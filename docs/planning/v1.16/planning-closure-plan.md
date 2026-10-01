@@ -51,6 +51,8 @@ These are acceptance-design obligations, not product tests executed during plann
 
 ## Planning acceptance
 
+[HB-7 architecture preparation](../../architecture/architecture-readiness.md) records the owner's self-hosted requirement and added technology, data, identity, admin, tenancy/organization and intelligence design scope. It supplies inputs to PP-07 and the later English baseline reconciliation; it does not close PP-02–06 findings, replace the 43-group requirements/work/screen trace, or authorize development. Detailed trace/schema/screen reconciliation remains PP-08 work.
+
 Completeness requires source/user-request coverage, coherent contracts and states, named ownership for unresolved decisions, acceptance scenarios, trace consistency and independent domain review. Structural validation alone is insufficient.
 
 The owner then decides whether planning is complete. That declaration is separate from PR approval or merge. A planning PR can merge while the development gate remains closed.

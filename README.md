@@ -21,6 +21,10 @@ The v1.16 source plan covers 123 chapters and 102 tables. Current planning artif
 
 Technology choices and supported provider/ERP combinations remain subject to planning decisions and actual validation. Existing HawkEye and TokenMeter workflows inform collaboration practices; their product stacks are not assumed.
 
+## Architecture preparation
+
+The owner has selected self-hosted delivery. The [architecture readiness plan](docs/architecture/architecture-readiness.md) organizes the operating prerequisites, development sequence, ClickHouse/Kafka/OpenTelemetry assessment, billing data model, collection methods and source grouping, tenant/customer/organization management, session and permission policies, admin/customer data views, and intelligence layer. PostgreSQL is the first transactional candidate; component adoption, sizing and implementation remain unverified.
+
 ## Working sequence
 
 All project work follows a matching Hybrid Billing Linear ticket, assigned ownership and machine claim, ticket branch, planning and relevant review, scoped execution, verification and re-review, PR, authorized merge, and merge read-back. This README-only initial commit is the owner's authorized seed for an otherwise empty repository; subsequent changes follow the full PR sequence.

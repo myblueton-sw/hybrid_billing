@@ -50,6 +50,8 @@ Bootstrap creates one initial administrator through atomically consumed operator
 
 ## Decision register and acceptance
 
+The proposed [access/trust contract](../../contracts/security/access-and-trust.md) specifies mandatory analytical enforcement, governed authentication-root replacement/epoch handling and conditional engine callers. Use its negative acceptance cases with these current-authority/session obligations; actual profiles/mechanisms/limits remain decisions.
+
 Seung Woo Park obtains named security/operations owners for: session idle/absolute limits, step-up lifetime, issued token/refresh policy, revocation/detection bounds, SSO/MFA products, service-client flow, signing/key rotation overlap, recovery custody, rate limits and audit/profile retention. Values remain UNRESOLVED.
 
 Planned cases: fixation; cookie/CSRF/cross-origin failures; logout and expiry; invalid issuer/audience/signature/nonce; SAML replay; LDAP injection/empty bind; same-email identities; refresh theft/concurrency; tenant guessing; MSP delegation expiry; role-reduction across API/cache/query/model/export/queued work; external outage; last-admin and backup resurrection. Acceptance requires current scoped authority and preserved financial separation. All runtime security cases are **NOT_RUN**.

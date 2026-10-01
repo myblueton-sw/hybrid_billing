@@ -60,6 +60,8 @@ Separate authoritative infrastructure cost → VM/node/resource observations →
 
 ## Profile acceptance
 
+Apply [source snapshot/append/hybrid publication semantics](../contracts/billing/inputs-pricing-and-erp.md) and the [all-retrieval fetch policy](../contracts/security/access-and-trust.md) to every included source profile. Actual identity/mode/precedence/destination/budget values must be approved before publication; completeness is not inferred from transport receipt.
+
 Each supported profile declares source resolution, available cost/usage explanation and historical coverage under the [usage detail lifecycle](usage-detail-lifecycle.md). Persist eligible evidence and lineage for later retrieval; source API availability or transport retention cannot substitute for approved historical storage.
 
 Each real profile records provider/product/API/schema version, contract/account role, region/site, kind/authority, method, permissions, expected coverage/generation delay, quota/cost, stable IDs, correction/precedence rules and evidence. Supported/limited/unsupported/unverified is profile-specific, never inferred from provider name.

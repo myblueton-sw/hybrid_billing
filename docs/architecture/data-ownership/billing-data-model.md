@@ -76,6 +76,8 @@ PostgreSQL constraints can enforce keys/references; cross-row balance sums requi
 
 ## Physical model and access paths to validate
 
+Use [source/pricing publication and evidence contracts](../../contracts/billing/inputs-pricing-and-erp.md) and [hold/metric/preference ownership](../../contracts/operations/holds-onboarding-and-favorites.md) when refining logical entities and physical schema. Supplemental semantics do not select keys/types or implement storage.
+
 Apply the owner-requested [usage detail lifecycle](../usage-detail-lifecycle.md): preserve source-to-measure-to-calculation-to-document contribution links, historical manifests and current-policy projections. Summary, complete permitted detail and exports agree only at the same scope/revision/currency/basis; maintained storage includes retained dependencies, verified archive and control-aware recovery.
 
 Design indexes from actual reads: workspace + customer + status + stable cursor; source identity/revision; effective-dated assignment; contract/run/manifest; Claim scope; document/number; external key/purpose; job next-attempt/lease; session/revocation; retention due/hold/dependency. Compare detail partitioning by source period/workspace against query skew, cardinality and retention; do not create a physical partition for every customer without evidence.

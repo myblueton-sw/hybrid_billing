@@ -46,6 +46,8 @@ The Kubernetes/VMware discussion remains a scope decision: infrastructure cost a
 
 ## Integration and acceptance
 
+[HB-11 supplementation](../reviews/HB-11-refinements/resolution.md) now supplies concrete contracts for the thirteen findings and D-01–07 decision packets, including RA-12/13/14. Contract supply/review is progress; final profile choices, canonical trace and owner acceptance are separate remaining work.
+
 PP-07 obtains named decision owners and first support profiles, including the three latest bundles. PP-08 maps this supplement to canonical requirements/work/contracts/screens and acceptance records, preserves source provenance and publishes a consistent English baseline. PP-09 independently reviews actual closure or explicit scoped deferral. Do not mechanically sum 43 + 14, count finding IDs as features, or claim that a register replaces detailed contracts.
 
 Root checks coverage of these requests; relevant domain reviewers verify financial, authority and lifecycle consistency. Structural document checks and independent content review do not certify implementation. No runtime, provider/ERP compatibility, performance, retention execution or human external specialist sign-off is asserted. The owner has not declared planning complete; product development remains prohibited.

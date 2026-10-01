@@ -102,6 +102,8 @@ Stages describe planned responsibility, not assigned developers or live child ti
 
 ## Decisions required next
 
+Apply the [HB-11 supplied contracts and decision packets](../reviews/HB-11-refinements/resolution.md) before final scope/contract acceptance. All thirteen findings now have supplemental semantics; actual profile/policy decisions and PP-08 trace integration still prevent final closure. Historical review verdicts remain baseline-specific.
+
 Owner: first customer operating profile; initial providers and ERP; deployment runtime; operating team and budget; target date constraints. Finance owner: pricing/rounding/tax/FX, receipt authority, recognition basis and correction approval. Security/operations owners: isolation profile, IdP/MFA, session/revocation bounds, network/offline conditions, retention and recovery targets. Architect/DBA: version-pinned component choices after comparison. Until people are named, these domain-owner assignments are **requested responsibilities**, not completed assignments. Seung Woo Park remains accountable for obtaining those decisions.
 
 Verification status: document/source review only. Technology adoption, implementation, compatibility, sizing, security enforcement, load and recovery remain UNVERIFIED.

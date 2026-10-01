@@ -7,6 +7,8 @@ status: draft
 
 # Self-hosted architecture readiness
 
+The [HB-8 external-source review](../reviews/HB-8-external-design/findings.md) adds six open capability-contract refinements and their closure sequence. It does not select technologies or close the planning gate.
+
 Tracking: [HB-7](https://linear.app/hybrid-billing/issue/HB-7/define-the-architecture-readiness-specification-and-development-plan). Accountable owner: Seung Woo Park. Root owns PM, planning and document edits; independent architect, DBA and QA reviewers assess the design. Machine: `mac_mini`.
 
 ## Requirement and decision status

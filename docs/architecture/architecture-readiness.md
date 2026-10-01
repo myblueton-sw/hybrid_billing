@@ -9,6 +9,8 @@ status: draft
 
 The [HB-8 external-source review](../reviews/HB-8-external-design/findings.md) adds six open capability-contract refinements and their closure sequence. It does not select technologies or close the planning gate.
 
+The [HB-10 re-review](../reviews/HB-10-unresolved/findings.md) assesses all thirteen PC/ED findings after HB-9; none is closed or approved as a scoped deferral. Use the [recent owner register](../planning/recent-owner-requirements.md) for discussion additions and outstanding choices, pending PP-08 canonical trace integration.
+
 Tracking: [HB-7](https://linear.app/hybrid-billing/issue/HB-7/define-the-architecture-readiness-specification-and-development-plan). Accountable owner: Seung Woo Park. Root owns PM, planning and document edits; independent architect, DBA and QA reviewers assess the design. Machine: `mac_mini`.
 
 ## Requirement and decision status

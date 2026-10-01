@@ -28,6 +28,7 @@ Tracking: [HB-7](https://linear.app/hybrid-billing/issue/HB-7/define-the-archite
 | Document | Owned design scope |
 | --- | --- |
 | [Technology assessment](technology-assessment.md) | Database, broker and telemetry suitability; adoption evidence |
+| [Installation assessment](self-hosted-installation-assessment.md) | Kubernetes/VM comparison, separate stateful placement, ownership and planned operational acceptance |
 | [Billing data model](data-ownership/billing-data-model.md) | Canonical entities, relationships, tenancy, organization and integrity |
 | [Data collection](data-collection.md) | API/push/export/upload methods, source authority and provider/customer grouping |
 | [Identity and permissions](security-boundaries/identity-session-permissions.md) | Login, sessions, tokens, revocation and scoped authority |

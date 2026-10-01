@@ -31,6 +31,7 @@ Tracking: [HB-7](https://linear.app/hybrid-billing/issue/HB-7/define-the-archite
 | [Identity and permissions](security-boundaries/identity-session-permissions.md) | Login, sessions, tokens, revocation and scoped authority |
 | [Admin design](admin-design.md) | Installation, tenant/customer and financial operations |
 | [Intelligence layer](intelligence-layer.md) | Validation, correction/adjustment proposals and forecasts |
+| [Usage detail lifecycle](usage-detail-lifecycle.md) | Complete cost/usage explanations, pricing/charge finalization and durable history/export/archive/recovery |
 
 ## Proposed logical architecture
 

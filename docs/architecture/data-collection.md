@@ -60,6 +60,8 @@ Separate authoritative infrastructure cost → VM/node/resource observations →
 
 ## Profile acceptance
 
+Each supported profile declares source resolution, available cost/usage explanation and historical coverage under the [usage detail lifecycle](usage-detail-lifecycle.md). Persist eligible evidence and lineage for later retrieval; source API availability or transport retention cannot substitute for approved historical storage.
+
 Each real profile records provider/product/API/schema version, contract/account role, region/site, kind/authority, method, permissions, expected coverage/generation delay, quota/cost, stable IDs, correction/precedence rules and evidence. Supported/limited/unsupported/unverified is profile-specific, never inferred from provider name.
 
 Planned cases: incomplete pagination; late correction; identical API/upload source; conflicting revision; shared payer disclosure; wrong-customer/malicious upload; webhook replay; resource move/reset/gap; broker replay; unknown authority; no usage versus unavailable data; OCR decimal error; forecasted gap. Integration/security/coverage/performance tests are **NOT_RUN**. Exact endpoints/formats and first support combinations remain unresolved.

@@ -51,6 +51,8 @@ These are acceptance-design obligations, not product tests executed during plann
 
 ## Planning acceptance
 
+[HB-9 usage detail lifecycle](../../architecture/usage-detail-lifecycle.md) records complete authorized usage/cost explanations, durable storage/management/maintenance and the owner's pricing-finalization question. PP-07 resolves detail/disclosure, pricing policy and retention/recovery choices; PP-08 reconciles existing source/customer/billing/output screens and traces with UD-01–12; PP-09 checks closure independently. PC-01/02 calculation/warning contracts remain open; runtime is NOT_RUN and development remains gated.
+
 [HB-8 external-source review](../../reviews/HB-8-external-design/findings.md) adds analytical enforcement, authentication-root authority, fetch-policy coverage, monetary arithmetic, source delivery semantics and conditional trained-artifact withdrawal obligations. Integrate closure into PP-07–09; the seven PC findings remain open. Required capability boundaries must be resolved or explicitly deferred before owner planning acceptance.
 
 [HB-7 architecture preparation](../../architecture/architecture-readiness.md) records the owner's self-hosted requirement and added technology, data, identity, admin, tenancy/organization and intelligence design scope. It supplies inputs to PP-07 and the later English baseline reconciliation; it does not close PP-02–06 findings, replace the 43-group requirements/work/screen trace, or authorize development. Detailed trace/schema/screen reconciliation remains PP-08 work.

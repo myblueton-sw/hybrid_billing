@@ -1,0 +1,34 @@
+# Mandatory ticket-to-merge workflow
+
+This rule implements the owner's requirement to use the ticket, execution and Git integration sequence observed in HawkEye and TokenMeter. It applies to every project work item: planning, content review, documentation, design, contracts, configuration, code, tests and infrastructure. It does not select another project's product stack or model provider.
+
+## Required sequence
+
+1. **Ticket first.** Create or reuse a semantically matching Linear ticket in the workspace/team/project verified against `.linear.json` before substantive project work or repository edits. Minimal discovery needed to locate a matching ticket or diagnose tracking is permitted. Do not invent issue IDs or work silently without tracking.
+2. **Classify and assign.** Root owns PM/planner responsibilities. Record goal, scope, acceptance criteria, dependencies, real accountable assignee, supporting role, domain and work type. Use the actual board's labels/states; record unavailable metadata explicitly rather than pretending it exists. Models inherit the execution environment.
+3. **Claim the machine.** Apply `machine:mac_mini` when working from this Mac mini. Another device uses its verified registered machine identifier. One active machine owns each ticket. Check current ownership before claiming; release it when work stops or hands off. Record the machine and handoff boundary in the ticket, commit trailer and merge/handoff evidence.
+4. **Create the ticket branch.** Use `<type>/HB-<number>-<short-description>` from current `origin/main`. One ticket per branch. Inspect Git status, preserve user changes, and use isolated worktrees for concurrent writers. Never silently move unrelated uncommitted work. If main does not yet exist, track the bootstrap explicitly before continuing; do not claim a fresh-main branch was created.
+5. **Plan and review.** Define behavior, boundaries, failure cases, owned files and validation before changes. Obtain relevant independent design review for billing, tenant/permission and public-contract decisions. PM, planner, review and QA responsibilities are required; small tasks can share a root owner and do not require artificial role-count delegation. Important independent reviews must have a separate reviewer.
+6. **Execute the scoped work.** Apply only the ticket's authorized changes. The planning gate remains binding: documentation/design work does not authorize product development. Git-bound artifacts, ticket descriptions, prompts, commit messages and PRs are English; user questions are answered in Korean.
+7. **Verify and re-review.** Run checks appropriate to the changed artifact. Feature behavior needs meaningful test cases; document changes need source/contract/trace checks. Fix blocking findings and have important fixes independently re-reviewed. Repeat scoped review until no new blocking issue is found. Record PASS / FAIL / UNVERIFIED and actual evidence; never claim unrun tests or unavailable reviewers.
+8. **Create the PR.** Inspect the actual staged diff for unrelated files, secrets and generated artifacts. Use commits such as `docs(HB-<number>): <subject>` with `Refs: HB-<number>` and `Machine: mac_mini`. PR title: `[HB-<number>] <description>`. Include ticket link, behavior/scope, review/validation evidence, risks, dependencies and machine. Do not push directly to main.
+9. **Merge through the authorized owner.** Required checks and reviews must pass. Delegated agents cannot self-merge. Root/PM can merge only with existing user authorization for that action; the rule itself grants no merge, deployment, payment or external-message permission. Preserve any approval already given and do not introduce duplicate approval requests.
+10. **Read back and complete.** Confirm the remote merge and final main contents. For a history-preserving merge, `git log --oneline <ticket-branch> --not origin/main` must be empty. For a squash merge, use the recorded merge commit and content/patch comparison; do not claim an empty ancestry check. Verify no foreign work landed and record exactly which checks ran. Only then mark the Git work Done and release the machine claim. If blocked, leave it open with evidence and next action. Read-only review work must also leave a ticket-linked Git report and follow the reviewed PR/merge sequence; do not invent an execution or merge that did not occur.
+
+## Initial repository bootstrap exception
+
+The owner explicitly authorized HB-5 to create the first remote commit with the English project README. Because both local and remote main have no history, this one seed commit may initialize main directly. Stage README.md only, inspect its full staged diff, obtain independent document review, commit with HB-5 and machine trailers, push without force, then verify the remote commit and README content. No planning source, settings, credentials or unrelated files belong in this seed commit. Every subsequent repository change uses a ticket branch and reviewed PR. This exception does not close HB-5 before its remaining workflow and connection work is completed.
+
+## Tracking, state and failure rules
+
+- Use the actual board's nearest equivalent of Backlog/Ready → Planning → Review → Executing → Review/QA → Done. Never fabricate a state transition.
+- Issue names such as HB-01 in planning JSON are requirement IDs, not proof that Linear tickets with those identifiers exist. Use returned Linear issue IDs and URLs for tracking.
+- A credential/workspace mismatch blocks that API connection; a separately authenticated and verified UI may provide ticket tracking in the correct workspace. An unavailable ticket system or unresolved machine ownership blocks dependent project execution. Diagnose and prepare reviewable local drafts, then request the missing connection/context. Do not substitute another workspace or offline placeholder ticket.
+- A local draft is not a repository change, ticket, review pass, PR, merge or completed project deliverable. Pending stages remain pending.
+- CI required checks must report on every applicable PR; relevance filtering belongs inside the check. This rule does not claim that remote branch protection or CI automation has already been installed.
+- Features/API/operations changes must reconcile the actual affected documents in the same ticket. Secrets and customer data never belong in prompts, tickets, files or logs.
+- Final reports distinguish changed artifacts, completed validation and remaining limitations. JEV is advisory and cannot approve any step.
+
+## Provenance
+
+Sequence inspected in HawkEye `AGENTS.md` and `.claude/rules/workflow.md`, and TokenMeter `AGENTS.md`, `.claude/rules/linear-workflow.md` and `.claude/rules/git-workflow.md`. Adopt the shared ticket, machine, branch, review, PR and merge-read-back discipline; use Hybrid Billing's actual board, permissions, planning gate and inherited model environment.

@@ -29,6 +29,8 @@ The [external-source design review](docs/reviews/HB-8-external-design/findings.m
 
 The owner requires [complete authorized usage details and maintained storage](docs/architecture/usage-detail-lifecycle.md), including cost explanation, pricing/charge finalization, historical revisions, full scoped exports and archive/retention/recovery contracts. These are planned requirements, not implemented capabilities.
 
+The [recent owner requirement register](docs/planning/recent-owner-requirements.md) consolidates fourteen discussion bundles without inflating the original 43-group count. The [current unresolved review](docs/reviews/HB-10-unresolved/findings.md) confirms all thirteen earlier refinements remain open and defines evidence-backed closure order; document publication is not finding closure.
+
 ## Working sequence
 
 All project work follows a matching Hybrid Billing Linear ticket, assigned ownership and machine claim, ticket branch, planning and relevant review, scoped execution, verification and re-review, PR, authorized merge, and merge read-back. This README-only initial commit is the owner's authorized seed for an otherwise empty repository; subsequent changes follow the full PR sequence.

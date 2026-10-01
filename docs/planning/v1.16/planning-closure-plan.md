@@ -51,6 +51,8 @@ These are acceptance-design obligations, not product tests executed during plann
 
 ## Planning acceptance
 
+[HB-10 current re-review](../../reviews/HB-10-unresolved/findings.md) confirms thirteen OPEN PC/ED findings after HB-9 and orders scope/owner decisions, security, eligible inputs/arithmetic/warnings, adapter/hold and product refinements, then PP-08/09. The [recent owner requirement register](../recent-owner-requirements.md) consolidates fourteen editorial bundles, including the latest detail/storage/pricing additions; reconcile overlap before revising the original 43-group baseline. No scoped exclusion or planning acceptance is established by this review.
+
 [HB-9 usage detail lifecycle](../../architecture/usage-detail-lifecycle.md) records complete authorized usage/cost explanations, durable storage/management/maintenance and the owner's pricing-finalization question. PP-07 resolves detail/disclosure, pricing policy and retention/recovery choices; PP-08 reconciles existing source/customer/billing/output screens and traces with UD-01–12; PP-09 checks closure independently. PC-01/02 calculation/warning contracts remain open; runtime is NOT_RUN and development remains gated.
 
 [HB-8 external-source review](../../reviews/HB-8-external-design/findings.md) adds analytical enforcement, authentication-root authority, fetch-policy coverage, monetary arithmetic, source delivery semantics and conditional trained-artifact withdrawal obligations. Integrate closure into PP-07–09; the seven PC findings remain open. Required capability boundaries must be resolved or explicitly deferred before owner planning acceptance.

@@ -27,6 +27,8 @@ The owner has selected self-hosted delivery. The [architecture readiness plan](d
 
 The [external-source design review](docs/reviews/HB-8-external-design/findings.md) supports the conceptual direction and records six open contract refinements with closure criteria. Official sources and published expert research informed the review; external human consultation and runtime validation have not been performed.
 
+The owner requires [complete authorized usage details and maintained storage](docs/architecture/usage-detail-lifecycle.md), including cost explanation, pricing/charge finalization, historical revisions, full scoped exports and archive/retention/recovery contracts. These are planned requirements, not implemented capabilities.
+
 ## Working sequence
 
 All project work follows a matching Hybrid Billing Linear ticket, assigned ownership and machine claim, ticket branch, planning and relevant review, scoped execution, verification and re-review, PR, authorized merge, and merge read-back. This README-only initial commit is the owner's authorized seed for an otherwise empty repository; subsequent changes follow the full PR sequence.

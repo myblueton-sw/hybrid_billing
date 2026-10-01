@@ -53,6 +53,8 @@ Admin query paths return authorized rows/fields, stable cursors and aggregates o
 
 ## Screen and interaction contract
 
+The owner requires complete authorized usage detail behind costs and durable maintenance. Apply the [usage detail lifecycle](usage-detail-lifecycle.md) to summary-to-detail navigation, full scoped exports, historical retrieval and archive/recall/retention administration; current pages and temporary files are not complete persistent history.
+
 Map into existing local families: P01–P06 installation/modules; O01–O03 organization/contracts; S01–S06 source/data; B/I closing/document/submission; M01–M05 identity/access; U/R operational/audit; C customer views. This mapping is an integration reference, not a claim every family owns all workflows above. New intelligence screens/actions need detailed screen-spec and requirement-trace follow-up before implementation.
 
 Every list has server search, stable cursor/filter and authorization-scoped counts. Bulk selection freezes an explicit target manifest and rechecks current permissions before work; one customer failure must not display another customer's data. Show loading, empty, denied, partial, failed, stale/unknown and completed states with retry/cancel limits. Monetary tables display currency, amount basis, input revision, coverage and as-of; missing/stale values never appear as zero or confirmed.

@@ -43,6 +43,8 @@ These are comparison profiles, not production sizing or deployment support decla
 
 ## Adoption evidence
 
+Supplement round-trip checks with the [analytical monetary contract](../contracts/billing/inputs-pricing-and-erp.md) and [mandatory query boundary](../contracts/security/access-and-trust.md). Select reviewed precomputed-authority or enumerated-expression profiles and exact isolation mechanisms; arithmetic/field enforcement remains unimplemented.
+
 Select exact versions, licenses, dependency notices, source interfaces and deployment configuration. Test duplicate delivery before/after crash, output-before-offset failure, delayed/changed revisions, replay outside the allowed horizon, schema evolution, partition skew, disk/quorum loss, backup restore and retained/deleted data. Test analytical query isolation and decimal round trips against independent expected totals. Measure operational setup/recovery effort as well as throughput. Record unsupported combinations explicitly.
 
 Security/business audit is persisted independently of sampled telemetry. Do not emit credentials, billing bodies, original AI prompts/responses or unnecessary customer identifiers. No mandatory external exporter or model endpoint is implied by self-hosting. Customer policies govern permitted destinations. [OTel sensitive-data guidance](https://opentelemetry.io/docs/security/handling-sensitive-data/).

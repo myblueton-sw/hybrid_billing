@@ -63,4 +63,6 @@ Before sensitive actions show affected scope, reason, evidence/revision, approva
 
 ## Administrative acceptance plan
 
+Apply [independent hold/onboarding/favorites semantics](../contracts/operations/holds-onboarding-and-favorites.md), [trust/query controls](../contracts/security/access-and-trust.md) and [pricing/warning/ERP contracts](../contracts/billing/inputs-pricing-and-erp.md). Detailed screen/API trace integration is still required; these links do not claim all 49 screen specs reconciled.
+
 Negative cases include operator attempting tenant ledger access; MSP viewing an unassigned customer; org move implying extra grants; cross-tenant bulk search/export; credential leak in diagnostics; finance self-approval; uncertain ERP shown complete; expired support session; offboarding deleting shared evidence; restore reviving access; forecast displayed as issued charge. Functional/a11y/security/visual tests are **NOT_RUN**. Exact role/action matrix, bulk limits, final layouts and permitted customer-profile fields remain unresolved.

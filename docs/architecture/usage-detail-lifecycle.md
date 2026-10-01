@@ -99,6 +99,8 @@ Size using source resolution, normalized/calculated row expansion, revisions, in
 
 ## Acceptance design and closure
 
+The [HB-11 decision packet](../reviews/HB-11-refinements/resolution.md) specifies pending support/disclosure, pricing/warnings, per-class retention and recovery fields. Its linked contracts supply query/trust, delivery/arithmetic and ERP/operational semantics. Actual decisions and PP-08 integration remain pending; existing historical HB-6/HB-8 findings are not automatically closed.
+
 | Case | Required outcome; all runtime cases NOT_RUN |
 | --- | --- |
 | UD-01 lineage | Many-to-one and one-to-many contribution links persist; workload allocation does not add duplicate infrastructure cost |

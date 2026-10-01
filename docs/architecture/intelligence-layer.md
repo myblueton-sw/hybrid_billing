@@ -38,6 +38,8 @@ Each module declares owner, version/digest, supported input/output schema, allow
 
 ## Evaluation and release gates
 
+The [conditional training/withdrawal contract](../contracts/security/access-and-trust.md) adds learned weights/checkpoints/adapters, deployed audiences and backup withdrawal. Sensitive tenant-data training remains blocked until its separately reviewed approved contract; this is no implied product exclusion or training approval.
+
 Define first use cases and independent labeled cases before selecting models. Planned evidence: validation false-positive/false-negative cases; correction delta correctness; unauthorized tool/proposal rejection; historical out-of-time forecast backtests with no future-data leakage; per-scope/currency errors against a simple baseline, uncertainty calibration, sparse/no-data behavior, drift and monitoring. Record data/version/cutoff and human review effort, not only model scores. Choose thresholds and forecast horizon with finance/product owners; no invented accuracy guarantee.
 
 Adoption requires independent security/billing review, traceable datasets and measured latency/resource costs under ingestion/closing load. Proposals must remain reversible until approved business execution; issued corrections remain explicit audit history. Current model training, inference, backtests, adversarial tests and integration scenarios are **NOT_RUN**.

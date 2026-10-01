@@ -33,6 +33,8 @@ The [recent owner requirement register](docs/planning/recent-owner-requirements.
 
 The [HB-11 supplementation](docs/reviews/HB-11-refinements/resolution.md) supplies reviewed security, financial and operational contracts for all thirteen refinements, with detail/retention decision packets and planned acceptance. Profile/policy choices and canonical trace integration remain pending; no runtime enforcement or planning completion is claimed.
 
+The [installation assessment](docs/architecture/self-hosted-installation-assessment.md) conditionally favors an existing customer-operated Kubernetes cluster and retains a VM/container comparison profile. New-cluster operations, stateful placement and actual installation/failure validation remain unverified; VMware is not required.
+
 ## Working sequence
 
 All project work follows a matching Hybrid Billing Linear ticket, assigned ownership and machine claim, ticket branch, planning and relevant review, scoped execution, verification and re-review, PR, authorized merge, and merge read-back. This README-only initial commit is the owner's authorized seed for an otherwise empty repository; subsequent changes follow the full PR sequence.

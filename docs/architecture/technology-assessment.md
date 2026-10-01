@@ -33,6 +33,8 @@ OpenTelemetry processes telemetry; Collector queues and persistent buffering red
 
 ## Alternatives to compare after development authorization
 
+Application and stateful placement are separate decisions; use the [Kubernetes/VM installation assessment](self-hosted-installation-assessment.md) for ownership, upgrades, recovery and comparable operational evidence. Kubernetes is not automatic justification for adding a broker, analytical cluster or in-cluster transactional DB.
+
 | Profile | Composition | Question to resolve |
 | --- | --- | --- |
 | Lower operating burden | Transactional DB + evidence store + durable jobs/outbox; bounded batch detail queries | Can agreed arrival/query/closing/replay requirements pass without a separate broker or analytical cluster? |

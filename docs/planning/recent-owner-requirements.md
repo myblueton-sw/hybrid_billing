@@ -32,9 +32,19 @@ The fourteen RA references below are local editorial bundles, not Linear tickets
 | RA-13 | Store, manage and maintain the information over its permitted lifetime | [Usage detail lifecycle](../architecture/usage-detail-lifecycle.md), storage/administration sections | Class-specific retention basis/durations, hold/reference protection, archive/recall availability, backup/deletion controls, capacity and RPO/RTO. Temporary exports/broker retention do not replace authoritative history |
 | RA-14 | Define how definitive pricing logic and final charges are determined | [Usage detail lifecycle](../architecture/usage-detail-lifecycle.md), pricing section | Named commercial/finance/tax/security decisions; rate/unit/tier/modifier/FX/tax/rounding policy and complete order (PC-01), warning acknowledgment (PC-02), independent expected amounts and separate policy/amount/issuance/ERP states |
 
-## Most recent additions
+## Full-scope clarification after HB-11
 
-RA-12, RA-13 and RA-14 are the latest three owner requirement bundles, documented under HB-9. Complete authorized detail includes all eligible permitted rows at supported resolution, rather than a single page. Historical maintenance covers retained source/result dependencies, current permissions, archive/recall, integrity, deletion and restore. Pricing finalization separates policy approval, calculation/reconciliation and amount approval from issuance and external confirmation.
+The owner instructs planning against the whole existing requirement set, without arbitrarily choosing a first target to reduce scope. The collection set includes AWS, Azure, GCP, OCI, Alibaba and VMware; existing HawkEye/TokenMeter connections and all other baseline requirement groups remain included. Source preservation, normalization, missing/duplicate checks, reconciliation and correction revisions already exist in local v1.16; they are not new features or additions to the 43-group count.
+
+Accuracy first, mandatory cross-validation and operator confirmation are confirmed directions. [Collection design](../architecture/data-collection.md#accuracy-cross-validation-and-operator-confirmation) supplies the proposed detailed gate and links it to financial publication. The interrupted phrase about an optional capability is unresolved; do not infer optional AI, automatic confirmation or another exception. Exact interaction, authority matrix and policy values remain distinct from the confirmed directions.
+
+Earlier requests for first/initial profiles in this register and HB-11 decision packets concern evidence, capability and activation planning only. They do not authorize a reduced design baseline or require the owner to reselect already documented providers. Gather available evidence for the full matrix; ask only about actual missing information, conflicts or decisions requiring owner authority. JEV-originated advice must be labeled **JEV recommendation**, with adoption and evidence stated separately; it is never owner approval.
+
+[HB-13 verification and trace](../reviews/HB-13-full-scope/verification.md) bounds this reconciliation. Full English canonical requirements/work/screens/acceptance integration and final planning acceptance remain pending under PP-08/09.
+
+## Additions recorded under HB-9
+
+RA-12, RA-13 and RA-14 are the three owner requirement bundles documented under HB-9. Complete authorized detail includes all eligible permitted rows at supported resolution, rather than a single page. Historical maintenance covers retained source/result dependencies, current permissions, archive/recall, integrity, deletion and restore. Pricing finalization separates policy approval, calculation/reconciliation and amount approval from issuance and external confirmation.
 
 These procedures are documented. Exact prices, formulas/order, warning policy, permitted source/detail profiles, storage products, retention durations, export formats and service targets are still unresolved. HB-9 publication did not close PC-01/02 or ED-01/04/05. Use the [current unresolved review](../reviews/HB-10-unresolved/findings.md) for the thirteen finding statuses and ordered closure criteria.
 

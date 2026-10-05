@@ -11,6 +11,8 @@ Part of [HB-11](../../reviews/HB-11-refinements/resolution.md); supplements PC-0
 
 ## ED-05: eligible dataset publication
 
+Every eligible publication mode below requires the [cross-validation and operator-confirmation gate](../../architecture/data-collection.md#accuracy-cross-validation-and-operator-confirmation). This proposed HB-13 refinement binds confirmation to the exact candidate revisions and independent comparison evidence, rechecks current scoped authority at publication and invalidates stale decisions. Complete snapshot, append and hybrid paths cannot bypass it. Confirmation grants no amount-approval or issuance authority and cannot waive missing required evidence or unresolved conflicts.
+
 A source profile must declare provider/authority/account scope, economic record identity, delivery scope, completeness criteria, mode, revision order and cross-transport precedence. Receipt ID, source economic identity, run ID and Claim are distinct. Missing/incomparable identity or conflicting versions block publication; request deduplication alone cannot prove economic uniqueness.
 
 | Mode | Eligible revision contract |

@@ -31,7 +31,7 @@ HB-5 has been created through the authenticated browser in the verified Hybrid B
 | PP-04 | Root with ERP/DBA review: PC-04 ERP profiles | PP-01 | Odoo/SAP distinctions restored as source-dated conditions; request/billing/FI completion semantics and per-call atomicity contract defined; current vendor facts remain UNVERIFIED unless officially checked |
 | PP-05 | Root with product/QA review: PC-05 independent dispute holds | PP-01; reconcile with PP-04 external capabilities | Hold/request/release state and role contracts, partial scope, external uncertainty, payment obligations and non-cancellation cases linked to B11, APIs and acceptance |
 | PP-06 | Root with product/QA review: PC-06 onboarding metrics and PC-07 favorites | PP-01 | Cohorts/denominators/timing categories and favorites persistence/revocation behavior specified; metric and access-boundary examples defined |
-| PP-07 | Root PM with domain owners: decision register | PP-02–06 inputs | Initial support profiles, numeric policies, identity/retention/SLO decisions and ERP accounting ownership each have evidence, accountable owner, blocking effect and decision status; values are not invented |
+| PP-07 | Root PM with domain owners: decision register | PP-02–06 inputs | Full-scope profile matrix with separate activation evidence, numeric policies, identity/retention/SLO decisions and ERP accounting ownership each have evidence, accountable owner, blocking effect and decision status; values are not invented |
 | PP-08 | Root tech-writer: English artifact and trace reconciliation | Content packages stabilized | English Git-bound artifacts, preserved original source/provenance and third-party notices, consistent JSON/Markdown/work/screens/test references and current-versus-historical summaries |
 | PP-09 | Independent architect/DBA/QA and root integration: final content re-review | PP-07–08 | Each PC finding closed by cited content and scoped re-review; remaining decisions explicit; owner receives a concise reviewable planning baseline |
 
@@ -50,6 +50,8 @@ PP-02–06 can be independently reviewed in parallel. Writing shared requirement
 These are acceptance-design obligations, not product tests executed during planning.
 
 ## Planning acceptance
+
+Apply the [owner full-scope clarification](../recent-owner-requirements.md#full-scope-clarification-after-hb-11). PP-07 collects missing evidence and decisions across the complete existing planning scope; selecting a first provider is not a prerequisite to documenting it. Actual activation remains capability-specific and verified. PP-08 must integrate the proposed evidence-bound input confirmation gate without equating it to amount approval or issuance. HB-13 is a bounded clarification, not completion of PP-07/08/09 or a reset of the original requirement count.
 
 [HB-11 supplementation](../../reviews/HB-11-refinements/resolution.md) supplies proposed security, financial and operational contracts for PC-01–07 and ED-01–06. Use its decision/acceptance references for PP-02–08 reconciliation; publication is not completion of those work packages or final finding closure. Start profile/owner evidence gathering now and complete PP-07 using reviewed content inputs; PP-09 and owner acceptance remain required.
 

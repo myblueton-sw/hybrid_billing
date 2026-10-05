@@ -35,6 +35,8 @@ The [HB-11 supplementation](docs/reviews/HB-11-refinements/resolution.md) suppli
 
 The [installation assessment](docs/architecture/self-hosted-installation-assessment.md) conditionally favors an existing customer-operated Kubernetes cluster and retains a VM/container comparison profile. New-cluster operations, stateful placement and actual installation/failure validation remain unverified; VMware is not required.
 
+The [full planning reconciliation](docs/planning/v1.16/planning-reconciliation.md) indexes all 43 requirement groups, existing work/screen/acceptance references and owner additions. The [decision/action register](docs/planning/v1.16/planning-decisions.md) separates established controls, integration gaps, product decisions, customer configuration and external evidence. The [payment and recognition contract](docs/contracts/billing/payment-and-recognition.md) carries contract Payment Terms and independent monthly ERP recognition into English. This is partial canonical integration, not completion of the detailed English baseline or planning acceptance.
+
 ## Working sequence
 
 All project work follows a matching Hybrid Billing Linear ticket, assigned ownership and machine claim, ticket branch, planning and relevant review, scoped execution, verification and re-review, PR, authorized merge, and merge read-back. This README-only initial commit is the owner's authorized seed for an otherwise empty repository; subsequent changes follow the full PR sequence.

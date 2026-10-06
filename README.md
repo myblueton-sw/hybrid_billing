@@ -37,6 +37,10 @@ The [installation assessment](docs/architecture/self-hosted-installation-assessm
 
 The [full planning reconciliation](docs/planning/v1.16/planning-reconciliation.md) indexes all 43 requirement groups, existing work/screen/acceptance references and owner additions. The [decision/action register](docs/planning/v1.16/planning-decisions.md) separates established controls, integration gaps, product decisions, customer configuration and external evidence. The [payment and recognition contract](docs/contracts/billing/payment-and-recognition.md) carries contract Payment Terms and independent monthly ERP recognition into English. This is partial canonical integration, not completion of the detailed English baseline or planning acceptance.
 
+## SaaS subscription planning
+
+The owner has requested future SaaS subscription and billing management. The [HB-18 planning supplement](docs/planning/saas-subscription-billing.md) proposes recurring, seat-based, metered and hybrid pricing, subscription changes, service entitlements, customer self-service and controlled payment integration. It extends existing contract, calculation, approval, invoice and ERP concepts; payment collection, service access and monthly cost recognition remain distinct. Exact policies, processor support and canonical screen/API integration are pending. This capability does not change self-hosted delivery or authorize product development.
+
 ## Working sequence
 
 All project work follows a matching Hybrid Billing Linear ticket, assigned ownership and machine claim, ticket branch, planning and relevant review, scoped execution, verification and re-review, PR, authorized merge, and merge read-back. This README-only initial commit is the owner's authorized seed for an otherwise empty repository; subsequent changes follow the full PR sequence.

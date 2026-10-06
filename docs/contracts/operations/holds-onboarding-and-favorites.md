@@ -7,6 +7,8 @@ status: draft
 
 # Holds onboarding and favorites
 
+The [shared action contract](../commands/planning-actions.md) now binds these semantics to B11/I04 holds, S02 metrics, U01 favorites and U02 stage-specific deadlines. Its canonical command IDs, typed request/results and errors govern those remediated interactions. Actual role/retention/calendar/profile values remain activation decisions. The [remediation trace](../../planning/v1.16/remediation-trace.json) maps requirements, work and planned cases; the entire product API is not claimed complete.
+
 Part of [HB-11](../../reviews/HB-11-refinements/resolution.md); supplements PC-05/06/07 from source B1488/B1110/B1359, local B11/S02/U01 and HB-10. Proposed English contract semantics; detailed API/schema/work/screen trace integration remains PP-08. No running workflows or persisted preferences are claimed.
 
 ## PC-05: independent holds

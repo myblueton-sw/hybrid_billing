@@ -7,6 +7,8 @@ status: draft
 
 # Input and financial contracts
 
+HB-16 supplies the concrete proposed [Claim and numeric mechanisms](claim-and-numeric.md) and [shared action contract](../commands/planning-actions.md). Use their partial-coverage states, explicit bounded arithmetic, input-confirmation requests and errors with this document's financial order and eligibility gates. Actual policy values and runtime enforcement remain unapproved/unverified.
+
 The [payment and recognition supplement](payment-and-recognition.md) preserves contract Payment Terms, overdue authority and monthly ERP cost recognition independent of customer billing cadence, including PT-01–08 and ERPC-01–08. It does not select actual accounting/tax policies or certify ERP capabilities.
 
 Part of [HB-11](../../reviews/HB-11-refinements/resolution.md); supplements PC-01/02/04 and ED-04/05. Source basis is HB-6/HB-8/HB-10, B0110/B0502/B0836–B0842 and local AR-06/DB contracts. These are draft planning contracts, not selected rates, accounting policy, technology versions or certified adapters. [Usage detail](../../architecture/usage-detail-lifecycle.md), Claim uniqueness and purpose-specific monthly recognition remain required.

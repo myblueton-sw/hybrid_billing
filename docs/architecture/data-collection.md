@@ -62,6 +62,8 @@ Receipt IDs, source identities, business Claims and ERP submission keys are sepa
 
 ## Accuracy, cross-validation and operator confirmation
 
+The [canonical action contract](../contracts/commands/planning-actions.md#input-confirmation) specifies `input.inspect`, `input.confirm_publish` and `input.reject`, their permission/evidence/error bindings, and the atomic decision/publication transition. Updated S03/S06/B09 specifications and [remediation trace](../planning/v1.16/remediation-trace.json) carry that flow; UI/API/CLI/AI share the same command boundary.
+
 The owner-confirmed direction is accuracy first, mandatory cross-validation and operator confirmation. The following is the proposed detailed contract for that direction; it does not claim the owner has approved its exact interaction or role matrix. No automatic-confirmation exception is inferred from the truncated optional requirement.
 
 Before eligible input publication, cross-validation must cover the full declared scope, not a sample or current page. Compare preserved source manifests/rows with normalized output using independently derived expected counts, coverage, economic identities and unit/currency/basis totals. Reusing the same transformation and summing its output twice is not independent evidence. Hash equality verifies bytes, not monetary semantics. Classify accepted, quarantined, duplicate and conflicting dispositions so every received record is accounted for without treating legitimate equal-amount usage as duplicate.

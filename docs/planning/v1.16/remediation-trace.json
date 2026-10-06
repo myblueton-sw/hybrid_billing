@@ -1,0 +1,2419 @@
+{
+  "schema_version": "1.0",
+  "ticket": "HB-16",
+  "authority": "Normative proposed amendments to the explicitly named requirement/work/action fields; unchanged clauses remain governed by the source baseline. This file and linked full specs supersede abbreviated older behavior only in these stated fields. No feature removal or final planning acceptance.",
+  "baseline_commit": "76102ddd2653e88c383fe8dcc6b9d6c19da71e90",
+  "development_authorized": false,
+  "source_index": "docs/planning/v1.16/planning-reconciliation.json",
+  "original_acceptance_count": 119,
+  "existing_combined_acceptance_count": 210,
+  "count_semantics": "Supplemental case references are not added to original requirement counts and may overlap existing acceptance obligations.",
+  "packages": [
+    {
+      "id": "R16-FETCH",
+      "requirement_ids": [
+        "HB-05",
+        "HB-06",
+        "HB-33",
+        "HB-34"
+      ],
+      "screen_ids": [
+        "P02"
+      ],
+      "contract_paths": [
+        "docs/contracts/security/access-and-trust.md"
+      ],
+      "command_ids": [],
+      "normative_design_requirement": "Reject metadata/loopback/unapproved management destinations on every retrieval; classified private destinations cannot override denial.",
+      "design_task_amendment": "Specify these fields, guards, errors and state transitions in the linked canonical contract and affected full screen specification.",
+      "implementation_task_amendment": "Implement only after explicit owner planning-complete declaration and profile approval; consume shared command contract rather than duplicating policy.",
+      "verification_task_amendment": "Execute referenced independent normal/negative/concurrency cases with actual enforcement and evidence after development authorization.",
+      "acceptance_ids": [
+        "FP-01",
+        "FP-02",
+        "FP-03"
+      ],
+      "design_status": "PROPOSED_SPECIFIED_PENDING_FINAL_ACCEPTANCE",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "id": "R16-INPUT",
+      "requirement_ids": [
+        "HB-04",
+        "HB-05",
+        "HB-06",
+        "HB-07",
+        "HB-08",
+        "HB-09",
+        "HB-23",
+        "HB-38",
+        "HB-41"
+      ],
+      "screen_ids": [
+        "S03",
+        "S06",
+        "B09"
+      ],
+      "contract_paths": [
+        "docs/contracts/commands/planning-actions.md",
+        "docs/architecture/data-collection.md"
+      ],
+      "command_ids": [
+        "input.inspect",
+        "input.confirm_publish",
+        "input.reject"
+      ],
+      "normative_design_requirement": "Bind independent full comparison and current actor to exact candidate/scope/evidence; atomic confirm/publication, rejection only before publication.",
+      "design_task_amendment": "Specify these fields, guards, errors and state transitions in the linked canonical contract and affected full screen specification.",
+      "implementation_task_amendment": "Implement only after explicit owner planning-complete declaration and profile approval; consume shared command contract rather than duplicating policy.",
+      "verification_task_amendment": "Execute referenced independent normal/negative/concurrency cases with actual enforcement and evidence after development authorization.",
+      "acceptance_ids": [
+        "IC-01",
+        "IC-02",
+        "IC-03",
+        "IC-04",
+        "IC-05",
+        "IC-06",
+        "H13-01",
+        "H13-02",
+        "H13-03",
+        "H13-04",
+        "H13-05",
+        "H13-06",
+        "H13-07",
+        "H13-08"
+      ],
+      "design_status": "PROPOSED_SPECIFIED_PENDING_FINAL_ACCEPTANCE",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "id": "R16-TRUST",
+      "requirement_ids": [
+        "HB-03",
+        "HB-42"
+      ],
+      "screen_ids": [
+        "M02"
+      ],
+      "contract_paths": [
+        "docs/contracts/commands/planning-actions.md",
+        "docs/contracts/security/access-and-trust.md"
+      ],
+      "command_ids": [
+        "trust.propose",
+        "trust.validate",
+        "trust.approve",
+        "trust.activate",
+        "trust.reject",
+        "trust.cancel"
+      ],
+      "normative_design_requirement": "Independent approval of legitimate authority proof; expected old epoch and bound digest; atomic new epoch/invalidation, rollback never revives sessions.",
+      "design_task_amendment": "Specify these fields, guards, errors and state transitions in the linked canonical contract and affected full screen specification.",
+      "implementation_task_amendment": "Implement only after explicit owner planning-complete declaration and profile approval; consume shared command contract rather than duplicating policy.",
+      "verification_task_amendment": "Execute referenced independent normal/negative/concurrency cases with actual enforcement and evidence after development authorization.",
+      "acceptance_ids": [
+        "TC-01",
+        "TC-02",
+        "TC-03",
+        "TR-01",
+        "TR-02"
+      ],
+      "design_status": "PROPOSED_SPECIFIED_PENDING_FINAL_ACCEPTANCE",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "id": "R16-HOLDS",
+      "requirement_ids": [
+        "HB-22",
+        "HB-24",
+        "HB-29",
+        "HB-30",
+        "HB-31"
+      ],
+      "screen_ids": [
+        "B11",
+        "I04"
+      ],
+      "contract_paths": [
+        "docs/contracts/commands/planning-actions.md",
+        "docs/contracts/operations/holds-onboarding-and-favorites.md"
+      ],
+      "command_ids": [
+        "holds.request",
+        "holds.release",
+        "holds.status"
+      ],
+      "normative_design_requirement": "Keep billing/delivery/collections holds independent; status reflects external certainty; release changes no financial obligations and resumes nothing.",
+      "design_task_amendment": "Specify these fields, guards, errors and state transitions in the linked canonical contract and affected full screen specification.",
+      "implementation_task_amendment": "Implement only after explicit owner planning-complete declaration and profile approval; consume shared command contract rather than duplicating policy.",
+      "verification_task_amendment": "Execute referenced independent normal/negative/concurrency cases with actual enforcement and evidence after development authorization.",
+      "acceptance_ids": [
+        "DH-01",
+        "DH-02",
+        "DH-03",
+        "DH-04",
+        "DH-05"
+      ],
+      "design_status": "PROPOSED_SPECIFIED_PENDING_FINAL_ACCEPTANCE",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "id": "R16-METRICS",
+      "requirement_ids": [
+        "HB-04",
+        "HB-30",
+        "HB-41"
+      ],
+      "screen_ids": [
+        "S02"
+      ],
+      "contract_paths": [
+        "docs/contracts/commands/planning-actions.md",
+        "docs/contracts/operations/holds-onboarding-and-favorites.md"
+      ],
+      "command_ids": [
+        "onboarding.metrics.read"
+      ],
+      "normative_design_requirement": "Use fixed cohort/cutoff and separate connected versus evidenced verified outcomes; preserve unknown/censored intervals and current scoped disclosure.",
+      "design_task_amendment": "Specify these fields, guards, errors and state transitions in the linked canonical contract and affected full screen specification.",
+      "implementation_task_amendment": "Implement only after explicit owner planning-complete declaration and profile approval; consume shared command contract rather than duplicating policy.",
+      "verification_task_amendment": "Execute referenced independent normal/negative/concurrency cases with actual enforcement and evidence after development authorization.",
+      "acceptance_ids": [
+        "OB-01",
+        "OB-02",
+        "OB-03",
+        "OB-04",
+        "OB-05"
+      ],
+      "design_status": "PROPOSED_SPECIFIED_PENDING_FINAL_ACCEPTANCE",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "id": "R16-FAVORITES",
+      "requirement_ids": [
+        "HB-03",
+        "HB-30",
+        "HB-42",
+        "HB-43"
+      ],
+      "screen_ids": [
+        "U01"
+      ],
+      "contract_paths": [
+        "docs/contracts/commands/planning-actions.md",
+        "docs/contracts/operations/holds-onboarding-and-favorites.md"
+      ],
+      "command_ids": [
+        "favorites.add",
+        "favorites.remove",
+        "favorites.list"
+      ],
+      "normative_design_requirement": "User/workspace/customer identity plus current read/write rights; explicit bounded retention/regrant policy; no identity transfer or resurrection.",
+      "design_task_amendment": "Specify these fields, guards, errors and state transitions in the linked canonical contract and affected full screen specification.",
+      "implementation_task_amendment": "Implement only after explicit owner planning-complete declaration and profile approval; consume shared command contract rather than duplicating policy.",
+      "verification_task_amendment": "Execute referenced independent normal/negative/concurrency cases with actual enforcement and evidence after development authorization.",
+      "acceptance_ids": [
+        "FV-01",
+        "FV-02",
+        "FV-03",
+        "FV-04",
+        "FV-05"
+      ],
+      "design_status": "PROPOSED_SPECIFIED_PENDING_FINAL_ACCEPTANCE",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "id": "R16-SCHEDULE",
+      "requirement_ids": [
+        "HB-15",
+        "HB-24",
+        "HB-28",
+        "HB-29",
+        "HB-30",
+        "HB-31"
+      ],
+      "screen_ids": [
+        "U02"
+      ],
+      "contract_paths": [
+        "docs/contracts/commands/planning-actions.md",
+        "docs/contracts/billing/payment-and-recognition.md"
+      ],
+      "command_ids": [
+        "schedule.change_request",
+        "schedule.apply_approved",
+        "payment.extension_request"
+      ],
+      "normative_design_requirement": "Bind cycle/schedule/stage/expected revision; preserve original history and independent stages; invoice due dates require finance extension.",
+      "design_task_amendment": "Specify these fields, guards, errors and state transitions in the linked canonical contract and affected full screen specification.",
+      "implementation_task_amendment": "Implement only after explicit owner planning-complete declaration and profile approval; consume shared command contract rather than duplicating policy.",
+      "verification_task_amendment": "Execute referenced independent normal/negative/concurrency cases with actual enforcement and evidence after development authorization.",
+      "acceptance_ids": [
+        "SC-01",
+        "SC-02",
+        "SC-03",
+        "PT-02",
+        "PT-04"
+      ],
+      "design_status": "PROPOSED_SPECIFIED_PENDING_FINAL_ACCEPTANCE",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "id": "R16-FINANCIAL",
+      "requirement_ids": [
+        "HB-14",
+        "HB-15",
+        "HB-16",
+        "HB-17",
+        "HB-18",
+        "HB-21",
+        "HB-22",
+        "HB-23",
+        "HB-24",
+        "HB-26",
+        "HB-29",
+        "HB-38"
+      ],
+      "screen_ids": [
+        "B09",
+        "B10"
+      ],
+      "contract_paths": [
+        "docs/contracts/billing/claim-and-numeric.md"
+      ],
+      "command_ids": [
+        "claim.reserve",
+        "claim.pin_dispatch",
+        "claim.consume",
+        "claim.release",
+        "claim.reverse",
+        "claim.authorize_replacement"
+      ],
+      "normative_design_requirement": "Stable obligation and canonical typed coverage, atomic overlap exclusion and unknown pinning; reversal not rebill; bounded exact arithmetic/explicit division/whole-pool residual algorithm.",
+      "design_task_amendment": "Specify these fields, guards, errors and state transitions in the linked canonical contract and affected full screen specification.",
+      "implementation_task_amendment": "Implement only after explicit owner planning-complete declaration and profile approval; consume shared command contract rather than duplicating policy.",
+      "verification_task_amendment": "Execute referenced independent normal/negative/concurrency cases with actual enforcement and evidence after development authorization.",
+      "acceptance_ids": [
+        "CL-01",
+        "CL-02",
+        "CL-03",
+        "CL-04",
+        "CL-05",
+        "CL-06",
+        "CL-07",
+        "CL-08",
+        "NM-01",
+        "NM-02",
+        "NM-03",
+        "NM-04",
+        "NM-05",
+        "NM-06"
+      ],
+      "design_status": "PROPOSED_SPECIFIED_PENDING_FINAL_ACCEPTANCE",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    }
+  ],
+  "requirements": [
+    {
+      "requirement_id": "HB-01",
+      "work_id": "W-01",
+      "task_ids": [
+        "HB-01-D",
+        "HB-01-I",
+        "HB-01-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:GH01",
+        "v1.16:GH02",
+        "v1.16:GH07",
+        "AUD-AR-01"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-02",
+      "work_id": "W-02",
+      "task_ids": [
+        "HB-02-D",
+        "HB-02-I",
+        "HB-02-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:GH03",
+        "v1.16:GH04",
+        "v1.16:GH05",
+        "v1.16:GH06"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-03",
+      "work_id": "W-03",
+      "task_ids": [
+        "HB-03-D",
+        "HB-03-I",
+        "HB-03-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:EX02",
+        "v1.16:EXT02",
+        "v1.16:GH04",
+        "v1.16:REV05",
+        "v1.16:SEC01",
+        "AUD-AR-09",
+        "AUD-QA-04",
+        "AUD-QA-08"
+      ],
+      "remediation_ids": [
+        "R16-TRUST",
+        "R16-FAVORITES"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-04",
+      "work_id": "W-04",
+      "task_ids": [
+        "HB-04-D",
+        "HB-04-I",
+        "HB-04-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:FD01",
+        "v1.16:FD02",
+        "v1.16:FD08",
+        "v1.16:ON03",
+        "v1.16:ON04",
+        "v1.16:ON05",
+        "v1.16:ON06",
+        "v1.16:ON09",
+        "v1.16:PO01",
+        "v1.16:PO02",
+        "v1.16:PO03",
+        "v1.16:PO04",
+        "v1.16:PO05",
+        "v1.16:PO06",
+        "v1.16:PO08",
+        "v1.16:PO09",
+        "v1.16:PO10",
+        "AUD-DB-02",
+        "AUD-DB-08",
+        "AUD-QA-07"
+      ],
+      "remediation_ids": [
+        "R16-INPUT",
+        "R16-METRICS"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-05",
+      "work_id": "W-05",
+      "task_ids": [
+        "HB-05-D",
+        "HB-05-I",
+        "HB-05-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:BILL01",
+        "v1.16:COM01",
+        "v1.16:FD03",
+        "v1.16:PO07",
+        "AUD-AR-02",
+        "AUD-DB-02",
+        "AUD-QA-02",
+        "AUD-QA-07",
+        "AUD-RT-01"
+      ],
+      "remediation_ids": [
+        "R16-FETCH",
+        "R16-INPUT"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-06",
+      "work_id": "W-06",
+      "task_ids": [
+        "HB-06-D",
+        "HB-06-I",
+        "HB-06-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:BILL01",
+        "v1.16:COM01",
+        "v1.16:DAT01",
+        "v1.16:FD03",
+        "AUD-AR-02",
+        "AUD-AR-03",
+        "AUD-AR-05",
+        "AUD-DB-06",
+        "AUD-RT-01"
+      ],
+      "remediation_ids": [
+        "R16-FETCH",
+        "R16-INPUT"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-07",
+      "work_id": "W-07",
+      "task_ids": [
+        "HB-07-D",
+        "HB-07-I",
+        "HB-07-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:FD04",
+        "v1.16:FD05",
+        "v1.16:FD06",
+        "v1.16:SIM01",
+        "AUD-QA-07"
+      ],
+      "remediation_ids": [
+        "R16-INPUT"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-08",
+      "work_id": "W-08",
+      "task_ids": [
+        "HB-08-D",
+        "HB-08-I",
+        "HB-08-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:DAT01",
+        "v1.16:EX01",
+        "v1.16:EX09",
+        "v1.16:REV04",
+        "AUD-AR-03",
+        "AUD-QA-02",
+        "AUD-QA-06"
+      ],
+      "remediation_ids": [
+        "R16-INPUT"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-09",
+      "work_id": "W-09",
+      "task_ids": [
+        "HB-09-D",
+        "HB-09-I",
+        "HB-09-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:COM02",
+        "v1.16:FD07",
+        "v1.16:REC01",
+        "v1.16:REC02",
+        "AUD-AR-03"
+      ],
+      "remediation_ids": [
+        "R16-INPUT"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-10",
+      "work_id": "W-10",
+      "task_ids": [
+        "HB-10-D",
+        "HB-10-I",
+        "HB-10-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:COM01",
+        "v1.16:DC01",
+        "v1.16:SIM06",
+        "AUD-AR-02",
+        "AUD-AR-10",
+        "AUD-RT-01"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-11",
+      "work_id": "W-11",
+      "task_ids": [
+        "HB-11-D",
+        "HB-11-I",
+        "HB-11-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:BILL01",
+        "v1.16:COM01",
+        "v1.16:SIM03",
+        "AUD-AR-02",
+        "AUD-AR-04",
+        "AUD-AR-05",
+        "AUD-RT-01"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-12",
+      "work_id": "W-12",
+      "task_ids": [
+        "HB-12-D",
+        "HB-12-I",
+        "HB-12-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:COM06",
+        "v1.16:DC01",
+        "v1.16:SIM06",
+        "AUD-AR-10"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-13",
+      "work_id": "W-13",
+      "task_ids": [
+        "HB-13-D",
+        "HB-13-I",
+        "HB-13-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:DC01",
+        "v1.16:PO06",
+        "v1.16:SIM06"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-14",
+      "work_id": "W-14",
+      "task_ids": [
+        "HB-14-D",
+        "HB-14-I",
+        "HB-14-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:COM04",
+        "v1.16:COM06",
+        "v1.16:GH03",
+        "v1.16:GH06"
+      ],
+      "remediation_ids": [
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-15",
+      "work_id": "W-15",
+      "task_ids": [
+        "HB-15-D",
+        "HB-15-I",
+        "HB-15-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:GH05",
+        "v1.16:GH06",
+        "v1.16:REV01",
+        "AUD-AR-01",
+        "AUD-AR-10",
+        "AUD-QA-02",
+        "PT-01",
+        "PT-02",
+        "PT-03",
+        "PT-04",
+        "PT-05",
+        "PT-06",
+        "PT-07",
+        "PT-08",
+        "ERPC-01",
+        "ERPC-02",
+        "ERPC-03",
+        "ERPC-04",
+        "ERPC-05",
+        "ERPC-06",
+        "ERPC-07",
+        "ERPC-08"
+      ],
+      "remediation_ids": [
+        "R16-SCHEDULE",
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-16",
+      "work_id": "W-16",
+      "task_ids": [
+        "HB-16-D",
+        "HB-16-I",
+        "HB-16-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:COM07",
+        "v1.16:RATE01",
+        "v1.16:SIM03",
+        "AUD-AR-01",
+        "AUD-AR-04",
+        "AUD-AR-07",
+        "AUD-AR-10"
+      ],
+      "remediation_ids": [
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-17",
+      "work_id": "W-17",
+      "task_ids": [
+        "HB-17-D",
+        "HB-17-I",
+        "HB-17-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:COM07",
+        "v1.16:RATE01",
+        "v1.16:SEC01",
+        "AUD-AR-07"
+      ],
+      "remediation_ids": [
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-18",
+      "work_id": "W-18",
+      "task_ids": [
+        "HB-18-D",
+        "HB-18-I",
+        "HB-18-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:COM08",
+        "v1.16:RATE01",
+        "AUD-AR-06"
+      ],
+      "remediation_ids": [
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-19",
+      "work_id": "W-19",
+      "task_ids": [
+        "HB-19-D",
+        "HB-19-I",
+        "HB-19-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:COM01",
+        "v1.16:COM02",
+        "v1.16:COM03",
+        "v1.16:COM04",
+        "v1.16:COM05",
+        "v1.16:COM06",
+        "v1.16:COM07",
+        "v1.16:COM08",
+        "v1.16:COM09",
+        "AUD-DB-09"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-20",
+      "work_id": "W-20",
+      "task_ids": [
+        "HB-20-D",
+        "HB-20-I",
+        "HB-20-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:MP01",
+        "v1.16:MP02",
+        "v1.16:MP03",
+        "v1.16:MP04",
+        "AUD-DB-10",
+        "AUD-DB-14"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-21",
+      "work_id": "W-21",
+      "task_ids": [
+        "HB-21-D",
+        "HB-21-I",
+        "HB-21-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:ERP04",
+        "v1.16:EXT03",
+        "v1.16:GH08",
+        "v1.16:REV01",
+        "v1.16:REV02",
+        "AUD-AR-01",
+        "AUD-DB-03",
+        "AUD-QA-09",
+        "ERPC-01",
+        "ERPC-02",
+        "ERPC-03",
+        "ERPC-04",
+        "ERPC-05",
+        "ERPC-06",
+        "ERPC-07",
+        "ERPC-08"
+      ],
+      "remediation_ids": [
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-22",
+      "work_id": "W-22",
+      "task_ids": [
+        "HB-22-D",
+        "HB-22-I",
+        "HB-22-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:COM05",
+        "v1.16:REV02",
+        "AUD-AR-08",
+        "AUD-AR-10",
+        "AUD-DB-10",
+        "AUD-QA-09",
+        "PT-01",
+        "PT-02",
+        "PT-03",
+        "PT-04",
+        "PT-05",
+        "PT-06",
+        "PT-07",
+        "PT-08"
+      ],
+      "remediation_ids": [
+        "R16-HOLDS",
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-23",
+      "work_id": "W-23",
+      "task_ids": [
+        "HB-23-D",
+        "HB-23-I",
+        "HB-23-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:COM09",
+        "v1.16:EXT01",
+        "v1.16:INV01",
+        "v1.16:REV05",
+        "v1.16:SEC01",
+        "AUD-AR-06",
+        "AUD-AR-07",
+        "AUD-QA-01",
+        "ERPC-01",
+        "ERPC-02",
+        "ERPC-03",
+        "ERPC-04",
+        "ERPC-05",
+        "ERPC-06",
+        "ERPC-07",
+        "ERPC-08"
+      ],
+      "remediation_ids": [
+        "R16-INPUT",
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-24",
+      "work_id": "W-24",
+      "task_ids": [
+        "HB-24-D",
+        "HB-24-I",
+        "HB-24-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:ERP01",
+        "v1.16:ERP02",
+        "v1.16:ERP03",
+        "v1.16:ERP04",
+        "v1.16:EXT03",
+        "v1.16:XL07",
+        "AUD-DB-01",
+        "AUD-DB-03",
+        "AUD-DB-04",
+        "AUD-DB-11",
+        "AUD-DB-12",
+        "PT-01",
+        "PT-02",
+        "PT-03",
+        "PT-04",
+        "PT-05",
+        "PT-06",
+        "PT-07",
+        "PT-08",
+        "ERPC-01",
+        "ERPC-02",
+        "ERPC-03",
+        "ERPC-04",
+        "ERPC-05",
+        "ERPC-06",
+        "ERPC-07",
+        "ERPC-08"
+      ],
+      "remediation_ids": [
+        "R16-HOLDS",
+        "R16-SCHEDULE",
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-25",
+      "work_id": "W-25",
+      "task_ids": [
+        "HB-25-D",
+        "HB-25-I",
+        "HB-25-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:ERP01",
+        "v1.16:ERP02",
+        "v1.16:ERP03",
+        "v1.16:ERP04",
+        "AUD-DB-03",
+        "AUD-DB-04",
+        "AUD-DB-05",
+        "AUD-DB-11",
+        "AUD-DB-12",
+        "ERPC-01",
+        "ERPC-02",
+        "ERPC-03",
+        "ERPC-04",
+        "ERPC-05",
+        "ERPC-06",
+        "ERPC-07",
+        "ERPC-08"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-26",
+      "work_id": "W-26",
+      "task_ids": [
+        "HB-26-D",
+        "HB-26-I",
+        "HB-26-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:XL01",
+        "v1.16:XL02",
+        "v1.16:XL03",
+        "v1.16:XL04",
+        "v1.16:XL05",
+        "v1.16:XL06",
+        "v1.16:XL07",
+        "v1.16:XL08",
+        "AUD-DB-01",
+        "AUD-DB-06",
+        "AUD-DB-07",
+        "ERPC-01",
+        "ERPC-02",
+        "ERPC-03",
+        "ERPC-04",
+        "ERPC-05",
+        "ERPC-06",
+        "ERPC-07",
+        "ERPC-08"
+      ],
+      "remediation_ids": [
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-27",
+      "work_id": "W-27",
+      "task_ids": [
+        "HB-27-D",
+        "HB-27-I",
+        "HB-27-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:EX01",
+        "v1.16:EX02",
+        "v1.16:EX03",
+        "v1.16:EX04",
+        "v1.16:EX05",
+        "v1.16:EX06",
+        "v1.16:EX07",
+        "v1.16:EX08",
+        "v1.16:EX09",
+        "v1.16:EX10",
+        "AUD-DB-05",
+        "AUD-DB-06",
+        "AUD-DB-07",
+        "PT-01",
+        "PT-02",
+        "PT-03",
+        "PT-04",
+        "PT-05",
+        "PT-06",
+        "PT-07",
+        "PT-08"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-28",
+      "work_id": "W-28",
+      "task_ids": [
+        "HB-28-D",
+        "HB-28-I",
+        "HB-28-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:INV01",
+        "v1.16:REV03",
+        "AUD-DB-06",
+        "AUD-QA-01",
+        "PT-01",
+        "PT-02",
+        "PT-03",
+        "PT-04",
+        "PT-05",
+        "PT-06",
+        "PT-07",
+        "PT-08",
+        "ERPC-01",
+        "ERPC-02",
+        "ERPC-03",
+        "ERPC-04",
+        "ERPC-05",
+        "ERPC-06",
+        "ERPC-07",
+        "ERPC-08"
+      ],
+      "remediation_ids": [
+        "R16-SCHEDULE"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-29",
+      "work_id": "W-29",
+      "task_ids": [
+        "HB-29-D",
+        "HB-29-I",
+        "HB-29-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:ERP03",
+        "v1.16:EX06",
+        "v1.16:GH08",
+        "v1.16:INV01",
+        "AUD-AR-07",
+        "AUD-DB-05",
+        "AUD-DB-07",
+        "PT-01",
+        "PT-02",
+        "PT-03",
+        "PT-04",
+        "PT-05",
+        "PT-06",
+        "PT-07",
+        "PT-08",
+        "ERPC-01",
+        "ERPC-02",
+        "ERPC-03",
+        "ERPC-04",
+        "ERPC-05",
+        "ERPC-06",
+        "ERPC-07",
+        "ERPC-08"
+      ],
+      "remediation_ids": [
+        "R16-HOLDS",
+        "R16-SCHEDULE",
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-30",
+      "work_id": "W-30",
+      "task_ids": [
+        "HB-30-D",
+        "HB-30-I",
+        "HB-30-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:ADM01",
+        "v1.16:ADM02",
+        "v1.16:ADM03",
+        "v1.16:ADM04",
+        "v1.16:ADM05",
+        "v1.16:ADM06",
+        "v1.16:ADM07",
+        "v1.16:ADM08",
+        "v1.16:OPSUI01",
+        "v1.16:OPSUI02",
+        "AUD-AR-08",
+        "AUD-DB-10",
+        "AUD-QA-03",
+        "AUD-QA-08",
+        "PT-01",
+        "PT-02",
+        "PT-03",
+        "PT-04",
+        "PT-05",
+        "PT-06",
+        "PT-07",
+        "PT-08",
+        "ERPC-01",
+        "ERPC-02",
+        "ERPC-03",
+        "ERPC-04",
+        "ERPC-05",
+        "ERPC-06",
+        "ERPC-07",
+        "ERPC-08"
+      ],
+      "remediation_ids": [
+        "R16-HOLDS",
+        "R16-METRICS",
+        "R16-FAVORITES",
+        "R16-SCHEDULE"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-31",
+      "work_id": "W-31",
+      "task_ids": [
+        "HB-31-D",
+        "HB-31-I",
+        "HB-31-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:OPSUI03",
+        "v1.16:OPSUI04",
+        "v1.16:OPSUI05",
+        "v1.16:OPSUI06",
+        "AUD-AR-08",
+        "AUD-DB-10",
+        "AUD-QA-03",
+        "AUD-QA-08",
+        "PT-01",
+        "PT-02",
+        "PT-03",
+        "PT-04",
+        "PT-05",
+        "PT-06",
+        "PT-07",
+        "PT-08",
+        "ERPC-01",
+        "ERPC-02",
+        "ERPC-03",
+        "ERPC-04",
+        "ERPC-05",
+        "ERPC-06",
+        "ERPC-07",
+        "ERPC-08"
+      ],
+      "remediation_ids": [
+        "R16-HOLDS",
+        "R16-SCHEDULE"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-32",
+      "work_id": "W-32",
+      "task_ids": [
+        "HB-32-D",
+        "HB-32-I",
+        "HB-32-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:EXT01",
+        "v1.16:EXT02",
+        "v1.16:EXT03",
+        "v1.16:REV05",
+        "v1.16:SEC01",
+        "AUD-AR-05",
+        "AUD-QA-01",
+        "AUD-QA-10"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-33",
+      "work_id": "W-33",
+      "task_ids": [
+        "HB-33-D",
+        "HB-33-I",
+        "HB-33-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:EXT01",
+        "v1.16:EXT02",
+        "v1.16:EXT07",
+        "v1.16:REV05",
+        "AUD-AR-02",
+        "AUD-QA-04",
+        "AUD-QA-05"
+      ],
+      "remediation_ids": [
+        "R16-FETCH"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-34",
+      "work_id": "W-34",
+      "task_ids": [
+        "HB-34-D",
+        "HB-34-I",
+        "HB-34-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:EXT03",
+        "v1.16:EXT04",
+        "v1.16:EXT05",
+        "v1.16:OPS01",
+        "v1.16:SIM09",
+        "AUD-DB-12",
+        "AUD-QA-05",
+        "AUD-RT-01"
+      ],
+      "remediation_ids": [
+        "R16-FETCH"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-35",
+      "work_id": "W-35",
+      "task_ids": [
+        "HB-35-D",
+        "HB-35-I",
+        "HB-35-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:EXT05",
+        "v1.16:EXT06",
+        "v1.16:EXT07",
+        "v1.16:EXT08",
+        "v1.16:REV05",
+        "AUD-QA-06"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-36",
+      "work_id": "W-36",
+      "task_ids": [
+        "HB-36-D",
+        "HB-36-I",
+        "HB-36-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:EXT06",
+        "v1.16:ON01",
+        "v1.16:ON02",
+        "v1.16:ON07",
+        "v1.16:ON08",
+        "v1.16:ON10",
+        "AUD-AR-09",
+        "AUD-DB-08",
+        "AUD-DB-13"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-37",
+      "work_id": "W-37",
+      "task_ids": [
+        "HB-37-D",
+        "HB-37-I",
+        "HB-37-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:DAT01",
+        "v1.16:EX09",
+        "v1.16:OPS01",
+        "v1.16:REV04",
+        "AUD-QA-02",
+        "AUD-QA-06",
+        "AUD-QA-09"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-38",
+      "work_id": "W-38",
+      "task_ids": [
+        "HB-38-D",
+        "HB-38-I",
+        "HB-38-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:SIM01",
+        "v1.16:SIM02",
+        "v1.16:SIM03",
+        "v1.16:SIM04",
+        "v1.16:SIM05",
+        "v1.16:SIM06",
+        "v1.16:SIM07",
+        "v1.16:SIM08",
+        "v1.16:SIM09",
+        "v1.16:SIM10",
+        "AUD-DB-09",
+        "AUD-QA-10"
+      ],
+      "remediation_ids": [
+        "R16-INPUT",
+        "R16-FINANCIAL"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-39",
+      "work_id": "W-39",
+      "task_ids": [
+        "HB-39-D",
+        "HB-39-I",
+        "HB-39-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:EX10",
+        "v1.16:EXT05",
+        "v1.16:OPS01",
+        "v1.16:SIM09",
+        "SCALE-01",
+        "SCALE-02",
+        "SCALE-03",
+        "SCALE-04",
+        "SCALE-05",
+        "SCALE-06",
+        "SCALE-07",
+        "SCALE-08",
+        "SCALE-09",
+        "SCALE-10",
+        "SCALE-11",
+        "SCALE-12"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-40",
+      "work_id": "W-40",
+      "task_ids": [
+        "HB-40-D",
+        "HB-40-I",
+        "HB-40-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:LIC01",
+        "AUD-DB-14"
+      ],
+      "remediation_ids": [],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-41",
+      "work_id": "W-41",
+      "task_ids": [
+        "HB-41-D",
+        "HB-41-I",
+        "HB-41-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:REV06",
+        "UI-01",
+        "UI-02",
+        "UI-03",
+        "UI-04",
+        "UI-05",
+        "UI-06",
+        "UI-07",
+        "UI-08",
+        "UI-09",
+        "UI-10",
+        "UI-11",
+        "UI-12",
+        "AUD-DB-01",
+        "AUD-DB-09"
+      ],
+      "remediation_ids": [
+        "R16-INPUT",
+        "R16-METRICS"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-42",
+      "work_id": "W-42",
+      "task_ids": [
+        "HB-42-D",
+        "HB-42-I",
+        "HB-42-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:EXT02",
+        "v1.16:REV05",
+        "v1.16:SEC01",
+        "IAM-01",
+        "IAM-02",
+        "IAM-03",
+        "IAM-04",
+        "IAM-05",
+        "IAM-06",
+        "IAM-07",
+        "IAM-08",
+        "AUD-AR-09",
+        "AUD-DB-08",
+        "AUD-QA-04"
+      ],
+      "remediation_ids": [
+        "R16-TRUST",
+        "R16-FAVORITES"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "requirement_id": "HB-43",
+      "work_id": "W-43",
+      "task_ids": [
+        "HB-43-D",
+        "HB-43-I",
+        "HB-43-V"
+      ],
+      "source_acceptance_ids": [
+        "v1.16:DAT01",
+        "v1.16:REV04",
+        "RET-01",
+        "RET-02",
+        "RET-03",
+        "RET-04",
+        "RET-05",
+        "RET-06",
+        "RET-07",
+        "RET-08",
+        "AUD-AR-05",
+        "AUD-QA-10"
+      ],
+      "remediation_ids": [
+        "R16-FAVORITES"
+      ],
+      "scope_status": "RETAINED",
+      "full_baseline_integration_status": "PENDING",
+      "implementation_status": "NOT_STARTED",
+      "runtime_status": "NOT_RUN"
+    }
+  ],
+  "supplemental_acceptance_catalog": [
+    {
+      "id": "QG-01",
+      "contract_path": "docs/contracts/security/access-and-trust.md",
+      "expected_outcome": "Missing/tampered scope, raw query and protected-store direct product access denied; authorized typed query succeeds only within current grants",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "QG-02",
+      "contract_path": "docs/contracts/security/access-and-trust.md",
+      "expected_outcome": "Restricted fields/identities cannot leak through filter/group/order/join/count/errors or model/export evidence links",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "QG-03",
+      "contract_path": "docs/contracts/security/access-and-trust.md",
+      "expected_outcome": "Cross-customer pooled reuse has no previous scope; failed cleanup discards connection rather than exposing data",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "QG-04",
+      "contract_path": "docs/contracts/security/access-and-trust.md",
+      "expected_outcome": "Revocation during export/recall/model work prevents subsequent unauthorized output; original completeness invalidated",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "TR-01",
+      "contract_path": "docs/contracts/security/access-and-trust.md",
+      "expected_outcome": "Bounded admin trust substitution, same-email linkage, self-approval and changed-digest activation denied",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "TR-02",
+      "contract_path": "docs/contracts/security/access-and-trust.md",
+      "expected_outcome": "Legitimate approved migration creates a new epoch; old sessions/refresh/step-up/queued privilege fail; outage/rollback cannot revive them",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "BE-01",
+      "contract_path": "docs/contracts/security/access-and-trust.md",
+      "expected_outcome": "Conditional engine rejects browser/unregistered/forged/revoked callers; output alone creates no approval, Claim or issuance",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "FP-01",
+      "contract_path": "docs/contracts/security/access-and-trust.md",
+      "expected_outcome": "Malicious follow-on URLs, DNS changes and redirects cause no forbidden request or credential forwarding; approved private endpoint stays scoped",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "FP-02",
+      "contract_path": "docs/contracts/security/access-and-trust.md",
+      "expected_outcome": "Oversized/decompressed/recursive/partial retrieval stops with honest incomplete status",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "TW-01",
+      "contract_path": "docs/contracts/security/access-and-trust.md",
+      "expected_outcome": "Unapproved training or unknown lineage cannot activate; withdrawal stops affected derivatives and restore cannot revive them",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-S01",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Complete `[A=10]` → complete `[A=10,B=5]`: eligible total 15, not 25. Then complete same-scope `[B=5]`: 5; old approved history preserved",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-S02",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Partial `[B=5]` missing required coverage publishes no complete replacement or inferred omission deletion. Older complete revision cannot roll a newer eligible total back",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-S03",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Complete total 15 plus one unique linked append correction −2: 13; identical retry remains 13; identical API/upload source cannot yield 30",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-S04",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Conflicting overlap or unspecified hybrid transition blocks publication until approved precedence; no arrival-order winner",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-M01",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Base 100, discount 10%, fee 20, minimum 120: `max(100 × 0.90 + 20,120)=120`. Moving minimum first gives 128 and requires a sequence revision; same-stage priority conflict blocks activation",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-M02",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Quantity 120 units, included quantity 20, synthetic rate 2: `(120−20) × 2=200`; allowance not reapplied by chunks, views or price stage",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-M03",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Future exception and retroactive correction preserve effective policy/history; changed affected input invalidates draft amount approval; no second FX on already converted component",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-W01",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Permitted current evidence-bound acknowledgment may satisfy only its approved warning; unwaivable/undefined blocker, revoked actor or global-approval bypass cannot",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-W02",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Changed warning/input/result/policy requires fresh acknowledgment; prior actor/time/reason remains auditable",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-A01",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Under an illustrative four-decimal nearest rule, `2/3=0.6667`; an engine returning truncated `0.6666` fails that hypothetical profile. No production rule selected",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-A02",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Exact `100.25+0.75−1.00=100.00`; near-bound multiplication/sums/cancellation/conversion and Decimal-to-Float paths must match independently approved expectations or reject before financial use",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-A03",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Duplicate joined components, mixed currencies/bases/revisions and unsupported types cannot silently produce a valid monetary aggregate",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-E01",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Historical Odoo/SAP conditions remain dated/unverified until profile evidence; mock success cannot switch support state to certified",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-E02",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "Odoo multi-call intervening change, partial call failure and timeout preserve approval/version guard or explicitly unsupported automatic path; unknown result reconciled without duplicate effect",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-E03",
+      "contract_path": "docs/contracts/billing/inputs-pricing-and-erp.md",
+      "expected_outcome": "SAP request, billing and FI outcomes displayed independently; price change requires reconciliation/reapproval, not assumed final invoice",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "PT-01",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Contract-specific Net30/45 date examples, day-0 proposed calculation, midnight/month-end/leap/DST boundaries",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "PT-02",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Issued term snapshot survives contract revision; approved extensions preserve original date and history",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "PT-03",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Partial/unallocated payments, credits, cancellations, overpayments and reversals conserve per-currency balances without double subtraction",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "PT-04",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Stale/unknown ERP receipts and date disagreement are not confirmed overdue; late receipts/reversals reevaluate correctly",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "PT-05",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Portal/search/totals/export preserve customer scope and contract/date-change authority",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "PT-06",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Aging equals the same-snapshot per-currency receivable total at 0/1/30/31/60/61/90/91-day boundaries",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "PT-07",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Unissued/internal/disputed/held/corrected documents remain distinct; no duplicate or stale incorrect notifications",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "PT-08",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Bulk date rollover, event replay, outage catch-up and projection lag are bounded and honest",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "ERPC-01",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Three monthly recognition submissions for quarterly billing create no customer invoice/delivery/due-date start",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "ERPC-02",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Monthly 100/120/80 versus 300; 290 requires -10 adjustment/posting/reconciliation, counted once",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "ERPC-03",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Missing/unknown/partial months are not zero or complete; idempotent resume and result lookup avoid duplicates",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "ERPC-04",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Monthly then quarterly handling avoids double recognition through verified offset/replacement/reversal/reference and external net reconciliation",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "ERPC-05",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Closed periods, late sources, corrections, cancellations and manual ERP changes preserve owned-history boundaries",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "ERPC-06",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Entity/customer/basis/currency/tax/FX distinctions reject invalid aggregation",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "ERPC-07",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Partial months/non-calendar quarters/cadence changes preserve snapshots and scoped approval",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "ERPC-08",
+      "contract_path": "docs/contracts/billing/payment-and-recognition.md",
+      "expected_outcome": "Bulk monthly/quarterly close, projection lag, recovery and official API/file combinations require actual validation",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "DH-01",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Partial billing hold blocks only its authorized unissued target; unrelated work and issued obligations remain intact",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "DH-02",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Delivery hold prevents subsequent dispatch; release sends nothing and cannot undo already delivered copies",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "DH-03",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "External accepted request/timeout/unsupported adapter displays pending/unknown/unsupported, never inferred confirmed effectiveness",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "DH-04",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Identical retry returns existing operation; stale revision/changed payload cannot apply another effect",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "DH-05",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Concurrent request/release or delayed external confirmation cannot clear another hold; unauthorized inquiry changes no hold",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "OB-01",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Three eligible cohort units, two connected, one verified: separate rates 2/3 and 1/3; conditional 1/2 explicitly labeled; connected-only affects no billing numerator",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "OB-02",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Retry preserves one unit; abandoned/incomplete attempts remain visible at cutoff; zero denominator is not-applicable",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "OB-03",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Parallel intervals `[0,10)` and `[5,15)` have total union 15, not 20; overlap labeled",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "OB-04",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Missing timestamps/no-use/partial coverage are unknown or explicit policy outcomes, not fabricated verified success",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "OB-05",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Each profile requires its own chosen milestone evidence; unauthorized cohort identities/counts remain hidden",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "FV-01",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Two users have independent favorites; duplicate add gives one preference; remove changes no customer/grant",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "FV-02",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Rename, navigation and new login retain permitted canonical favorite identity",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "FV-03",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Guessed cross-workspace customer reveals no existence and creates no unauthorized favorite",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "FV-04",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Revocation removes cache/list/count disclosure; regrant obeys approved restoration policy",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "FV-05",
+      "contract_path": "docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "expected_outcome": "Termination/recreated identity does not inherit prior preferences",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "IC-01",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Candidate with complete independent comparison publishes once with its decision; B09 still requires separate amount approval",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "IC-02",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Missing coverage/unresolved finding blocks despite confirmation intent; a server rejects caller-provided passed-validation assertions",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "IC-03",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Mapping/profile/evidence change or racing scope revision rejects old confirmation; no stale publication",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "IC-04",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Revocation/cross-workspace ID or inaccessible idempotent prior result reveals no protected data and grants no publication",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "IC-05",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Same command key with changed payload conflicts; concurrent equivalent confirmations never publish twice",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "IC-06",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Reject racing publication either rejects the still-unpublished candidate or conflicts after publication; eligible history never becomes rejected",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "TC-01",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Self approval or generic IdP-admin activation fails; independent valid approval plus current authority is required",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "TC-02",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Activation creates a newer epoch and durable invalidation; queued/session/refresh work on old epoch blocks even if propagation lags",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "TC-03",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Changed proof/old epoch, concurrent replacement or rollback to old configuration requires fresh approval and newer epoch",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "SC-01",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Approved delivery postponement changes only the selected cycle/schedule revision; approval/payment original/effective dates remain intact",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "SC-02",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Stale revision, ambiguous DST/calendar or stage/ID mismatch blocks; request acceptance is not schedule application",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "SC-03",
+      "contract_path": "docs/contracts/commands/planning-actions.md",
+      "expected_outcome": "Generic schedule permission cannot extend issued invoice due date; authorized finance extension produces separately linked update",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "CL-01",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Eligible `[0,100)`, consume `[0,60)`; retry under a new run/source revision | Consumed 60, available 40; overlapping retry rejected; `[60,100)` can follow normal approval",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "CL-02",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Two concurrent reservations `[0,60)` and `[40,100)` | At most one commits; no overlap, no partial multi-obligation residue",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "CL-03",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Dispatch `[0,60)`, timeout then worker lease expires | 60 remains pinned/unknown; no automatic release or second dispatch",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "CL-04",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Monetary credit for first application | Consumed quantity unchanged; no new eligible coverage",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "CL-05",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Reverse `[40,60)` from first application twice | Exactly one 20-unit reversal; replacement-pending until explicit approved replacement; no extra 20 from replay",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "CL-06",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Correct source total/decomposition, or cancel service | No coordinate reset; ambiguous overlap blocks; cancellation does not authorize replacement",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "CL-07",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "API/file or partition race; same key with changed scope | Global economic protection still holds; changed payload conflicts",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "CL-08",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Original `[0,60)`, reverse `[20,40)` then distinct `[30,50)` | Second reversal conflicts because `[30,40)` overlaps; scalar quantity below 60 is insufficient",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "NM-01",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Exact `0.1+0.2`; `100/(1-0.20)` | `0.3`; `125`",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "NM-02",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "`1/3` without round; synthetic 4-place half_up `1/3`, `2/3` | Reject first; `0.3333`, `0.6667` for explicitly rounded cases",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "NM-03",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Overflow, scale excess, float, mixed currency, missing profile | Reject before approval; no truncation/default/partial success",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "NM-04",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Synthetic total `0.05`, quantum `0.01`, equal A/B/C | `0.02/0.02/0.01`; negative total gives sign inverse; permutation/chunking unchanged",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "NM-05",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Filtered pool, duplicated target, zero total weight/negative weights, missing formula budget | Reject/ineligible; never recompute a smaller denominator silently",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "NM-06",
+      "contract_path": "docs/contracts/billing/claim-and-numeric.md",
+      "expected_outcome": "Aggregation fans out a source component or changes eligible revision | Reject or use verified unique authoritative components; no double sum",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-01",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "Many-to-one and one-to-many contribution links persist; workload allocation does not add duplicate infrastructure cost",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-02",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "Summary/full detail/export agree at identical revision/filter/scope/currency/basis; page subtotal distinct; fee/tax/credit/rounding bridges explicit",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-03",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "Coarse resolution, unknown/missing, measured zero, estimate and fixed fee remain distinct; no invented detail or universal quantity × rate",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-04",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "Shared payer/customer paths protect rows/fields and derived facts across counts/search/links/cache/export; inaccessible raw evidence does not prevent safe detail",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-05",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "Late correction and org/rate/source-mode changes preserve historical detail/corrections; revised access never revives prior grants",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-06",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "More than 100,000 rows page/export completely without wholesale browser loading; retries/part failure/cursor expiry/revocation cannot falsely complete",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-07",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "Transfer interruption/corruption/key/dependency failure keeps valid copy or explicit unavailable state; recall changes no financial outcome",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-08",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "Shared-reference/hold races preserve eligible evidence; temporary expiry leaves authority intact; managed backup deletion state is honest",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-09",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "Rebuild/restore preserves eligible historical detail without new Claims/ERP effects; latest deny/deletion controls prevent resurrection",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-10",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "Concurrent ingestion/closing/query/export/archive/deletion/recall verifies totals/counts, budgets and pressure states; no silently lost usage",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-11",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "Independent tier/unit/discount/minimum/FX/rounding examples and effective-date conflicts have approved expected amounts; published revisions cannot be silently edited",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "UD-12",
+      "contract_path": "docs/architecture/usage-detail-lifecycle.md",
+      "expected_outcome": "Reconciliation/errors/warnings and snapshot approval precede authorized issuance; changed draft evidence invalidates approval; issued corrections and uncertain ERP outcomes stay distinct",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-01",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Repeatable scoped installation and offline package preflight; missing dependencies/permissions fail visibly without hidden downloads",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-02",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Current tenant/query/worker authorization and credential/destination isolation; infrastructure role cannot act as financial approver",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-03",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Sustained/burst ingestion with closing, queries, exports, corrections and retention; agreed latency/backlog budgets and independent counts/currency totals",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-04",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Redelivery, duplicate Jobs, restart and concurrency preserve one economic effect, unique Claims and durable manifests/checkpoints",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-05",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Drain/node partition/failure before and after receipt/publication/dispatch; fence old workers, retain uncertain state and reconcile without blind resend",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-06",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Storage full/unavailable/corrupt/reattach; backpressure or explicit uncertainty, no false durable acknowledgment or lost/truncated evidence",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-07",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Authority/network/control outage; fail closed on sensitive outputs, stale cache/restart cannot revive revoked authority",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-08",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Mixed/interrupted release and migration; compatible continuation or safe halt, no destructive-schema recovery claim from image rollback",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-09",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Coherent DB/evidence restore meets agreed RPO/RTO; independent latest controls/keys, old-writer fencing and no deleted/withdrawn-data resurrection",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-10",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Crash/timeout around ERP or document delivery preserves immutable keys and unknown outcomes without duplicate economic effects; retries/retransmission require verified endpoint idempotency or explicit reconciled/manual handling, with channel limits recorded",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-11",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Named operators perform install/upgrade/incident/recovery runbooks; measure intervention hours, alerts, support boundary and unresolved escalations",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "KO-12",
+      "contract_path": "docs/architecture/self-hosted-installation-assessment.md",
+      "expected_outcome": "Decision packet records exact supported versions, resources, operating cost, failures and unsupported combinations; scores cannot conceal money/security failures",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-D01",
+      "contract_path": "docs/reviews/HB-11-refinements/resolution.md",
+      "expected_outcome": "Summary/full authorized detail/full export use identical revision/scope/filter/currency/basis; component bridges distinguish filtered/page totals and fixed fees/credits/tax/rounding",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-D02",
+      "contract_path": "docs/reviews/HB-11-refinements/resolution.md",
+      "expected_outcome": "Source granularity/limited fields/no-use/estimate/unknown/non-usage basis are honest; customer-safe explanation exposes no hidden supplier operand or shared payer locator",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-R01",
+      "contract_path": "docs/reviews/HB-11-refinements/resolution.md",
+      "expected_outcome": "Archive interrupted/corrupt/key/dependency failure retains valid history or explicit unavailable state; recall changes no financial outcome",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-R02",
+      "contract_path": "docs/reviews/HB-11-refinements/resolution.md",
+      "expected_outcome": "New hold/shared reference versus deletion race preserves eligible evidence; active deletion and pending backup expiry are separately recorded",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H11-R03",
+      "contract_path": "docs/reviews/HB-11-refinements/resolution.md",
+      "expected_outcome": "Restore/rebuild honors latest deny/deletion/withdrawal controls with no new Claim/document/ERP action; missing controls leave data quarantined",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H13-01",
+      "contract_path": "docs/reviews/HB-13-full-scope/verification.md",
+      "expected_outcome": "All eight collection families remain represented; unavailable capability stays unverified with a reason, without disappearing from design scope",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H13-02",
+      "contract_path": "docs/reviews/HB-13-full-scope/verification.md",
+      "expected_outcome": "Reused transformed totals, missing pages/files, unresolved conflicts or sampling-only evidence cannot satisfy the full-scope comparison gate; original evidence is retained",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H13-03",
+      "contract_path": "docs/reviews/HB-13-full-scope/verification.md",
+      "expected_outcome": "Required complete metering plus approved independent-price policy can proceed with supplier cost explicitly unknown; incompatible currency/basis comparisons and unexplained differences cannot pass; no fake invoice",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H13-04",
+      "contract_path": "docs/reviews/HB-13-full-scope/verification.md",
+      "expected_outcome": "Wrong-workspace, wrong-source-scope or revoked confirmation authority blocks publication; customer explanation never reveals protected shared-payer evidence",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H13-05",
+      "contract_path": "docs/reviews/HB-13-full-scope/verification.md",
+      "expected_outcome": "Affected input, mapping, attribution, profile or comparison revision change after confirmation requires renewed checks and confirmation; concurrent stale publication loses the expected-revision check",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H13-06",
+      "contract_path": "docs/reviews/HB-13-full-scope/verification.md",
+      "expected_outcome": "Identical API/upload evidence is one economic dataset; retried publication creates no extra Claim; late correction creates a new linked revision without overwriting history",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H13-07",
+      "contract_path": "docs/reviews/HB-13-full-scope/verification.md",
+      "expected_outcome": "Confirmed input alone cannot authorize pricing policy, final amount, issuance or ERP effects; an operator cannot waive an unresolved blocker",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "H13-08",
+      "contract_path": "docs/reviews/HB-13-full-scope/verification.md",
+      "expected_outcome": "No automatic confirmation or optional-model exception is enabled from the interrupted phrase; optional recommendations cannot replace mandatory checks",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "SUPPLEMENTAL_CASE_REFERENCE_NOT_FULL_PRODUCT_CLOSURE"
+    },
+    {
+      "id": "FP-03",
+      "contract_path": "docs/contracts/security/access-and-trust.md",
+      "expected_outcome": "Approved private destination allowed within scope; metadata/loopback initial/redirect/reference denied and unclassified link-local denied.",
+      "runtime_status": "NOT_RUN",
+      "trace_scope": "HB16_NEW_CASE"
+    }
+  ],
+  "remaining": "Full English original requirements/work/UI publication, unaffected commands, source capabilities and customer/product approvals remain explicit pending work."
+}

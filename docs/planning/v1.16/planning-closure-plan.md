@@ -51,6 +51,8 @@ These are acceptance-design obligations, not product tests executed during plann
 
 ## Planning acceptance
 
+[HB-14 full reconciliation](planning-reconciliation.md) supplies a 43-group index with source hashes and existing work/detail/screen/acceptance IDs, addition overlaps and a [decision/action register](planning-decisions.md). It publishes the English payment/recognition addition and separates established requirements from actual choices/evidence. This advances PP-07/08; full detailed English and canonical screen/API/work integration, final finding closure and PP-09 remain pending.
+
 Apply the [owner full-scope clarification](../recent-owner-requirements.md#full-scope-clarification-after-hb-11). PP-07 collects missing evidence and decisions across the complete existing planning scope; selecting a first provider is not a prerequisite to documenting it. Actual activation remains capability-specific and verified. PP-08 must integrate the proposed evidence-bound input confirmation gate without equating it to amount approval or issuance. HB-13 is a bounded clarification, not completion of PP-07/08/09 or a reset of the original requirement count.
 
 [HB-11 supplementation](../../reviews/HB-11-refinements/resolution.md) supplies proposed security, financial and operational contracts for PC-01–07 and ED-01–06. Use its decision/acceptance references for PP-02–08 reconciliation; publication is not completion of those work packages or final finding closure. Start profile/owner evidence gathering now and complete PP-07 using reviewed content inputs; PP-09 and owner acceptance remain required.

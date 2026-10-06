@@ -56,6 +56,8 @@ The Kubernetes/VMware discussion remains a scope decision: infrastructure cost a
 
 ## Integration and acceptance
 
+[HB-14 reconciliation](v1.16/planning-reconciliation.md) maps all fourteen bundles plus payment terms, monthly recognition, scale and HB-13 directions to the existing baseline without changing the 43-group count. These overlap mappings are proposed integration references, not completed canonical trace. Use the [decision/action register](v1.16/planning-decisions.md) to separate product choices, customer values and missing external evidence before asking the owner.
+
 [HB-11 supplementation](../reviews/HB-11-refinements/resolution.md) now supplies concrete contracts for the thirteen findings and D-01–07 decision packets, including RA-12/13/14. Contract supply/review is progress; final profile choices, canonical trace and owner acceptance are separate remaining work.
 
 PP-07 obtains named decision owners and first support profiles, including the three latest bundles. PP-08 maps this supplement to canonical requirements/work/contracts/screens and acceptance records, preserves source provenance and publishes a consistent English baseline. PP-09 independently reviews actual closure or explicit scoped deferral. Do not mechanically sum 43 + 14, count finding IDs as features, or claim that a register replaces detailed contracts.

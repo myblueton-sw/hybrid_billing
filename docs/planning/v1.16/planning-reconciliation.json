@@ -1412,5 +1412,8 @@
     {"id": "U02", "source_path": "docs/ui/screens/U02/design.json", "sha256": "93131812be27490944f159a21e047390f85ef9397a40377a6ebe417bddbd8af7"},
     {"id": "U03", "source_path": "docs/ui/screens/U03/design.json", "sha256": "b8ae65be421c5d5a4db8ab590a7b929520c1cd223eeac5a31ad966ad994e6355"},
     {"id": "U04", "source_path": "docs/ui/screens/U04/design.json", "sha256": "9f5bfa8b28f8756c43b22854d76e652860f2592533a3811754126f1e61b78b49"}
-  ]
+  ],
+  "remediation_trace": "docs/planning/v1.16/remediation-trace.json",
+  "source_hash_semantics": "Historical HB14 input/source-screen hashes retained; changed current paths have predecessor/current hashes in docs/reviews/HB-16-remediation/source-revisions.json. Do not compare historical screen hashes as current-file assertions.",
+  "current_source_revisions": "docs/reviews/HB-16-remediation/source-revisions.json"
 }

@@ -1,0 +1,291 @@
+{
+  "id": "S02",
+  "title": "Onboarding and owner handoff",
+  "layout": "wizard",
+  "purpose": "Separate setup permissions from operational read access and verify evidence from first data through reconciliation and activation.",
+  "roles": [
+    "OP",
+    "AM",
+    "BL"
+  ],
+  "requirement_ids": [
+    "HB-01",
+    "HB-04",
+    "HB-05",
+    "HB-07",
+    "HB-09",
+    "HB-25",
+    "HB-36",
+    "HB-41"
+  ],
+  "tabs": [
+    "Path selection",
+    "Setup and permissions",
+    "First data",
+    "First reconciliation",
+    "Activation review"
+  ],
+  "filters": [
+    "Stage status",
+    "Owner",
+    "Waiting reason",
+    "Provider"
+  ],
+  "columns": [
+    "Stage",
+    "Actor",
+    "Required permissions",
+    "Estimated cost",
+    "Completion evidence",
+    "Last check",
+    "Next action"
+  ],
+  "sections": [
+    {
+      "title": "Progress stages",
+      "content": [
+        "Check successful authentication separately from first data, completeness and reconciliation."
+      ]
+    },
+    {
+      "title": "Permission handoff",
+      "content": [
+        "Separate setup owner, export writer and reader into three rows."
+      ]
+    },
+    {
+      "title": "Readiness",
+      "content": [
+        "Distinguish no usage, first-generation wait, period restrictions and insufficient permissions."
+      ]
+    },
+    {
+      "title": "Design status",
+      "content": [
+        "Static proposal; product unimplemented; API disconnected; tests not run.",
+        "Use synthetic amounts and data only.",
+        "AUD links: AUD-DB-02, AUD-DB-05, AUD-DB-08, AUD-QA-07"
+      ]
+    },
+    {
+      "title": "Onboarding measurements",
+      "content": [
+        "The proposed `onboarding.metrics.read` uses scoped onboarding-read authority, fixed cohort revision and observation cutoff. Display connection success and first verified billing success as separate metrics, with their own event evidence and numerators. Authentication or data receipt is not first verified billing. Each measurement cohort binds a canonical cohort ID, immutable target manifest/denominator, inclusion rule, cutoff/as-of time, timezone, metric definition version and policy version. Deleting failures, holds, unsupported or waiting targets or changing a screen filter cannot improve the original denominator; changed eligibility creates a new cohort/version with an explained comparison.",
+        "Show numerator, fixed denominator and count of unknown/censored targets. A zero denominator is not a zero-percent success rate. Before verified evidence exists, first verified billing remains pending/unknown. Distinguish raw elapsed duration from permitted active duration. If active duration is defined to exclude pauses, subtract the union of qualifying pause intervals clipped to the observation interval exactly once; overlaps cannot be double-subtracted. Missing starts, ends, observation cutoff or required state evidence produce unknown/censored values instead of zero or fabricated durations. Show incomplete cases separately from completed-duration summaries.",
+        "Metric cohort selection, inclusion/exclusion policy, thresholds, pause eligibility, target durations and customer defaults remain unresolved policy choices. The UI exposes definition/version and evidence, not a selected threshold or success claim. Acceptance (NOT_RUN): overlapping pauses counted once; cutoff changes create a new immutable observation; retry cannot add duplicate successes; failures remain in denominator; unsupported and unverified states do not become zero; connection-only success cannot count as first verified billing."
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "Edit connection",
+      "screen_id": "S01"
+    },
+    {
+      "label": "First reconciliation",
+      "screen_id": "S06"
+    },
+    {
+      "label": "Release evidence",
+      "screen_id": "P05"
+    }
+  ],
+  "open_decisions": [
+    "Revalidate permissions and costs for actual provider combinations",
+    "Per-stage diagnostic expiry and activation approver"
+  ],
+  "audience": "admin",
+  "fields": [
+    {
+      "label": "Operating type and connection",
+      "type": "reference",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Initial edit",
+      "validation": "Connection scope matches business purpose",
+      "sensitivity": "Contract"
+    },
+    {
+      "label": "Setup owner",
+      "type": "principal-reference",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Handoff edit",
+      "validation": "Currently authorized for this task",
+      "sensitivity": "Principal"
+    },
+    {
+      "label": "Temporary setup permissions",
+      "type": "permission-set",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Plan edit",
+      "validation": "Least privilege and revocation time",
+      "sensitivity": "Security"
+    },
+    {
+      "label": "Service writer and collector reader",
+      "type": "reference",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Read after validation",
+      "validation": "Revoking setup access must not remove the writer",
+      "sensitivity": "Security"
+    },
+    {
+      "label": "Estimated cost and data interval",
+      "type": "money+interval",
+      "required": false,
+      "required_when": "When applicable",
+      "editability": "Read only",
+      "validation": "Separate query and storage costs; show unknown values",
+      "sensitivity": "Cost"
+    },
+    {
+      "label": "Handoff expiry and reason",
+      "type": "datetime+text",
+      "required": false,
+      "required_when": "When applicable",
+      "editability": "Edit",
+      "validation": "Task limited; exclude secrets",
+      "sensitivity": "Internal"
+    },
+    {
+      "label": "Stage evidence and configuration hash",
+      "type": "reference",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "Matches current configuration revision",
+      "sensitivity": "Restricted evidence"
+    },
+    {
+      "label": "Metric cohort and version",
+      "type": "reference+revision",
+      "required": false,
+      "required_when": "When measurement is displayed",
+      "editability": "Read only except explicit command draft",
+      "validation": "Immutable cohort; unknown/censored distinct from zero; pause union counted once; no chosen thresholds",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Observation cutoff and fixed denominator",
+      "type": "datetime+count",
+      "required": false,
+      "required_when": "When measurement is displayed",
+      "editability": "Read only except explicit command draft",
+      "validation": "Immutable cohort; unknown/censored distinct from zero; pause union counted once; no chosen thresholds",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Connection and first verified billing rates",
+      "type": "separate-rates",
+      "required": false,
+      "required_when": "When measurement is displayed",
+      "editability": "Read only except explicit command draft",
+      "validation": "Immutable cohort; unknown/censored distinct from zero; pause union counted once; no chosen thresholds",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Raw and active duration with interval evidence",
+      "type": "duration+reference-set",
+      "required": false,
+      "required_when": "When measurement is displayed",
+      "editability": "Read only except explicit command draft",
+      "validation": "Immutable cohort; unknown/censored distinct from zero; pause union counted once; no chosen thresholds",
+      "sensitivity": "Restricted business evidence"
+    }
+  ],
+  "actions": [
+    {
+      "label": "Start path",
+      "kind": "primary",
+      "effect": "Create a stage checklist",
+      "permission": "Connection setup",
+      "precondition": "Provider and contract selected",
+      "confirmation": "None"
+    },
+    {
+      "label": "Hand off owner",
+      "kind": "secondary",
+      "effect": "Create a task-limited handoff draft",
+      "permission": "Handoff permission",
+      "precondition": "Target owner and expiry specified",
+      "confirmation": "External delivery is a separate user action"
+    },
+    {
+      "label": "Recheck affected stages",
+      "kind": "secondary",
+      "effect": "Create fresh evidence only for affected stages",
+      "permission": "Diagnostic permission",
+      "precondition": "Configuration change scope confirmed",
+      "confirmation": "Confirm cost and scope"
+    },
+    {
+      "label": "Request activation review",
+      "kind": "primary",
+      "effect": "Move to approval review",
+      "permission": "Activation request",
+      "precondition": "First data, reconciliation and required gates satisfied",
+      "confirmation": "Confirm unsupported scope"
+    },
+    {
+      "id": "onboarding.metrics.read",
+      "label": "Inspect onboarding measurements",
+      "kind": "secondary",
+      "permission": "Scoped onboarding read",
+      "precondition": "Fixed cohort revision, policy and observation cutoff",
+      "effect": "Read separate connected and first-verified outcomes with fixed denominator",
+      "confirmation": "None",
+      "status": "proposed_not_implemented"
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "message": "Checking scope and permissions and loading Onboarding and owner handoff."
+    },
+    {
+      "name": "empty",
+      "message": "Onboarding has not started for the selected connection."
+    },
+    {
+      "name": "partial",
+      "message": "Only part of the data or work is ready. Show ready, missing, held, failed and unprocessed scopes separately; this is not full completion or zero."
+    },
+    {
+      "name": "blocked",
+      "message": "Required reconciliation evidence is missing. Data receipt alone cannot activate the connection."
+    },
+    {
+      "name": "error",
+      "message": "The request could not be completed. Check the request ID and failed scope, then choose a safe retry or handoff."
+    },
+    {
+      "name": "revoked",
+      "message": "Access to this scope has changed. Remove sensitive details, previews and selections, stop affected actions and downloads, and query permitted scope again. Recall of externally delivered copies is not guaranteed."
+    }
+  ],
+  "sensitive_fields": [
+    "Operating type and connection",
+    "Setup owner",
+    "Temporary setup permissions",
+    "Service writer and collector reader",
+    "Estimated cost and data interval",
+    "Stage evidence and configuration hash"
+  ],
+  "acceptance_ids": [
+    "AUD-DB-02",
+    "AUD-DB-05",
+    "AUD-DB-08",
+    "AUD-QA-07"
+  ],
+  "status": "static_design_only_not_implemented",
+  "command_contract": "../../../contracts/commands/planning-actions.md",
+  "source_provenance": {
+    "ticket": "HB-16",
+    "original_spec_sha256": "fafdd44b5ee29c366df3720fe22aa600e11d3388d0f28a625b9a59e96f25d3f2",
+    "original_design_sha256": "6f23a8d7e0d397ba05e0e1175f590eb84c581a7ca4a135be4783c51e40a50d26",
+    "translation": "English translation and integrated planning remediation; source semantics retained; runtime tests NOT_RUN"
+  }
+}

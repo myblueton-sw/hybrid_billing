@@ -1,0 +1,374 @@
+{
+  "id": "B11",
+  "title": "Credits and billing inquiries",
+  "layout": "workbench",
+  "purpose": "Manage balances and billing inquiries as separate states and link evidence-backed adjustments and approvals.",
+  "roles": [
+    "BL",
+    "AP",
+    "CP"
+  ],
+  "requirement_ids": [
+    "HB-22",
+    "HB-23",
+    "HB-29",
+    "HB-31",
+    "HB-15",
+    "HB-30"
+  ],
+  "tabs": [
+    "Due dates and overdue",
+    "Balances",
+    "Reservations and application",
+    "Inquiries and disputes",
+    "Adjustments and reversals"
+  ],
+  "filters": [
+    "Payment due date",
+    "Overdue or unknown",
+    "Customer and contract",
+    "Period",
+    "Currency and unit",
+    "Balance authority",
+    "Case state",
+    "Owner",
+    "Deadline"
+  ],
+  "columns": [
+    "Confirmed allocation and reversal balance impact",
+    "Dispute, collections hold and overdue state",
+    "Balance and case ID",
+    "Customer and contract",
+    "Currency and unit",
+    "As-of time",
+    "Available and reserved",
+    "Disputed amount",
+    "Status",
+    "Owner and deadline"
+  ],
+  "sections": [
+    {
+      "title": "Payment terms, due dates and overdue",
+      "content": [
+        "Receiving a dispute is not a payment exemption.",
+        "Separate confirmed credit application from the remaining balance after partial payment."
+      ]
+    },
+    {
+      "title": "Balance conservation",
+      "content": [
+        "Opening plus increases minus application minus expiry plus/minus reversals equals closing; separate available and reserved."
+      ]
+    },
+    {
+      "title": "Inquiry review",
+      "content": [
+        "Issue, owner, deadline and evidence; separate internal notes and public replies."
+      ]
+    },
+    {
+      "title": "Adjustment linkage",
+      "content": [
+        "Credits, SLA and corrections require contract, approval and original references."
+      ]
+    },
+    {
+      "title": "Design status",
+      "content": [
+        "Static proposal; product unimplemented; API disconnected; tests not run.",
+        "Use synthetic amounts and data only.",
+        "AUD links: AUD-AR-08, AUD-AR-10, AUD-DB-10, AUD-QA-09"
+      ]
+    },
+    {
+      "title": "Explicit holds",
+      "content": [
+        "The proposed [command contract](../../../contracts/commands/planning-actions.md) defines `holds.request`, `holds.release` and `holds.status`. A hold request fixes hold type (`billing`, `delivery` or `collections`), canonical target manifest, each target's expected revision, reason/evidence, actor/current authority, relevant approval policy and idempotency key. Preview affected and unaffected work before submission. Different hold types have separate effect boundaries: billing prevents the specified billing step, delivery stops controlled sending/disclosure paths, and collections pauses the specified reminder/collection activity. Inquiry state, a dispute or a successful read does not itself create a hold.",
+        "Show requested, pending approval/external confirmation, effective, rejected, release-requested, released and external-unknown effects separately from Job states. Per-target success, failure, pending, already-effective and conflict results must remain visible; a bulk receipt cannot imply all targets are held. Current permissions and expected revisions apply to request, release, status reads and retries. Hold permissions map to distinct hold.billing.request/release, hold.delivery.request/release and hold.collections.request/release plus scoped read; case resolution grants none. Local active/released state and external unsupported/requested/pending/confirmed-active/release-pending/confirmed-released/failed/unknown are separate. Local dispatch and hold/release serialize; delayed acknowledgements must match the current operation/revision. A stale target requires refreshed review; payload mismatch conflicts; denied or missing targets return generic outcomes without existence disclosure.",
+        "Release names the exact hold and affected targets and requires current authority, reasons, remaining blockers and any required approval. It does not automatically resume calculation, issue documents, resend packages, collect payment or advance closing. Subsequent work needs its own current-state command. External delivery/ERP/collection results may remain pending or unknown; retain conservative protection until authoritative evidence confirms the effect. Releasing one hold never removes another active hold. No hold or release changes original/effective payment due dates, contractual liability, confirmed receipts, credit balances or overdue calculation. Legal retention holds are separate and cannot be released by these operations. Payment extensions require the separate governed payment-term path.",
+        "Acceptance (NOT_RUN): mixed-authority bulk targets do not leak or all-pass; type-specific hold cannot stop/change an unrelated stage; concurrent revision change conflicts; unknown external effects cannot be reported effective/released; duplicate requests do not duplicate holds; release leaves other holds effective and does not auto-resume; dispute/hold never erases overdue or changes due dates."
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "Adjustment approval",
+      "screen_id": "B09"
+    },
+    {
+      "label": "Application history",
+      "screen_id": "B10"
+    },
+    {
+      "label": "Anomalies",
+      "screen_id": "U04"
+    },
+    {
+      "label": "Customer inquiries",
+      "screen_id": "C03"
+    },
+    {
+      "label": "Opening balance migration",
+      "screen_id": "P03"
+    }
+  ],
+  "open_decisions": [
+    "Balance freshness threshold and reservation expiry",
+    "Inquiry response deadline and public reply approval",
+    "Credit validity and SLA formula"
+  ],
+  "audience": "admin",
+  "fields": [
+    {
+      "label": "Balance authority and as-of time",
+      "type": "reference+datetime",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "Stale external balances cause a hold",
+      "sensitivity": "Financial"
+    },
+    {
+      "label": "Opening, increases, application, expiry and reversals",
+      "type": "money",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "Verify conservation by currency",
+      "sensitivity": "Financial"
+    },
+    {
+      "label": "Migration ledger and included historical coverage",
+      "type": "reference",
+      "required": false,
+      "required_when": "When applicable",
+      "editability": "Migration draft",
+      "validation": "Do not count opening balance and reimported history twice",
+      "sensitivity": "Restricted evidence"
+    },
+    {
+      "label": "Case, disputed amount and deadline",
+      "type": "reference+money+datetime",
+      "required": false,
+      "required_when": "When applicable",
+      "editability": "Draft edit",
+      "validation": "An inquiry is not cancellation or refund",
+      "sensitivity": "Personal and financial"
+    },
+    {
+      "label": "Internal note and public reply",
+      "type": "text",
+      "required": false,
+      "required_when": "When applicable",
+      "editability": "Separate editing",
+      "validation": "No cost or margin in public replies",
+      "sensitivity": "Internal and customer-public"
+    },
+    {
+      "label": "Adjustment reason, contract and evidence",
+      "type": "reference+text",
+      "required": false,
+      "required_when": "When applicable",
+      "editability": "Draft edit",
+      "validation": "An outage alone cannot create an SLA discount",
+      "sensitivity": "Restricted evidence"
+    },
+    {
+      "label": "Confirmed allocation and reversal balance impact",
+      "required": false,
+      "type": "read-only",
+      "required_when": "For applicable external billing contracts",
+      "editability": "Read only",
+      "validation": "Check authority, currency, snapshot and receipt freshness; separate unknown and not applicable",
+      "sensitivity": "Contract and customer financial"
+    },
+    {
+      "label": "Dispute, collections hold and overdue state",
+      "required": false,
+      "type": "read-only",
+      "required_when": "For applicable external billing contracts",
+      "editability": "Read only",
+      "validation": "Check authority, currency, snapshot and receipt freshness; separate unknown and not applicable",
+      "sensitivity": "Contract and customer financial"
+    },
+    {
+      "label": "Hold type and target manifest",
+      "type": "enum+reference",
+      "required": false,
+      "required_when": "Hold request, release or status",
+      "editability": "Read only except explicit command draft",
+      "validation": "Separate billing/delivery/collections effects; unknown is not effective/released",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Hold and per-target revisions",
+      "type": "reference+revision-map",
+      "required": false,
+      "required_when": "Hold request, release or status",
+      "editability": "Read only except explicit command draft",
+      "validation": "Separate billing/delivery/collections effects; unknown is not effective/released",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Hold effect and external confirmation",
+      "type": "enum+reference",
+      "required": false,
+      "required_when": "Hold request, release or status",
+      "editability": "Read only except explicit command draft",
+      "validation": "Separate billing/delivery/collections effects; unknown is not effective/released",
+      "sensitivity": "Restricted business evidence"
+    }
+  ],
+  "actions": [
+    {
+      "label": "Register inquiry",
+      "kind": "primary",
+      "effect": "Create a case with owner and deadline",
+      "permission": "Billing inquiry write",
+      "precondition": "Contract, document and issue specified",
+      "confirmation": "None"
+    },
+    {
+      "label": "Request adjustment approval",
+      "kind": "primary",
+      "effect": "Send a fixed adjustment proposal to the approval inbox",
+      "permission": "Adjustment request",
+      "precondition": "Reason, original, tax and balance verified",
+      "confirmation": "Confirm amounts, balances and disclosure scope"
+    },
+    {
+      "label": "Preview public reply",
+      "kind": "secondary",
+      "effect": "Preview public reply; sending is separate",
+      "permission": "Inquiry reply write",
+      "precondition": "Public fields validated",
+      "confirmation": "Confirm recipient and body"
+    },
+    {
+      "label": "Record resolution",
+      "kind": "secondary",
+      "effect": "Resolve case while preserving separate financial state",
+      "permission": "Inquiry handling",
+      "precondition": "Resolution evidence and related corrections linked",
+      "confirmation": "Confirm unfinished financial actions"
+    },
+    {
+      "label": "Inspect payment evidence",
+      "kind": "secondary",
+      "effect": "Read allowed evidence without changing receipts or credits",
+      "permission": "Read authority for document and receipt evidence",
+      "precondition": "Current permitted evidence scope",
+      "confirmation": "Distinguish acceptance from completion"
+    },
+    {
+      "id": "holds.request",
+      "label": "Request hold",
+      "kind": "secondary",
+      "permission": "Current scoped authority for the hold type and target action",
+      "precondition": "Explicit type, target revisions, reason/evidence and required policy",
+      "effect": "Report per-target requested/effective/released/pending/unknown effect without auto-resume",
+      "confirmation": "Confirm type-specific effect; due dates and balances do not change",
+      "status": "proposed_not_implemented"
+    },
+    {
+      "id": "holds.release",
+      "label": "Request hold release",
+      "kind": "secondary",
+      "permission": "Current scoped authority for the hold type and target action",
+      "precondition": "Explicit type, target revisions, reason/evidence and required policy",
+      "effect": "Report per-target requested/effective/released/pending/unknown effect without auto-resume",
+      "confirmation": "Confirm type-specific effect; due dates and balances do not change",
+      "status": "proposed_not_implemented"
+    },
+    {
+      "id": "holds.status",
+      "label": "Inspect hold status",
+      "kind": "secondary",
+      "permission": "Scoped hold read for the authorized hold and target",
+      "precondition": "Current authorized hold/case ID and target scope; no new mutation rationale or approval evidence",
+      "effect": "Read current revisions, as-of, hold effects and external uncertainty without mutation",
+      "confirmation": "None; read-only status inspection",
+      "status": "proposed_not_implemented"
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "message": "Checking scope and permissions and loading Credits and billing inquiries."
+    },
+    {
+      "name": "empty",
+      "message": "No balance or inquiry exists. Distinguish unknown balances from zero."
+    },
+    {
+      "name": "partial",
+      "message": "Only part of the data or work is ready. Show ready, missing, held, failed and unprocessed scopes separately; this is not full completion or zero."
+    },
+    {
+      "name": "blocked",
+      "message": "The balance is stale or concurrent reservations leave insufficient availability. Hold the adjustment."
+    },
+    {
+      "name": "error",
+      "message": "The request could not be completed. Check the request ID and failed scope, then choose a safe retry or handoff."
+    },
+    {
+      "name": "revoked",
+      "message": "Access to this scope has changed. Remove sensitive details, previews and selections, stop affected actions and downloads, and query permitted scope again. Recall of externally delivered copies is not guaranteed."
+    },
+    {
+      "name": "payment-unknown",
+      "message": "Payment status could not be verified. Check the last confirmation time and due date."
+    },
+    {
+      "name": "hold_pending",
+      "message": "The hold request is pending approval or authoritative external confirmation."
+    },
+    {
+      "name": "hold_effective",
+      "message": "Evidence confirms this hold is effective for the displayed targets and type."
+    },
+    {
+      "name": "hold_release_pending",
+      "message": "Release is requested; existing protection remains until confirmed."
+    },
+    {
+      "name": "hold_released",
+      "message": "This hold is released; other holds remain and work does not automatically resume."
+    },
+    {
+      "name": "hold_external_unknown",
+      "message": "External effect is unknown. Preserve protection and reconcile authoritative evidence."
+    }
+  ],
+  "sensitive_fields": [
+    "Balance authority and as-of time",
+    "Opening, increases, application, expiry and reversals",
+    "Migration ledger and included historical coverage",
+    "Case, disputed amount and deadline",
+    "Internal note and public reply",
+    "Adjustment reason, contract and evidence"
+  ],
+  "acceptance_ids": [
+    "AUD-AR-08",
+    "AUD-AR-10",
+    "AUD-DB-10",
+    "AUD-QA-09",
+    "PT-01",
+    "PT-02",
+    "PT-03",
+    "PT-04",
+    "PT-05",
+    "PT-06",
+    "PT-07",
+    "PT-08"
+  ],
+  "status": "static_design_only_not_implemented",
+  "command_contract": "../../../contracts/commands/planning-actions.md",
+  "source_provenance": {
+    "ticket": "HB-16",
+    "original_spec_sha256": "618d38f51a8a04e7e484e81b1ec7ea4f673a54ae87276dbcbce02a132dca0390",
+    "original_design_sha256": "f083b2c00cbd2666e0d94bd11f8bb04ce3b6dc3e6f89f503e791b165ee4231fb",
+    "translation": "English translation and integrated planning remediation; source semantics retained; runtime tests NOT_RUN"
+  }
+}

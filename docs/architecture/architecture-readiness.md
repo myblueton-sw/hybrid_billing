@@ -25,6 +25,8 @@ Tracking: [HB-7](https://linear.app/hybrid-billing/issue/HB-7/define-the-archite
 
 ## Design package
 
+The [HB-19 high-level architecture](high-level-architecture.md) expands the logical boundaries, financial and recovery paths, component responsibilities and numbered data flows before configuration selection. It separately labels the unmerged PR14 SaaS proposal and preserves this readiness document as its baseline.
+
 | Document | Owned design scope |
 | --- | --- |
 | [Technology assessment](technology-assessment.md) | Database, broker and telemetry suitability; adoption evidence |

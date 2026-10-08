@@ -9,6 +9,8 @@ status: draft
 
 Part of [HB-7 architecture readiness](architecture-readiness.md). Candidate suitability is a design recommendation, not adoption or runtime verification. Official documentation was checked during this review on 2026-10-01; exact deployable releases and compatibility remain unselected.
 
+The owner-updated >100M/day and object-storage/Parquet direction is assessed in the [HB-20 lake design](data-ownership/object-storage-data-architecture.md) and [performance/operations comparison](performance-operations-comparison.md). The candidate list below is historical assessment, not a mandatory bundle; MongoDB is excluded and serving copies must justify their workload.
+
 ## Storage recommendation
 
 **PostgreSQL is the first candidate for authoritative billing records.** Contracts, authorization/revocation, approved snapshots, Claims, credit reservations, document numbers, payment evidence metadata, ERP submissions and outbox need coordinated transactional changes. PostgreSQL provides relational constraints and transaction isolation; implementation must choose concurrency controls per invariant and retry failed serializable transactions safely. External calls stay outside transaction retry loops. [Constraints](https://www.postgresql.org/docs/current/ddl-constraints.html), [Isolation](https://www.postgresql.org/docs/current/transaction-iso.html).

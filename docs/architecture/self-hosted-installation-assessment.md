@@ -21,6 +21,8 @@ Decide application placement separately from stateful placement. First compare u
 | VM/container installation | Candidate where established VM operations and few operators favor fewer orchestration dependencies | Service supervision, repeatable releases, isolation, resource limits, HA and recovery still need explicit design; a single VM is not an HA solution |
 | Newly operated Kubernetes cluster | Candidate only where lifecycle/availability/scale benefits outweigh creating cluster operations | Separate cluster bootstrap, control-plane/etcd, nodes, certificates, CNI/CSI, security, upgrades, backup and incident work; no unmeasured savings claim |
 
+The [HB-20 lake design](data-ownership/object-storage-data-architecture.md) adds explicit table/catalog ownership. Catalog service/database, authentication keys, conditional commit/fencing, snapshot maintenance, credential rotation and coordinated restore require named operations owners and version-pinned compatibility. Existing cluster/VM recommendations do not automatically approve a catalog or lake stack.
+
 ## Proposed placement and boundaries
 
 ```mermaid

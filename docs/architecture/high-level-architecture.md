@@ -1,19 +1,92 @@
 ---
 type: Architecture Review Draft
-title: Hybrid Billing high-level architecture and data flows
+title: Hybrid Billing backend logical architecture
 description: Defines logical responsibilities, authoritative data and gated flows before selecting deployment or technology configuration.
 status: draft
 ---
 
-# High-level architecture
+# Backend logical architecture
 
 Date: 2026-10-07. Owner request: draw the high-level architecture before reviewing component data flows and fit-for-purpose configuration. Root owns synthesis; independent architecture/billing/security review is separate. Tracking: [HB-19](https://linear.app/hybrid-billing/issue/HB-19/document-high-level-architecture-and-component-data-flows-before). Accountable owner: Seung Woo Park. Execution machine: `machine:mac_mini`. This is a proposed design, not planning acceptance or product implementation. The previously untracked draft is now published through a ticket branch and independent review.
 
 ![High-level architecture overview](diagrams/high-level-architecture.svg)
 
-The static overview summarizes the boundaries and principal paths; the two Mermaid views and numbered contracts below supply the detailed relationships.
+The existing static overview is a supplementary data-flow sketch. Start with the logical responsibility map below; the detailed context views and F01-F12 contracts remain reference material.
 
-Baseline: repository main `e436a49424db7491140308f8c3895ce75cf176c3`. SaaS extension: [open PR #14](https://github.com/myblueton-sw/hybrid_billing/pull/14), head `6acb38c68117ff1f1865776aca00f87c61956196`; proposed separately from main. The original 43 requirement groups and 49 screen identities remain unchanged. Unpublished detailed planning inputs remain unavailable under the owner's prior instruction to proceed without those files. Planning completion has not been declared.
+## Current review basis
+
+2026-10-12 owner clarification: restart from the full backend **logical architecture**, at concept level. Define business responsibilities, authoritative ownership and interactions before implementation choices. This revision proposes the organizing map; it does not adopt unresolved business policies. Existing 43-group scope, provider families and conditional/later capabilities remain intact.
+
+Current main basis is `b5c65cf66992f703247b8e4713f86cef7835b767`, including the merged HB-16 input/Claim/numeric and command contracts. The original HB-19 proposal at `83f270a498fbb075db62876dad108b9104df8a53` is revised here rather than creating a competing architecture. SaaS remains the separate [PR14 proposal](https://github.com/myblueton-sw/hybrid_billing/pull/14) at `6acb38c68117ff1f1865776aca00f87c61956196`.
+
+Latest separate capacity/data review input: [HB-20](https://linear.app/hybrid-billing/issue/HB-20), local branch `docs/HB-20-cost-data-review` at `62f7df1`. It records the owner premise of more than 100 million source records/day, object storage/Parquet foundation and MongoDB exclusion. Preserve those inputs; the newer volume supersedes the earlier >1M/day examples as a design premise, not a measured guarantee. Table/catalog/engine proposals in that branch remain unmerged comparison material; this map does not select them.
+
+Required companion rules, bindings and planning inputs are now available in the authorized original workspace. Their prior unavailability was historical evidence from another publication environment. Planning completion remains undeclared; work here is documentation/design only.
+
+## Logical responsibility map
+
+The backend has three interacting concerns: **business authority**, **evidence and calculation**, and **access and delivery**. Cross-cutting governance applies to all three. These are responsibilities, not deployment tiers, process boundaries or database allocations. One module owns each authoritative business decision; another module requests a decision through that owner rather than changing its data directly.
+
+```mermaid
+flowchart TB
+    Entry[Operators, customers and authorized clients] --> Access[Identity, scope and command/query access]
+    Source[Provider, internal cost and permitted usage evidence] --> Input[Collection and input assurance]
+    Access --> Master[Customer, organization, contract and policy]
+    Master --> Calculation[Cost, allocation and selling calculation]
+    Input --> Calculation
+    Calculation --> Finance[Reconciliation, approval, Claims and documents]
+    Access --> Finance
+    Finance --> Accounting[Receivables and monthly recognition]
+    Input --> Accounting
+    Calculation --> Accounting
+    Finance --> Integration[Controlled external handoff]
+    Accounting --> Integration
+    Integration <--> External[ERP, document delivery and conditional service/payment targets]
+    Input --> Read[Scoped reporting, detail and export]
+    Calculation --> Read
+    Finance --> Read
+    Accounting --> Read
+    Read --> Access
+    Read --> Intelligence[Analysis and proposals]
+    Intelligence -. ordinary command request .-> Access
+    Master -. conditional subscription policy .-> Service[Subscription and entitlement responsibility]
+    Service -. approved delivery intent .-> Integration
+    Access --> Service
+    Governance[Workflow, audit, retention and recovery] -. control contracts .-> Input
+    Governance -. control contracts .-> Calculation
+    Governance -. control contracts .-> Finance
+    Governance -. control contracts .-> Integration
+```
+
+| Logical area | Owns | Collaborates through |
+| --- | --- | --- |
+| Identity and access | Internal identity, membership/delegation, sessions, current action/row/field authority | Derived authenticated scope and revocation checks for every entry, worker, query and adapter; business owners enforce domain approval constraints too |
+| Customer and policy | Party/customer relationships, organizational attribution, contracts and approved effective-dated policy revisions | Fixed revision references supplied to input attribution, calculation and financial workflows; a customer relationship is not automatically a tenant |
+| Collection and input assurance | Source connections/identities, receipts, coverage, independent comparison, input decisions and eligible release metadata | Permitted immutable evidence and exact eligible manifests; receipt, normalization and eligibility are distinct states |
+| Calculation | Supplier/internal cost interpretation, complete allocation/pricing pools, customer selling results and contribution lineage | Fixed input/policy revisions yield reproducible result releases; calculation never grants financial approval |
+| Financial workflow | Reconciliation cases, exact approved snapshots, economic Claims/reservations/reversals, document numbers and issuance intents | Coordinated authoritative transaction for local financial effects and durable dispatch intent; unknown external effects stay pinned |
+| Receivables and recognition | Due-date/payment-term snapshots, linked external receipt allocations and separately approved monthly recognition | Verified external/manual authority evidence and purpose-specific intents; invoice, cash, settlement and cost recognition remain independent |
+| Integration and service delivery | Transport attempts, verified result correlation; conditional subscription/entitlement domain owns desired/applied service state | Consumes approved owner intents and returns outcome evidence to that owner; transport success cannot grant approval, settlement or access |
+| Reporting and intelligence | Rebuildable scoped views, exports, analysis findings and proposals | Reads identified releases plus current authority; proposals re-enter ordinary commands, never write authoritative money |
+
+Workflow orchestration owns scheduling, dependencies, bounded retries and execution progress. It asks domain owners to perform transitions; job success is not business completion. Audit records durable business/security decisions separately from operational telemetry. Retention/recovery owns dependency/hold/control rules; each area must honor current revocation/deletion controls before publishing, serving or resuming work. These controls apply to every area, including those omitted from the overview's dotted arrows.
+
+## Principal logical interactions
+
+1. **Prepare:** approved customer/contract/policy revisions and scoped source assignments define the economic and access context.
+2. **Establish inputs:** collect evidence, verify identity/coverage and independent comparison, then explicitly confirm and publish a fixed eligible input release.
+3. **Derive amounts:** calculate complete cost/allocation/pricing scopes, publish a fixed result and explain differences; supplier cost, allocated cost and selling charges remain different measures.
+4. **Authorize effects:** obtain exact-result financial approval; reserve economic coverage and authorize document/submission intent through the coordinated financial authority. A new run cannot make already consumed coverage available.
+5. **Reconcile outcomes:** dispatch a purpose-specific immutable intent, correlate authoritative external evidence and update the owning domain. Monthly recognition has its own approval path independent of invoice cadence; timeout stays unknown until reconciliation.
+6. **Explain and correct:** expose authorized detail and lineage from consistent releases. Corrections create linked new revisions and pass the applicable gates; historical issued effects remain traceable. Conditional service grants have their own policy and acknowledgement path.
+
+## Logical consistency boundaries
+
+- **Business authority:** current policy/input/result publication, approval, Claim overlap, balances, document numbering and external intent are authoritative decisions. Coordinate local invariant changes atomically; domain ownership does not authorize eventually consistent financial uniqueness or independent competing ledgers.
+- **Evidence authority:** permitted originals and verified immutable input/result detail preserve provenance. Existence of bytes or a processing snapshot is not business eligibility. Publication checks complete references and lifecycle dependencies before advancing an eligible release.
+- **Read models:** dashboards, analytics, caches, exports and forecasts are derived. Every view carries scope, revision, completeness and as-of; lag or rebuild cannot authorize money or resurrect access.
+
+These are logical data roles. Object storage/Parquet is a recorded owner foundation from the separate capacity review, while exact table/catalog, transactional technology, messaging products, worker placement and deployment topology require later design. No physical schema, API field-by-field contract, node count or performance commitment is introduced here.
 
 ## Architectural direction
 
@@ -28,7 +101,7 @@ flowchart LR
     Users[Operators and customer users] --> Access[Identity and scoped command/query boundary]
     Clients[CLI, integrations and AI entry] --> Access
     IdP[Configured identity provider] --> Access
-    Sources[Cloud, on-prem, VMware, HawkEye, TokenMeter and approved files] --> Ingest
+    Sources[Cloud, on-prem, VMware and approved files; HawkEye/TokenMeter deferred] --> Ingest
     subgraph Install[Customer-operated Hybrid Billing installation]
         Access --> Core[Modular business core]
         Ingest[Scoped collection workers] --> Evidence[Protected evidence and immutable detail]
@@ -138,7 +211,7 @@ Review in dependency order:
 1. Approve or revise module responsibilities, permitted flows and external trust boundaries, including the PR14 SaaS proposal.
 2. Specify transaction boundaries, input publication, economic uniqueness, correction/reconciliation and entitlement/payment state contracts.
 3. Define exact command/event/query envelopes and source/target capability profiles, with independent monetary and tenant-isolation acceptance cases.
-4. Measure arrival bursts, record/detail expansion, monthly close, correction/replay, query concurrency, retention and catch-up requirements; existing >1M records/day is a premise, not a node-sizing answer.
+4. Measure arrival bursts, record/detail expansion, monthly close, correction/replay, query concurrency, retention and catch-up requirements; the latest >100M source records/day premise from the separate HB-20 review is not a node-sizing answer.
 5. Compare storage, queue, cache and worker configurations against those responsibilities; then choose VM/container or customer-operated Kubernetes placement and recovery topology.
 6. Reconcile the full requirement/work/API/screen/acceptance trace and obtain the owner's explicit planning completion before implementation.
 
@@ -148,6 +221,6 @@ No language, framework, database product, broker, cloud service, node count, ope
 
 Source documents read from the repository baseline: [readiness](architecture-readiness.md), [technology](technology-assessment.md), [installation](self-hosted-installation-assessment.md), [collection](data-collection.md), [billing ownership](data-ownership/billing-data-model.md), [administration](admin-design.md), [intelligence](intelligence-layer.md), [input/pricing/ERP contracts](../contracts/billing/inputs-pricing-and-erp.md), [payment/recognition](../contracts/billing/payment-and-recognition.md) and [security](../contracts/security/access-and-trust.md). The HB-18 supplement is read from the separately proposed PR14 head identified above. This is synthesis of repository evidence, not a new external standards/vendor audit.
 
-Browser access to the actual Hybrid Billing workspace was restored before formal publication; HB-19 ownership, project, status and machine claim were read back there. Earlier connector failure is not evidence that the workspace was absent. Missing companion rules, skills, `.linear.json`, detailed planning inputs, artifact policy and planning gate remain unavailable on this machine. The owner's explicit instruction to proceed without the other-local files permits this bounded documentation work; their contents are not reconstructed or certified.
+Historical publication context: browser access to the actual Hybrid Billing workspace was restored before the original HB-19 publication; its machine claim was subsequently released. The 2026-10-12 revision rechecks the authorized workspace, accountable owner and machine ownership. The current review basis above supersedes historical input-availability statements without certifying fresh-clone portability.
 
 Independent review, publication checks and limits are recorded in the [HB-19 verification report](../reviews/HB-19-high-level-architecture/verification.md). Runtime, financial execution, security enforcement, provider/ERP compatibility, load/recovery, user-task and accessibility validation are NOT_RUN. Final policy values, exact command contracts and physical design remain unresolved.

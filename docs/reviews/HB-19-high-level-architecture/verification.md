@@ -34,3 +34,18 @@ Runtime, monetary execution, tenant/security enforcement, provider/ERP compatibi
 Review module/data ownership and permitted flows first; then transaction and correction boundaries, command/event/query envelopes, provider capability profiles and workload evidence; only then compare storage, jobs/broker, read projections, worker and deployment configurations. No technology, node count or SLA is approved. Full trace reconciliation and explicit owner planning completion are prerequisites to product development.
 
 This package is prepared for PR review. Merge authorization, merge read-back and ticket completion remain pending. The machine claim will be released at publication handoff; the ticket remains open pending authorized integration.
+
+
+## 2026-10-12 logical architecture revision
+
+The owner explicitly requested a restart from backend high-level **logical** architecture, at concept level. Root owns integration and all edits; a separate read-only architect supplied design advice and reviewed the actual revised document against `83f270a`. The existing ticket/PR is reused. Original workspace rules, skills, binding and planning inputs are available in this authorized environment; earlier absent-input statements above are historical, not current assertions.
+
+An isolated `docs/HB-19-logical-architecture` working branch extends the published PR head and merges main `b5c65cf66992f703247b8e4713f86cef7835b767` without conflict. Publication advances the existing PR branch without rewriting history. Four revised files: high-level architecture, README/readiness entry points and this report. The original SVG stays a supplemental data-flow sketch with unchanged bytes.
+
+The document now starts with logical concerns, a responsibility/ownership map, six principal interactions and three consistency boundaries. It preserves the merged HB-16 contracts and conditional PR14 SaaS proposal. Latest HB-20 input at local branch commit `62f7df1` supplies the >100M source records/day premise and recorded object-storage/Parquet foundation; unmerged engine/catalog proposals are not adopted. This is no new physical schema, topology, technology comparison or deployment configuration.
+
+Independent actual-document review: PASS, no blocking financial/security contradictions. Reviewed fixed-release inputs, policy revisions, exact-result approval, economic Claim ownership, external unknown outcomes, current scope and recovery. Two clarity suggestions were applied: direct monthly evidence/calculation paths to recognition in the overview, and explicit deferral of HawkEye/TokenMeter in the supplemental source context. Entry-point changes summarize the revised scope. Final independent integrated four-file re-review: PASS; both clarity findings resolved, no blocking architecture/financial/security contradictions.
+
+Root QA: PASS for OKF type frontmatter, balanced source fences, local Markdown link targets, F01-F12 retention, original SVG bytes, current-main reconciliation JSON, scoped whitespace and added-line common credential patterns. An initial JSON preservation check compared against pre-HB-16 `83f270a` and failed because the merged HB-16 changes differ; the corrected current-main baseline check passed. This was a validation-baseline correction, not an artifact defect. No exhaustive new original-source audit is claimed. Mermaid rendering, runtime/security enforcement, load/recovery, compatibility and final policy/planning acceptance remain NOT_RUN/UNVERIFIED.
+
+PR review/publication does not authorize merge or product development. The machine claim will be released at handoff and recorded on the ticket; ticket remains In Progress until authorized integration/read-back.

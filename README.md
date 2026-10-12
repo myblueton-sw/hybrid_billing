@@ -23,7 +23,7 @@ Technology choices and supported provider/ERP combinations remain subject to pla
 
 ## Architecture preparation
 
-The [high-level architecture and data flows](docs/architecture/high-level-architecture.md) provide a visual overview, component responsibilities, storage authority and twelve gated flow contracts before configuration selection. SaaS subscription, payment and entitlement paths are explicitly proposed through open PR14; no stack or physical sizing is selected.
+The [backend logical architecture](docs/architecture/high-level-architecture.md) starts with business responsibilities, authoritative ownership and principal interactions. Context diagrams and twelve gated flow contracts provide supporting detail before configuration selection. SaaS subscription, payment and entitlement paths are explicitly proposed through open PR14; no stack or physical sizing is selected.
 
 The owner has selected self-hosted delivery. The [architecture readiness plan](docs/architecture/architecture-readiness.md) organizes the operating prerequisites, development sequence, ClickHouse/Kafka/OpenTelemetry assessment, billing data model, collection methods and source grouping, tenant/customer/organization management, session and permission policies, admin/customer data views, and intelligence layer. PostgreSQL is the first transactional candidate; component adoption, sizing and implementation remain unverified.
 

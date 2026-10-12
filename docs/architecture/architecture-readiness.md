@@ -25,7 +25,7 @@ Tracking: [HB-7](https://linear.app/hybrid-billing/issue/HB-7/define-the-archite
 
 ## Design package
 
-The [HB-19 high-level architecture](high-level-architecture.md) expands the logical boundaries, financial and recovery paths, component responsibilities and numbered data flows before configuration selection. It separately labels the unmerged PR14 SaaS proposal and preserves this readiness document as its baseline.
+The [HB-19 backend logical architecture](high-level-architecture.md) is the concept-first entry point for responsibilities, decision/data ownership and principal interactions. Financial/recovery boundaries and numbered flows provide supporting detail before configuration selection. It separately labels the unmerged PR14 SaaS proposal and preserves this readiness document as its baseline.
 
 | Document | Owned design scope |
 | --- | --- |

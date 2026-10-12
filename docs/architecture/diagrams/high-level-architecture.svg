@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1340" viewBox="0 0 2200 1340">
+<title>Hybrid Billing high-level logical architecture</title>
+<desc>HB-19 architecture review draft. Logical modules and controlled flows; no deployment or technology selection. SaaS overlay is unmerged PR14.</desc>
+<rect width="2200" height="1340" fill="#f5f7fb"/>
+<text x="45" y="32" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#182c49">HYBRID BILLING</text>
+<text x="45" y="83" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="26" font-weight="400" fill="#182c49">High-level logical architecture  /  Responsibilities before technology and server configuration</text>
+<text x="1690" y="42" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#5b6478">REVIEW DRAFT  |  2026-10-07</text>
+<text x="1690" y="76" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#5b6478">Main + proposed SaaS overlay (PR14)</text>
+<text x="45" y="134" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#5b6478">CONTROL PLANE</text>
+<rect x="45" y="166" width="260" height="145" rx="14" fill="#ffffff" stroke="#c9d5e5" stroke-width="2"/>
+<text x="65" y="184" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">People &amp; clients</text>
+<text x="65" y="224" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Admin / customer portal</text>
+<text x="65" y="252" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">CLI / integrations / AI</text>
+<text x="65" y="280" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#182c49">Configured identity provider</text>
+<rect x="350" y="166" width="355" height="145" rx="14" fill="#e7f0fb" stroke="#85aed7" stroke-width="2"/>
+<text x="370" y="184" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="23" font-weight="700" fill="#182c49">Scoped command boundary</text>
+<text x="370" y="224" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Identity + current permission</text>
+<text x="370" y="252" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Expected revision + audit</text>
+<text x="370" y="280" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Workers also require scope</text>
+<rect x="750" y="166" width="400" height="145" rx="14" fill="#e7f0fb" stroke="#85aed7" stroke-width="2"/>
+<text x="770" y="184" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Contract &amp; policy modules</text>
+<text x="770" y="224" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Customer / org / rates / FX</text>
+<text x="770" y="252" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Allocation / terms / approvals</text>
+<text x="770" y="280" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Versioned effective history</text>
+<rect x="1210" y="166" width="925" height="145" rx="14" fill="#f0eafd" stroke="#b39ad8" stroke-width="2"/>
+<text x="1230" y="184" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">SaaS subscription &amp; service policy  |  PR14 proposal</text>
+<text x="1230" y="224" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Catalog / plan / seat / meter revisions feed ordinary pricing and approval.</text>
+<text x="1230" y="252" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Desired service grants -&gt; scoped delivery -&gt; acknowledged actual grants.</text>
+<text x="1230" y="280" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Payment status does not directly grant access; grace and suspension need policy.</text>
+<polyline points="305,236 350,236" fill="none" stroke="#596c85" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="350,236 338,229 338,243" fill="#596c85"/>
+<polyline points="705,236 750,236" fill="none" stroke="#596c85" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="750,236 738,229 738,243" fill="#596c85"/>
+<polyline points="1210,285 1175,285 1175,346 1075,346 1075,391" fill="none" stroke="#7a54ad" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1075,391 1068,379 1082,379" fill="#7a54ad"/>
+<polyline points="950,311 950,354 1030,354 1030,391" fill="none" stroke="#596c85" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1030,391 1023,379 1037,379" fill="#596c85"/>
+<text x="45" y="346" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#5b6478">BILLING EVIDENCE AND CONTROLLED EXECUTION</text>
+<rect x="45" y="391" width="260" height="166" rx="14" fill="#ffffff" stroke="#c9d5e5" stroke-width="2"/>
+<text x="65" y="409" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Sources</text>
+<text x="65" y="449" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#182c49">Cloud / on-prem / VMware</text>
+<text x="65" y="477" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">HawkEye / TokenMeter</text>
+<text x="65" y="505" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#182c49">Approved files and meters</text>
+<polyline points="305,474 350,474" fill="none" stroke="#2865a0" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="350,474 338,467 338,481" fill="#2865a0"/>
+<rect x="350" y="391" width="260" height="166" rx="14" fill="#e7f0fb" stroke="#c9d5e5" stroke-width="2"/>
+<text x="370" y="409" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Receive &amp; stage</text>
+<text x="370" y="449" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Scoped collection</text>
+<text x="370" y="477" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#182c49">Permitted immutable bytes</text>
+<text x="370" y="505" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#182c49">Quarantine incomplete data</text>
+<polyline points="610,474 655,474" fill="none" stroke="#2865a0" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="655,474 643,467 643,481" fill="#2865a0"/>
+<rect x="655" y="391" width="260" height="166" rx="14" fill="#e7f0fb" stroke="#c9d5e5" stroke-width="2"/>
+<text x="675" y="409" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Eligible input</text>
+<text x="675" y="449" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#182c49">Normalize + full coverage</text>
+<text x="675" y="477" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#182c49">Independent cross-check</text>
+<text x="675" y="505" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Operator confirmation</text>
+<polyline points="915,474 960,474" fill="none" stroke="#2865a0" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="960,474 948,467 948,481" fill="#2865a0"/>
+<rect x="960" y="391" width="260" height="166" rx="14" fill="#e7f0fb" stroke="#c9d5e5" stroke-width="2"/>
+<text x="980" y="409" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Calculate</text>
+<text x="980" y="449" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Fixed input + policy</text>
+<text x="980" y="477" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Deterministic amounts</text>
+<text x="980" y="505" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Cost / allocation / sales</text>
+<polyline points="1220,474 1265,474" fill="none" stroke="#2865a0" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1265,474 1253,467 1253,481" fill="#2865a0"/>
+<rect x="1265" y="391" width="260" height="166" rx="14" fill="#e7f0fb" stroke="#c9d5e5" stroke-width="2"/>
+<text x="1285" y="409" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Approve &amp; commit</text>
+<text x="1285" y="449" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="17" font-weight="400" fill="#182c49">Reconcile + human approval</text>
+<text x="1285" y="477" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#182c49">Claim / numbering guards</text>
+<text x="1285" y="505" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Fixed issuance intent</text>
+<polyline points="1525,474 1570,474" fill="none" stroke="#2865a0" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1570,474 1558,467 1558,481" fill="#2865a0"/>
+<rect x="1570" y="391" width="260" height="166" rx="14" fill="#e7f0fb" stroke="#c9d5e5" stroke-width="2"/>
+<text x="1590" y="409" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Dispatch</text>
+<text x="1590" y="449" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Durable outbox / jobs</text>
+<text x="1590" y="477" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#182c49">Purpose-specific adapter</text>
+<text x="1590" y="505" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#182c49">Approved external action</text>
+<polyline points="1830,474 1875,474" fill="none" stroke="#2865a0" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1875,474 1863,467 1863,481" fill="#2865a0"/>
+<rect x="1875" y="391" width="260" height="166" rx="14" fill="#ffffff" stroke="#c9d5e5" stroke-width="2"/>
+<text x="1895" y="409" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">External systems</text>
+<text x="1895" y="449" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">ERP / document delivery</text>
+<text x="1895" y="477" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Conditional payments</text>
+<text x="1895" y="505" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Verified target profiles</text>
+<text x="805" y="592" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#2865a0">Fixed eligible manifest</text>
+<text x="1267" y="567" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#2865a0">Approval, Claim and outbox coordinate in local authority</text>
+<text x="45" y="607" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#5b6478">Corrections re-enter the gates;</text>
+<text x="45" y="636" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#5b6478">issued history is preserved.</text>
+<rect x="655" y="632" width="545" height="151" rx="14" fill="#e7f6f0" stroke="#7fb99f" stroke-width="2"/>
+<text x="675" y="650" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Monthly cost recognition</text>
+<text x="675" y="690" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Eligible period basis -&gt; fixed batch -&gt; own approval</text>
+<text x="675" y="718" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Separate ERP purpose; do not wait for invoice cadence</text>
+<text x="675" y="746" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">No duplicate recognition when later invoicing</text>
+<polyline points="785,557 785,632" fill="none" stroke="#29816c" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="785,632 778,620 792,620" fill="#29816c"/>
+<polyline points="1200,706 1507,706 1507,601 1700,601 1700,557" fill="none" stroke="#29816c" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1700,557 1693,569 1707,569" fill="#29816c"/>
+<text x="1222" y="719" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#29816c">Approved recognition intent</text>
+<rect x="1568" y="816" width="566" height="143" rx="14" fill="#fff2df" stroke="#cda570" stroke-width="2"/>
+<text x="1588" y="834" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">External evidence &amp; reconciliation</text>
+<text x="1588" y="874" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Authenticated inbox / original-result lookup</text>
+<text x="1588" y="902" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Unknown is not success or failure; no blind retry</text>
+<text x="1588" y="930" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">One chosen cash / receivable authority</text>
+<polyline points="2005,557 2005,816" fill="none" stroke="#bd7a20" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="2005,816 1998,804 2012,804" fill="#bd7a20"/>
+<text x="2018" y="658" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#996118">Confirm</text>
+<text x="2018" y="684" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#996118">business</text>
+<text x="2018" y="710" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#996118">outcome</text>
+<text x="45" y="815" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#5b6478">STORAGE ROLES</text>
+<rect x="45" y="855" width="455" height="176" rx="14" fill="#e7edf7" stroke="#829fc4" stroke-width="2"/>
+<text x="65" y="873" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Transactional authority</text>
+<text x="65" y="913" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Policies / manifests / approval digests</text>
+<text x="65" y="941" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Claims / credits / numbers / job intent</text>
+<text x="65" y="969" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Submission &amp; receipt evidence / audit</text>
+<text x="65" y="997" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Cross-store writes are not atomic</text>
+<rect x="550" y="855" width="455" height="176" rx="14" fill="#e7edf7" stroke="#829fc4" stroke-width="2"/>
+<text x="570" y="873" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Evidence &amp; immutable detail</text>
+<text x="570" y="913" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Permitted originals and fixed partitions</text>
+<text x="570" y="941" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Calculation lineage / issued artifacts</text>
+<text x="570" y="969" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Retention / holds / controlled retrieval</text>
+<text x="570" y="997" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Only eligible manifests feed final billing</text>
+<rect x="1055" y="855" width="455" height="176" rx="14" fill="#e7edf7" stroke="#829fc4" stroke-width="2"/>
+<text x="1075" y="873" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Derived read projections</text>
+<text x="1075" y="913" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Authorized summaries / search / reports</text>
+<text x="1075" y="941" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Source revision / completeness / as-of</text>
+<text x="1075" y="969" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Rebuildable from permitted evidence</text>
+<text x="1075" y="997" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Never independent financial authority</text>
+<polyline points="1568,888 1535,888 1535,1055 272,1055 272,1031" fill="none" stroke="#bd7a20" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="272,1031 265,1043 279,1043" fill="#bd7a20"/>
+<text x="1568" y="981" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#996118">Result evidence updates owned business state.</text>
+<text x="1568" y="1010" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#996118">Transport success is not settlement or ERP posting.</text>
+<rect x="45" y="1101" width="700" height="120" rx="14" fill="#ffffff" stroke="#c9d5e5" stroke-width="2"/>
+<text x="65" y="1119" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Permission-aware query and export</text>
+<text x="65" y="1159" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Authoritative state + permitted detail/projections -&gt; current scoped reads</text>
+<text x="65" y="1187" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Authorization before aggregation and before download/output release</text>
+<rect x="795" y="1101" width="715" height="120" rx="14" fill="#ffffff" stroke="#c9d5e5" stroke-width="2"/>
+<text x="815" y="1119" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Intelligence: advisory analysis and proposals</text>
+<text x="815" y="1159" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Read through the same permission boundary; retain evidence lineage</text>
+<text x="815" y="1187" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Proposals return to ordinary commands; no direct ledger write/approval</text>
+<polyline points="745,1161 795,1161" fill="none" stroke="#596c85" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="795,1161 783,1154 783,1168" fill="#596c85"/>
+<rect x="1568" y="1101" width="566" height="120" rx="14" fill="#ffffff" stroke="#c9d5e5" stroke-width="2"/>
+<text x="1588" y="1119" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#182c49">Operations and recovery</text>
+<text x="1588" y="1159" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Secrets / durable audit / redacted telemetry</text>
+<text x="1588" y="1187" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#182c49">Retention / backup / revocation / writer fencing</text>
+<text x="45" y="1256" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="21" font-weight="400" fill="#4c5e75">Blue: billing flow   Green: recognition   Amber: external confirmation   Gray: scoped control/read   Purple: proposed SaaS input</text>
+<text x="45" y="1292" dominant-baseline="text-before-edge" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#4c5e75">Logical modules, not one service per box. Storage access is summarized. No technology, node count or runtime capability is certified.</text>
+</svg>

@@ -9,9 +9,9 @@ status: draft
 
 Date: 2026-10-07. Owner request: draw the high-level architecture before reviewing component data flows and fit-for-purpose configuration. Root owns synthesis; independent architecture/billing/security review is separate. Tracking: [HB-19](https://linear.app/hybrid-billing/issue/HB-19/document-high-level-architecture-and-component-data-flows-before). Accountable owner: Seung Woo Park. Execution machine: `machine:mac_mini`. This is a proposed design, not planning acceptance or product implementation. The previously untracked draft is now published through a ticket branch and independent review.
 
-![High-level architecture overview](diagrams/high-level-architecture.svg)
+![Backend solution architecture with shared AI analysis and RAG](diagrams/backend-platform-ai.svg)
 
-The existing static overview is a supplementary data-flow sketch. Start with the logical responsibility map below; the detailed context views and F01-F12 contracts remain reference material.
+The solution overview separates collection/messaging, processing engines, backend applications and data stores, with shared AI analysis/RAG. The [original high-level sketch](diagrams/high-level-architecture.svg) remains historical supporting material. The logical responsibility map and F01-F12 contracts explain business ownership; the AI/RAG and HA extension below adds solution integration and failure behavior.
 
 ## Current review basis
 
@@ -87,6 +87,42 @@ Workflow orchestration owns scheduling, dependencies, bounded retries and execut
 - **Read models:** dashboards, analytics, caches, exports and forecasts are derived. Every view carries scope, revision, completeness and as-of; lag or rebuild cannot authorize money or resurrect access.
 
 These are logical data roles. Object storage/Parquet is a recorded owner foundation from the separate capacity review, while exact table/catalog, transactional technology, messaging products, worker placement and deployment topology require later design. No physical schema, API field-by-field contract, node count or performance commitment is introduced here.
+
+## Shared AI analysis and RAG integration
+
+2026-10-12 owner extension: connect both backend applications and data collection to one governed AI analysis/RAG subsystem. The solution preview is supplemented by an [AI/RAG and availability view](diagrams/backend-ai-ha.svg). This is a design proposal; no inference, indexing, customer-data processing or deployment has run.
+
+| Component | Interface and responsibility | Authority boundary |
+| --- | --- | --- |
+| AI analysis/orchestrator | Backend submits authorized questions/analysis requests; collector/Kafka submits bounded permitted evidence references, scope and revision | Pre-eligibility input may support labeled quality/mapping findings only; analysis cannot publish eligibility |
+| RAG retrieval and data tools | Retrieve approved knowledge/evidence slices with source citations; typed read-only tools obtain scoped dataset/aggregate views | Derive current principal/customer/field scope before search, context delivery and output release; no unrestricted model SQL or storage credentials |
+| Embedding/index worker | Build derived vector/keyword entries from permitted pinned corpus revisions; record document/chunk/field lineage and permissions | Indexing authority is not retrieval authority; source changes invalidate affected entries; no default capture of raw AI bodies/secrets |
+| Retrieval index | Derived vector/keyword store, separate from authoritative financial data; product unselected | Tombstones, holds, revocation and restore control apply to embeddings, index, cache and references; rebuilding uses only still-permitted evidence |
+| Model gateway/runtime | Versioned bounded local inference or separately approved external endpoint; isolated service identity and budgets | No default external transmission or tenant-data training grant; retrieved text/model output is untrusted data |
+| Result/proposal return | Citation-bearing finding, labeled forecast or revision-bound correction proposal returns to collector/backend workflow | Proposed changes re-enter ordinary deterministic validation and financial commands; no direct approval, ledger or ERP write |
+
+Optional AI/RAG failure returns unavailable/insufficient/stale status and queues bounded replay where permitted. A valid deterministic collection/close path continues; missing mandatory source/permission evidence still blocks the affected business gate. Recovery applies current deletion/revocation controls before index replay or answer release. Existing [intelligence contracts](intelligence-layer.md) govern exact proposal and evaluation semantics.
+
+## HA and failure-domain proposal
+
+The owner asked how HA behaves on failure. Propose three independent failure domains within a supported customer installation. This means distinct correlated-failure boundaries for compute, power, network and storage; it does not mean three total servers, or certify site-level disaster tolerance. Replica counts below are evaluation baselines, not purchased capacity or a production guarantee.
+
+| Area | Proposed redundancy | Failure behavior and activation evidence |
+| --- | --- | --- |
+| Ingress and stateless services | Redundant ingress/stable service endpoints; at least two API, collector, integration and AI/RAG instances across domains | Health routing plus sufficient survivor capacity; source partitions/checkpoints use leases, generation fencing and idempotent receipt keys; duplicate workers cannot create economic effects |
+| Kafka | At least three brokers; three dedicated KRaft controllers across domains; RF3, min ISR2 and producer acks=all as initial policy | One in-sync replica failure can retain the configured write threshold; insufficient ISR/controller quorum stops unsafe progress. Validate relevant internal topics, producer idempotence and disabled unclean elections. Kafka delivery does not make database/ERP writes atomic |
+| PostgreSQL authority | Primary plus two standbys; Patroni and three-member DCS as candidates; strict synchronous mode requiring at least one eligible standby acknowledgement | Promote only eligible confirmed candidates under coordination quorum with old-primary fencing and a stable writer endpoint. Loss of safe synchronous/coordination authority blocks financial writes; do not silently switch to async durability. Quorum1 does not imply all standbys contain every acknowledged commit |
+| ClickHouse | At least two replicas per shard plus three Keeper members across domains; shard count workload-driven | Route permitted reads only from a replica serving a complete identified release. Proposed two-replica insert acknowledgement pauses new projection publication when either replica is lost; retained input/result releases support later replay. Do not promise continuous writes or authoritative latest reads in that state |
+| Object storage and table catalog | Distributed storage and redundant catalog service/control state; exact product/replication or erasure/quorum profile unresolved | Verify physical placement, commit consistency, version references and pin/hold/cleanup behavior. Missing object/catalog proof blocks release publication rather than treating a folder or latest table head as eligible |
+| Workflow and compute | Durable domain job state, fenced coordinator/worker claims and restartable deterministic jobs; isolated survivor resource budgets | Lost executors replay exact input/policy releases. Scheduler success is not input eligibility, approval or confirmed external effect. Unknown commits/effects are reconciled under the same intent before redispatch |
+| AI model and retrieval dependencies | Multiple gateway/orchestrator instances; redundant model endpoints and HA index profile only when selected and validated | Two gateways do not certify two GPU/model capacities. Index/model failure degrades AI functionality; it cannot bypass scoped evidence or block otherwise valid deterministic closing |
+| Identity, keys and operational controls | Include IdP, DNS, certificate/secret custody, audit/retention authority and monitoring in dependency review | Unavailable current authorization fails closed. Stale revocation/deletion state cannot be served from backup or cached as permission. Monitoring is separate from durable security/business audit |
+
+Target: evaluate one failure domain loss with workload admission and sufficient N-1 headroom. Burst intake, monthly close, replay, AI/GPU workloads and maintenance compete for capacity; adding replicas alone is not evidence of survivability. Recovery retains financial Claims and unknown external outcomes, applies latest independent control watermarks and fences old writers before resuming actions.
+
+HA handles selected local faults; independent backups/disaster recovery handle deletion, corruption and site loss. Include PostgreSQL/WAL, original/detail objects, table catalog, policy versions, keys and latest revocation/deletion controls in a coherent recovery plan. RPO/RTO and backup location remain owner decisions; no zero-data-loss or timed-failover claim is made. Fault injection, restore, fencing, monetary replay and N-1 load scenarios remain NOT_RUN.
+
+Capability references checked for this proposal: [Kafka KRaft](https://kafka.apache.org/41/operations/kraft/), [Kafka topic policies](https://kafka.apache.org/41/configuration/topic-configs/), [PostgreSQL replication](https://www.postgresql.org/docs/current/runtime-config-replication.html), [Patroni strict synchronous behavior](https://patroni.readthedocs.io/en/latest/replication_modes.html), [Patroni watchdog/fencing](https://patroni.readthedocs.io/en/latest/watchdog.html), and [ClickHouse replication](https://clickhouse.com/docs/reference/engines/table-engines/mergetree-family/replication). Exact version/profile compatibility and actual host topology remain unselected. Independent review and document/visual QA are recorded in the [verification record](../reviews/HB-19-high-level-architecture/verification.md).
 
 ## Architectural direction
 

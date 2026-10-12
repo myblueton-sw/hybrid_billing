@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1240" viewBox="0 0 1560 1240" role="img" aria-labelledby="ha-title ha-desc"><title id="ha-title">Hybrid Billing HA and failure handling proposal</title><desc id="ha-desc">Three independent fault domains, redundant ingress and service pools, Kafka brokers and dedicated controller roles, PostgreSQL primary and two standbys with coordination quorum and fencing, two ClickHouse replicas with three Keeper members, HA data and RAG dependencies, independent backup and disaster recovery. This is a proposed placement, not three total servers or verified capacity.</desc><defs><marker id="ha-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#687e96"/></marker></defs><style>svg{font-family:Arial,sans-serif}text{fill:#24364e}.title{font-size:19px;font-weight:600}.label{font-size:15px}.header{font-size:25px;font-weight:600}.sub{font-size:14px;fill:#61768d}.domain{fill:#f8fafd;stroke:#b3c3d5;stroke-width:1.4}.node{fill:#fff;stroke:#bccdde;stroke-width:1.2}.primary{fill:#eaf3ff;stroke:#5684ba;stroke-width:1.5}.shared{fill:#eef2f8;stroke:#a9bbcf;stroke-width:1.3}.warn{fill:#fff6e9;stroke:#c4a573;stroke-width:1.1}.edge{fill:none;stroke:#687e96;stroke-width:1.6;marker-end:url(#ha-arrow)}</style><rect width="1560" height="1240" fill="white"/>
+<text x="32" y="37" class="header" text-anchor="start">Hybrid Billing · HA &amp; Failure Handling</text>
+<text x="32" y="64" class="sub" text-anchor="start">Proposed three-domain placement / Component counts are not total server counts; N-1 capacity and RPO/RTO remain unverified</text>
+<rect x="378" y="92" width="804" height="88" rx="8" class="shared"/>
+<text x="396" y="121" class="title" text-anchor="start">Redundant ingress / Stable API and writer endpoints</text>
+<text x="396" y="146" class="label" text-anchor="start">At least two ingress instances in separate domains; no single load balancer / DNS dependency</text>
+<rect x="32" y="219" width="480" height="765" rx="8" class="domain"/>
+<text x="52" y="251" class="header" text-anchor="start">Fault Domain A</text>
+<text x="52" y="275" class="sub" text-anchor="start">Separate compute / power / network / storage failure</text>
+<rect x="49" y="300" width="446" height="90" rx="8" class="node"/>
+<text x="67" y="329" class="title" text-anchor="start">API / Collector / AI-RAG service pool</text>
+<text x="67" y="354" class="label" text-anchor="start">Replicated instances across domains</text>
+<text x="67" y="377" class="label" text-anchor="start">Leases / Checkpoints / Fences / Scoped requests</text>
+<rect x="49" y="407" width="446" height="70" rx="8" class="node"/>
+<text x="67" y="436" class="title" text-anchor="start">Compute / Model capacity</text>
+<text x="67" y="461" class="label" text-anchor="start">Restartable jobs; survivor CPU/GPU capacity required</text>
+<rect x="49" y="494" width="446" height="96" rx="8" class="node"/>
+<text x="67" y="523" class="title" text-anchor="start">Kafka broker A / KRaft controller A</text>
+<text x="67" y="548" class="label" text-anchor="start">Broker and dedicated controller are separate roles</text>
+<text x="67" y="571" class="label" text-anchor="start">RF3 / min ISR2 / acks=all; controller quorum 2 of 3</text>
+<rect x="49" y="607" width="446" height="70" rx="8" class="node"/>
+<text x="67" y="636" class="title" text-anchor="start">Coordination member A</text>
+<text x="67" y="661" class="label" text-anchor="start">Patroni DCS candidate / Three-member quorum</text>
+<rect x="49" y="694" width="446" height="97" rx="8" class="primary"/>
+<text x="67" y="723" class="title" text-anchor="start">PostgreSQL Primary</text>
+<text x="67" y="748" class="label" text-anchor="start">Strict sync: acknowledge on at least one eligible standby</text>
+<text x="67" y="771" class="label" text-anchor="start">Old primary fenced before any safe promotion</text>
+<rect x="49" y="808" width="446" height="70" rx="8" class="node"/>
+<text x="67" y="837" class="title" text-anchor="start">ClickHouse replica A</text>
+<text x="67" y="862" class="label" text-anchor="start">Two replicas per shard; shard count workload-driven</text>
+<rect x="49" y="895" width="446" height="70" rx="8" class="node"/>
+<text x="67" y="924" class="title" text-anchor="start">ClickHouse Keeper A</text>
+<text x="67" y="949" class="label" text-anchor="start">Three members distributed across fault domains</text>
+<rect x="540" y="219" width="480" height="765" rx="8" class="domain"/>
+<text x="560" y="251" class="header" text-anchor="start">Fault Domain B</text>
+<text x="560" y="275" class="sub" text-anchor="start">Separate compute / power / network / storage failure</text>
+<rect x="557" y="300" width="446" height="90" rx="8" class="node"/>
+<text x="575" y="329" class="title" text-anchor="start">API / Collector / AI-RAG service pool</text>
+<text x="575" y="354" class="label" text-anchor="start">Replicated instances across domains</text>
+<text x="575" y="377" class="label" text-anchor="start">Leases / Checkpoints / Fences / Scoped requests</text>
+<rect x="557" y="407" width="446" height="70" rx="8" class="node"/>
+<text x="575" y="436" class="title" text-anchor="start">Compute / Model capacity</text>
+<text x="575" y="461" class="label" text-anchor="start">Restartable jobs; survivor CPU/GPU capacity required</text>
+<rect x="557" y="494" width="446" height="96" rx="8" class="node"/>
+<text x="575" y="523" class="title" text-anchor="start">Kafka broker B / KRaft controller B</text>
+<text x="575" y="548" class="label" text-anchor="start">Broker and dedicated controller are separate roles</text>
+<text x="575" y="571" class="label" text-anchor="start">RF3 / min ISR2 / acks=all; controller quorum 2 of 3</text>
+<rect x="557" y="607" width="446" height="70" rx="8" class="node"/>
+<text x="575" y="636" class="title" text-anchor="start">Coordination member B</text>
+<text x="575" y="661" class="label" text-anchor="start">Patroni DCS candidate / Three-member quorum</text>
+<rect x="557" y="694" width="446" height="97" rx="8" class="node"/>
+<text x="575" y="723" class="title" text-anchor="start">PostgreSQL Standby B</text>
+<text x="575" y="748" class="label" text-anchor="start">Eligible synchronized candidate only</text>
+<text x="575" y="771" class="label" text-anchor="start">Promote on primary loss after quorum + fencing</text>
+<rect x="557" y="808" width="446" height="70" rx="8" class="node"/>
+<text x="575" y="837" class="title" text-anchor="start">ClickHouse replica B</text>
+<text x="575" y="862" class="label" text-anchor="start">Two replicas per shard; shard count workload-driven</text>
+<rect x="557" y="895" width="446" height="70" rx="8" class="node"/>
+<text x="575" y="924" class="title" text-anchor="start">ClickHouse Keeper B</text>
+<text x="575" y="949" class="label" text-anchor="start">Three members distributed across fault domains</text>
+<rect x="1048" y="219" width="480" height="765" rx="8" class="domain"/>
+<text x="1068" y="251" class="header" text-anchor="start">Fault Domain C</text>
+<text x="1068" y="275" class="sub" text-anchor="start">Separate compute / power / network / storage failure</text>
+<rect x="1065" y="300" width="446" height="90" rx="8" class="node"/>
+<text x="1083" y="329" class="title" text-anchor="start">API / Collector / AI-RAG service pool</text>
+<text x="1083" y="354" class="label" text-anchor="start">Replicated instances across domains</text>
+<text x="1083" y="377" class="label" text-anchor="start">Leases / Checkpoints / Fences / Scoped requests</text>
+<rect x="1065" y="407" width="446" height="70" rx="8" class="node"/>
+<text x="1083" y="436" class="title" text-anchor="start">Compute / Model capacity</text>
+<text x="1083" y="461" class="label" text-anchor="start">Restartable jobs; survivor CPU/GPU capacity required</text>
+<rect x="1065" y="494" width="446" height="96" rx="8" class="node"/>
+<text x="1083" y="523" class="title" text-anchor="start">Kafka broker C / KRaft controller C</text>
+<text x="1083" y="548" class="label" text-anchor="start">Broker and dedicated controller are separate roles</text>
+<text x="1083" y="571" class="label" text-anchor="start">RF3 / min ISR2 / acks=all; controller quorum 2 of 3</text>
+<rect x="1065" y="607" width="446" height="70" rx="8" class="node"/>
+<text x="1083" y="636" class="title" text-anchor="start">Coordination member C</text>
+<text x="1083" y="661" class="label" text-anchor="start">Patroni DCS candidate / Three-member quorum</text>
+<rect x="1065" y="694" width="446" height="97" rx="8" class="node"/>
+<text x="1083" y="723" class="title" text-anchor="start">PostgreSQL Standby C</text>
+<text x="1083" y="748" class="label" text-anchor="start">Eligible synchronized candidate only</text>
+<text x="1083" y="771" class="label" text-anchor="start">No unsafe async fallback / Quorum1 is not all replicas</text>
+<rect x="1065" y="808" width="446" height="70" rx="8" class="node"/>
+<text x="1083" y="837" class="title" text-anchor="start">Additional data / Compute capacity</text>
+<text x="1083" y="862" class="label" text-anchor="start">Replica and shard placement follows measured workload</text>
+<rect x="1065" y="895" width="446" height="70" rx="8" class="node"/>
+<text x="1083" y="924" class="title" text-anchor="start">ClickHouse Keeper C</text>
+<text x="1083" y="949" class="label" text-anchor="start">Three members distributed across fault domains</text>
+<path d="M780 180V197H272V219" class="edge"/>
+<path d="M780 180V197H780V219" class="edge"/>
+<path d="M780 180V197H1288V219" class="edge"/>
+<path d="M495 739H557" class="edge"/><path d="M495 753H528V688H1065V714" class="edge"/>
+<text x="517" y="731" class="sub" text-anchor="start">Sync</text>
+<rect x="32" y="1005" width="1496" height="74" rx="8" class="shared"/>
+<text x="50" y="1034" class="title" text-anchor="start">Object Storage / Table Catalog / Retrieval Index</text>
+<text x="50" y="1059" class="label" text-anchor="start">HA product profiles + current access, holds and deletion controls; exact storage quorum and node placement are pending</text>
+<rect x="32" y="1098" width="733" height="98" rx="8" class="warn"/>
+<text x="50" y="1127" class="title" text-anchor="start">Failure policy: maintain valid business authority</text>
+<text x="50" y="1152" class="label" text-anchor="start">Quorum or safe PostgreSQL authority lost -&gt; financial writes stop</text>
+<text x="50" y="1175" class="label" text-anchor="start">CH replica lost with insert quorum2 -&gt; projection publication pauses</text>
+<rect x="785" y="1098" width="743" height="98" rx="8" class="shared"/>
+<text x="803" y="1127" class="title" text-anchor="start">AI outage / Disaster recovery</text>
+<text x="803" y="1152" class="label" text-anchor="start">AI unavailable -&gt; deterministic closing can continue if its own gates pass</text>
+<text x="803" y="1175" class="label" text-anchor="start">Independent backups / Coherent restore / Old-writer fencing; RPO/RTO TBD</text>
+<text x="32" y="1224" class="sub" text-anchor="start">HA is not a backup, a site-loss guarantee, or proof of continuous writes; IdP, keys, audit and catalog dependencies must also satisfy the selected profile.</text>
+</svg>

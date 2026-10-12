@@ -43,3 +43,10 @@ The [conditional training/withdrawal contract](../contracts/security/access-and-
 Define first use cases and independent labeled cases before selecting models. Planned evidence: validation false-positive/false-negative cases; correction delta correctness; unauthorized tool/proposal rejection; historical out-of-time forecast backtests with no future-data leakage; per-scope/currency errors against a simple baseline, uncertainty calibration, sparse/no-data behavior, drift and monitoring. Record data/version/cutoff and human review effort, not only model scores. Choose thresholds and forecast horizon with finance/product owners; no invented accuracy guarantee.
 
 Adoption requires independent security/billing review, traceable datasets and measured latency/resource costs under ingestion/closing load. Proposals must remain reversible until approved business execution; issued corrections remain explicit audit history. Current model training, inference, backtests, adversarial tests and integration scenarios are **NOT_RUN**.
+
+
+## Shared backend and collection integration
+
+The owner requested common AI analysis/RAG integration for both backend and data collection on 2026-10-12. The [architecture integration and HA proposal](high-level-architecture.md#shared-ai-analysis-and-rag-integration) defines the common analysis API, permitted evidence-reference triggers, governed retrieval/read-only data tools, embedding/index worker, derived vector/keyword store and isolated model gateway. Retrieval/model products are unselected. Citations and exact source/policy revisions accompany results; pre-eligibility quality findings do not publish eligible input.
+
+Apply current scope before retrieval, before context/output release and before ordinary proposal execution. Index/embedding/cache lifecycle follows source lineage and latest deletion/revocation controls. Optional AI or RAG dependency failure degrades assistance; deterministic eligible processing remains available subject to its own evidence/authority gates. Two API instances alone do not establish redundant inference/GPU capacity. All AI/HA runtime scenarios are NOT_RUN.

@@ -1,0 +1,363 @@
+{
+  "id": "U02",
+  "title": "Closing list and calendar",
+  "audience": "admin",
+  "layout": "table-detail",
+  "purpose": "Manage contract deadlines and completion conditions, resolve blockers, and preserve exemption, postponement and reopening history.",
+  "roles": [
+    "BL settlement operator",
+    "AP approver",
+    "CP customer policy administrator"
+  ],
+  "requirement_ids": [
+    "HB-15",
+    "HB-23",
+    "HB-30",
+    "HB-31",
+    "HB-34",
+    "HB-24"
+  ],
+  "tabs": [
+    "Recognition cadence and reconciliation",
+    "List",
+    "Calendar",
+    "Selected closing detail",
+    "Deadline change history"
+  ],
+  "filters": [
+    "Customer or organization",
+    "Contract",
+    "Legal entity",
+    "Settlement cycle",
+    "Owner",
+    "Stage",
+    "Overdue deadline",
+    "Issuance path"
+  ],
+  "columns": [
+    "Monthly recognition and quarterly billing deadlines",
+    "Monthly posting and unreconciled status",
+    "Customer and contract",
+    "Cycle",
+    "Original and current deadline",
+    "Local timezone",
+    "Remaining or exceeded time",
+    "Stage",
+    "Blockers",
+    "Exempt or held",
+    "Owner"
+  ],
+  "fields": [
+    {
+      "label": "Contract and cycle",
+      "required": true,
+      "type": "reference",
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "Bind to fixed target manifest",
+      "sensitivity": "Transactions"
+    },
+    {
+      "label": "Original deadline",
+      "required": true,
+      "type": "datetime",
+      "required_when": "Always",
+      "editability": "Immutable",
+      "validation": "Retain original deadline and delay after postponement",
+      "sensitivity": "Business"
+    },
+    {
+      "label": "Current deadline",
+      "required": true,
+      "type": "datetime",
+      "required_when": "Always",
+      "editability": "Permitted change draft",
+      "validation": "Calendar revision, timezone, change reason and impact review",
+      "sensitivity": "Business"
+    },
+    {
+      "label": "Calendar rule",
+      "required": true,
+      "type": "reference",
+      "required_when": "Always",
+      "editability": "Approved policy selection",
+      "validation": "Block without fixed-day/business-day, holiday, month-end, leap-year and DST rules",
+      "sensitivity": "Policy"
+    },
+    {
+      "label": "Completion conditions",
+      "required": true,
+      "type": "checklist",
+      "required_when": "Always",
+      "editability": "Read or rerun verification",
+      "validation": "Source, allocation, calculation, approval, issuance and delivery; internal routes have their own conditions",
+      "sensitivity": "Business"
+    },
+    {
+      "label": "Exemption reason and evidence",
+      "required": false,
+      "type": "text-reference",
+      "required_when": "When applicable",
+      "editability": "Exemption authority",
+      "validation": "Separate from completed; require evidence, accountability and allowed scope",
+      "sensitivity": "Business"
+    },
+    {
+      "label": "Owner",
+      "required": true,
+      "type": "scoped-user",
+      "required_when": "Always",
+      "editability": "Assignment authority",
+      "validation": "Hand off pending approvals and notification responsibility; reject inactive users",
+      "sensitivity": "Personal"
+    },
+    {
+      "label": "Denominator changes",
+      "required": true,
+      "type": "revision-history",
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "Record target additions, exemptions and holds with revisions",
+      "sensitivity": "Business"
+    },
+    {
+      "label": "Change reason",
+      "required": false,
+      "type": "textarea",
+      "required_when": "For postponement, reopening or exemption",
+      "editability": "Required editing",
+      "validation": "Reject empty reason; never overwrite history",
+      "sensitivity": "Business"
+    },
+    {
+      "label": "Monthly recognition and quarterly billing deadlines",
+      "required": false,
+      "type": "read-only",
+      "required_when": "For recognition-linked contracts",
+      "editability": "Read only",
+      "validation": "Permitted entity, contract and ERP scope; verify snapshot, currency and posting state",
+      "sensitivity": "Internal accounting and contract"
+    },
+    {
+      "label": "Monthly posting and unreconciled status",
+      "required": false,
+      "type": "read-only",
+      "required_when": "For recognition-linked contracts",
+      "editability": "Read only",
+      "validation": "Permitted entity, contract and ERP scope; verify snapshot, currency and posting state",
+      "sensitivity": "Internal accounting and contract"
+    },
+    {
+      "label": "Operational stage and schedule ID",
+      "type": "enum+reference",
+      "required": false,
+      "required_when": "Schedule change request",
+      "editability": "Read only except explicit command draft",
+      "validation": "Bind cycle and exact stage; exclude payment extension from generic mutation",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Expected schedule and calendar revision",
+      "type": "revision-pair",
+      "required": false,
+      "required_when": "Schedule change request",
+      "editability": "Read only except explicit command draft",
+      "validation": "Bind cycle and exact stage; exclude payment extension from generic mutation",
+      "sensitivity": "Restricted business evidence"
+    }
+  ],
+  "actions": [
+    {
+      "label": "Recheck conditions",
+      "kind": "primary",
+      "effect": "Create a completion-condition verification job",
+      "permission": "closing.validate",
+      "precondition": "Fixed targets and current permission",
+      "confirmation": "Not automatic amount calculation or issuance; confirm target and snapshot"
+    },
+    {
+      "label": "Hand off owner",
+      "kind": "secondary",
+      "effect": "Transfer unfinished work, pending approvals and notification responsibility",
+      "permission": "closing.assign and target-owner eligibility",
+      "precondition": "Current assignment scope",
+      "confirmation": "Confirm recipient and unfinished count; retain prior history"
+    },
+    {
+      "label": "Request deadline change",
+      "kind": "secondary",
+      "effect": "Request a new stage deadline revision after impact review",
+      "permission": "closing.schedule.write and approval policy",
+      "precondition": "Selected cycle, operational stage and schedule revision",
+      "confirmation": "Confirm old/new local and UTC times, affected cycles and preserved delay",
+      "id": "schedule.change_request",
+      "status": "proposed_not_implemented"
+    },
+    {
+      "label": "Request exemption",
+      "kind": "secondary",
+      "effect": "Request approval for a distinct evidenced exemption state",
+      "permission": "closing.exempt scope and policy",
+      "precondition": "Evidence and current exemption scope",
+      "confirmation": "Exemption is not completion or amount deletion; confirm reason and evidence"
+    },
+    {
+      "label": "Request reopening",
+      "kind": "danger",
+      "effect": "Before issuance create new calculation/approval; after issuance link an original-referencing correction",
+      "permission": "closing.reopen and current state",
+      "precondition": "Current target state permits governed path",
+      "confirmation": "Never overwrite finalized content; confirm target, impact and path"
+    },
+    {
+      "label": "Open approval inbox",
+      "kind": "secondary",
+      "effect": "Open related fixed result in B09",
+      "permission": "approval.read/request",
+      "precondition": "Related fixed result available",
+      "confirmation": "A deadline cannot automatically approve or issue"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Monthly ERP recognition and quarterly billing reconciliation",
+      "content": [
+        "Monthly transmission and actual posting confirmation are independent of billing.",
+        "Current monthly net plus approved adjustments not yet included equals quarterly comparison; never count an adjustment twice."
+      ]
+    },
+    {
+      "title": "Period and mode",
+      "content": [
+        "Switch list/calendar while preserving filters."
+      ]
+    },
+    {
+      "title": "Closing targets",
+      "content": [
+        "Use text to distinguish deadlines, exceeded deadlines and blockers from completion, exemption and holds."
+      ]
+    },
+    {
+      "title": "Selected target conditions",
+      "content": [
+        "Show mandatory stages, evidence, owner and next action."
+      ]
+    },
+    {
+      "title": "Deadline and state history",
+      "content": [
+        "Preserve original deadlines and all postponements, exemptions, reopenings and target changes."
+      ]
+    },
+    {
+      "title": "Stage-specific schedules",
+      "content": [
+        "The proposed [command contract](../../../contracts/commands/planning-actions.md) defines `schedule.change_request`. Target identity is the ClosingCycle plus explicit operational stage and schedule ID, never a bare cycle deadline. Bind authenticated scope, expected schedule revision, original/current/proposed local and UTC timestamps, timezone, calendar-policy revision, reason, affected targets and approval policy. The confirmation names the selected stage and unaffected stages.",
+        "Collection, calculation, approval, issuance, delivery and payment are distinct stages. A collection deadline change cannot silently move approval or delivery. Payment due-date extension is excluded from generic operational schedule mutation and must route to the separately governed `payment.extension_request` and approved payment-term extension process with its own document/receivable authority, approval and immutable original due date. Monthly-recognition closing and quarterly-billing closing also retain separate cadence and target identity. Select no calendar, grace or extension default here.",
+        "The request creates a proposed revision pending the required approval; it does not execute billing or complete closing. The separate proposed `schedule.apply_approved` applies the exact approved digest with separately authorized approval/execution permission and compare-and-swap against the expected stage/schedule revision. A request receipt is never application. Stale revision, changed calendar evidence or authority requires reload and new review. Same-key/same-payload retry rechecks current authority and returns the original permitted result; different payload conflicts. Preserve initial deadline and all delays, reasons, approvals, exemptions and reopenings. Missing required calendar policy blocks rather than substituting a date.",
+        "Acceptance (NOT_RUN): same cycle/different stages remain distinct; old-stage revision cannot mutate a new schedule; payment extension cannot use this generic action; retries do not create multiple revisions; DST/holiday policy changes force review; approval or deadline arrival cannot issue or complete the cycle."
+      ]
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "message": "Checking scope and permissions and loading Closing list and calendar."
+    },
+    {
+      "name": "empty",
+      "message": "No closing targets match the filters."
+    },
+    {
+      "name": "partial",
+      "message": "Only part of the data or work is ready. Show ready, missing, held, failed and unprocessed scopes separately; this is not full completion or zero."
+    },
+    {
+      "name": "blocked",
+      "message": "Unknown ERP outcomes, differences or mandatory file failures prevent closing."
+    },
+    {
+      "name": "error",
+      "message": "Closing conditions could not be verified. Preserve the existing closing state."
+    },
+    {
+      "name": "revoked",
+      "message": "Access to this scope has changed. Remove sensitive details, previews and selections, stop affected actions and downloads, and query permitted scope again. Recall of externally delivered copies is not guaranteed."
+    },
+    {
+      "name": "exempt",
+      "message": "This target is exempt based on evidence. Count it separately from completed targets."
+    },
+    {
+      "name": "recognition-unreconciled",
+      "message": "Monthly posting or billing reconciliation is incomplete. Check missing evidence, differences and adjustments."
+    },
+    {
+      "name": "schedule_change_pending",
+      "message": "This stage-specific change awaits required approval. Other deadlines remain unchanged."
+    }
+  ],
+  "links": [
+    {
+      "label": "Home",
+      "screen_id": "U01"
+    },
+    {
+      "label": "Jobs and deadline notifications",
+      "screen_id": "U03"
+    },
+    {
+      "label": "Reconciliation",
+      "screen_id": "S06"
+    },
+    {
+      "label": "Calculation",
+      "screen_id": "B08"
+    },
+    {
+      "label": "Approval",
+      "screen_id": "B09"
+    },
+    {
+      "label": "Documents",
+      "screen_id": "I01"
+    },
+    {
+      "label": "History",
+      "screen_id": "R02"
+    }
+  ],
+  "sensitive_fields": [
+    "Customer closing",
+    "Blocked amount",
+    "Owner",
+    "Exemption evidence"
+  ],
+  "open_decisions": [
+    "Holiday calendar, business-day and DST values",
+    "Deadline change and exemption approval roles",
+    "Escalation stages and timing"
+  ],
+  "acceptance_ids": [
+    "AUD-QA-03",
+    "ERPC-01",
+    "ERPC-02",
+    "ERPC-03",
+    "ERPC-04",
+    "ERPC-05",
+    "ERPC-06",
+    "ERPC-07",
+    "ERPC-08",
+    "UI-02",
+    "UI-06"
+  ],
+  "status": "static_design_only_not_implemented",
+  "command_contract": "../../../contracts/commands/planning-actions.md",
+  "source_provenance": {
+    "ticket": "HB-16",
+    "original_spec_sha256": "18d33f7ddd3e4ff8f6a88611d25190412272153c94d90ec32f72c62da5a8e742",
+    "original_design_sha256": "93131812be27490944f159a21e047390f85ef9397a40377a6ebe417bddbd8af7",
+    "translation": "English translation and integrated planning remediation; source semantics retained; runtime tests NOT_RUN"
+  }
+}

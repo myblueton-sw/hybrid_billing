@@ -7,6 +7,8 @@ status: draft
 
 # Logical data model
 
+The [HB-21 logical schema draft](logical-data-schema.md) refines the entities, keys, references and consistency boundaries using the proposed HB-19 architecture. Its [evidence/detail companion](evidence-detail-schema.md) specifies bulk fact grains, releases and lifecycle metadata. These are documentation proposals; physical schema and product implementation remain gated.
+
 Part of [HB-7](../architecture-readiness.md). Proposed refinement of local v1.16 `domain-contracts.md`, `retention-access.md`, `payment-terms.md` and `erp-recognition-cadence.md`; these local files remain unpublished. Entity names, keys and relationships below are logical proposals. No DDL, migrations, index implementation or production data exist in this package.
 
 ## Installation tenant customer and organization

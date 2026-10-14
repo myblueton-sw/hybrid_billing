@@ -23,7 +23,7 @@ Technology choices and supported provider/ERP combinations remain subject to pla
 
 ## Architecture preparation
 
-The [HB-21 logical data schema draft](docs/architecture/data-ownership/logical-data-schema.md) defines entity keys, relationships, ownership and financial state boundaries against the separately proposed HB-19 architecture, with a companion evidence/detail schema. Its latest capacity premise is more than 100 million source records/day; earlier examples elsewhere remain historical planning inputs. Physical database design, policy adoption and runtime verification remain pending.
+The [HB-21 logical data schema draft](docs/architecture/data-ownership/logical-data-schema.md) centers on [actual usage, MSP contract pricing, monthly closing and final charge adjustments](docs/architecture/data-ownership/monthly-settlement-schema.md), with separate evidence/detail and financial authority. Direct/resale responsibility, provisional versus final amounts and pre-issuance versus issued corrections are explicit. Its latest capacity premise is more than 100 million source records/day; earlier examples elsewhere remain historical planning inputs. Physical database design, policy adoption and runtime verification remain pending.
 
 The owner has selected self-hosted delivery. The [architecture readiness plan](docs/architecture/architecture-readiness.md) organizes the operating prerequisites, development sequence, ClickHouse/Kafka/OpenTelemetry assessment, billing data model, collection methods and source grouping, tenant/customer/organization management, session and permission policies, admin/customer data views, and intelligence layer. PostgreSQL is the first transactional candidate; component adoption, sizing and implementation remain unverified.
 

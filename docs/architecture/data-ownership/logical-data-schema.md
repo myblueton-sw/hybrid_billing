@@ -7,6 +7,26 @@ status: draft
 
 # Logical data schema
 
+## Primary business path: actual usage to adjusted monthly charge
+
+The [usage-driven monthly settlement schema](monthly-settlement-schema.md) is the primary business view. It explicitly restores original service subscriptions, MSP/customer contract rate bindings, direct/resale responsibility, provisional month calculations, complete monthly closing, pre-issuance final amount adjustment and issued corrections. Supplier invoice reconciliation is a conditional source-cost path, not the only way to calculate charges. Monthly settlement here means usage/charge finalization, not cash receipt. Historical review PASS for the initial draft does not certify this redesign.
+
+```mermaid
+flowchart LR
+    U[Actual usage and permitted cost evidence] --> M[Source to customer contract service mapping]
+    C[Effective contract service and rate policy] --> P[Provisional monthly calculation]
+    M --> P
+    P --> S[Complete month close and base ChargeLines]
+    S --> A[Explicit quantity fixed or target-total AdjustmentDraft]
+    A --> F[Recomputed final settlement snapshot]
+    S --> F
+    F --> H[Independent exact-amount approval]
+    H --> I[Claim reservation and authorized issuance]
+    I --> R[Linked immutable issued corrections]
+```
+
+The full entity/state/precedence/FOCUS and original requirement trace is defined once in the monthly companion. Existing authority, evidence, Claim, receipt, recognition, SaaS and recovery families below support this path. Unconfirmed/partial usage produces labeled estimates only; complete eligible evidence and approved policies produce final candidates. An adjustment grants neither source eligibility nor new economic coverage.
+
 Tracking: [HB-21](https://linear.app/hybrid-billing/issue/HB-21). Accountable owner: Seung Woo Park. Root owns PM/planning and all document edits; separate read-only architect and DBA reviewers assess actual changes. Machine during execution: `mac_mini`. This is a reviewable logical draft, not approved policy, DDL, migration or product implementation.
 
 ## Basis and scope
@@ -75,18 +95,22 @@ This is a simplified business view, not a complete cardinality diagram. A run pu
 | `TrustChange`, `TrustDecision`, `RevocationDecision` / identity | Connection/change revision; independent proposer/approver and activator | Old/new digests and epoch, affected identities, legitimate proof/recovery refs, approval digest, monotonic activation epoch and invalidation intent. Changed proof/config invalidates approval; rollback is a new epoch. |
 | `Party`, `WorkspaceParty`, `CustomerRelationship` / customer | Explicit workspace association to legal actor; 1:N selling/service relationships | Seller/buyer/responsibility roles, governed private profile revision, ERP mapping, effective/recorded times. Similar names and shared payer do not merge relationships. Global Party identity requires approved sharing; private fields stay scoped. |
 | `OrganizationNode`, `OrganizationRevision`, `GroupMembership` / customer | Workspace node; acyclic parent graph; overlapping groups allowed | Fixed complete hierarchy revision, effective dates and canonical member IDs. Activation validates whole revision; grouping never double-counts facts or transfers liability/grants. |
-| `Contract`, `ContractRevision`, `SourceAccountAssignment` / policy | Customer relationship to seller/buyer and scoped source account; 1:N fixed revisions | Effective interval, commercial responsibility, attribution revision, approved policy bundle and terms. Reject unsupported overlaps; retroactive changes require impact review. Historical calculations keep exact attribution. |
+| `Contract`, `ContractRevision`, `SourceAccountAssignment` / policy | Customer relationship to seller/buyer and scoped source account; 1:N fixed revisions | Effective interval, explicit direct/resale/internal route, per-component payment responsibility and permitted MSP selling scope, attribution revision, approved service/rate bindings and terms. Reject unsupported overlaps; retroactive changes require impact review. Historical calculations keep exact attribution. Direct CSP usage cannot be implicitly resold. |
 | `PolicyRevision` / owning domain | Typed numeric/rate/discount/allocation/FX/tax/payment/retention/access policy | Full content digest, effective scope/interval, independent expected cases where required, approver and activation evidence. Missing required values block activation. One generic policy ID cannot erase domain-specific validation. |
 | `NumericProfile`, `FormulaProfile`, `FXEvidence` / calculation policy | Policy-revision subtypes | Magnitude/scale/aggregate bounds, signs, units, allowed operators/budgets, rounding stages/modes/quantum/residual algorithm; FX purpose, pair, quotation numerator/denominator, rate/as-of/source and explicit fallback approval. No universal defaults. |
 
+Commercial refinements: `ContractServiceItem`, `ServiceDefinitionRevision`, base `ServiceSubscription`, `SourceServiceMappingRevision`, `RatePlanRevision`, `RateRuleRevision`, `ContractRateBinding`, `PricingSelectionTrace`, `BillingScheduleRevision` and `ContractEvent` use the detailed fields/invariants in the [service/rate catalog](monthly-settlement-schema.md#service-source-and-pricing-bindings). Pricing and FX preserve their distinct source-defined priority ladders; they are not one generic priority field. Conditional SaaS references these shared commercial terms.
+
 ## Calculation and fixed approval
+
+`SettlementPeriod`, `MonthlyCloseRevision`, `ProvisionalCalculation`, `ChargeLine`/`RuleTrace`, `FinalSettlementSnapshot` and `BillingCycle`/`CycleSettlementLink` refine this catalog through the [monthly close model](monthly-settlement-schema.md#month-close-and-calculation-entities). ChargeLine is the selling component view of immutable CalculatedComponentFact; InputRelease/ResultRelease below are the typed input/result BusinessReleaseManifest, not competing manifests. AdjustmentDraft/Line/Decision and issued adjustments follow the [distinct before/after issuance paths](monthly-settlement-schema.md#pre-issuance-final-charge-adjustment).
 
 | Entity / owner | Key and references | Required data / invariant |
 | --- | --- | --- |
-| `CalculationRun` / calculation | Run ID; exact InputRelease and complete policy/contract/org/unit/engine/plugin revisions | Economic period and scope, calculation purpose, engine digest, technical state and error evidence. Retrying preparation does not create fresh economic coverage. Workers cannot approve their results. |
+| `CalculationRun` / calculation | Run ID; exact InputRelease or explicitly noneligible provisional observed-input set, monthly close/item/binding and complete policy/contract/org/unit/engine/plugin revisions | Economic period/scope, purpose and provisional versus final-candidate kind, adjustment/selection trace, engine digest and technical/error evidence. Only final candidates from eligible input can enter approval. Retrying preparation does not create fresh economic coverage. Workers cannot approve results. |
 | `PoolSnapshot`, `PoolMember` / calculation | Pool ID/revision; unique `(pool_revision, canonical_target_id)` | Complete scope and digest, allowance/tier/min-max/allocation purpose, all weights, denominator, total, explicit algorithm and numeric profile, final conservation totals. Page/chunk/filter never changes membership or allowance. Large member sets live in fixed verified detail. |
 | `ReconciliationCase`, `WarningDecision` / reconciliation | Result/evidence revisions and precise affected scope | Expected/observed counts and compatible totals, independent comparison method, differences, blockers; acknowledged warnings bind policy, ceiling, actor and exact evidence. Zero unexplained difference is not a hidden tolerance. |
-| `ApprovalRequest`, `ApprovalDecision`, `ApprovedSnapshot` / finance | Request purpose and immutable snapshot digest; 1:N decisions | Exact result/input/policy/coverage/amount refs, target issuer/entity/books/period as applicable, approver, time, segregation evidence and authority epoch. Current role/separation/ceiling and unchanged digest rechecked at effect time. Rejection is not deletion; stale draft needs new approval. |
+| `ApprovalRequest`, `ApprovalDecision`, `ApprovedSnapshot` / finance | Request purpose and immutable final settlement snapshot digest; 1:N decisions | Exact monthly close/result/input/service/rate/adjustment/policy/coverage/amount refs, target issuer/entity/books/period as applicable, approver, time, segregation evidence and authority epoch. Current role/separation/ceiling/selling eligibility and unchanged digest rechecked at effect. Provisional/adjustment approval alone cannot authorize final billing. Rejection is not deletion; stale draft needs new approval. |
 | `NumberSeries`, `IssuedDocument`, `DocumentLine` / finance | Series scoped by issuer/type/legal profile; unique issued number within approved series domain | Immutable approved revision and rendered artifact digest, seller/bill-to, currency/basis, line component/quantity/money and payment-term snapshot. Atomic issuance intent/number allocation with financial gate; voided numbers remain history under chosen numbering policy. |
 | `DocumentContribution`, `DocumentClaimLink` / finance | Explicit line to fixed component/contribution and effective ClaimApplication link | Many-to-many lineage with quantity/amount/weight semantics; no join fan-out totals. Prepared links may reference reservations; confirmed economic links reference applications. Document existence alone does not assert an external economic effect. |
 

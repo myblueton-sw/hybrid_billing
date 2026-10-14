@@ -1,0 +1,153 @@
+{
+  "ticket": "HB-16",
+  "semantics": "Predecessor hashes identify preserved local planning bytes; current hashes identify translated/remediated canonical files. No original-source DOCX changed.",
+  "files": [
+    {
+      "path": "docs/planning/v1.16/domain-contracts.md",
+      "previous_sha256": "202d8ff891d6763d07302ab36813696109ec06a6cd492f3de2341a086a771682",
+      "current_sha256": "aec83bdea4dd92591c7e7ea0440bca6b6fbeb1385c705ae6161f413342f9173e",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/S02/spec.md",
+      "previous_sha256": "fafdd44b5ee29c366df3720fe22aa600e11d3388d0f28a625b9a59e96f25d3f2",
+      "current_sha256": "7f70a3b3cde55094f3a6b57f3eb0ae06e96d08da61bddfda2f6eb422663d49e7",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/S02/design.json",
+      "previous_sha256": "6f23a8d7e0d397ba05e0e1175f590eb84c581a7ca4a135be4783c51e40a50d26",
+      "current_sha256": "ae3510782510662cbeadd841fe240c1ff885585fc3400d94e95c232f5f52854c",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/S03/spec.md",
+      "previous_sha256": "caed22102c13593bf67e4973d1591d417c9c386fddd85a7b32a99bdf44d4d988",
+      "current_sha256": "000c22eeb378062fc103778198dab18a161fbb663b78bcc8a41998a1f488e147",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/S03/design.json",
+      "previous_sha256": "190827d02fb49c60fa622bf9e3cf53956ef4cb7f57f5048d83f07ce0d31fbf75",
+      "current_sha256": "6dfd671e31d77e2f379c8cc02729402a28529d37f203908c5322bd40133a101d",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/S06/spec.md",
+      "previous_sha256": "afca06def277689139b4d15ec753a3079bf2b845966de2ed70fdde9223e0138c",
+      "current_sha256": "e4cf9c532e9c1a16bbf75dd553666d64aad98f3d505b0cb80cf66803763763f1",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/S06/design.json",
+      "previous_sha256": "d1bbed9693561fc97ea439f719d0a488da8aef72f652a790508b1254fecfe53a",
+      "current_sha256": "58e62c3094ea37c8891b310f1212272122b0327c2bc52fe3db6ab7fda30a0e00",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/B09/spec.md",
+      "previous_sha256": "074c4d8d91dd79523c7ac545f956359beae2648f6d490ee4ea5a93be2b9fcc25",
+      "current_sha256": "14b82b66d5e696c12d35f29d04e515ddf0a138fcbbe2723c4d4e3d3dab6cf5d2",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/B09/design.json",
+      "previous_sha256": "ddb23aa02fc13c0b96a6a4eb2c358c486ab36c5821d66ab45f6d6261918d9fca",
+      "current_sha256": "9b6c2088b6e66acc8de198b315fc2f74438130fe89d3fdcd22e6c0fc08f1cd20",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/B10/spec.md",
+      "previous_sha256": "d276af243f765dfffa40e4783a87b5da1ad54f1326f9ad6b6041c6c0f2d45460",
+      "current_sha256": "3f1289a1243fe61905bdfeb31ee2170e9d12a3925c4807fa8cc6660d7a8b3b63",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/B10/design.json",
+      "previous_sha256": "648394cd9c3e73519729e248937ac00bf9e30e0c098ada8778b2f2562198be96",
+      "current_sha256": "2a183c29ac20b8e96c2537fd8180d5a4f9f4848c7581e74649ccd7bb91997f91",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/B11/spec.md",
+      "previous_sha256": "618d38f51a8a04e7e484e81b1ec7ea4f673a54ae87276dbcbce02a132dca0390",
+      "current_sha256": "58b270b84fb2b438740afb9e899b3a0aa575265a4bb49f2cd0272685576a6e5f",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/B11/design.json",
+      "previous_sha256": "f083b2c00cbd2666e0d94bd11f8bb04ce3b6dc3e6f89f503e791b165ee4231fb",
+      "current_sha256": "b47c994bc2400e360105a89637891c63f8be960d4f5503466c5e269a712d92a1",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/I04/spec.md",
+      "previous_sha256": "894a38132b649cc68f7372800768b4b982c4605254e60f24e0fb77ebf0acc4a4",
+      "current_sha256": "16b332efd752730de85f37f451f99d2a9e7fb95bfa7a0f2e21b3c6fed7fa6314",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/I04/design.json",
+      "previous_sha256": "ac6291fe63843b77fb4344b18cc38db678117e20813ebfd29345e42ecc9f991f",
+      "current_sha256": "367a161b83379b4f3c95514c4b1dfb87491b0e43a708c83044c122a87169d06a",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/M02/spec.md",
+      "previous_sha256": "1172749b27c04c9f2047163b73b9fa73238655efd5efdfa79ece3db5353689ff",
+      "current_sha256": "b8d0876cc8c52ae1482d168f8429789f2cef0c7698a37038379404a9fc2d40ba",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/M02/design.json",
+      "previous_sha256": "2ac0bc852df8b0c5f975bcb4c161848df8d5426b231e8943a66c269019dabcdf",
+      "current_sha256": "8fd7116f63ae3ed45da939b217fc5175ae1663431c073f0787ede3790364c541",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/U01/spec.md",
+      "previous_sha256": "4a9692be701a7032fc1e0b6e77c1b72011b318c579519653469b4f009c2c2123",
+      "current_sha256": "ef7a66ed955f89415a6a61bcd78edb74f2e53304d763a2ea53c1d05c6ce8573f",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/U01/design.json",
+      "previous_sha256": "c2693641be9e14ba442cdb2ff5843b1ef002f6d08aff88486010e3645a9ecbc6",
+      "current_sha256": "261b3f04dc6acb56134b3a1109cf9c7dc7bb97b41d32cad431ab9be0ebed9a27",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/U02/spec.md",
+      "previous_sha256": "18d33f7ddd3e4ff8f6a88611d25190412272153c94d90ec32f72c62da5a8e742",
+      "current_sha256": "de9e9bb06bf250c3e4e168bca7d88d7d0e489b294337c648496dc6fb45c23445",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    },
+    {
+      "path": "docs/ui/screens/U02/design.json",
+      "previous_sha256": "93131812be27490944f159a21e047390f85ef9397a40377a6ebe417bddbd8af7",
+      "current_sha256": "5fdf941f859efd2e58e9a33aa651d5c30331798704e0649776962d18012ea97b",
+      "previous_availability": "authorized_local_snapshot",
+      "current_publication": "included_in_HB16_PR"
+    }
+  ]
+}

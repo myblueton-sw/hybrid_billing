@@ -1,0 +1,999 @@
+{
+  "ticket": "HB-15",
+  "inputs": [
+    {
+      "path": "/Users/home/project/hybrid_billing/.local/planning/source.txt",
+      "sha256": "e3bf4789203da5bb347d867a8e8765b070628ad706a7d5b7e8e56c295be5fa99",
+      "bytes": 324595,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/architecture/admin-design.md",
+      "sha256": "a803aa2ac9f62075e40bd5ea90211fc2ab05fc95152caaa69451e4e7be444b82",
+      "bytes": 11077,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/architecture/architecture-readiness.md",
+      "sha256": "74faa78c9fcff42ea548f4f3e5e31dbff19a8f6a056baea20b44519535d24b7b",
+      "bytes": 13393,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/architecture/data-collection.md",
+      "sha256": "a74624901a1aba1167b3f20ca4bc01f23ffddba875f9d4222a5606d0df926a15",
+      "bytes": 14272,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/architecture/data-ownership/billing-data-model.md",
+      "sha256": "132ff0ebf5b472591fa8889d24bccfab7d89834f15eed92000101534c8c01ccc",
+      "bytes": 13835,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/architecture/intelligence-layer.md",
+      "sha256": "eed4a6fe1c40de8493bb7e35855935ee0eb7ae113751b3f28196cc0079179fa6",
+      "bytes": 6513,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/architecture/security-boundaries/identity-session-permissions.md",
+      "sha256": "2781929be06884efe7312b250285a829ccfea3e42af73fcee6b0b5a4a2191537",
+      "bytes": 9323,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/architecture/self-hosted-installation-assessment.md",
+      "sha256": "2a83d5bec2c98ec4d298397efdd809545cbaaf7804d83755b8c765357dbf507d",
+      "bytes": 15237,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/architecture/technology-assessment.md",
+      "sha256": "acfb6279d553dcfc14714f958226ce18e051368f17fead44c386d43cc32d6009",
+      "bytes": 7970,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/architecture/usage-detail-lifecycle.md",
+      "sha256": "2dc9849a1640034efddf0247ae30ea301ef2d059d0d41738a7a83f00b31723ef",
+      "bytes": 21237,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/contracts/billing/claim-and-numeric.md",
+      "sha256": "b1c787c91acd7eac59afc987c1af640c5054eeba9916a59a4e527799ce0b3b60",
+      "bytes": 14927,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/contracts/billing/inputs-pricing-and-erp.md",
+      "sha256": "b1357c01a80665620c1c416701713eed89a5a101d6ea08e094bdc817aecee7ff",
+      "bytes": 12884,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/contracts/billing/payment-and-recognition.md",
+      "sha256": "1d788ab2d3c71e371e9b6892ca333a35ee99278b6f3426dc130cfd6b101588ec",
+      "bytes": 14400,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/contracts/commands/planning-actions.md",
+      "sha256": "3e80ce3ca01b4b348ad49b0f867247f4344de3b82008ed0f998402edc378bff4",
+      "bytes": 16529,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/contracts/operations/holds-onboarding-and-favorites.md",
+      "sha256": "41810ba9a80afd4d7f234eddd38a1ae49d29902a91a4ada27931ffe01b24924b",
+      "bytes": 9338,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/contracts/security/access-and-trust.md",
+      "sha256": "688ed0d33d4924ec8b907ece426af7fffb672ededad4c3fb27a532398be043f7",
+      "bytes": 11126,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/licensing/commercial-evaluation.md",
+      "sha256": "b9f88f9dcd249f15d131eeaf4395cc8babd6913b671b0c35903f9bcf7b0c2afe",
+      "bytes": 2995,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/licensing/product-license-draft.md",
+      "sha256": "818c9828018199bf1d46cefac034f85158081c42321fb1c057cabb849aa54eb1",
+      "bytes": 2962,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/licensing/product-policy.md",
+      "sha256": "fec5d9e9124f725f97620d63161602764d8f9e860cb160ad5622f3fa5ca47d21",
+      "bytes": 3632,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/recent-owner-requirements.md",
+      "sha256": "3d1c9d0a91b2e12609db3bd804c9e30a26de8dce119e3b9a80dfcab744745466",
+      "bytes": 12126,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/acceptance-trace.json",
+      "sha256": "9e5dc2524b330b897cee3a139dfd9b5838bc698d941dd470d319c8f532577788",
+      "bytes": 93804,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/architecture.md",
+      "sha256": "fd8ff332254d7cbdfa999e10fb6ec60e068b3448a6540556d8d93379dca5a030",
+      "bytes": 16474,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/audit-report.md",
+      "sha256": "b741c57f119735308926f4c4144c1e91a7f372032090eee5fa9faf70d0f068ef",
+      "bytes": 10407,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/audit-validation.json",
+      "sha256": "13568f2292e1e6aac263efecdf62b4ad3d4f594733f404773205202480311f2e",
+      "bytes": 329,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/delivery-plan.md",
+      "sha256": "7faeb5d93d57c69546fbb5fdbc954ffd43d75aa5a60cd67118ffdee83c4baf03",
+      "bytes": 8923,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/detailed-requirements.json",
+      "sha256": "d65047ec31de364d375c279b3a52eb91fd9bc976cf8ade10af1fc62b0248ae7c",
+      "bytes": 51380,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/detailed-requirements.md",
+      "sha256": "31913859fff4f5246378bbdb4d47dcedd5fc93d2763f25c1a3cc53d38272e200",
+      "bytes": 36796,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/document-validation.json",
+      "sha256": "7fd1d6446c411044a8eb2e17f2ebbeb6266d23f5631e1c28e0728735cceafe86",
+      "bytes": 749,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/domain-contracts.md",
+      "sha256": "aec83bdea4dd92591c7e7ea0440bca6b6fbeb1385c705ae6161f413342f9173e",
+      "bytes": 15808,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/erp-recognition-cadence.md",
+      "sha256": "3424888e12ff6fc1752b753f08d1830f8f644447c3864a0859b14205f9b762e8",
+      "bytes": 10455,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/log.md",
+      "sha256": "dec7cb37d191ba82f8b17148dde310eafe82f7e571f79e15a4947c663af3ecae",
+      "bytes": 2507,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/overview.md",
+      "sha256": "fb06fb5b7aaf48cfb12fb6410cb273c861fca488d2dbba0a5bb7d8278a495019",
+      "bytes": 7030,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/payment-terms.md",
+      "sha256": "75a67d35a0e1ffe52bf257c84ace9f894b28158fd1d88ff22a7cc45930da0af3",
+      "bytes": 8868,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/planning-closure-plan.md",
+      "sha256": "217e32186f2f1b95bdbea084dfaa730a24cc712b0b40802ada22d10b92fcbb77",
+      "bytes": 11821,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/planning-decisions.md",
+      "sha256": "b10e68a41f8e163dda328ccc5a9491cc3ff3dd66cafda6a2f95eeae488cf8d4f",
+      "bytes": 10517,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/planning-gate.md",
+      "sha256": "5aa121d50849770d15bfe06af108f3d011c3621467ef31bcd5357c0d16e1dfaa",
+      "bytes": 1700,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/planning-reconciliation.json",
+      "sha256": "ba9382603c700b25de800654cb15c12ac0ed0d7086c9d32dbd8889f458b9c572",
+      "bytes": 90980,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/planning-reconciliation.md",
+      "sha256": "090b6d52dfd57fe718969c68a8582326879a091bc17e2fff49351e0d49c17ee3",
+      "bytes": 20313,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/provider-profiles.md",
+      "sha256": "accbf2f87858f65f6fd98c3752ff74427980f9ab34aaa6c3041fbbf23ca6e3f5",
+      "bytes": 8290,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/release-gates.json",
+      "sha256": "09a21beeedd3e0df31bc90af6d312737069b9360b39fd83254e8550428ef81e6",
+      "bytes": 15766,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/remediation-trace.json",
+      "sha256": "ff9f513812afc7dbb1bc9637ce6cdb41fea47621cd314ccfb04a3ace6496b959",
+      "bytes": 87212,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/repository-structure.md",
+      "sha256": "1b82dc28d10522b7d515ba26fd3ab31fb39e5e69cbcdfc7a82400e18c7a8b458",
+      "bytes": 24021,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/requirements.json",
+      "sha256": "52cbf37cb8cd267c91aa9dfa2716ee002deb5273678a32808477d2505357ed86",
+      "bytes": 141333,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/requirements.md",
+      "sha256": "c89db306f871abb59d504a4835bde895a87a3e7b359b4b25ba7a9c056e22ebb2",
+      "bytes": 63928,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/retention-access.md",
+      "sha256": "24eef063183549ae3735fb534765624c7ae473a6e34562b88a3772b67c61b75e",
+      "bytes": 18406,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/review.md",
+      "sha256": "a1bb68d59e695e567fc9683be32cb006399c9c15c1555e2641d04569533eebcb",
+      "bytes": 5127,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/scale-validation.md",
+      "sha256": "7365a3443f6ef2e74ad6f7e859ab82137c1117dcd7b17c852b931174a3990ef8",
+      "bytes": 6568,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/source-coverage.md",
+      "sha256": "a4527f686f9f3e06adfaf4e07c03ac0c580a51e73521e6bdba690511e659f2a7",
+      "bytes": 15199,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/source-inventory.json",
+      "sha256": "1858e715e3dd7278fdfa1e57bb2fa0ed195a97fa0710390a1f82a6cff630f495",
+      "bytes": 40098,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/ui-design.md",
+      "sha256": "b4360c50bca4d98c9d47043f5569dbf8b91e9328925fae0f37842a341651738d",
+      "bytes": 74930,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/work-breakdown.md",
+      "sha256": "5fca163bce0b04d68ed54ca4ccbe689a0ba08d244d4aa3c231d42e6fd9e7dfd7",
+      "bytes": 65463,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/planning/v1.16/work-items.json",
+      "sha256": "230f6fa1d93f42e059614fe6dd064420dd9575de22cbc91693aef8e4f3933e95",
+      "bytes": 184709,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/A01/design.json",
+      "sha256": "1210ae1909e2c5849376138d593ebe87ccf9670e90e1db5cf49534fe51b8b913",
+      "bytes": 5237,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/A01/spec.md",
+      "sha256": "5f72b63ed745ca08b72bd8760fa0a9bbb7bf67ad7818bd060fc64781d750c5ce",
+      "bytes": 10929,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B01/design.json",
+      "sha256": "db2bd667e3dc51eb25a8dbd1c7830e049e55620de8faa7360f9aed8bd9e54637",
+      "bytes": 4131,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B01/spec.md",
+      "sha256": "2d6756457b96df833ae2bb16c6947631358e6061c29c4379f5f52ebd2d96f760",
+      "bytes": 8985,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B02/design.json",
+      "sha256": "c9a6bbec102aaa4d8eb673c3c454335b683bcb8603ae0be651562817f7e5ece1",
+      "bytes": 4108,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B02/spec.md",
+      "sha256": "7ccd5522747c51baa4f0f8b54f85ded002be8de4b62a15edbe177550c6c4572c",
+      "bytes": 8937,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B03/design.json",
+      "sha256": "464f3df6401571f516874b0db4eca73cc66afd4cda7d482f2ee3183a5b27ac6a",
+      "bytes": 4166,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B03/spec.md",
+      "sha256": "70077874da9b87e2b8a0e193dc1e507f18a5fd5b106a8fb7f3849161b0965f13",
+      "bytes": 8946,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B04/design.json",
+      "sha256": "33b36cb365a9e3a7c21f6302579a6493d17c8066bf7a6497c15c9b54e12eb98c",
+      "bytes": 4820,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B04/spec.md",
+      "sha256": "e80373694d858d8d1b0f26ce0f78512dbb3e1a2433c5b897892522280dc3c41c",
+      "bytes": 9946,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B05/design.json",
+      "sha256": "1c51a575fb6513930548a1a1f242c550947965fdbd5958d3b1385cd7fa976c9b",
+      "bytes": 4560,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B05/spec.md",
+      "sha256": "051ba87c24c20d54d30d1e01e3c28289c220b10cd96a0a70f00a47b0f7f80eef",
+      "bytes": 9571,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B06/design.json",
+      "sha256": "d23a29306a9cfdfe233d47121181d9e8ac2eb96ab3ca00b01d3e1dbbc5b084ba",
+      "bytes": 4127,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B06/spec.md",
+      "sha256": "057daa9ca2629ba07b6e0542345547f65015c32ced1a34a93fb029d824d47149",
+      "bytes": 8891,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B07/design.json",
+      "sha256": "48abddaf6e34ff7dfe08afd1b427655c4ac20b8fa7449aa0945b5df7ad4bdb0a",
+      "bytes": 4179,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B07/spec.md",
+      "sha256": "c69151cb990092e647fec8879cb801b04508fb4641dd101193741c985b150d9e",
+      "bytes": 8899,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B08/design.json",
+      "sha256": "3bc4ea39e2952380bf87996f962d786948e12821f9e745ff963a024f09644ea8",
+      "bytes": 5663,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/B08/spec.md",
+      "sha256": "83c95e1ebbfc81eb006e4c20c201e4816f0b1090605f2497527bcc9f1984347e",
+      "bytes": 12139,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/C01/design.json",
+      "sha256": "b407c7f2ec044ab5ff734906d419f8f2806c16c640f3245e8a2a599b88f31e07",
+      "bytes": 5931,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/C01/spec.md",
+      "sha256": "95706c3efc99bc604dd62d8c396e143b0cbe3d3d29613accf56ebd4164e5d68b",
+      "bytes": 12468,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/C02/design.json",
+      "sha256": "805164ba88dac2a30493fe41e43e2a366835832ba87a58348798fcf26cbbf607",
+      "bytes": 6721,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/C02/spec.md",
+      "sha256": "89772338cd32442043812ce5f221c22908e8fcd8598b13130392e7854eff1055",
+      "bytes": 13584,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/C03/design.json",
+      "sha256": "a08db426677e6f117a4e9d1eb6e83de06172c5700c372d268d1cf4f6987f9618",
+      "bytes": 4855,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/C03/spec.md",
+      "sha256": "b5aa39f367ee71f0e46d74d722c0c5e73f15c45f6185e260365a6fe941a7b5e8",
+      "bytes": 10437,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/I01/design.json",
+      "sha256": "c94ba7baf279ecf1093e9705e1b71bbc697a84e784ff0b5a782659c35bda84ad",
+      "bytes": 8814,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/I01/spec.md",
+      "sha256": "f77f11a0999a23b7442093ded7a99cde98f5afa277690c66af855009795a996a",
+      "bytes": 15880,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/I02/design.json",
+      "sha256": "0dead8f19aeec6736c058443442d6029d623f40fada5f6ce61b7f2bf7a641b89",
+      "bytes": 9572,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/I02/spec.md",
+      "sha256": "fd2590cef5eada5df6108fe465d20df66e3adf38fc1962a0edb340d8ea2e60bf",
+      "bytes": 18818,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/I03/design.json",
+      "sha256": "cfc6d2d8c7e0b61cd10b48bc11cec831847b9903aa305a63e516b2e9b810452f",
+      "bytes": 7519,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/I03/spec.md",
+      "sha256": "32d3e124da305c3377f183ea2167e758dd7acf4f078c70349fb07e263a490635",
+      "bytes": 14284,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/L01/design.json",
+      "sha256": "94d0f1c0c40b0d6834ef95ee0ee05dcf2a8ae74403fa305235a56b250d75f0c6",
+      "bytes": 4281,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/L01/spec.md",
+      "sha256": "21190f4909313475a3ac0be564fde96001b5e39695c1e2d1e44af82bb8845fec",
+      "bytes": 10342,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/L02/design.json",
+      "sha256": "4a5a0b6d4aea707d17f4ce48af69801b965b425e2a123c4bebcfa3576b7dd270",
+      "bytes": 4434,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/L02/spec.md",
+      "sha256": "288c4ed89fb2a36b9f70fe6e00ba2be0ce5b100a16262d5392dd9ca5b2b21e13",
+      "bytes": 10091,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/L03/design.json",
+      "sha256": "5920ab505d4bbdd067c35a1f0bba563cb491c2fdc704f95a71175a466ecbc9d4",
+      "bytes": 4152,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/L03/spec.md",
+      "sha256": "e85f162dfa1b211a009f10ae52cb5e19176fa6d347ff1fec18347d42a7cae897",
+      "bytes": 9729,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/M01/design.json",
+      "sha256": "e44758c68cd058ccdfde4d6d8a1dbff5165dfd5856b4f217477e13c94674f589",
+      "bytes": 6501,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/M01/spec.md",
+      "sha256": "d26390a0a29a5b86d9118f6efdc74a7628707b49b623b85483327b17498bfbfc",
+      "bytes": 10575,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/M03/design.json",
+      "sha256": "fae50932c4136af7d6636ae0af3ef0f1e5726f403f36bc9f0d41c40a3f3c23d9",
+      "bytes": 9688,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/M03/spec.md",
+      "sha256": "7b066137f5df37fc81a4151e07f66763195f8298e2fea9c8b36a86369562a87f",
+      "bytes": 14739,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/M04/design.json",
+      "sha256": "5a7b50e26d3fff5e2069bb133f4147093d0bf265cb2ee9b74209101d26a3ef8a",
+      "bytes": 6503,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/M04/spec.md",
+      "sha256": "7e90d6544c6923b96359d8d12d18a97bb2420ea3f6fa52e072eae7f71d240188",
+      "bytes": 11227,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/M05/design.json",
+      "sha256": "8274f93adbf0e098d2b8da02205bb163a4b425748f15e2e684ef13f32bfdda92",
+      "bytes": 6327,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/M05/spec.md",
+      "sha256": "2963b7452c270a3e04ede0946894129a58d01fef2f94f68af00be2bb00bed61b",
+      "bytes": 12806,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/O01/design.json",
+      "sha256": "933af2456d14ccc815a6312bf1d6dc8214cf45963460ec8f348b1fc4aa72ec3b",
+      "bytes": 5715,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/O01/spec.md",
+      "sha256": "42826336fc7759c1817783d618818e31ba9d4534efb8b63e22293d1f311981ab",
+      "bytes": 9997,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/O02/design.json",
+      "sha256": "33835ac8a653fa857ed22f4b68b06100b5f140950705d4e731f9f2d5ccd632fd",
+      "bytes": 6023,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/O02/spec.md",
+      "sha256": "4798c0f71c365a3948ec1d5eaeea3d4a5ab669d4df69f39daa9de31e622e84c9",
+      "bytes": 10189,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/O03/design.json",
+      "sha256": "e51ef13af125bed8436b96d7f762b4fd10c23c81a0410317e8919e3f526c77ec",
+      "bytes": 9385,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/O03/spec.md",
+      "sha256": "04ef1f7389bf9500a34d70d91d6d361448d1f1dfbfc0bbccfd00a305718486db",
+      "bytes": 17860,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P01/design.json",
+      "sha256": "116d60359c3b122ec51ba66e303a6f8cb4fa390b213193187e18790abcbcd834",
+      "bytes": 6683,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P01/spec.md",
+      "sha256": "d0afa8db5e74b0056553c4a77b3371f8b46ea64e94c050cccf9a83d71df48114",
+      "bytes": 12270,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P02/design.json",
+      "sha256": "0f3b5eb0629d6964ba2fa464a00e4884246a622ddd082b6a351dbbc38c028d62",
+      "bytes": 7089,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P02/spec.md",
+      "sha256": "f6142749cd8d096ffc2e20f61441734b7ac331c04f6aa04e78b35918472d68ff",
+      "bytes": 13944,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P03/design.json",
+      "sha256": "489a8d1d22ba1244d1458fb7d07cd71a9bb8b5ad32813dd84174f43f5728523a",
+      "bytes": 7131,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P03/spec.md",
+      "sha256": "6f532e5d0e8be21a29a086be9428a7394ba5248f31355a149eb37d4a919290dd",
+      "bytes": 11729,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P04/design.json",
+      "sha256": "bc3293311873a840c8d6cd0f5b9fe1cf6145b842c219c041408bca3e4c595eb2",
+      "bytes": 11294,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P04/spec.md",
+      "sha256": "24210fc360132ceb819037f235689be69af8ace0fa593e270bef6770618694a5",
+      "bytes": 15602,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P05/design.json",
+      "sha256": "90e9eecc7b456b2858b55d3d6a84b67f9178ce37d994a61e1ed63c87ed159999",
+      "bytes": 6290,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P05/spec.md",
+      "sha256": "931c1ad8d23c8396bdeacb1b1564073350701127f327ab87cdb755f47a0bf9b6",
+      "bytes": 11615,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P06/design.json",
+      "sha256": "dc4a704c1c28ec8823f98cfec8eed76498ad038af91d83f8768a8bb889a13295",
+      "bytes": 6068,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P06/spec.md",
+      "sha256": "1371f7855e58cd7a63c54e764d1f31b9fdb2f5ff815b87a317c9eb8d2cfeacf8",
+      "bytes": 11764,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P07/design.json",
+      "sha256": "6ab2784fb1253a36fe74b3660653ac43e84527f1bfdc702950aed30869e10906",
+      "bytes": 6287,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/P07/spec.md",
+      "sha256": "b1fcf39405188276a8f296f1713e1d4236f161a9552c30b76c0ed654f051542d",
+      "bytes": 10861,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/R01/design.json",
+      "sha256": "39e20584587a9fdc258f52a08f2280684b8e7ebedb1b6b7e81cebafd0b3644a4",
+      "bytes": 7237,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/R01/spec.md",
+      "sha256": "b0e4648fa09e620f8aed1aa928564f76d0f0250e90a7fc6064c42c5252707b8a",
+      "bytes": 14394,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/R02/design.json",
+      "sha256": "a1a8577c95ccef23ef3f67853fcddc2c34eac3d788e658a150fc7dc7e98d5c0d",
+      "bytes": 4983,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/R02/spec.md",
+      "sha256": "f4e7e2369de01d67e8c00227a3e05d53917ccb60acced13f0b8cbd90533ff154",
+      "bytes": 10459,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/S01/design.json",
+      "sha256": "638293e8510e545704f8afa04134f781a337e49ea837f2373be6ff0a508b6165",
+      "bytes": 4590,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/S01/spec.md",
+      "sha256": "64eee749f747bea685edef0fc5f0a27f7f9f79a9f8f8f22ea54e1bada23fb9cc",
+      "bytes": 10689,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/S04/design.json",
+      "sha256": "5c29ee112055d9cdc6233b8b2ba5766a10c083f6f182a8056a2d1b7012563de2",
+      "bytes": 5129,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/S04/spec.md",
+      "sha256": "96835e6d461d83b9e3d1235d114703d1e4f0400ef19f99e8f0da3e9855c320d1",
+      "bytes": 9977,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/S05/design.json",
+      "sha256": "15b5cfe65ad4949b4f6c28ec0cb4304ec3a12dbd5e688716c6d92a50f2639948",
+      "bytes": 5710,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/S05/spec.md",
+      "sha256": "2a104be6a185cb4749073eed2f760959f6be7262ee0967eb459761af3e69e25c",
+      "bytes": 11087,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/U03/design.json",
+      "sha256": "b8ae65be421c5d5a4db8ab590a7b929520c1cd223eeac5a31ad966ad994e6355",
+      "bytes": 6157,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/U03/spec.md",
+      "sha256": "8b263f674620ce7f81ea96c3c118d6b5b7f7303eaef7ea1f7595146b0e6053ef",
+      "bytes": 12431,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/U04/design.json",
+      "sha256": "9f5bfa8b28f8756c43b22854d76e652860f2592533a3811754126f1e61b78b49",
+      "bytes": 4554,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/Users/home/project/hybrid_billing/docs/ui/screens/U04/spec.md",
+      "sha256": "43cbc8fa79e3f6606b17e0018d5d1d642eb7b008fa629e4aa53c959c9c52501f",
+      "bytes": 9779,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/B09/design.json",
+      "sha256": "9b6c2088b6e66acc8de198b315fc2f74438130fe89d3fdcd22e6c0fc08f1cd20",
+      "bytes": 14786,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/B09/spec.md",
+      "sha256": "14b82b66d5e696c12d35f29d04e515ddf0a138fcbbe2723c4d4e3d3dab6cf5d2",
+      "bytes": 25239,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/B10/design.json",
+      "sha256": "2a183c29ac20b8e96c2537fd8180d5a4f9f4848c7581e74649ccd7bb91997f91",
+      "bytes": 10255,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/B10/spec.md",
+      "sha256": "3f1289a1243fe61905bdfeb31ee2170e9d12a3925c4807fa8cc6660d7a8b3b63",
+      "bytes": 17853,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/B11/design.json",
+      "sha256": "b47c994bc2400e360105a89637891c63f8be960d4f5503466c5e269a712d92a1",
+      "bytes": 15749,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/B11/spec.md",
+      "sha256": "58b270b84fb2b438740afb9e899b3a0aa575265a4bb49f2cd0272685576a6e5f",
+      "bytes": 23540,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/I04/design.json",
+      "sha256": "367a161b83379b4f3c95514c4b1dfb87491b0e43a708c83044c122a87169d06a",
+      "bytes": 14122,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/I04/spec.md",
+      "sha256": "16b332efd752730de85f37f451f99d2a9e7fb95bfa7a0f2e21b3c6fed7fa6314",
+      "bytes": 22972,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/M02/design.json",
+      "sha256": "8fd7116f63ae3ed45da939b217fc5175ae1663431c073f0787ede3790364c541",
+      "bytes": 19167,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/M02/spec.md",
+      "sha256": "b8d0876cc8c52ae1482d168f8429789f2cef0c7698a37038379404a9fc2d40ba",
+      "bytes": 24257,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/S02/design.json",
+      "sha256": "ae3510782510662cbeadd841fe240c1ff885585fc3400d94e95c232f5f52854c",
+      "bytes": 11202,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/S02/spec.md",
+      "sha256": "7f70a3b3cde55094f3a6b57f3eb0ae06e96d08da61bddfda2f6eb422663d49e7",
+      "bytes": 18760,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/S03/design.json",
+      "sha256": "6dfd671e31d77e2f379c8cc02729402a28529d37f203908c5322bd40133a101d",
+      "bytes": 11873,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/S03/spec.md",
+      "sha256": "000c22eeb378062fc103778198dab18a161fbb663b78bcc8a41998a1f488e147",
+      "bytes": 21349,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/S06/design.json",
+      "sha256": "58e62c3094ea37c8891b310f1212272122b0327c2bc52fe3db6ab7fda30a0e00",
+      "bytes": 12490,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/S06/spec.md",
+      "sha256": "e4cf9c532e9c1a16bbf75dd553666d64aad98f3d505b0cb80cf66803763763f1",
+      "bytes": 21280,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/U01/design.json",
+      "sha256": "261b3f04dc6acb56134b3a1109cf9c7dc7bb97b41d32cad431ab9be0ebed9a27",
+      "bytes": 14807,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/U01/spec.md",
+      "sha256": "ef7a66ed955f89415a6a61bcd78edb74f2e53304d763a2ea53c1d05c6ce8573f",
+      "bytes": 22984,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/U02/design.json",
+      "sha256": "5fdf941f859efd2e58e9a33aa651d5c30331798704e0649776962d18012ea97b",
+      "bytes": 13947,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "path": "/private/tmp/hb15-recheck/docs/ui/screens/U02/spec.md",
+      "sha256": "de9e9bb06bf250c3e4e168bca7d88d7d0e489b294337c648496dc6fb45c23445",
+      "bytes": 23199,
+      "status": "authorized_input_not_publication_claim"
+    },
+    {
+      "git_revision": "6acb38c68117ff1f1865776aca00f87c61956196",
+      "path": "docs/planning/saas-subscription-billing.md",
+      "sha256": "7e727f39ae6bf530338b2d700f327957afc6abc0579af4cd26bff0a4db20c1e9",
+      "bytes": 20949,
+      "status": "proposed_branch_input_not_merged"
+    },
+    {
+      "git_revision": "6acb38c68117ff1f1865776aca00f87c61956196",
+      "path": "docs/planning/recent-owner-requirements.md",
+      "sha256": "de001493283d84cc58847bfd560cdba3f68d9bba15b72ecc0dd81f69c32f2b98",
+      "bytes": 13503,
+      "status": "proposed_branch_input_not_merged"
+    },
+    {
+      "git_revision": "6acb38c68117ff1f1865776aca00f87c61956196",
+      "path": "docs/planning/v1.16/planning-decisions.md",
+      "sha256": "8449249e265b86872477ea1aa1722ed9f6dbaec53b43d4f609ecffde4e5210a9",
+      "bytes": 12870,
+      "status": "proposed_branch_input_not_merged"
+    },
+    {
+      "git_revision": "75c4c188e5d42d682d286cebe9900b2bc0bc660c",
+      "path": "docs/architecture/high-level-architecture.md",
+      "sha256": "19e661cfffb05c8e0db83c4c7865c7dd4c864fda9666fe24405969a7620357b3",
+      "bytes": 40862,
+      "status": "proposed_branch_input_not_merged"
+    },
+    {
+      "git_revision": "75c4c188e5d42d682d286cebe9900b2bc0bc660c",
+      "path": "docs/architecture/intelligence-layer.md",
+      "sha256": "305d0de7bb48900666db71c6345488134d4efd45fa8b888c47bec94025cbff51",
+      "bytes": 7621,
+      "status": "proposed_branch_input_not_merged"
+    },
+    {
+      "git_revision": "75c4c188e5d42d682d286cebe9900b2bc0bc660c",
+      "path": "docs/architecture/security-boundaries/identity-session-permissions.md",
+      "sha256": "86d467723a63d3f1109e3e163150ddba22bdcc762a265d3afd863b51f536ae92",
+      "bytes": 10499,
+      "status": "proposed_branch_input_not_merged"
+    },
+    {
+      "git_revision": "62f7df1ed7a1b8e08372b36e63f140b46d75cc7c",
+      "path": "docs/architecture/data-ownership/object-storage-data-architecture.md",
+      "sha256": "acef7ae8f1c875f7241712f461f80168fca962e7f7e4b1b7ac658fb62462b158",
+      "bytes": 32145,
+      "status": "proposed_branch_input_not_merged"
+    },
+    {
+      "git_revision": "62f7df1ed7a1b8e08372b36e63f140b46d75cc7c",
+      "path": "docs/reviews/HB-20-cost-data/full-review.md",
+      "sha256": "88065edc553fca8dbddcee1d145310d0cf340714200199c7c31a7b8e1eeb728d",
+      "bytes": 10513,
+      "status": "proposed_branch_input_not_merged"
+    },
+    {
+      "git_revision": "129c525ba3e942a086a4cbb71b18dc7f5795cf4c",
+      "path": "docs/architecture/data-ownership/logical-data-schema.md",
+      "sha256": "0152b3a94634dc8fd678d4259a1020800c7fa127a5c6c26ef0a5221b0dc882ee",
+      "bytes": 37566,
+      "status": "proposed_branch_input_not_merged"
+    },
+    {
+      "git_revision": "129c525ba3e942a086a4cbb71b18dc7f5795cf4c",
+      "path": "docs/architecture/data-ownership/monthly-settlement-schema.md",
+      "sha256": "4d72b6e6388976f06e56fd71de6b2116e98feda4e3bf629344810a55954a43a9",
+      "bytes": 24464,
+      "status": "proposed_branch_input_not_merged"
+    },
+    {
+      "git_revision": "129c525ba3e942a086a4cbb71b18dc7f5795cf4c",
+      "path": "docs/architecture/data-ownership/evidence-detail-schema.md",
+      "sha256": "862f5d020b9d9144043cedf0222ce8aa64fb54ee0de5e311bfe63bd346ecce44",
+      "bytes": 17884,
+      "status": "proposed_branch_input_not_merged"
+    }
+  ],
+  "checks": {
+    "requirement_groups": 43,
+    "work_items": 43,
+    "task_identities": 129,
+    "details": 35,
+    "original_tests": 119,
+    "original_occurrences": 127,
+    "existing_added_tests": 91,
+    "combined_existing_cases": 210,
+    "screens": 49,
+    "screen_spec_json_files": 98,
+    "source_chapters": 123,
+    "docx_sha256": "e7772927bc521ee035d50a7762b2f75611b80b2162e385878dc4c36c6c0db84d",
+    "source_text_verified_lines": 2075,
+    "dependency_graph": "acyclic",
+    "runtime": "NOT_RUN"
+  }
+}

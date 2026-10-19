@@ -50,6 +50,8 @@ CustomerProfile contains scoped contact/address/legal reference and ERP customer
 
 ## Identity keys revisions and money
 
+The [Claim/numeric contract](../../contracts/billing/claim-and-numeric.md) refines the proposed economic key and canonical partial-coverage representation below, with reservation/pinning/reversal/replacement states and bounded exact arithmetic. It supplies product mechanisms without selecting customer policy values or certifying physical enforcement.
+
 - Canonical IDs identify installation/workspace/customer/source/contract/run/document independently of display names, email, provider IDs or broker offsets. Tenant-owned references include matching ownership context; globally unique IDs alone do not enforce isolation.
 - Source identity includes provider/authority, billing scope and stable source identity with explicitly versioned correction semantics. Missing stable identity is a reconciliation problem, not permission to infer uniqueness from an ingestion request.
 - API idempotency is installation/client/command/key plus input digest. Business Claim uniqueness instead follows issuer/responsibility, customer/contract, economic service/component and covered source/period/quantity scope. The exact key and partial-coverage representation require domain approval; adding a new run, revision or request key cannot reopen consumed scope.

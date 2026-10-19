@@ -25,7 +25,7 @@ Technology choices and supported provider/ERP combinations remain subject to pla
 
 Start with the [current owner decisions](docs/architecture/current-design-decisions.md): Go backend, Python processing/analysis, React frontend, cloud-independent operation, local Docker and a separate collection/lifecycle policy server. Earlier component bundles remain comparison proposals; integration does not declare planning complete.
 
-The [backend logical architecture](docs/architecture/high-level-architecture.md) starts with business responsibilities, authoritative ownership and principal interactions. Context diagrams and twelve gated flow contracts provide supporting detail before configuration selection. SaaS subscription, payment and entitlement paths are explicitly proposed through open PR14; its original stack and physical sizing hypotheses are superseded where the current owner decisions differ.
+The [backend logical architecture](docs/architecture/high-level-architecture.md) starts with business responsibilities, authoritative ownership and principal interactions. Context diagrams and twelve gated flow contracts provide supporting detail before configuration selection. SaaS subscription, payment and entitlement paths are explicitly proposed through the conditional PR14 proposal; its original stack and physical sizing hypotheses are superseded where the current owner decisions differ.
 
 The owner has selected self-hosted delivery. The [architecture readiness plan](docs/architecture/architecture-readiness.md) organizes the operating prerequisites, development sequence, ClickHouse/Kafka/OpenTelemetry assessment, billing data model, collection methods and source grouping, tenant/customer/organization management, session and permission policies, admin/customer data views, and intelligence layer. PostgreSQL is the first transactional candidate; component adoption, sizing and implementation remain unverified.
 
@@ -40,6 +40,10 @@ The [HB-11 supplementation](docs/reviews/HB-11-refinements/resolution.md) suppli
 The [installation assessment](docs/architecture/self-hosted-installation-assessment.md) conditionally favors an existing customer-operated Kubernetes cluster and retains a VM/container comparison profile. New-cluster operations, stateful placement and actual installation/failure validation remain unverified; VMware is not required.
 
 The [full planning reconciliation](docs/planning/v1.16/planning-reconciliation.md) indexes all 43 requirement groups, existing work/screen/acceptance references and owner additions. The [decision/action register](docs/planning/v1.16/planning-decisions.md) separates established controls, integration gaps, product decisions, customer configuration and external evidence. The [payment and recognition contract](docs/contracts/billing/payment-and-recognition.md) carries contract Payment Terms and independent monthly ERP recognition into English. This is partial canonical integration, not completion of the detailed English baseline or planning acceptance.
+
+## SaaS subscription planning
+
+The owner has requested future SaaS subscription and billing management. The [HB-18 planning supplement](docs/planning/saas-subscription-billing.md) proposes recurring, seat-based, metered and hybrid pricing, subscription changes, service entitlements, customer self-service and controlled payment integration. It extends existing contract, calculation, approval, invoice and ERP concepts; payment collection, service access and monthly cost recognition remain distinct. Exact policies, processor support and canonical screen/API integration are pending. This capability does not change self-hosted delivery or authorize product development.
 
 ## Working sequence
 

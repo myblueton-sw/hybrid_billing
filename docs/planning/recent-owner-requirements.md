@@ -32,6 +32,14 @@ The fourteen RA references below are local editorial bundles, not Linear tickets
 | RA-13 | Store, manage and maintain the information over its permitted lifetime | [Usage detail lifecycle](../architecture/usage-detail-lifecycle.md), storage/administration sections | Class-specific retention basis/durations, hold/reference protection, archive/recall availability, backup/deletion controls, capacity and RPO/RTO. Temporary exports/broker retention do not replace authoritative history |
 | RA-14 | Define how definitive pricing logic and final charges are determined | [Usage detail lifecycle](../architecture/usage-detail-lifecycle.md), pricing section | Named commercial/finance/tax/security decisions; rate/unit/tier/modifier/FX/tax/rounding policy and complete order (PC-01), warning acknowledgment (PC-02), independent expected amounts and separate policy/amount/issuance/ERP states |
 
+## SaaS subscription addition under HB-18
+
+On 2026-10-06 the owner requested future SaaS service subscription and billing management and instructed adding it to planning. **RA-15** records that request; RA-01–14 above retain their historical identities. The working interpretation is SaaS vendors managing customer subscriptions, not an approved change to Hybrid Billing's self-hosted delivery or a purchased-SaaS procurement product.
+
+The [SaaS planning supplement](saas-subscription-billing.md) covers recurring/seat/metered/hybrid prices, trials/renewals/cancellation, plan changes/proration, entitlement delivery, scoped customer flows, payment-adapter proposals and finance boundaries. Detailed behavior, payment automation and policy values remain proposals requiring review and profile decisions. D-08 in the [decision register](v1.16/planning-decisions.md) tracks unresolved fields; SB-A01–16 are planned acceptance, all NOT_RUN.
+
+RA-15 overlaps contract/pricing/Claims/approval/payment/ERP/access/retention groups; it is not a forty-fourth requirement group. The original count remains 43 and the screen count 49 pending full canonical integration. The published HB-14 JSON index retains its historical scope; the [updated Markdown crosswalk](v1.16/planning-reconciliation.md) records this later addition without claiming the absent source files were reconciled.
+
 ## Full-scope clarification after HB-11
 
 The owner instructs planning against the whole existing requirement set, without arbitrarily choosing a first target to reduce scope. The collection set includes AWS, Azure, GCP, OCI, Alibaba and VMware; existing HawkEye/TokenMeter connections and all other baseline requirement groups remain included. Source preservation, normalization, missing/duplicate checks, reconciliation and correction revisions already exist in local v1.16; they are not new features or additions to the 43-group count.

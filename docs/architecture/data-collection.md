@@ -15,6 +15,8 @@ The owner clarification tracked in [HB-13](../reviews/HB-13-full-scope/verificat
 
 Keep design coverage separate from connection activation: each provider/product/version/account-role/method combination needs its own capability and verification evidence. Unknown capability remains unverified, not out of scope or certified. VMware collection is in scope; installing the billing platform on VMware is not a prerequisite. Existing source-dated provider conditions remain evidence to verify, not current vendor guarantees.
 
+Current sequencing clarification (HB-20, owner direction 2026-10-08): HawkEye and TokenMeter remain historically traced requirements but their integration is deferred. The current review focuses on the original provider/on-prem billing foundation and object-storage/Parquet design; no existing provider family is silently dropped.
+
 ## Canonical grouping basis
 
 Use independent dimensions rather than one provider bucket:

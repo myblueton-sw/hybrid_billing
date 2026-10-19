@@ -9,6 +9,8 @@ status: draft
 
 Part of [HB-7](../architecture-readiness.md). Proposed refinement of local v1.16 `domain-contracts.md`, `retention-access.md`, `payment-terms.md` and `erp-recognition-cadence.md`; these local files remain unpublished. Entity names, keys and relationships below are logical proposals. No DDL, migrations, index implementation or production data exist in this package.
 
+The [HB-20 cost analysis supplement](cost-analytics-data-design.md) defines fact grains, cost bases, historical dimensions, semi-structured extensions and publication rules under the owner-updated >100 million incoming records/day premise. Physical schemas remain unselected.
+
 ## Installation tenant customer and organization
 
 | Concept | Meaning and relationships | Integrity and access boundary |

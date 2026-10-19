@@ -25,7 +25,7 @@ There is one newly identified contract conflict within existing ED-03. Other fin
 
 ### FR-01 — MEDIUM: fetch exception wording weakens an original deny rule
 
-**New conflict within ED-03.** [Access/trust contract](../../contracts/security/access-and-trust.md), line 42, permits metadata/loopback/link-local access through a separately reviewed capability. Original source B0189, B0725 and B1428 instead block metadata access and, in B0725, loopback and unapproved management networks while permitting approved private on-prem destinations. Local source evidence: `.local/planning/source.txt` lines 266, 999 and 1911; [AR-02](../../planning/v1.16/detailed-requirements.md#ar-02), lines 39–41, preserves that deny requirement.
+**New conflict within ED-03.** [Access/trust contract](../../contracts/security/access-and-trust.md), line 42, permits metadata/loopback/link-local access through a separately reviewed capability. Original source B0189, B0725 and B1428 instead block metadata access and, in B0725, loopback and unapproved management networks while permitting approved private on-prem destinations. Local source evidence: `.local/planning/source.txt` lines 266, 999 and 1911; AR-02 (`docs/planning/v1.16/detailed-requirements.md`, historical local input not published in this clone), lines 39–41, preserves that deny requirement.
 
 A future connector designer could read capability review as sufficient authority to allow a metadata endpoint for a follow-on fetch. This conflicts with the original prohibition. The supplement explicitly creates no current network exception at line 44; no exploit or deployed exposure was tested or inferred.
 
@@ -49,7 +49,7 @@ A generic activation action is insufficient to express the independent actor, ol
 
 ### FR-04 — MEDIUM: financial product mechanisms remain underspecified
 
-**Known D-03 / PC-01 / ED-04.** [Billing model](../../architecture/data-ownership/billing-data-model.md), line 55, and [requirements](../../planning/v1.16/requirements.md), line 385, leave exact economic Claim identity, partial consumption, expiry and correction behavior unresolved. [Financial contract](../../contracts/billing/inputs-pricing-and-erp.md), lines 35 and 47–54, leaves numeric bounds/scales, supported expressions and exact analytical processing profile for selection.
+**Known D-03 / PC-01 / ED-04.** [Billing model](../../architecture/data-ownership/billing-data-model.md), line 55, and requirements (`docs/planning/v1.16/requirements.md`, historical local input not published in this clone), line 385, leave exact economic Claim identity, partial consumption, expiry and correction behavior unresolved. [Financial contract](../../contracts/billing/inputs-pricing-and-erp.md), lines 35 and 47–54, leaves numeric bounds/scales, supported expressions and exact analytical processing profile for selection.
 
 For a 100-unit service with 60 units consumed, a correction/retry must neither reopen all 100 nor block the remaining 40. Existing invariants prohibit these outcomes, but the fields, overlap representation and command/state transitions remain to be defined. Similarly, division/truncation or chunk-dependent residual assignment needs explicit deterministic behavior and independent expected answers.
 

@@ -50,3 +50,10 @@ The existing 210 acceptance IDs comprise 119 original-source IDs and 91 addition
 JEV suggested the review skill and an uncertain standard depth. Root used the actual full-scope request to choose domain coverage. No JEV response is counted as independent review, authorization or verification.
 
 PR, merge/read-back and ticket completion are separate workflow steps. Prior authorization for PR #10 does not authorize this report's merge.
+
+
+## 2026-10-19 authorized integration review
+
+Owner authorized merging all pending planning/design work. Correct Hybrid Billing workspace/project, Seung Woo Park and the released machine state were verified in authenticated browser UI; root claimed `machine:mac_mini` for HB-15 integration. Historical findings, scope and PASS/FAIL/NOT_RUN assessments remain unchanged. Current owner choices are recorded in the HB-19 current-design-decisions register; this historical review does not override them or certify closure of its findings.
+
+Independent read-only actual branch review: PASS for preserving historical scope, unresolved findings and documentation-only changes. Root document QA identified three links to unpublished historical local inputs; those references now explicitly identify unavailable local evidence rather than offer broken navigation. Their source identifiers and conclusions are preserved. JSON parsing, Markdown metadata/fences, relative file targets, limited credential-pattern scan and whitespace checks pass after this correction. Runtime and re-audit of unavailable original sources remain NOT_RUN. Main integrated cleanly; GitHub merge/read-back remains a separate execution step.

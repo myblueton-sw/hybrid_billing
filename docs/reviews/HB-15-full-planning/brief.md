@@ -32,6 +32,6 @@ Root is the sole writer of this review directory. Reviewers are read-only. Origi
 
 ## Authority and limits
 
-The [planning gate](../../planning/v1.16/planning-gate.md) remains closed. This review does not select a stack, policy default, provider subset or customer-specific value. It does not certify a standalone clone, live integrations, screen behavior, throughput, recovery or legal rights. Previously supplied PC/ED contracts and HB-14 mappings are assessed as evidence, not automatic closure.
+The planning gate (`docs/planning/v1.16/planning-gate.md`, historical local input not published in this clone) remains closed. This review does not select a stack, policy default, provider subset or customer-specific value. It does not certify a standalone clone, live integrations, screen behavior, throughput, recovery or legal rights. Previously supplied PC/ED contracts and HB-14 mappings are assessed as evidence, not automatic closure.
 
 **JEV recommendation:** `review` skill, with uncertain `standard` depth. Root inspected that skill, distinguished design review from code-diff review, and selected full risk-based domain review plus PM/technical-writing integration. JEV did not authorize scope, execution or acceptance.

@@ -7,6 +7,11 @@ status: draft
 
 # Cost analysis data design
 
+## Current decision precedence
+
+The [current owner decisions](../current-design-decisions.md) supersede technology-selection and deployment suggestions below. This document preserves historical evaluation evidence. Object storage and Parquet remain the foundation; Iceberg, catalogs, Spark, Trino and ClickHouse are conditional candidates, not a required combined stack. Start with application services and workers and evaluate one bulk engine. Collection, retention and lifecycle policy belong to a separate policy server; billing approval and pricing remain separate responsibilities. Standardized common detail is optional reusable materialization, not a mandatory stage before every mart. No physical deployment or runtime performance is certified here.
+
+
 Tracking: [HB-20](https://linear.app/hybrid-billing/issue/c04558aa-62af-4914-a71e-785049be5fcb). Date: 2026-10-08. Accountable owner: Seung Woo Park. Root owns synthesis and documentation; a separate read-only DBA reviews design. Machine: `machine:mac_mini` during execution, released at handoff. Base: `e436a49`.
 
 Owner direction: retain original Hybrid Billing scope, defer HawkEye/TokenMeter integration, require **more than 100 million incoming records/day**, and give structural layers explicit purposes. These instructions supersede earlier 1 million/day sizing premises for this review. They do not authorize implementation, establish an upper bound, or select an exact NoSQL/SQL product. The prior Kafka/Spark/Airflow discussion is a provisional architecture, not measured adoption evidence. This document supplements the [logical ownership model](billing-data-model.md); it does not finalize DDL or pricing/accounting policy.

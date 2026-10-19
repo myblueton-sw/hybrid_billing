@@ -35,3 +35,7 @@ Separate architect and QA reviewed the complete performance/operations compariso
 ## Handoff
 
 Commit `5952b91` was pushed, but PR creation failed with `must be a collaborator (createPullRequest)`. No PR exists from that attempt. Root will release the resumed machine claim at handoff. Authorized merge/read-back and ticket completion remain pending. The ticket must remain open until authorized integration. Planning completion is not declared.
+
+## Authorized integration — 2026-10-19
+
+The owner authorized integration of all pending planning work. Root reconciled the three architecture entry points with the current owner decision register while preserving historical research and open physical-design gates. The published main baseline was merged before reconciliation. No product code, runtime tests or implementation-readiness claim is included. Independent read-only final diff review: PASS; current-decision precedence resolves the historical topology blocker. Scoped document QA: PASS for 13 changed files (12 Markdown, one JSON), local references, metadata, credential patterns and whitespace. Runtime and physical-design validation remain NOT_RUN/OPEN.

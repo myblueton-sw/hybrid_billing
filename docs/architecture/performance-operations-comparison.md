@@ -7,6 +7,11 @@ status: draft
 
 # Performance, maintainability and operations
 
+## Current decision precedence
+
+The [current owner decisions](current-design-decisions.md) supersede technology-selection and deployment suggestions below. This document preserves historical evaluation evidence. Object storage and Parquet remain the foundation; Iceberg, catalogs, Spark, Trino and ClickHouse are conditional candidates, not a required combined stack. Start with application services and workers and evaluate one bulk engine. Collection, retention and lifecycle policy belong to a separate policy server; billing approval and pricing remain separate responsibilities. Standardized common detail is optional reusable materialization, not a mandatory stage before every mart. No physical deployment or runtime performance is certified here.
+
+
 Tracking: [HB-20](https://linear.app/hybrid-billing/issue/c04558aa-62af-4914-a71e-785049be5fcb). Research date: 2026-10-08. This supplements the [object storage design](data-ownership/object-storage-data-architecture.md). Original Hybrid Billing scope applies; HawkEye and TokenMeter integration is deferred. MongoDB is excluded. More than 100 million incoming source records per day is a requirement, not a measured result. No installation, engine benchmark or production test was performed.
 
 ## Recommendation and decision boundary

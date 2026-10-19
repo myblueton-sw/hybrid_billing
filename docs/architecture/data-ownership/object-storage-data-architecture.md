@@ -7,6 +7,11 @@ status: draft
 
 # Object storage centered data architecture
 
+## Current decision precedence
+
+The [current owner decisions](../current-design-decisions.md) supersede technology-selection and deployment suggestions below. This document preserves historical evaluation evidence. Object storage and Parquet remain the foundation; Iceberg, catalogs, Spark, Trino and ClickHouse are conditional candidates, not a required combined stack. Start with application services and workers and evaluate one bulk engine. Collection, retention and lifecycle policy belong to a separate policy server; billing approval and pricing remain separate responsibilities. Standardized common detail is optional reusable materialization, not a mandatory stage before every mart. No physical deployment or runtime performance is certified here.
+
+
 Tracking: [HB-20](https://linear.app/hybrid-billing/issue/HB-20/review-cost-data-architecture-for-over-100-million-records-per-day). Date: 2026-10-08. Accountable owner: Seung Woo Park. Root is sole writer; independent architect, DBA and QA review architecture, financial data and requirements respectively. This replaces the earlier conversational solution list as the proposed detailed direction. It does not declare implementation readiness or planning completion.
 
 Owner constraints: original Hybrid Billing requirements remain; HawkEye/TokenMeter integration is deferred; more than 100 million incoming source records/day is a lower design condition; MongoDB is excluded; object storage and Parquet are the requested data foundation. SQL versus NoSQL is not the organizing boundary. SQL query capability, data model, file format, table metadata and storage service are different concerns.

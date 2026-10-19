@@ -15,6 +15,8 @@ The [machine-readable register](planning-reconciliation.json) preserves all 43 s
 
 HB-16 adds a [normative remediation trace](remediation-trace.json) for the specifically changed contract/action/work/acceptance fields and publishes ten complete English screen specifications plus the common domain contract. Apply those explicit revisions alongside unchanged source clauses. Historical HB-14 hashes remain baseline evidence; current screen hashes and predecessor hashes are recorded separately. This is not full English publication or closure of all 43 detailed groups.
 
+HB-22 adds a [source omission trace](source-omission-trace.json) for 33 clause-level source obligations that were missing or weakened after HB-16, bound to the [source pricing and cost](../../contracts/billing/source-pricing-and-cost-obligations.md), [source ERP and issuance](../../contracts/billing/source-erp-and-issuance-obligations.md) and [source policy, onboarding and verification](../../contracts/operations/source-policy-onboarding-and-verification-obligations.md) contracts. Apply them alongside the HB-16 revisions. The listed screen follow-ups remain open until the affected screen specifications adopt those clauses.
+
 - **Established:** source-required controls and explicit owner directions. Do not ask whether to include them again.
 - **Integration needed:** a contract exists, but full source/requirement/work/API/screen/acceptance reconciliation is incomplete.
 - **Decision/evidence needed:** a concrete value, product contract, customer configuration or compatibility proof remains missing. Use the [decision and action register](planning-decisions.md) to distinguish these.
@@ -92,9 +94,19 @@ RA-01–14 are existing discussion bundles, not fourteen independent new feature
 | RA-14 Definitive pricing and final charges | HB-09, HB-16, HB-17, HB-18, HB-21, HB-23, HB-24 | [Contract](../../../docs/contracts/billing/inputs-pricing-and-erp.md) |
 | ADD-PT Contract payment terms and overdue | HB-15, HB-22, HB-24, HB-27, HB-28, HB-29, HB-30, HB-31 | [Contract](../../../docs/contracts/billing/payment-and-recognition.md) |
 | ADD-ERPC Monthly ERP recognition independent of billing | HB-15, HB-21, HB-23, HB-24, HB-25, HB-26, HB-28, HB-29, HB-30, HB-31 | [Contract](../../../docs/contracts/billing/payment-and-recognition.md) |
-| ADD-SCALE Sustained scale and independent user axis | HB-30, HB-39, HB-42 | [Contract](../../../docs/planning/v1.16/scale-validation.md) |
+| ADD-SCALE Sustained scale and independent user axis | HB-30, HB-39, HB-42 | Historical local input: `docs/planning/v1.16/scale-validation.md` (unpublished) |
 | ADD-H13 Full scope accuracy cross-validation and operator confirmation | HB-04, HB-05, HB-06, HB-07, HB-09, HB-23, HB-38, HB-41 | [Contract](../../../docs/architecture/data-collection.md) |
 | ADD-OPTIONAL Interrupted optional-capability statement |  | [Contract](../../../docs/planning/recent-owner-requirements.md) |
+
+## SaaS subscription extension recorded after HB-14
+
+[HB-18](https://linear.app/hybrid-billing/issue/HB-18/plan-saas-subscription-and-hybrid-billing-management) adds **RA-15** from the owner's 2026-10-06 request. The [SaaS supplement](../saas-subscription-billing.md) supplies the proposed capability, logical/state boundaries, screen references and SB-A01–16 acceptance. [D-08](planning-decisions.md) records remaining product, configuration, external-evidence and integration decisions.
+
+| Addition | Proposed existing source overlap | Integration status |
+| --- | --- | --- |
+| RA-15 SaaS subscription and billing | HB-01/02/03/06/08/15/16/17/18/21/22/23/24/25/26/27/28/29/30/31/33/34/37/38/39/42/43 | Supplement and Markdown overlap supplied; detailed source/work/API/screen trace pending; runtime NOT_RUN |
+
+HB-18 in the task link is a Linear issue; source HB-18 above remains the FX/rounding group. Do not combine these identities. The original 43 groups and 49 screens remain unchanged. The companion JSON is the historical HB-14 index and does not yet include RA-15; its source hashes are preserved, not claimed as hashes of unavailable updated source files. Canonical reconciliation must include this later supplement before claiming a current complete machine-readable baseline.
 
 ## Integration delivered and remaining
 

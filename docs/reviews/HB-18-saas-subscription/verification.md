@@ -34,3 +34,10 @@ Root document QA: **PASS** for all six files, English content, nonempty type/tit
 ## Handoff
 
 The scoped commit and PR carry the reviewed six-file document change. Merge, remote merge read-back and ticket completion remain pending owner-authorized integration. Release the active machine claim when handing off the PR; retain the ticket open and record the exact PR in its description. No merge authorization is inferred from the request to add planning. The owner must separately declare planning complete before product development.
+
+
+## 2026-10-19 authorized integration review
+
+Owner authorized all pending planning/design merges. Hybrid Billing workspace/project, Seung Woo Park and released machine ownership were verified in authenticated browser UI; root claimed `machine:mac_mini` for this integration. An independent read-only reviewer inspected the actual HB-18 branch and reported PASS: the future SaaS proposal, financial/tenant boundaries and unresolved D-08 decisions remain conditional. Merge is not automatic-debit consent, policy acceptance or planning completion.
+
+Main integrated cleanly; root inspected the combined README and planning-decision/reconciliation changes. Present-tense entry links now call PR14 conditional rather than unmerged. The previously documented broken scale-validation link is now an explicit unpublished historical local reference, without changing its source meaning. Root checks cover Markdown metadata/fences, local file targets, limited credential patterns and whitespace; no runtime/provider/financial tests ran. Historical evidence remains intact. Authorized merge/read-back is recorded after execution.

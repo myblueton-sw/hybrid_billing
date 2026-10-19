@@ -94,7 +94,7 @@ RA-01–14 are existing discussion bundles, not fourteen independent new feature
 | RA-14 Definitive pricing and final charges | HB-09, HB-16, HB-17, HB-18, HB-21, HB-23, HB-24 | [Contract](../../../docs/contracts/billing/inputs-pricing-and-erp.md) |
 | ADD-PT Contract payment terms and overdue | HB-15, HB-22, HB-24, HB-27, HB-28, HB-29, HB-30, HB-31 | [Contract](../../../docs/contracts/billing/payment-and-recognition.md) |
 | ADD-ERPC Monthly ERP recognition independent of billing | HB-15, HB-21, HB-23, HB-24, HB-25, HB-26, HB-28, HB-29, HB-30, HB-31 | [Contract](../../../docs/contracts/billing/payment-and-recognition.md) |
-| ADD-SCALE Sustained scale and independent user axis | HB-30, HB-39, HB-42 | [Contract](../../../docs/planning/v1.16/scale-validation.md) |
+| ADD-SCALE Sustained scale and independent user axis | HB-30, HB-39, HB-42 | Historical local input: `docs/planning/v1.16/scale-validation.md` (unpublished) |
 | ADD-H13 Full scope accuracy cross-validation and operator confirmation | HB-04, HB-05, HB-06, HB-07, HB-09, HB-23, HB-38, HB-41 | [Contract](../../../docs/architecture/data-collection.md) |
 | ADD-OPTIONAL Interrupted optional-capability statement |  | [Contract](../../../docs/planning/recent-owner-requirements.md) |
 

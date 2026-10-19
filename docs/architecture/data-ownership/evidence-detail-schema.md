@@ -7,6 +7,11 @@ status: draft
 
 # Evidence and detail schema
 
+## Current decision precedence
+
+The [current owner decisions](../current-design-decisions.md) govern this logical vocabulary. Entity and fact families do not mandate one physical table or service each. Common standardized detail is optional materialization for reuse or replay; marts consume their declared source, calculation and workflow dependencies rather than a universal serial pipeline. The separate policy server owns collection, retention and lifecycle policy; workers enforce it, while pricing and billing approval remain separate. Go backend, Python processing/analysis, React and local Docker are the current direction. Exact schemas, partitions, tenant enforcement, lifecycle races and engine selection still require physical design and verification. No runtime adoption or planning completion is asserted.
+
+
 The [monthly settlement model](monthly-settlement-schema.md) now defines the primary usage-to-sales path, effective MSP service/rate bindings, provisional versus final closing and explicit charge adjustments. Bulk facts remain evidence/components; supplier invoice finality is not a universal prerequisite to an independently priced customer tariff. Source revisions and raw quantities/costs remain unchanged by commercial adjustment.
 
 Part of [HB-21 logical schema](logical-data-schema.md). All entity names and fields are proposed logical vocabulary. Transactional metadata owns eligibility and financial decisions; protected immutable detail owns permitted evidence and explanation; read projections/indexes are derived. Object storage/Parquet is the recorded foundation; exact table/catalog/engine and physical files remain unselected. The >100M source records/day premise does not set a maximum or certify throughput.

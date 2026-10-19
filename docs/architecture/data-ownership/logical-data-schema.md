@@ -7,6 +7,11 @@ status: draft
 
 # Logical data schema
 
+## Current decision precedence
+
+The [current owner decisions](../current-design-decisions.md) govern this logical vocabulary. Entity and fact families do not mandate one physical table or service each. Common standardized detail is optional materialization for reuse or replay; marts consume their declared source, calculation and workflow dependencies rather than a universal serial pipeline. The separate policy server owns collection, retention and lifecycle policy; workers enforce it, while pricing and billing approval remain separate. Go backend, Python processing/analysis, React and local Docker are the current direction. Exact schemas, partitions, tenant enforcement, lifecycle races and engine selection still require physical design and verification. No runtime adoption or planning completion is asserted.
+
+
 ## Primary business path: actual usage to adjusted monthly charge
 
 The [usage-driven monthly settlement schema](monthly-settlement-schema.md) is the primary business view. It explicitly restores original service subscriptions, MSP/customer contract rate bindings, direct/resale responsibility, provisional month calculations, complete monthly closing, pre-issuance final amount adjustment and issued corrections. Supplier invoice reconciliation is a conditional source-cost path, not the only way to calculate charges. Monthly settlement here means usage/charge finalization, not cash receipt. Historical review PASS for the initial draft does not certify this redesign.

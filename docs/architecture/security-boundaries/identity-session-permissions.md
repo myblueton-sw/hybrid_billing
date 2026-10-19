@@ -55,3 +55,10 @@ The proposed [access/trust contract](../../contracts/security/access-and-trust.m
 Seung Woo Park obtains named security/operations owners for: session idle/absolute limits, step-up lifetime, issued token/refresh policy, revocation/detection bounds, SSO/MFA products, service-client flow, signing/key rotation overlap, recovery custody, rate limits and audit/profile retention. Values remain UNRESOLVED.
 
 Planned cases: fixation; cookie/CSRF/cross-origin failures; logout and expiry; invalid issuer/audience/signature/nonce; SAML replay; LDAP injection/empty bind; same-email identities; refresh theft/concurrency; tenant guessing; MSP delegation expiry; role-reduction across API/cache/query/model/export/queued work; external outage; last-admin and backup resurrection. Acceptance requires current scoped authority and preserved financial separation. All runtime security cases are **NOT_RUN**.
+
+
+## Gateway and API layer integration
+
+The owner requires unified external API Gateway entry and an explicit frontend/backend API Layer. The [architecture boundary](../high-level-architecture.md#unified-external-gateway-and-application-api-layer) separates public routing/credential admission, internal backend and collection APIs, and downstream authorization-aware queries/RAG. Trusted proxy/service identity, TLS forwarding and header custody must be explicit; callers cannot forge workspace/principal/approval through forwarded headers. Gateway token validation does not replace current row/field/resource, revocation or command-specific approval checks.
+
+Portal and external clients cannot use direct internal database, object/catalog, broker or model addresses as a bypass. Authenticated provider/ERP callbacks enter through the gateway; outbound connector/ERP/IdP/model calls keep their independent destination/audience controls. Redundant gateway configuration and current key/revocation state are HA dependencies. No direct-public fallback on failure or transparent retry of unknown economic effects is approved. All route/enforcement/failover cases remain NOT_RUN.

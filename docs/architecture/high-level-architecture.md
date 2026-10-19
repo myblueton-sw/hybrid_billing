@@ -7,13 +7,17 @@ status: draft
 
 # Backend logical architecture
 
+## Current owner decisions: 2026-10-19
+
+Read the [current design decisions](current-design-decisions.md) first. They supersede conflicting language, deployment, technology-bundle and policy-server assumptions in this historical proposal. Go/Python/React and local Docker are now selected directions; physical engines and production topology are not selected. The historical platform and HA diagrams below illustrate earlier candidates, not a mandatory initial installation. The 2026-10-12 workspace-availability and review statements describe that historical environment, not the present clone.
+
 Date: 2026-10-07. Owner request: draw the high-level architecture before reviewing component data flows and fit-for-purpose configuration. Root owns synthesis; independent architecture/billing/security review is separate. Tracking: [HB-19](https://linear.app/hybrid-billing/issue/HB-19/document-high-level-architecture-and-component-data-flows-before). Accountable owner: Seung Woo Park. Execution machine: `machine:mac_mini`. This is a proposed design, not planning acceptance or product implementation. The previously untracked draft is now published through a ticket branch and independent review.
 
 ![Backend solution architecture with shared AI analysis and RAG](diagrams/backend-platform-ai.svg)
 
 The solution overview separates collection/messaging, processing engines, backend applications and data stores, with shared AI analysis/RAG. The [original high-level sketch](diagrams/high-level-architecture.svg) remains historical supporting material. The logical responsibility map and F01-F12 contracts explain business ownership; the AI/RAG and HA extension below adds solution integration and failure behavior.
 
-## Current review basis
+## Historical review basis (2026-10-12)
 
 2026-10-12 owner clarification: restart from the full backend **logical architecture**, at concept level. Define business responsibilities, authoritative ownership and interactions before implementation choices. This revision proposes the organizing map; it does not adopt unresolved business policies. Existing 43-group scope, provider families and conditional/later capabilities remain intact.
 

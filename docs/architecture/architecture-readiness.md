@@ -25,6 +25,8 @@ Tracking: [HB-7](https://linear.app/hybrid-billing/issue/HB-7/define-the-archite
 
 ## Design package
 
+The [current owner decisions](current-design-decisions.md) supersede conflicting historical stack/deployment hypotheses below. This readiness inventory retains open design and verification gates; it is not a new implementation authorization.
+
 The [HB-19 backend logical architecture](high-level-architecture.md) is the concept-first entry point for responsibilities, decision/data ownership and principal interactions. Financial/recovery boundaries and numbered flows provide supporting detail before configuration selection. It separately labels the unmerged PR14 SaaS proposal and preserves this readiness document as its baseline.
 
 | Document | Owned design scope |

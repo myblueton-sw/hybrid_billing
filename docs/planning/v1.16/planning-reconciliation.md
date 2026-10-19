@@ -15,6 +15,8 @@ The [machine-readable register](planning-reconciliation.json) preserves all 43 s
 
 HB-16 adds a [normative remediation trace](remediation-trace.json) for the specifically changed contract/action/work/acceptance fields and publishes ten complete English screen specifications plus the common domain contract. Apply those explicit revisions alongside unchanged source clauses. Historical HB-14 hashes remain baseline evidence; current screen hashes and predecessor hashes are recorded separately. This is not full English publication or closure of all 43 detailed groups.
 
+HB-22 adds a [source omission trace](source-omission-trace.json) for 33 clause-level source obligations that were missing or weakened after HB-16, bound to the [source pricing and cost](../../contracts/billing/source-pricing-and-cost-obligations.md), [source ERP and issuance](../../contracts/billing/source-erp-and-issuance-obligations.md) and [source policy, onboarding and verification](../../contracts/operations/source-policy-onboarding-and-verification-obligations.md) contracts. Apply them alongside the HB-16 revisions. The listed screen follow-ups remain open until the affected screen specifications adopt those clauses.
+
 - **Established:** source-required controls and explicit owner directions. Do not ask whether to include them again.
 - **Integration needed:** a contract exists, but full source/requirement/work/API/screen/acceptance reconciliation is incomplete.
 - **Decision/evidence needed:** a concrete value, product contract, customer configuration or compatibility proof remains missing. Use the [decision and action register](planning-decisions.md) to distinguish these.

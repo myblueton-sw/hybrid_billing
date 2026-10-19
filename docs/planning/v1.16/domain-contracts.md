@@ -9,6 +9,8 @@ status: draft
 
 This logical design remains under the [planning gate](planning-gate.md). Proposed names are not actual tables, DDL or deployed APIs. HB-16 translates the pre-existing local contract without dropping its obligations and integrates the reviewed input/trust/operating and monetary mechanisms. The previous bytes are preserved in the authorized local source snapshot; provenance is recorded in the [remediation record](../../reviews/HB-16-remediation/verification.md). Field lengths and runtime representations require approved profiles; never guess money, identities or dates.
 
+HB-22 restores source-derived obligations without new domains: separate purchase-date and billing FX snapshot versions, provisional estimate statements with linked true-up, contract-pool participants, consumption order and carryover, cost-pool split ratios, derived attribution statement kinds, and ERP route-switch locks. They are specified in the [source omission trace](source-omission-trace.json) and its linked contracts.
+
 ## Data ownership
 
 | Domain | Main entities and facts | Required invariant |

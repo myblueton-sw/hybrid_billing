@@ -65,6 +65,8 @@ SAP request/EBDR, billing document and FI posting have separate external identit
 
 Current vendor/deployment/method compatibility remains UNVERIFIED. First actual profiles and sandbox evidence are decisions; unsupported adapters must be explicitly classified. This supplement issues no ERP command.
 
+HB-22 (Linear ticket) restores the source default (B0219): even with a supported guarded method, automatic posting stays disabled at initial go-live, and (B0850) posted documents are read back and compared with the approved snapshot. See [source ERP and issuance obligations](source-erp-and-issuance-obligations.md) EI-02 and EI-03; selling-method, commitment and FX-version rules are in [source pricing and cost obligations](source-pricing-and-cost-obligations.md).
+
 ## Independent synthetic expectations and acceptance
 
 Numbers are synthetic reasoning examples, not actual rate/tax/rounding choices or executed product tests. All cases are NOT_RUN.

@@ -1,0 +1,306 @@
+{
+  "id": "S03",
+  "title": "Import, conflicts and completeness",
+  "layout": "workbench",
+  "purpose": "Check source files and events for duplication, corrections and missing partitions, and publish only eligible input revisions.",
+  "roles": [
+    "OP",
+    "BL"
+  ],
+  "requirement_ids": [
+    "HB-05",
+    "HB-06",
+    "HB-07",
+    "HB-34",
+    "HB-39"
+  ],
+  "tabs": [
+    "Import jobs",
+    "Quarantine and conflicts",
+    "Completeness",
+    "Extraction verification"
+  ],
+  "filters": [
+    "Source connection",
+    "Period",
+    "Job state",
+    "Revision",
+    "Quarantine reason",
+    "Verification state"
+  ],
+  "columns": [
+    "Import ID",
+    "Source and period",
+    "Rows and bytes",
+    "Verified volume",
+    "Duplicates and quarantine",
+    "Completeness",
+    "Job state"
+  ],
+  "sections": [
+    {
+      "title": "Input status",
+      "content": [
+        "Separate original, normalized and OCR candidates."
+      ]
+    },
+    {
+      "title": "Completeness assessment",
+      "content": [
+        "Compare received bytes, rows, partitions and watermark with expected coverage."
+      ]
+    },
+    {
+      "title": "Quarantine review",
+      "content": [
+        "Exclude same-key different-content, forged and tenant-mismatched data from eligible manifests. Inputs containing prompt or response bodies are not accepted as normal billing artifacts; never preserve bodies in raw storage, parser staging, error logs or support bundles. Retain only nonsensitive rejection reasons and receipt metadata references and reacquire allowed source fields without bodies."
+      ]
+    },
+    {
+      "title": "Design status",
+      "content": [
+        "Static proposal; product unimplemented; API disconnected; tests not run.",
+        "Use synthetic amounts and data only.",
+        "AUD links: AUD-AR-02, AUD-AR-03, AUD-RT-01, AUD-AR-05"
+      ]
+    },
+    {
+      "title": "Input confirmation",
+      "content": [
+        "The proposed [planning command contract](../../../contracts/commands/planning-actions.md) defines `input.inspect`, `input.confirm_publish` and `input.reject`. These are canonical planning IDs, not deployed endpoints or new permission grants. S03 collects candidates and evidence; S06 owns the explicit worker confirmation and atomic confirmation/publication action; B09 reads the resulting evidence as an amount-approval prerequisite. An amount approval never supplies or waives input confirmation.",
+        "The flow is `received → normalized_candidate → validating`, then proceeds to `blocked` for missing, conflicting or stale evidence, or `awaiting_confirmation` after all required checks pass. Only the currently authorized worker's explicit `input.confirm_publish` may atomically create the confirmation and publish that exact immutable revision as `eligible`. No intermediate confirmed-but-unpublished success or eligible-without-confirmation state is allowed. `input.reject` accepts only unpublished normalized_candidate, validating, blocked or awaiting_confirmation at the expected revision. It records reason and preserves candidate history; correcting a rejection creates a new candidate revision, not an edit to prior published evidence. A reject racing publication either wins before publication or conflicts after eligibility; it cannot turn eligible history into rejected. Withdrawal/correction of published eligibility requires the separate governed impact/financial path. `input.inspect` reads only currently permitted evidence and never confirms as a side effect."
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "Connection diagnostics",
+      "screen_id": "S01"
+    },
+    {
+      "label": "Compare original",
+      "screen_id": "S05"
+    },
+    {
+      "label": "Track jobs",
+      "screen_id": "U03"
+    },
+    {
+      "label": "Worker input confirmation",
+      "screen_id": "S06"
+    }
+  ],
+  "open_decisions": [
+    "Allowed file and decompression limits",
+    "Signature clock skew and replay retention",
+    "OCR verifier assignment policy"
+  ],
+  "audience": "admin",
+  "fields": [
+    {
+      "label": "Source connection and period",
+      "type": "reference+interval",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Edit before receipt",
+      "validation": "Authenticated scope and period match",
+      "sensitivity": "Account identifiers"
+    },
+    {
+      "label": "File or batch reference",
+      "type": "artifact-reference",
+      "required": true,
+      "required_when": "Always",
+      "editability": "New receipt",
+      "validation": "Validate signature, size, compression and schema",
+      "sensitivity": "Source evidence"
+    },
+    {
+      "label": "Provenance, recipient and original number",
+      "type": "text",
+      "required": false,
+      "required_when": "When applicable",
+      "editability": "Edit before receipt",
+      "validation": "Capture original invoice provenance",
+      "sensitivity": "Contract"
+    },
+    {
+      "label": "Original hash and revision",
+      "type": "digest+revision",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "Quarantine same key with different content",
+      "sensitivity": "Internal"
+    },
+    {
+      "label": "Watermark and partition manifest",
+      "type": "reference",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "All partitions, periods and row counts match",
+      "sensitivity": "Internal"
+    },
+    {
+      "label": "OCR candidate and verification evidence",
+      "type": "reference",
+      "required": false,
+      "required_when": "When applicable",
+      "editability": "Verifier assessment",
+      "validation": "Exclude from confirmed input until checked against original",
+      "sensitivity": "Source amounts"
+    },
+    {
+      "label": "Correction reference and reason",
+      "type": "reference+text",
+      "required": false,
+      "required_when": "When applicable",
+      "editability": "Edit before receipt",
+      "validation": "Validate supersedes target and connection scope",
+      "sensitivity": "Internal"
+    },
+    {
+      "label": "Input eligibility and candidate revision",
+      "type": "enum+revision",
+      "required": false,
+      "required_when": "Before eligibility or dependent amount approval",
+      "editability": "Read only except explicit command draft",
+      "validation": "Bind exact immutable evidence and current authority; no waiver",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Confirmation actor and evidence digest",
+      "type": "principal+digest",
+      "required": false,
+      "required_when": "Before eligibility or dependent amount approval",
+      "editability": "Read only except explicit command draft",
+      "validation": "Bind exact immutable evidence and current authority; no waiver",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Source, mapping and profile revisions",
+      "type": "reference-set",
+      "required": false,
+      "required_when": "Before eligibility or dependent amount approval",
+      "editability": "Read only except explicit command draft",
+      "validation": "Bind exact immutable evidence and current authority; no waiver",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Independent cross-validation and comparison digest",
+      "type": "reference+digest",
+      "required": false,
+      "required_when": "Before eligibility or dependent amount approval",
+      "editability": "Read only except explicit command draft",
+      "validation": "Bind exact immutable evidence and current authority; no waiver",
+      "sensitivity": "Restricted business evidence"
+    }
+  ],
+  "actions": [
+    {
+      "label": "Receive data",
+      "kind": "primary",
+      "effect": "Create a job awaiting verification",
+      "permission": "Source import",
+      "precondition": "Allowed billing fields and connection verified",
+      "confirmation": "Confirm target, bytes and duplication policy"
+    },
+    {
+      "label": "View quarantine reason",
+      "kind": "secondary",
+      "effect": "Show only nonsensitive errors and metadata references; no excluded-body link",
+      "permission": "Import read",
+      "precondition": "Quarantine record exists",
+      "confirmation": "None"
+    },
+    {
+      "label": "Record extraction verification",
+      "kind": "secondary",
+      "effect": "Bind verification evidence to a new revision",
+      "permission": "Evidence verification",
+      "precondition": "Original is available for comparison",
+      "confirmation": "Confirm verified amount and document number"
+    },
+    {
+      "label": "Resume failed segment",
+      "kind": "secondary",
+      "effect": "Resume while retaining completed segments",
+      "permission": "Import resume",
+      "precondition": "Valid checkpoint and current permission",
+      "confirmation": "Confirm resumed segment"
+    },
+    {
+      "id": "input.inspect",
+      "label": "Inspect input evidence",
+      "kind": "secondary",
+      "permission": "Existing scoped evidence-read permission",
+      "precondition": "Currently permitted exact candidate revision",
+      "effect": "Read input confirmation and validation evidence; no mutation",
+      "confirmation": "None",
+      "status": "proposed_not_implemented"
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "message": "Checking scope and permissions and loading Import, conflicts and completeness."
+    },
+    {
+      "name": "empty",
+      "message": "No import records match. Start an import or change the period."
+    },
+    {
+      "name": "partial",
+      "message": "Only part of the data or work is ready. Show ready, missing, held, failed and unprocessed scopes separately; this is not full completion or zero."
+    },
+    {
+      "name": "blocked",
+      "message": "Input partitions are missing or extracted values are unverified. They cannot be published as confirmed input."
+    },
+    {
+      "name": "error",
+      "message": "The request could not be completed. Check the request ID and failed scope, then choose a safe retry or handoff."
+    },
+    {
+      "name": "revoked",
+      "message": "Access to this scope has changed. Remove sensitive details, previews and selections, stop affected actions and downloads, and query permitted scope again. Recall of externally delivered copies is not guaranteed."
+    },
+    {
+      "name": "normalized_candidate",
+      "message": "This normalized revision is a candidate; it is not eligible for billing."
+    },
+    {
+      "name": "awaiting_confirmation",
+      "message": "Required checks passed. The authorized worker must explicitly confirm this exact evidence in S06."
+    },
+    {
+      "name": "eligible",
+      "message": "This exact revision has evidence-bound worker confirmation and atomic publication."
+    },
+    {
+      "name": "rejected",
+      "message": "This candidate was rejected. Preserve the reason and create a new revision for corrections."
+    }
+  ],
+  "sensitive_fields": [
+    "Source connection and period",
+    "File or batch reference",
+    "Provenance, recipient and original number",
+    "OCR candidate and verification evidence"
+  ],
+  "acceptance_ids": [
+    "AUD-AR-02",
+    "AUD-AR-03",
+    "AUD-AR-05",
+    "AUD-RT-01"
+  ],
+  "status": "static_design_only_not_implemented",
+  "command_contract": "../../../contracts/commands/planning-actions.md",
+  "source_provenance": {
+    "ticket": "HB-16",
+    "original_spec_sha256": "caed22102c13593bf67e4973d1591d417c9c386fddd85a7b32a99bdf44d4d988",
+    "original_design_sha256": "190827d02fb49c60fa622bf9e3cf53956ef4cb7f57f5048d83f07ce0d31fbf75",
+    "translation": "English translation and integrated planning remediation; source semantics retained; runtime tests NOT_RUN"
+  }
+}

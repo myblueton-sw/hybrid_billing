@@ -1,0 +1,867 @@
+{
+  "ticket": "HB-22",
+  "ticket_url": "https://linear.app/hybrid-billing/issue/HB-22",
+  "source": "통합_빌링_플랫폼_구현_기획안_v1.16.docx",
+  "source_sha256": "e7772927bc521ee035d50a7762b2f75611b80b2162e385878dc4c36c6c0db84d",
+  "baseline_commit": "b5c65cf66992f703247b8e4713f86cef7835b767",
+  "note": "requirement_groups are planning requirement IDs (HB-01..HB-43), not Linear tickets. Acceptance cases are NOT_RUN. screen_followup lists local screen specs whose detailed fields must adopt the contract clause; this ticket does not edit them. section is a list of contract section IDs.",
+  "findings": [
+    {
+      "id": "P1-01",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0155",
+        "B0873.R009"
+      ],
+      "requirement_groups": [
+        "HB-24",
+        "HB-28",
+        "HB-29"
+      ],
+      "contract": "docs/contracts/billing/source-erp-and-issuance-obligations.md",
+      "section": [
+        "EI-01"
+      ],
+      "screen_followup": [
+        "O03",
+        "I02"
+      ],
+      "acceptance_cases": [
+        "H22-E01",
+        "H22-E02",
+        "ERV-09"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-02",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0219",
+        "B0850"
+      ],
+      "requirement_groups": [
+        "HB-24",
+        "HB-25"
+      ],
+      "contract": "docs/contracts/billing/source-erp-and-issuance-obligations.md",
+      "section": [
+        "EI-02"
+      ],
+      "screen_followup": [
+        "I02"
+      ],
+      "acceptance_cases": [
+        "H22-E03"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-03",
+      "severity": "MEDIUM",
+      "class": "UNBOUND",
+      "source_locators": [
+        "B0065"
+      ],
+      "requirement_groups": [
+        "HB-13",
+        "HB-16",
+        "HB-29"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-05"
+      ],
+      "screen_followup": [
+        "B02",
+        "C02"
+      ],
+      "acceptance_cases": [
+        "H22-P14"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-04",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0060",
+        "B0319.R001-R004",
+        "B0324",
+        "B0325",
+        "B0327"
+      ],
+      "requirement_groups": [
+        "HB-12",
+        "HB-13"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-04"
+      ],
+      "screen_followup": [
+        "B01",
+        "B02"
+      ],
+      "acceptance_cases": [
+        "H22-P12",
+        "H22-P13"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-05",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0309",
+        "B0310",
+        "B0312"
+      ],
+      "requirement_groups": [
+        "HB-12"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-04"
+      ],
+      "screen_followup": [
+        "B01"
+      ],
+      "acceptance_cases": [
+        "H22-P10"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-06",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0301",
+        "B0302"
+      ],
+      "requirement_groups": [
+        "HB-12",
+        "HB-17",
+        "HB-36"
+      ],
+      "contract": "docs/contracts/operations/source-policy-onboarding-and-verification-obligations.md",
+      "section": [
+        "OP-01"
+      ],
+      "screen_followup": [
+        "B01",
+        "B04"
+      ],
+      "acceptance_cases": [
+        "H22-O01",
+        "H22-O02"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-07",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0469",
+        "B0460.R004"
+      ],
+      "requirement_groups": [
+        "HB-18",
+        "HB-22"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-03"
+      ],
+      "screen_followup": [
+        "B05"
+      ],
+      "acceptance_cases": [
+        "H22-P09"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-08",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0129",
+        "B1219.R003",
+        "B1224"
+      ],
+      "requirement_groups": [
+        "HB-01",
+        "HB-28",
+        "HB-29"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-06"
+      ],
+      "screen_followup": [
+        "C02",
+        "I01"
+      ],
+      "acceptance_cases": [
+        "H22-P15"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-09",
+      "severity": "LOW",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0034",
+        "B0130"
+      ],
+      "requirement_groups": [
+        "HB-09",
+        "HB-27",
+        "HB-29"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-06"
+      ],
+      "screen_followup": [
+        "C02",
+        "I01",
+        "S05"
+      ],
+      "acceptance_cases": [
+        "H22-P16"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-10",
+      "severity": "LOW",
+      "class": "UNBOUND",
+      "source_locators": [
+        "B0078"
+      ],
+      "requirement_groups": [
+        "HB-11",
+        "HB-30"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-09"
+      ],
+      "screen_followup": [
+        "R01"
+      ],
+      "acceptance_cases": [
+        "H22-P20"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-11",
+      "severity": "LOW",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0141"
+      ],
+      "requirement_groups": [
+        "HB-02",
+        "HB-14"
+      ],
+      "contract": "docs/contracts/operations/source-policy-onboarding-and-verification-obligations.md",
+      "section": [
+        "OP-02"
+      ],
+      "screen_followup": [
+        "B03"
+      ],
+      "acceptance_cases": [
+        "H22-O03"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-12",
+      "severity": "LOW",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0279"
+      ],
+      "requirement_groups": [
+        "HB-10",
+        "HB-15"
+      ],
+      "contract": "docs/contracts/operations/source-policy-onboarding-and-verification-obligations.md",
+      "section": [
+        "OP-03"
+      ],
+      "screen_followup": [
+        "B02"
+      ],
+      "acceptance_cases": [
+        "H22-O04"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-13",
+      "severity": "LOW",
+      "class": "LOST",
+      "source_locators": [
+        "B0024",
+        "B0208"
+      ],
+      "requirement_groups": [
+        "HB-01",
+        "HB-30"
+      ],
+      "contract": "docs/contracts/operations/source-policy-onboarding-and-verification-obligations.md",
+      "section": [
+        "OP-04"
+      ],
+      "screen_followup": [],
+      "acceptance_cases": [
+        "H22-O10"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P1-14",
+      "severity": "LOW",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0314"
+      ],
+      "requirement_groups": [
+        "HB-12",
+        "HB-14"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-04"
+      ],
+      "screen_followup": [
+        "B01"
+      ],
+      "acceptance_cases": [
+        "H22-P11"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-01",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0545.R001-R004",
+        "B0548",
+        "B0549",
+        "B0569",
+        "B0571",
+        "B0576",
+        "B0581"
+      ],
+      "requirement_groups": [
+        "HB-16",
+        "HB-19"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-01"
+      ],
+      "screen_followup": [
+        "B04",
+        "B06"
+      ],
+      "acceptance_cases": [
+        "H22-P01",
+        "H22-P04",
+        "H22-P05"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-02",
+      "severity": "MEDIUM",
+      "class": "LOST",
+      "source_locators": [
+        "B0551",
+        "B0667.R009"
+      ],
+      "requirement_groups": [
+        "HB-18",
+        "HB-19",
+        "HB-30"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-03"
+      ],
+      "screen_followup": [
+        "B05",
+        "R01"
+      ],
+      "acceptance_cases": [
+        "H22-P08"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-03",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0523.R001-R006",
+        "B0526",
+        "B0527"
+      ],
+      "requirement_groups": [
+        "HB-05",
+        "HB-07",
+        "HB-19"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-02"
+      ],
+      "screen_followup": [
+        "B06",
+        "S02"
+      ],
+      "acceptance_cases": [
+        "H22-P06",
+        "H22-P07"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-04",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0714"
+      ],
+      "requirement_groups": [
+        "HB-09",
+        "HB-41"
+      ],
+      "contract": "docs/contracts/billing/source-erp-and-issuance-obligations.md",
+      "section": [
+        "EI-07"
+      ],
+      "screen_followup": [
+        "S02"
+      ],
+      "acceptance_cases": [
+        "H22-E09"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-05",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0902",
+        "B0950"
+      ],
+      "requirement_groups": [
+        "HB-04",
+        "HB-41"
+      ],
+      "contract": "docs/contracts/billing/source-erp-and-issuance-obligations.md",
+      "section": [
+        "EI-07"
+      ],
+      "screen_followup": [
+        "S02",
+        "S06"
+      ],
+      "acceptance_cases": [
+        "H22-E10"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-06",
+      "severity": "MEDIUM",
+      "class": "UNBOUND",
+      "source_locators": [
+        "B0624",
+        "B0653.R001-R009",
+        "B0662",
+        "B0873.R001-R009"
+      ],
+      "requirement_groups": [
+        "HB-25",
+        "HB-32"
+      ],
+      "contract": "docs/contracts/operations/source-policy-onboarding-and-verification-obligations.md",
+      "section": [
+        "OP-09"
+      ],
+      "screen_followup": [
+        "A01",
+        "I02"
+      ],
+      "acceptance_cases": [
+        "AIV-01..AIV-11",
+        "ERV-01..ERV-09"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-07",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0850",
+        "B0873.R003",
+        "B0873.R005"
+      ],
+      "requirement_groups": [
+        "HB-24",
+        "HB-25"
+      ],
+      "contract": "docs/contracts/billing/source-erp-and-issuance-obligations.md",
+      "section": [
+        "EI-03"
+      ],
+      "screen_followup": [
+        "I02"
+      ],
+      "acceptance_cases": [
+        "H22-E04",
+        "ERV-03",
+        "ERV-05"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-08",
+      "severity": "LOW",
+      "class": "LOST",
+      "source_locators": [
+        "B0846.R003",
+        "B0870",
+        "B0871",
+        "B0873.R006"
+      ],
+      "requirement_groups": [
+        "HB-24",
+        "HB-25"
+      ],
+      "contract": "docs/contracts/billing/source-erp-and-issuance-obligations.md",
+      "section": [
+        "EI-04"
+      ],
+      "screen_followup": [
+        "I02"
+      ],
+      "acceptance_cases": [
+        "H22-E05",
+        "ERV-06"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-09",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0686.R001-R006",
+        "B0697",
+        "B0699",
+        "B0700"
+      ],
+      "requirement_groups": [
+        "HB-20"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-10"
+      ],
+      "screen_followup": [
+        "B07"
+      ],
+      "acceptance_cases": [
+        "H22-P21"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-10",
+      "severity": "LOW",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0566",
+        "B0571",
+        "B0572",
+        "B0574",
+        "B0576"
+      ],
+      "requirement_groups": [
+        "HB-19"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-01"
+      ],
+      "screen_followup": [],
+      "acceptance_cases": [
+        "H22-P02",
+        "H22-P03",
+        "H22-P04"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-11",
+      "severity": "LOW",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0930",
+        "B0938.R001-R005",
+        "B0940"
+      ],
+      "requirement_groups": [
+        "HB-04"
+      ],
+      "contract": "docs/contracts/operations/source-policy-onboarding-and-verification-obligations.md",
+      "section": [
+        "OP-05"
+      ],
+      "screen_followup": [
+        "S02"
+      ],
+      "acceptance_cases": [
+        "H22-O05"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P2-12",
+      "severity": "LOW",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B0977"
+      ],
+      "requirement_groups": [
+        "HB-27"
+      ],
+      "contract": "docs/contracts/billing/source-erp-and-issuance-obligations.md",
+      "section": [
+        "EI-08"
+      ],
+      "screen_followup": [
+        "S05"
+      ],
+      "acceptance_cases": [
+        "H22-E11"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P3-01",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B1469.R001-R006",
+        "B1472"
+      ],
+      "requirement_groups": [
+        "HB-15"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-08"
+      ],
+      "screen_followup": [
+        "O03"
+      ],
+      "acceptance_cases": [
+        "H22-P18",
+        "H22-P19"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P3-02",
+      "severity": "MEDIUM",
+      "class": "UNBOUND",
+      "source_locators": [
+        "B1218",
+        "B1219.R001-R005",
+        "B1222"
+      ],
+      "requirement_groups": [
+        "HB-14",
+        "HB-15",
+        "HB-16"
+      ],
+      "contract": "docs/contracts/billing/source-pricing-and-cost-obligations.md",
+      "section": [
+        "SP-07"
+      ],
+      "screen_followup": [
+        "B04",
+        "O02",
+        "O03"
+      ],
+      "acceptance_cases": [
+        "H22-P17"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P3-03",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B1032.R001-R007",
+        "B1035",
+        "B1040"
+      ],
+      "requirement_groups": [
+        "HB-26",
+        "HB-27"
+      ],
+      "contract": "docs/contracts/billing/source-erp-and-issuance-obligations.md",
+      "section": [
+        "EI-05"
+      ],
+      "screen_followup": [
+        "I03",
+        "I04"
+      ],
+      "acceptance_cases": [
+        "H22-E06"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P3-04",
+      "severity": "MEDIUM",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B1044",
+        "B1047",
+        "B1048"
+      ],
+      "requirement_groups": [
+        "HB-24",
+        "HB-26"
+      ],
+      "contract": "docs/contracts/billing/source-erp-and-issuance-obligations.md",
+      "section": [
+        "EI-06"
+      ],
+      "screen_followup": [
+        "I02",
+        "I03"
+      ],
+      "acceptance_cases": [
+        "H22-E07",
+        "H22-E08",
+        "H22-E12"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P3-05",
+      "severity": "MEDIUM",
+      "class": "UNBOUND",
+      "source_locators": [
+        "B1159",
+        "B1163",
+        "B1183"
+      ],
+      "requirement_groups": [
+        "HB-04",
+        "HB-07"
+      ],
+      "contract": "docs/contracts/operations/source-policy-onboarding-and-verification-obligations.md",
+      "section": [
+        "OP-06"
+      ],
+      "screen_followup": [
+        "S01",
+        "S02"
+      ],
+      "acceptance_cases": [
+        "H22-O06"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P3-06",
+      "severity": "LOW",
+      "class": "WEAKENED",
+      "source_locators": [
+        "B1410",
+        "B1452"
+      ],
+      "requirement_groups": [
+        "HB-33"
+      ],
+      "contract": "docs/contracts/operations/source-policy-onboarding-and-verification-obligations.md",
+      "section": [
+        "OP-07"
+      ],
+      "screen_followup": [],
+      "acceptance_cases": [
+        "H22-O09"
+      ],
+      "status": "contract_bound"
+    },
+    {
+      "id": "P3-07",
+      "severity": "LOW",
+      "class": "LOST",
+      "source_locators": [
+        "B1145",
+        "B1146",
+        "B1190",
+        "B1203",
+        "B1224",
+        "B1236",
+        "B1373",
+        "B1488"
+      ],
+      "requirement_groups": [
+        "HB-01",
+        "HB-04",
+        "HB-22",
+        "HB-30",
+        "HB-41"
+      ],
+      "contract": "docs/contracts/operations/source-policy-onboarding-and-verification-obligations.md",
+      "section": [
+        "OP-05",
+        "OP-08"
+      ],
+      "screen_followup": [
+        "B08",
+        "B11",
+        "S02"
+      ],
+      "acceptance_cases": [
+        "H22-O07",
+        "H22-O08"
+      ],
+      "status": "contract_bound"
+    }
+  ],
+  "followups": [
+    "Amend the default-enablement sentence of docs/planning/v1.16/architecture.md (external execution paragraph) to match EI-02.",
+    "Register erp_route.* commands in docs/contracts/commands/planning-actions.md.",
+    "Adopt contract clauses in each screen_followup specification."
+  ]
+}

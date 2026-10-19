@@ -1,0 +1,391 @@
+{
+  "id": "U01",
+  "title": "Settlement overview",
+  "audience": "admin",
+  "layout": "dashboard",
+  "purpose": "Understand settlement progress and blockers within the assigned scope and open the next closing, approval or document action.",
+  "roles": [
+    "BL settlement operator",
+    "AP approver",
+    "CP customer policy administrator",
+    "AU auditor"
+  ],
+  "requirement_ids": [
+    "HB-01",
+    "HB-23",
+    "HB-30",
+    "HB-31",
+    "HB-39",
+    "HB-15"
+  ],
+  "tabs": [
+    "Due dates and overdue",
+    "Current settlement",
+    "My work",
+    "Recent changes"
+  ],
+  "filters": [
+    "Payment due date",
+    "Overdue or unknown",
+    "Assigned customer or organization",
+    "Contract",
+    "Legal entity",
+    "Settlement period",
+    "Currency",
+    "Operating profile"
+  ],
+  "columns": [
+    "Receivables and overdue amounts by currency",
+    "Due, overdue and unknown counts",
+    "As-of time and receipt freshness",
+    "Customer or organization",
+    "Contract",
+    "Nearest deadline",
+    "Settlement stage",
+    "Blocking reason",
+    "Owner",
+    "As-of time"
+  ],
+  "fields": [
+    {
+      "label": "Business scope",
+      "required": true,
+      "type": "scope-select",
+      "required_when": "Always",
+      "editability": "Permitted scope only",
+      "validation": "Canonical IDs and period; update cards and selections together on scope change",
+      "sensitivity": "Customer identifiers"
+    },
+    {
+      "label": "Settlement period",
+      "required": true,
+      "type": "period",
+      "required_when": "Always",
+      "editability": "Queryable periods",
+      "validation": "Distinguish contract-local timezone and execution as-of time",
+      "sensitivity": "Transactions"
+    },
+    {
+      "label": "Total cost",
+      "required": false,
+      "type": "decimal-summary",
+      "required_when": "When applicable",
+      "editability": "Read only with cost permission",
+      "validation": "Separate currency and cost type; never add sales or allocations",
+      "sensitivity": "Cost"
+    },
+    {
+      "label": "Total sales",
+      "required": false,
+      "type": "decimal-summary",
+      "required_when": "When applicable",
+      "editability": "Read only with sales permission",
+      "validation": "Separate expected and confirmed amounts; totals by currency",
+      "sensitivity": "Sales"
+    },
+    {
+      "label": "Organization allocation",
+      "required": false,
+      "type": "decimal-summary",
+      "required_when": "When applicable",
+      "editability": "Read only with allocation permission",
+      "validation": "Show internal approval state, period and currency",
+      "sensitivity": "Allocation"
+    },
+    {
+      "label": "Progress",
+      "required": true,
+      "type": "count-summary",
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "Fixed target/completion denominator; separate exemption, hold and addition history",
+      "sensitivity": "Business"
+    },
+    {
+      "label": "Blockers and unknown ERP outcomes",
+      "required": true,
+      "type": "status-summary",
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "No other-customer counts; never infer ERP waiting as success or failure",
+      "sensitivity": "Business"
+    },
+    {
+      "label": "Display as-of time",
+      "required": true,
+      "type": "datetime",
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "Show card snapshot and refresh delay",
+      "sensitivity": "System"
+    },
+    {
+      "label": "Display exchange rate",
+      "required": false,
+      "type": "reference",
+      "required_when": "When applicable",
+      "editability": "Permitted aggregate mode",
+      "validation": "Show policy/time only for converted totals; does not modify finalized documents",
+      "sensitivity": "Amounts"
+    },
+    {
+      "label": "Receivables and overdue amounts by currency",
+      "required": false,
+      "type": "read-only",
+      "required_when": "For applicable external billing contracts",
+      "editability": "Read only",
+      "validation": "Check current scope, authority, currency, snapshot and receipt freshness; unknown differs from not applicable",
+      "sensitivity": "Contract and customer financial"
+    },
+    {
+      "label": "Due, overdue and unknown counts",
+      "required": false,
+      "type": "read-only",
+      "required_when": "For applicable external billing contracts",
+      "editability": "Read only",
+      "validation": "Check current scope, authority, currency, snapshot and receipt freshness; unknown differs from not applicable",
+      "sensitivity": "Contract and customer financial"
+    },
+    {
+      "label": "As-of time and receipt freshness",
+      "required": false,
+      "type": "read-only",
+      "required_when": "For applicable external billing contracts",
+      "editability": "Read only",
+      "validation": "Check current scope, authority, currency, snapshot and receipt freshness; unknown differs from not applicable",
+      "sensitivity": "Contract and customer financial"
+    },
+    {
+      "label": "Favorite target and revision",
+      "type": "reference+revision",
+      "required": false,
+      "required_when": "Favorite actions",
+      "editability": "Read only except explicit command draft",
+      "validation": "Principal/workspace scoped; no sensitive cached snapshot",
+      "sensitivity": "Restricted business evidence"
+    }
+  ],
+  "actions": [
+    {
+      "label": "Inspect closing",
+      "kind": "primary",
+      "effect": "Open same-scope closing list in U02",
+      "permission": "closing.read",
+      "precondition": "Current scope allowed",
+      "confirmation": "No confirmation for reads; retain snapshot and scope"
+    },
+    {
+      "label": "View my work",
+      "kind": "secondary",
+      "effect": "Open assigned jobs and cases in U03",
+      "permission": "Own or delegated task permission",
+      "precondition": "Current task scope allowed",
+      "confirmation": "Reading a notification does not resolve work"
+    },
+    {
+      "label": "Inspect blocker evidence",
+      "kind": "secondary",
+      "effect": "Open each blocker in reconciliation, approval or submission detail",
+      "permission": "Target and evidence access",
+      "precondition": "Current evidence scope allowed",
+      "confirmation": "Do not disclose unauthorized counts or reasons"
+    },
+    {
+      "label": "Open report",
+      "kind": "secondary",
+      "effect": "Analyze current amount meaning and scope in R01",
+      "permission": "report.read",
+      "precondition": "Current report scope allowed",
+      "confirmation": "Do not automatically sum different meanings"
+    },
+    {
+      "label": "Refresh overview",
+      "kind": "secondary",
+      "effect": "Fetch new snapshot and replace prior as-of time",
+      "permission": "Read permission",
+      "precondition": "Current scope allowed",
+      "confirmation": "Does not reexecute business commands; explain invalidated selections"
+    },
+    {
+      "label": "View overdue detail",
+      "kind": "secondary",
+      "effect": "Open R01 with the same snapshot overdue filter; export requires separate authority",
+      "permission": "Receivables read in current legal entity and customer scope",
+      "precondition": "Current snapshot and overdue filter",
+      "confirmation": "Distinguish acceptance from completion"
+    },
+    {
+      "id": "favorites.add",
+      "label": "Add favorite",
+      "kind": "secondary",
+      "permission": "Current personal workspace and target access",
+      "precondition": "Canonical target and current authority; expected personal favorite revision where applicable",
+      "effect": "Mutate/read only own favorite references; generic denied/unavailable result",
+      "confirmation": "Removal affects favorite only; no authority grant; regrant restoration follows approved policy",
+      "status": "proposed_not_implemented"
+    },
+    {
+      "id": "favorites.remove",
+      "label": "Remove favorite",
+      "kind": "secondary",
+      "permission": "Current personal workspace and target access",
+      "precondition": "Canonical target and current authority; expected personal favorite revision where applicable",
+      "effect": "Mutate/read only own favorite references; generic denied/unavailable result",
+      "confirmation": "Removal affects favorite only; no authority grant; regrant restoration follows approved policy",
+      "status": "proposed_not_implemented"
+    },
+    {
+      "id": "favorites.list",
+      "label": "List favorites",
+      "kind": "secondary",
+      "permission": "Current personal workspace and target access",
+      "precondition": "Canonical target and current authority; expected personal favorite revision where applicable",
+      "effect": "Mutate/read only own favorite references; generic denied/unavailable result",
+      "confirmation": "Removal affects favorite only; no authority grant; regrant restoration follows approved policy",
+      "status": "proposed_not_implemented"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Payment terms, due dates and overdue",
+      "content": [
+        "Due dates and overdue status by contract.",
+        "Separate unknown amounts from confirmed overdue totals."
+      ]
+    },
+    {
+      "title": "Scope and freshness",
+      "content": [
+        "Fix workspace, current scope, period, currency and refresh state."
+      ]
+    },
+    {
+      "title": "Summary by amount meaning",
+      "content": [
+        "Provide cost, sales and allocation cards separately under current permissions; do not aggregate unauthorized amounts or counts."
+      ]
+    },
+    {
+      "title": "Closing and blockers",
+      "content": [
+        "Show completed, exempt and held targets with fixed denominators, upcoming or exceeded deadlines and unknown ERP outcomes."
+      ]
+    },
+    {
+      "title": "My work",
+      "content": [
+        "Show currently permitted next actions for approval requests, differences, document failures and anomalies."
+      ]
+    },
+    {
+      "title": "Favorites",
+      "content": [
+        "The proposed [command contract](../../../contracts/commands/planning-actions.md) defines `favorites.add`, `favorites.remove` and `favorites.list`. Favorites are personal references scoped by the authenticated principal and workspace, with canonical customer target ID and expected favorite revision where applicable. They never store a permission grant, sensitive target snapshot or customer amount. Personal-preference write and customer read are separately required. Current customer permissions are checked at add, list, navigation and idempotent replay. Rename retains canonical identity; termination never transfers favorites to a recreated identity.",
+        "Duplicate addition is idempotent for the same principal/workspace/target. Removal changes only that personal favorite. Missing and forbidden targets receive a generic unavailable/denied result without exposing existence, names, counts or last-known metadata. Revoked targets are removed or suppressed from visible results under a bounded lifecycle policy; display no stale sensitive label. Later permission regrant obeys the approved versioned restoration policy. Automatic restoration is forbidden unless explicitly selected and approved in that policy; otherwise a fresh authorized addition is required. Missing policy blocks activation.",
+        "Favorite count bounds, order, retention/cleanup duration and exact removal-versus-suppression lifecycle remain unresolved. A bounded policy is required before implementation acceptance; do not invent an unlimited store or numeric default. Acceptance (NOT_RUN): cross-user/workspace listing rejected; revoked target not leaked; add/remove replay remains authorized; regrant does not silently restore; duplicate add does not create duplicate rows; missing and unauthorized outcomes are indistinguishable."
+      ]
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "message": "Checking scope and permissions and loading Settlement overview."
+    },
+    {
+      "name": "empty",
+      "message": "No settlement targets are registered in this scope."
+    },
+    {
+      "name": "partial",
+      "message": "Only part of the data or work is ready. Show ready, missing, held, failed and unprocessed scopes separately; this is not full completion or zero."
+    },
+    {
+      "name": "blocked",
+      "message": "Some targets lack mandatory evidence. Open blocker details to act."
+    },
+    {
+      "name": "error",
+      "message": "The overview could not be refreshed. Check the last successful as-of time."
+    },
+    {
+      "name": "revoked",
+      "message": "Access to this scope has changed. Remove sensitive details, previews and selections, stop affected actions and downloads, and query permitted scope again. Recall of externally delivered copies is not guaranteed."
+    },
+    {
+      "name": "zero",
+      "message": "The verified amount in this scope is zero. No-usage evidence is available."
+    },
+    {
+      "name": "payment-unknown",
+      "message": "Payment status could not be verified. Check the last confirmation time and due date."
+    },
+    {
+      "name": "favorite_unavailable",
+      "message": "This favorite is unavailable. Refresh permitted favorites or explicitly add an accessible target."
+    }
+  ],
+  "links": [
+    {
+      "label": "Closing",
+      "screen_id": "U02"
+    },
+    {
+      "label": "Jobs",
+      "screen_id": "U03"
+    },
+    {
+      "label": "Anomalies",
+      "screen_id": "U04"
+    },
+    {
+      "label": "Reconciliation",
+      "screen_id": "S06"
+    },
+    {
+      "label": "Approval",
+      "screen_id": "B09"
+    },
+    {
+      "label": "Submission",
+      "screen_id": "I02"
+    },
+    {
+      "label": "Reports",
+      "screen_id": "R01"
+    }
+  ],
+  "sensitive_fields": [
+    "Cost",
+    "Sales amount",
+    "Allocation amount",
+    "Customer-specific blockers",
+    "Owner"
+  ],
+  "open_decisions": [
+    "Card order by home profile",
+    "Refresh interval and delay target",
+    "Display conversion policy"
+  ],
+  "acceptance_ids": [
+    "AUD-QA-03",
+    "PT-01",
+    "PT-02",
+    "PT-03",
+    "PT-04",
+    "PT-05",
+    "PT-06",
+    "PT-07",
+    "PT-08",
+    "SCALE-03",
+    "UI-01",
+    "UI-02"
+  ],
+  "status": "static_design_only_not_implemented",
+  "command_contract": "../../../contracts/commands/planning-actions.md",
+  "source_provenance": {
+    "ticket": "HB-16",
+    "original_spec_sha256": "4a9692be701a7032fc1e0b6e77c1b72011b318c579519653469b4f009c2c2123",
+    "original_design_sha256": "c2693641be9e14ba442cdb2ff5843b1ef002f6d08aff88486010e3645a9ecbc6",
+    "translation": "English translation and integrated planning remediation; source semantics retained; runtime tests NOT_RUN"
+  }
+}

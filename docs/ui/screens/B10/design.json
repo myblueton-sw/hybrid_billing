@@ -1,0 +1,255 @@
+{
+  "id": "B10",
+  "title": "Billing application history",
+  "layout": "table-detail",
+  "purpose": "Trace applied coverage, remainder and reversals from source through charge lines and submissions to detect duplicate billing.",
+  "roles": [
+    "BL",
+    "AU"
+  ],
+  "requirement_ids": [
+    "HB-21",
+    "HB-22",
+    "HB-29"
+  ],
+  "tabs": [
+    "Application ledger",
+    "Partial billing",
+    "Reversals and corrections",
+    "External references"
+  ],
+  "filters": [
+    "Contract",
+    "Period",
+    "Component",
+    "Claim state",
+    "Submission path",
+    "Original document"
+  ],
+  "columns": [
+    "Claim ID",
+    "Contract and period",
+    "Component",
+    "Source coverage",
+    "Applied amount",
+    "Remainder",
+    "Submission and document",
+    "Correction reference"
+  ],
+  "sections": [
+    {
+      "title": "Ledger summary",
+      "content": [
+        "Show applied, remaining and reversed amounts by currency."
+      ]
+    },
+    {
+      "title": "Trace path",
+      "content": [
+        "Source to allocation to sales to line to API/file submission."
+      ]
+    },
+    {
+      "title": "Duplicate assessment",
+      "content": [
+        "Include coverage already applied by ERP orders or prepayments; no direct ledger editing."
+      ]
+    },
+    {
+      "title": "Design status",
+      "content": [
+        "Static proposal; product unimplemented; API disconnected; tests not run.",
+        "Use synthetic amounts and data only.",
+        "AUD links: AUD-DB-03"
+      ]
+    },
+    {
+      "title": "Claim coverage",
+      "content": [
+        "Read the proposed [Claim and numeric contract](../../../contracts/billing/claim-and-numeric.md). Display canonical coverage identity, source intervals or quantities/units, business deduplication scope, Claim revision, reserved/applied/reversed coverage, remaining available coverage and external references separately from amounts. Coverage is not inferred from a display label, page total, new submission ID or monetary credit.",
+        "Expose available, reserved, externally pending/unknown, applied, release-pending/released and reversed/corrected coverage with their authoritative evidence; these are business categories bound to the canonical contract, not a replacement Job enum. Pending/unknown external outcomes retain protected coverage. No timeout, local job failure or arbitrary expiry makes that coverage billable again. Reservation release requires proven nonapplication or authoritative cancellation, current rights and version checks. Link unresolved outcomes to I02 reconciliation and original-referencing corrections to B11/I01.",
+        "Quantity reversal does not automatically rebill. Any rebilling requires explicit claim.authorize_replacement for reconciled replacement-pending coverage followed by ordinary approval/reservation; reversal disposition may instead be cancelled or superseded and unavailable. Reversal subsets are checked against all prior effective reversals: a partly overlapping second reversal conflicts even if scalar cumulative quantity is below the original application. Money-only credits do not reopen quantity. Preserve original Claim, linked correction and tax/currency/amount/quantity dimensions; never directly edit the ledger. Display unknown remainder as unknown, not zero or available. Numeric precision, scale, rounding and deterministic remainder policy remain proposed under the numeric contract, with customer values unset.",
+        "Acceptance (NOT_RUN): concurrent partial claims cannot overlap; a fresh external key cannot rebill protected coverage; unknown submission retains reservation; credit-only adjustment does not release quantity; quantity reversal cannot auto-submit; correction links retain originals; currency/unit differences cannot be combined."
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "Calculation results",
+      "screen_id": "B08"
+    },
+    {
+      "label": "Corrections and credits",
+      "screen_id": "B11"
+    },
+    {
+      "label": "Submission state",
+      "screen_id": "I02"
+    },
+    {
+      "label": "Original evidence",
+      "screen_id": "S05"
+    }
+  ],
+  "open_decisions": [
+    "Partial coverage identity contract; proposed geometry in claim-and-numeric.md awaits closure",
+    "Reconciliation method for existing external orders"
+  ],
+  "audience": "admin",
+  "fields": [
+    {
+      "label": "Contract, component and period",
+      "type": "reference+interval",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "Fix business duplication scope",
+      "sensitivity": "Contract"
+    },
+    {
+      "label": "Source to allocation to sales to charge line",
+      "type": "reference-chain",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "Preserve canonical references",
+      "sensitivity": "Restricted evidence"
+    },
+    {
+      "label": "Applied, remaining and reversed amounts",
+      "type": "money",
+      "required": true,
+      "required_when": "Always",
+      "editability": "Read only",
+      "validation": "Preserve currency and partial coverage",
+      "sensitivity": "Sales"
+    },
+    {
+      "label": "Existing ERP order and prepayment reference",
+      "type": "reference",
+      "required": false,
+      "required_when": "When applicable",
+      "editability": "Read only",
+      "validation": "A new submission ID cannot bypass existing billing",
+      "sensitivity": "ERP contract"
+    },
+    {
+      "label": "Correction and original reference",
+      "type": "reference",
+      "required": false,
+      "required_when": "When applicable",
+      "editability": "Read only",
+      "validation": "Never overwrite the original",
+      "sensitivity": "Internal"
+    },
+    {
+      "label": "Coverage identity and units",
+      "type": "reference+unit",
+      "required": false,
+      "required_when": "Claim detail",
+      "editability": "Read only except explicit command draft",
+      "validation": "Protected unknown outcome; quantity reversal does not rebill; money-only credit does not reopen quantity",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Coverage state and external evidence",
+      "type": "enum+reference",
+      "required": false,
+      "required_when": "Claim detail",
+      "editability": "Read only except explicit command draft",
+      "validation": "Protected unknown outcome; quantity reversal does not rebill; money-only credit does not reopen quantity",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Reserved, applied, reversed and available coverage",
+      "type": "decimal-coverage",
+      "required": false,
+      "required_when": "Claim detail",
+      "editability": "Read only except explicit command draft",
+      "validation": "Protected unknown outcome; quantity reversal does not rebill; money-only credit does not reopen quantity",
+      "sensitivity": "Restricted business evidence"
+    },
+    {
+      "label": "Linked correction and original Claim",
+      "type": "reference-pair",
+      "required": false,
+      "required_when": "Claim detail",
+      "editability": "Read only except explicit command draft",
+      "validation": "Protected unknown outcome; quantity reversal does not rebill; money-only credit does not reopen quantity",
+      "sensitivity": "Restricted business evidence"
+    }
+  ],
+  "actions": [
+    {
+      "label": "Trace application path",
+      "kind": "primary",
+      "effect": "Link original source through external document",
+      "permission": "Billing history read",
+      "precondition": "Permitted contract and period",
+      "confirmation": "None"
+    },
+    {
+      "label": "View duplicate conflict",
+      "kind": "secondary",
+      "effect": "Show existing Claim and external billing evidence",
+      "permission": "Billing history read",
+      "precondition": "Conflict record exists",
+      "confirmation": "None"
+    },
+    {
+      "label": "Open correction review",
+      "kind": "secondary",
+      "effect": "Open a B11 case draft",
+      "permission": "Correction request",
+      "precondition": "Issued document and reason available",
+      "confirmation": "Confirm original and affected scope"
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "message": "Checking scope and permissions and loading Billing application history."
+    },
+    {
+      "name": "empty",
+      "message": "No billing application records exist for this scope."
+    },
+    {
+      "name": "partial",
+      "message": "Only part of the data or work is ready. Show ready, missing, held, failed and unprocessed scopes separately; this is not full completion or zero."
+    },
+    {
+      "name": "blocked",
+      "message": "The same coverage is already billed or the external outcome is unknown. Reconcile before proceeding."
+    },
+    {
+      "name": "error",
+      "message": "The request could not be completed. Check the request ID and failed scope, then choose a safe retry or handoff."
+    },
+    {
+      "name": "revoked",
+      "message": "Access to this scope has changed. Remove sensitive details, previews and selections, stop affected actions and downloads, and query permitted scope again. Recall of externally delivered copies is not guaranteed."
+    },
+    {
+      "name": "coverage_protected_unknown",
+      "message": "The external outcome is unknown. This coverage remains protected and cannot be rebilled."
+    }
+  ],
+  "sensitive_fields": [
+    "Contract, component and period",
+    "Source to allocation to sales to charge line",
+    "Applied, remaining and reversed amounts",
+    "Existing ERP order and prepayment reference"
+  ],
+  "acceptance_ids": [
+    "AUD-DB-03"
+  ],
+  "status": "static_design_only_not_implemented",
+  "command_contract": "../../../contracts/commands/planning-actions.md",
+  "source_provenance": {
+    "ticket": "HB-16",
+    "original_spec_sha256": "d276af243f765dfffa40e4783a87b5da1ad54f1326f9ad6b6041c6c0f2d45460",
+    "original_design_sha256": "648394cd9c3e73519729e248937ac00bf9e30e0c098ada8778b2f2562198be96",
+    "translation": "English translation and integrated planning remediation; source semantics retained; runtime tests NOT_RUN"
+  }
+}

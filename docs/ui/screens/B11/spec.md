@@ -68,6 +68,9 @@ AUD links: AUD-AR-08, AUD-AR-10, AUD-DB-10, AUD-QA-09
 | Hold type and target manifest | enum+reference | Hold request, release or status | Read only except explicit command draft | Separate billing/delivery/collections effects; unknown is not effective/released | Restricted business evidence |
 | Hold and per-target revisions | reference+revision-map | Hold request, release or status | Read only except explicit command draft | Separate billing/delivery/collections effects; unknown is not effective/released | Restricted business evidence |
 | Hold effect and external confirmation | enum+reference | Hold request, release or status | Read only except explicit command draft | Separate billing/delivery/collections effects; unknown is not effective/released | Restricted business evidence |
+| Customer consent to resolution | enum+reference | Dispute resolution | Separate editing | Recorded, declined, not recorded or not applicable, with evidence; never implied by a correction link or difference explanation | Personal and financial |
+| Resolution link | reference | Dispute resolution | Draft edit | Correction document or difference explanation; issued document and payment obligation unchanged by the dispute itself | Restricted evidence |
+| Pre-issuance adjustment draft | reference+revision | Adjustment for an unissued target | Read only except explicit command draft | Kind, declared basis, currency and expected base result revision; issued targets use the correction path | Sales |
 
 Sensitive fields: Balance authority and as-of time, Opening, increases, application, expiry and reversals, Migration ledger and included historical coverage, Case, disputed amount and deadline, Internal note and public reply, Adjustment reason, contract and evidence.
 
@@ -86,13 +89,15 @@ All identifiers below are proposed canonical planning IDs, not deployed APIs. Ex
 | Action | Proposed ID | Permission | Preconditions | Result | Confirmation |
 | --- | --- | --- | --- | --- | --- |
 | Register inquiry | Existing action; catalog mapping required | Billing inquiry write | Contract, document and issue specified | Create a case with owner and deadline | None |
-| Request adjustment approval | Existing action; catalog mapping required | Adjustment request | Reason, original, tax and balance verified | Send a fixed adjustment proposal to the approval inbox | Confirm amounts, balances and disclosure scope |
+| Request issued-document correction approval | Existing action; catalog mapping required | Adjustment request | Already-issued original, reason, tax and balance verified; unissued targets use `adjustment.draft` instead | Send a fixed original-referencing correction or credit proposal to the approval inbox | Confirm amounts, balances and disclosure scope |
 | Preview public reply | Existing action; catalog mapping required | Inquiry reply write | Public fields validated | Preview public reply; sending is separate | Confirm recipient and body |
 | Record resolution | Existing action; catalog mapping required | Inquiry handling | Resolution evidence and related corrections linked | Resolve case while preserving separate financial state | Confirm unfinished financial actions |
 | Inspect payment evidence | Existing action; catalog mapping required | Read authority for document and receipt evidence | Current permitted evidence scope | Read allowed evidence without changing receipts or credits | Distinguish acceptance from completion |
 | Request hold | holds.request | Current scoped authority for the hold type and target action | Explicit type, target revisions, reason/evidence and required policy | Report per-target requested/effective/released/pending/unknown effect without auto-resume | Confirm type-specific effect; due dates and balances do not change |
 | Request hold release | holds.release | Current scoped authority for the hold type and target action | Explicit type, target revisions, reason/evidence and required policy | Report per-target requested/effective/released/pending/unknown effect without auto-resume | Confirm type-specific effect; due dates and balances do not change |
 | Inspect hold status | holds.status | Scoped hold read for the authorized hold and target | Current authorized hold/case ID and target scope; no new mutation rationale or approval evidence | Read current revisions, as-of, hold effects and external uncertainty without mutation | None; read-only status inspection |
+| Draft pre-issuance adjustment | adjustment.draft | Scoped adjustment.write | Unissued target, reason, evidence and expected base result revision | Adjustment draft for computation and independent decision in B09 | Confirm kind, basis, currency and that issued documents are not changed |
+| Cancel adjustment draft | adjustment.cancel | Author's scoped adjustment.write or authorized cancellation scope | Draft not yet applied; expected draft revision and reason | Draft cancelled; no effect on any result | Confirm draft and reason |
 
 ## User-facing states
 
@@ -121,6 +126,12 @@ Release names the exact hold and affected targets and requires current authority
 
 Acceptance (NOT_RUN): mixed-authority bulk targets do not leak or all-pass; type-specific hold cannot stop/change an unrelated stage; concurrent revision change conflicts; unknown external effects cannot be reported effective/released; duplicate requests do not duplicate holds; release leaves other holds effective and does not auto-resume; dispute/hold never erases overdue or changes due dates.
 
+
+## Dispute resolution, consent and distinct holds
+
+Source: B1488, contract OP-08 in the [source policy, onboarding and verification obligations](../../../contracts/operations/source-policy-onboarding-and-verification-obligations.md). A dispute never automatically cancels an issued document or a payment obligation. Only permitted parts are held, and external processing results are confirmed before display as effective. Resolution links a correction document or a difference explanation and records customer consent as its own field; a correction link alone never implies consent. An unissued (billing) hold, a delivery hold and an external ERP recall request are distinct actions: the first two use `holds.request` with their own type, and an ERP recall follows the I02 correction path. Acceptance (NOT_RUN): H22-O07.
+
+An adjustment for a still-unissued target starts with `adjustment.draft` and follows the [command contract](../../../contracts/commands/planning-actions.md) lifecycle; credits and corrections for issued documents keep the original-referencing correction path. Acceptance (NOT_RUN): H23-C01, H23-C06.
 
 ## Authorization, editing and navigation
 

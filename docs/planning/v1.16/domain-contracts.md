@@ -60,7 +60,7 @@ Technical job success does not imply business completion: successful ERP lookup 
 
 ## Shared API and command boundary
 
-The [planning action registry](../../contracts/commands/planning-actions.md) is canonical for the remediated paths: typed input confirmation, independent trust replacement, holds, metrics, favorites and stage deadlines. It defines request/result/error/permission/state mappings used by affected screens and APIs. URLs/OpenAPI generation remain stack-dependent; AI gets no alternate write bypass. Original command families below remain required, including those not yet fully specified in that registry.
+The [planning action registry](../../contracts/commands/planning-actions.md) is canonical for the remediated paths: typed input confirmation, independent trust replacement, holds, metrics, favorites and stage deadlines, plus the HB-23 adjustment, settlement dependency, operational notification rule, demo scenario and ERP route families. It defines request/result/error/permission/state mappings used by affected screens and APIs. URLs/OpenAPI generation remain stack-dependent; AI gets no alternate write bypass. Original command families below remain required, including those not yet fully specified in that registry.
 
 | Area | Reads | Planned mutations | Preconditions/results |
 | --- | --- | --- | --- |

@@ -66,6 +66,7 @@ Source: B0460.R004, B0469, B0551, B0667.R009.
 5. **A realized FX difference at payment is recorded separately and never modifies the original invoice.** It links to [payment and recognition](payment-and-recognition.md) records.
 6. At close, the FX value, source response and policy are fixed as input evidence. An FX change after approval requires recalculation and reapproval. Issued documents never change to a later rate.
 7. Tax follows the issuing entity's policy. Example rates are never used as statutory defaults.
+8. Each FX snapshot version, including the prepay purchase-date rate and the monthly billing rate, passes the rate validity check in [inputs, pricing and ERP PC-01](inputs-pricing-and-erp.md#pc-01-default-calculation-and-approved-exceptions): `rate > 0`, positive quotation denominator, correct pair and direction, approved revision and effective time (B0477.R002). The FX difference, markup and fee components in rule 3 are signed components with their own rules and are not subject to the positive-rate check.
 
 ## SP-04: on-premises cost pools and metering (P1-04, P1-05, P1-14)
 
@@ -167,6 +168,7 @@ Numbers restate source examples for independent expectations. They are not chose
 | H22-P07 | P2-03 | Missing CommitmentDiscountId: null with reason, not zero or an invented ID; existing data's FOCUS version unchanged |
 | H22-P08 | P2-02 | Prepay purchase-date FX and monthly billing FX stored as two versions; differing cost and selling bases show a separate FX margin component |
 | H22-P09 | P1-07 | Payment received at a different FX rate: realized difference recorded separately; original invoice unchanged |
+| H23-S11 | FA-03 | B0551 prepay purchase-date FX snapshot recorded as `0` or with the reversed pair: that snapshot version is rejected and the prepay recovery line is held; the monthly billing FX version is not substituted. A negative FX margin difference component in the margin report remains valid |
 | H22-P10 | P1-05 | Shared server split ratios across CPU and memory pools sum to exactly 100% of the server cost, with idle or unattributed shares as explicit lines; a configuration totalling 200% or with an unexplained shortfall is rejected |
 | H22-P11 | P1-14 | B0314 pool 1,000,000 KRW at 60/30/10: 600,000 / 300,000 / idle 100,000. External sale 750,000 is not added to the internal 600,000 |
 | H22-P12 | P1-04 | Host and VM both metered for the same cost: charged once. VM recreated with the same name: new identity unless the stable identifier matches |

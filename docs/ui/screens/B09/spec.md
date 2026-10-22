@@ -57,7 +57,7 @@ AUD links: AUD-AR-01, AUD-AR-06, AUD-AR-07, AUD-QA-01
 
 ### Approval stages
 
-Billing-result approval may target a fixed calculation before an ERP draft exists. Final ERP amount approval follows external draft retrieval and reconciliation and binds that amount and external revision. Other policy approval targets a policy revision. Distinguish ERP not applicable from applicable but unknown. Unknown mandatory values block that stage and are never replaced with zero or not applicable.
+Billing-result approval may target a fixed calculation before an ERP draft exists. A pre-issuance adjustment decision approves only an exact adjustment computation; the adjusted result then needs its own final amount approval. Final ERP amount approval follows external draft retrieval and reconciliation and binds that amount and external revision. Other policy approval targets a policy revision. Distinguish ERP not applicable from applicable but unknown. Unknown mandatory values block that stage and are never replaced with zero or not applicable.
 
 ## Field contract
 
@@ -68,7 +68,7 @@ Billing-result approval may target a fixed calculation before an ERP draft exist
 | Input and result hashes | digest | Always | Read only | Approval invalid if current result differs | Internal |
 | Change evidence and blockers | reference-set | Always | Read only | Mandatory blockers cannot be bypassed | Restricted evidence |
 | Rejection reason and handoff | text+principal | When applicable | Edit | Hand off only to an authorized owner | Internal |
-| Approval type | enum | Always | Read only | Distinguish billing result, final ERP amount and other policy | Internal |
+| Approval type | enum | Always | Read only | Distinguish adjustment decision, billing result, final ERP amount and other policy | Internal |
 | Before/after amounts and taxes | money | For amount approval | Read only | Check amounts and limits by currency | Sales |
 | Final ERP amount and external revision | money+revision | At final ERP amount approval | Read only | Reconciled ERP draft and current revision; required unknown values block | ERP amounts |
 | Monthly recognition and quarterly reconciliation hash | read-only | For recognition-linked contracts | Read only | Permitted entity, contract and ERP scope; snapshot, currency and posting state | Internal accounting and contract |
@@ -78,6 +78,10 @@ Billing-result approval may target a fixed calculation before an ERP draft exist
 | Confirmation actor and evidence digest | principal+digest | Before eligibility or dependent amount approval | Read only except explicit command draft | Bind exact immutable evidence and current authority; no waiver | Restricted business evidence |
 | Source, mapping and profile revisions | reference-set | Before eligibility or dependent amount approval | Read only except explicit command draft | Bind exact immutable evidence and current authority; no waiver | Restricted business evidence |
 | Independent cross-validation and comparison digest | reference+digest | Before eligibility or dependent amount approval | Read only except explicit command draft | Bind exact immutable evidence and current authority; no waiver | Restricted business evidence |
+| Adjustment kind, declared basis and signed delta | enum+money | For adjustment decision | Read only | Exact computation digest; target minus current at the same net, tax or gross basis and currency; author differs from approver | Sales |
+| Adjustment draft, base result and computation digest | reference+revision+digest | For adjustment decision | Read only | Expected draft and base result revisions current; stale or blocked computation cannot be approved | Restricted business evidence |
+| Final settlement snapshot digest and dependency state | digest+enum | For final amount approval | Read only | Pinned dependency set current and traversal complete; stale or superseded snapshot cannot be approved | Restricted business evidence |
+| FX raw rate, selling markup and conversion fee | decimal-string set | For FX policy approval | Read only | Raw rate greater than zero with positive quotation unit and correct pair; markup and fee shown separately and validated by their own component sign policy | Rates |
 
 Sensitive fields: Action, target and period, Author and actual approver, Change evidence and blockers, Before/after amounts and taxes, Final ERP amount and external revision.
 
@@ -96,11 +100,15 @@ All identifiers below are proposed canonical planning IDs, not deployed APIs. Ex
 | Action | Proposed ID | Permission | Preconditions | Result | Confirmation |
 | --- | --- | --- | --- | --- | --- |
 | Approve monthly recognition | Existing action; catalog mapping required | Recognition approval for entity, ledger and limits with separation of duties | monthly_recognition type; matching batch hash, attribution/posting periods, currency, amount basis and current validation | Approve this batch only, separately from customer issuance approval | Confirm target, period, amounts and external effects |
-| Approve | Existing action; catalog mapping required | Approval for the specific action | Separation of duties, current hashes, limits and mandatory checks satisfied | Record approval of a fixed result, separately from issuance | Final confirmation of action, target, amounts and hashes |
+| Approve other policy | Existing action; catalog mapping required | Approval for the specific policy action | Policy revision target only; not used for adjustment decisions or final settlement amounts, which use `adjustment.approve` and `settlement.approve_final`; separation of duties, current hashes, limits and mandatory checks satisfied | Record approval of a fixed policy revision, separately from issuance | Final confirmation of action, target, amounts and hashes |
 | Reject | Existing action; catalog mapping required | Approval for the specific action | Valid request and reason | Record rejection and revision path | Confirm rejection reason |
 | Hand off to eligible owner | Existing action; catalog mapping required | Approval handoff | Target approval authority and expiry verified | Change owner who will approve under their own identity | Confirm deadline and authority |
 | Compare evidence | Existing action; catalog mapping required | Approval evidence read | Permitted evidence available | Show result versus ERP amount differences | None |
 | Inspect input evidence | input.inspect | Existing scoped evidence-read permission | Currently permitted exact candidate revision | Read input confirmation and validation evidence; no mutation | None |
+| Approve adjustment | adjustment.approve | Independently granted adjustment approval within ceiling | Validated computation, exact digest and expected draft revision; requester is not the author | Immutable adjustment decision; no application and no final amount approval | Confirm kind, basis, currency, delta and affected scope |
+| Reject adjustment | adjustment.reject | Independently granted adjustment approval | Exact computation digest, current draft revision and reason | Rejection recorded; draft cannot be applied | Confirm rejection reason |
+| Approve final amount | settlement.approve_final | Final amount approval for the scope within ceiling | Exact snapshot digest, current pinned dependencies, applied adjustments included and separation of duties | Approval of that digest only, separately from issuance | Confirm amounts by currency, digest and included adjustments |
+| Inspect dependencies | settlement.dependency_status | Scoped settlement read | Currently permitted snapshot or cycle | Read pinned and current dependency revisions, stale flags and traversal completeness | None |
 
 ## User-facing states
 
@@ -117,6 +125,8 @@ All identifiers below are proposed canonical planning IDs, not deployed APIs. Ex
 | awaiting_confirmation | Required checks passed. The authorized worker must explicitly confirm this exact evidence in S06. |
 | eligible | This exact revision has evidence-bound worker confirmation and atomic publication. |
 | rejected | This candidate was rejected. Preserve the reason and create a new revision for corrections. |
+| adjustment_awaiting_decision | This adjustment computation awaits an independent decision. It has no effect on the result until applied. |
+| approval_stale | A dependency of this result changed, for example a replaced month. Recompute the complete aggregate and approve the new result; the earlier approval cannot issue. |
 
 ## Confirmed input eligibility
 
@@ -130,6 +140,16 @@ Source, mapping, parser, profile, scope, evidence or comparison changes invalida
 
 Acceptance scenarios (NOT_RUN): confirmation without independent evidence fails; evidence changes between inspection and confirmation fail; simultaneous confirm/reject cannot publish a rejected revision; lost-response replay returns only a currently authorized original result; amount approval cannot override blocked/awaiting input; old published versions remain auditable while changed candidates require new confirmation.
 
+
+## Adjustment and dependent-period approval
+
+The proposed [planning command contract](../../../contracts/commands/planning-actions.md) defines the pre-issuance adjustment and dependent-period family. B04, B11 and S06 originate `adjustment.draft`; `adjustment.compute` produces the computation shown here; B09 records `adjustment.approve` or `adjustment.reject`; `adjustment.apply` creates a new unissued result revision that B08 shows; B09 then requires `settlement.approve_final` on that new digest. An adjustment decision never substitutes for final amount approval, and the adjustment author cannot approve it.
+
+A replaced month published with `close.publish_replacement` makes every dependent unissued aggregate and its approval `approval_stale`. The approval card shows the stale dependency and offers only reinspection; reapproval follows `settlement.recompute_aggregate`. An issued, pinned or unknown-outcome cycle is not reapproved here; it follows the linked correction or reconciliation path. When dependency traversal is incomplete, approval and issuance stay blocked.
+
+FX policy approval shows the raw published rate, the selling markup and the conversion fee as separate values. The raw rate must be greater than zero; zero markup and zero fee are valid, and a negative markup or fee follows that component's approved sign policy.
+
+Acceptance (NOT_RUN): H23-C01 to H23-C10 and H23-C23 in the command contract.
 
 ## Authorization, editing and navigation
 

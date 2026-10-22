@@ -63,6 +63,15 @@ AUD links: AUD-DB-02, AUD-DB-05, AUD-DB-08, AUD-QA-07
 | Observation cutoff and fixed denominator | datetime+count | When measurement is displayed | Read only except explicit command draft | Immutable cohort; unknown/censored distinct from zero; pause union counted once; no chosen thresholds | Restricted business evidence |
 | Connection and first verified billing rates | separate-rates | When measurement is displayed | Read only except explicit command draft | Immutable cohort; unknown/censored distinct from zero; pause union counted once; no chosen thresholds | Restricted business evidence |
 | Raw and active duration with interval evidence | duration+reference-set | When measurement is displayed | Read only except explicit command draft | Immutable cohort; unknown/censored distinct from zero; pause union counted once; no chosen thresholds | Restricted business evidence |
+| Onboarding input step and approval state | enum+state | Always | Step edit in source order | Issuing entity, currency, timezone and period; attribution; issuance mode and ERP; cost and selling policy; FX and tax responsibility; validation and approval. Currency, customer, entity, tax, FX and unit price start empty or as labelled unapproved drafts | Contract |
+| Diagnostic result | structured result | After each check | Read only | Code, blocking level, observed facts, impact, recommended action, owner role, safe retry, help link and expandable technical log; no secrets | Restricted evidence |
+| No-data classification | enum | When a check finds no data | Read only | Insufficient permission, export not configured, waiting for first generation, unsupported period or genuine zero usage | Business |
+| Access verification method | enum+evidence | Each provider policy request | Read only | Verified by an actual read operation, not by role name; actor, action, scope, reason, validity and check method recorded | Security |
+| Readiness states | state-set | Always | Read only | Separate: installation complete, source readable, billing verifiable, ERP issuance ready, operational go-live; document receipt, scope reconciliation, customer-sale verification, tax-integration verification; continuous collection readiness versus file-operation readiness | Business |
+| FOCUS readiness | reference-set | Per connection | Read only | Native or converted, source and target versions, conformance errors and restricted functions; data acquisition complete separate from billing go-live possible | Restricted evidence |
+| Commitment data capability | reference+enum | Commitment-bearing provider profiles | Read only | Retained evidence per provider profile verified per contract; unsupported values null with reason, never zero or an invented ID | Cost |
+| Cutover plan | interval+enum | Before operational go-live | Activation draft | Two parallel reconciliation periods against the existing billing; exactly one designated issuing system per period | Contract |
+| Operating profile and external selling | enum | Profile change | Activation draft | Changing the profile never creates an MSP or legal entity; enabling external selling on an internal-only installation needs party, contract, document and permission validation | Contract |
 
 Sensitive fields: Operating type and connection, Setup owner, Temporary setup permissions, Service writer and collector reader, Estimated cost and data interval, Stage evidence and configuration hash.
 
@@ -83,7 +92,7 @@ All identifiers below are proposed canonical planning IDs, not deployed APIs. Ex
 | Start path | Existing action; catalog mapping required | Connection setup | Provider and contract selected | Create a stage checklist | None |
 | Hand off owner | Existing action; catalog mapping required | Handoff permission | Target owner and expiry specified | Create a task-limited handoff draft | External delivery is a separate user action |
 | Recheck affected stages | Existing action; catalog mapping required | Diagnostic permission | Configuration change scope confirmed | Create fresh evidence only for affected stages | Confirm cost and scope |
-| Request activation review | Existing action; catalog mapping required | Activation request | First data, reconciliation and required gates satisfied | Move to approval review | Confirm unsupported scope |
+| Request activation review | Existing action; catalog mapping required | Activation request | First data, reconciliation and required gates satisfied, including an approved issuance route with recovery test, tax-integration verification where the customer needs it, and a cutover plan | Move to approval review | Confirm unsupported scope, designated issuing system and remaining readiness gaps |
 | Inspect onboarding measurements | onboarding.metrics.read | Scoped onboarding read | Fixed cohort revision, policy and observation cutoff | Read separate connected and first-verified outcomes with fixed denominator | None |
 
 ## User-facing states
@@ -96,6 +105,8 @@ All identifiers below are proposed canonical planning IDs, not deployed APIs. Ex
 | blocked | Required reconciliation evidence is missing. Data receipt alone cannot activate the connection. |
 | error | The request could not be completed. Check the request ID and failed scope, then choose a safe retry or handoff. |
 | revoked | Access to this scope has changed. Remove sensitive details, previews and selections, stop affected actions and downloads, and query permitted scope again. Recall of externally delivered copies is not guaranteed. |
+| not_go_live | A readiness state remains incomplete, for example tax-integration verification. Authentication or reconciliation alone does not complete go-live. |
+| parallel_run | Parallel reconciliation with the existing billing is running; only the designated system issues. |
 
 ## Onboarding measurement contract
 
@@ -105,6 +116,16 @@ Show numerator, fixed denominator and count of unknown/censored targets. A zero 
 
 Metric cohort selection, inclusion/exclusion policy, thresholds, pause eligibility, target durations and customer defaults remain unresolved policy choices. The UI exposes definition/version and evidence, not a selected threshold or success claim. Acceptance (NOT_RUN): overlapping pauses counted once; cutoff changes create a new immutable observation; retry cannot add duplicate successes; failures remain in denominator; unsupported and unverified states do not become zero; connection-only success cannot count as first verified billing.
 
+
+## Source-derived onboarding, readiness and cutover
+
+Sources: B0714, B0902, B0950 (contract EI-07 in the [source ERP and issuance obligations](../../../contracts/billing/source-erp-and-issuance-obligations.md)); B0930, B0938.R001–R005, B0940, B1145, B1146, B1203 (OP-05), B1159, B1163, B1183 (OP-06) in the [source policy, onboarding and verification obligations](../../../contracts/operations/source-policy-onboarding-and-verification-obligations.md); B0523.R001–R006, B0526, B0527 (SP-02) in the [source pricing and cost obligations](../../../contracts/billing/source-pricing-and-cost-obligations.md).
+
+Onboarding follows the source input order and never guesses currency, customer, issuing entity, tax, FX or unit price; recommended mappings and sample rates stay labelled unapproved drafts. Handoff notices contain no secrets. Resumption reruns only the affected check and keeps existing mappings. When upstream approval is needed, only that step is handed off and other setup continues. When the API is unavailable, file intake runs the same validation and its readiness is shown separately from continuous automatic collection.
+
+Readiness, reconciliation and tax-integration verification are separate states, and account authentication is never called billing-connected. Go-live is allowed only for contracts that completed an approved issuance route and recovery test, plus tax-integration verification where required. Cutover runs two periods of parallel reconciliation in S06 while exactly one designated system issues. Before go-live, MSP source download, customer disclosure policy, recipients and CSV totals are tested; go-live proceeds per contract. The handover package lists owners, close calendar, permission renewal, backup, correction procedure, file delivery, incident contact path and configuration version. FOCUS conformance and billability are separate judgments, and a missing billing-required column blocks issuance.
+
+Acceptance (NOT_RUN): H22-O05, H22-O06, H22-O08, H22-E09, H22-E10, H22-P06, H22-P07.
 
 ## Authorization, editing and navigation
 

@@ -62,12 +62,14 @@ AUD links: AUD-AR-03, AUD-AR-08, AUD-DB-04
 | Confirmation actor and evidence digest | principal+digest | Before eligibility or dependent amount approval | Read only except explicit command draft | Bind exact immutable evidence and current authority; no waiver | Restricted business evidence |
 | Source, mapping and profile revisions | reference-set | Before eligibility or dependent amount approval | Read only except explicit command draft | Bind exact immutable evidence and current authority; no waiver | Restricted business evidence |
 | Independent cross-validation and comparison digest | reference+digest | Before eligibility or dependent amount approval | Read only except explicit command draft | Bind exact immutable evidence and current authority; no waiver | Restricted business evidence |
+| Parallel-run period and legacy comparison | interval+reference | During cutover | Read only | Comparison against the existing billing for the designated parallel periods; produces no issuance | Sales |
+| Designated issuing system | enum | During cutover | Read only | Exactly one system issues for each period; set by the S02 cutover decision | Contract |
 
 Sensitive fields: Reconciliation basis and snapshot, Expected, actual and difference, Whole document and platform-attributable amount, Tax and credit classification, Difference reason and evidence.
 
 ## Tabs, filters and columns
 
-Tabs: Source reconciliation / Sales reconciliation / Allocation reconciliation / ERP reconciliation.
+Tabs: Source reconciliation / Sales reconciliation / Allocation reconciliation / ERP reconciliation / Parallel-run reconciliation (during cutover only).
 
 Filters: Period, Currency, Reconciliation type, Difference reason, Owner, Status.
 
@@ -81,7 +83,7 @@ All identifiers below are proposed canonical planning IDs, not deployed APIs. Ex
 | --- | --- | --- | --- | --- | --- |
 | Reconcile again | Existing action; catalog mapping required | Reconciliation execution | Inputs fixed to the same scope | Create a new verification result | Confirm affected scope |
 | Register difference evidence | Existing action; catalog mapping required | Difference review | Row and document locators available | Link explanation and evidence | None |
-| Request adjustment review | Existing action; catalog mapping required | Adjustment request | Reason, evidence and affected amounts available | Open a separate adjustment draft | Confirm amount and tax impact |
+| Request adjustment review | adjustment.draft | Scoped adjustment.write | Unissued target, reason, evidence, affected amounts and expected base result revision; differences must not conceal source errors | Separate adjustment draft for `adjustment.compute` and independent decision in B09; issued targets use the correction path | Confirm amount and tax impact |
 | Verify resolution | Existing action; catalog mapping required | Reconciliation confirmation | Required differences explained | Record verification pass or fail | Confirm remaining blockers |
 | Inspect input evidence | input.inspect | Existing scoped evidence-read permission | Currently permitted exact candidate revision | Read input confirmation and validation evidence; no mutation | None |
 | Confirm and publish input | input.confirm_publish | Scoped input.confirm plus publication authority under approved role mapping | Awaiting confirmation; expected candidate and scope revisions, exact evidence digest and current authority | Atomically record confirmation decision and publish eligible input; failure returns explicit error/blocked state without implicit rejection | Confirm candidate, evidence, scope and publication effect |
@@ -101,6 +103,7 @@ All identifiers below are proposed canonical planning IDs, not deployed APIs. Ex
 | awaiting_confirmation | Required checks passed. The authorized worker must explicitly confirm this exact evidence in S06. |
 | eligible | This exact revision has evidence-bound worker confirmation and atomic publication. |
 | rejected | This candidate was rejected. Preserve the reason and create a new revision for corrections. |
+| parallel_run | Parallel reconciliation with the existing billing is in progress. Only the designated system issues for this period. |
 
 ## Confirmed input eligibility
 
@@ -114,6 +117,10 @@ Source, mapping, parser, profile, scope, evidence or comparison changes invalida
 
 Acceptance scenarios (NOT_RUN): confirmation without independent evidence fails; evidence changes between inspection and confirmation fail; simultaneous confirm/reject cannot publish a rejected revision; lost-response replay returns only a currently authorized original result; amount approval cannot override blocked/awaiting input; old published versions remain auditable while changed candidates require new confirmation.
 
+
+## Cutover parallel reconciliation
+
+Source: B0950, contract EI-07 in the [source ERP and issuance obligations](../../../contracts/billing/source-erp-and-issuance-obligations.md). Cutover runs two periods of parallel reconciliation against the existing billing while exactly one designated system issues. The legacy comparison is a reconciliation type with its own differences and evidence; resolving it never issues a document, and the platform never issues customer documents for a period the legacy system also issues. Reconciliation completion does not certify supplier price legitimacy or tax compliance. Acceptance (NOT_RUN): H22-E09, H22-E10.
 
 ## Authorization, editing and navigation
 

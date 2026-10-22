@@ -34,9 +34,11 @@ All reviewers were separate read-only agents. None of them could approve product
 
 ## Open follow-ups
 
+Follow-ups 1 to 3 and the HB-15 FA and SR findings are addressed under [HB-23](https://linear.app/hybrid-billing/issue/HB-23); see its [verification](../HB-23-followup-closure/verification.md) for dispositions. The list below is kept as recorded by HB-22.
+
 1. Amend the default-enablement sentence of the local `docs/planning/v1.16/architecture.md` external-execution paragraph to match EI-02.
 2. Register the proposed `erp_route.*` commands in the [planning actions](../../contracts/commands/planning-actions.md) registry.
 3. Bring the contract clauses into each screen specification listed in the trace's `screen_followup` field.
-4. HB-15 findings FR-01–06, FA-01–14 and SR-01–03 remain open under their own tracking.
+4. HB-15 findings FA-01–14 and SR-01–03 (dispositions now in HB-23). Correction recorded by [HB-23](https://linear.app/hybrid-billing/issue/HB-23): FR-01–05 were remediated by HB-16 with recorded residual boundaries; FR-06 is partial, its FA-12 schema part is addressed by HB-23 and the remainder stays open under FA-14 and [HB-24](https://linear.app/hybrid-billing/issue/HB-24).
 
 Planning completion still requires the owner's explicit declaration.

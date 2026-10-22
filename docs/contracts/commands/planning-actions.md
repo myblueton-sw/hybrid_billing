@@ -1,13 +1,13 @@
 ---
 type: Command Contract
 title: Planning action registry for confirmed inputs trust and operations
-description: Defines shared proposed request result permission error and state contracts for the remediated screen actions.
+description: Defines shared proposed request result permission error and state contracts for the remediated screen actions, adjustment and dependent-period lifecycle, operational notification rules, demo scenario runs and ERP route switching.
 status: draft
 ---
 
 # Shared planning action contract
 
-Tracking: [HB-16](https://linear.app/hybrid-billing/issue/HB-16). These are canonical proposed command IDs for the remediated planning paths, shared by UI/API/CLI/AI/workers. They are not deployed endpoints or permission grants. Remaining original commands keep their existing scope; this registry is not a claim that every product API is finished. The [domain contract](../../planning/v1.16/domain-contracts.md) defines the common boundary. Financial authority follows [Claim/numeric](../billing/claim-and-numeric.md) and [financial gates](../billing/inputs-pricing-and-erp.md).
+Tracking: [HB-16](https://linear.app/hybrid-billing/issue/HB-16); [HB-23](https://linear.app/hybrid-billing/issue/HB-23) adds the adjustment and dependent-period, operational notification rule, demo scenario and ERP route families below; bindings for screens whose specifications are local companions are recorded in the [screen binding register](../../ui/screen-binding-register.md) and are not adopted until [HB-24](https://linear.app/hybrid-billing/issue/HB-24). These are canonical proposed command IDs for the remediated planning paths, shared by UI/API/CLI/AI/workers. They are not deployed endpoints or permission grants. Remaining original commands keep their existing scope; this registry is not a claim that every product API is finished. The [domain contract](../../planning/v1.16/domain-contracts.md) defines the common boundary. Financial authority follows [Claim/numeric](../billing/claim-and-numeric.md) and [financial gates](../billing/inputs-pricing-and-erp.md).
 
 ## Common request and result
 
@@ -77,9 +77,79 @@ Issued invoice payment due dates are governed by `payment.extension_request` / s
 
 `favorites.add/remove/list` always derive user/workspace server-side and target a canonical currently authorized customer. Personal-preference write and customer read are both required; preference permission grants no customer access. Add/remove are idempotent; list/count/cache/search apply current rights and generic denied/unavailable output. Rename preserves identity. A versioned policy chooses purge or bounded hidden-reference retention on revocation and explicit regrant restoration. If policy is missing, activation is blocked; no indefinite retention or automatic resurrection default is invented. Termination never transfers favorites to a recreated identity. U01 hides unauthorized identifiers and removing a favorite changes no customer/grant.
 
+## Pre-issuance adjustment and dependent-period lifecycle
+
+Source: B0486.R007, B0495; local AR-07 and REV01 as cited by the [monthly settlement schema](../../architecture/data-ownership/monthly-settlement-schema.md), whose AdjustmentDraft, AdjustmentLine/AdjustmentComputation, AdjustmentDecision/SettlementAdjustmentLink, FinalSettlementSnapshot and dependency-edge rules these commands operate. Supplies the command part of HB-15 FA-04. Schema names are logical proposals; the approval-subject typing of FA-01 belongs to the schema documents and is referenced, not redefined, here.
+
+| ID | Required body / permission | Outcome |
+| --- | --- | --- |
+| `adjustment.draft` | Unissued original close/run/result/line refs, affected item/pool/period manifest, kind `quantity`, `fixed_amount` or `target_total`, old and proposed Quantity or Money, declared basis (`net`, `tax` or `gross`), currency, reason and evidence refs, expected base result revision and digest, expected draft revision when revising; scoped `adjustment.write` | New or revised AdjustmentDraft. No computation, approval or financial effect. A generic edit of an invoice total is not accepted |
+| `adjustment.compute` | Draft ID and expected draft revision; scoped `adjustment.compute` | Job computing the explicit signed delta, target minus current **at the same declared basis**, tax/FX/pool recomputation and full impact manifest. Ends `validated` with a computation digest or `blocked` with typed reasons. Acceptance of the job is not validation |
+| `adjustment.approve`, `adjustment.reject` | Draft ID, exact computation digest, expected draft revision, decision rationale; independently granted `adjustment.approve` within the approver's ceiling | Immutable AdjustmentDecision. The draft author is refused with `self_approval_denied`. Adjustment approval never substitutes for final amount approval |
+| `adjustment.cancel` | Draft ID, expected draft revision, rationale; author's `adjustment.write` or authorized cancellation scope | Cancelled before application only; no effect on any result |
+| `adjustment.apply` | Approved decision ID and digest, expected base result revision, expected draft revision; scoped `adjustment.apply` plus current independent approved decision | Atomically, once: new unissued result revision with immutable AdjustmentLine and SettlementAdjustmentLink. Replay of the same intent returns the existing revision. Every FinalSettlementSnapshot approval bound to the previous result becomes stale |
+| `settlement.dependency_status` | FinalSettlementSnapshot or BillingCycle ID; scoped settlement read | Pinned dependency set, current authoritative revisions, stale or pinned flags, traversal completeness and as-of. No mutation |
+| `close.publish_replacement` | Settlement period ID, expected MonthlyCloseRevision, replacement input/manifest refs, the eligible input decision refs published by `input.confirm_publish` for every replaced input, replacement reason and evidence; scoped `close.publish` | Publication rechecks that each bound input decision is still eligible and current, otherwise `confirmation_prerequisite_failed`; it cannot bypass input confirmation. New MonthlyCloseRevision; the prior revision stays immutable. Every registered dependent unissued FinalSettlementSnapshot, invoice cycle and approval is marked stale in the same transaction or by durable intent that blocks issuance until traversal completes |
+| `settlement.recompute_aggregate` | Cycle or aggregate scope ID, expected aggregate revision, current dependency set from `settlement.dependency_status`; scoped `settlement.compute` | New complete aggregate revision (for example a quarterly snapshot over every dependent month) with a new digest. Never swaps one month inside an old approved aggregate |
+| `settlement.approve_final` | Snapshot ID, expected snapshot digest and revision, rationale; independently granted `settlement.approve_final` within ceiling. The server derives the approval subject (`ApprovalSubject` with purpose and snapshot type per the logical schema) from the stored snapshot; a caller-supplied subject is never authoritative | Final amount approval of that digest only. Stale, superseded or digest-mismatched snapshots return `approval_stale` or `revision_conflict` |
+
+Proposed adjustment states: `draft → computing → validated | blocked → approved | rejected | cancelled → applied`. A change to any parameter, evidence or base result makes an unapplied draft `stale`; it needs a new computation and decision. Proposed snapshot approval states: `awaiting_approval → approved`, and `approved → approval_stale` when a dependency is superseded; an `approval_stale` snapshot is replaced by a newly computed revision, never revived.
+
+At `adjustment.apply` recheck current authority and separation, expected base revision and all bound evidence. Application serializes with issuance and submission pinning. When any target is issued, submitted, potentially dispatched or in `outcome_unknown`, apply returns `invalid_stage` with the governed correction or reconciliation path as next action; unknown dispatch is never proof that a document is unissued. A second target-total request binds the revised current result, so the earlier applied delta is not added twice. Gross targets require an approved deterministic tax/rounding allocation and a feasible exact target, otherwise `policy_incomplete`. Mixed currency or basis is a validation error.
+
+`close.publish_replacement` never edits an issued or externally pinned cycle. An issued, pinned or unknown-outcome dependent receives a linked correction or reconciliation work item; it is not released, reissued or silently repriced. Incomplete or failed dependency traversal blocks issuance of every possibly affected aggregate (`evidence_stale` or `authority_unavailable`) rather than allowing it. Reapproval is a fresh `settlement.approve_final` on the recomputed digest.
+
+B04, B11 (unissued targets only) and S06 originate adjustment drafts and their authors cancel them there with `adjustment.cancel`, B08 shows computation, application and stale dependency results, B09 presents adjustment decisions and final amount approval, and U02 shows the cycle stage blocked by stale dependencies. Cut-off, late-arrival, tax allocation and cumulative correction values remain open policy decisions.
+
+## FX component validation
+
+Source: B0463, B0464, B0467, B0474, B0477.R002; local AR-06. Supplies the command-validation part of HB-15 FA-05 for any FX policy draft or approval command, including the existing B05 approval request. A published or selected raw exchange rate must be greater than zero, with a positive quotation unit, correct pair and direction, approval and effective time. Selling FX markup and conversion fee are separate fields recorded as contract rules, not part of the raw rate. Zero markup and zero fee are valid. A negative markup or fee is accepted or rejected only by that component's approved sign policy under the [Claim/numeric contract](../billing/claim-and-numeric.md); no blanket zero/negative rule applies to them. A raw-rate value that already contains a markup is a validation finding, not a rate.
+
+## Operational notification rules
+
+Source: B1381, B1387, B1388.R001–R005, B1391, B1392; OPSUI03, OPSUI04 (B1396). Supplies the command part of HB-15 FA-13. An operational notification rule revision belongs to the installation or workspace and governs who is told what, when and through which escalation. It is distinct from personal preferences (quiet hours, digest, snooze, personal channel) managed in M05 and from deadline identity managed by `schedule.*`.
+
+| ID | Required body / permission | Outcome |
+| --- | --- | --- |
+| `notification_rule.draft` | Rule or template ID, expected rule revision when revising, scope (workspace, contract or cycle set, stage and schedule kinds), notification type from B1388 (deadline pre-notice, approval or handoff waiting, closing blocker or failure, overdue or source delay, completion, correction or schedule change), trigger offsets relative to the stage schedule, recipient roles, ordered escalation steps (target role or principal and condition), alternate owner, channel binding refs, template content revision, rationale; scoped `notification.rule.write` | New draft revision; no live effect. Source offsets D-7, D-3, D-1 and same day are an initial template; actual values are profile choices |
+| `notification_rule.preview_impact` | Draft ID and expected revision; scoped `notification.rule.read` | Server-built impact: affected contracts, cycles and schedules, recipients resolved under current permissions, steps suppressed by holds or confirmed receipt, unresolved recipients and counts, with as-of. Unauthorized targets appear only as a generic unresolved count. No mutation |
+| `notification_rule.approve`, `notification_rule.reject` | Draft ID, exact preview digest, expected revision, rationale; `notification.rule.approve` under the approved role mapping | Immutable decision. Whether the approver must differ from the author is an installation policy decision; when the policy requires separation the author is refused with `self_approval_denied` |
+| `notification_rule.apply` | Approved decision ID and digest, expected rule revision; scoped `notification.rule.apply` | Atomically activates the exact approved revision for events created after activation. Events already created keep their rule revision. Deadlines, blockers, holds and approvals are unchanged |
+
+At each dispatch the notification service rechecks the current target state, recipient activity and permission, applicable hold and receipt state. A recipient who is inactive or lacks current permission for the target is not notified; the event records an unresolved-recipient state and proceeds to the rule's alternate owner or next escalation step, never to an unauthorized principal. A collections hold suppresses the reminder kinds it covers. Confirmed receipt suppresses payment reminders for the settled balance; unknown receipt is shown as unknown and is never treated as paid. Read, acknowledgement, owner acceptance and resolution remain separate (B1391); acknowledging a notification never resolves a blocker.
+
+Personal preferences may delay, group or route a user's own non-mandatory notifications within the organization's ceiling. They cannot edit an operational rule, remove an escalation step or replace the rule's alternate owner. A personal alternate chosen in M05 is a personal preference limited to permitted roles; precedence between it and the operational alternate owner is a profile decision. Channel connection or notification receipt grants no billing permission (B1387). U02 presents rule drafting, preview, approval state and application; P02 supplies channel bindings; M05 and U03 remain personal.
+
+## Demo scenario runs
+
+Source: B1286, B1293, B1317, B1318.R001–R008, B1328.R001–R010 (SIM01–SIM10), B1303. Supplies the command part of HB-15 SR-03 for P06.
+
+| ID | Required body / permission | Outcome |
+| --- | --- | --- |
+| `demo.scenario_run` | Demo environment ID, operating profile `msp`, `standalone_enterprise` or `corporate_group`, purpose `public_sample_view`, `synthetic_settlement` or `failure_reproduction`, scenario ID and revision, fixture revision, seed and virtual clock, expected-result bundle revision (required for `synthetic_settlement` and `failure_reproduction`, not applicable to `public_sample_view`), fault-injection set (only for `failure_reproduction`); scoped `demo.run` | Mock-only job in the isolated demo environment. Rejects real credentials, secret-store links, operational targets and unregistered destinations |
+| `demo.compare_expected` | Run ID, expected-result bundle revision; scoped `demo.read` | Amount, state, blocker and permission differences against the independent expected bundle. Not available for `public_sample_view`, whose output is labelled as sample viewing with missing documents and partial months shown as such |
+| `demo.reset` | Demo environment ID, expected environment revision, rationale; scoped `demo.reset` | Job resetting only that demo environment's data; rejects operational connections, volumes or any non-demo target |
+
+Each profile uses the same account, contract and permission model with different customer relationships (B1317). A public sample view never produces a validated invoice answer or restored CSP invoice (B1293). A demo pass is recorded separately from CSP, ERP or product connection verification (SIM10). Fixture versions, expected-result approver and training hardware remain open decisions.
+
+## ERP route switching
+
+Source: B1044, B1047, B1048. Registers the commands proposed in [source ERP and issuance obligations](../billing/source-erp-and-issuance-obligations.md) EI-06 (HB-22 follow-up 2). Names are unchanged from that table. HB-23 refines it: the separate approval operation names the designated-owner approval it already requires, the request permission is named `erp_route.assign_manual.request`, and both manual-assignment commands require route state `dispatch_locked` at an expected route revision (B1047). Where they differ, this registry governs.
+
+| ID | Required body / permission | Outcome |
+| --- | --- | --- |
+| `erp_route.lock_dispatch` | ERP connection and scope, expected route revision, rationale; scoped `erp_route.lock` | Route `dispatch_locked`. New automatic dispatch stops; queued outbox rows are held, not dropped, and stay in the shared submission ledger |
+| `erp_route.assign_manual` | ERP connection, expected route revision, submission IDs, each with confirmed not-applied evidence and expected revision, rationale; scoped `erp_route.assign_manual.request` | Allowed only while the route is `dispatch_locked` at the expected route revision, otherwise `invalid_stage` (B1047: lock dispatch first). Pending manual assignment request bound to that exact submission set and digest; no route change yet |
+| `erp_route.approve_manual_assignment` | Assignment request ID and digest, expected route revision, expected submission revisions, rationale; designated owner holding `erp_route.assign_manual.approve` | Allowed only while the route is still `dispatch_locked` at the expected revision, otherwise `invalid_stage`. Rechecks each submission's not-applied evidence against current ledger and lookup state; a submission now applied or unknown is excluded and reported. Executes the assignment: listed not-applied submissions move to the manual route; unknown-outcome items receive a review-only file and re-entry submissions that risk duplication are held. The requester is refused with `self_approval_denied` |
+| `erp_route.register_manual_result` | Submission ID, ERP document number, date, amount and status, or an ERP result file reference, expected submission revision; scoped `erp_route.register_result` | Reconciled against the original statement and recorded as operator-confirmed, distinct from ERP-confirmed. Differences open reconciliation; approved amounts are never edited by this command |
+| `erp_route.sync_after_recovery` | ERP connection, expected route revision; scoped `erp_route.lock` | Job synchronizing manually applied ERP numbers and statuses first; completed transactions are never recreated through the API; duplicate candidates are flagged |
+| `erp_route.unlock_dispatch` | ERP connection, expected route revision, rationale; scoped `erp_route.lock` | Allowed only after `sync_after_recovery` finished and no unknown-outcome item remains unassigned, otherwise `invalid_stage`. Held rows for not-applied submissions resume; others stay held for review |
+
+Proposed route states: `api_active → dispatch_locked → recovery_sync → api_active`; per submission `queued | held | manual_pending_approval | manual_assigned | operator_confirmed | erp_confirmed | review_only | outcome_unknown`. Manual handoff is never an unconditional retry path. Where the ERP does not enforce reference uniqueness, submission history, duplicate-candidate checks and result reconciliation compensate; operator re-entry cannot be fully prevented technically. I02 presents lock, assignment, approval, synchronization and unlock; I03 presents review-only files and manual result registration.
+
 ## Planned contract cases
 
-All cases below are NOT_RUN, linked to canonical screen/work records by the [remediation trace](../../planning/v1.16/remediation-trace.json). Existing H13, TR, FP, DH, OB, FV and PT cases remain applicable.
+All cases in the following table are NOT_RUN, linked to canonical screen/work records by the [remediation trace](../../planning/v1.16/remediation-trace.json). Existing H13, TR, FP, DH, OB, FV and PT cases remain applicable.
 
 | ID | Independent expected behavior |
 | --- | --- |
@@ -95,5 +165,33 @@ All cases below are NOT_RUN, linked to canonical screen/work records by the [rem
 | SC-01 | Approved delivery postponement changes only the selected cycle/schedule revision; approval/payment original/effective dates remain intact |
 | SC-02 | Stale revision, ambiguous DST/calendar or stage/ID mismatch blocks; request acceptance is not schedule application |
 | SC-03 | Generic schedule permission cannot extend issued invoice due date; authorized finance extension produces separately linked update |
+
+HB-23 cases are also NOT_RUN. Numbers restate the schema's synthetic example; they are not chosen policies. MS references are the schema's editorial cases.
+
+| ID | Independent expected behavior |
+| --- | --- |
+| H23-C01 | MS-05: net target 900 against base net 1,000 computes −100 at net basis; independent approval; one application yields a new result revision; replay returns the same revision; the prior final approval is stale and B09 requires `settlement.approve_final` on the new digest |
+| H23-C02 | The draft author calling `adjustment.approve` receives `self_approval_denied`; an approver above ceiling receives `permission_denied`; no decision is recorded |
+| H23-C03 | A new base run after computation makes `adjustment.apply` fail with `revision_conflict` or `approval_stale`; a new draft computation and decision are required |
+| H23-C04 | MS-05: a later target net 850 against revised net 900 adds −50; both applied lines and the original base remain; −100 is not added again |
+| H23-C05 | Gross target without an approved tax allocation rule returns `policy_incomplete`; mixed currency or basis returns a validation error |
+| H23-C06 | MS-07: apply racing issuance, or against a target in `outcome_unknown`, returns `invalid_stage` with the correction path; no pre-issuance effect is created |
+| H23-C07 | MS-09: replacement month published before quarterly issuance marks every dependent unissued quarter snapshot and approval stale; issuance is blocked until `settlement.recompute_aggregate` and a fresh `settlement.approve_final` |
+| H23-C08 | MS-09: replacement month after the quarter is issued or pinned unknown leaves the quarter immutable and opens a linked correction or reconciliation item; no release or reissue |
+| H23-C09 | Incomplete dependency traversal blocks issuance of every possibly affected aggregate; `settlement.dependency_status` reports traversal incomplete |
+| H23-C10 | FA-05: raw rate 0 or negative, wrong pair or zero quotation unit is rejected; zero markup and zero fee are accepted; a negative fee or markup follows its component sign policy; a raw rate containing markup is flagged |
+| H23-C11 | Rule revision changing a source example offset: preview lists affected cycles and resolved recipients; no effect before approval and apply; deadlines and blockers unchanged; events created earlier keep their rule revision |
+| H23-C12 | Escalation target inactive or without current target permission at dispatch is not notified; the event records unresolved recipient and proceeds to the alternate owner or next step; no protected detail reaches an unauthorized principal |
+| H23-C13 | Personal quiet hours delay a user's own non-mandatory notification but cannot remove an operational escalation step; a personal-preference permission cannot call `notification_rule.draft` or `notification_rule.apply` |
+| H23-C14 | Active collections hold suppresses covered reminders; confirmed receipt suppresses the payment reminder; unknown receipt is displayed as unknown and is not treated as paid |
+| H23-C15 | `notification_rule.apply` with a stale rule revision conflicts; same key and payload returns the same operation; changed payload conflicts |
+| H23-C16 | `demo.scenario_run` without operating profile or purpose is blocked; `public_sample_view` has no expected bundle and its output is never labelled an invoice answer; `synthetic_settlement` requires a fixed expected bundle revision |
+| H23-C17 | Demo run with a real credential, secret-store link or unregistered destination is blocked; `demo.reset` touches only the named demo environment and rejects any operational target |
+| H23-C18 | SIM02: same profile, scenario, fixture, seed and clock reproduce identical sorted statements and amounts; a demo pass is recorded separately from connection verification (SIM10) |
+| H23-C19 | `erp_route.unlock_dispatch` with a stale route revision conflicts; same-key replay of `erp_route.lock_dispatch` returns the same operation; a manual result whose amount differs from the original statement opens reconciliation and is recorded operator-confirmed, not ERP-confirmed |
+| H23-C20 | A submission ID from another workspace in `erp_route.assign_manual` returns a generic denial without existence disclosure; `erp_route.approve_manual_assignment` by the requester returns `self_approval_denied` |
+| H23-C21 | EI-06, B1047: `erp_route.assign_manual` while the route is not `dispatch_locked`, or with a stale route revision, returns `invalid_stage` or `revision_conflict`; a submission whose lookup shows it applied after the request is excluded at `erp_route.approve_manual_assignment` and is not assigned |
+| H23-C22 | `close.publish_replacement` referencing an input that is not eligible, or whose decision was superseded before publication, returns `confirmation_prerequisite_failed`; no replacement month is published and no dependent becomes stale |
+| H23-C23 | `settlement.approve_final` with a caller-supplied approval subject differing from the stored snapshot's derived subject records the approval only against the server-derived subject and does not persist the supplied value; a digest that differs from the current snapshot returns `revision_conflict` |
 
 No numeric defaults, deployed HTTP paths or completed compatibility claims follow from these proposals. Required permission mappings must be reviewed against actual role ceilings before activation.

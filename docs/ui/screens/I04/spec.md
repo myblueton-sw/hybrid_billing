@@ -57,6 +57,9 @@ Full validation results, ERP automatic-delivery controls and current permission 
 | Full row and amount validation | evidence | At delivery | Read only | Sampling alone cannot pass | Financial |
 | Delivery path | enum | Always | Before delivery | Require evidence of control over automatic ERP routes | Business |
 | Access expiry | datetime/policy | For links | Policy authority | Distinguish revocability and exposure window | Business |
+| Customer workbook content | allowlist | Customer XLSX | Policy draft | Only invoice, own usage and sales detail; no internal sheet, hidden or password-protected | Internal |
+| Workbook sanitization evidence | evidence | Customer XLSX | Read only | Generated as a new file; no hidden rows or sheets, comments, defined names, external links, caches or document properties carrying cost or other-customer data | Internal |
+| Not-final value markers | enum | When the ERP determines tax or other values | Read only | Values the ERP will determine are labelled not final | Financial |
 | Hold type and target manifest | enum+reference | Hold request, release or status | Read only except explicit command draft | Separate billing/delivery/collections effects; unknown is not effective/released | Restricted business evidence |
 | Hold and per-target revisions | reference+revision-map | Hold request, release or status | Read only except explicit command draft | Separate billing/delivery/collections effects; unknown is not effective/released | Restricted business evidence |
 | Hold effect and external confirmation | enum+reference | Hold request, release or status | Read only except explicit command draft | Separate billing/delivery/collections effects; unknown is not effective/released | Restricted business evidence |
@@ -112,6 +115,10 @@ Release names the exact hold and affected targets and requires current authority
 
 Acceptance (NOT_RUN): mixed-authority bulk targets do not leak or all-pass; type-specific hold cannot stop/change an unrelated stage; concurrent revision change conflicts; unknown external effects cannot be reported effective/released; duplicate requests do not duplicate holds; release leaves other holds effective and does not auto-resume; dispute/hold never erases overdue or changes due dates.
 
+
+## Standard settlement workbook and customer files
+
+Source: B1032.R001–R007, B1035, B1040, contract EI-05 in the [source ERP and issuance obligations](../../../contracts/billing/source-erp-and-issuance-obligations.md). The standard MSP settlement workbook with guide, header, detail, tax and adjustment, mapping, reconciliation and application-result sheets is an internal handoff artifact produced in I03. A customer-facing XLSX generated here contains only permitted data and is always generated as a new file, never by hiding or protecting internal sheets of the standard workbook. Validate all rows checks the sanitization evidence before delivery. Values the ERP will determine stay labelled not final. Large outputs split on customer, period and document boundaries with a file list, row counts and totals. Acceptance (NOT_RUN): H22-E06.
 
 ## Authorization, editing and navigation
 

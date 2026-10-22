@@ -72,6 +72,12 @@ Preserve original deadlines and all postponements, exemptions, reopenings and ta
 | Monthly posting and unreconciled status | read-only | For recognition-linked contracts | Read only | Permitted entity, contract and ERP scope; verify snapshot, currency and posting state | Internal accounting and contract |
 | Operational stage and schedule ID | enum+reference | Schedule change request | Read only except explicit command draft | Bind cycle and exact stage; exclude payment extension from generic mutation | Restricted business evidence |
 | Expected schedule and calendar revision | revision-pair | Schedule change request | Read only except explicit command draft | Bind cycle and exact stage; exclude payment extension from generic mutation | Restricted business evidence |
+| Notification rule, type and revision | reference+enum+revision | Operational notification rule change | Explicit rule draft | Type from the source notification table; expected rule revision; separate from personal preferences | Policy |
+| Trigger offsets and stage | offset-list+enum | Operational notification rule change | Explicit rule draft | Relative to the selected stage schedule; source D-7, D-3, D-1 and same day are an initial template, not a default value | Policy |
+| Recipients, escalation steps and alternate owner | role-or-principal list | Operational notification rule change | Explicit rule draft | Resolved under current target permission at preview and dispatch; inactive or unauthorized recipients are not notified | Personal |
+| Channel bindings and template revision | reference-set | Operational notification rule change | Explicit rule draft | Channels connected in P02; channel connection grants no billing permission | Internal |
+| Rule impact preview digest | digest+count-set | Before rule approval | Read only | Affected cycles, recipients, suppressed and unresolved counts at a fixed as-of | Restricted business evidence |
+| Settlement dependency state | enum+reference | Calculation or approval stage | Read only | Stale dependency from a replaced month blocks the stage until a recomputed aggregate is approved | Restricted business evidence |
 
 Sensitive fields: Customer closing, Blocked amount, Owner, Exemption evidence.
 
@@ -95,6 +101,11 @@ All identifiers below are proposed canonical planning IDs, not deployed APIs. Ex
 | Request exemption | Existing action; catalog mapping required | closing.exempt scope and policy | Evidence and current exemption scope | Request approval for a distinct evidenced exemption state | Exemption is not completion or amount deletion; confirm reason and evidence |
 | Request reopening | Existing action; catalog mapping required | closing.reopen and current state | Current target state permits governed path | Before issuance create new calculation/approval; after issuance link an original-referencing correction | Never overwrite finalized content; confirm target, impact and path |
 | Open approval inbox | Existing action; catalog mapping required | approval.read/request | Related fixed result available | Open related fixed result in B09 | A deadline cannot automatically approve or issue |
+| Draft notification rule | notification_rule.draft | notification.rule.write in scope | Rule type, scope, stage and expected rule revision | New draft rule revision without live effect | None; drafting does not change notifications |
+| Preview rule impact | notification_rule.preview_impact | notification.rule.read in scope | Current draft revision | Affected cycles, resolved recipients, suppressed and unresolved counts | None |
+| Approve or reject rule | notification_rule.approve / notification_rule.reject | notification.rule.approve under the approved role mapping | Exact preview digest; separation when the installation policy requires it | Immutable rule decision | Confirm scope, offsets, escalation and alternate owner |
+| Apply approved rule | notification_rule.apply | notification.rule.apply in scope | Approved digest and expected rule revision | Rule active for events created after activation; deadlines, blockers and holds unchanged | Confirm activation scope and that earlier events keep their revision |
+| Inspect settlement dependencies | settlement.dependency_status | Scoped settlement read | Selected cycle with a calculation or approval stage | Show stale or pinned dependencies and traversal completeness | None |
 
 ## User-facing states
 
@@ -109,6 +120,8 @@ All identifiers below are proposed canonical planning IDs, not deployed APIs. Ex
 | exempt | This target is exempt based on evidence. Count it separately from completed targets. |
 | recognition-unreconciled | Monthly posting or billing reconciliation is incomplete. Check missing evidence, differences and adjustments. |
 | schedule_change_pending | This stage-specific change awaits required approval. Other deadlines remain unchanged. |
+| notification_rule_pending | This notification rule revision awaits approval or application. Current notifications follow the active revision. |
+| approval_stale | A month this cycle depends on was replaced. Recompute and approve the complete result before issuance. |
 
 ## Stage-specific schedule changes
 
@@ -120,6 +133,20 @@ The request creates a proposed revision pending the required approval; it does n
 
 Acceptance (NOT_RUN): same cycle/different stages remain distinct; old-stage revision cannot mutate a new schedule; payment extension cannot use this generic action; retries do not create multiple revisions; DST/holiday policy changes force review; approval or deadline arrival cannot issue or complete the cycle.
 
+
+## Operational notification rules
+
+The proposed [command contract](../../../contracts/commands/planning-actions.md) defines `notification_rule.draft`, `notification_rule.preview_impact`, `notification_rule.approve`, `notification_rule.reject` and `notification_rule.apply`. Operators change notification templates and offsets, stage escalation and the alternate owner here; the source gives D-7, D-3, D-1 and same-day reminders as an initial template that operators change, and actual values remain profile choices. Notification types follow the source table: deadline pre-notice, approval or handoff waiting, closing blocker or failure, overdue or source delay, and completion, correction or schedule change.
+
+Preview binds the draft revision and shows affected cycles, resolved recipients, holds or confirmed receipts that suppress a step and unresolved recipients, without disclosing unauthorized targets. Application is explicit, uses the approved digest and expected revision, and affects only events created afterwards. At dispatch the target state, recipient activity and permission, hold and receipt are rechecked; an inactive or unauthorized recipient is not notified, the event proceeds to the alternate owner or next escalation step, and the recipient is recorded as unresolved. A rule never changes a deadline, blocker, hold or approval, and an acknowledgement never resolves a blocker.
+
+Personal quiet hours, digest, snooze and personal channels belong to M05 and U03. They cannot edit an operational rule or remove an escalation step; precedence between a personal alternate and the operational alternate owner is a profile decision.
+
+## Stale settlement dependencies
+
+When `close.publish_replacement` replaces a month on which an unissued cycle depends, the cycle's calculation and approval stages show `approval_stale` and closing completion is blocked until `settlement.recompute_aggregate` and `settlement.approve_final` succeed in B08 and B09. An issued or pinned cycle stays completed or blocked as before and links its correction or reconciliation item.
+
+Acceptance (NOT_RUN): H23-C07, H23-C08 and H23-C11 to H23-C15 in the command contract.
 
 ## Authorization, editing and navigation
 

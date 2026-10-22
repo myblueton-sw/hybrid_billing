@@ -12,7 +12,7 @@ sources:
 
 Part of Linear ticket [HB-22](https://linear.app/hybrid-billing/issue/HB-22); requirement group HB-22 (prepaid credits and disputes) is a different identifier. This document restores source clauses that the [source omission review](../../reviews/HB-22-source-omission/findings.md) found missing or weakened. Locators follow the [source inventory](../../planning/v1.16/source-inventory.json). It is a planning contract under the [planning gate](../../planning/v1.16/planning-gate.md); it certifies no ERP capability and issues no ERP command.
 
-It supplements PC-04 in [inputs, pricing and ERP](inputs-pricing-and-erp.md), the [planning actions](../commands/planning-actions.md) and the [payment and recognition supplement](payment-and-recognition.md). Submission identity, unknown-outcome lookup and outbox rules there continue to apply. FA-12 (issuance mode and artifact relationships) remains a separate open finding.
+It supplements PC-04 in [inputs, pricing and ERP](inputs-pricing-and-erp.md), the [planning actions](../commands/planning-actions.md) and the [payment and recognition supplement](payment-and-recognition.md). Submission identity, unknown-outcome lookup and outbox rules there continue to apply. FA-12 (issuance mode and artifact relationships) is addressed by [FA-12 in the source relationship bindings](../../architecture/data-ownership/source-relationship-bindings.md) under HB-23.
 
 ## EI-01: issuer and issuance-mode changes (P1-01)
 
@@ -29,7 +29,7 @@ Source: B0219, B0850.
 
 **Automatic posting is disabled by default at initial go-live**, even when the ERP profile supports guarded posting. HB-22 proposal, not source text: enabling it later is a separate approved profile change; the enabling authority and timing are open decisions. Without a protection mechanism (pre-posting amount lookup or draft lock, or a verified alternative such as an SAP billing block, Odoo permission control, server extension or ERP-internal manual approval), automatic posting is unsupported.
 
-This supersedes only the default-enablement sentence in `docs/planning/v1.16/architecture.md` (the external-execution paragraph, around line 112), which reads "do not enable automatic posting without draft-version protection": protection is a precondition, not a reason to enable by default. The transaction, Claim reservation and outbox rules in that paragraph are unchanged. Amending that local companion is an open follow-up recorded in the [HB-22 verification](../../reviews/HB-22-source-omission/verification.md). A file path is never shown as ERP-applied before the external document number and amount are confirmed. Contracts without an ERP are verified with self-issuance and customer delivery files.
+This supersedes only the default-enablement sentence in `docs/planning/v1.16/architecture.md` (the external-execution paragraph, around line 112), which reads "do not enable automatic posting without draft-version protection": protection is a precondition, not a reason to enable by default. The transaction, Claim reservation and outbox rules in that paragraph are unchanged. HB-23 amended that local companion; see the [HB-23 verification](../../reviews/HB-23-followup-closure/verification.md). A file path is never shown as ERP-applied before the external document number and amount are confirmed. Contracts without an ERP are verified with self-issuance and customer delivery files.
 
 ## EI-03: post-posting read-back (P2-07)
 
@@ -75,7 +75,7 @@ Source: B1044, B1047, B1048.
 - Before switching from API to manual: **lock automatic dispatch**, then look up in-flight and unknown-result requests. Only transactions confirmed as not applied are assigned to the manual route, **by approval of a designated owner**. If confirmation is impossible, provide a review-only file and hold re-entry submissions that risk duplication. API and file routes share one submission ledger.
 - After connection recovery: **synchronize manually applied ERP numbers and statuses first**, and never recreate completed transactions through the API. Where the ERP does not enforce reference uniqueness, operator re-entry cannot be fully prevented technically, so submission history, **duplicate-candidate checks** and result reconciliation compensate. Manual handoff is never an unconditional retry path for automatic submission.
 
-Proposed commands. They are **not yet registered** in the [planning actions](../commands/planning-actions.md) registry; registration is a follow-up. Each uses that registry's common request, idempotency, revision and error envelope.
+Proposed commands. HB-23 registered them in the [planning actions](../commands/planning-actions.md) registry, together with `erp_route.approve_manual_assignment` for the designated-owner approval. Each uses that registry's common request, idempotency, revision and error envelope.
 
 | Command | Required body | Permission and guard | Outcome |
 | --- | --- | --- | --- |

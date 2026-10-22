@@ -4,7 +4,7 @@ Product and technical decisions start from the owner's request and actual planni
 
 ## Current stage
 
-The project is in planning and design review. Do not start product development until the owner explicitly declares planning complete. The local authority is `docs/planning/v1.16/planning-gate.md`; only documentation and design review are currently permitted.
+The owner declared planning complete on 2026-10-22 ([decision record](docs/planning/planning-completion.md)). Product development may proceed through the mandatory sequence below. The declaration grants no deployment, payment, message, merge, real-account or customer-data permission; residuals carried forward are listed in the decision record.
 
 ## Required startup reading
 

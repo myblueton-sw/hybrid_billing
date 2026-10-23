@@ -1,0 +1,460 @@
+{
+  "independent_counter_totals": [
+    {
+      "basis": "BilledCost",
+      "currency": "USD",
+      "exact_total": "31144.92742278950",
+      "missing": 0,
+      "provider": "AWS"
+    },
+    {
+      "basis": "ContractedCost",
+      "currency": "USD",
+      "exact_total": "2557.28000000000",
+      "missing": 0,
+      "provider": "AWS"
+    },
+    {
+      "basis": "EffectiveCost",
+      "currency": "USD",
+      "exact_total": "1992.28000000000",
+      "missing": 0,
+      "provider": "AWS"
+    },
+    {
+      "basis": "ListCost",
+      "currency": "USD",
+      "exact_total": "33777.03468545900",
+      "missing": 0,
+      "provider": "AWS"
+    },
+    {
+      "basis": "BilledCost",
+      "currency": "USD",
+      "exact_total": "1127.58989491238",
+      "missing": 0,
+      "provider": "Oracle"
+    },
+    {
+      "basis": "ContractedCost",
+      "currency": "USD",
+      "exact_total": "0",
+      "missing": 36189,
+      "provider": "Oracle"
+    },
+    {
+      "basis": "EffectiveCost",
+      "currency": "USD",
+      "exact_total": "925.00000000000",
+      "missing": 0,
+      "provider": "Oracle"
+    },
+    {
+      "basis": "ListCost",
+      "currency": "USD",
+      "exact_total": "427.68978935406",
+      "missing": 259,
+      "provider": "Oracle"
+    },
+    {
+      "basis": "BilledCost",
+      "currency": "",
+      "exact_total": "0E-11",
+      "missing": 0,
+      "provider": "Oracle"
+    },
+    {
+      "basis": "ContractedCost",
+      "currency": "",
+      "exact_total": "0",
+      "missing": 227,
+      "provider": "Oracle"
+    },
+    {
+      "basis": "EffectiveCost",
+      "currency": "",
+      "exact_total": "0E-11",
+      "missing": 0,
+      "provider": "Oracle"
+    },
+    {
+      "basis": "ListCost",
+      "currency": "",
+      "exact_total": "0E-11",
+      "missing": 0,
+      "provider": "Oracle"
+    },
+    {
+      "basis": "BilledCost",
+      "currency": "USD",
+      "exact_total": "3.10852600000",
+      "missing": 0,
+      "provider": "Google Cloud"
+    },
+    {
+      "basis": "ContractedCost",
+      "currency": "USD",
+      "exact_total": "0E-11",
+      "missing": 0,
+      "provider": "Google Cloud"
+    },
+    {
+      "basis": "EffectiveCost",
+      "currency": "USD",
+      "exact_total": "0E-11",
+      "missing": 0,
+      "provider": "Google Cloud"
+    },
+    {
+      "basis": "ListCost",
+      "currency": "USD",
+      "exact_total": "3.10852600000",
+      "missing": 0,
+      "provider": "Google Cloud"
+    },
+    {
+      "basis": "BilledCost",
+      "currency": "USD",
+      "exact_total": "70846.08820320556",
+      "missing": 0,
+      "provider": "Microsoft"
+    },
+    {
+      "basis": "ContractedCost",
+      "currency": "USD",
+      "exact_total": "70791.18173154618",
+      "missing": 0,
+      "provider": "Microsoft"
+    },
+    {
+      "basis": "EffectiveCost",
+      "currency": "USD",
+      "exact_total": "72006.15740661209",
+      "missing": 0,
+      "provider": "Microsoft"
+    },
+    {
+      "basis": "ListCost",
+      "currency": "USD",
+      "exact_total": "70808.28919914158",
+      "missing": 0,
+      "provider": "Microsoft"
+    }
+  ],
+  "providers": {
+    "AWS": {
+      "billing_period_pairs": [
+        {
+          "end": "2024-10-01 00:00:00",
+          "rows": 5181336,
+          "start": "2024-09-01 00:00:00"
+        }
+      ],
+      "charge_duration_seconds": {
+        "10800": 131,
+        "14400": 85,
+        "1677601": 1,
+        "1731601": 1,
+        "18000": 73,
+        "1904401": 1,
+        "21600": 60,
+        "2319814": 3,
+        "25200": 98,
+        "2568225": 2,
+        "2568226": 1,
+        "2568227": 12,
+        "2592000": 494,
+        "28800": 59,
+        "32400": 52,
+        "3600": 5174667,
+        "36000": 81,
+        "39600": 60,
+        "43200": 53,
+        "46800": 65,
+        "50400": 56,
+        "54000": 79,
+        "57600": 96,
+        "61200": 100,
+        "64800": 96,
+        "68400": 114,
+        "7200": 149,
+        "72000": 116,
+        "75600": 169,
+        "79200": 221,
+        "82800": 310,
+        "86400": 3831
+      },
+      "duplicate_sample_ids": 0,
+      "identifier_distinct_counts": {
+        "BillingAccountId": 1,
+        "Id": 5181336,
+        "ResourceId": 562326,
+        "SubAccountId": 88
+      },
+      "periods": {
+        "BillingPeriodEnd": [
+          "2024-10-01 00:00:00",
+          "2024-10-01 00:00:00"
+        ],
+        "BillingPeriodStart": [
+          "2024-09-01 00:00:00",
+          "2024-09-01 00:00:00"
+        ],
+        "ChargePeriodEnd": [
+          "2024-09-01 01:00:00",
+          "2024-10-01 00:00:00"
+        ],
+        "ChargePeriodStart": [
+          "2024-09-01 00:00:00",
+          "2024-09-30 23:00:00"
+        ]
+      },
+      "rows": 5181336,
+      "services": {
+        "AWS App Runner": 358,
+        "AWS Backup": 2612,
+        "AWS CloudFormation": 149,
+        "AWS CloudHSM": 23,
+        "AWS CloudTrail": 51509,
+        "AWS Config": 77,
+        "AWS Cost Explorer": 68,
+        "AWS Data Transfer": 3938,
+        "AWS Glue": 2559,
+        "AWS Identity and Access Management Access Analyzer": 1,
+        "AWS Key Management Service": 25943,
+        "AWS Lambda": 58157,
+        "AWS Secrets Manager": 6799,
+        "AWS Security Hub": 1843,
+        "AWS Step Functions": 13254,
+        "AWS Support (Business)": 1,
+        "AWS Systems Manager": 61690,
+        "AWS Transfer Family": 143,
+        "AWS WAF": 1977,
+        "AWS X-Ray": 546,
+        "Amazon API Gateway": 4647,
+        "Amazon Athena": 23,
+        "Amazon Bedrock": 1,
+        "Amazon CloudFront": 57844,
+        "Amazon Cognito": 8,
+        "Amazon DevOps Guru": 135,
+        "Amazon DocumentDB (with MongoDB compatibility)": 442,
+        "Amazon DynamoDB": 24012,
+        "Amazon EC2 Container Registry (ECR)": 42082,
+        "Amazon ElastiCache": 3213,
+        "Amazon Elastic Compute Cloud": 2903250,
+        "Amazon Elastic Container Registry Public": 2405,
+        "Amazon Elastic Container Service": 252796,
+        "Amazon Elastic Container Service for Kubernetes": 3828,
+        "Amazon Elastic File System": 13684,
+        "Amazon Glacier": 45,
+        "Amazon GuardDuty": 5994,
+        "Amazon Inspector": 2,
+        "Amazon Kinesis Video Streams": 4,
+        "Amazon Lightsail": 409,
+        "Amazon Location Service": 156,
+        "Amazon OpenSearch Service": 100,
+        "Amazon Polly": 1,
+        "Amazon QuickSight": 287,
+        "Amazon Redshift": 151,
+        "Amazon Relational Database Service": 87722,
+        "Amazon Route 53": 20355,
+        "Amazon Simple Email Service": 3701,
+        "Amazon Simple Notification Service": 28640,
+        "Amazon Simple Queue Service": 83023,
+        "Amazon Simple Storage Service": 158392,
+        "Amazon SimpleDB": 7,
+        "Amazon Virtual Private Cloud": 326375,
+        "Amazon WorkDocs": 21,
+        "AmazonCloudWatch": 388577,
+        "AmazonWorkMail": 149,
+        "Claude 3.5 Sonnet (Amazon Bedrock Edition)": 2,
+        "CloudWatch Events": 5305,
+        "CodeBuild": 5,
+        "Datadog": 273,
+        "Elastic Load Balancing": 530947,
+        "Red Hat OpenShift Service on AWS": 395,
+        "Savings Plans for AWS Compute usage": 281
+      }
+    },
+    "Google Cloud": {
+      "billing_period_pairs": [
+        {
+          "end": "2024-03-31 07:00:00",
+          "rows": 115,
+          "start": "2024-03-01 08:00:00"
+        }
+      ],
+      "charge_duration_seconds": {
+        "3600": 115
+      },
+      "duplicate_sample_ids": 0,
+      "identifier_distinct_counts": {
+        "BillingAccountId": 1,
+        "Id": 115,
+        "ResourceId": 0,
+        "SubAccountId": 1
+      },
+      "periods": {
+        "BillingPeriodEnd": [
+          "2024-03-31 07:00:00",
+          "2024-03-31 07:00:00"
+        ],
+        "BillingPeriodStart": [
+          "2024-03-01 08:00:00",
+          "2024-03-01 08:00:00"
+        ],
+        "ChargePeriodEnd": [
+          "2024-03-20 16:00:00",
+          "2024-03-21 15:00:00"
+        ],
+        "ChargePeriodStart": [
+          "2024-03-20 15:00:00",
+          "2024-03-21 14:00:00"
+        ]
+      },
+      "rows": 115,
+      "services": {
+        "Artifact Registry": 17,
+        "Cloud Key Management Service (KMS)": 1,
+        "Cloud SQL": 14,
+        "Networking": 83
+      }
+    },
+    "Microsoft": {
+      "billing_period_pairs": [
+        {
+          "end": "2024-10-01 00:00:00",
+          "rows": 270492,
+          "start": "2024-09-01 00:00:00"
+        }
+      ],
+      "charge_duration_seconds": {
+        "86400": 270492
+      },
+      "duplicate_sample_ids": 0,
+      "identifier_distinct_counts": {
+        "BillingAccountId": 1,
+        "Id": 270492,
+        "ResourceId": 642,
+        "SubAccountId": 12
+      },
+      "periods": {
+        "BillingPeriodEnd": [
+          "2024-10-01 00:00:00",
+          "2024-10-01 00:00:00"
+        ],
+        "BillingPeriodStart": [
+          "2024-09-01 00:00:00",
+          "2024-09-01 00:00:00"
+        ],
+        "ChargePeriodEnd": [
+          "2024-09-02 00:00:00",
+          "2024-09-20 00:00:00"
+        ],
+        "ChargePeriodStart": [
+          "2024-09-01 00:00:00",
+          "2024-09-19 00:00:00"
+        ]
+      },
+      "rows": 270492,
+      "services": {
+        "API Management": 38,
+        "App Configuration": 38,
+        "Application Gateway": 474,
+        "Azure App Service": 2948,
+        "Azure Cognitive Search": 38,
+        "Azure Container Instances": 228,
+        "Azure Container Registry": 228,
+        "Azure DB for MySQL": 732,
+        "Azure DNS": 282,
+        "Azure Data Factory": 1828,
+        "Azure Data Factory v2": 924,
+        "Azure ExpressRoute": 38,
+        "Azure File Sync": 114,
+        "Azure Kubernetes Service": 1140,
+        "Azure Load Testing": 6,
+        "Azure Machine Learning": 45576,
+        "Azure Monitor": 938,
+        "Azure Private Link": 684,
+        "Azure Reservations": 2,
+        "Azure SQL Database": 2414,
+        "Azure Savings Plan for Compute": 38,
+        "Azure Site Recovery": 418,
+        "Azure Synapse Analytics": 762,
+        "Event Grid": 516,
+        "Key Vault": 2772,
+        "Load Balancer": 2546,
+        "Logic Apps": 108,
+        "Microsoft Defender for Cloud": 494,
+        "Microsoft.Fabric": 228,
+        "SQL Database": 512,
+        "SQL Managed Instance": 118,
+        "Service Bus": 114,
+        "Storage Accounts": 172314,
+        "Virtual Machine Scale Sets": 7986,
+        "Virtual Machines": 17538,
+        "Virtual Network": 5358
+      }
+    },
+    "Oracle": {
+      "billing_period_pairs": [
+        {
+          "end": "2024-10-01 00:00:00",
+          "rows": 34375,
+          "start": "2024-09-01 00:00:00"
+        },
+        {
+          "end": "2024-11-01 00:00:00",
+          "rows": 2041,
+          "start": "2024-10-01 00:00:00"
+        }
+      ],
+      "charge_duration_seconds": {
+        "3600": 36416
+      },
+      "duplicate_sample_ids": 0,
+      "identifier_distinct_counts": {
+        "BillingAccountId": 1,
+        "Id": 36416,
+        "ResourceId": 877,
+        "SubAccountId": 4
+      },
+      "periods": {
+        "BillingPeriodEnd": [
+          "2024-10-01 00:00:00",
+          "2024-11-01 00:00:00"
+        ],
+        "BillingPeriodStart": [
+          "2024-09-01 00:00:00",
+          "2024-10-01 00:00:00"
+        ],
+        "ChargePeriodEnd": [
+          "2024-09-01 23:00:00",
+          "2024-10-01 00:00:00"
+        ],
+        "ChargePeriodStart": [
+          "2024-09-01 22:00:00",
+          "2024-09-30 23:00:00"
+        ]
+      },
+      "rows": 36416,
+      "services": {
+        "BLOCK_STORAGE": 7206,
+        "COMPUTE": 19260,
+        "FILESTORAGESERVICE": 174,
+        "IDENTITY_AND_ACCESS_MANAGEMENT": 37,
+        "KMS": 49,
+        "NETWORK": 6689,
+        "OBJECTSTORE": 551,
+        "OCI_NATIVE_DNS": 34,
+        "ODSP": 555,
+        "OKE_CONTROL_PLANE": 390,
+        "OPENSEARCH": 148,
+        "ORACLE_STREAMING_SERVICE": 990,
+        "ORALB": 259,
+        "TELEMETRY": 74
+      }
+    }
+  },
+  "rows": 5488359
+}

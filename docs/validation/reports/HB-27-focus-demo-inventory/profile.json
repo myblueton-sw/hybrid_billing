@@ -1,0 +1,776 @@
+{
+  "artifact": "full",
+  "bytes": 496305507,
+  "columns": [
+    "AvailabilityZone",
+    "BilledCost",
+    "BillingAccountId",
+    "BillingAccountName",
+    "BillingCurrency",
+    "BillingPeriodEnd",
+    "BillingPeriodStart",
+    "ChargeCategory",
+    "ChargeClass",
+    "ChargeDescription",
+    "ChargeFrequency",
+    "ChargePeriodEnd",
+    "ChargePeriodStart",
+    "CommitmentDiscountCategory",
+    "CommitmentDiscountId",
+    "CommitmentDiscountName",
+    "CommitmentDiscountStatus",
+    "CommitmentDiscountType",
+    "ConsumedQuantity",
+    "ConsumedUnit",
+    "ContractedCost",
+    "ContractedUnitPrice",
+    "EffectiveCost",
+    "InvoiceIssuerName",
+    "ListCost",
+    "ListUnitPrice",
+    "PricingCategory",
+    "PricingQuantity",
+    "PricingUnit",
+    "ProviderName",
+    "PublisherName",
+    "RegionId",
+    "RegionName",
+    "ResourceId",
+    "ResourceName",
+    "ResourceType",
+    "ServiceCategory",
+    "Id",
+    "ServiceName",
+    "SkuId",
+    "SkuPriceId",
+    "SubAccountId",
+    "SubAccountName",
+    "Tags"
+  ],
+  "cost_totals_by_provider_currency": [
+    {
+      "costs": {
+        "BilledCost": "31144.92742278950",
+        "ContractedCost": "2557.28000000000",
+        "EffectiveCost": "1992.28000000000",
+        "ListCost": "33777.03468545900"
+      },
+      "currency": "USD",
+      "missing": {},
+      "provider": "AWS"
+    },
+    {
+      "costs": {
+        "BilledCost": "1127.58989491238",
+        "ContractedCost": "0",
+        "EffectiveCost": "925.00000000000",
+        "ListCost": "427.68978935406"
+      },
+      "currency": "USD",
+      "missing": {
+        "ContractedCost": 36189,
+        "ListCost": 259
+      },
+      "provider": "Oracle"
+    },
+    {
+      "costs": {
+        "BilledCost": "0E-11",
+        "ContractedCost": "0",
+        "EffectiveCost": "0E-11",
+        "ListCost": "0E-11"
+      },
+      "currency": "",
+      "missing": {
+        "ContractedCost": 227
+      },
+      "provider": "Oracle"
+    },
+    {
+      "costs": {
+        "BilledCost": "3.10852600000",
+        "ContractedCost": "0E-11",
+        "EffectiveCost": "0E-11",
+        "ListCost": "3.10852600000"
+      },
+      "currency": "USD",
+      "missing": {},
+      "provider": "Google Cloud"
+    },
+    {
+      "costs": {
+        "BilledCost": "70846.08820320556",
+        "ContractedCost": "70791.18173154618",
+        "EffectiveCost": "72006.15740661209",
+        "ListCost": "70808.28919914158"
+      },
+      "currency": "USD",
+      "missing": {},
+      "provider": "Microsoft"
+    }
+  ],
+  "distinct_service_names": 117,
+  "encoding": "UTF-8 strict decode passed",
+  "enums": {
+    "ChargeCategory": {
+      "Adjustment": 12740,
+      "Credit": 17334,
+      "Purchase": 278,
+      "Tax": 515,
+      "Usage": 5457377,
+      "usage": 115
+    },
+    "ChargeClass": {
+      "": 115,
+      "NULL": 5488244
+    },
+    "ChargeFrequency": {
+      "NULL": 115,
+      "One-Time": 17334,
+      "Recurring": 278,
+      "Usage-Based": 5434216,
+      "Usage-based": 36416
+    },
+    "ConsumedUnit": {
+      "10K Requests": 228,
+      "64K-Chunks": 2759,
+      "ACU-Hours": 1436,
+      "API Requests": 64605,
+      "Alarms": 7669,
+      "Characters": 1,
+      "Cluster Per Hour": 390,
+      "CognitoUserPoolsMAU": 7,
+      "ConfigurationItemRecorded": 47,
+      "Counts": 1613,
+      "Dashboards": 1644,
+      "Data Node Per Hour": 37,
+      "Estimates": 61,
+      "Events": 57313,
+      "Finding Ingestion Events": 965,
+      "GB": 3014143,
+      "GB Hours": 2199,
+      "GB Months": 14928,
+      "GB Of Data Transferred": 495,
+      "GB-Hours": 150,
+      "GB-Months": 929917,
+      "GB/Month": 25476,
+      "GiB Hours": 116,
+      "GiB/Second-Months": 42432,
+      "Gigabyte Per Hour": 7557,
+      "Gigabyte Storage Capacity per month": 111,
+      "Gigabytes Per Hour": 495,
+      "HostedZone": 21,
+      "Hour": 287,
+      "Hourly": 284,
+      "Hours": 615911,
+      "IOPS-Months": 39106,
+      "IOs": 5510,
+      "Key Version Hours": 49,
+      "Keys": 20554,
+      "LB Hours": 259,
+      "LCU-Hours": 17148,
+      "Lambda-GB-Seconds": 9648,
+      "Messages": 177,
+      "Metrics": 28031,
+      "MiB/Second-Months": 2964,
+      "Million Datapoints": 74,
+      "Minutes": 177,
+      "Months": 1418,
+      "NULL": 18127,
+      "Notifications": 1969,
+      "Number of Monitored resources": 1,
+      "OCPU Hours": 2085,
+      "OCPU Per Hour": 7441,
+      "OCU-Hours": 71,
+      "Obj-Months": 2340,
+      "Objects": 51,
+      "Queries": 20271,
+      "RPU-Hours": 8,
+      "ReadCapacityUnit-Hours": 7065,
+      "ReadRequestUnits": 1695,
+      "Requests": 288883,
+      "Resource-Assessments": 2,
+      "Seconds": 15389,
+      "Secrets": 3687,
+      "Security Checks": 873,
+      "Service Fees (OCPU Hours)": 111,
+      "StateTransitions": 4366,
+      "TB": 17,
+      "Tag-Months": 51,
+      "Traces": 545,
+      "URLs": 6,
+      "USE2-AmazonApiGatewayRequest": 211,
+      "USW1-ApiGatewayRequests": 138,
+      "USW2-AmazonApiGatewayRequests": 1653,
+      "USW2-ConfigurationItemRecorded": 30,
+      "Units": 154601,
+      "Units/Day": 608,
+      "Units/Hour": 5218,
+      "Units/Month": 19318,
+      "UsageHours": 135,
+      "UsageRecord-Months": 6,
+      "User Per Month": 37,
+      "User-Months": 169,
+      "Users": 287,
+      "WriteCapacityUnit-Hours": 6956,
+      "WriteRequestUnits": 1139,
+      "byte-seconds": 31,
+      "seconds": 84,
+      "vCPU-Hours": 4120,
+      "vCPU-Months": 152
+    },
+    "InvoiceIssuerName": {
+      "Amazon Web Services Canada, Inc.": 165638,
+      "Amazon Web Services EMEA SARL": 67499,
+      "Amazon Web Services, Inc.": 4948199,
+      "Microsoft": 270492,
+      "NULL": 115,
+      "Oracle": 36416
+    },
+    "PricingCategory": {
+      "": 36416,
+      "Committed": 12438,
+      "Dynamic": 5486,
+      "Other": 17803,
+      "Standard": 5416101,
+      "standard": 115
+    },
+    "PricingUnit": {
+      "10K Requests": 228,
+      "64K-Chunks": 2759,
+      "ACU-Hours": 1436,
+      "API Requests": 64646,
+      "Alarms": 7731,
+      "Characters": 1,
+      "Cluster Per Hour": 390,
+      "CognitoUserPoolsMAU": 7,
+      "ConfigurationItemRecorded": 47,
+      "Counts": 1651,
+      "Dashboards": 1663,
+      "Data Node Per Hour": 37,
+      "Estimates": 62,
+      "Events": 57324,
+      "Finding Ingestion Events": 965,
+      "GB": 3018620,
+      "GB Hours": 2199,
+      "GB Months": 14928,
+      "GB Of Data Transferred": 495,
+      "GB-Hours": 150,
+      "GB-Months": 930413,
+      "GB/Month": 25476,
+      "GiB Hours": 116,
+      "GiB/Second-Months": 42448,
+      "Gigabyte Per Hour": 7557,
+      "Gigabyte Storage Capacity per month": 111,
+      "Gigabytes Per Hour": 495,
+      "HostedZone": 23,
+      "Hour": 287,
+      "Hourly": 284,
+      "Hours": 624977,
+      "IOPS-Months": 39119,
+      "IOs": 5517,
+      "Key Version Hours": 49,
+      "Keys": 20577,
+      "LB Hours": 259,
+      "LCU-Hours": 17208,
+      "Lambda-GB-Seconds": 10076,
+      "Messages": 177,
+      "Metrics": 28131,
+      "MiB/Second-Months": 2964,
+      "Million Datapoints": 74,
+      "Minutes": 179,
+      "Months": 1448,
+      "NULL": 515,
+      "Notifications": 1969,
+      "Number of Monitored resources": 1,
+      "OCPU Hours": 2085,
+      "OCPU Per Hour": 7441,
+      "OCU-Hours": 71,
+      "Obj-Months": 2340,
+      "Objects": 70,
+      "Queries": 20357,
+      "RPU-Hours": 8,
+      "ReadCapacityUnit-Hours": 7065,
+      "ReadRequestUnits": 1703,
+      "Requests": 290821,
+      "Resource-Assessments": 2,
+      "Seconds": 15951,
+      "Secrets": 3705,
+      "Security Checks": 873,
+      "Service Fees (OCPU Hours)": 111,
+      "StateTransitions": 4366,
+      "TB": 23,
+      "Tag-Months": 65,
+      "Traces": 545,
+      "URLs": 6,
+      "USE2-AmazonApiGatewayRequest": 211,
+      "USW1-ApiGatewayRequests": 138,
+      "USW2-AmazonApiGatewayRequests": 1655,
+      "USW2-ConfigurationItemRecorded": 30,
+      "Units": 154601,
+      "Units/Day": 608,
+      "Units/Hour": 5218,
+      "Units/Month": 19318,
+      "UsageHours": 135,
+      "UsageRecord-Months": 6,
+      "User Per Month": 37,
+      "User-Months": 169,
+      "Users": 287,
+      "WriteCapacityUnit-Hours": 6956,
+      "WriteRequestUnits": 1147,
+      "gibibyte month": 31,
+      "hour": 83,
+      "month": 1,
+      "vCPU-Hours": 4179,
+      "vCPU-Months": 152
+    },
+    "PublisherName": {
+      "Amazon Web Services Canada, Inc.": 165638,
+      "Amazon Web Services EMEA SARL": 67499,
+      "Amazon Web Services, Inc.": 4947529,
+      "Anthropic, PBC": 2,
+      "Datadog Inc.": 273,
+      "Google Cloud": 115,
+      "Microsoft": 269249,
+      "NULL": 1243,
+      "Oracle": 36416,
+      "Red Hat Inc.": 395
+    },
+    "ServiceCategory": {
+      "": 1545,
+      "AI and Machine Learning": 45578,
+      "Analytics": 3476,
+      "Business Applications": 3871,
+      "Compute": 2320608,
+      "Databases": 118642,
+      "Developer Tools": 730,
+      "GCP": 115,
+      "Identity": 32810,
+      "Integration": 119534,
+      "Management and Governance": 502942,
+      "Media": 4,
+      "Migration": 143,
+      "Networking": 958957,
+      "Other": 303426,
+      "Others": 333,
+      "Security": 13131,
+      "Storage": 1059414,
+      "Web": 3100
+    }
+  },
+  "max_string_lengths": {
+    "AvailabilityZone": 22,
+    "BilledCost": 16,
+    "BillingAccountId": 52,
+    "BillingAccountName": 7,
+    "BillingCurrency": 3,
+    "BillingPeriodEnd": 19,
+    "BillingPeriodStart": 19,
+    "ChargeCategory": 10,
+    "ChargeClass": 4,
+    "ChargeDescription": 116,
+    "ChargeFrequency": 11,
+    "ChargePeriodEnd": 19,
+    "ChargePeriodStart": 19,
+    "CommitmentDiscountCategory": 5,
+    "CommitmentDiscountId": 141,
+    "CommitmentDiscountName": 37,
+    "CommitmentDiscountStatus": 6,
+    "CommitmentDiscountType": 12,
+    "ConsumedQuantity": 31,
+    "ConsumedUnit": 35,
+    "ContractedCost": 16,
+    "ContractedUnitPrice": 16,
+    "EffectiveCost": 16,
+    "Id": 7,
+    "InvoiceIssuerName": 32,
+    "ListCost": 16,
+    "ListUnitPrice": 19,
+    "PricingCategory": 9,
+    "PricingQuantity": 19,
+    "PricingUnit": 35,
+    "ProviderName": 12,
+    "PublisherName": 32,
+    "RegionId": 23,
+    "RegionName": 25,
+    "ResourceId": 306,
+    "ResourceName": 79,
+    "ResourceType": 64,
+    "ServiceCategory": 25,
+    "ServiceName": 50,
+    "SkuId": 16,
+    "SkuPriceId": 93,
+    "SubAccountId": 79,
+    "SubAccountName": 15,
+    "Tags": 971
+  },
+  "missing_by_token": {
+    "AvailabilityZone": {
+      "": 6600,
+      "NULL": 4894348
+    },
+    "BilledCost": {},
+    "BillingAccountId": {},
+    "BillingAccountName": {
+      "": 36416,
+      "NULL": 115
+    },
+    "BillingCurrency": {
+      "": 227
+    },
+    "BillingPeriodEnd": {},
+    "BillingPeriodStart": {},
+    "ChargeCategory": {},
+    "ChargeClass": {
+      "": 115,
+      "NULL": 5488244
+    },
+    "ChargeDescription": {
+      "NULL": 38
+    },
+    "ChargeFrequency": {
+      "NULL": 115
+    },
+    "ChargePeriodEnd": {},
+    "ChargePeriodStart": {},
+    "CommitmentDiscountCategory": {
+      "": 36531,
+      "NULL": 5438053
+    },
+    "CommitmentDiscountId": {
+      "": 36531,
+      "NULL": 5438053
+    },
+    "CommitmentDiscountName": {
+      "": 36531,
+      "NULL": 5450453
+    },
+    "CommitmentDiscountStatus": {
+      "NULL": 5474586
+    },
+    "CommitmentDiscountType": {
+      "": 36416,
+      "NULL": 5438168
+    },
+    "ConsumedQuantity": {
+      "NULL": 18127
+    },
+    "ConsumedUnit": {
+      "NULL": 18127
+    },
+    "ContractedCost": {
+      "NULL": 36416
+    },
+    "ContractedUnitPrice": {
+      "NULL": 36931
+    },
+    "EffectiveCost": {},
+    "Id": {},
+    "InvoiceIssuerName": {
+      "NULL": 115
+    },
+    "ListCost": {
+      "NULL": 259
+    },
+    "ListUnitPrice": {
+      "": 259,
+      "NULL": 7475
+    },
+    "PricingCategory": {
+      "": 36416
+    },
+    "PricingQuantity": {
+      "NULL": 515
+    },
+    "PricingUnit": {
+      "NULL": 515
+    },
+    "ProviderName": {},
+    "PublisherName": {
+      "NULL": 1243
+    },
+    "RegionId": {
+      "": 3,
+      "NULL": 36931
+    },
+    "RegionName": {
+      "": 3,
+      "NULL": 21514
+    },
+    "ResourceId": {
+      "": 115,
+      "NULL": 467439
+    },
+    "ResourceName": {
+      "": 36531,
+      "NULL": 5181336
+    },
+    "ResourceType": {
+      "": 115,
+      "NULL": 4381605
+    },
+    "ServiceCategory": {
+      "": 1545
+    },
+    "ServiceName": {},
+    "SkuId": {
+      "NULL": 553
+    },
+    "SkuPriceId": {
+      "": 36416,
+      "NULL": 17849
+    },
+    "SubAccountId": {
+      "NULL": 48
+    },
+    "SubAccountName": {
+      "NULL": 115
+    },
+    "Tags": {
+      "NULL": 1736090
+    }
+  },
+  "numeric": {
+    "BilledCost": {
+      "invalid": 0,
+      "max": "1105.89718281250",
+      "max_precision": 15,
+      "max_scale": 11,
+      "min": "-295.67390855120",
+      "missing": 0,
+      "negative": 103990,
+      "present": 5488359,
+      "zero": 1756675
+    },
+    "ConsumedQuantity": {
+      "invalid": 0,
+      "max": "223621000000000.000000000000000",
+      "max_precision": 30,
+      "max_scale": 15,
+      "min": "-1024.000000000000000",
+      "missing": 18127,
+      "negative": 88714,
+      "present": 5470232,
+      "zero": 83037
+    },
+    "ContractedCost": {
+      "invalid": 0,
+      "max": "1105.89718281250",
+      "max_precision": 15,
+      "max_scale": 11,
+      "min": "-296.00000000000",
+      "missing": 36416,
+      "negative": 85757,
+      "present": 5451943,
+      "zero": 5138932
+    },
+    "ContractedUnitPrice": {
+      "invalid": 0,
+      "max": "157.67000000000",
+      "max_precision": 14,
+      "max_scale": 11,
+      "min": "-296.00000000000",
+      "missing": 36931,
+      "negative": 5533,
+      "present": 5451428,
+      "zero": 5063896
+    },
+    "EffectiveCost": {
+      "invalid": 0,
+      "max": "1105.89718281250",
+      "max_precision": 15,
+      "max_scale": 11,
+      "min": "-296.00000000000",
+      "missing": 0,
+      "negative": 86789,
+      "present": 5488359,
+      "zero": 5171901
+    },
+    "ListCost": {
+      "invalid": 0,
+      "max": "1105.89718281250",
+      "max_precision": 15,
+      "max_scale": 11,
+      "min": "-295.67390855120",
+      "missing": 259,
+      "negative": 97577,
+      "present": 5488100,
+      "zero": 1761627
+    },
+    "ListUnitPrice": {
+      "invalid": 0,
+      "max": "157.67",
+      "max_precision": 17,
+      "max_scale": 17,
+      "min": "-0.99903356",
+      "missing": 7734,
+      "negative": 12521,
+      "present": 5480625,
+      "zero": 1681138
+    },
+    "PricingQuantity": {
+      "invalid": 0,
+      "max": "9638853.00000000000",
+      "max_precision": 18,
+      "max_scale": 11,
+      "min": "-1024.00000000000",
+      "missing": 515,
+      "negative": 88658,
+      "present": 5487844,
+      "zero": 100539
+    }
+  },
+  "periods": {
+    "BillingPeriodEnd": [
+      "2024-03-31 07:00:00",
+      "2024-11-01 00:00:00"
+    ],
+    "BillingPeriodStart": [
+      "2024-03-01 08:00:00",
+      "2024-10-01 00:00:00"
+    ],
+    "ChargePeriodEnd": [
+      "2024-03-20 16:00:00",
+      "2024-10-01 00:00:00"
+    ],
+    "ChargePeriodStart": [
+      "2024-03-20 15:00:00",
+      "2024-09-30 23:00:00"
+    ]
+  },
+  "providers": {
+    "AWS": 5181336,
+    "Google Cloud": 115,
+    "Microsoft": 270492,
+    "Oracle": 36416
+  },
+  "row_count": 5488359,
+  "services": {
+    "AWS": {
+      "AWS App Runner": 358,
+      "AWS Backup": 2612,
+      "AWS CloudFormation": 149,
+      "AWS CloudHSM": 23,
+      "AWS CloudTrail": 51509,
+      "AWS Config": 77,
+      "AWS Cost Explorer": 68,
+      "AWS Data Transfer": 3938,
+      "AWS Glue": 2559,
+      "AWS Identity and Access Management Access Analyzer": 1,
+      "AWS Key Management Service": 25943,
+      "AWS Lambda": 58157,
+      "AWS Secrets Manager": 6799,
+      "AWS Security Hub": 1843,
+      "AWS Step Functions": 13254,
+      "AWS Support (Business)": 1,
+      "AWS Systems Manager": 61690,
+      "AWS Transfer Family": 143,
+      "AWS WAF": 1977,
+      "AWS X-Ray": 546,
+      "Amazon API Gateway": 4647,
+      "Amazon Athena": 23,
+      "Amazon Bedrock": 1,
+      "Amazon CloudFront": 57844,
+      "Amazon Cognito": 8,
+      "Amazon DevOps Guru": 135,
+      "Amazon DocumentDB (with MongoDB compatibility)": 442,
+      "Amazon DynamoDB": 24012,
+      "Amazon EC2 Container Registry (ECR)": 42082,
+      "Amazon ElastiCache": 3213,
+      "Amazon Elastic Compute Cloud": 2903250,
+      "Amazon Elastic Container Registry Public": 2405,
+      "Amazon Elastic Container Service": 252796,
+      "Amazon Elastic Container Service for Kubernetes": 3828,
+      "Amazon Elastic File System": 13684,
+      "Amazon Glacier": 45,
+      "Amazon GuardDuty": 5994,
+      "Amazon Inspector": 2,
+      "Amazon Kinesis Video Streams": 4,
+      "Amazon Lightsail": 409,
+      "Amazon Location Service": 156,
+      "Amazon OpenSearch Service": 100,
+      "Amazon Polly": 1,
+      "Amazon QuickSight": 287,
+      "Amazon Redshift": 151,
+      "Amazon Relational Database Service": 87722,
+      "Amazon Route 53": 20355,
+      "Amazon Simple Email Service": 3701,
+      "Amazon Simple Notification Service": 28640,
+      "Amazon Simple Queue Service": 83023,
+      "Amazon Simple Storage Service": 158392,
+      "Amazon SimpleDB": 7,
+      "Amazon Virtual Private Cloud": 326375,
+      "Amazon WorkDocs": 21,
+      "AmazonCloudWatch": 388577,
+      "AmazonWorkMail": 149,
+      "Claude 3.5 Sonnet (Amazon Bedrock Edition)": 2,
+      "CloudWatch Events": 5305,
+      "CodeBuild": 5,
+      "Datadog": 273,
+      "Elastic Load Balancing": 530947,
+      "Red Hat OpenShift Service on AWS": 395,
+      "Savings Plans for AWS Compute usage": 281
+    },
+    "Google Cloud": {
+      "Artifact Registry": 17,
+      "Cloud Key Management Service (KMS)": 1,
+      "Cloud SQL": 14,
+      "Networking": 83
+    },
+    "Microsoft": {
+      "API Management": 38,
+      "App Configuration": 38,
+      "Application Gateway": 474,
+      "Azure App Service": 2948,
+      "Azure Cognitive Search": 38,
+      "Azure Container Instances": 228,
+      "Azure Container Registry": 228,
+      "Azure DB for MySQL": 732,
+      "Azure DNS": 282,
+      "Azure Data Factory": 1828,
+      "Azure Data Factory v2": 924,
+      "Azure ExpressRoute": 38,
+      "Azure File Sync": 114,
+      "Azure Kubernetes Service": 1140,
+      "Azure Load Testing": 6,
+      "Azure Machine Learning": 45576,
+      "Azure Monitor": 938,
+      "Azure Private Link": 684,
+      "Azure Reservations": 2,
+      "Azure SQL Database": 2414,
+      "Azure Savings Plan for Compute": 38,
+      "Azure Site Recovery": 418,
+      "Azure Synapse Analytics": 762,
+      "Event Grid": 516,
+      "Key Vault": 2772,
+      "Load Balancer": 2546,
+      "Logic Apps": 108,
+      "Microsoft Defender for Cloud": 494,
+      "Microsoft.Fabric": 228,
+      "SQL Database": 512,
+      "SQL Managed Instance": 118,
+      "Service Bus": 114,
+      "Storage Accounts": 172314,
+      "Virtual Machine Scale Sets": 7986,
+      "Virtual Machines": 17538,
+      "Virtual Network": 5358
+    },
+    "Oracle": {
+      "BLOCK_STORAGE": 7206,
+      "COMPUTE": 19260,
+      "FILESTORAGESERVICE": 174,
+      "IDENTITY_AND_ACCESS_MANAGEMENT": 37,
+      "KMS": 49,
+      "NETWORK": 6689,
+      "OBJECTSTORE": 551,
+      "OCI_NATIVE_DNS": 34,
+      "ODSP": 555,
+      "OKE_CONTROL_PLANE": 390,
+      "OPENSEARCH": 148,
+      "ORACLE_STREAMING_SERVICE": 990,
+      "ORALB": 259,
+      "TELEMETRY": 74
+    }
+  },
+  "sha256": "c198cda74cbde4b11b9be289815bda7e9ac62042f1d023ad9bc8fbf7bff1018c"
+}

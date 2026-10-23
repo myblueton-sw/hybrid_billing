@@ -1,0 +1,15 @@
+{
+  "checks": [
+    "Full compressed CSV SHA256 matches repository Git LFS object ID and byte size",
+    "5,488,359 rows strict UTF-8 CSV scan completed",
+    "Independent row-by-row Decimal sums equal distinct-value Decimal times frequency sums in 20 provider/currency/cost groups",
+    "Independent scans agree row count"
+  ],
+  "limits": [
+    "No full FOCUS conformance validation",
+    "No DB ingestion or mart execution",
+    "No live external connector",
+    "Original v1.0 composite is unsupported for 1.2/1.3 product input; exploratory profiling only"
+  ],
+  "status": "PASS"
+}

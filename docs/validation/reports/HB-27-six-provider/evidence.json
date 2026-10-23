@@ -1,0 +1,470 @@
+{
+  "run": "20261023T082547Z-2413fb",
+  "ticket": "HB-27",
+  "machine": "mac_mini",
+  "status": "PASS",
+  "batch_id": "eace0377-ffe5-4d17-bfd0-c1b9bb111637",
+  "manifest_digest": "51a0a507075f92bcd468fae92c7b18129153e85cac600c8ff61ee1949c506d5e",
+  "source_version": "1.0",
+  "rows": 1123,
+  "company_rows": 1121,
+  "foreign_rows": 2,
+  "views": {
+    "reader-north-a": {
+      "rows": 1112,
+      "unique_ordinals": 1112,
+      "providers": {
+        "AWS": 942,
+        "Alibaba Cloud": 2,
+        "Google Cloud": 115,
+        "Microsoft": 51,
+        "VMware": 2
+      },
+      "currency_cost_controls": {
+        "USD": {
+          "billed_cost": {
+            "coefficient": 25341678804260000000,
+            "present": 1111,
+            "missing": 0
+          },
+          "effective_cost": {
+            "coefficient": 17226514185860000000,
+            "present": 1111,
+            "missing": 0
+          },
+          "list_cost": {
+            "coefficient": 25484357826460000000,
+            "present": 1111,
+            "missing": 0
+          },
+          "contracted_cost": {
+            "coefficient": 17226260393260000000,
+            "present": 1111,
+            "missing": 0
+          }
+        },
+        "CNY": {
+          "billed_cost": {
+            "coefficient": 8800000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "effective_cost": {
+            "coefficient": 8800000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "list_cost": {
+            "coefficient": 8800000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "contracted_cost": {
+            "coefficient": 8800000000000000000,
+            "present": 1,
+            "missing": 0
+          }
+        }
+      },
+      "evidence_classes": {
+        "official-public": 993,
+        "official-public-subset": 115,
+        "synthetic-contract-fixture": 4
+      }
+    },
+    "reader-north-b": {
+      "rows": 9,
+      "unique_ordinals": 9,
+      "providers": {
+        "Alibaba Cloud": 1,
+        "Oracle": 7,
+        "VMware": 1
+      },
+      "currency_cost_controls": {
+        "CNY": {
+          "billed_cost": {
+            "coefficient": 2200000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "effective_cost": {
+            "coefficient": 2200000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "list_cost": {
+            "coefficient": 2200000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "contracted_cost": {
+            "coefficient": 2200000000000000000,
+            "present": 1,
+            "missing": 0
+          }
+        },
+        "USD": {
+          "billed_cost": {
+            "coefficient": 2037073924730000000,
+            "present": 8,
+            "missing": 0
+          },
+          "effective_cost": {
+            "coefficient": 1500000000000000000,
+            "present": 8,
+            "missing": 0
+          },
+          "list_cost": {
+            "coefficient": 1765073924730000000,
+            "present": 8,
+            "missing": 0
+          },
+          "contracted_cost": {
+            "coefficient": 1500000000000000000,
+            "present": 1,
+            "missing": 7
+          }
+        }
+      },
+      "evidence_classes": {
+        "official-public": 7,
+        "synthetic-contract-fixture": 2
+      }
+    },
+    "reader-foreign": {
+      "rows": 2,
+      "unique_ordinals": 2,
+      "providers": {
+        "Alibaba Cloud": 1,
+        "VMware": 1
+      },
+      "currency_cost_controls": {
+        "CNY": {
+          "billed_cost": {
+            "coefficient": 999000000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "effective_cost": {
+            "coefficient": 999000000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "list_cost": {
+            "coefficient": 999000000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "contracted_cost": {
+            "coefficient": 999000000000000000000,
+            "present": 1,
+            "missing": 0
+          }
+        },
+        "USD": {
+          "billed_cost": {
+            "coefficient": 999000000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "effective_cost": {
+            "coefficient": 999000000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "list_cost": {
+            "coefficient": 999000000000000000000,
+            "present": 1,
+            "missing": 0
+          },
+          "contracted_cost": {
+            "coefficient": 999000000000000000000,
+            "present": 1,
+            "missing": 0
+          }
+        }
+      },
+      "evidence_classes": {
+        "synthetic-contract-fixture": 2
+      }
+    },
+    "reader-company-north": {
+      "rows": 1121,
+      "unique_ordinals": 1121,
+      "providers": {
+        "AWS": 942,
+        "Alibaba Cloud": 3,
+        "Google Cloud": 115,
+        "Microsoft": 51,
+        "Oracle": 7,
+        "VMware": 3
+      },
+      "currency_cost_controls": {
+        "USD": {
+          "billed_cost": {
+            "coefficient": 27378752728990000000,
+            "present": 1119,
+            "missing": 0
+          },
+          "effective_cost": {
+            "coefficient": 18726514185860000000,
+            "present": 1119,
+            "missing": 0
+          },
+          "list_cost": {
+            "coefficient": 27249431751190000000,
+            "present": 1119,
+            "missing": 0
+          },
+          "contracted_cost": {
+            "coefficient": 18726260393260000000,
+            "present": 1112,
+            "missing": 7
+          }
+        },
+        "CNY": {
+          "billed_cost": {
+            "coefficient": 11000000000000000000,
+            "present": 2,
+            "missing": 0
+          },
+          "effective_cost": {
+            "coefficient": 11000000000000000000,
+            "present": 2,
+            "missing": 0
+          },
+          "list_cost": {
+            "coefficient": 11000000000000000000,
+            "present": 2,
+            "missing": 0
+          },
+          "contracted_cost": {
+            "coefficient": 11000000000000000000,
+            "present": 2,
+            "missing": 0
+          }
+        }
+      },
+      "evidence_classes": {
+        "official-public": 1000,
+        "official-public-subset": 115,
+        "synthetic-contract-fixture": 6
+      }
+    }
+  },
+  "provider_filters": {
+    "AWS": 942,
+    "Azure": 51,
+    "GCP": 115,
+    "OCI": 7,
+    "VMware": 3,
+    "Alibaba": 3
+  },
+  "same_batch_replay": true,
+  "union_complete_and_disjoint": true,
+  "test_run": "20261023T082253Z-71fb94",
+  "tests": 49,
+  "CLI_commands": 42,
+  "CLI_exits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "source_files": {
+    "modules/focus_import/service.py": "abad3cabbc77ee3843bc6c7b8b6a41d75d571b2935831d2786b7584aa4d6680d",
+    "modules/focus_import/warehouse.py": "3e7b8126895d3e6cef44482979c55d253b24b59f7c62c2f39a92965c8e5fc5c5",
+    "modules/focus_import/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "modules/focus_import/model.py": "d69826f7d6b91142b6fc16dbe28148b4b706d2d4c2014e2d2371244eb241bdfd",
+    "modules/focus_import/authority.py": "9eb05a04bba9dcc430e040f5aaabc871fd0c6df59a146e4a953cd28bb59efa33",
+    "modules/focus_import/samples.py": "8cac671d3d4073e16b4757ff79e1f60afb3cd5ce9343de982667f07fdc229b7a",
+    "modules/focus_import/views.py": "f28f0ba4d3961a7ed02869964df28e99b10282f185964b02b4f4692973352a9f",
+    "migrations/focus_import/001-authority.sql": "d564cec02e81b1dbbc99fc3052a89916903d2c867e4383b958240fb1cb970dee",
+    "migrations/focus_import/002-company-views.sql": "ada0e581393bec443c53398e571453ac3ce8a0fac0826c1e634b24dd28249acd",
+    "packages/contracts/focus_import/versions.json": "40f559976025068918483b3575988d3ee8b5adbf9cac9a02a402bf757f101719",
+    "tests/focus_import/test_model.py": "c81b7e81120d30c18e6508ae20ab58e238e035af2cdaeb019d6b3fe2103365ca",
+    "tests/focus_import/conftest.py": "7e44ac3e2758ce7bbd3bfb7f585f6a7b998b253d0f0c2fb5140e6573b06c8c35",
+    "tests/focus_import/test_company_views.py": "190fae748871b4079c9e3450aada9e7c471c29c24a629233042db2500a6ab9bc",
+    "tests/focus_import/test_integration.py": "bc67d4a479d862da0d4a3db8ffebd8f513e85c098b3cd4532066a4388b31069c",
+    "tests/fixtures/focus/six-provider/synthetic-vmware-alibaba.csv": "515970e020cf3d63052d99a61c80cd46e24e1d8bb83fba6b6f060874c8ef4cfe",
+    "tools/focus_data.py": "8280942c48b73e11b461ad1fdaf452db6323cb6b507e497c1c2147bf4a97accc"
+  },
+  "raw_commands_sha256": "0a9c1373a3da1d5e8cd9e8bb7d6b215ae42a4af79f318909d623dfa189cf5c19",
+  "test_xml_sha256": "b988e25eefb4a8570887bc0233d9a1eca015d5204aa6e1bf0b9ec5bf8f9c887c",
+  "input_provenance": {
+    "declared_version": "1.0",
+    "classification": "mixed-public-and-synthetic-query-only",
+    "official1000_sha256": "e91e5ac7edf01ed2c9d926f37ef7dc1ae2aae97956fea8da6c9ee488b1c2839e",
+    "official_full_sha256": "c198cda74cbde4b11b9be289815bda7e9ac62042f1d023ad9bc8fbf7bff1018c",
+    "google_source_ordinals": [
+      5158124,
+      5158125,
+      5158126,
+      5158127,
+      5158128,
+      5158129,
+      5158130,
+      5158131,
+      5158132,
+      5158133,
+      5158134,
+      5158135,
+      5158136,
+      5158137,
+      5158138,
+      5158139,
+      5158140,
+      5158141,
+      5158142,
+      5158143,
+      5158144,
+      5158145,
+      5158146,
+      5158147,
+      5158148,
+      5158149,
+      5158150,
+      5158151,
+      5158152,
+      5158153,
+      5158154,
+      5158155,
+      5158156,
+      5158157,
+      5158158,
+      5158159,
+      5158160,
+      5158161,
+      5158162,
+      5158163,
+      5158164,
+      5158165,
+      5158166,
+      5158167,
+      5158168,
+      5158169,
+      5158170,
+      5158171,
+      5158172,
+      5158173,
+      5158174,
+      5158175,
+      5158176,
+      5158177,
+      5158178,
+      5158179,
+      5158180,
+      5158181,
+      5158182,
+      5158183,
+      5158184,
+      5158185,
+      5158186,
+      5158187,
+      5158188,
+      5158189,
+      5158190,
+      5158191,
+      5158192,
+      5158193,
+      5158194,
+      5158195,
+      5158196,
+      5158197,
+      5158198,
+      5158199,
+      5158200,
+      5158201,
+      5158202,
+      5158203,
+      5158204,
+      5158205,
+      5158206,
+      5158207,
+      5158208,
+      5158209,
+      5158210,
+      5158211,
+      5158212,
+      5158213,
+      5158214,
+      5158215,
+      5158216,
+      5158217,
+      5158218,
+      5158219,
+      5158220,
+      5158221,
+      5158222,
+      5158223,
+      5158224,
+      5158225,
+      5158226,
+      5158227,
+      5158228,
+      5158229,
+      5158230,
+      5158231,
+      5158232,
+      5158233,
+      5158234,
+      5158235,
+      5158236,
+      5158237,
+      5158238
+    ],
+    "google_rows": 115,
+    "synthetic_rows": 8,
+    "synthetic_sha256": "515970e020cf3d63052d99a61c80cd46e24e1d8bb83fba6b6f060874c8ef4cfe",
+    "combined_sha256": "986a297e5476f4747a2921f690745309256ffc5d117cf487ff8a1c2d7286b9c2",
+    "combined_rows": 1123,
+    "source_revision": "adbdd17a132984d6e8583c149c236d2199c3f5bc",
+    "source_values_changed": false,
+    "format_note": "Derived CSV union adds provenance columns; official lexical values retained, not original byte identity."
+  },
+  "raw_retention": "Ignored local artifacts only, no persistence guarantee; raw public source row identifiers never committed.",
+  "licensing_baseline": "MIT main 0e5533801d201820264eadc1afe50714a254d8da; source code bytes unchanged",
+  "evidence_classification": "Four providers observed official public samples; VMware and Alibaba synthetic fixtures, not native exporter or live account evidence",
+  "sample_licenses": {
+    "official": "CC BY 4.0, attribution in summary.md",
+    "synthetic": "Original Hybrid Billing fixture, MIT"
+  }
+}

@@ -7,6 +7,8 @@ status: draft
 
 # Tenant-aware FOCUS data
 
+For the richer six-provider/company-view sample currently left running after its verification, use the [six-provider workflow](six-provider-samples.md). This page retains the official-only profile and its commands. Both use the same disposable namespace and immutable initialization policy; an incompatible existing profile is rejected rather than silently replaced. Test resets are documented below and are not a product configuration migration.
+
 Tracking: [HB-27](https://linear.app/hybrid-billing/issue/HB-27). Owner: Seung Woo Park. Machine during implementation: `mac_mini`. [Plan](../../work/HB-27-tenant-focus/brief.md). This is a local trusted-operator CLI using actual public demo rows and explicitly synthetic tenant assignments. Local actor selection is not product authentication. Do not expose it as a customer API.
 
 ## Start and execute

@@ -121,8 +121,11 @@ class Coordinator:
     def query(self,limit=20,after=0,provider=None,service=None,expected_batch=None):
         if type(limit) is not int or not 1<=limit<=100 or type(after) is not int or after<0:raise Rejected('query_page')
         if after and expected_batch is None:raise Rejected('query_batch_required')
+        from .views import query_view,source_provider
+        provider=source_provider(provider)
         a=self.a
         with a.transaction('query') as (gate,tenant):
+            if a.is_view:return query_view(self,gate,tenant,limit,after,provider,service,expected_batch)
             props=tenant['properties']
             result={'tenant':{k:props[k] for k in ['key','label','timezone','reporting_currency','retention_days']},
                 'currency_conversion':False,'retention_enforcement':False,'coefficient_scale':18,'row_count':0,'groups':{},'rows':[]}

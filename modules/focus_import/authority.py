@@ -10,12 +10,12 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
 from modules.focus_local.database import environment, password
-from .model import BINDINGS, ROOT, Rejected, canonical, digest, tenant_id, validate_config
+from .model import BINDINGS, ROOT, Rejected, canonical, digest, tenant_id, validate_config, reader_scopes, view_id
 
 
 IMPORTER='hb_focus_ingest'
 APPROVER='hb_focus_approve'
-TABLES=['configuration','tenant','gate','batch','slice','publication','confirmation','decision']
+TABLES=['configuration','tenant','gate','batch','slice','publication','confirmation','decision','audience','audience_member']
 
 
 def reader_role(tenant):
@@ -33,19 +33,35 @@ def initialize(config,env=None):
     env=env or environment()
     sha=digest(canonical(config).encode())
     migration=(ROOT/'migrations/focus_import/001-authority.sql').read_bytes()
-    roles={IMPORTER:None,APPROVER:None,**{reader_role(tenant_id(t['key'])):tenant_id(t['key']) for t in config['tenants']}}
+    roles={IMPORTER:None,APPROVER:None,**reader_scopes(config)}
+    view_roles={reader_role(view_id(v['actor'])):v['actor'] for v in config.get('views',[])}
     with connect(env) as conn,conn.transaction():
         conn.execute('SELECT pg_advisory_xact_lock(270002)')
         if not conn.execute("SELECT to_regclass('hb_focus.migration') AS value").fetchone()['value']:
             conn.execute(migration.decode())
             conn.execute('INSERT INTO hb_focus.migration VALUES (1,%s)',(digest(migration),))
         if conn.execute('SELECT digest FROM hb_focus.migration WHERE version=1').fetchone()['digest']!=digest(migration):raise Rejected('migration_digest')
+        second=(ROOT/'migrations/focus_import/002-company-views.sql').read_bytes()
+        record=conn.execute('SELECT digest FROM hb_focus.migration WHERE version=2').fetchone()
+        if record and record['digest']!=digest(second):raise Rejected('migration_digest')
+        if not record:
+            conn.execute(second.decode())
+            conn.execute('INSERT INTO hb_focus.migration VALUES (2,%s)',(digest(second),))
         saved=conn.execute('SELECT digest FROM hb_focus.configuration').fetchone()
         if saved and saved['digest']!=sha:raise Rejected('configuration_changed')
         if not saved:
             conn.execute('INSERT INTO hb_focus.configuration VALUES (1,%s,%s)',(sha,Jsonb(config)))
             conn.execute('INSERT INTO hb_focus.gate(source) VALUES (%s)',(config['source'],))
             for t in config['tenants']:conn.execute('INSERT INTO hb_focus.tenant(tenant_id,properties,active) VALUES (%s,%s,%s)',(tenant_id(t['key']),Jsonb(t),t['active']))
+        for view in config.get('views',[]):
+            expected=sorted([tenant_id(k) for k in view['tenant_keys']],key=str)
+            existing=conn.execute('SELECT * FROM hb_focus.audience WHERE actor=%s',(view['actor'],)).fetchone()
+            if not existing:
+                conn.execute('INSERT INTO hb_focus.audience(actor,source,company_id,expected_tenants,config_digest,active) VALUES (%s,%s,%s,%s,%s,%s)',(view['actor'],config['source'],view['company_id'],expected,sha,view['active']))
+                for tid in expected:conn.execute('INSERT INTO hb_focus.audience_member VALUES (%s,%s)',(view['actor'],tid))
+            else:
+                members={r['tenant_id'] for r in conn.execute('SELECT tenant_id FROM hb_focus.audience_member WHERE actor=%s',(view['actor'],))}
+                if members!=set(expected) or existing['expected_tenants']!=expected or existing['company_id']!=view['company_id'] or existing['config_digest']!=sha:raise Rejected('view_members_changed')
         for role,tenant in roles.items():
             if not conn.execute('SELECT 1 FROM pg_roles WHERE rolname=%s',(role,)).fetchone():
                 conn.execute(sql.SQL('CREATE ROLE {} LOGIN NOSUPERUSER NOBYPASSRLS PASSWORD {}').format(sql.Identifier(role),sql.Literal(password(env,role,'PG_ADMIN_PASSWORD'))))
@@ -57,25 +73,25 @@ def initialize(config,env=None):
                 conn.execute(sql.SQL('ALTER TABLE {} ENABLE ROW LEVEL SECURITY').format(ident))
                 conn.execute(sql.SQL('ALTER TABLE {} FORCE ROW LEVEL SECURITY').format(ident))
                 policy='p_'+role
-                allowed=tenant is None or table=='gate' or table in ['tenant','slice','publication']
-                if not allowed:continue
-                condition=sql.SQL('true') if tenant is None or table=='gate' else sql.SQL('tenant_id={}').format(sql.Literal(tenant))
+                condition=policy_condition(role,tenant,table,view_roles)
+                if condition is None:continue
                 conn.execute(sql.SQL('DROP POLICY IF EXISTS {} ON {}').format(sql.Identifier(policy),ident))
                 conn.execute(sql.SQL('CREATE POLICY {} ON {} TO {} USING ({}) WITH CHECK ({})').format(sql.Identifier(policy),ident,sql.Identifier(role),condition,condition))
                 conn.execute(sql.SQL('GRANT SELECT ON {} TO {}').format(ident,sql.Identifier(role)))
             conn.execute(sql.SQL('GRANT UPDATE(lock_token) ON hb_focus.gate,hb_focus.tenant TO {}').format(sql.Identifier(role)))
+            if role in view_roles:conn.execute(sql.SQL('GRANT UPDATE(lock_token) ON hb_focus.audience TO {}').format(sql.Identifier(role)))
         conn.execute('GRANT INSERT ON hb_focus.batch,hb_focus.slice TO hb_focus_ingest')
         conn.execute('GRANT UPDATE(state) ON hb_focus.batch TO hb_focus_ingest,hb_focus_approve')
         conn.execute('GRANT INSERT ON hb_focus.confirmation,hb_focus.decision,hb_focus.publication TO hb_focus_approve')
         conn.execute('GRANT UPDATE(batch_id) ON hb_focus.publication TO hb_focus_approve')
         conn.execute('GRANT UPDATE(current_batch,revision,busy) ON hb_focus.gate TO hb_focus_approve')
         conn.execute('GRANT UPDATE(busy) ON hb_focus.gate TO hb_focus_ingest')
-        for role,tenant in roles.items():verify_privileges(conn,role,tenant)
-        expected={t:{'p_'+r for r,tid in roles.items() if tid is None or t=='gate' or t in ['tenant','slice','publication']} for t in TABLES}
+        for role,tenant in roles.items():verify_privileges(conn,role,tenant,role in view_roles)
+        expected={t:{'p_'+r for r,tid in roles.items() if policy_condition(r,tid,t,view_roles) is not None} for t in TABLES}
         for table in TABLES:
             policies={r['policyname'] for r in conn.execute('SELECT policyname FROM pg_policies WHERE schemaname=%s AND tablename=%s',('hb_focus',table))}
             if policies!=expected[table]:raise Rejected('incompatible_pg_policy')
-    bindings={'config_digest':sha,'source':config['source'],'actors':{t['actor']:str(tenant_id(t['key'])) for t in config['tenants']}}
+    bindings={'config_digest':sha,'source':config['source'],'actors':{t['actor']:str(tenant_id(t['key'])) for t in config['tenants']},'views':[v['actor'] for v in config.get('views',[])]}
     BINDINGS.parent.mkdir(exist_ok=True)
     temporary=BINDINGS.with_suffix('.tmp')
     temporary.write_text(canonical(bindings))
@@ -84,9 +100,17 @@ def initialize(config,env=None):
     return config
 
 
-def verify_privileges(conn,role,tenant):
+def policy_condition(role,tenants,table,view_roles):
+    if tenants is None or table=='gate':return sql.SQL('true')
+    if table in ['tenant','slice','publication']:return sql.SQL('tenant_id=ANY({}::uuid[])').format(sql.Literal(tenants))
+    if role in view_roles and table in ['audience','audience_member']:return sql.SQL('actor={}').format(sql.Literal(view_roles[role]))
+    return None
+
+
+def verify_privileges(conn,role,tenant,is_view=False):
     inserts={'batch','slice'} if role==IMPORTER else {'confirmation','decision','publication'} if role==APPROVER else set()
     updates={'gate':{'lock_token'},'tenant':{'lock_token'}}
+    if is_view:updates['audience']={'lock_token'}
     if tenant is None:
         updates['batch']={'state'}
         updates['gate'].add('busy')
@@ -96,7 +120,7 @@ def verify_privileges(conn,role,tenant):
         name='hb_focus.'+table
         for privilege in ['DELETE','TRUNCATE','TRIGGER','REFERENCES']:
             if conn.execute('SELECT has_table_privilege(%s,%s,%s) AS v',(role,name,privilege)).fetchone()['v']:raise Rejected('incompatible_pg_privileges')
-        if tenant is not None and table not in ['tenant','slice','publication','gate'] and conn.execute("SELECT has_table_privilege(%s,%s,'SELECT') AS v",(role,name)).fetchone()['v']:raise Rejected('incompatible_pg_privileges')
+        if tenant is not None and table not in (['tenant','slice','publication','gate']+(['audience','audience_member'] if is_view else [])) and conn.execute("SELECT has_table_privilege(%s,%s,'SELECT') AS v",(role,name)).fetchone()['v']:raise Rejected('incompatible_pg_privileges')
         for col in conn.execute("SELECT column_name FROM information_schema.columns WHERE table_schema='hb_focus' AND table_name=%s",(table,)):
             for privilege,allowed in [('INSERT',table in inserts),('UPDATE',col['column_name'] in updates.get(table,set()))]:
                 if not allowed and conn.execute('SELECT has_column_privilege(%s,%s,%s,%s) AS v',(role,name,col['column_name'],privilege)).fetchone()['v']:raise Rejected('incompatible_pg_privileges')
@@ -109,7 +133,9 @@ class Authority:
         self.bindings=json.loads(BINDINGS.read_text())
         self.actor=actor
         self.tenant=None
+        self.is_view=actor in self.bindings.get('views',[])
         if actor in ['importer','approver']:self.role=IMPORTER if actor=='importer' else APPROVER
+        elif self.is_view:self.role=reader_role(view_id(actor))
         elif actor in self.bindings['actors']:
             self.tenant=UUID(self.bindings['actors'][actor]);self.role=reader_role(self.tenant)
         else:raise Rejected('unknown_local_actor')
@@ -119,12 +145,15 @@ class Authority:
 
     @contextmanager
     def transaction(self,right,allow_unfinished=False):
-        if right=='ingest' and self.actor!='importer' or right in ['confirm','publish'] and self.actor!='approver' or right=='query' and self.tenant is None:
+        if right=='ingest' and self.actor!='importer' or right in ['confirm','publish'] and self.actor!='approver' or right=='query' and self.tenant is None and not self.is_view:
             raise Rejected('permission')
         with self.conn.transaction():
             gate=self.conn.execute('SELECT * FROM hb_focus.gate WHERE source=%s FOR '+('SHARE' if right=='query' else 'UPDATE'),(self.bindings['source'],)).fetchone()
             if not gate:raise Rejected('source_unavailable')
-            if self.tenant is None:
+            if self.is_view:
+                from .views import authorize_view
+                yield gate,authorize_view(self,gate)
+            elif self.tenant is None:
                 cfg=self.conn.execute('SELECT * FROM hb_focus.configuration WHERE id=1').fetchone()
                 if cfg['digest']!=self.bindings['config_digest'] or digest(canonical(cfg['body']).encode())!=cfg['digest']:raise Rejected('configuration_changed')
                 tenants=self.conn.execute('SELECT tenant_id,properties,active FROM hb_focus.tenant ORDER BY tenant_id FOR SHARE').fetchall()

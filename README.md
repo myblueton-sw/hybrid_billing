@@ -16,6 +16,8 @@ The v1.16 source plan covers 123 chapters and 102 tables. Current planning artif
 
 The [tenant-aware official demo path](docs/ops/installation/tenant-focus-data.md) additionally downloads the pinned official FOCUS 1.0 sample, preserves and stores its original rows, and exposes tenant-scoped detail/aggregate queries. Two synthetic tenant profiles partition the actual 1,000 public rows (942/58) using explicit source account/period assignments; exact values and NULLs are retained. This is exploratory evidence ingestion with configurable tenant properties, separate from full FOCUS conformance or billing acceptance. [Execution evidence](docs/validation/reports/HB-27-tenant-focus/summary.md).
 
+The [six-provider sample workflow](docs/ops/installation/six-provider-samples.md) adds all 115 observed GCP rows and eight explicitly synthetic VMware/Alibaba rows. It stores 1,123 sample records and provides an explicitly authorized 1,121-row company view across two tenants while excluding a separate company's two rows, even when company display labels match. Provider, currency, unit, tenant and origin boundaries remain visible. [Validation and limits](docs/validation/reports/HB-27-six-provider/summary.md).
+
 ## Planned capabilities
 
 - Collect and validate provider evidence with explicit coverage, source authority, immutable revisions, and reconciliation.

@@ -136,7 +136,7 @@ def tenant_id(key):
 
 
 def validate_config(config):
-    if set(config)!={'source','version','revision','tenants','snapshot'} or not isinstance(config['source'],str) or not re.fullmatch('[a-z][a-z0-9-]{0,63}',config['source']):
+    if set(config)-{'views'}!={'source','version','revision','tenants','snapshot'} or not isinstance(config['source'],str) or not re.fullmatch('[a-z][a-z0-9-]{0,63}',config['source']):
         raise Rejected('configuration')
     if type(config['revision']) is not int or not 0<config['revision']<2**63 or config['version'] not in versions():
         raise Rejected('configuration_version')
@@ -146,13 +146,15 @@ def validate_config(config):
     if not isinstance(snapshot,dict) or set(snapshot)!={'file_digest','row_count','domains_digest'} or any(not isinstance(snapshot[k],str) or not re.fullmatch('[a-f0-9]{64}',snapshot[k]) for k in ['file_digest','domains_digest']) or type(snapshot['row_count']) is not int or not 0<snapshot['row_count']<=MAX_ROWS:raise Rejected('snapshot_profile')
     keys=set();actors=set();assignments=set()
     for t in config['tenants']:
-        if set(t)!={'key','label','timezone','reporting_currency','currencies','retention_days','actor','active','assignments'}:
+        if set(t)-{'company_id','company_label'}!={'key','label','timezone','reporting_currency','currencies','retention_days','actor','active','assignments'}:
             raise Rejected('tenant_properties')
         if not isinstance(t['key'],str) or not re.fullmatch('[a-z][a-z0-9-]{0,40}',t['key']) or t['key'] in keys:
             raise Rejected('tenant_identity')
         if not isinstance(t['actor'],str) or not re.fullmatch('reader-[a-z0-9-]{1,40}',t['actor']) or t['actor'] in actors:
             raise Rejected('tenant_actor')
         keys.add(t['key']);actors.add(t['actor'])
+        for prop in ['company_id','company_label']:
+            if prop in t and (not isinstance(t[prop],str) or not 1<=len(t[prop])<=100):raise Rejected('tenant_company')
         try:ZoneInfo(t['timezone'])
         except (ValueError,KeyError,TypeError):raise Rejected('tenant_timezone') from None
         if not isinstance(t['label'],str) or not 1<=len(t['label'])<=100 or type(t['active']) is not bool or type(t['retention_days']) is not int or not 1<=t['retention_days']<=36500:
@@ -169,7 +171,30 @@ def validate_config(config):
             token=canonical(item)
             if token in assignments:raise Rejected('overlapping_assignment')
             assignments.add(token)
+    validate_views(config,actors)
     return config
+
+
+def view_id(actor):
+    return uuid5(INSTALLATION,'audience:'+actor)
+
+
+def reader_scopes(config):
+    from .authority import reader_role
+    result={reader_role(tenant_id(t['key'])):[tenant_id(t['key'])] for t in config['tenants']}
+    result.update({reader_role(view_id(v['actor'])):[tenant_id(k) for k in v['tenant_keys']] for v in config.get('views',[])})
+    return result
+
+
+def validate_views(config,actors):
+    views=config.get('views',[])
+    if not isinstance(views,list) or len(views)>20:raise Rejected('view_configuration')
+    tenants={t['key']:t for t in config['tenants']}
+    for v in views:
+        if not isinstance(v,dict) or set(v)!={'actor','company_id','tenant_keys','active'} or not isinstance(v['actor'],str) or not re.fullmatch('reader-[a-z0-9-]{1,40}',v['actor']) or v['actor'] in actors:raise Rejected('view_actor')
+        actors.add(v['actor'])
+        if not isinstance(v['company_id'],str) or not 1<=len(v['company_id'])<=100 or type(v['active']) is not bool or not isinstance(v['tenant_keys'],list) or not v['tenant_keys'] or not all(isinstance(k,str) for k in v['tenant_keys']) or len(set(v['tenant_keys']))!=len(v['tenant_keys']):raise Rejected('view_members')
+        if any(k not in tenants or tenants[k].get('company_id')!=v['company_id'] for k in v['tenant_keys']):raise Rejected('view_company')
 
 
 def demo_config(data):

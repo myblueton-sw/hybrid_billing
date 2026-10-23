@@ -33,6 +33,7 @@ def main():
     i=sub.add_parser('init-demo');i.add_argument('--file',type=Path,required=True)
     i=sub.add_parser('init');i.add_argument('--config',type=Path,required=True)
     i=sub.add_parser('demo');i.add_argument('--file',type=Path,required=True)
+    i=sub.add_parser('build-samples');i.add_argument('--full-source',type=Path,default=ROOT/'.local/datasets/focus/full.csv.gz');i.add_argument('--official',type=Path,default=ROOT/'.local/datasets/focus/official-1000.csv');i.add_argument('--output',type=Path,default=ROOT/'.local/datasets/focus/six-provider.csv')
     for name in ['ingest','confirm','publish','query']:
         c=sub.add_parser(name);c.add_argument('--actor',required=True)
         if name=='ingest':
@@ -45,6 +46,9 @@ def main():
     try:
         if args.command=='versions':result={'versions':list(versions()),'classification':'exploratory-query-only'}
         elif args.command=='fetch-demo':result=fetch(args.output)
+        elif args.command=='build-samples':
+            from modules.focus_import.samples import build
+            result=build(args.full_source,args.official,args.output)
         elif args.command=='init-demo':result=initialize(demo_config(bounded(args.file)))
         elif args.command=='init':result=initialize(json.loads(args.config.read_text()))
         elif args.command=='demo':

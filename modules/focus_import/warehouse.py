@@ -9,7 +9,7 @@ import clickhouse_connect
 from modules.focus_local.database import password
 from modules.focus_local.storage import LOCKED_SETTINGS, object_client
 from .authority import APPROVER, IMPORTER, reader_role
-from .model import ADDITIVE, COLUMNS, NUMERIC, STRINGS, TIMES, Rejected, canonical, coefficient, controls, digest, row_digest, tenant_id
+from .model import ADDITIVE, COLUMNS, NUMERIC, STRINGS, TIMES, Rejected, canonical, coefficient, controls, digest, row_digest, tenant_id, reader_scopes
 
 
 BUCKET='hb-focus-originals'
@@ -24,7 +24,7 @@ def client(env,user=CH_WRITER):
 
 def initialize(env,config):
     admin=client(env,'probe_admin')
-    roles={CH_WRITER:None,**{reader_role(tenant_id(t['key'])):tenant_id(t['key']) for t in config['tenants']}}
+    roles={CH_WRITER:None,**reader_scopes(config)}
     try:
         admin.command('CREATE DATABASE IF NOT EXISTS hb_focus')
         admin.command('CREATE SETTINGS PROFILE IF NOT EXISTS hb_focus_locked SETTINGS '+LOCKED_SETTINGS)
@@ -36,7 +36,7 @@ def initialize(env,config):
             admin.command(f"CREATE USER IF NOT EXISTS {user} IDENTIFIED WITH sha256_hash BY '{verifier}' SETTINGS PROFILE 'hb_focus_locked'")
             grant='SELECT, INSERT' if tenant is None else 'SELECT'
             admin.command(f'GRANT {grant} ON hb_focus.fact TO {user}')
-            condition='1' if tenant is None else f"tenant_id=toUUID('{tenant}')"
+            condition='1' if tenant is None else 'tenant_id IN ('+','.join(f"toUUID('{tid}')" for tid in tenant)+')'
             admin.command(f'CREATE ROW POLICY IF NOT EXISTS p_{user} ON hb_focus.fact FOR SELECT USING {condition} TO {user}')
             admin.command(f'ALTER ROW POLICY p_{user} ON hb_focus.fact FOR SELECT USING {condition} TO {user}')
             for row in admin.query('SHOW GRANTS FOR '+user).result_rows:
@@ -75,7 +75,7 @@ class Warehouse:
         finally:ch.close()
 
     def rows(self,batch,tenant,reader=False):
-        ch=client(self.env,reader_role(tenant) if reader else CH_WRITER)
+        ch=client(self.env,reader if isinstance(reader,str) else reader_role(tenant) if reader else CH_WRITER)
         try:
             names=['tenant_id','ordinal']+COLUMNS
             result=ch.query('SELECT '+','.join('`'+n+'`' for n in names)+' FROM hb_focus.fact WHERE tenant_id={t:UUID} AND batch_id={b:UUID} ORDER BY ordinal LIMIT 10001',parameters={'t':str(tenant),'b':str(batch)})
@@ -88,7 +88,7 @@ class Warehouse:
         finally:ch.close()
 
     def aggregates(self,batch,tenant,reader=False):
-        ch=client(self.env,reader_role(tenant) if reader else CH_WRITER)
+        ch=client(self.env,reader if isinstance(reader,str) else reader_role(tenant) if reader else CH_WRITER)
         try:
             expr=','.join(f'sum(CAST(`{n}` AS Nullable(Decimal(76,18)))),countIf(isNull(`{n}`))' for n in ADDITIVE)
             result=ch.query(f'SELECT provider,service,currency,consumed_unit,pricing_unit,count(),{expr} FROM hb_focus.fact WHERE tenant_id={{t:UUID}} AND batch_id={{b:UUID}} GROUP BY provider,service,currency,consumed_unit,pricing_unit',parameters={'t':str(tenant),'b':str(batch)})

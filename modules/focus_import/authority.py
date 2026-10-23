@@ -47,6 +47,12 @@ def initialize(config,env=None):
         if not record:
             conn.execute(second.decode())
             conn.execute('INSERT INTO hb_focus.migration VALUES (2,%s)',(digest(second),))
+        third=(ROOT/'migrations/focus_import/003-control-checkpoint.sql').read_bytes()
+        record=conn.execute('SELECT digest FROM hb_focus.migration WHERE version=3').fetchone()
+        if record and record['digest']!=digest(third):raise Rejected('migration_digest')
+        if not record:
+            conn.execute(third.decode())
+            conn.execute('INSERT INTO hb_focus.migration VALUES (3,%s)',(digest(third),))
         saved=conn.execute('SELECT digest FROM hb_focus.configuration').fetchone()
         if saved and saved['digest']!=sha:raise Rejected('configuration_changed')
         if not saved:
@@ -86,6 +92,8 @@ def initialize(config,env=None):
         conn.execute('GRANT UPDATE(batch_id) ON hb_focus.publication TO hb_focus_approve')
         conn.execute('GRANT UPDATE(current_batch,revision,busy) ON hb_focus.gate TO hb_focus_approve')
         conn.execute('GRANT UPDATE(busy) ON hb_focus.gate TO hb_focus_ingest')
+        from .control import provision
+        provision(conn,roles)
         for role,tenant in roles.items():verify_privileges(conn,role,tenant,role in view_roles)
         expected={t:{'p_'+r for r,tid in roles.items() if policy_condition(r,tid,t,view_roles) is not None} for t in TABLES}
         for table in TABLES:
@@ -129,6 +137,8 @@ def verify_privileges(conn,role,tenant,is_view=False):
 
 class Authority:
     def __init__(self,actor,env=None):
+        from .control import local_denial
+        local_denial()
         self.env=env or environment()
         self.bindings=json.loads(BINDINGS.read_text())
         self.actor=actor
@@ -145,6 +155,7 @@ class Authority:
 
     @contextmanager
     def transaction(self,right,allow_unfinished=False):
+        if right not in ['ingest','confirm','publish','query']:raise Rejected('permission')
         if right=='ingest' and self.actor!='importer' or right in ['confirm','publish'] and self.actor!='approver' or right=='query' and self.tenant is None and not self.is_view:
             raise Rejected('permission')
         with self.conn.transaction():

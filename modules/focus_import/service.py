@@ -6,13 +6,17 @@ from psycopg.types.json import Jsonb
 
 from modules.focus_local.database import environment
 from . import authority, warehouse
+from .control import guarded, locked, Journal
 from .model import ADDITIVE, BINDINGS, MAX_BYTES, Rejected, assign, canonical, controls, decode, demo_config, digest, row_digest, serialized, tenant_id, validate_config, versions
 
 
 def initialize(config):
     env=environment()
-    config=authority.initialize(config,env)
-    warehouse.initialize(env,config)
+    with locked(),authority.connect(env) as conn:
+        journal=Journal(env,conn);journal.ready()
+        if journal.state and journal.state.get('retired'):raise Rejected('installation_retired')
+        config=authority.initialize(config,env)
+        warehouse.initialize(env,config)
     return {'state':'initialized','tenants':len(config['tenants']),'version':config['version'],'classification':'exploratory-query-only'}
 
 
@@ -34,11 +38,13 @@ class Coordinator:
         current=str(gate['current_batch']) if gate['current_batch'] else None
         if batch['state']!='sealed' and current!=batch['manifest']['predecessor']:raise Rejected('publication_conflict')
 
-    def ingest(self,data,version,revision):
+    @guarded
+    def ingest(self,data,version,revision,delivery=None):
         if type(revision) is not int or not 0<revision<2**63:raise Rejected('source_revision')
         a=self.a
         with a.transaction('ingest',allow_unfinished=True) as (gate,cfg):
-            if version!=cfg['body']['version']:raise Rejected('configured_version')
+            if delivery is not None and getattr(self,'_authorized_delivery',None) is not delivery:raise Rejected('registered_delivery_required')
+            if delivery is None and version!=cfg['body']['version']:raise Rejected('configured_version')
             mapping=self.mapping(version)
             mapping_sha=digest(canonical(mapping).encode())
             sha=digest(data)
@@ -52,8 +58,12 @@ class Coordinator:
             if gate['current_batch']:
                 prior=a.conn.execute('SELECT source_revision FROM hb_focus.batch WHERE batch_id=%s',(gate['current_batch'],)).fetchone()
                 if revision<=prior['source_revision']:raise Rejected('stale_source_revision')
-            if sha!=cfg['body']['snapshot']['file_digest']:raise Rejected('snapshot_digest')
-            rows=assign(decode(data,mapping),cfg['body'])
+            if delivery is None:
+                if sha!=cfg['body']['snapshot']['file_digest']:raise Rejected('snapshot_digest')
+                rows=assign(decode(data,mapping),cfg['body'])
+            else:
+                from .temporal import validate_delivery
+                rows=validate_delivery(data,version,cfg['body'],delivery)
             batch_id=uuid4()
             slices={}
             for tenant in cfg['body']['tenants']:
@@ -93,6 +103,7 @@ class Coordinator:
         if not batch:raise Rejected('batch_unavailable')
         return batch
 
+    @guarded
     def confirm(self,batch_id,manifest_digest):
         a=self.a
         with a.transaction('confirm',allow_unfinished=True) as (gate,cfg):
@@ -102,6 +113,7 @@ class Coordinator:
             a.conn.execute('INSERT INTO hb_focus.confirmation VALUES (%s,%s,%s) ON CONFLICT DO NOTHING',(batch['batch_id'],manifest_digest,a.role))
             return self.result(batch)
 
+    @guarded
     def publish(self,batch_id):
         a=self.a
         with a.transaction('publish',allow_unfinished=True) as (gate,cfg):
@@ -118,6 +130,7 @@ class Coordinator:
             a.conn.execute('INSERT INTO hb_focus.decision VALUES (%s,%s,%s,%s)',(gate['source'],batch['batch_id'],gate['current_batch'],a.role))
             return self.result({**batch,'state':'sealed'})
 
+    @guarded
     def query(self,limit=20,after=0,provider=None,service=None,expected_batch=None):
         if type(limit) is not int or not 1<=limit<=100 or type(after) is not int or after<0:raise Rejected('query_page')
         if after and expected_batch is None:raise Rejected('query_batch_required')
@@ -125,6 +138,12 @@ class Coordinator:
         provider=source_provider(provider)
         a=self.a
         with a.transaction('query') as (gate,tenant):
+            if self._journal and self._journal.state:
+                if self._journal.state['windows']:raise Rejected('period_query_required')
+                members=[t['tenant_id'] for t in tenant['tenants']] if a.is_view else [a.tenant]
+                for tid in members:
+                    item=self._journal.state['slices'].get(str(gate['current_batch'])+':'+str(tid))
+                    if item and item['state']!='hot':raise Rejected('period_query_required_or_expired')
             if a.is_view:return query_view(self,gate,tenant,limit,after,provider,service,expected_batch)
             props=tenant['properties']
             result={'tenant':{k:props[k] for k in ['key','label','timezone','reporting_currency','retention_days']},

@@ -36,3 +36,9 @@ def stack(official):
     yield env,demo_config(official)
     reset()
     if saved is not None:BINDINGS.write_bytes(saved)
+
+
+@pytest.fixture(autouse=True)
+def isolated_lifecycle_control(monkeypatch,tmp_path):
+    from modules.focus_import import control
+    monkeypatch.setattr(control,'DIRECTORY',tmp_path/'isolated-control')

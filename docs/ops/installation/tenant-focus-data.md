@@ -64,3 +64,8 @@ Tests require the pinned file at `.local/datasets/focus/official-1000.csv` (fetc
 Registry mappings1.0/1.2/1.3 are dynamically selected and explicitly labelled `exploratory-query-only`. The actual official data remains version1.0; it is never relabelled1.2/1.3. Mapping tests for1.2/1.3 use transformed in-memory copies, not certified provider exports. This path does not replace the existing strict synthetic1.2/1.3 validation path or authorize billing/pricing/issuance.
 
 The full5.48M-row gzip is retained/profilable but is outside this bounded importer. Production source/customer attribution, full FOCUS conformance, live collectors, API/UI/user authentication, financial acceptance, actual currency conversion, retention execution, quarantine/re-request, safe deletion/recovery, HA and capacity remain subsequent work. Leave verification services running; `docker compose -f deploy/local/verification/compose.yaml down` stops them without removing volumes.
+
+
+## Periodic collection follow-up
+
+After lifecycle activation and publication of recurring windows, use the [accumulated collection/lifecycle query](focus-collection-lifecycle.md). The earlier single-snapshot query rejects with `period_query_required`; it must not be used to infer cumulative daily/monthly totals. Historical execution evidence above remains valid for its recorded snapshot/run. Current periodic evidence and backup/retention behavior are recorded separately.

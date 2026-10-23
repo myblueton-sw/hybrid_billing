@@ -75,3 +75,8 @@ tests/engine_probes/.venv/bin/python -m pytest tests/focus_import -q
 Build the sample pack first. The suite includes prior official-only regressions, explicit audience/member lock races, role isolation, currency/NULL controls, full paging and mixed-batch denial. Fixtures reset hb_focus only; rerun sample initialization/intake/approval after testing to leave a queryable pack. Current acceptance is bounded sample ingestion/query, not full dataset capacity, live collectors/native VMware or Alibaba translation, deployed API/UI/authentication, pricing/issuance, FX or retention execution.
 
 Attribution: official FOCUS Sample Data, FinOps Open Cost and Usage Specification, a Series of Joint Development Foundation Projects, LLC; [pinned revision](https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS-Sample-Data/tree/adbdd17a132984d6e8583c149c236d2199c3f5bc), [CC BY4.0](https://creativecommons.org/licenses/by/4.0/). Only hashes/aggregate observations and independently created synthetic fixtures are committed.
+
+
+## Periodic collection follow-up
+
+After lifecycle activation and publication of recurring windows, use the [accumulated collection/lifecycle query](focus-collection-lifecycle.md). The earlier single-snapshot query rejects with `period_query_required`; it must not be used to infer cumulative daily/monthly totals. Historical execution evidence above remains valid for its recorded snapshot/run. Current periodic evidence and backup/retention behavior are recorded separately.

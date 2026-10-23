@@ -12,11 +12,13 @@ The v1.16 source plan covers 123 chapters and 102 tables. Current planning artif
 
 ## Local executable FOCUS path
 
-[Run the HB-27 local path](docs/ops/installation/local-focus-path.md) against the existing Docker verification stack: real PostgreSQL authority tables, ClickHouse facts and S3 originals/Parquet exports. Version-declared input selects a validated supported-version registry; the bundled entries are 1.2 and 1.3. Synthetic local personas/profile are for local verification only. Product authentication, live providers, pricing/issuance, destructive lifecycle recovery and production scale remain unimplemented.
+[Run the HB-27 local path](docs/ops/installation/local-focus-path.md) against the existing Docker verification stack: real PostgreSQL authority tables, ClickHouse facts and S3 originals/Parquet exports. Version-declared input selects a validated supported-version registry; the bundled entries are 1.2 and 1.3. Synthetic local personas/profile are for local verification only. Product authentication, live providers, pricing/issuance and production scale remain unimplemented.
 
 The [tenant-aware official demo path](docs/ops/installation/tenant-focus-data.md) additionally downloads the pinned official FOCUS 1.0 sample, preserves and stores its original rows, and exposes tenant-scoped detail/aggregate queries. Two synthetic tenant profiles partition the actual 1,000 public rows (942/58) using explicit source account/period assignments; exact values and NULLs are retained. This is exploratory evidence ingestion with configurable tenant properties, separate from full FOCUS conformance or billing acceptance. [Execution evidence](docs/validation/reports/HB-27-tenant-focus/summary.md).
 
 The [six-provider sample workflow](docs/ops/installation/six-provider-samples.md) adds all 115 observed GCP rows and eight explicitly synthetic VMware/Alibaba rows. It stores 1,123 sample records and provides an explicitly authorized 1,121-row company view across two tenants while excluding a separate company's two rows, even when company display labels match. Provider, currency, unit, tenant and origin boundaries remain visible. [Validation and limits](docs/validation/reports/HB-27-six-provider/summary.md).
+
+The [recurring collection and lifecycle workflow](docs/ops/installation/focus-collection-lifecycle.md) registers complete daily or monthly delivery windows, preserves revisions, replaces cumulative monthly refreshes, and queries accumulated authorized periods. It implements verified tenant Parquet archive/recall, holds/dependencies, approved deletion with explicit shared/physical-copy residuals, origin-based backup horizons and latest-control restore gates. Use its periodic query command after activation; the earlier single-snapshot query then rejects rather than showing only the newest delivery. This is a bounded trusted local CLI; live cloud adapters, production authentication, multi-host recovery and capacity remain outside its verified scope.
 
 ## Planned capabilities
 
@@ -41,7 +43,7 @@ The owner has selected self-hosted delivery. The [architecture readiness plan](d
 
 The [external-source design review](docs/reviews/HB-8-external-design/findings.md) supports the conceptual direction and records six open contract refinements with closure criteria. Official sources and published expert research informed the review; external human consultation and runtime validation have not been performed.
 
-The owner requires [complete authorized usage details and maintained storage](docs/architecture/usage-detail-lifecycle.md), including cost explanation, pricing/charge finalization, historical revisions, full scoped exports and archive/retention/recovery contracts. These are planned requirements, not implemented capabilities.
+The owner requires [complete authorized usage details and maintained storage](docs/architecture/usage-detail-lifecycle.md), including cost explanation, pricing/charge finalization, historical revisions, full scoped exports and archive/retention/recovery contracts. The complete product requirements remain broader than the bounded local collection/lifecycle implementation linked above.
 
 The [recent owner requirement register](docs/planning/recent-owner-requirements.md) consolidates fourteen discussion bundles without inflating the original 43-group count. The [current unresolved review](docs/reviews/HB-10-unresolved/findings.md) confirms all thirteen earlier refinements remain open and defines evidence-backed closure order; document publication is not finding closure.
 

@@ -67,6 +67,7 @@ class Warehouse:
         return key
 
     def insert(self,batch,rows):
+        if not rows:return
         ch=client(self.env)
         try:
             with localcontext() as context:

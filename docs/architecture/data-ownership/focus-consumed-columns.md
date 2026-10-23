@@ -63,3 +63,8 @@ FOCUS NumericFormat permits scientific notation and provider-specific precision;
 ## Evidence and remaining gates
 
 Official source inspection and demo profiling are completed evidence. Provider capability/applicability registry, approved P/S/count bounds, 1.2/1.3 fixtures, full semantic mapping tests and product ingestion are pending. Required acceptance covers exact header spelling, missing mandatory/conditional values, absent-by-version reasons, enum case errors, host/provider/publisher distinction, scientific-number limits, cross-tenant attribution and independently computed complete controls. SaaS/Datadog product scope remains; its 273 demo rows do not prove a native 1.2/1.3 export or connector. Product support is 1.2/1.3 only until an explicit reviewed version decision changes it.
+
+
+## Bounded local execution status
+
+The [HB-27 local runbook](../../ops/installation/local-focus-path.md) and [execution review](../../reviews/HB-27-local-path/verification.md) now describe a tested synthetic local increment using a dynamic supported-version registry. It implements isolated PG authority, immutable CH facts, original/quarantine preservation, confirmation/CAS/query and verified Parquet export. It does not implement this document's entire proposed product contract. Production profiles/authentication, quarantine resolution, actual fenced takeover/deletion, restore controls and capacity remain gated; historical design NOT_RUN statements are not retroactively converted into product passes.

@@ -6,9 +6,13 @@ It is intended for managed service providers, individual enterprises, and corpor
 
 ## Current stage
 
-The project is in planning and design review. **Product development must not begin until the project owner explicitly declares planning complete.** No provider/ERP compatibility, authentication integration, billing implementation, or production performance has been certified.
+The owner declared [planning complete](docs/planning/planning-completion.md) on 2026-10-22. Local implementation has started through the ticket/review workflow. No provider/ERP compatibility, authentication integration, billing implementation, or production performance has been certified.
 
 The v1.16 source plan covers 123 chapters and 102 tables. Current planning artifacts organize that scope into 43 requirement groups and 49 screen specifications. Additional requirements include more than one million incoming records per day, data retention/deletion, account lifecycle and authentication, contract Payment Terms, and monthly ERP recognition independent of customer billing cadence.
+
+## Local executable FOCUS path
+
+[Run the HB-27 local path](docs/ops/installation/local-focus-path.md) against the existing Docker verification stack: real PostgreSQL authority tables, ClickHouse facts and S3 originals/Parquet exports. Version-declared input selects a validated supported-version registry; the bundled entries are 1.2 and 1.3. Synthetic local personas/profile are for local verification only. Product authentication, live providers, pricing/issuance, destructive lifecycle recovery and production scale remain unimplemented.
 
 ## Planned capabilities
 

@@ -1,0 +1,461 @@
+{
+  "version": "1.2",
+  "revision": 1,
+  "profile": "synthetic-local-v1",
+  "sources": [
+    "https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS_Spec/tree/7296e3146fb931ee32b6496fa6e4200e7f4384f7/specification/columns"
+  ],
+  "fields": [
+    {
+      "source": "BillingAccountId",
+      "name": "billing_account_id",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "SubAccountId",
+      "name": "sub_account_id",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "BillingCurrency",
+      "name": "billing_currency",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "BillingPeriodStart",
+      "name": "billing_period_start",
+      "type": "timestamp",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "BillingPeriodEnd",
+      "name": "billing_period_end",
+      "type": "timestamp",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "ChargePeriodStart",
+      "name": "charge_period_start",
+      "type": "timestamp",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "ChargePeriodEnd",
+      "name": "charge_period_end",
+      "type": "timestamp",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "ChargeCategory",
+      "name": "charge_category",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      },
+      "enum": [
+        "Usage",
+        "Purchase",
+        "Tax",
+        "Credit",
+        "Adjustment"
+      ]
+    },
+    {
+      "source": "ChargeClass",
+      "name": "charge_class",
+      "type": "string",
+      "header": true,
+      "enum": [
+        "Correction"
+      ]
+    },
+    {
+      "source": "ServiceName",
+      "name": "service_name",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "ServiceCategory",
+      "name": "service_category",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "CommitmentDiscountStatus",
+      "name": "commitment_discount_status",
+      "type": "string",
+      "header": true,
+      "enum": [
+        "Used",
+        "Unused"
+      ]
+    },
+    {
+      "source": "SkuPriceId",
+      "name": "sku_price_id",
+      "type": "string",
+      "header": true
+    },
+    {
+      "source": "ResourceId",
+      "name": "resource_id",
+      "type": "string",
+      "header": true
+    },
+    {
+      "source": "Tags",
+      "name": "tags",
+      "type": "json",
+      "header": true
+    },
+    {
+      "source": "ProviderName",
+      "name": "provider_name_legacy",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "PublisherName",
+      "name": "publisher_name_legacy",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "InvoiceIssuerName",
+      "name": "invoice_issuer_name",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": "BilledCost",
+      "name": "billed_cost",
+      "type": "decimal",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      },
+      "aggregate": "sum"
+    },
+    {
+      "source": "EffectiveCost",
+      "name": "effective_cost",
+      "type": "decimal",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      },
+      "aggregate": "sum"
+    },
+    {
+      "source": "ListCost",
+      "name": "list_cost",
+      "type": "decimal",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      },
+      "aggregate": "sum"
+    },
+    {
+      "source": "ContractedCost",
+      "name": "contracted_cost",
+      "type": "decimal",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      },
+      "aggregate": "sum"
+    },
+    {
+      "source": "ConsumedQuantity",
+      "name": "consumed_quantity",
+      "type": "decimal",
+      "header": true,
+      "null_when": {
+        "any": [
+          {
+            "not": {
+              "eq": [
+                "charge_category",
+                "Usage"
+              ]
+            }
+          },
+          {
+            "eq": [
+              "commitment_discount_status",
+              "Unused"
+            ]
+          }
+        ]
+      },
+      "nonnull_when": {
+        "all": [
+          {
+            "eq": [
+              "charge_category",
+              "Usage"
+            ]
+          },
+          {
+            "not": {
+              "eq": [
+                "commitment_discount_status",
+                "Unused"
+              ]
+            }
+          },
+          {
+            "not": {
+              "eq": [
+                "charge_class",
+                "Correction"
+              ]
+            }
+          }
+        ]
+      },
+      "aggregate": "sum"
+    },
+    {
+      "source": "PricingQuantity",
+      "name": "pricing_quantity",
+      "type": "decimal",
+      "header": true,
+      "null_when": {
+        "any": [
+          {
+            "eq": [
+              "charge_category",
+              "Tax"
+            ]
+          }
+        ]
+      },
+      "nonnull_when": {
+        "all": [
+          {
+            "in": [
+              "charge_category",
+              [
+                "Usage",
+                "Purchase"
+              ]
+            ]
+          },
+          {
+            "not": {
+              "eq": [
+                "charge_class",
+                "Correction"
+              ]
+            }
+          }
+        ]
+      },
+      "aggregate": "sum"
+    },
+    {
+      "source": "ListUnitPrice",
+      "name": "list_unit_price",
+      "type": "decimal",
+      "header": true,
+      "aggregate": "none",
+      "nonnegative": true,
+      "null_when": {
+        "any": [
+          {
+            "eq": [
+              "charge_category",
+              "Tax"
+            ]
+          }
+        ]
+      },
+      "nonnull_when": {
+        "any": [
+          {
+            "all": [
+              {
+                "in": [
+                  "charge_category",
+                  [
+                    "Usage",
+                    "Purchase"
+                  ]
+                ]
+              },
+              {
+                "not": {
+                  "eq": [
+                    "charge_class",
+                    "Correction"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "source": "ContractedUnitPrice",
+      "name": "contracted_unit_price",
+      "type": "decimal",
+      "header": true,
+      "aggregate": "none",
+      "nonnegative": true,
+      "null_when": {
+        "any": [
+          {
+            "eq": [
+              "charge_category",
+              "Tax"
+            ]
+          }
+        ]
+      },
+      "nonnull_when": {
+        "any": [
+          {
+            "all": [
+              {
+                "in": [
+                  "charge_category",
+                  [
+                    "Usage",
+                    "Purchase"
+                  ]
+                ]
+              },
+              {
+                "not": {
+                  "eq": [
+                    "charge_class",
+                    "Correction"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "source": "ConsumedUnit",
+      "name": "consumed_unit",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "not": {
+          "is_null": "consumed_quantity"
+        }
+      },
+      "null_when": {
+        "is_null": "consumed_quantity"
+      }
+    },
+    {
+      "source": "PricingUnit",
+      "name": "pricing_unit",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "not": {
+          "is_null": "pricing_quantity"
+        }
+      },
+      "null_when": {
+        "is_null": "pricing_quantity"
+      }
+    },
+    {
+      "source": "ProviderName",
+      "name": "service_provider_name",
+      "type": "string",
+      "header": true,
+      "nonnull_when": {
+        "always": true
+      }
+    },
+    {
+      "source": null,
+      "name": "host_provider_name",
+      "type": "string",
+      "header": false
+    }
+  ],
+  "checks": [
+    {
+      "product": [
+        "list_unit_price",
+        "pricing_quantity",
+        "list_cost"
+      ],
+      "when": {
+        "not": {
+          "eq": [
+            "charge_class",
+            "Correction"
+          ]
+        }
+      }
+    },
+    {
+      "product": [
+        "contracted_unit_price",
+        "pricing_quantity",
+        "contracted_cost"
+      ],
+      "when": {
+        "not": {
+          "eq": [
+            "charge_class",
+            "Correction"
+          ]
+        }
+      }
+    }
+  ]
+}

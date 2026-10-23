@@ -91,3 +91,8 @@ Python exact integer coefficient/scale arithmetic or explicitly sized Decimal co
 ## Implementation exit gates
 
 Design review acceptance is distinct from executable acceptance. Before migrations/loaders: choose and independently approve exact provider numeric/revision/multiplicity profiles; select supported 1.2/1.3 fixture or reviewed adapter; specialize DDL and constraints; review migration/recovery/role grants. Before product use: run tenant FK/RLS negatives, duplicate/correction races, stale writer/publication races, three lifecycle protocol scenarios, scoped NULL/overflow/excess-scale tests, export/rebuild controls and actual query/capacity measurements. No >100M/day performance claim follows from this draft. OTLP billing usage, full financial schemas, production/HA, live connectors and production migration are outside this first-path design.
+
+
+## Bounded local execution status
+
+The [HB-27 local runbook](../../ops/installation/local-focus-path.md) and [execution review](../../reviews/HB-27-local-path/verification.md) now describe a tested synthetic local increment using a dynamic supported-version registry. It implements isolated PG authority, immutable CH facts, original/quarantine preservation, confirmation/CAS/query and verified Parquet export. It does not implement this document's entire proposed product contract. Production profiles/authentication, quarantine resolution, actual fenced takeover/deletion, restore controls and capacity remain gated; historical design NOT_RUN statements are not retroactively converted into product passes.

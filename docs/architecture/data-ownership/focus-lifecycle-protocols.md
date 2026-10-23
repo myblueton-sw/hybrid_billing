@@ -77,3 +77,8 @@ All below are NOT_RUN product tests, distinct from successful engine probes:
 | S3 lock or backup prevents removal | Honest pending/residual proof; no physically-removed label |
 
 Design review can accept this protocol without claiming these tests passed. Executable implementation must review real grants/network topology, cancellation/drain proof, transaction constraints, migration recovery and every case above before product use.
+
+
+## Bounded local execution status
+
+The [HB-27 local runbook](../../ops/installation/local-focus-path.md) and [execution review](../../reviews/HB-27-local-path/verification.md) now describe a tested synthetic local increment using a dynamic supported-version registry. It implements isolated PG authority, immutable CH facts, original/quarantine preservation, confirmation/CAS/query and verified Parquet export. It does not implement this document's entire proposed product contract. Production profiles/authentication, quarantine resolution, actual fenced takeover/deletion, restore controls and capacity remain gated; historical design NOT_RUN statements are not retroactively converted into product passes.

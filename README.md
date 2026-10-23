@@ -14,6 +14,8 @@ The v1.16 source plan covers 123 chapters and 102 tables. Current planning artif
 
 [Run the HB-27 local path](docs/ops/installation/local-focus-path.md) against the existing Docker verification stack: real PostgreSQL authority tables, ClickHouse facts and S3 originals/Parquet exports. Version-declared input selects a validated supported-version registry; the bundled entries are 1.2 and 1.3. Synthetic local personas/profile are for local verification only. Product authentication, live providers, pricing/issuance, destructive lifecycle recovery and production scale remain unimplemented.
 
+The [tenant-aware official demo path](docs/ops/installation/tenant-focus-data.md) additionally downloads the pinned official FOCUS 1.0 sample, preserves and stores its original rows, and exposes tenant-scoped detail/aggregate queries. Two synthetic tenant profiles partition the actual 1,000 public rows (942/58) using explicit source account/period assignments; exact values and NULLs are retained. This is exploratory evidence ingestion with configurable tenant properties, separate from full FOCUS conformance or billing acceptance. [Execution evidence](docs/validation/reports/HB-27-tenant-focus/summary.md).
+
 ## Planned capabilities
 
 - Collect and validate provider evidence with explicit coverage, source authority, immutable revisions, and reconciliation.

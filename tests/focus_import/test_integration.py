@@ -226,7 +226,7 @@ def test_pagination_and_source_composite_references(stack,official):
     env,c=stack;initialize(c);first=sealed(official)
     page=query('reader-demo-a',limit=2)
     assert page['next_after'] is not None
-    next_page=query('reader-demo-a',limit=2,after=page['next_after'],expected_batch=page['batch_id'])
+    next_page=query('reader-demo-a',limit=2,after=page['next_after'],expected_batch=page['batch_id'],expected_hierarchy=page['hierarchy_snapshot'])
     assert min(r['ordinal'] for r in next_page['rows'])>page['next_after']
     with pytest.raises(Rejected,match='query_batch_required'):query('reader-demo-a',after=2)
     with authority.connect(env) as conn:
@@ -237,7 +237,7 @@ def test_pagination_and_source_composite_references(stack,official):
     try:
         second=loader.ingest(official,'1.0',2)
         approver.confirm(second['batch_id'],second['manifest_digest']);approver.publish(second['batch_id'])
-        with pytest.raises(Rejected,match='query_batch_changed'):query('reader-demo-a',after=2,expected_batch=first['batch_id'])
+        with pytest.raises(Rejected,match='query_batch_changed'):query('reader-demo-a',after=2,expected_batch=first['batch_id'],expected_hierarchy=page['hierarchy_snapshot'])
     finally:loader.close();approver.close()
 
 

@@ -57,3 +57,8 @@ When **all** source slices/dependencies/holds/backups are released and active ob
 # Verification evidence
 
 See [HB-27 lifecycle validation](../../validation/reports/HB-27-lifecycle/summary.md). Test-only Python API clock injection supplies deterministic boundary cases; the CLI uses the server clock. Runtime roles receive no maintenance deletion privileges. Scenario actor names and source registration are trusted local operator choices, not authenticated financial approvals.
+
+
+## Native account normalization
+
+[Native hierarchy normalization](native-account-hierarchy.md) adds scoped provider-specific identity/edge/binding tables, approved metadata enrichment and immutable profile snapshots to this same collection/query/recovery path. Account ancestry is not an access grant, and graph grouping never duplicates financial occurrences. Existing samples require an approved observed-scope backfill after migration004.

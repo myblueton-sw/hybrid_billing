@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from . import authority, archive, control
+from . import authority, archive, control, hierarchy_store
 from .model import ADDITIVE, MAX_ROWS, Rejected, canonical, coefficient, controls, digest, serialized, tenant_id, versions
 from .service import Coordinator
 from .temporal import summarize, validate_delivery, window
@@ -121,8 +121,12 @@ def selected_slices(state,members,start,end):
     return result
 
 
-def query(actor,start=None,end=None,grain='month',limit=20,cursor=None,expected_snapshot=None,provider=None,service=None):
+def query(actor,start=None,end=None,grain='month',limit=20,cursor=None,expected_snapshot=None,provider=None,service=None,hierarchy_node=None,group_kind=None,group_axis=None,group_role='usage'):
     if type(limit) is not int or not 1<=limit<=100 or grain not in ['day','month']:raise Rejected('query_page')
+    if hierarchy_node is not None:
+        try:hierarchy_node=str(UUID(str(hierarchy_node)))
+        except ValueError:raise Rejected('hierarchy_node_identity') from None
+    if (group_kind is None)!=(group_axis is None) or group_role not in ['billing','usage','resource','identity']:raise Rejected('hierarchy_group_options')
     if cursor is not None and expected_snapshot is None:raise Rejected('query_snapshot_required')
     from .model import instant
     if start is not None:start=instant(start).isoformat()
@@ -135,15 +139,25 @@ def query(actor,start=None,end=None,grain='month',limit=20,cursor=None,expected_
             else:members={str(c.a.tenant):context['properties']}
             scopes=selected_slices(j.state,members,start,end)
             pins=[{'window':k,'delivery':digest(canonical(d).encode()),'slice':digest(canonical(item).encode())} for k,d,item in scopes]
-            snapshot=digest(canonical({'pins':pins,'members':members,'actor':actor,'start':start,'end':end,'grain':grain,'provider':provider,'service':service}).encode())
+            snapshot=digest(canonical({'pins':pins,'members':members,'actor':actor,'start':start,'end':end,'grain':grain,'provider':provider,'service':service,'hierarchy_node':hierarchy_node,'group_kind':group_kind,'group_axis':group_axis,'group_role':group_role}).encode())
             if expected_snapshot is not None and snapshot!=expected_snapshot:raise Rejected('query_snapshot_changed')
-            all_rows=[];breakdown={};periods={};coverage=[]
+            all_rows=[];breakdown={};periods={};coverage=[];graphs={};contexts={};account_groups={};unresolved_rows=0
             for key,d,item in scopes:
                 tid=item['tenant_id'];props=members[tid]
                 if item['state']=='archived':rows=archive.read(j.s3,item)
                 else:rows=c.store.verify(UUID(item['batch_id']),UUID(tid),item,reader=c.a.role)
                 if any(str(r['tenant_id'])!=tid for r in rows):raise Rejected('slice_scope')
+                graph_digest,graph=hierarchy_store.load(conn,tid,item['batch_id'],item.get('hierarchy_digest'))
+                if not item.get('hierarchy_digest'):raise Rejected('hierarchy_not_normalized')
                 rows=[r for r in rows if (provider is None or r['provider']==provider) and (service is None or r['service']==service)]
+                if hierarchy_node is not None:rows=[r for r in rows if hierarchy_node in hierarchy_store.context(graph,r['ordinal'])['visible_nodes']]
+                graph=hierarchy_store.view_body(graph,rows)
+                graph_key=item['batch_id']+':'+tid
+                graphs[graph_key]={'digest':graph_digest,**graph};contexts[graph_key]=graph
+                if group_kind is not None:
+                    from .hierarchy_model import group_rows
+                    grouped=group_rows(rows,graph,group_kind,group_axis,group_role)
+                    hierarchy_store.merge_groups(account_groups,grouped);unresolved_rows+=grouped['unresolved_rows']
                 periods.setdefault(props['key'],[]).extend(rows)
                 for row in rows:all_rows.append((key,item['batch_id'],row['ordinal'],props['key'],row))
                 coverage.append({'window':d['descriptor']['window'],'complete_through':d['descriptor']['complete_through'],'finalized':d['descriptor']['finalized'],'tenant_key':props['key'],'state':item['state']})
@@ -155,5 +169,5 @@ def query(actor,start=None,end=None,grain='month',limit=20,cursor=None,expected_
             if cursor is not None and (not isinstance(cursor,list) or len(cursor)!=3 or not isinstance(cursor[0],str) or not isinstance(cursor[1],str) or type(cursor[2]) is not int):raise Rejected('query_cursor')
             remaining=[r for r in all_rows if cursor is None or r[:3]>tuple(cursor)]
             page=remaining[:limit]
-            display=[{**serialized(row),'tenant_key':key,'window_id':wid,'batch_id':batch} for wid,batch,ordinal,key,row in page]
-            return {'snapshot':snapshot,'row_count':len(all_rows),'rows':display,'next_cursor':list(page[-1][:3]) if len(remaining)>limit else None,'groups':controls([r[4] for r in all_rows]),'tenant_breakdown':breakdown,'coverage':coverage,'currency_conversion':False,'retention_enforcement':True,'classification':'exploratory-query-only','range_basis':'delivery-window-overlap','period_attribution':'charge-start-in-tenant-timezone-no-proration'}
+            display=[{**serialized(row),'tenant_key':key,'window_id':wid,'batch_id':batch,'account_context':hierarchy_store.context(contexts[batch+':'+str(row['tenant_id'])],ordinal)} for wid,batch,ordinal,key,row in page]
+            return {'snapshot':snapshot,'account_hierarchies':graphs,'account_groups':account_groups,'unresolved_group_rows':unresolved_rows,'grouping_additive':True,'row_count':len(all_rows),'rows':display,'next_cursor':list(page[-1][:3]) if len(remaining)>limit else None,'groups':controls([r[4] for r in all_rows]),'tenant_breakdown':breakdown,'coverage':coverage,'currency_conversion':False,'retention_enforcement':True,'classification':'exploratory-query-only','range_basis':'delivery-window-overlap','period_attribution':'charge-start-in-tenant-timezone-no-proration'}

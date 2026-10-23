@@ -20,6 +20,8 @@ The [six-provider sample workflow](docs/ops/installation/six-provider-samples.md
 
 The [recurring collection and lifecycle workflow](docs/ops/installation/focus-collection-lifecycle.md) registers complete daily or monthly delivery windows, preserves revisions, replaces cumulative monthly refreshes, and queries accumulated authorized periods. It implements verified tenant Parquet archive/recall, holds/dependencies, approved deletion with explicit shared/physical-copy residuals, origin-based backup horizons and latest-control restore gates. Use its periodic query command after activation; the earlier single-snapshot query then rejects rather than showing only the newest delivery. This is a bounded trusted local CLI; live cloud adapters, production authentication, multi-host recovery and capacity remain outside its verified scope.
 
+The [native account hierarchy workflow](docs/ops/installation/native-account-hierarchy.md) normalizes six-provider IDs and typed billing/resource/organization/identity relationships, persists tenant-scoped immutable snapshots, and exposes hierarchy-filtered and account-grouped queries without multiplying costs. Approved supplemental metadata cannot broaden tenant access or rewrite typed historical snapshots. Public samples retain explicit unknown native ancestry; separately labelled synthetic metadata validates complete provider-specific shapes.
+
 ## Planned capabilities
 
 - Collect and validate provider evidence with explicit coverage, source authority, immutable revisions, and reconciliation.

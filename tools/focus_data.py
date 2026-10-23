@@ -41,7 +41,7 @@ def main():
         if name in ['confirm','publish']:c.add_argument('--batch',required=True)
         if name=='confirm':c.add_argument('--manifest-digest',required=True)
         if name=='query':
-            c.add_argument('--limit',type=int,default=20);c.add_argument('--after',type=int,default=0);c.add_argument('--provider');c.add_argument('--service');c.add_argument('--expected-batch')
+            c.add_argument('--limit',type=int,default=20);c.add_argument('--after',type=int,default=0);c.add_argument('--provider');c.add_argument('--service');c.add_argument('--expected-batch');c.add_argument('--expected-hierarchy')
     args=p.parse_args();coordinator=None
     try:
         if args.command=='versions':result={'versions':list(versions()),'classification':'exploratory-query-only'}
@@ -64,7 +64,7 @@ def main():
             if args.command=='ingest':result=coordinator.ingest(bounded(args.file),args.version,args.revision)
             elif args.command=='confirm':result=coordinator.confirm(args.batch,args.manifest_digest)
             elif args.command=='publish':result=coordinator.publish(args.batch)
-            else:result=coordinator.query(args.limit,args.after,args.provider,args.service,args.expected_batch)
+            else:result=coordinator.query(args.limit,args.after,args.provider,args.service,args.expected_batch,args.expected_hierarchy)
         print(json.dumps({'status':'ok',**result},sort_keys=True));return 0
     except Rejected as exc:print(json.dumps({'status':'rejected','reason':str(exc)}));return 2
     except Exception:print(json.dumps({'status':'unavailable','reason':'local_dependency_or_operation_failed'}));return 3

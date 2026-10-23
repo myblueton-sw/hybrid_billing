@@ -10,12 +10,13 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
 from modules.focus_local.database import environment, password
+from .hierarchy_store import TABLES as NATIVE_TABLES
 from .model import BINDINGS, ROOT, Rejected, canonical, digest, tenant_id, validate_config, reader_scopes, view_id
 
 
 IMPORTER='hb_focus_ingest'
 APPROVER='hb_focus_approve'
-TABLES=['configuration','tenant','gate','batch','slice','publication','confirmation','decision','audience','audience_member']
+TABLES=['configuration','tenant','gate','batch','slice','publication','confirmation','decision','audience','audience_member']+NATIVE_TABLES
 
 
 def reader_role(tenant):
@@ -53,6 +54,12 @@ def initialize(config,env=None):
         if not record:
             conn.execute(third.decode())
             conn.execute('INSERT INTO hb_focus.migration VALUES (3,%s)',(digest(third),))
+        fourth=(ROOT/'migrations/focus_import/004-native-hierarchy.sql').read_bytes()
+        record=conn.execute('SELECT digest FROM hb_focus.migration WHERE version=4').fetchone()
+        if record and record['digest']!=digest(fourth):raise Rejected('migration_digest')
+        if not record:
+            conn.execute(fourth.decode())
+            conn.execute('INSERT INTO hb_focus.migration VALUES (4,%s)',(digest(fourth),))
         saved=conn.execute('SELECT digest FROM hb_focus.configuration').fetchone()
         if saved and saved['digest']!=sha:raise Rejected('configuration_changed')
         if not saved:
@@ -87,6 +94,7 @@ def initialize(config,env=None):
             conn.execute(sql.SQL('GRANT UPDATE(lock_token) ON hb_focus.gate,hb_focus.tenant TO {}').format(sql.Identifier(role)))
             if role in view_roles:conn.execute(sql.SQL('GRANT UPDATE(lock_token) ON hb_focus.audience TO {}').format(sql.Identifier(role)))
         conn.execute('GRANT INSERT ON hb_focus.batch,hb_focus.slice TO hb_focus_ingest')
+        for table in NATIVE_TABLES:conn.execute(sql.SQL('GRANT INSERT ON {} TO hb_focus_ingest').format(sql.Identifier('hb_focus',table)))
         conn.execute('GRANT UPDATE(state) ON hb_focus.batch TO hb_focus_ingest,hb_focus_approve')
         conn.execute('GRANT INSERT ON hb_focus.confirmation,hb_focus.decision,hb_focus.publication TO hb_focus_approve')
         conn.execute('GRANT UPDATE(batch_id) ON hb_focus.publication TO hb_focus_approve')
@@ -110,13 +118,13 @@ def initialize(config,env=None):
 
 def policy_condition(role,tenants,table,view_roles):
     if tenants is None or table=='gate':return sql.SQL('true')
-    if table in ['tenant','slice','publication']:return sql.SQL('tenant_id=ANY({}::uuid[])').format(sql.Literal(tenants))
+    if table in ['tenant','slice','publication']+NATIVE_TABLES:return sql.SQL('tenant_id=ANY({}::uuid[])').format(sql.Literal(tenants))
     if role in view_roles and table in ['audience','audience_member']:return sql.SQL('actor={}').format(sql.Literal(view_roles[role]))
     return None
 
 
 def verify_privileges(conn,role,tenant,is_view=False):
-    inserts={'batch','slice'} if role==IMPORTER else {'confirmation','decision','publication'} if role==APPROVER else set()
+    inserts={'batch','slice',*NATIVE_TABLES} if role==IMPORTER else {'confirmation','decision','publication'} if role==APPROVER else set()
     updates={'gate':{'lock_token'},'tenant':{'lock_token'}}
     if is_view:updates['audience']={'lock_token'}
     if tenant is None:
@@ -128,7 +136,7 @@ def verify_privileges(conn,role,tenant,is_view=False):
         name='hb_focus.'+table
         for privilege in ['DELETE','TRUNCATE','TRIGGER','REFERENCES']:
             if conn.execute('SELECT has_table_privilege(%s,%s,%s) AS v',(role,name,privilege)).fetchone()['v']:raise Rejected('incompatible_pg_privileges')
-        if tenant is not None and table not in (['tenant','slice','publication','gate']+(['audience','audience_member'] if is_view else [])) and conn.execute("SELECT has_table_privilege(%s,%s,'SELECT') AS v",(role,name)).fetchone()['v']:raise Rejected('incompatible_pg_privileges')
+        if tenant is not None and table not in (['tenant','slice','publication','gate']+NATIVE_TABLES+(['audience','audience_member'] if is_view else [])) and conn.execute("SELECT has_table_privilege(%s,%s,'SELECT') AS v",(role,name)).fetchone()['v']:raise Rejected('incompatible_pg_privileges')
         for col in conn.execute("SELECT column_name FROM information_schema.columns WHERE table_schema='hb_focus' AND table_name=%s",(table,)):
             for privilege,allowed in [('INSERT',table in inserts),('UPDATE',col['column_name'] in updates.get(table,set()))]:
                 if not allowed and conn.execute('SELECT has_column_privilege(%s,%s,%s,%s) AS v',(role,name,col['column_name'],privilege)).fetchone()['v']:raise Rejected('incompatible_pg_privileges')

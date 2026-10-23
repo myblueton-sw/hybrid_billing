@@ -11,12 +11,13 @@ from psycopg import sql
 from modules.focus_local.database import environment
 from . import archive, authority, control, warehouse
 from .collection import now
+from .hierarchy_store import TABLES as NATIVE_TABLES
 from .model import BINDINGS, Rejected, canonical, digest, instant, tenant_id
 from .temporal import eligible, validate_policy
 
 
-METADATA_TABLES=['configuration','tenant','gate','batch','slice','publication','confirmation','decision','audience','audience_member']
-RIGHTS={name:{'operator'} for name in ['activate','archive','recall','hold','reference','preview','delete','status','backup','restore','prune-backups','revoke','policy-preview','policy-apply','retire-preview','retire']}
+METADATA_TABLES=['configuration','tenant','gate','batch','slice','publication','confirmation','decision','audience','audience_member']+NATIVE_TABLES
+RIGHTS={name:{'operator'} for name in ['activate','archive','recall','hold','reference','preview','delete','status','backup','restore','prune-backups','revoke','policy-preview','policy-apply','retire-preview','retire','hierarchy-plan','hierarchy-apply']}
 RIGHTS['approve']={'lifecycle-approver'}
 
 
@@ -68,7 +69,7 @@ def activate(actor,grain,policies):
             rows=store.verify(part['batch_id'],part['tenant_id'],part)
             end=max((r['billing_end'].isoformat() for r in rows),default=now())
             state['slices'][str(part['batch_id'])+':'+str(part['tenant_id'])]={k:part[k] for k in ['row_count','row_digest','controls']}
-            state['slices'][str(part['batch_id'])+':'+str(part['tenant_id'])].update({'tenant_id':str(part['tenant_id']),'batch_id':str(part['batch_id']),'window':None,'origin_received':None,'origin_window_end':end,'state':'hot','archive':None,'holds':{},'references':{},'deletion':None})
+            state['slices'][str(part['batch_id'])+':'+str(part['tenant_id'])].update({'tenant_id':str(part['tenant_id']),'batch_id':str(part['batch_id']),'window':None,'origin_received':None,'origin_window_end':end,'state':'hot','archive':None,'holds':{},'references':{},'deletion':None,'hierarchy_digest':part['metadata'].get('hierarchy_digest')})
         j.save(state)
         return {'state':'activated','installation':j.head['installation'],'retained_slices':len(state['slices']),'grain':grain}
 
@@ -279,7 +280,7 @@ def backup(actor,at=None):
 def restore_metadata(conn,records):
     conn.execute(sql.SQL('TRUNCATE {} CASCADE').format(sql.SQL(',').join(sql.Identifier('hb_focus',t) for t in METADATA_TABLES)))
     for table in METADATA_TABLES:
-        rows=records[table]
+        rows=records.get(table,[])
         if table=='gate':rows=[{**r,'current_batch':None} for r in rows]
         for row in rows:
             conn.execute(sql.SQL('INSERT INTO {} SELECT * FROM json_populate_record(NULL::{},%s::json)').format(sql.Identifier('hb_focus',table),sql.Identifier('hb_focus',table)),(canonical(row),))

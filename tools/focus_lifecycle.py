@@ -35,6 +35,9 @@ def run_due(actor,inbox):
 def parser():
     p=argparse.ArgumentParser(description='Trusted local FOCUS collection, temporal query and guarded lifecycle')
     sub=p.add_subparsers(dest='command',required=True)
+    sub.add_parser('hierarchy-profiles')
+    c=sub.add_parser('hierarchy-plan');c.add_argument('--file',type=Path)
+    c=sub.add_parser('hierarchy-apply');c.add_argument('--manifest-digest',required=True)
     c=sub.add_parser('describe');c.add_argument('--file',type=Path,required=True);c.add_argument('--version',required=True);c.add_argument('--start',required=True);c.add_argument('--end',required=True);c.add_argument('--grain',choices=['day','month'],required=True);c.add_argument('--revision',type=int,required=True);c.add_argument('--complete-through',required=True);c.add_argument('--finalized',action='store_true')
     c=sub.add_parser('activate');c.add_argument('--grain',choices=['day','month'],required=True);c.add_argument('--policies',type=Path,required=True)
     c=sub.add_parser('register');c.add_argument('--file',type=Path,required=True);c.add_argument('--descriptor',type=Path,required=True);c.add_argument('--version',required=True)
@@ -44,7 +47,7 @@ def parser():
     for name in ['run-due','watch']:
         c=sub.add_parser(name);c.add_argument('--inbox',type=Path,required=True)
         if name=='watch':c.add_argument('--interval',type=int,default=60);c.add_argument('--cycles',type=int,default=0)
-    c=sub.add_parser('query');c.add_argument('--start');c.add_argument('--end');c.add_argument('--grain',choices=['day','month'],default='month');c.add_argument('--limit',type=int,default=20);c.add_argument('--cursor');c.add_argument('--snapshot');c.add_argument('--provider');c.add_argument('--service')
+    c=sub.add_parser('query');c.add_argument('--start');c.add_argument('--end');c.add_argument('--grain',choices=['day','month'],default='month');c.add_argument('--limit',type=int,default=20);c.add_argument('--cursor');c.add_argument('--snapshot');c.add_argument('--provider');c.add_argument('--service');c.add_argument('--hierarchy-node');c.add_argument('--group-kind');c.add_argument('--group-axis');c.add_argument('--group-role',default='usage')
     for name in ['archive','recall']:
         c=sub.add_parser(name);c.add_argument('--slice',required=True)
     for name in ['hold','reference']:
@@ -57,12 +60,21 @@ def parser():
     c=sub.add_parser('revoke');c.add_argument('--reader',required=True)
     c=sub.add_parser('policy-preview');c.add_argument('--tenant',required=True);c.add_argument('--policy',type=Path,required=True)
     for c in sub.choices.values():
-        if c.prog.split()[-1]!='describe':c.add_argument('--actor',required=True)
+        if c.prog.split()[-1] not in ['describe','hierarchy-profiles']:c.add_argument('--actor',required=True)
     return p
 
 
 def execute(a):
     cmd=a.command
+    if cmd=='hierarchy-profiles':
+        from modules.focus_import.hierarchy_model import registry,registry_digest
+        return {'profiles':registry(),'registry_digest':registry_digest()}
+    if cmd=='hierarchy-plan':
+        from modules.focus_import.hierarchy_admin import prepare
+        return prepare(a.actor,json.loads(bounded(a.file)) if a.file else None)
+    if cmd=='hierarchy-apply':
+        from modules.focus_import.hierarchy_admin import apply
+        return apply(a.actor,a.manifest_digest)
     if cmd=='describe':
         data=bounded(a.file)
         if a.version not in versions():raise Rejected('unsupported_version')
@@ -85,7 +97,7 @@ def execute(a):
             print(json.dumps({'status':'ok','cycle':cycle,**result}),flush=True)
             if a.cycles and cycle>=a.cycles:return {'state':'watch_completed','cycles':cycle}
             time.sleep(a.interval)
-    if cmd=='query':return collection.query(a.actor,a.start,a.end,a.grain,a.limit,json.loads(a.cursor) if a.cursor else None,a.snapshot,a.provider,a.service)
+    if cmd=='query':return collection.query(a.actor,a.start,a.end,a.grain,a.limit,json.loads(a.cursor) if a.cursor else None,a.snapshot,a.provider,a.service,a.hierarchy_node,a.group_kind,a.group_axis,a.group_role)
     if cmd=='archive':return lifecycle.archive_slice(a.actor,a.slice)
     if cmd=='recall':return lifecycle.recall(a.actor,a.slice)
     if cmd in ['hold','reference']:return lifecycle.restriction(a.actor,a.slice,a.id,a.reason,cmd,a.release)

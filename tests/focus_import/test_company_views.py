@@ -64,7 +64,7 @@ def test_all_six_and_authorized_company_union(pack):
     while True:
         rows.extend(page['rows'])
         if page['next_after'] is None:break
-        page=read('reader-company-north',limit=100,after=page['next_after'],expected_batch=page['batch_id'])
+        page=read('reader-company-north',limit=100,after=page['next_after'],expected_batch=page['batch_id'],expected_hierarchy=page['hierarchy_snapshot'])
     assert len(rows)==len({r['ordinal'] for r in rows})==1121
     assert {r['tenant_key'] for r in rows}=={'north-a','north-b'}
     for key,group in combined['groups'].items():

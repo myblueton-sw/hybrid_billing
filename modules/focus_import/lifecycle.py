@@ -210,7 +210,9 @@ def deletion_status(j,store,identity):
 def original_for(j,batch):
     matches=[b for b in j.state['metadata']['batch'] if b['batch_id']==batch]
     if len(matches)!=1:raise Rejected('batch_metadata_unavailable')
-    return 'shared-originals/'+batch+'/'+matches[0]['file_digest']+'.csv'
+    format=matches[0]['manifest'].get('input_format','csv')
+    if format not in ['csv','parquet']:raise Rejected('original_format')
+    return 'shared-originals/'+batch+'/'+matches[0]['file_digest']+'.'+format
 
 
 def delete(actor,sha,at=None):

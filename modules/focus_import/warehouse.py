@@ -9,6 +9,7 @@ import clickhouse_connect
 from modules.focus_local.database import password
 from modules.focus_local.storage import LOCKED_SETTINGS, object_client
 from .authority import APPROVER, IMPORTER, reader_role
+from .intake import input_format
 from .model import ADDITIVE, COLUMNS, NUMERIC, STRINGS, TIMES, Rejected, canonical, coefficient, controls, digest, row_digest, tenant_id, reader_scopes
 
 
@@ -61,7 +62,7 @@ class Warehouse:
 
     def original(self,batch,data):
         s3=object_client(self.env)
-        key='shared-originals/'+str(batch)+'/'+digest(data)+'.csv'
+        key='shared-originals/'+str(batch)+'/'+digest(data)+'.'+input_format(data)
         s3.put_object(Bucket=BUCKET,Key=key,Body=data,IfNoneMatch='*',Metadata={'sha256':digest(data)})
         if s3.get_object(Bucket=BUCKET,Key=key)['Body'].read()!=data:raise Rejected('original_digest')
         return key

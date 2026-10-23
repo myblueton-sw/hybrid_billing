@@ -7,6 +7,7 @@ from psycopg.types.json import Jsonb
 from modules.focus_local.database import environment
 from . import authority, warehouse, hierarchy_store
 from .control import guarded, locked, Journal
+from .intake import input_format
 from .model import ADDITIVE, BINDINGS, MAX_BYTES, Rejected, assign, canonical, controls, decode, demo_config, digest, row_digest, serialized, tenant_id, validate_config, versions
 
 
@@ -78,7 +79,7 @@ class Coordinator:
                 slices[str(tid)]={'row_count':len(selected),'row_digest':row_digest(selected),'controls':controls(selected),'hierarchy_digest':hierarchy_store.signature(body)}
             manifest={'version':version,'classification':mapping['classification'],'mapping':mapping,'mapping_digest':mapping_sha,
                 'config_digest':cfg['digest'],'numeric_profile':'exact-decimal38-scale18-bounded-absolute-sums','source':gate['source'],
-                'source_revision':revision,'row_count':len(rows),'file_digest':sha,'file_bytes':len(data),'slices':slices,
+                'source_revision':revision,'row_count':len(rows),'file_digest':sha,'file_bytes':len(data),'input_format':input_format(data),'slices':slices,
                 'predecessor':str(gate['current_batch']) if gate['current_batch'] else None}
             manifest_sha=digest(canonical(manifest).encode())
             a.conn.execute('INSERT INTO hb_focus.batch VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)',(batch_id,gate['source'],revision,sha,cfg['digest'],mapping_sha,Jsonb(manifest),manifest_sha,'pending'))
@@ -180,4 +181,4 @@ class Coordinator:
     @staticmethod
     def result(batch,duplicate=False):
         return {'batch_id':str(batch['batch_id']),'state':batch['state'],'manifest_digest':batch['manifest_digest'],
-            'row_count':batch['manifest']['row_count'],'version':batch['manifest']['version'],'classification':batch['manifest']['classification'],'duplicate':duplicate}
+            'row_count':batch['manifest']['row_count'],'version':batch['manifest']['version'],'input_format':batch['manifest'].get('input_format','csv'),'classification':batch['manifest']['classification'],'duplicate':duplicate}

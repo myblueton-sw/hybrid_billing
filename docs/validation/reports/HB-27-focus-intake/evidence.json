@@ -1,0 +1,80 @@
+{
+  "artifact_policy": {
+    "access": "local public or synthetic verification only",
+    "owner": "Seung Woo Park",
+    "retention": "operator managed; local artifacts not guaranteed permanent"
+  },
+  "base_commit": "8e632ee6d4d0f8da1088d3200a9d591065c3aadf",
+  "classification": "exploratory-query-only",
+  "focused_tests": {
+    "integration": 3,
+    "passed": 20,
+    "pure": 17,
+    "run": "20261023T141451Z-edd757"
+  },
+  "input_formats": [
+    "csv",
+    "parquet"
+  ],
+  "limitations": [
+    "Not full FOCUS conformance or provider export certification",
+    "No live cloud connector or MSP settlement",
+    "Trusted local actors, not production authentication",
+    "Metadata budget is not a hard process memory cap",
+    "Destination timestamp range is inherited, not newly certified"
+  ],
+  "machine": "mac_mini",
+  "new_fixture_class": "synthetic",
+  "reviews": {
+    "architecture_security_actual_change": "PASS",
+    "dba_actual_change": "PASS",
+    "dba_design": "PASS",
+    "final_regression_qa": "PASS",
+    "focused_qa": "PASS",
+    "restored_runtime_qa": "PASS"
+  },
+  "runtime": {
+    "commands": 6,
+    "commands_sha256": "9fcd023bdb5d34f7eb755adf46cf7c119fe54eaca269a1089d70b36a930e1f70",
+    "company": 1121,
+    "foreign": 2,
+    "journal_sequence": 56,
+    "restored_legacy_csv_backup": true,
+    "run": "20261023T144022Z-744a94",
+    "tenant_a": 1112,
+    "tenant_b": 9
+  },
+  "sandbox_attempt": {
+    "pure_passed": 158,
+    "reason": "localhost connection denied; rerun with approved access passed",
+    "run": "20261023T141601Z-4117ab",
+    "setup_errors": 59
+  },
+  "source_sha256": {
+    "modules/focus_import/intake.py": "42e02e550f7cc9a6f4bd1cd56c0bafe6efda7cc107a8d0bdb473077fbd82e6cf",
+    "modules/focus_import/lifecycle.py": "44d27770081be300e4b17f782e1e38ecc4d59391e38e0f4c592ca7f8999d48e4",
+    "modules/focus_import/model.py": "3c9d57e571975870351a9d93427c9e263d92525daf7030afb1ecde36036d128a",
+    "modules/focus_import/service.py": "48d1b3350ade1505e25e77fb2dcca9fa686ad78aa0aa2be119bc05a99bc62cb7",
+    "modules/focus_import/warehouse.py": "add09666c5c2f8f998d6c8fc9b904d151094b34e9b534fd4bc85d4ce89a25e44",
+    "tests/focus_import/test_intake.py": "d44057ed8321569cedb80043efdd4f10a806f73d0d05759bf037d70b989cf27e",
+    "tests/focus_import/test_intake_integration.py": "96abaa0c405a78d8e7a43491fab2e6daf3a1b7e82a11d58491182b079962c673",
+    "tools/focus_data.py": "328af55b9bcb1e7616fbf310de9991ee9315026521ac1c3456a2d0e49135f374",
+    "tools/focus_lifecycle.py": "f1f4b65c3291ee0d1165cbb870f836a3011eda625643284ec7ab93b64013f61d"
+  },
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "integration": 59,
+    "junit_sha256": "dd5ea4ae7a923799d11e72acb27dfcffcec2d7a951cbeda03066fa70f21536f4",
+    "pure": 158,
+    "run": "20261023T141645Z-ed7780",
+    "skipped": 0,
+    "tests": 217
+  },
+  "ticket": "HB-27",
+  "versions": [
+    "1.0",
+    "1.2",
+    "1.3"
+  ]
+}

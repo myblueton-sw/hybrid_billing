@@ -44,7 +44,7 @@ def main():
             c.add_argument('--limit',type=int,default=20);c.add_argument('--after',type=int,default=0);c.add_argument('--provider');c.add_argument('--service');c.add_argument('--expected-batch');c.add_argument('--expected-hierarchy')
     args=p.parse_args();coordinator=None
     try:
-        if args.command=='versions':result={'versions':list(versions()),'classification':'exploratory-query-only'}
+        if args.command=='versions':result={'versions':list(versions()),'input_formats':['csv','parquet'],'classification':'exploratory-query-only'}
         elif args.command=='fetch-demo':result=fetch(args.output)
         elif args.command=='build-samples':
             from modules.focus_import.samples import build

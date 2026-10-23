@@ -1,5 +1,4 @@
 import csv
-import io
 import json
 import re
 from datetime import datetime, timezone
@@ -9,6 +8,7 @@ from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
 
 from modules.focus_local.contract import ROOT, Rejected, canonical, digest
+from .intake import sources
 
 
 MAX_BYTES = 16 * 1024 * 1024
@@ -93,20 +93,15 @@ def decode(data, mapping):
     if len(data)>MAX_BYTES:
         raise Rejected('input_size')
     try:
-        reader=csv.DictReader(io.StringIO(data.decode('utf-8'),newline=''),strict=True)
-        headers=reader.fieldnames or []
-        if len(set(headers))!=len(headers) or not set(mapping['columns'].values())<=set(headers):
-            raise Rejected('source_headers')
         rows=[]
-        for ordinal,source in enumerate(reader,1):
-            if ordinal>MAX_ROWS or None in source or any(v is None or len(v)>65536 for v in source.values()):
-                raise Rejected('source_shape')
+        for ordinal,source in enumerate(sources(data,mapping),1):
+            if ordinal>MAX_ROWS:raise Rejected('source_shape')
             row={'ordinal':ordinal,'source_json':canonical(source)}
             reasons={}
             for name,column in mapping['columns'].items():
                 value=source[column]
-                if value in mapping['null_tokens']:
-                    reasons[name]='empty' if value=='' else 'literal:'+value
+                if value is None or value in mapping['null_tokens']:
+                    reasons[name]='typed_null' if value is None else 'empty' if value=='' else 'literal:'+value
                     value=None
                 if name in TIMES:
                     value=instant(value)

@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 
 from modules.focus_import import collection, lifecycle
+from modules.focus_import.intake import input_format
 from modules.focus_import.model import MAX_BYTES, Rejected, decode, digest, domains_digest, versions
 from modules.focus_import.temporal import window
 
@@ -24,7 +25,7 @@ def run_due(actor,inbox):
         blocked=any(d['state']=='verified' for d in journal.state['deliveries'].values())
     results=[]
     if blocked:return {'collected':[],'registered_waiting':len(pending),'awaiting_publication':True}
-    for path in sorted(inbox.glob('*.csv'))[:100]:
+    for path in sorted(p for p in inbox.iterdir() if p.is_file() and p.suffix in ['.csv','.parquet'])[:100]:
         data=bounded(path);matches=[key for key,sha in pending.items() if sha==digest(data)]
         if matches:
             key=matches[0];results.append(collection.collect(actor,key,data));pending.pop(key)
@@ -82,7 +83,7 @@ def execute(a):
         except Rejected as e:
             if str(e)!='empty_input':raise
             rows=[]
-        return {'descriptor':{'window':window(a.start,a.end,a.grain),'revision':a.revision,'file_digest':digest(data),'row_count':len(rows),'domains_digest':domains_digest(rows),'complete_through':a.complete_through,'finalized':a.finalized},'version':a.version,'completeness':'operator_assertion_required'}
+        return {'descriptor':{'window':window(a.start,a.end,a.grain),'revision':a.revision,'file_digest':digest(data),'row_count':len(rows),'domains_digest':domains_digest(rows),'complete_through':a.complete_through,'finalized':a.finalized},'version':a.version,'input_format':input_format(data),'completeness':'operator_assertion_required'}
     if cmd=='activate':return lifecycle.activate(a.actor,a.grain,json.loads(a.policies.read_text()))
     if cmd=='register':return collection.register(a.actor,bounded(a.file),a.version,json.loads(a.descriptor.read_text()))
     if cmd=='collect':return collection.collect(a.actor,a.delivery,bounded(a.file))

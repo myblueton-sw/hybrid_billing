@@ -61,6 +61,8 @@ User conversation is in Korean. Git-bound documents, tool/agent task instruction
 
 The planning baseline is maintained locally under `docs/planning/v1.16/`; screen designs are under `docs/ui/`. Those artifacts are being reviewed and will be added through tracked follow-up changes.
 
-## Rights and status
+## License and commercial inquiries
 
-The intended product policy is source-available commercial software. Final product license terms, rights-holder details, and third-party distribution rights remain under review. This overview does not grant a product license or certify release readiness.
+Hybrid Billing's original code and project-authored documentation are open source under the [MIT License](LICENSE), which permits commercial use. Preserve the required copyright and permission notices. Third-party components and datasets retain their own [licenses and notices](LICENSING.md).
+
+For commercial-use support, consulting, integrations or collaboration, contact [myblueton@gmail.com](mailto:myblueton@gmail.com). Contacting the project or purchasing services is optional and is not a condition of MIT use. See the [MIT adoption decision](docs/licensing/mit-adoption.md).

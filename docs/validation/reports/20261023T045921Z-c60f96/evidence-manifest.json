@@ -1,0 +1,224 @@
+{
+  "run_id": "20261023T045921Z-c60f96",
+  "ticket": "HB-27",
+  "machine": "mac_mini",
+  "started_utc": "2026-10-23T04:59:21.986964+00:00",
+  "finished_utc": "2026-10-23T04:59:34.720341+00:00",
+  "status": "PASS",
+  "input_class": "synthetic only; fixed local account/period profile",
+  "checks": [
+    "49 tests passed",
+    "supported registry dispatch",
+    "single CLI end-to-end path",
+    "CLI replay same release and export",
+    "tenant-a two rows",
+    "tenant-b zero rows"
+  ],
+  "source_files": {
+    "modules/focus_local/database.py": "9e8b2c46d67af4590981f7f0902abb0c052d9f3a07ad81844872f474b2fca81e",
+    "modules/focus_local/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "modules/focus_local/pipeline.py": "194c0e10dec2632ad0791712e31148f1a05d93018760f3e886b97899ee1b16ce",
+    "modules/focus_local/storage.py": "fa534f5f107a0e561dd1bd6ef1cd96a84c079b0990af76e63904cd276fbbaa0e",
+    "modules/focus_local/contract.py": "134affc2e94a6d14d970095754d0d2ec23be233637647477f62e239956e01259",
+    "migrations/local_focus/001-authority.sql": "181ae89ae8881de67703af309d92197e285ec5d2fcc01a59123724e1599f27ae",
+    "packages/contracts/focus/1.2.json": "5636a573fdeeadc0b4ad1e27ba2f7d2f207d0e40c86383665e81f862dfd56364",
+    "packages/contracts/focus/1.3.json": "12cfc3a32e5ee1394d35690fa9deb2fae138e7db933310414ea71f583fb8d87c",
+    "tests/local_focus/conftest.py": "47eddf4d84a10c5be15a4656f3a7bd61f565b37ce0211ce07e613cb6bbfd4db4",
+    "tests/local_focus/test_contract.py": "95c7536df6c020be5cee9d37531c57974e8c44f58a1d882ca37e9920e8111bce",
+    "tests/local_focus/test_integration.py": "30fb99385ade904c0f859759cb2dfea3c133739f6d6ae0ee7fa86ff794bc29ac",
+    "tests/fixtures/focus/synthetic-1.2.csv": "f7bc9336b6330824d30c086a281b5534edefac2fe50f655dd336b00fc919b450",
+    "tests/fixtures/focus/synthetic-1.3.csv": "3b53012413b001c22595b9c5a74d6d4954c42d9e7e4a37479fdce502e8b9e103",
+    "tools/local_focus.py": "8205be08b9912414979e39ba27dd2c1f78aee52553e3c89ea1afa43d55b0a982"
+  },
+  "tools": {
+    "pytest": "8.4.2",
+    "psycopg": "3.2.10",
+    "clickhouse-connect": "0.9.2",
+    "pyarrow": "21.0.0",
+    "boto3": "1.40.40"
+  },
+  "raw_retention": "local only; not promised to persist",
+  "commands": [
+    {
+      "command": [
+        "python",
+        "-m",
+        "pytest",
+        "tests/local_focus",
+        "-q",
+        "--junitxml=.local/runs/20261023T045921Z-c60f96/tests.xml"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "python",
+        "tools/local_focus.py",
+        "versions"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "python",
+        "tools/local_focus.py",
+        "demo",
+        "--version",
+        "1.3",
+        "--file",
+        "tests/fixtures/focus/synthetic-1.3.csv"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "python",
+        "tools/local_focus.py",
+        "demo",
+        "--version",
+        "1.3",
+        "--file",
+        "tests/fixtures/focus/synthetic-1.3.csv"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "python",
+        "tools/local_focus.py",
+        "query",
+        "--actor",
+        "reader-a"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "python",
+        "tools/local_focus.py",
+        "query",
+        "--actor",
+        "reader-b"
+      ],
+      "exit": 0
+    }
+  ],
+  "cli_demo": {
+    "coefficient_scale": 6,
+    "export_sha256": "defd1ba8ec4641dd87faf7a7def99c58efa139256ba256d1f88e45471db706d5",
+    "groups": {
+      "[\"USD\",\"Hours\",\"Hours\"]": {
+        "measures": {
+          "billed_cost": {
+            "coefficient": 200000,
+            "missing": 0,
+            "present": 2
+          },
+          "consumed_quantity": {
+            "coefficient": 5000000,
+            "missing": 0,
+            "present": 2
+          },
+          "contracted_cost": {
+            "coefficient": 200000,
+            "missing": 0,
+            "present": 2
+          },
+          "effective_cost": {
+            "coefficient": 200000,
+            "missing": 0,
+            "present": 2
+          },
+          "list_cost": {
+            "coefficient": 200000,
+            "missing": 0,
+            "present": 2
+          },
+          "pricing_quantity": {
+            "coefficient": 2000000,
+            "missing": 0,
+            "present": 2
+          }
+        },
+        "rows": 2
+      }
+    },
+    "registry_digest": "f46aea7294381123ccf02b2a43b260dbace0348e0cdd8483ed833b9c1a1db4a4",
+    "release_id": "46f6a7db-b4ec-457b-acf4-4fcc33518287",
+    "row_count": 2,
+    "scope_revision": 1,
+    "state": "sealed",
+    "status": "ok",
+    "synthetic_demo": true,
+    "version": "1.3"
+  },
+  "cli_replay": {
+    "coefficient_scale": 6,
+    "export_sha256": "defd1ba8ec4641dd87faf7a7def99c58efa139256ba256d1f88e45471db706d5",
+    "groups": {
+      "[\"USD\",\"Hours\",\"Hours\"]": {
+        "measures": {
+          "billed_cost": {
+            "coefficient": 200000,
+            "missing": 0,
+            "present": 2
+          },
+          "consumed_quantity": {
+            "coefficient": 5000000,
+            "missing": 0,
+            "present": 2
+          },
+          "contracted_cost": {
+            "coefficient": 200000,
+            "missing": 0,
+            "present": 2
+          },
+          "effective_cost": {
+            "coefficient": 200000,
+            "missing": 0,
+            "present": 2
+          },
+          "list_cost": {
+            "coefficient": 200000,
+            "missing": 0,
+            "present": 2
+          },
+          "pricing_quantity": {
+            "coefficient": 2000000,
+            "missing": 0,
+            "present": 2
+          }
+        },
+        "rows": 2
+      }
+    },
+    "registry_digest": "f46aea7294381123ccf02b2a43b260dbace0348e0cdd8483ed833b9c1a1db4a4",
+    "release_id": "46f6a7db-b4ec-457b-acf4-4fcc33518287",
+    "row_count": 2,
+    "scope_revision": 1,
+    "state": "sealed",
+    "status": "ok",
+    "synthetic_demo": true,
+    "version": "1.3"
+  },
+  "tenant_b": {
+    "groups": {},
+    "release_id": null,
+    "row_count": 0,
+    "status": "ok"
+  },
+  "raw_artifacts": {
+    ".local/runs/20261023T045921Z-c60f96/evidence.json": {
+      "sha256": "2e694cb8a4b9a9e924654c2c10915f556efed374e220dcadae8580902433208b",
+      "bytes": 6715,
+      "retention": "local only; not promised to persist",
+      "owner": "mac_mini"
+    },
+    ".local/runs/20261023T045921Z-c60f96/tests.xml": {
+      "sha256": "76f06f43fe15b91f0bc12c5946690029b6e53153f0d235526d798ead3ef8ef81",
+      "bytes": 6395,
+      "retention": "local only; not promised to persist",
+      "owner": "mac_mini"
+    }
+  }
+}

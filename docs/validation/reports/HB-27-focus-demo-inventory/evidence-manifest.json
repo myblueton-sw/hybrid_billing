@@ -1,0 +1,53 @@
+{
+  "ticket": "HB-27",
+  "machine": "mac_mini",
+  "date": "2026-10-23",
+  "evidence_class": "observed demo; exploratory profiling only; not product ingestion",
+  "artifact": {
+    "repository_revision": "adbdd17a132984d6e8583c149c236d2199c3f5bc",
+    "path": "FOCUS-1.0/focus_data_table.csv.gz",
+    "url": "https://media.githubusercontent.com/media/FinOps-Open-Cost-and-Usage-Spec/FOCUS-Sample-Data/adbdd17a132984d6e8583c149c236d2199c3f5bc/FOCUS-1.0/focus_data_table.csv.gz",
+    "sha256": "c198cda74cbde4b11b9be289815bda7e9ac62042f1d023ad9bc8fbf7bff1018c",
+    "bytes": 496305507,
+    "license": "CC BY 4.0"
+  },
+  "method": {
+    "python": "standard-library csv, gzip, decimal, hashlib",
+    "decimal_precision": 100,
+    "first_pass": "rowwise exact Decimal accumulation; lexical metadata and token counts",
+    "independent_pass": "distinct source decimal value multiplied by occurrence count for each provider/currency/measure",
+    "matched_groups": 20,
+    "missing_tokens": [
+      "",
+      "NULL",
+      "null",
+      "\\N"
+    ],
+    "source_modified": false
+  },
+  "scratch": {
+    "location": "local scratch only; not promised to persist",
+    "scripts": {
+      "profile.py": "befb63ad514dfb5fa8403b54845deba0c2963de2ec9de8c5d56e9073166c1be1",
+      "supplement.py": "d1935f35683bdf0616812e8971352654ca76a0617a06b13231b36d06c7e2f9a3"
+    }
+  },
+  "files": {
+    "provenance.json": {
+      "sha256": "c5aa520ebe105494407203f6bc8780350b6851f48e3ebf1cedaf8417ae337591",
+      "bytes": 2276
+    },
+    "checks.json": {
+      "sha256": "9f1d4a046450626c4039f7fa168de4f6319f16b55e6d3c3ac9cf58d18132a72c",
+      "bytes": 587
+    },
+    "independent-controls.json": {
+      "sha256": "b46acc8d8cc1ffc65505150722dc28dd6714d4e20bb659bb22b7a2a32998741e",
+      "bytes": 11940
+    },
+    "profile.json": {
+      "sha256": "0c0604358288a78fef9b5a14f4cda38e3e3155b011bc8b1279d752030ab6d566",
+      "bytes": 19324
+    }
+  }
+}

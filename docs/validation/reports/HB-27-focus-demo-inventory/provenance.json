@@ -1,0 +1,45 @@
+{
+  "attribution_proposal": "FOCUS Sample Data by FinOps Open Cost and Usage Specification, a Series of Joint Development Foundation Projects, LLC; source repository and revision; CC BY 4.0 https://creativecommons.org/licenses/by/4.0/; identify any changes",
+  "candidate_files": {
+    "README.md": {
+      "bytes": 1616,
+      "git_lfs_pointer": false,
+      "sha256": "eb36922f510ad12eed8969b7f1f817fd14335f2b3d16c81180a98f3c92ca4d6a"
+    },
+    "focus_data_table.csv.gz": {
+      "bytes": 134,
+      "git_lfs_pointer": true,
+      "sha256": "d6daccbba69afa5c55cbaf01d1bb361e1c6b788dfca349c8ac6c7022998ce856"
+    },
+    "focus_data_table.sql.gz": {
+      "bytes": 134,
+      "git_lfs_pointer": true,
+      "sha256": "3d434031066caf679a445ddc1390af7654b5e3e9d5aefec149f781e3dea72ea4"
+    },
+    "focus_sample.csv": {
+      "bytes": 755423,
+      "git_lfs_pointer": false,
+      "sha256": "e91e5ac7edf01ed2c9d926f37ef7dc1ae2aae97956fea8da6c9ee488b1c2839e"
+    },
+    "focus_sample_10000.csv": {
+      "bytes": 7529214,
+      "git_lfs_pointer": false,
+      "sha256": "0bf58b73123294c4476b648e647cad842935036f67dc4e9a2cc4a6d7497cc2e3"
+    },
+    "focus_sample_100000.csv.gz": {
+      "bytes": 9173495,
+      "git_lfs_pointer": false,
+      "sha256": "76e9158659d40cdef0fecfe6fbc8b874a438ef9fb440205b9190ed1600bf6f8a"
+    }
+  },
+  "dataset_readme_url": "https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS-Sample-Data/blob/adbdd17a132984d6e8583c149c236d2199c3f5bc/FOCUS-1.0/README.md",
+  "declared_focus_version": "1.0; original AWS input 1.0 preview per official article",
+  "documented_origin": "Anonymized real AWS, Google Cloud, Oracle data; Microsoft FinOps Toolkit sample",
+  "license": "CC BY 4.0",
+  "license_url": "https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS-Sample-Data/blob/adbdd17a132984d6e8583c149c236d2199c3f5bc/license.md",
+  "provenance_article": "https://www.finops.org/insights/focus-sandbox/",
+  "revision": "adbdd17a132984d6e8583c149c236d2199c3f5bc",
+  "sample_repository": "https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS-Sample-Data",
+  "sandbox_url": "https://focus.finops.org/docs/tools-assets/tools/query-sandbox/",
+  "sandbox_view_sample_data_target": "https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS-Sample-Data"
+}

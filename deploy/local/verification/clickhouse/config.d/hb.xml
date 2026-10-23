@@ -1,0 +1,17 @@
+<clickhouse>
+    <listen_host>0.0.0.0</listen_host>
+    <access_control_improvements>
+        <users_without_row_policies_can_read_rows>false</users_without_row_policies_can_read_rows>
+        <throw_on_unmatched_row_policies>true</throw_on_unmatched_row_policies>
+    </access_control_improvements>
+    <named_collections>
+        <hb_objects>
+            <url>http://seaweedfs:8333/hb-probe/</url>
+            <access_key_id from_env="S3_ACCESS_KEY"/>
+            <secret_access_key from_env="S3_SECRET_KEY"/>
+        </hb_objects>
+    </named_collections>
+    <logger>
+        <level>information</level>
+    </logger>
+</clickhouse>

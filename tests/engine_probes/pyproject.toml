@@ -1,0 +1,16 @@
+[project]
+name = "hb-engine-probes"
+version = "0.1.0"
+description = "HB-27 engine behavior probes for the platform data build design"
+requires-python = ">=3.11"
+dependencies = [
+    "pytest==8.4.2",
+    "clickhouse-connect==0.9.2",
+    "psycopg[binary]==3.2.10",
+    "boto3==1.40.40",
+    "pyarrow==21.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+addopts = "-q"

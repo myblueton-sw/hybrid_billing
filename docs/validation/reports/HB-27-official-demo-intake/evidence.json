@@ -1,0 +1,182 @@
+{
+  "ticket": "HB-27",
+  "machine": "mac_mini",
+  "revision": "adbdd17a132984d6e8583c149c236d2199c3f5bc",
+  "download": "PASS: fresh HTTP download; exact pinned hash",
+  "path": "FOCUS-1.0/focus_sample.csv",
+  "bytes": 755423,
+  "sha256": "e91e5ac7edf01ed2c9d926f37ef7dc1ae2aae97956fea8da6c9ee488b1c2839e",
+  "csv_rows": 1000,
+  "csv_headers": 44,
+  "providers": {
+    "AWS": 942,
+    "Oracle": 7,
+    "Microsoft": 51
+  },
+  "bundled_versions": [
+    "1.2",
+    "1.3"
+  ],
+  "declared_version_supported": false,
+  "missing_required_headers": {
+    "1.2": [],
+    "1.3": [
+      "HostProviderName",
+      "ServiceProviderName"
+    ]
+  },
+  "unchanged_cli_intake": "REJECTED: source_scope before version dispatch; no bypass attempted",
+  "published_sample_unchanged": true,
+  "commands": [
+    {
+      "args": [
+        "query",
+        "--actor",
+        "reader-a"
+      ],
+      "exit": 0,
+      "result": {
+        "coefficient_scale": 6,
+        "groups": {
+          "[\"USD\",\"Hours\",\"Hours\"]": {
+            "measures": {
+              "billed_cost": {
+                "coefficient": 200000,
+                "missing": 0,
+                "present": 2
+              },
+              "consumed_quantity": {
+                "coefficient": 5000000,
+                "missing": 0,
+                "present": 2
+              },
+              "contracted_cost": {
+                "coefficient": 200000,
+                "missing": 0,
+                "present": 2
+              },
+              "effective_cost": {
+                "coefficient": 200000,
+                "missing": 0,
+                "present": 2
+              },
+              "list_cost": {
+                "coefficient": 200000,
+                "missing": 0,
+                "present": 2
+              },
+              "pricing_quantity": {
+                "coefficient": 2000000,
+                "missing": 0,
+                "present": 2
+              }
+            },
+            "rows": 2
+          }
+        },
+        "registry_digest": "f46aea7294381123ccf02b2a43b260dbace0348e0cdd8483ed833b9c1a1db4a4",
+        "release_id": "38d7a50c-0d82-402c-930b-decef7e9048a",
+        "row_count": 2,
+        "scope_revision": 1,
+        "status": "ok",
+        "version": "1.3"
+      }
+    },
+    {
+      "args": [
+        "versions"
+      ],
+      "exit": 0,
+      "result": {
+        "status": "ok",
+        "versions": [
+          "1.2",
+          "1.3"
+        ]
+      }
+    },
+    {
+      "args": [
+        "ingest",
+        "--actor",
+        "loader-a",
+        "--version",
+        "1.0",
+        "--revision",
+        "2",
+        "--file",
+        ".local/runs/hb27-official-intake-20261023/focus_sample.csv"
+      ],
+      "exit": 2,
+      "result": {
+        "status": "rejected",
+        "reason": "source_scope"
+      }
+    },
+    {
+      "args": [
+        "query",
+        "--actor",
+        "reader-a"
+      ],
+      "exit": 0,
+      "result": {
+        "coefficient_scale": 6,
+        "groups": {
+          "[\"USD\",\"Hours\",\"Hours\"]": {
+            "measures": {
+              "billed_cost": {
+                "coefficient": 200000,
+                "missing": 0,
+                "present": 2
+              },
+              "consumed_quantity": {
+                "coefficient": 5000000,
+                "missing": 0,
+                "present": 2
+              },
+              "contracted_cost": {
+                "coefficient": 200000,
+                "missing": 0,
+                "present": 2
+              },
+              "effective_cost": {
+                "coefficient": 200000,
+                "missing": 0,
+                "present": 2
+              },
+              "list_cost": {
+                "coefficient": 200000,
+                "missing": 0,
+                "present": 2
+              },
+              "pricing_quantity": {
+                "coefficient": 2000000,
+                "missing": 0,
+                "present": 2
+              }
+            },
+            "rows": 2
+          }
+        },
+        "registry_digest": "f46aea7294381123ccf02b2a43b260dbace0348e0cdd8483ed833b9c1a1db4a4",
+        "release_id": "38d7a50c-0d82-402c-930b-decef7e9048a",
+        "row_count": 2,
+        "scope_revision": 1,
+        "status": "ok",
+        "version": "1.3"
+      }
+    }
+  ],
+  "full_artifact": {
+    "acquisition": "previous download retained; not freshly downloaded in this run",
+    "bytes": 496305507,
+    "sha256": "c198cda74cbde4b11b9be289815bda7e9ac62042f1d023ad9bc8fbf7bff1018c"
+  },
+  "limits": "Official 1.0 download/CSV check is not successful product ingestion. No source relabelling, adapter, capability or numeric-profile changes.",
+  "source_url": "https://raw.githubusercontent.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS-Sample-Data/adbdd17a132984d6e8583c149c236d2199c3f5bc/FOCUS-1.0/focus_sample.csv",
+  "license": "CC BY 4.0; attribution in summary.md",
+  "raw_evidence_sha256": "7475c6e30e561bcef3d261fa2c58dba657177983f701693e3cbce812b61d34ff",
+  "raw_retention": "Ignored local run directory only; no persistence guarantee",
+  "method": "Root executed scratch wrapper; HTTP download via curl; strict UTF-8 CSV scan; SHA-256; actual CLI commands. No fixture or product contract changes."
+}

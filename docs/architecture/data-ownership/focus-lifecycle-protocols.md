@@ -82,3 +82,8 @@ Design review can accept this protocol without claiming these tests passed. Exec
 ## Bounded local execution status
 
 The [HB-27 local runbook](../../ops/installation/local-focus-path.md) and [execution review](../../reviews/HB-27-local-path/verification.md) now describe a tested synthetic local increment using a dynamic supported-version registry. It implements isolated PG authority, immutable CH facts, original/quarantine preservation, confirmation/CAS/query and verified Parquet export. It does not implement this document's entire proposed product contract. Production profiles/authentication, quarantine resolution, actual fenced takeover/deletion, restore controls and capacity remain gated; historical design NOT_RUN statements are not retroactively converted into product passes.
+
+
+## Bounded local implementation evidence
+
+HB-27 subsequently implements the [trusted single-host CLI lifecycle](../../ops/installation/focus-collection-lifecycle.md) with independent DB-rollback controls, complete-window revisions, typed archive/recall, holds, residual-aware deletion and guarded backup restore. [Its execution report](../../validation/reports/HB-27-lifecycle/summary.md) identifies actual tests. This does not certify all proposed multi-host fencing, production policy-authority outages, storage-media erasure, full retention UI or production capacity scenarios in this protocol. Unknown dispatched effects remain closed and have no automatic takeover. Preserve the preceding NOT_RUN design gates for those broader paths.

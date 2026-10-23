@@ -1,0 +1,935 @@
+{
+  "schema_version": 1,
+  "max_nodes": 1024,
+  "max_edges": 4096,
+  "max_bindings": 10000,
+  "max_depth": 32,
+  "max_bytes": 1048576,
+  "categories": [
+    "organization",
+    "folder",
+    "account",
+    "usage_scope",
+    "invoice_scope",
+    "billing_account",
+    "resource_scope",
+    "identity_scope",
+    "compute_scope",
+    "storage_scope",
+    "network_scope",
+    "management_scope"
+  ],
+  "axes": [
+    "organization",
+    "resource",
+    "billing",
+    "identity",
+    "placement",
+    "attachment",
+    "management",
+    "focus"
+  ],
+  "providers": {
+    "aws": {
+      "kinds": {
+        "organization": {
+          "category": "organization",
+          "namespace": "global"
+        },
+        "root": {
+          "category": "folder",
+          "namespace": "organization"
+        },
+        "organizational_unit": {
+          "category": "folder",
+          "namespace": "organization"
+        },
+        "account": {
+          "category": "account",
+          "namespace": "global"
+        },
+        "resource": {
+          "category": "resource_scope",
+          "namespace": "account"
+        }
+      },
+      "relations": [
+        {
+          "relation": "member_of",
+          "axis": "organization",
+          "children": [
+            "account"
+          ],
+          "parents": [
+            "organization"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "contained_by",
+          "axis": "organization",
+          "children": [
+            "account",
+            "organizational_unit"
+          ],
+          "parents": [
+            "root",
+            "organizational_unit"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "root_of",
+          "axis": "organization",
+          "children": [
+            "root"
+          ],
+          "parents": [
+            "organization"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "paid_by",
+          "axis": "billing",
+          "children": [
+            "account",
+            "organization"
+          ],
+          "parents": [
+            "account"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "resource_in",
+          "axis": "resource",
+          "children": [
+            "resource"
+          ],
+          "parents": [
+            "account"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "managed_by",
+          "axis": "management",
+          "children": [
+            "organization"
+          ],
+          "parents": [
+            "account"
+          ],
+          "max_parents": 1
+        }
+      ],
+      "roles": {
+        "billing": [
+          "account"
+        ],
+        "usage": [
+          "account"
+        ],
+        "resource": [
+          "resource"
+        ],
+        "identity": []
+      }
+    },
+    "azure": {
+      "kinds": {
+        "entra_tenant": {
+          "category": "identity_scope",
+          "namespace": "global"
+        },
+        "management_group": {
+          "category": "management_scope",
+          "namespace": "directory"
+        },
+        "subscription": {
+          "category": "usage_scope",
+          "namespace": "global"
+        },
+        "resource_group": {
+          "category": "resource_scope",
+          "namespace": "global"
+        },
+        "resource": {
+          "category": "resource_scope",
+          "namespace": "global"
+        },
+        "billing_account": {
+          "category": "billing_account",
+          "namespace": "global"
+        },
+        "billing_profile": {
+          "category": "invoice_scope",
+          "namespace": "billing-account"
+        },
+        "invoice_section": {
+          "category": "invoice_scope",
+          "namespace": "billing-account"
+        },
+        "enrollment": {
+          "category": "invoice_scope",
+          "namespace": "billing-account"
+        },
+        "enrollment_account": {
+          "category": "invoice_scope",
+          "namespace": "billing-account"
+        },
+        "customer": {
+          "category": "account",
+          "namespace": "billing-account"
+        },
+        "department": {
+          "category": "invoice_scope",
+          "namespace": "billing-account"
+        },
+        "csp_customer": {
+          "category": "account",
+          "namespace": "billing-account"
+        }
+      },
+      "relations": [
+        {
+          "relation": "contained_by",
+          "axis": "resource",
+          "children": [
+            "resource"
+          ],
+          "parents": [
+            "resource_group"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "resource_group_of",
+          "axis": "resource",
+          "children": [
+            "resource_group"
+          ],
+          "parents": [
+            "subscription"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "governed_by",
+          "axis": "organization",
+          "children": [
+            "subscription",
+            "management_group"
+          ],
+          "parents": [
+            "management_group"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "directory_of",
+          "axis": "identity",
+          "children": [
+            "subscription",
+            "management_group"
+          ],
+          "parents": [
+            "entra_tenant"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "charged_to",
+          "axis": "billing",
+          "children": [
+            "subscription"
+          ],
+          "parents": [
+            "invoice_section",
+            "billing_profile",
+            "enrollment_account",
+            "customer",
+            "billing_account",
+            "csp_customer"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "invoice_section_of",
+          "axis": "billing",
+          "children": [
+            "invoice_section"
+          ],
+          "parents": [
+            "billing_profile"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "billing_profile_of",
+          "axis": "billing",
+          "children": [
+            "billing_profile"
+          ],
+          "parents": [
+            "billing_account"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "enrollment_of",
+          "axis": "billing",
+          "children": [
+            "enrollment"
+          ],
+          "parents": [
+            "billing_account"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "enrollment_account_of",
+          "axis": "billing",
+          "children": [
+            "enrollment_account"
+          ],
+          "parents": [
+            "enrollment",
+            "department"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "customer_of",
+          "axis": "billing",
+          "children": [
+            "customer",
+            "csp_customer"
+          ],
+          "parents": [
+            "billing_account"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "department_of",
+          "axis": "billing",
+          "children": [
+            "department"
+          ],
+          "parents": [
+            "enrollment",
+            "billing_account"
+          ],
+          "max_parents": 1
+        }
+      ],
+      "roles": {
+        "billing": [
+          "billing_account",
+          "billing_profile",
+          "invoice_section",
+          "enrollment",
+          "enrollment_account",
+          "customer",
+          "department",
+          "csp_customer"
+        ],
+        "usage": [
+          "subscription"
+        ],
+        "resource": [
+          "resource_group",
+          "resource"
+        ],
+        "identity": [
+          "entra_tenant"
+        ]
+      }
+    },
+    "gcp": {
+      "kinds": {
+        "organization": {
+          "category": "organization",
+          "namespace": "global"
+        },
+        "folder": {
+          "category": "folder",
+          "namespace": "global"
+        },
+        "project": {
+          "category": "usage_scope",
+          "namespace": "global"
+        },
+        "billing_account": {
+          "category": "billing_account",
+          "namespace": "global"
+        },
+        "resource": {
+          "category": "resource_scope",
+          "namespace": "project"
+        }
+      },
+      "relations": [
+        {
+          "relation": "contained_by",
+          "axis": "resource",
+          "children": [
+            "project",
+            "folder"
+          ],
+          "parents": [
+            "folder",
+            "organization"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "charged_to",
+          "axis": "billing",
+          "children": [
+            "project"
+          ],
+          "parents": [
+            "billing_account"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "billing_owned_by",
+          "axis": "billing",
+          "children": [
+            "billing_account"
+          ],
+          "parents": [
+            "organization"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "resource_in",
+          "axis": "resource",
+          "children": [
+            "resource"
+          ],
+          "parents": [
+            "project"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "sub_billing_account_of",
+          "axis": "billing",
+          "children": [
+            "billing_account"
+          ],
+          "parents": [
+            "billing_account"
+          ],
+          "max_parents": 1
+        }
+      ],
+      "roles": {
+        "billing": [
+          "billing_account"
+        ],
+        "usage": [
+          "project"
+        ],
+        "resource": [
+          "project",
+          "resource"
+        ],
+        "identity": []
+      }
+    },
+    "oci": {
+      "kinds": {
+        "organization": {
+          "category": "organization",
+          "namespace": "global"
+        },
+        "tenancy": {
+          "category": "account",
+          "namespace": "global"
+        },
+        "compartment": {
+          "category": "resource_scope",
+          "namespace": "tenancy"
+        },
+        "subscription": {
+          "category": "billing_account",
+          "namespace": "global"
+        },
+        "identity_domain": {
+          "category": "identity_scope",
+          "namespace": "tenancy"
+        },
+        "resource": {
+          "category": "resource_scope",
+          "namespace": "tenancy"
+        }
+      },
+      "relations": [
+        {
+          "relation": "member_of",
+          "axis": "organization",
+          "children": [
+            "tenancy"
+          ],
+          "parents": [
+            "organization"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "contained_by",
+          "axis": "resource",
+          "children": [
+            "compartment"
+          ],
+          "parents": [
+            "compartment",
+            "tenancy"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "resource_in",
+          "axis": "resource",
+          "children": [
+            "resource"
+          ],
+          "parents": [
+            "compartment"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "subscribed_to",
+          "axis": "billing",
+          "children": [
+            "tenancy"
+          ],
+          "parents": [
+            "subscription"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "domain_of",
+          "axis": "identity",
+          "children": [
+            "identity_domain"
+          ],
+          "parents": [
+            "tenancy"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "child_tenancy_of",
+          "axis": "organization",
+          "children": [
+            "tenancy"
+          ],
+          "parents": [
+            "tenancy"
+          ],
+          "max_parents": 1
+        }
+      ],
+      "roles": {
+        "billing": [
+          "subscription",
+          "tenancy"
+        ],
+        "usage": [
+          "tenancy",
+          "compartment"
+        ],
+        "resource": [
+          "compartment",
+          "resource"
+        ],
+        "identity": [
+          "identity_domain"
+        ]
+      }
+    },
+    "alibaba": {
+      "kinds": {
+        "resource_directory": {
+          "category": "organization",
+          "namespace": "global"
+        },
+        "folder": {
+          "category": "folder",
+          "namespace": "directory"
+        },
+        "account": {
+          "category": "account",
+          "namespace": "global"
+        },
+        "resource_group": {
+          "category": "resource_scope",
+          "namespace": "account"
+        },
+        "ram_user": {
+          "category": "identity_scope",
+          "namespace": "account"
+        },
+        "resource": {
+          "category": "resource_scope",
+          "namespace": "account"
+        },
+        "ram_role": {
+          "category": "identity_scope",
+          "namespace": "account"
+        },
+        "ram_group": {
+          "category": "identity_scope",
+          "namespace": "account"
+        }
+      },
+      "relations": [
+        {
+          "relation": "member_of",
+          "axis": "organization",
+          "children": [
+            "account",
+            "folder"
+          ],
+          "parents": [
+            "folder",
+            "resource_directory"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "paid_by",
+          "axis": "billing",
+          "children": [
+            "account"
+          ],
+          "parents": [
+            "account"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "resource_group_of",
+          "axis": "resource",
+          "children": [
+            "resource_group"
+          ],
+          "parents": [
+            "account"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "resource_in",
+          "axis": "resource",
+          "children": [
+            "resource"
+          ],
+          "parents": [
+            "resource_group"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "identity_of",
+          "axis": "identity",
+          "children": [
+            "ram_user",
+            "ram_role",
+            "ram_group"
+          ],
+          "parents": [
+            "account"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "managed_by",
+          "axis": "management",
+          "children": [
+            "resource_directory"
+          ],
+          "parents": [
+            "account"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "member_of_identity_group",
+          "axis": "identity",
+          "children": [
+            "ram_user"
+          ],
+          "parents": [
+            "ram_group"
+          ],
+          "max_parents": null
+        }
+      ],
+      "roles": {
+        "billing": [
+          "account"
+        ],
+        "usage": [
+          "account"
+        ],
+        "resource": [
+          "resource_group",
+          "resource"
+        ],
+        "identity": [
+          "ram_user",
+          "ram_role",
+          "ram_group"
+        ]
+      }
+    },
+    "vmware": {
+      "kinds": {
+        "service_instance": {
+          "category": "management_scope",
+          "namespace": "global"
+        },
+        "datacenter": {
+          "category": "resource_scope",
+          "namespace": "service-instance"
+        },
+        "folder": {
+          "category": "folder",
+          "namespace": "service-instance"
+        },
+        "cluster": {
+          "category": "compute_scope",
+          "namespace": "service-instance"
+        },
+        "host": {
+          "category": "compute_scope",
+          "namespace": "service-instance"
+        },
+        "resource_pool": {
+          "category": "compute_scope",
+          "namespace": "service-instance"
+        },
+        "virtual_machine": {
+          "category": "usage_scope",
+          "namespace": "service-instance"
+        },
+        "datastore": {
+          "category": "storage_scope",
+          "namespace": "service-instance"
+        },
+        "network": {
+          "category": "network_scope",
+          "namespace": "service-instance"
+        },
+        "distributed_switch": {
+          "category": "network_scope",
+          "namespace": "service-instance"
+        },
+        "distributed_port_group": {
+          "category": "network_scope",
+          "namespace": "service-instance"
+        },
+        "billing_account": {
+          "category": "billing_account",
+          "namespace": "global"
+        },
+        "compute_resource": {
+          "category": "compute_scope",
+          "namespace": "service-instance"
+        },
+        "vapp": {
+          "category": "compute_scope",
+          "namespace": "service-instance"
+        }
+      },
+      "relations": [
+        {
+          "relation": "inventory_parent",
+          "axis": "resource",
+          "children": [
+            "virtual_machine",
+            "folder",
+            "datacenter",
+            "vapp"
+          ],
+          "parents": [
+            "folder",
+            "datacenter",
+            "service_instance"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "placed_in",
+          "axis": "placement",
+          "children": [
+            "cluster"
+          ],
+          "parents": [
+            "datacenter"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "host_in",
+          "axis": "placement",
+          "children": [
+            "host"
+          ],
+          "parents": [
+            "cluster",
+            "datacenter",
+            "compute_resource"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "pool_in",
+          "axis": "placement",
+          "children": [
+            "resource_pool"
+          ],
+          "parents": [
+            "resource_pool",
+            "cluster",
+            "host",
+            "vapp",
+            "compute_resource"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "runs_on",
+          "axis": "placement",
+          "children": [
+            "virtual_machine"
+          ],
+          "parents": [
+            "host"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "allocated_to",
+          "axis": "placement",
+          "children": [
+            "virtual_machine"
+          ],
+          "parents": [
+            "resource_pool",
+            "vapp"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "uses_datastore",
+          "axis": "attachment",
+          "children": [
+            "virtual_machine"
+          ],
+          "parents": [
+            "datastore"
+          ],
+          "max_parents": null
+        },
+        {
+          "relation": "uses_network",
+          "axis": "attachment",
+          "children": [
+            "virtual_machine"
+          ],
+          "parents": [
+            "network",
+            "distributed_port_group"
+          ],
+          "max_parents": null
+        },
+        {
+          "relation": "switch_of",
+          "axis": "attachment",
+          "children": [
+            "distributed_port_group",
+            "network"
+          ],
+          "parents": [
+            "distributed_switch"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "charged_to",
+          "axis": "billing",
+          "children": [
+            "virtual_machine"
+          ],
+          "parents": [
+            "billing_account"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "compute_resource_in",
+          "axis": "placement",
+          "children": [
+            "compute_resource"
+          ],
+          "parents": [
+            "datacenter"
+          ],
+          "max_parents": 1
+        },
+        {
+          "relation": "vapp_in",
+          "axis": "placement",
+          "children": [
+            "vapp"
+          ],
+          "parents": [
+            "vapp",
+            "resource_pool",
+            "cluster",
+            "host",
+            "compute_resource"
+          ],
+          "max_parents": 1
+        }
+      ],
+      "roles": {
+        "billing": [
+          "billing_account"
+        ],
+        "usage": [
+          "virtual_machine",
+          "host",
+          "cluster",
+          "resource_pool",
+          "compute_resource",
+          "vapp"
+        ],
+        "resource": [
+          "virtual_machine",
+          "host",
+          "cluster",
+          "resource_pool",
+          "datacenter",
+          "datastore",
+          "network",
+          "compute_resource",
+          "vapp"
+        ],
+        "identity": []
+      }
+    }
+  }
+}

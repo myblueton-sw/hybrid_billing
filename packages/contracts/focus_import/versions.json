@@ -1,0 +1,97 @@
+{
+  "versions": {
+    "1.0": {
+      "classification": "exploratory-query-only",
+      "source_timezone": "UTC",
+      "null_tokens": [
+        "",
+        "NULL",
+        "null",
+        "\\N"
+      ],
+      "columns": {
+        "provider": "ProviderName",
+        "service": "ServiceName",
+        "currency": "BillingCurrency",
+        "account": "BillingAccountId",
+        "subaccount": "SubAccountId",
+        "consumed_unit": "ConsumedUnit",
+        "pricing_unit": "PricingUnit",
+        "billing_start": "BillingPeriodStart",
+        "billing_end": "BillingPeriodEnd",
+        "charge_start": "ChargePeriodStart",
+        "charge_end": "ChargePeriodEnd",
+        "billed_cost": "BilledCost",
+        "effective_cost": "EffectiveCost",
+        "list_cost": "ListCost",
+        "contracted_cost": "ContractedCost",
+        "consumed_quantity": "ConsumedQuantity",
+        "pricing_quantity": "PricingQuantity",
+        "list_unit_price": "ListUnitPrice",
+        "contracted_unit_price": "ContractedUnitPrice"
+      }
+    },
+    "1.2": {
+      "classification": "exploratory-query-only",
+      "source_timezone": "UTC",
+      "null_tokens": [
+        "",
+        "NULL",
+        "null",
+        "\\N"
+      ],
+      "columns": {
+        "provider": "ProviderName",
+        "service": "ServiceName",
+        "currency": "BillingCurrency",
+        "account": "BillingAccountId",
+        "subaccount": "SubAccountId",
+        "consumed_unit": "ConsumedUnit",
+        "pricing_unit": "PricingUnit",
+        "billing_start": "BillingPeriodStart",
+        "billing_end": "BillingPeriodEnd",
+        "charge_start": "ChargePeriodStart",
+        "charge_end": "ChargePeriodEnd",
+        "billed_cost": "BilledCost",
+        "effective_cost": "EffectiveCost",
+        "list_cost": "ListCost",
+        "contracted_cost": "ContractedCost",
+        "consumed_quantity": "ConsumedQuantity",
+        "pricing_quantity": "PricingQuantity",
+        "list_unit_price": "ListUnitPrice",
+        "contracted_unit_price": "ContractedUnitPrice"
+      }
+    },
+    "1.3": {
+      "classification": "exploratory-query-only",
+      "source_timezone": "UTC",
+      "null_tokens": [
+        "",
+        "NULL",
+        "null",
+        "\\N"
+      ],
+      "columns": {
+        "provider": "ServiceProviderName",
+        "service": "ServiceName",
+        "currency": "BillingCurrency",
+        "account": "BillingAccountId",
+        "subaccount": "SubAccountId",
+        "consumed_unit": "ConsumedUnit",
+        "pricing_unit": "PricingUnit",
+        "billing_start": "BillingPeriodStart",
+        "billing_end": "BillingPeriodEnd",
+        "charge_start": "ChargePeriodStart",
+        "charge_end": "ChargePeriodEnd",
+        "billed_cost": "BilledCost",
+        "effective_cost": "EffectiveCost",
+        "list_cost": "ListCost",
+        "contracted_cost": "ContractedCost",
+        "consumed_quantity": "ConsumedQuantity",
+        "pricing_quantity": "PricingQuantity",
+        "list_unit_price": "ListUnitPrice",
+        "contracted_unit_price": "ContractedUnitPrice"
+      }
+    }
+  }
+}

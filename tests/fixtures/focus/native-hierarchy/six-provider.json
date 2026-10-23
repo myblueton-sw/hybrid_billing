@@ -1,0 +1,876 @@
+{
+  "schema_version": 1,
+  "revision": 1,
+  "observed_at": "2026-10-23T00:00:00Z",
+  "evidence_class": "synthetic",
+  "evidence_ref": "HB-27 synthetic six-provider hierarchy fixture; not provider inventory",
+  "nodes": [
+    {
+      "key": "aws-org",
+      "provider": "aws",
+      "partition": "aws",
+      "namespace": "global",
+      "kind": "organization",
+      "native_id": "o-syntheticorg01",
+      "label": "Synthetic aws-org",
+      "aliases": []
+    },
+    {
+      "key": "aws-root",
+      "provider": "aws",
+      "partition": "aws",
+      "namespace": "organization:o-syntheticorg01",
+      "kind": "root",
+      "native_id": "r-syntheticroot",
+      "label": "Synthetic aws-root",
+      "aliases": []
+    },
+    {
+      "key": "aws-ou-north",
+      "provider": "aws",
+      "partition": "aws",
+      "namespace": "organization:o-syntheticorg01",
+      "kind": "organizational_unit",
+      "native_id": "ou-synthetic-north",
+      "label": "Synthetic aws-ou-north",
+      "aliases": []
+    },
+    {
+      "key": "aws-ou-foreign",
+      "provider": "aws",
+      "partition": "aws",
+      "namespace": "organization:o-syntheticorg01",
+      "kind": "organizational_unit",
+      "native_id": "ou-synthetic-foreign",
+      "label": "Synthetic aws-ou-foreign",
+      "aliases": []
+    },
+    {
+      "key": "aws-usage-a",
+      "provider": "aws",
+      "partition": "aws",
+      "namespace": "global",
+      "kind": "account",
+      "native_id": "111111111111",
+      "label": "Synthetic aws-usage-a",
+      "aliases": []
+    },
+    {
+      "key": "aws-usage-b",
+      "provider": "aws",
+      "partition": "aws",
+      "namespace": "global",
+      "kind": "account",
+      "native_id": "222222222222",
+      "label": "Synthetic aws-usage-b",
+      "aliases": []
+    },
+    {
+      "key": "aws-foreign",
+      "provider": "aws",
+      "partition": "aws",
+      "namespace": "global",
+      "kind": "account",
+      "native_id": "333333333333",
+      "label": "Synthetic aws-foreign",
+      "aliases": []
+    },
+    {
+      "key": "aws-manager",
+      "provider": "aws",
+      "partition": "aws",
+      "namespace": "global",
+      "kind": "account",
+      "native_id": "444444444444",
+      "label": "Synthetic aws-manager",
+      "aliases": []
+    },
+    {
+      "key": "aws-payer",
+      "provider": "aws",
+      "partition": "aws",
+      "namespace": "global",
+      "kind": "account",
+      "native_id": "999999999999",
+      "label": "Synthetic aws-payer",
+      "aliases": []
+    },
+    {
+      "key": "azure-billing",
+      "provider": "azure",
+      "partition": "azure-public",
+      "namespace": "global",
+      "kind": "billing_account",
+      "native_id": "synthetic-mca-account",
+      "label": "Synthetic azure-billing",
+      "aliases": []
+    },
+    {
+      "key": "azure-profile",
+      "provider": "azure",
+      "partition": "azure-public",
+      "namespace": "billing-account:synthetic-mca-account",
+      "kind": "billing_profile",
+      "native_id": "synthetic-mca-profile",
+      "label": "Synthetic azure-profile",
+      "aliases": []
+    },
+    {
+      "key": "azure-section",
+      "provider": "azure",
+      "partition": "azure-public",
+      "namespace": "billing-account:synthetic-mca-account",
+      "kind": "invoice_section",
+      "native_id": "synthetic-invoice-section",
+      "label": "Synthetic azure-section",
+      "aliases": []
+    },
+    {
+      "key": "azure-directory",
+      "provider": "azure",
+      "partition": "azure-public",
+      "namespace": "global",
+      "kind": "entra_tenant",
+      "native_id": "00000000-0000-0000-0000-000000000010",
+      "label": "Synthetic azure-directory",
+      "aliases": []
+    },
+    {
+      "key": "azure-mg",
+      "provider": "azure",
+      "partition": "azure-public",
+      "namespace": "directory:00000000-0000-0000-0000-000000000010",
+      "kind": "management_group",
+      "native_id": "synthetic-mg",
+      "label": "Synthetic azure-mg",
+      "aliases": []
+    },
+    {
+      "key": "azure-subscription",
+      "provider": "azure",
+      "partition": "azure-public",
+      "namespace": "global",
+      "kind": "subscription",
+      "native_id": "00000000-0000-0000-0000-000000000101",
+      "label": "Synthetic azure-subscription",
+      "aliases": []
+    },
+    {
+      "key": "azure-resource-group",
+      "provider": "azure",
+      "partition": "azure-public",
+      "namespace": "global",
+      "kind": "resource_group",
+      "native_id": "/subscriptions/00000000-0000-0000-0000-000000000101/resourceGroups/synthetic-rg",
+      "label": "Synthetic azure-resource-group",
+      "aliases": []
+    },
+    {
+      "key": "gcp-resource-org",
+      "provider": "gcp",
+      "partition": "google-cloud",
+      "namespace": "global",
+      "kind": "organization",
+      "native_id": "100000000001",
+      "label": "Synthetic gcp-resource-org",
+      "aliases": []
+    },
+    {
+      "key": "gcp-billing-org",
+      "provider": "gcp",
+      "partition": "google-cloud",
+      "namespace": "global",
+      "kind": "organization",
+      "native_id": "100000000002",
+      "label": "Synthetic gcp-billing-org",
+      "aliases": []
+    },
+    {
+      "key": "gcp-folder",
+      "provider": "gcp",
+      "partition": "google-cloud",
+      "namespace": "global",
+      "kind": "folder",
+      "native_id": "200000000001",
+      "label": "Synthetic gcp-folder",
+      "aliases": []
+    },
+    {
+      "key": "gcp-project",
+      "provider": "gcp",
+      "partition": "google-cloud",
+      "namespace": "global",
+      "kind": "project",
+      "native_id": "synthetic-project-a",
+      "label": "Synthetic gcp-project",
+      "aliases": [
+        {
+          "kind": "project_number",
+          "value": "300000000001"
+        },
+        {
+          "kind": "project_id",
+          "value": "synthetic-project-a"
+        }
+      ]
+    },
+    {
+      "key": "gcp-billing",
+      "provider": "gcp",
+      "partition": "google-cloud",
+      "namespace": "global",
+      "kind": "billing_account",
+      "native_id": "AAAAAA-BBBBBB-CCCCCC",
+      "label": "Synthetic gcp-billing",
+      "aliases": []
+    },
+    {
+      "key": "oci-org",
+      "provider": "oci",
+      "partition": "oc1",
+      "namespace": "global",
+      "kind": "organization",
+      "native_id": "ocid1.organization.oc1..syntheticorg",
+      "label": "Synthetic oci-org",
+      "aliases": []
+    },
+    {
+      "key": "oci-tenancy",
+      "provider": "oci",
+      "partition": "oc1",
+      "namespace": "global",
+      "kind": "tenancy",
+      "native_id": "ocid1.tenancy.oc1..synthetictenant",
+      "label": "Synthetic oci-tenancy",
+      "aliases": []
+    },
+    {
+      "key": "oci-compartment",
+      "provider": "oci",
+      "partition": "oc1",
+      "namespace": "tenancy:ocid1.tenancy.oc1..synthetictenant",
+      "kind": "compartment",
+      "native_id": "ocid1.compartment.oc1..syntheticcompartment",
+      "label": "Synthetic oci-compartment",
+      "aliases": []
+    },
+    {
+      "key": "oci-subscription",
+      "provider": "oci",
+      "partition": "oc1",
+      "namespace": "global",
+      "kind": "subscription",
+      "native_id": "ocid1.subscription.oc1..syntheticsubscription",
+      "label": "Synthetic oci-subscription",
+      "aliases": []
+    },
+    {
+      "key": "oci-domain",
+      "provider": "oci",
+      "partition": "oc1",
+      "namespace": "tenancy:ocid1.tenancy.oc1..synthetictenant",
+      "kind": "identity_domain",
+      "native_id": "ocid1.domain.oc1..syntheticidentity",
+      "label": "Synthetic oci-domain",
+      "aliases": []
+    },
+    {
+      "key": "ali-directory",
+      "provider": "alibaba",
+      "partition": "aliyun",
+      "namespace": "global",
+      "kind": "resource_directory",
+      "native_id": "rd-syntheticdirectory",
+      "label": "Synthetic ali-directory",
+      "aliases": []
+    },
+    {
+      "key": "ali-folder",
+      "provider": "alibaba",
+      "partition": "aliyun",
+      "namespace": "directory:rd-syntheticdirectory",
+      "kind": "folder",
+      "native_id": "fd-syntheticfolder",
+      "label": "Synthetic ali-folder",
+      "aliases": []
+    },
+    {
+      "key": "ali-manager",
+      "provider": "alibaba",
+      "partition": "aliyun",
+      "namespace": "global",
+      "kind": "account",
+      "native_id": "100000000001",
+      "label": "Synthetic ali-manager",
+      "aliases": []
+    },
+    {
+      "key": "ali-member",
+      "provider": "alibaba",
+      "partition": "aliyun",
+      "namespace": "global",
+      "kind": "account",
+      "native_id": "100000000002",
+      "label": "Synthetic ali-member",
+      "aliases": []
+    },
+    {
+      "key": "ali-payer",
+      "provider": "alibaba",
+      "partition": "aliyun",
+      "namespace": "global",
+      "kind": "account",
+      "native_id": "100000000003",
+      "label": "Synthetic ali-payer",
+      "aliases": []
+    },
+    {
+      "key": "ali-rg",
+      "provider": "alibaba",
+      "partition": "aliyun",
+      "namespace": "account:100000000002",
+      "kind": "resource_group",
+      "native_id": "rg-synthetic",
+      "label": "Synthetic ali-rg",
+      "aliases": []
+    },
+    {
+      "key": "ali-ram",
+      "provider": "alibaba",
+      "partition": "aliyun",
+      "namespace": "account:100000000002",
+      "kind": "ram_user",
+      "native_id": "synthetic-user",
+      "label": "Synthetic ali-ram",
+      "aliases": []
+    },
+    {
+      "key": "vm-instance",
+      "provider": "vmware",
+      "partition": "vsphere",
+      "namespace": "global",
+      "kind": "service_instance",
+      "native_id": "11111111-2222-3333-4444-555555555555",
+      "label": "Synthetic vm-instance",
+      "aliases": []
+    },
+    {
+      "key": "vm-dc",
+      "provider": "vmware",
+      "partition": "vsphere",
+      "namespace": "service-instance:11111111-2222-3333-4444-555555555555",
+      "kind": "datacenter",
+      "native_id": "datacenter-1",
+      "label": "Synthetic vm-dc",
+      "aliases": []
+    },
+    {
+      "key": "vm-folder",
+      "provider": "vmware",
+      "partition": "vsphere",
+      "namespace": "service-instance:11111111-2222-3333-4444-555555555555",
+      "kind": "folder",
+      "native_id": "group-v3",
+      "label": "Synthetic vm-folder",
+      "aliases": []
+    },
+    {
+      "key": "vm-cluster",
+      "provider": "vmware",
+      "partition": "vsphere",
+      "namespace": "service-instance:11111111-2222-3333-4444-555555555555",
+      "kind": "cluster",
+      "native_id": "domain-c7",
+      "label": "Synthetic vm-cluster",
+      "aliases": []
+    },
+    {
+      "key": "vm-host",
+      "provider": "vmware",
+      "partition": "vsphere",
+      "namespace": "service-instance:11111111-2222-3333-4444-555555555555",
+      "kind": "host",
+      "native_id": "host-21",
+      "label": "Synthetic vm-host",
+      "aliases": []
+    },
+    {
+      "key": "vm-pool",
+      "provider": "vmware",
+      "partition": "vsphere",
+      "namespace": "service-instance:11111111-2222-3333-4444-555555555555",
+      "kind": "resource_pool",
+      "native_id": "resgroup-4",
+      "label": "Synthetic vm-pool",
+      "aliases": []
+    },
+    {
+      "key": "vm-machine",
+      "provider": "vmware",
+      "partition": "vsphere",
+      "namespace": "service-instance:11111111-2222-3333-4444-555555555555",
+      "kind": "virtual_machine",
+      "native_id": "vm-101",
+      "label": "Synthetic vm-machine",
+      "aliases": []
+    },
+    {
+      "key": "vm-datastore-a",
+      "provider": "vmware",
+      "partition": "vsphere",
+      "namespace": "service-instance:11111111-2222-3333-4444-555555555555",
+      "kind": "datastore",
+      "native_id": "datastore-1",
+      "label": "Synthetic vm-datastore-a",
+      "aliases": []
+    },
+    {
+      "key": "vm-datastore-b",
+      "provider": "vmware",
+      "partition": "vsphere",
+      "namespace": "service-instance:11111111-2222-3333-4444-555555555555",
+      "kind": "datastore",
+      "native_id": "datastore-2",
+      "label": "Synthetic vm-datastore-b",
+      "aliases": []
+    },
+    {
+      "key": "vm-network-a",
+      "provider": "vmware",
+      "partition": "vsphere",
+      "namespace": "service-instance:11111111-2222-3333-4444-555555555555",
+      "kind": "network",
+      "native_id": "network-1",
+      "label": "Synthetic vm-network-a",
+      "aliases": []
+    },
+    {
+      "key": "vm-network-b",
+      "provider": "vmware",
+      "partition": "vsphere",
+      "namespace": "service-instance:11111111-2222-3333-4444-555555555555",
+      "kind": "network",
+      "native_id": "network-2",
+      "label": "Synthetic vm-network-b",
+      "aliases": []
+    }
+  ],
+  "edges": [
+    {
+      "child": "aws-root",
+      "parent": "aws-org",
+      "relation": "root_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "aws-ou-north",
+      "parent": "aws-root",
+      "relation": "contained_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "aws-ou-foreign",
+      "parent": "aws-root",
+      "relation": "contained_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "aws-usage-a",
+      "parent": "aws-ou-north",
+      "relation": "contained_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "aws-usage-a",
+      "parent": "aws-payer",
+      "relation": "paid_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "aws-usage-b",
+      "parent": "aws-ou-north",
+      "relation": "contained_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "aws-usage-b",
+      "parent": "aws-payer",
+      "relation": "paid_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "aws-foreign",
+      "parent": "aws-ou-foreign",
+      "relation": "contained_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "aws-foreign",
+      "parent": "aws-payer",
+      "relation": "paid_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "aws-org",
+      "parent": "aws-manager",
+      "relation": "managed_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "azure-profile",
+      "parent": "azure-billing",
+      "relation": "billing_profile_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "azure-section",
+      "parent": "azure-profile",
+      "relation": "invoice_section_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "azure-subscription",
+      "parent": "azure-section",
+      "relation": "charged_to",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "azure-subscription",
+      "parent": "azure-mg",
+      "relation": "governed_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "azure-subscription",
+      "parent": "azure-directory",
+      "relation": "directory_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "azure-mg",
+      "parent": "azure-directory",
+      "relation": "directory_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "azure-resource-group",
+      "parent": "azure-subscription",
+      "relation": "resource_group_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "gcp-project",
+      "parent": "gcp-folder",
+      "relation": "contained_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "gcp-folder",
+      "parent": "gcp-resource-org",
+      "relation": "contained_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "gcp-project",
+      "parent": "gcp-billing",
+      "relation": "charged_to",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "gcp-billing",
+      "parent": "gcp-billing-org",
+      "relation": "billing_owned_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "oci-tenancy",
+      "parent": "oci-org",
+      "relation": "member_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "oci-compartment",
+      "parent": "oci-tenancy",
+      "relation": "contained_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "oci-tenancy",
+      "parent": "oci-subscription",
+      "relation": "subscribed_to",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "oci-domain",
+      "parent": "oci-tenancy",
+      "relation": "domain_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "ali-folder",
+      "parent": "ali-directory",
+      "relation": "member_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "ali-member",
+      "parent": "ali-folder",
+      "relation": "member_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "ali-directory",
+      "parent": "ali-manager",
+      "relation": "managed_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "ali-member",
+      "parent": "ali-payer",
+      "relation": "paid_by",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "ali-rg",
+      "parent": "ali-member",
+      "relation": "resource_group_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "ali-ram",
+      "parent": "ali-member",
+      "relation": "identity_of",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-machine",
+      "parent": "vm-folder",
+      "relation": "inventory_parent",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-folder",
+      "parent": "vm-dc",
+      "relation": "inventory_parent",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-dc",
+      "parent": "vm-instance",
+      "relation": "inventory_parent",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-cluster",
+      "parent": "vm-dc",
+      "relation": "placed_in",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-host",
+      "parent": "vm-cluster",
+      "relation": "host_in",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-pool",
+      "parent": "vm-cluster",
+      "relation": "pool_in",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-machine",
+      "parent": "vm-host",
+      "relation": "runs_on",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-machine",
+      "parent": "vm-pool",
+      "relation": "allocated_to",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-machine",
+      "parent": "vm-datastore-a",
+      "relation": "uses_datastore",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-machine",
+      "parent": "vm-datastore-b",
+      "relation": "uses_datastore",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-machine",
+      "parent": "vm-network-a",
+      "relation": "uses_network",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    },
+    {
+      "child": "vm-machine",
+      "parent": "vm-network-b",
+      "relation": "uses_network",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "bindings": [
+    {
+      "provider": "aws",
+      "account": "synthetic-aws-payer",
+      "subaccount": "synthetic-aws-usage",
+      "tenant_key": "north-a",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z",
+      "roles": {
+        "billing": "aws-payer",
+        "usage": "aws-usage-a"
+      }
+    },
+    {
+      "provider": "aws",
+      "account": "synthetic-aws-payer",
+      "subaccount": "synthetic-aws-usage-b",
+      "tenant_key": "north-b",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z",
+      "roles": {
+        "billing": "aws-payer",
+        "usage": "aws-usage-b"
+      }
+    },
+    {
+      "provider": "aws",
+      "account": "synthetic-aws-payer",
+      "subaccount": "synthetic-aws-foreign",
+      "tenant_key": "foreign",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z",
+      "roles": {
+        "billing": "aws-payer",
+        "usage": "aws-foreign"
+      }
+    },
+    {
+      "provider": "aws",
+      "account": "synthetic-aws-unknown",
+      "subaccount": "synthetic-aws-unknown-usage",
+      "tenant_key": "north-a",
+      "valid_from": null,
+      "valid_to": null,
+      "roles": {
+        "billing": "aws-payer",
+        "usage": "aws-usage-a"
+      }
+    },
+    {
+      "provider": "azure",
+      "account": "synthetic-azure-profile",
+      "subaccount": "synthetic-azure-subscription",
+      "tenant_key": "north-a",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z",
+      "roles": {
+        "billing": "azure-profile",
+        "usage": "azure-subscription",
+        "resource": "azure-resource-group",
+        "identity": "azure-directory"
+      }
+    },
+    {
+      "provider": "gcp",
+      "account": "synthetic-gcp-billing",
+      "subaccount": "synthetic-gcp-project",
+      "tenant_key": "north-a",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z",
+      "roles": {
+        "billing": "gcp-billing",
+        "usage": "gcp-project"
+      }
+    },
+    {
+      "provider": "oci",
+      "account": "synthetic-oci-subscription",
+      "subaccount": "synthetic-oci-compartment",
+      "tenant_key": "north-a",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z",
+      "roles": {
+        "billing": "oci-subscription",
+        "usage": "oci-compartment",
+        "identity": "oci-domain"
+      }
+    },
+    {
+      "provider": "alibaba",
+      "account": "synthetic-alibaba-payer",
+      "subaccount": "synthetic-alibaba-member",
+      "tenant_key": "north-a",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z",
+      "roles": {
+        "billing": "ali-payer",
+        "usage": "ali-member",
+        "resource": "ali-rg",
+        "identity": "ali-ram"
+      }
+    },
+    {
+      "provider": "vmware",
+      "account": "synthetic-vmware-invoice",
+      "subaccount": "vm-101",
+      "tenant_key": "north-a",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "valid_to": "2025-01-01T00:00:00Z",
+      "roles": {
+        "usage": "vm-machine",
+        "resource": "vm-machine"
+      }
+    }
+  ]
+}

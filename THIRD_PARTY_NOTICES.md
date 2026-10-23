@@ -1,0 +1,14 @@
+# Third-party notices
+
+Hybrid Billing's original material uses MIT as described in [LICENSE](LICENSE) and [LICENSING.md](LICENSING.md). Third-party components and data retain their own licenses. This notice records known referenced or locally adapted assets; it is not a complete dependency SBOM or a claim that local companion assets are included in every clone or release.
+
+| Asset | Source and applicable notice | Scope |
+| --- | --- | --- |
+| systematic-debugging skill | [obra/superpowers](https://github.com/obra/superpowers/tree/main/skills/systematic-debugging), MIT; Copyright (c) 2025 Jesse Vincent | Adapted Korean skill in the authorized workspace under `.agents/skills/systematic-debugging/`; original component LICENSE retained. Not added by this licensing change. |
+| property-based-testing skill | [trailofbits/skills](https://github.com/trailofbits/skills/tree/main/plugins/property-based-testing), CC BY-SA 4.0 | Adapted Korean skill under `.agents/skills/property-based-testing/`; original license and attribution retained. This component is not converted to MIT. |
+| Selected inherited HawkEye/TokenMeter rules and role templates | Respective source-file rights and notices; local provenance recorded in `docs/environment-provenance.json` | Existing rights are preserved. This change does not claim completed ownership or redistribution clearance for inherited material. |
+| FOCUS Sample Data | FinOps Open Cost and Usage Specification, a Series of Joint Development Foundation Projects, LLC; [pinned repository revision](https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS-Sample-Data/tree/adbdd17a132984d6e8583c149c236d2199c3f5bc); [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Official public samples downloaded outside Git. Derived reports retain attribution, source hashes and identification of changes. Project-authored synthetic fixtures are identified separately. |
+
+Runtime and development dependencies installed through their package managers keep their component licenses and legal notices. Do not replace, remove or overwrite those notices with the project's root LICENSE. A package name in a planning candidate list does not prove adoption or distribution. Before packaging a release, inventory the components and versions actually shipped and carry their required notices with the corresponding material.
+
+The project MIT decision does not alter existing TokenMeter/HawkEye licenses, FOCUS rights, third-party contributor rights or customer-data rights. Commercial inquiries: [myblueton@gmail.com](mailto:myblueton@gmail.com); contacting the project is optional under MIT.

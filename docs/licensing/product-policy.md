@@ -10,6 +10,8 @@ sources:
 
 # MIT project policy
 
+The owner reaffirmed on 2026-10-25 that this source targets customer-operated, self-hosted installations rather than a project-hosted SaaS offering. Companies and tenants are internal installation boundaries. This deployment description does not amend the standard MIT grant or introduce hosting, subscription, activation, registration or paid-commercial-use restrictions. Customer installation readiness and optional service agreements are separate from source-code permission.
+
 On 2026-10-23 the owner selected the standard MIT License for original Hybrid Billing code and project-authored documentation. The [adoption decision](mit-adoption.md) supersedes the earlier source-available, paid-commercial direction in the v1.16 planning material. The authoritative license grant is [LICENSE](../../LICENSE); the path and third-party boundaries are in [LICENSING.md](../../LICENSING.md).
 
 MIT permits use, copying, modification, publication, distribution, sublicensing and sale, including commercial use, subject to its copyright/permission notice condition and warranty/liability disclaimer. No license fee, registration, prior approval or email inquiry is required by the project for these MIT rights. Preserve the exact license and relevant notices when distributing copies or substantial portions.

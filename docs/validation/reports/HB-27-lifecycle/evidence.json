@@ -1,0 +1,111 @@
+{
+  "ticket": "HB-27",
+  "machine": "mac_mini",
+  "scope": "trusted-single-host-exploratory-local-CLI",
+  "tests": {
+    "run": "20261023T105939Z-12d7cb",
+    "passed": 122,
+    "pure": 77,
+    "actual_engine_integration": 45,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "junit_sha256": "56b62164827dde6481a0d0e8a543dd46f0b5b87782c6bd386d8e59d79cc52758"
+  },
+  "regression_before_fix": {
+    "run": "20261023T100923Z-028cfe",
+    "passed": 10,
+    "failed": 4
+  },
+  "baseline_cli": {
+    "run": "20261023T105442Z-88bde1",
+    "commands": 42,
+    "successful": 42
+  },
+  "periodic_cli": {
+    "run": "20261023T105825Z-e7c355",
+    "commands": 67,
+    "successful": 67,
+    "raw_commands_sha256": "b6e9c1163bb01651bee5f95b1c8a1f97ab17f62004d1f09602647c7039e7132e",
+    "window_rows": {
+      "2024-03": 115,
+      "2024-09": 1007,
+      "2024-10": 1
+    },
+    "current_rows": 1123,
+    "company_rows": 1121,
+    "foreign_rows": 2,
+    "all_original_cells_preserved": true,
+    "monthly_replacement": true,
+    "archive_recall_rearchive": true,
+    "backup_restore": true,
+    "CLI_deletion_target_count": 0,
+    "provider_filters": {
+      "AWS": 942,
+      "Azure": 51,
+      "GCP": 115,
+      "OCI": 7,
+      "VMware": 3,
+      "Alibaba": 3
+    }
+  },
+  "final_restore": {
+    "backup_id": "1697dd80-edf1-4219-9d23-8532cf9de4f1",
+    "sequence": 44,
+    "latest_controls_applied": true,
+    "commands": 1
+  },
+  "restored_readback": {
+    "state": "PASS",
+    "restored_sequence": 44,
+    "backup_id": "1697dd80-edf1-4219-9d23-8532cf9de4f1",
+    "reader_counts": {
+      "reader-north-a": 1112,
+      "reader-north-b": 9,
+      "reader-foreign": 2,
+      "reader-company-north": 1121
+    },
+    "groups_match_pre_test_CLI": true,
+    "all_slices_hot": true,
+    "commands": 5,
+    "artifact_sha256": "3be90054952a7225b843dec40307fcb722990462ca557607f19c65046aa9875e",
+    "test_run": "20261023T105939Z-12d7cb",
+    "tests": 122,
+    "test_xml_sha256": "56b62164827dde6481a0d0e8a543dd46f0b5b87782c6bd386d8e59d79cc52758"
+  },
+  "source_files": {
+    "modules/focus_import/service.py": "2608722f65450b91135939db5c189a77f2a0eaf9d8465ca9b3a54481ffa2ba90",
+    "modules/focus_import/temporal.py": "4bebe569376d9863dd8f69e91b60f31bc967abb7d5784d451842ce72d85f0ebd",
+    "modules/focus_import/warehouse.py": "12db439ffd6e5db420c055187909dc67fef2f13177bc2bdf7ff0096895bbd214",
+    "modules/focus_import/control.py": "26151654f4df9e4dcb0db67358945492986f8f3bc59def50dfa5b439603d0ed8",
+    "modules/focus_import/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "modules/focus_import/model.py": "d69826f7d6b91142b6fc16dbe28148b4b706d2d4c2014e2d2371244eb241bdfd",
+    "modules/focus_import/lifecycle.py": "b900bda5f48d4eee478fb60815beea1f87ea9257e224c4b1ac45e70a724a44e8",
+    "modules/focus_import/authority.py": "7d192c3e205b39cf5dd82e76dfb65c6f171f2a029e880ae4037f1c6b3d7590e5",
+    "modules/focus_import/archive.py": "a710e8fdeedc1eacd0ae6d588b6245302518aa176f7da723c671809ff0ec371f",
+    "modules/focus_import/collection.py": "a10637dacf77a9374489b18d7019adb6d39ae26ab4a6f2108733d2179d4604e9",
+    "modules/focus_import/samples.py": "8cac671d3d4073e16b4757ff79e1f60afb3cd5ce9343de982667f07fdc229b7a",
+    "modules/focus_import/views.py": "f28f0ba4d3961a7ed02869964df28e99b10282f185964b02b4f4692973352a9f",
+    "migrations/focus_import/001-authority.sql": "d564cec02e81b1dbbc99fc3052a89916903d2c867e4383b958240fb1cb970dee",
+    "migrations/focus_import/002-company-views.sql": "ada0e581393bec443c53398e571453ac3ce8a0fac0826c1e634b24dd28249acd",
+    "migrations/focus_import/003-control-checkpoint.sql": "a74120ae6d0183fc41322324c2e193e2444fbdf9ee06e208a1a4fda277adc5d5",
+    "packages/contracts/focus_import/versions.json": "40f559976025068918483b3575988d3ee8b5adbf9cac9a02a402bf757f101719",
+    "tests/focus_import/test_model.py": "c81b7e81120d30c18e6508ae20ab58e238e035af2cdaeb019d6b3fe2103365ca",
+    "tests/focus_import/test_lifecycle.py": "f6b863ea26921a8160c231275cf92d430553ea1ef51dcb8f67fc253b965a9900",
+    "tests/focus_import/conftest.py": "3fb26b5b8fa2412a76c8725ef1f8332b8d66b80de15bc416b45d3a0b7a6fd146",
+    "tests/focus_import/test_temporal.py": "d04b29b04dd032cc898af56582a2786b65aed7b1862a28e4954bb37a80db2ea5",
+    "tests/focus_import/test_company_views.py": "190fae748871b4079c9e3450aada9e7c471c29c24a629233042db2500a6ab9bc",
+    "tests/focus_import/test_integration.py": "bc67d4a479d862da0d4a3db8ffebd8f513e85c098b3cd4532066a4388b31069c",
+    "tools/focus_data.py": "8280942c48b73e11b461ad1fdaf452db6323cb6b507e497c1c2147bf4a97accc",
+    "tools/focus_lifecycle.py": "84f62b1def9f8875777388596f570bbee2da90960adceeace308c31272b0d0c2"
+  },
+  "limits": [
+    "No native cloud connectors or live accounts",
+    "VMware and Alibaba rows explicitly synthetic",
+    "No production authentication, financial acceptance or full FOCUS conformance",
+    "No multi-host unknown-effect takeover or host-disaster certification",
+    "Per-tenant deletion retains explicitly inventoried shared source/control/backup residuals",
+    "Whole-source managed payload cleanup does not certify physical media/WAL erasure or caller-owned external copies",
+    "CLI deletion had zero targets; destructive effects verified in actual engine integration tests"
+  ]
+}

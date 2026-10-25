@@ -1,0 +1,174 @@
+{
+  "ticket": "HB-27",
+  "machine": "mac_mini",
+  "scope": "trusted-local-native-hierarchy-normalization",
+  "tests": {
+    "run": "20261023T124948Z-f01817",
+    "passed": 197,
+    "pure": 141,
+    "actual_integration": 56,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "junit_sha256": "b2b4fbf7c5ee068a43a8042ca658d7cecd2590c9d3bb9b1b61c49d158ab37bbe"
+  },
+  "first_full_run": {
+    "run": "20261023T124351Z-62bf30",
+    "passed": 181,
+    "failed": 1,
+    "failure": "test expected a different label for correctly rejected nonadditive ancestors"
+  },
+  "pre_fix_profile_reproduction": {
+    "state": "FAIL_REPRODUCED",
+    "case": "retained_snapshot_uses_current_profile",
+    "reason": "hierarchy_grouping",
+    "old_group_count": 1
+  },
+  "runtime": {
+    "run": "20261023T130614Z-74babf",
+    "state": "PASS",
+    "ticket": "HB-27",
+    "machine": "mac_mini",
+    "commands": 39,
+    "successful": 39,
+    "test_run": "20261023T124948Z-f01817",
+    "tests": 197,
+    "current_rows": 1123,
+    "billing_scopes": 6,
+    "usage_scopes": 80,
+    "native_parent_inference": false,
+    "profile_kinds": {
+      "alibaba": 8,
+      "aws": 5,
+      "azure": 13,
+      "gcp": 5,
+      "oci": 6,
+      "vmware": 14
+    },
+    "registry_digest": "5f230fc4695dd35c9b8a1103cee98fd6150901d3bbe260a6e26a31760c3ed45a",
+    "normalized_table_counts": {
+      "native_snapshot": 15,
+      "native_node": 268,
+      "native_edge": 2624,
+      "native_binding": 3253,
+      "native_binding_role": 0,
+      "native_head": 15
+    },
+    "normalized_retained_slices": 15,
+    "fraction_checks": 972,
+    "new_backup_id": "120d19db-e114-4c8b-8178-ff16f5b1f58e",
+    "restored_control_sequence": 54,
+    "journal_sequence": 54,
+    "native_roles_in_public_sample": 0
+  },
+  "views": {
+    "reader-north-a": {
+      "rows": 1112,
+      "provider_counts": {
+        "Google Cloud": 115,
+        "AWS": 942,
+        "Microsoft": 51,
+        "VMware": 2,
+        "Alibaba Cloud": 2
+      }
+    },
+    "reader-north-b": {
+      "rows": 9,
+      "provider_counts": {
+        "Oracle": 7,
+        "VMware": 1,
+        "Alibaba Cloud": 1
+      }
+    },
+    "reader-foreign": {
+      "rows": 2,
+      "provider_counts": {
+        "VMware": 1,
+        "Alibaba Cloud": 1
+      }
+    },
+    "reader-company-north": {
+      "rows": 1121,
+      "provider_counts": {
+        "Oracle": 7,
+        "Google Cloud": 115,
+        "AWS": 942,
+        "Microsoft": 51,
+        "VMware": 3,
+        "Alibaba Cloud": 3
+      }
+    }
+  },
+  "artifacts": {
+    "CLI_commands_sha256": "2f7bf5b6d34785d2fc73d60abe4449c3fa235f071589cdf4674f3285672665e1",
+    "summary_sha256": "b425adefd5fab6d806481961567b0e851c99e528a2e9849e0e0de2d0b78e8886",
+    "SQL_readback_sha256": "214872cc40f1b3a64d68f38a7666e69f25214189af541c51638fda1f78bc57cb"
+  },
+  "source_files": {
+    "modules/focus_import/service.py": "61a3c021e183c907068145ceb34ed21f168c238e06189525c67329e3391489a8",
+    "modules/focus_import/temporal.py": "4bebe569376d9863dd8f69e91b60f31bc967abb7d5784d451842ce72d85f0ebd",
+    "modules/focus_import/warehouse.py": "12db439ffd6e5db420c055187909dc67fef2f13177bc2bdf7ff0096895bbd214",
+    "modules/focus_import/hierarchy_admin.py": "6b853a31ffea38c353cde66b4aa6b25a6c43791c23b7afb083c49ce91fcfef7c",
+    "modules/focus_import/control.py": "26151654f4df9e4dcb0db67358945492986f8f3bc59def50dfa5b439603d0ed8",
+    "modules/focus_import/hierarchy_model.py": "be3d2febd93a773742b1c428c830e1d1a58db93a8cb5766c2e792937c5b66a7b",
+    "modules/focus_import/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "modules/focus_import/model.py": "d69826f7d6b91142b6fc16dbe28148b4b706d2d4c2014e2d2371244eb241bdfd",
+    "modules/focus_import/lifecycle.py": "52374968ff4c50f17fbdc114049eb34194abcb1dbbd09cc4279b82a5ee1c6989",
+    "modules/focus_import/authority.py": "2e4b9a8c330b4aa2aadbf6fb0aba7ea358b54163cf62b22e4a5be15b79bd6020",
+    "modules/focus_import/archive.py": "a710e8fdeedc1eacd0ae6d588b6245302518aa176f7da723c671809ff0ec371f",
+    "modules/focus_import/collection.py": "2a3845c86141b884326f7f5d29dce1ada7a29158aa68f930baf649469465197c",
+    "modules/focus_import/hierarchy_store.py": "5f7130a73d7d18f59457c10d6609535d180baf239ccefc9b5a3cdcb49f67bb51",
+    "modules/focus_import/samples.py": "8cac671d3d4073e16b4757ff79e1f60afb3cd5ce9343de982667f07fdc229b7a",
+    "modules/focus_import/views.py": "f884e25963f30a93bbb121135babc1b678db4c427980b55aac7a50b7a02c0421",
+    "migrations/focus_import/001-authority.sql": "d564cec02e81b1dbbc99fc3052a89916903d2c867e4383b958240fb1cb970dee",
+    "migrations/focus_import/002-company-views.sql": "ada0e581393bec443c53398e571453ac3ce8a0fac0826c1e634b24dd28249acd",
+    "migrations/focus_import/004-native-hierarchy.sql": "578874264ce345ee004e850b898f50350cb9b8bcc7fe4ede67fbdbece1534958",
+    "migrations/focus_import/003-control-checkpoint.sql": "a74120ae6d0183fc41322324c2e193e2444fbdf9ee06e208a1a4fda277adc5d5",
+    "packages/contracts/focus_import/versions.json": "40f559976025068918483b3575988d3ee8b5adbf9cac9a02a402bf757f101719",
+    "packages/contracts/focus_import/native_hierarchy.json": "43bcbe5c58628bd9e11ca562dbf93c5577fa7f58e906207f5b02ed8edf32b6df",
+    "tests/focus_import/test_model.py": "c81b7e81120d30c18e6508ae20ab58e238e035af2cdaeb019d6b3fe2103365ca",
+    "tests/focus_import/test_lifecycle.py": "f6b863ea26921a8160c231275cf92d430553ea1ef51dcb8f67fc253b965a9900",
+    "tests/focus_import/conftest.py": "3fb26b5b8fa2412a76c8725ef1f8332b8d66b80de15bc416b45d3a0b7a6fd146",
+    "tests/focus_import/test_temporal.py": "d04b29b04dd032cc898af56582a2786b65aed7b1862a28e4954bb37a80db2ea5",
+    "tests/focus_import/test_company_views.py": "84625e9005f7115d736a3d605c524c8f407bc1fdb27cfd534c2b6d006f243fd5",
+    "tests/focus_import/test_integration.py": "e6cdb763266cafa2d4a56d5cdf73809d3cc52bd0dfb43b11b7aa63a104af6010",
+    "tests/focus_import/test_native_hierarchy.py": "679496af80a6f48cadb06e8f3fd40bf3fa0377fbbfc43d4d9209c501fe9ccc94",
+    "tests/focus_import/test_hierarchy_model.py": "b299162e4a79e003ca184e278e79d5ac9e101dd4c7d1fe1ff44efe1f0f438428",
+    "tests/fixtures/focus/native-hierarchy/six-provider.json": "8845bdb12c483d291d17245921d3a44de45a68a083e499d31f631a8e2754e7f5",
+    "tools/focus_data.py": "4c3316fdde631558c84f120c6534426c026dfbf8d16abe44e7eaaf2abc5b352c",
+    "tools/focus_lifecycle.py": "96544dfaac464ffbb8c870f4eb4ec6f91c01d44f9e134fe3279e197576e4890b"
+  },
+  "limits": [
+    "No live discovery/native API adapters or real accounts",
+    "Full six-provider native graph evidence uses explicitly synthetic metadata",
+    "Public sample has6 observed invoice scopes/80 observed usage scopes, no asserted native parent inventory",
+    "Trusted local operator/approver/reader identities, no production authentication",
+    "Current single-host and10000-row selection bounds remain",
+    "Hierarchy grouping traverses one selected axis; missing/partial is unresolved and multiple additive targets reject"
+  ],
+  "SQL_readback": {
+    "state": "PASS",
+    "queries": {
+      "native_snapshot": "SELECT count(*) AS n FROM hb_focus.native_snapshot",
+      "native_node": "SELECT count(*) AS n FROM hb_focus.native_node",
+      "native_edge": "SELECT count(*) AS n FROM hb_focus.native_edge",
+      "native_binding": "SELECT count(*) AS n FROM hb_focus.native_binding",
+      "native_binding_role": "SELECT count(*) AS n FROM hb_focus.native_binding_role",
+      "native_head": "SELECT count(*) AS n FROM hb_focus.native_head"
+    },
+    "counts": {
+      "native_snapshot": 15,
+      "native_node": 268,
+      "native_edge": 2624,
+      "native_binding": 3253,
+      "native_binding_role": 0,
+      "native_head": 15
+    },
+    "checkpoint": {
+      "installation": "91877088-d92d-4868-937a-1f4c1843dfa8",
+      "sequence": "54",
+      "digest": "64cfa95eb532a6611acbf16f928a0998b01bfd969c372ff1fbf7d8306131ee25"
+    },
+    "mode": "actual-read-only-PG-aggregate"
+  }
+}

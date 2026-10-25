@@ -1,0 +1,148 @@
+{
+  "run": "20261023T063824Z-f67dc9",
+  "ticket": "HB-27",
+  "machine": "mac_mini",
+  "status": "PASS",
+  "input": "unchanged official public1000sample",
+  "source_sha256": "e91e5ac7edf01ed2c9d926f37ef7dc1ae2aae97956fea8da6c9ee488b1c2839e",
+  "source_version": "1.0",
+  "classification": "exploratory-query-only",
+  "batch_id": "18b2fb2c-aab7-4806-a837-6aa5de5217eb",
+  "manifest_digest": "d70b0f7942b5b4e218daa1b4cd8028d374a96aed73b6bbc843379897cb30d643",
+  "duplicate_same_batch": true,
+  "views": {
+    "reader-demo-a": {
+      "row_count": 942,
+      "distinct_source_ordinals": 942,
+      "tenant": {
+        "key": "demo-a",
+        "label": "Synthetic demo-a",
+        "reporting_currency": "USD",
+        "retention_days": 180,
+        "timezone": "Asia/Seoul"
+      },
+      "providers": {
+        "AWS": 942
+      },
+      "cost_controls": {
+        "billed_cost": {
+          "coefficient": 18006638618400000000,
+          "scale": 18,
+          "currency": "USD",
+          "missing": 0
+        },
+        "effective_cost": {
+          "coefficient": 13000000000000000000,
+          "scale": 18,
+          "currency": "USD",
+          "missing": 0
+        },
+        "list_cost": {
+          "coefficient": 18149317640600000000,
+          "scale": 18,
+          "currency": "USD",
+          "missing": 0
+        },
+        "contracted_cost": {
+          "coefficient": 13000000000000000000,
+          "scale": 18,
+          "currency": "USD",
+          "missing": 0
+        }
+      },
+      "NULL_contracted_rows": 0
+    },
+    "reader-demo-b": {
+      "row_count": 58,
+      "distinct_source_ordinals": 58,
+      "tenant": {
+        "key": "demo-b",
+        "label": "Synthetic demo-b",
+        "reporting_currency": "USD",
+        "retention_days": 365,
+        "timezone": "UTC"
+      },
+      "providers": {
+        "Microsoft": 51,
+        "Oracle": 7
+      },
+      "cost_controls": {
+        "billed_cost": {
+          "coefficient": 2513588110590000000,
+          "scale": 18,
+          "currency": "USD",
+          "missing": 0
+        },
+        "effective_cost": {
+          "coefficient": 1976514185860000000,
+          "scale": 18,
+          "currency": "USD",
+          "missing": 0
+        },
+        "list_cost": {
+          "coefficient": 2241588110590000000,
+          "scale": 18,
+          "currency": "USD",
+          "missing": 0
+        },
+        "contracted_cost": {
+          "coefficient": 1976260393260000000,
+          "scale": 18,
+          "currency": "USD",
+          "missing": 7
+        }
+      },
+      "NULL_contracted_rows": 7
+    }
+  },
+  "CLI_exits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "command_count": 18,
+  "source_files": {
+    "modules/focus_import/service.py": "ce22b32008277d2d4bdf5e3a917567039a9ce6e0f5739168460c6c4c11a4ee27",
+    "modules/focus_import/warehouse.py": "cfe1a9e5a74e3b8e5310f12408550aff9422ff28df8cb437fd1729ec6deda05e",
+    "modules/focus_import/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "modules/focus_import/model.py": "899d1eb5e66d20fed656b1a8eed1c5bb2ef19a3a99b3957b59284f660fac6660",
+    "modules/focus_import/authority.py": "777c912856d33884edb9745181467d866fcc972958d8f0185066fef69313595d",
+    "migrations/focus_import/001-authority.sql": "d564cec02e81b1dbbc99fc3052a89916903d2c867e4383b958240fb1cb970dee",
+    "packages/contracts/focus_import/versions.json": "40f559976025068918483b3575988d3ee8b5adbf9cac9a02a402bf757f101719",
+    "tests/focus_import/test_model.py": "c81b7e81120d30c18e6508ae20ab58e238e035af2cdaeb019d6b3fe2103365ca",
+    "tests/focus_import/conftest.py": "7e44ac3e2758ce7bbd3bfb7f585f6a7b998b253d0f0c2fb5140e6573b06c8c35",
+    "tests/focus_import/test_integration.py": "bc67d4a479d862da0d4a3db8ffebd8f513e85c098b3cd4532066a4388b31069c",
+    "tools/focus_data.py": "0f0b6b35c3722b47d42004c605da3839cb6e42b9e3ac018fa957a9c91e0c4792"
+  },
+  "raw_commands_sha256": "496b99caa0e4d71e9a135947eea363072e682f121f128749dbea4d89c698de42",
+  "raw_retention": "local only; contains public demo row detail, never committed; no persistence guarantee",
+  "test_run": "20261023T063643Z-870c19",
+  "tests": 37,
+  "test_xml": {
+    "path": ".local/runs/20261023T063643Z-870c19/tests.xml",
+    "sha256": "434e14cb5bac96ff2319c8bf615dfc7b1584e5d83164e2a9412cccefb8e09dfd"
+  },
+  "tools": {
+    "pytest": "8.4.2",
+    "psycopg": "3.2.10",
+    "clickhouse-connect": "0.9.2",
+    "boto3": "1.40.40"
+  },
+  "source_url": "https://raw.githubusercontent.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS-Sample-Data/adbdd17a132984d6e8583c149c236d2199c3f5bc/FOCUS-1.0/focus_sample.csv",
+  "license": "CC BY 4.0; see summary attribution"
+}

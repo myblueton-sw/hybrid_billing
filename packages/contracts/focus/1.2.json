@@ -1,6 +1,6 @@
 {
   "version": "1.2",
-  "revision": 1,
+  "revision": 3,
   "profile": "synthetic-local-v1",
   "sources": [
     "https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS_Spec/tree/7296e3146fb931ee32b6496fa6e4200e7f4384f7/specification/columns"
@@ -19,10 +19,7 @@
       "source": "SubAccountId",
       "name": "sub_account_id",
       "type": "string",
-      "header": true,
-      "nonnull_when": {
-        "always": true
-      }
+      "header": false
     },
     {
       "source": "BillingCurrency",
@@ -110,7 +107,28 @@
       "header": true,
       "nonnull_when": {
         "always": true
-      }
+      },
+      "enum": [
+        "AI and Machine Learning",
+        "Analytics",
+        "Business Applications",
+        "Compute",
+        "Databases",
+        "Developer Tools",
+        "Multicloud",
+        "Identity",
+        "Integration",
+        "Internet of Things",
+        "Management and Governance",
+        "Media",
+        "Migration",
+        "Mobile",
+        "Networking",
+        "Security",
+        "Storage",
+        "Web",
+        "Other"
+      ]
     },
     {
       "source": "CommitmentDiscountStatus",
@@ -126,7 +144,34 @@
       "source": "SkuPriceId",
       "name": "sku_price_id",
       "type": "string",
-      "header": true
+      "header": true,
+      "null_when": {
+        "eq": [
+          "charge_category",
+          "Tax"
+        ]
+      },
+      "nonnull_when": {
+        "all": [
+          {
+            "in": [
+              "charge_category",
+              [
+                "Usage",
+                "Purchase"
+              ]
+            ]
+          },
+          {
+            "not": {
+              "eq": [
+                "charge_class",
+                "Correction"
+              ]
+            }
+          }
+        ]
+      }
     },
     {
       "source": "ResourceId",

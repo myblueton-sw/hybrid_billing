@@ -28,7 +28,7 @@ The [recurring collection and lifecycle workflow](docs/ops/installation/focus-co
 
 The [native account hierarchy workflow](docs/ops/installation/native-account-hierarchy.md) normalizes six-provider IDs and typed billing/resource/organization/identity relationships, persists tenant-scoped immutable snapshots, and exposes hierarchy-filtered and account-grouped queries without multiplying costs. Approved supplemental metadata cannot broaden tenant access or rewrite typed historical snapshots. Public samples retain explicit unknown native ancestry; separately labelled synthetic metadata validates complete provider-specific shapes.
 
-The [common-ingestion omission audit](docs/reviews/HB-30-focus-completeness/findings.md) identifies remaining independent-source/window identity, expected account/period coverage, consumed-field semantics, quarantine resolution and scheduler fairness work. The bounded local path is implemented; complete common FOCUS collection and installation production readiness are still pending.
+The [common-ingestion omission audit](docs/reviews/HB-30-focus-completeness/findings.md) records the original gaps. Its [remediation](docs/reviews/HB-30-focus-completeness/resolution.md) and [connection runbook](docs/ops/installation/common-focus-connections.md) add independent source/window identity, expected account/calendar coverage, pinned consumed-field semantics, guarded quarantine/replacement and scheduler fairness. These remain bounded installation workflows; full provider conformance, live connectors and installation production readiness require separate evidence.
 
 ## Planned capabilities
 

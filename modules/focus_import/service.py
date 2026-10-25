@@ -66,7 +66,7 @@ class Coordinator:
                 rows=assign(decode(data,mapping),cfg['body'])
             else:
                 from .temporal import validate_delivery
-                rows=validate_delivery(data,version,cfg['body'],delivery)
+                rows=validate_delivery(data,version,cfg['body'],delivery,consumed=bool(getattr(self,'_delivery_semantic',None)))
             batch_id=uuid4()
             slices={};hierarchies={}
             from .hierarchy_model import snapshot
@@ -81,6 +81,11 @@ class Coordinator:
                 'config_digest':cfg['digest'],'numeric_profile':'exact-decimal38-scale18-bounded-absolute-sums','source':gate['source'],
                 'source_revision':revision,'row_count':len(rows),'file_digest':sha,'file_bytes':len(data),'input_format':input_format(data),'slices':slices,
                 'predecessor':str(gate['current_batch']) if gate['current_batch'] else None}
+            semantic=getattr(self,'_delivery_semantic',None)
+            if semantic:
+                from .semantics import validate_rows
+                validate_rows(rows,version,semantic)
+                manifest['semantic_profile']=semantic
             manifest_sha=digest(canonical(manifest).encode())
             a.conn.execute('INSERT INTO hb_focus.batch VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)',(batch_id,gate['source'],revision,sha,cfg['digest'],mapping_sha,Jsonb(manifest),manifest_sha,'pending'))
             for tid,item in slices.items():

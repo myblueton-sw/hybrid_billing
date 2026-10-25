@@ -16,7 +16,7 @@ MAX_BYTES = 8 * 1024 * 1024
 SCALE = 6
 MEASURES = ('billed_cost', 'effective_cost', 'list_cost', 'contracted_cost')
 IDENTIFIER = re.compile(r'[a-z][a-z0-9_]{0,62}\Z')
-NUMBER = re.compile(r'(-?)([0-9]+)(?:\.([0-9]+))?(?:[eE]([+-]?[0-9]+))?\Z')
+NUMBER = re.compile(r'(-?)([0-9]+)(?:\.([0-9]+))?(?:[eE](-?[0-9]+))?\Z')
 
 
 class Rejected(Exception):
@@ -29,6 +29,37 @@ def canonical(value):
 
 def digest(value):
     return hashlib.sha256(value).hexdigest()
+
+
+def key_value(text):
+    if not isinstance(text, str) or len(text) > 65536:
+        raise Rejected('json_value')
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise Rejected('json_value')
+            result[key] = value
+        return result
+    def numeric(text):
+        if len(text) > 128:
+            raise Rejected('json_value')
+        value = Decimal(text)
+        if not value.is_finite() or abs(value.as_tuple().exponent) > 128:
+            raise Rejected('json_value')
+        return value
+    try:
+        value = json.loads(text, object_pairs_hook=unique, parse_float=numeric, parse_int=numeric,
+            parse_constant=lambda _: (_ for _ in ()).throw(Rejected('json_value')))
+    except (ValueError, TypeError, OverflowError, ArithmeticError):
+        raise Rejected('json_value') from None
+    if not isinstance(value, dict) or any(isinstance(v, (list, dict)) for v in value.values()):
+        raise Rejected('json_value')
+    return text
+
+
+def subaccount(value):
+    return None if value in (None, '', '\\N') else value
 
 
 def predicate(rule, row):
@@ -207,7 +238,7 @@ def parse(data, contract, capability):
             if len(rows) >= MAX_ROWS or None in source or any(v is None for v in source.values()):
                 raise Rejected('row_shape_or_limit')
             sources = {f['name']: f['source'] for f in contract.fields}
-            if source.get(sources['billing_account_id']) != capability['account'] or source.get(sources['sub_account_id']) != capability['subaccount']:
+            if source.get(sources['billing_account_id']) != capability['account'] or subaccount(source.get(sources['sub_account_id'])) != capability['subaccount']:
                 raise Rejected('source_scope')
             row = {}
             for field in contract.fields:
@@ -219,11 +250,11 @@ def parse(data, contract, capability):
                     if field['type'] == 'decimal':
                         value = decimal_value(value)
                     elif field['type'] == 'timestamp':
-                        if not re.fullmatch(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,6})?(?:Z|[+-]\d\d:\d\d)', value):
+                        if not re.fullmatch(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,6})?Z', value):
                             raise Rejected('timestamp_format')
                         value = datetime.fromisoformat(value.replace('Z', '+00:00'))
                     elif field['type'] == 'json':
-                        value = canonical(json.loads(value, parse_constant=lambda _: (_ for _ in ()).throw(Rejected('json_value'))))
+                        value = key_value(value)
                     if 'enum' in field and value not in field['enum']:
                         raise Rejected('enum_value')
                 row[field['name']] = value
@@ -231,10 +262,13 @@ def parse(data, contract, capability):
                 value = row[field['name']]
                 if value is not None and field.get('nonnegative') and value < 0:
                     raise Rejected('negative_unit_price')
-                if 'nonnull_when' in field and predicate(field['nonnull_when'], row) and value is None:
+                if field['name'] != 'sku_price_id' and 'nonnull_when' in field and predicate(field['nonnull_when'], row) and value is None:
                     raise Rejected('required_value')
                 if 'null_when' in field and predicate(field['null_when'], row) and value is not None:
                     raise Rejected('inapplicable_value')
+            for field in contract.fields:
+                if field['name'] == 'sku_price_id' and 'nonnull_when' in field and predicate(field['nonnull_when'], row) and row[field['name']] is None:
+                    raise Rejected('required_value')
             for check in contract.entry['checks']:
                 left, right, target = (row[n] for n in check['product'])
                 if left is not None and right is not None and predicate(check['when'], row):
@@ -264,19 +298,20 @@ def admit(data, capability):
         reader = csv.DictReader(io.StringIO(data.decode('utf-8'),newline=''),strict=True)
         headers = reader.fieldnames or []
         mapping = capability['admission_fields']
-        if len(headers) != len(set(headers)) or not set(mapping.values()) <= set(headers):
+        required = {v for k, v in mapping.items() if k != 'subaccount' or capability['subaccount'] is not None}
+        if len(headers) != len(set(headers)) or not required <= set(headers):
             raise Rejected('source_admission')
         count = 0
         for row in reader:
             count += 1
             if count > MAX_ROWS or None in row or any(v is None for v in row.values()):
                 raise Rejected('source_admission')
-            if row[mapping['account']] != capability['account'] or row[mapping['subaccount']] != capability['subaccount']:
+            if row[mapping['account']] != capability['account'] or subaccount(row.get(mapping['subaccount'])) != capability['subaccount']:
                 raise Rejected('source_scope')
             values = {}
             for field in ('billing_start','billing_end','charge_start','charge_end'):
                 text = row[mapping[field]]
-                if len(text)>40 or not re.fullmatch(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,6})?(?:Z|[+-]\d\d:\d\d)',text):
+                if len(text)>40 or not re.fullmatch(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,6})?Z',text):
                     raise Rejected('source_admission')
                 values[field] = datetime.fromisoformat(text.replace('Z','+00:00'))
             if values['billing_start'] != capability['period_start'] or values['billing_end'] != capability['period_end']:

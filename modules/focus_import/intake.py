@@ -1,6 +1,6 @@
 import csv
 import io
-from datetime import datetime
+from datetime import datetime, timezone
 
 from modules.focus_local.contract import Rejected
 
@@ -18,7 +18,7 @@ def input_format(data):
 
 
 def headers(names, mapping):
-    if len(set(names)) != len(names) or not set(mapping['columns'].values()) <= set(names):
+    if len(set(names)) != len(names) or not set(mapping.get('required_columns', mapping['columns'].values())) <= set(names):
         raise Rejected('source_headers')
 
 
@@ -72,7 +72,7 @@ def parquet_sources(data, mapping):
                     source = {}
                     for name, value in record.items():
                         if isinstance(value, datetime):
-                            value = value.isoformat()
+                            value = (value if value.tzinfo else value.replace(tzinfo=timezone.utc)).astimezone(timezone.utc).isoformat().replace('+00:00','Z')
                         elif isinstance(value, bool):
                             value = 'true' if value else 'false'
                         elif value is not None:

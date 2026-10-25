@@ -25,8 +25,14 @@ def run_due(actor,inbox):
         blocked=any(d['state']=='verified' for d in journal.state['deliveries'].values())
     results=[]
     if blocked:return {'collected':[],'registered_waiting':len(pending),'awaiting_publication':True}
-    for path in sorted(p for p in inbox.iterdir() if p.is_file() and p.suffix in ['.csv','.parquet'])[:100]:
-        data=bounded(path);matches=[key for key,sha in pending.items() if sha==digest(data)]
+    paths=[]
+    for index,path in enumerate(inbox.iterdir()):
+        if index>=10000:raise Rejected('inbox_scan_bound')
+        if path.is_file() and path.suffix in ['.csv','.parquet']:paths.append(path)
+    for path in sorted(paths):
+        try:data=bounded(path)
+        except (Rejected,OSError):continue
+        matches=[key for key,sha in pending.items() if sha==digest(data)]
         if matches:
             key=matches[0];results.append(collection.collect(actor,key,data));pending.pop(key)
             break
@@ -37,9 +43,15 @@ def parser():
     p=argparse.ArgumentParser(description='Trusted local FOCUS collection, temporal query and guarded lifecycle')
     sub=p.add_subparsers(dest='command',required=True)
     sub.add_parser('hierarchy-profiles')
+    c=sub.add_parser('connection-register');c.add_argument('--file',type=Path,required=True)
+    for name in ['reopen-plan','replacement-plan']:
+        c=sub.add_parser(name);c.add_argument('--file',type=Path,required=True)
+    c=sub.add_parser('receipt-delete-preview');c.add_argument('--receipt',required=True)
+    c=sub.add_parser('receipt-delete');c.add_argument('--manifest-digest',required=True)
+    c=sub.add_parser('receipt-retention');c.add_argument('--receipt',required=True);c.add_argument('--hold');c.add_argument('--release',action='store_true')
     c=sub.add_parser('hierarchy-plan');c.add_argument('--file',type=Path)
     c=sub.add_parser('hierarchy-apply');c.add_argument('--manifest-digest',required=True)
-    c=sub.add_parser('describe');c.add_argument('--file',type=Path,required=True);c.add_argument('--version',required=True);c.add_argument('--start',required=True);c.add_argument('--end',required=True);c.add_argument('--grain',choices=['day','month'],required=True);c.add_argument('--revision',type=int,required=True);c.add_argument('--complete-through',required=True);c.add_argument('--finalized',action='store_true')
+    c=sub.add_parser('describe');c.add_argument('--file',type=Path,required=True);c.add_argument('--version',required=True);c.add_argument('--start',required=True);c.add_argument('--end',required=True);c.add_argument('--grain',choices=['day','month'],required=True);c.add_argument('--revision',type=int,required=True);c.add_argument('--complete-through',required=True);c.add_argument('--finalized',action='store_true');c.add_argument('--connection');c.add_argument('--zero-domains',type=Path);c.add_argument('--exploratory',action='store_true')
     c=sub.add_parser('activate');c.add_argument('--grain',choices=['day','month'],required=True);c.add_argument('--policies',type=Path,required=True)
     c=sub.add_parser('register');c.add_argument('--file',type=Path,required=True);c.add_argument('--descriptor',type=Path,required=True);c.add_argument('--version',required=True)
     c=sub.add_parser('collect');c.add_argument('--delivery',required=True);c.add_argument('--file',type=Path,required=True)
@@ -67,6 +79,19 @@ def parser():
 
 def execute(a):
     cmd=a.command
+    if cmd=='connection-register':return collection.configure_connection(a.actor,json.loads(bounded(a.file)))
+    if cmd in ['reopen-plan','replacement-plan']:
+        from modules.focus_import.receipts import prepare
+        return prepare(a.actor,'reopen' if cmd=='reopen-plan' else 'replacement',json.loads(bounded(a.file)))
+    if cmd=='receipt-delete-preview':
+        from modules.focus_import.receipts import deletion_plan
+        return deletion_plan(a.actor,a.receipt)
+    if cmd=='receipt-delete':
+        from modules.focus_import.receipts import delete
+        return delete(a.actor,a.manifest_digest)
+    if cmd=='receipt-retention':
+        from modules.focus_import.receipts import retention
+        return retention(a.actor,a.receipt,hold=a.hold,release=a.release)
     if cmd=='hierarchy-profiles':
         from modules.focus_import.hierarchy_model import registry,registry_digest
         return {'profiles':registry(),'registry_digest':registry_digest()}
@@ -79,11 +104,16 @@ def execute(a):
     if cmd=='describe':
         data=bounded(a.file)
         if a.version not in versions():raise Rejected('unsupported_version')
-        try:rows=decode(data,versions()[a.version])
+        try:rows=decode(data,versions()[a.version],conditional=bool(a.connection) and not a.exploratory and a.version!='1.0')
         except Rejected as e:
-            if str(e)!='empty_input':raise
-            rows=[]
-        return {'descriptor':{'window':window(a.start,a.end,a.grain),'revision':a.revision,'file_digest':digest(data),'row_count':len(rows),'domains_digest':domains_digest(rows),'complete_through':a.complete_through,'finalized':a.finalized},'version':a.version,'input_format':input_format(data),'completeness':'operator_assertion_required'}
+            if str(e)=='empty_input':rows=[]
+            elif a.connection:rows=collection.connections.source_scopes(data,versions()[a.version],consumed=not a.exploratory and a.version!='1.0')
+            else:raise
+        descriptor={'window':window(a.start,a.end,a.grain),'revision':a.revision,'file_digest':digest(data),'row_count':len(rows),'domains_digest':domains_digest(rows),'complete_through':a.complete_through,'finalized':a.finalized}
+        if a.connection:
+            descriptor['connection_id']=a.connection
+            descriptor['zero_domains']=json.loads(bounded(a.zero_domains)) if a.zero_domains else []
+        return {'descriptor':descriptor,'version':a.version,'input_format':input_format(data),'completeness':'operator_assertion_required'}
     if cmd=='activate':return lifecycle.activate(a.actor,a.grain,json.loads(a.policies.read_text()))
     if cmd=='register':return collection.register(a.actor,bounded(a.file),a.version,json.loads(a.descriptor.read_text()))
     if cmd=='collect':return collection.collect(a.actor,a.delivery,bounded(a.file))

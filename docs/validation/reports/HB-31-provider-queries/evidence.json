@@ -1,0 +1,4982 @@
+{
+  "base_commit": "8153975c19fe27e32569e5416ef5f9298362ec08",
+  "boundaries": [
+    "No product source changes or runtime resets",
+    "No native provider connection or real invoice supplied",
+    "Exploratory1.0 samples and synthetic1.2/1.3 contracts are separate",
+    "Offline dimension summaries are not native SQL endpoints",
+    "Actual supplier DOUBLE/nested/compressed/multipart transport acceptance is not certified",
+    "No full provider/service catalog conformance claim",
+    "PR merge is not authorized by this new validation task"
+  ],
+  "company_billed_cost_by_currency": {
+    "AWS": [
+      {
+        "billed_cost": "18.006638618400000000",
+        "currency": "USD",
+        "missing": 0,
+        "present": 942
+      }
+    ],
+    "Alibaba Cloud": [
+      {
+        "billed_cost": "1.250000000000000000",
+        "currency": "USD",
+        "missing": 0,
+        "present": 1
+      },
+      {
+        "billed_cost": "11.000000000000000000",
+        "currency": "CNY",
+        "missing": 0,
+        "present": 2
+      }
+    ],
+    "Google Cloud": [
+      {
+        "billed_cost": "3.108526000000000000",
+        "currency": "USD",
+        "missing": 0,
+        "present": 115
+      }
+    ],
+    "Microsoft": [
+      {
+        "billed_cost": "1.976514185860000000",
+        "currency": "USD",
+        "missing": 0,
+        "present": 51
+      }
+    ],
+    "Oracle": [
+      {
+        "billed_cost": "0.537073924730000000",
+        "currency": "USD",
+        "missing": 0,
+        "present": 7
+      }
+    ],
+    "VMware": [
+      {
+        "billed_cost": "2.500000000000000000",
+        "currency": "USD",
+        "missing": 0,
+        "present": 3
+      }
+    ]
+  },
+  "intermediate_attempts": [
+    {
+      "outcome": "FAIL in test oracle: exact-integral conversion signalled Rounded for zero fractional digits; no product change",
+      "run": "HB-31-provider-queries-first"
+    },
+    {
+      "outcome": "FAIL in test oracle: union global ordinal assumption invalid for monthly delivery partitions; source row multiset matched,177 ordinals differed; corrected using retained source digests",
+      "run": "HB-31-provider-queries-second"
+    }
+  ],
+  "machine": "mac_mini",
+  "oracle_unit_tests": {
+    "command": "python3 tests/focus_import/provider_queries/check_oracle.py",
+    "status": "PASS",
+    "tests": 2
+  },
+  "profile_artifact_sha256": "0282977fbdc679ef825f430bc0494cf7ad223d91621548772ef09c4eb1a719e7",
+  "profile_probes": {
+    "case_count": 16,
+    "cases": [
+      {
+        "name": "profile:1.2:AWS",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "profile:1.2:Microsoft",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "profile:1.2:Google Cloud",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "profile:1.2:Oracle",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "profile:1.2:Alibaba Cloud",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "profile:1.2:VMware",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "profile:1.3:AWS",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "profile:1.3:Microsoft",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "profile:1.3:Google Cloud",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "profile:1.3:Oracle",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "profile:1.3:Alibaba Cloud",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "profile:1.3:VMware",
+        "source": "synthetic-contract-fixture",
+        "status": "PASS"
+      },
+      {
+        "name": "lowercase_charge_category_not_relabelled:1.2",
+        "outcome": "semantic_enum_value",
+        "source": "synthetic reproduction of observed sample lowercase value",
+        "status": "PASS"
+      },
+      {
+        "name": "lowercase_charge_category_not_relabelled:1.3",
+        "outcome": "semantic_enum_value",
+        "source": "synthetic reproduction of observed sample lowercase value",
+        "status": "PASS"
+      },
+      {
+        "compatibility_gap": "Documented supplier DOUBLE columns require an explicitly reviewed exact-value adapter; native acceptance is not verified.",
+        "name": "supplier_style_double_parquet",
+        "outcome": "parquet_type",
+        "source": "synthetic representative physical schema, not an actual AWS export",
+        "status": "PASS"
+      },
+      {
+        "compatibility_gap": "Nested BigQuery extensions need an explicit transport/flattening contract; no native BigQuery adapter is certified.",
+        "name": "supplier_style_nested_extension",
+        "outcome": "parquet_type",
+        "source": "synthetic representative nested extension, not an actual GCP export",
+        "status": "PASS"
+      }
+    ],
+    "pyarrow_version": "21.0.0",
+    "runner_sha256": "0f6ee8231ca320d67779e52430a97984dffcd2889128514a0b65830bb42c37f6",
+    "scope": "Pure consumed-profile and physical-type probes; not provider conformance or storage/query integration",
+    "status": "PASS"
+  },
+  "query": {
+    "case_count": 66,
+    "cases": [
+      {
+        "grain": "month",
+        "groups_digest": "c9073f65d2a20061a0e40aa657278f3239a3599c19e26cd77da0c82bc9df081c",
+        "name": "company_union",
+        "pages": 12,
+        "rows": 1121,
+        "snapshot": "d562edb1681af6916f79695fd7160be7c95a6be5fe594c45b7c673ed390bfbc6",
+        "source_values_digest": "681ec9bc44e50936119669de62f788cef572fc6b680a76c7ca07d0b056d1842d",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "25236bf62cb9db82e3c80f98463d9f41d74afc63254ccfc6303569d11baed7a8",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 9
+          },
+          "resource_sku": {
+            "digest": "6b7340eabefa0dbfac6c18f0c35380b05537d6e6d717e39f2eb0edfd0e250764",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 981
+          },
+          "service_billing_account": {
+            "digest": "0781d8ffe48fe9aa1e792a701c98bd5dfac6f24c08ac832de7232b363633971c",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 41
+          },
+          "service_category": {
+            "digest": "5fb95fc7fcfcd8af946c6a23394262f676399d2976728513c2320cb5b1b16a15",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 20
+          },
+          "service_subaccount": {
+            "digest": "4483883d00711402351666f993d6b6c9a73b075f9e8be5192686b700be4b7d00",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 229
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "3ac54c0c3fa2f9d24082c84caa7a3d5d19f5adc9722756bad12193759baff69c",
+        "name": "tenant_a",
+        "pages": 12,
+        "rows": 1112,
+        "snapshot": "226db48300e35587d1a633f19a7b87b46e717a1c193868d0e6772229d3ec27e9",
+        "source_values_digest": "38f85887022b8ccee0be5290ec38bb617c7a2cd8d68c556fcb66d1a8b43d8ee8",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "3b6195c144df2b48c67929d2af4f28b1be298c760397be0892e98009a18245d2",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 7
+          },
+          "resource_sku": {
+            "digest": "3e1579f39113683abfa21be71b61f69650e5984d25bd849cfc0a1c3950ace6e2",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 972
+          },
+          "service_billing_account": {
+            "digest": "f2beeb0277d60bc3a843cd4e4676f3165265f8acd6fd2bac0a4238e8dcf85274",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 37
+          },
+          "service_category": {
+            "digest": "3dbf463cd4edbe0fa96f6945fc3e575e54c34fe28e62580471ae18ce5c8c4801",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 17
+          },
+          "service_subaccount": {
+            "digest": "1cad3e23a3b0212e3607efebda887fde80ebfc4f0c9166380240a1211cc0dc06",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 222
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "91f4ddbef87d45b58933119804cff4644593c73a3c4f145041a082b243aa1b46",
+        "name": "tenant_b",
+        "pages": 1,
+        "rows": 9,
+        "snapshot": "f4dba62522737cb20e242c97f6fd6e6ad654ab0f38e7db1f47f2896625c3c834",
+        "source_values_digest": "d2db1fea742c0f1a41a6c704dc4613e98350cde0a7876dc218fd21402f3fcab2",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "fe4f273e469dfcc2ab59505026b1bf5ec958ab6cafa1a518b8203b1354e21ad8",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 4
+          },
+          "resource_sku": {
+            "digest": "cb966fa5e06d345eff269a3ba0e83c49dfa9303b2b08503fa431e92e447b4c87",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 9
+          },
+          "service_billing_account": {
+            "digest": "97bed3cd61859ed3a19164825544cfe6a60829924aa066817072d8d5913866f0",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 6
+          },
+          "service_category": {
+            "digest": "48408d4d3b2a85660e7910cb667c93f581850bc1a444f93c5102dfb22410b3d1",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 5
+          },
+          "service_subaccount": {
+            "digest": "6a5d279dc26ccf3b9b39754b04aeb11516ea5ae78c218acbfbfd7d50ceea23b5",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 7
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "5573e3bc6721d979125ffd5e5fbe2c9a8d8f94589aee5933add47c4c7a30b589",
+        "name": "foreign_only",
+        "pages": 1,
+        "rows": 2,
+        "snapshot": "e0fbb81d92c111f365654a986d5e83dcdad24e53b246c16d2d672f9ecd75a1a6",
+        "source_values_digest": "db113b9b140d20abfb9e1155c4468a50844c56866b1863e62b0c05c3e8f42ea2",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "1a7ebcb64edc572796d5431480bba2e117e1af1ad15ec722983788dfe5a84992",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "3f991dae4d41cba732d60278d9adac4c3ab4d88721de27268febbcc68a60c87e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 2
+          },
+          "service_billing_account": {
+            "digest": "c46e6a6ffac2b43fe3c14683d9558e7f2e3e10bd1d3e48aa4684e7e333d87559",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 2
+          },
+          "service_category": {
+            "digest": "e9f1e4923c0b896928905356ce969666f9b8e0dce5d8e20482bfaa0affe9767f",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 2
+          },
+          "service_subaccount": {
+            "digest": "ab44f051a7f3202b9e0253cf3754c8e63dfc4f53d8d562e5a3f86cd970a12b82",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 2
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "5a9bd0c5821fab33954da568f47952ab9bb41849e0b3a900cc44544aed373ce3",
+        "name": "provider:AWS",
+        "pages": 13,
+        "rows": 942,
+        "snapshot": "eb1ff27a11016252d2020e9d3dab8e46f3454600dfa204502d9f76163540a496",
+        "source_values_digest": "ffb7259d305155f67e0bad72ad4caa098ad57009a6a9a360658267afe0871907",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "0671c22529eb8fe550cc7bbb210fe303ae7dce7cc9ef095d6eeb52b95141f4fa",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "ab61a22c9a302e5eaae673deba5c59fbfeb797ccc8dfc2648b433197d0feaab1",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 906
+          },
+          "service_billing_account": {
+            "digest": "f6421c030bb23c4af58d2f84786ac1df7d7b9bf766fa66fea63a226db62810b4",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 24
+          },
+          "service_category": {
+            "digest": "15e62fa89dbffb79b3475706b89b03aba9b48e39ab2da4db306f9aebb5c390a7",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 9
+          },
+          "service_subaccount": {
+            "digest": "012931d6341b0a864682bd673e951e1f1e97627c2462ebeb4047eeee21141a7d",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 206
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "0549cd0edc82611cb08705350e94b8b33ae1308178224d15903f40baca77cdb1",
+        "name": "service:AWS:AWS CloudTrail",
+        "pages": 1,
+        "rows": 8,
+        "snapshot": "520f8fd736c509de30f4d87777275b744bdcc11caba57fe7791966eb415a6785",
+        "source_values_digest": "24a871b3aea5223a08c7dede7586586bb70de2ce25fd831efc1d876b22a452bf",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "eb5a8767bc4a8fa0ea36102a4d3a0ad39ade386ff6f1f3001c7662a28ac77566",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "9ffe8725ce23b20b63662f99e9c6666ac941ba2c4f9f2437d0fa686cfd837563",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 8
+          },
+          "service_billing_account": {
+            "digest": "ec52fba201eb3109cbbf2b3c55e41eeff75a43e0ba306a33d15ec870efd14f33",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "451357dc9eb4197a4a9d54496247dc1046105b005cf9dd7c4758aa32ea07538b",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "00c1e37cb8bd73a419f0d7f47798fb2659047f0b2045d9171dd573e75ae8ccc7",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 7
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "0a4947ea4cf4f519ff22a38c9b2d566d639224430a0f8ff28bdbb0c0dcc31f7c",
+        "name": "service:AWS:AWS Key Management Service",
+        "pages": 1,
+        "rows": 4,
+        "snapshot": "f44512f1844ed4abd3107782f12a399c62674c77d85e76dd7aeaf8c0baa0c568",
+        "source_values_digest": "f9f8c742194a073ae64fe1fc756cc46ad4621d56e3880c4c3c199304f90a319e",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "03f0e4aa951aef9a8bf6cd2c42ba3f926a21c715ffcb2a191cc38a2c5f3c6822",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "8acd33b764893339e801ed3dade733adb03a98c962676e618cdbafaaf5a6ba84",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 4
+          },
+          "service_billing_account": {
+            "digest": "e634d13a56768a2c2986b9b04b90321e30e0babd705e1b76ee9502d1f071a24c",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "d2e9b417e98caa5ae83bddaaede4490bcccc0dbbff7dc62adfc598d434713fd5",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "20167d288e93e7263626f28bb1cc1d98e4d4ffba06ef56a2c4fc659b3bf840d6",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 4
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "401559a5e0e48ac09dbe2bd46748cd202e02bc5b4eae6cfb1b6855c382da8dea",
+        "name": "service:AWS:AWS Lambda",
+        "pages": 1,
+        "rows": 9,
+        "snapshot": "3841e9e428c00341ef16262cc263063916abf9a4c72110d7b02895c7ac98c32f",
+        "source_values_digest": "a2abebfc877b30e7127181fcd201e3efac5a431fa6024b9017d344d0b11a8aae",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "226893f953def81d2cd41dcbe9f7a30085a622d413e5f2f05923c9d0ae12914a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "7785e2487c5f6f97eeaca193b30839bfc19a1520c1ea8763cea8cf2de100d9d6",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 9
+          },
+          "service_billing_account": {
+            "digest": "33a1c0ce24da1256a57171779ae01b52a3fa475b657a258988deed6b94e6a692",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "88b61718088762fce127a6bad27dc9cd9a32e2a80211d79617bf913fc1b76080",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "2c1e1ef2071a6178aa740cae1ecbc35ae23883b2a8b517d04279691b5d20ab5a",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 4
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "b8928d81f337d71a74e23360fee5cc3e4f882e4dd0f89fa99205a64b588ebb68",
+        "name": "service:AWS:AWS Security Hub",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "403983790a173c20945921e82995dad1e62350c16d1530990d2cc5e9509157a4",
+        "source_values_digest": "ed93bac5db1d4928478b1524f4c2a0725b9f6b91f29b05990c30cfb337dfad03",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "277be6c142ae56732d469e7daf4160e34a8e0e12816c023ff37f62739b6b4f12",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "99333b4fa15b3edc869d839cf94fea98d0ed75184cf7f92bceed94364ac74007",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "d2ebea50a87ab968ed11dc1ffd433a18a8f28f83c9512afda927fa1b045fa175",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "8b7fed291d1676b2a6f46d74f4a46a962068a1dc88ce4c3cadd3871932244c57",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "52e3b8f879731580a97062980597243aed64ea43d49d4aa88aad907cf0253e43",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "561060a0581d162b7d546e595ae3cb9d3a8b374b32807e5036468636a7a9776e",
+        "name": "service:AWS:AWS Step Functions",
+        "pages": 1,
+        "rows": 4,
+        "snapshot": "679d127c8b8f395f451b2d76635b9da910ccf38dc5cf728b4a1f7e908a3a90fe",
+        "source_values_digest": "db5dff2412948fa6c9431203e596848956d5996c0a775338f81fc9f50ab06af5",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "a8a43e258024bc8aff3b880e3d0ff3ca9e9772a8ccf1814da5a1db0e5cafb1e6",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "7cc0c86539e754b1006c1a7926ee135d5a7101c667ae07c849f99baf4e755dda",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 4
+          },
+          "service_billing_account": {
+            "digest": "b8a51b11929b865fae3a4d38896741388cb0ec9db06d0a8683959c9ea7bcb1f3",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "ccf649725752777dbe9f0ddc0b5748d8219600b00b9f66d769f8d60a34ec5d77",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "60ab54796b9055e138c917705cb22623e289caf6c75dfe7d0d62c395f5ee18e4",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "5510859ef7b5b97cb4b452db4271bcc3b5470aa5d7e6692397f9dfc2a0fd4d72",
+        "name": "service:AWS:AWS Systems Manager",
+        "pages": 1,
+        "rows": 8,
+        "snapshot": "92892f283c721edb1a417d67092c2dd0fe174f707484544888e397924b888d96",
+        "source_values_digest": "66764dffd96d6c9843a01637283aa0f5d417cc0638f6515e4f24827376eb7d36",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "d184989ca8a9210764cfc24d66e3e8967509e0ddab264ed15386a4f741a953c2",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "508da352428a20a3bf5d12b80dcd95cd28de8cde8f19c76ed8eefa4e3a389772",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "3232a38ee1a40db21ec01f99520de6c2f95b29875b3d03a5ccf425b3ce49f181",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "f0d9a264fbe83630607e9244da262de6a4f0ac1d656f7278dfc5d86af22467dc",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "734b0f1ccf47c2d4706980f0db533b070ba2b33cd8846a4fdc87790a125ed789",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "b1415fb9fa4b1ec1c5a781ee65f1c528431896ee3400246109d88e7d5668e2c7",
+        "name": "service:AWS:AWS WAF",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "40730b984b231eb3b5219d21c43b5ef27e523b8bfba5bae95f0f1eb3fd0ba046",
+        "source_values_digest": "46a02dd7e30b5a3d098f32515e80d5206a4ef35ece14c225a58c263cfaf55f45",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "23a80e2aeb7e4625f42c552932c586665dd8869f188355adcc3bd934b9d4476a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "1f69e0527c71aaa172bd266454d0ba46762b9ae39c1054e50ea4cab0e8d303a6",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "7899020d7945faa7f37964134c259c6810266a5cc033a2889f12e6a62af215a3",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "1430d5723f3c8571715b4ff54663d13f4c305f002919e8fedf6371ade65ed7e2",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "8ea76236e6b5c1e89888152f7e94dae870a1c448dc14a645ebdb27108882d541",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "bfac54d26dca34836c9b0e29e22018bd2e8024c2596795fee1e13aa6b764e02b",
+        "name": "service:AWS:Amazon API Gateway",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "a992e9d503cc739db868cb0663e8002821d92748ac85792689325b21f84bf19e",
+        "source_values_digest": "73ba2f61b90474f068f471e78ce630e68afe2c3411e890b1803781f262c10cc7",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "c47065e5df0b159fbd3a3e5955496b5f0d28bf8a474d2611aa4185eca37ef40d",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "c5b65d8af7a3d1de4561bcc679dc9c7344af56bdbe03a6d20f886d62cf131062",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "928771fe6a2d1f57c9d4391e09d47a3ceb430af80fdc988aec657fb9862b1d61",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "4dcbba814796617d21e8df5cf3832b0d30540a36c00a38db1d5d9e05f5afab0f",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "e17cbe5050e92d696fcc9851ee69fe31880160c5c6a30a815c5aa2253ef37638",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "24cccf4607c2ec0405e858fd7e24a107af98eda9d5e859bb4996aa5f57fc6d1a",
+        "name": "service:AWS:Amazon CloudFront",
+        "pages": 1,
+        "rows": 11,
+        "snapshot": "b0b5cb10220d35bee1e34f878e182896382fab225ed8dc3e93423a23a63f3a7f",
+        "source_values_digest": "c1d404a9689227ec686ef8328a726fb613514afeef2aba0e064272e27d41c867",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "3d6dda0ad177c3abca4e0c513fbe4eecfd8492cc93e1a4867c8e90d32f5eb285",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "10360ea089f7d576957f261674922e32ca89ed2425b56ac80abba6a340871c99",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 11
+          },
+          "service_billing_account": {
+            "digest": "fbfc9229b59f87544eb5d0e3d69ada3f8b718daf139dd6798ebc9809d43875c5",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "4f562e4a553db3866acac574fe90094fd39148728b82701461075b92d6a6686a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "6aa13dac35d1c7ee1ef38ec07b30f2c8ed63b9501d68114675e792ef3a7115d8",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 6
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "68ff6a34e55f0a702b0d54278da4bbbc0b0ce4c2f6fa718796ea481b3200e844",
+        "name": "service:AWS:Amazon DynamoDB",
+        "pages": 1,
+        "rows": 7,
+        "snapshot": "32fb1d87790cbd7b8ded9d4aead034862b0d7981e0a4fc5bb55db5d9bf786266",
+        "source_values_digest": "aa299c2409e58e0fe461b8936fa59735a3aaf0104e6abaeb4439d4c187fda217",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "100ec5c0802485ae14ca646f4c7113868aecd97e122e9b13d3a34be8415ea7dd",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "70c8aca741c774cd890b1d6406dceaf7931a1f219a44b2551208340694202eab",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 7
+          },
+          "service_billing_account": {
+            "digest": "c37a3f1dd67d387f5b2132a8a98794a62ecf000c8648a5f4055e9e85a6351f0d",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "8193c7d01bab2f651feee76d845fcf27dff14adb65dd3462bfe855e67c2e4ac9",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "6d70054dddeec91c0978daba9e7d6c04f266d447aa6b39549759f6016410d571",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 5
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "7908224a0f5788263cce03a80f136e3fee464946993aa223cba0aae73d64f986",
+        "name": "service:AWS:Amazon EC2 Container Registry (ECR)",
+        "pages": 1,
+        "rows": 5,
+        "snapshot": "ba5fdca37e8d0cb16a18399880494a23bbdb2362fb83f72f4995a93adef01e3b",
+        "source_values_digest": "c6a19d933b56fd3a9ea78b8024c909fba14868127707e346df8d804cc0da79b2",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "d070b7cff8391a7d3e76b91e8491c1468a9e0adfe73922d6e5a99fa14e536332",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "f36f0debd9f6d46cd33aec2350fdcae4c53af29a35c12a0f5622c421f99eb1d9",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 5
+          },
+          "service_billing_account": {
+            "digest": "34cbb2041f8ae1b994892b2cc0c35c9295f144371fde3b1efec0510a58036d94",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "e7456a8cdfcb8e9c86ac45ad35e0602b0ccb8ede7fc12104df52426d25f67d43",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "008bc3385cb1b86bab736534a3588e07db2236487c3b115371ef765be490c1fd",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 4
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "b3de2491665ac54ec65a5fbb519c0b7317daf3c9b3eeb78fe0ad836ada1a4818",
+        "name": "service:AWS:Amazon Elastic Compute Cloud",
+        "pages": 6,
+        "rows": 554,
+        "snapshot": "8be5728a992b4005e3e40541ed658e5d30413a0eba6cd8393b4b66991439f8f0",
+        "source_values_digest": "63bb31ea9127e4adf61d38f1f7ec9813a5e70ef894bbb8165e67689b41e0491e",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "bbf93398a5bd93b91f47a6a0736e333637f18b46cdb759e72dac51a20b2051c8",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "89bbb0cff9abd75e44757b0a857bb16e356edaff00f4e27c60290b939b060802",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 543
+          },
+          "service_billing_account": {
+            "digest": "36f385f3c3685c419c0124d2ca207bff993450e75b86d8415d9601f377efdea1",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "ecbf6e9e593c9f17b5b67d22994a66e189ffca8de9251110557a3bf0afda4e11",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 2
+          },
+          "service_subaccount": {
+            "digest": "c2dc3da2a4a4e6b3607be5fa1bf95075d25471ec5ba08c31c8f987e4009e9e10",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 56
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "f0cd97af72d6fe7c2664d15ef968cfa6b1811e4cff2b726003650d232c1dfc98",
+        "name": "service:AWS:Amazon Elastic Container Service",
+        "pages": 1,
+        "rows": 40,
+        "snapshot": "f1a06baac0e6d223a8fa8bd19327cd2503b3fb9486991391d85587ed9a420761",
+        "source_values_digest": "7ad9e214de7df2f0b6f3448bcd656b0bce33d24363268f10b6a9e49294e6c6e1",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "d8d491f226f77a6fdb1a04855b7ae446a832dc16e319719e7fb2722706d64dfc",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "cb93e24e09276b074184a2ded23a6c2d7f5a6e3ea6e26ba9137dbbf66452063d",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 40
+          },
+          "service_billing_account": {
+            "digest": "6cbf451a08dbdebd0f3eafcfbab17b15feacb3aeb30a7e970e0985c0260e8853",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "06268bb285e09eb63502529de691e2d6f4b638df02ec7a559ce94097c65ab6c7",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "f14823fc0486b5b4a5f1514c8e5559e9490b67d16fef9743c127b524319bda4d",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 5
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "efde9136212549692800750ad780543c4cffa97531deea7c9600884c3bae8037",
+        "name": "service:AWS:Amazon Elastic Container Service for Kubernetes",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "882729515b990dfc3ee6838e285ee33defca097a4012ea7d6fc1690b0fce9a10",
+        "source_values_digest": "1e9c5e6194b0b93439830e665e2b8c5b6eb9977df00cc6b9892e3744d37bd60c",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "fcb4f0210a0090dbc5865d0dd268f1dd9c6cf6666ba156d6546011a98556c141",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "52ac346a488a0eb2ca3318085901e80e76cc199de1bd4e5ef2b09149f1956f19",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "30939653cd6ce2003f96c7ae7606813a61065c0e596273a6dfce59f0e4d8cf36",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "d499d75fe0b9fa5d2784d1f8ca0e861fa1c501421ad7a9a5082a3cce0d0b515e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "32e3030ea28f2b9bc651c02c4dc2997e8c11d7b397e2f79d131928a84bd93340",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "c5123af50f6a8e256c95afb03841f65c098653089bfbfe36acea825200f87be5",
+        "name": "service:AWS:Amazon Elastic File System",
+        "pages": 1,
+        "rows": 2,
+        "snapshot": "37cfb49d32711580d4218613fc0ef4db83fdcdab611865922f3fdced1b5181fb",
+        "source_values_digest": "2e8ff66bff07de3ffd8e7f11e422fe7bf447cb878896fbd8867e5fbb676dbe35",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "a98641bf5596f96485bfdc9de98a2c0107aff3a76489c42123e8733805331a06",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "9ab7c5c295245dce9d6c34069cfa85ad6f97418a9c3b715fccaf9d1fed2990af",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 2
+          },
+          "service_billing_account": {
+            "digest": "f4a2f5f81be1f2223fe6b9dc938fe925ed4ba511934a21350dfdc57bb02dc86a",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "a9eecaf392e03274337dbc21f7fd1d4e906a91ea1839d765d039db55c9976e94",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "60c391502d2fa077347b42dac137781632381c83103935af4faa682114ceaa6a",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "23b35056dfd575a081adae00d2e9e5ea6468260f693bf436057f279ffb428fad",
+        "name": "service:AWS:Amazon Relational Database Service",
+        "pages": 1,
+        "rows": 13,
+        "snapshot": "945b714f874e6fe6983754c202099d194d6bcce1cbc696ec15d7f6e80263b7c9",
+        "source_values_digest": "924fb151f94ff5f00df3075c08fc1d0688a5826975b30749a33d49019b1f74fd",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "1181f344cf22b01f4f28c23fce2665bc9453473358cf074a1222ee646996297a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "d813c79b1e12b2e716dc177a8b514d95e057ce9002f0780a3a9e4808d273289d",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 12
+          },
+          "service_billing_account": {
+            "digest": "8196713224ae9667e4afdf9d7936b67df459cc475eb23488fe2b42414c619fa5",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "d4374bf78a0588034014e4abac62314d8165c4ffffee65cd2a21f3c68135390e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "0884584062dc5fc5410ca30723603f81e91c30791bc18900ac2da09797b37b9e",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 11
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "8a8924f17ae902f66dc32f7c587e3b68e638671561d2ca53b8d96e2e31bb1fdd",
+        "name": "service:AWS:Amazon Route 53",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "1b1e2e11ee4e920f7c6af8acdc7a2011fb8d78c57811c98dc36466bd42b728bd",
+        "source_values_digest": "c60bf37cc85912415077344fb1132a68292abe658e5558a6bbd5c82ce6181c0d",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "ed0387d0a24344700466336044ac4a82759feda4d8f1191878aa43781a22f466",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "a5fa00b401b4eaff92d3f846c8016217e57e756f3d810ae89f6d89ecf481a955",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "428e8ef92387a4c25f040479f7c413164ad6a9f10141be4aa7bce3a392dc6b5c",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "6f4f556150b42bc5b64fc1a4dae28480b192a0e47bc79d976b519f6ef40c3f20",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "ad6c66536f19ac540246fcd842f73c565adddc5f757b8db363f53575a3f93ff0",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "1b13c3735e6e54ba317c37aad56480b7bc9e9683af5bba074f91f26d94e13987",
+        "name": "service:AWS:Amazon Simple Notification Service",
+        "pages": 1,
+        "rows": 4,
+        "snapshot": "323178dc091732e5cca1b8947cdcd7696e12c4ddd5756929b3a5b27ee25f1a5f",
+        "source_values_digest": "4e5c940e80f04bd48e32e788fbe27de35e9173007295d3198eef436c0e0abe4f",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "7f3ffbd9f54275673079997b1569e63fe97fe14be8db8fe8cf50963e2836599c",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "d0fa6bb920c4aac9b6f053c026a1be2b50cd2b60258d152d2e6d76e878eb4528",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 4
+          },
+          "service_billing_account": {
+            "digest": "344ce1f62487341b9f0b042f4c36ab180e32f0c718304b6a49a6338f96fef467",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "747d253521b3f4632f8dbe4a27ea55869a14a06b3ca8b83123f1272db8692f82",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "7a0def0125a26f114f8f7ba6504a68040c9c412f91773bcef1fdd1ceb0cd38f0",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 4
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "162095d97b0be84b38b234efb8dc92ff9348e2d08474e9b6d546e8441c94de01",
+        "name": "service:AWS:Amazon Simple Queue Service",
+        "pages": 1,
+        "rows": 14,
+        "snapshot": "395aa39be96c1aac708ac1cd504f4f7cd1b3f269f257349cb3a4be7e943f0e34",
+        "source_values_digest": "9478e3e8a338648e0779492660a0e44367f17c9a4c9481e8282eb013c18f5ab8",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "188481b1b3d44f9816aaa5892da3a5422b256f478a5c1a8bcfee9f39b223dabf",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "932a1a46c4545ab68094fe1955802f29df544a7f325019e37163c2ed1741b5e5",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 14
+          },
+          "service_billing_account": {
+            "digest": "e0dd01f01ef6040eb1f0c16561ade843ac22356b50dd6c86267e8e3504af275e",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "893c845c35700d27c2174cb0ff1b92095a675b27ba6944103d551679eed45612",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "fb9f43f5296a80d98380ef22d59276409631a83ff7d125abadc964cc74d9982c",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 6
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "fda53313649b03cc1f255dc9b432e4d7eddc86fc19e378d56d8f3fcc2e85d796",
+        "name": "service:AWS:Amazon Simple Storage Service",
+        "pages": 1,
+        "rows": 36,
+        "snapshot": "0e83e2203da44bb7b0cdf15cf1d715a834c62058bfa787488c79f8c18fd7d375",
+        "source_values_digest": "93a27c2d9978f7f047c6905d703a231e883bba9254ae5bc7a389a1a925f70ead",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "7bd1a288d3c53d014c5a45bd3c29a36117832ae37e40353942f3105ebf2c6b10",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "04ad31ce95200f146e02d34839042bff1afcdfd0bda36ef22568a6a3fc12d6ef",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 24
+          },
+          "service_billing_account": {
+            "digest": "1cf2acbe2c197a5efe2181306845b01e453c5312d0c08b427720306fb25f7bee",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "db6049061137070fa7e559071ff2d2113554e29316d4948488c4055061159b89",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "2a22b3c2cb3a88f5d1599edfa8b4924731351800783282288087340633b20187",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 14
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "4422908f5fe6d4b567fa3bf3cf7ed1c859cd0244ac8056fe1507a90925616d1d",
+        "name": "service:AWS:Amazon Virtual Private Cloud",
+        "pages": 1,
+        "rows": 57,
+        "snapshot": "9382c7581701a82617a4f20515ea8d0086bb875c2ed1074e795760e2aa02419d",
+        "source_values_digest": "05c3b666b737cc3057241e740371a5062077c65dc7672fae5d4f85a2b67d9ec0",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "7ee2f3698f06140f7d9af90d0b213ba8f0901614c041b6a181cd20b17b463f8f",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "ad895c83a6a66e465039b15b6515f74c38726a8df6a9b7f2e7dc9653a21210e7",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 57
+          },
+          "service_billing_account": {
+            "digest": "90e8d7c2215c4a9b96cae57a1306d3c360697b6ed5eb00deb29c105ebe315900",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "6592b82c8ca61947770503863a976ebde745edce96740fc0f674a1748d5ebef2",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "de7a9fa8f17eef368a2616a91b41b8db0fb72aeec07f98a031c9a18e91248e54",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 26
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "1a6e79082e30755baa330f50c3717c5b3beba0afeafe502c34feda7bd423aff0",
+        "name": "service:AWS:AmazonCloudWatch",
+        "pages": 1,
+        "rows": 63,
+        "snapshot": "e268c444300599a78eb2d2ef248e19cdfb2367fef12c521762f0f006935af0df",
+        "source_values_digest": "c6e01b281adf413cc05ccaa436a458209801153b67f0c9bdd7721485cdaf00b3",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "702f7904ef5132f068e836c6120fdf3ef7d3f82d5e9ad791dfdc8d2b9da8aa4e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "b66dfa1fe9e799bf5abdc4f4b0edbc597c67598bba4a992cd2e981b711dc5338",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 61
+          },
+          "service_billing_account": {
+            "digest": "8c1d559d8411e83b1e27a409d569f8c508035f032d385102de35000cc86dc743",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "1e1a5db0c9a511bc7cc7c7fa50f49454ced40bb92f4fc6aecb0957029cffc240",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "54ec40a64f928a1b8e57a7e875c106a2fc82d9d28b99aa85f48785925d675c56",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 14
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "0fc540f9963de951098f341937b89326cc1a0687675577b5bc0d0bc879db8964",
+        "name": "service:AWS:Elastic Load Balancing",
+        "pages": 1,
+        "rows": 97,
+        "snapshot": "82e3339e55f13e871b8aef3c7dd5e8a723ebf9a96654171990ecd432ea3fb33c",
+        "source_values_digest": "415b480ceb27661ecd7ae2dbd315fa26b399757d5526c0037a9109d190102fe3",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "a57ee50930a11d0dc45a632ea46b0414aa73deddcd69c3d14de5e96a1ed5c8cb",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "adf197f6549180f40950c80d3218ddb25220c7fcb1957ce4d6e4bcf209758f34",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 94
+          },
+          "service_billing_account": {
+            "digest": "4d6f3afb93e18cf6bcb577258cecb690d6623e63f2eac5485173c43b145d353e",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "e53667651c5d732737c1d8edd8e7c394055f1f9ef82bcfb5fc11087d37c8a729",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "f213bbb7ed1eff2e25fef596794704d578d525036ae7e94df170161ce7a7dc0f",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 31
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "56ae658624aac41e93707c89f31a9dc826357503afaff0f282f2e6bce3e02d51",
+        "name": "service:AWS:Red Hat OpenShift Service on AWS",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "ec441cd560343238d7ceef930e4772542095fe67936fda70a9c4794d2ef0a5a8",
+        "source_values_digest": "31bf1a163a695523e683dd294f5a81f3a1b6d107bb9048fa213c7d01709ee50a",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "6ed9dfc62d90cf8f04058acaef24110e4e7669c3dc48336acb026f824db8cc0e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "628811e4efac2d566a40eed57cec8038fa9561aa41753537f047fba83a4674b9",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "88a0aa7559bb3eccc1b0f7c76453937ab43a0f8cf370b6b6df36da96005a1813",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "b2871c435fe33ff89cc8e8c6e9d42743a03227e87a585e972d37b1c497146c0b",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "a7f411c60d9abaa1da5f18985c56d3cf9e0fd43bdeb1eb633541c405ebf4ebbb",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "day",
+        "groups_digest": "5a9bd0c5821fab33954da568f47952ab9bb41849e0b3a900cc44544aed373ce3",
+        "name": "daily:AWS",
+        "pages": 10,
+        "rows": 942,
+        "snapshot": "54a3783f6f29991d55f3815e87ae96f966e7d8ccffe8a7373f86606949212727",
+        "source_values_digest": "ffb7259d305155f67e0bad72ad4caa098ad57009a6a9a360658267afe0871907",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "0671c22529eb8fe550cc7bbb210fe303ae7dce7cc9ef095d6eeb52b95141f4fa",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "ab61a22c9a302e5eaae673deba5c59fbfeb797ccc8dfc2648b433197d0feaab1",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 906
+          },
+          "service_billing_account": {
+            "digest": "f6421c030bb23c4af58d2f84786ac1df7d7b9bf766fa66fea63a226db62810b4",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 24
+          },
+          "service_category": {
+            "digest": "15e62fa89dbffb79b3475706b89b03aba9b48e39ab2da4db306f9aebb5c390a7",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 9
+          },
+          "service_subaccount": {
+            "digest": "012931d6341b0a864682bd673e951e1f1e97627c2462ebeb4047eeee21141a7d",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 206
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "bf79b11f51d0b4ecd76ddadda0906c0ce3e4e68d763ed0a32e35da0fac71f188",
+        "name": "provider:Alibaba Cloud",
+        "pages": 1,
+        "rows": 3,
+        "snapshot": "d1c769e52280be0e784fe6a605b6471a7e565dbdb2316d82d7b9b32dd4e30592",
+        "source_values_digest": "15dfb9de1ee09840018c67e0a66b62767e90da830eab45fc52b4fa00693ab8a7",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "f63c7163721d08b2c7101bd7f2890c8aaba60690db47d5e608861c2f17084474",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "a986fd3599485755c7707fef4d1bf8c9bd9fecba3d84e20fb2c93d1af11d622b",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 3
+          },
+          "service_billing_account": {
+            "digest": "b21e0058accc87037b1b973309081e33cfcec7e1d7c187f56b4151c58ac4be13",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 2
+          },
+          "service_category": {
+            "digest": "10392adb3cc28fb566af2830d109af005d2dcfffc5964b5499ac0c954768c956",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 2
+          },
+          "service_subaccount": {
+            "digest": "a8a1311ce2f7ac893c4d5fbe7a4d0ed2ab03ee6cb905650b8528d6fb9cf0c71f",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 3
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "bf79b11f51d0b4ecd76ddadda0906c0ce3e4e68d763ed0a32e35da0fac71f188",
+        "name": "service:Alibaba Cloud:Synthetic ECS Hours",
+        "pages": 1,
+        "rows": 3,
+        "snapshot": "72e4d18aef2870efe26872c124ef808a54efb37ad9fbb2317e32b6ec593f40d3",
+        "source_values_digest": "15dfb9de1ee09840018c67e0a66b62767e90da830eab45fc52b4fa00693ab8a7",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "f63c7163721d08b2c7101bd7f2890c8aaba60690db47d5e608861c2f17084474",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "a986fd3599485755c7707fef4d1bf8c9bd9fecba3d84e20fb2c93d1af11d622b",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 3
+          },
+          "service_billing_account": {
+            "digest": "b21e0058accc87037b1b973309081e33cfcec7e1d7c187f56b4151c58ac4be13",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 2
+          },
+          "service_category": {
+            "digest": "10392adb3cc28fb566af2830d109af005d2dcfffc5964b5499ac0c954768c956",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 2
+          },
+          "service_subaccount": {
+            "digest": "a8a1311ce2f7ac893c4d5fbe7a4d0ed2ab03ee6cb905650b8528d6fb9cf0c71f",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 3
+          }
+        }
+      },
+      {
+        "grain": "day",
+        "groups_digest": "bf79b11f51d0b4ecd76ddadda0906c0ce3e4e68d763ed0a32e35da0fac71f188",
+        "name": "daily:Alibaba Cloud",
+        "pages": 1,
+        "rows": 3,
+        "snapshot": "9dcfef4f6a6a1fc694abe87a49bee638a51a5b7017e8f55b65b32f9323d3e301",
+        "source_values_digest": "15dfb9de1ee09840018c67e0a66b62767e90da830eab45fc52b4fa00693ab8a7",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "f63c7163721d08b2c7101bd7f2890c8aaba60690db47d5e608861c2f17084474",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "a986fd3599485755c7707fef4d1bf8c9bd9fecba3d84e20fb2c93d1af11d622b",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 3
+          },
+          "service_billing_account": {
+            "digest": "b21e0058accc87037b1b973309081e33cfcec7e1d7c187f56b4151c58ac4be13",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 2
+          },
+          "service_category": {
+            "digest": "10392adb3cc28fb566af2830d109af005d2dcfffc5964b5499ac0c954768c956",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 2
+          },
+          "service_subaccount": {
+            "digest": "a8a1311ce2f7ac893c4d5fbe7a4d0ed2ab03ee6cb905650b8528d6fb9cf0c71f",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 3
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "319e6d81e062f914d3fec0eb80f5ad71af678bc08bba77c04f590ef4f21de21b",
+        "name": "provider:Google Cloud",
+        "pages": 2,
+        "rows": 115,
+        "snapshot": "4e17f2000f95380f894c1251111680cac7fb53ce332950e1c5d6d3233c857e17",
+        "source_values_digest": "2579c4093c3c37fc15a660a33e22942aca4352952b7ab355d6f96a520decc49d",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "88ee9473e175cf0d4fe7b59ad345bc56f35cd3968766c80f3efaf57a67bbe2da",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "f170004c6f61deba0dc974fb743d20f9c5af5a4b8111339f17e6dcc78031f0cf",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 15
+          },
+          "service_billing_account": {
+            "digest": "014a29540567f7b7e29d51199e59aebd4132fce7b1b836d9ee39f9265501aad5",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 4
+          },
+          "service_category": {
+            "digest": "90056123b99b6db184fd1584161268fdc45ae4f7069bc58f15703551daa6a478",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "5356dfcb804530ace9326848ab108b507d6eb2bdc424d06a8e9af1f75bea6158",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 4
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "980a773b6be5c43b4c7c45f0d7084487e997db381dddbedec300cac678853dbd",
+        "name": "service:Google Cloud:Artifact Registry",
+        "pages": 1,
+        "rows": 17,
+        "snapshot": "a418408d6adca4ecbee6fb81ee66bcfc55ff49c5a6726ef854e802590c892264",
+        "source_values_digest": "b601f481d1a507cb1d3b7c7888a8b22e54bbb424d378eacf1a12da87248a13e1",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "fedf802c16002e76b6ee83d04ddbd50f3eade7a3900fe040644b2acea585966a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "446dc6bac8ab545d966713914a7edd6bc317662d2839437c33f5550259390e61",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "78b21b0322b06dae4b33856119c0c651096f06268ecaa8acf1eb03a806bd8d96",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "895cc42add8a110d83230ad2b1ff6dda6e57de64833161171d910cab6cc2ac29",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "b88151b5aa45a144d2db8cd34ddf09bdbb072b632c8dd71d3e0c8b08ccb98d66",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "0789d49d86e589e73e5349670f6e3323989a366d5dcf5cb3f946f8c013305a20",
+        "name": "service:Google Cloud:Cloud Key Management Service (KMS)",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "756d80c5c0f246084f9cd2234407d490a37428b55e3162de4a7a88ed62c0c391",
+        "source_values_digest": "0418554c3c8424cfa64fcebb3b2b50219f5a0fe70464e7063242799a9876f164",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "1b53a7277b3989618a6ec7af8fcd83e0621cc1ac03337f4fdd85a093c2f1a09e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "9f733c8ea5996174c328039d9ebfe296b9077d8f8c7a4d6a5d27bdcd51197c8e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "bb9528fcddf4f22ccdfa32105346b7930f713da503f63299c5e6e29ce8875746",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "72e30b5a2a3056c065da939096fd41ef4f123b98b913f87f15ad907e9ff2741a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "0b2ea1d7aafff37c2257471fb5dfe8e4a6a5fde98441e79bcce495056860cacb",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "848f7853009e3392054b16784147f5ecfc229514fbc2e62f635ec9fc66cb02b8",
+        "name": "service:Google Cloud:Cloud SQL",
+        "pages": 1,
+        "rows": 14,
+        "snapshot": "d35552cdad01eebf84699c4dc2727860713602bf2449a7b69a24b08f623a7021",
+        "source_values_digest": "e144cf6cb9e54b02c1593a2b8a1da252b02b1b8939c884fc8a3090c37691af27",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "743351ae732a7c96e29e04b816f9a1b6d87a9b9bcbad5349011ba60f87ae39e4",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "26cd0d008cce7e38e8ea4089a6985d7c8d7c345bc130f33dcc411e4d2cbcb54d",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 3
+          },
+          "service_billing_account": {
+            "digest": "47584427f7b92ad06dab0e369016223f1e6bcd0edd0958f77a7db2451714e844",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "214feec35d5706144c3ecfddaf748559e098618592ef982ff1d1e987262fd571",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "45d0664e02beb2b126c7f40bae46d6eafac61bdafcc9516d8d165148bdc89b00",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "9b71dc0fa085de86972ba407ef1e5fc9bff56c7ce60d5c6c972a82801f19e71d",
+        "name": "service:Google Cloud:Networking",
+        "pages": 1,
+        "rows": 83,
+        "snapshot": "f7ff6aaba2032828f457f380900dd8271e2dd2465cec054580a260867c57ab22",
+        "source_values_digest": "345d69fd8a8a806b8d8d79b4bddc9037286b6b4b9e5a38056e42f6f0d4cdc59a",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "cc83e38af65cdff07533a5c98f5abb9158ad8b40fae96831afaf3875a4167d22",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "250c118ac0f98ee00dfebda17e2660533fcd29d85a975af3f539fda018aba013",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 10
+          },
+          "service_billing_account": {
+            "digest": "b86ea92f3efba4c7d990622a54754a06b23dfa8509661fdb34d915c91cfdecb5",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "f9cac2aa412af7a94762acd7e5eb7b8c73c754b50e4bed3570d3c0e472518467",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "8c5c45659bc9d48d6c2f22c4669d1b0c866678fd849174c54d4a352e61ebe0ee",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "day",
+        "groups_digest": "319e6d81e062f914d3fec0eb80f5ad71af678bc08bba77c04f590ef4f21de21b",
+        "name": "daily:Google Cloud",
+        "pages": 2,
+        "rows": 115,
+        "snapshot": "9a571a1d6782aa5754bd9414727feaf271c6dc9281c71dc1f3176b9229b6301f",
+        "source_values_digest": "2579c4093c3c37fc15a660a33e22942aca4352952b7ab355d6f96a520decc49d",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "88ee9473e175cf0d4fe7b59ad345bc56f35cd3968766c80f3efaf57a67bbe2da",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "f170004c6f61deba0dc974fb743d20f9c5af5a4b8111339f17e6dcc78031f0cf",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 15
+          },
+          "service_billing_account": {
+            "digest": "014a29540567f7b7e29d51199e59aebd4132fce7b1b836d9ee39f9265501aad5",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 4
+          },
+          "service_category": {
+            "digest": "90056123b99b6db184fd1584161268fdc45ae4f7069bc58f15703551daa6a478",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "5356dfcb804530ace9326848ab108b507d6eb2bdc424d06a8e9af1f75bea6158",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 4
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "d7b213b562d15ec5dc893b9bd6af5066aea5219665fdb40c2e477f8ad2e7e97b",
+        "name": "provider:Microsoft",
+        "pages": 1,
+        "rows": 51,
+        "snapshot": "adb0fdf162fb4b142561c42d992d2d8c0fa28d9f7bd9a89b5406604c038cc45c",
+        "source_values_digest": "e520d19bd8db1003a34f4c74bc58bddb7608e4787bfdee5fe127e43565bcebca",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "c9a16574c3588f9f384eaf42e96c518c675edbb0e5d4613b243ccae5c415ee4b",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "5ba55514fa4fbd9f93e485f16a6f5c2b462d8fa7ae0705962bfb0f41e548c68a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 47
+          },
+          "service_billing_account": {
+            "digest": "5ce69acc0f9151b98c97a42241fe71bd7ad21b329a5e04f39b13512be88aef89",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 6
+          },
+          "service_category": {
+            "digest": "64ebd724b591f79e63c38c7a98dd777ba045b46d796c79256954ab6f44f10e4f",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 4
+          },
+          "service_subaccount": {
+            "digest": "8b5d4eeb7760b0f7f9cd2de106c69c2ae4787dad5f1e835b421754ef9f87f69e",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 9
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "47ec8ef2d50a5ec2c39a8b31a1bc5283383d8edb7adf524882c3c968eff84e83",
+        "name": "service:Microsoft:Azure DB for MySQL",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "d3319cbd9dc42eae396f989ca962240d7c9860c1f76a84b8418e32694dc10d61",
+        "source_values_digest": "02ad4e8df80113f54b0cd4c39b38e51de288c36db4496226e067f3cc9af167ff",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "752658653c8b35886a82bba59ce46e5e93a29b1fd3a6bdd6dd2bf0df6df2ba58",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "9437dee579fd30ff429ef51ce0b6b5451e4c7ebe0be128b996805142a39fc6b4",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "cc4d47c4bf01b63eef3eb8ca40a20845864bc3207b90b233d5339cbcfd06ef4a",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "1f43ed726809e94a8b072271442d5db080f46ed14a4d53669f8b7c5a9347762f",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "dc8c1a008cbfaa88b5468437e21b76fde04212cd9c0fa49c4cd52846e372c931",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "e08c90f9ecc66a2f7b00f9a0b48570f21a144763119e1117e644bbcfb2534af5",
+        "name": "service:Microsoft:Azure Kubernetes Service",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "4aff412516c105b8c42d8a59a177bc477b39cd3f7b6aeeb51948cf09336ef9c9",
+        "source_values_digest": "639047ad0f12f9c78c306ecde03c99e276700be1dc7e694a120316a4ee582512",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "5835d31600a2bd8c228ec2707942b0b02c44d67a849e7f03903e93548c6f3f9c",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "602a1d77991c176ac9f93393325ea2b88fcb68e50cae26848b92901c3dd04a6a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "d28cf1e2f2f53eec044c60502993691007364f4d60333b482ebd7ef0b497f309",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "be2485b9583edb94f0e0ea5678a6ce09f2bf05b5348b1a38eada4889da668848",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "f71d5407f4ba4c95578be0b5993dad1bda96c66ea245336309fc561bb469bab7",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "7339650019d8a65f03af5544f31728bcd2616f708590d25a8edd254921eb4d25",
+        "name": "service:Microsoft:Azure Machine Learning",
+        "pages": 1,
+        "rows": 9,
+        "snapshot": "ecd9c26d7858237ab993784c6c4d561cb31113e055bb274cf329ed03e380283c",
+        "source_values_digest": "30b5ab3ea16e021e46331dfe2d669ed1ed246e2a705b15b2827e3ba5c1d6543f",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "d9fa06d7cdf752b753302dcf35f00be2b638ab6cc73dbe530c4c36ffd9bed574",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "9582d47831fb20b4e4cbaccd0f302b3880e246dae3700c8e226500ae31c03558",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 6
+          },
+          "service_billing_account": {
+            "digest": "abb45d1c1b9ae0af4b5ed654a48b40b717ed033201b38fd4c8f39ecfb10ec29e",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "958ef238c7728f52262538e97aa91d6b0b6ad4493fd84b315c9aaee20bedde29",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "cf0e6924311366f2cdee47f7587398ae44e429d840c5b4d1d928c90c14e63873",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "546a7c01f3fbd841d43a0b0043974eb938e5d8d9cc33f930b011fc1edec4ba6c",
+        "name": "service:Microsoft:Storage Accounts",
+        "pages": 1,
+        "rows": 38,
+        "snapshot": "3c9e3e1ab3b999f576826cb18ac5d7d62c312a0edf73ab18119b4afcea6169b5",
+        "source_values_digest": "70044620f744decea56243a118499a4d60846b428b1aeeec76b57dd16e97fbcf",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "907383fc4eb00e8f5e0fc375c361b697a23a7db2379172c6e30d564114079e14",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "d9ff3e977027ec9db7a8fd523a0fcf2cfbc7f426f92decdef82b5ec37a7dc3af",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 37
+          },
+          "service_billing_account": {
+            "digest": "f22d79ffe562d6e4d6c0fa4f625adcb1eae6aef70d4cbb5927533cdeddcf45e7",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "e11555e1a3723fd2e88be9c61823a9aa8302469501ba28de8813683b3cf4803e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "d00090685bdadc2d147a1d870fddfd123189a705f923669a11cf0008b9f61e70",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 4
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "13b3ab1e8facf7a4f7a161466f10e73ec26ae316516f4b456236aaf87eb13e52",
+        "name": "service:Microsoft:Virtual Machine Scale Sets",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "66de6dc4c62fe9f5ede83499149792c24d5be7a199be8a8ebd160a3b3eb81e91",
+        "source_values_digest": "1344b667c6d9c779babecbd5d2ed12d32ed788a5a157ce11cba1fc7872567ec9",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "643b19467e165ab96bef3a69552f3c0ca4ec83c0b2e9f5d701e2b1269c37822f",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "948916e9cec1972e5923634727f32deca4918d5935f94d3d8ae7c890e061e9af",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "dee98bd31c07fba4aa97e0d08489bc3f404236b7318d7d061b05eaaa7250f18e",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "051f7fee21478689d2d0deeddb9d1e2a3592aaed3a45cd8fce17a3bae1964924",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "03f92dfaf52e41a071280d92c18d102168b87bd3e226487e5e4fe1a32f3be46e",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "0c585bacfdedf149d10543b6207e39054ecaa9b5863d420c8103da720b7dd9c3",
+        "name": "service:Microsoft:Virtual Machines",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "11f7758c35637c14201c19d5da0346d6211f4821687a97a723c79c8225de2c9e",
+        "source_values_digest": "ab6807d0d77394b06bc01bf2b43d852020be5a162b73eabeb49bd59f6a9c4df7",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "3f244fcb1e44e3a408b8d27149bd33223a7f2e1d36f2cf6a9cf016eecca6adcd",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "4e66e0fb9f9a04993f3a201d69b03b1abfb3c82039e97d5d3805c2a3298b7cf7",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "79abaed7cdbdcbb4a702e2675414167da1688fe2b79e17bf2ec8f185964ce7fa",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "098e6f560b4ae75b41361bfd15cb2b81162fb61f5bf40ae9012eb7540ec0d7a8",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "04dea21f96f5ce4b276d1f6f45cd683a30c09d2a1027fe8aa1fc00f68d8d96f9",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "day",
+        "groups_digest": "d7b213b562d15ec5dc893b9bd6af5066aea5219665fdb40c2e477f8ad2e7e97b",
+        "name": "daily:Microsoft",
+        "pages": 1,
+        "rows": 51,
+        "snapshot": "df4b6e5ad18ee3e871434b42115bcb72f4ad56f0ae30c95920e601c233c66b17",
+        "source_values_digest": "e520d19bd8db1003a34f4c74bc58bddb7608e4787bfdee5fe127e43565bcebca",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "c9a16574c3588f9f384eaf42e96c518c675edbb0e5d4613b243ccae5c415ee4b",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "5ba55514fa4fbd9f93e485f16a6f5c2b462d8fa7ae0705962bfb0f41e548c68a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 47
+          },
+          "service_billing_account": {
+            "digest": "5ce69acc0f9151b98c97a42241fe71bd7ad21b329a5e04f39b13512be88aef89",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 6
+          },
+          "service_category": {
+            "digest": "64ebd724b591f79e63c38c7a98dd777ba045b46d796c79256954ab6f44f10e4f",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 4
+          },
+          "service_subaccount": {
+            "digest": "8b5d4eeb7760b0f7f9cd2de106c69c2ae4787dad5f1e835b421754ef9f87f69e",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 9
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "a78ae1dcac757d988549d380126bf389134d29604bc91dd879b7c366a4b2c524",
+        "name": "provider:Oracle",
+        "pages": 1,
+        "rows": 7,
+        "snapshot": "c85d02e22f8441bb9266d46e11ae9d0b6e66fd7b4d640945cbcb583f517184d3",
+        "source_values_digest": "99f8216591842f73f84b9ec77fb4cf06cebdfed2a03c24925f1eabe6de6a627a",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "da02e7e0d0e95c62d846961e56824a5df13e8ea651f72610fd8d2cb5fda701b8",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "b972b751ed8195ae2d1f6c47a76b57d0e917509e59a6c19b1bde460a15759e6b",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 7
+          },
+          "service_billing_account": {
+            "digest": "34ea9f20e264ac09c37c8dba7984de9442f50739a1a74cf7acf358622a82c902",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 4
+          },
+          "service_category": {
+            "digest": "77144ffaceff74214f9897ac63453b668587ee9575435c06801291acf01b0d6e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 3
+          },
+          "service_subaccount": {
+            "digest": "280adbd5bf5267bf0275f027a136fe2e19f545b8646164fc7ceb8bb98c2e7c1f",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 5
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "8f144251747b9fa23c3ae30826a7044aa3818420848816c1138fd90cc76ec5c8",
+        "name": "service:Oracle:BLOCK_STORAGE",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "48e63294a57e81b3540ffb2758bc2bed4fe49bcec362977cd5a4948685daf62e",
+        "source_values_digest": "3a6368c571b813ae6a5ee13fc4fc03a250b030942a8dc970c463ae112017bd6d",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "fd21c633f0664443dcd9ee2ce28f6b7f3615ecd800ca33c8d7c90d9c451a2815",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "6f82c43d69717041213f1b5d5b4270e192eacab39e46253bec5602755f5c4e73",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "eb26c4817584d17ce5339410956e70ea2390c9d79b0f5d297326a879094206a9",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "32f1bdbbf4914cfa578d859f26a0c5d3be72cebd42a5c9366b6fdb0e80012aaa",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "29326875d998edd2725a44471465168c2263b00697ec34876ade324e066489a7",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "aa2cb84eac33b4f5fda75280a08ff817e07ed24ae30dae36dd267aa0d58357e7",
+        "name": "service:Oracle:COMPUTE",
+        "pages": 1,
+        "rows": 5,
+        "snapshot": "be04c38ab957bf154f75a170f8dfea794075f9cd1bfbf902324b16cfc6a839a8",
+        "source_values_digest": "2ff66ffb71544f67c8266c6bafb2bf5e079ac7e6e8df8f1c9a9e49ef4b872964",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "c2c5a1e3bf7407514a61591906961d2877c71f4e050f4a7614507173958def23",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "5e83f1d7ab903cfb95556569164c619d85c39b5a4529a3183248f43e1d04c80e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 5
+          },
+          "service_billing_account": {
+            "digest": "e3b937200e72a8380bbdff1cadd60c8058221b018af280c5998f415a5cad8937",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 2
+          },
+          "service_category": {
+            "digest": "8ed5ff283149fde6d86ddf53bde008f36604e400a2ed9337753de323fb43f0f2",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "0fa452be4b8b585cec60f3bdfe38582c63e9357aed0dc336201630708fce3674",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 3
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "c9954d8ab0465be4f342660cc5896ad6b110af1a89e07454bc711e48f31ffa78",
+        "name": "service:Oracle:NETWORK",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "50bb473852e997bf2960cb5a737401ecb7a170b68aa0a2f4197aaa68d43d47c4",
+        "source_values_digest": "8504389e59b615901fcf78c49523749d4f1dec5b793107ed28b01fd0e6118a12",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "aa713bed525f1345710341429a59ed98abe390345fb75823b032482537438386",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "cf923cee4a20e54dac6549c6f236dfc41b8b03cecec8bc9cb1f6e41c8ed445bf",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "30835500eb12f6ed7f50e41a16f11da1f2e7f3e71e3182ca184d3bfb19b9bf5e",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "134640598890025482e9c7d2edff5be429b84057958db84e7f84d70cfe55d259",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "3b1e6fca22f1c4326844bda05896b6d6bb6b2a0abf925541edf4f83f75d74ee1",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "day",
+        "groups_digest": "a78ae1dcac757d988549d380126bf389134d29604bc91dd879b7c366a4b2c524",
+        "name": "daily:Oracle",
+        "pages": 1,
+        "rows": 7,
+        "snapshot": "0bfec86e53642c89e80a9fcb41071049494d4a75ccc9d9659375c7183445dafa",
+        "source_values_digest": "99f8216591842f73f84b9ec77fb4cf06cebdfed2a03c24925f1eabe6de6a627a",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "da02e7e0d0e95c62d846961e56824a5df13e8ea651f72610fd8d2cb5fda701b8",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "b972b751ed8195ae2d1f6c47a76b57d0e917509e59a6c19b1bde460a15759e6b",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 7
+          },
+          "service_billing_account": {
+            "digest": "34ea9f20e264ac09c37c8dba7984de9442f50739a1a74cf7acf358622a82c902",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 4
+          },
+          "service_category": {
+            "digest": "77144ffaceff74214f9897ac63453b668587ee9575435c06801291acf01b0d6e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 3
+          },
+          "service_subaccount": {
+            "digest": "280adbd5bf5267bf0275f027a136fe2e19f545b8646164fc7ceb8bb98c2e7c1f",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 5
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "ea5a9096ca6ccd860622cd7931794941e8b82299680f976c10117940de185f2e",
+        "name": "provider:VMware",
+        "pages": 1,
+        "rows": 3,
+        "snapshot": "6874d2e999c014c7f97c580338d8336aca4020a095b6a8f76cd907c8eabc99e3",
+        "source_values_digest": "e1d8f3540132a92efbd75786a7ce8362f3fc81d03936120cb85840388d34635e",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "d614505fdf9b3dfa150d1866f28e3c885498cfbd28794b01cf1460847a0f9d52",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "6346be21333d72a21d2ca44c9767de375f1ce150be63d611b9d8f05855f32993",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 3
+          },
+          "service_billing_account": {
+            "digest": "81bd5fc155ff0f8b849dcec9957d527a87862576ccc461e933af842e5fbd3c30",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "2759758c0d691ee373185a7daac2aa5fa58ca0402e36d9ea26fb00bc1f411ed1",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "9fd2eaafd039945417c9172cabb68079200584867a1a2ccfacde639ab5e7c3af",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 2
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "ea5a9096ca6ccd860622cd7931794941e8b82299680f976c10117940de185f2e",
+        "name": "service:VMware:Synthetic VM Hours",
+        "pages": 1,
+        "rows": 3,
+        "snapshot": "5cfcb5c63fcee9982509a296a6e1fa2a17d9f340899996eec3ddf79a74905c79",
+        "source_values_digest": "e1d8f3540132a92efbd75786a7ce8362f3fc81d03936120cb85840388d34635e",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "d614505fdf9b3dfa150d1866f28e3c885498cfbd28794b01cf1460847a0f9d52",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "6346be21333d72a21d2ca44c9767de375f1ce150be63d611b9d8f05855f32993",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 3
+          },
+          "service_billing_account": {
+            "digest": "81bd5fc155ff0f8b849dcec9957d527a87862576ccc461e933af842e5fbd3c30",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "2759758c0d691ee373185a7daac2aa5fa58ca0402e36d9ea26fb00bc1f411ed1",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "9fd2eaafd039945417c9172cabb68079200584867a1a2ccfacde639ab5e7c3af",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 2
+          }
+        }
+      },
+      {
+        "grain": "day",
+        "groups_digest": "ea5a9096ca6ccd860622cd7931794941e8b82299680f976c10117940de185f2e",
+        "name": "daily:VMware",
+        "pages": 1,
+        "rows": 3,
+        "snapshot": "d6bd7cbbc5b93dac7bcc412e62c0312122d3b99ee4355023f9038078e16ee640",
+        "source_values_digest": "e1d8f3540132a92efbd75786a7ce8362f3fc81d03936120cb85840388d34635e",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "d614505fdf9b3dfa150d1866f28e3c885498cfbd28794b01cf1460847a0f9d52",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "6346be21333d72a21d2ca44c9767de375f1ce150be63d611b9d8f05855f32993",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 3
+          },
+          "service_billing_account": {
+            "digest": "81bd5fc155ff0f8b849dcec9957d527a87862576ccc461e933af842e5fbd3c30",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "2759758c0d691ee373185a7daac2aa5fa58ca0402e36d9ea26fb00bc1f411ed1",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "9fd2eaafd039945417c9172cabb68079200584867a1a2ccfacde639ab5e7c3af",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 2
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "name": "unknown_provider",
+        "pages": 1,
+        "rows": 0,
+        "snapshot": "96d20cde083e328a20be19f387f1de8228f5910512803b16d6a3188ef20ef692",
+        "source_values_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 0
+          },
+          "resource_sku": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 0
+          },
+          "service_billing_account": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 0
+          },
+          "service_category": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 0
+          },
+          "service_subaccount": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 0
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "name": "unknown_service",
+        "pages": 1,
+        "rows": 0,
+        "snapshot": "080856d0a98801ac0c124ee27560b04be2156b7c87815a034937c5a3afbb669b",
+        "source_values_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 0
+          },
+          "resource_sku": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 0
+          },
+          "service_billing_account": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 0
+          },
+          "service_category": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 0
+          },
+          "service_subaccount": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 0
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "name": "other_tenant_provider",
+        "pages": 1,
+        "rows": 0,
+        "snapshot": "2f80236cde274cead20fdbb569dfb5f466cfc3e9ba0ffeb920916b5598d5a58e",
+        "source_values_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 0
+          },
+          "resource_sku": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 0
+          },
+          "service_billing_account": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 0
+          },
+          "service_category": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 0
+          },
+          "service_subaccount": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 0
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "0b0c239c9024903c0c451c499e851d3984efbe999fcd01df58af043f97678bc6",
+        "name": "foreign_alibaba",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "eb929f9db82b2e94bc43b782b02d804326f03b152f70f4ba76f94ac05979d39c",
+        "source_values_digest": "2fcef8f574cccd36846938ced93fe05921bf0018109c0586df8725497007ac85",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "a1f56594351f53a1bffb00078478d117ab9f7d91acda941129c5b442072ce063",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "97698081d8465eefd3135a4df8169cb8a57257f86d52f53babcb7d1a707216f8",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "fc01d5860da3f585c2d870cb4c42f96e742eda3329d13a467ad44689a4e500e0",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "02df64c277fdcece1b5b5a4d43dd2a81231edc2558a637df2208b64a2a0fac4a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "815208e1b5a37f377714f99e40d9857d8fb73f6e2eb47b85a4d580bc93ec15ba",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "name": "empty_service_string",
+        "pages": 1,
+        "rows": 0,
+        "snapshot": "67a853304bc2ae575cc582647031a31868715671d7c26d857f7b3cb8a2707e2d",
+        "source_values_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 0
+          },
+          "resource_sku": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 0
+          },
+          "service_billing_account": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 0
+          },
+          "service_category": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 0
+          },
+          "service_subaccount": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 0
+          }
+        }
+      },
+      {
+        "asserted_rejections": 5,
+        "name": "snapshot_and_role_negatives",
+        "status": "PASS"
+      },
+      {
+        "grain": "month",
+        "groups_digest": "11dda939b581f3f51b73891d7d310950ec86488f5cdcad82653181c602f15844",
+        "name": "billing_window",
+        "pages": 11,
+        "rows": 1005,
+        "snapshot": "55fe160ecd5dfe916669f0f66c185dc4d438bd12f93cd2e912da2302cc229429",
+        "source_values_digest": "f9489ed06e7c81199715f8219538df967eada8660f08e73aea4033ae8a865195",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "6cbd5824c550663b7e0ecd4f3a733e2b28c0a1376e468b35b1f8c29ba5107d44",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 8
+          },
+          "resource_sku": {
+            "digest": "96f9fa18233b1f9a0c517ac7069521ad240a2e7272da339cccf72463018d77ab",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 965
+          },
+          "service_billing_account": {
+            "digest": "860a08018df7afa1ce72e04e1bfc8ff2ff8fdb6ff5eb99c5fb14f821e4e5e5d4",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 36
+          },
+          "service_category": {
+            "digest": "12a4b62d06d090df21e1d6071bf12182cb28c760d5d72e01b4296a373d0d6590",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 19
+          },
+          "service_subaccount": {
+            "digest": "d65c90d59e9703a41c366c9088ce46fe5c0dc506c9749ffc50abc8630dd98674",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 224
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "11dda939b581f3f51b73891d7d310950ec86488f5cdcad82653181c602f15844",
+        "name": "overlap_not_row_clip",
+        "pages": 11,
+        "rows": 1005,
+        "snapshot": "17fdeb4e11e875ad06b130a52cab3ea58ecae135c4f939f5b3a5730fd68d3cbd",
+        "source_values_digest": "f9489ed06e7c81199715f8219538df967eada8660f08e73aea4033ae8a865195",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "6cbd5824c550663b7e0ecd4f3a733e2b28c0a1376e468b35b1f8c29ba5107d44",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 8
+          },
+          "resource_sku": {
+            "digest": "96f9fa18233b1f9a0c517ac7069521ad240a2e7272da339cccf72463018d77ab",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 965
+          },
+          "service_billing_account": {
+            "digest": "860a08018df7afa1ce72e04e1bfc8ff2ff8fdb6ff5eb99c5fb14f821e4e5e5d4",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 36
+          },
+          "service_category": {
+            "digest": "12a4b62d06d090df21e1d6071bf12182cb28c760d5d72e01b4296a373d0d6590",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 19
+          },
+          "service_subaccount": {
+            "digest": "d65c90d59e9703a41c366c9088ce46fe5c0dc506c9749ffc50abc8630dd98674",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 224
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "8a3be38cce7b09dc606d72a756b5a002c9a01a37d3285d5a90e707120e930985",
+        "name": "exclusive_boundary",
+        "pages": 1,
+        "rows": 1,
+        "snapshot": "9d7ca42594ec684a920cda378eca31fcfed95373f0e8fcf04376241e8aaf87f3",
+        "source_values_digest": "70a68306e0f6988abf6c399095f4756ea42543de78e09cfe0369e693e11a319d",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "d36b5a68472106efe227dfa0eae41fa4c577aade3a553c61c59033bd847da93a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "1f7927e50854ef97411c872603deca3681badc2856331bd2d52b8cb566227d9f",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 1
+          },
+          "service_billing_account": {
+            "digest": "1d2e2bfc455c80f948e2414566c75a7f2103e8363d134a0cc8884bd1c624f154",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "2bd3c1a113c38974cf84f650209c4b3181c820edb5f4d048c04445c252567dcd",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "ca82fcd7f695d4f1444826e333a2c2022f6a5680caf8d0df518c7c3879146761",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 1
+          }
+        }
+      },
+      {
+        "grain": "month",
+        "groups_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "name": "before_boundary",
+        "pages": 1,
+        "rows": 0,
+        "snapshot": "f0a36dc47f885e0bda8a4706b3bb8a7629def739571c43c97c2f196f280a2f43",
+        "source_values_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "status": "PASS",
+        "use_cases": {
+          "charge_category": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 0
+          },
+          "resource_sku": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 0
+          },
+          "service_billing_account": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 0
+          },
+          "service_category": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 0
+          },
+          "service_subaccount": {
+            "digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 0
+          }
+        }
+      },
+      {
+        "journal_sequence": 58,
+        "name": "runtime_unchanged",
+        "status": "PASS"
+      }
+    ],
+    "command_count": 142,
+    "commands_sha256": "9dad82f958ae334ceab5b5c1036477aea69b03c83e8bf539f51edbee7c909274",
+    "declared_version": "1.0",
+    "delivery_pins": [
+      {
+        "batch_id": "49097f58-fd9c-4d50-9c52-0099fce53543",
+        "revision": 1,
+        "rows": 1,
+        "sha256": "2d6be515246c78182c800d288b6de5a8fad64b8e0ead08338fb3fc7713e64b2d",
+        "window": {
+          "end": "2024-11-01T00:00:00+00:00",
+          "grain": "month",
+          "key": "1558b1a5acc748f1843e8505aecffd8d2678db9b362400825ea4a0e8814d770f",
+          "start": "2024-10-01T00:00:00+00:00"
+        }
+      },
+      {
+        "batch_id": "c4bcd3b4-6f5e-401c-aba6-3811e63df862",
+        "revision": 1,
+        "rows": 115,
+        "sha256": "9b2255f3043a1e7c98cea5a62c3eb78b4583001c0b00ad30cb8f54100a73b0dc",
+        "window": {
+          "end": "2024-04-01T00:00:00+00:00",
+          "grain": "month",
+          "key": "61b48a0032496ac81f5afd1b5780b97f08e1c5c2fa8a5f12973aa74d0b96adda",
+          "start": "2024-03-01T00:00:00+00:00"
+        }
+      },
+      {
+        "batch_id": "5e816636-70e0-4475-b288-b5376f8300f2",
+        "revision": 2,
+        "rows": 1007,
+        "sha256": "ee4d245177c54aae7fbe5492466f74e2167ef0c79432842c959bf9ca2134f7e4",
+        "window": {
+          "end": "2024-10-01T00:00:00+00:00",
+          "grain": "month",
+          "key": "70ae7a316b54aa4afa501a337b756709b461345d3609f96324e5333a83fa2c0d",
+          "start": "2024-09-01T00:00:00+00:00"
+        }
+      }
+    ],
+    "journal_sequence": 58,
+    "oracle_sha256": "ee3608b9e6a1b15fdbc09d4d0c8fc17e5bf7db562fd5474bdde187172db0aced",
+    "provenance": {
+      "classification": "mixed-public-and-synthetic-query-only",
+      "combined_rows": 1123,
+      "combined_sha256": "986a297e5476f4747a2921f690745309256ffc5d117cf487ff8a1c2d7286b9c2",
+      "declared_version": "1.0",
+      "format_note": "Derived CSV union adds provenance columns; official lexical values retained, not original byte identity.",
+      "google_rows": 115,
+      "google_source_ordinals": [
+        5158124,
+        5158125,
+        5158126,
+        5158127,
+        5158128,
+        5158129,
+        5158130,
+        5158131,
+        5158132,
+        5158133,
+        5158134,
+        5158135,
+        5158136,
+        5158137,
+        5158138,
+        5158139,
+        5158140,
+        5158141,
+        5158142,
+        5158143,
+        5158144,
+        5158145,
+        5158146,
+        5158147,
+        5158148,
+        5158149,
+        5158150,
+        5158151,
+        5158152,
+        5158153,
+        5158154,
+        5158155,
+        5158156,
+        5158157,
+        5158158,
+        5158159,
+        5158160,
+        5158161,
+        5158162,
+        5158163,
+        5158164,
+        5158165,
+        5158166,
+        5158167,
+        5158168,
+        5158169,
+        5158170,
+        5158171,
+        5158172,
+        5158173,
+        5158174,
+        5158175,
+        5158176,
+        5158177,
+        5158178,
+        5158179,
+        5158180,
+        5158181,
+        5158182,
+        5158183,
+        5158184,
+        5158185,
+        5158186,
+        5158187,
+        5158188,
+        5158189,
+        5158190,
+        5158191,
+        5158192,
+        5158193,
+        5158194,
+        5158195,
+        5158196,
+        5158197,
+        5158198,
+        5158199,
+        5158200,
+        5158201,
+        5158202,
+        5158203,
+        5158204,
+        5158205,
+        5158206,
+        5158207,
+        5158208,
+        5158209,
+        5158210,
+        5158211,
+        5158212,
+        5158213,
+        5158214,
+        5158215,
+        5158216,
+        5158217,
+        5158218,
+        5158219,
+        5158220,
+        5158221,
+        5158222,
+        5158223,
+        5158224,
+        5158225,
+        5158226,
+        5158227,
+        5158228,
+        5158229,
+        5158230,
+        5158231,
+        5158232,
+        5158233,
+        5158234,
+        5158235,
+        5158236,
+        5158237,
+        5158238
+      ],
+      "official1000_sha256": "e91e5ac7edf01ed2c9d926f37ef7dc1ae2aae97956fea8da6c9ee488b1c2839e",
+      "official_full_sha256": "c198cda74cbde4b11b9be289815bda7e9ac62042f1d023ad9bc8fbf7bff1018c",
+      "source_revision": "adbdd17a132984d6e8583c149c236d2199c3f5bc",
+      "source_values_changed": false,
+      "synthetic_rows": 8,
+      "synthetic_sha256": "515970e020cf3d63052d99a61c80cd46e24e1d8bb83fba6b6f060874c8ef4cfe"
+    },
+    "providers": {
+      "AWS": {
+        "all_rows": 942,
+        "charge_categories": {
+          "Credit": 1,
+          "Usage": 941
+        },
+        "company_rows": 942,
+        "evidence_classes": [
+          "official-public"
+        ],
+        "negative_billed_rows": 1,
+        "nullable_numeric": {
+          "billed_cost": 0,
+          "consumed_quantity": 1,
+          "contracted_cost": 0,
+          "effective_cost": 0,
+          "list_cost": 0,
+          "pricing_quantity": 0
+        },
+        "services": [
+          "AWS CloudTrail",
+          "AWS Key Management Service",
+          "AWS Lambda",
+          "AWS Security Hub",
+          "AWS Step Functions",
+          "AWS Systems Manager",
+          "AWS WAF",
+          "Amazon API Gateway",
+          "Amazon CloudFront",
+          "Amazon DynamoDB",
+          "Amazon EC2 Container Registry (ECR)",
+          "Amazon Elastic Compute Cloud",
+          "Amazon Elastic Container Service",
+          "Amazon Elastic Container Service for Kubernetes",
+          "Amazon Elastic File System",
+          "Amazon Relational Database Service",
+          "Amazon Route 53",
+          "Amazon Simple Notification Service",
+          "Amazon Simple Queue Service",
+          "Amazon Simple Storage Service",
+          "Amazon Virtual Private Cloud",
+          "AmazonCloudWatch",
+          "Elastic Load Balancing",
+          "Red Hat OpenShift Service on AWS"
+        ],
+        "source_use_cases": {
+          "charge_category": {
+            "digest": "0671c22529eb8fe550cc7bbb210fe303ae7dce7cc9ef095d6eeb52b95141f4fa",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "ab61a22c9a302e5eaae673deba5c59fbfeb797ccc8dfc2648b433197d0feaab1",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 906
+          },
+          "service_billing_account": {
+            "digest": "f6421c030bb23c4af58d2f84786ac1df7d7b9bf766fa66fea63a226db62810b4",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 24
+          },
+          "service_category": {
+            "digest": "15e62fa89dbffb79b3475706b89b03aba9b48e39ab2da4db306f9aebb5c390a7",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 9
+          },
+          "service_subaccount": {
+            "digest": "012931d6341b0a864682bd673e951e1f1e97627c2462ebeb4047eeee21141a7d",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 206
+          }
+        }
+      },
+      "Alibaba Cloud": {
+        "all_rows": 4,
+        "charge_categories": {
+          "Usage": 4
+        },
+        "company_rows": 3,
+        "evidence_classes": [
+          "synthetic-contract-fixture"
+        ],
+        "negative_billed_rows": 0,
+        "nullable_numeric": {
+          "billed_cost": 0,
+          "consumed_quantity": 0,
+          "contracted_cost": 0,
+          "effective_cost": 0,
+          "list_cost": 0,
+          "pricing_quantity": 0
+        },
+        "services": [
+          "Synthetic ECS Hours"
+        ],
+        "source_use_cases": {
+          "charge_category": {
+            "digest": "7131283e50b08fa6f38fba54adad9eb80b07f2f1994a62168bf2ffd22f3e2ffc",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "728ef6d43954aadac57617ea1a59d00a9d640de9f27f29966f6ca45eadef0a25",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 4
+          },
+          "service_billing_account": {
+            "digest": "1b2c05b2ccb2574177228899a4e6ca340b1c3bfd492596f681118daecbc52784",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 2
+          },
+          "service_category": {
+            "digest": "b7ad52335328e189b27fddf7431a20498c6af5d94cd6a4934c6dbc35bd5656f7",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 2
+          },
+          "service_subaccount": {
+            "digest": "38de0881863eb09b39ce4295b51a9ed8e37aa5772f20b441d7ae6ffe3c53c266",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 4
+          }
+        }
+      },
+      "Google Cloud": {
+        "all_rows": 115,
+        "charge_categories": {
+          "usage": 115
+        },
+        "company_rows": 115,
+        "evidence_classes": [
+          "official-public-subset"
+        ],
+        "negative_billed_rows": 0,
+        "nullable_numeric": {
+          "billed_cost": 0,
+          "consumed_quantity": 0,
+          "contracted_cost": 0,
+          "effective_cost": 0,
+          "list_cost": 0,
+          "pricing_quantity": 0
+        },
+        "services": [
+          "Artifact Registry",
+          "Cloud Key Management Service (KMS)",
+          "Cloud SQL",
+          "Networking"
+        ],
+        "source_use_cases": {
+          "charge_category": {
+            "digest": "88ee9473e175cf0d4fe7b59ad345bc56f35cd3968766c80f3efaf57a67bbe2da",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "f170004c6f61deba0dc974fb743d20f9c5af5a4b8111339f17e6dcc78031f0cf",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 15
+          },
+          "service_billing_account": {
+            "digest": "014a29540567f7b7e29d51199e59aebd4132fce7b1b836d9ee39f9265501aad5",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 4
+          },
+          "service_category": {
+            "digest": "90056123b99b6db184fd1584161268fdc45ae4f7069bc58f15703551daa6a478",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "5356dfcb804530ace9326848ab108b507d6eb2bdc424d06a8e9af1f75bea6158",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 4
+          }
+        }
+      },
+      "Microsoft": {
+        "all_rows": 51,
+        "charge_categories": {
+          "Usage": 51
+        },
+        "company_rows": 51,
+        "evidence_classes": [
+          "official-public"
+        ],
+        "negative_billed_rows": 12,
+        "nullable_numeric": {
+          "billed_cost": 0,
+          "consumed_quantity": 0,
+          "contracted_cost": 0,
+          "effective_cost": 0,
+          "list_cost": 0,
+          "pricing_quantity": 0
+        },
+        "services": [
+          "Azure DB for MySQL",
+          "Azure Kubernetes Service",
+          "Azure Machine Learning",
+          "Storage Accounts",
+          "Virtual Machine Scale Sets",
+          "Virtual Machines"
+        ],
+        "source_use_cases": {
+          "charge_category": {
+            "digest": "c9a16574c3588f9f384eaf42e96c518c675edbb0e5d4613b243ccae5c415ee4b",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "5ba55514fa4fbd9f93e485f16a6f5c2b462d8fa7ae0705962bfb0f41e548c68a",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 47
+          },
+          "service_billing_account": {
+            "digest": "5ce69acc0f9151b98c97a42241fe71bd7ad21b329a5e04f39b13512be88aef89",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 6
+          },
+          "service_category": {
+            "digest": "64ebd724b591f79e63c38c7a98dd777ba045b46d796c79256954ab6f44f10e4f",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 4
+          },
+          "service_subaccount": {
+            "digest": "8b5d4eeb7760b0f7f9cd2de106c69c2ae4787dad5f1e835b421754ef9f87f69e",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 9
+          }
+        }
+      },
+      "Oracle": {
+        "all_rows": 7,
+        "charge_categories": {
+          "Adjustment": 2,
+          "Usage": 5
+        },
+        "company_rows": 7,
+        "evidence_classes": [
+          "official-public"
+        ],
+        "negative_billed_rows": 0,
+        "nullable_numeric": {
+          "billed_cost": 0,
+          "consumed_quantity": 0,
+          "contracted_cost": 7,
+          "effective_cost": 0,
+          "list_cost": 0,
+          "pricing_quantity": 0
+        },
+        "services": [
+          "BLOCK_STORAGE",
+          "COMPUTE",
+          "NETWORK"
+        ],
+        "source_use_cases": {
+          "charge_category": {
+            "digest": "da02e7e0d0e95c62d846961e56824a5df13e8ea651f72610fd8d2cb5fda701b8",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 2
+          },
+          "resource_sku": {
+            "digest": "b972b751ed8195ae2d1f6c47a76b57d0e917509e59a6c19b1bde460a15759e6b",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 7
+          },
+          "service_billing_account": {
+            "digest": "34ea9f20e264ac09c37c8dba7984de9442f50739a1a74cf7acf358622a82c902",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 4
+          },
+          "service_category": {
+            "digest": "77144ffaceff74214f9897ac63453b668587ee9575435c06801291acf01b0d6e",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 3
+          },
+          "service_subaccount": {
+            "digest": "280adbd5bf5267bf0275f027a136fe2e19f545b8646164fc7ceb8bb98c2e7c1f",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 5
+          }
+        }
+      },
+      "VMware": {
+        "all_rows": 4,
+        "charge_categories": {
+          "Usage": 4
+        },
+        "company_rows": 3,
+        "evidence_classes": [
+          "synthetic-contract-fixture"
+        ],
+        "negative_billed_rows": 0,
+        "nullable_numeric": {
+          "billed_cost": 0,
+          "consumed_quantity": 0,
+          "contracted_cost": 0,
+          "effective_cost": 0,
+          "list_cost": 0,
+          "pricing_quantity": 0
+        },
+        "services": [
+          "Synthetic VM Hours"
+        ],
+        "source_use_cases": {
+          "charge_category": {
+            "digest": "544e9585bf5cad309b7d7d0cf7ce89c1fc3ae1b4feb16fa1e16718203574e7b6",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ChargeCategory",
+              "ChargeClass"
+            ],
+            "groups": 1
+          },
+          "resource_sku": {
+            "digest": "8dfdce6b2b57ba2e1997c38abf2d1a586b7eb41e3ebe4c10c26ced2a7c313426",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceName",
+              "ResourceId",
+              "SkuId"
+            ],
+            "groups": 4
+          },
+          "service_billing_account": {
+            "digest": "ffa3379b2379b8548435ca83cf87381dde3d328958b9f2170c77e97402d4b8b7",
+            "dimensions": [
+              "ProviderName",
+              "BillingAccountId",
+              "BillingCurrency",
+              "ServiceName",
+              "BillingPeriodStart",
+              "BillingPeriodEnd"
+            ],
+            "groups": 1
+          },
+          "service_category": {
+            "digest": "04e98a9d6043ee9448d89a0ff27f23b22dc6ea55d39a182f283ef8ad24404408",
+            "dimensions": [
+              "ProviderName",
+              "BillingCurrency",
+              "ServiceCategory"
+            ],
+            "groups": 1
+          },
+          "service_subaccount": {
+            "digest": "f11b18de162c5925791c065d81d8eb79607509648037a8d1e94d7e0db7c96ceb",
+            "dimensions": [
+              "ProviderName",
+              "SubAccountId",
+              "BillingCurrency",
+              "ServiceName"
+            ],
+            "groups": 3
+          }
+        }
+      }
+    },
+    "runner_sha256": "3abdd5035407c3de91f1a6cab32b45b599ca28e6153e267648b7eaa41284d59c",
+    "runtime_unchanged": true,
+    "source_data_committed": false,
+    "status": "PASS",
+    "use_case_mode": "offline derivation from verified returned source_json, not new native query endpoints"
+  },
+  "query_run": "HB-31-provider-queries-third",
+  "review_method": "Independent read-only source/index review and offline retained-response replay; no independent database test rerun. Oracle unit tests executed by writer.",
+  "reviews": {
+    "corrected_code_dba": "PASS",
+    "design_dba": "PASS",
+    "final_dba": "PASS",
+    "final_qa": "PASS",
+    "final_staged_review": "PASS",
+    "preliminary_qa": "PASS",
+    "specification_map": "PASS",
+    "validation_applicability_dba": "PASS"
+  },
+  "source_sha256": {
+    "tests/focus_import/provider_queries/check_oracle.py": "9554eeb5ab74209a75bf7fce0c8123864738b9128ef93ec77d4ea24d6bf7bbc9",
+    "tests/focus_import/provider_queries/check_profiles.py": "0f6ee8231ca320d67779e52430a97984dffcd2889128514a0b65830bb42c37f6",
+    "tests/focus_import/provider_queries/oracle.py": "ee3608b9e6a1b15fdbc09d4d0c8fc17e5bf7db562fd5474bdde187172db0aced",
+    "tests/focus_import/provider_queries/verify.py": "3abdd5035407c3de91f1a6cab32b45b599ca28e6153e267648b7eaa41284d59c"
+  },
+  "ticket": "HB-31"
+}

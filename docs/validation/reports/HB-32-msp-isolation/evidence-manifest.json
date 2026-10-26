@@ -1,0 +1,365 @@
+{
+  "artifacts": [
+    {
+      "access": "local synthetic verification",
+      "bytes": 938,
+      "committed": false,
+      "path": ".local/runs/HB-32-preflight.json",
+      "sha256": "10d9d2890bc4aa4aea7026da3b4e36ad609d4b83f985860f0e1fe32c11770a86"
+    },
+    {
+      "access": "local synthetic verification",
+      "bytes": 580,
+      "committed": false,
+      "path": ".local/runs/HB-32-isolation/reproduction.json",
+      "sha256": "f6a02dbcb3a89755a5629142151d7d51b0811da4669b2ed2011398c53c0543e4"
+    },
+    {
+      "access": "local synthetic verification",
+      "bytes": 7430,
+      "committed": false,
+      "path": ".local/runs/HB-32-isolation/20261026T233842Z-pre.json",
+      "sha256": "4914ed2b7b3ea6759593997dba34f17872f1be2708376c838fa727a6b338422e"
+    },
+    {
+      "access": "local synthetic verification",
+      "bytes": 2952,
+      "committed": false,
+      "path": ".local/runs/HB-32-isolation/20261026T234112Z-lifecycle.json",
+      "sha256": "0b0820b6d6922a0745de364d3029efdf85521440c9c6155fed636b2f92114525"
+    },
+    {
+      "access": "local synthetic verification",
+      "bytes": 248,
+      "committed": false,
+      "path": ".local/runs/HB-32-isolation/postcheck.json",
+      "sha256": "3fe77c780f85f121e8b6ff3a65fa595f2d2813119a5296776e87b2368f1800ab"
+    },
+    {
+      "access": "local synthetic verification",
+      "bytes": 392,
+      "committed": false,
+      "path": ".local/runs/HB-32-isolation/default-preservation.json",
+      "sha256": "d3cf3d7ae9d5ea82ac3e1bbd8c2684adc970fbf43238939ac0cf6444a1deec07"
+    },
+    {
+      "access": "local synthetic verification",
+      "bytes": 3910573,
+      "committed": false,
+      "path": ".local/runs/HB-32-isolation/responses.jsonl",
+      "sha256": "acf42516daa8d4a97c5c8061dc40694b270a42c22b87b8ed039a4cca385b3d62"
+    }
+  ],
+  "base_commit": "8153975c19fe27e32569e5416ef5f9298362ec08",
+  "executed_final_cases": [
+    {
+      "id": "I01:msp32-a1",
+      "kind": "core",
+      "observed": {
+        "billed_cost": "25",
+        "rows": 3,
+        "snapshot": "5b205065641c5dc8b46fb5735f9ffc0ae431aafc0568fe6b6eacda56caf7a8c3"
+      },
+      "seconds": 10.909,
+      "status": "PASS"
+    },
+    {
+      "id": "I01:msp32-a2",
+      "kind": "core",
+      "observed": {
+        "billed_cost": "7",
+        "rows": 1,
+        "snapshot": "052dbfe0be7737340a6839a6cc5d99eb1d7f024d0b43d0a02a5b9ef9c42a67cf"
+      },
+      "seconds": 3.803,
+      "status": "PASS"
+    },
+    {
+      "id": "I01:msp32-b",
+      "kind": "core",
+      "observed": {
+        "billed_cost": "300",
+        "rows": 2,
+        "snapshot": "c37e754d4e995924d791965b648643d21a03db86eb40ba1bf08657bba00e0947"
+      },
+      "seconds": 7.24,
+      "status": "PASS"
+    },
+    {
+      "id": "I02:explicit-company-union",
+      "kind": "core",
+      "observed": {
+        "billed_cost": "32",
+        "rows": 4,
+        "snapshot": "e89d889e7c732827c90ec129728bafb5411dfab6d4b42bc41a5b4e56215baf55"
+      },
+      "seconds": 14.216,
+      "status": "PASS"
+    },
+    {
+      "id": "I03:equal-label-shared-payer",
+      "kind": "core",
+      "observed": {
+        "equal_labels_distinct_companies": true,
+        "ordinary_reader_inherits_no_sibling": true
+      },
+      "seconds": 2.621,
+      "status": "PASS"
+    },
+    {
+      "id": "I04:provider-qualified-identity",
+      "kind": "core",
+      "observed": {
+        "aws_rows": 2,
+        "gcp_rows": 1,
+        "same_strings_provider_qualified": true
+      },
+      "seconds": 2.181,
+      "status": "PASS"
+    },
+    {
+      "id": "I05:pg-spoofed-context",
+      "kind": "core",
+      "observed": {
+        "connection_reuse_scoped": true,
+        "foreign_rows_after_context_spoof": 0,
+        "visible_tenants": 1
+      },
+      "seconds": 0.013,
+      "status": "PASS"
+    },
+    {
+      "id": "I06:pg-privileges",
+      "kind": "core",
+      "observed": {
+        "denied_actions": 5,
+        "row_security_off_bypass": false
+      },
+      "seconds": 0.011,
+      "status": "PASS"
+    },
+    {
+      "id": "I07:ch-predicates-union",
+      "kind": "core",
+      "observed": {
+        "foreign_predicate_rows": 0,
+        "unfiltered_billed_cost": "25.000000000000000000",
+        "unfiltered_rows": 3,
+        "union_rows": 3
+      },
+      "seconds": 0.241,
+      "status": "PASS"
+    },
+    {
+      "id": "I08:ch-settings",
+      "kind": "core",
+      "observed": {
+        "denied_locked_settings_and_write": 4,
+        "error_types": [
+          "SETTING_CONSTRAINT_VIOLATION",
+          "SETTING_CONSTRAINT_VIOLATION",
+          "SETTING_CONSTRAINT_VIOLATION",
+          "ACCESS_DENIED"
+        ],
+        "foreign_rows_with_per_query_setting": 0,
+        "global_readonly_not_claimed": true,
+        "per_query_readonly": 0
+      },
+      "seconds": 0.029,
+      "status": "PASS"
+    },
+    {
+      "id": "I09:metadata-isolation",
+      "kind": "core",
+      "observed": {
+        "authorized_coverage_count": 3,
+        "foreign_coverage_count": 0,
+        "foreign_graph_count": 0
+      },
+      "seconds": 2.755,
+      "status": "PASS"
+    },
+    {
+      "id": "I10:foreign-correction-stable-cursor",
+      "kind": "core",
+      "observed": {
+        "a_snapshot_unchanged": true,
+        "b_corrected_cost": "301"
+      },
+      "seconds": 16.066,
+      "status": "PASS"
+    },
+    {
+      "id": "I11:ambiguous-owner",
+      "kind": "core",
+      "observed": {
+        "reason": "overlapping_assignment"
+      },
+      "seconds": 0.0,
+      "status": "PASS"
+    },
+    {
+      "id": "I12:wrong-source-no-raw",
+      "kind": "core",
+      "observed": {
+        "reader_registration_denied": true,
+        "reason": "connection_domain_authority",
+        "retained_raw_key": null,
+        "state": "rejected"
+      },
+      "seconds": 1.434,
+      "status": "PASS"
+    },
+    {
+      "id": "I13:audience-tamper",
+      "kind": "core",
+      "observed": {
+        "invalid_definition_denied": true,
+        "live_tamper_denials": 3,
+        "valid_view_restored": true
+      },
+      "seconds": 3.922,
+      "status": "PASS"
+    },
+    {
+      "id": "I14:concurrent-readers",
+      "kind": "core",
+      "observed": {
+        "contamination": false,
+        "personas": 4
+      },
+      "seconds": 6.77,
+      "status": "PASS"
+    },
+    {
+      "id": "I16:unsigned-storage",
+      "kind": "storage-adjacent",
+      "observed": {
+        "customer_download_endpoint": "NOT_IMPLEMENTED",
+        "unsigned_operations": [
+          {
+            "code": "AccessDenied",
+            "denied": true
+          },
+          {
+            "code": "AccessDenied",
+            "denied": true
+          }
+        ]
+      },
+      "seconds": 0.013,
+      "status": "PASS"
+    },
+    {
+      "id": "I17a:untrusted-engine-metadata",
+      "kind": "conditional-direct-SQL",
+      "observed": {
+        "error_type": "DatabaseError",
+        "physical_metadata_denied": true,
+        "profile": "conditional-untrusted-SQL"
+      },
+      "seconds": 0.014,
+      "status": "PASS"
+    },
+    {
+      "id": "I20:owned-known-zero",
+      "kind": "core",
+      "observed": {
+        "authorized_zero_domains": 2,
+        "foreign_zero_disclosure": false,
+        "original_rows": 3
+      },
+      "seconds": 6.421,
+      "status": "PASS"
+    },
+    {
+      "id": "I15:archive-revoke-restore",
+      "kind": "core",
+      "observed": {
+        "archive_recall_scoped": true,
+        "old_cursor_denied": true,
+        "revoked_after_restore": true
+      },
+      "seconds": 60.637,
+      "status": "PASS"
+    },
+    {
+      "id": "I17b:revoked-internal-SQL",
+      "kind": "conditional-direct-SQL",
+      "reason": "internal database access remains usable after product revocation: PG=3, CH=3",
+      "seconds": 0.023,
+      "status": "FAIL"
+    },
+    {
+      "id": "I21:owned-versus-foreign-expiry",
+      "kind": "core",
+      "observed": {
+        "foreign_expiry_ignored": true,
+        "owned_expiry_blocked": true,
+        "physical_all_copy_erasure_claimed": false,
+        "synthetic_deletion_clock": "2300-01-01T00:00:00Z"
+      },
+      "seconds": 24.198,
+      "status": "PASS"
+    }
+  ],
+  "external_customer_portal": "UNVERIFIED_NOT_IMPLEMENTED",
+  "machine": "mac_mini",
+  "not_run": {
+    "I18": "External user authentication, MSP multi-customer staff grants, department human permissions and customer field projection are not implemented.",
+    "I19": "Customer search/cache/download/export/queued-worker entry points are not implemented."
+  },
+  "owner": "Seung Woo Park",
+  "postchecks": {
+    "default_company_rows": 1121,
+    "default_legacy_tenant_row_counts": [
+      2,
+      9,
+      1112
+    ],
+    "legacy_customer_metadata_isolation_certified": false,
+    "revoked_member_denies_whole_company_view": "view_member_denied",
+    "status": "PASS"
+  },
+  "preservation": {
+    "bindings_sha256": "47fcb53cb01a75fc99bada7359bed8292df6ef9dec8285f29dedd1af20d8ede2",
+    "bucket": "hb32-msp-isolation-20261027",
+    "clickhouse_port": 18124,
+    "database": "hb32_msp_isolation_20261027",
+    "default_runtime_unchanged": true,
+    "journal_sequence": 58,
+    "shared_roles_unchanged": true,
+    "status_sha256": "cd93c98bebcc02ea965bd30dd91e9f0351e13b583bc4da9b6dea0f01a37f483f"
+  },
+  "retention": "Local operator retains evidence until ticket handoff/review; no permanent remote retention promised.",
+  "reviews": [
+    {
+      "execution": "Read-only diff and artifact inspection; no DB actions.",
+      "role": "independent DBA",
+      "verdict": "PASS for narrow fix/core evidence; direct SQL revocation FAIL; external paths UNVERIFIED"
+    },
+    {
+      "execution": "Read-only diff and artifact inspection; no DB actions.",
+      "role": "independent security/QA",
+      "verdict": "PASS for narrow fix/core evidence; direct SQL revocation FAIL; external paths UNVERIFIED"
+    }
+  ],
+  "selector_regressions": {
+    "command": "tests/engine_probes/.venv/bin/python tests/focus_import/msp_isolation/check_selector.py",
+    "executed": 8,
+    "status": "PASS"
+  },
+  "source_sha256": {
+    "modules/focus_import/collection.py": "a0ad3b06b21efbf4da3b7f298d4523e2fde50723108b57054e638284f46eb91e",
+    "tests/focus_import/msp_isolation/check_selector.py": "dac3c7741354354b0d129368523b84badf7e2a7106cbc69b9f9dd25f635a715a",
+    "tests/focus_import/msp_isolation/database_cases.py": "ff85a9f24cfca7d5e79656b7e93dc6ecb065c20da95e23b9fc23d523657ab7c1",
+    "tests/focus_import/msp_isolation/fixture_data.py": "b4e0a377a456e8bae6667cbb31afdbc24f1b2d1c6c17a39ce0685fa4b670b271",
+    "tests/focus_import/msp_isolation/postcheck.py": "865d9b150a7d0036813aa0275380e1ed67157d89818ca55827c52cef5725a075",
+    "tests/focus_import/msp_isolation/preflight.py": "157e53d3338856d2a1984996d63438109fee5f7e992f6e6a177adbc10ec4f1b9",
+    "tests/focus_import/msp_isolation/query_cases.py": "890575e6c60c5327e0476170e2561a660aa6bb3185d96f91f09e2761e9afed9a",
+    "tests/focus_import/msp_isolation/reproduce.py": "4684d564601b83f399719afe05fe5f216cb2a162f70ce9512325f9b3e4547c6b",
+    "tests/focus_import/msp_isolation/runtime.py": "cea52234bf5aff2315201454469ff89435c2a89fc836dd939b253cea35549d54",
+    "tests/focus_import/msp_isolation/verify.py": "43ec6ad54d7392cd64ad77de941624c506823b1ec8745bcefd75560f80fa9eef"
+  },
+  "ticket": "HB-32"
+}

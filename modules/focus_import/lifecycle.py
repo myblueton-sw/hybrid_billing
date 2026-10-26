@@ -250,7 +250,7 @@ def delete(actor,sha,at=None):
 def status(actor):
     with access(actor,'status') as (j,conn,store,tenants):
         if j.state.get('retired'):return {'installation':j.head['installation'],'state':'retired','receipt':j.state}
-        return {'installation':j.head['installation'],'sequence':j.head['sequence'],'slices':copy.deepcopy(j.state['slices']),'policies':j.state['policies'],'windows':j.state['windows'],'deliveries':j.state['deliveries'],'backups':j.state['backups'],'deletions':[deletion_status(j,store,i) for i,x in j.state['slices'].items() if x['state']=='deleted']}
+        return {'receipts':copy.deepcopy(j.state.get('receipts',{})),'connections':copy.deepcopy(j.state.get('connections',{})),'installation':j.head['installation'],'sequence':j.head['sequence'],'slices':copy.deepcopy(j.state['slices']),'policies':j.state['policies'],'windows':j.state['windows'],'deliveries':j.state['deliveries'],'backups':j.state['backups'],'deletions':[deletion_status(j,store,i) for i,x in j.state['slices'].items() if x['state']=='deleted']}
 
 
 def backup(actor,at=None):
@@ -267,14 +267,17 @@ def backup(actor,at=None):
             parts[key]=base64.b64encode(archive.encode(rows)).decode();until.append(deadline);deadlines[key]=deadline
             rawkey=original_for(j,item['batch_id'])
             if rawkey not in originals:originals[rawkey]=base64.b64encode(j.s3.get_object(Bucket=warehouse.BUCKET,Key=rawkey)['Body'].read()).decode()
-        if not parts:raise Rejected('backup_retention_elapsed')
-        body={'installation':j.head['installation'],'control_head':j.head,'metadata':metadata(conn),'slices':copy.deepcopy(j.state['slices']),'parts':parts,'originals':originals}
+        from .receipts import backup_parts
+        quarantine,quarantine_deadlines=backup_parts(j,at)
+        until.extend(quarantine_deadlines.values())
+        if not parts and not quarantine:raise Rejected('backup_retention_elapsed')
+        body={'installation':j.head['installation'],'control_head':j.head,'metadata':metadata(conn),'slices':copy.deepcopy(j.state['slices']),'parts':parts,'originals':originals,'quarantine':quarantine,'quarantine_deadlines':quarantine_deadlines}
         data=canonical(body).encode()
         if len(data)>128*1024*1024:raise Rejected('backup_size')
         sha=digest(data);object_key=f'backups/{identity}/{sha}.json'
         with j.effect('backup',identity):
             archive.put(j.s3,object_key,data)
-            j.state['backups'][identity]={'key':object_key,'digest':sha,'bytes':len(data),'created_at':at,'expires_at':max(until,default=at),'slices':list(parts),'slice_deadlines':deadlines,'excluded_expired':excluded,'shared_copy_residual':'until-last-slice-deadline','state':'retained'}
+            j.state['backups'][identity]={'key':object_key,'digest':sha,'bytes':len(data),'created_at':at,'expires_at':max(until,default=at),'slices':list(parts),'slice_deadlines':deadlines,'quarantine_deadlines':quarantine_deadlines,'excluded_expired':excluded,'shared_copy_residual':'until-last-slice-deadline','state':'retained'}
             j.state['metadata']=metadata(conn)
         return {'backup_id':identity,'sha256':sha,'slices':len(parts),'expires_at':j.state['backups'][identity]['expires_at']}
 
@@ -294,6 +297,9 @@ def validated_backup(j,backup_id,current):
     if not b or b['state']!='retained':raise Rejected('backup_unavailable')
     if current>=b['expires_at']:raise Rejected('backup_horizon_elapsed')
     if any(current>=deadline and j.state['slices'][identity]['state']!='deleted' for identity,deadline in b['slice_deadlines'].items()):raise Rejected('backup_slice_horizon_elapsed')
+    from .receipts import managed
+    live_quarantine={q['key'] for q in managed(j)}
+    if any(current>=deadline for key,deadline in b.get('quarantine_deadlines',{}).items() if key in live_quarantine):raise Rejected('backup_quarantine_horizon_elapsed')
     data=j.s3.get_object(Bucket=warehouse.BUCKET,Key=b['key'])['Body'].read()
     if digest(data)!=b['digest']:raise Rejected('backup_digest')
     body=json.loads(data)
@@ -342,6 +348,8 @@ def restore(actor,backup_id,at=None):
                 rows=archive.decode(base64.b64decode(body['parts'][identity],validate=True),item)
                 remove_hot(store,item);store.insert(UUID(item['batch_id']),rows)
                 store.verify(UUID(item['batch_id']),UUID(item['tenant_id']),item)
+            from .receipts import restore_parts
+            restore_parts(j,body)
             j.state['metadata']=metadata(conn)
         return {'state':'restored','backup_id':backup_id,'latest_controls_applied':True,'sequence':j.head['sequence']}
 
@@ -399,6 +407,8 @@ def retirement_inventory(j,conn,store):
     binding_files={str(p.relative_to(BINDINGS.parent)):digest(p.read_bytes()) for p in [BINDINGS,BINDINGS.with_suffix('.tmp')] if p.exists()}
     if any(x['state']!='deleted' or x['holds'] or x['references'] for x in j.state['slices'].values()):raise Rejected('retirement_retained_dependency')
     if any(b['state']=='retained' for b in j.state['backups'].values()):raise Rejected('retirement_backup_residual')
+    from .receipts import managed
+    if managed(j):raise Rejected('retirement_quarantine_residual')
     if j.s3.get_bucket_versioning(Bucket=warehouse.BUCKET).get('Status') in ['Enabled','Suspended']:raise Rejected('retirement_object_versions')
     reader=warehouse.client(store.env)
     try:

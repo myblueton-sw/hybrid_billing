@@ -1,0 +1,127 @@
+{
+  "boundaries": [
+    "No full provider FOCUS conformance or supplier invoice acceptance",
+    "No live CSP/customer credentials or customer documents",
+    "No production installer/authentication/capacity/HA certification",
+    "Existing local CLI actors remain trusted verification personas",
+    "No automatic recovery from unknown effects",
+    "No claim of physical all-copy erasure",
+    "PR remains unmerged pending owner authorization"
+  ],
+  "delivery": "customer-operated installation",
+  "findings_addressed": [
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07"
+  ],
+  "intermediate_attempts": [
+    {
+      "outcome": "5 setup errors: sandbox denied localhost",
+      "run": "20261025T113607Z-2d7a3f"
+    },
+    {
+      "outcome": "5 setup errors: ClickHouse host port closed despite healthy internal endpoint; verification container restart restored port",
+      "run": "20261025T113653Z-50b651"
+    },
+    {
+      "outcome": "5 actual-stack tests passed",
+      "run": "20261025T114142Z-584a1d"
+    },
+    {
+      "outcome": "10 passed,1 test expectation mismatch; denied escalation behavior was correct",
+      "run": "20261025T114501Z-035f0f"
+    },
+    {
+      "outcome": "420-second wrapper timeout; not a test pass",
+      "run": "20261025T114834Z-3bfff6"
+    },
+    {
+      "outcome": "335 passed,1 query UTC serialization expectation mismatch; internal+00:00 is valid, source lexicalZ verified by corrected assertion",
+      "run": "20261025T121309Z-f11346"
+    },
+    {
+      "outcome": "13 passed,1 test-local variable shadowing error; corrected and rerun14 passed",
+      "run": "20261025T134823Z-ebcb19"
+    }
+  ],
+  "license_sha256": "83a62b0955e876667b851d0de97f4d88f3eb2dc1edaf22e2afe3925b956ded9c",
+  "license_unchanged": true,
+  "machine": "mac_mini",
+  "review_base_commit": "9ff5cf4b55753b69698cbfa804610b47ffa1a607",
+  "reviews": {
+    "design_dba": "PASS",
+    "design_security": "PASS",
+    "final_admission_code": "PASS",
+    "final_evidence_qa": "PASS",
+    "final_staged_review": "PASS",
+    "integrated_security_code": "PASS",
+    "scope_qa_code": "PASS",
+    "semantic_code": "PASS"
+  },
+  "runs": [
+    {
+      "errors": 0,
+      "failures": 0,
+      "junit_sha256": "31b3860c1a1bd123e4c529060b38ee593f598acda7cbe08ea0203b0992043372",
+      "label": "full_regression",
+      "run": "20261025T122007Z-6a0b3a",
+      "skipped": 0,
+      "tests": 337
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "junit_sha256": "d83c67e30cc79f4727febd9f5c429e9301c7173fb3deb674e0410c74287c3aae",
+      "label": "final_scope_delta",
+      "run": "20261025T141836Z-628bbc",
+      "skipped": 0,
+      "tests": 14
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "junit_sha256": "3f818479172416a59bbc349a553aeb6806948289f0cb91466bc2f0a3b5a23095",
+      "label": "final_parser_delta",
+      "run": "20261025T142128Z-57afc2",
+      "skipped": 0,
+      "tests": 2
+    }
+  ],
+  "runtime": {
+    "commands": 6,
+    "commands_sha256": "f6df20878e9268a6910e48f95bd81b67d6b203b6c3cfbc00b16e80d4b22d61bd",
+    "company": 1121,
+    "foreign": 2,
+    "journal_sequence": 58,
+    "restored_legacy_csv_backup": true,
+    "run": "20261025T142220Z-16485f",
+    "tenant_a": 1112,
+    "tenant_b": 9
+  },
+  "source_sha256": {
+    "modules/focus_import/collection.py": "52b35f93e4158f738dc2e5fb45d7afb1cda80381fe653e544a11c7892f0b118c",
+    "modules/focus_import/connections.py": "7b1507df8a0a93e8f4fed19ee91f35a554162f504b469f6449de68d03993db20",
+    "modules/focus_import/hierarchy_model.py": "a17699ef46a4c3189bc2092114310231c9962267096114bce4c6ac58bdc95b58",
+    "modules/focus_import/intake.py": "4fb7b5bb9b941ebfa5989a7c7b580b17ca35d623d0f69435b509966eb0ce060e",
+    "modules/focus_import/lifecycle.py": "e21c916f9fbdbb930fa9a4b213d62a76d0ec1fc76c1ed949b44c6a83284aa9c5",
+    "modules/focus_import/model.py": "45b8f0164290039462eb545a831deea624e52e85cbdd042785d1a6f8d61d39c4",
+    "modules/focus_import/receipts.py": "677c73dd2bf764a9a1454e5823f1f4b240a00025f95e05d78b5823bf5aaf884b",
+    "modules/focus_import/semantics.py": "746bdcad90497f32d0164e298b77a82a22c339832182308ea266f74b978a7985",
+    "modules/focus_import/service.py": "981fd05132a645948c153845bf8903d9a9d9103ba98ed823b5d5d567ed1c745b",
+    "modules/focus_import/temporal.py": "2a1d796cc75244894a11403ec6582adf603f21f152f63c6233b87df3cca6c798",
+    "modules/focus_local/contract.py": "70ce7633c4df7f1ba0c50cf60d96c6954d3a31f2a20e5fc8338fc2eae649ca02",
+    "packages/contracts/focus/1.2.json": "833215358593aecbdfe14031a897fdeff2c4af1ac6e0430f2bca053c52ed65b4",
+    "packages/contracts/focus/1.3.json": "31dfdc54ef998c8f4f6b54db2d53f508ebd4dac18e5548c02049f238ad5d8d14",
+    "packages/contracts/focus_import/consumed.json": "fc14e2fa75d6c5c34d57b838f95bcaf9257becad87d2b1d79fc59d0c53b5fed4",
+    "tests/focus_import/test_collection_scopes.py": "2cd826a912262109db1d6b20e75e1378922a718e86094cced92ada71c09f2e1f",
+    "tests/focus_import/test_connection_model.py": "381486e8644ab49067ae809b806378e67988dfb62d4bb6b5bb201710c0820761",
+    "tests/focus_import/test_semantics.py": "b14c48480dd62ee496b35becb2251de0a25c2e95517f7d75fdced7511e43b008",
+    "tools/focus_lifecycle.py": "6291c50821d7b035cab14e1f722a0b2b3dab5ddf622a45b1b649037fa39ee2a9"
+  },
+  "ticket": "HB-30",
+  "verification_method": "Full337 regression followed by targeted14 after final admission/origin changes and targeted2 after parser-error normalization. Counts overlap; do not sum as unique tests."
+}

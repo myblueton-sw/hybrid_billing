@@ -1,0 +1,1331 @@
+{
+  "versions": {
+    "1.2": {
+      "version": "1.2",
+      "revision": 2,
+      "validator_revision": 2,
+      "numeric": {
+        "precision": 38,
+        "scale": 18,
+        "grammar": "focus-numeric-v1"
+      },
+      "null_tokens": [
+        "",
+        "\\N"
+      ],
+      "sources": [
+        "https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS_Spec/tree/7296e3146fb931ee32b6496fa6e4200e7f4384f7/specification/columns"
+      ],
+      "fields": [
+        {
+          "source": "BillingAccountId",
+          "name": "billing_account_id",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "SubAccountId",
+          "name": "sub_account_id",
+          "type": "string",
+          "header": true,
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "BillingCurrency",
+          "name": "billing_currency",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "BillingPeriodStart",
+          "name": "billing_period_start",
+          "type": "timestamp",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "BillingPeriodEnd",
+          "name": "billing_period_end",
+          "type": "timestamp",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ChargePeriodStart",
+          "name": "charge_period_start",
+          "type": "timestamp",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ChargePeriodEnd",
+          "name": "charge_period_end",
+          "type": "timestamp",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ChargeCategory",
+          "name": "charge_category",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "enum": [
+            "Usage",
+            "Purchase",
+            "Tax",
+            "Credit",
+            "Adjustment"
+          ],
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ChargeClass",
+          "name": "charge_class",
+          "type": "string",
+          "header": true,
+          "enum": [
+            "Correction"
+          ],
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ServiceName",
+          "name": "service_name",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ServiceCategory",
+          "name": "service_category",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "enum": [
+            "AI and Machine Learning",
+            "Analytics",
+            "Business Applications",
+            "Compute",
+            "Databases",
+            "Developer Tools",
+            "Multicloud",
+            "Identity",
+            "Integration",
+            "Internet of Things",
+            "Management and Governance",
+            "Media",
+            "Migration",
+            "Mobile",
+            "Networking",
+            "Security",
+            "Storage",
+            "Web",
+            "Other"
+          ],
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "CommitmentDiscountStatus",
+          "name": "commitment_discount_status",
+          "type": "string",
+          "header": true,
+          "enum": [
+            "Used",
+            "Unused"
+          ],
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "SkuPriceId",
+          "name": "sku_price_id",
+          "type": "string",
+          "header": true,
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ],
+          "null_when": {
+            "eq": [
+              "charge_category",
+              "Tax"
+            ]
+          },
+          "nonnull_when": {
+            "all": [
+              {
+                "in": [
+                  "charge_category",
+                  [
+                    "Usage",
+                    "Purchase"
+                  ]
+                ]
+              },
+              {
+                "not": {
+                  "eq": [
+                    "charge_class",
+                    "Correction"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "source": "ResourceId",
+          "name": "resource_id",
+          "type": "string",
+          "header": true,
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "Tags",
+          "name": "tags",
+          "type": "json",
+          "header": true,
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ProviderName",
+          "name": "provider_name_legacy",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "PublisherName",
+          "name": "publisher_name_legacy",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "InvoiceIssuerName",
+          "name": "invoice_issuer_name",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "BilledCost",
+          "name": "billed_cost",
+          "type": "decimal",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "EffectiveCost",
+          "name": "effective_cost",
+          "type": "decimal",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "ListCost",
+          "name": "list_cost",
+          "type": "decimal",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "ContractedCost",
+          "name": "contracted_cost",
+          "type": "decimal",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "ConsumedQuantity",
+          "name": "consumed_quantity",
+          "type": "decimal",
+          "header": true,
+          "null_when": {
+            "any": [
+              {
+                "not": {
+                  "eq": [
+                    "charge_category",
+                    "Usage"
+                  ]
+                }
+              },
+              {
+                "eq": [
+                  "commitment_discount_status",
+                  "Unused"
+                ]
+              }
+            ]
+          },
+          "nonnull_when": {
+            "all": [
+              {
+                "eq": [
+                  "charge_category",
+                  "Usage"
+                ]
+              },
+              {
+                "not": {
+                  "eq": [
+                    "commitment_discount_status",
+                    "Unused"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "eq": [
+                    "charge_class",
+                    "Correction"
+                  ]
+                }
+              }
+            ]
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "PricingQuantity",
+          "name": "pricing_quantity",
+          "type": "decimal",
+          "header": true,
+          "null_when": {
+            "any": [
+              {
+                "eq": [
+                  "charge_category",
+                  "Tax"
+                ]
+              }
+            ]
+          },
+          "nonnull_when": {
+            "all": [
+              {
+                "in": [
+                  "charge_category",
+                  [
+                    "Usage",
+                    "Purchase"
+                  ]
+                ]
+              },
+              {
+                "not": {
+                  "eq": [
+                    "charge_class",
+                    "Correction"
+                  ]
+                }
+              }
+            ]
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "ListUnitPrice",
+          "name": "list_unit_price",
+          "type": "decimal",
+          "header": true,
+          "aggregate": "none",
+          "nonnegative": true,
+          "null_when": {
+            "any": [
+              {
+                "eq": [
+                  "charge_category",
+                  "Tax"
+                ]
+              }
+            ]
+          },
+          "nonnull_when": {
+            "any": [
+              {
+                "all": [
+                  {
+                    "in": [
+                      "charge_category",
+                      [
+                        "Usage",
+                        "Purchase"
+                      ]
+                    ]
+                  },
+                  {
+                    "not": {
+                      "eq": [
+                        "charge_class",
+                        "Correction"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ContractedUnitPrice",
+          "name": "contracted_unit_price",
+          "type": "decimal",
+          "header": true,
+          "aggregate": "none",
+          "nonnegative": true,
+          "null_when": {
+            "any": [
+              {
+                "eq": [
+                  "charge_category",
+                  "Tax"
+                ]
+              }
+            ]
+          },
+          "nonnull_when": {
+            "any": [
+              {
+                "all": [
+                  {
+                    "in": [
+                      "charge_category",
+                      [
+                        "Usage",
+                        "Purchase"
+                      ]
+                    ]
+                  },
+                  {
+                    "not": {
+                      "eq": [
+                        "charge_class",
+                        "Correction"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ConsumedUnit",
+          "name": "consumed_unit",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "not": {
+              "is_null": "consumed_quantity"
+            }
+          },
+          "null_when": {
+            "is_null": "consumed_quantity"
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "PricingUnit",
+          "name": "pricing_unit",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "not": {
+              "is_null": "pricing_quantity"
+            }
+          },
+          "null_when": {
+            "is_null": "pricing_quantity"
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ProviderName",
+          "name": "service_provider_name",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": null,
+          "name": "host_provider_name",
+          "type": "string",
+          "header": false,
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "product": [
+            "list_unit_price",
+            "pricing_quantity",
+            "list_cost"
+          ],
+          "when": {
+            "not": {
+              "eq": [
+                "charge_class",
+                "Correction"
+              ]
+            }
+          }
+        },
+        {
+          "product": [
+            "contracted_unit_price",
+            "pricing_quantity",
+            "contracted_cost"
+          ],
+          "when": {
+            "not": {
+              "eq": [
+                "charge_class",
+                "Correction"
+              ]
+            }
+          }
+        }
+      ],
+      "capabilities": {
+        "measured_usage": true,
+        "list_prices": true,
+        "contracted_prices": true,
+        "host_null_services": [],
+        "tags": true,
+        "resource_ids": true,
+        "commitment_discounts": true,
+        "sku_prices": true,
+        "subaccounts": true
+      }
+    },
+    "1.3": {
+      "version": "1.3",
+      "revision": 2,
+      "validator_revision": 2,
+      "numeric": {
+        "precision": 38,
+        "scale": 18,
+        "grammar": "focus-numeric-v1"
+      },
+      "null_tokens": [
+        "",
+        "\\N"
+      ],
+      "sources": [
+        "https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS_Spec/tree/c67b95bd40e6fb43a57f74a53a615c4d6d3c118f/specification/datasets/cost_and_usage/columns"
+      ],
+      "fields": [
+        {
+          "source": "BillingAccountId",
+          "name": "billing_account_id",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "SubAccountId",
+          "name": "sub_account_id",
+          "type": "string",
+          "header": true,
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "BillingCurrency",
+          "name": "billing_currency",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "BillingPeriodStart",
+          "name": "billing_period_start",
+          "type": "timestamp",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "BillingPeriodEnd",
+          "name": "billing_period_end",
+          "type": "timestamp",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ChargePeriodStart",
+          "name": "charge_period_start",
+          "type": "timestamp",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ChargePeriodEnd",
+          "name": "charge_period_end",
+          "type": "timestamp",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ChargeCategory",
+          "name": "charge_category",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "enum": [
+            "Usage",
+            "Purchase",
+            "Tax",
+            "Credit",
+            "Adjustment"
+          ],
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ChargeClass",
+          "name": "charge_class",
+          "type": "string",
+          "header": true,
+          "enum": [
+            "Correction"
+          ],
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ServiceName",
+          "name": "service_name",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ServiceCategory",
+          "name": "service_category",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "enum": [
+            "AI and Machine Learning",
+            "Analytics",
+            "Business Applications",
+            "Compute",
+            "Databases",
+            "Developer Tools",
+            "Multicloud",
+            "Identity",
+            "Integration",
+            "Internet of Things",
+            "Management and Governance",
+            "Media",
+            "Migration",
+            "Mobile",
+            "Networking",
+            "Security",
+            "Storage",
+            "Web",
+            "Other"
+          ],
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "CommitmentDiscountStatus",
+          "name": "commitment_discount_status",
+          "type": "string",
+          "header": true,
+          "enum": [
+            "Used",
+            "Unused"
+          ],
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "SkuPriceId",
+          "name": "sku_price_id",
+          "type": "string",
+          "header": true,
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ],
+          "null_when": {
+            "eq": [
+              "charge_category",
+              "Tax"
+            ]
+          },
+          "nonnull_when": {
+            "all": [
+              {
+                "in": [
+                  "charge_category",
+                  [
+                    "Usage",
+                    "Purchase"
+                  ]
+                ]
+              },
+              {
+                "not": {
+                  "eq": [
+                    "charge_class",
+                    "Correction"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "source": "ResourceId",
+          "name": "resource_id",
+          "type": "string",
+          "header": true,
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "Tags",
+          "name": "tags",
+          "type": "json",
+          "header": true,
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ProviderName",
+          "name": "provider_name_legacy",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "PublisherName",
+          "name": "publisher_name_legacy",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "InvoiceIssuerName",
+          "name": "invoice_issuer_name",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "BilledCost",
+          "name": "billed_cost",
+          "type": "decimal",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "EffectiveCost",
+          "name": "effective_cost",
+          "type": "decimal",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "ListCost",
+          "name": "list_cost",
+          "type": "decimal",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "ContractedCost",
+          "name": "contracted_cost",
+          "type": "decimal",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "ConsumedQuantity",
+          "name": "consumed_quantity",
+          "type": "decimal",
+          "header": true,
+          "null_when": {
+            "any": [
+              {
+                "not": {
+                  "eq": [
+                    "charge_category",
+                    "Usage"
+                  ]
+                }
+              },
+              {
+                "eq": [
+                  "commitment_discount_status",
+                  "Unused"
+                ]
+              },
+              {
+                "is_null": "sku_price_id"
+              }
+            ]
+          },
+          "nonnull_when": {
+            "all": [
+              {
+                "eq": [
+                  "charge_category",
+                  "Usage"
+                ]
+              },
+              {
+                "not": {
+                  "eq": [
+                    "commitment_discount_status",
+                    "Unused"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "eq": [
+                    "charge_class",
+                    "Correction"
+                  ]
+                }
+              }
+            ]
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "PricingQuantity",
+          "name": "pricing_quantity",
+          "type": "decimal",
+          "header": true,
+          "null_when": {
+            "any": [
+              {
+                "eq": [
+                  "charge_category",
+                  "Tax"
+                ]
+              },
+              {
+                "is_null": "sku_price_id"
+              }
+            ]
+          },
+          "nonnull_when": {
+            "all": [
+              {
+                "in": [
+                  "charge_category",
+                  [
+                    "Usage",
+                    "Purchase"
+                  ]
+                ]
+              },
+              {
+                "not": {
+                  "eq": [
+                    "charge_class",
+                    "Correction"
+                  ]
+                }
+              }
+            ]
+          },
+          "aggregate": "sum",
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail",
+            "exact-control"
+          ]
+        },
+        {
+          "source": "ListUnitPrice",
+          "name": "list_unit_price",
+          "type": "decimal",
+          "header": true,
+          "aggregate": "none",
+          "nonnegative": true,
+          "null_when": {
+            "any": [
+              {
+                "eq": [
+                  "charge_category",
+                  "Tax"
+                ]
+              },
+              {
+                "is_null": "sku_price_id"
+              }
+            ]
+          },
+          "nonnull_when": {
+            "any": [
+              {
+                "all": [
+                  {
+                    "in": [
+                      "charge_category",
+                      [
+                        "Usage",
+                        "Purchase"
+                      ]
+                    ]
+                  },
+                  {
+                    "not": {
+                      "eq": [
+                        "charge_class",
+                        "Correction"
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "not": {
+                  "is_null": "sku_price_id"
+                }
+              }
+            ]
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ContractedUnitPrice",
+          "name": "contracted_unit_price",
+          "type": "decimal",
+          "header": true,
+          "aggregate": "none",
+          "nonnegative": true,
+          "null_when": {
+            "any": [
+              {
+                "eq": [
+                  "charge_category",
+                  "Tax"
+                ]
+              },
+              {
+                "is_null": "sku_price_id"
+              }
+            ]
+          },
+          "nonnull_when": {
+            "any": [
+              {
+                "all": [
+                  {
+                    "in": [
+                      "charge_category",
+                      [
+                        "Usage",
+                        "Purchase"
+                      ]
+                    ]
+                  },
+                  {
+                    "not": {
+                      "eq": [
+                        "charge_class",
+                        "Correction"
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "not": {
+                  "is_null": "sku_price_id"
+                }
+              }
+            ]
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ConsumedUnit",
+          "name": "consumed_unit",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "not": {
+              "is_null": "consumed_quantity"
+            }
+          },
+          "null_when": {
+            "is_null": "consumed_quantity"
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "PricingUnit",
+          "name": "pricing_unit",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "not": {
+              "is_null": "pricing_quantity"
+            }
+          },
+          "null_when": {
+            "is_null": "pricing_quantity"
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "ServiceProviderName",
+          "name": "service_provider_name",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "always": true
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        },
+        {
+          "source": "HostProviderName",
+          "name": "host_provider_name",
+          "type": "string",
+          "header": true,
+          "nonnull_when": {
+            "not": {
+              "in": [
+                "charge_category",
+                [
+                  "Tax",
+                  "Adjustment"
+                ]
+              ]
+            }
+          },
+          "disclosure": "tenant-protected",
+          "functions": [
+            "scoped-detail"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "product": [
+            "list_unit_price",
+            "pricing_quantity",
+            "list_cost"
+          ],
+          "when": {
+            "always": true
+          }
+        },
+        {
+          "product": [
+            "contracted_unit_price",
+            "pricing_quantity",
+            "contracted_cost"
+          ],
+          "when": {
+            "always": true
+          }
+        }
+      ],
+      "capabilities": {
+        "measured_usage": true,
+        "list_prices": true,
+        "contracted_prices": true,
+        "host_null_services": [],
+        "tags": true,
+        "resource_ids": true,
+        "commitment_discounts": true,
+        "sku_prices": true,
+        "subaccounts": true
+      }
+    }
+  }
+}

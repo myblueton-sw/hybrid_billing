@@ -1,5 +1,7 @@
 # Licensing scope
 
+Hybrid Billing is developed as installation-based, self-hosted software that customers deploy and operate in their own infrastructure. This repository does not provide a project-hosted SaaS offering. The deployment description is not an additional license condition: it does not limit the rights granted by MIT, including commercial use. Customer-controlled collection, storage, queries and lifecycle operations remain distinct from separately purchased support or integration services.
+
 Original Hybrid Billing code and project-authored documentation are available under the [MIT License](LICENSE). Commercial use is permitted under that license. The owner's [MIT adoption decision](docs/licensing/mit-adoption.md) supersedes the earlier source-available commercial policy for this material.
 
 For commercial-use support, consulting, integration or collaboration inquiries, contact [myblueton@gmail.com](mailto:myblueton@gmail.com). Contact, payment and prior approval are not requirements for exercising rights granted by MIT.

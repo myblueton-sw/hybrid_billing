@@ -325,11 +325,14 @@ def snapshot(rows, tenant_key, source, catalog=None):
         if type(row['ordinal']) is not int or row['ordinal'] < 1 or row['ordinal'] in ordinals or str(row['tenant_id']) != str(tenant_id(tenant_key)):
             raise Rejected('hierarchy_tenant_scope')
         ordinals.add(row['ordinal'])
-        invoice, usage = focus_node(row, 'focus_billing_scope'), focus_node(row, 'focus_usage_scope')
+        invoice = focus_node(row, 'focus_billing_scope')
+        usage = focus_node(row, 'focus_usage_scope') if row['subaccount'] is not None else invoice
         nodes[invoice['id']], nodes[usage['id']] = invoice, usage
-        observed = encoded_edge(usage['id'], invoice['id'], 'focus_invoice_scope', 'focus', row['charge_start'].isoformat(), row['charge_end'].isoformat(), 'focus-observed')
-        edges[observed['id']] = observed
-        visible_nodes, visible_edges = {invoice['id'], usage['id']}, {observed['id']}
+        visible_nodes, visible_edges = {invoice['id'], usage['id']}, set()
+        if usage['id'] != invoice['id']:
+            observed = encoded_edge(usage['id'], invoice['id'], 'focus_invoice_scope', 'focus', row['charge_start'].isoformat(), row['charge_end'].isoformat(), 'focus-observed')
+            edges[observed['id']] = observed
+            visible_edges.add(observed['id'])
         roles, unresolved, partial = {}, set(), {}
         try:
             provider = provider_key(row['provider'])
@@ -374,6 +377,8 @@ def snapshot(rows, tenant_key, source, catalog=None):
             unresolved.discard('focus')
         status = 'mixed' if roles and any(partial.values()) else 'typed-native' if roles else 'focus-only'
         bindings.append({'ordinal': row['ordinal'], 'focus_billing': invoice['id'], 'focus_usage': usage['id'], 'native_roles': roles, 'visible_nodes': sorted(visible_nodes), 'visible_edges': sorted(visible_edges), 'unresolved_axes': sorted(unresolved), 'role_partial_axes': partial, 'status': status, 'evidence_class': catalog['evidence_class'] if roles else 'focus-observed', 'charge_start': row['charge_start'].isoformat(), 'charge_end': row['charge_end'].isoformat(), 'row_scope_digest': digest(canonical([row[k] for k in ['provider', 'account', 'subaccount']]).encode())})
+        if row['subaccount'] is None:
+            bindings[-1]['usage_scope_status'] = 'account-only-subaccount-absent'
     statuses = {b['status'] for b in bindings}
     status = 'typed-native' if statuses == {'typed-native'} else 'mixed' if any(b['native_roles'] for b in bindings) else 'focus-only'
     evidence = {b['evidence_class'] for b in bindings}

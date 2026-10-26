@@ -1,8 +1,14 @@
 # Hybrid Billing
 
-Hybrid Billing is a planned platform for reconciling provider costs, calculating customer charges, allocating internal costs, and handing approved billing results to ERP systems or controlled document workflows.
+Hybrid Billing is a self-hosted, installation-based billing platform being developed for reconciling provider costs, calculating customer charges, allocating internal costs, and handing approved billing results to ERP systems or controlled document workflows.
 
 It is intended for managed service providers, individual enterprises, and corporate groups across cloud, on-premises, data-center, and AI usage sources. Provider cost, customer selling price, and internal allocation remain separate business concepts.
+
+## Installation model
+
+Customers deploy and operate Hybrid Billing in their own infrastructure. This repository targets customer-operated installations, not a project-hosted SaaS offering. Collection, storage, queries, backup and recovery belong to the customer-controlled installation. Companies, workspaces and tenants describe authorization and data boundaries within an installation; a shared company name never grants cross-tenant access.
+
+The current executable environment is a bounded local verification stack. A supported production installer, installation upgrade/rollback procedure, authentication integration and production recovery certification are still pending. References to SaaS subscription billing describe a potential billing source or business capability, not a change to this product's delivery model.
 
 ## Current stage
 
@@ -18,9 +24,11 @@ The [tenant-aware official demo path](docs/ops/installation/tenant-focus-data.md
 
 The [six-provider sample workflow](docs/ops/installation/six-provider-samples.md) adds all 115 observed GCP rows and eight explicitly synthetic VMware/Alibaba rows. It stores 1,123 sample records and provides an explicitly authorized 1,121-row company view across two tenants while excluding a separate company's two rows, even when company display labels match. Provider, currency, unit, tenant and origin boundaries remain visible. [Validation and limits](docs/validation/reports/HB-27-six-provider/summary.md).
 
-The [recurring collection and lifecycle workflow](docs/ops/installation/focus-collection-lifecycle.md) accepts bounded CSV or exact Parquet input under an explicitly declared registry version, registers complete daily or monthly delivery windows, preserves revisions, replaces cumulative monthly refreshes, and queries accumulated authorized periods. It implements verified tenant Parquet archive/recall, holds/dependencies, approved deletion with explicit shared/physical-copy residuals, origin-based backup horizons and latest-control restore gates. Use its periodic query command after activation; the earlier single-snapshot query then rejects rather than showing only the newest delivery. This is a bounded trusted local CLI; live cloud adapters, production authentication, multi-host recovery and capacity remain outside its verified scope.
+The [recurring collection and lifecycle workflow](docs/ops/installation/focus-collection-lifecycle.md) accepts bounded CSV or exact Parquet input under an explicitly declared registry version, registers operator-declared complete daily or monthly delivery windows, preserves revisions, replaces cumulative monthly refreshes, and queries accumulated authorized periods. It implements verified tenant Parquet archive/recall, holds/dependencies, approved deletion with explicit shared/physical-copy residuals, origin-based backup horizons and latest-control restore gates. Use its periodic query command after activation; the earlier single-snapshot query then rejects rather than showing only the newest delivery. This is a bounded trusted local CLI; live cloud adapters, production authentication, multi-host recovery and capacity remain outside its verified scope.
 
 The [native account hierarchy workflow](docs/ops/installation/native-account-hierarchy.md) normalizes six-provider IDs and typed billing/resource/organization/identity relationships, persists tenant-scoped immutable snapshots, and exposes hierarchy-filtered and account-grouped queries without multiplying costs. Approved supplemental metadata cannot broaden tenant access or rewrite typed historical snapshots. Public samples retain explicit unknown native ancestry; separately labelled synthetic metadata validates complete provider-specific shapes.
+
+The [common-ingestion omission audit](docs/reviews/HB-30-focus-completeness/findings.md) records the original gaps. Its [remediation](docs/reviews/HB-30-focus-completeness/resolution.md) and [connection runbook](docs/ops/installation/common-focus-connections.md) add independent source/window identity, expected account/calendar coverage, pinned consumed-field semantics, guarded quarantine/replacement and scheduler fairness. These remain bounded installation workflows; full provider conformance, live connectors and installation production readiness require separate evidence.
 
 ## Planned capabilities
 
@@ -55,7 +63,7 @@ The [installation assessment](docs/architecture/self-hosted-installation-assessm
 
 The [full planning reconciliation](docs/planning/v1.16/planning-reconciliation.md) indexes all 43 requirement groups, existing work/screen/acceptance references and owner additions. The [decision/action register](docs/planning/v1.16/planning-decisions.md) separates established controls, integration gaps, product decisions, customer configuration and external evidence. The [payment and recognition contract](docs/contracts/billing/payment-and-recognition.md) carries contract Payment Terms and independent monthly ERP recognition into English. This is partial canonical integration, not completion of the detailed English baseline or planning acceptance.
 
-## SaaS subscription planning
+## Planned SaaS subscription billing capability
 
 The owner has requested future SaaS subscription and billing management. The [HB-18 planning supplement](docs/planning/saas-subscription-billing.md) proposes recurring, seat-based, metered and hybrid pricing, subscription changes, service entitlements, customer self-service and controlled payment integration. It extends existing contract, calculation, approval, invoice and ERP concepts; payment collection, service access and monthly cost recognition remain distinct. Exact policies, processor support and canonical screen/API integration are pending. This capability does not change self-hosted delivery or authorize product development.
 
@@ -69,6 +77,6 @@ The planning baseline is maintained locally under `docs/planning/v1.16/`; screen
 
 ## License and commercial inquiries
 
-Hybrid Billing's original code and project-authored documentation are open source under the [MIT License](LICENSE), which permits commercial use. Preserve the required copyright and permission notices. Third-party components and datasets retain their own [licenses and notices](LICENSING.md).
+The installation-based delivery model adds no license restriction. Hybrid Billing's original code and project-authored documentation are open source under the [MIT License](LICENSE), which permits commercial use. Preserve the required copyright and permission notices. Third-party components and datasets retain their own [licenses and notices](LICENSING.md).
 
 For commercial-use support, consulting, integrations or collaboration, contact [myblueton@gmail.com](mailto:myblueton@gmail.com). Contacting the project or purchasing services is optional and is not a condition of MIT use. See the [MIT adoption decision](docs/licensing/mit-adoption.md).

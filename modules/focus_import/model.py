@@ -89,26 +89,28 @@ def domain(row):
     return [row[k].isoformat() if k in TIMES else row[k] for k in ['provider','account','subaccount','billing_start','billing_end']]
 
 
-def decode(data, mapping):
+def decode(data, mapping, conditional=False):
     if len(data)>MAX_BYTES:
         raise Rejected('input_size')
     try:
+        if conditional:
+            mapping={**mapping,'null_tokens':['',r'\N'],'required_columns':[mapping['columns'][n] for n in ['provider','account','service']+TIMES]}
         rows=[]
         for ordinal,source in enumerate(sources(data,mapping),1):
             if ordinal>MAX_ROWS:raise Rejected('source_shape')
             row={'ordinal':ordinal,'source_json':canonical(source)}
             reasons={}
             for name,column in mapping['columns'].items():
-                value=source[column]
+                value=source.get(column)
                 if value is None or value in mapping['null_tokens']:
-                    reasons[name]='typed_null' if value is None else 'empty' if value=='' else 'literal:'+value
+                    reasons[name]='absent_header' if column not in source else 'typed_null' if value is None else 'empty' if value=='' else 'literal:'+value
                     value=None
                 if name in TIMES:
                     value=instant(value)
                 elif name in NUMERIC and value is not None:
                     value=number(value)
                 row[name]=value
-            if not all(row[n] is not None for n in ['provider','account','subaccount','service']):
+            if not all(row[n] is not None for n in ['provider','account','service']):
                 raise Rejected('required_source_scope')
             if row['billing_start']>=row['billing_end'] or row['charge_start']>=row['charge_end']:
                 raise Rejected('timestamp_interval')
@@ -159,7 +161,7 @@ def validate_config(config):
         if not isinstance(t['assignments'],list) or len(t['assignments'])>MAX_ROWS:
             raise Rejected('source_assignments')
         for item in t['assignments']:
-            if not isinstance(item,list) or len(item)!=5 or not all(isinstance(x,str) and 0<len(x)<=4096 for x in item):
+            if not isinstance(item,list) or len(item)!=5 or not all(isinstance(item[i],str) and 0<len(item[i])<=4096 for i in [0,1,3,4]) or item[2] is not None and (not isinstance(item[2],str) or not 0<len(item[2])<=4096):
                 raise Rejected('source_assignments')
             normalized=item[:3]+[instant(item[3]).isoformat(),instant(item[4]).isoformat()]
             if normalized!=item or instant(item[3])>=instant(item[4]):raise Rejected('source_assignments')

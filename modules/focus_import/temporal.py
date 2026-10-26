@@ -47,8 +47,9 @@ def overlaps(left, right):
     return utc(left['start']) < utc(right['end']) and utc(right['start']) < utc(left['end'])
 
 
-def validate_delivery(data, version, config, descriptor):
-    if not isinstance(descriptor, dict) or set(descriptor) != DELIVERY_FIELDS:
+def validate_delivery(data, version, config, descriptor, consumed=False):
+    from .connections import OPTIONAL_DELIVERY
+    if not isinstance(descriptor, dict) or set(descriptor)-OPTIONAL_DELIVERY != DELIVERY_FIELDS:
         raise Rejected('delivery_descriptor')
     scope = checked_window(descriptor['window'])
     if type(descriptor['revision']) is not int or not 0 < descriptor['revision'] < 2**63:
@@ -67,7 +68,7 @@ def validate_delivery(data, version, config, descriptor):
     if not isinstance(data, bytes) or digest(data) != descriptor['file_digest']:
         raise Rejected('delivery_digest')
     try:
-        rows = decode(data, registry[version])
+        rows = decode(data, registry[version], conditional=consumed)
     except Rejected as exc:
         if str(exc) != 'empty_input' or descriptor['row_count'] != 0:
             raise

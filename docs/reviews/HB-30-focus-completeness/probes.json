@@ -1,0 +1,252 @@
+{
+  "cases": [
+    {
+      "case": "field_inventory",
+      "mapped_count": 19,
+      "missing_from_common": [
+        "ChargeCategory",
+        "ChargeClass",
+        "CommitmentDiscountStatus",
+        "InvoiceIssuerName",
+        "PublisherName",
+        "ResourceId",
+        "ServiceCategory",
+        "SkuPriceId",
+        "Tags"
+      ],
+      "separate_strict_count": 28,
+      "version": "1.2"
+    },
+    {
+      "case": "field_inventory",
+      "mapped_count": 19,
+      "missing_from_common": [
+        "ChargeCategory",
+        "ChargeClass",
+        "CommitmentDiscountStatus",
+        "HostProviderName",
+        "InvoiceIssuerName",
+        "ProviderName",
+        "PublisherName",
+        "ResourceId",
+        "ServiceCategory",
+        "SkuPriceId",
+        "Tags"
+      ],
+      "separate_strict_count": 30,
+      "version": "1.3"
+    },
+    {
+      "case": "positive_exponent_sign",
+      "common_import": "100.000000000000000000",
+      "input": "1E+2",
+      "separate_strict_synthetic": "100.000000"
+    },
+    {
+      "case": "mandatory_cost_null",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "42e7d07f10abfc6f0fd8c7526924766d30b0a31b6fc21b5fd48173745b45518e",
+      "separate_strict_synthetic": {
+        "reason": "required_value",
+        "result": "rejected"
+      }
+    },
+    {
+      "case": "negative_unit_price",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "60a7b7dcec78e76cb1dc3e1aca2cd4102db09ee315535e0a91ccccbacde341af",
+      "separate_strict_synthetic": {
+        "reason": "negative_unit_price",
+        "result": "rejected"
+      }
+    },
+    {
+      "case": "price_product_mismatch",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "41072602a939ed3269f11d11f7d4863428204670173449e08d3fb0eedec405e9",
+      "separate_strict_synthetic": {
+        "reason": "price_product",
+        "result": "rejected"
+      }
+    },
+    {
+      "case": "quantity_without_unit",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "a9c7df305575f851ba133f7b126fbe10620c5bdcf10e259fc88a6f00d439625f",
+      "separate_strict_synthetic": {
+        "reason": "required_value",
+        "result": "rejected"
+      }
+    },
+    {
+      "case": "sku_missing",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "a4ff8a2f00daa5c7e803a3bfe3fc959b4a92b91b90b281a93d5a9cb69b37a499",
+      "separate_strict_synthetic": {
+        "reason": "inapplicable_value",
+        "result": "rejected"
+      }
+    },
+    {
+      "case": "category_case",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "88ef66db351077bb99eb36f796e96a6b3d172dce35e3d71bb0efa0c399593887",
+      "separate_strict_synthetic": {
+        "reason": "enum_value",
+        "result": "rejected"
+      }
+    },
+    {
+      "case": "host_missing",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "a65614cb4ec6b130fb8e43856a61873810209ada3ff64d729cb8507e1bfb3753",
+      "separate_strict_synthetic": {
+        "reason": "required_value",
+        "result": "rejected"
+      }
+    },
+    {
+      "case": "null_subaccount",
+      "common_import": {
+        "reason": "required_source_scope",
+        "result": "rejected"
+      },
+      "input_sha256": "2f43cb021a35ccb3a88f20f69e0194a260f784d7dad762e26bf2825ddc3f4516",
+      "separate_strict_synthetic": {
+        "reason": "source_scope",
+        "result": "rejected"
+      }
+    },
+    {
+      "case": "naive_timestamp",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "ac45b199bc8a5217cb9b581d376645c885b7fcd3977e3e9554845e66c2beb172",
+      "separate_strict_synthetic": {
+        "reason": "timestamp_format",
+        "result": "rejected"
+      }
+    },
+    {
+      "case": "bad_service_category",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "978204fb2948cf35c97a6a259d9b7398ae317ca7ee7924c17ba3b50931878a57",
+      "separate_strict_synthetic": {
+        "result": "accepted",
+        "rows": 2
+      }
+    },
+    {
+      "case": "tags_array",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "cbd1ec950406cd20ea689ce507d14cfd6ddb1fbf1fb696f01cf95ec9d780c151",
+      "separate_strict_synthetic": {
+        "result": "accepted",
+        "rows": 2
+      }
+    },
+    {
+      "case": "duplicate_tag_keys",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "085ecf066bb970965c4dbc8f39ba3a167a2a7f3db1d0a62e0c7d8b82b49179a0",
+      "separate_strict_synthetic": {
+        "normalized_tags": "{\"k\":\"b\"}",
+        "result": "accepted",
+        "rows": 2
+      }
+    },
+    {
+      "case": "tag_numeric_precision",
+      "common_import": {
+        "result": "accepted",
+        "rows": 2
+      },
+      "input_sha256": "1915202edf7e1d20354049bdc219eb15cc235b0b2a0cc2f88d2c03d91d2af01b",
+      "separate_strict_synthetic": {
+        "normalized_tags": "{\"weight\":0.1}",
+        "result": "accepted",
+        "rows": 2
+      }
+    },
+    {
+      "accepted_rows": 1,
+      "case": "finalized_partial_accounts",
+      "configured_tenants": 2,
+      "observed_tenants": 1
+    },
+    {
+      "case": "scheduler_starvation",
+      "collection_calls": 0,
+      "cycles": [
+        {
+          "awaiting_publication": false,
+          "collected": [],
+          "registered_waiting": 1
+        },
+        {
+          "awaiting_publication": false,
+          "collected": [],
+          "registered_waiting": 1
+        }
+      ]
+    },
+    {
+      "case": "pending_middle_window",
+      "known_windows": 3,
+      "selected_windows": 2
+    },
+    {
+      "case": "independent_provider_same_period",
+      "higher_revision_second_provider": "accepted",
+      "same_revision_second_provider": "delivery_revision_or_pending",
+      "selected_batches_after_modeled_publication": [
+        "azure-batch"
+      ],
+      "selection_is_modeled_post_publication_not_engine_effect": true,
+      "window_count": 1
+    },
+    {
+      "case": "finality_regression",
+      "new_complete_through": "2024-09-10T00:00:00Z",
+      "new_finalized": false,
+      "previous_finalized": true,
+      "result": "registered",
+      "runtime_effect": "none; registration used fake journal and connection"
+    }
+  ],
+  "reproduction_sha256": "0d66b0aec3a59a3a7cc56e808e83b0e2b355dd8f1deeb647ef7d4ba7c2e671ac",
+  "scope": "pure synthetic audit; no database or runtime effects",
+  "synthetic_fixture_sha256": "3b53012413b001c22595b9c5a74d6d4954c42d9e7e4a37479fdce502e8b9e103"
+}

@@ -170,12 +170,28 @@ def publish(actor,delivery_id):
 
 
 def selected_slices(state,members,start,end):
-    result=[]
+    result=[];ownership=None
     for key,w in sorted(state['windows'].items()):
+        connection_id=w.get('connection_id');visible=set(members)
+        if connection_id is not None:
+            connection=state.get('connections',{}).get(connection_id)
+            if connection is None:raise Rejected('connection_unregistered')
+            if ownership is None:
+                configuration=state.get('metadata',{}).get('configuration',[])
+                if len(configuration)!=1 or not isinstance(configuration[0].get('body'),dict):raise Rejected('connection_owner_unavailable')
+                ownership=connections.owners(configuration[0]['body'])
+            expected=set()
+            for domain in connection['domains']:
+                owner=ownership.get(canonical(domain))
+                if owner is None:raise Rejected('connection_owner_unavailable')
+                expected.add(str(tenant_id(owner['key'])))
+            visible&=expected
+        if not visible:continue
         if not w['current'] or start and w['window']['end']<=start or end and w['window']['start']>=end:continue
         d=state['deliveries'][w['current']]
+        if d['descriptor'].get('connection_id')!=connection_id:raise Rejected('connection_window_identity')
         if d['state']!='sealed':raise Rejected('window_not_published')
-        for tid in sorted(members):
+        for tid in sorted(visible):
             item=state['slices'].get(d['batch_id']+':'+tid)
             if not item:raise Rejected('slice_missing')
             if item['state']=='deleted':raise Rejected('period_expired_unavailable')

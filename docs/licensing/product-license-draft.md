@@ -1,16 +1,15 @@
 ---
 type: Superseded License Reference
-title: Superseded commercial product-license draft
-description: Identifies the former restrictive license draft as superseded by standard MIT licensing and directs readers to the current grant.
+title: Superseded custom commercial product-license draft
+description: Retains the former custom license draft as historical and points to the current standard PolyForm transition without reviving its old restrictions.
 status: deprecated
 sources:
   - resource: ./mit-adoption.md
+  - resource: ./source-available-adoption.md
 ---
 
-# Superseded license draft
+# Superseded custom draft
 
-The previous pre-release draft proposed separate paid commercial-use terms and unresolved noncommercial permissions. The owner's 2026-10-23 [MIT adoption decision](mit-adoption.md) supersedes that direction for original Hybrid Billing material.
+The former pre-release draft proposed separate paid-commercial terms and unresolved noncommercial permissions. The 2026-10-23 [MIT adoption](mit-adoption.md) superseded that draft. The owner's 2026-10-28 [source-available transition](source-available-adoption.md) now selects standard PolyForm Noncommercial terms for current project-authored original material from the transition revision onward; it does not revive the old custom draft, evaluation-expiry gates or paid-service assumptions.
 
-The current grant is the standard [MIT License](../../LICENSE). Commercial use, evaluation, modification and redistribution do not require a separate commercial license or prior contact under the project policy. This reference does not add an evaluation period, fee, entitlement check, copyright assignment or other condition to MIT.
-
-For optional commercial-use services and collaboration, contact [myblueton@gmail.com](mailto:myblueton@gmail.com). Third-party material remains subject to its own [licensing scope and notices](../../LICENSING.md).
+Use the current [LICENSE](../../LICENSE), [applicability scope](../../LICENSING.md) and [product policy](product-policy.md). Historical MIT grants and third-party rights remain intact. No fee, expiry, remote-control mechanism or commercial agreement is created by retaining this historical reference.

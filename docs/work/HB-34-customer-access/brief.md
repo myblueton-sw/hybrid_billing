@@ -30,4 +30,10 @@ HB-33's [internal SQL revocation evidence](../../validation/reports/HB-33-reader
 
 # Review evidence
 
+## Implemented internal increments
+
+PR31 contains the [current-grant query boundary](query-authorization.md) and the [usage-only projection/source bridge](usage-projection.md). The latter connects Go to the existing Python data-processing path and actual local PostgreSQL/ClickHouse with synthetic data while retaining source protection through final Go authorization. [Runtime evidence](../../validation/reports/HB-34-query-authorization/usage-projection.md) distinguishes actual engine tests from synthetic identity proof. Selling/allocation prices, full export/download and external authentication remain open; the original sequence is not a completed-feature claim.
+
+## Sequencing review
+
 Independent architecture/security review PASS for this sequencing change: provider deferral, synthetic-versus-authenticated evidence, current grants, hidden fields, financial bases and Go/Python ownership remain consistent with existing contracts. Root and reviewer checked frontmatter, relative links and whitespace. No runtime code changed and no runtime tests were run for this document-only increment.

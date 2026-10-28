@@ -199,7 +199,7 @@ def selected_slices(state,members,start,end):
     return result
 
 
-def query(actor,start=None,end=None,grain='month',limit=20,cursor=None,expected_snapshot=None,provider=None,service=None,hierarchy_node=None,group_kind=None,group_axis=None,group_role='usage'):
+def query(actor,start=None,end=None,grain='month',limit=20,cursor=None,expected_snapshot=None,provider=None,service=None,hierarchy_node=None,group_kind=None,group_axis=None,group_role='usage',*,_consumer=None):
     if type(limit) is not int or not 1<=limit<=100 or grain not in ['day','month']:raise Rejected('query_page')
     if hierarchy_node is not None:
         try:hierarchy_node=str(UUID(str(hierarchy_node)))
@@ -221,6 +221,7 @@ def query(actor,start=None,end=None,grain='month',limit=20,cursor=None,expected_
             pins=[{'window':k,'delivery':digest(canonical(d).encode()),'slice':digest(canonical(item).encode())} for k,d,item in scopes]
             snapshot=digest(canonical({'pins':pins,'expected_coverage':expected_coverage,'members':members,'actor':actor,'start':start,'end':end,'grain':grain,'provider':provider,'service':service,'hierarchy_node':hierarchy_node,'group_kind':group_kind,'group_axis':group_axis,'group_role':group_role}).encode())
             if expected_snapshot is not None and snapshot!=expected_snapshot:raise Rejected('query_snapshot_changed')
+            if _consumer is not None:_consumer.preflight(j,c,context,scopes)
             all_rows=[];breakdown={};periods={};coverage=[];graphs={};contexts={};account_groups={};unresolved_rows=0;semantic_contexts={}
             for key,d,item in scopes:
                 tid=item['tenant_id'];props=members[tid]
@@ -253,4 +254,5 @@ def query(actor,start=None,end=None,grain='month',limit=20,cursor=None,expected_
             remaining=[r for r in all_rows if cursor is None or r[:3]>tuple(cursor)]
             page=remaining[:limit]
             display=[{**serialized(row),'tenant_key':key,'window_id':wid,'batch_id':batch,'account_context':hierarchy_store.context(contexts[batch+':'+str(row['tenant_id'])],ordinal),'semantic_context':semantic_contexts.get((batch,str(row['tenant_id']),ordinal))} for wid,batch,ordinal,key,row in page]
-            return {'expected_coverage':expected_coverage,'legacy_expectations':'operator-asserted-unverified','snapshot':snapshot,'account_hierarchies':graphs,'account_groups':account_groups,'unresolved_group_rows':unresolved_rows,'grouping_additive':True,'row_count':len(all_rows),'rows':display,'next_cursor':list(page[-1][:3]) if len(remaining)>limit else None,'groups':controls([r[4] for r in all_rows]),'tenant_breakdown':breakdown,'coverage':coverage,'currency_conversion':False,'retention_enforcement':True,'classification':'exploratory-query-only','range_basis':'delivery-window-overlap','period_attribution':'charge-start-in-tenant-timezone-no-proration'}
+            result={'expected_coverage':expected_coverage,'legacy_expectations':'operator-asserted-unverified','snapshot':snapshot,'account_hierarchies':graphs,'account_groups':account_groups,'unresolved_group_rows':unresolved_rows,'grouping_additive':True,'row_count':len(all_rows),'rows':display,'next_cursor':list(page[-1][:3]) if len(remaining)>limit else None,'groups':controls([r[4] for r in all_rows]),'tenant_breakdown':breakdown,'coverage':coverage,'currency_conversion':False,'retention_enforcement':True,'classification':'exploratory-query-only','range_basis':'delivery-window-overlap','period_attribution':'charge-start-in-tenant-timezone-no-proration'}
+            return _consumer.consume(result,all_rows) if _consumer is not None else result

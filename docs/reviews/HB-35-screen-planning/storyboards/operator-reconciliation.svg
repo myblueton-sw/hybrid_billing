@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100">
+<title>Hybrid Billing: operator-reconciliation — synthetic static design study</title>
+<rect x="0" y="0" width="1600" height="1100" rx="0" fill="#F3F5FA" stroke="none"/>
+<rect x="0" y="0" width="194" height="1100" rx="0" fill="#142039" stroke="none"/>
+<text x="22" y="48.92" font-family="Apple SD Gothic Neo, sans-serif" font-size="22" font-weight="600" fill="white">HYBRID</text>
+<text x="22" y="75.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#A7B5D0">MSP BILLING</text>
+<rect x="10" y="127" width="174" height="43" rx="7" fill="#2A3D64" stroke="none"/>
+<text x="22" y="151.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="600" fill="white">Monthly close</text>
+<text x="22" y="204.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#C0CAE0">Customers</text>
+<text x="22" y="257.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#C0CAE0">Sources &amp; validation</text>
+<text x="22" y="310.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#C0CAE0">Rates &amp; contracts</text>
+<text x="22" y="363.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#C0CAE0">Invoices &amp; delivery</text>
+<text x="22" y="416.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#C0CAE0">Analysis</text>
+<text x="22" y="469.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#C0CAE0">Administration</text>
+<text x="22" y="980.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#C0CAE0">Operator workspace</text>
+<text x="22" y="1006.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#C0CAE0">Scoped finance access</text>
+<rect x="194" y="0" width="1406" height="64" rx="0" fill="white" stroke="none"/>
+<text x="224" y="34.9" font-family="Apple SD Gothic Neo, sans-serif" font-size="15" font-weight="600" fill="#182230">Monthly close / Example customer A</text>
+<text x="1170" y="33.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="600" fill="#2855D9">STATIC DESIGN · NO LIVE ACTIONS</text>
+<text x="224" y="115.94" font-family="Apple SD Gothic Neo, sans-serif" font-size="29" font-weight="600" fill="#182230">Make this month’s bill explainable.</text>
+<text x="224" y="145.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#526174">September 2026 · UTC · Issuer: Example MSP · Contract C-01 · USD · Net amounts</text>
+<rect x="224" y="165" width="341.5" height="26" rx="5" fill="#EFF4FF" stroke="none"/>
+<text x="234" y="182.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#175CD3">Draft r7 · source s3 · mapping m2 · pricing p4 · FX not applicable</text>
+<rect x="915" y="165" width="212.5" height="26" rx="5" fill="#EFF4FF" stroke="none"/>
+<text x="925" y="182.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#B42318">BLOCKED: unresolved sales difference</text>
+<rect x="224" y="212" width="318" height="135" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="244" y="243.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Source billed control</text>
+<text x="244" y="279.8" font-family="Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="600" fill="#182230">1,000.00</text>
+<text x="244" y="317.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#526174">Observed source sum: 1,000.00</text>
+<rect x="559" y="212" width="318" height="135" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="579" y="243.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Expected sales net</text>
+<text x="579" y="279.8" font-family="Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="600" fill="#182230">1,100.00</text>
+<text x="579" y="317.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#526174">Independent example expectation</text>
+<rect x="894" y="212" width="318" height="135" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="914" y="243.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Calculated sales net</text>
+<text x="914" y="279.8" font-family="Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="600" fill="#182230">1,120.00</text>
+<text x="914" y="317.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#526174">Current candidate r7</text>
+<rect x="1229" y="212" width="318" height="135" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="1249" y="243.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Unexplained residual</text>
+<text x="1249" y="279.8" font-family="Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="600" fill="#B42318">+20.00</text>
+<text x="1249" y="317.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#526174">Candidate minus expected sales</text>
+<rect x="224" y="366" width="916" height="303" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="244" y="397.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Explain the charge · compare like-for-like amounts</text>
+<text x="245" y="422.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="600" fill="#526174">Component / evidence</text>
+<text x="720" y="422.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="600" fill="#526174">Expected USD</text>
+<text x="882" y="422.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="600" fill="#526174">Candidate USD</text>
+<text x="1050" y="422.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="600" fill="#526174">Delta</text>
+<text x="245" y="459.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#182230">Base selling charge · contract p4</text>
+<text x="742" y="459.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#182230">1,200.00</text>
+<text x="904" y="459.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#182230">1,200.00</text>
+<text x="1050" y="459.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#182230">0.00</text>
+<text x="245" y="503.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#182230">Contract discount · 10% of base</text>
+<text x="742" y="503.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#182230">-120.00</text>
+<text x="904" y="503.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#182230">-120.00</text>
+<text x="1050" y="503.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#182230">0.00</text>
+<rect x="238" y="525" width="888" height="41" rx="5" fill="#FFF1EC" stroke="none"/>
+<text x="245" y="547.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#B42318">Service fee · fixed USD 20.00</text>
+<text x="742" y="547.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#B42318">20.00</text>
+<text x="904" y="547.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#B42318">40.00</text>
+<text x="1050" y="547.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#B42318">+20.00</text>
+<text x="245" y="591.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="600" fill="#182230">Net sales subtotal</text>
+<text x="742" y="591.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="600" fill="#182230">1,100.00</text>
+<text x="904" y="591.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="600" fill="#182230">1,120.00</text>
+<text x="1050" y="591.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="600" fill="#182230">+20.00</text>
+<text x="245" y="647.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="400" fill="#526174">Source cost is a different basis. It is not required to equal the selling amount.</text>
+<rect x="1160" y="366" width="406" height="459" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="1180" y="397.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Assistant · investigate this difference</text>
+<rect x="1180" y="405" width="208.0" height="26" rx="5" fill="#EFF4FF" stroke="none"/>
+<text x="1190" y="422.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#2855D9">SIMULATED FINDING · not verified AI</text>
+<text x="1180" y="465.34" font-family="Apple SD Gothic Neo, sans-serif" font-size="19" font-weight="600" fill="#182230">A duplicate service-fee application may</text>
+<text x="1180" y="491.34" font-family="Apple SD Gothic Neo, sans-serif" font-size="19" font-weight="600" fill="#182230">explain the USD 20.00 difference.</text>
+<text x="1180" y="540.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="600" fill="#526174">Evidence to inspect</text>
+<text x="1180" y="570.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="400" fill="#182230">Contract p4: one fixed fee per period</text>
+<text x="1180" y="598.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="400" fill="#182230">Candidate r7: two USD 20.00 fee lines</text>
+<text x="1180" y="626.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="400" fill="#182230">Source billed control: no discrepancy</text>
+<rect x="1180" y="660" width="366" height="82" rx="7" fill="#EEF3FF" stroke="none"/>
+<text x="1194" y="687.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#182230">Proposed next step: inspect both fee references; prepare</text>
+<text x="1194" y="708.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#182230">a versioned correction for review.</text>
+<text x="1180" y="780.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="600" fill="#2855D9">No source overwrite. No AI approval.</text>
+<rect x="224" y="686" width="916" height="139" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="244" y="717.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Correction loop · keep every version and its evidence</text>
+<text x="245" y="745.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Investigate → review correction → new revision → recalculate → independently compare</text>
+<text x="245" y="788.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="400" fill="#526174">If the difference remains, return to the same case. Relevant changes invalidate prior approval.</text>
+<rect x="224" y="845" width="1342" height="131" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="244" y="876.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Release gate · a proposed correction is not a verified result</text>
+<text x="245" y="900.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="600" fill="#B42318">Source confirmation: pending   |   Sales reconciliation: blocked   |   Tax review: pending   |   Amount approval: unavailable</text>
+<text x="245" y="940.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#526174">Only a verified fixed result can proceed to separate approval, then issuance. Issued documents use linked corrections.</text>
+<text x="224" y="1014.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="400" fill="#526174">Precomputed synthetic scenario. USD net values; tax is excluded here. No pricing policy or live calculation is adopted.</text>
+<text x="224" y="1046.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="400" fill="#526174">S06 + B08 + B04 + A01  /  Proposed workbench, not the completed 49-screen redesign.</text>
+</svg>

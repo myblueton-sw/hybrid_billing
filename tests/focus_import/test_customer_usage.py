@@ -121,3 +121,32 @@ def test_profile_allowlist_and_query_pinning(monkeypatch):
         return 'observed'
     monkeypatch.setattr(usage.collection, 'query', query)
     assert usage.query(json.dumps(p), 2, lambda value: value) == 'observed'
+
+
+def test_export_includes_full_selection_beyond_page_and_never_truncates():
+    rows = []
+    for ordinal in range(1, 102):
+        value = row(Decimal('2'))
+        value['ordinal'] = ordinal
+        rows.append(value)
+    all_rows = [('window', BATCH, r['ordinal'], 'tenant', r) for r in rows]
+    page = result(rows[:1])
+    page['row_count'] = len(all_rows)
+    consumer = usage.Projection(json.dumps(profile()), lambda value: value, 'export', 101)
+    exported = consumer.consume(page, all_rows)
+    assert exported['selection'] == 'complete-supported-selection' and exported['row_count'] == 101
+    assert len(exported['rows']) == 101 and len({r['ID'] for r in exported['rows']}) == 101
+    bounded = usage.Projection(json.dumps(profile()), lambda value: pytest.fail('truncated export released'), 'export', 100)
+    with pytest.raises(Rejected): bounded.consume(page, all_rows)
+    page['row_count'] = 102
+    with pytest.raises(Rejected): consumer.consume(page, all_rows)
+
+
+def test_export_mode_pins_full_row_limit_but_keeps_source_page_bounded(monkeypatch):
+    def query(actor, start, end, grain, limit, **kwargs):
+        assert limit == 100 and kwargs['_consumer'].mode == 'export' and kwargs['_consumer'].limit == 500
+        return 'full-request'
+    monkeypatch.setattr(usage.collection, 'query', query)
+    assert usage.query(json.dumps(profile()), 500, lambda value: value, 'export') == 'full-request'
+    for mode, limit in [('other', 10), ('export', 10001), ('page', 101)]:
+        with pytest.raises(Rejected): usage.query(json.dumps(profile()), limit, lambda value: value, mode)

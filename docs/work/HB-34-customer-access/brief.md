@@ -32,7 +32,7 @@ HB-33's [internal SQL revocation evidence](../../validation/reports/HB-33-reader
 
 ## Implemented internal increments
 
-PR31 contains the [current-grant query boundary](query-authorization.md) and the [usage-only projection/source bridge](usage-projection.md). The latter connects Go to the existing Python data-processing path and actual local PostgreSQL/ClickHouse with synthetic data while retaining source protection through final Go authorization. [Runtime evidence](../../validation/reports/HB-34-query-authorization/usage-projection.md) distinguishes actual engine tests from synthetic identity proof. Selling/allocation prices, full export/download and external authentication remain open; the original sequence is not a completed-feature claim.
+PR31 contains the [current-grant query boundary](query-authorization.md), [usage-only projection/source bridge](usage-projection.md) and [protected internal export jobs/download](protected-export.md). Go connects to the existing Python data-processing path and actual local PostgreSQL/ClickHouse with synthetic data while retaining source protection through final Go authorization. [Projection evidence](../../validation/reports/HB-34-query-authorization/usage-projection.md) and [export evidence](../../validation/reports/HB-34-query-authorization/protected-export.md) distinguish actual engine tests from synthetic identity proof. Selling/allocation prices, public customer download routes/formats, durable/distributed job storage and external authentication remain open; the original sequence is not a completed-feature claim.
 
 ## Sequencing review
 

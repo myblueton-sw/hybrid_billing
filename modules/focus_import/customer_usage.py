@@ -41,9 +41,11 @@ def checked_profile(raw):
 
 
 class Projection:
-    def __init__(self, raw, deliver):
+    def __init__(self, raw, deliver, mode='page', limit=100):
         self.profile, self.revision = checked_profile(raw)
         self.deliver = deliver
+        self.mode = mode
+        self.limit = limit
 
     def preflight(self, journal, coordinator, context, slices):
         p = self.profile
@@ -81,16 +83,22 @@ class Projection:
             if key in projected:
                 raise Rejected('usage_duplicate')
             projected[key] = self.row(batch, ordinal, row)
+        if self.mode == 'export':
+            if len(projected) > self.limit or len(projected) != result['row_count']:
+                raise Rejected('usage_export_limit')
+            rows = list(projected.values())
+            return self.deliver({'status': 'ready', 'revision': self.revision, 'rows': rows,
+                'selection': 'complete-supported-selection', 'row_count': len(rows)})
         rows = [projected[(row['batch_id'], row['ordinal'])] for row in result['rows']]
         return self.deliver({'status': 'ready', 'revision': self.revision, 'rows': rows})
 
 
-def query(raw, limit, deliver):
-    if type(limit) is not int or not 1 <= limit <= 100:
+def query(raw, limit, deliver, mode='page'):
+    if mode not in ['page', 'export'] or type(limit) is not int or not 1 <= limit <= (10000 if mode == 'export' else 100):
         raise Rejected('usage_limit')
-    consumer = Projection(raw, deliver)
+    consumer = Projection(raw, deliver, mode, limit)
     p = consumer.profile
-    return collection.query(p['actor'], p['start'], p['end'], p['grain'], limit,
+    return collection.query(p['actor'], p['start'], p['end'], p['grain'], min(limit, 100),
         expected_snapshot=p['snapshot'], _consumer=consumer)
 
 
@@ -100,7 +108,7 @@ def main():
         if not line.endswith(b'\n') or len(line) > MAX_INPUT:
             raise Rejected('usage_input')
         request = json.loads(line)
-        if not isinstance(request, dict) or set(request) != {'profile', 'limit'}:
+        if not isinstance(request, dict) or set(request) not in [{'profile', 'limit'}, {'profile', 'limit', 'mode'}]:
             raise Rejected('usage_input')
 
         def deliver(value):
@@ -114,7 +122,7 @@ def main():
             sys.stdout.buffer.write(b'{"status":"released"}\n')
             sys.stdout.buffer.flush()
 
-        query(request['profile'], request['limit'], deliver)
+        query(request['profile'], request['limit'], deliver, request.get('mode', 'page'))
         return 0
     except Exception:
         return 2

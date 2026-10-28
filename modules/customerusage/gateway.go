@@ -81,7 +81,7 @@ func (b *bridge) release() error {
 	return nil
 }
 
-func (g *Gateway) start(ctx context.Context, selection ca.Selection) (*bridge, []ca.Row, error) {
+func (g *Gateway) start(ctx context.Context, selection ca.Selection, mode string) (*bridge, []ca.Row, error) {
 	cmd := exec.CommandContext(ctx, g.command[0], g.command[1:]...)
 	cmd.Stderr = io.Discard
 	input, err := cmd.StdinPipe()
@@ -103,17 +103,24 @@ func (g *Gateway) start(ctx context.Context, selection ca.Selection) (*bridge, [
 	request := struct {
 		Profile string `json:"profile"`
 		Limit   int    `json:"limit"`
-	}{g.raw, selection.Limit}
+		Mode    string `json:"mode,omitempty"`
+	}{g.raw, selection.Limit, mode}
 	if json.NewEncoder(input).Encode(request) != nil {
 		b.abort()
 		return nil, nil, ca.ErrUnavailable
 	}
 	var response struct {
-		Status   string   `json:"status"`
-		Revision string   `json:"revision"`
-		Rows     []ca.Row `json:"rows"`
+		Status    string   `json:"status"`
+		Revision  string   `json:"revision"`
+		Rows      []ca.Row `json:"rows"`
+		Selection string   `json:"selection"`
+		RowCount  *int     `json:"row_count"`
 	}
 	if decodeLine(b.output, &response) != nil || response.Status != "ready" || response.Revision != g.revision || len(response.Rows) > selection.Limit {
+		b.abort()
+		return nil, nil, ca.ErrUnavailable
+	}
+	if mode == "export" && (response.Selection != "complete-supported-selection" || response.RowCount == nil || *response.RowCount != len(response.Rows)) {
 		b.abort()
 		return nil, nil, ca.ErrUnavailable
 	}
@@ -137,7 +144,7 @@ func (g *Gateway) Query(ctx context.Context, request ca.Selection) (*Page, error
 	}, g.store, func(ctx context.Context, selection ca.Selection) ([]ca.Row, error) {
 		var rows []ca.Row
 		var err error
-		held, rows, err = g.start(ctx, selection)
+		held, rows, err = g.start(ctx, selection, "page")
 		return rows, err
 	}, ca.Limits{MaxRows: g.budget.Rows, MaxScopes: 1, MaxFields: len(Fields())})
 	if err != nil {

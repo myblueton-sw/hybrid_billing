@@ -61,6 +61,7 @@ def main():
     assert fingerprints() == before
     evidence = {'status': 'PASS', 'postgres': pg_version, 'clickhouse': ch_version, 'synthetic_rows': 1,
         'source_lock_held_until_release': True, 'go_engine_integration': True,
+        'protected_export_generation_download_revocation': True,
         'default_and_prior_bindings_controls_unchanged': True, 'database_writes': False,
         'external_authentication': 'NOT_RUN', 'source': 'HB-33-r4 synthetic read-only'}
     (run / 'results.json').write_text(json.dumps(evidence, indent=2) + '\n')

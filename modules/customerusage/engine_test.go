@@ -84,4 +84,44 @@ func TestEngineGateway(t *testing.T) {
 			}
 		})
 	}
+	exportGrant := subject.Grants[0]
+	exportGrant.Action = ca.UsageExport
+	subject.Grants = append(subject.Grants, exportGrant)
+	if _, err := store.PutSubject(subject, 1); err != nil {
+		t.Fatal(err)
+	}
+	exports, err := NewExports(makeGateway(profile), ExportLimits{MaxJobs: 2, MaxRows: 1000, MaxBytes: 65536, TTL: time.Minute}, time.Now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, err := exports.Create(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := exports.Run(context.Background(), id); err != nil {
+		t.Fatal("engine export generation", err)
+	}
+	artifact, err := exports.Download(context.Background(), id)
+	if err != nil {
+		t.Fatal("engine download", err)
+	}
+	var exported ExportPackage
+	if err := json.Unmarshal(artifact.Bytes, &exported); err != nil {
+		t.Fatal(err)
+	}
+	if exported.Manifest.Completion != "complete-supported-selection" || exported.Manifest.RowCount != 1 || len(exported.Rows) != 1 || exported.Rows[0].Values["quantity"] != "2.000000000000000000" || hashBytes(artifact.Bytes) != artifact.SHA256 {
+		t.Fatal("engine export manifest/payload mismatch")
+	}
+	for _, hidden := range []string{"PRIVATE-", "synthetic-shared-payer", "billed_cost", "source_json", "account_context"} {
+		if strings.Contains(string(artifact.Bytes), hidden) {
+			t.Fatal("hidden source data in artifact")
+		}
+	}
+	subject.Grants = subject.Grants[:1]
+	if _, err := store.PutSubject(subject, 2); err != nil {
+		t.Fatal(err)
+	}
+	if data, err := exports.Download(context.Background(), id); data != nil || err != ca.ErrDenied {
+		t.Fatal("revoked engine export downloaded")
+	}
 }

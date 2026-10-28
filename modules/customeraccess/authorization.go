@@ -7,7 +7,7 @@ type authorityStamp struct {
 	tenants    map[string]uint64
 }
 
-func (s *Store) authorize(principal Principal, request Selection) (authorityStamp, error) {
+func (s *Store) authorize(principal Principal, request Selection, action Action) (authorityStamp, error) {
 	stamp := authorityStamp{}
 	if !s.available {
 		return stamp, ErrUnavailable
@@ -29,7 +29,7 @@ func (s *Store) authorize(principal Principal, request Selection) (authorityStam
 		}
 		allowed := make(map[string]struct{})
 		for _, grant := range subject.value.Grants {
-			if grant.Scope == scope && grant.Action == UsageRead && now.Before(grant.ExpiresAt) {
+			if grant.Scope == scope && grant.Action == action && now.Before(grant.ExpiresAt) {
 				for _, field := range grant.Fields {
 					allowed[field] = struct{}{}
 				}

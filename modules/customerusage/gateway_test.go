@@ -26,6 +26,7 @@ func TestBridgeHelper(t *testing.T) {
 	var req struct {
 		Profile string
 		Limit   int
+		Mode    string
 	}
 	if json.Unmarshal(line, &req) != nil {
 		os.Exit(2)
@@ -57,6 +58,12 @@ func TestBridgeHelper(t *testing.T) {
 	}
 	digest := sha256.Sum256([]byte(req.Profile))
 	values := map[string]string{"service": "Compute", "quantity": "0.000000000000000000", "unit": "hours", "usage_start": "2026-08-01T00:00:00+00:00", "usage_end": "2026-08-02T00:00:00+00:00", "measurement_state": "source-reported"}
+	if mode == "changed" {
+		values["quantity"] = "1.000000000000000000"
+	}
+	if mode == "formula" {
+		values["service"] = "=HYPERLINK(\"https://example.invalid\")"
+	}
 	row := ca.Row{Scope: ca.Scope{CompanyID: p.CompanyID, TenantID: p.TenantID}, ID: strings.Repeat("b", 64), Values: values}
 	if mode == "foreign" {
 		row.Scope.CompanyID = "foreign"
@@ -68,7 +75,15 @@ func TestBridgeHelper(t *testing.T) {
 	if mode == "revision" {
 		revision = "wrong"
 	}
-	json.NewEncoder(os.Stdout).Encode(map[string]any{"status": "ready", "revision": revision, "rows": []ca.Row{row}})
+	response := map[string]any{"status": "ready", "revision": revision, "rows": []ca.Row{row}}
+	if req.Mode == "export" && mode != "page-marker" {
+		response["selection"] = "complete-supported-selection"
+		response["row_count"] = 1
+	}
+	if mode == "wrong-count" {
+		response["row_count"] = 2
+	}
+	json.NewEncoder(os.Stdout).Encode(response)
 	if mode == "dead" {
 		os.Exit(0)
 	}

@@ -7,10 +7,15 @@ type Service struct {
 	store  *Store
 	read   ReadFunc
 	limits Limits
+	action Action
 }
 
 func NewService(verify VerifyFunc, store *Store, read ReadFunc, limits Limits) (*Service, error) {
-	if verify == nil || store == nil || read == nil || limits.MaxRows <= 0 || limits.MaxScopes <= 0 || limits.MaxFields <= 0 {
+	return NewServiceForAction(verify, store, read, limits, UsageRead)
+}
+
+func NewServiceForAction(verify VerifyFunc, store *Store, read ReadFunc, limits Limits, action Action) (*Service, error) {
+	if verify == nil || store == nil || read == nil || limits.MaxRows <= 0 || limits.MaxScopes <= 0 || limits.MaxFields <= 0 || (action != UsageRead && action != UsageExport) {
 		return nil, ErrInvalidPolicy
 	}
 	store.mu.RLock()
@@ -18,10 +23,21 @@ func NewService(verify VerifyFunc, store *Store, read ReadFunc, limits Limits) (
 	if store.clock == nil {
 		return nil, ErrInvalidPolicy
 	}
-	return &Service{verify: verify, store: store, read: read, limits: limits}, nil
+	return &Service{verify: verify, store: store, read: read, limits: limits, action: action}, nil
 }
 
 func (s *Service) Query(ctx context.Context, request Selection) ([]Row, error) {
+	return s.query(ctx, request, nil)
+}
+
+func (s *Service) QueryPinned(ctx context.Context, request Selection, checkpoint *Checkpoint) ([]Row, error) {
+	if checkpoint == nil {
+		return nil, ErrDenied
+	}
+	return s.query(ctx, request, checkpoint)
+}
+
+func (s *Service) query(ctx context.Context, request Selection, checkpoint *Checkpoint) ([]Row, error) {
 	if ctx == nil || s == nil || s.store == nil {
 		return nil, ErrDenied
 	}
@@ -37,10 +53,13 @@ func (s *Service) Query(ctx context.Context, request Selection) ([]Row, error) {
 		return nil, ErrDenied
 	}
 	s.store.mu.RLock()
-	before, err := s.store.authorize(principal, request)
+	before, err := s.store.authorize(principal, request, s.action)
 	s.store.mu.RUnlock()
 	if err != nil {
 		return nil, err
+	}
+	if checkpoint != nil && !checkpoint.matches(s, principal, request, before) {
+		return nil, ErrDenied
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -54,7 +73,7 @@ func (s *Service) Query(ctx context.Context, request Selection) ([]Row, error) {
 	}
 	s.store.mu.RLock()
 	defer s.store.mu.RUnlock()
-	after, err := s.store.authorize(principal, request)
+	after, err := s.store.authorize(principal, request, s.action)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +87,7 @@ func (s *Service) Query(ctx context.Context, request Selection) ([]Row, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	if _, err := s.store.authorize(principal, request); err != nil {
+	if _, err := s.store.authorize(principal, request, s.action); err != nil {
 		return nil, err
 	}
 	return result, nil

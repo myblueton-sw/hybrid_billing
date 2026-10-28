@@ -113,6 +113,8 @@ The revised mockup is adequate only if reviewers can follow these cases without 
 
 # Limits and next deliverable
 
+**Subsequent visual delivery:** the [fifteen-state v2 prototype](prototype/README.md) now implements this core-flow brief as a synthetic visual artifact, with a new generated review PDF and [verification](visual-verification.md). It does not replace all 49 baseline screen specifications.
+
 This is a researched screen brief, not a completed visual redesign. Earlier SVGs remain historical narrow studies and the v1.16 PDF has not been regenerated. No live vendor UI, local provider connector, financial engine, tax compliance, account entitlement, AI endpoint or customer usability was tested. IBM indexed-text limitations and screenshot failures are explicit above. Country-specific invoice legality and actual commercial agreements still need their own verified inputs.
 
 Next visual work must use the portfolio-to-document story and acceptance cases above, with representative provider differences and correction states. Preserve the existing inventory and binding obligations; authentication selection and the separately deferred post-invoice MSP service remain unchanged. Research does not authorize merge, deployment, real-account access or financial actions.

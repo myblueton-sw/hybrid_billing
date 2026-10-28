@@ -7,6 +7,8 @@ status: draft
 
 # Scope
 
+The subsequent [v2 visual prototype](prototype/README.md) and its [separate verification report](visual-verification.md) supersede the two-frame study as the current core-flow visual proposal. Checks below remain evidence for the earlier artifacts.
+
 HB-35; root writer; machine mac_mini; 2026-10-28. Deliverables: [planning review](review.md), [source inventory](source-inventory.json), [operator storyboard](storyboards/operator-reconciliation.svg) and [customer storyboard](storyboards/customer-bill.svg). Owner directions expanded the review to international workflow evidence, separate personas, iterative financial correction and embedded AI assistance. This is not the completed whole-product redesign.
 
 # Checks actually performed

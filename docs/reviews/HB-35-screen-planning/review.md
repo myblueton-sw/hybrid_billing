@@ -7,6 +7,8 @@ status: draft
 
 # Outcome and ownership
 
+**Visual delivery update:** the [v2 prototype](prototype/README.md) now provides 12 operator and 3 customer screen states, plus a generated fifteen-page review PDF. It applies the renewed research to the connected monthly billing story. See [visual verification](visual-verification.md). Earlier notes below about the two-frame limitation remain historical; the 49-screen baseline PDF is still unchanged.
+
 **Research update, 2026-10-28:** the owner rejected the two narrow storyboards below as insufficient for full CSP billing. The [renewed multi-provider research and screen brief](multi-provider-research.md) now supplies the provider-specific evidence, international MSP comparison, portfolio-to-invoice story and showback/allocation/chargeback boundaries for the next design. The two SVGs remain historical arithmetic illustrations; they are not an accepted complete invoice design. The existing v1.16 PDF has not been updated.
 
 Tracking: [HB-35](https://linear.app/hybrid-billing/issue/HB-35/review-planning-baseline-for-the-complete-product-screen-mockup). Accountable owner: Seung Woo Park. Machine: mac_mini. Baseline: main `4f990f168790ad15b10bf6359927fadeefb8e6ef`. Root owns PM/UI-UX synthesis and these artifacts; separate read-only `screen_source_review` reviews source trace, billing/permission design and the resulting artifacts. This is a planning review and static design study, not a product implementation or a full DOCX re-audit.

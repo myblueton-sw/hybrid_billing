@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hybrid Billing / customer design</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<section class="screen customer" id="overview" data-title="Your bill, clearly explained.">
+<main class="main">
+<header class="top">
+<div class="brand">hybrid<i>.</i> <span class="minor">/ Customer portal</span>
+</div>
+<nav class="customernav">
+<a href="#overview" class="active">Overview</a>
+<a href="#invoice" class="">Invoices</a>
+<a href="#usage" class="">Usage & questions</a>
+</nav>
+<span>Northstar Labs <span class="avatar">NL</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Customer billing / September 2026</div>
+<h1>Your bill, clearly explained.</h1>
+<div class="sub">Northstar Labs / US entity · Your authorized billing documents</div>
+</div>
+<div class="actions">
+</div>
+</div>
+<div class="hero">
+<div>
+<div class="eyebrow" style="color:#a8dfce">September 2026 · issued invoice</div>
+<div class="large">USD 136,560.00</div>
+<p>DEMO-2026-09104 · Issued Oct 05 · Due Nov 04</p>
+</div>
+<div>
+<span class="pill ">Issued</span>
+<p class="minor">Payment confirmation unavailable</p>
+<a class="btn " href="#invoice">View invoice</a>
+</div>
+</div>
+<div class="cols">
+<div class="card ">
+<div class="cardhead">
+<h2>Your services this month</h2>
+</div>
+<div class="cardbody">
+<div class="chartrow">
+<span>AWS</span>
+<div class="bartrack">
+<div class="barfill" style="width:100%">
+</div>
+</div>
+<strong class="num">51,600.00</strong>
+</div>
+<div class="chartrow">
+<span>Azure</span>
+<div class="bartrack">
+<div class="barfill" style="width:67%">
+</div>
+</div>
+<strong class="num">34,560.00</strong>
+</div>
+<div class="chartrow">
+<span>GCP</span>
+<div class="bartrack">
+<div class="barfill" style="width:38%">
+</div>
+</div>
+<strong class="num">19,440.00</strong>
+</div>
+<div class="chartrow">
+<span>OCI</span>
+<div class="bartrack">
+<div class="barfill" style="width:17%">
+</div>
+</div>
+<strong class="num">8,640.00</strong>
+</div>
+<div class="chartrow">
+<span>Alibaba</span>
+<div class="bartrack">
+<div class="barfill" style="width:8%">
+</div>
+</div>
+<strong class="num">4,320.00</strong>
+</div>
+<div class="chartrow">
+<span>VMware</span>
+<div class="bartrack">
+<div class="barfill" style="width:29%">
+</div>
+</div>
+<strong class="num">15,000.00</strong>
+</div>
+<div class="chartrow">
+<span>Support</span>
+<div class="bartrack">
+<div class="barfill" style="width:6%">
+</div>
+</div>
+<strong class="num">3,000.00</strong>
+</div>
+</div>
+<div class="tablefoot">USD selling amounts after your contracted discounts. Tax is shown on the invoice.</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>What you can do</h2>
+</div>
+<div class="cardbody">
+<h3>Understand a charge</h3>
+<p class="minor">Open service detail and the applicable discount or fixed-fee basis.</p>
+<a class="btn " href="#usage">Explore service detail</a>
+<div class="sectionlabel">Documents</div>
+<div class="line">
+<span>September invoice</span>
+<strong>
+<span class="pill ok">Issued</span>
+</strong>
+</div>
+<div class="line">
+<span>October estimate</span>
+<strong>Not available</strong>
+</div>
+<p class="minor">An estimate is separate from an issued invoice. Unavailable data is never shown as zero.</p>
+</div>
+</div>
+</div>
+<div class="notice info">
+<strong>About this design example</strong>
+<p>All entities, amounts, dates and tax treatment are synthetic. No payment, invoice delivery or account connection is performed.</p>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 13 / 15</span>
+<a href="#invoice">Open invoice detail →</a>
+</footer>
+</main>
+</section>
+<section class="screen customer" id="invoice" data-title="Your September invoice.">
+<main class="main">
+<header class="top">
+<div class="brand">hybrid<i>.</i> <span class="minor">/ Customer portal</span>
+</div>
+<nav class="customernav">
+<a href="#overview" class="">Overview</a>
+<a href="#invoice" class="active">Invoices</a>
+<a href="#usage" class="">Usage & questions</a>
+</nav>
+<span>Northstar Labs <span class="avatar">NL</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Customer documents / DEMO-2026-09104</div>
+<h1>Your September invoice.</h1>
+<div class="sub">A single permitted USD invoice with itemized services and your contracted discounts.</div>
+</div>
+<div class="actions">
+<a class="btn " href="#overview">Back to overview</a>
+</div>
+</div>
+<div class="card invoice">
+<div class="invoicehead">
+<div>
+<div class="eyebrow">MSP sales invoice / synthetic example</div>
+<h2>DEMO-2026-09104</h2>
+<p class="minor">From Meridian MSP US<br>Bill to Northstar Labs US<br>Service period: September 01–30, 2026</p>
+</div>
+<div class="minor">
+<span class="pill ok">Issued</span>
+<p>Issued: October 05, 2026<br>Due: November 04, 2026<br>Terms: illustrative Net 30<br>Currency: USD</p>
+</div>
+</div>
+<table class="compact">
+<thead>
+<tr>
+<th>Service</th>
+<th>Basis</th>
+<th>Base USD</th>
+<th>Discount USD</th>
+<th>Net USD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS cloud services</td>
+<td>Monthly service detail</td>
+<td class="num">60,000.00</td>
+<td class="num">-8,400.00</td>
+<td class="num">51,600.00</td>
+</tr>
+<tr>
+<td>Azure cloud services</td>
+<td>Usage + seats + commitments</td>
+<td class="num">38,400.00</td>
+<td class="num">-3,840.00</td>
+<td class="num">34,560.00</td>
+</tr>
+<tr>
+<td>Google Cloud services</td>
+<td>September billing period</td>
+<td class="num">21,600.00</td>
+<td class="num">-2,160.00</td>
+<td class="num">19,440.00</td>
+</tr>
+<tr>
+<td>Oracle Cloud services</td>
+<td>Subscription service detail</td>
+<td class="num">9,600.00</td>
+<td class="num">-960.00</td>
+<td class="num">8,640.00</td>
+</tr>
+<tr>
+<td>Alibaba Cloud services</td>
+<td>Subscription + metered services</td>
+<td class="num">4,800.00</td>
+<td class="num">-480.00</td>
+<td class="num">4,320.00</td>
+</tr>
+<tr>
+<td>Managed VMware capacity</td>
+<td>Fixed monthly service</td>
+<td class="num">15,000.00</td>
+<td>—</td>
+<td class="num">15,000.00</td>
+</tr>
+<tr>
+<td>Managed support</td>
+<td>1 monthly fee × USD 3,000</td>
+<td class="num">3,000.00</td>
+<td>—</td>
+<td class="num">3,000.00</td>
+</tr>
+</tbody>
+</table>
+<div class="invoicefoot">
+<div>
+<h3>What is included</h3>
+<p class="minor">Five cloud services, managed VMware capacity<br>and one monthly support fee.</p>
+<a href="#usage">See service breakdown and ask a question ↗</a>
+<p class="micro">Illustrative document, not a statutory invoice template.<br>TAX-DEMO-0 is a synthetic 0% policy, not a default.</p>
+</div>
+<div class="summarytotal">
+<div class="line">
+<span>Base charges</span>
+<strong>152,400.00</strong>
+</div>
+<div class="line">
+<span>Contract discounts</span>
+<strong>-15,840.00</strong>
+</div>
+<div class="line">
+<span>Net subtotal</span>
+<strong>136,560.00</strong>
+</div>
+<div class="line">
+<span>Illustrative tax · 0%</span>
+<strong>0.00</strong>
+</div>
+<div class="line">
+<b>Gross amount · USD</b>
+<strong style="font-size:21px">136,560.00</strong>
+</div>
+</div>
+</div>
+</div>
+<div class="notice info">
+<strong>Payment status is not confirmed.</strong>
+<p>The issued document does not establish that payment was received. No live payment or download is connected in this design.</p>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 14 / 15</span>
+<a href="#usage">Inspect service detail →</a>
+</footer>
+</main>
+</section>
+<section class="screen customer" id="usage" data-title="Trace a service charge without losing context.">
+<main class="main">
+<header class="top">
+<div class="brand">hybrid<i>.</i> <span class="minor">/ Customer portal</span>
+</div>
+<nav class="customernav">
+<a href="#overview" class="">Overview</a>
+<a href="#invoice" class="">Invoices</a>
+<a href="#usage" class="active">Usage & questions</a>
+</nav>
+<span>Northstar Labs <span class="avatar">NL</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Customer detail / AWS cloud services</div>
+<h1>Trace a service charge without losing context.</h1>
+<div class="sub">Own service details and invoice-linked questions, without internal MSP economics.</div>
+</div>
+<div class="actions">
+</div>
+</div>
+<div class="scope">
+<strong>Northstar Labs</strong>
+<span>DEMO-2026-09104</span>
+<span>September 2026 · USD selling amounts</span>
+<span class="pill ok">Issued detail</span>
+</div>
+<div class="cols">
+<div class="card ">
+<div class="cardhead">
+<h2>AWS services / USD 51,600.00</h2>
+</div>
+<table class="">
+<thead>
+<tr>
+<th>Service / customer charge basis</th>
+<th>Contract base</th>
+<th>Discount 14%</th>
+<th>Net USD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Compute · permitted usage detail</td>
+<td class="num">36,000.00</td>
+<td class="num">-5,040.00</td>
+<td class="num">30,960.00</td>
+</tr>
+<tr>
+<td>Storage · permitted usage detail</td>
+<td class="num">15,000.00</td>
+<td class="num">-2,100.00</td>
+<td class="num">12,900.00</td>
+</tr>
+<tr>
+<td>Network · permitted usage detail</td>
+<td class="num">9,000.00</td>
+<td class="num">-1,260.00</td>
+<td class="num">7,740.00</td>
+</tr>
+<tr class="emphasis">
+<td>AWS subtotal</td>
+<td class="num">60,000.00</td>
+<td class="num">-8,400.00</td>
+<td class="num">51,600.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>A question about this charge?</h2>
+</div>
+<div class="cardbody">
+<h3>Reference the exact invoice line</h3>
+<div class="line">
+<span>Invoice</span>
+<strong>DEMO-2026-09104</strong>
+</div>
+<div class="line">
+<span>Service</span>
+<strong>AWS / Compute</strong>
+</div>
+<div class="line">
+<span>Period</span>
+<strong>September 2026</strong>
+</div>
+<p class="minor">The product would attach this reference to your inquiry. The prototype does not send messages.</p>
+<a class="btn " href="#usage-question">View inquiry example</a>
+</div>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Usage evidence / selected disclosed rows</h2>
+</div>
+<table class="compact">
+<thead>
+<tr>
+<th>Service / scope</th>
+<th>Measurement</th>
+<th>Period</th>
+<th>Availability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Compute / production application</td>
+<td>12,000 instance-hours</td>
+<td>Sep 01–30</td>
+<td>
+<span class="pill ok">Available</span>
+</td>
+</tr>
+<tr>
+<td>Storage / application data</td>
+<td>50,000 GB-month</td>
+<td>September</td>
+<td>
+<span class="pill ok">Available</span>
+</td>
+</tr>
+<tr>
+<td>Network / outbound traffic</td>
+<td>30,000 GB</td>
+<td>September</td>
+<td>
+<span class="pill ok">Available</span>
+</td>
+</tr>
+<tr>
+<td>VMware / managed capacity</td>
+<td>Fixed monthly service</td>
+<td>September</td>
+<td>
+<span class="pill warn">VM price detail unavailable</span>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="tablefoot">Usage measures have different units and are not summed. Contracted service bundles need not equal a single usage × rate formula.</div>
+</div>
+<div class="notice info">
+<strong>Your document history stays understandable.</strong>
+<p>Only issued corrections are added to your document history. Internal drafts and unapproved correction proposals are not customer documents.</p>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 15 / 15</span>
+<a href="#overview">Return to your overview →</a>
+</footer>
+</main>
+</section>
+<dialog id="inquiry-dialog">
+<h2>Illustrative invoice inquiry</h2>
+<p>Invoice DEMO-2026-09104 · AWS / Compute · September 2026</p>
+<p>“Please explain which usage makes up this compute charge.”</p>
+<p class="minor">Example only. Nothing is submitted or sent.</p>
+<form method="dialog">
+<button class="btn">Close example</button>
+</form>
+</dialog>
+<script src="navigation.js">
+</script>
+</body>
+</html>

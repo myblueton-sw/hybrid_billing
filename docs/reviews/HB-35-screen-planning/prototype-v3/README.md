@@ -7,6 +7,8 @@ status: draft
 
 # Open the revised design
 
+**Latest extension:** [v4](../prototype-v4/README.md) adds monthly history and supplier PDF analysis. The 27 states here remain preserved reference flows in the 35-page v4 bundle.
+
 Generate the bundle with the commands below. Open `output/designs/HB-35-v3-ko/index.html` for Korean operator flows or `output/designs/HB-35-v3/index.html` for English. Each bundle's `customer.html` is a separate customer-only document and loads a separate script. PDF outputs are `output/pdf/hybrid-billing-msp-design-v3-ko.pdf` and `output/pdf/hybrid-billing-msp-design-v3.pdf`.
 
 This revision incorporates the [external sufficiency review](../baseline-sufficiency-review.md). It supplies twelve additional working design states, retains the fifteen earlier core states and keeps neutral typography, tables and dividers. There are no colored highlights, decorative AI motifs or rounded-card treatments. The 27-page count is not certification of all 49 baseline screens or production billing readiness.

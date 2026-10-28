@@ -7,6 +7,8 @@ status: draft
 
 # Open the design
 
+**Coverage assessment:** the [external sufficiency review](../baseline-sufficiency-review.md) identifies missing operating paths and provider transaction cases. This artifact is a core-story proposal, not a complete operational baseline.
+
 Open [operator workspace](index.html) in a browser. Start with **Review Northstar**, or follow the footer links through the story. The [customer workspace](customer.html) is a separate HTML document with only disclosed selling information. HTML, CSS and navigation JavaScript are self-contained local assets; there are no external requests, analytics, APIs or financial operations.
 
 The generated review PDF is `output/pdf/hybrid-billing-msp-design-v2.pdf` at the repository root. It contains all fifteen screen states, one per page. PDF/PNG files are generated local output and are not committed. This v2 artifact replaces the two narrow storyboards as the current core-flow visual proposal; the old v1.16 PDF has not been overwritten.

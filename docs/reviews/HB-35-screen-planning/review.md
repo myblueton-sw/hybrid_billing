@@ -7,6 +7,8 @@ status: draft
 
 # Outcome and ownership
 
+**Baseline sufficiency update, 2026-10-28:** [External assessment](baseline-sufficiency-review.md) finds the core story adequate but the full operational screen baseline incomplete. Prior visual QA is not a workflow-completeness certification.
+
 **Visual delivery update:** the [v2 prototype](prototype/README.md) now provides 12 operator and 3 customer screen states, plus a generated fifteen-page review PDF. It applies the renewed research to the connected monthly billing story. See [visual verification](visual-verification.md). Earlier notes below about the two-frame limitation remain historical; the 49-screen baseline PDF is still unchanged.
 
 **Research update, 2026-10-28:** the owner rejected the two narrow storyboards below as insufficient for full CSP billing. The [renewed multi-provider research and screen brief](multi-provider-research.md) now supplies the provider-specific evidence, international MSP comparison, portfolio-to-invoice story and showback/allocation/chargeback boundaries for the next design. The two SVGs remain historical arithmetic illustrations; they are not an accepted complete invoice design. The existing v1.16 PDF has not been updated.

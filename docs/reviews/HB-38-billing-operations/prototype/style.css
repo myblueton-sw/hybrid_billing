@@ -4,3 +4,4 @@
 @page{size:1440px 1200px;margin:0}
 @media print{body{width:1440px}aside{position:absolute;height:1200px}main{padding-bottom:65px}footer{position:fixed;bottom:22px;left:237px;right:32px}.table-wrap{overflow:visible}.hide-print,.pager{display:none}.print-only{display:block}tbody tr:nth-child(n+9).operation-row{display:none}button,input,select{print-color-adjust:exact}}
 @media print{.operation-row td{padding:8px 9px}.print-only{font-size:11px;margin:10px 0}main{padding-bottom:35px}}
+.contract-tabs{display:flex;gap:24px;border-bottom:1px solid #aeb7c0;padding:14px 0;margin:14px 0}.contract-tabs a{text-decoration:none}.contract-tabs a[aria-current]{font-weight:700;text-decoration:underline}.contract-context{font-size:12px;color:#56616c}.contract-tabs+ .eyebrow{margin-top:16px}

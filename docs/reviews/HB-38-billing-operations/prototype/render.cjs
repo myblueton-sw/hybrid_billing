@@ -1,7 +1,7 @@
 const {chromium}=require(process.env.HB_PLAYWRIGHT_MODULE||'playwright');
 const fs=require('fs'),path=require('path'),{execFileSync}=require('child_process');
 const root=path.resolve(__dirname,'../../../..');
-const out=path.join(root,'output/designs/HB-38');
+const out=path.join(root,'output/designs/HB-39');
 fs.mkdirSync(out,{recursive:true});
 fs.mkdirSync(path.join(root,'output/pdf'),{recursive:true});
 const assert=(x,m)=>{if(!x)throw Error(m);};
@@ -14,8 +14,8 @@ const assert=(x,m)=>{if(!x)throw Error(m);};
   page.on('pageerror',e=>errors.push(String(e)));
   page.on('request',r=>{if(/^https?:/.test(r.url()))external.push(r.url());});
   const url='file://'+path.join(__dirname,'index.html')+'?lang='+lang;
-  const go=async route=>{await page.goto(url+'#'+route);};
-  const routes=['operations','detail/C00226','policies','oci','preview','history'];
+  const go=async route=>{await page.goto('about:blank');await page.goto(url+'#'+route);await page.locator('h1').waitFor();await page.waitForFunction(()=>!['#oci','#policies','#preview'].includes(location.hash));};
+  const routes=['operations','detail/C00226','contracts','contracts/customer/C00226','contracts/supplier/oci','contracts/customer/C00226/preview','history'];
   const pages=[];
   for(let i=0;i<routes.length;i++){
    await go(routes[i]);
@@ -29,7 +29,7 @@ const assert=(x,m)=>{if(!x)throw Error(m);};
    pages.push(pdf);report.push({lang,route:routes[i],bounds});
    await page.emulateMedia({media:'screen'});
   }
-  const final=path.join(root,'output/pdf',`hybrid-billing-operations-contracts-v6${lang==='ko'?'-ko':''}.pdf`);
+  const final=path.join(root,'output/pdf',`hybrid-billing-operations-contracts-v7${lang==='ko'?'-ko':''}.pdf`);
   execFileSync('pdfunite',[...pages,final]);
   await go('operations');
   assert(await page.locator('tbody tr').count()===25,'Default pagination');
@@ -75,16 +75,68 @@ const assert=(x,m)=>{if(!x)throw Error(m);};
   await page.waitForFunction(()=>document.querySelector('.eyebrow')?.textContent.includes('C00226'));
   await go('detail/bad-id');
   assert((await page.locator('h1').innerText()).includes(lang==='ko'?'찾을':'not found'),'Unknown customer mapped incorrectly');
+  await go('contracts');
+  assert(await page.locator('#nav a').count()===3,'Focused main navigation count');
+  assert(await page.locator('#nav a[href="#oci"]').count()===0,'OCI promoted to main navigation');
+  assert(await page.locator('#content tbody tr').count()===5,'Supplier categories missing');
+  for(const provider of ['aws','azure','gcp','oci','alibaba']){
+   await page.locator(`tbody a[href="#contracts/supplier/${provider}"]`).first().click();
+   await page.locator('.back[href="#contracts"]').waitFor();
+   assert(await page.locator('#nav a[href="#contracts"][aria-current]').count()===1,'Contract parent state');
+   await page.locator('.back').click();
+   await page.locator('#content tbody').waitFor();
+  }
+  await go('oci');
+  assert(new URL(page.url()).hash==='#contracts/supplier/oci','Legacy OCI route');
+  await go('detail/C00001');
+  await page.locator('a[href="#contracts/customer/C00001"]').click();
+  await page.locator('.contract-context').waitFor();
+  assert((await page.locator('#content').innerText()).includes('C00001'),'Customer sales context');
+  assert(!(await page.locator('#content').innerText()).includes('GOODWILL-025'),'Foreign customer policy substituted');
+  await page.locator('a[href="#contracts/customer/C00001/preview"]').click();
+  await page.waitForFunction(()=>document.querySelector('h1').textContent.includes(document.documentElement.lang==='ko'?'미조회':'unavailable'));
+  assert(!(await page.locator('#content').innerText()).includes('1,020.00'),'Foreign customer preview amount');
+  for(const legacy of ['policies','preview']){
+   await page.evaluate(value=>{location.hash='#'+value;},legacy);
+   await page.waitForFunction(value=>location.hash==='#contracts/customer/C00001'+(value==='preview'?'/preview':''),legacy);
+   await page.locator('.contract-context').waitFor();
+   assert((await page.locator('.contract-context').innerText()).includes('C00001'),'Legacy customer context');
+   assert(!(await page.locator('#content').innerText()).includes('GOODWILL-025'),'Legacy substituted policy');
+  }
+  await page.locator('#mode').selectOption('single');
+  await page.waitForFunction(()=>location.hash==='#contracts/customer/C00226/preview');
+  assert((await page.locator('.contract-context').innerText()).includes('C00226'),'Sales workspace switch');
+  await go('operations');
+  await page.locator('#month').selectOption('2026-08');
+  await page.locator('#nav a[href="#contracts"]').click();
+  await page.locator('.contract-tabs a[href="#contracts/customer/C00226"]').click();
+  await page.locator('.contract-context').waitFor();
+  assert((await page.locator('.contract-context').innerText()).includes('2026-08'),'Month lost in contracts');
+  assert(!(await page.locator('#content').innerText()).includes('GOODWILL-025'),'September benefit shown for August');
+  await page.locator('a[href="#contracts/customer/C00226/preview"]').click();
+  await page.waitForFunction(()=>document.querySelector('h1').textContent.includes(document.documentElement.lang==='ko'?'미조회':'unavailable'));
+  assert(!(await page.locator('#content').innerText()).includes('1,020.00'),'Unloaded month priced');
+  await go('operations');
+  await page.locator('#size').selectOption('100');
+  await page.locator('#next').click();
+  const returnLink=await page.locator('tbody a').first().getAttribute('href');
+  await page.locator('tbody a').first().click();
+  await page.locator('a[href^="#contracts/customer/"]').first().click();
+  await page.locator('.contract-context').waitFor();
+  await page.locator('#nav a[href="#operations"]').click();
+  await page.locator('#result-count').waitFor();
+  assert(await page.evaluate(()=>hb38.state.page)===2,'Contract return page');
+  assert(await page.evaluate(()=>document.activeElement.getAttribute('href'))===returnLink,'Contract return focus');
   await page.setViewportSize({width:390,height:844});
-  for(const route of ['operations','detail/C00226','policies','oci','preview','history']){
+  for(const route of ['operations','detail/C00226','contracts','contracts/customer/C00226','contracts/supplier/oci','contracts/customer/C00226/preview','history']){
    await go(route);
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile overflow '+route);
-   await page.screenshot({path:path.join(out,`${lang}-${route.split('/')[0]}-mobile.png`),fullPage:true});
+   await page.screenshot({path:path.join(out,`${lang}-${route.replaceAll('/','-')}-mobile.png`),fullPage:true});
   }
   assert(errors.length===0&&external.length===0,'Browser errors/network '+JSON.stringify({errors,external}));
-  report.push({lang,errors,external,checks:'pagination 25/100; filters; preserved count/page/focus; unknown outcome; issued exception subset; unavailable month; single company; unknown identity; mobile width'});
+  report.push({lang,errors,external,checks:'pagination 25/100; filters; preserved count/page/focus; unknown outcome; issued exception subset; unavailable month; single company; unknown identity; provider hierarchy/legacy links; customer-month policy isolation; contract return context; mobile width'});
   await page.close();
  }
  fs.writeFileSync(path.join(out,'verification.json'),JSON.stringify(report,null,2));
- await browser.close();console.log(JSON.stringify({locales:2,pagesPerPdf:6,report:path.join(out,'verification.json')}));
+ await browser.close();console.log(JSON.stringify({locales:2,pagesPerPdf:7,report:path.join(out,'verification.json')}));
 })().catch(e=>{console.error(e);process.exit(1);});

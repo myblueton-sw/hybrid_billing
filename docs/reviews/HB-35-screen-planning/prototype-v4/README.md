@@ -5,6 +5,9 @@ description: Adds eight bilingual history and document-review states with a synt
 status: draft
 ---
 
+The [v5 extension](../prototype-v5/README.md) is the current customer, contract, issuance and ERP-preparation entry point. This v4 evidence workflow is preserved within it.
+
+
 # Revised entry points
 
 Open `output/designs/HB-35-v4-ko/index.html` for Korean operator history and PDF review, or `output/designs/HB-35-v4/index.html` for English. Each bundle has a separate selling-only `customer.html`. The generated combined PDFs are `output/pdf/hybrid-billing-msp-design-v4-ko.pdf` and `output/pdf/hybrid-billing-msp-design-v4.pdf`, with 35 pages each.

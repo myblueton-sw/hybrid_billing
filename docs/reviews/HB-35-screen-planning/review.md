@@ -5,6 +5,9 @@ description: Reviews the existing 49-screen baseline against later decisions and
 status: draft
 ---
 
+Latest revision: [v5 customer and issuance guide](prototype-v5/README.md) and [verification](v5-verification.md). Seven new screens plus 35 prior states; 42-page EN/KO review books.
+
+
 # Outcome and ownership
 
 **v4 revision:** [Monthly history and supplier PDF analysis](prototype-v4/README.md) adds eight bilingual states and a synthetic PDF workbench; see [v4 verification](v4-verification.md).

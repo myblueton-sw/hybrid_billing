@@ -1,0 +1,585 @@
+{
+  "baseline_states": 42,
+  "integrated_states": 52,
+  "book_pages": 54,
+  "coverage": [
+    {
+      "baseline": "v5/previous/core-index-close",
+      "destination": "core-index-close",
+      "page": 4,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/customer/northstar",
+      "destination": "customer-detail",
+      "page": 5,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/index-intake",
+      "destination": "index-intake",
+      "page": 6,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/v4-inbox",
+      "destination": "v4-inbox",
+      "page": 7,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/v4-extract",
+      "destination": "v4-extract",
+      "page": 8,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/v4-differences",
+      "destination": "v4-differences",
+      "page": 9,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/v4-audit",
+      "destination": "v4-audit",
+      "page": 10,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-index-sources",
+      "destination": "core-index-sources",
+      "page": 11,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-index-aws",
+      "destination": "core-index-aws",
+      "page": 12,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-index-variants",
+      "destination": "core-index-variants",
+      "page": 13,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/index-mapping",
+      "destination": "index-mapping",
+      "page": 14,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/contracts/northstar",
+      "destination": "customer-contract",
+      "page": 21,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-index-allocation",
+      "destination": "core-index-allocation",
+      "page": 24,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-index-pricing",
+      "destination": "core-index-pricing",
+      "page": 25,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/index-pricing",
+      "destination": "index-pricing",
+      "page": 26,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/index-seats",
+      "destination": "index-seats",
+      "page": 27,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/index-commitments",
+      "destination": "index-commitments",
+      "page": 28,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/index-fx",
+      "destination": "index-fx",
+      "page": 29,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-reconciliation-case",
+      "destination": "core-reconciliation-case",
+      "page": 30,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-reconciliation-recalc",
+      "destination": "core-reconciliation-recalc",
+      "page": 31,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/index-runs",
+      "destination": "index-runs",
+      "page": 32,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-reconciliation-approval",
+      "destination": "core-reconciliation-approval",
+      "page": 33,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/index-approval",
+      "destination": "index-approval",
+      "page": 34,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/policy/meridian",
+      "destination": "assignment-policy",
+      "page": 35,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/process/juniper-2026-08",
+      "destination": "review-issue",
+      "page": 36,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/document/northstar-2026-08",
+      "destination": "document-history",
+      "page": 37,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-reconciliation-issued",
+      "destination": "core-reconciliation-issued",
+      "page": 38,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/erp",
+      "destination": "erp",
+      "page": 39,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/v4-monthly",
+      "destination": "v4-monthly",
+      "page": 40,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/v4-month",
+      "destination": "v4-month",
+      "page": 41,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/v4-variance",
+      "destination": "v4-variance",
+      "page": 42,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-reconciliation-correction",
+      "destination": "core-reconciliation-correction",
+      "page": 43,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/index-correction",
+      "destination": "index-correction",
+      "page": 44,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-customer-overview",
+      "destination": "core-customer-overview",
+      "page": 45,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/v4-customer-months",
+      "destination": "v4-customer-months",
+      "page": 46,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/customer-history",
+      "destination": "customer-history",
+      "page": 47,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-customer-invoice",
+      "destination": "core-customer-invoice",
+      "page": 48,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-customer-usage",
+      "destination": "core-customer-usage",
+      "page": 49,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/customer-inquiry",
+      "destination": "customer-inquiry",
+      "page": 50,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/customer-response",
+      "destination": "customer-response",
+      "page": 51,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/previous/core-reconciliation-setup",
+      "destination": "core-reconciliation-setup",
+      "page": 52,
+      "disposition": "retained and integrated"
+    },
+    {
+      "baseline": "v5/register",
+      "destination": "operations",
+      "page": 3,
+      "disposition": "replaced by 5000-target operations; historical company detail retained in monthly-history chapter"
+    }
+  ],
+  "page_order": [
+    {
+      "id": "overview",
+      "page": 1,
+      "chapter": "overview",
+      "title": "Hybrid Billing \u2014 complete review"
+    },
+    {
+      "id": "contents",
+      "page": 2,
+      "chapter": "overview",
+      "title": "Complete screen index"
+    },
+    {
+      "id": "operations",
+      "page": 3,
+      "chapter": "work",
+      "title": "What is preventing issuance?"
+    },
+    {
+      "id": "core-index-close",
+      "page": 4,
+      "chapter": "work",
+      "title": "Selected portfolio close workbench"
+    },
+    {
+      "id": "customer-detail",
+      "page": 5,
+      "chapter": "work",
+      "title": "Northstar Labs"
+    },
+    {
+      "id": "index-intake",
+      "page": 6,
+      "chapter": "sources",
+      "title": "Resolve incomplete supplier evidence"
+    },
+    {
+      "id": "v4-inbox",
+      "page": 7,
+      "chapter": "sources",
+      "title": "Supplier invoice inbox"
+    },
+    {
+      "id": "v4-extract",
+      "page": 8,
+      "chapter": "sources",
+      "title": "Review PDF, extracted fields and AI findings"
+    },
+    {
+      "id": "v4-differences",
+      "page": 9,
+      "chapter": "sources",
+      "title": "Resolve PDF versus collected-data differences"
+    },
+    {
+      "id": "v4-audit",
+      "page": 10,
+      "chapter": "sources",
+      "title": "Accept evidence with an immutable audit trail"
+    },
+    {
+      "id": "core-index-sources",
+      "page": 11,
+      "chapter": "sources",
+      "title": "Supplier invoice reconciliation"
+    },
+    {
+      "id": "core-index-aws",
+      "page": 12,
+      "chapter": "sources",
+      "title": "AWS source detail"
+    },
+    {
+      "id": "core-index-variants",
+      "page": 13,
+      "chapter": "sources",
+      "title": "Provider billing structures"
+    },
+    {
+      "id": "index-mapping",
+      "page": 14,
+      "chapter": "sources",
+      "title": "Assign the account and inspect the impact"
+    },
+    {
+      "id": "supplier-register",
+      "page": 15,
+      "chapter": "contracts",
+      "title": "Contracts and rates"
+    },
+    {
+      "id": "supplier-aws",
+      "page": 16,
+      "chapter": "contracts",
+      "title": "AWS \u00b7 Contract evidence"
+    },
+    {
+      "id": "supplier-azure",
+      "page": 17,
+      "chapter": "contracts",
+      "title": "Azure \u00b7 Contract evidence"
+    },
+    {
+      "id": "supplier-gcp",
+      "page": 18,
+      "chapter": "contracts",
+      "title": "GCP \u00b7 Contract evidence"
+    },
+    {
+      "id": "supplier-oci",
+      "page": 19,
+      "chapter": "contracts",
+      "title": "OCI purchase contract"
+    },
+    {
+      "id": "supplier-alibaba",
+      "page": 20,
+      "chapter": "contracts",
+      "title": "Alibaba Cloud \u00b7 Contract evidence"
+    },
+    {
+      "id": "customer-contract",
+      "page": 21,
+      "chapter": "contracts",
+      "title": "Contract lifecycle and effective versions"
+    },
+    {
+      "id": "sales-policy",
+      "page": 22,
+      "chapter": "contracts",
+      "title": "A default, explicit exceptions, one-off benefits"
+    },
+    {
+      "id": "sales-impact",
+      "page": 23,
+      "chapter": "contracts",
+      "title": "See the price before activating the rule"
+    },
+    {
+      "id": "core-index-allocation",
+      "page": 24,
+      "chapter": "contracts",
+      "title": "Cost allocation and retained costs"
+    },
+    {
+      "id": "core-index-pricing",
+      "page": 25,
+      "chapter": "contracts",
+      "title": "Customer selling calculation"
+    },
+    {
+      "id": "index-pricing",
+      "page": 26,
+      "chapter": "contracts",
+      "title": "Change a scoped contract rule"
+    },
+    {
+      "id": "index-seats",
+      "page": 27,
+      "chapter": "contracts",
+      "title": "Explain a mid-cycle seat adjustment"
+    },
+    {
+      "id": "index-commitments",
+      "page": 28,
+      "chapter": "contracts",
+      "title": "Keep commitments and credits distinct"
+    },
+    {
+      "id": "index-fx",
+      "page": 29,
+      "chapter": "contracts",
+      "title": "Verify conversion, tax and document grouping"
+    },
+    {
+      "id": "core-reconciliation-case",
+      "page": 30,
+      "chapter": "reconcile",
+      "title": "Reconciliation investigation"
+    },
+    {
+      "id": "core-reconciliation-recalc",
+      "page": 31,
+      "chapter": "reconcile",
+      "title": "Calculation revision comparison"
+    },
+    {
+      "id": "index-runs",
+      "page": 32,
+      "chapter": "reconcile",
+      "title": "Run the corrected Aster candidate"
+    },
+    {
+      "id": "core-reconciliation-approval",
+      "page": 33,
+      "chapter": "reconcile",
+      "title": "Financial approval review"
+    },
+    {
+      "id": "index-approval",
+      "page": 34,
+      "chapter": "reconcile",
+      "title": "Resolve feedback before fixed-version issuance"
+    },
+    {
+      "id": "assignment-policy",
+      "page": 35,
+      "chapter": "issue",
+      "title": "Issuer and reviewer assignment policy"
+    },
+    {
+      "id": "review-issue",
+      "page": 36,
+      "chapter": "issue",
+      "title": "Review and issue"
+    },
+    {
+      "id": "document-history",
+      "page": 37,
+      "chapter": "issue",
+      "title": "DEMO-2026-08102"
+    },
+    {
+      "id": "core-reconciliation-issued",
+      "page": 38,
+      "chapter": "issue",
+      "title": "Invoice and follow-up status"
+    },
+    {
+      "id": "erp",
+      "page": 39,
+      "chapter": "issue",
+      "title": "ERP connection and document mapping"
+    },
+    {
+      "id": "v4-monthly",
+      "page": 40,
+      "chapter": "history",
+      "title": "Monthly billing history"
+    },
+    {
+      "id": "v4-month",
+      "page": 41,
+      "chapter": "history",
+      "title": "September close and evidence history"
+    },
+    {
+      "id": "v4-variance",
+      "page": 42,
+      "chapter": "history",
+      "title": "Explain the change from August to September"
+    },
+    {
+      "id": "core-reconciliation-correction",
+      "page": 43,
+      "chapter": "history",
+      "title": "Post-issue source revision"
+    },
+    {
+      "id": "index-correction",
+      "page": 44,
+      "chapter": "history",
+      "title": "Close the late-credit correction case"
+    },
+    {
+      "id": "core-customer-overview",
+      "page": 45,
+      "chapter": "customer",
+      "title": "Billing overview"
+    },
+    {
+      "id": "v4-customer-months",
+      "page": 46,
+      "chapter": "customer",
+      "title": "Your monthly billing history"
+    },
+    {
+      "id": "customer-history",
+      "page": 47,
+      "chapter": "customer",
+      "title": "Your invoices and corrections"
+    },
+    {
+      "id": "core-customer-invoice",
+      "page": 48,
+      "chapter": "customer",
+      "title": "September invoice"
+    },
+    {
+      "id": "core-customer-usage",
+      "page": 49,
+      "chapter": "customer",
+      "title": "Service charges and usage detail"
+    },
+    {
+      "id": "customer-inquiry",
+      "page": 50,
+      "chapter": "customer",
+      "title": "Ask about a specific charge"
+    },
+    {
+      "id": "customer-response",
+      "page": 51,
+      "chapter": "customer",
+      "title": "Track the billing explanation"
+    },
+    {
+      "id": "core-reconciliation-setup",
+      "page": 52,
+      "chapter": "settings",
+      "title": "Initial setup and source readiness"
+    },
+    {
+      "id": "license-modes",
+      "page": 53,
+      "chapter": "settings",
+      "title": "Usage mode and license"
+    },
+    {
+      "id": "license-status",
+      "page": 54,
+      "chapter": "settings",
+      "title": "License status and registration"
+    }
+  ]
+}

@@ -29,12 +29,14 @@ def connect(env,user=None):
         autocommit=True,row_factory=dict_row,connect_timeout=5)
 
 
-def initialize(config,env=None):
+def initialize(config,env=None,revoked=()):
     config=validate_config(config)
     env=env or environment()
     sha=digest(canonical(config).encode())
     migration=(ROOT/'migrations/focus_import/001-authority.sql').read_bytes()
     roles={IMPORTER:None,APPROVER:None,**reader_scopes(config)}
+    from .revocation import denied_roles,revoke_privileges
+    denied=denied_roles(config,revoked)
     view_roles={reader_role(view_id(v['actor'])):v['actor'] for v in config.get('views',[])}
     with connect(env) as conn,conn.transaction():
         conn.execute('SELECT pg_advisory_xact_lock(270002)')
@@ -75,12 +77,15 @@ def initialize(config,env=None):
             else:
                 members={r['tenant_id'] for r in conn.execute('SELECT tenant_id FROM hb_focus.audience_member WHERE actor=%s',(view['actor'],))}
                 if members!=set(expected) or existing['expected_tenants']!=expected or existing['company_id']!=view['company_id'] or existing['config_digest']!=sha:raise Rejected('view_members_changed')
+        inactive={r['actor'] for r in conn.execute("SELECT properties->>'actor' AS actor FROM hb_focus.tenant WHERE NOT active UNION SELECT actor FROM hb_focus.audience WHERE NOT active")}
+        denied|=denied_roles(config,inactive)
+        revoke_privileges(conn,denied)
         for role,tenant in roles.items():
             if not conn.execute('SELECT 1 FROM pg_roles WHERE rolname=%s',(role,)).fetchone():
                 conn.execute(sql.SQL('CREATE ROLE {} LOGIN NOSUPERUSER NOBYPASSRLS PASSWORD {}').format(sql.Identifier(role),sql.Literal(password(env,role,'PG_ADMIN_PASSWORD'))))
             attributes=conn.execute('SELECT oid,rolsuper,rolbypassrls,rolcreaterole,rolcreatedb,rolreplication FROM pg_roles WHERE rolname=%s',(role,)).fetchone()
             if any(attributes[k] for k in ['rolsuper','rolbypassrls','rolcreaterole','rolcreatedb','rolreplication']) or conn.execute('SELECT 1 FROM pg_auth_members WHERE member=%s',(attributes['oid'],)).fetchone() or conn.execute('SELECT 1 FROM pg_class WHERE relowner=%s',(attributes['oid'],)).fetchone():raise Rejected('incompatible_pg_role')
-            conn.execute(sql.SQL('GRANT USAGE ON SCHEMA hb_focus TO {}').format(sql.Identifier(role)))
+            if role not in denied:conn.execute(sql.SQL('GRANT USAGE ON SCHEMA hb_focus TO {}').format(sql.Identifier(role)))
             for table in TABLES:
                 ident=sql.Identifier('hb_focus',table)
                 conn.execute(sql.SQL('ALTER TABLE {} ENABLE ROW LEVEL SECURITY').format(ident))
@@ -88,11 +93,12 @@ def initialize(config,env=None):
                 policy='p_'+role
                 condition=policy_condition(role,tenant,table,view_roles)
                 if condition is None:continue
+                if role in denied:condition=sql.SQL('false')
                 conn.execute(sql.SQL('DROP POLICY IF EXISTS {} ON {}').format(sql.Identifier(policy),ident))
                 conn.execute(sql.SQL('CREATE POLICY {} ON {} TO {} USING ({}) WITH CHECK ({})').format(sql.Identifier(policy),ident,sql.Identifier(role),condition,condition))
-                conn.execute(sql.SQL('GRANT SELECT ON {} TO {}').format(ident,sql.Identifier(role)))
-            conn.execute(sql.SQL('GRANT UPDATE(lock_token) ON hb_focus.gate,hb_focus.tenant TO {}').format(sql.Identifier(role)))
-            if role in view_roles:conn.execute(sql.SQL('GRANT UPDATE(lock_token) ON hb_focus.audience TO {}').format(sql.Identifier(role)))
+                if role not in denied:conn.execute(sql.SQL('GRANT SELECT ON {} TO {}').format(ident,sql.Identifier(role)))
+            if role not in denied:conn.execute(sql.SQL('GRANT UPDATE(lock_token) ON hb_focus.gate,hb_focus.tenant TO {}').format(sql.Identifier(role)))
+            if role in view_roles and role not in denied:conn.execute(sql.SQL('GRANT UPDATE(lock_token) ON hb_focus.audience TO {}').format(sql.Identifier(role)))
         conn.execute('GRANT INSERT ON hb_focus.batch,hb_focus.slice TO hb_focus_ingest')
         for table in NATIVE_TABLES:conn.execute(sql.SQL('GRANT INSERT ON {} TO hb_focus_ingest').format(sql.Identifier('hb_focus',table)))
         conn.execute('GRANT UPDATE(state) ON hb_focus.batch TO hb_focus_ingest,hb_focus_approve')
@@ -101,7 +107,7 @@ def initialize(config,env=None):
         conn.execute('GRANT UPDATE(current_batch,revision,busy) ON hb_focus.gate TO hb_focus_approve')
         conn.execute('GRANT UPDATE(busy) ON hb_focus.gate TO hb_focus_ingest')
         from .control import provision
-        provision(conn,roles)
+        provision(conn,{r:t for r,t in roles.items() if r not in denied})
         for role,tenant in roles.items():verify_privileges(conn,role,tenant,role in view_roles)
         expected={t:{'p_'+r for r,tid in roles.items() if policy_condition(r,tid,t,view_roles) is not None} for t in TABLES}
         for table in TABLES:

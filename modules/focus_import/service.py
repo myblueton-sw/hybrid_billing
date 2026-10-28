@@ -16,8 +16,9 @@ def initialize(config):
     with locked(),authority.connect(env) as conn:
         journal=Journal(env,conn);journal.ready()
         if journal.state and journal.state.get('retired'):raise Rejected('installation_retired')
-        config=authority.initialize(config,env)
-        warehouse.initialize(env,config)
+        revoked=journal.state['revoked_actors'] if journal.state else ()
+        config=authority.initialize(config,env,revoked)
+        warehouse.initialize(env,config,revoked)
     return {'state':'initialized','tenants':len(config['tenants']),'version':config['version'],'classification':'exploratory-query-only'}
 
 

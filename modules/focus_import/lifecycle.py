@@ -38,10 +38,13 @@ def access(actor,right,repair=False,restore_request=None):
         if right=='restore':
             if restore_request is None:raise Rejected('backup_request_required')
             j.restore_body=validated_backup(j,*restore_request)
+            if control.checkpoint(conn) is not None:
+                from .revocation import enforce_postgres
+                enforce_postgres(conn,state['metadata']['configuration'][0]['body'],state['revoked_actors'])
         bootstrapped=False
         if right=='restore' and control.checkpoint(conn) is None:
             cfg=state['metadata']['configuration'][0]['body']
-            authority.initialize(cfg,env)
+            authority.initialize(cfg,env,state['revoked_actors'])
             with conn.transaction():
                 conn.execute('UPDATE hb_focus.gate SET busy=true')
                 for name in state['revoked_actors']:
@@ -314,7 +317,9 @@ def restore(actor,backup_id,at=None):
         body=j.restore_body
         with j.effect('restore',backup_id):
             cfg=j.state['metadata']['configuration'][0]['body']
-            warehouse.initialize(store.env,cfg)
+            warehouse.initialize(store.env,cfg,j.state['revoked_actors'])
+            from .revocation import denied_roles,enforce_clickhouse
+            enforce_clickhouse(store.env,denied_roles(cfg,j.state['revoked_actors']))
             restore_metadata(conn,j.state['metadata'])
             required_batches={x['batch_id'] for x in j.state['slices'].values() if x['state']!='deleted'}
             for batch in required_batches:
@@ -369,15 +374,8 @@ def prune_backups(actor,at=None):
 
 
 def revoke(actor,target):
-    with access(actor,'revoke') as (j,conn,store,tenants):
-        readers={t['properties']['actor'] for t in tenants}|{r['actor'] for r in conn.execute('SELECT actor FROM hb_focus.audience')}
-        if target not in readers:raise Rejected('reader_unavailable')
-        if target not in j.state['revoked_actors']:j.state['revoked_actors'].append(target)
-        j.save(j.state)
-        conn.execute("UPDATE hb_focus.tenant SET active=false WHERE properties->>'actor'=%s",(target,))
-        conn.execute('UPDATE hb_focus.audience SET active=false WHERE actor=%s',(target,))
-        j.state['metadata']=metadata(conn);j.save(j.state)
-        return {'state':'revoked','actor':target}
+    from .revocation import revoke as enforce
+    return enforce(actor,target)
 
 
 def policy_preview(actor,tenant,policy):

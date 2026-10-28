@@ -23,7 +23,9 @@ def client(env,user=CH_WRITER):
     return clickhouse_connect.get_client(host='127.0.0.1',port=18123,username=user,password=secret,autogenerate_session_id=False,connect_timeout=5,send_receive_timeout=30)
 
 
-def initialize(env,config):
+def initialize(env,config,revoked=()):
+    from .revocation import denied_roles
+    denied=denied_roles(config,revoked)
     admin=client(env,'probe_admin')
     roles={CH_WRITER:None,**reader_scopes(config)}
     try:
@@ -36,13 +38,15 @@ def initialize(env,config):
             verifier=hashlib.sha256(password(env,user,key).encode()).hexdigest()
             admin.command(f"CREATE USER IF NOT EXISTS {user} IDENTIFIED WITH sha256_hash BY '{verifier}' SETTINGS PROFILE 'hb_focus_locked'")
             grant='SELECT, INSERT' if tenant is None else 'SELECT'
-            admin.command(f'GRANT {grant} ON hb_focus.fact TO {user}')
-            condition='1' if tenant is None else 'tenant_id IN ('+','.join(f"toUUID('{tid}')" for tid in tenant)+')'
+            if user in denied:admin.command(f'REVOKE SELECT ON hb_focus.fact FROM {user}')
+            else:admin.command(f'GRANT {grant} ON hb_focus.fact TO {user}')
+            condition='0' if user in denied else '1' if tenant is None else 'tenant_id IN ('+','.join(f"toUUID('{tid}')" for tid in tenant)+')'
             admin.command(f'CREATE ROW POLICY IF NOT EXISTS p_{user} ON hb_focus.fact FOR SELECT USING {condition} TO {user}')
             admin.command(f'ALTER ROW POLICY p_{user} ON hb_focus.fact FOR SELECT USING {condition} TO {user}')
             for row in admin.query('SHOW GRANTS FOR '+user).result_rows:
                 match=re.fullmatch(r'GRANT ([A-Z, ]+) ON hb_focus\.fact TO '+user,row[0].replace('`',''))
-                if not match or not set(match[1].split(', '))<=({'SELECT','INSERT'} if tenant is None else {'SELECT'}):raise Rejected('incompatible_ch_privileges')
+                if user in denied and row[0].replace('`','')==f'GRANT USAGE ON *.* TO {user}':continue
+                if not match or not set(match[1].split(', '))<=(set() if user in denied else {'SELECT','INSERT'} if tenant is None else {'SELECT'}):raise Rejected('incompatible_ch_privileges')
             effective=client(env,user)
             try:
                 required={'join_use_nulls':'1','input_format_null_as_default':'0','input_format_csv_empty_as_default':'1','input_format_parquet_allow_missing_columns':'0','serialize_query_plan':'0','async_insert':'0'}

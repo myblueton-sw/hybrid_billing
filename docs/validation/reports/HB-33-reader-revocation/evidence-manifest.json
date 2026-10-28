@@ -1,0 +1,465 @@
+{
+  "artifacts": [
+    {
+      "bytes": 1843,
+      "committed": false,
+      "path": ".local/runs/HB-33-revocation-r4/20261028T003039Z-seed.json",
+      "sha256": "792deebd073463ab09bb3bfcb63df1e02573faf7f5125ccd56b978157a4a58fc"
+    },
+    {
+      "bytes": 1919,
+      "committed": false,
+      "path": ".local/runs/HB-33-revocation-r4/20261028T003201Z-baseline.json",
+      "sha256": "2b93b97776544edd52c2308854e085574608803f7230737b6de856c7ac678038"
+    },
+    {
+      "bytes": 7032,
+      "committed": false,
+      "path": ".local/runs/HB-33-revocation-r4/20261028T003229Z-verify.json",
+      "sha256": "ea464b7ba4f4065c4da83d2adad3ab1f165035ec4030af851abe089f1049d4a9"
+    },
+    {
+      "bytes": 2805,
+      "committed": false,
+      "path": ".local/runs/HB-33-revocation-r4/20261028T003308Z-missing-schema.json",
+      "sha256": "b25d18fd50ba9207740d9232efa2b8a17786fe6927535b7f7027a1ef1d9af64a"
+    },
+    {
+      "bytes": 3793,
+      "committed": false,
+      "path": ".local/runs/HB-33-revocation-r4/20261028T003341Z-checkpoint.json",
+      "sha256": "90914e61c98ee36cff6faeb736295b4cfe71d0529a33464b6d73439722ddc032"
+    },
+    {
+      "bytes": 982,
+      "committed": false,
+      "path": ".local/runs/HB-33-revocation-r4/preflight.json",
+      "sha256": "b988fd65d05e55edcadcb0431b5f1baf5c895220205275befc9d32ca1f094f5d"
+    },
+    {
+      "bytes": 406,
+      "committed": false,
+      "path": ".local/runs/HB-33-revocation-r4/default-preservation.json",
+      "sha256": "9b4c7fa78200d48cb193e724fba245e9f29cd46dcf1ac75eee8fbfc2086d2f17"
+    }
+  ],
+  "base_commit": "79866f4388b8052d64443b974e4d1eec9cedacf9",
+  "baseline": [
+    {
+      "id": "I17b:baseline-reproduction",
+      "observed": {
+        "defect_reproduced": true,
+        "existing_pg_rows": 3,
+        "fresh_credentials_rows": 3,
+        "reused_ch_rows": 3
+      },
+      "seconds": 1.387,
+      "status": "PASS"
+    }
+  ],
+  "core_source_sha256": {
+    "modules/focus_import/authority.py": "5bdaeda06d78f0716f786b1bbc3119c17ad6cc0f0c5f5cd230c1d245c01a6eb3",
+    "modules/focus_import/lifecycle.py": "2f51db8ee3788a9b942977f29ae791404785888d0e9c4b3df9fe0ed5b6ba00fe",
+    "modules/focus_import/revocation.py": "2419d891ffa82b3d041f196d0461e1b28f495f9c198e04cb2a62c13a33fdb0ce",
+    "modules/focus_import/service.py": "baf11f797d174226a35dbbe621aa6ee6014c99453303ebc9ef443e7723075d59",
+    "modules/focus_import/warehouse.py": "8821081baff4aea8038d5eff51b303a195d4603003c3f440b87038a6f0e5ec6f"
+  },
+  "engine_cases": [
+    {
+      "id": "R01:partial-engine-failure",
+      "observed": {
+        "durable_pending": true,
+        "product_reads_fail_closed": true
+      },
+      "seconds": 2.887,
+      "status": "PASS"
+    },
+    {
+      "id": "R02:retry-completes",
+      "observed": {
+        "actor": "reader-msp33-a1-r4",
+        "engine_access": "denied",
+        "inflight_query_cancelled": true,
+        "state": "revoked"
+      },
+      "seconds": 0.776,
+      "status": "PASS"
+    },
+    {
+      "id": "R03:existing-sessions",
+      "observed": {
+        "reader-msp33-a1-r4": {
+          "prepared_pg": {
+            "connection_closed": true,
+            "denied": true,
+            "sqlstate": "57P01"
+          },
+          "reused_ch": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          }
+        },
+        "reader-msp33-company-a-r4": {
+          "prepared_pg": {
+            "connection_closed": true,
+            "denied": true,
+            "sqlstate": "57P01"
+          },
+          "reused_ch": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          }
+        },
+        "repeatable_read": {
+          "connection_closed": true,
+          "denied": true,
+          "sqlstate": "57P01"
+        }
+      },
+      "seconds": 0.02,
+      "status": "PASS"
+    },
+    {
+      "id": "R04:fresh-tenant-reader",
+      "observed": {
+        "clickhouse": {
+          "denied": true,
+          "error_type": "DatabaseError"
+        },
+        "postgres": {
+          "connection_closed": false,
+          "denied": true,
+          "sqlstate": "42501"
+        },
+        "product_denied": true
+      },
+      "seconds": 0.185,
+      "status": "PASS"
+    },
+    {
+      "id": "R05:fresh-dependent-audience",
+      "observed": {
+        "clickhouse": {
+          "denied": true,
+          "error_type": "DatabaseError"
+        },
+        "postgres": {
+          "connection_closed": false,
+          "denied": true,
+          "sqlstate": "42501"
+        },
+        "product_denied": true
+      },
+      "seconds": 0.208,
+      "status": "PASS"
+    },
+    {
+      "id": "R06:unaffected-readers",
+      "observed": {
+        "reader-msp33-a2-r4": 1,
+        "reader-msp33-b-r4": 2
+      },
+      "seconds": 1.793,
+      "status": "PASS"
+    },
+    {
+      "id": "R07:duplicate-revoke",
+      "observed": {
+        "actor": "reader-msp33-a1-r4",
+        "engine_access": "denied",
+        "state": "revoked"
+      },
+      "seconds": 1.344,
+      "status": "PASS"
+    },
+    {
+      "id": "R08:ordinary-reinitialize",
+      "observed": {
+        "audience": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "tenant": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "unaffected": {
+          "reader-msp33-a2-r4": 1,
+          "reader-msp33-b-r4": 2
+        }
+      },
+      "seconds": 6.977,
+      "status": "PASS"
+    },
+    {
+      "id": "R09:old-backup-restore",
+      "observed": {
+        "audience": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "tenant": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "unaffected": {
+          "reader-msp33-a2-r4": 1,
+          "reader-msp33-b-r4": 2
+        }
+      },
+      "seconds": 3.188,
+      "status": "PASS"
+    },
+    {
+      "id": "R10:direct-audience-revocation",
+      "observed": {
+        "legacy_restore_existing": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": true,
+            "denied": true,
+            "sqlstate": "57P01"
+          }
+        },
+        "legacy_restore_fresh": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "unaffected": {
+          "reader-msp33-a2-r4": 1,
+          "reader-msp33-b-r4": 2
+        },
+        "view": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        }
+      },
+      "seconds": 5.762,
+      "status": "PASS"
+    },
+    {
+      "id": "R11:missing-schema-restore",
+      "observed": {
+        "dependent_audience": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "direct_audience": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "tenant": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "unaffected": {
+          "reader-msp33-a2-r4": 1,
+          "reader-msp33-b-r4": 2
+        }
+      },
+      "seconds": 7.515,
+      "status": "PASS"
+    },
+    {
+      "id": "R12:intent-checkpoint-crash",
+      "observed": {
+        "dependent_audience": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "different_target_repair": "DENIED",
+        "durable_head_ahead_by": 1,
+        "failed_stage": "intent",
+        "normal_load_denied": true,
+        "same_target_retry_reconciled": true,
+        "tenant": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "unaffected": {
+          "reader-msp33-a2-r4": 1,
+          "reader-msp33-b-r4": 2
+        }
+      },
+      "seconds": 3.39,
+      "status": "PASS"
+    },
+    {
+      "id": "R13:completion-checkpoint-crash",
+      "observed": {
+        "dependent_audience": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "different_target_repair": "NOT_RUN",
+        "durable_head_ahead_by": 1,
+        "failed_stage": "completion",
+        "normal_load_denied": true,
+        "same_target_retry_reconciled": true,
+        "tenant": {
+          "clickhouse": {
+            "denied": true,
+            "error_type": "DatabaseError"
+          },
+          "postgres": {
+            "connection_closed": false,
+            "denied": true,
+            "sqlstate": "42501"
+          },
+          "product_denied": true
+        },
+        "unaffected": {
+          "reader-msp33-a2-r4": 1,
+          "reader-msp33-b-r4": 2
+        }
+      },
+      "seconds": 2.351,
+      "status": "PASS"
+    }
+  ],
+  "environment": {
+    "bucket": "hb33-reader-revocation-20261028-r4",
+    "clickhouse_version": "26.8.33.10",
+    "database": "hb33_reader_revocation_20261028_r4",
+    "postgres_version": "18.6 (Debian 18.6-1.pgdg13+2)",
+    "status": "PASS"
+  },
+  "harness_note": "The checkpoint phase dispatch variable was corrected after successful verify/missing-schema runs; all five core source hashes match every final phase. Per-phase source hashes remain in retained artifacts.",
+  "limits": [
+    "No external identity/customer projection/portal/export certification; HB-34 awaits authentication policy inputs.",
+    "Generated exclusive reader identities only; no arbitrary shared-user cancellation guarantee.",
+    "No retroactive revocation of completed responses.",
+    "Unrelated failed restore operations remain fail-closed; no general restore recovery redesign."
+  ],
+  "machine": "mac_mini",
+  "owner": "Seung Woo Park",
+  "preservation": {
+    "bindings_sha256": "47fcb53cb01a75fc99bada7359bed8292df6ef9dec8285f29dedd1af20d8ede2",
+    "bucket": "hb33-reader-revocation-20261028-r4",
+    "clickhouse_port": 18129,
+    "database": "hb33_reader_revocation_20261028_r4",
+    "default_runtime_unchanged": true,
+    "journal_sequence": 58,
+    "shared_roles_unchanged": true,
+    "status_sha256": "cd93c98bebcc02ea965bd30dd91e9f0351e13b583bc4da9b6dea0f01a37f483f"
+  },
+  "pure_tests": {
+    "reader_revocation": 13,
+    "selector_regressions": 8,
+    "status": "PASS"
+  },
+  "retention": "Local operator retains synthetic evidence until review/handoff; no permanent remote retention promise. Earlier failed/diagnostic namespaces are retained, with ClickHouse containers stopped.",
+  "run_number": 4,
+  "source_sha256": {
+    "modules/focus_import/authority.py": "5bdaeda06d78f0716f786b1bbc3119c17ad6cc0f0c5f5cd230c1d245c01a6eb3",
+    "modules/focus_import/lifecycle.py": "2f51db8ee3788a9b942977f29ae791404785888d0e9c4b3df9fe0ed5b6ba00fe",
+    "modules/focus_import/revocation.py": "2419d891ffa82b3d041f196d0461e1b28f495f9c198e04cb2a62c13a33fdb0ce",
+    "modules/focus_import/service.py": "baf11f797d174226a35dbbe621aa6ee6014c99453303ebc9ef443e7723075d59",
+    "modules/focus_import/warehouse.py": "8821081baff4aea8038d5eff51b303a195d4603003c3f440b87038a6f0e5ec6f",
+    "tests/focus_import/reader_revocation/cases.py": "5b896f46af64e13575ffe2d9ed6399d45645aeb5ad1137011927eb21395dff22",
+    "tests/focus_import/reader_revocation/checkpoint_cases.py": "c20491d12f6f1f82dde4dce3faa26d3e05257d56b5d35f91f690a4b2b34da202",
+    "tests/focus_import/reader_revocation/environment.py": "a546116a49e5f7318118018fc143202480fd09d65c2d482e5f6ace61171fe0f1",
+    "tests/focus_import/reader_revocation/verify.py": "6c0355e6352665d5f70ceebbb7046e7ddeae86db37314ea618341b5206579585",
+    "tests/focus_import/test_reader_revocation.py": "c0b8989bb2093214ec59a0ebbd0829bda606afd648b4ca02983c630c239e63b1"
+  },
+  "ticket": "HB-33"
+}

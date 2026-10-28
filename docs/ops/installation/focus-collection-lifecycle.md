@@ -66,6 +66,8 @@ When **all** source slices/dependencies/holds/backups are released and active ob
 
 # Verification evidence
 
+`revoke --actor operator --reader ACTOR` now records durable denial before removing protected PostgreSQL/ClickHouse read access and stopping affected active queries/sessions. Revoking a tenant also denies each containing company audience completely; directly revoking an audience leaves its tenant readers intact. This applies to the exclusively provisioned internal reader profile, not arbitrary shared SQL users or external customer authentication. A failed engine step remains pending: retry the same reader after restoring engine availability. Do not report effective revocation until the command returns `engine_access: denied`; do not clear journal/checkpoint files or bypass a different unresolved operation. Reinitialization and both restore paths preserve the latest denial. Already completed responses cannot be withdrawn. See [HB-33 evidence and limitations](../../validation/reports/HB-33-reader-revocation/results.md).
+
 See [HB-27 lifecycle validation](../../validation/reports/HB-27-lifecycle/summary.md). Test-only Python API clock injection supplies deterministic boundary cases; the CLI uses the server clock. Runtime roles receive no maintenance deletion privileges. Scenario actor names and source registration are trusted local operator choices, not authenticated financial approvals.
 
 

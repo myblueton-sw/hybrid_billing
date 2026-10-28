@@ -7,6 +7,8 @@ status: draft
 
 # Outcome and ownership
 
+**v3 revision:** [Revised bilingual operating prototype](prototype-v3/README.md) adds twelve decision/exception/customer states to the preserved fifteen-state story. See [v3 verification](v3-verification.md).
+
 **Baseline sufficiency update, 2026-10-28:** [External assessment](baseline-sufficiency-review.md) finds the core story adequate but the full operational screen baseline incomplete. Prior visual QA is not a workflow-completeness certification.
 
 **Visual delivery update:** the [v2 prototype](prototype/README.md) now provides 12 operator and 3 customer screen states, plus a generated fifteen-page review PDF. It applies the renewed research to the connected monthly billing story. See [visual verification](visual-verification.md). Earlier notes below about the two-frame limitation remain historical; the 49-screen baseline PDF is still unchanged.

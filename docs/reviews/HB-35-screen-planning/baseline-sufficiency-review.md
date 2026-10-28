@@ -7,6 +7,8 @@ status: draft
 
 # Verdict and scope
 
+**Subsequent design revision:** [v3](prototype-v3/README.md) now illustrates the representative remediation cases. This report preserves the pre-revision assessment; [v3 verification](v3-verification.md) records the new checks and remaining limits.
+
 Reviewed on 2026-10-28 for [HB-35](https://linear.app/hybrid-billing/issue/HB-35/review-planning-baseline-for-the-complete-product-screen-mockup). Root owns synthesis and document edits; independent read-only reviewers `msp_workflow_research` and `csp_financial_research` assessed the actual prototype and official external evidence. Accountable owner: Seung Woo Park; working machine: mac_mini.
 
 **PASS as a representative core billing story; FAIL as a complete baseline MSP operating-workflow design. Runtime capability is UNVERIFIED by this assessment.** This verdict applies equally to the neutral English and Korean editions. Earlier arithmetic, translation and visual QA passes remain valid within their stated scope; they did not certify operational completeness or all 49 baseline screens.

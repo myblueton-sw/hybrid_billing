@@ -7,6 +7,8 @@ status: draft
 
 # Open the design
 
+**Latest revision:** use the [v3 operating prototype](../prototype-v3/README.md) for the review-driven additions and combined 27-page English/Korean PDFs. This v2 source remains the preserved core story.
+
 **Coverage assessment:** the [external sufficiency review](../baseline-sufficiency-review.md) identifies missing operating paths and provider transaction cases. This artifact is a core-story proposal, not a complete operational baseline.
 
 Open [operator workspace](index.html) in a browser. Start with **Review Northstar**, or follow the footer links through the story. The [customer workspace](customer.html) is a separate HTML document with only disclosed selling information. HTML, CSS and navigation JavaScript are self-contained local assets; there are no external requests, analytics, APIs or financial operations.

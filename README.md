@@ -75,6 +75,8 @@ User conversation is in Korean. Git-bound documents, tool/agent task instruction
 
 The planning baseline is maintained locally under `docs/planning/v1.16/`; screen designs are under `docs/ui/`. Those artifacts are being reviewed and will be added through tracked follow-up changes.
 
+The [HB-38 operations and contract-pricing study](docs/reviews/HB-38-billing-operations/prototype/README.md) provides a focused bilingual revision for 5,000 synthetic company-month targets. Its [provider research](docs/reviews/HB-38-billing-operations/provider-pricing-research.md) covers AWS, Azure, GCP, OCI and Alibaba pricing evidence, with IBM and VMware boundaries. These are reviewed design artifacts, not certified live billing integrations.
+
 ## License and commercial inquiries
 
 The current project-authored original material is offered under the [PolyForm Noncommercial License 1.0.0](LICENSE), with the applicability described in [LICENSING.md](LICENSING.md). It is source-available, not an OSI open-source license. Commercial-purpose use outside the license's permitted purposes requires a separate agreement; contact [myblueton@gmail.com](mailto:myblueton@gmail.com).

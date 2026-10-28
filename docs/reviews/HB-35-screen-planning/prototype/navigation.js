@@ -4,7 +4,7 @@ function showScreen() {
   const target = requested === 'usage-question' ? 'usage' : requested;
   const current = screens.find(screen => screen.id === target) || screens[0];
   screens.forEach(screen => { screen.hidden = screen !== current; });
-  document.title = current.dataset.title + ' | Hybrid Billing design';
+  document.title = current.dataset.title + ' | Hybrid Billing';
   current.setAttribute('tabindex', '-1');
   current.focus({preventScroll: true});
   window.scrollTo(0, 0);
@@ -20,7 +20,10 @@ if (search) {
     const rows = Array.from(document.querySelectorAll('[data-customer-row]'));
     rows.forEach(row => { row.hidden = !row.textContent.toLowerCase().includes(term); });
     const count = rows.filter(row => !row.hidden).length;
-    document.querySelector('[data-search-result]').textContent = count ? count + ' customer-periods shown' : 'No matching customers. Clear the filter to view all six.';
+    const korean = document.documentElement.lang === 'ko';
+    document.querySelector('[data-search-result]').textContent = korean
+      ? (count ? '고객·기간 ' + count + '건 표시' : '일치하는 고객이 없습니다. 검색어를 지우면 6건 모두 표시됩니다.')
+      : (count ? count + ' customer-periods shown' : 'No matching customers. Clear the filter to view all six.');
   });
 }
 

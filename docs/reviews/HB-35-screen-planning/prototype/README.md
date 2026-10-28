@@ -64,3 +64,16 @@ pdftoppm -scale-to 1440 -png output/pdf/hybrid-billing-msp-design-v2.pdf output/
 ```
 
 See [visual verification](../visual-verification.md) for actual results and limits. A local file bundle is a public synthetic design artifact, not an authorization boundary; production customer endpoints must enforce access independently.
+
+# Neutral styling and Korean edition
+
+The owner explicitly requested removing Claude-style patterns/highlights and adding a Korean edition. The current design uses neutral task headings, white/gray tables and dividers, unfilled status labels and a plain investigation panel. Decorative colored cards/callouts, AI sparkle, rounded containers and colored hero treatment were removed. Required states still use explicit text; focus indication and selected navigation remain visible.
+
+The owner-authorized Korean UI copy is maintained in `ko.json`; identifiers, currencies and amounts stay unchanged. Reports remain English. Generate the self-contained Korean HTML bundle under `output/designs/HB-35-v2-ko/`:
+
+```sh
+python3 docs/reviews/HB-35-screen-planning/prototype/localize.py
+HB_DESIGN_LOCALE=ko node docs/reviews/HB-35-screen-planning/prototype/render.cjs
+```
+
+The renderer uses the same optional Playwright/Chromium environment paths described above. Korean output: `output/pdf/hybrid-billing-msp-design-v2-ko.pdf`; English output remains `output/pdf/hybrid-billing-msp-design-v2.pdf`. Open the generated Korean `index.html` or `customer.html` directly. The localizer checks for unmapped English text nodes and copies the CSS/navigation dependencies; this is design localization, not an installed product language feature.

@@ -1,0 +1,1388 @@
+{
+  "scope": "Structural inventory only; not full semantic or runtime certification",
+  "screen_count": 49,
+  "source_requirement_group_count": 43,
+  "tracked_screen_specs": 10,
+  "screens": [
+    {
+      "screen_id": "C01",
+      "source_requirement_ids": [
+        "HB-01",
+        "HB-14",
+        "HB-27",
+        "HB-30",
+        "HB-31",
+        "HB-15"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/C01/spec.md",
+          "tracked": false,
+          "sha256": "95706c3efc99bc604dd62d8c396e143b0cbe3d3d29613accf56ebd4164e5d68b"
+        },
+        {
+          "path": "docs/ui/screens/C01/wireframe.svg",
+          "tracked": false,
+          "sha256": "e4e5acfd686437bfe02d72aaedd17908b314625bf01d1c3c519da1bdce4fd200"
+        },
+        {
+          "path": "docs/ui/screens/C01/design.json",
+          "tracked": false,
+          "sha256": "b407c7f2ec044ab5ff734906d419f8f2806c16c640f3245e8a2a599b88f31e07"
+        }
+      ]
+    },
+    {
+      "screen_id": "C02",
+      "source_requirement_ids": [
+        "HB-08",
+        "HB-26",
+        "HB-27",
+        "HB-28",
+        "HB-29",
+        "HB-43",
+        "HB-15",
+        "HB-30",
+        "HB-31"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/C02/spec.md",
+          "tracked": false,
+          "sha256": "89772338cd32442043812ce5f221c22908e8fcd8598b13130392e7854eff1055"
+        },
+        {
+          "path": "docs/ui/screens/C02/wireframe.svg",
+          "tracked": false,
+          "sha256": "8195016aba82759893559ef996798195efce5670cf35569a1062c8e452ba5689"
+        },
+        {
+          "path": "docs/ui/screens/C02/design.json",
+          "tracked": false,
+          "sha256": "805164ba88dac2a30493fe41e43e2a366835832ba87a58348798fcf26cbbf607"
+        }
+      ]
+    },
+    {
+      "screen_id": "C03",
+      "source_requirement_ids": [
+        "HB-22",
+        "HB-29",
+        "HB-31"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/C03/spec.md",
+          "tracked": false,
+          "sha256": "b5aa39f367ee71f0e46d74d722c0c5e73f15c45f6185e260365a6fe941a7b5e8"
+        },
+        {
+          "path": "docs/ui/screens/C03/wireframe.svg",
+          "tracked": false,
+          "sha256": "54225c7e47baefa7ce1d40b1cfb69ea9622c398a6beef17a6580be9619da5b8f"
+        },
+        {
+          "path": "docs/ui/screens/C03/design.json",
+          "tracked": false,
+          "sha256": "a08db426677e6f117a4e9d1eb6e83de06172c5700c372d268d1cf4f6987f9618"
+        }
+      ]
+    },
+    {
+      "screen_id": "L01",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-42"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/L01/spec.md",
+          "tracked": false,
+          "sha256": "21190f4909313475a3ac0be564fde96001b5e39695c1e2d1e44af82bb8845fec"
+        },
+        {
+          "path": "docs/ui/screens/L01/wireframe.svg",
+          "tracked": false,
+          "sha256": "17802b394404f98ebc6273d051f469e514ad8812c52f6b864e1167d09191d356"
+        },
+        {
+          "path": "docs/ui/screens/L01/design.json",
+          "tracked": false,
+          "sha256": "94d0f1c0c40b0d6834ef95ee0ee05dcf2a8ae74403fa305235a56b250d75f0c6"
+        }
+      ]
+    },
+    {
+      "screen_id": "L02",
+      "source_requirement_ids": [
+        "HB-01",
+        "HB-36",
+        "HB-42"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/L02/spec.md",
+          "tracked": false,
+          "sha256": "288c4ed89fb2a36b9f70fe6e00ba2be0ce5b100a16262d5392dd9ca5b2b21e13"
+        },
+        {
+          "path": "docs/ui/screens/L02/wireframe.svg",
+          "tracked": false,
+          "sha256": "90cde3c6da52df1c2fdd26fd04f257d57bf51122fdadb5d654b108689b8b6d16"
+        },
+        {
+          "path": "docs/ui/screens/L02/design.json",
+          "tracked": false,
+          "sha256": "4a5a0b6d4aea707d17f4ce48af69801b965b425e2a123c4bebcfa3576b7dd270"
+        }
+      ]
+    },
+    {
+      "screen_id": "L03",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-42"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/L03/spec.md",
+          "tracked": false,
+          "sha256": "e85f162dfa1b211a009f10ae52cb5e19176fa6d347ff1fec18347d42a7cae897"
+        },
+        {
+          "path": "docs/ui/screens/L03/wireframe.svg",
+          "tracked": false,
+          "sha256": "e0742b205f250dab2d1460dc2f75d659b603489f21290a1632d17eb923d573cb"
+        },
+        {
+          "path": "docs/ui/screens/L03/design.json",
+          "tracked": false,
+          "sha256": "5920ab505d4bbdd067c35a1f0bba563cb491c2fdc704f95a71175a466ecbc9d4"
+        }
+      ]
+    },
+    {
+      "screen_id": "U01",
+      "source_requirement_ids": [
+        "HB-01",
+        "HB-23",
+        "HB-30",
+        "HB-31",
+        "HB-39",
+        "HB-15"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/U01/spec.md",
+          "tracked": true,
+          "sha256": "ef7a66ed955f89415a6a61bcd78edb74f2e53304d763a2ea53c1d05c6ce8573f"
+        },
+        {
+          "path": "docs/ui/screens/U01/wireframe.svg",
+          "tracked": false,
+          "sha256": "ca80ee1428cc2e7df388e6cec366af61123921c4a695dd1a75a3c347906f0002"
+        },
+        {
+          "path": "docs/ui/screens/U01/design.json",
+          "tracked": true,
+          "sha256": "261b3f04dc6acb56134b3a1109cf9c7dc7bb97b41d32cad431ab9be0ebed9a27"
+        }
+      ]
+    },
+    {
+      "screen_id": "U02",
+      "source_requirement_ids": [
+        "HB-15",
+        "HB-23",
+        "HB-30",
+        "HB-31",
+        "HB-34",
+        "HB-24"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/U02/spec.md",
+          "tracked": true,
+          "sha256": "c777f7462b504daf113b604913a121c2aafce3ccef188e68c8942cc430ed0d34"
+        },
+        {
+          "path": "docs/ui/screens/U02/wireframe.svg",
+          "tracked": false,
+          "sha256": "9f6b7050587f36fbbe15e5bf2394ce357fc93a74d84cd8980ae7f75cadbae75c"
+        },
+        {
+          "path": "docs/ui/screens/U02/design.json",
+          "tracked": true,
+          "sha256": "5fdf941f859efd2e58e9a33aa651d5c30331798704e0649776962d18012ea97b"
+        }
+      ]
+    },
+    {
+      "screen_id": "U03",
+      "source_requirement_ids": [
+        "HB-23",
+        "HB-30",
+        "HB-31",
+        "HB-34",
+        "HB-15"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/U03/spec.md",
+          "tracked": false,
+          "sha256": "8b263f674620ce7f81ea96c3c118d6b5b7f7303eaef7ea1f7595146b0e6053ef"
+        },
+        {
+          "path": "docs/ui/screens/U03/wireframe.svg",
+          "tracked": false,
+          "sha256": "1c5692e87376a40152d6d48693be27d901f13ac5783c759f1a179f7674aed335"
+        },
+        {
+          "path": "docs/ui/screens/U03/design.json",
+          "tracked": false,
+          "sha256": "b8ae65be421c5d5a4db8ab590a7b929520c1cd223eeac5a31ad966ad994e6355"
+        }
+      ]
+    },
+    {
+      "screen_id": "U04",
+      "source_requirement_ids": [
+        "HB-22",
+        "HB-30",
+        "HB-31"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/U04/spec.md",
+          "tracked": false,
+          "sha256": "43cbc8fa79e3f6606b17e0018d5d1d642eb7b008fa629e4aa53c959c9c52501f"
+        },
+        {
+          "path": "docs/ui/screens/U04/wireframe.svg",
+          "tracked": false,
+          "sha256": "59d0084209322dcb8bb9364af039cea101bb1f4aedff1e13bde7fc9db32dc415"
+        },
+        {
+          "path": "docs/ui/screens/U04/design.json",
+          "tracked": false,
+          "sha256": "9f5bfa8b28f8756c43b22854d76e652860f2592533a3811754126f1e61b78b49"
+        }
+      ]
+    },
+    {
+      "screen_id": "O01",
+      "source_requirement_ids": [
+        "HB-01",
+        "HB-02",
+        "HB-03",
+        "HB-14"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/O01/spec.md",
+          "tracked": false,
+          "sha256": "42826336fc7759c1817783d618818e31ba9d4534efb8b63e22293d1f311981ab"
+        },
+        {
+          "path": "docs/ui/screens/O01/wireframe.svg",
+          "tracked": false,
+          "sha256": "badd61c613a377106c5274a9777faeca35a2843a2f1ca9dca9d47a8d8de83a40"
+        },
+        {
+          "path": "docs/ui/screens/O01/design.json",
+          "tracked": false,
+          "sha256": "933af2456d14ccc815a6312bf1d6dc8214cf45963460ec8f348b1fc4aa72ec3b"
+        }
+      ]
+    },
+    {
+      "screen_id": "O02",
+      "source_requirement_ids": [
+        "HB-02",
+        "HB-14",
+        "HB-15",
+        "HB-21",
+        "HB-23"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/O02/spec.md",
+          "tracked": false,
+          "sha256": "4798c0f71c365a3948ec1d5eaeea3d4a5ab669d4df69f39daa9de31e622e84c9"
+        },
+        {
+          "path": "docs/ui/screens/O02/wireframe.svg",
+          "tracked": false,
+          "sha256": "3100d16795fe74901b21e7436eb2386d8995fc47cad0db9c986a95fcacafccca"
+        },
+        {
+          "path": "docs/ui/screens/O02/design.json",
+          "tracked": false,
+          "sha256": "33835ac8a653fa857ed22f4b68b06100b5f140950705d4e731f9f2d5ccd632fd"
+        }
+      ]
+    },
+    {
+      "screen_id": "O03",
+      "source_requirement_ids": [
+        "HB-01",
+        "HB-05",
+        "HB-08",
+        "HB-10",
+        "HB-12",
+        "HB-15",
+        "HB-16",
+        "HB-18",
+        "HB-21",
+        "HB-22",
+        "HB-23",
+        "HB-24",
+        "HB-25",
+        "HB-28",
+        "HB-32",
+        "HB-37",
+        "HB-30",
+        "HB-31"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/O03/spec.md",
+          "tracked": false,
+          "sha256": "04ef1f7389bf9500a34d70d91d6d361448d1f1dfbfc0bbccfd00a305718486db"
+        },
+        {
+          "path": "docs/ui/screens/O03/wireframe.svg",
+          "tracked": false,
+          "sha256": "6c0af9beb5a2f91444275a51d63b6bdaf4a7d7acaa5aca62bb50d21795380cb3"
+        },
+        {
+          "path": "docs/ui/screens/O03/design.json",
+          "tracked": false,
+          "sha256": "e51ef13af125bed8436b96d7f762b4fd10c23c81a0410317e8919e3f526c77ec"
+        }
+      ]
+    },
+    {
+      "screen_id": "S01",
+      "source_requirement_ids": [
+        "HB-04",
+        "HB-05",
+        "HB-10",
+        "HB-11",
+        "HB-13"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/S01/spec.md",
+          "tracked": false,
+          "sha256": "64eee749f747bea685edef0fc5f0a27f7f9f79a9f8f8f22ea54e1bada23fb9cc"
+        },
+        {
+          "path": "docs/ui/screens/S01/wireframe.svg",
+          "tracked": false,
+          "sha256": "d920c843067e5317fec1b21ab98d399f3bd63b7373d7dd9a9b5b87056e533b6b"
+        },
+        {
+          "path": "docs/ui/screens/S01/design.json",
+          "tracked": false,
+          "sha256": "638293e8510e545704f8afa04134f781a337e49ea837f2373be6ff0a508b6165"
+        }
+      ]
+    },
+    {
+      "screen_id": "S02",
+      "source_requirement_ids": [
+        "HB-01",
+        "HB-04",
+        "HB-05",
+        "HB-07",
+        "HB-09",
+        "HB-25",
+        "HB-36",
+        "HB-41"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/S02/spec.md",
+          "tracked": true,
+          "sha256": "66da5c7c7e8692fa06bbd4f93c114beed29d189d02107f4131b218dda7dd9537"
+        },
+        {
+          "path": "docs/ui/screens/S02/wireframe.svg",
+          "tracked": false,
+          "sha256": "92bcabfb8c27ce2aa5038374b5d0ed3f2c504619eb147ca442c78027ef6dfb7d"
+        },
+        {
+          "path": "docs/ui/screens/S02/design.json",
+          "tracked": true,
+          "sha256": "ae3510782510662cbeadd841fe240c1ff885585fc3400d94e95c232f5f52854c"
+        }
+      ]
+    },
+    {
+      "screen_id": "S03",
+      "source_requirement_ids": [
+        "HB-05",
+        "HB-06",
+        "HB-07",
+        "HB-34",
+        "HB-39"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/S03/spec.md",
+          "tracked": true,
+          "sha256": "000c22eeb378062fc103778198dab18a161fbb663b78bcc8a41998a1f488e147"
+        },
+        {
+          "path": "docs/ui/screens/S03/wireframe.svg",
+          "tracked": false,
+          "sha256": "87ba6bf2e0e7b0a4aee18dc4d4b504be6a9e38ccd87b36e1553f1da1a797ddd3"
+        },
+        {
+          "path": "docs/ui/screens/S03/design.json",
+          "tracked": true,
+          "sha256": "6dfd671e31d77e2f379c8cc02729402a28529d37f203908c5322bd40133a101d"
+        }
+      ]
+    },
+    {
+      "screen_id": "S04",
+      "source_requirement_ids": [
+        "HB-06",
+        "HB-07",
+        "HB-10",
+        "HB-11",
+        "HB-13",
+        "HB-19",
+        "HB-20"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/S04/spec.md",
+          "tracked": false,
+          "sha256": "96835e6d461d83b9e3d1235d114703d1e4f0400ef19f99e8f0da3e9855c320d1"
+        },
+        {
+          "path": "docs/ui/screens/S04/wireframe.svg",
+          "tracked": false,
+          "sha256": "373671bd867bf416627684f50d2d3acb65b1a6f79d8e7dabbaaa3a8f73983d38"
+        },
+        {
+          "path": "docs/ui/screens/S04/design.json",
+          "tracked": false,
+          "sha256": "5c29ee112055d9cdc6233b8b2ba5766a10c083f6f182a8056a2d1b7012563de2"
+        }
+      ]
+    },
+    {
+      "screen_id": "S05",
+      "source_requirement_ids": [
+        "HB-06",
+        "HB-08",
+        "HB-27",
+        "HB-37",
+        "HB-43"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/S05/spec.md",
+          "tracked": false,
+          "sha256": "2a104be6a185cb4749073eed2f760959f6be7262ee0967eb459761af3e69e25c"
+        },
+        {
+          "path": "docs/ui/screens/S05/wireframe.svg",
+          "tracked": false,
+          "sha256": "5b262aeb99986682d0b3aa48667d26a3ffba650ae61eeb8709f53fa0fc93edc7"
+        },
+        {
+          "path": "docs/ui/screens/S05/design.json",
+          "tracked": false,
+          "sha256": "15b5cfe65ad4949b4f6c28ec0cb4304ec3a12dbd5e688716c6d92a50f2639948"
+        }
+      ]
+    },
+    {
+      "screen_id": "S06",
+      "source_requirement_ids": [
+        "HB-09",
+        "HB-12",
+        "HB-14",
+        "HB-19",
+        "HB-20",
+        "HB-23"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/S06/spec.md",
+          "tracked": true,
+          "sha256": "f2b0c4e1ae780c07ac8a0dd402e4523f6ae4d602845880de41f1a42dd687b64b"
+        },
+        {
+          "path": "docs/ui/screens/S06/wireframe.svg",
+          "tracked": false,
+          "sha256": "672731a8198fcf91ee3883244bb95c060615d1b6e2c2c39657228eed502116ea"
+        },
+        {
+          "path": "docs/ui/screens/S06/design.json",
+          "tracked": true,
+          "sha256": "58e62c3094ea37c8891b310f1212272122b0327c2bc52fe3db6ab7fda30a0e00"
+        }
+      ]
+    },
+    {
+      "screen_id": "B01",
+      "source_requirement_ids": [
+        "HB-10",
+        "HB-12",
+        "HB-14"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/B01/spec.md",
+          "tracked": false,
+          "sha256": "2d6756457b96df833ae2bb16c6947631358e6061c29c4379f5f52ebd2d96f760"
+        },
+        {
+          "path": "docs/ui/screens/B01/wireframe.svg",
+          "tracked": false,
+          "sha256": "fed0843ef29b1beb4ee688545aaa6e62252995811a2036586c031978773743e5"
+        },
+        {
+          "path": "docs/ui/screens/B01/design.json",
+          "tracked": false,
+          "sha256": "db2bd667e3dc51eb25a8dbd1c7830e049e55620de8faa7360f9aed8bd9e54637"
+        }
+      ]
+    },
+    {
+      "screen_id": "B02",
+      "source_requirement_ids": [
+        "HB-10",
+        "HB-11",
+        "HB-13"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/B02/spec.md",
+          "tracked": false,
+          "sha256": "7ccd5522747c51baa4f0f8b54f85ded002be8de4b62a15edbe177550c6c4572c"
+        },
+        {
+          "path": "docs/ui/screens/B02/wireframe.svg",
+          "tracked": false,
+          "sha256": "491390278bcb57dea6ac5ab2c96d0f8cc38a03c98382dab295b23a7056780eef"
+        },
+        {
+          "path": "docs/ui/screens/B02/design.json",
+          "tracked": false,
+          "sha256": "c9a6bbec102aaa4d8eb673c3c454335b683bcb8603ae0be651562817f7e5ece1"
+        }
+      ]
+    },
+    {
+      "screen_id": "B03",
+      "source_requirement_ids": [
+        "HB-02",
+        "HB-12",
+        "HB-14",
+        "HB-19",
+        "HB-23"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/B03/spec.md",
+          "tracked": false,
+          "sha256": "70077874da9b87e2b8a0e193dc1e507f18a5fd5b106a8fb7f3849161b0965f13"
+        },
+        {
+          "path": "docs/ui/screens/B03/wireframe.svg",
+          "tracked": false,
+          "sha256": "5c08da03321722bc42a9a2904b48bb3b21af7b0d3215f68c338cdbdebe376cf2"
+        },
+        {
+          "path": "docs/ui/screens/B03/design.json",
+          "tracked": false,
+          "sha256": "464f3df6401571f516874b0db4eca73cc66afd4cda7d482f2ee3183a5b27ac6a"
+        }
+      ]
+    },
+    {
+      "screen_id": "B04",
+      "source_requirement_ids": [
+        "HB-15",
+        "HB-16",
+        "HB-17",
+        "HB-21",
+        "HB-23"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/B04/spec.md",
+          "tracked": false,
+          "sha256": "e80373694d858d8d1b0f26ce0f78512dbb3e1a2433c5b897892522280dc3c41c"
+        },
+        {
+          "path": "docs/ui/screens/B04/wireframe.svg",
+          "tracked": false,
+          "sha256": "e1da976f3f268997a7508392535ef9486871ac21cc228c70d4ebccb5b000fc95"
+        },
+        {
+          "path": "docs/ui/screens/B04/design.json",
+          "tracked": false,
+          "sha256": "33b36cb365a9e3a7c21f6302579a6493d17c8066bf7a6497c15c9b54e12eb98c"
+        }
+      ]
+    },
+    {
+      "screen_id": "B05",
+      "source_requirement_ids": [
+        "HB-18",
+        "HB-23"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/B05/spec.md",
+          "tracked": false,
+          "sha256": "051ba87c24c20d54d30d1e01e3c28289c220b10cd96a0a70f00a47b0f7f80eef"
+        },
+        {
+          "path": "docs/ui/screens/B05/wireframe.svg",
+          "tracked": false,
+          "sha256": "0b05b67ff9c6e20e1811c888741813dbb1cf2d00274d93a156a051892c77f096"
+        },
+        {
+          "path": "docs/ui/screens/B05/design.json",
+          "tracked": false,
+          "sha256": "1c51a575fb6513930548a1a1f242c550947965fdbd5958d3b1385cd7fa976c9b"
+        }
+      ]
+    },
+    {
+      "screen_id": "B06",
+      "source_requirement_ids": [
+        "HB-19",
+        "HB-09",
+        "HB-14",
+        "HB-16"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/B06/spec.md",
+          "tracked": false,
+          "sha256": "057daa9ca2629ba07b6e0542345547f65015c32ced1a34a93fb029d824d47149"
+        },
+        {
+          "path": "docs/ui/screens/B06/wireframe.svg",
+          "tracked": false,
+          "sha256": "3accc3cf8aad42bcecea44141a778dc46dac85fc776bb16ff3113a248a4468d6"
+        },
+        {
+          "path": "docs/ui/screens/B06/design.json",
+          "tracked": false,
+          "sha256": "d23a29306a9cfdfe233d47121181d9e8ac2eb96ab3ca00b01d3e1dbbc5b084ba"
+        }
+      ]
+    },
+    {
+      "screen_id": "B07",
+      "source_requirement_ids": [
+        "HB-20",
+        "HB-09",
+        "HB-16",
+        "HB-24"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/B07/spec.md",
+          "tracked": false,
+          "sha256": "c69151cb990092e647fec8879cb801b04508fb4641dd101193741c985b150d9e"
+        },
+        {
+          "path": "docs/ui/screens/B07/wireframe.svg",
+          "tracked": false,
+          "sha256": "71e71f87a1a5ada750daf4346b26ce1e2d122af6a7b9c636666b7acda732ae52"
+        },
+        {
+          "path": "docs/ui/screens/B07/design.json",
+          "tracked": false,
+          "sha256": "48abddaf6e34ff7dfe08afd1b427655c4ac20b8fa7449aa0945b5df7ad4bdb0a"
+        }
+      ]
+    },
+    {
+      "screen_id": "B08",
+      "source_requirement_ids": [
+        "HB-06",
+        "HB-09",
+        "HB-15",
+        "HB-16",
+        "HB-17",
+        "HB-18",
+        "HB-21",
+        "HB-23",
+        "HB-34",
+        "HB-39",
+        "HB-24"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/B08/spec.md",
+          "tracked": false,
+          "sha256": "83c95e1ebbfc81eb006e4c20c201e4816f0b1090605f2497527bcc9f1984347e"
+        },
+        {
+          "path": "docs/ui/screens/B08/wireframe.svg",
+          "tracked": false,
+          "sha256": "27de186fd0cc031ffa2e7f8deb90e0dd62027c4d6e92a93ea3f4a0e23fcdb068"
+        },
+        {
+          "path": "docs/ui/screens/B08/design.json",
+          "tracked": false,
+          "sha256": "3bc4ea39e2952380bf87996f962d786948e12821f9e745ff963a024f09644ea8"
+        }
+      ]
+    },
+    {
+      "screen_id": "B09",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-23",
+        "HB-24",
+        "HB-28",
+        "HB-32",
+        "HB-15"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/B09/spec.md",
+          "tracked": true,
+          "sha256": "45018b44c38acf22ce3f1f10cdb1c331f5d9650d60eb0a85a384a2e4797f1879"
+        },
+        {
+          "path": "docs/ui/screens/B09/wireframe.svg",
+          "tracked": false,
+          "sha256": "9efd260e25cb182f82e85fa15997abe7a3a25c72881725dfe574d748d78cc910"
+        },
+        {
+          "path": "docs/ui/screens/B09/design.json",
+          "tracked": true,
+          "sha256": "9b6c2088b6e66acc8de198b315fc2f74438130fe89d3fdcd22e6c0fc08f1cd20"
+        }
+      ]
+    },
+    {
+      "screen_id": "B10",
+      "source_requirement_ids": [
+        "HB-21",
+        "HB-22",
+        "HB-29"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/B10/spec.md",
+          "tracked": true,
+          "sha256": "3f1289a1243fe61905bdfeb31ee2170e9d12a3925c4807fa8cc6660d7a8b3b63"
+        },
+        {
+          "path": "docs/ui/screens/B10/wireframe.svg",
+          "tracked": false,
+          "sha256": "72d32ec4b95be8eb15c9b1bd07c19cf7b8655c4a4082fa86e5e5c7c8e4f052cc"
+        },
+        {
+          "path": "docs/ui/screens/B10/design.json",
+          "tracked": true,
+          "sha256": "2a183c29ac20b8e96c2537fd8180d5a4f9f4848c7581e74649ccd7bb91997f91"
+        }
+      ]
+    },
+    {
+      "screen_id": "B11",
+      "source_requirement_ids": [
+        "HB-22",
+        "HB-23",
+        "HB-29",
+        "HB-31",
+        "HB-15",
+        "HB-30"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/B11/spec.md",
+          "tracked": true,
+          "sha256": "fc441552d58882c57c22d0e60cccb2fce0b040c0813bfd8b5043c7b394a005e6"
+        },
+        {
+          "path": "docs/ui/screens/B11/wireframe.svg",
+          "tracked": false,
+          "sha256": "c96104510678fd35db9c439a955c893015ecec42ad1212721d3c12360088ca26"
+        },
+        {
+          "path": "docs/ui/screens/B11/design.json",
+          "tracked": true,
+          "sha256": "b47c994bc2400e360105a89637891c63f8be960d4f5503466c5e269a712d92a1"
+        }
+      ]
+    },
+    {
+      "screen_id": "I01",
+      "source_requirement_ids": [
+        "HB-06",
+        "HB-08",
+        "HB-23",
+        "HB-26",
+        "HB-27",
+        "HB-28",
+        "HB-29",
+        "HB-30",
+        "HB-32",
+        "HB-15",
+        "HB-31",
+        "HB-24"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/I01/spec.md",
+          "tracked": false,
+          "sha256": "f77f11a0999a23b7442093ded7a99cde98f5afa277690c66af855009795a996a"
+        },
+        {
+          "path": "docs/ui/screens/I01/wireframe.svg",
+          "tracked": false,
+          "sha256": "46c663abeea49ba4be80b36d238497d670e6628b13384020512e9e8a7d9bb057"
+        },
+        {
+          "path": "docs/ui/screens/I01/design.json",
+          "tracked": false,
+          "sha256": "c94ba7baf279ecf1093e9705e1b71bbc697a84e784ff0b5a782659c35bda84ad"
+        }
+      ]
+    },
+    {
+      "screen_id": "I02",
+      "source_requirement_ids": [
+        "HB-21",
+        "HB-24",
+        "HB-25",
+        "HB-27",
+        "HB-29",
+        "HB-33",
+        "HB-34",
+        "HB-15",
+        "HB-30",
+        "HB-31"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/I02/spec.md",
+          "tracked": false,
+          "sha256": "fd2590cef5eada5df6108fe465d20df66e3adf38fc1962a0edb340d8ea2e60bf"
+        },
+        {
+          "path": "docs/ui/screens/I02/wireframe.svg",
+          "tracked": false,
+          "sha256": "fe14145e2279a487b732c0942e54c655266ecbdd36bbc9a4b7a26e636aa0cb87"
+        },
+        {
+          "path": "docs/ui/screens/I02/design.json",
+          "tracked": false,
+          "sha256": "0dead8f19aeec6736c058443442d6029d623f40fada5f6ce61b7f2bf7a641b89"
+        }
+      ]
+    },
+    {
+      "screen_id": "I03",
+      "source_requirement_ids": [
+        "HB-06",
+        "HB-24",
+        "HB-26",
+        "HB-27",
+        "HB-28",
+        "HB-29",
+        "HB-41",
+        "HB-15"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/I03/spec.md",
+          "tracked": false,
+          "sha256": "32d3e124da305c3377f183ea2167e758dd7acf4f078c70349fb07e263a490635"
+        },
+        {
+          "path": "docs/ui/screens/I03/wireframe.svg",
+          "tracked": false,
+          "sha256": "bd81a608176af43669a6120c27329d64f08e8cedd9752a28847e35703a70d952"
+        },
+        {
+          "path": "docs/ui/screens/I03/design.json",
+          "tracked": false,
+          "sha256": "cfc6d2d8c7e0b61cd10b48bc11cec831847b9903aa305a63e516b2e9b810452f"
+        }
+      ]
+    },
+    {
+      "screen_id": "I04",
+      "source_requirement_ids": [
+        "HB-06",
+        "HB-24",
+        "HB-25",
+        "HB-26",
+        "HB-27",
+        "HB-28",
+        "HB-29",
+        "HB-34",
+        "HB-41",
+        "HB-43"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/I04/spec.md",
+          "tracked": true,
+          "sha256": "509c4540e65c381e4e3e30177c14fd63ed611e6076e7c651151bbc53f7db40c3"
+        },
+        {
+          "path": "docs/ui/screens/I04/wireframe.svg",
+          "tracked": false,
+          "sha256": "fa5e9fe4dd67398e9b286420d1ebd75e2ae69c42e8d8129c7096f26e6cedca23"
+        },
+        {
+          "path": "docs/ui/screens/I04/design.json",
+          "tracked": true,
+          "sha256": "367a161b83379b4f3c95514c4b1dfb87491b0e43a708c83044c122a87169d06a"
+        }
+      ]
+    },
+    {
+      "screen_id": "R01",
+      "source_requirement_ids": [
+        "HB-07",
+        "HB-14",
+        "HB-19",
+        "HB-20",
+        "HB-27",
+        "HB-30",
+        "HB-39",
+        "HB-15",
+        "HB-31",
+        "HB-24"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/R01/spec.md",
+          "tracked": false,
+          "sha256": "b0e4648fa09e620f8aed1aa928564f76d0f0250e90a7fc6064c42c5252707b8a"
+        },
+        {
+          "path": "docs/ui/screens/R01/wireframe.svg",
+          "tracked": false,
+          "sha256": "4db14f246a76ce3e3bdc82bcfaa3a582f6766412426348d1c9fd22bbbed2bccc"
+        },
+        {
+          "path": "docs/ui/screens/R01/design.json",
+          "tracked": false,
+          "sha256": "39e20584587a9fdc258f52a08f2280684b8e7ebedb1b6b7e81cebafd0b3644a4"
+        }
+      ]
+    },
+    {
+      "screen_id": "R02",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-08",
+        "HB-23",
+        "HB-30",
+        "HB-37",
+        "HB-42",
+        "HB-43"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/R02/spec.md",
+          "tracked": false,
+          "sha256": "f4e7e2369de01d67e8c00227a3e05d53917ccb60acced13f0b8cbd90533ff154"
+        },
+        {
+          "path": "docs/ui/screens/R02/wireframe.svg",
+          "tracked": false,
+          "sha256": "b3a6fc2ee6be89b550a222d552dd98a4c5d9546e35b58cfb78889d93d710d03f"
+        },
+        {
+          "path": "docs/ui/screens/R02/design.json",
+          "tracked": false,
+          "sha256": "a1a8577c95ccef23ef3f67853fcddc2c34eac3d788e658a150fc7dc7e98d5c0d"
+        }
+      ]
+    },
+    {
+      "screen_id": "A01",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-23",
+        "HB-27",
+        "HB-32",
+        "HB-33",
+        "HB-34"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/A01/spec.md",
+          "tracked": false,
+          "sha256": "5f72b63ed745ca08b72bd8760fa0a9bbb7bf67ad7818bd060fc64781d750c5ce"
+        },
+        {
+          "path": "docs/ui/screens/A01/wireframe.svg",
+          "tracked": false,
+          "sha256": "0657ae74c5851d5ae6e1f8d02d61606fe15223e49171c9badfdc63bcd896d547"
+        },
+        {
+          "path": "docs/ui/screens/A01/design.json",
+          "tracked": false,
+          "sha256": "1210ae1909e2c5849376138d593ebe87ccf9670e90e1db5cf49534fe51b8b913"
+        }
+      ]
+    },
+    {
+      "screen_id": "M01",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-34",
+        "HB-42"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/M01/spec.md",
+          "tracked": false,
+          "sha256": "d26390a0a29a5b86d9118f6efdc74a7628707b49b623b85483327b17498bfbfc"
+        },
+        {
+          "path": "docs/ui/screens/M01/wireframe.svg",
+          "tracked": false,
+          "sha256": "2e29904991fb9813a9722c8a45d000f971dc9f5b3ff7cb05894a5a5e6c02ae47"
+        },
+        {
+          "path": "docs/ui/screens/M01/design.json",
+          "tracked": false,
+          "sha256": "e44758c68cd058ccdfde4d6d8a1dbff5165dfd5856b4f217477e13c94674f589"
+        }
+      ]
+    },
+    {
+      "screen_id": "M02",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-36",
+        "HB-42"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/M02/spec.md",
+          "tracked": true,
+          "sha256": "b8d0876cc8c52ae1482d168f8429789f2cef0c7698a37038379404a9fc2d40ba"
+        },
+        {
+          "path": "docs/ui/screens/M02/wireframe.svg",
+          "tracked": false,
+          "sha256": "147fb5f6d936b8aa130869537eaa6b2564b77d40cb5872f0f8ba8f4314703942"
+        },
+        {
+          "path": "docs/ui/screens/M02/design.json",
+          "tracked": true,
+          "sha256": "8fd7116f63ae3ed45da939b217fc5175ae1663431c073f0787ede3790364c541"
+        }
+      ]
+    },
+    {
+      "screen_id": "M03",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-04",
+        "HB-23",
+        "HB-33",
+        "HB-36",
+        "HB-42"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/M03/spec.md",
+          "tracked": false,
+          "sha256": "7b066137f5df37fc81a4151e07f66763195f8298e2fea9c8b36a86369562a87f"
+        },
+        {
+          "path": "docs/ui/screens/M03/wireframe.svg",
+          "tracked": false,
+          "sha256": "84323abb857598f774acb24a080d7fde507ae1cf3cedd3a54d9d669386906277"
+        },
+        {
+          "path": "docs/ui/screens/M03/design.json",
+          "tracked": false,
+          "sha256": "fae50932c4136af7d6636ae0af3ef0f1e5726f403f36bc9f0d41c40a3f3c23d9"
+        }
+      ]
+    },
+    {
+      "screen_id": "M04",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-05",
+        "HB-24",
+        "HB-33",
+        "HB-42"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/M04/spec.md",
+          "tracked": false,
+          "sha256": "7e90d6544c6923b96359d8d12d18a97bb2420ea3f6fa52e072eae7f71d240188"
+        },
+        {
+          "path": "docs/ui/screens/M04/wireframe.svg",
+          "tracked": false,
+          "sha256": "132b72d1e95f50c6dcfebdd135c221bd91104ecbd7f0aa2d89676e5b4595a7ea"
+        },
+        {
+          "path": "docs/ui/screens/M04/design.json",
+          "tracked": false,
+          "sha256": "5a7b50e26d3fff5e2069bb133f4147093d0bf265cb2ee9b74209101d26a3ef8a"
+        }
+      ]
+    },
+    {
+      "screen_id": "M05",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-31",
+        "HB-42",
+        "HB-43"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/M05/spec.md",
+          "tracked": false,
+          "sha256": "2963b7452c270a3e04ede0946894129a58d01fef2f94f68af00be2bb00bed61b"
+        },
+        {
+          "path": "docs/ui/screens/M05/wireframe.svg",
+          "tracked": false,
+          "sha256": "b401aabb5e4105078c1e25dff5e59be995e42dbef714d2df6ba6a18b2f9a5d72"
+        },
+        {
+          "path": "docs/ui/screens/M05/design.json",
+          "tracked": false,
+          "sha256": "8274f93adbf0e098d2b8da02205bb163a4b425748f15e2e684ef13f32bfdda92"
+        }
+      ]
+    },
+    {
+      "screen_id": "P01",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-04",
+        "HB-36",
+        "HB-39",
+        "HB-40",
+        "HB-42"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/P01/spec.md",
+          "tracked": false,
+          "sha256": "d0afa8db5e74b0056553c4a77b3371f8b46ea64e94c050cccf9a83d71df48114"
+        },
+        {
+          "path": "docs/ui/screens/P01/wireframe.svg",
+          "tracked": false,
+          "sha256": "b697f7ad226be55d8a96c47267f3d7ad04f76bf1e0b8a21d9fb0f867e654196d"
+        },
+        {
+          "path": "docs/ui/screens/P01/design.json",
+          "tracked": false,
+          "sha256": "116d60359c3b122ec51ba66e303a6f8cb4fa390b213193187e18790abcbcd834"
+        }
+      ]
+    },
+    {
+      "screen_id": "P02",
+      "source_requirement_ids": [
+        "HB-03",
+        "HB-05",
+        "HB-06",
+        "HB-08",
+        "HB-10",
+        "HB-11",
+        "HB-24",
+        "HB-31",
+        "HB-33",
+        "HB-34",
+        "HB-35",
+        "HB-37",
+        "HB-40",
+        "HB-42"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/P02/spec.md",
+          "tracked": false,
+          "sha256": "f6142749cd8d096ffc2e20f61441734b7ac331c04f6aa04e78b35918472d68ff"
+        },
+        {
+          "path": "docs/ui/screens/P02/wireframe.svg",
+          "tracked": false,
+          "sha256": "38605765ca472e07ef6901216d3f2f20efdeac0ace9b2f1230811628bc9f7b94"
+        },
+        {
+          "path": "docs/ui/screens/P02/design.json",
+          "tracked": false,
+          "sha256": "0f3b5eb0629d6964ba2fa464a00e4884246a622ddd082b6a351dbbc38c028d62"
+        }
+      ]
+    },
+    {
+      "screen_id": "P03",
+      "source_requirement_ids": [
+        "HB-08",
+        "HB-21",
+        "HB-22",
+        "HB-34",
+        "HB-37",
+        "HB-42",
+        "HB-43"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/P03/spec.md",
+          "tracked": false,
+          "sha256": "6f532e5d0e8be21a29a086be9428a7394ba5248f31355a149eb37d4a919290dd"
+        },
+        {
+          "path": "docs/ui/screens/P03/wireframe.svg",
+          "tracked": false,
+          "sha256": "f590fb083e53ece216688f34ebace8e273ae9dc917f6d6c07379df55cfffdfbb"
+        },
+        {
+          "path": "docs/ui/screens/P03/design.json",
+          "tracked": false,
+          "sha256": "489a8d1d22ba1244d1458fb7d07cd71a9bb8b5ad32813dd84174f43f5728523a"
+        }
+      ]
+    },
+    {
+      "screen_id": "P04",
+      "source_requirement_ids": [
+        "HB-06",
+        "HB-08",
+        "HB-11",
+        "HB-21",
+        "HB-27",
+        "HB-32",
+        "HB-37",
+        "HB-38",
+        "HB-43"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/P04/spec.md",
+          "tracked": false,
+          "sha256": "24210fc360132ceb819037f235689be69af8ace0fa593e270bef6770618694a5"
+        },
+        {
+          "path": "docs/ui/screens/P04/wireframe.svg",
+          "tracked": false,
+          "sha256": "de2b7e8c243b1ffbdd8d44b0461e927acdbc36491f328371e771677105b3c868"
+        },
+        {
+          "path": "docs/ui/screens/P04/design.json",
+          "tracked": false,
+          "sha256": "bc3293311873a840c8d6cd0f5b9fe1cf6145b842c219c041408bca3e4c595eb2"
+        }
+      ]
+    },
+    {
+      "screen_id": "P05",
+      "source_requirement_ids": [
+        "HB-04",
+        "HB-19",
+        "HB-24",
+        "HB-25",
+        "HB-26",
+        "HB-38",
+        "HB-39",
+        "HB-40",
+        "HB-41"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/P05/spec.md",
+          "tracked": false,
+          "sha256": "931c1ad8d23c8396bdeacb1b1564073350701127f327ab87cdb755f47a0bf9b6"
+        },
+        {
+          "path": "docs/ui/screens/P05/wireframe.svg",
+          "tracked": false,
+          "sha256": "d6c24eecd8848e50e050f696b60059e352b832252610191883a71c43391fd620"
+        },
+        {
+          "path": "docs/ui/screens/P05/design.json",
+          "tracked": false,
+          "sha256": "90e9eecc7b456b2858b55d3d6a84b67f9178ce37d994a61e1ed63c87ed159999"
+        }
+      ]
+    },
+    {
+      "screen_id": "P06",
+      "source_requirement_ids": [
+        "HB-10",
+        "HB-11",
+        "HB-13",
+        "HB-19",
+        "HB-32",
+        "HB-38",
+        "HB-39",
+        "HB-41",
+        "HB-43"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/P06/spec.md",
+          "tracked": false,
+          "sha256": "1371f7855e58cd7a63c54e764d1f31b9fdb2f5ff815b87a317c9eb8d2cfeacf8"
+        },
+        {
+          "path": "docs/ui/screens/P06/wireframe.svg",
+          "tracked": false,
+          "sha256": "0eff4d92cc3edda23d94ada1a7248a61213ecce7e94c7337c9f29cbadace1638"
+        },
+        {
+          "path": "docs/ui/screens/P06/design.json",
+          "tracked": false,
+          "sha256": "dc4a704c1c28ec8823f98cfec8eed76498ad038af91d83f8768a8bb889a13295"
+        }
+      ]
+    },
+    {
+      "screen_id": "P07",
+      "source_requirement_ids": [
+        "HB-20",
+        "HB-35",
+        "HB-36",
+        "HB-40"
+      ],
+      "files": [
+        {
+          "path": "docs/ui/screens/P07/spec.md",
+          "tracked": false,
+          "sha256": "b1fcf39405188276a8f296f1713e1d4236f161a9552c30b76c0ed654f051542d"
+        },
+        {
+          "path": "docs/ui/screens/P07/wireframe.svg",
+          "tracked": false,
+          "sha256": "1fb1f4566af8138d36663a5d2fb8ad69876a856ddbd88c5ab5204a987f505924"
+        },
+        {
+          "path": "docs/ui/screens/P07/design.json",
+          "tracked": false,
+          "sha256": "6ab2784fb1253a36fe74b3660653ac43e84527f1bfdc702950aed30869e10906"
+        }
+      ]
+    }
+  ]
+}

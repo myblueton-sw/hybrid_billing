@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hybrid Billing / MSP design</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<section class="screen " id="case" data-title="Reconciliation investigation">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="index.html#close" class="">Monthly close</a>
+<a href="index.html#sources" class="">Supplier evidence</a>
+<a href="index.html#allocation" class="">Cost allocation</a>
+<a href="index.html#pricing" class="">Contracts & pricing</a>
+<a href="#case" class="active">Reconciliation</a>
+<a href="#issued" class="">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="#setup">Sources & readiness</a>
+<a href="index.html#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Billing operations / September 2026</div>
+<h1>Reconciliation investigation</h1>
+<div class="sub">Reconciliation case EX-204 · Assigned to Finance Operations · Priority: blocks month close</div>
+</div>
+<div class="actions">
+</div>
+</div>
+<div class="scope">
+<strong>Northstar Labs</strong>
+<span>Sep 2026 · UTC</span>
+<span>Meridian MSP → Northstar US</span>
+<span>USD · Net unless stated</span>
+<span class="pill blue">Draft r7</span>
+<span>Source s3 · Mapping m2 · Pricing p4</span>
+</div>
+<div class="steps">
+<div class="step done">01 Source controls</div>
+<div class="step done">02 Allocate & price</div>
+<div class="step current">03 Reconcile</div>
+<div class="step ">04 Approve</div>
+<div class="step ">05 Issue</div>
+</div>
+<div class="stats">
+<div class="stat">
+<label>Independent expected net</label>
+<div class="value ">136,560.00</div>
+<small>Worksheet W9 · contract C-104 / p4</small>
+</div>
+<div class="stat">
+<label>Candidate r7 net</label>
+<div class="value ">139,560.00</div>
+<small>Current blocked calculation</small>
+</div>
+<div class="stat">
+<label>Unexplained sales residual</label>
+<div class="value red">+3,000.00</div>
+<small>Candidate minus independent expectation</small>
+</div>
+<div class="stat">
+<label>Affected customer-periods</label>
+<div class="value ">1</div>
+<small>Northstar / September / USD</small>
+</div>
+</div>
+<div class="cols">
+<div class="card ">
+<div class="cardhead">
+<h2>Case EX-204 · duplicate managed support</h2>
+</div>
+<table class="">
+<thead>
+<tr>
+<th>Candidate line / evidence</th>
+<th>Expected USD</th>
+<th>Actual USD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cloud services · five providers</td>
+<td class="num">118,560.00</td>
+<td class="num">118,560.00</td>
+</tr>
+<tr>
+<td>Managed VMware capacity</td>
+<td class="num">15,000.00</td>
+<td class="num">15,000.00</td>
+</tr>
+<tr>
+<td>Support · fee occurrence F-01</td>
+<td class="num">3,000.00</td>
+<td class="num">3,000.00</td>
+</tr>
+<tr class="alertrow">
+<td>Support · fee occurrence F-02</td>
+<td class="num">0.00</td>
+<td class="num">3,000.00</td>
+</tr>
+<tr class="emphasis">
+<td>Net total</td>
+<td class="num">136,560.00</td>
+<td class="num">139,560.00</td>
+</tr>
+</tbody>
+</table>
+<div class="cardbody">
+<div class="tagrow">
+<span class="pill ok">Source controls passed</span>
+<span class="pill bad">Sales control failed</span>
+<span class="pill bad">Issuance blocked</span>
+</div>
+<p class="minor">Two occurrence IDs reference the same customer, period and once-per-period fee. Original source evidence stays unchanged.</p>
+</div>
+</div>
+<div class="card assistant">
+<div class="cardhead">
+<h2>
+<span class="ai-label">
+ Billing Assistant</span>
+</h2>
+</div>
+<div class="cardbody">
+<span class="pill blue">Simulated assistance</span>
+<h3 style="margin-top:15px">A duplicate fee may explain the difference.</h3>
+<p class="minor">Hypothesis, not a completed financial correction.</p>
+<div class="evidence">
+<b>Observed evidence</b>
+<p class="minor">SUP-P4 allows one fee. r7 contains F-01 and F-02 for the same scope.</p>
+<a href="index.html#pricing">Contract evidence ↗</a>
+</div>
+<div class="evidence">
+<b>Proposed correction</b>
+<p class="minor">Exclude duplicate occurrence F-02 in a new draft. Preserve the source and prior calculation.</p>
+</div>
+<div class="quote">Expected impact: -USD 3,000.00 net. Confirmed only by the separately checked r8 preview.</div>
+<a class="btn primary" href="#recalc">Inspect correction preview</a>
+<p class="micro">AI cannot approve amounts, waive blockers or issue documents.</p>
+</div>
+</div>
+</div>
+<div class="notice info">
+<strong>Correction needs the normal authorization and review path.</strong>
+<p>This link opens a predefined later preview. No model, recalculation service, source edit or ledger action runs in this prototype.</p>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 07 / 15</span>
+<a href="#recalc">Compare corrected revision →</a>
+</footer>
+</main>
+</section>
+<section class="screen " id="recalc" data-title="Calculation revision comparison">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="index.html#close" class="">Monthly close</a>
+<a href="index.html#sources" class="">Supplier evidence</a>
+<a href="index.html#allocation" class="">Cost allocation</a>
+<a href="index.html#pricing" class="">Contracts & pricing</a>
+<a href="#case" class="active">Reconciliation</a>
+<a href="#issued" class="">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="#setup">Sources & readiness</a>
+<a href="index.html#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Billing operations / September 2026</div>
+<h1>Calculation revision comparison</h1>
+<div class="sub">Source intake and pricing revisions are preserved; the original candidate is never overwritten.</div>
+</div>
+<div class="actions">
+<a class="btn primary" href="#approval">Open approval package</a>
+</div>
+</div>
+<div class="scope">
+<strong>Northstar Labs</strong>
+<span>Sep 2026 · UTC</span>
+<span>Meridian MSP → Northstar US</span>
+<span>USD · Net unless stated</span>
+<span class="pill blue">Preview r8</span>
+<span>Source s3 · Mapping m2 · Pricing p4 · Correction adj2</span>
+</div>
+<div class="steps">
+<div class="step done">01 Source controls</div>
+<div class="step done">02 Allocate & price</div>
+<div class="step current">03 Reconcile</div>
+<div class="step ">04 Approve</div>
+<div class="step ">05 Issue</div>
+</div>
+<div class="notice success">
+<strong>Later example state: the duplicate fee is removed in a new revision.</strong>
+<p>Original r7 remains in history. This is an authored preview, not an executed correction.</p>
+</div>
+<div class="cols">
+<div class="card ">
+<div class="cardhead">
+<h2>Compare r7 → r8</h2>
+</div>
+<table class="">
+<thead>
+<tr>
+<th>Component / USD net</th>
+<th>r7 · blocked</th>
+<th>r8 · preview</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cloud services</td>
+<td class="num">118,560.00</td>
+<td class="num">118,560.00</td>
+<td class="num">0.00</td>
+</tr>
+<tr>
+<td>VMware capacity</td>
+<td class="num">15,000.00</td>
+<td class="num">15,000.00</td>
+<td class="num">0.00</td>
+</tr>
+<tr>
+<td>Managed support</td>
+<td class="num">6,000.00</td>
+<td class="num">3,000.00</td>
+<td class="num">-3,000.00</td>
+</tr>
+<tr class="emphasis">
+<td>Net total</td>
+<td class="num">139,560.00</td>
+<td class="num">136,560.00</td>
+<td class="num">-3,000.00</td>
+</tr>
+<tr>
+<td>Independent W9 expectation</td>
+<td class="num">136,560.00</td>
+<td class="num">136,560.00</td>
+<td class="num">0.00</td>
+</tr>
+<tr class="emphasis">
+<td>Unexplained residual</td>
+<td class="num">3,000.00</td>
+<td class="num">0.00</td>
+<td>Resolved</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Pinned dependencies</h2>
+</div>
+<div class="cardbody">
+<div class="line">
+<span>New source intake</span>
+<strong>None</strong>
+</div>
+<div class="line">
+<span>Pricing revision</span>
+<strong>p4 unchanged</strong>
+</div>
+<div class="line">
+<span>Correction</span>
+<strong>adj2 · duplicate fee</strong>
+</div>
+<div class="line">
+<span>Impact scope</span>
+<strong>1 customer / 1 period</strong>
+</div>
+<div class="line">
+<span>Prior approvals</span>
+<strong>Not reusable</strong>
+</div>
+<p class="minor">Recalculation with existing evidence differs from refreshing provider data. Both require explicit dependency checks.</p>
+</div>
+</div>
+</div>
+<div class="cols equal">
+<div class="card ">
+<div class="cardhead">
+<h2>Validation of the staged r8 result</h2>
+</div>
+<div class="cardbody">
+<ul class="checklist">
+<li>Supplier coverage / controls <span class="pill ok">Passed</span>
+</li>
+<li>Allocation conservation <span class="pill ok">Passed</span>
+</li>
+<li>Independent sales comparison <span class="pill ok">Passed</span>
+</li>
+<li>Correction decision <span class="pill ok">Recorded · adj2</span>
+</li>
+<li>Final amount approval <span class="pill warn">Pending</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Continue the investigation if needed</h2>
+</div>
+<div class="cardbody">
+<p>Zero residual is one control, not automatic permission to issue.</p>
+<ol class="numbered">
+<li>Missing evidence remains an open case.</li>
+<li>Changed inputs make dependent checks stale.</li>
+<li>No-progress AI assistance returns to a person.</li>
+</ol>
+<a href="#case">Return to the case ↗</a>
+</div>
+</div>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 08 / 15</span>
+<a href="#approval">Review release gates →</a>
+</footer>
+</main>
+</section>
+<section class="screen " id="approval" data-title="Financial approval review">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="index.html#close" class="">Monthly close</a>
+<a href="index.html#sources" class="">Supplier evidence</a>
+<a href="index.html#allocation" class="">Cost allocation</a>
+<a href="index.html#pricing" class="">Contracts & pricing</a>
+<a href="#case" class="active">Reconciliation</a>
+<a href="#issued" class="">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="#setup">Sources & readiness</a>
+<a href="index.html#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Billing operations / September 2026</div>
+<h1>Financial approval review</h1>
+<div class="sub">Financial approval and invoice issuance are separate decisions.</div>
+</div>
+<div class="actions">
+</div>
+</div>
+<div class="scope">
+<strong>Northstar Labs</strong>
+<span>Sep 2026 · UTC</span>
+<span>Meridian MSP → Northstar US</span>
+<span>USD · Net unless stated</span>
+<span class="pill blue">Verified r8</span>
+<span>Source s3 · Mapping m2 · Pricing p4 · Correction adj2</span>
+</div>
+<div class="steps">
+<div class="step done">01 Source controls</div>
+<div class="step done">02 Allocate & price</div>
+<div class="step done">03 Reconcile</div>
+<div class="step current">04 Approve</div>
+<div class="step ">05 Issue</div>
+</div>
+<div class="cols">
+<div class="card ">
+<div class="cardhead">
+<h2>Financial review / Northstar September</h2>
+</div>
+<table class="">
+<thead>
+<tr>
+<th>Approval checkpoint</th>
+<th>Evidence</th>
+<th>Stage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source confirmation</td>
+<td>s3 · five document controls</td>
+<td>
+<span class="pill ok">Recorded</span>
+</td>
+</tr>
+<tr>
+<td>Pricing policy approval</td>
+<td>p4 · effective contract C-104</td>
+<td>
+<span class="pill ok">Recorded</span>
+</td>
+</tr>
+<tr>
+<td>Correction decision</td>
+<td>adj2 · excludes F-02</td>
+<td>
+<span class="pill ok">Recorded</span>
+</td>
+</tr>
+<tr>
+<td>Independent reconciliation</td>
+<td>W9 · residual USD 0.00</td>
+<td>
+<span class="pill ok">Passed</span>
+</td>
+</tr>
+<tr>
+<td>Tax classification</td>
+<td>TAX-DEMO-0 · synthetic zero-tax case</td>
+<td>
+<span class="pill blue">Example checked</span>
+</td>
+</tr>
+<tr>
+<td>Final amount approval</td>
+<td>Finance approver · fixed r8</td>
+<td>
+<span class="pill warn">Pending</span>
+</td>
+</tr>
+<tr>
+<td>Issue authorization</td>
+<td>Available only after amount approval</td>
+<td>
+<span class="pill ">Not yet available</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Customer invoice preview</h2>
+</div>
+<div class="cardbody">
+<div class="sectionlabel">Net amount · USD</div>
+<div class="large">136,560.00</div>
+<div class="line">
+<span>Illustrative tax · 0%</span>
+<strong>0.00</strong>
+</div>
+<div class="line">
+<span>Gross · USD</span>
+<strong>136,560.00</strong>
+</div>
+<p class="minor">Zero is a deliberately selected synthetic tax scenario, never a default for unknown tax. This is not a statutory invoice template.</p>
+</div>
+</div>
+</div>
+<div class="cols equal">
+<div class="card ">
+<div class="cardhead">
+<h2>One permitted invoice bundle</h2>
+</div>
+<div class="cardbody">
+<div class="line">
+<span>Selling / buying entity</span>
+<strong>Meridian US / Northstar US</strong>
+</div>
+<div class="line">
+<span>Period / currency</span>
+<strong>Sep 2026 / USD</strong>
+</div>
+<div class="line">
+<span>Tax / ERP route</span>
+<strong>TAX-DEMO-0 / US-AR</strong>
+</div>
+<p class="minor">Same entity, currency, period and approved tax/routing context. Another currency or issuer must split documents.</p>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Review before proceeding</h2>
+</div>
+<div class="cardbody">
+<p>Approve the fixed version, not “the latest bill.”</p>
+<p class="minor">A new input invalidates this approval package. Approver identity, authority and audit time are required in the product.</p>
+<a class="btn primary" href="#issued">View later issued example</a>
+<p class="routehint">Design navigation only. This does not grant approval or issue an invoice.</p>
+</div>
+</div>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 09 / 15</span>
+<a href="#issued">View later issued state →</a>
+</footer>
+</main>
+</section>
+<section class="screen " id="issued" data-title="Invoice and follow-up status">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="index.html#close" class="">Monthly close</a>
+<a href="index.html#sources" class="">Supplier evidence</a>
+<a href="index.html#allocation" class="">Cost allocation</a>
+<a href="index.html#pricing" class="">Contracts & pricing</a>
+<a href="#case" class="">Reconciliation</a>
+<a href="#issued" class="active">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="#setup">Sources & readiness</a>
+<a href="index.html#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Billing operations / September 2026</div>
+<h1>Invoice and follow-up status</h1>
+<div class="sub">Separate the legal document from delivery, ERP and receipt evidence.</div>
+</div>
+<div class="actions">
+</div>
+</div>
+<div class="scope">
+<strong>Northstar Labs</strong>
+<span>Sep 2026 · UTC</span>
+<span>Meridian MSP → Northstar US</span>
+<span>USD · Net unless stated</span>
+<span class="pill blue">Issued r8 · later state</span>
+<span>Approval AP-88 · Invoice DEMO-2026-09104</span>
+</div>
+<div class="steps">
+<div class="step done">01 Source controls</div>
+<div class="step done">02 Allocate & price</div>
+<div class="step done">03 Reconcile</div>
+<div class="step done">04 Approve</div>
+<div class="step current">05 Issue</div>
+</div>
+<div class="notice info">
+<strong>The invoice is issued. Delivery and ERP outcomes still need attention.</strong>
+<p>The approved gross amount is USD 136,560.00. Document issuance is not proof of delivery, posting or payment.</p>
+</div>
+<div class="stats">
+<div class="stat">
+<label>Issued gross · USD</label>
+<div class="value ">136,560.00</div>
+<small>DEMO-2026-09104 · immutable r8</small>
+</div>
+<div class="stat">
+<label>Customer delivery</label>
+<div class="value red">Failed</div>
+<small>Mailbox rejected · action required</small>
+</div>
+<div class="stat">
+<label>ERP posting</label>
+<div class="value ">Unknown</div>
+<small>Await external read-back; do not blind-retry</small>
+</div>
+<div class="stat">
+<label>Payment evidence</label>
+<div class="value ">Not connected</div>
+<small>No receipt or balance inference</small>
+</div>
+</div>
+<div class="cols">
+<div class="card ">
+<div class="cardhead">
+<h2>Document package</h2>
+</div>
+<table class="">
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Kind / scope</th>
+<th>Access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DEMO-2026-09104</td>
+<td>MSP sales invoice · Northstar US</td>
+<td>
+<a href="customer.html#invoice">Customer invoice ↗</a>
+</td>
+</tr>
+<tr>
+<td>September service detail</td>
+<td>Derived selling statement · own services</td>
+<td>
+<a href="customer.html#usage">Customer detail ↗</a>
+</td>
+</tr>
+<tr>
+<td>INV-AWS-09</td>
+<td>Shared supplier original · two customers</td>
+<td>Operator-only</td>
+</tr>
+<tr>
+<td>cp6 / DC-East</td>
+<td>Internal cost allocation statement</td>
+<td>
+<a href="index.html#allocation">Internal allocation ↗</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Issue history · staged example</h2>
+</div>
+<div class="cardbody">
+<div class="timeline">
+<div class="event">
+<strong>Amount approved / AP-88</strong>
+<small>Fixed r8 · authorized example reviewer</small>
+</div>
+<div class="event">
+<strong>Document issued</strong>
+<small>Oct 05 · DEMO-2026-09104</small>
+</div>
+<div class="event">
+<strong>Delivery failed</strong>
+<small>Destination rejected; document unchanged</small>
+</div>
+<div class="event">
+<strong>ERP confirmation unknown</strong>
+<small>External acknowledgement unavailable</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Safe follow-up</h2>
+</div>
+<div class="cardbody">
+<div class="cols equal">
+<div>
+<h3>Delivery recovery</h3>
+<p class="minor">Verify the authorized destination and resend the same document through a governed job. Do not create another invoice.</p>
+</div>
+<div>
+<h3>Unknown ERP outcome</h3>
+<p class="minor">Read back the locked route and external reference before considering retry. Financial posting remains unverified.</p>
+</div>
+</div>
+</div>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 10 / 15</span>
+<a href="#correction">See a late-source correction →</a>
+</footer>
+</main>
+</section>
+<section class="screen " id="correction" data-title="Post-issue source revision">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="index.html#close" class="">Monthly close</a>
+<a href="index.html#sources" class="">Supplier evidence</a>
+<a href="index.html#allocation" class="">Cost allocation</a>
+<a href="index.html#pricing" class="">Contracts & pricing</a>
+<a href="#case" class="">Reconciliation</a>
+<a href="#issued" class="active">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="#setup">Sources & readiness</a>
+<a href="index.html#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Billing operations / September 2026</div>
+<h1>Post-issue source revision</h1>
+<div class="sub">Source finalization does not prevent future credits or corrected charges.</div>
+</div>
+<div class="actions">
+</div>
+</div>
+<div class="scope">
+<strong>Northstar Labs</strong>
+<span>Sep 2026 · UTC</span>
+<span>Meridian MSP → Northstar US</span>
+<span>USD · Net unless stated</span>
+<span class="pill blue">Issued r8 + new source s4</span>
+<span>Later branch · Correction proposal cp1</span>
+</div>
+<div class="notice ">
+<strong>New supplier credit received after issuance.</strong>
+<p>A GCP credit of USD 500.00 has arrived. Preserve DEMO-2026-09104 and assess the approved customer treatment.</p>
+</div>
+<div class="cols">
+<div class="card ">
+<div class="cardhead">
+<h2>Impact assessment</h2>
+</div>
+<table class="">
+<thead>
+<tr>
+<th>Evidence / outcome</th>
+<th>Original</th>
+<th>New evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GCP September original invoice</td>
+<td class="num">18,000.00</td>
+<td>18,000.00 · unchanged</td>
+</tr>
+<tr>
+<td>Separate supplier credit / CR-GC-1007</td>
+<td>Not in September original</td>
+<td>-500.00 · October billing</td>
+</tr>
+<tr>
+<td>Related usage / issued date</td>
+<td>September 2026 usage</td>
+<td>Oct 07, 2026 · mapping pending</td>
+</tr>
+<tr>
+<td>GCP net-position projection</td>
+<td class="num">18,000.00</td>
+<td>17,500.00 · provisional</td>
+</tr>
+<tr>
+<td>Northstar CSP net-position projection</td>
+<td class="num">110,000.00</td>
+<td>109,500.00 · provisional</td>
+</tr>
+<tr>
+<td>Source revision</td>
+<td>s3</td>
+<td>s4 · attribution pending</td>
+</tr>
+<tr>
+<td>Issued customer gross</td>
+<td class="num">136,560.00</td>
+<td>Unchanged</td>
+</tr>
+<tr>
+<td>Customer correction amount</td>
+<td>Not applicable</td>
+<td>Not calculated / review required</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>What must be decided?</h2>
+</div>
+<div class="cardbody">
+<ol class="numbered">
+<li>Confirm the credit belongs to this customer-period.</li>
+<li>Inspect contract treatment; do not assume full pass-through.</li>
+<li>Calculate and independently reconcile a new correction.</li>
+<li>Approve and issue a linked correction document.</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Original invoice and correction history</h2>
+</div>
+<table class="">
+<thead>
+<tr>
+<th>Document / revision</th>
+<th>State</th>
+<th>Financial authority</th>
+<th>Next step</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DEMO-2026-09104 / r8</td>
+<td>
+<span class="pill ok">Issued</span>
+</td>
+<td>Preserved original</td>
+<td>View original document</td>
+</tr>
+<tr>
+<td>Credit evidence / s4</td>
+<td>
+<span class="pill blue">Received</span>
+</td>
+<td>Supplier evidence only</td>
+<td>Confirm scope and treatment</td>
+</tr>
+<tr>
+<td>Correction proposal / cp1</td>
+<td>
+<span class="pill warn">Needs review</span>
+</td>
+<td>No approved customer amount</td>
+<td>
+<a href="#case">View investigation pattern ↗</a>
+<small>Opens separate EX-204 fee case, not this credit proposal.</small>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="notice info">
+<strong>No automatic netting and no edit to an issued amount.</strong>
+<p>A supplier credit is not automatically a customer credit. The customer portal shows only issued, authorized documents; this internal proposal is not published.</p>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 11 / 15</span>
+<a href="customer.html#overview">Switch to customer view →</a>
+</footer>
+</main>
+</section>
+<section class="screen " id="setup" data-title="Initial setup and source readiness">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="index.html#close" class="">Monthly close</a>
+<a href="index.html#sources" class="">Supplier evidence</a>
+<a href="index.html#allocation" class="">Cost allocation</a>
+<a href="index.html#pricing" class="">Contracts & pricing</a>
+<a href="#case" class="">Reconciliation</a>
+<a href="#issued" class="">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="#setup">Sources & readiness</a>
+<a href="index.html#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">First use / separate empty-state example</div>
+<h1>Initial setup and source readiness</h1>
+<div class="sub">A useful empty state guides setup instead of displaying fabricated totals.</div>
+</div>
+<div class="actions">
+</div>
+</div>
+<div class="notice info">
+<strong>First-use example / a separate empty installation.</strong>
+<p>No source is connected and no billing amount can be calculated. This screen is not the populated Northstar workspace above.</p>
+</div>
+<div class="cols">
+<div class="card ">
+<div class="cardhead">
+<h2>Get the first billing period ready</h2>
+</div>
+<div class="cardbody">
+<ol class="numbered">
+<li>
+<b>Set the operating profile</b>
+<p class="minor">MSP resale or enterprise internal allocation; activate only the relevant workflows.</p>
+</li>
+<li>
+<b>Define legal entities and customer contracts</b>
+<p class="minor">Seller, buyer, currency, period, approved rates and responsible roles.</p>
+</li>
+<li>
+<b>Connect sources or register approved files</b>
+<p class="minor">Declare actual provider relationship, document coverage and supported detail.</p>
+</li>
+<li>
+<b>Confirm the first source period</b>
+<p class="minor">Validate completeness, mapping and money controls before calculating.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>No billable period yet</h2>
+</div>
+<div class="cardbody">
+<div class="empty">
+<span class="large">—</span>
+<h2>Waiting for evidence</h2>
+<p class="minor">Missing source data is not a zero-cost month.</p>
+</div>
+<p class="minor">Connection setup is not implemented in this visual prototype. Authentication method selection remains deferred.</p>
+<a class="btn primary" href="index.html#close">Explore populated example</a>
+</div>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Source coverage / no implied integration success</h2>
+</div>
+<table class="compact">
+<thead>
+<tr>
+<th>Source family</th>
+<th>Required evidence</th>
+<th>Readiness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS / Azure / GCP</td>
+<td>Cloud billing documents + detail</td>
+<td>
+<span class="pill ">Not connected</span>
+</td>
+</tr>
+<tr>
+<td>OCI / Alibaba</td>
+<td>Cloud bills + subscription/benefit detail</td>
+<td>
+<span class="pill ">Not connected</span>
+</td>
+</tr>
+<tr>
+<td>VMware / on-premises</td>
+<td>Metering + approved internal cost pools</td>
+<td>
+<span class="pill ">Not connected</span>
+</td>
+</tr>
+<tr>
+<td>HawkEye / TokenMeter</td>
+<td>Contracted usage / service inputs</td>
+<td>
+<span class="pill ">Not connected</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 12 / 15</span>
+<a href="index.html#close">Open populated monthly close →</a>
+</footer>
+</main>
+</section><script src="navigation.js"></script>
+</body>
+</html>

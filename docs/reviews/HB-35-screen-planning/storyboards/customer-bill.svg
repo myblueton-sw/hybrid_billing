@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100">
+<title>Hybrid Billing: customer-bill — synthetic static design study</title>
+<rect x="0" y="0" width="1600" height="1100" rx="0" fill="#F5F7FB" stroke="none"/>
+<rect x="0" y="0" width="1600" height="76" rx="0" fill="white" stroke="none"/>
+<text x="64" y="43.34" font-family="Apple SD Gothic Neo, sans-serif" font-size="19" font-weight="600" fill="#182230">HYBRID / CUSTOMER</text>
+<text x="490" y="42.9" font-family="Apple SD Gothic Neo, sans-serif" font-size="15" font-weight="600" fill="#2855D9">My billing</text>
+<text x="650" y="42.9" font-family="Apple SD Gothic Neo, sans-serif" font-size="15" font-weight="400" fill="#526174">Documents</text>
+<text x="805" y="42.9" font-family="Apple SD Gothic Neo, sans-serif" font-size="15" font-weight="400" fill="#526174">Usage</text>
+<text x="930" y="42.9" font-family="Apple SD Gothic Neo, sans-serif" font-size="15" font-weight="400" fill="#526174">Questions</text>
+<text x="1280" y="42.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#182230">Example customer A</text>
+<text x="85" y="143.52" font-family="Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="600" fill="#182230">Your September bill, explained.</text>
+<text x="85" y="178.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#526174">September 2026 · USD · Example MSP · Your disclosed billing documents</text>
+<rect x="85" y="201" width="329.5" height="26" rx="5" fill="#EFF4FF" stroke="none"/>
+<text x="95" y="218.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#175CD3">LATER STORY STATE · r8 issued after correction and approval</text>
+<rect x="1160" y="201" width="159.5" height="26" rx="5" fill="#EFF4FF" stroke="none"/>
+<text x="1170" y="218.32" font-family="Apple SD Gothic Neo, sans-serif" font-size="12" font-weight="400" fill="#175CD3">STATIC SYNTHETIC DESIGN</text>
+<rect x="85" y="250" width="900" height="209" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="105" y="281.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Issued invoice · DEMO-2026-09</text>
+<text x="109" y="338.98" font-family="Apple SD Gothic Neo, sans-serif" font-size="43" font-weight="600" fill="#182230">USD 1,210.00</text>
+<text x="109" y="378.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#526174">Net 1,100.00 + illustrative tax 110.00</text>
+<text x="109" y="422.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#526174">Issued on 01 Oct 2026 · Due 31 Oct 2026 · Example terms only</text>
+<rect x="1005" y="250" width="510" height="209" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="1025" y="281.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Payment information</text>
+<text x="1028" y="326.22" font-family="Apple SD Gothic Neo, sans-serif" font-size="27" font-weight="600" fill="#182230">Not confirmed</text>
+<text x="1028" y="367.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#526174">A published invoice is not proof of payment. Receipt and balance</text>
+<text x="1028" y="390.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#526174">information is not connected in this design.</text>
+<rect x="85" y="481" width="900" height="314" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="105" y="512.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">What makes up this bill?</text>
+<text x="110" y="545.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="600" fill="#526174">Your contracted charges</text>
+<text x="811" y="545.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="600" fill="#526174">USD</text>
+<text x="110" y="587.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#182230">Service charges</text>
+<text x="807" y="587.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#182230">1,200.00</text>
+<text x="110" y="624.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#182230">Your contract discount · 10%</text>
+<text x="807" y="624.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#182230">-120.00</text>
+<text x="110" y="661.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#182230">Service fee</text>
+<text x="807" y="661.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#182230">20.00</text>
+<text x="110" y="698.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Net subtotal</text>
+<text x="807" y="698.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">1,100.00</text>
+<text x="110" y="735.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#182230">Illustrative tax · 10%</text>
+<text x="807" y="735.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#182230">110.00</text>
+<rect x="1005" y="481" width="510" height="314" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="1025" y="512.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Understand or question a charge</text>
+<text x="1028" y="550.2" font-family="Apple SD Gothic Neo, sans-serif" font-size="20" font-weight="600" fill="#182230">Start with the service, period and contract discount</text>
+<text x="1028" y="577.2" font-family="Apple SD Gothic Neo, sans-serif" font-size="20" font-weight="600" fill="#182230">shown on your document.</text>
+<text x="1028" y="639.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="600" fill="#526174">Planned actions</text>
+<text x="1028" y="673.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#2855D9">View permitted service usage</text>
+<text x="1028" y="707.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#2855D9">Download the disclosed invoice</text>
+<text x="1028" y="741.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#2855D9">Ask about a specific invoice line</text>
+<rect x="85" y="819" width="1430" height="126" rx="10" fill="white" stroke="#DCE3EE"/>
+<text x="105" y="850.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="600" fill="#182230">Your document history</text>
+<text x="110" y="880.76" font-family="Apple SD Gothic Neo, sans-serif" font-size="16" font-weight="400" fill="#182230">This is the issued r8 view. Earlier internal drafts are not customer documents.</text>
+<text x="110" y="916.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#526174">If an issued amount changes, show a linked correction and explanation; preserve the original invoice.</text>
+<text x="85" y="995.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#526174">Synthetic later-stage example: 1,200 - 120 + 20 = 1,100 net; illustrative 10% tax = 110; gross = 1,210.</text>
+<text x="85" y="1028.04" font-family="Apple SD Gothic Neo, sans-serif" font-size="14" font-weight="400" fill="#526174">No real invoice, payment, tax policy, download, customer account or authentication is created.</text>
+<text x="85" y="1060.18" font-family="Apple SD Gothic Neo, sans-serif" font-size="13" font-weight="400" fill="#526174">C01 + C02 + C03  /  No supplier costs, MSP margin, internal correction cases or raw-source links.</text>
+</svg>

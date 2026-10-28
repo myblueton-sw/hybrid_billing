@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hybrid Billing / MSP design</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<section class="screen " id="close" data-title="Monthly close">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="#close" class="active">Monthly close</a>
+<a href="#sources" class="">Supplier evidence</a>
+<a href="#allocation" class="">Cost allocation</a>
+<a href="#pricing" class="">Contracts & pricing</a>
+<a href="reconciliation.html#case" class="">Reconciliation</a>
+<a href="reconciliation.html#issued" class="">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="reconciliation.html#setup">Sources & readiness</a>
+<a href="#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Billing operations / September 2026</div>
+<h1>Monthly close</h1>
+<div class="sub">Customer work, unresolved money and the next action - in one place.</div>
+</div>
+<div class="actions">
+<a class="btn primary" href="reconciliation.html#case">Review Northstar</a>
+</div>
+</div>
+<div class="stats">
+<div class="stat">
+<label>Customer-periods in this review</label>
+<div class="value ">6</div>
+<small>Fixed scope · September 2026</small>
+</div>
+<div class="stat">
+<label>Require investigation</label>
+<div class="value red">2</div>
+<small>Pricing mismatch / missing allocation</small>
+</div>
+<div class="stat">
+<label>Ready for financial review</label>
+<div class="value ">1</div>
+<small>Approval has not been granted</small>
+</div>
+<div class="stat">
+<label>Source follow-up</label>
+<div class="value ">2</div>
+<small>1 missing · 1 revised after issue</small>
+</div>
+</div>
+<div class="notice ">
+<strong>Start with Northstar: a duplicate support fee adds USD 3,000.00.</strong>
+<p>Supplier controls passed. The candidate selling total still differs from the independent contract expectation. Issuance is blocked.</p>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Monthly close worklist</h2>
+<input class="search" aria-label="Filter customer worklist" placeholder="Search customer or status" data-customer-search>
+</div>
+<table class="">
+<thead>
+<tr>
+<th>Customer / billing scope</th>
+<th>Currency</th>
+<th>Candidate net</th>
+<th>Financial / delivery state</th>
+<th>Next dependency</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr data-customer-row>
+<td>
+<b>Northstar Labs</b>
+<small>US entity · 5 CSPs + VMware</small>
+</td>
+<td>USD</td>
+<td class="num">139,560.00</td>
+<td>
+<span class="pill bad">Blocked</span>
+</td>
+<td>1 pricing mismatch</td>
+<td>
+<a href="reconciliation.html#case">Resolve $3,000 ↗</a>
+</td>
+</tr>
+<tr data-customer-row>
+<td>
+<b>Juniper Retail</b>
+<small>US entity · AWS + Azure</small>
+</td>
+<td>USD</td>
+<td class="num">24,800.00</td>
+<td>
+<span class="pill ok">Ready for review</span>
+</td>
+<td>Controls passed</td>
+<td>
+<a href="reconciliation.html#approval">Review pattern ↗</a>
+</td>
+</tr>
+<tr data-customer-row>
+<td>
+<b>Aster Health</b>
+<small>US entity · GCP</small>
+</td>
+<td>USD</td>
+<td>Not calculated</td>
+<td>
+<span class="pill bad">Blocked</span>
+</td>
+<td>Account not assigned</td>
+<td>
+<a href="#allocation">Allocation pattern ↗</a>
+</td>
+</tr>
+<tr data-customer-row>
+<td>
+<b>Atlas Systems</b>
+<small>EU entity · OCI</small>
+</td>
+<td>EUR</td>
+<td>Not calculated</td>
+<td>
+<span class="pill warn">Awaiting source</span>
+</td>
+<td>September detail missing</td>
+<td>
+<a href="reconciliation.html#setup">Setup pattern ↗</a>
+</td>
+</tr>
+<tr data-customer-row>
+<td>
+<b>Vertex Media</b>
+<small>US entity · AWS</small>
+</td>
+<td>USD</td>
+<td class="num">18,200.00</td>
+<td>
+<span class="pill ok">Issued</span> <span class="pill bad">Delivery failed</span>
+</td>
+<td>ERP confirmation unknown</td>
+<td>
+<a href="reconciliation.html#issued">View status pattern ↗</a>
+</td>
+</tr>
+<tr data-customer-row>
+<td>
+<b>Summit Research</b>
+<small>EU entity · GCP + Azure</small>
+</td>
+<td>EUR</td>
+<td>Under reassessment</td>
+<td>
+<span class="pill warn">Source revised</span>
+</td>
+<td>Credit received after issue</td>
+<td>
+<a href="reconciliation.html#correction">Correction pattern ↗</a>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="tablefoot" data-search-result aria-live="polite">6 customer-periods shown · Currencies are never added together.</div>
+</div>
+<div class="cols equal">
+<div class="card ">
+<div class="cardhead">
+<h2>What can close next?</h2>
+</div>
+<div class="cardbody">
+<div class="line">
+<span>Juniper</span>
+<span class="pill ok">Ready · not approved</span>
+</div>
+<p class="minor">Other customer rows link to Northstar’s staged patterns or the separate setup example, not to those customers’ records. Northstar is the connected end-to-end journey.</p>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Keep independent outcomes visible</h2>
+</div>
+<div class="cardbody">
+<div class="dualstatus">
+<span class="pill ">Financial review</span>
+<span class="pill ">Issued</span>
+<span class="pill bad">Delivery failed</span>
+<span class="pill warn">ERP unknown</span>
+</div>
+<p class="minor">These are separate state axes. An issued document can still need delivery or external confirmation.</p>
+</div>
+</div>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 01 / 15</span>
+<a href="#sources">Inspect supplier evidence →</a>
+</footer>
+</main>
+</section>
+<section class="screen " id="sources" data-title="Supplier invoice reconciliation">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="#close" class="">Monthly close</a>
+<a href="#sources" class="active">Supplier evidence</a>
+<a href="#allocation" class="">Cost allocation</a>
+<a href="#pricing" class="">Contracts & pricing</a>
+<a href="reconciliation.html#case" class="">Reconciliation</a>
+<a href="reconciliation.html#issued" class="">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="reconciliation.html#setup">Sources & readiness</a>
+<a href="#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Billing operations / September 2026</div>
+<h1>Supplier invoice reconciliation</h1>
+<div class="sub">Supplier invoices, admitted rows and customer attribution have separate controls.</div>
+</div>
+<div class="actions">
+</div>
+</div>
+<div class="scope">
+<strong>Northstar Labs</strong>
+<span>Sep 2026 · UTC</span>
+<span>Meridian MSP → Northstar US</span>
+<span>USD · Net unless stated</span>
+<span class="pill blue">Draft r7</span>
+<span>Source s3 · Mapping m2 · Pricing p4</span>
+</div>
+<div class="steps">
+<div class="step current">01 Source controls</div>
+<div class="step ">02 Allocate & price</div>
+<div class="step ">03 Reconcile</div>
+<div class="step ">04 Approve</div>
+<div class="step ">05 Issue</div>
+</div>
+<div class="stats">
+<div class="stat">
+<label>Supplier originals · USD</label>
+<div class="value ">126,000.00</div>
+<small>Five documents · includes shared AWS payer</small>
+</div>
+<div class="stat">
+<label>Admitted invoice-basis rows</label>
+<div class="value ">126,000.00</div>
+<small>Matching document scope and currency</small>
+</div>
+<div class="stat">
+<label>Northstar CSP attribution</label>
+<div class="value ">110,000.00</div>
+<small>Excludes VMware internal allocation</small>
+</div>
+<div class="stat">
+<label>Supplier control residual</label>
+<div class="value ">0.00</div>
+<small>Completeness confirmed in this staged example</small>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Original documents → customer attribution</h2>
+<span class="pill blue">Original scope ≠ customer scope</span>
+</div>
+<table class="">
+<thead>
+<tr>
+<th>Supplier / document</th>
+<th>Original USD</th>
+<th>Northstar USD</th>
+<th>Control</th>
+<th>Version / received</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<span class="provider">AW</span>
+<b>AWS</b>
+<small>Shared payer · INV-AWS-09</small>
+</td>
+<td class="num">64,000.00</td>
+<td class="num">48,000.00</td>
+<td>
+<span class="pill ok">Matched</span>
+</td>
+<td>s3 · Oct 03</td>
+<td>
+<a href="#aws">Open evidence ↗</a>
+</td>
+</tr>
+<tr>
+<td>
+<span class="provider">AZ</span>
+<b>Azure CSP</b>
+<small>Usage + license reconciliation</small>
+</td>
+<td class="num">32,000.00</td>
+<td class="num">32,000.00</td>
+<td>
+<span class="pill ok">Matched</span>
+</td>
+<td>s3 · Oct 03</td>
+<td>
+<a href="#variants">Charge types ↗</a>
+</td>
+</tr>
+<tr>
+<td>
+<span class="provider">GC</span>
+<b>Google Cloud</b>
+<small>Invoice month Sep · prior usage included</small>
+</td>
+<td class="num">18,000.00</td>
+<td class="num">18,000.00</td>
+<td>
+<span class="pill ok">Matched</span>
+</td>
+<td>s3 · Oct 03</td>
+<td>
+<a href="#variants">Period bridge ↗</a>
+</td>
+</tr>
+<tr>
+<td>
+<span class="provider">OC</span>
+<b>Oracle Cloud</b>
+<small>Subscription assignment history retained</small>
+</td>
+<td class="num">8,000.00</td>
+<td class="num">8,000.00</td>
+<td>
+<span class="pill ok">Matched</span>
+</td>
+<td>s3 · Oct 03</td>
+<td>
+<a href="#variants">Assignments ↗</a>
+</td>
+</tr>
+<tr>
+<td>
+<span class="provider">AL</span>
+<b>Alibaba Cloud</b>
+<small>Monthly bill + spending details</small>
+</td>
+<td class="num">4,000.00</td>
+<td class="num">4,000.00</td>
+<td>
+<span class="pill ok">Matched</span>
+</td>
+<td>s3 · Oct 03</td>
+<td>
+<a href="#variants">Benefits ↗</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="cols equal">
+<div class="card ">
+<div class="cardhead">
+<h2>Shared-source allocation</h2>
+</div>
+<div class="cardbody">
+<div class="line">
+<span>AWS original invoice</span>
+<strong>64,000.00</strong>
+</div>
+<div class="line">
+<span>Northstar attribution</span>
+<strong>48,000.00</strong>
+</div>
+<div class="line">
+<span>Other customer attribution</span>
+<strong>16,000.00</strong>
+</div>
+<p class="minor">Customer output is a derived statement. The full payer invoice is operator-only.</p>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Readiness is evidence, not a timer</h2>
+</div>
+<div class="cardbody">
+<ul class="checklist">
+<li>Expected document coverage <span class="pill ok">5 / 5</span>
+</li>
+<li>Version and mapping checks <span class="pill ok">Passed</span>
+</li>
+<li>Source confirmation <span class="pill ok">Recorded · s3</span>
+</li>
+<li>Selling amount approval <span class="pill bad">Still blocked</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 02 / 15</span>
+<a href="#aws">Drill into AWS →</a>
+</footer>
+</main>
+</section>
+<section class="screen " id="aws" data-title="AWS source detail">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="#close" class="">Monthly close</a>
+<a href="#sources" class="active">Supplier evidence</a>
+<a href="#allocation" class="">Cost allocation</a>
+<a href="#pricing" class="">Contracts & pricing</a>
+<a href="reconciliation.html#case" class="">Reconciliation</a>
+<a href="reconciliation.html#issued" class="">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="reconciliation.html#setup">Sources & readiness</a>
+<a href="#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Billing operations / September 2026</div>
+<h1>AWS source detail</h1>
+<div class="sub">AWS shared payer · Original document → attribution → charge component → evidence</div>
+</div>
+<div class="actions">
+<a class="btn " href="#pricing">Review selling bridge</a>
+</div>
+</div>
+<div class="scope">
+<strong>Northstar Labs</strong>
+<span>Sep 2026 · UTC</span>
+<span>Meridian MSP → Northstar US</span>
+<span>USD · Net unless stated</span>
+<span class="pill blue">Draft r7</span>
+<span>Source s3 · Mapping m2 · Pricing p4</span>
+</div>
+<div class="notice success">
+<strong>Supplier control passed; the selling result still needs review.</strong>
+<p>This source explains USD 48,000.00 of Northstar cost. It is not the USD 51,600.00 contracted selling charge.</p>
+</div>
+<div class="cols wide">
+<div class="card ">
+<div class="cardhead">
+<h2>INV-AWS-09 / September 2026</h2>
+<span class="pill ok">Matched</span>
+</div>
+<table class="">
+<thead>
+<tr>
+<th>Invoice-basis charge component</th>
+<th>Payer USD</th>
+<th>Northstar USD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>On-demand and other usage</td>
+<td class="num">44,000.00</td>
+<td class="num">32,000.00</td>
+</tr>
+<tr>
+<td>Savings Plan covered usage</td>
+<td class="num">14,000.00</td>
+<td class="num">10,000.00</td>
+</tr>
+<tr>
+<td>Savings Plan negation</td>
+<td class="num">-14,000.00</td>
+<td class="num">-10,000.00</td>
+</tr>
+<tr>
+<td>Savings Plan recurring fee</td>
+<td class="num">16,000.00</td>
+<td class="num">12,000.00</td>
+</tr>
+<tr>
+<td>Support</td>
+<td class="num">5,000.00</td>
+<td class="num">5,000.00</td>
+</tr>
+<tr>
+<td>Credit</td>
+<td class="num">-1,000.00</td>
+<td class="num">-1,000.00</td>
+</tr>
+<tr class="emphasis">
+<td>Billed-cost control</td>
+<td class="num">64,000.00</td>
+<td class="num">48,000.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Document & provenance</h2>
+</div>
+<div class="cardbody">
+<div class="line">
+<span>Document kind</span>
+<strong>Supplier original</strong>
+</div>
+<div class="line">
+<span>Issuer / seller</span>
+<strong>AWS example seller</strong>
+</div>
+<div class="line">
+<span>Payer scope</span>
+<strong>2 customers</strong>
+</div>
+<div class="line">
+<span>Invoice period</span>
+<strong>Sep 01–30, 2026</strong>
+</div>
+<div class="line">
+<span>Usage timezone</span>
+<strong>UTC</strong>
+</div>
+<div class="line">
+<span>Evidence revision</span>
+<strong>s3 / confirmed</strong>
+</div>
+<div class="line">
+<span>Mapping revision</span>
+<strong>m2</strong>
+</div>
+<p class="minor">Synthetic identifiers. No original customer data or real download is attached.</p>
+</div>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Trace a charge to its source</h2>
+</div>
+<table class="compact">
+<thead>
+<tr>
+<th>Usage account / resource</th>
+<th>Service / charge type</th>
+<th>Usage period</th>
+<th>Billed USD</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Northstar production / vm-017</td>
+<td>Compute / on-demand</td>
+<td>Sep 01–30</td>
+<td class="num">8,000.00</td>
+<td>CUR row EX-017 · s3</td>
+</tr>
+<tr>
+<td>Northstar shared compute</td>
+<td>Compute / SP covered + offsets</td>
+<td>Sep 01–30</td>
+<td>See paired lines above</td>
+<td>Coverage group SP-DEMO</td>
+</tr>
+<tr>
+<td>Northstar account</td>
+<td>Credit / linked prior charge</td>
+<td>Aug usage · Sep invoice</td>
+<td class="num">-1,000.00</td>
+<td>Credit EX-CR-01</td>
+</tr>
+</tbody>
+</table>
+<div class="tablefoot">Selected evidence examples, not the entire dataset. Effective/amortized cost is a different analytical basis and is not summed into billed cost.</div>
+</div>
+<div class="notice info">
+<strong>Do not count the commitment benefit twice.</strong>
+<p>Covered usage and negation are a linked pair. Repricing uses approved contract p4; provider credits and customer discounts retain separate treatment.</p>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 03 / 15</span>
+<a href="#variants">Compare provider differences →</a>
+</footer>
+</main>
+</section>
+<section class="screen " id="variants" data-title="Provider billing structures">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="#close" class="">Monthly close</a>
+<a href="#sources" class="active">Supplier evidence</a>
+<a href="#allocation" class="">Cost allocation</a>
+<a href="#pricing" class="">Contracts & pricing</a>
+<a href="reconciliation.html#case" class="">Reconciliation</a>
+<a href="reconciliation.html#issued" class="">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="reconciliation.html#setup">Sources & readiness</a>
+<a href="#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Billing operations / September 2026</div>
+<h1>Provider billing structures</h1>
+<div class="sub">Four source bridges that a generic “usage × discount” table would miss.</div>
+</div>
+<div class="actions">
+</div>
+</div>
+<div class="scope">
+<strong>Northstar Labs</strong>
+<span>Sep 2026 · UTC</span>
+<span>Meridian MSP → Northstar US</span>
+<span>USD · Net unless stated</span>
+<span class="pill blue">Draft r7</span>
+<span>Source s3 · Mapping m2 · Pricing p4</span>
+</div>
+<div class="notice info">
+<strong>Common workflow. Provider-specific evidence.</strong>
+<p>The same reconciliation screen must retain charge types, dates and relationships that differ by supplier.</p>
+</div>
+<div class="cols equal">
+<div class="card ">
+<div class="cardhead">
+<h2>Azure CSP · USD 32,000.00</h2>
+</div>
+<div class="cardbody">
+<table class="compact">
+<thead>
+<tr>
+<th>Reconciliation component</th>
+<th>USD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Metered usage</td>
+<td class="num">24,000.00</td>
+</tr>
+<tr>
+<td>Recurring seats / SaaS</td>
+<td class="num">6,000.00</td>
+</tr>
+<tr>
+<td>Reservation purchase</td>
+<td class="num">2,000.00</td>
+</tr>
+</tbody>
+</table>
+<p class="minor">Daily usage is not the full invoice. Reservation-covered usage can have zero charges; quantity is still tracked.</p>
+<span class="pill blue">Provider rounding and credit rules retained</span>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Google Cloud · USD 18,000.00</h2>
+</div>
+<div class="cardbody">
+<table class="compact">
+<thead>
+<tr>
+<th>Usage period → invoice month</th>
+<th>USD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>September usage → September</td>
+<td class="num">17,500.00</td>
+</tr>
+<tr>
+<td>August correction → September</td>
+<td class="num">500.00</td>
+</tr>
+</tbody>
+</table>
+<p class="minor">Invoice-month control includes prior usage. Corrections retain negation/replacement references; channel repricing is separately identified.</p>
+<span class="pill blue">Usage month ≠ invoice month</span>
+</div>
+</div>
+</div>
+<div class="cols equal">
+<div class="card ">
+<div class="cardhead">
+<h2>OCI · USD 8,000.00</h2>
+</div>
+<div class="cardbody">
+<table class="compact">
+<thead>
+<tr>
+<th>Effective subscription assignment</th>
+<th>USD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sep 01–15 / Subscription A</td>
+<td class="num">3,500.00</td>
+</tr>
+<tr>
+<td>Sep 16–30 / Subscription B</td>
+<td class="num">4,500.00</td>
+</tr>
+</tbody>
+</table>
+<p class="minor">Tenancy history is effective-dated. The current subscription cannot replace historical attribution.</p>
+<span class="pill blue">Parent source · scoped customer statement</span>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Alibaba Cloud · USD 4,000.00</h2>
+</div>
+<div class="cardbody">
+<table class="compact">
+<thead>
+<tr>
+<th>Bill / benefit component</th>
+<th>USD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Subscription orders</td>
+<td class="num">1,500.00</td>
+</tr>
+<tr>
+<td>PAYG before eligible benefit</td>
+<td class="num">3,000.00</td>
+</tr>
+<tr>
+<td>Eligible coupon deduction</td>
+<td class="num">-500.00</td>
+</tr>
+</tbody>
+</table>
+<p class="minor">Monthly bills, spending details and raw usage have separate readiness. Coupons and plans are not a generic customer discount.</p>
+<span class="pill blue">Eligibility and stacking evidence required</span>
+</div>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Model each source’s actual capability</h2>
+</div>
+<div class="cardbody">
+<div class="legend">
+<span>
+<b style="background:#555555">
+</b>Supported detail</span>
+<span>
+<b style="background:#999999">
+</b>Limited granularity</span>
+<span>
+<b style="background:#cccccc">
+</b>Unverified account variant</span>
+</div>
+<p class="minor">These are synthetic document examples grounded in research. They do not certify live regional, sovereign, reseller or account-type support.</p>
+</div>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 04 / 15</span>
+<a href="#allocation">Review cost allocation →</a>
+</footer>
+</main>
+</section>
+<section class="screen " id="allocation" data-title="Cost allocation and retained costs">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="#close" class="">Monthly close</a>
+<a href="#sources" class="">Supplier evidence</a>
+<a href="#allocation" class="active">Cost allocation</a>
+<a href="#pricing" class="">Contracts & pricing</a>
+<a href="reconciliation.html#case" class="">Reconciliation</a>
+<a href="reconciliation.html#issued" class="">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="reconciliation.html#setup">Sources & readiness</a>
+<a href="#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Billing operations / September 2026</div>
+<h1>Cost allocation and retained costs</h1>
+<div class="sub">Cost visibility and internal charging support the billing process without duplicating external charges.</div>
+</div>
+<div class="actions">
+</div>
+</div>
+<div class="scope">
+<strong>Northstar Labs</strong>
+<span>Sep 2026 · UTC</span>
+<span>Meridian MSP → Northstar US</span>
+<span>USD · Net unless stated</span>
+<span class="pill blue">Draft r7</span>
+<span>Source s3 · Mapping m2 · Pricing p4</span>
+</div>
+<div class="steps">
+<div class="step done">01 Source controls</div>
+<div class="step current">02 Allocate & price</div>
+<div class="step ">03 Reconcile</div>
+<div class="step ">04 Approve</div>
+<div class="step ">05 Issue</div>
+</div>
+<div class="stats">
+<div class="stat">
+<label>VMware pool · DC-East</label>
+<div class="value ">20,000.00</div>
+<small>Approved accounting cost · pool cp6</small>
+</div>
+<div class="stat">
+<label>Northstar allocation</label>
+<div class="value ">12,000.00</div>
+<small>60% of allocatable capacity</small>
+</div>
+<div class="stat">
+<label>Other customer allocation</label>
+<div class="value ">6,000.00</div>
+<small>30% · separate recipient</small>
+</div>
+<div class="stat">
+<label>Retained idle cost</label>
+<div class="value ">2,000.00</div>
+<small>10% · operations cost center</small>
+</div>
+</div>
+<div class="cols">
+<div class="card ">
+<div class="cardhead">
+<h2>Explain the shared cost</h2>
+</div>
+<div class="cardbody">
+<div class="bars">
+<span style="width:60%;background:#555555">
+</span>
+<span style="width:30%;background:#999999">
+</span>
+<span style="width:10%;background:#cccccc">
+</span>
+</div>
+<div class="legend">
+<span>
+<b style="background:#555555">
+</b>Northstar 60%</span>
+<span>
+<b style="background:#999999">
+</b>Other 30%</span>
+<span>
+<b style="background:#cccccc">
+</b>Idle 10%</span>
+</div>
+</div>
+<table class="">
+<thead>
+<tr>
+<th>Pool input / monthly accounting cost</th>
+<th>USD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Depreciation / lease basis</td>
+<td class="num">9,000.00</td>
+</tr>
+<tr>
+<td>Licensing & maintenance</td>
+<td class="num">5,000.00</td>
+</tr>
+<tr>
+<td>Power & facilities · no overlap</td>
+<td class="num">6,000.00</td>
+</tr>
+<tr class="emphasis">
+<td>Allocation + retained = pool</td>
+<td class="num">20,000.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Allocation policy</h2>
+</div>
+<div class="cardbody">
+<div class="line">
+<span>Basis</span>
+<strong>Allocatable capacity</strong>
+</div>
+<div class="line">
+<span>Effective period</span>
+<strong>September 2026</strong>
+</div>
+<div class="line">
+<span>Version / approval</span>
+<strong>cp6 / recorded</strong>
+</div>
+<div class="line">
+<span>Unattributed remainder</span>
+<strong>0.00</strong>
+</div>
+<div class="line">
+<span>Conservation residual</span>
+<strong>0.00</strong>
+</div>
+<p class="minor">CPU/memory/storage weights are approved once. Host and VM costs are not billed twice.</p>
+</div>
+</div>
+</div>
+<div class="cols equal">
+<div class="card ">
+<div class="cardhead">
+<h2>Showback / internal cost statement</h2>
+</div>
+<div class="cardbody">
+<div class="large">USD 12,000.00</div>
+<p>Northstar’s attributed VMware cost.</p>
+<p class="minor">OrgVDC-level evidence available. Per-VM price detail is unavailable for this selected allocation policy.</p>
+<span class="pill blue">Internal chargeback · policy-dependent</span>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>External selling / separate amount</h2>
+</div>
+<div class="cardbody">
+<div class="large">USD 15,000.00</div>
+<p>Approved fixed managed-capacity charge.</p>
+<p class="minor">Contract p4 explains the USD 3,000.00 cost-to-sale difference. Do not add the USD 12,000.00 allocation again.</p>
+<a href="#pricing">Review contract basis ↗</a>
+</div>
+</div>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 05 / 15</span>
+<a href="#pricing">Inspect customer pricing →</a>
+</footer>
+</main>
+</section>
+<section class="screen " id="pricing" data-title="Customer selling calculation">
+<aside class="rail">
+<div class="brand">hybrid<i>.</i>
+</div>
+<small>FINANCIAL OPERATIONS</small>
+<div class="group">Workspace · Meridian MSP</div>
+<nav>
+<a href="#close" class="">Monthly close</a>
+<a href="#sources" class="">Supplier evidence</a>
+<a href="#allocation" class="">Cost allocation</a>
+<a href="#pricing" class="active">Contracts & pricing</a>
+<a href="reconciliation.html#case" class="">Reconciliation</a>
+<a href="reconciliation.html#issued" class="">Invoices & delivery</a>
+</nav>
+<div class="group">Workspace setup</div>
+<nav>
+<a href="reconciliation.html#setup">Sources & readiness</a>
+<a href="#variants">Provider differences</a>
+</nav>
+<div class="bottom">Finance operator<br>
+<b>September close</b>
+<br>
+<br>
+<a href="customer.html#overview">View customer design ↗</a>
+</div>
+</aside>
+<main class="main">
+<header class="top">
+<span>Meridian MSP &nbsp; / &nbsp; Billing workspace</span>
+<span class="demo">INTERACTIVE DESIGN · STAGED EXAMPLES</span>
+<span>Finance team <span class="avatar">AM</span>
+</span>
+</header>
+<div class="heading">
+<div>
+<div class="eyebrow">Billing operations / September 2026</div>
+<h1>Customer selling calculation</h1>
+<div class="sub">Provider acquisition economics and customer commercial terms remain separate.</div>
+</div>
+<div class="actions">
+</div>
+</div>
+<div class="scope">
+<strong>Northstar Labs</strong>
+<span>Sep 2026 · UTC</span>
+<span>Meridian MSP → Northstar US</span>
+<span>USD · Net unless stated</span>
+<span class="pill blue">Draft r7</span>
+<span>Source s3 · Mapping m2 · Pricing p4</span>
+</div>
+<div class="steps">
+<div class="step done">01 Source controls</div>
+<div class="step current">02 Allocate & price</div>
+<div class="step ">03 Reconcile</div>
+<div class="step ">04 Approve</div>
+<div class="step ">05 Issue</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Northstar / contract C-104 / pricing p4</h2>
+<span class="pill ok">Effective Sep 01–30</span>
+</div>
+<table class="compact">
+<thead>
+<tr>
+<th>Selling component</th>
+<th>Contract base USD</th>
+<th>Customer concession</th>
+<th>Expected net USD</th>
+<th>Matched rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS services</td>
+<td class="num">60,000.00</td>
+<td>14% / -8,400.00</td>
+<td class="num">51,600.00</td>
+<td>AWS-P4</td>
+</tr>
+<tr>
+<td>Azure services</td>
+<td class="num">38,400.00</td>
+<td>10% / -3,840.00</td>
+<td class="num">34,560.00</td>
+<td>AZ-P4</td>
+</tr>
+<tr>
+<td>GCP services</td>
+<td class="num">21,600.00</td>
+<td>10% / -2,160.00</td>
+<td class="num">19,440.00</td>
+<td>GC-P4</td>
+</tr>
+<tr>
+<td>OCI services</td>
+<td class="num">9,600.00</td>
+<td>10% / -960.00</td>
+<td class="num">8,640.00</td>
+<td>OC-P4</td>
+</tr>
+<tr>
+<td>Alibaba services</td>
+<td class="num">4,800.00</td>
+<td>10% / -480.00</td>
+<td class="num">4,320.00</td>
+<td>AL-P4</td>
+</tr>
+<tr class="emphasis">
+<td>Cloud selling subtotal</td>
+<td class="num">134,400.00</td>
+<td class="num">-15,840.00</td>
+<td class="num">118,560.00</td>
+<td>5 rules matched</td>
+</tr>
+<tr>
+<td>VMware managed capacity</td>
+<td>Fixed contract</td>
+<td>No additional discount</td>
+<td class="num">15,000.00</td>
+<td>VM-P4</td>
+</tr>
+<tr>
+<td>Managed support</td>
+<td>Once per customer-period</td>
+<td>Fixed fee</td>
+<td class="num">3,000.00</td>
+<td>SUP-P4</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="cols equal">
+<div class="card ">
+<div class="cardhead">
+<h2>Coverage and execution order</h2>
+</div>
+<div class="cardbody">
+<ul class="checklist">
+<li>Required component rules <span class="pill ok">7 / 7 matched</span>
+</li>
+<li>Unmatched amount <span class="pill ok">0.00</span>
+</li>
+<li>Shadowed / overlapping rules <span class="pill ok">None</span>
+</li>
+</ul>
+<p class="minor">Quantity / base → customer discount → fees → limits → FX → tax / rounding. Dates and target scope are pinned.</p>
+</div>
+</div>
+<div class="card ">
+<div class="cardhead">
+<h2>Independent expected sales control</h2>
+</div>
+<div class="cardbody">
+<div class="line">
+<span>Cloud selling</span>
+<strong>118,560.00</strong>
+</div>
+<div class="line">
+<span>VMware fixed charge</span>
+<strong>15,000.00</strong>
+</div>
+<div class="line">
+<span>Support · one occurrence</span>
+<strong>3,000.00</strong>
+</div>
+<div class="line">
+<span>Expected net · review worksheet W9</span>
+<strong>136,560.00</strong>
+</div>
+<p class="minor">Separately authored contract worksheet. Supplier purchase cost is a different basis; rule coverage alone does not prove the candidate is correct.</p>
+</div>
+</div>
+</div>
+<div class="notice ">
+<strong>Candidate r7 applied SUP-P4 twice.</strong>
+<p>Rules are complete, but the current run contains two fee occurrences. Compare actual lines before changing contract policy.</p>
+</div>
+<footer class="footer">
+<span>HB-35 / DESIGN v2 · Synthetic data · No live financial actions · 06 / 15</span>
+<a href="reconciliation.html#case">Investigate the duplicate fee →</a>
+</footer>
+</main>
+</section><script src="navigation.js"></script>
+</body>
+</html>

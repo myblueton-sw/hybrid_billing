@@ -7,6 +7,8 @@ status: draft
 
 # Outcome and ownership
 
+**Research update, 2026-10-28:** the owner rejected the two narrow storyboards below as insufficient for full CSP billing. The [renewed multi-provider research and screen brief](multi-provider-research.md) now supplies the provider-specific evidence, international MSP comparison, portfolio-to-invoice story and showback/allocation/chargeback boundaries for the next design. The two SVGs remain historical arithmetic illustrations; they are not an accepted complete invoice design. The existing v1.16 PDF has not been updated.
+
 Tracking: [HB-35](https://linear.app/hybrid-billing/issue/HB-35/review-planning-baseline-for-the-complete-product-screen-mockup). Accountable owner: Seung Woo Park. Machine: mac_mini. Baseline: main `4f990f168790ad15b10bf6359927fadeefb8e6ef`. Root owns PM/UI-UX synthesis and these artifacts; separate read-only `screen_source_review` reviews source trace, billing/permission design and the resulting artifacts. This is a planning review and static design study, not a product implementation or a full DOCX re-audit.
 
 **Finding:** the existing inventory is reusable, but the old screens should not be reproduced unchanged. The visible generic tables and repeated explanation cards do not adequately tell the monthly billing story. The central MSP task is an iterative evidence-and-money reconciliation loop, assisted by AI, before separate approval and issuance. The customer task is understanding their own disclosed bill, usage and questions. These require distinct experiences.

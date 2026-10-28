@@ -28,6 +28,14 @@ PASS: separate read-only screen_source_review reviewed the actual Markdown, inve
 
 # Remaining work and limits
 
+## Renewed multi-provider research, 2026-10-28
+
+The owner rejected the two-frame study as insufficient for full CSP invoices. The [expanded research](multi-provider-research.md) supersedes it as the next visual brief and adds AWS/Azure/GCP/OCI/Alibaba/VMware distinctions, international MSP workflows, document hierarchy, allocation/showback/internal chargeback applicability and scenario acceptance criteria. It does not claim a redesigned PDF or implemented features.
+
+Root checked frontmatter, relative links, named provider/product coverage and `git diff --check`: PASS for document structure only. Separate csp_financial_research inspected AWS/Azure/GCP claims and local SP-04/SP-06 semantics; it found and required correcting Azure zero-charge wording to avoid confusing usage quantity with charges. Separate msp_workflow_research reviewed competitor evidence qualifications, portfolio-to-package coverage, disclosure and showback/chargeback applicability: PASS, with wording clarifications applied. Approval history now explicitly remains historical while affected approvals are stale and unusable for issuance; internal chargeback applicability is not a scope deferral.
+
+OCI/Alibaba/Broadcom evidence was directly inspected by root, not independently re-fetched by these reviewers. IBM evidence is official search-index text with direct-fetch limitations. No renewed vendor screenshot inspection succeeded. No account, API, monetary engine, actual UI or AI runtime validation occurred. Existing two-frame arithmetic/visual PASS results above apply only to those narrow artifacts and do not establish adequacy of the whole-product design.
+
 The full mockup needs first-use, portfolio, correction proposal, recheck/stale, approval/issuance, unknown ERP, customer document/usage/inquiry, mobile and accessibility states. Two static screens demonstrate direction only. Existing49 IDs and SaaS subflows remain in scope; no additional screen count is certified. Authentication method remains deferred; external model/provider and data handling are not selected. The post-invoice MSP service stays deferred separately from existing invoice/ERP/terms planning.
 
 No product code, DB, cloud account, customer data, pricing/tax policy, payment, issuance, notification, deployment or AI API execution occurred. Runtime, real-user usability, browser interactions, screen-reader/keyboard compliance, financial-engine correctness and AI safety/performance remain NOT_RUN. Git-bound artifacts are English; the owner conversation is Korean. PNG previews remain local generated output, not tracked source.

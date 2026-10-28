@@ -7,6 +7,8 @@ status: draft
 
 # Scope and ownership
 
+Historical HB-38 evidence below applies to v6. [HB-39](../HB-39-contract-navigation/review.md) subsequently corrects navigation and customer/month policy context in the maintained prototype and records v7 verification separately.
+
 [HB-38](https://linear.app/hybrid-billing/issue/HB-38/redesign-monthly-billing-operations-for-1000-customer-msp-usability); root sole writer, machine mac_mini, 2026-10-28. Accountable ticket assignee Seung Woo Park. Existing public scoped publication/main integration authorization is retained. The ticket remains open until verified merge read-back and release.
 
 Deliverables: [provider research](provider-pricing-research.md), [pricing/operations proposal](pricing-design-review.md), and [bilingual prototype](prototype/README.md). This work does not implement financial processing or connectors.

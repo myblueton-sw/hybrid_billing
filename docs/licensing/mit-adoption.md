@@ -2,12 +2,14 @@
 type: Decision Record
 title: Owner decision to adopt MIT licensing
 description: Records MIT adoption for original Hybrid Billing material, optional commercial inquiry contact and preservation of third-party rights.
-status: stable
+status: deprecated
 sources:
   - resource: https://opensource.org/license/mit
 ---
 
 # MIT adoption decision
+
+**Historical decision:** the [2026-10-28 source-available transition](source-available-adoption.md) supersedes this as the default for current project-authored original material from that transition revision onward. Any rights already obtained for earlier MIT copies remain intact. The text below records the earlier decision; its MIT license is preserved at [LICENSES/MIT-legacy.txt](../../LICENSES/MIT-legacy.txt).
 
 Tracking: [HB-28](https://linear.app/hybrid-billing/issue/HB-28). Accountable owner: Seung Woo Park. Machine: mac_mini. Decision date: 2026-10-23.
 
@@ -15,7 +17,7 @@ The owner explicitly requested that this project be open source under MIT and th
 
 ## Decision
 
-- Adopt the standard [MIT License](../../LICENSE) for original Hybrid Billing code and project-authored documentation, subject to the explicit third-party scope in [LICENSING.md](../../LICENSING.md).
+- Adopt the standard [MIT License](../../LICENSES/MIT-legacy.txt) for original Hybrid Billing code and project-authored documentation, subject to the explicit third-party scope in [LICENSING.md](../../LICENSING.md).
 - Permit commercial use under MIT; do not require an inquiry, license fee, registration or prior approval for the granted rights.
 - Publish [myblueton@gmail.com](mailto:myblueton@gmail.com) for optional commercial-use support, consulting, integrations and collaboration. Any purchased services are separately agreed and do not narrow MIT rights.
 - Preserve component-specific copyright and license notices, existing third-party grants and official FOCUS data attribution. Do not infer ownership transfer or clearance of inherited assets.

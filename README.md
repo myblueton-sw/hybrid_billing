@@ -77,6 +77,6 @@ The planning baseline is maintained locally under `docs/planning/v1.16/`; screen
 
 ## License and commercial inquiries
 
-The installation-based delivery model adds no license restriction. Hybrid Billing's original code and project-authored documentation are open source under the [MIT License](LICENSE), which permits commercial use. Preserve the required copyright and permission notices. Third-party components and datasets retain their own [licenses and notices](LICENSING.md).
+The current project-authored original material is offered under the [PolyForm Noncommercial License 1.0.0](LICENSE), with the applicability described in [LICENSING.md](LICENSING.md). It is source-available, not an OSI open-source license. Commercial-purpose use outside the license's permitted purposes requires a separate agreement; contact [myblueton@gmail.com](mailto:myblueton@gmail.com).
 
-For commercial-use support, consulting, integrations or collaboration, contact [myblueton@gmail.com](mailto:myblueton@gmail.com). Contacting the project or purchasing services is optional and is not a condition of MIT use. See the [MIT adoption decision](docs/licensing/mit-adoption.md).
+The owner reports sole development and no external distribution or downloads; this has not been independently audited. Any rights already obtained for earlier MIT copies remain unaffected, with the [historical license and notice](LICENSES/MIT-legacy.txt) preserved for that scope. They do not offer the current revision under MIT. Third-party rights and external-contributor commercial permissions remain separate. See the [owner's transition decision](docs/licensing/source-available-adoption.md), [current policy](docs/licensing/product-policy.md) and [third-party notices](THIRD_PARTY_NOTICES.md).

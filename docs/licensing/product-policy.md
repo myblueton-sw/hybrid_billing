@@ -1,23 +1,23 @@
 ---
 type: Licensing Policy
-title: MIT open-source project policy
-description: Defines the owner's MIT licensing decision for original Hybrid Billing material and optional commercial inquiry contact while preserving third-party rights.
+title: Source-available noncommercial project policy
+description: Applies PolyForm Noncommercial terms to the current original project revision with a separate commercial-permission path and preservation of rights already granted for earlier copies.
 status: stable
 sources:
-  - resource: https://opensource.org/license/mit
-  - resource: ./mit-adoption.md
+  - resource: https://polyformproject.org/licenses/noncommercial/1.0.0
+  - resource: ./source-available-adoption.md
 ---
 
-# MIT project policy
+# Current licensing policy
 
-The owner reaffirmed on 2026-10-25 that this source targets customer-operated, self-hosted installations rather than a project-hosted SaaS offering. Companies and tenants are internal installation boundaries. This deployment description does not amend the standard MIT grant or introduce hosting, subscription, activation, registration or paid-commercial-use restrictions. Customer installation readiness and optional service agreements are separate from source-code permission.
+The owner's final decision on 2026-10-28 is to permit noncommercial use and require a separate agreement for commercial use outside the selected license's permitted purposes. The unmodified [PolyForm Noncommercial License 1.0.0](../../LICENSE) supplies those terms for current project-authored original material from this transition revision onward. The [scope document](../../LICENSING.md) defines applicability; this summary does not modify the standard license.
 
-On 2026-10-23 the owner selected the standard MIT License for original Hybrid Billing code and project-authored documentation. The [adoption decision](mit-adoption.md) supersedes the earlier source-available, paid-commercial direction in the v1.16 planning material. The authoritative license grant is [LICENSE](../../LICENSE); the path and third-party boundaries are in [LICENSING.md](../../LICENSING.md).
+The owner reports sole development and no external distribution or downloads. This is an owner statement, not an independent recipient audit. The policy therefore changes the current original project version, rather than limiting the change to future additions. It supersedes the MIT default for revisions covered by the transition. Any rights already obtained for an earlier MIT copy remain unaffected; the [historical MIT license](../../LICENSES/MIT-legacy.txt) preserves that prior scope, not an alternative grant for the current version. No ownership or license change is inferred for third-party material.
 
-MIT permits use, copying, modification, publication, distribution, sublicensing and sale, including commercial use, subject to its copyright/permission notice condition and warranty/liability disclaimer. No license fee, registration, prior approval or email inquiry is required by the project for these MIT rights. Preserve the exact license and relevant notices when distributing copies or substantial portions.
+The selected license expressly permits its stated noncommercial, personal and qualifying organizational purposes. Its organizational permissions, including the named nonprofit/public categories, remain unchanged. Commercial-purpose company operations, MSP offerings, paid services and resale need separate permission when not covered by the applicable grant. A company label alone is not an automatic license-violation finding, and free distribution does not by itself establish noncommercial purpose.
 
-Commercial-use support, consulting, integrations and collaboration inquiries are welcome at [myblueton@gmail.com](mailto:myblueton@gmail.com). Any separately purchased services require their own agreed scope and terms. Such an agreement does not revoke or narrow MIT rights in already licensed original software. No paid-service price, SLA or signed contract is established by publishing this contact.
+The project is described as source-available for this material, not as OSI open source: a noncommercial-purpose restriction does not meet the Open Source Definition. MIT and Apache 2.0 permit commercial use and do not implement the owner's new restriction. Self-hosted installation remains the delivery model; it does not independently change license terms.
 
-The root MIT license does not relicense third-party dependencies, adapted CC BY-SA skills, official CC BY 4.0 data, external planning originals or inherited material with unresolved rights. Preserve source notices and attribution. This decision does not assert a copyright transfer, grant trademark rights or certify ownership clearance for excluded material.
+Contact [myblueton@gmail.com](mailto:myblueton@gmail.com) for a separate commercial-permission agreement. An email inquiry is not a license, payment, signed agreement or SLA. Any agreement must identify the actual rightsholder, authorized material/versions and permitted use; it can cover external contributions only where the necessary authority has been obtained. The [contribution policy](../../CONTRIBUTING.md) does not presume such authority or copyright transfer.
 
-The earlier [product-license draft](product-license-draft.md) and [commercial/evaluation plan](commercial-evaluation.md) are superseded references. They impose no restrictions on the current MIT grant. Historical planning documents are retained as source evidence; current implementation and communications must follow this policy. Product self-hosted delivery, optional future paid services and customer billing features remain distinct from permission to use the source code.
+Third-party licenses, FOCUS data rights, component notices and unresolved ownership boundaries remain as recorded in [LICENSING.md](../../LICENSING.md) and [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md). The earlier commercial draft is not revived. This change introduces no activation check, automatic external reporting, remote lock, fee collection or other enforcement runtime.

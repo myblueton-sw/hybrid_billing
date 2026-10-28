@@ -1,6 +1,6 @@
 # Third-party notices
 
-Hybrid Billing's original material uses MIT as described in [LICENSE](LICENSE) and [LICENSING.md](LICENSING.md). Third-party components and data retain their own licenses. This notice records known referenced or locally adapted assets; it is not a complete dependency SBOM or a claim that local companion assets are included in every clone or release.
+Hybrid Billing's current original-material policy uses [PolyForm Noncommercial 1.0.0](LICENSE); rights already granted for earlier copies retain their [MIT terms](LICENSES/MIT-legacy.txt). Applicability is defined in [LICENSING.md](LICENSING.md). Third-party components and data retain their own licenses. This notice records known referenced or locally adapted assets; it is not a complete dependency SBOM or a claim that local companion assets are included in every clone or release.
 
 | Asset | Source and applicable notice | Scope |
 | --- | --- | --- |
@@ -11,4 +11,4 @@ Hybrid Billing's original material uses MIT as described in [LICENSE](LICENSE) a
 
 Runtime and development dependencies installed through their package managers keep their component licenses and legal notices. Do not replace, remove or overwrite those notices with the project's root LICENSE. A package name in a planning candidate list does not prove adoption or distribution. Before packaging a release, inventory the components and versions actually shipped and carry their required notices with the corresponding material.
 
-The project MIT decision does not alter existing TokenMeter/HawkEye licenses, FOCUS rights, third-party contributor rights or customer-data rights. Commercial inquiries: [myblueton@gmail.com](mailto:myblueton@gmail.com); contacting the project is optional under MIT.
+The source-available transition does not alter existing TokenMeter/HawkEye licenses, FOCUS rights, contributor grants or customer-data rights. Commercial-permission inquiries: [myblueton@gmail.com](mailto:myblueton@gmail.com). Contact remains unnecessary for uses already permitted by an applicable MIT or PolyForm grant. The root license does not confer authority to commercially relicense third-party material.

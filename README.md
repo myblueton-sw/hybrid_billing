@@ -4,6 +4,32 @@ Hybrid Billing is a self-hosted, installation-based billing platform being devel
 
 It is intended for managed service providers, individual enterprises, and corporate groups across cloud, on-premises, data-center, and AI usage sources. Provider cost, customer selling price, and internal allocation remain separate business concepts.
 
+## Why Hybrid Billing exists
+
+**Every cloud bill should be explainable—from the original usage record to the final customer charge.**
+
+Hybrid Billing grew out of Seungwoo Park's experience building cloud management platforms (CMPs) and working with FinOps and billing needs in Korea and the Middle East. Across enterprise cloud teams and managed service providers, the same challenge kept returning: turning provider usage and complex commercial agreements into amounts that billing teams can verify and customers can understand.
+
+A monthly bill brings that challenge into focus. Provider costs must be reconciled, contract discounts applied, credits and exceptions accounted for, and differences resolved before an invoice can be issued. Customers need to see which rates and discounts apply to their services and instances. Billing teams need the evidence behind those answers without rebuilding the calculation in spreadsheets every month.
+
+This project brings those practical lessons into a self-hosted billing platform, with the goal of making transparent, auditable billing accessible to more MSPs and enterprise FinOps teams. Its planned workflow connects source evidence, contract pricing, reconciliation, approval and invoice history. AI assistance is intended to help explain discrepancies and prepare corrections while keeping financial decisions under human review. The implementation status below distinguishes that ambition from what has been verified today.
+
+The source is available for inspection and permitted noncommercial use; commercial-purpose use outside the license's permitted purposes requires a separate agreement, as described under [License and commercial inquiries](#license-and-commercial-inquiries).
+
+## Founder and domain experience
+
+**Seungwoo Park — CMP and FinOps practitioner, former OpsNow CEO and CTO, and founder of Hybrid Billing.**
+
+Seungwoo brings experience from both sides of cloud platforms: the enterprise teams that build and operate them, and the product organizations that turn them into services for customers.
+
+- **Samsung Electronics:** Served as a part leader and technical leader, working on CMP and cloud billing platforms, including collaboration with Megazone and SpaceONE colleagues on platform development.
+- **Bespin Global and OpsNow:** Held technical leadership responsibilities at Bespin Global and served as CEO and CTO of OpsNow, bringing together CMP engineering, product development and SaaS operations. OpsNow's [2024 appointment announcement](https://www.opsnow.io/kr-ko/post/news-008) documents his Samsung background, his move to Bespin Global in 2022 and his responsibility for OpsNow product development and SaaS operations before his CEO appointment.
+- **FinOps practice:** Draws on experience with Korean MSPs and Middle Eastern market needs, alongside personal FinOps Foundation AI and FOCUS certification experience, to shape requirements for cost transparency, contract pricing and billing reconciliation.
+
+Hybrid Billing is his independent effort to turn that accumulated CMP and FinOps experience into a platform that helps operators close the month with confidence and gives customers a clear explanation of what they are being charged. Career and credential details above combine his own account with the linked public announcement. Personal credentials do not constitute certification of this software. The project does not imply endorsement by former employers, collaborators or the FinOps Foundation.
+
+[Connect with Seungwoo on LinkedIn](https://www.linkedin.com/in/seungwoo-park-43452598).
+
 ## Installation model
 
 Customers deploy and operate Hybrid Billing in their own infrastructure. This repository targets customer-operated installations, not a project-hosted SaaS offering. Collection, storage, queries, backup and recovery belong to the customer-controlled installation. Companies, workspaces and tenants describe authorization and data boundaries within an installation; a shared company name never grants cross-tenant access.

@@ -52,7 +52,7 @@ The portable archive is `output/designs/hybrid-billing-v10-modules.zip`. Generat
 
 # Proposed module revisions
 
-[03-onboarding r2: minimal-action AWS FOCUS onboarding](../design-modules/03-onboarding/r2/README.md) defines the connection, AWS approval and background collection flow under HB-49. It is a reviewed design proposal with runtime acceptance pending, not a replacement for frozen v10 pages or an assembled new edition.
+[03-onboarding r2: multi-provider FOCUS onboarding](../design-modules/03-onboarding/r2/README.md) defines common source selection, provider-specific setup, data/schema validation and background collection under HB-49/HB-51. It is a reviewed design proposal with runtime acceptance pending, not a replacement for frozen v10 pages or an assembled new edition.
 
 # HB-50 rule verification
 

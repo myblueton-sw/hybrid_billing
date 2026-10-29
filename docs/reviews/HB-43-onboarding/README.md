@@ -22,4 +22,4 @@ python3 docs/reviews/HB-43-onboarding/build.py
 node docs/reviews/HB-43-onboarding/render.cjs
 ```
 
-Set `HB_PLAYWRIGHT_MODULE` and `HB_CHROMIUM_PATH` for an external browser runtime. Generated manifests, screenshots, render reports and PDFs remain under `output/`, excluded from Git. Inspect rendered PDFs as well as automated bounds. Maintained generators and English requirements are Git-bound. Owner design sign-off, live integrations, runtime security/financial tests and the earlier unresolved CFRC definition remain pending.
+Set `HB_PLAYWRIGHT_MODULE` and `HB_CHROMIUM_PATH` for an external browser runtime. Generated manifests, screenshots, render reports and PDFs remain under `output/`, excluded from Git. Inspect rendered PDFs as well as automated bounds. Maintained generators and English requirements are Git-bound. The owner fixed v10 as the base design on 2026-10-29; [baseline decision and module management](../../design-baseline-v10/README.md) govern subsequent changes. Live integrations, runtime security/financial tests, detailed residual decisions and the earlier unresolved CFRC definition remain pending.

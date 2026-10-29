@@ -119,3 +119,7 @@ Automation is conditional on existing authority: discover authorized resources, 
 Input changes clear approvals and dependent evidence; visible checkboxes follow that invalidation. Scenario changes invalidate tests and return to diagnostics. Publication remains blocked because independent billing-basis evidence is absent. VMware uses approved internal-cost and independent metering/cost comparisons, not a fictional supplier invoice. Runtime implementation requires persisted task ownership, secure identity registry, actual provider discovery/setup/read adapters and canonical authorization/confirmation APIs.
 
 The compact prototype.html remains a separate navigation study while this draft is reviewed; it is not the detailed operational configuration deliverable. No final replacement acceptance is inferred.
+
+# Stack-first and actual-console comparison refinement
+
+[HB-53](console-comparison.md) makes standard AWS resource planning automatic after account/custody/installation verification, while preserving existing/advanced branches and all read/financial gates. The optional comparison panel uses attributed public official screenshots where verified and explicit missing-image states elsewhere. It does not imply every provider screen has been captured or that the prototype performs cloud deployment.

@@ -1,0 +1,495 @@
+{
+  "ticket": "HB-43",
+  "retained": [
+    {
+      "id": "overview",
+      "v9": 1,
+      "v10": 1,
+      "expanded": false
+    },
+    {
+      "id": "contents",
+      "v9": 2,
+      "v10": 2,
+      "expanded": false
+    },
+    {
+      "id": "operations",
+      "v9": 3,
+      "v10": 19,
+      "expanded": false
+    },
+    {
+      "id": "core-index-close",
+      "v9": 4,
+      "v10": 20,
+      "expanded": false
+    },
+    {
+      "id": "customer-detail",
+      "v9": 5,
+      "v10": 21,
+      "expanded": true
+    },
+    {
+      "id": "index-intake",
+      "v9": 6,
+      "v10": 22,
+      "expanded": false
+    },
+    {
+      "id": "v4-inbox",
+      "v9": 7,
+      "v10": 23,
+      "expanded": false
+    },
+    {
+      "id": "v4-extract",
+      "v9": 8,
+      "v10": 24,
+      "expanded": false
+    },
+    {
+      "id": "v4-differences",
+      "v9": 9,
+      "v10": 25,
+      "expanded": false
+    },
+    {
+      "id": "v4-audit",
+      "v9": 10,
+      "v10": 26,
+      "expanded": false
+    },
+    {
+      "id": "core-index-sources",
+      "v9": 11,
+      "v10": 27,
+      "expanded": false
+    },
+    {
+      "id": "core-index-aws",
+      "v9": 12,
+      "v10": 28,
+      "expanded": false
+    },
+    {
+      "id": "core-index-variants",
+      "v9": 13,
+      "v10": 29,
+      "expanded": false
+    },
+    {
+      "id": "index-mapping",
+      "v9": 14,
+      "v10": 30,
+      "expanded": false
+    },
+    {
+      "id": "auto-portfolio",
+      "v9": 15,
+      "v10": 33,
+      "expanded": true
+    },
+    {
+      "id": "supplier-register",
+      "v9": 16,
+      "v10": 34,
+      "expanded": false
+    },
+    {
+      "id": "supplier-aws",
+      "v9": 17,
+      "v10": 37,
+      "expanded": false
+    },
+    {
+      "id": "supplier-azure",
+      "v9": 18,
+      "v10": 38,
+      "expanded": false
+    },
+    {
+      "id": "supplier-gcp",
+      "v9": 19,
+      "v10": 39,
+      "expanded": false
+    },
+    {
+      "id": "supplier-oci",
+      "v9": 20,
+      "v10": 40,
+      "expanded": false
+    },
+    {
+      "id": "supplier-alibaba",
+      "v9": 21,
+      "v10": 41,
+      "expanded": false
+    },
+    {
+      "id": "customer-contract",
+      "v9": 22,
+      "v10": 42,
+      "expanded": false
+    },
+    {
+      "id": "auto-rulebook",
+      "v9": 23,
+      "v10": 43,
+      "expanded": false
+    },
+    {
+      "id": "auto-editor",
+      "v9": 24,
+      "v10": 44,
+      "expanded": false
+    },
+    {
+      "id": "auto-exclusions",
+      "v9": 25,
+      "v10": 45,
+      "expanded": false
+    },
+    {
+      "id": "auto-mapping",
+      "v9": 26,
+      "v10": 46,
+      "expanded": false
+    },
+    {
+      "id": "auto-bulk",
+      "v9": 27,
+      "v10": 47,
+      "expanded": false
+    },
+    {
+      "id": "auto-exceptions",
+      "v9": 28,
+      "v10": 48,
+      "expanded": false
+    },
+    {
+      "id": "auto-activation",
+      "v9": 29,
+      "v10": 49,
+      "expanded": false
+    },
+    {
+      "id": "sales-policy",
+      "v9": 30,
+      "v10": 50,
+      "expanded": false
+    },
+    {
+      "id": "sales-impact",
+      "v9": 31,
+      "v10": 51,
+      "expanded": false
+    },
+    {
+      "id": "core-index-allocation",
+      "v9": 32,
+      "v10": 52,
+      "expanded": true
+    },
+    {
+      "id": "core-index-pricing",
+      "v9": 33,
+      "v10": 53,
+      "expanded": false
+    },
+    {
+      "id": "index-pricing",
+      "v9": 34,
+      "v10": 54,
+      "expanded": false
+    },
+    {
+      "id": "index-seats",
+      "v9": 35,
+      "v10": 55,
+      "expanded": false
+    },
+    {
+      "id": "index-commitments",
+      "v9": 36,
+      "v10": 56,
+      "expanded": false
+    },
+    {
+      "id": "index-fx",
+      "v9": 37,
+      "v10": 57,
+      "expanded": false
+    },
+    {
+      "id": "auto-job",
+      "v9": 38,
+      "v10": 58,
+      "expanded": false
+    },
+    {
+      "id": "auto-trace",
+      "v9": 39,
+      "v10": 59,
+      "expanded": true
+    },
+    {
+      "id": "core-reconciliation-case",
+      "v9": 40,
+      "v10": 62,
+      "expanded": false
+    },
+    {
+      "id": "core-reconciliation-recalc",
+      "v9": 41,
+      "v10": 63,
+      "expanded": false
+    },
+    {
+      "id": "index-runs",
+      "v9": 42,
+      "v10": 64,
+      "expanded": false
+    },
+    {
+      "id": "core-reconciliation-approval",
+      "v9": 43,
+      "v10": 65,
+      "expanded": false
+    },
+    {
+      "id": "index-approval",
+      "v9": 44,
+      "v10": 66,
+      "expanded": false
+    },
+    {
+      "id": "assignment-policy",
+      "v9": 45,
+      "v10": 67,
+      "expanded": false
+    },
+    {
+      "id": "review-issue",
+      "v9": 46,
+      "v10": 68,
+      "expanded": false
+    },
+    {
+      "id": "document-history",
+      "v9": 47,
+      "v10": 69,
+      "expanded": false
+    },
+    {
+      "id": "core-reconciliation-issued",
+      "v9": 48,
+      "v10": 70,
+      "expanded": false
+    },
+    {
+      "id": "erp",
+      "v9": 49,
+      "v10": 71,
+      "expanded": false
+    },
+    {
+      "id": "auto-history",
+      "v9": 50,
+      "v10": 72,
+      "expanded": false
+    },
+    {
+      "id": "v4-monthly",
+      "v9": 51,
+      "v10": 73,
+      "expanded": false
+    },
+    {
+      "id": "v4-month",
+      "v9": 52,
+      "v10": 74,
+      "expanded": false
+    },
+    {
+      "id": "v4-variance",
+      "v9": 53,
+      "v10": 75,
+      "expanded": false
+    },
+    {
+      "id": "core-reconciliation-correction",
+      "v9": 54,
+      "v10": 76,
+      "expanded": false
+    },
+    {
+      "id": "index-correction",
+      "v9": 55,
+      "v10": 77,
+      "expanded": false
+    },
+    {
+      "id": "auto-customer",
+      "v9": 56,
+      "v10": 78,
+      "expanded": true
+    },
+    {
+      "id": "core-customer-overview",
+      "v9": 57,
+      "v10": 80,
+      "expanded": false
+    },
+    {
+      "id": "v4-customer-months",
+      "v9": 58,
+      "v10": 81,
+      "expanded": false
+    },
+    {
+      "id": "customer-history",
+      "v9": 59,
+      "v10": 82,
+      "expanded": false
+    },
+    {
+      "id": "core-customer-invoice",
+      "v9": 60,
+      "v10": 83,
+      "expanded": false
+    },
+    {
+      "id": "core-customer-usage",
+      "v9": 61,
+      "v10": 84,
+      "expanded": false
+    },
+    {
+      "id": "customer-inquiry",
+      "v9": 62,
+      "v10": 85,
+      "expanded": false
+    },
+    {
+      "id": "customer-response",
+      "v9": 63,
+      "v10": 86,
+      "expanded": false
+    },
+    {
+      "id": "core-reconciliation-setup",
+      "v9": 64,
+      "v10": 87,
+      "expanded": false
+    },
+    {
+      "id": "license-modes",
+      "v9": 65,
+      "v10": 88,
+      "expanded": false
+    },
+    {
+      "id": "license-status",
+      "v9": 66,
+      "v10": 89,
+      "expanded": false
+    }
+  ],
+  "added": [
+    {
+      "id": "entry-start",
+      "v10": 3
+    },
+    {
+      "id": "entry-bootstrap",
+      "v10": 4
+    },
+    {
+      "id": "entry-invite",
+      "v10": 5
+    },
+    {
+      "id": "entry-login",
+      "v10": 6
+    },
+    {
+      "id": "entry-challenge",
+      "v10": 7
+    },
+    {
+      "id": "entry-scope",
+      "v10": 8
+    },
+    {
+      "id": "entry-roles",
+      "v10": 9
+    },
+    {
+      "id": "entry-sessions",
+      "v10": 10
+    },
+    {
+      "id": "setup-progress",
+      "v10": 11
+    },
+    {
+      "id": "setup-profile",
+      "v10": 12
+    },
+    {
+      "id": "setup-attribution",
+      "v10": 13
+    },
+    {
+      "id": "setup-connectors",
+      "v10": 14
+    },
+    {
+      "id": "setup-readtest",
+      "v10": 15
+    },
+    {
+      "id": "setup-schedule",
+      "v10": 16
+    },
+    {
+      "id": "setup-first",
+      "v10": 17
+    },
+    {
+      "id": "setup-readiness",
+      "v10": 18
+    },
+    {
+      "id": "cost-pivot",
+      "v10": 31
+    },
+    {
+      "id": "raw-explorer",
+      "v10": 32
+    },
+    {
+      "id": "marketplace-register",
+      "v10": 35
+    },
+    {
+      "id": "marketplace-commitment",
+      "v10": 36
+    },
+    {
+      "id": "ai-cost-waterfall",
+      "v10": 60
+    },
+    {
+      "id": "cost-differences",
+      "v10": 61
+    },
+    {
+      "id": "ai-invoice-detail",
+      "v10": 79
+    }
+  ]
+}

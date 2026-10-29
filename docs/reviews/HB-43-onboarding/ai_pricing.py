@@ -1,0 +1,28 @@
+def additions(locale):
+    t = lambda en, ko: ko if locale == 'ko' else en
+
+    def table(head, rows):
+        return '<div class="table-scroll" tabindex="0"><table><thead><tr>' + ''.join('<th>'+t(*h)+'</th>' for h in head) + '</tr></thead><tbody>' + ''.join('<tr>'+''.join('<td>'+c+'</td>' for c in row)+'</tr>' for row in rows) + '</tbody></table></div>'
+
+    def note(en, ko):
+        return '<p class="auto-note">'+t(en, ko)+'</p>'
+
+    def bridge():
+        return table([('Stage','적용 단계'),('Basis / rate','기준 금액 / 할인율'),('Reduction · USD','할인액 · USD'),('Remaining · USD','적용 후 · USD')],[[t('Agreed list basis','합의한 정가 기준'),'100 GPU h × USD 10/h','—','1,000.00'],[t('CSP commitment benefit','CSP 약정 할인'),'1,000.00 × 10%','−100.00','900.00'],[t('Google additional benefit · synthetic','Google 추가 할인 · 합성 예시'),'900.00 × 5%','−45.00','855.00'],[t('MSP special discount','MSP 특별 할인'),'855.00 × 5%','−42.75','812.25']])
+
+    identity = '<p class="lead">AI-DEMO-01 · 2026-10 · USD · gpu-ai-01 · 100 GPU h · '+t('independent synthetic case','독립 합성 사례')+'</p>'
+    body = '<h1>'+t('AI instance cost and stacked discounts','AI 인스턴스 원가·단계별 할인')+'</h1>'+identity
+    body += '<div class="auto-summary"><div>'+t('Supplier acquisition cost','MSP 실제 매입 원가')+'<strong>800.00</strong></div><div>'+t('Selling basis','판매 기준액')+'<strong>1,000.00</strong></div><div>'+t('Total selling discount','판매 할인 합계')+'<strong>−187.75</strong></div><div>'+t('Customer pretax','고객 제공가 · 세전')+'<strong>812.25</strong></div></div>'
+    body += bridge()
+    body += '<p>'+t('Net selling rate USD 8.1225/GPU h. Effective selling discount 18.775%, not 20%. Gross difference USD 12.25 against separately confirmed procurement USD 800.00; this is not net profit. Round each stage half-up to two USD decimals; retain unit-rate precision. Tax excluded, treatment pending; no FX/credits in this example.','최종 판매 단가 USD 8.1225/GPU h. 실효 판매 할인율은 18.775%이며 20%가 아닙니다. 별도 확인된 매입 원가 USD 800.00 대비 차액은 USD 12.25이며 순이익이 아닙니다. 단계별 USD 소수 2자리 반올림이며 단가 정밀도는 보존합니다. 세금은 제외되었고 처리 기준 확인 대기입니다. 환율·크레딧은 없습니다.')+'</p>'
+    body += table([('Evidence gate','근거 확인'),('Required state in this illustration','이 예시의 전제')],[[t('Procurement evidence','매입 근거'),t('Synthetic supplier net line: USD800.00; never derived from selling percentages','합성 공급자 순원가 행 USD 800.00 · 판매 할인율로 역산하지 않음')],[t('Benefit allocation / order','혜택 배부 / 순서'),t('Three independently approved selling rules; precise basis and pass-through decision fixed','독립 승인된 판매 규칙 3개 · 기준액·고객 전달 여부 고정')],[t('Already applied in source','원천 기반영 할인'),t('Mark included benefit IDs; never deduct again from net procurement','포함된 혜택 ID 표시 · 순원가에서 중복 차감 금지')],[t('Conflict / missing / partial','충돌 / 누락 / 일부 수집'),t('Block affected calculation; do not substitute 0% or fabricate allocation','해당 계산 보류 · 0% 대체·임의 배부 금지')],[t('Customer cost disclosure','고객 원가 공개'),t('Explicit recipient, field, source and version approval required; default deny','수신 고객·필드·원천·버전별 명시적 공개 승인 필요 · 기본 비공개')]])
+    body += note('Illustrative negotiated rules, not a claim about Google or any CSP discount eligibility. GPU hours, tokens, requests, storage and support require separate SKU/component units; never add incompatible quantities. Search and invoice exports use pinned source/contract/calculation revisions.','예시 계약 규칙이며 Google 또는 특정 CSP의 실제 할인 자격을 주장하지 않습니다. GPU 시간·토큰·요청·저장·지원료는 SKU·비용 항목별 단위를 분리하고 서로 다른 수량을 합산하지 않습니다. 검색·인보이스 내역은 고정 원천·계약·계산 버전을 사용합니다.')
+    body += '<a href="#ai-invoice-detail">'+t('Review permitted customer invoice detail','허용된 고객 인보이스 상세 보기')+' →</a>'
+    operator = body
+    body = '<h1>'+t('Your AI usage invoice and discount detail','내 AI 사용료 인보이스·할인 상세')+'</h1>'+identity
+    body += '<div class="auto-form"><label>'+t('Product / instance search','제품 / 인스턴스 검색')+'<input value="gpu-ai-01"></label><label>'+t('Statement / status','명세서 / 상태')+'<input value="DEMO-AI-OCT-D1 · '+t('Draft, not issued','초안 · 미발행')+'"></label></div>'
+    body += '<h2>'+t('Estimated pretax charge: USD 812.25','예상 세전 청구액 USD 812.25의 근거')+'</h2>'+bridge()
+    body += table([('Summary','요약'),('Amount / evidence','금액 / 근거')],[[t('Total discount / effective rate','총 할인액 / 실효 할인율'),'USD 187.75 / 18.775%'],[t('Net unit rate / pretax subtotal','최종 단가 / 세전 소계'),'USD 8.1225/GPU h / USD 812.25'],[t('Tax / amount payable','세금 / 최종 납부액'),t('Not determined; issuance blocked until approved tax treatment','미확정 · 세금 처리 승인 전 발행 보류')],[t('Disclosed procurement cost','공개 승인된 MSP 매입 원가'),'USD 800.00 · '+t('open-book permission assumed for this example','이 예시에서 원가 공개 권한 승인 가정')],[t('Contract / price revision','계약 / 요율 버전'),'DEMO-AI-SELL-R1 · 2026-10'],[t('Billing detail package','청구 상세 내역'),t('Invoice PDF + resource/SKU CSV/XLSX: quantity, units, basis, each discount, tax and final amount','인보이스 PDF + 리소스/SKU별 CSV/XLSX: 수량·단위·기준액·단계별 할인·세금·최종 금액')]])
+    body += '<div class="auto-actions"><button disabled>'+t('Invoice PDF · design only','인보이스 PDF · 설계 예시')+'</button><button disabled>'+t('Detailed CSV / XLSX · design only','상세 CSV / XLSX · 설계 예시')+'</button></div>'
+    body += note('Separate synthetic case; not part of the earlier USD1,535 estimate. Both customer disclosure and selling rules are assumed approved solely to illustrate this view. Without cost permission the acquisition cost field is omitted from screen, search and exports. No private supplier contract or another customer is included. Production exports must reconcile with the same frozen invoice revision and retain corrections.','앞선 USD 1,535 예상액과 별개인 합성 사례입니다. 이 화면 설명을 위해 고객 공개·판매 조건 승인을 가정했습니다. 원가 공개 권한이 없으면 화면·검색·내보내기에서 매입 원가를 제외합니다. 공급자 비공개 계약·다른 고객 정보는 포함하지 않습니다. 실제 내보내기는 동일한 고정 인보이스 버전과 대사하고 정정 이력을 보존해야 합니다.')
+    return {'ai-cost-waterfall': operator, 'ai-invoice-detail': body}

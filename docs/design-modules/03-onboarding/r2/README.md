@@ -52,6 +52,8 @@ The owner requires actual operable configuration screens, not summary cards. [Co
 
 [Stack-first design and screenshot provenance](console-comparison.md) correct the default AWS experience: account/custody/installation prerequisite → generated Stack plan → customer AWS approval → automatic result inspection. Role/bucket/export inputs remain in existing/advanced paths. The detailed prototype now includes an optional official-console comparison panel. Historical examples and missing screenshots are explicit; no live template launch or complete current-console coverage is claimed.
 
+**Owner review status:** keep the current functional draft; detailed visual refinement is deferred. Match the product-wide look and feel without the perceived Claude-style presentation, and later design guidance around the customer working in the actual provider console. Reference screenshots alone are insufficient. See [recorded feedback](console-comparison.md#owner-feedback-keep-this-draft-and-defer-visual-refinement).
+
 # Preconditions that the product must not hide
 
 The installation administrator first configures a customer-controlled workload identity able to request short-lived AWS role sessions. AWS-hosted workload roles are one candidate; an off-AWS installation needs a separately verified federation/credential-provider setup. There is no vendor-operated central AWS account, no collection of browser AWS credentials and no pasted access-key pair in this flow. An installation lacking this prerequisite shows a targeted administrator handoff before launch. The short path does not pretend this one-time installation work is free or already implemented.

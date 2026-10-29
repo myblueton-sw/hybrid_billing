@@ -48,3 +48,12 @@ Direct image URLs are maintained once in connection-setup.html's consoleEvidence
 # Remaining acceptance
 
 Current actual-console capture coverage is incomplete for GCP, OCI, IBM, VMware and some permission steps. Acquiring current authorized sanitized screenshots is an explicit requirement before claiming complete visual coverage; image absence is not waived. Real template hosting/deployment, narrow permission testing, current console walkthroughs and Outputs read-back are NOT_RUN. Screenshots must be refreshed when the documented provider flow changes, with source/date and mismatches re-reviewed.
+
+# Owner feedback: keep this draft and defer visual refinement
+
+The owner explicitly asked to keep the current draft and record the following requirements for later detailed work. This is not final visual acceptance and does not authorize another redesign in this change.
+
+- Remove the perceived Claude-style presentation and align onboarding with the product-wide look and feel. The current layout is a functional study, not an approved visual system.
+- Design the experience around the customer viewing and working through the actual provider console while following setup. A panel of reference screenshots alone does not satisfy that intended experience.
+- Define the later console-opening, side-by-side guidance, step synchronization, return/resume and verification interaction in detail. Do not infer permission to control a customer's live console or capture private account data.
+- Retain the present implementation as a held draft. The owner's instruction to continue resumes documentation and integration of this work; it does not revoke the explicit deferral of detailed visual design.

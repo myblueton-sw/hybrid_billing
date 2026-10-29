@@ -62,3 +62,5 @@ Root browser QA: PASS for 160 provider/route/scenario/width paths and 928 observ
 Local evidence: output/HB53/ui-check.json, comparison-check.json, aws-stack-comparison.png and alibaba-mobile-comparison.png. Document QA covers affected relative links, OKF metadata, staged scope and whitespace. Runtime deployment, hosted template, minimum IAM, DescribeStacks/Outputs retrieval, actual source collection and current authenticated console walkthroughs remain NOT_RUN. Current actual screenshot coverage is incomplete as explicitly catalogued in console-comparison.md; no substitute images or final-design acceptance are inferred.
 
 Reviewed HTML SHA-256: `9127f97abc141de74903402be89866b24670e2ce765833ebdf934bbbe70ab2ee`.
+
+Owner feedback after preview: current draft retained, not visually accepted. Product-wide look and feel and actual customer-console guided interaction are explicitly deferred requirements in console-comparison.md. No additional visual changes were made in response to the note-only instruction.

@@ -1,0 +1,616 @@
+{
+  "ticket": "HB-44",
+  "baseline": "v10",
+  "owner_baseline_fixed": "2026-10-29",
+  "source_commit": "e955befffa54a9cefb392984ab7716a67c8e05b0",
+  "checklist": "../reviews/HB-43-onboarding/checklist.md",
+  "runtime_acceptance": "unchanged-open",
+  "artifacts": {
+    "en": {
+      "path": "output/pdf/hybrid-billing-full-design-v10.pdf",
+      "sha256": "840ba486da15863bf120bc1750ce03ae664966f2a4689e8dc638e121a68aa190",
+      "pages": 89
+    },
+    "ko": {
+      "path": "output/pdf/hybrid-billing-full-design-v10-ko.pdf",
+      "sha256": "b6816cf40225422acf7090ff2967d98dfcd9b14464741dc01a361776e86b6329",
+      "pages": 89
+    }
+  },
+  "modules": [
+    {
+      "id": "01-overview",
+      "chapter": "overview",
+      "title": {
+        "en": "Review guide",
+        "ko": "전체 검토 안내"
+      },
+      "revision": "r1",
+      "status": "baseline-fixed",
+      "checklist_refs": [
+        "UX-01"
+      ],
+      "pages": [
+        {
+          "id": "overview",
+          "baseline_page": 1
+        },
+        {
+          "id": "contents",
+          "baseline_page": 2
+        }
+      ]
+    },
+    {
+      "id": "02-access",
+      "chapter": "access",
+      "title": {
+        "en": "Registration and permissions",
+        "ko": "가입·로그인·권한"
+      },
+      "revision": "r1",
+      "status": "baseline-fixed",
+      "checklist_refs": [
+        "BL-01",
+        "BL-05",
+        "AC-*"
+      ],
+      "pages": [
+        {
+          "id": "entry-start",
+          "baseline_page": 3
+        },
+        {
+          "id": "entry-bootstrap",
+          "baseline_page": 4
+        },
+        {
+          "id": "entry-invite",
+          "baseline_page": 5
+        },
+        {
+          "id": "entry-login",
+          "baseline_page": 6
+        },
+        {
+          "id": "entry-challenge",
+          "baseline_page": 7
+        },
+        {
+          "id": "entry-scope",
+          "baseline_page": 8
+        },
+        {
+          "id": "entry-roles",
+          "baseline_page": 9
+        },
+        {
+          "id": "entry-sessions",
+          "baseline_page": 10
+        }
+      ]
+    },
+    {
+      "id": "03-onboarding",
+      "chapter": "onboarding",
+      "title": {
+        "en": "Connection and collection",
+        "ko": "연결·수집·온보딩"
+      },
+      "revision": "r1",
+      "status": "baseline-fixed",
+      "checklist_refs": [
+        "ON-*",
+        "BL-07",
+        "EX-10"
+      ],
+      "pages": [
+        {
+          "id": "setup-progress",
+          "baseline_page": 11
+        },
+        {
+          "id": "setup-profile",
+          "baseline_page": 12
+        },
+        {
+          "id": "setup-attribution",
+          "baseline_page": 13
+        },
+        {
+          "id": "setup-connectors",
+          "baseline_page": 14
+        },
+        {
+          "id": "setup-readtest",
+          "baseline_page": 15
+        },
+        {
+          "id": "setup-schedule",
+          "baseline_page": 16
+        },
+        {
+          "id": "setup-first",
+          "baseline_page": 17
+        },
+        {
+          "id": "setup-readiness",
+          "baseline_page": 18
+        }
+      ]
+    },
+    {
+      "id": "04-work",
+      "chapter": "work",
+      "title": {
+        "en": "Monthly operations and customers",
+        "ko": "월별 운영·고객 관리"
+      },
+      "revision": "r1",
+      "status": "baseline-fixed",
+      "checklist_refs": [
+        "BL-02",
+        "BL-03",
+        "BL-04",
+        "CT-01",
+        "CT-02",
+        "CT-03",
+        "CT-04",
+        "CT-05"
+      ],
+      "pages": [
+        {
+          "id": "operations",
+          "baseline_page": 19
+        },
+        {
+          "id": "core-index-close",
+          "baseline_page": 20
+        },
+        {
+          "id": "customer-detail",
+          "baseline_page": 21
+        }
+      ]
+    },
+    {
+      "id": "05-sources",
+      "chapter": "sources",
+      "title": {
+        "en": "Source evidence and cost exploration",
+        "ko": "원천·PDF·비용 탐색"
+      },
+      "revision": "r1",
+      "status": "baseline-fixed",
+      "checklist_refs": [
+        "BL-07",
+        "BL-08",
+        "BL-09",
+        "BL-10",
+        "EX-01",
+        "EX-02"
+      ],
+      "pages": [
+        {
+          "id": "index-intake",
+          "baseline_page": 22
+        },
+        {
+          "id": "v4-inbox",
+          "baseline_page": 23
+        },
+        {
+          "id": "v4-extract",
+          "baseline_page": 24
+        },
+        {
+          "id": "v4-differences",
+          "baseline_page": 25
+        },
+        {
+          "id": "v4-audit",
+          "baseline_page": 26
+        },
+        {
+          "id": "core-index-sources",
+          "baseline_page": 27
+        },
+        {
+          "id": "core-index-aws",
+          "baseline_page": 28
+        },
+        {
+          "id": "core-index-variants",
+          "baseline_page": 29
+        },
+        {
+          "id": "index-mapping",
+          "baseline_page": 30
+        },
+        {
+          "id": "cost-pivot",
+          "baseline_page": 31
+        },
+        {
+          "id": "raw-explorer",
+          "baseline_page": 32
+        }
+      ]
+    },
+    {
+      "id": "06-contracts",
+      "chapter": "contracts",
+      "title": {
+        "en": "Contracts, pricing and Marketplace",
+        "ko": "계약·요율·Marketplace"
+      },
+      "revision": "r1",
+      "status": "baseline-fixed",
+      "checklist_refs": [
+        "CT-*",
+        "PR-01",
+        "PR-02",
+        "PR-03",
+        "PR-04",
+        "PR-05",
+        "EX-06",
+        "EX-07",
+        "EX-08",
+        "EX-09"
+      ],
+      "pages": [
+        {
+          "id": "auto-portfolio",
+          "baseline_page": 33
+        },
+        {
+          "id": "supplier-register",
+          "baseline_page": 34
+        },
+        {
+          "id": "marketplace-register",
+          "baseline_page": 35
+        },
+        {
+          "id": "marketplace-commitment",
+          "baseline_page": 36
+        },
+        {
+          "id": "supplier-aws",
+          "baseline_page": 37
+        },
+        {
+          "id": "supplier-azure",
+          "baseline_page": 38
+        },
+        {
+          "id": "supplier-gcp",
+          "baseline_page": 39
+        },
+        {
+          "id": "supplier-oci",
+          "baseline_page": 40
+        },
+        {
+          "id": "supplier-alibaba",
+          "baseline_page": 41
+        },
+        {
+          "id": "customer-contract",
+          "baseline_page": 42
+        },
+        {
+          "id": "auto-rulebook",
+          "baseline_page": 43
+        },
+        {
+          "id": "auto-editor",
+          "baseline_page": 44
+        },
+        {
+          "id": "auto-exclusions",
+          "baseline_page": 45
+        },
+        {
+          "id": "auto-mapping",
+          "baseline_page": 46
+        },
+        {
+          "id": "auto-bulk",
+          "baseline_page": 47
+        },
+        {
+          "id": "auto-exceptions",
+          "baseline_page": 48
+        },
+        {
+          "id": "auto-activation",
+          "baseline_page": 49
+        },
+        {
+          "id": "sales-policy",
+          "baseline_page": 50
+        },
+        {
+          "id": "sales-impact",
+          "baseline_page": 51
+        },
+        {
+          "id": "core-index-allocation",
+          "baseline_page": 52
+        },
+        {
+          "id": "core-index-pricing",
+          "baseline_page": 53
+        },
+        {
+          "id": "index-pricing",
+          "baseline_page": 54
+        },
+        {
+          "id": "index-seats",
+          "baseline_page": 55
+        },
+        {
+          "id": "index-commitments",
+          "baseline_page": 56
+        },
+        {
+          "id": "index-fx",
+          "baseline_page": 57
+        }
+      ]
+    },
+    {
+      "id": "07-reconcile",
+      "chapter": "reconcile",
+      "title": {
+        "en": "Calculation and reconciliation",
+        "ko": "계산·교정·검수"
+      },
+      "revision": "r1",
+      "status": "baseline-fixed",
+      "checklist_refs": [
+        "BL-09",
+        "PR-09",
+        "PR-10",
+        "PR-11",
+        "PR-13",
+        "EX-03",
+        "EX-04",
+        "EX-05"
+      ],
+      "pages": [
+        {
+          "id": "auto-job",
+          "baseline_page": 58
+        },
+        {
+          "id": "auto-trace",
+          "baseline_page": 59
+        },
+        {
+          "id": "ai-cost-waterfall",
+          "baseline_page": 60
+        },
+        {
+          "id": "cost-differences",
+          "baseline_page": 61
+        },
+        {
+          "id": "core-reconciliation-case",
+          "baseline_page": 62
+        },
+        {
+          "id": "core-reconciliation-recalc",
+          "baseline_page": 63
+        },
+        {
+          "id": "index-runs",
+          "baseline_page": 64
+        },
+        {
+          "id": "core-reconciliation-approval",
+          "baseline_page": 65
+        },
+        {
+          "id": "index-approval",
+          "baseline_page": 66
+        }
+      ]
+    },
+    {
+      "id": "08-issue",
+      "chapter": "issue",
+      "title": {
+        "en": "Issuance and ERP",
+        "ko": "발행·ERP"
+      },
+      "revision": "r1",
+      "status": "baseline-fixed",
+      "checklist_refs": [
+        "BL-05",
+        "CT-06",
+        "CT-07",
+        "CT-08"
+      ],
+      "pages": [
+        {
+          "id": "assignment-policy",
+          "baseline_page": 67
+        },
+        {
+          "id": "review-issue",
+          "baseline_page": 68
+        },
+        {
+          "id": "document-history",
+          "baseline_page": 69
+        },
+        {
+          "id": "core-reconciliation-issued",
+          "baseline_page": 70
+        },
+        {
+          "id": "erp",
+          "baseline_page": 71
+        }
+      ]
+    },
+    {
+      "id": "09-history",
+      "chapter": "history",
+      "title": {
+        "en": "Monthly history and corrections",
+        "ko": "월별 이력·정정"
+      },
+      "revision": "r1",
+      "status": "baseline-fixed",
+      "checklist_refs": [
+        "BL-06",
+        "PR-15"
+      ],
+      "pages": [
+        {
+          "id": "auto-history",
+          "baseline_page": 72
+        },
+        {
+          "id": "v4-monthly",
+          "baseline_page": 73
+        },
+        {
+          "id": "v4-month",
+          "baseline_page": 74
+        },
+        {
+          "id": "v4-variance",
+          "baseline_page": 75
+        },
+        {
+          "id": "core-reconciliation-correction",
+          "baseline_page": 76
+        },
+        {
+          "id": "index-correction",
+          "baseline_page": 77
+        }
+      ]
+    },
+    {
+      "id": "10-customer",
+      "chapter": "customer",
+      "title": {
+        "en": "Customer portal",
+        "ko": "고객 포털"
+      },
+      "revision": "r1",
+      "status": "baseline-fixed",
+      "checklist_refs": [
+        "BL-01",
+        "PR-06",
+        "PR-07",
+        "PR-08",
+        "PR-12",
+        "PR-14",
+        "PR-15"
+      ],
+      "pages": [
+        {
+          "id": "auto-customer",
+          "baseline_page": 78
+        },
+        {
+          "id": "ai-invoice-detail",
+          "baseline_page": 79
+        },
+        {
+          "id": "core-customer-overview",
+          "baseline_page": 80
+        },
+        {
+          "id": "v4-customer-months",
+          "baseline_page": 81
+        },
+        {
+          "id": "customer-history",
+          "baseline_page": 82
+        },
+        {
+          "id": "core-customer-invoice",
+          "baseline_page": 83
+        },
+        {
+          "id": "core-customer-usage",
+          "baseline_page": 84
+        },
+        {
+          "id": "customer-inquiry",
+          "baseline_page": 85
+        },
+        {
+          "id": "customer-response",
+          "baseline_page": 86
+        }
+      ]
+    },
+    {
+      "id": "11-settings",
+      "chapter": "settings",
+      "title": {
+        "en": "Configuration and license",
+        "ko": "설정·라이선스"
+      },
+      "revision": "r1",
+      "status": "baseline-fixed",
+      "checklist_refs": [
+        "LC-01",
+        "LC-02"
+      ],
+      "pages": [
+        {
+          "id": "core-reconciliation-setup",
+          "baseline_page": 87
+        },
+        {
+          "id": "license-modes",
+          "baseline_page": 88
+        },
+        {
+          "id": "license-status",
+          "baseline_page": 89
+        }
+      ]
+    },
+    {
+      "id": "12-vmware-onprem",
+      "chapter": "vmware-onprem",
+      "title": {
+        "en": "VMware and on-premises detail",
+        "ko": "VMware·온프레미스 상세"
+      },
+      "revision": null,
+      "status": "planned-gap",
+      "checklist_refs": [
+        "BL-07",
+        "CT-09",
+        "ON-02",
+        "ON-03"
+      ],
+      "pages": [],
+      "existing_context": [
+        "setup-connectors",
+        "core-index-allocation",
+        "core-index-variants"
+      ],
+      "gaps": [
+        "vCenter endpoint and scoped credential setup",
+        "inventory-to-customer attribution",
+        "meter collection cadence and missing telemetry",
+        "approved CPU/memory/storage cost and allocation basis",
+        "VM resize, lifecycle, shared capacity and historical rate versions",
+        "reconciliation and customer-visible VMware billing detail"
+      ]
+    }
+  ]
+}

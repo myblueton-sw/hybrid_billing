@@ -32,3 +32,14 @@ The owner explicitly authorized HB-5 to create the first remote commit with the 
 ## Provenance
 
 Sequence inspected in HawkEye `AGENTS.md` and `.claude/rules/workflow.md`, and TokenMeter `AGENTS.md`, `.claude/rules/linear-workflow.md` and `.claude/rules/git-workflow.md`. Adopt the shared ticket, machine, branch, review, PR and merge-read-back discipline; use Hybrid Billing's actual board, permissions, planning gate and inherited model environment.
+
+## Final document cleanup
+
+The owner requires superseded document and design copies to be removed after the replacement is fixed as final. Under [HB-50](https://linear.app/hybrid-billing/issue/HB-50/document-final-document-cleanup-and-no-comment-rules), finalization includes:
+
+1. Identify the exact accepted replacement and the old files/requirements it replaces; a newer filename or a draft does not establish replacement. Preserve distinct modules and any requirements not yet carried forward.
+2. Update current links, indexes, manifests and build/export inputs to the accepted version. Historical references that must identify the old evidence use an immutable Git revision/path.
+3. Remove the superseded maintained documents and their obsolete generated copies from the current tree. Do not create archive/old/version-copy folders to evade removal. Record deletions in the ticket and PR; Git history supplies prior tracked versions without rewriting history.
+4. Verify remaining local links and current generation inputs; confirm that no unreplaced requirements or unrelated user work were removed. Identify any untracked old artifact before deletion rather than pretending Git can recover it.
+
+Original planning evidence, licensing notices, distinct decision/review/validation records and required third-party material are not automatically obsolete because they are older. They are retained for their independent purpose, not as duplicate versions of the final deliverable. Frozen baselines remain unchanged while active; once actually superseded for an accepted scope, this cleanup rule replaces indefinite retention in the current tree. Partial module acceptance does not delete an unreplaced complete edition.

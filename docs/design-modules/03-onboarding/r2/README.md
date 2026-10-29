@@ -48,6 +48,10 @@ The prototype field table illustrates common FOCUS concepts, not a certified pro
 
 The owner requires actual operable configuration screens, not summary cards. [Conditional workflow](setup-workflow.md) and [provider guides](setup-workflow.md#provider-guides) now define inputs, owners, prerequisites, recovery and release gates. The earlier three-surface prototype is incomplete for this requirement. The one-account AWS path below applies only after every installation/default-profile prerequisite is verified; it is not the general setup experience. The [detailed configuration prototype](connection-setup.html) contains seven operable surfaces with provider-specific forms, conditional setup, administrator handoff and simulated diagnostics. It does not claim live provider calls. The earlier prototype.html remains the distinct compact navigation review, not the detailed configuration screen.
 
+# Stack-first setup and console comparison (HB-53)
+
+[Stack-first design and screenshot provenance](console-comparison.md) correct the default AWS experience: account/custody/installation prerequisite → generated Stack plan → customer AWS approval → automatic result inspection. Role/bucket/export inputs remain in existing/advanced paths. The detailed prototype now includes an optional official-console comparison panel. Historical examples and missing screenshots are explicit; no live template launch or complete current-console coverage is claimed.
+
 # Preconditions that the product must not hide
 
 The installation administrator first configures a customer-controlled workload identity able to request short-lived AWS role sessions. AWS-hosted workload roles are one candidate; an off-AWS installation needs a separately verified federation/credential-provider setup. There is no vendor-operated central AWS account, no collection of browser AWS credentials and no pasted access-key pair in this flow. An installation lacking this prerequisite shows a targeted administrator handoff before launch. The short path does not pretend this one-time installation work is free or already implemented.

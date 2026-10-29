@@ -41,3 +41,7 @@ Timeout after create → inspect the same stack/export before retry. Trust/SCP/b
 - [Region setup](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/data-exports.html), [migration/history](https://docs.aws.amazon.com/guidance/latest/cloud-intelligence-dashboards/migration-to-focus-1-2.html).
 
 Live acceptance NOT_RUN: same/cross-account role and storage, region/partition, policy preservation, full manifest, revoked trust, cumulative replay, independent totals, backfill and cleanup. Documentation does not prove a deployable template exists.
+
+# Default screen path
+
+[HB-53 Stack-first design](../console-comparison.md) makes the standard new route automatic: derive proposed resources, skip manual source-field entry and inspect generated outputs after customer approval. The input table above describes the full configuration contract, not mandatory freeform fields on the default first screen. Existing and advanced routes retain those controls. Narrow DescribeStacks permission or an explicit fallback must be verified before automatic output retrieval is claimed.

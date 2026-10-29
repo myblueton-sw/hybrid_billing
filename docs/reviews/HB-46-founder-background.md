@@ -26,3 +26,9 @@ Root applies tech-writer; a separate read-only editorial reviewer checks claim a
 Actual change review: PASS by the separate read-only founder_review agent. The review requested matching the new license summary to the canonical permitted-purpose wording; root corrected it and the reviewer independently rechecked it with no remaining blockers.
 
 Document QA: PASS. A scripted comparison confirmed that removing the inserted two sections reproduces the previous README exactly. The new local license anchor exists, the report has nonempty OKF type metadata, and git diff --check passes. Root inspected the scoped diff for unrelated work and sensitive material. Official-source access succeeded; direct LinkedIn retrieval and exact badge verification remain unavailable as stated above. No runtime tests are relevant to this prose-only change.
+
+## HB-47 first-person editorial follow-up
+
+[HB-47](https://linear.app/hybrid-billing/issue/HB-47/document-first-person-cmp-and-finops-expert-introduction) applies the owner's requested first-person voice and CMP/FinOps expert description. Displayed personal-name references in the README become I/my/me; the existing profile URL remains intact. Career facts, source links, credential verification limits and licensing remain unchanged. Root owns writing, editorial review and QA for this small wording change; no new independent review is claimed. Machine: mac_mini.
+
+Verification: PASS. The actual diff was reviewed for first-person grammar and scope; scripted checks confirm no displayed personal name, third-person possessive or supplied spelling/grammar errors remain, the requested expert phrase is present, and all content from Installation model onward is unchanged. git diff --check passes. This changes prose only and introduces no runtime or contract behavior.

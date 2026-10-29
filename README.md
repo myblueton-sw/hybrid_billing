@@ -8,7 +8,7 @@ It is intended for managed service providers, individual enterprises, and corpor
 
 **Every cloud bill should be explainable—from the original usage record to the final customer charge.**
 
-Hybrid Billing grew out of Seungwoo Park's experience building cloud management platforms (CMPs) and working with FinOps and billing needs in Korea and the Middle East. Across enterprise cloud teams and managed service providers, the same challenge kept returning: turning provider usage and complex commercial agreements into amounts that billing teams can verify and customers can understand.
+Hybrid Billing grew out of my experience building cloud management platforms (CMPs) and working with FinOps and billing needs in Korea and the Middle East. Across enterprise cloud teams and managed service providers, the same challenge kept returning: turning provider usage and complex commercial agreements into amounts that billing teams can verify and customers can understand.
 
 A monthly bill brings that challenge into focus. Provider costs must be reconciled, contract discounts applied, credits and exceptions accounted for, and differences resolved before an invoice can be issued. Customers need to see which rates and discounts apply to their services and instances. Billing teams need the evidence behind those answers without rebuilding the calculation in spreadsheets every month.
 
@@ -18,17 +18,17 @@ The source is available for inspection and permitted noncommercial use; commerci
 
 ## Founder and domain experience
 
-**Seungwoo Park — CMP and FinOps practitioner, former OpsNow CEO and CTO, and founder of Hybrid Billing.**
+**I am a CMP and FinOps expert, former OpsNow CEO and CTO, and the founder of Hybrid Billing.**
 
-Seungwoo brings experience from both sides of cloud platforms: the enterprise teams that build and operate them, and the product organizations that turn them into services for customers.
+I bring experience from both sides of cloud platforms: the enterprise teams that build and operate them, and the product organizations that turn them into services for customers.
 
-- **Samsung Electronics:** Served as a part leader and technical leader, working on CMP and cloud billing platforms, including collaboration with Megazone and SpaceONE colleagues on platform development.
-- **Bespin Global and OpsNow:** Held technical leadership responsibilities at Bespin Global and served as CEO and CTO of OpsNow, bringing together CMP engineering, product development and SaaS operations. OpsNow's [2024 appointment announcement](https://www.opsnow.io/kr-ko/post/news-008) documents his Samsung background, his move to Bespin Global in 2022 and his responsibility for OpsNow product development and SaaS operations before his CEO appointment.
-- **FinOps practice:** Draws on experience with Korean MSPs and Middle Eastern market needs, alongside personal FinOps Foundation AI and FOCUS certification experience, to shape requirements for cost transparency, contract pricing and billing reconciliation.
+- **Samsung Electronics:** I served as a part leader and technical leader, working on CMP and cloud billing platforms, including collaboration with Megazone and SpaceONE colleagues on platform development.
+- **Bespin Global and OpsNow:** I held technical leadership responsibilities at Bespin Global and served as CEO and CTO of OpsNow, bringing together CMP engineering, product development and SaaS operations. OpsNow's [2024 appointment announcement](https://www.opsnow.io/kr-ko/post/news-008) documents my Samsung background, my move to Bespin Global in 2022 and my responsibility for OpsNow product development and SaaS operations before my CEO appointment.
+- **FinOps practice:** I draw on experience with Korean MSPs and Middle Eastern market needs, alongside my personal FinOps Foundation AI and FOCUS certification experience, to shape requirements for cost transparency, contract pricing and billing reconciliation.
 
-Hybrid Billing is his independent effort to turn that accumulated CMP and FinOps experience into a platform that helps operators close the month with confidence and gives customers a clear explanation of what they are being charged. Career and credential details above combine his own account with the linked public announcement. Personal credentials do not constitute certification of this software. The project does not imply endorsement by former employers, collaborators or the FinOps Foundation.
+Hybrid Billing is my independent effort to turn that accumulated CMP and FinOps experience into a platform that helps operators close the month with confidence and gives customers a clear explanation of what they are being charged. Career and credential details above combine my own account with the linked public announcement. My personal credentials do not constitute certification of this software. The project does not imply endorsement by my former employers, collaborators or the FinOps Foundation.
 
-[Connect with Seungwoo on LinkedIn](https://www.linkedin.com/in/seungwoo-park-43452598).
+[Connect with me on LinkedIn](https://www.linkedin.com/in/seungwoo-park-43452598).
 
 ## Installation model
 

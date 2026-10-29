@@ -1,0 +1,336 @@
+{
+  "retained_v8_pages": [
+    {
+      "id": "overview",
+      "v8_page": 1,
+      "v9_page": 1
+    },
+    {
+      "id": "contents",
+      "v8_page": 2,
+      "v9_page": 2
+    },
+    {
+      "id": "operations",
+      "v8_page": 3,
+      "v9_page": 3
+    },
+    {
+      "id": "core-index-close",
+      "v8_page": 4,
+      "v9_page": 4
+    },
+    {
+      "id": "customer-detail",
+      "v8_page": 5,
+      "v9_page": 5
+    },
+    {
+      "id": "index-intake",
+      "v8_page": 6,
+      "v9_page": 6
+    },
+    {
+      "id": "v4-inbox",
+      "v8_page": 7,
+      "v9_page": 7
+    },
+    {
+      "id": "v4-extract",
+      "v8_page": 8,
+      "v9_page": 8
+    },
+    {
+      "id": "v4-differences",
+      "v8_page": 9,
+      "v9_page": 9
+    },
+    {
+      "id": "v4-audit",
+      "v8_page": 10,
+      "v9_page": 10
+    },
+    {
+      "id": "core-index-sources",
+      "v8_page": 11,
+      "v9_page": 11
+    },
+    {
+      "id": "core-index-aws",
+      "v8_page": 12,
+      "v9_page": 12
+    },
+    {
+      "id": "core-index-variants",
+      "v8_page": 13,
+      "v9_page": 13
+    },
+    {
+      "id": "index-mapping",
+      "v8_page": 14,
+      "v9_page": 14
+    },
+    {
+      "id": "supplier-register",
+      "v8_page": 15,
+      "v9_page": 16
+    },
+    {
+      "id": "supplier-aws",
+      "v8_page": 16,
+      "v9_page": 17
+    },
+    {
+      "id": "supplier-azure",
+      "v8_page": 17,
+      "v9_page": 18
+    },
+    {
+      "id": "supplier-gcp",
+      "v8_page": 18,
+      "v9_page": 19
+    },
+    {
+      "id": "supplier-oci",
+      "v8_page": 19,
+      "v9_page": 20
+    },
+    {
+      "id": "supplier-alibaba",
+      "v8_page": 20,
+      "v9_page": 21
+    },
+    {
+      "id": "customer-contract",
+      "v8_page": 21,
+      "v9_page": 22
+    },
+    {
+      "id": "sales-policy",
+      "v8_page": 22,
+      "v9_page": 30
+    },
+    {
+      "id": "sales-impact",
+      "v8_page": 23,
+      "v9_page": 31
+    },
+    {
+      "id": "core-index-allocation",
+      "v8_page": 24,
+      "v9_page": 32
+    },
+    {
+      "id": "core-index-pricing",
+      "v8_page": 25,
+      "v9_page": 33
+    },
+    {
+      "id": "index-pricing",
+      "v8_page": 26,
+      "v9_page": 34
+    },
+    {
+      "id": "index-seats",
+      "v8_page": 27,
+      "v9_page": 35
+    },
+    {
+      "id": "index-commitments",
+      "v8_page": 28,
+      "v9_page": 36
+    },
+    {
+      "id": "index-fx",
+      "v8_page": 29,
+      "v9_page": 37
+    },
+    {
+      "id": "core-reconciliation-case",
+      "v8_page": 30,
+      "v9_page": 40
+    },
+    {
+      "id": "core-reconciliation-recalc",
+      "v8_page": 31,
+      "v9_page": 41
+    },
+    {
+      "id": "index-runs",
+      "v8_page": 32,
+      "v9_page": 42
+    },
+    {
+      "id": "core-reconciliation-approval",
+      "v8_page": 33,
+      "v9_page": 43
+    },
+    {
+      "id": "index-approval",
+      "v8_page": 34,
+      "v9_page": 44
+    },
+    {
+      "id": "assignment-policy",
+      "v8_page": 35,
+      "v9_page": 45
+    },
+    {
+      "id": "review-issue",
+      "v8_page": 36,
+      "v9_page": 46
+    },
+    {
+      "id": "document-history",
+      "v8_page": 37,
+      "v9_page": 47
+    },
+    {
+      "id": "core-reconciliation-issued",
+      "v8_page": 38,
+      "v9_page": 48
+    },
+    {
+      "id": "erp",
+      "v8_page": 39,
+      "v9_page": 49
+    },
+    {
+      "id": "v4-monthly",
+      "v8_page": 40,
+      "v9_page": 51
+    },
+    {
+      "id": "v4-month",
+      "v8_page": 41,
+      "v9_page": 52
+    },
+    {
+      "id": "v4-variance",
+      "v8_page": 42,
+      "v9_page": 53
+    },
+    {
+      "id": "core-reconciliation-correction",
+      "v8_page": 43,
+      "v9_page": 54
+    },
+    {
+      "id": "index-correction",
+      "v8_page": 44,
+      "v9_page": 55
+    },
+    {
+      "id": "core-customer-overview",
+      "v8_page": 45,
+      "v9_page": 57
+    },
+    {
+      "id": "v4-customer-months",
+      "v8_page": 46,
+      "v9_page": 58
+    },
+    {
+      "id": "customer-history",
+      "v8_page": 47,
+      "v9_page": 59
+    },
+    {
+      "id": "core-customer-invoice",
+      "v8_page": 48,
+      "v9_page": 60
+    },
+    {
+      "id": "core-customer-usage",
+      "v8_page": 49,
+      "v9_page": 61
+    },
+    {
+      "id": "customer-inquiry",
+      "v8_page": 50,
+      "v9_page": 62
+    },
+    {
+      "id": "customer-response",
+      "v8_page": 51,
+      "v9_page": 63
+    },
+    {
+      "id": "core-reconciliation-setup",
+      "v8_page": 52,
+      "v9_page": 64
+    },
+    {
+      "id": "license-modes",
+      "v8_page": 53,
+      "v9_page": 65
+    },
+    {
+      "id": "license-status",
+      "v8_page": 54,
+      "v9_page": 66
+    }
+  ],
+  "added_states": [
+    {
+      "id": "auto-portfolio",
+      "v9_page": 15,
+      "chapter": "contracts"
+    },
+    {
+      "id": "auto-rulebook",
+      "v9_page": 23,
+      "chapter": "contracts"
+    },
+    {
+      "id": "auto-editor",
+      "v9_page": 24,
+      "chapter": "contracts"
+    },
+    {
+      "id": "auto-exclusions",
+      "v9_page": 25,
+      "chapter": "contracts"
+    },
+    {
+      "id": "auto-mapping",
+      "v9_page": 26,
+      "chapter": "contracts"
+    },
+    {
+      "id": "auto-bulk",
+      "v9_page": 27,
+      "chapter": "contracts"
+    },
+    {
+      "id": "auto-exceptions",
+      "v9_page": 28,
+      "chapter": "contracts"
+    },
+    {
+      "id": "auto-activation",
+      "v9_page": 29,
+      "chapter": "contracts"
+    },
+    {
+      "id": "auto-job",
+      "v9_page": 38,
+      "chapter": "reconcile"
+    },
+    {
+      "id": "auto-trace",
+      "v9_page": 39,
+      "chapter": "reconcile"
+    },
+    {
+      "id": "auto-history",
+      "v9_page": 50,
+      "chapter": "history"
+    },
+    {
+      "id": "auto-customer",
+      "v9_page": 56,
+      "chapter": "customer"
+    }
+  ]
+}

@@ -11,7 +11,7 @@ Official documentation checked on 2026-10-29. All Hybrid Billing live integratio
 
 | Source | Documented data route | Proposed minimal user action | Required distinctions |
 | --- | --- | --- | --- |
-| AWS | S3 Data Exports, native FOCUS 1.2 | Existing authorized account or one account ID, then reviewed stack setup | Detailed AWS profile in README and research; actual deployment and workload identity prerequisites remain |
+| AWS | S3 Data Exports, native FOCUS 1.2 | Select authorized account; resolve missing identity/storage/export prerequisites, then reviewed setup | Detailed AWS profile in README and research; actual deployment and workload identity prerequisites remain |
 | Azure | Cost Management FOCUS export to Storage; dataset versions selectable | Select authorized billing scope/export; supply only missing Storage/permission setup | Scope/agreement eligibility before resource creation; MOSP and management-group FOCUS limitations; export writer versus Blob reader |
 | Google Cloud | Native FOCUS BigQuery linked dataset, Preview; columns up to 1.2 documented | Select approved billing account/project/dataset; enable eligible export if absent | Location, preview availability, billing permissions and query permissions are distinct; query costs; not a plain S3-style file manifest |
 | OCI | Native FOCUS cost reports in Oracle-owned report storage alongside proprietary reports | Select registered tenancy/report connection and approve required read access | Report type, source-declared schema and time/account coverage; missing products cannot be invented from the FOCUS label |
@@ -30,3 +30,7 @@ Official documentation checked on 2026-10-29. All Hybrid Billing live integratio
 - [AWS research](research.md) retains source evidence and profile limits for the detailed first provider design.
 
 No provider credentials or live customer data were accessed. All prefilled account/path labels in the prototype are synthetic. Proposed cross-provider automation must use each provider's actual credential and permission mechanisms, scoped to the customer-operated installation; it must not depend on a fictional common OAuth flow or vendor-held credentials.
+
+# Detailed configuration
+
+[HB-52 workflow and provider guides](setup-workflow.md) define the actual fields and conditional tasks behind these summaries. Automatic discovery requires existing approved access; provider-side mutations require a reviewed plan. Direct AWS export encryption is SSE-S3; post-delivery KMS is a distinct profile. IBM account and enterprise reports require different scope and identity handling.

@@ -1,17 +1,48 @@
 ---
 type: Design
-title: Minimal-action AWS FOCUS onboarding
-description: Defines three simple connection surfaces with explicit AWS approval, automatic diagnostics and separate evidence acceptance.
+title: Minimal-action multi-provider FOCUS onboarding
+description: Defines a common onboarding interface with provider-specific data routes, schema validation, coverage and separate evidence acceptance.
 status: draft
 ---
 
 # Scope and decision
 
-[HB-49](https://linear.app/hybrid-billing/issue/HB-49/document-minimal-action-aws-focus-onboarding). Owner priority: FOCUS-first onboarding, starting with AWS, with the fewest user actions and a simple interface. Root owns this module revision and the baseline index link. Architect and ui-ux skills apply; a separate read-only reviewer checks security and financial-readiness boundaries. This is a design proposal, not a deployed connector, CloudFormation template or completed visual prototype.
+[HB-49](https://linear.app/hybrid-billing/issue/HB-49/document-minimal-action-aws-focus-onboarding). Owner priority: FOCUS-first onboarding, starting with AWS, with the fewest user actions and a simple interface. Root owns this module revision and the baseline index link. Architect and ui-ux skills apply; a separate read-only reviewer checks security and financial-readiness boundaries. This is a design proposal, not a deployed connector or CloudFormation template. HB-51 adds the synthetic interactive review described below.
 
 Baseline: frozen v10 / module 03-onboarding r1, pages 11–18. This r2 elaborates setup-connectors, setup-readtest, setup-schedule, setup-first, setup-readiness and setup-progress with AWS-specific child states. setup-profile and setup-attribution retain their existing obligations. Related modules: 02-access for authorization, 05-sources for source evidence, 06-contracts/07-reconcile for financial readiness. ON-01–05, BL-07 and EX-10 remain unchecked until runtime acceptance. [Research and limits](research.md); [review](review.md).
 
 **Default experience: connect AWS → approve in AWS → return to a live collection status.** Three surfaces are not three clicks. Hide configuration mechanics, not account scope, resource creation or unresolved data quality.
+
+# Multi-provider interface expansion (HB-51)
+
+The owner clarified that this module must cover all providers, and that actual data integration and format validation are central. [HB-51](https://linear.app/hybrid-billing/issue/HB-51/document-multi-provider-focus-onboarding-interface-and-data-validation) updates this same draft rather than creating another competing revision. The AWS specification below remains the detailed AWS profile, not a universal provisioning recipe. The current proposal is not yet fixed as final and does not delete unreplaced v10 scope.
+
+Common surfaces: choose source → review only missing connection setup → follow acquisition and validation. Supported source categories are AWS, Azure, Google Cloud, OCI, Alibaba Cloud, IBM Cloud, VMware/on-prem and existing file/storage. Native FOCUS availability and a verified Hybrid Billing connector are separate. Provider-specific setup cannot be presented as a universal OAuth approval. See [provider profiles and official evidence](provider-profiles.md).
+
+The Korean interactive review [source](prototype.html) presents these surfaces using synthetic inputs only. It never reads files, queries cloud APIs, deploys resources or confirms billing evidence. Its preview-only state selector exposes first-arrival waiting, schema error, missing account and verification-summary states. It is outside the depicted product journey; do not count it as a production input. The preview applies the owner's Korean screen requirement while design/evidence documents stay English.
+
+## Data and format validation contract
+
+- Before access: bind the authenticated installation, source custodian, authorized accounts/resources, billing scope, operating identity and declared source profile. New accounts in a payer export require authorization, not automatic tenant membership.
+- Source receipt: preserve raw files or bounded query result snapshots and query/response metadata, source location, complete manifest/page set, execution watermark, period and immutable revision. Object-store file, BigQuery result and paginated API have different receipt mechanisms. Scope and query budgets must be approved before data access.
+- Source identity: pin provider dataset, declared FOCUS version, provider schema version and extensions, query/filter configuration, account scope and source schema digest. A matching header alone is not a trusted version/profile. Unknown profiles block accepted ingestion with a specific owner/action.
+- Conversion: retain native versus converted provenance, target schema/version, exact adapter/mapping revision and unsupported functions. No LLM-generated mapping becomes active without controlled review. VMware requires metering history plus approved cost/allocation policies; it is not a CSP invoice.
+- Field inspection: show source field, source type/unit, target field/version, transformation and pass/fail/unverified result. Preserve decimal precision, NULL versus zero, currency, quantities/units, timezone and interval boundaries. Keep BilledCost and EffectiveCost separate. Provider extensions remain attributable to originals.
+- Full validation: examples help explain errors but acceptance covers every required file/page, row, authorized account and expected period, with independent count/identity and unit/currency/basis comparison. Show missing, partial, unsupported, duplicate, corrected and evidence-backed zero distinctly.
+- Publication: received, schema-valid, coverage-complete, comparison-complete and operator-confirmed are separate states. Protected operator inspection does not grant customer visibility or financial acceptance. Current authority, revision and required comparisons gate input.confirm_publish; financial policy/amount/issuance approvals remain subsequent distinct controls.
+
+The prototype field table illustrates common FOCUS concepts, not a certified provider column inventory. VMware uses a separate metering/policy illustration. Unknown file profiles, VMware and Alibaba analysis-only FOCUS cannot reach monetary acceptance through the generic successful example. Alibaba requires separately collected official bill overview/details for reconciliation and settlement. Contract and scope differences are visible before setup; deeper parameters remain collapsed. Evidence summaries link to existing setup-attribution, sources and reconciliation responsibilities rather than asking for the full financial configuration again.
+
+## Provider-neutral acceptance additions (runtime NOT_RUN)
+
+- M01: Each source shows its actual storage/API/query route, version/preview limits and the appropriate missing inputs; no generic cloud login silently substitutes for billing scope.
+- M02: Unsupported Azure scope or unavailable provider preview entitlement blocks before creating resources; native-format availability is never inferred from a provider logo.
+- M03: BigQuery/service-account location and query permissions, OCI report policy, OSS read scope and IBM full-page/month coverage are diagnosed separately. No key or token is entered into the mockup.
+- M04: Unknown version/header/schema drift is held, decimal/NULL/currency units preserved, and conversion support is explicit.
+- M05: Missing accounts, missing chunks/pages, duplicates and changed source snapshots never pass because the preview sample passed.
+- M06: Human confirmation is unavailable while required scope, source, pricing basis or independent reconciliation evidence is missing. No inherited cross-customer authorization.
+- M07: Switching providers or switching existing/new paths clears obsolete setup context and cannot reuse another provider's diagnostics. Keyboard focus moves to a visible control on explicit screen navigation.
+- M08: Every simulated state remains labeled as example data; user interaction performs no external access or billing action.
 
 # Preconditions that the product must not hide
 
@@ -101,4 +132,4 @@ On receipt, show only useful summary fields: observed/expected accounts, availab
 
 # Delivery boundary
 
-Next: review this design, create a separate bilingual interactive r2 screen prototype with synthetic states, then implement/test the versioned template and real connector under their own tickets. Live AWS deployment, account credentials, exact IAM policy execution and console action count have not been tested here. The frozen v10 book and registry are unchanged; r2 is not an assembled replacement edition.
+Next: obtain owner feedback on the Korean interactive r2 review, complete the corresponding English visual review, then implement/test provider-specific adapters and setup templates under their own tickets. Live AWS deployment, account credentials, exact IAM policy execution and console action count have not been tested here. The frozen v10 book and registry are unchanged; r2 is not an assembled replacement edition.

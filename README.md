@@ -6,13 +6,13 @@ It is intended for managed service providers, individual enterprises, and corpor
 
 ## Why Hybrid Billing exists
 
-**Every cloud bill should be explainable—from the original usage record to the final customer charge.**
+I know CMP, FinOps, and cloud billing inside out. I've built these platforms, led the teams behind them, and worked through the demands of enterprise customers and MSPs in Korea and the Middle East.
 
-Hybrid Billing grew out of my experience building cloud management platforms (CMPs) and working with FinOps and billing needs in Korea and the Middle East. Across enterprise cloud teams and managed service providers, the same challenge kept returning: turning provider usage and complex commercial agreements into amounts that billing teams can verify and customers can understand.
+Many of those demands weren't new. They were real problems that customers had been asking us to solve for years. But established platforms come with existing architectures, dependencies, and product commitments. There were things I wanted to build that simply couldn't fit within those constraints.
 
-A monthly bill brings that challenge into focus. Provider costs must be reconciled, contract discounts applied, credits and exceptions accounted for, and differences resolved before an invoice can be issued. Customers need to see which rates and discounts apply to their services and instances. Billing teams need the evidence behind those answers without rebuilding the calculation in spreadsheets every month.
+Hybrid Billing is my chance to put those lessons into practice—to build the billing platform I've long wanted to build, shaped by real operational needs and made available for others to inspect, learn from, and use.
 
-This project brings those practical lessons into a self-hosted billing platform, with the goal of making transparent, auditable billing accessible to more MSPs and enterprise FinOps teams. Its planned workflow connects source evidence, contract pricing, reconciliation, approval and invoice history. AI assistance is intended to help explain discrepancies and prepare corrections while keeping financial decisions under human review. The implementation status below distinguishes that ambition from what has been verified today.
+I want billing teams to spend less time fixing spreadsheets and explaining discrepancies, and give customers a clear answer to a simple question: **“Why am I being charged this amount?”**
 
 The source is available for inspection and permitted noncommercial use; commercial-purpose use outside the license's permitted purposes requires a separate agreement, as described under [License and commercial inquiries](#license-and-commercial-inquiries).
 

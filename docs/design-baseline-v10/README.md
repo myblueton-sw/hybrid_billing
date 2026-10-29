@@ -48,3 +48,7 @@ Run `python3 docs/design-baseline-v10/build.py` with Poppler tools and the exact
 Open `output/designs/v10-modules/index.html`, then select Korean or English. The package contains11 PDFs per locale, with original baseline page numbering and unchanged historical header/navigation. Embedded PDF links retain original targets and are not independently remapped; use the package index to select modules or the original HTML book for complete navigation. This is a design review package, not a customer deployment.
 
 The portable archive is `output/designs/hybrid-billing-v10-modules.zip`. Generated files remain outside Git; maintained registry, decision and builder are tracked. [Verification](verification.md) records actual results.
+
+# Proposed module revisions
+
+[03-onboarding r2: minimal-action AWS FOCUS onboarding](../design-modules/03-onboarding/r2/README.md) defines the connection, AWS approval and background collection flow under HB-49. It is a reviewed design proposal with runtime acceptance pending, not a replacement for frozen v10 pages or an assembled new edition.

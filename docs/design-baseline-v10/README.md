@@ -32,12 +32,13 @@ The registry supplies stable screen IDs and checklist references; original page 
 
 # Change management
 
-1. Keep v10 baseline artifacts and frozen source commit immutable. Do not edit HB-43 page generators to implement later module changes; reproduce the baseline from its pinned commit when required.
+1. Keep active v10 baseline artifacts and its frozen source commit immutable. Do not edit HB-43 page generators to implement later module changes; reproduce the baseline from its pinned commit when required.
 2. Create a ticket and owned module revision for each change, for example `02-access/r2` or the first `12-vmware-onprem/r1`. The module owns its maintained screen definitions; reference shared assets explicitly instead of modifying historical snapshots.
 3. Each revision records baseline, previous revision, owner/ticket, changed stable screen IDs, reason, checklist IDs, dependencies, reviewer, verification and approval status. Root integrates shared dependencies; one writer owns each file.
 4. Preserve cross-module links by stable screen ID. Identify affected source/target modules and review contracts together before changing navigation or shared behavior. A module approval is scoped, not approval of every other module.
 5. Review only affected modules and relevant regression paths. Financial/tenant/permission changes still require independent review and actual runtime evidence before checklist completion.
 6. Assemble a later complete edition only from an explicit manifest pinning every compatible module revision. Do not silently mix latest files or replace v10. VMware gaps can be filled independently without claiming the original baseline contained them.
+7. Once the owner fixes a replacement as final, migrate references/build inputs and delete the superseded copies from the current tree under the [final-document cleanup rule](../../.agents/rules/workflow.md#final-document-cleanup). Use Git history for prior tracked editions, not archive copies. This later owner instruction supersedes indefinite current-tree retention; v10 remains active until its scope is actually replaced. An AWS-only r2 draft does not replace the complete v10 book.
 
 Root owns registry integration. Domain owners and implementation tickets for future revisions are unassigned until claimed; no work or authority is invented. Source/billing contracts and the existing checklist remain canonical rather than duplicated per module.
 
@@ -52,3 +53,9 @@ The portable archive is `output/designs/hybrid-billing-v10-modules.zip`. Generat
 # Proposed module revisions
 
 [03-onboarding r2: minimal-action AWS FOCUS onboarding](../design-modules/03-onboarding/r2/README.md) defines the connection, AWS approval and background collection flow under HB-49. It is a reviewed design proposal with runtime acceptance pending, not a replacement for frozen v10 pages or an assembled new edition.
+
+# HB-50 rule verification
+
+The owner clarified that explanatory code comments are prohibited and accepted final documents replace older copies in the current tree. Root updated AGENTS.md, the workflow rule and this management policy; root editorial review and document QA apply to this small rule clarification, not an independent review claim. Existing runtime, rights and evidence-retention contracts are unchanged. No bulk deletion is claimed: the current r2 onboarding proposal is a draft and does not supersede the full v10 baseline. Finalization must enumerate the actual replacement set and remove it, including obsolete generated copies.
+
+Validation: PASS for root editorial scope review, rule-link target/anchor, existing OKF metadata and git diff --check. This ticket changes policy text only; no code or document deletion was executed.

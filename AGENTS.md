@@ -26,7 +26,8 @@ For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md
 
 ## Core rules
 
-- Do not add explanatory source comments. Preserve required machine directives and legal headers.
+- Do not add explanatory source comments or use docstrings/JSDoc to bypass this rule. Preserve required machine directives, legal headers and externally consumed API documentation.
+- When the owner fixes a final document or design revision, remove the superseded versions from the current tree in the same scoped finalization change. Update links, indexes and generators first; retain history in Git rather than duplicate archive folders. Apply replacement per module/scope, not by version number alone. Original evidence, legal notices and distinct review/verification records are not superseded drafts.
 - Split directly maintained source and test files at 1,500 physical lines, including blanks, by responsibility.
 - Distinguish facts, assumptions, unknowns and actual verification. Do not fabricate test, review or connection success.
 - Billing amounts, tenant boundaries, permissions and public-contract changes require independent design/change review.

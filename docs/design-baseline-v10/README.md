@@ -59,3 +59,7 @@ The portable archive is `output/designs/hybrid-billing-v10-modules.zip`. Generat
 The owner clarified that explanatory code comments are prohibited and accepted final documents replace older copies in the current tree. Root updated AGENTS.md, the workflow rule and this management policy; root editorial review and document QA apply to this small rule clarification, not an independent review claim. Existing runtime, rights and evidence-retention contracts are unchanged. No bulk deletion is claimed: the current r2 onboarding proposal is a draft and does not supersede the full v10 baseline. Finalization must enumerate the actual replacement set and remove it, including obsolete generated copies.
 
 Validation: PASS for root editorial scope review, rule-link target/anchor, existing OKF metadata and git diff --check. This ticket changes policy text only; no code or document deletion was executed.
+
+# Planning coverage review
+
+[HB-54 coverage audit](coverage-audit.md) distinguishes missing/partial operational screen journeys, existing coverage and owner-deferred detail. It does not alter the frozen baseline, certify runtime acceptance or authorize the deferred visual redesign.

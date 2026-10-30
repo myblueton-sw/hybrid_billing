@@ -63,3 +63,5 @@ Validation: PASS for root editorial scope review, rule-link target/anchor, exist
 # Planning coverage review
 
 [HB-54 coverage audit](coverage-audit.md) distinguishes missing/partial operational screen journeys, existing coverage and owner-deferred detail. It does not alter the frozen baseline, certify runtime acceptance or authorize the deferred visual redesign.
+
+[HB-55 focused settings/admin/overview check](admin-overview-audit.md) narrows the audit to dedicated missing and partial management views; it does not change any screen.

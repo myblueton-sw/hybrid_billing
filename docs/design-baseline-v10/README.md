@@ -65,3 +65,5 @@ Validation: PASS for root editorial scope review, rule-link target/anchor, exist
 [HB-54 coverage audit](coverage-audit.md) distinguishes missing/partial operational screen journeys, existing coverage and owner-deferred detail. It does not alter the frozen baseline, certify runtime acceptance or authorize the deferred visual redesign.
 
 [HB-55 focused settings/admin/overview check](admin-overview-audit.md) narrows the audit to dedicated missing and partial management views; it does not change any screen.
+
+[HB-59 administration and operations r2 draft](../design-modules/11-settings/r2/README.md) develops detailed membership, customer settings, calendar, recovery, retention and policy workflows across scoped modules. Its [coverage record](../design-modules/11-settings/r2/verification.md) distinguishes textual planning from unresolved bindings, owner adoption and runtime acceptance; frozen v10 remains active.

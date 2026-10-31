@@ -11,7 +11,7 @@ export function closeDialog(){
 export function modal(title,body,locale){
  const dialog=document.querySelector('#dialog');
  if(!dialog.open)returnFocus=document.activeElement;
- dialog.innerHTML=`<header><h2 id="dialog-title">${esc(title)}</h2><button id="close-dialog" aria-label="${t('close',locale)}">×</button></header>${body}`;
+ dialog.innerHTML=`<header><h2 id="dialog-title">${esc(title)}</h2><button id="close-dialog" aria-label="${t('close',locale)}"><img class="icon" src="./design-system/assets/icons/close.svg" alt="" aria-hidden="true"></button></header>${body}`;
  dialog.setAttribute('aria-labelledby','dialog-title');
  dialog.querySelector('#close-dialog').onclick=closeDialog;
  dialog.oncancel=event=>{event.preventDefault();closeDialog();};

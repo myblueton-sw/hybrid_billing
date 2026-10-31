@@ -16,7 +16,7 @@ This repository is being published incrementally. Companion rules, skills, `.lin
 
 This applies to planning, reviews, documents, configuration, code, tests and infrastructure. Read-only reviews also produce ticket-linked Git reports. The README-only first commit was the owner's HB-5 bootstrap exception; subsequent changes follow the PR sequence. JEV cannot authorize or waive a step.
 
-For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md` and `code-structure.md`. For documentation, read `knowledge-format.md`; Markdown knowledge documents under `docs/` follow OKF v0.2. Read `tenant-security.md` for data, permission or billing work and `usability.md` for screens.
+For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md` and `code-structure.md`. For documentation, read `knowledge-format.md`; Markdown knowledge documents under `docs/` follow OKF v0.2. Read `tenant-security.md` for data, permission or billing work and `usability.md` for screens. For screens, visual assets and design builds, also read `.agents/rules/design-system.md`, `docs/design-system.md` and `docs/design-build-guide.md`.
 
 ## Language and response policy
 

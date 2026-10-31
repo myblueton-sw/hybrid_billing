@@ -12,7 +12,7 @@ HB-63; root owns shell, state/data adapter, styling, checks and integration. The
 ## Design contract
 
 - English/Arabic priority with Korean first-class; locale copy is a review candidate, not certified practitioner translation. HB-61 terminology rules at commit 2694eab apply to this draft even though PR57 remains separate.
-- TNB for domains, searchable secondary screen navigation and an on-demand context drawer. UAE-informed 16px base typography, 24px desktop gaps, breakpoints 640/768/1024/1280/1536 and logical RTL layout. Brand navy/teal is a deliberate product variation from federal identity colors. Local fallback fonts remain possible; no compliance claim without rendered evidence.
+- TNB for domains, searchable secondary screen navigation and an on-demand context drawer. UAE-informed 16px base typography, 24px desktop gaps, breakpoints 640/768/1024/1280/1536 and logical RTL layout. Brand navy/teal is a deliberate product variation from federal identity colors. IBM Plex fonts are packaged locally by the design build; no compliance claim without rendered evidence.
 - Logical synthetic populations of 100,000 accounts and 1,000,000 file records; generate bounded pages, not a million DOM rows. Production requires server-side indexed search and cursor pagination; this prototype supplies an isolated asynchronous adapter, not a performance benchmark of a backend.
 - Cursor and selection bind scope, screen, query, provider, status, sort and snapshot. Page size/sort invalidate cursors; filter/scope changes clear selection/preview. Exact totals only when known; filtered totals can be unknown. No fabricated last page.
 - Page selection and all-filtered selection are distinct. All-filtered stores a query descriptor and exclusion IDs, never the entire match set. Preview displays scope and count certainty; expired snapshots block submission. No money calculation, authorization or issuance is performed.
@@ -31,10 +31,12 @@ Independent design review: PASS with required scope/snapshot invalidation, query
 
 ## Run
 
-Serve this directory locally with `python3 -m http.server 8763 --bind 127.0.0.1`, then open http://127.0.0.1:8763. No build or external service is required. Source modules are dependency-free design code so reviewers can inspect interactions independently of the pending production React/API integration.
+Run the locked dependency preparation and build in [the design build guide](../../../design-build-guide.md), then serve `output/designs/HB-63-console` on port 8763. The build supplies canonical logos, token styles and local IBM Plex fonts; serving this source directory directly is no longer sufficient. Runtime source modules remain dependency-free design code, separate from pending production React/API integration.
 
 ## Review and implementation boundary
 
 Open `?lang=en#operations`, `?lang=ar#operations` or `?lang=ko#operations`; `#contents` exposes the entire catalog. Six TNB domains organize the eleven catalog groups, with searchable secondary navigation and bounded detail dialogs. Browser refresh resets drafts, file descriptors and jobs. Local large-file examples are metadata scenarios only.
 
 [Verification](verification.md) records independent findings, fixes, browser evidence and remaining acceptance. The 111-route coverage is navigation and common-interaction coverage. It does not establish complete business behavior for every form/detail/workflow. The existing v10 baseline is preserved until the owner accepts a replacement scope.
+
+Brand and style source: [active design foundations](../../../design-system.md). The placeholder H mark has been replaced with the supplied Fusion AI SVG; favicon and controls use canonical assets. Source hashes and core visual rules are checked by tools/design.

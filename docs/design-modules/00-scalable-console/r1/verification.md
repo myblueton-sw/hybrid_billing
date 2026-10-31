@@ -13,7 +13,7 @@ Ticket: [HB-63](https://linear.app/hybrid-billing/issue/HB-63/implement-multilin
 
 The runnable draft contains 111 routes, retaining all 89 v10 screen identities and mapping all 49 registry IDs. Inventory coverage is not completed business-workflow parity. Four overview, 19 form, 31 list, 18 workflow, 28 detail, three file and eight report routes share the interaction framework. Detail/report values without a data contract are unavailable; workflows demonstrate review progression, not operational approval. Form drafts are memory-only. An explicit banner identifies synthetic data, missing backend connection and pending language review.
 
-Six primary domains use TNB: overview, billing operations, sources/evidence, pricing/calculation, customer portal and administration. The searchable secondary navigation retains the eleven catalog groups. Arabic reverses logical navigation/table layout; identifiers retain isolated direction. No third-party fonts, images or executable dependencies are bundled. System font fallback is intentional in this draft.
+Six primary domains use TNB: overview, billing operations, sources/evidence, pricing/calculation, customer portal and administration. The searchable secondary navigation retains the eleven catalog groups. Arabic reverses logical navigation/table layout; identifiers retain isolated direction. The initial draft used system font fallback. The brand follow-up below packages the supplied SVG assets and local IBM Plex fonts; the runtime remains native JavaScript.
 
 The scale model is 100,000 synthetic accounts and up to 1,000,000 synthetic file records. Account search renders 20 results; lists render 25, 50 or 100 rows. File intake holds at most 100 metadata descriptors and displays 25 at a time. Demo jobs are capped at 100 with at most two processing jobs. These are bounded frontend demonstrations, not measured production database, upload or scheduler capacity.
 
@@ -31,13 +31,13 @@ research_review applied read-only QA to code, assertions and representative scre
 
 ## Executed verification
 
-The dependency-free prototype was served on loopback with Python http.server. Browser tests use Playwright 1.56.1 and the installed Chromium headless shell build 1243. Initial default-browser resolution and sandbox launch failed; the installed executable and authorized unsandboxed browser run were then used successfully. These failures are not recorded as successful checks.
+The initial dependency-free prototype was served on loopback with Python http.server. The brand follow-up serves the built artifact instead of the source directory. Browser tests use Playwright 1.56.1 and the installed Chromium headless shell build 1243. Initial default-browser resolution and sandbox launch failed; the installed executable and authorized unsandboxed browser run were then used successfully. These failures are not recorded as successful checks.
 
 `verify.cjs` completed with 65 passing checks, including all 111 routes in English, Arabic and Korean (333 route renders). Runtime assertions cover bounded pages, previous/next cursors, exact/unknown counts, page/all-filtered selection, exclusions, account 100000 search, keyboard picker behavior, account/customer job separation, duplicate submission, known-zero selection, loading/error/empty/expiry states, out-of-order requests, local file metadata intake without content reads, queue limits, cancellation/retry focus, workflow focus and draft feedback. Responsive checks cover 360, 768 and 1440 CSS pixels in each locale with no document-level horizontal overflow. Table/navigation scrolling remains local and intentional. No browser runtime error was observed.
 
 Root inspected rendered English desktop, Arabic desktop, Korean tablet and English mobile screenshots. The independent QA reviewer inspected English desktop, Arabic mobile and Korean tablet. Full screenshot inspection of every route was not performed. Generated screenshots and machine output live under `output/validation/HB-63/`, are excluded from Git and are not promised as permanent hosted assets.
 
-To reproduce, serve this directory, install a compatible Playwright runtime outside the artifact, and run:
+To reproduce, follow [the build guide](../../../design-build-guide.md), serve `output/designs/HB-63-console`, install a compatible Playwright runtime outside the artifact, and run:
 
 ```sh
 HB_PLAYWRIGHT_MODULE=/absolute/path/to/playwright \
@@ -54,3 +54,17 @@ node docs/design-modules/00-scalable-console/r1/verify.cjs
 - Field-by-field business workflows, backend auth/scopes, tenant isolation, money contracts, indexed server search, stable server snapshots and real cursor tokens require production implementation and independent review. Client-side scope demonstrations do not authorize access.
 - Large-file resume, multipart transport, durable queues, real retry recovery and ingestion throughput are not implemented or benchmarked here.
 - Owner acceptance must identify the actual replacement scope before removing accepted v10 artifacts. PR review/merge and ticket completion are separate pending stages.
+
+## Brand and build follow-up
+
+The owner identified missing logo/design-rule adoption after the initial prototype. The follow-up replaces the H placeholder with the unchanged Fusion AI lockup and mark favicon, imports supplied close/chevron icons, applies semantic tokens, removes rounded geometry/shadows and packages IBM Plex Sans/Sans Arabic/Sans KR/Mono locally. The base token file and seven SVGs match the supplied originals byte-for-byte; provenance preserves their hashes and metadata. React components remain unadopted. Body/table 16px, Arabic line-height 1.8 and responsive layout are explicit overrides in the active guide.
+
+Active work entry points now include root AGENTS.md, .agents/rules/design-system.md, docs/design-system.md, docs/design-build-guide.md, the foundation entry page and module/tooling READMEs. Fontsource 5.3.0 dependencies are locked; their OFL-1.1 license files are copied into generated output and the root third-party notice identifies this scope.
+
+Executed: locked npm preparation, source/asset checks and two clean builds produced 874 emitted files with byte-identical manifests. A synthetic unknown-file probe caused the build to fail while preserving that file, confirming the output ownership guard. The build rejects unknown files/symlinks and clears only its manifest-owned generated tree. No generated font, screenshot, node_modules directory or output artifact is staged.
+
+The initial token migration introduced malformed white-space declarations; independent screenshot review caught vertical-character mobile navigation that the earlier overflow-only assertion missed. The declarations and malformed state token were corrected, the static guard strengthened, and computed nowrap checks added for TNB/table and mobile secondary navigation. Desktop secondary navigation intentionally supports wrapped titles.
+
+Final browser run: PASS 98 checks, including all 333 localized route renders, correct unchanged-logo loading/LTR orientation, square controls/panels, restored navigation/table readability, actual loading of all four local IBM Plex families, zero external runtime requests, zero missing built assets and the prior scale/focus/error scenarios. Root inspected refreshed Arabic desktop/mobile and Korean mobile screenshots. Independent review records below distinguish source re-review from rendered evidence inspection. No native-language or accessibility certification is implied.
+
+Independent follow-up verdict: PASS after source re-review and inspection of the refreshed 98-check report and Arabic mobile screenshot. The reviewer did not independently execute the browser suite. Its final reproduction-path documentation note was corrected to use the built output.

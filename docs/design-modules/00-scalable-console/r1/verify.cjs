@@ -25,10 +25,12 @@ const check=(name,value)=>{assert.ok(value,name);observations.push(name);};
  const browser=await chromium.launch({headless:true,...(process.env.HB_CHROMIUM?{executablePath:process.env.HB_CHROMIUM}:{})});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:1000}});
-  const errors=[];
+  const errors=[],external=[],missing=[];
+  page.on('request',request=>{if(new URL(request.url()).origin!==new URL(base).origin)external.push(request.url());});
+  page.on('response',response=>{if(response.status()>=400)missing.push(response.url());});
   page.on('pageerror',error=>errors.push(error.message));
   async function ready(){await page.waitForFunction(()=>!document.querySelector('#results')||document.querySelector('#results').getAttribute('aria-busy')==='false');}
-  async function go(id,lang='en'){await page.goto(`${base}/?lang=${lang}#${id}`);await ready();}
+  async function go(id,lang='en'){await page.goto(`${base}/?lang=${lang}#${id}`);await ready();await page.evaluate(()=>document.fonts.ready);}
   for(const lang of ['en','ar','ko']){
    await go('operations',lang);
    for(const screen of screens){
@@ -148,10 +150,18 @@ const check=(name,value)=>{assert.ok(value,name);observations.push(name);};
    for(const width of [360,768,1440]){
     await page.setViewportSize({width,height:1000});await go('operations',lang);
     check(`${lang} ${width}px has no document overflow`,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    check(`${lang} logo loads unchanged and remains LTR`,await page.locator('.brand-logo').evaluate(node=>node.complete&&node.naturalWidth===232&&getComputedStyle(node.parentElement).direction==='ltr'&&getComputedStyle(node).transform==='none'));
+    check(`${lang} navigation and table prevent character wrapping`,await page.locator(width<1024?'.tnb button,.rail nav a,table':'.tnb button,table').evaluateAll(nodes=>nodes.every(node=>getComputedStyle(node).whiteSpace==='nowrap')));
+    check(`${lang} square controls and panels`,await page.locator('button,.panel,dialog').evaluateAll(nodes=>nodes.every(node=>getComputedStyle(node).borderRadius==='0px'&&getComputedStyle(node).boxShadow==='none')));
     check(`${lang} layout direction matches`,await page.locator('html').getAttribute('dir')===(lang==='ar'?'rtl':'ltr'));
     await page.screenshot({path:path.join(output,`${lang}-${width}.png`),fullPage:true});
    }
   }
+  for(const [family,sample] of [['IBM Plex Sans','Billing'],['IBM Plex Sans Arabic','فواتير'],['IBM Plex Sans KR','청구'],['IBM Plex Mono','123']]){
+   check(`${family} loads locally`,await page.evaluate(async({family,sample})=>{const fonts=await document.fonts.load(`16px "${family}"`,sample);return fonts.length>0&&fonts.every(font=>font.status==='loaded');},{family,sample}));
+  }
+  check('No runtime external requests',external.length===0);
+  check('No missing built assets',missing.length===0);
   check('No browser runtime errors',errors.length===0);
   fs.writeFileSync(path.join(output,'results.json'),JSON.stringify({status:'PASS',observations},null,2));
   console.log(JSON.stringify({status:'PASS',checks:observations.length,routes:screens.length,locales:3},null,2));

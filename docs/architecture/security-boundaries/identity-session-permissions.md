@@ -66,3 +66,7 @@ Portal and external clients cannot use direct internal database, object/catalog,
 ## Authentication selection deferred
 
 On 2026-10-28 the owner deferred authentication-method selection. The [HB-34 sequence](../../work/HB-34-customer-access/brief.md) permits provider-independent authorization/disclosure/export design and synthetic internal verification to proceed before that decision. It selects no provider, login flow or session policy and does not relax the verified-principal boundary. Actual customer entry-point integration and external security certification remain pending authentication implementation.
+
+## Login and enterprise integration specification
+
+The owner's subsequent HB-60 request adds detailed login, LDAP, SAML and SSO planning. The [module 02 authentication integration proposal](../../design-modules/02-access/r2/authentication-integration.md) specifies LDAPv3 TLS, SAML 2.0 SP-initiated SSO and OIDC code/PKCE profiles, identity/group mapping, first-party sessions and recovery. This narrows the earlier deferral only for specification work: vendor, deployment, exact policy values and runtime adoption remain unresolved. Existing independent trust approval, current scoped authority and epoch rules remain mandatory. [Acceptance cases and actual review](../../design-modules/02-access/r2/authentication-verification.md) distinguish document checks from NOT_RUN interoperability tests.

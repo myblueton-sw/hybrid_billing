@@ -1,0 +1,38 @@
+const words = {
+jobDuplicate:['This preview job is already queued.','같은 시연 작업이 이미 등록되어 있습니다.','هذه المهمة التجريبية مضافة بالفعل.'],
+jobLimit:['Preview capacity reached (100 jobs). Reload to reset the simulation.','시연 작업 한도(100개)에 도달했습니다. 새로고침으로 시연을 초기화할 수 있습니다.','تم بلوغ سعة العرض (100 مهمة). أعد تحميل الصفحة لبدء المحاكاة من جديد.'],
+preview:['Interactive design · Synthetic data · No backend connection','인터랙티브 시안 · 합성 데이터 · 백엔드 미연결','تصميم تفاعلي · بيانات تجريبية · غير متصل بالخادم'],
+review:['Language review pending','현지 용어 검토 대기','المراجعة اللغوية قيد الانتظار'],
+workspace:['Organization','조직','المؤسسة'],search:['Search by name or ID','이름 또는 ID 검색','البحث بالاسم أو المعرّف'],screens:['Find a screen','화면 찾기','البحث عن شاشة'],
+provider:['Provider','제공업체','مزوّد الخدمة'],all:['All','전체','الكل'],status:['Status','상태','الحالة'],ready:['Available','조회 가능','متاح'],pending:['Pending','대기','قيد الانتظار'],failed:['Needs attention','확인 필요','يتطلب المراجعة'],
+refresh:['Refresh snapshot','조회 기준 새로고침','تحديث لقطة البيانات'],next:['Next','다음','التالي'],previous:['Previous','이전','السابق'],pageSize:['Rows per page','페이지당 행','صفوف لكل صفحة'],
+records:['Records','항목','السجلات'],unknown:['Total not yet known','전체 건수 미확정','الإجمالي غير معروف بعد'],selected:['Selected','선택됨','المحدد'],selectPage:['Select this page','현재 페이지 선택','تحديد هذه الصفحة'],selectAll:['Select all matching results','검색 결과 전체 선택','تحديد جميع النتائج المطابقة'],clear:['Clear selection','선택 해제','مسح التحديد'],
+bulk:['Review selected items','선택 항목 검토','مراجعة العناصر المحددة'],snapshot:['Snapshot','조회 기준','لقطة البيانات'],expired:['Snapshot expired. Refresh before continuing.','조회 기준이 만료됐습니다. 새로고침 후 진행하세요.','انتهت صلاحية لقطة البيانات. حدّثها للمتابعة.'],
+loading:['Loading records…','목록을 불러오는 중…','جارٍ تحميل السجلات…'],empty:['No matching records','일치하는 항목이 없습니다','لا توجد سجلات مطابقة'],tryFilters:['Change your search or filters.','검색어나 필터를 변경하세요.','غيّر البحث أو عوامل التصفية.'],retry:['Retry','다시 시도','إعادة المحاولة'],error:['Unable to load this page. Your filters are preserved.','목록을 불러오지 못했습니다. 검색 조건은 유지됩니다.','تعذّر تحميل الصفحة. تم الاحتفاظ بعوامل التصفية.'],
+asc:['ID: ascending','ID 오름차순','المعرّف: تصاعدي'],desc:['ID: descending','ID 내림차순','المعرّف: تنازلي'],sort:['Sort','정렬','الترتيب'],
+close:['Close','닫기','إغلاق'],details:['View details','상세 보기','عرض التفاصيل'],related:['Related tasks','관련 업무','المهام المرتبطة'],save:['Save draft preview','초안 저장 시연','حفظ مسودة تجريبية'],saved:['Draft saved in this preview only.','이 시안 안에서만 초안을 저장했습니다.','تم حفظ المسودة داخل هذا العرض فقط.'],
+choose:['Choose an account','계정 선택','اختيار حساب'],account:['Account','계정','الحساب'],chosen:['Current account','현재 계정','الحساب الحالي'],apply:['Use this account','이 계정 선택','استخدام هذا الحساب'],pickerHelp:['Search across 100,000 synthetic accounts. Only 20 results load at a time.','합성 계정 100,000개를 검색합니다. 결과는 20개씩 표시합니다.','ابحث ضمن 100,000 حساب تجريبي. تُعرض 20 نتيجة في كل مرة.'],
+queued:['Queued','작업 대기','في قائمة الانتظار'],processing:['Processing','처리 중','قيد المعالجة'],completed:['Preview complete','시연 완료','اكتمل العرض التجريبي'],cancelled:['Cancelled','취소됨','ملغى'],cancel:['Cancel','취소','إلغاء'],jobs:['Background tasks','백그라운드 작업','مهام الخلفية'],
+queue:['Queue preview job','작업 실행 시연','إضافة مهمة تجريبية'],jobNote:['Simulation only. Jobs are not persisted and reset on reload.','시연 전용입니다. 작업은 저장되지 않으며 새로고침 시 초기화됩니다.','محاكاة فقط. لا تُحفظ المهام وتُحذف عند إعادة تحميل الصفحة.'],
+noJobs:['No preview jobs yet','아직 시연 작업이 없습니다','لا توجد مهام تجريبية بعد'],
+files:['File intake','파일 수신','استلام الملفات'],addFiles:['Choose files (metadata only)','파일 선택 (정보만 확인)','اختيار ملفات (البيانات الوصفية فقط)'],fileNote:['No file content is read or uploaded. Up to 100 file descriptors; 25 shown per page.','파일 내용은 읽거나 업로드하지 않습니다. 파일 정보는 최대 100개, 페이지당 25개입니다.','لا تُقرأ محتويات الملفات ولا تُرفع. الحد الأقصى 100 ملف وصفي، وتُعرض 25 في الصفحة.'],
+fileLimit:['Queue limit reached: at most 100 file descriptors.','파일 정보 대기열은 최대 100개입니다.','تم بلوغ الحد الأقصى: 100 ملف وصفي.'],fileAdded:['File metadata added to preview queue.','파일 정보를 시연 대기열에 추가했습니다.','أُضيفت بيانات الملفات الوصفية إلى قائمة التجربة.'],
+name:['Name','이름','الاسم'],size:['Size','크기','الحجم'],action:['Action','작업','الإجراء'],runFiles:['Simulate processing','처리 시연','محاكاة المعالجة'],demoFiles:['Add large-file examples','대용량 파일 예시 추가','إضافة أمثلة لملفات كبيرة'],
+selectionNote:['Selection is bound to the current account, filters and snapshot. No financial action will occur.','선택 범위는 현재 계정·필터·조회 기준에 고정됩니다. 실제 청구 작업은 실행하지 않습니다.','التحديد مرتبط بالحساب وعوامل التصفية ولقطة البيانات الحالية. لن يُنفذ أي إجراء مالي.'],
+exceptions:['Excluded items','제외 항목','العناصر المستبعدة'],scope:['Scope','대상 범위','النطاق'],filterMatches:['All filtered results','검색 결과 전체','جميع النتائج المطابقة'],explicit:['Explicitly selected IDs','개별 선택 ID','المعرّفات المحددة'],
+notConnected:['Live integration not verified','실제 연동 미검증','لم يتم التحقق من الربط الفعلي'],unknownValue:['Not available','미확인','غير متاح'],
+view:['Presentation','표시 방식','طريقة العرض'],table:['Table','표','جدول'],cards:['List cards','목록 카드','بطاقات القائمة'],
+reviewTools:['Review scenarios','검토 시나리오','سيناريوهات المراجعة'],normal:['Normal','정상','عادي'],loadError:['Load error','조회 오류','خطأ تحميل'],expire:['Expire snapshot','조회 기준 만료','إنهاء صلاحية اللقطة'],
+summary:['Work overview','업무 개요','نظرة عامة على العمل'],accounts:['Logical demo accounts','논리적 합성 계정','حسابات تجريبية افتراضية'],fileCount:['Logical demo files','논리적 합성 파일','ملفات تجريبية افتراضية'],bounded:['Only the current page is rendered','현재 페이지만 화면에 표시','تُعرض الصفحة الحالية فقط'],
+progress:['Progress','진행 상황','التقدم'],check:['Review step','단계 검토','مراجعة الخطوة'],step:['Step','단계','الخطوة'],back:['Back to list','목록으로','العودة إلى القائمة'],
+columns:['Visible columns','표시 열','الأعمدة الظاهرة'],reset:['Reset filters','필터 초기화','إعادة ضبط التصفية'],period:['Period','기간','الفترة'],
+count:['Count','건수','العدد'],draft:['Draft','초안','مسودة'],currency:['Currency','통화','العملة'],basis:['Amount basis','금액 기준','أساس المبلغ'],
+nextTask:['Continue to related task','관련 업무로 이동','المتابعة إلى المهمة المرتبطة'],allScreens:['All screens','전체 화면','جميع الشاشات'],
+selectOne:['Select at least one item.','항목을 하나 이상 선택하세요.','حدّد عنصراً واحداً على الأقل.'],
+selectionReset:['Selection and preview cleared because the query scope changed.','조회 범위가 바뀌어 선택과 미리보기를 초기화했습니다.','تم مسح التحديد والمعاينة بسبب تغيير نطاق الاستعلام.'],
+validation:['Review required fields before continuing.','필수 입력 항목을 확인하세요.','راجع الحقول المطلوبة قبل المتابعة.'],
+noActual:['This action previews the workflow; no approval, payment or publication is executed.','업무 흐름만 시연하며 실제 승인·결제·게시를 실행하지 않습니다.','يعرض هذا الإجراء سير العمل فقط؛ لا يُنفذ اعتماد أو دفع أو نشر فعلي.']
+};
+export const locales=['en','ko','ar'];
+export const t=(key,locale='en')=>words[key]?.[locales.indexOf(locale)]??key;
+export const label=(value,locale='en')=>typeof value==='string'?value:value?.[locale]??value?.en??'';

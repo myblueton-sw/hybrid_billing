@@ -68,3 +68,14 @@ The initial token migration introduced malformed white-space declarations; indep
 Final browser run: PASS 98 checks, including all 333 localized route renders, correct unchanged-logo loading/LTR orientation, square controls/panels, restored navigation/table readability, actual loading of all four local IBM Plex families, zero external runtime requests, zero missing built assets and the prior scale/focus/error scenarios. Root inspected refreshed Arabic desktop/mobile and Korean mobile screenshots. Independent review records below distinguish source re-review from rendered evidence inspection. No native-language or accessibility certification is implied.
 
 Independent follow-up verdict: PASS after source re-review and inspection of the refreshed 98-check report and Arabic mobile screenshot. The reviewer did not independently execute the browser suite. Its final reproduction-path documentation note was corrected to use the built output.
+
+## HB-63 contribution follow-up — 2026-10-31
+
+Added five owner-approved monthly tiers and separate individual/company/organization recognition guidance at `#community`. No roster or authenticated sponsor data is loaded. Source: [sponsorship decision and manual workflow](../../../community/sponsorship.md).
+
+- `npm run build --prefix tools/design`: PASS, 8 immutable foundations, 875 emitted files.
+- `node /private/tmp/hb63-preview.cjs`: PASS, 98 checks, 112 routes across 3 locales.
+- `node /private/tmp/hb63-community-qa.cjs`: PASS, header entry, five tiers, contact link, EN/KO/AR at 360/1440px, no horizontal overflow or runtime errors; six screenshots in local validation output. Korean desktop screenshot visually inspected.
+- Independent architect plan and actual-change review: PASS. Tier/identity separation, consent, private payment/contact exclusion, public branch and license boundaries, route/build integration verified. Reviewer also compared built module/hash and rendered localized markup.
+
+Live tier publication, active sponsor verification, consent collection, automatic synchronization, native Arabic acceptance and benefit fulfillment remain UNVERIFIED. Existing onboarding/AI follow-up is not completed by this scoped change.

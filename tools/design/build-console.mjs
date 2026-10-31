@@ -39,7 +39,7 @@ async function copyTree(directory,prefix){
   else await emit(`${prefix}/${item.name}`,await readFile(path.join(directory,item.name)));
  }
 }
-for(const name of ['index.html','app.js','catalog.js','copy.js','data.js','widgets.js','style.css'])await emit(name,await readFile(path.join(source,name)));
+for(const name of ['index.html','app.js','catalog.js','copy.js','data.js','widgets.js','community.js','style.css'])await emit(name,await readFile(path.join(source,name)));
 await copyTree(path.join(foundations,'assets'),'design-system/assets');
 await emit('design-system/tokens.css',await readFile(path.join(foundations,'styles/tokens.css')));
 await emit('design-system/console.css',await readFile(path.join(foundations,'styles/console.css')));

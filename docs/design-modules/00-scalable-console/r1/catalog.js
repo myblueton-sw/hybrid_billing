@@ -1110,5 +1110,32 @@ export const screens = [
     "fields": [{"key":"contract","label":{"en":"Contract reference","ko":"계약 참조","ar":"مرجع العقد"},"type":"text"},{"key":"period","label":{"en":"Billing period","ko":"청구 기간","ar":"فترة الفوترة"},"type":"text"}],
     "action": {"en":"Review evidence","ko":"근거 검토","ar":"مراجعة الأدلة"},
     "related": ["support-matrix"], "registryIds": ["B04"], "baselinePage": null
-  }
+  },
+{
+  "id": "community",
+  "group": "settings",
+  "title": {
+    "en": "Contribute",
+    "ko": "기여",
+    "ar": "المساهمة"
+  },
+  "description": {
+    "en": "Individuals, companies and organizations can sponsor at any tier. Sponsor type is separate from the monthly tier.",
+    "ko": "개인·기업·단체 모두 원하는 등급으로 후원할 수 있습니다. 후원 유형과 월 후원 등급은 별개입니다.",
+    "ar": "يمكن للأفراد والشركات والمؤسسات الدعم بأي مستوى. نوع الداعم مستقل عن مستوى الدعم الشهري."
+  },
+  "kind": "detail",
+  "columns": [],
+  "fields": [],
+  "action": {
+    "en": "View sponsorship",
+    "ko": "후원 보기",
+    "ar": "عرض الدعم"
+  },
+  "related": [
+    "operations"
+  ],
+  "registryIds": [],
+  "baselinePage": null
+}
 ];

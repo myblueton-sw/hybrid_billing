@@ -40,3 +40,7 @@ Open `?lang=en#operations`, `?lang=ar#operations` or `?lang=ko#operations`; `#co
 [Verification](verification.md) records independent findings, fixes, browser evidence and remaining acceptance. The 111-route coverage is navigation and common-interaction coverage. It does not establish complete business behavior for every form/detail/workflow. The existing v10 baseline is preserved until the owner accepts a replacement scope.
 
 Brand and style source: [active design foundations](../../../design-system.md). The placeholder H mark has been replaced with the supplied Fusion AI SVG; favicon and controls use canonical assets. Source hashes and core visual rules are checked by tools/design.
+
+## Contribution follow-up
+
+The header utility link opens `#community` in English, Arabic or Korean. Monthly benefits and the individual/company/organization recognition workflow follow [the sponsorship decision](../../../community/sponsorship.md). The roster is explicitly unconnected; no sponsor identities, payment records, automatic synchronization or live tier publication are claimed. Work contributor recognition remains separate from financial sponsorship.

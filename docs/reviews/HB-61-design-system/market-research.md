@@ -99,3 +99,7 @@ The local `docs/ui/screen-registry.json` contains 49 entries. This table maps ev
 5. Further confidence would require equivalent screen prototypes, representative US and Arabic-speaking users, and observed task results. The full inventory above identifies coverage and gaps; this desk-research report is not a completed usability study.
 
 No product code, base-style rule, menu specification, financial contract, permission boundary, or licensing policy is changed by this research. Verification and independent-review status are recorded in [verification.md](verification.md).
+
+## Subsequent owner direction: terminology
+
+The owner subsequently required English/Arabic-first design with Korean as a first-class market and externally researched regional IT terminology instead of mechanical translation. The separate [terminology guide](../../ui/design-system/terminology.md) implements that content rule with source-backed candidates and explicit review states. It does not retroactively turn this research into an accepted visual design or a completed multilingual screen review.

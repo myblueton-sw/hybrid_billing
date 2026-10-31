@@ -34,3 +34,13 @@ No accessibility conformance, translation quality, RTL interaction, responsive r
 ## Handoff boundary
 
 This report is a reviewable research artifact. No merge, style adoption, menu replacement, or runtime import is claimed. HB-61's broader import scope remains open. Research publication and remaining tracking status are reported in the PR and ticket handoff.
+
+## Terminology extension, 2026-10-31
+
+The owner subsequently requested externally researched regional IT terminology rules for English, Arabic and Korean. Root owns the new [terminology guide](../../ui/design-system/terminology.md), the AGENTS.md entry link, and updates to these research records. This extension establishes a content workflow; the original visual research remains unchanged in meaning. No runtime translation, screen redesign or financial/security contract change is included.
+
+Primary evidence covers Google global writing, UAE English/Arabic content guidance, AWS English/Korean/Arabic terminology, Microsoft Korean/Arabic cloud vocabulary, NAVER Cloud Korean administration terminology and FinOps definitions. A localized official page is treated as usage evidence, not proof of human translation or native-market acceptance. The initial ten concept rows are candidates with explicit unresolved labels; no native-language/domain approval is claimed.
+
+Root checks completed: nonempty OKF type fields, local document links, and source-ID references. Unsupported discovery leads were excluded from term evidence: the Korean Microsoft PDF was not readable through the research tool, KRDS retrieval failed, and a NAVER notice's Korean search excerpt was not exposed on direct retrieval. These failures are not recorded as successful source review.
+
+Independent documentation review by the separate read-only research_review agent: PASS; sampled primary-source usage and final four-file staged diff checked. No blocking findings. Root inspected the staged diff for scope and sensitive data; staged whitespace checks passed. Native practitioner review, regional term acceptance and rendered multilingual QA are UNVERIFIED; those limits do not prevent recording the requested source-checking rules.

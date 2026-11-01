@@ -3,6 +3,7 @@ import { identity } from "../modules/identity/module";
 import { operations } from "../modules/operations/module";
 import { organizations } from "../modules/organizations/module";
 import { issuance } from "../modules/issuance/module";
+import { onboarding } from "../modules/onboarding/module";
 import HeaderSelect from "./HeaderSelect";
 import AccountPicker from "./AccountPicker";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -26,6 +27,7 @@ export const modules = [
   operations,
   organizations,
   issuance,
+  onboarding,
 ];
 export const extensions = [evidenceGuide];
 function Workspace({

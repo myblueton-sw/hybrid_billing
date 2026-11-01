@@ -46,11 +46,11 @@ Three shells replace the current top-domain tabs.
 
 The workspace switcher selects a workspace (tenant boundary), not a provider source account. The current synthetic account picker (`scope=sample-a|sample-b`) is a preview stand-in and must be relabelled as such until a workspace contract exists. Switching installation is a larger boundary than an organization filter: open jobs and drafts show which installation and workspace they belong to, and the switch confirms that boundary (ui-design.md line 28).
 
-**Left menu** (admin): nine groups in planning order, plus My account (M05) in the user menu. Each group lists its screens by planning ID order. A group is shown when at least one of its screens is permitted for the current role; the per-screen `roleCodes` in the registry decide this (`conditionalGrants` name grants that need a separate permission and no role code; the preview shows them as conditional). A01 additionally requires the separate permission named in its `requiresPermission` field (`assistant.use`) before its menu entry appears, and the table below only summarises the menu's main users. The current rail search remains at the top and searches only permitted screen titles and IDs.
+**Left menu** (admin): nine groups in planning order, plus My account (M05) in the user menu. Each group lists its screens by planning ID order. A group is shown when at least one of its screens is visible to the user under the permission model below. The table summarises the menu's main users using the planning personas. The current rail search remains at the top and searches only permitted screen titles and IDs.
 
 This follows [roles-and-navigation.md](../../ui/navigation/roles-and-navigation.md), which places M05 under 내 계정; ui-design.md line 41 lists M05 under 사용자와 접근 (decision D11). The registry's `menus` list also contains the portal and pre-login keys, so it has twelve keys in total.
 
-| Menu (KO) | Screens | Primary roles |
+| Menu (KO) | Screens | Main users (planning personas) |
 | --- | --- | --- |
 | 업무 홈 | U01 U02 U03 U04 | BL, AP, CP, AU; U03 for all business roles |
 | 조직과 계약 | O01 O02 O03 | AM, CP |
@@ -115,17 +115,32 @@ Every screen uses one archetype. Archetypes are compositions of the common compo
 | prelogin-form / prelogin-wizard | Entry shell. | L01 / L02, L03 |
 | portal-dashboard / portal-list-detail / portal-inbox | Portal shell variants of dashboard, list with document detail, and inbox. | C01 / C02 / C03 |
 
-## Roles and visibility
+## Permissions and roles
 
-Role codes follow the planning document: OP, AM, PR, BL, AP, CP, AU, CU, IA. Menu visibility follows the per-screen `roleCodes` in the registry. **Menu visibility is not authorization**: every read, write and download is rechecked by the server, and hidden objects never appear in counts, badges, search or errors. Customers never receive admin menus, internal cost, margin, other customers or internal notes; hiding columns in the browser is prohibited for this.
+**The product fixes permissions, not roles.** A permission is an action (for example approving a billing run, editing a cost pool or downloading an original) bound to a scope: customer, legal entity, contract, field and period. The server evaluates it for the current user and session on every read, write and download (ui-design.md, 역할과 화면 권한). Each installation defines its own roles in M03 by bundling permissions and assigns them to users; role names are the installation's own.
 
-The preview adds a synthetic role selector inside review tools so reviewers can see per-role menus and disabled actions. It is labelled as preview tooling and grants nothing.
+The planning codes OP, AM, PR, BL, AP, CP, AU, CU and IA are **design personas**. The registry keeps them as `exampleRoles` and `exampleRoleTemplates`: they describe who a screen is designed for and are candidate default role templates. They never grant anything. The differing definitions of CP across specs (customer policy administrator versus internal cost owner) are therefore two personas, not a product decision; a default template set may offer both.
+
+**Visibility:** a screen and its menu entry are shown when the user holds at least one permission belonging to that screen (its view permission or any of its actions) within the current scope. A01 additionally requires `assistant.use`. Hidden objects never appear in counts, badges, search or errors, and hiding is never the security control: the server rechecks every request. Customer users are users of the fixed customer class (see invariants below), and their permissions are limited to their own organization's scope; customers never receive admin menus, internal cost, margin, other customers or internal notes, and hiding columns in the browser is prohibited for this.
+
+**Product invariants that no role bundle can override:**
+
+- **User class.** Every user has a fixed class, internal or customer, set when the account is created or the invitation is issued (L02 token type) and changeable only through M01's own controlled flow, never through a role. Each catalog permission declares the user classes allowed to hold it. M03 rejects granting an internal permission to a customer user. The shell is chosen by user class, and the visibility rule applies only inside that shell: a customer user never reaches an admin screen or admin data, whatever bundle was attempted (roles-and-navigation.md, 사용자 포털).
+- **Separation of duties.** The catalog declares incompatible permission pairs (for example authoring and approving the same revision). Holding several roles never lifts separation of duties or the self-approval limit; approval actions are rejected when the approver authored the target revision.
+- **Grant ceiling.** In M03 a user can grant or delegate only permissions they hold with a delegable flag, within their own scope. An access administrator manages assignments without automatically acquiring the business permissions they assign (ui-design.md, IA).
+- **Sensitive data.** Amounts, tax, bank details and original or bulk export are separate permissions from screen view. An installation-operations user does not see customer amounts unless separately granted.
+
+Foundation 0a encodes these in the catalog contract and 0b tests them: a customer user given a bundle containing an internal permission sees no admin screen and the grant is refused; a bundle containing incompatible pairs cannot approve its own revision; a grant above the granter's ceiling is refused; viewing a screen without the sensitive-field permission shows the field as not permitted.
+
+**Permission catalog:** each screen record lists `specCommands` (where its spec defines command names, such as U02, S03, S06, B09, B11, I04 and M02) and `actionsSummary` (the spec's action list otherwise). Foundation ticket 0a defines the permission key naming convention and the catalog: one view permission per screen object and one key per action, each with its allowed user classes, delegable flag, incompatible pairs and sensitivity. Until that independent review passes, the catalog is an unverified input.
+
+The preview offers a role selector in review tools that applies example role templates to show menus and disabled actions. It is labelled as preview tooling and grants nothing.
 
 ## Audience and shell selection
 
 The shell and the data projection are chosen by the authenticated audience (admin, customer or unauthenticated), never by the URL path. U03 (`/tasks`) and M05 (`/my-security`) are shared paths: their customer views are separate projections with their own fixtures, not the admin component with columns hidden. Customers see only public document, download and inquiry events in U03 (U03 spec), and customer start pages are C01 rather than U01. The preview's synthetic audience selector switches the projection for review only.
 
-Required negative cases for the foundation and portal tickets: a customer opening any admin path or legacy admin ID gets no admin shell, menu, counts or data; customer search, badges and errors contain no admin or other-customer counts; an admin role without permission for a screen sees neither its menu entry nor its existence in search.
+Required negative cases for the foundation and portal tickets: a customer opening any admin path or legacy admin ID gets no admin shell, menu, counts or data; customer search, badges and errors contain no admin or other-customer counts; an admin user without any permission of a screen sees neither its menu entry nor its existence in search.
 
 # Screen index
 
@@ -218,7 +233,7 @@ Each must be resolved in the named ticket, not assumed.
 | # | Topic | Detail | Where decided |
 | --- | --- | --- | --- |
 | D1 | Onboarding steps | Five S02 spec steps vs eight HB-67 steps; wireframe W02 (ui-design.md line 253) also shows seven stages. | Owner, before S02 |
-| D2 | CP role meaning | Specs define CP both as customer policy administrator (U01, U02, U04, R01, M05, C01–C03) and as internal cost owner (O/I/M/P glossaries, navigation doc). | Owner/domain review, before role-dependent screens |
+| D2 | CP role meaning | **Resolved 2026-11-01 by the owner** (session decision recorded on HB-72 in Linear): roles are defined per installation from permissions; CP and the other codes are design personas and example templates. The two CP definitions become two personas. | Resolved |
 | D3 | S05 customer access | S05 lists CU although customers must not be routed to internal evidence screens. Recommendation: CU reaches permitted evidence only through C02. | S05 ticket |
 | D4 | Correction entry owner | I01, I02, B10 and B11 each offer correction entry; F04 starts from I01/B11. | B11/I01 tickets |
 | D5 | Payment-term extension | U02 forbids it as a schedule change; I01 and O03 each have their own request. | O03/I01 tickets |
@@ -239,9 +254,9 @@ Each ticket follows the mandatory sequence in AGENTS.md (machine claim, branch f
 
 | Ticket | Scope | Required tests |
 | --- | --- | --- |
-| 0a Registry and routing | Per-module screen registry files generated from screen-registry.json (tab slugs and machine scope keys added); hash routing with object, tab and step segments; the 112-entry legacy redirect table; legacy-to-planning screen map for review records; per-module copy files. | All 112 legacy IDs redirect to the recorded target with lang/mode/scope kept; unknown IDs fall back by audience; registry has 49 screens and unique paths. |
-| 0b Shells and navigation | Admin, portal and pre-login shells; top bar (workspace boundary, installation badge, jobs, user menu); left menu with per-screen role filtering; synthetic role and audience preview in review tools; review tooling relocation. | Role preview grants nothing; per-role menus; customer negative cases (no admin shell, menu, counts or data from admin or legacy paths); keyboard navigation of menu and user menu; KO/EN/AR at 1440/390. |
-| 0c Page frame | Page header with breadcrumb and cannot-restore fallback; scope bar with invalidation and unsaved-input prompt; object tabs; state view including revoked/session-expired; amount meaning; placeholder page for unimplemented screens (ID, purpose, roles, scope, tabs, labelled not implemented). | Scope change clears selection and previews; inapplicable tabs omitted; each state renders its text; placeholder never shows fixture data. |
+| 0a Registry and routing | Per-module screen registry files generated from screen-registry.json (tab slugs and machine scope keys added); hash routing with object, tab and step segments; the 112-entry legacy redirect table; legacy-to-planning screen map for review records; per-module copy files; permission key naming convention and permission catalog (view permission per screen object, one key per action; allowed user classes, delegable flag, incompatible pairs, sensitivity) from `specCommands` and `actionsSummary`, reviewed independently as a permission contract. | All 112 legacy IDs redirect to the recorded target with lang/mode/scope kept; unknown IDs fall back by audience; registry has 49 screens and unique paths. |
+| 0b Shells and navigation | Admin, portal and pre-login shells; top bar (workspace boundary, installation badge, jobs, user menu); left menu filtered by permissions held in the current scope; preview role selector applying example role templates, and audience preview, in review tools; review tooling relocation. | Preview grants nothing; menus follow held permissions (a user with one action of a screen sees it, without any sees nothing); invariant tests (customer class cannot receive internal permissions or reach admin screens, incompatible pairs, grant ceiling, sensitive-field separation); customer negative cases (no admin shell, menu, counts or data from admin or legacy paths); keyboard navigation of menu and user menu; KO/EN/AR at 1440/390. |
+| 0c Page frame | Page header with breadcrumb and cannot-restore fallback; scope bar with invalidation and unsaved-input prompt; object tabs; state view including revoked/session-expired; amount meaning; placeholder page for unimplemented screens (ID, purpose, example personas, scope, tabs, labelled not implemented). | Scope change clears selection and previews; inapplicable tabs omitted; each state renders its text; placeholder never shows fixture data. |
 | 0d Data components | Bulk table with the full normative contract; job progress; approval card; compare; timeline; evidence link; secret reference field. | Unit and browser tests for every bulk-table clause listed above, including all-matching manifest, cursor expiry, pre-execution recheck and export manifest; job counts without invented progress. |
 | 0e Body migration | Move the 22 implemented bodies to their planning routes without behavior changes (S02 interim steps); keep item IDs; reset fingerprints with disclosure. | Existing suites (unit, qa, qa:work, qa:entry, qa:setup) adapted only for routes; each moved body renders at its new route; review panel shows planning and legacy screen IDs. |
 
@@ -252,15 +267,15 @@ Order prioritises reaching a synthetic first billing cycle. F01's installation a
 | Phase | Screens | Depends on |
 | --- | --- | --- |
 | 1 | L01–L03 | 0a–0e |
-| 2 | U01–U04 | 0a–0e, D2 for CP-dependent views |
+| 2 | U01–U04 | 0a–0e |
 | 3 | S01–S06 | 0a–0e, D1 for S02 |
-| 4 | O01–O03 | 0a–0e, D2 |
+| 4 | O01–O03 | 0a–0e |
 | 5 | B01–B07 | 0a–0e |
 | 6 | B08–B11, I01–I04 | 0a–0e |
-| 7 | M01–M05 | 0a–0e, D2, D11 |
+| 7 | M01–M05 | 0a–0e, D11 |
 | 8 | P01–P07 | 0a–0e |
-| 9 | R01, R02 | 0a–0e, D2 |
-| 10 | C01–C03 | 0a–0e, D2 |
+| 9 | R01, R02 | 0a–0e |
+| 10 | C01–C03 | 0a–0e |
 | 11 | A01 | 0a–0e |
 
 Each phase is a parent ticket with one child ticket per screen. Only one screen ticket per owning module is active at a time, because screens of a module share its registry and copy files. Every screen ticket:
@@ -269,16 +284,16 @@ Each phase is a parent ticket with one child ticket per screen. Only one screen 
 - **Design process:** for a new visual composition, record external reference evidence (source, observation, adopted, rejected) and obtain the restricted Claude CLI ui-designer composition and render comparison, as service-screen-style.md requires.
 - **Allowed files:** the owning module's folder (screen code, its per-module registry and copy files, fixtures, tests) and the screen's QA suite. Shared frame components change only through a separate shared-component ticket with an impact assessment.
 - **Data:** synthetic fixtures only, visibly labelled; explicit unconnected mode shows no fixture data. No production API, credential, payment, deployment or message.
-- **Validation:** unit tests for screen state logic; a browser suite covering the screen's states, role-preview differences, audience negative cases where relevant, scope-change invalidation, keyboard and focus, KO/EN/AR at 1440 and 390 px, computed neutral borders and no horizontal overflow; all existing suites.
+- **Validation:** unit tests for screen state logic; a browser suite covering the screen's states, permission differences (each action enabled or disabled by its permission key), audience negative cases where relevant, scope-change invalidation, keyboard and focus, KO/EN/AR at 1440 and 390 px, computed neutral borders and no horizontal overflow; all existing suites.
 - **Acceptance:** stable item IDs listed; independent read-only review; owner confirms the screen through the review control (FIX). No assistant, test or build creates FIX.
 
 # Verification of this document
 
 Root-executed on 2026-11-01:
 
-- The registry has exactly 49 screen records matching the planning catalog IDs and paths in ui-design.md lines 32–44, plus per-screen purpose and roles parsed from the catalog tables (lines 90–163).
+- The registry has exactly 49 screen records matching the planning catalog IDs and paths in ui-design.md lines 32–44, plus per-screen purpose and example personas parsed from the catalog tables (lines 90–163).
 - Absorbed routes were computed from the HB-63 catalog (`apps/console/src/shared/catalog.json` on main 3e5f754): every planning screen maps to at least one existing route; three routes have no registry ID (`overview`, `contents`, `community`); four routes map to two or more screens (`operations`, `marketplace-commitment`, `auto-history`, `v4-customer-months`). That catalog is on main 3e5f754 and derives from HB-63 commit 4d51763. `legacyRedirects` covers all 112 IDs with exactly one target each; the four multi-mapped routes use recorded primary targets (U01, B06, B10, C01).
-- An independent read-only reviewer reviewed the first draft (PASS WITH CHANGES, six blocking items) and sampled tabs and audience for 17 further screens against their specs. A re-review confirmed all six resolved and raised one new item, free-text roles, which this revision fixes by storing role codes and conditional grants.
+- An independent read-only reviewer reviewed the first draft (PASS WITH CHANGES, six blocking items) and sampled tabs and audience for 17 further screens against their specs. A re-review confirmed all six resolved and raised one new item, free-text roles, which was fixed by storing persona codes and conditional grants. On 2026-11-01 the owner then directed a permission-first model: roles are defined per installation, persona codes became `exampleRoles`, D2 was resolved, and per-screen actions plus a 0a permission catalog were added. That revision is re-reviewed separately.
 - Tabs, scope fields and archetypes were extracted from all 49 specs by a separate read-only agent. Root compared the tab lists of U01, U02, S02, B08, B09, I01 and C02 with their specs: all match, except that the registry places the appended payment-terms and recognition-cadence tabs after the primary tabs (recommendation D9). Other screens' tabs rely on the extraction. Paths, the default object tab set and flows F01–F08 come from ui-design.md, not from the specs.
 - Module owners follow HB-66 `screen-ownership.json` (PR 62, open). Where it lists several modules, the owner was chosen by planning menu; P06 is assigned to administration rather than design-review because it is a product screen.
 

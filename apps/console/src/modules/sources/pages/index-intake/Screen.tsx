@@ -246,7 +246,7 @@ export default function Screen({
           )}
         </p>
       </section>
-      <section className="panel">
+      <section className="panel list-panel">
         <div className="toolbar">
           <label className="grow">
             {t(l, "Search", "검색", "بحث")}

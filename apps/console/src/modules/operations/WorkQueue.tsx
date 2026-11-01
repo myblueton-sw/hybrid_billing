@@ -184,7 +184,7 @@ export default function WorkQueue({
           )}
         </p>
       </section>
-      <section className="panel">
+      <section className="panel list-panel">
         <div className="toolbar">
           <label>
             {t(l, "Billing period", "청구 기간", "فترة الفوترة")}

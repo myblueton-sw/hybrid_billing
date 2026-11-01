@@ -424,11 +424,9 @@ bdi {
 }
 
 .design-review {
-  margin: 0 0 var(--hb-sp-16);
+  margin: 0 0 var(--hb-sp-20);
   padding-block: 6px;
-  padding-inline: var(--hb-sp-14) 6px;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
+  border-block: 1px solid var(--c-border);
   font-size: var(--ui-small);
 }
 .review-heading {
@@ -491,6 +489,54 @@ bdi {
 }
 .sd-list-context {
   margin-block-end: var(--hb-sp-16);
+}
+.sd-list-context:has(+ .list-panel) {
+  margin-block-end: 0;
+  padding: var(--hb-sp-16) var(--hb-sp-20) var(--hb-sp-12);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-bottom: 0;
+}
+.panel.list-panel {
+  padding: 0;
+}
+.list-panel > .toolbar {
+  margin: 0;
+  padding: var(--hb-sp-12) var(--hb-sp-20);
+}
+.sd-list-context + .list-panel {
+  border-top: 0;
+}
+.sd-list-context + .list-panel > .toolbar:first-child {
+  padding-top: 4px;
+}
+.list-panel .bulkbar {
+  border-inline: 0;
+  padding-inline: var(--hb-sp-20);
+}
+.list-panel .table-wrap,
+.list-panel .state {
+  border-inline: 0;
+  border-bottom: 0;
+}
+.list-panel #results > .notice,
+.list-panel #results > [role="alert"] {
+  margin: 0;
+  padding: var(--hb-sp-12) var(--hb-sp-20);
+  border-inline: 0;
+  border-bottom: 0;
+}
+.list-panel .cards {
+  padding: var(--hb-sp-16) var(--hb-sp-20);
+  border-top: 1px solid var(--c-divider);
+}
+.list-panel .pager {
+  padding: var(--hb-sp-10) var(--hb-sp-20);
+  border-top: 1px solid var(--c-border);
+}
+.list-panel > .scenario {
+  margin: 0;
+  padding: 0 var(--hb-sp-20) var(--hb-sp-12);
 }
 .sd-list-context h2 {
   margin-block-end: 2px;
@@ -1194,5 +1240,17 @@ dialog header h2 {
   .record-card > input[type="checkbox"] {
     width: 24px;
     height: 24px;
+  }
+}
+@media (max-width: 767px) {
+  .list-panel > .toolbar,
+  .list-panel .bulkbar,
+  .list-panel .pager,
+  .list-panel > .scenario,
+  .list-panel .cards,
+  .list-panel #results > .notice,
+  .list-panel #results > [role="alert"],
+  .sd-list-context:has(+ .list-panel) {
+    padding-inline: var(--hb-sp-16);
   }
 }

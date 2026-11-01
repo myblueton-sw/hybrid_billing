@@ -78,7 +78,11 @@
   font-size: var(--hb-fs-16);
 }
 .setup-content > .setup-draft {
-  padding: 8px var(--hb-sp-14);
+  margin: 0 0 var(--hb-sp-10);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--hb-muted);
   font-size: var(--ui-small);
 }
 .setup-required {

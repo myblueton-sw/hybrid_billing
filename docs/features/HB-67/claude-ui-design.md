@@ -89,3 +89,14 @@ Root executed in worktree `/private/tmp/hb67-react-console` on macOS arm64, Node
 Independent read-only review (separate Claude subagent, no edits): initial verdict FAIL-fixable on constraints and PASS WITH FIXES on professional quality. Blocking items were the undocumented 14px change (resolved by owner approval), a mobile logo mark below 20px (fixed at 28px height) and fixed 32px targets on coarse pointers (fixed). Re-review: logo PASS, touch targets PASS with a record-card checkbox gap (fixed), no new blocking issue. A facts-column ID wrap found in re-review was fixed by stacking label and value; confirmed on the regenerated customer-detail capture by root, not re-reviewed.
 
 Not verified: coarse-pointer devices, Windows/Linux, other browsers, screen readers, native-language terminology and owner acceptance.
+
+## Container consolidation
+
+On 2026-11-01 the owner asked to remove excess boxes after root reported that list screens nested a bordered bulk bar and table inside a bordered panel, and that standard consoles group the list title, toolbar and table in one container. Changes:
+
+- Operations queue and source intake: the list title section, filters, bulk bar, table, pager and review scenarios form one bordered container (`list-panel`). The table and bulk bar run flush to the container edges; inner sections are separated by neutral dividers instead of nested borders.
+- Page header remains unboxed. The screen design review strip uses top and bottom dividers instead of a box.
+- Onboarding draft notice is unboxed muted text above the step content.
+- The skip link is visually clipped until focused.
+
+Detail and form screens keep a single panel per task section. Shared-shell fingerprints change for implemented screens; no prior FIX existed. Root-run after the change: unit 40, qa 37, qa:work 32, qa:entry 50, qa:setup 21 and verify-build 242 PASS; KO desktop operations/intake (synthetic and unconnected) and AR 390px operations inspected. No separate reviewer examined this container change.

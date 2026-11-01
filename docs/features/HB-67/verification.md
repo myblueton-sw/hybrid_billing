@@ -4,6 +4,14 @@ title: HB-67 React console verification
 description: Records executed checks and remaining limitations for the first React frontend increment.
 ---
 
+# Designer-led entry composition: current evidence
+
+The designer led actual-service reference comparison before root wrote the visual revision, then inspected all eight start/login KO/AR renders at 1440/390. The new full-height identity/action composition, unboxed action area, grouped secondary paths and footer utility matched the specification. Mobile intro stretch was identified and corrected; suspected Korean action spacing was measured live at 32px rather than assumed from a screenshot.
+
+Build and 242 artifact hashes PASS. The entry suite passed 50 checks, including six-route KO/EN/AR desktop/mobile rendering, original negative identity/review tests, full width, neutral borders, expanded language menus, content-sized mobile introduction and at least 24px note-to-action separation. Screenshots of normal states now clear a preceding QA keyboard focus before capture; dedicated focus tests remain. No auth/state contract changed. External GitLab login was unavailable behind a verification challenge and was not treated as inspected login evidence.
+
+Only start/login receive the new two-pane composition; other existing entry bodies retain their prior screen-specific layout. Root performed runtime tests; designer performed visual comparison. All-service completion, native terminology, production identity integration, other OS execution and owner FIX remain outside these results.
+
 # Full-width service presentation and locale selector
 
 Root verified official SAP Fiori and Carbon references recorded in design.md before this revision. The owner's full-width requirement governs the layout; sources are supporting patterns, not blanket approval. Centered page caps are removed, review is collapsed, and the identity-disconnected boundary remains visible. The shared language selector gains styled code/name/selection presentation without colored edge decoration.

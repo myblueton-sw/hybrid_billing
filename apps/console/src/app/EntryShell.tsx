@@ -62,8 +62,12 @@ export default function EntryShell({
           }}
         />
       </header>
-      <main id="main" className="entry-main" tabIndex={-1}>
-        {route.id !== "entry-start" && (
+      <main
+        id="main"
+        className={`entry-main ${["entry-start", "entry-login"].includes(route.id) ? "entry-designed" : ""}`}
+        tabIndex={-1}
+      >
+        {!["entry-start", "entry-login"].includes(route.id) && (
           <a className="entry-back" href={entryUrl("entry-start", l, mode)}>
             {t(l, "Back to start", "시작 화면으로", "العودة إلى البداية")}
           </a>
@@ -78,6 +82,20 @@ export default function EntryShell({
             onState={onState}
           />
         </div>
+      </main>
+      <footer className="entry-footer">
+        <span className="entry-footer-brand">Hybrid Billing</span>
+        <span className="entry-environment">
+          {t(
+            l,
+            "Interactive preview · identity service not connected",
+            "인터랙티브 시안 · 인증 서비스 미연결",
+            "معاينة تفاعلية · خدمة الهوية غير متصلة",
+          )}
+        </span>
+        <span>
+          {t(l, "Workspace access", "업무 공간 접속", "الوصول لمساحة العمل")}
+        </span>
         <details className="entry-review-tools">
           <summary>
             {t(l, "Confirm screen review", "검수 확인", "تأكيد مراجعة الشاشة")}
@@ -94,20 +112,6 @@ export default function EntryShell({
             items={view.items}
           />
         </details>
-      </main>
-      <footer className="entry-footer">
-        Hybrid Billing{" "}
-        <span className="entry-environment">
-          {t(
-            l,
-            "Interactive preview · identity service not connected",
-            "인터랙티브 시안 · 인증 서비스 미연결",
-            "معاينة تفاعلية · خدمة الهوية غير متصلة",
-          )}
-        </span>
-        <span>
-          {t(l, "Workspace access", "업무 공간 접속", "الوصول لمساحة العمل")}
-        </span>
       </footer>
     </div>
   );

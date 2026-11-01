@@ -19,7 +19,6 @@ export default function Screen({ locale: l, mode, onState }: ScreenProps) {
   return (
     <div className="entry-welcome">
       <section className="entry-intro">
-        <span className="entry-eyebrow">Hybrid Billing</span>
         <h1>
           {t(
             l,
@@ -54,63 +53,74 @@ export default function Screen({ locale: l, mode, onState }: ScreenProps) {
           </div>
         </dl>
       </section>
-      <section className="entry-card entry-signin-card">
-        <h2>
-          {t(
-            l,
-            "Sign in to your workspace",
-            "업무 공간 로그인",
-            "الدخول إلى مساحة العمل",
-          )}
-        </h2>
-        <p>
-          {t(
-            l,
-            "Continue through your organization’s sign-in process.",
-            "소속 조직의 로그인 절차를 진행합니다.",
-            "تابع إجراءات تسجيل الدخول الخاصة بمؤسستك.",
-          )}
-        </p>
-        <a
-          className="primary entry-main-action"
-          href={entryUrl("entry-login", l, mode)}
-        >
-          {t(l, "Continue to sign in", "로그인하기", "متابعة تسجيل الدخول")}
-        </a>
-        <div className="entry-secondary">
-          <h3>
+      <section className="entry-access">
+        <div className="entry-primary">
+          <h2>
             {t(
               l,
-              "Received an invitation?",
-              "초대를 받으셨나요?",
-              "هل تلقيت دعوة؟",
+              "Sign in to your workspace",
+              "업무 공간 로그인",
+              "الدخول إلى مساحة العمل",
             )}
-          </h3>
-          <EntryLink id="entry-invite" locale={l} mode={mode}>
-            {t(l, "Join by invitation", "초대 수락하기", "الانضمام عبر دعوة")}
-          </EntryLink>
-        </div>
-        <div className="entry-secondary">
-          <h3>
-            {t(l, "First installation", "처음 설치하셨나요?", "التثبيت الأول")}
-          </h3>
-          <EntryLink id="entry-bootstrap" locale={l} mode={mode}>
+          </h2>
+          <p>
             {t(
               l,
-              "Register the first administrator",
-              "최초 관리자 등록",
-              "تسجيل المسؤول الأول",
+              "Continue through your organization’s sign-in process.",
+              "소속 조직의 로그인 절차를 진행합니다.",
+              "تابع إجراءات تسجيل الدخول الخاصة بمؤسستك.",
+            )}
+          </p>
+          <a
+            className="primary entry-main-action"
+            href={entryUrl("entry-login", l, mode)}
+          >
+            {t(l, "Continue to sign in", "로그인하기", "متابعة تسجيل الدخول")}
+          </a>
+        </div>
+        <div className="entry-alternatives">
+          <div className="entry-secondary">
+            <h3>
+              {t(
+                l,
+                "Received an invitation?",
+                "초대를 받으셨나요?",
+                "هل تلقيت دعوة؟",
+              )}
+            </h3>
+            <EntryLink id="entry-invite" locale={l} mode={mode}>
+              {t(l, "Join by invitation", "초대 수락하기", "الانضمام عبر دعوة")}
+            </EntryLink>
+          </div>
+          <div className="entry-secondary">
+            <h3>
+              {t(
+                l,
+                "First installation",
+                "처음 설치하셨나요?",
+                "التثبيت الأول",
+              )}
+            </h3>
+            <EntryLink id="entry-bootstrap" locale={l} mode={mode}>
+              {t(
+                l,
+                "Register the first administrator",
+                "최초 관리자 등록",
+                "تسجيل المسؤول الأول",
+              )}
+            </EntryLink>
+          </div>
+        </div>
+        <div className="entry-recovery">
+          <EntryLink id="entry-challenge" locale={l} mode={mode}>
+            {t(
+              l,
+              "Need help accessing your workspace?",
+              "접근에 도움이 필요하신가요?",
+              "هل تحتاج مساعدة للوصول؟",
             )}
           </EntryLink>
         </div>
-        <EntryLink id="entry-challenge" locale={l} mode={mode}>
-          {t(
-            l,
-            "Need help accessing your workspace?",
-            "접근에 도움이 필요하신가요?",
-            "هل تحتاج مساعدة للوصول؟",
-          )}
-        </EntryLink>
       </section>
     </div>
   );

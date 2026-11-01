@@ -110,3 +110,21 @@ The owner also made full viewport width and external professional service refere
 | [SAP Fiori v1-38 full-screen guidance](https://www.sap.com/design-system/fiori-design-web/v1-38/page-types/page-layouts/full-screen) | Explains full-screen use for wide content and a consistent shell. | Its small-content letterboxing advice does not override the owner's explicit full-width requirement. It does not independently justify our login composition. |
 
 The locale selector now exposes a native language name, code, neutral list surface and textual selection indication. Colored selection-edge decoration is removed from the shared header list, not just entry notices. Its controls retain 44px minimum height, square geometry, no shadows and existing focus behavior. Changes affect entry and existing workspace header consumers. AGENTS.md and service-screen-style.md now require both external evidence and full-width layout before implementation and during verification.
+
+# Designer-led service-entry composition
+
+The owner rejected instruction-by-instruction styling and requested the designer to lead the whole-screen composition. Root paused implementation until service_designer completed actual external visual inspection and supplied the integrated specification. Root implemented that specification; the same designer then compared the rendered candidate to it. This is a visual revision of entry-start and entry-login, not additional service feature completion.
+
+| Actual official reference | Observed visual evidence | Adopted / rejected |
+| --- | --- | --- |
+| [Atlassian account login](https://id.atlassian.com/login) | Desktop sign-in rendered in an isolated browser without input/submission: a concentrated primary task and separately grouped alternate access/help. | Adopt action hierarchy only. Reject its fixed centered card, shadows, illustrations, provider options and branding. |
+| [Microsoft account entry](https://login.microsoftonline.com/) | Desktop and 390px mobile renders: primary task separated from alternate methods; mobile main content uses available width with approximately 24px inset. | Adopt primary/secondary separation and mobile adaptation. Reject desktop floating card, background graphics, colored input underline and unrelated identity methods. |
+| [GitLab sign-in](https://gitlab.com/users/sign_in) | Browser displayed a Cloudflare verification page, not the sign-in screen. | No visual pattern adopted; no challenge bypass attempted. |
+
+Screenshots were inspected locally by the designer and the desktop references by root. Third-party captures remain local working evidence outside the repository; no external assets or source were copied. These observations do not certify that a design is universally “latest.”
+
+The designer's original adaptation uses the full viewport with a 40/60 identity/action split at desktop widths. This ratio is a project design proposal responding to the owner's full-width constraint, not a ratio copied from the centered external pages. A quiet neutral context pane replaces redundant branding and the broad FAQ-style card; the white action pane is unboxed. Sign-in is the dominant action, invitation and initial-administrator links form a secondary two-column group, and recovery remains below. Existing content, route IDs, identity boundary and brand remain.
+
+Typography and spacing form one system: 44px/1.15 semibold identity heading, 28px/1.3 section heading, 18px secondary headings, 16px body/labels; pane insets clamp from 32px to 64px. Login shares the same split, with title/back/context at inline-start and unchanged required fields/actions at inline-end. Inputs/actions are 48px high, fields 24px apart and the action separated by 32px. At widths below 1024px the panes stack; mobile uses 24px insets, 32px title and 24px section title. The neutral intro row is content-sized rather than stretched. Logical layout mirrors in Arabic while the logo remains LTR. Review moves to a collapsed footer utility.
+
+The designer reviewed eight KO/AR start/login desktop/mobile renders, approved the whole composition and requested a mobile intro-height refinement plus live action-gap verification. Root corrected mobile row sizing and measured a 32px Korean desktop note-to-button gap. This scoped design assessment is not owner FIX, backend readiness or complete-service acceptance.

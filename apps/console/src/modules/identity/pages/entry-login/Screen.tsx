@@ -17,8 +17,11 @@ export default function Screen(props: ScreenProps) {
       "navigate:entry-scope",
     ]);
   return (
-    <div className="entry-form-layout">
-      <section className="entry-card">
+    <div className="entry-welcome entry-login-layout">
+      <section className="entry-intro">
+        <EntryLink id="entry-start" locale={l} mode={mode}>
+          {t(l, "Back to start", "시작 화면으로", "العودة إلى البداية")}
+        </EntryLink>
         <h1>{t(l, "Sign in", "로그인", "تسجيل الدخول")}</h1>
         <p>
           {t(
@@ -28,6 +31,26 @@ export default function Screen(props: ScreenProps) {
             "أدخل مساحة عملك وبريدك الإلكتروني.",
           )}
         </p>
+        <div className="entry-intro-help">
+          <h2>
+            {t(
+              l,
+              "Your organization’s workspace",
+              "소속 조직의 업무 공간",
+              "مساحة عمل مؤسستك",
+            )}
+          </h2>
+          <p>
+            {t(
+              l,
+              "Use the workspace provided by your administrator. An email address alone does not grant membership.",
+              "관리자에게 안내받은 업무 공간을 입력하세요. 이메일 주소만으로 조직에 가입되지 않습니다.",
+              "استخدم مساحة العمل التي وفرها المسؤول. البريد الإلكتروني وحده لا يمنح العضوية.",
+            )}
+          </p>
+        </div>
+      </section>
+      <section className="entry-access entry-login-fields">
         <form onSubmit={state.submit} onChange={state.changed}>
           <label>
             {t(l, "Workspace", "업무 공간", "مساحة العمل")}
@@ -61,24 +84,6 @@ export default function Screen(props: ScreenProps) {
         <EntryLink id="entry-challenge" locale={l} mode={mode}>
           {t(l, "Recover access", "접근 복구", "استعادة الوصول")}
         </EntryLink>
-      </section>
-      <aside className="entry-help">
-        <h2>
-          {t(
-            l,
-            "Your organization’s workspace",
-            "소속 조직의 업무 공간",
-            "مساحة عمل مؤسستك",
-          )}
-        </h2>
-        <p>
-          {t(
-            l,
-            "Use the workspace provided by your administrator. An email address alone does not grant membership.",
-            "관리자에게 안내받은 업무 공간을 입력하세요. 이메일 주소만으로 조직에 가입되지 않습니다.",
-            "استخدم مساحة العمل التي وفرها المسؤول. البريد الإلكتروني وحده لا يمنح العضوية.",
-          )}
-        </p>
         <PreviewNext
           locale={l}
           mode={mode}
@@ -90,7 +95,7 @@ export default function Screen(props: ScreenProps) {
             "معاينة اختيار مساحة العمل",
           )}
         />
-      </aside>
+      </section>
     </div>
   );
 }

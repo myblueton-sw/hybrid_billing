@@ -140,7 +140,7 @@ try {
   ok("unconnected membership has no synthetic choices");
   await go("entry-login");
   await p.locator("#entry-workspace").fill("EPHEMERAL");
-  await p.locator(".entry-back").click();
+  await p.locator('#content a[href^="#entry-start"]').click();
   await p.locator(".entry-main-action").waitFor();
   await p.goBack();
   await p.locator("#entry-workspace").waitFor();
@@ -247,6 +247,32 @@ try {
           });
           await p.keyboard.press("Escape");
         }
+        if (id === "entry-start" && width === 390) {
+          assert(
+            await p.evaluate(() => {
+              const intro = document
+                  .querySelector(".entry-intro")
+                  .getBoundingClientRect(),
+                copy = document
+                  .querySelector(".entry-intro>p")
+                  .getBoundingClientRect();
+              return Math.abs(intro.bottom - copy.bottom - 24) < 2;
+            }),
+          );
+        }
+        if (id === "entry-login") {
+          assert(
+            await p.evaluate(
+              () =>
+                document.querySelector("form button").getBoundingClientRect()
+                  .top -
+                  document.querySelector(".entry-note").getBoundingClientRect()
+                    .bottom >=
+                24,
+            ),
+          );
+        }
+        await p.locator("h1").click();
         await p.screenshot({
           path: `${out}/${id}-${lang}-${width}.png`,
           fullPage: true,

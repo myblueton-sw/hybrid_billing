@@ -1,0 +1,1934 @@
+{
+  "ticket": "HB-66",
+  "sourceRevision": "4d51763458b314fd766998c05fb32a1c40c99e72",
+  "sourcePath": "docs/design-modules/00-scalable-console/r1/catalog.js",
+  "meaning": "Proposed ownership only; preserve existing semantic implementation-item IDs when migrating each screen.",
+  "screens": [
+    {
+      "screenId": "overview",
+      "title": "Hybrid Billing — complete review",
+      "navigationGroup": "overview",
+      "feature": "design-review",
+      "proposedScreenPath": "apps/console/src/features/design-review/screens/overview/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/overview/spec.md",
+      "registryIds": [],
+      "baselinePage": 1,
+      "related": [
+        "contents"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "contents",
+      "title": "Complete screen index",
+      "navigationGroup": "overview",
+      "feature": "design-review",
+      "proposedScreenPath": "apps/console/src/features/design-review/screens/contents/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/contents/spec.md",
+      "registryIds": [],
+      "baselinePage": 2,
+      "related": [
+        "operations",
+        "setup-progress",
+        "support-matrix"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "entry-start",
+      "title": "Welcome to Hybrid Billing",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/entry-start/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/entry-start/spec.md",
+      "registryIds": [
+        "L01"
+      ],
+      "baselinePage": 3,
+      "related": [
+        "entry-login",
+        "entry-invite",
+        "entry-bootstrap",
+        "entry-challenge"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "entry-bootstrap",
+      "title": "Register the first administrator",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/entry-bootstrap/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/entry-bootstrap/spec.md",
+      "registryIds": [
+        "L02"
+      ],
+      "baselinePage": 4,
+      "related": [
+        "entry-invite"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "entry-invite",
+      "title": "Join by invitation",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/entry-invite/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/entry-invite/spec.md",
+      "registryIds": [
+        "L02"
+      ],
+      "baselinePage": 5,
+      "related": [
+        "entry-login"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "entry-login",
+      "title": "Sign in",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/entry-login/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/entry-login/spec.md",
+      "registryIds": [
+        "L01"
+      ],
+      "baselinePage": 6,
+      "related": [
+        "entry-challenge"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "entry-challenge",
+      "title": "Verify identity or recover access",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/entry-challenge/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/entry-challenge/spec.md",
+      "registryIds": [
+        "L03"
+      ],
+      "baselinePage": 7,
+      "related": [
+        "entry-scope"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "entry-scope",
+      "title": "Choose an authorized workspace",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/entry-scope/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/entry-scope/spec.md",
+      "registryIds": [
+        "L01"
+      ],
+      "baselinePage": 8,
+      "related": [
+        "entry-roles"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "entry-roles",
+      "title": "Roles and delegated permissions",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/entry-roles/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/entry-roles/spec.md",
+      "registryIds": [
+        "M03"
+      ],
+      "baselinePage": 9,
+      "related": [
+        "users",
+        "service-accounts",
+        "identity-policy"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "entry-sessions",
+      "title": "Sessions and access recovery",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/entry-sessions/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/entry-sessions/spec.md",
+      "registryIds": [
+        "M05"
+      ],
+      "baselinePage": 10,
+      "related": [
+        "setup-progress"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "setup-progress",
+      "title": "Set up your first billing workspace",
+      "navigationGroup": "onboarding",
+      "feature": "onboarding",
+      "proposedScreenPath": "apps/console/src/features/onboarding/screens/setup-progress/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/setup-progress/spec.md",
+      "registryIds": [
+        "S02"
+      ],
+      "baselinePage": 11,
+      "related": [
+        "setup-profile"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "setup-profile",
+      "title": "Business and billing foundation",
+      "navigationGroup": "onboarding",
+      "feature": "onboarding",
+      "proposedScreenPath": "apps/console/src/features/onboarding/screens/setup-profile/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/setup-profile/spec.md",
+      "registryIds": [
+        "O03"
+      ],
+      "baselinePage": 12,
+      "related": [
+        "setup-attribution"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "setup-attribution",
+      "title": "Connect customers to billing accounts",
+      "navigationGroup": "onboarding",
+      "feature": "onboarding",
+      "proposedScreenPath": "apps/console/src/features/onboarding/screens/setup-attribution/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/setup-attribution/spec.md",
+      "registryIds": [
+        "O01"
+      ],
+      "baselinePage": 13,
+      "related": [
+        "setup-connectors"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "setup-connectors",
+      "title": "Choose the first data connection",
+      "navigationGroup": "onboarding",
+      "feature": "onboarding",
+      "proposedScreenPath": "apps/console/src/features/onboarding/screens/setup-connectors/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/setup-connectors/spec.md",
+      "registryIds": [
+        "S01"
+      ],
+      "baselinePage": 14,
+      "related": [
+        "setup-readtest",
+        "support-matrix",
+        "supplier-naver",
+        "supplier-kt"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "setup-readtest",
+      "title": "Verify permission with an actual read",
+      "navigationGroup": "onboarding",
+      "feature": "onboarding",
+      "proposedScreenPath": "apps/console/src/features/onboarding/screens/setup-readtest/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/setup-readtest/spec.md",
+      "registryIds": [
+        "S01"
+      ],
+      "baselinePage": 15,
+      "related": [
+        "setup-schedule"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "setup-schedule",
+      "title": "Configure the first collection",
+      "navigationGroup": "onboarding",
+      "feature": "onboarding",
+      "proposedScreenPath": "apps/console/src/features/onboarding/screens/setup-schedule/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/setup-schedule/spec.md",
+      "registryIds": [
+        "S02"
+      ],
+      "baselinePage": 16,
+      "related": [
+        "setup-first"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "setup-first",
+      "title": "Validate the first collected data",
+      "navigationGroup": "onboarding",
+      "feature": "onboarding",
+      "proposedScreenPath": "apps/console/src/features/onboarding/screens/setup-first/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/setup-first/spec.md",
+      "registryIds": [
+        "S03"
+      ],
+      "baselinePage": 17,
+      "related": [
+        "setup-readiness"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "setup-readiness",
+      "title": "Ready for the first billing cycle?",
+      "navigationGroup": "onboarding",
+      "feature": "onboarding",
+      "proposedScreenPath": "apps/console/src/features/onboarding/screens/setup-readiness/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/setup-readiness/spec.md",
+      "registryIds": [
+        "S02"
+      ],
+      "baselinePage": 18,
+      "related": [
+        "operations"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "operations",
+      "title": "What is preventing issuance?",
+      "navigationGroup": "work",
+      "feature": "operations",
+      "proposedScreenPath": "apps/console/src/features/operations/screens/operations/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/operations/spec.md",
+      "registryIds": [
+        "U01",
+        "U03",
+        "U04"
+      ],
+      "baselinePage": 19,
+      "related": [
+        "core-index-close",
+        "my-tasks",
+        "index-intake",
+        "review-issue"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-index-close",
+      "title": "Selected portfolio close workbench",
+      "navigationGroup": "work",
+      "feature": "operations",
+      "proposedScreenPath": "apps/console/src/features/operations/screens/core-index-close/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-index-close/spec.md",
+      "registryIds": [
+        "U02"
+      ],
+      "baselinePage": 20,
+      "related": [
+        "customer-detail"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "customer-detail",
+      "title": "Customer account detail",
+      "navigationGroup": "work",
+      "feature": "organizations",
+      "proposedScreenPath": "apps/console/src/features/organizations/screens/customer-detail/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/customer-detail/spec.md",
+      "registryIds": [
+        "O03"
+      ],
+      "baselinePage": 21,
+      "related": [
+        "index-intake"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "index-intake",
+      "title": "Resolve incomplete supplier evidence",
+      "navigationGroup": "sources",
+      "feature": "sources",
+      "proposedScreenPath": "apps/console/src/features/sources/screens/index-intake/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/index-intake/spec.md",
+      "registryIds": [
+        "S03"
+      ],
+      "baselinePage": 22,
+      "related": [
+        "v4-inbox"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "v4-inbox",
+      "title": "Supplier invoice inbox",
+      "navigationGroup": "sources",
+      "feature": "sources",
+      "proposedScreenPath": "apps/console/src/features/sources/screens/v4-inbox/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/v4-inbox/spec.md",
+      "registryIds": [
+        "S05"
+      ],
+      "baselinePage": 23,
+      "related": [
+        "v4-extract"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "v4-extract",
+      "title": "Review PDF, extracted fields and AI findings",
+      "navigationGroup": "sources",
+      "feature": "sources",
+      "proposedScreenPath": "apps/console/src/features/sources/screens/v4-extract/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/v4-extract/spec.md",
+      "registryIds": [
+        "S05"
+      ],
+      "baselinePage": 24,
+      "related": [
+        "v4-differences"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "v4-differences",
+      "title": "Resolve PDF versus collected-data differences",
+      "navigationGroup": "sources",
+      "feature": "sources",
+      "proposedScreenPath": "apps/console/src/features/sources/screens/v4-differences/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/v4-differences/spec.md",
+      "registryIds": [
+        "S06"
+      ],
+      "baselinePage": 25,
+      "related": [
+        "v4-audit"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "v4-audit",
+      "title": "Accept evidence with an immutable audit trail",
+      "navigationGroup": "sources",
+      "feature": "sources",
+      "proposedScreenPath": "apps/console/src/features/sources/screens/v4-audit/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/v4-audit/spec.md",
+      "registryIds": [
+        "R02"
+      ],
+      "baselinePage": 26,
+      "related": [
+        "core-index-sources"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-index-sources",
+      "title": "Supplier invoice reconciliation",
+      "navigationGroup": "sources",
+      "feature": "sources",
+      "proposedScreenPath": "apps/console/src/features/sources/screens/core-index-sources/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-index-sources/spec.md",
+      "registryIds": [
+        "S06"
+      ],
+      "baselinePage": 27,
+      "related": [
+        "core-index-aws"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-index-aws",
+      "title": "AWS source detail",
+      "navigationGroup": "sources",
+      "feature": "sources",
+      "proposedScreenPath": "apps/console/src/features/sources/screens/core-index-aws/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-index-aws/spec.md",
+      "registryIds": [
+        "S04"
+      ],
+      "baselinePage": 28,
+      "related": [
+        "core-index-variants"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-index-variants",
+      "title": "Provider billing structures",
+      "navigationGroup": "sources",
+      "feature": "sources",
+      "proposedScreenPath": "apps/console/src/features/sources/screens/core-index-variants/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-index-variants/spec.md",
+      "registryIds": [
+        "S04"
+      ],
+      "baselinePage": 29,
+      "related": [
+        "index-mapping"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "index-mapping",
+      "title": "Assign the account and inspect the impact",
+      "navigationGroup": "sources",
+      "feature": "sources",
+      "proposedScreenPath": "apps/console/src/features/sources/screens/index-mapping/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/index-mapping/spec.md",
+      "registryIds": [
+        "O02"
+      ],
+      "baselinePage": 30,
+      "related": [
+        "cost-pivot"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "cost-pivot",
+      "title": "Cost pivot by project, service and SKU",
+      "navigationGroup": "sources",
+      "feature": "analytics",
+      "proposedScreenPath": "apps/console/src/features/analytics/screens/cost-pivot/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/cost-pivot/spec.md",
+      "registryIds": [
+        "R01"
+      ],
+      "baselinePage": 31,
+      "related": [
+        "raw-explorer"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "raw-explorer",
+      "title": "Raw cost lookup and export",
+      "navigationGroup": "sources",
+      "feature": "analytics",
+      "proposedScreenPath": "apps/console/src/features/analytics/screens/raw-explorer/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/raw-explorer/spec.md",
+      "registryIds": [
+        "S04"
+      ],
+      "baselinePage": 32,
+      "related": [
+        "auto-portfolio"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-portfolio",
+      "title": "Contract pricing operations",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/auto-portfolio/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-portfolio/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 33,
+      "related": [
+        "supplier-register"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "supplier-register",
+      "title": "Contracts and rates",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/supplier-register/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/supplier-register/spec.md",
+      "registryIds": [
+        "O03"
+      ],
+      "baselinePage": 34,
+      "related": [
+        "supplier-aws",
+        "supplier-azure",
+        "supplier-gcp",
+        "supplier-oci",
+        "supplier-alibaba",
+        "supplier-naver",
+        "supplier-kt"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "marketplace-register",
+      "title": "Marketplace ISV costs and contracts",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/marketplace-register/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/marketplace-register/spec.md",
+      "registryIds": [
+        "B07"
+      ],
+      "baselinePage": 35,
+      "related": [
+        "marketplace-commitment"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "marketplace-commitment",
+      "title": "Commitment credit and ISV purchase planning",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/marketplace-commitment/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/marketplace-commitment/spec.md",
+      "registryIds": [
+        "B06",
+        "B07"
+      ],
+      "baselinePage": 36,
+      "related": [
+        "supplier-aws"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "supplier-aws",
+      "title": "AWS · Contract evidence",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/supplier-aws/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/supplier-aws/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 37,
+      "related": [
+        "supplier-azure"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "supplier-azure",
+      "title": "Azure · Contract evidence",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/supplier-azure/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/supplier-azure/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 38,
+      "related": [
+        "supplier-gcp"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "supplier-gcp",
+      "title": "GCP · Contract evidence",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/supplier-gcp/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/supplier-gcp/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 39,
+      "related": [
+        "supplier-oci"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "supplier-oci",
+      "title": "OCI purchase contract",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/supplier-oci/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/supplier-oci/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 40,
+      "related": [
+        "supplier-alibaba"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "supplier-alibaba",
+      "title": "Alibaba Cloud · Contract evidence",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/supplier-alibaba/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/supplier-alibaba/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 41,
+      "related": [
+        "customer-contract"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "customer-contract",
+      "title": "Contract lifecycle and effective versions",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/customer-contract/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/customer-contract/spec.md",
+      "registryIds": [
+        "O03"
+      ],
+      "baselinePage": 42,
+      "related": [
+        "auto-rulebook"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-rulebook",
+      "title": "Northstar customer price book",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/auto-rulebook/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-rulebook/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 43,
+      "related": [
+        "auto-editor"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-editor",
+      "title": "Define a pricing rule",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/auto-editor/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-editor/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 44,
+      "related": [
+        "auto-exclusions"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-exclusions",
+      "title": "Discount interaction and exclusions",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/auto-exclusions/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-exclusions/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 45,
+      "related": [
+        "auto-mapping"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-mapping",
+      "title": "Validate automatic matching",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/auto-mapping/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-mapping/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 46,
+      "related": [
+        "auto-bulk"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-bulk",
+      "title": "Bulk price application preview",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/auto-bulk/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-bulk/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 47,
+      "related": [
+        "auto-exceptions"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-exceptions",
+      "title": "Pricing exceptions",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/auto-exceptions/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-exceptions/spec.md",
+      "registryIds": [
+        "U04"
+      ],
+      "baselinePage": 48,
+      "related": [
+        "auto-activation"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-activation",
+      "title": "Approve and schedule contract pricing",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/auto-activation/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-activation/spec.md",
+      "registryIds": [
+        "B09"
+      ],
+      "baselinePage": 49,
+      "related": [
+        "sales-policy"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "sales-policy",
+      "title": "A default, explicit exceptions, one-off benefits",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/sales-policy/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/sales-policy/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 50,
+      "related": [
+        "sales-impact"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "sales-impact",
+      "title": "See the price before activating the rule",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/sales-impact/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/sales-impact/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 51,
+      "related": [
+        "core-index-allocation"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-index-allocation",
+      "title": "Cost allocation and retained costs",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/core-index-allocation/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-index-allocation/spec.md",
+      "registryIds": [
+        "B03"
+      ],
+      "baselinePage": 52,
+      "related": [
+        "core-index-pricing"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-index-pricing",
+      "title": "Customer selling calculation",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/core-index-pricing/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-index-pricing/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 53,
+      "related": [
+        "index-pricing"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "index-pricing",
+      "title": "Change a scoped contract rule",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/index-pricing/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/index-pricing/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 54,
+      "related": [
+        "index-seats"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "index-seats",
+      "title": "Explain a mid-cycle seat adjustment",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/index-seats/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/index-seats/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": 55,
+      "related": [
+        "index-commitments"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "index-commitments",
+      "title": "Keep commitments and credits distinct",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/index-commitments/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/index-commitments/spec.md",
+      "registryIds": [
+        "B06"
+      ],
+      "baselinePage": 56,
+      "related": [
+        "index-fx"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "index-fx",
+      "title": "Verify conversion, tax and document grouping",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/index-fx/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/index-fx/spec.md",
+      "registryIds": [
+        "B05"
+      ],
+      "baselinePage": 57,
+      "related": [
+        "auto-job"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-job",
+      "title": "Automatic calculation and review",
+      "navigationGroup": "reconcile",
+      "feature": "calculation",
+      "proposedScreenPath": "apps/console/src/features/calculation/screens/auto-job/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-job/spec.md",
+      "registryIds": [
+        "B08"
+      ],
+      "baselinePage": 58,
+      "related": [
+        "auto-trace"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-trace",
+      "title": "Explain every calculated price",
+      "navigationGroup": "reconcile",
+      "feature": "calculation",
+      "proposedScreenPath": "apps/console/src/features/calculation/screens/auto-trace/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-trace/spec.md",
+      "registryIds": [
+        "B10"
+      ],
+      "baselinePage": 59,
+      "related": [
+        "ai-cost-waterfall"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "ai-cost-waterfall",
+      "title": "AI instance cost and stacked discounts",
+      "navigationGroup": "reconcile",
+      "feature": "calculation",
+      "proposedScreenPath": "apps/console/src/features/calculation/screens/ai-cost-waterfall/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/ai-cost-waterfall/spec.md",
+      "registryIds": [
+        "S04"
+      ],
+      "baselinePage": 60,
+      "related": [
+        "cost-differences"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "cost-differences",
+      "title": "Precision, AI version and support reconciliation",
+      "navigationGroup": "reconcile",
+      "feature": "calculation",
+      "proposedScreenPath": "apps/console/src/features/calculation/screens/cost-differences/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/cost-differences/spec.md",
+      "registryIds": [
+        "S06"
+      ],
+      "baselinePage": 61,
+      "related": [
+        "core-reconciliation-case"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-reconciliation-case",
+      "title": "Reconciliation investigation",
+      "navigationGroup": "reconcile",
+      "feature": "calculation",
+      "proposedScreenPath": "apps/console/src/features/calculation/screens/core-reconciliation-case/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-reconciliation-case/spec.md",
+      "registryIds": [
+        "S06"
+      ],
+      "baselinePage": 62,
+      "related": [
+        "core-reconciliation-recalc"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-reconciliation-recalc",
+      "title": "Calculation revision comparison",
+      "navigationGroup": "reconcile",
+      "feature": "calculation",
+      "proposedScreenPath": "apps/console/src/features/calculation/screens/core-reconciliation-recalc/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-reconciliation-recalc/spec.md",
+      "registryIds": [
+        "B08"
+      ],
+      "baselinePage": 63,
+      "related": [
+        "index-runs"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "index-runs",
+      "title": "Run the corrected Aster candidate",
+      "navigationGroup": "reconcile",
+      "feature": "calculation",
+      "proposedScreenPath": "apps/console/src/features/calculation/screens/index-runs/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/index-runs/spec.md",
+      "registryIds": [
+        "B08"
+      ],
+      "baselinePage": 64,
+      "related": [
+        "core-reconciliation-approval"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-reconciliation-approval",
+      "title": "Financial approval review",
+      "navigationGroup": "reconcile",
+      "feature": "issuance",
+      "proposedScreenPath": "apps/console/src/features/issuance/screens/core-reconciliation-approval/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-reconciliation-approval/spec.md",
+      "registryIds": [
+        "B09"
+      ],
+      "baselinePage": 65,
+      "related": [
+        "index-approval"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "index-approval",
+      "title": "Resolve feedback before fixed-version issuance",
+      "navigationGroup": "reconcile",
+      "feature": "issuance",
+      "proposedScreenPath": "apps/console/src/features/issuance/screens/index-approval/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/index-approval/spec.md",
+      "registryIds": [
+        "B09"
+      ],
+      "baselinePage": 66,
+      "related": [
+        "assignment-policy"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "assignment-policy",
+      "title": "Issuer and reviewer assignment policy",
+      "navigationGroup": "issue",
+      "feature": "issuance",
+      "proposedScreenPath": "apps/console/src/features/issuance/screens/assignment-policy/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/assignment-policy/spec.md",
+      "registryIds": [
+        "I01"
+      ],
+      "baselinePage": 67,
+      "related": [
+        "review-issue"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "review-issue",
+      "title": "Review and issue",
+      "navigationGroup": "issue",
+      "feature": "issuance",
+      "proposedScreenPath": "apps/console/src/features/issuance/screens/review-issue/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/review-issue/spec.md",
+      "registryIds": [
+        "I01"
+      ],
+      "baselinePage": 68,
+      "related": [
+        "document-history"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "document-history",
+      "title": "Document action history",
+      "navigationGroup": "issue",
+      "feature": "issuance",
+      "proposedScreenPath": "apps/console/src/features/issuance/screens/document-history/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/document-history/spec.md",
+      "registryIds": [
+        "I01"
+      ],
+      "baselinePage": 69,
+      "related": [
+        "core-reconciliation-issued"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-reconciliation-issued",
+      "title": "Invoice and follow-up status",
+      "navigationGroup": "issue",
+      "feature": "issuance",
+      "proposedScreenPath": "apps/console/src/features/issuance/screens/core-reconciliation-issued/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-reconciliation-issued/spec.md",
+      "registryIds": [
+        "I01"
+      ],
+      "baselinePage": 70,
+      "related": [
+        "erp"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "erp",
+      "title": "ERP connection and document mapping",
+      "navigationGroup": "issue",
+      "feature": "delivery",
+      "proposedScreenPath": "apps/console/src/features/delivery/screens/erp/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/erp/spec.md",
+      "registryIds": [
+        "I02"
+      ],
+      "baselinePage": 71,
+      "related": [
+        "file-handoff",
+        "publication-packages"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-history",
+      "title": "Contract and calculation history",
+      "navigationGroup": "history",
+      "feature": "history",
+      "proposedScreenPath": "apps/console/src/features/history/screens/auto-history/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-history/spec.md",
+      "registryIds": [
+        "B10",
+        "R02"
+      ],
+      "baselinePage": 72,
+      "related": [
+        "v4-monthly"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "v4-monthly",
+      "title": "Monthly billing history",
+      "navigationGroup": "history",
+      "feature": "history",
+      "proposedScreenPath": "apps/console/src/features/history/screens/v4-monthly/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/v4-monthly/spec.md",
+      "registryIds": [
+        "R02"
+      ],
+      "baselinePage": 73,
+      "related": [
+        "v4-month"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "v4-month",
+      "title": "September close and evidence history",
+      "navigationGroup": "history",
+      "feature": "history",
+      "proposedScreenPath": "apps/console/src/features/history/screens/v4-month/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/v4-month/spec.md",
+      "registryIds": [
+        "R02"
+      ],
+      "baselinePage": 74,
+      "related": [
+        "v4-variance"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "v4-variance",
+      "title": "Explain the change from August to September",
+      "navigationGroup": "history",
+      "feature": "history",
+      "proposedScreenPath": "apps/console/src/features/history/screens/v4-variance/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/v4-variance/spec.md",
+      "registryIds": [
+        "R01"
+      ],
+      "baselinePage": 75,
+      "related": [
+        "core-reconciliation-correction"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-reconciliation-correction",
+      "title": "Post-issue source revision",
+      "navigationGroup": "history",
+      "feature": "history",
+      "proposedScreenPath": "apps/console/src/features/history/screens/core-reconciliation-correction/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-reconciliation-correction/spec.md",
+      "registryIds": [
+        "B11"
+      ],
+      "baselinePage": 76,
+      "related": [
+        "index-correction"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "index-correction",
+      "title": "Close the late-credit correction case",
+      "navigationGroup": "history",
+      "feature": "history",
+      "proposedScreenPath": "apps/console/src/features/history/screens/index-correction/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/index-correction/spec.md",
+      "registryIds": [
+        "B11"
+      ],
+      "baselinePage": 77,
+      "related": [
+        "auto-customer"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "auto-customer",
+      "title": "How your contract determines your bill",
+      "navigationGroup": "customer",
+      "feature": "customer-portal",
+      "proposedScreenPath": "apps/console/src/features/customer-portal/screens/auto-customer/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/auto-customer/spec.md",
+      "registryIds": [
+        "C02"
+      ],
+      "baselinePage": 78,
+      "related": [
+        "ai-invoice-detail"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "ai-invoice-detail",
+      "title": "Your AI usage invoice and discount detail",
+      "navigationGroup": "customer",
+      "feature": "customer-portal",
+      "proposedScreenPath": "apps/console/src/features/customer-portal/screens/ai-invoice-detail/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/ai-invoice-detail/spec.md",
+      "registryIds": [
+        "C02"
+      ],
+      "baselinePage": 79,
+      "related": [
+        "core-customer-overview"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-customer-overview",
+      "title": "Billing overview",
+      "navigationGroup": "customer",
+      "feature": "customer-portal",
+      "proposedScreenPath": "apps/console/src/features/customer-portal/screens/core-customer-overview/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-customer-overview/spec.md",
+      "registryIds": [
+        "C01"
+      ],
+      "baselinePage": 80,
+      "related": [
+        "v4-customer-months"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "v4-customer-months",
+      "title": "Your monthly billing history",
+      "navigationGroup": "customer",
+      "feature": "customer-portal",
+      "proposedScreenPath": "apps/console/src/features/customer-portal/screens/v4-customer-months/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/v4-customer-months/spec.md",
+      "registryIds": [
+        "C01",
+        "C02"
+      ],
+      "baselinePage": 81,
+      "related": [
+        "customer-history"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "customer-history",
+      "title": "Your invoices and corrections",
+      "navigationGroup": "customer",
+      "feature": "customer-portal",
+      "proposedScreenPath": "apps/console/src/features/customer-portal/screens/customer-history/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/customer-history/spec.md",
+      "registryIds": [
+        "C02"
+      ],
+      "baselinePage": 82,
+      "related": [
+        "core-customer-invoice"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-customer-invoice",
+      "title": "September invoice",
+      "navigationGroup": "customer",
+      "feature": "customer-portal",
+      "proposedScreenPath": "apps/console/src/features/customer-portal/screens/core-customer-invoice/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-customer-invoice/spec.md",
+      "registryIds": [
+        "C02"
+      ],
+      "baselinePage": 83,
+      "related": [
+        "core-customer-usage"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-customer-usage",
+      "title": "Service charges and usage detail",
+      "navigationGroup": "customer",
+      "feature": "customer-portal",
+      "proposedScreenPath": "apps/console/src/features/customer-portal/screens/core-customer-usage/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-customer-usage/spec.md",
+      "registryIds": [
+        "C02"
+      ],
+      "baselinePage": 84,
+      "related": [
+        "customer-inquiry"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "customer-inquiry",
+      "title": "Ask about a specific charge",
+      "navigationGroup": "customer",
+      "feature": "customer-portal",
+      "proposedScreenPath": "apps/console/src/features/customer-portal/screens/customer-inquiry/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/customer-inquiry/spec.md",
+      "registryIds": [
+        "C03"
+      ],
+      "baselinePage": 85,
+      "related": [
+        "customer-response"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "customer-response",
+      "title": "Track the billing explanation",
+      "navigationGroup": "customer",
+      "feature": "customer-portal",
+      "proposedScreenPath": "apps/console/src/features/customer-portal/screens/customer-response/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/customer-response/spec.md",
+      "registryIds": [
+        "C03"
+      ],
+      "baselinePage": 86,
+      "related": [
+        "core-reconciliation-setup"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "core-reconciliation-setup",
+      "title": "Initial setup and source readiness",
+      "navigationGroup": "settings",
+      "feature": "administration",
+      "proposedScreenPath": "apps/console/src/features/administration/screens/core-reconciliation-setup/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/core-reconciliation-setup/spec.md",
+      "registryIds": [
+        "P01"
+      ],
+      "baselinePage": 87,
+      "related": [
+        "license-modes"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "license-modes",
+      "title": "Usage mode and license",
+      "navigationGroup": "settings",
+      "feature": "administration",
+      "proposedScreenPath": "apps/console/src/features/administration/screens/license-modes/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/license-modes/spec.md",
+      "registryIds": [
+        "P07"
+      ],
+      "baselinePage": 88,
+      "related": [
+        "license-status"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "license-status",
+      "title": "License status and registration",
+      "navigationGroup": "settings",
+      "feature": "administration",
+      "proposedScreenPath": "apps/console/src/features/administration/screens/license-status/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/license-status/spec.md",
+      "registryIds": [
+        "P07"
+      ],
+      "baselinePage": 89,
+      "related": [
+        "license-modes",
+        "support-matrix",
+        "retention-policy",
+        "recovery-migration"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "organizations",
+      "title": "Organization relationships",
+      "navigationGroup": "work",
+      "feature": "organizations",
+      "proposedScreenPath": "apps/console/src/features/organizations/screens/organizations/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/organizations/spec.md",
+      "registryIds": [
+        "O01"
+      ],
+      "baselinePage": null,
+      "related": [
+        "setup-attribution"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "organization-impact",
+      "title": "Relationship change impact",
+      "navigationGroup": "work",
+      "feature": "organizations",
+      "proposedScreenPath": "apps/console/src/features/organizations/screens/organization-impact/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/organization-impact/spec.md",
+      "registryIds": [
+        "O02"
+      ],
+      "baselinePage": null,
+      "related": [
+        "index-mapping"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "onprem-pools",
+      "title": "On-premises cost pools",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/onprem-pools/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/onprem-pools/spec.md",
+      "registryIds": [
+        "B01"
+      ],
+      "baselinePage": null,
+      "related": [
+        "core-index-allocation"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "asset-measurements",
+      "title": "Asset and measurement history",
+      "navigationGroup": "sources",
+      "feature": "sources",
+      "proposedScreenPath": "apps/console/src/features/sources/screens/asset-measurements/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/asset-measurements/spec.md",
+      "registryIds": [
+        "B02"
+      ],
+      "baselinePage": null,
+      "related": [
+        "onprem-pools"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "file-handoff",
+      "title": "File handoff and results",
+      "navigationGroup": "issue",
+      "feature": "delivery",
+      "proposedScreenPath": "apps/console/src/features/delivery/screens/file-handoff/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/file-handoff/spec.md",
+      "registryIds": [
+        "I03"
+      ],
+      "baselinePage": null,
+      "related": [
+        "erp"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "publication-packages",
+      "title": "Disclosure and delivery packages",
+      "navigationGroup": "issue",
+      "feature": "delivery",
+      "proposedScreenPath": "apps/console/src/features/delivery/screens/publication-packages/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/publication-packages/spec.md",
+      "registryIds": [
+        "I04"
+      ],
+      "baselinePage": null,
+      "related": [
+        "file-handoff"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "users",
+      "title": "Users and invitations",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/users/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/users/spec.md",
+      "registryIds": [
+        "M01"
+      ],
+      "baselinePage": null,
+      "related": [
+        "entry-roles"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "identity-policy",
+      "title": "Identity providers and sign-in policy",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/identity-policy/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/identity-policy/spec.md",
+      "registryIds": [
+        "M02"
+      ],
+      "baselinePage": null,
+      "related": [
+        "entry-challenge"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "service-accounts",
+      "title": "Service accounts and credential references",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/service-accounts/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/service-accounts/spec.md",
+      "registryIds": [
+        "M04"
+      ],
+      "baselinePage": null,
+      "related": [
+        "setup-readtest"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "personal-security",
+      "title": "Personal security and notifications",
+      "navigationGroup": "access",
+      "feature": "identity",
+      "proposedScreenPath": "apps/console/src/features/identity/screens/personal-security/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/personal-security/spec.md",
+      "registryIds": [
+        "M05"
+      ],
+      "baselinePage": null,
+      "related": [
+        "entry-sessions"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "installation-diagnostics",
+      "title": "Installation diagnostics",
+      "navigationGroup": "settings",
+      "feature": "administration",
+      "proposedScreenPath": "apps/console/src/features/administration/screens/installation-diagnostics/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/installation-diagnostics/spec.md",
+      "registryIds": [
+        "P01"
+      ],
+      "baselinePage": null,
+      "related": [
+        "core-reconciliation-setup"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "integrations",
+      "title": "API, plugins and channels",
+      "navigationGroup": "settings",
+      "feature": "administration",
+      "proposedScreenPath": "apps/console/src/features/administration/screens/integrations/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/integrations/spec.md",
+      "registryIds": [
+        "P02"
+      ],
+      "baselinePage": null,
+      "related": [
+        "service-accounts"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "recovery-migration",
+      "title": "Recovery and migration",
+      "navigationGroup": "settings",
+      "feature": "administration",
+      "proposedScreenPath": "apps/console/src/features/administration/screens/recovery-migration/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/recovery-migration/spec.md",
+      "registryIds": [
+        "P03"
+      ],
+      "baselinePage": null,
+      "related": [
+        "installation-diagnostics"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "retention-policy",
+      "title": "Retention and deletion review",
+      "navigationGroup": "settings",
+      "feature": "administration",
+      "proposedScreenPath": "apps/console/src/features/administration/screens/retention-policy/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/retention-policy/spec.md",
+      "registryIds": [
+        "P04"
+      ],
+      "baselinePage": null,
+      "related": [
+        "audit-events"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "support-matrix",
+      "title": "Support matrix and release evidence",
+      "navigationGroup": "settings",
+      "feature": "administration",
+      "proposedScreenPath": "apps/console/src/features/administration/screens/support-matrix/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/support-matrix/spec.md",
+      "registryIds": [
+        "P05"
+      ],
+      "baselinePage": null,
+      "related": [
+        "setup-connectors"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "demo-scenarios",
+      "title": "Synthetic scenarios",
+      "navigationGroup": "settings",
+      "feature": "design-review",
+      "proposedScreenPath": "apps/console/src/features/design-review/screens/demo-scenarios/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/demo-scenarios/spec.md",
+      "registryIds": [
+        "P06"
+      ],
+      "baselinePage": null,
+      "related": [
+        "overview"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "assistant",
+      "title": "Billing assistant",
+      "navigationGroup": "work",
+      "feature": "assistant",
+      "proposedScreenPath": "apps/console/src/features/assistant/screens/assistant/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/assistant/spec.md",
+      "registryIds": [
+        "A01"
+      ],
+      "baselinePage": null,
+      "related": [
+        "operations"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "reports",
+      "title": "Scoped billing reports",
+      "navigationGroup": "history",
+      "feature": "analytics",
+      "proposedScreenPath": "apps/console/src/features/analytics/screens/reports/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/reports/spec.md",
+      "registryIds": [
+        "R01"
+      ],
+      "baselinePage": null,
+      "related": [
+        "cost-pivot"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "audit-events",
+      "title": "Audit event search",
+      "navigationGroup": "history",
+      "feature": "history",
+      "proposedScreenPath": "apps/console/src/features/history/screens/audit-events/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/audit-events/spec.md",
+      "registryIds": [
+        "R02"
+      ],
+      "baselinePage": null,
+      "related": [
+        "auto-history"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "my-tasks",
+      "title": "My tasks and notifications",
+      "navigationGroup": "work",
+      "feature": "operations",
+      "proposedScreenPath": "apps/console/src/features/operations/screens/my-tasks/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/my-tasks/spec.md",
+      "registryIds": [
+        "U03"
+      ],
+      "baselinePage": null,
+      "related": [
+        "operations"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "supplier-naver",
+      "title": "NAVER Cloud contract evidence · unverified",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/supplier-naver/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/supplier-naver/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": null,
+      "related": [
+        "support-matrix"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "supplier-kt",
+      "title": "KT Cloud contract evidence · unverified",
+      "navigationGroup": "contracts",
+      "feature": "pricing",
+      "proposedScreenPath": "apps/console/src/features/pricing/screens/supplier-kt/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/supplier-kt/spec.md",
+      "registryIds": [
+        "B04"
+      ],
+      "baselinePage": null,
+      "related": [
+        "support-matrix"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    },
+    {
+      "screenId": "community",
+      "title": "Contribute",
+      "navigationGroup": "settings",
+      "feature": "administration",
+      "proposedScreenPath": "apps/console/src/features/administration/screens/community/Screen.tsx",
+      "proposedSpecPath": "docs/ui/screens/community/spec.md",
+      "registryIds": [],
+      "baselinePage": null,
+      "related": [
+        "operations"
+      ],
+      "implementationStatus": "not-implemented-by-HB-66",
+      "acceptanceStatus": "not-assessed-by-HB-66"
+    }
+  ]
+}

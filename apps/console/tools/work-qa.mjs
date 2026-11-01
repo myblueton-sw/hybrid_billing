@@ -33,11 +33,11 @@ const rows = (n) =>
     n,
   );
 try {
-  await p.goto(url);
+  await p.goto(url + "#operations");
   await rows(25);
   assert.match(await p.locator("h1").innerText(), /발행/);
   assert.equal(await p.locator("#design-directory-results").count(), 0);
-  ok("default actual operations screen");
+  ok("explicit operations screen");
   await p.goto(url + "#operations?lang=en&provider=Azure&filter=ready");
   await rows(25);
   assert.deepEqual(await p.locator("thead th").allTextContents(), [

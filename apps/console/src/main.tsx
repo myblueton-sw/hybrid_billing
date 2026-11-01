@@ -11,6 +11,7 @@ import "../../../packages/design-system/styles/console.css";
 import "./shared/styles.css";
 import "./shared/screen-layout.css";
 import "./app/header.css";
+import "./app/entry.css";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />

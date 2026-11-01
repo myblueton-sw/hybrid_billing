@@ -1,6 +1,6 @@
 # React console — HB-67
 
-Corrected implementation increment: baseline six-domain shell and all 112 navigation identities, with seven distinct React screen bodies: `contents` (also reused by `overview`), `index-intake`, `operations`, `core-index-close`, `my-tasks`, `customer-detail` and `review-issue`. Other destinations explicitly show implementation pending. The remaining screens stay in the HB-63 design baseline. No production API, identity, billing calculation or financial operation is connected.
+Corrected implementation increment: baseline six-domain shell and all 112 navigation identities, with thirteen distinct React screen bodies: six entry screens (`entry-start`, `entry-login`, `entry-bootstrap`, `entry-invite`, `entry-challenge`, `entry-scope`) plus `contents` (also reused by `overview`), `index-intake`, `operations`, `core-index-close`, `my-tasks`, `customer-detail` and `review-issue`. Other destinations explicitly show implementation pending. The remaining screens stay in the HB-63 design baseline. No production API, identity, billing calculation or financial operation is connected.
 
 ## Install and operate
 
@@ -14,7 +14,7 @@ npm test
 npm start
 ```
 
-Open http://127.0.0.1:8787/#operations?lang=ko. The default is a visibly labeled synthetic work queue; append `&mode=unconnected` to inspect the disconnected boundary. Stop with Ctrl+C. Restart with `npm start`. For source development use `npm run dev`. Installation needs registry access or a populated package cache. A built `dist` uses local assets/fonts and can operate without external requests. Serve it over loopback HTTP or HTTPS; review hashing requires a secure browser context. Do not open index.html through file URLs. Vite preview is a local review server, not a production hosting architecture.
+Open http://127.0.0.1:8787/#entry-start?lang=ko. The default is service entry with a separate pre-workspace layout; append `&mode=unconnected` to inspect the disconnected boundary. Stop with Ctrl+C. Restart with `npm start`. For source development use `npm run dev`. Installation needs registry access or a populated package cache. A built `dist` uses local assets/fonts and can operate without external requests. Serve it over loopback HTTP or HTTPS; review hashing requires a secure browser context. Do not open index.html through file URLs. Vite preview is a local review server, not a production hosting architecture.
 
 `dist` is generated and replaced on build; keep no manual files there. Preserve exported review evidence before changing browser profiles or clearing storage. Install/build errors must be corrected before serving a stale build. Review save failures are visible and do not establish FIX.
 
@@ -37,10 +37,13 @@ Every implemented screen exposes a review button and stable item IDs. FIX is sco
 ```sh
 npm run qa -- --playwright-module "path to installed playwright" --chromium "path to chromium executable"
 npm run qa:work -- --playwright-module "path to installed playwright" --chromium "path to chromium executable"
+npm run qa:entry -- --playwright-module "path to installed playwright" --chromium "path to chromium executable"
 ```
 
-Both runners accept `--url`; the original `qa` runner also accepts `--output`. Playwright/browser are QA prerequisites, not application runtime dependencies. Reports/screenshots go to ignored `qa-output`. Tests use isolated browser storage and never record real owner acceptance.
+All runners accept `--url`; the original `qa` runner also accepts `--output`. Playwright/browser are QA prerequisites, not application runtime dependencies. Reports/screenshots go to ignored `qa-output`. Tests use isolated browser storage and never record real owner acceptance.
 
 The header account chooser currently offers two synthetic scopes; the full baseline searchable account workflow and background-job engine are not ported. Profiles/data modes are in separate review tools below the screen.
 
 See [design and scope](../../docs/features/HB-67/design.md), [verification](../../docs/features/HB-67/verification.md) and [notices](THIRD_PARTY_NOTICES.md).
+
+Entry forms validate local examples and clear fields; they do not authenticate, register administrators, accept invitations or send recovery requests. Passwords/tokens are not collected. Explicit preview navigation uses fixed synthetic workspaces. Onboarding/customer landing bodies remain pending; the links do not establish a finished end-to-end service. Editable entry review records expire for the current candidate on remount/reload; raw field values are never stored in review evidence.

@@ -3,6 +3,7 @@ export const profiles: Profile[] = [
   {
     id: "standard",
     modules: [
+      "identity",
       "design-review",
       "sources",
       "operations",
@@ -14,6 +15,7 @@ export const profiles: Profile[] = [
   {
     id: "evidence",
     modules: [
+      "identity",
       "design-review",
       "sources",
       "operations",

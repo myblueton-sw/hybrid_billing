@@ -37,6 +37,7 @@ export default function ReviewPanel({
     extensions: parsed.extensions,
     state: {
       phase: state.phase ?? "overview",
+      variant: state.variant ?? "default",
       workspace: state.scope ?? "none",
       filter: state.filter ?? "none",
       page: state.page ?? 0,
@@ -204,49 +205,16 @@ export default function ReviewPanel({
           {t(l, "Confirm screen review", "검수 확인", "تأكيد مراجعة الشاشة")}
         </button>
       </div>
-      <p>
-        {t(
-          l,
-          "Local browser evidence only. This is not authenticated project acceptance or financial approval.",
-          "이 브라우저의 로컬 검수 기록입니다. 인증된 프로젝트 확정이나 금전 승인이 아닙니다.",
-          "دليل محلي في هذا المتصفح فقط، وليس اعتمادًا موثقًا للمشروع أو موافقة مالية.",
-        )}
-      </p>
-      <details>
-        <summary>
-          {t(
-            l,
-            "Implementation item IDs",
-            "구현 항목 ID",
-            "معرّفات عناصر التنفيذ",
-          )}
-        </summary>
-        <ul>
-          {items.map((id) => (
-            <li key={id}>
-              <bdi>{id}</bdi>
-            </li>
-          ))}
-        </ul>
-      </details>
       {error && (
         <p role="alert">
           {t(
             l,
-            "Review storage unavailable or invalid. FIX has not been verified as saved.",
-            "검수 저장소를 사용할 수 없거나 기록이 손상되었습니다. FIX 저장을 확인할 수 없습니다.",
-            "تخزين المراجعة غير متاح أو غير صالح. لم يتم التحقق من حفظ FIX.",
+            "Review storage or fingerprint unavailable. FIX cannot be confirmed.",
+            "검수 저장소 또는 화면 지문을 사용할 수 없어 FIX를 확인할 수 없습니다.",
+            "تخزين المراجعة أو بصمة الشاشة غير متاح. لا يمكن تأكيد FIX.",
           )}
         </p>
       )}
-      <button onClick={exportRecords}>
-        {t(
-          l,
-          "Export review evidence",
-          "검수 기록 내보내기",
-          "تصدير دليل المراجعة",
-        )}
-      </button>
       <dialog ref={dialog} aria-labelledby="review-title" onCancel={close}>
         <h2 id="review-title">
           {t(
@@ -276,6 +244,49 @@ export default function ReviewPanel({
             </li>
           ))}
         </ul>
+        <p>
+          {t(
+            l,
+            "Local browser evidence only. This is not authenticated project acceptance or financial approval.",
+            "이 브라우저의 로컬 검수 기록입니다. 인증된 프로젝트 확정이나 금전 승인이 아닙니다.",
+            "دليل محلي في هذا المتصفح فقط، وليس اعتمادًا موثقًا للمشروع أو موافقة مالية.",
+          )}
+        </p>
+        <details>
+          <summary>
+            {t(
+              l,
+              "Implementation item IDs",
+              "구현 항목 ID",
+              "معرّفات عناصر التنفيذ",
+            )}
+          </summary>
+          <ul>
+            {items.map((id) => (
+              <li key={id}>
+                <bdi>{id}</bdi>
+              </li>
+            ))}
+          </ul>
+        </details>
+        {error && (
+          <p role="alert">
+            {t(
+              l,
+              "Review storage unavailable or invalid. FIX has not been verified as saved.",
+              "검수 저장소를 사용할 수 없거나 기록이 손상되었습니다. FIX 저장을 확인할 수 없습니다.",
+              "تخزين المراجعة غير متاح أو غير صالح. لم يتم التحقق من حفظ FIX.",
+            )}
+          </p>
+        )}
+        <button onClick={exportRecords}>
+          {t(
+            l,
+            "Export review evidence",
+            "검수 기록 내보내기",
+            "تصدير دليل المراجعة",
+          )}
+        </button>
         <label className="check">
           <input
             id="owner-ack"

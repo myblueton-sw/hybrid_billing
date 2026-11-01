@@ -4,6 +4,23 @@ title: HB-67 React console verification
 description: Records executed checks and remaining limitations for the first React frontend increment.
 ---
 
+# Service-entry implementation: current verification
+
+Default navigation now opens entry-start in a separate pre-workspace layout. Six identity bodies were added; thirteen distinct bodies exist in total. This replaces the operations-first entry only, not every pending service screen. Source files and runtime agree on the new default. Onboarding and customer landing implementations remain pending.
+
+Actual checks on macOS arm64, Node 26.7.0, npm 11.19.0, Playwright 1.56.1 and Chromium 153.0.8010.12:
+
+- TypeScript/Vite build and 242 final artifact hashes: PASS. Unit tests: 24 PASS.
+- Existing browser suite: 37 PASS; work journeys: 32 PASS, using an explicit operations route after the default changed.
+- New entry suite: 50 PASS. It covers the default service entry, branch navigation, all four form validation/reset/no-auth results, isolated review export without input values, recovery/verification FIX invalidation, fixed workspace preview selection/search/empty states, disconnected memberships, back-navigation field clearing, language focus and visible digest failure.
+- The entry suite rendered all six screens in KO/EN/AR at 1440/390 widths (36 combinations), checked direction, overflow, brand loading, review placement and zero runtime errors/external requests. Request and console capture contained no entered synthetic identity values.
+- A first back-navigation assertion raced route rendering; the runner now waits for the start screen before traversing history. The completed traversal test passed; no runtime back-navigation defect is claimed from the earlier test race.
+- Designer visually inspected Korean desktop start/login, Korean mobile start, Arabic mobile start/login and Korean desktop workspace selection. No blocking visual findings. Arabic mobile review metadata wrapping was refined to a full-width first row. Root also inspected Korean mobile start and English desktop workspace selection, correcting inherited column direction on the radio cards. The final 50-check run regenerated all renders after these layout refinements.
+
+Independent boundary review passed before coding. Actual source review found missing recovery/verification scope and an unreachable fingerprint failure disclosure; both were corrected. A subsequent evidence review requested exported variant labels, also corrected. Final scoped source re-review: PASS. PM scope/document review: PASS. Browser runs and automated test records are root evidence; no real owner FIX was written.
+
+Editable identity forms and workspace search use per-mount review nonces to avoid storing field values while preventing unrelated state from reusing a local FIX. Reload/remount requires renewed review for these screens; prior evidence is retained, not silently deleted. No production identity request, password/token collection, registration, invitation acceptance or session success occurs. Keyboard coverage is scoped, not a full assistive-technology certificate. Native-language acceptance, all service bodies and Windows/Linux execution remain unverified. PR63 remains draft; no merge/deployment.
+
 # Actual work screens: current verification
 
 The current increment adds operations, monthly close, assigned tasks, customer detail and issuance prerequisites. Together with directory and intake, seven distinct bodies are implemented; overview aliases the directory. Remaining route bodies are pending. Default navigation shows a labeled synthetic work queue, not the directory. Historical checks below describe their respective earlier increments.

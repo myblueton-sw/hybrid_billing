@@ -1,3 +1,5 @@
+import EntryShell from "./EntryShell";
+import { identity } from "../modules/identity/module";
 import { operations } from "../modules/operations/module";
 import { organizations } from "../modules/organizations/module";
 import { issuance } from "../modules/issuance/module";
@@ -18,6 +20,7 @@ import { screens, groups, domains } from "../shared/catalog";
 import logo from "../../../../packages/design-system/assets/logo/hb-lockup-color.svg";
 import chevron from "../../../../packages/design-system/assets/icons/chevron-down.svg";
 export const modules = [
+  identity,
   designReview,
   sources,
   operations,
@@ -156,7 +159,7 @@ export default function App() {
   const hash = useLocation(),
     [routePart, query] = hash.slice(1).split("?"),
     params = new URLSearchParams(query);
-  const id = routePart || "operations",
+  const id = routePart || "entry-start",
     l: Locale = ["en", "ar"].includes(params.get("lang") ?? "")
       ? (params.get("lang") as Locale)
       : "ko";
@@ -214,6 +217,17 @@ export default function App() {
   } catch {
     valid = false;
   }
+  const entry = valid ? identity.routes.find((r) => r.id === id) : undefined;
+  if (entry)
+    return (
+      <EntryShell
+        key={`${id}:${l}:${mode}:${profile}`}
+        route={entry}
+        locale={l}
+        mode={mode}
+        profile={profile}
+      />
+    );
   return (
     <>
       <a

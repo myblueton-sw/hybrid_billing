@@ -4,6 +4,18 @@ title: HB-67 React console verification
 description: Records executed checks and remaining limitations for the first React frontend increment.
 ---
 
+# Corrected outcome after owner review
+
+Design fidelity: FAIL. The owner identified that acceptance of the internal module/file structure did not authorize replacing the existing top-level IA or screen composition. PR 63 is a draft requiring correction. The previous completion statement is withdrawn. The technical test results below remain historical facts; they do not establish design compliance.
+
+Compared with HB-63 baseline commit 4d51763458b314fd766998c05fb32a1c40c99e72, the React candidate omitted the six-domain top navigation, searchable full secondary navigation, account/jobs header controls and the established screen directory. It substituted an implementation workspace and a reduced two-route rail. Reusing tokens and logos was insufficient. Baseline-to-render comparison was missing from the acceptance checks.
+
+Corrective work must trace each changed screen to the baseline app.js, catalog.js, design-directory.js and screen-specific designs before changing JSX. Preserve existing domain order, menu identities, labels, header hierarchy, screen composition and item meanings. Code-folder composition is an internal implementation choice; it cannot redefine product IA. Any unimplemented interaction must be identified explicitly without silently deleting the planned UI. Verify baseline and React renders side by side in KO/EN/AR at desktop/mobile sizes, including navigation and review placement, before another completion claim.
+
+Independent fidelity audit also identified the review strip moved below content, changed intake controls/columns and replacement semantic item IDs. Intake must retain source-reference/amount/status/evidence-reference columns, its existing filter/action/pagination controls, and unavailable amounts where no contract exists. Preserve canonical IDs such as index-intake:field:record-search, index-intake:field:provider-filter and index-intake:action:record-detail. The directory must retain 24-item paging and its search/area/review-status filters. Baseline responsive rules include a 246px desktop rail and a horizontal rail below 1024px. These are correction requirements, not completed fixes.
+
+No corrected React screen is claimed in this record. Existing HB-63 designs remain the visual reference. No owner FIX or acceptance has occurred.
+
 # Executed checks
 
 Environment: macOS arm64, Node 26.7.0, npm 11.19.0, Playwright 1.56.1 with installed Chromium 153.0.8010.12. Browser storage is isolated synthetic QA storage. No real owner acceptance was created.

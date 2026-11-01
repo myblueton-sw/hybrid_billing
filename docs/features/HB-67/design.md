@@ -4,6 +4,10 @@ title: Modular console foundation and intake increment
 description: Defines the implemented first React increment and its composition, review and data boundaries.
 ---
 
+# Owner correction
+
+The owner rejected the candidate's arbitrary IA/layout changes. This document describes an incomplete implementation, not an accepted replacement design. Internal app/modules/shared/extensions/profiles boundaries remain accepted; the existing HB-63 top navigation, header, secondary navigation and per-screen designs remain the UI contract. See [corrected verification outcome](verification.md). The implementation workspace and reduced navigation must not be treated as an approved product direction.
+
 # Scope and ownership
 
 [HB-67](https://linear.app/hybrid-billing/issue/HB-67/implement-modular-react-console-foundation-and-source-intake-slice) implements two React screens after the owner accepted the shallow architecture in [HB-66 PR 62](https://github.com/myblueton-sw/hybrid_billing/pull/62), commit c9c8a8be8faf01d491176829e0b10f3ca009b10b. Root owns implementation and QA; a separate read-only reviewer checks design and actual changes. Machine: mac_mini. This branch starts from main b48b23c; it does not merge pending design PRs.

@@ -1,6 +1,6 @@
 # React console — HB-67
 
-First implementation increment: `contents` and `index-intake`, out of the 112-screen design inventory. The remaining screens stay in the HB-63 design baseline. No production API, identity, billing calculation or financial operation is connected.
+Corrected implementation increment: baseline six-domain shell and all 112 navigation identities, with React content for `contents` (also reused by `overview`) and `index-intake`. Other destinations explicitly show implementation pending. The remaining screens stay in the HB-63 design baseline. No production API, identity, billing calculation or financial operation is connected.
 
 ## Install and operate
 
@@ -39,5 +39,7 @@ npm run qa -- --playwright-module "path to installed playwright" --chromium "pat
 ```
 
 The optional runner arguments also include `--url` and `--output`. Playwright/browser are QA prerequisites, not application runtime dependencies. Reports/screenshots go to ignored `qa-output`. Tests use isolated browser storage and never record real owner acceptance.
+
+The header account chooser currently offers two synthetic scopes; the full baseline searchable account workflow and background-job engine are not ported. Profiles/data modes are in separate review tools below the screen.
 
 See [design and scope](../../docs/features/HB-67/design.md), [verification](../../docs/features/HB-67/verification.md) and [notices](THIRD_PARTY_NOTICES.md).

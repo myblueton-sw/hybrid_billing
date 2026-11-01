@@ -14,37 +14,24 @@ The owner rejected the candidate's arbitrary IA/layout changes. This document de
 
 The source intake and implementation index exercise app/modules/shared/extensions/profiles without creating empty future packages. The 112-screen plan is not represented as 112 completed React screens. HB-63 remains the baseline for unreplaced screens; no owner FIX or supersession is inferred.
 
-# Boundaries and behavior
+# Corrected screen contract
 
-`assemble` validates explicit module/profile/extension descriptors, versions, dependencies, unique routes and slot ownership before rendering. Standard and Evidence share the sources module; Evidence contributes its own renderer at sources/evidence/v1. Both examples are intentionally bundled. This is not plugin isolation, tenant authorization or a private-customer distribution solution.
+The shared catalog and shell copy are derived from HB-63 commit 4d51763458b314fd766998c05fb32a1c40c99e72. The app restores preview notice, linked logo, account/jobs/locale controls, six ordered domains, searchable secondary navigation, breadcrumb/title/metadata, review before content and related links. All 112 route identities and registry links remain. Unported content is explicitly pending; a route inventory does not establish screen implementation. Customer navigation stays restricted to customer routes as a UI boundary only.
 
-The default adapter is unconnected. Opt-in synthetic mode has 57 records with bounded ten-row pages, search, missing/ready filters, detail and selection. Query scope changes invalidate selection/detail and abort old requests; an epoch also rejects late results. Hash history restores only explicit synthetic fixture queries. No real customer query may reuse this URL policy without a separate data review. Error, empty and loading states are distinct.
+`contents` restores the 24-card design directory, search, area/review filters, counts and paging. `overview` reuses this directory as in the baseline. Intake restores source-context, search/provider/status/sort/refresh, table/cards/columns/reset/import, grouped page/all-result selection with exclusions and local selection review, original source/amount/status/evidence columns, and 25/50/100 page sizes. Amounts remain unavailable. Scope changes invalidate selection/detail and cancel stale requests. Expiration blocks results/actions until refresh; retry returns to the normal synthetic scenario.
 
-Both screens use canonical local tokens/logo/fonts. Review evidence covers immutable source/dependency fingerprints, locale, width, profile/mode, visible state (including unsubmitted input), items and explicit acknowledgment. Scope changes cannot reuse FIX. Exported variants describe non-sensitive state while the scope hash binds the exact state. Corruption, quota and read-back failures remain visible. Browser records are local evidence, not project acceptance; authenticated approval storage is deferred.
+The default adapter is unconnected. Opt-in synthetic mode uses 57 fixture records. Fixture queries alone may enter hash history. Import selects a local file but performs no upload or server validation. Header account selection is limited to two synthetic scopes and jobs remain an empty local boundary; the full baseline account picker/job implementation remains pending. Profile/mode demonstration is separate review tooling below the screen rather than a replacement header.
 
-# Screen items
+Catalog contracts/data live in shared, not app internals. Standard and Evidence reuse the same source module; the versioned evidence slot renders an actual extension component. This is not tenant authorization or private customer packaging.
 
-| Screen / item suffix | Location and expected behavior | Status |
-| --- | --- | --- |
-| contents:table:implementation | Main index distinguishes 2 implemented screens and 112 planned screens | Implemented |
-| contents:action:open-intake | Open intake using current profile/mode/locale | Implemented |
-| index-intake:field:scope | Sample workspace picker invalidates result selection/detail | Synthetic |
-| index-intake:field:filter | Ready/missing/all filter resets page | Synthetic |
-| index-intake:field:search | Fixture ID input; unsubmitted edits invalidate review scope | Synthetic |
-| index-intake:action:search | Submit bounded fixture query into hash history | Synthetic |
-| index-intake:table:records | At most ten rows, exact fixture total, stable IDs | Synthetic |
-| index-intake:state:feedback | Loading, empty and error feedback without fabricated zero | Implemented |
-| index-intake:state:unconnected | Default explicit no-backend message | Implemented |
-| index-intake:field:scenario | Explicit synthetic normal/empty/error demonstration | Synthetic |
-| index-intake:action:page | Previous/next with limits | Synthetic |
-| index-intake:action:select | Select visible records only; no financial action | Synthetic |
-| index-intake:action:inspect | Open inline record detail, owned by this screen review scope | Synthetic |
-| index-intake:action:close-detail | Close visible detail | Implemented |
-| index-intake:action:retry | Retry only when the request failed | Synthetic |
-| index-intake:extension:evidence-guide | Evidence-only contribution, no source approval | Implemented |
+Review fingerprints include source dependencies, shell account, locale/width, profile/mode and actual screen state. Same-tab save notifications refresh directory counts. Previous evidence is preserved; no owner FIX is inferred. Existing canonical implementation IDs are restored, including:
 
-IDs remain stable on reorder. Screen IDs retain the prior design route identity; this increment adds scoped item IDs and does not retire other baseline items. Review controls and shell choices are shared dependencies of both screens. Their changes affect both fingerprints. A no-impact dependency change still needs an impact assessment before reconciling prior acceptance.
+- `contents:field:design-directory-search`, `contents:field:design-directory-group`, `contents:field:design-directory-status`, paging and per-card navigation IDs.
+- `index-intake:region:layout`, `index-intake:section:purpose`, `index-intake:field:record-search`, `index-intake:field:provider-filter`, `index-intake:field:status-filter`, `index-intake:field:sort`, `index-intake:field:page-size`.
+- `index-intake:field:page-select`, `index-intake:field:row-selection`, `index-intake:action:all-select`, `index-intake:action:review-selection`, `index-intake:action:record-detail`, `index-intake:action:retry-load` and visible column data IDs.
+
+The earlier candidate's conflicting item names are not the canonical design IDs. This correction changes both implemented screen fingerprints; no old FIX transfers. Dialogs belong to their owning screen and remain local synthetic behavior. Canonical visual rules and baseline CSS are retained; this correction does not establish pixel-exact parity of every unported state.
 
 # Deferred work
 
-Production adapters, authenticated tenant/permission enforcement, remaining 110 React screens, real customer installation packaging, durable owner acceptance, native-language review and Windows/Linux execution remain outside this increment. No payment, deployment or merge permission is implied. Operational commands and licensing are in [console README](../../../apps/console/README.md).
+Production adapters, authenticated tenant/permission enforcement, remaining distinct React screen implementations, real customer installation packaging, durable owner acceptance, native-language review and Windows/Linux execution remain outside this increment. No payment, deployment or merge permission is implied. Operational commands and licensing are in [console README](../../../apps/console/README.md).

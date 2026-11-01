@@ -125,6 +125,7 @@ export default function ReviewPanel({
         evidence: "local-owner-acknowledgement",
       });
       setRecords(next);
+      window.dispatchEvent(new Event("screen-review-saved"));
       setError(false);
       close();
     } catch {
@@ -153,7 +154,7 @@ export default function ReviewPanel({
   }
   return (
     <section
-      className="review"
+      className="design-review"
       aria-label={t(
         l,
         "Screen design review",

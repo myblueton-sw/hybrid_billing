@@ -55,3 +55,24 @@ test("aborted requests reject and late response epochs are ineligible", async ()
     name: "AbortError",
   });
 });
+
+test("provider, sort and 25-row pages preserve independent fixture counts", async () => {
+  const signal = new AbortController().signal;
+  const filtered = await readSyntheticEvidence(
+    { ...query, provider: "AWS", size: 25 },
+    signal,
+  );
+  assert.equal(filtered.total, 19);
+  assert(filtered.rows.every((row) => row.provider === "AWS"));
+  const descending = await readSyntheticEvidence(
+    { ...query, sort: "desc", size: 25 },
+    signal,
+  );
+  assert.equal(descending.rows.length, 25);
+  assert.equal(descending.rows[0].id, "sample-b-REC-0000057");
+  const last = await readSyntheticEvidence(
+    { ...query, size: 25, page: 3 },
+    signal,
+  );
+  assert.equal(last.rows.length, 7);
+});

@@ -11,6 +11,9 @@ export type Query = {
   search: string;
   page: number;
   scenario: string;
+  provider?: string;
+  sort?: string;
+  size?: number;
 };
 export async function readSyntheticEvidence(
   q: Query,
@@ -36,7 +39,7 @@ export async function readSyntheticEvidence(
       : Array.from(
           { length: 57 },
           (_, i): EvidenceRow => ({
-            id: `${q.scope}-REC-${String(i + 1).padStart(4, "0")}`,
+            id: `${q.scope}-REC-${String(i + 1).padStart(7, "0")}`,
             scope: q.scope,
             provider: ["AWS", "Azure", "GCP"][i % 3],
             state: i % 4 === 0 ? "missing" : "ready",
@@ -45,10 +48,14 @@ export async function readSyntheticEvidence(
         );
   const found = all.filter(
     (r) =>
-      (q.filter === "all" || r.state === q.filter) && r.id.includes(q.search),
+      (q.filter === "all" || r.state === q.filter) &&
+      (!q.provider || r.provider === q.provider) &&
+      r.id.includes(q.search),
   );
+  if (q.sort === "desc") found.reverse();
+  const size = q.size ?? 10;
   return {
-    rows: found.slice((q.page - 1) * 10, q.page * 10),
+    rows: found.slice((q.page - 1) * size, q.page * size),
     total: found.length,
   };
 }

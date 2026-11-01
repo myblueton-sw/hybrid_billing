@@ -110,3 +110,7 @@ The [operations and contract-pricing study](docs/reviews/HB-38-billing-operation
 The current project-authored original material is offered under the [PolyForm Noncommercial License 1.0.0](LICENSE), with the applicability described in [LICENSING.md](LICENSING.md). It is source-available, not an OSI open-source license. Commercial-purpose use outside the license's permitted purposes requires a separate agreement; contact [myblueton@gmail.com](mailto:myblueton@gmail.com).
 
 The owner reports sole development and no external distribution or downloads; this has not been independently audited. Any rights already obtained for earlier MIT copies remain unaffected, with the [historical license and notice](LICENSES/MIT-legacy.txt) preserved for that scope. They do not offer the current revision under MIT. Third-party rights and external-contributor commercial permissions remain separate. See the [owner's transition decision](docs/licensing/source-available-adoption.md), [current policy](docs/licensing/product-policy.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
+
+## Interactive design preview
+
+The current multilingual screen draft, adopted Fusion AI branding and local-font build are described in [design foundations](docs/design-system.md) and [design build/work guide](docs/design-build-guide.md). Build the preview before serving it; the source directory alone is not the packaged artifact. This is a design prototype with synthetic data, not completed backend or production workflow integration.

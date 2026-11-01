@@ -1,0 +1,9 @@
+# Owner-supplied design reference
+
+Original reference archive, retained without activating its setup scripts or nested rules. The earlier extraction was reference-only. The owner subsequently authorized screen implementation and requested brand/rule adoption in HB-63. The hybrid_billing directory preserves all 79 original archive files, including application instructions, without activating them in the repository. Do not run APPLY instructions or apply nested agent/editor rules automatically.
+
+Source: hybrid_billing-design-system.zip supplied by the owner. Tracking: HB-61. At initial extraction, no package installation, application integration, commit, push or merge was performed. Temporary verification tooling was installed outside the repository before the clarification; no runtime validation is claimed.
+
+Future implementation review notes: Money uses binary numbers and implicit rounding and does not validate missing currency; Icon interpolates its title into raw SVG; callback-only Rail navigation lacks keyboard behavior; Metrics/Facts inline grids override responsive rules; LinkTabs blocks its default action without a handler. Field select/textarea typing also needs review. These observations do not modify the supplied reference. The package README relative links are valid from its original repository placement; the draft is not standalone documentation. Arabic copy, actual rendering, dependency compatibility and application build remain unverified.
+
+Active static foundations now live in packages/design-system; provenance records the selected unchanged logo/icon/token files. Current instructions are docs/design-system.md and docs/design-build-guide.md, linked from root AGENTS.md. React components from this archive remain unadopted pending their recorded review findings. The 79 original archive files remain unchanged.

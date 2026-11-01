@@ -16,7 +16,7 @@ This repository is being published incrementally. Companion rules, skills, `.lin
 
 This applies to planning, reviews, documents, configuration, code, tests and infrastructure. Read-only reviews also produce ticket-linked Git reports. The README-only first commit was the owner's HB-5 bootstrap exception; subsequent changes follow the PR sequence. JEV cannot authorize or waive a step.
 
-For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md` and `code-structure.md`. For documentation, read `knowledge-format.md`; Markdown knowledge documents under `docs/` follow OKF v0.2. Read `tenant-security.md` for data, permission or billing work and `usability.md` for screens.
+For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md` and `code-structure.md`. For documentation, read `knowledge-format.md`; Markdown knowledge documents under `docs/` follow OKF v0.2. Read `tenant-security.md` for data, permission or billing work and `usability.md` for screens. For screens, visual assets and design builds, also read `.agents/rules/design-system.md`, `.agents/rules/screen-review.md`, `docs/design-system.md` and `docs/design-build-guide.md`.
 
 ## Language and response policy
 
@@ -25,6 +25,8 @@ For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md
 - Keep replies minimal. Brief acknowledgments may be English; answer user questions in Korean.
 
 ## Core rules
+
+- All designs must support installation and operation without dependence on a particular OS. Follow `.agents/rules/platform-independence.md`; distinguish portability targets from tested combinations.
 
 - Do not add explanatory source comments or use docstrings/JSDoc to bypass this rule. Preserve required machine directives, legal headers and externally consumed API documentation.
 - When the owner fixes a final document or design revision, remove the superseded versions from the current tree in the same scoped finalization change. Update links, indexes and generators first; retain history in Git rather than duplicate archive folders. Apply replacement per module/scope, not by version number alone. Original evidence, legal notices and distinct review/verification records are not superseded drafts.

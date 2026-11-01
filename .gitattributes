@@ -1,0 +1,5 @@
+packages/design-system/assets/** -text
+packages/design-system/styles/tokens.css -text
+packages/design-system/styles/console.css text eol=lf
+docs/design-modules/00-scalable-console/r1/** text eol=lf
+tools/design/** text eol=lf

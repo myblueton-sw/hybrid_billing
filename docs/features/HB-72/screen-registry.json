@@ -1,0 +1,2566 @@
+{
+ "ticket": "HB-72",
+ "status": "draft",
+ "source": "docs/planning/v1.16/ui-design.md (catalog lines 90-163, IA lines 32-44); docs/ui/screens/<id>/spec.md; apps/console/src/shared/catalog.json on main 3e5f754 (derived from HB-63 4d51763); HB-66 screen-ownership.json (PR 62, open)",
+ "menus": [
+  {
+   "key": "home",
+   "ko": "업무 홈",
+   "en": "Work home"
+  },
+  {
+   "key": "org",
+   "ko": "조직과 계약",
+   "en": "Organizations and contracts"
+  },
+  {
+   "key": "src",
+   "ko": "원천과 증빙",
+   "en": "Sources and evidence"
+  },
+  {
+   "key": "cost",
+   "ko": "원가와 요율",
+   "en": "Cost and rates"
+  },
+  {
+   "key": "bill",
+   "ko": "정산과 청구",
+   "en": "Settlement and billing"
+  },
+  {
+   "key": "rep",
+   "ko": "리포트와 이력",
+   "en": "Reports and history"
+  },
+  {
+   "key": "ai",
+   "ko": "Assistant",
+   "en": "Assistant"
+  },
+  {
+   "key": "iam",
+   "ko": "사용자와 접근",
+   "en": "Users and access"
+  },
+  {
+   "key": "ops",
+   "ko": "설치와 운영",
+   "en": "Installation and operations"
+  },
+  {
+   "key": "me",
+   "ko": "내 계정",
+   "en": "My account"
+  },
+  {
+   "key": "portal",
+   "ko": "고객 포털",
+   "en": "Customer portal"
+  },
+  {
+   "key": "pre",
+   "ko": "로그인 전",
+   "en": "Before sign-in"
+  }
+ ],
+ "screens": [
+  {
+   "id": "L01",
+   "titleKo": "로그인",
+   "path": "/login",
+   "menu": "pre",
+   "menuKo": "로그인 전",
+   "audience": "prelogin",
+   "module": "identity",
+   "archetype": "prelogin-form",
+   "scope": "업무 공간 경로·운영/DEMO 표식",
+   "tabs": [
+    "로그인 방식",
+    "추가 인증"
+   ],
+   "flows": "F01,F05",
+   "spec": "docs/ui/screens/L01/spec.md",
+   "legacyRoutes": [
+    "entry-start",
+    "entry-login",
+    "entry-scope"
+   ],
+   "reactBodies": [
+    "entry-start",
+    "entry-login",
+    "entry-scope"
+   ],
+   "purposeKo": "로그인",
+   "primaryFieldsActionsKo": "설치/업무 공간 경로, 아이디·비밀번호, 허용 SAML/OIDC 제공자, 직접 디렉터리 로그인, MFA 단계, 도움말",
+   "roleCodes": [],
+   "conditionalGrants": [
+    "모든 사용자"
+   ],
+   "roleLabelsKo": [
+    "모든 사용자"
+   ],
+   "roleNotes": [
+    "unauthenticated entry"
+   ]
+  },
+  {
+   "id": "L02",
+   "titleKo": "최초 등록·초대 수락",
+   "path": "/activate",
+   "menu": "pre",
+   "menuKo": "로그인 전",
+   "audience": "prelogin",
+   "module": "identity",
+   "archetype": "prelogin-wizard",
+   "scope": "업무 공간·부여 범위(토큰 고정)",
+   "tabs": [
+    "초대 확인",
+    "신원 확인",
+    "등록 결과"
+   ],
+   "flows": "F01,F05",
+   "spec": "docs/ui/screens/L02/spec.md",
+   "legacyRoutes": [
+    "entry-bootstrap",
+    "entry-invite"
+   ],
+   "reactBodies": [
+    "entry-bootstrap",
+    "entry-invite"
+   ],
+   "purposeKo": "최초 등록·초대 수락",
+   "primaryFieldsActionsKo": "일회성 bootstrap 또는 초대 종류, 대상 업무 공간·역할·만료, 허용 인증 방식으로 신원 확인, 비밀번호 설정/SSO 연결",
+   "roleCodes": [],
+   "conditionalGrants": [
+    "최초 OP (scope-limited)",
+    "초대 대상"
+   ],
+   "roleLabelsKo": [
+    "최초 OP",
+    "초대 대상"
+   ],
+   "roleNotes": [
+    "unauthenticated entry"
+   ]
+  },
+  {
+   "id": "L03",
+   "titleKo": "계정 복구·긴급 접근",
+   "path": "/recover",
+   "menu": "pre",
+   "menuKo": "로그인 전",
+   "audience": "prelogin",
+   "module": "identity",
+   "archetype": "prelogin-wizard",
+   "scope": "업무 공간",
+   "tabs": [
+    "복구 경로",
+    "소유 증명",
+    "새 수단 설정",
+    "복구 결과"
+   ],
+   "flows": "F05",
+   "spec": "docs/ui/screens/L03/spec.md",
+   "legacyRoutes": [
+    "entry-challenge"
+   ],
+   "reactBodies": [
+    "entry-challenge"
+   ],
+   "purposeKo": "계정 복구·긴급 접근",
+   "primaryFieldsActionsKo": "로컬 재설정, 제공자 관리 복구 안내, MFA 복구, 명시적 긴급 접근 사유·유효기간",
+   "roleCodes": [],
+   "conditionalGrants": [
+    "사용자",
+    "지정 복구 관리자"
+   ],
+   "roleLabelsKo": [
+    "사용자",
+    "지정 복구 관리자"
+   ],
+   "roleNotes": [
+    "unauthenticated entry"
+   ]
+  },
+  {
+   "id": "U01",
+   "titleKo": "전체 정산 현황",
+   "path": "/home",
+   "menu": "home",
+   "menuKo": "업무 홈",
+   "audience": "admin",
+   "module": "operations",
+   "archetype": "dashboard",
+   "scope": "조직/고객·계약·법인·기간·통화·표시 환율·기준시각·운영 프로파일",
+   "tabs": [
+    "현재 정산",
+    "내 작업",
+    "최근 변경",
+    "납기·연체"
+   ],
+   "flows": "F02,F05",
+   "spec": "docs/ui/screens/U01/spec.md",
+   "legacyRoutes": [
+    "operations"
+   ],
+   "reactBodies": [
+    "operations"
+   ],
+   "purposeKo": "전체 현황",
+   "primaryFieldsActionsKo": "현재 범위, 원가/판매/배분 각각의 금액, 마감 건수·차단·ERP 미확인·내 할 일, 근거·다음 조치",
+   "roleCodes": [
+    "BL",
+    "AP",
+    "CP",
+    "AU"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "AP",
+    "CP",
+    "AU"
+   ]
+  },
+  {
+   "id": "U02",
+   "titleKo": "마감 목록·달력",
+   "path": "/closing",
+   "menu": "home",
+   "menuKo": "업무 홈",
+   "audience": "admin",
+   "module": "operations",
+   "archetype": "list-workbench",
+   "scope": "고객/조직·계약·법인·정산 주기·담당·단계·기한·발행 경로",
+   "tabs": [
+    "목록",
+    "달력",
+    "선택 마감 상세",
+    "기한 변경 이력",
+    "인식 주기·대사"
+   ],
+   "flows": "F02",
+   "spec": "docs/ui/screens/U02/spec.md",
+   "legacyRoutes": [
+    "core-index-close"
+   ],
+   "reactBodies": [
+    "core-index-close"
+   ],
+   "purposeKo": "마감 목록·달력",
+   "primaryFieldsActionsKo": "고객/계약/법인/기간/통화/발행 경로, 단계·기한·담당·차단, 검증 재실행·담당 지정·승인 요청·기한 변경",
+   "roleCodes": [
+    "BL",
+    "AP",
+    "CP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "AP",
+    "CP"
+   ]
+  },
+  {
+   "id": "U03",
+   "titleKo": "내 작업·알림함",
+   "path": "/tasks",
+   "menu": "home",
+   "menuKo": "업무 홈",
+   "audience": "admin+portal",
+   "module": "operations",
+   "archetype": "inbox",
+   "scope": "기간·업무 유형·내 현재 범위",
+   "tabs": [
+    "내 작업",
+    "업무 알림",
+    "선택 상세",
+    "전달 상태",
+    "납기·연체"
+   ],
+   "flows": "F02,F03,F05,F07",
+   "spec": "docs/ui/screens/U03/spec.md",
+   "legacyRoutes": [
+    "operations",
+    "my-tasks"
+   ],
+   "reactBodies": [
+    "my-tasks"
+   ],
+   "purposeKo": "내 작업·알림함",
+   "primaryFieldsActionsKo": "작업/사건 ID, 대상·단계·기한·담당·성공/보류/실패, 확인·수락·재시도·인계·알림 설정",
+   "roleCodes": [
+    "OP",
+    "AM",
+    "PR",
+    "BL",
+    "AP",
+    "CP",
+    "AU",
+    "CU",
+    "IA"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "모든 업무 역할"
+   ]
+  },
+  {
+   "id": "U04",
+   "titleKo": "청구 특이사항",
+   "path": "/billing-findings",
+   "menu": "home",
+   "menuKo": "업무 홈",
+   "audience": "admin",
+   "module": "operations",
+   "archetype": "list-workbench",
+   "scope": "고객/계약·기간·금액 기준·통화·담당",
+   "tabs": [
+    "특이사항 목록",
+    "검토 상세",
+    "관련 근거·조정"
+   ],
+   "flows": "청구 이상 검토",
+   "spec": "docs/ui/screens/U04/spec.md",
+   "legacyRoutes": [
+    "operations",
+    "auto-exceptions"
+   ],
+   "reactBodies": [],
+   "purposeKo": "청구 특이사항",
+   "primaryFieldsActionsKo": "유형·대상·기간·금액 의미/통화·근거·심각도·담당·검토 상태, 수동 등록/정상 확인/조정 요청/해결 연결",
+   "roleCodes": [
+    "PR",
+    "BL",
+    "AP",
+    "CP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "PR",
+    "CP",
+    "AP"
+   ]
+  },
+  {
+   "id": "O01",
+   "titleKo": "조직·관계 탐색",
+   "path": "/organizations",
+   "menu": "org",
+   "menuKo": "조직과 계약",
+   "audience": "admin",
+   "module": "organizations",
+   "archetype": "tree-list-detail",
+   "scope": "기준일·법인·관계 종류·미귀속·공급자",
+   "tabs": [
+    "조직 트리",
+    "원천 계정",
+    "조회 그룹",
+    "귀속 이력"
+   ],
+   "flows": "F01,F03",
+   "spec": "docs/ui/screens/O01/spec.md",
+   "legacyRoutes": [
+    "setup-attribution",
+    "organizations"
+   ],
+   "reactBodies": [],
+   "purposeKo": "조직·관계 탐색",
+   "primaryFieldsActionsKo": "법인/부서/프로젝트, 조회 그룹, 원천 계정 종류·귀속 유효기간, 공유 배분·권한 근거",
+   "roleCodes": [
+    "AM",
+    "BL",
+    "CP",
+    "AU"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "AM",
+    "CP",
+    "BL",
+    "AU"
+   ]
+  },
+  {
+   "id": "O02",
+   "titleKo": "관계 변경·영향 검토",
+   "path": "/organization-changes",
+   "menu": "org",
+   "menuKo": "조직과 계약",
+   "audience": "admin",
+   "module": "organizations",
+   "archetype": "wizard",
+   "scope": "적용일·고정 대상 manifest·기대 revision",
+   "tabs": [
+    "변경 대상",
+    "영향 검토",
+    "승인·예약",
+    "적용 결과"
+   ],
+   "flows": "F03",
+   "spec": "docs/ui/screens/O02/spec.md",
+   "legacyRoutes": [
+    "index-mapping",
+    "organization-impact"
+   ],
+   "reactBodies": [],
+   "purposeKo": "관계 변경·영향 검토",
+   "primaryFieldsActionsKo": "연결/해제/이동/묶음 종류, 적용일·대상 snapshot, 금액·계약 풀·ERP·권한·파일 영향, 승인·예약/실행",
+   "roleCodes": [
+    "AM",
+    "PR",
+    "AP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "AM",
+    "PR",
+    "AP"
+   ]
+  },
+  {
+   "id": "O03",
+   "titleKo": "계약·발행 프로파일",
+   "path": "/contracts",
+   "menu": "org",
+   "menuKo": "조직과 계약",
+   "audience": "admin",
+   "module": "organizations",
+   "archetype": "list+detail-tabs",
+   "scope": "법인·계약 상태·정산 상태·직판/재판매",
+   "tabs": [
+    "당사자·경로",
+    "청구 일정",
+    "상품·요율",
+    "문서·지급",
+    "종료·최종정산",
+    "납부 조건",
+    "인식 주기·대사"
+   ],
+   "flows": "F01,계좌 변경",
+   "spec": "docs/ui/screens/O03/spec.md",
+   "legacyRoutes": [
+    "setup-profile",
+    "customer-detail",
+    "supplier-register",
+    "customer-contract"
+   ],
+   "reactBodies": [
+    "customer-detail"
+   ],
+   "purposeKo": "계약·발행 프로파일",
+   "primaryFieldsActionsKo": "당사자·지급 책임·문서 수신자·법인·통화·시간대·시작/종료·주기·일할·선후청구·발행 모드·ERP",
+   "roleCodes": [
+    "AM",
+    "PR",
+    "BL",
+    "AP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "AM",
+    "PR",
+    "BL",
+    "AP"
+   ]
+  },
+  {
+   "id": "S01",
+   "titleKo": "원천 연결·지원 범위",
+   "path": "/connections",
+   "menu": "src",
+   "menuKo": "원천과 증빙",
+   "audience": "admin",
+   "module": "onboarding",
+   "archetype": "list-workbench",
+   "scope": "Provider·계약 유형·계정 역할·법인·지원 상태·인증 만료",
+   "tabs": [
+    "연결 목록",
+    "지원 범위",
+    "인증·보안",
+    "진단 이력"
+   ],
+   "flows": "F01",
+   "spec": "docs/ui/screens/S01/spec.md",
+   "legacyRoutes": [
+    "setup-connectors",
+    "setup-readtest"
+   ],
+   "reactBodies": [],
+   "purposeKo": "원천 연결·지원 범위",
+   "primaryFieldsActionsKo": "Provider·계약·scope·계정역할·제품버전·인증 참조·capability·마지막 수신, 연결/진단/회수",
+   "roleCodes": [
+    "OP",
+    "BL"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "OP",
+    "BL"
+   ]
+  },
+  {
+   "id": "S02",
+   "titleKo": "온보딩·담당자 인계",
+   "path": "/onboarding",
+   "menu": "src",
+   "menuKo": "원천과 증빙",
+   "audience": "admin",
+   "module": "onboarding",
+   "archetype": "wizard",
+   "scope": "Provider·계약·운영 유형",
+   "tabs": [
+    "경로 선택",
+    "설정·권한",
+    "첫 데이터",
+    "첫 대사",
+    "개통 검토"
+   ],
+   "flows": "F01",
+   "spec": "docs/ui/screens/S02/spec.md",
+   "legacyRoutes": [
+    "setup-progress",
+    "setup-schedule",
+    "setup-readiness"
+   ],
+   "reactBodies": [
+    "setup-progress",
+    "setup-profile",
+    "setup-attribution",
+    "setup-connectors",
+    "setup-readtest",
+    "setup-schedule",
+    "setup-first",
+    "setup-readiness"
+   ],
+   "purposeKo": "온보딩·담당자 인계",
+   "primaryFieldsActionsKo": "경로별 단계·완료 증거·필요 권한·자료·담당·대기 이유, 인계·재검사·첫 대사·개통 요청",
+   "roleCodes": [
+    "OP",
+    "AM",
+    "BL"
+   ],
+   "conditionalGrants": [
+    "ERP 담당"
+   ],
+   "roleLabelsKo": [
+    "OP",
+    "AM",
+    "BL",
+    "ERP 담당"
+   ]
+  },
+  {
+   "id": "S03",
+   "titleKo": "수입·충돌·완전성",
+   "path": "/imports",
+   "menu": "src",
+   "menuKo": "원천과 증빙",
+   "audience": "admin",
+   "module": "sources",
+   "archetype": "list-workbench",
+   "scope": "원천 연결·기간·개정",
+   "tabs": [
+    "수입 작업",
+    "격리·충돌",
+    "완전성",
+    "추출 검증"
+   ],
+   "flows": "F01,F02",
+   "spec": "docs/ui/screens/S03/spec.md",
+   "legacyRoutes": [
+    "setup-first",
+    "index-intake"
+   ],
+   "reactBodies": [
+    "index-intake"
+   ],
+   "purposeKo": "수입·충돌·완전성",
+   "primaryFieldsActionsKo": "원천 파일/응답·개정·해시·기간·계정·행/바이트·manifest·중복/격리·watermark, 업로드/검증/재개",
+   "roleCodes": [
+    "OP",
+    "BL"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "OP",
+    "BL"
+   ]
+  },
+  {
+   "id": "S04",
+   "titleKo": "비용·사용량 명세",
+   "path": "/source-data",
+   "menu": "src",
+   "menuKo": "원천과 증빙",
+   "audience": "admin",
+   "module": "sources",
+   "archetype": "list-workbench",
+   "scope": "기간·원천·계정/조직·서비스/모델·비용 의미·통화·품질·귀속",
+   "tabs": [
+    "정규화 명세",
+    "원천 필드",
+    "사용량",
+    "변환 이력"
+   ],
+   "flows": "F02",
+   "spec": "docs/ui/screens/S04/spec.md",
+   "legacyRoutes": [
+    "core-index-aws",
+    "core-index-variants",
+    "raw-explorer",
+    "ai-cost-waterfall"
+   ],
+   "reactBodies": [],
+   "purposeKo": "비용·사용량 명세",
+   "primaryFieldsActionsKo": "원본/정규화 선택, Billed/Effective 등 의미, 수량·단위·통화·시간·품질·변환 버전·귀속, 필터/근거",
+   "roleCodes": [
+    "BL",
+    "CP",
+    "AU"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "CP",
+    "AU"
+   ]
+  },
+  {
+   "id": "S05",
+   "titleKo": "증빙·문서 연결",
+   "path": "/evidence",
+   "menu": "src",
+   "menuKo": "원천과 증빙",
+   "audience": "admin",
+   "module": "sources",
+   "archetype": "list-workbench",
+   "scope": "문서 종류·발행자·기간·연결 청구",
+   "tabs": [
+    "증빙 목록",
+    "문서 연결",
+    "검증",
+    "보존·복원"
+   ],
+   "flows": "F02",
+   "spec": "docs/ui/screens/S05/spec.md",
+   "legacyRoutes": [
+    "v4-inbox",
+    "v4-extract"
+   ],
+   "reactBodies": [],
+   "purposeKo": "증빙·문서 연결",
+   "primaryFieldsActionsKo": "문서 종류·발행자·번호·기간·원천 locator·해시·연결 청구·보관 상태, 원본/파생본 다운로드·복원 요청",
+   "roleCodes": [
+    "BL",
+    "AU"
+   ],
+   "conditionalGrants": [
+    "허용 CU (scope-limited)"
+   ],
+   "roleLabelsKo": [
+    "BL",
+    "AU",
+    "허용 CU"
+   ],
+   "roleNotes": [
+    "CU excluded from admin shell pending D3; customers reach permitted evidence through C02"
+   ]
+  },
+  {
+   "id": "S06",
+   "titleKo": "대사·차이 작업함",
+   "path": "/reconciliation",
+   "menu": "src",
+   "menuKo": "원천과 증빙",
+   "audience": "admin",
+   "module": "sources",
+   "archetype": "list-workbench",
+   "scope": "기간·통화·대사 종류·기준/snapshot",
+   "tabs": [
+    "원천 대사",
+    "판매 대사",
+    "배분 대사",
+    "ERP 대사",
+    "병행 운영 대사"
+   ],
+   "flows": "F01,F02",
+   "spec": "docs/ui/screens/S06/spec.md",
+   "legacyRoutes": [
+    "v4-differences",
+    "core-index-sources",
+    "cost-differences",
+    "core-reconciliation-case"
+   ],
+   "reactBodies": [],
+   "purposeKo": "대사·차이 작업함",
+   "primaryFieldsActionsKo": "원통화·문서 범위·원가/판매/배분 대사, 기대/실제·차액·세금/크레딧·담당·원행, 해결 근거/재검증",
+   "roleCodes": [
+    "BL",
+    "AP",
+    "CP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "AP",
+    "CP"
+   ]
+  },
+  {
+   "id": "B01",
+   "titleKo": "온프렘 원가 풀",
+   "path": "/cost-pools",
+   "menu": "cost",
+   "menuKo": "원가와 요율",
+   "audience": "admin",
+   "module": "pricing",
+   "archetype": "list+detail-tabs",
+   "scope": "기간·소유 법인·풀 유형·승인 상태",
+   "tabs": [
+    "풀 요약",
+    "원가 구성",
+    "상품 포함 관계",
+    "승인 이력"
+   ],
+   "flows": "F02",
+   "spec": "docs/ui/screens/B01/spec.md",
+   "legacyRoutes": [
+    "onprem-pools"
+   ],
+   "reactBodies": [],
+   "purposeKo": "온프렘 원가 풀",
+   "primaryFieldsActionsKo": "자산·리스/감가·라이선스·전력·시설·기간·출처·포함 항목·승인, 초안/배분 미리보기",
+   "roleCodes": [
+    "PR",
+    "BL",
+    "CP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "CP",
+    "PR",
+    "BL"
+   ]
+  },
+  {
+   "id": "B02",
+   "titleKo": "계측·자산 이력",
+   "path": "/meters",
+   "menu": "cost",
+   "menuKo": "원가와 요율",
+   "audience": "admin",
+   "module": "sources",
+   "archetype": "list-workbench",
+   "scope": "기간·자산/미터·측정등급·모델·귀속",
+   "tabs": [
+    "자산 이력",
+    "계측 구간",
+    "누락·reset",
+    "모델·미터"
+   ],
+   "flows": "F02",
+   "spec": "docs/ui/screens/B02/spec.md",
+   "legacyRoutes": [
+    "asset-measurements"
+   ],
+   "reactBodies": [],
+   "purposeKo": "계측·자산 이력",
+   "primaryFieldsActionsKo": "VM/GPU/미터 ID·구간·사양/귀속 변경·단위·측정등급·reset·누락, 진단/근거 조회",
+   "roleCodes": [
+    "OP",
+    "BL",
+    "CP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "OP",
+    "CP",
+    "BL"
+   ]
+  },
+  {
+   "id": "B03",
+   "titleKo": "배분·공유 풀",
+   "path": "/allocations",
+   "menu": "cost",
+   "menuKo": "원가와 요율",
+   "audience": "admin",
+   "module": "pricing",
+   "archetype": "list-workbench",
+   "scope": "기간·풀·기준액 종류·대상 조직·정책 개정",
+   "tabs": [
+    "정책",
+    "전체 풀",
+    "시뮬레이션",
+    "비교·검증"
+   ],
+   "flows": "F01,F02",
+   "spec": "docs/ui/screens/B03/spec.md",
+   "legacyRoutes": [
+    "core-index-allocation"
+   ],
+   "reactBodies": [],
+   "purposeKo": "배분·공유 풀",
+   "primaryFieldsActionsKo": "기준 원가/판매액·기간·대상·정률/사용/예약·유휴·잔액·정책, 시뮬레이션/비교/승인",
+   "roleCodes": [
+    "PR",
+    "BL",
+    "AP",
+    "CP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "CP",
+    "PR",
+    "BL",
+    "AP"
+   ]
+  },
+  {
+   "id": "B04",
+   "titleKo": "요율·산식·영향",
+   "path": "/rates",
+   "menu": "cost",
+   "menuKo": "원가와 요율",
+   "audience": "admin",
+   "module": "pricing",
+   "archetype": "list-workbench",
+   "scope": "계약·서비스/SKU·유효기간·정책 상태",
+   "tabs": [
+    "요율",
+    "산식 단계",
+    "상속·예외",
+    "수동 조정",
+    "영향 비교"
+   ],
+   "flows": "F01,F03",
+   "spec": "docs/ui/screens/B04/spec.md",
+   "legacyRoutes": [
+    "auto-portfolio",
+    "supplier-aws",
+    "supplier-azure",
+    "supplier-gcp",
+    "supplier-oci",
+    "supplier-alibaba",
+    "auto-rulebook",
+    "auto-editor",
+    "auto-exclusions",
+    "auto-mapping",
+    "auto-bulk",
+    "sales-policy",
+    "sales-impact",
+    "core-index-pricing",
+    "index-pricing",
+    "index-seats",
+    "supplier-naver",
+    "supplier-kt"
+   ],
+   "reactBodies": [],
+   "purposeKo": "요율·산식·영향",
+   "primaryFieldsActionsKo": "계약/서비스/SKU·기준액·단위·고정/구간·포함량·최소·최대·할인·가산/마진·순서·상속·유효일, 검사/모의/승인",
+   "roleCodes": [
+    "PR",
+    "BL",
+    "AP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "PR",
+    "BL",
+    "AP"
+   ]
+  },
+  {
+   "id": "B05",
+   "titleKo": "환율·반올림",
+   "path": "/exchange-rates",
+   "menu": "cost",
+   "menuKo": "원가와 요율",
+   "audience": "admin",
+   "module": "pricing",
+   "archetype": "list-workbench",
+   "scope": "통화쌍·제공기관·환율 종류·기준일",
+   "tabs": [
+    "정책",
+    "고시·수동 반입",
+    "환산 비교",
+    "승인 이력"
+   ],
+   "flows": "F02",
+   "spec": "docs/ui/screens/B05/spec.md",
+   "legacyRoutes": [
+    "index-fx"
+   ],
+   "reactBodies": [],
+   "purposeKo": "환율·반올림",
+   "primaryFieldsActionsKo": "통화쌍·고시단위·출처·기준일·고정값·경과일·정책·반올림 단계, 수집/반입/비교/승인",
+   "roleCodes": [
+    "PR",
+    "BL",
+    "AP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "PR",
+    "BL",
+    "AP"
+   ]
+  },
+  {
+   "id": "B06",
+   "titleKo": "약정 원가·혜택",
+   "path": "/commitments",
+   "menu": "cost",
+   "menuKo": "원가와 요율",
+   "audience": "admin",
+   "module": "pricing",
+   "archetype": "list-workbench",
+   "scope": "Provider·약정 종류·기간·소유자·배분 풀",
+   "tabs": [
+    "약정 명세",
+    "사용·미사용",
+    "혜택 전달",
+    "대사"
+   ],
+   "flows": "F02",
+   "spec": "docs/ui/screens/B06/spec.md",
+   "legacyRoutes": [
+    "marketplace-commitment",
+    "index-commitments"
+   ],
+   "reactBodies": [],
+   "purposeKo": "약정 원가·혜택",
+   "primaryFieldsActionsKo": "공급자 제공 약정/사용/미사용/상계·소유·배분·판매 전달정책·증빙, 조회/대사/정책 연결",
+   "roleCodes": [
+    "PR",
+    "BL",
+    "CP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "PR",
+    "CP"
+   ]
+  },
+  {
+   "id": "B07",
+   "titleKo": "Marketplace 거래",
+   "path": "/marketplace",
+   "menu": "cost",
+   "menuKo": "원가와 요율",
+   "audience": "admin",
+   "module": "pricing",
+   "archetype": "list-workbench",
+   "scope": "Provider·마켓·계약/offer·기간",
+   "tabs": [
+    "구매자 청구",
+    "판매자 정산",
+    "혜택·크레딧",
+    "매핑"
+   ],
+   "flows": "F02",
+   "spec": "docs/ui/screens/B07/spec.md",
+   "legacyRoutes": [
+    "marketplace-register",
+    "marketplace-commitment"
+   ],
+   "reactBodies": [],
+   "purposeKo": "Marketplace 거래",
+   "primaryFieldsActionsKo": "구매자 청구·판매 수수료·순정산·offer·할인 적용범위·크레딧·매입/판매 책임, 매핑/대사",
+   "roleCodes": [
+    "PR",
+    "BL"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "PR"
+   ]
+  },
+  {
+   "id": "B08",
+   "titleKo": "청구 실행·전후 비교",
+   "path": "/billing-runs",
+   "menu": "bill",
+   "menuKo": "정산과 청구",
+   "audience": "admin",
+   "module": "calculation",
+   "archetype": "list-workbench",
+   "scope": "기간·계약/법인·통화·정책 revision·대상 manifest",
+   "tabs": [
+    "실행 목록",
+    "입력·정책",
+    "결과·규칙 추적",
+    "전후 비교",
+    "검증",
+    "인식 주기·대사"
+   ],
+   "flows": "F01,F02",
+   "spec": "docs/ui/screens/B08/spec.md",
+   "legacyRoutes": [
+    "auto-job",
+    "core-reconciliation-recalc",
+    "index-runs"
+   ],
+   "reactBodies": [],
+   "purposeKo": "청구 실행·전후 비교",
+   "primaryFieldsActionsKo": "입력/귀속/정책/FX/엔진 버전·대상·금액·규칙추적·완전성·job, 계산/검증/비교/승인 요청",
+   "roleCodes": [
+    "PR",
+    "BL",
+    "AP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "PR",
+    "AP"
+   ]
+  },
+  {
+   "id": "B09",
+   "titleKo": "승인함·결과 카드",
+   "path": "/approvals",
+   "menu": "bill",
+   "menuKo": "정산과 청구",
+   "audience": "admin",
+   "module": "issuance",
+   "archetype": "inbox",
+   "scope": "법인/고객·행위·기간·금액 범위·작성자·기한",
+   "tabs": [
+    "대기",
+    "내 결정",
+    "위임·대리",
+    "승인 이력",
+    "인식 주기·대사"
+   ],
+   "flows": "F01,F02,F03",
+   "spec": "docs/ui/screens/B09/spec.md",
+   "legacyRoutes": [
+    "auto-activation",
+    "core-reconciliation-approval",
+    "index-approval"
+   ],
+   "reactBodies": [],
+   "purposeKo": "승인함·결과 카드",
+   "primaryFieldsActionsKo": "대상·행위·기간·통화별 금액·입력/결과 해시·작성자·차이·경고·근거·ERP 최종액, 승인/반려/담당 인계",
+   "roleCodes": [
+    "AP"
+   ],
+   "conditionalGrants": [
+    "정책 소유자"
+   ],
+   "roleLabelsKo": [
+    "AP",
+    "정책 소유자"
+   ]
+  },
+  {
+   "id": "B10",
+   "titleKo": "청구 적용 이력",
+   "path": "/claims",
+   "menu": "bill",
+   "menuKo": "정산과 청구",
+   "audience": "admin",
+   "module": "calculation",
+   "archetype": "list-workbench",
+   "scope": "계약·기간·구성요소·Claim 상태·제출 경로",
+   "tabs": [
+    "적용 원장",
+    "부분 청구",
+    "역거래·정정",
+    "외부 참조"
+   ],
+   "flows": "F02",
+   "spec": "docs/ui/screens/B10/spec.md",
+   "legacyRoutes": [
+    "auto-trace",
+    "auto-history"
+   ],
+   "reactBodies": [],
+   "purposeKo": "청구 적용 이력",
+   "primaryFieldsActionsKo": "계약·기간·구성요소·원천→배분→판매→행→제출, 적용/잔여/역거래·원문 참조",
+   "roleCodes": [
+    "BL",
+    "AU"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "AU"
+   ]
+  },
+  {
+   "id": "B11",
+   "titleKo": "크레딧·청구 문의",
+   "path": "/credits-cases",
+   "menu": "bill",
+   "menuKo": "정산과 청구",
+   "audience": "admin",
+   "module": "history",
+   "archetype": "list-workbench",
+   "scope": "고객/계약·기간·통화/단위·잔액 권위·기준시각",
+   "tabs": [
+    "잔액",
+    "예약·적용",
+    "문의·이의",
+    "조정·역거래",
+    "납기·연체"
+   ],
+   "flows": "F04,F08",
+   "spec": "docs/ui/screens/B11/spec.md",
+   "legacyRoutes": [
+    "core-reconciliation-correction",
+    "index-correction"
+   ],
+   "reactBodies": [],
+   "purposeKo": "크레딧·청구 문의",
+   "primaryFieldsActionsKo": "잔액 권위·기준시각·통화/단위·예약/사용가능·배정/역거래, 사건·쟁점금액·증빙·내부메모/공개답변·기한",
+   "roleCodes": [
+    "BL",
+    "AP",
+    "CP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "AP",
+    "CP"
+   ]
+  },
+  {
+   "id": "I01",
+   "titleKo": "인보이스·내부 명세",
+   "path": "/invoices",
+   "menu": "bill",
+   "menuKo": "정산과 청구",
+   "audience": "admin",
+   "module": "issuance",
+   "archetype": "list+detail-tabs",
+   "scope": "법인·계약·문서 종류·기간·통화",
+   "tabs": [
+    "문서 목록",
+    "문서 본문",
+    "원문·정정",
+    "승인·전달 이력",
+    "납기·연체",
+    "인식 주기·대사"
+   ],
+   "flows": "F01,F02,F04",
+   "spec": "docs/ui/screens/I01/spec.md",
+   "legacyRoutes": [
+    "assignment-policy",
+    "review-issue",
+    "document-history",
+    "core-reconciliation-issued"
+   ],
+   "reactBodies": [
+    "review-issue"
+   ],
+   "purposeKo": "인보이스·내부 명세",
+   "primaryFieldsActionsKo": "원천/판매/ERP/내부 종류·법인·번호·통화·본문/첨부·세금/템플릿·승인·원문/정정, 미리보기/발행/다운로드/정정 초안",
+   "roleCodes": [
+    "BL",
+    "AP",
+    "AU"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "AP",
+    "AU"
+   ]
+  },
+  {
+   "id": "I02",
+   "titleKo": "ERP 제출·동기화",
+   "path": "/submissions",
+   "menu": "bill",
+   "menuKo": "정산과 청구",
+   "audience": "admin",
+   "module": "delivery",
+   "archetype": "list-workbench",
+   "scope": "ERP 제품/버전·법인",
+   "tabs": [
+    "제출 목록",
+    "초안 비교",
+    "문서·행 연결",
+    "외부 사건",
+    "연결 capability",
+    "납기·연체",
+    "인식 주기·대사"
+   ],
+   "flows": "F02,F04",
+   "spec": "docs/ui/screens/I02/spec.md",
+   "legacyRoutes": [
+    "erp"
+   ],
+   "reactBodies": [],
+   "purposeKo": "ERP 제출·동기화",
+   "primaryFieldsActionsKo": "연결 제품/버전·법인·마스터 매핑·제출/외부ID·초안/전기/법정/입금 상태·금액차이, 초안 조회/대사/허용 전기/정정",
+   "roleCodes": [
+    "BL",
+    "AP"
+   ],
+   "conditionalGrants": [
+    "ERP 담당"
+   ],
+   "roleLabelsKo": [
+    "BL",
+    "AP",
+    "ERP 담당"
+   ]
+  },
+  {
+   "id": "I03",
+   "titleKo": "파일 인계·반영 결과",
+   "path": "/handoffs",
+   "menu": "bill",
+   "menuKo": "정산과 청구",
+   "audience": "admin",
+   "module": "delivery",
+   "archetype": "list-workbench",
+   "scope": "파일 목적·템플릿 버전·기간",
+   "tabs": [
+    "인계 목록",
+    "파일 구성",
+    "반영 결과",
+    "행별 대사",
+    "인식 주기·대사"
+   ],
+   "flows": "F02,F04",
+   "spec": "docs/ui/screens/I03/spec.md",
+   "legacyRoutes": [
+    "file-handoff"
+   ],
+   "reactBodies": [],
+   "purposeKo": "파일 인계·반영 결과",
+   "primaryFieldsActionsKo": "표준/검증 업로드용·템플릿 버전·제출ID·문서/행·담당·다운로드/외부반영 상태, 생성/결과 등록/대사/실패 재인계",
+   "roleCodes": [
+    "BL"
+   ],
+   "conditionalGrants": [
+    "ERP 담당"
+   ],
+   "roleLabelsKo": [
+    "BL",
+    "ERP 담당"
+   ]
+  },
+  {
+   "id": "I04",
+   "titleKo": "공개 정책·전달 패키지",
+   "path": "/exports",
+   "menu": "bill",
+   "menuKo": "정산과 청구",
+   "audience": "admin",
+   "module": "delivery",
+   "archetype": "list-workbench",
+   "scope": "목적·수신자·정책 버전",
+   "tabs": [
+    "정책 개정",
+    "공개 미리보기",
+    "패키지",
+    "전달 이력"
+   ],
+   "flows": "F02,F04",
+   "spec": "docs/ui/screens/I04/spec.md",
+   "legacyRoutes": [
+    "publication-packages"
+   ],
+   "reactBodies": [],
+   "purposeKo": "공개 정책·전달 패키지",
+   "primaryFieldsActionsKo": "내부/고객용 목적·수신자·허용필드/집계·제외/추론충돌·샘플·행/합계/해시·정책개정, 생성/검사/전달/재시도",
+   "roleCodes": [
+    "BL",
+    "AP"
+   ],
+   "conditionalGrants": [
+    "공개 정책 담당"
+   ],
+   "roleLabelsKo": [
+    "BL",
+    "AP",
+    "공개 정책 담당"
+   ]
+  },
+  {
+   "id": "R01",
+   "titleKo": "정형 리포트",
+   "path": "/reports",
+   "menu": "rep",
+   "menuKo": "리포트와 이력",
+   "audience": "admin",
+   "module": "analytics",
+   "archetype": "dashboard",
+   "scope": "분석 범위·시간 기준·기간/비교 기간·금액 의미·통화/환산·그룹 차원",
+   "tabs": [
+    "요약",
+    "비교",
+    "상세 행",
+    "저장한 보기",
+    "내보내기 상태",
+    "납기·연체",
+    "인식 주기·대사"
+   ],
+   "flows": "F02",
+   "spec": "docs/ui/screens/R01/spec.md",
+   "legacyRoutes": [
+    "cost-pivot",
+    "v4-variance",
+    "reports"
+   ],
+   "reactBodies": [],
+   "purposeKo": "정형 리포트",
+   "primaryFieldsActionsKo": "기간·서비스·공급자·조직·모델·금액 기준·통화·snapshot·비교기간, 저장 필터/드릴다운/권한 있는 export",
+   "roleCodes": [
+    "BL",
+    "CP",
+    "AU"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "BL",
+    "CP",
+    "AU"
+   ]
+  },
+  {
+   "id": "R02",
+   "titleKo": "공통 이력·감사",
+   "path": "/history",
+   "menu": "rep",
+   "menuKo": "리포트와 이력",
+   "audience": "admin",
+   "module": "history",
+   "archetype": "list-workbench",
+   "scope": "발생/수신 기간·대상 종류/ID·행위자",
+   "tabs": [
+    "사건 목록",
+    "행위 상세",
+    "개정 차이",
+    "관련 증거"
+   ],
+   "flows": "F03,F05,F06",
+   "spec": "docs/ui/screens/R02/spec.md",
+   "legacyRoutes": [
+    "v4-audit",
+    "auto-history",
+    "v4-monthly",
+    "v4-month",
+    "audit-events"
+   ],
+   "reactBodies": [],
+   "purposeKo": "공통 이력·감사",
+   "primaryFieldsActionsKo": "사건/업무ID·실제/수신시각·사람/AI/자동주체·개정·사유·승인·외부참조·접근/반출, 검색/차이/문서 이동",
+   "roleCodes": [
+    "OP",
+    "AM",
+    "PR",
+    "BL",
+    "AP",
+    "CP",
+    "AU",
+    "IA"
+   ],
+   "conditionalGrants": [
+    "separately permitted business roles"
+   ],
+   "roleLabelsKo": [
+    "AU",
+    "허용 업무 역할"
+   ]
+  },
+  {
+   "id": "A01",
+   "titleKo": "AI 업무 Assistant",
+   "path": "/assistant",
+   "menu": "ai",
+   "menuKo": "Assistant",
+   "audience": "admin",
+   "module": "assistant",
+   "archetype": "conversation",
+   "scope": "업무 공간·고객/계약·기간·통화",
+   "tabs": [
+    "대화",
+    "실행 계획",
+    "작업·결과",
+    "대화 보관"
+   ],
+   "flows": "F07",
+   "spec": "docs/ui/screens/A01/spec.md",
+   "legacyRoutes": [
+    "assistant"
+   ],
+   "reactBodies": [],
+   "purposeKo": "AI 업무 대화",
+   "primaryFieldsActionsKo": "현재 scope·기간·통화·출처·갱신·요청/해석/계획·서버 결과 카드·job, 질의/초안/검증/명시 승인 전달/상세로 이동",
+   "roleCodes": [
+    "OP",
+    "AM",
+    "PR",
+    "BL",
+    "AP",
+    "CP",
+    "AU",
+    "IA"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "허용 업무 역할"
+   ],
+   "requiresPermission": "assistant.use",
+   "roleNotes": [
+    "visible only when the role also holds the separate Assistant permission"
+   ]
+  },
+  {
+   "id": "M01",
+   "titleKo": "사용자·초대·대량 회수",
+   "path": "/users",
+   "menu": "iam",
+   "menuKo": "사용자와 접근",
+   "audience": "admin",
+   "module": "identity",
+   "archetype": "list-workbench",
+   "scope": "업무 공간·상태·인증 방식·역할·만료",
+   "tabs": [
+    "사용자",
+    "초대",
+    "소속·역할",
+    "회수 작업"
+   ],
+   "flows": "F05",
+   "spec": "docs/ui/screens/M01/spec.md",
+   "legacyRoutes": [
+    "users"
+   ],
+   "reactBodies": [],
+   "purposeKo": "사용자·초대·대량 회수",
+   "primaryFieldsActionsKo": "불변 사용자ID·표시명·로그인ID·업무 공간·역할/기간·인증연결·상태·초대·세션, 생성/초대/재전송/정지/종료/회수",
+   "roleCodes": [
+    "AM",
+    "IA"
+   ],
+   "conditionalGrants": [
+    "범위 내 AM (scope-limited)"
+   ],
+   "roleLabelsKo": [
+    "IA",
+    "범위 내 AM"
+   ]
+  },
+  {
+   "id": "M02",
+   "titleKo": "인증 제공자·로그인 정책",
+   "path": "/authentication",
+   "menu": "iam",
+   "menuKo": "사용자와 접근",
+   "audience": "admin",
+   "module": "identity",
+   "archetype": "list+detail-tabs",
+   "scope": "인증 방식·업무 공간·상태",
+   "tabs": [
+    "제공자 연결",
+    "조직 로그인 정책",
+    "시험 로그인",
+    "키·인증서",
+    "복구 경로",
+    "외부 상태 동기화"
+   ],
+   "flows": "F01,F05",
+   "spec": "docs/ui/screens/M02/spec.md",
+   "legacyRoutes": [
+    "identity-policy"
+   ],
+   "reactBodies": [],
+   "purposeKo": "인증 제공자·로그인 정책",
+   "primaryFieldsActionsKo": "local/SAML/OIDC/LDAP·workspace route·신뢰설정·MFA근거·그룹매핑·인증서/키 만료·진단·정책revision, 시험/승인/활성/회전",
+   "roleCodes": [
+    "OP",
+    "IA"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "IA",
+    "OP"
+   ]
+  },
+  {
+   "id": "M03",
+   "titleKo": "역할·위임·효력 미리보기",
+   "path": "/access",
+   "menu": "iam",
+   "menuKo": "사용자와 접근",
+   "audience": "admin",
+   "module": "identity",
+   "archetype": "list-workbench",
+   "scope": "주체·행위·고객/법인",
+   "tabs": [
+    "역할 정의",
+    "부여·위임",
+    "효력 비교",
+    "지원 접근"
+   ],
+   "flows": "F05",
+   "spec": "docs/ui/screens/M03/spec.md",
+   "legacyRoutes": [
+    "entry-roles"
+   ],
+   "reactBodies": [],
+   "purposeKo": "역할·위임·효력 미리보기",
+   "primaryFieldsActionsKo": "주체·행위·고객/법인/계약/필드·유효기간·권한출처·부여상한, 변경초안/영향/승인/회수",
+   "roleCodes": [
+    "AM",
+    "IA"
+   ],
+   "conditionalGrants": [
+    "정책 소유자"
+   ],
+   "roleLabelsKo": [
+    "IA",
+    "AM",
+    "정책 소유자"
+   ]
+  },
+  {
+   "id": "M04",
+   "titleKo": "서비스 계정·자격",
+   "path": "/service-accounts",
+   "menu": "iam",
+   "menuKo": "사용자와 접근",
+   "audience": "admin",
+   "module": "identity",
+   "archetype": "list-workbench",
+   "scope": "소유 조직·책임자·scope·만료",
+   "tabs": [
+    "서비스 계정",
+    "자격 메타데이터",
+    "최근 사용",
+    "책임자 이관"
+   ],
+   "flows": "F05",
+   "spec": "docs/ui/screens/M04/spec.md",
+   "legacyRoutes": [
+    "service-accounts"
+   ],
+   "reactBodies": [],
+   "purposeKo": "서비스 계정·자격",
+   "primaryFieldsActionsKo": "사람과 다른 ID·목적·책임자·audience/scope·대상·credential 만료/회전·최근 사용, 생성/교체/폐기/책임자 인계",
+   "roleCodes": [
+    "OP",
+    "IA"
+   ],
+   "conditionalGrants": [
+    "허용 소유자"
+   ],
+   "roleLabelsKo": [
+    "IA",
+    "OP",
+    "허용 소유자"
+   ]
+  },
+  {
+   "id": "M05",
+   "titleKo": "내 보안·로그인 연결·알림",
+   "path": "/my-security",
+   "menu": "me",
+   "menuKo": "내 계정",
+   "audience": "admin+portal",
+   "module": "identity",
+   "archetype": "detail-tabs",
+   "scope": "본인 고정·소속 업무 공간",
+   "tabs": [
+    "내 계정",
+    "로그인 수단",
+    "추가 인증·복구",
+    "세션·최근 접근",
+    "알림 설정"
+   ],
+   "flows": "F05",
+   "spec": "docs/ui/screens/M05/spec.md",
+   "legacyRoutes": [
+    "entry-sessions",
+    "personal-security"
+   ],
+   "reactBodies": [],
+   "purposeKo": "내 보안·로그인 연결",
+   "primaryFieldsActionsKo": "로그인수단·본인 소속·MFA·세션·최근 접근, 비밀번호 변경/허용identity 연결·해제/다른 세션 종료",
+   "roleCodes": [
+    "OP",
+    "AM",
+    "PR",
+    "BL",
+    "AP",
+    "CP",
+    "AU",
+    "CU",
+    "IA"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "본인"
+   ],
+   "roleNotes": [
+    "self-scoped"
+   ]
+  },
+  {
+   "id": "P01",
+   "titleKo": "설치·진단·지원",
+   "path": "/installation",
+   "menu": "ops",
+   "menuKo": "설치와 운영",
+   "audience": "admin",
+   "module": "administration",
+   "archetype": "wizard",
+   "scope": "설치 profile·검사 영역",
+   "tabs": [
+    "설치 계획",
+    "환경 진단",
+    "지원 자료",
+    "지원 접근"
+   ],
+   "flows": "F01",
+   "spec": "docs/ui/screens/P01/spec.md",
+   "legacyRoutes": [
+    "core-reconciliation-setup",
+    "installation-diagnostics"
+   ],
+   "reactBodies": [],
+   "purposeKo": "설치·진단·지원",
+   "primaryFieldsActionsKo": "설치버전·프로파일·환경/네트워크·저장소·백업·연결검사·지원자료 미리보기, 진단/제한 지원 접근/묶음 생성",
+   "roleCodes": [
+    "OP"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "OP"
+   ]
+  },
+  {
+   "id": "P02",
+   "titleKo": "API·플러그인·채널",
+   "path": "/integrations",
+   "menu": "ops",
+   "menuKo": "설치와 운영",
+   "audience": "admin",
+   "module": "administration",
+   "archetype": "list-workbench",
+   "scope": "종류·상태·scope·버전",
+   "tabs": [
+    "API client",
+    "모듈",
+    "구독·채널",
+    "사건·재처리"
+   ],
+   "flows": "-",
+   "spec": "docs/ui/screens/P02/spec.md",
+   "legacyRoutes": [
+    "integrations"
+   ],
+   "reactBodies": [],
+   "purposeKo": "API·플러그인·채널",
+   "primaryFieldsActionsKo": "client·scope·구독·모듈manifest·버전/digest·capability·송신대상·라이선스·작업제한, 등록/시험/승인/격리/중지/재처리",
+   "roleCodes": [
+    "OP",
+    "BL",
+    "IA"
+   ],
+   "conditionalGrants": [
+    "범위 내 BL (scope-limited)"
+   ],
+   "roleLabelsKo": [
+    "OP",
+    "IA",
+    "범위 내 BL"
+   ]
+  },
+  {
+   "id": "P03",
+   "titleKo": "복구·이관·실행 상태",
+   "path": "/recovery",
+   "menu": "ops",
+   "menuKo": "설치와 운영",
+   "audience": "admin",
+   "module": "administration",
+   "archetype": "list-workbench",
+   "scope": "복원 시점·설치 generation",
+   "tabs": [
+    "복원 세트",
+    "격리 검사",
+    "외부 대사",
+    "고객 이관",
+    "재개 판정"
+   ],
+   "flows": "복구·이관",
+   "spec": "docs/ui/screens/P03/spec.md",
+   "legacyRoutes": [
+    "recovery-migration"
+   ],
+   "reactBodies": [],
+   "purposeKo": "복구·이관·실행 상태",
+   "primaryFieldsActionsKo": "복원세트·시점·발행잠금·최신회수/삭제원장·구작업자차단·외부대사·고객이관manifest, 검사/복원요청/허용범위 반출/재개 요청",
+   "roleCodes": [
+    "OP",
+    "BL",
+    "AU"
+   ],
+   "conditionalGrants": [
+    "허용 BL (scope-limited)"
+   ],
+   "roleLabelsKo": [
+    "OP",
+    "AU",
+    "허용 BL"
+   ]
+  },
+  {
+   "id": "P04",
+   "titleKo": "데이터 보관·삭제",
+   "path": "/retention",
+   "menu": "ops",
+   "menuKo": "설치와 운영",
+   "audience": "admin",
+   "module": "administration",
+   "archetype": "list-workbench",
+   "scope": "데이터 등급·scope·정책 버전",
+   "tabs": [
+    "보관 정책",
+    "사용량·만료",
+    "보류·참조",
+    "삭제 작업",
+    "아카이브 복원",
+    "결정 기록·복원 최신성"
+   ],
+   "flows": "F06",
+   "spec": "docs/ui/screens/P04/spec.md",
+   "legacyRoutes": [
+    "retention-policy"
+   ],
+   "reactBodies": [],
+   "purposeKo": "데이터 보관·삭제",
+   "primaryFieldsActionsKo": "등급/범위·기산점·기간·hot/archive·증가량·만료예정·보류·공유참조·백업, 정책초안/영향/승인/보류/복원/삭제작업",
+   "roleCodes": [
+    "OP",
+    "AU"
+   ],
+   "conditionalGrants": [
+    "보존 정책 담당"
+   ],
+   "roleLabelsKo": [
+    "보존 정책 담당",
+    "OP",
+    "AU"
+   ]
+  },
+  {
+   "id": "P05",
+   "titleKo": "지원 조합·출시 증거",
+   "path": "/release-evidence",
+   "menu": "ops",
+   "menuKo": "설치와 운영",
+   "audience": "admin",
+   "module": "administration",
+   "archetype": "list-workbench",
+   "scope": "Provider·계약/역할·제품 버전·발행 경로",
+   "tabs": [
+    "지원 행렬",
+    "요구 추적",
+    "시험 artifact",
+    "부하 프로파일",
+    "판정 이력"
+   ],
+   "flows": "F01",
+   "spec": "docs/ui/screens/P05/spec.md",
+   "legacyRoutes": [
+    "support-matrix"
+   ],
+   "reactBodies": [],
+   "purposeKo": "지원 조합·출시 증거",
+   "primaryFieldsActionsKo": "요구ID·Provider/계약/역할/버전/발행경로·시험·artifact·담당·상태·차단·측정profile, 증거조회/판정기록",
+   "roleCodes": [
+    "OP"
+   ],
+   "conditionalGrants": [
+    "제품/도메인 책임자",
+    "QA"
+   ],
+   "roleLabelsKo": [
+    "제품/도메인 책임자",
+    "QA",
+    "OP"
+   ]
+  },
+  {
+   "id": "P06",
+   "titleKo": "데모·시나리오",
+   "path": "/demo",
+   "menu": "ops",
+   "menuKo": "설치와 운영",
+   "audience": "admin",
+   "module": "administration",
+   "archetype": "dashboard",
+   "scope": "DEMO 환경 ID(DEMO 배너 고정)",
+   "tabs": [
+    "시나리오",
+    "합성 입력",
+    "실행 결과",
+    "실패 주입"
+   ],
+   "flows": "F01",
+   "spec": "docs/ui/screens/P06/spec.md",
+   "legacyRoutes": [
+    "demo-scenarios"
+   ],
+   "reactBodies": [],
+   "purposeKo": "데모·시나리오",
+   "primaryFieldsActionsKo": "DEMO 환경·출처·seed·시계·fixture/기대값버전·시나리오·장애주입·결과, 초기화/실행/검증",
+   "roleCodes": [
+    "OP"
+   ],
+   "conditionalGrants": [
+    "교육 사용자",
+    "QA"
+   ],
+   "roleLabelsKo": [
+    "교육 사용자",
+    "QA",
+    "OP"
+   ]
+  },
+  {
+   "id": "P07",
+   "titleKo": "라이선스·배포 고지",
+   "path": "/licenses",
+   "menu": "ops",
+   "menuKo": "설치와 운영",
+   "audience": "admin",
+   "module": "administration",
+   "archetype": "list-workbench",
+   "scope": "권리 상태·모듈·라이선스 종류·기간",
+   "tabs": [
+    "설치 권리",
+    "오프라인 파일",
+    "모듈 고지",
+    "계약·지원"
+   ],
+   "flows": "-",
+   "spec": "docs/ui/screens/P07/spec.md",
+   "legacyRoutes": [
+    "license-modes",
+    "license-status"
+   ],
+   "reactBodies": [],
+   "purposeKo": "라이선스·배포 고지",
+   "primaryFieldsActionsKo": "설치권리·기간·운영범위·서명상태·모듈라이선스·고지·지원수준, 승인파일반입/문서보기",
+   "roleCodes": [
+    "OP",
+    "AU"
+   ],
+   "conditionalGrants": [
+    "계약 담당"
+   ],
+   "roleLabelsKo": [
+    "OP",
+    "계약 담당",
+    "AU"
+   ]
+  },
+  {
+   "id": "C01",
+   "titleKo": "내 정산 홈",
+   "path": "/portal/overview",
+   "menu": "portal",
+   "menuKo": "고객 포털",
+   "audience": "portal",
+   "module": "customer-portal",
+   "archetype": "portal-dashboard",
+   "scope": "내 조직·정산 기간·정산 종류·통화",
+   "tabs": [
+    "요약",
+    "내 사용량",
+    "알림 요약",
+    "납기·연체"
+   ],
+   "flows": "F08",
+   "spec": "docs/ui/screens/C01/spec.md",
+   "legacyRoutes": [
+    "core-customer-overview",
+    "v4-customer-months"
+   ],
+   "reactBodies": [],
+   "purposeKo": "고객 정산 홈",
+   "primaryFieldsActionsKo": "자기 기간·통화·판매액 또는 허용 내부 배분·기준시각·문서·문의/할일",
+   "roleCodes": [
+    "CP",
+    "CU"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "CU",
+    "CP"
+   ]
+  },
+  {
+   "id": "C02",
+   "titleKo": "내 문서·사용량",
+   "path": "/portal/documents",
+   "menu": "portal",
+   "menuKo": "고객 포털",
+   "audience": "portal",
+   "module": "customer-portal",
+   "archetype": "portal-list-detail",
+   "scope": "내 조직/계약·정산 기간·통화",
+   "tabs": [
+    "문서 목록",
+    "문서 상세",
+    "판매/배분 명세",
+    "허용 사용량",
+    "다운로드 상태",
+    "납기·연체"
+   ],
+   "flows": "F08",
+   "spec": "docs/ui/screens/C02/spec.md",
+   "legacyRoutes": [
+    "auto-customer",
+    "ai-invoice-detail",
+    "v4-customer-months",
+    "customer-history",
+    "core-customer-invoice",
+    "core-customer-usage"
+   ],
+   "reactBodies": [],
+   "purposeKo": "고객 문서·사용량",
+   "primaryFieldsActionsKo": "자기 문서/개정·판매 명세·허용 사용량·정정 관계·패키지·정책, 조회/다운로드/문의",
+   "roleCodes": [
+    "CP",
+    "CU"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "CU",
+    "CP"
+   ]
+  },
+  {
+   "id": "C03",
+   "titleKo": "내 문의·답변",
+   "path": "/portal/cases",
+   "menu": "portal",
+   "menuKo": "고객 포털",
+   "audience": "portal",
+   "module": "customer-portal",
+   "archetype": "portal-inbox",
+   "scope": "내 조직·관련 문서·기간",
+   "tabs": [
+    "문의 목록",
+    "문의 작성",
+    "대화·자료",
+    "관련 문서·해결"
+   ],
+   "flows": "F08",
+   "spec": "docs/ui/screens/C03/spec.md",
+   "legacyRoutes": [
+    "customer-inquiry",
+    "customer-response"
+   ],
+   "reactBodies": [],
+   "purposeKo": "고객 문의·답변",
+   "primaryFieldsActionsKo": "자기 문서/행·쟁점·이유·첨부·공개답변·상태·기한, 접수/자료 추가/해결 확인",
+   "roleCodes": [
+    "CP",
+    "CU"
+   ],
+   "conditionalGrants": [],
+   "roleLabelsKo": [
+    "CU",
+    "CP"
+   ]
+  }
+ ],
+ "legacyRedirects": {
+  "overview": {
+   "target": "/design/overview",
+   "screen": null,
+   "note": "review tooling"
+  },
+  "contents": {
+   "target": "/design/screens",
+   "screen": null,
+   "note": "review tooling"
+  },
+  "entry-start": {
+   "target": "/login",
+   "screen": "L01",
+   "note": ""
+  },
+  "entry-bootstrap": {
+   "target": "/activate",
+   "screen": "L02",
+   "note": ""
+  },
+  "entry-invite": {
+   "target": "/activate",
+   "screen": "L02",
+   "note": ""
+  },
+  "entry-login": {
+   "target": "/login",
+   "screen": "L01",
+   "note": ""
+  },
+  "entry-challenge": {
+   "target": "/recover",
+   "screen": "L03",
+   "note": ""
+  },
+  "entry-scope": {
+   "target": "/login",
+   "screen": "L01",
+   "note": ""
+  },
+  "entry-roles": {
+   "target": "/access",
+   "screen": "M03",
+   "note": ""
+  },
+  "entry-sessions": {
+   "target": "/my-security",
+   "screen": "M05",
+   "note": ""
+  },
+  "setup-progress": {
+   "target": "/onboarding/start",
+   "screen": "S02",
+   "note": "interim wizard step until decision D1"
+  },
+  "setup-profile": {
+   "target": "/onboarding/profile",
+   "screen": "S02",
+   "note": "interim wizard step until decision D1"
+  },
+  "setup-attribution": {
+   "target": "/onboarding/attribution",
+   "screen": "S02",
+   "note": "interim wizard step until decision D1"
+  },
+  "setup-connectors": {
+   "target": "/onboarding/connection",
+   "screen": "S02",
+   "note": "interim wizard step until decision D1"
+  },
+  "setup-readtest": {
+   "target": "/onboarding/diagnostics",
+   "screen": "S02",
+   "note": "interim wizard step until decision D1"
+  },
+  "setup-schedule": {
+   "target": "/onboarding/schedule",
+   "screen": "S02",
+   "note": "interim wizard step until decision D1"
+  },
+  "setup-first": {
+   "target": "/onboarding/first-receipt",
+   "screen": "S02",
+   "note": "interim wizard step until decision D1"
+  },
+  "setup-readiness": {
+   "target": "/onboarding/readiness",
+   "screen": "S02",
+   "note": "interim wizard step until decision D1"
+  },
+  "operations": {
+   "target": "/home",
+   "screen": "U01",
+   "note": "multi-mapped; primary chosen"
+  },
+  "core-index-close": {
+   "target": "/closing",
+   "screen": "U02",
+   "note": ""
+  },
+  "customer-detail": {
+   "target": "/contracts",
+   "screen": "O03",
+   "note": ""
+  },
+  "index-intake": {
+   "target": "/imports",
+   "screen": "S03",
+   "note": ""
+  },
+  "v4-inbox": {
+   "target": "/evidence",
+   "screen": "S05",
+   "note": ""
+  },
+  "v4-extract": {
+   "target": "/evidence",
+   "screen": "S05",
+   "note": ""
+  },
+  "v4-differences": {
+   "target": "/reconciliation",
+   "screen": "S06",
+   "note": ""
+  },
+  "v4-audit": {
+   "target": "/history",
+   "screen": "R02",
+   "note": ""
+  },
+  "core-index-sources": {
+   "target": "/reconciliation",
+   "screen": "S06",
+   "note": ""
+  },
+  "core-index-aws": {
+   "target": "/source-data",
+   "screen": "S04",
+   "note": ""
+  },
+  "core-index-variants": {
+   "target": "/source-data",
+   "screen": "S04",
+   "note": ""
+  },
+  "index-mapping": {
+   "target": "/organization-changes",
+   "screen": "O02",
+   "note": ""
+  },
+  "cost-pivot": {
+   "target": "/reports",
+   "screen": "R01",
+   "note": ""
+  },
+  "raw-explorer": {
+   "target": "/source-data",
+   "screen": "S04",
+   "note": ""
+  },
+  "auto-portfolio": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "supplier-register": {
+   "target": "/contracts",
+   "screen": "O03",
+   "note": ""
+  },
+  "marketplace-register": {
+   "target": "/marketplace",
+   "screen": "B07",
+   "note": ""
+  },
+  "marketplace-commitment": {
+   "target": "/commitments",
+   "screen": "B06",
+   "note": "multi-mapped; primary chosen"
+  },
+  "supplier-aws": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "supplier-azure": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "supplier-gcp": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "supplier-oci": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "supplier-alibaba": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "customer-contract": {
+   "target": "/contracts",
+   "screen": "O03",
+   "note": ""
+  },
+  "auto-rulebook": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "auto-editor": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "auto-exclusions": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "auto-mapping": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "auto-bulk": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "auto-exceptions": {
+   "target": "/billing-findings",
+   "screen": "U04",
+   "note": ""
+  },
+  "auto-activation": {
+   "target": "/approvals",
+   "screen": "B09",
+   "note": ""
+  },
+  "sales-policy": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "sales-impact": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "core-index-allocation": {
+   "target": "/allocations",
+   "screen": "B03",
+   "note": ""
+  },
+  "core-index-pricing": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "index-pricing": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "index-seats": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "index-commitments": {
+   "target": "/commitments",
+   "screen": "B06",
+   "note": ""
+  },
+  "index-fx": {
+   "target": "/exchange-rates",
+   "screen": "B05",
+   "note": ""
+  },
+  "auto-job": {
+   "target": "/billing-runs",
+   "screen": "B08",
+   "note": ""
+  },
+  "auto-trace": {
+   "target": "/claims",
+   "screen": "B10",
+   "note": ""
+  },
+  "ai-cost-waterfall": {
+   "target": "/source-data",
+   "screen": "S04",
+   "note": ""
+  },
+  "cost-differences": {
+   "target": "/reconciliation",
+   "screen": "S06",
+   "note": ""
+  },
+  "core-reconciliation-case": {
+   "target": "/reconciliation",
+   "screen": "S06",
+   "note": ""
+  },
+  "core-reconciliation-recalc": {
+   "target": "/billing-runs",
+   "screen": "B08",
+   "note": ""
+  },
+  "index-runs": {
+   "target": "/billing-runs",
+   "screen": "B08",
+   "note": ""
+  },
+  "core-reconciliation-approval": {
+   "target": "/approvals",
+   "screen": "B09",
+   "note": ""
+  },
+  "index-approval": {
+   "target": "/approvals",
+   "screen": "B09",
+   "note": ""
+  },
+  "assignment-policy": {
+   "target": "/invoices",
+   "screen": "I01",
+   "note": ""
+  },
+  "review-issue": {
+   "target": "/invoices",
+   "screen": "I01",
+   "note": ""
+  },
+  "document-history": {
+   "target": "/invoices",
+   "screen": "I01",
+   "note": ""
+  },
+  "core-reconciliation-issued": {
+   "target": "/invoices",
+   "screen": "I01",
+   "note": ""
+  },
+  "erp": {
+   "target": "/submissions",
+   "screen": "I02",
+   "note": ""
+  },
+  "auto-history": {
+   "target": "/claims",
+   "screen": "B10",
+   "note": "multi-mapped; primary chosen"
+  },
+  "v4-monthly": {
+   "target": "/history",
+   "screen": "R02",
+   "note": ""
+  },
+  "v4-month": {
+   "target": "/history",
+   "screen": "R02",
+   "note": ""
+  },
+  "v4-variance": {
+   "target": "/reports",
+   "screen": "R01",
+   "note": ""
+  },
+  "core-reconciliation-correction": {
+   "target": "/credits-cases",
+   "screen": "B11",
+   "note": ""
+  },
+  "index-correction": {
+   "target": "/credits-cases",
+   "screen": "B11",
+   "note": ""
+  },
+  "auto-customer": {
+   "target": "/portal/documents",
+   "screen": "C02",
+   "note": ""
+  },
+  "ai-invoice-detail": {
+   "target": "/portal/documents",
+   "screen": "C02",
+   "note": ""
+  },
+  "core-customer-overview": {
+   "target": "/portal/overview",
+   "screen": "C01",
+   "note": ""
+  },
+  "v4-customer-months": {
+   "target": "/portal/overview",
+   "screen": "C01",
+   "note": "multi-mapped; primary chosen"
+  },
+  "customer-history": {
+   "target": "/portal/documents",
+   "screen": "C02",
+   "note": ""
+  },
+  "core-customer-invoice": {
+   "target": "/portal/documents",
+   "screen": "C02",
+   "note": ""
+  },
+  "core-customer-usage": {
+   "target": "/portal/documents",
+   "screen": "C02",
+   "note": ""
+  },
+  "customer-inquiry": {
+   "target": "/portal/cases",
+   "screen": "C03",
+   "note": ""
+  },
+  "customer-response": {
+   "target": "/portal/cases",
+   "screen": "C03",
+   "note": ""
+  },
+  "core-reconciliation-setup": {
+   "target": "/installation",
+   "screen": "P01",
+   "note": ""
+  },
+  "license-modes": {
+   "target": "/licenses",
+   "screen": "P07",
+   "note": ""
+  },
+  "license-status": {
+   "target": "/licenses",
+   "screen": "P07",
+   "note": ""
+  },
+  "organizations": {
+   "target": "/organizations",
+   "screen": "O01",
+   "note": ""
+  },
+  "organization-impact": {
+   "target": "/organization-changes",
+   "screen": "O02",
+   "note": ""
+  },
+  "onprem-pools": {
+   "target": "/cost-pools",
+   "screen": "B01",
+   "note": ""
+  },
+  "asset-measurements": {
+   "target": "/meters",
+   "screen": "B02",
+   "note": ""
+  },
+  "file-handoff": {
+   "target": "/handoffs",
+   "screen": "I03",
+   "note": ""
+  },
+  "publication-packages": {
+   "target": "/exports",
+   "screen": "I04",
+   "note": ""
+  },
+  "users": {
+   "target": "/users",
+   "screen": "M01",
+   "note": ""
+  },
+  "identity-policy": {
+   "target": "/authentication",
+   "screen": "M02",
+   "note": ""
+  },
+  "service-accounts": {
+   "target": "/service-accounts",
+   "screen": "M04",
+   "note": ""
+  },
+  "personal-security": {
+   "target": "/my-security",
+   "screen": "M05",
+   "note": ""
+  },
+  "installation-diagnostics": {
+   "target": "/installation",
+   "screen": "P01",
+   "note": ""
+  },
+  "integrations": {
+   "target": "/integrations",
+   "screen": "P02",
+   "note": ""
+  },
+  "recovery-migration": {
+   "target": "/recovery",
+   "screen": "P03",
+   "note": ""
+  },
+  "retention-policy": {
+   "target": "/retention",
+   "screen": "P04",
+   "note": ""
+  },
+  "support-matrix": {
+   "target": "/release-evidence",
+   "screen": "P05",
+   "note": ""
+  },
+  "demo-scenarios": {
+   "target": "/demo",
+   "screen": "P06",
+   "note": ""
+  },
+  "assistant": {
+   "target": "/assistant",
+   "screen": "A01",
+   "note": ""
+  },
+  "reports": {
+   "target": "/reports",
+   "screen": "R01",
+   "note": ""
+  },
+  "audit-events": {
+   "target": "/history",
+   "screen": "R02",
+   "note": ""
+  },
+  "my-tasks": {
+   "target": "/tasks",
+   "screen": "U03",
+   "note": ""
+  },
+  "supplier-naver": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "supplier-kt": {
+   "target": "/rates",
+   "screen": "B04",
+   "note": ""
+  },
+  "community": {
+   "target": "/help/contribute",
+   "screen": null,
+   "note": "help"
+  }
+ },
+ "notes": [
+  "Tab slugs and machine scope keys are defined by Foundation ticket 0a and added to this registry there.",
+  "purposeKo and roles come from the ui-design.md catalog columns; specs govern details.",
+  "flows uses F-codes where the planning document assigns them and end-to-end.md flow names otherwise.",
+  "roleCodes drive menu visibility and the role preview. conditionalGrants are grants that need a separate permission and do not map to a role code; the preview shows them as conditional. roleLabelsKo keeps the catalog source labels.",
+  "requiresPermission is a gate: the screen and its menu entry are shown only when the role holds roleCodes AND that permission (A01: assistant.use). conditionalGrants never widen or gate visibility."
+ ],
+ "roleCodes": {
+  "OP": "설치 운영자",
+  "AM": "조직 관리자",
+  "PR": "정책 담당자",
+  "BL": "정산 담당자",
+  "AP": "승인·발행 담당자",
+  "CP": "고객 정책 관리자 (definition open, D2)",
+  "AU": "감사자",
+  "CU": "고객 사용자",
+  "IA": "접근 관리자"
+ }
+}

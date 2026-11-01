@@ -30,11 +30,12 @@ Only `output/designs/HB-63-console` is the runnable artifact. Serving the source
 
 ## Change a screen or foundation
 
-1. Locate the stable route in catalog.js and its baseline/registry mapping. Update purpose, fields, columns, actions and related links together. Do not represent catalog coverage as complete business-workflow behavior.
+1. Read the [screen-review rule](../.agents/rules/screen-review.md). Check the current screen/revision acceptance and any owner-authorized change scope before editing. Locate the stable route in catalog.js and its baseline/registry mapping. Update purpose, fields, columns, actions and related links together. Do not represent catalog coverage as complete business-workflow behavior.
 2. Edit shared visual tokens/assets at packages/design-system; do not patch generated output. Source SVG metadata is preserved. A changed canonical source needs updated provenance and explicit review; never merely update a hash to silence an unexpected mismatch.
 3. Use the shared shell/widgets for paging, listboxes, selection and jobs. Preserve scope invalidation, honest count/error states, bounded rendering and keyboard focus. Local synthetic behavior must remain labeled.
 4. Keep new text localized in English/Arabic/Korean, record regional terminology evidence, and identify native-review gaps. Do not hard-code a translated brand name or use machine translation as approval.
-5. Rebuild, run checks appropriate to the change, inspect screenshots, and update the screen README/verification and this guide if commands or boundaries changed. Stage source, lockfile and notices only; never node_modules, generated fonts/screenshots or customer data.
+5. Keep stable implementation-item IDs and mark a changed fixed-screen candidate for renewed owner review, including affected shared-component consumers. Do not assign owner FIX from a build or automated test.
+6. Rebuild, run checks appropriate to the change, inspect screenshots, and update the screen README/verification and this guide if commands or boundaries changed. Stage source, lockfile and notices only; never node_modules, generated fonts/screenshots or customer data.
 
 ## Browser verification
 

@@ -92,3 +92,9 @@ The [baseline audit](gap-audit.md) is retained for c8187fe. [Remediation](gap-re
 - Root visually inspected Korean mobile onboarding, Arabic desktop approval and English desktop report captures. Generated evidence: `output/validation/HB-63-journeys/results.json` and PNGs. No claim of exhaustive visual, screen-reader or native-language approval.
 
 The preview still does not calculate amounts, aggregate reports, authorize users, approve/issue invoices or call providers/models. Missing values remain unavailable. Document/ERP/customer-inquiry and complete recovery journeys from the baseline audit are not declared resolved.
+
+## Screen review and FIX policy (2026-11-01)
+
+The owner requested implementation-item IDs, individual screen designs and a review-confirmation control that fixes the accepted screen. Root added `.agents/rules/screen-review.md` and linked it from AGENTS and the design/build guidance. The rule binds FIX to explicit owner evidence and the accepted revision/items/variants, preserves prior acceptance, and requires renewed review only for changed accepted design scopes. Dependency-only changes with no design impact require an impact assessment, not duplicate owner approval.
+
+Independent gap_review initially flagged overly broad shared-dependency wording. Root narrowed it; scoped re-review PASS. New local references resolve and `git diff --check` passes. This is a policy-only increment: no browser code changed, no browser test was rerun for it, no all-screen review control or canonical acceptance store was implemented, and no screen was marked FIX. The earlier 169-check runtime results apply to their recorded implementation scope.

@@ -43,3 +43,12 @@ Large-data design requires bounded pages, searchable account selection, snapshot
 ## Acceptance boundary
 
 The owner requested application of the supplied design rules and logo. This guide records that adoption for current work; it does not supersede accepted v10 artifacts or certify UAE regulatory/federal-brand conformity. Review English/Arabic/Korean screenshots, focus behavior, local fonts, logo geometry/spacing, overflow and data states. [Verification](design-modules/00-scalable-console/r1/verification.md) distinguishes actual checks from pending business/API/native-language acceptance.
+
+
+## Owner screen-review decision (2026-11-01)
+
+Under [HB-63](https://linear.app/hybrid-billing/issue/HB-63/implement-multilingual-whole-product-scalable-screen-redesign), the owner requested individual screen designs with implementation-item IDs, followed by a review-confirmation control on every screen. Confirmed screens become FIX for the accepted revision and declared variants. The [screen-review rule](../.agents/rules/screen-review.md) defines stable IDs, owner evidence, scope, storage honesty and change/re-review handling.
+
+Design FIX and implementation completion are separate. An owner-authorized change creates a new candidate without overwriting the prior acceptance. Common-component changes identify every affected fixed screen. Screen acceptance does not authorize merge, deployment or financial operations.
+
+This records the required workflow. The current console does not yet implement an all-screen review control or canonical acceptance store; no screen is declared newly fixed by this policy update. That UI and acceptance-record implementation must follow this rule.

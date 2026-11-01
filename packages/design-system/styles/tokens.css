@@ -1,0 +1,47 @@
+:root{
+--hb-ink:#20252b;--hb-ink-book:#222;--hb-ink-rail:#333;--hb-ink-primary:#1b3a5c;
+--hb-muted:#56616c;--hb-muted-2:#5e6974;--hb-muted-3:#606a75;--hb-muted-4:#626b75;--hb-muted-5:#66717c;--hb-muted-footer:#65707b;
+--hb-text-disabled:#424a52;--hb-text-faint:#98a1a9;
+--hb-line-strong:#34475a;--hb-line-control:#8d949c;--hb-line-th:#9ba7b2;--hb-line-metrics:#a4aeb8;--hb-line-tabs:#aeb7c0;--hb-line-footer:#aeb8c2;--hb-line-flow:#aeb9c4;--hb-line-header:#b4bcc4;--hb-line-note:#b5bdc5;--hb-line-panel:#c3cbd3;--hb-line-details:#c6cdd4;--hb-line-rail:#cbd0d5;--hb-line-th-top:#d2d8de;--hb-line-cell:#d3d8dd;--hb-line-facts:#d4dbe1;--hb-line-nav:#d5d9dd;--hb-line-row:#dce1e5;
+--hb-white:#fff;--hb-rail:#f6f7f8;--hb-th:#f3f5f7;--hb-flow:#f6f7f9;--hb-hover:#edf0f3;--hb-disabled:#f1f3f5;--hb-disabled-line:#9ca7b2;
+--hb-link:#24394e;--hb-accent:#1b3a5c;--hb-focus:#235b94;
+--text-body:var(--hb-ink);--text-muted:var(--hb-muted);--text-label:var(--hb-muted-5);--text-link:var(--hb-link);--text-disabled:var(--hb-text-disabled);
+--surface-page:var(--hb-white);--surface-nav:var(--hb-rail);--surface-table-head:var(--hb-th);--surface-flow:var(--hb-flow);--surface-hover:var(--hb-hover);--surface-disabled:var(--hb-disabled);
+--surface-primary:var(--hb-ink-primary);--text-on-primary:var(--hb-white);
+--border-control:var(--hb-line-control);--border-row:var(--hb-line-row);--border-section:var(--hb-line-metrics);--border-header:var(--hb-line-header);--border-nav:var(--hb-line-rail);--border-total:var(--hb-line-strong);
+--indicator-active:var(--hb-accent);--focus-ring:var(--hb-focus);
+}
+
+
+:root{
+--hb-brand-900:#0f2236;--hb-brand-800:#16304b;--hb-brand-700:#1b3a5c;--hb-brand-600:#24507d;--hb-brand-500:#2c64a0;--hb-brand-100:#e6edf5;--hb-brand-50:#f2f6fa;
+--hb-teal-700:#0b6e74;--hb-teal-600:#0f7c86;--hb-teal-300:#5fd0c9;--hb-teal-100:#e3f4f4;
+--hb-success:#2e7d4f;--hb-success-bg:#e8f3ec;--hb-warning:#a15c00;--hb-warning-bg:#fdf3e3;--hb-danger:#b42318;--hb-danger-bg:#fbeceb;--hb-info:#235b94;--hb-info-bg:#e8f0f8;
+--surface-brand:var(--hb-brand-700);--text-on-brand:#fff;--accent-secondary:var(--hb-teal-600);
+}
+
+
+:root{
+--hb-font-sans:"IBM Plex Sans","IBM Plex Sans Arabic","IBM Plex Sans KR",-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;
+--hb-font-brand:"IBM Plex Sans",Arial,sans-serif;
+--hb-font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+--hb-lh-arabic:1.7;
+--hb-fs-10:10px;--hb-fs-11:11px;--hb-fs-12:12px;--hb-fs-13:13px;--hb-fs-14:14px;--hb-fs-15:15px;--hb-fs-16:16px;--hb-fs-17:17px;--hb-fs-18:18px;--hb-fs-25:25px;--hb-fs-28:28px;--hb-fs-30:30px;
+--hb-lh-body:1.5;
+--hb-lh-h1:1.25;
+--hb-lh-metric:1.3;
+--hb-fw-regular:400;
+--hb-fw-medium:550;
+--hb-fw-semibold:600;
+--hb-fw-bold:700;
+--font-body:var(--hb-font-sans);
+--type-h1-size:var(--hb-fs-30);--type-h2-size:var(--hb-fs-18);--type-h3-size:var(--hb-fs-15);--type-body-size:var(--hb-fs-14);--type-table-size:var(--hb-fs-12);--type-label-size:var(--hb-fs-12);--type-small-size:var(--hb-fs-11);--type-footer-size:var(--hb-fs-10);--type-metric-size:var(--hb-fs-30);--type-brand-size:var(--hb-fs-16);
+}
+
+:root{
+--hb-sp-2:2px;--hb-sp-5:5px;--hb-sp-7:7px;--hb-sp-9:9px;--hb-sp-10:10px;--hb-sp-12:12px;--hb-sp-14:14px;--hb-sp-15:15px;--hb-sp-16:16px;--hb-sp-18:18px;--hb-sp-20:20px;--hb-sp-22:22px;--hb-sp-24:24px;--hb-sp-26:26px;--hb-sp-28:28px;--hb-sp-30:30px;--hb-sp-32:32px;
+--hb-rail-width:205px;--hb-header-height:76px;--hb-main-pad-x:32px;
+--hb-radius:0;--hb-shadow:none;
+--hb-border-w:1px;--hb-indicator-w:3px;--hb-total-w:2px;
+--hb-focus-w:3px;--hb-focus-offset:3px;
+}

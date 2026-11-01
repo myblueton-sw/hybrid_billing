@@ -4,6 +4,12 @@ title: HB-67 React console verification
 description: Records executed checks and remaining limitations for the first React frontend increment.
 ---
 
+# Mandatory border-style correction
+
+The owner identified a mandatory visual constraint missed by implementation and review: canonical color tokens were incorrectly treated as sufficient compliance. Entry notice/feedback accent strips and selected card/tab color borders are removed. AGENTS.md now requires service-screen-style.md before implementation and rendered verification; the rule is a MUST, not an optional token choice.
+
+Build and 242 artifact hashes PASS. Root inspected the updated Korean login render. Targeted computed-style checks passed in KO/EN/AR at 1440/390 for notices, feedback, active tabs and selected workspace borders. The reusable entry suite now asserts these borders and passed all 50 checks. Keyboard focus rules remain unchanged. This is scoped entry coverage, not a completed audit of all legacy screens. No new owner FIX or merge occurred.
+
 # Service-entry implementation: current verification
 
 Default navigation now opens entry-start in a separate pre-workspace layout. Six identity bodies were added; thirteen distinct bodies exist in total. This replaces the operations-first entry only, not every pending service screen. Source files and runtime agree on the new default. Onboarding and customer landing implementations remain pending.

@@ -79,6 +79,7 @@ try {
     await p.getByRole("button", { name: "Cancel", exact: true }).click();
     await p.locator("form button[type=submit]").click();
     await p.locator(".entry-feedback").waitFor();
+    assert.equal(await p.locator('.entry-feedback').evaluate(e => getComputedStyle(e).borderInlineStartWidth), '0px');
     assert.equal(await p.locator("#entry-email").inputValue(), "");
     assert.equal(await p.evaluate(() => location.hash), hash);
     assert.match(
@@ -160,6 +161,17 @@ try {
           ),
         );
         assert.equal(await p.locator(".tnb,.rail").count(), 0);
+        if (id === "entry-login") {
+          assert.equal(await p.locator(".entry-note").evaluate(e => getComputedStyle(e).borderInlineStartWidth), "0px");
+        }
+        if (id === "entry-challenge") {
+          assert.equal(await p.locator('.entry-tabs [aria-pressed="true"]').evaluate(e => getComputedStyle(e).borderColor), await p.locator('.entry-card').evaluate(e => getComputedStyle(e).borderColor));
+        }
+        if (id === "entry-scope") {
+          const border = await p.locator('.entry-workspace').first().evaluate(e => getComputedStyle(e).borderColor);
+          await p.locator('input[value="sample-a"]').check();
+          assert.equal(await p.locator('.entry-workspace.selected').evaluate(e => getComputedStyle(e).borderColor), border);
+        }
         assert(
           await p
             .locator(".brand-logo")

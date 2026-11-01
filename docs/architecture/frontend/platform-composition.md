@@ -9,7 +9,7 @@ status: draft
 
 The owner clarified that simplicity must coexist with expansion and customer-specific assembly. A flat pages/components layout alone does not define how customer variations compose. A deep feature/model hierarchy is also unnecessary. Use a shallow modular application with one explicit assembly point, reusable business modules, narrowly defined extension slots and validated profiles. This is a project design judgment informed by the observations below, not a universal React standard or adoption of any external platform runtime.
 
-This refines the unaccepted HB-66 draft in place. The updated [structure](structure.md) and [112-screen ownership map](screen-ownership.json) remain the current design proposal. No customer forks, runtime plugin loader or product code are implemented by this research.
+The owner accepted this shallow composition direction after the comparison; the decision is recorded in [structure](structure.md). The [112-screen ownership map](screen-ownership.json) remains the implementation placement plan, not acceptance of individual screens. No customer forks, runtime plugin loader or product code are implemented by this research.
 
 # External evidence
 

@@ -31,3 +31,7 @@ The owner requested professional platform evidence and customer-specific assembl
 - PASS: root checked local links/frontmatter and revised diff; no customer configuration, credentials or third-party source was included.
 - PASS: independent final review found no blocking composition inconsistency, rechecked all 112 routes and shallow paths, and spot-checked Backstage/Medusa/Grafana/Shopify source claims. The reviewer did not independently reproduce every repository-tree lookup or Odoo/Strapi observation.
 - UNVERIFIED: composition resolver implementation, actual profile assemblies, tenant isolation, plugin failure containment, upgrade/rollback and platform compatibility. Proposed rules and synthetic examples are not executed test results.
+
+# Structural decision acceptance
+
+The owner explicitly approved proceeding with the shallow modular structure after revision `4f868791db811288b77f7e2d6a3ae6efc3007fdc` was presented. Root recorded that decision without changing the reviewed architecture or claiming screen FIX. The earlier deep hierarchy was already replaced in the same maintained files; no duplicate superseded architecture draft remains in this scope. Historical research and screen evidence are retained for distinct purposes. Root checked this decision-only diff and its local links; no new runtime validation is implied.

@@ -4,6 +4,22 @@ title: HB-67 React console verification
 description: Records executed checks and remaining limitations for the first React frontend increment.
 ---
 
+# Actual work screens: current verification
+
+The current increment adds operations, monthly close, assigned tasks, customer detail and issuance prerequisites. Together with directory and intake, seven distinct bodies are implemented; overview aliases the directory. Remaining route bodies are pending. Default navigation shows a labeled synthetic work queue, not the directory. Historical checks below describe their respective earlier increments.
+
+Executed on the same macOS arm64 / Node 26.7.0 / npm 11.19.0 / Chromium 153.0.8010.12 environment:
+
+- Strict TypeScript and Vite build: PASS; final manifest verification: 242 artifacts PASS.
+- Unit tests: 24 PASS, including exact account/case/period resolution and absent financial amounts.
+- Existing browser regression: 37 PASS, zero runtime errors and external requests.
+- Work journey runner: 32 PASS, zero runtime errors. Covers default queue, canonical columns, filter/back restoration, customer/evidence/source navigation with conflicting prior filters, prerequisite preparation/invalidation, account and period mismatch rejection, disconnected mode, close/task paging, error/retry/empty and 18 KO/EN/AR renders at 1440/390 widths.
+- Root inspected rendered desktop work queue and issuance form. A full-page capture showed an apparent skip-link overlap; an additional live viewport capture and computed bounds confirmed the unfocused skip link is at y=-80 with bottom=-36, outside the viewport, and the logo is unobscured. No production style change was made for the capture artifact.
+
+Independent design review passed with exact-reference and preparation-invalidation requirements. Actual source review found period validation, conflicting source filters, disconnected search, missing item IDs and layout-style coverage issues. After correction, the separate read-only reviewer passed all five scoped fixes with no remaining source blocker. Browser execution and visual inspection above are root evidence, not the reviewer's independent browser verification.
+
+Raw work reports and screenshots are reproducible using `npm run qa:work` and remain ignored under `apps/console/qa-output/work`. Local reviewer records are synthetic test evidence, not real owner acceptance. Full baseline pixel parity, all remaining bodies, production APIs, authenticated permissions, financial operations, native-language/accessibility acceptance and Windows/Linux execution remain unverified. PR 63 remains draft; no merge or deployment occurred.
+
 # Header control refinement and live debugging
 
 The owner requested actual rendered debugging and identified unfinished header controls. Root re-read hb-react-screens, hb-screen-regression and systematic-debugging and used the actual running React route in an isolated Playwright session. The refinement retains IA/logo while styling contribution/account/jobs/language controls consistently, replacing the native language popup with a keyboard-operable listbox and adding search/selection feedback to the two-account synthetic picker.

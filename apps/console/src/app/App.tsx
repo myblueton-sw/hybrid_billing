@@ -1,3 +1,6 @@
+import { operations } from "../modules/operations/module";
+import { organizations } from "../modules/organizations/module";
+import { issuance } from "../modules/issuance/module";
 import HeaderSelect from "./HeaderSelect";
 import AccountPicker from "./AccountPicker";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -14,7 +17,13 @@ import shellCopy from "../shared/shell-copy.json";
 import { screens, groups, domains } from "../shared/catalog";
 import logo from "../../../../packages/design-system/assets/logo/hb-lockup-color.svg";
 import chevron from "../../../../packages/design-system/assets/icons/chevron-down.svg";
-export const modules = [designReview, sources];
+export const modules = [
+  designReview,
+  sources,
+  operations,
+  organizations,
+  issuance,
+];
 export const extensions = [evidenceGuide];
 function Workspace({
   id,
@@ -147,13 +156,15 @@ export default function App() {
   const hash = useLocation(),
     [routePart, query] = hash.slice(1).split("?"),
     params = new URLSearchParams(query);
-  const id = routePart || "contents",
+  const id = routePart || "operations",
     l: Locale = ["en", "ar"].includes(params.get("lang") ?? "")
       ? (params.get("lang") as Locale)
       : "ko";
   const profile = params.get("profile") ?? "standard",
     mode: Mode =
-      params.get("mode") === "synthetic" ? "synthetic" : "unconnected";
+      params.has("mode") && params.get("mode") !== "synthetic"
+        ? "unconnected"
+        : "synthetic";
   const [search, setSearch] = useState(""),
     [dialogKind, setDialogKind] = useState("");
   const dialog = useRef<HTMLDialogElement>(null),
@@ -323,7 +334,7 @@ export default function App() {
         <main className="main" id="main" tabIndex={-1}>
           {valid ? (
             <Workspace
-              key={`${id}:${l}:${profile}:${mode}`}
+              key={`${id}:${l}:${profile}:${mode}:${params.get("scope") ?? "sample-a"}`}
               id={id}
               l={l}
               mode={mode}

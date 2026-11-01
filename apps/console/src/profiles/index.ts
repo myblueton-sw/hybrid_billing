@@ -1,9 +1,25 @@
 import type { Profile } from "../shared/types";
 export const profiles: Profile[] = [
-  { id: "standard", modules: ["design-review", "sources"], extensions: [] },
+  {
+    id: "standard",
+    modules: [
+      "design-review",
+      "sources",
+      "operations",
+      "organizations",
+      "issuance",
+    ],
+    extensions: [],
+  },
   {
     id: "evidence",
-    modules: ["design-review", "sources"],
+    modules: [
+      "design-review",
+      "sources",
+      "operations",
+      "organizations",
+      "issuance",
+    ],
     extensions: ["evidence-guide"],
   },
 ];

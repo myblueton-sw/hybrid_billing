@@ -40,7 +40,7 @@ const ok = (n) => checks.push(n),
       n,
     );
 try {
-  await page.goto(url + "#contents?lang=en");
+  await page.goto(url + "#contents?lang=en&mode=unconnected");
   await page.locator("#design-directory-results a").first().waitFor();
   assert.deepEqual(await page.locator(".tnb button").allTextContents(), [
     "Overview",

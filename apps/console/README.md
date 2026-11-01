@@ -1,6 +1,6 @@
 # React console — HB-67
 
-Corrected implementation increment: baseline six-domain shell and all 112 navigation identities, with React content for `contents` (also reused by `overview`) and `index-intake`. Other destinations explicitly show implementation pending. The remaining screens stay in the HB-63 design baseline. No production API, identity, billing calculation or financial operation is connected.
+Corrected implementation increment: baseline six-domain shell and all 112 navigation identities, with seven distinct React screen bodies: `contents` (also reused by `overview`), `index-intake`, `operations`, `core-index-close`, `my-tasks`, `customer-detail` and `review-issue`. Other destinations explicitly show implementation pending. The remaining screens stay in the HB-63 design baseline. No production API, identity, billing calculation or financial operation is connected.
 
 ## Install and operate
 
@@ -14,7 +14,7 @@ npm test
 npm start
 ```
 
-Open http://127.0.0.1:8787/. Stop with Ctrl+C. Restart with `npm start`. For source development use `npm run dev`. Installation needs registry access or a populated package cache. A built `dist` uses local assets/fonts and can operate without external requests. Serve it over loopback HTTP or HTTPS; review hashing requires a secure browser context. Do not open index.html through file URLs. Vite preview is a local review server, not a production hosting architecture.
+Open http://127.0.0.1:8787/#operations?lang=ko. The default is a visibly labeled synthetic work queue; append `&mode=unconnected` to inspect the disconnected boundary. Stop with Ctrl+C. Restart with `npm start`. For source development use `npm run dev`. Installation needs registry access or a populated package cache. A built `dist` uses local assets/fonts and can operate without external requests. Serve it over loopback HTTP or HTTPS; review hashing requires a secure browser context. Do not open index.html through file URLs. Vite preview is a local review server, not a production hosting architecture.
 
 `dist` is generated and replaced on build; keep no manual files there. Preserve exported review evidence before changing browser profiles or clearing storage. Install/build errors must be corrected before serving a stale build. Review save failures are visible and do not establish FIX.
 
@@ -36,9 +36,10 @@ Every implemented screen exposes a review button and stable item IDs. FIX is sco
 
 ```sh
 npm run qa -- --playwright-module "path to installed playwright" --chromium "path to chromium executable"
+npm run qa:work -- --playwright-module "path to installed playwright" --chromium "path to chromium executable"
 ```
 
-The optional runner arguments also include `--url` and `--output`. Playwright/browser are QA prerequisites, not application runtime dependencies. Reports/screenshots go to ignored `qa-output`. Tests use isolated browser storage and never record real owner acceptance.
+Both runners accept `--url`; the original `qa` runner also accepts `--output`. Playwright/browser are QA prerequisites, not application runtime dependencies. Reports/screenshots go to ignored `qa-output`. Tests use isolated browser storage and never record real owner acceptance.
 
 The header account chooser currently offers two synthetic scopes; the full baseline searchable account workflow and background-job engine are not ported. Profiles/data modes are in separate review tools below the screen.
 

@@ -10,7 +10,7 @@ The owner rejected the candidate's arbitrary IA/layout changes. This document de
 
 # Scope and ownership
 
-[HB-67](https://linear.app/hybrid-billing/issue/HB-67/implement-modular-react-console-foundation-and-source-intake-slice) implements two React screens after the owner accepted the shallow architecture in [HB-66 PR 62](https://github.com/myblueton-sw/hybrid_billing/pull/62), commit c9c8a8be8faf01d491176829e0b10f3ca009b10b. Root owns implementation and QA; a separate read-only reviewer checks design and actual changes. Machine: mac_mini. This branch starts from main b48b23c; it does not merge pending design PRs.
+[HB-67](https://linear.app/hybrid-billing/issue/HB-67/implement-modular-react-console-foundation-and-source-intake-slice) implements seven distinct React screen bodies after the owner accepted the shallow architecture in [HB-66 PR 62](https://github.com/myblueton-sw/hybrid_billing/pull/62), commit c9c8a8be8faf01d491176829e0b10f3ca009b10b. Root owns implementation and QA; a separate read-only reviewer checks design and actual changes. Machine: mac_mini. This branch starts from main b48b23c; it does not merge pending design PRs.
 
 The source intake and implementation index exercise app/modules/shared/extensions/profiles without creating empty future packages. The 112-screen plan is not represented as 112 completed React screens. HB-63 remains the baseline for unreplaced screens; no owner FIX or supersession is inferred.
 
@@ -20,7 +20,7 @@ The shared catalog and shell copy are derived from HB-63 commit 4d51763458b314fd
 
 `contents` restores the 24-card design directory, search, area/review filters, counts and paging. `overview` reuses this directory as in the baseline. Intake restores source-context, search/provider/status/sort/refresh, table/cards/columns/reset/import, grouped page/all-result selection with exclusions and local selection review, original source/amount/status/evidence columns, and 25/50/100 page sizes. Amounts remain unavailable. Scope changes invalidate selection/detail and cancel stale requests. Expiration blocks results/actions until refresh; retry returns to the normal synthetic scenario.
 
-The default adapter is unconnected. Opt-in synthetic mode uses 57 fixture records. Fixture queries alone may enter hash history. Import selects a local file but performs no upload or server validation. Header account selection is limited to two synthetic scopes and jobs remain an empty local boundary; the full baseline account picker/job implementation remains pending. Profile/mode demonstration is separate review tooling below the screen rather than a replacement header.
+The default preview uses visibly labeled synthetic mode with 57 fixture records. Explicit unconnected mode exposes no fixture work records. Fixture queries alone may enter hash history. Import selects a local file but performs no upload or server validation. Header account selection is limited to two synthetic scopes and jobs remain an empty local boundary; the full baseline account picker/job implementation remains pending. Profile/mode demonstration is separate review tooling below the screen rather than a replacement header.
 
 Catalog contracts/data live in shared, not app internals. Standard and Evidence reuse the same source module; the versioned evidence slot renders an actual extension component. This is not tenant authorization or private customer packaging.
 
@@ -30,7 +30,7 @@ Review fingerprints include source dependencies, shell account, locale/width, pr
 - `index-intake:region:layout`, `index-intake:section:purpose`, `index-intake:field:record-search`, `index-intake:field:provider-filter`, `index-intake:field:status-filter`, `index-intake:field:sort`, `index-intake:field:page-size`.
 - `index-intake:field:page-select`, `index-intake:field:row-selection`, `index-intake:action:all-select`, `index-intake:action:review-selection`, `index-intake:action:record-detail`, `index-intake:action:retry-load` and visible column data IDs.
 
-The earlier candidate's conflicting item names are not the canonical design IDs. This correction changes both implemented screen fingerprints; no old FIX transfers. Dialogs belong to their owning screen and remain local synthetic behavior. Canonical visual rules and baseline CSS are retained; this correction does not establish pixel-exact parity of every unported state.
+The earlier candidate's conflicting item names are not the canonical design IDs. This earlier correction changed the directory and intake screen fingerprints; no old FIX transfers. Dialogs belong to their owning screen and remain local synthetic behavior. Canonical visual rules and baseline CSS are retained; this correction does not establish pixel-exact parity of every unported state.
 
 # Deferred work
 
@@ -40,4 +40,14 @@ Production adapters, authenticated tenant/permission enforcement, remaining dist
 
 The owner identified that the header's plain contribution link, native language selector and temporary account buttons did not form a finished control design. The correction preserves logo geometry/clear space, IA order and canonical tokens while applying consistent 44px minimum controls, square borders, spacing and focus treatment. Language selection uses a styled listbox with keyboard navigation and Escape focus return rather than an OS-rendered popup. The account dialog adds search, current selection and empty feedback for the same two synthetic scopes. Closing clears the picker search. Mobile controls use two columns; Arabic remains RTL with isolated account IDs and unchanged LTR branding.
 
-This refinement is authorized by the owner's header feedback and is distinct from restoring the prior baseline verbatim. It affects shared-shell fingerprints for both implemented screens. It does not finish production account search, job integration or unported screen bodies.
+This refinement is authorized by the owner's header feedback and is distinct from restoring the prior baseline verbatim. It affects shared-shell fingerprints for every implemented screen. It does not finish production account search, job integration or unported screen bodies.
+
+# Actual work-screen increment
+
+The owner requested work screens rather than a directory/checklist. Default navigation now opens `operations`. Domain modules follow HB-66 ownership: operations owns `operations`, `core-index-close` and `my-tasks`; organizations owns `customer-detail`; issuance owns `review-issue`. The latter two declare their operations dependency. The shared queue retains each screen's canonical column contract rather than replacing the three workflows with directory cards.
+
+Work queues provide period/provider/status/search filters, 25/50/100 paging, selection, empty/error/retry states and query-history restoration. Customer detail carries the exact synthetic case/account/period into overview, evidence and history tabs. Its evidence link clears conflicting intake filters and selects the corresponding source reference. Account changes reset scoped screen state and invalidate selected references/preparation; mismatched case or period produces an explicit missing-record boundary with no fallback customer.
+
+Issuance exposes reviewer/issuer separation, source/recipient/payment prerequisite checks, revision and currency. Local preparation is invalidated by every relevant change, including changing back to an earlier value. Financial approval and issuance stay disabled; no monetary result is fabricated. Explicit unconnected mode disables work search and exposes no synthetic customer/issuance data. The preview banner distinguishes fixtures from a backend connection.
+
+Baseline screen-layout styles, existing tokens, IA, canonical item IDs and review-before-content remain. Each screen fingerprints visible filters, selections, references and preparation state. This adds five work bodies to the existing directory/intake pair; it does not complete all 112 routes or establish owner FIX. Installation/start use the existing portable npm/Node commands without adding OS-specific product dependencies.

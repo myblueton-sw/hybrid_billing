@@ -1,3 +1,5 @@
+import HeaderSelect from "./HeaderSelect";
+import AccountPicker from "./AccountPicker";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { assemble } from "./assemble";
 import { getProfile } from "../profiles";
@@ -192,6 +194,7 @@ export default function App() {
   }
   function close() {
     dialog.current?.close();
+    setDialogKind("");
     lastTrigger.current?.focus();
   }
   let valid = true;
@@ -232,17 +235,18 @@ export default function App() {
         </a>
         <div className="top-actions">
           {!customer && (
-            <a href={routeUrl("community")}>
+            <a className="header-control" href={routeUrl("community")}>
               {t(l, "Contribute", "기여", "المساهمة")}
             </a>
           )}
           <button
             id="choose-account"
             className="account-button"
+            aria-label={`${shellCopy.account[l]} · ${params.get("scope") === "sample-b" ? "ACC-000002" : "ACC-000001"}`}
             disabled={customer}
             onClick={() => open("account")}
           >
-            {shellCopy.account[l]} ·{" "}
+            <span className="account-label">{shellCopy.account[l]} ·</span>
             <bdi>
               {params.get("scope") === "sample-b" ? "ACC-000002" : "ACC-000001"}
             </bdi>
@@ -251,19 +255,16 @@ export default function App() {
           <button id="open-jobs" onClick={() => open("jobs")}>
             {shellCopy.jobs[l]} <span className="tag">0</span>
           </button>
-          <label>
-            <span className="sr-only">Language</span>
-            <select
-              id="language"
-              aria-label="Language"
-              value={l}
-              onChange={(e) => update({ lang: e.target.value })}
-            >
-              <option value="en">English (US)</option>
-              <option value="ar">العربية (الإمارات)</option>
-              <option value="ko">한국어</option>
-            </select>
-          </label>
+          <HeaderSelect
+            label="Language"
+            value={l}
+            options={[
+              { value: "en", label: "English (US)" },
+              { value: "ar", label: "العربية (الإمارات)" },
+              { value: "ko", label: "한국어" },
+            ]}
+            onChange={(lang) => update({ lang })}
+          />
         </div>
       </header>
       <nav
@@ -386,6 +387,13 @@ export default function App() {
       </div>
       <dialog
         ref={dialog}
+        onKeyDownCapture={(e) => {
+          if (e.key === "Escape") {
+            e.preventDefault();
+            e.stopPropagation();
+            close();
+          }
+        }}
         onCancel={close}
         aria-label={
           dialogKind === "account"
@@ -407,17 +415,14 @@ export default function App() {
           )}
         </p>
         {dialogKind === "account" ? (
-          ["sample-a", "sample-b"].map((scope, i) => (
-            <button
-              key={scope}
-              onClick={() => {
-                update({ scope, page: "1", q: "" });
-                close();
-              }}
-            >
-              ACC-00000{i + 1}
-            </button>
-          ))
+          <AccountPicker
+            locale={l}
+            value={params.get("scope") ?? "sample-a"}
+            onChange={(scope) => {
+              update({ scope, page: "1", q: "" });
+              close();
+            }}
+          />
         ) : (
           <p>
             {t(

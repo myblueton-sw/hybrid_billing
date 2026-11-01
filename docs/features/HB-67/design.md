@@ -35,3 +35,9 @@ The earlier candidate's conflicting item names are not the canonical design IDs.
 # Deferred work
 
 Production adapters, authenticated tenant/permission enforcement, remaining distinct React screen implementations, real customer installation packaging, durable owner acceptance, native-language review and Windows/Linux execution remain outside this increment. No payment, deployment or merge permission is implied. Operational commands and licensing are in [console README](../../../apps/console/README.md).
+
+# Owner-requested header control refinement
+
+The owner identified that the header's plain contribution link, native language selector and temporary account buttons did not form a finished control design. The correction preserves logo geometry/clear space, IA order and canonical tokens while applying consistent 44px minimum controls, square borders, spacing and focus treatment. Language selection uses a styled listbox with keyboard navigation and Escape focus return rather than an OS-rendered popup. The account dialog adds search, current selection and empty feedback for the same two synthetic scopes. Closing clears the picker search. Mobile controls use two columns; Arabic remains RTL with isolated account IDs and unchanged LTR branding.
+
+This refinement is authorized by the owner's header feedback and is distinct from restoring the prior baseline verbatim. It affects shared-shell fingerprints for both implemented screens. It does not finish production account search, job integration or unported screen bodies.

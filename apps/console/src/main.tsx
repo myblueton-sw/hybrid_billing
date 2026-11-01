@@ -9,6 +9,7 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "../../../packages/design-system/styles/tokens.css";
 import "../../../packages/design-system/styles/console.css";
 import "./shared/styles.css";
+import "./app/header.css";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />

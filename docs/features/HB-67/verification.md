@@ -4,6 +4,14 @@ title: HB-67 React console verification
 description: Records executed checks and remaining limitations for the first React frontend increment.
 ---
 
+# Header control refinement and live debugging
+
+The owner requested actual rendered debugging and identified unfinished header controls. Root re-read hb-react-screens, hb-screen-regression and systematic-debugging and used the actual running React route in an isolated Playwright session. The refinement retains IA/logo while styling contribution/account/jobs/language controls consistently, replacing the native language popup with a keyboard-operable listbox and adding search/selection feedback to the two-account synthetic picker.
+
+The debugging probe reproduced two failures before correction: account dialog entry focus did not reach its search; Escape in a nonempty native search cleared the value but left the modal open, preventing a subsequent directory input. After correction, observed active elements were header-account-search on entry and choose-account after Escape; the modal was closed and directory search returned the one matching screen. Mount-time focus and dialog-level Escape handling implement that recovery.
+
+Final build passed. Browser regression: 37 checks PASS, including 44px header controls with zero radius/no shadow, language keyboard selection/Escape, account search/empty/entry/exit focus and the existing 34 scenarios. Root inspected desktop/mobile language popup and account-dialog captures, then corrected helper spacing and preserved the full account ID on narrow screens by hiding only its redundant visual prefix while retaining the accessible name. Independent source re-review of the focus/listbox correction passed; assistive-technology and owner visual acceptance remain unverified. Synthetic account and unported-screen limitations are unchanged.
+
 # Implemented correction and current boundary
 
 The first candidate's design-fidelity failure below remains part of the record. Root has now corrected the six-domain shell, all 112 navigation identities, searchable rail, directory and intake layout in React. Independent source re-review passed after fixing scope, selection, expiration/retry, shared dependency direction and style findings. This is a scoped correction, not completion of all 112 screen implementations or owner acceptance. PR 63 remains draft for the remaining screen-porting scope.

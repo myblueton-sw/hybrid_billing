@@ -51,9 +51,70 @@ try {
     "Administration",
   ]);
   ok("baseline six-domain order");
+  const headerStyles = await page
+    .locator(".top-actions > a,.top-actions > button,.header-select > button")
+    .evaluateAll((es) =>
+      es.map((e) => ({
+        height: e.getBoundingClientRect().height,
+        radius: getComputedStyle(e).borderRadius,
+        shadow: getComputedStyle(e).boxShadow,
+      })),
+    );
+  assert(
+    headerStyles.every(
+      (s) => s.height === 44 && s.radius === "0px" && s.shadow === "none",
+    ),
+  );
+  ok("header controls share44px square shadow-free styling");
+  await page.locator("#language").focus();
+  await page.keyboard.press("ArrowDown");
+  await page.getByRole("listbox", { name: "Language" }).waitFor();
+  await page.keyboard.press("End");
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(() => document.documentElement.lang === "ko");
+  await page.locator("#language").click();
+  await page.keyboard.press("Escape");
+  assert.equal(
+    await page.locator("#language").getAttribute("aria-expanded"),
+    "false",
+  );
+  assert.equal(
+    await page
+      .locator("#language")
+      .evaluate((e) => e === document.activeElement),
+    true,
+  );
+  await page.locator("#language").click();
+  await page.getByRole("option", { name: "English (US)", exact: true }).click();
+  await page.waitForFunction(() => document.documentElement.lang === "en");
+  ok("styled language listbox keyboard selection and Escape focus");
+  await page.locator("#choose-account").click();
+  await page.waitForFunction(
+    () => document.activeElement.id === "header-account-search",
+  );
+  await page.fill("#header-account-search", "000002");
+  await page.waitForFunction(
+    () => document.querySelectorAll(".picker-list [role=option]").length === 1,
+  );
+  assert.equal(await page.locator(".picker-list [role=option]").count(), 1);
+  await page.fill("#header-account-search", "not-found");
+  await page.getByText("No matching account", { exact: true }).waitFor();
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => !document.querySelector("dialog[open]"));
+  assert.equal(
+    await page
+      .locator("#choose-account")
+      .evaluate((e) => e === document.activeElement),
+    true,
+  );
+  ok("styled account search, empty state, entry and Escape focus");
+
   assert.equal(await page.locator("#design-directory-results a").count(), 24);
   ok("directory 24-item page");
   await page.fill("#design-directory-search", "index-intake");
+  await page.waitForFunction(
+    () => document.querySelectorAll("#design-directory-results a").length === 1,
+  );
   assert.equal(await page.locator("#design-directory-results a").count(), 1);
   ok("directory canonical ID search");
   await page.locator("#design-directory-results a").click();
@@ -97,7 +158,7 @@ try {
   assert.equal(await page.locator("tbody input:checked").count(), 24);
   ok("all-results exclusions");
   await page.locator("#choose-account").click();
-  await page.getByRole("button", { name: "ACC-000002", exact: true }).click();
+  await page.getByRole("option", { name: /ACC-000002/ }).click();
   await page.waitForFunction(() =>
     document.querySelector("tbody")?.textContent.includes("sample-b-REC"),
   );
@@ -187,7 +248,7 @@ try {
   );
   ok("same-tab directory count updates");
   await page.locator("#choose-account").click();
-  await page.getByRole("button", { name: "ACC-000002", exact: true }).click();
+  await page.getByRole("option", { name: /ACC-000002/ }).click();
   await page.waitForFunction(
     () =>
       !document.querySelector("#review-status").textContent.startsWith("FIX"),

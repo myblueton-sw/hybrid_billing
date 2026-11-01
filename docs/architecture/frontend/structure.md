@@ -9,7 +9,7 @@ status: draft
 
 [HB-66](https://linear.app/hybrid-billing/issue/HB-66/design-whole-frontend-architecture-and-screen-directory-ownership) responds to the owner's request to design the whole frontend and its file/directory structure before implementation. Root owns the design and mapping; gap_review independently reviews architecture and scope. Accountable owner: Seung Woo Park. Machine: mac_mini.
 
-Use one modular React application, with TypeScript proposed for implementation contracts. Group screens by business responsibility, not by visual widget or provider alone. Keep screen-specific composition and behavior explicit. Reuse shared UI and canonical design assets; do not render the entire product through one catalog-driven form/table component. React is an [existing owner decision](../current-design-decisions.md); TypeScript and the physical paths here are design selections, not installed dependencies. Bundler, router, server-state library, test framework and exact versions remain implementation decisions against actual runtime support requirements. This document does not select Next.js, SSR, microfrontends or a cloud service.
+Use one modular React application, with TypeScript proposed for implementation contracts. Group screens into shallow business modules, not by visual widget or provider alone. The owner's follow-up rejects unnecessary folder depth and requires customer-specific assembly: [platform research and composition](platform-composition.md) defines the explicit assembly/profile/extension boundary. Keep screen-specific composition and behavior explicit. Reuse shared UI and canonical design assets; do not render the entire product through one catalog-driven form/table component. React is an [existing owner decision](../current-design-decisions.md); TypeScript and the physical paths here are design selections, not installed dependencies. Bundler, router, server-state library, test framework and exact versions remain implementation decisions against actual runtime support requirements. This document does not select Next.js, SSR, microfrontends or a cloud service.
 
 The complete design input is [HB-63 at 4d5176](https://github.com/myblueton-sw/hybrid_billing/tree/4d51763458b314fd766998c05fb32a1c40c99e72/docs/design-modules/00-scalable-console/r1). It contains 112 route identities, screen profiles, bounded synthetic interactions and local review evidence. It is a separate open PR, not a merged product app. The [route ownership map](screen-ownership.json) and [screen directory](screens.md) cover every input route once, preserving registry IDs, baseline pages and related routes. They describe proposed paths, not files that already exist or screens that have passed product acceptance.
 
@@ -19,7 +19,7 @@ The authorized workspace also contains the planning repository-structure proposa
 
 | Choice | Reason | Cost / boundary |
 | --- | --- | --- |
-| One app with feature modules | Shared shell, identity context, brand and review workflows with one build; fits the current single product | Import rules and feature ownership must prevent a large coupled application |
+| One app with shallow business modules | Shared shell, identity context, brand and review workflows with one build; fits the current single product | Import rules and feature ownership must prevent a large coupled application |
 | Separate frontend per provider | Rejected as baseline: provider details reuse source/contract workflows | Provider-specific forms remain inside the owning feature; support still needs per-provider evidence |
 | Microfrontends | Deferred: no established independently released UI teams or deployment need | Avoid duplicate session state, assets and cross-app version contracts |
 | Universal metadata renderer | Rejected as the full implementation: catalog metadata lacks complete workflow semantics | Metadata remains useful for routing, navigation, traceability and review indexing |
@@ -32,83 +32,57 @@ Only create directories when an implementation adds real files. The paths below 
 
 ```text
 apps/console/
-  package.json                 app dependencies and portable commands
-  tsconfig.json                selected compiler and import boundaries
-  index.html                   browser entry, no embedded credentials
+  package.json                 locked dependencies and portable commands
+  tsconfig.json                selected compiler/import checks
+  index.html
   src/
-    main.tsx                   bootstrap and root error handling
-    app/
-      App.tsx                  assembly only
-      routes/                  route registration, lazy entry points, not screen logic
-      navigation/              domain menu, search, breadcrumbs, return destinations
-      layout/                  workspace shell, public entry shell, portal shell
-      providers/               session, locale, runtime configuration composition
-    features/
-      identity/                login, invitations, identity policy and sessions
-      onboarding/              first setup and readiness
-      operations/              close workbench and assigned tasks
-      organizations/           relationships, customer context and change impact
-      sources/                 collection, supplier evidence and reconciliation intake
-      analytics/               cost exploration, pivot and reporting
-      pricing/                 purchase/customer contracts, rules, seats and allocation
-      calculation/             run revisions, explanation and reconciliation
-      issuance/                financial approval, document lifecycle and assignment
-      delivery/                ERP, file handoff and disclosure delivery
-      history/                 historical close, correction and audit views
-      customer-portal/         customer-authorized bill and inquiry views
-      administration/          installation, license, lifecycle and integrations
-      assistant/               constrained conversation, proposals and job navigation
-      design-review/           index, review controls, evidence and scope comparison
-    shared/
-      ui/                      fields, dialogs, bounded table, picker, feedback
-      api/                     transport, cancellation and response/error decoding
-      session/                 current authenticated context and invalidation signals
-      i18n/                    locale selection, shared messages, direction helpers
-      formatting/              exact-value presentation, timestamps, identifier isolation
-      styles/                  app-level semantic layout rules
-    testing/                   synthetic adapter setup and shared test helpers
-  tools/                       portable build/config/preview entry points as needed
-packages/
-  design-system/               existing canonical assets, tokens, provenance and notices
-  contracts/                   existing contracts; future API schema only when agreed
-  sdk/                         generated clients only when a real schema/generator exists
-tests/
-  e2e/console/                 user journeys across feature boundaries
-  contracts/console/           real adapter/schema and failure-boundary checks
-  fixtures/console/            small synthetic scenarios and independent expectations
-docs/ui/screens/<screen-id>/   screen spec, item IDs, state matrix and acceptance evidence
-docs/architecture/frontend/    this architecture and complete ownership map
-output/                       generated artifacts and raw verification evidence
+    main.tsx
+    app/                       shell, routes, navigation and assemble.ts
+    modules/<domain>/
+      module.ts                public module descriptor
+      pages/<screen-id>/       Screen.tsx and screen-local helpers/tests
+      api.ts                   domain API adapter; split only as needed
+      messages/                EN/KO/AR module messages when required
+    shared/                    reusable UI, transport, session, locale, formatting
+    extensions/                reviewed capability-specific additions
+    profiles/                  public reusable presets/schema, no customer data
+  tools/                       portable app tooling when needed
+packages/design-system/        existing canonical assets/tokens/provenance
+packages/contracts/            existing contracts; new schemas only when agreed
+tests/e2e/console/              cross-module user journeys
+tests/contracts/console/        composition and API contract checks
+tests/fixtures/console/         small synthetic profiles/scenarios
+docs/ui/screens/<screen-id>/    screen/item/variant specification and evidence
+output/                        generated artifacts, not maintained source
 ```
 
 `packages/design-system` remains the token/asset authority. Keep React UI primitives app-local initially; extract a shared `packages/ui` only when another real consumer needs it. Do not create competing tokens or copy the supplied archive's unreviewed Money/Icon implementations. Existing `tools/design` and static design modules remain their own review artifact until accepted replacement scopes are finalized.
 
-# Feature and file responsibilities
+# Module and file responsibilities
 
 A typical feature grows by responsibility, not by adding every file in advance:
 
 ```text
-features/sources/
-  routes.ts                    public route descriptors / lazy screen references
-  screens/index-intake/
-    Screen.tsx                 screen-specific layout and actions
-    state.ts                   screen state and transitions when nontrivial
-    Screen.test.tsx            meaningful component/scenario checks
-  components/                  source-domain widgets shared by actual source screens
-  model/                       query scope, draft validation and data projection
-  api/                         source contract adapters and query/command orchestration
-  messages/                    en, ko, ar feature message catalogs
+modules/sources/
+  module.ts                    public routes/contributions and dependencies
+  pages/index-intake/
+    Screen.tsx                 layout/actions specific to this screen
+    state.ts                   only when nontrivial state needs separation
+    Screen.test.tsx            meaningful scenario tests
+  api.ts                       source-query/command contract adapter
 ```
+
+Additional components, message catalogs and adapter files are introduced when actual use warrants them; there is no mandatory model/hooks/services hierarchy. The assembly entry consumes module descriptors and approved extensions. It does not scan and execute arbitrary customer packages.
 
 Use canonical route IDs as screen directory names. A filename change must not change screen/item identity. Component files use descriptive PascalCase names; ordinary modules use descriptive kebab-case names except established entry filenames. Each directly maintained source/test file stays below 1,500 physical lines, and responsibility splitting happens earlier when useful. No explanatory source comments; use types, names, tests and design records.
 
-Dependencies flow from app composition to features and from features to shared modules/design-system. Shared modules never import app or features. Feature internals do not directly import another feature's internals. Cross-feature navigation uses route IDs/descriptors; cross-feature orchestration belongs in app composition or an explicit owner contract. Do not move domain logic into shared/utils to bypass a cycle. Feature route descriptors and explicitly exported types are the narrow public surface. Proposed import checking should be added with the selected tooling; it is not installed by this document.
+Dependencies flow from app composition to modules and from modules to shared modules/design-system. Shared modules never import app or business modules. Module internals do not directly import another module's internals. Cross-feature navigation uses route IDs/descriptors; cross-feature orchestration belongs in app composition or an explicit owner contract. Do not move domain logic into shared/utils to bypass a cycle. Module descriptors and explicitly exported types are the narrow public surface. Proposed import checking should be added with the selected tooling; it is not installed by this document.
 
 A screen can compose multiple concerns while keeping one primary owner. For example pricing owns the price-rule editor; issuance owns financial approval; design-review owns visual acceptance. A customer portal may reuse a primitive but must not import internal-cost screen projections or broad cached responses. One app bundle is not an authorization boundary. Customer-sensitive data must never be fetched and hidden as a substitute for server-side disclosure.
 
 # Whole-screen ownership
 
-[screens.md](screens.md) lists all 112 routes and their proposed `Screen.tsx` paths. The owner map is keyed by screen ID, not label or array position. It preserves related-screen links and original baseline mappings, including multiple screens referring to the same legacy registry ID. Navigation groups remain separate from code ownership: regrouping a menu is not permission to move contract authority.
+[screens.md](screens.md) lists all 112 routes and their proposed `Screen.tsx` paths under shallow modules. The owner map is keyed by screen ID, not label or array position. It preserves related-screen links and original baseline mappings, including multiple screens referring to the same legacy registry ID. Navigation groups remain separate from code ownership: regrouping a menu is not permission to move contract authority.
 
 Special ownership choices include cost pivot/raw explorer/reports under analytics, organization relationships under organizations, approvals under issuance, ERP/file/publication delivery under delivery and assistant under its own feature. Customer-facing variants stay in customer-portal rather than reusing an internal financial screen with hidden columns. The design overview/index and synthetic scenario selector belong to the review experience; they are not ordinary financial operations.
 
@@ -185,4 +159,4 @@ Co-locate component/state tests with their owning feature; cross-feature journey
 
 Required scenarios include late responses after scope changes, revoked sessions and cache clearing, bounded paging/selection, command timeout reconciliation, review persistence failure, changed accepted dependencies, EN/KO/AR keyboard/focus/overflow and direct-link/back navigation. Product tests must use isolated synthetic identities and records; never issue real bills or set owner acceptance.
 
-This increment is architecture and complete route ownership design. [Verification](verification.md) records document/coverage/independent-review checks. No React source directories, dependency installation, product screenshot, runtime test, owner FIX, merge or deployment are introduced here.
+The current draft includes the owner-requested shallow-module and customer-assembly refinement. The earlier deep directory tree is replaced in place; route IDs and semantic ownership remain unchanged. This increment is architecture and complete route ownership design. [Verification](verification.md) records document/coverage/independent-review checks. No React source directories, dependency installation, product screenshot, runtime test, owner FIX, merge or deployment are introduced here.

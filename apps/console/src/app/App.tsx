@@ -136,7 +136,7 @@ function Workspace({
           </section>
         )}
       </div>
-      <section className="panel">
+      <section className="related-section">
         <h2>{shellCopy.related[l]}</h2>
         <div className="related">
           {screen.related
@@ -253,8 +253,8 @@ export default function App() {
           <img
             className="brand-logo"
             src={logo}
-            width="232"
-            height="48"
+            width="155"
+            height="32"
             alt="Hybrid Billing"
           />
         </a>
@@ -316,34 +316,39 @@ export default function App() {
       </nav>
       <div className="layout">
         <aside className="rail">
-          <label>
-            <span className="sr-only">{shellCopy.screens[l]}</span>
-            <input
-              id="screen-search"
-              type="search"
-              value={search}
-              placeholder={shellCopy.screens[l]}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </label>
-          <small>
-            {allowed.length} {t(l, "screens", "전체 화면", "شاشة")}
-          </small>
-          <nav
-            id="screen-links"
-            aria-label={t(l, "Screens", "전체 화면", "الشاشات")}
-          >
-            {visible.map((s) => (
-              <a
-                key={s.id}
-                className={id === s.id ? "active" : ""}
-                href={routeUrl(s.id)}
-                aria-current={id === s.id ? "page" : undefined}
-              >
-                {s.title[l]}
-              </a>
-            ))}
-          </nav>
+          <div className="rail-inner">
+            <label>
+              <span className="sr-only">{shellCopy.screens[l]}</span>
+              <input
+                id="screen-search"
+                type="search"
+                value={search}
+                placeholder={shellCopy.screens[l]}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </label>
+            <div className="rail-heading">
+              <h2>{search ? shellCopy.screens[l] : domain.label[l]}</h2>
+              <small>
+                {allowed.length} {t(l, "screens", "전체 화면", "شاشة")}
+              </small>
+            </div>
+            <nav
+              id="screen-links"
+              aria-label={t(l, "Screens", "전체 화면", "الشاشات")}
+            >
+              {visible.map((s) => (
+                <a
+                  key={s.id}
+                  className={id === s.id ? "active" : ""}
+                  href={routeUrl(s.id)}
+                  aria-current={id === s.id ? "page" : undefined}
+                >
+                  {s.title[l]}
+                </a>
+              ))}
+            </nav>
+          </div>
         </aside>
         <main className="main" id="main" tabIndex={-1}>
           {valid ? (

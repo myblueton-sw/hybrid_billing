@@ -41,3 +41,51 @@ This is a proposal, not an implemented or accepted replacement. The reviewer exp
 PASS: actual read-only CLI invocation returned a substantive screenshot-based design assessment; role and mandatory ownership rules are recorded. PASS: scoped document/role content manually checked against the invocation and owner constraints. No application source changed in this workflow revision; no new browser/build tests were run for it. The proposed screen implementation and follow-up rendered review remain pending.
 
 CLI-reported token counts for this invocation only: uncached input 12; cache creation input 40050; cache read input 91902; output 24966, including reported thinking 16210. These categories reflect cumulative CLI telemetry, not unique source size or root-turn usage. Restricted mode ignored settings/hooks; JEV use inside this invocation is not claimed. Total root-turn token/cache accounting and a no-skill control run are unavailable. No measured token savings or causal optimization comparison can be stated.
+
+# Professional console visual revision
+
+On 2026-11-01 the owner reported that the whole console still did not read as a professional solution and asked Claude CLI to finish HB-67. Claude CLI acted as root and visual design lead in this revision. IA, routes, six-domain order, header controls, review-before-content placement, canonical item IDs and screen functions are unchanged. No owner FIX is created or carried forward; every implemented screen's shared-shell fingerprint changes and returns to review.
+
+## Diagnosis from actual renders
+
+Before-state captures at 1440 and 390 pixels showed: about 190px of stacked chrome (preview strip, 96px header, tabs); 44px controls and 16px text applied uniformly, making work screens resemble a document; teal edge strips on section headings, metric cards and the active rail item, which also violated the neutral-border rule; underlined identifiers in every table row; full panels for related links; a 3px focus outline drawn around the programmatically focused main region on every route change; and entry screens whose title and form were split into disconnected panes.
+
+## External evidence
+
+Fetched in this session:
+
+- IBM Carbon data table style (https://carbondesignsystem.com/components/data-table/style/): 14px regular body cells, 14px semibold column headers, row sizes 24/32/40/48/64px.
+- AWS Cloudscape typography (https://cloudscape.design/foundation/visual-foundation/typography/): 14px/20px default body, 24px page heading, 20/18/16px lower headings.
+
+Adopted: 14px work density, compact 36px controls, 40px header row and 44px body rows, restrained heading scale. Rejected: rounded corners, shadows, colored row/selection accents and provider-specific visual identity. The earlier Atlassian/Microsoft sign-in evidence above remains the basis for a narrow entry form column with explicit alternate paths.
+
+## Adopted specification
+
+| Area | Specification |
+|---|---|
+| Chrome | 28px neutral preview strip, 64px white header, 44px domain tabs. Active tab uses ink-colored 2px underline and semibold weight; no accent color. |
+| Logo | Canonical color lockup at 32px height (155px width), unchanged geometry, LTR at inline-start. The mark spans 36 of 48 viewBox units, so it renders at 24px with 16px vertical clear space (minimum 12px). Mobile uses 28px height: 21px mark, above the 20px minimum. |
+| Type | Work area 14px body (Arabic 15px), 13px secondary text and table headers, 12px captions, 24px page title, 16–18px section titles. Entry fields use 15px input text. |
+| Controls | 36px on fine pointers, 44px on coarse pointers through `pointer: coarse`, including review, bulk, pager, related-link and row-link controls; table checkboxes enlarge to 24px. Primary navy, secondary white with neutral border. Disabled uses neutral fill. |
+| Tables | Bulk bar attached to table, sticky 40px header, 44px rows, tabular numerals, monospace record IDs without permanent underline, neutral hover. Row height matches the planning default in `docs/planning/v1.16/ui-design.md`. |
+| Navigation | Baseline 246px rail (210px below 1280px, horizontal below 1024px) with domain heading and count; active item uses neutral fill and weight. |
+| Surfaces | Neutral page background, white panels with hairline neutral borders, no colored edge strips, shadows or radius. Focus ring 2px; main region no longer shows a focus outline after route changes. |
+| Entry | Title, principal action and alternatives in one aligned 440px column; alternate paths are separated rows; installation status or help in a 400px neutral context column at inline-end. Single column below 1024px. Secondary entry screens use a 560px form column with a 360px help column. |
+
+The 16px console body override in the design-system guide remains the documented baseline elsewhere. This revision deliberately applies 14px density to HB-67 work surfaces based on the evidence above; Arabic stays at 15px with the 1.8 line height, with 14px secondary text and 13px captions. The owner approved the 14px work-area density on 2026-11-01 in the Claude CLI session. `packages/design-system/styles/console.css` now sets body and table size to 14px and the console consumes `--type-body-size`. The untracked `docs/design-system.md` override paragraph and logo-size row still state 16px and the 48px header logo; they must be updated when that guide enters the tracked tree. This approval covers type density only; it is not screen FIX.
+
+## Verification
+
+Root executed in worktree `/private/tmp/hb67-react-console` on macOS arm64, Node 26.7.0, Playwright 1.56.1 with Chromium headless shell 1243:
+
+- `npm run build`: PASS (TypeScript strict and Vite bundle).
+- `npm test`: PASS, 24 tests.
+- `npm run qa`: PASS, 37 checks, after updating the header-control height assertion from 44px to 36px for fine pointers.
+- `npm run qa:work`: PASS, 32 checks.
+- `npm run qa:entry`: PASS, 50 checks, including logo load, full-width entry main, neutral selected-workspace border and language listbox bounds.
+- `node tools/verify-build.mjs`: PASS, 242 final artifact hashes including HTML and licenses.
+- Rendered KO/EN/AR at 1440 and 390 pixels inspected for operations, overview, customer detail, issuance review, start, login, scope and bootstrap.
+
+Independent read-only review (separate Claude subagent, no edits): initial verdict FAIL-fixable on constraints and PASS WITH FIXES on professional quality. Blocking items were the undocumented 14px change (resolved by owner approval), a mobile logo mark below 20px (fixed at 28px height) and fixed 32px targets on coarse pointers (fixed). Re-review: logo PASS, touch targets PASS with a record-card checkbox gap (fixed), no new blocking issue. A facts-column ID wrap found in re-review was fixed by stacking label and value; confirmed on the regenerated customer-detail capture by root, not re-reviewed.
+
+Not verified: coarse-pointer devices, Windows/Linux, other browsers, screen readers, native-language terminology and owner acceptance.

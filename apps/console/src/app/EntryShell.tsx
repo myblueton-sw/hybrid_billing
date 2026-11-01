@@ -44,8 +44,8 @@ export default function EntryShell({
           <img
             className="brand-logo"
             src={logo}
-            width="232"
-            height="48"
+            width="155"
+            height="32"
             alt="Hybrid Billing"
           />
         </a>

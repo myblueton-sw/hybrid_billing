@@ -62,10 +62,10 @@ try {
     );
   assert(
     headerStyles.every(
-      (s) => s.height === 44 && s.radius === "0px" && s.shadow === "none",
+      (s) => s.height === 36 && s.radius === "0px" && s.shadow === "none",
     ),
   );
-  ok("header controls share44px square shadow-free styling");
+  ok("header controls share 36px square shadow-free styling");
   await page.locator("#language").focus();
   await page.keyboard.press("ArrowDown");
   await page.getByRole("listbox", { name: "Language" }).waitFor();

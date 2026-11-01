@@ -132,3 +132,7 @@ The designer reviewed eight KO/AR start/login desktop/mobile renders, approved t
 # Owner correction: Claude CLI design leadership
 
 The owner rejected the prior designer-role result as visually inadequate. Prior technical checks remain historical evidence, not owner design acceptance. Future visual composition and render comparison use the actual Claude CLI ui-designer role with the official installed frontend-design skill, while root owns implementation and integration. See [workflow and execution evidence](claude-ui-design.md). Do not substitute same-environment agent naming for actual CLI execution.
+
+# Superseded visual values
+
+The 2026-11-01 professional console revision in [claude-ui-design.md](claude-ui-design.md#professional-console-visual-revision) replaces the visual values above: 44px header controls, the 40/60 entry split, 44px/28px entry headings, 48px inputs/actions and 16px body/labels. IA, entry journeys, header control set and review placement described above remain in force.

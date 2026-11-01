@@ -17,3 +17,9 @@ HB-67 entry regression checks cover notice/feedback edge removal, neutral select
 - MUST consult relevant external professional service screens or official service design guides before implementing or revising a screen layout. Record exact sources, the observed pattern, what is adopted, what is rejected and why. External patterns do not override owner instructions, existing IA or brand rules.
 - MUST verify the rendered result against that evidence and the owner's constraints at desktop/mobile widths. A familiar convention, personal preference or token reuse is insufficient evidence.
 - MUST retain neutral borders and explicit state indicators when adapting references. No new dependency or copied third-party asset is implied by research.
+
+## Owner-assigned visual design lead
+
+Use the Claude CLI ui-designer role for new service-screen visual composition and material visual revisions. Supply the actual current renders, authorized external references and mandatory constraints before requesting a design. Use the installed official frontend-design skill when available; owner requirements take precedence over its defaults. Root implements the returned specification and verifies behavior; Claude CLI compares final renders against its design. The root PM retains scope and integration responsibility.
+
+Do not substitute a same-environment role assignment and call it Claude CLI work. Record actual invocation success/failure, reviewed artifacts and returned findings. CLI availability is not a completed review. If the CLI/skill is unavailable, disclose that fact without fabricating a designer result. No recursive CLI invocation or production authority is granted. This is development tooling, not an OS-specific product installation dependency.

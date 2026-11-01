@@ -26,6 +26,7 @@ For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md
 
 ## Core rules
 
+- Visual design leadership for service screens uses the Claude CLI `ui-designer` role under `.agents/rules/service-screen-style.md`; root retains implementation and integration ownership.
 - Service screens MUST use the available viewport width and documented external professional references; MUST NOT use decorative colored borders or accent edge strips. Apply `.agents/rules/service-screen-style.md` before implementation and during rendered verification.
 
 - Do not add explanatory source comments or use docstrings/JSDoc to bypass this rule. Preserve required machine directives, legal headers and externally consumed API documentation.

@@ -1,6 +1,7 @@
 import {readFile,writeFile,mkdir,readdir,rm} from 'node:fs/promises';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
+import {buildRevisions} from './build-revisions.mjs';
 import {checkDesign,root,source,foundations} from './check-design.mjs';
 await checkDesign();
 const output=path.join(root,'output/designs/HB-63-console');
@@ -39,7 +40,7 @@ async function copyTree(directory,prefix){
   else await emit(`${prefix}/${item.name}`,await readFile(path.join(directory,item.name)));
  }
 }
-for(const name of ['index.html','app.js','catalog.js','copy.js','data.js','widgets.js','community.js','onboarding.js','onboarding-copy.js','onboarding-profiles.js','analysis.js','analysis-copy.js','journeys.js','journeys-copy.js','style.css'])await emit(name,await readFile(path.join(source,name)));
+for(const name of (await readdir(source)).filter(name=>/\.(js|css|html)$/.test(name)).sort())await emit(name,await readFile(path.join(source,name)));
 await copyTree(path.join(foundations,'assets'),'design-system/assets');
 await emit('design-system/tokens.css',await readFile(path.join(foundations,'styles/tokens.css')));
 await emit('design-system/console.css',await readFile(path.join(foundations,'styles/console.css')));
@@ -63,6 +64,7 @@ for(const family of ['ibm-plex-sans','ibm-plex-sans-arabic','ibm-plex-sans-kr','
 }
 await emit('design-system/fonts.css',fontCss);
 await emit('NOTICE.txt',await readFile(path.join(root,'THIRD_PARTY_NOTICES.md')));
+await emit('design-revisions.json',JSON.stringify(await buildRevisions(source,files),null,2)+'\n');
 const manifest={source:'docs/design-modules/00-scalable-console/r1',foundations:'packages/design-system',fonts,files:Object.fromEntries([...files].sort(([a],[b])=>a.localeCompare(b)))};
 await writeFile(path.join(output,'build-manifest.json'),JSON.stringify(manifest,null,2)+'\n');
 console.log(`Built ${files.size} files at output/designs/HB-63-console. Serve this directory; no runtime network dependency.`);

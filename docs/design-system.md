@@ -51,4 +51,9 @@ Under [HB-63](https://linear.app/hybrid-billing/issue/HB-63/implement-multilingu
 
 Design FIX and implementation completion are separate. An owner-authorized change creates a new candidate without overwriting the prior acceptance. Common-component changes identify every affected fixed screen. Screen acceptance does not authorize merge, deployment or financial operations.
 
-This records the required workflow. The current console does not yet implement an all-screen review control or canonical acceptance store; no screen is declared newly fixed by this policy update. That UI and acceptance-record implementation must follow this rule.
+The console now exposes a per-screen review control and stable IDs for the currently displayed implementation items. Confirmation stores scoped local evidence and supports JSON export; a canonical authenticated acceptance store is not implemented. No screen is declared owner-fixed by implementation or QA. See the [frontend design record](design-modules/00-scalable-console/r1/frontend-design.md).
+
+
+## OS-independent installation and operation
+
+The owner requires installation and operation without dependence on a particular OS. The [platform rule](../.agents/rules/platform-independence.md) governs all designs. Frontend preview tooling uses portable Node/npm commands and standard browser APIs, with local fonts/assets and explicit storage capability failures. macOS execution evidence does not certify Windows, Linux, every browser or production installations; those combinations remain unverified until tested.

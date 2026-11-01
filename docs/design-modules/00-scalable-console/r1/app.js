@@ -1,3 +1,7 @@
+import {designDirectory} from './design-directory.js';
+import {loadDesignRevisions,reviewBar,bindDesignReview,screenReviewStatus} from './design-review.js';
+import {reviewText} from './review-copy.js';
+import {createScreenDesign,screenDesignIntro} from './screen-designs.js';
 import {onboarding,setupRoutes,disposeOnboarding} from './onboarding.js';
 import {analysisScreen,setAnalysisContext,invalidateAnalysis,disposeAnalysis} from './analysis.js';
 import {reportScreen,approvalScreen,customerOverview,gapText} from './journeys.js';
@@ -85,7 +89,7 @@ function render(){
  <header class="top"><a href="${link(screen.group==='customer'?'core-customer-overview':'overview')}" class="brand" dir="ltr"><img class="brand-logo" src="./design-system/assets/logo/hb-lockup-color.svg" width="232" height="48" alt="Hybrid Billing"></a><div class="top-actions">${screen.group==='customer'?'':`<a href="${link('community')}">${text({en:'Contribute',ko:'기여',ar:'المساهمة'})}</a>`}<button id="choose-account" class="account-button" ${screen.group==='customer'?'disabled':''}>${tr('account')} · <bdi>${account}</bdi><img class="icon" src="./design-system/assets/icons/chevron-down.svg" alt="" aria-hidden="true"></button><button id="open-jobs">${tr('jobs')} <span class="tag" id="job-count">${jobs.items.filter(job=>job.scope===scopeKey()).length}</span></button><label><span class="sr-only">Language</span><select id="language" aria-label="Language"><option value="en" ${locale==='en'?'selected':''}>English (US)</option><option value="ar" ${locale==='ar'?'selected':''}>العربية (الإمارات)</option><option value="ko" ${locale==='ko'?'selected':''}>한국어</option></select></label></div></header>
  <nav class="tnb" aria-label="${tr('workspace')}">${groupLinks()}</nav>
  <div class="layout"><aside class="rail"><label><span class="sr-only">${tr('screens')}</span><input id="screen-search" type="search" placeholder="${tr('screens')}" autocomplete="off"></label><small>${screens.filter(item=>screen.group!=='customer'||item.group==='customer').length} ${tr('allScreens')}</small><nav id="screen-links" aria-label="${tr('allScreens')}">${railLinks()}</nav></aside>
- <main class="main" id="main" tabindex="-1"><div class="crumb">${text(activeGroup()?.label)} / <bdi>${screen.id}</bdi></div><div class="heading"><div><h1>${text(screen.title)}</h1><p>${text(screen.description)}</p></div><span class="tag">${tr('draft')}</span></div><div class="meta"><span>${tr('account')}: <bdi>${account}</bdi></span><span>${tr('snapshot')}: <bdi>S${snapshot}</bdi></span><span>${tr('notConnected')}</span></div><div id="content">${content()}</div><section class="panel"><h2>${tr('related')}</h2><div class="related">${relatedIds().map(id=>`<a href="${link(id)}">${text(screens.find(item=>item.id===id)?.title)}</a>`).join('')}</div></section></main></div>`;
+ <main class="main" id="main" tabindex="-1"><div class="crumb">${text(activeGroup()?.label)} / <bdi>${screen.id}</bdi></div><div class="heading"><div><h1>${text(screen.title)}</h1><p>${text(screen.description)}</p></div><span class="tag">${tr('draft')}</span></div><div class="meta"><span>${tr('account')}: <bdi>${account}</bdi></span><span>${tr('snapshot')}: <bdi>S${snapshot}</bdi></span><span>${tr('notConnected')}</span></div>${reviewBar(screen,locale)}<div id="content">${content()}</div><section class="panel"><h2>${tr('related')}</h2><div class="related">${relatedIds().map(id=>`<a href="${link(id)}">${text(screens.find(item=>item.id===id)?.title)}</a>`).join('')}</div></section></main></div>`;
  $('#choose-account').onclick=()=>accountPicker(locale,account,value=>{if(value!==account){invalidateAnalysis(scopeKey());navigationState.clear();account=value;snapshot++;expired=false;invalidate();resetQuery();render();$('#choose-account').focus();}});
  $('#open-jobs').onclick=()=>jobsDialog(locale,jobs,scopeKey());
  $('#language').onchange=event=>{
@@ -96,15 +100,18 @@ function render(){
  document.querySelectorAll('[data-group]').forEach(button=>button.onclick=()=>location.hash=screens.find(item=>domains.find(domain=>domain.id===button.dataset.group).groups.includes(item.group)).id);
  $('#screen-search').oninput=event=>$('#screen-links').innerHTML=railLinks(event.target.value);
  bindContent();
+ bindDesignReview(screen,locale,()=>{mounted?.refresh?.();document.querySelectorAll('[data-review-status]').forEach(node=>node.textContent=reviewText(screenReviewStatus(node.dataset.reviewStatus,locale),locale));},mounted?.items??[]);
 }
 function content(){
  const scope=scopeKey(),id=screen.id,lang=locale;
  const active=()=>scopeKey()===scope&&screen.id===id&&locale===lang;
  const navigate=target=>{location.hash=target;};
- if(setupRoutes.includes(id))mounted=onboarding(id,scope,locale,navigate,active);
+ if(['overview','contents'].includes(id))mounted=designDirectory(screens,groups,locale,link);
+ else if(setupRoutes.includes(id))mounted=onboarding(id,scope,locale,navigate,active);
  else if(id==='assistant')mounted=analysisScreen(scope,locale,context=>{navigate(context.screen);if(context.record){pendingEvidence={...context,scope};}},active);
  else if(id==='index-approval')mounted=approvalScreen(scope,locale,active);
  else if(screen.kind==='report')mounted=reportScreen(screen,scope,locale,context=>analyze(null,context));
+ else if(screen.id!=='community'&&screen.id!=='core-customer-overview')mounted=createScreenDesign(screen,{locale,account,scope,navigate,isActive:active});
  if(mounted)return mounted.html;
  if(screen.id==='community')return community(locale);
  if(screen.kind==='overview')return overview();
@@ -116,7 +123,7 @@ function content(){
 function overview(){
  if(screen.group==='customer')return customerOverview(account,locale,screens.filter(item=>item.group==='customer'),link);
  const ids=screen.id==='contents'?screens:screens.filter(item=>item.group!== 'overview').filter((item,index,array)=>array.findIndex(x=>x.group===item.group)===index);
- return `<div class="stats"><article class="stat">${tr('accounts')}<strong>${number(100000)}</strong><p>${tr('pickerHelp')}</p></article><article class="stat">${tr('fileCount')}<strong>${number(1000000)}</strong><p>${tr('bounded')}</p></article><article class="stat">${tr('allScreens')}<strong>${number(screens.length)}</strong><p>English · العربية · 한국어</p></article></div><section class="panel"><h2>${tr('nextTask')}</h2><div class="screen-index">${ids.map(item=>`<a href="${link(item.id)}">${text(item.title)}<small>${text(groups.find(g=>g.id===item.group)?.label)}</small></a>`).join('')}</div></section>`;
+ return `<div class="stats"><article class="stat">${tr('accounts')}<strong>${number(100000)}</strong><p>${tr('pickerHelp')}</p></article><article class="stat">${tr('fileCount')}<strong>${number(1000000)}</strong><p>${tr('bounded')}</p></article><article class="stat">${tr('allScreens')}<strong>${number(screens.length)}</strong><p>English · العربية · 한국어</p></article></div><section class="panel"><h2>${tr('nextTask')}</h2><div class="screen-index">${ids.map(item=>`<a href="${link(item.id)}">${text(item.title)}<small>${text(groups.find(g=>g.id===item.group)?.label)} · <bdi>${item.id}</bdi></small><small class="review-status" data-review-status="${item.id}">${reviewText(screenReviewStatus(item.id,locale),locale)}</small></a>`).join('')}</div></section>`;
 }
 function form(){
  const draft=drafts.get(`${account}:${screen.id}`)??{};
@@ -138,7 +145,7 @@ function detail(){
 }
 function options(items,current){return items.map(item=>`<option value="${esc(item.value)}" ${current===item.value?'selected':''}>${esc(item.name)}</option>`).join('');}
 function list(){
- return `<section class="panel"><div class="toolbar"><label class="grow">${tr('search')}<input id="record-search" type="search" value="${esc(q.search)}" placeholder="REC-0000001" autocomplete="off"></label>${screen.group==='customer'?'':`<label>${tr('provider')}<select id="provider-filter">${options([{value:'',name:tr('all')},...providers.map(value=>({value,name:value}))],q.provider)}</select></label>`}<label>${tr('status')}<select id="status-filter">${options([{value:'',name:tr('all')},...states.map(value=>({value,name:tr(value)}))],q.status)}</select></label><label>${tr('sort')}<select id="sort">${options(['asc','desc'].map(value=>({value,name:tr(value)})),q.sort)}</select></label><button id="refresh">${tr('refresh')}</button></div>
+ return `${screenDesignIntro(screen,locale)}<section class="panel"><div class="toolbar"><label class="grow">${tr('search')}<input id="record-search" type="search" value="${esc(q.search)}" placeholder="REC-0000001" autocomplete="off"></label>${screen.group==='customer'?'':`<label>${tr('provider')}<select id="provider-filter">${options([{value:'',name:tr('all')},...providers.map(value=>({value,name:value}))],q.provider)}</select></label>`}<label>${tr('status')}<select id="status-filter">${options([{value:'',name:tr('all')},...states.map(value=>({value,name:tr(value)}))],q.status)}</select></label><label>${tr('sort')}<select id="sort">${options(['asc','desc'].map(value=>({value,name:tr(value)})),q.sort)}</select></label><button id="refresh">${tr('refresh')}</button></div>
  <div class="toolbar"><button id="table-view" aria-pressed="${view==='table'}">${tr('table')}</button><button id="card-view" aria-pressed="${view==='cards'}">${tr('cards')}</button><button id="column-picker">${tr('columns')}</button><button id="reset-filters">${tr('reset')}</button>${screen.kind==='files'||screen.group==='sources'?`<button id="intake" class="primary">${tr('files')}</button>`:''}</div><div id="bulk-controls"></div><div id="results" aria-live="polite"></div><div class="pager"><div><label>${tr('pageSize')}<select id="page-size">${options([25,50,100].map(value=>({value:String(value),name:String(value)})),String(q.size))}</select></label><span id="record-count" class="muted"></span></div><div><button id="prev">${tr('previous')}</button><span id="page-number"></span><button id="next">${tr('next')}</button></div></div>
  <details class="scenario"><summary>${tr('reviewTools')}</summary><div><button id="scenario-normal">${tr('normal')}</button><button id="scenario-error">${tr('loadError')}</button><button id="scenario-expire">${tr('expire')}</button></div></details></section>`;
 }
@@ -262,4 +269,5 @@ function selectionPreview(){
  };
 }
 window.addEventListener('hashchange',()=>{closeDialog();route(location.hash.slice(1));});
+await loadDesignRevisions();
 resetQuery();render();

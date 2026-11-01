@@ -48,3 +48,14 @@ The header utility link opens `#community` in English, Arabic or Korean. Monthly
 The [baseline gap audit](gap-audit.md) records missing business journeys at c8187fe. The [remediation record](gap-remediation.md) tracks the subsequent six-observation follow-up and its remaining limits.
 
 Dedicated onboarding and AI modules now run in the built preview. Reports expose period/currency/basis/grouping descriptors without fabricating aggregates. Customer navigation remains within its synthetic context. Approval comparisons remain unavailable and block approval/issuance; review and rejection are separate local states. Back restores valid query/page/selection state within the current account. See verification.md for actual regression and review evidence.
+
+
+## Individual screen review and portable operation
+
+The current inventory has 112 screen designs with a searchable, paginated library at `#contents`. Each route exposes its design revision, currently displayed implementation-item IDs and a review-confirmation control. The [frontend design record](frontend-design.md) describes ownership, screen profiles and exact acceptance boundaries.
+
+Confirmation requires explicit acknowledgment and stores only the displayed locale, width, state and item set. Local FIX is unauthenticated browser evidence, exportable for canonical ticket/Git reconciliation. It is not durable owner identity, implementation completion or financial approval. Previous scope/revision evidence is retained. No owner acceptance is supplied by the assistant or automated tests.
+
+Customer inquiry/conversation/document links preserve the synthetic document, selected line and revision. Issuance review separates reviewer/issuer and invalidates stale evidence. ERP demonstrations pin request context and distinguish unknown outcome from retryable failure. Actual approval, issuance, posting, amounts and provider integrations remain unavailable.
+
+All designs must support OS-independent installation and operation. The preview uses Node.js 22+ and npm for build/serving, standard browser APIs and local assets. See [portable commands](../../../../tools/design/README.md) and the [build guide](../../../design-build-guide.md). Only the recorded macOS test environment has been exercised; Windows/Linux and other runtime/browser combinations remain unverified.

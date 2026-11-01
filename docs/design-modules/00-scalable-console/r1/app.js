@@ -1,3 +1,6 @@
+import {onboarding,setupRoutes,disposeOnboarding} from './onboarding.js';
+import {analysisScreen,setAnalysisContext,invalidateAnalysis,disposeAnalysis} from './analysis.js';
+import {reportScreen,approvalScreen,customerOverview,gapText} from './journeys.js';
 import {community} from './community.js';
 import {groups,screens} from './catalog.js';
 import {t,label} from './copy.js';
@@ -11,6 +14,8 @@ let account='ACC-000001',snapshot=1,expired=false,mode='normal',view='table';
 let q,rows=[],result=null,cursors=[null],page=0,loading=false,controller,generation=0;
 let selected=new Set(),excluded=new Set(),allSelected=false,hidden=new Set(),searchTimer;
 let drafts=new Map(),completedSteps=new Set();
+const navigationState=new Map();
+let mounted=null,pendingEvidence=null;
 const jobs=createJobs(()=>{renderJobs(locale,jobs,scopeKey());const count=$('#job-count');if(count)count.textContent=String(jobs.items.filter(job=>job.scope===scopeKey()).length);});
 const tr=key=>t(key,locale);
 const text=value=>esc(label(value,locale));
@@ -35,6 +40,7 @@ function resetQuery(){
  cursors=[null];page=0;result=null;rows=[];selected.clear();excluded.clear();allSelected=false;hidden.clear();
 }
 function invalidate(){
+ invalidateAnalysis(scopeKey());
  const hadSelection=selected.size||allSelected;
  selected.clear();excluded.clear();allSelected=false;cursors=[null];page=0;result=null;
  closeDialog();
@@ -43,42 +49,63 @@ function invalidate(){
 function changeQuery(key,value){
  q[key]=value;invalidate();load();
 }
+function remember(){
+ navigationState.set(`${scopeKey()}:${screen.id}`,{q:{...q},cursors:[...cursors],page,snapshot,expired,mode,view,selected:new Set(selected),excluded:new Set(excluded),allSelected,hidden:new Set(hidden)});
+}
+function relatedIds(){return screen.related.filter(id=>screen.group!=='customer'||screens.find(item=>item.id===id)?.group==='customer');}
+function analyze(record=null,context={}){
+ setAnalysisContext(scopeKey(),{screen:screen.id,record,snapshot:`S${snapshot}`,query:{...q},...context});
+ closeDialog();location.hash='assistant';
+}
 function route(id){
  const next=screens.find(item=>item.id===id);
  if(!next)return;
  controller?.abort();clearTimeout(searchTimer);generation++;
- screen=next;expired=false;mode='normal';snapshot++;resetQuery();render();
+ remember();screen=next;
+ const saved=navigationState.get(`${scopeKey()}:${screen.id}`);
+ if(saved){({q,cursors,page,snapshot,expired,mode,view,selected,excluded,allSelected,hidden}=saved);rows=[];result=null;}
+ else{expired=false;mode='normal';snapshot++;resetQuery();}
+ render();
  $('#main').focus({preventScroll:true});
 }
 function groupLinks(){
- return domains.map(group=>`<button data-group="${group.id}" class="${group.id===activeDomain().id?'active':''}" aria-pressed="${group.id===activeDomain().id}">${text(group.label)}</button>`).join('');
+ return domains.filter(group=>screen.group!=='customer'||group.id==='customer').map(group=>`<button data-group="${group.id}" class="${group.id===activeDomain().id?'active':''}" aria-pressed="${group.id===activeDomain().id}">${text(group.label)}</button>`).join('');
 }
 function railLinks(needle=''){
- const visible=screens.filter(item=>needle?`${label(item.title,locale)} ${item.id} ${item.registryIds.join(' ')}`.toLowerCase().includes(needle.toLowerCase()):activeDomain().groups.includes(item.group));
+ const visible=screens.filter(item=>screen.group!=='customer'||item.group==='customer').filter(item=>needle?`${label(item.title,locale)} ${item.id} ${item.registryIds.join(' ')}`.toLowerCase().includes(needle.toLowerCase()):activeDomain().groups.includes(item.group));
  return visible.map(item=>`<a href="${link(item.id)}" ${item.id===screen.id?'aria-current="page"':''} class="${item.id===screen.id?'active':''}">${text(item.title)}</a>`).join('')||`<p>${tr('empty')}</p>`;
 }
 function render(){
+ disposeOnboarding();disposeAnalysis();mounted=null;
  document.documentElement.lang=locale==='ar'?'ar-AE':locale;
  document.documentElement.dir=locale==='ar'?'rtl':'ltr';
  document.title=`${label(screen.title,locale)} · Hybrid Billing`;
  $('.skip').textContent=locale==='ko'?'본문 바로가기':locale==='ar'?'انتقل إلى المحتوى':'Skip to content';
  $('#app').innerHTML=`<div class="preview"><span>${tr('preview')}</span><span>${tr('review')}</span></div>
- <header class="top"><a href="${link('overview')}" class="brand" dir="ltr"><img class="brand-logo" src="./design-system/assets/logo/hb-lockup-color.svg" width="232" height="48" alt="Hybrid Billing"></a><div class="top-actions"><a href="${link('community')}">${text({en:'Contribute',ko:'기여',ar:'المساهمة'})}</a><button id="choose-account" class="account-button">${tr('account')} · <bdi>${account}</bdi><img class="icon" src="./design-system/assets/icons/chevron-down.svg" alt="" aria-hidden="true"></button><button id="open-jobs">${tr('jobs')} <span class="tag" id="job-count">${jobs.items.filter(job=>job.scope===scopeKey()).length}</span></button><label><span class="sr-only">Language</span><select id="language" aria-label="Language"><option value="en" ${locale==='en'?'selected':''}>English (US)</option><option value="ar" ${locale==='ar'?'selected':''}>العربية (الإمارات)</option><option value="ko" ${locale==='ko'?'selected':''}>한국어</option></select></label></div></header>
+ <header class="top"><a href="${link(screen.group==='customer'?'core-customer-overview':'overview')}" class="brand" dir="ltr"><img class="brand-logo" src="./design-system/assets/logo/hb-lockup-color.svg" width="232" height="48" alt="Hybrid Billing"></a><div class="top-actions">${screen.group==='customer'?'':`<a href="${link('community')}">${text({en:'Contribute',ko:'기여',ar:'المساهمة'})}</a>`}<button id="choose-account" class="account-button" ${screen.group==='customer'?'disabled':''}>${tr('account')} · <bdi>${account}</bdi><img class="icon" src="./design-system/assets/icons/chevron-down.svg" alt="" aria-hidden="true"></button><button id="open-jobs">${tr('jobs')} <span class="tag" id="job-count">${jobs.items.filter(job=>job.scope===scopeKey()).length}</span></button><label><span class="sr-only">Language</span><select id="language" aria-label="Language"><option value="en" ${locale==='en'?'selected':''}>English (US)</option><option value="ar" ${locale==='ar'?'selected':''}>العربية (الإمارات)</option><option value="ko" ${locale==='ko'?'selected':''}>한국어</option></select></label></div></header>
  <nav class="tnb" aria-label="${tr('workspace')}">${groupLinks()}</nav>
- <div class="layout"><aside class="rail"><label><span class="sr-only">${tr('screens')}</span><input id="screen-search" type="search" placeholder="${tr('screens')}" autocomplete="off"></label><small>${screens.length} ${tr('allScreens')}</small><nav id="screen-links" aria-label="${tr('allScreens')}">${railLinks()}</nav></aside>
- <main class="main" id="main" tabindex="-1"><div class="crumb">${text(activeGroup()?.label)} / <bdi>${screen.id}</bdi></div><div class="heading"><div><h1>${text(screen.title)}</h1><p>${text(screen.description)}</p></div><span class="tag">${tr('draft')}</span></div><div class="meta"><span>${tr('account')}: <bdi>${account}</bdi></span><span>${tr('snapshot')}: <bdi>S${snapshot}</bdi></span><span>${tr('notConnected')}</span></div><div id="content">${content()}</div><section class="panel"><h2>${tr('related')}</h2><div class="related">${screen.related.map(id=>`<a href="${link(id)}">${text(screens.find(item=>item.id===id)?.title)}</a>`).join('')}</div></section></main></div>`;
- $('#choose-account').onclick=()=>accountPicker(locale,account,value=>{if(value!==account){account=value;snapshot++;expired=false;invalidate();resetQuery();render();$('#choose-account').focus();}});
+ <div class="layout"><aside class="rail"><label><span class="sr-only">${tr('screens')}</span><input id="screen-search" type="search" placeholder="${tr('screens')}" autocomplete="off"></label><small>${screens.filter(item=>screen.group!=='customer'||item.group==='customer').length} ${tr('allScreens')}</small><nav id="screen-links" aria-label="${tr('allScreens')}">${railLinks()}</nav></aside>
+ <main class="main" id="main" tabindex="-1"><div class="crumb">${text(activeGroup()?.label)} / <bdi>${screen.id}</bdi></div><div class="heading"><div><h1>${text(screen.title)}</h1><p>${text(screen.description)}</p></div><span class="tag">${tr('draft')}</span></div><div class="meta"><span>${tr('account')}: <bdi>${account}</bdi></span><span>${tr('snapshot')}: <bdi>S${snapshot}</bdi></span><span>${tr('notConnected')}</span></div><div id="content">${content()}</div><section class="panel"><h2>${tr('related')}</h2><div class="related">${relatedIds().map(id=>`<a href="${link(id)}">${text(screens.find(item=>item.id===id)?.title)}</a>`).join('')}</div></section></main></div>`;
+ $('#choose-account').onclick=()=>accountPicker(locale,account,value=>{if(value!==account){invalidateAnalysis(scopeKey());navigationState.clear();account=value;snapshot++;expired=false;invalidate();resetQuery();render();$('#choose-account').focus();}});
  $('#open-jobs').onclick=()=>jobsDialog(locale,jobs,scopeKey());
  $('#language').onchange=event=>{
   locale=event.target.value;
   const url=new URL(location.href);url.searchParams.set('lang',locale);history.replaceState(null,'',url);
   closeDialog();render();$('#language').focus();
  };
- document.querySelectorAll('[data-group]').forEach(button=>button.onclick=()=>location.hash=screens.find(item=>item.group===button.dataset.group).id);
+ document.querySelectorAll('[data-group]').forEach(button=>button.onclick=()=>location.hash=screens.find(item=>domains.find(domain=>domain.id===button.dataset.group).groups.includes(item.group)).id);
  $('#screen-search').oninput=event=>$('#screen-links').innerHTML=railLinks(event.target.value);
  bindContent();
 }
 function content(){
+ const scope=scopeKey(),id=screen.id,lang=locale;
+ const active=()=>scopeKey()===scope&&screen.id===id&&locale===lang;
+ const navigate=target=>{location.hash=target;};
+ if(setupRoutes.includes(id))mounted=onboarding(id,scope,locale,navigate,active);
+ else if(id==='assistant')mounted=analysisScreen(scope,locale,context=>{navigate(context.screen);if(context.record){pendingEvidence={...context,scope};}},active);
+ else if(id==='index-approval')mounted=approvalScreen(scope,locale,active);
+ else if(screen.kind==='report')mounted=reportScreen(screen,scope,locale,context=>analyze(null,context));
+ if(mounted)return mounted.html;
  if(screen.id==='community')return community(locale);
  if(screen.kind==='overview')return overview();
  if(screen.kind==='form')return form();
@@ -87,6 +114,7 @@ function content(){
  return list();
 }
 function overview(){
+ if(screen.group==='customer')return customerOverview(account,locale,screens.filter(item=>item.group==='customer'),link);
  const ids=screen.id==='contents'?screens:screens.filter(item=>item.group!== 'overview').filter((item,index,array)=>array.findIndex(x=>x.group===item.group)===index);
  return `<div class="stats"><article class="stat">${tr('accounts')}<strong>${number(100000)}</strong><p>${tr('pickerHelp')}</p></article><article class="stat">${tr('fileCount')}<strong>${number(1000000)}</strong><p>${tr('bounded')}</p></article><article class="stat">${tr('allScreens')}<strong>${number(screens.length)}</strong><p>English · العربية · 한국어</p></article></div><section class="panel"><h2>${tr('nextTask')}</h2><div class="screen-index">${ids.map(item=>`<a href="${link(item.id)}">${text(item.title)}<small>${text(groups.find(g=>g.id===item.group)?.label)}</small></a>`).join('')}</div></section>`;
 }
@@ -115,6 +143,7 @@ function list(){
  <details class="scenario"><summary>${tr('reviewTools')}</summary><div><button id="scenario-normal">${tr('normal')}</button><button id="scenario-error">${tr('loadError')}</button><button id="scenario-expire">${tr('expire')}</button></div></details></section>`;
 }
 function bindContent(){
+ if(mounted){mounted.bind();return;}
  if($('#screen-form'))$('#screen-form').onsubmit=event=>{
   event.preventDefault();
   const values=Object.fromEntries(new FormData(event.target));
@@ -144,6 +173,7 @@ function bindContent(){
  $('#scenario-error').onclick=()=>{mode='error';load();};
  $('#scenario-expire').onclick=()=>{expired=true;selected.clear();excluded.clear();allSelected=false;closeDialog();renderRows();};
  if($('#intake'))$('#intake').onclick=()=>fileIntake(locale,scopeKey(),jobs);
+ if(pendingEvidence?.scope===scopeKey()&&pendingEvidence.screen===screen.id){q.search=pendingEvidence.record;invalidate();$('#record-search').value=q.search;pendingEvidence=null;}
  load();
 }
 async function load(){
@@ -210,10 +240,11 @@ function columnPicker(){
 }
 function rowDetail(row){
  const safeColumns=screen.columns.filter(column=>screen.group!=='customer'||!['provider','cost','margin','supplier','revision'].includes(column.key));
- modal(`${tr('details')} · ${row.id}`,`<p>${tr('account')}: <bdi>${row.account}</bdi> · ${tr('snapshot')}: S${snapshot}</p><dl class="facts">${safeColumns.map(column=>`<div><dt>${text(column.label)}</dt><dd>${valueFor(row,column)}</dd></div>`).join('')}</dl><div class="notice">${tr('noActual')}</div><div class="related">${screen.related.map(id=>`<a href="${link(id)}">${text(screens.find(item=>item.id===id)?.title)}</a>`).join('')}</div>`,locale);
+ modal(`${tr('details')} · ${row.id}`,`<p>${tr('account')}: <bdi>${row.account}</bdi> · ${tr('snapshot')}: S${snapshot}</p><dl class="facts">${safeColumns.map(column=>`<div><dt>${text(column.label)}</dt><dd>${valueFor(row,column)}</dd></div>`).join('')}</dl><div class="notice">${tr('noActual')}</div><div class="related">${relatedIds().map(id=>`<a href="${link(id)}">${text(screens.find(item=>item.id===id)?.title)}</a>`).join('')}</div>${screen.group==='customer'?'':`<button id="analyze-record">${gapText('analyze',locale)}</button>`}`,locale);
+ const trigger=$('#analyze-record');if(trigger)trigger.onclick=()=>analyze(row.id);
 }
 function actionPreview(){
- modal(label(screen.action,locale),`<p>${tr('noActual')}</p><div class="notice">${tr('notConnected')}</div><div class="related">${screen.related.map(id=>`<a href="${link(id)}">${text(screens.find(item=>item.id===id)?.title)}</a>`).join('')}</div>`,locale);
+ modal(label(screen.action,locale),`<p>${tr('noActual')}</p><div class="notice">${tr('notConnected')}</div><div class="related">${relatedIds().map(id=>`<a href="${link(id)}">${text(screens.find(item=>item.id===id)?.title)}</a>`).join('')}</div>`,locale);
 }
 function selectionPreview(){
  if(expired||loading||!hasSelection())return;

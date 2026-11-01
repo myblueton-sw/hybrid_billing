@@ -37,10 +37,14 @@ Run the locked dependency preparation and build in [the design build guide](../.
 
 Open `?lang=en#operations`, `?lang=ar#operations` or `?lang=ko#operations`; `#contents` exposes the entire catalog. Six TNB domains organize the eleven catalog groups, with searchable secondary navigation and bounded detail dialogs. Browser refresh resets drafts, file descriptors and jobs. Local large-file examples are metadata scenarios only.
 
-[Verification](verification.md) records independent findings, fixes, browser evidence and remaining acceptance. The 111-route coverage is navigation and common-interaction coverage. It does not establish complete business behavior for every form/detail/workflow. The existing v10 baseline is preserved until the owner accepts a replacement scope.
+[Verification](verification.md) records independent findings, fixes, browser evidence and remaining acceptance. The 112-route coverage is navigation and common-interaction coverage. It does not establish complete business behavior for every form/detail/workflow. The existing v10 baseline is preserved until the owner accepts a replacement scope.
 
 Brand and style source: [active design foundations](../../../design-system.md). The placeholder H mark has been replaced with the supplied Fusion AI SVG; favicon and controls use canonical assets. Source hashes and core visual rules are checked by tools/design.
 
 ## Contribution follow-up
 
 The header utility link opens `#community` in English, Arabic or Korean. Monthly benefits and the individual/company/organization recognition workflow follow [the sponsorship decision](../../../community/sponsorship.md). The roster is explicitly unconnected; no sponsor identities, payment records, automatic synchronization or live tier publication are claimed. Work contributor recognition remains separate from financial sponsorship.
+
+The [baseline gap audit](gap-audit.md) records missing business journeys at c8187fe. The [remediation record](gap-remediation.md) tracks the subsequent six-observation follow-up and its remaining limits.
+
+Dedicated onboarding and AI modules now run in the built preview. Reports expose period/currency/basis/grouping descriptors without fabricating aggregates. Customer navigation remains within its synthetic context. Approval comparisons remain unavailable and block approval/issuance; review and rejection are separate local states. Back restores valid query/page/selection state within the current account. See verification.md for actual regression and review evidence.

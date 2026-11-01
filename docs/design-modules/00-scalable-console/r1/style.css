@@ -876,3 +876,8 @@ html[dir=rtl] h1 {
 .account-button { display:flex; align-items:center; gap:10px; }
 html[lang=ko] { word-break:keep-all; }
 bdi { direction:ltr; font-variant-numeric:tabular-nums; }
+.setup-steps { display:flex; flex-wrap:wrap; gap:var(--hb-sp-10); margin-block:var(--hb-sp-16); }
+.setup-steps [aria-current=step] { border-color:var(--accent-secondary); font-weight:600; }
+.analysis-question { margin-block:var(--hb-sp-16); }
+textarea { width:100%; min-height:96px; resize:vertical; }
+#report-result:not(:empty) { margin-block-start:var(--hb-sp-16); }

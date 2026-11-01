@@ -79,3 +79,16 @@ Added five owner-approved monthly tiers and separate individual/company/organiza
 - Independent architect plan and actual-change review: PASS. Tier/identity separation, consent, private payment/contact exclusion, public branch and license boundaries, route/build integration verified. Reviewer also compared built module/hash and rendered localized markup.
 
 Live tier publication, active sponsor verification, consent collection, automatic synchronization, native Arabic acceptance and benefit fulfillment remain UNVERIFIED. Existing onboarding/AI follow-up is not completed by this scoped change.
+
+
+## Six-observation remediation (2026-11-01)
+
+The [baseline audit](gap-audit.md) is retained for c8187fe. [Remediation](gap-remediation.md) connects the owner continuation, design constraints, changes and remaining business gaps.
+
+- Build: PASS; 882 emitted files, eight unchanged canonical foundations. Onboarding, AI and journey modules are included in the reproducible build.
+- Existing `verify.cjs`: PASS, 98 checks, all 112 routes in EN/AR/KO. The generic workflow test selects a remaining generic workflow because setup now has a dedicated implementation.
+- New `verify-journeys.cjs`: PASS, 71 checks. Includes provider prerequisites/unsupported paths, new-setup acknowledgment and administrator read-back, denied/unknown diagnostics, partial receipt, financial publication block, implicit-submit prevention, revoked-acknowledgment/rerun invalidation, AI stale/error/partial/cancel/context behavior, running account/language/navigation changes, same-record evidence, Back search/selection/cursor/expiry and cross-account isolation, report descriptors, approval rejection and revision/currency reset, customer-only navigation and thirty EN/AR/KO 360/1440px layout checks. No browser error or external request was observed.
+- Independent gap_review: design PASS with constraints; initial actual-change FAIL for stale onboarding prerequisites and implicit connector progression; scoped source re-review PASS after correction. Reviewer did not independently run browser tests.
+- Root visually inspected Korean mobile onboarding, Arabic desktop approval and English desktop report captures. Generated evidence: `output/validation/HB-63-journeys/results.json` and PNGs. No claim of exhaustive visual, screen-reader or native-language approval.
+
+The preview still does not calculate amounts, aggregate reports, authorize users, approve/issue invoices or call providers/models. Missing values remain unavailable. Document/ERP/customer-inquiry and complete recovery journeys from the baseline audit are not declared resolved.

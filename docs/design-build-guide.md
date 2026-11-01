@@ -24,7 +24,7 @@ python3 -m http.server 8763 --bind 127.0.0.1 --directory output/designs/HB-63-co
 
 Dependency preparation may require registry access. The lockfile fixes the four IBM Plex package versions and integrity hashes; review dependency changes and their licenses before updating it. After preparation, building and serving require no external runtime request. Do not substitute a font CDN if an offline build fails.
 
-The build refuses unknown output files or symlinks, then rebuilds its prior manifest-owned output directory cleanly. It checks immutable foundation hashes, rejects source color literals/rounded controls/shadows/placeholder branding, copies the preview runtime files, including the contribution screen and canonical assets, resolves Fontsource CSS URLs into local font files and carries each package's LICENSE. `build-manifest.json` records font versions and hashes of generated files without timestamps, so identical inputs can be compared byte-for-byte. This manifest is evidence for the built artifact, not proof that every visual/workflow requirement passed.
+The build refuses unknown output files or symlinks, then rebuilds its prior manifest-owned output directory cleanly. It checks immutable foundation hashes, rejects source color literals/rounded controls/shadows/placeholder branding, copies the preview runtime files, including contribution, onboarding, analysis and scoped journey screens plus canonical assets, resolves Fontsource CSS URLs into local font files and carries each package's LICENSE. `build-manifest.json` records font versions and hashes of generated files without timestamps, so identical inputs can be compared byte-for-byte. This manifest is evidence for the built artifact, not proof that every visual/workflow requirement passed.
 
 Only `output/designs/HB-63-console` is the runnable artifact. Serving the source directory directly no longer resolves the generated foundation/font paths. Stop an older local server before reusing its port. Open `http://127.0.0.1:8763/?lang=ko#operations`; substitute `en` or `ar`, or use `#contents` for all routes.
 
@@ -46,7 +46,9 @@ HB_CHROMIUM=/absolute/path/to/chromium \
 node docs/design-modules/00-scalable-console/r1/verify.cjs
 ```
 
-`HB_PREVIEW_URL` and `HB_QA_OUTPUT` override the endpoint/output location. Inspect the generated report and representative desktop/mobile screenshots in all three languages. Verify the logo loads unchanged and stays LTR, IBM Plex faces actually load, clear space remains visible, tables/pickers stay bounded, and no external runtime request or missing local asset occurs. Keyboard/focus, error/empty/loading, zero/unknown counts and expired selection need actual runtime checks. Full screen-reader, native-language and production API acceptance are separate.
+`HB_PREVIEW_URL` and `HB_QA_OUTPUT` override the endpoint/output location. Run `node docs/design-modules/00-scalable-console/r1/verify-journeys.cjs` with the same browser environment variables for the dedicated onboarding/AI/report/customer/approval and Back-state scenarios. Its default output is `output/validation/HB-63-journeys`.
+
+Inspect the generated report and representative desktop/mobile screenshots in all three languages. Verify the logo loads unchanged and stays LTR, IBM Plex faces actually load, clear space remains visible, tables/pickers stay bounded, and no external runtime request or missing local asset occurs. Keyboard/focus, error/empty/loading, zero/unknown counts and expired selection need actual runtime checks. Full screen-reader, native-language and production API acceptance are separate.
 
 ## Failure and handoff
 

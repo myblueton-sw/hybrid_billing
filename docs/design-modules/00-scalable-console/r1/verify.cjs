@@ -143,7 +143,7 @@ const check=(name,value)=>{assert.ok(value,name);observations.push(name);};
   await page.locator('[name=workspace]').fill('Demo workspace');await page.locator('[name=email]').fill('review@example.invalid');
   await page.locator('#screen-form button[type=submit]').click();
   check('Form draft visibly acknowledges preview-only save',(await page.locator('#form-feedback').innerText()).includes('preview only'));
-  const workflow=screens.find(screen=>screen.kind==='workflow');await go(workflow.id);
+  const workflow=screens.find(screen=>screen.kind==='workflow'&&!screen.id.startsWith('setup-')&&screen.id!=='index-approval');await go(workflow.id);
   await page.locator('[data-step]:not(:disabled)').first().click();
   check('Workflow review keeps keyboard focus in next action',await page.evaluate(()=>document.activeElement.matches('[data-step],#workflow-review')));
   for(const lang of ['en','ar','ko']){

@@ -63,12 +63,14 @@ try {
       .locator(id === "entry-login" ? "#entry-workspace" : "#entry-proof")
       .fill("SENSITIVE-EXAMPLE-NOT-A-REAL-SECRET");
     await p.locator("#entry-email").fill("private-example@example.invalid");
+    await p.locator(".entry-review-tools").evaluate((e) => (e.open = true));
     await p.locator("#confirm-review").click();
     await p.locator("#owner-ack").check();
     await p.locator("#save-review").click();
     await p.waitForFunction(() =>
       document.querySelector("#review-status")?.textContent.includes("FIX"),
     );
+    await p.locator(".entry-review-tools").evaluate((e) => (e.open = true));
     await p.locator("#confirm-review").click();
     const download = p.waitForEvent("download");
     await p.getByRole("button", { name: "Export review evidence" }).click();
@@ -79,7 +81,12 @@ try {
     await p.getByRole("button", { name: "Cancel", exact: true }).click();
     await p.locator("form button[type=submit]").click();
     await p.locator(".entry-feedback").waitFor();
-    assert.equal(await p.locator('.entry-feedback').evaluate(e => getComputedStyle(e).borderInlineStartWidth), '0px');
+    assert.equal(
+      await p
+        .locator(".entry-feedback")
+        .evaluate((e) => getComputedStyle(e).borderInlineStartWidth),
+      "0px",
+    );
     assert.equal(await p.locator("#entry-email").inputValue(), "");
     assert.equal(await p.evaluate(() => location.hash), hash);
     assert.match(
@@ -98,6 +105,7 @@ try {
   }
   await go("entry-challenge");
   await p.getByRole("button", { name: "Recover access", exact: true }).click();
+  await p.locator(".entry-review-tools").evaluate((e) => (e.open = true));
   await p.locator("#confirm-review").click();
   await p.locator("#owner-ack").check();
   await p.locator("#save-review").click();
@@ -162,31 +170,83 @@ try {
         );
         assert.equal(await p.locator(".tnb,.rail").count(), 0);
         if (id === "entry-login") {
-          assert.equal(await p.locator(".entry-note").evaluate(e => getComputedStyle(e).borderInlineStartWidth), "0px");
+          assert.equal(
+            await p
+              .locator(".entry-note")
+              .evaluate((e) => getComputedStyle(e).borderInlineStartWidth),
+            "0px",
+          );
         }
         if (id === "entry-challenge") {
-          assert.equal(await p.locator('.entry-tabs [aria-pressed="true"]').evaluate(e => getComputedStyle(e).borderColor), await p.locator('.entry-card').evaluate(e => getComputedStyle(e).borderColor));
+          assert.equal(
+            await p
+              .locator('.entry-tabs [aria-pressed="true"]')
+              .evaluate((e) => getComputedStyle(e).borderColor),
+            await p
+              .locator(".entry-card")
+              .evaluate((e) => getComputedStyle(e).borderColor),
+          );
         }
         if (id === "entry-scope") {
-          const border = await p.locator('.entry-workspace').first().evaluate(e => getComputedStyle(e).borderColor);
+          const border = await p
+            .locator(".entry-workspace")
+            .first()
+            .evaluate((e) => getComputedStyle(e).borderColor);
           await p.locator('input[value="sample-a"]').check();
-          assert.equal(await p.locator('.entry-workspace.selected').evaluate(e => getComputedStyle(e).borderColor), border);
+          assert.equal(
+            await p
+              .locator(".entry-workspace.selected")
+              .evaluate((e) => getComputedStyle(e).borderColor),
+            border,
+          );
         }
         assert(
           await p
             .locator(".brand-logo")
             .evaluate((e) => e.complete && e.naturalWidth > 0),
         );
-        assert(await p.locator("#confirm-review").isVisible());
+        assert(await p.locator(".entry-review-tools > summary").isVisible());
+        assert(
+          await p
+            .locator(".entry-main")
+            .evaluate(
+              (e) => Math.abs(e.getBoundingClientRect().width - innerWidth) < 2,
+            ),
+        );
         assert(
           await p.evaluate(
             () =>
               document.querySelector("#content").getBoundingClientRect()
                 .bottom <=
-              document.querySelector(".design-review").getBoundingClientRect()
-                .top,
+              document
+                .querySelector(".entry-review-tools")
+                .getBoundingClientRect().top,
           ),
         );
+        if (id === "entry-start") {
+          await p.locator("#language").click();
+          assert.equal(
+            await p.locator("#language").getAttribute("aria-expanded"),
+            "true",
+          );
+          assert(
+            await p.locator('[role="listbox"]').evaluate((e) => {
+              const r = e.getBoundingClientRect();
+              return r.left >= 0 && r.right <= innerWidth;
+            }),
+          );
+          assert.equal(
+            await p
+              .locator('[role="option"][aria-selected="true"]')
+              .evaluate((e) => getComputedStyle(e).borderInlineStartWidth),
+            "0px",
+          );
+          await p.screenshot({
+            path: `${out}/language-${lang}-${width}.png`,
+            fullPage: true,
+          });
+          await p.keyboard.press("Escape");
+        }
         await p.screenshot({
           path: `${out}/${id}-${lang}-${width}.png`,
           fullPage: true,
@@ -209,6 +269,7 @@ try {
   });
   const fp = await failed.newPage();
   await fp.goto(url + "#entry-start?lang=en");
+  await fp.locator(".entry-review-tools").evaluate((e) => (e.open = true));
   await fp.getByRole("alert").waitFor();
   assert(await fp.locator("#confirm-review").isDisabled());
   assert.match(

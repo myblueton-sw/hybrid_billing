@@ -93,3 +93,20 @@ Design review and independent boundary review passed before implementation. Root
 # Owner correction: no decorative colored borders
 
 The owner rejected colored-border decoration in the service entry candidate. Do not add brand-colored edge strips to notices, colored outlines to selected cards, or accent borders to tabs in subsequent service screens. Use neutral separators, spacing, text hierarchy and explicit selection controls instead. Keyboard focus must remain visible and is an interaction indicator rather than decoration. This correction removes the entry notice/feedback accent edge and tinted fill, makes selection borders neutral, and identifies the active tab through weight and underline. Canonical logos/tokens remain unchanged.
+
+# Owner-reviewed start screen: full-width presentation and locale selector
+
+The owner stated that review confirmation had been completed for the presented start screen and authorized a product-facing presentation with a styled locale selector. The prior candidate is preserved in Git at 3f9b748. The statement is evidence of owner feedback, not a fabricated browser record: exact accepted viewport, locale, item list and confirmation timestamp were not supplied. The current change is owner-authorized and gets a new source fingerprint; no synthetic acceptance is transferred.
+
+The owner also made full viewport width and external professional service references mandatory. The former 1160px centered cap was an unsupported implementation choice and is removed. Entry header/content use the available width with existing 32px desktop and 16px mobile content gutters. Scope selection loses its 780px centered cap. Columns become one column on small screens. Review remains keyboard-accessible through a collapsed auxiliary disclosure; the actual disconnected identity notice remains visible in the footer and request screens.
+
+## External evidence applied before this revision
+
+| Official source | Observed pattern and adoption | Limits / rejected assumptions |
+| --- | --- | --- |
+| [SAP Fiori v1-148 design practices](https://www.sap.com/design-system/fiori-design-web/v1-148/discover/sap-products/sap-s4hana-only/best-practices-for-designing-sap-fiori-apps) | Defines a page using the app viewport, with header, content and optional footer; supports the full-width service composition. | Not evidence that our exact login grid or dimensions are owner-approved. Do not import SAP branding, auth policy or components. |
+| [Carbon v10 UI shell header](https://v10.carbondesignsystem.com/components/UI-shell-header/usage/) | Full-width persistent product header, with global functions at its outer end; applied to brand and locale placement. | Explicitly a versioned reference, not a claim of latest Carbon compliance. Do not copy IBM branding, header height or product navigation. |
+| [Current Carbon dropdown guidelines](https://www.carbondesignsystem.com/building-blocks/core/components/dropdown/guidelines) | Simple single selection with visible chosen value and a clear option list; informs locale trigger/list hierarchy. | Native select is suggested for frequent mobile/form use, but the owner requested a styled selector; retain keyboard behavior and test mobile bounds. No library adoption or copied assets. |
+| [SAP Fiori v1-38 full-screen guidance](https://www.sap.com/design-system/fiori-design-web/v1-38/page-types/page-layouts/full-screen) | Explains full-screen use for wide content and a consistent shell. | Its small-content letterboxing advice does not override the owner's explicit full-width requirement. It does not independently justify our login composition. |
+
+The locale selector now exposes a native language name, code, neutral list surface and textual selection indication. Colored selection-edge decoration is removed from the shared header list, not just entry notices. Its controls retain 44px minimum height, square geometry, no shadows and existing focus behavior. Changes affect entry and existing workspace header consumers. AGENTS.md and service-screen-style.md now require both external evidence and full-width layout before implementation and during verification.

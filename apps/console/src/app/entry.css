@@ -9,7 +9,7 @@
   justify-content: space-between;
   align-items: center;
   gap: var(--hb-sp-24);
-  padding: var(--hb-sp-24) max(var(--hb-sp-24), calc((100vw - 1160px) / 2));
+  padding: var(--hb-sp-24) var(--hb-sp-32);
   border-bottom: 1px solid var(--hb-line-panel);
 }
 .entry-header .brand {
@@ -24,9 +24,9 @@
 }
 .entry-main {
   width: 100%;
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 48px var(--hb-sp-24) var(--hb-sp-24);
+  max-width: none;
+  margin: 0;
+  padding: 48px var(--hb-sp-32) var(--hb-sp-24);
   flex: 1;
 }
 .entry-main:focus {
@@ -56,10 +56,10 @@
 }
 .entry-intro h1 {
   font-size: 44px;
-  max-width: 450px;
+  max-width: none;
 }
 .entry-intro p {
-  max-width: 450px;
+  max-width: none;
   line-height: 1.8;
 }
 .entry-eyebrow {
@@ -177,8 +177,8 @@
   background: var(--hb-white);
 }
 .entry-scope {
-  max-width: 780px;
-  margin-inline: auto;
+  max-width: none;
+  margin-inline: 0;
 }
 .entry-workspaces {
   display: grid;
@@ -291,5 +291,25 @@
 }
 
 @media (max-width: 768px) {
-  .review-heading > div { flex: 1 1 100%; }
+  .review-heading > div {
+    flex: 1 1 100%;
+  }
+}
+
+.entry-review-tools {
+  margin-top: var(--hb-sp-24);
+  border-top: 1px solid var(--hb-line-row);
+  padding-top: var(--hb-sp-12);
+  color: var(--hb-muted);
+  font-size: 14px;
+}
+.entry-review-tools > summary {
+  cursor: pointer;
+  width: fit-content;
+  padding-block: var(--hb-sp-10);
+}
+.entry-footer .entry-environment {
+  padding: 0;
+  background: transparent;
+  text-align: start;
 }

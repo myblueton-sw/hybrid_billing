@@ -4,6 +4,14 @@ title: HB-67 React console verification
 description: Records executed checks and remaining limitations for the first React frontend increment.
 ---
 
+# Full-width service presentation and locale selector
+
+Root verified official SAP Fiori and Carbon references recorded in design.md before this revision. The owner's full-width requirement governs the layout; sources are supporting patterns, not blanket approval. Centered page caps are removed, review is collapsed, and the identity-disconnected boundary remains visible. The shared language selector gains styled code/name/selection presentation without colored edge decoration.
+
+Build and 242 artifact hashes PASS. Existing browser suite: 37 PASS after retaining its established 44px header-control geometry. Entry suite: 50 PASS with added full-viewport width, expanded listbox bounds and neutral selected-option assertions in KO/EN/AR at 1440/390. The suite still checks review storage failure through the accessible disclosure and no identity-value persistence. An initial ad hoc menu capture toggled an already-open menu closed at the next viewport and timed out; it was not reported as a successful mobile-menu check. The final runner explicitly opens and asserts the list before capturing it.
+
+Designer independently inspected full-width desktop KO/EN/AR, mobile KO/AR and the Korean desktop expanded selector; these had no blocking visual findings. Designer also re-inspected the corrected expanded Korean and Arabic mobile menus and passed their bounds, anchoring, labels and neutral selection treatment. Root ran the automated checks separately. The owner reported prior review confirmation; no missing acceptance timestamp or scope is invented. No auth integration, all-screen completion, cross-OS validation or merge is claimed.
+
 # Mandatory border-style correction
 
 The owner identified a mandatory visual constraint missed by implementation and review: canonical color tokens were incorrectly treated as sufficient compliance. Entry notice/feedback accent strips and selected card/tab color borders are removed. AGENTS.md now requires service-screen-style.md before implementation and rendered verification; the rule is a MUST, not an optional token choice.

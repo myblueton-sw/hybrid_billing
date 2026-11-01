@@ -62,14 +62,6 @@ export default function EntryShell({
           }}
         />
       </header>
-      <div className="entry-environment">
-        {t(
-          l,
-          "Interactive preview · identity service not connected",
-          "인터랙티브 시안 · 인증 서비스 미연결",
-          "معاينة تفاعلية · خدمة الهوية غير متصلة",
-        )}
-      </div>
       <main id="main" className="entry-main" tabIndex={-1}>
         {route.id !== "entry-start" && (
           <a className="entry-back" href={entryUrl("entry-start", l, mode)}>
@@ -86,20 +78,33 @@ export default function EntryShell({
             onState={onState}
           />
         </div>
-        <ReviewPanel
-          screen={route.id}
-          locale={l}
-          context={JSON.stringify({
-            profile,
-            mode,
-            extensions: [],
-            state: view.state,
-          })}
-          items={view.items}
-        />
+        <details className="entry-review-tools">
+          <summary>
+            {t(l, "Confirm screen review", "검수 확인", "تأكيد مراجعة الشاشة")}
+          </summary>
+          <ReviewPanel
+            screen={route.id}
+            locale={l}
+            context={JSON.stringify({
+              profile,
+              mode,
+              extensions: [],
+              state: view.state,
+            })}
+            items={view.items}
+          />
+        </details>
       </main>
       <footer className="entry-footer">
         Hybrid Billing{" "}
+        <span className="entry-environment">
+          {t(
+            l,
+            "Interactive preview · identity service not connected",
+            "인터랙티브 시안 · 인증 서비스 미연결",
+            "معاينة تفاعلية · خدمة الهوية غير متصلة",
+          )}
+        </span>
         <span>
           {t(l, "Workspace access", "업무 공간 접속", "الوصول لمساحة العمل")}
         </span>

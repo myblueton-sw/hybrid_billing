@@ -10,3 +10,10 @@ The owner explicitly prohibited decorative colored borders in service screens. T
 - A violation fails visual acceptance even if build, functional tests or token checks pass. Correct it before presenting the changed screen as compliant.
 
 HB-67 entry regression checks cover notice/feedback edge removal, neutral selected-workspace borders and neutral active-tab borders. This coverage does not certify every legacy screen. Canonical logo geometry remains unchanged.
+
+## Full viewport and external reference evidence — MUST
+
+- MUST use the available viewport width as the service layout baseline. Do not silently add a centered, fixed maximum-width page container. Responsive columns and readable field/text grouping must work inside the full-width layout.
+- MUST consult relevant external professional service screens or official service design guides before implementing or revising a screen layout. Record exact sources, the observed pattern, what is adopted, what is rejected and why. External patterns do not override owner instructions, existing IA or brand rules.
+- MUST verify the rendered result against that evidence and the owner's constraints at desktop/mobile widths. A familiar convention, personal preference or token reuse is insufficient evidence.
+- MUST retain neutral borders and explicit state indicators when adapting references. No new dependency or copied third-party asset is implied by research.

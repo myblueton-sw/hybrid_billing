@@ -11,6 +11,9 @@ export default function HeaderSelect({
   onChange: (value: string) => void;
   label: string;
 }) {
+  const selected = options.find((o) => o.value === value);
+  const selectedText =
+    value === "ko" ? "선택됨" : value === "ar" ? "محدد" : "Selected";
   const [open, setOpen] = useState(false),
     [active, setActive] = useState(0);
   const trigger = useRef<HTMLButtonElement>(null),
@@ -41,7 +44,7 @@ export default function HeaderSelect({
         ref={trigger}
         className="header-control"
         type="button"
-        aria-label={label}
+        aria-label={`${label}: ${selected?.label ?? ""}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls="language-options"
@@ -53,7 +56,10 @@ export default function HeaderSelect({
           }
         }}
       >
-        {options.find((o) => o.value === value)?.label}
+        <span className="language-code" aria-hidden="true">
+          {value.toUpperCase()}
+        </span>
+        <span className="language-value">{selected?.label}</span>
         <img className="icon" src={chevron} alt="" />
       </button>
       {open && (
@@ -89,6 +95,7 @@ export default function HeaderSelect({
               type="button"
               key={o.value}
               role="option"
+              aria-label={o.label}
               aria-selected={o.value === value}
               tabIndex={active === i ? 0 : -1}
               ref={(node) => {
@@ -99,7 +106,15 @@ export default function HeaderSelect({
                 close();
               }}
             >
-              {o.label}
+              <span className="language-option-label">
+                <bdi>{o.label}</bdi>
+                <small aria-hidden="true">{o.value.toUpperCase()}</small>
+              </span>
+              {o.value === value && (
+                <span className="language-selected" aria-hidden="true">
+                  {selectedText}
+                </span>
+              )}
             </button>
           ))}
         </div>

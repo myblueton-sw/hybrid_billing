@@ -2,17 +2,21 @@ import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
 import { stages, type Closing, type Stage } from "./model";
 import { organizationName, stageName, statusName } from "./copy";
+import Paging, { usePage } from "./Paging";
 export default function Lifecycle({
   rows,
+  scope,
   locale: l,
   selected,
   onSelect,
 }: {
   rows: Closing[];
+  scope: string;
   locale: Locale;
   selected: string;
   onSelect: (row: Closing, stage: Stage) => void;
 }) {
+  const page = usePage(rows, scope);
   return (
     <section className="unified-panel unified-lifecycle">
       <header>
@@ -74,7 +78,7 @@ export default function Lifecycle({
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {page.rows.map((r) => (
               <tr key={r.id}>
                 <th>
                   <strong>{organizationName(l, r.organization)}</strong>
@@ -104,6 +108,7 @@ export default function Lifecycle({
           </tbody>
         </table>
       </div>
+      <Paging value={page} locale={l} />
     </section>
   );
 }

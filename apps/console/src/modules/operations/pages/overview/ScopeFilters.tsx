@@ -3,6 +3,7 @@ import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
 import { months, sources, organizations, type Currency } from "./model";
 import { organizationName } from "./copy";
+import OrgPicker from "./OrgPicker";
 function Choices({
   title,
   options,
@@ -71,7 +72,11 @@ export default function ScopeFilters({
   selectedSources,
   selectedOrganizations,
   change,
+  enterprise,
+  contextKey,
 }: {
+  enterprise: boolean;
+  contextKey: string;
   locale: Locale;
   period: string;
   currency: Currency;
@@ -127,22 +132,31 @@ export default function ScopeFilters({
         onChange={(ids) => change({ "ov-sources": ids.join("|") })}
         locale={l}
       />
-      <Choices
-        title={t(l, "Organizations", "조직", "المؤسسات")}
-        options={organizations.map((id) => ({
-          id,
-          label: organizationName(l, id),
-        }))}
-        selected={selectedOrganizations}
-        onChange={(ids) => change({ "ov-organizations": ids.join("|") })}
-        locale={l}
-      />
+      {enterprise ? (
+        <OrgPicker
+          key={contextKey}
+          locale={l}
+          selected={selectedOrganizations}
+          onChange={(value) => change({ "ov-organizations": value })}
+        />
+      ) : (
+        <Choices
+          title={t(l, "Organizations", "조직", "المؤسسات")}
+          options={organizations.map((id) => ({
+            id,
+            label: organizationName(l, id),
+          }))}
+          selected={selectedOrganizations}
+          onChange={(ids) => change({ "ov-organizations": ids.join("|") })}
+          locale={l}
+        />
+      )}
       <button
         id="overview-reset"
         onClick={() =>
           change({
             "ov-sources": sources.join("|"),
-            "ov-organizations": organizations.join("|"),
+            "ov-organizations": "all",
           })
         }
       >

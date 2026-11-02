@@ -1,3 +1,8 @@
+import {
+  encodeOrganizations,
+  resolveOrganizations,
+  enterpriseLeaves,
+} from "./organization-scope";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -93,4 +98,36 @@ test("aggregation and formatting do not lose large exact minor units", () => {
   assert.equal(formatMoney(null, "USD", "en"), "—");
   assert.equal(formatMoney(-1n, "USD", "en"), "USD -0.01");
   assert.equal(formatMoney(-12345n, "USD", "en"), "USD -123.45");
+});
+
+test("enterprise hierarchy unions leaves without broadening invalid or empty selections", () => {
+  assert.equal(resolveOrganizations(true, null).length, 2400);
+  assert.equal(resolveOrganizations(true, "C01").length, 200);
+  assert.equal(
+    resolveOrganizations(true, "C01|C01.B01|C01.B01.D01").length,
+    200,
+  );
+  assert.equal(resolveOrganizations(true, "C01|C02").length, 400);
+  assert.equal(resolveOrganizations(true, "C01|unknown").length, 200);
+  assert.deepEqual(resolveOrganizations(true, ""), []);
+  assert.deepEqual(resolveOrganizations(true, "unknown"), []);
+  assert.deepEqual(resolveOrganizations(false, "C01"), []);
+  const rows = fixtureCosts("sample-a", enterpriseLeaves);
+  const overlap = selectCosts(
+    rows,
+    ["AWS"],
+    resolveOrganizations(true, "C01|C01.B01"),
+    "2026-05",
+  );
+  assert.equal(overlap.length, 200);
+  assert.equal(total(overlap, "USD").value, 481700000n);
+});
+
+test("enterprise compact selections preserve arbitrary subsets and reject corrupt encoding", () => {
+  const ids = enterpriseLeaves.filter((_, i) => i % 3 === 0);
+  assert.equal(encodeOrganizations(ids).length, 603);
+  assert.deepEqual(resolveOrganizations(true, encodeOrganizations(ids)), ids);
+  assert.deepEqual(resolveOrganizations(true, "v1:00"), []);
+  assert.equal(encodeOrganizations(enterpriseLeaves), "all");
+  assert.equal(encodeOrganizations([]), "");
 });

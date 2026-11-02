@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import type { ScreenProps } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
 import { routeUrl, useLocation } from "../../../../shared/navigation";
@@ -22,6 +22,9 @@ import ScopeFilters from "./ScopeFilters";
 import CostTrend from "./CostTrend";
 import Lifecycle from "./Lifecycle";
 import "./overview.css";
+import { enterpriseLeaves, resolveOrganizations } from "./organization-scope";
+import OrgBreakdown from "./OrgBreakdown";
+import Paging, { usePage } from "./Paging";
 type Detail = {
   key: string;
   kind: "source" | "organization" | "record" | "stage";
@@ -39,13 +42,14 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
   const selectedSources = params.has("ov-sources")
     ? sources.filter((s) => params.get("ov-sources")!.split("|").includes(s))
     : [...sources];
-  const selectedOrganizations = params.has("ov-organizations")
-    ? organizations.filter((s) =>
-        params.get("ov-organizations")!.split("|").includes(s),
-      )
-    : [...organizations];
+  const enterprise = params.get("ov-scale") === "enterprise";
+  const selectedOrganizations = resolveOrganizations(
+    enterprise,
+    params.get("ov-organizations"),
+  );
   const key = JSON.stringify([
     workspace,
+    enterprise,
     period,
     currency,
     selectedSources,
@@ -56,13 +60,23 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
   const detailRef = useRef<HTMLElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
   const active = detail?.key === key ? detail : null;
-  const costs = mode === "synthetic" ? fixtureCosts(workspace) : [];
+  const costs = useMemo(
+    () =>
+      mode === "synthetic"
+        ? fixtureCosts(workspace, enterprise ? enterpriseLeaves : organizations)
+        : [],
+    [workspace, enterprise, mode],
+  );
   const all = selectCosts(costs, selectedSources, selectedOrganizations);
   const current = all.filter((r) => r.month === period);
   const closing =
     mode === "synthetic"
       ? selectClosings(
-          fixtureClosings(workspace, period),
+          fixtureClosings(
+            workspace,
+            period,
+            enterprise ? enterpriseLeaves : organizations,
+          ),
           selectedSources,
           selectedOrganizations,
         )
@@ -78,13 +92,33 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
         active.kind === "source"
           ? r.source === active.id
           : active.kind === "organization"
-            ? r.organization === active.id
+            ? r.organization === active.id ||
+              (enterprise && r.organization.startsWith(active.id + "."))
             : active.kind === "record"
               ? r.id === active.id
               : r.organization === activeClosing?.organization &&
                 activeClosing.sources.includes(r.source),
       )
     : [];
+  const detailPage = usePage(
+    detailRows,
+    key + "|" + active?.kind + "|" + active?.id + "|" + active?.stage,
+  );
+  const exceptions = [
+    ...missing.map((r) => ({
+      id: r.id,
+      kind: "record" as const,
+      label: `${r.source} · ${organizationName(l, r.organization)} · ${t(l, "Cost record missing", "비용 자료 누락", "سجل تكلفة مفقود")}`,
+    })),
+    ...closing
+      .filter((r) => r.status.accounting === "unknown")
+      .map((r) => ({
+        id: r.id,
+        kind: "stage" as const,
+        label: `${organizationName(l, r.organization)} · ${t(l, "ERP confirmation missing", "ERP 반영 미확인", "تأكيد ERP مفقود")}`,
+      })),
+  ];
+  const exceptionPage = usePage(exceptions, key);
   const money = (value: bigint | null, c: Currency) => formatMoney(value, c, l);
   function change(values: Record<string, string>) {
     setDetail(null);
@@ -107,6 +141,7 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
   useEffect(() => {
     onState(
       JSON.stringify({
+        enterprise,
         workspace,
         scope: workspace,
         period,
@@ -123,6 +158,9 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
         "overview:field:reporting-month",
         "overview:field:source-selection",
         "overview:field:organization-selection",
+        "overview:field:organization-search",
+        "overview:field:fixture-profile",
+        "overview:action:page",
         "overview:field:chart-currency",
         ...(mode === "synthetic"
           ? [
@@ -217,12 +255,67 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
     >
       <ScopeFilters
         locale={l}
+        enterprise={enterprise}
+        contextKey={JSON.stringify([
+          workspace,
+          enterprise,
+          period,
+          selectedSources,
+          mode,
+        ])}
         period={period}
         currency={currency}
         selectedSources={selectedSources}
         selectedOrganizations={selectedOrganizations}
         change={change}
       />
+      <div className="overview-profile">
+        <label>
+          {t(l, "Example size", "예제 규모", "حجم المثال")}
+          <select
+            id="overview-profile"
+            value={enterprise ? "enterprise" : "small"}
+            onChange={(e) =>
+              change({
+                "ov-scale": e.target.value,
+                "ov-organizations": "all",
+                "ov-sources": sources.join("|"),
+              })
+            }
+          >
+            <option value="small">
+              {t(
+                l,
+                "Small · 3 organizations",
+                "소규모 · 조직 3개",
+                "صغير · 3 مؤسسات",
+              )}
+            </option>
+            <option value="enterprise">
+              {t(
+                l,
+                "Enterprise · 2,400 departments",
+                "대규모 · 부서 2,400개",
+                "كبير · 2400 قسم",
+              )}
+            </option>
+          </select>
+        </label>
+        <p data-scope-count>
+          {enterprise &&
+            t(
+              l,
+              "Selected companies / divisions / departments",
+              "선택 법인 / 사업부 / 부서",
+              "الشركات / القطاعات / الأقسام المختارة",
+            )}{" "}
+          <bdi dir="ltr">
+            {enterprise
+              ? `${new Set(selectedOrganizations.map((id) => id.split(".")[0])).size} / ${new Set(selectedOrganizations.map((id) => id.split(".").slice(0, 2).join("."))).size} / ${selectedOrganizations.length}`
+              : `${selectedOrganizations.length} / 3`}
+          </bdi>
+        </p>
+      </div>
       <p className="unified-basis">
         {t(
           l,
@@ -371,10 +464,17 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
             />
             <div className="unified-composition">
               {breakdown("source", selectedSources)}
-              {breakdown("organization", selectedOrganizations)}
             </div>
           </div>
+          <OrgBreakdown
+            rows={current}
+            enterprise={enterprise}
+            scope={key}
+            locale={l}
+            onSelect={(id) => inspect("organization", id)}
+          />
           <Lifecycle
+            scope={key}
             rows={closing}
             locale={l}
             selected={
@@ -475,7 +575,7 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {detailRows.map((r) => (
+                    {detailPage.rows.map((r) => (
                       <tr key={r.id}>
                         <td>{organizationName(l, r.organization)}</td>
                         <td>{r.source}</td>
@@ -492,6 +592,7 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
                   </tbody>
                 </table>
               </div>
+              <Paging value={detailPage} locale={l} />
             </section>
           )}
           <section className="unified-panel unified-exceptions">
@@ -506,36 +607,21 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
               </h2>
             </header>
             <ul>
-              {missing.map((r) => (
+              {exceptionPage.rows.map((r) => (
                 <li key={r.id}>
-                  <button onClick={() => inspect("record", r.id)}>
-                    {r.source} · {organizationName(l, r.organization)} ·{" "}
-                    {t(
-                      l,
-                      "Cost record missing",
-                      "비용 자료 누락",
-                      "سجل تكلفة مفقود",
-                    )}
+                  <button
+                    onClick={() =>
+                      inspect(
+                        r.kind,
+                        r.id,
+                        r.kind === "stage" ? "accounting" : undefined,
+                      )
+                    }
+                  >
+                    {r.label}
                   </button>
                 </li>
               ))}
-              {closing
-                .filter((r) => r.status.accounting === "unknown")
-                .map((r) => (
-                  <li key={r.id}>
-                    <button
-                      onClick={() => inspect("stage", r.id, "accounting")}
-                    >
-                      {organizationName(l, r.organization)} ·{" "}
-                      {t(
-                        l,
-                        "ERP confirmation missing",
-                        "ERP 반영 미확인",
-                        "تأكيد ERP مفقود",
-                      )}
-                    </button>
-                  </li>
-                ))}
               {!missing.length &&
                 !closing.some((r) => r.status.accounting === "unknown") && (
                   <li>
@@ -548,6 +634,7 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
                   </li>
                 )}
             </ul>
+            <Paging value={exceptionPage} locale={l} />
           </section>
           <p className="unified-note">
             {t(

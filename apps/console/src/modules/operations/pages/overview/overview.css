@@ -344,3 +344,111 @@
   max-width: 180px;
   min-height: 36px;
 }
+.overview-profile,
+.overview-paging,
+.overview-org-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.overview-profile {
+  justify-content: space-between;
+  margin-block: 12px;
+}
+.overview-profile select {
+  max-inline-size: 100%;
+}
+.overview-paging {
+  justify-content: flex-end;
+  margin-block: 12px;
+}
+.overview-org-picker[open] {
+  flex: 0 0 100%;
+  max-inline-size: 880px;
+}
+.overview-org-body {
+  padding: 16px;
+  border: 1px solid var(--hb-line-row);
+}
+.overview-org-body nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 12px;
+}
+.overview-org-body input[type="search"] {
+  inline-size: 320px;
+  max-inline-size: 100%;
+}
+.overview-org-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-block-size: 44px;
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.overview-org-row label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-inline-size: 0;
+}
+.overview-org-row small {
+  display: block;
+  color: var(--hb-muted);
+}
+.overview-org-breakdown small {
+  display: block;
+}
+.overview-org-breakdown header label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .overview-org-row {
+    gap: 6px;
+  }
+  .overview-org-body {
+    padding: 8px;
+  }
+}
+.unified-exceptions button {
+  white-space: normal;
+  text-align: start;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+.unified-detail h2 {
+  overflow-wrap: anywhere;
+  min-inline-size: 0;
+}
+.overview-org-picker[open] {
+  grid-column: 1 / -1;
+}
+.overview-org-breakdown td {
+  text-align: end;
+}
+.overview-org-breakdown td bdi {
+  white-space: nowrap;
+}
+.overview-org-breakdown th button {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--c-link);
+  text-decoration: underline;
+  text-align: start;
+}
+.unified-exceptions .overview-paging button {
+  border: 1px solid var(--hb-line-control);
+  text-decoration: none;
+  padding: 8px 12px;
+  color: inherit;
+}
+.overview-org-row label {flex-direction:row;justify-content:flex-start;text-align:start;}
+.overview-org-row input[type="checkbox"] {flex:none;inline-size:auto;min-inline-size:0;}
+.overview-org-body > label {display:flex;flex-direction:column;align-items:flex-start;text-align:start;}
+.overview-org-breakdown th:not(:first-child) {text-align:end;}

@@ -42,9 +42,12 @@ export type Closing = {
   status: Record<Stage, Status>;
 };
 export const snapshot = "DEMO-2026-11-02";
-export function fixtureCosts(workspace: string): Cost[] {
+export function fixtureCosts(
+  workspace: string,
+  organizationIds: readonly string[] = organizations,
+): Cost[] {
   return months.flatMap((month, m) =>
-    organizations.flatMap((organization, o) =>
+    organizationIds.flatMap((organization, o) =>
       sources.map((source, s) => ({
         id: `${workspace}:${month}:${organization}:${source}`,
         workspace,
@@ -72,10 +75,12 @@ export function selectCosts(
   selectedOrganizations: string[],
   month?: string,
 ) {
+  const sourceSet = new Set(selectedSources);
+  const organizationSet = new Set(selectedOrganizations);
   return costs.filter(
     (r) =>
-      selectedSources.includes(r.source) &&
-      selectedOrganizations.includes(r.organization) &&
+      sourceSet.has(r.source) &&
+      organizationSet.has(r.organization) &&
       (!month || r.month === month),
   );
 }
@@ -102,9 +107,13 @@ export function formatMoney(
   }).format(magnitude / scale);
   return `${currency} ${value < 0n ? "-" : ""}${whole}${scale === 100n ? "." + (magnitude % scale).toString().padStart(2, "0") : ""}`;
 }
-export function fixtureClosings(workspace: string, month: string): Closing[] {
+export function fixtureClosings(
+  workspace: string,
+  month: string,
+  organizationIds: readonly string[] = organizations,
+): Closing[] {
   if (!months.includes(month)) return [];
-  return organizations.flatMap((organization, o) =>
+  return organizationIds.flatMap((organization, o) =>
     [false, true].map((internal) => {
       const status = Object.fromEntries(
         stages.map((s) => [s, "complete"]),
@@ -145,9 +154,10 @@ export function selectClosings(
   selectedSources: string[],
   selectedOrganizations: string[],
 ) {
+  const organizationSet = new Set(selectedOrganizations);
   return rows.filter(
     (r) =>
-      selectedOrganizations.includes(r.organization) &&
+      organizationSet.has(r.organization) &&
       r.sources.some((s) => selectedSources.includes(s)),
   );
 }

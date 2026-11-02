@@ -47,3 +47,8 @@ Candidate preview: http://127.0.0.1:8790/#overview?lang=ko. The separately deleg
 Stable review mapping: overview:region:layout is retained. The prior settlement-period item is retired in favor of overview:field:reporting-month because this fixture uses an explicitly distinct reporting basis. New source/organization selectors, chart currency, monthly-cost, breakdown, closing-matrix and detail items use new scoped IDs. No acceptance record is carried forward.
 
 CLI telemetry for this implementation turn (four successful process returns, including two review FAIL verdicts before final PASS): {"input_tokens": 30, "cache_creation_input_tokens": 65044, "cache_read_input_tokens": 144733, "output_tokens": 12623}. These are CLI-only cumulative token categories, not root-turn totals or savings. No no-skill control was run. Restricted CLI ignores JEV/settings hooks; no JEV use inside it is claimed.
+
+
+# Enterprise follow-up
+
+The owner's large-organization requirement is implemented as a selectable 2,400-department synthetic profile with hierarchy search and bounded results. See [enterprise scope and verification](enterprise-scope.md). This supersedes the prior flat-only organization interaction for the enterprise profile, without claiming production service scalability.

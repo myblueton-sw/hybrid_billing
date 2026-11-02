@@ -4,6 +4,10 @@ title: Operational overview separated from the screen directory
 description: Records the scoped overview correction, design evidence, browser validation and remaining planning work.
 ---
 
+# Current disposition
+
+The owner subsequently rejected this candidate as too narrow for unified billing. Its test and scoped visual-review results below remain historical technical evidence, not product acceptance. PR66 is Draft. The researched replacement information architecture and independent financial/architecture findings are in [Unified overview research](unified-overview-research.md). Monthly trend and selected-month lifecycle are not implemented by this candidate.
+
 # Scope and design
 
 Ticket: HB-140. Root owns implementation and QA; restricted Claude CLI ui-designer provided read-only composition and final source/render review. The owner requested an operational overview instead of the screen directory. Previously App mapped overview to contents. The correction registers a distinct operations-owned overview, keeps contents reachable in review tools (and explicit directory search), and accepts /home as a temporary alias. Existing operational queues and entry design remain intact. This does not implement the complete HB-85 U01 contract or replace HB-75 routing work. Reconcile the temporary alias with the later HB-72 migration.

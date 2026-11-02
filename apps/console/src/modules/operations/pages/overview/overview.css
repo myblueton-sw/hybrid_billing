@@ -1,0 +1,105 @@
+.overview-dashboard {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.overview-scope {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--hb-line-row);
+}
+.overview-scope label {
+  display: grid;
+  gap: 8px;
+}
+.overview-scope input {
+  width: 168px;
+}
+.overview-scope p {
+  color: var(--hb-muted);
+  margin: 0;
+}
+.overview-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.overview-metric {
+  border: 1px solid var(--hb-line-row);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 8px;
+}
+.overview-dashboard h2 {
+  font-size: 16px;
+  margin: 0;
+}
+.overview-metric h2 {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--hb-muted);
+}
+.overview-metric strong {
+  font-size: 28px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.overview-metric small {
+  color: var(--hb-muted);
+}
+.overview-amounts {
+  margin: 0;
+  padding-block: 12px;
+  border-block: 1px solid var(--hb-line-row);
+}
+.overview-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.overview-list {
+  min-width: 0;
+}
+.overview-list header,
+.overview-list li > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.overview-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+.overview-list li {
+  border-bottom: 1px solid var(--hb-line-row);
+  padding-block: 12px;
+  overflow-wrap: anywhere;
+}
+.overview-list p {
+  color: var(--hb-muted);
+  margin-block: 8px;
+}
+@media (max-width: 1023px) {
+  .overview-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .overview-lists {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 599px) {
+  .overview-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .overview-scope label,
+  .overview-scope input {
+    width: 100%;
+  }
+}

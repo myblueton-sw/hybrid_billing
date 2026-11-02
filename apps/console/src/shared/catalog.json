@@ -94,14 +94,14 @@
       "id": "overview",
       "group": "overview",
       "title": {
-        "en": "Hybrid Billing — complete review",
-        "ko": "Hybrid Billing 전체 통합 시안",
-        "ar": "مراجعة تصميم Hybrid Billing"
+        "en": "Operational overview",
+        "ko": "전체 현황",
+        "ar": "نظرة عامة على العمليات"
       },
       "description": {
-        "en": "Hybrid Billing — complete review. Choose a scoped workflow and inspect its prerequisites.",
-        "ko": "Hybrid Billing 전체 통합 시안. 업무 범위를 선택하고 시작 조건을 확인합니다.",
-        "ar": "مراجعة تصميم Hybrid Billing. اختر مسار عمل محدد النطاق وراجع متطلباته."
+        "en": "Review work status and open the next action within the current scope.",
+        "ko": "현재 범위의 업무 상태를 확인하고 필요한 작업으로 이동합니다.",
+        "ar": "راجع حالة العمل وانتقل إلى الإجراء التالي ضمن النطاق الحالي."
       },
       "kind": "overview",
       "columns": [
@@ -150,7 +150,8 @@
         "ar": "مراجعة مساحة العمل"
       },
       "related": [
-        "contents"
+        "operations",
+        "my-tasks"
       ],
       "registryIds": [],
       "baselinePage": 1

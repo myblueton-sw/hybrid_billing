@@ -99,9 +99,9 @@
         "ar": "نظرة عامة على العمليات"
       },
       "description": {
-        "en": "Review work status and open the next action within the current scope.",
-        "ko": "현재 범위의 업무 상태를 확인하고 필요한 작업으로 이동합니다.",
-        "ar": "راجع حالة العمل وانتقل إلى الإجراء التالي ضمن النطاق الحالي."
+        "en": "Compare monthly costs and closing status across sources and organizations in one view.",
+        "ko": "여러 원천과 조직의 월별 비용·정산 상태를 한곳에서 비교합니다.",
+        "ar": "قارن التكاليف الشهرية وحالة الإقفال عبر المصادر والمؤسسات في عرض موحد."
       },
       "kind": "overview",
       "columns": [

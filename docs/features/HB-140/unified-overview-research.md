@@ -82,3 +82,7 @@ This is a researched design correction, not a revised screen implementation. Cur
 - Final financial re-review: PASS for researched information architecture only; no blocking contradiction remains. Runtime financial correctness remains UNVERIFIED.
 - Editorial review identified a broken table separator and ambiguous month-to-settlement navigation. Root fixed both, made the Korean month heading more natural and required financial/time basis next to trend labels.
 - Editorial re-review: PASS; table continuity, explicit linked-period navigation and Korean labels verified. This is not runtime, financial-calculation, accessibility or native-Arabic verification.
+
+# Implemented candidate follow-up
+
+The owner subsequently authorized an integrated synthetic candidate emphasizing multiple sources and organizations. See [implementation and verification](integrated-implementation.md). It delivers exact source-cost views and independent monthly closing states; the broader contract-backed sales/allocation/forecast/receivable views remain pending. The former four-counter hierarchy is removed from the candidate. This does not change owner FIX or merge status.

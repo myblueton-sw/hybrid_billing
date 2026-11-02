@@ -93,21 +93,23 @@ function Workspace({
         </div>
         <span className="tag">{shellCopy.draft[l]}</span>
       </div>
-      <div className="meta">
-        <span>
-          {shellCopy.account[l]}:{" "}
-          <bdi>
-            {new URLSearchParams(location.hash.split("?")[1]).get("scope") ===
-            "sample-b"
-              ? "ACC-000002"
-              : "ACC-000001"}
-          </bdi>
-        </span>
-        <span>
-          {shellCopy.snapshot[l]}: <bdi>DEMO-S1</bdi>
-        </span>
-        <span>{shellCopy.notConnected[l]}</span>
-      </div>
+      {id !== "overview" && (
+        <div className="meta">
+          <span>
+            {shellCopy.account[l]}:{" "}
+            <bdi>
+              {new URLSearchParams(location.hash.split("?")[1]).get("scope") ===
+              "sample-b"
+                ? "ACC-000002"
+                : "ACC-000001"}
+            </bdi>
+          </span>
+          <span>
+            {shellCopy.snapshot[l]}: <bdi>DEMO-S1</bdi>
+          </span>
+          <span>{shellCopy.notConnected[l]}</span>
+        </div>
+      )}
       {id !== "overview" && reviewPanel}
       <div id="content">
         {Screen ? (
@@ -271,19 +273,48 @@ export default function App() {
               {t(l, "Contribute", "기여", "المساهمة")}
             </a>
           )}
-          <button
-            id="choose-account"
-            className="account-button"
-            aria-label={`${shellCopy.account[l]} · ${params.get("scope") === "sample-b" ? "ACC-000002" : "ACC-000001"}`}
-            disabled={customer}
-            onClick={() => open("account")}
-          >
-            <span className="account-label">{shellCopy.account[l]} ·</span>
-            <bdi>
-              {params.get("scope") === "sample-b" ? "ACC-000002" : "ACC-000001"}
-            </bdi>
-            <img className="icon" src={chevron} alt="" />
-          </button>
+          {id === "overview" ? (
+            <label className="overview-workspace">
+              <span className="sr-only">
+                {t(
+                  l,
+                  "Example workspace",
+                  "예제 업무 공간",
+                  "مساحة عمل تجريبية",
+                )}
+              </span>
+              <select
+                id="overview-workspace"
+                value={
+                  params.get("scope") === "sample-b" ? "sample-b" : "sample-a"
+                }
+                onChange={(e) => update({ scope: e.target.value })}
+              >
+                <option value="sample-a">
+                  {t(l, "Demo workspace A", "예제 공간 A", "مساحة تجريبية A")}
+                </option>
+                <option value="sample-b">
+                  {t(l, "Demo workspace B", "예제 공간 B", "مساحة تجريبية B")}
+                </option>
+              </select>
+            </label>
+          ) : (
+            <button
+              id="choose-account"
+              className="account-button"
+              aria-label={`${shellCopy.account[l]} · ${params.get("scope") === "sample-b" ? "ACC-000002" : "ACC-000001"}`}
+              disabled={customer}
+              onClick={() => open("account")}
+            >
+              <span className="account-label">{shellCopy.account[l]} ·</span>
+              <bdi>
+                {params.get("scope") === "sample-b"
+                  ? "ACC-000002"
+                  : "ACC-000001"}
+              </bdi>
+              <img className="icon" src={chevron} alt="" />
+            </button>
+          )}
           <button id="open-jobs" onClick={() => open("jobs")}>
             {shellCopy.jobs[l]} <span className="tag">0</span>
           </button>

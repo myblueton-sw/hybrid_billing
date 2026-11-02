@@ -46,3 +46,18 @@ The first visual review rejected the missing mobile open-picker grid span. Root 
 Candidate: http://127.0.0.1:8790/#overview?lang=ko&ov-scale=enterprise. Draft PR66; no merge or owner FIX.
 
 CLI-only telemetry for four calls (design, two FAIL visual reviews, final PASS): {"input_tokens": 44, "cache_creation_input_tokens": 74867, "cache_read_input_tokens": 230409, "output_tokens": 20980}. No root-turn total or no-skill control measurement is available; this is not a savings claim.
+
+
+# Closing-list continuation
+
+Owner requested continued frontend work. Root added organization-code search, explicit stage/status filters and direct page navigation. Claude CLI supplied the compact native-control layout proposal, then reviewed EN desktop and KO/AR mobile filter/pager element captures. Its initial design call could not find the screenshot at the supplied path and was source-only; the actual visual review used corrected apps/console/qa-output paths and passed.
+
+These filters narrow closing rows only, with matching/scoped counts. Any matching stage means an existential cell-status match, never overall closing completion. Global financial totals remain unchanged. Empty results are explicit; reset restores the list. Scope changes reset local filters and pages; filter changes clear detail. New review IDs cover closing-search, closing-stage-filter, closing-status-filter, closing-list-reset and page-jump. No owner FIX is created.
+
+The shared overview pager accepts integer page numbers in Latin, Arabic-Indic and Eastern Arabic digits, rejects invalid/out-of-range entries with linked inline errors and clamps navigation. It affects only overview organization, closing, detail, exception and picker panels. An independent reviewer reproduced lost keyboard focus caused by remounting PageJump; root replaced its React key with a reset prop/effect while preserving the DOM. Targeted re-review is recorded below.
+
+Verification: build and 47 unit tests PASS. Browser suite PASS across twelve small/enterprise locale/viewport renders, including page0/999 rejection, Arabic240 Enter submission and input-focus retention, accounting-unconfirmed2399/4800, blocked1/4800, code search, no match, unchanged financial totals, detail invalidation and month reset. Artifact verifier PASS242. Claude CLI actual visual/source review PASS before the focus-only correction; keyboard behavior is established by browser tests and independent re-review, not screenshots. No new dependency or production service integration.
+
+Independent targeted re-review PASS: rebuilt preview retained input focus after Arabic240+Enter, rejected999, reset draft/error on filters and preserved USD aggregate.
+
+Continuation CLI-only telemetry: {"input_tokens": 24, "cache_creation_input_tokens": 29791, "cache_read_input_tokens": 150215, "output_tokens": 8215}. No no-skill control or root-turn total available; no savings comparison claimed.

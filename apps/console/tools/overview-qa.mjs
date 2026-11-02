@@ -89,6 +89,77 @@ try {
       document.querySelector("[data-closing-count]")?.textContent === "4800",
   );
   const initialTotal = await page.locator('[data-total="USD"]').innerText();
+  const list = page.locator(".unified-lifecycle");
+  await list.getByLabel("Page", { exact: true }).fill("0");
+  await list.getByRole("button", { name: "Go", exact: true }).click();
+  await list.getByRole("alert").waitFor();
+  assert.match(
+    await list.locator("tbody tr").first().innerText(),
+    /C01.B01.D01/,
+  );
+  await list.getByLabel("Page", { exact: true }).fill("٢٤٠");
+  await list.getByLabel("Page", { exact: true }).press("Enter");
+  assert.match(
+    await list.locator("tbody tr").first().innerText(),
+    /C12.B10.D11/,
+  );
+  assert(
+    await list
+      .getByLabel("Page", { exact: true })
+      .evaluate((e) => e === document.activeElement),
+  );
+  await list.getByLabel("Page", { exact: true }).fill("999");
+  await list.getByRole("button", { name: "Go", exact: true }).click();
+  assert.equal(await list.getByRole("alert").count(), 1);
+  await page.selectOption("#closing-stage", "accounting");
+  await page.selectOption("#closing-status", "unknown");
+  assert.equal(
+    await page.locator("[data-list-count]").innerText(),
+    "2399 / 4800",
+  );
+  assert.equal(
+    await list.getByLabel("Page", { exact: true }).inputValue(),
+    "1",
+  );
+  assert.equal(
+    await page.locator('[data-total="USD"]').innerText(),
+    initialTotal,
+  );
+  await list.locator("tbody button").first().click();
+  await page.locator(".unified-detail").waitFor();
+  await page.locator("#closing-search").fill("C12.B10.D20");
+  assert.equal(await page.locator("[data-list-count]").innerText(), "1 / 4800");
+  assert.equal(await page.locator(".unified-detail").count(), 0);
+  await page.locator("#closing-search").fill("no-such-code");
+  await page
+    .getByText("No units match these filters", { exact: true })
+    .waitFor();
+  assert.equal(await list.locator("tbody tr").count(), 0);
+  assert.equal(
+    await page.locator('[data-total="USD"]').innerText(),
+    initialTotal,
+  );
+  await list
+    .getByRole("button", { name: "Reset list filters", exact: true })
+    .click();
+  assert.equal(
+    await page.locator("[data-list-count]").innerText(),
+    "4800 / 4800",
+  );
+  await page.selectOption("#closing-status", "blocked");
+  assert.equal(await page.locator("[data-list-count]").innerText(), "1 / 4800");
+  await page.selectOption("#overview-period", "2026-09");
+  await page.waitForFunction(
+    () => document.querySelector("#closing-status")?.value === "",
+  );
+  assert.equal(
+    await page.locator("[data-list-count]").innerText(),
+    "4800 / 4800",
+  );
+  await page.selectOption("#overview-period", "2026-10");
+  await page.waitForFunction(
+    () => document.querySelector("#overview-period")?.value === "2026-10",
+  );
   await page
     .locator(".unified-matrix")
     .locator("..")

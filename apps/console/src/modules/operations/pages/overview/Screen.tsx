@@ -22,6 +22,7 @@ import ScopeFilters from "./ScopeFilters";
 import CostTrend from "./CostTrend";
 import Lifecycle from "./Lifecycle";
 import "./overview.css";
+import { emptyClosingFilter } from "./closing-filter";
 import { enterpriseLeaves, resolveOrganizations } from "./organization-scope";
 import OrgBreakdown from "./OrgBreakdown";
 import Paging, { usePage } from "./Paging";
@@ -56,6 +57,7 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
     selectedOrganizations,
     mode,
   ]);
+  const [listFilter, setListFilter] = useState(emptyClosingFilter);
   const [detail, setDetail] = useState<Detail | null>(null);
   const detailRef = useRef<HTMLElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
@@ -137,10 +139,12 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
   }, [detail]);
   useEffect(() => {
     setDetail(null);
+    setListFilter(emptyClosingFilter);
   }, [key]);
   useEffect(() => {
     onState(
       JSON.stringify({
+        listFilter,
         enterprise,
         workspace,
         scope: workspace,
@@ -161,6 +165,11 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
         "overview:field:organization-search",
         "overview:field:fixture-profile",
         "overview:action:page",
+        "overview:field:closing-search",
+        "overview:field:closing-stage-filter",
+        "overview:field:closing-status-filter",
+        "overview:action:closing-list-reset",
+        "overview:action:page-jump",
         "overview:field:chart-currency",
         ...(mode === "synthetic"
           ? [
@@ -174,7 +183,7 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
           : ["overview:state:unconnected"]),
       ],
     );
-  }, [key, active?.id, active?.stage, onState]);
+  }, [key, active?.id, active?.stage, listFilter, onState]);
   function amount(value: ReturnType<typeof total>, c: Currency) {
     return (
       <>
@@ -474,6 +483,11 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
             onSelect={(id) => inspect("organization", id)}
           />
           <Lifecycle
+            key={key}
+            onFilterChange={(filter) => {
+              setDetail(null);
+              setListFilter(filter);
+            }}
             scope={key}
             rows={closing}
             locale={l}

@@ -1,3 +1,4 @@
+import { filterClosings } from "./closing-filter";
 import {
   encodeOrganizations,
   resolveOrganizations,
@@ -130,4 +131,34 @@ test("enterprise compact selections preserve arbitrary subsets and reject corrup
   assert.deepEqual(resolveOrganizations(true, "v1:00"), []);
   assert.equal(encodeOrganizations(enterpriseLeaves), "all");
   assert.equal(encodeOrganizations([]), "");
+});
+
+test("closing list filters match independent stages without changing source units", () => {
+  const rows = fixtureClosings("sample-a", "2026-10");
+  assert.equal(
+    filterClosings(rows, { query: "", stage: "accounting", status: "unknown" })
+      .length,
+    2,
+  );
+  assert.equal(
+    filterClosings(rows, { query: "", stage: "", status: "pending" }).length,
+    6,
+  );
+  assert.equal(
+    filterClosings(rows, {
+      query: " B ",
+      stage: "reconciliation",
+      status: "blocked",
+    }).length,
+    1,
+  );
+  assert.equal(
+    filterClosings(rows, { query: "", stage: "receipt", status: "na" }).length,
+    3,
+  );
+  assert.equal(
+    filterClosings(rows, { query: "not-found", stage: "", status: "" }).length,
+    0,
+  );
+  assert.equal(rows.length, 6);
 });

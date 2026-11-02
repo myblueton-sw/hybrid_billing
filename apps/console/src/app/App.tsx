@@ -42,9 +42,7 @@ function Workspace({
   profile: string;
 }) {
   const composition = assemble(modules, extensions, getProfile(profile));
-  const route = composition.routes.find(
-    (r) => r.id === (id === "overview" ? "contents" : id),
-  );
+  const route = composition.routes.find((r) => r.id === id);
   const screen = screens.find((s) => s.id === id);
   const [view, setView] = useState({ state: "", items: [] as string[] });
   const onState = useCallback(
@@ -64,10 +62,29 @@ function Workspace({
       </section>
     );
   const Screen = route?.component;
+  const reviewPanel = (
+    <ReviewPanel
+      screen={id}
+      locale={l}
+      context={JSON.stringify({
+        profile,
+        account:
+          new URLSearchParams(location.hash.split("?")[1]).get("scope") ??
+          "sample-a",
+        mode,
+        extensions: extensionIds,
+        state: view.state,
+      })}
+      items={view.items}
+    />
+  );
   return (
     <>
       <div className="crumb">
-        {groups.find((g) => g.id === screen.group)?.label[l]} / <bdi>{id}</bdi>
+        {id === "overview"
+          ? screen.title[l]
+          : groups.find((g) => g.id === screen.group)?.label[l]}{" "}
+        / <bdi>{id}</bdi>
       </div>
       <div className="heading">
         <div>
@@ -76,37 +93,24 @@ function Workspace({
         </div>
         <span className="tag">{shellCopy.draft[l]}</span>
       </div>
-      <div className="meta">
-        <span>
-          {shellCopy.account[l]}:{" "}
-          <bdi>
-            {new URLSearchParams(location.hash.split("?")[1]).get("scope") ===
-            "sample-b"
-              ? "ACC-000002"
-              : "ACC-000001"}
-          </bdi>
-        </span>
-        <span>
-          {shellCopy.snapshot[l]}: <bdi>DEMO-S1</bdi>
-        </span>
-        <span>{shellCopy.notConnected[l]}</span>
-      </div>
-      <ReviewPanel
-        screen={id}
-        locale={l}
-        context={JSON.stringify({
-          profile,
-          account:
-            new URLSearchParams(location.hash.split("?")[1]).get("scope") ??
-            "sample-a",
-          mode,
-          extensions: extensionIds,
-          state: view.state,
-        })}
-        items={view.items.map((item) =>
-          id === "overview" ? item.replace(/^contents:/, "overview:") : item,
-        )}
-      />
+      {id !== "overview" && (
+        <div className="meta">
+          <span>
+            {shellCopy.account[l]}:{" "}
+            <bdi>
+              {new URLSearchParams(location.hash.split("?")[1]).get("scope") ===
+              "sample-b"
+                ? "ACC-000002"
+                : "ACC-000001"}
+            </bdi>
+          </span>
+          <span>
+            {shellCopy.snapshot[l]}: <bdi>DEMO-S1</bdi>
+          </span>
+          <span>{shellCopy.notConnected[l]}</span>
+        </div>
+      )}
+      {id !== "overview" && reviewPanel}
       <div id="content">
         {Screen ? (
           <Screen
@@ -138,22 +142,25 @@ function Workspace({
           </section>
         )}
       </div>
-      <section className="related-section">
-        <h2>{shellCopy.related[l]}</h2>
-        <div className="related">
-          {screen.related
-            .filter(
-              (target) =>
-                screen.group !== "customer" ||
-                screens.find((s) => s.id === target)?.group === "customer",
-            )
-            .map((target) => (
-              <a key={target} href={routeUrl(target)}>
-                {screens.find((s) => s.id === target)?.title[l]}
-              </a>
-            ))}
-        </div>
-      </section>
+      {id === "overview" && reviewPanel}
+      {id !== "overview" && (
+        <section className="related-section">
+          <h2>{shellCopy.related[l]}</h2>
+          <div className="related">
+            {screen.related
+              .filter(
+                (target) =>
+                  screen.group !== "customer" ||
+                  screens.find((s) => s.id === target)?.group === "customer",
+              )
+              .map((target) => (
+                <a key={target} href={routeUrl(target)}>
+                  {screens.find((s) => s.id === target)?.title[l]}
+                </a>
+              ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }
@@ -161,7 +168,7 @@ export default function App() {
   const hash = useLocation(),
     [routePart, query] = hash.slice(1).split("?"),
     params = new URLSearchParams(query);
-  const id = routePart || "entry-start",
+  const id = routePart === "/home" ? "overview" : routePart || "entry-start",
     l: Locale = ["en", "ar"].includes(params.get("lang") ?? "")
       ? (params.get("lang") as Locale)
       : "ko";
@@ -185,7 +192,7 @@ export default function App() {
       ? `${s.title[l]} ${s.id} ${s.registryIds.join(" ")}`
           .toLowerCase()
           .includes(search.toLowerCase())
-      : domain.groups.includes(s.group),
+      : domain.groups.includes(s.group) && s.id !== "contents",
   );
   useEffect(() => {
     document.documentElement.lang = l;
@@ -266,19 +273,48 @@ export default function App() {
               {t(l, "Contribute", "기여", "المساهمة")}
             </a>
           )}
-          <button
-            id="choose-account"
-            className="account-button"
-            aria-label={`${shellCopy.account[l]} · ${params.get("scope") === "sample-b" ? "ACC-000002" : "ACC-000001"}`}
-            disabled={customer}
-            onClick={() => open("account")}
-          >
-            <span className="account-label">{shellCopy.account[l]} ·</span>
-            <bdi>
-              {params.get("scope") === "sample-b" ? "ACC-000002" : "ACC-000001"}
-            </bdi>
-            <img className="icon" src={chevron} alt="" />
-          </button>
+          {id === "overview" ? (
+            <label className="overview-workspace">
+              <span className="sr-only">
+                {t(
+                  l,
+                  "Example workspace",
+                  "예제 업무 공간",
+                  "مساحة عمل تجريبية",
+                )}
+              </span>
+              <select
+                id="overview-workspace"
+                value={
+                  params.get("scope") === "sample-b" ? "sample-b" : "sample-a"
+                }
+                onChange={(e) => update({ scope: e.target.value })}
+              >
+                <option value="sample-a">
+                  {t(l, "Demo workspace A", "예제 공간 A", "مساحة تجريبية A")}
+                </option>
+                <option value="sample-b">
+                  {t(l, "Demo workspace B", "예제 공간 B", "مساحة تجريبية B")}
+                </option>
+              </select>
+            </label>
+          ) : (
+            <button
+              id="choose-account"
+              className="account-button"
+              aria-label={`${shellCopy.account[l]} · ${params.get("scope") === "sample-b" ? "ACC-000002" : "ACC-000001"}`}
+              disabled={customer}
+              onClick={() => open("account")}
+            >
+              <span className="account-label">{shellCopy.account[l]} ·</span>
+              <bdi>
+                {params.get("scope") === "sample-b"
+                  ? "ACC-000002"
+                  : "ACC-000001"}
+              </bdi>
+              <img className="icon" src={chevron} alt="" />
+            </button>
+          )}
           <button id="open-jobs" onClick={() => open("jobs")}>
             {shellCopy.jobs[l]} <span className="tag">0</span>
           </button>
@@ -376,6 +412,9 @@ export default function App() {
               {t(l, "Review tools", "검수 도구", "أدوات المراجعة")}
             </summary>
             <div className="toolbar">
+              <a href={routeUrl("contents")}>
+                {t(l, "Screen directory", "전체 화면 찾아보기", "دليل الشاشات")}
+              </a>
               <label>
                 {t(
                   l,

@@ -1,0 +1,110 @@
+[
+  {
+    "id": "B11",
+    "path": "/credits-cases",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "history",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/B11/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AP",
+      "CP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "balances",
+        "labelKo": "잔액"
+      },
+      {
+        "key": "reservations",
+        "labelKo": "예약·적용"
+      },
+      {
+        "key": "cases",
+        "labelKo": "문의·이의"
+      },
+      {
+        "key": "adjustments",
+        "labelKo": "조정·역거래"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "크레딧·청구 문의",
+    "scopeLabelKo": "고객/계약·기간·통화/단위·잔액 권위·기준시각",
+    "purposeKo": "잔액 권위·기준시각·통화/단위·예약/사용가능·배정/역거래, 사건·쟁점금액·증빙·내부메모/공개답변·기한",
+    "commandReferences": [
+      "adjustment.draft",
+      "holds.request",
+      "holds.release",
+      "holds.status"
+    ],
+    "actionEvidence": "- register inquiry; preview public reply; record resolution; inspect payment evidence; `holds.status`. - Server approval required: request issued-document correction approval; `holds.request` / `holds.release`; `adjustment.draft` / `cancel`."
+  },
+  {
+    "id": "R02",
+    "path": "/history",
+    "menu": "rep",
+    "audience": "admin",
+    "module": "history",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/R02/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AM",
+      "PR",
+      "BL",
+      "AP",
+      "CP",
+      "AU",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "events",
+        "labelKo": "사건 목록"
+      },
+      {
+        "key": "detail",
+        "labelKo": "행위 상세"
+      },
+      {
+        "key": "diff",
+        "labelKo": "개정 차이"
+      },
+      {
+        "key": "evidence",
+        "labelKo": "관련 증거"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "공통 이력·감사",
+    "scopeLabelKo": "발생/수신 기간·대상 종류/ID·행위자",
+    "purposeKo": "사건/업무ID·실제/수신시각·사람/AI/자동주체·개정·사유·승인·외부참조·접근/반출, 검색/차이/문서 이동",
+    "commandReferences": [],
+    "actionEvidence": "사건 조회; 개정 비교; 근거 열기; 감사 묶음 요청 (audit.export job)."
+  }
+]

@@ -1,0 +1,59 @@
+{
+  "columns": [
+    "id",
+    "organization",
+    "relation",
+    "state",
+    "effective"
+  ],
+  "details": [
+    "parent",
+    "expected",
+    "actual",
+    "manifest",
+    "revision",
+    "reason"
+  ],
+  "values": {
+    "organization": "DEMO Research",
+    "relation": "Ownership",
+    "state": "draft",
+    "effective": "unconfigured",
+    "parent": "DEMO-GROUP",
+    "expected": "DEMO-ENTITY-02",
+    "actual": "DEMO-ENTITY-01",
+    "manifest": "DEMO-MANIFEST-01",
+    "revision": "r1"
+  },
+  "views": {
+    "targets": [
+      "organization",
+      "relation",
+      "parent"
+    ],
+    "impact": [
+      "expected",
+      "actual",
+      "meaning",
+      "manifest"
+    ],
+    "approval": [
+      "effective",
+      "approver",
+      "digest",
+      "state"
+    ],
+    "result": [
+      "targets",
+      "succeeded",
+      "held",
+      "failed"
+    ]
+  },
+  "draftFields": [
+    "organization",
+    "parent",
+    "effective",
+    "reason"
+  ]
+}

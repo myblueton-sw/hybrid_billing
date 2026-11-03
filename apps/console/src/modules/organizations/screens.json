@@ -1,0 +1,159 @@
+[
+  {
+    "id": "O01",
+    "path": "/organizations",
+    "menu": "org",
+    "audience": "admin",
+    "module": "organizations",
+    "archetype": "tree-list-detail",
+    "spec": "docs/ui/screens/O01/spec.md",
+    "exampleRoles": [
+      "AM",
+      "BL",
+      "CP",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "tree",
+        "labelKo": "조직 트리"
+      },
+      {
+        "key": "accounts",
+        "labelKo": "원천 계정"
+      },
+      {
+        "key": "groups",
+        "labelKo": "조회 그룹"
+      },
+      {
+        "key": "history",
+        "labelKo": "귀속 이력"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "조직·관계 탐색",
+    "scopeLabelKo": "기준일·법인·관계 종류·미귀속·공급자",
+    "purposeKo": "법인/부서/프로젝트, 조회 그룹, 원천 계정 종류·귀속 유효기간, 공유 배분·권한 근거",
+    "commandReferences": [],
+    "actionEvidence": "관계 상세; 변경 계획 만들기 (→O02 draft); 조회 그룹 초안 (grants no permission)."
+  },
+  {
+    "id": "O02",
+    "path": "/organization-changes",
+    "menu": "org",
+    "audience": "admin",
+    "module": "organizations",
+    "archetype": "wizard",
+    "spec": "docs/ui/screens/O02/spec.md",
+    "exampleRoles": [
+      "AM",
+      "PR",
+      "AP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "targets",
+        "labelKo": "변경 대상"
+      },
+      {
+        "key": "impact",
+        "labelKo": "영향 검토"
+      },
+      {
+        "key": "approval",
+        "labelKo": "승인·예약"
+      },
+      {
+        "key": "result",
+        "labelKo": "적용 결과"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "관계 변경·영향 검토",
+    "scopeLabelKo": "적용일·고정 대상 manifest·기대 revision",
+    "purposeKo": "연결/해제/이동/묶음 종류, 적용일·대상 snapshot, 금액·계약 풀·ERP·권한·파일 영향, 승인·예약/실행",
+    "commandReferences": [],
+    "actionEvidence": "영향 계산 (async); 승인 요청 (→B09, server approval); 예약·적용 요청 (approval hash, atomic per pool); 실패 단위 재개."
+  },
+  {
+    "id": "O03",
+    "path": "/contracts",
+    "menu": "org",
+    "audience": "admin",
+    "module": "organizations",
+    "archetype": "list+detail-tabs",
+    "spec": "docs/ui/screens/O03/spec.md",
+    "exampleRoles": [
+      "AM",
+      "PR",
+      "BL",
+      "AP"
+    ],
+    "reactBodies": [
+      "customer-detail"
+    ],
+    "tabs": [
+      {
+        "key": "parties",
+        "labelKo": "당사자·경로"
+      },
+      {
+        "key": "schedule",
+        "labelKo": "청구 일정"
+      },
+      {
+        "key": "products",
+        "labelKo": "상품·요율"
+      },
+      {
+        "key": "documents",
+        "labelKo": "문서·지급"
+      },
+      {
+        "key": "termination",
+        "labelKo": "종료·최종정산"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납부 조건"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "계약·발행 프로파일",
+    "scopeLabelKo": "법인·계약 상태·정산 상태·직판/재판매",
+    "purposeKo": "당사자·지급 책임·문서 수신자·법인·통화·시간대·시작/종료·주기·일할·선후청구·발행 모드·ERP",
+    "commandReferences": [],
+    "actionEvidence": "변경 초안 저장; 청구 영향 검토; 승인 요청 (server approval); 종료 계획; 납부 조건 변경 승인 요청 (approval; never edits issued snapshots)."
+  }
+]

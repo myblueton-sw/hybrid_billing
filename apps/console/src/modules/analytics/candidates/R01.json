@@ -1,0 +1,69 @@
+{
+  "columns": [
+    "id",
+    "organization",
+    "period",
+    "meaning",
+    "amount"
+  ],
+  "details": [
+    "quantity",
+    "unit",
+    "basis",
+    "revision",
+    "completeness"
+  ],
+  "values": {
+    "organization": "DEMO Research",
+    "period": "2026-10",
+    "meaning": "Published sales",
+    "amount": "USD 1250.0000",
+    "quantity": "250000",
+    "unit": "token",
+    "basis": "Historical attribution",
+    "revision": "r1",
+    "completeness": "partial"
+  },
+  "views": {
+    "summary": [
+      "organization",
+      "period",
+      "meaning",
+      "amount"
+    ],
+    "comparison": [
+      "basis",
+      "expected",
+      "actual",
+      "difference"
+    ],
+    "rows": [
+      "id",
+      "quantity",
+      "unit",
+      "amount"
+    ],
+    "views": [
+      "name",
+      "scope",
+      "basis"
+    ],
+    "exports": [
+      "manifest",
+      "schema",
+      "state",
+      "rows"
+    ],
+    "payment-terms": [
+      "document",
+      "due",
+      "state"
+    ],
+    "recognition": [
+      "recognition",
+      "posting",
+      "period"
+    ]
+  },
+  "draftFields": []
+}

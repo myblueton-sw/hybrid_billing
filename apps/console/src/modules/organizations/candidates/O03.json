@@ -1,0 +1,77 @@
+{
+  "columns": [
+    "id",
+    "contract",
+    "buyer",
+    "issuer",
+    "path",
+    "currency"
+  ],
+  "details": [
+    "payer",
+    "entity",
+    "timezone",
+    "terms",
+    "recognition",
+    "revision"
+  ],
+  "values": {
+    "contract": "DEMO Enterprise",
+    "buyer": "DEMO Research",
+    "issuer": "DEMO-ENTITY-01",
+    "path": "External sales",
+    "currency": "USD",
+    "payer": "DEMO Treasury",
+    "entity": "DEMO-ENTITY-01",
+    "timezone": "UTC",
+    "terms": "unconfigured",
+    "recognition": "Monthly / quarterly review",
+    "revision": "r1"
+  },
+  "views": {
+    "parties": [
+      "contract",
+      "buyer",
+      "payer",
+      "issuer",
+      "path"
+    ],
+    "schedule": [
+      "period",
+      "timezone",
+      "effective"
+    ],
+    "products": [
+      "component",
+      "rate",
+      "policy"
+    ],
+    "documents": [
+      "document",
+      "terms",
+      "posting"
+    ],
+    "termination": [
+      "state",
+      "effective",
+      "balance"
+    ],
+    "payment-terms": [
+      "terms",
+      "due",
+      "revision"
+    ],
+    "recognition": [
+      "recognition",
+      "posting",
+      "period"
+    ]
+  },
+  "draftFields": [
+    "buyer",
+    "payer",
+    "issuer",
+    "currency",
+    "timezone"
+  ]
+}

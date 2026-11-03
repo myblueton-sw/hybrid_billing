@@ -97,6 +97,13 @@ try {
           es.every((e) => getComputedStyle(e).fontSize === "16px"),
         );
       assert(tableType);
+      assert(
+        await page
+          .locator(".overview-closing-filters label")
+          .evaluateAll((es) =>
+            es.every((e) => getComputedStyle(e).fontSize === "14px"),
+          ),
+      );
       if (width === 390) {
         assert(
           await page

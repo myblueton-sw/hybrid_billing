@@ -754,3 +754,12 @@ html[lang="ar"] .overview-shell {
 .unified-overview .unified-detail :is(th, td):nth-child(3) {
   text-align: end;
 }
+.overview-shell .unified-overview label {
+  font-size: 14px;
+  font-weight: 400;
+}
+.overview-shell .unified-picker fieldset label,
+.overview-shell .overview-org-row label,
+.overview-shell .design-review dialog label {
+  font-size: 16px;
+}

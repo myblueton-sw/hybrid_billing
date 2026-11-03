@@ -7,7 +7,7 @@ status: draft
 
 # Candidate and rejection history
 
-The owner rejected the first PR77 candidate on 2026-11-03 for typography, global layout and usability. Earlier technical passes did not establish commercial design quality. This report covers the complete U01 viewport replacement, not just the old body. Final source revision is `15ef73e0a2d1`. Owner acceptance remains pending.
+The owner rejected the first PR77 candidate on 2026-11-03 for typography, global layout and usability. Earlier technical passes did not establish commercial design quality. This report covers the complete U01 viewport replacement, not just the old body. Final source revision is `008bd182b66a`. Owner acceptance remains pending.
 
 Host: macOS arm64, Node 26.7.0, npm 11.19.0, Chromium headless shell 153.0.8010.12. The Node/npm/browser implementation remains portable by design; Windows/Linux and other browser engines are unverified. No production services or customer data were used.
 
@@ -38,7 +38,7 @@ A separate source/financial reviewer passed the recomposed scope, then independe
 
 Claude CLI ui-designer used the installed official frontend-design skill and rejected-render evidence to propose a complete viewport composition. Its first revised visual critique found floating chart-axis labels, absent gridlines and an overemphasized repeated headline. Root introduced aligned readable ticks/gridlines and headroom, reduced headline emphasis, aligned actions and restricted the selected underline to the month label. Final formal critique of revision `0a16f75fa54a` visually passed the first viewport and chart, while leaving minor lower-screen defects and owner acceptance separate. It directly inspected all three desktop first screens, KO/AR compact charts, KO lifecycle/compositions/detail and AR compact compositions. EN compact and full AR lifecycle/detail were not independently visually reviewed.
 
-Root subsequently corrected the minor incomplete bottom borders, first lifecycle-header fill, completed/not-applicable link density and detail amount alignment, retaining keyboard focus and actual actions. The final root captures and browser rerun cover these changes; the independent visual verdict is not represented as having inspected that later polish.
+Root subsequently corrected the minor incomplete bottom borders, first lifecycle-header fill, completed/not-applicable link density, detail amount alignment and inherited 12px field labels (now checked at 14px), retaining keyboard focus and actual actions. The final root captures and browser rerun cover these changes; the independent visual verdict is not represented as having inspected that later polish.
 
 The visual review questioned organization C's KRW zero. The unchanged model explicitly creates a recorded zero for that on-premises fixture; existing numeric/browser checks verify it. It is distinct from source/currency combinations without records. No missing value was converted to zero or not applicable.
 

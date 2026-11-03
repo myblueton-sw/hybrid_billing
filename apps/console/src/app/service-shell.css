@@ -180,3 +180,23 @@
   margin-block-start: 32px;
   padding-block-start: 16px;
 }
+.service-shell .service-related {
+  margin-block: 0 16px;
+  font-size: 14px;
+}
+.service-shell .service-related summary {
+  cursor: pointer;
+}
+.service-shell .service-related nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding-block: 8px;
+}
+.service-shell .service-related a {
+  min-block-size: 40px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.service-shell .planning-menu-dialog .planning-header-actions > button { text-align: start; justify-content: flex-start; }

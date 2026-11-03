@@ -1,43 +1,43 @@
 ---
 type: NavigationDesign
-title: Approved commercial service information architecture
-description: Implements the owner's eight business destinations with separate administration, shared Assistant access and unchanged canonical screen contracts.
+title: Task-based commercial menu draft
+description: Renders the owner's revised menu draft with direct overview and reports, business workbenches, lower collection/administration and contextual routes.
 status: draft
 ---
 
-# Decision and scope
+# Current revision and scope
 
-The owner instructed implementation of the eight-menu proposal after the planning-purpose review. This authorizes the navigation composition, not owner FIX, full functionality, main merge or deployment. Root owns implementation and QA. Existing screen IDs, owning modules, routes and authority remain unchanged. The active presentation source is apps/console/src/app/service-ia.ts; backend module ownership is not derived from a menu group.
+The owner requested the latest menu draft on screen after the menu-purpose audit. This replaces the earlier eight-peer-group presentation for this navigation scope. Root owns implementation and QA. Canonical IDs, screen contracts, module ownership, server authority and current owner-review rules remain unchanged. service-ia.ts is the active presentation mapping. It describes route placement, not capability completion.
 
-# Business navigation
+# Visible menu
 
-| Destination | Canonical screens |
+| Area | Entries |
 | --- | --- |
-| Overview | U01, U02, U03, U04 |
-| Costs and usage | S04, B01, B02, B06, B07 |
-| Organizations and contracts | O01, O02, O03 |
-| Allocation and pricing | B03, B04, B05 |
-| Settlement and billing | B08, B09, B10, I01, B11, I04 |
-| Accounting and ERP | I02, I03 |
-| Data and connections | S01, S02, S03, S05, S06 |
-| Reports and audit | R01, R02 |
+| Overview, direct | U01 |
+| Costs and allocation | S04 cost/usage, B01 cost pools, B03 allocation policies |
+| Settlement | B08 runs, U02 closing management, B09 approvals, S06 reconciliation/differences, I02 external submissions/results |
+| Billing | I01 documents, B11 balances/credits and inquiries through existing balances/cases views |
+| Organizations and contracts | O01 organizations, O03 contracts, B04 sales pricing, B05 exchange-rate policies |
+| Reports, direct | R01 |
+| Lower Data collection | S03 received inputs, S01 connections |
+| Lower Administration | M01 users/access, P02 integrations, P01 platform operations |
 
-Administration is a lower separated group: M01–M04 and P01–P07. A01 is an authorized header entry, M05 stays in the account menu, and C01–C03/L01–L03 retain separate customer/prelogin presentation. U03 keeps its authorized customer projection. All 49 screens are accounted for once in canonical placement; view projections are not new screens.
+My work is a global menu containing U03 work/notifications and execution-job access. A01 remains an authorized global Assistant entry. M05 stays self-only. C01–C03 and L01–L03 retain their separate audience surfaces.
 
-Navigation and breadcrumbs use the same mapping. Labels distinguish cost exploration, internal allocation, selling policy and independent monthly-recognition/ERP work. Tasks within one canonical screen remain its tabs or subviews: the I02 menu destination explicitly includes monthly recognition, submission and reconciliation, rather than inventing three identical destinations. Payment terms, receipt freshness and due/overdue views remain existing screen requirements rather than new implemented modules.
+# Contextual access and permission fallback
 
-# Interaction and boundaries
+Contextual ownership: U04 from U01; S02 from S01; B02/B06/B07/S05 from S04; B10 from B08; I04 from I01; I03 from I02; O02 from O01; R02 from R01; M02–M04 from M01; P03–P07 from P01. This accounts for all 49 canonical IDs exactly once without requiring 49 visible menu items.
 
-Only allowed registry entries appear; empty sections disappear. The current section opens when the active screen changes. Other disclosure choices persist within the mounted navigation. Header Assistant and Notifications use the same allowed entries as business navigation. Mobile utilities remain reachable through the menu. All navigation uses the existing guarded transition and preserves allowed shared scope and service mode.
+Related-work disclosure provides guarded, permission-filtered canonical links for contextually placed workbenches. I01 additionally links to I03 for non-ERP file purposes. Generic links deliberately discard unrelated object IDs, snapshots and filters rather than imply the destination has inherited valid object context. Existing exact row/document evidence links remain unchanged.
 
-No monetary, permission, posting, invoice or collection behavior changes. Accounting navigation does not force customer billing to precede monthly recognition. No unsupported screen capability becomes implemented by appearing in this menu. Developer simulation remains explicitly separated and grants no authority.
+Users allowed a contextual child but denied its parent receive an authorized fallback menu entry. S05 is an explicit exception: its live viewer needs exact object context, so no generic working evidence-search/viewer is invented. Independent evidence discovery for an S05-only user remains unimplemented; required object evidence and its existing exact links are preserved. Do not claim this menu draft completes that separate capability.
 
-# Design and review
+B11's two entries share one canonical route with actual balances/cases tab keys. Current selection follows the active tab. An active contextual page highlights its owning visible workbench; fallback children can highlight themselves. Lower operational placement does not turn intake into configuration-only work. Monthly recognition opens directly through I02 without requiring an invoice.
 
-The shell composition and external references remain those recorded in service-shell.md. This change applies the owner-approved grouping to the same neutral full-width shell; it imports no external assets or dependencies. The earlier seven-group research candidate remains distinct review evidence, qualified by planning-purpose-review.md; this document is the current implemented navigation decision.
+# Review and actual validation
 
-Independent design and actual IA implementation reviews PASS for coverage, visibility filtering, breadcrumbs and route/authority preservation. Shared source revision changes require current-scope owner review; previous FIX is not copied.
+The same previously reviewed neutral full-width shell is used. No external assets, dependencies or OS-specific runtime interface is added. Source-derived review revision changes with the navigation; no previous FIX is transferred.
 
-# Validation
+Independent design review required child-only entry and non-ERP file discoverability. Actual diff review found generic S05 fallback and inconsistent Arabic meanings; both were corrected. Final targeted source re-review PASS. 76 console tests and typecheck/build PASS, including complete canonical classification and child-only fallback checks. Nine EN/KO/AR desktop/tablet/mobile renders PASS, including direct entries, lower sections, hidden contextual LNB entries, Enter-key mobile settlement expansion, guarded live S01-to-S02 navigation, non-ERP I03 link from I01, B11 tab aliases with exactly one active entry and global My work/job access. Claude CLI visual review found no blocking menu issue in three representative captures; requested report-label and mobile Assistant alignment polish was applied. The opened Chrome deliverable uses the standard static preview on port 8804 with labelled synthetic data; the guarded local-service test remains on port 8803. Static preview does not provide the local-service API. Existing bundle warning remains.
 
-75 console tests and typecheck/build PASS; existing bundle-size warning remains. Registry partition test covers all 49 IDs exactly once and checks separate accounting, policy and administration placement. Browser QA PASS on 18 EN/KO/AR desktop/tablet/mobile renders, eight business groups plus lower administration, all 41 sidebar destinations and all five data destinations including S05, preserved service navigation, developer separation, mobile Assistant/Notifications and Enter-key accounting-group expansion. Claude CLI visual review found no blockers in four representative renders; its unobserved mobile utility and S05-visibility conditions were checked in browser. Other workflow-body findings remain outside this navigation change. macOS execution is not Windows/Linux certification. No new production integration is claimed.
+This is a rendered navigation draft. It does not implement new calculation, approval, accounting, evidence-search, collection or authentication capabilities. No owner FIX, main merge, deployment or untested OS support is claimed.

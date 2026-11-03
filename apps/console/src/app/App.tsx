@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Locale, Mode } from "../shared/types";
 import { serviceQuery } from "./service-navigation";
 import ServiceNavigation from "./ServiceNavigation";
-import { sectionFor } from "./service-ia";
+import { sectionFor, relatedScreens, navigationLabels } from "./service-ia";
 import "./service-shell.css";
 import { useLocation, setNavigationGuard } from "../shared/navigation";
 import {
@@ -262,6 +262,7 @@ export default function App() {
         query={serviceQuery(params, screen?.id ?? "")}
         onNavigate={navigate}
         developer={developer}
+        activeView={tab}
       />
     </>
   );
@@ -297,14 +298,21 @@ export default function App() {
       {context.assistant && allowed.some((s) => s.id === "A01") && (
         <button onClick={() => navigate("/assistant")}>AI Assistant</button>
       )}
-      {allowed.some((s) => s.id === "U03") && (
-        <button onClick={() => navigate("/tasks")}>
-          {local(l, ["알림", "Notifications", "الإشعارات"])}
+      <details className="planning-work">
+        <summary>{local(l, ["내 작업", "My work", "أعمالي"])}</summary>
+        {allowed.some((s) => s.id === "U03") && (
+          <button onClick={() => navigate("/tasks")}>
+            {local(l, [
+              "내 작업·알림",
+              "My work and notifications",
+              "أعمالي والإشعارات",
+            ])}
+          </button>
+        )}
+        <button ref={jobTrigger} onClick={() => jobs.current?.showModal()}>
+          {local(l, ["실행 중 작업", "Background jobs", "المهام الخلفية"])}
         </button>
-      )}
-      <button ref={jobTrigger} onClick={() => jobs.current?.showModal()}>
-        {local(l, ["작업", "Jobs", "المهام"])}
-      </button>
+      </details>
       <details className="planning-help">
         <summary>{local(l, ["도움말", "Help", "المساعدة"])}</summary>
         <button onClick={() => navigate("/help/contribute")}>
@@ -758,6 +766,52 @@ export default function App() {
                   </span>
                 </div>
               </header>
+              {relatedScreens(screen.id).some((id) =>
+                allowed.some((s) => s.id === id),
+              ) && (
+                <details className="service-related">
+                  <summary>
+                    {local(l, [
+                      "관련 업무",
+                      "Related work",
+                      "الأعمال ذات الصلة",
+                    ])}
+                  </summary>
+                  <nav
+                    aria-label={local(l, [
+                      "관련 업무",
+                      "Related work",
+                      "الأعمال ذات الصلة",
+                    ])}
+                  >
+                    {[
+                      ...relatedScreens(screen.id),
+                      ...(screen.id === "I01" ? ["I03"] : []),
+                    ]
+                      .filter((id, index, all) => all.indexOf(id) === index)
+                      .flatMap((id) => {
+                        const target = allowed.find((s) => s.id === id);
+                        return target
+                          ? [
+                              <a
+                                key={id}
+                                href={planningUrl(
+                                  target.path,
+                                  serviceQuery(params, screen.id),
+                                )}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  navigate(target.path);
+                                }}
+                              >
+                                {local(l, navigationLabels[id] ?? titles[id])}
+                              </a>,
+                            ]
+                          : [];
+                      })}
+                  </nav>
+                </details>
+              )}
               <ReviewPanel
                 screen={screen.id}
                 locale={l}

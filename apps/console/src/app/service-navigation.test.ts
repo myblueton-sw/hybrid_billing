@@ -20,24 +20,36 @@ test("business navigation preserves service mode and shared scope without leakin
 import {
   businessSections,
   administrationSection,
+  dataSection,
+  contextualGroups,
+  navigationScreenIds,
+  relatedScreens,
   outsideBusinessNavigation,
   sectionFor,
 } from "./service-ia";
 import { planningScreens } from "../planning/registry";
-test("approved IA covers all canonical screens once with separate accounting and administration", () => {
+test("draft keeps all canonical identities while nesting contextual work", () => {
   const ids = [
     ...businessSections.flatMap((s) => s.screens),
+    ...dataSection.screens,
     ...administrationSection.screens,
+    ...contextualGroups.flatMap((g) => g.screens),
     ...outsideBusinessNavigation,
   ];
-  assert.equal(businessSections.length, 8);
   assert.equal(new Set(ids).size, 49);
   assert.equal(ids.length, 49);
   assert.deepEqual([...ids].sort(), planningScreens.map((s) => s.id).sort());
-  assert.equal(sectionFor("I02")?.key, "accounting");
-  assert.equal(sectionFor("I01")?.key, "billing");
-  assert.equal(sectionFor("B03")?.key, "policies");
-  assert.equal(sectionFor("S04")?.key, "costs");
-  for (const id of outsideBusinessNavigation)
-    assert.equal(sectionFor(id), undefined);
+  assert.equal(sectionFor("I02")?.key, "settlement");
+  assert.equal(sectionFor("I03")?.key, "settlement");
+  assert.equal(sectionFor("S02")?.key, "data");
+  assert.equal(sectionFor("B03")?.key, "costs");
+  assert.equal(sectionFor("B04")?.key, "organizations");
+  assert.ok(relatedScreens("I01").includes("I03"));
+});
+test("allowed contextual children retain entry without a permitted parent", () => {
+  for (const child of ["B02", "I03", "O02", "R02", "M03"]) {
+    const section = sectionFor(child)!;
+    assert.deepEqual(navigationScreenIds(section, new Set([child])), [child]);
+  }
+  assert.deepEqual(navigationScreenIds(dataSection, new Set()), []);
 });

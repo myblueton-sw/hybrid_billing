@@ -24,8 +24,14 @@ page.on("pageerror", (e) => errors.push(e.message));
 const url = args.url || "http://127.0.0.1:8787/",
   output = args.output || "qa-output/overview";
 await mkdir(output, { recursive: true });
-const loaded = () =>
-  page.locator("[data-focus-state=loaded]").waitFor({ timeout: 30000 });
+const loaded = async () => {
+  await page.waitForFunction(() => {
+    const current = new URLSearchParams(location.hash.split("?")[1]), expected = new URLSearchParams();
+    for (const k of ["period", "provider", "account", "basis", "q", "after", "account_after", "snapshot"]) if(current.has(`focus-${k}`)) expected.set(k, k === "q" ? current.get(`focus-${k}`).trim() : current.get(`focus-${k}`));
+    const root = document.querySelector("[data-focus-state=loaded]");
+    return root?.getAttribute("data-focus-query") === expected.toString();
+  }, null, {timeout:30000}).catch(async e => { console.error(await page.locator("[data-focus-state]").evaluate(el=>({state:el.getAttribute("data-focus-state"),query:el.getAttribute("data-focus-query"),url:location.hash,error:el.querySelector("[role=alert]")?.textContent}))); throw e; });
+};
 const open = async (query = "") => {
   await page.goto(url + "#/home?lang=en" + query);
   await loaded();
@@ -133,17 +139,22 @@ try {
     { headers: { "X-HB-Local-Client": "1" } },
   );
   assert.equal(stale.status(), 409);
-  await page.locator("input[value=effective_cost]").check();
+  await page.locator("input[value=effective_cost]").click();
+  await page.waitForURL(/focus-basis=effective_cost/);
+  await page.locator("input[value=effective_cost]:checked").waitFor();
   await loaded();
+  assert.equal(await page.locator("input[value=effective_cost]").isChecked(), true);
   assert(
     (await page.locator(".focus-amounts").innerText()).includes(
       "18.72651418586",
     ),
   );
   await page.locator("#focus-provider").selectOption("Microsoft");
+  await page.waitForURL(/focus-provider=Microsoft/);
   await loaded();
   assert.equal(await page.locator("[data-focus-rows]").innerText(), "51");
   await page.locator("#focus-period").selectOption("2024-10");
+  await page.waitForURL(/focus-period=2024-10/);
   await loaded();
   assert.equal(await page.locator("[data-focus-rows]").innerText(), "0");
   await open("&focus-q=%20AWS%20");
@@ -152,6 +163,7 @@ try {
     .locator("#focus-account-search")
     .fill("no-such-public-sample-account");
   await page.locator(".focus-search button").click();
+  await page.waitForURL(/focus-q=no-such-public-sample-account/);
   await loaded();
   assert.equal(
     await page.locator(".focus-table").nth(1).locator("tbody tr").count(),
@@ -164,6 +176,7 @@ try {
     .last()
     .getByRole("button", { name: "Next", exact: true })
     .click();
+  await page.waitForURL(/focus-after=25/);
   await loaded();
   assert(page.url().includes("focus-after=25"));
   await page.goBack();
@@ -175,16 +188,20 @@ try {
     .locator("tbody th button")
     .first()
     .click();
+  await page.waitForURL(/focus-account=/);
   await loaded();
   assert((await page.locator("[data-focus-rows]").innerText()) !== "1121");
   await open();
-  await page.route("**/api/focus-overview?**", async (route) => {
-    const q = new URL(route.request().url()).searchParams;
-    if (q.get("provider") === "AWS") {
-      const response = await route.fetch();
-      await new Promise((r) => setTimeout(r, 1500));
-      await route.fulfill({ response }).catch(() => {});
-    } else await route.continue();
+  const replay = {};
+  for (const provider of ["AWS", "Microsoft"]) {
+    const response = await page.request.get(url+"api/focus-overview?provider="+provider,{headers:{"X-HB-Local-Client":"1"}});
+    assert.equal(response.status(),200); replay[provider] = await response.json();
+  }
+  await page.route("**/api/focus-overview?**", async route => {
+    const provider = new URL(route.request().url()).searchParams.get("provider");
+    if (provider === "AWS") await new Promise(r => setTimeout(r,1500));
+    if(replay[provider]) await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(replay[provider])}).catch(()=>{});
+    else await route.continue();
   });
   await page.locator("#focus-provider").selectOption("AWS");
   await page.waitForTimeout(100);

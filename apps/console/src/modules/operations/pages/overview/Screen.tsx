@@ -219,6 +219,7 @@ export default function Overview({
     <div
       className="overview-dashboard unified-overview focus-overview"
       data-focus-state={error ? "error" : data ? "loaded" : "loading"}
+      data-focus-query={key}
     >
       <div className="unified-filters">
         <label>

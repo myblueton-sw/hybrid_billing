@@ -9,7 +9,7 @@ status: draft
 
 Tracking: HB-85, branch `feat/HB-85-commercial-overview`, draft PR77, pending HB-76 dependency. Root implements; separate financial and architecture reviewers inspect source. The [integration design](collected-focus.md) and [composition](commercial-overview.md) are current; [earlier verification](verification.md) describes a different generated-fixture revision.
 
-Implementation and isolated verification pass. The final successfully built candidate is source fingerprint`c43029ac98d7`; App banners and all U01 legacy mode/scenario variants use the collected path without a generated fallback. **Final end-to-end QA remains BLOCKED by the existing local storage outage.** Do not represent six successful earlier capture sessions as completion of the later interrupted journey suite. Owner screen FIX, complete U01 planning/business fitness, merge and deployment remain pending.
+Implementation and isolated verification pass. The final successfully built candidate is source fingerprint`c43029ac98d7`; App banners and all U01 legacy mode/scenario variants use the collected path without a generated fallback. **The former storage blocker was resolved on 2026-11-04; the complete collected-data journey suite now passes.** Do not represent six successful earlier capture sessions as completion of the later interrupted journey suite. Owner screen FIX, complete U01 planning/business fitness, merge and deployment remain pending.
 
 # Actual retained source read-back
 
@@ -46,7 +46,7 @@ Host: macOS arm64; Python3.11.7; Node26.7.0; npm11.19.0; Chromium headless shell
 | `node apps/console/tools/verify-build.mjs` | PASS, 438 generated artifact hashes including HTML/seven notices |
 | Actual browser capture phase | Six EN/KO/AR variants at1440/390, 1,121 rows,78 account combinations,6 providers, bounded25-row mapping/detail pages, exact cost and review control present; no page errors or viewport overflow |
 | Actual journey phase | INCOMPLETE: hostile/missing proxy header, browser actor, forged account, stale basis continuation and EffectiveCost switch passed before the Microsoft-filter query failed during storage outage |
-| Final post-review renders/journeys | BLOCKED, not certified by earlier captures |
+| Final post-review renders/journeys | PASS on2026-11-04: six locale/layout captures and the complete collected query journey suite |
 
 The first capture attempt's English-font assertion failed in a Korean compact view because it checked a family not used by that locale. The runner now checks the actual locale family. The subsequent six captures passed. A later source change moved unknown markers to the zero baseline, corrected table alignment and added normal refresh; those changes still require fresh runtime captures.
 
@@ -96,3 +96,13 @@ node apps/console/tools/overview-qa.mjs --url http://127.0.0.1:8805/ --playwrigh
 ```
 
 The browser runner intentionally expects this documented authorized sample pack. It does not seed data, change permissions, execute financial commands or confirm review. Dependencies are explicit, with fixed loopback host and portable Python/Node browser interfaces. This is a portability design, not Windows/Linux execution evidence.
+
+# Recovery and completed query QA — 2026-11-04
+
+The removed temporary worktree was restored from commit1172307 into a persistent sibling checkout. Existing retained volumes and journal were reused; Docker and the same three services became healthy without namespace initialization or reseeding. Actual source rows/counts/costs were read back again.
+
+Root ran the complete `overview-qa.mjs` suite successfully: six EN/KO/AR1440/390 renders, exact BilledCost/EffectiveCost, provider/month/empty scopes, account-list search invariance, account narrowing, snapshot pages, Back, foreign scope, hostile/missing proxy headers, stale continuation, injected late response, error clearing and retry. The late-response case replays earlier actual protected responses in an isolated browser route, isolating UI response ordering from the deliberately bounded two-request backend; it does not certify backend cancellation. The first resumed runner exposed assertions racing hash navigation; observable URL/query identity and loaded-state matching now replace those early assertions. No financial source behavior was changed.
+
+Claude CLI ui-designer inspected the current KO/EN/AR1440 renders and KO390 account capture and returned scoped visualPASS for all three previous blockers, with no new blockers in that inspected scope. Uninspected mobile chart/source details, native-language and full controller-fitness acceptance remain separate. No ownerFIX was created.
+
+The former outage section above records historical evidence; it is no longer the current runtime status. Windows/Linux and other browser engines remain unverified. Draft PR77 still depends on the unmerged shell work and receives no merge/deployment authorization from this report.

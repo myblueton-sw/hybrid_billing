@@ -1,0 +1,62 @@
+{
+  "columns": [
+    "id",
+    "pair",
+    "quotation",
+    "rate",
+    "state"
+  ],
+  "details": [
+    "provider",
+    "occurred",
+    "markup",
+    "fee",
+    "policy"
+  ],
+  "values": {
+    "pair": "USD / KRW",
+    "quotation": "1 USD",
+    "rate": "unconfigured",
+    "state": "draft",
+    "provider": "unconfigured",
+    "occurred": "unconfigured",
+    "markup": "unconfigured",
+    "fee": "unconfigured",
+    "policy": "DEMO-FX-r1"
+  },
+  "views": {
+    "policies": [
+      "id",
+      "pair",
+      "quotation",
+      "rate",
+      "state"
+    ],
+    "imports": [
+      "provider",
+      "occurred",
+      "rate",
+      "quotation"
+    ],
+    "comparison": [
+      "basis",
+      "markup",
+      "fee",
+      "expected",
+      "actual"
+    ],
+    "approvals": [
+      "policy",
+      "approver",
+      "digest",
+      "state"
+    ]
+  },
+  "draftFields": [
+    "pair",
+    "quotation",
+    "rate",
+    "markup",
+    "fee"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "columns": [
+    "id",
+    "document",
+    "kind",
+    "issuer",
+    "period",
+    "state"
+  ],
+  "details": [
+    "hash",
+    "locator",
+    "retention",
+    "correction"
+  ],
+  "values": {
+    "document": "DEMO-STATEMENT-01",
+    "kind": "Provider original",
+    "issuer": "DEMO Provider",
+    "period": "2026-10",
+    "state": "pending",
+    "hash": "DEMO-HASH-01",
+    "locator": "DEMO-LOCATOR-01",
+    "retention": "unconfigured",
+    "correction": "notapplicable"
+  },
+  "views": {
+    "evidence": [
+      "id",
+      "document",
+      "kind",
+      "issuer",
+      "period"
+    ],
+    "documents": [
+      "document",
+      "contract",
+      "correction"
+    ],
+    "validation": [
+      "hash",
+      "evidence",
+      "validation"
+    ],
+    "retention": [
+      "retention",
+      "hold",
+      "restoreSet"
+    ]
+  },
+  "draftFields": []
+}

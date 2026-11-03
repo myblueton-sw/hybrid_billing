@@ -37,9 +37,10 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
     params = new URLSearchParams(hash.split("?")[1]);
   const workspace =
     params.get("scope") === "sample-b" ? "sample-b" : "sample-a";
-  const period = params.get("overview-period") ?? months.at(-1)!;
+  const period =
+    params.get("period") ?? params.get("overview-period") ?? months.at(-1)!;
   const currency: Currency =
-    params.get("ov-currency") === "KRW" ? "KRW" : "USD";
+    (params.get("ccy") ?? params.get("ov-currency")) === "KRW" ? "KRW" : "USD";
   const selectedSources = params.has("ov-sources")
     ? sources.filter((s) => params.get("ov-sources")!.split("|").includes(s))
     : [...sources];
@@ -469,7 +470,7 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
               currency={currency}
               locale={l}
               period={period}
-              onMonth={(month) => change({ "overview-period": month })}
+              onMonth={(month) => change({ period: month })}
             />
             <div className="unified-composition">
               {breakdown("source", selectedSources)}

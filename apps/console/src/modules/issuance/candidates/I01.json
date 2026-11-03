@@ -1,0 +1,70 @@
+{
+  "columns": [
+    "id",
+    "document",
+    "kind",
+    "issuer",
+    "gross",
+    "delivery"
+  ],
+  "details": [
+    "net",
+    "tax",
+    "period",
+    "correction",
+    "due",
+    "posting"
+  ],
+  "values": {
+    "document": "DEMO-INVOICE-01",
+    "kind": "MSP sales invoice",
+    "issuer": "DEMO-ENTITY-01",
+    "gross": "USD 110.0000",
+    "delivery": "pending",
+    "net": "USD 100.0000",
+    "tax": "USD 10.0000",
+    "period": "2026-10",
+    "correction": "notapplicable",
+    "due": "2026-11-30",
+    "posting": "unknown"
+  },
+  "views": {
+    "documents": [
+      "id",
+      "document",
+      "kind",
+      "issuer",
+      "gross",
+      "delivery"
+    ],
+    "body": [
+      "document",
+      "issuer",
+      "net",
+      "tax",
+      "gross"
+    ],
+    "corrections": [
+      "document",
+      "correction",
+      "revision"
+    ],
+    "history": [
+      "approver",
+      "digest",
+      "delivery",
+      "occurred"
+    ],
+    "payment-terms": [
+      "due",
+      "terms",
+      "state"
+    ],
+    "recognition": [
+      "recognition",
+      "posting",
+      "period"
+    ]
+  },
+  "draftFields": []
+}

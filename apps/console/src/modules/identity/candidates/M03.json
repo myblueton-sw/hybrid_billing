@@ -1,0 +1,57 @@
+{
+  "columns": [
+    "id",
+    "subject",
+    "permission",
+    "scope",
+    "grant"
+  ],
+  "details": [
+    "delegation",
+    "expiry",
+    "sensitivity",
+    "revision"
+  ],
+  "values": {
+    "subject": "DEMO Reviewer",
+    "permission": "unconfigured",
+    "scope": "DEMO Research",
+    "grant": "pending",
+    "delegation": "notapplicable",
+    "expiry": "unconfigured",
+    "sensitivity": "unconfigured",
+    "revision": "r1",
+    "name": "DEMO Reviewer"
+  },
+  "views": {
+    "roles": [
+      "id",
+      "name",
+      "permission",
+      "scope"
+    ],
+    "grants": [
+      "subject",
+      "delegation",
+      "scope",
+      "expiry"
+    ],
+    "effects": [
+      "permission",
+      "grant",
+      "sensitivity",
+      "evidence"
+    ],
+    "support": [
+      "subject",
+      "purpose",
+      "expiry",
+      "state"
+    ]
+  },
+  "draftFields": [
+    "name",
+    "purpose",
+    "scope"
+  ]
+}

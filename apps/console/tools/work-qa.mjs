@@ -131,12 +131,17 @@ try {
   assert.equal(await p.locator("#record-search").isDisabled(), true);
   ok("explicit unconnected generates no rows and disables fixture search");
   await p.goto(url + "#core-index-close?lang=en");
-  await rows(25);
+  await rows(20);
   assert.ok(
-    (await p.locator("thead th").allTextContents()).includes("Net amount"),
+    (await p.locator("thead th").allTextContents()).includes(
+      "Original deadline · UTC",
+    ),
   );
-  assert.match(await p.locator("tbody").innerText(), /Not available/);
-  ok("close workspace keeps amounts unavailable");
+  assert.match(
+    await p.locator("#content").innerText(),
+    /Amounts: Not available/,
+  );
+  ok("closing candidate preserves original deadlines and unavailable amounts");
   await p.goto(url + "#my-tasks?lang=en");
   await rows(25);
   await p.locator("#next").click();

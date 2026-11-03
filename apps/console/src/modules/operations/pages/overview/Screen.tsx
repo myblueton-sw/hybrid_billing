@@ -21,7 +21,10 @@ import { organizationName, stageName, statusName } from "./copy";
 import ScopeFilters from "./ScopeFilters";
 import CostTrend from "./CostTrend";
 import Lifecycle from "./Lifecycle";
+import AmountSummary from "./AmountSummary";
+import WorkSummary from "./WorkSummary";
 import "./overview.css";
+import "./commercial.css";
 import { emptyClosingFilter } from "./closing-filter";
 import { enterpriseLeaves, resolveOrganizations } from "./organization-scope";
 import OrgBreakdown from "./OrgBreakdown";
@@ -58,6 +61,14 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
     selectedOrganizations,
     mode,
   ]);
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 767px)");
+    const update = () => setCompact(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
   const [listFilter, setListFilter] = useState(emptyClosingFilter);
   const [detail, setDetail] = useState<Detail | null>(null);
   const detailRef = useRef<HTMLElement>(null);
@@ -121,7 +132,7 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
         label: `${organizationName(l, r.organization)} · ${t(l, "ERP confirmation missing", "ERP 반영 미확인", "تأكيد ERP مفقود")}`,
       })),
   ];
-  const exceptionPage = usePage(exceptions, key);
+  const exceptionPage = usePage(exceptions, key, 5);
   const money = (value: bigint | null, c: Currency) => formatMoney(value, c, l);
   function change(values: Record<string, string>) {
     setDetail(null);
@@ -160,6 +171,11 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
       }),
       [
         "overview:region:layout",
+        "U01:summary:amount-meanings",
+        "U01:work:attention",
+        "U01:state:receivables",
+        "U01:scope:provenance",
+        "U01:scope:example-data-set",
         "overview:field:reporting-month",
         "overview:field:source-selection",
         "overview:field:organization-selection",
@@ -188,7 +204,11 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
   function amount(value: ReturnType<typeof total>, c: Currency) {
     return (
       <>
-        <bdi>{money(value.value, c)}</bdi>
+        <bdi dir="ltr">
+          {value.value === null
+            ? `${c} · ${money(value.value, c)}`
+            : money(value.value, c)}
+        </bdi>
         {value.missing > 0 && (
           <small>
             {t(l, "Partial · missing", "부분 · 누락", "جزئي · مفقود")}{" "}
@@ -218,7 +238,17 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
                 )}
           </h2>
         </header>
-        <div className="table-wrap">
+        <div
+          className="table-wrap"
+          role="region"
+          tabIndex={0}
+          aria-label={t(
+            l,
+            "Source amounts, horizontally scrollable",
+            "원천별 금액, 가로 스크롤",
+            "مبالغ المصادر، تمرير أفقي",
+          )}
+        >
           <table className="unified-breakdown">
             <thead>
               <tr>
@@ -279,54 +309,7 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
         selectedOrganizations={selectedOrganizations}
         change={change}
       />
-      <div className="overview-profile">
-        <label>
-          {t(l, "Example size", "예제 규모", "حجم المثال")}
-          <select
-            id="overview-profile"
-            value={enterprise ? "enterprise" : "small"}
-            onChange={(e) =>
-              change({
-                "ov-scale": e.target.value,
-                "ov-organizations": "all",
-                "ov-sources": sources.join("|"),
-              })
-            }
-          >
-            <option value="small">
-              {t(
-                l,
-                "Small · 3 organizations",
-                "소규모 · 조직 3개",
-                "صغير · 3 مؤسسات",
-              )}
-            </option>
-            <option value="enterprise">
-              {t(
-                l,
-                "Enterprise · 2,400 departments",
-                "대규모 · 부서 2,400개",
-                "كبير · 2400 قسم",
-              )}
-            </option>
-          </select>
-        </label>
-        <p data-scope-count>
-          {enterprise &&
-            t(
-              l,
-              "Selected companies / divisions / departments",
-              "선택 법인 / 사업부 / 부서",
-              "الشركات / القطاعات / الأقسام المختارة",
-            )}{" "}
-          <bdi dir="ltr">
-            {enterprise
-              ? `${new Set(selectedOrganizations.map((id) => id.split(".")[0])).size} / ${new Set(selectedOrganizations.map((id) => id.split(".").slice(0, 2).join("."))).size} / ${selectedOrganizations.length}`
-              : `${selectedOrganizations.length} / 3`}
-          </bdi>
-        </p>
-      </div>
-      <p className="unified-basis">
+      <p className="unified-basis" data-design-id="U01:scope:provenance">
         {t(
           l,
           "Synthetic source cost · tax excluded · reporting month · no currency conversion",
@@ -378,92 +361,61 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
         </section>
       ) : (
         <>
-          <section
-            className="unified-summary"
-            aria-label={t(
-              l,
-              "Integrated monthly summary",
-              "통합 월별 요약",
-              "ملخص شهري موحد",
-            )}
+          {!compact && <AmountSummary rows={current} locale={l} />}
+          <div
+            className="overview-workboard"
+            data-design-id="U01:work:attention"
           >
-            <div className="unified-total">
-              <h2>
-                {t(
-                  l,
-                  "Known monthly costs",
-                  "선택 월 확인된 비용",
-                  "التكاليف الشهرية المعروفة",
-                )}
-              </h2>
-              <div className="unified-money">
-                {(["USD", "KRW"] as const).map((c) => (
-                  <div key={c} data-total={c}>
-                    {amount(total(current, c), c)}
-                  </div>
+            <WorkSummary
+              rows={closing}
+              known={known}
+              expected={current.length}
+              locale={l}
+              onSelect={(row, stage) => inspect("stage", row.id, stage)}
+            />
+            <section className="unified-panel unified-exceptions">
+              <header>
+                <h2>
+                  {t(
+                    l,
+                    "Data to verify",
+                    "확인이 필요한 자료",
+                    "بيانات للتحقق",
+                  )}
+                </h2>
+              </header>
+              <ul>
+                {exceptionPage.rows.map((r) => (
+                  <li key={r.id}>
+                    <button
+                      onClick={() =>
+                        inspect(
+                          r.kind,
+                          r.id,
+                          r.kind === "stage" ? "accounting" : undefined,
+                        )
+                      }
+                    >
+                      {r.label}
+                    </button>
+                  </li>
                 ))}
-              </div>
-              <p>
-                {t(
-                  l,
-                  "Currencies are separate totals. Partial data is not the final amount.",
-                  "통화별 개별 합계입니다. 부분 자료는 최종 금액이 아닙니다.",
-                  "إجماليات منفصلة حسب العملة؛ البيانات الجزئية ليست مبلغاً نهائياً.",
-                )}
-              </p>
-            </div>
-            <div>
-              <h2>
-                {t(
-                  l,
-                  "Monthly data coverage",
-                  "월별 자료 확인",
-                  "تغطية البيانات الشهرية",
-                )}
-              </h2>
-              <strong data-coverage>
-                <bdi dir="ltr">
-                  {known} / {current.length}
-                </bdi>
-              </strong>
-              <p>
-                {t(
-                  l,
-                  "Source × organization records",
-                  "원천 × 조직 자료",
-                  "سجلات المصدر × المؤسسة",
-                )}{" "}
-                ·{" "}
-                {missing.length
-                  ? `${t(l, "Missing", "누락", "مفقود")} ${missing.length}`
-                  : t(
-                      l,
-                      "Complete fixture coverage",
-                      "예제 자료 모두 확인",
-                      "تغطية تجريبية كاملة",
-                    )}
-              </p>
-            </div>
-            <div>
-              <h2>
-                {t(
-                  l,
-                  "Closing units in scope",
-                  "범위 내 정산 단위",
-                  "وحدات الإقفال في النطاق",
-                )}
-              </h2>
-              <strong data-closing-count>{closing.length}</strong>
-              <p>
-                {t(
-                  l,
-                  "Unique contract paths · not a completed count",
-                  "중복 없는 계약 경로 · 완료 건수 아님",
-                  "مسارات عقود فريدة · ليس عدد المكتمل",
-                )}
-              </p>
-            </div>
-          </section>
+                {!missing.length &&
+                  !closing.some((r) => r.status.accounting === "unknown") && (
+                    <li>
+                      {t(
+                        l,
+                        "No missing cost or unknown ERP outcomes in this fixture selection.",
+                        "선택한 예제에 비용 누락·ERP 미확인 항목이 없습니다.",
+                        "لا توجد تكلفة مفقودة أو نتائج ERP غير مؤكدة في الاختيار التجريبي.",
+                      )}
+                    </li>
+                  )}
+              </ul>
+              <Paging value={exceptionPage} locale={l} />
+            </section>
+          </div>
+          {compact && <AmountSummary rows={current} locale={l} />}
           <div className="unified-analysis">
             <CostTrend
               rows={all}
@@ -610,57 +562,106 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
               <Paging value={detailPage} locale={l} />
             </section>
           )}
-          <section className="unified-panel unified-exceptions">
-            <header>
-              <h2>
-                {t(
-                  l,
-                  "Items needing attention",
-                  "확인이 필요한 항목",
-                  "عناصر تتطلب الانتباه",
-                )}
-              </h2>
-            </header>
-            <ul>
-              {exceptionPage.rows.map((r) => (
-                <li key={r.id}>
-                  <button
-                    onClick={() =>
-                      inspect(
-                        r.kind,
-                        r.id,
-                        r.kind === "stage" ? "accounting" : undefined,
-                      )
-                    }
-                  >
-                    {r.label}
-                  </button>
-                </li>
-              ))}
-              {!missing.length &&
-                !closing.some((r) => r.status.accounting === "unknown") && (
-                  <li>
-                    {t(
-                      l,
-                      "No missing cost or unknown ERP outcomes in this fixture selection.",
-                      "선택한 예제에 비용 누락·ERP 미확인 항목이 없습니다.",
-                      "لا توجد تكلفة مفقودة أو نتائج ERP غير مؤكدة في الاختيار التجريبي.",
-                    )}
-                  </li>
-                )}
-            </ul>
-            <Paging value={exceptionPage} locale={l} />
+          <section
+            className="overview-unavailable"
+            data-design-id="U01:state:receivables"
+          >
+            <h2>
+              {t(
+                l,
+                "Receivables & deadlines",
+                "미수 잔액과 납기",
+                "المستحقات والمواعيد",
+              )}
+            </h2>
+            <p>
+              {t(
+                l,
+                "Unknown · Receipt allocations and payment terms are not connected. Receipt-stage status does not establish a balance or overdue amount.",
+                "확인 불가 · 수납 배정과 지급 조건이 연동되지 않았습니다. 수납 단계의 상태만으로 미수·연체 금액을 판단할 수 없습니다.",
+                "غير معلوم · تخصيصات التحصيل وشروط الدفع غير متصلة. حالة التحصيل لا تحدد الرصيد أو المبلغ المتأخر.",
+              )}
+            </p>
           </section>
-          <p className="unified-note">
-            {t(
-              l,
-              "This view demonstrates integrated source costs and independent closing states. Sales, allocations, forecasts and receipt balances require separate data contracts and are not calculated here.",
-              "이 화면은 통합 원천 비용과 독립 정산 상태를 보여주는 예제입니다. 판매·배분 금액, 예측, 미수 잔액은 별도 데이터 계약이 필요하며 여기서 계산하지 않습니다.",
-              "هذا مثال للتكاليف الموحدة وحالات الإقفال المستقلة. تتطلب المبيعات والتخصيصات والتوقعات وأرصدة المستحقات عقود بيانات منفصلة ولا تحسب هنا.",
-            )}
-          </p>
         </>
       )}
+      <details className="overview-example-config">
+        <summary>
+          {t(
+            l,
+            "Example configuration",
+            "예제 데이터 설정",
+            "إعدادات البيانات التجريبية",
+          )}
+        </summary>
+        <div className="overview-profile">
+          <label>
+            {t(
+              l,
+              "Example data set",
+              "예제 데이터 세트",
+              "مجموعة البيانات التجريبية",
+            )}
+            <select
+              id="overview-workspace"
+              value={workspace}
+              onChange={(e) => change({ scope: e.target.value })}
+            >
+              <option value="sample-a">
+                {t(l, "Example A", "예제 A", "مثال A")}
+              </option>
+              <option value="sample-b">
+                {t(l, "Example B", "예제 B", "مثال B")}
+              </option>
+            </select>
+          </label>
+          <label>
+            {t(l, "Example size", "예제 규모", "حجم المثال")}
+            <select
+              id="overview-profile"
+              value={enterprise ? "enterprise" : "small"}
+              onChange={(e) =>
+                change({
+                  "ov-scale": e.target.value,
+                  "ov-organizations": "all",
+                  "ov-sources": sources.join("|"),
+                })
+              }
+            >
+              <option value="small">
+                {t(
+                  l,
+                  "Small · 3 organizations",
+                  "소규모 · 조직 3개",
+                  "صغير · 3 مؤسسات",
+                )}
+              </option>
+              <option value="enterprise">
+                {t(
+                  l,
+                  "Enterprise · 2,400 departments",
+                  "대규모 · 부서 2,400개",
+                  "كبير · 2400 قسم",
+                )}
+              </option>
+            </select>
+          </label>
+          <p data-scope-count>
+            {enterprise &&
+              t(
+                l,
+                "Selected companies / divisions / departments",
+                "선택 법인 / 사업부 / 부서",
+                "الشركات / القطاعات / الأقسام المختارة",
+              )}{" "}
+            <bdi dir="ltr">
+              {enterprise
+                ? `${new Set(selectedOrganizations.map((id) => id.split(".")[0])).size} / ${new Set(selectedOrganizations.map((id) => id.split(".").slice(0, 2).join("."))).size} / ${selectedOrganizations.length}`
+                : `${selectedOrganizations.length} / 3`}
+            </bdi>
+          </p>
+        </div>
+      </details>
     </div>
   );
 }

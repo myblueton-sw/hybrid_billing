@@ -1,0 +1,336 @@
+.unified-overview {
+  container: overview / inline-size;
+  gap: 32px;
+}
+.overview-dashboard.unified-overview h2 {
+  font-size: 20px;
+  line-height: 1.4;
+}
+.unified-overview small {
+  font-size: 14px;
+}
+.unified-overview .unified-panel {
+  border: 0;
+  border-block-start: 1px solid var(--hb-line-row);
+  padding: 24px 0 0;
+}
+.unified-overview .unified-basis {
+  font-size: 14px;
+  margin: 0;
+  padding-block-end: 16px;
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.unified-overview .overview-amounts {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 0;
+  padding: 0;
+}
+.unified-overview .overview-amounts > div {
+  padding-inline: 24px;
+}
+.unified-overview .overview-amounts > div:first-child {
+  padding-inline-start: 0;
+}
+.unified-overview .overview-amounts h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--hb-ink);
+}
+.unified-overview .overview-amounts p {
+  font-size: 16px;
+  max-inline-size: 44ch;
+}
+.unified-overview .unified-money {
+  display: grid;
+  gap: 12px;
+  margin-block: 20px;
+}
+.unified-overview .unified-money bdi {
+  font-size: clamp(24px, 2.2vw, 32px);
+  line-height: 1.25;
+}
+.unified-overview .overview-unknown {
+  display: block;
+  margin-block: 24px 16px;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--hb-muted);
+}
+.unified-overview .overview-meaning-note {
+  font-size: 14px;
+}
+.overview-workboard {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 32px;
+  border-block: 1px solid var(--hb-line-row);
+  padding-block: 24px;
+  align-items: start;
+}
+.overview-work-summary {
+  min-inline-size: 0;
+}
+.overview-work-summary > header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.overview-attention-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-block: 24px 16px;
+}
+.overview-attention-counts > div {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 8px;
+}
+.overview-attention-counts strong {
+  font-size: 32px;
+  line-height: 1.25;
+  font-weight: 600;
+}
+.overview-attention-counts button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  min-block-size: 40px;
+  color: var(--c-link);
+  text-decoration: underline;
+  text-align: start;
+  white-space: normal;
+}
+.unified-overview .overview-operational-note,
+.unified-overview .overview-coverage,
+.overview-independent-states {
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.overview-independent-states {
+  margin-block-start: 16px;
+}
+.overview-independent-states summary {
+  cursor: pointer;
+  min-block-size: 40px;
+  padding-block: 8px;
+}
+.overview-independent-states dl {
+  margin: 8px 0;
+}
+.overview-independent-states dl > div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  padding-block: 8px;
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.overview-independent-states dt {
+  font-weight: 600;
+}
+.overview-independent-states dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.overview-coverage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--hb-line-row);
+}
+.overview-coverage strong {
+  color: var(--hb-ink);
+}
+.overview-coverage > span {
+  flex-basis: 100%;
+}
+.unified-overview .overview-workboard .unified-exceptions {
+  border: 0;
+  padding: 0;
+}
+.unified-overview .unified-exceptions ul {
+  display: block;
+  list-style: none;
+  padding: 0;
+}
+.unified-overview .unified-exceptions li {
+  padding-block: 12px;
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.unified-overview .unified-exceptions li:first-child {
+  padding-block-start: 0;
+}
+.unified-overview .unified-exceptions .overview-paging {
+  justify-content: flex-start;
+  font-size: 14px;
+}
+.unified-overview .unified-plot {
+  height: 240px;
+}
+.unified-overview .unified-matrix button {
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.unified-overview .unified-matrix button.stage-blocked,
+.unified-overview .unified-matrix button.stage-unknown {
+  background: var(--hb-hover);
+}
+.unified-overview .unified-matrix th:first-child {
+  inline-size: 200px;
+  min-inline-size: 200px;
+  max-inline-size: 200px;
+  overflow-wrap: anywhere;
+}
+.unified-overview .unified-breakdown td,
+.unified-overview .unified-breakdown th {
+  font-size: 16px;
+  padding-block: 16px;
+}
+.unified-overview .unified-breakdown {
+  min-inline-size: 420px;
+}
+.overview-unavailable {
+  border-block-start: 1px solid var(--hb-line-row);
+  padding-block-start: 24px;
+}
+.overview-unavailable p {
+  color: var(--hb-muted);
+  max-inline-size: 80ch;
+}
+.overview-example-config {
+  font-size: 14px;
+  color: var(--hb-muted);
+  border-block-start: 1px solid var(--hb-line-row);
+  padding-block-start: 16px;
+}
+.overview-example-config summary {
+  cursor: pointer;
+  min-block-size: 40px;
+}
+.overview-example-config .overview-profile label {
+  display: grid;
+  gap: 8px;
+}
+@container overview (max-width: 850px) {
+  .overview-workboard,
+  .unified-overview .unified-analysis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .unified-overview .unified-composition {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container overview (max-width: 600px) {
+  .unified-overview .overview-amounts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .unified-overview .overview-amounts > div {
+    padding: 0;
+    border: 0;
+  }
+  .unified-overview .overview-amounts > div + div {
+    border-block-start: 1px solid var(--hb-line-row);
+    padding-block-start: 24px;
+  }
+  .unified-overview .unified-money bdi {
+    font-size: 28px;
+  }
+  .overview-attention-counts {
+    gap: 8px;
+  }
+  .overview-attention-counts > div > span {
+    min-block-size: 48px;
+  }
+  .unified-overview .unified-matrix th:first-child {
+    inline-size: 140px;
+    min-inline-size: 140px;
+    max-inline-size: 140px;
+  }
+}
+
+.overview-dashboard.unified-overview {
+  --ui-size: 16px;
+  --ui-small: 14px;
+  font-size: 16px;
+}
+.unified-overview .table-wrap {
+  border: 0;
+}
+.unified-overview tbody th,
+.unified-overview tbody td {
+  font-size: 16px;
+  background: var(--hb-white);
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.unified-overview thead th {
+  background: var(--hb-white);
+}
+.unified-overview .unified-breakdown thead th:not(:first-child),
+.unified-overview .overview-org-breakdown thead th:not(:first-child) {
+  text-align: end;
+}
+.unified-overview .unified-exceptions .overview-paging button:disabled {
+  color: var(--hb-muted);
+}
+@container overview (max-width: 600px) {
+  .unified-composition .table-wrap,
+  .overview-org-breakdown .table-wrap {
+    max-block-size: none;
+    overflow: visible;
+  }
+  .unified-overview .unified-breakdown,
+  .unified-overview .overview-org-breakdown table {
+    display: block;
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+  .unified-breakdown thead,
+  .overview-org-breakdown thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .unified-breakdown tbody,
+  .overview-org-breakdown tbody {
+    display: block;
+  }
+  .unified-overview .unified-breakdown tbody tr,
+  .unified-overview .overview-org-breakdown tbody tr {
+    display: grid;
+    gap: 8px;
+    padding-block: 16px;
+    border-block-end: 1px solid var(--hb-line-row);
+  }
+  .unified-overview .unified-breakdown tbody th,
+  .unified-overview .unified-breakdown tbody td,
+  .unified-overview .overview-org-breakdown tbody th,
+  .unified-overview .overview-org-breakdown tbody td {
+    position: static;
+    display: block;
+    min-block-size: 0;
+    block-size: auto;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    text-align: start;
+  }
+  .unified-overview .unified-breakdown td bdi,
+  .unified-overview .overview-org-breakdown td bdi {
+    white-space: nowrap;
+  }
+}
+.overview-dashboard.unified-overview :is(button, input, select) {
+  font-size: 16px;
+  min-block-size: 40px;
+}

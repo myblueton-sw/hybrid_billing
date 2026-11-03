@@ -57,7 +57,17 @@ export default function OrgBreakdown({
           "تكاليف الفروع المختارة فقط · دون توحيد أو استبعادات. الصفحات لا تغير الإجماليات.",
         )}
       </p>
-      <div className="table-wrap">
+      <div
+        className="table-wrap"
+        role="region"
+        tabIndex={0}
+        aria-label={t(
+          l,
+          "Organization amounts, horizontally scrollable",
+          "조직별 금액, 가로 스크롤",
+          "مبالغ المؤسسات، تمرير أفقي",
+        )}
+      >
         <table>
           <thead>
             <tr>
@@ -84,12 +94,19 @@ export default function OrgBreakdown({
                     {organizationName(l, id)}
                   </button>
                 </th>
-                <td>{new Set(items.map((r) => r.organization)).size}</td>
+                <td data-included-count>
+                  {t(l, "Included", "포함", "المشمول")}{" "}
+                  <bdi>{new Set(items.map((r) => r.organization)).size}</bdi>
+                </td>
                 {(["USD", "KRW"] as const).map((c) => {
                   const sum = total(items, c);
                   return (
                     <td key={c}>
-                      <bdi>{formatMoney(sum.value, c, l)}</bdi>
+                      <bdi dir="ltr">
+                        {sum.value === null
+                          ? `${c} · ${formatMoney(sum.value, c, l)}`
+                          : formatMoney(sum.value, c, l)}
+                      </bdi>
                       {sum.missing > 0 && (
                         <small>
                           {t(l, "Missing", "누락", "مفقود")} {sum.missing}

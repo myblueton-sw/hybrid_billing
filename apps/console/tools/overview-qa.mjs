@@ -50,12 +50,100 @@ try {
         await page.locator("html").getAttribute("dir"),
         lang === "ar" ? "rtl" : "ltr",
       );
+      assert.equal(await page.locator("[data-amount-meaning]").count(), 2);
+      for (const meaning of ["sales", "allocation"]) {
+        const card = page.locator(`[data-amount-meaning="${meaning}"]`);
+        assert.equal(await card.locator("[data-total]").count(), 0);
+        assert.equal(await card.locator(".overview-unknown").count(), 1);
+      }
+      assert.deepEqual(
+        await page.locator("[data-attention] strong").allTextContents(),
+        ["1", "4", "2"],
+      );
+      const layout = await page.evaluate(() => {
+        const body = document.querySelector(".unified-overview");
+        const work = document.querySelector(".overview-workboard");
+        const amounts = document.querySelector(".overview-amounts");
+        const chart = document.querySelector(".unified-analysis");
+        return {
+          gap: getComputedStyle(body).gap,
+          heading: getComputedStyle(work.querySelector("h2")).fontSize,
+          metadata: getComputedStyle(amounts.querySelector("small")).fontSize,
+          workBeforeChart:
+            work.getBoundingClientRect().top <
+            chart.getBoundingClientRect().top,
+          workBeforeAmounts:
+            work.getBoundingClientRect().top <
+            amounts.getBoundingClientRect().top,
+          workBeforeAmountsDOM: Boolean(
+            work.compareDocumentPosition(amounts) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+          ),
+        };
+      });
+      assert.equal(layout.gap, "32px");
+      assert.equal(layout.heading, "20px");
+      assert.equal(layout.metadata, "14px");
+      assert(layout.workBeforeChart);
+      assert.match(
+        await page.locator("[data-trend-status]").innerText(),
+        lang === "ko" ? /부분/ : lang === "ar" ? /جزئي/ : /Partial/,
+      );
+      const tableType = await page
+        .locator(
+          ".overview-org-breakdown tbody td,.unified-matrix tbody td,.unified-matrix tbody button",
+        )
+        .evaluateAll((es) =>
+          es.every((e) => getComputedStyle(e).fontSize === "16px"),
+        );
+      assert(tableType);
+      if (width === 390) {
+        assert(
+          await page
+            .locator(".unified-breakdown td bdi,.overview-org-breakdown td bdi")
+            .evaluateAll((es) =>
+              es.every((e) => {
+                const r = e.getBoundingClientRect();
+                return r.left >= 0 && r.right <= innerWidth;
+              }),
+            ),
+        );
+      }
+      assert.equal(layout.workBeforeAmounts, width === 390);
+      assert.equal(layout.workBeforeAmountsDOM, width === 390);
       await page.evaluate(() => document.fonts.ready);
       await page.screenshot({
         path: `qa-output/overview/integrated-${lang}-${width}.png`,
         fullPage: true,
       });
     }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await open();
+  for (const group of ["blocked", "approval", "erp"]) {
+    const trigger = page.locator(`[data-attention="${group}"] button`);
+    await trigger.click();
+    await page.locator(".unified-detail").waitFor();
+    assert(
+      await page
+        .locator(".unified-detail")
+        .evaluate((e) => e === document.activeElement),
+    );
+    assert.match(
+      await page.locator(".unified-detail").innerText(),
+      group === "approval"
+        ? /Approval/
+        : group === "erp"
+          ? /Accounting/
+          : /Collection/,
+    );
+    await page.locator(".unified-detail header button").click();
+    assert(await trigger.evaluate((e) => e === document.activeElement));
+  }
+  await open("&period=2026-09");
+  assert.deepEqual(
+    await page.locator("[data-attention] strong").allTextContents(),
+    ["0", "0", "0"],
+  );
   await page.setViewportSize({ width: 1440, height: 1000 });
   for (const lang of ["en", "ko", "ar"])
     for (const width of [1440, 390]) {
@@ -71,7 +159,7 @@ try {
         await page.locator(".overview-org-breakdown tbody tr").count(),
         12,
       );
-      assert.equal(await page.locator(".unified-exceptions li").count(), 20);
+      assert.equal(await page.locator(".unified-exceptions li").count(), 5);
       assert(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth + 1,
@@ -232,6 +320,7 @@ try {
     await page.locator(".unified-matrix tbody tr").first().innerText(),
     /C01.B01.D02/,
   );
+  await page.locator(".overview-example-config summary").click();
   await page.selectOption("#overview-profile", "small");
   await page.waitForFunction(
     () => document.querySelector("[data-closing-count]")?.textContent === "6",
@@ -332,6 +421,10 @@ try {
   await page.waitForFunction(() => !document.querySelector(".unified-detail"));
   assert.equal(await page.locator(".unified-detail").count(), 0);
   await open("&ov-sources=GCP&ov-organizations=B");
+  assert.match(
+    await page.locator('[data-total="USD"]').innerText(),
+    /USD.*Unknown/s,
+  );
   assert.match(await page.locator('[data-total="USD"]').innerText(), /—/);
   assert.equal(
     await page
@@ -353,6 +446,7 @@ try {
   );
   await open();
   assert.equal(await page.locator("#language").count(), 1);
+  await page.locator(".overview-example-config summary").click();
   await page.selectOption("#overview-workspace", "sample-b");
   await page.waitForFunction(() =>
     document
@@ -384,7 +478,9 @@ try {
     .locator(".unified-panel")
     .evaluateAll((es) =>
       es.every(
-        (e) => getComputedStyle(e).borderTopColor === "rgb(220, 225, 229)",
+        (e) =>
+          getComputedStyle(e).borderTopWidth === "0px" ||
+          getComputedStyle(e).borderTopColor === "rgb(220, 225, 229)",
       ),
     );
   assert(neutral);
@@ -400,11 +496,8 @@ try {
   );
   await page.goto(url + "#/home?lang=en");
   await page.locator("[data-total]").first().waitFor();
-  await page.getByText("Review tools", { exact: true }).click();
-  await page
-    .getByRole("link", { name: "Screen directory", exact: true })
-    .click();
-  await page.locator("#design-directory-results").waitFor();
+  await page.goto(url + "#/design/screens?lang=en&review=1");
+  await page.locator(".planning-directory").waitFor();
   assert.equal(await page.locator(".unified-overview").count(), 0);
   assert.deepEqual(errors, []);
   console.log(

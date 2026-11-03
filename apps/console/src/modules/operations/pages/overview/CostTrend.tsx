@@ -21,6 +21,7 @@ export default function CostTrend({
       currency,
     ),
   }));
+  const selected = values.find((v) => v.month === period);
   const maximum = values.reduce(
     (max, x) => (x.value !== null && x.value > max ? x.value : max),
     0n,
@@ -57,6 +58,21 @@ export default function CostTrend({
             l,
           )}
         </bdi>
+        {" · "}
+        <span data-trend-status>
+          {!selected?.expected
+            ? t(l, "No matching data", "해당 자료 없음", "لا بيانات مطابقة")
+            : selected.value === null
+              ? t(l, "Unknown", "미확인", "غير مؤكد")
+              : selected.missing
+                ? t(
+                    l,
+                    `Partial (${selected.missing} missing)`,
+                    `부분 합계 (${selected.missing}건 누락)`,
+                    `جزئي (${selected.missing} مفقود)`,
+                  )
+                : t(l, "Known amount", "확인된 금액", "المبلغ المعروف")}
+        </span>
       </p>
       <div
         className="unified-chart"

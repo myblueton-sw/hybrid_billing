@@ -124,7 +124,9 @@ export default function SourceData({
       document
         .getElementById(
           rowId
-            ? "source-detail"
+            ? focus === "evidence"
+              ? "source-evidence-link"
+              : "source-detail"
             : focus
               ? `source-${window.innerWidth < 640 ? "mobile" : "row"}-${focus}`
               : "source-page-title",
@@ -141,6 +143,7 @@ export default function SourceData({
           "S04:table:normalized",
           "S04:page:snapshot",
           "S04:detail:row",
+          "S04:action:evidence",
           "S04:state:unavailable",
         ],
       ),
@@ -562,13 +565,34 @@ export default function SourceData({
                   </div>
                 ))}
               </dl>
-              <p>
-                {c(
-                  "Evidence viewing is not connected yet (S05). No original is downloaded.",
-                  "증빙 열람은 아직 연결되지 않았습니다(S05). 원본을 다운로드하지 않습니다.",
-                  "عرض الأدلة غير متصل بعد (S05). لا يتم تنزيل الأصل.",
-                )}
-              </p>
+              <a
+                id="source-evidence-link"
+                href={
+                  "#/evidence/" +
+                  objectId +
+                  "?" +
+                  new URLSearchParams({
+                    lang: l,
+                    service: "local",
+                    snapshot: data.snapshot,
+                    after,
+                    row: selected.ordinal,
+                  })
+                }
+                onClick={() =>
+                  history.replaceState(
+                    null,
+                    "",
+                    href(objectId, {
+                      snapshot: data.snapshot,
+                      row: selected.ordinal,
+                      focus: "evidence",
+                    }),
+                  )
+                }
+              >
+                {c("View source evidence", "원본 근거 보기", "عرض دليل المصدر")}
+              </a>
             </section>
           )}
         </>

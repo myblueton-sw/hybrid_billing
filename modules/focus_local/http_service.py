@@ -10,6 +10,7 @@ from .contract import MAX_BYTES, Rejected
 from .intake_view import Intake
 from .reconciliation import Reconciliation
 from .source_data import SourceData
+from .evidence import Evidence
 
 
 class LocalServer(ThreadingHTTPServer):
@@ -81,6 +82,8 @@ class Handler(BaseHTTPRequestHandler):
             return failure(403, 'origin_denied')
         if mutation and origin != self.server.origin:
             return failure(403, 'origin_denied')
+        if path.path.startswith('/api/local-evidence'):
+            return self.evidence(path.path, mutation, request_id, failure)
         if path.path.startswith('/api/local-source-data'):
             return self.source_data(path.path, mutation, request_id, failure)
         if path.path.startswith('/api/local-reconciliation'):
@@ -199,6 +202,33 @@ class Handler(BaseHTTPRequestHandler):
                 result = service.context()
             else:
                 result = service.candidates(exact[1] if exact else None)
+            self.reply(200, {**result, 'request_id': request_id})
+        except Rejected as exc:
+            reason = str(exc)
+            if reason in ('permission', 'policy_unavailable', 'release_unavailable', 'release_identity'):
+                failure(403, 'scope_denied')
+            elif reason == 'request_invalid':
+                failure(400, reason)
+            else:
+                failure(409, 'policy_changed' if reason == 'policy_changed' else 'evidence_unavailable')
+        except Exception:
+            failure(503, 'service_unavailable')
+        finally:
+            if service:
+                service.close()
+
+    def evidence(self, path, mutation, request_id, failure):
+        if not self.server.actor.startswith('approver-'):
+            return failure(403, 'scope_denied')
+        if mutation:
+            return failure(405, 'method_denied')
+        match = re.fullmatch(r'/api/local-evidence/rows/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/([0-9a-f]{64})/([1-9][0-9]{0,3}|10000)', path)
+        if not match:
+            return failure(400, 'request_invalid')
+        service = None
+        try:
+            service = Evidence(self.server.actor, self.server.env)
+            result = service.inspect_row(match[1], match[2], int(match[3]))
             self.reply(200, {**result, 'request_id': request_id})
         except Rejected as exc:
             reason = str(exc)

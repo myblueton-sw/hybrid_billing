@@ -1,0 +1,109 @@
+.connections-screen {
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+}
+.connections-screen section {
+  min-inline-size: 0;
+}
+.connections-screen h2 {
+  font-size: 20px;
+  margin-block: 0 12px;
+}
+.connections-screen h3 {
+  font-size: 18px;
+  margin-block: 0 12px;
+}
+.connections-screen p {
+  margin-block: 8px 16px;
+  overflow-wrap: anywhere;
+}
+.connections-screen bdi {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.connection-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
+}
+.connection-heading p {
+  max-inline-size: 70ch;
+}
+.connection-heading button {
+  min-block-size: 44px;
+}
+.connections-screen dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin-block: 16px 0;
+}
+.connections-screen dt {
+  font-size: 13px;
+  color: var(--hb-muted);
+}
+.connections-screen dd {
+  margin: 4px 0 12px;
+  overflow-wrap: anywhere;
+}
+.connection-date {
+  display: block;
+  white-space: nowrap;
+}
+html[dir="rtl"] .connection-date {
+  text-align: right;
+}
+.connection-scope,
+.connection-reception {
+  border-block: 1px solid var(--hb-line-row);
+  padding-block: 24px;
+}
+.connection-contracts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.connection-contracts article,
+.connection-notice {
+  border: 1px solid var(--hb-line-row);
+  padding: 16px;
+  min-inline-size: 0;
+}
+.connection-contracts summary {
+  margin-block-end: 8px;
+}
+.connection-holds {
+  border-block-start: 1px solid var(--hb-line-row);
+  margin-block-start: 16px;
+  padding-block-start: 12px;
+}
+.connection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+}
+.connection-actions a {
+  min-block-size: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.connections-screen [role="status"]:empty {
+  display: none;
+}
+.planning-app.live-connections-screen #confirm-review {
+  font-size: 16px;
+  min-block-size: 44px;
+}
+.planning-app.live-connections-screen .review-heading #review-status {
+  font-size: 14px;
+}
+@media (max-width: 639px) {
+  .connections-screen dl,
+  .connection-contracts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

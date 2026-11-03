@@ -14,6 +14,7 @@ import {
   type Audience,
 } from "../planning/routing";
 import { titles, menuNames, local, tabLabel } from "../planning/copy";
+import Connections from "../modules/onboarding/pages/connections/Screen";
 import EvidenceScreen from "../modules/sources/pages/evidence/Screen";
 import SourceData from "../modules/sources/pages/source-data/Screen";
 import Reconciliation from "../modules/sources/pages/reconciliation/Screen";
@@ -97,8 +98,16 @@ export default function App() {
     screen?.id === "S05" &&
     audience === "admin" &&
     params.get("service") === "local";
+  const liveConnections =
+    screen?.id === "S01" &&
+    audience === "admin" &&
+    params.get("service") === "local";
   const liveService =
-    liveImports || liveReconciliation || liveSourceData || liveEvidence;
+    liveImports ||
+    liveReconciliation ||
+    liveSourceData ||
+    liveEvidence ||
+    liveConnections;
   const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveSourceData || liveEvidence ? params.toString() : ""}`;
   const tabs =
     screen?.id === "U02" ? screen.tabs.slice(0, 2) : (screen?.tabs ?? []);
@@ -470,7 +479,7 @@ export default function App() {
   }
   return (
     <div
-      className={`planning-app ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""}`}
+      className={`planning-app ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""}`}
     >
       <a
         className="skip"
@@ -484,35 +493,41 @@ export default function App() {
       </a>
       <div className="planning-preview">
         <span>
-          {liveEvidence
+          {liveConnections
             ? local(l, [
-                "로컬 증빙 열람 · 원본 검증·텍스트 추출 · 합성 입력 전용",
-                "Local evidence inspection · verified original text extract · synthetic input only",
-                "فحص أدلة محلي · مقتطف نصي من أصل متحقق منه · مدخلات تجريبية فقط",
+                "로컬 연결 현황 · 실제 설정·수신 메타데이터 · 합성 입력 전용",
+                "Local connection status · actual configuration and reception metadata · synthetic input only",
+                "حالة اتصال محلي · إعدادات وبيانات استقبال فعلية · مدخلات تجريبية فقط",
               ])
-            : liveSourceData
+            : liveEvidence
               ? local(l, [
-                  "로컬 명세 조회 · 실제 저장 데이터 · 합성 입력 전용",
-                  "Local source inspection · actual stored rows · synthetic input only",
-                  "فحص مصدر محلي · صفوف مخزنة فعلية · مدخلات تجريبية فقط",
+                  "로컬 증빙 열람 · 원본 검증·텍스트 추출 · 합성 입력 전용",
+                  "Local evidence inspection · verified original text extract · synthetic input only",
+                  "فحص أدلة محلي · مقتطف نصي من أصل متحقق منه · مدخلات تجريبية فقط",
                 ])
-              : liveReconciliation
+              : liveSourceData
                 ? local(l, [
-                    "로컬 대사 · 실제 저장 근거 조회 · 합성 데이터 전용",
-                    "Local reconciliation · actual stored evidence · synthetic data only",
-                    "مطابقة محلية · أدلة مخزنة فعلية · بيانات تجريبية فقط",
+                    "로컬 명세 조회 · 실제 저장 데이터 · 합성 입력 전용",
+                    "Local source inspection · actual stored rows · synthetic input only",
+                    "فحص مصدر محلي · صفوف مخزنة فعلية · مدخلات تجريبية فقط",
                   ])
-                : liveImports
+                : liveReconciliation
                   ? local(l, [
-                      "로컬 서비스 연동 · 실제 검증·저장 · 합성 입력 전용",
-                      "Local service integration · actual validation and persistence · synthetic input only",
-                      "تكامل خدمة محلية · تحقق وحفظ فعليان · مدخلات تجريبية فقط",
+                      "로컬 대사 · 실제 저장 근거 조회 · 합성 데이터 전용",
+                      "Local reconciliation · actual stored evidence · synthetic data only",
+                      "مطابقة محلية · أدلة مخزنة فعلية · بيانات تجريبية فقط",
                     ])
-                  : local(l, [
-                      "인터랙티브 시안 · 합성 데이터 · 실제 서비스 미연결",
-                      "Interactive preview · synthetic data · services not connected",
-                      "معاينة تفاعلية · بيانات تجريبية · الخدمات غير متصلة",
-                    ])}
+                  : liveImports
+                    ? local(l, [
+                        "로컬 서비스 연동 · 실제 검증·저장 · 합성 입력 전용",
+                        "Local service integration · actual validation and persistence · synthetic input only",
+                        "تكامل خدمة محلية · تحقق وحفظ فعليان · مدخلات تجريبية فقط",
+                      ])
+                    : local(l, [
+                        "인터랙티브 시안 · 합성 데이터 · 실제 서비스 미연결",
+                        "Interactive preview · synthetic data · services not connected",
+                        "معاينة تفاعلية · بيانات تجريبية · الخدمات غير متصلة",
+                      ])}
         </span>
         {audience === "admin" && (
           <button onClick={() => previewAudience("admin", "/design/screens")}>
@@ -792,7 +807,7 @@ export default function App() {
                     </button>
                   ))}
                 </nav>
-                {["S03", "S04", "S05", "S06"].includes(screen.id) && (
+                {["S01", "S03", "S04", "S05", "S06"].includes(screen.id) && (
                   <button
                     className="live-mode-switch"
                     onClick={() =>
@@ -821,7 +836,13 @@ export default function App() {
                   id="content"
                   key={screenKey + ":" + tab + (liveService ? ":" + l : "")}
                 >
-                  {liveEvidence ? (
+                  {liveConnections ? (
+                    <Connections
+                      locale={l}
+                      objectId={route.objectId}
+                      onState={onState}
+                    />
+                  ) : liveEvidence ? (
                     <EvidenceScreen
                       locale={l}
                       objectId={route.objectId}

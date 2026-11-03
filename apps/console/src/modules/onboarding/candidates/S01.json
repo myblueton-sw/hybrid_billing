@@ -1,0 +1,60 @@
+{
+  "columns": [
+    "id",
+    "provider",
+    "version",
+    "auth",
+    "operational",
+    "statement",
+    "invoice"
+  ],
+  "details": [
+    "lastReceipt",
+    "capability",
+    "secret",
+    "expiry"
+  ],
+  "values": {
+    "provider": "DEMO Cloud",
+    "version": "DEMO-v1",
+    "auth": "verified",
+    "operational": "verified",
+    "statement": "pending",
+    "invoice": "unknown",
+    "lastReceipt": "2026-11-03T09:00:00Z",
+    "capability": "unconfigured",
+    "secret": "secret-ref:DEMO-01",
+    "expiry": "unconfigured"
+  },
+  "views": {
+    "connections": [
+      "id",
+      "provider",
+      "auth",
+      "operational",
+      "statement",
+      "invoice"
+    ],
+    "capabilities": [
+      "provider",
+      "version",
+      "capability"
+    ],
+    "security": [
+      "secret",
+      "expiry",
+      "owner"
+    ],
+    "diagnostics": [
+      "check",
+      "state",
+      "occurred",
+      "evidence"
+    ]
+  },
+  "draftFields": [
+    "provider",
+    "version",
+    "secret"
+  ]
+}

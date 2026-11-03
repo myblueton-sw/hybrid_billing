@@ -1,0 +1,562 @@
+{
+  "overview": {
+    "target": "/design/overview",
+    "screen": null,
+    "note": "review tooling"
+  },
+  "contents": {
+    "target": "/design/screens",
+    "screen": null,
+    "note": "review tooling"
+  },
+  "entry-start": {
+    "target": "/login",
+    "screen": "L01",
+    "note": ""
+  },
+  "entry-bootstrap": {
+    "target": "/activate",
+    "screen": "L02",
+    "note": ""
+  },
+  "entry-invite": {
+    "target": "/activate",
+    "screen": "L02",
+    "note": ""
+  },
+  "entry-login": {
+    "target": "/login",
+    "screen": "L01",
+    "note": ""
+  },
+  "entry-challenge": {
+    "target": "/recover",
+    "screen": "L03",
+    "note": ""
+  },
+  "entry-scope": {
+    "target": "/login",
+    "screen": "L01",
+    "note": ""
+  },
+  "entry-roles": {
+    "target": "/access",
+    "screen": "M03",
+    "note": ""
+  },
+  "entry-sessions": {
+    "target": "/my-security",
+    "screen": "M05",
+    "note": ""
+  },
+  "setup-progress": {
+    "target": "/onboarding/start",
+    "screen": "S02",
+    "note": "interim wizard step until decision D1"
+  },
+  "setup-profile": {
+    "target": "/onboarding/profile",
+    "screen": "S02",
+    "note": "interim wizard step until decision D1"
+  },
+  "setup-attribution": {
+    "target": "/onboarding/attribution",
+    "screen": "S02",
+    "note": "interim wizard step until decision D1"
+  },
+  "setup-connectors": {
+    "target": "/onboarding/connection",
+    "screen": "S02",
+    "note": "interim wizard step until decision D1"
+  },
+  "setup-readtest": {
+    "target": "/onboarding/diagnostics",
+    "screen": "S02",
+    "note": "interim wizard step until decision D1"
+  },
+  "setup-schedule": {
+    "target": "/onboarding/schedule",
+    "screen": "S02",
+    "note": "interim wizard step until decision D1"
+  },
+  "setup-first": {
+    "target": "/onboarding/first-receipt",
+    "screen": "S02",
+    "note": "interim wizard step until decision D1"
+  },
+  "setup-readiness": {
+    "target": "/onboarding/readiness",
+    "screen": "S02",
+    "note": "interim wizard step until decision D1"
+  },
+  "operations": {
+    "target": "/home",
+    "screen": "U01",
+    "note": "multi-mapped; primary chosen"
+  },
+  "core-index-close": {
+    "target": "/closing",
+    "screen": "U02",
+    "note": ""
+  },
+  "customer-detail": {
+    "target": "/contracts",
+    "screen": "O03",
+    "note": ""
+  },
+  "index-intake": {
+    "target": "/imports",
+    "screen": "S03",
+    "note": ""
+  },
+  "v4-inbox": {
+    "target": "/evidence",
+    "screen": "S05",
+    "note": ""
+  },
+  "v4-extract": {
+    "target": "/evidence",
+    "screen": "S05",
+    "note": ""
+  },
+  "v4-differences": {
+    "target": "/reconciliation",
+    "screen": "S06",
+    "note": ""
+  },
+  "v4-audit": {
+    "target": "/history",
+    "screen": "R02",
+    "note": ""
+  },
+  "core-index-sources": {
+    "target": "/reconciliation",
+    "screen": "S06",
+    "note": ""
+  },
+  "core-index-aws": {
+    "target": "/source-data",
+    "screen": "S04",
+    "note": ""
+  },
+  "core-index-variants": {
+    "target": "/source-data",
+    "screen": "S04",
+    "note": ""
+  },
+  "index-mapping": {
+    "target": "/organization-changes",
+    "screen": "O02",
+    "note": ""
+  },
+  "cost-pivot": {
+    "target": "/reports",
+    "screen": "R01",
+    "note": ""
+  },
+  "raw-explorer": {
+    "target": "/source-data",
+    "screen": "S04",
+    "note": ""
+  },
+  "auto-portfolio": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "supplier-register": {
+    "target": "/contracts",
+    "screen": "O03",
+    "note": ""
+  },
+  "marketplace-register": {
+    "target": "/marketplace",
+    "screen": "B07",
+    "note": ""
+  },
+  "marketplace-commitment": {
+    "target": "/commitments",
+    "screen": "B06",
+    "note": "multi-mapped; primary chosen"
+  },
+  "supplier-aws": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "supplier-azure": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "supplier-gcp": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "supplier-oci": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "supplier-alibaba": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "customer-contract": {
+    "target": "/contracts",
+    "screen": "O03",
+    "note": ""
+  },
+  "auto-rulebook": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "auto-editor": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "auto-exclusions": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "auto-mapping": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "auto-bulk": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "auto-exceptions": {
+    "target": "/billing-findings",
+    "screen": "U04",
+    "note": ""
+  },
+  "auto-activation": {
+    "target": "/approvals",
+    "screen": "B09",
+    "note": ""
+  },
+  "sales-policy": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "sales-impact": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "core-index-allocation": {
+    "target": "/allocations",
+    "screen": "B03",
+    "note": ""
+  },
+  "core-index-pricing": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "index-pricing": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "index-seats": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "index-commitments": {
+    "target": "/commitments",
+    "screen": "B06",
+    "note": ""
+  },
+  "index-fx": {
+    "target": "/exchange-rates",
+    "screen": "B05",
+    "note": ""
+  },
+  "auto-job": {
+    "target": "/billing-runs",
+    "screen": "B08",
+    "note": ""
+  },
+  "auto-trace": {
+    "target": "/claims",
+    "screen": "B10",
+    "note": ""
+  },
+  "ai-cost-waterfall": {
+    "target": "/source-data",
+    "screen": "S04",
+    "note": ""
+  },
+  "cost-differences": {
+    "target": "/reconciliation",
+    "screen": "S06",
+    "note": ""
+  },
+  "core-reconciliation-case": {
+    "target": "/reconciliation",
+    "screen": "S06",
+    "note": ""
+  },
+  "core-reconciliation-recalc": {
+    "target": "/billing-runs",
+    "screen": "B08",
+    "note": ""
+  },
+  "index-runs": {
+    "target": "/billing-runs",
+    "screen": "B08",
+    "note": ""
+  },
+  "core-reconciliation-approval": {
+    "target": "/approvals",
+    "screen": "B09",
+    "note": ""
+  },
+  "index-approval": {
+    "target": "/approvals",
+    "screen": "B09",
+    "note": ""
+  },
+  "assignment-policy": {
+    "target": "/invoices",
+    "screen": "I01",
+    "note": ""
+  },
+  "review-issue": {
+    "target": "/invoices",
+    "screen": "I01",
+    "note": ""
+  },
+  "document-history": {
+    "target": "/invoices",
+    "screen": "I01",
+    "note": ""
+  },
+  "core-reconciliation-issued": {
+    "target": "/invoices",
+    "screen": "I01",
+    "note": ""
+  },
+  "erp": {
+    "target": "/submissions",
+    "screen": "I02",
+    "note": ""
+  },
+  "auto-history": {
+    "target": "/claims",
+    "screen": "B10",
+    "note": "multi-mapped; primary chosen"
+  },
+  "v4-monthly": {
+    "target": "/history",
+    "screen": "R02",
+    "note": ""
+  },
+  "v4-month": {
+    "target": "/history",
+    "screen": "R02",
+    "note": ""
+  },
+  "v4-variance": {
+    "target": "/reports",
+    "screen": "R01",
+    "note": ""
+  },
+  "core-reconciliation-correction": {
+    "target": "/credits-cases",
+    "screen": "B11",
+    "note": ""
+  },
+  "index-correction": {
+    "target": "/credits-cases",
+    "screen": "B11",
+    "note": ""
+  },
+  "auto-customer": {
+    "target": "/portal/documents",
+    "screen": "C02",
+    "note": ""
+  },
+  "ai-invoice-detail": {
+    "target": "/portal/documents",
+    "screen": "C02",
+    "note": ""
+  },
+  "core-customer-overview": {
+    "target": "/portal/overview",
+    "screen": "C01",
+    "note": ""
+  },
+  "v4-customer-months": {
+    "target": "/portal/overview",
+    "screen": "C01",
+    "note": "multi-mapped; primary chosen"
+  },
+  "customer-history": {
+    "target": "/portal/documents",
+    "screen": "C02",
+    "note": ""
+  },
+  "core-customer-invoice": {
+    "target": "/portal/documents",
+    "screen": "C02",
+    "note": ""
+  },
+  "core-customer-usage": {
+    "target": "/portal/documents",
+    "screen": "C02",
+    "note": ""
+  },
+  "customer-inquiry": {
+    "target": "/portal/cases",
+    "screen": "C03",
+    "note": ""
+  },
+  "customer-response": {
+    "target": "/portal/cases",
+    "screen": "C03",
+    "note": ""
+  },
+  "core-reconciliation-setup": {
+    "target": "/installation",
+    "screen": "P01",
+    "note": ""
+  },
+  "license-modes": {
+    "target": "/licenses",
+    "screen": "P07",
+    "note": ""
+  },
+  "license-status": {
+    "target": "/licenses",
+    "screen": "P07",
+    "note": ""
+  },
+  "organizations": {
+    "target": "/organizations",
+    "screen": "O01",
+    "note": ""
+  },
+  "organization-impact": {
+    "target": "/organization-changes",
+    "screen": "O02",
+    "note": ""
+  },
+  "onprem-pools": {
+    "target": "/cost-pools",
+    "screen": "B01",
+    "note": ""
+  },
+  "asset-measurements": {
+    "target": "/meters",
+    "screen": "B02",
+    "note": ""
+  },
+  "file-handoff": {
+    "target": "/handoffs",
+    "screen": "I03",
+    "note": ""
+  },
+  "publication-packages": {
+    "target": "/exports",
+    "screen": "I04",
+    "note": ""
+  },
+  "users": {
+    "target": "/users",
+    "screen": "M01",
+    "note": ""
+  },
+  "identity-policy": {
+    "target": "/authentication",
+    "screen": "M02",
+    "note": ""
+  },
+  "service-accounts": {
+    "target": "/service-accounts",
+    "screen": "M04",
+    "note": ""
+  },
+  "personal-security": {
+    "target": "/my-security",
+    "screen": "M05",
+    "note": ""
+  },
+  "installation-diagnostics": {
+    "target": "/installation",
+    "screen": "P01",
+    "note": ""
+  },
+  "integrations": {
+    "target": "/integrations",
+    "screen": "P02",
+    "note": ""
+  },
+  "recovery-migration": {
+    "target": "/recovery",
+    "screen": "P03",
+    "note": ""
+  },
+  "retention-policy": {
+    "target": "/retention",
+    "screen": "P04",
+    "note": ""
+  },
+  "support-matrix": {
+    "target": "/release-evidence",
+    "screen": "P05",
+    "note": ""
+  },
+  "demo-scenarios": {
+    "target": "/demo",
+    "screen": "P06",
+    "note": ""
+  },
+  "assistant": {
+    "target": "/assistant",
+    "screen": "A01",
+    "note": ""
+  },
+  "reports": {
+    "target": "/reports",
+    "screen": "R01",
+    "note": ""
+  },
+  "audit-events": {
+    "target": "/history",
+    "screen": "R02",
+    "note": ""
+  },
+  "my-tasks": {
+    "target": "/tasks",
+    "screen": "U03",
+    "note": ""
+  },
+  "supplier-naver": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "supplier-kt": {
+    "target": "/rates",
+    "screen": "B04",
+    "note": ""
+  },
+  "community": {
+    "target": "/help/contribute",
+    "screen": null,
+    "note": "help"
+  }
+}

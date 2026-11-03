@@ -7,11 +7,13 @@ import HeaderSelect from "./HeaderSelect";
 import logo from "../../../../packages/design-system/assets/logo/hb-lockup-color.svg";
 export default function EntryShell({
   route,
+  planningId,
   locale: l,
   mode,
   profile,
 }: {
   route: Route;
+  planningId?: string;
   locale: Locale;
   mode: Mode;
   profile: string;
@@ -101,7 +103,7 @@ export default function EntryShell({
             {t(l, "Confirm screen review", "검수 확인", "تأكيد مراجعة الشاشة")}
           </summary>
           <ReviewPanel
-            screen={route.id}
+            screen={planningId ?? route.id}
             locale={l}
             context={JSON.stringify({
               profile,

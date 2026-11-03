@@ -1,0 +1,62 @@
+[
+  {
+    "key": "home",
+    "ko": "업무 홈",
+    "en": "Work home"
+  },
+  {
+    "key": "org",
+    "ko": "조직과 계약",
+    "en": "Organizations and contracts"
+  },
+  {
+    "key": "src",
+    "ko": "원천과 증빙",
+    "en": "Sources and evidence"
+  },
+  {
+    "key": "cost",
+    "ko": "원가와 요율",
+    "en": "Cost and rates"
+  },
+  {
+    "key": "bill",
+    "ko": "정산과 청구",
+    "en": "Settlement and billing"
+  },
+  {
+    "key": "rep",
+    "ko": "리포트와 이력",
+    "en": "Reports and history"
+  },
+  {
+    "key": "ai",
+    "ko": "Assistant",
+    "en": "Assistant"
+  },
+  {
+    "key": "iam",
+    "ko": "사용자와 접근",
+    "en": "Users and access"
+  },
+  {
+    "key": "ops",
+    "ko": "설치와 운영",
+    "en": "Installation and operations"
+  },
+  {
+    "key": "me",
+    "ko": "내 계정",
+    "en": "My account"
+  },
+  {
+    "key": "portal",
+    "ko": "고객 포털",
+    "en": "Customer portal"
+  },
+  {
+    "key": "pre",
+    "ko": "로그인 전",
+    "en": "Before sign-in"
+  }
+]

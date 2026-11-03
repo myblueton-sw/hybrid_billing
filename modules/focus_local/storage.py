@@ -106,6 +106,19 @@ class Storage:
     def get(self, key):
         return self.s3.get_object(Bucket=BUCKET, Key=key)['Body'].read()
 
+    def bounded_original(self, key, maximum):
+        response = self.s3.get_object(Bucket=BUCKET, Key=key)
+        stream = response['Body']
+        try:
+            if response.get('ContentLength', maximum + 1) > maximum:
+                raise Rejected('original_too_large')
+            data = stream.read(maximum + 1)
+            if len(data) > maximum:
+                raise Rejected('original_too_large')
+            return data
+        finally:
+            stream.close()
+
     def insert(self, scope, release_id, contract, rows):
         names = [f['name'] for f in contract.fields]
         values = [[scope[0], scope[1], release_id, 1, ordinal] + [row[n] for n in names] for ordinal, row in enumerate(rows, 1)]

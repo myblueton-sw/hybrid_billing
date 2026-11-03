@@ -1,0 +1,288 @@
+[
+  {
+    "id": "B01",
+    "path": "/cost-pools",
+    "menu": "cost",
+    "audience": "admin",
+    "module": "pricing",
+    "archetype": "list+detail-tabs",
+    "spec": "docs/ui/screens/B01/spec.md",
+    "exampleRoles": [
+      "PR",
+      "BL",
+      "CP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "summary",
+        "labelKo": "풀 요약"
+      },
+      {
+        "key": "costs",
+        "labelKo": "원가 구성"
+      },
+      {
+        "key": "products",
+        "labelKo": "상품 포함 관계"
+      },
+      {
+        "key": "approvals",
+        "labelKo": "승인 이력"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "온프렘 원가 풀",
+    "scopeLabelKo": "기간·소유 법인·풀 유형·승인 상태",
+    "purposeKo": "자산·리스/감가·라이선스·전력·시설·기간·출처·포함 항목·승인, 초안/배분 미리보기",
+    "commandReferences": [],
+    "actionEvidence": "초안 저장; 중복 검사; 배분 미리보기 (→B03); 승인 요청 (server approval)."
+  },
+  {
+    "id": "B03",
+    "path": "/allocations",
+    "menu": "cost",
+    "audience": "admin",
+    "module": "pricing",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/B03/spec.md",
+    "exampleRoles": [
+      "PR",
+      "BL",
+      "AP",
+      "CP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "policies",
+        "labelKo": "정책"
+      },
+      {
+        "key": "pools",
+        "labelKo": "전체 풀"
+      },
+      {
+        "key": "simulation",
+        "labelKo": "시뮬레이션"
+      },
+      {
+        "key": "comparison",
+        "labelKo": "비교·검증"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "배분·공유 풀",
+    "scopeLabelKo": "기간·풀·기준액 종류·대상 조직·정책 개정",
+    "purposeKo": "기준 원가/판매액·기간·대상·정률/사용/예약·유휴·잔액·정책, 시뮬레이션/비교/승인",
+    "commandReferences": [],
+    "actionEvidence": "정책 초안 저장; 전체 풀 시뮬레이션; 이전 결과 비교; 승인 요청 (server approval)."
+  },
+  {
+    "id": "B04",
+    "path": "/rates",
+    "menu": "cost",
+    "audience": "admin",
+    "module": "pricing",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/B04/spec.md",
+    "exampleRoles": [
+      "PR",
+      "BL",
+      "AP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "rates",
+        "labelKo": "요율"
+      },
+      {
+        "key": "formula",
+        "labelKo": "산식 단계"
+      },
+      {
+        "key": "inheritance",
+        "labelKo": "상속·예외"
+      },
+      {
+        "key": "adjustments",
+        "labelKo": "수동 조정"
+      },
+      {
+        "key": "impact",
+        "labelKo": "영향 비교"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "요율·산식·영향",
+    "scopeLabelKo": "계약·서비스/SKU·유효기간·정책 상태",
+    "purposeKo": "계약/서비스/SKU·기준액·단위·고정/구간·포함량·최소·최대·할인·가산/마진·순서·상속·유효일, 검사/모의/승인",
+    "commandReferences": [],
+    "actionEvidence": "초안 저장; 산식 검사 (div-by-zero, cycles); 모의 계산; 차액행 미리보기; 승인 요청 (server approval)."
+  },
+  {
+    "id": "B05",
+    "path": "/exchange-rates",
+    "menu": "cost",
+    "audience": "admin",
+    "module": "pricing",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/B05/spec.md",
+    "exampleRoles": [
+      "PR",
+      "BL",
+      "AP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "policies",
+        "labelKo": "정책"
+      },
+      {
+        "key": "imports",
+        "labelKo": "고시·수동 반입"
+      },
+      {
+        "key": "comparison",
+        "labelKo": "환산 비교"
+      },
+      {
+        "key": "approvals",
+        "labelKo": "승인 이력"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "환율·반올림",
+    "scopeLabelKo": "통화쌍·제공기관·환율 종류·기준일",
+    "purposeKo": "통화쌍·고시단위·출처·기준일·고정값·경과일·정책·반올림 단계, 수집/반입/비교/승인",
+    "commandReferences": [],
+    "actionEvidence": "고시 수집 요청; 수동 반입; 환산 비교; 승인 요청 (server approval)."
+  },
+  {
+    "id": "B06",
+    "path": "/commitments",
+    "menu": "cost",
+    "audience": "admin",
+    "module": "pricing",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/B06/spec.md",
+    "exampleRoles": [
+      "PR",
+      "BL",
+      "CP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "commitments",
+        "labelKo": "약정 명세"
+      },
+      {
+        "key": "utilization",
+        "labelKo": "사용·미사용"
+      },
+      {
+        "key": "benefits",
+        "labelKo": "혜택 전달"
+      },
+      {
+        "key": "reconciliation",
+        "labelKo": "대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "약정 원가·혜택",
+    "scopeLabelKo": "Provider·약정 종류·기간·소유자·배분 풀",
+    "purposeKo": "공급자 제공 약정/사용/미사용/상계·소유·배분·판매 전달정책·증빙, 조회/대사/정책 연결",
+    "commandReferences": [],
+    "actionEvidence": "약정 대사; 전달 정책 연결 (→B04); 근거 보기 (→S05)."
+  },
+  {
+    "id": "B07",
+    "path": "/marketplace",
+    "menu": "cost",
+    "audience": "admin",
+    "module": "pricing",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/B07/spec.md",
+    "exampleRoles": [
+      "PR",
+      "BL"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "buyer",
+        "labelKo": "구매자 청구"
+      },
+      {
+        "key": "seller",
+        "labelKo": "판매자 정산"
+      },
+      {
+        "key": "credits",
+        "labelKo": "혜택·크레딧"
+      },
+      {
+        "key": "mapping",
+        "labelKo": "매핑"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "Marketplace 거래",
+    "scopeLabelKo": "Provider·마켓·계약/offer·기간",
+    "purposeKo": "구매자 청구·판매 수수료·순정산·offer·할인 적용범위·크레딧·매입/판매 책임, 매핑/대사",
+    "commandReferences": [],
+    "actionEvidence": "거래 매핑; 정산 대사; 크레딧 근거 연결 (→B11)."
+  }
+]

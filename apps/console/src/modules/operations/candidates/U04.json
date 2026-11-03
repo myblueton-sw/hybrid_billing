@@ -1,0 +1,53 @@
+{
+  "columns": [
+    "id",
+    "kind",
+    "contract",
+    "period",
+    "state",
+    "owner"
+  ],
+  "details": [
+    "basis",
+    "meaning",
+    "amount",
+    "evidence",
+    "reason"
+  ],
+  "values": {
+    "kind": "Usage variance",
+    "contract": "DEMO-CONTRACT-01",
+    "period": "2026-10",
+    "basis": "Previous source revision",
+    "meaning": "Potential sales impact",
+    "amount": "unknown",
+    "evidence": "DEMO-EV-01",
+    "state": "pending",
+    "owner": "DEMO-USER-01"
+  },
+  "views": {
+    "findings": [
+      "id",
+      "kind",
+      "contract",
+      "period",
+      "state"
+    ],
+    "review": [
+      "basis",
+      "meaning",
+      "amount",
+      "evidence"
+    ],
+    "evidence": [
+      "evidence",
+      "reason",
+      "revision"
+    ]
+  },
+  "draftFields": [
+    "contract",
+    "kind",
+    "reason"
+  ]
+}

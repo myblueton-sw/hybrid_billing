@@ -1,0 +1,152 @@
+.live-imports dd,
+.live-imports p {
+  overflow-wrap: anywhere;
+}
+.live-imports dd {
+  margin-inline-start: 0;
+  margin-block-end: 12px;
+}
+.live-imports input[type="file"] {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+.live-imports .planning-table table {
+  min-inline-size: 760px;
+}
+.live-mode-switch {
+  margin-block-end: 24px;
+}
+.live-imports dt {
+  font-size: 13px;
+  color: var(--hb-muted);
+}
+.live-imports bdi {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+}
+.live-imports .live-timestamp {
+  display: block;
+  white-space: nowrap;
+}
+.live-imports .live-fields {
+  display: grid;
+  gap: 24px;
+  margin-block: 20px;
+}
+.live-imports .live-fields label {
+  display: grid;
+  gap: 6px;
+}
+.live-imports form p {
+  max-inline-size: 72ch;
+}
+.live-imports form > button {
+  margin-block-start: 16px;
+  justify-self: start;
+}
+.live-imports .live-file-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-inline-size: 0;
+}
+.live-imports .live-file-picker input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  cursor: pointer;
+}
+.live-imports .live-file-choice {
+  border: 1px solid var(--hb-line-row);
+  padding: 8px 12px;
+  flex-shrink: 0;
+}
+.live-imports .live-file-picker:focus-within {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.live-imports .live-receipt-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-align: start;
+}
+.live-imports td small {
+  display: block;
+  margin-block-start: 4px;
+}
+.live-imports .live-quarantine {
+  border-block-start: 1px solid var(--hb-line-row);
+  padding-block: 12px;
+}
+.live-imports .planning-table + h3 {
+  margin-block-start: 16px;
+}
+@media (min-width: 1024px) {
+  .live-imports .live-fields {
+    grid-template-columns: minmax(320px, 480px) 160px 200px;
+  }
+  .live-imports .live-scope {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 16px 24px;
+  }
+  .live-imports .live-identity {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 639px) {
+  .live-imports .planning-table {
+    overflow: visible;
+  }
+  .live-imports .planning-table table {
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+  .live-imports .planning-table thead {
+    position: absolute;
+    clip-path: inset(50%);
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+  }
+  .live-imports .planning-table tbody,
+  .live-imports .planning-table tr,
+  .live-imports .planning-table td {
+    display: block;
+  }
+  .live-imports .planning-table tr {
+    padding: 12px;
+    border-block-end: 1px solid var(--hb-line-row);
+  }
+  .live-imports .planning-table td {
+    padding: 4px 0;
+    border: 0;
+    white-space: normal;
+  }
+  .live-imports .planning-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 13px;
+    color: var(--hb-muted);
+  }
+  .live-imports .live-receipt-link {
+    inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+.live-imports .live-empty-file {
+  font: inherit;
+}
+.live-imports .live-quarantine {
+  border: 1px solid var(--hb-line-row);
+  padding: 12px;
+}
+.live-imports .live-quarantine strong {
+  color: var(--hb-ink);
+}

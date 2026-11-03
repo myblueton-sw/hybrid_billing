@@ -1,244 +1,492 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Locale, Mode } from "../shared/types";
+import { canonicalScope } from "../shared/scope-query";
+import { useLocation, setNavigationGuard } from "../shared/navigation";
+import {
+  planningScreens,
+  legacyReviewMap,
+  type PlanningScreen,
+} from "../planning/registry";
+import {
+  resolveRoute,
+  planningUrl,
+  visibleTo,
+  type Audience,
+} from "../planning/routing";
+import { titles, menuNames, local, tabLabel } from "../planning/copy";
+import Onboarding from "../modules/onboarding/pages/onboarding/Screen";
+import Connections from "../modules/onboarding/pages/connections/Screen";
+import EvidenceScreen from "../modules/sources/pages/evidence/Screen";
+import SourceData from "../modules/sources/pages/source-data/Screen";
+import Reconciliation from "../modules/sources/pages/reconciliation/Screen";
+import LiveImports from "../modules/sources/pages/live-imports/Screen";
+import CandidateWorkbench from "../planning/CandidateWorkbench";
+import ReviewPanel from "../shared/ReviewPanel";
+import HeaderSelect from "./HeaderSelect";
 import EntryShell from "./EntryShell";
 import { identity } from "../modules/identity/module";
-import { operations } from "../modules/operations/module";
-import { organizations } from "../modules/organizations/module";
-import { issuance } from "../modules/issuance/module";
-import { onboarding } from "../modules/onboarding/module";
-import HeaderSelect from "./HeaderSelect";
-import AccountPicker from "./AccountPicker";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { assemble } from "./assemble";
-import { getProfile } from "../profiles";
-import { sources } from "../modules/sources/module";
-import { designReview } from "../modules/design-review/module";
-import { evidenceGuide } from "../extensions/evidence-guide";
-import { text as t } from "../shared/copy";
-import { useLocation, routeUrl } from "../shared/navigation";
-import type { Locale, Mode } from "../shared/types";
-import ReviewPanel from "../shared/ReviewPanel";
-import shellCopy from "../shared/shell-copy.json";
-import { screens, groups, domains } from "../shared/catalog";
+import Overview from "../modules/operations/pages/overview/Screen";
+import Closing from "../modules/operations/pages/core-index-close/Screen";
 import logo from "../../../../packages/design-system/assets/logo/hb-lockup-color.svg";
-import chevron from "../../../../packages/design-system/assets/icons/chevron-down.svg";
-export const modules = [
-  identity,
-  designReview,
-  sources,
-  operations,
-  organizations,
-  issuance,
-  onboarding,
-];
-export const extensions = [evidenceGuide];
-function Workspace({
-  id,
-  l,
-  mode,
-  profile,
-}: {
-  id: string;
-  l: Locale;
-  mode: Mode;
-  profile: string;
-}) {
-  const composition = assemble(modules, extensions, getProfile(profile));
-  const route = composition.routes.find((r) => r.id === id);
-  const screen = screens.find((s) => s.id === id);
-  const [view, setView] = useState({ state: "", items: [] as string[] });
+import "../planning/planning.css";
+const personas = ["all", "OP", "AM", "PR", "BL", "AP", "CP", "AU", "CU", "IA"];
+export default function App() {
+  const [mobile, setMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setMobile(media.matches);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  const hash = useLocation(),
+    params = new URLSearchParams(hash.split("?")[1]);
+  const l: Locale =
+    params.get("lang") === "en"
+      ? "en"
+      : params.get("lang") === "ar"
+        ? "ar"
+        : "ko";
+  const mode: Mode =
+    params.has("mode") && params.get("mode") !== "synthetic"
+      ? "unconnected"
+      : "synthetic";
+  const [audience, setAudience] = useState<Audience>("admin"),
+    [persona, setPersona] = useState("all"),
+    [search, setSearch] = useState(""),
+    [dirty, setDirty] = useState(false),
+    [scenario, setScenario] = useState("normal"),
+    [view, setView] = useState({ key: "", state: "{}", items: [] as string[] });
+  const menuDialog = useRef<HTMLDialogElement>(null),
+    jobs = useRef<HTMLDialogElement>(null),
+    menuTrigger = useRef<HTMLButtonElement>(null),
+    jobTrigger = useRef<HTMLButtonElement>(null);
+  const context = useMemo(
+    () => ({
+      audience,
+      viewable: new Set(
+        planningScreens
+          .filter(
+            (s) =>
+              persona === "all" ||
+              s.exampleRoles.includes(persona) ||
+              s.audience === "prelogin",
+          )
+          .map((s) => s.id),
+      ),
+      assistant:
+        audience === "admin" &&
+        (persona === "all" || ["BL", "PR", "AP", "CP", "OP"].includes(persona)),
+      designTools: audience === "admin",
+    }),
+    [audience, persona],
+  );
+  const route = resolveRoute(hash || "#/home", context),
+    screen = route.screen;
+  const scope = params.get("scope") === "sample-b" ? "sample-b" : "sample-a";
+  const liveImports =
+    screen?.id === "S03" &&
+    audience === "admin" &&
+    params.get("service") === "local";
+  const liveReconciliation =
+    screen?.id === "S06" &&
+    audience === "admin" &&
+    params.get("service") === "local";
+  const liveSourceData =
+    screen?.id === "S04" &&
+    audience === "admin" &&
+    params.get("service") === "local";
+  const liveEvidence =
+    screen?.id === "S05" &&
+    audience === "admin" &&
+    params.get("service") === "local";
+  const liveConnections =
+    screen?.id === "S01" &&
+    audience === "admin" &&
+    params.get("service") === "local";
+  const liveOnboarding =
+    screen?.id === "S02" &&
+    audience === "admin" &&
+    params.get("service") === "local";
+  const liveService =
+    liveImports ||
+    liveReconciliation ||
+    liveSourceData ||
+    liveEvidence ||
+    liveConnections ||
+    liveOnboarding;
+  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
+  const tabs =
+    screen?.id === "U02" ? screen.tabs.slice(0, 2) : (screen?.tabs ?? []);
+  const requestedTab = params.get("view") ?? route.tab ?? route.step;
+  const tab = tabs.some((t) => t.key === requestedTab)
+    ? requestedTab!
+    : (tabs[0]?.key ?? "");
   const onState = useCallback(
     (state: string, items: string[]) =>
       setView((old) =>
-        old.state === state && old.items.join("|") === items.join("|")
+        old.key === screenKey &&
+        old.state === state &&
+        old.items.join("|") === items.join("|")
           ? old
-          : { state, items },
+          : { key: screenKey, state, items },
       ),
-    [],
+    [screenKey],
   );
-  const extensionIds = composition.extensions.map((e) => e.id);
-  if (!screen)
-    return (
-      <section className="panel">
-        <h1>{t(l, "Unknown screen", "알 수 없는 화면", "شاشة غير معروفة")}</h1>
-      </section>
+  const canLeave = () => {
+    const allowed =
+      !dirty ||
+      window.confirm(
+        local(l, [
+          "저장하지 않은 예제 입력을 버릴까요?",
+          "Discard unsaved example input?",
+          "هل تريد تجاهل المدخلات التجريبية غير المحفوظة؟",
+        ]),
+      );
+    if (allowed) setNavigationGuard(null);
+    return allowed;
+  };
+  function navigate(path: string, changes: Record<string, string> = {}) {
+    if (!canLeave()) return;
+    setDirty(false);
+    setSearch("");
+    menuDialog.current?.close();
+    const q = new URLSearchParams();
+    const inherited = canonicalScope(params, screen?.id ?? "");
+    for (const key of ["lang", "mode", "scope", "period", "le", "ccy"])
+      if (inherited.has(key)) q.set(key, inherited.get(key)!);
+    location.hash = planningUrl(path, q, changes);
+  }
+  function changeScope(changes: Record<string, string>) {
+    if (!canLeave()) return;
+    setDirty(false);
+    location.hash = planningUrl(route.path, params, { ...changes, view: tab });
+  }
+  function previewAudience(next: Audience, path?: string) {
+    if (!canLeave()) return;
+    setDirty(false);
+    setAudience(next);
+    setPersona("all");
+    setScenario("normal");
+    location.hash = planningUrl(
+      path ??
+        (next === "admin"
+          ? "/home"
+          : next === "customer"
+            ? "/portal/overview"
+            : "/login"),
+      new URLSearchParams({ lang: l }),
     );
-  const Screen = route?.component;
-  const reviewPanel = (
-    <ReviewPanel
-      screen={id}
-      locale={l}
-      context={JSON.stringify({
-        profile,
-        account:
-          new URLSearchParams(location.hash.split("?")[1]).get("scope") ??
-          "sample-a",
-        mode,
-        extensions: extensionIds,
-        state: view.state,
-      })}
-      items={view.items}
-    />
-  );
-  return (
-    <>
-      <div className="crumb">
-        {id === "overview"
-          ? screen.title[l]
-          : groups.find((g) => g.id === screen.group)?.label[l]}{" "}
-        / <bdi>{id}</bdi>
-      </div>
-      <div className="heading">
-        <div>
-          <h1>{screen.title[l]}</h1>
-          <p>{screen.description[l]}</p>
-        </div>
-        <span className="tag">{shellCopy.draft[l]}</span>
-      </div>
-      {id !== "overview" && (
-        <div className="meta">
-          <span>
-            {shellCopy.account[l]}:{" "}
-            <bdi>
-              {new URLSearchParams(location.hash.split("?")[1]).get("scope") ===
-              "sample-b"
-                ? "ACC-000002"
-                : "ACC-000001"}
-            </bdi>
-          </span>
-          <span>
-            {shellCopy.snapshot[l]}: <bdi>DEMO-S1</bdi>
-          </span>
-          <span>{shellCopy.notConnected[l]}</span>
-        </div>
-      )}
-      {id !== "overview" && reviewPanel}
-      <div id="content">
-        {Screen ? (
-          <Screen
-            locale={l}
-            mode={mode}
-            profile={profile}
-            extensionIds={extensionIds}
-            contributions={composition.extensions}
-            onState={onState}
-          />
-        ) : (
-          <section className="panel">
-            <h2>
-              {t(
-                l,
-                "React implementation pending",
-                "React 구현 대기",
-                "تنفيذ React قيد الانتظار",
-              )}
-            </h2>
-            <p>
-              {t(
-                l,
-                "This screen retains its existing design identity. Its React implementation has not been completed.",
-                "기존 시안의 화면 위치와 이름을 유지했습니다. 이 화면의 React 구현은 아직 완료되지 않았습니다.",
-                "تحتفظ الشاشة بهويتها التصميمية الحالية. لم يكتمل تنفيذها بعد.",
-              )}
-            </p>
-          </section>
-        )}
-      </div>
-      {id === "overview" && reviewPanel}
-      {id !== "overview" && (
-        <section className="related-section">
-          <h2>{shellCopy.related[l]}</h2>
-          <div className="related">
-            {screen.related
-              .filter(
-                (target) =>
-                  screen.group !== "customer" ||
-                  screens.find((s) => s.id === target)?.group === "customer",
-              )
-              .map((target) => (
-                <a key={target} href={routeUrl(target)}>
-                  {screens.find((s) => s.id === target)?.title[l]}
-                </a>
-              ))}
-          </div>
-        </section>
-      )}
-    </>
-  );
-}
-export default function App() {
-  const hash = useLocation(),
-    [routePart, query] = hash.slice(1).split("?"),
-    params = new URLSearchParams(query);
-  const id = routePart === "/home" ? "overview" : routePart || "entry-start",
-    l: Locale = ["en", "ar"].includes(params.get("lang") ?? "")
-      ? (params.get("lang") as Locale)
-      : "ko";
-  const profile = params.get("profile") ?? "standard",
-    mode: Mode =
-      params.has("mode") && params.get("mode") !== "synthetic"
-        ? "unconnected"
-        : "synthetic";
-  const [search, setSearch] = useState(""),
-    [dialogKind, setDialogKind] = useState("");
-  const dialog = useRef<HTMLDialogElement>(null),
-    lastTrigger = useRef<HTMLElement | null>(null);
-  const screen = screens.find((s) => s.id === id),
-    customer = screen?.group === "customer";
-  const domain = domains.find((d) =>
-    d.groups.includes(screen?.group ?? "overview"),
-  )!;
-  const allowed = screens.filter((s) => !customer || s.group === "customer");
-  const visible = allowed.filter((s) =>
-    search
-      ? `${s.title[l]} ${s.id} ${s.registryIds.join(" ")}`
-          .toLowerCase()
-          .includes(search.toLowerCase())
-      : domain.groups.includes(s.group) && s.id !== "contents",
-  );
+  }
   useEffect(() => {
     document.documentElement.lang = l;
     document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
-    document.title = `${screen?.title[l] ?? "Hybrid Billing"} · Hybrid Billing`;
-  }, [l, id]);
+    document.title = `${screen ? local(l, titles[screen.id]) : "Hybrid Billing"} · Hybrid Billing`;
+  }, [l, screen?.id]);
   useEffect(() => {
-    setSearch("");
-    dialog.current?.close();
+    setDirty(false);
     document.getElementById("main")?.focus({ preventScroll: true });
-  }, [id]);
-  function update(values: Record<string, string>) {
-    location.hash = routeUrl(id, {
-      ...values,
-      ...(values.mode ? { q: "", page: "1" } : {}),
-    });
-  }
-  function open(kind: string) {
-    lastTrigger.current = document.activeElement as HTMLElement;
-    setDialogKind(kind);
-    dialog.current?.showModal();
-  }
-  function close() {
-    dialog.current?.close();
-    setDialogKind("");
-    lastTrigger.current?.focus();
-  }
-  let valid = true;
-  try {
-    assemble(modules, extensions, getProfile(profile));
-  } catch {
-    valid = false;
-  }
-  const entry = valid ? identity.routes.find((r) => r.id === id) : undefined;
-  if (entry)
-    return (
-      <EntryShell
-        key={`${id}:${l}:${mode}:${profile}`}
-        route={entry}
-        locale={l}
-        mode={mode}
-        profile={profile}
-      />
+  }, [screenKey]);
+  useEffect(() => {
+    const h = (e: BeforeUnloadEvent) => {
+      if (dirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", h);
+    return () => window.removeEventListener("beforeunload", h);
+  }, [dirty]);
+  useEffect(() => {
+    const nextQuery = new URLSearchParams(params);
+    if (route.legacyId?.startsWith("entry-"))
+      nextQuery.set("entry-view", route.legacyId);
+    const expected = planningUrl(route.path, nextQuery);
+    if (
+      route.legacyId ||
+      (!route.screen && !route.tool && !hash.startsWith("#" + route.path))
+    ) {
+      history.replaceState(null, "", expected);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }
+  }, [hash, route.path, route.legacyId]);
+  useEffect(() => {
+    setNavigationGuard(
+      () =>
+        !dirty ||
+        window.confirm(
+          local(l, [
+            "저장하지 않은 예제 입력을 버릴까요?",
+            "Discard unsaved example input?",
+            "هل تريد تجاهل المدخلات التجريبية غير المحفوظة؟",
+          ]),
+        ),
     );
-  return (
+    return () => setNavigationGuard(null);
+  }, [dirty, l]);
+  const allowed = planningScreens.filter((s) => visibleTo(s, context));
+  const filtered = allowed.filter((s) =>
+    `${local(l, titles[s.id])} ${s.id}`
+      .toLowerCase()
+      .includes(search.toLowerCase()),
+  );
+  const menus = Object.keys(menuNames).filter(
+    (k) => !["pre", "portal", "me"].includes(k),
+  );
+  const sidebar = (
     <>
+      <label className="planning-search">
+        {local(l, ["화면 검색", "Find a screen", "البحث عن شاشة"])}
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </label>
+      <nav
+        aria-label={local(l, ["업무 메뉴", "Work navigation", "تنقل العمل"])}
+      >
+        {menus.map((key) => {
+          const entries = filtered.filter((s) => s.menu === key);
+          return entries.length ? (
+            <details key={key} open>
+              <summary>{local(l, menuNames[key])}</summary>
+              {entries.map((s) => (
+                <a
+                  key={s.id}
+                  href={planningUrl(s.path, new URLSearchParams({ lang: l }))}
+                  aria-current={s.id === screen?.id ? "page" : undefined}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(s.path);
+                  }}
+                >
+                  <span>{local(l, titles[s.id])}</span>
+                  <small>{s.id}</small>
+                </a>
+              ))}
+            </details>
+          ) : null;
+        })}
+      </nav>
+    </>
+  );
+  const portal = audience === "customer";
+  const headerActions = (
+    <div className="planning-header-actions">
+      {!portal && !liveService && (
+        <label className="planning-workspace">
+          <span className="sr-only">
+            {local(l, ["예제 업무 공간", "Example workspace", "مساحة تجريبية"])}
+          </span>
+          <select
+            value={scope}
+            onChange={(e) => changeScope({ scope: e.target.value })}
+          >
+            <option value="sample-a">
+              {local(l, [
+                "예제 공간 A",
+                "Example workspace A",
+                "مساحة تجريبية A",
+              ])}
+            </option>
+            <option value="sample-b">
+              {local(l, [
+                "예제 공간 B",
+                "Example workspace B",
+                "مساحة تجريبية B",
+              ])}
+            </option>
+          </select>
+        </label>
+      )}
+      <button ref={jobTrigger} onClick={() => jobs.current?.showModal()}>
+        {local(l, ["작업", "Jobs", "المهام"])}
+      </button>
+      <details className="planning-help">
+        <summary>{local(l, ["도움말", "Help", "المساعدة"])}</summary>
+        <button onClick={() => navigate("/help/contribute")}>
+          {local(l, [
+            "기여·지원",
+            "Contribution and support",
+            "المساهمة والدعم",
+          ])}
+        </button>
+      </details>
+      <HeaderSelect
+        label="Language"
+        value={l}
+        options={[
+          { value: "ko", label: "한국어" },
+          { value: "en", label: "English (US)" },
+          { value: "ar", label: "العربية (الإمارات)" },
+        ]}
+        onChange={(lang) => changeScope({ lang })}
+      />
+      <details className="planning-user">
+        <summary>{local(l, ["내 계정", "My account", "حسابي"])}</summary>
+        <button onClick={() => navigate("/my-security")}>
+          {local(l, titles.M05)}
+        </button>
+        <button onClick={() => previewAudience("unauthenticated")}>
+          {local(l, [
+            "로그인 전 시안으로",
+            "Open sign-in preview",
+            "فتح معاينة الدخول",
+          ])}
+        </button>
+      </details>
+    </div>
+  );
+  const reviewTools = (
+    <details className="planning-review-tools">
+      <summary>
+        {local(l, [
+          "시안 검토 도구",
+          "Preview review tools",
+          "أدوات مراجعة المعاينة",
+        ])}
+      </summary>
+      <div className="planning-controls">
+        <label>
+          {local(l, [
+            "사용자 구분 미리보기",
+            "Audience preview",
+            "معاينة فئة المستخدم",
+          ])}
+          <select
+            value={audience}
+            onChange={(e) => previewAudience(e.target.value as Audience)}
+          >
+            <option value="admin">
+              {local(l, ["내부 사용자", "Internal user", "مستخدم داخلي"])}
+            </option>
+            <option value="customer">
+              {local(l, ["고객", "Customer", "عميل"])}
+            </option>
+            <option value="unauthenticated">
+              {local(l, ["로그인 전", "Before sign-in", "قبل الدخول"])}
+            </option>
+          </select>
+        </label>
+        {audience === "admin" && (
+          <label>
+            {local(l, [
+              "예제 역할 · 권한 부여 아님",
+              "Example persona · grants nothing",
+              "شخصية تجريبية · لا تمنح صلاحيات",
+            ])}
+            <select
+              value={persona}
+              onChange={(e) => {
+                if (canLeave()) {
+                  setPersona(e.target.value);
+                  setDirty(false);
+                }
+              }}
+            >
+              {personas
+                .filter((p) => p !== "CU")
+                .map((p) => (
+                  <option key={p}>{p}</option>
+                ))}
+            </select>
+          </label>
+        )}
+        <label>
+          {local(l, ["데이터 모드", "Data mode", "نمط البيانات"])}
+          <select
+            value={mode}
+            onChange={(e) => changeScope({ mode: e.target.value })}
+          >
+            <option value="synthetic">
+              {local(l, ["합성 예제", "Synthetic examples", "أمثلة تجريبية"])}
+            </option>
+            <option value="unconnected">
+              {local(l, ["미연결", "Unconnected", "غير متصل"])}
+            </option>
+          </select>
+        </label>
+        <label>
+          {local(l, ["상태 예제", "State example", "مثال الحالة"])}
+          <select
+            value={scenario}
+            onChange={(e) => {
+              if (canLeave()) {
+                setDirty(false);
+                setScenario(e.target.value);
+              }
+            }}
+          >
+            {["normal", "loading", "empty", "partial", "error", "revoked"].map(
+              (s) => (
+                <option key={s}>{s}</option>
+              ),
+            )}
+          </select>
+        </label>
+        {audience === "admin" && (
+          <button onClick={() => navigate("/design/screens")}>
+            {local(l, [
+              "전체 화면 찾아보기",
+              "Browse all screens",
+              "استعراض الشاشات",
+            ])}
+          </button>
+        )}
+      </div>
+      <p>
+        {local(l, [
+          "합성 시안 전용입니다. 역할·사용자 구분 선택은 실제 인증이나 권한을 부여하지 않습니다.",
+          "Synthetic preview only. Persona and audience choices provide no real authentication or authority.",
+          "معاينة تجريبية فقط. اختيار الفئة أو الدور لا يمنح مصادقة أو صلاحية فعلية.",
+        ])}
+      </p>
+    </details>
+  );
+  if (audience === "unauthenticated" && screen) {
+    const entries =
+      screen.id === "L01"
+        ? ["entry-start", "entry-login", "entry-scope"]
+        : screen.id === "L02"
+          ? ["entry-bootstrap", "entry-invite"]
+          : ["entry-challenge"];
+    const requested = params.get("entry-view") ?? route.legacyId ?? "";
+    const id = entries.includes(requested)
+      ? requested
+      : screen.id === "L01"
+        ? "entry-login"
+        : screen.id === "L02"
+          ? "entry-invite"
+          : "entry-challenge";
+    const entry = identity.routes.find((r) => r.id === id)!;
+    return (
+      <>
+        <EntryShell
+          route={entry}
+          planningId={screen.id}
+          locale={l}
+          mode={mode}
+          profile="standard"
+        />
+        <div className="planning-entry-tools">
+          {reviewTools}
+          <nav>
+            {planningScreens
+              .filter((s) => s.audience === "prelogin")
+              .map((s) => (
+                <button key={s.id} onClick={() => navigate(s.path)}>
+                  {local(l, titles[s.id])}
+                </button>
+              ))}
+          </nav>
+        </div>
+      </>
+    );
+  }
+  return (
+    <div
+      className={`planning-app ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
+    >
       <a
         className="skip"
         href="#main"
@@ -247,17 +495,78 @@ export default function App() {
           document.getElementById("main")?.focus();
         }}
       >
-        {t(l, "Skip to content", "본문 바로가기", "انتقل إلى المحتوى")}
+        {local(l, ["본문 바로가기", "Skip to content", "انتقل إلى المحتوى"])}
       </a>
-      <div className="preview">
-        <span>{shellCopy.preview[l]}</span>
-        <span>{shellCopy.review[l]}</span>
+      <div className="planning-preview">
+        <span>
+          {liveOnboarding
+            ? local(l, [
+                "로컬 온보딩 근거 · 합성 입력 전용 · 개통 승인 미연결",
+                "Local onboarding evidence · synthetic input only · activation approval not connected",
+                "أدلة تهيئة محلية · مدخلات تجريبية فقط · اعتماد التشغيل غير متصل",
+              ])
+            : liveConnections
+              ? local(l, [
+                  "로컬 연결 현황 · 실제 설정·수신 메타데이터 · 합성 입력 전용",
+                  "Local connection status · actual configuration and reception metadata · synthetic input only",
+                  "حالة اتصال محلي · إعدادات وبيانات استقبال فعلية · مدخلات تجريبية فقط",
+                ])
+              : liveEvidence
+                ? local(l, [
+                    "로컬 증빙 열람 · 원본 검증·텍스트 추출 · 합성 입력 전용",
+                    "Local evidence inspection · verified original text extract · synthetic input only",
+                    "فحص أدلة محلي · مقتطف نصي من أصل متحقق منه · مدخلات تجريبية فقط",
+                  ])
+                : liveSourceData
+                  ? local(l, [
+                      "로컬 명세 조회 · 실제 저장 데이터 · 합성 입력 전용",
+                      "Local source inspection · actual stored rows · synthetic input only",
+                      "فحص مصدر محلي · صفوف مخزنة فعلية · مدخلات تجريبية فقط",
+                    ])
+                  : liveReconciliation
+                    ? local(l, [
+                        "로컬 대사 · 실제 저장 근거 조회 · 합성 데이터 전용",
+                        "Local reconciliation · actual stored evidence · synthetic data only",
+                        "مطابقة محلية · أدلة مخزنة فعلية · بيانات تجريبية فقط",
+                      ])
+                    : liveImports
+                      ? local(l, [
+                          "로컬 서비스 연동 · 실제 검증·저장 · 합성 입력 전용",
+                          "Local service integration · actual validation and persistence · synthetic input only",
+                          "تكامل خدمة محلية · تحقق وحفظ فعليان · مدخلات تجريبية فقط",
+                        ])
+                      : local(l, [
+                          "인터랙티브 시안 · 합성 데이터 · 실제 서비스 미연결",
+                          "Interactive preview · synthetic data · services not connected",
+                          "معاينة تفاعلية · بيانات تجريبية · الخدمات غير متصلة",
+                        ])}
+        </span>
+        {audience === "admin" && (
+          <button onClick={() => previewAudience("admin", "/design/screens")}>
+            {local(l, [
+              "시안 전체 보기",
+              "All screen candidates",
+              "جميع المعاينات",
+            ])}
+          </button>
+        )}
       </div>
-      <header className="top">
+      <header className="planning-header">
+        <button
+          ref={menuTrigger}
+          className="planning-menu-button"
+          onClick={() => menuDialog.current?.showModal()}
+        >
+          {local(l, ["메뉴", "Menu", "القائمة"])}
+        </button>
         <a
           className="brand"
           dir="ltr"
-          href={routeUrl(customer ? "core-customer-overview" : "overview")}
+          href={planningUrl(portal ? "/portal/overview" : "/home", params)}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate(portal ? "/portal/overview" : "/home");
+          }}
         >
           <img
             className="brand-logo"
@@ -267,245 +576,427 @@ export default function App() {
             alt="Hybrid Billing"
           />
         </a>
-        <div className="top-actions">
-          {!customer && (
-            <a className="header-control" href={routeUrl("community")}>
-              {t(l, "Contribute", "기여", "المساهمة")}
-            </a>
-          )}
-          {id === "overview" ? (
-            <label className="overview-workspace">
-              <span className="sr-only">
-                {t(
-                  l,
-                  "Example workspace",
-                  "예제 업무 공간",
-                  "مساحة عمل تجريبية",
-                )}
-              </span>
-              <select
-                id="overview-workspace"
-                value={
-                  params.get("scope") === "sample-b" ? "sample-b" : "sample-a"
-                }
-                onChange={(e) => update({ scope: e.target.value })}
-              >
-                <option value="sample-a">
-                  {t(l, "Demo workspace A", "예제 공간 A", "مساحة تجريبية A")}
-                </option>
-                <option value="sample-b">
-                  {t(l, "Demo workspace B", "예제 공간 B", "مساحة تجريبية B")}
-                </option>
-              </select>
-            </label>
-          ) : (
-            <button
-              id="choose-account"
-              className="account-button"
-              aria-label={`${shellCopy.account[l]} · ${params.get("scope") === "sample-b" ? "ACC-000002" : "ACC-000001"}`}
-              disabled={customer}
-              onClick={() => open("account")}
-            >
-              <span className="account-label">{shellCopy.account[l]} ·</span>
-              <bdi>
-                {params.get("scope") === "sample-b"
-                  ? "ACC-000002"
-                  : "ACC-000001"}
-              </bdi>
-              <img className="icon" src={chevron} alt="" />
-            </button>
-          )}
-          <button id="open-jobs" onClick={() => open("jobs")}>
-            {shellCopy.jobs[l]} <span className="tag">0</span>
+        <span className="planning-installation">
+          DEMO-01 <span className="tag">DEMO</span>
+        </span>
+        {!mobile && headerActions}
+        {mobile && (
+          <button
+            className="planning-mobile-account"
+            onClick={() => navigate("/my-security")}
+          >
+            {local(l, ["내 계정", "My account", "حسابي"])}
           </button>
-          <HeaderSelect
-            label="Language"
-            value={l}
-            options={[
-              { value: "en", label: "English (US)" },
-              { value: "ar", label: "العربية (الإمارات)" },
-              { value: "ko", label: "한국어" },
-            ]}
-            onChange={(lang) => update({ lang })}
-          />
-        </div>
+        )}
       </header>
-      <nav
-        className="tnb"
-        aria-label={t(l, "Workspace", "업무 영역", "مساحة العمل")}
-      >
-        {domains
-          .filter((d) => !customer || d.id === "customer")
-          .map((d) => (
+      {portal && (
+        <nav
+          className="planning-portal-nav"
+          aria-label={local(l, [
+            "고객 메뉴",
+            "Customer navigation",
+            "تنقل العميل",
+          ])}
+        >
+          {["C01", "C02", "C03", "U03"].map((id) => (
             <button
-              key={d.id}
-              data-group={d.id}
-              className={domain.id === d.id ? "active" : ""}
-              aria-pressed={domain.id === d.id}
-              onClick={() => {
-                location.hash = routeUrl(
-                  screens.find((s) => d.groups.includes(s.group))!.id,
-                );
-              }}
+              key={id}
+              aria-current={screen?.id === id ? "page" : undefined}
+              onClick={() =>
+                navigate(planningScreens.find((s) => s.id === id)!.path)
+              }
             >
-              {d.label[l]}
+              {local(l, titles[id])}
             </button>
           ))}
-      </nav>
-      <div className="layout">
-        <aside className="rail">
-          <div className="rail-inner">
-            <label>
-              <span className="sr-only">{shellCopy.screens[l]}</span>
-              <input
-                id="screen-search"
-                type="search"
-                value={search}
-                placeholder={shellCopy.screens[l]}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </label>
-            <div className="rail-heading">
-              <h2>{search ? shellCopy.screens[l] : domain.label[l]}</h2>
-              <small>
-                {allowed.length} {t(l, "screens", "전체 화면", "شاشة")}
-              </small>
-            </div>
-            <nav
-              id="screen-links"
-              aria-label={t(l, "Screens", "전체 화면", "الشاشات")}
-            >
-              {visible.map((s) => (
-                <a
-                  key={s.id}
-                  className={id === s.id ? "active" : ""}
-                  href={routeUrl(s.id)}
-                  aria-current={id === s.id ? "page" : undefined}
-                >
-                  {s.title[l]}
-                </a>
-              ))}
-            </nav>
-          </div>
-        </aside>
-        <main className="main" id="main" tabIndex={-1}>
-          {valid ? (
-            <Workspace
-              key={`${id}:${l}:${profile}:${mode}:${params.get("scope") ?? "sample-a"}`}
-              id={id}
-              l={l}
-              mode={mode}
-              profile={profile}
-            />
-          ) : (
-            <section className="panel" role="alert">
-              {t(
-                l,
-                "Unknown installation profile",
-                "알 수 없는 설치 구성",
-                "ملف تثبيت غير معروف",
+        </nav>
+      )}
+      <div className="planning-layout">
+        {!portal && <aside className="planning-sidebar">{sidebar}</aside>}
+        <main id="main" tabIndex={-1} className="planning-main">
+          {route.tool ? (
+            <>
+              <header className="planning-page-header">
+                <h1>
+                  {local(l, [
+                    "전체 화면 시안",
+                    "All screen candidates",
+                    "جميع معاينات الشاشات",
+                  ])}
+                </h1>
+                <p>
+                  {local(l, [
+                    "기획 기준 49개 화면 · 각 화면에서 개별 검수",
+                    "49 planning screens · review each screen separately",
+                    "49 شاشة حسب التخطيط · مراجعة كل شاشة منفردة",
+                  ])}
+                </p>
+              </header>
+              {route.tool === "/help/contribute" ? (
+                <section className="planning-panel">
+                  <h2>
+                    {local(l, [
+                      "기여·지원",
+                      "Contribution and support",
+                      "المساهمة والدعم",
+                    ])}
+                  </h2>
+                  <a
+                    href="https://github.com/myblueton-sw/hybrid_billing"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    GitHub
+                  </a>
+                </section>
+              ) : (
+                <div className="planning-directory">
+                  {planningScreens.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() =>
+                        previewAudience(
+                          s.audience === "prelogin"
+                            ? "unauthenticated"
+                            : s.audience === "portal"
+                              ? "customer"
+                              : "admin",
+                          s.path,
+                        )
+                      }
+                    >
+                      <small>
+                        {s.id} · {local(l, menuNames[s.menu])}
+                      </small>
+                      <strong>{local(l, titles[s.id])}</strong>
+                      <span>{s.path}</span>
+                    </button>
+                  ))}
+                </div>
               )}
+            </>
+          ) : screen ? (
+            <>
+              <header className="planning-page-header">
+                <p className="crumb">
+                  {local(l, menuNames[screen.menu])} / <bdi>{screen.id}</bdi>
+                </p>
+                <div>
+                  <h1>{local(l, titles[screen.id])}</h1>
+                  <span className="tag">
+                    {local(l, [
+                      "검토 시안",
+                      "Review candidate",
+                      "معاينة للمراجعة",
+                    ])}
+                  </span>
+                </div>
+              </header>
+              <ReviewPanel
+                screen={screen.id}
+                locale={l}
+                context={JSON.stringify({
+                  profile: liveService
+                    ? "local-service-synthetic-v1"
+                    : "planning-preview",
+                  mode,
+                  extensions: [],
+                  audience,
+                  legacy: screen.reactBodies,
+                  scope,
+                  tab,
+                  period: params.get("period") ?? "2026-10",
+                  organization: params.get("le") ?? "DEMO-ORG-01",
+                  currency: params.get("ccy") ?? "USD",
+                  objectId: route.objectId ?? null,
+                  persona,
+                  scenario,
+                  dirty,
+                  state: view.key === screenKey ? view.state : "{}",
+                })}
+                items={
+                  view.key === screenKey && view.items.length
+                    ? view.items
+                    : [`${screen.id}:region:${tab}`]
+                }
+              />
+              {!["U01", "U02"].includes(screen.id) && (
+                <details
+                  className="planning-scope"
+                  open={!mobile}
+                  hidden={liveService}
+                >
+                  <summary>
+                    {local(l, ["조회 범위", "Scope", "النطاق"])} ·{" "}
+                    <bdi>{params.get("period") ?? "2026-10"}</bdi> ·{" "}
+                    {portal ? "DEMO Own organization" : scope}
+                  </summary>
+                  <div className="planning-controls">
+                    {screen.id !== "M05" && (
+                      <>
+                        <label>
+                          {local(l, ["조직", "Organization", "المؤسسة"])}
+                          <select
+                            value={params.get("le") ?? "DEMO-ORG-01"}
+                            onChange={(e) =>
+                              changeScope({ le: e.target.value })
+                            }
+                          >
+                            <option>DEMO-ORG-01</option>
+                            {!portal && <option>DEMO-ORG-02</option>}
+                          </select>
+                        </label>
+                        <label>
+                          {local(l, ["기간", "Period", "الفترة"])}
+                          <input
+                            type="month"
+                            value={params.get("period") ?? "2026-10"}
+                            onChange={(e) =>
+                              changeScope({ period: e.target.value })
+                            }
+                          />
+                        </label>
+                        <label>
+                          {local(l, ["통화", "Currency", "العملة"])}
+                          <select
+                            value={params.get("ccy") ?? "USD"}
+                            onChange={(e) =>
+                              changeScope({ ccy: e.target.value })
+                            }
+                          >
+                            {["USD", "KRW", "EUR"].map((c) => (
+                              <option key={c}>{c}</option>
+                            ))}
+                          </select>
+                        </label>
+                      </>
+                    )}
+                    <span>
+                      {local(l, [
+                        "합성 기준시각",
+                        "Synthetic as-of",
+                        "وقت مرجعي تجريبي",
+                      ])}{" "}
+                      <bdi>2026-11-03T12:00Z</bdi>
+                    </span>
+                  </div>
+                </details>
+              )}
+              <div
+                className={
+                  screen.archetype.includes("wizard")
+                    ? "planning-wizard-layout"
+                    : ""
+                }
+              >
+                <nav
+                  className="planning-tabs"
+                  style={liveService ? { display: "none" } : undefined}
+                  aria-label={local(l, [
+                    "화면 보기",
+                    "Screen views",
+                    "عروض الشاشة",
+                  ])}
+                >
+                  {tabs.map((t, i) => (
+                    <button
+                      key={t.key}
+                      aria-current={tab === t.key ? "page" : undefined}
+                      onClick={() => {
+                        if (canLeave()) {
+                          setDirty(false);
+                          location.hash = planningUrl(screen.path, params, {
+                            view: t.key,
+                            ...(screen.id === "U02"
+                              ? { "close-view": t.key }
+                              : {}),
+                          });
+                        }
+                      }}
+                    >
+                      {screen.archetype.includes("wizard") ? `${i + 1}. ` : ""}
+                      {tabLabel(l, t.key, t.labelKo)}
+                    </button>
+                  ))}
+                </nav>
+                {["S01", "S02", "S03", "S04", "S05", "S06"].includes(
+                  screen.id,
+                ) && (
+                  <button
+                    className="live-mode-switch"
+                    onClick={() =>
+                      changeScope({
+                        service: liveService ? "preview" : "local",
+                      })
+                    }
+                  >
+                    {local(
+                      l,
+                      liveService
+                        ? [
+                            "시안 데이터로 전환",
+                            "Switch to preview data",
+                            "التبديل إلى المعاينة",
+                          ]
+                        : [
+                            "로컬 서비스에 연결",
+                            "Connect local service",
+                            "الاتصال بالخدمة المحلية",
+                          ],
+                    )}
+                  </button>
+                )}
+                <div
+                  id="content"
+                  key={screenKey + ":" + tab + (liveService ? ":" + l : "")}
+                >
+                  {liveOnboarding ? (
+                    <Onboarding
+                      locale={l}
+                      stage={tab}
+                      expected={params.get("connection") ?? undefined}
+                      onState={onState}
+                    />
+                  ) : liveConnections ? (
+                    <Connections
+                      locale={l}
+                      objectId={route.objectId}
+                      onState={onState}
+                    />
+                  ) : liveEvidence ? (
+                    <EvidenceScreen
+                      locale={l}
+                      objectId={route.objectId}
+                      onState={onState}
+                    />
+                  ) : liveSourceData ? (
+                    <SourceData
+                      locale={l}
+                      onState={onState}
+                      objectId={route.objectId}
+                    />
+                  ) : liveReconciliation ? (
+                    <Reconciliation
+                      locale={l}
+                      onState={onState}
+                      objectId={route.objectId}
+                    />
+                  ) : liveImports ? (
+                    <LiveImports
+                      objectId={route.objectId}
+                      locale={l}
+                      onState={onState}
+                      onDirty={setDirty}
+                    />
+                  ) : screen.id === "U01" &&
+                    tab === "settlement" &&
+                    scenario === "normal" ? (
+                    <Overview
+                      locale={l}
+                      mode={mode}
+                      profile="standard"
+                      extensionIds={[]}
+                      contributions={[]}
+                      onState={onState}
+                    />
+                  ) : screen.id === "U02" && scenario === "normal" ? (
+                    <Closing
+                      locale={l}
+                      mode={mode}
+                      profile="standard"
+                      extensionIds={[]}
+                      contributions={[]}
+                      onState={onState}
+                    />
+                  ) : (
+                    <CandidateWorkbench
+                      screen={screen}
+                      locale={l}
+                      mode={mode}
+                      tab={tab}
+                      objectId={route.objectId}
+                      canDiscard={canLeave}
+                      scope={scope}
+                      period={params.get("period") ?? "2026-10"}
+                      currency={params.get("ccy") ?? "USD"}
+                      organization={params.get("le") ?? "DEMO-ORG-01"}
+                      scenario={scenario}
+                      customer={portal}
+                      onDirty={setDirty}
+                      onState={onState}
+                    />
+                  )}
+                </div>
+              </div>
+              <p className="planning-legacy-map">
+                {local(l, [
+                  "기존 화면 연결",
+                  "Legacy screen mapping",
+                  "ربط الشاشات السابقة",
+                ])}
+                :{" "}
+                {Object.entries(legacyReviewMap)
+                  .filter(([id]) => screen.reactBodies.includes(id))
+                  .map(([id]) => id)
+                  .join(", ") || "—"}
+              </p>
+            </>
+          ) : (
+            <section className="planning-panel" role="status">
+              <h1>
+                {local(l, [
+                  "현재 예제 범위에서 열 수 있는 화면 없음",
+                  "No screen available in this preview scope",
+                  "لا توجد شاشة متاحة في نطاق المعاينة",
+                ])}
+              </h1>
             </section>
           )}
-          <details className="review-tools">
-            <summary>
-              {t(l, "Review tools", "검수 도구", "أدوات المراجعة")}
-            </summary>
-            <div className="toolbar">
-              <a href={routeUrl("contents")}>
-                {t(l, "Screen directory", "전체 화면 찾아보기", "دليل الشاشات")}
-              </a>
-              <label>
-                {t(
-                  l,
-                  "Demo installation profile",
-                  "예제 설치 구성",
-                  "ملف التثبيت التجريبي",
-                )}
-                <select
-                  id="profile"
-                  value={valid ? profile : ""}
-                  onChange={(e) => update({ profile: e.target.value })}
-                >
-                  {!valid && <option value="">—</option>}
-                  <option value="standard">Standard</option>
-                  <option value="evidence">Evidence</option>
-                </select>
-              </label>
-              <label>
-                {t(l, "Data mode", "데이터 모드", "نمط البيانات")}
-                <select
-                  id="mode"
-                  value={mode}
-                  onChange={(e) => update({ mode: e.target.value })}
-                >
-                  <option value="unconnected">
-                    {t(l, "Unconnected", "미연결", "غير متصل")}
-                  </option>
-                  <option value="synthetic">
-                    {t(
-                      l,
-                      "Synthetic demo",
-                      "합성 데이터 체험",
-                      "بيانات تجريبية",
-                    )}
-                  </option>
-                </select>
-              </label>
-            </div>
-          </details>
+          {reviewTools}
         </main>
       </div>
       <dialog
-        ref={dialog}
-        onKeyDownCapture={(e) => {
-          if (e.key === "Escape") {
-            e.preventDefault();
-            e.stopPropagation();
-            close();
-          }
-        }}
-        onCancel={close}
-        aria-label={
-          dialogKind === "account"
-            ? t(l, "Choose account", "계정 선택", "اختيار الحساب")
-            : shellCopy.jobs[l]
-        }
+        className="planning-menu-dialog"
+        ref={menuDialog}
+        onCancel={() => menuTrigger.current?.focus()}
+      >
+        <button
+          autoFocus
+          onClick={() => {
+            menuDialog.current?.close();
+            menuTrigger.current?.focus();
+          }}
+        >
+          {local(l, ["메뉴 닫기", "Close menu", "إغلاق القائمة"])}
+        </button>
+        {mobile && headerActions}
+        {!portal && sidebar}
+      </dialog>
+      <dialog
+        className="planning-jobs"
+        ref={jobs}
+        onCancel={() => jobTrigger.current?.focus()}
       >
         <h2>
-          {dialogKind === "account"
-            ? t(l, "Choose account", "계정 선택", "اختيار الحساب")
-            : shellCopy.jobs[l]}
+          {local(l, ["백그라운드 작업", "Background jobs", "المهام الخلفية"])}
         </h2>
         <p>
-          {t(
-            l,
-            "Synthetic preview only. Production service not connected.",
-            "합성 시안입니다. 운영 서비스는 연결되지 않았습니다.",
-            "معاينة اصطناعية فقط. خدمة الإنتاج غير متصلة.",
-          )}
+          {local(l, [
+            "실제 작업 서비스가 연결되지 않았습니다. 화면에서 수행한 초안 검토는 작업을 생성하지 않습니다.",
+            "Job service is not connected. Reviewing a local draft does not create a job.",
+            "خدمة المهام غير متصلة. مراجعة مسودة محلية لا تنشئ مهمة.",
+          ])}
         </p>
-        {dialogKind === "account" ? (
-          <AccountPicker
-            locale={l}
-            value={params.get("scope") ?? "sample-a"}
-            onChange={(scope) => {
-              update({ scope, page: "1", q: "" });
-              close();
-            }}
-          />
-        ) : (
-          <p>
-            {t(
-              l,
-              "No local preview jobs",
-              "로컬 시안 작업이 없습니다",
-              "لا توجد مهام معاينة محلية",
-            )}
-          </p>
-        )}
-        <button onClick={close}>{t(l, "Close", "닫기", "إغلاق")}</button>
+        <button
+          autoFocus
+          onClick={() => {
+            jobs.current?.close();
+            jobTrigger.current?.focus();
+          }}
+        >
+          {local(l, ["닫기", "Close", "إغلاق"])}
+        </button>
       </dialog>
-    </>
+    </div>
   );
 }

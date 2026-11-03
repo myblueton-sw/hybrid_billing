@@ -1,0 +1,61 @@
+{
+  "columns": [
+    "id",
+    "path",
+    "owner",
+    "state"
+  ],
+  "details": [
+    "auth",
+    "source",
+    "manifest",
+    "evidence",
+    "revision"
+  ],
+  "values": {
+    "path": "DEMO Cloud / external sales",
+    "owner": "DEMO-USER-01",
+    "state": "draft",
+    "auth": "pending",
+    "source": "DEMO-SOURCE-01",
+    "manifest": "DEMO-INPUT-01",
+    "evidence": "pending",
+    "revision": "r1"
+  },
+  "views": {
+    "path": [
+      "path",
+      "contract",
+      "entity",
+      "currency"
+    ],
+    "permissions": [
+      "owner",
+      "permission",
+      "auth",
+      "secret"
+    ],
+    "first-data": [
+      "source",
+      "lastReceipt",
+      "completeness"
+    ],
+    "reconciliation": [
+      "expected",
+      "actual",
+      "difference",
+      "evidence"
+    ],
+    "activation": [
+      "state",
+      "approver",
+      "capability",
+      "revision"
+    ]
+  },
+  "draftFields": [
+    "path",
+    "owner",
+    "source"
+  ]
+}

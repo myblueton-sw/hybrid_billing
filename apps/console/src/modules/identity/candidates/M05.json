@@ -1,0 +1,54 @@
+{
+  "columns": [
+    "id",
+    "name",
+    "realm",
+    "state"
+  ],
+  "details": [
+    "session",
+    "device",
+    "lastUsed",
+    "expiry",
+    "channel"
+  ],
+  "values": {
+    "name": "DEMO Self",
+    "realm": "DEMO-OIDC",
+    "state": "verified",
+    "session": "DEMO-CURRENT",
+    "device": "Example browser",
+    "lastUsed": "2026-11-03T09:00:00Z",
+    "expiry": "unconfigured",
+    "channel": "In-app preview"
+  },
+  "views": {
+    "account": [
+      "id",
+      "name",
+      "realm"
+    ],
+    "methods": [
+      "method",
+      "realm",
+      "state"
+    ],
+    "recovery": [
+      "method",
+      "expiry",
+      "state"
+    ],
+    "sessions": [
+      "session",
+      "device",
+      "lastUsed",
+      "expiry"
+    ],
+    "notifications": [
+      "channel",
+      "delivery",
+      "state"
+    ]
+  },
+  "draftFields": []
+}

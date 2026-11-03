@@ -1,0 +1,67 @@
+{
+  "columns": [
+    "id",
+    "contract",
+    "component",
+    "rate",
+    "priority",
+    "state"
+  ],
+  "details": [
+    "formula",
+    "inheritance",
+    "effective",
+    "denominator",
+    "policy"
+  ],
+  "values": {
+    "contract": "DEMO-CONTRACT-01",
+    "component": "API input tokens",
+    "rate": "USD 2.5000",
+    "priority": "1",
+    "state": "draft",
+    "formula": "quantity / denominator × rate",
+    "inheritance": "Explicit contract rule",
+    "effective": "unconfigured",
+    "denominator": "1000000 tokens",
+    "policy": "DEMO-POLICY-r1"
+  },
+  "views": {
+    "rates": [
+      "id",
+      "contract",
+      "component",
+      "rate",
+      "state"
+    ],
+    "formula": [
+      "priority",
+      "formula",
+      "denominator"
+    ],
+    "inheritance": [
+      "inheritance",
+      "priority",
+      "policy"
+    ],
+    "adjustments": [
+      "basis",
+      "amount",
+      "currency",
+      "reason"
+    ],
+    "impact": [
+      "expected",
+      "actual",
+      "difference",
+      "digest"
+    ]
+  },
+  "draftFields": [
+    "contract",
+    "component",
+    "rate",
+    "denominator",
+    "effective"
+  ]
+}

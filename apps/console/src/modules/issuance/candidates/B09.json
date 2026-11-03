@@ -1,0 +1,63 @@
+{
+  "columns": [
+    "id",
+    "action",
+    "author",
+    "period",
+    "state"
+  ],
+  "details": [
+    "approver",
+    "amount",
+    "digest",
+    "input",
+    "ceiling",
+    "evidence"
+  ],
+  "values": {
+    "action": "Billing result approval",
+    "author": "DEMO-AUTHOR-01",
+    "period": "2026-10",
+    "state": "pending",
+    "approver": "unconfigured",
+    "amount": "USD 1250.0000",
+    "digest": "DEMO-RESULT-r1",
+    "input": "DEMO-INPUT-r1",
+    "ceiling": "unconfigured",
+    "evidence": "DEMO-EVIDENCE-01"
+  },
+  "views": {
+    "pending": [
+      "id",
+      "action",
+      "author",
+      "period",
+      "state"
+    ],
+    "decisions": [
+      "approver",
+      "action",
+      "occurred",
+      "reason"
+    ],
+    "delegation": [
+      "subject",
+      "delegation",
+      "scope",
+      "expiry"
+    ],
+    "history": [
+      "author",
+      "approver",
+      "digest",
+      "revision"
+    ],
+    "recognition": [
+      "recognition",
+      "posting",
+      "evidence",
+      "state"
+    ]
+  },
+  "draftFields": []
+}

@@ -1,0 +1,71 @@
+{
+  "columns": [
+    "id",
+    "document",
+    "state",
+    "posting",
+    "lastPoll"
+  ],
+  "details": [
+    "fullAmount",
+    "attributable",
+    "external",
+    "nextPoll",
+    "capability",
+    "revision"
+  ],
+  "values": {
+    "document": "DEMO-INVOICE-01",
+    "state": "waiting",
+    "posting": "unknown",
+    "lastPoll": "2026-11-03T09:00:00Z",
+    "fullAmount": "USD 1800.0000",
+    "attributable": "USD 1250.0000",
+    "external": "DEMO-ERP-01",
+    "nextPoll": "unconfigured",
+    "capability": "unconfigured",
+    "revision": "r1"
+  },
+  "views": {
+    "submissions": [
+      "id",
+      "document",
+      "state",
+      "posting",
+      "lastPoll"
+    ],
+    "comparison": [
+      "expected",
+      "actual",
+      "difference",
+      "digest"
+    ],
+    "rows": [
+      "fullAmount",
+      "attributable",
+      "external"
+    ],
+    "events": [
+      "event",
+      "occurred",
+      "received",
+      "posting"
+    ],
+    "capabilities": [
+      "provider",
+      "version",
+      "capability"
+    ],
+    "payment-terms": [
+      "due",
+      "terms",
+      "state"
+    ],
+    "recognition": [
+      "recognition",
+      "posting",
+      "period"
+    ]
+  },
+  "draftFields": []
+}

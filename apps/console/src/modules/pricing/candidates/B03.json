@@ -1,0 +1,64 @@
+{
+  "columns": [
+    "id",
+    "name",
+    "method",
+    "basis",
+    "state"
+  ],
+  "details": [
+    "amount",
+    "weight",
+    "denominator",
+    "idle",
+    "residual",
+    "manifest"
+  ],
+  "values": {
+    "name": "DEMO compute allocation",
+    "method": "Weighted usage",
+    "basis": "Whole pool",
+    "state": "draft",
+    "amount": "USD 1200.0000",
+    "weight": "unconfigured",
+    "denominator": "unconfigured",
+    "idle": "unconfigured",
+    "residual": "unconfigured",
+    "manifest": "DEMO-POOL-01"
+  },
+  "views": {
+    "policies": [
+      "id",
+      "name",
+      "method",
+      "basis",
+      "state"
+    ],
+    "pools": [
+      "amount",
+      "weight",
+      "denominator",
+      "idle",
+      "residual"
+    ],
+    "simulation": [
+      "manifest",
+      "expected",
+      "actual",
+      "validation"
+    ],
+    "comparison": [
+      "expected",
+      "actual",
+      "difference",
+      "evidence"
+    ]
+  },
+  "draftFields": [
+    "name",
+    "method",
+    "basis",
+    "idle",
+    "residual"
+  ]
+}

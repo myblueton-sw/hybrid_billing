@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Locale, Mode } from "../shared/types";
 import { serviceQuery } from "./service-navigation";
 import ServiceNavigation from "./ServiceNavigation";
+import { sectionFor } from "./service-ia";
 import "./service-shell.css";
 import { useLocation, setNavigationGuard } from "../shared/navigation";
 import {
@@ -293,6 +294,14 @@ export default function App() {
           </select>
         </label>
       )}
+      {context.assistant && allowed.some((s) => s.id === "A01") && (
+        <button onClick={() => navigate("/assistant")}>AI Assistant</button>
+      )}
+      {allowed.some((s) => s.id === "U03") && (
+        <button onClick={() => navigate("/tasks")}>
+          {local(l, ["알림", "Notifications", "الإشعارات"])}
+        </button>
+      )}
       <button ref={jobTrigger} onClick={() => jobs.current?.showModal()}>
         {local(l, ["작업", "Jobs", "المهام"])}
       </button>
@@ -479,7 +488,15 @@ export default function App() {
         />
         <div className="planning-entry-tools">
           {developer && reviewTools}
-          {developer && <button onClick={() => navigate("/home", {review:""})}>{local(l, ["서비스로 돌아가기", "Return to service", "العودة إلى الخدمة"])}</button>}
+          {developer && (
+            <button onClick={() => navigate("/home", { review: "" })}>
+              {local(l, [
+                "서비스로 돌아가기",
+                "Return to service",
+                "العودة إلى الخدمة",
+              ])}
+            </button>
+          )}
           <nav>
             {planningScreens
               .filter((s) => s.audience === "prelogin")
@@ -711,9 +728,10 @@ export default function App() {
             <>
               <header className="planning-page-header">
                 <p className="crumb">
-                  {screen.menu === "home"
-                    ? local(l, ["빌링", "Billing", "الفوترة"])
-                    : local(l, menuNames[screen.menu])}
+                  {local(
+                    l,
+                    sectionFor(screen.id)?.label ?? menuNames[screen.menu],
+                  )}
                   {developer && (
                     <>
                       {" "}

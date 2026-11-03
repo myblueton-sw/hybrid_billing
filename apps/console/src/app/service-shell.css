@@ -164,5 +164,19 @@
     max-block-size: none;
   }
 }
-.service-shell .planning-sidebar { position: relative; inset-block-start: auto; align-self: stretch; overflow: visible; }
-@media (max-width: 1279px) { .service-shell .planning-layout { display: block; } }
+.service-shell .planning-sidebar {
+  position: relative;
+  inset-block-start: auto;
+  align-self: stretch;
+  overflow: visible;
+}
+@media (max-width: 1279px) {
+  .service-shell .planning-layout {
+    display: block;
+  }
+}
+.service-shell .service-administration {
+  border-block-start: 1px solid var(--hb-line-row);
+  margin-block-start: 32px;
+  padding-block-start: 16px;
+}

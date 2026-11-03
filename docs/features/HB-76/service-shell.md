@@ -13,6 +13,8 @@ HB-76 is the shared-shell implementation ticket. Its branch starts from current 
 
 # Product and developer boundary
 
+The historical shell slice below has been extended by the owner-authorized [commercial IA](commercial-ia.md), which is now the current navigation composition. Earlier direct U01–U04 placement and domain-group ordering describe the first corrective slice, not the active eight-group mapping.
+
 Service entry is the integrated billing overview at canonical U01 /home. U02–U04 retain their business destinations without a Work home category header. Other canonical business groups and visibility checks remain. No screen search, screen IDs, legacy mapping, role simulation or screen directory appears in ordinary service navigation.
 
 Explicit review=1 enables developer presentation only. Direct design routes require that mode; the flag grants no backend identity or authority. Leaving the mode resets simulation and effective service state does not inherit it. Contribution help remains separately reachable. The compact per-screen review control retains exact revision and scope under the owner's existing requirement; no assistant-created FIX.

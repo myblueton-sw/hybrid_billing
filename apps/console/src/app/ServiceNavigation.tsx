@@ -1,7 +1,14 @@
+import { useEffect, useState } from "react";
 import type { Locale } from "../shared/types";
 import type { PlanningScreen } from "../planning/registry";
-import { local, titles, menuNames } from "../planning/copy";
+import { local, titles } from "../planning/copy";
 import { planningUrl } from "../planning/routing";
+import {
+  businessSections,
+  administrationSection,
+  navigationLabels,
+  type ServiceSection,
+} from "./service-ia";
 export default function ServiceNavigation({
   locale,
   entries,
@@ -17,9 +24,16 @@ export default function ServiceNavigation({
   onNavigate: (path: string) => void;
   developer: boolean;
 }) {
-  const groups = Object.keys(menuNames).filter(
-    (k) => !["pre", "portal", "me"].includes(k),
-  );
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    const group = [...businessSections, administrationSection].find((s) =>
+      s.screens.includes(active ?? ""),
+    );
+    if (group)
+      setExpanded((old) =>
+        old[group.key] ? old : { ...old, [group.key]: true },
+      );
+  }, [active]);
   const render = (s: PlanningScreen) => (
     <a
       key={s.id}
@@ -30,18 +44,38 @@ export default function ServiceNavigation({
         onNavigate(s.path);
       }}
     >
-      <span>
-        {s.id === "U01"
-          ? local(locale, [
-              "통합 빌링 현황",
-              "Billing overview",
-              "نظرة عامة على الفوترة",
-            ])
-          : local(locale, titles[s.id])}
-      </span>
+      <span>{local(locale, navigationLabels[s.id] ?? titles[s.id])}</span>
       {developer && <small>{s.id}</small>}
     </a>
   );
+  const section = (group: ServiceSection) => {
+    const pages = group.screens.flatMap((id) => {
+      const found = entries.find((s) => s.id === id);
+      return found ? [found] : [];
+    });
+    if (!pages.length) return null;
+    return (
+      <details
+        key={group.key}
+        data-section={group.key}
+        open={
+          expanded[group.key] ??
+          (developer || pages.some((s) => s.id === active))
+        }
+      >
+        <summary
+          onClick={(e) => {
+            e.preventDefault();
+            const current = e.currentTarget.parentElement as HTMLDetailsElement;
+            setExpanded((old) => ({ ...old, [group.key]: !current.open }));
+          }}
+        >
+          {local(locale, group.label)}
+        </summary>
+        {pages.map(render)}
+      </details>
+    );
+  };
   return (
     <nav
       className="service-navigation"
@@ -51,23 +85,10 @@ export default function ServiceNavigation({
         "تنقل الخدمة",
       ])}
     >
-      <div className="service-primary">
-        {entries.filter((s) => s.menu === "home").map(render)}
+      <div className="service-business">{businessSections.map(section)}</div>
+      <div className="service-administration">
+        {section(administrationSection)}
       </div>
-      {groups
-        .filter((k) => k !== "home")
-        .map((key) => {
-          const pages = entries.filter((s) => s.menu === key);
-          return pages.length ? (
-            <details
-              key={key + ":" + active}
-              open={developer || pages.some((s) => s.id === active)}
-            >
-              <summary>{local(locale, menuNames[key])}</summary>
-              {pages.map(render)}
-            </details>
-          ) : null;
-        })}
     </nav>
   );
 }

@@ -72,16 +72,6 @@ export default function OrgBreakdown({
           <thead>
             <tr>
               <th>{t(l, "Organization", "조직", "المؤسسة")}</th>
-              <th>
-                {t(
-                  l,
-                  enterprise
-                    ? "Included departments"
-                    : "Included organizations",
-                  enterprise ? "포함 부서" : "포함 조직",
-                  enterprise ? "الأقسام المشمولة" : "المؤسسات المشمولة",
-                )}
-              </th>
               <th>USD</th>
               <th>KRW</th>
             </tr>
@@ -93,11 +83,11 @@ export default function OrgBreakdown({
                   <button onClick={() => onSelect(id)}>
                     {organizationName(l, id)}
                   </button>
+                  <small data-included-count>
+                    {t(l, "Included", "포함", "المشمول")}{" "}
+                    <bdi>{new Set(items.map((r) => r.organization)).size}</bdi>
+                  </small>
                 </th>
-                <td data-included-count>
-                  {t(l, "Included", "포함", "المشمول")}{" "}
-                  <bdi>{new Set(items.map((r) => r.organization)).size}</bdi>
-                </td>
                 {(["USD", "KRW"] as const).map((c) => {
                   const sum = total(items, c);
                   return (

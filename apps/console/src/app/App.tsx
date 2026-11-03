@@ -520,7 +520,7 @@ export default function App() {
   }
   return (
     <div
-      className={`planning-app service-shell ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
+      className={`planning-app service-shell ${screen?.id === "U01" ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
     >
       <a
         className="skip"

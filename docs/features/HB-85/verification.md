@@ -1,42 +1,47 @@
 ---
 type: VerificationReport
-title: HB-85 commercial overview verification
-description: Records actual rendered and independent-review evidence for the first commercial U01 body redesign, with integration and acceptance limits.
+title: HB-85 recomposed overview verification
+description: Separates actual font, layout and interaction checks from independent visual critique and pending owner acceptance of the rejected overview replacement.
 status: draft
 ---
 
-# Scope and environment
+# Candidate and rejection history
 
-HB-85 changes the U01 overview body, retains the pending HB-76 shell and does not complete other screen redesigns. Source revision shown by the final build is `e68833797c09` (short form). Host execution: macOS arm64, Node 26.7.0, npm 11.19.0 and Chromium headless shell 153.0.8010.12. OS-neutral Node/npm/browser implementation is retained; Windows/Linux and other browser engines are unverified.
+The owner rejected the first PR77 candidate on 2026-11-03 for typography, global layout and usability. Earlier technical passes did not establish commercial design quality. This report covers the complete U01 viewport replacement, not just the old body. Final source revision is `15ef73e0a2d1`. Owner acceptance remains pending.
 
-# Executed verification
+Host: macOS arm64, Node 26.7.0, npm 11.19.0, Chromium headless shell 153.0.8010.12. The Node/npm/browser implementation remains portable by design; Windows/Linux and other browser engines are unverified. No production services or customer data were used.
 
-Run from `apps/console`:
+# Actual root verification
 
-| Check | Result |
+From `apps/console`:
+
+| Command/check | Result |
 | --- | --- |
-| `npm run build` | PASS: TypeScript and Vite production build; existing large-chunk advisory remains |
-| `node tools/verify-build.mjs` | PASS: 242 artifact hashes, HTML and seven license notices |
-| `npm test` | PASS: 76 tests, zero failures |
-| `npm run qa:overview -- --url <loopback-preview> --playwright-module <installed-module> --chromium <installed-browser>` | PASS: 12 small/enterprise renders and scoped journeys |
-| `git diff --check` | PASS before commit |
+| `npm run build` | PASS: TypeScript and Vite build; existing bundle-size advisory remains |
+| `node tools/verify-build.mjs` | PASS: 438 artifact hashes, HTML and seven license notices |
+| `npm test` | PASS: 79 tests, zero failures |
+| `npm run qa:overview -- --url <loopback-preview> --playwright-module <installed-module> --chromium <installed-browser>` | PASS: 12 small/enterprise EN/KO/AR desktop/mobile renders and scoped journeys |
+| New scoped CSS guard | PASS: no literal colors, radius, shadows or gradients; canonical asset hashes verified by build |
+| Staged/source diff checks | PASS before commit |
 
-Browser regression covers EN/KO/AR at 1440px and 390px, scoped exact USD/KRW totals, partial/all-missing/verified-zero/empty/unconnected states, source/organization/currency/month changes, 2,400 departments and 4,800 closing units, bounded pages, hierarchy selection, compact URLs, list-filter independence, attention-detail entry/close focus restoration and scope invalidation. Source/organization money stays within the compact viewport. The workboard precedes charts everywhere and precedes amounts in mobile visual and DOM order. Computed headings are 20px, metadata 14px, table/control/body text 16px. Actual selectors distinguish source-record coverage from the whole-unit closing denominator. A scoped CSS guard found no literal colors, rounded controls, shadows or gradients; the canonical asset hash checks ran during build.
+Rendered checks cover 1440px and 390px, exact currency-separated costs, partial/all-missing/verified-zero/empty/unconnected states, source/organization/month/currency filters, 2,400 departments and 4,800 closing units, bounded pages, hierarchy selection, URL scope reset, list-only filter invariance and exact detail focus entry/return. The chart-currency control retains its ID in the new chart-header location.
 
-Six final captures under `output/validation/HB-85` show local font families with loaded font status and zero external runtime requests. Full 12-view screenshots remain generated under `apps/console/qa-output/overview`. Generated evidence and dependencies are excluded from the commit. Final visible review status is pending; no confirmation was performed.
+At 1440×900, all three locales show the full plot and at least four work rows, with title-to-toolbar height under 200px. Compact view renders work before amounts and trend in the DOM. Money strings remain within the compact viewport. Computed headings/body/table/control/metadata roles match the current design. Actual Sans KR/Arabic 600 faces load; font-family, 600-face loaded status and font readiness were checked, rather than assuming a CSS weight means a real face exists.
 
-# Failures found and corrected
+Axis label centers and gridlines align within the scoped tolerance at both widths. Nice ticks/headroom use bigint scaling and percentage-only Number conversion; exact amounts are unchanged. A standalone axis test covers normal, zero/sub-unit and huge bigint inputs. The scale is for the current nonnegative fixtures; signed-cost plotting is not established.
 
-The initial source review found reversed baseline/override stylesheet imports. Browser checks then identified equal-specificity heading/control overrides from the shared planning shell; scoped specificity corrected the measured values. The first existing regression run referenced a removed fixture selector and obsolete pre-HB76 directory controls; explicit example configuration and current design-directory routing now exercise those boundaries. A prior panel-color assertion incorrectly treated a zero-width border as a painted border; the check now accepts absent edges and verifies the remaining neutral edges.
+Review ID, revision, status and confirmation remain visible at both widths. Isolated QA opens the review dialog, verifies the U01 scope, cancels with Escape and checks focus/status restoration. It never acknowledges or saves owner acceptance. Final captures and local request/font evidence are generated under `output/validation/HB-85-revision`; no external runtime requests were observed in the six capture sessions. Full 12-view captures remain under `apps/console/qa-output/overview`. These generated files and dependencies are excluded from Git.
 
-Claude CLI visual review found an unqualified partial chart headline. The selected headline now labels partial and missing counts directly. Compact source/organization tables now stack complete currency values instead of leaving money fragments at the initial scroll position. Single-page exception controls remain disabled and use muted ink. Attention actions have distinct accessible names.
+# Independent findings and corrections
 
-# Independent review
+A separate source/financial reviewer passed the recomposed scope, then independently ran all three chart-scale tests and passed the axis/Paging follow-up. It checked whole-unit versus missing-record identity, overlap, exact stage/record inspection, scope invalidation, currency meanings, unavailable states and preserved review controls. This is not commercial design acceptance.
 
-The separate planning reviewer returned conditional PASS for presentation-only scope with distinct financial meanings, overlapping attention counts, whole-unit denominators, scoped fixture inspection and explicit unknowns. The separate implementation reviewer returned PASS after fixes, including the final partial-label, currency and compact-table changes. The final all-missing cost wording refinement also passed independent source review and the browser rerun. This was source review, not independently run browser QA.
+Claude CLI ui-designer used the installed official frontend-design skill and rejected-render evidence to propose a complete viewport composition. Its first revised visual critique found floating chart-axis labels, absent gridlines and an overemphasized repeated headline. Root introduced aligned readable ticks/gridlines and headroom, reduced headline emphasis, aligned actions and restricted the selected underline to the month label. Final formal critique of revision `0a16f75fa54a` visually passed the first viewport and chart, while leaving minor lower-screen defects and owner acceptance separate. It directly inspected all three desktop first screens, KO/AR compact charts, KO lifecycle/compositions/detail and AR compact compositions. EN compact and full AR lifecycle/detail were not independently visually reviewed.
 
-Claude CLI ui-designer produced the composition and then reviewed the six first-pass rendered variants with the installed official frontend-design skill. The initial render verdict was FAIL on the partial headline, with typography unverified. Final Claude CLI re-review returned scoped PASS: partial headline and compact money clipping are fixed; typography PASS relies on root computed-browser evidence, not independent measurement. It inspected final viewport/analysis captures, full EN/AR compact renders and targeted source. Desktop lower-table sections were not independently inspected in that final visual pass. Nonblocking refinements remain: chart value scale, stage-link density and compact headline wrapping.
+Root subsequently corrected the minor incomplete bottom borders, first lifecycle-header fill, completed/not-applicable link density and detail amount alignment, retaining keyboard focus and actual actions. The final root captures and browser rerun cover these changes; the independent visual verdict is not represented as having inspected that later polish.
+
+The visual review questioned organization C's KRW zero. The unchanged model explicitly creates a recorded zero for that on-premises fixture; existing numeric/browser checks verify it. It is distinct from source/currency combinations without records. No missing value was converted to zero or not applicable.
 
 # Limits
 
-This is a commercial screen-composition increment over synthetic costs and closing states. No production authentication, overview aggregate, sales/allocation ledger, authoritative ERP feed, receipt allocation, payment terms, deadlines or assignee directory is connected. No refresh, financial command, amount conversion or approval authority was added. Full assistive-technology/native-language review and non-Chromium table semantics remain unverified. Owner FIX, production readiness, merge and deployment are not established by these checks.
+This remains a synthetic screen candidate. Production authentication/permission projection, overview aggregation, sales/allocation/receipt ledgers, authoritative ERP, deadlines, owners and financial commands are unconnected. Native-language and assistive-technology acceptance, signed costs and non-Chromium table semantics remain unverified. Shared real font faces can affect other consumers; their screen acceptance is not inferred. No owner FIX, main merge or deployment occurred. The owner decides whether this candidate meets the intended commercial standard.

@@ -9,27 +9,30 @@ export default function AmountSummary({
   rows: Cost[];
   locale: Locale;
 }) {
+  const known = rows.filter((r) => r.minor !== null).length;
   return (
     <section
       className="unified-summary overview-amounts"
       data-design-id="U01:summary:amount-meanings"
       aria-label={t(
         l,
-        "Three separate amount meanings",
-        "구분된 세 가지 금액",
-        "ثلاثة معانٍ مالية منفصلة",
+        "Separate financial meanings",
+        "금액별 구분",
+        "معانٍ مالية منفصلة",
       )}
     >
       <div className="unified-total">
-        <h2>{t(l, "Source cost", "원천 비용", "تكلفة المصادر")}</h2>
-        <p>
-          {t(
-            l,
-            "Collected source costs, by currency",
-            "수집된 원천 비용 · 통화별 합계",
-            "تكاليف المصادر المجمعة حسب العملة",
-          )}
-        </p>
+        <div className="overview-cost-heading">
+          <h2>{t(l, "Source cost", "원천 비용", "تكلفة المصادر")}</h2>
+          <span>
+            {t(
+              l,
+              "Separate currency totals",
+              "통화별 개별 합계",
+              "إجماليات منفصلة حسب العملة",
+            )}
+          </span>
+        </div>
         <div className="unified-money">
           {(["USD", "KRW"] as const).map((currency) => {
             const sum = total(rows, currency);
@@ -41,87 +44,83 @@ export default function AmountSummary({
                     : formatMoney(sum.value, currency, l)}
                 </bdi>
                 <small>
-                  {sum.expected > 0 && sum.value === null
+                  {!sum.expected
                     ? t(
                         l,
-                        "Unknown · all records missing",
-                        "미확인 · 전체 자료 누락",
-                        "غير معلوم · جميع السجلات مفقودة",
+                        "No matching data",
+                        "해당 자료 없음",
+                        "لا بيانات مطابقة",
                       )
-                    : sum.missing
+                    : sum.value === null
                       ? t(
                           l,
-                          `Partial · ${sum.missing} missing`,
-                          `부분 합계 · ${sum.missing}건 누락`,
-                          `جزئي · ${sum.missing} مفقود`,
+                          "Unknown · all records missing",
+                          "미확인 · 전체 자료 누락",
+                          "غير معلوم · جميع السجلات مفقودة",
                         )
-                      : sum.expected
-                        ? t(l, "Known amount", "확인된 금액", "المبلغ المعروف")
-                        : t(
+                      : sum.missing
+                        ? t(
                             l,
-                            "No matching data",
-                            "해당 자료 없음",
-                            "لا بيانات مطابقة",
-                          )}
+                            `Partial · ${sum.missing} missing`,
+                            `부분 합계 · ${sum.missing}건 누락`,
+                            `جزئي · ${sum.missing} مفقود`,
+                          )
+                        : t(l, "Known amount", "확인된 금액", "المبلغ المعروف")}
                 </small>
               </div>
             );
           })}
         </div>
-        <p className="overview-meaning-note">
-          {t(
-            l,
-            "Tax excluded · no FX conversion · not a final settlement",
-            "세금 제외 · 환산 없음 · 최종 정산액 아님",
-            "باستثناء الضريبة · دون تحويل · ليست تسوية نهائية",
-          )}
+        <p className="overview-cost-coverage">
+          {t(l, "Cost records", "비용 자료 확인", "سجلات التكلفة")}{" "}
+          <strong data-coverage>
+            <bdi dir="ltr">
+              {known} / {rows.length}
+            </bdi>
+          </strong>
         </p>
       </div>
       <div data-amount-meaning="sales">
-        <h2>{t(l, "Customer sales", "고객 판매 금액", "مبيعات العملاء")}</h2>
-        <p>
-          {t(
-            l,
-            "Amounts sold to external customers",
-            "외부 고객에게 판매한 금액",
-            "مبالغ المبيعات للعملاء الخارجيين",
-          )}
-        </p>
+        <h2>{t(l, "Customer sales", "고객 판매", "مبيعات العملاء")}</h2>
         <strong className="overview-unknown">
           {t(l, "Not connected", "미연결", "غير متصل")}
         </strong>
-        <p>
+        <small>
           {t(
             l,
-            "Sales ledger unavailable. Expected and confirmed amounts remain unknown.",
-            "판매 원장이 없어 예상·확정 금액을 확인할 수 없습니다.",
-            "دفتر المبيعات غير متاح. المبالغ المتوقعة والمؤكدة غير معلومة.",
+            "Sales ledger unavailable",
+            "판매 원장 미연결",
+            "دفتر المبيعات غير متاح",
           )}
-        </p>
+        </small>
       </div>
       <div data-amount-meaning="allocation">
-        <h2>
-          {t(l, "Internal allocation", "조직 배분 금액", "التخصيص الداخلي")}
-        </h2>
-        <p>
-          {t(
-            l,
-            "Costs assigned to internal organizations",
-            "내부 조직에 배분한 비용",
-            "التكاليف المخصصة للمؤسسات الداخلية",
-          )}
-        </p>
+        <h2>{t(l, "Internal allocation", "조직 배분", "التخصيص الداخلي")}</h2>
         <strong className="overview-unknown">
           {t(l, "Not connected", "미연결", "غير متصل")}
         </strong>
-        <p>
+        <small>
           {t(
             l,
-            "Allocation results unavailable. Source cost is not an allocation amount.",
-            "배분 결과가 없어 금액을 확인할 수 없습니다. 원천 비용과는 별개입니다.",
-            "نتائج التخصيص غير متاحة. تكلفة المصادر ليست مبلغ التخصيص.",
+            "Allocation results unavailable",
+            "배분 결과 미연결",
+            "نتائج التخصيص غير متاحة",
           )}
-        </p>
+        </small>
+      </div>
+      <div data-design-id="U01:state:receivables">
+        <h2>{t(l, "Receivables", "미수·연체", "المستحقات")}</h2>
+        <strong className="overview-unknown">
+          {t(l, "Unknown", "미확인", "غير معلوم")}
+        </strong>
+        <small>
+          {t(
+            l,
+            "Receipt allocations unavailable",
+            "수납 배정 미연결",
+            "تخصيصات التحصيل غير متاحة",
+          )}
+        </small>
       </div>
     </section>
   );

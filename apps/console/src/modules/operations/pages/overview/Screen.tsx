@@ -24,7 +24,6 @@ import Lifecycle from "./Lifecycle";
 import AmountSummary from "./AmountSummary";
 import WorkSummary from "./WorkSummary";
 import "./overview.css";
-import "./commercial.css";
 import { emptyClosingFilter } from "./closing-filter";
 import { enterpriseLeaves, resolveOrganizations } from "./organization-scope";
 import OrgBreakdown from "./OrgBreakdown";
@@ -95,7 +94,6 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
           selectedOrganizations,
         )
       : [];
-  const known = current.filter((r) => r.minor !== null).length;
   const missing = current.filter((r) => r.minor === null);
   const activeClosing =
     active?.kind === "stage"
@@ -118,21 +116,6 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
     detailRows,
     key + "|" + active?.kind + "|" + active?.id + "|" + active?.stage,
   );
-  const exceptions = [
-    ...missing.map((r) => ({
-      id: r.id,
-      kind: "record" as const,
-      label: `${r.source} · ${organizationName(l, r.organization)} · ${t(l, "Cost record missing", "비용 자료 누락", "سجل تكلفة مفقود")}`,
-    })),
-    ...closing
-      .filter((r) => r.status.accounting === "unknown")
-      .map((r) => ({
-        id: r.id,
-        kind: "stage" as const,
-        label: `${organizationName(l, r.organization)} · ${t(l, "ERP confirmation missing", "ERP 반영 미확인", "تأكيد ERP مفقود")}`,
-      })),
-  ];
-  const exceptionPage = usePage(exceptions, key, 5);
   const money = (value: bigint | null, c: Currency) => formatMoney(value, c, l);
   function change(values: Record<string, string>) {
     setDetail(null);
@@ -304,23 +287,40 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
           mode,
         ])}
         period={period}
-        currency={currency}
         selectedSources={selectedSources}
         selectedOrganizations={selectedOrganizations}
         change={change}
       />
-      <p className="unified-basis" data-design-id="U01:scope:provenance">
-        {t(
-          l,
-          "Synthetic source cost · tax excluded · reporting month · no currency conversion",
-          "합성 원천 비용 · 세금 제외 · 보고월 기준 · 통화 환산 없음",
-          "تكلفة مصادر تجريبية · باستثناء الضريبة · شهر التقرير · دون تحويل عملة",
-        )}
-        <br />
-        {t(l, "Fixture snapshot", "예제 스냅샷", "لقطة تجريبية")}:{" "}
-        <bdi>{mode === "synthetic" ? snapshot : "—"}</bdi> ·{" "}
-        {t(l, "No live connection", "실제 연동 없음", "لا اتصال مباشر")}
-      </p>
+      <div className="overview-basis" data-design-id="U01:scope:provenance">
+        <p>
+          {t(l, "Synthetic data", "합성 데이터", "بيانات تجريبية")}{" "}
+          <bdi dir="ltr">{mode === "synthetic" ? snapshot : "—"}</bdi> ·{" "}
+          {t(
+            l,
+            "No live connection · tax excluded · no FX",
+            "실제 연동 없음 · 세금 제외 · 환산 없음",
+            "دون اتصال مباشر · باستثناء الضريبة · دون تحويل",
+          )}
+        </p>
+        <details>
+          <summary>
+            {t(
+              l,
+              "About these figures",
+              "금액·상태 기준",
+              "أساس المبالغ والحالات",
+            )}
+          </summary>
+          <p>
+            {t(
+              l,
+              "Source cost is not customer sales or organizational allocation. Partial amounts include known records only and are not final settlements. Work categories overlap; pending status grants no approval permission. Stages are independent and internal non-applicable states remain distinct. Owners, deadlines and authoritative as-of times are unavailable. Sales, allocation and receipt ledgers are not connected; no balances or overdue amounts are estimated.",
+              "원천 비용은 고객 판매·조직 배분과 구분합니다. 부분 합계는 확인된 자료만 포함하며 최종 정산액이 아닙니다. 업무 항목은 중복될 수 있고 대기 상태가 승인 권한을 부여하지 않습니다. 각 처리 단계는 독립적이며 내부 정산의 해당 없음과 미확인은 구분합니다. 담당자·납기·실제 확인 시각은 미연결입니다. 판매·배분·수납 원장이 없어 미수·연체 금액을 추정하지 않습니다.",
+              "تكلفة المصادر منفصلة عن المبيعات والتخصيص. تشمل المبالغ الجزئية السجلات المتاحة فقط وليست تسويات نهائية. قد تتداخل فئات العمل والانتظار لا يمنح صلاحية الموافقة. المراحل مستقلة والحالات غير المنطبقة منفصلة عن غير المؤكدة. المسؤولون والمواعيد ووقت التحقق الفعلي غير متاحين. دفاتر المبيعات والتخصيص والتحصيل غير متصلة ولا تقدر أرصدة أو متأخرات.",
+            )}
+          </p>
+        </details>
+      </div>
       {mode === "unconnected" ? (
         <section className="state" role="status">
           <h2>
@@ -362,95 +362,24 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
       ) : (
         <>
           {!compact && <AmountSummary rows={current} locale={l} />}
-          <div
-            className="overview-workboard"
-            data-design-id="U01:work:attention"
-          >
+          <div className="overview-work-context">
             <WorkSummary
               rows={closing}
-              known={known}
-              expected={current.length}
+              missing={missing}
+              scope={key}
               locale={l}
-              onSelect={(row, stage) => inspect("stage", row.id, stage)}
+              onInspect={inspect}
             />
-            <section className="unified-panel unified-exceptions">
-              <header>
-                <h2>
-                  {t(
-                    l,
-                    "Data to verify",
-                    "확인이 필요한 자료",
-                    "بيانات للتحقق",
-                  )}
-                </h2>
-              </header>
-              <ul>
-                {exceptionPage.rows.map((r) => (
-                  <li key={r.id}>
-                    <button
-                      onClick={() =>
-                        inspect(
-                          r.kind,
-                          r.id,
-                          r.kind === "stage" ? "accounting" : undefined,
-                        )
-                      }
-                    >
-                      {r.label}
-                    </button>
-                  </li>
-                ))}
-                {!missing.length &&
-                  !closing.some((r) => r.status.accounting === "unknown") && (
-                    <li>
-                      {t(
-                        l,
-                        "No missing cost or unknown ERP outcomes in this fixture selection.",
-                        "선택한 예제에 비용 누락·ERP 미확인 항목이 없습니다.",
-                        "لا توجد تكلفة مفقودة أو نتائج ERP غير مؤكدة في الاختيار التجريبي.",
-                      )}
-                    </li>
-                  )}
-              </ul>
-              <Paging value={exceptionPage} locale={l} />
-            </section>
-          </div>
-          {compact && <AmountSummary rows={current} locale={l} />}
-          <div className="unified-analysis">
+            {compact && <AmountSummary rows={current} locale={l} />}
             <CostTrend
               rows={all}
               currency={currency}
               locale={l}
               period={period}
               onMonth={(month) => change({ period: month })}
+              onCurrency={(ccy) => change({ ccy })}
             />
-            <div className="unified-composition">
-              {breakdown("source", selectedSources)}
-            </div>
           </div>
-          <OrgBreakdown
-            rows={current}
-            enterprise={enterprise}
-            scope={key}
-            locale={l}
-            onSelect={(id) => inspect("organization", id)}
-          />
-          <Lifecycle
-            key={key}
-            onFilterChange={(filter) => {
-              setDetail(null);
-              setListFilter(filter);
-            }}
-            scope={key}
-            rows={closing}
-            locale={l}
-            selected={
-              active?.kind === "stage" ? active.id + ":" + active.stage : ""
-            }
-            onSelect={(row: Closing, stage: Stage) =>
-              inspect("stage", row.id, stage)
-            }
-          />
           {active && (
             <section
               ref={detailRef}
@@ -547,7 +476,11 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
                         <td>{organizationName(l, r.organization)}</td>
                         <td>{r.source}</td>
                         <td>
-                          <bdi>{money(r.minor, r.currency)}</bdi>
+                          <bdi dir="ltr">
+                            {r.minor === null
+                              ? `${r.currency} · ${money(r.minor, r.currency)}`
+                              : money(r.minor, r.currency)}
+                          </bdi>
                           {r.minor === null &&
                             t(l, " · Missing", " · 누락", " · مفقود")}
                         </td>
@@ -562,27 +495,32 @@ export default function Overview({ locale: l, mode, onState }: ScreenProps) {
               <Paging value={detailPage} locale={l} />
             </section>
           )}
-          <section
-            className="overview-unavailable"
-            data-design-id="U01:state:receivables"
-          >
-            <h2>
-              {t(
-                l,
-                "Receivables & deadlines",
-                "미수 잔액과 납기",
-                "المستحقات والمواعيد",
-              )}
-            </h2>
-            <p>
-              {t(
-                l,
-                "Unknown · Receipt allocations and payment terms are not connected. Receipt-stage status does not establish a balance or overdue amount.",
-                "확인 불가 · 수납 배정과 지급 조건이 연동되지 않았습니다. 수납 단계의 상태만으로 미수·연체 금액을 판단할 수 없습니다.",
-                "غير معلوم · تخصيصات التحصيل وشروط الدفع غير متصلة. حالة التحصيل لا تحدد الرصيد أو المبلغ المتأخر.",
-              )}
-            </p>
-          </section>
+          <Lifecycle
+            key={key}
+            onFilterChange={(filter) => {
+              setDetail(null);
+              setListFilter(filter);
+            }}
+            scope={key}
+            rows={closing}
+            locale={l}
+            selected={
+              active?.kind === "stage" ? active.id + ":" + active.stage : ""
+            }
+            onSelect={(row: Closing, stage: Stage) =>
+              inspect("stage", row.id, stage)
+            }
+          />
+          <div className="overview-compositions">
+            {breakdown("source", selectedSources)}
+            <OrgBreakdown
+              rows={current}
+              enterprise={enterprise}
+              scope={key}
+              locale={l}
+              onSelect={(id) => inspect("organization", id)}
+            />
+          </div>
         </>
       )}
       <details className="overview-example-config">

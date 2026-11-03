@@ -58,19 +58,19 @@ try {
       }
       assert.deepEqual(
         await page.locator("[data-attention] strong").allTextContents(),
-        ["1", "4", "2"],
+        ["1", "2", "4"],
       );
       const layout = await page.evaluate(() => {
         const body = document.querySelector(".unified-overview");
         const work = document.querySelector(".overview-workboard");
         const amounts = document.querySelector(".overview-amounts");
-        const chart = document.querySelector(".unified-analysis");
+        const chart = document.querySelector(".unified-trend");
         return {
           gap: getComputedStyle(body).gap,
           heading: getComputedStyle(work.querySelector("h2")).fontSize,
           metadata: getComputedStyle(amounts.querySelector("small")).fontSize,
           workBeforeChart:
-            work.getBoundingClientRect().top <
+            work.getBoundingClientRect().top <=
             chart.getBoundingClientRect().top,
           workBeforeAmounts:
             work.getBoundingClientRect().top <
@@ -81,7 +81,7 @@ try {
           ),
         };
       });
-      assert.equal(layout.gap, "32px");
+      assert.equal(layout.gap, "20px");
       assert.equal(layout.heading, "20px");
       assert.equal(layout.metadata, "14px");
       assert(layout.workBeforeChart);
@@ -112,6 +112,88 @@ try {
       assert.equal(layout.workBeforeAmounts, width === 390);
       assert.equal(layout.workBeforeAmountsDOM, width === 390);
       await page.evaluate(() => document.fonts.ready);
+      const family =
+        lang === "ko"
+          ? "IBM Plex Sans KR"
+          : lang === "ar"
+            ? "IBM Plex Sans Arabic"
+            : "IBM Plex Sans";
+      assert(
+        await page.evaluate(
+          (family) =>
+            [...document.fonts].some(
+              (face) =>
+                face.family.replaceAll('"', "") === family &&
+                face.weight === "600" &&
+                face.status === "loaded",
+            ),
+          family,
+        ),
+      );
+      assert(
+        await page.evaluate(() => {
+          const labels = [
+            ...document.querySelectorAll(".overview-chart-axis bdi"),
+          ];
+          const lines = [
+            ...document.querySelectorAll(".overview-chart-grid span"),
+          ];
+          return (
+            labels.length === 3 &&
+            labels.every((label, index) => {
+              const r = label.getBoundingClientRect();
+              return (
+                Math.abs(
+                  r.top +
+                    r.height / 2 -
+                    lines[index].getBoundingClientRect().top,
+                ) <= 1.5
+              );
+            })
+          );
+        }),
+      );
+      assert(await page.locator(".review-source-revision").isVisible());
+      assert(await page.locator("#confirm-review").isVisible());
+      const reviewState = await page.locator("#review-status").innerText();
+      await page.locator("#confirm-review").click();
+      await page.locator(".design-review dialog[open]").waitFor();
+      assert.match(
+        await page.locator(".design-review dialog").innerText(),
+        /U01/,
+      );
+      await page.locator(".design-review dialog").press("Escape");
+      assert(
+        await page
+          .locator("#confirm-review")
+          .evaluate((e) => e === document.activeElement),
+      );
+      assert.equal(
+        await page.locator("#review-status").innerText(),
+        reviewState,
+      );
+      if (width === 1440) {
+        const viewport = await page.evaluate(() => ({
+          plotBottom: document
+            .querySelector(".unified-plot")
+            .getBoundingClientRect().bottom,
+          fourthWorkBottom: document
+            .querySelectorAll(".overview-work-list li")[3]
+            .getBoundingClientRect().bottom,
+          headerBottom: document
+            .querySelector(".unified-filters")
+            .getBoundingClientRect().bottom,
+          headingTop: document
+            .querySelector(".planning-page-header")
+            .getBoundingClientRect().top,
+        }));
+        assert(viewport.plotBottom <= 900, JSON.stringify(viewport));
+        assert(viewport.fourthWorkBottom <= 900, JSON.stringify(viewport));
+        assert(
+          viewport.headerBottom - viewport.headingTop <= 200,
+          JSON.stringify(viewport),
+        );
+      }
       await page.screenshot({
         path: `qa-output/overview/integrated-${lang}-${width}.png`,
         fullPage: true,
@@ -120,7 +202,7 @@ try {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await open();
   for (const group of ["blocked", "approval", "erp"]) {
-    const trigger = page.locator(`[data-attention="${group}"] button`);
+    const trigger = page.locator(`[data-work-group="${group}"] button`).first();
     await trigger.click();
     await page.locator(".unified-detail").waitFor();
     assert(
@@ -159,7 +241,7 @@ try {
         await page.locator(".overview-org-breakdown tbody tr").count(),
         12,
       );
-      assert.equal(await page.locator(".unified-exceptions li").count(), 5);
+      assert.equal(await page.locator(".unified-exceptions li").count(), 6);
       assert(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth + 1,
@@ -458,7 +540,7 @@ try {
     /35,680.00/,
   );
   await open();
-  await page.locator(".unified-exceptions button").first().click();
+  await page.locator('[data-work-kind="record"] button').first().click();
   await page.locator(".unified-detail").waitFor();
   assert.equal(await page.locator(".unified-detail tbody tr").count(), 1);
   assert.match(

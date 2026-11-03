@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
-import { months, sources, organizations, type Currency } from "./model";
+import { months, sources, organizations } from "./model";
 import { organizationName } from "./copy";
 import OrgPicker from "./OrgPicker";
 function Choices({
@@ -68,7 +68,6 @@ function Choices({
 export default function ScopeFilters({
   locale: l,
   period,
-  currency,
   selectedSources,
   selectedOrganizations,
   change,
@@ -79,7 +78,6 @@ export default function ScopeFilters({
   contextKey: string;
   locale: Locale;
   period: string;
-  currency: Currency;
   selectedSources: string[];
   selectedOrganizations: string[];
   change: (values: Record<string, string>) => void;
@@ -107,22 +105,6 @@ export default function ScopeFilters({
           {months.map((m) => (
             <option key={m}>{m}</option>
           ))}
-        </select>
-      </label>
-      <label>
-        {t(
-          l,
-          "Chart currency · no FX",
-          "차트 통화 · 환산 없음",
-          "عملة الرسم · دون تحويل",
-        )}
-        <select
-          id="overview-currency"
-          value={currency}
-          onChange={(e) => change({ ccy: e.target.value })}
-        >
-          <option>USD</option>
-          <option>KRW</option>
         </select>
       </label>
       <Choices

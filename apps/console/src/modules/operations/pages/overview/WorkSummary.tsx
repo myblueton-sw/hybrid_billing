@@ -1,131 +1,170 @@
 import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
-import { stages, type Closing, type Stage } from "./model";
-import { stageName, statusName } from "./copy";
+import { stages, type Closing, type Cost, type Stage } from "./model";
+import { organizationName, stageName } from "./copy";
+import Paging, { usePage } from "./Paging";
 
+type WorkItem = {
+  key: string;
+  group: "blocked" | "missing" | "erp" | "approval";
+  kind: "stage" | "record";
+  id: string;
+  organization: string;
+  stage?: Stage;
+  source: string;
+};
 export default function WorkSummary({
   rows,
-  known,
-  expected,
+  missing,
+  scope,
   locale: l,
-  onSelect,
+  onInspect,
 }: {
   rows: Closing[];
-  known: number;
-  expected: number;
+  missing: Cost[];
+  scope: string;
   locale: Locale;
-  onSelect: (row: Closing, stage: Stage) => void;
+  onInspect: (kind: "stage" | "record", id: string, stage?: Stage) => void;
 }) {
-  const attention = [
+  const groups = [
     {
-      id: "blocked",
-      label: t(l, "Blocked units", "처리 차단", "وحدات محظورة"),
+      id: "blocked" as const,
+      label: t(l, "Blocked", "차단", "محظور"),
       rows: rows.filter((r) => stages.some((s) => r.status[s] === "blocked")),
       stage: (r: Closing) => stages.find((s) => r.status[s] === "blocked")!,
     },
     {
-      id: "approval",
-      label: t(l, "Awaiting approval", "승인 대기", "بانتظار الموافقة"),
-      rows: rows.filter((r) => r.status.approval === "pending"),
-      stage: () => "approval" as Stage,
-    },
-    {
-      id: "erp",
+      id: "erp" as const,
       label: t(l, "ERP unconfirmed", "ERP 미확인", "ERP غير مؤكد"),
       rows: rows.filter((r) => r.status.accounting === "unknown"),
       stage: () => "accounting" as Stage,
     },
+    {
+      id: "approval" as const,
+      label: t(l, "Approval pending", "승인 대기", "الموافقة معلقة"),
+      rows: rows.filter((r) => r.status.approval === "pending"),
+      stage: () => "approval" as Stage,
+    },
   ];
+  const items: WorkItem[] = [
+    ...groups[0].rows.map((r) => ({
+      key: `blocked:${r.id}`,
+      group: "blocked" as const,
+      kind: "stage" as const,
+      id: r.id,
+      organization: r.organization,
+      stage: groups[0].stage(r),
+      source: r.internal
+        ? t(l, "Internal", "내부 정산", "داخلي")
+        : t(l, "External", "외부 청구", "خارجي"),
+    })),
+    ...missing.map((r) => ({
+      key: `missing:${r.id}`,
+      group: "missing" as const,
+      kind: "record" as const,
+      id: r.id,
+      organization: r.organization,
+      source: r.source,
+    })),
+    ...groups.slice(1).flatMap((g) =>
+      g.rows.map((r) => ({
+        key: `${g.id}:${r.id}`,
+        group: g.id,
+        kind: "stage" as const,
+        id: r.id,
+        organization: r.organization,
+        stage: g.stage(r),
+        source: r.internal
+          ? t(l, "Internal", "내부 정산", "داخلي")
+          : t(l, "External", "외부 청구", "خارجي"),
+      })),
+    ),
+  ];
+  const page = usePage(items, scope, 6);
+  const labels = {
+    blocked: groups[0].label,
+    missing: t(l, "Missing data", "자료 누락", "بيانات مفقودة"),
+    erp: groups[1].label,
+    approval: groups[2].label,
+  };
   return (
-    <section className="overview-work-summary">
+    <section
+      className="overview-workboard unified-exceptions"
+      data-design-id="U01:work:attention"
+    >
       <header>
-        <h2>{t(l, "Settlement work", "정산 업무", "أعمال التسوية")}</h2>
+        <h2>{t(l, "Next work", "다음 작업", "العمل التالي")}</h2>
         <span>
           <bdi data-closing-count>{rows.length}</bdi>{" "}
-          {t(l, "units in scope", "정산 건", "وحدات في النطاق")}
+          {t(l, "settlement units", "정산 건", "وحدات تسوية")}
         </span>
       </header>
-      <div className="overview-attention-counts">
-        {attention.map((group) => (
-          <div key={group.id} data-attention={group.id}>
-            <span>{group.label}</span>
-            <strong>{group.rows.length}</strong>
-            {group.rows.length > 0 && (
-              <button
-                aria-label={`${group.label} · ${t(l, "Inspect first unit", "첫 정산 건 확인", "فحص الوحدة الأولى")}`}
-                onClick={() =>
-                  onSelect(group.rows[0], group.stage(group.rows[0]))
-                }
-              >
-                {t(
-                  l,
-                  "Inspect first unit",
-                  "첫 정산 건 확인",
-                  "فحص الوحدة الأولى",
-                )}
-              </button>
-            )}
-          </div>
+      <div className="overview-work-counts">
+        {groups.map((g) => (
+          <span key={g.id} data-attention={g.id}>
+            {g.label} <strong>{g.rows.length}</strong>
+          </span>
         ))}
+        <span>
+          {t(l, "Missing records", "자료 누락", "السجلات المفقودة")}{" "}
+          <strong>{missing.length}</strong>
+        </span>
       </div>
-      <p className="overview-operational-note">
+      <div className="overview-work-head" aria-hidden="true">
+        <span>{t(l, "State", "상태", "الحالة")}</span>
+        <span>{t(l, "Target", "대상", "الهدف")}</span>
+        <span>{t(l, "Stage", "단계", "المرحلة")}</span>
+        <span>{t(l, "Action", "동작", "الإجراء")}</span>
+      </div>
+      <ul className="overview-work-list">
+        {page.rows.map((item) => (
+          <li
+            key={item.key}
+            data-work-group={item.group}
+            data-work-kind={item.kind}
+          >
+            <span
+              className={`overview-work-state ${item.group === "blocked" ? "is-blocked" : ""}`}
+            >
+              {labels[item.group]}
+            </span>
+            <div className="overview-work-target">
+              {organizationName(l, item.organization)}
+              <small>{item.source}</small>
+            </div>
+            <span className="overview-work-stage">
+              {item.stage
+                ? stageName(l, item.stage)
+                : t(l, "Source cost", "원천 비용", "تكلفة المصادر")}
+            </span>
+            <button
+              aria-label={`${labels[item.group]} · ${organizationName(l, item.organization)} · ${item.source} · ${item.stage ? stageName(l, item.stage) : t(l, "Source cost", "원천 비용", "تكلفة المصادر")} · ${t(l, "Inspect", "확인", "فحص")}`}
+              onClick={() => onInspect(item.kind, item.id, item.stage)}
+            >
+              {t(l, "Inspect", "확인", "فحص")}
+            </button>
+          </li>
+        ))}
+      </ul>
+      {!items.length && (
+        <p role="status">
+          {t(
+            l,
+            "No blocked units, missing cost records, unknown ERP outcomes or pending approvals in this selection.",
+            "선택 범위에 차단·자료 누락·ERP 미확인·승인 대기 항목이 없습니다.",
+            "لا توجد وحدات محظورة أو سجلات تكلفة مفقودة أو ERP غير مؤكد أو موافقات معلقة في هذا النطاق.",
+          )}
+        </p>
+      )}
+      <p className="overview-work-footnote">
         {t(
           l,
-          "Categories can overlap. Pending is not permission to approve. Owner and deadline are unknown.",
-          "항목 간 중복이 있습니다. 승인 대기는 승인 권한을 뜻하지 않습니다. 담당자·납기는 미확인입니다.",
-          "قد تتداخل الفئات. الانتظار لا يمنح صلاحية الموافقة. المسؤول والموعد غير معلومين.",
+          "Categories overlap. Owners and deadlines are not connected.",
+          "항목 간 중복 가능 · 담당자·납기 미연결",
+          "قد تتداخل الفئات · المسؤولون والمواعيد غير متصلة",
         )}
       </p>
-      <details className="overview-independent-states">
-        <summary>
-          {t(
-            l,
-            "Issuance, ERP and receipt are independent",
-            "발행·ERP·수납 상태는 각각 독립적입니다",
-            "الإصدار وERP والتحصيل حالات مستقلة",
-          )}
-        </summary>
-        <dl>
-          {(["issuance", "accounting", "receipt"] as const).map((stage) => (
-            <div key={stage}>
-              <dt>{stageName(l, stage)}</dt>
-              <dd>
-                {(
-                  ["complete", "pending", "blocked", "unknown", "na"] as const
-                ).map((status) => (
-                  <span key={status}>
-                    {statusName(l, status)}{" "}
-                    <bdi>
-                      {rows.filter((r) => r.status[stage] === status).length}
-                    </bdi>
-                  </span>
-                ))}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </details>
-      <p className="overview-coverage">
-        {t(
-          l,
-          "Cost records available",
-          "비용 자료 확인",
-          "سجلات التكلفة المتاحة",
-        )}{" "}
-        <strong data-coverage>
-          <bdi dir="ltr">
-            {known} / {expected}
-          </bdi>
-        </strong>
-        <span>
-          {t(
-            l,
-            "Source × organization · not closing completion",
-            "원천 × 조직 · 정산 완료율 아님",
-            "المصدر × المؤسسة · ليست نسبة اكتمال الإقفال",
-          )}
-        </span>
-      </p>
+      <Paging value={page} locale={l} jump={items.length > 60} />
     </section>
   );
 }

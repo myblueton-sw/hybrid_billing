@@ -1,0 +1,56 @@
+{
+  "columns": [
+    "id",
+    "name",
+    "component",
+    "amount",
+    "inclusion"
+  ],
+  "details": [
+    "basis",
+    "denominator",
+    "idle",
+    "policy"
+  ],
+  "values": {
+    "name": "DEMO compute pool",
+    "component": "Lease",
+    "amount": "USD 1200.0000",
+    "inclusion": "pending",
+    "basis": "Contract cost",
+    "denominator": "unconfigured",
+    "idle": "unconfigured",
+    "policy": "DEMO-POLICY-r1"
+  },
+  "views": {
+    "summary": [
+      "id",
+      "name",
+      "amount",
+      "state"
+    ],
+    "costs": [
+      "component",
+      "amount",
+      "basis",
+      "inclusion"
+    ],
+    "products": [
+      "component",
+      "contract",
+      "inclusion"
+    ],
+    "approvals": [
+      "policy",
+      "approver",
+      "digest",
+      "state"
+    ]
+  },
+  "draftFields": [
+    "name",
+    "component",
+    "basis",
+    "idle"
+  ]
+}

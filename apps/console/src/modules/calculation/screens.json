@@ -1,0 +1,103 @@
+[
+  {
+    "id": "B08",
+    "path": "/billing-runs",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "calculation",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/B08/spec.md",
+    "exampleRoles": [
+      "PR",
+      "BL",
+      "AP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "runs",
+        "labelKo": "실행 목록"
+      },
+      {
+        "key": "inputs",
+        "labelKo": "입력·정책"
+      },
+      {
+        "key": "trace",
+        "labelKo": "결과·규칙 추적"
+      },
+      {
+        "key": "comparison",
+        "labelKo": "전후 비교"
+      },
+      {
+        "key": "validation",
+        "labelKo": "검증"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "청구 실행·전후 비교",
+    "scopeLabelKo": "기간·계약/법인·통화·정책 revision·대상 manifest",
+    "purposeKo": "입력/귀속/정책/FX/엔진 버전·대상·금액·규칙추적·완전성·job, 계산/검증/비교/승인 요청",
+    "commandReferences": [],
+    "actionEvidence": "계산 실행 (async); 이전 실행 비교; 실패 구간 재시도; 승인 요청 (→B09); 월별 인식 배치 검증·고정; 월별 인식 승인 요청 (B09 `monthly_recognition`)."
+  },
+  {
+    "id": "B10",
+    "path": "/claims",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "calculation",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/B10/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "ledger",
+        "labelKo": "적용 원장"
+      },
+      {
+        "key": "partial",
+        "labelKo": "부분 청구"
+      },
+      {
+        "key": "reversals",
+        "labelKo": "역거래·정정"
+      },
+      {
+        "key": "references",
+        "labelKo": "외부 참조"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "청구 적용 이력",
+    "scopeLabelKo": "계약·기간·구성요소·Claim 상태·제출 경로",
+    "purposeKo": "계약·기간·구성요소·원천→배분→판매→행→제출, 적용/잔여/역거래·원문 참조",
+    "commandReferences": [],
+    "actionEvidence": "trace application path; view duplicate conflict; open correction review. `claim.authorize_replacement` is referenced."
+  }
+]

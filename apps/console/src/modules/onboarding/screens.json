@@ -1,0 +1,110 @@
+[
+  {
+    "id": "S01",
+    "path": "/connections",
+    "menu": "src",
+    "audience": "admin",
+    "module": "onboarding",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/S01/spec.md",
+    "exampleRoles": [
+      "OP",
+      "BL"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "connections",
+        "labelKo": "연결 목록"
+      },
+      {
+        "key": "capabilities",
+        "labelKo": "지원 범위"
+      },
+      {
+        "key": "security",
+        "labelKo": "인증·보안"
+      },
+      {
+        "key": "diagnostics",
+        "labelKo": "진단 이력"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "원천 연결·지원 범위",
+    "scopeLabelKo": "Provider·계약 유형·계정 역할·법인·지원 상태·인증 만료",
+    "purposeKo": "Provider·계약·scope·계정역할·제품버전·인증 참조·capability·마지막 수신, 연결/진단/회수",
+    "commandReferences": [],
+    "actionEvidence": "연결 초안 저장; 진단 실행 (job); 인증 참조 교체 (rediagnosis needed); 연결 회수."
+  },
+  {
+    "id": "S02",
+    "path": "/onboarding",
+    "menu": "src",
+    "audience": "admin",
+    "module": "onboarding",
+    "archetype": "wizard",
+    "spec": "docs/ui/screens/S02/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AM",
+      "BL"
+    ],
+    "reactBodies": [
+      "setup-progress",
+      "setup-profile",
+      "setup-attribution",
+      "setup-connectors",
+      "setup-readtest",
+      "setup-schedule",
+      "setup-first",
+      "setup-readiness"
+    ],
+    "tabs": [
+      {
+        "key": "path",
+        "labelKo": "경로 선택"
+      },
+      {
+        "key": "permissions",
+        "labelKo": "설정·권한"
+      },
+      {
+        "key": "first-data",
+        "labelKo": "첫 데이터"
+      },
+      {
+        "key": "reconciliation",
+        "labelKo": "첫 대사"
+      },
+      {
+        "key": "activation",
+        "labelKo": "개통 검토"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "온보딩·담당자 인계",
+    "scopeLabelKo": "Provider·계약·운영 유형",
+    "purposeKo": "경로별 단계·완료 증거·필요 권한·자료·담당·대기 이유, 인계·재검사·첫 대사·개통 요청",
+    "commandReferences": [
+      "onboarding.metrics.read"
+    ],
+    "actionEvidence": "start path; hand off owner; recheck affected stages; request activation review (server approval; needs approved issuance route, recovery test, tax integration, cutover plan); `onboarding.metrics.read`."
+  }
+]

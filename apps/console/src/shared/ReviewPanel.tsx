@@ -175,7 +175,11 @@ export default function ReviewPanel({
           </strong>
           <p>
             <bdi>
-              {screen} · {__SOURCE_REVISION__.slice(0, 12)}
+              <span className="review-screen-id">{screen}</span>
+              <span className="review-source-revision">
+                {" "}
+                · {__SOURCE_REVISION__.slice(0, 12)}
+              </span>
             </bdi>
           </p>
         </div>
@@ -226,7 +230,7 @@ export default function ReviewPanel({
         </h2>
         <p>
           <bdi>
-            {screen} · {l} · {width}px
+            {screen} · {l} · {width}px · {__SOURCE_REVISION__.slice(0, 12)}
           </bdi>
         </p>
         <p>

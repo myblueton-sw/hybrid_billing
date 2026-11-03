@@ -11,12 +11,14 @@
     "build": "tsc --noEmit && vite build",
     "start": "vite preview --host 127.0.0.1 --port 8787 --strictPort",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/app/assemble.test.ts src/shared/review-store.test.ts src/modules/sources/api.test.ts src/modules/operations/index.test.ts src/modules/onboarding/store.test.ts src/modules/operations/pages/overview/model.test.ts",
+    "test": "tsx --test src/app/assemble.test.ts src/shared/review-store.test.ts src/modules/sources/api.test.ts src/modules/operations/index.test.ts src/modules/onboarding/store.test.ts src/modules/operations/pages/overview/model.test.ts src/planning/routing.test.ts src/modules/operations/pages/core-index-close/model.test.ts src/modules/sources/pages/live-imports/api.test.ts",
     "qa": "node tools/browser-qa.mjs",
     "qa:work": "node tools/work-qa.mjs",
     "qa:entry": "node tools/entry-qa.mjs",
     "qa:setup": "node tools/setup-qa.mjs",
-    "qa:overview": "node tools/overview-qa.mjs"
+    "qa:overview": "node tools/overview-qa.mjs",
+    "qa:planning": "node tools/planning-qa.mjs",
+    "qa:service": "node tools/service-qa.mjs"
   },
   "dependencies": {
     "react": "19.3.1",

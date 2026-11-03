@@ -9,6 +9,7 @@ from uuid import uuid4
 from .contract import MAX_BYTES, Rejected
 from .intake_view import Intake
 from .reconciliation import Reconciliation
+from .source_data import SourceData
 
 
 class LocalServer(ThreadingHTTPServer):
@@ -80,6 +81,8 @@ class Handler(BaseHTTPRequestHandler):
             return failure(403, 'origin_denied')
         if mutation and origin != self.server.origin:
             return failure(403, 'origin_denied')
+        if path.path.startswith('/api/local-source-data'):
+            return self.source_data(path.path, mutation, request_id, failure)
         if path.path.startswith('/api/local-reconciliation'):
             return self.reconcile(path.path, mutation, request_id, failure)
         if not self.server.actor.startswith('loader-'):
@@ -171,6 +174,40 @@ class Handler(BaseHTTPRequestHandler):
                 failure(409, str(exc))
             else:
                 failure(403, 'scope_denied')
+        except Exception:
+            failure(503, 'service_unavailable')
+        finally:
+            if service:
+                service.close()
+
+    def source_data(self, path, mutation, request_id, failure):
+        if not self.server.actor.startswith('approver-'):
+            return failure(403, 'scope_denied')
+        if mutation:
+            return failure(405, 'method_denied')
+        prefix = '/api/local-source-data'
+        exact = re.fullmatch(prefix + r'/candidates/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', path)
+        page = re.fullmatch(prefix + r'/pages/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/([0-9a-f]{64})/(0|[1-9][0-9]{0,3})', path)
+        if path not in (prefix + '/profile', prefix + '/candidates') and not exact and not page:
+            return failure(400, 'request_invalid')
+        service = None
+        try:
+            service = SourceData(self.server.actor, self.server.env)
+            if page:
+                result = service.page(page[1], page[2], int(page[3]))
+            elif path.endswith('/profile'):
+                result = service.context()
+            else:
+                result = service.candidates(exact[1] if exact else None)
+            self.reply(200, {**result, 'request_id': request_id})
+        except Rejected as exc:
+            reason = str(exc)
+            if reason in ('permission', 'policy_unavailable', 'release_unavailable', 'release_identity'):
+                failure(403, 'scope_denied')
+            elif reason == 'request_invalid':
+                failure(400, reason)
+            else:
+                failure(409, 'policy_changed' if reason == 'policy_changed' else 'evidence_unavailable')
         except Exception:
             failure(503, 'service_unavailable')
         finally:

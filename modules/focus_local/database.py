@@ -182,6 +182,34 @@ class Authority:
             if self.inspection_capability() != cap:
                 raise Rejected('policy_changed')
 
+    def metadata_capability(self):
+        if self.actor.startswith('loader-'):
+            right = 'ingest'
+        elif self.actor.startswith('approver-'):
+            right = 'confirm'
+        else:
+            raise Rejected('permission')
+        principal = self.conn.execute('SELECT rights FROM hb_local.principal WHERE actor=%s AND connection_id=%s', (self.actor, self.scope[2])).fetchone()
+        if not principal or right not in principal['rights']:
+            raise Rejected('permission')
+        cap = self.conn.execute('SELECT * FROM hb_local.connection WHERE connection_id=%s', (self.scope[2],)).fetchone()
+        if not cap or not cap['active']:
+            raise Rejected('policy_unavailable')
+        return cap
+
+    @contextmanager
+    def metadata_inspection(self):
+        if self.conn.info.transaction_status != TransactionStatus.IDLE:
+            raise Rejected('inspection_transaction')
+        with self.conn.transaction():
+            self.conn.execute('SET TRANSACTION READ ONLY')
+            self.conn.execute("SELECT set_config('hb.installation',%s,true),set_config('hb.workspace',%s,true)", (str(self.scope[0]), str(self.scope[1])))
+            self.conn.execute('SELECT pg_advisory_xact_lock(%s)', (int.from_bytes(self.scope[2].bytes[:8], 'big', signed=True),))
+            cap = self.metadata_capability()
+            yield cap
+            if self.metadata_capability() != cap:
+                raise Rejected('policy_changed')
+
     def mark_unknown(self, operation_id):
         try:
             with self.transaction('ingest' if self.actor.startswith('loader-') else 'export', allow_unfinished=True):

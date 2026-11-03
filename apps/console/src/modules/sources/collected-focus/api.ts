@@ -1,4 +1,4 @@
-import { request, ServiceError } from "../../../sources/pages/live-imports/api";
+import { request, ServiceError } from "../pages/live-imports/api";
 export { ServiceError };
 export type Basis = "billed_cost" | "effective_cost";
 export type Measure = {
@@ -23,6 +23,16 @@ export type Account = {
   amounts: Amount[];
 };
 export type FocusRow = {
+  consumed_unit: string | null;
+  pricing_unit: string | null;
+  consumed_quantity: string | null;
+  pricing_quantity: string | null;
+  list_cost: string | null;
+  contracted_cost: string | null;
+  list_unit_price: string | null;
+  contracted_unit_price: string | null;
+  billing_start: string;
+  billing_end: string;
   id: string;
   account: string;
   provider: string;
@@ -241,6 +251,20 @@ export function validOverview(
       d.rows.every(
         (r) =>
           sha(r.id) &&
+          ["consumed_unit", "pricing_unit"].every(
+            (k) =>
+              r[k as "consumed_unit"] === null || text(r[k as "consumed_unit"]),
+          ) &&
+          [
+            "consumed_quantity",
+            "pricing_quantity",
+            "list_cost",
+            "contracted_cost",
+            "list_unit_price",
+            "contracted_unit_price",
+          ].every((k) => numeric(r[k as "consumed_quantity"])) &&
+          text(r.billing_start, 64) &&
+          text(r.billing_end, 64) &&
           sha(r.account) &&
           text(r.provider) &&
           text(r.billing_account) &&

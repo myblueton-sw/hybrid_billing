@@ -57,3 +57,5 @@ Entry forms validate local examples and clear fields; they do not authenticate, 
 ## Collected FOCUS overview
 
 U01 at `/#/home?lang=ko` now queries the authorized collected FOCUS sample service, with exact currency-separated BilledCost/EffectiveCost, observed billing/subaccount mapping and bounded source rows. It does not fall back to generated data for legacy mode/scenario parameters. Operational ledgers remain explicitly unconnected. Follow the [HB-85 runbook](../../docs/features/HB-85/focus-verification.md) for the separate trusted reader process, ports, source provenance and current storage interruption; static preview alone does not supply this data.
+
+The next collected screen is S04 at `/#/source-data?lang=ko`, using the same reader and pinned source as U01. It exposes normalized rows, mapped fields, native consumption/pricing quantities and explicit unavailable history. The [HB-143 verification/runbook](../../docs/features/HB-143/verification.md) distinguishes exact data, scoped reviews and deferred integrations. The existing `service=local` S04 deep links remain on their separate legacy inspection contract.

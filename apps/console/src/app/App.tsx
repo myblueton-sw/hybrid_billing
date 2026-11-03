@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Locale, Mode } from "../shared/types";
-import { canonicalScope } from "../shared/scope-query";
+import { serviceQuery } from "./service-navigation";
+import ServiceNavigation from "./ServiceNavigation";
+import { sectionFor, relatedScreens, navigationLabels } from "./service-ia";
+import "./service-shell.css";
 import { useLocation, setNavigationGuard } from "../shared/navigation";
 import {
   planningScreens,
@@ -46,20 +49,24 @@ export default function App() {
       : params.get("lang") === "ar"
         ? "ar"
         : "ko";
+  const developer = params.get("review") === "1";
   const mode: Mode =
     params.has("mode") && params.get("mode") !== "synthetic"
       ? "unconnected"
       : "synthetic";
-  const [audience, setAudience] = useState<Audience>("admin"),
-    [persona, setPersona] = useState("all"),
+  const [audiencePreview, setAudience] = useState<Audience>("admin"),
+    [personaPreview, setPersona] = useState("all"),
     [search, setSearch] = useState(""),
     [dirty, setDirty] = useState(false),
-    [scenario, setScenario] = useState("normal"),
+    [scenarioPreview, setScenario] = useState("normal"),
     [view, setView] = useState({ key: "", state: "{}", items: [] as string[] });
   const menuDialog = useRef<HTMLDialogElement>(null),
     jobs = useRef<HTMLDialogElement>(null),
     menuTrigger = useRef<HTMLButtonElement>(null),
     jobTrigger = useRef<HTMLButtonElement>(null);
+  const audience: Audience = developer ? audiencePreview : "admin";
+  const persona = developer ? personaPreview : "all";
+  const scenario = developer ? scenarioPreview : "normal";
   const context = useMemo(
     () => ({
       audience,
@@ -76,9 +83,9 @@ export default function App() {
       assistant:
         audience === "admin" &&
         (persona === "all" || ["BL", "PR", "AP", "CP", "OP"].includes(persona)),
-      designTools: audience === "admin",
+      designTools: audience === "admin" && developer,
     }),
-    [audience, persona],
+    [audience, persona, developer],
   );
   const route = resolveRoute(hash || "#/home", context),
     screen = route.screen;
@@ -150,10 +157,7 @@ export default function App() {
     setDirty(false);
     setSearch("");
     menuDialog.current?.close();
-    const q = new URLSearchParams();
-    const inherited = canonicalScope(params, screen?.id ?? "");
-    for (const key of ["lang", "mode", "scope", "period", "le", "ccy"])
-      if (inherited.has(key)) q.set(key, inherited.get(key)!);
+    const q = serviceQuery(params, screen?.id ?? "");
     location.hash = planningUrl(path, q, changes);
   }
   function changeScope(changes: Record<string, string>) {
@@ -174,7 +178,7 @@ export default function App() {
           : next === "customer"
             ? "/portal/overview"
             : "/login"),
-      new URLSearchParams({ lang: l }),
+      new URLSearchParams({ lang: l, ...(developer ? { review: "1" } : {}) }),
     );
   }
   useEffect(() => {
@@ -229,51 +233,43 @@ export default function App() {
       .toLowerCase()
       .includes(search.toLowerCase()),
   );
-  const menus = Object.keys(menuNames).filter(
-    (k) => !["pre", "portal", "me"].includes(k),
-  );
+  const previousDeveloper = useRef(developer);
+  useEffect(() => {
+    if (previousDeveloper.current && !developer) {
+      setAudience("admin");
+      setPersona("all");
+      setScenario("normal");
+      setSearch("");
+    }
+    previousDeveloper.current = developer;
+  }, [developer]);
   const sidebar = (
     <>
-      <label className="planning-search">
-        {local(l, ["화면 검색", "Find a screen", "البحث عن شاشة"])}
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </label>
-      <nav
-        aria-label={local(l, ["업무 메뉴", "Work navigation", "تنقل العمل"])}
-      >
-        {menus.map((key) => {
-          const entries = filtered.filter((s) => s.menu === key);
-          return entries.length ? (
-            <details key={key} open>
-              <summary>{local(l, menuNames[key])}</summary>
-              {entries.map((s) => (
-                <a
-                  key={s.id}
-                  href={planningUrl(s.path, new URLSearchParams({ lang: l }))}
-                  aria-current={s.id === screen?.id ? "page" : undefined}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(s.path);
-                  }}
-                >
-                  <span>{local(l, titles[s.id])}</span>
-                  <small>{s.id}</small>
-                </a>
-              ))}
-            </details>
-          ) : null;
-        })}
-      </nav>
+      {developer && (
+        <label className="planning-search">
+          {local(l, ["화면 검색", "Find a screen", "البحث عن شاشة"])}
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+      )}
+      <ServiceNavigation
+        locale={l}
+        entries={developer ? filtered : allowed}
+        active={screen?.id}
+        query={serviceQuery(params, screen?.id ?? "")}
+        onNavigate={navigate}
+        developer={developer}
+        activeView={tab}
+      />
     </>
   );
   const portal = audience === "customer";
   const headerActions = (
     <div className="planning-header-actions">
-      {!portal && !liveService && (
+      {developer && !portal && !liveService && (
         <label className="planning-workspace">
           <span className="sr-only">
             {local(l, ["예제 업무 공간", "Example workspace", "مساحة تجريبية"])}
@@ -299,9 +295,24 @@ export default function App() {
           </select>
         </label>
       )}
-      <button ref={jobTrigger} onClick={() => jobs.current?.showModal()}>
-        {local(l, ["작업", "Jobs", "المهام"])}
-      </button>
+      {context.assistant && allowed.some((s) => s.id === "A01") && (
+        <button onClick={() => navigate("/assistant")}>AI Assistant</button>
+      )}
+      <details className="planning-work">
+        <summary>{local(l, ["내 작업", "My work", "أعمالي"])}</summary>
+        {allowed.some((s) => s.id === "U03") && (
+          <button onClick={() => navigate("/tasks")}>
+            {local(l, [
+              "내 작업·알림",
+              "My work and notifications",
+              "أعمالي والإشعارات",
+            ])}
+          </button>
+        )}
+        <button ref={jobTrigger} onClick={() => jobs.current?.showModal()}>
+          {local(l, ["실행 중 작업", "Background jobs", "المهام الخلفية"])}
+        </button>
+      </details>
       <details className="planning-help">
         <summary>{local(l, ["도움말", "Help", "المساعدة"])}</summary>
         <button onClick={() => navigate("/help/contribute")}>
@@ -327,7 +338,22 @@ export default function App() {
         <button onClick={() => navigate("/my-security")}>
           {local(l, titles.M05)}
         </button>
-        <button onClick={() => previewAudience("unauthenticated")}>
+        <button onClick={() => changeScope({ review: developer ? "" : "1" })}>
+          {local(
+            l,
+            developer
+              ? ["개발 모드 종료", "Exit developer mode", "إنهاء وضع المطور"]
+              : [
+                  "개발·검수 도구",
+                  "Developer and review tools",
+                  "أدوات التطوير والمراجعة",
+                ],
+          )}
+        </button>
+        <button
+          hidden={!developer}
+          onClick={() => previewAudience("unauthenticated")}
+        >
           {local(l, [
             "로그인 전 시안으로",
             "Open sign-in preview",
@@ -469,7 +495,16 @@ export default function App() {
           profile="standard"
         />
         <div className="planning-entry-tools">
-          {reviewTools}
+          {developer && reviewTools}
+          {developer && (
+            <button onClick={() => navigate("/home", { review: "" })}>
+              {local(l, [
+                "서비스로 돌아가기",
+                "Return to service",
+                "العودة إلى الخدمة",
+              ])}
+            </button>
+          )}
           <nav>
             {planningScreens
               .filter((s) => s.audience === "prelogin")
@@ -485,7 +520,7 @@ export default function App() {
   }
   return (
     <div
-      className={`planning-app ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
+      className={`planning-app service-shell ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
     >
       <a
         className="skip"
@@ -497,7 +532,7 @@ export default function App() {
       >
         {local(l, ["본문 바로가기", "Skip to content", "انتقل إلى المحتوى"])}
       </a>
-      <div className="planning-preview">
+      <div className="planning-preview" hidden={!developer}>
         <span>
           {liveOnboarding
             ? local(l, [
@@ -577,7 +612,28 @@ export default function App() {
           />
         </a>
         <span className="planning-installation">
-          DEMO-01 <span className="tag">DEMO</span>
+          <span className="service-environment">
+            {local(
+              l,
+              liveService
+                ? [
+                    "로컬 검증 환경 · 합성 데이터",
+                    "Local validation · synthetic data",
+                    "تحقق محلي · بيانات تجريبية",
+                  ]
+                : mode === "synthetic"
+                  ? [
+                      "데모 환경 · 합성 데이터",
+                      "Demo · synthetic data",
+                      "عرض تجريبي · بيانات اصطناعية",
+                    ]
+                  : [
+                      "데이터 미연결",
+                      "Data not connected",
+                      "البيانات غير متصلة",
+                    ],
+            )}
+          </span>
         </span>
         {!mobile && headerActions}
         {mobile && (
@@ -589,6 +645,7 @@ export default function App() {
           </button>
         )}
       </header>
+      {developer && reviewTools}
       {portal && (
         <nav
           className="planning-portal-nav"
@@ -679,11 +736,28 @@ export default function App() {
             <>
               <header className="planning-page-header">
                 <p className="crumb">
-                  {local(l, menuNames[screen.menu])} / <bdi>{screen.id}</bdi>
+                  {local(
+                    l,
+                    sectionFor(screen.id)?.label ?? menuNames[screen.menu],
+                  )}
+                  {developer && (
+                    <>
+                      {" "}
+                      / <bdi>{screen.id}</bdi>
+                    </>
+                  )}
                 </p>
                 <div>
-                  <h1>{local(l, titles[screen.id])}</h1>
-                  <span className="tag">
+                  <h1>
+                    {screen.id === "U01"
+                      ? local(l, [
+                          "통합 빌링 현황",
+                          "Billing overview",
+                          "نظرة عامة على الفوترة",
+                        ])
+                      : local(l, titles[screen.id])}
+                  </h1>
+                  <span className="tag" hidden={!developer}>
                     {local(l, [
                       "검토 시안",
                       "Review candidate",
@@ -692,10 +766,57 @@ export default function App() {
                   </span>
                 </div>
               </header>
+              {relatedScreens(screen.id).some((id) =>
+                allowed.some((s) => s.id === id),
+              ) && (
+                <details className="service-related">
+                  <summary>
+                    {local(l, [
+                      "관련 업무",
+                      "Related work",
+                      "الأعمال ذات الصلة",
+                    ])}
+                  </summary>
+                  <nav
+                    aria-label={local(l, [
+                      "관련 업무",
+                      "Related work",
+                      "الأعمال ذات الصلة",
+                    ])}
+                  >
+                    {[
+                      ...relatedScreens(screen.id),
+                      ...(screen.id === "I01" ? ["I03"] : []),
+                    ]
+                      .filter((id, index, all) => all.indexOf(id) === index)
+                      .flatMap((id) => {
+                        const target = allowed.find((s) => s.id === id);
+                        return target
+                          ? [
+                              <a
+                                key={id}
+                                href={planningUrl(
+                                  target.path,
+                                  serviceQuery(params, screen.id),
+                                )}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  navigate(target.path);
+                                }}
+                              >
+                                {local(l, navigationLabels[id] ?? titles[id])}
+                              </a>,
+                            ]
+                          : [];
+                      })}
+                  </nav>
+                </details>
+              )}
               <ReviewPanel
                 screen={screen.id}
                 locale={l}
                 context={JSON.stringify({
+                  shellMode: developer ? "developer" : "service",
                   profile: liveService
                     ? "local-service-synthetic-v1"
                     : "planning-preview",
@@ -819,33 +940,34 @@ export default function App() {
                     </button>
                   ))}
                 </nav>
-                {["S01", "S02", "S03", "S04", "S05", "S06"].includes(
-                  screen.id,
-                ) && (
-                  <button
-                    className="live-mode-switch"
-                    onClick={() =>
-                      changeScope({
-                        service: liveService ? "preview" : "local",
-                      })
-                    }
-                  >
-                    {local(
-                      l,
-                      liveService
-                        ? [
-                            "시안 데이터로 전환",
-                            "Switch to preview data",
-                            "التبديل إلى المعاينة",
-                          ]
-                        : [
-                            "로컬 서비스에 연결",
-                            "Connect local service",
-                            "الاتصال بالخدمة المحلية",
-                          ],
-                    )}
-                  </button>
-                )}
+                {developer &&
+                  ["S01", "S02", "S03", "S04", "S05", "S06"].includes(
+                    screen.id,
+                  ) && (
+                    <button
+                      className="live-mode-switch"
+                      onClick={() =>
+                        changeScope({
+                          service: liveService ? "preview" : "local",
+                        })
+                      }
+                    >
+                      {local(
+                        l,
+                        liveService
+                          ? [
+                              "시안 데이터로 전환",
+                              "Switch to preview data",
+                              "التبديل إلى المعاينة",
+                            ]
+                          : [
+                              "로컬 서비스에 연결",
+                              "Connect local service",
+                              "الاتصال بالخدمة المحلية",
+                            ],
+                      )}
+                    </button>
+                  )}
                 <div
                   id="content"
                   key={screenKey + ":" + tab + (liveService ? ":" + l : "")}
@@ -928,7 +1050,7 @@ export default function App() {
                   )}
                 </div>
               </div>
-              <p className="planning-legacy-map">
+              <p className="planning-legacy-map" hidden={!developer}>
                 {local(l, [
                   "기존 화면 연결",
                   "Legacy screen mapping",
@@ -952,7 +1074,6 @@ export default function App() {
               </h1>
             </section>
           )}
-          {reviewTools}
         </main>
       </div>
       <dialog

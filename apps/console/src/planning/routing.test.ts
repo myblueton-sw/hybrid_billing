@@ -124,3 +124,15 @@ test("prototype property names never become legacy redirects", () => {
         );
     }
 });
+
+test("developer directory is gated independently of public help", () => {
+  const c = { ...context("admin"), designTools: false };
+  assert.equal(resolveRoute("#/design/screens", c).screen?.id, "U01");
+  assert.equal(resolveRoute("#/design/overview", c).screen?.id, "U01");
+  assert.equal(resolveRoute("#/help/contribute", c).tool, "/help/contribute");
+  assert.equal(
+    resolveRoute("#/help/contribute", { ...c, audience: "customer" }).screen
+      ?.id,
+    "C01",
+  );
+});

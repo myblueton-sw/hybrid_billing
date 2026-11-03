@@ -1,0 +1,224 @@
+[
+  {
+    "id": "U01",
+    "path": "/home",
+    "menu": "home",
+    "audience": "admin",
+    "module": "operations",
+    "archetype": "dashboard",
+    "spec": "docs/ui/screens/U01/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AP",
+      "CP",
+      "AU"
+    ],
+    "reactBodies": [
+      "operations"
+    ],
+    "tabs": [
+      {
+        "key": "settlement",
+        "labelKo": "현재 정산"
+      },
+      {
+        "key": "tasks",
+        "labelKo": "내 작업"
+      },
+      {
+        "key": "changes",
+        "labelKo": "최근 변경"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "전체 정산 현황",
+    "scopeLabelKo": "조직/고객·계약·법인·기간·통화·표시 환율·기준시각·운영 프로파일",
+    "purposeKo": "현재 범위, 원가/판매/배분 각각의 금액, 마감 건수·차단·ERP 미확인·내 할 일, 근거·다음 조치",
+    "commandReferences": [
+      "favorites.add",
+      "favorites.remove",
+      "favorites.list"
+    ],
+    "actionEvidence": "inspect closing; view my work; inspect blocker evidence; open report; refresh; view overdue detail; `favorites.add/remove/list`. No bulk amount-changing actions."
+  },
+  {
+    "id": "U02",
+    "path": "/closing",
+    "menu": "home",
+    "audience": "admin",
+    "module": "operations",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/U02/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AP",
+      "CP"
+    ],
+    "reactBodies": [
+      "core-index-close"
+    ],
+    "tabs": [
+      {
+        "key": "list",
+        "labelKo": "목록"
+      },
+      {
+        "key": "calendar",
+        "labelKo": "달력"
+      },
+      {
+        "key": "detail",
+        "labelKo": "선택 마감 상세"
+      },
+      {
+        "key": "history",
+        "labelKo": "기한 변경 이력"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "마감 목록·달력",
+    "scopeLabelKo": "고객/조직·계약·법인·정산 주기·담당·단계·기한·발행 경로",
+    "purposeKo": "고객/계약/법인/기간/통화/발행 경로, 단계·기한·담당·차단, 검증 재실행·담당 지정·승인 요청·기한 변경",
+    "commandReferences": [
+      "schedule.change_request",
+      "payment.extension_request",
+      "schedule.apply_approved",
+      "notification_rule.draft",
+      "notification_rule.preview_impact",
+      "notification_rule.approve",
+      "notification_rule.reject",
+      "notification_rule.apply",
+      "close.publish_replacement",
+      "settlement.recompute_aggregate",
+      "settlement.approve_final"
+    ],
+    "actionEvidence": "- closing.validate (recheck); hand off owner; open approval inbox (→B09); inspect `settlement.dependency_status`. - Server approval required: `schedule.change_request` (stage-specific; applied only via the separate `schedule.apply_approved`); request exemption; request reopening (after issuance this links a correction). - `notification_rule.draft / preview_impact / approve / reject / apply`, with approval digest and separation of duties."
+  },
+  {
+    "id": "U03",
+    "path": "/tasks",
+    "menu": "home",
+    "audience": "admin+portal",
+    "module": "operations",
+    "archetype": "inbox",
+    "spec": "docs/ui/screens/U03/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AM",
+      "PR",
+      "BL",
+      "AP",
+      "CP",
+      "AU",
+      "CU",
+      "IA"
+    ],
+    "reactBodies": [
+      "my-tasks"
+    ],
+    "tabs": [
+      {
+        "key": "tasks",
+        "labelKo": "내 작업"
+      },
+      {
+        "key": "notifications",
+        "labelKo": "업무 알림"
+      },
+      {
+        "key": "detail",
+        "labelKo": "선택 상세"
+      },
+      {
+        "key": "delivery",
+        "labelKo": "전달 상태"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "내 작업·알림함",
+    "scopeLabelKo": "기간·업무 유형·내 현재 범위",
+    "purposeKo": "작업/사건 ID, 대상·단계·기한·담당·성공/보류/실패, 확인·수락·재시도·인계·알림 설정",
+    "commandReferences": [],
+    "actionEvidence": "확인 (incident.ack); 담당 수락; 재시도 (job.retry; unknown → re-query first); 취소 요청 (request ≠ stop); 스누즈; 업무 열기; 알림 설정 (→M05); 관련 납부 문서 보기. \"Mark all read\" is not a bulk resolve."
+  },
+  {
+    "id": "U04",
+    "path": "/billing-findings",
+    "menu": "home",
+    "audience": "admin",
+    "module": "operations",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/U04/spec.md",
+    "exampleRoles": [
+      "PR",
+      "BL",
+      "AP",
+      "CP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "findings",
+        "labelKo": "특이사항 목록"
+      },
+      {
+        "key": "review",
+        "labelKo": "검토 상세"
+      },
+      {
+        "key": "evidence",
+        "labelKo": "관련 근거·조정"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "청구 특이사항",
+    "scopeLabelKo": "고객/계약·기간·금액 기준·통화·담당",
+    "purposeKo": "유형·대상·기간·금액 의미/통화·근거·심각도·담당·검토 상태, 수동 등록/정상 확인/조정 요청/해결 연결",
+    "commandReferences": [],
+    "actionEvidence": "수동 등록 (finding.create); 정상 확인 (finding.review, needs a reason); 조정 요청 (→B11; correction approved separately); 담당 인계; 해결 근거 연결. No bulk \"normal\" confirmation by default."
+  }
+]

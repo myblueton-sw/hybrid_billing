@@ -1,0 +1,56 @@
+{
+  "columns": [
+    "id",
+    "event",
+    "occurred",
+    "received",
+    "author",
+    "result"
+  ],
+  "details": [
+    "action",
+    "subject",
+    "revision",
+    "reason",
+    "evidence"
+  ],
+  "values": {
+    "event": "DEMO policy drafted",
+    "occurred": "2026-11-03T09:00:00Z",
+    "received": "2026-11-03T09:00:02Z",
+    "author": "DEMO-USER-01",
+    "result": "draft",
+    "action": "Draft",
+    "subject": "DEMO-POLICY-01",
+    "revision": "r1",
+    "reason": "Example revision",
+    "evidence": "DEMO-EV-01"
+  },
+  "views": {
+    "events": [
+      "id",
+      "event",
+      "occurred",
+      "received",
+      "author",
+      "result"
+    ],
+    "detail": [
+      "action",
+      "subject",
+      "author",
+      "reason"
+    ],
+    "diff": [
+      "expected",
+      "actual",
+      "revision"
+    ],
+    "evidence": [
+      "evidence",
+      "hash",
+      "locator"
+    ]
+  },
+  "draftFields": []
+}

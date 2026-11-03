@@ -1,0 +1,64 @@
+{
+  "columns": [
+    "id",
+    "meaning",
+    "currency",
+    "expected",
+    "actual",
+    "difference",
+    "state"
+  ],
+  "details": [
+    "fullAmount",
+    "attributable",
+    "evidence",
+    "revision"
+  ],
+  "values": {
+    "meaning": "Provider original",
+    "currency": "USD",
+    "expected": "1250.0000",
+    "actual": "1250.0000",
+    "difference": "0.0000",
+    "state": "pending",
+    "fullAmount": "USD 1800.0000",
+    "attributable": "USD 1250.0000",
+    "evidence": "DEMO-CROSSCHECK-01",
+    "revision": "r1"
+  },
+  "views": {
+    "source": [
+      "id",
+      "meaning",
+      "currency",
+      "expected",
+      "actual",
+      "difference"
+    ],
+    "sales": [
+      "contract",
+      "meaning",
+      "expected",
+      "actual"
+    ],
+    "allocation": [
+      "component",
+      "expected",
+      "actual",
+      "difference"
+    ],
+    "erp": [
+      "fullAmount",
+      "attributable",
+      "posting",
+      "evidence"
+    ],
+    "parallel": [
+      "basis",
+      "expected",
+      "actual",
+      "revision"
+    ]
+  },
+  "draftFields": []
+}

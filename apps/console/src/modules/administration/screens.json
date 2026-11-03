@@ -1,0 +1,339 @@
+[
+  {
+    "id": "P01",
+    "path": "/installation",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "wizard",
+    "spec": "docs/ui/screens/P01/spec.md",
+    "exampleRoles": [
+      "OP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "plan",
+        "labelKo": "설치 계획"
+      },
+      {
+        "key": "diagnostics",
+        "labelKo": "환경 진단"
+      },
+      {
+        "key": "support",
+        "labelKo": "지원 자료"
+      },
+      {
+        "key": "access",
+        "labelKo": "지원 접근"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "설치·진단·지원",
+    "scopeLabelKo": "설치 profile·검사 영역",
+    "purposeKo": "설치버전·프로파일·환경/네트워크·저장소·백업·연결검사·지원자료 미리보기, 진단/제한 지원 접근/묶음 생성",
+    "commandReferences": [],
+    "actionEvidence": "설치 계획 검토; 진단 요청; 지원 묶음 생성; 제한 지원 접근 요청."
+  },
+  {
+    "id": "P02",
+    "path": "/integrations",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/P02/spec.md",
+    "exampleRoles": [
+      "OP",
+      "BL",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "clients",
+        "labelKo": "API client"
+      },
+      {
+        "key": "modules",
+        "labelKo": "모듈"
+      },
+      {
+        "key": "channels",
+        "labelKo": "구독·채널"
+      },
+      {
+        "key": "events",
+        "labelKo": "사건·재처리"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "API·플러그인·채널",
+    "scopeLabelKo": "종류·상태·scope·버전",
+    "purposeKo": "client·scope·구독·모듈manifest·버전/digest·capability·송신대상·라이선스·작업제한, 등록/시험/승인/격리/중지/재처리",
+    "commandReferences": [],
+    "actionEvidence": "등록 초안; 호환·송신 시험; 활성화 요청 (approval); 격리·중지; 사건 재처리."
+  },
+  {
+    "id": "P03",
+    "path": "/recovery",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/P03/spec.md",
+    "exampleRoles": [
+      "OP",
+      "BL",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "sets",
+        "labelKo": "복원 세트"
+      },
+      {
+        "key": "isolation",
+        "labelKo": "격리 검사"
+      },
+      {
+        "key": "reconciliation",
+        "labelKo": "외부 대사"
+      },
+      {
+        "key": "migration",
+        "labelKo": "고객 이관"
+      },
+      {
+        "key": "resume",
+        "labelKo": "재개 판정"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "복구·이관·실행 상태",
+    "scopeLabelKo": "복원 시점·설치 generation",
+    "purposeKo": "복원세트·시점·발행잠금·최신회수/삭제원장·구작업자차단·외부대사·고객이관manifest, 검사/복원요청/허용범위 반출/재개 요청",
+    "commandReferences": [],
+    "actionEvidence": "복원 세트 검사; 격리 복원 요청; 이관 패키지 준비; 외부 결과 대사; 재개 승인 요청 (approval)."
+  },
+  {
+    "id": "P04",
+    "path": "/retention",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/P04/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "policies",
+        "labelKo": "보관 정책"
+      },
+      {
+        "key": "expiry",
+        "labelKo": "사용량·만료"
+      },
+      {
+        "key": "holds",
+        "labelKo": "보류·참조"
+      },
+      {
+        "key": "deletion",
+        "labelKo": "삭제 작업"
+      },
+      {
+        "key": "restore",
+        "labelKo": "아카이브 복원"
+      },
+      {
+        "key": "decisions",
+        "labelKo": "결정 기록·복원 최신성"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "데이터 보관·삭제",
+    "scopeLabelKo": "데이터 등급·scope·정책 버전",
+    "purposeKo": "등급/범위·기산점·기간·hot/archive·증가량·만료예정·보류·공유참조·백업, 정책초안/영향/승인/보류/복원/삭제작업",
+    "commandReferences": [],
+    "actionEvidence": "정책 영향 미리보기; 정책 승인 요청; 보류 등록/해제 요청; 삭제 실행 요청 (approval, multi-stage); 아카이브 복원 요청."
+  },
+  {
+    "id": "P05",
+    "path": "/release-evidence",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/P05/spec.md",
+    "exampleRoles": [
+      "OP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "matrix",
+        "labelKo": "지원 행렬"
+      },
+      {
+        "key": "requirements",
+        "labelKo": "요구 추적"
+      },
+      {
+        "key": "artifacts",
+        "labelKo": "시험 artifact"
+      },
+      {
+        "key": "load",
+        "labelKo": "부하 프로파일"
+      },
+      {
+        "key": "decisions",
+        "labelKo": "판정 이력"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "지원 조합·출시 증거",
+    "scopeLabelKo": "Provider·계약/역할·제품 버전·발행 경로",
+    "purposeKo": "요구ID·Provider/계약/역할/버전/발행경로·시험·artifact·담당·상태·차단·측정profile, 증거조회/판정기록",
+    "commandReferences": [],
+    "actionEvidence": "증거 연결; 차이 검토; 지원 판정 기록; 개통 검토 요청 (approval)."
+  },
+  {
+    "id": "P06",
+    "path": "/demo",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "dashboard",
+    "spec": "docs/ui/screens/P06/spec.md",
+    "exampleRoles": [
+      "OP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "scenarios",
+        "labelKo": "시나리오"
+      },
+      {
+        "key": "inputs",
+        "labelKo": "합성 입력"
+      },
+      {
+        "key": "results",
+        "labelKo": "실행 결과"
+      },
+      {
+        "key": "failures",
+        "labelKo": "실패 주입"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "데모·시나리오",
+    "scopeLabelKo": "DEMO 환경 ID(DEMO 배너 고정)",
+    "purposeKo": "DEMO 환경·출처·seed·시계·fixture/기대값버전·시나리오·장애주입·결과, 초기화/실행/검증",
+    "commandReferences": [],
+    "actionEvidence": "시나리오 실행; 기대값 비교; 실패 주입 실행; DEMO 초기화."
+  },
+  {
+    "id": "P07",
+    "path": "/licenses",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/P07/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "entitlements",
+        "labelKo": "설치 권리"
+      },
+      {
+        "key": "offline",
+        "labelKo": "오프라인 파일"
+      },
+      {
+        "key": "notices",
+        "labelKo": "모듈 고지"
+      },
+      {
+        "key": "support",
+        "labelKo": "계약·지원"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "라이선스·배포 고지",
+    "scopeLabelKo": "권리 상태·모듈·라이선스 종류·기간",
+    "purposeKo": "설치권리·기간·운영범위·서명상태·모듈라이선스·고지·지원수준, 승인파일반입/문서보기",
+    "commandReferences": [],
+    "actionEvidence": "권리 파일 검사; 검증 파일 적용 요청; 고지 다운로드; 기존 증빙 이동."
+  }
+]

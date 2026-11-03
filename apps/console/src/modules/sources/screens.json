@@ -1,0 +1,250 @@
+[
+  {
+    "id": "S03",
+    "path": "/imports",
+    "menu": "src",
+    "audience": "admin",
+    "module": "sources",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/S03/spec.md",
+    "exampleRoles": [
+      "OP",
+      "BL"
+    ],
+    "reactBodies": [
+      "index-intake"
+    ],
+    "tabs": [
+      {
+        "key": "imports",
+        "labelKo": "수입 작업"
+      },
+      {
+        "key": "quarantine",
+        "labelKo": "격리·충돌"
+      },
+      {
+        "key": "completeness",
+        "labelKo": "완전성"
+      },
+      {
+        "key": "extraction",
+        "labelKo": "추출 검증"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "수입·충돌·완전성",
+    "scopeLabelKo": "원천 연결·기간·개정",
+    "purposeKo": "원천 파일/응답·개정·해시·기간·계정·행/바이트·manifest·중복/격리·watermark, 업로드/검증/재개",
+    "commandReferences": [
+      "input.inspect",
+      "input.confirm_publish",
+      "input.reject"
+    ],
+    "actionEvidence": "receive data; view quarantine reason; record extraction verification; resume failed segment; `input.inspect`. Confirmation is NOT here; it is in S06."
+  },
+  {
+    "id": "S04",
+    "path": "/source-data",
+    "menu": "src",
+    "audience": "admin",
+    "module": "sources",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/S04/spec.md",
+    "exampleRoles": [
+      "BL",
+      "CP",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "rows",
+        "labelKo": "정규화 명세"
+      },
+      {
+        "key": "fields",
+        "labelKo": "원천 필드"
+      },
+      {
+        "key": "usage",
+        "labelKo": "사용량"
+      },
+      {
+        "key": "history",
+        "labelKo": "변환 이력"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "비용·사용량 명세",
+    "scopeLabelKo": "기간·원천·계정/조직·서비스/모델·비용 의미·통화·품질·귀속",
+    "purposeKo": "원본/정규화 선택, Billed/Effective 등 의미, 수량·단위·통화·시간·품질·변환 버전·귀속, 필터/근거",
+    "commandReferences": [],
+    "actionEvidence": "필터 적용; 원문 근거 보기 (→S05); 공개 명세 내보내기 요청 (→I04 preview and full validation, async export)."
+  },
+  {
+    "id": "S05",
+    "path": "/evidence",
+    "menu": "src",
+    "audience": "admin",
+    "module": "sources",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/S05/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "evidence",
+        "labelKo": "증빙 목록"
+      },
+      {
+        "key": "documents",
+        "labelKo": "문서 연결"
+      },
+      {
+        "key": "validation",
+        "labelKo": "검증"
+      },
+      {
+        "key": "retention",
+        "labelKo": "보존·복원"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "증빙·문서 연결",
+    "scopeLabelKo": "문서 종류·발행자·기간·연결 청구",
+    "purposeKo": "문서 종류·발행자·번호·기간·원천 locator·해시·연결 청구·보관 상태, 원본/파생본 다운로드·복원 요청",
+    "commandReferences": [],
+    "actionEvidence": "안전 열람본 열기; 원본 다운로드 (audited, restricted); 복원 요청 (job); 연결 근거 확인."
+  },
+  {
+    "id": "S06",
+    "path": "/reconciliation",
+    "menu": "src",
+    "audience": "admin",
+    "module": "sources",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/S06/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AP",
+      "CP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "source",
+        "labelKo": "원천 대사"
+      },
+      {
+        "key": "sales",
+        "labelKo": "판매 대사"
+      },
+      {
+        "key": "allocation",
+        "labelKo": "배분 대사"
+      },
+      {
+        "key": "erp",
+        "labelKo": "ERP 대사"
+      },
+      {
+        "key": "parallel",
+        "labelKo": "병행 운영 대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "대사·차이 작업함",
+    "scopeLabelKo": "기간·통화·대사 종류·기준/snapshot",
+    "purposeKo": "원통화·문서 범위·원가/판매/배분 대사, 기대/실제·차액·세금/크레딧·담당·원행, 해결 근거/재검증",
+    "commandReferences": [
+      "adjustment.compute",
+      "input.inspect",
+      "input.confirm_publish",
+      "input.reject"
+    ],
+    "actionEvidence": "reconcile again; register difference evidence; `adjustment.draft` (→ compute → B09 decision); verify resolution; `input.inspect`; **`input.confirm_publish`** (server-authorized, atomic; owned here); `input.reject`."
+  },
+  {
+    "id": "B02",
+    "path": "/meters",
+    "menu": "cost",
+    "audience": "admin",
+    "module": "sources",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/B02/spec.md",
+    "exampleRoles": [
+      "OP",
+      "BL",
+      "CP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "assets",
+        "labelKo": "자산 이력"
+      },
+      {
+        "key": "intervals",
+        "labelKo": "계측 구간"
+      },
+      {
+        "key": "gaps",
+        "labelKo": "누락·reset"
+      },
+      {
+        "key": "meters",
+        "labelKo": "모델·미터"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "계측·자산 이력",
+    "scopeLabelKo": "기간·자산/미터·측정등급·모델·귀속",
+    "purposeKo": "VM/GPU/미터 ID·구간·사양/귀속 변경·단위·측정등급·reset·누락, 진단/근거 조회",
+    "commandReferences": [],
+    "actionEvidence": "구간 진단; 원천 근거 보기 (→S04); 누락 검토 등록 (→U04)."
+  }
+]

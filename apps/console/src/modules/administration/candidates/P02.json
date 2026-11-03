@@ -1,0 +1,62 @@
+{
+  "columns": [
+    "id",
+    "client",
+    "purpose",
+    "scope",
+    "state"
+  ],
+  "details": [
+    "channel",
+    "endpoint",
+    "event",
+    "cursor",
+    "secret",
+    "version"
+  ],
+  "values": {
+    "client": "DEMO-API-01",
+    "purpose": "Approved export reader",
+    "scope": "DEMO-EXPORTS",
+    "state": "draft",
+    "channel": "DEMO-CHANNEL-01",
+    "endpoint": "allowlist-ref:DEMO-01",
+    "event": "DEMO-EVENT-01",
+    "cursor": "DEMO-CURSOR-01",
+    "secret": "secret-ref:DEMO-01",
+    "version": "r1"
+  },
+  "views": {
+    "clients": [
+      "id",
+      "client",
+      "purpose",
+      "scope",
+      "state"
+    ],
+    "modules": [
+      "name",
+      "version",
+      "hash",
+      "notice"
+    ],
+    "channels": [
+      "channel",
+      "endpoint",
+      "secret",
+      "scope"
+    ],
+    "events": [
+      "event",
+      "cursor",
+      "state",
+      "external"
+    ]
+  },
+  "draftFields": [
+    "client",
+    "purpose",
+    "scope",
+    "endpoint"
+  ]
+}

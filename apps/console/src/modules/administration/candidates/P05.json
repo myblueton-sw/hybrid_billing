@@ -1,0 +1,62 @@
+{
+  "columns": [
+    "id",
+    "provider",
+    "version",
+    "design",
+    "implementation",
+    "test",
+    "live"
+  ],
+  "details": [
+    "requirement",
+    "evidence",
+    "environment",
+    "expiry"
+  ],
+  "values": {
+    "provider": "DEMO Adapter",
+    "version": "DEMO-v1",
+    "design": "draft",
+    "implementation": "partial",
+    "test": "pending",
+    "live": "unconnected",
+    "requirement": "DEMO-REQ-01",
+    "evidence": "pending",
+    "environment": "unconfigured",
+    "expiry": "unconfigured"
+  },
+  "views": {
+    "matrix": [
+      "id",
+      "provider",
+      "version",
+      "design",
+      "implementation",
+      "test",
+      "live"
+    ],
+    "requirements": [
+      "requirement",
+      "evidence",
+      "state"
+    ],
+    "artifacts": [
+      "evidence",
+      "hash",
+      "environment"
+    ],
+    "load": [
+      "targets",
+      "quantity",
+      "unit",
+      "environment"
+    ],
+    "decisions": [
+      "approver",
+      "occurred",
+      "result"
+    ]
+  },
+  "draftFields": []
+}

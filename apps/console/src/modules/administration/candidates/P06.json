@@ -1,0 +1,56 @@
+{
+  "columns": [
+    "id",
+    "scenario",
+    "purpose",
+    "revision",
+    "state"
+  ],
+  "details": [
+    "seed",
+    "clock",
+    "bundle",
+    "expected",
+    "actual"
+  ],
+  "values": {
+    "scenario": "DEMO-SIM-01",
+    "purpose": "Synthetic settlement",
+    "revision": "r1",
+    "state": "draft",
+    "seed": "42",
+    "clock": "2026-11-03T09:00:00Z",
+    "bundle": "unconfigured",
+    "expected": "unconfigured",
+    "actual": "unconnected"
+  },
+  "views": {
+    "scenarios": [
+      "id",
+      "scenario",
+      "purpose",
+      "revision",
+      "state"
+    ],
+    "inputs": [
+      "seed",
+      "clock",
+      "source"
+    ],
+    "results": [
+      "bundle",
+      "expected",
+      "actual"
+    ],
+    "failures": [
+      "event",
+      "expected",
+      "actual"
+    ]
+  },
+  "draftFields": [
+    "scenario",
+    "purpose",
+    "seed"
+  ]
+}

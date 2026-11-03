@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Locale, Mode } from "../shared/types";
+import { canonicalScope } from "../shared/scope-query";
 import { useLocation, setNavigationGuard } from "../shared/navigation";
 import {
   planningScreens,
@@ -124,8 +125,9 @@ export default function App() {
     setSearch("");
     menuDialog.current?.close();
     const q = new URLSearchParams();
+    const inherited = canonicalScope(params, screen?.id ?? "");
     for (const key of ["lang", "mode", "scope", "period", "le", "ccy"])
-      if (params.has(key)) q.set(key, params.get(key)!);
+      if (inherited.has(key)) q.set(key, inherited.get(key)!);
     location.hash = planningUrl(path, q, changes);
   }
   function changeScope(changes: Record<string, string>) {
@@ -795,9 +797,14 @@ export default function App() {
                   key={screenKey + ":" + tab + (liveService ? ":" + l : "")}
                 >
                   {liveReconciliation ? (
-                    <Reconciliation locale={l} onState={onState} />
+                    <Reconciliation
+                      locale={l}
+                      onState={onState}
+                      objectId={route.objectId}
+                    />
                   ) : liveImports ? (
                     <LiveImports
+                      objectId={route.objectId}
                       locale={l}
                       onState={onState}
                       onDirty={setDirty}

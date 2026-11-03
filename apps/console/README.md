@@ -51,3 +51,5 @@ Entry forms validate local examples and clear fields; they do not authenticate, 
 ## Local service screen integrations
 
 [S03 ingestion](../../docs/features/HB-141/integration.md) receives synthetic FOCUS files into actual local services. [S06 reconciliation](../../docs/features/HB-95/reconciliation.md) compares original and stored evidence through a separate fixed-approver loopback process. Both are explicit local-service modes; other screen candidates remain previews. Neither adapter provides production identity or canonical input confirmation/publication.
+
+[HB-142 planning review](../../docs/features/HB-142/planning-review.md) records reception confirmation, exact detail routing, period/currency continuity and remaining integration gaps.

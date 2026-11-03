@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { canonicalScope } from "./scope-query";
 export function useLocation() {
   return useSyncExternalStore(
     (callback) => {
@@ -10,7 +11,10 @@ export function useLocation() {
   );
 }
 export function routeUrl(id: string, values: Record<string, string> = {}) {
-  const current = new URLSearchParams(location.hash.split("?")[1]);
+  const current = canonicalScope(
+    new URLSearchParams(location.hash.split("?")[1]),
+    id === "overview" ? "U01" : id === "core-index-close" ? "U02" : "",
+  );
   for (const [key, value] of Object.entries(values)) current.set(key, value);
   return `#${id}?${current.toString()}`;
 }

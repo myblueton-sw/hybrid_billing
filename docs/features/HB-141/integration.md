@@ -54,3 +54,5 @@ Visual review identified hidden mobile status, mixed RTL values, oversized form 
 Final actual Claude CLI visual re-review: PASS for corrected representative layouts and conflict/selected states, with unverified empty-file font in the last two images and native-language acceptance still pending. A full-page screenshot crops the independently scrolling sidebar; root separately verified the active link can scroll fully into view and the native file input exposes a visible focus-within outline. No CLI runtime testing was claimed.
 
 Three actual CLI calls reported input_tokens: 14, cache_creation_input_tokens: 34,189, cache_read_input_tokens: 36,077, output_tokens: 10,155. Whole Codex/team/JEV usage is unavailable. No no-skill/no-cache control run was performed, so no token savings percentage is claimed.
+
+HB-142 adds a pinned reception review before upload, fail-closed detail handling and exact live object routes. See the [current correction and verification record](../HB-142/planning-review.md); the original HB-141 results above remain historical evidence for that revision.

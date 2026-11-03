@@ -150,3 +150,45 @@
 .live-imports .live-quarantine strong {
   color: var(--hb-ink);
 }
+.live-upload-review {
+  inline-size: min(640px, calc(100vw - 32px));
+  max-block-size: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--hb-line-control);
+  background: var(--surface-page);
+  color: var(--text-body);
+}
+.live-upload-review::backdrop {
+  background: var(--surface-nav);
+}
+.live-upload-review h2 {
+  margin-block-start: 0;
+  font-size: 22px;
+}
+.live-upload-review p,
+.live-upload-review dd {
+  overflow-wrap: anywhere;
+}
+.live-upload-review dt {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.live-upload-review dd {
+  margin-inline-start: 0;
+  margin-block-end: 16px;
+}
+.live-review-actions {
+  display: flex;
+  justify-content: end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.live-review-actions button {
+  min-block-size: 44px;
+}
+@media (max-width: 639px) {
+  .live-imports .planning-table td {
+    height: auto;
+  }
+}

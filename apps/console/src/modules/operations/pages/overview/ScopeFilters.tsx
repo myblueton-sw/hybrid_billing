@@ -99,7 +99,7 @@ export default function ScopeFilters({
         <select
           id="overview-period"
           value={period}
-          onChange={(e) => change({ "overview-period": e.target.value })}
+          onChange={(e) => change({ period: e.target.value })}
         >
           {!months.includes(period) && (
             <option value={period}>{period || "—"}</option>
@@ -119,7 +119,7 @@ export default function ScopeFilters({
         <select
           id="overview-currency"
           value={currency}
-          onChange={(e) => change({ "ov-currency": e.target.value })}
+          onChange={(e) => change({ ccy: e.target.value })}
         >
           <option>USD</option>
           <option>KRW</option>

@@ -1,0 +1,61 @@
+{
+  "columns": [
+    "id",
+    "policy",
+    "recipient",
+    "purpose",
+    "state"
+  ],
+  "details": [
+    "allowlist",
+    "excluded",
+    "schema",
+    "hash",
+    "validation",
+    "expiry"
+  ],
+  "values": {
+    "policy": "DEMO-PUBLIC-r1",
+    "recipient": "DEMO Research",
+    "purpose": "Published statement",
+    "state": "draft",
+    "allowlist": "document, quantity, sales amount",
+    "excluded": "internal cost, margin, secret reference",
+    "schema": "DEMO-PUBLIC-r1",
+    "hash": "pending",
+    "validation": "pending",
+    "expiry": "unconfigured"
+  },
+  "views": {
+    "policies": [
+      "id",
+      "policy",
+      "recipient",
+      "purpose",
+      "state"
+    ],
+    "preview": [
+      "allowlist",
+      "excluded",
+      "validation"
+    ],
+    "packages": [
+      "schema",
+      "hash",
+      "manifest",
+      "rows"
+    ],
+    "history": [
+      "recipient",
+      "delivery",
+      "expiry",
+      "occurred"
+    ]
+  },
+  "draftFields": [
+    "recipient",
+    "purpose",
+    "allowlist",
+    "excluded"
+  ]
+}

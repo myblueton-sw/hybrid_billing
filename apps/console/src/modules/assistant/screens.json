@@ -1,0 +1,54 @@
+[
+  {
+    "id": "A01",
+    "path": "/assistant",
+    "menu": "ai",
+    "audience": "admin",
+    "module": "assistant",
+    "archetype": "conversation",
+    "spec": "docs/ui/screens/A01/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AM",
+      "PR",
+      "BL",
+      "AP",
+      "CP",
+      "AU",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "conversation",
+        "labelKo": "대화"
+      },
+      {
+        "key": "plan",
+        "labelKo": "실행 계획"
+      },
+      {
+        "key": "results",
+        "labelKo": "작업·결과"
+      },
+      {
+        "key": "retention",
+        "labelKo": "대화 보관"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "AI 업무 Assistant",
+    "scopeLabelKo": "업무 공간·고객/계약·기간·통화",
+    "purposeKo": "현재 scope·기간·통화·출처·갱신·요청/해석/계획·서버 결과 카드·job, 질의/초안/검증/명시 승인 전달/상세로 이동",
+    "commandReferences": [],
+    "actionEvidence": "질문 보내기; 실행 계획 검토; 작업 실행 요청 (durable job); 승인 화면 열기 (→B09 human approval); 작업 계속 보기; 대화 삭제 요청 (blocked by legal hold)."
+  }
+]

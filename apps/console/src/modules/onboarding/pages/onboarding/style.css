@@ -1,0 +1,144 @@
+.onboarding-live {
+  font-size: 16px;
+  min-inline-size: 0;
+}
+.onboarding-live p {
+  max-inline-size: 72ch;
+  overflow-wrap: anywhere;
+}
+.onboarding-live .onboarding-code {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.onboarding-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.onboarding-live button {
+  font-size: 16px;
+  min-block-size: 44px;
+}
+.onboarding-live dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 32px;
+}
+.onboarding-live dt {
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.onboarding-live dd {
+  margin: 8px 0 16px;
+  overflow-wrap: anywhere;
+}
+.onboarding-scope {
+  border-block: 1px solid var(--hb-line-row);
+  padding-block: 16px;
+  margin-block: 16px 32px;
+}
+.onboarding-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 32px;
+}
+.onboarding-stages ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.onboarding-stages a {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-block-end: 1px solid var(--hb-line-row);
+  color: inherit;
+  text-decoration: none;
+}
+.onboarding-stages a[aria-current] {
+  font-weight: 600;
+  text-decoration: underline;
+}
+.onboarding-stages small {
+  font-size: 14px;
+  font-weight: 400;
+}
+.onboarding-stage {
+  min-inline-size: 0;
+}
+.onboarding-stage h2 {
+  font-size: 20px;
+  margin-block: 8px 24px;
+}
+.onboarding-stage h3 {
+  font-size: 18px;
+}
+.onboarding-eyebrow {
+  font-size: 14px;
+}
+.onboarding-footer {
+  border-block-start: 1px solid var(--hb-line-row);
+  margin-block-start: 32px;
+  padding-block: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.onboarding-footer a,
+.onboarding-links a {
+  min-block-size: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.onboarding-links {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.planning-app.live-onboarding-screen #confirm-review {
+  font-size: 16px;
+  min-block-size: 44px;
+}
+@media (max-width: 1023px) {
+  .onboarding-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .onboarding-stages ol {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .onboarding-stages li {
+    flex: 1 1 180px;
+  }
+}
+@media (max-width: 639px) {
+  .onboarding-live dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .onboarding-stages li {
+    flex-basis: 100%;
+  }
+}
+.live-onboarding-screen .planning-wizard-layout {
+  display: block;
+}
+.live-onboarding-screen .live-mode-switch {
+  display: inline-flex;
+  width: auto;
+  min-block-size: 44px;
+  margin-block-end: 16px;
+}
+.live-onboarding-screen .planning-legacy-map {
+  display: none;
+}
+
+.onboarding-next {
+  margin-inline-start: auto;
+}
+.onboarding-stage h2:focus-visible {
+  outline-offset: -2px;
+}

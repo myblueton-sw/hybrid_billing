@@ -1,0 +1,51 @@
+{
+  "columns": [
+    "id",
+    "name",
+    "relation",
+    "parent",
+    "effective"
+  ],
+  "details": [
+    "account",
+    "entity",
+    "revision",
+    "evidence"
+  ],
+  "values": {
+    "name": "DEMO Research",
+    "relation": "Ownership",
+    "parent": "DEMO-GROUP",
+    "effective": "2026-10-01",
+    "account": "DEMO-SOURCE-01",
+    "entity": "DEMO-ENTITY-01",
+    "revision": "r1",
+    "evidence": "DEMO-REL-01"
+  },
+  "views": {
+    "tree": [
+      "id",
+      "name",
+      "relation",
+      "parent",
+      "effective"
+    ],
+    "accounts": [
+      "account",
+      "organization",
+      "entity"
+    ],
+    "groups": [
+      "name",
+      "relation",
+      "scope"
+    ],
+    "history": [
+      "relation",
+      "effective",
+      "revision",
+      "evidence"
+    ]
+  },
+  "draftFields": []
+}

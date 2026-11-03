@@ -13,8 +13,10 @@ import "./style.css";
 export default function Reconciliation({
   locale: l,
   onState,
+  objectId,
 }: {
   locale: Locale;
+  objectId?: string;
   onState: (state: string, items: string[]) => void;
 }) {
   const copy = (en: string, ko: string, ar: string) => text(l, en, ko, ar);
@@ -154,10 +156,18 @@ export default function Reconciliation({
         }
       } else {
         const p = await reconcile<Profile>("/profile", c.signal);
-        const rows = await reconcile<Candidates>("/candidates", c.signal);
+        const rows = await reconcile<Candidates>(
+          objectId
+            ? "/candidates/" + encodeURIComponent(objectId)
+            : "/candidates",
+          c.signal,
+        );
         if (id === epoch.current) {
+          if (objectId && rows.candidates[0]?.release_id !== objectId)
+            throw new ServiceError("scope_denied", "");
           setProfile(p);
           setList(rows);
+          if (objectId) setSelected(rows.candidates[0]);
         }
       }
     } catch (e) {
@@ -231,6 +241,11 @@ export default function Reconciliation({
     );
   return (
     <div className="reconciliation" aria-busy={busy}>
+      {objectId && (
+        <a href={`#/reconciliation?lang=${l}&service=local`}>
+          {copy("Return to candidates", "후보 목록으로", "العودة إلى المرشحين")}
+        </a>
+      )}
       <section className="rec-intro" aria-labelledby="rec-title">
         <div className="rec-heading">
           <div>
@@ -363,113 +378,125 @@ export default function Reconciliation({
               )}
             </ul>
           </section>
-          <section aria-labelledby="rec-candidates">
-            <h2 id="rec-candidates">
-              {copy("Recent inputs", "최근 입력", "المدخلات الحديثة")}{" "}
-              <span className="rec-count">{list.candidates.length}</span>
-            </h2>
-            <p>
-              {list.more
-                ? copy(
-                    "25 most recent candidates shown; older entries are not listed.",
-                    "최신 후보 25건을 표시합니다. 이전 후보는 목록에서 제외됩니다.",
-                    "يظهر أحدث 25 مرشحاً؛ الإدخالات الأقدم غير مدرجة.",
-                  )
-                : copy(
-                    "All candidates in this connection are shown (up to 25).",
-                    "이 연결의 모든 후보를 표시합니다 (최대 25건).",
-                    "تظهر جميع المرشحات في هذا الاتصال (حتى 25).",
-                  )}
-            </p>
-            {list.candidates.length === 0 ? (
+          {!objectId && (
+            <section aria-labelledby="rec-candidates">
+              <h2 id="rec-candidates">
+                {copy("Recent inputs", "최근 입력", "المدخلات الحديثة")}{" "}
+                <span className="rec-count">{list.candidates.length}</span>
+              </h2>
               <p>
-                {copy(
-                  "No input candidates in this scope.",
-                  "이 범위에 입력 후보가 없습니다.",
-                  "لا توجد مرشحات إدخال في هذا النطاق.",
-                )}
+                {list.more
+                  ? copy(
+                      "25 most recent candidates shown; older entries are not listed.",
+                      "최신 후보 25건을 표시합니다. 이전 후보는 목록에서 제외됩니다.",
+                      "يظهر أحدث 25 مرشحاً؛ الإدخالات الأقدم غير مدرجة.",
+                    )
+                  : copy(
+                      "All candidates in this connection are shown (up to 25).",
+                      "이 연결의 모든 후보를 표시합니다 (최대 25건).",
+                      "تظهر جميع المرشحات في هذا الاتصال (حتى 25).",
+                    )}
               </p>
-            ) : (
-              <div className="planning-table rec-candidates">
-                <table>
-                  <thead>
-                    <tr>
-                      {[
-                        copy("Candidate", "후보", "المرشح"),
-                        copy("Source revision", "원본 리비전", "مراجعة المصدر"),
-                        copy("Rows", "행 수", "الصفوف"),
-                        copy("Received", "수신시각", "وقت الاستلام"),
-                        copy("Input state", "입력 상태", "حالة المدخل"),
-                      ].map((v) => (
-                        <th key={v} scope="col">
-                          {v}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {list.candidates.map((row) => (
-                      <tr
-                        key={row.release_id}
-                        data-selected={selected?.release_id === row.release_id}
-                      >
-                        <td data-label={copy("Candidate", "후보", "المرشح")}>
-                          <button
-                            className="rec-select"
-                            aria-pressed={
-                              selected?.release_id === row.release_id
-                            }
-                            onClick={() => select(row)}
-                          >
-                            <bdi>{row.release_id}</bdi>
-                          </button>
-                          {selected?.release_id === row.release_id && (
-                            <small>{copy("Selected", "선택됨", "محدد")}</small>
-                          )}
-                        </td>
-                        <td data-label={copy("Revision", "리비전", "المراجعة")}>
-                          <bdi>{row.source_revision}</bdi>
-                        </td>
-                        <td data-label={copy("Rows", "행 수", "الصفوف")}>
-                          {row.row_count}
-                        </td>
-                        <td
-                          data-label={copy(
-                            "Received",
-                            "수신시각",
-                            "وقت الاستلام",
-                          )}
-                        >
-                          <bdi>{row.created_at}</bdi>
-                        </td>
-                        <td data-label={copy("State", "상태", "الحالة")}>
-                          {label(row.state)}
-                        </td>
+              {list.candidates.length === 0 ? (
+                <p>
+                  {copy(
+                    "No input candidates in this scope.",
+                    "이 범위에 입력 후보가 없습니다.",
+                    "لا توجد مرشحات إدخال في هذا النطاق.",
+                  )}
+                </p>
+              ) : (
+                <div className="planning-table rec-candidates">
+                  <table>
+                    <thead>
+                      <tr>
+                        {[
+                          copy("Candidate", "후보", "المرشح"),
+                          copy(
+                            "Source revision",
+                            "원본 리비전",
+                            "مراجعة المصدر",
+                          ),
+                          copy("Rows", "행 수", "الصفوف"),
+                          copy("Received", "수신시각", "وقت الاستلام"),
+                          copy("Input state", "입력 상태", "حالة المدخل"),
+                        ].map((v) => (
+                          <th key={v} scope="col">
+                            {v}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {selected && (
-              <a
-                href="#rec-detail"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById("rec-detail")?.focus();
-                  document
-                    .getElementById("rec-detail")
-                    ?.scrollIntoView({ block: "start" });
-                }}
-              >
-                {copy(
-                  "Go to selected detail",
-                  "선택한 상세로 이동",
-                  "انتقل إلى التفاصيل المحددة",
-                )}
-              </a>
-            )}
-          </section>
+                    </thead>
+                    <tbody>
+                      {list.candidates.map((row) => (
+                        <tr
+                          key={row.release_id}
+                          data-selected={
+                            selected?.release_id === row.release_id
+                          }
+                        >
+                          <td data-label={copy("Candidate", "후보", "المرشح")}>
+                            <button
+                              className="rec-select"
+                              aria-pressed={
+                                selected?.release_id === row.release_id
+                              }
+                              onClick={() => select(row)}
+                            >
+                              <bdi>{row.release_id}</bdi>
+                            </button>
+                            {selected?.release_id === row.release_id && (
+                              <small>
+                                {copy("Selected", "선택됨", "محدد")}
+                              </small>
+                            )}
+                          </td>
+                          <td
+                            data-label={copy("Revision", "리비전", "المراجعة")}
+                          >
+                            <bdi>{row.source_revision}</bdi>
+                          </td>
+                          <td data-label={copy("Rows", "행 수", "الصفوف")}>
+                            {row.row_count}
+                          </td>
+                          <td
+                            data-label={copy(
+                              "Received",
+                              "수신시각",
+                              "وقت الاستلام",
+                            )}
+                          >
+                            <bdi>{row.created_at}</bdi>
+                          </td>
+                          <td data-label={copy("State", "상태", "الحالة")}>
+                            {label(row.state)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {selected && (
+                <a
+                  href="#rec-detail"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById("rec-detail")?.focus();
+                    document
+                      .getElementById("rec-detail")
+                      ?.scrollIntoView({ block: "start" });
+                  }}
+                >
+                  {copy(
+                    "Go to selected detail",
+                    "선택한 상세로 이동",
+                    "انتقل إلى التفاصيل المحددة",
+                  )}
+                </a>
+              )}
+            </section>
+          )}
         </>
       )}
       {selected && (

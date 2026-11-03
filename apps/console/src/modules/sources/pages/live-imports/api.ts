@@ -42,10 +42,11 @@ export async function request<T>(
   path: string,
   signal: AbortSignal,
   init: RequestInit = {},
+  base = "/api/local-imports",
 ): Promise<T> {
   let response: Response;
   try {
-    response = await fetch("/api/local-imports" + path, {
+    response = await fetch(base + path, {
       ...init,
       signal,
       cache: "no-store",

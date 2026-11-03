@@ -1,0 +1,49 @@
+{
+  "columns": [
+    "id",
+    "entitlement",
+    "expiry",
+    "signature",
+    "state"
+  ],
+  "details": [
+    "notice",
+    "version",
+    "owner",
+    "purpose"
+  ],
+  "values": {
+    "entitlement": "unconfigured",
+    "expiry": "unconfigured",
+    "signature": "unknown",
+    "state": "pending",
+    "notice": "Original third-party notices retained",
+    "version": "r1",
+    "owner": "unconfigured",
+    "purpose": "Rights review only"
+  },
+  "views": {
+    "entitlements": [
+      "id",
+      "entitlement",
+      "expiry",
+      "state"
+    ],
+    "offline": [
+      "file",
+      "signature",
+      "expiry"
+    ],
+    "notices": [
+      "name",
+      "version",
+      "notice"
+    ],
+    "support": [
+      "owner",
+      "purpose",
+      "evidence"
+    ]
+  },
+  "draftFields": []
+}

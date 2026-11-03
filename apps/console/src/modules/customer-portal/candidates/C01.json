@@ -1,0 +1,49 @@
+{
+  "columns": [
+    "id",
+    "contract",
+    "period",
+    "meaning",
+    "amount"
+  ],
+  "details": [
+    "document",
+    "due",
+    "delivery",
+    "publicReply"
+  ],
+  "values": {
+    "contract": "DEMO Own contract",
+    "period": "2026-10",
+    "meaning": "Published sales",
+    "amount": "USD 110.0000",
+    "document": "DEMO-PUBLIC-01",
+    "due": "2026-11-30",
+    "delivery": "pending",
+    "publicReply": "pending"
+  },
+  "views": {
+    "summary": [
+      "contract",
+      "period",
+      "meaning",
+      "amount"
+    ],
+    "usage": [
+      "quantity",
+      "unit",
+      "period"
+    ],
+    "notifications": [
+      "event",
+      "received",
+      "publicReply"
+    ],
+    "payment-terms": [
+      "document",
+      "due",
+      "state"
+    ]
+  },
+  "draftFields": []
+}

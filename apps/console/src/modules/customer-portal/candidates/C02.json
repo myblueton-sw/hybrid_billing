@@ -1,0 +1,71 @@
+{
+  "columns": [
+    "id",
+    "document",
+    "kind",
+    "period",
+    "gross",
+    "delivery"
+  ],
+  "details": [
+    "issuer",
+    "net",
+    "tax",
+    "correction",
+    "due",
+    "quantity",
+    "unit"
+  ],
+  "values": {
+    "document": "DEMO-PUBLIC-01",
+    "kind": "Published sales invoice",
+    "period": "2026-10",
+    "gross": "USD 110.0000",
+    "delivery": "pending",
+    "issuer": "DEMO-ENTITY-01",
+    "net": "USD 100.0000",
+    "tax": "USD 10.0000",
+    "correction": "notapplicable",
+    "due": "2026-11-30",
+    "quantity": "100",
+    "unit": "hour"
+  },
+  "views": {
+    "documents": [
+      "id",
+      "document",
+      "kind",
+      "period",
+      "gross"
+    ],
+    "detail": [
+      "document",
+      "issuer",
+      "net",
+      "tax",
+      "gross"
+    ],
+    "statement": [
+      "meaning",
+      "quantity",
+      "unit",
+      "amount"
+    ],
+    "usage": [
+      "quantity",
+      "unit",
+      "period"
+    ],
+    "downloads": [
+      "file",
+      "delivery",
+      "state"
+    ],
+    "payment-terms": [
+      "document",
+      "due",
+      "state"
+    ]
+  },
+  "draftFields": []
+}

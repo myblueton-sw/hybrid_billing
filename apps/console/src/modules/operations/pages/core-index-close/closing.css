@@ -1,0 +1,224 @@
+.closing-screen {
+  font-size: 16px;
+  min-inline-size: 0;
+}
+.closing-scope,
+.closing-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+.closing-scope {
+  padding-block: 12px;
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.closing-scope label,
+.closing-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  max-inline-size: 100%;
+}
+.closing-scope p {
+  margin-inline-start: auto;
+}
+.closing-views {
+  display: flex;
+  gap: 8px;
+}
+.closing-views button[aria-pressed="true"] {
+  font-weight: 600;
+  text-decoration: underline;
+  background: var(--hb-hover);
+}
+.closing-note {
+  color: var(--hb-muted);
+  margin-block: 16px;
+}
+.closing-filter-panel {
+  margin-block: 16px;
+}
+.closing-filters {
+  padding-block: 12px;
+}
+.closing-filters input[type="search"] {
+  inline-size: 320px;
+  max-inline-size: 100%;
+}
+.closing-filters select {
+  min-inline-size: 140px;
+  max-inline-size: 100%;
+}
+.closing-filters .closing-check {
+  flex-direction: row;
+  align-items: center;
+}
+.closing-counts {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-block: 1px solid var(--hb-line-row);
+  margin-block: 20px;
+}
+.closing-counts > div {
+  padding: 16px;
+  border-inline-end: 1px solid var(--hb-line-row);
+}
+.closing-counts strong {
+  display: block;
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+.closing-list,
+.closing-calendar {
+  background: var(--hb-white);
+  border: 1px solid var(--hb-line-row);
+  padding: 16px;
+  min-inline-size: 0;
+}
+.closing-list header,
+.closing-detail header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.closing-list table {
+  min-inline-size: 1100px;
+}
+.closing-list th,
+.closing-list td {
+  padding: 10px 8px;
+}
+.closing-list tbody th {
+  position: sticky;
+  top: auto;
+  inset-inline-start: 0;
+  background: var(--hb-white);
+}
+.closing-list small {
+  display: block;
+  color: var(--hb-muted);
+}
+.closing-open {
+  background: none;
+  border: 0;
+  color: var(--c-link);
+  text-decoration: underline;
+  padding: 0;
+  min-block-size: 36px;
+}
+.closing-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+}
+.closing-days button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-block-size: 104px;
+  padding: 10px;
+  border: 1px solid var(--hb-line-row);
+  white-space: normal;
+}
+.closing-days strong {
+  font-size: 18px;
+}
+.closing-detail {
+  inline-size: min(600px, 100%);
+  max-inline-size: 100%;
+  block-size: 100dvh;
+  max-block-size: 100dvh;
+  margin: 0;
+  margin-inline-start: auto;
+  padding: 24px;
+  border: 1px solid var(--hb-line-row);
+  background: var(--hb-white);
+  overflow: auto;
+}
+.closing-detail::backdrop {
+  background: var(--hb-rail);
+}
+.closing-detail p,
+.closing-detail dd {
+  overflow-wrap: anywhere;
+}
+.closing-detail h3 {
+  margin-block-start: 24px;
+}
+.closing-detail dl {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 10px;
+}
+.closing-detail dd {
+  margin: 0;
+}
+.closing-scenarios {
+  margin-block: 24px;
+}
+.closing-scenarios button {
+  margin-inline-end: 8px;
+}
+@media (max-width: 767px) {
+  .closing-counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .closing-scope p {
+    margin-inline-start: 0;
+  }
+  .closing-filters label {
+    inline-size: 100%;
+  }
+  .closing-filters input[type="search"],
+  .closing-filters select {
+    inline-size: 100%;
+  }
+  .closing-days {
+    grid-template-columns: 1fr;
+  }
+  .closing-days button {
+    min-block-size: 60px;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .closing-calendar-offset {
+    display: none !important;
+  }
+  .closing-detail {
+    padding: 16px;
+  }
+  .closing-detail dl {
+    grid-template-columns: 1fr;
+  }
+  .closing-list,
+  .closing-calendar {
+    padding: 12px;
+  }
+}
+
+.closing-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  padding-block: 8px;
+}
+@media (max-width: 767px) {
+  .closing-weekdays {
+    display: none;
+  }
+}
+.closing-detail tbody th,
+.closing-detail tbody td {
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.closing-detail .table-wrap + p {
+  margin-block-start: 12px;
+}
+
+.closing-detail tbody th {
+  position: static;
+}

@@ -1,0 +1,64 @@
+{
+  "columns": [
+    "id",
+    "kind",
+    "state",
+    "due",
+    "owner"
+  ],
+  "details": [
+    "targets",
+    "succeeded",
+    "held",
+    "failed",
+    "remaining",
+    "delivery",
+    "external"
+  ],
+  "values": {
+    "kind": "Job / import",
+    "state": "waiting",
+    "due": "2026-11-05",
+    "owner": "DEMO-USER-01",
+    "targets": "120",
+    "succeeded": "80",
+    "held": "20",
+    "failed": "5",
+    "remaining": "15",
+    "delivery": "pending",
+    "external": "DEMO-JOB-01"
+  },
+  "views": {
+    "tasks": [
+      "id",
+      "kind",
+      "state",
+      "due",
+      "owner"
+    ],
+    "notifications": [
+      "event",
+      "occurred",
+      "received",
+      "delivery"
+    ],
+    "detail": [
+      "targets",
+      "succeeded",
+      "held",
+      "failed",
+      "remaining"
+    ],
+    "delivery": [
+      "channel",
+      "delivery",
+      "external"
+    ],
+    "payment-terms": [
+      "document",
+      "due",
+      "state"
+    ]
+  },
+  "draftFields": []
+}

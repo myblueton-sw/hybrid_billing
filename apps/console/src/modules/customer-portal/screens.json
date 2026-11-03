@@ -1,0 +1,148 @@
+[
+  {
+    "id": "C01",
+    "path": "/portal/overview",
+    "menu": "portal",
+    "audience": "portal",
+    "module": "customer-portal",
+    "archetype": "portal-dashboard",
+    "spec": "docs/ui/screens/C01/spec.md",
+    "exampleRoles": [
+      "CP",
+      "CU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "summary",
+        "labelKo": "요약"
+      },
+      {
+        "key": "usage",
+        "labelKo": "내 사용량"
+      },
+      {
+        "key": "notifications",
+        "labelKo": "알림 요약"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "내 정산 홈",
+    "scopeLabelKo": "내 조직·정산 기간·정산 종류·통화",
+    "purposeKo": "자기 기간·통화·판매액 또는 허용 내부 배분·기준시각·문서·문의/할일",
+    "commandReferences": [],
+    "actionEvidence": "문서 보기 (→C02); 사용량 자세히 (→C02, never S04); 문의하기 (→C03); 알림 보기 (→U03); 내 보안 (→M05); 납부기한 확인."
+  },
+  {
+    "id": "C02",
+    "path": "/portal/documents",
+    "menu": "portal",
+    "audience": "portal",
+    "module": "customer-portal",
+    "archetype": "portal-list-detail",
+    "spec": "docs/ui/screens/C02/spec.md",
+    "exampleRoles": [
+      "CP",
+      "CU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "documents",
+        "labelKo": "문서 목록"
+      },
+      {
+        "key": "detail",
+        "labelKo": "문서 상세"
+      },
+      {
+        "key": "statement",
+        "labelKo": "판매/배분 명세"
+      },
+      {
+        "key": "usage",
+        "labelKo": "허용 사용량"
+      },
+      {
+        "key": "downloads",
+        "labelKo": "다운로드 상태"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "내 문서·사용량",
+    "scopeLabelKo": "내 조직/계약·정산 기간·통화",
+    "purposeKo": "자기 문서/개정·판매 명세·허용 사용량·정정 관계·패키지·정책, 조회/다운로드/문의",
+    "commandReferences": [],
+    "actionEvidence": "문서 열기; 다운로드 (bulk confirm); 보관 문서 복원 요청; 문서 문의 (→C03); 필터 전체 선택; 납부 상태 문의."
+  },
+  {
+    "id": "C03",
+    "path": "/portal/cases",
+    "menu": "portal",
+    "audience": "portal",
+    "module": "customer-portal",
+    "archetype": "portal-inbox",
+    "spec": "docs/ui/screens/C03/spec.md",
+    "exampleRoles": [
+      "CP",
+      "CU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "cases",
+        "labelKo": "문의 목록"
+      },
+      {
+        "key": "compose",
+        "labelKo": "문의 작성"
+      },
+      {
+        "key": "conversation",
+        "labelKo": "대화·자료"
+      },
+      {
+        "key": "resolution",
+        "labelKo": "관련 문서·해결"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "내 문의·답변",
+    "scopeLabelKo": "내 조직·관련 문서·기간",
+    "purposeKo": "자기 문서/행·쟁점·이유·첨부·공개답변·상태·기한, 접수/자료 추가/해결 확인",
+    "commandReferences": [],
+    "actionEvidence": "문의 접수 (receipt ≠ cancellation); 자료 추가; 해결 확인; 다시 문의; 관련 문서 보기."
+  }
+]

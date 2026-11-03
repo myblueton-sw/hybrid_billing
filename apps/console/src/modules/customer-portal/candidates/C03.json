@@ -1,0 +1,54 @@
+{
+  "columns": [
+    "id",
+    "document",
+    "kind",
+    "state",
+    "received"
+  ],
+  "details": [
+    "message",
+    "publicReply",
+    "consent",
+    "amount"
+  ],
+  "values": {
+    "document": "DEMO-PUBLIC-01",
+    "kind": "Usage question",
+    "state": "pending",
+    "received": "2026-11-03T09:00:00Z",
+    "message": "Example public question",
+    "publicReply": "pending",
+    "consent": "pending",
+    "amount": "USD 10.0000"
+  },
+  "views": {
+    "cases": [
+      "id",
+      "document",
+      "kind",
+      "state",
+      "received"
+    ],
+    "compose": [
+      "document",
+      "kind",
+      "message"
+    ],
+    "conversation": [
+      "message",
+      "publicReply",
+      "received"
+    ],
+    "resolution": [
+      "document",
+      "consent",
+      "state"
+    ]
+  },
+  "draftFields": [
+    "document",
+    "kind",
+    "message"
+  ]
+}

@@ -105,7 +105,9 @@ function PageJump({
 export default function Paging({
   value,
   locale: l,
+  jump = true,
 }: {
+  jump?: boolean;
   value: {
     scope: string;
     page: number;
@@ -134,7 +136,7 @@ export default function Paging({
       >
         {t(l, "Next", "다음", "التالي")}
       </button>
-      {total > size && (
+      {jump && total > size && (
         <PageJump
           resetKey={value.scope + "|" + total}
           page={page}

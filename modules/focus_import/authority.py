@@ -1,3 +1,4 @@
+from modules.focus_local.ports import port
 import json
 import re
 from contextlib import contextmanager
@@ -24,7 +25,7 @@ def reader_role(tenant):
 
 
 def connect(env,user=None):
-    return psycopg.connect(host='127.0.0.1',port=15432,dbname='hb',user=user or env['PG_ADMIN_USER'],
+    return psycopg.connect(host='127.0.0.1',port=port(env, "PG"),dbname='hb',user=user or env['PG_ADMIN_USER'],
         password=password(env,user,'PG_ADMIN_PASSWORD') if user else env['PG_ADMIN_PASSWORD'],
         autocommit=True,row_factory=dict_row,connect_timeout=5)
 

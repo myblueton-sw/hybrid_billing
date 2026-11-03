@@ -1,6 +1,6 @@
 # React console — HB-67
 
-Corrected implementation increment: baseline six-domain shell and all 112 navigation identities, with thirteen distinct React screen bodies: six entry screens (`entry-start`, `entry-login`, `entry-bootstrap`, `entry-invite`, `entry-challenge`, `entry-scope`) plus `contents` (also reused by `overview`), `index-intake`, `operations`, `core-index-close`, `my-tasks`, `customer-detail` and `review-issue`. Other destinations explicitly show implementation pending. The remaining screens stay in the HB-63 design baseline. No production API, identity, billing calculation or financial operation is connected.
+Corrected implementation increment: baseline six-domain shell and all 112 navigation identities, with thirteen distinct React screen bodies: six entry screens (`entry-start`, `entry-login`, `entry-bootstrap`, `entry-invite`, `entry-challenge`, `entry-scope`) plus `contents`, `index-intake`, `operations`, `core-index-close`, `my-tasks`, `customer-detail` and `review-issue`. Other destinations explicitly show implementation pending. The remaining screens stay in the HB-63 design baseline. No production API, identity, billing calculation or financial operation is connected.
 
 ## Install and operate
 
@@ -53,3 +53,7 @@ Entry forms validate local examples and clear fields; they do not authenticate, 
 [S03 ingestion](../../docs/features/HB-141/integration.md) receives synthetic FOCUS files into actual local services. [S06 reconciliation](../../docs/features/HB-95/reconciliation.md) compares original and stored evidence through a separate fixed-approver loopback process. Both are explicit local-service modes; other screen candidates remain previews. Neither adapter provides production identity or canonical input confirmation/publication.
 
 [HB-142 planning review](../../docs/features/HB-142/planning-review.md) records reception confirmation, exact detail routing, period/currency continuity and remaining integration gaps.
+
+## Collected FOCUS overview
+
+U01 at `/#/home?lang=ko` now queries the authorized collected FOCUS sample service, with exact currency-separated BilledCost/EffectiveCost, observed billing/subaccount mapping and bounded source rows. It does not fall back to generated data for legacy mode/scenario parameters. Operational ledgers remain explicitly unconnected. Follow the [HB-85 runbook](../../docs/features/HB-85/focus-verification.md) for the separate trusted reader process, ports, source provenance and current storage interruption; static preview alone does not supply this data.

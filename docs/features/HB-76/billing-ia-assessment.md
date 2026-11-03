@@ -33,6 +33,8 @@ No third-party code or assets are imported. These sources support patterns; the 
 
 # Proposed navigation and complete screen mapping
 
+This candidate is qualified by the subsequent [planning-purpose review](planning-purpose-review.md). Mapping completeness does not establish task fitness; do not adopt this grouping without preserving the plan's separate cost, allocation, sales policy and parallel ERP-recognition obligations.
+
 Order the business menu around recurring work. Initial setup has its own guided entry, rather than forcing every returning user to start with connectors.
 
 | Product destination | User question | Existing screens |

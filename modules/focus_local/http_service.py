@@ -8,14 +8,15 @@ from uuid import uuid4
 
 from .contract import MAX_BYTES, Rejected
 from .intake_view import Intake
+from .reconciliation import Reconciliation
 
 
 class LocalServer(ThreadingHTTPServer):
     daemon_threads = True
 
     def __init__(self, port, actor, build, env=None):
-        if actor not in ('loader-a', 'loader-b'):
-            raise ValueError('loader_required')
+        if actor not in ('loader-a', 'loader-b', 'approver-a', 'approver-b'):
+            raise ValueError('local_operator_required')
         self.actor, self.env = actor, env
         self.build = Path(build).resolve()
         manifest = json.loads((self.build / 'build-manifest.json').read_text())
@@ -79,6 +80,10 @@ class Handler(BaseHTTPRequestHandler):
             return failure(403, 'origin_denied')
         if mutation and origin != self.server.origin:
             return failure(403, 'origin_denied')
+        if path.path.startswith('/api/local-reconciliation'):
+            return self.reconcile(path.path, mutation, request_id, failure)
+        if not self.server.actor.startswith('loader-'):
+            return failure(403, 'scope_denied')
         allowed = path.path in ('/api/local-imports', '/api/local-imports/profile') or re.fullmatch(r'/api/local-imports/[0-9a-f-]{36}', path.path)
         if not allowed or mutation and path.path != '/api/local-imports':
             return failure(404, 'not_found')
@@ -123,6 +128,49 @@ class Handler(BaseHTTPRequestHandler):
                 failure(422, reason)
             else:
                 failure(422, 'validation_rejected')
+        except Exception:
+            failure(503, 'service_unavailable')
+        finally:
+            if service:
+                service.close()
+
+    def reconcile(self, path, mutation, request_id, failure):
+        if not self.server.actor.startswith('approver-'):
+            return failure(403, 'scope_denied')
+        prefix = '/api/local-reconciliation'
+        match = re.fullmatch(prefix + r'/candidates/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(/revalidate)?', path)
+        if mutation:
+            if not match or not match[2]:
+                return failure(404, 'not_found')
+            lengths = self.headers.get_all('Content-Length') or []
+            if self.headers.get('Transfer-Encoding') or len(lengths) != 1 or not lengths[0].isdigit():
+                return failure(400, 'request_invalid')
+            length = int(lengths[0])
+            if not 0 < length <= 512 or self.headers.get('Content-Type') != 'application/json':
+                return failure(400, 'request_invalid')
+            try:
+                body = json.loads(self.rfile.read(length))
+                if not isinstance(body, dict) or set(body) != {'expected_manifest'} or not isinstance(body['expected_manifest'], str) or not re.fullmatch('[0-9a-f]{64}', body['expected_manifest']):
+                    return failure(400, 'request_invalid')
+            except (ValueError, TimeoutError):
+                return failure(400, 'request_invalid')
+        elif path not in (prefix + '/profile', prefix + '/candidates') and (not match or match[2]):
+            return failure(404, 'not_found')
+        service = None
+        try:
+            service = Reconciliation(self.server.actor, self.server.env)
+            if mutation:
+                result = service.revalidate(match[1], body['expected_manifest'])
+            elif path.endswith('/profile'):
+                result = service.context()
+            else:
+                result = service.candidates(match[1] if match else None)
+            self.reply(200, {**result, 'request_id': request_id})
+        except Rejected as exc:
+            if str(exc) in ('evidence_changed', 'policy_changed'):
+                failure(409, str(exc))
+            else:
+                failure(403, 'scope_denied')
         except Exception:
             failure(503, 'service_unavailable')
         finally:

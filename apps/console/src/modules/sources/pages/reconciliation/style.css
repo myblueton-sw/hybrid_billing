@@ -1,0 +1,245 @@
+.reconciliation {
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+}
+.reconciliation section {
+  min-inline-size: 0;
+}
+.reconciliation h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-block: 0 12px;
+}
+.reconciliation h3 {
+  font-size: 18px;
+  margin-block: 0 12px;
+}
+.reconciliation p {
+  margin-block: 8px 16px;
+  overflow-wrap: anywhere;
+}
+.reconciliation bdi {
+  overflow-wrap: anywhere;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+}
+.reconciliation .rec-money {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.rec-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.rec-heading button {
+  min-block-size: 44px;
+  flex-shrink: 0;
+}
+.rec-heading p,
+.rec-limit {
+  max-inline-size: 72ch;
+}
+.rec-blockers,
+.rec-error {
+  border: 1px solid var(--hb-line-row);
+  padding: 16px;
+}
+.rec-blockers ul {
+  margin-block: 0;
+  padding-inline-start: 24px;
+}
+.rec-blockers li {
+  margin-block: 8px;
+}
+.rec-blockers small {
+  display: block;
+  color: var(--hb-muted);
+}
+.rec-scope,
+.rec-checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+}
+.reconciliation dt {
+  color: var(--hb-muted);
+  font-size: 13px;
+}
+.reconciliation dd {
+  margin-inline-start: 0;
+  margin-block-end: 12px;
+  overflow-wrap: anywhere;
+}
+.rec-checks {
+  border-block: 1px solid var(--hb-line-row);
+  padding-block: 16px;
+}
+.rec-checks dd {
+  font-weight: 600;
+  margin-block-end: 0;
+}
+.rec-count {
+  font-size: 16px;
+  font-weight: 400;
+}
+.rec-status:empty {
+  display: none;
+}
+.rec-candidates {
+  max-block-size: 440px;
+  overflow: auto;
+  margin-block-end: 12px;
+}
+.rec-candidates table {
+  min-inline-size: 820px;
+}
+.reconciliation th,
+.reconciliation td {
+  padding: 8px 12px;
+}
+.rec-candidates thead {
+  position: sticky;
+  inset-block-start: 0;
+  background: var(--surface-page);
+}
+.rec-select {
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: start;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-block-size: 44px;
+}
+.rec-candidates [data-selected="true"] {
+  font-weight: 600;
+}
+.reconciliation td small,
+.reconciliation th small {
+  display: block;
+  font-weight: 400;
+  font-size: 13px;
+  margin-block-start: 4px;
+}
+.rec-comparison {
+  overflow: auto;
+}
+.rec-comparison table {
+  min-inline-size: 960px;
+}
+.rec-comparison td {
+  text-align: end;
+}
+.rec-comparison th:first-child {
+  position: sticky;
+  inset-inline-start: 0;
+  background: var(--surface-page);
+  min-inline-size: 170px;
+}
+.rec-comparison caption {
+  text-align: start;
+  padding: 12px;
+}
+@media (min-width: 1280px) {
+  .rec-checks {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 639px) {
+  .rec-scope,
+  .rec-checks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rec-candidates table {
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+  .rec-candidates thead {
+    position: absolute;
+    clip-path: inset(50%);
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+  }
+  .rec-candidates tbody,
+  .rec-candidates tr,
+  .reconciliation .rec-candidates td {
+    height: auto;
+    min-block-size: 44px;
+    display: block;
+  }
+  .rec-candidates tr {
+    padding: 12px;
+    border-block-end: 1px solid var(--hb-line-row);
+  }
+  .reconciliation .rec-candidates td {
+    height: auto;
+    min-block-size: 44px;
+    padding: 4px 0;
+    border: 0;
+    white-space: normal;
+  }
+  .rec-candidates td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 13px;
+    color: var(--hb-muted);
+  }
+}
+
+.rec-comparison thead th:first-child {
+  background: var(--surface-table-head);
+}
+.rec-comparison thead th:not(:first-child) {
+  text-align: end;
+}
+.rec-comparison th:first-child {
+  inline-size: 200px;
+  max-inline-size: 200px;
+}
+
+.reconciliation .planning-table td,
+.reconciliation .planning-table tbody th {
+  font-size: 16px;
+}
+.reconciliation .rec-comparison thead th {
+  background: var(--surface-table-head);
+  color: var(--text-body);
+  font-size: 13px;
+}
+
+.rec-mobile-values {
+  display: none;
+}
+.rec-full-table summary {
+  margin-block-end: 12px;
+}
+.reconciliation .rec-comparison td {
+  vertical-align: top;
+}
+@media (max-width: 639px) {
+  .rec-mobile-values {
+    display: grid;
+    gap: 16px;
+  }
+  .rec-mobile-values article {
+    border: 1px solid var(--hb-line-row);
+    padding: 16px;
+    min-inline-size: 0;
+  }
+  .rec-mobile-values h4 {
+    margin-block: 0 8px;
+  }
+  .rec-mobile-values dl {
+    margin-block-end: 0;
+  }
+  .rec-mobile-values .rec-money {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}

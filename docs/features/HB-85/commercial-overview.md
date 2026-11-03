@@ -53,3 +53,7 @@ U01 uses 24px page titles, 20px section headings, 16px body/table/control text, 
 # Acceptance boundary
 
 Actual checks and review limits are recorded in [verification](verification.md). At 1440×900 the candidate must show amounts, four work rows and the entire plot, with the title-to-toolbar block under 200px. These checks reject an unusable composition but do not establish aesthetic quality or owner acceptance. Design remains pending until the owner reviews the actual candidate.
+
+# Domain review gate
+
+The owner's subsequent finance and billing-operator review request produced two independent AI role-fitness FAIL verdicts for this default home composition. Closing readiness, business/accounting scope, independent financial lanes and actionable/filterable work need redesign. The figures are code-generated fixtures, not verified FOCUS samples. [The domain report](finance-billing-review.md) records evidence, provenance and proposed information order. These findings remain open; existing source/visual checks do not close them or establish practitioner acceptance. This review step changed no application screen.

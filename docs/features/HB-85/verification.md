@@ -45,3 +45,7 @@ The visual review questioned organization C's KRW zero. The unchanged model expl
 # Limits
 
 This remains a synthetic screen candidate. Production authentication/permission projection, overview aggregation, sales/allocation/receipt ledgers, authoritative ERP, deadlines, owners and financial commands are unconnected. Native-language and assistive-technology acceptance, signed costs and non-Chromium table semantics remain unverified. Shared real font faces can affect other consumers; their screen acceptance is not inferred. No owner FIX, main merge or deployment occurred. The owner decides whether this candidate meets the intended commercial standard.
+
+# Subsequent finance and billing review
+
+Two separate AI specialist-role reviews of this same source/build returned FAIL for the default enterprise home. They assessed role decisions and workflow rather than repeating technical checks. [The report](finance-billing-review.md) confirms non-FOCUS fixture provenance, records required design changes and separates human acceptance from role-based AI critique. Its billing findings and provenance were independently read back for report accuracy. No application change or new runtime test was performed in that review step.

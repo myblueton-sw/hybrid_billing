@@ -13,6 +13,7 @@ import {
   type Audience,
 } from "../planning/routing";
 import { titles, menuNames, local, tabLabel } from "../planning/copy";
+import LiveImports from "../modules/sources/pages/live-imports/Screen";
 import CandidateWorkbench from "../planning/CandidateWorkbench";
 import ReviewPanel from "../shared/ReviewPanel";
 import HeaderSelect from "./HeaderSelect";
@@ -76,7 +77,11 @@ export default function App() {
   const route = resolveRoute(hash || "#/home", context),
     screen = route.screen;
   const scope = params.get("scope") === "sample-b" ? "sample-b" : "sample-a";
-  const screenKey = `${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}`;
+  const liveImports =
+    screen?.id === "S03" &&
+    audience === "admin" &&
+    params.get("service") === "local";
+  const screenKey = `${liveImports}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}`;
   const tabs =
     screen?.id === "U02" ? screen.tabs.slice(0, 2) : (screen?.tabs ?? []);
   const requestedTab = params.get("view") ?? route.tab ?? route.step;
@@ -234,7 +239,7 @@ export default function App() {
   const portal = audience === "customer";
   const headerActions = (
     <div className="planning-header-actions">
-      {!portal && (
+      {!portal && !liveImports && (
         <label className="planning-workspace">
           <span className="sr-only">
             {local(l, ["예제 업무 공간", "Example workspace", "مساحة تجريبية"])}
@@ -458,11 +463,17 @@ export default function App() {
       </a>
       <div className="planning-preview">
         <span>
-          {local(l, [
-            "인터랙티브 시안 · 합성 데이터 · 실제 서비스 미연결",
-            "Interactive preview · synthetic data · services not connected",
-            "معاينة تفاعلية · بيانات تجريبية · الخدمات غير متصلة",
-          ])}
+          {liveImports
+            ? local(l, [
+                "로컬 서비스 연동 · 실제 검증·저장 · 합성 입력 전용",
+                "Local service integration · actual validation and persistence · synthetic input only",
+                "تكامل خدمة محلية · تحقق وحفظ فعليان · مدخلات تجريبية فقط",
+              ])
+            : local(l, [
+                "인터랙티브 시안 · 합성 데이터 · 실제 서비스 미연결",
+                "Interactive preview · synthetic data · services not connected",
+                "معاينة تفاعلية · بيانات تجريبية · الخدمات غير متصلة",
+              ])}
         </span>
         {audience === "admin" && (
           <button onClick={() => previewAudience("admin", "/design/screens")}>
@@ -619,7 +630,9 @@ export default function App() {
                 screen={screen.id}
                 locale={l}
                 context={JSON.stringify({
-                  profile: "planning-preview",
+                  profile: liveImports
+                    ? "local-service-synthetic-v1"
+                    : "planning-preview",
                   mode,
                   extensions: [],
                   audience,
@@ -642,7 +655,11 @@ export default function App() {
                 }
               />
               {!["U01", "U02"].includes(screen.id) && (
-                <details className="planning-scope" open={!mobile}>
+                <details
+                  className="planning-scope"
+                  open={!mobile}
+                  hidden={liveImports}
+                >
                   <summary>
                     {local(l, ["조회 범위", "Scope", "النطاق"])} ·{" "}
                     <bdi>{params.get("period") ?? "2026-10"}</bdi> ·{" "}
@@ -708,6 +725,7 @@ export default function App() {
               >
                 <nav
                   className="planning-tabs"
+                  style={liveImports ? { display: "none" } : undefined}
                   aria-label={local(l, [
                     "화면 보기",
                     "Screen views",
@@ -735,10 +753,44 @@ export default function App() {
                     </button>
                   ))}
                 </nav>
-                <div id="content" key={screenKey + ":" + tab}>
-                  {screen.id === "U01" &&
-                  tab === "settlement" &&
-                  scenario === "normal" ? (
+                {screen.id === "S03" && (
+                  <button
+                    className="live-mode-switch"
+                    onClick={() =>
+                      changeScope({
+                        service: liveImports ? "preview" : "local",
+                      })
+                    }
+                  >
+                    {local(
+                      l,
+                      liveImports
+                        ? [
+                            "시안 데이터로 전환",
+                            "Switch to preview data",
+                            "التبديل إلى المعاينة",
+                          ]
+                        : [
+                            "로컬 서비스에 연결",
+                            "Connect local service",
+                            "الاتصال بالخدمة المحلية",
+                          ],
+                    )}
+                  </button>
+                )}
+                <div
+                  id="content"
+                  key={screenKey + ":" + tab + (liveImports ? ":" + l : "")}
+                >
+                  {liveImports ? (
+                    <LiveImports
+                      locale={l}
+                      onState={onState}
+                      onDirty={setDirty}
+                    />
+                  ) : screen.id === "U01" &&
+                    tab === "settlement" &&
+                    scenario === "normal" ? (
                     <Overview
                       locale={l}
                       mode={mode}

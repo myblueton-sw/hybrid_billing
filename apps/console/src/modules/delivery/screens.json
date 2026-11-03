@@ -1,0 +1,159 @@
+[
+  {
+    "id": "I02",
+    "path": "/submissions",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "delivery",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/I02/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "submissions",
+        "labelKo": "제출 목록"
+      },
+      {
+        "key": "comparison",
+        "labelKo": "초안 비교"
+      },
+      {
+        "key": "rows",
+        "labelKo": "문서·행 연결"
+      },
+      {
+        "key": "events",
+        "labelKo": "외부 사건"
+      },
+      {
+        "key": "capabilities",
+        "labelKo": "연결 capability"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "ERP 제출·동기화",
+    "scopeLabelKo": "ERP 제품/버전·법인",
+    "purposeKo": "연결 제품/버전·법인·마스터 매핑·제출/외부ID·초안/전기/법정/입금 상태·금액차이, 초안 조회/대사/허용 전기/정정",
+    "commandReferences": [],
+    "actionEvidence": "초안 제출 (idempotent); 외부 상태 조회; 귀속 행 대사; 전기 요청 (AP, final ERP amount re-approval); 정정 요청; 수납·납기 대사; 승인된 월별 인식 전송."
+  },
+  {
+    "id": "I03",
+    "path": "/handoffs",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "delivery",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/I03/spec.md",
+    "exampleRoles": [
+      "BL"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "handoffs",
+        "labelKo": "인계 목록"
+      },
+      {
+        "key": "files",
+        "labelKo": "파일 구성"
+      },
+      {
+        "key": "outcomes",
+        "labelKo": "반영 결과"
+      },
+      {
+        "key": "reconciliation",
+        "labelKo": "행별 대사"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "파일 인계·반영 결과",
+    "scopeLabelKo": "파일 목적·템플릿 버전·기간",
+    "purposeKo": "표준/검증 업로드용·템플릿 버전·제출ID·문서/행·담당·다운로드/외부반영 상태, 생성/결과 등록/대사/실패 재인계",
+    "commandReferences": [],
+    "actionEvidence": "표준 XLSX 생성 (job); 검증 업로드 파일 생성; 반영 결과 등록 (never overwrites amounts); 미반영 범위 재인계; 월별 인식 인계 파일 생성."
+  },
+  {
+    "id": "I04",
+    "path": "/exports",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "delivery",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/I04/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "policies",
+        "labelKo": "정책 개정"
+      },
+      {
+        "key": "preview",
+        "labelKo": "공개 미리보기"
+      },
+      {
+        "key": "packages",
+        "labelKo": "패키지"
+      },
+      {
+        "key": "history",
+        "labelKo": "전달 이력"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "공개 정책·전달 패키지",
+    "scopeLabelKo": "목적·수신자·정책 버전",
+    "purposeKo": "내부/고객용 목적·수신자·허용필드/집계·제외/추론충돌·샘플·행/합계/해시·정책개정, 생성/검사/전달/재시도",
+    "commandReferences": [
+      "holds.request",
+      "holds.release",
+      "holds.status"
+    ],
+    "actionEvidence": "generate public copy; validate all rows; request delivery (full validation required); redeliver same package; revoke link access; `holds.request` / `release` / `status`."
+  }
+]

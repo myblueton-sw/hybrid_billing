@@ -1,0 +1,120 @@
+[
+  {
+    "id": "B09",
+    "path": "/approvals",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "issuance",
+    "archetype": "inbox",
+    "spec": "docs/ui/screens/B09/spec.md",
+    "exampleRoles": [
+      "AP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "pending",
+        "labelKo": "대기"
+      },
+      {
+        "key": "decisions",
+        "labelKo": "내 결정"
+      },
+      {
+        "key": "delegation",
+        "labelKo": "위임·대리"
+      },
+      {
+        "key": "history",
+        "labelKo": "승인 이력"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "승인함·결과 카드",
+    "scopeLabelKo": "법인/고객·행위·기간·금액 범위·작성자·기한",
+    "purposeKo": "대상·행위·기간·통화별 금액·입력/결과 해시·작성자·차이·경고·근거·ERP 최종액, 승인/반려/담당 인계",
+    "commandReferences": [
+      "adjustment.approve",
+      "settlement.approve_final",
+      "input.inspect",
+      "input.confirm_publish",
+      "input.reject",
+      "adjustment.draft",
+      "adjustment.compute",
+      "adjustment.reject",
+      "adjustment.apply",
+      "close.publish_replacement",
+      "settlement.recompute_aggregate"
+    ],
+    "actionEvidence": "- approve monthly recognition; approve other policy; reject (needs a reason); hand off; compare evidence. - `input.inspect`; `adjustment.approve` / `reject`; `settlement.approve_final`; `settlement.dependency_status`."
+  },
+  {
+    "id": "I01",
+    "path": "/invoices",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "issuance",
+    "archetype": "list+detail-tabs",
+    "spec": "docs/ui/screens/I01/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AP",
+      "AU"
+    ],
+    "reactBodies": [
+      "review-issue"
+    ],
+    "tabs": [
+      {
+        "key": "documents",
+        "labelKo": "문서 목록"
+      },
+      {
+        "key": "body",
+        "labelKo": "문서 본문"
+      },
+      {
+        "key": "corrections",
+        "labelKo": "원문·정정"
+      },
+      {
+        "key": "history",
+        "labelKo": "승인·전달 이력"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "인보이스·내부 명세",
+    "scopeLabelKo": "법인·계약·문서 종류·기간·통화",
+    "purposeKo": "원천/판매/ERP/내부 종류·법인·번호·통화·본문/첨부·세금/템플릿·승인·원문/정정, 미리보기/발행/다운로드/정정 초안",
+    "commandReferences": [],
+    "actionEvidence": "안전 미리보기; 발행 요청 (AP, approval hash; ERP mode → I02); 확정본 다운로드 (same bytes); 정정 초안; 납기 연장 승인 요청 (approval)."
+  }
+]

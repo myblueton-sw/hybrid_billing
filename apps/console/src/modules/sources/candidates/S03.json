@@ -1,0 +1,54 @@
+{
+  "columns": [
+    "id",
+    "source",
+    "period",
+    "state",
+    "completeness"
+  ],
+  "details": [
+    "hash",
+    "watermark",
+    "manifest",
+    "supersedes",
+    "evidence"
+  ],
+  "values": {
+    "source": "DEMO-EXPORT-01",
+    "period": "2026-10",
+    "state": "pending",
+    "completeness": "partial",
+    "hash": "DEMO-HASH-01",
+    "watermark": "2026-11-03T09:00:00Z",
+    "manifest": "DEMO-PARTITIONS-01",
+    "supersedes": "DEMO-ORIGINAL-r1",
+    "evidence": "DEMO-OCR-01"
+  },
+  "views": {
+    "imports": [
+      "id",
+      "source",
+      "period",
+      "state",
+      "completeness"
+    ],
+    "quarantine": [
+      "source",
+      "hash",
+      "supersedes",
+      "reason"
+    ],
+    "completeness": [
+      "watermark",
+      "manifest",
+      "completeness"
+    ],
+    "extraction": [
+      "expected",
+      "actual",
+      "evidence",
+      "validation"
+    ]
+  },
+  "draftFields": []
+}

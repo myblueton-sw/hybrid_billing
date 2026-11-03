@@ -1,0 +1,366 @@
+[
+  {
+    "id": "L01",
+    "path": "/login",
+    "menu": "pre",
+    "audience": "prelogin",
+    "module": "identity",
+    "archetype": "prelogin-form",
+    "spec": "docs/ui/screens/L01/spec.md",
+    "exampleRoles": [],
+    "reactBodies": [
+      "entry-start",
+      "entry-login",
+      "entry-scope"
+    ],
+    "tabs": [
+      {
+        "key": "method",
+        "labelKo": "로그인 방식"
+      },
+      {
+        "key": "mfa",
+        "labelKo": "추가 인증"
+      }
+    ],
+    "scopeKeys": [
+      "scope"
+    ],
+    "titleKo": "로그인",
+    "scopeLabelKo": "업무 공간 경로·운영/DEMO 표식",
+    "purposeKo": "설치/업무 공간 경로, 아이디·비밀번호, 허용 SAML/OIDC 제공자, 직접 디렉터리 로그인, MFA 단계, 도움말",
+    "commandReferences": [],
+    "actionEvidence": "로그인; 회사 계정으로 계속 (SAML/OIDC, no automatic local fallback); 추가 인증 확인; 계정 복구 (→L03). All are server-checked; double-submit lock."
+  },
+  {
+    "id": "L02",
+    "path": "/activate",
+    "menu": "pre",
+    "audience": "prelogin",
+    "module": "identity",
+    "archetype": "prelogin-wizard",
+    "spec": "docs/ui/screens/L02/spec.md",
+    "exampleRoles": [],
+    "reactBodies": [
+      "entry-bootstrap",
+      "entry-invite"
+    ],
+    "tabs": [
+      {
+        "key": "invitation",
+        "labelKo": "초대 확인"
+      },
+      {
+        "key": "identity",
+        "labelKo": "신원 확인"
+      },
+      {
+        "key": "result",
+        "labelKo": "등록 결과"
+      }
+    ],
+    "scopeKeys": [
+      "scope"
+    ],
+    "titleKo": "최초 등록·초대 수락",
+    "scopeLabelKo": "업무 공간·부여 범위(토큰 고정)",
+    "purposeKo": "일회성 bootstrap 또는 초대 종류, 대상 업무 공간·역할·만료, 허용 인증 방식으로 신원 확인, 비밀번호 설정/SSO 연결",
+    "commandReferences": [],
+    "actionEvidence": "신원 확인으로 계속; 등록 완료 (one-time token consumption; concurrent bootstrap = only one succeeds); 초대 재요청; 다른 계정으로 확인 (→L01)."
+  },
+  {
+    "id": "L03",
+    "path": "/recover",
+    "menu": "pre",
+    "audience": "prelogin",
+    "module": "identity",
+    "archetype": "prelogin-wizard",
+    "spec": "docs/ui/screens/L03/spec.md",
+    "exampleRoles": [],
+    "reactBodies": [
+      "entry-challenge"
+    ],
+    "tabs": [
+      {
+        "key": "route",
+        "labelKo": "복구 경로"
+      },
+      {
+        "key": "proof",
+        "labelKo": "소유 증명"
+      },
+      {
+        "key": "replacement",
+        "labelKo": "새 수단 설정"
+      },
+      {
+        "key": "result",
+        "labelKo": "복구 결과"
+      }
+    ],
+    "scopeKeys": [
+      "scope"
+    ],
+    "titleKo": "계정 복구·긴급 접근",
+    "scopeLabelKo": "업무 공간",
+    "purposeKo": "로컬 재설정, 제공자 관리 복구 안내, MFA 복구, 명시적 긴급 접근 사유·유효기간",
+    "commandReferences": [],
+    "actionEvidence": "복구 안내 요청 (same response whether or not the account exists); 복구 증명 확인; 새 수단 적용 (session revoke); 긴급 접근 요청 (reason, scope, expiry, audit)."
+  },
+  {
+    "id": "M01",
+    "path": "/users",
+    "menu": "iam",
+    "audience": "admin",
+    "module": "identity",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/M01/spec.md",
+    "exampleRoles": [
+      "AM",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "users",
+        "labelKo": "사용자"
+      },
+      {
+        "key": "invitations",
+        "labelKo": "초대"
+      },
+      {
+        "key": "membership",
+        "labelKo": "소속·역할"
+      },
+      {
+        "key": "revocation",
+        "labelKo": "회수 작업"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "사용자·초대·대량 회수",
+    "scopeLabelKo": "업무 공간·상태·인증 방식·역할·만료",
+    "purposeKo": "불변 사용자ID·표시명·로그인ID·업무 공간·역할/기간·인증연결·상태·초대·세션, 생성/초대/재전송/정지/종료/회수",
+    "commandReferences": [],
+    "actionEvidence": "초대 작성; 초대 재발급; 사용자 정지 (last-admin protection, reauth); 소속 종료; 선택 범위 회수 (bulk via fixed manifest)."
+  },
+  {
+    "id": "M02",
+    "path": "/authentication",
+    "menu": "iam",
+    "audience": "admin",
+    "module": "identity",
+    "archetype": "list+detail-tabs",
+    "spec": "docs/ui/screens/M02/spec.md",
+    "exampleRoles": [
+      "OP",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "providers",
+        "labelKo": "제공자 연결"
+      },
+      {
+        "key": "policies",
+        "labelKo": "조직 로그인 정책"
+      },
+      {
+        "key": "test",
+        "labelKo": "시험 로그인"
+      },
+      {
+        "key": "keys",
+        "labelKo": "키·인증서"
+      },
+      {
+        "key": "recovery",
+        "labelKo": "복구 경로"
+      },
+      {
+        "key": "sync",
+        "labelKo": "외부 상태 동기화"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "인증 제공자·로그인 정책",
+    "scopeLabelKo": "인증 방식·업무 공간·상태",
+    "purposeKo": "local/SAML/OIDC/LDAP·workspace route·신뢰설정·MFA근거·그룹매핑·인증서/키 만료·진단·정책revision, 시험/승인/활성/회전",
+    "commandReferences": [
+      "trust.propose",
+      "trust.validate",
+      "trust.approve",
+      "trust.activate",
+      "trust.reject",
+      "trust.cancel"
+    ],
+    "actionEvidence": "- diagnose; test login; request policy activation; plan key rotation; recheck external status. - `trust.propose` / `validate` / `approve` (independent; self-approval forbidden) / `activate` / `reject` / `cancel`."
+  },
+  {
+    "id": "M03",
+    "path": "/access",
+    "menu": "iam",
+    "audience": "admin",
+    "module": "identity",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/M03/spec.md",
+    "exampleRoles": [
+      "AM",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "roles",
+        "labelKo": "역할 정의"
+      },
+      {
+        "key": "grants",
+        "labelKo": "부여·위임"
+      },
+      {
+        "key": "effects",
+        "labelKo": "효력 비교"
+      },
+      {
+        "key": "support",
+        "labelKo": "지원 접근"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "역할·위임·효력 미리보기",
+    "scopeLabelKo": "주체·행위·고객/법인",
+    "purposeKo": "주체·행위·고객/법인/계약/필드·유효기간·권한출처·부여상한, 변경초안/영향/승인/회수",
+    "commandReferences": [],
+    "actionEvidence": "효력 미리보기; 변경 승인 요청 (server approval); 위임 회수; 제한 지원 조회 요청."
+  },
+  {
+    "id": "M04",
+    "path": "/service-accounts",
+    "menu": "iam",
+    "audience": "admin",
+    "module": "identity",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/M04/spec.md",
+    "exampleRoles": [
+      "OP",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "accounts",
+        "labelKo": "서비스 계정"
+      },
+      {
+        "key": "credentials",
+        "labelKo": "자격 메타데이터"
+      },
+      {
+        "key": "usage",
+        "labelKo": "최근 사용"
+      },
+      {
+        "key": "transfer",
+        "labelKo": "책임자 이관"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "서비스 계정·자격",
+    "scopeLabelKo": "소유 조직·책임자·scope·만료",
+    "purposeKo": "사람과 다른 ID·목적·책임자·audience/scope·대상·credential 만료/회전·최근 사용, 생성/교체/폐기/책임자 인계",
+    "commandReferences": [],
+    "actionEvidence": "계정 생성 초안; 자격 회전 요청; 자격 폐기 (deny first); 책임자 인계."
+  },
+  {
+    "id": "M05",
+    "path": "/my-security",
+    "menu": "me",
+    "audience": "admin+portal",
+    "module": "identity",
+    "archetype": "detail-tabs",
+    "spec": "docs/ui/screens/M05/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AM",
+      "PR",
+      "BL",
+      "AP",
+      "CP",
+      "AU",
+      "CU",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "account",
+        "labelKo": "내 계정"
+      },
+      {
+        "key": "methods",
+        "labelKo": "로그인 수단"
+      },
+      {
+        "key": "recovery",
+        "labelKo": "추가 인증·복구"
+      },
+      {
+        "key": "sessions",
+        "labelKo": "세션·최근 접근"
+      },
+      {
+        "key": "notifications",
+        "labelKo": "알림 설정"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "내 보안·로그인 연결·알림",
+    "scopeLabelKo": "본인 고정·소속 업무 공간",
+    "purposeKo": "로그인수단·본인 소속·MFA·세션·최근 접근, 비밀번호 변경/허용identity 연결·해제/다른 세션 종료",
+    "commandReferences": [],
+    "actionEvidence": "비밀번호 변경; 로그인 수단 연결/해제 (last-method protection); MFA/복구 관리; 다른 세션 종료; 이 세션 종료 (→L01); 알림 설정 저장; 계정 복구 안내 (→L03)."
+  }
+]

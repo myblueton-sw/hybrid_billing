@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 const args = Object.fromEntries(
   process.argv
@@ -17,581 +17,222 @@ const browser = await chromium.launch({
   headless: true,
   ...(args.chromium ? { executablePath: args.chromium } : {}),
 });
-const context = await browser.newContext();
-const page = await context.newPage();
-const errors = [];
+const context = await browser.newContext(),
+  page = await context.newPage(),
+  errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
-const url = args.url || "http://127.0.0.1:8787/";
-await mkdir("qa-output/overview", { recursive: true });
+const url = args.url || "http://127.0.0.1:8787/",
+  output = args.output || "qa-output/overview";
+await mkdir(output, { recursive: true });
+const loaded = () =>
+  page.locator("[data-focus-state=loaded]").waitFor({ timeout: 30000 });
 const open = async (query = "") => {
-  await page.goto(url + "#overview?lang=en" + query);
-  await page.locator(".unified-overview").waitFor();
+  await page.goto(url + "#/home?lang=en" + query);
+  await loaded();
 };
+const results = [];
+let passed = false;
 try {
   for (const lang of ["en", "ko", "ar"])
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 1000 });
-      await page.goto(url + "#overview?lang=" + lang);
-      await page.locator("[data-coverage]").waitFor();
+      await page.goto(url + "#/home?lang=" + lang);
+      await loaded();
+      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      assert.equal(await page.locator("[data-focus-rows]").innerText(), "1121");
+      assert.equal(await page.locator("#focus-provider option").count(), 7);
       assert.equal(
-        await page.locator("[data-coverage]").innerText(),
-        "11 / 12",
+        await page
+          .locator(".focus-amounts")
+          .innerText()
+          .then((t) => t.includes("27.37875272899")),
+        true,
       );
-      assert.equal(await page.locator("[data-closing-count]").innerText(), "6");
-      assert.equal(await page.locator(".unified-month").count(), 6);
-      assert.equal(await page.locator(".unified-matrix tbody tr").count(), 6);
-      assert.equal(await page.locator("#design-directory-results").count(), 0);
-      assert(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= innerWidth + 1,
-        ),
+      assert.equal(
+        await page.locator(".focus-table").nth(1).locator("tbody tr").count(),
+        25,
       );
+      assert.equal(
+        await page.locator(".focus-table").nth(2).locator("tbody tr").count(),
+        25,
+      );
+      assert.equal(await page.locator("#confirm-review").count(), 1);
       assert.equal(
         await page.locator("html").getAttribute("dir"),
         lang === "ar" ? "rtl" : "ltr",
       );
-      assert.equal(await page.locator("[data-amount-meaning]").count(), 2);
-      for (const meaning of ["sales", "allocation"]) {
-        const card = page.locator(`[data-amount-meaning="${meaning}"]`);
-        assert.equal(await card.locator("[data-total]").count(), 0);
-        assert.equal(await card.locator(".overview-unknown").count(), 1);
-      }
-      assert.deepEqual(
-        await page.locator("[data-attention] strong").allTextContents(),
-        ["1", "2", "4"],
-      );
-      const layout = await page.evaluate(() => {
-        const body = document.querySelector(".unified-overview");
-        const work = document.querySelector(".overview-workboard");
-        const amounts = document.querySelector(".overview-amounts");
-        const chart = document.querySelector(".unified-trend");
-        return {
-          gap: getComputedStyle(body).gap,
-          heading: getComputedStyle(work.querySelector("h2")).fontSize,
-          metadata: getComputedStyle(amounts.querySelector("small")).fontSize,
-          workBeforeChart:
-            work.getBoundingClientRect().top <=
-            chart.getBoundingClientRect().top,
-          workBeforeAmounts:
-            work.getBoundingClientRect().top <
-            amounts.getBoundingClientRect().top,
-          workBeforeAmountsDOM: Boolean(
-            work.compareDocumentPosition(amounts) &
-            Node.DOCUMENT_POSITION_FOLLOWING,
-          ),
-        };
-      });
-      assert.equal(layout.gap, "20px");
-      assert.equal(layout.heading, "20px");
-      assert.equal(layout.metadata, "14px");
-      assert(layout.workBeforeChart);
-      assert.match(
-        await page.locator("[data-trend-status]").innerText(),
-        lang === "ko" ? /부분/ : lang === "ar" ? /جزئي/ : /Partial/,
-      );
-      const tableType = await page
-        .locator(
-          ".overview-org-breakdown tbody td,.unified-matrix tbody td,.unified-matrix tbody button",
-        )
-        .evaluateAll((es) =>
-          es.every((e) => getComputedStyle(e).fontSize === "16px"),
-        );
-      assert(tableType);
-      assert(
-        await page
-          .locator(".overview-closing-filters label")
-          .evaluateAll((es) =>
-            es.every((e) => getComputedStyle(e).fontSize === "14px"),
-          ),
-      );
-      if (width === 390) {
-        assert(
-          await page
-            .locator(".unified-breakdown td bdi,.overview-org-breakdown td bdi")
-            .evaluateAll((es) =>
-              es.every((e) => {
-                const r = e.getBoundingClientRect();
-                return r.left >= 0 && r.right <= innerWidth;
-              }),
-            ),
-        );
-      }
-      assert.equal(layout.workBeforeAmounts, width === 390);
-      assert.equal(layout.workBeforeAmountsDOM, width === 390);
-      await page.evaluate(() => document.fonts.ready);
-      const family =
-        lang === "ko"
-          ? "IBM Plex Sans KR"
-          : lang === "ar"
-            ? "IBM Plex Sans Arabic"
-            : "IBM Plex Sans";
-      assert(
-        await page.evaluate(
-          (family) =>
-            [...document.fonts].some(
-              (face) =>
-                face.family.replaceAll('"', "") === family &&
-                face.weight === "600" &&
-                face.status === "loaded",
-            ),
-          family,
-        ),
-      );
-      assert(
-        await page.evaluate(() => {
-          const labels = [
-            ...document.querySelectorAll(".overview-chart-axis bdi"),
-          ];
-          const lines = [
-            ...document.querySelectorAll(".overview-chart-grid span"),
-          ];
-          return (
-            labels.length === 3 &&
-            labels.every((label, index) => {
-              const r = label.getBoundingClientRect();
-              return (
-                Math.abs(
-                  r.top +
-                    r.height / 2 -
-                    lines[index].getBoundingClientRect().top,
-                ) <= 1.5
-              );
-            })
-          );
-        }),
-      );
-      assert(await page.locator(".review-source-revision").isVisible());
-      assert(await page.locator("#confirm-review").isVisible());
-      const reviewState = await page.locator("#review-status").innerText();
-      await page.locator("#confirm-review").click();
-      await page.locator(".design-review dialog[open]").waitFor();
-      assert.match(
-        await page.locator(".design-review dialog").innerText(),
-        /U01/,
-      );
-      await page.locator(".design-review dialog").press("Escape");
-      assert(
-        await page
-          .locator("#confirm-review")
-          .evaluate((e) => e === document.activeElement),
-      );
-      assert.equal(
-        await page.locator("#review-status").innerText(),
-        reviewState,
-      );
-      if (width === 1440) {
-        const viewport = await page.evaluate(() => ({
-          plotBottom: document
-            .querySelector(".unified-plot")
-            .getBoundingClientRect().bottom,
-          fourthWorkBottom: document
-            .querySelectorAll(".overview-work-list li")[3]
-            .getBoundingClientRect().bottom,
-          headerBottom: document
-            .querySelector(".unified-filters")
-            .getBoundingClientRect().bottom,
-          headingTop: document
-            .querySelector(".planning-page-header")
-            .getBoundingClientRect().top,
-        }));
-        assert(viewport.plotBottom <= 900, JSON.stringify(viewport));
-        assert(viewport.fourthWorkBottom <= 900, JSON.stringify(viewport));
-        assert(
-          viewport.headerBottom - viewport.headingTop <= 200,
-          JSON.stringify(viewport),
-        );
-      }
-      await page.screenshot({
-        path: `qa-output/overview/integrated-${lang}-${width}.png`,
-        fullPage: true,
-      });
-    }
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  await open();
-  for (const group of ["blocked", "approval", "erp"]) {
-    const trigger = page.locator(`[data-work-group="${group}"] button`).first();
-    await trigger.click();
-    await page.locator(".unified-detail").waitFor();
-    assert(
-      await page
-        .locator(".unified-detail")
-        .evaluate((e) => e === document.activeElement),
-    );
-    assert.match(
-      await page.locator(".unified-detail").innerText(),
-      group === "approval"
-        ? /Approval/
-        : group === "erp"
-          ? /Accounting/
-          : /Collection/,
-    );
-    await page.locator(".unified-detail header button").click();
-    assert(await trigger.evaluate((e) => e === document.activeElement));
-  }
-  await open("&period=2026-09");
-  assert.deepEqual(
-    await page.locator("[data-attention] strong").allTextContents(),
-    ["0", "0", "0"],
-  );
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  for (const lang of ["en", "ko", "ar"])
-    for (const width of [1440, 390]) {
-      await page.setViewportSize({ width, height: 1000 });
-      await page.goto(url + "#overview?lang=" + lang + "&ov-scale=enterprise");
-      await page.waitForFunction(
-        () =>
-          document.querySelector("[data-closing-count]")?.textContent ===
-          "4800",
-      );
-      assert.equal(await page.locator(".unified-matrix tbody tr").count(), 20);
-      assert.equal(
-        await page.locator(".overview-org-breakdown tbody tr").count(),
-        12,
-      );
-      assert.equal(await page.locator(".unified-exceptions li").count(), 6);
       assert(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth + 1,
         ),
       );
+      assert(
+        await page.evaluate(
+          (lang) =>
+            document.fonts.check(
+              `600 16px "${lang === "ko" ? "IBM Plex Sans KR" : lang === "ar" ? "IBM Plex Sans Arabic" : "IBM Plex Sans"}"`,
+            ),
+          lang,
+        ),
+      );
+      await page.screenshot({ path: `${output}/${lang}-${width}.png` });
+      await page.locator(".focus-search").scrollIntoViewIfNeeded();
       await page.screenshot({
-        path: `qa-output/overview/enterprise-${lang}-${width}.png`,
-        fullPage: true,
+        path: `${output}/${lang}-${width}-accounts.png`,
+      });
+      results.push({
+        lang,
+        width,
+        rows: 1121,
+        accountsPage: 25,
+        detailPage: 25,
+        overflow: false,
       });
     }
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await open("&ov-scale=enterprise");
-  await page.waitForFunction(
-    () =>
-      document.querySelector("[data-closing-count]")?.textContent === "4800",
+  await open();
+  const all = await page.request.get(url + "api/focus-overview", {
+    headers: { "X-HB-Local-Client": "1" },
+  });
+  assert.equal(all.status(), 200);
+  const actual = await all.json();
+  assert.equal(actual.account_count, 78);
+  assert.equal(actual.row_count, 1121);
+  assert.deepEqual(actual.options.periods, ["2024-03", "2024-09", "2024-10"]);
+  assert.equal(actual.provenance["synthetic-contract-fixture"], 6);
+  assert.equal(
+    actual.provenance["official-public"] +
+      actual.provenance["official-public-subset"],
+    1115,
   );
-  const initialTotal = await page.locator('[data-total="USD"]').innerText();
-  const list = page.locator(".unified-lifecycle");
-  await list.getByLabel("Page", { exact: true }).fill("0");
-  await list.getByRole("button", { name: "Go", exact: true }).click();
-  await list.getByRole("alert").waitFor();
-  assert.match(
-    await list.locator("tbody tr").first().innerText(),
-    /C01.B01.D01/,
+  const hostile = await page.request.get(url + "api/focus-overview", {
+    headers: {
+      "X-HB-Local-Client": "1",
+      Origin: "https://evil.example",
+      "Sec-Fetch-Site": "cross-site",
+    },
+  });
+  assert.equal(hostile.status(), 403);
+  const missing = await page.request.get(url + "api/focus-overview");
+  assert.equal(missing.status(), 403);
+  const foreign = await page.request.get(
+    url + "api/focus-overview?actor=foreign",
+    { headers: { "X-HB-Local-Client": "1" } },
   );
-  await list.getByLabel("Page", { exact: true }).fill("٢٤٠");
-  await list.getByLabel("Page", { exact: true }).press("Enter");
-  assert.match(
-    await list.locator("tbody tr").first().innerText(),
-    /C12.B10.D11/,
+  assert.equal(foreign.status(), 400);
+  const forged = await page.request.get(
+    url + "api/focus-overview?account=" + "f".repeat(64),
+    { headers: { "X-HB-Local-Client": "1" } },
   );
+  assert.equal(forged.status(), 400);
+  const stale = await page.request.get(
+    url +
+      "api/focus-overview?after=25&basis=effective_cost&snapshot=" +
+      actual.snapshot,
+    { headers: { "X-HB-Local-Client": "1" } },
+  );
+  assert.equal(stale.status(), 409);
+  await page.locator("input[value=effective_cost]").check();
+  await loaded();
   assert(
-    await list
-      .getByLabel("Page", { exact: true })
-      .evaluate((e) => e === document.activeElement),
+    (await page.locator(".focus-amounts").innerText()).includes(
+      "18.72651418586",
+    ),
   );
-  await list.getByLabel("Page", { exact: true }).fill("999");
-  await list.getByRole("button", { name: "Go", exact: true }).click();
-  assert.equal(await list.getByRole("alert").count(), 1);
-  await page.selectOption("#closing-stage", "accounting");
-  await page.selectOption("#closing-status", "unknown");
+  await page.locator("#focus-provider").selectOption("Microsoft");
+  await loaded();
+  assert.equal(await page.locator("[data-focus-rows]").innerText(), "51");
+  await page.locator("#focus-period").selectOption("2024-10");
+  await loaded();
+  assert.equal(await page.locator("[data-focus-rows]").innerText(), "0");
+  await open("&focus-q=%20AWS%20");
+  assert.equal(await page.locator("#focus-account-search").inputValue(), "AWS");
+  await page
+    .locator("#focus-account-search")
+    .fill("no-such-public-sample-account");
+  await page.locator(".focus-search button").click();
+  await loaded();
   assert.equal(
-    await page.locator("[data-list-count]").innerText(),
-    "2399 / 4800",
-  );
-  assert.equal(
-    await list.getByLabel("Page", { exact: true }).inputValue(),
-    "1",
-  );
-  assert.equal(
-    await page.locator('[data-total="USD"]').innerText(),
-    initialTotal,
-  );
-  await list.locator("tbody button").first().click();
-  await page.locator(".unified-detail").waitFor();
-  await page.locator("#closing-search").fill("C12.B10.D20");
-  assert.equal(await page.locator("[data-list-count]").innerText(), "1 / 4800");
-  assert.equal(await page.locator(".unified-detail").count(), 0);
-  await page.locator("#closing-search").fill("no-such-code");
-  await page
-    .getByText("No units match these filters", { exact: true })
-    .waitFor();
-  assert.equal(await list.locator("tbody tr").count(), 0);
-  assert.equal(
-    await page.locator('[data-total="USD"]').innerText(),
-    initialTotal,
-  );
-  await list
-    .getByRole("button", { name: "Reset list filters", exact: true })
-    .click();
-  assert.equal(
-    await page.locator("[data-list-count]").innerText(),
-    "4800 / 4800",
-  );
-  await page.selectOption("#closing-status", "blocked");
-  assert.equal(await page.locator("[data-list-count]").innerText(), "1 / 4800");
-  await page.selectOption("#overview-period", "2026-09");
-  await page.waitForFunction(
-    () => document.querySelector("#closing-status")?.value === "",
-  );
-  assert.equal(
-    await page.locator("[data-list-count]").innerText(),
-    "4800 / 4800",
-  );
-  await page.selectOption("#overview-period", "2026-10");
-  await page.waitForFunction(
-    () => document.querySelector("#overview-period")?.value === "2026-10",
-  );
-  await page
-    .locator(".unified-matrix")
-    .locator("..")
-    .getByRole("button", { name: "Next", exact: true })
-    .click();
-  assert.match(
-    await page.locator(".unified-matrix tbody tr").first().innerText(),
-    /C01.B01.D11/,
-  );
-  assert.equal(
-    await page.locator('[data-total="USD"]').innerText(),
-    initialTotal,
-  );
-  await page.locator(".overview-org-picker summary").click();
-  await page.locator("#overview-org-search").fill("C12.B10.D20");
-  assert.equal(await page.locator(".overview-org-row").count(), 1);
-  assert.equal(
-    await page.locator('[data-total="USD"]').innerText(),
-    initialTotal,
-  );
-  await page.locator(".overview-org-row input").click();
-  await page.waitForFunction(
-    () =>
-      document.querySelector("[data-closing-count]")?.textContent === "4798",
-  );
-  assert((await page.evaluate(() => location.hash.length)) < 750);
-  assert.match(
-    await page.locator(".unified-matrix tbody tr").first().innerText(),
-    /C01.B01.D01/,
-  );
-  await page
-    .getByRole("button", { name: "Clear selection", exact: true })
-    .click();
-  await page
-    .getByText("No data in the selected scope", { exact: true })
-    .waitFor();
-  await page.locator("#overview-org-search").fill("");
-  await page
-    .locator(".overview-org-row")
-    .filter({ has: page.getByText("C01", { exact: true }) })
-    .locator("input")
-    .click();
-  await page.waitForFunction(
-    () => document.querySelector("[data-closing-count]")?.textContent === "400",
-  );
-  await page.getByRole("button", { name: "Browse C01", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Browse C01.B01", exact: true })
-    .click();
-  assert.equal(await page.locator(".overview-org-row").count(), 20);
-  await page.locator(".overview-org-row input").first().click();
-  await page.waitForFunction(
-    () => document.querySelector("[data-closing-count]")?.textContent === "398",
-  );
-  await page.locator(".overview-org-picker summary").click();
-  await page.locator(".overview-org-breakdown tbody button").first().click();
-  await page.locator(".unified-detail").waitFor();
-  assert.equal(await page.locator(".unified-detail tbody tr").count(), 20);
-  await page.getByRole("button", { name: "Close detail", exact: true }).click();
-  await page.selectOption("#overview-period", "2026-09");
-  await page.waitForFunction(
-    () => document.querySelector("#overview-period")?.value === "2026-09",
-  );
-  assert.equal(await page.locator(".unified-detail").count(), 0);
-  await page.selectOption("#overview-period", "2026-10");
-  await page.waitForFunction(
-    () => document.querySelector("#overview-period")?.value === "2026-10",
-  );
-  assert.match(
-    await page.locator(".unified-matrix tbody tr").first().innerText(),
-    /C01.B01.D02/,
-  );
-  await page.locator(".overview-example-config summary").click();
-  await page.selectOption("#overview-profile", "small");
-  await page.waitForFunction(
-    () => document.querySelector("[data-closing-count]")?.textContent === "6",
-  );
-  await open();
-  assert.match(
-    await page.locator('[data-total="USD"]').innerText(),
-    /USD 17,840.00/,
-  );
-  assert.match(
-    await page.locator('[data-total="KRW"]').innerText(),
-    /KRW 6,900,000/,
-  );
-  await page.locator(".unified-month").first().click();
-  await page.waitForFunction(
-    () => document.querySelector("#overview-period")?.value === "2026-05",
-  );
-  assert.equal(await page.locator("#overview-period").inputValue(), "2026-05");
-  assert.match(
-    await page.locator('[data-total="USD"]').innerText(),
-    /16,470.00/,
-  );
-  await page.goBack();
-  await page.waitForFunction(
-    () => document.querySelector("#overview-period")?.value === "2026-10",
-  );
-  assert.equal(await page.locator("#overview-period").inputValue(), "2026-10");
-  await page.locator(".unified-picker").first().locator("summary").click();
-  await page
-    .locator(".unified-picker")
-    .first()
-    .getByLabel("All", { exact: true })
-    .click();
-  await page
-    .getByText("No data in the selected scope", { exact: true })
-    .waitFor();
-  assert.equal(await page.locator("[data-total]").count(), 0);
-  await page
-    .locator(".unified-picker")
-    .first()
-    .getByLabel("AWS", { exact: true })
-    .click();
-  await page.waitForFunction(
-    () => document.querySelector("[data-closing-count]")?.textContent === "3",
-  );
-  assert.equal(await page.locator("[data-closing-count]").innerText(), "3");
-  assert.match(
-    await page.locator('[data-total="USD"]').innerText(),
-    /5,640.00/,
-  );
-  await page
-    .locator(".unified-picker")
-    .first()
-    .getByLabel("Azure", { exact: true })
-    .click();
-  await page.waitForFunction(
-    () => document.querySelector("[data-closing-count]")?.textContent === "3",
-  );
-  assert.equal(await page.locator("[data-closing-count]").innerText(), "3");
-  await page.locator(".unified-picker").nth(1).locator("summary").click();
-  await page
-    .locator(".unified-picker")
-    .nth(1)
-    .getByLabel("All", { exact: true })
-    .click();
-  await page
-    .locator(".unified-picker")
-    .nth(1)
-    .getByLabel("Example organization A", { exact: true })
-    .click();
-  await page.waitForFunction(
-    () => document.querySelector("[data-closing-count]")?.textContent === "1",
-  );
-  assert.equal(await page.locator("[data-closing-count]").innerText(), "1");
-  await page.locator(".unified-matrix tbody button").first().click();
-  await page.locator(".unified-detail").waitFor();
-  assert.match(
-    await page.locator(".unified-detail").innerText(),
-    /Whole-unit sources: AWS · Azure · GCP/,
-  );
-  assert.equal(await page.locator(".unified-detail tbody tr").count(), 2);
-  assert.equal(
-    await page
-      .locator(".unified-detail")
-      .evaluate((e) => e === document.activeElement),
-    true,
-  );
-  await page.getByRole("button", { name: "Close detail", exact: true }).click();
-  assert.equal(
-    await page
-      .locator(".unified-matrix tbody button")
-      .first()
-      .evaluate((e) => e === document.activeElement),
-    true,
-  );
-  await page.locator(".unified-matrix tbody button").first().click();
-  await page.selectOption("#overview-currency", "KRW");
-  await page.waitForFunction(() => !document.querySelector(".unified-detail"));
-  assert.equal(await page.locator(".unified-detail").count(), 0);
-  await open("&ov-sources=GCP&ov-organizations=B");
-  assert.match(
-    await page.locator('[data-total="USD"]').innerText(),
-    /USD.*Unknown/s,
-  );
-  assert.match(await page.locator('[data-total="USD"]').innerText(), /—/);
-  assert.equal(
-    await page
-      .locator(".unified-month")
-      .last()
-      .locator(".unified-bar")
-      .evaluate((e) => e.style.height),
-    "0%",
-  );
-  assert.match(
-    await page.locator(".unified-month").last().innerText(),
-    /Unknown/,
-  );
-  await open("&ov-sources=On-prem&ov-organizations=C&ov-currency=KRW");
-  assert.match(await page.locator('[data-total="KRW"]').innerText(), /KRW 0/);
-  assert.match(
-    await page.locator(".unified-matrix tbody").innerText(),
-    /Not applicable/,
-  );
-  await open();
-  assert.equal(await page.locator("#language").count(), 1);
-  await page.locator(".overview-example-config summary").click();
-  await page.selectOption("#overview-workspace", "sample-b");
-  await page.waitForFunction(() =>
-    document
-      .querySelector('[data-total="USD"]')
-      ?.textContent.includes("35,680.00"),
-  );
-  assert.match(
-    await page.locator('[data-total="USD"]').innerText(),
-    /35,680.00/,
-  );
-  await open();
-  await page.locator('[data-work-kind="record"] button').first().click();
-  await page.locator(".unified-detail").waitFor();
-  assert.equal(await page.locator(".unified-detail tbody tr").count(), 1);
-  assert.match(
-    await page.locator(".unified-detail tbody").innerText(),
-    /Example organization B/,
-  );
-  assert(
-    await page
-      .locator(".unified-detail")
-      .evaluate(
-        (e) =>
-          e.getBoundingClientRect().top < innerHeight &&
-          e.getBoundingClientRect().bottom > 0,
-      ),
-  );
-  const neutral = await page
-    .locator(".unified-panel")
-    .evaluateAll((es) =>
-      es.every(
-        (e) =>
-          getComputedStyle(e).borderTopWidth === "0px" ||
-          getComputedStyle(e).borderTopColor === "rgb(220, 225, 229)",
-      ),
-    );
-  assert(neutral);
-  await open("&mode=unconnected");
-  await page
-    .getByText("Integrated overview not connected", { exact: true })
-    .waitFor();
-  assert.equal(
-    await page
-      .locator("[data-total],.unified-month,.unified-matrix tbody tr")
-      .count(),
+    await page.locator(".focus-table").nth(1).locator("tbody tr").count(),
     0,
   );
-  await page.goto(url + "#/home?lang=en");
-  await page.locator("[data-total]").first().waitFor();
-  await page.goto(url + "#/design/screens?lang=en&review=1");
-  await page.locator(".planning-directory").waitFor();
-  assert.equal(await page.locator(".unified-overview").count(), 0);
-  assert.deepEqual(errors, []);
-  console.log(
-    "PASS: integrated overview, 12 small/enterprise locale/viewport renders, 2400 departments, bounded pages, hierarchy selection, compact URL, scope reset, exact separate-currency totals, partial/all-missing/zero, multi-selection, unique closing units, monthly history, scoped detail and focus/reset, workspace change, unconnected and directory separation",
+  assert.equal(await page.locator("[data-focus-rows]").innerText(), "1121");
+  await open();
+  await page
+    .locator(".overview-paging")
+    .last()
+    .getByRole("button", { name: "Next", exact: true })
+    .click();
+  await loaded();
+  assert(page.url().includes("focus-after=25"));
+  await page.goBack();
+  await loaded();
+  assert(!page.url().includes("focus-after=25"));
+  await page
+    .locator(".focus-table")
+    .nth(1)
+    .locator("tbody th button")
+    .first()
+    .click();
+  await loaded();
+  assert((await page.locator("[data-focus-rows]").innerText()) !== "1121");
+  await open();
+  await page.route("**/api/focus-overview?**", async (route) => {
+    const q = new URL(route.request().url()).searchParams;
+    if (q.get("provider") === "AWS") {
+      const response = await route.fetch();
+      await new Promise((r) => setTimeout(r, 1500));
+      await route.fulfill({ response }).catch(() => {});
+    } else await route.continue();
+  });
+  await page.locator("#focus-provider").selectOption("AWS");
+  await page.waitForTimeout(100);
+  await page.evaluate(() => {
+    const p = new URLSearchParams(location.hash.split("?")[1]);
+    p.set("focus-provider", "Microsoft");
+    location.hash = "#/home?" + p;
+  });
+  await loaded();
+  assert.equal(await page.locator("[data-focus-rows]").innerText(), "51");
+  await page.waitForTimeout(1700);
+  assert.equal(await page.locator("[data-focus-rows]").innerText(), "51");
+  await page.unroute("**/api/focus-overview?**");
+  await page.route("**/api/focus-overview?**", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "collected_unavailable" }),
+    }),
   );
+  await page.locator("#focus-provider").selectOption("Oracle");
+  await page.locator("[data-focus-state=error]").waitFor();
+  assert.equal(await page.locator(".focus-amounts").count(), 0);
+  assert.equal(await page.locator(".focus-table").count(), 0);
+  await page.unroute("**/api/focus-overview?**");
+  await page
+    .locator("[role=alert]")
+    .getByRole("button", { name: "Refresh query", exact: true })
+    .click();
+  await loaded();
+  assert.equal(await page.locator("[data-focus-rows]").innerText(), "7");
+  await page.goto(url + "#/home?lang=en&focus-account=" + "f".repeat(64));
+  await page.locator("[data-focus-state=error]").waitFor();
+  assert.equal(await page.locator(".focus-amounts").count(), 0);
+  passed = true;
 } finally {
+  await writeFile(
+    `${output}/report.json`,
+    JSON.stringify(
+      { verdict: passed ? "PASS" : "FAIL", variants: results, errors },
+      null,
+      2,
+    ),
+  );
   await browser.close();
 }
+assert.equal(results.length, 6);
+assert.deepEqual(errors, []);
+console.log(
+  "PASS: six locale/layout variants; retained-source readback; precise basis switch; provider/month/empty/account/search/pages/history; hostile proxy; stale continuation; late response; failure clearing/recovery; foreign scope. Owner review untouched.",
+);

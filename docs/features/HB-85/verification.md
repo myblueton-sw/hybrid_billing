@@ -5,6 +5,10 @@ description: Separates actual font, layout and interaction checks from independe
 status: draft
 ---
 
+# Historical scope
+
+This report describes the preceding generated-fixture revision only. The owner subsequently required collected FOCUS data; see [current collected-data verification](focus-verification.md). Its historical passes are not evidence for the current collected runtime or full U01 business fitness.
+
 # Candidate and rejection history
 
 The owner rejected the first PR77 candidate on 2026-11-03 for typography, global layout and usability. Earlier technical passes did not establish commercial design quality. This report covers the complete U01 viewport replacement, not just the old body. Final source revision is `008bd182b66a`. Owner acceptance remains pending.

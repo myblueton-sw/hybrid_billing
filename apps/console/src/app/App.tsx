@@ -114,14 +114,16 @@ export default function App() {
     screen?.id === "S02" &&
     audience === "admin" &&
     params.get("service") === "local";
+  const liveOverview = screen?.id === "U01" && audience === "admin";
   const liveService =
+    liveOverview ||
     liveImports ||
     liveReconciliation ||
     liveSourceData ||
     liveEvidence ||
     liveConnections ||
     liveOnboarding;
-  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
+  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveOverview || liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
   const tabs =
     screen?.id === "U02" ? screen.tabs.slice(0, 2) : (screen?.tabs ?? []);
   const requestedTab = params.get("view") ?? route.tab ?? route.step;
@@ -534,47 +536,53 @@ export default function App() {
       </a>
       <div className="planning-preview" hidden={!developer}>
         <span>
-          {liveOnboarding
+          {liveOverview
             ? local(l, [
-                "로컬 온보딩 근거 · 합성 입력 전용 · 개통 승인 미연결",
-                "Local onboarding evidence · synthetic input only · activation approval not connected",
-                "أدلة تهيئة محلية · مدخلات تجريبية فقط · اعتماد التشغيل غير متصل",
+                "수집 FOCUS 샘플 · 공개·합성 출처 · 조회 전용",
+                "Collected FOCUS samples · public/synthetic sources · read only",
+                "عينات FOCUS مجمعة · مصادر عامة وتجريبية · قراءة فقط",
               ])
-            : liveConnections
+            : liveOnboarding
               ? local(l, [
-                  "로컬 연결 현황 · 실제 설정·수신 메타데이터 · 합성 입력 전용",
-                  "Local connection status · actual configuration and reception metadata · synthetic input only",
-                  "حالة اتصال محلي · إعدادات وبيانات استقبال فعلية · مدخلات تجريبية فقط",
+                  "로컬 온보딩 근거 · 합성 입력 전용 · 개통 승인 미연결",
+                  "Local onboarding evidence · synthetic input only · activation approval not connected",
+                  "أدلة تهيئة محلية · مدخلات تجريبية فقط · اعتماد التشغيل غير متصل",
                 ])
-              : liveEvidence
+              : liveConnections
                 ? local(l, [
-                    "로컬 증빙 열람 · 원본 검증·텍스트 추출 · 합성 입력 전용",
-                    "Local evidence inspection · verified original text extract · synthetic input only",
-                    "فحص أدلة محلي · مقتطف نصي من أصل متحقق منه · مدخلات تجريبية فقط",
+                    "로컬 연결 현황 · 실제 설정·수신 메타데이터 · 합성 입력 전용",
+                    "Local connection status · actual configuration and reception metadata · synthetic input only",
+                    "حالة اتصال محلي · إعدادات وبيانات استقبال فعلية · مدخلات تجريبية فقط",
                   ])
-                : liveSourceData
+                : liveEvidence
                   ? local(l, [
-                      "로컬 명세 조회 · 실제 저장 데이터 · 합성 입력 전용",
-                      "Local source inspection · actual stored rows · synthetic input only",
-                      "فحص مصدر محلي · صفوف مخزنة فعلية · مدخلات تجريبية فقط",
+                      "로컬 증빙 열람 · 원본 검증·텍스트 추출 · 합성 입력 전용",
+                      "Local evidence inspection · verified original text extract · synthetic input only",
+                      "فحص أدلة محلي · مقتطف نصي من أصل متحقق منه · مدخلات تجريبية فقط",
                     ])
-                  : liveReconciliation
+                  : liveSourceData
                     ? local(l, [
-                        "로컬 대사 · 실제 저장 근거 조회 · 합성 데이터 전용",
-                        "Local reconciliation · actual stored evidence · synthetic data only",
-                        "مطابقة محلية · أدلة مخزنة فعلية · بيانات تجريبية فقط",
+                        "로컬 명세 조회 · 실제 저장 데이터 · 합성 입력 전용",
+                        "Local source inspection · actual stored rows · synthetic input only",
+                        "فحص مصدر محلي · صفوف مخزنة فعلية · مدخلات تجريبية فقط",
                       ])
-                    : liveImports
+                    : liveReconciliation
                       ? local(l, [
-                          "로컬 서비스 연동 · 실제 검증·저장 · 합성 입력 전용",
-                          "Local service integration · actual validation and persistence · synthetic input only",
-                          "تكامل خدمة محلية · تحقق وحفظ فعليان · مدخلات تجريبية فقط",
+                          "로컬 대사 · 실제 저장 근거 조회 · 합성 데이터 전용",
+                          "Local reconciliation · actual stored evidence · synthetic data only",
+                          "مطابقة محلية · أدلة مخزنة فعلية · بيانات تجريبية فقط",
                         ])
-                      : local(l, [
-                          "인터랙티브 시안 · 합성 데이터 · 실제 서비스 미연결",
-                          "Interactive preview · synthetic data · services not connected",
-                          "معاينة تفاعلية · بيانات تجريبية · الخدمات غير متصلة",
-                        ])}
+                      : liveImports
+                        ? local(l, [
+                            "로컬 서비스 연동 · 실제 검증·저장 · 합성 입력 전용",
+                            "Local service integration · actual validation and persistence · synthetic input only",
+                            "تكامل خدمة محلية · تحقق وحفظ فعليان · مدخلات تجريبية فقط",
+                          ])
+                        : local(l, [
+                            "인터랙티브 시안 · 합성 데이터 · 실제 서비스 미연결",
+                            "Interactive preview · synthetic data · services not connected",
+                            "معاينة تفاعلية · بيانات تجريبية · الخدمات غير متصلة",
+                          ])}
         </span>
         {audience === "admin" && (
           <button onClick={() => previewAudience("admin", "/design/screens")}>
@@ -615,23 +623,29 @@ export default function App() {
           <span className="service-environment">
             {local(
               l,
-              liveService
+              liveOverview
                 ? [
-                    "로컬 검증 환경 · 합성 데이터",
-                    "Local validation · synthetic data",
-                    "تحقق محلي · بيانات تجريبية",
+                    "수집 FOCUS 샘플 · 공개·합성 출처",
+                    "Collected FOCUS samples · public and synthetic sources",
+                    "عينات FOCUS مجمعة · مصادر عامة وتجريبية",
                   ]
-                : mode === "synthetic"
+                : liveService
                   ? [
-                      "데모 환경 · 합성 데이터",
-                      "Demo · synthetic data",
-                      "عرض تجريبي · بيانات اصطناعية",
+                      "로컬 검증 환경 · 합성 데이터",
+                      "Local validation · synthetic data",
+                      "تحقق محلي · بيانات تجريبية",
                     ]
-                  : [
-                      "데이터 미연결",
-                      "Data not connected",
-                      "البيانات غير متصلة",
-                    ],
+                  : mode === "synthetic"
+                    ? [
+                        "데모 환경 · 합성 데이터",
+                        "Demo · synthetic data",
+                        "عرض تجريبي · بيانات اصطناعية",
+                      ]
+                    : [
+                        "데이터 미연결",
+                        "Data not connected",
+                        "البيانات غير متصلة",
+                      ],
             )}
           </span>
         </span>
@@ -817,18 +831,26 @@ export default function App() {
                 locale={l}
                 context={JSON.stringify({
                   shellMode: developer ? "developer" : "service",
-                  profile: liveService
-                    ? "local-service-synthetic-v1"
-                    : "planning-preview",
+                  profile: liveOverview
+                    ? "collected-focus-samples-v1"
+                    : liveService
+                      ? "local-service-synthetic-v1"
+                      : "planning-preview",
                   mode,
                   extensions: [],
                   audience,
                   legacy: screen.reactBodies,
                   scope,
                   tab,
-                  period: params.get("period") ?? "2026-10",
-                  organization: params.get("le") ?? "DEMO-ORG-01",
-                  currency: params.get("ccy") ?? "USD",
+                  period: liveOverview
+                    ? (params.get("focus-period") ?? "all")
+                    : (params.get("period") ?? "2026-10"),
+                  organization: liveOverview
+                    ? "server-authorized-focus-accounts"
+                    : (params.get("le") ?? "DEMO-ORG-01"),
+                  currency: liveOverview
+                    ? "source-currencies"
+                    : (params.get("ccy") ?? "USD"),
                   objectId: route.objectId ?? null,
                   persona,
                   scenario,
@@ -912,7 +934,11 @@ export default function App() {
               >
                 <nav
                   className="planning-tabs"
-                  style={liveService ? { display: "none" } : undefined}
+                  style={
+                    liveService && !liveOverview
+                      ? { display: "none" }
+                      : undefined
+                  }
                   aria-label={local(l, [
                     "화면 보기",
                     "Screen views",
@@ -1010,10 +1036,9 @@ export default function App() {
                       onState={onState}
                       onDirty={setDirty}
                     />
-                  ) : screen.id === "U01" &&
-                    tab === "settlement" &&
-                    scenario === "normal" ? (
+                  ) : screen.id === "U01" ? (
                     <Overview
+                      view={tab}
                       locale={l}
                       mode={mode}
                       profile="standard"

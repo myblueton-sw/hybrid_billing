@@ -37,6 +37,12 @@ const revision = hash(
     )
     .join("\n"),
 );
+const proxy = {
+  "/api/focus-overview": {
+    target: "http://127.0.0.1:8806",
+    changeOrigin: true,
+  },
+};
 const licensePackages = [
   "react",
   "react-dom",
@@ -49,7 +55,8 @@ const licensePackages = [
 export default defineConfig({
   base: "./",
   define: { __SOURCE_REVISION__: JSON.stringify(revision) },
-  server: { host: "127.0.0.1", fs: { allow: [resolve(root, "../..")] } },
+  preview: { host: "127.0.0.1", proxy },
+  server: { proxy, host: "127.0.0.1", fs: { allow: [resolve(root, "../..")] } },
   build: {
     target: "es2022",
     outDir: "dist",

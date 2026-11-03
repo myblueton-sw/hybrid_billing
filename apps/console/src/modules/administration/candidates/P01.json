@@ -1,0 +1,55 @@
+{
+  "columns": [
+    "id",
+    "service",
+    "port",
+    "volume",
+    "state"
+  ],
+  "details": [
+    "environment",
+    "check",
+    "evidence",
+    "digest"
+  ],
+  "values": {
+    "service": "DEMO console",
+    "port": "unconfigured",
+    "volume": "unconfigured",
+    "state": "draft",
+    "environment": "OS-neutral deployment target",
+    "check": "Network / CA / time / capacity",
+    "evidence": "pending",
+    "digest": "pending"
+  },
+  "views": {
+    "plan": [
+      "service",
+      "port",
+      "volume",
+      "environment"
+    ],
+    "diagnostics": [
+      "check",
+      "state",
+      "evidence"
+    ],
+    "support": [
+      "manifest",
+      "excluded",
+      "hash"
+    ],
+    "access": [
+      "subject",
+      "scope",
+      "expiry",
+      "state"
+    ]
+  },
+  "draftFields": [
+    "environment",
+    "service",
+    "port",
+    "volume"
+  ]
+}

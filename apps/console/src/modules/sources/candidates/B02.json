@@ -1,0 +1,53 @@
+{
+  "columns": [
+    "id",
+    "asset",
+    "interval",
+    "quantity",
+    "unit",
+    "grade"
+  ],
+  "details": [
+    "reset",
+    "organization",
+    "completeness",
+    "revision"
+  ],
+  "values": {
+    "asset": "DEMO-VM-01",
+    "interval": "2026-10-01 / 2026-10-31",
+    "quantity": "744",
+    "unit": "vCPU-hour",
+    "grade": "Measured fixture",
+    "reset": "notapplicable",
+    "organization": "DEMO Research",
+    "completeness": "partial",
+    "revision": "r1"
+  },
+  "views": {
+    "assets": [
+      "id",
+      "asset",
+      "revision",
+      "effective"
+    ],
+    "intervals": [
+      "interval",
+      "quantity",
+      "unit",
+      "grade"
+    ],
+    "gaps": [
+      "reset",
+      "completeness",
+      "evidence"
+    ],
+    "meters": [
+      "asset",
+      "component",
+      "unit",
+      "denominator"
+    ]
+  },
+  "draftFields": []
+}

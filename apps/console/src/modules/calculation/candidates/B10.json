@@ -1,0 +1,54 @@
+{
+  "columns": [
+    "id",
+    "contract",
+    "coverage",
+    "applied",
+    "remaining",
+    "reversed"
+  ],
+  "details": [
+    "external",
+    "source",
+    "component",
+    "revision"
+  ],
+  "values": {
+    "contract": "DEMO-CONTRACT-01",
+    "coverage": "DEMO-COVERAGE-01",
+    "applied": "40 hours",
+    "remaining": "60 hours",
+    "reversed": "0 hours",
+    "external": "DEMO-SUBMISSION-01",
+    "source": "DEMO-SOURCE-01",
+    "component": "Compute",
+    "revision": "r1"
+  },
+  "views": {
+    "ledger": [
+      "id",
+      "contract",
+      "coverage",
+      "applied",
+      "remaining"
+    ],
+    "partial": [
+      "coverage",
+      "applied",
+      "remaining",
+      "unit"
+    ],
+    "reversals": [
+      "reversed",
+      "correction",
+      "reason"
+    ],
+    "references": [
+      "external",
+      "source",
+      "revision",
+      "state"
+    ]
+  },
+  "draftFields": []
+}

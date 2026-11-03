@@ -1,0 +1,56 @@
+{
+  "columns": [
+    "id",
+    "name",
+    "purpose",
+    "owner",
+    "expiry"
+  ],
+  "details": [
+    "secret",
+    "scope",
+    "lastUsed",
+    "revision"
+  ],
+  "values": {
+    "name": "DEMO Export reader",
+    "purpose": "Read approved exports",
+    "owner": "DEMO-USER-01",
+    "expiry": "unconfigured",
+    "secret": "secret-ref:DEMO-SVC-01",
+    "scope": "DEMO-EXPORTS",
+    "lastUsed": "unknown",
+    "revision": "r1"
+  },
+  "views": {
+    "accounts": [
+      "id",
+      "name",
+      "purpose",
+      "owner",
+      "expiry"
+    ],
+    "credentials": [
+      "secret",
+      "scope",
+      "expiry",
+      "revision"
+    ],
+    "usage": [
+      "lastUsed",
+      "action",
+      "result"
+    ],
+    "transfer": [
+      "owner",
+      "effective",
+      "reason"
+    ]
+  },
+  "draftFields": [
+    "name",
+    "purpose",
+    "owner",
+    "scope"
+  ]
+}

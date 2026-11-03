@@ -1,0 +1,61 @@
+[
+  {
+    "id": "R01",
+    "path": "/reports",
+    "menu": "rep",
+    "audience": "admin",
+    "module": "analytics",
+    "archetype": "dashboard",
+    "spec": "docs/ui/screens/R01/spec.md",
+    "exampleRoles": [
+      "BL",
+      "CP",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "summary",
+        "labelKo": "요약"
+      },
+      {
+        "key": "comparison",
+        "labelKo": "비교"
+      },
+      {
+        "key": "rows",
+        "labelKo": "상세 행"
+      },
+      {
+        "key": "views",
+        "labelKo": "저장한 보기"
+      },
+      {
+        "key": "exports",
+        "labelKo": "내보내기 상태"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "정형 리포트",
+    "scopeLabelKo": "분석 범위·시간 기준·기간/비교 기간·금액 의미·통화/환산·그룹 차원",
+    "purposeKo": "기간·서비스·공급자·조직·모델·금액 기준·통화·snapshot·비교기간, 저장 필터/드릴다운/권한 있는 export",
+    "commandReferences": [],
+    "actionEvidence": "조회; 상세 근거 보기; 보기 저장; 내보내기 요청 (export.raw/customer, job); 새 기준으로 갱신; 미수·연체 보고서."
+  }
+]

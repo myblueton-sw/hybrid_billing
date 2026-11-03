@@ -1,0 +1,73 @@
+{
+  "columns": [
+    "id",
+    "period",
+    "state",
+    "input",
+    "result"
+  ],
+  "details": [
+    "policy",
+    "digest",
+    "manifest",
+    "targets",
+    "succeeded",
+    "held",
+    "failed",
+    "remaining"
+  ],
+  "values": {
+    "period": "2026-10",
+    "state": "waiting",
+    "input": "DEMO-INPUT-r2",
+    "result": "pending",
+    "policy": "DEMO-POLICY-r1",
+    "digest": "pending",
+    "manifest": "DEMO-MANIFEST-01",
+    "targets": "100",
+    "succeeded": "0",
+    "held": "100",
+    "failed": "0",
+    "remaining": "0"
+  },
+  "views": {
+    "runs": [
+      "id",
+      "period",
+      "state",
+      "input",
+      "result"
+    ],
+    "inputs": [
+      "input",
+      "policy",
+      "manifest",
+      "revision"
+    ],
+    "trace": [
+      "result",
+      "digest",
+      "formula"
+    ],
+    "comparison": [
+      "expected",
+      "actual",
+      "difference",
+      "basis"
+    ],
+    "validation": [
+      "targets",
+      "succeeded",
+      "held",
+      "failed",
+      "remaining"
+    ],
+    "recognition": [
+      "recognition",
+      "posting",
+      "period",
+      "state"
+    ]
+  },
+  "draftFields": []
+}

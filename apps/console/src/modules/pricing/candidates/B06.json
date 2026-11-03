@@ -1,0 +1,50 @@
+{
+  "columns": [
+    "id",
+    "commitment",
+    "billed",
+    "effectiveCost",
+    "unused"
+  ],
+  "details": [
+    "benefit",
+    "evidence",
+    "period",
+    "scope"
+  ],
+  "values": {
+    "commitment": "DEMO-COMMIT-01",
+    "billed": "USD 1000.0000",
+    "effectiveCost": "USD 850.0000",
+    "unused": "USD 150.0000",
+    "benefit": "unconfigured",
+    "evidence": "DEMO-BENEFIT-01",
+    "period": "2026-10",
+    "scope": "DEMO Research"
+  },
+  "views": {
+    "commitments": [
+      "id",
+      "commitment",
+      "billed",
+      "effectiveCost"
+    ],
+    "utilization": [
+      "quantity",
+      "unit",
+      "unused"
+    ],
+    "benefits": [
+      "benefit",
+      "contract",
+      "policy"
+    ],
+    "reconciliation": [
+      "expected",
+      "actual",
+      "evidence",
+      "state"
+    ]
+  },
+  "draftFields": []
+}

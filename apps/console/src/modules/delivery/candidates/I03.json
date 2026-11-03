@@ -1,0 +1,60 @@
+{
+  "columns": [
+    "id",
+    "file",
+    "purpose",
+    "schema",
+    "rows",
+    "state"
+  ],
+  "details": [
+    "external",
+    "posting",
+    "hash",
+    "manifest"
+  ],
+  "values": {
+    "file": "DEMO-handoff.xlsx",
+    "purpose": "Review only",
+    "schema": "DEMO-standard-r1",
+    "rows": "120",
+    "state": "draft",
+    "external": "unknown",
+    "posting": "unknown",
+    "hash": "DEMO-HASH-01",
+    "manifest": "DEMO-FILE-01"
+  },
+  "views": {
+    "handoffs": [
+      "id",
+      "file",
+      "purpose",
+      "schema",
+      "rows",
+      "state"
+    ],
+    "files": [
+      "file",
+      "schema",
+      "hash",
+      "manifest"
+    ],
+    "outcomes": [
+      "external",
+      "posting",
+      "received"
+    ],
+    "reconciliation": [
+      "expected",
+      "actual",
+      "difference",
+      "evidence"
+    ],
+    "recognition": [
+      "recognition",
+      "posting",
+      "period"
+    ]
+  },
+  "draftFields": []
+}

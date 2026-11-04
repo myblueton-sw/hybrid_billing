@@ -114,7 +114,11 @@ export const navigationLabels: Record<string, Tr> = {
     "Consolidated cost and usage",
     "تفاصيل التكاليف والاستخدام الموحدة",
   ],
-  B01: ["원가 풀", "Cost pools", "مجموعات التكلفة"],
+  B01: [
+    "인프라 원가 구성",
+    "Infrastructure cost composition",
+    "مكوّنات تكلفة البنية التحتية",
+  ],
   B03: ["배분 정책", "Allocation policies", "سياسات التوزيع"],
   B04: ["판매 요금 정책", "Sales pricing policies", "سياسات تسعير المبيعات"],
   B05: [

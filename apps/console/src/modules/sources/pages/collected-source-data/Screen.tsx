@@ -207,7 +207,7 @@ export default function CollectedSource({
     >
       <div className="collected-toolbar">
         <label>
-          {t(l, "Charge period", "과금 기간", "فترة الرسوم")}
+          {t(l, "Charge-start month", "과금 시작 월", "شهر بدء الرسوم")}
           <select
             id="source-period"
             disabled={!data}
@@ -250,8 +250,12 @@ export default function CollectedSource({
             value={query.get("basis") ?? "billed_cost"}
             onChange={(e) => change({ basis: e.target.value })}
           >
-            <option value="billed_cost">BilledCost</option>
-            <option value="effective_cost">EffectiveCost</option>
+            <option value="billed_cost">
+              {t(l, "Billed cost", "청구 비용", "التكلفة المفوترة")}
+            </option>
+            <option value="effective_cost">
+              {t(l, "Effective cost", "실효 비용", "التكلفة الفعلية")}
+            </option>
           </select>
         </label>
         <button onClick={refresh} disabled={!data && !error}>
@@ -299,9 +303,9 @@ export default function CollectedSource({
           <p>
             {t(
               l,
-              "The source, permission or pinned selection could not be verified. Previous rows are cleared. Refresh starts a new snapshot.",
-              "원천·권한·고정된 조회 범위를 확인하지 못했습니다. 이전 행은 제거했습니다. 새로 조회하면 새 스냅샷으로 시작합니다.",
-              "تعذر التحقق من المصدر أو الصلاحية أو اللقطة. مُسحت الصفوف السابقة؛ التحديث يبدأ لقطة جديدة.",
+              "The source, permission or pinned selection could not be verified. Previous rows are cleared. Refresh starts a new selection reference ID.",
+              "원천·권한·고정된 조회 범위를 확인하지 못했습니다. 이전 행은 제거했습니다. 새로 조회하면 새 조회 기준 ID로 시작합니다.",
+              "تعذر التحقق من المصدر أو الصلاحية أو اللقطة. مُسحت الصفوف السابقة؛ التحديث يبدأ معرّف مرجع استعلام جديد.",
             )}
           </p>
           <p>
@@ -355,14 +359,34 @@ export default function CollectedSource({
                   "يُنسب الشهر لبدء الرسوم حسب منطقة المستأجر دون توزيع زمني. تبقى الوحدات أصلية دون جمع مختلط أو صيغة سعر مفترضة.",
                 )}
               </p>
+              <p>
+                {t(
+                  l,
+                  "Account scopes distinguish provider, billing account and subaccount within authorized tenant access; they are not legal entities or unique billing accounts. A selection reference identifies the chosen source context; a source data reference identifies the collected dataset. Neither signifies financial approval.",
+                  "계정 범위는 접근 권한 내 공급사·결제 계정·하위 계정을 구분하며 법인 수나 고유 결제 계정 수가 아닙니다. 조회 기준 ID는 선택한 조회 범위, 수집 데이터 기준 ID는 수집 데이터 집합을 식별하며 재무 승인을 뜻하지 않습니다.",
+                  "تميّز نطاقات الحسابات المزود وحساب الفوترة والحساب الفرعي ضمن وصول المستأجر المصرّح به؛ وليست كيانات قانونية أو حسابات فوترة فريدة. يحدّد مرجع الاستعلام نطاق البيانات المختار ومرجع بيانات المصدر مجموعة البيانات المجمعة؛ ولا يدل أيّ منهما على اعتماد مالي.",
+                )}
+              </p>
               <dl>
                 <dt>
-                  {t(l, "Selection snapshot", "조회 스냅샷", "لقطة الاستعلام")}
+                  {t(
+                    l,
+                    "Selection reference ID",
+                    "조회 기준 ID",
+                    "معرّف مرجع الاستعلام",
+                  )}
                 </dt>
                 <dd>
                   <bdi>{data.snapshot}</bdi>
                 </dd>
-                <dt>{t(l, "Source snapshot", "원천 스냅샷", "لقطة المصدر")}</dt>
+                <dt>
+                  {t(
+                    l,
+                    "Source data reference ID",
+                    "수집 데이터 기준 ID",
+                    "معرّف مرجع بيانات المصدر",
+                  )}
+                </dt>
                 <dd>
                   <bdi>{data.source_snapshot}</bdi>
                 </dd>
@@ -379,7 +403,7 @@ export default function CollectedSource({
               <span>
                 <bdi data-source-total>{data.row_count}</bdi>{" "}
                 {t(l, "rows", "행", "صفوف")} · {data.account_count}{" "}
-                {t(l, "account combinations", "계정 조합", "مجموعات حسابات")}
+                {t(l, "account scopes", "계정 범위 수", "نطاقات حسابات")}
               </span>
             </header>
             <div className="collected-totals">
@@ -387,8 +411,8 @@ export default function CollectedSource({
                 <div key={a.currency}>
                   <span>
                     {data.selection.basis === "billed_cost"
-                      ? "BilledCost"
-                      : "EffectiveCost"}
+                      ? t(l, "Billed cost", "청구 비용", "التكلفة المفوترة")
+                      : t(l, "Effective cost", "실효 비용", "التكلفة الفعلية")}
                   </span>
                   <strong>
                     {value(a[data.selection.basis].coefficient, a.currency)}
@@ -614,7 +638,12 @@ export default function CollectedSource({
                         )}
                       </th>
                       <th scope="col">
-                        {t(l, "Charge month", "과금 시작 월", "شهر بدء الرسوم")}
+                        {t(
+                          l,
+                          "Charge-start month",
+                          "과금 시작 월",
+                          "شهر بدء الرسوم",
+                        )}
                       </th>
                       {view === "usage" ? (
                         <>
@@ -622,7 +651,7 @@ export default function CollectedSource({
                             {t(
                               l,
                               "Consumed quantity / unit",
-                              "소비 수량 / 단위",
+                              "사용 수량 / 단위",
                               "كمية الاستهلاك / الوحدة",
                             )}
                           </th>
@@ -630,7 +659,7 @@ export default function CollectedSource({
                             {t(
                               l,
                               "Pricing quantity / unit",
-                              "가격 수량 / 단위",
+                              "요금 산정 수량 / 단위",
                               "كمية التسعير / الوحدة",
                             )}
                           </th>
@@ -638,7 +667,7 @@ export default function CollectedSource({
                             {t(
                               l,
                               "List unit price / pricing unit",
-                              "정가 단가 / 가격 단위",
+                              "정가 단가 / 요금 산정 단위",
                               "سعر القائمة / وحدة التسعير",
                             )}
                           </th>
@@ -646,7 +675,7 @@ export default function CollectedSource({
                             {t(
                               l,
                               "Contracted unit price / pricing unit",
-                              "계약 단가 / 가격 단위",
+                              "계약 단가 / 요금 산정 단위",
                               "سعر العقد / وحدة التسعير",
                             )}
                           </th>
@@ -680,13 +709,27 @@ export default function CollectedSource({
                         </>
                       ) : (
                         <>
-                          <th scope="col">BilledCost</th>
-                          <th scope="col">EffectiveCost</th>
+                          <th scope="col">
+                            {t(
+                              l,
+                              "Billed cost",
+                              "청구 비용",
+                              "التكلفة المفوترة",
+                            )}
+                          </th>
+                          <th scope="col">
+                            {t(
+                              l,
+                              "Effective cost",
+                              "실효 비용",
+                              "التكلفة الفعلية",
+                            )}
+                          </th>
                           <th scope="col">
                             {t(
                               l,
                               "Consumed quantity / unit",
-                              "소비 수량 / 단위",
+                              "사용 수량 / 단위",
                               "كمية الاستهلاك / الوحدة",
                             )}
                           </th>
@@ -891,7 +934,7 @@ export default function CollectedSource({
                         {t(
                           l,
                           "Consumed quantity",
-                          "소비 수량",
+                          "사용 수량",
                           "كمية الاستهلاك",
                         )}
                       </dt>
@@ -899,7 +942,12 @@ export default function CollectedSource({
                         {quantity(row.consumed_quantity, row.consumed_unit)}
                       </dd>
                       <dt>
-                        {t(l, "Pricing quantity", "가격 수량", "كمية التسعير")}
+                        {t(
+                          l,
+                          "Pricing quantity",
+                          "요금 산정 수량",
+                          "كمية التسعير",
+                        )}
                       </dt>
                       <dd>
                         {quantity(row.pricing_quantity, row.pricing_unit)}

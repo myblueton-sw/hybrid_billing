@@ -28,6 +28,7 @@ import ReviewPanel from "../shared/ReviewPanel";
 import HeaderSelect from "./HeaderSelect";
 import EntryShell from "./EntryShell";
 import { identity } from "../modules/identity/module";
+import InfrastructureCost from "../modules/pricing/pages/infrastructure-cost/Screen";
 import CollectedSource from "../modules/sources/pages/collected-source-data/Screen";
 import Overview from "../modules/operations/pages/overview/Screen";
 import Closing from "../modules/operations/pages/core-index-close/Screen";
@@ -119,8 +120,10 @@ export default function App() {
     screen?.id === "S04" &&
     audience === "admin" &&
     params.get("service") !== "local";
+  const liveCost = screen?.id === "B01" && audience === "admin";
   const liveOverview = screen?.id === "U01" && audience === "admin";
   const liveService =
+    liveCost ||
     liveCollectedSource ||
     liveOverview ||
     liveImports ||
@@ -129,7 +132,7 @@ export default function App() {
     liveEvidence ||
     liveConnections ||
     liveOnboarding;
-  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveOverview || liveCollectedSource || liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
+  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveOverview || liveCollectedSource || liveCost || liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
   const tabs =
     screen?.id === "U02" ? screen.tabs.slice(0, 2) : (screen?.tabs ?? []);
   const requestedTab = params.get("view") ?? route.tab ?? route.step;
@@ -152,9 +155,9 @@ export default function App() {
       !dirty ||
       window.confirm(
         local(l, [
-          "저장하지 않은 예제 입력을 버릴까요?",
-          "Discard unsaved example input?",
-          "هل تريد تجاهل المدخلات التجريبية غير المحفوظة؟",
+          "저장하지 않은 입력을 버릴까요?",
+          "Discard unsaved input?",
+          "هل تريد تجاهل المدخلات غير المحفوظة؟",
         ]),
       );
     if (allowed) setNavigationGuard(null);
@@ -195,7 +198,7 @@ export default function App() {
     document.title = `${screen ? local(l, titles[screen.id]) : "Hybrid Billing"} · Hybrid Billing`;
   }, [l, screen?.id]);
   useEffect(() => {
-    setDirty(false);
+    if (!liveCost) setDirty(false);
     document.getElementById("main")?.focus({ preventScroll: true });
   }, [screenKey]);
   useEffect(() => {
@@ -227,14 +230,14 @@ export default function App() {
         !dirty ||
         window.confirm(
           local(l, [
-            "저장하지 않은 예제 입력을 버릴까요?",
-            "Discard unsaved example input?",
-            "هل تريد تجاهل المدخلات التجريبية غير المحفوظة؟",
+            "저장하지 않은 입력을 버릴까요?",
+            "Discard unsaved input?",
+            "هل تريد تجاهل المدخلات غير المحفوظة؟",
           ]),
         ),
     );
     return () => setNavigationGuard(null);
-  }, [dirty, l]);
+  }, [dirty, l, screenKey]);
   const allowed = planningScreens.filter((s) => visibleTo(s, context));
   const filtered = allowed.filter((s) =>
     `${local(l, titles[s.id])} ${s.id}`
@@ -528,7 +531,7 @@ export default function App() {
   }
   return (
     <div
-      className={`planning-app service-shell ${screen?.id === "U01" || liveCollectedSource ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
+      className={`planning-app service-shell ${screen?.id === "U01" || liveCollectedSource || liveCost ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
     >
       <a
         className="skip"
@@ -542,7 +545,7 @@ export default function App() {
       </a>
       <div className="planning-preview" hidden={!developer}>
         <span>
-          {liveOverview || liveCollectedSource
+          {liveOverview || liveCollectedSource || liveCost
             ? local(l, [
                 "수집 FOCUS 샘플 · 공개·합성 출처 · 조회 전용",
                 "Collected FOCUS samples · public/synthetic sources · read only",
@@ -629,7 +632,7 @@ export default function App() {
           <span className="service-environment">
             {local(
               l,
-              liveOverview || liveCollectedSource
+              liveOverview || liveCollectedSource || liveCost
                 ? [
                     "수집 FOCUS 샘플 · 공개·합성 출처",
                     "Collected FOCUS samples · public and synthetic sources",
@@ -843,7 +846,7 @@ export default function App() {
                 context={JSON.stringify({
                   shellMode: developer ? "developer" : "service",
                   profile:
-                    liveOverview || liveCollectedSource
+                    liveOverview || liveCollectedSource || liveCost
                       ? "collected-focus-samples-v1"
                       : liveService
                         ? "local-service-synthetic-v1"
@@ -855,15 +858,15 @@ export default function App() {
                   scope,
                   tab,
                   period:
-                    liveOverview || liveCollectedSource
+                    liveOverview || liveCollectedSource || liveCost
                       ? (params.get("focus-period") ?? "all")
                       : (params.get("period") ?? "2026-10"),
                   organization:
-                    liveOverview || liveCollectedSource
+                    liveOverview || liveCollectedSource || liveCost
                       ? "server-authorized-focus-accounts"
                       : (params.get("le") ?? "DEMO-ORG-01"),
                   currency:
-                    liveOverview || liveCollectedSource
+                    liveOverview || liveCollectedSource || liveCost
                       ? "source-currencies"
                       : (params.get("ccy") ?? "USD"),
                   objectId: route.objectId ?? null,
@@ -950,7 +953,8 @@ export default function App() {
                 <nav
                   className="planning-tabs"
                   style={
-                    liveService && !(liveOverview || liveCollectedSource)
+                    liveService &&
+                    !(liveOverview || liveCollectedSource || liveCost)
                       ? { display: "none" }
                       : undefined
                   }
@@ -965,8 +969,10 @@ export default function App() {
                       key={t.key}
                       aria-current={tab === t.key ? "page" : undefined}
                       onClick={() => {
-                        if (canLeave()) {
-                          setDirty(false);
+                        if (liveCost && tab === t.key) return;
+                        if (liveCost || canLeave()) {
+                          if (liveCost) setNavigationGuard(null);
+                          if (!liveCost) setDirty(false);
                           location.hash = planningUrl(screen.path, params, {
                             view: t.key,
                             ...(screen.id === "U02"
@@ -977,7 +983,35 @@ export default function App() {
                       }}
                     >
                       {screen.archetype.includes("wizard") ? `${i + 1}. ` : ""}
-                      {tabLabel(l, t.key, t.labelKo)}
+                      {liveCost
+                        ? local(
+                            l,
+                            (
+                              {
+                                summary: [
+                                  "구성 요약",
+                                  "Composition summary",
+                                  "ملخص المكوّنات",
+                                ],
+                                costs: [
+                                  "원가 항목",
+                                  "Cost items",
+                                  "بنود التكلفة",
+                                ],
+                                products: [
+                                  "상품별 포함 항목",
+                                  "Included items by product",
+                                  "البنود المشمولة لكل منتج",
+                                ],
+                                approvals: [
+                                  "승인 이력",
+                                  "Approval history",
+                                  "سجل الاعتماد",
+                                ],
+                              } as Record<string, [string, string, string]>
+                            )[t.key],
+                          )
+                        : tabLabel(l, t.key, t.labelKo)}
                     </button>
                   ))}
                 </nav>
@@ -1012,9 +1046,22 @@ export default function App() {
                   )}
                 <div
                   id="content"
-                  key={screenKey + ":" + tab + (liveService ? ":" + l : "")}
+                  key={
+                    liveCost
+                      ? "B01:" + l
+                      : screenKey + ":" + tab + (liveService ? ":" + l : "")
+                  }
                 >
-                  {liveCollectedSource ? (
+                  {liveCost ? (
+                    <InfrastructureCost
+                      locale={l}
+                      params={params}
+                      view={tab}
+                      onState={onState}
+                      onDirty={setDirty}
+                      canDiscard={canLeave}
+                    />
+                  ) : liveCollectedSource ? (
                     <CollectedSource
                       locale={l}
                       view={tab}

@@ -1,0 +1,398 @@
+.infrastructure-cost {
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.infrastructure-cost :is(section, div, aside) {
+  min-inline-size: 0;
+}
+.infrastructure-cost h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+.infrastructure-cost p {
+  margin-block: 8px;
+}
+.infrastructure-cost :is(small, .infra-meta) {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--hb-muted);
+}
+.infrastructure-cost small {
+  display: block;
+}
+.infrastructure-cost :is(bdi, dd, p) {
+  overflow-wrap: anywhere;
+}
+.infrastructure-cost :is(button, input, select) {
+  min-block-size: 40px;
+  font-size: 16px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.infrastructure-cost button {
+  border: 1px solid var(--hb-line-control);
+  padding-inline: 16px;
+}
+.infrastructure-cost button:disabled {
+  color: var(--hb-muted);
+  background: var(--hb-white);
+}
+.infrastructure-cost .infra-primary {
+  background: var(--hb-ink);
+  color: var(--hb-white);
+  border-color: var(--hb-ink);
+}
+.infrastructure-cost :is(input:not([type="checkbox"]), select) {
+  border: 1px solid var(--hb-line-control);
+  background: var(--hb-white);
+  color: var(--hb-ink);
+  padding: 8px 12px;
+  max-inline-size: 100%;
+}
+.infrastructure-cost input[type="checkbox"] {
+  inline-size: 24px;
+  block-size: 24px;
+  min-block-size: 24px;
+  margin: 4px;
+}
+.infrastructure-cost :focus-visible {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+.infra-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px 20px;
+}
+.infra-toolbar label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+.infra-toolbar select {
+  min-inline-size: 180px;
+}
+.infra-toolbar a {
+  align-content: center;
+  min-block-size: 40px;
+}
+.infra-source-notice,
+.infra-feedback {
+  border: 1px solid var(--hb-line-control);
+  padding: 20px;
+}
+.infra-source-notice h2 {
+  font-size: 16px;
+  line-height: 24px;
+}
+.infra-source-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 40px;
+  margin-block: 16px;
+}
+.infra-source-facts dt {
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.infra-source-facts dd {
+  margin: 4px 0 0;
+}
+.infra-feedback ul {
+  padding-inline-start: 24px;
+  margin-block-end: 0;
+}
+.infra-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 32px;
+  padding-block-end: 24px;
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.infra-draft {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.infra-draft > label {
+  font-size: 14px;
+  margin-block-start: 8px;
+}
+.infra-draft input {
+  inline-size: 100%;
+}
+.infra-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block-start: 8px;
+}
+.infra-currency-grid {
+  display: grid;
+  gap: 16px;
+}
+.infra-currency {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 1fr);
+  margin: 16px 0 8px;
+}
+.infra-currency dt,
+.infra-currency dd {
+  padding-block: 10px;
+  border-block-end: 1px solid var(--hb-line-row);
+  margin: 0;
+}
+.infra-currency dt {
+  padding-inline-end: 16px;
+}
+.infra-currency dd {
+  text-align: end;
+}
+.infra-net {
+  font-weight: 600;
+}
+.infra-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 24px;
+  align-items: center;
+}
+.infra-items > p {
+  margin-block: 8px 16px;
+}
+.infra-table {
+  overflow: auto;
+  max-block-size: 720px;
+}
+.infra-table table {
+  inline-size: 100%;
+  min-inline-size: 920px;
+  border-collapse: collapse;
+}
+.infra-table :is(th, td) {
+  padding: 12px;
+  text-align: start;
+  vertical-align: top;
+  border-block-end: 1px solid var(--hb-line-row);
+  font-size: 16px;
+  overflow-wrap: anywhere;
+  min-inline-size: 130px;
+  max-inline-size: 270px;
+}
+.infra-table thead th {
+  background: var(--hb-hover);
+  font-size: 14px;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  font-weight: 600;
+}
+.infra-table :is(th, td):first-child {
+  min-inline-size: 58px;
+}
+.infra-table tbody tr[data-selected="true"],
+.infra-table tbody tr:hover {
+  background: var(--hb-hover);
+}
+.infra-table strong {
+  font-weight: 600;
+}
+.infra-table select,
+.infra-table input:not([type="checkbox"]) {
+  inline-size: 200px;
+}
+.infra-table summary {
+  min-block-size: 40px;
+  align-content: center;
+  color: var(--c-link);
+  cursor: pointer;
+}
+.infra-table details dl {
+  inline-size: 230px;
+  margin-block: 8px;
+}
+.infra-table details :is(dt, dd) {
+  margin: 0 0 8px;
+}
+.infra-table details dt {
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.infra-table .infra-money {
+  text-align: end;
+}
+.infra-pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: end;
+  gap: 12px;
+}
+.infra-pages span {
+  font-size: 14px;
+}
+.infra-evidence,
+.infra-unconnected {
+  border-block-start: 1px solid var(--hb-line-row);
+  padding-block-start: 24px;
+}
+.infra-relations {
+  display: grid;
+  gap: 16px;
+  margin-block: 16px;
+}
+.infra-relations dl {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 8px 24px;
+  padding-block: 16px;
+  border-block: 1px solid var(--hb-line-row);
+  margin: 0;
+}
+.infra-relations dt {
+  color: var(--hb-muted);
+  font-size: 14px;
+}
+.infra-relations dd {
+  margin: 0;
+}
+[dir="rtl"] .infrastructure-cost {
+  line-height: 1.8;
+}
+@media (max-width: 1199px) {
+  .infra-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .infra-draft {
+    border-block-start: 1px solid var(--hb-line-row);
+    padding-block-start: 24px;
+  }
+}
+@media (max-width: 767px) {
+  .infrastructure-cost {
+    gap: 20px;
+  }
+  .infra-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .infra-toolbar select {
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+  .infrastructure-cost :is(button, input:not([type="checkbox"]), select) {
+    min-block-size: 44px;
+  }
+  .infra-source-notice,
+  .infra-feedback {
+    padding: 16px;
+  }
+  .infra-source-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .infra-currency {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .infra-currency dt {
+    border-block-end: 0;
+    padding-block-end: 0;
+  }
+  .infra-currency dd {
+    padding-block-start: 4px;
+  }
+  .infra-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .infra-pages {
+    justify-content: start;
+  }
+  .infra-table {
+    max-block-size: none;
+    overflow: visible;
+  }
+  .infra-table table {
+    min-inline-size: 0;
+    display: block;
+  }
+  .infra-table thead {
+    display: none;
+  }
+  .infra-table tbody {
+    display: block;
+  }
+  .infra-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: 16px;
+    border-block-end: 1px solid var(--hb-line-control);
+  }
+  .infra-table tbody td {
+    block-size: auto;
+    min-block-size: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    border: 0;
+    padding: 8px 0;
+    max-inline-size: none;
+    min-inline-size: 0;
+    gap: 4px;
+    text-align: start;
+  }
+  .infra-table tbody td > bdi {
+    justify-self: start;
+  }
+  .infra-table tbody td.infra-money > bdi {
+    justify-self: end;
+  }
+  .infra-table tbody td::before {
+    content: attr(data-label);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--hb-muted);
+  }
+  .infra-table input:not([type="checkbox"]),
+  .infra-table select {
+    inline-size: 100%;
+  }
+  .infra-table details dl {
+    inline-size: 100%;
+  }
+  .infra-relations dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .infra-relations dd {
+    margin-block-end: 12px;
+  }
+}
+
+.infrastructure-cost > button {
+  justify-self: start;
+}
+@media (max-width: 767px) {
+  .infrastructure-cost > button {
+    justify-self: stretch;
+  }
+}
+
+.infra-target-id {
+  inline-size: 200px;
+  max-inline-size: 100%;
+  margin-block-start: 8px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.infra-target-id bdi {
+  display: block;
+}

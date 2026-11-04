@@ -223,7 +223,7 @@ export default function Overview({
     >
       <div className="unified-filters">
         <label>
-          {t(l, "Charge period", "과금 기간", "فترة الرسوم")}
+          {t(l, "Charge-start month", "과금 시작 월", "شهر بدء الرسوم")}
           <select
             id="focus-period"
             disabled={!data}
@@ -270,7 +270,9 @@ export default function Overview({
                 checked={basis === b}
                 onChange={() => change({ basis: b })}
               />
-              {b === "billed_cost" ? "BilledCost" : "EffectiveCost"}
+              {b === "billed_cost"
+                ? t(l, "Billed cost", "청구 비용", "التكلفة المفوترة")
+                : t(l, "Effective cost", "실효 비용", "التكلفة الفعلية")}
             </label>
           ))}
         </fieldset>
@@ -410,8 +412,21 @@ export default function Overview({
                 <bdi>{data.observed_at}</bdi>
               </p>
               <p>
-                {t(l, "Selection snapshot", "조회 스냅샷", "لقطة الاستعلام")}:{" "}
-                <bdi>{data.snapshot}</bdi>
+                {t(
+                  l,
+                  "Account scopes distinguish provider, billing account and subaccount within authorized tenant access; they are not legal entities or unique billing accounts. A selection reference identifies the chosen source context; a source data reference identifies the collected dataset. Neither signifies financial approval.",
+                  "계정 범위는 접근 권한 내 공급사·결제 계정·하위 계정을 구분하며 법인 수나 고유 결제 계정 수가 아닙니다. 조회 기준 ID는 선택한 조회 범위, 수집 데이터 기준 ID는 수집 데이터 집합을 식별하며 재무 승인을 뜻하지 않습니다.",
+                  "تميّز نطاقات الحسابات المزود وحساب الفوترة والحساب الفرعي ضمن وصول المستأجر المصرّح به؛ وليست كيانات قانونية أو حسابات فوترة فريدة. يحدّد مرجع الاستعلام نطاق البيانات المختار ومرجع بيانات المصدر مجموعة البيانات المجمعة؛ ولا يدل أيّ منهما على اعتماد مالي.",
+                )}
+              </p>
+              <p>
+                {t(
+                  l,
+                  "Selection reference ID",
+                  "조회 기준 ID",
+                  "معرّف مرجع الاستعلام",
+                )}
+                : <bdi>{data.snapshot}</bdi>
               </p>
             </details>
           </div>
@@ -473,13 +488,8 @@ export default function Overview({
                   </p>
                   <small>
                     {data.account_count}{" "}
-                    {t(
-                      l,
-                      "account combinations",
-                      "계정 조합",
-                      "مجموعات حسابات",
-                    )}{" "}
-                    · {data.providers.length}{" "}
+                    {t(l, "account scopes", "계정 범위 수", "نطاقات حسابات")} ·{" "}
+                    {data.providers.length}{" "}
                     {t(l, "providers", "공급사", "مزودين")}
                   </small>
                 </div>
@@ -650,7 +660,14 @@ export default function Overview({
                         <th>{t(l, "Provider", "공급사", "المزود")}</th>
                         <th>BillingAccountId</th>
                         <th>SubAccountId</th>
-                        <th>BilledCost / EffectiveCost</th>
+                        <th>
+                          {t(
+                            l,
+                            "Billed / effective cost",
+                            "청구 비용 / 실효 비용",
+                            "التكلفة المفوترة / الفعلية",
+                          )}
+                        </th>
                         <th>{t(l, "Rows", "행", "صفوف")}</th>
                       </tr>
                     </thead>
@@ -763,8 +780,17 @@ export default function Overview({
                           )}
                         </th>
                         <th>BillingAccountId / SubAccountId</th>
-                        <th>BilledCost</th>
-                        <th>EffectiveCost</th>
+                        <th>
+                          {t(l, "Billed cost", "청구 비용", "التكلفة المفوترة")}
+                        </th>
+                        <th>
+                          {t(
+                            l,
+                            "Effective cost",
+                            "실효 비용",
+                            "التكلفة الفعلية",
+                          )}
+                        </th>
                         <th>{t(l, "Source", "출처", "المصدر")}</th>
                       </tr>
                     </thead>

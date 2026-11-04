@@ -18,6 +18,8 @@ This applies to planning, reviews, documents, configuration, code, tests and inf
 
 For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md` and `code-structure.md`. For documentation, read `knowledge-format.md`; Markdown knowledge documents under `docs/` follow OKF v0.2. Read `tenant-security.md` for data, permission or billing work and `usability.md` for screens.
 
+For new or revised service screens and user-facing copy, also follow `.agents/rules/product-terminology.md` and the product glossary. The owner requires continuous technical-writing terminology review.
+
 ## Language and response policy
 
 - Git-bound document deliverables are English.

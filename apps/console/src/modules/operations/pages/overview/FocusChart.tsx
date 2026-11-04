@@ -1,6 +1,6 @@
 import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
-import type { OverviewData } from "./focus-api";
+import type { OverviewData } from "../../../sources/collected-focus/api";
 import { chartSeries, decimal, money, signedScale } from "./focus-values";
 export default function FocusChart({
   data,

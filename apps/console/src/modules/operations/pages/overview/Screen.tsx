@@ -7,8 +7,9 @@ import {
   ServiceError,
   type Basis,
   type OverviewData,
-} from "./focus-api";
+} from "../../../sources/collected-focus/api";
 import { decimal } from "./focus-values";
+import { focusHref } from "../../../sources/collected-focus/query";
 import FocusChart from "./FocusChart";
 import "./overview.css";
 import "./focus.css";
@@ -713,6 +714,14 @@ export default function Overview({
                 )}
               </section>
               <section className="unified-panel focus-source">
+                <a href={focusHref("/source-data", params, data.snapshot)}>
+                  {t(
+                    l,
+                    "Open consolidated cost and usage",
+                    "통합 비용·사용량 명세 열기",
+                    "فتح تفاصيل التكلفة والاستخدام الموحدة",
+                  )}
+                </a>
                 <header>
                   <h2 ref={detailHeading} tabIndex={-1}>
                     {t(

@@ -1,6 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { validOverview, type OverviewData } from "./focus-api";
+import {
+  validOverview,
+  type OverviewData,
+} from "../../../sources/collected-focus/api";
 function sample(): OverviewData {
   const measure = {
     coefficient: "1000000000000000001",
@@ -66,6 +69,16 @@ function sample(): OverviewData {
     rows: [
       {
         id: "d".repeat(64),
+        consumed_unit: "Hours",
+        pricing_unit: "Requests",
+        consumed_quantity: "1",
+        pricing_quantity: null,
+        list_cost: "0",
+        contracted_cost: null,
+        list_unit_price: "-1",
+        contracted_unit_price: null,
+        billing_start: "2024-03-01T00:00:00Z",
+        billing_end: "2024-04-01T00:00:00Z",
         account: "c".repeat(64),
         provider: "Example",
         billing_account: "sample-account",
@@ -116,6 +129,17 @@ test("rejects incorrect meanings, provider arithmetic, null precision and forged
       d.rows = Array(26).fill(d.rows[0]);
     },
   ];
+  mutations.push(
+    (d) => {
+      d.rows[0].consumed_quantity = "1.5";
+    },
+    (d) => {
+      d.rows[0].list_unit_price = 1 as unknown as string;
+    },
+    (d) => {
+      delete (d.rows[0] as Partial<(typeof d.rows)[0]>).billing_start;
+    },
+  );
   for (const mutate of mutations) {
     const d = sample();
     mutate(d);

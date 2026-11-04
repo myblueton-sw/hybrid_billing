@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import FocusChart from "./FocusChart";
-import type { OverviewData } from "./focus-api";
+import type { OverviewData } from "../../../sources/collected-focus/api";
 import React from "react";
 test("rendered chart distinguishes partial zero, partial known, all-missing, absent and minimum coefficients", () => {
   const monthly = [

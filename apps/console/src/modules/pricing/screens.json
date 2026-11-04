@@ -111,23 +111,23 @@
     "tabs": [
       {
         "key": "rates",
-        "labelKo": "요율"
+        "labelKo": "요금 규칙"
       },
       {
         "key": "formula",
-        "labelKo": "산식 단계"
+        "labelKo": "계산 단계"
       },
       {
         "key": "inheritance",
-        "labelKo": "상속·예외"
+        "labelKo": "정책 상속"
       },
       {
         "key": "adjustments",
-        "labelKo": "수동 조정"
+        "labelKo": "조정 검토"
       },
       {
         "key": "impact",
-        "labelKo": "영향 비교"
+        "labelKo": "금액 비교"
       }
     ],
     "scopeKeys": [
@@ -139,7 +139,7 @@
       "ccy",
       "asof"
     ],
-    "titleKo": "요율·산식·영향",
+    "titleKo": "판매 요금 정책",
     "scopeLabelKo": "계약·서비스/SKU·유효기간·정책 상태",
     "purposeKo": "계약/서비스/SKU·기준액·단위·고정/구간·포함량·최소·최대·할인·가산/마진·순서·상속·유효일, 검사/모의/승인",
     "commandReferences": [],

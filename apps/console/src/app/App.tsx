@@ -28,6 +28,7 @@ import ReviewPanel from "../shared/ReviewPanel";
 import HeaderSelect from "./HeaderSelect";
 import EntryShell from "./EntryShell";
 import { identity } from "../modules/identity/module";
+import AllocationPolicies from "../modules/pricing/pages/allocation-policies/Screen";
 import InfrastructureCost from "../modules/pricing/pages/infrastructure-cost/Screen";
 import CollectedSource from "../modules/sources/pages/collected-source-data/Screen";
 import Overview from "../modules/operations/pages/overview/Screen";
@@ -120,10 +121,12 @@ export default function App() {
     screen?.id === "S04" &&
     audience === "admin" &&
     params.get("service") !== "local";
-  const liveCost = screen?.id === "B01" && audience === "admin";
+  const liveAllocation = screen?.id === "B03" && audience === "admin";
+  const livePricing =
+    (screen?.id === "B01" || liveAllocation) && audience === "admin";
   const liveOverview = screen?.id === "U01" && audience === "admin";
   const liveService =
-    liveCost ||
+    livePricing ||
     liveCollectedSource ||
     liveOverview ||
     liveImports ||
@@ -132,7 +135,7 @@ export default function App() {
     liveEvidence ||
     liveConnections ||
     liveOnboarding;
-  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveOverview || liveCollectedSource || liveCost || liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
+  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveOverview || liveCollectedSource || livePricing || liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
   const tabs =
     screen?.id === "U02" ? screen.tabs.slice(0, 2) : (screen?.tabs ?? []);
   const requestedTab = params.get("view") ?? route.tab ?? route.step;
@@ -198,7 +201,7 @@ export default function App() {
     document.title = `${screen ? local(l, titles[screen.id]) : "Hybrid Billing"} · Hybrid Billing`;
   }, [l, screen?.id]);
   useEffect(() => {
-    if (!liveCost) setDirty(false);
+    if (!livePricing) setDirty(false);
     document.getElementById("main")?.focus({ preventScroll: true });
   }, [screenKey]);
   useEffect(() => {
@@ -531,7 +534,7 @@ export default function App() {
   }
   return (
     <div
-      className={`planning-app service-shell ${screen?.id === "U01" || liveCollectedSource || liveCost ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
+      className={`planning-app service-shell ${screen?.id === "U01" || liveCollectedSource || livePricing ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
     >
       <a
         className="skip"
@@ -545,7 +548,7 @@ export default function App() {
       </a>
       <div className="planning-preview" hidden={!developer}>
         <span>
-          {liveOverview || liveCollectedSource || liveCost
+          {liveOverview || liveCollectedSource || livePricing
             ? local(l, [
                 "수집 FOCUS 샘플 · 공개·합성 출처 · 조회 전용",
                 "Collected FOCUS samples · public/synthetic sources · read only",
@@ -632,7 +635,7 @@ export default function App() {
           <span className="service-environment">
             {local(
               l,
-              liveOverview || liveCollectedSource || liveCost
+              liveOverview || liveCollectedSource || livePricing
                 ? [
                     "수집 FOCUS 샘플 · 공개·합성 출처",
                     "Collected FOCUS samples · public and synthetic sources",
@@ -846,7 +849,7 @@ export default function App() {
                 context={JSON.stringify({
                   shellMode: developer ? "developer" : "service",
                   profile:
-                    liveOverview || liveCollectedSource || liveCost
+                    liveOverview || liveCollectedSource || livePricing
                       ? "collected-focus-samples-v1"
                       : liveService
                         ? "local-service-synthetic-v1"
@@ -858,15 +861,15 @@ export default function App() {
                   scope,
                   tab,
                   period:
-                    liveOverview || liveCollectedSource || liveCost
+                    liveOverview || liveCollectedSource || livePricing
                       ? (params.get("focus-period") ?? "all")
                       : (params.get("period") ?? "2026-10"),
                   organization:
-                    liveOverview || liveCollectedSource || liveCost
+                    liveOverview || liveCollectedSource || livePricing
                       ? "server-authorized-focus-accounts"
                       : (params.get("le") ?? "DEMO-ORG-01"),
                   currency:
-                    liveOverview || liveCollectedSource || liveCost
+                    liveOverview || liveCollectedSource || livePricing
                       ? "source-currencies"
                       : (params.get("ccy") ?? "USD"),
                   objectId: route.objectId ?? null,
@@ -954,7 +957,7 @@ export default function App() {
                   className="planning-tabs"
                   style={
                     liveService &&
-                    !(liveOverview || liveCollectedSource || liveCost)
+                    !(liveOverview || liveCollectedSource || livePricing)
                       ? { display: "none" }
                       : undefined
                   }
@@ -969,10 +972,10 @@ export default function App() {
                       key={t.key}
                       aria-current={tab === t.key ? "page" : undefined}
                       onClick={() => {
-                        if (liveCost && tab === t.key) return;
-                        if (liveCost || canLeave()) {
-                          if (liveCost) setNavigationGuard(null);
-                          if (!liveCost) setDirty(false);
+                        if (livePricing && tab === t.key) return;
+                        if (livePricing || canLeave()) {
+                          if (livePricing) setNavigationGuard(null);
+                          if (!livePricing) setDirty(false);
                           location.hash = planningUrl(screen.path, params, {
                             view: t.key,
                             ...(screen.id === "U02"
@@ -983,11 +986,31 @@ export default function App() {
                       }}
                     >
                       {screen.archetype.includes("wizard") ? `${i + 1}. ` : ""}
-                      {liveCost
+                      {livePricing
                         ? local(
                             l,
                             (
                               {
+                                policies: [
+                                  "배분 정책",
+                                  "Allocation policy",
+                                  "سياسة التوزيع",
+                                ],
+                                pools: [
+                                  "배분 기준액",
+                                  "Allocation basis",
+                                  "مبلغ أساس التوزيع",
+                                ],
+                                simulation: [
+                                  "배분 미리보기",
+                                  "Allocation preview",
+                                  "معاينة التوزيع",
+                                ],
+                                comparison: [
+                                  "결과 비교",
+                                  "Result comparison",
+                                  "مقارنة النتائج",
+                                ],
                                 summary: [
                                   "구성 요약",
                                   "Composition summary",
@@ -1047,12 +1070,21 @@ export default function App() {
                 <div
                   id="content"
                   key={
-                    liveCost
-                      ? "B01:" + l
+                    livePricing
+                      ? screen.id + ":" + l
                       : screenKey + ":" + tab + (liveService ? ":" + l : "")
                   }
                 >
-                  {liveCost ? (
+                  {liveAllocation ? (
+                    <AllocationPolicies
+                      locale={l}
+                      params={params}
+                      view={tab}
+                      onState={onState}
+                      onDirty={setDirty}
+                      canDiscard={canLeave}
+                    />
+                  ) : livePricing ? (
                     <InfrastructureCost
                       locale={l}
                       params={params}

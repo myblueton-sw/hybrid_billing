@@ -50,3 +50,7 @@ Final build fingerprint: `c7565d15d374`. The final complete browser run passed a
 The CLI's four-blocker visual PASS preceded only the final scoped20px CSS specificity and review/keyboard metadata correction. These final changes are root-verified with the complete browser run and computed checks, not claimed as a further CLI approval. B01 retains its layout/copy/arithmetic; its shared App leaf integration and changed candidate source fingerprint were assessed with the B01 regression. Other leaf screens were not redesigned or comprehensively re-audited.
 
 No owner acknowledgement, authoritative policy write, backend mutation, merge or deployment was performed. Browser foreground handoff was not completed; the local direct screen URL remains available for owner review.
+
+# Subsequent owner confirmation
+
+The owner subsequently confirmed FIX for the presented B03 Korean policy-editor design. See the [scoped immutable acceptance record](../../ui/acceptance/B03.md). Earlier statements that no owner acknowledgement was saved describe the automated verification run; they do not negate this later explicit chat confirmation. Other variants, integrations, merge and deployment remain unconfirmed. No product code changed.

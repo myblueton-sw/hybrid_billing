@@ -59,4 +59,4 @@ The successful Claude CLI ui-designer design inspected the current generic B03 c
 | B03:action:browser-draft | Strict projected metadata, fresh-authorized restore and visible readback failure | Model/store tests and browser failure paths |
 | B03:state:source-unavailable | Loading/restriction/error replaces prior source, draft and results |403 and obsolete actual-response replay; no offline fallback |
 
-The original full B03 approval/organization/idle/production-rounding requirements are retained as explicit integrations, not rewritten as complete. Owner FIX is pending for every item and variant.
+The original full B03 approval/organization/idle/production-rounding requirements are retained as explicit integrations, not rewritten as complete. The later [owner confirmation](../../ui/acceptance/B03.md) fixes only its declared policy-editor scope; remaining items/variants stay unconfirmed.

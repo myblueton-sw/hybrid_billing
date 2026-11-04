@@ -162,11 +162,11 @@
     "tabs": [
       {
         "key": "policies",
-        "labelKo": "정책"
+        "labelKo": "환산 규칙"
       },
       {
         "key": "imports",
-        "labelKo": "고시·수동 반입"
+        "labelKo": "환율 근거"
       },
       {
         "key": "comparison",
@@ -186,7 +186,7 @@
       "ccy",
       "asof"
     ],
-    "titleKo": "환율·반올림",
+    "titleKo": "환율·반올림 정책",
     "scopeLabelKo": "통화쌍·제공기관·환율 종류·기준일",
     "purposeKo": "통화쌍·고시단위·출처·기준일·고정값·경과일·정책·반올림 단계, 수집/반입/비교/승인",
     "commandReferences": [],

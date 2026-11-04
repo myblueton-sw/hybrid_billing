@@ -9,7 +9,7 @@ status: draft
 
 HB-143 adds the default collected S04 screen at `/source-data`. The original authorized planning specification remains the product contract; the [scoped integration design](../../../features/HB-143/collected-source.md) describes this implemented subset. It follows HB-85/PR77 and the separate HB-93 source-inspection planning; it does not certify a merged standalone main checkout.
 
-Normalized rows, mapped allowlisted source fields and native consumption/pricing quantities are connected. Unit prices retain source currency and pricing unit; no implicit denominator or calculated rate is added. Every financial numeric field uses nullable18-place coefficients. Full-scope currency totals and25-row pages come from the protected server query. Transformation history, original-object inspection, export and global service/model/quality/attribution filters remain deferred.
+Normalized rows, mapped allowlisted source fields and native consumption/pricing quantities are connected. Unit prices retain source currency and pricing unit; no implicit denominator or calculated rate is added. Every financial numeric field uses nullable18-place coefficients. Full-scope currency totals and 25-row pages come from the protected server query. Transformation history, original-object inspection, export and global service/model/quality/attribution filters remain deferred.
 
 The U01 source-detail link and S04 return link preserve full selection and the loaded snapshot, resetting offsets. Stale evidence fails visibly. Account mappings use complete tenant/provider/billing/subaccount identities; missing native hierarchy is not fabricated. The older `service=local` inspector remains an explicit compatibility deep link to its own separate local source.
 

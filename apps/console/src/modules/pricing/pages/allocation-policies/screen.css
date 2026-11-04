@@ -1,0 +1,598 @@
+.allocation-screen {
+  display: grid;
+  gap: 20px;
+  min-inline-size: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.allocation-screen :is(section, div, aside, fieldset) {
+  min-inline-size: 0;
+}
+.planning-main .allocation-screen h2 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  margin: 0;
+}
+.allocation-screen h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.allocation-screen p {
+  margin-block: 8px;
+}
+.allocation-screen :is(.allocation-meta, small) {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--hb-muted);
+}
+.allocation-screen small {
+  display: block;
+}
+.allocation-screen :is(bdi, dd, p, strong) {
+  overflow-wrap: anywhere;
+}
+.allocation-screen :is(button, input, select) {
+  min-block-size: 40px;
+  font-size: 16px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.allocation-screen button {
+  border: 1px solid var(--hb-line-control);
+  background: var(--hb-white);
+  color: var(--hb-ink);
+  padding: 8px 16px;
+  justify-self: start;
+}
+.allocation-screen button:disabled {
+  color: var(--hb-muted);
+  cursor: not-allowed;
+}
+.allocation-screen .allocation-primary {
+  color: var(--hb-white);
+  background: var(--hb-ink);
+  border-color: var(--hb-ink);
+}
+.allocation-screen .allocation-primary:disabled {
+  color: var(--hb-muted);
+  background: var(--hb-white);
+  border-color: var(--hb-line-control);
+}
+.allocation-screen :is(input:not([type="radio"]), select) {
+  border: 1px solid var(--hb-line-control);
+  background: var(--hb-white);
+  color: var(--hb-ink);
+  padding: 8px 12px;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+.allocation-screen input[aria-invalid="true"] {
+  border-width: 2px;
+}
+.allocation-screen :focus-visible {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+.allocation-screen .allocation-text-button {
+  border: 0;
+  padding: 4px 0;
+  background: transparent;
+  color: var(--c-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-block-size: 32px;
+  text-align: start;
+}
+.allocation-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: end;
+}
+.allocation-toolbar label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+.allocation-toolbar select {
+  min-inline-size: 150px;
+  max-inline-size: 240px;
+}
+.allocation-pool-strip {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.5fr) repeat(2, minmax(160px, 1fr));
+  gap: 16px 24px;
+  padding-block: 16px;
+  border-block: 1px solid var(--hb-line-row);
+}
+.allocation-pool-strip dl {
+  margin: 0;
+}
+.allocation-pool-strip dt {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--hb-muted);
+  margin-block-end: 6px;
+}
+.allocation-pool-strip dd {
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+.allocation-pool-strip dd small {
+  font-weight: 400;
+}
+.allocation-source-note {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px 24px;
+}
+.allocation-source-note > p {
+  margin: 0;
+}
+.allocation-evidence summary {
+  color: var(--c-link);
+  cursor: pointer;
+  font-size: 14px;
+  min-block-size: 32px;
+  align-content: center;
+}
+.allocation-evidence[open] {
+  grid-column: 1/-1;
+  max-inline-size: 100%;
+}
+.allocation-evidence dl {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 8px 24px;
+  margin-block: 16px;
+}
+.allocation-evidence :is(dt, dd) {
+  margin: 0;
+  font-size: 14px;
+}
+.allocation-evidence dt {
+  color: var(--hb-muted);
+}
+.allocation-blocked {
+  border-block: 1px solid var(--hb-line-row);
+  padding-block: 24px;
+}
+.allocation-error-summary {
+  border: 1px solid var(--hb-line-control);
+  padding: 16px 20px;
+}
+.allocation-error-summary ul {
+  margin-block: 8px 0;
+  padding-inline-start: 20px;
+}
+.allocation-policy-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-areas: "fields summary" "editor summary";
+  gap: 24px 32px;
+  align-items: start;
+}
+.allocation-editor {
+  grid-area: editor;
+  display: grid;
+  gap: 16px;
+}
+.allocation-policy-fields {
+  grid-area: fields;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  padding-block-end: 16px;
+}
+.allocation-policy-fields > label {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  font-size: 14px;
+}
+.allocation-policy-fields fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.allocation-policy-fields legend {
+  font-size: 14px;
+  font-weight: 600;
+  margin-block-end: 8px;
+}
+.allocation-method {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  font-size: 16px;
+  font-weight: 400;
+  align-items: center;
+  gap: 8px;
+}
+.allocation-method input {
+  inline-size: 20px;
+  block-size: 20px;
+  min-block-size: 20px;
+}
+.allocation-policy-fields summary {
+  color: var(--c-link);
+  min-block-size: 32px;
+  align-content: center;
+  cursor: pointer;
+}
+.allocation-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.allocation-target-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 20px;
+}
+.allocation-target-toolbar label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+.allocation-target-toolbar p {
+  flex: 1 1 240px;
+}
+.allocation-table {
+  overflow: auto;
+  max-inline-size: 100%;
+  max-block-size: 680px;
+  border-block-start: 1px solid var(--hb-line-row);
+}
+.allocation-table table {
+  border-collapse: collapse;
+  inline-size: 100%;
+  min-inline-size: 680px;
+}
+.allocation-table :is(th, td) {
+  font-size: 16px;
+  padding: 12px 16px;
+  vertical-align: top;
+  text-align: start;
+  border-block-end: 1px solid var(--hb-line-row);
+  min-inline-size: 120px;
+  max-inline-size: 280px;
+  block-size: auto;
+  height: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.allocation-table thead th {
+  background: var(--hb-hover);
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+}
+.allocation-table :is(th, td):first-child {
+  position: sticky;
+  inset-inline-start: 0;
+  background: var(--hb-white);
+  z-index: 1;
+  min-inline-size: 190px;
+  max-inline-size: 240px;
+}
+.allocation-table thead th:first-child {
+  background: var(--hb-hover);
+  z-index: 2;
+}
+.allocation-table tr[data-selected="true"] :is(th, td) {
+  background: var(--hb-hover);
+}
+.allocation-table .allocation-money {
+  text-align: end;
+}
+.allocation-table strong {
+  font-weight: 600;
+}
+.allocation-table details {
+  margin-block-start: 4px;
+}
+.allocation-table summary {
+  color: var(--c-link);
+  cursor: pointer;
+  font-size: 14px;
+  min-block-size: 32px;
+  align-content: center;
+}
+.allocation-table details small {
+  max-inline-size: 220px;
+  white-space: normal;
+  margin-block: 6px;
+}
+.allocation-percent-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: end;
+}
+.allocation-screen .allocation-percent-input input {
+  inline-size: 10ch;
+  min-inline-size: 90px;
+  text-align: end;
+}
+.allocation-weight > small {
+  text-align: end;
+  margin-block-start: 4px;
+}
+.allocation-pages {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block-start: 12px;
+}
+.allocation-pages span {
+  font-size: 14px;
+}
+.allocation-policy-summary {
+  grid-area: summary;
+  display: grid;
+  gap: 12px;
+  border-inline-start: 1px solid var(--hb-line-row);
+  padding-inline-start: 24px;
+}
+.allocation-input-totals {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 20px;
+  margin: 8px 0;
+}
+.allocation-input-totals dt {
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.allocation-input-totals dd {
+  margin: 0;
+  text-align: end;
+  font-weight: 600;
+}
+.allocation-browser-save {
+  border-block-start: 1px solid var(--hb-line-row);
+  margin-block-start: 12px;
+  padding-block-start: 24px;
+}
+.allocation-mini-result {
+  border-block-start: 1px solid var(--hb-line-row);
+  padding-block-start: 12px;
+}
+.allocation-mini-result dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.allocation-mini-result dt {
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.allocation-mini-result dd {
+  margin: 4px 0 0;
+}
+.allocation-results {
+  display: grid;
+  gap: 16px;
+}
+.allocation-conservation {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  border-block: 1px solid var(--hb-line-row);
+  padding-block: 20px;
+}
+.allocation-conservation dl {
+  margin: 0;
+}
+.allocation-conservation dt {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--hb-muted);
+}
+.allocation-conservation dd {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  margin: 12px 0 0;
+}
+.allocation-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+[dir="rtl"] .allocation-screen {
+  line-height: 1.8;
+}
+@media (max-width: 1279px) {
+  .allocation-policy-layout {
+    grid-template-areas: "fields" "summary" "editor";
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .allocation-policy-summary {
+    border-inline-start: 0;
+    border-block: 1px solid var(--hb-line-row);
+    padding: 20px 0;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 12px 32px;
+  }
+  .allocation-policy-summary > h2 {
+    grid-column: 1/-1;
+  }
+  .allocation-input-totals {
+    grid-column: 1;
+    grid-row: span 3;
+  }
+  .allocation-browser-save {
+    grid-column: 1/-1;
+  }
+  .allocation-conservation {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .allocation-screen {
+    gap: 20px;
+  }
+  .allocation-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .allocation-toolbar select {
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: none;
+  }
+  .allocation-screen :is(button, input:not([type="radio"]), select) {
+    min-block-size: 44px;
+  }
+  .allocation-pool-strip {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .allocation-pool-strip > dl:first-child {
+    grid-column: 1/-1;
+  }
+  .allocation-source-note {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .allocation-evidence dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .allocation-evidence dd {
+    margin-block-end: 12px;
+  }
+  .allocation-policy-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .allocation-target-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .allocation-target-toolbar p {
+    margin: 0;
+  }
+  .allocation-target-toolbar input {
+    inline-size: 100%;
+  }
+  .allocation-policy-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .allocation-policy-summary > *,
+  .allocation-input-totals {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  .allocation-policy-summary > button,
+  .allocation-browser-save button {
+    justify-self: stretch;
+    inline-size: 100%;
+  }
+  .allocation-input-totals {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .allocation-table {
+    overflow: visible;
+    max-block-size: none;
+  }
+  .allocation-table table,
+  .allocation-table tbody {
+    display: block;
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+  .allocation-table thead {
+    display: none;
+  }
+  .allocation-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    border-block-end: 1px solid var(--hb-line-control);
+    padding-block: 16px;
+  }
+  .allocation-table tbody td,
+  .allocation-table tbody td:first-child {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: 8px 0;
+    block-size: auto;
+    height: auto;
+    min-block-size: 0;
+    max-inline-size: none;
+    min-inline-size: 0;
+    position: static;
+    background: transparent;
+    border: 0;
+  }
+  .allocation-table tbody td::before {
+    content: attr(data-label);
+    font-size: 14px;
+    color: var(--hb-muted);
+    font-weight: 600;
+  }
+  .allocation-table tbody td > bdi {
+    justify-self: start;
+  }
+  .allocation-table tbody td.allocation-money > bdi {
+    justify-self: end;
+  }
+  .allocation-table tbody tr[data-selected="true"] {
+    background: var(--hb-hover);
+  }
+  .allocation-edit-table tbody tr {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px 16px;
+  }
+  .allocation-edit-table tbody td:first-child {
+    grid-column: 1;
+  }
+  .allocation-edit-table tbody td.allocation-weight {
+    grid-column: 2;
+  }
+  .allocation-edit-table tbody td:nth-child(3) {
+    grid-column: 1;
+  }
+  .allocation-edit-table tbody td:nth-child(4) {
+    grid-column: 2;
+  }
+  .allocation-edit-table .allocation-percent-input {
+    flex-wrap: nowrap;
+  }
+  .allocation-screen .allocation-percent-input input {
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+  .allocation-table details small {
+    max-inline-size: 100%;
+  }
+  .allocation-conservation {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .allocation-conservation dd {
+    margin-block-start: 6px;
+  }
+  .allocation-pages {
+    justify-content: start;
+  }
+}

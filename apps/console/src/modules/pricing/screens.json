@@ -64,19 +64,19 @@
     "tabs": [
       {
         "key": "policies",
-        "labelKo": "정책"
+        "labelKo": "배분 정책"
       },
       {
         "key": "pools",
-        "labelKo": "전체 풀"
+        "labelKo": "배분 기준액"
       },
       {
         "key": "simulation",
-        "labelKo": "시뮬레이션"
+        "labelKo": "배분 미리보기"
       },
       {
         "key": "comparison",
-        "labelKo": "비교·검증"
+        "labelKo": "결과 비교"
       }
     ],
     "scopeKeys": [
@@ -88,7 +88,7 @@
       "ccy",
       "asof"
     ],
-    "titleKo": "배분·공유 풀",
+    "titleKo": "배분 정책",
     "scopeLabelKo": "기간·풀·기준액 종류·대상 조직·정책 개정",
     "purposeKo": "기준 원가/판매액·기간·대상·정률/사용/예약·유휴·잔액·정책, 시뮬레이션/비교/승인",
     "commandReferences": [],

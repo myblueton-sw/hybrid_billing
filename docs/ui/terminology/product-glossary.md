@@ -35,6 +35,12 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 | target-review-amount / target | 목표 검토 금액 | Target review amount | مبلغ المراجعة المستهدف | Same-currency pre-FX/pre-tax target on a current session candidate. Not an approved invoice adjustment. | B04 |
 | review-difference / adjustment delta | 검토 차액 | Review difference | فرق المراجعة | Target minus original candidate, displayed as a separate signed result. Never overwrites source or implies financial application. | B04 |
 | source-precision-truncation / nonzero division remainder | 원천 정밀도에서 절삭 | Truncated at source precision | مقتطع بدقة المصدر | Explicit toward-zero source-scale arithmetic. Raw division remainder is not money or an activated currency quantum. | B04 |
+| fx-rounding-policy / B05 | 환율·반올림 정책 | FX and rounding policies | سياسات تحويل العملة والتقريب | Manual source-cost conversion review; not an approved FX policy or B04 selling amount. | B05 |
+| manual-fx-quote / rate | 수동 입력 환율 | Manually entered exchange rate | سعر الصرف المُدخل يدوياً | Target-currency units per explicit source quotation unit; manual reference is not verified published rate authority. | B05 |
+| fx-quotation-unit / quoteUnit | 환율 기준 수량 | Exchange-rate quotation unit | كمية أساس تسعير الصرف | Positive source-currency denominator retained in the complete equation, including per 100 quotations. | B05 |
+| amount-quantum / quantum | 금액 처리 단위 | Amount rounding increment | وحدة تقريب المبلغ | Explicit positive target-currency increment such as 0.05; never inferred decimal places or currency standard. | B05 |
+| rounding-difference / difference | 금액 처리 차이 | Rounding difference | فرق التقريب | Rounded result minus exact pre-round rational amount; raw quotient remainder is not money. | B05 |
+| unconverted-declaration / treatment | 미환산 원천 금액으로 검토 — 사용자 선언 | Treat as unconverted source amount — user declaration | اعتبار المبلغ أصلياً غير محوّل — إقرار المستخدم | Explicit review choice; supplier conversion history remains unknown and already-converted choices block this exercise. | B05 |
 
 # B01 labels
 
@@ -53,3 +59,7 @@ Separate AI TW design review for HB-103 inspected the authorized B03 planning an
 # B04 terminology evidence
 
 Separate AI TW review of HB-104, B04, PC-01/SP-01 and numeric/H23 contracts conditionally approved the terminology. Prefer 요금 규칙 / 계산 단계 / 정책 상속 / 조정 검토 / 금액 비교 for the stable five tab keys. Entered unit prices, fees and target amounts are financial review parameters intentionally saved locally; never call that payload merely metadata-only. Signed source quantities retain their sign without automatically being classified as approved refunds. Native-language/human practitioner acceptance remains pending.
+
+# B05 terminology evidence
+
+Independent AI TW design review of B05 and the PC-01/AR-06/numeric contracts conditionally passed the displayed manual quote, quotation unit, markup, target fee, quantum and difference distinctions. Preserve policies/imports/comparison/approvals while displaying 환산 규칙 / 환율 근거 / 환산 비교 / 승인 이력. Dates and maximum age are declared UTC review evidence, not verified market freshness. Explicit browser storage retains entered financial parameters, source descriptions and references. Actual source and selected rendered TW reviews passed after the mobile source-card correction. Native-language/human practitioner acceptance remains separate.

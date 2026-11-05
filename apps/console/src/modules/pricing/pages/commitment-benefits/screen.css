@@ -1,0 +1,552 @@
+.planning-main .b06-screen {
+  font-family: var(--font-body);
+  width: 100%;
+  min-width: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-body);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.planning-main .b06-screen h2 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0 0 18px;
+}
+.planning-main .b06-screen h3,
+.planning-main .b06-screen h4 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 16px 0 12px;
+}
+.b06-screen p {
+  margin: 0 0 12px;
+}
+.b06-screen small,
+.b06-screen .b06-meta {
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.b06-screen small {
+  display: block;
+}
+.b06-screen bdi {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.b06-screen .b06-date {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+.b06-screen button {
+  font: inherit;
+  font-size: 16px;
+  min-height: 44px;
+  border: 1px solid var(--border-control);
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--surface-page);
+  color: var(--text-body);
+  padding: 9px 14px;
+  cursor: pointer;
+}
+.b06-screen button:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text-body);
+  border-color: var(--border-control);
+}
+.b06-screen button:disabled {
+  background: var(--surface-disabled);
+  color: var(--text-disabled);
+  cursor: default;
+}
+.b06-screen :is(button, input, select, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+.b06-screen label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 0;
+}
+.b06-screen :is(input, select) {
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 44px;
+  padding: 9px 10px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border-control);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--text-body);
+  background: var(--surface-page);
+}
+.b06-screen :is(input, select):hover:not(:disabled) {
+  background: var(--surface-page);
+  color: var(--text-body);
+  border-color: var(--border-control);
+}
+.b06-screen .b06-toolbar {
+  display: grid;
+  grid-template-columns:
+    minmax(130px, 1fr) minmax(150px, 1fr) minmax(180px, 1.5fr)
+    auto auto;
+  gap: 12px;
+  align-items: start;
+  padding-block-end: 18px;
+  border-block-end: 1px solid var(--border-section);
+}
+.b06-screen .b06-toolbar button {
+  margin-block-start: 29px;
+}
+.b06-screen details summary {
+  min-height: 44px;
+  padding-block: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.b06-screen dl {
+  margin: 0;
+  min-width: 0;
+}
+.b06-screen dt {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.b06-screen dd {
+  margin: 4px 0 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.b06-screen .b06-account-scope {
+  border-block-end: 1px solid var(--border-row);
+  padding-block-end: 12px;
+}
+.b06-screen .b06-account-list {
+  list-style: none;
+  margin: 16px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.b06-screen .b06-account-list li {
+  min-width: 0;
+}
+.b06-screen .b06-account-list button {
+  width: 100%;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.b06-screen .b06-account-list button > span {
+  display: block;
+  min-height: 0;
+  height: auto;
+}
+.b06-screen button[aria-pressed="true"] {
+  font-weight: 600;
+  background: var(--surface-nav);
+}
+.b06-screen .b06-boundary {
+  border-block-end: 1px solid var(--border-row);
+  padding-block-end: 10px;
+}
+.b06-screen .b06-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  padding-block-end: 20px;
+  border-block-end: 1px solid var(--border-section);
+}
+.b06-screen .b06-counts dd {
+  font-size: 24px;
+  font-weight: 600;
+}
+.b06-screen .b06-scroll {
+  overflow-x: auto;
+  width: 100%;
+  max-width: 100%;
+  scrollbar-gutter: stable;
+}
+.b06-screen table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.6;
+  table-layout: fixed;
+}
+.b06-screen thead {
+  background: var(--surface-table-head);
+}
+.b06-screen th,
+.b06-screen td {
+  border-block-end: 1px solid var(--border-row);
+  text-align: start;
+  vertical-align: top;
+  padding: 12px 10px;
+  height: auto;
+  min-height: 0;
+  overflow-wrap: anywhere;
+}
+.b06-screen th {
+  font-weight: 600;
+}
+.b06-screen .b06-measure {
+  display: block;
+}
+.b06-screen .b06-measure > span {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+.b06-screen .b06-cost-summary td:nth-last-child(-n + 2) {
+  text-align: end;
+}
+.b06-screen .b06-summary-table table {
+  table-layout: auto;
+}
+.b06-screen .b06-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 24px;
+  align-items: start;
+}
+.b06-screen .b06-groups {
+  min-width: 0;
+}
+.b06-screen .b06-detail,
+.b06-screen .b06-detail-placeholder {
+  min-width: 0;
+  border-inline-start: 1px solid var(--border-nav);
+  padding-inline-start: 24px;
+}
+.b06-screen .b06-group-table table {
+  table-layout: fixed;
+}
+.b06-screen .b06-group-table th:first-child {
+  width: 108px;
+}
+.b06-screen .b06-group-table th:nth-child(2) {
+  width: 30%;
+}
+.b06-screen .b06-group-table th,
+.b06-screen .b06-group-table td {
+  padding: 12px 8px;
+}
+.b06-screen .b06-group-table tr[aria-current="true"] {
+  background: var(--surface-nav);
+}
+.b06-screen .b06-group-table button {
+  font-size: 16px;
+  padding-inline: 8px;
+  white-space: normal;
+  width: 100%;
+}
+.b06-screen .b06-source-id {
+  font-family: var(--font-body);
+  font-size: 16px;
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  word-break: break-word;
+}
+.b06-screen .b06-scope-identity {
+  display: block;
+  margin-block-start: 10px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.b06-screen .b06-scope-identity > span {
+  display: block;
+  height: auto;
+  min-height: 0;
+}
+.b06-screen .b06-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: start;
+}
+.b06-screen .b06-values > bdi {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  height: auto;
+  min-height: 0;
+}
+.b06-screen .b06-metadata {
+  display: block;
+  min-width: 0;
+}
+.b06-screen .b06-reasons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.b06-screen .b06-reasons > div {
+  padding-block: 12px;
+  border-block-end: 1px solid var(--border-row);
+}
+.b06-screen .b06-reasons dd {
+  font-weight: 600;
+}
+.b06-screen .b06-pager {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-block: 18px;
+}
+.b06-screen .b06-pager button {
+  font-size: 16px;
+  padding-inline: 10px;
+}
+.b06-screen .b06-detail-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.b06-screen .b06-detail-heading h2 {
+  margin-block-end: 12px;
+}
+.b06-screen .b06-selected-costs,
+.b06-screen .b06-charge-costs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding-block: 14px;
+  border-block-end: 1px solid var(--border-row);
+}
+.b06-screen .b06-selected-costs dd {
+  font-weight: 600;
+}
+.b06-screen .b06-status-table table {
+  table-layout: auto;
+}
+.b06-screen .b06-status-table td {
+  min-width: 90px;
+}
+.b06-screen .b06-evidence > div {
+  padding-block: 12px;
+  border-block-end: 1px solid var(--border-row);
+  min-width: 0;
+}
+.b06-screen .b06-identity {
+  margin-block: 20px;
+}
+.b06-screen .b06-charge-records article {
+  padding-block: 12px;
+  border-block-start: 1px solid var(--border-row);
+}
+.b06-screen .b06-charge-records h4 {
+  margin-block-start: 0;
+}
+.b06-screen .b06-benefit-flow {
+  margin: 0;
+  padding-inline-start: 24px;
+}
+.b06-screen .b06-benefit-flow li {
+  padding-block: 12px;
+  border-block-end: 1px solid var(--border-row);
+}
+.b06-screen .b06-benefit-flow h3 {
+  margin-block-start: 0;
+}
+.b06-screen .b06-reconciliation {
+  border-block: 1px solid var(--border-section);
+  padding-block: 20px;
+}
+.b06-screen .b06-error {
+  padding-block: 10px;
+}
+.b06-screen .b06-mobile-columns {
+  display: none;
+}
+.b06-screen:lang(ko) {
+  word-break: keep-all;
+}
+.b06-screen:lang(ar) {
+  line-height: 1.8;
+}
+.planning-layout:has(.b06-screen) {
+  align-items: start;
+}
+.planning-layout:has(.b06-screen) > .planning-sidebar {
+  align-self: start;
+}
+@media (max-width: 1279px) {
+  .b06-screen .b06-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .b06-screen .b06-detail,
+  .b06-screen .b06-detail-placeholder {
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--border-nav);
+    padding-inline-start: 0;
+    padding-block-start: 24px;
+  }
+  .b06-screen .b06-group-table th:nth-child(2) {
+    width: 34%;
+  }
+}
+@media (max-width: 760px) {
+  .b06-screen .b06-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+  .b06-screen .b06-toolbar label:has(#b06-search) {
+    grid-column: 1/-1;
+  }
+  .b06-screen .b06-toolbar button {
+    margin-block-start: 0;
+  }
+  .b06-screen .b06-counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .b06-screen .b06-account-list {
+    grid-template-columns: 1fr;
+  }
+  .b06-screen .b06-reasons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .planning-main .b06-screen .b06-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .planning-main .b06-screen .b06-toolbar label {
+    grid-column: 1/-1;
+  }
+  .planning-main .b06-screen .b06-group-table,
+  .planning-main .b06-screen .b06-status-table {
+    overflow: visible;
+  }
+  .planning-main
+    .b06-screen
+    :is(.b06-group-table, .b06-summary-table, .b06-status-table)
+    :is(table, tbody) {
+    display: block;
+    table-layout: auto;
+    height: auto;
+    min-height: 0;
+  }
+  .planning-main
+    .b06-screen
+    :is(.b06-group-table, .b06-summary-table, .b06-status-table)
+    thead {
+    display: none;
+  }
+  .planning-main
+    .b06-screen
+    :is(.b06-group-table, .b06-summary-table, .b06-status-table)
+    tr {
+    display: block;
+    padding-block: 16px;
+    border-block-end: 1px solid var(--border-control);
+    height: auto;
+    min-height: 0;
+  }
+  .planning-main
+    .b06-screen
+    :is(.b06-group-table, .b06-summary-table, .b06-status-table)
+    :is(td, th) {
+    display: block;
+    padding: 7px 0;
+    border: 0;
+    text-align: start;
+    height: auto;
+    min-height: 0;
+    width: auto;
+  }
+  .planning-main
+    .b06-screen
+    :is(.b06-group-table, .b06-summary-table, .b06-status-table)
+    td[data-label]:before {
+    content: attr(data-label);
+    display: block;
+    font-size: 14px;
+    color: var(--text-muted);
+    height: auto;
+    min-height: 0;
+    line-height: 1.6;
+  }
+  .planning-main .b06-screen .b06-group-table td:first-child button {
+    width: 100%;
+    font-size: 16px;
+  }
+  .planning-main .b06-screen .b06-group-table th:first-child,
+  .planning-main .b06-screen .b06-group-table th:nth-child(2) {
+    width: auto;
+  }
+  .b06-screen .b06-mobile-columns {
+    display: block;
+  }
+  .b06-screen .b06-mobile-columns table {
+    min-width: 760px;
+    table-layout: fixed;
+  }
+  .b06-screen .b06-selected-costs,
+  .b06-screen .b06-charge-costs {
+    grid-template-columns: 1fr;
+  }
+  .b06-screen .b06-detail-heading {
+    flex-wrap: wrap;
+  }
+  .b06-screen .b06-detail-heading button {
+    width: 100%;
+  }
+  .b06-screen .b06-counts {
+    gap: 14px;
+  }
+  .b06-screen .b06-counts dd {
+    font-size: 22px;
+  }
+  .planning-main:has(.b06-screen) .planning-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    overflow: visible;
+    white-space: normal;
+    align-items: stretch;
+  }
+  .planning-main:has(.b06-screen) .planning-tabs button {
+    min-width: 0;
+    white-space: normal;
+    min-height: 44px;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .planning-main:has(.b06-screen) .planning-tabs button[aria-current] {
+    font-weight: 600;
+  }
+}
+
+.planning-main .b06-screen :is(th, td) {
+  font-size: 16px;
+  white-space: normal;
+  height: auto;
+  block-size: auto;
+}
+
+.b06-screen .b06-cost-summary th:nth-last-child(-n + 2) {
+  text-align: end;
+}

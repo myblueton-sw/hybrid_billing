@@ -213,15 +213,15 @@
       },
       {
         "key": "utilization",
-        "labelKo": "사용·미사용"
+        "labelKo": "사용·미사용 근거"
       },
       {
         "key": "benefits",
-        "labelKo": "혜택 전달"
+        "labelKo": "혜택 흐름"
       },
       {
         "key": "reconciliation",
-        "labelKo": "대사"
+        "labelKo": "대사 검토"
       }
     ],
     "scopeKeys": [
@@ -233,7 +233,7 @@
       "ccy",
       "asof"
     ],
-    "titleKo": "약정 원가·혜택",
+    "titleKo": "약정 비용·혜택",
     "scopeLabelKo": "Provider·약정 종류·기간·소유자·배분 풀",
     "purposeKo": "공급자 제공 약정/사용/미사용/상계·소유·배분·판매 전달정책·증빙, 조회/대사/정책 연결",
     "commandReferences": [],

@@ -60,7 +60,11 @@ export const titles: Record<string, Tr> = {
     "FX and rounding policies",
     "سياسات تحويل العملة والتقريب",
   ],
-  B06: ["약정·혜택", "Commitments and benefits", "الالتزامات والمزايا"],
+  B06: [
+    "약정 비용·혜택",
+    "Commitment costs and benefits",
+    "تكاليف الالتزامات ومنافعها",
+  ],
   B07: ["Marketplace 거래", "Marketplace transactions", "معاملات السوق"],
   B08: [
     "청구 실행·전후 비교",

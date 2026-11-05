@@ -41,6 +41,12 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 | amount-quantum / quantum | 금액 처리 단위 | Amount rounding increment | وحدة تقريب المبلغ | Explicit positive target-currency increment such as 0.05; never inferred decimal places or currency standard. | B05 |
 | rounding-difference / difference | 금액 처리 차이 | Rounding difference | فرق التقريب | Rounded result minus exact pre-round rational amount; raw quotient remainder is not money. | B05 |
 | unconverted-declaration / treatment | 미환산 원천 금액으로 검토 — 사용자 선언 | Treat as unconverted source amount — user declaration | اعتبار المبلغ أصلياً غير محوّل — إقرار المستخدم | Explicit review choice; supplier conversion history remains unknown and already-converted choices block this exercise. | B05 |
+| commitment-source-group / B06 | 관측된 약정 ID 그룹 | Observed commitment ID groups | مجموعات معرّفات الالتزام المرصودة | Source ID scoped by authorized tenant/provider/account/subaccount/currency. Not a legal-contract count or ownership claim. | B06 |
+| commitment-usage-class / source status | 약정 사용 분류 — 원천 값 | Commitment usage classification — source value | تصنيف استخدام الالتزام — قيمة المصدر | Charge-level mapped Used/Unused evidence; not lifecycle status, VM utilization, savings or contractual unused burden. | B06 |
+| no-observed-classified-rows / empty bucket | 관측된 행 없음 | No observed rows | لا توجد صفوف مرصودة | No classified rows in this selection; never a measured zero-unused-cost claim. | B06 |
+| version-mapping-evidence / mapping | 버전 매핑 행 | Version-mapped rows | صفوف مربوطة بالإصدار | Rows interpreted through the pinned version mapping, not provider conformance, source validation or financial eligibility. | B06 |
+| source-interval-envelope / minmax | 원천 기간 범위 | Source interval envelope | نطاق الفترة من المصدر | Earliest start through latest end of observed records, not continuous coverage or commitment lifetime. | B06 |
+| reconciliation-evidence-review / B06 | 대사 검토 | Reconciliation review | مراجعة المطابقة | Source completeness/version/field evidence inspection, not financial reconciliation completion or monthly Billed/Effective equality. | B06 |
 
 # B01 labels
 
@@ -63,3 +69,7 @@ Separate AI TW review of HB-104, B04, PC-01/SP-01 and numeric/H23 contracts cond
 # B05 terminology evidence
 
 Independent AI TW design review of B05 and the PC-01/AR-06/numeric contracts conditionally passed the displayed manual quote, quotation unit, markup, target fee, quantum and difference distinctions. Preserve policies/imports/comparison/approvals while displaying 환산 규칙 / 환율 근거 / 환산 비교 / 승인 이력. Dates and maximum age are declared UTC review evidence, not verified market freshness. Explicit browser storage retains entered financial parameters, source descriptions and references. Actual source and selected rendered TW reviews passed after the mobile source-card correction. Native-language/human practitioner acceptance remains separate.
+
+# B06 terminology evidence
+
+Independent AI TW design and actual-source reviews distinguish scoped source ID groups from legal contracts, charge-level Used/Unused mapping from lifecycle/utilization, observed zero from absent observations, and evidence review from completed financial reconciliation. The actual source counters are explicitly version-mapped/unmapped; min/max intervals are evidence envelopes. Preferred tabs preserve commitments/utilization/benefits/reconciliation while displaying 약정 명세 / 사용·미사용 근거 / 혜택 흐름 / 대사 검토. Current-source copy was corrected to usage classification and existing collected/query reference-ID terminology. Independent AI TW selected actual-render reviews and the final coverage-copy follow-up passed. Native-language/human practitioner and owner acceptance remain pending.

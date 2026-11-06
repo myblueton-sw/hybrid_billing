@@ -96,7 +96,7 @@ export default function Submissions(props: Props) {
           >
             <div className="fin-inline-controls">
               <label>
-                {t(l, ["비교 범위", "Comparison scope", "نطاق المقارنة"])}
+                {t(l, ["확인 범위", "Inspection scope", "نطاق الفحص"])}
                 <select
                   value={basis}
                   onChange={(e) => setBasis(e.target.value as typeof basis)}
@@ -118,22 +118,24 @@ export default function Submissions(props: Props) {
                   </option>
                 </select>
               </label>
-              <label>
-                {t(l, ["비교 항목", "Measure", "المقياس"])}
-                <select
-                  value={measure}
-                  onChange={(e) => setMeasure(e.target.value as FieldKey)}
-                  data-item="I02:input:comparison-measure"
-                >
-                  {(["platformAmount", "tax", "quantity"] as FieldKey[]).map(
-                    (key) => (
-                      <option key={key} value={key}>
-                        {t(l, fields[key].label)}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </label>
+              {basis === "attributed" && (
+                <label>
+                  {t(l, ["비교 항목", "Measure", "المقياس"])}
+                  <select
+                    value={measure}
+                    onChange={(e) => setMeasure(e.target.value as FieldKey)}
+                    data-item="I02:input:comparison-measure"
+                  >
+                    {(["platformAmount", "tax", "quantity"] as FieldKey[]).map(
+                      (key) => (
+                        <option key={key} value={key}>
+                          {t(l, fields[key].label)}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </label>
+              )}
             </div>
             <Notice
               l={l}
@@ -152,48 +154,90 @@ export default function Submissions(props: Props) {
               }
             />
           </Panel>
-          <div className="fin-comparison">
+          {basis === "whole" ? (
             <Panel
               title={t(l, [
-                "승인된 플랫폼 명세",
-                "Approved platform statement",
-                "كشف المنصة المعتمد",
+                "전체 ERP 문서 금액 · 별도 문맥",
+                "Whole ERP document amount: separate context",
+                "مبلغ مستند ERP بالكامل: سياق منفصل",
               ])}
             >
               <Evidence
                 l={l}
                 screenId="I02"
-                keys={["hash", measure, "approval"]}
+                keys={["externalRevision", "wholeAmount"]}
               />
-            </Panel>
-            <Panel title={t(l, ["ERP 초안", "ERP draft", "مسودة ERP"])}>
-              <Evidence
+              <Notice
                 l={l}
-                screenId="I02"
-                keys={[
-                  "externalRevision",
-                  basis === "whole" ? "wholeAmount" : measure,
+                text={[
+                  "이 금액은 비관련 ERP 상품을 포함할 수 있는 문서 전체 금액입니다. 플랫폼 귀속 순액·세금·수량과 비교하거나 대사 차이로 표시하지 않습니다.",
+                  "This is the whole-document amount and may include unrelated ERP products. It is not compared with platform-attributed net amount, tax or quantity and is not presented as a reconciliation difference.",
+                  "هذا مبلغ المستند الكامل وقد يتضمن منتجات ERP غير مرتبطة. لا يُقارن بصافي المبلغ أو الضريبة أو الكمية المنسوبة للمنصة ولا يُعرض كفرق مطابقة.",
                 ]}
               />
             </Panel>
-            <Panel
-              title={t(l, [
-                "대사 차이",
-                "Reconciliation difference",
-                "فرق المطابقة",
-              ])}
-            >
-              <p>{t(l, fields[measure].label)}</p>
-              <Evidence l={l} screenId="I02" keys={["difference"]} />
-              <p className="fin-meta">
-                {t(l, [
-                  "비교 가능한 근거가 없어 계산하지 않습니다.",
-                  "No calculation without comparable evidence.",
-                  "لا يُجرى حساب دون أدلة قابلة للمقارنة.",
+          ) : (
+            <div className="fin-comparison">
+              <Panel
+                title={t(l, [
+                  "승인된 플랫폼 명세",
+                  "Approved platform statement",
+                  "كشف المنصة المعتمد",
                 ])}
-              </p>
-            </Panel>
-          </div>
+              >
+                <Evidence
+                  l={l}
+                  screenId="I02"
+                  keys={["hash", measure, "approval"]}
+                />
+              </Panel>
+              <Panel
+                title={t(l, [
+                  "ERP 초안의 플랫폼 귀속분",
+                  "Platform-attributed ERP draft",
+                  "الجزء المنسوب للمنصة من مسودة ERP",
+                ])}
+              >
+                <Evidence
+                  l={l}
+                  screenId="I02"
+                  keys={["externalRevision", measure]}
+                />
+              </Panel>
+              <Panel
+                title={t(l, [
+                  "대사 차이",
+                  "Reconciliation difference",
+                  "فرق المطابقة",
+                ])}
+              >
+                <p>{t(l, fields[measure].label)}</p>
+                <p>
+                  {t(
+                    l,
+                    measure === "quantity"
+                      ? [
+                          "수량 차이·단위 미확인",
+                          "Quantity difference and unit unknown",
+                          "فرق الكمية والوحدة غير معروفين",
+                        ]
+                      : [
+                          "금액 차이·통화 미확인",
+                          "Amount difference and currency unknown",
+                          "فرق المبلغ والعملة غير معروفين",
+                        ],
+                  )}
+                </p>
+                <p className="fin-meta">
+                  {t(l, [
+                    "비교 가능한 근거가 없어 계산하지 않습니다.",
+                    "No calculation without comparable evidence.",
+                    "لا يُجرى حساب دون أدلة قابلة للمقارنة.",
+                  ])}
+                </p>
+              </Panel>
+            </div>
+          )}
         </>
       ) : view === "submissions" ? (
         <Panel

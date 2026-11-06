@@ -255,7 +255,7 @@
     "tabs": [
       {
         "key": "buyer",
-        "labelKo": "구매자 청구"
+        "labelKo": "구매 측 청구 근거"
       },
       {
         "key": "seller",
@@ -267,7 +267,7 @@
       },
       {
         "key": "mapping",
-        "labelKo": "매핑"
+        "labelKo": "거래 연결 근거"
       }
     ],
     "scopeKeys": [

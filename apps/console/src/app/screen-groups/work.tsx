@@ -1,4 +1,7 @@
-import { Organizations, OrganizationChange } from "../../modules/organizations/pages/organizations/Screen";
+import {
+  Organizations,
+  OrganizationChange,
+} from "../../modules/organizations/pages/organizations/Screen";
 import Contracts from "../../modules/organizations/pages/contracts/Screen";
 import Inbox from "../../modules/operations/pages/tasks/Screen";
 import Findings from "../../modules/operations/pages/billing-findings/Screen";
@@ -27,9 +30,15 @@ export default function WorkRemaining(p: Props) {
     <div
       className="work-domain"
       data-screen-id={p.screenId}
-      data-source-state="unconnected"
+      data-source-state={
+        p.screenId === "S03" ? "receipt-reader" : "unconnected"
+      }
       dir={p.locale === "ar" ? "rtl" : "ltr"}
-      key={`${p.screenId}:${p.locale}:${p.view}:${p.audience ?? "restricted"}:${p.params.toString()}`}
+      key={
+        p.screenId === "S03"
+          ? `${p.screenId}:${p.locale}:${p.view}:${p.audience ?? "restricted"}`
+          : `${p.screenId}:${p.locale}:${p.view}:${p.audience ?? "restricted"}:${p.params.toString()}`
+      }
     >
       {leaf}
     </div>

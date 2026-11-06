@@ -1,4 +1,3 @@
-import fcntl
 import json
 import os
 from contextlib import contextmanager
@@ -10,6 +9,7 @@ from psycopg import sql
 
 from modules.focus_local.storage import object_client
 from . import authority
+from .file_lock import exclusive_lock
 from .model import ROOT, Rejected, canonical, digest
 from .warehouse import BUCKET
 
@@ -30,11 +30,8 @@ def durable(path,data):
 
 @contextmanager
 def locked():
-    DIRECTORY.parent.mkdir(parents=True,exist_ok=True)
-    with (DIRECTORY.parent/'focus-coordinator.lock').open('a') as stream:
-        fcntl.flock(stream,fcntl.LOCK_EX)
-        try:yield
-        finally:fcntl.flock(stream,fcntl.LOCK_UN)
+    with exclusive_lock(DIRECTORY.parent/'focus-coordinator.lock'):
+        yield
 
 
 def checkpoint(conn):

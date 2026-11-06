@@ -82,8 +82,8 @@ class ReceiptFixture:
         descriptor = self.descriptor(revision, connection)
         descriptor.update(descriptor_changes or {})
         descriptor_digest = digest(canonical(descriptor).encode()) if admitted else None
-        body = {'file_digest': digest(f'quarantine-{connection}-{revision}'.encode()), 'version': '1.0', 'connection_id': connection,
-                'reason': 'delivery_coverage', 'admitted': admitted, 'descriptor_digest': descriptor_digest}
+        body = {'file_digest': descriptor['file_digest'] if admitted else digest(f'quarantine-{connection}-{revision}'.encode()), 'version': '1.0', 'connection_id': connection,
+                'reason': 'decimal_syntax', 'admitted': admitted, 'descriptor_digest': descriptor_digest}
         key = digest(canonical(body).encode())
         item = {**body, 'descriptor': descriptor if admitted else None, 'state': stage,
                 'received_at': '2026-01-03T00:00:00+00:00', 'attempts': 0, 'root_receipt': key, 'replaced_by': None,

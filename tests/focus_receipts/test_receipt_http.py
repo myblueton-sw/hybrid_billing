@@ -142,3 +142,18 @@ def test_duplicate_length_and_transfer_encoding_are_denied(receipt_server):
     assert response.status == 400
     assert fetch(receipt_server, headers={'Transfer-Encoding': 'chunked'})[0] == 400
     assert receipt_server[2] == []
+
+
+@pytest.mark.parametrize('field', ['file_digest', 'version'])
+def test_contradictory_admitted_quarantine_has_no_wire_evidence(receipt_server, field):
+    from modules.focus_import.model import canonical, digest, versions
+    fixture = receipt_server[1]
+    original = fixture.add_quarantine()
+    item = fixture.state['receipts'].pop(original)
+    item[field] = 'c' * 64 if field == 'file_digest' else next(v for v in versions() if v != fixture.state['connections']['north']['version'])
+    identity = digest(canonical({k: item[k] for k in ['file_digest', 'version', 'connection_id', 'reason', 'admitted', 'descriptor_digest']}).encode())
+    item['root_receipt'] = identity
+    fixture.state['receipts'][identity] = item
+    status, body, _ = fetch(receipt_server, 'view=quarantine')
+    assert status == 503 and body['error'] == 'collected_unavailable'
+    assert set(body) == {'error', 'request_id'} and 'records' not in body

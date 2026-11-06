@@ -2,7 +2,7 @@ import re
 
 from . import connections
 from .model import Rejected, canonical, digest, tenant_id
-from .temporal import checked_window, utc
+from .temporal import DELIVERY_FIELDS, checked_window, utc
 
 
 RECORD_FIELDS = (
@@ -105,7 +105,7 @@ def authorized_connections(state, config, members):
 
 
 def descriptor_for(value):
-    if not isinstance(value, dict):
+    if not isinstance(value, dict) or set(value) - connections.OPTIONAL_DELIVERY != DELIVERY_FIELDS:
         fail()
     scope = checked_window(value.get('window'))
     number(value.get('revision'), 1, 2**63 - 1)
@@ -273,9 +273,9 @@ def quarantine_records(state, config, owned, registry):
         expected_keys = sorted({owner['key'] for d in owned[cid]['domains'] for owner in [ownership.get(canonical(d))]})
         if item.get('tenant_keys') != expected_keys:
             continue
-        scope = checked_window(descriptor.get('window'))
+        scope = descriptor_for(descriptor)
         version = version_for(item.get('version'), registry)
-        if not sha(item.get('file_digest')):
+        if version != owned[cid]['version'] or item.get('file_digest') != descriptor['file_digest']:
             fail()
         bare = {k: v for k, v in descriptor.items() if k not in {'replacement_plan', 'reopen_plan'}}
         if item.get('descriptor_digest') != digest(canonical(bare).encode()):
@@ -288,8 +288,8 @@ def quarantine_records(state, config, owned, registry):
             fail()
         record = blank(identity, 'quarantine', item['state'])
         record.update(connection=cid, window_start=scope['start'], window_end=scope['end'],
-                      source_revision=nullable_number(descriptor.get('revision'), 1, 2**63 - 1), focus_version=version,
-                      declared_rows=nullable_number(descriptor.get('row_count'), 0, 10000), file_digest=item['file_digest'],
+                      source_revision=number(descriptor['revision'], 1, 2**63 - 1), focus_version=version,
+                      declared_rows=number(descriptor['row_count'], 0, 10000), file_digest=item['file_digest'],
                       received_at=timestamp(item.get('received_at')), reason=reason)
         records[identity] = record
     return records

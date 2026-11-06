@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from modules.focus_import.model import Rejected, canonical, digest, tenant_id
+from modules.focus_import.model import Rejected, canonical, digest, tenant_id, versions
 from modules.focus_import.receipt_metadata import RECORD_FIELDS
 from modules.focus_import.receipt_projection import MAX_RESPONSE_BYTES, project, receipts, selection
 
@@ -95,15 +95,15 @@ def test_current_membership_and_connection_bindings_are_required(receipt_fixture
     assert now['permission_revision'] != first['permission_revision']
 
 
-def test_quarantine_safe_metadata_and_invalid_declarations_are_nullable(receipt_fixture):
+def test_quarantine_safe_admitted_metadata_has_valid_declarations(receipt_fixture):
     f = receipt_fixture
-    qid = f.add_quarantine(descriptor_changes={'revision': 0, 'row_count': 'invalid'})
+    qid = f.add_quarantine()
     foreign = f.add_quarantine(revision=3, connection='south')
     body = f.render({'view': 'quarantine'})
     assert body['total'] == 1
     row = body['records'][0]
-    assert row['id'] == qid and row['reason'] == 'delivery_coverage'
-    assert row['source_revision'] is None and row['declared_rows'] is None
+    assert row['id'] == qid and row['reason'] == 'decimal_syntax'
+    assert row['source_revision'] == '1' and row['declared_rows'] == '2'
     assert row['file_bytes'] is None and row['format'] is None and row['mapping_digest'] is None
     assert row['root_receipt'] == qid and row['attempts'] == '0'
     f.state['receipts'][qid]['replaced_by'] = foreign
@@ -343,3 +343,30 @@ def test_source_binding_is_part_of_authorized_scope(receipt_fixture):
     f.authority.bindings['config_digest'] = changed
     after = f.render()
     assert before['auth_scope'] != after['auth_scope']
+
+
+@pytest.mark.parametrize('change', ['file-digest', 'version', 'revision', 'rows', 'through', 'finalized', 'extra-field'])
+def test_admitted_quarantine_contradictions_are_rejected(receipt_fixture, change):
+    f = receipt_fixture
+    original = f.add_quarantine()
+    item = f.state['receipts'].pop(original)
+    if change == 'file-digest':
+        item['file_digest'] = 'c' * 64
+    elif change == 'version':
+        item['version'] = next(v for v in versions() if v != f.state['connections']['north']['version'])
+    elif change == 'revision':
+        item['descriptor']['revision'] = 0
+    elif change == 'rows':
+        item['descriptor']['row_count'] = 'invalid'
+    elif change == 'through':
+        item['descriptor']['complete_through'] = 'invalid'
+    elif change == 'finalized':
+        item['descriptor']['finalized'] = 'true'
+    else:
+        item['descriptor']['unexpected'] = 'must-not-be-admitted'
+    item['descriptor_digest'] = digest(canonical(item['descriptor']).encode())
+    identity = digest(canonical({k: item[k] for k in ['file_digest', 'version', 'connection_id', 'reason', 'admitted', 'descriptor_digest']}).encode())
+    item['root_receipt'] = identity
+    f.state['receipts'][identity] = item
+    with pytest.raises(Rejected):
+        f.render({'view': 'quarantine'})

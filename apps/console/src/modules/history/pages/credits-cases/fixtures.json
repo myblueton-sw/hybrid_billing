@@ -1,0 +1,584 @@
+{
+  "balances": {
+    "schema": 1,
+    "numeric_format": "decimal-strings-read-v1",
+    "read_only": true,
+    "commands": "unconnected",
+    "source_mode": "synthetic",
+    "auth_scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "snapshot": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "permission_revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "view": "balances",
+    "selection": {
+      "q": ""
+    },
+    "cursor": null,
+    "next_cursor": null,
+    "total": 2,
+    "observed_at": "2026-11-06T01:02:03Z",
+    "records": [
+      {
+        "id": "QA-BALANCE-1",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic money zero observations",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "blockers": [],
+        "kind": "balance",
+        "dimension": {
+          "kind": "money",
+          "currency": "USD",
+          "unit": null
+        },
+        "opening": "0.0000",
+        "increases": "0",
+        "applied": "0",
+        "expired": "0",
+        "reversed": "-0.00",
+        "closing": "0.0000",
+        "available": "0",
+        "reserved": "0",
+        "migration_ref": "QA-MIGRATION-1",
+        "included_history_ref": "QA-HISTORY-1"
+      },
+      {
+        "id": "QA-BALANCE-2",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic stale quantity history",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "stale"
+        },
+        "blockers": [],
+        "kind": "balance",
+        "dimension": {
+          "kind": "quantity",
+          "currency": null,
+          "unit": "QA units"
+        },
+        "opening": "100.000",
+        "increases": null,
+        "applied": "60",
+        "expired": "0",
+        "reversed": "-0.00",
+        "closing": null,
+        "available": null,
+        "reserved": "40",
+        "migration_ref": "QA-MIGRATION-1",
+        "included_history_ref": "QA-HISTORY-1"
+      }
+    ]
+  },
+  "reservations": {
+    "schema": 1,
+    "numeric_format": "decimal-strings-read-v1",
+    "read_only": true,
+    "commands": "unconnected",
+    "source_mode": "synthetic",
+    "auth_scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "snapshot": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "permission_revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "view": "reservations",
+    "selection": {
+      "q": ""
+    },
+    "cursor": null,
+    "next_cursor": null,
+    "total": 2,
+    "observed_at": "2026-11-06T01:02:03Z",
+    "records": [
+      {
+        "id": "QA-RESERVATION-1",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic unknown external reservation",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "blockers": [],
+        "kind": "reservation",
+        "dimension": {
+          "kind": "money",
+          "currency": "USD",
+          "unit": null
+        },
+        "value": null,
+        "credit_ref": "QA-CREDIT-1",
+        "document_ref": "QA-DOC-1",
+        "original_ref": null,
+        "state": "outcome_unknown"
+      },
+      {
+        "id": "QA-RESERVATION-2",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic declared applied reservation",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "blockers": [],
+        "kind": "reservation",
+        "dimension": {
+          "kind": "money",
+          "currency": "USD",
+          "unit": null
+        },
+        "value": "0.000",
+        "credit_ref": "QA-CREDIT-1",
+        "document_ref": "QA-DOC-1",
+        "original_ref": "QA-RESERVATION-ORIGINAL",
+        "state": "applied"
+      }
+    ]
+  },
+  "cases": {
+    "schema": 1,
+    "numeric_format": "decimal-strings-read-v1",
+    "read_only": true,
+    "commands": "unconnected",
+    "source_mode": "synthetic",
+    "auth_scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "snapshot": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "permission_revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "view": "cases",
+    "selection": {
+      "q": ""
+    },
+    "cursor": null,
+    "next_cursor": null,
+    "total": 2,
+    "observed_at": "2026-11-06T01:02:03Z",
+    "records": [
+      {
+        "id": "QA-CASE-1",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic separate internal and public evidence",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "blockers": [],
+        "kind": "case",
+        "state": "in_review",
+        "original_document_ref": "QA-DOC-1",
+        "amounts": [
+          {
+            "currency": "USD",
+            "value": "125.0000"
+          }
+        ],
+        "owner_label": "QA billing reviewer",
+        "received_at": "2026-11-05T01:02:03Z",
+        "deadline": null,
+        "internal_note": "QA internal evidence: reconciliation is pending.",
+        "public_reply": "QA public evidence: inquiry received.",
+        "resolution": "correction_requested",
+        "resolution_ref": "QA-CORRECTION-1",
+        "consent": {
+          "state": "not_recorded",
+          "evidence_ref": null
+        },
+        "holds": [
+          {
+            "type": "collections",
+            "effect": "requested",
+            "reference": "QA-HOLD-1",
+            "revision": "QA-rev1",
+            "target_ref": "QA-DOC-1",
+            "observed_at": "2026-11-06T01:02:03Z",
+            "external_effect": "pending"
+          }
+        ]
+      },
+      {
+        "id": "QA-CASE-2",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic consent with explicit evidence",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "blockers": [],
+        "kind": "case",
+        "state": "resolved",
+        "original_document_ref": "QA-DOC-1",
+        "amounts": [
+          {
+            "currency": "USD",
+            "value": "125.0000"
+          }
+        ],
+        "owner_label": "QA billing reviewer",
+        "received_at": "2026-11-05T01:02:03Z",
+        "deadline": null,
+        "internal_note": "QA internal evidence: reconciliation is pending.",
+        "public_reply": "QA public evidence: inquiry received.",
+        "resolution": "corrected",
+        "resolution_ref": "QA-CORRECTION-1",
+        "consent": {
+          "state": "recorded",
+          "evidence_ref": "QA-CONSENT-1"
+        },
+        "holds": [
+          {
+            "type": "collections",
+            "effect": "effective",
+            "reference": "QA-HOLD-1",
+            "revision": "QA-rev1",
+            "target_ref": "QA-DOC-1",
+            "observed_at": "2026-11-06T01:02:03Z",
+            "external_effect": "not_applicable"
+          }
+        ]
+      }
+    ]
+  },
+  "adjustments": {
+    "schema": 1,
+    "numeric_format": "decimal-strings-read-v1",
+    "read_only": true,
+    "commands": "unconnected",
+    "source_mode": "synthetic",
+    "auth_scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "snapshot": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "permission_revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "view": "adjustments",
+    "selection": {
+      "q": ""
+    },
+    "cursor": null,
+    "next_cursor": null,
+    "total": 2,
+    "observed_at": "2026-11-06T01:02:03Z",
+    "records": [
+      {
+        "id": "QA-ADJUSTMENT-1",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic original-linked monetary credit",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "blockers": [],
+        "kind": "adjustment",
+        "original_document_ref": "QA-DOC-1",
+        "original_claim_ref": "QA-CLAIM-1",
+        "correction_ref": "QA-CORRECTION-1",
+        "reason": "QA synthetic approved monetary observation only",
+        "evidence_ref": "QA-EVIDENCE-1",
+        "approval_ref": "QA-APPROVAL-1",
+        "adjustment_kind": "credit",
+        "state": "applied",
+        "amounts": [
+          {
+            "currency": "USD",
+            "value": "-12.3400"
+          }
+        ]
+      },
+      {
+        "id": "QA-ADJUSTMENT-2",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic incomplete quantity-reversal evidence",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "blockers": [],
+        "kind": "adjustment",
+        "original_document_ref": null,
+        "original_claim_ref": null,
+        "correction_ref": null,
+        "reason": "QA synthetic approved monetary observation only",
+        "evidence_ref": null,
+        "approval_ref": null,
+        "adjustment_kind": "quantity_reversal",
+        "state": "draft",
+        "amounts": [
+          {
+            "currency": "KRW",
+            "value": null
+          }
+        ]
+      }
+    ]
+  },
+  "payment-terms": {
+    "schema": 1,
+    "numeric_format": "decimal-strings-read-v1",
+    "read_only": true,
+    "commands": "unconnected",
+    "source_mode": "synthetic",
+    "auth_scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "snapshot": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "permission_revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "view": "payment-terms",
+    "selection": {
+      "q": ""
+    },
+    "cursor": null,
+    "next_cursor": null,
+    "total": 4,
+    "observed_at": "2026-11-06T01:02:03Z",
+    "records": [
+      {
+        "id": "QA-PAYMENT-1",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic current confirmed remaining receivable",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "blockers": [],
+        "kind": "payment",
+        "original_document_ref": "QA-DOC-1",
+        "issuance": "issued",
+        "term_ref": "QA-TERM-1",
+        "term_label": "QA source payment term",
+        "time_zone": "Asia/Seoul",
+        "issue_date": "2026-10-01",
+        "original_due_date": "2026-10-31",
+        "effective_due_date": "2026-11-01",
+        "receivable": {
+          "currency": "USD",
+          "value": "25.0000"
+        },
+        "receipt": {
+          "state": "confirmed",
+          "reference": "QA-RECEIPT-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "overdue": "overdue",
+        "dispute": "open",
+        "holds": [
+          {
+            "type": "collections",
+            "effect": "requested",
+            "reference": "QA-HOLD-1",
+            "revision": "QA-rev1",
+            "target_ref": "QA-DOC-1",
+            "observed_at": "2026-11-06T01:02:03Z",
+            "external_effect": "pending"
+          }
+        ]
+      },
+      {
+        "id": "QA-PAYMENT-2",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic stale receipts unknown",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "stale"
+        },
+        "blockers": [],
+        "kind": "payment",
+        "original_document_ref": "QA-DOC-1",
+        "issuance": "issued",
+        "term_ref": "QA-TERM-1",
+        "term_label": "QA source payment term",
+        "time_zone": "Asia/Seoul",
+        "issue_date": "2026-10-01",
+        "original_due_date": "2026-10-31",
+        "effective_due_date": "2026-11-01",
+        "receivable": {
+          "currency": "USD",
+          "value": "25.0000"
+        },
+        "receipt": {
+          "state": "confirmed",
+          "reference": "QA-RECEIPT-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "stale"
+        },
+        "overdue": "unknown",
+        "dispute": "open",
+        "holds": [
+          {
+            "type": "collections",
+            "effect": "requested",
+            "reference": "QA-HOLD-1",
+            "revision": "QA-rev1",
+            "target_ref": "QA-DOC-1",
+            "observed_at": "2026-11-06T01:02:03Z",
+            "external_effect": "pending"
+          }
+        ]
+      },
+      {
+        "id": "QA-PAYMENT-3",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic internal nonpayment scope",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "blockers": [],
+        "kind": "payment",
+        "original_document_ref": null,
+        "issuance": "internal",
+        "term_ref": null,
+        "term_label": null,
+        "time_zone": null,
+        "issue_date": null,
+        "original_due_date": null,
+        "effective_due_date": null,
+        "receivable": {
+          "currency": "USD",
+          "value": null
+        },
+        "receipt": {
+          "state": "not_provided",
+          "reference": null,
+          "observed_at": null,
+          "freshness": "unknown"
+        },
+        "overdue": "not_applicable",
+        "dispute": "none",
+        "holds": []
+      },
+      {
+        "id": "QA-PAYMENT-4",
+        "revision": "QA-revision-1",
+        "label": "QA synthetic source-declared fully paid",
+        "target": {
+          "entity": "QA entity",
+          "customer": "QA customer",
+          "contract": "QA contract",
+          "period": "2026-10"
+        },
+        "updated_at": "2026-11-06T01:02:03Z",
+        "authority": {
+          "kind": "platform",
+          "reference": "QA-AUTH-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "blockers": [],
+        "kind": "payment",
+        "original_document_ref": "QA-DOC-1",
+        "issuance": "issued",
+        "term_ref": "QA-TERM-1",
+        "term_label": "QA source payment term",
+        "time_zone": "Asia/Seoul",
+        "issue_date": "2026-10-01",
+        "original_due_date": "2026-10-31",
+        "effective_due_date": "2026-11-01",
+        "receivable": {
+          "currency": "USD",
+          "value": "0.0000"
+        },
+        "receipt": {
+          "state": "confirmed",
+          "reference": "QA-RECEIPT-1",
+          "observed_at": "2026-11-06T01:02:03Z",
+          "freshness": "current"
+        },
+        "overdue": "fully_paid",
+        "dispute": "none",
+        "holds": []
+      }
+    ]
+  }
+}

@@ -24,15 +24,15 @@
       },
       {
         "key": "trace",
-        "labelKo": "결과·규칙 추적"
+        "labelKo": "결과·규칙 근거"
       },
       {
         "key": "comparison",
-        "labelKo": "전후 비교"
+        "labelKo": "원천 입력 비교"
       },
       {
         "key": "validation",
-        "labelKo": "검증"
+        "labelKo": "청구 전 확인"
       },
       {
         "key": "recognition",

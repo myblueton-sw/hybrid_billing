@@ -1,0 +1,2146 @@
+[
+  {
+    "id": "A01",
+    "path": "/assistant",
+    "menu": "ai",
+    "audience": "admin",
+    "module": "assistant",
+    "archetype": "conversation",
+    "spec": "docs/ui/screens/A01/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AM",
+      "PR",
+      "BL",
+      "AP",
+      "CP",
+      "AU",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "conversation",
+        "labelKo": "대화"
+      },
+      {
+        "key": "plan",
+        "labelKo": "실행 계획"
+      },
+      {
+        "key": "results",
+        "labelKo": "작업·결과"
+      },
+      {
+        "key": "retention",
+        "labelKo": "대화 보관"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "AI 업무 Assistant",
+    "scopeLabelKo": "업무 공간·고객/계약·기간·통화",
+    "purposeKo": "현재 scope·기간·통화·출처·갱신·요청/해석/계획·서버 결과 카드·job, 질의/초안/검증/명시 승인 전달/상세로 이동",
+    "commandReferences": [],
+    "actionEvidence": "질문 보내기; 실행 계획 검토; 작업 실행 요청 (durable job); 승인 화면 열기 (→B09 human approval); 작업 계속 보기; 대화 삭제 요청 (blocked by legal hold).",
+    "ticket": "HB-139",
+    "spec_sha256": "5f72b63ed745ca08b72bd8760fa0a9bbb7bf67ad7818bd060fc64781d750c5ce",
+    "purpose": "허용 범위의 정산 질문과 초안·검증·업무 요청을 실제 서버 명령 및 결과 카드로 연결한다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 업무 범위 | scope-reference | 예 | 허용 범위 선택 | 범위 없거나 모호하면 질문; 자동 확장 금지 | 고객 식별 |\n| 기간·통화 | period-currency | 조건부/선택 | 요청에 필요한 경우 | 계산/집계 의미와 명확히 고정; 다른 통화 합산 금지 | 거래 |\n| 요청 내용 | textarea | 예 | 사용자 입력 | secret/불필요 고객 원문 입력 안내; 모델이 임의 권한 생성 불가 | 업무 대화 |\n| 출처·기준시각 | evidence-summary | 조건부/선택 | 서버 읽기 전용 | 근거 링크·완전성·stale 상태; 모델 추정과 사실 구분 | 증빙 |\n| 실행 계획 | command-summary | 조건부/선택 | 서버 검증된 초안 | 대상·명령·입력 hash·정책 revision·부작용·권한/승인 필요 | 권한 |\n| 명시 승인 카드 | approval-card | 조건부/선택 | 권한 있는 승인자 | 현재 해시·역할·금액 한도·직무 분리; 자연어 칭찬/일반 동의로 대체 금지 | 승인 |\n| 작업 결과 | job-reference | 조건부/선택 | 읽기 전용 | 접수≠완료·waiting/partial 명확; 실제 job ID 유지 | 업무 |\n| 첨부·도구 출력 | untrusted-reference | 조건부/선택 | 허용 자료만 연결 | 프롬프트 주입으로 지시·도구목록·권한 확대 안 됨 | 고객 자료 |\n| 대화 보관 상태 | retention-summary | 예 | 정책상 개인 관리 | 대화 삭제≠작업/승인/감사 정본 삭제 | 개인 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항"
+    ]
+  },
+  {
+    "id": "B02",
+    "path": "/meters",
+    "menu": "cost",
+    "audience": "admin",
+    "module": "sources",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/B02/spec.md",
+    "exampleRoles": [
+      "OP",
+      "BL",
+      "CP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "assets",
+        "labelKo": "자산 이력"
+      },
+      {
+        "key": "intervals",
+        "labelKo": "계측 구간"
+      },
+      {
+        "key": "gaps",
+        "labelKo": "누락·reset"
+      },
+      {
+        "key": "meters",
+        "labelKo": "모델·미터"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "계측·자산 이력",
+    "scopeLabelKo": "기간·자산/미터·측정등급·모델·귀속",
+    "purposeKo": "VM/GPU/미터 ID·구간·사양/귀속 변경·단위·측정등급·reset·누락, 진단/근거 조회",
+    "commandReferences": [],
+    "actionEvidence": "구간 진단; 원천 근거 보기 (→S04); 누락 검토 등록 (→U04).",
+    "ticket": "HB-102",
+    "spec_sha256": "7ccd5522747c51baa4f0f8b54f85ded002be8de4b62a15edbe177550c6c4572c",
+    "purpose": "과거 자산 사양·귀속과 계측 구간을 연결해 계산 가능한 수량을 확인한다.",
+    "fields": "조건부 필드는 해당 원천/업무 유형에 적용될 때 필수다. JSON의 required=false는 미적용 가능성을 뜻하며 필수 검증을 생략한다는 의미가 아니다. 금액·환율·수량은 decimal 문자열, 기간은 시작 포함/끝 제외와 계약 시간대를 기본으로 한다.\n\n| 표시명 | 타입 | 필수 | 읽기·편집 | 검증 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 자산·미터 canonical ID | reference | 예 | 읽기 | 표시명으로 연결하지 않음 | 내부 |\n| 사양·귀속 유효구간 | interval+reference | 예 | 읽기 | 현재값으로 과거 보간 금지 | 계약 |\n| 측정 종류 | enum | 예 | 읽기 | 누적/구간합계/순간값 구분 | 내부 |\n| 수량·단위 | decimal-string+unit | 조건부 | 읽기 | GB/GiB·kW/kWh 암묵 치환 금지 | 사용량 |\n| 측정등급·reset | enum+event-reference | 예 | 읽기 | mock·추정·측정불가 표시 | 내부 |\n| 모델 별칭·단가 분모 | reference+unit | 조건부 | 읽기 | 시점별 별칭·분모 유지 | 요율 |",
+    "actions": "",
+    "special_sections": [
+      "목적·역할·범위",
+      "화면 구역",
+      "필드 계약",
+      "표·필터·탭",
+      "동작 계약",
+      "상태와 문구",
+      "대량 데이터·동시성",
+      "반응형·키보드",
+      "연결 화면",
+      "요구·인수 연결",
+      "미정값·설계 검증"
+    ]
+  },
+  {
+    "id": "C01",
+    "path": "/portal/overview",
+    "menu": "portal",
+    "audience": "portal",
+    "module": "customer-portal",
+    "archetype": "portal-dashboard",
+    "spec": "docs/ui/screens/C01/spec.md",
+    "exampleRoles": [
+      "CP",
+      "CU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "summary",
+        "labelKo": "요약"
+      },
+      {
+        "key": "usage",
+        "labelKo": "내 사용량"
+      },
+      {
+        "key": "notifications",
+        "labelKo": "알림 요약"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "내 정산 홈",
+    "scopeLabelKo": "내 조직·정산 기간·정산 종류·통화",
+    "purposeKo": "자기 기간·통화·판매액 또는 허용 내부 배분·기준시각·문서·문의/할일",
+    "commandReferences": [],
+    "actionEvidence": "문서 보기 (→C02); 사용량 자세히 (→C02, never S04); 문의하기 (→C03); 알림 보기 (→U03); 내 보안 (→M05); 납부기한 확인.",
+    "ticket": "HB-135",
+    "spec_sha256": "95706c3efc99bc604dd62d8c396e143b0cbe3d3d29613accf56ebd4164e5d68b",
+    "purpose": "고객 또는 조직 구성원이 자신에게 공개된 판매 청구나 내부 배분을 이해하고 문서 확인·문의·알림의 다음 행동을 찾는다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 내 조직 | scope-select | 예 | 본인에게 허용된 목록 | 조직 전환 시 이전 수치·선택·알림 범위 폐기 | 고객 식별 |\n| 정산 기간 | period | 예 | 조회 가능 기간 | 공개 정책/보존 범위 적용; 미생성 기간을 0으로 채우지 않음 | 거래 |\n| 정산 종류 | enum | 예 | 계약상 가능 종류 | 판매 청구와 내부 배분을 별도 제목으로 표시; 구매 원가 카드 기본 없음 | 거래 |\n| 통화 | currency | 예 | 존재하는 허용 통화 | 통화별 독립 합계; 환산하면 표시용 FX/기준일 명시 | 거래 |\n| 이번 정산 | amount-summary | 예 | 읽기 전용 | 판매 확정/예정 또는 승인 배분을 구분; 초안은 공개 정책 허용 시만 | 금액 |\n| 문서 공개 상태 | status | 예 | 읽기 전용 | 미공개/생성대기/확정/정정 구분; 내부 승인자의 비공개 정보 제외 | 거래 |\n| 납부 정보 | external-status | 조건부/선택 | 읽기 전용 | 외부 권위의 확인시각과 미확인 표시; 다운로드≠납부 | 금융 |\n| 사용량 요약 | measure-summary | 조건부/선택 | 읽기 전용 | 허용 단위/기간/서비스만; 원가·마진·숨은 가격 역산 필드 제외 | 사용량 |\n| 내 문의 | case-summary | 조건부/선택 | 읽기 전용 | 본인 열람 허용 사건만, 내부 메모/전체 처리량 없음 | 문의 |\n| 알림 | notification-summary | 조건부/선택 | 읽기 전용 | 문서공개/문의답변 등 고객에게 해당되는 업무 사건 | 개인 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항",
+      "사용자 추가: Payment Term·납부기한·Overdue"
+    ]
+  },
+  {
+    "id": "C02",
+    "path": "/portal/documents",
+    "menu": "portal",
+    "audience": "portal",
+    "module": "customer-portal",
+    "archetype": "portal-list-detail",
+    "spec": "docs/ui/screens/C02/spec.md",
+    "exampleRoles": [
+      "CP",
+      "CU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "documents",
+        "labelKo": "문서 목록"
+      },
+      {
+        "key": "detail",
+        "labelKo": "문서 상세"
+      },
+      {
+        "key": "statement",
+        "labelKo": "판매/배분 명세"
+      },
+      {
+        "key": "usage",
+        "labelKo": "허용 사용량"
+      },
+      {
+        "key": "downloads",
+        "labelKo": "다운로드 상태"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "내 문서·사용량",
+    "scopeLabelKo": "내 조직/계약·정산 기간·통화",
+    "purposeKo": "자기 문서/개정·판매 명세·허용 사용량·정정 관계·패키지·정책, 조회/다운로드/문의",
+    "commandReferences": [],
+    "actionEvidence": "문서 열기; 다운로드 (bulk confirm); 보관 문서 복원 요청; 문서 문의 (→C03); 필터 전체 선택; 납부 상태 문의.",
+    "ticket": "HB-136",
+    "spec_sha256": "89772338cd32442043812ce5f221c22908e8fcd8598b13130392e7854eff1055",
+    "purpose": "고객이 자신에게 공개된 문서와 허용 사용량을 찾고 정정 관계를 이해하며 안전하게 다운로드하거나 문의한다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 문서 식별 | reference | 예 | 읽기 전용 | 공개 번호와 canonical 문서 ID 연결; 번호로 타 고객 검색 금지 | 거래 |\n| 문서 종류 | enum | 예 | 읽기 전용 | 판매 청구/내부 배분/크레딧/정정 구분 | 거래 |\n| 발행자·수신자 | party-summary | 예 | 읽기 전용 | 공개 문서에 승인된 정보만; 여기서 지급 계좌 수정 불가 | 개인/금융 |\n| 금액·세금·통화 | decimal-summary | 예 | 읽기 전용 | 해당 문서 snapshot 합계; null/잠정/확정 구분 | 금액 |\n| 원문·정정 | document-links | 조건부/선택 | 읽기 전용 | 원문 유지·관계별 증감 표시; 새 문서가 이전 문서를 삭제하지 않음 | 거래 |\n| 명세 행 | paged-table | 조건부/선택 | 읽기 전용 | 허용 서비스/수량/단위/판매액 또는 배분액만 | 금액/사용량 |\n| 사용량 기간·단위 | measure-summary | 조건부/선택 | 허용 필터 | 계약상 공개 단위로 표시; 정확한 측정/추정 여부 표시 | 사용량 |\n| 다운로드 형식 | enum | 조건부/선택 | 허용 형식만 선택 | PDF/CSV/XLSX 중 공개 패키지에 있는 형식; 원본 관리자 파일 없음 | 파일 |\n| 다운로드 범위 | enum | 조건부/선택 | 현재 문서/선택문서/필터전체 | 문서 snapshot과 정책 revision을 고정; 대상 수·통화별 합계 미리보기 | 공개 범위 |\n| 파일 보관 상태 | status | 예 | 읽기 전용 | 준비됨/복원대기/만료/권한차단을 구분 | 보존 |\n| 문의할 행 | reference | 조건부/선택 | 현재 문서 허용 행 | 불변 행 참조, 화면 행번호를 식별자로 사용하지 않음 | 문의 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항",
+      "사용자 추가: Payment Term·납부기한·Overdue"
+    ]
+  },
+  {
+    "id": "C03",
+    "path": "/portal/cases",
+    "menu": "portal",
+    "audience": "portal",
+    "module": "customer-portal",
+    "archetype": "portal-inbox",
+    "spec": "docs/ui/screens/C03/spec.md",
+    "exampleRoles": [
+      "CP",
+      "CU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "cases",
+        "labelKo": "문의 목록"
+      },
+      {
+        "key": "compose",
+        "labelKo": "문의 작성"
+      },
+      {
+        "key": "conversation",
+        "labelKo": "대화·자료"
+      },
+      {
+        "key": "resolution",
+        "labelKo": "관련 문서·해결"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "내 문의·답변",
+    "scopeLabelKo": "내 조직·관련 문서·기간",
+    "purposeKo": "자기 문서/행·쟁점·이유·첨부·공개답변·상태·기한, 접수/자료 추가/해결 확인",
+    "commandReferences": [],
+    "actionEvidence": "문의 접수 (receipt ≠ cancellation); 자료 추가; 해결 확인; 다시 문의; 관련 문서 보기.",
+    "ticket": "HB-137",
+    "spec_sha256": "b5aa39f367ee71f0e46d74d722c0c5e73f15c45f6185e260365a6fe941a7b5e8",
+    "purpose": "고객이 공개 문서의 쟁점을 접수하고 자료를 보완하며 공개 답변과 해결 결과를 확인한다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 관련 문서 | scoped-reference | 예 | 접수 전 허용 문서 선택 | 본인 공개 문서만; 보이는 번호와 실제 ID를 대조 | 거래 |\n| 쟁점 행 | scoped-reference | 조건부/선택 | 해당 문서 허용 행만 | 행번호 아닌 canonical 참조; 문서 revision 보존 | 거래 |\n| 문의 유형 | enum | 예 | 접수 전 선택 | 금액/사용량/문서정보/다운로드 등 정책상 유형 | 문의 |\n| 제목 | text | 예 | 초안 수정 | 빈값/과도길이 제한은 미정; 비밀 포함 안내 | 문의 |\n| 문의 내용 | textarea | 예 | 초안 또는 공개 추가답변 | 일반 텍스트/안전 표현; credential·결제 비밀 입력 금지 | 고객 내용 |\n| 쟁점 금액·통화 | decimal | 조건부/선택 | 선택한 문서 범위 | 통화 일치·음수 의미 명시; 합계 차감 명령이 아님 | 금액 |\n| 첨부 | file | 조건부/선택 | 접수/보완 권한 | 크기/형식 제한 미정; 격리 검사 후 공개·실행 금지 | 고객 파일 |\n| 회신 요청 기한 | datetime | 조건부/선택 | 고객 요청만 | 요청기한과 담당자 확정기한을 구분; 자동 SLA 약속 아님 | 업무 |\n| 공개 답변 | thread | 조건부/선택 | 읽기/허용 답변 추가 | 내부 메모를 같은 payload에 포함하지 않음 | 고객 내용 |\n| 해결 상태·근거 | status-reference | 예 | 담당 판단 읽기/고객 확인 | 조정 문서가 있으면 공개 연결; 해결≠환불 | 거래 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항"
+    ]
+  },
+  {
+    "id": "I01",
+    "path": "/invoices",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "issuance",
+    "archetype": "list+detail-tabs",
+    "spec": "docs/ui/screens/I01/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AP",
+      "AU"
+    ],
+    "reactBodies": [
+      "review-issue"
+    ],
+    "tabs": [
+      {
+        "key": "documents",
+        "labelKo": "문서 목록"
+      },
+      {
+        "key": "body",
+        "labelKo": "문서 본문"
+      },
+      {
+        "key": "corrections",
+        "labelKo": "원문·정정"
+      },
+      {
+        "key": "history",
+        "labelKo": "승인·전달 이력"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "인보이스·내부 명세",
+    "scopeLabelKo": "법인·계약·문서 종류·기간·통화",
+    "purposeKo": "원천/판매/ERP/내부 종류·법인·번호·통화·본문/첨부·세금/템플릿·승인·원문/정정, 미리보기/발행/다운로드/정정 초안",
+    "commandReferences": [],
+    "actionEvidence": "안전 미리보기; 발행 요청 (AP, approval hash; ERP mode → I02); 확정본 다운로드 (same bytes); 정정 초안; 납기 연장 승인 요청 (approval).",
+    "ticket": "HB-113",
+    "spec_sha256": "f77f11a0999a23b7442093ded7a99cde98f5afa277690c66af855009795a996a",
+    "purpose": "문서의 발행 책임과 승인 근거를 확인하고 적격한 문서만 발행하거나 원문 연결 정정을 요청한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 문서 종류 | enum | 예 | 초안 | ERP/자체/내부 책임 구분 | 업무 |\n| 발행 법인 | reference | 예 | 초안 | 계약 법인과 일치 | 업무 |\n| 문서 번호 | identifier | 확정 시 | 읽기 전용 | 법인/번호체계 고유성; 임의 입력 금지 | 고객 |\n| 금액·세금·통화 | decimal+currency | 예 | 읽기 전용 | 승인 명세와 ERP 최종액 각각 대사 | 재무 |\n| 템플릿 개정 | reference | 예 | 초안 | 검증된 문서/지역 조합 | 업무 |\n| 지급계좌 참조 | protected reference | 해당 문서 | 별도 변경 초안 | 기존 채널 확인·별도 승인·유효기간 | 금융 |\n| 수신자 참조 | reference | 해당 문서 | 별도 변경 초안 | 수신 권리와 공개 정책 일치 | 개인 |\n| 원문·정정 참조 | reference[] | 정정 시 | 초안 | 확정 원문을 삭제/덮어쓰지 않음 | 고객 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 안전 미리보기 | BL/AP/AU의 문서 조회 | 범위·문서 접근 적격 | 외부 리소스 없이 고정 본문 표시 | 없음 |\n| 발행 요청 | 발행 권한 AP | 승인 hash·Claim·번호·법정 조합 검증 | 발행 작업 접수; ERP 모드는 I02로 연결 | 문서 종류/법인/금액/되돌릴 수 없음 확인 |\n| 확정본 다운로드 | 문서 반출 권한 | 현재 접근·보존 상태 유효 | 저장된 동일 바이트 반환 | 원본/공개본과 반출 목적 확인 |\n| 정정 초안 | 정정 권한 BL/AP | 확정 원문 및 잔여 정정 범위 | 원문 참조 차액 초안 생성 | 원문 유지와 후속 승인 안내 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위",
+      "사용자 추가: Payment Term·납부기한·Overdue",
+      "사용자 추가: 월별 ERP 인식과 분기 청구"
+    ]
+  },
+  {
+    "id": "I02",
+    "path": "/submissions",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "delivery",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/I02/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "submissions",
+        "labelKo": "제출 목록"
+      },
+      {
+        "key": "comparison",
+        "labelKo": "초안 비교"
+      },
+      {
+        "key": "rows",
+        "labelKo": "문서·행 연결"
+      },
+      {
+        "key": "events",
+        "labelKo": "외부 사건"
+      },
+      {
+        "key": "capabilities",
+        "labelKo": "연결 capability"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "ERP 제출·동기화",
+    "scopeLabelKo": "ERP 제품/버전·법인",
+    "purposeKo": "연결 제품/버전·법인·마스터 매핑·제출/외부ID·초안/전기/법정/입금 상태·금액차이, 초안 조회/대사/허용 전기/정정",
+    "commandReferences": [],
+    "actionEvidence": "초안 제출 (idempotent); 외부 상태 조회; 귀속 행 대사; 전기 요청 (AP, final ERP amount re-approval); 정정 요청; 수납·납기 대사; 승인된 월별 인식 전송.",
+    "ticket": "HB-114",
+    "spec_sha256": "fd2590cef5eada5df6108fe465d20df66e3adf38fc1962a0edb340d8ea2e60bf",
+    "purpose": "플랫폼 명세와 외부 문서의 연결을 대사하고 중복 없이 초안·전기·정정 상태를 추적한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| ERP 연결 | reference | 예 | 제출 전 | 지원 제품/버전·법인 일치 | 업무 |\n| 기존 주문·선불 참조 | reference[] | 해당 시 | 제출 전 | 직접 발행/주문 청구 중복 검사 | 재무 |\n| 제출 ID·개정 | identifier | 예 | 읽기 전용 | API/파일 공통 원장 | 업무 |\n| 외부 문서·행 연결 | reference[] | 외부 반영 시 | 검증 매핑 | 다대다; 비관련 ERP 상품 제외 | 재무 |\n| 순액·세금·수량 | decimal set | 예 | 읽기 전용 | 플랫폼 귀속분과 문서 전체 별도 | 재무 |\n| 외부 revision | identifier | 초안 존재 시 | 읽기 전용 | 승인 후 변경 시 재승인 | 업무 |\n| 자동 첨부·발송 검증 | evidence | 자동 전달 시 | 검증 기록 | 통제 불가면 자동 전달 비활성 | 내부 |\n| 마지막·다음 조회 | datetime | 추적 중 | 정책 기반 | webhook 누락 주기 대사 | 업무 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 초안 제출 | 제출 권한 BL/AP | 기존 주문/AP 대사·고정 승인·capability | 멱등 제출 작업 접수 | 법인·경로·기존 거래 연결 확인 |\n| 외부 상태 조회 | ERP 조회 권한 | 연결·scope 유효 | 외부 상태 회수; 발행 완료로 추정 금지 | 없음 |\n| 귀속 행 대사 | 대사 권한 BL | 외부 문서/행 확보 | 플랫폼 귀속 순액·세금·수량 차이 표시 | 없음 |\n| 전기 요청 | 전기 권한 AP | ERP 최종액 재승인·revision 일치 | 허용된 ERP 명령 접수 | 외부 회계 영향·최종액 확인 |\n| 정정 요청 | 정정 권한 AP | 원문과 수정 적격성·승인 | 원문 연결 정정 사건 | 취소/역분개 영향 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위",
+      "사용자 추가: Payment Term·납부기한·Overdue",
+      "사용자 추가: 월별 ERP 인식과 분기 청구"
+    ]
+  },
+  {
+    "id": "I03",
+    "path": "/handoffs",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "delivery",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/I03/spec.md",
+    "exampleRoles": [
+      "BL"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "handoffs",
+        "labelKo": "인계 목록"
+      },
+      {
+        "key": "files",
+        "labelKo": "파일 구성"
+      },
+      {
+        "key": "outcomes",
+        "labelKo": "반영 결과"
+      },
+      {
+        "key": "reconciliation",
+        "labelKo": "행별 대사"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "파일 인계·반영 결과",
+    "scopeLabelKo": "파일 목적·템플릿 버전·기간",
+    "purposeKo": "표준/검증 업로드용·템플릿 버전·제출ID·문서/행·담당·다운로드/외부반영 상태, 생성/결과 등록/대사/실패 재인계",
+    "commandReferences": [],
+    "actionEvidence": "표준 XLSX 생성 (job); 검증 업로드 파일 생성; 반영 결과 등록 (never overwrites amounts); 미반영 범위 재인계; 월별 인식 인계 파일 생성.",
+    "ticket": "HB-115",
+    "spec_sha256": "32d3e124da305c3377f183ea2167e758dd7acf4f078c70349fb07e263a490635",
+    "purpose": "승인 명세로 표준 파일을 만들고 외부 반영 결과를 같은 제출 원장에 등록한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 파일 목적 | enum | 예 | 생성 전 | 검토용/재입력용 구분 | 업무 |\n| 템플릿·생성기 버전 | reference | 예 | 생성 전 | ERP 업로드는 제품별 실증 필요 | 업무 |\n| 승인 명세 hash | digest | 예 | 읽기 전용 | 현재 승인과 일치 | 내부 |\n| 제출·행 ID | identifier[] | 예 | 읽기 전용 | API와 동일 ID; 긴 ID 텍스트 | 업무 |\n| 정밀 금액·통화 | decimal+currency | 예 | 읽기 전용 | 수정 금액 회수 거부 | 재무 |\n| 외부 참조·결과 | reference+enum | 결과 등록 시 | 결과 입력 | 허용 문서/행·부분 반영 대사 | 재무 |\n| 분할 manifest | reference | 분할 시 | 읽기 전용 | 파일별 행/합계·누락 없음 | 내부 |\n| 담당·인계 기한 | reference+datetime | 인계 시 | 업무 권한 | 유효 담당·계약상 기한 | 개인 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 표준 XLSX 생성 | 파일 생성 권한 BL | 승인 명세·공개 목적 확정 | 공통 표준/고객 파일 생성 작업 접수 | 목적·대상·행 수 확인 |\n| 검증 업로드 파일 생성 | ERP 인계 권한 | 검증된 제품 템플릿·미반영 범위 | 고정값 업로드 파일 생성 | 검토용과 구별·금액 확인 |\n| 반영 결과 등록 | ERP 결과 등록 권한 | 동일 제출/행 ID·외부 증거 | 외부 참조/상태만 반영; 금액 덮어쓰기 거부 | 결과 범위와 증거 확인 |\n| 미반영 범위 재인계 | 인계 권한 | 외부 미반영 확인; 불명 제외 | 동일 원장 실패 범위만 재인계 | 이미 반영된 행 제외 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위",
+      "사용자 추가: 월별 ERP 인식과 분기 청구"
+    ]
+  },
+  {
+    "id": "I04",
+    "path": "/exports",
+    "menu": "bill",
+    "audience": "admin",
+    "module": "delivery",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/I04/spec.md",
+    "exampleRoles": [
+      "BL",
+      "AP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "policies",
+        "labelKo": "정책 개정"
+      },
+      {
+        "key": "preview",
+        "labelKo": "공개 미리보기"
+      },
+      {
+        "key": "packages",
+        "labelKo": "패키지"
+      },
+      {
+        "key": "history",
+        "labelKo": "전달 이력"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "공개 정책·전달 패키지",
+    "scopeLabelKo": "목적·수신자·정책 버전",
+    "purposeKo": "내부/고객용 목적·수신자·허용필드/집계·제외/추론충돌·샘플·행/합계/해시·정책개정, 생성/검사/전달/재시도",
+    "commandReferences": [
+      "holds.request",
+      "holds.release",
+      "holds.status"
+    ],
+    "actionEvidence": "generate public copy; validate all rows; request delivery (full validation required); redeliver same package; revoke link access; `holds.request` / `release` / `status`.",
+    "ticket": "HB-116",
+    "spec_sha256": "509c4540e65c381e4e3e30177c14fd63ed611e6076e7c651151bbc53f7db40c3",
+    "purpose": "Create new files using only fields permitted for the recipient, then validate every row for disclosure and amounts before delivery.",
+    "fields": "| Label | Type | Required when | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| Disclosure purpose | enum | Always | Draft | Separate internal and customer purposes | Business |\n| Recipient scope | reference[] | Always | Draft | Intersection of contract and current permissions | Personal |\n| Allowed fields and aggregation | allowlist | Always | Policy draft | Exclude newly unclassified fields by default; check inference conflicts | Internal |\n| Policy, generator and schema version | reference | Always | Read only | Fix sorting, date, sign and precision | Business |\n| Input and file hash | digest | Always | Read only | Never replace a finalized artifact | Internal |\n| Full row and amount validation | evidence | At delivery | Read only | Sampling alone cannot pass | Financial |\n| Delivery path | enum | Always | Before delivery | Require evidence of control over automatic ERP routes | Business |\n| Access expiry | datetime/policy | For links | Policy authority | Distinguish revocability and exposure window | Business |\n| Customer workbook content | allowlist | Customer XLSX | Policy draft | Only invoice, own usage and sales detail; no internal sheet, hidden or password-protected | Internal |\n| Workbook sanitization evidence | evidence | Customer XLSX | Read only | Generated as a new file; no hidden rows or sheets, comments, defined names, external links, caches or document properties carrying cost or other-customer data | Internal |\n| Not-final value markers | enum | When the ERP determines tax or other values | Read only | Values the ERP will determine are labelled not final | Financial |\n| Hold type and target manifest | enum+reference | Hold request, release or status | Read only except explicit command draft | Separate billing/delivery/collections effects; unknown is not effective/released | Restricted business evidence |\n| Hold and per-target revisions | reference+revision-map | Hold request, release or status | Read only except explicit command draft | Separate billing/delivery/collections effects; unknown is not effective/released | Restricted business evidence |\n| Hold effect and external confirmation | enum+reference | Hold request, release or status | Read only except explicit command draft | Separate billing/delivery/collections effects; unknown is not effective/released | Restricted business evidence |\n\nSensitive fields: Recipient scope, Allowed fields and aggregation, Input and file hash, Full row and amount validation.",
+    "actions": "All identifiers below are proposed canonical planning IDs, not deployed APIs. Existing English permission tokens are preserved; descriptive permissions require the command catalog mapping, not an invented grant.\n\n| Action | Proposed ID | Permission | Preconditions | Result | Confirmation |\n| --- | --- | --- | --- | --- | --- |\n| Generate public copy | Existing action; catalog mapping required | Public-file generation permission | Recipient, policy and inputs fixed | Create a new file without internal original links | Confirm fields, targets and purpose |\n| Validate all rows | Existing action; catalog mapping required | Validation permission BL/AP | Generated artifact exists | Check fields, filenames, ZIP contents, cache and amounts | None |\n| Request delivery | Existing action; catalog mapping required | Delivery permission | Full validation passed, current recipient rights and route verified | Accept delivery job | Confirm recipients, channel and file hash |\n| Redeliver same package | Existing action; catalog mapping required | Delivery permission | Issued document unchanged and authority valid | Retry delivery only | Confirm duplicate delivery targets |\n| Revoke link access | Existing action; catalog mapping required | Disclosure revocation permission | Current link scope | Block managed access; no guarantee of recalling external copies | Confirm affected links |\n| Request hold | holds.request | Current scoped authority for the hold type and target action | Explicit type, target revisions, reason/evidence and required policy | Report per-target requested/effective/released/pending/unknown effect without auto-resume | Confirm type-specific effect; due dates and balances do not change |\n| Request hold release | holds.release | Current scoped authority for the hold type and target action | Explicit type, target revisions, reason/evidence and required policy | Report per-target requested/effective/released/pending/unknown effect without auto-resume | Confirm type-specific effect; due dates and balances do not change |\n| Inspect hold status | holds.status | Scoped hold read for the authorized hold and target | Current authorized hold/case ID and target scope; no new mutation rationale or approval evidence | Read current revisions, as-of, hold effects and external uncertainty without mutation | None; read-only status inspection |",
+    "special_sections": [
+      "Role interpretation",
+      "Explicit billing, delivery and collections holds",
+      "Standard settlement workbook and customer files"
+    ]
+  },
+  {
+    "id": "L01",
+    "path": "/login",
+    "menu": "pre",
+    "audience": "prelogin",
+    "module": "identity",
+    "archetype": "prelogin-form",
+    "spec": "docs/ui/screens/L01/spec.md",
+    "exampleRoles": [],
+    "reactBodies": [
+      "entry-start",
+      "entry-login",
+      "entry-scope"
+    ],
+    "tabs": [
+      {
+        "key": "method",
+        "labelKo": "로그인 방식"
+      },
+      {
+        "key": "mfa",
+        "labelKo": "추가 인증"
+      }
+    ],
+    "scopeKeys": [
+      "scope"
+    ],
+    "titleKo": "로그인",
+    "scopeLabelKo": "업무 공간 경로·운영/DEMO 표식",
+    "purposeKo": "설치/업무 공간 경로, 아이디·비밀번호, 허용 SAML/OIDC 제공자, 직접 디렉터리 로그인, MFA 단계, 도움말",
+    "commandReferences": [],
+    "actionEvidence": "로그인; 회사 계정으로 계속 (SAML/OIDC, no automatic local fallback); 추가 인증 확인; 계정 복구 (→L03). All are server-checked; double-submit lock.",
+    "ticket": "HB-81",
+    "spec_sha256": "21190f4909313475a3ac0be564fde96001b5e39695c1e2d1e44af82bb8845fec",
+    "purpose": "허용된 업무 공간과 인증 방식으로 신원을 확인하고 현재 권한에 맞는 시작 화면으로 이동한다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 업무 공간 | route | 예 | 설치가 허용한 경로만 선택 | 직접 경로/초대 문맥 확인; 이메일 도메인만으로 membership 생성 금지 | 공개 식별 |\n| 로그인 방식 | enum | 예 | 정책상 허용 방식 | 아이디·비밀번호/SAML/OIDC/디렉터리; SSO 강제 범위는 local 우회 금지 | 정책 |\n| 아이디 | text | 조건부/선택 | local 또는 직접 LDAP 단계 | 빈 값 거절; realm별 정규화 정책은 미정; 계정 존재 여부 비공개 | 개인 식별 |\n| 비밀번호 | password | 조건부/선택 | local 또는 직접 LDAP 단계 | 붙여넣기/비밀번호 관리자 허용; 서버로 안전하게 전달 후 입력 제거; LDAP 저장 금지 | 비밀 |\n| 회사 로그인 | provider-choice | 조건부/선택 | SAML/OIDC 또는 LDAP 연합 | 허용 연결 ID만 사용; 동일 이메일 자동 연결 금지 | 연결 식별 |\n| 추가 인증 | challenge | 조건부/선택 | 정책 요구 시 | 검증된 IdP 인증강도 또는 추가 MFA; 재생·만료 거절 | 비밀 |\n| 이 기기의 세션 | policy-summary | 조건부/선택 | 읽기 전용 | 적용 세션 정책을 설명; 임의 영구 로그인 허용 안 함 | 보안 |\n| 인증 문제 참조 | reference | 조건부/선택 | 읽기 전용 | 비민감 오류 참조만; assertion/token/LDAP DN 미노출 | 운영 식별 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항"
+    ]
+  },
+  {
+    "id": "L02",
+    "path": "/activate",
+    "menu": "pre",
+    "audience": "prelogin",
+    "module": "identity",
+    "archetype": "prelogin-wizard",
+    "spec": "docs/ui/screens/L02/spec.md",
+    "exampleRoles": [],
+    "reactBodies": [
+      "entry-bootstrap",
+      "entry-invite"
+    ],
+    "tabs": [
+      {
+        "key": "invitation",
+        "labelKo": "초대 확인"
+      },
+      {
+        "key": "identity",
+        "labelKo": "신원 확인"
+      },
+      {
+        "key": "result",
+        "labelKo": "등록 결과"
+      }
+    ],
+    "scopeKeys": [
+      "scope"
+    ],
+    "titleKo": "최초 등록·초대 수락",
+    "scopeLabelKo": "업무 공간·부여 범위(토큰 고정)",
+    "purposeKo": "일회성 bootstrap 또는 초대 종류, 대상 업무 공간·역할·만료, 허용 인증 방식으로 신원 확인, 비밀번호 설정/SSO 연결",
+    "commandReferences": [],
+    "actionEvidence": "신원 확인으로 계속; 등록 완료 (one-time token consumption; concurrent bootstrap = only one succeeds); 초대 재요청; 다른 계정으로 확인 (→L01).",
+    "ticket": "HB-82",
+    "spec_sha256": "288c4ed89fb2a36b9f70fe6e00ba2be0ce5b100a16262d5392dd9ca5b2b21e13",
+    "purpose": "일회성 최초 관리자 등록 또는 범위가 정해진 초대를 검증하여 인증된 신원을 올바른 업무 공간에 연결한다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 등록 종류 | read-only | 예 | 수정 불가 | bootstrap/초대 종류를 서버 검증 | 보안 |\n| 업무 공간 | reference | 예 | 수정 불가 | 초대에 고정된 workspace; URL 조작으로 변경 불가 | 범위 |\n| 초대한 주체 | text | 조건부/선택 | 수정 불가 | 허용된 이름만 표시; 신뢰 가능한 발행 정보 | 개인 |\n| 부여 범위 | scope-summary | 예 | 수정 불가 | 역할 상한·고객·유효기간 표시; 본인이 확대할 수 없음 | 권한 |\n| 만료 시각 | datetime | 예 | 수정 불가 | 현지 시간대와 잔여 시간; 만료 재검사 | 보안 |\n| 인증 방식 | enum | 예 | 허용 연결 내 | local/SSO/디렉터리의 초대 정책; 이메일 동일만으로 linking 금지 | 보안 |\n| 표시 이름 | text | 조건부/선택 | 정책이 허용하면 수정 | UserID와 별개; 과거 actor 변경 안 함 | 개인 |\n| 새 비밀번호 | password | 조건부/선택 | local 최초 설정만 | 현행 정책 적용; 기존 비밀번호 표시 안 함 | 비밀 |\n| 비밀번호 확인 | password | 조건부/선택 | local 최초 설정만 | 일치 확인; 저장 후 두 입력 제거 | 비밀 |\n| 초대 토큰 | opaque | 예 | 링크에서 검증; 일반 폼 노출 없음 | 만료·1회성·재사용·대상 신원·scope 검사; URL/로그 비밀 최소화 | 비밀 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항"
+    ]
+  },
+  {
+    "id": "L03",
+    "path": "/recover",
+    "menu": "pre",
+    "audience": "prelogin",
+    "module": "identity",
+    "archetype": "prelogin-wizard",
+    "spec": "docs/ui/screens/L03/spec.md",
+    "exampleRoles": [],
+    "reactBodies": [
+      "entry-challenge"
+    ],
+    "tabs": [
+      {
+        "key": "route",
+        "labelKo": "복구 경로"
+      },
+      {
+        "key": "proof",
+        "labelKo": "소유 증명"
+      },
+      {
+        "key": "replacement",
+        "labelKo": "새 수단 설정"
+      },
+      {
+        "key": "result",
+        "labelKo": "복구 결과"
+      }
+    ],
+    "scopeKeys": [
+      "scope"
+    ],
+    "titleKo": "계정 복구·긴급 접근",
+    "scopeLabelKo": "업무 공간",
+    "purposeKo": "로컬 재설정, 제공자 관리 복구 안내, MFA 복구, 명시적 긴급 접근 사유·유효기간",
+    "commandReferences": [],
+    "actionEvidence": "복구 안내 요청 (same response whether or not the account exists); 복구 증명 확인; 새 수단 적용 (session revoke); 긴급 접근 요청 (reason, scope, expiry, audit).",
+    "ticket": "HB-83",
+    "spec_sha256": "e85f162dfa1b211a009f10ae52cb5e19176fa6d347ff1fec18347d42a7cae897",
+    "purpose": "인증 수단을 잃은 사용자가 검증된 복구 절차로 접근을 되찾고 긴급 관리자 접근을 일반 복구와 구분한다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 업무 공간 | route | 예 | 정책이 허용한 입력 | 복구 경로 결정; SSO 강제 우회 금지 | 범위 |\n| 복구 종류 | enum | 예 | 허용 종류만 | local 암호/추가 인증/제공자 복구 안내/정책상 긴급 접근 | 보안 |\n| 아이디 또는 복구 식별자 | text | 조건부/선택 | 복구 요청 단계 | 존재 여부 동일 응답; 비밀 질문 등 임의 약한 대체 증명 안 함 | 개인 |\n| 복구 증명 | secret | 조건부/선택 | 발급된 단계만 | 만료·일회성·실패 제한; 원값 보존/로그 금지 | 비밀 |\n| 새 비밀번호 | password | 조건부/선택 | local 증명 검증 후 | 비밀번호 정책·재사용 등 확정 정책만 적용 | 비밀 |\n| 복구 관리자 확인 | approval-reference | 조건부/선택 | 읽기 전용 | 별도 관리자 절차가 정해진 경우만; 본인 임의 선택 금지 | 권한 |\n| 긴급 접근 사유 | textarea | 조건부/선택 | 사전 지정 사용자 | 구체 사건/목적 필수; credential 입력 금지 | 운영 민감 |\n| 긴급 범위·만료 | scope-summary | 조건부/선택 | 사전 정책 내 요청 | 허용 범위 상한과 유효기간; 임의 무기한 접근 불가 | 권한 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항"
+    ]
+  },
+  {
+    "id": "M01",
+    "path": "/users",
+    "menu": "iam",
+    "audience": "admin",
+    "module": "identity",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/M01/spec.md",
+    "exampleRoles": [
+      "AM",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "users",
+        "labelKo": "사용자"
+      },
+      {
+        "key": "invitations",
+        "labelKo": "초대"
+      },
+      {
+        "key": "membership",
+        "labelKo": "소속·역할"
+      },
+      {
+        "key": "revocation",
+        "labelKo": "회수 작업"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "사용자·초대·대량 회수",
+    "scopeLabelKo": "업무 공간·상태·인증 방식·역할·만료",
+    "purposeKo": "불변 사용자ID·표시명·로그인ID·업무 공간·역할/기간·인증연결·상태·초대·세션, 생성/초대/재전송/정지/종료/회수",
+    "commandReferences": [],
+    "actionEvidence": "초대 작성; 초대 재발급; 사용자 정지 (last-admin protection, reauth); 소속 종료; 선택 범위 회수 (bulk via fixed manifest).",
+    "ticket": "HB-118",
+    "spec_sha256": "d26390a0a29a5b86d9118f6efdc74a7628707b49b623b85483327b17498bfbfc",
+    "purpose": "사람의 신원·소속·역할을 분리해 초대하고 권한 회수 효력을 먼저 확정한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 불변 UserID | identifier | 예 | 읽기 전용 | 이메일/이름으로 병합 금지 | 개인 |\n| 표시명·로그인 ID | text | 예 | 관리 권한 | realm 내 정규화 고유성 | 개인 |\n| 업무 공간 소속 | reference | 예 | 초대/변경 | 타 조직 권한 자동 확대 금지 | 개인 |\n| 역할·유효기간 | reference+interval | 예 | 부여 범위 내 | 부여상한·만료 검사 | 내부 |\n| 초대 대상·만료 | reference+datetime | 초대 시 | 초안 | 일회성·대상 조직 바인딩 | 개인 |\n| 사용자/identity/소속 상태 | enum set | 예 | 허용 명령 | 전체 정지와 한 조직 종료 분리 | 개인 |\n| 회수 revision·확정시각 | identifier+datetime | 회수 시 | 읽기 전용 | 내구 차단 ack와 cleanup 별도 | 내부 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 초대 작성 | 초대 권한 IA/AM | 역할 상한·인증 정책 | 일회성 초대 생성 제안 | 조직·역할·대상 확인 |\n| 초대 재발급 | 초대 권한 | 미수락·현재 권한 | 기존 토큰 효력과 새 만료 안내 | 기존 링크 폐기 확인 |\n| 사용자 정지 | 전체 정지 권한 IA | 최후 관리자 보호·재인증 | 차단 revision 우선; 토큰 정리 작업 | 전체 소속 영향 확인 |\n| 소속 종료 | 해당 소속 관리 권한 | scope·업무 인계 검사 | 해당 공간만 종료 | 타 소속 유지·담당업무 확인 |\n| 선택 범위 회수 | 대량 회수 권한 | 고정 manifest·역할 상한 | 보안 효력 확정 후 청크 cleanup | 대상/제외/효력 범위 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "M02",
+    "path": "/authentication",
+    "menu": "iam",
+    "audience": "admin",
+    "module": "identity",
+    "archetype": "list+detail-tabs",
+    "spec": "docs/ui/screens/M02/spec.md",
+    "exampleRoles": [
+      "OP",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "providers",
+        "labelKo": "제공자 연결"
+      },
+      {
+        "key": "policies",
+        "labelKo": "조직 로그인 정책"
+      },
+      {
+        "key": "test",
+        "labelKo": "시험 로그인"
+      },
+      {
+        "key": "keys",
+        "labelKo": "키·인증서"
+      },
+      {
+        "key": "recovery",
+        "labelKo": "복구 경로"
+      },
+      {
+        "key": "sync",
+        "labelKo": "외부 상태 동기화"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "인증 제공자·로그인 정책",
+    "scopeLabelKo": "인증 방식·업무 공간·상태",
+    "purposeKo": "local/SAML/OIDC/LDAP·workspace route·신뢰설정·MFA근거·그룹매핑·인증서/키 만료·진단·정책revision, 시험/승인/활성/회전",
+    "commandReferences": [
+      "trust.propose",
+      "trust.validate",
+      "trust.approve",
+      "trust.activate",
+      "trust.reject",
+      "trust.cancel"
+    ],
+    "actionEvidence": "- diagnose; test login; request policy activation; plan key rotation; recheck external status. - `trust.propose` / `validate` / `approve` (independent; self-approval forbidden) / `activate` / `reject` / `cancel`.",
+    "ticket": "HB-119",
+    "spec_sha256": "b8d0876cc8c52ae1482d168f8429789f2cef0c7698a37038379404a9fc2d40ba",
+    "purpose": "Test organization authentication routes and trust contracts, verify recovery paths, then activate.",
+    "fields": "| Label | Type | Required when | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| Method and workspace route | enum+reference | Always | Draft | Distinguish local, SAML, OIDC and LDAP | Internal |\n| Issuer and subject contract | text+policy | SAML/OIDC | Draft | Stable subject; no automatic email linking | Internal |\n| Certificate and key reference | secret reference | External authentication | Draft | Verify trusted origin, expiry and rotation | Secret reference |\n| OIDC redirect/audience | uri+text | OIDC | Draft | Exact registration; PKCE, state and nonce checks | Internal |\n| LDAP endpoint, CA and search scope | uri+reference | Direct LDAP | Draft | TLS mandatory; reject empty bind; stable identity | Internal |\n| Allowed methods and enforced SSO | policy | Always | Draft | No automatic local bypass during outage | Internal |\n| MFA and reauthentication evidence | policy+evidence | Sensitive commands | Draft | An SSO label alone does not satisfy requirements | Internal |\n| Group mapping and role ceiling | mapping | When synchronizing | Draft | Allowlist; no automatic JIT administrator grants | Internal |\n| Recovery-path evidence | evidence | At activation | Verification record | Last-administrator access; no resurrection of revoked access | Internal |\n| External-status verification method | enum+adapter contract | External identity | Policy draft | Distinguish events, synchronization and polling; login alone does not detect departures | Internal |\n| Last success and next check | datetime pair | External identity | Read only | Separate last attempt from last success; missing signals do not imply active | Internal |\n| Maximum permitted detection delay | duration policy | External identity | Policy draft | Unset value; determine through supported adapter and operational contract | Internal |\n| Synchronization state and failure reason | enum+reason | External identity | Read only | Distinguish healthy, delayed, failed and unknown; unknown external status holds sensitive commands | Internal |\n| Old and proposed trust epoch | revision-pair | Trust change | Read only except explicit command draft | Bind exact proposal and current authority; changed evidence invalidates independent approval | Restricted business evidence |\n| Old/new configuration and identity evidence digests | digest-set | Trust change | Read only except explicit command draft | Bind exact proposal and current authority; changed evidence invalidates independent approval | Restricted business evidence |\n| Proposer, independent approver and activator | principal-set | Trust change | Read only except explicit command draft | Bind exact proposal and current authority; changed evidence invalidates independent approval | Restricted business evidence |\n| Session impact and invalidation status | reference+enum | Trust change | Read only except explicit command draft | Bind exact proposal and current authority; changed evidence invalidates independent approval | Restricted business evidence |\n\nSensitive fields: Method and workspace route, Issuer and subject contract, Certificate and key reference, OIDC redirect/audience, LDAP endpoint, CA and search scope, Allowed methods and enforced SSO, MFA and reauthentication evidence, Group mapping and role ceiling, Recovery-path evidence, External-status verification method, Last success and next check, Maximum permitted detection delay, Synchronization state and failure reason.",
+    "actions": "All identifiers below are proposed canonical planning IDs, not deployed APIs. Existing English permission tokens are preserved; descriptive permissions require the command catalog mapping, not an invented grant.\n\n| Action | Proposed ID | Permission | Preconditions | Result | Confirmation |\n| --- | --- | --- | --- | --- | --- |\n| Diagnose connection | Existing action; catalog mapping required | Authentication configuration permission | Allowed endpoint and secret references | Return error, version and trust validation results | Confirm external diagnostic scope |\n| Test login | Existing action; catalog mapping required | Authentication test permission | Draft settings and test principal | Assess identity and MFA; not business approval | Confirm test scope |\n| Request policy activation | Existing action; catalog mapping required | Policy approval permission | Diagnostics, recovery and enforced SSO verified | Plan activation of a new revision through the trust workflow | Confirm affected users and lockout risk |\n| Plan key rotation | Existing action; catalog mapping required | Key management permission | Old and new key validity and verification | Plan rotation and failure recovery | Confirm interruption impact |\n| Recheck external status | Existing action; catalog mapping required | Diagnostic permission for this authentication connection | Allowed adapter, scope and destination with current connection authority | Requery and reconcile external inactivity and group changes; update successful evidence and last-success time; retain sensitive-command hold while unknown | Confirm targets and external-call scope |\n| Propose trust change | trust.propose | Scoped trust.propose | Current connection revision and expected old epoch; exact proposal and proof references | Create a draft proposal only; active trust unchanged | Review proposed scope and old/new digests |\n| Validate trust change | trust.validate | Scoped trust.validate | Draft proposal at expected revision; exact configuration, proof and old epoch | Record validated or blocked evidence; no approval or activation | Review validation scope and evidence |\n| Independently approve trust change | trust.approve | Scoped trust.approve by an independent authorized actor | Validated proposal at expected revision and digest; current old epoch; approver differs from proposer | Record independent approval of the exact proposal; active trust unchanged | Confirm exact digest, authority and session/lockout impact |\n| Activate approved trust change | trust.activate | Scoped trust.activate plus current independent approved authority | Independently approved revision/digest; expected old epoch; current proposer/approver separation and approver/activator authority | Atomically publish configuration, strictly newer epoch and durable invalidation intent; report propagation separately | Confirm approved digest, affected principals and session/lockout impact |\n| Reject trust change | trust.reject | Scoped trust.approve | Current proposal revision and rationale; before activation | Mark proposal rejected; active trust unchanged | Confirm rejection and rationale |\n| Cancel trust proposal | trust.cancel | Authorized trust proposal cancellation scope | Current proposal revision and rationale; before activation | Mark proposal cancelled; active trust unchanged | Confirm proposal cancellation |",
+    "special_sections": [
+      "Role interpretation",
+      "Trust change and activation"
+    ]
+  },
+  {
+    "id": "M03",
+    "path": "/access",
+    "menu": "iam",
+    "audience": "admin",
+    "module": "identity",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/M03/spec.md",
+    "exampleRoles": [
+      "AM",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "roles",
+        "labelKo": "역할 정의"
+      },
+      {
+        "key": "grants",
+        "labelKo": "부여·위임"
+      },
+      {
+        "key": "effects",
+        "labelKo": "효력 비교"
+      },
+      {
+        "key": "support",
+        "labelKo": "지원 접근"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "역할·위임·효력 미리보기",
+    "scopeLabelKo": "주체·행위·고객/법인",
+    "purposeKo": "주체·행위·고객/법인/계약/필드·유효기간·권한출처·부여상한, 변경초안/영향/승인/회수",
+    "commandReferences": [],
+    "actionEvidence": "효력 미리보기; 변경 승인 요청 (server approval); 위임 회수; 제한 지원 조회 요청.",
+    "ticket": "HB-120",
+    "spec_sha256": "7b066137f5df37fc81a4151e07f66763195f8298e2fea9c8b36a86369562a87f",
+    "purpose": "누가 어떤 범위에 어떤 행위를 할 수 있는지 출처와 위임 상한까지 확인한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 주체 | reference | 예 | 초안 | 사람/서비스 구분 | 개인 |\n| 행위·필드 범위 | allowlist | 예 | 초안 | 부여자 상한·민감 행위 분리 | 내부 |\n| 고객·법인·계약 | reference[] | 예 | 초안 | workspace 경계·교집합 검사 | 내부 |\n| 원위임·재위임 허용 | reference+boolean | 위임 시 | 초안 | 부모 만료·scope 상한 상속 | 내부 |\n| 유효기간 | interval | 예 | 초안 | 기간 상한·만료 검사 | 업무 |\n| 요청 대상 지원자 | reference | 지원 조회 시 | 요청 초안에서 선택 | 선택 가능한 적격 지원자만; 실제 실행자 사칭/대체 불가 | 개인 |\n| 실제 요청자·실행자 | authenticated reference | 지원 조회 시 | 인증 문맥에서 읽기 전용 | 서버가 현재 요청/실행 신원 기록; 사용자 입력으로 덮어쓰기 금지 | 개인 |\n| 지원 사유 | text | 지원 조회 시 | 요청 초안 편집 | 대상·기간·업무 목적과 일치; 승인 범위를 확대하지 않음 | 민감 |\n| client 교집합 | computed scope | API 위임 시 | 읽기 전용 | 현재 사용자∩client; 승인 요청≠사람 승인 | 내부 |\n| 효력 비교 결과 | evidence | 활성화 시 | 읽기 전용 | A/B 고객 실제 행위별 허용/거절 | 내부 |\n| 회수 접수·효력·정리 상태 | state set | 회수 시 | 읽기 전용 | 접수/보안 차단 확정/후속 정리 중/완료를 분리 | 내부 |\n| 독립 결정 기록·확정 watermark | sequence+evidence | 회수 확정 시 | 전문가 상세 읽기 전용 | 독립 결정 원장 내구 commit 실패/불명은 회수 성공 아님 | 내부 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 효력 미리보기 | 권한 관리/범위 조회 | 주체·행위·대상 지정 | 허용/거절과 권한 출처 표시 | 없음 |\n| 변경 승인 요청 | 부여 권한 | 자기승격·상한 검사 | 고정 revision 승인 요청 | 추가/회수 범위 확인 |\n| 위임 회수 | 원위임 관리 권한 | 현재 위임 chain | 회수 접수→독립 결정 원장 내구 commit과 deny revision 확정→후속 토큰/캐시/작업 정리→완료; commit 실패/불명은 성공 응답 금지 | 후속 위임 영향 확인 |\n| 제한 지원 조회 요청 | 지원 승인 권한 | 사유·대상·기간 | 선택한 적격 지원자의 제한 세션 요청; 실제 요청자·실행자는 인증 문맥에서 별도 읽기 전용 기록 | 고객 계정 공유 없음 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "M04",
+    "path": "/service-accounts",
+    "menu": "iam",
+    "audience": "admin",
+    "module": "identity",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/M04/spec.md",
+    "exampleRoles": [
+      "OP",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "accounts",
+        "labelKo": "서비스 계정"
+      },
+      {
+        "key": "credentials",
+        "labelKo": "자격 메타데이터"
+      },
+      {
+        "key": "usage",
+        "labelKo": "최근 사용"
+      },
+      {
+        "key": "transfer",
+        "labelKo": "책임자 이관"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "서비스 계정·자격",
+    "scopeLabelKo": "소유 조직·책임자·scope·만료",
+    "purposeKo": "사람과 다른 ID·목적·책임자·audience/scope·대상·credential 만료/회전·최근 사용, 생성/교체/폐기/책임자 인계",
+    "commandReferences": [],
+    "actionEvidence": "계정 생성 초안; 자격 회전 요청; 자격 폐기 (deny first); 책임자 인계.",
+    "ticket": "HB-121",
+    "spec_sha256": "7e90d6544c6923b96359d8d12d18a97bb2420ea3f6fa52e072eae7f71d240188",
+    "purpose": "자동 처리의 목적·책임자·권한·자격 수명을 사람 계정과 구분해 관리한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 서비스 계정 ID | identifier | 예 | 읽기 전용 | 사람 User와 별개 | 내부 |\n| 목적·소유 조직 | text+reference | 예 | 초안 | 업무 목적과 scope 일치 | 내부 |\n| 관리 책임자 | reference | 예 | 변경 승인 | 유효 책임자·퇴사 시 인계/정지 | 개인 |\n| audience·scope | allowlist | 예 | 초안 | 대상 제한·사람 승인 scope 거부 | 내부 |\n| 자격 참조·버전 | secret reference | 예 | 발급/회전 명령 | 목록은 원문 비밀 열람 불가 | 비밀 참조 |\n| 만료·회전 상태 | datetime+enum | 예 | 정책 기반 | 폐기/회전 순서와 진행 작업 검사 | 내부 |\n| 사용자 위임 문맥 | reference | 위임 시 | 읽기 전용 | 사용자∩client 실효 권한 | 개인 |\n| 최근 사용·폐기 효력 | datetime+evidence | 사용/폐기 시 | 읽기 전용 | 실제 호출 범위·현재 거절 상태 | 내부 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 계정 생성 초안 | 서비스 계정 관리 권한 | 목적·책임자·scope 적격 | 계정/자격 계획 생성 | 사람 승인 불가 확인 |\n| 자격 회전 요청 | 소유/회전 권한 | 신구 버전·사용처 파악 | 제한적 교체 작업 계획 | 진행 작업 영향 확인 |\n| 자격 폐기 | 폐기 권한 | 대상 자격 현재 버전 | deny 우선 확정·후속 정리 | 연결 중단 범위 확인 |\n| 책임자 인계 | 조직 관리 권한 | 신규 책임자 적격 | 감사 가능한 인계 | 자동 영구 유지 아님 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "M05",
+    "path": "/my-security",
+    "menu": "me",
+    "audience": "admin+portal",
+    "module": "identity",
+    "archetype": "detail-tabs",
+    "spec": "docs/ui/screens/M05/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AM",
+      "PR",
+      "BL",
+      "AP",
+      "CP",
+      "AU",
+      "CU",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "account",
+        "labelKo": "내 계정"
+      },
+      {
+        "key": "methods",
+        "labelKo": "로그인 수단"
+      },
+      {
+        "key": "recovery",
+        "labelKo": "추가 인증·복구"
+      },
+      {
+        "key": "sessions",
+        "labelKo": "세션·최근 접근"
+      },
+      {
+        "key": "notifications",
+        "labelKo": "알림 설정"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "내 보안·로그인 연결·알림",
+    "scopeLabelKo": "본인 고정·소속 업무 공간",
+    "purposeKo": "로그인수단·본인 소속·MFA·세션·최근 접근, 비밀번호 변경/허용identity 연결·해제/다른 세션 종료",
+    "commandReferences": [],
+    "actionEvidence": "비밀번호 변경; 로그인 수단 연결/해제 (last-method protection); MFA/복구 관리; 다른 세션 종료; 이 세션 종료 (→L01); 알림 설정 저장; 계정 복구 안내 (→L03).",
+    "ticket": "HB-122",
+    "spec_sha256": "2963b7452c270a3e04ede0946894129a58d01fef2f94f68af00be2bb00bed61b",
+    "purpose": "본인이 자신의 인증 수단·세션·최근 접근과 개인 알림 선호를 관리하고 안전하게 계정 접근을 유지한다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 사용자 ID | immutable-reference | 예 | 수정 불가 | 이메일/표시명/로그인 ID 변경과 무관하게 불변 | 개인 |\n| 표시 이름·연락 이메일 | text | 조건부/선택 | 조직 정책 허용 시 | 소유 증명·변경 정책 적용; 같은 이메일의 다른 identity 자동 병합 금지 | 개인 |\n| 내 소속·역할 | scope-summary | 예 | 읽기 전용 | 현재 유효 membership과 기간; 본인 역할 확대 입력 없음 | 권한 |\n| 연결 로그인 수단 | identity-list | 예 | 허용 연결·해제만 | local/SAML/OIDC/LDAP 안정 subject·연결 ID; raw subject 노출 최소화 | 보안 |\n| 현재 비밀번호/재인증 | password-challenge | 조건부/선택 | 민감 작업 직전 | 현재 인증 방식의 재인증; IdP 비밀번호를 로컬 변경하지 않음 | 비밀 |\n| 새 비밀번호 | password | 조건부/선택 | local 정책 허용 시 | 정책·확인값 검증; 관리자 기존값 열람 없음 | 비밀 |\n| MFA·복구 상태 | security-summary | 예 | 허용 수단 등록/해제 | 제공자 검증 근거와 제품 등록 수단 구분; SSO라고 MFA 완료 추정 금지 | 보안 |\n| 새 identity 증명 | auth-challenge | 조건부/선택 | 연결 단계 | 현재 계정 재인증+새 신원 소유 증명 또는 검증 관리자 절차 | 비밀 |\n| 현재 세션·기기 | session-list | 예 | 본인 종료만 | 현재세션 표시·발급/최근사용/만료/회수효력; 상세 위치는 최소화 | 개인 |\n| 조용한 시간·시간대 | time-range-zone | 조건부/선택 | 개인 선호 | 정책상 필수 보안/업무 알림 예외 표시; DST 처리 정책 | 개인 |\n| 요약 주기·심각도 재알림 | enum | 조건부/선택 | 조직 상한 내 | 스누즈·채널별 선호; 업무 차단/기한 자체 변경 안 함 | 개인 |\n| 대체 담당 | scoped-user | 조건부/선택 | 허용 업무 역할만 | 허용 담당만 선택; 고객 일반사용자는 내부 담당 지정 불가 | 개인 |\n| 알림 채널 | verified-destination | 조건부/선택 | 허용 채널·수신처 | 소유 검증·최소 payload; 이메일 변경이 지급 수신자 변경 아님 | 개인 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항"
+    ]
+  },
+  {
+    "id": "O01",
+    "path": "/organizations",
+    "menu": "org",
+    "audience": "admin",
+    "module": "organizations",
+    "archetype": "tree-list-detail",
+    "spec": "docs/ui/screens/O01/spec.md",
+    "exampleRoles": [
+      "AM",
+      "BL",
+      "CP",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "tree",
+        "labelKo": "조직 트리"
+      },
+      {
+        "key": "accounts",
+        "labelKo": "원천 계정"
+      },
+      {
+        "key": "groups",
+        "labelKo": "조회 그룹"
+      },
+      {
+        "key": "history",
+        "labelKo": "귀속 이력"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "조직·관계 탐색",
+    "scopeLabelKo": "기준일·법인·관계 종류·미귀속·공급자",
+    "purposeKo": "법인/부서/프로젝트, 조회 그룹, 원천 계정 종류·귀속 유효기간, 공유 배분·권한 근거",
+    "commandReferences": [],
+    "actionEvidence": "관계 상세; 변경 계획 만들기 (→O02 draft); 조회 그룹 초안 (grants no permission).",
+    "ticket": "HB-97",
+    "spec_sha256": "42826336fc7759c1817783d618818e31ba9d4534efb8b63e22293d1f311981ab",
+    "purpose": "법인·조직·원천 계정의 유효기간과 조회/배분/권한 관계를 구분해 탐색한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 기준일 | date | 예 | 조회 | 현재 분석/당시 정산 구분 | 업무 |\n| 조직 ID·표시명 | identifier+text | 예 | 명칭 초안 | canonical ID 참조; 표시명 키 금지 | 업무 |\n| 법인 참조 | reference | 법인 소속 시 | 변경 계획 | 통화/발행 책임 자동 변경 금지 | 업무 |\n| 관계 종류 | enum | 예 | 변경 계획 | 소유/조회/배분/권한 구분 | 내부 |\n| 유효 시작·종료 | interval | 예 | 변경 계획 | 순환·중첩·이중 전액 귀속 검사 | 업무 |\n| 계정 역할·원천 범위 | reference | 계정 시 | 읽기 전용 | member/payer와 자료 범위 분리 | 내부 |\n| 미귀속 사유 | enum+text | 미귀속 시 | 권한 내 기록 | 미귀속을 0이나 자동 공개로 대체 금지 | 내부 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 관계 상세 | 범위 내 조회 역할 | 허용 조직/기간 | 권한·배분·원천 근거 표시 | 없음 |\n| 변경 계획 만들기 | 관계 변경 권한 AM | 대상 revision 확보 | O02 변경 초안 | 없음 |\n| 조회 그룹 초안 | 그룹 관리 권한 | 허용 구성원만 | 그룹 초안; 권한 자동 부여 없음 | 조회 그룹은 소유권이 아님 안내 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "O02",
+    "path": "/organization-changes",
+    "menu": "org",
+    "audience": "admin",
+    "module": "organizations",
+    "archetype": "wizard",
+    "spec": "docs/ui/screens/O02/spec.md",
+    "exampleRoles": [
+      "AM",
+      "PR",
+      "AP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "targets",
+        "labelKo": "변경 대상"
+      },
+      {
+        "key": "impact",
+        "labelKo": "영향 검토"
+      },
+      {
+        "key": "approval",
+        "labelKo": "승인·예약"
+      },
+      {
+        "key": "result",
+        "labelKo": "적용 결과"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "관계 변경·영향 검토",
+    "scopeLabelKo": "적용일·고정 대상 manifest·기대 revision",
+    "purposeKo": "연결/해제/이동/묶음 종류, 적용일·대상 snapshot, 금액·계약 풀·ERP·권한·파일 영향, 승인·예약/실행",
+    "commandReferences": [],
+    "actionEvidence": "영향 계산 (async); 승인 요청 (→B09, server approval); 예약·적용 요청 (approval hash, atomic per pool); 실패 단위 재개.",
+    "ticket": "HB-98",
+    "spec_sha256": "4798c0f71c365a3948ec1d5eaeea3d4a5ab669d4df69f39daa9de31e622e84c9",
+    "purpose": "연결·해제·이동의 청구·공유 풀·공개 영향을 고정한 뒤 승인된 의존 단위로 적용한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 변경 종류 | enum | 예 | 초안 | 연결/해제/이동/그룹 구분 | 업무 |\n| 고정 대상 manifest | reference | 예 | 초안 재고정 | 필터 변경은 새 대상 버전 | 내부 |\n| 기대 revision | identifier | 예 | 읽기 전용 | 동시 변경 시 충돌 | 업무 |\n| 적용일 | datetime | 예 | 초안 | 계약 기간·확정 과거 영향 검사 | 업무 |\n| 영향 풀·계약 | reference[] | 예 | 읽기 전용 | 공유 의존 단위 전체 검사 | 재무 |\n| 금액·공개·ERP 영향 | evidence | 예 | 읽기 전용 | 통화별 비교; 기존 문서 불변 | 재무 |\n| 예약 시각 | datetime | 예약 시 | 승인 전 | 실행 시 권한/hash 재검사 | 업무 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 영향 계산 | AM/PR 변경 검토 권한 | 고정 대상·적용일 | 금액/권한/파일 영향 비동기 계산 | 범위 확인 |\n| 승인 요청 | 변경 요청 권한 | 전체 의존 검증 통과 | B09 승인 요청 생성 | 변경 전후·해제 영향 확인 |\n| 예약·적용 요청 | 적격 승인/실행 권한 | 승인 hash·현재 revision·권한 | 풀 단위 원자 적용 작업 | 적용일·영향 범위 확인 |\n| 실패 단위 재개 | 실행 권한 | 성공 단위 유지·실패 원인 해결 | 실패 의존 단위만 재개 | 성공 결과 재적용 없음 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "O03",
+    "path": "/contracts",
+    "menu": "org",
+    "audience": "admin",
+    "module": "organizations",
+    "archetype": "list+detail-tabs",
+    "spec": "docs/ui/screens/O03/spec.md",
+    "exampleRoles": [
+      "AM",
+      "PR",
+      "BL",
+      "AP"
+    ],
+    "reactBodies": [
+      "customer-detail"
+    ],
+    "tabs": [
+      {
+        "key": "parties",
+        "labelKo": "당사자·경로"
+      },
+      {
+        "key": "schedule",
+        "labelKo": "청구 일정"
+      },
+      {
+        "key": "products",
+        "labelKo": "상품·요율"
+      },
+      {
+        "key": "documents",
+        "labelKo": "문서·지급"
+      },
+      {
+        "key": "termination",
+        "labelKo": "종료·최종정산"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납부 조건"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "계약·발행 프로파일",
+    "scopeLabelKo": "법인·계약 상태·정산 상태·직판/재판매",
+    "purposeKo": "당사자·지급 책임·문서 수신자·법인·통화·시간대·시작/종료·주기·일할·선후청구·발행 모드·ERP",
+    "commandReferences": [],
+    "actionEvidence": "변경 초안 저장; 청구 영향 검토; 승인 요청 (server approval); 종료 계획; 납부 조건 변경 승인 요청 (approval; never edits issued snapshots).",
+    "ticket": "HB-99",
+    "spec_sha256": "04ef1f7389bf9500a34d70d91d6d361448d1f1dfbfc0bbccfd00a305718486db",
+    "purpose": "거래 책임·판매 적격 범위·발행 경로와 계약 수명주기를 명시하고 변경 영향을 승인한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 거래 경로 | enum | 예 | 초안 | direct/resale 및 서비스료 적격 구분 | 재무 |\n| 구매·지급·발행 주체 | reference[] | 예 | 초안 | 동일 주체로 임의 합치지 않음 | 고객 |\n| 법인·통화·시간대 | reference+enum | 예 | 초안 | 상이한 법인/통화 부적격 합산 차단 | 재무 |\n| 시작·종료·청구 주기 | interval+policy | 예 | 초안 | 사용기간과 청구기간 구분 | 업무 |\n| 일할·선후청구·FX | policy reference | 해당 계약 | 초안 | 미정 정책으로 확정 청구 금지 | 재무 |\n| 서비스 구성요소·포함량 | reference[] | 예 | 초안 | 직접 CSP 재청구·포함 전력 이중 청구 차단 | 재무 |\n| ERP 주문·선불 참조 | reference[] | 해당 경로 | 초안 | 기존 거래 중복 대사 | 재무 |\n| 지급정보·수신자·템플릿 | protected reference | 발행 계약 | 별도 변경 초안 | 기존 채널 확인·승인·유효기간 | 금융/개인 |\n| 계약 상태·최종정산 상태 | enum pair | 예 | 허용 명령 | ended와 pending_final 동시 가능 | 업무 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 변경 초안 저장 | 계약 편집 권한 | 필드 유효성·expected revision | 새 계약 개정 초안 | 없음 |\n| 청구 영향 검토 | PR/BL 검토 권한 | 기간·요율·경로 정의 | 기존/신규 개정별 예상 차이 | 모의 결과임 안내 |\n| 승인 요청 | 계약 요청 권한 | 필수 정책·지급 검증 충족 | 고정 계약 개정 승인 요청 | 금액/책임 변경 확인 |\n| 종료 계획 | 계약 종료 권한 | 종료일·잔량·최종 증빙 경로 | 계약 종료와 최종 정산 별도 작업 | CSP 자원/구독 자동 취소 아님 안내 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위",
+      "사용자 추가: Payment Term·납부기한·Overdue",
+      "사용자 추가: 월별 ERP 인식과 분기 청구"
+    ]
+  },
+  {
+    "id": "P01",
+    "path": "/installation",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "wizard",
+    "spec": "docs/ui/screens/P01/spec.md",
+    "exampleRoles": [
+      "OP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "plan",
+        "labelKo": "설치 계획"
+      },
+      {
+        "key": "diagnostics",
+        "labelKo": "환경 진단"
+      },
+      {
+        "key": "support",
+        "labelKo": "지원 자료"
+      },
+      {
+        "key": "access",
+        "labelKo": "지원 접근"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "설치·진단·지원",
+    "scopeLabelKo": "설치 profile·검사 영역",
+    "purposeKo": "설치버전·프로파일·환경/네트워크·저장소·백업·연결검사·지원자료 미리보기, 진단/제한 지원 접근/묶음 생성",
+    "commandReferences": [],
+    "actionEvidence": "설치 계획 검토; 진단 요청; 지원 묶음 생성; 제한 지원 접근 요청.",
+    "ticket": "HB-124",
+    "spec_sha256": "d0afa8db5e74b0056553c4a77b3371f8b46ea64e94c050cccf9a83d71df48114",
+    "purpose": "환경 변경 계획과 진단 결과를 확인하고 제한된 지원 자료와 접근을 준비한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 설치 버전·profile | reference | 예 | 계획 | 지원 조합/기존 설치 확인 | 내부 |\n| 서비스·포트·볼륨 변경 | plan | 예 | 계획 | 기존 데이터/충돌 영향 검사 | 내부 |\n| 생성 권한·자원·비용 | plan | 예 | 계획 | 포괄 관리자 해결책 금지 | 내부 |\n| 허용 진단 목적지 | allowlist | 네트워크 진단 | 계획 | 승인 범위 실제 주소 검증 | 내부 |\n| 설정 hash·검사 유효기간 | digest+interval | 예 | 읽기 전용 | 변경된 영향 단계 재검증 | 내부 |\n| CA·시각·용량 검사 | evidence | 예 | 읽기 전용 | TLS 우회 금지·필수 오류 중지 | 내부 |\n| 지원 자료 포함 목록 | manifest | 지원 묶음 시 | 미리보기 선택 | 비밀/고객 원문 제거·반출 권한 | 내부 |\n| 지원 actor·범위·만료 | reference+scope | 지원 접근 시 | 승인 초안 | 실제 actor·사유·재위임 상한 | 개인 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 설치 계획 검토 | 설치 운영 권한 | 환경 inventory | 서비스/포트/볼륨 영향 미리보기 | 변경 대상·데이터 영향 확인 |\n| 진단 요청 | 진단 권한 | 목적지 allowlist·scope | 검사 작업과 정상 예시 표시 | 네트워크 요청 대상 확인 |\n| 지원 묶음 생성 | 지원 자료 권한 | 포함/제외 검사·고정 목록 | 로컬 반출용 자료 생성 계획 | 민감 제거 결과 확인; 자동 업로드 없음 |\n| 제한 지원 접근 요청 | 지원 위임 권한 | 대상·실제 actor·만료 | 작업 한정 지원 권한 계획 | 승인 사칭 없음 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "P02",
+    "path": "/integrations",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/P02/spec.md",
+    "exampleRoles": [
+      "OP",
+      "BL",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "clients",
+        "labelKo": "API client"
+      },
+      {
+        "key": "modules",
+        "labelKo": "모듈"
+      },
+      {
+        "key": "channels",
+        "labelKo": "구독·채널"
+      },
+      {
+        "key": "events",
+        "labelKo": "사건·재처리"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "API·플러그인·채널",
+    "scopeLabelKo": "종류·상태·scope·버전",
+    "purposeKo": "client·scope·구독·모듈manifest·버전/digest·capability·송신대상·라이선스·작업제한, 등록/시험/승인/격리/중지/재처리",
+    "commandReferences": [],
+    "actionEvidence": "등록 초안; 호환·송신 시험; 활성화 요청 (approval); 격리·중지; 사건 재처리.",
+    "ticket": "HB-125",
+    "spec_sha256": "f6142749cd8d096ffc2e20f61441734b7ac331c04f6aa04e78b35918472d68ff",
+    "purpose": "외부 확장의 권한·버전·송신 경계와 사건 처리 상태를 검증한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| client·audience·scope | reference+allowlist | API 시 | 등록 초안 | 설치별 권한; 사용자 위임 교집합 | 내부 |\n| 모듈 manifest·digest | reference+digest | 모듈 시 | 등록 초안 | 서명/호환/권한/라이선스 검사 | 내부 |\n| 저장·이관·삭제 계약 | policy | 모듈 시 | 등록 초안 | 소유 공간과 보존 의존성 명시 | 내부 |\n| 송신 목적지 | uri allowlist | 채널 시 | 초안 | DNS/redirect/metadata 접근 검사 | 내부 |\n| 웹훅 서명·키 버전 | secret reference | webhook 시 | 회전 명령 | 시각/eventID/replay 검증 | 비밀 참조 |\n| 사건 봉투·cursor | identifier+schema | 사건 시 | 읽기 전용 | source+id 중복·revision 역행 금지 | 업무 |\n| 작업 제한·quota | policy | 예 | 권한 내 설정 | 429 대기·timeout·재시도 범위 | 업무 |\n| 외부 앱 origin | uri | 외부 앱 시 | 등록 초안 | 별도 origin; 코어 admin token 전달 금지 | 내부 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 등록 초안 | 확장 관리 권한 | 권한·manifest·목적 정의 | 검증 대기 등록 | 허용 기능/송신 범위 확인 |\n| 호환·송신 시험 | 검증 권한 | 승인 테스트 목적지 | 호환/서명/권한 증거 | 실데이터 송신 여부와 대상 확인 |\n| 활성화 요청 | 적격 승인 권한 | 실증·라이선스·범위 검증 | 고정 버전 활성화 계획 | 권한·외부 영향 확인 |\n| 격리·중지 | 운영 중지 권한 | 대상/진행 작업 식별 | 새 실행 차단·진행 결과 추적 | 이미 나간 요청 취소 불가 안내 |\n| 사건 재처리 | 재처리 권한 | 원사건/현재 scope·멱등검사 | 중복 방지 재처리 | 외부 효과/대상 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "P03",
+    "path": "/recovery",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/P03/spec.md",
+    "exampleRoles": [
+      "OP",
+      "BL",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "sets",
+        "labelKo": "복원 세트"
+      },
+      {
+        "key": "isolation",
+        "labelKo": "격리 검사"
+      },
+      {
+        "key": "reconciliation",
+        "labelKo": "외부 대사"
+      },
+      {
+        "key": "migration",
+        "labelKo": "고객 이관"
+      },
+      {
+        "key": "resume",
+        "labelKo": "재개 판정"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "복구·이관·실행 상태",
+    "scopeLabelKo": "복원 시점·설치 generation",
+    "purposeKo": "복원세트·시점·발행잠금·최신회수/삭제원장·구작업자차단·외부대사·고객이관manifest, 검사/복원요청/허용범위 반출/재개 요청",
+    "commandReferences": [],
+    "actionEvidence": "복원 세트 검사; 격리 복원 요청; 이관 패키지 준비; 외부 결과 대사; 재개 승인 요청 (approval).",
+    "ticket": "HB-126",
+    "spec_sha256": "6f532e5d0e8be21a29a086be9428a7394ba5248f31355a149eb37d4a919290dd",
+    "purpose": "복원 세트와 최신 삭제·회수 결정을 검증하고 외부 중복 실행 없이 재개를 준비한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 복원 세트·시점 | reference+datetime | 예 | 계획 | DB/객체/키/스키마/모듈 manifest | 내부 |\n| 설치 generation·구 worker 차단 | identifier+evidence | 예 | 읽기 전용 | 구 설치 네트워크/credential 격리 | 내부 |\n| 삭제·회수 watermark | sequence+evidence | 예 | 읽기 전용 | 최신 내구 결정까지 연속 검증 | 내부 |\n| 문서·번호·outbox 대사 | evidence | 예 | 읽기 전용 | 복원으로 재발행/재전송 금지 | 재무 |\n| 외부 결과 확인 | evidence | 외부 요청 존재 시 | 검증 기록 | ERP unknown이면 재개 보류 | 재무 |\n| 고객 이관 범위 | manifest | 이관 시 | 계획 | 허용 고객/정책·최소 중복방지 키 | 고객 |\n| 기초잔액·기준일·거래범위 | decimal+reference | 잔액 이관 시 | 승인 초안 | 통화별 보존식·과거 재수입 중복 차단 | 재무 |\n| 재개 승인 근거 | evidence | 재개 시 | 승인 기록 | 모든 필수 잠금 사유 해소 | 내부 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 복원 세트 검사 | 복구 검증 권한 | manifest·키 접근 허용 | 무결성·의존성 검사 작업 | 대상 복원 세트 확인 |\n| 격리 복원 요청 | 복구 실행 권한 | 구 설치 격리·계획 승인 | 공개/외부 쓰기 잠긴 복원 작업 | 기존 환경 영향 확인 |\n| 이관 패키지 준비 | 고객 범위 반출 권한 | 고정 scope·잔액/Claim 참조 | 검증된 이관 파일 계획 | 수신자·개인/재무 범위 확인 |\n| 외부 결과 대사 | ERP 대사 권한 | 원제출 참조 | unknown 해소 증거 기록 | 없음 |\n| 재개 승인 요청 | 운영 재개 권한 | 최신 watermark·외부 대사·무결성 통과 | 별도 재개 판정 | 공개/외부 쓰기 범위 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "P04",
+    "path": "/retention",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/P04/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "policies",
+        "labelKo": "보관 정책"
+      },
+      {
+        "key": "expiry",
+        "labelKo": "사용량·만료"
+      },
+      {
+        "key": "holds",
+        "labelKo": "보류·참조"
+      },
+      {
+        "key": "deletion",
+        "labelKo": "삭제 작업"
+      },
+      {
+        "key": "restore",
+        "labelKo": "아카이브 복원"
+      },
+      {
+        "key": "decisions",
+        "labelKo": "결정 기록·복원 최신성"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "데이터 보관·삭제",
+    "scopeLabelKo": "데이터 등급·scope·정책 버전",
+    "purposeKo": "등급/범위·기산점·기간·hot/archive·증가량·만료예정·보류·공유참조·백업, 정책초안/영향/승인/보류/복원/삭제작업",
+    "commandReferences": [],
+    "actionEvidence": "정책 영향 미리보기; 정책 승인 요청; 보류 등록/해제 요청; 삭제 실행 요청 (approval, multi-stage); 아카이브 복원 요청.",
+    "ticket": "HB-127",
+    "spec_sha256": "24210fc360132ceb819037f235689be69af8ace0fa593e270bef6770618694a5",
+    "purpose": "데이터 등급별 보관과 공유 증빙·법적 보류를 평가해 삭제 영향과 실제 잔존 상태를 관리한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 정책 revision·범위 | reference | 예 | 정책 초안 | 관할/계약별 권한·적용일 | 내부 |\n| 등급·기산점·기간 | policy | 예 | 정책 초안 | 재수집/복사로 기산점 초기화 금지 | 업무 |\n| hot/archive/delete 기준 | policy | 예 | 정책 초안 | archive 검증 전 원본 제거 금지 | 업무 |\n| 법적 보류·책임자 | reference+reason | 보류 시 | 승인 명령 | 사유/범위/등록·해제 이력 | 민감 |\n| 공유 증빙·정정 의존 | reference[] | 평가 시 | 읽기 전용 | 다른 고객 유효 참조 보호 | 고객 |\n| 삭제 후보 manifest | reference | 실행 시 | 고정 계획 | 삭제 직전 보류/참조 재검사 | 내부 |\n| 저장소별 성공/보류/실패/미처리 | counts | 작업 시 | 읽기 전용 | 대상=네 상태 합; DB/객체 별도 | 내부 |\n| 백업 만료·tombstone | datetime+evidence | 삭제 시 | 읽기 전용 | 살아 있는 복원 창 포함 | 내부 |\n| 복원 요청·임시 hot 만료 | reference+datetime | archive 시 | 권한 내 요청 | hash·복호화·현재 권한 검증 | 고객 |\n| 삭제 접수·보안 차단·후속 정리 | state set | 삭제 시 | 읽기 전용 | 접수와 확정·정리를 구분; 물리 삭제/백업 완료 별도 | 내부 |\n| 독립 결정 기록 확정 상태 | enum+evidence | 삭제 확정 시 | 전문가 상세 읽기 전용 | commit 확정/실패/불명; 내구 확정 전 성공 응답 금지 | 내부 |\n| 결정 sequence·epoch·watermark | identifier+sequence | 삭제/복원 시 | 전문가 상세 읽기 전용 | 최신 확정 지점과 연속성 검증; stale 복제본 추정 금지 | 내부 |\n| 복원 최신성·재적용 상태 | evidence+enum | 복원 시 | 전문가 상세 읽기 전용 | 최신 기록 확보/연속성/재적용 전 공개·외부 쓰기 격리 | 내부 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 정책 영향 미리보기 | 정책 편집 권한 | 등급·기산점·기간 명시 | 건수/바이트/증빙 영향 계산 | 소급 단축 범위 확인 |\n| 정책 승인 요청 | 정책 요청 권한 | 미정 기간 없음·영향 검증 | 새 정책 revision 승인 요청 | 기존 자료 영향 확인 |\n| 보류 등록/해제 요청 | 보류 권한 | 대상·사유·책임자 | 삭제 예약과 직렬화된 보류 계획 | 이미 삭제된 자료 보존 보장 불가 안내 |\n| 삭제 실행 요청 | 적격 삭제 권한 | 고정 manifest·승인·현재 보류/참조 검증 | 접수→독립 결정 기록 내구 확정·논리 접근 차단→저장소 후속 삭제→활성 삭제 확인→백업 만료→정책상 완료; commit 실패/불명은 성공 아님 | 물리 삭제 후 취소가 복원 아님 확인 |\n| 아카이브 복원 요청 | 증빙 접근 권한 | 원본 hash·키·정책 유효 | 임시 hot 복원 작업 | 접근 범위·보관 만료 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "P05",
+    "path": "/release-evidence",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/P05/spec.md",
+    "exampleRoles": [
+      "OP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "matrix",
+        "labelKo": "지원 행렬"
+      },
+      {
+        "key": "requirements",
+        "labelKo": "요구 추적"
+      },
+      {
+        "key": "artifacts",
+        "labelKo": "시험 artifact"
+      },
+      {
+        "key": "load",
+        "labelKo": "부하 프로파일"
+      },
+      {
+        "key": "decisions",
+        "labelKo": "판정 이력"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "지원 조합·출시 증거",
+    "scopeLabelKo": "Provider·계약/역할·제품 버전·발행 경로",
+    "purposeKo": "요구ID·Provider/계약/역할/버전/발행경로·시험·artifact·담당·상태·차단·측정profile, 증거조회/판정기록",
+    "commandReferences": [],
+    "actionEvidence": "증거 연결; 차이 검토; 지원 판정 기록; 개통 검토 요청 (approval).",
+    "ticket": "HB-128",
+    "spec_sha256": "931c1ad8d23c8396bdeacb1b1564073350701127f327ab87cdb755f47a0bf9b6",
+    "purpose": "요구·설계·구현·시험·실고객 실증의 증거를 구분해 지원 조합 개통을 판정한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 지원 조합 | reference set | 예 | 판정 초안 | Provider/계약/역할/버전/경로 명시 | 업무 |\n| 요구·상세 인수 ID | reference[] | 예 | 읽기 전용 | HB/AUD 및 D/I/V 연결 | 업무 |\n| artifact·실행 환경 | reference | 통과 주장 시 | 증거 등록 | 실제 로그/버전/입력/결과 확인 | 내부 |\n| 검증 날짜·유효성 | datetime+policy | 증거 시 | 기록 | 버전/조건 변경 시 재검증 | 업무 |\n| 데이터 규모·동시 작업 | measurement | 성능 판정 시 | 기록 | 일 100만 초과·월 3000만 이상 누적 | 내부 |\n| 공통/조건부 gate | enum | 예 | 읽기 전용 | 공통 XLSX 생략 금지 | 업무 |\n| 판정·사유·책임자 | enum+reference | 예 | 판정 권한 | unsupported/unverified 구분 | 개인 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 증거 연결 | 검증 기록 권한 | 실제 artifact 존재 | 요구/조합별 증거 등록 | 실행 여부·환경 확인 |\n| 차이 검토 | 조회 권한 | 조건/버전 선택 | 이전 판정 대비 변경 표시 | 없음 |\n| 지원 판정 기록 | 도메인 판정 권한 | 필수 실제 증거·scale 충족 | 지원/제한/미지원/미검증 기록 | 검증 범위만 지원 확인 |\n| 개통 검토 요청 | 개통 요청 권한 | 해당 gate 충족 | 조합 개통 승인 검토 | 모의 통과≠실연계 실증 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "P06",
+    "path": "/demo",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "dashboard",
+    "spec": "docs/ui/screens/P06/spec.md",
+    "exampleRoles": [
+      "OP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "scenarios",
+        "labelKo": "시나리오"
+      },
+      {
+        "key": "inputs",
+        "labelKo": "합성 입력"
+      },
+      {
+        "key": "results",
+        "labelKo": "실행 결과"
+      },
+      {
+        "key": "failures",
+        "labelKo": "실패 주입"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "데모·시나리오",
+    "scopeLabelKo": "DEMO 환경 ID(DEMO 배너 고정)",
+    "purposeKo": "DEMO 환경·출처·seed·시계·fixture/기대값버전·시나리오·장애주입·결과, 초기화/실행/검증",
+    "commandReferences": [],
+    "actionEvidence": "시나리오 실행; 기대값 비교; 실패 주입 실행; DEMO 초기화.",
+    "ticket": "HB-129",
+    "spec_sha256": "1371f7855e58cd7a63c54e764d1f31b9fdb2f5ff815b87a317c9eb8d2cfeacf8",
+    "purpose": "운영과 격리된 합성 시나리오를 실행해 업무 흐름·실패·기대값을 학습하고 비교한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| DEMO 환경 ID | identifier | 예 | 읽기 전용 | 운영 DB/키/문서번호와 분리 | 업무 |\n| 자료 출처·fixture 버전 | reference | 예 | 시나리오 선택 | 공개 부분월≠인보이스 정답 | 업무 |\n| seed·가상 시계 | integer+datetime | 재현 시 | 실행 전 | 동일 버전 재현 | 업무 |\n| 기대값 버전 | reference | 검증 시 | 읽기 전용 | 합성 정답 승인 근거 | 업무 |\n| 모의 연결·목적지 | mock reference | 예 | 등록 범위 | 실 credential/secret store 연결 거절 | 내부 |\n| 장애 주입 | enum | 선택 | 실행 전 | 모의 환경에 한정 | 업무 |\n| 사건 행렬 | reference[] | 약정 시나리오 | 선택 | 0/100 사용·환불/FX/부분 CSV 포함 | 업무 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 시나리오 실행 | 데모 실행 권한 | DEMO identity·mock-only 연결 | 모의 작업과 결과 표시 | 외부 실제 발행 없음 확인 |\n| 기대값 비교 | 검증 권한 | fixture/engine/기대값 고정 | 금액·상태·권한 차이 표시 | 없음 |\n| 실패 주입 실행 | 시나리오 권한 | 승인 모의 대상 | timeout/중복/권한 회수 시나리오 | 운영 대상 아님 확인 |\n| DEMO 초기화 | 데모 reset 권한 | 환경 격리 확인 | 해당 demo 데이터만 초기화 계획 | 환경 ID·삭제 대상 확인 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "P07",
+    "path": "/licenses",
+    "menu": "ops",
+    "audience": "admin",
+    "module": "administration",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/P07/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "entitlements",
+        "labelKo": "설치 권리"
+      },
+      {
+        "key": "offline",
+        "labelKo": "오프라인 파일"
+      },
+      {
+        "key": "notices",
+        "labelKo": "모듈 고지"
+      },
+      {
+        "key": "support",
+        "labelKo": "계약·지원"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "라이선스·배포 고지",
+    "scopeLabelKo": "권리 상태·모듈·라이선스 종류·기간",
+    "purposeKo": "설치권리·기간·운영범위·서명상태·모듈라이선스·고지·지원수준, 승인파일반입/문서보기",
+    "commandReferences": [],
+    "actionEvidence": "권리 파일 검사; 검증 파일 적용 요청; 고지 다운로드; 기존 증빙 이동.",
+    "ticket": "HB-130",
+    "spec_sha256": "b1fcf39405188276a8f296f1713e1d4236f161a9552c30b76c0ed654f051542d",
+    "purpose": "설치 권리와 모듈별 고지를 확인하고 서명된 오프라인 권리 파일의 적용 범위를 검증한다.",
+    "fields": "필수 “조건부”는 해당 상황에만 필수다. 읽기 전용 값은 원장/검증 결과에서 조회하며 UI가 생성하거나 덮어쓰지 않는다.\n\n| Label | Type | Required | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| 설치·권리 참조 | identifier | 예 | 읽기 전용 | 대상 설치 일치 | 내부 |\n| 유효기간·상태 | interval+enum | 예 | 읽기 전용 | 유효/예정/유예/만료/검증실패 분리 | 계약 |\n| 운영 범위·과금 지표 | policy | 예 | 읽기 전용 | 계약 지표만; 고객 청구액 자동 전용 금지 | 계약 |\n| 서명 파일·검증 결과 | artifact+evidence | 갱신 시 | 반입 검증 | 서명/설치/기간 검사; 서버 필수 아님 | 내부 |\n| 모듈 라이선스·고지 | reference[] | 예 | 읽기 전용 | 기존 제3자 권리/고지 보존 | 공개 |\n| 지원 주체·수준 | reference | 계약 시 | 읽기 전용 | 최종 계약 미확정 표시 | 계약 |\n| 직접/Marketplace 권리 연결 | reference | 후속 도입 시 | 후속 설계 | 중복 결제 차단; 현재 미개통 | 계약 |",
+    "actions": "아래는 제품이 구현될 때의 명령 설계이며 이 문서 작성 과정에서 실행되지 않는다. 모든 쓰기는 expected revision·멱등 키·현재 권한을 확인하고 접수 ID와 완료 상태를 구분한다. 확인 대화는 임의 추가 승인 단계가 아니라 각 업무 계약상 영향 검토를 표현한다.\n\n| Label | 권한 | 전제 | 결과 | 확인 |\n| --- | --- | --- | --- | --- |\n| 권리 파일 검사 | 라이선스 관리 권한 | 오프라인 승인 파일 | 서명·설치·범위 검증 | 파일 출처·설치 확인 |\n| 검증 파일 적용 요청 | 권리 적용 권한 | 검증 통과·현재 계약 적격 | 권리 상태 갱신 계획 | 신규 운영 영향 확인 |\n| 고지 다운로드 | 고지 조회 권한 | 고지 artifact 확보 | 모듈별 원문/지원 문서 제공 | 없음 |\n| 기존 증빙 이동 | 기존 문서 접근 권한 | 고객 권한·보존 정책 유효 | 만료해도 문서/감사/반출 경로 유지 | 없음 |",
+    "special_sections": [
+      "목적·역할·범위",
+      "구역 배치",
+      "필드 계약",
+      "목록·필터·상세",
+      "액션 계약",
+      "탭·하위 보기·이동",
+      "상태 문구",
+      "대량 데이터와 snapshot",
+      "Desktop·Mobile·Keyboard",
+      "요구·인수 추적",
+      "미정값과 검증 범위"
+    ]
+  },
+  {
+    "id": "R01",
+    "path": "/reports",
+    "menu": "rep",
+    "audience": "admin",
+    "module": "analytics",
+    "archetype": "dashboard",
+    "spec": "docs/ui/screens/R01/spec.md",
+    "exampleRoles": [
+      "BL",
+      "CP",
+      "AU"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "summary",
+        "labelKo": "요약"
+      },
+      {
+        "key": "comparison",
+        "labelKo": "비교"
+      },
+      {
+        "key": "rows",
+        "labelKo": "상세 행"
+      },
+      {
+        "key": "views",
+        "labelKo": "저장한 보기"
+      },
+      {
+        "key": "exports",
+        "labelKo": "내보내기 상태"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      },
+      {
+        "key": "recognition",
+        "labelKo": "인식 주기·대사"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "정형 리포트",
+    "scopeLabelKo": "분석 범위·시간 기준·기간/비교 기간·금액 의미·통화/환산·그룹 차원",
+    "purposeKo": "기간·서비스·공급자·조직·모델·금액 기준·통화·snapshot·비교기간, 저장 필터/드릴다운/권한 있는 export",
+    "commandReferences": [],
+    "actionEvidence": "조회; 상세 근거 보기; 보기 저장; 내보내기 요청 (export.raw/customer, job); 새 기준으로 갱신; 미수·연체 보고서.",
+    "ticket": "HB-132",
+    "spec_sha256": "b0e4648fa09e620f8aed1aa928564f76d0f0250e90a7fc6064c42c5252707b8a",
+    "purpose": "같은 금액 의미·통화·기준시각을 유지하며 담당 범위의 비용·판매·배분을 비교하고 허용된 분석 결과를 반출한다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 분석 범위 | scope-select | 예 | 허용 필터 | canonical ID·현재 권한; 전체 고객 추정 금지 | 고객 식별 |\n| 시간 기준 | enum | 예 | 조회 설정 | 당시 귀속/정산과 현재 조직 재분석을 명시적으로 구분 | 정책 |\n| 기간·비교 기간 | period | 예 | 지원 기간 | 누락/다른 일수·비교 분모를 표시; 미생성 0 처리 금지 | 거래 |\n| 금액 의미 | enum | 예 | 허용 종류만 | Billed/Effective/내부원가/판매/배분 각각; 혼합 합계 금지 | 금액 |\n| 통화/환산 보기 | currency-enum | 예 | 조회 설정 | 원통화 기본; 표시 환율·기준시각 필수; 확정액 변경 아님 | 금액 |\n| 그룹 차원 | dimension-list | 예 | 공개 필드만 | Provider/서비스/조직/모델·허용 차원; 추론 노출 검증 | 사용량 |\n| 출처·완전성 | metadata | 예 | 읽기 전용 | source/policy revision·as_of·미수신/추정 범위 | 증빙 |\n| 저장 이름 | text | 조건부/선택 | 본인 보기 저장 | 범위·정렬·차원만 저장; 권한 자체나 raw 결과 저장 아님 | 개인 |\n| 반출 목적·형식 | enum | 조건부/선택 | 허용 export 권한 | 내부/고객용 구분·필드 투영·CSV/XLSX/PDF 지원은 정책별 | 공개 범위 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항",
+      "사용자 추가: Payment Term·납부기한·Overdue",
+      "사용자 추가: 월별 ERP 인식과 분기 청구"
+    ]
+  },
+  {
+    "id": "R02",
+    "path": "/history",
+    "menu": "rep",
+    "audience": "admin",
+    "module": "history",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/R02/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AM",
+      "PR",
+      "BL",
+      "AP",
+      "CP",
+      "AU",
+      "IA"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "events",
+        "labelKo": "사건 목록"
+      },
+      {
+        "key": "detail",
+        "labelKo": "행위 상세"
+      },
+      {
+        "key": "diff",
+        "labelKo": "개정 차이"
+      },
+      {
+        "key": "evidence",
+        "labelKo": "관련 증거"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "공통 이력·감사",
+    "scopeLabelKo": "발생/수신 기간·대상 종류/ID·행위자",
+    "purposeKo": "사건/업무ID·실제/수신시각·사람/AI/자동주체·개정·사유·승인·외부참조·접근/반출, 검색/차이/문서 이동",
+    "commandReferences": [],
+    "actionEvidence": "사건 조회; 개정 비교; 근거 열기; 감사 묶음 요청 (audit.export job).",
+    "ticket": "HB-133",
+    "spec_sha256": "f4e7e2369de01d67e8c00227a3e05d53917ccb60acced13f0b8cbd90533ff154",
+    "purpose": "허용된 업무의 실제 행위자·입력 개정·승인·외부 부작용을 시간순으로 추적하고 당시 근거를 재확인한다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 발생/수신시각 | datetime-pair | 예 | 읽기 전용 | UTC와 현지 표현; 지연 수신·시간 순서 구별 | 업무 |\n| 실제 행위자 | immutable-reference | 예 | 읽기 전용 | UserID·ServiceAccount·지원 actor; 삭제/퇴사 뒤 최소 actor 유지 | 개인 |\n| 대리·지원 문맥 | delegation-reference | 조건부/선택 | 읽기 전용 | 실제 operator·대상·사유·허용 scope·만료; 승인자 사칭 금지 | 권한 |\n| 실행 경로 | enum | 예 | 읽기 전용 | UI/API/AI/자동화·client ID와 실제 권한 주체 구분 | 보안 |\n| 행위·결과 | code-summary | 예 | 읽기 전용 | 접수/성공/실패/결과불명 구별; 안정 명령 ID | 업무 |\n| 입력·결과 개정 | hash-reference | 조건부/선택 | 읽기 전용 | 원천·정책·대상·승인 snapshot 연결; 해시가 권한 증명 아님 | 증빙 |\n| 변경 전후 | redacted-diff | 조건부/선택 | 읽기 전용 | 허용 필드만 비교; 비밀/금지 원문은 diff에 저장하지 않음 | 민감 |\n| 사유·승인 | reference-text | 조건부/선택 | 읽기 전용 | 당시 승인자/범위/해시·최신 상태와 구분 | 권한 |\n| 외부 참조 | reference | 조건부/선택 | 읽기 전용 | ERP/전달/파일 job ID; 응답 원문 secret 제외 | 외부 식별 |\n| 보존·보류 | status | 조건부/선택 | 읽기 전용 | 보존 정책·유효 hold·익명화/최소화 상태를 권한대로 | 보존 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항"
+    ]
+  },
+  {
+    "id": "S03",
+    "path": "/imports",
+    "menu": "src",
+    "audience": "admin",
+    "module": "sources",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/S03/spec.md",
+    "exampleRoles": [
+      "OP",
+      "BL"
+    ],
+    "reactBodies": [
+      "index-intake"
+    ],
+    "tabs": [
+      {
+        "key": "imports",
+        "labelKo": "수입 작업"
+      },
+      {
+        "key": "quarantine",
+        "labelKo": "격리·충돌"
+      },
+      {
+        "key": "completeness",
+        "labelKo": "완전성"
+      },
+      {
+        "key": "extraction",
+        "labelKo": "추출 검증"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "수입·충돌·완전성",
+    "scopeLabelKo": "원천 연결·기간·개정",
+    "purposeKo": "원천 파일/응답·개정·해시·기간·계정·행/바이트·manifest·중복/격리·watermark, 업로드/검증/재개",
+    "commandReferences": [
+      "input.inspect",
+      "input.confirm_publish",
+      "input.reject"
+    ],
+    "actionEvidence": "receive data; view quarantine reason; record extraction verification; resume failed segment; `input.inspect`. Confirmation is NOT here; it is in S06.",
+    "ticket": "HB-92",
+    "spec_sha256": "000c22eeb378062fc103778198dab18a161fbb663b78bcc8a41998a1f488e147",
+    "purpose": "Check source files and events for duplication, corrections and missing partitions, and publish only eligible input revisions.",
+    "fields": "| Label | Type | Required when | Editability | Validation | Sensitivity |\n| --- | --- | --- | --- | --- | --- |\n| Source connection and period | reference+interval | Always | Edit before receipt | Authenticated scope and period match | Account identifiers |\n| File or batch reference | artifact-reference | Always | New receipt | Validate signature, size, compression and schema | Source evidence |\n| Provenance, recipient and original number | text | When applicable | Edit before receipt | Capture original invoice provenance | Contract |\n| Original hash and revision | digest+revision | Always | Read only | Quarantine same key with different content | Internal |\n| Watermark and partition manifest | reference | Always | Read only | All partitions, periods and row counts match | Internal |\n| OCR candidate and verification evidence | reference | When applicable | Verifier assessment | Exclude from confirmed input until checked against original | Source amounts |\n| Correction reference and reason | reference+text | When applicable | Edit before receipt | Validate supersedes target and connection scope | Internal |\n| Input eligibility and candidate revision | enum+revision | Before eligibility or dependent amount approval | Read only except explicit command draft | Bind exact immutable evidence and current authority; no waiver | Restricted business evidence |\n| Confirmation actor and evidence digest | principal+digest | Before eligibility or dependent amount approval | Read only except explicit command draft | Bind exact immutable evidence and current authority; no waiver | Restricted business evidence |\n| Source, mapping and profile revisions | reference-set | Before eligibility or dependent amount approval | Read only except explicit command draft | Bind exact immutable evidence and current authority; no waiver | Restricted business evidence |\n| Independent cross-validation and comparison digest | reference+digest | Before eligibility or dependent amount approval | Read only except explicit command draft | Bind exact immutable evidence and current authority; no waiver | Restricted business evidence |\n\nSensitive fields: Source connection and period, File or batch reference, Provenance, recipient and original number, OCR candidate and verification evidence.",
+    "actions": "All identifiers below are proposed canonical planning IDs, not deployed APIs. Existing English permission tokens are preserved; descriptive permissions require the command catalog mapping, not an invented grant.\n\n| Action | Proposed ID | Permission | Preconditions | Result | Confirmation |\n| --- | --- | --- | --- | --- | --- |\n| Receive data | Existing action; catalog mapping required | Source import | Allowed billing fields and connection verified | Create a job awaiting verification | Confirm target, bytes and duplication policy |\n| View quarantine reason | Existing action; catalog mapping required | Import read | Quarantine record exists | Show only nonsensitive errors and metadata references; no excluded-body link | None |\n| Record extraction verification | Existing action; catalog mapping required | Evidence verification | Original is available for comparison | Bind verification evidence to a new revision | Confirm verified amount and document number |\n| Resume failed segment | Existing action; catalog mapping required | Import resume | Valid checkpoint and current permission | Resume while retaining completed segments | Confirm resumed segment |\n| Inspect input evidence | input.inspect | Existing scoped evidence-read permission | Currently permitted exact candidate revision | Read input confirmation and validation evidence; no mutation | None |",
+    "special_sections": [
+      "Confirmed input eligibility"
+    ]
+  },
+  {
+    "id": "U03",
+    "path": "/tasks",
+    "menu": "home",
+    "audience": "admin+portal",
+    "module": "operations",
+    "archetype": "inbox",
+    "spec": "docs/ui/screens/U03/spec.md",
+    "exampleRoles": [
+      "OP",
+      "AM",
+      "PR",
+      "BL",
+      "AP",
+      "CP",
+      "AU",
+      "CU",
+      "IA"
+    ],
+    "reactBodies": [
+      "my-tasks"
+    ],
+    "tabs": [
+      {
+        "key": "tasks",
+        "labelKo": "내 작업"
+      },
+      {
+        "key": "notifications",
+        "labelKo": "업무 알림"
+      },
+      {
+        "key": "detail",
+        "labelKo": "선택 상세"
+      },
+      {
+        "key": "delivery",
+        "labelKo": "전달 상태"
+      },
+      {
+        "key": "payment-terms",
+        "labelKo": "납기·연체"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "내 작업·알림함",
+    "scopeLabelKo": "기간·업무 유형·내 현재 범위",
+    "purposeKo": "작업/사건 ID, 대상·단계·기한·담당·성공/보류/실패, 확인·수락·재시도·인계·알림 설정",
+    "commandReferences": [],
+    "actionEvidence": "확인 (incident.ack); 담당 수락; 재시도 (job.retry; unknown → re-query first); 취소 요청 (request ≠ stop); 스누즈; 업무 열기; 알림 설정 (→M05); 관련 납부 문서 보기. \"Mark all read\" is not a bulk resolve.",
+    "ticket": "HB-87",
+    "spec_sha256": "8b263f674620ce7f81ea96c3c118d6b5b7f7303eaef7ea1f7595146b0e6053ef",
+    "purpose": "사용자가 자신의 작업 결과와 업무 사건을 확인하고 허용된 재시도·인계·알림 행동을 수행한다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 작업 ID | reference | 조건부/선택 | 읽기 전용 | job_id와 업무 ID 구분; 다른 대화에서도 같은 job 조회 | 업무 |\n| 상위 작업 상태 | enum | 조건부/선택 | 읽기 전용 | queued/running/waiting/succeeded/failed/cancelled만 | 업무 |\n| 업무 세부 결과 | status-counts | 조건부/선택 | 읽기 전용 | partial·성공/보류/실패/미처리; 합계 일치 | 업무 |\n| 대기 사유 | text | 조건부/선택 | 읽기 전용 | ERP 결과불명은 waiting+reason; 재제출 버튼 금지 | 업무 |\n| 사건 상태 | enum | 조건부/선택 | 허용 확인/수락 | 읽음/확인/담당 수락/문제 해결 독립 | 업무 |\n| 발생 이력 | count-datetime | 조건부/선택 | 읽기 전용 | 최초/최종·반복횟수·해결후 재발 새 사건 연결 | 업무 |\n| 스누즈 | datetime | 조건부/선택 | 알림 설정 허용 | 업무 차단/기한은 유지; 정책상 최장기간 미정 | 개인 |\n| 전달 상태 | enum | 조건부/선택 | 읽기 전용 | 채널 수락/실패/미확인과 사용자 읽음 별개 | 개인 |\n| 오류·다음 조치 | safe-error | 조건부/선택 | 읽기 전용 | 안정 code/request_id·재시도 가능 여부·비밀 제외 | 운영 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항",
+      "사용자 추가: Payment Term·납부기한·Overdue"
+    ]
+  },
+  {
+    "id": "U04",
+    "path": "/billing-findings",
+    "menu": "home",
+    "audience": "admin",
+    "module": "operations",
+    "archetype": "list-workbench",
+    "spec": "docs/ui/screens/U04/spec.md",
+    "exampleRoles": [
+      "PR",
+      "BL",
+      "AP",
+      "CP"
+    ],
+    "reactBodies": [],
+    "tabs": [
+      {
+        "key": "findings",
+        "labelKo": "특이사항 목록"
+      },
+      {
+        "key": "review",
+        "labelKo": "검토 상세"
+      },
+      {
+        "key": "evidence",
+        "labelKo": "관련 근거·조정"
+      }
+    ],
+    "scopeKeys": [
+      "scope",
+      "le",
+      "customer",
+      "contract",
+      "period",
+      "ccy",
+      "asof"
+    ],
+    "titleKo": "청구 특이사항",
+    "scopeLabelKo": "고객/계약·기간·금액 기준·통화·담당",
+    "purposeKo": "유형·대상·기간·금액 의미/통화·근거·심각도·담당·검토 상태, 수동 등록/정상 확인/조정 요청/해결 연결",
+    "commandReferences": [],
+    "actionEvidence": "수동 등록 (finding.create); 정상 확인 (finding.review, needs a reason); 조정 요청 (→B11; correction approved separately); 담당 인계; 해결 근거 연결. No bulk \"normal\" confirmation by default.",
+    "ticket": "HB-88",
+    "spec_sha256": "43cbc8fa79e3f6606b17e0018d5d1d642eb7b008fa629e4aa53c959c9c52501f",
+    "purpose": "비용 급증·신규 과금·혜택 누락 의심·충돌·계측 누락을 근거와 함께 검토하고 정당한 조정 업무로 연결한다.",
+    "fields": "표의 필수는 적용되는 탭·행위 안에서의 조건이다. 미적용 입력은 숨기되 필수 정책이 누락된 경우 차단 이유를 표시한다. 비밀은 저장/로그/복사 대상에서 제외하며 실제 값을 예시로 사용하지 않는다.\n\n| 레이블 | 형식 | 필수 | 수정 가능 조건 | 검증·상호작용 | 민감도 |\n| --- | --- | --- | --- | --- | --- |\n| 유형 | enum | 예 | 등록/허용 수정 | 급증/신규/혜택 의심/충돌/계측 누락; 유형별 근거 | 업무 |\n| 대상·기간 | scoped-reference | 예 | 등록 시 | 허용 계약/기간·source revision 고정 | 거래 |\n| 금액 의미·통화 | enum | 예 | 등록 시 | 원가/판매/배분 구분; 알 수 없는 영향은 미확인 | 금액 |\n| 비교 기준 | reference-text | 예 | 등록/검토 | 이전 주기/계약 조항/예상 범위·기준시각 표시 | 정책 |\n| 영향 금액 | decimal | 조건부/선택 | 근거 연결 후 | 확정/추정/미확인 구분; 의심액을 자동 차감하지 않음 | 금액 |\n| 근거 | reference-list | 예 | 허용 첨부/링크 | 원천/계약/문서의 현재 접근 확인; secret 금지 | 고객 자료 |\n| 검토 상태 | enum | 예 | 권한 있는 명령만 | 검토 중/정상 확인/조정 필요/해결; 감사 이력 | 업무 |\n| 담당자·기한 | scoped-user-datetime | 예 | 인계 권한 | 허용 담당·정책 기한; 알림 연결 | 개인 |\n| 판정 사유 | textarea | 조건부/선택 | 정상확인/해결 때 필수 | 해결 근거·관련 정정 ID; 단순 '완료' 빈 기록 금지 | 업무 |",
+    "actions": "",
+    "special_sections": [
+      "상태와 근거",
+      "목적·역할·범위",
+      "구역과 읽기 순서",
+      "필드 계약",
+      "탭·조회·열",
+      "액션과 확인",
+      "상태와 사용자 문구",
+      "대량 조회·스냅샷·선택",
+      "반응형·키보드·접근성",
+      "이동과 연결 흐름",
+      "인수 시나리오와 미정 사항"
+    ]
+  }
+]

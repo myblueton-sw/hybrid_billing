@@ -17,7 +17,7 @@
     "tabs": [
       {
         "key": "imports",
-        "labelKo": "수입 작업"
+        "labelKo": "수집 작업"
       },
       {
         "key": "quarantine",
@@ -41,7 +41,7 @@
       "ccy",
       "asof"
     ],
-    "titleKo": "수입·충돌·완전성",
+    "titleKo": "수집·충돌·완전성",
     "scopeLabelKo": "원천 연결·기간·개정",
     "purposeKo": "원천 파일/응답·개정·해시·기간·계정·행/바이트·manifest·중복/격리·watermark, 업로드/검증/재개",
     "commandReferences": [

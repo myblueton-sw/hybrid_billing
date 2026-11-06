@@ -1,3 +1,7 @@
+import RemainingScreens from "./RemainingScreens";
+import RemainingEntryShell from "./RemainingEntryShell";
+import { remainingIds, presentationAudience } from "./remaining-screens";
+import ScreenTabLabel from "./ScreenTabLabel";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Locale, Mode } from "../shared/types";
 import { serviceQuery } from "./service-navigation";
@@ -26,8 +30,6 @@ import LiveImports from "../modules/sources/pages/live-imports/Screen";
 import CandidateWorkbench from "../planning/CandidateWorkbench";
 import ReviewPanel from "../shared/ReviewPanel";
 import HeaderSelect from "./HeaderSelect";
-import EntryShell from "./EntryShell";
-import { identity } from "../modules/identity/module";
 import CreditsCases from "../modules/history/pages/credits-cases/Screen";
 import * as credits from "../modules/history/pages/credits-cases/copy";
 import ClaimHistory from "../modules/calculation/pages/claim-history/Screen";
@@ -88,7 +90,9 @@ export default function App() {
     jobs = useRef<HTMLDialogElement>(null),
     menuTrigger = useRef<HTMLButtonElement>(null),
     jobTrigger = useRef<HTMLButtonElement>(null);
-  const audience: Audience = developer ? audiencePreview : "admin";
+  const audience: Audience = developer
+    ? audiencePreview
+    : presentationAudience(hash);
   const persona = developer ? personaPreview : "all";
   const scenario = developer ? scenarioPreview : "normal";
   const context = useMemo(
@@ -160,9 +164,13 @@ export default function App() {
       liveMarketplace) &&
     audience === "admin";
   const liveOverview = screen?.id === "U01" && audience === "admin";
+  const remaining = screen
+    ? remainingIds.has(screen.id) && !liveImports
+    : false;
   const liveReadWorkbench =
     livePricing || liveBilling || liveInbox || liveClaims || liveCredits;
   const liveService =
+    remaining ||
     liveReadWorkbench ||
     liveCollectedSource ||
     liveOverview ||
@@ -521,57 +529,21 @@ export default function App() {
     </details>
   );
   if (audience === "unauthenticated" && screen) {
-    const entries =
-      screen.id === "L01"
-        ? ["entry-start", "entry-login", "entry-scope"]
-        : screen.id === "L02"
-          ? ["entry-bootstrap", "entry-invite"]
-          : ["entry-challenge"];
-    const requested = params.get("entry-view") ?? route.legacyId ?? "";
-    const id = entries.includes(requested)
-      ? requested
-      : screen.id === "L01"
-        ? "entry-login"
-        : screen.id === "L02"
-          ? "entry-invite"
-          : "entry-challenge";
-    const entry = identity.routes.find((r) => r.id === id)!;
     return (
-      <>
-        <EntryShell
-          route={entry}
-          planningId={screen.id}
-          locale={l}
-          mode={mode}
-          profile="standard"
-        />
-        <div className="planning-entry-tools">
-          {developer && reviewTools}
-          {developer && (
-            <button onClick={() => navigate("/home", { review: "" })}>
-              {local(l, [
-                "서비스로 돌아가기",
-                "Return to service",
-                "العودة إلى الخدمة",
-              ])}
-            </button>
-          )}
-          <nav>
-            {planningScreens
-              .filter((s) => s.audience === "prelogin")
-              .map((s) => (
-                <button key={s.id} onClick={() => navigate(s.path)}>
-                  {local(l, titles[s.id])}
-                </button>
-              ))}
-          </nav>
-        </div>
-      </>
+      <RemainingEntryShell
+        key={screen.id + ":" + l + ":" + tab}
+        screenId={screen.id}
+        locale={l}
+        params={params}
+        view={tab}
+        onDirty={setDirty}
+      />
     );
   }
+
   return (
     <div
-      className={`planning-app service-shell ${screen?.id === "U01" || liveCollectedSource || liveReadWorkbench ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
+      className={`planning-app service-shell ${remaining?"remaining-service-shell":""} ${screen?.id === "U01" || liveCollectedSource || liveReadWorkbench ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
     >
       <a
         className="skip"
@@ -670,41 +642,47 @@ export default function App() {
         </a>
         <span className="planning-installation">
           <span className="service-environment">
-            {liveCredits
-              ? credits.environment(l)
-              : liveClaims
-                ? claimEnvironment(l)
-                : liveInbox
-                  ? inboxEnvironment(l)
-                  : local(
-                      l,
-                      liveOverview ||
-                        liveCollectedSource ||
-                        livePricing ||
-                        liveBilling
-                        ? [
-                            "수집 FOCUS 샘플 · 공개·합성 출처",
-                            "Collected FOCUS samples · public and synthetic sources",
-                            "عينات FOCUS مجمعة · مصادر عامة وتجريبية",
-                          ]
-                        : liveService
+            {remaining
+              ? local(l, [
+                  "업무 서비스 미연결",
+                  "Work service not connected",
+                  "خدمة العمل غير متصلة",
+                ])
+              : liveCredits
+                ? credits.environment(l)
+                : liveClaims
+                  ? claimEnvironment(l)
+                  : liveInbox
+                    ? inboxEnvironment(l)
+                    : local(
+                        l,
+                        liveOverview ||
+                          liveCollectedSource ||
+                          livePricing ||
+                          liveBilling
                           ? [
-                              "로컬 검증 환경 · 합성 데이터",
-                              "Local validation · synthetic data",
-                              "تحقق محلي · بيانات تجريبية",
+                              "수집 FOCUS 샘플 · 공개·합성 출처",
+                              "Collected FOCUS samples · public and synthetic sources",
+                              "عينات FOCUS مجمعة · مصادر عامة وتجريبية",
                             ]
-                          : mode === "synthetic"
+                          : liveService
                             ? [
-                                "데모 환경 · 합성 데이터",
-                                "Demo · synthetic data",
-                                "عرض تجريبي · بيانات اصطناعية",
+                                "로컬 검증 환경 · 합성 데이터",
+                                "Local validation · synthetic data",
+                                "تحقق محلي · بيانات تجريبية",
                               ]
-                            : [
-                                "데이터 미연결",
-                                "Data not connected",
-                                "البيانات غير متصلة",
-                              ],
-                    )}
+                            : mode === "synthetic"
+                              ? [
+                                  "데모 환경 · 합성 데이터",
+                                  "Demo · synthetic data",
+                                  "عرض تجريبي · بيانات اصطناعية",
+                                ]
+                              : [
+                                  "데이터 미연결",
+                                  "Data not connected",
+                                  "البيانات غير متصلة",
+                                ],
+                      )}
           </span>
         </span>
         {!mobile && headerActions}
@@ -942,6 +920,18 @@ export default function App() {
                   ...(liveInbox ? inboxContext : {}),
                   ...(liveClaims ? claimContext : {}),
                   ...(liveCredits ? credits.reviewContext : {}),
+                  ...(remaining
+                    ? {
+                        profile: "commercial-frontend-unconnected",
+                        mode: "unconnected",
+                        period: null,
+                        organization: null,
+                        currency: null,
+                        scope: null,
+                        producer: "unbound",
+                        commands: "unconnected",
+                      }
+                    : {}),
                 })}
                 items={
                   view.key === screenKey && view.items.length
@@ -1013,7 +1003,7 @@ export default function App() {
               )}
               <div
                 className={
-                  screen.archetype.includes("wizard")
+                  screen.archetype.includes("wizard") && !remaining
                     ? "planning-wizard-layout"
                     : ""
                 }
@@ -1029,7 +1019,8 @@ export default function App() {
                       liveBilling ||
                       liveInbox ||
                       liveClaims ||
-                      liveCredits
+                      liveCredits ||
+                      remaining
                     )
                       ? { display: "none" }
                       : undefined
@@ -1059,155 +1050,7 @@ export default function App() {
                       }}
                     >
                       {screen.archetype.includes("wizard") ? `${i + 1}. ` : ""}
-                      {liveCredits
-                        ? credits.tabLabel(l, t.key)
-                        : liveClaims
-                          ? claimTab(l, t.key)
-                          : liveInbox
-                            ? inboxTab(l, t.key)
-                            : liveBilling
-                              ? billingTab(l, t.key)
-                              : liveMarketplace
-                                ? marketplaceTab(l, t.key)
-                                : liveCommitments
-                                  ? local(
-                                      l,
-                                      (
-                                        {
-                                          commitments: [
-                                            "약정 명세",
-                                            "Commitment details",
-                                            "تفاصيل الالتزامات",
-                                          ],
-                                          utilization: [
-                                            "사용·미사용 근거",
-                                            "Used and unused evidence",
-                                            "أدلة الاستخدام وعدم الاستخدام",
-                                          ],
-                                          benefits: [
-                                            "혜택 흐름",
-                                            "Benefit flow",
-                                            "مسار المنافع",
-                                          ],
-                                          reconciliation: [
-                                            "대사 검토",
-                                            "Reconciliation review",
-                                            "مراجعة المطابقة",
-                                          ],
-                                        } as Record<
-                                          string,
-                                          [string, string, string]
-                                        >
-                                      )[t.key],
-                                    )
-                                  : liveFx
-                                    ? local(
-                                        l,
-                                        (
-                                          {
-                                            policies: [
-                                              "환산 규칙",
-                                              "Conversion rules",
-                                              "قواعد التحويل",
-                                            ],
-                                            imports: [
-                                              "환율 근거",
-                                              "Exchange-rate evidence",
-                                              "أدلة سعر الصرف",
-                                            ],
-                                            comparison: [
-                                              "환산 비교",
-                                              "Conversion comparison",
-                                              "مقارنة التحويل",
-                                            ],
-                                            approvals: [
-                                              "승인 이력",
-                                              "Approval history",
-                                              "سجل الاعتماد",
-                                            ],
-                                          } as Record<
-                                            string,
-                                            [string, string, string]
-                                          >
-                                        )[t.key],
-                                      )
-                                    : livePricing
-                                      ? local(
-                                          l,
-                                          (
-                                            {
-                                              rates: [
-                                                "요금 규칙",
-                                                "Pricing rules",
-                                                "قواعد التسعير",
-                                              ],
-                                              formula: [
-                                                "계산 단계",
-                                                "Calculation steps",
-                                                "خطوات الحساب",
-                                              ],
-                                              inheritance: [
-                                                "정책 상속",
-                                                "Policy inheritance",
-                                                "توريث السياسات",
-                                              ],
-                                              adjustments: [
-                                                "조정 검토",
-                                                "Adjustment review",
-                                                "مراجعة التعديل",
-                                              ],
-                                              impact: [
-                                                "금액 비교",
-                                                "Amount comparison",
-                                                "مقارنة المبالغ",
-                                              ],
-                                              policies: [
-                                                "배분 정책",
-                                                "Allocation policy",
-                                                "سياسة التوزيع",
-                                              ],
-                                              pools: [
-                                                "배분 기준액",
-                                                "Allocation basis",
-                                                "مبلغ أساس التوزيع",
-                                              ],
-                                              simulation: [
-                                                "배분 미리보기",
-                                                "Allocation preview",
-                                                "معاينة التوزيع",
-                                              ],
-                                              comparison: [
-                                                "결과 비교",
-                                                "Result comparison",
-                                                "مقارنة النتائج",
-                                              ],
-                                              summary: [
-                                                "구성 요약",
-                                                "Composition summary",
-                                                "ملخص المكوّنات",
-                                              ],
-                                              costs: [
-                                                "원가 항목",
-                                                "Cost items",
-                                                "بنود التكلفة",
-                                              ],
-                                              products: [
-                                                "상품별 포함 항목",
-                                                "Included items by product",
-                                                "البنود المشمولة لكل منتج",
-                                              ],
-                                              approvals: [
-                                                "승인 이력",
-                                                "Approval history",
-                                                "سجل الاعتماد",
-                                              ],
-                                            } as Record<
-                                              string,
-                                              [string, string, string]
-                                            >
-                                          )[t.key],
-                                        )
-                                      : tabLabel(l, t.key, t.labelKo)}
+                      <ScreenTabLabel id={screen.id} locale={l} tab={t} />
                     </button>
                   ))}
                 </nav>
@@ -1243,12 +1086,22 @@ export default function App() {
                 <div
                   id="content"
                   key={
-                    liveReadWorkbench
+                    liveReadWorkbench || remaining
                       ? screen.id + ":" + l
                       : screenKey + ":" + tab + (liveService ? ":" + l : "")
                   }
                 >
-                  {liveCredits ? (
+                  {remaining ? (
+                    <RemainingScreens
+                      screenId={screen.id}
+                      locale={l}
+                      params={params}
+                      view={tab}
+                      audience={audience}
+                      onState={onState}
+                      onDirty={setDirty}
+                    />
+                  ) : liveCredits ? (
                     <CreditsCases
                       locale={l}
                       params={params}

@@ -1,0 +1,59 @@
+---
+type: ImplementationEvidence
+title: HB-144 identity and security frontend candidates
+description: Records eight dedicated identity and security surfaces, their local preparation boundaries, actual checks and remaining integration review.
+status: draft
+---
+
+# Scope and source
+
+HB-144 owns this candidate on `work/HB-144-security`, stacked on the batch base. The isolated writer owns only `apps/console/src/modules/identity/remaining/` and this report. Root owns routing, the prelogin shell, canonical tabs, screen review controls, integration and independent rendered QA. Existing entry leaves, earlier financial leaves, shared foundations and packages are unchanged. This is not owner FIX, authentication implementation or authorization enforcement.
+
+All eight actual planning specifications were read in the authorized local workspace: [L01](../../ui/screens/L01/spec.md), [L02](../../ui/screens/L02/spec.md), [L03](../../ui/screens/L03/spec.md), [M01](../../ui/screens/M01/spec.md), [M02](../../ui/screens/M02/spec.md), [M03](../../ui/screens/M03/spec.md), [M04](../../ui/screens/M04/spec.md) and [M05](../../ui/screens/M05/spec.md). The [batch plan](implementation-plan.md) and `screens.json` supply the canonical view keys. These legacy planning sources contain historical static-stage statements; the owner's later planning-complete decision and ticketed batch govern authorized frontend execution.
+
+# Composition and field map
+
+The default export accepts `{screenId, locale, params, view, onState, onDirty}`. `model.ts` freezes all 32 canonical views and editable field allowlists. Dedicated components compose entry, user administration, provider policy, access/delegation, service identities and personal security. They share control and local-validation primitives, not a universal screen renderer. Missing observations use fixed domain meanings and explicit unknown values, never server-provided labels or fabricated records.
+
+| Screen | Canonical views                                     | Actual frontend interaction and evidence distinction                                                                                                                                                                                                                                                |
+| ------ | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L01    | method, mfa                                         | Workspace and sign-in ID format preparation; verification-help topic; unknown methods, challenge and session policy. No password, provider authentication, workspace-membership choice or progression to a service preview.                                                                         |
+| L02    | invitation, identity, result                        | Contact-format and display-name preparation; read-only unknown invitation type, bound workspace/role/expiry, identity and membership result. No token input or user-selectable bootstrap/admin mode.                                                                                                |
+| L03    | route, proof, replacement, result                   | Workspace, sign-in ID and recovery-guidance draft; proof-help topic; unknown ownership, approved replacement and session outcome. No recovery-code/password input, emergency-access grant or completed result.                                                                                      |
+| M01    | users, invitations, membership, revocation          | Local lookup terms, invitation references/expiry, membership interval and revocation scope preparation. Identity, membership, whole-user suspension, durable deny effect and later cleanup remain distinct.                                                                                         |
+| M02    | providers, policies, test, keys, recovery, sync     | Method-specific local/SAML/OIDC/LDAPS metadata; policy-review references, enforced-SSO proposal, MFA/group/ceiling references, test-principal scope, key-version/recovery references and synchronization method. Trust epoch, independent actors, diagnostics and activation remain unknown.        |
+| M03    | roles, grants, effects, support                     | Separate subject, action and legal-entity/customer/contract references; parent delegation and interval; local effect-comparison scope; requested support identity distinct from uneditable actual actor. Fixed effect matrix remains not evaluated.                                                 |
+| M04    | accounts, credentials, usage, transfer              | Purpose/organization/owner/audience/scope draft, credential references/version, use-history period and owner-handoff preparation. Explicit approval-scope labels fail local checks; no local result grants any scope.                                                                               |
+| M05    | account, methods, recovery, sessions, notifications | Personal display/contact preparation, source method/recovery evidence, current/other-session scope and quiet-hours/timezone/digest/reminder/channel preferences. Structurally excludes internal substitute owners, support, delegation, role-management, cost and margin fields for every audience. |
+
+The entry composition retains the existing intro/access concept and canonical shell responsibility. Layout fills available width, uses responsive two-column task/evidence regions and stacks below 1024px. Scoped CSS sets 16px body/control/table, 20px section headings, 14px help/meta and Arabic line-height 1.8. Local IBM Plex and canonical branding remain supplied by the root shell. Separators and controls use neutral semantic borders, square geometry and no shadows; focus outlines remain visible. No third-party component code or assets were copied.
+
+Official [Carbon forms](https://www.carbondesignsystem.com/building-blocks/core/patterns/forms) and [empty-state guidance](https://www.carbondesignsystem.com/building-blocks/core/patterns/empty-states) were researched through the web tool for consistent form composition and contextual next steps. They inform patterns only and do not supply authentication or permission rules.
+
+The actual Claude CLI `ui-designer` ran with Read/Glob/Grep tools and the installed official frontend-design skill. The first invocation failed because the variadic CLI arguments consumed the prompt; the corrected invocation completed successfully and read the eight specs, batch evidence and existing entry source. Its composition called for dedicated task surfaces, full-width entry reuse, strict secret boundaries, method-specific fields, unknown source states and structural M05 disclosure limits. It did not inspect a rendered candidate. No prior HB-143 captures were available at the supplied directory; the known capture script targeted S04 rather than B11. Missing captures are not visual approval.
+
+# State, privacy and local validation
+
+No producer, fetch, mutation, upload, credential input, storage operation, clipboard action or external message is implemented in this module. URL mode/persona flags never enable synthetic data or membership progression. Password, verification-code, invitation-token, recovery-proof and private-key controls are absent until a separately reviewed verified service flow exists. L01/L03 checks never look up or disclose whether an account exists.
+
+Local drafts are uncontrolled browser form fields. Their contents are never passed to `onState`, a URL, a log, storage or a review digest. `onState` carries only unconnected phase, canonical view, random form-instance identity, method variant, local revision, dirty/stage and invalid field IDs. Stable screen-prefixed input/action/data/state IDs support the root review control. `onDirty` tracks edits and clear/reset. Method changes, canonical view changes and relevant scope/permission/as-of changes remount the form; navigation unmounts it. Error summaries link to fields, move focus to the first error and set `aria-invalid`; clearing or editing removes stale errors. The checked message explicitly says nothing was sent or saved.
+
+Actual validation covers required/bounded nonsecret values, canonical references, email shape, HTTPS/LDAPS without embedded credentials/query/hash, real ordered date intervals, supported timezone names, valid nonempty quiet-hour ranges and explicit human-approval scope labels. These are transport/form checks, not account existence, adapter compatibility, policy eligibility or current authority. Timezone support was exercised only on the current runtime's Intl database; DST behavior and other platforms remain unverified. No session duration, MFA strength, detection interval, role grant, financial rule or customer default is activated.
+
+# Actual verification and handoff
+
+On macOS, Node v26.7.0 and the existing locked dependency binding:
+
+- PASS: `npm run typecheck --prefix apps/console`.
+- PASS: `npm run build --prefix apps/console`; the existing bundle-size warning remains. Root has not yet mounted this isolated module, so this build is not integrated rendering evidence.
+- PASS: from `apps/console`, `node_modules/.bin/tsx --test src/modules/identity/screen-ui/model.test.tsx`: 13 tests, including 96 static screen/view/locale renders, frozen field subsets, disclosure/secret negatives, source-state distinctions, URL/identifier/date/timezone/scope checks and review-state privacy.
+- Initial test invocation from the repository root did not select the console JSX configuration and failed with `React is not defined`; rerunning from the documented console directory corrected that harness invocation. An initial arbitrary markup-length assertion rejected short Korean copy and was replaced by semantic section/heading checks.
+- Every maintained source/test/style file is below 1500 physical lines. PASS: scoped whitespace and staged-source checks before commit; no generated build/font/screenshot or node_modules binding belongs in the commit.
+
+Root must mount the dedicated export for all eight screens and provide canonical prelogin tabs for L01/L02/L03. Normal `/login`, `/activate`, `/recover` and verified legacy aliases need unauthenticated presentation context; URL-driven synthetic mode cannot select a service identity. The module does not depend on the old EntryShell mounting a legacy leaf. Related entry links retain language only. The root may pass an audience prop, but M05's shared field schema remains safe without it.
+
+Browser interaction, actual 390/1440 layout/font/RTL/focus/clear behavior, independent actual-change review, final Claude capture comparison, native Arabic/practitioner review, other OS/browser combinations and live identity/access enforcement remain UNVERIFIED here. Root owns those next checks. Backend actions, verified user records, policy activation, keys, actual revocation/cleanup and saved personal preferences are explicitly deferred, never simulated success. No owner acceptance was created.
+
+# Final integration paths
+
+Root relocated the isolated staging paths into canonical product modules and actual shared UI helpers. The exact [file map](file-relocation.json) records all48 import-only normalized hashes; no staging `remaining` source files remain. Current integrated validation and limits are in [verification](verification.md). The earlier commands and scoped writer results above describe the original isolated candidate, not independent final acceptance.

@@ -38,6 +38,10 @@ const revision = hash(
     .join("\n"),
 );
 const proxy = {
+  "/api/focus-marketplace": {
+    target: "http://127.0.0.1:8806",
+    changeOrigin: true,
+  },
   "/api/focus-commitments": {
     target: "http://127.0.0.1:8806",
     changeOrigin: true,

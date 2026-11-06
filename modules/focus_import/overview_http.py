@@ -8,6 +8,7 @@ from uuid import uuid4
 from .model import Rejected
 from .overview import overview
 from .commitments import commitments
+from .marketplace import marketplace
 
 
 class OverviewServer(ThreadingHTTPServer):
@@ -58,10 +59,10 @@ class Handler(BaseHTTPRequestHandler):
         if len(self.path) > 8192 or self.headers.get('Content-Length') not in (None, '0'):
             return failure(400, 'request_invalid')
         path = urlsplit(self.path)
-        if path.path not in ('/api/focus-overview', '/api/focus-commitments') or path.scheme or path.netloc or path.fragment:
+        if path.path not in ('/api/focus-overview', '/api/focus-commitments', '/api/focus-marketplace') or path.scheme or path.netloc or path.fragment:
             return failure(404, 'not_found')
         try:
-            values = parse_qs(path.query, keep_blank_values=True, strict_parsing=True, max_num_fields=10 if path.path == '/api/focus-commitments' else 8)
+            values = parse_qs(path.query, keep_blank_values=True, strict_parsing=True, max_num_fields={'/api/focus-commitments': 10, '/api/focus-marketplace': 9}.get(path.path, 8))
             if any(len(v) != 1 for v in values.values()):
                 raise ValueError('duplicate')
             params = {k: v[0] for k, v in values.items()}
@@ -70,7 +71,7 @@ class Handler(BaseHTTPRequestHandler):
         if not self.server.slots.acquire(blocking=False):
             return failure(503, 'source_busy')
         try:
-            consumer = commitments if path.path == '/api/focus-commitments' else overview
+            consumer = {'/api/focus-commitments': commitments, '/api/focus-marketplace': marketplace}.get(path.path, overview)
             consumer(self.server.actor, params, lambda body: self.reply(200, body))
         except Rejected as exc:
             reason = str(exc)

@@ -16,23 +16,23 @@
     "tabs": [
       {
         "key": "balances",
-        "labelKo": "잔액"
+        "labelKo": "크레딧 잔액"
       },
       {
         "key": "reservations",
-        "labelKo": "예약·적용"
+        "labelKo": "예약·적용 이력"
       },
       {
         "key": "cases",
-        "labelKo": "문의·이의"
+        "labelKo": "청구 문의·이의"
       },
       {
         "key": "adjustments",
-        "labelKo": "조정·역거래"
+        "labelKo": "조정·취소 이력"
       },
       {
         "key": "payment-terms",
-        "labelKo": "납기·연체"
+        "labelKo": "지급 기한·연체"
       }
     ],
     "scopeKeys": [

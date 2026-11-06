@@ -14,7 +14,7 @@
     "tabs": [
       {
         "key": "pending",
-        "labelKo": "대기"
+        "labelKo": "승인 대기"
       },
       {
         "key": "decisions",
@@ -26,7 +26,7 @@
       },
       {
         "key": "history",
-        "labelKo": "승인 이력"
+        "labelKo": "결정 이력"
       },
       {
         "key": "recognition",

@@ -38,6 +38,7 @@ const revision = hash(
     .join("\n"),
 );
 const proxy = {
+  "/api/claim-history": { target: "http://127.0.0.1:8806", changeOrigin: true },
   "/api/approval-review": {
     target: "http://127.0.0.1:8806",
     changeOrigin: true,

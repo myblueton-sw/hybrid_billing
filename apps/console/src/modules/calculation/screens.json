@@ -70,7 +70,7 @@
     "tabs": [
       {
         "key": "ledger",
-        "labelKo": "적용 원장"
+        "labelKo": "청구 적용 이력"
       },
       {
         "key": "partial",
@@ -78,7 +78,7 @@
       },
       {
         "key": "reversals",
-        "labelKo": "역거래·정정"
+        "labelKo": "적용 취소·정정"
       },
       {
         "key": "references",

@@ -53,3 +53,7 @@ The resulting CSS is scoped to `.work-domain`, uses the complete available width
 - UNVERIFIED here: actual App integration, all rendered locale/viewport variants, keyboard round trips, independent current-code review, browser interactions and final Claude render comparison. Root performs those in the integrated batch.
 - UNVERIFIED: live authentication, field/tenant enforcement, receipts, billing/ERP/recognition, imports, assistant, jobs, durable drafts or customer authority. UI presentation is not server authorization.
 - UNVERIFIED: native Arabic acceptance, human finance/billing practitioner acceptance, Windows/Linux executions and universal OS compatibility. The leaves use portable React, browser controls and CSS with no OS-specific product dependency.
+
+# Final integration paths
+
+Root relocated the isolated staging paths into canonical product modules and actual shared UI helpers. The exact [file map](file-relocation.json) records all48 import-only normalized hashes; no staging `remaining` source files remain. Current integrated validation and limits are in [verification](verification.md). The earlier commands and scoped writer results above describe the original isolated candidate, not independent final acceptance.

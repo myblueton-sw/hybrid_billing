@@ -1,0 +1,142 @@
+.remaining-entry-shell .planning-tabs {
+  gap: 8px;
+  margin-block-end: 24px;
+}
+.remaining-entry-shell .planning-tabs a {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  padding: 10px 16px;
+  border-block-end: 2px solid transparent;
+  text-decoration: none;
+  color: var(--hb-ink);
+  font-size: 16px;
+}
+.remaining-entry-shell .planning-tabs a[aria-current] {
+  border-block-end-color: var(--hb-muted);
+  background: var(--hb-hover);
+  font-weight: 600;
+}
+.remaining-entry-shell .entry-footer {
+  align-items: start;
+  flex-wrap: wrap;
+}
+.remaining-entry-shell .entry-footer .design-review {
+  flex: 1 1 100%;
+}
+.remaining-entry-shell .entry-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.remaining-entry-shell .entry-footer nav a {
+  min-block-size: 44px;
+  display: flex;
+  align-items: center;
+}
+.ops-notice-search {
+  display: grid;
+  gap: 8px;
+  margin-block: 20px;
+}
+.ops-notices {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.ops-notices li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-block: 16px;
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.ops-notices li > bdi {
+  overflow-wrap: anywhere;
+}
+#content
+  [data-remaining-screen]
+  :is(
+    input:not([type="radio"]):not([type="checkbox"]),
+    select,
+    textarea,
+    button,
+    th,
+    td,
+    label
+  ) {
+  font-size: 16px;
+}
+#content [data-remaining-screen] h2 {
+  font-size: 20px;
+}
+#content [data-remaining-screen] h3 {
+  font-size: 16px;
+}
+#content [data-remaining-screen]:lang(ar) {
+  line-height: 1.8;
+}
+.remaining-service-shell .planning-tabs button {
+  font-size: 16px;
+  min-block-size: 44px;
+}
+#content [data-remaining-screen] table {
+  white-space: normal;
+}
+#content [data-remaining-screen] th {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#content [data-remaining-screen] .ops-radio label {
+  flex-direction: row;
+  justify-content: flex-start;
+  text-align: start;
+  font-weight: 400;
+  align-items: center;
+}
+#content [data-remaining-screen] .ops-grid > aside .ops-stages {
+  flex-direction: column;
+}
+#content [data-remaining-screen] .ops-grid > aside .ops-stages li {
+  border-inline-end: 0;
+  border-block-end: 1px solid var(--hb-line-panel);
+}
+#content [data-remaining-screen] .ops-grid > aside .ops-stages li:last-child {
+  border-block-end: 0;
+}
+#content [data-remaining-screen] .ops-table table {
+  min-inline-size: 600px;
+}
+.remaining-table-state,
+.ops-table-state {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  padding: 16px;
+  background: var(--hb-th);
+  margin-block: 0 16px;
+}
+.remaining-table-hint {
+  font-size: 14px;
+  color: var(--hb-muted);
+  margin-block: 12px;
+}
+.remaining-table-hint[hidden] {
+  display: none;
+}
+.planning-app.remaining-service-shell .review-source-revision {
+  display: inline;
+  font-size: 14px;
+}
+.planning-app.remaining-service-shell .review-heading {
+  flex-wrap: wrap;
+}
+.planning-app.remaining-service-shell #confirm-review {
+  font-size: 16px;
+  min-block-size: 44px;
+}
+.planning-app.remaining-service-shell .review-heading #review-status {
+  font-size: 14px;
+}
+.planning-app.service-shell.remaining-service-shell #confirm-review,.entry-shell.remaining-entry-shell #confirm-review{font-size:16px;min-block-size:44px;}

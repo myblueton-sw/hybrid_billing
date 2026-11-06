@@ -46,10 +46,14 @@ On macOS, Node v26.7.0 and the existing locked dependency binding:
 
 - PASS: `npm run typecheck --prefix apps/console`.
 - PASS: `npm run build --prefix apps/console`; the existing bundle-size warning remains. Root has not yet mounted this isolated module, so this build is not integrated rendering evidence.
-- PASS: from `apps/console`, `node_modules/.bin/tsx --test src/modules/identity/remaining/model.test.tsx`: 13 tests, including 96 static screen/view/locale renders, frozen field subsets, disclosure/secret negatives, source-state distinctions, URL/identifier/date/timezone/scope checks and review-state privacy.
+- PASS: from `apps/console`, `node_modules/.bin/tsx --test src/modules/identity/screen-ui/model.test.tsx`: 13 tests, including 96 static screen/view/locale renders, frozen field subsets, disclosure/secret negatives, source-state distinctions, URL/identifier/date/timezone/scope checks and review-state privacy.
 - Initial test invocation from the repository root did not select the console JSX configuration and failed with `React is not defined`; rerunning from the documented console directory corrected that harness invocation. An initial arbitrary markup-length assertion rejected short Korean copy and was replaced by semantic section/heading checks.
 - Every maintained source/test/style file is below 1500 physical lines. PASS: scoped whitespace and staged-source checks before commit; no generated build/font/screenshot or node_modules binding belongs in the commit.
 
 Root must mount the dedicated export for all eight screens and provide canonical prelogin tabs for L01/L02/L03. Normal `/login`, `/activate`, `/recover` and verified legacy aliases need unauthenticated presentation context; URL-driven synthetic mode cannot select a service identity. The module does not depend on the old EntryShell mounting a legacy leaf. Related entry links retain language only. The root may pass an audience prop, but M05's shared field schema remains safe without it.
 
 Browser interaction, actual 390/1440 layout/font/RTL/focus/clear behavior, independent actual-change review, final Claude capture comparison, native Arabic/practitioner review, other OS/browser combinations and live identity/access enforcement remain UNVERIFIED here. Root owns those next checks. Backend actions, verified user records, policy activation, keys, actual revocation/cleanup and saved personal preferences are explicitly deferred, never simulated success. No owner acceptance was created.
+
+# Final integration paths
+
+Root relocated the isolated staging paths into canonical product modules and actual shared UI helpers. The exact [file map](file-relocation.json) records all48 import-only normalized hashes; no staging `remaining` source files remain. Current integrated validation and limits are in [verification](verification.md). The earlier commands and scoped writer results above describe the original isolated candidate, not independent final acceptance.

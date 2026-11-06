@@ -480,3 +480,27 @@ test("pinned pages retain exact snapshot permission and filter identity", () => 
   filtered.selection.state = "reserved";
   assert.equal(valid(filtered, selected), false);
 });
+
+test("uncertain same-application external evidence rejects all known available coverage including zero", () => {
+  for (const protection of ["available", "applied"] as const) {
+    for (const outcome of ["pending", "unknown"] as const) {
+      for (const available of ["0", "60.0000"]) {
+        const d = fresh();
+        d.records[1].protection = protection;
+        d.records[1].external = [
+          {
+            kind: "erp_order",
+            id: "QA-ERP-UNCERTAIN",
+            revision: null,
+            observed_at: null,
+            outcome,
+          },
+        ];
+        d.records[1].coverage.available = available;
+        assert.equal(valid(d, request()), false);
+        d.records[1].coverage.available = null;
+        assert.equal(valid(d, request()), true);
+      }
+    }
+  }
+});

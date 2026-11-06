@@ -210,6 +210,13 @@ function record(r: ClaimRecord) {
     )
   )
     return false;
+  if (
+    r.external.some(
+      (e) => e.outcome === "pending" || e.outcome === "unknown",
+    ) &&
+    c.available !== null
+  )
+    return false;
   return (
     Array.isArray(r.blockers) &&
     r.blockers.length <= 16 &&

@@ -36,6 +36,9 @@ try {
     .setInputFiles("../../tests/fixtures/focus/synthetic-1.3.csv");
   await submit.click();
   await page
+    .getByRole("button", { name: "Confirm reception", exact: true })
+    .click();
+  await page
     .getByText("Validation stored. Worker confirmation is still required.", {
       exact: true,
     })
@@ -48,7 +51,7 @@ try {
   await row.getByRole("button").click();
   await page.getByRole("heading", { name: "Persisted evidence" }).waitFor();
   await page.locator(".live-imports tbody tr").first().waitFor();
-  await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
   await page.screenshot({
     path: "qa-output/service/S03-selected-en.png",
     fullPage: true,
@@ -64,6 +67,9 @@ try {
     .setInputFiles("../../tests/fixtures/focus/synthetic-1.3.csv");
   await submit.click();
   await page
+    .getByRole("button", { name: "Confirm reception", exact: true })
+    .click();
+  await page
     .getByText("Existing receipt returned; no duplicate import.", {
       exact: true,
     })
@@ -77,10 +83,13 @@ try {
     buffer: Buffer.from(content.toString().replaceAll("0.300001", "0.300002")),
   });
   await submit.click();
+  await page
+    .getByRole("button", { name: "Confirm reception", exact: true })
+    .click();
   await page.getByRole("alert").waitFor();
   assert.match(await page.getByRole("alert").innerText(), /revision_conflict/);
   await page.locator(".live-imports tbody tr").first().waitFor();
-  await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
   await page.screenshot({
     path: "qa-output/service/S03-conflict-en.png",
     fullPage: true,
@@ -99,8 +108,10 @@ try {
         false,
       );
       await page.locator(".live-imports tbody tr").first().waitFor();
-  await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
-  await page.screenshot({
+      await page.evaluate(() =>
+        window.scrollTo({ top: 0, behavior: "instant" }),
+      );
+      await page.screenshot({
         path: `qa-output/service/S03-${lang}-${width}.png`,
         fullPage: true,
       });

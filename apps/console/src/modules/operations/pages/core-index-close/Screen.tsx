@@ -24,7 +24,7 @@ export default function Screen({ locale: l, mode, onState }: ScreenProps) {
     params = new URLSearchParams(hash.split("?")[1]);
   const workspace =
       params.get("scope") === "sample-b" ? "sample-b" : "sample-a",
-    period = params.get("close-period") ?? "2026-10",
+    period = params.get("period") ?? params.get("close-period") ?? "2026-10",
     view = params.get("close-view") === "calendar" ? "calendar" : "list",
     date = params.get("close-date") ?? "",
     scenario = params.get("close-state") ?? "normal";
@@ -116,7 +116,7 @@ export default function Screen({ locale: l, mode, onState }: ScreenProps) {
           <select
             id="closing-period"
             value={period}
-            onChange={(e) => change({ "close-period": e.target.value })}
+            onChange={(e) => change({ period: e.target.value })}
           >
             {!cyclePeriods.includes(
               period as (typeof cyclePeriods)[number],

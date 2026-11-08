@@ -1,0 +1,48 @@
+---
+type: SpecificationMap
+title: Supplier export contracts and FOCUS billing query use cases
+description: Separates documented supplier formats, locally verified sample queries and unverified provider conformance.
+---
+
+# Interpretation
+
+Tracking: HB-31. Research date: 2026-10-27. FOCUS standardizes cost/usage datasets, field meaning and analytical examples. It does not enumerate every supplier's service catalog or implement a collector for that supplier. ServiceName is a supplier-defined offering; ServiceCategory is a common functional classification; SKU, pricing meter, resource and account dimensions remain distinct. A service filter working for a sample does not establish coverage of every service sold by that supplier.
+
+The existing pack is declared exploratory FOCUS1.0: 942 AWS,51 Microsoft,115 Google Cloud and7 Oracle public sample rows, plus4 VMware and4 Alibaba deliberately synthetic rows. These are public sample observations, not real connected accounts or supplier conformance certificates. See the [pinned sample source](https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS-Sample-Data/tree/adbdd17a132984d6e8583c149c236d2199c3f5bc) and [sample runbook](../../../ops/installation/six-provider-samples.md). Source license remains CC BY4.0; only aggregates/hashes and independently written verification code are committed.
+
+# Supplier contracts
+
+| Supplier | Officially documented export | Account/service interpretation and local acceptance boundary |
+| --- | --- | --- |
+| AWS | FOCUS1.2 export to S3; gzip CSV or Parquet, manifest declares version. [Migration](https://docs.aws.amazon.com/cur/latest/userguide/table-dictionary-focus-1-2-migrating.html), [scope](https://docs.aws.amazon.com/cur/latest/userguide/table-dictionary-focus-1-2-aws.html) | Management-account scope may include organization members. Do not infer exact payer/usage identities merely from this scope statement. ServiceName, ServiceCategory and x_ServiceCode/x_Operation are distinct. The [column dictionary](https://docs.aws.amazon.com/cur/latest/userguide/table-dictionary-focus-1-2-aws-columns.html) documents DOUBLE physical values; local exact-only Parquet rejects a synthetic representative DOUBLE column. Actual supplier Parquet acceptance remains unverified. [Conformance gaps](https://docs.aws.amazon.com/cur/latest/userguide/table-dictionary-focus-1-2-aws-conformance.html) require capability-aware admission. |
+| Microsoft Azure | Vendor schema distinguishes1.0/1.0r2 and1.2-preview; CSV/Parquet exports to Azure Storage. [Schema](https://learn.microsoft.com/en-us/azure/cost-management-billing/dataset-schema/cost-usage-details-focus), [exports](https://learn.microsoft.com/en-in/azure/cost-management-billing/costs/tutorial-improved-exports) | BillingAccountId is EA enrollment or MCA billing profile; SubAccountId is subscription. Preserve fully qualified IDs and curated service/category mappings. Some1.2 fields are not populated; [conformance report](https://learn.microsoft.com/en-us/cloud-computing/finops/focus/conformance-full-report) must inform any actual source profile. Current51-row sample query coverage does not certify a native1.2 export. |
+| Google Cloud | Dedicated FOCUS1.0/1.2 BigQuery export preview; distinguish this from historical conversion views. [Export guide](https://docs.cloud.google.com/billing/docs/how-to/export-data-bigquery), [schema](https://docs.cloud.google.com/billing/docs/how-to/export-data-bigquery-tables/focus-export) | Billing account maps to BillingAccountId; project.id to SubAccountId; service.description and sku.id remain separate. Nested x_Credits needs a transport contract; a synthetic nested Parquet extension is rejected locally. Current public sample retains lowercase charge category `usage`; strict1.2/1.3 probes reject that spelling. Do not relabel or silently capitalize original1.0 data. |
+| Oracle Cloud Infrastructure | [FOCUS generator guide](https://focus.finops.org/docs/implementation/data-generators/oracle-cloud/) lists1.2 while retaining1.0 references. [Supplier report schema](https://docs.oracle.com/en-us/iaas/Content/Billing/Concepts/costusagereportsoverview.htm) includes legacy column names and does not unambiguously pin an export version. | Supplier documentation maps billing account to subscription and subaccount to tenancy, not compartment. Reports are obtained from Oracle-owned Object Storage; tax/invoice differences exist. OCI1.3 support is UNVERIFIED from these sources. Require actual versioned export/schema inspection before source admission; the local7-row1.0 sample is not that evidence. |
+| Alibaba Cloud | [Official1.0 invitational preview](https://www.alibabacloud.com/help/en/user-center/export-alibaba-cloud-standard-billing-focus), OSS subscription, CSV with possible ZIP/multipart, month-to-date replacement delivery | Supplier documentation defines generic account fields plus commodity/billing-item extensions; exact payer/member mapping is unverified here. Export is explicitly analytical, not final reconciliation/settlement. Monthly final timing statements on the page differ, so no new fixed schedule is inferred. Local4 rows are synthetic; native compressed/multipart intake is not certified. |
+| VMware | [VCF9.1 announcement](https://blogs.vmware.com/cloud-foundation/2026/06/03/unified-cloud-value-accelerating-cloud-fin-ops-with-vcf-9-1-and-focus/) discusses FOCUS use cases without supplying a native export version/schema/transport contract | On-premises/private-cloud costs are a legitimate source category, but this announcement does not prove a vSphere/VCF billing exporter contract. [CloudHealth](https://www.broadcom.com/products/software/finops/cloudhealth) multi-cloud translation is a separate product. Native account/service/SKU mapping and exporter acceptance remain UNVERIFIED; local4 rows are synthetic. |
+
+ProviderName in1.2 and ServiceProviderName in1.3 are selected by the declared version. HostProviderName and InvoiceIssuerName are separate roles. The12 synthetic version/provider probes exercise this selection, not the suppliers' actual export conformance. Current vendor versions must never be inferred from the version range accepted by our generic parser.
+
+# Use-case mapping
+
+| Official use case | Required distinctions | What this verification establishes |
+| --- | --- | --- |
+| [Service charges](https://focus.finops.org/docs/use-cases/v1-2/verify-service-charges/) | Provider, billing account/name, billing period, currency, service and BilledCost | Actual provider/service filters and exact measures; preserved account/name/period fields allow offline source-vs-returned-row aggregation. No invoice was supplied, so invoice agreement is UNVERIFIED. |
+| [Daily costs by subaccount](https://focus.finops.org/docs/use-cases/v1-2/daily-anomaly-subaccount/) | Charge period, provider, subaccount and EffectiveCost | Product daily/monthly buckets are checked in each tenant's configured timezone. Product range filters select delivery windows by overlap; they are not the example SQL's charge-row predicates or proration. |
+| [Resource costs by SKU](https://focus.finops.org/docs/use-cases/v1-2/resource-costs-sku/) | Provider, SKU/SKU-price, charge period, list price, quantities and units | Source fields and exact per-row prices are retained. Offline resource/SKU summaries add a local resource dimension beyond this example's SQL. No new resource/SKU server filter or native ranked SQL endpoint is claimed. |
+| [Service categories](https://focus.finops.org/docs/use-cases/v1-2/costs-service-category/) | Service category, provider, billing period and currency | Lexical categories are preserved and offline category summaries agree. Native category filter/group endpoints are outside this change. |
+| [Discount accuracy](https://focus.finops.org/docs/use-cases/v1-2/verify-discounts-applied/) | ListCost, EffectiveCost, BilledCost, currency, correction exclusion and denominator handling | Exact three-cost retention and charge-class/category dimensions are checked. No supplier discount agreement, invoice or complete commitment population exists here; financial discount accuracy remains UNVERIFIED. |
+
+Published SQL templates require review of strict end comparisons and NULL treatment (`ChargeClass != 'Correction'` excludes NULL under SQL semantics). They are not copied mechanically into product behavior. The harness compares source/returned dimensions and exact costs; its offline summaries do not claim execution of those full SQL templates or implementation of their business decisions.
+
+# Reproduce safely
+
+Run standalone scripts at repository root. They intentionally do not invoke the parent pytest stack fixture, which resets disposable storage. Retain the existing bindings and the three monthly source CSVs whose hashes match the current delivery descriptors. No native credentials or private billing data are required.
+
+```sh
+python3 tests/focus_import/provider_queries/check_oracle.py
+tests/engine_probes/.venv/bin/python tests/focus_import/provider_queries/check_profiles.py --output .local/runs/HB-31-provider-profiles.json
+python3 tests/focus_import/provider_queries/verify.py --output .local/runs/HB-31-provider-queries-third --delivery-directory .local/runs/20261023T105825Z-e7c355
+```
+
+The output directory must not already exist; choose a fresh path for another execution. The delivery directory is a recorded local artifact location, not a fresh-clone fixture. Missing or differently hashed source files block this specific replay rather than producing a guessed PASS. Raw CLI responses stay ignored locally; the committed evidence contains only bounded aggregates, hashes and classifications.

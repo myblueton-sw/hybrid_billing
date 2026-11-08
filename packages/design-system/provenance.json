@@ -1,0 +1,46 @@
+{
+  "source": "Owner-supplied hybrid_billing-design-system.zip",
+  "ticket": "HB-63",
+  "assets": [
+    {
+      "path": "assets/icons/chevron-down.svg",
+      "source": "design-system-reference/hybrid_billing/packages/design-system/assets/icons/chevron-down.svg",
+      "sha256": "4c5f40817d59b88d94d9015e86696fac7b2c970f8e1d362dc28a3d07d8c0ef09"
+    },
+    {
+      "path": "assets/icons/close.svg",
+      "source": "design-system-reference/hybrid_billing/packages/design-system/assets/icons/close.svg",
+      "sha256": "5d64ebb086758b8505d909ae98a3cd29dc3ff37ed3cce82d5c90f77e1f575491"
+    },
+    {
+      "path": "assets/logo/hb-lockup-color.svg",
+      "source": "design-system-reference/hybrid_billing/packages/design-system/assets/logo/hb-lockup-color.svg",
+      "sha256": "65c4341a009005116e6d2c174b18efeb01cf5b8ea4654319523063bcfa89f54c"
+    },
+    {
+      "path": "assets/logo/hb-lockup-reverse.svg",
+      "source": "design-system-reference/hybrid_billing/packages/design-system/assets/logo/hb-lockup-reverse.svg",
+      "sha256": "6e2f56fd63007f432859d3888f7a9b27d7472d5bd438b3b9ec1358c42900fb5f"
+    },
+    {
+      "path": "assets/logo/hb-mark-color.svg",
+      "source": "design-system-reference/hybrid_billing/packages/design-system/assets/logo/hb-mark-color.svg",
+      "sha256": "06080aecb820286c038362b435b1fd596f7bcec6af1a1611eefb6cf53ba942b8"
+    },
+    {
+      "path": "assets/logo/hb-mark-mono.svg",
+      "source": "design-system-reference/hybrid_billing/packages/design-system/assets/logo/hb-mark-mono.svg",
+      "sha256": "6ce3b4ee81438fbb81a94f7df22ad4d03efcc76b140bdde694ec1f06e8d41ab4"
+    },
+    {
+      "path": "assets/logo/hb-mark-reverse.svg",
+      "source": "design-system-reference/hybrid_billing/packages/design-system/assets/logo/hb-mark-reverse.svg",
+      "sha256": "c4547028b509724b4e6207781f5f286da56670a56da463b85d2f87e69f148e43"
+    },
+    {
+      "path": "styles/tokens.css",
+      "source": "design-system-reference/hybrid_billing/packages/design-system/src/styles/tokens.css",
+      "sha256": "3c4e5c6f5395c9012b796b4e47eeb6e993b287d5b02e72ad1e8a7939b8470bc7"
+    }
+  ]
+}

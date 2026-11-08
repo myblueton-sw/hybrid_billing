@@ -11,6 +11,8 @@ HB-16 supplies the concrete proposed [Claim and numeric mechanisms](claim-and-nu
 
 The [payment and recognition supplement](payment-and-recognition.md) preserves contract Payment Terms, overdue authority and monthly ERP cost recognition independent of customer billing cadence, including PT-01–08 and ERPC-01–08. It does not select actual accounting/tax policies or certify ERP capabilities.
 
+The [allocation profile and approval contract](allocation-profile.md) specifies required evidence-bound pool inputs, benefit representation, full-pool approval and operator review states. It activates no commercial values and does not implement the calculator or durable financial authority.
+
 Part of [HB-11](../../reviews/HB-11-refinements/resolution.md); supplements PC-01/02/04 and ED-04/05. Source basis is HB-6/HB-8/HB-10, B0110/B0502/B0836–B0842 and local AR-06/DB contracts. These are draft planning contracts, not selected rates, accounting policy, technology versions or certified adapters. [Usage detail](../../architecture/usage-detail-lifecycle.md), Claim uniqueness and purpose-specific monthly recognition remain required.
 
 ## ED-05: eligible dataset publication

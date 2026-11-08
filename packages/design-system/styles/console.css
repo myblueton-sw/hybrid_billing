@@ -1,6 +1,6 @@
 :root {
-  --type-body-size: var(--hb-fs-14);
-  --type-table-size: var(--hb-fs-14);
+  --type-body-size: var(--hb-fs-16);
+  --type-table-size: var(--hb-fs-16);
   --hb-lh-arabic: 1.8;
   --hb-font-arabic: "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif;
 }

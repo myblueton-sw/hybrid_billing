@@ -1,0 +1,7 @@
+.sd-public-thread { list-style:none; padding:0; margin:0 0 var(--hb-sp-24); }
+.sd-public-thread li { border:1px solid var(--hb-line-facts); border-inline-start:3px solid var(--hb-teal-600); padding:var(--hb-sp-16); margin-block-end:var(--hb-sp-16); overflow-wrap:anywhere; }
+.sd-public-thread li > div { display:flex; justify-content:space-between; flex-wrap:wrap; gap:var(--hb-sp-10); margin-block-end:var(--hb-sp-12); }
+.sd-public-thread time,.sd-public-thread small { font-size:var(--hb-fs-14); color:var(--hb-muted); }
+.sd-public-thread p { white-space:pre-wrap; }
+.sd-evidence-checks { display:flex; flex-direction:column; gap:var(--hb-sp-16); margin-block:var(--hb-sp-24); }
+.sd-evidence-checks .inline { align-items:flex-start; }

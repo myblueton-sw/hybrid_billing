@@ -1,0 +1,173 @@
+.source-data {
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+}
+.source-data section,
+.source-data details {
+  min-inline-size: 0;
+}
+.source-data h2 {
+  font-size: 20px;
+  margin-block: 0 12px;
+}
+.source-data h3 {
+  margin-block: 0 12px;
+}
+.source-data p {
+  margin-block: 12px;
+  overflow-wrap: anywhere;
+}
+.source-data bdi {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.source-data .source-amount bdi {
+  font-size: 16px;
+  white-space: nowrap;
+}
+.source-scope {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  padding-block: 16px;
+  border-block: 1px solid var(--hb-line-row);
+  margin: 0;
+}
+.source-data dt {
+  color: var(--hb-muted);
+  font-size: 13px;
+}
+.source-data dd {
+  margin: 4px 0 16px;
+  overflow-wrap: anywhere;
+}
+.source-release-list {
+  display: grid;
+  gap: 0;
+  border-block-start: 1px solid var(--hb-line-row);
+}
+.source-release-list a {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  justify-content: space-between;
+  padding-block: 16px;
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.source-release-list span {
+  color: var(--text-body);
+}
+.source-data .planning-table {
+  overflow: auto;
+}
+.source-data table {
+  min-inline-size: 1100px;
+}
+.source-data .planning-table td,
+.source-data .planning-table tbody th {
+  font-size: 16px;
+  padding: 16px;
+  vertical-align: top;
+}
+.source-data td small {
+  display: block;
+  margin-block-start: 8px;
+}
+.source-data .planning-table thead th {
+  font-size: 13px;
+  background: var(--surface-table-head);
+  color: var(--text-body);
+  padding: 12px 16px;
+}
+.source-data summary {
+  margin-block-end: 12px;
+}
+.source-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  border-block: 1px solid var(--hb-line-row);
+  padding-block: 16px;
+}
+.source-pagination a {
+  min-block-size: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.source-pagination [aria-disabled="true"] {
+  color: var(--hb-muted);
+  text-decoration: none;
+}
+.source-detail {
+  border: 1px solid var(--hb-line-row);
+  padding: 24px;
+}
+.source-detail dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+}
+.source-mobile {
+  display: none;
+}
+.source-data [role="status"]:empty {
+  display: none;
+}
+@media (max-width: 639px) {
+  .source-scope,
+  .source-detail dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .source-mobile {
+    display: grid;
+    gap: 16px;
+  }
+  .source-mobile article {
+    border: 1px solid var(--hb-line-row);
+    padding: 16px;
+    min-inline-size: 0;
+  }
+  .source-data .source-mobile .source-amount bdi {
+    white-space: normal;
+  }
+  .source-detail {
+    padding: 16px;
+  }
+}
+.source-data .source-date {
+  display: block;
+  white-space: nowrap;
+}
+.source-data .source-amount {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.source-data .planning-table thead th {
+  font-weight: 400;
+}
+.source-data .planning-table th:nth-child(n + 4),
+.source-data .planning-table td:nth-child(n + 4) {
+  text-align: end;
+}
+.source-data .planning-table tbody tr:hover th {
+  background: var(--surface-table-head);
+}
+.source-pagination {
+  justify-content: end;
+  gap: 24px;
+}
+.live-source-screen #confirm-review {
+  font-size: 16px;
+  min-block-size: 44px;
+}
+.live-source-screen #review-status {
+  font-size: 14px;
+}
+.planning-app.live-source-screen #confirm-review { font-size: 16px; min-block-size: 44px; }
+.planning-app.live-source-screen .review-heading #review-status { font-size: 14px; }
+html[dir="rtl"] .source-data .source-date { text-align: right; }

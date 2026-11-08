@@ -14,6 +14,7 @@ import {
   type Audience,
 } from "../planning/routing";
 import { titles, menuNames, local, tabLabel } from "../planning/copy";
+import SourceData from "../modules/sources/pages/source-data/Screen";
 import Reconciliation from "../modules/sources/pages/reconciliation/Screen";
 import LiveImports from "../modules/sources/pages/live-imports/Screen";
 import CandidateWorkbench from "../planning/CandidateWorkbench";
@@ -87,8 +88,12 @@ export default function App() {
     screen?.id === "S06" &&
     audience === "admin" &&
     params.get("service") === "local";
-  const liveService = liveImports || liveReconciliation;
-  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}`;
+  const liveSourceData =
+    screen?.id === "S04" &&
+    audience === "admin" &&
+    params.get("service") === "local";
+  const liveService = liveImports || liveReconciliation || liveSourceData;
+  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveSourceData ? params.toString() : ""}`;
   const tabs =
     screen?.id === "U02" ? screen.tabs.slice(0, 2) : (screen?.tabs ?? []);
   const requestedTab = params.get("view") ?? route.tab ?? route.step;
@@ -458,7 +463,9 @@ export default function App() {
     );
   }
   return (
-    <div className={`planning-app ${portal ? "planning-portal" : ""}`}>
+    <div
+      className={`planning-app ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""}`}
+    >
       <a
         className="skip"
         href="#main"
@@ -471,23 +478,29 @@ export default function App() {
       </a>
       <div className="planning-preview">
         <span>
-          {liveReconciliation
+          {liveSourceData
             ? local(l, [
-                "로컬 대사 · 실제 저장 근거 조회 · 합성 데이터 전용",
-                "Local reconciliation · actual stored evidence · synthetic data only",
-                "مطابقة محلية · أدلة مخزنة فعلية · بيانات تجريبية فقط",
+                "로컬 명세 조회 · 실제 저장 데이터 · 합성 입력 전용",
+                "Local source inspection · actual stored rows · synthetic input only",
+                "فحص مصدر محلي · صفوف مخزنة فعلية · مدخلات تجريبية فقط",
               ])
-            : liveImports
+            : liveReconciliation
               ? local(l, [
-                  "로컬 서비스 연동 · 실제 검증·저장 · 합성 입력 전용",
-                  "Local service integration · actual validation and persistence · synthetic input only",
-                  "تكامل خدمة محلية · تحقق وحفظ فعليان · مدخلات تجريبية فقط",
+                  "로컬 대사 · 실제 저장 근거 조회 · 합성 데이터 전용",
+                  "Local reconciliation · actual stored evidence · synthetic data only",
+                  "مطابقة محلية · أدلة مخزنة فعلية · بيانات تجريبية فقط",
                 ])
-              : local(l, [
-                  "인터랙티브 시안 · 합성 데이터 · 실제 서비스 미연결",
-                  "Interactive preview · synthetic data · services not connected",
-                  "معاينة تفاعلية · بيانات تجريبية · الخدمات غير متصلة",
-                ])}
+              : liveImports
+                ? local(l, [
+                    "로컬 서비스 연동 · 실제 검증·저장 · 합성 입력 전용",
+                    "Local service integration · actual validation and persistence · synthetic input only",
+                    "تكامل خدمة محلية · تحقق وحفظ فعليان · مدخلات تجريبية فقط",
+                  ])
+                : local(l, [
+                    "인터랙티브 시안 · 합성 데이터 · 실제 서비스 미연결",
+                    "Interactive preview · synthetic data · services not connected",
+                    "معاينة تفاعلية · بيانات تجريبية · الخدمات غير متصلة",
+                  ])}
         </span>
         {audience === "admin" && (
           <button onClick={() => previewAudience("admin", "/design/screens")}>
@@ -767,7 +780,7 @@ export default function App() {
                     </button>
                   ))}
                 </nav>
-                {["S03", "S06"].includes(screen.id) && (
+                {["S03", "S04", "S06"].includes(screen.id) && (
                   <button
                     className="live-mode-switch"
                     onClick={() =>
@@ -796,7 +809,13 @@ export default function App() {
                   id="content"
                   key={screenKey + ":" + tab + (liveService ? ":" + l : "")}
                 >
-                  {liveReconciliation ? (
+                  {liveSourceData ? (
+                    <SourceData
+                      locale={l}
+                      onState={onState}
+                      objectId={route.objectId}
+                    />
+                  ) : liveReconciliation ? (
                     <Reconciliation
                       locale={l}
                       onState={onState}

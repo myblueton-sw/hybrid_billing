@@ -47,6 +47,12 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 | version-mapping-evidence / mapping | 버전 매핑 행 | Version-mapped rows | صفوف مربوطة بالإصدار | Rows interpreted through the pinned version mapping, not provider conformance, source validation or financial eligibility. | B06 |
 | source-interval-envelope / minmax | 원천 기간 범위 | Source interval envelope | نطاق الفترة من المصدر | Earliest start through latest end of observed records, not continuous coverage or commitment lifetime. | B06 |
 | reconciliation-evidence-review / B06 | 대사 검토 | Reconciliation review | مراجعة المطابقة | Source completeness/version/field evidence inspection, not financial reconciliation completion or monthly Billed/Effective equality. | B06 |
+| marketplace-candidate-source / B07 | Marketplace 후보 원천 행 | Marketplace candidate source rows | صفوف مصدر مرشّحة للسوق | Exact non-null mapped issuer/publisher name inequality is a reporting signal, not a confirmed transaction, legal role or customer invoice. | B07 |
+| invoice-issuer / InvoiceIssuerName | 청구서 발행사 | Invoice issuer | جهة إصدار الفاتورة | Entity named in the source as issuing its invoice, not an inferred reseller or customer-credit authority. | B07 |
+| publisher / PublisherName | 상품 제공사 | Publisher | ناشر المنتج | Source publisher identity; provider-label inequality does not establish Marketplace purchasing. | B07 |
+| no-name-difference / no_difference | 이름 차이 없음 | No name difference observed | لم يُرصد اختلاف في الاسمين | Exact source-name equality; not proof of legal-party identity, direct purchase or absence of Marketplace activity. | B07 |
+| insufficient-classification / unknown | 분류 근거 부족 | Insufficient classification evidence | أدلة غير كافية للتصنيف | Missing, blank, invalid or unmapped names remain unknown and are excluded from candidate amounts. | B07 |
+| seller-withheld-amount / withholding | 보류액 | Withheld amount | المبلغ المحتجز | Separately sourced withheld balance; never assume this is withholding tax or calculate it from buyer source costs. | B07 |
 
 # B01 labels
 
@@ -73,3 +79,7 @@ Independent AI TW design review of B05 and the PC-01/AR-06/numeric contracts con
 # B06 terminology evidence
 
 Independent AI TW design and actual-source reviews distinguish scoped source ID groups from legal contracts, charge-level Used/Unused mapping from lifecycle/utilization, observed zero from absent observations, and evidence review from completed financial reconciliation. The actual source counters are explicitly version-mapped/unmapped; min/max intervals are evidence envelopes. Preferred tabs preserve commitments/utilization/benefits/reconciliation while displaying 약정 명세 / 사용·미사용 근거 / 혜택 흐름 / 대사 검토. Current-source copy was corrected to usage classification and existing collected/query reference-ID terminology. Independent AI TW selected actual-render reviews and the final coverage-copy follow-up passed. Native-language/human practitioner and owner acceptance remain pending.
+
+# B07 terminology evidence
+
+Independent AI finance/TW design and actual-source reviews preserve candidate source-row counts, source Billed/Effective bases, lexical name comparison and the unconnected seller/benefit/legal boundaries. Canonical buyer/seller/credits/mapping keys remain; preferred display tabs are 구매 측 청구 근거 / 판매자 정산 / 혜택·크레딧 / 거래 연결 근거. Refunds and taxes remain separate from fees, withheld balances and disbursements. No settlement formula or invoice-to-collection inference is adopted. Selected actual rendered review and the final count/version/selection-copy follow-up passed, recorded in HB-107 verification; native-language/human practitioner and owner acceptance remain pending.

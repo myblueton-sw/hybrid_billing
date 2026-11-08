@@ -1,0 +1,427 @@
+.planning-main .sales-pricing {
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.6;
+  min-width: 0;
+  color: #18232d;
+}
+.planning-main .sales-pricing h2 {
+  font-size: 20px;
+  line-height: 1.4;
+  margin: 0 0 20px;
+  font-weight: 600;
+}
+.sales-pricing h3 {
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+.sales-pricing button,
+.sales-pricing input,
+.sales-pricing select,
+.sales-pricing textarea {
+  font: inherit;
+  border: 1px solid #b9bec3;
+  border-radius: 0;
+  box-shadow: none;
+  min-height: 44px;
+  background: #fff;
+  color: inherit;
+}
+.sales-pricing button {
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.sales-pricing button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.sales-pricing input,
+.sales-pricing select,
+.sales-pricing textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+}
+.sales-pricing label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-weight: 500;
+  min-width: 0;
+}
+.sales-pricing small,
+.sales-pricing .pricing-meta {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #56616a;
+}
+.sales-pricing small {
+  display: block;
+}
+.sales-pricing bdi {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.sales-pricing summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 10px;
+  font-size: 14px;
+}
+.sales-pricing details p {
+  margin-block: 8px;
+}
+.sales-pricing .pricing-toolbar {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-block: 16px;
+  border-block-end: 1px solid #cbd0d4;
+}
+.pricing-toolbar label {
+  flex: 1 1 160px;
+}
+.pricing-toolbar label:has(#pricing-search) {
+  flex: 1.5 1 200px;
+}
+.pricing-identity {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 0.6fr 1.5fr;
+  gap: 20px;
+  border-block-end: 1px solid #cbd0d4;
+  padding-block: 20px;
+}
+.sales-pricing dl {
+  margin: 0;
+}
+.pricing-identity dt {
+  font-size: 14px;
+  color: #56616a;
+}
+.pricing-identity dd {
+  margin: 5px 0 0;
+  font-weight: 600;
+}
+.pricing-identity dl:last-child dd {
+  font-size: 14px;
+  font-weight: 400;
+}
+.pricing-source-note {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-block: 12px 24px;
+}
+.pricing-source-note p {
+  margin: 0;
+}
+.pricing-source-note > details {
+  flex: 0 0 180px;
+}
+.pricing-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+}
+.pricing-rates > .pricing-editor {
+  grid-column: 1;
+  grid-row: 1;
+}
+.pricing-rates > .pricing-picker {
+  grid-column: 1;
+  grid-row: 2;
+}
+.pricing-rates > .pricing-rail {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.pricing-rail {
+  border-inline-start: 1px solid #cbd0d4;
+  padding-inline-start: 24px;
+  min-width: 0;
+}
+.pricing-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+.pricing-wide {
+  grid-column: 1 / -1;
+}
+.pricing-single {
+  grid-template-columns: 1fr;
+}
+.pricing-input {
+  display: flex;
+  border: 1px solid #b9bec3;
+  align-items: center;
+}
+.sales-pricing .pricing-input input {
+  border: 0;
+  flex: 1;
+  width: 0;
+}
+.pricing-input bdi {
+  padding-inline: 10px;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.sales-pricing .pricing-primary {
+  display: block;
+  width: 100%;
+  background: #182b3c;
+  color: #fff;
+  border-color: #182b3c;
+  margin-block: 18px;
+}
+.pricing-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding-block: 12px;
+  border-block-end: 1px solid #d7dbdf;
+}
+.pricing-summary dt {
+  font-size: 14px;
+}
+.pricing-summary dd {
+  margin: 0;
+  text-align: end;
+  font-weight: 600;
+}
+.pricing-summary > div:last-child {
+  font-size: 20px;
+}
+.pricing-draft {
+  border-block-start: 1px solid #cbd0d4;
+  margin-block-start: 24px;
+  padding-block-start: 20px;
+}
+.pricing-draft button {
+  width: 100%;
+}
+.pricing-picker {
+  min-width: 0;
+  border-block-start: 1px solid #cbd0d4;
+  padding-block-start: 24px;
+}
+.pricing-table-scroll {
+  overflow: auto;
+  min-width: 0;
+  width: 100%;
+}
+.sales-pricing table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 16px;
+}
+.sales-pricing th,
+.sales-pricing td {
+  text-align: start;
+  padding: 12px 10px;
+  border-block-end: 1px solid #d3d8dc;
+  vertical-align: top;
+}
+.sales-pricing thead {
+  background: #f0f2f4;
+}
+.sales-pricing th {
+  font-weight: 500;
+  white-space: nowrap;
+}
+.sales-pricing td {
+  min-width: 110px;
+}
+.sales-pricing tr[aria-current="true"] td:nth-child(2) {
+  font-weight: 600;
+}
+.pricing-pager,
+.pricing-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  margin-block: 16px;
+}
+.pricing-actions {
+  justify-content: start;
+  flex-wrap: wrap;
+}
+.pricing-evidence > div {
+  padding-block: 10px;
+  border-block-end: 1px solid #d3d8dc;
+}
+.pricing-evidence dt {
+  font-size: 14px;
+}
+.pricing-evidence dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.pricing-validation {
+  border-block: 1px solid #8c959c;
+  padding: 16px;
+  margin-block: 20px;
+}
+.sales-pricing textarea {
+  min-height: 130px;
+}
+.sales-pricing:lang(ko) {
+  word-break: keep-all;
+}
+.sales-pricing:lang(ar) {
+  line-height: 1.8;
+}
+@media (max-width: 900px) {
+  .pricing-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pricing-rates > .pricing-editor,
+  .pricing-rates > .pricing-rail,
+  .pricing-rates > .pricing-picker {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .pricing-rail {
+    border-inline-start: 0;
+    border-block-start: 1px solid #cbd0d4;
+    padding-inline-start: 0;
+    padding-block-start: 24px;
+  }
+  .pricing-identity {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pricing-source-note {
+    display: block;
+  }
+  .pricing-fields {
+    grid-template-columns: 1fr;
+  }
+  .pricing-wide {
+    grid-column: auto;
+  }
+  .pricing-pager {
+    gap: 8px;
+  }
+  .sales-pricing th,
+  .sales-pricing td {
+    padding: 10px;
+  }
+  .pricing-toolbar button {
+    flex: 1 1 100px;
+  }
+}
+.sales-pricing .pricing-numeric {
+  text-align: end;
+}
+.pricing-steps {
+  padding-inline-start: 24px;
+}
+.pricing-steps li {
+  padding-block: 10px;
+  border-block-end: 1px solid #d3d8dc;
+}
+.pricing-source-jump {
+  margin-block-start: 12px;
+}
+@media (max-width: 600px) {
+  .pricing-picker .pricing-table-scroll {
+    overflow: visible;
+  }
+  .pricing-picker table,
+  .pricing-picker tbody {
+    display: block;
+  }
+  .pricing-picker thead {
+    display: none;
+  }
+  .pricing-picker tr {
+    display: flex;
+    flex-direction: column;
+    padding: 14px 0;
+    border-block-end: 1px solid #b9bec3;
+  }
+  .pricing-picker td {
+    display: block;
+    border: 0;
+    padding: 6px 0;
+    min-width: 0;
+  }
+  .pricing-picker td[data-label]:before {
+    content: attr(data-label);
+    display: block;
+    font-size: 14px;
+    color: #56616a;
+  }
+  .pricing-picker td:nth-child(2) {
+    font-weight: 600;
+  }
+  .pricing-picker td:first-child button {
+    width: 100%;
+  }
+  .pricing-identity {
+    gap: 14px;
+  }
+  .pricing-pager button {
+    padding-inline: 10px;
+  }
+}
+
+.planning-main .sales-pricing textarea {
+  font: inherit;
+  font-size: 16px;
+}
+.sales-pricing .pricing-primary:hover:not(:disabled) {
+  background: #243b4d;
+  color: #fff;
+  border-color: #243b4d;
+}
+.pricing-comparison td,
+.pricing-trace td {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.pricing-trace th:first-child {
+  position: sticky;
+  inset-inline-start: 0;
+  background: #f0f2f4;
+}
+@media (max-width: 600px) {
+  .pricing-comparison,
+  .pricing-comparison table,
+  .pricing-comparison tbody {
+    display: block;
+    overflow: visible;
+  }
+  .pricing-comparison thead {
+    display: none;
+  }
+  .pricing-comparison tr {
+    display: block;
+    border-block-end: 1px solid #b9bec3;
+    padding-block: 12px;
+  }
+  .pricing-comparison th,
+  .pricing-comparison td {
+    display: block;
+    min-width: 0;
+    border: 0;
+    padding: 6px 0;
+  }
+  .pricing-comparison th {
+    white-space: normal;
+    font-weight: 600;
+  }
+  .pricing-comparison td::before {
+    content: attr(data-label);
+    float: inline-start;
+    font-size: 14px;
+    color: #56616a;
+  }
+  .pricing-comparison td small {
+    clear: both;
+  }
+}

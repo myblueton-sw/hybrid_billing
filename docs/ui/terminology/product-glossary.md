@@ -28,6 +28,13 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 | unallocated / source minus intended | 미배분 금액 | Unallocated amount | المبلغ غير الموزّع | Source amount minus the intended allocation at the entered percentage sum. Not unknown idle cost or precision remainder. | B03 |
 | precision-remainder / intended minus shares | 계산 정밀도 잔액 | Calculation precision remainder | المتبقي الناتج عن دقة الحساب | Intended allocation minus actual recipient sum at the provisional source-precision arithmetic profile. Not automatically assigned or certified financial rounding. | B03 |
 | session-baseline / local comparison result | 현재 세션의 비교 기준 | Comparison baseline for this session | أساس المقارنة للجلسة الحالية | Immutable by-value preview within identical source/recipient/profile context; not server history or prior financial approval. | B03 |
+| sales-pricing-policy / B04 | 판매 요금 정책 | Sales pricing policies | سياسات تسعير المبيعات | Manual independent unit-price review. Contract activation, eligibility, tax/FX, full tier/minimum pools and approval remain distinct unavailable integrations. | B04 |
+| manual-selling-unit-price / unitPrice | 판매 단가 — 직접 입력 | Selling unit price — manual input | سعر وحدة البيع — إدخال يدوي | Explicit review proposal, never preloaded or inferred from provider ListUnitPrice/ContractedUnitPrice. | B04 |
+| quantity-per-price / denominator | 단가 기준 수량 | Quantity per price | الكمية المقابلة للسعر | Positive denominator in the unchanged source PricingUnit. Must be entered/chosen; no consumed-unit substitution or implicit conversion. | B04 |
+| pre-fx-tax-review / candidate | 환산·세금 적용 전 검토 금액 | Review amount before FX and tax | مبلغ المراجعة قبل تحويل العملة والضريبة | Provisional source-precision result, not final customer sales or a zero-tax claim. Source costs remain separate evidence. | B04 |
+| target-review-amount / target | 목표 검토 금액 | Target review amount | مبلغ المراجعة المستهدف | Same-currency pre-FX/pre-tax target on a current session candidate. Not an approved invoice adjustment. | B04 |
+| review-difference / adjustment delta | 검토 차액 | Review difference | فرق المراجعة | Target minus original candidate, displayed as a separate signed result. Never overwrites source or implies financial application. | B04 |
+| source-precision-truncation / nonzero division remainder | 원천 정밀도에서 절삭 | Truncated at source precision | مقتطع بدقة المصدر | Explicit toward-zero source-scale arithmetic. Raw division remainder is not money or an activated currency quantum. | B04 |
 
 # B01 labels
 
@@ -42,3 +49,7 @@ FOCUS definitions: [Billed Cost](https://focus.finops.org/docs/specification/v1-
 # B03 terminology evidence
 
 Separate AI TW design review for HB-103 inspected the authorized B03 planning and numeric contract. Preferred tabs preserve `policies/pools/simulation/comparison` while displaying 배분 정책 / 배분 기준액 / 배분 미리보기 / 결과 비교. The full denominator is100 percent; display search/pages never normalize entered weights. Blank percentages are missing. Unknown idle cost stays separate from the provisional arithmetic equation. Native-language and human practitioner acceptance remain pending.
+
+# B04 terminology evidence
+
+Separate AI TW review of HB-104, B04, PC-01/SP-01 and numeric/H23 contracts conditionally approved the terminology. Prefer 요금 규칙 / 계산 단계 / 정책 상속 / 조정 검토 / 금액 비교 for the stable five tab keys. Entered unit prices, fees and target amounts are financial review parameters intentionally saved locally; never call that payload merely metadata-only. Signed source quantities retain their sign without automatically being classified as approved refunds. Native-language/human practitioner acceptance remains pending.

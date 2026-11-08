@@ -28,6 +28,7 @@ import ReviewPanel from "../shared/ReviewPanel";
 import HeaderSelect from "./HeaderSelect";
 import EntryShell from "./EntryShell";
 import { identity } from "../modules/identity/module";
+import SalesPricing from "../modules/pricing/pages/sales-pricing/Screen";
 import AllocationPolicies from "../modules/pricing/pages/allocation-policies/Screen";
 import InfrastructureCost from "../modules/pricing/pages/infrastructure-cost/Screen";
 import CollectedSource from "../modules/sources/pages/collected-source-data/Screen";
@@ -121,9 +122,11 @@ export default function App() {
     screen?.id === "S04" &&
     audience === "admin" &&
     params.get("service") !== "local";
+  const liveRates = screen?.id === "B04" && audience === "admin";
   const liveAllocation = screen?.id === "B03" && audience === "admin";
   const livePricing =
-    (screen?.id === "B01" || liveAllocation) && audience === "admin";
+    (screen?.id === "B01" || liveAllocation || liveRates) &&
+    audience === "admin";
   const liveOverview = screen?.id === "U01" && audience === "admin";
   const liveService =
     livePricing ||
@@ -991,6 +994,31 @@ export default function App() {
                             l,
                             (
                               {
+                                rates: [
+                                  "요금 규칙",
+                                  "Pricing rules",
+                                  "قواعد التسعير",
+                                ],
+                                formula: [
+                                  "계산 단계",
+                                  "Calculation steps",
+                                  "خطوات الحساب",
+                                ],
+                                inheritance: [
+                                  "정책 상속",
+                                  "Policy inheritance",
+                                  "توريث السياسات",
+                                ],
+                                adjustments: [
+                                  "조정 검토",
+                                  "Adjustment review",
+                                  "مراجعة التعديل",
+                                ],
+                                impact: [
+                                  "금액 비교",
+                                  "Amount comparison",
+                                  "مقارنة المبالغ",
+                                ],
                                 policies: [
                                   "배분 정책",
                                   "Allocation policy",
@@ -1075,7 +1103,16 @@ export default function App() {
                       : screenKey + ":" + tab + (liveService ? ":" + l : "")
                   }
                 >
-                  {liveAllocation ? (
+                  {liveRates ? (
+                    <SalesPricing
+                      locale={l}
+                      params={params}
+                      view={tab}
+                      onState={onState}
+                      onDirty={setDirty}
+                      canDiscard={canLeave}
+                    />
+                  ) : liveAllocation ? (
                     <AllocationPolicies
                       locale={l}
                       params={params}

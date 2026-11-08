@@ -1,0 +1,67 @@
+{
+  "columns": [
+    "id",
+    "provider",
+    "method",
+    "state",
+    "lastUsed"
+  ],
+  "details": [
+    "endpoint",
+    "secret",
+    "expiry",
+    "policy",
+    "revision"
+  ],
+  "values": {
+    "provider": "DEMO Identity",
+    "method": "OIDC",
+    "state": "draft",
+    "lastUsed": "unknown",
+    "endpoint": "DEMO-IDP-reference",
+    "secret": "secret-ref:DEMO-IDP",
+    "expiry": "unconfigured",
+    "policy": "unconfigured",
+    "revision": "r1"
+  },
+  "views": {
+    "providers": [
+      "id",
+      "provider",
+      "method",
+      "state"
+    ],
+    "policies": [
+      "policy",
+      "scope",
+      "revision"
+    ],
+    "test": [
+      "check",
+      "state",
+      "evidence"
+    ],
+    "keys": [
+      "secret",
+      "expiry",
+      "revision"
+    ],
+    "recovery": [
+      "method",
+      "reason",
+      "scope"
+    ],
+    "sync": [
+      "lastPoll",
+      "nextPoll",
+      "revocation",
+      "state"
+    ]
+  },
+  "draftFields": [
+    "provider",
+    "method",
+    "endpoint",
+    "secret"
+  ]
+}

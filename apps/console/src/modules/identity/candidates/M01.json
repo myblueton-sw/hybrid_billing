@@ -1,0 +1,57 @@
+{
+  "columns": [
+    "id",
+    "name",
+    "realm",
+    "membership",
+    "state"
+  ],
+  "details": [
+    "role",
+    "expiry",
+    "revocation",
+    "owner"
+  ],
+  "values": {
+    "name": "DEMO User",
+    "realm": "DEMO-OIDC",
+    "membership": "Active fixture",
+    "state": "verified",
+    "role": "Example reviewer",
+    "expiry": "unconfigured",
+    "revocation": "notapplicable",
+    "owner": "DEMO-ADMIN-01"
+  },
+  "views": {
+    "users": [
+      "id",
+      "name",
+      "realm",
+      "membership",
+      "state"
+    ],
+    "invitations": [
+      "name",
+      "realm",
+      "expiry",
+      "state"
+    ],
+    "membership": [
+      "organization",
+      "role",
+      "effective",
+      "expiry"
+    ],
+    "revocation": [
+      "targets",
+      "revocation",
+      "succeeded",
+      "failed"
+    ]
+  },
+  "draftFields": [
+    "name",
+    "realm",
+    "scope"
+  ]
+}

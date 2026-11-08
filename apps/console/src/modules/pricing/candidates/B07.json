@@ -1,0 +1,57 @@
+{
+  "columns": [
+    "id",
+    "transaction",
+    "contract",
+    "amount",
+    "settlement"
+  ],
+  "details": [
+    "fee",
+    "held",
+    "payout",
+    "benefit",
+    "evidence"
+  ],
+  "values": {
+    "transaction": "DEMO buyer subscription",
+    "contract": "DEMO-CONTRACT-01",
+    "amount": "USD 100.0000",
+    "settlement": "pending",
+    "fee": "unknown",
+    "held": "unknown",
+    "payout": "unknown",
+    "benefit": "unconfigured",
+    "evidence": "DEMO-TRANSACTION-01"
+  },
+  "views": {
+    "buyer": [
+      "id",
+      "transaction",
+      "contract",
+      "amount"
+    ],
+    "seller": [
+      "settlement",
+      "fee",
+      "held",
+      "payout"
+    ],
+    "credits": [
+      "benefit",
+      "correction",
+      "evidence"
+    ],
+    "mapping": [
+      "source",
+      "contract",
+      "revision",
+      "state"
+    ]
+  },
+  "draftFields": [
+    "contract",
+    "source",
+    "reason"
+  ]
+}

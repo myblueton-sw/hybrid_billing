@@ -1,0 +1,55 @@
+{
+  "columns": [
+    "id",
+    "source",
+    "meaning",
+    "amount",
+    "quantity",
+    "unit"
+  ],
+  "details": [
+    "denominator",
+    "locator",
+    "revision",
+    "completeness"
+  ],
+  "values": {
+    "source": "DEMO API usage",
+    "meaning": "Provider Billed cost",
+    "amount": "USD 12.5000",
+    "quantity": "250000",
+    "unit": "token",
+    "denominator": "1000000 tokens",
+    "locator": "DEMO-ROW-01",
+    "revision": "r1",
+    "completeness": "pending"
+  },
+  "views": {
+    "rows": [
+      "id",
+      "source",
+      "meaning",
+      "amount",
+      "quantity",
+      "unit"
+    ],
+    "fields": [
+      "source",
+      "locator",
+      "revision"
+    ],
+    "usage": [
+      "quantity",
+      "unit",
+      "denominator",
+      "grade"
+    ],
+    "history": [
+      "revision",
+      "occurred",
+      "reason",
+      "evidence"
+    ]
+  },
+  "draftFields": []
+}

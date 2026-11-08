@@ -1,0 +1,55 @@
+{
+  "columns": [
+    "id",
+    "restoreSet",
+    "generation",
+    "isolation",
+    "state"
+  ],
+  "details": [
+    "watermarkDecision",
+    "external",
+    "manifest",
+    "balance"
+  ],
+  "values": {
+    "restoreSet": "DEMO-RESTORE-01",
+    "generation": "DEMO-GEN-02",
+    "isolation": "pending",
+    "state": "blocked",
+    "watermarkDecision": "unknown",
+    "external": "unknown",
+    "manifest": "DEMO-RESTORE-MANIFEST",
+    "balance": "unknown"
+  },
+  "views": {
+    "sets": [
+      "id",
+      "restoreSet",
+      "generation",
+      "state"
+    ],
+    "isolation": [
+      "isolation",
+      "check",
+      "evidence"
+    ],
+    "reconciliation": [
+      "external",
+      "posting",
+      "watermarkDecision"
+    ],
+    "migration": [
+      "manifest",
+      "balance",
+      "scope"
+    ],
+    "resume": [
+      "isolation",
+      "watermarkDecision",
+      "approver",
+      "state"
+    ]
+  },
+  "draftFields": []
+}

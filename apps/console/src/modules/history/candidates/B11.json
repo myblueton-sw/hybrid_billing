@@ -1,0 +1,66 @@
+{
+  "columns": [
+    "id",
+    "contract",
+    "balance",
+    "reserved",
+    "state"
+  ],
+  "details": [
+    "document",
+    "amount",
+    "publicReply",
+    "consent",
+    "reason",
+    "due"
+  ],
+  "values": {
+    "contract": "DEMO-CONTRACT-01",
+    "balance": "USD 50.0000",
+    "reserved": "USD 10.0000",
+    "state": "pending",
+    "document": "DEMO-INVOICE-01",
+    "amount": "USD 10.0000",
+    "publicReply": "pending",
+    "consent": "pending",
+    "reason": "Usage question",
+    "due": "2026-11-30"
+  },
+  "views": {
+    "balances": [
+      "id",
+      "contract",
+      "balance",
+      "reserved"
+    ],
+    "reservations": [
+      "amount",
+      "document",
+      "state",
+      "revision"
+    ],
+    "cases": [
+      "document",
+      "reason",
+      "publicReply",
+      "consent"
+    ],
+    "adjustments": [
+      "correction",
+      "amount",
+      "basis",
+      "state"
+    ],
+    "payment-terms": [
+      "document",
+      "due",
+      "terms",
+      "state"
+    ]
+  },
+  "draftFields": [
+    "contract",
+    "document",
+    "reason"
+  ]
+}

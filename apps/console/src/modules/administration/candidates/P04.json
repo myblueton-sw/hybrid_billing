@@ -1,0 +1,64 @@
+{
+  "columns": [
+    "id",
+    "dataClass",
+    "retention",
+    "hold",
+    "state"
+  ],
+  "details": [
+    "deletion",
+    "backup",
+    "watermarkDecision",
+    "manifest"
+  ],
+  "values": {
+    "dataClass": "Billing evidence",
+    "retention": "unconfigured",
+    "hold": "DEMO-HOLD-01",
+    "state": "blocked",
+    "deletion": "No durable decision",
+    "backup": "unconfigured",
+    "watermarkDecision": "unknown",
+    "manifest": "DEMO-DELETE-01"
+  },
+  "views": {
+    "policies": [
+      "id",
+      "dataClass",
+      "retention",
+      "state"
+    ],
+    "expiry": [
+      "quantity",
+      "unit",
+      "expiry"
+    ],
+    "holds": [
+      "hold",
+      "evidence",
+      "document"
+    ],
+    "deletion": [
+      "deletion",
+      "targets",
+      "succeeded",
+      "failed"
+    ],
+    "restore": [
+      "restoreSet",
+      "hash",
+      "validation"
+    ],
+    "decisions": [
+      "watermarkDecision",
+      "backup",
+      "state"
+    ]
+  },
+  "draftFields": [
+    "dataClass",
+    "retention",
+    "purpose"
+  ]
+}

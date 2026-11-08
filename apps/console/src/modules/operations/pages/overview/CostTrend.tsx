@@ -1,3 +1,4 @@
+import { chartScale, chartPercent } from "./chart-scale";
 import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
 import { months, total, formatMoney, type Cost, type Currency } from "./model";
@@ -7,12 +8,14 @@ export default function CostTrend({
   locale: l,
   period,
   onMonth,
+  onCurrency,
 }: {
   rows: Cost[];
   currency: Currency;
   locale: Locale;
   period: string;
   onMonth: (month: string) => void;
+  onCurrency: (currency: Currency) => void;
 }) {
   const values = months.map((month) => ({
     month,
@@ -21,10 +24,20 @@ export default function CostTrend({
       currency,
     ),
   }));
+  const selected = values.find((v) => v.month === period);
   const maximum = values.reduce(
     (max, x) => (x.value !== null && x.value > max ? x.value : max),
     0n,
   );
+  const scale = chartScale(maximum);
+  const axisAmount = (tick: bigint) => {
+    const unit = currency === "USD" ? 100n : 1n;
+    return tick % unit === 0n
+      ? new Intl.NumberFormat(
+          l === "ar" ? "ar-AE" : l === "ko" ? "ko-KR" : "en-US",
+        ).format(tick / unit)
+      : formatMoney(tick, currency, l).replace(currency, "").trim();
+  };
   return (
     <section className="unified-panel unified-trend">
       <header>
@@ -32,8 +45,8 @@ export default function CostTrend({
           <h2>
             {t(
               l,
-              "Monthly cost trend",
-              "월별 비용 추이",
+              "Monthly source cost",
+              "월별 원천 비용",
               "اتجاه التكلفة الشهري",
             )}
           </h2>
@@ -47,6 +60,24 @@ export default function CostTrend({
             · <bdi>{currency}</bdi>
           </p>
         </div>
+        <label className="overview-chart-currency">
+          <span>
+            {t(
+              l,
+              "Chart currency · no FX",
+              "차트 통화 · 환산 없음",
+              "عملة الرسم · دون تحويل",
+            )}
+          </span>
+          <select
+            id="overview-currency"
+            value={currency}
+            onChange={(e) => onCurrency(e.target.value as Currency)}
+          >
+            <option>USD</option>
+            <option>KRW</option>
+          </select>
+        </label>
       </header>
       <p className="unified-trend-value">
         <bdi>
@@ -57,52 +88,84 @@ export default function CostTrend({
             l,
           )}
         </bdi>
+        {" · "}
+        <span data-trend-status>
+          {!selected?.expected
+            ? t(l, "No matching data", "해당 자료 없음", "لا بيانات مطابقة")
+            : selected.value === null
+              ? t(l, "Unknown", "미확인", "غير مؤكد")
+              : selected.missing
+                ? t(
+                    l,
+                    `Partial (${selected.missing} missing)`,
+                    `부분 합계 (${selected.missing}건 누락)`,
+                    `جزئي (${selected.missing} مفقود)`,
+                  )
+                : t(l, "Known amount", "확인된 금액", "المبلغ المعروف")}
+        </span>
       </p>
-      <div
-        className="unified-chart"
-        role="group"
-        aria-label={t(l, "Select a month", "월 선택", "اختر شهراً")}
-      >
-        {values.map((v) => (
-          <button
-            key={v.month}
-            className="unified-month"
-            aria-pressed={v.month === period}
-            onClick={() => onMonth(v.month)}
-            aria-label={`${v.month} ${formatMoney(v.value, currency, l)} ${v.missing ? t(l, "Partial or unavailable", "부분 또는 미확인", "جزئي أو غير متاح") : ""}`}
-          >
-            <span className="unified-plot">
+      <div className="overview-chart-frame">
+        <div className="overview-chart-axis" aria-hidden="true">
+          {scale.ticks.map((tick) => (
+            <bdi
+              dir="ltr"
+              key={String(tick)}
+              style={{ top: `${100 - chartPercent(tick, scale.ceiling)}%` }}
+            >
+              {axisAmount(tick)}
+            </bdi>
+          ))}
+        </div>
+        <div className="overview-chart-area">
+          <div className="overview-chart-grid" aria-hidden="true">
+            {scale.ticks.map((tick) => (
               <span
-                className={v.missing ? "unified-bar partial" : "unified-bar"}
-                style={{
-                  height:
-                    maximum && v.value !== null
-                      ? `${Number((v.value * 10000n) / maximum) / 100}%`
-                      : "0%",
-                }}
+                key={String(tick)}
+                style={{ top: `${100 - chartPercent(tick, scale.ceiling)}%` }}
               />
-            </span>
-            <bdi>{v.month.slice(5)}</bdi>
-            <small>
-              {v.expected === 0
-                ? t(l, "No data", "자료 없음", "لا بيانات")
-                : v.value === null
-                  ? t(l, "Unknown", "미확인", "غير مؤكد")
-                  : v.missing
-                    ? t(l, "Partial", "부분", "جزئي")
-                    : t(l, "Known", "확인", "متاح")}
-            </small>
-          </button>
-        ))}
+            ))}
+          </div>
+          <div
+            className="unified-chart"
+            role="group"
+            aria-label={t(l, "Select a month", "월 선택", "اختر شهراً")}
+          >
+            {values.map((v) => (
+              <button
+                key={v.month}
+                className="unified-month"
+                aria-pressed={v.month === period}
+                onClick={() => onMonth(v.month)}
+                aria-label={`${v.month} ${formatMoney(v.value, currency, l)} ${v.missing ? t(l, "Partial or unavailable", "부분 또는 미확인", "جزئي أو غير متاح") : ""}`}
+              >
+                <span className="unified-plot">
+                  <span
+                    className={
+                      v.missing ? "unified-bar partial" : "unified-bar"
+                    }
+                    style={{
+                      height:
+                        maximum && v.value !== null
+                          ? `${chartPercent(v.value, scale.ceiling)}%`
+                          : "0%",
+                    }}
+                  />
+                </span>
+                <bdi>{v.month.slice(5)}</bdi>
+                <small>
+                  {v.expected === 0
+                    ? t(l, "No data", "자료 없음", "لا بيانات")
+                    : v.value === null
+                      ? t(l, "Unknown", "미확인", "غير مؤكد")
+                      : v.missing
+                        ? t(l, "Partial", "부분", "جزئي")
+                        : t(l, "Known", "확인", "متاح")}
+                </small>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
-      <p className="unified-note">
-        {t(
-          l,
-          "Partial bars show known subtotals only. No forecast or currency conversion. Month selection retains the reporting-month basis.",
-          "부분 막대는 확인된 금액만 표시합니다. 예측·환산은 하지 않습니다. 월 선택 시 보고월 기준을 유지합니다.",
-          "تعرض الأعمدة الجزئية الإجمالي المعروف فقط، دون توقعات أو تحويل عملة. يظل الاختيار على أساس شهر التقرير.",
-        )}
-      </p>
       <details>
         <summary>
           {t(

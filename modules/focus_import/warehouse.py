@@ -1,3 +1,4 @@
+from modules.focus_local.ports import port
 import hashlib
 import re
 from datetime import timezone
@@ -20,7 +21,7 @@ TYPES={**{n:'Nullable(String)' for n in STRINGS},**{n:"DateTime64(6,'UTC')" for 
 
 def client(env,user=CH_WRITER):
     secret=env['CH_ADMIN_PASSWORD'] if user=='probe_admin' else password(env,user,'CH_LOADER_PASSWORD' if user==CH_WRITER else 'CH_READER_PASSWORD')
-    return clickhouse_connect.get_client(host='127.0.0.1',port=18123,username=user,password=secret,autogenerate_session_id=False,connect_timeout=5,send_receive_timeout=30)
+    return clickhouse_connect.get_client(host='127.0.0.1',port=port(env, "CH"),username=user,password=secret,autogenerate_session_id=False,connect_timeout=5,send_receive_timeout=30)
 
 
 def initialize(env,config,revoked=()):

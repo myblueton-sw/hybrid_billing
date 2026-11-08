@@ -1,0 +1,300 @@
+.focus-overview {
+  min-inline-size: 0;
+}
+.focus-basis {
+  display: flex;
+  gap: 16px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.focus-basis legend {
+  font-size: 14px;
+  margin-block-end: 4px;
+}
+.focus-basis label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.focus-basis input {
+  inline-size: auto;
+}
+.focus-amounts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 2fr)) repeat(2, minmax(0, 1.2fr));
+  padding-block: 20px;
+  border-block-start: 1px solid var(--hb-line-control);
+  gap: 20px;
+}
+.focus-amounts > div {
+  min-inline-size: 0;
+  padding-inline-end: 20px;
+  border-inline-end: 1px solid var(--hb-line-row);
+}
+.focus-amounts > div:last-child {
+  border: 0;
+}
+.unified-overview .focus-amounts h2 {
+  font-size: 16px;
+  line-height: 24px;
+}
+.focus-money {
+  display: block;
+  font-size: 28px;
+  line-height: 36px;
+  margin-block: 8px;
+  overflow-wrap: anywhere;
+}
+.focus-analysis {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 24px;
+}
+.focus-trend header p {
+  max-inline-size: 48ch;
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.focus-trend label {
+  display: grid;
+  gap: 4px;
+}
+.focus-chart {
+  display: grid;
+  grid-template-columns: minmax(64px, auto) minmax(0, 1fr);
+  gap: 12px;
+  margin-block: 28px 20px;
+}
+.focus-axis {
+  position: relative;
+  block-size: 220px;
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.focus-axis bdi {
+  position: absolute;
+  inset-inline-end: 0;
+  transform: translateY(-50%);
+}
+.focus-plot {
+  position: relative;
+}
+.focus-grid {
+  position: absolute;
+  inset: 0 0 auto;
+  block-size: 220px;
+}
+.focus-grid span {
+  position: absolute;
+  inset-inline: 0;
+  border-block-start: 1px solid var(--hb-line-row);
+}
+.focus-bars {
+  display: grid;
+  gap: 8px;
+  position: relative;
+}
+.focus-month {
+  min-inline-size: 0;
+  text-align: center;
+  font-size: 14px;
+}
+.focus-bar-slot {
+  position: relative;
+  block-size: 220px;
+  margin-block-end: 8px;
+}
+.focus-bar {
+  display: block;
+  position: absolute;
+  inset-inline-start: 25%;
+  inline-size: 50%;
+  background: var(--hb-ink-primary);
+}
+.focus-gap {
+  position: absolute;
+  transform: translateY(-100%);
+  inset-inline: 0;
+  color: var(--hb-muted);
+}
+.focus-search {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 16px;
+}
+.focus-search input {
+  inline-size: 320px;
+  max-inline-size: 100%;
+}
+.focus-table {
+  max-block-size: 600px;
+  overflow: auto;
+}
+.focus-table table {
+  min-inline-size: 650px;
+  inline-size: 100%;
+}
+.focus-table :is(th, td) {
+  vertical-align: top;
+  padding: 12px;
+}
+.focus-table td {
+  overflow-wrap: anywhere;
+  max-inline-size: 36ch;
+}
+.focus-table bdi {
+  overflow-wrap: anywhere;
+}
+.focus-table button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-decoration: underline;
+  color: var(--c-link);
+  text-align: start;
+}
+.focus-subtotal {
+  font-weight: 600;
+}
+.focus-account-money + .focus-account-money {
+  margin-block-start: 8px;
+}
+.focus-table summary {
+  cursor: pointer;
+}
+.focus-table dd {
+  margin-inline: 0;
+}
+@media (max-width: 1199px) {
+  .focus-analysis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .focus-amounts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .focus-amounts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .focus-amounts > div {
+    border: 0;
+    border-block-end: 1px solid var(--hb-line-row);
+    padding-block-end: 12px;
+  }
+  .focus-basis {
+    grid-column: 1/-1;
+  }
+  .focus-analysis {
+    gap: 16px;
+  }
+  .focus-chart {
+    gap: 8px;
+  }
+  .focus-bars {
+    gap: 4px;
+  }
+  .focus-axis,
+  .focus-grid,
+  .focus-bar-slot {
+    block-size: 180px;
+  }
+  .focus-month {
+    font-size: 14px;
+  }
+  .focus-month .focus-bar-slot {
+    writing-mode: horizontal-tb;
+    inline-size: 100%;
+  }
+  .focus-table {
+    max-block-size: 480px;
+  }
+}
+.overview-dashboard.unified-overview .focus-basis label {
+  flex-direction: row;
+  gap: 6px;
+}
+.overview-dashboard.unified-overview .focus-basis input {
+  min-block-size: 20px;
+  inline-size: 20px;
+  margin: 0;
+}
+.overview-dashboard.unified-overview .focus-amounts h2 {
+  font-size: 16px;
+  line-height: 24px;
+}
+.focus-providers .focus-table table {
+  min-inline-size: 0;
+  table-layout: fixed;
+}
+.focus-providers .focus-table th:first-child {
+  inline-size: 32%;
+}
+.focus-providers .focus-table th:last-child {
+  inline-size: 13%;
+}
+.focus-providers .focus-table :is(th, td) {
+  padding-inline: 8px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 767px) {
+  .focus-month {
+    writing-mode: horizontal-tb;
+  }
+  .focus-month > bdi {
+    display: block;
+    font-size: 14px;
+  }
+}
+.focus-bar.is-partial {
+  background: var(--hb-muted);
+}
+.focus-partial {
+  position: absolute;
+  transform: translateY(-100%);
+  inset-inline: 0;
+  color: var(--hb-ink);
+}
+.focus-table :is(th, td) {
+  text-align: start;
+}
+.focus-providers .focus-table :is(th, td):nth-child(n + 2),
+.focus-accounts .focus-table :is(th, td):nth-child(n + 5),
+.focus-source .focus-table :is(th, td):is(:nth-child(4), :nth-child(5)) {
+  text-align: end;
+}
+.focus-providers .focus-table :is(th, td) {
+  vertical-align: middle;
+}
+.overview-dashboard.unified-overview .focus-providers .focus-table button {
+  min-block-size: 32px;
+  padding-block: 4px;
+}
+.focus-exact {
+  white-space: nowrap;
+}
+.focus-money {
+  overflow-x: auto;
+}
+.focus-basis legend {
+  float: inline-start;
+  padding-inline-end: 12px;
+  line-height: 40px;
+  margin: 0;
+}
+.focus-basis {
+  display: block;
+}
+.overview-dashboard.unified-overview .focus-basis label {
+  display: inline-flex;
+  min-block-size: 40px;
+  margin-inline-end: 12px;
+}
+@media (max-width: 767px) {
+  .overview-dashboard.unified-overview .focus-providers .focus-table button {
+    min-block-size: 44px;
+  }
+}

@@ -9,6 +9,7 @@ from psycopg.rows import dict_row
 from psycopg.pq import TransactionStatus
 
 from .contract import ROOT, Rejected, digest
+from .ports import DEFAULTS, port
 
 
 INSTALLATION = uuid5(NAMESPACE_DNS, 'hybrid-billing.local.synthetic')
@@ -27,6 +28,8 @@ def environment():
         key, sep, value = line.partition('=')
         if sep:
             values[key] = value
+    for service in DEFAULTS:
+        values[f"{service}_PORT"] = port(values, service)
     return values
 
 
@@ -44,7 +47,7 @@ def persona(actor):
 
 
 def connect(env, admin=False):
-    return psycopg.connect(host='127.0.0.1', port=15432, dbname='hb',
+    return psycopg.connect(host='127.0.0.1', port=port(env, "PG"), dbname='hb',
         user=env['PG_ADMIN_USER'] if admin else 'hb_local_app',
         password=env['PG_ADMIN_PASSWORD'] if admin else password(env, 'pg-app', 'PG_ADMIN_PASSWORD'),
         autocommit=True, row_factory=dict_row, connect_timeout=5)

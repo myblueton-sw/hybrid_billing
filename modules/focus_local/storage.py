@@ -1,3 +1,4 @@
+from .ports import port
 import io
 import re
 from datetime import timezone
@@ -23,13 +24,13 @@ LOCKED_SETTINGS = 'join_use_nulls=1 CONST, input_format_null_as_default=0 CONST,
 
 def client(env, user='hb_local_writer'):
     secret = env['CH_ADMIN_PASSWORD'] if user == 'probe_admin' else password(env, user, 'CH_LOADER_PASSWORD' if user == 'hb_local_writer' else 'CH_READER_PASSWORD')
-    return clickhouse_connect.get_client(host='127.0.0.1', port=18123,
+    return clickhouse_connect.get_client(host='127.0.0.1', port=port(env, "CH"),
         username=user, password=secret, autogenerate_session_id=False,
         send_receive_timeout=20, connect_timeout=5)
 
 
 def object_client(env):
-    return boto3.client('s3', endpoint_url='http://127.0.0.1:18333',
+    return boto3.client('s3', endpoint_url=f'http://127.0.0.1:{port(env, "S3")}',
         aws_access_key_id=env['S3_ACCESS_KEY'], aws_secret_access_key=env['S3_SECRET_KEY'],
         region_name='us-east-1', config=Config(s3={'addressing_style': 'path'},
             retries={'max_attempts': 0}, connect_timeout=5, read_timeout=20))

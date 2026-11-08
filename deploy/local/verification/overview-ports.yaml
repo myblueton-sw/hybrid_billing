@@ -1,0 +1,10 @@
+services:
+  postgres:
+    ports: !override
+      - "127.0.0.1:25432:5432"
+  clickhouse:
+    ports: !override
+      - "127.0.0.1:28123:8123"
+  seaweedfs:
+    ports: !override
+      - "127.0.0.1:28333:8333"

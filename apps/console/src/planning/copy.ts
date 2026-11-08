@@ -47,7 +47,11 @@ export const titles: Record<string, Tr> = {
     "Reconciliation and input publication",
     "المطابقة ونشر المدخلات",
   ],
-  B01: ["원가 풀", "Cost pools", "مجموعات التكلفة"],
+  B01: [
+    "인프라 원가 구성",
+    "Infrastructure cost composition",
+    "مكوّنات تكلفة البنية التحتية",
+  ],
   B02: ["자산·계측", "Assets and measurements", "الأصول والقياسات"],
   B03: ["배분 정책", "Allocation policies", "سياسات التوزيع"],
   B04: ["요율·판매 정책", "Rates and sales policies", "الأسعار وسياسات البيع"],

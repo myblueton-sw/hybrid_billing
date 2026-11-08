@@ -16,15 +16,15 @@
     "tabs": [
       {
         "key": "summary",
-        "labelKo": "풀 요약"
+        "labelKo": "구성 요약"
       },
       {
         "key": "costs",
-        "labelKo": "원가 구성"
+        "labelKo": "원가 항목"
       },
       {
         "key": "products",
-        "labelKo": "상품 포함 관계"
+        "labelKo": "상품별 포함 항목"
       },
       {
         "key": "approvals",
@@ -40,7 +40,7 @@
       "ccy",
       "asof"
     ],
-    "titleKo": "온프렘 원가 풀",
+    "titleKo": "인프라 원가 구성",
     "scopeLabelKo": "기간·소유 법인·풀 유형·승인 상태",
     "purposeKo": "자산·리스/감가·라이선스·전력·시설·기간·출처·포함 항목·승인, 초안/배분 미리보기",
     "commandReferences": [],

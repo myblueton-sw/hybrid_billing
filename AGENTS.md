@@ -20,6 +20,8 @@ For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md
 
 For user-facing terminology, UI copy and localization, also follow [the terminology guide](docs/ui/design-system/terminology.md). Research actual regional IT usage and preserve domain meaning; unreviewed machine translation is not final copy. English, Arabic and Korean are first-class design languages; language selection must not silently change jurisdiction, currency or business semantics.
 
+For new or revised service screens and user-facing copy, also follow `.agents/rules/product-terminology.md` and the product glossary. The owner requires continuous technical-writing terminology review.
+
 ## Language and response policy
 
 - Git-bound document deliverables are English.

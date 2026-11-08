@@ -4,32 +4,6 @@ Hybrid Billing is a self-hosted, installation-based billing platform being devel
 
 It is intended for managed service providers, individual enterprises, and corporate groups across cloud, on-premises, data-center, and AI usage sources. Provider cost, customer selling price, and internal allocation remain separate business concepts.
 
-## Why Hybrid Billing exists
-
-I know CMP, FinOps, and cloud billing inside out. I've built these platforms, led the teams behind them, and worked through the demands of enterprise customers and MSPs in Korea and the Middle East.
-
-Many of those demands weren't new. They were real problems that customers had been asking us to solve for years. But established platforms come with existing architectures, dependencies, and product commitments. There were things I wanted to build that simply couldn't fit within those constraints.
-
-Hybrid Billing is my chance to put those lessons into practice—to build the billing platform I've long wanted to build, shaped by real operational needs and made available for others to inspect, learn from, and use.
-
-I want billing teams to spend less time fixing spreadsheets and explaining discrepancies, and give customers a clear answer to a simple question: **“Why am I being charged this amount?”**
-
-The source is available for inspection and permitted noncommercial use; commercial-purpose use outside the license's permitted purposes requires a separate agreement, as described under [License and commercial inquiries](#license-and-commercial-inquiries).
-
-## Founder and domain experience
-
-**I am a CMP and FinOps expert, former OpsNow CEO and CTO, and the founder of Hybrid Billing.**
-
-I bring experience from both sides of cloud platforms: the enterprise teams that build and operate them, and the product organizations that turn them into services for customers.
-
-- **Samsung Electronics:** I served as a part leader and technical leader, working on CMP and cloud billing platforms, including collaboration with Megazone and SpaceONE colleagues on platform development.
-- **Bespin Global and OpsNow:** I held technical leadership responsibilities at Bespin Global and served as CEO and CTO of OpsNow, bringing together CMP engineering, product development and SaaS operations. OpsNow's [2024 appointment announcement](https://www.opsnow.io/kr-ko/post/news-008) documents my Samsung background, my move to Bespin Global in 2022 and my responsibility for OpsNow product development and SaaS operations before my CEO appointment.
-- **FinOps practice:** I draw on experience with Korean MSPs and Middle Eastern market needs, alongside my personal FinOps Foundation AI and FOCUS certification experience, to shape requirements for cost transparency, contract pricing and billing reconciliation.
-
-Hybrid Billing is my independent effort to turn that accumulated CMP and FinOps experience into a platform that helps operators close the month with confidence and gives customers a clear explanation of what they are being charged. Career and credential details above combine my own account with the linked public announcement. My personal credentials do not constitute certification of this software. The project does not imply endorsement by my former employers, collaborators or the FinOps Foundation.
-
-[Connect with me on LinkedIn](https://www.linkedin.com/in/seungwoo-park-43452598).
-
 ## Installation model
 
 Customers deploy and operate Hybrid Billing in their own infrastructure. This repository targets customer-operated installations, not a project-hosted SaaS offering. Collection, storage, queries, backup and recovery belong to the customer-controlled installation. Companies, workspaces and tenants describe authorization and data boundaries within an installation; a shared company name never grants cross-tenant access.

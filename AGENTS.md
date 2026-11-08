@@ -16,7 +16,7 @@ This repository is being published incrementally. Companion rules, skills, `.lin
 
 This applies to planning, reviews, documents, configuration, code, tests and infrastructure. Read-only reviews also produce ticket-linked Git reports. The README-only first commit was the owner's HB-5 bootstrap exception; subsequent changes follow the PR sequence. JEV cannot authorize or waive a step.
 
-For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md` and `code-structure.md`. For documentation, read `knowledge-format.md`; Markdown knowledge documents under `docs/` follow OKF v0.2. Read `tenant-security.md` for data, permission or billing work and `usability.md` for screens.
+For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md` and `code-structure.md`. For documentation, read `knowledge-format.md`; Markdown knowledge documents under `docs/` follow OKF v0.2. Read `tenant-security.md` for data, permission or billing work and `usability.md` for screens. For screens, visual assets and design builds, also read `.agents/rules/design-system.md`, `.agents/rules/screen-review.md`, `docs/design-system.md` and `docs/design-build-guide.md`.
 
 For user-facing terminology, UI copy and localization, also follow [the terminology guide](docs/ui/design-system/terminology.md). Research actual regional IT usage and preserve domain meaning; unreviewed machine translation is not final copy. English, Arabic and Korean are first-class design languages; language selection must not silently change jurisdiction, currency or business semantics.
 
@@ -28,6 +28,7 @@ For user-facing terminology, UI copy and localization, also follow [the terminol
 
 ## Core rules
 
+- All designs must support installation and operation without dependence on a particular OS. Follow `.agents/rules/platform-independence.md`; distinguish portability targets from tested combinations.
 - Visual design leadership for service screens uses the Claude CLI `ui-designer` role under `.agents/rules/service-screen-style.md`; root retains implementation and integration ownership.
 - Service screens MUST use the available viewport width and documented external professional references; MUST NOT use decorative colored borders or accent edge strips. Apply `.agents/rules/service-screen-style.md` before implementation and during rendered verification.
 

@@ -54,6 +54,8 @@ The portable archive is `output/designs/hybrid-billing-v10-modules.zip`. Generat
 
 [03-onboarding r2: multi-provider FOCUS onboarding](../design-modules/03-onboarding/r2/README.md) defines common source selection, provider-specific setup, data/schema validation and background collection under HB-49/HB-51. It is a reviewed design proposal with runtime acceptance pending, not a replacement for frozen v10 pages or an assembled new edition.
 
+[02-access r2: login, LDAP and federated SSO](../design-modules/02-access/r2/authentication-integration.md) supplies the HB-60 protocol and configuration proposal for LDAPv3, SAML 2.0 and OIDC, with session, mapping and recovery boundaries. It is planning-only; actual support and acceptance remain pending in the [verification plan](../design-modules/02-access/r2/authentication-verification.md).
+
 # HB-50 rule verification
 
 The owner clarified that explanatory code comments are prohibited and accepted final documents replace older copies in the current tree. Root updated AGENTS.md, the workflow rule and this management policy; root editorial review and document QA apply to this small rule clarification, not an independent review claim. Existing runtime, rights and evidence-retention contracts are unchanged. No bulk deletion is claimed: the current r2 onboarding proposal is a draft and does not supersede the full v10 baseline. Finalization must enumerate the actual replacement set and remove it, including obsolete generated copies.

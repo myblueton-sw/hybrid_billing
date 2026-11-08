@@ -1,0 +1,246 @@
+{
+  "scope": "New 32 screen sources only",
+  "normalization": "Only static relative import strings; all other source bytes equal",
+  "files": [
+    {
+      "from": "apps/console/src/modules/identity/remaining/Entry.tsx",
+      "to": "apps/console/src/modules/identity/pages/access-entry/Screen.tsx",
+      "normalized_sha256": "ed6c11a9130a4770efbb08a08849b5812db58f89faad3b2c3059937275b7696c"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/Users.tsx",
+      "to": "apps/console/src/modules/identity/pages/users/Screen.tsx",
+      "normalized_sha256": "66bdf259d6bdaa0792a724f78bc5654493d61b0aa000deef180174e6ff06553d"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/Authentication.tsx",
+      "to": "apps/console/src/modules/identity/pages/authentication/Screen.tsx",
+      "normalized_sha256": "b239277b9df0106769c2d5b7ed213ee22a74d2aaa48030bfcb549d56ffc3fe52"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/Access.tsx",
+      "to": "apps/console/src/modules/identity/pages/access/Screen.tsx",
+      "normalized_sha256": "648e7a52d1893b9d71f65fa633bca19c335d924c96c65af79decc213f6761074"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/ServiceAccounts.tsx",
+      "to": "apps/console/src/modules/identity/pages/service-accounts/Screen.tsx",
+      "normalized_sha256": "a90ab49be34295059ba03074fee17d90b2967e140b00886a79581acd10037348"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/MySecurity.tsx",
+      "to": "apps/console/src/modules/identity/pages/my-security/Screen.tsx",
+      "normalized_sha256": "3150c94dddd509789761947f71c003d9f53454ad2f8d3b140edf785a686a5d15"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/types.ts",
+      "to": "apps/console/src/modules/identity/screen-ui/types.ts",
+      "normalized_sha256": "c59b6395cc79c9e75667b7d9f061afd73ead8325dfc6719445f7032fe9d8f907"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/copy.ts",
+      "to": "apps/console/src/modules/identity/screen-ui/copy.ts",
+      "normalized_sha256": "bff0e7342cd5271ef4bbaaf90216913c6eed56fbc42c365c1acd181ca95d4e60"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/model.ts",
+      "to": "apps/console/src/modules/identity/screen-ui/model.ts",
+      "normalized_sha256": "ddac4419df2c157538d9ac341628f46aeb45d8a5f5a81937aaa5e44cf00e008e"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/model.test.tsx",
+      "to": "apps/console/src/modules/identity/screen-ui/model.test.tsx",
+      "normalized_sha256": "9011da9df84c78ef979174a8c16063d49807fb7c3cc298eece546e9c96403576"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/primitives.tsx",
+      "to": "apps/console/src/modules/identity/screen-ui/primitives.tsx",
+      "normalized_sha256": "5f76b5c85c58224ae93b1dbaa664b19d5a3c04672dd70c49a9937515626abe7c"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/security.css",
+      "to": "apps/console/src/modules/identity/screen-ui/security.css",
+      "normalized_sha256": "01c8358f20940ae8ec8a3874327060557f38d8205dae5fafb2ef80817168fc93"
+    },
+    {
+      "from": "apps/console/src/modules/identity/remaining/index.tsx",
+      "to": "apps/console/src/app/screen-groups/identity.tsx",
+      "normalized_sha256": "fac6f101f96d4eaabc761f67b8a24e9ba56444ed7e4d4d0f6f44b8fa50dbe113"
+    },
+    {
+      "from": "apps/console/src/modules/issuance/remaining/Invoices.tsx",
+      "to": "apps/console/src/modules/issuance/pages/invoices/Screen.tsx",
+      "normalized_sha256": "cdb7b1545410b729d3657688914823e474eebf214e5d9f256c1f66817b834991"
+    },
+    {
+      "from": "apps/console/src/modules/issuance/remaining/Submissions.tsx",
+      "to": "apps/console/src/modules/delivery/pages/submissions/Screen.tsx",
+      "normalized_sha256": "39be7d100858cd302e427d97948756ffc36500a189fa77422051fc26c1dcfe1e"
+    },
+    {
+      "from": "apps/console/src/modules/issuance/remaining/Handoffs.tsx",
+      "to": "apps/console/src/modules/delivery/pages/handoffs/Screen.tsx",
+      "normalized_sha256": "7eadf8f39567da4bc679e589a5b1d4584694c6c64ec217fb6bbe30b6878f7544"
+    },
+    {
+      "from": "apps/console/src/modules/issuance/remaining/Disclosure.tsx",
+      "to": "apps/console/src/modules/delivery/pages/exports/Screen.tsx",
+      "normalized_sha256": "f8dbde7c72c632bffe0d5b9e40f78c7e8d04029ea49e77916fc50903428a23fd"
+    },
+    {
+      "from": "apps/console/src/modules/issuance/remaining/Reports.tsx",
+      "to": "apps/console/src/modules/analytics/pages/reports/Screen.tsx",
+      "normalized_sha256": "3f359e4655f5e81a3e74d18aa1a47fba6078a79067cd25f236413f30df0c2002"
+    },
+    {
+      "from": "apps/console/src/modules/issuance/remaining/Audit.tsx",
+      "to": "apps/console/src/modules/history/pages/activity-history/Screen.tsx",
+      "normalized_sha256": "10ab29b2f290e7ed1028905461ead22eccbce0d0ed102c3b4299aff24ea46cdf"
+    },
+    {
+      "from": "apps/console/src/modules/issuance/remaining/Metering.tsx",
+      "to": "apps/console/src/modules/sources/pages/meters/Screen.tsx",
+      "normalized_sha256": "65b5ce47a44b7b6e37ce8d048db47e95971a12eaef3e339717bdc034fd9d20a8"
+    },
+    {
+      "from": "apps/console/src/modules/issuance/remaining/contracts.ts",
+      "to": "apps/console/src/shared/domain-screen-ui/finance/contracts.ts",
+      "normalized_sha256": "abf8bd316e6f4673caf99b79f646ebb137232cf0f7e72c86ed5c5b124114e648"
+    },
+    {
+      "from": "apps/console/src/modules/issuance/remaining/ui.tsx",
+      "to": "apps/console/src/shared/domain-screen-ui/finance/ui.tsx",
+      "normalized_sha256": "10bac37246e322a5b1bbdc9546cfe0bde8feff7edb7bcd92ca948dc91c9d12a5"
+    },
+    {
+      "from": "apps/console/src/modules/issuance/remaining/screen.css",
+      "to": "apps/console/src/shared/domain-screen-ui/finance/screen.css",
+      "normalized_sha256": "3088ee5b5463e6f74c8028c15b864b3f0826097b6ba4ffed58f8fa38360443ec"
+    },
+    {
+      "from": "apps/console/src/modules/issuance/remaining/index.tsx",
+      "to": "apps/console/src/app/screen-groups/finance.tsx",
+      "normalized_sha256": "d1e0388d68821f5ab2250daf979cfca75da7fe62b5e1277bd94083dce35174b6"
+    },
+    {
+      "from": "apps/console/src/modules/organizations/remaining/Organizations.tsx",
+      "to": "apps/console/src/modules/organizations/pages/organizations/Screen.tsx",
+      "normalized_sha256": "7056bc5f7b16b0ecc0983540780fd72eee7b70218820ca1145d98f7d33eab7a9"
+    },
+    {
+      "from": "apps/console/src/modules/organizations/remaining/ContractProfile.tsx",
+      "to": "apps/console/src/modules/organizations/pages/contracts/Screen.tsx",
+      "normalized_sha256": "16a733440939ca41b7c04fce9931231d47fc695a6fe9b82e2e91ff6d560fd9d0"
+    },
+    {
+      "from": "apps/console/src/modules/organizations/remaining/Inbox.tsx",
+      "to": "apps/console/src/modules/operations/pages/tasks/Screen.tsx",
+      "normalized_sha256": "2497935962463abf878e48783f6c59b37ce660f8c6f42b9373cb9d90207437d3"
+    },
+    {
+      "from": "apps/console/src/modules/organizations/remaining/Findings.tsx",
+      "to": "apps/console/src/modules/operations/pages/billing-findings/Screen.tsx",
+      "normalized_sha256": "e95e467b6241ce8d5964c1672c233b0dda18e2d205a03db57f0027e17b8bd6d6"
+    },
+    {
+      "from": "apps/console/src/modules/organizations/remaining/Imports.tsx",
+      "to": "apps/console/src/modules/sources/pages/import-review/Screen.tsx",
+      "normalized_sha256": "f826f39dda74b7f96e622910201ade59a3fe6a57fb7ff7672d9c42661dcd580f"
+    },
+    {
+      "from": "apps/console/src/modules/organizations/remaining/Assistant.tsx",
+      "to": "apps/console/src/modules/assistant/pages/conversation/Screen.tsx",
+      "normalized_sha256": "8ace5555080086ecd9cedfc18124b35533d87a03328bb920930eb7903612c61e"
+    },
+    {
+      "from": "apps/console/src/modules/organizations/remaining/contracts.ts",
+      "to": "apps/console/src/shared/domain-screen-ui/work/contracts.ts",
+      "normalized_sha256": "f8c4be315d15633270e3f0d49cd1ad3a466a6b72aa6bc99268321dca12826a23"
+    },
+    {
+      "from": "apps/console/src/modules/organizations/remaining/ui.tsx",
+      "to": "apps/console/src/shared/domain-screen-ui/work/ui.tsx",
+      "normalized_sha256": "fc0b02152f0fed145ca7ccf384ca737d070221925693dd212ee3733c040ad91d"
+    },
+    {
+      "from": "apps/console/src/modules/organizations/remaining/screen.css",
+      "to": "apps/console/src/shared/domain-screen-ui/work/screen.css",
+      "normalized_sha256": "118fbf9efa5f1d432456b0e85ea19e9cc96ab75b97ea55528939ffb2f19e3167"
+    },
+    {
+      "from": "apps/console/src/modules/organizations/remaining/index.tsx",
+      "to": "apps/console/src/app/screen-groups/work.tsx",
+      "normalized_sha256": "fdbd57aeaccdb310c9803c7b08fe4af6f6ef227720c328f0839f8441a627bad9"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/Installation.tsx",
+      "to": "apps/console/src/modules/administration/pages/installation/Screen.tsx",
+      "normalized_sha256": "d0ef37def7be1779493f83ab3434df8a8715fde8b8f7352e887b1120e534a98c"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/Integrations.tsx",
+      "to": "apps/console/src/modules/administration/pages/integrations/Screen.tsx",
+      "normalized_sha256": "bf73f35db9ed55c5b99e39688148c2f5f683e09461d7cb39c975f1cd7d9f197c"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/Recovery.tsx",
+      "to": "apps/console/src/modules/administration/pages/recovery/Screen.tsx",
+      "normalized_sha256": "362c1b15932e0131e5886553a8e5f75f0ceff06193976a6f329971d9d987a3e5"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/Retention.tsx",
+      "to": "apps/console/src/modules/administration/pages/retention/Screen.tsx",
+      "normalized_sha256": "d7e4607e265beec56da3e9926a7d79e0afefdc0bc46b63ebb73c9fffdb40f547"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/ReleaseEvidence.tsx",
+      "to": "apps/console/src/modules/administration/pages/release-evidence/Screen.tsx",
+      "normalized_sha256": "a20e112ff42777d53b7daf497528e0a218b92e05b0b234165cd944302c32cb7c"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/Demo.tsx",
+      "to": "apps/console/src/modules/administration/pages/demo/Screen.tsx",
+      "normalized_sha256": "476f74623845825d9dddab093eed6c0623f6a60ae732c3a3b8e8fc00fedc9ec8"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/Licenses.tsx",
+      "to": "apps/console/src/modules/administration/pages/licenses/Screen.tsx",
+      "normalized_sha256": "365f3882414fc7a643218c1242551d47668a36c9f7362319406e1dd72cd473b8"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/Notices.tsx",
+      "to": "apps/console/src/modules/administration/pages/licenses/Notices.tsx",
+      "normalized_sha256": "b4ff5f36b502d6a098e4fe3b666849d7969f13576d553a2b3458222337ce93dd"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/Portal.tsx",
+      "to": "apps/console/src/modules/customer-portal/pages/workspace/Screen.tsx",
+      "normalized_sha256": "5c2f19bb8f252dc5bbeda5259b922e9c510990e3dac71730591de2ffaa5b8951"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/types.ts",
+      "to": "apps/console/src/shared/domain-screen-ui/operations/types.ts",
+      "normalized_sha256": "5fcbc36ad02e4722676d8b306dd086687f6babbc02ba8d8aab1a8dd80d649c13"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/contracts.ts",
+      "to": "apps/console/src/shared/domain-screen-ui/operations/contracts.ts",
+      "normalized_sha256": "0c42e8d94449e705bc534c02a9d469239cdb3894a9b2fc8c24b6d2d21452de2c"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/controls.tsx",
+      "to": "apps/console/src/shared/domain-screen-ui/operations/controls.tsx",
+      "normalized_sha256": "ee0dc3bc4ec081d9d6c6b15170ccc9012c092b5d26fbb9d3881ff922cf2369f2"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/screen.css",
+      "to": "apps/console/src/shared/domain-screen-ui/operations/screen.css",
+      "normalized_sha256": "7b19d1de47247e576a93921b83d051fa0afbc126d637b78b91f5b483561e2dad"
+    },
+    {
+      "from": "apps/console/src/modules/administration/remaining/index.tsx",
+      "to": "apps/console/src/app/screen-groups/operations.tsx",
+      "normalized_sha256": "d232250c6abd4109d0d5702ca72bc91245af020e3651a348e34c74b5e0546459"
+    }
+  ]
+}

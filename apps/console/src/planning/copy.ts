@@ -35,7 +35,7 @@ export const titles: Record<string, Tr> = {
     "الاتصالات والقدرات",
   ],
   S02: ["원천 개통", "Source onboarding", "تهيئة المصادر"],
-  S03: ["수입·완전성 검증", "Imports and completeness", "الاستيراد والاكتمال"],
+  S03: ["수집·완전성 검증", "Imports and completeness", "الاستيراد والاكتمال"],
   S04: [
     "원천 명세·사용량",
     "Source rows and usage",

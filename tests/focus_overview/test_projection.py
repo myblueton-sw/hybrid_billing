@@ -12,6 +12,9 @@ def row(account='same', subaccount=None, provider='AWS', value='1.00000000000000
     return {'provider': provider, 'account': account, 'subaccount': subaccount, 'service': 'Compute', 'currency': currency,
             'billed_cost': Decimal(value) if value is not None else None, 'effective_cost': Decimal('-0.5'),
             'charge_start': datetime.fromisoformat(start), 'charge_end': datetime(2024, 5, 1, tzinfo=timezone.utc),
+            'consumed_quantity': Decimal('0.000000000000000001'), 'pricing_quantity': None, 'list_cost': Decimal('0'), 'contracted_cost': None,
+            'list_unit_price': Decimal('-0.000000000000000001'), 'contracted_unit_price': None,
+            'consumed_unit': 'Hours', 'pricing_unit': 'Requests', 'billing_start': datetime(2024, 1, 1, tzinfo=timezone.utc), 'billing_end': datetime(2024, 2, 1, tzinfo=timezone.utc),
             'source_json': {'x_HB_EvidenceClass': evidence, 'secret_extra': 'never-project'}}
 
 
@@ -91,3 +94,30 @@ def test_publication_remains_in_collection_consumer(monkeypatch):
         assert body['financial_authority'] is False
         return 'published'
     assert overview('reader-company-north', {}, deliver) == 'published'
+
+
+def test_extended_row_contract_is_exact_and_unit_specific():
+    d = project()
+    r = d['rows'][0]
+    assert r['consumed_quantity'] == '1' and r['consumed_unit'] == 'Hours'
+    assert r['pricing_quantity'] is None and r['pricing_unit'] == 'Requests'
+    assert r['list_unit_price'] == '-1' and r['list_cost'] == '0'
+    assert r['contracted_cost'] is None
+    assert r['billing_start'] == '2024-01-01T00:00:00+00:00'
+    assert 'source_json' not in r
+
+
+def test_extended_projection_rejects_old_content_identity():
+    from modules.focus_import.model import canonical, digest
+    old = digest(canonical({'projection': 1, 'source': 'a' * 64, 'selection': {'period':'all','provider':'','account':'','basis':'billed_cost','q':''}}).encode())
+    with pytest.raises(Rejected, match='query_snapshot_changed'):
+        project({'snapshot': old})
+
+
+def test_quantity_with_missing_unit_does_not_invent_one():
+    r = row()
+    r['consumed_unit'] = None
+    d = project(rows=[('w','b',0,'north-a',r)])
+    assert d['rows'][0]['consumed_quantity'] == '1'
+    assert d['rows'][0]['consumed_unit'] is None
+    assert 'consumed_quantity' not in d['amounts'][0]

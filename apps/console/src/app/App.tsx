@@ -28,6 +28,7 @@ import ReviewPanel from "../shared/ReviewPanel";
 import HeaderSelect from "./HeaderSelect";
 import EntryShell from "./EntryShell";
 import { identity } from "../modules/identity/module";
+import CollectedSource from "../modules/sources/pages/collected-source-data/Screen";
 import Overview from "../modules/operations/pages/overview/Screen";
 import Closing from "../modules/operations/pages/core-index-close/Screen";
 import logo from "../../../../packages/design-system/assets/logo/hb-lockup-color.svg";
@@ -114,8 +115,13 @@ export default function App() {
     screen?.id === "S02" &&
     audience === "admin" &&
     params.get("service") === "local";
+  const liveCollectedSource =
+    screen?.id === "S04" &&
+    audience === "admin" &&
+    params.get("service") !== "local";
   const liveOverview = screen?.id === "U01" && audience === "admin";
   const liveService =
+    liveCollectedSource ||
     liveOverview ||
     liveImports ||
     liveReconciliation ||
@@ -123,7 +129,7 @@ export default function App() {
     liveEvidence ||
     liveConnections ||
     liveOnboarding;
-  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveOverview || liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
+  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveOverview || liveCollectedSource || liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
   const tabs =
     screen?.id === "U02" ? screen.tabs.slice(0, 2) : (screen?.tabs ?? []);
   const requestedTab = params.get("view") ?? route.tab ?? route.step;
@@ -522,7 +528,7 @@ export default function App() {
   }
   return (
     <div
-      className={`planning-app service-shell ${screen?.id === "U01" ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
+      className={`planning-app service-shell ${screen?.id === "U01" || liveCollectedSource ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
     >
       <a
         className="skip"
@@ -536,7 +542,7 @@ export default function App() {
       </a>
       <div className="planning-preview" hidden={!developer}>
         <span>
-          {liveOverview
+          {liveOverview || liveCollectedSource
             ? local(l, [
                 "수집 FOCUS 샘플 · 공개·합성 출처 · 조회 전용",
                 "Collected FOCUS samples · public/synthetic sources · read only",
@@ -623,7 +629,7 @@ export default function App() {
           <span className="service-environment">
             {local(
               l,
-              liveOverview
+              liveOverview || liveCollectedSource
                 ? [
                     "수집 FOCUS 샘플 · 공개·합성 출처",
                     "Collected FOCUS samples · public and synthetic sources",
@@ -769,7 +775,12 @@ export default function App() {
                           "Billing overview",
                           "نظرة عامة على الفوترة",
                         ])
-                      : local(l, titles[screen.id])}
+                      : local(
+                          l,
+                          liveCollectedSource
+                            ? navigationLabels.S04
+                            : titles[screen.id],
+                        )}
                   </h1>
                   <span className="tag" hidden={!developer}>
                     {local(l, [
@@ -831,26 +842,30 @@ export default function App() {
                 locale={l}
                 context={JSON.stringify({
                   shellMode: developer ? "developer" : "service",
-                  profile: liveOverview
-                    ? "collected-focus-samples-v1"
-                    : liveService
-                      ? "local-service-synthetic-v1"
-                      : "planning-preview",
+                  profile:
+                    liveOverview || liveCollectedSource
+                      ? "collected-focus-samples-v1"
+                      : liveService
+                        ? "local-service-synthetic-v1"
+                        : "planning-preview",
                   mode,
                   extensions: [],
                   audience,
                   legacy: screen.reactBodies,
                   scope,
                   tab,
-                  period: liveOverview
-                    ? (params.get("focus-period") ?? "all")
-                    : (params.get("period") ?? "2026-10"),
-                  organization: liveOverview
-                    ? "server-authorized-focus-accounts"
-                    : (params.get("le") ?? "DEMO-ORG-01"),
-                  currency: liveOverview
-                    ? "source-currencies"
-                    : (params.get("ccy") ?? "USD"),
+                  period:
+                    liveOverview || liveCollectedSource
+                      ? (params.get("focus-period") ?? "all")
+                      : (params.get("period") ?? "2026-10"),
+                  organization:
+                    liveOverview || liveCollectedSource
+                      ? "server-authorized-focus-accounts"
+                      : (params.get("le") ?? "DEMO-ORG-01"),
+                  currency:
+                    liveOverview || liveCollectedSource
+                      ? "source-currencies"
+                      : (params.get("ccy") ?? "USD"),
                   objectId: route.objectId ?? null,
                   persona,
                   scenario,
@@ -863,7 +878,7 @@ export default function App() {
                     : [`${screen.id}:region:${tab}`]
                 }
               />
-              {!["U01", "U02"].includes(screen.id) && (
+              {!["U01", "U02"].includes(screen.id) && !liveCollectedSource && (
                 <details
                   className="planning-scope"
                   open={!mobile}
@@ -935,7 +950,7 @@ export default function App() {
                 <nav
                   className="planning-tabs"
                   style={
-                    liveService && !liveOverview
+                    liveService && !(liveOverview || liveCollectedSource)
                       ? { display: "none" }
                       : undefined
                   }
@@ -967,6 +982,7 @@ export default function App() {
                   ))}
                 </nav>
                 {developer &&
+                  screen.id !== "S04" &&
                   ["S01", "S02", "S03", "S04", "S05", "S06"].includes(
                     screen.id,
                   ) && (
@@ -998,7 +1014,14 @@ export default function App() {
                   id="content"
                   key={screenKey + ":" + tab + (liveService ? ":" + l : "")}
                 >
-                  {liveOnboarding ? (
+                  {liveCollectedSource ? (
+                    <CollectedSource
+                      locale={l}
+                      view={tab}
+                      objectId={route.objectId}
+                      onState={onState}
+                    />
+                  ) : liveOnboarding ? (
                     <Onboarding
                       locale={l}
                       stage={tab}

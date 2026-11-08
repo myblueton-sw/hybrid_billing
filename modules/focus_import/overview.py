@@ -93,7 +93,7 @@ class Projection:
         if p['provider'] and p['provider'] not in providers or p['account'] and p['account'] not in {r[1] for r in facts} or p['period'] != 'all' and p['period'] not in periods:
             raise Rejected('selection_unavailable')
         identity = {k: v for k, v in p.items() if k not in ('after', 'account_after')}
-        snapshot = digest(canonical({'projection': 1, 'source': result['snapshot'], 'selection': identity}).encode())
+        snapshot = digest(canonical({'projection': 2, 'source': result['snapshot'], 'selection': identity}).encode())
         if self.expected is not None and self.expected != snapshot:
             raise Rejected('query_snapshot_changed')
         narrowed = [r for r in facts if (not p['provider'] or r[6]['provider'] == p['provider']) and (not p['account'] or r[1] == p['account'])]
@@ -122,8 +122,10 @@ class Projection:
             details.append({'id': digest(canonical([window, batch, ordinal, tenant]).encode()), 'account': key,
                             'provider': row['provider'], 'billing_account': row['account'], 'sub_account': row['subaccount'],
                             'service': row['service'], 'currency': row['currency'], 'charge_month': month,
+                            'consumed_unit': row['consumed_unit'], 'pricing_unit': row['pricing_unit'],
+                            'billing_start': row['billing_start'].isoformat(), 'billing_end': row['billing_end'].isoformat(),
                             'charge_start': row['charge_start'].isoformat(), 'charge_end': row['charge_end'].isoformat(),
-                            **{basis: str(coefficient(row[basis])) if row[basis] is not None else None for basis in BASES},
+                            **{basis: str(coefficient(row[basis])) if row[basis] is not None else None for basis in (*BASES, 'list_cost', 'contracted_cost', 'consumed_quantity', 'pricing_quantity', 'list_unit_price', 'contracted_unit_price')},
                             'evidence_class': evidence(row), 'batch': str(batch), 'ordinal': str(ordinal)})
         windows = result.get('coverage', [])
         body = {'schema': 1, 'scale': 18, 'snapshot': snapshot, 'source_snapshot': result['snapshot'], 'selection': identity,

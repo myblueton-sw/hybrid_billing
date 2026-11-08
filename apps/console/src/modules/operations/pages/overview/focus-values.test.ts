@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { decimal, chartSeries, signedScale, scale } from "./focus-values";
-import type { OverviewData } from "./focus-api";
+import type { OverviewData } from "../../../sources/collected-focus/api";
 test("exact18 digit values, huge integers, zero and signed credits", () => {
   assert.equal(decimal("1000000000000000001", "en"), "1.000000000000000001");
   assert.equal(decimal("-1", "ko"), "-0.000000000000000001");

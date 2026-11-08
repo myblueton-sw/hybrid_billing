@@ -1,0 +1,296 @@
+.collected-source {
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.collected-source h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+.collected-source p {
+  margin-block: 8px;
+}
+.collected-source small {
+  display: block;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--hb-muted);
+}
+.collected-source :is(button, input, select) {
+  min-block-size: 40px;
+  font-size: 16px;
+}
+.collected-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px 20px;
+}
+.collected-toolbar label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+.collected-toolbar select {
+  min-inline-size: 160px;
+}
+.collected-toolbar a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 40px;
+}
+.collected-provenance {
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.collected-provenance summary,
+.collected-account summary {
+  cursor: pointer;
+  min-block-size: 40px;
+  align-content: center;
+}
+.collected-provenance dl {
+  max-inline-size: 85ch;
+}
+.collected-source :is(dd, bdi) {
+  overflow-wrap: anywhere;
+}
+.collected-source dd {
+  margin-inline-start: 0;
+  margin-block: 4px 16px;
+}
+.collected-scope {
+  border-block: 1px solid var(--hb-line-row);
+  padding-block: 20px;
+}
+.collected-scope header,
+.collected-list-header,
+.collected-detail header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+.collected-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 40px;
+  margin-block-start: 16px;
+}
+.collected-totals > div {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+.collected-totals span {
+  font-size: 14px;
+}
+.collected-totals strong {
+  font-size: 24px;
+  font-weight: 600;
+}
+.collected-account {
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.collected-account form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-block: 12px;
+}
+.collected-account input {
+  inline-size: 320px;
+  max-inline-size: 100%;
+}
+.collected-account ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  max-block-size: 360px;
+  overflow: auto;
+}
+.collected-account li {
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.collected-account li button {
+  border: 0;
+  background: transparent;
+  color: var(--c-link);
+  text-align: start;
+  text-decoration: underline;
+  padding: 8px 0;
+}
+.collected-pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: end;
+}
+.collected-pages span {
+  font-size: 14px;
+}
+.collected-list-header p {
+  color: var(--hb-muted);
+  font-size: 14px;
+}
+.collected-table {
+  min-inline-size: 0;
+  max-block-size: 640px;
+  overflow: auto;
+}
+.collected-table table {
+  inline-size: 100%;
+  min-inline-size: 1100px;
+  border-collapse: collapse;
+}
+.collected-table :is(th, td) {
+  text-align: start;
+  vertical-align: top;
+  padding: 12px;
+  border-block-end: 1px solid var(--hb-line-row);
+  font-size: 16px;
+  overflow-wrap: anywhere;
+  min-inline-size: 140px;
+  max-inline-size: 32ch;
+}
+.collected-table thead th {
+  position: sticky;
+  inset-block-start: 0;
+  background: var(--hb-hover);
+  z-index: 2;
+  font-size: 14px;
+}
+.collected-table tbody th {
+  position: sticky;
+  inset-inline-start: 0;
+  background: var(--hb-white);
+  z-index: 1;
+  min-inline-size: 200px;
+  max-inline-size: 240px;
+}
+.collected-table tbody th button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--c-link);
+  text-decoration: underline;
+  text-align: start;
+}
+.collected-table .number {
+  text-align: end;
+}
+.collected-table .number bdi {
+  white-space: nowrap;
+}
+.collected-detail {
+  border-block-start: 1px solid var(--hb-line-control);
+  padding-block-start: 24px;
+  scroll-margin-block: 24px;
+}
+.collected-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+.collected-detail dt {
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.collected-detail dd {
+  font-size: 16px;
+}
+.collected-unavailable {
+  padding-block: 24px;
+  border-block-start: 1px solid var(--hb-line-row);
+}
+@media (max-width: 1199px) {
+  .collected-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .collected-toolbar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .collected-toolbar select {
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+  .collected-source :is(button, select, input) {
+    min-block-size: 44px;
+  }
+  .collected-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .collected-pages {
+    justify-content: start;
+  }
+  .collected-table {
+    max-block-size: 480px;
+  }
+  .collected-table tbody th {
+    position: static;
+  }
+  .collected-totals strong {
+    overflow-x: auto;
+    max-inline-size: 100%;
+  }
+  .collected-source {
+    gap: 20px;
+  }
+}
+.overview-shell .collected-source {
+  gap: 20px;
+}
+.overview-shell .collected-source .collected-toolbar label {
+  font-size: 14px;
+  font-weight: 400;
+}
+.overview-shell .collected-scope {
+  padding-block: 16px;
+}
+.collected-table tbody th {
+  white-space: normal;
+  inline-size: 240px;
+}
+.collected-table tbody th > small,
+.collected-table tbody th button {
+  display: block;
+  inline-size: 220px;
+  max-inline-size: 220px;
+  white-space: normal;
+}
+.collected-table tbody th bdi {
+  display: block;
+  inline-size: 220px;
+  max-inline-size: 220px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.collected-table tbody th small {
+  font-weight: 400;
+}
+.collected-table td:not(.number) bdi {
+  display: block;
+  white-space: normal;
+  max-inline-size: 32ch;
+  overflow-wrap: anywhere;
+}
+.collected-source .collected-table tbody th button {
+  display: flex;
+  align-items: flex-start;
+  padding-block: 0;
+}
+.collected-scroll-hint {
+  font-size: 14px;
+  color: var(--hb-muted);
+}

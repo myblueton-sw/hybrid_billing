@@ -66,6 +66,8 @@ Validation: PASS for root editorial scope review, rule-link target/anchor, exist
 
 [HB-55 focused settings/admin/overview check](admin-overview-audit.md) narrows the audit to dedicated missing and partial management views; it does not change any screen.
 
+[HB-59 administration and operations r2 draft](../design-modules/11-settings/r2/README.md) develops detailed membership, customer settings, calendar, recovery, retention and policy workflows across scoped modules. Its [coverage record](../design-modules/11-settings/r2/verification.md) distinguishes textual planning from unresolved bindings, owner adoption and runtime acceptance; frozen v10 remains active.
+
 [HB-58 detailed planning coverage review](../reviews/HB-58-planning-coverage/report.md) traces administration, settings and operational workflow gaps to original clauses and current coverage, including stale local specifications and planning-only closure criteria.
 
 [HB-56 allocation readiness review](../reviews/HB-56-allocation/report.md) prioritizes EDP, discount and shared-cost calculation correctness, distinguishes existing contracts from executable coverage, and records the remaining financial acceptance gates.

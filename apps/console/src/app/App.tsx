@@ -28,6 +28,12 @@ import ReviewPanel from "../shared/ReviewPanel";
 import HeaderSelect from "./HeaderSelect";
 import EntryShell from "./EntryShell";
 import { identity } from "../modules/identity/module";
+import ApprovalInbox from "../modules/issuance/pages/approval-inbox/Screen";
+import {
+  tabLabel as inboxTab,
+  environment as inboxEnvironment,
+  reviewContext as inboxContext,
+} from "../modules/issuance/pages/approval-inbox/copy";
 import BillingRuns from "../modules/calculation/pages/billing-runs/Screen";
 import { tabLabel as billingTab } from "../modules/calculation/pages/billing-runs/copy";
 import Marketplace from "../modules/pricing/pages/marketplace/Screen";
@@ -128,6 +134,7 @@ export default function App() {
     screen?.id === "S04" &&
     audience === "admin" &&
     params.get("service") !== "local";
+  const liveInbox = screen?.id === "B09" && audience === "admin";
   const liveBilling = screen?.id === "B08" && audience === "admin";
   const liveMarketplace = screen?.id === "B07" && audience === "admin";
   const liveCommitments = screen?.id === "B06" && audience === "admin";
@@ -143,9 +150,9 @@ export default function App() {
       liveMarketplace) &&
     audience === "admin";
   const liveOverview = screen?.id === "U01" && audience === "admin";
+  const liveReadWorkbench = livePricing || liveBilling || liveInbox;
   const liveService =
-    liveBilling ||
-    livePricing ||
+    liveReadWorkbench ||
     liveCollectedSource ||
     liveOverview ||
     liveImports ||
@@ -154,7 +161,7 @@ export default function App() {
     liveEvidence ||
     liveConnections ||
     liveOnboarding;
-  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveOverview || liveCollectedSource || livePricing || liveBilling || liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
+  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveOverview || liveCollectedSource || liveReadWorkbench || liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
   const tabs =
     screen?.id === "U02" ? screen.tabs.slice(0, 2) : (screen?.tabs ?? []);
   const requestedTab = params.get("view") ?? route.tab ?? route.step;
@@ -553,7 +560,7 @@ export default function App() {
   }
   return (
     <div
-      className={`planning-app service-shell ${screen?.id === "U01" || liveCollectedSource || livePricing || liveBilling ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
+      className={`planning-app service-shell ${screen?.id === "U01" || liveCollectedSource || liveReadWorkbench ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
     >
       <a
         className="skip"
@@ -652,32 +659,37 @@ export default function App() {
         </a>
         <span className="planning-installation">
           <span className="service-environment">
-            {local(
-              l,
-              liveOverview || liveCollectedSource || livePricing || liveBilling
-                ? [
-                    "수집 FOCUS 샘플 · 공개·합성 출처",
-                    "Collected FOCUS samples · public and synthetic sources",
-                    "عينات FOCUS مجمعة · مصادر عامة وتجريبية",
-                  ]
-                : liveService
-                  ? [
-                      "로컬 검증 환경 · 합성 데이터",
-                      "Local validation · synthetic data",
-                      "تحقق محلي · بيانات تجريبية",
-                    ]
-                  : mode === "synthetic"
+            {liveInbox
+              ? inboxEnvironment(l)
+              : local(
+                  l,
+                  liveOverview ||
+                    liveCollectedSource ||
+                    livePricing ||
+                    liveBilling
                     ? [
-                        "데모 환경 · 합성 데이터",
-                        "Demo · synthetic data",
-                        "عرض تجريبي · بيانات اصطناعية",
+                        "수집 FOCUS 샘플 · 공개·합성 출처",
+                        "Collected FOCUS samples · public and synthetic sources",
+                        "عينات FOCUS مجمعة · مصادر عامة وتجريبية",
                       ]
-                    : [
-                        "데이터 미연결",
-                        "Data not connected",
-                        "البيانات غير متصلة",
-                      ],
-            )}
+                    : liveService
+                      ? [
+                          "로컬 검증 환경 · 합성 데이터",
+                          "Local validation · synthetic data",
+                          "تحقق محلي · بيانات تجريبية",
+                        ]
+                      : mode === "synthetic"
+                        ? [
+                            "데모 환경 · 합성 데이터",
+                            "Demo · synthetic data",
+                            "عرض تجريبي · بيانات اصطناعية",
+                          ]
+                        : [
+                            "데이터 미연결",
+                            "Data not connected",
+                            "البيانات غير متصلة",
+                          ],
+                )}
           </span>
         </span>
         {!mobile && headerActions}
@@ -908,6 +920,7 @@ export default function App() {
                   scenario,
                   dirty,
                   state: view.key === screenKey ? view.state : "{}",
+                  ...(liveInbox ? inboxContext : {}),
                 })}
                 items={
                   view.key === screenKey && view.items.length
@@ -992,7 +1005,8 @@ export default function App() {
                       liveOverview ||
                       liveCollectedSource ||
                       livePricing ||
-                      liveBilling
+                      liveBilling ||
+                      liveInbox
                     )
                       ? { display: "none" }
                       : undefined
@@ -1008,11 +1022,9 @@ export default function App() {
                       key={t.key}
                       aria-current={tab === t.key ? "page" : undefined}
                       onClick={() => {
-                        if ((livePricing || liveBilling) && tab === t.key)
-                          return;
-                        if (livePricing || liveBilling || canLeave()) {
-                          if (livePricing || liveBilling)
-                            setNavigationGuard(null);
+                        if (liveReadWorkbench && tab === t.key) return;
+                        if (liveReadWorkbench || canLeave()) {
+                          if (liveReadWorkbench) setNavigationGuard(null);
                           if (!livePricing) setDirty(false);
                           location.hash = planningUrl(screen.path, params, {
                             view: t.key,
@@ -1024,62 +1036,36 @@ export default function App() {
                       }}
                     >
                       {screen.archetype.includes("wizard") ? `${i + 1}. ` : ""}
-                      {liveBilling
-                        ? billingTab(l, t.key)
-                        : liveMarketplace
-                          ? marketplaceTab(l, t.key)
-                          : liveCommitments
-                            ? local(
-                                l,
-                                (
-                                  {
-                                    commitments: [
-                                      "약정 명세",
-                                      "Commitment details",
-                                      "تفاصيل الالتزامات",
-                                    ],
-                                    utilization: [
-                                      "사용·미사용 근거",
-                                      "Used and unused evidence",
-                                      "أدلة الاستخدام وعدم الاستخدام",
-                                    ],
-                                    benefits: [
-                                      "혜택 흐름",
-                                      "Benefit flow",
-                                      "مسار المنافع",
-                                    ],
-                                    reconciliation: [
-                                      "대사 검토",
-                                      "Reconciliation review",
-                                      "مراجعة المطابقة",
-                                    ],
-                                  } as Record<string, [string, string, string]>
-                                )[t.key],
-                              )
-                            : liveFx
+                      {liveInbox
+                        ? inboxTab(l, t.key)
+                        : liveBilling
+                          ? billingTab(l, t.key)
+                          : liveMarketplace
+                            ? marketplaceTab(l, t.key)
+                            : liveCommitments
                               ? local(
                                   l,
                                   (
                                     {
-                                      policies: [
-                                        "환산 규칙",
-                                        "Conversion rules",
-                                        "قواعد التحويل",
+                                      commitments: [
+                                        "약정 명세",
+                                        "Commitment details",
+                                        "تفاصيل الالتزامات",
                                       ],
-                                      imports: [
-                                        "환율 근거",
-                                        "Exchange-rate evidence",
-                                        "أدلة سعر الصرف",
+                                      utilization: [
+                                        "사용·미사용 근거",
+                                        "Used and unused evidence",
+                                        "أدلة الاستخدام وعدم الاستخدام",
                                       ],
-                                      comparison: [
-                                        "환산 비교",
-                                        "Conversion comparison",
-                                        "مقارنة التحويل",
+                                      benefits: [
+                                        "혜택 흐름",
+                                        "Benefit flow",
+                                        "مسار المنافع",
                                       ],
-                                      approvals: [
-                                        "승인 이력",
-                                        "Approval history",
-                                        "سجل الاعتماد",
+                                      reconciliation: [
+                                        "대사 검토",
+                                        "Reconciliation review",
+                                        "مراجعة المطابقة",
                                       ],
                                     } as Record<
                                       string,
@@ -1087,70 +1073,25 @@ export default function App() {
                                     >
                                   )[t.key],
                                 )
-                              : livePricing
+                              : liveFx
                                 ? local(
                                     l,
                                     (
                                       {
-                                        rates: [
-                                          "요금 규칙",
-                                          "Pricing rules",
-                                          "قواعد التسعير",
-                                        ],
-                                        formula: [
-                                          "계산 단계",
-                                          "Calculation steps",
-                                          "خطوات الحساب",
-                                        ],
-                                        inheritance: [
-                                          "정책 상속",
-                                          "Policy inheritance",
-                                          "توريث السياسات",
-                                        ],
-                                        adjustments: [
-                                          "조정 검토",
-                                          "Adjustment review",
-                                          "مراجعة التعديل",
-                                        ],
-                                        impact: [
-                                          "금액 비교",
-                                          "Amount comparison",
-                                          "مقارنة المبالغ",
-                                        ],
                                         policies: [
-                                          "배분 정책",
-                                          "Allocation policy",
-                                          "سياسة التوزيع",
+                                          "환산 규칙",
+                                          "Conversion rules",
+                                          "قواعد التحويل",
                                         ],
-                                        pools: [
-                                          "배분 기준액",
-                                          "Allocation basis",
-                                          "مبلغ أساس التوزيع",
-                                        ],
-                                        simulation: [
-                                          "배분 미리보기",
-                                          "Allocation preview",
-                                          "معاينة التوزيع",
+                                        imports: [
+                                          "환율 근거",
+                                          "Exchange-rate evidence",
+                                          "أدلة سعر الصرف",
                                         ],
                                         comparison: [
-                                          "결과 비교",
-                                          "Result comparison",
-                                          "مقارنة النتائج",
-                                        ],
-                                        summary: [
-                                          "구성 요약",
-                                          "Composition summary",
-                                          "ملخص المكوّنات",
-                                        ],
-                                        costs: [
-                                          "원가 항목",
-                                          "Cost items",
-                                          "بنود التكلفة",
-                                        ],
-                                        products: [
-                                          "상품별 포함 항목",
-                                          "Included items by product",
-                                          "البنود المشمولة لكل منتج",
+                                          "환산 비교",
+                                          "Conversion comparison",
+                                          "مقارنة التحويل",
                                         ],
                                         approvals: [
                                           "승인 이력",
@@ -1163,7 +1104,83 @@ export default function App() {
                                       >
                                     )[t.key],
                                   )
-                                : tabLabel(l, t.key, t.labelKo)}
+                                : livePricing
+                                  ? local(
+                                      l,
+                                      (
+                                        {
+                                          rates: [
+                                            "요금 규칙",
+                                            "Pricing rules",
+                                            "قواعد التسعير",
+                                          ],
+                                          formula: [
+                                            "계산 단계",
+                                            "Calculation steps",
+                                            "خطوات الحساب",
+                                          ],
+                                          inheritance: [
+                                            "정책 상속",
+                                            "Policy inheritance",
+                                            "توريث السياسات",
+                                          ],
+                                          adjustments: [
+                                            "조정 검토",
+                                            "Adjustment review",
+                                            "مراجعة التعديل",
+                                          ],
+                                          impact: [
+                                            "금액 비교",
+                                            "Amount comparison",
+                                            "مقارنة المبالغ",
+                                          ],
+                                          policies: [
+                                            "배분 정책",
+                                            "Allocation policy",
+                                            "سياسة التوزيع",
+                                          ],
+                                          pools: [
+                                            "배분 기준액",
+                                            "Allocation basis",
+                                            "مبلغ أساس التوزيع",
+                                          ],
+                                          simulation: [
+                                            "배분 미리보기",
+                                            "Allocation preview",
+                                            "معاينة التوزيع",
+                                          ],
+                                          comparison: [
+                                            "결과 비교",
+                                            "Result comparison",
+                                            "مقارنة النتائج",
+                                          ],
+                                          summary: [
+                                            "구성 요약",
+                                            "Composition summary",
+                                            "ملخص المكوّنات",
+                                          ],
+                                          costs: [
+                                            "원가 항목",
+                                            "Cost items",
+                                            "بنود التكلفة",
+                                          ],
+                                          products: [
+                                            "상품별 포함 항목",
+                                            "Included items by product",
+                                            "البنود المشمولة لكل منتج",
+                                          ],
+                                          approvals: [
+                                            "승인 이력",
+                                            "Approval history",
+                                            "سجل الاعتماد",
+                                          ],
+                                        } as Record<
+                                          string,
+                                          [string, string, string]
+                                        >
+                                      )[t.key],
+                                    )
+                                  : tabLabel(l, t.key, t.labelKo)}
                     </button>
                   ))}
                 </nav>
@@ -1199,12 +1216,20 @@ export default function App() {
                 <div
                   id="content"
                   key={
-                    livePricing || liveBilling
+                    liveReadWorkbench
                       ? screen.id + ":" + l
                       : screenKey + ":" + tab + (liveService ? ":" + l : "")
                   }
                 >
-                  {liveBilling ? (
+                  {liveInbox ? (
+                    <ApprovalInbox
+                      locale={l}
+                      params={params}
+                      view={tab}
+                      onState={onState}
+                      onDirty={setDirty}
+                    />
+                  ) : liveBilling ? (
                     <BillingRuns
                       locale={l}
                       params={params}

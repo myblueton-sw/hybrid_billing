@@ -1,0 +1,279 @@
+{
+  "schema": 1,
+  "numeric_format": "decimal-strings-read-v1",
+  "read_only": true,
+  "commands": "unconnected",
+  "source_mode": "synthetic",
+  "auth_scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "snapshot": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "permission_revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "actor": {
+    "id": "QA-READER",
+    "label": "QA synthetic reviewer"
+  },
+  "view": "history",
+  "selection": {
+    "kind": "",
+    "q": ""
+  },
+  "cursor": null,
+  "next_cursor": null,
+  "observed_at": "2026-11-06T01:01:00Z",
+  "total": 5,
+  "records": [
+    {
+      "id": "QA-REQUEST-001",
+      "kind": "billing_result",
+      "status": "pending",
+      "target": {
+        "id": "QA-RESULT-001",
+        "label": "QA synthetic billing-result review",
+        "entity": "QA legal entity",
+        "customer": "QA customer",
+        "period": "2026-10"
+      },
+      "author": {
+        "id": "QA-AUTHOR-001",
+        "label": "QA synthetic author"
+      },
+      "approver": null,
+      "updated_at": "2026-11-06T01:00:00Z",
+      "deadline": "2026-11-08T00:00:00Z",
+      "decided_at": null,
+      "amounts": [
+        {
+          "currency": "USD",
+          "basis": "net",
+          "base": "100.00",
+          "candidate": "110.00",
+          "difference": "10.00",
+          "erp": null
+        }
+      ],
+      "erp": {
+        "applicability": "unknown",
+        "external_revision": null,
+        "observed_at": null
+      },
+      "evidence": {
+        "input_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+        "result_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+        "revision": "QA-REVISION-1",
+        "dependencies": "current",
+        "completeness": "complete",
+        "validation": "passed",
+        "blockers": []
+      },
+      "authority": {
+        "separation": "unknown",
+        "limit": "unknown",
+        "valid_until": null
+      }
+    },
+    {
+      "id": "QA-REQUEST-002",
+      "kind": "adjustment",
+      "status": "blocked",
+      "target": {
+        "id": "QA-ADJUSTMENT-001",
+        "label": "QA synthetic zero adjustment",
+        "entity": "QA legal entity",
+        "customer": "QA customer",
+        "period": "2026-10"
+      },
+      "author": {
+        "id": "QA-AUTHOR-001",
+        "label": "QA synthetic author"
+      },
+      "approver": null,
+      "updated_at": "2026-11-06T01:00:00Z",
+      "deadline": "2026-11-08T00:00:00Z",
+      "decided_at": null,
+      "amounts": [
+        {
+          "currency": "KRW",
+          "basis": "net",
+          "base": "0",
+          "candidate": "0",
+          "difference": "0",
+          "erp": null
+        }
+      ],
+      "erp": {
+        "applicability": "not_applicable",
+        "external_revision": null,
+        "observed_at": null
+      },
+      "evidence": {
+        "input_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+        "result_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+        "revision": "QA-REVISION-1",
+        "dependencies": "stale",
+        "completeness": "partial",
+        "validation": "failed",
+        "blockers": [
+          {
+            "code": "QA_STALE_RESULT",
+            "text": "Synthetic test: the source result revision is stale."
+          }
+        ]
+      },
+      "authority": {
+        "separation": "unknown",
+        "limit": "unknown",
+        "valid_until": null
+      }
+    },
+    {
+      "id": "QA-REQUEST-003",
+      "kind": "final_erp_amount",
+      "status": "blocked",
+      "target": {
+        "id": "QA-ERP-DRAFT-001",
+        "label": "QA synthetic final ERP amount, external evidence unknown",
+        "entity": "QA legal entity",
+        "customer": "QA customer",
+        "period": "2026-10"
+      },
+      "author": {
+        "id": "QA-AUTHOR-001",
+        "label": "QA synthetic author"
+      },
+      "approver": null,
+      "updated_at": "2026-11-06T01:00:00Z",
+      "deadline": "2026-11-08T00:00:00Z",
+      "decided_at": null,
+      "amounts": [
+        {
+          "currency": "USD",
+          "basis": "gross",
+          "base": "110.00",
+          "candidate": "120.00",
+          "difference": "10.00",
+          "erp": null
+        }
+      ],
+      "erp": {
+        "applicability": "applicable",
+        "external_revision": null,
+        "observed_at": null
+      },
+      "evidence": {
+        "input_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+        "result_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+        "revision": "QA-REVISION-1",
+        "dependencies": "current",
+        "completeness": "partial",
+        "validation": "unknown",
+        "blockers": [
+          {
+            "code": "QA_ERP_UNKNOWN",
+            "text": "Synthetic test: external ERP amount and revision have not been observed."
+          }
+        ]
+      },
+      "authority": {
+        "separation": "unknown",
+        "limit": "unknown",
+        "valid_until": null
+      }
+    },
+    {
+      "id": "QA-REQUEST-004",
+      "kind": "policy",
+      "status": "approved",
+      "target": {
+        "id": "QA-POLICY-001",
+        "label": "QA synthetic recorded policy decision",
+        "entity": "QA legal entity",
+        "customer": "QA customer",
+        "period": "2026-10"
+      },
+      "author": {
+        "id": "QA-AUTHOR-001",
+        "label": "QA synthetic author"
+      },
+      "approver": {
+        "id": "QA-READER",
+        "label": "QA synthetic reviewer"
+      },
+      "updated_at": "2026-11-06T01:00:00Z",
+      "deadline": "2026-11-08T00:00:00Z",
+      "decided_at": "2026-11-06T00:30:00Z",
+      "amounts": [],
+      "erp": {
+        "applicability": "not_applicable",
+        "external_revision": null,
+        "observed_at": null
+      },
+      "evidence": {
+        "input_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+        "result_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+        "revision": "QA-REVISION-1",
+        "dependencies": "current",
+        "completeness": "complete",
+        "validation": "passed",
+        "blockers": []
+      },
+      "authority": {
+        "separation": "satisfied",
+        "limit": "within",
+        "valid_until": "2026-11-07T00:00:00Z"
+      }
+    },
+    {
+      "id": "QA-REQUEST-005",
+      "kind": "monthly_recognition",
+      "status": "pending",
+      "target": {
+        "id": "QA-RECOGNITION-001",
+        "label": "QA synthetic monthly expense-recognition review",
+        "entity": "QA legal entity",
+        "customer": "QA customer",
+        "period": "2026-10"
+      },
+      "author": {
+        "id": "QA-AUTHOR-001",
+        "label": "QA synthetic author"
+      },
+      "approver": null,
+      "updated_at": "2026-11-06T01:00:00Z",
+      "deadline": "2026-11-08T00:00:00Z",
+      "decided_at": null,
+      "amounts": [
+        {
+          "currency": "KRW",
+          "basis": "expense",
+          "base": "300.00",
+          "candidate": "300.00",
+          "difference": "0.00",
+          "erp": null
+        }
+      ],
+      "erp": {
+        "applicability": "applicable",
+        "external_revision": null,
+        "observed_at": null
+      },
+      "evidence": {
+        "input_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+        "result_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+        "revision": "QA-REVISION-1",
+        "dependencies": "current",
+        "completeness": "partial",
+        "validation": "unknown",
+        "blockers": [
+          {
+            "code": "QA_POSTING_UNKNOWN",
+            "text": "Synthetic test: actual monthly ERP posting is unverified."
+          }
+        ]
+      },
+      "authority": {
+        "separation": "unknown",
+        "limit": "unknown",
+        "valid_until": null
+      }
+    }
+  ]
+}

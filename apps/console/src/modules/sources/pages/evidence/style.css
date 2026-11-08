@@ -1,0 +1,123 @@
+.evidence-screen {
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+}
+.evidence-screen section,
+.evidence-screen details {
+  min-inline-size: 0;
+}
+.evidence-screen h2 {
+  font-size: 20px;
+  margin-block: 0 12px;
+}
+.evidence-screen h3 {
+  font-size: 18px;
+  margin-block: 0 12px;
+}
+.evidence-screen p {
+  margin-block: 8px 16px;
+  overflow-wrap: anywhere;
+}
+.evidence-screen bdi {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.evidence-screen .evidence-value {
+  font-size: 16px;
+  white-space: pre-wrap;
+}
+.evidence-summary {
+  border-block: 1px solid var(--hb-line-row);
+  padding-block: 24px;
+}
+.evidence-summary dl,
+.evidence-integrity dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin-block: 16px 0;
+}
+.evidence-screen dt {
+  color: var(--hb-muted);
+  font-size: 13px;
+}
+.evidence-screen dd {
+  margin: 4px 0 12px;
+  overflow-wrap: anywhere;
+}
+.evidence-date {
+  display: block;
+  white-space: nowrap;
+}
+html[dir="rtl"] .evidence-date {
+  text-align: right;
+}
+.evidence-notice {
+  border: 1px solid var(--hb-line-row);
+  padding: 16px;
+}
+.evidence-screen summary {
+  margin-block-end: 12px;
+}
+.evidence-screen .planning-table {
+  overflow: auto;
+}
+.evidence-screen table {
+  min-inline-size: 900px;
+  table-layout: fixed;
+  inline-size: 100%;
+}
+.evidence-screen .planning-table th,
+.evidence-screen .planning-table td {
+  padding: 16px;
+  vertical-align: top;
+  font-weight: 400;
+  font-size: 16px;
+  white-space: normal;
+}
+.evidence-screen .planning-table thead th {
+  font-size: 13px;
+  background: var(--surface-table-head);
+  color: var(--text-body);
+}
+.evidence-screen td {
+  overflow-wrap: anywhere;
+}
+.evidence-screen th small {
+  display: block;
+  margin-block-start: 8px;
+  color: var(--hb-muted);
+}
+.evidence-mobile {
+  display: none;
+}
+.evidence-screen [role="status"]:empty {
+  display: none;
+}
+.planning-app.live-evidence-screen #confirm-review {
+  font-size: 16px;
+  min-block-size: 44px;
+}
+.planning-app.live-evidence-screen .review-heading #review-status {
+  font-size: 14px;
+}
+@media (max-width: 639px) {
+  .evidence-summary dl,
+  .evidence-integrity dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .evidence-mobile {
+    display: grid;
+    gap: 16px;
+  }
+  .evidence-mobile article {
+    border: 1px solid var(--hb-line-row);
+    padding: 16px;
+    min-inline-size: 0;
+  }
+  .evidence-mobile dl {
+    margin-block-end: 0;
+  }
+}

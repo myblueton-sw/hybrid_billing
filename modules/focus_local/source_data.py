@@ -56,20 +56,8 @@ class SourceData(Reconciliation):
             raise Rejected('request_invalid')
         a = self.authority
         with a.inspection() as cap:
-            release = a.release(release_id)
-            self.check_registry(release)
+            release = self.inspected_release(release_id, expected_manifest, cap)
             manifest = release['manifest']
-            if release['manifest_digest'] != expected_manifest:
-                raise Rejected('evidence_changed')
-            for key, value in zip(('installation_id', 'workspace_id', 'connection_id'), a.scope):
-                if manifest[key] != str(value):
-                    raise Rejected('manifest_scope')
-            if manifest['policy_revision'] != cap['policy_revision']:
-                raise Rejected('policy_changed')
-            if release['state'] not in ('verified', 'sealed'):
-                raise Rejected('input_unavailable')
-            if manifest['file_digest'] != release['file_digest'] or manifest['source_revision'] != release['source_revision'] or manifest['attempt'] != 1:
-                raise Rejected('manifest_identity')
             if after >= manifest['row_count']:
                 raise Rejected('request_invalid')
             rows, next_after = warehouse_page(a.env, a.scope, release, after)
@@ -78,3 +66,21 @@ class SourceData(Reconciliation):
                 'fields': [f['name'] for f in pinned_contract(release).fields if f['name'] in FIELDS],
                 'classification': 'local-source-inspection', 'content_integrity': 'not-revalidated',
                 'observed_at': datetime.now(timezone.utc).isoformat()}
+
+    def inspected_release(self, release_id, expected_manifest, cap):
+        a = self.authority
+        release = a.release(release_id)
+        self.check_registry(release)
+        manifest = release['manifest']
+        if release['manifest_digest'] != expected_manifest:
+            raise Rejected('evidence_changed')
+        for key, value in zip(('installation_id', 'workspace_id', 'connection_id'), a.scope):
+            if manifest[key] != str(value):
+                raise Rejected('manifest_scope')
+        if manifest['policy_revision'] != cap['policy_revision']:
+            raise Rejected('policy_changed')
+        if release['state'] not in ('verified', 'sealed'):
+            raise Rejected('input_unavailable')
+        if manifest['file_digest'] != release['file_digest'] or manifest['source_revision'] != release['source_revision'] or manifest['attempt'] != 1:
+            raise Rejected('manifest_identity')
+        return release

@@ -164,3 +164,4 @@ export function validProfile(p: Profile): boolean {
     bounded(p.period_end, 64)
   );
 }
+export { fields as sourceFieldNames, decimals as decimalFieldNames };

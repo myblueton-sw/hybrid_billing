@@ -1,0 +1,390 @@
+.retained-connections-screen {
+  container: retained-connections / inline-size;
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.retained-connections-screen:lang(ar) {
+  line-height: 1.8;
+}
+.retained-connections-screen
+  :is(section, header, div, dl, dt, dd, form, label, table, tr, th, td) {
+  min-inline-size: 0;
+}
+.retained-connections-screen :is(h2, h3, p, dl) {
+  margin-block: 0;
+}
+.retained-connections-screen h2 {
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+.retained-connections-screen h3 {
+  font-size: 18px;
+}
+.retained-connections-screen :is(button, input, th, td) {
+  font-size: 16px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.retained-connections-screen button {
+  min-block-size: 44px;
+  white-space: normal;
+}
+.retained-connections-screen :is(button, a, input):focus-visible {
+  outline: 2px solid var(--hb-focus);
+  outline-offset: 2px;
+}
+.retained-connections-screen :is(p, dt, dd, bdi, a) {
+  overflow-wrap: anywhere;
+}
+.retained-connections-screen dd {
+  margin-inline: 0;
+}
+.retained-connections-screen time {
+  display: inline;
+}
+.retained-connections-screen time bdi {
+  white-space: normal;
+}
+.retained-connection-context {
+  display: grid;
+  gap: 12px;
+  padding-block-end: 20px;
+  border-block-end: 1px solid var(--hb-line-panel);
+}
+.retained-connection-scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+  font-size: 14px;
+}
+.retained-connection-scope > div {
+  display: grid;
+  gap: 4px;
+}
+.retained-connection-scope dt {
+  color: var(--text-muted);
+}
+.retained-connection-workspace {
+  display: grid;
+  gap: 24px;
+}
+.retained-connection-list-area {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+.retained-connection-list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.retained-connection-counter {
+  font-size: 14px;
+}
+.retained-connection-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+.retained-connection-filter label {
+  display: grid;
+  gap: 8px;
+  flex: 1 1 280px;
+}
+.retained-connection-filter input {
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-control);
+  background: var(--surface-page);
+  color: inherit;
+}
+.retained-connection-filter > p {
+  flex-basis: 100%;
+}
+.retained-connection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.retained-connection-actions button:last-child {
+  margin-inline-start: 8px;
+}
+.retained-connection-status {
+  min-block-size: 24px;
+}
+.retained-connection-status:empty {
+  display: none;
+}
+.retained-connection-error {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.retained-connection-error bdi {
+  font-family: var(--hb-font-mono);
+}
+.retained-connection-note {
+  color: var(--text-muted);
+}
+.retained-connection-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.retained-connection-pagination > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.retained-connection-pagination > span {
+  font-size: 14px;
+}
+.retained-connection-table {
+  inline-size: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.retained-connection-table :is(th, td) {
+  padding: 12px 8px;
+  border-block-end: 1px solid var(--border-row);
+  text-align: start;
+  vertical-align: top;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.retained-connection-table :is(th, td):first-child {
+  inline-size: 38%;
+  padding-inline-start: 0;
+}
+.retained-connection-table :is(th, td):nth-child(2) {
+  inline-size: 62%;
+}
+.retained-connection-table tr[aria-selected="true"] {
+  background: var(--surface-hover);
+  font-weight: 600;
+}
+.retained-connection-row-button {
+  display: inline;
+  max-inline-size: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: start;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.retained-connection-interval {
+  display: grid;
+  gap: 12px;
+}
+.retained-connection-interval > span {
+  display: grid;
+  gap: 4px;
+}
+.retained-connection-interval-label {
+  font-size: 16px;
+}
+.retained-connection-col-medium,
+.retained-connection-col-wide,
+.retained-connection-col-profile,
+.retained-connection-col-id {
+  display: none;
+}
+.retained-connection-detail {
+  display: grid;
+  gap: 20px;
+  align-content: start;
+  border-block-start: 1px solid var(--hb-line-panel);
+  padding-block-start: 24px;
+}
+.retained-connection-detail-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.retained-connection-detail-heading h2 {
+  flex: 1 1 180px;
+}
+.retained-connection-detail :is(dl, .retained-connection-policy) {
+  display: grid;
+  gap: 16px;
+}
+.retained-connection-detail dl > div {
+  display: grid;
+  gap: 6px;
+}
+.retained-connection-detail dt {
+  color: var(--text-muted);
+}
+.retained-connection-detail dd {
+  font-size: 16px;
+}
+.retained-connection-detail dd p {
+  margin-block-start: 8px;
+}
+.retained-connection-id {
+  font-family: var(--hb-font-mono);
+}
+.retained-connection-capabilities {
+  display: grid;
+  gap: 12px;
+}
+.retained-connection-capabilities > div {
+  display: grid;
+  gap: 6px;
+  padding-block-end: 12px;
+  border-block-end: 1px solid var(--hb-line-panel);
+}
+.retained-connection-capabilities dt {
+  font-weight: 600;
+}
+.retained-connection-close-wide {
+  display: none;
+}
+.retained-connection-close-mobile {
+  display: inline;
+}
+@container retained-connections (max-width: 767px) {
+  .retained-connection-has-detail .retained-connection-list-area {
+    display: none;
+  }
+  .retained-connection-filter label {
+    flex-basis: 100%;
+  }
+  .retained-connection-actions {
+    inline-size: 100%;
+  }
+  .retained-connection-actions button {
+    flex: 1 1 auto;
+  }
+  .retained-connection-actions button:last-child {
+    margin-inline-start: 0;
+  }
+}
+@container retained-connections (min-width: 768px) {
+  .retained-connection-col-medium {
+    display: table-cell;
+  }
+  .retained-connection-table :is(th, td):first-child {
+    inline-size: 25%;
+  }
+  .retained-connection-table :is(th, td):nth-child(2) {
+    inline-size: 43%;
+  }
+  .retained-connection-table :is(th, td):nth-child(3) {
+    inline-size: 16%;
+  }
+  .retained-connection-table :is(th, td):nth-child(4) {
+    inline-size: 16%;
+  }
+  .retained-connection-capabilities > div {
+    grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.2fr);
+    gap: 24px;
+  }
+  .retained-connection-detail > dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 32px;
+  }
+  .retained-connection-detail > dl > div:first-child {
+    grid-column: 1 / -1;
+  }
+  .retained-connection-close-wide {
+    display: inline;
+  }
+  .retained-connection-close-mobile {
+    display: none;
+  }
+}
+@container retained-connections (min-width: 1280px) {
+  .retained-connection-col-wide,
+  .retained-connection-col-profile {
+    display: table-cell;
+  }
+  .retained-connection-table :is(th, td):first-child {
+    inline-size: 20%;
+  }
+  .retained-connection-table :is(th, td):nth-child(2) {
+    inline-size: 28%;
+  }
+  .retained-connection-table :is(th, td):nth-child(3) {
+    inline-size: 12%;
+  }
+  .retained-connection-table :is(th, td):nth-child(4) {
+    inline-size: 10%;
+  }
+  .retained-connection-table :is(th, td):nth-child(5) {
+    inline-size: 10%;
+  }
+  .retained-connection-table :is(th, td):nth-child(6) {
+    inline-size: 20%;
+  }
+  .retained-connection-has-detail {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+  .retained-connection-has-detail .retained-connection-col-profile {
+    display: none;
+  }
+  .retained-connection-has-detail .retained-connection-detail {
+    border-block-start: 0;
+    border-inline-start: 1px solid var(--hb-line-panel);
+    padding-block-start: 0;
+    padding-inline-start: 24px;
+  }
+  .retained-connection-has-detail .retained-connection-detail > dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .retained-connection-has-detail
+    .retained-connection-table
+    :is(th, td):first-child {
+    inline-size: 25%;
+  }
+  .retained-connection-has-detail
+    .retained-connection-table
+    :is(th, td):nth-child(2) {
+    inline-size: 35%;
+  }
+}
+@container retained-connections (min-width: 1600px) {
+  .retained-connection-col-id {
+    display: table-cell;
+  }
+  .retained-connection-table :is(th, td):first-child {
+    inline-size: 18%;
+  }
+  .retained-connection-table :is(th, td):nth-child(2) {
+    inline-size: 24%;
+  }
+  .retained-connection-table :is(th, td):nth-child(6) {
+    inline-size: 12%;
+  }
+  .retained-connection-table :is(th, td):nth-child(7) {
+    inline-size: 14%;
+  }
+  .retained-connection-has-detail
+    .retained-connection-table
+    :is(th, td):first-child {
+    inline-size: 25%;
+  }
+  .retained-connection-has-detail
+    .retained-connection-table
+    :is(th, td):nth-child(2) {
+    inline-size: 35%;
+  }
+  .retained-connection-has-detail
+    .retained-connection-table
+    :is(th, td):nth-child(7) {
+    inline-size: 8%;
+  }
+}

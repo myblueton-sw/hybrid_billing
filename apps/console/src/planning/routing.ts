@@ -77,7 +77,8 @@ export function resolveRoute(
   if (
     ["/design/screens", "/design/overview", "/help/contribute"].includes(path)
   ) {
-    return context.audience === "admin" && context.designTools
+    return context.audience === "admin" &&
+      (path === "/help/contribute" || context.designTools)
       ? { ...base, screen: null, path, tool: path, legacyId }
       : fallback();
   }

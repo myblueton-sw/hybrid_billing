@@ -1,0 +1,202 @@
+.service-shell[hidden],
+.service-shell [hidden] {
+  display: none !important;
+}
+.service-shell {
+  font-size: 16px;
+}
+.service-shell .planning-header {
+  min-block-size: 76px;
+  padding-inline: 24px;
+  background: var(--hb-white);
+}
+.service-shell .planning-header-actions > button,
+.service-shell .planning-header details > summary {
+  border: 0;
+  min-block-size: 44px;
+  padding: 12px;
+  font-size: 14px;
+}
+.service-shell .planning-header details > summary {
+  list-style: none;
+}
+.service-shell .planning-header details > summary::-webkit-details-marker {
+  display: none;
+}
+.service-shell .planning-header details[open] {
+  background: var(--hb-hover);
+}
+.service-environment {
+  font-size: 12px;
+  color: var(--hb-muted);
+  white-space: normal;
+}
+.service-shell .planning-layout {
+  grid-template-columns: 256px minmax(0, 1fr);
+  min-block-size: calc(100dvh - 76px);
+  align-items: stretch;
+}
+.service-shell .planning-sidebar {
+  padding: 24px 12px;
+  block-size: auto;
+  max-block-size: none;
+}
+.service-shell .service-navigation {
+  position: sticky;
+  inset-block-start: 24px;
+  max-block-size: calc(100dvh - 48px);
+  overflow-y: auto;
+}
+.service-shell .service-navigation .service-primary {
+  padding-block-end: 16px;
+  margin-block-end: 16px;
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.service-shell .service-navigation a {
+  min-block-size: 44px;
+  padding: 10px 16px;
+  font-size: 14px;
+}
+.service-shell .service-navigation summary {
+  min-block-size: 44px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--hb-text);
+}
+.service-shell .service-navigation details > a {
+  padding-inline-start: 28px;
+}
+.service-shell .service-navigation a:hover {
+  background: var(--hb-hover);
+}
+.service-shell .service-navigation a[aria-current] {
+  background: var(--hb-th);
+  font-weight: 600;
+}
+.service-shell .planning-main {
+  padding: 32px;
+}
+.service-shell .planning-page-header {
+  margin-block-end: 12px;
+}
+.service-shell .planning-main h1 {
+  font-size: 28px;
+  margin-block: 8px 16px;
+}
+.service-shell .planning-page-header .crumb {
+  font-size: 13px;
+  color: var(--hb-muted);
+}
+.service-shell .design-review {
+  padding-block: 8px;
+  margin-block: 0 24px;
+  border-block-start: 0;
+}
+.service-shell .review-heading {
+  justify-content: flex-end;
+  gap: 12px;
+}
+.service-shell .review-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-inline-end: auto;
+}
+.service-shell .review-heading strong {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--hb-muted);
+}
+.service-shell .review-heading p {
+  font-size: 12px;
+  margin: 0;
+}
+.service-shell .review-heading #confirm-review {
+  font-size: 14px;
+  min-block-size: 36px;
+  border: 0;
+  text-decoration: underline;
+  padding: 6px 10px;
+}
+.service-shell .review-heading #review-status {
+  font-size: 12px;
+}
+.service-shell .planning-review-tools {
+  margin: 0;
+  padding: 12px 24px;
+  background: var(--hb-th);
+  border: 0;
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.service-shell .planning-header .planning-help[open],
+.service-shell .planning-header .planning-user[open] {
+  z-index: 3;
+}
+@media (max-width: 767px) {
+  .service-shell .planning-layout {
+    display: block;
+  }
+  .service-shell .planning-main {
+    padding: 20px 16px;
+  }
+  .service-shell .planning-header {
+    padding-inline: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .service-shell .planning-installation {
+    flex-basis: 100%;
+    padding-block-end: 8px;
+  }
+  .service-shell .planning-main h1 {
+    font-size: 24px;
+  }
+  .service-shell .review-heading {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .service-shell .review-heading > div {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+  .service-shell .service-navigation {
+    position: static;
+    max-block-size: none;
+  }
+}
+.service-shell .planning-sidebar {
+  position: relative;
+  inset-block-start: auto;
+  align-self: stretch;
+  overflow: visible;
+}
+@media (max-width: 1279px) {
+  .service-shell .planning-layout {
+    display: block;
+  }
+}
+.service-shell .service-administration {
+  border-block-start: 1px solid var(--hb-line-row);
+  margin-block-start: 32px;
+  padding-block-start: 16px;
+}
+.service-shell .service-related {
+  margin-block: 0 16px;
+  font-size: 14px;
+}
+.service-shell .service-related summary {
+  cursor: pointer;
+}
+.service-shell .service-related nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding-block: 8px;
+}
+.service-shell .service-related a {
+  min-block-size: 40px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.service-shell .planning-menu-dialog .planning-header-actions > button { text-align: start; justify-content: flex-start; }

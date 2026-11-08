@@ -47,3 +47,7 @@ The header account chooser currently offers two synthetic scopes; the full basel
 See [design and scope](../../docs/features/HB-67/design.md), [verification](../../docs/features/HB-67/verification.md) and [notices](THIRD_PARTY_NOTICES.md).
 
 Entry forms validate local examples and clear fields; they do not authenticate, register administrators, accept invitations or send recovery requests. Passwords/tokens are not collected. Explicit preview navigation uses fixed synthetic workspaces. Onboarding/customer landing bodies remain pending; the links do not establish a finished end-to-end service. Editable entry review records expire for the current candidate on remount/reload; raw field values are never stored in review evidence.
+
+## Local service screen integrations
+
+[S03 ingestion](../../docs/features/HB-141/integration.md) receives synthetic FOCUS files into actual local services. [S06 reconciliation](../../docs/features/HB-95/reconciliation.md) compares original and stored evidence through a separate fixed-approver loopback process. Both are explicit local-service modes; other screen candidates remain previews. Neither adapter provides production identity or canonical input confirmation/publication.

@@ -55,7 +55,11 @@ export const titles: Record<string, Tr> = {
   B02: ["자산·계측", "Assets and measurements", "الأصول والقياسات"],
   B03: ["배분 정책", "Allocation policies", "سياسات التوزيع"],
   B04: ["판매 요금 정책", "Sales pricing policies", "سياسات تسعير المبيعات"],
-  B05: ["환율 정책", "Exchange-rate policies", "سياسات الصرف"],
+  B05: [
+    "환율·반올림 정책",
+    "FX and rounding policies",
+    "سياسات تحويل العملة والتقريب",
+  ],
   B06: ["약정·혜택", "Commitments and benefits", "الالتزامات والمزايا"],
   B07: ["Marketplace 거래", "Marketplace transactions", "معاملات السوق"],
   B08: [

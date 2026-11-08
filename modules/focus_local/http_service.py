@@ -11,6 +11,7 @@ from .intake_view import Intake
 from .reconciliation import Reconciliation
 from .source_data import SourceData
 from .evidence import Evidence
+from .connections import Connections
 
 
 class LocalServer(ThreadingHTTPServer):
@@ -82,6 +83,8 @@ class Handler(BaseHTTPRequestHandler):
             return failure(403, 'origin_denied')
         if mutation and origin != self.server.origin:
             return failure(403, 'origin_denied')
+        if path.path.startswith('/api/local-connections'):
+            return self.connections(path.path, mutation, request_id, failure)
         if path.path.startswith('/api/local-evidence'):
             return self.evidence(path.path, mutation, request_id, failure)
         if path.path.startswith('/api/local-source-data'):
@@ -238,6 +241,25 @@ class Handler(BaseHTTPRequestHandler):
                 failure(400, reason)
             else:
                 failure(409, 'policy_changed' if reason == 'policy_changed' else 'evidence_unavailable')
+        except Exception:
+            failure(503, 'service_unavailable')
+        finally:
+            if service:
+                service.close()
+
+    def connections(self, path, mutation, request_id, failure):
+        if mutation:
+            return failure(405, 'method_denied')
+        match = re.fullmatch(r'/api/local-connections(?:/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}))?', path)
+        if not match:
+            return failure(400, 'request_invalid')
+        service = None
+        try:
+            service = Connections(self.server.actor, self.server.env)
+            result = service.detail(match[1])
+            self.reply(200, {**result, 'request_id': request_id})
+        except Rejected as exc:
+            failure(409, 'policy_changed') if str(exc) == 'policy_changed' else failure(403, 'scope_denied')
         except Exception:
             failure(503, 'service_unavailable')
         finally:

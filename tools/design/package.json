@@ -1,0 +1,18 @@
+{
+  "name": "@hybrid-billing/design-preview-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build-console.mjs",
+    "check": "node check-design.mjs",
+    "start": "node serve-preview.mjs",
+    "test": "node --test serve-preview.test.mjs review-store.test.mjs build-revisions.test.mjs",
+    "qa": "node run-browser-qa.mjs"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-sans": "^5",
+    "@fontsource/ibm-plex-sans-arabic": "^5",
+    "@fontsource/ibm-plex-sans-kr": "^5",
+    "@fontsource/ibm-plex-mono": "^5"
+  }
+}

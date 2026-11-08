@@ -1,0 +1,13 @@
+.design-review { border:1px solid var(--hb-line-panel); background:var(--surface-page); padding:var(--hb-sp-20); margin-block:var(--hb-sp-20); }
+.review-heading { display:flex; flex-wrap:wrap; align-items:center; gap:var(--hb-sp-16); }
+.review-heading>div { flex:1; min-width:0; }
+.review-heading p { margin-block:var(--hb-sp-5); }
+.design-review code,#dialog code { overflow-wrap:anywhere; white-space:normal; font-family:var(--hb-font-mono,monospace); }
+#design-items ol { padding-inline-start:var(--hb-sp-20); }
+#design-items li { padding-block:var(--hb-sp-10); border-block-end:1px solid var(--hb-line-row); }
+#design-items li code { display:block; margin-block-start:var(--hb-sp-5); color:var(--text-muted); }
+#design-items button { text-align:start; }
+.design-review>button { margin-block-start:var(--hb-sp-12); }
+.design-highlight { outline:3px solid var(--focus-ring); outline-offset:3px; }
+.screen-index small.review-status { color:var(--accent-secondary); }
+.review-index-toolbar { display:flex; flex-wrap:wrap; align-items:end; gap:var(--hb-sp-16); margin-block-end:var(--hb-sp-20); }

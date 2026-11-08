@@ -1882,14 +1882,14 @@
       "id": "core-index-close",
       "group": "work",
       "title": {
-        "en": "Selected portfolio close workbench",
-        "ko": "선택 포트폴리오의 월 마감 작업",
-        "ar": "مساحة عمل الإقفال الشهري"
+        "en": "Closing list and calendar",
+        "ko": "마감 목록·달력",
+        "ar": "قائمة وتقويم الإقفال"
       },
       "description": {
-        "en": "Selected portfolio close workbench. Search and filter the scoped records; inspect a record before continuing.",
-        "ko": "선택 포트폴리오의 월 마감 작업. 범위 내 목록을 검색·필터링하고 항목을 확인한 뒤 진행합니다.",
-        "ar": "مساحة عمل الإقفال الشهري. ابحث في السجلات ضمن النطاق وصفها وراجع السجل قبل المتابعة."
+        "en": "Review contract deadlines, blockers, conditions and preserved history.",
+        "ko": "계약별 기한·차단 사유·완료 조건과 변경 이력을 확인합니다.",
+        "ar": "راجع مواعيد العقود والعوائق والشروط والسجل المحفوظ."
       },
       "kind": "list",
       "columns": [

@@ -1,0 +1,698 @@
+{
+  "ticket": "HB-64",
+  "observedOn": "2026-11-01",
+  "scope": "Research snapshots; no external skills installed or executed",
+  "repositories": [
+    {
+      "repo": "antfu/skills",
+      "sha": "7de210b51c8d48cc405a4eac3e17cbb1396c653b",
+      "commitDate": "2026-10-30T21:17:52Z",
+      "archived": false
+    },
+    {
+      "repo": "anthropics/skills",
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5",
+      "commitDate": "2026-10-28T19:20:38Z",
+      "archived": false
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "sha": "5269f7ea2d6c3a9bfda5ed878b6726cf509121fd",
+      "commitDate": "2026-10-30T00:35:13Z",
+      "archived": false
+    },
+    {
+      "repo": "microsoft/playwright-cli",
+      "sha": "0a808078d96496cf2a8fa725143c870354f63cda",
+      "commitDate": "2026-10-31T15:20:36Z",
+      "archived": false
+    },
+    {
+      "repo": "microsoft/skills",
+      "sha": "3f5b461b2314e01c400564051e92469114c5b68f",
+      "commitDate": "2026-10-30T17:07:01Z",
+      "archived": false
+    },
+    {
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sha": "3a13158ff1f32156cbe144108de48eda2ecaed9a",
+      "commitDate": "2026-11-01T07:04:28Z",
+      "archived": false
+    },
+    {
+      "repo": "obra/superpowers",
+      "sha": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "commitDate": "2026-10-21T21:00:49Z",
+      "archived": false
+    },
+    {
+      "repo": "openai/skills",
+      "sha": "49f948faa9258a0c61caceaf225e179651397431",
+      "commitDate": "2026-06-24T02:36:12Z",
+      "archived": false
+    },
+    {
+      "repo": "trailofbits/skills",
+      "sha": "2be6433b39e009cd2b6fd3be1895f6b1faa5af9a",
+      "commitDate": "2026-10-28T18:38:54Z",
+      "archived": false
+    },
+    {
+      "repo": "vercel-labs/agent-skills",
+      "sha": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "commitDate": "2026-10-27T21:40:02Z",
+      "archived": false
+    },
+    {
+      "repo": "wshobson/agents",
+      "sha": "7e2fb559cf4b824b27f1fec49fe88f7511066d26",
+      "commitDate": "2026-10-30T23:34:46Z",
+      "archived": false
+    }
+  ],
+  "files": [
+    {
+      "repo": "vercel-labs/agent-skills",
+      "sha": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "path": "skills/react-best-practices/SKILL.md",
+      "url": "https://raw.githubusercontent.com/vercel-labs/agent-skills/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/react-best-practices/SKILL.md",
+      "sha256": "71ed7794962fa6e803ee83030517b5b93a9f70fbfeb431ec4535c5480a8d8355",
+      "bytes": 7251
+    },
+    {
+      "repo": "vercel-labs/agent-skills",
+      "sha": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "path": "skills/composition-patterns/SKILL.md",
+      "url": "https://raw.githubusercontent.com/vercel-labs/agent-skills/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/composition-patterns/SKILL.md",
+      "sha256": "e38e0eaa609316b10423a9a138ed95e35099accd3f735585295c8a8f165c28a3",
+      "bytes": 2886
+    },
+    {
+      "repo": "vercel-labs/agent-skills",
+      "sha": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "path": "skills/web-design-guidelines/SKILL.md",
+      "url": "https://raw.githubusercontent.com/vercel-labs/agent-skills/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/web-design-guidelines/SKILL.md",
+      "sha256": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f",
+      "bytes": 1231
+    },
+    {
+      "repo": "vercel-labs/agent-skills",
+      "sha": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "path": "skills/deploy-to-vercel/SKILL.md",
+      "url": "https://raw.githubusercontent.com/vercel-labs/agent-skills/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/deploy-to-vercel/SKILL.md",
+      "sha256": "418ca2a60d35c551e6cb645f4e82c1b704a8335486ffe74b1b3d0617a17504e5",
+      "bytes": 9721
+    },
+    {
+      "repo": "vercel-labs/agent-skills",
+      "sha": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/vercel-labs/agent-skills/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/README.md",
+      "sha256": "9429e781e3fb2f005e619b96fe18cdc59f8db38b619a4c98f0c46c86357e56a0",
+      "bytes": 7273
+    },
+    {
+      "repo": "anthropics/skills",
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5",
+      "path": "skills/frontend-design/SKILL.md",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/ca45fc496a3436251f191354091d557da31c15b5/skills/frontend-design/SKILL.md",
+      "sha256": "d91970639e9f5c37682ac7ab60094d35f1c7c1f38d731bd56396563aee10c1d3",
+      "bytes": 9390
+    },
+    {
+      "repo": "anthropics/skills",
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5",
+      "path": "skills/webapp-testing/SKILL.md",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/ca45fc496a3436251f191354091d557da31c15b5/skills/webapp-testing/SKILL.md",
+      "sha256": "51b7349e77ec63b7744a6f63647e7566a0b4d2e301121cc10e8c2113af6556a2",
+      "bytes": 3913
+    },
+    {
+      "repo": "anthropics/skills",
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5",
+      "path": "skills/web-artifacts-builder/SKILL.md",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/ca45fc496a3436251f191354091d557da31c15b5/skills/web-artifacts-builder/SKILL.md",
+      "sha256": "81c5002c6643b0de7b8710b00e7a9038daa6fb9b68d59870ee6adb12da8d10f8",
+      "bytes": 3087
+    },
+    {
+      "repo": "anthropics/skills",
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/ca45fc496a3436251f191354091d557da31c15b5/README.md",
+      "sha256": "2fb9c4cc026366ea6e21c60cb23c908a4d27c62071819cc06beffaac102d0694",
+      "bytes": 5552
+    },
+    {
+      "repo": "anthropics/skills",
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5",
+      "path": "skills/frontend-design/LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/ca45fc496a3436251f191354091d557da31c15b5/skills/frontend-design/LICENSE.txt",
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+      "bytes": 10174
+    },
+    {
+      "repo": "anthropics/skills",
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5",
+      "path": "skills/web-artifacts-builder/LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/ca45fc496a3436251f191354091d557da31c15b5/skills/web-artifacts-builder/LICENSE.txt",
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362",
+      "bytes": 11345
+    },
+    {
+      "repo": "anthropics/skills",
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5",
+      "path": "skills/webapp-testing/LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/ca45fc496a3436251f191354091d557da31c15b5/skills/webapp-testing/LICENSE.txt",
+      "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362",
+      "bytes": 11345
+    },
+    {
+      "repo": "microsoft/playwright-cli",
+      "sha": "0a808078d96496cf2a8fa725143c870354f63cda",
+      "path": "skills/playwright-cli/SKILL.md",
+      "url": "https://raw.githubusercontent.com/microsoft/playwright-cli/0a808078d96496cf2a8fa725143c870354f63cda/skills/playwright-cli/SKILL.md",
+      "sha256": "b07a6cbe4e5b638046fe0b9df0e84783cb9899f0aed3db1eef915601c3260a64",
+      "bytes": 15702
+    },
+    {
+      "repo": "microsoft/playwright-cli",
+      "sha": "0a808078d96496cf2a8fa725143c870354f63cda",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/microsoft/playwright-cli/0a808078d96496cf2a8fa725143c870354f63cda/LICENSE",
+      "sha256": "9a7110fc2d2f964038e5dc49128f908f29f47a574c961cba16085914e879cbda",
+      "bytes": 11552
+    },
+    {
+      "repo": "microsoft/playwright-cli",
+      "sha": "0a808078d96496cf2a8fa725143c870354f63cda",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/microsoft/playwright-cli/0a808078d96496cf2a8fa725143c870354f63cda/README.md",
+      "sha256": "0ebce0d1585577c7fd370f6e5f47133500f5d2f0871a4201519d11706f803746",
+      "bytes": 26504
+    },
+    {
+      "repo": "microsoft/skills",
+      "sha": "3f5b461b2314e01c400564051e92469114c5b68f",
+      "path": ".github/skills/frontend-design-review/SKILL.md",
+      "url": "https://raw.githubusercontent.com/microsoft/skills/3f5b461b2314e01c400564051e92469114c5b68f/.github/skills/frontend-design-review/SKILL.md",
+      "sha256": "639b68cdc6f9b4cdd66a111851555afee2eb82d4de37bf9cbad3be845bb00c2d",
+      "bytes": 6157
+    },
+    {
+      "repo": "microsoft/skills",
+      "sha": "3f5b461b2314e01c400564051e92469114c5b68f",
+      "path": ".github/plugins/azure-sdk-typescript/skills/azure-microsoft-playwright-testing-ts/SKILL.md",
+      "url": "https://raw.githubusercontent.com/microsoft/skills/3f5b461b2314e01c400564051e92469114c5b68f/.github/plugins/azure-sdk-typescript/skills/azure-microsoft-playwright-testing-ts/SKILL.md",
+      "sha256": "0dc8c8b6b89db75fa1aa0890e777a7989960804dafd4aa4b02cc4ffa64476434",
+      "bytes": 8806
+    },
+    {
+      "repo": "microsoft/skills",
+      "sha": "3f5b461b2314e01c400564051e92469114c5b68f",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/microsoft/skills/3f5b461b2314e01c400564051e92469114c5b68f/LICENSE",
+      "sha256": "d9a1b1e30d633d5732ea18e3cba9538d293ebc53e1a9e4e96ab739e0c5c4f1cb",
+      "bytes": 1140
+    },
+    {
+      "repo": "microsoft/skills",
+      "sha": "3f5b461b2314e01c400564051e92469114c5b68f",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/microsoft/skills/3f5b461b2314e01c400564051e92469114c5b68f/README.md",
+      "sha256": "6075bd43893c2f0973609cb0526b21e2fb8a8963e7b2a256b19962842d0438cd",
+      "bytes": 44338
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "sha": "5269f7ea2d6c3a9bfda5ed878b6726cf509121fd",
+      "path": "skills/web-design-reviewer/SKILL.md",
+      "url": "https://raw.githubusercontent.com/github/awesome-copilot/5269f7ea2d6c3a9bfda5ed878b6726cf509121fd/skills/web-design-reviewer/SKILL.md",
+      "sha256": "a08a147cfe555dabe30f2c8f2e267f287e992f74f2b802e68989884338e23b17",
+      "bytes": 10657
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "sha": "5269f7ea2d6c3a9bfda5ed878b6726cf509121fd",
+      "path": "skills/webapp-testing/SKILL.md",
+      "url": "https://raw.githubusercontent.com/github/awesome-copilot/5269f7ea2d6c3a9bfda5ed878b6726cf509121fd/skills/webapp-testing/SKILL.md",
+      "sha256": "c4629221463d79c84555721ae2a30a6c345dd4d16c38cf6dbe735126e2426044",
+      "bytes": 3814
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "sha": "5269f7ea2d6c3a9bfda5ed878b6726cf509121fd",
+      "path": "skills/playwright-generate-test/SKILL.md",
+      "url": "https://raw.githubusercontent.com/github/awesome-copilot/5269f7ea2d6c3a9bfda5ed878b6726cf509121fd/skills/playwright-generate-test/SKILL.md",
+      "sha256": "79dbb1a49fc5a6502788ccba1a4bd30769a017a1cc31d9db329d1326ea3d898f",
+      "bytes": 877
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "sha": "5269f7ea2d6c3a9bfda5ed878b6726cf509121fd",
+      "path": "skills/react-container-presentation-component/SKILL.md",
+      "url": "https://raw.githubusercontent.com/github/awesome-copilot/5269f7ea2d6c3a9bfda5ed878b6726cf509121fd/skills/react-container-presentation-component/SKILL.md",
+      "sha256": "a9c167eeafa799ac1647bf3bf3cb588099bcba1dfea7821fae0d86e8fc6676d7",
+      "bytes": 4135
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "sha": "5269f7ea2d6c3a9bfda5ed878b6726cf509121fd",
+      "path": "skills/multi-stage-dockerfile/SKILL.md",
+      "url": "https://raw.githubusercontent.com/github/awesome-copilot/5269f7ea2d6c3a9bfda5ed878b6726cf509121fd/skills/multi-stage-dockerfile/SKILL.md",
+      "sha256": "7dfea7d31f3744930cb07869e15a79f90dbd47d2ddc56d165715fbd257db9ba7",
+      "bytes": 2314
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "sha": "5269f7ea2d6c3a9bfda5ed878b6726cf509121fd",
+      "path": "skills/security-review/SKILL.md",
+      "url": "https://raw.githubusercontent.com/github/awesome-copilot/5269f7ea2d6c3a9bfda5ed878b6726cf509121fd/skills/security-review/SKILL.md",
+      "sha256": "002392d88637b89e4cbc409a0531834970937f3b57c0b448a17e04b5ca6d356c",
+      "bytes": 9094
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "sha": "5269f7ea2d6c3a9bfda5ed878b6726cf509121fd",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/github/awesome-copilot/5269f7ea2d6c3a9bfda5ed878b6726cf509121fd/LICENSE",
+      "sha256": "e32449d23085399adc1222f7a17408b730550258e51627c153cb108ca9955823",
+      "bytes": 1059
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "sha": "5269f7ea2d6c3a9bfda5ed878b6726cf509121fd",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/github/awesome-copilot/5269f7ea2d6c3a9bfda5ed878b6726cf509121fd/README.md",
+      "sha256": "f81aa4eb5861eb5a8e2cb16ee4ddf53a5df4c0ac86045447397ace768c47fe96",
+      "bytes": 118541
+    },
+    {
+      "repo": "obra/superpowers",
+      "sha": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "path": "skills/using-superpowers/SKILL.md",
+      "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/using-superpowers/SKILL.md",
+      "sha256": "82c5c8866ad7f5dd4440ce66bd7806ba48a2f13771beae5cf112e53f08fe36ba",
+      "bytes": 3192
+    },
+    {
+      "repo": "obra/superpowers",
+      "sha": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "path": "skills/systematic-debugging/SKILL.md",
+      "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/systematic-debugging/SKILL.md",
+      "sha256": "51c6435d98c83c42c96ba7c35725a0b2c376cd487fb1a4e6bd0ddbe7e33ef202",
+      "bytes": 9530
+    },
+    {
+      "repo": "obra/superpowers",
+      "sha": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "path": "skills/verification-before-completion/SKILL.md",
+      "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/verification-before-completion/SKILL.md",
+      "sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+      "bytes": 3646
+    },
+    {
+      "repo": "obra/superpowers",
+      "sha": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "path": "skills/executing-plans/SKILL.md",
+      "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/executing-plans/SKILL.md",
+      "sha256": "e4649e59880ef2643d1da128e3d607e87e3f969410d72095a5bf65811b6036dc",
+      "bytes": 18103
+    },
+    {
+      "repo": "obra/superpowers",
+      "sha": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/LICENSE",
+      "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+      "bytes": 1070
+    },
+    {
+      "repo": "obra/superpowers",
+      "sha": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/obra/superpowers/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/README.md",
+      "sha256": "79f29f50c735862d2e304ea547b4c9aa67d9db6909ff6fb7b5ea922d7bcbc3e7",
+      "bytes": 14847
+    },
+    {
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sha": "3a13158ff1f32156cbe144108de48eda2ecaed9a",
+      "path": ".claude/skills/design/SKILL.md",
+      "url": "https://raw.githubusercontent.com/nextlevelbuilder/ui-ux-pro-max-skill/3a13158ff1f32156cbe144108de48eda2ecaed9a/.claude/skills/design/SKILL.md",
+      "sha256": "e93fe3683b7fa18a9bfcd00c0dc6e12c6859be07b7bfe20145f96ea49b72da13",
+      "bytes": 14196
+    },
+    {
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sha": "3a13158ff1f32156cbe144108de48eda2ecaed9a",
+      "path": ".claude/skills/design-system/SKILL.md",
+      "url": "https://raw.githubusercontent.com/nextlevelbuilder/ui-ux-pro-max-skill/3a13158ff1f32156cbe144108de48eda2ecaed9a/.claude/skills/design-system/SKILL.md",
+      "sha256": "8aa5ff93320559a6e5289d37b6b06b3307737dbfb4a6f3fc44135c705613c511",
+      "bytes": 7458
+    },
+    {
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sha": "3a13158ff1f32156cbe144108de48eda2ecaed9a",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/nextlevelbuilder/ui-ux-pro-max-skill/3a13158ff1f32156cbe144108de48eda2ecaed9a/LICENSE",
+      "sha256": "738f69dfa83db5c347c678fb9d90e560877059f0de93a327c39001bff92dc014",
+      "bytes": 1075
+    },
+    {
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sha": "3a13158ff1f32156cbe144108de48eda2ecaed9a",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/nextlevelbuilder/ui-ux-pro-max-skill/3a13158ff1f32156cbe144108de48eda2ecaed9a/README.md",
+      "sha256": "3ad51bd37d7d7d5589e4c9c82a2f49a3cecb63b2c56ea1de6d358271de99dec8",
+      "bytes": 40012
+    },
+    {
+      "repo": "openai/skills",
+      "sha": "49f948faa9258a0c61caceaf225e179651397431",
+      "path": "skills/.curated/playwright/SKILL.md",
+      "url": "https://raw.githubusercontent.com/openai/skills/49f948faa9258a0c61caceaf225e179651397431/skills/.curated/playwright/SKILL.md",
+      "sha256": "0ffaabcc8e0990627c4725f18bf1c7955534a796c1c199e872909de2013ce6a8",
+      "bytes": 3771
+    },
+    {
+      "repo": "openai/skills",
+      "sha": "49f948faa9258a0c61caceaf225e179651397431",
+      "path": "skills/.curated/security-best-practices/SKILL.md",
+      "url": "https://raw.githubusercontent.com/openai/skills/49f948faa9258a0c61caceaf225e179651397431/skills/.curated/security-best-practices/SKILL.md",
+      "sha256": "7b3dae1ffc5434d890f3c65c8f552af52d0307fab3b35dec13013c9ca3844c4f",
+      "bytes": 8612
+    },
+    {
+      "repo": "openai/skills",
+      "sha": "49f948faa9258a0c61caceaf225e179651397431",
+      "path": "skills/.curated/security-threat-model/SKILL.md",
+      "url": "https://raw.githubusercontent.com/openai/skills/49f948faa9258a0c61caceaf225e179651397431/skills/.curated/security-threat-model/SKILL.md",
+      "sha256": "1283c0dd62a8104d9edda4583569b5d8510b4ddaa45120687c999250fd96bad2",
+      "bytes": 5561
+    },
+    {
+      "repo": "openai/skills",
+      "sha": "49f948faa9258a0c61caceaf225e179651397431",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/openai/skills/49f948faa9258a0c61caceaf225e179651397431/README.md",
+      "sha256": "0f6a07580f3c627253e15a58dd0439e135049ec38eb16cf3587f7e50abc6f590",
+      "bytes": 1840
+    },
+    {
+      "repo": "openai/skills",
+      "sha": "49f948faa9258a0c61caceaf225e179651397431",
+      "path": "skills/.curated/playwright/LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/openai/skills/49f948faa9258a0c61caceaf225e179651397431/skills/.curated/playwright/LICENSE.txt",
+      "sha256": "9a7110fc2d2f964038e5dc49128f908f29f47a574c961cba16085914e879cbda",
+      "bytes": 11552
+    },
+    {
+      "repo": "openai/skills",
+      "sha": "49f948faa9258a0c61caceaf225e179651397431",
+      "path": "skills/.curated/security-best-practices/LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/openai/skills/49f948faa9258a0c61caceaf225e179651397431/skills/.curated/security-best-practices/LICENSE.txt",
+      "sha256": "4dd13869245e356246a5b770723247bbb80a8f07a181d1d3d873a1734297cdb9",
+      "bytes": 10776
+    },
+    {
+      "repo": "openai/skills",
+      "sha": "49f948faa9258a0c61caceaf225e179651397431",
+      "path": "skills/.curated/security-threat-model/LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/openai/skills/49f948faa9258a0c61caceaf225e179651397431/skills/.curated/security-threat-model/LICENSE.txt",
+      "sha256": "4dd13869245e356246a5b770723247bbb80a8f07a181d1d3d873a1734297cdb9",
+      "bytes": 10776
+    },
+    {
+      "repo": "antfu/skills",
+      "sha": "7de210b51c8d48cc405a4eac3e17cbb1396c653b",
+      "path": "skills/vite/SKILL.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/7de210b51c8d48cc405a4eac3e17cbb1396c653b/skills/vite/SKILL.md",
+      "sha256": "20bddfc0d23d4b759abb1603a65c6ee488be631fdc2a2e6144c7b31e82480669",
+      "bytes": 2524
+    },
+    {
+      "repo": "antfu/skills",
+      "sha": "7de210b51c8d48cc405a4eac3e17cbb1396c653b",
+      "path": "skills/vitest/SKILL.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/7de210b51c8d48cc405a4eac3e17cbb1396c653b/skills/vitest/SKILL.md",
+      "sha256": "01c2da913702dcc3f944b93fe92cdc67d594c9126a6c919653d3fb353a5b8e48",
+      "bytes": 3716
+    },
+    {
+      "repo": "antfu/skills",
+      "sha": "7de210b51c8d48cc405a4eac3e17cbb1396c653b",
+      "path": "LICENSE.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/7de210b51c8d48cc405a4eac3e17cbb1396c653b/LICENSE.md",
+      "sha256": "2a596f697b619094b6f4067936e0f385027a393bce32211383db0478774c1cb2",
+      "bytes": 1102
+    },
+    {
+      "repo": "antfu/skills",
+      "sha": "7de210b51c8d48cc405a4eac3e17cbb1396c653b",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/7de210b51c8d48cc405a4eac3e17cbb1396c653b/README.md",
+      "sha256": "6be7e0cab52177ded04fa065f97ea64cecf3bfcdb1be220d406106bb469cc3b5",
+      "bytes": 6302
+    },
+    {
+      "repo": "wshobson/agents",
+      "sha": "7e2fb559cf4b824b27f1fec49fe88f7511066d26",
+      "path": "plugins/ui-design/skills/accessibility-compliance/SKILL.md",
+      "url": "https://raw.githubusercontent.com/wshobson/agents/7e2fb559cf4b824b27f1fec49fe88f7511066d26/plugins/ui-design/skills/accessibility-compliance/SKILL.md",
+      "sha256": "3ad0fbcb0a69b69e70652641a8eeb59f168cceb4bc9d9b9c8b47154072b9e1a2",
+      "bytes": 2402
+    },
+    {
+      "repo": "wshobson/agents",
+      "sha": "7e2fb559cf4b824b27f1fec49fe88f7511066d26",
+      "path": "plugins/ui-design/skills/design-system-patterns/SKILL.md",
+      "url": "https://raw.githubusercontent.com/wshobson/agents/7e2fb559cf4b824b27f1fec49fe88f7511066d26/plugins/ui-design/skills/design-system-patterns/SKILL.md",
+      "sha256": "618355f0e6c6ba8ca5d231035c9da18302fe6894aedce565743e9181b6c928ee",
+      "bytes": 4003
+    },
+    {
+      "repo": "wshobson/agents",
+      "sha": "7e2fb559cf4b824b27f1fec49fe88f7511066d26",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/wshobson/agents/7e2fb559cf4b824b27f1fec49fe88f7511066d26/LICENSE",
+      "sha256": "f89abb55d9f073f38f1703e4518f0613c788c6174be7f13b8dfe48a1c076c746",
+      "bytes": 1068
+    },
+    {
+      "repo": "wshobson/agents",
+      "sha": "7e2fb559cf4b824b27f1fec49fe88f7511066d26",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/wshobson/agents/7e2fb559cf4b824b27f1fec49fe88f7511066d26/README.md",
+      "sha256": "8469d4f011ce26fb97a34cf079610c8cabb8ef82bcfb20417818f7c1e8738c81",
+      "bytes": 9662
+    },
+    {
+      "repo": "trailofbits/skills",
+      "sha": "2be6433b39e009cd2b6fd3be1895f6b1faa5af9a",
+      "path": "plugins/property-based-testing/skills/property-based-testing/SKILL.md",
+      "url": "https://raw.githubusercontent.com/trailofbits/skills/2be6433b39e009cd2b6fd3be1895f6b1faa5af9a/plugins/property-based-testing/skills/property-based-testing/SKILL.md",
+      "sha256": "9448cacb65c6237a7c22dc59602667177ecae405524079ae9ff92240590b995a",
+      "bytes": 4306
+    },
+    {
+      "repo": "trailofbits/skills",
+      "sha": "2be6433b39e009cd2b6fd3be1895f6b1faa5af9a",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/trailofbits/skills/2be6433b39e009cd2b6fd3be1895f6b1faa5af9a/LICENSE",
+      "sha256": "7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297",
+      "bytes": 20131
+    },
+    {
+      "repo": "trailofbits/skills",
+      "sha": "2be6433b39e009cd2b6fd3be1895f6b1faa5af9a",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/trailofbits/skills/2be6433b39e009cd2b6fd3be1895f6b1faa5af9a/README.md",
+      "sha256": "40f12a2b5ad363b74bba2b885609ce3cbc2de49fc47dec95c4bbd98d418c8bca",
+      "bytes": 10531
+    },
+    {
+      "repo": "vercel-labs/agent-skills",
+      "sha": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "path": "skills/react-best-practices/rules/async-parallel.md",
+      "url": "https://raw.githubusercontent.com/vercel-labs/agent-skills/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/react-best-practices/rules/async-parallel.md",
+      "sha256": "6d2f841896279e976dfcdc1ac89e70771ac188baadfd43c096b5706cb838b961",
+      "bytes": 654
+    },
+    {
+      "repo": "vercel-labs/agent-skills",
+      "sha": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "path": "skills/react-best-practices/rules/client-localstorage-schema.md",
+      "url": "https://raw.githubusercontent.com/vercel-labs/agent-skills/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/react-best-practices/rules/client-localstorage-schema.md",
+      "sha256": "0fb7cdf9dc93fdf22f87e3669f953fb9d4ac9b0be42eec4a29fe9a2560610b88",
+      "bytes": 1950
+    },
+    {
+      "repo": "vercel-labs/agent-skills",
+      "sha": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "path": "skills/react-best-practices/rules/server-cache-lru.md",
+      "url": "https://raw.githubusercontent.com/vercel-labs/agent-skills/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/react-best-practices/rules/server-cache-lru.md",
+      "sha256": "1924b64561841923b88a657085097a0aeba3e0ba2d5470b9f5c15cc10d6ae70f",
+      "bytes": 1353
+    },
+    {
+      "repo": "vercel-labs/agent-skills",
+      "sha": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "path": "skills/composition-patterns/rules/architecture-compound-components.md",
+      "url": "https://raw.githubusercontent.com/vercel-labs/agent-skills/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/skills/composition-patterns/rules/architecture-compound-components.md",
+      "sha256": "f246af13dc269b521cf20eb8ad99a0cb645beac381c8c9b117262c34612c8457",
+      "bytes": 2600
+    },
+    {
+      "repo": "anthropics/skills",
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5",
+      "path": "skills/webapp-testing/scripts/with_server.py",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/ca45fc496a3436251f191354091d557da31c15b5/skills/webapp-testing/scripts/with_server.py",
+      "sha256": "b0dcf4918935b795f4eda9821579b9902119235ff4447f687a30286e7d0925fd",
+      "bytes": 3693
+    },
+    {
+      "repo": "anthropics/skills",
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5",
+      "path": "skills/web-artifacts-builder/scripts/init-artifact.sh",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/ca45fc496a3436251f191354091d557da31c15b5/skills/web-artifacts-builder/scripts/init-artifact.sh",
+      "sha256": "355e5dd4382aaaee91f01f1627eaeab30b2676ffa8d9b3ec328a1ae450ebccaa",
+      "bytes": 9924
+    },
+    {
+      "repo": "anthropics/skills",
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5",
+      "path": "skills/web-artifacts-builder/scripts/bundle-artifact.sh",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/ca45fc496a3436251f191354091d557da31c15b5/skills/web-artifacts-builder/scripts/bundle-artifact.sh",
+      "sha256": "abf0e480bf6585b56fab8526a407dfb7dc740812bddd70c636e1e8f3df5f9618",
+      "bytes": 1517
+    },
+    {
+      "repo": "microsoft/playwright-cli",
+      "sha": "0a808078d96496cf2a8fa725143c870354f63cda",
+      "path": "package.json",
+      "url": "https://raw.githubusercontent.com/microsoft/playwright-cli/0a808078d96496cf2a8fa725143c870354f63cda/package.json",
+      "sha256": "9a1c812beb461e49868a66e828064aafc8478d4c7c5223de662c846306999f8a",
+      "bytes": 693
+    },
+    {
+      "repo": "microsoft/playwright-cli",
+      "sha": "0a808078d96496cf2a8fa725143c870354f63cda",
+      "path": "skills/playwright-cli/references/playwright-tests.md",
+      "url": "https://raw.githubusercontent.com/microsoft/playwright-cli/0a808078d96496cf2a8fa725143c870354f63cda/skills/playwright-cli/references/playwright-tests.md",
+      "sha256": "c5b0719fef2cfdff50bd744051b2f9afc119775db4b48e9b2882c1cf3886797c",
+      "bytes": 1690
+    },
+    {
+      "repo": "microsoft/playwright-cli",
+      "sha": "0a808078d96496cf2a8fa725143c870354f63cda",
+      "path": "skills/playwright-cli/references/test-generation.md",
+      "url": "https://raw.githubusercontent.com/microsoft/playwright-cli/0a808078d96496cf2a8fa725143c870354f63cda/skills/playwright-cli/references/test-generation.md",
+      "sha256": "b9c5dda349a469b9abf9f10f3787135e6521f433f5743de399a164e14e76f7ce",
+      "bytes": 16072
+    },
+    {
+      "repo": "openai/skills",
+      "sha": "49f948faa9258a0c61caceaf225e179651397431",
+      "path": "skills/.curated/playwright/scripts/playwright_cli.sh",
+      "url": "https://raw.githubusercontent.com/openai/skills/49f948faa9258a0c61caceaf225e179651397431/skills/.curated/playwright/scripts/playwright_cli.sh",
+      "sha256": "aa3fdff5d0e4556177f4dfd5f04117e772aa54f94b6a2e34b6c0edf629c6b9b5",
+      "bytes": 526
+    },
+    {
+      "repo": "openai/skills",
+      "sha": "49f948faa9258a0c61caceaf225e179651397431",
+      "path": "skills/.curated/security-best-practices/references/javascript-typescript-react-web-frontend-security.md",
+      "url": "https://raw.githubusercontent.com/openai/skills/49f948faa9258a0c61caceaf225e179651397431/skills/.curated/security-best-practices/references/javascript-typescript-react-web-frontend-security.md",
+      "sha256": "d3030c0f24bddb56b9bbb91bbec1ee49eb7778bce4d3e0297b2641b2fc6b0d9c",
+      "bytes": 41686
+    },
+    {
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sha": "3a13158ff1f32156cbe144108de48eda2ecaed9a",
+      "path": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "url": "https://raw.githubusercontent.com/nextlevelbuilder/ui-ux-pro-max-skill/3a13158ff1f32156cbe144108de48eda2ecaed9a/.claude/skills/ui-ux-pro-max/SKILL.md",
+      "sha256": "ea087c341bfb5b23195c7302027268ede86da802554c18a5c4896a6017b439f9",
+      "bytes": 15969
+    },
+    {
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sha": "3a13158ff1f32156cbe144108de48eda2ecaed9a",
+      "path": ".claude/skills/design-system/scripts/generate-tokens.cjs",
+      "url": "https://raw.githubusercontent.com/nextlevelbuilder/ui-ux-pro-max-skill/3a13158ff1f32156cbe144108de48eda2ecaed9a/.claude/skills/design-system/scripts/generate-tokens.cjs",
+      "sha256": "aac8a0f4ec4dccf0d371f9ee5a9111e44977bb0cad7e40a3754aba5571aa1231",
+      "bytes": 4968
+    },
+    {
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sha": "3a13158ff1f32156cbe144108de48eda2ecaed9a",
+      "path": ".claude/skills/design/scripts/logo/generate.py",
+      "url": "https://raw.githubusercontent.com/nextlevelbuilder/ui-ux-pro-max-skill/3a13158ff1f32156cbe144108de48eda2ecaed9a/.claude/skills/design/scripts/logo/generate.py",
+      "sha256": "5dbd4e4641b55c13096f6c29d577960dc6ca0386096d90c90f76598976367d01",
+      "bytes": 29116
+    },
+    {
+      "repo": "wshobson/agents",
+      "sha": "7e2fb559cf4b824b27f1fec49fe88f7511066d26",
+      "path": "plugins/ui-design/skills/accessibility-compliance/references/details.md",
+      "url": "https://raw.githubusercontent.com/wshobson/agents/7e2fb559cf4b824b27f1fec49fe88f7511066d26/plugins/ui-design/skills/accessibility-compliance/references/details.md",
+      "sha256": "1789504a4268186e62126059da48d8deb95d36631fac6263b368e715df2ca2fb",
+      "bytes": 9668
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "sha": "5269f7ea2d6c3a9bfda5ed878b6726cf509121fd",
+      "path": "skills/webapp-testing/assets/test-helper.js",
+      "url": "https://raw.githubusercontent.com/github/awesome-copilot/5269f7ea2d6c3a9bfda5ed878b6726cf509121fd/skills/webapp-testing/assets/test-helper.js",
+      "sha256": "4a9b5c0f27cfe63ad5b4c781d4c96d7149870d8ac3d5ef32fd51b0f90f78766f",
+      "bytes": 1521
+    },
+    {
+      "repo": "wshobson/agents",
+      "sha": "7e2fb559cf4b824b27f1fec49fe88f7511066d26",
+      "path": "plugins/backend-development/skills/api-design-principles/SKILL.md",
+      "url": "https://raw.githubusercontent.com/wshobson/agents/7e2fb559cf4b824b27f1fec49fe88f7511066d26/plugins/backend-development/skills/api-design-principles/SKILL.md",
+      "sha256": "1f6166c23c0a0f32d703c19d84b3c30c2873daefb9e8732339a009934fa17013",
+      "bytes": 3603
+    },
+    {
+      "repo": "wshobson/agents",
+      "sha": "7e2fb559cf4b824b27f1fec49fe88f7511066d26",
+      "path": "plugins/systems-programming/skills/go-concurrency-patterns/SKILL.md",
+      "url": "https://raw.githubusercontent.com/wshobson/agents/7e2fb559cf4b824b27f1fec49fe88f7511066d26/plugins/systems-programming/skills/go-concurrency-patterns/SKILL.md",
+      "sha256": "a66d04f2c616aecc3dd53c23d08cb06903f30a2c190c99e6ba82b3e5315b36b2",
+      "bytes": 2771
+    },
+    {
+      "repo": "wshobson/agents",
+      "sha": "7e2fb559cf4b824b27f1fec49fe88f7511066d26",
+      "path": "plugins/python-development/skills/python-performance-optimization/SKILL.md",
+      "url": "https://raw.githubusercontent.com/wshobson/agents/7e2fb559cf4b824b27f1fec49fe88f7511066d26/plugins/python-development/skills/python-performance-optimization/SKILL.md",
+      "sha256": "807aa725cc2b46b4d68a11a52e5b345be0449e80b7f4b60c32bfd2c35345afb5",
+      "bytes": 3253
+    },
+    {
+      "repo": "vercel-labs/web-interface-guidelines",
+      "sha": "434b7f91364665f2f733b310ec54809bf8f37937",
+      "path": "command.md",
+      "url": "https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/434b7f91364665f2f733b310ec54809bf8f37937/command.md",
+      "sha256": "d246b026f4f29b5823a9cc857f9edf3d2507002e055e32040cadeaf3b38e0234",
+      "bytes": 8055
+    },
+    {
+      "repo": "vercel-labs/web-interface-guidelines",
+      "sha": "434b7f91364665f2f733b310ec54809bf8f37937",
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/434b7f91364665f2f733b310ec54809bf8f37937/LICENSE",
+      "sha256": "6cd1609c9c12233507cdd2ce0d32e9a721e3c27494951be06b90090deeeb7af2",
+      "bytes": 1068
+    }
+  ],
+  "failedLookups": [
+    {
+      "repo": "vercel-labs/web-interface-guidelines",
+      "path": "LICENSE.md",
+      "result": "HTTP 404; corrected by retrieving LICENSE at the same commit, recorded among successful files"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "preview": {
+    "en": "Interactive design · Synthetic data · No backend connection",
+    "ko": "인터랙티브 시안 · 합성 데이터 · 백엔드 미연결",
+    "ar": "تصميم تفاعلي · بيانات تجريبية · غير متصل بالخادم"
+  },
+  "review": {
+    "en": "Language review pending",
+    "ko": "현지 용어 검토 대기",
+    "ar": "المراجعة اللغوية قيد الانتظار"
+  },
+  "account": {
+    "en": "Account",
+    "ko": "계정",
+    "ar": "الحساب"
+  },
+  "jobs": {
+    "en": "Background tasks",
+    "ko": "백그라운드 작업",
+    "ar": "مهام الخلفية"
+  },
+  "snapshot": {
+    "en": "Snapshot",
+    "ko": "조회 기준",
+    "ar": "لقطة البيانات"
+  },
+  "notConnected": {
+    "en": "Live integration not verified",
+    "ko": "실제 연동 미검증",
+    "ar": "لم يتم التحقق من الربط الفعلي"
+  },
+  "related": {
+    "en": "Related tasks",
+    "ko": "관련 업무",
+    "ar": "المهام المرتبطة"
+  },
+  "draft": {
+    "en": "Draft",
+    "ko": "초안",
+    "ar": "مسودة"
+  },
+  "screens": {
+    "en": "Find a screen",
+    "ko": "화면 찾기",
+    "ar": "البحث عن شاشة"
+  },
+  "allScreens": {
+    "en": "All screens",
+    "ko": "전체 화면",
+    "ar": "جميع الشاشات"
+  },
+  "workspace": {
+    "en": "Organization",
+    "ko": "조직",
+    "ar": "المؤسسة"
+  }
+}

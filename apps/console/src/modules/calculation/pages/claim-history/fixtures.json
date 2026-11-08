@@ -1,0 +1,293 @@
+{
+  "schema": 1,
+  "numeric_format": "decimal-strings-read-v1",
+  "read_only": true,
+  "commands": "unconnected",
+  "source_mode": "synthetic",
+  "auth_scope": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "snapshot": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "permission_revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "view": "ledger",
+  "selection": {
+    "state": "",
+    "q": ""
+  },
+  "cursor": null,
+  "next_cursor": null,
+  "total": 5,
+  "observed_at": "2026-11-06T01:02:03Z",
+  "records": [
+    {
+      "id": "QA-CLAIM-001",
+      "revision": "QA-rev-1",
+      "application_id": "QA-APP-001",
+      "obligation_id": "QA-OBL-001",
+      "purpose": "QA customer billing",
+      "target": {
+        "label": "QA synthetic protected application",
+        "entity": "QA entity",
+        "customer": "QA customer",
+        "contract": "QA contract",
+        "component": "QA component",
+        "period": "2026-10"
+      },
+      "protection": "outcome_unknown",
+      "partial": null,
+      "updated_at": "2026-11-06T01:02:03Z",
+      "coverage": {
+        "identity": "QA-COVER-001",
+        "universe": "QA-UNIVERSE-001",
+        "unit": "QA units",
+        "unit_version": "QA-v1",
+        "description": "QA synthetic subset observation; no geometry or eligibility evidence",
+        "reserved": "60.000",
+        "applied": null,
+        "reversed": null,
+        "available": null
+      },
+      "amounts": [
+        {
+          "currency": "USD",
+          "basis": "net",
+          "applied": null,
+          "remaining": null,
+          "reversed": null
+        }
+      ],
+      "lineage": {
+        "source": "QA-SOURCE-1",
+        "allocation": null,
+        "sales": null,
+        "charge_line": null,
+        "submission": "QA-SUBMIT-1"
+      },
+      "correction": {
+        "original_claim_id": null,
+        "linked_claim_ids": [],
+        "disposition": "none"
+      },
+      "external": [
+        {
+          "kind": "erp_order",
+          "id": "QA-ERP-1",
+          "revision": null,
+          "observed_at": null,
+          "outcome": "unknown"
+        },
+        {
+          "kind": "prepayment",
+          "id": "QA-PREPAY-1",
+          "revision": "QA-v1",
+          "observed_at": "2026-11-06T10:02:03+09:00",
+          "outcome": "pending"
+        }
+      ],
+      "blockers": [
+        {
+          "code": "external_unknown",
+          "text": "QA synthetic external outcome is unknown; coverage remains protected."
+        }
+      ]
+    },
+    {
+      "id": "QA-CLAIM-002",
+      "revision": "QA-rev-1",
+      "application_id": "QA-APP-002",
+      "obligation_id": "QA-OBL-002",
+      "purpose": "QA customer billing",
+      "target": {
+        "label": "QA synthetic partial application with genuine zero",
+        "entity": "QA entity",
+        "customer": "QA customer",
+        "contract": "QA contract",
+        "component": "QA component",
+        "period": "2026-10"
+      },
+      "protection": "applied",
+      "partial": true,
+      "updated_at": "2026-11-06T01:02:03Z",
+      "coverage": {
+        "identity": "QA-COVER-002",
+        "universe": "QA-UNIVERSE-001",
+        "unit": "QA units",
+        "unit_version": "QA-v1",
+        "description": "QA synthetic subset observation; no geometry or eligibility evidence",
+        "reserved": "0",
+        "applied": "40.0000",
+        "reversed": "0",
+        "available": "60.0000"
+      },
+      "amounts": [
+        {
+          "currency": "KRW",
+          "basis": "gross",
+          "applied": "0",
+          "remaining": "0.000",
+          "reversed": "0"
+        }
+      ],
+      "lineage": {
+        "source": "QA-SOURCE-1",
+        "allocation": null,
+        "sales": null,
+        "charge_line": null,
+        "submission": "QA-SUBMIT-1"
+      },
+      "correction": {
+        "original_claim_id": null,
+        "linked_claim_ids": [],
+        "disposition": "none"
+      },
+      "external": [],
+      "blockers": []
+    },
+    {
+      "id": "QA-CLAIM-003",
+      "revision": "QA-rev-1",
+      "application_id": "QA-APP-003",
+      "obligation_id": "QA-OBL-003",
+      "purpose": "QA customer billing",
+      "target": {
+        "label": "QA synthetic money-only correction",
+        "entity": "QA entity",
+        "customer": "QA customer",
+        "contract": "QA contract",
+        "component": "QA component",
+        "period": "2026-10"
+      },
+      "protection": "applied",
+      "partial": false,
+      "updated_at": "2026-11-06T01:02:03Z",
+      "coverage": {
+        "identity": "QA-COVER-003",
+        "universe": "QA-UNIVERSE-001",
+        "unit": "QA units",
+        "unit_version": "QA-v1",
+        "description": "QA synthetic subset observation; no geometry or eligibility evidence",
+        "reserved": "0",
+        "applied": "40.0000",
+        "reversed": "0",
+        "available": null
+      },
+      "amounts": [
+        {
+          "currency": "USD",
+          "basis": "net",
+          "applied": "-12.3400",
+          "remaining": null,
+          "reversed": "12.3400"
+        }
+      ],
+      "lineage": {
+        "source": "QA-SOURCE-1",
+        "allocation": null,
+        "sales": null,
+        "charge_line": null,
+        "submission": "QA-SUBMIT-1"
+      },
+      "correction": {
+        "original_claim_id": "QA-CLAIM-002",
+        "linked_claim_ids": [],
+        "disposition": "money_only"
+      },
+      "external": [],
+      "blockers": []
+    },
+    {
+      "id": "QA-CLAIM-004",
+      "revision": "QA-rev-1",
+      "application_id": "QA-APP-004",
+      "obligation_id": "QA-OBL-004",
+      "purpose": "QA customer billing",
+      "target": {
+        "label": "QA synthetic quantity reversal awaiting replacement review",
+        "entity": "QA entity",
+        "customer": "QA customer",
+        "contract": "QA contract",
+        "component": "QA component",
+        "period": "2026-10"
+      },
+      "protection": "replacement_pending",
+      "partial": true,
+      "updated_at": "2026-11-06T01:02:03Z",
+      "coverage": {
+        "identity": "QA-COVER-004",
+        "universe": "QA-UNIVERSE-001",
+        "unit": "QA units",
+        "unit_version": "QA-v1",
+        "description": "QA synthetic subset observation; no geometry or eligibility evidence",
+        "reserved": "0",
+        "applied": "20",
+        "reversed": "20",
+        "available": null
+      },
+      "amounts": [
+        {
+          "currency": "USD",
+          "basis": "net",
+          "applied": null,
+          "remaining": null,
+          "reversed": null
+        }
+      ],
+      "lineage": {
+        "source": "QA-SOURCE-1",
+        "allocation": null,
+        "sales": null,
+        "charge_line": null,
+        "submission": "QA-SUBMIT-1"
+      },
+      "correction": {
+        "original_claim_id": "QA-CLAIM-002",
+        "linked_claim_ids": ["QA-CLAIM-003"],
+        "disposition": "quantity_reversal"
+      },
+      "external": [],
+      "blockers": []
+    },
+    {
+      "id": "QA-CLAIM-005",
+      "revision": "QA-rev-1",
+      "application_id": null,
+      "obligation_id": null,
+      "purpose": null,
+      "target": {
+        "label": "QA synthetic missing observations",
+        "entity": "QA entity",
+        "customer": "QA customer",
+        "contract": "QA contract",
+        "component": "QA component",
+        "period": "2026-10"
+      },
+      "protection": "unknown",
+      "partial": null,
+      "updated_at": "2026-11-06T01:02:03Z",
+      "coverage": {
+        "identity": null,
+        "universe": null,
+        "unit": null,
+        "unit_version": null,
+        "description": null,
+        "reserved": null,
+        "applied": null,
+        "reversed": null,
+        "available": null
+      },
+      "amounts": [],
+      "lineage": {
+        "source": null,
+        "allocation": null,
+        "sales": null,
+        "charge_line": null,
+        "submission": null
+      },
+      "correction": {
+        "original_claim_id": null,
+        "linked_claim_ids": [],
+        "disposition": "none"
+      },
+      "external": [],
+      "blockers": []
+    }
+  ]
+}

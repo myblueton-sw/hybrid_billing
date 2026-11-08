@@ -18,6 +18,8 @@ This applies to planning, reviews, documents, configuration, code, tests and inf
 
 For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md` and `code-structure.md`. For documentation, read `knowledge-format.md`; Markdown knowledge documents under `docs/` follow OKF v0.2. Read `tenant-security.md` for data, permission or billing work and `usability.md` for screens. For screens, visual assets and design builds, also read `.agents/rules/design-system.md`, `.agents/rules/screen-review.md`, `docs/design-system.md` and `docs/design-build-guide.md`.
 
+For user-facing terminology, UI copy and localization, also follow [the terminology guide](docs/ui/design-system/terminology.md). Research actual regional IT usage and preserve domain meaning; unreviewed machine translation is not final copy. English, Arabic and Korean are first-class design languages; language selection must not silently change jurisdiction, currency or business semantics.
+
 For new or revised service screens and user-facing copy, also follow `.agents/rules/product-terminology.md` and the product glossary. The owner requires continuous technical-writing terminology review.
 
 ## Language and response policy

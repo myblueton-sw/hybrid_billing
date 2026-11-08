@@ -164,6 +164,8 @@ export default function App() {
       liveMarketplace) &&
     audience === "admin";
   const liveOverview = screen?.id === "U01" && audience === "admin";
+  const receiptInspection =
+    screen?.id === "S03" && !liveImports && audience === "admin";
   const remaining = screen
     ? remainingIds.has(screen.id) && !liveImports
     : false;
@@ -543,7 +545,7 @@ export default function App() {
 
   return (
     <div
-      className={`planning-app service-shell ${remaining?"remaining-service-shell":""} ${screen?.id === "U01" || liveCollectedSource || liveReadWorkbench ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
+      className={`planning-app service-shell ${remaining ? "remaining-service-shell" : ""} ${screen?.id === "U01" || liveCollectedSource || liveReadWorkbench ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
     >
       <a
         className="skip"
@@ -642,47 +644,53 @@ export default function App() {
         </a>
         <span className="planning-installation">
           <span className="service-environment">
-            {remaining
+            {receiptInspection
               ? local(l, [
-                  "업무 서비스 미연결",
-                  "Work service not connected",
-                  "خدمة العمل غير متصلة",
+                  "수집 접수 조회",
+                  "Collection receipt inspection",
+                  "فحص إيصالات التجميع",
                 ])
-              : liveCredits
-                ? credits.environment(l)
-                : liveClaims
-                  ? claimEnvironment(l)
-                  : liveInbox
-                    ? inboxEnvironment(l)
-                    : local(
-                        l,
-                        liveOverview ||
-                          liveCollectedSource ||
-                          livePricing ||
-                          liveBilling
-                          ? [
-                              "수집 FOCUS 샘플 · 공개·합성 출처",
-                              "Collected FOCUS samples · public and synthetic sources",
-                              "عينات FOCUS مجمعة · مصادر عامة وتجريبية",
-                            ]
-                          : liveService
+              : remaining
+                ? local(l, [
+                    "업무 서비스 미연결",
+                    "Work service not connected",
+                    "خدمة العمل غير متصلة",
+                  ])
+                : liveCredits
+                  ? credits.environment(l)
+                  : liveClaims
+                    ? claimEnvironment(l)
+                    : liveInbox
+                      ? inboxEnvironment(l)
+                      : local(
+                          l,
+                          liveOverview ||
+                            liveCollectedSource ||
+                            livePricing ||
+                            liveBilling
                             ? [
-                                "로컬 검증 환경 · 합성 데이터",
-                                "Local validation · synthetic data",
-                                "تحقق محلي · بيانات تجريبية",
+                                "수집 FOCUS 샘플 · 공개·합성 출처",
+                                "Collected FOCUS samples · public and synthetic sources",
+                                "عينات FOCUS مجمعة · مصادر عامة وتجريبية",
                               ]
-                            : mode === "synthetic"
+                            : liveService
                               ? [
-                                  "데모 환경 · 합성 데이터",
-                                  "Demo · synthetic data",
-                                  "عرض تجريبي · بيانات اصطناعية",
+                                  "로컬 검증 환경 · 합성 데이터",
+                                  "Local validation · synthetic data",
+                                  "تحقق محلي · بيانات تجريبية",
                                 ]
-                              : [
-                                  "데이터 미연결",
-                                  "Data not connected",
-                                  "البيانات غير متصلة",
-                                ],
-                      )}
+                              : mode === "synthetic"
+                                ? [
+                                    "데모 환경 · 합성 데이터",
+                                    "Demo · synthetic data",
+                                    "عرض تجريبي · بيانات اصطناعية",
+                                  ]
+                                : [
+                                    "데이터 미연결",
+                                    "Data not connected",
+                                    "البيانات غير متصلة",
+                                  ],
+                        )}
           </span>
         </span>
         {!mobile && headerActions}
@@ -920,18 +928,29 @@ export default function App() {
                   ...(liveInbox ? inboxContext : {}),
                   ...(liveClaims ? claimContext : {}),
                   ...(liveCredits ? credits.reviewContext : {}),
-                  ...(remaining
+                  ...(receiptInspection
                     ? {
-                        profile: "commercial-frontend-unconnected",
-                        mode: "unconnected",
+                        profile: "retained-focus-receipts-v1",
+                        mode: "protected-local-read",
                         period: null,
                         organization: null,
                         currency: null,
                         scope: null,
-                        producer: "unbound",
+                        producer: "receipt-reader",
                         commands: "unconnected",
                       }
-                    : {}),
+                    : remaining
+                      ? {
+                          profile: "commercial-frontend-unconnected",
+                          mode: "unconnected",
+                          period: null,
+                          organization: null,
+                          currency: null,
+                          scope: null,
+                          producer: "unbound",
+                          commands: "unconnected",
+                        }
+                      : {}),
                 })}
                 items={
                   view.key === screenKey && view.items.length

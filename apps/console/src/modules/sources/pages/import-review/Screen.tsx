@@ -1,435 +1,552 @@
-import { useState } from "react";
-import { text, type Props } from "../../../../shared/domain-screen-ui/work/contracts";
+import { useEffect, useRef, useState } from "react";
+import type { Props } from "../../../../shared/domain-screen-ui/work/contracts";
 import {
-  Boundary,
-  EmptyList,
-  Facts,
-  Label,
-  Panel,
-  ReviewForm,
-  refInput,
-  useReview,
-} from "../../../../shared/domain-screen-ui/work/ui";
+  query,
+  queryString,
+  identifier,
+  recordKeys,
+  type Query,
+  type Data,
+} from "./contract";
+import { load, ReadError, type ReadResult } from "./api";
+import { t, words, timestamp } from "./copy";
+import ReceiptList from "./ReceiptList";
+import ReceiptDetail from "./ReceiptDetail";
+import "./screen.css";
+type State = {
+  key: string;
+  result?: ReadResult;
+  error?: string;
+  requestId?: string;
+};
+function href(
+  params: URLSearchParams,
+  q: Query,
+  changes: {
+    q?: string;
+    after?: number;
+    snapshot?: string;
+    permission_revision?: string;
+  },
+) {
+  const p = new URLSearchParams(params);
+  for (const k of [...p.keys()]) if (k.startsWith("receipt-")) p.delete(k);
+  p.set("view", q.view);
+  const text = changes.q ?? q.q;
+  if (text) p.set("receipt-q", text);
+  const after = changes.after ?? 0;
+  if (after) p.set("receipt-after", String(after));
+  if (changes.snapshot) p.set("receipt-snapshot", changes.snapshot);
+  if (changes.permission_revision)
+    p.set("receipt-permission", changes.permission_revision);
+  return "#/imports?" + p.toString();
+}
 export default function Imports(p: Props) {
   const l = p.locale;
-  const [connection, setConnection] = useState("");
-  const [period, setPeriod] = useState("");
-  const [receipt, setReceipt] = useState("");
-  const [correction, setCorrection] = useState("");
-  const [reason, setReason] = useState("");
-  useReview(p, !!(connection || period || receipt || correction || reason));
-  const clear = () => {
-    setConnection("");
-    setPeriod("");
-    setReceipt("");
-    setCorrection("");
-    setReason("");
+  let q: Query | undefined;
+  try {
+    q = query(p.params, p.view);
+  } catch {}
+  const qText = q ? queryString(q) : "invalid";
+  const [attempt, setAttempt] = useState(0),
+    [state, setState] = useState<State>({ key: "" }),
+    [search, setSearch] = useState(q?.q ?? ""),
+    [invalid, setInvalid] = useState(false),
+    [selection, setSelection] = useState<{
+      key: string;
+      snapshot: string;
+      id: string;
+    } | null>(null);
+  const key = JSON.stringify([l, qText, attempt]);
+  const current = state.key === key ? state : undefined;
+  const data: Data | undefined =
+    current?.result?.kind === "loaded" ? current.result.data : undefined;
+  const phase = !q
+    ? "error"
+    : current?.error
+      ? "error"
+      : data
+        ? "loaded"
+        : current?.result?.kind === "unconnected"
+          ? "unconnected"
+          : "loading";
+  const selected =
+    data && selection?.key === key && selection.snapshot === data.snapshot
+      ? data.records.find((r) => r.id === selection.id)
+      : undefined;
+  const seq = useRef(0),
+    status = useRef<HTMLParagraphElement>(null),
+    input = useRef<HTMLInputElement>(null),
+    trigger = useRef<HTMLButtonElement | null>(null),
+    focusStatus = useRef(false);
+  useEffect(() => {
+    p.onDirty(false);
+    return () => p.onDirty(false);
+  }, [p.onDirty]);
+  useEffect(() => {
+    const c = new AbortController(),
+      n = ++seq.current;
+    setState({ key });
+    setSelection(null);
+    setSearch(q?.q ?? "");
+    setInvalid(false);
+    if (q)
+      load(q, c.signal)
+        .then((result) => {
+          if (!c.signal.aborted && n === seq.current) setState({ key, result });
+        })
+        .catch((e) => {
+          if (!c.signal.aborted && n === seq.current)
+            setState({
+              key,
+              error: e instanceof ReadError ? e.code : "service_unavailable",
+              requestId: e instanceof ReadError ? e.requestId : undefined,
+            });
+        });
+    return () => c.abort();
+  }, [key]);
+  useEffect(() => {
+    p.onState(
+      JSON.stringify({
+        phase,
+        view: p.view,
+        profile: "retained-focus-receipts-v1",
+        commands: "unconnected",
+        financial_authority: false,
+        requested: q ?? null,
+        request_authority: "unverified",
+        source: data
+          ? {
+              auth_scope: data.auth_scope,
+              permission_revision: data.permission_revision,
+              snapshot: data.snapshot,
+              total: data.total,
+              capabilities: data.capabilities,
+              observed_at: data.observed_at,
+            }
+          : null,
+        error: phase === "error" ? (current?.error ?? "invalid_query") : null,
+        error_request_id:
+          phase === "error" ? (current?.requestId ?? null) : null,
+        selected: selected?.id ?? null,
+      }),
+      [
+        `S03:data:${p.view}`,
+        "S03:state:async",
+        "S03:action:filter",
+        "S03:action:refresh",
+        "S03:action:inspect",
+        ...recordKeys.map((k) => `S03:field:${k}`),
+      ],
+    );
+  }, [
+    phase,
+    p.view,
+    qText,
+    data,
+    current?.error,
+    current?.requestId,
+    selected?.id,
+    p.onState,
+  ]);
+  useEffect(() => {
+    if (phase !== "loading" && focusStatus.current) {
+      focusStatus.current = false;
+      status.current?.focus({ preventScroll: true });
+    }
+  }, [phase, data]);
+  const close = () => {
+    setSelection(null);
+    requestAnimationFrame(() => {
+      if (trigger.current?.isConnected) trigger.current.focus();
+      else status.current?.focus();
+    });
   };
+  const reload = () => {
+    focusStatus.current = true;
+    setSelection(null);
+    setState({ key: "" });
+    if (q && (q.after !== 0 || q.snapshot || q.permission_revision))
+      location.hash = href(p.params, q, { after: 0 });
+    else if (q) setAttempt((n) => n + 1);
+    else {
+      const next = new URLSearchParams(p.params);
+      for (const k of [...next.keys()])
+        if (k.startsWith("receipt-")) next.delete(k);
+      location.hash = "#/imports?" + next.toString();
+    }
+  };
+  const unsupported =
+    data &&
+    (data.view === "extraction" ||
+      (data.view === "completeness" &&
+        data.capabilities.completeness === "unavailable"));
+  const errorCode = q ? current?.error : "invalid_query";
+  const stale =
+    errorCode === "query_snapshot_changed" ||
+    errorCode === "snapshot_required" ||
+    errorCode === "snapshot_stale" ||
+    errorCode === "receipt_snapshot_stale" ||
+    errorCode === "permission_changed";
   return (
-    <>
-      <Boundary l={l} />
-      <div
-        className="work-import-trail"
-        aria-label={text(l, [
-          "수집 입력 단계",
-          "Input intake stages",
-          "مراحل استقبال المدخلات",
-        ])}
-      >
-        {[
-          ["수신", "Received", "مستلم"],
-          ["정규화 후보", "Normalized candidate", "مرشح مطبع"],
-          ["검증", "Validation", "التحقق"],
-          [
-            "작업자 확인 대기",
-            "Awaiting worker confirmation",
-            "بانتظار تأكيد المسؤول",
-          ],
-          ["적격 입력", "Eligible input", "مدخل مؤهل"],
-        ].map((w) => (
-          <span key={w[1]}>{text(l, w as [string, string, string])}</span>
-        ))}
-        <strong>
-          {text(l, [
-            "현재 단계 미확인",
-            "Current stage unknown",
-            "المرحلة الحالية غير معروفة",
-          ])}
-        </strong>
-      </div>
-      {p.view === "imports" ? (
-        <div className="work-columns import-columns">
-          <Panel
-            title={text(l, [
-              "수집 접수와 처리 상태",
-              "Import receipts and processing state",
-              "إيصالات الاستيراد وحالة المعالجة",
-            ])}
-            id="S03:data:imports"
-          >
-            <EmptyList
-              l={l}
-              columns={[
-                ["수집 접수 ID", "Import receipt ID", "معرف إيصال الاستيراد"],
-                ["원천·기간", "Source and period", "المصدر والفترة"],
-                ["행·바이트", "Rows and bytes", "الصفوف والبايتات"],
-                [
-                  "revision·작업 상태",
-                  "Revision and job state",
-                  "المراجعة وحالة المهمة",
-                ],
-              ]}
-              reason={[
-                "허용된 수집 접수 목록을 아직 받지 못했습니다.",
-                "The permitted import receipt list has not been received.",
-                "لم يتم استلام قائمة إيصالات الاستيراد المسموح بها.",
-              ]}
-            />
-            <Facts
-              l={l}
-              labels={[
-                [
-                  "원본 hash·revision",
-                  "Original hash and revision",
-                  "بصمة الأصل ومراجعته",
-                ],
-                [
-                  "원천·매핑·프로파일 개정",
-                  "Source, mapping and profile revisions",
-                  "مراجعات المصدر والربط والملف التعريفي",
-                ],
-              ]}
-            />
-          </Panel>
-          <Panel
-            title={text(l, [
-              "접수 범위 검토 초안",
-              "Receipt scope review draft",
-              "مسودة مراجعة نطاق الإيصال",
-            ])}
-          >
-            <ReviewForm
-              l={l}
-              id="S03:action:review-receipt-scope"
-              onClear={clear}
-            >
-              <Label
-                label={text(l, [
-                  "원천 연결 참조",
-                  "Source connection reference",
-                  "مرجع اتصال المصدر",
-                ])}
-              >
-                <input
-                  {...refInput}
-                  required
-                  value={connection}
-                  onChange={(e) => setConnection(e.target.value)}
-                />
-              </Label>
-              <Label
-                label={text(l, ["자료 기간", "Source month", "شهر المصدر"])}
-              >
-                <input
-                  required
-                  type="month"
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                />
-              </Label>
-              <Label
-                label={text(l, [
-                  "정정 대상 참조 · 해당 시",
-                  "Correction target reference · if applicable",
-                  "مرجع هدف التصحيح · إن وجد",
-                ])}
-              >
-                <input
-                  {...refInput}
-                  value={correction}
-                  onChange={(e) => setCorrection(e.target.value)}
-                />
-              </Label>
-              {correction && (
-                <Label
-                  label={text(l, [
-                    "정정 사유",
-                    "Correction reason",
-                    "سبب التصحيح",
+    <section
+      className="receipt-screen"
+      data-read-phase={phase}
+      aria-busy={phase === "loading"}
+    >
+      <header className="receipt-context">
+        <h2>{t(l, words.scope)}</h2>
+        <p>{t(l, words.local)}</p>
+        <p className="receipt-meta">
+          {t(
+            l,
+            p.view === "completeness" ? words.completeness : words.metadata,
+          )}
+        </p>
+        {data && (
+          <>
+            <dl className="receipt-scope-facts">
+              <div>
+                <dt>
+                  {t(l, [
+                    "서버 읽기 범위",
+                    "Server read scope",
+                    "نطاق قراءة الخادم",
                   ])}
-                >
-                  <textarea
-                    required
-                    rows={3}
-                    maxLength={1000}
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                  />
-                </Label>
-              )}
-              <p>
-                {text(l, [
-                  "파일을 업로드하거나 수집 작업을 접수하지 않습니다. 원본 검증·중복 정책·현재 권한이 연결되어야 합니다.",
-                  "No file is uploaded and no import job is accepted. Original validation, duplication policy and current authority must be connected.",
-                  "لا يتم رفع ملف أو قبول مهمة استيراد. يجب توصيل التحقق من الأصل وسياسة التكرار والصلاحية الحالية.",
+                </dt>
+                <dd>
+                  {t(
+                    l,
+                    data.audience === "company"
+                      ? ["회사 범위", "Company scope", "نطاق الشركة"]
+                      : ["테넌트 범위", "Tenant scope", "نطاق المستأجر"],
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>
+                  {t(l, [
+                    "허용 구성원 수",
+                    "Authorized members",
+                    "الأعضاء المسموحون",
+                  ])}
+                </dt>
+                <dd>
+                  <bdi dir="ltr">{data.member_count}</bdi>
+                </dd>
+              </div>
+              <div>
+                <dt>{t(l, ["조회 시각", "Read at", "وقت القراءة"])}</dt>
+                <dd>
+                  <time dateTime={data.observed_at}>
+                    <bdi dir="ltr">{timestamp(data.observed_at)}</bdi>
+                  </time>
+                </dd>
+              </div>
+            </dl>
+            <details className="receipt-pins">
+              <summary>
+                {t(l, [
+                  "조회 범위·개정 근거",
+                  "Read scope and revision evidence",
+                  "أدلة نطاق القراءة والمراجعة",
                 ])}
-              </p>
-            </ReviewForm>
-          </Panel>
-        </div>
-      ) : p.view === "quarantine" ? (
-        <Panel
-          title={text(l, [
-            "격리 사유와 충돌 근거",
-            "Quarantine reasons and conflict evidence",
-            "أسباب العزل وأدلة التعارض",
-          ])}
-          id="S03:data:quarantine"
+              </summary>
+              <dl>
+                {(
+                  [
+                    [
+                      "auth_scope",
+                      [
+                        "읽기 범위 해시",
+                        "Read scope digest",
+                        "بصمة نطاق القراءة",
+                      ],
+                    ],
+                    [
+                      "permission_revision",
+                      [
+                        "현재 권한 개정",
+                        "Current permission revision",
+                        "مراجعة الصلاحية الحالية",
+                      ],
+                    ],
+                    [
+                      "snapshot",
+                      [
+                        "수집 근거 스냅샷",
+                        "Collection evidence snapshot",
+                        "لقطة أدلة التجميع",
+                      ],
+                    ],
+                  ] as const
+                ).map(([field, label]) => (
+                  <div key={field}>
+                    <dt>{t(l, label)}</dt>
+                    <dd>
+                      <bdi dir="ltr" className="receipt-id">
+                        {data[field]}
+                      </bdi>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          </>
+        )}
+      </header>
+      {q && p.view !== "extraction" && !unsupported && (
+        <form
+          role="search"
+          className="receipt-search"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const next = search.trim().toLowerCase();
+            if (!identifier(next)) {
+              setInvalid(true);
+              input.current?.focus();
+              return;
+            }
+            setInvalid(false);
+            focusStatus.current = true;
+            setSelection(null);
+            if (next === q.q && q.after === 0) reload();
+            else location.hash = href(p.params, q, { q: next, after: 0 });
+          }}
         >
-          <EmptyList
-            l={l}
-            columns={[
-              ["접수 참조", "Receipt reference", "مرجع الإيصال"],
-              [
-                "비민감 거절 사유",
-                "Nonsensitive rejection reason",
-                "سبب رفض غير حساس",
-              ],
-              [
-                "원본 revision 충돌",
-                "Original revision conflict",
-                "تعارض مراجعة الأصل",
-              ],
-              [
-                "메타데이터 참조",
-                "Metadata reference",
-                "مرجع البيانات الوصفية",
-              ],
-            ]}
-            reason={[
-              "격리 근거 서비스 미연결. 충돌이 없다고 해석하지 않습니다.",
-              "Quarantine evidence is unconnected. This does not mean there are no conflicts.",
-              "أدلة العزل غير متصلة. لا يعني ذلك عدم وجود تعارضات.",
-            ]}
-          />
-          <div className="work-policy-note">
-            <h3>
-              {text(l, [
-                "청구 자료의 수집 경계",
-                "Billing input boundary",
-                "حدود مدخلات الفوترة",
-              ])}
-            </h3>
-            <p>
-              {text(l, [
-                "프롬프트·응답 본문이 포함된 자료는 정상 청구 입력으로 받지 않습니다. 격리 화면에도 본문 링크나 원문을 보관하지 않고 비민감 거절 참조만 제공합니다.",
-                "Inputs containing prompt or response bodies are not normal billing inputs. Quarantine keeps no body links or source text, only nonsensitive rejection references.",
-                "المدخلات المحتوية على نصوص المطالبات أو الردود ليست مدخلات فوترة عادية. لا يحتفظ العزل بروابط النصوص أو أصولها، بل بمراجع رفض غير حساسة فقط.",
-              ])}
-            </p>
-          </div>
-        </Panel>
-      ) : p.view === "completeness" ? (
-        <div className="work-columns completeness-columns">
-          <Panel
-            title={text(l, [
-              "예상 범위와 수신 범위",
-              "Expected and received coverage",
-              "التغطية المتوقعة والمستلمة",
-            ])}
-            id="S03:data:completeness"
-          >
-            <div className="work-comparison">
-              <section>
-                <h3>
-                  {text(l, [
-                    "예상 범위",
-                    "Expected coverage",
-                    "التغطية المتوقعة",
-                  ])}
-                </h3>
-                <Facts
-                  l={l}
-                  labels={[
-                    ["바이트·행", "Bytes and rows", "البايتات والصفوف"],
-                    ["파티션 manifest", "Partition manifest", "بيان الأقسام"],
-                    ["watermark", "Watermark", "علامة التقدم"],
-                  ]}
-                />
-              </section>
-              <section>
-                <h3>
-                  {text(l, [
-                    "실제 수신 범위",
-                    "Received coverage",
-                    "التغطية المستلمة",
-                  ])}
-                </h3>
-                <Facts
-                  l={l}
-                  labels={[
-                    ["바이트·행", "Bytes and rows", "البايتات والصفوف"],
-                    ["수신 파티션", "Received partitions", "الأقسام المستلمة"],
-                    ["watermark", "Watermark", "علامة التقدم"],
-                  ]}
-                />
-              </section>
-            </div>
-          </Panel>
-          <Panel
-            title={text(l, [
-              "누락과 독립 검증",
-              "Missing scope and independent validation",
-              "النطاق المفقود والتحقق المستقل",
-            ])}
-          >
-            <Facts
-              l={l}
-              labels={[
-                [
-                  "누락 기간·분할",
-                  "Missing intervals and partitions",
-                  "الفترات والأقسام المفقودة",
-                ],
-                [
-                  "독립 교차 검증",
-                  "Independent cross-validation",
-                  "التحقق المستقل المتقاطع",
-                ],
-                ["비교 digest", "Comparison digest", "بصمة المقارنة"],
-              ]}
+          <label htmlFor="receipt-search">
+            {t(l, words.query)}
+            <input
+              id="receipt-search"
+              type="search"
+              ref={input}
+              value={search}
+              maxLength={128}
+              autoComplete="off"
+              spellCheck={false}
+              aria-invalid={invalid || undefined}
+              aria-describedby={invalid ? "receipt-search-error" : undefined}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setInvalid(false);
+              }}
             />
-            <p>
-              {text(l, [
-                "분모가 확인되지 않아 완전성 비율을 계산하지 않습니다. 합계 일치만으로 독립 검증이 성립하지 않습니다.",
-                "No completeness percentage is calculated without a verified denominator. Matching totals alone do not establish independent validation.",
-                "لا تحسب نسبة اكتمال دون مقام متحقق. تطابق الإجماليات وحده لا يثبت التحقق المستقل.",
-              ])}
-            </p>
-          </Panel>
-        </div>
-      ) : (
-        <div className="work-columns extraction-columns">
-          <Panel
-            title={text(l, [
-              "원본과 추출 후보 비교",
-              "Original and extraction candidate comparison",
-              "مقارنة الأصل ومرشح الاستخراج",
-            ])}
-            id="S03:data:extraction"
-          >
-            <div className="work-comparison">
-              <section>
-                <h3>
-                  {text(l, ["원본 증빙", "Original evidence", "الدليل الأصلي"])}
-                </h3>
-                <Facts
-                  l={l}
-                  labels={[
-                    [
-                      "원본 참조·문서 번호",
-                      "Original reference and document number",
-                      "مرجع الأصل ورقم المستند",
-                    ],
-                    ["금액·통화", "Amount and currency", "المبلغ والعملة"],
-                  ]}
-                />
-              </section>
-              <section>
-                <h3>
-                  {text(l, [
-                    "추출 후보",
-                    "Extraction candidate",
-                    "مرشح الاستخراج",
-                  ])}
-                </h3>
-                <Facts
-                  l={l}
-                  labels={[
-                    ["후보 revision", "Candidate revision", "مراجعة المرشح"],
-                    [
-                      "추출 금액·통화",
-                      "Extracted amount and currency",
-                      "المبلغ المستخرج والعملة",
-                    ],
-                  ]}
-                />
-              </section>
-            </div>
-            <p>
-              {text(l, [
-                "OCR 완료나 모델 신뢰도는 적격 입력 확인이 아닙니다. S06의 권한 있는 작업자가 불변 근거를 확인해야 합니다.",
-                "OCR completion or model confidence is not input eligibility. An authorized worker in S06 must confirm immutable evidence.",
-                "اكتمال OCR أو ثقة النموذج ليس تأكيدا لأهلية المدخل. يجب أن يؤكد مسؤول مخول في S06 الأدلة غير القابلة للتغيير.",
-              ])}
-            </p>
-          </Panel>
-          <Panel
-            title={text(l, [
-              "비교 근거 참조 검토",
-              "Comparison evidence reference review",
-              "مراجعة مرجع دليل المقارنة",
-            ])}
-          >
-            <ReviewForm
-              l={l}
-              id="S03:action:review-extraction-reference"
-              onClear={clear}
+          </label>
+          <div className="receipt-actions">
+            <button type="submit">{t(l, words.apply)}</button>
+            {q.q && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  focusStatus.current = true;
+                  location.hash = href(p.params, q, { q: "", after: 0 });
+                }}
+              >
+                {t(l, words.clear)}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={reload}
+              disabled={phase === "loading"}
             >
-              <Label
-                label={text(l, [
-                  "접수·후보 참조",
-                  "Receipt or candidate reference",
-                  "مرجع الإيصال أو المرشح",
-                ])}
-              >
-                <input
-                  {...refInput}
-                  required
-                  value={receipt}
-                  onChange={(e) => setReceipt(e.target.value)}
-                />
-              </Label>
-              <Label
-                label={text(l, [
-                  "원본 비교 근거 참조",
-                  "Original comparison evidence reference",
-                  "مرجع دليل مقارنة الأصل",
-                ])}
-              >
-                <input
-                  {...refInput}
-                  required
-                  value={connection}
-                  onChange={(e) => setConnection(e.target.value)}
-                />
-              </Label>
-              <p>
-                {text(l, [
-                  "입력 형식만 검토합니다. 추출 검증을 기록하거나 후보를 적격 입력으로 발행하지 않습니다.",
-                  "Only input format is reviewed. No extraction verification is recorded and no candidate is published as eligible.",
-                  "تراجع صيغة الإدخال فقط. لا يسجل تحقق الاستخراج ولا ينشر المرشح كمدخل مؤهل.",
-                ])}
-              </p>
-            </ReviewForm>
-            <Facts
-              l={l}
-              labels={[
-                [
-                  "확인 작업자·근거 digest",
-                  "Confirmation actor and evidence digest",
-                  "جهة التأكيد وبصمة الدليل",
-                ],
-                [
-                  "현재 입력 적격성",
-                  "Current input eligibility",
-                  "أهلية المدخل الحالية",
-                ],
-              ]}
-            />
-          </Panel>
+              {t(l, words.refresh)}
+            </button>
+          </div>
+          {invalid && (
+            <p id="receipt-search-error" role="alert">
+              {t(l, words.invalid)}
+            </p>
+          )}
+        </form>
+      )}
+      {q && (p.view === "extraction" || unsupported) && (
+        <div className="receipt-refresh">
+          <button type="button" onClick={reload} disabled={phase === "loading"}>
+            {t(l, words.refresh)}
+          </button>
         </div>
       )}
-    </>
+      <p
+        className="receipt-result-status"
+        role="status"
+        aria-live="polite"
+        tabIndex={-1}
+        ref={status}
+      >
+        {phase === "loading" ? (
+          t(l, words.loading)
+        ) : phase === "unconnected" ? (
+          t(l, words.unconnected)
+        ) : phase === "error" ? (
+          t(l, words.error)
+        ) : unsupported ? (
+          t(
+            l,
+            data.view === "extraction" ? words.extraction : words.unsupported,
+          )
+        ) : data?.total === 0 ? (
+          t(l, words.empty)
+        ) : data ? (
+          <>
+            {t(l, ["허용된 결과 ", "Permitted results ", "النتائج المسموحة "])}
+            <bdi dir="ltr">
+              {data.selection.after + 1}–
+              {data.selection.after + data.records.length}
+            </bdi>
+            {t(l, [
+              ` / ${data.total}건`,
+              ` of ${data.total}`,
+              ` من ${data.total}`,
+            ])}
+          </>
+        ) : (
+          t(l, words.unknown)
+        )}
+      </p>
+      {(phase === "error" || phase === "unconnected") && (
+        <div className="receipt-error" role="alert">
+          {stale && (
+            <p>
+              {t(l, [
+                "근거나 권한이 변경됐습니다. 기존 페이지를 새 범위에 자동으로 합치지 않습니다.",
+                "Evidence or permissions changed. The old page will not be silently rebased.",
+                "تغيّرت الأدلة أو الصلاحيات. لن تُعاد مواءمة الصفحة السابقة تلقائيًا.",
+              ])}
+            </p>
+          )}
+          {errorCode && (
+            <p>
+              {t(l, ["오류 코드", "Error code", "رمز الخطأ"])}:{" "}
+              <bdi dir="ltr">{errorCode}</bdi>
+            </p>
+          )}
+          {current?.requestId && (
+            <p>
+              {t(l, ["요청 ID", "Request ID", "معرّف الطلب"])}:{" "}
+              <bdi dir="ltr">{current.requestId}</bdi>
+            </p>
+          )}
+          <button onClick={reload}>{t(l, words.retry)}</button>
+        </div>
+      )}
+      {phase === "loaded" && data && !unsupported && (
+        <>
+          <div
+            className={`receipt-workspace ${selected ? "receipt-has-detail" : ""}`}
+          >
+            <div>
+              <h2>
+                {t(
+                  l,
+                  p.view === "quarantine"
+                    ? [
+                        "허용된 격리 접수",
+                        "Permitted quarantine receipts",
+                        "إيصالات العزل المسموحة",
+                      ]
+                    : p.view === "completeness"
+                      ? [
+                          "등록된 기대 수집 범위",
+                          "Registered collection expectations",
+                          "توقعات التجميع المسجلة",
+                        ]
+                      : [
+                          "수집 접수와 처리 상태",
+                          "Collection receipts and processing state",
+                          "إيصالات التجميع وحالة المعالجة",
+                        ],
+                )}
+              </h2>
+              {data.records.length > 0 ? (
+                <ReceiptList
+                  locale={l}
+                  view={data.view}
+                  records={data.records}
+                  selected={selected?.id}
+                  onSelect={(r, button) => {
+                    trigger.current = button;
+                    setSelection({ key, snapshot: data.snapshot, id: r.id });
+                    requestAnimationFrame(() =>
+                      document
+                        .getElementById("receipt-detail-title")
+                        ?.focus({ preventScroll: false }),
+                    );
+                  }}
+                />
+              ) : null}
+              {data.view === "quarantine" && (
+                <p className="receipt-meta">
+                  {t(l, [
+                    "현재 범위를 입증한 접수의 비민감 사유만 표시합니다. 원문·객체 경로·비소유 자료의 건수는 제공하지 않습니다.",
+                    "Only attributable receipts and nonsensitive reasons are shown. No source bodies, object paths or unowned record counts are provided.",
+                    "تُعرض الإيصالات المنسوبة للنطاق والأسباب غير الحساسة فقط. لا تُقدّم نصوص المصادر أو مسارات الكائنات أو أعداد السجلات غير المملوكة.",
+                  ])}
+                </p>
+              )}
+              {q && data.total !== 0 && (
+                <nav
+                  className="receipt-pagination"
+                  aria-label={t(l, [
+                    "접수 페이지",
+                    "Receipt pages",
+                    "صفحات الإيصالات",
+                  ])}
+                >
+                  <button
+                    disabled={q.after === 0}
+                    onClick={() => {
+                      focusStatus.current = true;
+                      location.hash = href(p.params, q, {
+                        after: Math.max(0, q.after - 25),
+                        snapshot: data.snapshot,
+                        permission_revision: data.permission_revision,
+                      });
+                    }}
+                  >
+                    {t(l, words.back)}
+                  </button>
+                  <button
+                    disabled={data.next_after === null}
+                    onClick={() => {
+                      if (data.next_after === null) return;
+                      focusStatus.current = true;
+                      location.hash = href(p.params, q, {
+                        after: data.next_after,
+                        snapshot: data.snapshot,
+                        permission_revision: data.permission_revision,
+                      });
+                    }}
+                  >
+                    {t(l, words.next)}
+                  </button>
+                  {data.total !== null && data.total > 0 && (
+                    <span>
+                      {t(l, [
+                        `${Math.floor(data.selection.after / 25) + 1} / ${Math.ceil(data.total / 25)} 페이지`,
+                        `Page ${Math.floor(data.selection.after / 25) + 1} of ${Math.ceil(data.total / 25)}`,
+                        `الصفحة ${Math.floor(data.selection.after / 25) + 1} من ${Math.ceil(data.total / 25)}`,
+                      ])}
+                    </span>
+                  )}
+                  <span className="receipt-meta">
+                    {t(l, [
+                      "현재 필터·허용 범위의 결과만 조회합니다.",
+                      "Only results in the current filter and permitted scope are read.",
+                      "تُقرأ النتائج ضمن المرشح والنطاق المسموح الحاليين فقط.",
+                    ])}
+                  </span>
+                </nav>
+              )}
+            </div>
+            {selected && (
+              <ReceiptDetail locale={l} record={selected} onClose={close} />
+            )}
+          </div>
+        </>
+      )}
+      <p className="receipt-meta receipt-deferred">{t(l, words.deferred)}</p>
+    </section>
   );
 }

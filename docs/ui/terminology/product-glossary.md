@@ -53,6 +53,11 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 | no-name-difference / no_difference | 이름 차이 없음 | No name difference observed | لم يُرصد اختلاف في الاسمين | Exact source-name equality; not proof of legal-party identity, direct purchase or absence of Marketplace activity. | B07 |
 | insufficient-classification / unknown | 분류 근거 부족 | Insufficient classification evidence | أدلة غير كافية للتصنيف | Missing, blank, invalid or unmapped names remain unknown and are excluded from candidate amounts. | B07 |
 | seller-withheld-amount / withholding | 보류액 | Withheld amount | المبلغ المحتجز | Separately sourced withheld balance; never assume this is withholding tax or calculate it from buyer source costs. | B07 |
+| temporary-source-baseline / B08 | 원천 비교 기준 잠시 보관 | Temporarily keep source baseline | الاحتفاظ المؤقت بمرجع المصدر | Volatile source aggregate observation on this screen only; never a frozen manifest, calculation lock, financial run, policy or approval. | B08 |
+| source-input-comparison / comparison | 원천 입력 비교 | Source input comparison | مقارنة مدخلات المصدر | Same-source-reference authorized scope comparison, not prior-run billing variance. Changed opaque source references invalidate the baseline. | B08 |
+| observed-measure-presence / present-missing | 값 있음 / 누락 | Present / missing | موجود / مفقود | Presence within observed source rows, not whole-source completeness or financial readiness. Show both sides in comparisons. | B08 |
+| pre-billing-checks / validation | 청구 전 확인 | Pre-billing checks | فحوص ما قبل الفوترة | Source read is observed; contract eligibility, shared dependencies, policy/result checks and calculation/issuance locks remain separate. | B08 |
+| monthly-expense-recognition / recognition | 월별 비용 인식 | Monthly expense recognition | الإثبات الشهري للمصروفات | Legal entity/book/basis and actual ERP posting are required; not revenue recognition, invoicing, receivables, collection or payment-term commencement. | B08 |
 
 # B01 labels
 
@@ -83,3 +88,7 @@ Independent AI TW design and actual-source reviews distinguish scoped source ID 
 # B07 terminology evidence
 
 Independent AI finance/TW design and actual-source reviews preserve candidate source-row counts, source Billed/Effective bases, lexical name comparison and the unconnected seller/benefit/legal boundaries. Canonical buyer/seller/credits/mapping keys remain; preferred display tabs are 구매 측 청구 근거 / 판매자 정산 / 혜택·크레딧 / 거래 연결 근거. Refunds and taxes remain separate from fees, withheld balances and disbursements. No settlement formula or invoice-to-collection inference is adopted. Selected actual rendered review and the final count/version/selection-copy follow-up passed, recorded in HB-107 verification; native-language/human practitioner and owner acceptance remain pending.
+
+# B08 terminology evidence
+
+Independent AI finance/TW design and actual-source reviews distinguish source observation, temporary in-memory baseline, full-scope amount presence and financial run authority. Canonical runs/inputs/trace/comparison/validation/recognition keys remain, with source input comparison and pre-billing checks as qualified labels. Both comparison sides show present/missing counts after an independently reproduced partial-subtotal finding. Monthly expense recognition remains distinct from customer billing and actual ERP posting. Selected actual rendered finance/TW review passed and is recorded in HB-109 verification; native-language/human practitioner and owner acceptance remain pending.

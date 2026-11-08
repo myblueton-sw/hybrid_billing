@@ -27,6 +27,8 @@ For design/code work, also read `design-first.md`, `quality.md`, `no-comments.md
 ## Core rules
 
 - All designs must support installation and operation without dependence on a particular OS. Follow `.agents/rules/platform-independence.md`; distinguish portability targets from tested combinations.
+- Visual design leadership for service screens uses the Claude CLI `ui-designer` role under `.agents/rules/service-screen-style.md`; root retains implementation and integration ownership.
+- Service screens MUST use the available viewport width and documented external professional references; MUST NOT use decorative colored borders or accent edge strips. Apply `.agents/rules/service-screen-style.md` before implementation and during rendered verification.
 
 - Do not add explanatory source comments or use docstrings/JSDoc to bypass this rule. Preserve required machine directives, legal headers and externally consumed API documentation.
 - When the owner fixes a final document or design revision, remove the superseded versions from the current tree in the same scoped finalization change. Update links, indexes and generators first; retain history in Git rather than duplicate archive folders. Apply replacement per module/scope, not by version number alone. Original evidence, legal notices and distinct review/verification records are not superseded drafts.

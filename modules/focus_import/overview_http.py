@@ -10,6 +10,7 @@ from .overview import overview
 from .commitments import commitments
 from .marketplace import marketplace
 from .receipt_projection import MAX_RESPONSE_BYTES, receipts
+from .connection_projection import connection_metadata
 
 
 class OverviewServer(ThreadingHTTPServer):
@@ -35,7 +36,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def reply(self, status, body):
         data = json.dumps(body).encode()
-        if self.path.split('?', 1)[0] == '/api/focus-receipts' and len(data) > MAX_RESPONSE_BYTES:
+        if self.path.split('?', 1)[0] in ('/api/focus-receipts', '/api/focus-connections') and len(data) > MAX_RESPONSE_BYTES:
             status, data = 503, json.dumps({'error': 'response_bound', 'request_id': uuid4().hex}).encode()
         elif len(data) > 8 * 1024 * 1024:
             status, data = 503, b'{"error":"response_bound"}'
@@ -65,10 +66,10 @@ class Handler(BaseHTTPRequestHandler):
             path = urlsplit(self.path)
         except ValueError:
             return failure(400, 'request_invalid')
-        if path.path not in ('/api/focus-overview', '/api/focus-commitments', '/api/focus-marketplace', '/api/focus-receipts') or path.scheme or path.netloc or path.fragment:
+        if path.path not in ('/api/focus-overview', '/api/focus-commitments', '/api/focus-marketplace', '/api/focus-receipts', '/api/focus-connections') or path.scheme or path.netloc or path.fragment:
             return failure(404, 'not_found')
         try:
-            values = parse_qs(path.query, keep_blank_values=True, strict_parsing=True, max_num_fields={'/api/focus-commitments': 10, '/api/focus-marketplace': 9, '/api/focus-receipts': 5}.get(path.path, 8))
+            values = parse_qs(path.query, keep_blank_values=True, strict_parsing=True, max_num_fields={'/api/focus-commitments': 10, '/api/focus-marketplace': 9, '/api/focus-receipts': 5, '/api/focus-connections': 5}.get(path.path, 8))
             if any(len(v) != 1 for v in values.values()):
                 raise ValueError('duplicate')
             params = {k: v[0] for k, v in values.items()}
@@ -77,7 +78,7 @@ class Handler(BaseHTTPRequestHandler):
         if not self.server.slots.acquire(blocking=False):
             return failure(503, 'source_busy')
         try:
-            consumer = {'/api/focus-commitments': commitments, '/api/focus-marketplace': marketplace, '/api/focus-receipts': receipts}.get(path.path, overview)
+            consumer = {'/api/focus-commitments': commitments, '/api/focus-marketplace': marketplace, '/api/focus-receipts': receipts, '/api/focus-connections': connection_metadata}.get(path.path, overview)
             consumer(self.server.actor, params, lambda body: self.reply(200, body))
         except Rejected as exc:
             reason = str(exc)
@@ -96,7 +97,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def deny_method(self):
         body = {'error': 'method_denied'}
-        if self.path.split('?', 1)[0] == '/api/focus-receipts':
+        if self.path.split('?', 1)[0] in ('/api/focus-receipts', '/api/focus-connections'):
             body['request_id'] = uuid4().hex
         self.reply(405, body)
 

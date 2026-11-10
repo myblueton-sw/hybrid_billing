@@ -113,3 +113,19 @@ Independent AI finance/TW design and actual-source/render review prefers 크레�
 # S03 receipt evidence wording
 
 HB-145 independent AI finance/TW source review and review of eight actual captures preserve collection metadata versus financial authority, historical publication versus current availability, declared counts versus financial totals, registered expectation versus upstream completeness, and explicit all-domain zero attestation versus unknown/nonzero. Arabic numeric UTC timestamps remain LTR with source precision; interval starts are inclusive and ends exclusive. Review scope and actual limits are recorded in [HB-145 verification](../../features/HB-145/verification.md). AI review is not human finance-practitioner, Arabic native-language or owner FIX acceptance.
+
+# S03 current stored observations
+
+HB-150 adds current scoped stored-data observations alongside historical receipt metadata. Keep all existing S03 receipt/declared-count terms and canonical fields. Candidate terms below received separate AI contract/TW review; native-language and practitioner acceptance remain pending.
+
+| Concept | KO | EN | AR | Meaning and forbidden implication |
+| --- | --- | --- | --- | --- |
+| queryable-authorized-rows / row_count | 허용 범위의 조회 가능한 행 | Queryable rows in your permitted scope | الصفوف القابلة للاستعلام ضمن نطاقك المسموح | Currently read and verified allowed rows, independent of receipt prefix filtering; not whole-provider inventory or approved billable rows. |
+| contributing-deliveries / delivery_count | 조회 가능한 수집본 | Queryable deliveries | عمليات التسليم القابلة للاستعلام | Distinct current publications contributing at least one allowed row; excludes foreign-only zero slices and is not a connection or whole-file receipt count. |
+| source-delivery-window | 원천 수집 구간 | Source delivery window | نطاق تسليم المصدر | UTC interval with inclusive start/exclusive end, grouped across allowed contributions; not a charge-start-month filter. |
+| public-source-sample | 공개 샘플 / 공개 샘플 일부 | Public samples / Public sample subsets | عينات عامة / أجزاء من عينات عامة | Allowlisted sample provenance from source; not live provider certification. |
+| synthetic-source-fixture | 합성 시험 자료 | Synthetic test data | بيانات اختبار اصطناعية | Deliberately synthetic source rows, separate from public samples and customer data. |
+| upstream-completeness | 원천 전체 수집 완전성 · 미확인 | Upstream completeness · Unverified | اكتمال التجميع من المصدر · غير متحقق | No complete upstream inventory is established by a successful stored-row read. |
+| original-file-availability | 원본 파일 가용성 · 미확인 | Original-file availability · Not checked | توفر الملف الأصلي · لم يُتحقّق منه | Current row verification does not itself re-read original file bytes. |
+
+Regional sources and adopted/rejected layout patterns are recorded in [HB-150 references](../../features/HB-150/references.md). Receipt metadata may be unavailable independently of stored rows; authority denial/mismatch clears both observations. AI review does not authenticate an owner or finalize regional terminology.

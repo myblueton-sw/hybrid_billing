@@ -1,0 +1,205 @@
+{
+  "artifacts": {
+    "api-result.json": "37433617659980cce212d145535151138e3cd63eedcbfe4aba5a5231cfb96cf6",
+    "audit-wrapper.py": "2b40bff24443d8091015f90421e6f7dc92eee2e799ac46e1624046a7bc474484",
+    "commands.json": "027726fa9252a45a78e1872abd79ed419087b35c0f330f91636ef968a44e4981",
+    "storage-audit.py": "82bc988a58a209ebe7eebff014951d8946074482a5eb8641c579a1da55bc9ae8",
+    "storage-result.json": "d5a1ae8e52dc68f97265d3e87405a944475e7a8b580f5293b11f671f86155085",
+    "summary.json": "db49f0f96f2d437913017a11ecca94d23f45467d4362b6452132b7c6ec80d236"
+  },
+  "case_count": 66,
+  "command_count": 142,
+  "console_proxy_root_observation": {
+    "independently_rerun": false,
+    "port": 8817,
+    "routes": [
+      {
+        "http": 200,
+        "route": "focus-overview",
+        "rows": 1121
+      },
+      {
+        "http": 200,
+        "route": "focus-receipts",
+        "total": 2
+      },
+      {
+        "http": 200,
+        "route": "focus-connections",
+        "total": 0
+      }
+    ]
+  },
+  "expected_rejections": 5,
+  "initial_run": {
+    "cause": "deleted preview-worktree container bind sources; no data comparison passed before repair",
+    "completed_commands": 2,
+    "status": "FAIL"
+  },
+  "journal_sequence": 58,
+  "machine": "mac_mini",
+  "oracle_sha256": "ee3608b9e6a1b15fdbc09d4d0c8fc17e5bf7db562fd5474bdde187172db0aced",
+  "preservation_files": 85,
+  "preservation_manifest_sha256": "c1a5e862f6c3b63cd910a3ee5760bb17d5d77ab7370da396ab603a1cf33ca4ad",
+  "preservation_unchanged_after_final_query": true,
+  "protected_gets": [
+    {
+      "http": 200,
+      "route": "focus-overview",
+      "summary": {
+        "authorized_rows": 1121,
+        "coverage": {
+          "complete_through": "2024-04-01T00:00:00+00:00",
+          "expectations": "operator-asserted-unverified",
+          "finalized_slices": 6,
+          "slices": 6
+        },
+        "delivery_count": 3,
+        "financial_authority": false,
+        "provenance": {
+          "official-public": 1000,
+          "official-public-subset": 115,
+          "synthetic-contract-fixture": 6
+        },
+        "row_count": 1121
+      }
+    },
+    {
+      "http": 200,
+      "route": "focus-receipts",
+      "summary": {
+        "financial_authority": false,
+        "member_count": 2,
+        "profile": "retained-focus-receipts-v1",
+        "total": 2
+      }
+    },
+    {
+      "http": 200,
+      "route": "focus-connections",
+      "summary": {
+        "financial_authority": false,
+        "member_count": 2,
+        "profile": "retained-focus-connections-v1",
+        "total": 0
+      }
+    }
+  ],
+  "provider_rows": {
+    "AWS": {
+      "all_rows": 942,
+      "company_rows": 942
+    },
+    "Alibaba Cloud": {
+      "all_rows": 4,
+      "company_rows": 3
+    },
+    "Google Cloud": {
+      "all_rows": 115,
+      "company_rows": 115
+    },
+    "Microsoft": {
+      "all_rows": 51,
+      "company_rows": 51
+    },
+    "Oracle": {
+      "all_rows": 7,
+      "company_rows": 7
+    },
+    "VMware": {
+      "all_rows": 4,
+      "company_rows": 3
+    }
+  },
+  "queries": {
+    "before_boundary": {
+      "pages": 1,
+      "rows": 0,
+      "status": "PASS"
+    },
+    "billing_window": {
+      "pages": 11,
+      "rows": 1005,
+      "status": "PASS"
+    },
+    "company_union": {
+      "pages": 12,
+      "rows": 1121,
+      "status": "PASS"
+    },
+    "exclusive_boundary": {
+      "pages": 1,
+      "rows": 1,
+      "status": "PASS"
+    },
+    "foreign_only": {
+      "pages": 1,
+      "rows": 2,
+      "status": "PASS"
+    },
+    "overlap_not_row_clip": {
+      "pages": 11,
+      "rows": 1005,
+      "status": "PASS"
+    },
+    "tenant_a": {
+      "pages": 12,
+      "rows": 1112,
+      "status": "PASS"
+    },
+    "tenant_b": {
+      "pages": 1,
+      "rows": 9,
+      "status": "PASS"
+    }
+  },
+  "recording": "No per-query timing or raw command response recording",
+  "rendered_after_repair": "UNVERIFIED ScreenCaptureKit -3811",
+  "runner_sha256": "3abdd5035407c3de91f1a6cab32b45b599ca28e6153e267648b7eaa41284d59c",
+  "runtime_unchanged": true,
+  "source_commit": "8e10d9dada03e31114d9e861603382bfc134ab5d",
+  "status": "PASS",
+  "storage": {
+    "archive_slices": 0,
+    "control_state_unchanged": true,
+    "deliveries": [
+      {
+        "company_rows": 1,
+        "foreign_rows": 0,
+        "fully_owned_receipt": true,
+        "month": "2024-10",
+        "original_bytes": 1474,
+        "original_sha256": "2d6be515246c78182c800d288b6de5a8fad64b8e0ead08338fb3fc7713e64b2d",
+        "rows": 1,
+        "state": "sealed"
+      },
+      {
+        "company_rows": 115,
+        "foreign_rows": 0,
+        "fully_owned_receipt": true,
+        "month": "2024-03",
+        "original_bytes": 79227,
+        "original_sha256": "9b2255f3043a1e7c98cea5a62c3eb78b4583001c0b00ad30cb8f54100a73b0dc",
+        "rows": 115,
+        "state": "sealed"
+      },
+      {
+        "company_rows": 1005,
+        "foreign_rows": 2,
+        "fully_owned_receipt": false,
+        "month": "2024-09",
+        "original_bytes": 807967,
+        "original_sha256": "ee4d245177c54aae7fbe5492466f74e2167ef0c79432842c959bf9ca2134f7e4",
+        "rows": 1007,
+        "state": "sealed"
+      }
+    ],
+    "journal_sequence": 58,
+    "parquet_scope": "Existing archived slices only; hot slices do not imply a stored Parquet copy",
+    "slice_states": {
+      "hot": 15
+    },
+    "status": "PASS"
+  },
+  "ticket": "HB-149"
+}

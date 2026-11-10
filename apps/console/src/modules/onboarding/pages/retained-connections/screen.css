@@ -16,14 +16,14 @@
 .retained-connections-screen :is(h2, h3, p, dl) {
   margin-block: 0;
 }
-.retained-connections-screen h2 {
+#content .retained-connections-screen h2 {
   font-size: 20px;
   overflow-wrap: anywhere;
 }
 .retained-connections-screen h3 {
   font-size: 18px;
 }
-.retained-connections-screen :is(button, input, th, td) {
+#content .retained-connections-screen :is(button, input, th, td) {
   font-size: 16px;
   border-radius: 0;
   box-shadow: none;
@@ -31,6 +31,13 @@
 .retained-connections-screen button {
   min-block-size: 44px;
   white-space: normal;
+}
+.planning-app.connection-inspection-shell #confirm-review {
+  font-size: 16px;
+  min-block-size: 44px;
+}
+.planning-app.connection-inspection-shell .review-source-revision {
+  display: inline;
 }
 .retained-connections-screen :is(button, a, input):focus-visible {
   outline: 2px solid var(--hb-focus);
@@ -84,7 +91,18 @@
   gap: 12px;
 }
 .retained-connection-counter {
-  font-size: 14px;
+  font-size: 16px;
+}
+#content
+  .retained-connections-screen
+  :is(
+    .retained-connection-filter label,
+    .retained-connection-scope dd,
+    .retained-connection-scope dd bdi,
+    .retained-connection-counter bdi,
+    .retained-connection-pagination > span bdi
+  ) {
+  font-size: 16px;
 }
 .retained-connection-filter {
   display: flex;
@@ -146,7 +164,7 @@
   gap: 8px;
 }
 .retained-connection-pagination > span {
-  font-size: 14px;
+  font-size: 16px;
 }
 .retained-connection-table {
   inline-size: 100%;
@@ -215,7 +233,10 @@
   gap: 12px;
 }
 .retained-connection-detail-heading h2 {
-  flex: 1 1 180px;
+  flex: 0 1 auto;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  scroll-margin-block-start: 96px;
 }
 .retained-connection-detail :is(dl, .retained-connection-policy) {
   display: grid;
@@ -235,6 +256,12 @@
   margin-block-start: 8px;
 }
 .retained-connection-id {
+  font-family: var(--hb-font-mono);
+  display: block;
+  direction: ltr;
+  text-align: left;
+}
+.retained-connection-error bdi {
   font-family: var(--hb-font-mono);
 }
 .retained-connection-capabilities {
@@ -257,6 +284,10 @@
   display: inline;
 }
 @container retained-connections (max-width: 767px) {
+  .retained-connection-has-detail .retained-connection-detail {
+    border-block-start: 0;
+    padding-block-start: 0;
+  }
   .retained-connection-has-detail .retained-connection-list-area {
     display: none;
   }
@@ -273,7 +304,55 @@
     margin-inline-start: 0;
   }
 }
+@container retained-connections (min-width: 1024px) {
+  .retained-connection-has-detail .retained-connection-interval > span {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+  .retained-connection-has-detail .retained-connection-detail {
+    border-block-start: 0;
+    border-inline-start: 1px solid var(--hb-line-panel);
+    padding-block-start: 0;
+    padding-inline-start: 24px;
+  }
+  .retained-connection-has-detail .retained-connection-detail > dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .retained-connection-has-detail {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+  .retained-connection-has-detail
+    :is(
+      .retained-connection-col-wide,
+      .retained-connection-col-profile,
+      .retained-connection-col-id
+    ),
+  .retained-connection-has-detail
+    .retained-connection-table
+    :is(th, td):nth-child(4) {
+    display: none;
+  }
+  .retained-connection-has-detail
+    .retained-connection-table
+    :is(th, td):first-child {
+    inline-size: 28%;
+  }
+  .retained-connection-has-detail
+    .retained-connection-table
+    :is(th, td):nth-child(2) {
+    inline-size: 50%;
+  }
+  .retained-connection-has-detail
+    .retained-connection-table
+    :is(th, td):nth-child(3) {
+    inline-size: 22%;
+  }
+}
 @container retained-connections (min-width: 768px) {
+  .retained-connection-interval > span {
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 12px;
+  }
   .retained-connection-col-medium {
     display: table-cell;
   }
@@ -348,12 +427,12 @@
   .retained-connection-has-detail
     .retained-connection-table
     :is(th, td):first-child {
-    inline-size: 25%;
+    inline-size: 28%;
   }
   .retained-connection-has-detail
     .retained-connection-table
     :is(th, td):nth-child(2) {
-    inline-size: 35%;
+    inline-size: 50%;
   }
 }
 @container retained-connections (min-width: 1600px) {

@@ -65,6 +65,7 @@ function RegistrationDetail({
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
+    heading.current?.scrollIntoView({ block: "nearest" });
   }, [record.id]);
   const fields: [Words, ReactNode][] = [
     [
@@ -536,13 +537,15 @@ export default function RetainedConnections(props: Props) {
                   >
                     {text(locale, words.clear)}
                   </button>
-                  <button
-                    type="button"
-                    onClick={reload}
-                    disabled={phase === "loading"}
-                  >
-                    {text(locale, words.refresh)}
-                  </button>
+                  {phase !== "error" && phase !== "unconnected" && (
+                    <button
+                      type="button"
+                      onClick={reload}
+                      disabled={phase === "loading"}
+                    >
+                      {text(locale, words.refresh)}
+                    </button>
+                  )}
                 </div>
                 {invalid && (
                   <p id="retained-connection-search-error" role="alert">
@@ -551,17 +554,6 @@ export default function RetainedConnections(props: Props) {
                 )}
               </form>
             </>
-          )}
-          {!supported && (
-            <div className="retained-connection-refresh">
-              <button
-                type="button"
-                disabled={phase === "loading"}
-                onClick={reload}
-              >
-                {text(locale, words.refresh)}
-              </button>
-            </div>
           )}
           <p
             ref={status}
@@ -618,6 +610,17 @@ export default function RetainedConnections(props: Props) {
                   : words.diagnosticsBody,
               )}
             </p>
+          )}
+          {!supported && phase !== "error" && phase !== "unconnected" && (
+            <div className="retained-connection-refresh">
+              <button
+                type="button"
+                disabled={phase === "loading"}
+                onClick={reload}
+              >
+                {text(locale, words.refresh)}
+              </button>
+            </div>
           )}
           {phase === "loaded" && data && supported && (
             <>

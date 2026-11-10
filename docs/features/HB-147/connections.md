@@ -41,6 +41,8 @@ Use prefix filter/apply/clear, refresh, pinned paging and selected detail with k
 
 This binds existing screen behavior, not a new provider connector or full S01 configuration workflow. External layout references already established by the adjacent receipt screen are the official Cloudscape table-view and split-panel patterns; consult their actual current contents before material composition, adopting hierarchy only. Native-language/practitioner approval remains separate.
 
+Actual-render review refined the composition after implementation: the existing shell hides incompatible demo/financial scope selectors for this live-read surface. Scope labels remain14px metadata; returned scope values, counts, filter labels and paging values are16px. At1024px of actual content width, selected detail sits beside a three-column connection/interval/domain list; additional registration facts remain in detail. Narrower layouts stack or replace the list, and detail focus scrolls the heading into view. Registration intervals use compact label/value rows on larger content widths. Hashes stay LTR with consistent line starts. Unsupported refresh follows its message; error states retain one retry action and usable prefix controls. These are presentation changes only and do not alter the frozen read contract.
+
 # Verification
 
 Backend isolated tests: fully owned/foreign/mixed/unresolved domains, duplicate domains, revoked/mismatched bindings, operator denial, malformed owned scalars/intervals/version, closed query and exact pins/page boundaries/limits, unsupported null versus confirmed empty, foreign activity not affecting public pins, no original/warehouse reads, guarded HTTP/method/body/error/size behavior and older-route regression. Fixtures remain visibly synthetic.

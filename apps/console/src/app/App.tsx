@@ -23,6 +23,7 @@ import {
 import { titles, menuNames, local, tabLabel } from "../planning/copy";
 import Onboarding from "../modules/onboarding/pages/onboarding/Screen";
 import Connections from "../modules/onboarding/pages/connections/Screen";
+import RetainedConnections from "../modules/onboarding/pages/retained-connections/Screen";
 import EvidenceScreen from "../modules/sources/pages/evidence/Screen";
 import SourceData from "../modules/sources/pages/source-data/Screen";
 import Reconciliation from "../modules/sources/pages/reconciliation/Screen";
@@ -166,6 +167,11 @@ export default function App() {
   const liveOverview = screen?.id === "U01" && audience === "admin";
   const receiptInspection =
     screen?.id === "S03" && !liveImports && audience === "admin";
+  const connectionInspection =
+    screen?.id === "S01" &&
+    !liveConnections &&
+    !route.objectId &&
+    audience === "admin";
   const remaining = screen
     ? remainingIds.has(screen.id) && !liveImports
     : false;
@@ -181,8 +187,9 @@ export default function App() {
     liveSourceData ||
     liveEvidence ||
     liveConnections ||
+    connectionInspection ||
     liveOnboarding;
-  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveOverview || liveCollectedSource || liveReadWorkbench || liveSourceData || liveEvidence || liveOnboarding ? params.toString() : ""}`;
+  const screenKey = `${liveService}:${screen?.id ?? route.path}:${audience}:${scope}:${params.get("period")}:${params.get("le")}:${params.get("ccy")}:${route.objectId ?? ""}:${mode}:${scenario}:${persona}:${liveOverview || liveCollectedSource || liveReadWorkbench || liveSourceData || liveEvidence || liveOnboarding || connectionInspection ? params.toString() : ""}`;
   const tabs =
     screen?.id === "U02" ? screen.tabs.slice(0, 2) : (screen?.tabs ?? []);
   const requestedTab = params.get("view") ?? route.tab ?? route.step;
@@ -224,7 +231,11 @@ export default function App() {
   function changeScope(changes: Record<string, string>) {
     if (!canLeave()) return;
     setDirty(false);
-    location.hash = planningUrl(route.path, params, { ...changes, view: tab });
+    const next = new URLSearchParams(params);
+    if (connectionInspection)
+      for (const key of [...next.keys()])
+        if (key.startsWith("connection-")) next.delete(key);
+    location.hash = planningUrl(route.path, next, { ...changes, view: tab });
   }
   function previewAudience(next: Audience, path?: string) {
     if (!canLeave()) return;
@@ -545,7 +556,7 @@ export default function App() {
 
   return (
     <div
-      className={`planning-app service-shell ${remaining ? "remaining-service-shell" : ""} ${screen?.id === "U01" || liveCollectedSource || liveReadWorkbench ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
+      className={`planning-app service-shell ${connectionInspection ? "connection-inspection-shell" : ""} ${remaining ? "remaining-service-shell" : ""} ${screen?.id === "U01" || liveCollectedSource || liveReadWorkbench ? "overview-shell" : ""} ${portal ? "planning-portal" : ""} ${liveSourceData ? "live-source-screen" : ""} ${liveEvidence ? "live-evidence-screen" : ""} ${liveConnections ? "live-connections-screen" : ""} ${liveOnboarding ? "live-onboarding-screen" : ""}`}
     >
       <a
         className="skip"
@@ -559,7 +570,11 @@ export default function App() {
       </a>
       <div className="planning-preview" hidden={!developer}>
         <span>
-          {liveOverview || liveCollectedSource || livePricing || liveBilling
+          {liveOverview ||
+          liveCollectedSource ||
+          livePricing ||
+          liveBilling ||
+          connectionInspection
             ? local(l, [
                 "수집 FOCUS 샘플 · 공개·합성 출처 · 조회 전용",
                 "Collected FOCUS samples · public/synthetic sources · read only",
@@ -644,53 +659,59 @@ export default function App() {
         </a>
         <span className="planning-installation">
           <span className="service-environment">
-            {receiptInspection
+            {connectionInspection
               ? local(l, [
-                  "수집 접수 조회",
-                  "Collection receipt inspection",
-                  "فحص إيصالات التجميع",
+                  "연결 등록 근거 조회",
+                  "Connection registration inspection",
+                  "فحص تسجيلات الاتصال",
                 ])
-              : remaining
+              : receiptInspection
                 ? local(l, [
-                    "업무 서비스 미연결",
-                    "Work service not connected",
-                    "خدمة العمل غير متصلة",
+                    "수집 접수 조회",
+                    "Collection receipt inspection",
+                    "فحص إيصالات التجميع",
                   ])
-                : liveCredits
-                  ? credits.environment(l)
-                  : liveClaims
-                    ? claimEnvironment(l)
-                    : liveInbox
-                      ? inboxEnvironment(l)
-                      : local(
-                          l,
-                          liveOverview ||
-                            liveCollectedSource ||
-                            livePricing ||
-                            liveBilling
-                            ? [
-                                "수집 FOCUS 샘플 · 공개·합성 출처",
-                                "Collected FOCUS samples · public and synthetic sources",
-                                "عينات FOCUS مجمعة · مصادر عامة وتجريبية",
-                              ]
-                            : liveService
+                : remaining
+                  ? local(l, [
+                      "업무 서비스 미연결",
+                      "Work service not connected",
+                      "خدمة العمل غير متصلة",
+                    ])
+                  : liveCredits
+                    ? credits.environment(l)
+                    : liveClaims
+                      ? claimEnvironment(l)
+                      : liveInbox
+                        ? inboxEnvironment(l)
+                        : local(
+                            l,
+                            liveOverview ||
+                              liveCollectedSource ||
+                              livePricing ||
+                              liveBilling
                               ? [
-                                  "로컬 검증 환경 · 합성 데이터",
-                                  "Local validation · synthetic data",
-                                  "تحقق محلي · بيانات تجريبية",
+                                  "수집 FOCUS 샘플 · 공개·합성 출처",
+                                  "Collected FOCUS samples · public and synthetic sources",
+                                  "عينات FOCUS مجمعة · مصادر عامة وتجريبية",
                                 ]
-                              : mode === "synthetic"
+                              : liveService
                                 ? [
-                                    "데모 환경 · 합성 데이터",
-                                    "Demo · synthetic data",
-                                    "عرض تجريبي · بيانات اصطناعية",
+                                    "로컬 검증 환경 · 합성 데이터",
+                                    "Local validation · synthetic data",
+                                    "تحقق محلي · بيانات تجريبية",
                                   ]
-                                : [
-                                    "데이터 미연결",
-                                    "Data not connected",
-                                    "البيانات غير متصلة",
-                                  ],
-                        )}
+                                : mode === "synthetic"
+                                  ? [
+                                      "데모 환경 · 합성 데이터",
+                                      "Demo · synthetic data",
+                                      "عرض تجريبي · بيانات اصطناعية",
+                                    ]
+                                  : [
+                                      "데이터 미연결",
+                                      "Data not connected",
+                                      "البيانات غير متصلة",
+                                    ],
+                          )}
           </span>
         </span>
         {!mobile && headerActions}
@@ -928,29 +949,40 @@ export default function App() {
                   ...(liveInbox ? inboxContext : {}),
                   ...(liveClaims ? claimContext : {}),
                   ...(liveCredits ? credits.reviewContext : {}),
-                  ...(receiptInspection
+                  ...(connectionInspection
                     ? {
-                        profile: "retained-focus-receipts-v1",
+                        profile: "retained-focus-connections-v1",
                         mode: "protected-local-read",
                         period: null,
                         organization: null,
                         currency: null,
                         scope: null,
-                        producer: "receipt-reader",
+                        producer: "connection-reader",
                         commands: "unconnected",
                       }
-                    : remaining
+                    : receiptInspection
                       ? {
-                          profile: "commercial-frontend-unconnected",
-                          mode: "unconnected",
+                          profile: "retained-focus-receipts-v1",
+                          mode: "protected-local-read",
                           period: null,
                           organization: null,
                           currency: null,
                           scope: null,
-                          producer: "unbound",
+                          producer: "receipt-reader",
                           commands: "unconnected",
                         }
-                      : {}),
+                      : remaining
+                        ? {
+                            profile: "commercial-frontend-unconnected",
+                            mode: "unconnected",
+                            period: null,
+                            organization: null,
+                            currency: null,
+                            scope: null,
+                            producer: "unbound",
+                            commands: "unconnected",
+                          }
+                        : {}),
                 })}
                 items={
                   view.key === screenKey && view.items.length
@@ -1039,6 +1071,7 @@ export default function App() {
                       liveInbox ||
                       liveClaims ||
                       liveCredits ||
+                      connectionInspection ||
                       remaining
                     )
                       ? { display: "none" }
@@ -1055,11 +1088,20 @@ export default function App() {
                       key={t.key}
                       aria-current={tab === t.key ? "page" : undefined}
                       onClick={() => {
-                        if (liveReadWorkbench && tab === t.key) return;
+                        if (
+                          (liveReadWorkbench || connectionInspection) &&
+                          tab === t.key
+                        )
+                          return;
                         if (liveReadWorkbench || canLeave()) {
                           if (liveReadWorkbench) setNavigationGuard(null);
                           if (!livePricing) setDirty(false);
-                          location.hash = planningUrl(screen.path, params, {
+                          const next = new URLSearchParams(params);
+                          if (connectionInspection)
+                            for (const key of [...next.keys()])
+                              if (key.startsWith("connection-"))
+                                next.delete(key);
+                          location.hash = planningUrl(screen.path, next, {
                             view: t.key,
                             ...(screen.id === "U02"
                               ? { "close-view": t.key }
@@ -1217,6 +1259,13 @@ export default function App() {
                       locale={l}
                       stage={tab}
                       expected={params.get("connection") ?? undefined}
+                      onState={onState}
+                    />
+                  ) : connectionInspection ? (
+                    <RetainedConnections
+                      locale={l}
+                      params={params}
+                      view={tab}
                       onState={onState}
                     />
                   ) : liveConnections ? (

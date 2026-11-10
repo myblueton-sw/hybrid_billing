@@ -9,6 +9,7 @@ export class ReadError extends Error {
   constructor(
     public code: string,
     public requestId = "",
+    public httpStatus?: number,
   ) {
     super(code);
   }
@@ -60,7 +61,7 @@ export function parseJson(text: string): unknown {
     throw new ReadError("invalid_response");
   }
 }
-async function body(response: Response) {
+export async function body(response: Response) {
   const mime = response.headers.get("content-type") ?? "";
   if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(mime))
     throw new ReadError("invalid_response");
@@ -104,7 +105,8 @@ async function body(response: Response) {
   return parseJson(text);
 }
 export type ReadResult =
-  { kind: "loaded"; data: Data } | { kind: "unconnected" };
+  | { kind: "loaded"; data: Data }
+  | { kind: "unconnected" };
 export async function load(q: Query, signal: AbortSignal): Promise<ReadResult> {
   const captured: Query = Object.freeze({ ...q });
   const aborted = () => {

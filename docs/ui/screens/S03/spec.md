@@ -172,3 +172,9 @@ All scenarios below remain NOT_RUN.
 - OCR verifier assignment policy.
 
 Field lengths, precision/scale policy values, permission enums, actual API addresses, nullable details, concrete error codes, page sizes, latency targets and supported product versions require detailed contract closure. The proposed command and numeric contracts define planning behavior, not chosen customer defaults. Current provider/ERP support, actual credentials and live data connections remain unverified. Static document/JSON checks cannot substitute for product behavior, accessibility, performance or live integration evidence.
+
+## Retained sample implementation boundary
+
+[HB-150](../../../features/HB-150/plan.md) adds current authorized stored-row counts and provider/source-window/provenance observations beside the existing protected whole-file receipt metadata. Prefix search filters receipts only; source rows and receipts have separate observation times and snapshots. Mixed-file permitted rows do not disclose excluded whole-file metadata. Authority denial or mismatched scope clears both observations. The S04 link opens its existing independently authorized reader without treating source windows as charge-month filters.
+
+This bounded sample reader does not implement the full receive/resume/OCR/worker/completeness actions specified above or certify upstream completeness, large-volume processing or owner FIX. Actual implementation and verification scope is recorded per ticket.

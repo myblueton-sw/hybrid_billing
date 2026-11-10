@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Props } from "../../../../shared/domain-screen-ui/work/contracts";
 import {
   query,
@@ -9,8 +9,9 @@ import {
   type Data,
 } from "./contract";
 import { load, ReadError, type ReadResult } from "./api";
-import { t, words, timestamp } from "./copy";
+import { t, words, timestamp, shortTimestamp } from "./copy";
 import ReceiptList from "./ReceiptList";
+import CollectionSummary from "./CollectionSummary";
 import ReceiptDetail from "./ReceiptDetail";
 import "./screen.css";
 type State = {
@@ -74,6 +75,21 @@ export default function Imports(p: Props) {
     data && selection?.key === key && selection.snapshot === data.snapshot
       ? data.records.find((r) => r.id === selection.id)
       : undefined;
+  const [summary, setSummary] = useState<{ key: string; value: string } | null>(
+    null,
+  );
+  const summaryState = useCallback(
+    (value: string) => setSummary({ key, value }),
+    [key],
+  );
+  const authorityError = useCallback(
+    (error: ReadError) => {
+      setSelection(null);
+      setSummary(null);
+      setState({ key, error: error.code, requestId: error.requestId });
+    },
+    [key],
+  );
   const seq = useRef(0),
     status = useRef<HTMLParagraphElement>(null),
     input = useRef<HTMLInputElement>(null),
@@ -129,6 +145,7 @@ export default function Imports(p: Props) {
         error_request_id:
           phase === "error" ? (current?.requestId ?? null) : null,
         selected: selected?.id ?? null,
+        stored_status: summary?.key === key ? JSON.parse(summary.value) : null,
       }),
       [
         `S03:data:${p.view}`,
@@ -136,6 +153,11 @@ export default function Imports(p: Props) {
         "S03:action:filter",
         "S03:action:refresh",
         "S03:action:inspect",
+        "S03:data:stored-rows",
+        "S03:data:source-provenance",
+        "S03:data:source-windows",
+        "S03:state:summary-async",
+        "S03:action:source-rows",
         ...recordKeys.map((k) => `S03:field:${k}`),
       ],
     );
@@ -147,6 +169,8 @@ export default function Imports(p: Props) {
     current?.error,
     current?.requestId,
     selected?.id,
+    summary,
+    key,
     p.onState,
   ]);
   useEffect(() => {
@@ -195,106 +219,114 @@ export default function Imports(p: Props) {
       aria-busy={phase === "loading"}
     >
       <header className="receipt-context">
-        <h2>{t(l, words.scope)}</h2>
-        <p>{t(l, words.local)}</p>
-        <p className="receipt-meta">
-          {t(
-            l,
-            p.view === "completeness" ? words.completeness : words.metadata,
+        <div className="receipt-scope-strip">
+          <h2>{t(l, words.scope)}</h2>
+          {data && (
+            <p>
+              {t(
+                l,
+                data.audience === "company"
+                  ? ["회사 범위", "Company scope", "نطاق الشركة"]
+                  : ["테넌트 범위", "Tenant scope", "نطاق المستأجر"],
+              )}{" "}
+              ·{" "}
+              {t(l, ["허용 구성원", "Authorized members", "الأعضاء المسموحون"])}{" "}
+              <bdi dir="ltr">{data.member_count}</bdi>
+            </p>
           )}
-        </p>
-        {data && (
-          <>
-            <dl className="receipt-scope-facts">
-              <div>
-                <dt>
-                  {t(l, [
-                    "서버 읽기 범위",
-                    "Server read scope",
-                    "نطاق قراءة الخادم",
-                  ])}
-                </dt>
-                <dd>
-                  {t(
-                    l,
-                    data.audience === "company"
-                      ? ["회사 범위", "Company scope", "نطاق الشركة"]
-                      : ["테넌트 범위", "Tenant scope", "نطاق المستأجر"],
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt>
-                  {t(l, [
-                    "허용 구성원 수",
-                    "Authorized members",
-                    "الأعضاء المسموحون",
-                  ])}
-                </dt>
-                <dd>
-                  <bdi dir="ltr">{data.member_count}</bdi>
-                </dd>
-              </div>
-              <div>
-                <dt>{t(l, ["조회 시각", "Read at", "وقت القراءة"])}</dt>
-                <dd>
-                  <time dateTime={data.observed_at}>
-                    <bdi dir="ltr">{timestamp(data.observed_at)}</bdi>
-                  </time>
-                </dd>
-              </div>
-            </dl>
-            <details className="receipt-pins">
-              <summary>
-                {t(l, [
-                  "조회 범위·개정 근거",
-                  "Read scope and revision evidence",
-                  "أدلة نطاق القراءة والمراجعة",
-                ])}
-              </summary>
-              <dl>
-                {(
-                  [
-                    [
-                      "auth_scope",
-                      [
-                        "읽기 범위 해시",
-                        "Read scope digest",
-                        "بصمة نطاق القراءة",
-                      ],
-                    ],
-                    [
-                      "permission_revision",
-                      [
-                        "현재 권한 개정",
-                        "Current permission revision",
-                        "مراجعة الصلاحية الحالية",
-                      ],
-                    ],
-                    [
-                      "snapshot",
-                      [
-                        "수집 근거 스냅샷",
-                        "Collection evidence snapshot",
-                        "لقطة أدلة التجميع",
-                      ],
-                    ],
-                  ] as const
-                ).map(([field, label]) => (
+          <button type="button" onClick={reload} disabled={phase === "loading"}>
+            {t(l, words.refresh)}
+          </button>
+        </div>
+        <details className="receipt-pins">
+          <summary>
+            {t(l, [
+              "조회 범위·개정 근거",
+              "Read scope and revision evidence",
+              "أدلة نطاق القراءة والمراجعة",
+            ])}
+          </summary>
+          <p>{t(l, words.local)}</p>
+          <p>
+            {t(
+              l,
+              p.view === "completeness" ? words.completeness : words.metadata,
+            )}
+          </p>
+          {data && (
+            <dl>
+              {(["auth_scope", "permission_revision", "snapshot"] as const).map(
+                (field) => (
                   <div key={field}>
-                    <dt>{t(l, label)}</dt>
+                    <dt>
+                      {t(
+                        l,
+                        field === "auth_scope"
+                          ? [
+                              "읽기 범위 해시",
+                              "Read scope digest",
+                              "بصمة نطاق القراءة",
+                            ]
+                          : field === "permission_revision"
+                            ? [
+                                "현재 권한 개정",
+                                "Current permission revision",
+                                "مراجعة الصلاحية الحالية",
+                              ]
+                            : [
+                                "접수 조회 스냅샷",
+                                "Receipt snapshot",
+                                "لقطة الإيصالات",
+                              ],
+                      )}
+                    </dt>
                     <dd>
                       <bdi dir="ltr" className="receipt-id">
                         {data[field]}
                       </bdi>
                     </dd>
                   </div>
-                ))}
-              </dl>
-            </details>
-          </>
-        )}
+                ),
+              )}
+            </dl>
+          )}
+        </details>
       </header>
+      {data && (
+        <CollectionSummary
+          key={key}
+          locale={l}
+          scope={data}
+          identity={key}
+          onAuthorityError={authorityError}
+          onState={summaryState}
+        />
+      )}
+      <div className="receipt-section-heading">
+        <h2>
+          {t(l, [
+            "접수 메타데이터",
+            "Receipt metadata",
+            "بيانات الإيصالات الوصفية",
+          ])}
+        </h2>
+        {data && (
+          <p className="receipt-meta">
+            {t(l, ["접수 조회 시각", "Receipt read at", "وقت قراءة الإيصالات"])}
+            :{" "}
+            <time dateTime={data.observed_at}>
+              <bdi dir="ltr">{shortTimestamp(data.observed_at)}</bdi>
+            </time>
+          </p>
+        )}
+      </div>
+      <p>
+        {t(l, [
+          "파일 전체가 허용 범위에 속하는 접수만 표시합니다. 접수가 표시되지 않는 파일에도 조회 가능한 행이 있을 수 있습니다.",
+          "Only whole-file receipts within your permitted scope are shown. Queryable rows may also come from files whose receipts are not shown.",
+          "تُعرض إيصالات الملفات الواقعة بالكامل ضمن نطاقك المسموح فقط. قد تأتي الصفوف القابلة للاستعلام أيضًا من ملفات لا تُعرض إيصالاتها.",
+        ])}
+      </p>
       {q && p.view !== "extraction" && !unsupported && (
         <form
           role="search"
@@ -346,27 +378,20 @@ export default function Imports(p: Props) {
                 {t(l, words.clear)}
               </button>
             )}
-            <button
-              type="button"
-              onClick={reload}
-              disabled={phase === "loading"}
-            >
-              {t(l, words.refresh)}
-            </button>
           </div>
+          <p className="receipt-filter-note">
+            {t(l, [
+              "이 검색은 접수 목록에만 적용됩니다.",
+              "This search filters receipts only.",
+              "يُطبّق هذا البحث على الإيصالات فقط.",
+            ])}
+          </p>
           {invalid && (
             <p id="receipt-search-error" role="alert">
               {t(l, words.invalid)}
             </p>
           )}
         </form>
-      )}
-      {q && (p.view === "extraction" || unsupported) && (
-        <div className="receipt-refresh">
-          <button type="button" onClick={reload} disabled={phase === "loading"}>
-            {t(l, words.refresh)}
-          </button>
-        </div>
       )}
       <p
         className="receipt-result-status"
@@ -390,10 +415,9 @@ export default function Imports(p: Props) {
           t(l, words.empty)
         ) : data ? (
           <>
-            {t(l, ["허용된 결과 ", "Permitted results ", "النتائج المسموحة "])}
+            {t(l, ["접수 검색 결과 ", "Receipt results ", "نتائج الإيصالات "])}
             <bdi dir="ltr">
-              {data.selection.after + 1}–
-              {data.selection.after + data.records.length}
+              {`${data.selection.after + 1}–${data.selection.after + data.records.length}`}
             </bdi>
             {t(l, [
               ` / ${data.total}건`,
@@ -437,7 +461,7 @@ export default function Imports(p: Props) {
             className={`receipt-workspace ${selected ? "receipt-has-detail" : ""}`}
           >
             <div>
-              <h2>
+              <h3>
                 {t(
                   l,
                   p.view === "quarantine"
@@ -458,7 +482,7 @@ export default function Imports(p: Props) {
                           "إيصالات التجميع وحالة المعالجة",
                         ],
                 )}
-              </h2>
+              </h3>
               {data.records.length > 0 ? (
                 <ReceiptList
                   locale={l}

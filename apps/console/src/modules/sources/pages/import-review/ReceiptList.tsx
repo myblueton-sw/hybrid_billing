@@ -2,8 +2,27 @@ import { useId } from "react";
 import type { Locale } from "../../../../shared/types";
 import TableRegion from "../../../../shared/TableRegion";
 import type { Receipt, View } from "./contract";
-import { t, words, labels, stage, type Words } from "./copy";
+import { t, words, labels, stage, timestamp, type Words } from "./copy";
 import { Value, receivedLabel } from "./ReceiptDetail";
+function CompactTime({
+  value,
+  locale,
+}: {
+  value: string | null;
+  locale: Locale;
+}) {
+  if (value === null) return <span>{t(locale, words.unknown)}</span>;
+  const dateOnly = /T00:00:00(?:\.0+)?(?:Z|\+00:00)$/.test(value);
+  return (
+    <time dateTime={value} title={value}>
+      <bdi dir="ltr">
+        {dateOnly
+          ? value.slice(0, 10) + " UTC"
+          : timestamp(value).replace(/(\d{2}:\d{2}:\d{2})\.\d+/, "$1")}
+      </bdi>
+    </time>
+  );
+}
 export default function ReceiptList({
   locale: l,
   view,
@@ -18,6 +37,23 @@ export default function ReceiptList({
   onSelect: (r: Receipt, trigger: HTMLButtonElement) => void;
 }) {
   const noteId = useId();
+  const cardFields =
+    view === "completeness"
+      ? ([
+          "window_start",
+          "window_end",
+          "known_zero",
+          "complete_through",
+        ] as const)
+      : view === "quarantine"
+        ? (["window_start", "window_end", "reason", "received_at"] as const)
+        : ([
+            "window_start",
+            "window_end",
+            "declared_rows",
+            "file_bytes",
+            "received_at",
+          ] as const);
   const headings: Words[] = [
     labels.id,
     ["연결·자료 기간", "Connection and window", "الاتصال والفترة"],
@@ -46,6 +82,51 @@ export default function ReceiptList({
           "الصفحة الحالية. افحص سجلًا لعرض مرجعه التقني الكامل.",
         ])}
       </p>
+      <div className="receipt-cards">
+        {records.map((r) => (
+          <article
+            className="receipt-card"
+            key={r.id}
+            aria-current={selected === r.id ? "true" : undefined}
+          >
+            <button
+              className="receipt-open"
+              type="button"
+              aria-pressed={selected === r.id}
+              aria-label={`${t(l, words.inspect)} ${r.id.slice(0, 12)}`}
+              onClick={(e) => onSelect(r, e.currentTarget)}
+            >
+              <bdi dir="ltr">{r.id.slice(0, 12)}</bdi>
+            </button>
+            <dl>
+              <div>
+                <dt>{t(l, labels.stage)}</dt>
+                <dd>{stage(l, r)}</dd>
+              </div>
+              {cardFields.map((field) => (
+                <div key={field} data-field={field}>
+                  <dt>{t(l, labels[field])}</dt>
+                  <dd>
+                    {[
+                      "window_start",
+                      "window_end",
+                      "received_at",
+                      "complete_through",
+                    ].includes(field) ? (
+                      <CompactTime
+                        locale={l}
+                        value={r[field] as string | null}
+                      />
+                    ) : (
+                      <Value locale={l} record={r} field={field} />
+                    )}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </article>
+        ))}
+      </div>
       <TableRegion
         locale={l}
         className="receipt-table"
@@ -91,7 +172,7 @@ export default function ReceiptList({
                         "البداية · مشمولة",
                       ])}
                       <br />
-                      <Value locale={l} record={r} field="window_start" />
+                      <CompactTime locale={l} value={r.window_start} />
                     </div>
                     <div>
                       {t(l, [
@@ -100,7 +181,7 @@ export default function ReceiptList({
                         "النهاية · غير مشمولة",
                       ])}
                       <br />
-                      <Value locale={l} record={r} field="window_end" />
+                      <CompactTime locale={l} value={r.window_end} />
                     </div>
                   </div>
                 </td>
@@ -137,7 +218,7 @@ export default function ReceiptList({
                         {receivedLabel(l, r)}
                       </span>
                       <div>
-                        <Value locale={l} record={r} field="received_at" />
+                        <CompactTime locale={l} value={r.received_at} />
                       </div>
                     </>
                   )}

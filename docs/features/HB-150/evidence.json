@@ -1,0 +1,64 @@
+{
+  "actual_status": {
+    "contributing_deliveries": 3,
+    "original_availability": "not-checked",
+    "providers": 6,
+    "queryable_rows": 1121,
+    "upstream_completeness": "unverified",
+    "visible_receipt_metadata": 2
+  },
+  "artifacts": {
+    "actual-ar-1440.png": "b6aed2ae6b3a3ea96d7efe964f29b8ba72ad0ce8f8aca80cc2108137da551af5",
+    "actual-ar-390.png": "82b93d44a93591029955f2e80b672aa1118deeeed1794ca981154fa821b80365",
+    "actual-en-1440.png": "f176b9943439e57f6f09a96787ba452fc41d8da94951851a7826cb3b4e59efc7",
+    "actual-en-390.png": "97fde3446ebc9f3459d310c64e418ec14033b1e27adb37a73cc9255ecd780e97",
+    "actual-keyboard-focus.png": "eaee0eb7b2ce808d89f2a73fd48c3a9d5295000b35cbbd5c8c61a7629d9c45e6",
+    "actual-ko-1440.png": "5ece5feda42e2f34b298c6407409832a2d0eed29ec80d9c150b9f95ff2a34c4d",
+    "actual-ko-390.png": "77b221b94cdb06aca95f9e7a70bd9f1e7679283963f0c061c8b1975d73167ff1",
+    "actual-selected-en-1440.png": "bda8b3a49716d5ad973f4734e3609ca597356764a3aa5e0d1f0528b39194916f",
+    "design-final-review.json": "7d66d4ffb38b6099a0f0e0ca36ef51d47d24e47f275c3ff11c903c3d0a21b6d4",
+    "design-initial-review.json": "536ff82113460f8b0323ba9eb8bc3e0d36b8f66ec03e82fd2e53eaac83b05954",
+    "design-proposal.json": "0e611ad644b6e032a72a7070371b75c743d90cb0a084f45e189de9f29d183d9b",
+    "preservation.json": "1f47faae65062d45cf2b7221e873b80f0445f4832ede0ff9f9a4801ccc006c44",
+    "report.json": "1b8780bb05189bbcd556b5a33d462572b872aad2e94761d8226ca27536401cbf",
+    "style-result.json": "0e64b1348f6cb14469ddd26bf4674ddd55b177b2370b7f0312cdce9a026ce67f",
+    "synthetic-authority-cleared.png": "2010d6f6ef9629e0b598acb476ed6e454fdeeb74094d40c6f9fa3690346f87f6",
+    "synthetic-exact-zero.png": "3ccbbc1a03d4ae0c33dfa46a6830ee62512caf4669df06f037b9a39da86f9ffe",
+    "synthetic-source-unavailable.png": "3006df570ff7741e3c672b45a0662f036a38b21e9f36730d1768ab186b0f6493"
+  },
+  "baseline_commit": "2ba6667a31d9fb38382208e70aaf01f40bf43d03",
+  "checks": {
+    "browser_captures": 10,
+    "browser_cases": 23,
+    "build_artifacts": 438,
+    "client_tests": 278,
+    "existing_backend_regressions": 284,
+    "immutable_foundations": 8,
+    "new_backend_tests": 84,
+    "non_get_requests": 0,
+    "page_errors": 0,
+    "preservation_unchanged": true,
+    "preserved_files": 93
+  },
+  "frontend_revision": "04c70e38da805f3695030d347678be82bcda728a4bd10eb062f849c3f56797f8",
+  "machine": "mac_mini",
+  "native_browser_observation": "Updated KO S03 opened in a new tab;1121 rows and3 deliveries observed;prior S04 tab preserved",
+  "owner_acceptance_created": false,
+  "root_backend_execution": {
+    "command": "tests/engine_probes/.venv/bin/python -m pytest -q --import-mode=importlib tests/focus_collection_status",
+    "exit_status": 0,
+    "observed_result": "84 passed",
+    "provenance": "Curated from the root terminal execution; not the child socket-error log"
+  },
+  "source_hashes": {
+    "apps/console/src/modules/sources/pages/import-review/CollectionSummary.tsx": "a2f857af2af0f1dcccd43b78fccdd232da196f65bac1fffa574e8223f6c3788e",
+    "apps/console/src/modules/sources/pages/import-review/Screen.tsx": "e3d6da316fc00b17c95b56240593d951fe2c871c5cef506d279519faffd37947",
+    "apps/console/src/modules/sources/pages/import-review/status-api.ts": "275d12d010f28a8cfe87417b38b1924b15717fefb57ab056095b73267cfadf3b",
+    "apps/console/tools/collection-status-qa.mjs": "0b33d1efe0f0bf5296ad78d3533a5c77fa833891c39eb47d88223d6e3bd9c008",
+    "modules/focus_import/collection_status.py": "a310ec6cd86627c3a726978c024e245ded86c4ef5da4d8758ae4e98773f7c3b5",
+    "modules/focus_import/overview_http.py": "ac06063bdda4d0d6a7a545aa9bb5e3373ccaa3f7f267b2ff7a6a163eb6b00ca0"
+  },
+  "source_review": "PASS including decoder ordering and canonical UTC aliases",
+  "ticket": "HB-150",
+  "visual_review": "PASS narrow; root computed neutral borders and physical LTR checks passed"
+}

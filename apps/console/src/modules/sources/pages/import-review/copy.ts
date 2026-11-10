@@ -215,3 +215,6 @@ export const labels = {
 export function timestamp(value: string) {
   return value.replace("T", " ").replace(/(?:Z|\+00:00)$/, " UTC");
 }
+
+export const shortTimestamp = (value: string) =>
+  timestamp(value).replace(/\.\d+(?= UTC$)/, "");

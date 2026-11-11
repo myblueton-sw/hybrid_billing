@@ -48,6 +48,7 @@
   color: var(--hb-muted);
 }
 .collected-provenance summary,
+.collected-reference summary,
 .collected-account summary {
   cursor: pointer;
   min-block-size: 40px;
@@ -194,11 +195,6 @@
   padding-block-start: 24px;
   scroll-margin-block: 24px;
 }
-.collected-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
-}
 .collected-detail dt {
   font-size: 14px;
   color: var(--hb-muted);
@@ -209,11 +205,6 @@
 .collected-unavailable {
   padding-block: 24px;
   border-block-start: 1px solid var(--hb-line-row);
-}
-@media (max-width: 1199px) {
-  .collected-detail-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 @media (max-width: 767px) {
   .collected-toolbar {
@@ -227,9 +218,6 @@
   }
   .collected-source :is(button, select, input) {
     min-block-size: 44px;
-  }
-  .collected-detail-grid {
-    grid-template-columns: minmax(0, 1fr);
   }
   .collected-pages {
     justify-content: start;
@@ -293,4 +281,352 @@
 .collected-scroll-hint {
   font-size: 14px;
   color: var(--hb-muted);
+}
+.collected-code {
+  font-family: var(--hb-font-mono);
+  font-size: 14px;
+}
+.collected-source .collected-token {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.collected-quiet {
+  color: var(--hb-muted);
+}
+.collected-state {
+  font-weight: 600;
+  color: var(--hb-ink);
+}
+.collected-reference {
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.collected-reference summary small {
+  display: inline;
+  margin-inline-start: 12px;
+}
+.collected-reference table,
+.collected-field-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+.collected-reference table,
+.collected-field-table {
+  white-space: normal;
+  table-layout: auto;
+}
+.collected-reference :is(th, td),
+.collected-field-table :is(th, td) {
+  position: static;
+  block-size: auto;
+  background: transparent;
+  color: var(--hb-ink);
+  font-size: 16px;
+  line-height: 24px;
+  text-align: start;
+  vertical-align: top;
+  padding: 8px 12px;
+  border-block-end: 1px solid var(--hb-line-row);
+  font-weight: 400;
+  word-break: keep-all;
+}
+.collected-reference :is(th, td):first-child,
+.collected-field-table :is(th, td):first-child {
+  padding-inline-start: 0;
+}
+.collected-reference thead th,
+.collected-field-table thead th {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.collected-reference .collected-group th {
+  padding-block: 16px 6px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+.collected-field-table .collected-group th {
+  padding-block: 16px 6px;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.collected-reference tbody th:first-child {
+  inline-size: 240px;
+}
+.collected-reference td:nth-child(2) {
+  inline-size: 280px;
+}
+.collected-reference td:last-child {
+  max-inline-size: 72ch;
+}
+.collected-version-name {
+  display: block;
+}
+.collected-table .collected-fields-table {
+  min-inline-size: 1664px;
+}
+.collected-table .collected-fields-table :is(th, td) {
+  overflow-wrap: normal;
+  max-inline-size: none;
+  min-inline-size: 0;
+}
+.collected-table .collected-fields-table td bdi.collected-token {
+  display: block;
+  white-space: nowrap;
+  max-inline-size: none;
+  overflow-wrap: normal;
+}
+.collected-fields-table :is(th, td):nth-child(1) {
+  min-inline-size: 240px;
+}
+.collected-fields-table :is(th, td):nth-child(2) {
+  min-inline-size: 176px;
+}
+.collected-table .collected-fields-table td:nth-child(2) {
+  white-space: normal;
+  max-inline-size: 200px;
+}
+.collected-fields-table :is(th, td):nth-child(3) {
+  min-inline-size: 184px;
+}
+.collected-fields-table :is(th, td):nth-child(4) {
+  min-inline-size: 80px;
+}
+.collected-fields-table :is(th, td):is(:nth-child(5), :nth-child(6)) {
+  min-inline-size: 208px;
+}
+.collected-fields-table
+  :is(th, td):is(:nth-child(7), :nth-child(8), :nth-child(9)) {
+  min-inline-size: 136px;
+}
+.collected-fields-table :is(th, td):nth-child(10) {
+  min-inline-size: 152px;
+}
+.collected-fields-table thead th small {
+  font-weight: 400;
+}
+.collected-table .collected-fields-table .collected-band th {
+  block-size: 36px;
+  padding-block: 8px;
+  line-height: 20px;
+  min-inline-size: 0;
+}
+.collected-band span {
+  position: sticky;
+  inset-inline-start: 12px;
+}
+.collected-table .collected-fields-table thead tr:nth-child(2) th {
+  inset-block-start: 36px;
+}
+.collected-fields-table .collected-band th + th,
+.collected-fields-table
+  thead
+  tr:nth-child(2)
+  th:is(:nth-child(7), :nth-child(9)),
+.collected-fields-table td.collected-group-start {
+  border-inline-start: 1px solid var(--hb-line-row);
+}
+.collected-reference tbody tr:hover td,
+.collected-field-table tbody tr:hover td {
+  background: transparent;
+}
+.collected-reference tbody tr:last-child td,
+.collected-field-table tbody tr:last-child td {
+  border-block-end: 1px solid var(--hb-line-row);
+}
+.collected-table .collected-fields-table td strong bdi {
+  display: inline;
+}
+.collected-table tbody tr[data-selected] :is(th, td) {
+  background: var(--hb-hover);
+}
+.collected-table tbody th small.collected-selected {
+  font-weight: 600;
+  color: var(--hb-ink);
+}
+.collected-detail > header {
+  align-items: start;
+}
+.collected-detail h3 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+.collected-source .collected-row-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-block: 4px 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--hb-muted);
+}
+.collected-source .collected-caption {
+  max-inline-size: 85ch;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--hb-muted);
+  word-break: keep-all;
+}
+.collected-detail-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px 48px;
+  margin-block-start: 16px;
+}
+.collected-detail-source {
+  flex: 1 1 760px;
+  max-inline-size: 960px;
+  min-inline-size: 0;
+}
+.collected-detail-side {
+  flex: 1 1 300px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(272px, 1fr));
+  gap: 32px;
+  align-content: start;
+  min-inline-size: 0;
+}
+.collected-detail-side dl {
+  margin-block: 8px 0;
+  max-inline-size: 60ch;
+}
+.collected-detail-side dl + h3 {
+  margin-block-start: 32px;
+}
+.collected-names > span,
+.collected-value > :is(span, strong) {
+  display: block;
+  line-height: 24px;
+}
+.collected-names > span + span,
+.collected-value > .collected-unit {
+  font-size: 14px;
+  line-height: 22px;
+}
+.collected-value > span.collected-unit,
+.collected-field-table .collected-note {
+  color: var(--hb-muted);
+}
+.collected-field-table .collected-note {
+  font-size: 14px;
+  line-height: 24px;
+}
+.collected-field-table tbody th {
+  inline-size: 152px;
+}
+.collected-field-table .collected-note {
+  inline-size: 176px;
+  min-inline-size: 176px;
+}
+.collected-source .collected-token-pair {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.collected-field-table .collected-names {
+  inline-size: 190px;
+  white-space: nowrap;
+}
+.collected-field-table .collected-names bdi {
+  overflow-wrap: normal;
+}
+.collected-field-table thead th {
+  white-space: nowrap;
+}
+.collected-reference .collected-group th small {
+  font-weight: 400;
+}
+.collected-field-table .collected-value {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+.collected-field-table tr[data-period-note] td {
+  font-size: 14px;
+  line-height: 22px;
+}
+.collected-unsupplied :is(p, li) {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--hb-muted);
+  word-break: keep-all;
+}
+.collected-unsupplied ul {
+  margin: 0;
+  padding-inline-start: 20px;
+}
+.collected-detail > footer {
+  margin-block-start: 24px;
+}
+.overview-shell .collected-source .collected-detail button {
+  min-block-size: 40px;
+  block-size: auto;
+}
+@media (max-width: 767px) {
+  .overview-shell .collected-source .collected-detail button {
+    min-block-size: 44px;
+  }
+}
+@media (max-width: 767px) {
+  .collected-reference table,
+  .collected-reference :is(tbody, tr, th, td),
+  .collected-field-table,
+  .collected-field-table :is(tbody, tr, th, td) {
+    display: block;
+    inline-size: auto;
+  }
+  .collected-reference thead,
+  .collected-field-table thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .collected-reference tbody tr,
+  .collected-field-table tbody tr {
+    padding-block: 12px;
+    border-block-end: 1px solid var(--hb-line-row);
+  }
+  .collected-reference tbody :is(th, td),
+  .collected-field-table tbody :is(th, td) {
+    padding: 0;
+    border: 0;
+    inline-size: auto;
+    max-inline-size: 100%;
+  }
+  .collected-field-table tbody th {
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--hb-muted);
+  }
+  .collected-field-table .collected-note,
+  .collected-field-table tbody th {
+    inline-size: auto;
+    min-inline-size: 0;
+  }
+  .collected-reference tbody th:first-child {
+    inline-size: auto;
+  }
+  .collected-reference tbody tr:last-child td,
+  .collected-field-table tbody tr:last-child td {
+    border: 0;
+  }
+  .collected-field-table .collected-names {
+    inline-size: auto;
+    white-space: normal;
+  }
+  .collected-field-table .collected-group th,
+  .collected-reference .collected-group th {
+    padding: 0;
+    color: var(--hb-ink);
+  }
+  .collected-field-table .collected-note:empty {
+    display: none;
+  }
+  .collected-reference summary small {
+    display: block;
+    margin-inline-start: 0;
+  }
 }

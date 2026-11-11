@@ -188,7 +188,7 @@ export default function Results({
             {t(
               l,
               "Same source, company, provider, month, basis, currency, recipient set and arithmetic profile.",
-              "원천·회사·공급자·월·비용 기준·통화·대상 집합·계산 방식이 같은 결과입니다.",
+              "원천·회사·공급사·월·비용 기준·통화·대상 집합·계산 방식이 같은 결과입니다.",
               "نتائج للمصدر والشركة والمزوّد والشهر وأساس التكلفة والعملة والمستلمين وملف الحساب نفسها.",
             )}
           </p>

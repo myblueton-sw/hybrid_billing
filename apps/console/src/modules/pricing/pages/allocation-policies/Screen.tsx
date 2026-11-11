@@ -370,7 +370,7 @@ export default function Screen({
               {t(
                 l,
                 "All authorized providers",
-                "전체 허용 공급자",
+                "전체 허용 공급사",
                 "كل المزوّدين المصرّح بهم",
               )}
             </option>

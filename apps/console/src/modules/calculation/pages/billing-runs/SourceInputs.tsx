@@ -1,52 +1,14 @@
 import { useEffect, useRef } from "react";
 import type { Locale } from "../../../../shared/types";
-import { decimal } from "../../../sources/collected-focus/values";
-import type { OverviewData, FocusRow, Measure } from "./api";
+import {
+  fieldLabel,
+  Instant,
+  missingLabel,
+} from "../../../sources/collected-focus/labels";
+import type { OverviewData, FocusRow } from "./api";
 import { t, basisLabel } from "./copy";
-export function Money({
-  value,
-  currency,
-  locale: l,
-}: {
-  value: string | null;
-  currency: string;
-  locale: Locale;
-}) {
-  if (value === null)
-    return (
-      <span>
-        {t(l, "No observed amount", "관측 금액 없음", "لا مبلغ مرصود")}
-      </span>
-    );
-  const n = BigInt(value);
-  return (
-    <bdi dir="ltr">
-      {n < 0n ? "−" : ""}
-      {currency} {decimal((n < 0n ? -n : n).toString(), l)}
-    </bdi>
-  );
-}
-export function AmountValue({
-  value: m,
-  currency,
-  locale: l,
-}: {
-  value: Measure;
-  currency: string;
-  locale: Locale;
-}) {
-  return (
-    <>
-      <Money value={m.coefficient} currency={currency} locale={l} />
-      <small>
-        {t(l, "Present / missing", "값 있음 / 누락", "موجود / مفقود")}{" "}
-        <bdi dir="ltr">
-          {m.present} / {m.missing}
-        </bdi>
-      </small>
-    </>
-  );
-}
+import { AmountValue, RowAmount } from "./Amounts";
+import SourceDetail from "./SourceDetail";
 export function Totals({
   locale: l,
   data: d,
@@ -110,160 +72,6 @@ export function Totals({
           )}
         </p>
       )}
-    </section>
-  );
-}
-export function SourceDetail({
-  locale: l,
-  row: r,
-  close,
-}: {
-  locale: Locale;
-  row: FocusRow;
-  close: () => void;
-}) {
-  return (
-    <section
-      className="b08-detail"
-      onKeyDown={(e) => {
-        if (
-          e.key === "Escape" &&
-          !(e.target as HTMLElement).closest("details[open]")
-        ) {
-          e.preventDefault();
-          close();
-        }
-      }}
-    >
-      <header>
-        <h2 tabIndex={-1} data-b08-detail-heading>
-          {t(
-            l,
-            "Source input evidence",
-            "원천 입력 근거",
-            "أدلة مدخلات المصدر",
-          )}
-        </h2>
-        <button onClick={close}>
-          {t(l, "Close details", "상세 닫기", "إغلاق التفاصيل")}
-        </button>
-      </header>
-      <p className="b08-meta">
-        {t(
-          l,
-          "Technical source reference, not a customer, contract or run ID",
-          "원천 기술 참조이며 고객·계약·실행 ID가 아닙니다",
-          "مرجع تقني للمصدر وليس معرّف عميل أو عقد أو عملية احتساب",
-        )}
-        <bdi dir="ltr">{r.id}</bdi>
-      </p>
-      <dl className="b08-facts">
-        {[
-          [
-            t(l, "Service / provider", "서비스 / 공급자", "الخدمة / المزوّد"),
-            `${r.service ?? t(l, "No source value", "원천 값 없음", "لا قيمة في المصدر")} / ${r.provider}`,
-          ],
-          [
-            t(
-              l,
-              "Billing account / sub-account",
-              "청구 계정 / 하위 계정",
-              "حساب الفوترة / الحساب الفرعي",
-            ),
-            `${r.billing_account} / ${r.sub_account ?? t(l, "No source value", "원천 값 없음", "لا قيمة في المصدر")}`,
-          ],
-          [
-            t(l, "Charge interval", "과금 기간", "فترة الرسوم"),
-            `${r.charge_start} / ${r.charge_end}`,
-          ],
-          [
-            t(l, "Billing interval", "청구 기간", "فترة الفوترة"),
-            `${r.billing_start} / ${r.billing_end}`,
-          ],
-          [
-            t(
-              l,
-              "Source batch / ordinal",
-              "원천 배치 / 행 순번",
-              "دفعة المصدر / ترتيب الصف",
-            ),
-            `${r.batch} / ${r.ordinal}`,
-          ],
-          [
-            t(l, "Provenance class", "출처 분류", "تصنيف المنشأ"),
-            r.evidence_class,
-          ],
-        ].map(([label, value]) => (
-          <div key={label}>
-            <dt>{label}</dt>
-            <dd>
-              <bdi dir="ltr">{value}</bdi>
-            </dd>
-          </div>
-        ))}
-        {(["billed_cost", "effective_cost"] as const).map((b) => (
-          <div key={b}>
-            <dt>{basisLabel(l, b)}</dt>
-            <dd>
-              <Money value={r[b]} currency={r.currency} locale={l} />
-            </dd>
-          </div>
-        ))}
-      </dl>
-      <details>
-        <summary>
-          {t(
-            l,
-            "Quantities and source units",
-            "수량·원천 단위",
-            "الكميات ووحدات المصدر",
-          )}
-        </summary>
-        <dl className="b08-facts">
-          {[
-            [
-              t(
-                l,
-                "Consumed quantity / unit",
-                "소비 수량 / 단위",
-                "الكمية المستهلكة / الوحدة",
-              ),
-              r.consumed_quantity,
-              r.consumed_unit,
-            ],
-            [
-              t(
-                l,
-                "Pricing quantity / unit",
-                "과금 수량 / 단위",
-                "كمية التسعير / الوحدة",
-              ),
-              r.pricing_quantity,
-              r.pricing_unit,
-            ],
-          ].map(([label, value, unit]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd>
-                {value === null ? (
-                  t(
-                    l,
-                    "No observed quantity",
-                    "관측 수량 없음",
-                    "لا كمية مرصودة",
-                  )
-                ) : (
-                  <bdi dir="ltr">{decimal(value, l)}</bdi>
-                )}{" "}
-                <bdi dir="ltr">
-                  {unit ??
-                    t(l, "Unit unavailable", "단위 없음", "الوحدة غير متاحة")}
-                </bdi>
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </details>
     </section>
   );
 }
@@ -338,12 +146,19 @@ export default function SourceInputs({
             <div className="b08-mobile-list">
               {d.rows.map((r) => (
                 <article key={r.id}>
-                  <h3>{r.service ?? r.provider}</h3>
+                  <h3>
+                    {r.service ?? (
+                      <>
+                        <small>{fieldLabel(l, "service")}</small>
+                        <strong className="b08-state" data-b08-value="missing">
+                          {missingLabel(l)}
+                        </strong>
+                      </>
+                    )}
+                  </h3>
                   <dl className="b08-facts">
                     <div>
-                      <dt>
-                        {t(l, "Source provider", "원천 공급자", "مزوّد المصدر")}
-                      </dt>
+                      <dt>{fieldLabel(l, "provider")}</dt>
                       <dd>
                         <bdi dir="ltr">{r.provider}</bdi>
                       </dd>
@@ -352,7 +167,7 @@ export default function SourceInputs({
                       <div key={b}>
                         <dt>{basisLabel(l, b)}</dt>
                         <dd>
-                          <Money
+                          <RowAmount
                             value={r[b]}
                             currency={r.currency}
                             locale={l}
@@ -407,12 +222,11 @@ export default function SourceInputs({
                         {t(l, "Source charge", "원천 청구", "رسوم المصدر")}
                       </th>
                       <th scope="col">
-                        {t(
-                          l,
-                          "Account / charge start",
-                          "계정 / 과금 시작",
-                          "الحساب / بدء الرسوم",
-                        )}
+                        {fieldLabel(l, "billing_account")}
+                        <small>
+                          {fieldLabel(l, "charge_start")}{" "}
+                          <bdi dir="ltr">(UTC)</bdi>
+                        </small>
                       </th>
                       {(["billed_cost", "effective_cost"] as const).map((b) => (
                         <th className="money" scope="col" key={b}>
@@ -426,13 +240,11 @@ export default function SourceInputs({
                     {d.rows.map((r) => (
                       <tr key={r.id}>
                         <td>
-                          {r.service ??
-                            t(
-                              l,
-                              "Service unavailable",
-                              "서비스 값 없음",
-                              "الخدمة غير متاحة",
-                            )}
+                          {r.service ?? (
+                            <strong className="b08-state">
+                              {missingLabel(l)}
+                            </strong>
+                          )}
                           <small>
                             <bdi dir="ltr">{r.provider}</bdi>
                           </small>
@@ -440,17 +252,13 @@ export default function SourceInputs({
                         <td>
                           <bdi dir="ltr">{r.billing_account}</bdi>
                           <small>
-                            <bdi className="b08-count" dir="ltr">
-                              {r.charge_start.slice(0, 10)}
-                            </bdi>
-                            <br />
-                            <bdi dir="ltr">{r.charge_start.slice(11)}</bdi>
+                            <Instant value={r.charge_start} />
                           </small>
                         </td>
                         {(["billed_cost", "effective_cost"] as const).map(
                           (b) => (
                             <td className="money" key={b}>
-                              <Money
+                              <RowAmount
                                 value={r[b]}
                                 currency={r.currency}
                                 locale={l}

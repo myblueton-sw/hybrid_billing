@@ -2,7 +2,12 @@ import type { Locale } from "../../../../shared/types";
 import type { OverviewData, FocusRow } from "./api";
 import { compare, type Baseline } from "./model";
 import { t, basisLabel, unavailable, unknown } from "./copy";
-import { Totals, Money, AmountValue } from "./SourceInputs";
+import { Totals } from "./SourceInputs";
+import { Money, RowAmount, AmountValue } from "./Amounts";
+import {
+  fieldLabel,
+  missingLabel,
+} from "../../../sources/collected-focus/labels";
 function Authorities({ locale: l }: { locale: Locale }) {
   return (
     <section className="b08-authorities">
@@ -169,21 +174,37 @@ export function Trace({
         {row ? (
           <>
             <p>
-              <bdi dir="ltr">{row.service ?? row.provider}</bdi>
+              {row.service === null ? (
+                <>
+                  {fieldLabel(l, "service")}:{" "}
+                  <strong className="b08-state">{missingLabel(l)}</strong>
+                </>
+              ) : (
+                <bdi dir="ltr">{row.service}</bdi>
+              )}
             </p>
             <dl className="b08-facts">
               {(["billed_cost", "effective_cost"] as const).map((b) => (
                 <div key={b}>
                   <dt>{basisLabel(l, b)}</dt>
                   <dd>
-                    <Money value={row[b]} currency={row.currency} locale={l} />
+                    <RowAmount
+                      value={row[b]}
+                      currency={row.currency}
+                      locale={l}
+                      note
+                    />
                   </dd>
                 </div>
               ))}
               <div>
-                <dt>{t(l, "Source reference", "원천 참조", "مرجع المصدر")}</dt>
+                <dt>{fieldLabel(l, "id")}</dt>
                 <dd>
-                  <bdi dir="ltr">{row.id}</bdi>
+                  <bdi dir="ltr" className="b08-code">
+                    <span>{row.id.slice(0, 32)}</span>
+                    <wbr />
+                    <span>{row.id.slice(32)}</span>
+                  </bdi>
                 </dd>
               </div>
             </dl>

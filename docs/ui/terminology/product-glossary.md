@@ -153,3 +153,7 @@ B01 applies the HB-151 terms above without new concepts: Missing and Exact zero 
 ## B08 use of the source-field terms (HB-154)
 
 B08 applies the HB-151 terms to its source input rows, row detail and account list: Missing, Unit missing and Exact zero for row values, charge period and billing period in UTC, the derived charge-start month, delivery ID and row ordinal, sample provenance, 결제 계정 ID and 공급사. The Exact zero note appears in the row detail and trace view, not in the 25-row table. Totals read 값 없음 / No values present when no value is present and keep 값 있음 / 누락 counts; totals and differences are never labeled Exact zero. Negative amounts, totals and differences use the shared format `USD -1.00`. B08 keeps its basis labels 원천 청구 비용 / 원천 실효 비용 because they mark the amounts as source costs on a billing screen. AI wording review only.
+
+## B03 Korean wording alignment (HB-155)
+
+At the owner's request B03 uses 공급사 for the provider and 금액 누락 행 for rows whose amount is missing, replacing 공급자 and 금액 없는 행. English and Arabic are unchanged. The earlier owner FIX of the Korean policy editor is retained for its source and the changed candidate awaits renewed confirmation ([acceptance record](../acceptance/B03.md)).

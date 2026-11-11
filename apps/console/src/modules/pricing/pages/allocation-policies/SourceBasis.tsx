@@ -108,7 +108,7 @@ export default function SourceBasis({
         {t(
           l,
           "Full server totals for this provider and charge-start month. Detail pages and recipient searches never change these amounts.",
-          "공급자·과금 시작 월에 해당하는 서버 전체 집계입니다. 상세 페이지나 대상 검색으로 기준액을 바꾸지 않습니다.",
+          "공급사·과금 시작 월에 해당하는 서버 전체 집계입니다. 상세 페이지나 대상 검색으로 기준액을 바꾸지 않습니다.",
           "إجماليات الخادم الكاملة لهذا المزوّد وشهر بدء الرسوم. لا تغيّر صفحات التفاصيل أو عمليات البحث عن المستلمين هذه المبالغ.",
         )}
       </p>
@@ -134,7 +134,7 @@ export default function SourceBasis({
                 {t(
                   l,
                   "Missing amount rows",
-                  "금액 없는 행",
+                  "금액 누락 행",
                   "صفوف بمبالغ مفقودة",
                 )}
               </th>
@@ -187,7 +187,7 @@ export default function SourceBasis({
                     data-label={t(
                       l,
                       "Missing amount rows",
-                      "금액 없는 행",
+                      "금액 누락 행",
                       "صفوف بمبالغ مفقودة",
                     )}
                   >

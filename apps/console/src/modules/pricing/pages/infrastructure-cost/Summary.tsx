@@ -26,14 +26,21 @@ export default function Summary({
     return (
       <>
         <bdi dir="ltr">
-          {value?.coefficient === null || !value
-            ? t(l, "No value", "값 없음", "لا توجد قيمة")
-            : money(value.coefficient, currency, l)}
+          {!value
+            ? t(l, "Unavailable", "산정 불가", "غير متاح")
+            : value.coefficient === null
+              ? t(l, "No values present", "값 없음", "لا قيم موجودة")
+              : money(value.coefficient, currency, l)}
         </bdi>
         {!!value?.missing && (
           <small>
-            {t(l, "Missing rows", "값 없는 행", "صفوف بلا قيمة")}:{" "}
-            {value.missing}
+            {t(
+              l,
+              "Rows with a missing amount",
+              "금액 누락 행",
+              "صفوف مبلغها مفقود",
+            )}
+            : {value.missing}
           </small>
         )}
       </>
@@ -144,7 +151,7 @@ export default function Summary({
         {t(
           l,
           "Signed values and source precision are preserved. Missing amounts are excluded from known subtotals. Currencies are never combined.",
-          "부호와 원천 정밀도를 유지합니다. 값 없는 금액은 알려진 값의 합계에서 제외하며 통화는 합산하지 않습니다.",
+          "부호와 원천 정밀도를 유지합니다. 누락된 금액은 알려진 값의 합계에서 제외하며 통화는 합산하지 않습니다.",
           "تُحفظ الإشارات ودقة المصدر. تُستبعد المبالغ المفقودة من مجاميع القيم المعروفة ولا تُجمع العملات.",
         )}
       </p>

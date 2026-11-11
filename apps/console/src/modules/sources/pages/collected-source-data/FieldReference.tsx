@@ -17,7 +17,7 @@ import {
   originLabel,
   originMeaning,
   type DisplayField,
-} from "./labels";
+} from "../../collected-focus/labels";
 const groups: { origin: Origin; fields: DisplayField[] }[] = [
   { origin: "source", fields: [...mappedFields] },
   { origin: "derived", fields: [...derivedFields] },

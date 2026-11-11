@@ -20,7 +20,7 @@ import {
   provenanceLabel,
   unitMissingLabel,
   zeroLabel,
-} from "./labels";
+} from "../../collected-focus/labels";
 import "./style.css";
 export default function CollectedSource({
   locale: l,

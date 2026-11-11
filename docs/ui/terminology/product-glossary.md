@@ -129,3 +129,19 @@ HB-150 adds current scoped stored-data observations alongside historical receipt
 | original-file-availability | 원본 파일 가용성 · 미확인 | Original-file availability · Not checked | توفر الملف الأصلي · لم يُتحقّق منه | Current row verification does not itself re-read original file bytes. |
 
 Regional sources and adopted/rejected layout patterns are recorded in [HB-150 references](../../features/HB-150/references.md). Receipt metadata may be unavailable independently of stored rows; authority denial/mismatch clears both observations. AI review does not authenticate an owner or finalize regional terminology.
+
+## S04 source fields and row detail — HB-151
+
+[HB-151](https://linear.app/hybrid-billing/issue/HB-151/refine-s04-source-fields-and-row-detail-to-separate-source-values-from) separates values read from mapped FOCUS columns from values the product derives. A separate AI technical-writing review read the KO/EN/AR source strings and its corrections are applied here; the rendered-context inspection is recorded in the [HB-151 verification record](../../features/HB-151/verification.md). Neither is native-language, practitioner or owner acceptance. "Billing" stays 결제 for the account and 청구 for currency and period, as in existing S04 copy.
+
+| Concept | KO | EN | AR | Meaning and forbidden implication |
+| --- | --- | --- | --- | --- |
+| source-column-value / mapped field | 원천 열 값 | From source columns | من أعمدة المصدر | Value read from the named FOCUS column through the version mapping. Not the original text form, a verified value or provider conformance. |
+| derived-value / charge_month, id, account | Hybrid Billing 산출 값 · 행 ID · 계정 범위 ID | Derived by Hybrid Billing · Row ID · Account scope ID | قيم يشتقها Hybrid Billing · معرّف الصف · معرّف نطاق الحساب | Computed by the product; no FOCUS column holds it. Not a provider identifier or a financial result. |
+| delivery-lineage / batch, ordinal | 수집본 식별 정보 · 수집본 ID · 수집본 내 행 순번 | Delivery lineage · Delivery ID · Row ordinal in delivery | بيانات تتبّع التسليم · معرّف التسليم · ترتيب الصف في التسليم | Group label, then its two fields: delivery ID and row ordinal inside that delivery. Not a receipt, a source delivery window or original-file access. |
+| sample-annotation / x_HB_EvidenceClass | 샘플 주석 · 샘플 출처 | Sample annotation · Sample provenance | وسم العينة · منشأ العينة | Group label, then its field. Annotation column carried in the collected sample row. Absent or unrecognized values read Unclassified; never a collector-assigned class or customer-data claim. |
+| missing-row-value / null | 누락 | Missing | مفقود | The collected row has no value for the field; the reason is not carried by the row record. Never rendered as 0, a dash or with a currency. Replaces 미확인/Unavailable and "not provided" for null row and account-list values on S04. A missing unit reads 단위 누락 / Unit missing / الوحدة مفقودة. |
+| exact-zero-value / zero coefficient | 정확한 0 | Exact zero | صفر دقيق | The collected numeric value is zero. Row fields only; not S03's explicit zero-attestation and not applied to scope totals. A scope total without present values reads 값 없음 / no values present / لا قيم موجودة. |
+| charge-period / ChargePeriodStart, ChargePeriodEnd | 과금 기간 | Charge period | فترة الرسوم | Source interval, start inclusive and end exclusive by FOCUS definition, shown in UTC. Not the charge-start month. Replaces "charge interval" on S04. |
+| billing-period / BillingPeriodStart, BillingPeriodEnd | 청구 기간 | Billing period | فترة الفوترة | Source billing interval, same bounds and UTC display. Not a settlement or recognition period. Replaces "billing interval" on S04. |
+| not-carried-by-row-record | 행 기록에 없는 정보 | Not carried by the row record | غير متضمَّن في سجل الصف | Evidence the current row query does not return, so the screen neither shows nor infers it. Not a statement that the evidence does not exist. |

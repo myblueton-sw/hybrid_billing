@@ -10,6 +10,17 @@ import {
 } from "../../collected-focus/api";
 import { decimal, money } from "../../collected-focus/values";
 import { focusHref, focusQuery } from "../../collected-focus/query";
+import { provenanceClass, valueState } from "../../collected-focus/fields";
+import FieldReference from "./FieldReference";
+import FieldsTable from "./FieldsTable";
+import RowDetail from "./RowDetail";
+import {
+  missingLabel,
+  selectedLabel,
+  provenanceLabel,
+  unitMissingLabel,
+  zeroLabel,
+} from "./labels";
 import "./style.css";
 export default function CollectedSource({
   locale: l,
@@ -71,7 +82,7 @@ export default function CollectedSource({
   useEffect(() => setSearch(query.get("q") ?? ""), [key]);
   useEffect(() => {
     if (row) detail.current?.focus();
-  }, [row?.id, view]);
+  }, [row?.id]);
   useEffect(
     () =>
       onState(
@@ -94,6 +105,10 @@ export default function CollectedSource({
           "S04:page:snapshot",
           "S04:state:unavailable",
           "S04:state:history-unconnected",
+          "S04:reference:field-mapping",
+          "S04:detail:field-origin",
+          "S04:state:value-missing-zero",
+          "S04:state:evidence-unavailable",
         ],
       ),
     [data, error, row?.id, view, onState],
@@ -121,8 +136,8 @@ export default function CollectedSource({
       setRetry((n) => n + 1);
     }
   }
-  function inspect(r: FocusRow) {
-    trigger.current = document.activeElement as HTMLElement;
+  function inspect(r: FocusRow, element: HTMLElement) {
+    trigger.current = element;
     setSelected({ key, id: r.id });
   }
   function close() {
@@ -144,17 +159,32 @@ export default function CollectedSource({
     window.addEventListener("keydown", escape);
     return () => window.removeEventListener("keydown", escape);
   }, [row?.id]);
-  const none = t(l, "Unavailable", "미확인", "غير متاح"),
-    unitNone = t(l, "Unit unavailable", "단위 미확인", "الوحدة غير متاحة");
+  const none = missingLabel(l),
+    unitNone = unitMissingLabel(l);
+  const zero = (v: string | null) =>
+    valueState(v) === "zero" && <small>{zeroLabel(l)}</small>;
   const quantity = (v: string | null, u: string | null) => (
     <>
-      <bdi dir="ltr">{v === null ? none : decimal(v, l)}</bdi>
+      {v === null ? none : <bdi dir="ltr">{decimal(v, l)}</bdi>}
+      {zero(v)}
       <small>{u ?? unitNone}</small>
     </>
   );
   const value = (v: string | null, c: string) => (
-    <bdi dir="ltr">{v === null ? `${c} · ${none}` : money(v, c, l)}</bdi>
+    <>
+      {v === null ? none : <bdi dir="ltr">{money(v, c, l)}</bdi>}
+      {zero(v)}
+    </>
   );
+  const total = (v: string | null, c: string) =>
+    v === null ? (
+      <>
+        <bdi dir="ltr">{c}</bdi>{" "}
+        {t(l, "no values present", "값 없음", "لا قيم موجودة")}
+      </>
+    ) : (
+      <bdi dir="ltr">{money(v, c, l)}</bdi>
+    );
   const rowLabel = (r: FocusRow) =>
     `${t(l, "Inspect row", "행 상세", "تفاصيل الصف")} ${r.provider} ${r.billing_account} ${r.sub_account ?? ""} ${r.charge_month} ${r.id.slice(0, 8)}`;
   const pager = data && (
@@ -415,7 +445,7 @@ export default function CollectedSource({
                       : t(l, "Effective cost", "실효 비용", "التكلفة الفعلية")}
                   </span>
                   <strong>
-                    {value(a[data.selection.basis].coefficient, a.currency)}
+                    {total(a[data.selection.basis].coefficient, a.currency)}
                   </strong>
                   <small>
                     {a[data.selection.basis].missing
@@ -483,16 +513,8 @@ export default function CollectedSource({
                 <li key={a.id}>
                   <button onClick={() => change({ account: a.id, q: "" })}>
                     {a.provider} · <bdi>{a.billing_account}</bdi> /{" "}
-                    <bdi>
-                      {a.sub_account ??
-                        t(
-                          l,
-                          "Subaccount not provided",
-                          "하위 계정 제공 없음",
-                          "الحساب الفرعي غير مقدم",
-                        )}
-                    </bdi>{" "}
-                    · {a.rows} {t(l, "rows", "행", "صفوف")}
+                    <bdi>{a.sub_account ?? none}</bdi> · {a.rows}{" "}
+                    {t(l, "rows", "행", "صفوف")}
                   </button>
                 </li>
               ))}
@@ -549,9 +571,9 @@ export default function CollectedSource({
               <p>
                 {t(
                   l,
-                  "This collected path exposes verified normalized fields and source lineage. A row-level transformation history and AI execution evidence are unavailable.",
-                  "현재 수집 경로는 검증된 정규화 필드와 수집 근거를 제공합니다. 행별 변환 이력과 AI 실행 근거는 미연결입니다.",
-                  "يعرض المسار حقولاً مطبّعة ونسب المصدر. سجل التحويل على مستوى الصف وأدلة تنفيذ الذكاء الاصطناعي غير متاحة.",
+                  "This collected path shows normalized fields and delivery lineage. A row-level transformation history and AI execution evidence are unavailable.",
+                  "현재 수집 경로는 정규화 필드와 수집본 식별 정보를 제공합니다. 행별 변환 이력과 AI 실행 근거는 미연결입니다.",
+                  "يعرض المسار حقولاً مطبّعة وبيانات تتبّع التسليم. سجل التحويل على مستوى الصف وأدلة تنفيذ الذكاء الاصطناعي غير متاحة.",
                 )}
               </p>
             </section>
@@ -585,9 +607,9 @@ export default function CollectedSource({
                     {view === "fields"
                       ? t(
                           l,
-                          "Allowlisted fields only · select a row for billing/charge intervals and source lineage.",
-                          "허용된 필드만 표시합니다. 행을 선택하면 청구·과금 구간과 수집 근거를 확인할 수 있습니다.",
-                          "حقول مسموح بها فقط؛ اختر صفاً للفترات ونسب المصدر.",
+                          "Columns are grouped by where each value comes from. The Missing values column counts, per row, how many of the 12 nullable source fields have no value. Select a row to see every field.",
+                          "열은 값의 출처별로 묶여 있습니다. 누락 값 열은 값이 없을 수 있는 원천 필드 12개 중 행마다 누락된 개수를 표시합니다. 행을 선택하면 모든 필드를 확인할 수 있습니다.",
+                          "الأعمدة مجمّعة حسب مصدر كل قيمة. يعرض عمود القيم المفقودة لكل صف عدد الحقول المفقودة من بين 12 حقلاً مصدرياً يمكن أن تخلو من قيمة. اختر صفاً لعرض كل الحقول.",
                         )
                       : t(
                           l,
@@ -599,12 +621,15 @@ export default function CollectedSource({
                 </div>
                 {pager}
               </header>
+              {view === "fields" && (
+                <FieldReference l={l} versions={data.versions} />
+              )}
               <p className="collected-scroll-hint">
                 {t(
                   l,
-                  "Scroll horizontally to see all source columns.",
-                  "전체 명세 열은 표를 가로로 스크롤하여 확인할 수 있습니다.",
-                  "مرّر الجدول أفقياً لعرض كل أعمدة المصدر.",
+                  "Scroll the table horizontally to see all columns.",
+                  "표를 가로로 스크롤하면 모든 열을 확인할 수 있습니다.",
+                  "مرّر الجدول أفقياً لعرض كل الأعمدة.",
                 )}
               </p>
               <div
@@ -618,226 +643,197 @@ export default function CollectedSource({
                   "جدول المصدر المجمع، قابل للتمرير أفقياً",
                 )}
               >
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col">
-                        {t(
-                          l,
-                          "Account / detail",
-                          "계정 / 상세",
-                          "الحساب / التفاصيل",
-                        )}
-                      </th>
-                      <th scope="col">
-                        {t(
-                          l,
-                          "Provider / service",
-                          "공급사 / 서비스",
-                          "المزود / الخدمة",
-                        )}
-                      </th>
-                      <th scope="col">
-                        {t(
-                          l,
-                          "Charge-start month",
-                          "과금 시작 월",
-                          "شهر بدء الرسوم",
-                        )}
-                      </th>
-                      {view === "usage" ? (
-                        <>
-                          <th scope="col">
-                            {t(
-                              l,
-                              "Consumed quantity / unit",
-                              "사용 수량 / 단위",
-                              "كمية الاستهلاك / الوحدة",
-                            )}
-                          </th>
-                          <th scope="col">
-                            {t(
-                              l,
-                              "Pricing quantity / unit",
-                              "요금 산정 수량 / 단위",
-                              "كمية التسعير / الوحدة",
-                            )}
-                          </th>
-                          <th scope="col">
-                            {t(
-                              l,
-                              "List unit price / pricing unit",
-                              "정가 단가 / 요금 산정 단위",
-                              "سعر القائمة / وحدة التسعير",
-                            )}
-                          </th>
-                          <th scope="col">
-                            {t(
-                              l,
-                              "Contracted unit price / pricing unit",
-                              "계약 단가 / 요금 산정 단위",
-                              "سعر العقد / وحدة التسعير",
-                            )}
-                          </th>
-                        </>
-                      ) : view === "fields" ? (
-                        <>
-                          <th scope="col">
-                            {t(
-                              l,
-                              "Charge interval",
-                              "과금 구간",
-                              "فترة الرسوم",
-                            )}
-                          </th>
-                          <th scope="col">
-                            {t(
-                              l,
-                              "Billing interval",
-                              "청구 구간",
-                              "فترة الفوترة",
-                            )}
-                          </th>
-                          <th scope="col">
-                            {t(
-                              l,
-                              "Batch / ordinal",
-                              "수집 배치 / 순번",
-                              "دفعة / ترتيب",
-                            )}
-                          </th>
-                        </>
-                      ) : (
-                        <>
-                          <th scope="col">
-                            {t(
-                              l,
-                              "Billed cost",
-                              "청구 비용",
-                              "التكلفة المفوترة",
-                            )}
-                          </th>
-                          <th scope="col">
-                            {t(
-                              l,
-                              "Effective cost",
-                              "실효 비용",
-                              "التكلفة الفعلية",
-                            )}
-                          </th>
-                          <th scope="col">
-                            {t(
-                              l,
-                              "Consumed quantity / unit",
-                              "사용 수량 / 단위",
-                              "كمية الاستهلاك / الوحدة",
-                            )}
-                          </th>
-                        </>
-                      )}
-                      <th scope="col">
-                        {t(l, "Evidence", "출처 근거", "دليل المصدر")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.rows.map((r) => (
-                      <tr key={r.id} data-row-id={r.id}>
-                        <th scope="row">
-                          <button
-                            aria-label={rowLabel(r)}
-                            aria-expanded={row?.id === r.id}
-                            onClick={() => inspect(r)}
-                          >
-                            <bdi>{r.billing_account}</bdi>
-                          </button>
-                          <small>
-                            <bdi>
-                              {r.sub_account ??
-                                t(
-                                  l,
-                                  "Subaccount not provided",
-                                  "하위 계정 제공 없음",
-                                  "الحساب الفرعي غير مقدم",
-                                )}
-                            </bdi>
-                          </small>
+                {view === "fields" ? (
+                  <FieldsTable
+                    l={l}
+                    rows={data.rows}
+                    versions={data.versions}
+                    selectedId={row?.id}
+                    rowLabel={rowLabel}
+                    onInspect={inspect}
+                  />
+                ) : (
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">
+                          {t(
+                            l,
+                            "Account / detail",
+                            "계정 / 상세",
+                            "الحساب / التفاصيل",
+                          )}
                         </th>
-                        <td>
-                          {r.provider}
-                          <small>{r.service ?? none}</small>
-                        </td>
-                        <td>
-                          <bdi>{r.charge_month}</bdi>
-                        </td>
+                        <th scope="col">
+                          {t(
+                            l,
+                            "Provider / service",
+                            "공급사 / 서비스",
+                            "المزود / الخدمة",
+                          )}
+                        </th>
+                        <th scope="col">
+                          {t(
+                            l,
+                            "Charge-start month",
+                            "과금 시작 월",
+                            "شهر بدء الرسوم",
+                          )}
+                        </th>
                         {view === "usage" ? (
                           <>
-                            <td className="number">
-                              {quantity(r.consumed_quantity, r.consumed_unit)}
-                            </td>
-                            <td className="number">
-                              {quantity(r.pricing_quantity, r.pricing_unit)}
-                            </td>
-                            <td className="number">
-                              {value(r.list_unit_price, r.currency)}
-                              <small>{r.pricing_unit ?? unitNone}</small>
-                            </td>
-                            <td className="number">
-                              {value(r.contracted_unit_price, r.currency)}
-                              <small>{r.pricing_unit ?? unitNone}</small>
-                            </td>
-                          </>
-                        ) : view === "fields" ? (
-                          <>
-                            <td>
-                              <bdi>{r.charge_start}</bdi>
-                              <small>
-                                <bdi>{r.charge_end}</bdi>
-                              </small>
-                            </td>
-                            <td>
-                              <bdi>{r.billing_start}</bdi>
-                              <small>
-                                <bdi>{r.billing_end}</bdi>
-                              </small>
-                            </td>
-                            <td>
-                              <bdi>{r.batch}</bdi>
-                              <small>{r.ordinal}</small>
-                            </td>
+                            <th scope="col">
+                              {t(
+                                l,
+                                "Consumed quantity / unit",
+                                "사용 수량 / 단위",
+                                "كمية الاستهلاك / الوحدة",
+                              )}
+                            </th>
+                            <th scope="col">
+                              {t(
+                                l,
+                                "Pricing quantity / unit",
+                                "요금 산정 수량 / 단위",
+                                "كمية التسعير / الوحدة",
+                              )}
+                            </th>
+                            <th scope="col">
+                              {t(
+                                l,
+                                "List unit price / pricing unit",
+                                "정가 단가 / 요금 산정 단위",
+                                "سعر القائمة / وحدة التسعير",
+                              )}
+                            </th>
+                            <th scope="col">
+                              {t(
+                                l,
+                                "Contracted unit price / pricing unit",
+                                "계약 단가 / 요금 산정 단위",
+                                "سعر العقد / وحدة التسعير",
+                              )}
+                            </th>
                           </>
                         ) : (
                           <>
-                            <td className="number">
-                              {value(r.billed_cost, r.currency)}
-                            </td>
-                            <td className="number">
-                              {value(r.effective_cost, r.currency)}
-                            </td>
-                            <td className="number">
-                              {quantity(r.consumed_quantity, r.consumed_unit)}
-                            </td>
+                            <th scope="col">
+                              {t(
+                                l,
+                                "Billed cost",
+                                "청구 비용",
+                                "التكلفة المفوترة",
+                              )}
+                            </th>
+                            <th scope="col">
+                              {t(
+                                l,
+                                "Effective cost",
+                                "실효 비용",
+                                "التكلفة الفعلية",
+                              )}
+                            </th>
+                            <th scope="col">
+                              {t(
+                                l,
+                                "Consumed quantity / unit",
+                                "사용 수량 / 단위",
+                                "كمية الاستهلاك / الوحدة",
+                              )}
+                            </th>
                           </>
                         )}
-                        <td>
-                          {r.evidence_class.startsWith("official-public")
-                            ? t(l, "Public sample", "공개 샘플", "عينة عامة")
-                            : r.evidence_class === "synthetic-contract-fixture"
-                              ? t(
-                                  l,
-                                  "Synthetic sample",
-                                  "합성 샘플",
-                                  "عينة تجريبية",
-                                )
-                              : t(l, "Unclassified", "출처 미분류", "غير مصنف")}
-                          <small>
-                            <bdi>{r.id.slice(0, 12)}</bdi>
-                          </small>
-                        </td>
+                        <th scope="col">
+                          {t(
+                            l,
+                            "Sample provenance / row ID",
+                            "샘플 출처 / 행 ID",
+                            "منشأ العينة / معرّف الصف",
+                          )}
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {data.rows.map((r) => (
+                        <tr
+                          key={r.id}
+                          data-row-id={r.id}
+                          data-selected={row?.id === r.id || undefined}
+                        >
+                          <th scope="row">
+                            <button
+                              aria-label={rowLabel(r)}
+                              aria-expanded={row?.id === r.id}
+                              onClick={(event) =>
+                                inspect(r, event.currentTarget)
+                              }
+                            >
+                              <bdi>{r.billing_account}</bdi>
+                            </button>
+                            <small>
+                              {r.sub_account === null ? (
+                                none
+                              ) : (
+                                <bdi>{r.sub_account}</bdi>
+                              )}
+                            </small>
+                            {row?.id === r.id && (
+                              <small className="collected-selected">
+                                {selectedLabel(l)}
+                              </small>
+                            )}
+                          </th>
+                          <td>
+                            {r.provider}
+                            <small>{r.service ?? none}</small>
+                          </td>
+                          <td>
+                            <bdi>{r.charge_month}</bdi>
+                          </td>
+                          {view === "usage" ? (
+                            <>
+                              <td className="number">
+                                {quantity(r.consumed_quantity, r.consumed_unit)}
+                              </td>
+                              <td className="number">
+                                {quantity(r.pricing_quantity, r.pricing_unit)}
+                              </td>
+                              <td className="number">
+                                {value(r.list_unit_price, r.currency)}
+                                <small>{r.pricing_unit ?? unitNone}</small>
+                              </td>
+                              <td className="number">
+                                {value(r.contracted_unit_price, r.currency)}
+                                <small>{r.pricing_unit ?? unitNone}</small>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="number">
+                                {value(r.billed_cost, r.currency)}
+                              </td>
+                              <td className="number">
+                                {value(r.effective_cost, r.currency)}
+                              </td>
+                              <td className="number">
+                                {quantity(r.consumed_quantity, r.consumed_unit)}
+                              </td>
+                            </>
+                          )}
+                          <td>
+                            {provenanceLabel(
+                              l,
+                              provenanceClass(r.evidence_class),
+                            )}
+                            <small>
+                              <bdi>{r.id.slice(0, 12)}</bdi>
+                            </small>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
               {!data.rows.length && (
                 <p role="status">
@@ -851,174 +847,13 @@ export default function CollectedSource({
               )}
               {pager}
               {row && (
-                <section
-                  className="collected-detail"
-                  ref={detail}
-                  tabIndex={-1}
-                  aria-label={t(
-                    l,
-                    "Selected source row",
-                    "선택 명세 상세",
-                    "تفاصيل الصف المحدد",
-                  )}
-                >
-                  <header>
-                    <h2>
-                      {t(
-                        l,
-                        "Selected row details",
-                        "선택 행 상세",
-                        "تفاصيل الصف المحدد",
-                      )}
-                    </h2>
-                    <button onClick={close}>
-                      {t(l, "Back to row", "행으로 돌아가기", "العودة للصف")}
-                    </button>
-                  </header>
-                  <div className="collected-detail-grid">
-                    <dl>
-                      <dt>
-                        {t(
-                          l,
-                          "Provider / service",
-                          "공급사 / 서비스",
-                          "المزود / الخدمة",
-                        )}
-                      </dt>
-                      <dd>
-                        {row.provider} / {row.service ?? none}
-                      </dd>
-                      <dt>BillingAccountId</dt>
-                      <dd>
-                        <bdi>{row.billing_account}</bdi>
-                      </dd>
-                      <dt>SubAccountId</dt>
-                      <dd>
-                        <bdi>{row.sub_account ?? none}</bdi>
-                      </dd>
-                      <dt>
-                        {t(l, "Charge interval", "과금 구간", "فترة الرسوم")}
-                      </dt>
-                      <dd>
-                        <bdi>{row.charge_start}</bdi>
-                        <br />
-                        <bdi>{row.charge_end}</bdi>
-                      </dd>
-                    </dl>
-                    <dl>
-                      {(
-                        [
-                          "billed_cost",
-                          "effective_cost",
-                          "list_cost",
-                          "contracted_cost",
-                        ] as const
-                      ).map((k) => (
-                        <div key={k}>
-                          <dt>
-                            {
-                              {
-                                billed_cost: "BilledCost",
-                                effective_cost: "EffectiveCost",
-                                list_cost: "ListCost",
-                                contracted_cost: "ContractedCost",
-                              }[k]
-                            }
-                          </dt>
-                          <dd>{value(row[k], row.currency)}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                    <dl>
-                      <dt>
-                        {t(
-                          l,
-                          "Consumed quantity",
-                          "사용 수량",
-                          "كمية الاستهلاك",
-                        )}
-                      </dt>
-                      <dd>
-                        {quantity(row.consumed_quantity, row.consumed_unit)}
-                      </dd>
-                      <dt>
-                        {t(
-                          l,
-                          "Pricing quantity",
-                          "요금 산정 수량",
-                          "كمية التسعير",
-                        )}
-                      </dt>
-                      <dd>
-                        {quantity(row.pricing_quantity, row.pricing_unit)}
-                      </dd>
-                      <dt>
-                        {t(l, "List unit price", "정가 단가", "سعر القائمة")}
-                      </dt>
-                      <dd>
-                        {value(row.list_unit_price, row.currency)}
-                        <small>{row.pricing_unit ?? unitNone}</small>
-                      </dd>
-                      <dt>
-                        {t(
-                          l,
-                          "Contracted unit price",
-                          "계약 단가",
-                          "سعر العقد",
-                        )}
-                      </dt>
-                      <dd>
-                        {value(row.contracted_unit_price, row.currency)}
-                        <small>{row.pricing_unit ?? unitNone}</small>
-                      </dd>
-                    </dl>
-                    <dl>
-                      <dt>
-                        {t(
-                          l,
-                          "Canonical row identity",
-                          "행 식별자",
-                          "هوية الصف",
-                        )}
-                      </dt>
-                      <dd>
-                        <bdi>{row.id}</bdi>
-                      </dd>
-                      <dt>
-                        {t(
-                          l,
-                          "Evidence / batch / ordinal",
-                          "출처 / 배치 / 순번",
-                          "الدليل / الدفعة / الترتيب",
-                        )}
-                      </dt>
-                      <dd>
-                        <bdi>{row.evidence_class}</bdi>
-                        <br />
-                        <bdi>
-                          {row.batch} / {row.ordinal}
-                        </bdi>
-                      </dd>
-                      <dt>
-                        {t(l, "Billing interval", "청구 구간", "فترة الفوترة")}
-                      </dt>
-                      <dd>
-                        <bdi>{row.billing_start}</bdi>
-                        <br />
-                        <bdi>{row.billing_end}</bdi>
-                      </dd>
-                      <dt>
-                        {t(
-                          l,
-                          "FOCUS versions in authorized source scope",
-                          "전체 권한 원천 범위의 FOCUS 버전",
-                          "إصدارات FOCUS في نطاق المصدر المصرح به",
-                        )}
-                      </dt>
-                      <dd>{data.versions.join(", ")}</dd>
-                    </dl>
-                  </div>
-                </section>
+                <RowDetail
+                  l={l}
+                  row={row}
+                  data={data}
+                  detailRef={detail}
+                  onClose={close}
+                />
               )}
             </>
           )}

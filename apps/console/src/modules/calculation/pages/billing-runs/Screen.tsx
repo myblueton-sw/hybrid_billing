@@ -31,6 +31,8 @@ const items = [
   "B08:data:recognition-boundary",
   "B08:action:inspect-source",
   "B08:state:async",
+  "B08:data:source-field-origin",
+  "B08:state:value-missing-zero",
 ];
 const requestKey = (p: URLSearchParams) =>
   JSON.stringify([
@@ -231,7 +233,7 @@ export default function Screen({
               {t(
                 l,
                 "All authorized providers",
-                "전체 허용 공급자",
+                "전체 허용 공급사",
                 "كل المزوّدين المصرّح بهم",
               )}
             </option>
@@ -508,7 +510,7 @@ export default function Screen({
               {t(
                 l,
                 "These coverage declarations concern all authorized collected sources, not completeness of this provider/month. They are operator assertions, not financial approval.",
-                "수집 범위 선언은 전체 허용 수집 원천 기준이며 현재 공급자·월의 완전성을 뜻하지 않습니다. 운영자 선언이며 재무 승인이 아닙니다.",
+                "수집 범위 선언은 전체 허용 수집 원천 기준이며 현재 공급사·월의 완전성을 뜻하지 않습니다. 운영자 선언이며 재무 승인이 아닙니다.",
                 "إقرارات التغطية تخص كل المصادر المجمّعة المصرّح بها، لا اكتمال هذا المزوّد أو الشهر. هي إقرارات مشغّل وليست اعتماداً مالياً.",
               )}
             </p>

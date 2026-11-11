@@ -338,6 +338,252 @@ try {
       path: `${out}/partial-comparison.png`,
       fullPage: true,
     });
+    const field = (name) =>
+      page.locator(`.b08-desktop-detail [data-b08-field="${name}"] dd`);
+    const lines = async (locator) =>
+      (await locator.innerText())
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+    const moneyCells = async (index) =>
+      (
+        await page
+          .locator("table tbody tr")
+          .nth(index)
+          .locator("td.money")
+          .allInnerTexts()
+      ).map((text) => text.trim());
+    const openRow = async (index) => {
+      await page.locator("table button[data-b08-row]").nth(index).click();
+      await page.locator("[data-b08-detail-heading]:visible").waitFor();
+    };
+    await page.goto(
+      url + "#/billing-runs?lang=en&view=inputs&focus-provider=Oracle",
+    );
+    await loaded();
+    await openRow(0);
+    assert.deepEqual(
+      await page
+        .locator(".b08-desktop-detail [data-b08-origin]")
+        .evaluateAll((groups) => groups.map((g) => g.dataset.b08Origin)),
+      ["source", "derived", "lineage", "annotation"],
+    );
+    assert.deepEqual(await lines(field("billed_cost")), ["USD 0.24"]);
+    assert.deepEqual(await lines(field("effective_cost")), [
+      "USD 0.00",
+      "Exact zero",
+    ]);
+    assert.deepEqual(await lines(field("charge_start")), [
+      "2024-09-30 22:00:00 UTC",
+    ]);
+    assert.deepEqual(await lines(field("billing_end")), [
+      "2024-11-01 00:00:00 UTC",
+    ]);
+    assert.deepEqual(await lines(field("charge_month")), ["2024-09"]);
+    assert.deepEqual(await lines(field("ordinal")), ["1"]);
+    assert.deepEqual(await lines(field("evidence_class")), ["Public sample"]);
+    assert.deepEqual(await lines(field("currency")), ["USD"]);
+    assert.equal(
+      (await field("id").innerText()).trim(),
+      await page
+        .locator("table button[data-b08-row]")
+        .first()
+        .getAttribute("data-b08-row"),
+    );
+    assert.equal(
+      await page
+        .locator(".b08-desktop-detail dt")
+        .evaluateAll(
+          (terms) =>
+            terms.filter((term) =>
+              /interval|batch|Provenance class|sub-account/i.test(
+                term.textContent,
+              ),
+            ).length,
+        ),
+      0,
+    );
+    assert.equal(
+      await page
+        .locator("table tbody tr")
+        .first()
+        .locator(".b08-state-note")
+        .count(),
+      0,
+    );
+    await page.screenshot({
+      path: `${out}/en-oracle-detail.png`,
+      fullPage: true,
+    });
+    for (const [locale, zero] of [
+      ["ko", "정확한 0"],
+      ["ar", "صفر دقيق"],
+    ]) {
+      await page.goto(
+        url + `#/billing-runs?lang=${locale}&view=inputs&focus-provider=Oracle`,
+      );
+      await loaded();
+      await openRow(0);
+      assert.equal((await lines(field("effective_cost")))[1], zero);
+    }
+    const awsSnapshot = (
+      await (
+        await page.request.get(
+          new URL("/api/focus-overview?provider=AWS&period=all", url).href,
+          { headers: { "X-HB-Local-Client": "1" } },
+        )
+      ).json()
+    ).snapshot;
+    await page.goto(
+      url +
+        `#/billing-runs?lang=en&view=inputs&focus-provider=AWS&focus-after=450&focus-snapshot=${awsSnapshot}`,
+    );
+    await loaded();
+    assert.deepEqual(await moneyCells(6), ["USD -2.6137", "USD -3.00"]);
+    await openRow(6);
+    assert.deepEqual(await lines(field("billed_cost")), ["USD -2.6137"]);
+    await page.goto(
+      url + "#/billing-runs?lang=en&view=inputs&focus-provider=Alibaba+Cloud",
+    );
+    await loaded();
+    assert.deepEqual(await moneyCells(1), ["CNY 8.80", "CNY 8.80"]);
+    await page.goto(url + "#/billing-runs?lang=en&view=comparison");
+    await loaded();
+    await page.locator("#b08-keep").click();
+    await kept();
+    const lower = structuredClone(initial);
+    lower.observed_at = new Date(
+      Date.parse(initial.observed_at) + 60000,
+    ).toISOString();
+    for (const list of [
+      lower.amounts,
+      lower.providers.find((p) => p.amounts.some((a) => a.currency === "USD"))
+        .amounts,
+      lower.months.find((m) => m.amounts.some((a) => a.currency === "USD"))
+        .amounts,
+    ]) {
+      const usd = list.find((a) => a.currency === "USD");
+      usd.billed_cost.coefficient = (
+        BigInt(usd.billed_cost.coefficient) -
+        10n ** 18n
+      ).toString();
+    }
+    await page.route(
+      endpoint,
+      (r) =>
+        r.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(lower),
+        }),
+      { times: 1 },
+    );
+    await refresh();
+    const deltas = (
+      await page.locator("[data-b08-delta=billed_cost]").allInnerTexts()
+    ).map((text) => text.trim());
+    assert.ok(deltas.includes("USD -1.00"), JSON.stringify(deltas));
+    assert.ok(deltas.every((text) => !text.includes("\u2212")));
+    await page.screenshot({
+      path: `${out}/negative-difference.png`,
+      fullPage: true,
+    });
+    const degraded = structuredClone(partial);
+    degraded.rows[0].sub_account = null;
+    degraded.rows[0].service = null;
+    degraded.rows[0].consumed_quantity = null;
+    degraded.rows[0].consumed_unit = null;
+    degraded.rows[0].pricing_quantity = "0";
+    degraded.rows[0].evidence_class = "unclassified";
+    degraded.rows[0].charge_start = degraded.rows[0].charge_start.replace(
+      "+00:00",
+      "Z",
+    );
+    await page.route(endpoint, (r) =>
+      r.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(degraded),
+      }),
+    );
+    for (const [locale, missing, unit, absent, provenance] of [
+      ["en", "Missing", "Unit missing", "No values present", "Unclassified"],
+      ["ko", "누락", "단위 누락", "값 없음", "출처 미분류"],
+      ["ar", "مفقود", "الوحدة مفقودة", "لا قيم موجودة", "غير مصنف"],
+    ]) {
+      await page.goto(url + `#/billing-runs?lang=${locale}&view=inputs`);
+      await loaded();
+      await page.locator(".b08-toolbar>button").last().click();
+      await loaded();
+      const cells = await moneyCells(0);
+      assert.equal(cells[0], missing);
+      assert.ok(!/USD|—|\d/.test(cells[0]));
+      assert.ok(
+        (
+          await page
+            .locator("table tbody tr")
+            .first()
+            .locator("td")
+            .first()
+            .innerText()
+        ).includes(missing),
+      );
+      assert.ok(
+        (await page.locator(".b08-totals").innerText()).includes(absent),
+      );
+      await openRow(0);
+      assert.deepEqual(await lines(field("billed_cost")), [missing]);
+      assert.deepEqual(await lines(field("sub_account")), [missing]);
+      assert.deepEqual(await lines(field("service")), [missing]);
+      assert.deepEqual(await lines(field("evidence_class")), [provenance]);
+      assert.equal(
+        await page
+          .locator('.b08-desktop-detail [data-b08-instant="raw"]')
+          .innerText(),
+        degraded.rows[0].charge_start,
+      );
+      if (locale === "en") {
+        assert.ok(
+          (await field("charge_start").innerText()).includes(
+            "Shown as collected; not converted to UTC",
+          ),
+        );
+        assert.match(
+          await page.locator(".b08-account-list button").first().textContent(),
+          /Billing account ID:/,
+        );
+        await page.locator(".planning-tabs button").nth(2).click();
+        await page.locator(".b08-screen[data-b08-view=trace]").waitFor();
+        const trace = await page.locator(".b08-screen").innerText();
+        assert.ok(trace.includes("Service: Missing"));
+        assert.ok(trace.includes("Row ID"));
+        assert.ok(!trace.includes("Source reference\n"));
+        await page.locator(".planning-tabs button").nth(1).click();
+        await page.locator(".b08-screen[data-b08-view=inputs]").waitFor();
+        await page.locator("[data-b08-detail-heading]:visible").waitFor();
+      }
+      await page.locator(".b08-desktop-detail details summary").click();
+      const consumed = await field("consumed_quantity").innerText();
+      assert.ok(consumed.includes(missing) && consumed.includes(unit));
+      assert.ok(!/\d/.test(consumed));
+      assert.ok(
+        (await field("pricing_quantity").innerText()).includes(
+          locale === "en"
+            ? "Exact zero"
+            : locale === "ko"
+              ? "정확한 0"
+              : "صفر دقيق",
+        ),
+      );
+      if (locale === "en")
+        await page.screenshot({
+          path: `${out}/en-degraded-detail.png`,
+          fullPage: true,
+        });
+    }
+    await page.unroute(endpoint);
+    await page.goto(url + "#/billing-runs?lang=en");
+    await loaded();
     assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
   }
   for (const lang of ["ko", "en", "ar"])

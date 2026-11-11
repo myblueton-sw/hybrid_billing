@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { OverviewData as Data } from "./api";
+import {
+  fieldLabel,
+  missingLabel,
+} from "../../../sources/collected-focus/labels";
 import { t } from "./copy";
 const range = (after: number, length: number, total: number) =>
   `${length ? after + 1 : 0}–${after + length} / ${total}`;
@@ -91,24 +95,19 @@ export default function AccountScope({
                 onClick={() => select(a.id)}
               >
                 <span>
-                  {t(l, "Billing account", "청구 계정", "حساب الفوترة")}:{" "}
+                  {fieldLabel(l, "billing_account")}:{" "}
                   <bdi dir="ltr">{a.billing_account}</bdi>
                 </span>
                 <span>
-                  {t(l, "Provider", "공급자", "المزوّد")}:{" "}
-                  <bdi dir="ltr">{a.provider}</bdi>
+                  {fieldLabel(l, "provider")}: <bdi dir="ltr">{a.provider}</bdi>
                 </span>
                 <span>
-                  {t(l, "Sub-account", "하위 계정", "الحساب الفرعي")}:{" "}
-                  <bdi dir="ltr">
-                    {a.sub_account ??
-                      t(
-                        l,
-                        "None in source",
-                        "원천 값 없음",
-                        "لا يوجد في المصدر",
-                      )}
-                  </bdi>
+                  {fieldLabel(l, "sub_account")}:{" "}
+                  {a.sub_account === null ? (
+                    missingLabel(l)
+                  ) : (
+                    <bdi dir="ltr">{a.sub_account}</bdi>
+                  )}
                 </span>
                 <span>
                   {t(l, "Source rows", "원천 행", "صفوف المصدر")}:{" "}

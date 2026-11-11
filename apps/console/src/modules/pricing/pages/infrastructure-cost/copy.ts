@@ -82,8 +82,8 @@ export function issueLabel(l: Locale, code: string) {
       "أدخل مرجع دليل لكل علاقة تضمين مُعلنة.",
     ],
     interval_mismatch: [
-      "Included rows must have identical charge intervals.",
-      "포함 관계는 과금 시작·종료 시각이 같은 행 사이에서만 선언할 수 있습니다.",
+      "Included rows must have identical charge periods.",
+      "포함 관계는 과금 기간이 같은 행 사이에서만 선언할 수 있습니다.",
       "يجب أن تتطابق فترات الرسوم للصفوف المرتبطة بالتضمين.",
     ],
     inclusion_cycle: [

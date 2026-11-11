@@ -15,7 +15,7 @@ import {
   selectedLabel,
   originLabel,
   provenanceLabel,
-} from "./labels";
+} from "../../collected-focus/labels";
 const shownNames = 4;
 function MissingValues({
   l,

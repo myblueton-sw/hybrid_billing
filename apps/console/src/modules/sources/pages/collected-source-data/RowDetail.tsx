@@ -25,7 +25,7 @@ import {
   provenanceLabel,
   unitMissingLabel,
   zeroLabel,
-} from "./labels";
+} from "../../collected-focus/labels";
 const shownTimezones = 8;
 export default function RowDetail({
   l,

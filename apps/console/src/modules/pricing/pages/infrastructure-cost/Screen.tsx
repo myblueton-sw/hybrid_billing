@@ -13,6 +13,7 @@ import { context, restore, save, clear, type Context } from "./store";
 import { basisLabel, issueLabel } from "./copy";
 import CostItems from "./CostItems";
 import Summary from "./Summary";
+import RelationEnd from "./RelationEnd";
 import "./screen.css";
 type State = {
   key: string;
@@ -37,6 +38,8 @@ const itemIds = [
   "B01:action:browser-save",
   "B01:state:approval-unconnected",
   "B01:state:source-unavailable",
+  "B01:table:row-identity",
+  "B01:state:value-missing-zero",
 ];
 export default function Screen({
   locale: l,
@@ -332,7 +335,7 @@ export default function Screen({
             onChange={(e) => change({ provider: e.target.value })}
           >
             <option value="">
-              {t(l, "All providers", "전체 공급자", "كل المزوّدين")}
+              {t(l, "All providers", "전체 공급사", "كل المزوّدين")}
             </option>
             {(data?.options.providers ?? [query.get("provider") ?? "VMware"])
               .filter(Boolean)
@@ -427,7 +430,7 @@ export default function Screen({
               {t(
                 l,
                 "Collected sample evidence",
-                "수집 표본 근거",
+                "수집 샘플 근거",
                 "دليل عيّنة مجمّعة",
               )}
             </h2>
@@ -435,7 +438,7 @@ export default function Screen({
               {t(
                 l,
                 "Provider labels do not establish on-premises ownership or a complete infrastructure cost composition.",
-                "공급자 이름만으로 온프렘 소유나 전체 인프라 원가 구성을 확인할 수 없습니다.",
+                "공급사 이름만으로 온프렘 소유나 전체 인프라 원가 구성을 확인할 수 없습니다.",
                 "تسمية المزوّد لا تثبت ملكية محلية أو اكتمال مكوّنات تكلفة البنية التحتية.",
               )}
             </p>
@@ -474,16 +477,16 @@ export default function Screen({
               {t(
                 l,
                 "Account scopes are source account combinations, not legal entities or a count of unique billing accounts.",
-                "계정 범위 수는 원천의 계정 조합 수이며 법인 수나 고유 청구 계정 수가 아닙니다.",
+                "계정 범위 수는 원천의 계정 조합 수이며 법인 수나 고유 결제 계정 수가 아닙니다.",
                 "نطاقات الحسابات هي تركيبات حسابات المصدر، وليست كيانات قانونية أو عدد حسابات فوترة فريدة.",
               )}
             </p>
             <p className="infra-meta">
               {t(
                 l,
-                "Months use charge-start attribution in the tenant timezone, without proration. A selected month or matching interval does not establish infrastructure-cost eligibility, depreciation or monthly accrual.",
-                "월은 테넌트 시간대의 과금 시작 시각으로 구분하며 월별로 안분하지 않습니다. 월 선택이나 동일 기간만으로 인프라 원가 해당 여부·감가상각·월별 발생액을 확정할 수 없습니다.",
-                "تُنسب الأشهر إلى بدء الرسوم بتوقيت المستأجر دون توزيع نسبي. اختيار الشهر أو تطابق الفترة لا يثبت أهلية تكلفة البنية التحتية أو الإهلاك أو الاستحقاق الشهري.",
+                "Months use charge-start attribution in the tenant timezone, without proration. A selected month or matching charge period does not establish infrastructure-cost eligibility, depreciation or monthly accrual.",
+                "월은 테넌트 시간대의 과금 시작 시각으로 구분하며 월별로 안분하지 않습니다. 월 선택이나 동일한 과금 기간만으로 인프라 원가 해당 여부·감가상각·월별 발생액을 확정할 수 없습니다.",
+                "تُنسب الأشهر إلى بدء الرسوم بتوقيت المستأجر دون توزيع نسبي. اختيار الشهر أو تطابق فترة الرسوم لا يثبت أهلية تكلفة البنية التحتية أو الإهلاك أو الاستحقاق الشهري.",
               )}
             </p>
             {(query.get("q") || query.get("account")) && (
@@ -656,8 +659,8 @@ export default function Screen({
                             "معرّف الصف المُعلن مشمولاً",
                           )}
                         </dt>
-                        <dd>
-                          <bdi dir="ltr">{e.row}</bdi>
+                        <dd data-relation="included">
+                          <RelationEnd locale={l} rows={data.rows} id={e.row} />
                         </dd>
                         <dt>
                           {t(
@@ -667,8 +670,12 @@ export default function Screen({
                             "معرّف الصف الهدف",
                           )}
                         </dt>
-                        <dd>
-                          <bdi dir="ltr">{e.parent}</bdi>
+                        <dd data-relation="target">
+                          <RelationEnd
+                            locale={l}
+                            rows={data.rows}
+                            id={e.parent as string}
+                          />
                         </dd>
                         <dt>
                           {t(
@@ -682,9 +689,9 @@ export default function Screen({
                           {e.reference ||
                             t(
                               l,
-                              "Missing reference",
-                              "근거 참조 없음",
-                              "مرجع مفقود",
+                              "No reference entered",
+                              "근거 참조 미입력",
+                              "لم يُدخل مرجع",
                             )}
                         </dd>
                       </dl>

@@ -1,11 +1,11 @@
-import type { Locale } from "../../../../shared/types";
-import { text as t } from "../../../../shared/copy";
+import type { Locale } from "../../../shared/types";
+import { text as t } from "../../../shared/copy";
 import {
   instantParts,
   type MappedField,
   type Origin,
   type ProvenanceClass,
-} from "../../collected-focus/fields";
+} from "./fields";
 export type DisplayField =
   | MappedField
   | "charge_month"

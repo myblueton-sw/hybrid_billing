@@ -169,13 +169,31 @@
   margin-block: 8px 16px;
 }
 .infra-table {
-  overflow: auto;
-  max-block-size: 720px;
+  overflow-x: auto;
 }
 .infra-table table {
   inline-size: 100%;
-  min-inline-size: 920px;
+  min-inline-size: 996px;
+  table-layout: fixed;
   border-collapse: collapse;
+}
+.infra-table[data-edit="true"] table {
+  min-inline-size: 876px;
+}
+.infra-col-select {
+  inline-size: 48px;
+}
+.infra-col-period {
+  inline-size: 184px;
+}
+.infra-col-month {
+  inline-size: 136px;
+}
+.infra-col-cost {
+  inline-size: 208px;
+}
+.infra-col-category {
+  inline-size: 120px;
 }
 .infra-table :is(th, td) {
   padding: 12px;
@@ -183,51 +201,161 @@
   vertical-align: top;
   border-block-end: 1px solid var(--hb-line-row);
   font-size: 16px;
+  white-space: normal;
   overflow-wrap: anywhere;
-  min-inline-size: 130px;
-  max-inline-size: 270px;
 }
 .infra-table thead th {
   background: var(--hb-hover);
   font-size: 14px;
-  position: sticky;
-  inset-block-start: 0;
-  z-index: 1;
   font-weight: 600;
+  word-break: keep-all;
+}
+.infra-table thead th small {
+  font-weight: 400;
 }
 .infra-table :is(th, td):first-child {
-  min-inline-size: 58px;
+  padding-inline: 8px;
 }
-.infra-table tbody tr[data-selected="true"],
-.infra-table tbody tr:hover {
+.infra-table[data-edit="false"] tbody tr[data-selected="true"],
+.infra-table[data-edit="false"] tbody tr:hover {
   background: var(--hb-hover);
+}
+.infra-table[data-edit="true"] tbody tr,
+.infra-table[data-edit="true"] tbody tr:hover,
+.infra-table[data-edit="true"] tbody tr:hover td {
+  background: transparent;
+}
+.infra-table[data-edit="true"] tbody {
+  border-block-end: 1px solid var(--hb-line-control);
 }
 .infra-table strong {
   font-weight: 600;
 }
-.infra-table select,
-.infra-table input:not([type="checkbox"]) {
-  inline-size: 200px;
+.infra-select label {
+  display: grid;
+  place-items: center;
 }
-.infra-table summary {
-  min-block-size: 40px;
-  align-content: center;
-  color: var(--c-link);
-  cursor: pointer;
-}
-.infra-table details dl {
-  inline-size: 230px;
-  margin-block: 8px;
-}
-.infra-table details :is(dt, dd) {
-  margin: 0 0 8px;
-}
-.infra-table details dt {
+.infra-identity {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 2px 12px;
+  margin: 8px 0 0;
   font-size: 14px;
+  line-height: 22px;
+}
+.infra-identity dt {
   color: var(--hb-muted);
+  word-break: keep-all;
+}
+.infra-identity dd {
+  margin: 0;
+  color: var(--hb-ink);
+}
+.infra-identity .infra-identity-wide {
+  grid-column: 1 / -1;
+}
+.infra-identity dt.infra-identity-wide {
+  margin-block-start: 6px;
+}
+.infra-identity dd.infra-identity-wide {
+  margin-block-end: 2px;
+}
+.infrastructure-cost .infra-code {
+  font-family: var(--hb-font-mono);
+  font-size: 14px;
+  line-height: 22px;
+}
+.infrastructure-cost .infra-token,
+.infrastructure-cost .infra-token bdi {
+  display: inline-block;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.infra-table td > :is(.infra-token, .infra-raw) {
+  display: block;
+}
+.infrastructure-cost .infra-state {
+  font-weight: 600;
+  color: var(--hb-ink);
+}
+.infrastructure-cost .infra-state-note {
+  display: block;
+  font-size: 14px;
+  line-height: 22px;
 }
 .infra-table .infra-money {
   text-align: end;
+}
+.infra-cost-line {
+  display: grid;
+  justify-items: end;
+}
+.infra-cost-line bdi {
+  max-inline-size: 100%;
+}
+.infra-cost-line + .infra-cost-line {
+  margin-block-start: 8px;
+  font-size: 14px;
+  line-height: 22px;
+}
+.infra-table .infra-included {
+  margin-block-start: 6px;
+}
+.infrastructure-cost .infra-card-only,
+.infra-table thead .infra-select-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.infra-table .infra-declare-row td {
+  padding: 4px 12px 16px;
+  padding-inline-start: 60px;
+}
+.infra-table[data-edit="true"] tbody tr:first-child td {
+  border-block-end: 0;
+}
+.infra-declare {
+  display: grid;
+  grid-template-columns: 200px minmax(280px, 400px) minmax(240px, 480px);
+  gap: 16px 24px;
+  justify-content: start;
+  align-items: start;
+}
+.infra-declare label {
+  display: grid;
+  gap: 4px;
+}
+.infra-declare label > span,
+.infra-declare-status > span {
+  display: block;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--hb-muted);
+  word-break: keep-all;
+}
+.infra-declare :is(select, input) {
+  inline-size: 100%;
+}
+.infra-declare .infra-declare-id {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  margin: 0;
+}
+.infra-declare .infra-declare-status {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--hb-muted);
 }
 .infra-pages {
   display: flex;
@@ -263,6 +391,9 @@
 }
 .infra-relations dd {
   margin: 0;
+}
+.infra-relation-identity {
+  display: block;
 }
 [dir="rtl"] .infrastructure-cost {
   line-height: 1.8;
@@ -317,57 +448,6 @@
   .infra-pages {
     justify-content: start;
   }
-  .infra-table {
-    max-block-size: none;
-    overflow: visible;
-  }
-  .infra-table table {
-    min-inline-size: 0;
-    display: block;
-  }
-  .infra-table thead {
-    display: none;
-  }
-  .infra-table tbody {
-    display: block;
-  }
-  .infra-table tbody tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    padding-block: 16px;
-    border-block-end: 1px solid var(--hb-line-control);
-  }
-  .infra-table tbody td {
-    block-size: auto;
-    min-block-size: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    border: 0;
-    padding: 8px 0;
-    max-inline-size: none;
-    min-inline-size: 0;
-    gap: 4px;
-    text-align: start;
-  }
-  .infra-table tbody td > bdi {
-    justify-self: start;
-  }
-  .infra-table tbody td.infra-money > bdi {
-    justify-self: end;
-  }
-  .infra-table tbody td::before {
-    content: attr(data-label);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--hb-muted);
-  }
-  .infra-table input:not([type="checkbox"]),
-  .infra-table select {
-    inline-size: 100%;
-  }
-  .infra-table details dl {
-    inline-size: 100%;
-  }
   .infra-relations dl {
     grid-template-columns: minmax(0, 1fr);
     gap: 4px;
@@ -387,12 +467,106 @@
 }
 
 .infra-target-id {
-  inline-size: 200px;
-  max-inline-size: 100%;
   margin-block-start: 8px;
   white-space: normal;
-  overflow-wrap: anywhere;
 }
-.infra-target-id bdi {
+.infra-target-id > span {
   display: block;
+}
+@media (max-width: 1319px) {
+  .infra-table {
+    overflow: visible;
+  }
+  .infrastructure-cost
+    .infra-table
+    :is(button, input:not([type="checkbox"]), select) {
+    min-block-size: 44px;
+  }
+  .infra-table table,
+  .infra-table[data-edit="true"] table {
+    min-inline-size: 0;
+    display: block;
+  }
+  .infra-table :is(thead, colgroup) {
+    display: none;
+  }
+  .infra-table tbody {
+    display: block;
+  }
+  .infra-table tbody tr {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    column-gap: 8px;
+    row-gap: 12px;
+  }
+  .infra-table[data-edit="false"] tbody tr,
+  .infra-table[data-edit="true"] tbody {
+    padding-block: 16px;
+    border-block-end: 1px solid var(--hb-line-control);
+  }
+  .infra-table tbody td,
+  .infra-table .infra-declare-row td {
+    block-size: auto;
+    min-block-size: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-column: 1 / -1;
+    border: 0;
+    padding: 0;
+    gap: 4px;
+    text-align: start;
+  }
+  .infra-table tbody td.infra-money {
+    text-align: start;
+  }
+  .infra-table tbody td.infra-select {
+    grid-column: 1;
+    padding: 0;
+  }
+  .infra-table tbody td.infra-row-identity {
+    grid-column: 2;
+    gap: 0;
+  }
+  .infra-select label {
+    inline-size: 44px;
+    block-size: 44px;
+  }
+  .infra-table tbody td[data-label]::before {
+    content: attr(data-label);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--hb-muted);
+  }
+  .infrastructure-cost .infra-card-only {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+  .infra-cost-line,
+  .infra-table tbody td > bdi {
+    justify-items: start;
+    justify-self: start;
+  }
+  .infra-table tbody tr.infra-declare-row {
+    display: block;
+    margin-block-start: 12px;
+  }
+  .infra-declare {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .infra-declare .infra-declare-id {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 600;
+    color: var(--hb-ink);
+  }
 }

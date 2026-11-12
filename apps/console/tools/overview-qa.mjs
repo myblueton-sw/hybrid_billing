@@ -218,6 +218,11 @@ try {
   await page.waitForURL(/focus-period=2024-10/);
   await loaded();
   assert.equal(await page.locator("[data-focus-rows]").innerText(), "0");
+  assert.equal(await page.locator("[data-u01-provenance]").count(), 0);
+  assert.doesNotMatch(
+    await page.locator(".overview-basis > p").first().textContent(),
+    /·\s*·/,
+  );
   await open("&focus-q=%20AWS%20");
   assert.equal(await page.locator("#focus-account-search").inputValue(), "AWS");
   await page
@@ -432,6 +437,7 @@ try {
     assert.equal(s.notes, 0, label);
   };
   const instant = (v) => `${v.slice(0, 10)} ${v.slice(11, 19)} UTC`;
+  assert.notEqual(actual.rows[0].billed_cost, null);
   const real = actual.rows[0],
     rowSelector = `[data-u01-row="${real.id}"]`,
     toggle = `[data-u01-evidence-toggle="${real.id}"]`;
@@ -713,11 +719,15 @@ try {
             : "value",
         `real data ${lang} ${width}`,
       );
+      await page.locator(toggle).click();
+      assert.equal(
+        await page.locator(`${evidence} .source-instant`).count(),
+        2,
+      );
       assert.equal(
         await page.locator(`${evidence} [data-source-instant=raw]`).count(),
         0,
       );
-      await page.locator(toggle).click();
       const s = await shape();
       sound(s, `${lang} ${width}`);
       layouts.push({
@@ -753,6 +763,7 @@ try {
 }
 assert.equal(results.length, 6);
 assert.deepEqual(errors, []);
+assert.ok(busyRetries <= 6, `source_busy recoveries: ${busyRetries}`);
 console.log(JSON.stringify({ busyRetries }));
 console.log(
   "PASS: six locale/layout variants; retained-source readback; precise basis switch; provider/month/empty/account/search/pages/history; hostile proxy; stale continuation; late response; failure clearing/recovery; foreign scope; source-field terms on real rows, routed missing row and empty-currency aggregates in five variants, reference row and layout at seven widths in three languages. Owner review untouched.",

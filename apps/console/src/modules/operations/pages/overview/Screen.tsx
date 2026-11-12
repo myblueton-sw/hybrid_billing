@@ -164,6 +164,19 @@ export default function Overview({
     basis === "billed_cost"
       ? t(l, "Billed cost", "청구 비용", "التكلفة المفوترة")
       : t(l, "Effective cost", "실효 비용", "التكلفة الفعلية");
+  const provenanceLine = provenanceClasses
+    .map(
+      (c) =>
+        [
+          c,
+          Object.entries(data?.provenance ?? {})
+            .filter(([k]) => provenanceClass(k) === c)
+            .reduce((n, [, v]) => n + v, 0),
+        ] as const,
+    )
+    .filter(([, n]) => n > 0)
+    .map(([c, n]) => `${provenanceLabel(l, c)} ${n}`)
+    .join(" · ");
   const pageKey = data ? `${data.snapshot}:${data.after}` : "",
     openId = opened.key === pageKey ? opened.id : null;
   const table = (label: string, children: React.ReactNode) => (
@@ -360,22 +373,11 @@ export default function Overview({
                 "عينات FOCUS مجمعة",
               )}{" "}
               <bdi>{data.versions.join(", ")}</bdi> ·{" "}
-              <span data-u01-provenance>
-                {provenanceClasses
-                  .map(
-                    (c) =>
-                      [
-                        c,
-                        Object.entries(data.provenance)
-                          .filter(([k]) => provenanceClass(k) === c)
-                          .reduce((n, [, v]) => n + v, 0),
-                      ] as const,
-                  )
-                  .filter(([, n]) => n > 0)
-                  .map(([c, n]) => `${provenanceLabel(l, c)} ${n}`)
-                  .join(" · ")}
-              </span>{" "}
-              ·{" "}
+              {provenanceLine && (
+                <>
+                  <span data-u01-provenance>{provenanceLine}</span> ·{" "}
+                </>
+              )}
               {t(
                 l,
                 "No FX conversion · query only",

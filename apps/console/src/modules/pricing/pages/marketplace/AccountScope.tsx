@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { Data } from "./contract";
+import { fieldLabel as sourceLabel } from "../../../sources/collected-focus/labels";
+import { SourceText } from "../../../sources/collected-focus/SourceValues";
 import { t } from "./copy";
 const range = (after: number, length: number, total: number) =>
   `${length ? after + 1 : 0}–${after + length} / ${total}`;
@@ -27,9 +29,9 @@ export default function AccountScope({
         {data.selection.account
           ? t(
               l,
-              "One canonical account selected",
-              "원천 계정 1개 선택",
-              "حساب مرجعي واحد محدد",
+              "One account scope selected",
+              "계정 범위 1개 선택",
+              "نطاق حساب واحد محدد",
             )
           : t(
               l,
@@ -44,9 +46,9 @@ export default function AccountScope({
       <p className="b07-meta">
         {t(
           l,
-          "Search matches the account list only. Selecting an account narrows the source rows. A FOCUS account reference is not legal ownership.",
-          "검색은 계정 목록에만 적용됩니다. 계정을 선택하면 원천 행 범위가 좁아집니다. FOCUS 계정 참조는 법적 소유 관계가 아닙니다.",
-          "يؤثر البحث في قائمة الحسابات فقط. يضيّق اختيار الحساب نطاق صفوف المصدر . مرجع حساب FOCUS ليس ملكية قانونية.",
+          "Search matches the account list only. Selecting an account narrows the source rows. An account scope ID is derived by Hybrid Billing and does not establish legal ownership.",
+          "검색은 계정 목록에만 적용됩니다. 계정을 선택하면 원천 행 범위가 좁아집니다. 계정 범위 ID는 Hybrid Billing 산출 값이며 법적 소유 관계가 아닙니다.",
+          "يؤثر البحث في قائمة الحسابات فقط. يضيّق اختيار الحساب نطاق صفوف المصدر. معرّف نطاق الحساب يشتقه Hybrid Billing ولا يثبت ملكية قانونية.",
         )}
       </p>
       <button
@@ -63,13 +65,10 @@ export default function AccountScope({
       </button>
       {data.selection.account && (
         <p className="b07-meta">
-          {t(
-            l,
-            "Selected canonical account reference",
-            "선택 원천 계정 참조",
-            "مرجع الحساب المحدد",
-          )}
-          : <bdi dir="ltr">{data.selection.account}</bdi>
+          {sourceLabel(l, "account")}:{" "}
+          <bdi dir="ltr" data-b07-selected-account>
+            {data.selection.account}
+          </bdi>
         </p>
       )}
       {!data.account_matches ? (
@@ -90,32 +89,40 @@ export default function AccountScope({
                 aria-pressed={data.selection.account === a.id}
                 onClick={() => select(a.id)}
               >
-                <span>
-                  {t(l, "Billing account", "청구 계정", "حساب الفوترة")}:{" "}
-                  <bdi dir="ltr">{a.billing_account}</bdi>
-                </span>
-                <span>
-                  {t(l, "Provider", "공급자", "المزوّد")}:{" "}
-                  <bdi dir="ltr">{a.provider}</bdi>
-                </span>
-                <span>
-                  {t(l, "Sub-account", "하위 계정", "الحساب الفرعي")}:{" "}
-                  <bdi dir="ltr">
-                    {a.sub_account ??
-                      t(
-                        l,
-                        "None in source",
-                        "원천 값 없음",
-                        "لا يوجد في المصدر",
-                      )}
-                  </bdi>
-                </span>
-                <span>
-                  {t(l, "Source rows", "원천 행", "صفوف المصدر")}:{" "}
-                  <bdi dir="ltr">{a.rows}</bdi>
-                  {data.selection.account === a.id && (
-                    <> · {t(l, "Selected", "선택됨", "محدد")}</>
-                  )}
+                <span className="b07-account-field">
+                  <span className="b07-account-label">
+                    {sourceLabel(l, "billing_account")}
+                  </span>{" "}
+                  <span className="b07-account-value">
+                    <bdi dir="ltr">{a.billing_account}</bdi>
+                  </span>
+                </span>{" "}
+                <span className="b07-account-field">
+                  <span className="b07-account-label">
+                    {sourceLabel(l, "provider")}
+                  </span>{" "}
+                  <span className="b07-account-value">
+                    <bdi dir="ltr">{a.provider}</bdi>
+                  </span>
+                </span>{" "}
+                <span className="b07-account-field">
+                  <span className="b07-account-label">
+                    {sourceLabel(l, "sub_account")}
+                  </span>{" "}
+                  <span className="b07-account-value">
+                    <SourceText value={a.sub_account} locale={l} />
+                  </span>
+                </span>{" "}
+                <span className="b07-account-field">
+                  <span className="b07-account-label">
+                    {t(l, "Source rows", "원천 행", "صفوف المصدر")}
+                  </span>{" "}
+                  <span className="b07-account-value">
+                    <bdi dir="ltr">{a.rows}</bdi>
+                    {data.selection.account === a.id && (
+                      <> · {t(l, "Selected", "선택됨", "محدد")}</>
+                    )}
+                  </span>
                 </span>
               </button>
             </li>

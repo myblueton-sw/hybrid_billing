@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import SlowReadHint from "../../../../shared/SlowReadHint";
 import type { Locale } from "../../../../shared/types";
 import {
   query,
@@ -562,25 +563,26 @@ export default function RetainedConnections(props: Props) {
             aria-live="polite"
             tabIndex={-1}
           >
-            {phase === "loading"
-              ? text(locale, words.loading)
-              : phase === "unconnected"
-                ? text(locale, words.unconnected)
-                : phase === "error"
-                  ? text(locale, failure)
-                  : !supported
-                    ? text(
-                        locale,
-                        props.view === "security"
-                          ? words.security
-                          : words.diagnostics,
-                      )
-                    : data?.total === 0
-                      ? text(
-                          locale,
-                          requested?.q ? words.emptyFiltered : words.emptyScope,
-                        )
-                      : null}
+            {phase === "loading" ? (
+              <>
+                {text(locale, words.loading)}
+                <SlowReadHint locale={locale} />
+              </>
+            ) : phase === "unconnected" ? (
+              text(locale, words.unconnected)
+            ) : phase === "error" ? (
+              text(locale, failure)
+            ) : !supported ? (
+              text(
+                locale,
+                props.view === "security" ? words.security : words.diagnostics,
+              )
+            ) : data?.total === 0 ? (
+              text(
+                locale,
+                requested?.q ? words.emptyFiltered : words.emptyScope,
+              )
+            ) : null}
           </p>
           {(phase === "error" || phase === "unconnected") && (
             <div className="retained-connection-error">

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import SlowReadHint from "../../../../shared/SlowReadHint";
 import type { Locale } from "../../../../shared/types";
 import { digest } from "../../../../shared/review-store";
 import { load, query, ServiceError, type Data, type FieldState } from "./api";
@@ -559,6 +560,7 @@ export default function Screen({
             "선택한 범위와 권한을 확인하고 약정 비용·혜택 근거를 불러오는 중입니다…",
             "جارٍ التحقق من النطاق والتفويض وتحميل أدلة تكاليف الالتزامات ومنافعها…",
           )}
+          <SlowReadHint locale={l} />
         </p>
       ) : (
         <>

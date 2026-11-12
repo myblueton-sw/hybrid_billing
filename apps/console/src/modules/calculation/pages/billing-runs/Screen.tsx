@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import SlowReadHint from "../../../../shared/SlowReadHint";
 import type { Locale } from "../../../../shared/types";
 import { load, query, ServiceError, type OverviewData } from "./api";
 import { makeBaseline, compatible, type Baseline } from "./model";
@@ -358,6 +359,7 @@ export default function Screen({
             "허용된 원천 근거를 조회하는 중입니다…",
             "جارٍ قراءة أدلة المصدر المصرّح بها…",
           )}
+          <SlowReadHint locale={l} />
         </p>
       ) : (
         <>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import SlowReadHint from "../../../../shared/SlowReadHint";
 import type { Locale } from "../../../../shared/types";
 import { setNavigationGuard } from "../../../../shared/navigation";
 import {
@@ -510,6 +511,7 @@ export default function Screen({
             "권한이 허용된 원천 행을 조회하고 있습니다…",
             "جارٍ تحميل صفوف المصدر المصرّح بها…",
           )}
+          <SlowReadHint locale={l} />
         </p>
       ) : (
         <>

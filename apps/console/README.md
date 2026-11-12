@@ -68,7 +68,7 @@ B03 at `/#/allocations?lang=ko` provides a source-backed allocation review edito
 
 The `/rates` screen uses an explicitly selected, freshly authorized collected FOCUS row for a manual unit-price arithmetic review. It requires PricingQuantity/PricingUnit and keeps source provider prices separate from selling inputs. Five views cover the rule, ordered calculation, unconnected contract inheritance, separate target adjustment and session comparison. Browser save retains explicitly entered financial parameters; it is not private policy storage or a financial command. See [HB-104 design](../../docs/features/HB-104/sales-pricing.md) and [verification](../../docs/features/HB-104/verification.md).
 
-Run `node tools/sales-pricing-qa.mjs --url http://127.0.0.1:8805/ --playwright-module <installed-module> --chromium <browser-executable> --output <local-evidence-directory>` from this directory against the already running collected-source reader. No retained namespace reset is needed. Portable runtime design does not certify untested operating systems.
+Run `node tools/sales-pricing-qa.mjs --url http://127.0.0.1:8805/ --playwright-module <installed-module> --chromium <browser-executable> --output <local-evidence-directory>` from this directory against the already running collected-source reader. No retained namespace reset is needed. Portable runtime design does not certify untested operating systems. Source row values use the S04 source-field terms and value states; see the [HB-157 plan](../../docs/features/HB-157/plan.md) and [verification](../../docs/features/HB-157/verification.md).
 
 ## B05 FX and rounding policies
 

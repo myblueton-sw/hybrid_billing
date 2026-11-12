@@ -25,12 +25,12 @@ export function issueLabel(l: Locale, code: string) {
     ],
     quantity_unavailable: [
       "Pricing quantity is missing.",
-      "요금 산정 수량이 없습니다.",
+      "요금 산정 수량이 누락되었습니다.",
       "كمية التسعير مفقودة.",
     ],
     unit_unavailable: [
       "Pricing unit is missing.",
-      "요금 산정 단위가 없습니다.",
+      "요금 산정 단위가 누락되었습니다.",
       "وحدة التسعير مفقودة.",
     ],
     price_invalid: [
@@ -100,5 +100,3 @@ export function issueLabel(l: Locale, code: string) {
 }
 export const notCalculated = (l: Locale) =>
   t(l, "Not calculated", "미계산", "لم يُحسب");
-export const missing = (l: Locale) =>
-  t(l, "Source value missing", "원천 값 없음", "قيمة المصدر مفقودة");

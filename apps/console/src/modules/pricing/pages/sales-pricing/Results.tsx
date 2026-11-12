@@ -8,6 +8,8 @@ import {
 } from "./model";
 import { t, notCalculated } from "./copy";
 import { money, number } from "./values";
+import { fieldLabel } from "../../../sources/collected-focus/labels";
+import { SourceAmount } from "./SourceValues";
 export function Summary({
   locale: l,
   result,
@@ -568,22 +570,21 @@ export default function Results({
         <summary>
           {t(l, "Source cost evidence", "원천 비용 근거", "أدلة تكلفة المصدر")}
         </summary>
-        <p>
-          <bdi dir="ltr">
-            BilledCost:{" "}
-            {source.row.billed_cost === null
-              ? "—"
-              : money(source.row.billed_cost, source.row.currency, l)}
-          </bdi>
-        </p>
-        <p>
-          <bdi dir="ltr">
-            EffectiveCost:{" "}
-            {source.row.effective_cost === null
-              ? "—"
-              : money(source.row.effective_cost, source.row.currency, l)}
-          </bdi>
-        </p>
+        <dl className="pricing-evidence">
+          {(["billed_cost", "effective_cost"] as const).map((basis) => (
+            <div key={basis} data-pricing-field={basis}>
+              <dt>{fieldLabel(l, basis)}</dt>
+              <dd>
+                <SourceAmount
+                  value={source.row[basis]}
+                  currency={source.row.currency}
+                  note
+                  locale={l}
+                />
+              </dd>
+            </div>
+          ))}
+        </dl>
         <p className="pricing-meta">
           {t(
             l,

@@ -425,3 +425,122 @@
     clear: both;
   }
 }
+
+.sales-pricing .pricing-state {
+  font-weight: 600;
+}
+.sales-pricing .pricing-state-note {
+  display: block;
+  font-size: 14px;
+}
+.sales-pricing .pricing-source-value {
+  display: block;
+}
+.sales-pricing .pricing-code {
+  font-family: var(--hb-font-mono);
+  font-size: 14px;
+}
+.sales-pricing .pricing-instant {
+  white-space: nowrap;
+}
+.sales-pricing .pricing-tz {
+  font-size: 14px;
+}
+.pricing-picker :is(th, td) {
+  white-space: normal;
+}
+.pricing-picker td small {
+  overflow-wrap: anywhere;
+}
+.pricing-picker td {
+  block-size: auto;
+  min-block-size: 0;
+}
+.sales-pricing .pricing-code > span {
+  display: inline-block;
+  white-space: nowrap;
+}
+.sales-pricing .pricing-period {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.sales-pricing .pricing-period small {
+  display: inline;
+}
+.pricing-picker table {
+  table-layout: fixed;
+  min-width: 760px;
+}
+.pricing-picker [data-pricing-service] {
+  overflow-wrap: anywhere;
+}
+.pricing-picker th:nth-child(1) {
+  width: 124px;
+}
+.pricing-picker th:nth-child(3) {
+  width: 132px;
+}
+.pricing-picker th:nth-child(4) {
+  width: 132px;
+}
+.pricing-picker th:nth-child(5) {
+  width: 184px;
+}
+.sales-pricing .pricing-evidence-toggle {
+  display: block;
+  inline-size: 100%;
+  margin-block-start: 8px;
+  padding-inline: 8px;
+  white-space: normal;
+  font-size: 14px;
+}
+.sales-pricing .pricing-picker td {
+  min-width: 0;
+}
+.pricing-picker td small > bdi {
+  display: inline-block;
+  max-width: 100%;
+  color: #18232d;
+}
+.pricing-picker tr[data-evidence-open="true"] > td {
+  border-block-end: 0;
+}
+.pricing-evidence-row > td {
+  padding: 0 10px 16px;
+}
+.pricing-picker .pricing-evidence {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  column-gap: 24px;
+}
+.pricing-picker .pricing-evidence > [data-pricing-field="sub_account"],
+.pricing-picker .pricing-evidence > [data-pricing-field="id"] {
+  grid-column: 1 / -1;
+}
+.pricing-source-note {
+  flex-wrap: wrap;
+}
+.pricing-source-note > details[open] {
+  flex-basis: 100%;
+}
+@media (max-width: 600px) {
+  .pricing-identity dl:last-child {
+    grid-column: 1 / -1;
+  }
+  .pricing-picker table {
+    table-layout: auto;
+    min-width: 0;
+  }
+  .sales-pricing td {
+    block-size: auto;
+    min-block-size: 0;
+  }
+  .pricing-picker tr[data-evidence-open="true"] {
+    border-block-end: 0;
+    padding-block-end: 0;
+  }
+  .pricing-picker .pricing-evidence {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

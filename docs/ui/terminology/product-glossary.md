@@ -157,3 +157,7 @@ B08 applies the HB-151 terms to its source input rows, row detail and account li
 ## B03 Korean wording alignment (HB-155)
 
 At the owner's request B03 uses 공급사 for the provider and 금액 누락 행 for rows whose amount is missing, replacing 공급자 and 금액 없는 행. English and Arabic are unchanged. The earlier owner FIX of the Korean policy editor is retained for its source and the changed candidate awaits renewed confirmation ([acceptance record](../acceptance/B03.md)).
+
+## B04 use of the source-field terms (HB-157)
+
+B04 applies the HB-151 terms to its source row picker, evidence disclosure, source summary and source cost evidence: Missing, Unit missing and Exact zero, 원천 과금 기간 / Source charge period in UTC, 결제 계정 ID, 하위 계정 ID, 수집본 내 행 순번, 샘플 출처 and 공급사, replacing 원천 값 없음, 원천 과금 구간 and 공급자. The eligibility column keeps its specific 요금 산정 수량 누락 / 요금 산정 단위 누락. Source amounts use the shared format; B04's computed candidate, adjustment and comparison amounts keep their own reviewed format. AI wording review only. The evidence toggle reads 원천 근거 보기 / 원천 근거 닫기 (Show / Hide source evidence); an instant that is not read as UTC carries 수집된 그대로 표시하며 UTC로 변환하지 않았습니다 / Shown as collected; not converted to UTC, as on B08. The picker's first data column is headed 원천 행 / Source row / صف المصدر and the period lines are prefixed 시작 / 종료 (Start / End). Residual: 원천 근거 보기 is also the Korean label of B08's and B07's row-detail button, whose English reads Inspect source; the two pairings are not yet aligned.

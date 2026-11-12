@@ -1,91 +1,152 @@
+import { Fragment, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import type {
   OverviewData,
   FocusRow,
 } from "../../../sources/collected-focus/api";
-import { t, missing } from "./copy";
-import { number, money } from "./values";
-export function Evidence({
+import { provenanceClass } from "../../../sources/collected-focus/fields";
+import {
+  fieldLabel,
+  provenanceLabel,
+} from "../../../sources/collected-focus/labels";
+import { t } from "./copy";
+import {
+  Missing,
+  SourceAmount,
+  SourceInstant,
+  SourceQuantity,
+  SourceText,
+} from "./SourceValues";
+function EvidenceList({
   row: r,
   locale: l,
 }: {
   row: FocusRow;
   locale: Locale;
 }) {
-  const values: [string, string | null, boolean][] = [
-    [
-      t(
-        l,
-        "Source list unit price",
-        "원천 정가 단가",
-        "سعر وحدة القائمة من المصدر",
-      ),
-      r.list_unit_price,
-      true,
-    ],
-    [
-      t(
-        l,
-        "Source contracted unit price",
-        "원천 계약 단가",
-        "سعر الوحدة المتعاقد عليه من المصدر",
-      ),
-      r.contracted_unit_price,
-      true,
-    ],
-    [
-      t(l, "Effective cost", "실효 비용", "التكلفة الفعلية"),
-      r.effective_cost,
-      true,
-    ],
-    [
-      t(
-        l,
-        "Consumed quantity — unused",
-        "사용 수량 — 계산 미사용",
-        "الكمية المستهلكة — غير مستخدمة",
-      ),
-      r.consumed_quantity,
-      false,
-    ],
-  ];
   return (
-    <details>
-      <summary>{t(l, "Source evidence", "원천 근거", "أدلة المصدر")}</summary>
+    <>
       <dl className="pricing-evidence">
-        {values.map(([label, v, isMoney], index) => (
-          <div key={label}>
-            <dt>{label}</dt>
-            <dd>
-              <bdi dir="ltr">
-                {v === null
-                  ? missing(l)
-                  : isMoney
-                    ? `${money(v, r.currency, l)}${index < 2 ? ` / ${r.pricing_unit?.trim() || missing(l)}` : ""}`
-                    : `${number(v, l)} ${r.consumed_unit ?? ""}`}
-              </bdi>
-            </dd>
-          </div>
-        ))}
-        <div>
+        <div data-pricing-field="list_unit_price">
           <dt>
             {t(
               l,
-              "Source charge interval",
-              "원천 과금 구간",
-              "فترة رسوم المصدر",
+              "Source list unit price",
+              "원천 정가 단가",
+              "سعر وحدة القائمة من المصدر",
             )}
           </dt>
           <dd>
-            <bdi dir="ltr">
-              {r.charge_start} — {r.charge_end}
-            </bdi>
+            <SourceAmount
+              value={r.list_unit_price}
+              currency={r.currency}
+              unit={r.pricing_unit}
+              note
+              locale={l}
+            />
           </dd>
         </div>
-        <div>
-          <dt>{t(l, "Row ID", "행 ID", "معرّف الصف")}</dt>
+        <div data-pricing-field="contracted_unit_price">
+          <dt>
+            {t(
+              l,
+              "Source contracted unit price",
+              "원천 계약 단가",
+              "سعر الوحدة المتعاقد عليه من المصدر",
+            )}
+          </dt>
           <dd>
-            <bdi dir="ltr">{r.id}</bdi>
+            <SourceAmount
+              value={r.contracted_unit_price}
+              currency={r.currency}
+              unit={r.pricing_unit}
+              note
+              locale={l}
+            />
+          </dd>
+        </div>
+        <div data-pricing-field="billed_cost">
+          <dt>{fieldLabel(l, "billed_cost")}</dt>
+          <dd>
+            <SourceAmount
+              value={r.billed_cost}
+              currency={r.currency}
+              note
+              locale={l}
+            />
+          </dd>
+        </div>
+        <div data-pricing-field="effective_cost">
+          <dt>{fieldLabel(l, "effective_cost")}</dt>
+          <dd>
+            <SourceAmount
+              value={r.effective_cost}
+              currency={r.currency}
+              note
+              locale={l}
+            />
+          </dd>
+        </div>
+        <div data-pricing-field="consumed_quantity">
+          <dt>
+            {t(
+              l,
+              "Consumed quantity — unused",
+              "사용 수량 — 계산 미사용",
+              "الكمية المستهلكة — غير مستخدمة",
+            )}
+          </dt>
+          <dd>
+            <SourceQuantity
+              value={r.consumed_quantity}
+              unit={r.consumed_unit}
+              note
+              locale={l}
+            />
+          </dd>
+        </div>
+        <div data-pricing-field="charge_start">
+          <dt>{fieldLabel(l, "charge_start")}</dt>
+          <dd>
+            <SourceInstant value={r.charge_start} locale={l} />
+          </dd>
+        </div>
+        <div data-pricing-field="charge_end">
+          <dt>{fieldLabel(l, "charge_end")}</dt>
+          <dd>
+            <SourceInstant value={r.charge_end} locale={l} />
+          </dd>
+        </div>
+        <div data-pricing-field="billing_account">
+          <dt>{fieldLabel(l, "billing_account")}</dt>
+          <dd>
+            <SourceText value={r.billing_account} locale={l} />
+          </dd>
+        </div>
+        <div data-pricing-field="ordinal">
+          <dt>{fieldLabel(l, "ordinal")}</dt>
+          <dd>
+            <bdi dir="ltr">{r.ordinal}</bdi>
+          </dd>
+        </div>
+        <div data-pricing-field="evidence_class">
+          <dt>{fieldLabel(l, "evidence_class")}</dt>
+          <dd>{provenanceLabel(l, provenanceClass(r.evidence_class))}</dd>
+        </div>
+        <div data-pricing-field="sub_account">
+          <dt>{fieldLabel(l, "sub_account")}</dt>
+          <dd>
+            <SourceText value={r.sub_account} locale={l} />
+          </dd>
+        </div>
+        <div data-pricing-field="id">
+          <dt>{fieldLabel(l, "id")}</dt>
+          <dd>
+            <bdi dir="ltr" className="pricing-code">
+              <span>{r.id.slice(0, 32)}</span>
+              <wbr />
+              <span>{r.id.slice(32)}</span>
+            </bdi>
           </dd>
         </div>
       </dl>
@@ -97,6 +158,20 @@ export function Evidence({
           "أدلة فقط. لا تُحمّل هذه الأسعار كأسعار للعملاء.",
         )}
       </p>
+    </>
+  );
+}
+export function Evidence({
+  row,
+  locale: l,
+}: {
+  row: FocusRow;
+  locale: Locale;
+}) {
+  return (
+    <details>
+      <summary>{t(l, "Source evidence", "원천 근거", "أدلة المصدر")}</summary>
+      <EvidenceList row={row} locale={l} />
     </details>
   );
 }
@@ -113,6 +188,12 @@ export default function SourcePicker({
   select: (id: string) => void;
   page: (n: number) => void;
 }) {
+  const [opened, setOpened] = useState<{ key: string; id: string | null }>({
+      key: "",
+      id: null,
+    }),
+    pageKey = `${data.snapshot}:${data.after}`,
+    openId = opened.key === pageKey ? opened.id : null;
   return (
     <section className="pricing-picker" id="pricing-source-list" tabIndex={-1}>
       <h2>
@@ -153,19 +234,14 @@ export default function SourcePicker({
               <tr>
                 {[
                   t(l, "Select", "선택", "اختيار"),
-                  t(
-                    l,
-                    "Service / provider",
-                    "서비스 / 공급자",
-                    "الخدمة / المزوّد",
-                  ),
+                  t(l, "Source row", "원천 행", "صف المصدر"),
                   t(
                     l,
                     "Pricing quantity / unit",
                     "요금 산정 수량 / 단위",
                     "كمية التسعير / الوحدة",
                   ),
-                  t(l, "Billed cost", "청구 비용", "التكلفة المفوترة"),
+                  fieldLabel(l, "billed_cost"),
                   t(
                     l,
                     "Evidence / eligibility",
@@ -179,82 +255,123 @@ export default function SourcePicker({
             </thead>
             <tbody>
               {data.rows.map((r) => (
-                <tr
-                  key={r.id}
-                  aria-current={selected === r.id ? "true" : undefined}
-                >
-                  <td>
-                    <button
-                      data-pricing-row={r.id}
-                      aria-pressed={selected === r.id}
-                      onClick={() => select(r.id)}
+                <Fragment key={r.id}>
+                  <tr
+                    data-pricing-picker-row={r.id}
+                    data-evidence-open={openId === r.id}
+                    aria-current={selected === r.id ? "true" : undefined}
+                  >
+                    <td>
+                      <button
+                        data-pricing-row={r.id}
+                        aria-pressed={selected === r.id}
+                        onClick={() => select(r.id)}
+                      >
+                        {selected === r.id
+                          ? t(l, "Selected", "선택됨", "محدد")
+                          : t(l, "Select row", "이 행 선택", "اختر الصف")}
+                      </button>
+                    </td>
+                    <td>
+                      <span data-pricing-service>
+                        {r.service ?? <Missing locale={l} />}
+                      </span>
+                      <small>
+                        <bdi dir="ltr">{r.provider}</bdi>
+                      </small>
+                      <small data-pricing-account>
+                        {fieldLabel(l, "billing_account")}:{" "}
+                        <bdi dir="ltr">{r.billing_account}</bdi>
+                      </small>
+                      <small>
+                        {fieldLabel(l, "sub_account")}:{" "}
+                        <SourceText value={r.sub_account} locale={l} />
+                      </small>
+                    </td>
+                    <td
+                      data-label={t(
+                        l,
+                        "Pricing quantity / unit",
+                        "요금 산정 수량 / 단위",
+                        "كمية التسعير / الوحدة",
+                      )}
                     >
-                      {selected === r.id
-                        ? t(l, "Selected", "선택됨", "محدد")
-                        : t(l, "Select row", "이 행 선택", "اختر الصف")}
-                    </button>
-                  </td>
-                  <td>
-                    {r.service ?? missing(l)}
-                    <small>
-                      <bdi dir="ltr">{r.provider}</bdi>
-                    </small>
-                  </td>
-                  <td
-                    data-label={t(
-                      l,
-                      "Pricing quantity / unit",
-                      "요금 산정 수량 / 단위",
-                      "كمية التسعير / الوحدة",
-                    )}
-                  >
-                    <bdi dir="ltr">
-                      {r.pricing_quantity === null
-                        ? missing(l)
-                        : number(r.pricing_quantity, l)}{" "}
-                      {r.pricing_unit ?? missing(l)}
-                    </bdi>
-                  </td>
-                  <td
-                    data-label={t(
-                      l,
-                      "Billed cost",
-                      "청구 비용",
-                      "التكلفة المفوترة",
-                    )}
-                  >
-                    <bdi dir="ltr">
-                      {r.billed_cost === null
-                        ? missing(l)
-                        : money(r.billed_cost, r.currency, l)}
-                    </bdi>
-                  </td>
-                  <td>
-                    <span>
-                      {r.pricing_quantity === null
-                        ? t(
-                            l,
-                            "Pricing quantity missing",
-                            "요금 산정 수량 없음",
-                            "كمية التسعير مفقودة",
-                          )
-                        : !r.pricing_unit?.trim()
+                      <SourceQuantity
+                        value={r.pricing_quantity}
+                        unit={r.pricing_unit}
+                        locale={l}
+                      />
+                    </td>
+                    <td data-label={fieldLabel(l, "billed_cost")}>
+                      <SourceAmount
+                        value={r.billed_cost}
+                        currency={r.currency}
+                        locale={l}
+                      />
+                    </td>
+                    <td>
+                      <span>
+                        {r.pricing_quantity === null
                           ? t(
                               l,
-                              "Pricing unit missing",
-                              "요금 산정 단위 없음",
-                              "وحدة التسعير مفقودة",
+                              "Pricing quantity missing",
+                              "요금 산정 수량 누락",
+                              "كمية التسعير مفقودة",
+                            )
+                          : !r.pricing_unit?.trim()
+                            ? t(
+                                l,
+                                "Pricing unit missing",
+                                "요금 산정 단위 누락",
+                                "وحدة التسعير مفقودة",
+                              )
+                            : t(
+                                l,
+                                "Review available",
+                                "검토 가능",
+                                "المراجعة متاحة",
+                              )}
+                      </span>
+                      <button
+                        className="pricing-evidence-toggle"
+                        data-pricing-evidence-toggle={r.id}
+                        aria-expanded={openId === r.id}
+                        aria-controls={`pricing-evidence-${r.id}`}
+                        onClick={() =>
+                          setOpened({
+                            key: pageKey,
+                            id: openId === r.id ? null : r.id,
+                          })
+                        }
+                      >
+                        {openId === r.id
+                          ? t(
+                              l,
+                              "Hide source evidence",
+                              "원천 근거 닫기",
+                              "إخفاء أدلة المصدر",
                             )
                           : t(
                               l,
-                              "Review available",
-                              "검토 가능",
-                              "المراجعة متاحة",
+                              "Show source evidence",
+                              "원천 근거 보기",
+                              "عرض أدلة المصدر",
                             )}
-                    </span>
-                    <Evidence row={r} locale={l} />
-                  </td>
-                </tr>
+                      </button>
+                    </td>
+                  </tr>
+                  {openId === r.id && (
+                    <tr
+                      className="pricing-evidence-row"
+                      id={`pricing-evidence-${r.id}`}
+                      data-evidence-for={r.id}
+                    >
+                      <td colSpan={5}>
+                        <EvidenceList row={r} locale={l} />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>

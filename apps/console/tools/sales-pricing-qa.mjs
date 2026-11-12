@@ -228,6 +228,340 @@ try {
   await page.waitForTimeout(2300);
   assert.equal(await page.locator("#pricing-name").inputValue(), "");
   assert.equal(await root().getAttribute("data-pricing-selected-row"), ids[1]);
+  const acceptDialog = (dialog) => dialog.accept().catch(() => {});
+  page.on("dialog", acceptDialog);
+  const visit = async (query) => {
+    await page.goto(url + "#/rates?" + query);
+    await loaded();
+  };
+  const lines = async (locator) =>
+    (await locator.innerText())
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+  const pickerRow = (index) =>
+    page
+      .locator(".pricing-picker tbody tr[data-pricing-picker-row]")
+      .nth(index);
+  const evidence = async (index) => {
+    const toggle = pickerRow(index).locator("[data-pricing-evidence-toggle]"),
+      id = await toggle.getAttribute("data-pricing-evidence-toggle");
+    if ((await toggle.getAttribute("aria-expanded")) !== "true")
+      await toggle.click();
+    const panel = page.locator(`tr[data-evidence-for="${id}"]`);
+    await panel.waitFor();
+    return (name) => panel.locator(`[data-pricing-field="${name}"] dd`);
+  };
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await visit("lang=en&focus-provider=VMware&focus-period=2024-09");
+  assert.deepEqual(
+    await page
+      .locator(".pricing-picker tbody tr [data-pricing-account] bdi")
+      .allInnerTexts(),
+    ["synthetic-vmware", "synthetic-vmware", "synthetic-vmware"],
+  );
+  assert.ok((await pickerRow(0).innerText()).includes("synthetic-a"));
+  assert.ok((await pickerRow(2).innerText()).includes("synthetic-b"));
+  let field = await evidence(0);
+  assert.deepEqual(await lines(field("ordinal")), ["1000"]);
+  assert.deepEqual(await lines(field("evidence_class")), [
+    "Synthetic test data",
+  ]);
+  assert.equal((await field("id").innerText()).trim(), ids[0]);
+  assert.deepEqual(await lines(field("charge_start")), [
+    "2024-09-01 00:00:00 UTC",
+  ]);
+  assert.deepEqual(await lines(field("charge_end")), [
+    "2024-09-02 00:00:00 UTC",
+  ]);
+  assert.deepEqual(await lines(field("list_unit_price")), ["USD 0.75 / Hours"]);
+  assert.equal(
+    await page
+      .locator(".pricing-table-scroll")
+      .evaluate((region) => region.scrollWidth > region.clientWidth + 1),
+    false,
+  );
+  await visit("lang=en&focus-provider=Oracle");
+  field = await evidence(0);
+  assert.deepEqual(await lines(field("billed_cost")), ["USD 0.24"]);
+  assert.deepEqual(await lines(field("effective_cost")), [
+    "USD 0.00",
+    "Exact zero",
+  ]);
+  assert.deepEqual(await lines(field("contracted_unit_price")), ["Missing"]);
+  assert.equal(await pickerRow(0).locator("td").nth(3).innerText(), "USD 0.24");
+  await page.screenshot({
+    path: `${out}/en-oracle-evidence.png`,
+    fullPage: true,
+  });
+  await pickerRow(0).locator("button[data-pricing-row]").click();
+  assert.deepEqual(await lines(page.locator(".pricing-period")), [
+    "Start 2024-09-30 22:00:00 UTC",
+    "End 2024-09-30 23:00:00 UTC",
+  ]);
+  await page.locator(".planning-tabs button").nth(4).click();
+  const costEvidence = page
+    .locator("details")
+    .filter({ hasText: "Source cost evidence" });
+  await costEvidence.locator("summary").click();
+  assert.deepEqual(
+    await lines(costEvidence.locator('[data-pricing-field="billed_cost"] dd')),
+    ["USD 0.24"],
+  );
+  assert.deepEqual(
+    (await costEvidence.locator("dt").allInnerTexts()).map((text) =>
+      text.trim(),
+    ),
+    ["Billed cost", "Effective cost"],
+  );
+  assert.deepEqual(
+    await lines(
+      costEvidence.locator('[data-pricing-field="effective_cost"] dd'),
+    ),
+    ["USD 0.00", "Exact zero"],
+  );
+  await page.locator(".planning-tabs button").nth(0).click();
+  for (const [locale, zero, missing] of [
+    ["ko", "정확한 0", "누락"],
+    ["ar", "صفر دقيق", "مفقود"],
+  ]) {
+    await visit(`lang=${locale}&focus-provider=Oracle`);
+    field = await evidence(0);
+    assert.equal((await lines(field("effective_cost")))[1], zero);
+    assert.deepEqual(await lines(field("contracted_unit_price")), [missing]);
+  }
+  const awsSnapshot = await page.evaluate(async () => {
+    const r = await fetch("/api/focus-overview?provider=AWS", {
+      headers: { "X-HB-Local-Client": "1" },
+      cache: "no-store",
+    });
+    if (!r.ok) throw Error("AWS source unavailable");
+    return (await r.json()).snapshot;
+  });
+  await visit(
+    `lang=en&focus-provider=AWS&focus-after=450&focus-snapshot=${awsSnapshot}`,
+  );
+  assert.equal(
+    (await pickerRow(6).locator("td").nth(3).innerText()).trim(),
+    "USD -2.6137",
+  );
+  await visit("lang=en&focus-provider=Alibaba+Cloud");
+  assert.equal(
+    (await pickerRow(1).locator("td").nth(3).innerText()).trim(),
+    "CNY 8.80",
+  );
+  const degraded = structuredClone(source);
+  degraded.rows[0].billed_cost = null;
+  degraded.rows[0].sub_account = null;
+  degraded.rows[0].service = null;
+  degraded.rows[0].pricing_unit = null;
+  degraded.rows[0].list_unit_price = null;
+  degraded.rows[0].consumed_quantity = "0";
+  degraded.rows[0].consumed_unit = null;
+  degraded.rows[0].evidence_class = "unrecognized-class";
+  degraded.rows[1].pricing_quantity = null;
+  degraded.rows[1].pricing_unit = null;
+  degraded.rows[2].pricing_unit = "  ";
+  degraded.rows[2].charge_start = degraded.rows[2].charge_start.replace(
+    "+00:00",
+    "Z",
+  );
+  await page.route("**/api/focus-overview?**", (r) =>
+    r.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(degraded),
+    }),
+  );
+  for (const [locale, missing, unit, provenance, noQuantity, noUnit] of [
+    [
+      "en",
+      "Missing",
+      "Unit missing",
+      "Unclassified",
+      "Pricing quantity missing",
+      "Pricing unit missing",
+    ],
+    [
+      "ko",
+      "누락",
+      "단위 누락",
+      "출처 미분류",
+      "요금 산정 수량 누락",
+      "요금 산정 단위 누락",
+    ],
+    [
+      "ar",
+      "مفقود",
+      "الوحدة مفقودة",
+      "غير مصنف",
+      "كمية التسعير مفقودة",
+      "وحدة التسعير مفقودة",
+    ],
+  ]) {
+    await visit(
+      `lang=${locale}&focus-provider=VMware&focus-period=2024-09&focus-basis=billed_cost`,
+    );
+    await page.locator(".pricing-toolbar button").last().click();
+    await loaded();
+    const cells = await pickerRow(0).locator("td").allInnerTexts();
+    assert.equal(
+      (await pickerRow(0).locator("[data-pricing-service]").innerText()).trim(),
+      missing,
+    );
+    assert.ok(
+      (await pickerRow(2).locator("td").nth(2).innerText()).includes(unit),
+    );
+    assert.ok(cells[2].includes(unit));
+    assert.equal(cells[3].trim(), missing);
+    assert.ok(!/USD|—|\d/.test(cells[3]));
+    assert.ok(cells[4].includes(noUnit));
+    assert.ok(
+      (await pickerRow(1).locator("td").nth(4).innerText()).includes(
+        noQuantity,
+      ),
+    );
+    assert.deepEqual(await lines(pickerRow(1).locator("td").nth(2)), [
+      missing,
+      unit,
+    ]);
+    field = await evidence(0);
+    assert.deepEqual(await lines(field("list_unit_price")), [missing]);
+    assert.deepEqual(await lines(field("billed_cost")), [missing]);
+    assert.deepEqual(await lines(field("sub_account")), [missing]);
+    assert.deepEqual(await lines(field("evidence_class")), [provenance]);
+    const consumed = await lines(field("consumed_quantity"));
+    assert.equal(consumed[0], "0.00");
+    assert.ok(
+      consumed.includes(
+        locale === "en"
+          ? "Exact zero"
+          : locale === "ko"
+            ? "정확한 0"
+            : "صفر دقيق",
+      ),
+    );
+    await pickerRow(1).locator("[data-pricing-evidence-toggle]").click();
+    assert.equal(await page.locator("tr.pricing-evidence-row").count(), 1);
+    assert.equal(
+      await pickerRow(0)
+        .locator("[data-pricing-evidence-toggle]")
+        .getAttribute("aria-expanded"),
+      "false",
+    );
+    assert.equal(
+      await pickerRow(1)
+        .locator("[data-pricing-evidence-toggle]")
+        .getAttribute("aria-expanded"),
+      "true",
+    );
+    field = await evidence(0);
+    assert.ok(consumed.includes(unit));
+    const contracted = await lines(field("contracted_unit_price"));
+    assert.ok(contracted.includes(unit));
+    assert.ok(!contracted[0].includes("/"));
+    const raw = await evidence(2);
+    assert.ok(
+      (await raw("charge_start").innerText()).includes(
+        degraded.rows[2].charge_start,
+      ),
+    );
+    if (locale === "en")
+      assert.ok(
+        (await raw("charge_start").innerText()).includes(
+          "Shown as collected; not converted to UTC",
+        ),
+      );
+    await pickerRow(0).locator("button[data-pricing-row]").click();
+    assert.equal(
+      (
+        await page.locator("[data-pricing-selected-service]").innerText()
+      ).trim(),
+      missing,
+    );
+    assert.ok(
+      (await page.locator(".pricing-identity").innerText()).includes(unit),
+    );
+    if (locale === "en")
+      await page.screenshot({
+        path: `${out}/en-degraded-evidence.png`,
+        fullPage: true,
+      });
+  }
+  await page.unroute("**/api/focus-overview?**");
+  await visit("lang=en&focus-provider=VMware&focus-period=2024-09");
+  for (const width of [1280, 1024, 768]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await visit("lang=en&focus-provider=Oracle");
+    await evidence(0);
+    assert.equal(await page.locator("tr.pricing-evidence-row").count(), 1);
+    await page.evaluate(() => document.fonts.ready);
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth,
+      ),
+      false,
+    );
+    assert.deepEqual(
+      await page.locator(".pricing-picker :is(td, th)").evaluateAll((cells) =>
+        cells
+          .filter((cell) => cell.getClientRects().length)
+          .filter(
+            (cell) =>
+              cell.scrollWidth > cell.clientWidth + 1 ||
+              cell.scrollHeight > cell.clientHeight + 1,
+          )
+          .map((cell) => cell.textContent.slice(0, 30)),
+      ),
+      [],
+    );
+    assert.ok(
+      await page
+        .locator("[data-pricing-service]")
+        .evaluateAll((names) =>
+          names.every((name) => name.closest("td").clientWidth >= 184),
+        ),
+    );
+    await page.screenshot({
+      path: `${out}/en-${width}-oracle-evidence.png`,
+      fullPage: true,
+    });
+  }
+  await page.setViewportSize({ width: 390, height: 1000 });
+  await page.route("**/api/focus-overview?**", (r) =>
+    r.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(degraded),
+    }),
+  );
+  await visit("lang=ko&focus-provider=VMware&focus-period=2024-09");
+  await page.locator(".pricing-toolbar button").last().click();
+  await loaded();
+  await page.locator("[data-pricing-evidence-toggle]").first().click();
+  assert.deepEqual(
+    await page.locator(".sales-pricing :is(td, th)").evaluateAll((cells) =>
+      cells
+        .filter((cell) => cell.getClientRects().length)
+        .filter((cell) => cell.scrollHeight > cell.clientHeight + 1)
+        .map((cell) => cell.textContent.slice(0, 30)),
+    ),
+    [],
+  );
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth,
+    ),
+    false,
+  );
+  await page.screenshot({
+    path: `${out}/ko-390-degraded-evidence.png`,
+    fullPage: true,
+  });
+  await page.unroute("**/api/focus-overview?**");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await visit("lang=en&focus-provider=VMware&focus-period=2024-09");
+  page.off("dialog", acceptDialog);
   const variants = [];
   for (const locale of ["en", "ko", "ar"])
     for (const width of [1440, 390]) {
@@ -263,6 +597,42 @@ try {
           ),
           false,
         );
+        assert.deepEqual(
+          await page
+            .locator(".sales-pricing :is(td, th)")
+            .evaluateAll((cells) =>
+              cells
+                .filter((cell) => cell.getClientRects().length)
+                .filter((cell) => cell.scrollHeight > cell.clientHeight + 1)
+                .map((cell) => cell.textContent.slice(0, 30)),
+            ),
+          [],
+        );
+        if (view === "rates") {
+          await page.locator("[data-pricing-evidence-toggle]").first().click();
+          assert.deepEqual(
+            await page
+              .locator(".sales-pricing :is(td, th)")
+              .evaluateAll((cells) =>
+                cells
+                  .filter((cell) => cell.getClientRects().length)
+                  .filter((cell) => cell.scrollHeight > cell.clientHeight + 1)
+                  .map((cell) => cell.textContent.slice(0, 30)),
+              ),
+            [],
+          );
+          assert.equal(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth > innerWidth,
+            ),
+            false,
+          );
+          await page.screenshot({
+            path: `${out}/${locale}-${width}-evidence-open.png`,
+            fullPage: true,
+          });
+          await page.locator("[data-pricing-evidence-toggle]").first().click();
+        }
         const styleCheck = await root().evaluate((el) => ({
           headings: [...el.querySelectorAll("h2")].map(
             (e) => getComputedStyle(e).fontSize,

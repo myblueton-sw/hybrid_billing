@@ -20,8 +20,8 @@ import {
   type Adjustment,
 } from "./model";
 import { save, restore } from "./store";
-import { t, issueLabel, missing } from "./copy";
-import { number } from "./values";
+import { t, issueLabel } from "./copy";
+import { SourcePeriod, SourceQuantity, SourceText } from "./SourceValues";
 import RuleEditor from "./RuleEditor";
 import SourcePicker, { Evidence } from "./SourcePicker";
 import Results, { Summary } from "./Results";
@@ -53,6 +53,8 @@ const items = [
   "B04:comparison:session-baseline",
   "B04:action:browser-draft",
   "B04:state:source-unavailable",
+  "B04:data:source-row-identity",
+  "B04:state:value-missing-zero",
 ];
 export default function Screen({
   locale: l,
@@ -402,7 +404,7 @@ export default function Screen({
               {t(
                 l,
                 "All authorized providers",
-                "전체 허용 공급자",
+                "전체 허용 공급사",
                 "كل المزوّدين المصرّح بهم",
               )}
             </option>
@@ -517,9 +519,12 @@ export default function Screen({
                   "صف المصدر المحدد",
                 )}
               </dt>
-              <dd>
-                {source?.row.service ??
-                  t(l, "No row selected", "선택한 행 없음", "لا يوجد صف محدد")}
+              <dd data-pricing-selected-service>
+                {source ? (
+                  <SourceText value={source.row.service} locale={l} />
+                ) : (
+                  t(l, "No row selected", "선택한 행 없음", "لا يوجد صف محدد")
+                )}
               </dd>
             </dl>
             <dl>
@@ -532,11 +537,16 @@ export default function Screen({
                 )}
               </dt>
               <dd>
-                <bdi dir="ltr">
-                  {source
-                    ? `${source.row.pricing_quantity === null ? missing(l) : number(source.row.pricing_quantity, l)} ${source.row.pricing_unit ?? missing(l)}`
-                    : "—"}
-                </bdi>
+                {source ? (
+                  <SourceQuantity
+                    value={source.row.pricing_quantity}
+                    unit={source.row.pricing_unit}
+                    note
+                    locale={l}
+                  />
+                ) : (
+                  "—"
+                )}
               </dd>
             </dl>
             <dl>
@@ -549,17 +559,21 @@ export default function Screen({
               <dt>
                 {t(
                   l,
-                  "Source charge interval",
-                  "원천 과금 구간",
+                  "Source charge period",
+                  "원천 과금 기간",
                   "فترة رسوم المصدر",
                 )}
               </dt>
               <dd>
-                <bdi dir="ltr">
-                  {source
-                    ? `${source.row.charge_start} — ${source.row.charge_end}`
-                    : "—"}
-                </bdi>
+                {source ? (
+                  <SourcePeriod
+                    start={source.row.charge_start}
+                    end={source.row.charge_end}
+                    locale={l}
+                  />
+                ) : (
+                  "—"
+                )}
               </dd>
             </dl>
           </div>
@@ -575,8 +589,8 @@ export default function Screen({
             <p className="pricing-meta">
               {t(
                 l,
-                "Source rows are evidence, not customer contracts, SKUs or selling prices. The charge interval is not a policy effective period.",
-                "수집 원천 행은 근거이며 고객 계약·SKU·판매 단가가 아닙니다. 과금 구간은 정책 적용 기간이 아닙니다.",
+                "Source rows are evidence, not customer contracts, SKUs or selling prices. The charge period is not a policy effective period.",
+                "수집 원천 행은 근거이며 고객 계약·SKU·판매 단가가 아닙니다. 과금 기간은 정책 적용 기간이 아닙니다.",
                 "صفوف المصدر أدلة وليست عقود عملاء أو وحدات مخزون أو أسعار بيع. فترة الرسوم ليست فترة سريان سياسة.",
               )}
             </p>

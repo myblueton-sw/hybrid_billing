@@ -102,6 +102,7 @@ def test_methods_and_slot_bound_do_not_query(connection_server):
         if method != 'HEAD':
             assert set(body) == {'error', 'request_id'} and body['error'] == 'method_denied'
     assert connection_server[2] == []
+    connection_server[0].slot_wait = 0.05
     for _ in range(2): connection_server[0].slots.acquire()
     try:
         status, body, _ = fetch(connection_server)

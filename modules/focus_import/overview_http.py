@@ -1,5 +1,6 @@
 import json
 import re
+import socket
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
@@ -14,6 +15,10 @@ from .connection_projection import connection_metadata
 from .collection_status import collection_status
 
 
+MAX_WAITERS = 6
+SLOT_WAIT_SECONDS = 20
+
+
 class OverviewServer(ThreadingHTTPServer):
     daemon_threads = True
 
@@ -22,6 +27,8 @@ class OverviewServer(ThreadingHTTPServer):
             raise ValueError('trusted_local_profile')
         self.actor = actor
         self.slots = threading.BoundedSemaphore(2)
+        self.admission = threading.BoundedSemaphore(2 + MAX_WAITERS)
+        self.slot_wait = SLOT_WAIT_SECONDS
         super().__init__(('127.0.0.1', port), Handler)
         self.origin = f'http://127.0.0.1:{self.server_port}'
         self.origins = {self.origin, f'http://127.0.0.1:{ui_port}'}
@@ -34,6 +41,17 @@ class Handler(BaseHTTPRequestHandler):
     def setup(self):
         super().setup()
         self.connection.settimeout(15)
+
+    def abandoned(self):
+        self.connection.setblocking(False)
+        try:
+            return self.connection.recv(1, socket.MSG_PEEK) == b''
+        except (BlockingIOError, InterruptedError):
+            return False
+        except OSError:
+            return True
+        finally:
+            self.connection.settimeout(15)
 
     def reply(self, status, body):
         data = json.dumps(body).encode()
@@ -76,25 +94,33 @@ class Handler(BaseHTTPRequestHandler):
             params = {k: v[0] for k, v in values.items()}
         except ValueError:
             return failure(400, 'request_invalid')
-        if not self.server.slots.acquire(blocking=False):
+        if not self.server.admission.acquire(blocking=False):
             return failure(503, 'source_busy')
         try:
-            consumer = {'/api/focus-commitments': commitments, '/api/focus-marketplace': marketplace, '/api/focus-receipts': receipts, '/api/focus-connections': connection_metadata, '/api/focus-collection-status': collection_status}.get(path.path, overview)
-            consumer(self.server.actor, params, lambda body: self.reply(200, body))
-        except Rejected as exc:
-            reason = str(exc)
-            if reason in ('request_invalid', 'selection_unavailable', 'query_page'):
-                failure(400, reason)
-            elif reason in ('query_snapshot_changed', 'snapshot_required'):
-                failure(409, reason)
-            elif reason in ('reader_revoked', 'permission', 'view_unavailable', 'view_member_denied'):
-                failure(403, 'scope_denied')
-            else:
+            waited = not self.server.slots.acquire(blocking=False)
+            if waited and not self.server.slots.acquire(timeout=self.server.slot_wait):
+                return failure(503, 'source_busy')
+            try:
+                if waited and self.abandoned():
+                    return
+                consumer = {'/api/focus-commitments': commitments, '/api/focus-marketplace': marketplace, '/api/focus-receipts': receipts, '/api/focus-connections': connection_metadata, '/api/focus-collection-status': collection_status}.get(path.path, overview)
+                consumer(self.server.actor, params, lambda body: self.reply(200, body))
+            except Rejected as exc:
+                reason = str(exc)
+                if reason in ('request_invalid', 'selection_unavailable', 'query_page'):
+                    failure(400, reason)
+                elif reason in ('query_snapshot_changed', 'snapshot_required'):
+                    failure(409, reason)
+                elif reason in ('reader_revoked', 'permission', 'view_unavailable', 'view_member_denied'):
+                    failure(403, 'scope_denied')
+                else:
+                    failure(503, 'collected_unavailable')
+            except Exception:
                 failure(503, 'collected_unavailable')
-        except Exception:
-            failure(503, 'collected_unavailable')
+            finally:
+                self.server.slots.release()
         finally:
-            self.server.slots.release()
+            self.server.admission.release()
 
     def deny_method(self):
         body = {'error': 'method_denied'}

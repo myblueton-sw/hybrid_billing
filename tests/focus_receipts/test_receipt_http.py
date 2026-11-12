@@ -82,6 +82,7 @@ def test_denied_methods_and_parallel_slot_bound(receipt_server):
         if method != 'HEAD':
             assert set(body) == {'error', 'request_id'} and body['error'] == 'method_denied'
     assert receipt_server[2] == []
+    receipt_server[0].slot_wait = 0.05
     for _ in range(2):
         receipt_server[0].slots.acquire()
     try:

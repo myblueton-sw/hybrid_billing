@@ -98,6 +98,7 @@ def test_method_denial_and_concurrency_bound(status_server):
         if method != 'HEAD':
             assert body['error'] == 'method_denied' and set(body) == {'error', 'request_id'}
     assert status_server[1] == []
+    status_server[0].slot_wait = 0.05
     for _ in range(2): status_server[0].slots.acquire()
     try:
         code, body, _ = fetch(status_server)

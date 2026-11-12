@@ -266,6 +266,7 @@ def test_http_hostile_requests_do_not_query(server, headers):
 
 def test_shared_http_slots_protect_commitment_route(server):
     srv, calls = server
+    srv.slot_wait = 0.05
     assert srv.slots.acquire(False) and srv.slots.acquire(False)
     try:
         assert fetch(server)[0] == 503 and calls == []

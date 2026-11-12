@@ -304,6 +304,7 @@ def test_http_duplicate_security_headers_reject_without_query(server, name, valu
 
 def test_shared_http_slots_protect_marketplace_route(server):
     srv, calls = server
+    srv.slot_wait = 0.05
     assert srv.slots.acquire(False) and srv.slots.acquire(False)
     try:
         assert fetch(server)[0] == 503 and calls == []

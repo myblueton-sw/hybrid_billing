@@ -1,5 +1,7 @@
 import type { Locale } from "../../../../shared/types";
 import type { OverviewData } from "../../../sources/collected-focus/api";
+import { fieldLabel } from "../../../sources/collected-focus/labels";
+import { SourceText } from "../../../sources/collected-focus/SourceValues";
 import { t } from "./copy";
 export default function AccountScope({
   locale: l,
@@ -12,6 +14,9 @@ export default function AccountScope({
   select: (id: string) => void;
   page: (after: number) => void;
 }) {
+  const selectedAccount = data.accounts.find(
+    (a) => a.id === data.selection.account,
+  );
   return (
     <details
       className="b05-account-scope"
@@ -20,18 +25,23 @@ export default function AccountScope({
     >
       <summary>
         {t(l, "Account scope", "계정 범위", "نطاق الحساب")} ·{" "}
-        <bdi dir="ltr">
-          {data.selection.account
-            ? (data.accounts.find((a) => a.id === data.selection.account)
-                ?.billing_account ??
-              t(l, "Selected account", "선택 계정", "الحساب المحدد"))
-            : t(
-                l,
-                "All authorized accounts",
-                "전체 허용 계정",
-                "كل الحسابات المصرّح بها",
-              )}
-        </bdi>
+        {!data.selection.account ? (
+          t(
+            l,
+            "All authorized accounts",
+            "전체 허용 계정",
+            "كل الحسابات المصرّح بها",
+          )
+        ) : selectedAccount ? (
+          <>
+            {fieldLabel(l, "billing_account")}:{" "}
+            <bdi dir="ltr">{selectedAccount.billing_account}</bdi> ·{" "}
+            {fieldLabel(l, "sub_account")}:{" "}
+            <SourceText value={selectedAccount.sub_account} locale={l} />
+          </>
+        ) : (
+          t(l, "Selected account", "선택 계정", "الحساب المحدد")
+        )}
       </summary>
       <p className="b05-meta">
         {t(
@@ -67,10 +77,17 @@ export default function AccountScope({
               aria-pressed={data.selection.account === a.id}
               onClick={() => select(a.id)}
             >
-              <bdi dir="ltr">
-                {a.billing_account}
-                {a.sub_account ? " / " + a.sub_account : ""} · {a.provider}
-              </bdi>
+              <span>
+                {fieldLabel(l, "billing_account")}:{" "}
+                <bdi dir="ltr">{a.billing_account}</bdi>
+              </span>
+              <span>
+                {fieldLabel(l, "sub_account")}:{" "}
+                <SourceText value={a.sub_account} locale={l} />
+              </span>
+              <span>
+                {fieldLabel(l, "provider")}: <bdi dir="ltr">{a.provider}</bdi>
+              </span>
             </button>
           ))
         ) : (

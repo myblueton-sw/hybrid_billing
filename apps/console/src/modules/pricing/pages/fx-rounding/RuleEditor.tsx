@@ -8,7 +8,9 @@ import {
   type Prepared,
 } from "./model";
 import { t, label, modeLabel, missing, issueLabel, errorFields } from "./copy";
-import { fieldId, money } from "./values";
+import { fieldId } from "./values";
+import { fieldLabel } from "../../../sources/collected-focus/labels";
+import { SourceAmount } from "../../../sources/collected-focus/SourceValues";
 export default function RuleEditor({
   locale: l,
   draft: d,
@@ -127,32 +129,20 @@ export default function RuleEditor({
             "1. إقرار تكلفة المصدر",
           )}
         </legend>
-        <p className="b05-source-cost">
-          <bdi dir="ltr">
-            {source && sourceAmount(source) !== null
-              ? money(sourceAmount(source)!, source.row.currency, l)
-              : t(
-                  l,
-                  "Select a source row",
-                  "원천 행을 선택하세요",
-                  "اختر صف مصدر",
-                )}
-          </bdi>{" "}
-          ·{" "}
-          {source
-            ? t(
-                l,
-                source.data.selection.basis === "billed_cost"
-                  ? "Billed cost"
-                  : "Effective cost",
-                source.data.selection.basis === "billed_cost"
-                  ? "청구 비용"
-                  : "실효 비용",
-                source.data.selection.basis === "billed_cost"
-                  ? "التكلفة المفوترة"
-                  : "التكلفة الفعلية",
-              )
-            : ""}
+        <p className="b05-source-cost" data-fx-editor-cost>
+          {source ? (
+            <SourceAmount
+              value={sourceAmount(source)}
+              currency={source.row.currency}
+              note
+              locale={l}
+            />
+          ) : (
+            t(l, "Select a source row", "원천 행을 선택하세요", "اختر صف مصدر")
+          )}
+          {source && (
+            <small>{fieldLabel(l, source.data.selection.basis)}</small>
+          )}
         </p>
         {select("treatment", [
           [
@@ -195,7 +185,7 @@ export default function RuleEditor({
           {t(
             l,
             "User declaration only; supplier conversion history is unconnected. Source cost is not the B04 selling amount.",
-            "사용자 선언이며 공급자 환산 이력은 미연결입니다. 원천 비용은 B04 판매 금액이 아닙니다.",
+            "사용자 선언이며 공급사 환산 이력은 미연결입니다. 원천 비용은 B04 판매 금액이 아닙니다.",
             "إقرار مستخدم فقط؛ سجل تحويل المزوّد غير متصل. تكلفة المصدر ليست مبلغ البيع في B04.",
           )}
         </p>

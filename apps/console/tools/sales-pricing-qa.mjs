@@ -295,7 +295,7 @@ try {
     fullPage: true,
   });
   await pickerRow(0).locator("button[data-pricing-row]").click();
-  assert.deepEqual(await lines(page.locator(".pricing-period")), [
+  assert.deepEqual(await lines(page.locator(".source-period")), [
     "Start 2024-09-30 22:00:00 UTC",
     "End 2024-09-30 23:00:00 UTC",
   ]);

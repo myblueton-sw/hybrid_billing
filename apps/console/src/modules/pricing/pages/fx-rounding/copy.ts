@@ -106,9 +106,9 @@ export function issueLabel(l: Locale, c: string) {
       "اختر شهر بدء رسوم الصف.",
     ],
     amount_unavailable: [
-      "The selected source cost is unavailable. It is not replaced with zero.",
-      "선택한 원천 비용이 없습니다. 0으로 대체하지 않습니다.",
-      "تكلفة المصدر المحددة غير متاحة. لا تُستبدل بصفر.",
+      "The selected source cost is missing. It is not replaced with zero.",
+      "선택한 원천 비용이 누락되었습니다. 0으로 대체하지 않습니다.",
+      "تكلفة المصدر المحددة مفقودة. لا تُستبدل بصفر.",
     ],
     target_invalid: [
       "Select an allowed target currency different from the source.",
@@ -117,7 +117,7 @@ export function issueLabel(l: Locale, c: string) {
     ],
     conversion_declaration: [
       "An explicit unconverted declaration is required. This is not verified supplier conversion history.",
-      "미환산 선언이 없어 계산할 수 없습니다. 공급자 환산 이력으로 검증된 선언이 아닙니다.",
+      "미환산 선언이 없어 계산할 수 없습니다. 공급사 환산 이력으로 검증된 선언이 아닙니다.",
       "يلزم إقرار صريح بعدم التحويل. لم يُتحقق منه بسجل تحويل المزوّد.",
     ],
     rate_invalid: [

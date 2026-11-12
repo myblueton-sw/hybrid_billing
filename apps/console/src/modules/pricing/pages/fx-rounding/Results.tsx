@@ -318,7 +318,7 @@ export function ManualEvidence({
           {t(
             l,
             "Monthly averages, local timezones, holiday fallback, automatic latest quotes, customer-currency fee imports, supplier conversion history, contract precedence and server approvals are unconnected.",
-            "월평균·현지 시간대·휴일 대체·자동 최신 환율·고객 통화 수수료 반입·공급자 환산 이력·계약 우선순위·서버 승인은 미연결입니다.",
+            "월평균·현지 시간대·휴일 대체·자동 최신 환율·고객 통화 수수료 반입·공급사 환산 이력·계약 우선순위·서버 승인은 미연결입니다.",
             "المتوسطات الشهرية والمناطق الزمنية المحلية وبدائل العطلات وأحدث الأسعار التلقائية واستيراد رسوم عملة العميل وسجل تحويل المزوّد وأولوية العقود واعتمادات الخادم غير متصلة.",
           )}
         </p>

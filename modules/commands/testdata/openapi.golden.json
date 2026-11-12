@@ -1,0 +1,776 @@
+{
+  "components": {
+    "schemas": {
+      "Error": {
+        "properties": {
+          "code": {
+            "enum": [
+              "authority_unavailable",
+              "dependency_unavailable",
+              "idempotency_conflict",
+              "internal_error",
+              "invalid_request",
+              "invalid_stage",
+              "permission_denied",
+              "prerequisite_failed",
+              "revision_conflict",
+              "self_approval_denied",
+              "unauthenticated",
+              "unsupported_capability",
+              "unsupported_command"
+            ],
+            "type": "string"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "next_action": {
+            "enum": [
+              "correct_request",
+              "inspect_current_state",
+              "inspect_operation",
+              "none",
+              "obtain_new_access_answer",
+              "retry_later"
+            ],
+            "type": "string"
+          },
+          "operation_id": {
+            "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+            "type": "string"
+          },
+          "request_id": {
+            "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+            "type": "string"
+          },
+          "retry": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "next_action",
+          "request_id",
+          "retry"
+        ],
+        "type": "object"
+      },
+      "Result": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "business_state": {
+            "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+            "type": "string"
+          },
+          "fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "job_id": {
+            "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+            "type": "string"
+          },
+          "operation_id": {
+            "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+            "type": "string"
+          },
+          "replay": {
+            "type": "boolean"
+          },
+          "request_id": {
+            "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+            "type": "string"
+          },
+          "result_revision": {
+            "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "accepted",
+              "completed"
+            ],
+            "type": "string"
+          },
+          "target_id": {
+            "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "status"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Provisional rendering of the command catalogue. It is not a published contract, no HTTP path is deployed, and no operation is anonymous: the authentication method is not decided.",
+    "title": "Synthetic commands",
+    "version": "0.0.0-provisional"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/commands/statement.adjust": {
+      "post": {
+        "operationId": "statement.adjust",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "body": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "amount": {
+                        "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+                        "type": "string",
+                        "x-type": "decimal"
+                      },
+                      "at": {
+                        "format": "date-time",
+                        "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$",
+                        "type": "string",
+                        "x-type": "timestamp"
+                      },
+                      "basis": {
+                        "enum": [
+                          "gross",
+                          "net"
+                        ],
+                        "type": "string",
+                        "x-type": "enum"
+                      },
+                      "count": {
+                        "pattern": "^-?(0|[1-9][0-9]*)$",
+                        "type": "string",
+                        "x-type": "integer"
+                      },
+                      "final": {
+                        "enum": [
+                          "false",
+                          "true"
+                        ],
+                        "type": "string",
+                        "x-type": "boolean"
+                      },
+                      "note": {
+                        "type": "string",
+                        "x-type": "text"
+                      }
+                    },
+                    "required": [
+                      "amount"
+                    ],
+                    "type": "object",
+                    "x-max-value-bytes": 40
+                  },
+                  "expected_revision": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  },
+                  "idempotency_key": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  },
+                  "rationale": {
+                    "minLength": 1,
+                    "type": "string",
+                    "x-max-bytes": 60
+                  },
+                  "request_id": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  },
+                  "target_id": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "body",
+                  "expected_revision",
+                  "idempotency_key",
+                  "rationale",
+                  "request_id",
+                  "target_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            },
+            "description": "completed"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            },
+            "description": "accepted; not business success"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "unauthenticated"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "permission_denied"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "idempotency_conflict, revision_conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "invalid_request, invalid_stage, prerequisite_failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "internal_error"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "unsupported_capability"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "authority_unavailable, dependency_unavailable"
+          }
+        },
+        "x-mutating": true,
+        "x-permission": {
+          "action": "issue",
+          "approval": false,
+          "kind": "statement"
+        },
+        "x-supported": true
+      }
+    },
+    "/commands/statement.approve": {
+      "post": {
+        "operationId": "statement.approve",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "body": {
+                    "additionalProperties": false,
+                    "properties": {},
+                    "type": "object",
+                    "x-max-value-bytes": 40
+                  },
+                  "expected_revision": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  },
+                  "idempotency_key": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  },
+                  "request_id": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  },
+                  "target_id": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "body",
+                  "expected_revision",
+                  "idempotency_key",
+                  "request_id",
+                  "target_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            },
+            "description": "completed"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            },
+            "description": "accepted; not business success"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "unauthenticated"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "permission_denied, self_approval_denied"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "idempotency_conflict, revision_conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "invalid_request, invalid_stage, prerequisite_failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "internal_error"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "unsupported_capability"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "authority_unavailable, dependency_unavailable"
+          }
+        },
+        "x-mutating": true,
+        "x-permission": {
+          "action": "approve",
+          "approval": true,
+          "kind": "statement"
+        },
+        "x-supported": true
+      }
+    },
+    "/commands/statement.planned": {
+      "post": {
+        "operationId": "statement.planned",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "body": {
+                    "additionalProperties": false,
+                    "properties": {},
+                    "type": "object",
+                    "x-max-value-bytes": 40
+                  },
+                  "expected_revision": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  },
+                  "idempotency_key": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  },
+                  "request_id": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  },
+                  "target_id": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "body",
+                  "expected_revision",
+                  "idempotency_key",
+                  "request_id",
+                  "target_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "unauthenticated"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "internal_error"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "unsupported_capability"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "authority_unavailable, dependency_unavailable"
+          }
+        },
+        "x-mutating": true,
+        "x-permission": {
+          "action": "deliver",
+          "approval": false,
+          "kind": "statement"
+        },
+        "x-supported": false
+      }
+    },
+    "/commands/statement.read": {
+      "post": {
+        "operationId": "statement.read",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "body": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "ref": {
+                        "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                        "type": "string",
+                        "x-type": "id"
+                      }
+                    },
+                    "type": "object",
+                    "x-max-value-bytes": 40
+                  },
+                  "request_id": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  },
+                  "target_id": {
+                    "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "body",
+                  "request_id",
+                  "target_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            },
+            "description": "completed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "unauthenticated"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "permission_denied"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "revision_conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "invalid_request, invalid_stage, prerequisite_failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "internal_error"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "unsupported_capability"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "authority_unavailable, dependency_unavailable"
+          }
+        },
+        "x-mutating": false,
+        "x-permission": {
+          "action": "view",
+          "approval": false,
+          "fields": [
+            "quantity"
+          ],
+          "kind": "statement"
+        },
+        "x-supported": true
+      }
+    }
+  },
+  "x-anonymous-access": false,
+  "x-errors": [
+    {
+      "code": "authority_unavailable",
+      "next_action": "retry_later",
+      "retry": true,
+      "status": 503
+    },
+    {
+      "code": "dependency_unavailable",
+      "next_action": "retry_later",
+      "retry": true,
+      "status": 503
+    },
+    {
+      "code": "idempotency_conflict",
+      "next_action": "inspect_current_state",
+      "retry": false,
+      "status": 409
+    },
+    {
+      "code": "internal_error",
+      "next_action": "none",
+      "retry": false,
+      "status": 500
+    },
+    {
+      "code": "invalid_request",
+      "next_action": "correct_request",
+      "retry": false,
+      "status": 422
+    },
+    {
+      "code": "invalid_stage",
+      "next_action": "correct_request",
+      "retry": false,
+      "status": 422
+    },
+    {
+      "code": "permission_denied",
+      "next_action": "none",
+      "retry": false,
+      "status": 403
+    },
+    {
+      "code": "prerequisite_failed",
+      "next_action": "correct_request",
+      "retry": false,
+      "status": 422
+    },
+    {
+      "code": "revision_conflict",
+      "next_action": "inspect_current_state",
+      "retry": false,
+      "retry_for_reading_command": true,
+      "status": 409
+    },
+    {
+      "code": "self_approval_denied",
+      "next_action": "none",
+      "retry": false,
+      "status": 403
+    },
+    {
+      "code": "unauthenticated",
+      "next_action": "obtain_new_access_answer",
+      "retry": false,
+      "status": 401
+    },
+    {
+      "code": "unsupported_capability",
+      "next_action": "none",
+      "retry": false,
+      "status": 501
+    },
+    {
+      "code": "unsupported_command",
+      "next_action": "none",
+      "retry": false,
+      "status": 404
+    }
+  ],
+  "x-provisional": true
+}

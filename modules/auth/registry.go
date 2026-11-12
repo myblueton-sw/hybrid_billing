@@ -185,6 +185,19 @@ func (r *Registry) validTerms(terms Terms) bool {
 	return r.validFields(terms.Action, terms.Fields)
 }
 
+func (r *Registry) Describes(action Action, kind string, fields []string) bool {
+	if r == nil {
+		return false
+	}
+	if _, known := actions[action]; !known {
+		return false
+	}
+	if _, known := r.kinds[kind]; !known {
+		return false
+	}
+	return r.validFields(action, fields)
+}
+
 func (r *Registry) validFields(action Action, fields []string) bool {
 	if !fieldAction(action) {
 		return len(fields) == 0

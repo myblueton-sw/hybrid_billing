@@ -81,6 +81,16 @@ var (
 	Months    = auth.Months
 )
 
+type Answer = identity.Answer
+
+type Admission string
+
+const (
+	Admitted         Admission = "admitted"
+	NotCurrent       Admission = "identity_not_current"
+	AdmitUnavailable Admission = "authority_unavailable"
+)
+
 type Stamp struct {
 	issued     bool
 	permission auth.Stamp

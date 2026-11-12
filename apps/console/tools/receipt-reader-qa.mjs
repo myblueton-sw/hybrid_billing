@@ -32,6 +32,13 @@ const hook = (page) => {
 };
 const ready = async (page, phase = "loaded") =>
   page.locator(`.receipt-screen[data-read-phase="${phase}"]`).waitFor();
+const summarySettled = (page) =>
+  page.waitForFunction(
+    () =>
+      !document.querySelector('.collection-status[data-summary-phase="loading"]'),
+    null,
+    { timeout: 120000 },
+  );
 const snap = async (page, name) => {
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(() => {
@@ -74,11 +81,21 @@ try {
       ]) {
         await page.goto(`${origin}#/imports?lang=${locale}&view=${view}`);
         await ready(page);
+        await summarySettled(page);
         await page.evaluate(() => document.fonts.ready);
         assert.equal(
-          await page.locator(".receipt-open").count(),
+          await page.locator(".receipt-open:visible").count(),
           observed[view].records.length,
         );
+        if (observed[view].records.length)
+          assert.deepEqual(
+            await page.locator(".receipt-screen").evaluate((e) => ({
+              table: e.querySelector(".receipt-table").getClientRects().length > 0,
+              cards: e.querySelector(".receipt-cards").getClientRects().length > 0,
+            })),
+            { table: width >= 720, cards: width < 720 },
+          );
+        else assert.equal(await page.locator(".receipt-open").count(), 0);
         const measures = await page
           .locator(".receipt-screen")
           .evaluate((e) => ({
@@ -89,6 +106,7 @@ try {
               .map((f) => f.family),
             type: [...e.querySelectorAll("h2,input,button,th,td")]
               .filter((c) => c.getClientRects().length)
+              .filter((c) => !c.closest(".collection-status"))
               .map((c) => ({
                 tag: c.tagName,
                 font: parseFloat(getComputedStyle(c).fontSize),
@@ -191,21 +209,23 @@ try {
             .locator(".receipt-screen time")
             .evaluateAll((es) =>
               es.every((e) =>
-                /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)? UTC$/.test(
-                  e.textContent,
-                ),
+                (e.closest(".receipt-table,.receipt-cards") &&
+                /T00:00:00(?:\.0+)?(?:Z|\+00:00)$/.test(e.dateTime)
+                  ? /^\d{4}-\d{2}-\d{2} UTC$/
+                  : /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)? UTC$/
+                ).test(e.textContent),
               ),
             ),
         );
         if (["completeness", "extraction"].includes(view))
           assert.equal(
-            await page.locator(".receipt-refresh button").count(),
+            await page.locator(".receipt-scope-strip button").count(),
             1,
           );
         await snap(page, `actual-${view}-${locale}-${width}`);
         checks.push(`actual ${view} ${locale} ${width}`);
         if (view === "imports") {
-          const button = page.locator(".receipt-open").first();
+          const button = page.locator(".receipt-open:visible").first();
           await button.click();
           await page.locator(".receipt-detail").waitFor();
           await page.waitForFunction(
@@ -253,7 +273,7 @@ try {
   await page.setViewportSize({ width: 1880, height: 1000 });
   await page.goto(origin + "#/imports?lang=en");
   await ready(page);
-  await page.locator(".receipt-open").first().click();
+  await page.locator(".receipt-open:visible").first().click();
   await page.locator(".receipt-detail").waitFor();
   assert.equal(
     await page
@@ -266,7 +286,7 @@ try {
   await page.setViewportSize({ width: 900, height: 1000 });
   await page.goto(origin + "#/imports?lang=ar");
   await ready(page);
-  await page.locator(".receipt-open").first().click();
+  await page.locator(".receipt-open:visible").first().click();
   await page.locator(".receipt-detail").waitFor();
   await snap(page, "actual-selected-ar-900");
   assert.equal(
@@ -286,7 +306,7 @@ try {
     new URLSearchParams(location.hash.split("?")[1]).has("receipt-q"),
   );
   await page.waitForFunction(
-    () => document.querySelectorAll(".receipt-open").length === 1,
+    () => document.querySelectorAll(".receipt-table .receipt-open").length === 1,
   );
   await page
     .locator(".receipt-search button")
@@ -297,17 +317,17 @@ try {
     () => !new URLSearchParams(location.hash.split("?")[1]).has("receipt-q"),
   );
   await page.waitForFunction(
-    (n) => document.querySelectorAll(".receipt-open").length === n,
+    (n) => document.querySelectorAll(".receipt-table .receipt-open").length === n,
     observed.imports.records.length,
   );
   checks.push("actual identifier filter and clear");
   await page
-    .locator(".receipt-search button")
+    .locator(".receipt-scope-strip button")
     .filter({ hasText: "Refresh evidence" })
     .click();
   await ready(page);
   assert.equal(
-    await page.locator(".receipt-open").count(),
+    await page.locator(".receipt-open:visible").count(),
     observed.imports.records.length,
   );
   checks.push("actual refresh without mutation");
@@ -385,6 +405,18 @@ try {
     oldStartedResolve;
   let oldStarted = new Promise((r) => (oldStartedResolve = r));
   let oldReleased;
+  await fixture.route("**/api/focus-collection-status*", (route) =>
+    route
+      .fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: "collected_unavailable",
+          request_id: "fixture-summary",
+        }),
+      })
+      .catch(() => {}),
+  );
   await fixture.route("**/api/focus-receipts?*", async (route) => {
     const u = new URL(route.request().url()),
       q = u.searchParams.get("q") || "",
@@ -458,7 +490,7 @@ try {
   };
   await openFixture(origin + "#/imports?lang=en");
   await ready(fixture);
-  assert.equal(await fixture.locator(".receipt-open").count(), 25);
+  assert.equal(await fixture.locator(".receipt-open:visible").count(), 25);
   await fixture
     .locator(".receipt-pagination button")
     .filter({ hasText: "Next page" })
@@ -470,7 +502,7 @@ try {
       "25",
   );
   await fixture.waitForFunction(
-    () => document.querySelectorAll(".receipt-open").length === 1,
+    () => document.querySelectorAll(".receipt-table .receipt-open").length === 1,
   );
   await fixture.goBack();
   await ready(fixture);
@@ -479,7 +511,7 @@ try {
       !new URLSearchParams(location.hash.split("?")[1]).has("receipt-after"),
   );
   await fixture.waitForFunction(
-    () => document.querySelectorAll(".receipt-open").length === 25,
+    () => document.querySelectorAll(".receipt-table .receipt-open").length === 25,
   );
   checks.push("isolated pinned page and browser back");
   for (const scenario of ["empty", "denied", "stale", "invalid", "absent"]) {
@@ -515,14 +547,14 @@ try {
   mode = "quarantine";
   await openFixture(origin + "#/imports?lang=ko&view=quarantine");
   await ready(fixture);
-  await fixture.locator(".receipt-open").click();
+  await fixture.locator(".receipt-open:visible").click();
   await fixture.locator(".receipt-detail").waitFor();
   await snap(fixture, "isolated-quarantine-selected-ko");
   checks.push("isolated admitted quarantine detail");
   mode = "coverage";
   await openFixture(origin + "#/imports?lang=ar&view=completeness");
   await ready(fixture);
-  await fixture.locator(".receipt-open").click();
+  await fixture.locator(".receipt-open:visible").click();
   await fixture.locator(".receipt-detail").waitFor();
   await snap(fixture, "isolated-coverage-selected-ar");
   checks.push("isolated latest quarantine versus current publication");
@@ -531,7 +563,7 @@ try {
   await ready(fixture);
   mode = "denied";
   await fixture
-    .locator(".receipt-search button")
+    .locator(".receipt-scope-strip button")
     .filter({ hasText: "Refresh evidence" })
     .click();
   await ready(fixture, "error");
@@ -540,7 +572,7 @@ try {
   mode = "page";
   await fixture.locator(".receipt-error button").click();
   await ready(fixture);
-  assert.equal(await fixture.locator(".receipt-open").count(), 25);
+  assert.equal(await fixture.locator(".receipt-open:visible").count(), 25);
   checks.push("isolated retry recovers after denial");
   mode = "page";
   await openFixture(origin + "#/imports?lang=en");
@@ -557,7 +589,7 @@ try {
   await ready(fixture);
   await fixture.waitForFunction(
     () =>
-      document.querySelector(".receipt-open bdi")?.textContent ===
+      document.querySelector(".receipt-table .receipt-open bdi")?.textContent ===
       "bbbbbbbbbbbb",
   );
   const released = new Promise((r) => (oldReleased = r));
@@ -568,7 +600,7 @@ try {
       new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
   );
   assert.equal(
-    await fixture.locator(".receipt-open bdi").first().innerText(),
+    await fixture.locator(".receipt-open:visible bdi").first().innerText(),
     "bbbbbbbbbbbb",
   );
   checks.push("isolated late old result cannot replace new query");

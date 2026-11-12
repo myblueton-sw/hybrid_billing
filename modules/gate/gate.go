@@ -2,6 +2,7 @@ package gate
 
 import (
 	"errors"
+	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/auth"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
@@ -37,6 +38,7 @@ type Gate struct {
 	boundary    *identity.Boundary
 	view        *identity.Subjects
 	permissions *auth.Registry
+	clock       func() time.Time
 }
 
 type Administration struct{ permissions *auth.Registry }
@@ -50,7 +52,7 @@ func New(registry *identity.Registry, catalog Catalog) (*Gate, *Administration, 
 	if err != nil {
 		return nil, nil, err
 	}
-	return &Gate{boundary: registry.Boundary(), view: view, permissions: permissions}, &Administration{permissions: permissions}, nil
+	return &Gate{boundary: registry.Boundary(), view: view, permissions: permissions, clock: registry.Clock()}, &Administration{permissions: permissions}, nil
 }
 
 func refusal(code Code, reason Reason, actor string) Decision {
@@ -66,6 +68,32 @@ func (g *Gate) confirm(answer identity.Answer) (Decision, bool) {
 		return refusal(PermissionDenied, ReasonIdentity, ""), false
 	}
 	return Decision{}, true
+}
+
+func (g *Gate) Admit(answer Answer) Admission {
+	if !g.ready() {
+		return AdmitUnavailable
+	}
+	denial, ok := g.confirm(answer)
+	switch {
+	case ok:
+		return Admitted
+	case denial.Code == AuthorityUnavailable:
+		return AdmitUnavailable
+	default:
+		return NotCurrent
+	}
+}
+
+func (g *Gate) Describes(action Action, kind string, fields []string) bool {
+	return g.ready() && g.permissions.Describes(action, kind, fields)
+}
+
+func (g *Gate) Clock() func() time.Time {
+	if !g.ready() {
+		return nil
+	}
+	return g.clock
 }
 
 func (g *Gate) run(answer identity.Answer, client, session, workspace string, decide func(auth.Principal) auth.Decision) Decision {

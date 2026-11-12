@@ -758,3 +758,53 @@ func TestRechecksOfEveryKindFailWithTheAnswer(t *testing.T) {
 	}
 	f.expect("a stamp of this gate presented to the second gate", other.Recheck(stamp, "", ask(Issue)), false, ReasonNoGrant)
 }
+
+func TestAdmissionClockAndCatalogue(t *testing.T) {
+	var none *Gate
+	for _, g := range []*Gate{none, {}} {
+		if g.Admit(identity.Answer{}) != AdmitUnavailable || g.Clock() != nil || g.Describes(Issue, "usage_statement", nil) {
+			t.Errorf("a gate that is not built admits, tells the time or describes a permission")
+		}
+	}
+	f := setup(t)
+	f.member("ann")
+	session := f.login("ann")
+	answer, err := f.b.Access(session, "w1")
+	f.must(err)
+	if got := f.g.Admit(answer); got != Admitted {
+		t.Errorf("a current answer: %s", got)
+	}
+	if got := f.g.Admit(identity.Answer{}); got != NotCurrent {
+		t.Errorf("an empty answer: %s", got)
+	}
+	f.must(f.a.SetAvailable(false))
+	if got := f.g.Admit(answer); got != Admitted {
+		t.Errorf("admission follows the identity, not the permission registry: %s", got)
+	}
+	f.must(f.a.SetAvailable(true))
+	f.must(f.b.EndSession(session))
+	if got := f.g.Admit(answer); got != NotCurrent {
+		t.Errorf("an answer of an ended session: %s", got)
+	}
+	if f.g.Clock() == nil || !f.g.Clock()().Equal(*f.now) {
+		t.Errorf("the gate's clock is not the identity registry's")
+	}
+	for name, c := range map[string]struct {
+		action Action
+		kind   string
+		fields []string
+		want   bool
+	}{
+		"an action on a kind":                 {Issue, "usage_statement", nil, true},
+		"a field action with a field":         {View, "usage_statement", []string{"quantity"}, true},
+		"an unknown kind":                     {Issue, "invoice", nil, false},
+		"an unknown action":                   {"erase", "usage_statement", nil, false},
+		"a field action without fields":       {View, "usage_statement", nil, false},
+		"fields on an action without fields":  {Issue, "usage_statement", []string{"quantity"}, false},
+		"a field the catalogue does not hold": {View, "usage_statement", []string{"margin"}, false},
+	} {
+		if got := f.g.Describes(c.action, c.kind, c.fields); got != c.want {
+			t.Errorf("%s: %v", name, got)
+		}
+	}
+}

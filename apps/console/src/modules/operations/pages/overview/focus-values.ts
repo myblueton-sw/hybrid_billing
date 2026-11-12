@@ -27,6 +27,7 @@ export function chartSeries(data: OverviewData, currency: string) {
     const amounts = data.months.find((m) => m.period === period)?.amounts ?? [];
     return {
       period,
+      collected: data.months.some((m) => m.period === period),
       measure: amountFor(amounts, currency, data.selection.basis),
     };
   });

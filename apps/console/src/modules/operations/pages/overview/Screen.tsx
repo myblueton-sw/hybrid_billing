@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import type { ScreenProps } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
 import { useLocation } from "../../../../shared/navigation";
@@ -8,9 +8,22 @@ import {
   type Basis,
   type OverviewData,
 } from "../../../sources/collected-focus/api";
-import { decimal } from "./focus-values";
+import {
+  provenanceClass,
+  provenanceClasses,
+} from "../../../sources/collected-focus/fields";
+import {
+  fieldLabel as sourceLabel,
+  provenanceLabel,
+} from "../../../sources/collected-focus/labels";
+import {
+  SourceAmount,
+  SourceInstant,
+  SourceText,
+} from "../../../sources/collected-focus/SourceValues";
 import { focusHref } from "../../../sources/collected-focus/query";
 import FocusChart from "./FocusChart";
+import Sum, { MissingCount } from "./Sum";
 import "./overview.css";
 import "./focus.css";
 const keys = [
@@ -43,7 +56,11 @@ export default function Overview({
     error?: string;
   }>({ key });
   const [retry, setRetry] = useState(0),
-    [search, setSearch] = useState(query.get("q") ?? "");
+    [search, setSearch] = useState(query.get("q") ?? ""),
+    [opened, setOpened] = useState<{ key: string; id: string | null }>({
+      key: "",
+      id: null,
+    });
   const data = state.key === key ? state.data : undefined,
     error = state.key === key ? state.error : undefined;
   useEffect(() => {
@@ -105,6 +122,7 @@ export default function Overview({
               "overview:data:source-breakdown",
               "overview:data:organization-breakdown",
               "overview:section:detail",
+              "U01:state:value-missing-zero",
             ]
           : []),
       ],
@@ -146,12 +164,21 @@ export default function Overview({
     basis === "billed_cost"
       ? t(l, "Billed cost", "청구 비용", "التكلفة المفوترة")
       : t(l, "Effective cost", "실효 비용", "التكلفة الفعلية");
-  const amount = (coefficient: string | null, currency: string) => (
-    <bdi dir="ltr">
-      <span>{currency}</span>{" "}
-      <span className="focus-exact">{decimal(coefficient, l)}</span>
-    </bdi>
-  );
+  const provenanceLine = provenanceClasses
+    .map(
+      (c) =>
+        [
+          c,
+          Object.entries(data?.provenance ?? {})
+            .filter(([k]) => provenanceClass(k) === c)
+            .reduce((n, [, v]) => n + v, 0),
+        ] as const,
+    )
+    .filter(([, n]) => n > 0)
+    .map(([c, n]) => `${provenanceLabel(l, c)} ${n}`)
+    .join(" · ");
+  const pageKey = data ? `${data.snapshot}:${data.after}` : "",
+    openId = opened.key === pageKey ? opened.id : null;
   const table = (label: string, children: React.ReactNode) => (
     <div
       className="table-wrap focus-table"
@@ -346,12 +373,11 @@ export default function Overview({
                 "عينات FOCUS مجمعة",
               )}{" "}
               <bdi>{data.versions.join(", ")}</bdi> ·{" "}
-              {t(l, "Public", "공개", "عام")}{" "}
-              {Object.entries(data.provenance)
-                .filter(([k]) => k.startsWith("official-public"))
-                .reduce((n, [, v]) => n + v, 0)}{" "}
-              · {t(l, "Synthetic", "합성", "تجريبي")}{" "}
-              {data.provenance["synthetic-contract-fixture"] ?? 0} ·{" "}
+              {provenanceLine && (
+                <>
+                  <span data-u01-provenance>{provenanceLine}</span> ·{" "}
+                </>
+              )}
               {t(
                 l,
                 "No FX conversion · query only",
@@ -444,23 +470,24 @@ export default function Overview({
                       {a.currency} · {label}
                     </h2>
                     <strong className="focus-money">
-                      {amount(a[basis].coefficient, a.currency)}
+                      <Sum
+                        value={a[basis].coefficient}
+                        currency={a.currency}
+                        locale={l}
+                      />
                     </strong>
                     <small>
                       {a.rows} {t(l, "rows", "행", "صفوف")} ·{" "}
-                      {a[basis].missing
-                        ? t(
-                            l,
-                            `${a[basis].missing} values missing`,
-                            `${a[basis].missing}개 값 누락`,
-                            `${a[basis].missing} قيم مفقودة`,
-                          )
-                        : t(
-                            l,
-                            "No values missing",
-                            "값 누락 없음",
-                            "دون قيم مفقودة",
-                          )}
+                      {a[basis].missing ? (
+                        <MissingCount count={a[basis].missing} locale={l} />
+                      ) : (
+                        t(
+                          l,
+                          "No values missing",
+                          "값 누락 없음",
+                          "دون قيم مفقودة",
+                        )
+                      )}
                     </small>
                   </div>
                 ))}
@@ -479,7 +506,7 @@ export default function Overview({
                 )}
                 <div>
                   <h2>
-                    {t(l, "Collected scope", "수집 범위", "نطاق التجميع")}
+                    {t(l, "Selected scope", "선택 범위", "النطاق المحدد")}
                   </h2>
                   <p>
                     <strong data-focus-rows>{data.row_count}</strong> /{" "}
@@ -549,7 +576,21 @@ export default function Overview({
                             <th>
                               {a.currency} {t(l, "total", "합계", "المجموع")}
                             </th>
-                            <td>{amount(a[basis].coefficient, a.currency)}</td>
+                            <td>
+                              <Sum
+                                value={a[basis].coefficient}
+                                currency={a.currency}
+                                locale={l}
+                              />
+                              {a[basis].missing > 0 && (
+                                <small>
+                                  <MissingCount
+                                    count={a[basis].missing}
+                                    locale={l}
+                                  />
+                                </small>
+                              )}
+                            </td>
                             <td>{a.rows}</td>
                           </tr>
                         ))}
@@ -569,11 +610,17 @@ export default function Overview({
                                 </button>
                               </th>
                               <td>
-                                {amount(a[basis].coefficient, a.currency)}
+                                <Sum
+                                  value={a[basis].coefficient}
+                                  currency={a.currency}
+                                  locale={l}
+                                />
                                 {a[basis].missing > 0 && (
                                   <small>
-                                    {t(l, "Partial", "부분", "جزئي")}:{" "}
-                                    {a[basis].missing}
+                                    <MissingCount
+                                      count={a[basis].missing}
+                                      locale={l}
+                                    />
                                   </small>
                                 )}
                               </td>
@@ -658,8 +705,8 @@ export default function Overview({
                           )}
                         </th>
                         <th>{t(l, "Provider", "공급사", "المزود")}</th>
-                        <th>BillingAccountId</th>
-                        <th>SubAccountId</th>
+                        <th>{sourceLabel(l, "billing_account")}</th>
+                        <th>{sourceLabel(l, "sub_account")}</th>
                         <th>
                           {t(
                             l,
@@ -685,11 +732,8 @@ export default function Overview({
                               <bdi>{a.billing_account}</bdi>
                             </button>
                           </th>
-                          <td>
-                            <bdi>
-                              {a.sub_account ??
-                                t(l, "Not provided", "제공 없음", "غير مقدم")}
-                            </bdi>
+                          <td data-u01-field="account-sub_account">
+                            <SourceText value={a.sub_account} locale={l} />
                           </td>
                           <td>
                             {a.amounts.map((v) => (
@@ -697,11 +741,36 @@ export default function Overview({
                                 className="focus-account-money"
                                 key={v.currency}
                               >
-                                {amount(v.billed_cost.coefficient, v.currency)}
+                                <Sum
+                                  value={v.billed_cost.coefficient}
+                                  currency={v.currency}
+                                  locale={l}
+                                />
+                                {v.billed_cost.missing > 0 && (
+                                  <>
+                                    {" "}
+                                    ·{" "}
+                                    <MissingCount
+                                      count={v.billed_cost.missing}
+                                      locale={l}
+                                    />
+                                  </>
+                                )}
                                 <small>
-                                  {amount(
-                                    v.effective_cost.coefficient,
-                                    v.currency,
+                                  <Sum
+                                    value={v.effective_cost.coefficient}
+                                    currency={v.currency}
+                                    locale={l}
+                                  />
+                                  {v.effective_cost.missing > 0 && (
+                                    <>
+                                      {" "}
+                                      ·{" "}
+                                      <MissingCount
+                                        count={v.effective_cost.missing}
+                                        locale={l}
+                                      />
+                                    </>
                                   )}
                                 </small>
                               </div>
@@ -768,93 +837,124 @@ export default function Overview({
                   <table>
                     <thead>
                       <tr>
+                        <th>{sourceLabel(l, "charge_month")}</th>
                         <th>
-                          {t(l, "Charge month", "과금 시작 월", "شهر الرسوم")}
+                          <span>{sourceLabel(l, "provider")}</span>
+                          <span>{sourceLabel(l, "service")}</span>
                         </th>
                         <th>
-                          {t(
-                            l,
-                            "Provider / service",
-                            "공급사 / 서비스",
-                            "المزود / الخدمة",
-                          )}
+                          <span>{sourceLabel(l, "billing_account")}</span>
+                          <span>{sourceLabel(l, "sub_account")}</span>
                         </th>
-                        <th>BillingAccountId / SubAccountId</th>
-                        <th>
-                          {t(l, "Billed cost", "청구 비용", "التكلفة المفوترة")}
-                        </th>
-                        <th>
-                          {t(
-                            l,
-                            "Effective cost",
-                            "실효 비용",
-                            "التكلفة الفعلية",
-                          )}
-                        </th>
-                        <th>{t(l, "Source", "출처", "المصدر")}</th>
+                        <th>{sourceLabel(l, "billed_cost")}</th>
+                        <th>{sourceLabel(l, "effective_cost")}</th>
+                        <th>{sourceLabel(l, "evidence_class")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.rows.map((r) => (
-                        <tr key={r.id}>
-                          <td>
-                            <bdi>{r.charge_month}</bdi>
-                          </td>
-                          <td>
-                            {r.provider}
-                            <small>{r.service ?? "—"}</small>
-                          </td>
-                          <td>
-                            <bdi>{r.billing_account}</bdi>
-                            <small>
-                              <bdi>{r.sub_account ?? "—"}</bdi>
-                            </small>
-                          </td>
-                          <td>{amount(r.billed_cost, r.currency)}</td>
-                          <td>{amount(r.effective_cost, r.currency)}</td>
-                          <td>
-                            <details>
-                              <summary>{r.evidence_class}</summary>
-                              <dl>
-                                <dt>
-                                  {t(
-                                    l,
-                                    "Charge start",
-                                    "과금 시작",
-                                    "بدء الرسوم",
-                                  )}
-                                </dt>
-                                <dd>
-                                  <bdi>{r.charge_start}</bdi>
-                                </dd>
-                                <dt>
-                                  {t(
-                                    l,
-                                    "Charge end",
-                                    "과금 종료",
-                                    "نهاية الرسوم",
-                                  )}
-                                </dt>
-                                <dd>
-                                  <bdi>{r.charge_end}</bdi>
-                                </dd>
-                                <dt>
-                                  {t(
-                                    l,
-                                    "Batch / ordinal",
-                                    "수집 배치 / 순번",
-                                    "دفعة / ترتيب",
-                                  )}
-                                </dt>
-                                <dd>
-                                  <bdi>
-                                    {r.batch} / {r.ordinal}
-                                  </bdi>
-                                </dd>
-                              </dl>
-                            </details>
-                          </td>
-                        </tr>
+                        <Fragment key={r.id}>
+                          <tr data-u01-row={r.id}>
+                            <td data-u01-field="charge_month">
+                              <bdi>{r.charge_month}</bdi>
+                            </td>
+                            <td>
+                              {r.provider}
+                              <small data-u01-field="service">
+                                <SourceText value={r.service} locale={l} />
+                              </small>
+                            </td>
+                            <td>
+                              <bdi
+                                id={`u01-row-${r.id}`}
+                                data-u01-field="billing_account"
+                              >
+                                {r.billing_account}
+                              </bdi>
+                              <small data-u01-field="sub_account">
+                                <SourceText value={r.sub_account} locale={l} />
+                              </small>
+                            </td>
+                            <td data-u01-field="billed_cost">
+                              <SourceAmount
+                                value={r.billed_cost}
+                                currency={r.currency}
+                                locale={l}
+                              />
+                            </td>
+                            <td data-u01-field="effective_cost">
+                              <SourceAmount
+                                value={r.effective_cost}
+                                currency={r.currency}
+                                locale={l}
+                              />
+                            </td>
+                            <td>
+                              <span data-u01-field="evidence_class">
+                                {provenanceLabel(
+                                  l,
+                                  provenanceClass(r.evidence_class),
+                                )}
+                              </span>
+                              <button
+                                className="focus-evidence-toggle"
+                                data-u01-evidence-toggle={r.id}
+                                aria-expanded={openId === r.id}
+                                aria-controls={`u01-evidence-${r.id}`}
+                                aria-describedby={`u01-row-${r.id}`}
+                                onClick={() =>
+                                  setOpened({
+                                    key: pageKey,
+                                    id: openId === r.id ? null : r.id,
+                                  })
+                                }
+                              >
+                                {t(
+                                  l,
+                                  "Charge period and delivery lineage",
+                                  "과금 기간·수집본 식별 정보",
+                                  "فترة الرسوم وبيانات تتبّع التسليم",
+                                )}
+                              </button>
+                            </td>
+                          </tr>
+                          {openId === r.id && (
+                            <tr
+                              className="focus-evidence"
+                              id={`u01-evidence-${r.id}`}
+                            >
+                              <td colSpan={6}>
+                                <div className="focus-evidence-box">
+                                  <dl>
+                                    {(
+                                      ["charge_start", "charge_end"] as const
+                                    ).map((k) => (
+                                      <div key={k} data-u01-field={k}>
+                                        <dt>{sourceLabel(l, k)}</dt>
+                                        <dd>
+                                          <SourceInstant
+                                            value={r[k]}
+                                            locale={l}
+                                          />
+                                        </dd>
+                                      </div>
+                                    ))}
+                                    {(["batch", "ordinal"] as const).map(
+                                      (k) => (
+                                        <div key={k} data-u01-field={k}>
+                                          <dt>{sourceLabel(l, k)}</dt>
+                                          <dd>
+                                            <bdi dir="ltr">{r[k]}</bdi>
+                                          </dd>
+                                        </div>
+                                      ),
+                                    )}
+                                  </dl>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>,

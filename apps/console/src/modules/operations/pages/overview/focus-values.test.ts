@@ -25,7 +25,7 @@ test("signed chart preserves credit and cancellation geometry", () => {
   assert.ok(Number.isFinite(signedScale([null]).y(0n)));
   assert.ok(signedScale([(scale ** 2n).toString()]).y(scale ** 2n) >= 0);
 });
-test("calendar gaps remain unknown instead of invented zeros", () => {
+test("calendar gaps stay without a measure instead of invented zeros", () => {
   const measure = { coefficient: "0", present: 1, missing: 0 };
   const data = {
     selection: { period: "all", basis: "billed_cost" },
@@ -45,4 +45,8 @@ test("calendar gaps remain unknown instead of invented zeros", () => {
   assert.equal(values[0].measure?.coefficient, "0");
   assert.equal(values[1].period, "2024-04");
   assert.equal(values[1].measure, undefined);
+  assert.equal(values[1].collected, false);
+  const other = chartSeries(data, "CNY");
+  assert.equal(other[0].measure, undefined);
+  assert.equal(other[0].collected, true);
 });

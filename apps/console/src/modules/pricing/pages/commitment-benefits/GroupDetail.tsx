@@ -1,22 +1,21 @@
 import { useEffect, useRef } from "react";
 import type { Locale } from "../../../../shared/types";
+import { fieldNames, type Group, type Detail, type Field } from "./contract";
+import { t, costLabel, statusLabel, fieldLabel, stateLabel } from "./copy";
+import { provenanceClass } from "../../../sources/collected-focus/fields";
 import {
-  fieldNames,
-  type Group,
-  type Detail,
-  type Charge,
-  type Field,
-} from "./contract";
+  fieldLabel as sourceLabel,
+  provenanceLabel,
+} from "../../../sources/collected-focus/labels";
 import {
-  t,
-  costLabel,
-  statusLabel,
-  fieldLabel,
-  stateLabel,
-  noValue,
-} from "./copy";
+  Missing,
+  SourceAmount,
+  SourceInstant,
+  SourcePeriod,
+  SourceText,
+} from "../../../sources/collected-focus/SourceValues";
 import { MeasureValue, MetadataValue } from "./GroupTable";
-import { money, range, rowStatus } from "./values";
+import { range, rowStatus } from "./values";
 function FieldValue({ locale: l, field: f }: { locale: Locale; field: Field }) {
   return f.state === "value" ? (
     <bdi dir="ltr">{f.value}</bdi>
@@ -32,12 +31,12 @@ function FieldValue({ locale: l, field: f }: { locale: Locale; field: Field }) {
     </>
   );
 }
-function Intervals({
+function Envelopes({
   locale: l,
   value: v,
 }: {
   locale: Locale;
-  value: Group["intervals"] | Charge;
+  value: Group["intervals"];
 }) {
   return (
     <dl className="b06-evidence">
@@ -48,9 +47,9 @@ function Intervals({
             "charge_end",
             t(
               l,
-              "Source charge interval envelope",
+              "Source charge period envelope",
               "원천 과금 기간 범위",
-              "فترة رسوم المصدر",
+              "نطاق فترة رسوم المصدر",
             ),
           ],
           [
@@ -58,27 +57,30 @@ function Intervals({
             "billing_end",
             t(
               l,
-              "Source billing interval envelope",
+              "Source billing period envelope",
               "원천 청구 기간 범위",
-              "فترة فوترة المصدر",
+              "نطاق فترة فوترة المصدر",
             ),
           ],
         ] as const
       ).map(([start, end, label]) => (
-        <div key={start}>
+        <div key={start} data-b06-envelope={start}>
           <dt>{label}</dt>
           <dd>
-            <bdi dir="ltr" className="b06-date">
-              {v[start]}
-            </bdi>
-            {" — "}
-            <bdi dir="ltr" className="b06-date">
-              {v[end]}
-            </bdi>
+            <SourcePeriod start={v[start]} end={v[end]} locale={l} />
           </dd>
         </div>
       ))}
     </dl>
+  );
+}
+function RowId({ id }: { id: string }) {
+  return (
+    <bdi dir="ltr" className="b06-code">
+      <span>{id.slice(0, 32)}</span>
+      <wbr />
+      <span>{id.slice(32)}</span>
+    </bdi>
   );
 }
 export default function GroupDetail({
@@ -256,7 +258,7 @@ export default function GroupDetail({
                 {t(
                   l,
                   "Provider source evidence",
-                  "공급자 원천 근거",
+                  "공급사 원천 근거",
                   "أدلة مصدر المزوّد",
                 )}
               </h3>
@@ -328,25 +330,22 @@ export default function GroupDetail({
           )}
         </summary>
         <dl className="b06-evidence">
+          {(
+            [
+              ["provider", g.provider],
+              ["billing_account", g.billing_account],
+              ["sub_account", g.sub_account],
+              ["account", g.account],
+            ] as const
+          ).map(([field, value]) => (
+            <div key={field} data-b06-identity={field}>
+              <dt>{sourceLabel(l, field)}</dt>
+              <dd>
+                <SourceText value={value} locale={l} />
+              </dd>
+            </div>
+          ))}
           {[
-            [t(l, "Provider", "공급자", "المزوّد"), g.provider],
-            [
-              t(l, "Billing account", "청구 계정", "حساب الفوترة"),
-              g.billing_account,
-            ],
-            [
-              t(l, "Sub-account", "하위 계정", "الحساب الفرعي"),
-              g.sub_account ?? noValue(l),
-            ],
-            [
-              t(
-                l,
-                "Canonical account reference",
-                "원천 계정 참조",
-                "مرجع الحساب",
-              ),
-              g.account,
-            ],
             [
               t(
                 l,
@@ -367,13 +366,13 @@ export default function GroupDetail({
             </div>
           ))}
         </dl>
-        <Intervals locale={l} value={g.intervals} />
+        <Envelopes locale={l} value={g.intervals} />
         <p className="b06-meta">
           {t(
             l,
-            "Source interval envelopes are earliest start through latest end, not continuous coverage or the commitment term. Start inclusive, end exclusive. Account references do not establish legal ownership.",
-            "원천 기간 범위는 최초 시작부터 최종 종료까지이며 연속 완전성·약정 전체 기간을 뜻하지 않습니다. 시작 포함·끝 제외입니다. 계정 참조는 법적 소유 관계가 아닙니다.",
-            "نطاقات فترات المصدر تمتد من أول بداية إلى آخر نهاية ولا تثبت تغطية مستمرة أو مدة الالتزام. تشمل البداية وتستثني النهاية. مراجع الحسابات لا تثبت ملكية قانونية.",
+            "Source period envelopes are earliest start through latest end, not continuous coverage or the commitment term. Start inclusive, end exclusive. Account scope IDs do not establish legal ownership.",
+            "원천 기간 범위는 최초 시작부터 최종 종료까지이며 연속 완전성·약정 전체 기간을 뜻하지 않습니다. 시작 포함·끝 제외입니다. 계정 범위 ID는 법적 소유 관계가 아닙니다.",
+            "نطاقات فترات المصدر تمتد من أول بداية إلى آخر نهاية ولا تثبت تغطية مستمرة أو مدة الالتزام. تشمل البداية وتستثني النهاية. معرّفات نطاق الحساب لا تثبت ملكية قانونية.",
           )}
         </p>
         <dl className="b06-evidence">
@@ -394,9 +393,9 @@ export default function GroupDetail({
         <p className="b06-meta">
           {t(
             l,
-            "Different values are source variation, not an automatic conflict. Used and Unused rows may coexist. Missing-field states are retained per charge row below.",
-            "서로 다른 값은 원천의 차이이며 자동 충돌 판정이 아닙니다. 사용·미사용 분류 행은 함께 존재할 수 있습니다. 누락 필드 상태는 아래 행별 근거에서 확인하세요.",
-            "القيم المختلفة تنوع في المصدر وليست تعارضاً تلقائياً. قد تتواجد صفوف مستخدمة وغير مستخدمة معاً. تُحفظ حالات الحقول المفقودة لكل صف أدناه.",
+            "Different values are source variation, not an automatic conflict. Used and Unused rows may coexist. Field states such as Column absent, Blank source value, Source null token and Version not mapped are retained per charge row below.",
+            "서로 다른 값은 원천의 차이이며 자동 충돌 판정이 아닙니다. 사용·미사용 분류 행은 함께 존재할 수 있습니다. 열 없음·빈 원천 값·원천 null 값·버전 미매핑 같은 필드 상태는 아래 행별 근거에서 확인하세요.",
+            "القيم المختلفة تنوع في المصدر وليست تعارضاً تلقائياً. قد تتواجد صفوف مستخدمة وغير مستخدمة معاً. تُحفظ لكل صف أدناه حالات الحقول مثل: العمود غير موجود، قيمة مصدر فارغة، رمز قيمة فارغة في المصدر، الإصدار غير مربوط.",
           )}
         </p>
       </details>
@@ -456,14 +455,17 @@ export default function GroupDetail({
       <div className="b06-charge-records">
         {d.rows.map((r) => (
           <article key={r.id}>
-            <h4>
-              {r.service ??
-                t(
-                  l,
-                  "Service unavailable",
-                  "서비스명 없음",
-                  "الخدمة غير متاحة",
-                )}
+            <h4 data-b06-row-service>
+              {r.service === null ? (
+                <>
+                  <span className="b06-heading-label">
+                    {sourceLabel(l, "service")}:
+                  </span>{" "}
+                  <Missing locale={l} />
+                </>
+              ) : (
+                r.service
+              )}
             </h4>
             <p className="b06-meta">
               {statusLabel(l, rowStatus(r))} ·{" "}
@@ -472,12 +474,15 @@ export default function GroupDetail({
             </p>
             <div className="b06-charge-costs">
               {(["billed_cost", "effective_cost"] as const).map((k) => (
-                <dl key={k}>
+                <dl key={k} data-b06-row-cost={k}>
                   <dt>{costLabel(l, k)}</dt>
                   <dd>
-                    <bdi dir="ltr">
-                      {r[k] === null ? noValue(l) : money(r[k]!, r.currency, l)}
-                    </bdi>
+                    <SourceAmount
+                      value={r[k]}
+                      currency={r.currency}
+                      note
+                      locale={l}
+                    />
                   </dd>
                 </dl>
               ))}
@@ -493,55 +498,55 @@ export default function GroupDetail({
               </summary>
               <dl className="b06-evidence">
                 {fieldNames.map((k) => (
-                  <div key={k}>
+                  <div key={k} data-b06-field={k}>
                     <dt>{fieldLabel(l, k)}</dt>
                     <dd>
                       <FieldValue locale={l} field={r.fields[k]} />
                     </dd>
                   </div>
                 ))}
-                {[
+                {(
                   [
-                    t(
-                      l,
-                      "Canonical row reference",
-                      "원천 행 참조",
-                      "مرجع الصف",
-                    ),
-                    r.id,
-                  ],
-                  [
-                    t(
-                      l,
-                      "Evidence classification",
-                      "근거 분류",
-                      "تصنيف الأدلة",
-                    ),
-                    r.evidence_class,
-                  ],
-                  [
-                    t(l, "Delivery batch", "수집 배치", "دفعة التسليم"),
-                    r.batch,
-                  ],
-                  [
-                    t(
-                      l,
-                      "Source row ordinal",
-                      "원천 행 순번",
-                      "الترتيب في المصدر",
-                    ),
-                    r.ordinal,
-                  ],
-                ].map(([k, v]) => (
-                  <div key={k}>
-                    <dt>{k}</dt>
+                    "charge_start",
+                    "charge_end",
+                    "billing_start",
+                    "billing_end",
+                  ] as const
+                ).map((field) => (
+                  <div key={field} data-b06-row-field={field}>
+                    <dt>{sourceLabel(l, field)}</dt>
                     <dd>
-                      <bdi dir="ltr">{v}</bdi>
+                      <SourceInstant value={r[field]} locale={l} />
                     </dd>
                   </div>
                 ))}
+                <div data-b06-row-field="batch">
+                  <dt>{sourceLabel(l, "batch")}</dt>
+                  <dd>
+                    <bdi dir="ltr" className="b06-code">
+                      {r.batch}
+                    </bdi>
+                  </dd>
+                </div>
+                <div data-b06-row-field="ordinal">
+                  <dt>{sourceLabel(l, "ordinal")}</dt>
+                  <dd>
+                    <bdi dir="ltr">{r.ordinal}</bdi>
+                  </dd>
+                </div>
+                <div data-b06-row-field="evidence_class">
+                  <dt>{sourceLabel(l, "evidence_class")}</dt>
+                  <dd>
+                    {provenanceLabel(l, provenanceClass(r.evidence_class))}
+                  </dd>
+                </div>
+                <div data-b06-row-field="id">
+                  <dt>{sourceLabel(l, "id")}</dt>
+                  <dd>
+                    <RowId id={r.id} />
+                  </dd>
+                </div>
               </dl>
-              <Intervals locale={l} value={r} />
             </details>
           </article>
         ))}

@@ -46,8 +46,8 @@ export const costLabel = (l: Locale, k: string) =>
     : t(l, "Effective cost", "실효 비용", "التكلفة الفعلية");
 export const noRows = (l: Locale) =>
   t(l, "No observed rows", "관측된 행 없음", "لا توجد صفوف مرصودة");
-export const noValue = (l: Locale) =>
-  t(l, "No source value", "원천 값 없음", "لا توجد قيمة مصدر");
+export const noValuesPresent = (l: Locale) =>
+  t(l, "No values present", "값 없음", "لا قيم موجودة");
 export function errorLabel(l: Locale, code: string) {
   if (
     [

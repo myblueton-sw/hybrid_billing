@@ -1,10 +1,8 @@
 import type { Locale } from "../../../../shared/types";
-import { decimal } from "../../../sources/collected-focus/values";
+import { money as sharedMoney } from "../../../sources/collected-focus/values";
 import type { Charge } from "./contract";
-export function money(value: string, currency: string, locale: Locale) {
-  const n = BigInt(value);
-  return `${n < 0n ? "−" : ""}${currency} ${decimal((n < 0n ? -n : n).toString(), locale)}`;
-}
+export const money = (value: string, currency: string, locale: Locale) =>
+  sharedMoney(value, currency, locale);
 export function rowStatus(row: Charge): "used" | "unused" | "unknown" {
   if (row.version !== "1.0" || row.fields.status.state !== "value")
     return "unknown";

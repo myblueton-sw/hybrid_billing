@@ -1,3 +1,5 @@
+import { fieldLabel as sourceLabel } from "../../../sources/collected-focus/labels";
+import { SourceText } from "../../../sources/collected-focus/SourceValues";
 import { useEffect, useRef } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { Data } from "./contract";
@@ -26,9 +28,9 @@ export default function AccountScope({
         {data.selection.account
           ? t(
               l,
-              "One canonical account selected",
-              "원천 계정 1개 선택",
-              "حساب مرجعي واحد محدد",
+              "One account scope selected",
+              "계정 범위 1개 선택",
+              "نطاق حساب واحد محدد",
             )
           : t(
               l,
@@ -43,9 +45,9 @@ export default function AccountScope({
       <p className="b06-meta">
         {t(
           l,
-          "Search matches the account list only. Selecting an account narrows the source rows and groups. A FOCUS account reference is not legal ownership.",
-          "검색은 계정 목록에만 적용됩니다. 계정을 선택하면 원천 행·그룹 범위가 좁아집니다. FOCUS 계정 참조는 법적 소유 관계가 아닙니다.",
-          "يؤثر البحث في قائمة الحسابات فقط. يضيّق اختيار الحساب نطاق صفوف المصدر والمجموعات. مرجع حساب FOCUS ليس ملكية قانونية.",
+          "Search matches the account list only. Selecting an account narrows the source rows and groups. An account scope ID is derived by Hybrid Billing and does not establish legal ownership.",
+          "검색은 계정 목록에만 적용됩니다. 계정을 선택하면 원천 행·그룹 범위가 좁아집니다. 계정 범위 ID는 Hybrid Billing 산출 값이며 법적 소유 관계가 아닙니다.",
+          "يؤثر البحث في قائمة الحسابات فقط. يضيّق اختيار الحساب نطاق صفوف المصدر والمجموعات. معرّف نطاق الحساب يشتقه Hybrid Billing ولا يثبت ملكية قانونية.",
         )}
       </p>
       <button
@@ -62,13 +64,8 @@ export default function AccountScope({
       </button>
       {data.selection.account && (
         <p className="b06-meta">
-          {t(
-            l,
-            "Selected canonical account reference",
-            "선택 원천 계정 참조",
-            "مرجع الحساب المحدد",
-          )}
-          : <bdi dir="ltr">{data.selection.account}</bdi>
+          {sourceLabel(l, "account")}:{" "}
+          <bdi dir="ltr">{data.selection.account}</bdi>
         </p>
       )}
       {!data.account_matches ? (
@@ -90,24 +87,16 @@ export default function AccountScope({
                 onClick={() => select(a.id)}
               >
                 <span>
-                  {t(l, "Billing account", "청구 계정", "حساب الفوترة")}:{" "}
+                  {sourceLabel(l, "billing_account")}:{" "}
                   <bdi dir="ltr">{a.billing_account}</bdi>
                 </span>
                 <span>
-                  {t(l, "Provider", "공급자", "المزوّد")}:{" "}
+                  {sourceLabel(l, "provider")}:{" "}
                   <bdi dir="ltr">{a.provider}</bdi>
                 </span>
                 <span>
-                  {t(l, "Sub-account", "하위 계정", "الحساب الفرعي")}:{" "}
-                  <bdi dir="ltr">
-                    {a.sub_account ??
-                      t(
-                        l,
-                        "None in source",
-                        "원천 값 없음",
-                        "لا يوجد في المصدر",
-                      )}
-                  </bdi>
+                  {sourceLabel(l, "sub_account")}:{" "}
+                  <SourceText value={a.sub_account} locale={l} />
                 </span>
                 <span>
                   {t(l, "Source rows", "원천 행", "صفوف المصدر")}:{" "}

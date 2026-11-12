@@ -550,3 +550,77 @@
 .b06-screen .b06-cost-summary th:nth-last-child(-n + 2) {
   text-align: end;
 }
+.b06-screen .source-state {
+  font-weight: 600;
+  color: var(--text-body);
+}
+.b06-screen .source-state-note {
+  display: block;
+  font-size: 14px;
+}
+.b06-screen .source-value {
+  display: block;
+}
+.b06-screen .source-instant {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.b06-screen .source-tz {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.b06-screen .source-period {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.b06-screen .source-period > span > small:first-child {
+  display: inline;
+}
+.b06-screen .source-period > span + span {
+  margin-block-start: 6px;
+}
+.b06-screen .b06-code {
+  font-family: var(--hb-font-mono);
+  font-size: 14px;
+}
+.b06-screen .b06-code > span {
+  display: inline-block;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.b06-screen :is(.b06-charge-records, .b06-identity) .b06-evidence {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  column-gap: 24px;
+}
+.b06-screen .b06-evidence > [data-b06-field="id"],
+.b06-screen .b06-evidence > [data-b06-row-field="id"] {
+  grid-column: 1 / -1;
+}
+.b06-screen .b06-evidence > [data-b06-row-field="charge_start"],
+.b06-screen .b06-evidence > [data-b06-row-field="batch"] {
+  grid-column-start: 1;
+  margin-block-start: 12px;
+}
+.b06-screen .b06-charge-records article {
+  border-block-start-color: var(--border-section);
+  padding-block: 20px 12px;
+}
+.b06-screen .b06-charge-records article > details[open] {
+  padding-block-end: 12px;
+}
+.b06-screen .b06-heading-label {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.b06-screen .source-period > span > small:first-child {
+  display: inline-block;
+  min-inline-size: 2.75em;
+}
+.b06-screen .b06-measure small > bdi {
+  white-space: nowrap;
+}
+.b06-screen .b06-account-list button {
+  overflow-wrap: break-word;
+}

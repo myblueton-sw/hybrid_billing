@@ -1,6 +1,17 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { decimal } from "../../../sources/collected-focus/values";
+import { provenanceClass } from "../../../sources/collected-focus/fields";
+import {
+  fieldLabel as sourceLabel,
+  provenanceLabel,
+} from "../../../sources/collected-focus/labels";
+import {
+  Missing,
+  SourceAmount,
+  SourceInstant,
+  SourceText,
+} from "../../../sources/collected-focus/SourceValues";
+import { money } from "../../../sources/collected-focus/values";
 import {
   fieldNames,
   type Data,
@@ -16,11 +27,7 @@ import {
   unavailable,
   unknown,
 } from "./copy";
-export const money = (v: string, c: string, l: Locale) => {
-  const n = BigInt(v);
-  return `${n < 0n ? "−" : ""}${c} ${decimal((n < 0n ? -n : n).toString(), l)}`;
-};
-export function Money({
+function SumValue({
   value,
   currency,
   locale: l,
@@ -30,9 +37,22 @@ export function Money({
   locale: Locale;
 }) {
   return value === null ? (
-    <span>{t(l, "No observed amount", "관측 금액 없음", "لا مبلغ مرصود")}</span>
+    <strong className="source-state" data-b07-sum="none">
+      {t(l, "No values present", "값 없음", "لا قيم موجودة")}
+    </strong>
   ) : (
-    <bdi dir="ltr">{money(value, currency, l)}</bdi>
+    <bdi dir="ltr" data-b07-sum="value">
+      {money(value, currency, l)}
+    </bdi>
+  );
+}
+function RowId({ id }: { id: string }) {
+  return (
+    <bdi dir="ltr" className="b07-code">
+      <span>{id.slice(0, 32)}</span>
+      <wbr />
+      <span>{id.slice(32)}</span>
+    </bdi>
   );
 }
 function MeasureValue({
@@ -46,7 +66,7 @@ function MeasureValue({
 }) {
   return (
     <>
-      <Money value={m.coefficient} currency={currency} locale={l} />
+      <SumValue value={m.coefficient} currency={currency} locale={l} />
       <small>
         {t(l, "Present / missing", "값 있음 / 누락", "موجود / مفقود")}{" "}
         <bdi dir="ltr">
@@ -165,22 +185,34 @@ function SourcePanel({
         </button>
       </header>
       {view === "credits" && <ContractBoundary locale={l} />}
-      <p className="b07-meta">
-        {t(
-          l,
-          "Technical source reference, not a transaction ID",
-          "원천 기술 참조 · 거래 ID가 아닙니다",
-          "مرجع تقني للمصدر، وليس معرّف معاملة",
-        )}
-        <bdi dir="ltr">{r.id}</bdi>
-      </p>
+      <dl className="b07-facts">
+        <div data-b07-field="id">
+          <dt>{sourceLabel(l, "id")}</dt>
+          <dd>
+            <RowId id={r.id} />
+            <small>
+              {t(
+                l,
+                "A technical reference to the collected row, not a transaction ID",
+                "수집된 행의 기술 참조이며 거래 ID가 아닙니다",
+                "مرجع تقني للصف المجمَّع، وليس معرّف معاملة",
+              )}
+            </small>
+          </dd>
+        </div>
+      </dl>
       {view === "buyer" && (
         <dl className="b07-row-costs">
           {(["billed_cost", "effective_cost"] as const).map((b) => (
-            <div key={b}>
+            <div key={b} data-b07-field={b}>
               <dt>{basisLabel(l, b)}</dt>
               <dd>
-                <Money value={r[b]} currency={r.currency} locale={l} />
+                <SourceAmount
+                  value={r[b]}
+                  currency={r.currency}
+                  note
+                  locale={l}
+                />
               </dd>
             </div>
           ))}
@@ -246,70 +278,73 @@ function SourcePanel({
         <summary>
           {t(
             l,
-            "Period and source references",
-            "기간·원천 참조",
-            "الفترة ومراجع المصدر",
+            "Period, account and delivery references",
+            "기간·계정·수집본 참조",
+            "مراجع الفترة والحساب والتسليم",
           )}
         </summary>
         <dl className="b07-facts">
-          {[
+          {(
             [
-              t(l, "Charge interval", "과금 기간", "فترة الرسوم"),
-              `${r.charge_start} / ${r.charge_end}`,
-            ],
-            [
-              t(l, "Billing interval", "청구 기간", "فترة الفوترة"),
-              `${r.billing_start} / ${r.billing_end}`,
-            ],
-            [t(l, "FOCUS version", "FOCUS 버전", "إصدار FOCUS"), r.version],
-            [
-              t(
-                l,
-                "Billing account / sub-account",
-                "청구 계정 / 하위 계정",
-                "حساب الفوترة / الحساب الفرعي",
-              ),
-              `${r.billing_account} / ${r.sub_account ?? t(l, "None in source", "원천 값 없음", "لا قيمة في المصدر")}`,
-            ],
-            [
-              t(
-                l,
-                "Canonical account reference",
-                "원천 계정 참조",
-                "مرجع الحساب",
-              ),
-              r.account,
-            ],
-            [
-              t(l, "Tenant reference", "테넌트 참조", "مرجع المستأجر"),
-              r.tenant,
-            ],
-            [
-              t(
-                l,
-                "Source batch / ordinal",
-                "원천 배치 / 행 순번",
-                "دفعة المصدر / ترتيب الصف",
-              ),
-              `${r.batch} / ${r.ordinal}`,
-            ],
-            [
-              t(
-                l,
-                "Source provenance class",
-                "원천 출처 분류",
-                "تصنيف منشأ المصدر",
-              ),
-              r.evidence_class,
-            ],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <dt>{label}</dt>
+              "charge_start",
+              "charge_end",
+              "billing_start",
+              "billing_end",
+            ] as const
+          ).map((k) => (
+            <div key={k} data-b07-field={k}>
+              <dt>{sourceLabel(l, k)}</dt>
               <dd>
-                <bdi dir="ltr">{value}</bdi>
+                <SourceInstant value={r[k]} locale={l} />
               </dd>
             </div>
           ))}
+          <div data-b07-field="version">
+            <dt>{t(l, "FOCUS version", "FOCUS 버전", "إصدار FOCUS")}</dt>
+            <dd>
+              <bdi dir="ltr">{r.version}</bdi>
+            </dd>
+          </div>
+          <div data-b07-field="billing_account">
+            <dt>{sourceLabel(l, "billing_account")}</dt>
+            <dd>
+              <bdi dir="ltr">{r.billing_account}</bdi>
+            </dd>
+          </div>
+          <div data-b07-field="sub_account">
+            <dt>{sourceLabel(l, "sub_account")}</dt>
+            <dd>
+              <SourceText value={r.sub_account} locale={l} />
+            </dd>
+          </div>
+          <div data-b07-field="account">
+            <dt>{sourceLabel(l, "account")}</dt>
+            <dd>
+              <bdi dir="ltr">{r.account}</bdi>
+            </dd>
+          </div>
+          <div data-b07-field="tenant">
+            <dt>{t(l, "Tenant reference", "테넌트 참조", "مرجع المستأجر")}</dt>
+            <dd>
+              <bdi dir="ltr">{r.tenant}</bdi>
+            </dd>
+          </div>
+          <div data-b07-field="batch">
+            <dt>{sourceLabel(l, "batch")}</dt>
+            <dd>
+              <bdi dir="ltr">{r.batch}</bdi>
+            </dd>
+          </div>
+          <div data-b07-field="ordinal">
+            <dt>{sourceLabel(l, "ordinal")}</dt>
+            <dd>
+              <bdi dir="ltr">{r.ordinal}</bdi>
+            </dd>
+          </div>
+          <div data-b07-field="evidence_class">
+            <dt>{sourceLabel(l, "evidence_class")}</dt>
+            <dd>{provenanceLabel(l, provenanceClass(r.evidence_class))}</dd>
+          </div>
         </dl>
       </details>
     </section>
@@ -465,9 +500,9 @@ export function Totals({ locale: l, data: d }: { locale: Locale; data: Data }) {
         <p>
           {t(
             l,
-            "Null or unavailable issuer/publisher names remain unknown. Equal names alone do not establish direct purchase. These source costs are excluded from candidate totals.",
-            "발행사·제공사 이름이 null·미확인이면 분류를 확정하지 않습니다. 같은 이름도 직접 구매를 뜻하지 않습니다. 이 원천 비용은 후보 합계에 포함하지 않습니다.",
-            "الأسماء الفارغة أو غير المتاحة تبقى غير معروفة. تساوي الأسماء وحده لا يثبت الشراء المباشر. تُستبعد هذه التكاليف من إجماليات المرشحين.",
+            "A row whose issuer or publisher name is not an observed value is counted as insufficient classification evidence. Equal names alone do not establish direct purchase. These source costs are excluded from candidate totals.",
+            "발행사·제공사 이름이 관측 값이 아닌 행은 분류를 확정하지 않습니다. 같은 이름도 직접 구매를 뜻하지 않습니다. 이 원천 비용은 후보 합계에 포함하지 않습니다.",
+            "الصف الذي لا يكون فيه اسم جهة الإصدار أو الناشر قيمة مرصودة يُحتسب ضمن الأدلة غير الكافية للتصنيف. تساوي الأسماء وحده لا يثبت الشراء المباشر. تُستبعد هذه التكاليف من إجماليات المرشحين.",
           )}
         </p>
         {d.unknown_amounts.map((a) => (
@@ -523,9 +558,8 @@ export function CandidateList({
       t(l, "Source charge", "원천 청구", "رسوم المصدر"),
       (r) => (
         <>
-          <span>
-            {r.service ??
-              t(l, "Service unavailable", "서비스 값 없음", "الخدمة غير متاحة")}
+          <span data-b07-field="service">
+            <SourceText value={r.service} locale={l} />
           </span>
           <small>
             {fieldLabel(l, "publisher")}{" "}
@@ -541,12 +575,7 @@ export function CandidateList({
     [
       view === "credits"
         ? fieldLabel(l, "category")
-        : t(
-            l,
-            "Account / charge start",
-            "계정 / 과금 시작",
-            "الحساب / بدء الرسوم",
-          ),
+        : `${sourceLabel(l, "billing_account")} / ${sourceLabel(l, "charge_start")}`,
       (r) =>
         view === "credits" ? (
           <>
@@ -556,23 +585,26 @@ export function CandidateList({
         ) : (
           <>
             <bdi dir="ltr">{r.billing_account}</bdi>
-            <small>
-              <bdi className="b07-charge-date" dir="ltr">
-                {r.charge_start.slice(0, 10)}
-              </bdi>
-              <bdi dir="ltr">{r.charge_start.slice(11)}</bdi>
+            <small data-b07-field="charge_start">
+              <SourceInstant value={r.charge_start} locale={l} />
             </small>
           </>
         ),
     ],
     [
       basisLabel(l, "billed_cost"),
-      (r) => <Money value={r.billed_cost} currency={r.currency} locale={l} />,
+      (r) => (
+        <SourceAmount value={r.billed_cost} currency={r.currency} locale={l} />
+      ),
     ],
     [
       basisLabel(l, "effective_cost"),
       (r) => (
-        <Money value={r.effective_cost} currency={r.currency} locale={l} />
+        <SourceAmount
+          value={r.effective_cost}
+          currency={r.currency}
+          locale={l}
+        />
       ),
     ],
     [
@@ -634,9 +666,17 @@ export function CandidateList({
                   key={r.id}
                   className={d.selected?.id === r.id ? "selected" : ""}
                 >
-                  <h3>{r.service}</h3>
-                  <p>
-                    <bdi dir="ltr">{r.fields.description.value}</bdi>
+                  <h3 data-b07-field="service">
+                    {r.service === null ? (
+                      <>
+                        {sourceLabel(l, "service")}: <Missing locale={l} />
+                      </>
+                    ) : (
+                      <bdi dir="ltr">{r.service}</bdi>
+                    )}
+                  </h3>
+                  <p data-b07-field="description">
+                    <FieldValue field={r.fields.description} locale={l} />
                   </p>
                   <dl className="b07-facts">
                     <div>
@@ -657,7 +697,7 @@ export function CandidateList({
                       <div key={b}>
                         <dt>{basisLabel(l, b)}</dt>
                         <dd>
-                          <Money
+                          <SourceAmount
                             value={r[b]}
                             currency={r.currency}
                             locale={l}
@@ -710,7 +750,9 @@ export function CandidateList({
                           key={label}
                           className={i === 2 || i === 3 ? "money" : ""}
                         >
-                          {label}
+                          {label.split(" / ").map((part) => (
+                            <span key={part}>{part}</span>
+                          ))}
                         </th>
                       ))}
                     </tr>

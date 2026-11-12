@@ -14,6 +14,7 @@ const items = [
   "B07:data:mapping-evidence",
   "B07:action:inspect-source",
   "B07:state:async",
+  "B07:state:value-missing-zero",
 ];
 const requestKey = (p: URLSearchParams) =>
   JSON.stringify([
@@ -214,7 +215,7 @@ export default function Screen({
               {t(
                 l,
                 "All authorized providers",
-                "전체 허용 공급자",
+                "전체 허용 공급사",
                 "كل المزوّدين المصرّح بهم",
               )}
             </option>
@@ -432,7 +433,7 @@ export default function Screen({
               {t(
                 l,
                 "Coverage declarations cover all authorized collected sources, not the selected provider/month. They are operator assertions, not verified completeness or financial approval.",
-                "수집 범위 선언은 전체 허용 수집 원천 기준이며 선택한 공급자·월의 완전성을 뜻하지 않습니다. 운영자 선언은 검증된 완전성·재무 승인이 아닙니다.",
+                "수집 범위 선언은 전체 허용 수집 원천 기준이며 선택한 공급사·월의 완전성을 뜻하지 않습니다. 운영자 선언은 검증된 완전성·재무 승인이 아닙니다.",
                 "إقرارات التغطية تخص كل المصادر المجمّعة المصرّح بها، لا المزوّد أو الشهر المحدد. هي إقرارات مشغّل وليست اكتمالاً متحققاً أو اعتماداً مالياً.",
               )}
             </p>

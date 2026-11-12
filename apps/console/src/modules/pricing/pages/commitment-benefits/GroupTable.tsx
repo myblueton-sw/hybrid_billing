@@ -1,7 +1,16 @@
+import { fieldLabel as sourceLabel } from "../../../sources/collected-focus/labels";
+import { SourceText } from "../../../sources/collected-focus/SourceValues";
 import type { ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { Data, Group, Measure, Metadata } from "./contract";
-import { t, costLabel, statusLabel, noRows, noValue, fieldLabel } from "./copy";
+import {
+  t,
+  costLabel,
+  statusLabel,
+  noRows,
+  noValuesPresent,
+  fieldLabel,
+} from "./copy";
 import { money, range } from "./values";
 export function MeasureValue({
   locale: l,
@@ -22,7 +31,7 @@ export function MeasureValue({
         {rows === 0 ? (
           noRows(l)
         ) : value.coefficient === null ? (
-          noValue(l)
+          noValuesPresent(l)
         ) : (
           <bdi dir="ltr">{money(value.coefficient, currency, l)}</bdi>
         )}
@@ -40,7 +49,7 @@ export function MeasureValue({
               ·{" "}
             </span>
           )}
-          {t(l, "Values / missing", "값 / 누락", "قيم / مفقود")}:{" "}
+          {t(l, "Present / missing", "값 있음 / 누락", "موجود / مفقود")}:{" "}
           <bdi dir="ltr">
             {value.present} / {value.missing}
           </bdi>
@@ -67,7 +76,7 @@ export function MetadataValue({
           ))}
         </span>
       ) : (
-        noValue(l)
+        noValuesPresent(l)
       )}
       {m.distinct > 1 && (
         <small>
@@ -109,19 +118,15 @@ export function ScopeIdentity({
   return (
     <span className="b06-scope-identity">
       <span>
-        {t(l, "Provider", "공급자", "المزوّد")}:{" "}
-        <bdi dir="ltr">{g.provider}</bdi>
+        {sourceLabel(l, "provider")}: <bdi dir="ltr">{g.provider}</bdi>
       </span>
       <span>
-        {t(l, "Billing account", "청구 계정", "حساب الفوترة")}:{" "}
+        {sourceLabel(l, "billing_account")}:{" "}
         <bdi dir="ltr">{g.billing_account}</bdi>
       </span>
       <span>
-        {t(l, "Sub-account", "하위 계정", "الحساب الفرعي")}:{" "}
-        <bdi dir="ltr">
-          {g.sub_account ??
-            t(l, "None in source", "원천 값 없음", "لا يوجد في المصدر")}
-        </bdi>
+        {sourceLabel(l, "sub_account")}:{" "}
+        <SourceText value={g.sub_account} locale={l} />
       </span>
       <span>
         {t(l, "Currency", "통화", "العملة")}: <bdi dir="ltr">{g.currency}</bdi>

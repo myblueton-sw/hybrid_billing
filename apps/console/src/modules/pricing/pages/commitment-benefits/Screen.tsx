@@ -23,6 +23,7 @@ const items = [
   "B06:data:reconciliation-evidence",
   "B06:action:inspect-detail",
   "B06:state:async-unavailable",
+  "B06:state:value-missing-zero",
 ];
 function requestKey(params: URLSearchParams) {
   return JSON.stringify([
@@ -148,7 +149,7 @@ function EvidenceScope({ locale: l, data: d }: { locale: Locale; data: Data }) {
               {t(
                 l,
                 "These declarations cover all collected sources, not the selected provider or period. They do not prove this selection is complete or establish commitment maturity.",
-                "수집 원천 전체의 선언이며 선택한 공급자·기간의 완전성이나 약정 만기를 증명하지 않습니다.",
+                "수집 원천 전체의 선언이며 선택한 공급사·기간의 완전성이나 약정 만기를 증명하지 않습니다.",
                 "تشمل هذه الإقرارات كل المصادر المجمّعة، لا المزوّد أو الفترة المختارة. وهي لا تثبت اكتمال الاختيار أو استحقاق الالتزام.",
               )}
             </small>
@@ -449,7 +450,7 @@ export default function Screen({
               {t(
                 l,
                 "All authorized providers",
-                "전체 허용 공급자",
+                "전체 허용 공급사",
                 "كل المزوّدين المصرّح بهم",
               )}
             </option>
@@ -795,7 +796,7 @@ export default function Screen({
                     {t(
                       l,
                       "Provider evidence can be inspected. Internal allocation, customer discounts and unused-cost ownership are unconnected.",
-                      "공급자 근거를 확인할 수 있습니다. 내부 배분·고객 할인·미사용 비용 소유 관계는 미연결입니다.",
+                      "공급사 근거를 확인할 수 있습니다. 내부 배분·고객 할인·미사용 비용 소유 관계는 미연결입니다.",
                       "يمكن فحص أدلة المزوّد. التوزيع الداخلي وخصومات العملاء وملكية التكلفة غير المستخدمة غير متصلة.",
                     )}
                   </p>

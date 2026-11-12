@@ -155,7 +155,11 @@ try {
   await page.getByRole("button", { name: "New query", exact: true }).click();
   await page.locator("[data-b06-state=error]").waitFor();
   assert.equal(
-    await page.locator("[data-b06-detail],button[data-b06-group]").count(),
+    await page
+      .locator(
+        "[data-b06-detail],button[data-b06-group],[data-source-value],[data-b06-row-cost],[data-b06-identity]",
+      )
+      .count(),
     0,
   );
   await page.unroute("**/api/focus-commitments?**");
@@ -225,6 +229,310 @@ try {
   console.log(
     "PASS actual zero costs, classifications, scope, focus, empty/error/retry, stale hash and no owner acknowledgement",
   );
+  const lines = async (locator) =>
+    (await locator.innerText())
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+  const openAll = async () => {
+    for (const disclosure of await page
+      .locator("[data-b06-detail] details, details.b06-account-scope")
+      .all())
+      if (!(await disclosure.evaluate((e) => e.open)))
+        await disclosure.locator("> summary").click();
+  };
+  const overflowing = () =>
+    page
+      .locator(
+        "[data-b06-detail] :is(dd, dl, article, h4, .source-value), [data-b06-detail] .source-period > span, .b06-scope-identity > span, .b06-account-list button > span",
+      )
+      .evaluateAll((boxes) =>
+        boxes
+          .filter((box) => box.getClientRects().length)
+          .filter((box) => {
+            const outer = box.getBoundingClientRect();
+            return [...box.children].some((child) => {
+              const inner = child.getBoundingClientRect();
+              return (
+                inner.width > 0 &&
+                (inner.left < outer.left - 1 || inner.right > outer.right + 1)
+              );
+            });
+          })
+          .map((box) => box.textContent.slice(0, 40)),
+      );
+  const openGroup = async (query) => {
+    await page.goto("about:blank");
+    await page.goto(url + "#/commitments?" + query);
+    await loaded();
+    const read = page.waitForResponse(
+      (r) =>
+        r.url().includes("/api/focus-commitments?") &&
+        r.url().includes("group="),
+    );
+    await page.locator("button[data-b06-group]:visible").first().click();
+    const body = await (await read).json();
+    await selected(ids[0]);
+    await page.locator("[data-b06-detail]").waitFor();
+    await openAll();
+    return body;
+  };
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const real = await openGroup("lang=en&" + base);
+  const realRow = real.selected.rows[0];
+  const rowField = (index, name) =>
+    page
+      .locator(".b06-charge-records article")
+      .nth(index)
+      .locator(`[data-b06-row-field="${name}"] dd`);
+  const rowCost = (index, name) =>
+    page
+      .locator(".b06-charge-records article")
+      .nth(index)
+      .locator(`[data-b06-row-cost="${name}"] dd`);
+  assert.equal(await page.locator(".b06-charge-records article").count(), 3);
+  assert.deepEqual(await lines(rowCost(0, "billed_cost")), [
+    "USD 0.00",
+    "Exact zero",
+  ]);
+  assert.deepEqual(await lines(rowCost(0, "effective_cost")), [
+    "USD 0.00",
+    "Exact zero",
+  ]);
+  assert.equal((await rowField(0, "id").innerText()).trim(), realRow.id);
+  assert.deepEqual(await lines(rowField(0, "ordinal")), [realRow.ordinal]);
+  assert.deepEqual(await lines(rowField(0, "batch")), [realRow.batch]);
+  assert.deepEqual(await lines(rowField(0, "evidence_class")), [
+    "Public sample",
+  ]);
+  assert.deepEqual(await lines(rowField(0, "charge_start")), [
+    "2024-09-20 20:00:00 UTC",
+  ]);
+  assert.deepEqual(await lines(rowField(0, "billing_end")), [
+    "2024-10-01 00:00:00 UTC",
+  ]);
+  assert.deepEqual(
+    await lines(page.locator('[data-b06-envelope="charge_start"] dd')),
+    ["Start 2024-09-20 20:00:00 UTC", "End 2024-09-26 13:00:00 UTC"],
+  );
+  assert.deepEqual(
+    await page
+      .locator("[data-b06-detail] [data-b06-identity] dt")
+      .allInnerTexts(),
+    ["Provider", "Billing account ID", "Subaccount ID", "Account scope ID"],
+  );
+  const detailText = await page
+    .locator("[data-b06-detail]")
+    .evaluate((e) => e.textContent);
+  for (const superseded of [
+    "Canonical",
+    "Delivery batch",
+    "interval",
+    "Evidence classification",
+    "Service unavailable",
+    "Sub-account",
+    "No source value",
+  ])
+    assert.ok(!detailText.includes(superseded), superseded);
+  assert.match(
+    await page
+      .locator(".b06-group-table .b06-scope-identity")
+      .first()
+      .innerText(),
+    /Provider: AWS[\s\S]*Billing account ID: 1234567890123[\s\S]*Subaccount ID: 18938484842/,
+  );
+  assert.match(
+    await page.locator(".b06-account-list button").first().innerText(),
+    /Billing account ID:[\s\S]*Provider:[\s\S]*Subaccount ID:/,
+  );
+  assert.match(
+    await page
+      .locator("[data-b06-detail] [data-b06-cost=billed_cost]")
+      .innerText(),
+    /Present \/ missing/,
+  );
+  await page.screenshot({ path: `${out}/en-detail-open.png`, fullPage: true });
+  const degrade = (body, allMissing) => {
+    const d = structuredClone(body),
+      g = d.groups.find((group) => group.id === ids[0]),
+      rows = d.selected.rows,
+      total = d.identified_amounts.find((a) => a.currency === g.currency),
+      holders = (basis) => [g[basis], g.statuses.used[basis], total[basis]],
+      shift = (measure, delta, lost) => {
+        measure.present -= lost;
+        measure.missing += lost;
+        measure.coefficient =
+          measure.present === 0
+            ? null
+            : (BigInt(measure.coefficient) + delta).toString();
+      };
+    rows[0].service = null;
+    rows[2].charge_start = rows[2].charge_start.replace("+00:00", "Z");
+    for (const row of rows) row.sub_account = null;
+    g.sub_account = null;
+    for (const account of d.accounts)
+      if (account.id === g.account) account.sub_account = null;
+    if (allMissing) {
+      for (const row of rows) {
+        for (const measure of holders("effective_cost"))
+          shift(measure, -BigInt(row.effective_cost), 1);
+        row.effective_cost = null;
+      }
+    } else {
+      for (const measure of holders("billed_cost"))
+        shift(measure, -BigInt(rows[0].billed_cost), 1);
+      rows[0].billed_cost = null;
+      const negative = -2n * 10n ** 18n;
+      for (const measure of holders("effective_cost"))
+        shift(measure, negative - BigInt(rows[1].effective_cost), 0);
+      rows[1].effective_cost = negative.toString();
+    }
+    return d;
+  };
+  let allMissing = false;
+  await page.route("**/api/focus-commitments?**", async (route) => {
+    if (
+      !route
+        .request()
+        .url()
+        .includes("group=" + ids[0])
+    )
+      return route.continue();
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      body: JSON.stringify(degrade(await response.json(), allMissing)),
+    });
+  });
+  for (const [locale, missing, absent, service] of [
+    ["en", "Missing", "No values present", "Service: Missing"],
+    ["ko", "누락", "값 없음", "서비스: 누락"],
+    ["ar", "مفقود", "لا قيم موجودة", "الخدمة: مفقود"],
+  ]) {
+    allMissing = false;
+    await openGroup(`lang=${locale}&${base}`);
+    assert.deepEqual(await lines(rowCost(0, "billed_cost")), [missing]);
+    assert.deepEqual(await lines(rowCost(1, "effective_cost")), ["USD -2.00"]);
+    assert.match(
+      await page
+        .locator("[data-b06-detail] [data-b06-cost=billed_cost]")
+        .innerText(),
+      /2 \/ 1/,
+    );
+    assert.ok(
+      (await page.locator("[data-b06-detail] .b06-metadata").allInnerTexts())
+        .join("\n")
+        .includes(absent),
+    );
+    const localized = await page
+      .locator("[data-b06-detail]")
+      .evaluate((e) => e.textContent);
+    for (const superseded of [
+      "공급자",
+      "원천 값 없음",
+      "서비스명 없음",
+      "청구 계정",
+    ])
+      assert.ok(!localized.includes(superseded), superseded);
+    assert.equal(
+      (await page.locator("[data-b06-row-service]").first().innerText()).trim(),
+      service,
+    );
+    assert.ok(
+      (
+        await page
+          .locator("[data-b06-detail] [data-b06-cost=effective_cost]")
+          .innerText()
+      ).includes("USD -2.00"),
+    );
+    const sub = page.locator(
+      '[data-b06-detail] [data-b06-identity="sub_account"] dd',
+    );
+    assert.deepEqual(await lines(sub), [missing]);
+    assert.equal(
+      await sub
+        .locator("[data-source-value=missing]")
+        .evaluate((node) => !!node.closest('bdi[dir="ltr"]')),
+      false,
+    );
+    assert.ok((await rowField(2, "charge_start").innerText()).includes("Z"));
+    assert.ok(
+      (
+        await page
+          .locator(".b06-group-table .b06-scope-identity")
+          .first()
+          .innerText()
+      ).includes(missing),
+    );
+    if (locale === "ar") {
+      const edges = await page
+        .locator(".b06-charge-records article")
+        .first()
+        .locator('[data-b06-row-field="id"]')
+        .evaluate((item) => [
+          item.querySelector("dt").getBoundingClientRect().right,
+          item.querySelector("dd bdi").getBoundingClientRect().right,
+        ]);
+      assert.ok(Math.abs(edges[0] - edges[1]) <= 2, JSON.stringify(edges));
+    }
+    await page.screenshot({
+      path: `${out}/${locale}-degraded-detail.png`,
+      fullPage: true,
+    });
+    allMissing = true;
+    await openGroup(`lang=${locale}&${base}`);
+    assert.ok(
+      (
+        await page
+          .locator("[data-b06-detail] [data-b06-cost=effective_cost]")
+          .innerText()
+      ).includes(absent),
+    );
+    assert.deepEqual(await lines(rowCost(2, "effective_cost")), [missing]);
+  }
+  for (const locale of ["ko", "ar"]) {
+    allMissing = false;
+    await page.setViewportSize({ width: 390, height: 1000 });
+    await openGroup(`lang=${locale}&${base}`);
+    assert.deepEqual(await overflowing(), []);
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth,
+      ),
+      false,
+    );
+    await page.screenshot({
+      path: `${out}/${locale}-390-degraded-detail.png`,
+      fullPage: true,
+    });
+  }
+  await page.unroute("**/api/focus-commitments?**");
+  for (const locale of ["en", "ko", "ar"])
+    for (const width of [1440, 1280, 1279, 1024, 761, 760, 641, 640, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await openGroup(`lang=${locale}&${base}`);
+      await page.evaluate(() => document.fonts.ready);
+      assert.equal(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > innerWidth,
+        ),
+        false,
+        `${locale} ${width} page overflow`,
+      );
+      assert.deepEqual(await overflowing(), [], `${locale} ${width}`);
+      assert.ok(
+        (await page.locator("[data-b06-detail] [data-source-value]").count()) >
+          0,
+      );
+      if (locale === "en" || width === 390 || width === 1440)
+        await page.screenshot({
+          path: `${out}/${locale}-${width}-detail-open.png`,
+          fullPage: true,
+        });
+    }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto(url + "#/commitments?lang=en&" + base);
+  await loaded();
   const variants = [];
   for (const locale of ["en", "ko", "ar"])
     for (const width of [1440, 390]) {

@@ -12,6 +12,7 @@ var (
 	ErrNotBacked   = errors.New("delegation is not backed by its delegator")
 	ErrDenied      = errors.New("approver lacks the required authority")
 	ErrUnavailable = errors.New("authority is unavailable")
+	ErrChanged     = errors.New("subject state changed during the request")
 )
 
 type Action string
@@ -245,11 +246,20 @@ const (
 	ReasonNotHuman         Reason = "approver_not_human"
 	ReasonAuthor           Reason = "author_unknown"
 	ReasonSelfApproval     Reason = "author_is_approver"
+	ReasonIdentity         Reason = "identity_not_current"
+	ReasonWorkspace        Reason = "workspace_mismatch"
 )
+
+type SubjectSource interface {
+	Subject(id string) (Subject, bool)
+	Member(workspaceID, id string) (uint64, bool)
+	Generation() uint64
+}
 
 type Stamp struct {
 	instance   [16]byte
 	generation uint64
+	subjects   uint64
 	digest     [32]byte
 	approval   bool
 	issued     bool

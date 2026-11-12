@@ -40,6 +40,7 @@ func (h *Installation) CreateUser(operator Operator, userID string, triple Tripl
 	}
 	r.users[userID] = &user{kind: Human, state: Active, epoch: 1}
 	r.link(userID, triple, email)
+	r.generation++
 	return nil
 }
 
@@ -74,6 +75,7 @@ func (h *Installation) SuspendUser(operator Operator, userID string, expected ui
 	found.state = Suspended
 	found.operatorBlock = found.kind == Service
 	r.drop(userID)
+	r.generation++
 	return nil
 }
 
@@ -91,6 +93,7 @@ func (h *Installation) ReinstateUser(operator Operator, userID string, expected 
 		return ErrConflict
 	}
 	found.state, found.operatorBlock = Active, false
+	r.generation++
 	return nil
 }
 
@@ -128,6 +131,7 @@ func (h *Installation) DepartUser(operator Operator, userID string, expected uin
 	}
 	found.state, found.linked, found.operatorBlock = Departed, 0, false
 	r.drop(userID)
+	r.generation++
 	return nil
 }
 

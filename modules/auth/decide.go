@@ -8,11 +8,14 @@ import (
 )
 
 func (r *Registry) direct(subjectID, clientID string, action Action, kind string, resource Resource, field string, now time.Time) bool {
-	for _, grant := range r.grants {
+	for id, grant := range r.grants {
 		g := grant.value
 		if grant.closed || g.SubjectID != subjectID || g.ClientID != clientID || !g.Validity.at(now) ||
 			g.Terms.Action != action || g.Terms.Kind != kind || !g.Terms.Scope.matches(resource) ||
 			!g.Terms.Period.matches(resource) || (field != "" && !contains(g.Terms.Fields, field)) {
+			continue
+		}
+		if subjectID != "" && !r.memberWith(g.Terms.Scope.WorkspaceID, subjectID, r.grantJoined[id]) {
 			continue
 		}
 		return true
@@ -32,6 +35,8 @@ func (r *Registry) covers(delegation versioned[Delegation], action Action, kind 
 	return !delegation.closed && d.Validity.at(now) && d.Terms.Action == action && d.Terms.Kind == kind &&
 		d.Terms.Scope.matches(resource) && d.Terms.Period.matches(resource) && (field == "" || contains(d.Terms.Fields, field)) &&
 		r.activeHuman(d.DelegatorID) && r.activeHuman(d.DelegateID) &&
+		r.memberWith(d.Terms.Scope.WorkspaceID, d.DelegatorID, r.chainJoined[d.ID][0]) &&
+		r.memberWith(d.Terms.Scope.WorkspaceID, d.DelegateID, r.chainJoined[d.ID][1]) &&
 		r.holdsInWorkspace(d.DelegateID, d.Terms.Scope.WorkspaceID, now)
 }
 
@@ -158,8 +163,8 @@ func (r *Registry) validRequest(request Request) bool {
 }
 
 func (r *Registry) current(principal Principal) bool {
-	subject := r.subjects[principal.SubjectID]
-	return principal.Installation == r.installation && subject.version != 0 && subject.value.State == Active && subject.value.Epoch == principal.Epoch
+	subject, known := r.subject(principal.SubjectID)
+	return principal.Installation == r.installation && known && subject.State == Active && subject.Epoch == principal.Epoch
 }
 
 func (r *Registry) stamp(principal Principal, request Request, author string, approval bool) Stamp {
@@ -210,7 +215,8 @@ func (r *Registry) decide(principal Principal, request Request, now time.Time) D
 	if principal.SessionID != "" {
 		session := r.sessions[principal.SessionID]
 		s := session.value
-		if session.version == 0 || session.closed || !s.Validity.at(now) || s.ActorID != principal.SubjectID || !r.activeHuman(s.ActorID) {
+		if session.version == 0 || session.closed || !s.Validity.at(now) || s.ActorID != principal.SubjectID || !r.activeHuman(s.ActorID) ||
+			!r.memberWith(s.WorkspaceID, s.ActorID, r.actorJoined[principal.SessionID]) {
 			return denied(PermissionDenied, ReasonSupportSession, principal)
 		}
 		if request.Action != View || request.Kind != s.Kind || request.Resource.WorkspaceID != s.WorkspaceID ||
@@ -247,16 +253,29 @@ func (r *Registry) time() time.Time {
 	return r.clock()
 }
 
+func (r *Registry) consistent(principal Principal, run func(time.Time) Decision) Decision {
+	now := r.time()
+	generation := r.subjectsGeneration()
+	decision := run(now)
+	if r.subjectsGeneration() != generation && decision.Code != AuthorityUnavailable {
+		return denied(PermissionDenied, ReasonStamp, principal)
+	}
+	if decision.Allowed {
+		decision.Stamp.subjects = generation
+	}
+	return decision
+}
+
 func (r *Registry) Decide(principal Principal, request Request) Decision {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.decide(principal, request, r.time())
+	return r.consistent(principal, func(now time.Time) Decision { return r.decide(principal, request, now) })
 }
 
 func (r *Registry) Recheck(stamp Stamp, principal Principal, request Request) Decision {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	decision := r.decide(principal, request, r.time())
+	decision := r.consistent(principal, func(now time.Time) Decision { return r.decide(principal, request, now) })
 	if decision.Allowed && (!stamp.issued || stamp.approval || stamp != decision.Stamp) {
 		return denied(PermissionDenied, ReasonStamp, principal)
 	}
@@ -276,7 +295,7 @@ func (r *Registry) checkApproval(approver Principal, authorID string, request Re
 	if !r.activeHuman(approver.SubjectID) {
 		return denied(PermissionDenied, ReasonNotHuman, approver)
 	}
-	if r.subjects[authorID].version == 0 {
+	if _, known := r.subject(authorID); !known {
 		return denied(PermissionDenied, ReasonAuthor, approver)
 	}
 	if !r.direct(approver.SubjectID, "", Approve, request.Kind, request.Resource, "", now) {
@@ -291,13 +310,13 @@ func (r *Registry) checkApproval(approver Principal, authorID string, request Re
 func (r *Registry) CheckApproval(approver Principal, authorID string, request Request) Decision {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.checkApproval(approver, authorID, request, r.time())
+	return r.consistent(approver, func(now time.Time) Decision { return r.checkApproval(approver, authorID, request, now) })
 }
 
 func (r *Registry) RecheckApproval(stamp Stamp, approver Principal, authorID string, request Request) Decision {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	decision := r.checkApproval(approver, authorID, request, r.time())
+	decision := r.consistent(approver, func(now time.Time) Decision { return r.checkApproval(approver, authorID, request, now) })
 	if decision.Allowed && (!stamp.issued || !stamp.approval || stamp != decision.Stamp) {
 		return denied(PermissionDenied, ReasonStamp, approver)
 	}

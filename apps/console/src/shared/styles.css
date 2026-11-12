@@ -1254,3 +1254,12 @@ dialog header h2 {
     padding-inline: var(--hb-sp-16);
   }
 }
+.slow-read-hint {
+  display: block;
+  margin-block-start: 4px;
+  max-inline-size: 90ch;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--hb-muted);
+  text-align: start;
+}

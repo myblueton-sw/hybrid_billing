@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import SlowReadHint from "../../../../shared/SlowReadHint";
 import { setNavigationGuard } from "../../../../shared/navigation";
 import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
@@ -405,6 +406,7 @@ export default function Screen({
             "수집 원천을 조회하고 있습니다…",
             "جارٍ تحميل المصدر المجمّع المصرّح به…",
           )}
+          <SlowReadHint locale={l} />
         </p>
       )}
       {current?.error && (

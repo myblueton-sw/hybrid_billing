@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import SlowReadHint from "../../../../shared/SlowReadHint";
 import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
 import { useLocation } from "../../../../shared/navigation";
@@ -317,6 +318,7 @@ export default function CollectedSource({
               "수집 리비전과 허용된 계정 범위를 확인하고 있습니다.",
               "جارٍ التحقق من إصدارات المصدر ونطاق الحسابات المصرح بها.",
             )}
+            <SlowReadHint locale={l} />
           </p>
         </section>
       )}

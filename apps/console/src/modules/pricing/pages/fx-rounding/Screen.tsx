@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import SlowReadHint from "../../../../shared/SlowReadHint";
 import type { Locale } from "../../../../shared/types";
 import { setNavigationGuard } from "../../../../shared/navigation";
 import { digest } from "../../../../shared/review-store";
@@ -524,6 +525,7 @@ export default function Screen({
             "선택한 범위와 권한을 확인하고 환율·반올림 원천 근거를 불러오는 중입니다…",
             "جارٍ التحقق من النطاق والتفويض وتحميل أدلة مصدر الصرف والتقريب…",
           )}
+          <SlowReadHint locale={l} />
         </p>
       ) : (
         <>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import SlowReadHint from "../../../../shared/SlowReadHint";
 import type { Locale } from "../../../../shared/types";
 import { load, query, ServiceError, type Data } from "./api";
 import { t } from "./copy";
@@ -347,6 +348,7 @@ export default function Screen({
             "허용된 원천 근거를 불러오는 중입니다…",
             "جارٍ تحميل أدلة المصدر المصرّح بها…",
           )}
+          <SlowReadHint locale={l} />
         </p>
       ) : (
         <>

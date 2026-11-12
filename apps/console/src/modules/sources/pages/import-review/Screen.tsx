@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import SlowReadHint from "../../../../shared/SlowReadHint";
 import type { Props } from "../../../../shared/domain-screen-ui/work/contracts";
 import {
   query,
@@ -401,7 +402,10 @@ export default function Imports(p: Props) {
         ref={status}
       >
         {phase === "loading" ? (
-          t(l, words.loading)
+          <>
+            {t(l, words.loading)}
+            <SlowReadHint locale={l} />
+          </>
         ) : phase === "unconnected" ? (
           t(l, words.unconnected)
         ) : phase === "error" ? (

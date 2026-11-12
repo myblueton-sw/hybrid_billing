@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import SlowReadHint from "../../../../shared/SlowReadHint";
 import type { Locale } from "../../../../shared/types";
 import { t, timestamp, shortTimestamp, type Words } from "./copy";
 import { ReadError } from "./api";
@@ -260,18 +261,23 @@ export default function CollectionSummary({
         tabIndex={-1}
         ref={status}
       >
-        {phase === "loading"
-          ? t(l, text.loading)
-          : error
-            ? t(l, text.error)
-            : data && (
-                <>
-                  {t(l, text.observed)}:{" "}
-                  <time dateTime={data.observed_at}>
-                    <bdi dir="ltr">{shortTimestamp(data.observed_at)}</bdi>
-                  </time>
-                </>
-              )}
+        {phase === "loading" ? (
+          <>
+            {t(l, text.loading)}
+            <SlowReadHint locale={l} />
+          </>
+        ) : error ? (
+          t(l, text.error)
+        ) : (
+          data && (
+            <>
+              {t(l, text.observed)}:{" "}
+              <time dateTime={data.observed_at}>
+                <bdi dir="ltr">{shortTimestamp(data.observed_at)}</bdi>
+              </time>
+            </>
+          )
+        )}
       </p>
       {error && (
         <div className="collection-failure" role="alert">

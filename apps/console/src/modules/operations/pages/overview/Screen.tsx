@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from "react";
+import SlowReadHint from "../../../../shared/SlowReadHint";
 import type { ScreenProps } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
 import { useLocation } from "../../../../shared/navigation";
@@ -333,6 +334,7 @@ export default function Overview({
               "허용된 계정과 확정된 수집 리비전을 확인하고 있습니다.",
               "التحقق من الحسابات المصرح بها وإصدارات المصدر.",
             )}
+            <SlowReadHint locale={l} />
           </p>
         </section>
       )}

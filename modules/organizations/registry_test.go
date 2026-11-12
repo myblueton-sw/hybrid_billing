@@ -323,6 +323,9 @@ func TestSellingEligibilityBlocksRebillingWithoutProviderResponsibility(t *testi
 		{"an unknown component kind", ContractRevision{SellerID: "seller", Path: Resale, Components: []Component{{ID: "usage", Kind: "tax", SellerBillable: true}}}, "usage", "seller", Decision{false, InvalidContract}},
 		{"a provider charge without a responsible party", ContractRevision{SellerID: "seller", Path: Resale, Components: []Component{{ID: "usage", Kind: ProviderCharge, SellerBillable: true}}}, "usage", "seller", Decision{false, InvalidContract}},
 		{"a service that names a provider responsibility", ContractRevision{SellerID: "seller", Path: Resale, Components: []Component{{ID: "fee", Kind: SellerService, ProviderPaymentResponsibleID: "seller", SellerBillable: true}}}, "fee", "seller", Decision{false, InvalidContract}},
+		{"a repeated component identifier", ContractRevision{CustomerID: "customer-a", SellerID: "seller", Path: Direct, Components: []Component{{ID: "usage", Kind: SellerService, SellerBillable: true}, {ID: "usage", Kind: ProviderCharge, ProviderPaymentResponsibleID: "customer-a"}}}, "usage", "seller", Decision{false, InvalidContract}},
+		{"an empty component identifier", ContractRevision{CustomerID: "customer-a", SellerID: "seller", Path: Resale, Components: []Component{{Kind: SellerService, SellerBillable: true}}}, "", "seller", Decision{false, InvalidContract}},
+		{"a seller that is the customer", ContractRevision{CustomerID: "seller", SellerID: "seller", Path: Resale, Components: components("seller", true)}, "usage", "seller", Decision{false, InvalidContract}},
 		{"resale charge the customer pays the provider for", ContractRevision{CustomerID: "customer-a", SellerID: "seller", Path: Resale, Components: components("customer-a", false)}, "usage", "seller", Decision{false, NoPaymentResponsibility}},
 		{"a contract without a seller", ContractRevision{CustomerID: "customer-a", Path: Direct, Components: components("customer-a", false)}, "usage", "customer-a", Decision{false, NotSeller}},
 		{"an empty issuer against a contract without a seller", ContractRevision{CustomerID: "customer-a", Path: Direct, Components: components("customer-a", false)}, "usage", "", Decision{false, NotSeller}},
@@ -402,6 +405,8 @@ func TestDocumentsAreNotCombinedAcrossPartiesCurrenciesOrPaths(t *testing.T) {
 		"unknown path":           func(k *DocumentKey) { k.Path = "barter" },
 		"chargeback with payer":  func(k *DocumentKey) { k.Path = InternalChargeback },
 		"no currency":            func(k *DocumentKey) { k.Currency = "" },
+		"no issuer":              func(k *DocumentKey) { k.IssuerLegalEntityID = "" },
+		"no buyer":               func(k *DocumentKey) { k.BuyerLegalEntityID = "" },
 	} {
 		broken := whole
 		change(&broken)
@@ -468,11 +473,12 @@ func TestSuspensionAndFrozenFields(t *testing.T) {
 		t.Fatal(err)
 	}
 	for name, change := range map[string]func(*BillingProfile){
-		"issuer":   func(p *BillingProfile) { p.IssuerID = "agent"; p.PayerID = "customer-a" },
-		"buyer":    func(p *BillingProfile) { p.BuyerID = "customer-b" },
-		"payer":    func(p *BillingProfile) { p.PayerID = "customer-a" },
-		"currency": func(p *BillingProfile) { p.Currency = "KRW" },
-		"path":     func(p *BillingProfile) { p.Path = InternalChargeback; p.PayerID = "" },
+		"issuer":    func(p *BillingProfile) { p.IssuerID = "agent"; p.PayerID = "customer-a" },
+		"buyer":     func(p *BillingProfile) { p.BuyerID = "customer-b" },
+		"payer":     func(p *BillingProfile) { p.PayerID = "customer-a" },
+		"currency":  func(p *BillingProfile) { p.Currency = "KRW" },
+		"path":      func(p *BillingProfile) { p.Path = InternalChargeback; p.PayerID = "" },
+		"recipient": func(p *BillingProfile) { p.RecipientID = "customer-b" },
 	} {
 		changed := external("p", "seller", "customer-a", "agent", "USD")
 		change(&changed)
@@ -505,6 +511,9 @@ func TestSuspensionAndFrozenFields(t *testing.T) {
 	}
 	if version, err := r.PutParty(Party{ID: "unit-1", WorkspaceID: "w1", Kind: InternalUnit, ParentID: "customer-a", State: Suspended}, 1); err != nil || version != 2 {
 		t.Errorf("suspending a unit under a suspended legal entity = %d, %v", version, err)
+	}
+	if _, err := r.PutParty(Party{ID: "unit-1", WorkspaceID: "w1", Kind: InternalUnit, ParentID: "customer-a", State: Active}, 2); !errors.Is(err, ErrSuspended) {
+		t.Errorf("reactivating a unit under a suspended legal entity error = %v", err)
 	}
 	if _, err := r.PutBillingProfile(internal("after", "unit-2", "customer-a"), 0); !errors.Is(err, ErrSuspended) {
 		t.Errorf("chargeback inside a suspended legal entity error = %v", err)

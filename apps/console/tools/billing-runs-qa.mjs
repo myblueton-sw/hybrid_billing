@@ -447,13 +447,15 @@ try {
     );
     await loaded();
     assert.deepEqual(await moneyCells(1), ["CNY 8.80", "CNY 8.80"]);
+    const baselineAnswer = response();
     await page.goto(url + "#/billing-runs?lang=en&view=comparison");
+    const baselineRead = await (await baselineAnswer).json();
     await loaded();
     await page.locator("#b08-keep").click();
     await kept();
-    const lower = structuredClone(initial);
+    const lower = structuredClone(baselineRead);
     lower.observed_at = new Date(
-      Date.parse(initial.observed_at) + 60000,
+      Date.parse(baselineRead.observed_at) + 60000,
     ).toISOString();
     for (const list of [
       lower.amounts,

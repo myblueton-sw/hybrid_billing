@@ -81,10 +81,15 @@ class RecordingSlots(threading.BoundedSemaphore):
         super().__init__(value)
         self.waiting = threading.Semaphore(0)
         self.released = threading.Semaphore(0)
+        self.seen = threading.local()
+        self.steps = 0
 
     def acquire(self, blocking=True, timeout=None):
         if timeout is not None:
-            self.waiting.release()
+            self.steps += 1
+            if not getattr(self.seen, 'waiting', False):
+                self.seen.waiting = True
+                self.waiting.release()
         return super().acquire(blocking, timeout)
 
     def release(self, n=1):
@@ -160,6 +165,7 @@ def test_full_waiting_places_answer_busy_without_waiting(server, held):
 
 def test_caller_that_left_while_waiting_is_not_queried(server, held):
     srv, calls, release = held
+    srv.slot_step = srv.slot_wait
     caller = socket.create_connection(('127.0.0.1', srv.server_port))
     caller.sendall(b'GET /api/focus-overview HTTP/1.1\r\nHost: 127.0.0.1:%d\r\nX-HB-Local-Client: 1\r\n\r\n' % srv.server_port)
     assert srv.slots.waiting.acquire(timeout=5)
@@ -212,3 +218,69 @@ def test_admission_is_returned_on_every_path(server, held):
     assert not srv.admission.acquire(blocking=False)
     for _ in range(8):
         srv.admission.release()
+
+
+def leave_while_waiting(srv):
+    caller = socket.create_connection(('127.0.0.1', srv.server_port))
+    caller.sendall(b'GET /api/focus-overview HTTP/1.1\r\nHost: 127.0.0.1:%d\r\nX-HB-Local-Client: 1\r\n\r\n' % srv.server_port)
+    assert srv.slots.waiting.acquire(timeout=5)
+    caller.close()
+    assert srv.admission.released.acquire(timeout=5)
+
+
+def test_caller_that_left_frees_its_waiting_place_before_a_slot(server, held, capsys):
+    srv, calls, _ = held
+    srv.admission = RecordingSlots(8)
+    srv.slot_step = 0.02
+    leave_while_waiting(srv)
+    assert calls == [] and capsys.readouterr().err == ''
+    assert not srv.slots.released.acquire(blocking=False)
+    assert all(srv.admission.acquire(blocking=False) for _ in range(8))
+    for _ in range(8):
+        srv.admission.release()
+
+
+def test_callers_that_left_one_after_another_leave_the_places_free(server, held, capsys):
+    srv, calls, release = held
+    srv.admission = RecordingSlots(8)
+    srv.slot_step = 0.02
+    for _ in range(8):
+        leave_while_waiting(srv)
+    assert capsys.readouterr().err == ''
+    worker, result = background(server)
+    assert srv.slots.waiting.acquire(timeout=5)
+    assert calls == []
+    release()
+    worker.join(5)
+    assert result[0][0] == 200 and len(calls) == 1
+    assert srv.slots.released.acquire(timeout=5)
+
+
+def test_total_wait_is_kept_across_steps(server, held):
+    srv, calls, _ = held
+    srv.slot_wait, srv.slot_step = 0.3, 0.05
+    started = time.monotonic()
+    status, body, _ = fetch(server)
+    assert status == 503 and body['error'] == 'source_busy' and calls == []
+    assert time.monotonic() - started >= 0.3 and srv.slots.steps >= 2
+
+
+LINE = 'Collected FOCUS local reader: a request ended without a complete response.\n'
+
+
+def test_error_output_is_one_fixed_line(server, capsys):
+    srv, _ = server
+    try:
+        raise RuntimeError('secret driver detail')
+    except RuntimeError:
+        srv.handle_error(None, ('127.0.0.1', 1))
+    assert capsys.readouterr().err == LINE
+
+
+def test_failed_write_after_a_failed_query_prints_no_detail(server, monkeypatch, capsys):
+    def broken(self, status, body):
+        raise BrokenPipeError('secret pipe detail')
+    monkeypatch.setattr('modules.focus_import.overview_http.Handler.reply', broken)
+    with pytest.raises((http.client.RemoteDisconnected, ConnectionError)):
+        fetch(server, '/api/focus-overview?provider=offline')
+    assert capsys.readouterr().err == LINE

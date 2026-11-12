@@ -1,7 +1,9 @@
 import json
 import re
 import socket
+import sys
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 from uuid import uuid4
@@ -17,6 +19,7 @@ from .collection_status import collection_status
 
 MAX_WAITERS = 6
 SLOT_WAIT_SECONDS = 20
+SLOT_STEP_SECONDS = 0.25
 
 
 class OverviewServer(ThreadingHTTPServer):
@@ -29,9 +32,13 @@ class OverviewServer(ThreadingHTTPServer):
         self.slots = threading.BoundedSemaphore(2)
         self.admission = threading.BoundedSemaphore(2 + MAX_WAITERS)
         self.slot_wait = SLOT_WAIT_SECONDS
+        self.slot_step = SLOT_STEP_SECONDS
         super().__init__(('127.0.0.1', port), Handler)
         self.origin = f'http://127.0.0.1:{self.server_port}'
         self.origins = {self.origin, f'http://127.0.0.1:{ui_port}'}
+
+    def handle_error(self, request, client_address):
+        sys.stderr.write('Collected FOCUS local reader: a request ended without a complete response.\n')
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -98,8 +105,16 @@ class Handler(BaseHTTPRequestHandler):
             return failure(503, 'source_busy')
         try:
             waited = not self.server.slots.acquire(blocking=False)
-            if waited and not self.server.slots.acquire(timeout=self.server.slot_wait):
-                return failure(503, 'source_busy')
+            if waited:
+                deadline = time.monotonic() + self.server.slot_wait
+                while True:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        return failure(503, 'source_busy')
+                    if self.server.slots.acquire(timeout=min(self.server.slot_step, remaining)):
+                        break
+                    if self.abandoned():
+                        return
             try:
                 if waited and self.abandoned():
                     return

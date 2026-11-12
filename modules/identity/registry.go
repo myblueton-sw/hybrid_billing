@@ -62,6 +62,7 @@ type membership struct {
 	role    Role
 	state   MembershipState
 	version uint64
+	joined  uint64
 }
 
 type session struct {
@@ -99,6 +100,7 @@ type Registry struct {
 	byUser       map[string]map[Verifier]struct{}
 	serial       uint64
 	credentials  map[string]*credential
+	generation   uint64
 }
 
 type Installation struct{ r *Registry }
@@ -106,6 +108,8 @@ type Installation struct{ r *Registry }
 type Boundary struct{ r *Registry }
 
 type Workspace struct{ r *Registry }
+
+type Subjects struct{ r *Registry }
 
 func New(installation string, limits Limits, clock func() time.Time) (*Registry, error) {
 	if !validID(installation) || !limits.valid() || clock == nil {
@@ -126,6 +130,84 @@ func (r *Registry) Installation() *Installation { return &Installation{r: r} }
 func (r *Registry) Boundary() *Boundary { return &Boundary{r: r} }
 
 func (r *Registry) Workspace() *Workspace { return &Workspace{r: r} }
+
+func (r *Registry) Subjects() *Subjects { return &Subjects{r: r} }
+
+func (r *Registry) InstallationID() string {
+	if r == nil {
+		return ""
+	}
+	return r.installation
+}
+
+func (r *Registry) Clock() func() time.Time {
+	if r == nil {
+		return nil
+	}
+	return r.clock
+}
+
+func (h *Subjects) open() (*Registry, bool) {
+	if h == nil {
+		return nil, false
+	}
+	return h.r, h.r.lock()
+}
+
+func (h *Subjects) Subject(userID string) (Kind, UserState, uint64, bool) {
+	r, ok := h.open()
+	if !ok {
+		return "", "", 0, false
+	}
+	defer r.mu.Unlock()
+	found := r.users[userID]
+	if found == nil {
+		return "", "", 0, false
+	}
+	return found.kind, found.state, found.epoch, true
+}
+
+func (h *Subjects) Member(workspace, userID string) (uint64, bool) {
+	r, ok := h.open()
+	if !ok {
+		return 0, false
+	}
+	defer r.mu.Unlock()
+	found := r.users[userID]
+	if found == nil || found.state != Active {
+		return 0, false
+	}
+	if found.kind == Service {
+		return 1, found.workspace == workspace
+	}
+	own := r.member(workspace, userID)
+	if own == nil || own.state != MembershipActive {
+		return 0, false
+	}
+	return own.joined, true
+}
+
+func (h *Subjects) Service(userID string) (string, string, bool) {
+	r, ok := h.open()
+	if !ok {
+		return "", "", false
+	}
+	defer r.mu.Unlock()
+	found := r.users[userID]
+	if found == nil || found.kind != Service {
+		return "", "", false
+	}
+	return found.creator, found.owner, true
+}
+
+func (h *Subjects) Generation() uint64 {
+	r, ok := h.open()
+	if !ok {
+		return 0
+	}
+	defer r.mu.Unlock()
+	return r.generation
+}
 
 func (r *Registry) lock() bool {
 	if r == nil || !r.built {

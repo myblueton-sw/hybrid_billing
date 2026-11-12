@@ -111,15 +111,16 @@ func (h *Workspace) Accept(workspace, invitationID string, verifier, actor Verif
 		}
 		return refused(ReasonVerifier)
 	}
-	version := uint64(0)
+	version, joined := uint64(0), uint64(0)
 	if previous := r.memberships[workspace][acting.user]; previous != nil {
-		version = previous.version
+		version, joined = previous.version, previous.joined
 	}
 	if !bump(&version) {
 		return ErrConflict
 	}
 	found.state = invitationAccepted
-	r.memberships[workspace][acting.user] = &membership{role: found.role, state: MembershipActive, version: version}
+	r.memberships[workspace][acting.user] = &membership{role: found.role, state: MembershipActive, version: version, joined: joined + 1}
+	r.generation++
 	return nil
 }
 
@@ -154,6 +155,7 @@ func (r *Registry) transition(actor Verifier, workspace, target string, expected
 		return ErrConflict
 	}
 	*found = next
+	r.generation++
 	return nil
 }
 
@@ -258,6 +260,7 @@ func (h *Workspace) CreateServiceUser(actor Verifier, workspace, serviceID, owne
 		return ErrConflict
 	}
 	r.users[serviceID] = &user{kind: Service, state: Active, epoch: 1, workspace: workspace, creator: acting.user, owner: owner}
+	r.generation++
 	return nil
 }
 
@@ -290,6 +293,7 @@ func (r *Registry) serviceState(actor Verifier, workspace, serviceID string, exp
 		return ErrConflict
 	}
 	found.state, found.operatorBlock = to, false
+	r.generation++
 	return nil
 }
 

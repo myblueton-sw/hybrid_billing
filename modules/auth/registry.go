@@ -27,6 +27,49 @@ type Registry struct {
 	grants       map[string]versioned[Grant]
 	delegations  map[string]versioned[Delegation]
 	sessions     map[string]versioned[SupportSession]
+	source       SubjectSource
+	grantJoined  map[string]uint64
+	chainJoined  map[string][2]uint64
+	actorJoined  map[string]uint64
+}
+
+func NewRegistryWithSubjects(installationID string, catalog Catalog, clock func() time.Time, source SubjectSource) (*Registry, error) {
+	if source == nil {
+		return nil, ErrInvalid
+	}
+	r, err := NewRegistry(installationID, catalog, clock)
+	if err != nil {
+		return nil, err
+	}
+	r.source = source
+	return r, nil
+}
+
+func (r *Registry) subject(id string) (Subject, bool) {
+	if r.source != nil {
+		return r.source.Subject(id)
+	}
+	found := r.subjects[id]
+	return found.value, found.version != 0
+}
+
+func (r *Registry) member(workspaceID, id string) (uint64, bool) {
+	if r.source == nil {
+		return 0, true
+	}
+	return r.source.Member(workspaceID, id)
+}
+
+func (r *Registry) memberWith(workspaceID, id string, joined uint64) bool {
+	current, active := r.member(workspaceID, id)
+	return active && current == joined
+}
+
+func (r *Registry) subjectsGeneration() uint64 {
+	if r.source == nil {
+		return 0
+	}
+	return r.source.Generation()
 }
 
 func NewRegistry(installationID string, catalog Catalog, clock func() time.Time) (*Registry, error) {
@@ -38,7 +81,8 @@ func NewRegistry(installationID string, catalog Catalog, clock func() time.Time)
 		kinds: make(map[string]struct{}), fields: make(map[string]FieldClass),
 		subjects: make(map[string]versioned[Subject]), clients: make(map[string]versioned[Client]),
 		grants: make(map[string]versioned[Grant]), delegations: make(map[string]versioned[Delegation]),
-		sessions: make(map[string]versioned[SupportSession]),
+		sessions:    make(map[string]versioned[SupportSession]),
+		grantJoined: make(map[string]uint64), chainJoined: make(map[string][2]uint64), actorJoined: make(map[string]uint64),
 	}
 	for _, kind := range catalog.Kinds {
 		if _, repeated := r.kinds[kind]; repeated || !validID(kind) {
@@ -83,6 +127,9 @@ func (r *Registry) PutSubject(subject Subject, expected uint64) (uint64, error) 
 	if r.subjects == nil {
 		return 0, ErrUnavailable
 	}
+	if r.source != nil {
+		return 0, ErrInvalid
+	}
 	if !validID(subject.ID) || (subject.Kind != Human && subject.Kind != Service) ||
 		(subject.State != Active && subject.State != Suspended) || subject.Epoch == 0 {
 		return 0, ErrInvalid
@@ -120,8 +167,8 @@ func (r *Registry) PutClient(client Client, expected uint64) (uint64, error) {
 }
 
 func (r *Registry) activeHuman(id string) bool {
-	subject := r.subjects[id]
-	return subject.version != 0 && subject.value.State == Active && subject.value.Kind == Human
+	subject, known := r.subject(id)
+	return known && subject.State == Active && subject.Kind == Human
 }
 
 func (r *Registry) validTerms(terms Terms) bool {
@@ -171,9 +218,15 @@ func (r *Registry) AddGrant(grant Grant) error {
 	if !validID(grant.ID) || !r.validTerms(grant.Terms) || !grant.Validity.valid() || (grant.SubjectID == "") == (grant.ClientID == "") {
 		return ErrInvalid
 	}
+	generation := r.subjectsGeneration()
+	joined := uint64(0)
 	if grant.SubjectID != "" {
-		subject := r.subjects[grant.SubjectID]
-		if subject.version == 0 || subject.value.State != Active || (humanOnly(grant.Terms.Action) && subject.value.Kind != Human) {
+		subject, known := r.subject(grant.SubjectID)
+		if !known || subject.State != Active || (humanOnly(grant.Terms.Action) && subject.Kind != Human) {
+			return ErrInvalid
+		}
+		active := false
+		if joined, active = r.member(grant.Terms.Scope.WorkspaceID, grant.SubjectID); !active {
 			return ErrInvalid
 		}
 	} else {
@@ -182,10 +235,14 @@ func (r *Registry) AddGrant(grant Grant) error {
 			return ErrInvalid
 		}
 	}
+	if r.subjectsGeneration() != generation {
+		return ErrChanged
+	}
 	if r.grants[grant.ID].version != 0 {
 		return ErrConflict
 	}
 	r.grants[grant.ID] = versioned[Grant]{value: grant, version: 1}
+	r.grantJoined[grant.ID] = joined
 	r.changed()
 	return nil
 }
@@ -226,11 +283,11 @@ func (r *Registry) backedDirectly(delegatorID string, terms Terms, now time.Time
 	}
 	for _, field := range fields {
 		backed := false
-		for _, grant := range r.grants {
+		for id, grant := range r.grants {
 			g := grant.value
 			if !grant.closed && g.SubjectID == delegatorID && g.Validity.at(now) && g.Terms.Action == terms.Action &&
 				g.Terms.Kind == terms.Kind && terms.Scope.within(g.Terms.Scope) && terms.Period.within(g.Terms.Period) &&
-				(field == "" || contains(g.Terms.Fields, field)) {
+				(field == "" || contains(g.Terms.Fields, field)) && r.memberWith(g.Terms.Scope.WorkspaceID, delegatorID, r.grantJoined[id]) {
 				backed = true
 				break
 			}
@@ -243,8 +300,9 @@ func (r *Registry) backedDirectly(delegatorID string, terms Terms, now time.Time
 }
 
 func (r *Registry) holdsInWorkspace(subjectID, workspaceID string, now time.Time) bool {
-	for _, grant := range r.grants {
-		if !grant.closed && grant.value.SubjectID == subjectID && grant.value.Terms.Scope.WorkspaceID == workspaceID && grant.value.Validity.at(now) {
+	for id, grant := range r.grants {
+		if !grant.closed && grant.value.SubjectID == subjectID && grant.value.Terms.Scope.WorkspaceID == workspaceID && grant.value.Validity.at(now) &&
+			r.memberWith(workspaceID, subjectID, r.grantJoined[id]) {
 			return true
 		}
 	}
@@ -274,12 +332,15 @@ func (r *Registry) AddDelegation(delegation Delegation) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	terms := copyTerms(delegation.Terms)
+	generation := r.subjectsGeneration()
 	if !validID(delegation.ID) || !r.validTerms(terms) || !delegation.Validity.valid() || humanOnly(terms.Action) ||
 		delegation.DelegatorID == delegation.DelegateID || !r.activeHuman(delegation.DelegatorID) || !r.activeHuman(delegation.DelegateID) {
 		return ErrInvalid
 	}
-	if r.delegations[delegation.ID].version != 0 {
-		return ErrConflict
+	delegatorJoined, delegatorActive := r.member(terms.Scope.WorkspaceID, delegation.DelegatorID)
+	delegateJoined, delegateActive := r.member(terms.Scope.WorkspaceID, delegation.DelegateID)
+	if !delegatorActive || !delegateActive {
+		return ErrInvalid
 	}
 	now := r.clock()
 	if delegation.ParentID == "" {
@@ -306,8 +367,15 @@ func (r *Registry) AddDelegation(delegation Delegation) error {
 	if !r.holdsInWorkspace(delegation.DelegateID, terms.Scope.WorkspaceID, now) {
 		return ErrInvalid
 	}
+	if r.subjectsGeneration() != generation {
+		return ErrChanged
+	}
+	if r.delegations[delegation.ID].version != 0 {
+		return ErrConflict
+	}
 	delegation.Terms = terms
 	r.delegations[delegation.ID] = versioned[Delegation]{value: delegation, version: 1}
+	r.chainJoined[delegation.ID] = [2]uint64{delegatorJoined, delegateJoined}
 	r.changed()
 	return nil
 }
@@ -359,19 +427,17 @@ func (r *Registry) AddSupportSession(session SupportSession, approver Principal)
 	if !r.available {
 		return ErrUnavailable
 	}
+	generation := r.subjectsGeneration()
 	session.Fields = append([]string(nil), session.Fields...)
 	if _, known := r.kinds[session.Kind]; !known || !validID(session.ID) || !validID(session.WorkspaceID) ||
 		!validID(session.CustomerID) || session.Reason == "" || !session.Validity.valid() ||
-		!r.validFields(View, session.Fields) || !r.activeHuman(session.ActorID) {
+		!r.validFields(View, session.Fields) || !validID(session.ActorID) {
 		return ErrInvalid
 	}
-	if r.sessions[session.ID].version != 0 {
-		return ErrConflict
-	}
 	now := r.clock()
-	subject := r.subjects[approver.SubjectID]
+	subject, _ := r.subject(approver.SubjectID)
 	if approver.Installation != r.installation || approver.ClientID != "" || approver.SessionID != "" ||
-		!r.activeHuman(approver.SubjectID) || subject.value.Epoch != approver.Epoch ||
+		!r.activeHuman(approver.SubjectID) || subject.Epoch != approver.Epoch ||
 		approver.SubjectID == session.ActorID || r.delegatesFor(session.ActorID, approver.SubjectID, now) {
 		return ErrDenied
 	}
@@ -379,8 +445,19 @@ func (r *Registry) AddSupportSession(session SupportSession, approver Principal)
 	if !r.direct(approver.SubjectID, "", ApproveSupportSession, session.Kind, resource, "", now) {
 		return ErrDenied
 	}
+	actorJoined, actorActive := r.member(session.WorkspaceID, session.ActorID)
+	if !r.activeHuman(session.ActorID) || !actorActive {
+		return ErrInvalid
+	}
+	if r.subjectsGeneration() != generation {
+		return ErrChanged
+	}
+	if r.sessions[session.ID].version != 0 {
+		return ErrConflict
+	}
 	session.ApproverID = approver.SubjectID
 	r.sessions[session.ID] = versioned[SupportSession]{value: session, version: 1}
+	r.actorJoined[session.ID] = actorJoined
 	r.changed()
 	return nil
 }

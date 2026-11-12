@@ -259,6 +259,369 @@ try {
   console.log(
     "PASS actual arithmetic, validation, target guard, draft, dirty, empty, denial/retry and late-hash cases",
   );
+  const acceptDialog = (dialog) => dialog.accept().catch(() => {});
+  page.on("dialog", acceptDialog);
+  const visit = async (query) => {
+    await page.goto(url + "#/exchange-rates?" + query);
+    await loaded();
+  };
+  const lines = async (locator) =>
+    (await locator.innerText())
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+  const pickerRow = (index) =>
+    page.locator(".b05-source-table tbody tr[data-fx-picker-row]").nth(index);
+  const evidence = async (index) => {
+    const toggle = pickerRow(index).locator("[data-fx-evidence-toggle]"),
+      id = await toggle.getAttribute("data-fx-evidence-toggle");
+    if ((await toggle.getAttribute("aria-expanded")) !== "true")
+      await toggle.click();
+    const panel = page.locator(`tr[data-evidence-for="${id}"]`);
+    await panel.waitFor();
+    return (name) => panel.locator(`[data-fx-field="${name}"] dd`);
+  };
+  const noEvidence = async () =>
+    assert.equal(await page.locator("tr.b05-evidence-row").count(), 0);
+  const contained = () =>
+    page.locator(".b05-source-table :is(td, th)").evaluateAll((cells) =>
+      cells
+        .filter((cell) => cell.getClientRects().length)
+        .filter((cell) => {
+          const box = cell.getBoundingClientRect();
+          return [...cell.children].some((child) => {
+            const inner = child.getBoundingClientRect();
+            return (
+              inner.width > 0 &&
+              (inner.left < box.left - 1 ||
+                inner.right > box.right + 1 ||
+                inner.bottom > box.bottom + 1)
+            );
+          });
+        })
+        .map((cell) => cell.textContent.slice(0, 30)),
+    );
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await visit("lang=en&" + base);
+  assert.equal(await page.locator(".b05-mobile-columns").count(), 0);
+  assert.equal(await page.locator(".b05-source-table details").count(), 0);
+  assert.deepEqual(
+    await page.locator("[data-fx-row-account] bdi").allInnerTexts(),
+    ["synthetic-vmware", "synthetic-vmware", "synthetic-vmware"],
+  );
+  assert.deepEqual(
+    await page.locator("[data-fx-subaccount] bdi").allInnerTexts(),
+    ["synthetic-a", "synthetic-a", "synthetic-b"],
+  );
+  let field = await evidence(0);
+  assert.deepEqual(await lines(field("ordinal")), ["1000"]);
+  assert.deepEqual(await lines(field("evidence_class")), [
+    "Synthetic test data",
+  ]);
+  assert.equal((await field("id").innerText()).trim(), ids[0]);
+  assert.deepEqual(await lines(field("charge_start")), [
+    "2024-09-01 00:00:00 UTC",
+  ]);
+  assert.deepEqual(await lines(field("charge_end")), [
+    "2024-09-02 00:00:00 UTC",
+  ]);
+  assert.deepEqual(await lines(field("billed_cost")), ["USD 0.75"]);
+  await pickerRow(1).locator("[data-fx-evidence-toggle]").click();
+  assert.equal(await page.locator("tr.b05-evidence-row").count(), 1);
+  assert.equal(
+    await pickerRow(0)
+      .locator("[data-fx-evidence-toggle]")
+      .getAttribute("aria-expanded"),
+    "false",
+  );
+  await pickerRow(1).locator("button[data-fx-row]").click();
+  await selected(ids[1]);
+  await noEvidence();
+  assert.deepEqual(await lines(page.locator("[data-fx-editor-cost]")), [
+    "USD 0.25",
+    "Billed cost",
+  ]);
+  assert.deepEqual(await lines(page.locator(".source-period")), [
+    "Start 2024-09-01 00:00:00 UTC",
+    "End 2024-09-02 00:00:00 UTC",
+  ]);
+  await evidence(0);
+  await page.locator("#fx-basis").selectOption("effective_cost");
+  await loaded();
+  await noEvidence();
+  await visit("lang=en&" + base);
+  await evidence(0);
+  if (!(await page.locator(".b05-account-scope").evaluate((e) => e.open)))
+    await page.locator(".b05-account-scope summary").click();
+  assert.match(
+    await page.locator("button[data-fx-account]").first().innerText(),
+    /Billing account ID:[\s\S]*Subaccount ID:[\s\S]*Provider:/,
+  );
+  await page.locator("button[data-fx-account]").first().click();
+  await loaded();
+  await noEvidence();
+  assert.match(
+    await page.locator(".b05-account-scope summary").innerText(),
+    /Billing account ID: synthetic-vmware · Subaccount ID: synthetic-/,
+  );
+  await visit("lang=en&focus-provider=Oracle");
+  field = await evidence(0);
+  assert.deepEqual(await lines(field("billed_cost")), ["USD 0.24"]);
+  assert.deepEqual(await lines(field("effective_cost")), [
+    "USD 0.00",
+    "Exact zero",
+  ]);
+  assert.deepEqual(await lines(pickerRow(0).locator("[data-fx-cost]")), [
+    "USD 0.24",
+    "Billed cost",
+  ]);
+  await page.screenshot({
+    path: `${out}/en-oracle-evidence.png`,
+    fullPage: true,
+  });
+  await visit("lang=en&focus-provider=Oracle&focus-basis=effective_cost");
+  await pickerRow(0).locator("button[data-fx-row]").click();
+  await page.locator("[data-fx-selected-row]").waitFor();
+  assert.deepEqual(await lines(page.locator("[data-fx-editor-cost]")), [
+    "USD 0.00",
+    "Exact zero",
+    "Effective cost",
+  ]);
+  assert.deepEqual(await lines(page.locator("[data-fx-selected-cost]")), [
+    "USD 0.00",
+    "Exact zero",
+  ]);
+  for (const [locale, zero] of [
+    ["ko", "정확한 0"],
+    ["ar", "صفر دقيق"],
+  ]) {
+    await visit(`lang=${locale}&focus-provider=Oracle`);
+    field = await evidence(0);
+    assert.equal((await lines(field("effective_cost")))[1], zero);
+  }
+  const awsSnapshot = await page.evaluate(async () => {
+    const r = await fetch("/api/focus-overview?provider=AWS", {
+      headers: { "X-HB-Local-Client": "1" },
+      cache: "no-store",
+    });
+    if (!r.ok) throw Error("AWS source unavailable");
+    return (await r.json()).snapshot;
+  });
+  await visit("lang=en&focus-provider=AWS");
+  await evidence(0);
+  await page.locator("#fx-next").click();
+  await loaded();
+  await noEvidence();
+  await visit(
+    `lang=en&focus-provider=AWS&focus-after=450&focus-snapshot=${awsSnapshot}`,
+  );
+  assert.deepEqual(await lines(pickerRow(6).locator("[data-fx-cost]")), [
+    "USD -2.6137",
+    "Billed cost",
+  ]);
+  await pickerRow(6).locator("button[data-fx-row]").click();
+  await page.locator("[data-fx-selected-row]").waitFor();
+  assert.equal(
+    (await lines(page.locator("[data-fx-editor-cost]")))[0],
+    "USD -2.6137",
+  );
+  await visit("lang=en&focus-provider=Alibaba+Cloud");
+  assert.equal(
+    (await lines(pickerRow(1).locator("[data-fx-cost]")))[0],
+    "CNY 8.80",
+  );
+  await visit("lang=en&" + base);
+  await evidence(0);
+  await page.route(
+    "**/api/focus-overview?**",
+    (r) =>
+      r.fulfill({
+        status: 403,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "scope_denied", request_id: "qa" }),
+      }),
+    { times: 1 },
+  );
+  await page.locator(".b05-toolbar button").last().click();
+  await page.locator("[data-fx-state=error]").waitFor();
+  assert.equal(
+    await page
+      .locator("[data-source-value], [data-fx-field], [data-fx-picker-row]")
+      .count(),
+    0,
+  );
+  await page
+    .getByRole("button", { name: "Reset row and retry", exact: true })
+    .click();
+  await loaded();
+  const degraded = structuredClone(source);
+  degraded.rows[0].billed_cost = null;
+  degraded.rows[0].sub_account = null;
+  degraded.rows[0].service = null;
+  degraded.rows[0].evidence_class = "unclassified";
+  degraded.provenance = { "synthetic-contract-fixture": 2, unclassified: 1 };
+  degraded.rows[0].charge_start = degraded.rows[0].charge_start.replace(
+    "+00:00",
+    "Z",
+  );
+  degraded.rows[1].effective_cost = null;
+  const degrade = () =>
+    page.route("**/api/focus-overview?**", (r) =>
+      r.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(degraded),
+      }),
+    );
+  await degrade();
+  for (const [locale, missing, provenance, amountMissing] of [
+    ["en", "Missing", "Unclassified", "Amount missing"],
+    ["ko", "누락", "출처 미분류", "금액 누락"],
+    ["ar", "مفقود", "غير مصنف", "المبلغ مفقود"],
+  ]) {
+    await visit(`lang=${locale}&${base}&focus-basis=billed_cost`);
+    await page.locator(".b05-toolbar button").last().click();
+    await loaded();
+    assert.equal(
+      (await pickerRow(0).locator("[data-fx-service]").innerText()).trim(),
+      missing,
+    );
+    assert.equal(
+      (
+        await pickerRow(0).locator("[data-fx-subaccount] strong").innerText()
+      ).trim(),
+      missing,
+    );
+    const cost = await lines(pickerRow(0).locator("[data-fx-cost]"));
+    assert.equal(cost[0], missing);
+    assert.ok(!/USD|—|\d/.test(cost[0]));
+    assert.ok(
+      (await pickerRow(0).locator("td").nth(3).innerText()).includes(
+        amountMissing,
+      ),
+    );
+    field = await evidence(0);
+    assert.deepEqual(await lines(field("billed_cost")), [missing]);
+    assert.deepEqual(await lines(field("sub_account")), [missing]);
+    assert.deepEqual(await lines(field("evidence_class")), [provenance]);
+    assert.ok(
+      (await field("charge_start").innerText()).includes(
+        degraded.rows[0].charge_start,
+      ),
+    );
+    field = await evidence(1);
+    assert.deepEqual(await lines(field("effective_cost")), [missing]);
+    await pickerRow(0).locator("button[data-fx-row]").click();
+    await page.locator("[data-fx-selected-row]").waitFor();
+    assert.equal(
+      (await page.locator("[data-fx-selected-service]").innerText()).trim(),
+      missing,
+    );
+    assert.deepEqual(await lines(page.locator("[data-fx-selected-cost]")), [
+      missing,
+    ]);
+    if (locale === "en")
+      assert.deepEqual(await lines(page.locator(".source-period")), [
+        "Start " + degraded.rows[0].charge_start,
+        "Shown as collected; not converted to UTC",
+        "End 2024-09-02 00:00:00 UTC",
+      ]);
+    const editorCost = (await lines(page.locator("[data-fx-editor-cost]")))[0];
+    assert.equal(editorCost, missing);
+    assert.equal(
+      (await lines(page.locator("[data-fx-editor-cost]"))).length,
+      2,
+    );
+    assert.equal(
+      await page
+        .locator(
+          "[data-fx-selected-cost] [data-source-value=missing], [data-fx-editor-cost] [data-source-value=missing]",
+        )
+        .count(),
+      2,
+    );
+    if (locale === "en")
+      await page.screenshot({
+        path: `${out}/en-degraded-evidence.png`,
+        fullPage: true,
+      });
+  }
+  for (const locale of ["ko", "ar"]) {
+    await page.setViewportSize({ width: 390, height: 1000 });
+    await visit(`lang=${locale}&${base}&focus-basis=billed_cost`);
+    await page.locator(".b05-toolbar button").last().click();
+    await loaded();
+    await evidence(0);
+    assert.deepEqual(await contained(), []);
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth,
+      ),
+      false,
+    );
+    await pickerRow(0).locator("button[data-fx-row]").click();
+    await page.locator("[data-fx-selected-row]").waitFor();
+    assert.equal(
+      (await lines(page.locator("[data-fx-editor-cost]")))[0],
+      locale === "ko" ? "누락" : "مفقود",
+    );
+    assert.ok(await page.locator("[data-fx-editor-cost]").isVisible());
+    await evidence(0);
+    await page.screenshot({
+      path: `${out}/${locale}-390-degraded-evidence.png`,
+      fullPage: true,
+    });
+  }
+  await page.unroute("**/api/focus-overview?**");
+  for (const locale of ["en", "ko", "ar"])
+    for (const width of [1440, 1280, 1001, 1000, 800, 641, 640, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await visit(`lang=${locale}&focus-provider=Oracle&focus-after=0`);
+      await page.locator(".b05-toolbar button").last().click();
+      await loaded();
+      await evidence(0);
+      await page.evaluate(() => document.fonts.ready);
+      assert.equal(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > innerWidth,
+        ),
+        false,
+        `${locale} ${width} page overflow`,
+      );
+      assert.deepEqual(await contained(), [], `${locale} ${width}`);
+      if (width > 800)
+        assert.equal(
+          await page
+            .locator(".b05-source-table")
+            .evaluate((region) => region.scrollWidth > region.clientWidth + 1),
+          false,
+          `${locale} ${width} region scroll`,
+        );
+      if (width <= 800)
+        assert.equal(
+          await page.locator(".b05-source-table thead").isVisible(),
+          false,
+          `${locale} ${width} cards`,
+        );
+      if (width === 390)
+        assert.ok(
+          await page
+            .locator(".b05-evidence-toggle, button[data-fx-row]")
+            .evaluateAll((buttons) =>
+              buttons.every(
+                (button) => button.getBoundingClientRect().height >= 44,
+              ),
+            ),
+        );
+      if (locale === "en" || width === 390 || width === 1440)
+        await page.screenshot({
+          path: `${out}/${locale}-${width}-oracle-evidence.png`,
+          fullPage: true,
+        });
+    }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await visit("lang=en&" + base);
+  page.off("dialog", acceptDialog);
   const variants = [];
   for (const locale of ["en", "ko", "ar"])
     for (const width of [1440, 390]) {
@@ -332,13 +695,11 @@ try {
           await page.locator("[data-fx-declaration]").waitFor();
         }
         if (view === "policies") {
-          const group = await page
-            .locator("#fx-mode")
-            .evaluate((e) => ({
-              legendBottom: e.querySelector("legend").getBoundingClientRect()
-                .bottom,
-              firstTop: e.querySelector("label").getBoundingClientRect().top,
-            }));
+          const group = await page.locator("#fx-mode").evaluate((e) => ({
+            legendBottom: e.querySelector("legend").getBoundingClientRect()
+              .bottom,
+            firstTop: e.querySelector("label").getBoundingClientRect().top,
+          }));
           assert.ok(
             group.firstTop >= group.legendBottom,
             JSON.stringify(group),

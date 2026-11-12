@@ -426,24 +426,24 @@
   }
 }
 
-.sales-pricing .pricing-state {
+.sales-pricing .source-state {
   font-weight: 600;
 }
-.sales-pricing .pricing-state-note {
+.sales-pricing .source-state-note {
   display: block;
   font-size: 14px;
 }
-.sales-pricing .pricing-source-value {
+.sales-pricing .source-value {
   display: block;
 }
 .sales-pricing .pricing-code {
   font-family: var(--hb-font-mono);
   font-size: 14px;
 }
-.sales-pricing .pricing-instant {
+.sales-pricing .source-instant {
   white-space: nowrap;
 }
-.sales-pricing .pricing-tz {
+.sales-pricing .source-tz {
   font-size: 14px;
 }
 .pricing-picker :is(th, td) {
@@ -460,12 +460,12 @@
   display: inline-block;
   white-space: nowrap;
 }
-.sales-pricing .pricing-period {
+.sales-pricing .source-period {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
-.sales-pricing .pricing-period small {
+.sales-pricing .source-period > span > small:first-child {
   display: inline;
 }
 .pricing-picker table {

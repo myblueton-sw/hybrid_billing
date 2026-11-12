@@ -9,7 +9,7 @@ import {
 import { t, notCalculated } from "./copy";
 import { money, number } from "./values";
 import { fieldLabel } from "../../../sources/collected-focus/labels";
-import { SourceAmount } from "./SourceValues";
+import { SourceAmount } from "../../../sources/collected-focus/SourceValues";
 export function Summary({
   locale: l,
   result,

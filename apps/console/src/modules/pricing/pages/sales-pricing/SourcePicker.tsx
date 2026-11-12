@@ -16,7 +16,7 @@ import {
   SourceInstant,
   SourceQuantity,
   SourceText,
-} from "./SourceValues";
+} from "../../../sources/collected-focus/SourceValues";
 function EvidenceList({
   row: r,
   locale: l,

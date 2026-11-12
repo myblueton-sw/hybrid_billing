@@ -1,22 +1,11 @@
-import type { Locale } from "../../../../shared/types";
-import {
-  instantParts,
-  valueState,
-} from "../../../sources/collected-focus/fields";
-import {
-  Instant,
-  missingLabel,
-  unitMissingLabel,
-  zeroLabel,
-} from "../../../sources/collected-focus/labels";
-import {
-  decimal,
-  money as sourceMoney,
-} from "../../../sources/collected-focus/values";
-import { t } from "./copy";
+import type { Locale } from "../../../shared/types";
+import { text as t } from "../../../shared/copy";
+import { instantParts, valueState } from "./fields";
+import { Instant, missingLabel, unitMissingLabel, zeroLabel } from "./labels";
+import { decimal, money as sourceMoney } from "./values";
 export function Missing({ locale: l }: { locale: Locale }) {
   return (
-    <strong className="pricing-state" data-pricing-value="missing">
+    <strong className="source-state" data-source-value="missing">
       {missingLabel(l)}
     </strong>
   );
@@ -46,18 +35,18 @@ export function SourceAmount({
   const state = valueState(value);
   if (state === "missing") return <Missing locale={l} />;
   return (
-    <span className="pricing-source-value" data-pricing-value={state}>
+    <span className="source-value" data-source-value={state}>
       <bdi dir="ltr">
         {sourceMoney(value, currency, l)}
         {unit !== undefined && unit?.trim() ? ` / ${unit.trim()}` : ""}
       </bdi>
       {unit !== undefined && !unit?.trim() && (
-        <strong className="pricing-state pricing-state-note">
+        <strong className="source-state source-state-note">
           {unitMissingLabel(l)}
         </strong>
       )}
       {note && state === "zero" && (
-        <strong className="pricing-state pricing-state-note">
+        <strong className="source-state source-state-note">
           {zeroLabel(l)}
         </strong>
       )}
@@ -78,8 +67,8 @@ export function SourceQuantity({
   const state = valueState(value);
   return (
     <span
-      className="pricing-source-value"
-      data-pricing-value={state === "missing" ? undefined : state}
+      className="source-value"
+      data-source-value={state === "missing" ? undefined : state}
     >
       {state === "missing" ? (
         <Missing locale={l} />
@@ -90,12 +79,12 @@ export function SourceQuantity({
         </bdi>
       )}
       {!unit?.trim() && (
-        <strong className="pricing-state pricing-state-note">
+        <strong className="source-state source-state-note">
           {unitMissingLabel(l)}
         </strong>
       )}
       {note && state === "zero" && (
-        <strong className="pricing-state pricing-state-note">
+        <strong className="source-state source-state-note">
           {zeroLabel(l)}
         </strong>
       )}
@@ -110,12 +99,12 @@ export function SourceInstant({
   locale: Locale;
 }) {
   return instantParts(value) ? (
-    <bdi dir="ltr" className="pricing-instant">
-      <Instant value={value} /> <span className="pricing-tz">UTC</span>
+    <bdi dir="ltr" className="source-instant">
+      <Instant value={value} /> <span className="source-tz">UTC</span>
     </bdi>
   ) : (
     <>
-      <bdi dir="ltr" data-pricing-instant="raw">
+      <bdi dir="ltr" data-source-instant="raw">
         {value}
       </bdi>
       <small>
@@ -139,7 +128,7 @@ export function SourcePeriod({
   locale: Locale;
 }) {
   return (
-    <span className="pricing-period">
+    <span className="source-period">
       <span>
         <small>{t(l, "Start", "시작", "البداية")}</small>{" "}
         <SourceInstant value={start} locale={l} />

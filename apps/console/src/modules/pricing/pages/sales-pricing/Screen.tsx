@@ -21,7 +21,11 @@ import {
 } from "./model";
 import { save, restore } from "./store";
 import { t, issueLabel } from "./copy";
-import { SourcePeriod, SourceQuantity, SourceText } from "./SourceValues";
+import {
+  SourcePeriod,
+  SourceQuantity,
+  SourceText,
+} from "../../../sources/collected-focus/SourceValues";
 import RuleEditor from "./RuleEditor";
 import SourcePicker, { Evidence } from "./SourcePicker";
 import Results, { Summary } from "./Results";

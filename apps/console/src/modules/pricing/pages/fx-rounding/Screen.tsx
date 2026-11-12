@@ -20,7 +20,11 @@ import {
 } from "./model";
 import { save, restore } from "./store";
 import { t, issueLabel, errorFields } from "./copy";
-import { money } from "./values";
+import {
+  SourceAmount,
+  SourcePeriod,
+  SourceText,
+} from "../../../sources/collected-focus/SourceValues";
 import RuleEditor from "./RuleEditor";
 import AccountScope from "./AccountScope";
 import SourcePicker from "./SourcePicker";
@@ -48,6 +52,8 @@ const items = [
   "B05:action:browser-draft",
   "B05:state:authority-unconnected",
   "B05:state:source-unavailable",
+  "B05:data:source-row-identity",
+  "B05:state:value-missing-zero",
 ];
 function selection(params: URLSearchParams) {
   const q = focusQuery(params);
@@ -368,7 +374,7 @@ export default function Screen({
             {t(
               l,
               "All authorized providers",
-              "전체 허용 공급자",
+              "전체 허용 공급사",
               "كل المزوّدين المصرّح بهم",
             )}
           </option>
@@ -539,24 +545,27 @@ export default function Screen({
                     "صف المصدر المحدد",
                   )}
                 </dt>
-                <dd>
-                  {source?.row.service ??
-                    t(
-                      l,
-                      "No row selected",
-                      "선택한 행 없음",
-                      "لا يوجد صف محدد",
-                    )}
+                <dd data-fx-selected-service>
+                  {source ? (
+                    <SourceText value={source.row.service} locale={l} />
+                  ) : (
+                    t(l, "No row selected", "선택한 행 없음", "لا يوجد صف محدد")
+                  )}
                 </dd>
               </dl>
               <dl>
                 <dt>{t(l, "Source cost", "원천 비용", "تكلفة المصدر")}</dt>
-                <dd>
-                  <bdi dir="ltr">
-                    {source && sourceAmount(source) !== null
-                      ? money(sourceAmount(source)!, source.row.currency, l)
-                      : "—"}
-                  </bdi>
+                <dd data-fx-selected-cost>
+                  {source ? (
+                    <SourceAmount
+                      value={sourceAmount(source)}
+                      currency={source.row.currency}
+                      note
+                      locale={l}
+                    />
+                  ) : (
+                    "—"
+                  )}
                 </dd>
               </dl>
               <dl>
@@ -569,22 +578,18 @@ export default function Screen({
                 <dt>
                   {t(
                     l,
-                    "Source charge interval",
-                    "원천 과금 구간",
+                    "Source charge period",
+                    "원천 과금 기간",
                     "فترة رسوم المصدر",
                   )}
                 </dt>
                 <dd>
                   {source ? (
-                    <>
-                      <bdi className="b05-date" dir="ltr">
-                        {source.row.charge_start}
-                      </bdi>
-                      {" — "}
-                      <bdi className="b05-date" dir="ltr">
-                        {source.row.charge_end}
-                      </bdi>
-                    </>
+                    <SourcePeriod
+                      start={source.row.charge_start}
+                      end={source.row.charge_end}
+                      locale={l}
+                    />
                   ) : (
                     "—"
                   )}
@@ -595,8 +600,8 @@ export default function Screen({
               <p className="b05-meta">
                 {t(
                   l,
-                  "Source cost, not a selling amount. The source charge interval is not a policy effective period.",
-                  "원천 비용이며 판매 금액이 아닙니다. 과금 구간은 정책 적용 기간이 아닙니다.",
+                  "Source cost, not a selling amount. The source charge period is not a policy effective period.",
+                  "원천 비용이며 판매 금액이 아닙니다. 과금 기간은 정책 적용 기간이 아닙니다.",
                   "تكلفة مصدر وليست مبلغ بيع. فترة رسوم المصدر ليست فترة سريان السياسة.",
                 )}
               </p>

@@ -1,7 +1,9 @@
 import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
 import type { OverviewData } from "../../../sources/collected-focus/api";
-import { chartSeries, decimal, money, signedScale } from "./focus-values";
+import { missingCount } from "../../../sources/collected-focus/labels";
+import { chartSeries, decimal, signedScale } from "./focus-values";
+import Sum, { noValues } from "./Sum";
 export default function FocusChart({
   data,
   currency,
@@ -17,7 +19,6 @@ export default function FocusChart({
 }) {
   const values = chartSeries(data, currency),
     axis = signedScale(values.map((v) => v.measure?.coefficient));
-  const missing = t(l, "No collected value", "수집 값 없음", "لا قيمة مجمعة");
   return (
     <section className="unified-panel focus-trend">
       <header>
@@ -33,9 +34,9 @@ export default function FocusChart({
           <p>
             {t(
               l,
-              "Charge-start month · up to 12 months · gaps remain unknown",
-              "과금 시작 월 · 최대 12개월 · 빈 기간은 미확인",
-              "شهر بدء الرسوم · حتى 12 شهراً · الفجوات غير معلومة",
+              "Charge-start month · up to 12 months · a month without rows is not shown as zero",
+              "과금 시작 월 · 최대 12개월 · 행이 없는 월은 0으로 표시하지 않습니다",
+              "شهر بدء الرسوم · حتى 12 شهراً · الشهر بلا صفوف لا يُعرض كصفر",
             )}
           </p>
         </div>
@@ -102,12 +103,10 @@ export default function FocusChart({
                     )}
                     {n == null && (
                       <span
-                        className="focus-gap"
+                        className={`focus-gap ${v.measure ? "is-state" : ""}`}
                         style={{ top: `calc(${axis.zero}% - 4px)` }}
                       >
-                        {v.measure
-                          ? t(l, "Unknown", "미확인", "غير معلوم")
-                          : "—"}
+                        {v.measure ? noValues(l) : "—"}
                       </span>
                     )}
                     {n != null && !!v.measure?.missing && (
@@ -148,7 +147,7 @@ export default function FocusChart({
               <tr>
                 <th>{t(l, "Month", "월", "الشهر")}</th>
                 <th>{currency}</th>
-                <th>{t(l, "Coverage", "값 상태", "التغطية")}</th>
+                <th>{t(l, "Value state", "값 상태", "حالة القيم")}</th>
               </tr>
             </thead>
             <tbody>
@@ -163,35 +162,50 @@ export default function FocusChart({
                       <bdi>{v.period}</bdi>
                     )}
                   </th>
-                  <td>
-                    <bdi dir="ltr">
-                      {money(v.measure?.coefficient ?? null, currency, l)}
-                    </bdi>
-                  </td>
-                  <td>
-                    {!v.measure
-                      ? missing
-                      : v.measure.present === 0
+                  {!v.measure ? (
+                    <td colSpan={2} data-u01-month="absent">
+                      {v.collected
                         ? t(
                             l,
-                            "Unknown · all values missing",
-                            "미확인 · 모든 값 누락",
-                            "غير معلوم · كل القيم مفقودة",
+                            `No ${currency} rows`,
+                            `${currency} 행 없음`,
+                            `لا صفوف ${currency}`,
                           )
-                        : v.measure.missing
+                        : t(
+                            l,
+                            "No rows in selection",
+                            "선택 범위에 행 없음",
+                            "لا صفوف ضمن النطاق",
+                          )}
+                    </td>
+                  ) : (
+                    <>
+                      <td>
+                        <Sum
+                          value={v.measure.coefficient}
+                          currency={currency}
+                          locale={l}
+                        />
+                      </td>
+                      <td data-u01-month-state>
+                        {v.measure.present === 0
                           ? t(
                               l,
-                              `Partial · ${v.measure.missing} missing`,
-                              `부분 · ${v.measure.missing}개 누락`,
-                              `جزئي · ${v.measure.missing} مفقود`,
+                              "All values missing",
+                              "모든 값 누락",
+                              "كل القيم مفقودة",
                             )
-                          : t(
-                              l,
-                              "All values present",
-                              "값 누락 없음",
-                              "كل القيم موجودة",
-                            )}
-                  </td>
+                          : v.measure.missing
+                            ? `${t(l, "Partial", "부분", "جزئي")} · ${missingCount(l, v.measure.missing)}`
+                            : t(
+                                l,
+                                "All values present",
+                                "값 누락 없음",
+                                "كل القيم موجودة",
+                              )}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>

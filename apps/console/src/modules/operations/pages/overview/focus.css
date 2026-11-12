@@ -298,3 +298,116 @@
     min-block-size: 44px;
   }
 }
+.focus-overview .source-state {
+  font-weight: 600;
+  color: var(--hb-ink);
+}
+.focus-overview small .source-state {
+  font-size: inherit;
+}
+.focus-overview .source-state-note {
+  display: block;
+  font-size: 14px;
+}
+.focus-overview .source-instant,
+.focus-overview .source-instant bdi {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.focus-overview .source-tz {
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.focus-sum-none {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--hb-ink);
+}
+.focus-money .focus-sum-none {
+  display: block;
+  font-size: 20px;
+  line-height: 28px;
+  padding-block: 4px;
+}
+.focus-source thead th > span {
+  display: block;
+}
+.focus-source [data-u01-field="evidence_class"] {
+  display: block;
+}
+.focus-table .focus-evidence td {
+  max-inline-size: none;
+  white-space: normal;
+  text-align: start;
+}
+.focus-evidence dl {
+  position: sticky;
+  inset-inline-start: 12px;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr)
+    minmax(0, 0.5fr);
+  gap: 8px 24px;
+  margin: 0;
+  inline-size: calc(100cqi - 24px);
+}
+.focus-source .focus-table {
+  container-type: inline-size;
+}
+.focus-evidence-box {
+  inline-size: 0;
+  min-inline-size: 100%;
+}
+.focus-evidence dt {
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+@media (max-width: 1199px) {
+  .focus-evidence dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .focus-evidence dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.focus-source td small[data-u01-field] bdi {
+  white-space: normal;
+}
+.focus-overview small .focus-sum-none {
+  font-size: inherit;
+  line-height: inherit;
+}
+.focus-providers .focus-table {
+  max-block-size: none;
+}
+.focus-trend .table-wrap :is(th, td) {
+  white-space: normal;
+}
+.unified-overview .focus-evidence td {
+  background: var(--hb-hover);
+}
+.focus-gap.is-state {
+  inset-inline: -16px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 600;
+  color: var(--hb-ink);
+  overflow-wrap: normal;
+}
+@media (max-width: 1199px) {
+  .focus-source .focus-evidence-toggle {
+    white-space: normal;
+  }
+}
+@media (max-width: 767px) {
+  .overview-dashboard.unified-overview .focus-source .focus-table button {
+    min-block-size: 44px;
+  }
+}
+.unified-overview .focus-trend .table-wrap {
+  max-block-size: none;
+}

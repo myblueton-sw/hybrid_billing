@@ -15,7 +15,7 @@ Nothing calls the package: no file is parsed, no target that copies a FOCUS vers
 
 # Executed checks
 
-Executed on 2026-11-13 and 2026-11-14 in the ticket worktree on macOS (Darwin 25.2.0, arm64) with the repository's Go toolchain. No other operating system was tested.
+Executed on 2026-11-13 in the ticket worktree on macOS (Darwin 25.2.0, arm64) with the repository's Go toolchain. No other operating system was tested.
 
 | Check | Result |
 | --- | --- |

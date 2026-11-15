@@ -590,3 +590,24 @@ func TestDigestKnownAnswer(t *testing.T) {
 		t.Fatal("digest framing")
 	}
 }
+
+func TestValidityFollowsPolicyAndGrant(t *testing.T) {
+	f := newFixture(t)
+	p := must(f.r.Project("w1", Request{Policy: "std", Recipient: "acme-portal", Rows: rows()}, system("portal")))
+	pkg := must(f.r.Package("w1", p.Digest, system("portal")))
+	v := must(f.r.Validity("w1", pkg.ID))
+	if v != (Validity{Package: pkg.ID, Recipient: "acme-portal", FileDigest: pkg.FileDigest, Policy: "std", Revision: pkg.Revision, Grant: 1, Live: true}) {
+		t.Fatalf("live: %+v", v)
+	}
+	expect(t, "form", second(f.r.Validity("", pkg.ID)), "invalid")
+	expect(t, "form package", second(f.r.Validity("w1", "")), "invalid")
+	expect(t, "workspace", second(f.r.Validity("w9", pkg.ID)), "not_found")
+	expect(t, "package", second(f.r.Validity("w1", "nope")), "not_found")
+	f.policy(t, Policy{ID: "std", Roles: map[string][]string{RoleCustomer: {"customer", "service"}}})
+	if v := must(f.r.Validity("w1", pkg.ID)); v.Live || v.Reason != ReasonPolicySuperseded {
+		t.Fatalf("superseded: %+v", v)
+	}
+	if !f.r.Recipient("acme-portal") || f.r.Recipient("author") {
+		t.Fatal("recipient identifiers")
+	}
+}

@@ -547,3 +547,31 @@ func (r *Registry) Preview(workspace, projection string, page, size int, interna
 	b.WriteString("</table></section>")
 	return b.String(), nil
 }
+
+func (r *Registry) Validity(workspace, pkg string) (Validity, error) {
+	r.enter()
+	defer r.leave()
+	if !validID(workspace) || !validID(pkg) {
+		return Validity{}, ErrInvalid
+	}
+	s, err := r.space(workspace, false)
+	if err != nil {
+		return Validity{}, err
+	}
+	p := s.packages[pkg]
+	if p == nil {
+		return Validity{}, ErrNotFound
+	}
+	v := Validity{Package: p.ID, Recipient: p.Recipient, FileDigest: p.FileDigest, Policy: p.Policy, Revision: p.Revision, Grant: p.Grant, Live: true}
+	if err := s.live(p.Policy, p.Revision, p.Recipient, p.Grant); err != nil {
+		refusal, _ := err.(Refusal)
+		v.Live, v.Reason = false, refusal.Reason
+	}
+	return v, nil
+}
+
+func (r *Registry) Recipient(id string) bool {
+	r.enter()
+	defer r.leave()
+	return r.recipients[id]
+}

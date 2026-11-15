@@ -224,3 +224,14 @@ type LinkView struct {
 	Issuer    string
 	RevokedBy string
 }
+
+type Validity struct {
+	Package    string
+	Recipient  string
+	FileDigest string
+	Policy     string
+	Revision   int
+	Grant      int
+	Live       bool
+	Reason     string
+}

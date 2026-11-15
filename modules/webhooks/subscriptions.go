@@ -20,6 +20,8 @@ type subscription struct {
 	redeliver  map[string]string
 	dismiss    map[string]string
 	generation int
+	keys       map[string]*KeyView
+	names      map[string]bool
 }
 
 type space struct {
@@ -48,14 +50,14 @@ func NewRegistry(config Config, limits Limits, clock func() time.Time) (*Registr
 
 func (l Limits) valid() bool {
 	pairs := [][2]int{{l.Workspaces, maxWorkspaces}, {l.Subscriptions, maxSubscription}, {l.Types, maxTypes}, {l.Attempts, maxAttempts}, {l.Dead, maxDead},
-		{l.Batch, maxBatch}, {l.Work, maxWork}}
+		{l.Batch, maxBatch}, {l.Work, maxWork}, {l.Keys, maxKeys}}
 	for _, p := range pairs {
 		if p[0] < 1 || p[0] > p[1] {
 			return false
 		}
 	}
 	return l.Lease >= minLease && l.Lease <= maxLease && l.Backoff >= minBackoff && l.Backoff <= l.MaxBackoff && l.MaxBackoff <= maxMaxBackoff &&
-		l.MaxAge >= l.Backoff && l.MaxAge <= maxMaxAge
+		l.MaxAge >= l.Backoff && l.MaxAge <= maxMaxAge && l.KeyLife >= minKeyLife && l.KeyLife <= maxKeyLife
 }
 
 func (r *Registry) enter() time.Time {
@@ -184,7 +186,7 @@ func (r *Registry) ProposeSubscription(workspace string, s Subscription, actor A
 		}
 	}
 	made := &subscription{view: SubscriptionView{Subscription: copySubscription(s), State: SubscriptionProposed, Proposer: actor.ID}, redeliver: map[string]string{},
-		dismiss: map[string]string{}}
+		dismiss: map[string]string{}, keys: map[string]*KeyView{}, names: map[string]bool{}}
 	sp.subscriptions[s.ID] = made
 	sp.order = append(sp.order, s.ID)
 	return viewSubscription(made), nil

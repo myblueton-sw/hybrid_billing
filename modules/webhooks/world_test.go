@@ -1,6 +1,7 @@
 package webhooks
 
 import (
+	"crypto/ed25519"
 	"crypto/sha256"
 	"errors"
 	"sync"
@@ -12,7 +13,7 @@ import (
 
 var (
 	start   = time.Date(2026, 11, 15, 9, 0, 0, 0, time.UTC)
-	limits  = Limits{Workspaces: 2, Subscriptions: 3, Types: 2, Lease: time.Minute, Backoff: time.Second, MaxBackoff: time.Minute, Attempts: 3, MaxAge: time.Hour, Dead: 2, Batch: 5, Work: 2}
+	limits  = Limits{Workspaces: 2, Subscriptions: 3, Types: 2, Lease: time.Minute, Backoff: time.Second, MaxBackoff: time.Minute, Attempts: 3, MaxAge: time.Hour, Dead: 2, Batch: 5, Work: 2, Keys: 4, KeyLife: 3650 * 24 * time.Hour}
 	ann     = Actor{ID: "ann", Kind: KindHuman}
 	bob     = Actor{ID: "bob", Kind: KindHuman}
 	bot     = Actor{ID: "bot", Kind: KindAssistant}
@@ -66,6 +67,9 @@ type fakes struct {
 	redirectTo  string
 	redirectErr error
 	onState     func()
+	onSign      func()
+	onCheck     func()
+	actual      string
 }
 
 func (f *fakes) State(workspace, destination string) (string, error) {
@@ -98,19 +102,37 @@ func (f *fakes) Current(string, string) (string, error) {
 	return f.version, f.versionErr
 }
 
+func private(version string) ed25519.PrivateKey {
+	seed := sha256.Sum256([]byte("synthetic-webhook-seed-" + version))
+	return ed25519.NewKeyFromSeed(seed[:])
+}
+
+func public(version string) []byte { return private(version).Public().(ed25519.PublicKey) }
+
 func (f *fakes) Sign(workspace, subscription, version string, message []byte) ([]byte, error) {
 	f.mu.Lock()
-	hold, entered, err := f.hold, f.entered, f.signErr
+	hold, entered, err, actual, onSign := f.hold, f.entered, f.signErr, f.actual, f.onSign
 	f.mu.Unlock()
+	if onSign != nil {
+		onSign()
+	}
 	if hold != nil {
 		entered <- struct{}{}
 		<-hold
 	}
-	sum := sha256.Sum256(append([]byte(version+"|"), message...))
-	return sum[:], err
+	if actual == "" {
+		actual = version
+	}
+	return ed25519.Sign(private(actual), message), err
 }
 
 func (f *fakes) Check(workspace, destination, current string, hop int, location string) (string, string, int, error) {
+	f.mu.Lock()
+	hook := f.onCheck
+	f.mu.Unlock()
+	if hook != nil {
+		hook()
+	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return f.redirectTo, location, hop + 1, f.redirectErr
@@ -187,6 +209,23 @@ func (f world) subscribe(id, destination string, types ...string) {
 	_, err := f.r.ProposeSubscription("w1", Subscription{ID: id, Subscriber: "acme", Destination: destination, Types: types}, ann)
 	f.must(err)
 	_, err = f.r.ApproveSubscription("w1", id, bob)
+	f.must(err)
+	f.publishKey(id, "k1")
+}
+
+func (f world) publishKeyAt(id, version string, from, to time.Time) {
+	f.t.Helper()
+	_, err := f.r.ProposeKey("w1", id, Key{Version: version, Public: public(version), NotBefore: from, NotAfter: to}, ann)
+	f.must(err)
+	_, err = f.r.ApproveKey("w1", id, version, bob)
+	f.must(err)
+}
+
+func (f world) publishKey(id, version string) {
+	f.t.Helper()
+	_, err := f.r.ProposeKey("w1", id, Key{Version: version, Public: public(version), NotBefore: start.Add(-time.Hour), NotAfter: start.Add(365 * 24 * time.Hour)}, ann)
+	f.must(err)
+	_, err = f.r.ApproveKey("w1", id, version, bob)
 	f.must(err)
 }
 

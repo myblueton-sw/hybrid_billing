@@ -2,6 +2,7 @@ package webhooks
 
 import (
 	"bytes"
+	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
@@ -32,6 +33,8 @@ type delivery struct {
 	until     time.Time
 	confirmed bool
 	reason    string
+	version   string
+	held      bool
 }
 
 func (r *Registry) backoff(d *delivery) time.Duration {
@@ -58,14 +61,14 @@ func (r *Registry) room(s *subscription) bool {
 
 func (r *Registry) bury(sp *space, s *subscription, d *delivery, reason string) {
 	if !r.room(s) {
-		d.phase, d.token, d.reason = phaseDue, "", reason
+		d.phase, d.token, d.reason, d.held = phaseDue, "", reason, true
 		if s.view.State == SubscriptionActive {
 			s.generation++
 			s.view.State, s.view.Reason = SubscriptionSuspended, ReasonBacklog
 		}
 		return
 	}
-	d.kind, d.phase, d.token, d.reason = KindDead, phaseDue, "", reason
+	d.kind, d.phase, d.token, d.reason, d.held = KindDead, phaseDue, "", reason, false
 	s.open = nil
 	s.dead = append(s.dead, d)
 }
@@ -87,7 +90,7 @@ func (r *Registry) close(sp *space, s *subscription, d *delivery) {
 
 func (r *Registry) expire(sp *space, s *subscription, now time.Time) {
 	d := s.open
-	if d == nil {
+	if d == nil || d.held {
 		return
 	}
 	switch {
@@ -145,6 +148,11 @@ func (r *Registry) Dispatch(workspace string, limit int, actor Actor) ([]Lease, 
 		s := sp.subscriptions[sp.order[index]]
 		r.expire(sp, s, now)
 		if s.view.State != SubscriptionActive || now.Before(s.throttle) {
+			continue
+		}
+		if s.open != nil && s.open.held {
+			r.bury(sp, s, s.open, s.open.reason)
+			visited = index + 1
 			continue
 		}
 		if s.open == nil && len(s.queue) > 0 {
@@ -244,7 +252,7 @@ func (r *Registry) Confirm(workspace, id, token string, actor Actor) (Signed, er
 	subscriber, destination, subscriptionID, event, attempt := s.view.Subscription.Subscriber, s.view.Subscription.Destination, s.view.Subscription.ID, d.event, d.attempts+1
 	r.leave()
 	body, at := events.Body(event), now
-	verdict, version, signature := r.check(workspace, destination, subscriber, subscriptionID, event, d, attempt, at, &at, body)
+	verdict, version, signature, signedMessage := r.check(workspace, destination, subscriber, subscriptionID, event, d, attempt, at, &at, body)
 	now = r.enter()
 	defer r.leave()
 	if d.token != token || d.phase != phaseConfirming || !now.Before(d.until) || s.view.State != SubscriptionActive {
@@ -254,9 +262,6 @@ func (r *Registry) Confirm(workspace, id, token string, actor Actor) (Signed, er
 		return Signed{}, ErrStale
 	}
 	switch verdict {
-	case ReasonDependency:
-		r.retry(d, now)
-		return Signed{}, refuse(verdict)
 	case ReasonDestinationRevoked:
 		r.end(sp, s, verdict)
 		return Signed{}, refuse(verdict)
@@ -268,7 +273,26 @@ func (r *Registry) Confirm(workspace, id, token string, actor Actor) (Signed, er
 	case ReasonPermissionRevoked:
 		r.cancel(sp, s, d, verdict)
 		return Signed{}, refuse(verdict)
+	case "":
+	default:
+		r.retry(d, now)
+		return Signed{}, refuse(verdict)
 	}
+	public := published(s, version, at)
+	refused := ""
+	switch {
+	case public == nil:
+		refused = ReasonKeyUnpublished
+	case !ed25519.Verify(public, signedMessage, signature):
+		refused = ReasonKeyMismatch
+	}
+	if refused != "" {
+		d.phase, d.token = phaseDue, ""
+		s.generation++
+		s.view.State, s.view.Reason = SubscriptionSuspended, refused
+		return Signed{}, refuse(refused)
+	}
+	d.version = version
 	d.phase, d.until, d.confirmed = phaseConfirmed, now.Add(r.limits.Lease), true
 	headers := map[string]string{"webhook-delivery": d.id, "webhook-event-id": event.Event.ID, "webhook-event-source": event.Event.Source,
 		"webhook-attempt": strconv.Itoa(attempt), "webhook-key-version": version, "webhook-time": strconv.FormatInt(at.UnixNano(), 10),
@@ -276,36 +300,37 @@ func (r *Registry) Confirm(workspace, id, token string, actor Actor) (Signed, er
 	return Signed{Delivery: d.id, Attempt: attempt, Version: version, At: at, Body: body, Signature: append([]byte(nil), signature...), Headers: headers}, nil
 }
 
-func (r *Registry) check(workspace, destination, subscriber, subscriptionID string, event events.Stored, d *delivery, attempt int, at time.Time, when *time.Time, body []byte) (string, string, []byte) {
+func (r *Registry) check(workspace, destination, subscriber, subscriptionID string, event events.Stored, d *delivery, attempt int, at time.Time, when *time.Time, body []byte) (string, string, []byte, []byte) {
 	state, err := r.config.Destinations.State(workspace, destination)
 	switch {
 	case err != nil:
-		return ReasonDependency, "", nil
+		return ReasonDependency, "", nil, nil
 	case state == DestinationRevoked:
-		return ReasonDestinationRevoked, "", nil
+		return ReasonDestinationRevoked, "", nil, nil
 	case state != DestinationActive:
-		return ReasonDestinationInactive, "", nil
+		return ReasonDestinationInactive, "", nil, nil
 	}
 	allowed, err := r.config.Permits.Allowed(workspace, subscriber, event)
 	switch {
 	case err != nil:
-		return ReasonDependency, "", nil
+		return ReasonDependency, "", nil, nil
 	case !allowed:
-		return ReasonPermissionRevoked, "", nil
+		return ReasonPermissionRevoked, "", nil, nil
 	}
 	version, err := r.config.Signer.Current(workspace, subscriptionID)
 	if err != nil {
-		return ReasonDependency, "", nil
+		return ReasonDependency, "", nil, nil
 	}
 	if fresh := r.clock().UTC().Round(0); fresh.After(at) {
 		*when = fresh
 		at = fresh
 	}
-	signature, err := r.config.Signer.Sign(workspace, subscriptionID, version, message(workspace, d, attempt, version, at, body))
+	signed := message(workspace, d, attempt, version, at, body)
+	signature, err := r.config.Signer.Sign(workspace, subscriptionID, version, signed)
 	if err != nil {
-		return ReasonDependency, "", nil
+		return ReasonDependency, "", nil, nil
 	}
-	return "", version, signature
+	return "", version, signature, signed
 }
 
 func (r *Registry) Redirect(workspace, id, token, current string, hop int, location string, actor Actor) (string, int, error) {
@@ -323,6 +348,15 @@ func (r *Registry) Redirect(workspace, id, token, current string, hop int, locat
 	target, url, next, err := r.config.Redirects.Check(workspace, destination, current, hop, location)
 	if err != nil || target != destination {
 		return "", 0, refuse(ReasonUnapprovedRedirect)
+	}
+	r.enter()
+	defer r.leave()
+	if d.token != token || d.phase != phaseConfirmed {
+		return "", 0, ErrStale
+	}
+	if k := d.sub.keys[d.version]; k == nil || k.State != KeyActive {
+		d.phase, d.token = phaseDue, ""
+		return "", 0, refuse(ReasonKeyUnpublished)
 	}
 	return url, next, nil
 }
@@ -506,7 +540,7 @@ func (r *Registry) ApproveDismiss(workspace, id, letterID string, actor Actor) e
 	s.dead = append(s.dead[:index:index], s.dead[index+1:]...)
 	delete(s.dismiss, letterID)
 	delete(s.redeliver, letterID)
-	if d := s.open; d != nil && (d.reason == ReasonRejected || d.reason == ReasonMaxAge || d.reason == ReasonAttempts) {
+	if d := s.open; d != nil && d.held {
 		r.bury(r.workspaces[workspace], s, d, d.reason)
 	}
 	return nil

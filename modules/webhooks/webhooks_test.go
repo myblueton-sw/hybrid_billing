@@ -2,6 +2,7 @@ package webhooks
 
 import (
 	"bytes"
+	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/binary"
 	"strconv"
@@ -28,7 +29,7 @@ func TestNewRegistry(t *testing.T) {
 	}{
 		"workspaces": {func(l *Limits) *int { return &l.Workspaces }, maxWorkspaces}, "subscriptions": {func(l *Limits) *int { return &l.Subscriptions }, maxSubscription},
 		"types": {func(l *Limits) *int { return &l.Types }, maxTypes}, "attempts": {func(l *Limits) *int { return &l.Attempts }, maxAttempts},
-		"dead": {func(l *Limits) *int { return &l.Dead }, maxDead}, "batch": {func(l *Limits) *int { return &l.Batch }, maxBatch}, "work": {func(l *Limits) *int { return &l.Work }, maxWork},
+		"dead": {func(l *Limits) *int { return &l.Dead }, maxDead}, "keys": {func(l *Limits) *int { return &l.Keys }, maxKeys}, "batch": {func(l *Limits) *int { return &l.Batch }, maxBatch}, "work": {func(l *Limits) *int { return &l.Work }, maxWork},
 	}
 	for name, c := range counts {
 		for value, ok := range map[int]bool{0: false, 1: true, c.max: true, c.max + 1: false} {
@@ -43,7 +44,8 @@ func TestNewRegistry(t *testing.T) {
 		"a short lease": func(l *Limits) { l.Lease = minLease - 1 }, "a long lease": func(l *Limits) { l.Lease = maxLease + 1 },
 		"a short backoff": func(l *Limits) { l.Backoff = minBackoff - 1 }, "a backoff above the maximum": func(l *Limits) { l.Backoff = 2 * time.Minute },
 		"a long maximum backoff": func(l *Limits) { l.MaxBackoff, l.MaxAge = maxMaxBackoff+1, maxMaxAge }, "an age below the backoff": func(l *Limits) { l.MaxAge = time.Second - 1 },
-		"a long age": func(l *Limits) { l.MaxAge = maxMaxAge + 1 },
+		"a long age":       func(l *Limits) { l.MaxAge = maxMaxAge + 1 },
+		"a short key life": func(l *Limits) { l.KeyLife = minKeyLife - 1 }, "a long key life": func(l *Limits) { l.KeyLife = maxKeyLife + 1 },
 	} {
 		l := limits
 		change(&l)
@@ -53,7 +55,8 @@ func TestNewRegistry(t *testing.T) {
 		"the shortest lease": func(l *Limits) { l.Lease = minLease }, "the longest lease": func(l *Limits) { l.Lease = maxLease },
 		"the shortest backoff": func(l *Limits) { l.Backoff = minBackoff }, "a backoff at the maximum": func(l *Limits) { l.Backoff = time.Minute },
 		"the longest maximum backoff": func(l *Limits) { l.MaxBackoff = maxMaxBackoff }, "an age at the backoff": func(l *Limits) { l.MaxAge = time.Second },
-		"the longest age": func(l *Limits) { l.MaxAge = maxMaxAge },
+		"the longest age":       func(l *Limits) { l.MaxAge = maxMaxAge },
+		"the shortest key life": func(l *Limits) { l.KeyLife = minKeyLife }, "the longest key life": func(l *Limits) { l.KeyLife = maxKeyLife },
 	} {
 		l := limits
 		change(&l)
@@ -253,8 +256,7 @@ func TestConfirmAndSignature(t *testing.T) {
 		want.Write(size[:])
 		want.WriteString(value)
 	}
-	sum := sha256.Sum256(append([]byte("k1|"), want.Bytes()...))
-	if !bytes.Equal(signed.Signature, sum[:]) {
+	if !ed25519.Verify(public("k1"), want.Bytes(), signed.Signature) {
 		t.Errorf("the signed message differs from the known answer")
 	}
 	expect(t, "a second confirmation", second(f.r.Confirm("w1", lease.Delivery, lease.Token, relay)), ErrStale)
@@ -270,6 +272,7 @@ func TestConfirmAndSignature(t *testing.T) {
 	expect(t, "a redirect with a stale token", third(f.r.Redirect("w1", lease.Delivery, "nope", "https://d1/", 0, "/x", relay)), ErrStale)
 	f.report(lease, StatusFailed, 0)
 	f.advance(time.Minute)
+	f.publishKey("s1", "k2")
 	f.fk.set(func(k *fakes) { k.version = "k2" })
 	retry := f.dispatch()[0]
 	expect(t, "a redirect before confirmation", third(f.r.Redirect("w1", retry.Delivery, retry.Token, "https://d1/", 0, "/x", relay)), ErrStale)

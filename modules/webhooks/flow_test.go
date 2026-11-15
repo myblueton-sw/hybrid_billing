@@ -1,8 +1,7 @@
 package webhooks
 
 import (
-	"bytes"
-	"crypto/sha256"
+	"crypto/ed25519"
 	"encoding/hex"
 	"errors"
 	"strconv"
@@ -487,8 +486,7 @@ func TestSignatureVerifier(t *testing.T) {
 		at, _ := strconv.ParseInt(h["webhook-time"], 10, 64)
 		d := &delivery{id: h["webhook-delivery"], sub: &subscription{view: SubscriptionView{Subscription: Subscription{ID: h["webhook-subscription"]}}}}
 		d.event.Event.Source, d.event.Event.ID = h["webhook-event-source"], h["webhook-event-id"]
-		sum := sha256.Sum256(append([]byte(h["webhook-key-version"]+"|"), message("w1", d, attempt, h["webhook-key-version"], time.Unix(0, at), body)...))
-		return bytes.Equal(sum[:], signed.Signature)
+		return ed25519.Verify(public(h["webhook-key-version"]), message("w1", d, attempt, h["webhook-key-version"], time.Unix(0, at), body), signed.Signature)
 	}
 	if !verify(signed.Headers, signed.Body) {
 		t.Fatal("the reference verifier rejects a genuine signature")
@@ -542,7 +540,7 @@ func TestConcurrentDispatch(t *testing.T) {
 	}
 }
 
-const knownSignature = "e180854a0c584f2bc3119c4812f2d61ae6f6d1c1b92060171f922e8ab57573ef"
+const knownSignature = "08ec6898e2628e125dd1a2dc6de34a2bc094069b3ec8250415d2430a7c77528a12e1cd8779039da2b86a1f581051dc2b9edbd55e29190b781135020f2fb1420a"
 
 func TestGapHistoryBound(t *testing.T) {
 	l := limits

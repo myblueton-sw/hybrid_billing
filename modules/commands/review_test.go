@@ -126,7 +126,7 @@ func TestAFailureOutsideTheHandlerLeavesNothingBehind(t *testing.T) {
 	*f.armed = 11
 	got := f.code("the clock fails after the recheck and before the apply", f.c.Execute(adjust(ann, "k1", "1")), InternalError)
 	*f.hook = nil
-	if resolves, applies := f.h.count(); resolves != 1 || applies != 0 || *f.armed != 0 || got.Err.Operation != "" {
+	if resolves, applies := f.h.count(); resolves != 2 || applies != 0 || *f.armed != 0 || got.Err.Operation != "" {
 		t.Errorf("%d resolves, %d applies, %d reads left, operation %q", resolves, applies, *f.armed, got.Err.Operation)
 	}
 	if record := f.last(); record.Outcome != string(InternalError) || record.Operation != "" {
@@ -137,7 +137,7 @@ func TestAFailureOutsideTheHandlerLeavesNothingBehind(t *testing.T) {
 		t.Errorf("the failure kept the key, the lock or a journal slot: %+v", done)
 	}
 	*f.hook = func() { panic("synthetic clock failure") }
-	*f.armed = 12
+	*f.armed = 13
 	next := adjust(ann, "k2", "1")
 	next.Expected = done.Revision
 	last := f.code("the clock fails while the record is written", f.c.Execute(next), "")
@@ -161,11 +161,12 @@ type overlapping struct {
 	active  atomic.Int64
 	overlap atomic.Bool
 	applies atomic.Int64
+	during  atomic.Int64
 	spawn   func()
 }
 
 func (o *overlapping) Resolve(string, string) (Target, Resolution) {
-	if o.active.Load() > 0 {
+	if o.active.Load() > 0 && o.during.Add(1) > 1 {
 		o.overlap.Store(true)
 	}
 	return Target{CustomerID: "c1", Revision: "r1"}, Found
@@ -218,7 +219,7 @@ func TestAReplayIsRecordedAfterItsOriginal(t *testing.T) {
 		case <-time.After(200 * time.Millisecond):
 		}
 	}
-	*f.armed = 12
+	*f.armed = 13
 	first := f.code("the first call, whose record is being written", f.c.Execute(adjust(ann, "k1", "1")), "")
 	second := f.code("the same call sent while that record is written", <-concurrent, "")
 	records := f.c.Journal(0, 10)

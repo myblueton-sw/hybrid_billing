@@ -2,6 +2,7 @@ package commands
 
 import (
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -306,36 +307,133 @@ func (r *Registry) sweepOperations(now time.Time) {
 	}
 }
 
-func (r *Registry) lookup(key operationKey, who holder, now time.Time) (*operation, bool) {
+type verdict int
+
+const (
+	reserving verdict = iota
+	conflicting
+	lapsed
+	replaying
+	full
+	inflight
+)
+
+type flight struct {
+	object   string
+	applying string
+	release  func()
+	key      operationKey
+	op       *operation
+}
+
+type lockKey struct {
+	workspace string
+	object    string
+}
+
+type lockEntry struct {
+	whole  sync.RWMutex
+	single sync.Mutex
+	refs   int
+}
+
+func (r *Registry) entry(key lockKey) *lockEntry {
+	found := r.locks[key]
+	if found == nil {
+		found = &lockEntry{}
+		r.locks[key] = found
+	}
+	found.refs++
+	return found
+}
+
+func (r *Registry) unref(key lockKey) {
+	if r.locks[key].refs--; r.locks[key].refs == 0 {
+		delete(r.locks, key)
+	}
+}
+
+func (r *Registry) acquire(workspace, object string) func() {
+	whole, single := lockKey{workspace, ""}, lockKey{workspace, object}
+	r.mu.Lock()
+	space := r.entry(whole)
+	var one *lockEntry
+	if object != "" {
+		one = r.entry(single)
+	}
+	r.mu.Unlock()
+	if one == nil {
+		space.whole.Lock()
+	} else {
+		space.whole.RLock()
+		one.single.Lock()
+	}
+	return func() {
+		if one == nil {
+			space.whole.Unlock()
+		} else {
+			one.single.Unlock()
+			space.whole.RUnlock()
+		}
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		r.unref(whole)
+		if one != nil {
+			r.unref(single)
+		}
+	}
+}
+
+func (r *Registry) lookup(key operationKey, who holder, digest [32]byte, now time.Time) (verdict, Result, *operation) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sweepOperations(now)
 	stored := r.operations[key]
-	if stored != nil && r.expired(stored, now, r.limits.Retention) {
-		r.drop(key, stored)
-		stored = nil
+	switch {
+	case stored != nil && (stored.workspace != who.workspace || stored.user != who.user || stored.digest != digest):
+		return conflicting, Result{}, nil
+	case stored != nil && stored.pending:
+		return inflight, Result{}, nil
+	case stored != nil && r.expired(stored, now, r.limits.Replay):
+		return lapsed, Result{}, nil
+	case stored != nil:
+		return replaying, detached(stored.result), nil
+	case len(r.operations) >= r.limits.Operations || !r.stored.room(who, r.limits, r.limits.UserOperations, r.limits.WorkspaceOperations):
+		return full, Result{}, nil
 	}
-	if stored != nil {
-		return stored, true
-	}
-	return nil, len(r.operations) < r.limits.Operations && r.stored.room(who, r.limits, r.limits.UserOperations, r.limits.WorkspaceOperations)
+	op := &operation{workspace: who.workspace, user: who.user, digest: digest, pending: true}
+	r.operations[key] = op
+	r.stored.add(who)
+	return reserving, Result{}, op
 }
 
-func (r *Registry) store(key operationKey, op *operation, reserved time.Time) {
+func (r *Registry) complete(key operationKey, op *operation, result Result, now, reservedAt time.Time) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if op.created.IsZero() {
-		op.created = reserved
+	created := now
+	if created.IsZero() {
+		created = reservedAt
 	}
-	if op.created.IsZero() {
-		op.created = r.lastKept
+	if created.IsZero() {
+		created = r.lastKept
 	}
-	if !op.created.IsZero() {
+	if !created.IsZero() {
+		if created.Before(r.lastCreated) {
+			created = r.lastCreated
+		}
+		r.lastCreated = created
 		for index := len(r.order) - 1; index >= r.first && r.order[index].op.created.IsZero(); index-- {
-			r.order[index].op.created = op.created
+			r.order[index].op.created = created
 		}
 	}
-	r.operations[key] = op
+	op.result, op.pending, op.created = detached(result), false, created
 	r.order = append(r.order, ordered{key: key, op: op})
-	r.stored.add(holder{op.workspace, op.user})
+}
+
+func (r *Registry) abandon(key operationKey, op *operation) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if op.pending {
+		r.drop(key, op)
+	}
 }

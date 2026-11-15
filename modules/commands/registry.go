@@ -23,6 +23,7 @@ type operation struct {
 	digest    [32]byte
 	result    Result
 	created   time.Time
+	pending   bool
 }
 
 type ordered struct {
@@ -32,7 +33,6 @@ type ordered struct {
 
 type Registry struct {
 	mu          sync.Mutex
-	mutations   sync.Mutex
 	built       bool
 	gate        *gate.Gate
 	limits      Limits
@@ -50,6 +50,8 @@ type Registry struct {
 	lastKept    time.Time
 	records     held
 	reserved    int
+	lastCreated time.Time
+	locks       map[lockKey]*lockEntry
 	buckets     map[holder]*bucket
 	cleaned     int
 	throttled   map[string]map[string]*Throttle
@@ -61,7 +63,7 @@ func New(g *gate.Gate, limits Limits) (*Registry, error) {
 		return nil, ErrInvalid
 	}
 	r := &Registry{built: true, gate: g, limits: limits, clock: g.Clock(), definitions: map[string]Definition{}, operations: map[operationKey]*operation{},
-		stored: newHeld(), records: newHeld(), buckets: map[holder]*bucket{}, cleaned: 1, throttled: map[string]map[string]*Throttle{}, aggregated: map[unrecordedKey]*Unrecorded{}}
+		stored: newHeld(), records: newHeld(), buckets: map[holder]*bucket{}, cleaned: 1, throttled: map[string]map[string]*Throttle{}, aggregated: map[unrecordedKey]*Unrecorded{}, locks: map[lockKey]*lockEntry{}}
 	if _, err := rand.Read(r.secret[:]); err != nil {
 		return nil, ErrUnavailable
 	}

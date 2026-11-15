@@ -136,6 +136,7 @@ type Target struct {
 	HasMonth      bool
 	Revision      string
 	AuthorID      string
+	Key           string
 }
 
 type Context struct {
@@ -145,6 +146,7 @@ type Context struct {
 	Operation string
 	Request   string
 	Target    string
+	Key       string
 	Resolved  string
 	Expected  string
 	Rationale string

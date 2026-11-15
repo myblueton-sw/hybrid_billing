@@ -275,6 +275,18 @@ type StatusView struct {
 	Evaluated   time.Time
 }
 
+type Coverage struct {
+	Contract string
+	Binding  string
+	Term     string
+	Revision int
+	NetDays  int
+	Mode     string
+	Zone     string
+	Date     string
+	Due      string
+}
+
 type Estimate struct {
 	Contract string
 	Binding  string

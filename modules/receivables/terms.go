@@ -300,3 +300,30 @@ func (r *Registry) Estimate(workspace, contract, date string) (Estimate, error) 
 	t := s.terms[[2]string{b.view.Binding.Term, itoa(b.view.Binding.Revision)}]
 	return Estimate{Contract: contract, Binding: b.view.Binding.ID, Date: date, Due: addDays(date, t.view.Term.NetDays)}, nil
 }
+
+func (r *Registry) Cover(workspace, contract string, at time.Time) (Coverage, error) {
+	if !validID(workspace) || !validID(contract) || at.IsZero() {
+		return Coverage{}, ErrInvalid
+	}
+	r.enter()
+	defer r.leave()
+	s := r.workspaces[workspace]
+	if s == nil {
+		return Coverage{}, refuse(ReasonTermMissing)
+	}
+	location := r.zoneOf(s, contract)
+	if location == nil {
+		return Coverage{}, refuse(ReasonTermMissing)
+	}
+	date := dateOf(at, location)
+	if !validDate(date) {
+		return Coverage{}, ErrInvalid
+	}
+	b, err := r.cover(s, contract, date)
+	if err != nil {
+		return Coverage{}, err
+	}
+	t := s.terms[[2]string{b.view.Binding.Term, itoa(b.view.Binding.Revision)}]
+	return Coverage{Contract: contract, Binding: b.view.Binding.ID, Term: b.view.Binding.Term, Revision: b.view.Binding.Revision,
+		NetDays: t.view.Term.NetDays, Mode: t.view.Term.Mode, Zone: b.view.Binding.Zone, Date: date, Due: addDays(date, t.view.Term.NetDays)}, nil
+}

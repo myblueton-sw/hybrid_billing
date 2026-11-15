@@ -32,6 +32,14 @@ const (
 	maxMaxAge       = 30 * 24 * time.Hour
 	jitterPercent   = 20
 	signatureTag    = "hybrid-billing/webhook/v1"
+	challengeTag    = "hybrid-billing/webhook-key/v1"
+	maxKeys         = 16
+	namesPerKey     = 64
+	minKeyLife      = time.Hour
+	maxKeyLife      = 3650 * 24 * time.Hour
+	KeyProposed     = "proposed"
+	KeyActive       = "active"
+	KeyRetired      = "retired"
 
 	KindHuman     = "human"
 	KindAssistant = "assistant"
@@ -87,6 +95,10 @@ const (
 	ReasonBackoff             = "backoff"
 	ReasonThrottled           = "throttled"
 	ReasonPaused              = "paused"
+	ReasonKeyUnpublished      = "key_unpublished"
+	ReasonKeyMismatch         = "key_mismatch"
+	ReasonWeakKey             = "weak_key"
+	ReasonKeyLife             = "key_life"
 )
 
 type Refusal struct {
@@ -140,6 +152,8 @@ type Limits struct {
 	Dead          int
 	Batch         int
 	Work          int
+	Keys          int
+	KeyLife       time.Duration
 }
 
 type Actor struct {
@@ -193,6 +207,20 @@ type Signed struct {
 type Outcome struct {
 	Status     string
 	RetryAfter time.Duration
+}
+
+type Key struct {
+	Version   string
+	Public    []byte
+	NotBefore time.Time
+	NotAfter  time.Time
+}
+
+type KeyView struct {
+	Key      Key
+	State    string
+	Proposer string
+	Approver string
 }
 
 type DeliveryView struct {

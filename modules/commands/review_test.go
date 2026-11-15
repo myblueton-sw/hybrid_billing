@@ -118,12 +118,12 @@ func TestAResolutionOutsideTheListIsAMissingTarget(t *testing.T) {
 func TestAFailureOutsideTheHandlerLeavesNothingBehind(t *testing.T) {
 	limits := testLimits
 	limits.Journal = 3
-	f := setupWith(t, limits)
+	f := setupWith(t, solo(limits))
 	f.member("ann")
 	f.grant("ann", gate.Issue, "c1")
 	ann := f.answer("ann")
 	*f.hook = func() { panic("synthetic clock failure") }
-	*f.armed = 8
+	*f.armed = 11
 	got := f.code("the clock fails after the recheck and before the apply", f.c.Execute(adjust(ann, "k1", "1")), InternalError)
 	*f.hook = nil
 	if resolves, applies := f.h.count(); resolves != 1 || applies != 0 || *f.armed != 0 || got.Err.Operation != "" {
@@ -137,7 +137,7 @@ func TestAFailureOutsideTheHandlerLeavesNothingBehind(t *testing.T) {
 		t.Errorf("the failure kept the key, the lock or a journal slot: %+v", done)
 	}
 	*f.hook = func() { panic("synthetic clock failure") }
-	*f.armed = 9
+	*f.armed = 12
 	next := adjust(ann, "k2", "1")
 	next.Expected = done.Revision
 	last := f.code("the clock fails while the record is written", f.c.Execute(next), "")
@@ -218,7 +218,7 @@ func TestAReplayIsRecordedAfterItsOriginal(t *testing.T) {
 		case <-time.After(200 * time.Millisecond):
 		}
 	}
-	*f.armed = 9
+	*f.armed = 12
 	first := f.code("the first call, whose record is being written", f.c.Execute(adjust(ann, "k1", "1")), "")
 	second := f.code("the same call sent while that record is written", <-concurrent, "")
 	records := f.c.Journal(0, 10)

@@ -78,7 +78,7 @@ func TestOpenAPIDocument(t *testing.T) {
 			t.Errorf("%s: operation %v", entry.ID, operation)
 		}
 		responses := operation["responses"].(map[string]any)
-		wanted := []string{"401", "500", "501", "503"}
+		wanted := []string{"401", "429", "500", "501", "503"}
 		if entry.Supported {
 			wanted = append(wanted, "200", "403", "409", "422")
 		}
@@ -122,7 +122,9 @@ func TestOpenAPIDocument(t *testing.T) {
 	}
 	for name, c := range map[string][3]string{
 		"a reading command cannot conflict on a key":     {"statement.read", "409", "revision_conflict"},
-		"a mutating command can":                         {"statement.adjust", "409", "idempotency_conflict, revision_conflict"},
+		"a mutating command can":                         {"statement.adjust", "409", "idempotency_conflict, idempotency_key_expired, revision_conflict"},
+		"a reading command cannot have an expired key":   {"statement.read", "409", "revision_conflict"},
+		"every command can be rate limited":              {"statement.planned", "429", "rate_limited"},
 		"only an approval can be a self approval":        {"statement.approve", "403", "permission_denied, self_approval_denied"},
 		"an ordinary command cannot":                     {"statement.adjust", "403", "permission_denied"},
 		"a command without a handler is not implemented": {"statement.planned", "501", "unsupported_capability"},
@@ -135,6 +137,9 @@ func TestOpenAPIDocument(t *testing.T) {
 	failed := schemas["Error"].(map[string]any)
 	if len(failed["properties"].(map[string]any)["next_action"].(map[string]any)["enum"].([]any)) != 6 {
 		t.Errorf("the next actions are not a closed list: %v", failed["properties"])
+	}
+	if retry := failed["properties"].(map[string]any)["retry_after_ms"].(map[string]any); retry["type"] != "integer" || retry["minimum"] != float64(1) {
+		t.Errorf("the retry interval is not in the error schema: %v", retry)
 	}
 	for name, schema := range schemas {
 		if _, closed := schema.(map[string]any)["additionalProperties"]; closed {
@@ -160,7 +165,7 @@ func TestOpenAPIDocument(t *testing.T) {
 		codes = append(codes, string(code))
 	}
 	sort.Strings(codes)
-	if strings.Join(listed, ",") != strings.Join(codes, ",") || len(codes) != 13 {
+	if strings.Join(listed, ",") != strings.Join(codes, ",") || len(codes) != 15 {
 		t.Errorf("error catalogue %v", listed)
 	}
 	empty, err := New(f.g, testLimits)
@@ -183,6 +188,7 @@ func TestTheErrorCatalogue(t *testing.T) {
 		InvalidRequest: {422, false, NextCorrect}, InvalidStage: {422, false, NextCorrect}, PrerequisiteFailed: {422, false, NextCorrect},
 		UnsupportedCommand: {404, false, NextNone}, UnsupportedCapability: {501, false, NextNone},
 		AuthorityUnavailable: {503, true, NextRetry}, DependencyUnavailable: {503, true, NextRetry}, InternalError: {500, false, NextNone},
+		RateLimited: {429, true, NextRetry}, IdempotencyKeyExpired: {409, false, NextInspect},
 	}
 	if len(errorRules) != len(want) {
 		t.Fatalf("%d codes", len(errorRules))

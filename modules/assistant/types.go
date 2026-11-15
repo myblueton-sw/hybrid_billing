@@ -188,15 +188,16 @@ type Invocation struct {
 }
 
 type Reply struct {
-	Status    string
-	Code      string
-	Operation string
-	Replay    bool
-	Fields    map[string]string
-	Truncated []string
-	Calls     int
-	Remaining int
-	Targets   int
+	Status     string
+	Code       string
+	Operation  string
+	Replay     bool
+	Fields     map[string]string
+	Truncated  []string
+	RetryAfter time.Duration
+	Calls      int
+	Remaining  int
+	Targets    int
 }
 
 type Card struct {

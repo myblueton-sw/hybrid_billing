@@ -29,6 +29,8 @@ const (
 	AuthorityUnavailable  Code = "authority_unavailable"
 	DependencyUnavailable Code = "dependency_unavailable"
 	InternalError         Code = "internal_error"
+	RateLimited           Code = "rate_limited"
+	IdempotencyKeyExpired Code = "idempotency_key_expired"
 )
 
 type NextAction string
@@ -62,6 +64,8 @@ var errorRules = map[Code]errorRule{
 	AuthorityUnavailable:  {503, true, NextRetry},
 	DependencyUnavailable: {503, true, NextRetry},
 	InternalError:         {500, false, NextNone},
+	RateLimited:           {429, true, NextRetry},
+	IdempotencyKeyExpired: {409, false, NextInspect},
 }
 
 var handlerCodes = map[Code]bool{
@@ -70,13 +74,14 @@ var handlerCodes = map[Code]bool{
 }
 
 type Error struct {
-	Code      Code
-	Status    int
-	Retry     bool
-	Next      NextAction
-	Request   string
-	Fields    []string
-	Operation string
+	Code       Code
+	Status     int
+	Retry      bool
+	Next       NextAction
+	Request    string
+	Fields     []string
+	Operation  string
+	RetryAfter time.Duration
 }
 
 type Failure struct {
@@ -209,20 +214,55 @@ type Result struct {
 }
 
 type Limits struct {
-	Fields     int
-	Value      int
-	Rationale  int
-	Operations int
-	Journal    int
+	Fields              int
+	Value               int
+	Rationale           int
+	Operations          int
+	Journal             int
+	Workspaces          int
+	Users               int
+	WorkspaceJournal    int
+	UserJournal         int
+	WorkspaceOperations int
+	UserOperations      int
+	Replay              time.Duration
+	Retention           time.Duration
+	Burst               int
+	Refill              time.Duration
+}
+
+const (
+	minReplay    = time.Minute
+	maxReplay    = 30 * 24 * time.Hour
+	minRetention = time.Hour
+	maxRetention = 3650 * 24 * time.Hour
+	maxBurst     = 100000
+	minRefill    = time.Millisecond
+	maxRefill    = time.Hour
+)
+
+func within(count, share, bound int) bool {
+	return count <= bound/share
+}
+
+func (e *Error) RetryAfterMillis() int64 {
+	if e.RetryAfter <= 0 {
+		return 0
+	}
+	return int64((e.RetryAfter + time.Millisecond - 1) / time.Millisecond)
 }
 
 func (l Limits) valid() bool {
-	for _, value := range []int{l.Fields, l.Value, l.Rationale, l.Operations, l.Journal} {
+	for _, value := range []int{l.Fields, l.Value, l.Rationale, l.Operations, l.Journal, l.Workspaces, l.Users, l.WorkspaceJournal, l.UserJournal,
+		l.WorkspaceOperations, l.UserOperations, l.Burst} {
 		if value < 1 {
 			return false
 		}
 	}
-	return true
+	return within(l.Workspaces, l.WorkspaceJournal, l.Journal) && within(l.Workspaces, l.WorkspaceOperations, l.Operations) &&
+		within(l.Users, l.UserJournal, l.WorkspaceJournal) && within(l.Users, l.UserOperations, l.WorkspaceOperations) &&
+		l.Replay >= minReplay && l.Replay <= maxReplay && l.Retention >= minRetention && l.Retention <= maxRetention && l.Retention >= l.Replay &&
+		l.Burst <= maxBurst && l.Refill >= minRefill && l.Refill <= maxRefill
 }
 
 const Marker = "not_recorded"

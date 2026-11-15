@@ -195,3 +195,37 @@ func TestPinnedDigest(t *testing.T) {
 		t.Errorf("term digest %s, want %s", v.Digest, want)
 	}
 }
+
+func TestCoverUsesTheContractZoneAndBindingRules(t *testing.T) {
+	r, _ := openWith(t, testLimits())
+	at := time.Date(2026, 9, 30, 16, 0, 0, 0, time.UTC)
+	expect(t, "invalid", second(r.Cover("", "k", at)), "workspace")
+	expect(t, "invalid", second(r.Cover("ws", "", at)), "contract")
+	expect(t, "invalid", second(r.Cover("ws", "k", time.Time{})), "instant")
+	expect(t, ReasonTermMissing, second(r.Cover("ws", "k", at)), "no workspace")
+	must(r.RecordTerm("ws", Term{ID: "n", Revision: 1, NetDays: 30, Mode: ModeCalendar}, "clerk"))
+	must(r.ApproveTerm("ws", "n", 1, "lead"))
+	expect(t, ReasonTermMissing, second(r.Cover("ws", "k", at)), "no binding")
+	must(r.Bind("ws", Binding{ID: "w", Contract: "k", Term: "n", Revision: 1, Zone: "Asia/Seoul", From: "2026-09-01", Reason: "initial"}, "clerk"))
+	must(r.WithdrawBinding("ws", "w", "clerk"))
+	expect(t, ReasonTermMissing, second(r.Cover("ws", "k", at)), "only withdrawn")
+	must(r.Bind("ws", Binding{ID: "p", Contract: "k", Term: "n", Revision: 1, Zone: "Asia/Seoul", From: "2026-10-01", Reason: "initial"}, "clerk"))
+	expect(t, ReasonTermPending, second(r.Cover("ws", "k", at)), "pending")
+	must(r.ApproveBinding("ws", "p", "lead"))
+	c := must(r.Cover("ws", "k", at))
+	want := Coverage{Contract: "k", Binding: "p", Term: "n", Revision: 1, NetDays: 30, Mode: ModeCalendar, Zone: "Asia/Seoul", Date: "2026-10-01", Due: "2026-10-31"}
+	if c != want {
+		t.Errorf("cover: %+v", c)
+	}
+	expect(t, ReasonTermMissing, second(r.Cover("ws", "k", at.Add(-61*time.Minute))), "before the binding in the contract zone")
+	expect(t, "invalid", second(r.Cover("ws", "k", time.Date(2100, 1, 1, 0, 0, 0, 0, time.UTC))), "a date Record would refuse")
+	for _, instant := range []time.Time{at, at.Add(40 * 24 * time.Hour), at.Add(400 * 24 * time.Hour)} {
+		c := must(r.Cover("ws", "k", instant))
+		e := must(r.Estimate("ws", "k", c.Date))
+		if e.Binding != c.Binding || e.Due != c.Due || e.Date != c.Date {
+			t.Errorf("cover %+v disagrees with estimate %+v", c, e)
+		}
+	}
+	must(r.Bind("ws", Binding{ID: "q", Contract: "k", Term: "n", Revision: 1, Zone: "Asia/Seoul", From: "2026-10-05", Reason: "correction"}, "clerk"))
+	expect(t, ReasonTermConflict, second(r.Cover("ws", "k", at.Add(5*24*time.Hour))), "conflict")
+}

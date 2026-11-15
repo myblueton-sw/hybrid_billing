@@ -264,7 +264,7 @@ func TestPermissions(t *testing.T) {
 	}
 }
 
-const releaseAnswer = "5f01b2d66e3a025bb7a22583cb9015829d419439a17dacf12cb56682165dcadb"
+const releaseAnswer = "750040193bb6b0202b17999a902c26afd740bd90cd56482ef02c8728f418694c"
 
 func TestReleaseEncoding(t *testing.T) {
 	base := fixture("1.0.0")

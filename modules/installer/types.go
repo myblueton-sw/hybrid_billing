@@ -26,6 +26,38 @@ const (
 	ChangeConfig      = "config"
 	ChangeDestination = "destination"
 	ChangePlan        = "plan"
+	ChangeUpgrade     = "upgrade"
+	ChangeRollback    = "rollback"
+
+	RunInstall  = "install"
+	RunUpgrade  = "upgrade"
+	RunRollback = "rollback"
+
+	StateInstalled     = "installed"
+	StateUpgradeFailed = "upgrade_failed"
+
+	StepQuiesce = "quiesce"
+	StepBackup  = "backup"
+	StepVerify  = "verify"
+
+	ActionReplace   = "replace"
+	ActionRemove    = "remove"
+	ActionReuse     = "reuse"
+	ActionRetain    = "retain"
+	ActionDetach    = "detach"
+	ActionReattach  = "reattached"
+	ActionAdopt     = "adopt_created"
+	ActionRestart   = "restart"
+	ActionLeftover  = "leftover"
+	BasisRecordName = "register_record_and_name"
+
+	EffectRetained = "retained"
+	EffectStale    = "stale_content"
+
+	ConflictPortMoved      = "port_moved"
+	ConflictVolumeRemapped = "volume_remapped"
+	ConflictDataRemoved    = "data_volume_removed"
+	ConflictOwnedMissing   = "owned_missing"
 
 	ProposalPending   = "pending"
 	ProposalApplied   = "applied"
@@ -106,6 +138,13 @@ const (
 	ReasonAcceptanceUsed     = "acceptance_used"
 	ReasonNotAllowedState    = "not_allowed_state"
 	ReasonInterrupted        = "interrupted"
+	ReasonNotInstalled       = "not_installed"
+	ReasonNotUpgradable      = "not_upgradable"
+	ReasonDirection          = "direction"
+	ReasonDataForm           = "data_form"
+	ReasonDataTouched        = "data_touched"
+	ReasonNotNeeded          = "not_needed"
+	ReasonRolledBack         = "rolled_back"
 	ReasonDependency         = "dependency_unavailable"
 	ReasonUnknownCode        = "unknown_code"
 	ReasonExpired            = "expired"
@@ -182,12 +221,13 @@ type Volume struct {
 }
 
 type Release struct {
-	Version   string
-	Key       string
-	Platforms []Platform
-	Artifacts []Artifact
-	Services  []Service
-	Volumes   []Volume
+	Version     string
+	Key         string
+	UpgradeFrom []string
+	Platforms   []Platform
+	Artifacts   []Artifact
+	Services    []Service
+	Volumes     []Volume
 }
 
 type Site struct {
@@ -228,6 +268,7 @@ type Acceptance struct {
 	Version string
 	Hash    string
 	Admin   string
+	Run     string
 }
 
 type Change struct {
@@ -283,9 +324,12 @@ type DataEffect struct {
 }
 
 type PreviewView struct {
+	Kind        string
+	Basis       string
 	Site        string
 	Version     string
 	Hash        string
+	Leftovers   []Item
 	Services    []Item
 	Ports       []Item
 	Volumes     []Item
@@ -295,6 +339,9 @@ type PreviewView struct {
 }
 
 type RunView struct {
+	Kind     string
+	Backup   string
+	Scope    []string
 	ID       string
 	Site     string
 	Version  string
@@ -323,4 +370,36 @@ type Result struct {
 type Guidance struct {
 	Cause string
 	Steps []string
+}
+
+type OwnedService struct {
+	Name  string
+	Ports []string
+}
+
+type OwnedVolume struct {
+	Host     string
+	Logical  string
+	Data     bool
+	Detached bool
+}
+
+type History struct {
+	Kind   string
+	From   string
+	To     string
+	Run    string
+	Backup string
+	Runs   []string
+}
+
+type InstalledView struct {
+	Version        string
+	State          string
+	Services       []OwnedService
+	Volumes        []OwnedVolume
+	Touched        bool
+	TouchedVersion string
+	History        []History
+	Backups        []string
 }

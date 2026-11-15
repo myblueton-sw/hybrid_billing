@@ -89,6 +89,20 @@ func semver(text string) ([3]int, bool) {
 	return out, true
 }
 
+func compare(a, b string) int {
+	x, _ := semver(a)
+	y, _ := semver(b)
+	for index := range x {
+		switch {
+		case x[index] < y[index]:
+			return -1
+		case x[index] > y[index]:
+			return 1
+		}
+	}
+	return 0
+}
+
 type encoder struct {
 	out bytes.Buffer
 }

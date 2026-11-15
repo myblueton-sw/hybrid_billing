@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"errors"
 	"net/http"
 	"sync"
 	"time"
@@ -17,6 +18,7 @@ const (
 	CookiePath   = "/api/v1"
 	tokenBytes   = 32
 	maxSessions  = 10000
+	maxEvictions = 20
 	clientHeader = "X-HB-Client"
 	csrfHeader   = "X-CSRF-Token"
 )
@@ -25,6 +27,8 @@ type session struct {
 	verifier  identity.Verifier
 	workspace string
 	csrf      string
+	created   time.Time
+	login     string
 }
 
 type sessions struct {
@@ -44,7 +48,32 @@ func encode(b []byte) string { return base64.RawURLEncoding.EncodeToString(b) }
 
 func verifierOf(token []byte) identity.Verifier { return identity.Verifier(sha256.Sum256(token)) }
 
-func (s *sessions) put(v identity.Verifier, workspace string) (string, error) {
+func (s *sessions) prune(before time.Time) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for v, found := range s.byID {
+		if found.created.Before(before) {
+			delete(s.byID, v)
+		}
+	}
+}
+
+func (s *sessions) oldest(login string, except identity.Verifier) (identity.Verifier, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var best *session
+	for _, found := range s.byID {
+		if found.login == login && found.verifier != except && (best == nil || found.created.Before(best.created)) {
+			best = found
+		}
+	}
+	if best == nil {
+		return identity.Verifier{}, false
+	}
+	return best.verifier, true
+}
+
+func (s *sessions) put(v identity.Verifier, workspace, login string, now time.Time) (string, error) {
 	raw := random(tokenBytes)
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -52,7 +81,7 @@ func (s *sessions) put(v identity.Verifier, workspace string) (string, error) {
 		return "", ErrStart
 	}
 	csrf := encode(raw)
-	s.byID[v] = &session{verifier: v, workspace: workspace, csrf: csrf}
+	s.byID[v] = &session{verifier: v, workspace: workspace, csrf: csrf, created: now, login: login}
 	return csrf, nil
 }
 
@@ -73,17 +102,33 @@ func (s *sessions) drop(v identity.Verifier) {
 }
 
 func (s *Server) OpenSession(triple identity.Triple, workspace string, secure bool) (cookie *http.Cookie, csrf string, err error) {
+	cookie, csrf, _, err = s.openSession(triple, workspace, secure)
+	return cookie, csrf, err
+}
+
+func (s *Server) openSession(triple identity.Triple, workspace string, secure bool) (*http.Cookie, string, identity.Verifier, error) {
 	raw := random(tokenBytes)
 	v := verifierOf(raw)
-	if csrf, err = s.sessions.put(v, workspace); err != nil {
-		return nil, "", err
+	csrf, err := s.sessions.put(v, workspace, triple.Subject, s.clock())
+	if err != nil {
+		return nil, "", v, err
 	}
-	if err := s.identity.Boundary().OpenSession(triple, v, sessionIdle, sessionAbsolute); err != nil {
+	err = s.identity.Boundary().OpenSession(triple, v, sessionIdle, sessionAbsolute)
+	for tries := 0; errors.Is(err, identity.ErrLimit) && tries < maxEvictions; tries++ {
+		old, ok := s.sessions.oldest(triple.Subject, v)
+		if !ok {
+			break
+		}
+		_ = s.identity.Boundary().EndSession(old)
+		s.sessions.drop(old)
+		err = s.identity.Boundary().OpenSession(triple, v, sessionIdle, sessionAbsolute)
+	}
+	if err != nil {
 		s.sessions.drop(v)
-		return nil, "", err
+		return nil, "", v, err
 	}
 	return &http.Cookie{Name: CookieName, Value: encode(raw), Path: CookiePath, HttpOnly: true, SameSite: http.SameSiteStrictMode, Secure: secure,
-		MaxAge: int(sessionAbsolute / time.Second)}, csrf, nil
+		MaxAge: int(sessionAbsolute / time.Second)}, csrf, v, nil
 }
 
 func (s *Server) lookup(r *http.Request) (session, bool) {

@@ -22,7 +22,8 @@ type boundaryCode struct {
 }
 
 var boundaryCodes = []boundaryCode{{CodeBodyTooLarge, http.StatusRequestEntityTooLarge}, {CodeCSRF, http.StatusForbidden},
-	{CodeMisdirected, http.StatusMisdirectedRequest}, {CodeOrigin, http.StatusForbidden}}
+	{CodeLinkInvalid, http.StatusUnprocessableEntity}, {CodeMisdirected, http.StatusMisdirectedRequest}, {CodeOrigin, http.StatusForbidden},
+	{CodePasswordForm, http.StatusUnprocessableEntity}}
 
 type errorBody struct {
 	Code         string   `json:"code"`
@@ -77,11 +78,12 @@ var moduleRules = map[commands.Code]struct {
 	retry  bool
 	next   commands.NextAction
 }{
-	commands.Unauthenticated:      {http.StatusUnauthorized, false, commands.NextAnswer},
-	commands.InvalidRequest:       {http.StatusUnprocessableEntity, false, commands.NextCorrect},
-	commands.AuthorityUnavailable: {http.StatusServiceUnavailable, true, commands.NextRetry},
-	commands.InternalError:        {http.StatusInternalServerError, false, commands.NextNone},
-	commands.UnsupportedCommand:   {http.StatusNotFound, false, commands.NextNone},
+	commands.Unauthenticated:       {http.StatusUnauthorized, false, commands.NextAnswer},
+	commands.InvalidRequest:        {http.StatusUnprocessableEntity, false, commands.NextCorrect},
+	commands.AuthorityUnavailable:  {http.StatusServiceUnavailable, true, commands.NextRetry},
+	commands.InternalError:         {http.StatusInternalServerError, false, commands.NextNone},
+	commands.UnsupportedCommand:    {http.StatusNotFound, false, commands.NextNone},
+	commands.DependencyUnavailable: {http.StatusServiceUnavailable, true, commands.NextRetry},
 }
 
 func failCode(w http.ResponseWriter, code commands.Code, request string) {

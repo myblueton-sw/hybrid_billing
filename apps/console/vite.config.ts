@@ -38,6 +38,7 @@ const revision = hash(
     .join("\n"),
 );
 const proxy = {
+  "/api/v1": { target: "http://127.0.0.1:8820", changeOrigin: true },
   "/api/focus-collection-status": { target: "http://127.0.0.1:8810", changeOrigin: true },
   "/api/focus-connections": {
     target: "http://127.0.0.1:8810",

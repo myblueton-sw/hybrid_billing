@@ -275,3 +275,16 @@ func (r *Registry) DocumentOf(workspace, id string) (DocumentView, error) {
 	}
 	return viewDocument(s.documents[id]), nil
 }
+
+func (r *Registry) CreditsOf(workspace, id string) ([]string, error) {
+	r.enter()
+	defer r.leave()
+	if !validID(workspace) || !validID(id) {
+		return nil, ErrInvalid
+	}
+	s := r.space(workspace)
+	if s == nil || s.documents[id] == nil {
+		return nil, ErrNotFound
+	}
+	return append([]string{}, s.documents[id].credits...), nil
+}

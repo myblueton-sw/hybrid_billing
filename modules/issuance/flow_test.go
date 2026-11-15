@@ -394,3 +394,28 @@ func TestStoredFileIsACopyOfTheRendererBuffer(t *testing.T) {
 		t.Fatal("the stored file shares the renderer buffer")
 	}
 }
+
+func TestCreditsOfListsEveryCredit(t *testing.T) {
+	f := standard(t)
+	f.issued(t, draftOf("d1", "inv"))
+	if got := must(f.r.CreditsOf("ws", "d1")); got == nil || len(got) != 0 {
+		t.Fatalf("no credits: %#v", got)
+	}
+	for _, id := range []string{"c1", "c2"} {
+		c := draftOf(id, "crn", Line{Text: "x", Amount: "1"})
+		c.Original = "d1"
+		f.issued(t, c)
+	}
+	got := must(f.r.CreditsOf("ws", "d1"))
+	if len(got) != 2 || got[0] != "c1" || got[1] != "c2" {
+		t.Fatal(got)
+	}
+	got[0] = "mutated"
+	if must(f.r.CreditsOf("ws", "d1"))[0] != "c1" {
+		t.Fatal("a view shares the credits")
+	}
+	expect(t, "form", second(f.r.CreditsOf("", "d1")), "invalid")
+	expect(t, "form id", second(f.r.CreditsOf("ws", "")), "invalid")
+	expect(t, "unknown", second(f.r.CreditsOf("ws", "nope")), "not_found")
+	expect(t, "workspace", second(f.r.CreditsOf("other", "d1")), "not_found")
+}

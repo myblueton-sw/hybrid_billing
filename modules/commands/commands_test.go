@@ -771,7 +771,7 @@ func TestTheRecheckBeforeApply(t *testing.T) {
 	*f.hook = func() { f.must(f.b.EndSession(session)) }
 	*f.armed = 9
 	f.code("the session ends between the decision and the apply", f.c.Execute(adjust(answer, "k1", "1")), Unauthenticated)
-	if resolves, applies := f.h.count(); applies != 0 || resolves != 1 || *f.armed != 0 {
+	if resolves, applies := f.h.count(); applies != 0 || resolves != 2 || *f.armed != 0 {
 		t.Errorf("the session did not end after the decision and before the apply: %d resolves, %d applies, %d reads left", resolves, applies, *f.armed)
 	}
 	f.grant("bob", gate.Approve, "c1")
@@ -781,7 +781,7 @@ func TestTheRecheckBeforeApply(t *testing.T) {
 	*f.hook = func() { f.must(f.b.EndSession(approverSession)) }
 	*f.armed = 9
 	f.code("the approver's session ends between the check and the apply", f.c.Execute(approve(approver, "a1", "t1")), Unauthenticated)
-	if resolves, applies := f.h.count(); applies != 0 || resolves != 2 || *f.armed != 0 {
+	if resolves, applies := f.h.count(); applies != 0 || resolves != 4 || *f.armed != 0 {
 		t.Errorf("the approver's session did not end after the check and before the apply: %d resolves, %d applies, %d reads left", resolves, applies, *f.armed)
 	}
 	f.member("cat")
@@ -793,7 +793,7 @@ func TestTheRecheckBeforeApply(t *testing.T) {
 	if !got.Err.Retry {
 		t.Errorf("a stale stamp is not retryable")
 	}
-	if resolves, applies := f.h.count(); applies != 0 || resolves != 3 || *f.armed != 0 {
+	if resolves, applies := f.h.count(); applies != 0 || resolves != 6 || *f.armed != 0 {
 		t.Errorf("%d resolves, %d applies, %d reads left", resolves, applies, *f.armed)
 	}
 	f.code("the same call again", f.c.Execute(adjust(ann, "k2", "1")), "")

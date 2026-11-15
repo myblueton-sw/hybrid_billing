@@ -461,39 +461,64 @@ func TestUnrecordedReplays(t *testing.T) {
 	}
 }
 
+func (r *Registry) put(key string, who holder, now, reservedAt time.Time) (verdict, *operation) {
+	found, _, op := r.lookup(operationKey{key: key}, who, [32]byte{}, now)
+	if op != nil {
+		r.complete(operationKey{key: key}, op, Result{Status: Completed}, now, reservedAt)
+	}
+	return found, op
+}
+
 func TestUntimedOperations(t *testing.T) {
 	l := testLimits
 	l.Replay, l.Retention = time.Hour, 2*time.Hour
 	f := setupWith(t, l)
-	op := &operation{workspace: "w1", user: "ann"}
-	f.c.store(operationKey{key: "a"}, op, time.Time{})
+	_, op := f.c.put("a", holder{"w1", "ann"}, time.Time{}, time.Time{})
 	if !op.created.IsZero() {
 		t.Errorf("a time was invented")
 	}
-	f.c.store(operationKey{key: "b"}, &operation{workspace: "w1", user: "bob", created: start}, time.Time{})
+	f.c.put("b", holder{"w1", "bob"}, start, time.Time{})
 	if !op.created.Equal(start) {
 		t.Errorf("the untimed operation did not take the next time")
 	}
 	f.c.lastKept = start.Add(time.Minute)
-	later := &operation{workspace: "w1", user: "cat"}
-	f.c.store(operationKey{key: "c"}, later, time.Time{})
-	reservedOnly := &operation{workspace: "w1", user: "dan"}
-	f.c.store(operationKey{key: "d"}, reservedOnly, start.Add(2*time.Minute))
+	_, later := f.c.put("c", holder{"w1", "cat"}, time.Time{}, time.Time{})
+	_, reservedOnly := f.c.put("d", holder{"w1", "dan"}, time.Time{}, start.Add(2*time.Minute))
 	if !reservedOnly.created.Equal(start.Add(2 * time.Minute)) {
 		t.Errorf("the untimed operation did not take its reservation time")
 	}
 	if !later.created.Equal(start.Add(time.Minute)) {
 		t.Errorf("the untimed operation did not take the last known time")
 	}
-	early := operationKey{key: "early"}
-	f.c.store(operationKey{key: "late"}, &operation{workspace: "w1", user: "dan", created: start.Add(time.Hour)}, time.Time{})
-	f.c.store(early, &operation{workspace: "w1", user: "eve", created: start.Add(-time.Hour)}, time.Time{})
-	f.c.lastKept = time.Time{}
-	if stored, room := f.c.lookup(early, holder{"w1", "eve"}, start.Add(l.Retention)); stored != nil || !room || f.c.operations[early] != nil {
-		t.Errorf("an operation past its retention behind a live one was kept: %v %v", stored, room)
+	_, clamped := f.c.put("e", holder{"w1", "eve"}, start.Add(-time.Hour), time.Time{})
+	if !clamped.created.Equal(start.Add(2 * time.Minute)) {
+		t.Errorf("a creation time went back: %v", clamped.created)
 	}
 	if f.c.expired(op, time.Time{}, time.Hour) || f.c.expired(&operation{}, start.Add(10*time.Hour), time.Hour) {
 		t.Errorf("an unknown time expired an operation")
+	}
+	g := setupWith(t, l)
+	_, _, first := g.c.lookup(operationKey{key: "first"}, holder{"w1", "ann"}, [32]byte{}, start)
+	_, _, second := g.c.lookup(operationKey{key: "second"}, holder{"w1", "bob"}, [32]byte{}, start)
+	if got, _, _ := g.c.lookup(operationKey{key: "first"}, holder{"w1", "ann"}, [32]byte{}, start.Add(10*l.Retention)); got != inflight {
+		t.Errorf("a pending reservation expired or was refused as a conflict: %v", got)
+	}
+	if got, _, _ := g.c.lookup(operationKey{key: "first"}, holder{"w1", "bob"}, [32]byte{}, start); got != conflicting {
+		t.Errorf("another user's call on a pending key: %v", got)
+	}
+	g.c.complete(operationKey{key: "second"}, second, Result{Status: Completed}, start.Add(time.Hour), time.Time{})
+	g.c.complete(operationKey{key: "first"}, first, Result{Status: Completed}, start, time.Time{})
+	if !first.created.Equal(start.Add(time.Hour)) || g.c.order[1].op != first {
+		t.Errorf("completion order is not monotonic: %v", first.created)
+	}
+	g.c.abandon(operationKey{key: "second"}, second)
+	if g.c.operations[operationKey{key: "second"}] != second {
+		t.Errorf("abandoning a completed operation removed it")
+	}
+	_, _, gone := g.c.lookup(operationKey{key: "gone"}, holder{"w1", "cat"}, [32]byte{}, start)
+	g.c.abandon(operationKey{key: "gone"}, gone)
+	if g.c.operations[operationKey{key: "gone"}] != nil || g.c.stored.users[holder{"w1", "cat"}] != 0 || len(g.c.order) != 2 {
+		t.Errorf("an abandoned reservation stayed")
 	}
 }
 
@@ -559,19 +584,17 @@ func TestWorkspaceIsolation(t *testing.T) {
 		t.Errorf("a third workspace beyond the workspace count")
 	}
 	for index, key := range []string{"a", "b"} {
-		if _, room := f.c.lookup(operationKey{key: key}, one, start); !room {
+		if got, _ := f.c.put(key, one, start, start); got != reserving {
 			t.Fatalf("w1 operation %d", index)
 		}
-		f.c.store(operationKey{key: key}, &operation{workspace: "w1", user: "ann", created: start}, start)
 	}
-	if _, room := f.c.lookup(operationKey{key: "c"}, one, start); room {
+	if got, _ := f.c.put("c", one, start, start); got != full {
 		t.Errorf("w1 operations beyond its share")
 	}
-	if _, room := f.c.lookup(operationKey{key: "c"}, two, start); !room {
+	if got, _ := f.c.put("c", two, start, start); got != reserving {
 		t.Errorf("w2 is stopped by w1's operations")
 	}
-	f.c.store(operationKey{key: "c"}, &operation{workspace: "w2", user: "ann", created: start}, start)
-	if _, room := f.c.lookup(operationKey{key: "d"}, three, start); room {
+	if got, _ := f.c.put("d", three, start, start); got != full {
 		t.Errorf("a third workspace holds operations")
 	}
 	if f.c.records.workspaces["w1"] != 2 || f.c.records.workspaces["w2"] != 1 || f.c.stored.workspaces["w1"] != 2 || f.c.stored.members["w2"] != 1 {

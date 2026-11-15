@@ -237,29 +237,39 @@ func (r *Registry) Execute(call Call) (result Result) {
 		r.unrecorded(who, result.Err.Code)
 		return result
 	}
-	locked := false
+	var flight flight
 	entry := Record{Request: request, Command: marked(call.Command), User: call.Answer.User(), Client: marked(call.Client), Workspace: call.Answer.Workspace(),
 		Target: marked(call.Target), Digest: Marker}
 	if call.Client == "" {
 		entry.Client = ""
 	}
 	defer func() {
+		if flight.release != nil {
+			flight.release()
+		}
+	}()
+	defer func() {
 		if recover() != nil {
 			result = failure(InternalError, request)
+		}
+		switch {
+		case flight.op != nil && flight.applying != "":
+			result = failure(InternalError, request)
+			result.Err.Operation, result.Err.Next = flight.applying, NextOperation
+			r.complete(flight.key, flight.op, result, r.instant(), reservedAt)
+		case flight.op != nil:
+			r.abandon(flight.key, flight.op)
 		}
 		entry.Outcome, entry.Operation, entry.Replay = string(result.Status), result.Operation, result.Replay
 		if result.Err != nil {
 			entry.Outcome, entry.Operation = string(result.Err.Code), result.Err.Operation
 		}
 		r.record(entry, reservedAt)
-		if locked {
-			r.mutations.Unlock()
-		}
 	}()
-	return r.run(call, request, &entry, &locked, true, reservedAt)
+	return r.run(call, request, &entry, &flight, true, reservedAt)
 }
 
-func (r *Registry) run(call Call, request string, entry *Record, locked *bool, recorded bool, reservedAt time.Time) Result {
+func (r *Registry) run(call Call, request string, entry *Record, flight *flight, recorded bool, reservedAt time.Time) Result {
 	r.mu.Lock()
 	definition, registered := r.definitions[call.Command]
 	r.mu.Unlock()
@@ -283,14 +293,23 @@ func (r *Registry) run(call Call, request string, entry *Record, locked *bool, r
 	if !recorded {
 		return failure(DependencyUnavailable, request)
 	}
-	if definition.Mutating {
-		r.mutations.Lock()
-		*locked = true
-	}
 	workspace, user := call.Answer.Workspace(), call.Answer.User()
+	if definition.Mutating {
+		chosen, found, read := resolve(definition.Handler, workspace, call.Target)
+		switch {
+		case read && found == Found && validID(chosen.Key):
+			flight.object = chosen.Key
+			flight.release = r.acquire(workspace, flight.object)
+		case read && found == Found:
+			flight.release = r.acquire(workspace, "")
+		}
+	}
 	target, resolution, sound := resolve(definition.Handler, workspace, call.Target)
 	if !sound {
 		return failure(InternalError, request)
+	}
+	if definition.Mutating && (flight.release == nil && resolution == Found || flight.object != "" && (resolution != Found || target.Key != flight.object)) {
+		return failure(DependencyUnavailable, request)
 	}
 	if resolution == Unavailable {
 		return failure(DependencyUnavailable, request)
@@ -319,22 +338,21 @@ func (r *Registry) run(call Call, request string, entry *Record, locked *bool, r
 	}
 	digest := sha256.Sum256(body)
 	identity := operationKey{installation: call.Answer.Installation(), client: call.Client, command: call.Command, key: call.Key}
-	created := time.Time{}
 	if definition.Mutating {
-		created = r.instant()
-		stored, room := r.lookup(identity, holder{workspace, user}, created)
-		if stored != nil {
-			if stored.workspace != workspace || stored.user != user || stored.digest != digest {
-				return failure(IdempotencyConflict, request)
-			}
-			if r.expired(stored, created, r.limits.Replay) {
-				return failure(IdempotencyKeyExpired, request)
-			}
-			return replayed(stored.result, request)
-		}
-		if !room {
+		verdict, stored, reserved := r.lookup(identity, holder{workspace, user}, digest, r.instant())
+		switch verdict {
+		case conflicting:
+			return failure(IdempotencyConflict, request)
+		case inflight:
+			return failure(DependencyUnavailable, request)
+		case lapsed:
+			return failure(IdempotencyKeyExpired, request)
+		case replaying:
+			return replayed(stored, request)
+		case full:
 			return failure(DependencyUnavailable, request)
 		}
+		flight.key, flight.op = identity, reserved
 		if call.Expected != target.Revision {
 			return failure(RevisionConflict, request)
 		}
@@ -356,11 +374,14 @@ func (r *Registry) run(call Call, request string, entry *Record, locked *bool, r
 		operationID = "op-" + hex.EncodeToString(random[:])
 	}
 	at := r.clock()
+	flight.applying = operationID
 	outcome, err, sound := apply(definition.Handler, Context{Workspace: workspace, User: user, Client: call.Client, Operation: operationID, Request: request,
-		Target: call.Target, Resolved: target.Revision, Expected: call.Expected, Rationale: call.Rationale, Fields: copyFields(values), At: at})
+		Target: call.Target, Key: target.Key, Resolved: target.Revision, Expected: call.Expected, Rationale: call.Rationale, Fields: copyFields(values), At: at})
+	flight.applying = ""
 	result, keep := r.finish(definition, call, request, operationID, target, outcome, err, sound, at)
 	if keep {
-		r.store(identity, &operation{workspace: workspace, user: user, digest: digest, result: detached(result), created: created}, reservedAt)
+		r.complete(flight.key, flight.op, result, r.instant(), reservedAt)
+		flight.op = nil
 	}
 	return result
 }

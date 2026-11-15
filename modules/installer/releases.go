@@ -15,7 +15,8 @@ const (
 	maxServicePorts  = 8
 	maxServiceVolume = 8
 	maxVolumes       = 32
-	releaseTag       = "hybrid-billing/release/v1"
+	releaseTag       = "hybrid-billing/release/v2"
+	maxUpgradeFrom   = 16
 	challengeTag     = "hybrid-billing/release-key/v1"
 )
 
@@ -53,8 +54,13 @@ func validPorts(ports []Port, limit int) bool {
 func (p Platform) valid() bool { return validID(p.OS) && validID(p.Arch) }
 
 func (rel Release) valid() bool {
-	if _, ok := semver(rel.Version); !ok || !validID(rel.Key) {
+	if _, ok := semver(rel.Version); !ok || !validID(rel.Key) || len(rel.UpgradeFrom) > maxUpgradeFrom {
 		return false
+	}
+	for index, from := range rel.UpgradeFrom {
+		if _, ok := semver(from); !ok || compare(from, rel.Version) >= 0 || index > 0 && compare(rel.UpgradeFrom[index-1], from) >= 0 {
+			return false
+		}
 	}
 	if len(rel.Platforms) == 0 || len(rel.Platforms) > maxPlatforms || len(rel.Artifacts) > maxArtifacts ||
 		len(rel.Services) == 0 || len(rel.Services) > maxServices || len(rel.Volumes) > maxVolumes {
@@ -120,6 +126,10 @@ func (rel Release) encode() []byte {
 	e.text(releaseTag)
 	e.text(rel.Version)
 	e.text(rel.Key)
+	e.count(len(rel.UpgradeFrom))
+	for _, from := range rel.UpgradeFrom {
+		e.text(from)
+	}
 	e.count(len(rel.Platforms))
 	for _, p := range rel.Platforms {
 		e.text(p.OS)
@@ -165,6 +175,7 @@ func challenge(version string) []byte {
 }
 
 func copyRelease(rel Release) Release {
+	rel.UpgradeFrom = append([]string(nil), rel.UpgradeFrom...)
 	rel.Platforms = append([]Platform(nil), rel.Platforms...)
 	rel.Artifacts = append([]Artifact(nil), rel.Artifacts...)
 	rel.Volumes = append([]Volume(nil), rel.Volumes...)

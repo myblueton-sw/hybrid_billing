@@ -20,6 +20,7 @@ func active(state string) bool { return state == RunOpen || state == RunInterrup
 func viewRun(run *run) RunView {
 	v := run.view
 	v.Steps = append([]string(nil), v.Steps...)
+	v.Scope = append([]string(nil), v.Scope...)
 	return v
 }
 
@@ -62,7 +63,7 @@ func (r *Registry) StartRun(id string, number uint64, actor Actor) (RunView, err
 	switch {
 	case p == nil:
 		return RunView{}, ErrNotFound
-	case p.scope != id || p.view.Change.Kind != ChangePlan || p.view.State != ProposalApplied:
+	case p.scope != id || !acceptance(p.view.Change.Kind) || p.view.State != ProposalApplied:
 		return RunView{}, refuse(ReasonNotApproved)
 	case p.used:
 		return RunView{}, refuse(ReasonAcceptanceUsed)
@@ -74,9 +75,12 @@ func (r *Registry) StartRun(id string, number uint64, actor Actor) (RunView, err
 			return RunView{}, refuse(ReasonRunOpen)
 		}
 	}
-	a := p.view.Change.Acceptance
+	a, kind := p.view.Change.Acceptance, p.view.Change.Kind
+	if kind == ChangeRollback && s.rolledBack[a.Run] {
+		return RunView{}, refuse(ReasonRolledBack)
+	}
 	rel := r.releases[a.Version]
-	view, err := r.preview(s, rel, now, nil)
+	view, err := r.kindPreview(s, kind, a, now, nil)
 	switch {
 	case err != nil:
 		return RunView{}, err
@@ -86,7 +90,22 @@ func (r *Registry) StartRun(id string, number uint64, actor Actor) (RunView, err
 	p.used = true
 	s.counter++
 	made := &run{view: RunView{ID: "run-" + strconv.Itoa(s.counter), Site: id, Version: a.Version, Hash: a.Hash, Revision: s.revision,
-		Probe: s.view.Probe, Admin: a.Admin, Steps: steps(rel.release, r.resolve(s, rel.release)), State: RunOpen}}
+		Probe: s.view.Probe, Admin: a.Admin, State: RunOpen}}
+	switch kind {
+	case ChangePlan:
+		made.view.Kind, made.view.Steps = RunInstall, steps(rel.release, r.resolve(s, rel.release))
+	case ChangeUpgrade:
+		made.view.Kind, made.view.Steps = RunUpgrade, upgradeSteps(rel.release, view)
+	default:
+		made.view.Kind, made.view.Steps = RunRollback, rollbackSteps(rel.release, s.record)
+	}
+	r.layoutOf(s, rel.release, made)
+	if kind == ChangeRollback {
+		made.ports = map[string][]string{}
+		for name, keys := range s.record.services {
+			made.ports[name] = append([]string{}, keys...)
+		}
+	}
 	s.runs[made.view.ID] = made
 	s.order = append(s.order, made.view.ID)
 	for len(s.order) > r.limits.Runs {
@@ -166,12 +185,38 @@ func (r *Registry) Complete(id, runID, step string, e Evidence, actor Actor) (Ru
 			if a.Name == name && a.Digest != e.Digest {
 				v.State, v.Reason = RunFailed, ReasonDigestMismatch
 				r.forget(s)
+				r.ended(s, found)
 				return RunView{}, refuse(ReasonDigestMismatch)
 			}
 		}
 	}
+	if step == StepBackup {
+		v.Backup, v.Scope = e.Digest, []string{}
+		scope := map[string]bool{}
+		for host, vol := range s.record.volumes {
+			scope[host] = scope[host] || vol.data
+		}
+		for host, vol := range s.createdVols {
+			scope[host] = scope[host] || vol.data
+		}
+		for _, host := range sortedKeys(scope) {
+			if scope[host] {
+				v.Scope = append(v.Scope, host)
+			}
+		}
+		s.backups = append(s.backups, backup{run: v.ID, digest: e.Digest, scope: append([]string{}, v.Scope...)})
+		if len(s.backups) > maxHistory {
+			s.backups = s.backups[1:]
+		}
+	}
 	found.record(e.Digest)
 	v.Done++
+	switch {
+	case v.Done == len(v.Steps):
+		r.finish(s, found)
+	case v.Kind == RunUpgrade && strings.HasPrefix(v.Steps[v.Done], "service:"):
+		s.touched, s.touchedAt = true, v.Version
+	}
 	return viewRun(found), nil
 }
 
@@ -237,20 +282,22 @@ func (r *Registry) Resume(id, runID string, actor Actor) (RunView, error) {
 		r.invalidate(s, found, cause)
 		return RunView{}, refuse(cause)
 	}
-	plan := r.resolve(s, rel.release)
 	allowed := map[string]bool{}
 	for _, step := range v.Steps[:v.Done] {
-		if name, ok := strings.CutPrefix(step, "service:"); ok {
-			allowed["service:"+name] = true
-			for _, key := range plan.ports[name] {
-				allowed["port:"+key] = true
+		for _, prefix := range []string{"service:", "remove:"} {
+			if name, ok := strings.CutPrefix(step, prefix); ok {
+				allowed["service:"+name] = true
+				for _, key := range found.ports[name] {
+					allowed["port:"+key] = true
+				}
 			}
 		}
 		if host, ok := strings.CutPrefix(step, "volume:"); ok {
 			allowed["volume:"+host] = true
 		}
 	}
-	view, err := r.preview(s, rel, now, allowed)
+	kinds := map[string]string{RunInstall: ChangePlan, RunUpgrade: ChangeUpgrade, RunRollback: ChangeRollback}
+	view, err := r.kindPreview(s, kinds[v.Kind], Acceptance{Version: v.Version, Run: r.lastFailed(s)}, now, allowed)
 	if err != nil {
 		return RunView{}, err
 	}
@@ -276,6 +323,7 @@ func (r *Registry) Cancel(id, runID string, actor Actor) (RunView, error) {
 	case RunOpen, RunInterrupted:
 		found.view.State, found.view.Reason, found.view.Note = RunCancelled, "", ""
 		r.forget(s)
+		r.ended(s, found)
 	case RunCancelled:
 	default:
 		return RunView{}, refuse(ReasonRunClosed)
@@ -308,7 +356,10 @@ func (r *Registry) IssueBootstrap(id, runID string, ttl time.Duration, actor Act
 	if err != nil {
 		return "", err
 	}
-	if found.view.Steps[found.view.Done] != StepRegisterAdmin {
+	switch {
+	case found.view.Kind != RunInstall:
+		return "", refuse(ReasonNotAllowedState)
+	case found.view.Steps[found.view.Done] != StepRegisterAdmin:
 		return "", refuse(ReasonOutOfOrder)
 	}
 	raw := make([]byte, codeBytes)
@@ -358,5 +409,14 @@ func (r *Registry) RegisterAdmin(text string, actor Actor) (RunView, error) {
 	found.record(digestOf([]byte(actor.ID)))
 	found.view.Done++
 	found.view.State = RunCompleted
+	s.record = r.recordFrom(found)
+	s.remember(History{Kind: RunInstall, To: found.view.Version, Run: found.view.ID})
 	return viewRun(found), nil
+}
+
+func (r *Registry) lastFailed(s *site) string {
+	if len(s.failedRuns) == 0 {
+		return ""
+	}
+	return s.failedRuns[len(s.failedRuns)-1]
 }

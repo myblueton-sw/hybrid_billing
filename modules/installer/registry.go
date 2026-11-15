@@ -42,9 +42,12 @@ type release struct {
 }
 
 type run struct {
-	view   RunView
-	proofs []string
-	paused uint64
+	view    RunView
+	proofs  []string
+	paused  uint64
+	logical map[string]string
+	data    map[string]bool
+	ports   map[string][]string
 }
 
 func (r *run) evidence(index int) string { return r.proofs[index] }
@@ -72,7 +75,37 @@ type site struct {
 	counter      int
 	admin        string
 	installed    bool
+	record       *record
+	failed       bool
+	touched      bool
+	touchedAt    string
+	created      map[string][]string
+	createdVols  map[string]*ownedVolume
+	removed      map[string]bool
+	failedRuns   []string
+	backups      []backup
+	rolledBack   map[string]bool
+	rolledOrder  []string
+	history      []History
 	code         *[sha256.Size]byte
+}
+
+type ownedVolume struct {
+	logical  string
+	data     bool
+	detached bool
+}
+
+type record struct {
+	version  string
+	services map[string][]string
+	volumes  map[string]*ownedVolume
+}
+
+type backup struct {
+	run    string
+	digest string
+	scope  []string
 }
 
 type proposal struct {
@@ -281,7 +314,7 @@ func (r *Registry) retire(scopes []*scope, match func(Acceptance) bool) {
 	for _, s := range scopes {
 		for _, number := range s.done {
 			p := r.proposals[number]
-			if p.view.Change.Kind == ChangePlan && match(p.view.Change.Acceptance) {
+			if acceptance(p.view.Change.Kind) && match(p.view.Change.Acceptance) {
 				p.retired = true
 			}
 		}

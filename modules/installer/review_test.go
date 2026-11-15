@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const previewAnswer = "5657d39979122cf087325ebb57ae71ded6a37fadee357ec937378934727c7e2b"
+const previewAnswer = "cc1f81de626a45d2a70055457190aebe3f665e325db7f7225197cf75a38ba43f"
 
 func TestHashKnownAnswers(t *testing.T) {
 	sum := codeHash(codePrefix + strings.Repeat("A", 43))

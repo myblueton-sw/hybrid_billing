@@ -128,11 +128,18 @@ func clean(c Change) (Change, string, bool) {
 		out.Destination = c.Destination
 		out.Destination.Ranges = append([]string(nil), c.Destination.Ranges...)
 		return out, c.Destination.Site, c.Destination.valid()
-	case ChangePlan:
+	case ChangePlan, ChangeUpgrade, ChangeRollback:
 		a := c.Acceptance
 		out.Acceptance = a
 		_, ok := semver(a.Version)
-		return out, a.Site, ok && validID(a.Site) && validHex(a.Hash) && validID(a.Admin)
+		ok = ok && validID(a.Site) && validHex(a.Hash)
+		switch c.Kind {
+		case ChangePlan:
+			return out, a.Site, ok && validID(a.Admin) && a.Run == ""
+		case ChangeUpgrade:
+			return out, a.Site, ok && a.Admin == "" && a.Run == ""
+		}
+		return out, a.Site, ok && a.Admin == "" && validID(a.Run)
 	}
 	return out, registerScope, false
 }
@@ -174,7 +181,7 @@ func encodeChange(c Change) []byte {
 		e.text(value)
 	}
 	a := c.Acceptance
-	for _, value := range []string{a.Site, a.Version, a.Hash, a.Admin} {
+	for _, value := range []string{a.Site, a.Version, a.Hash, a.Admin, a.Run} {
 		e.text(value)
 	}
 	return e.out.Bytes()
@@ -223,7 +230,7 @@ func (r *Registry) check(c Change, now time.Time) error {
 	case ChangeDestination:
 		return r.checkDestination(c.Destination)
 	}
-	return r.checkPlan(c.Acceptance, now)
+	return r.checkPlan(c.Kind, c.Acceptance, now)
 }
 
 func (r *Registry) checkKey(k ReleaseKey) error {
@@ -315,12 +322,15 @@ func (r *Registry) checkDestination(d Destination) error {
 	return nil
 }
 
-func (r *Registry) checkPlan(a Acceptance, now time.Time) error {
-	rel := r.releases[a.Version]
-	if rel == nil {
+func (r *Registry) checkPlan(kind string, a Acceptance, now time.Time) error {
+	if r.releases[a.Version] == nil {
 		return ErrNotFound
 	}
-	view, err := r.preview(r.sites[a.Site], rel, now, nil)
+	s := r.sites[a.Site]
+	if kind != ChangePlan && r.activeRun(s) {
+		return refuse(ReasonRunOpen)
+	}
+	view, err := r.kindPreview(s, kind, a, now, nil)
 	switch {
 	case err != nil:
 		return err
@@ -340,7 +350,8 @@ func (r *Registry) apply(c Change) {
 	case ChangeRelease:
 		r.releases[c.Release.Version] = &release{release: copyRelease(c.Release), signature: append([]byte(nil), c.Signature...), digest: digestOf(c.Signature)}
 	case ChangeSite:
-		r.sites[c.Site.ID] = &site{view: c.Site, probes: 1, destinations: map[string]Destination{}, runs: map[string]*run{}}
+		r.sites[c.Site.ID] = &site{view: c.Site, probes: 1, destinations: map[string]Destination{}, runs: map[string]*run{}, created: map[string][]string{},
+			createdVols: map[string]*ownedVolume{}, removed: map[string]bool{}, rolledBack: map[string]bool{}}
 		r.probes[c.Site.Probe] = c.Site.ID
 	case ChangeProbe:
 		s := r.sites[c.Site.ID]
@@ -373,6 +384,7 @@ func (r *Registry) changed(s *site, reason string) {
 
 func (r *Registry) invalidate(s *site, run *run, reason string) {
 	run.view.State, run.view.Reason, run.view.Note = RunInvalidated, reason, ""
+	r.ended(s, run)
 	r.forget(s)
 }
 

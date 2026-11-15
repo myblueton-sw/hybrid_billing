@@ -8,11 +8,13 @@
               "authority_unavailable",
               "dependency_unavailable",
               "idempotency_conflict",
+              "idempotency_key_expired",
               "internal_error",
               "invalid_request",
               "invalid_stage",
               "permission_denied",
               "prerequisite_failed",
+              "rate_limited",
               "revision_conflict",
               "self_approval_denied",
               "unauthenticated",
@@ -48,6 +50,11 @@
           },
           "retry": {
             "type": "boolean"
+          },
+          "retry_after_ms": {
+            "description": "present only for rate_limited; milliseconds rounded up",
+            "minimum": 1,
+            "type": "integer"
           }
         },
         "required": [
@@ -260,7 +267,7 @@
                 }
               }
             },
-            "description": "idempotency_conflict, revision_conflict"
+            "description": "idempotency_conflict, idempotency_key_expired, revision_conflict"
           },
           "422": {
             "content": {
@@ -271,6 +278,16 @@
               }
             },
             "description": "invalid_request, invalid_stage, prerequisite_failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "rate_limited"
           },
           "500": {
             "content": {
@@ -406,7 +423,7 @@
                 }
               }
             },
-            "description": "idempotency_conflict, revision_conflict"
+            "description": "idempotency_conflict, idempotency_key_expired, revision_conflict"
           },
           "422": {
             "content": {
@@ -417,6 +434,16 @@
               }
             },
             "description": "invalid_request, invalid_stage, prerequisite_failed"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "rate_limited"
           },
           "500": {
             "content": {
@@ -513,6 +540,16 @@
               }
             },
             "description": "unauthenticated"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "rate_limited"
           },
           "500": {
             "content": {
@@ -646,6 +683,16 @@
             },
             "description": "invalid_request, invalid_stage, prerequisite_failed"
           },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "rate_limited"
+          },
           "500": {
             "content": {
               "application/json": {
@@ -711,6 +758,12 @@
       "status": 409
     },
     {
+      "code": "idempotency_key_expired",
+      "next_action": "inspect_current_state",
+      "retry": false,
+      "status": 409
+    },
+    {
       "code": "internal_error",
       "next_action": "none",
       "retry": false,
@@ -739,6 +792,12 @@
       "next_action": "correct_request",
       "retry": false,
       "status": 422
+    },
+    {
+      "code": "rate_limited",
+      "next_action": "retry_later",
+      "retry": true,
+      "status": 429
     },
     {
       "code": "revision_conflict",

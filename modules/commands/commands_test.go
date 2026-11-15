@@ -21,7 +21,8 @@ var (
 	operator   = identity.Operator{Reference: "synthetic-operator", Reason: "synthetic-reason"}
 	idLimits   = identity.Limits{BootstrapValidity: time.Hour, InvitationValidity: 72 * time.Hour, CredentialValidity: 720 * time.Hour, SessionIdle: 30 * time.Minute, SessionAbsolute: 8 * time.Hour, Reauthentication: 5 * time.Minute, Attempts: 3, PendingInvitations: 1000, SessionsPerUser: 100000, CredentialsPerServiceUser: 1000, PageSize: 100}
 	catalog    = gate.Catalog{Kinds: []string{"statement", "adjustment"}, Fields: map[string]gate.FieldClass{"quantity": gate.General, "unit_cost": gate.Cost}}
-	testLimits = Limits{Fields: 6, Value: 40, Rationale: 60, Operations: 1000, Journal: 100000}
+	testLimits = Limits{Fields: 6, Value: 40, Rationale: 60, Operations: 1000, Journal: 100000, Workspaces: 1, Users: 10, WorkspaceJournal: 100000, UserJournal: 10000,
+		WorkspaceOperations: 1000, UserOperations: 100, Replay: 24 * time.Hour, Retention: 400 * 24 * time.Hour, Burst: maxBurst, Refill: time.Millisecond}
 )
 
 type stub struct {
@@ -285,7 +286,10 @@ func TestRegistration(t *testing.T) {
 	if f.c.Catalogue()[0].Fields[0].Name != "amount" {
 		t.Errorf("the catalogue aliases the registry")
 	}
-	for name, limits := range map[string]Limits{"fields": {0, 1, 1, 1, 1}, "value": {1, 0, 1, 1, 1}, "rationale": {1, 1, 0, 1, 1}, "operations": {1, 1, 1, 0, 1}, "journal": {1, 1, 1, 1, 0}} {
+	for name, change := range map[string]func(*Limits){"fields": func(l *Limits) { l.Fields = 0 }, "value": func(l *Limits) { l.Value = 0 },
+		"rationale": func(l *Limits) { l.Rationale = 0 }, "operations": func(l *Limits) { l.Operations = 0 }, "journal": func(l *Limits) { l.Journal = 0 }} {
+		limits := testLimits
+		change(&limits)
 		if _, err := New(f.g, limits); !errors.Is(err, ErrInvalid) {
 			t.Errorf("a zero %s limit: %v", name, err)
 		}
@@ -765,7 +769,7 @@ func TestTheRecheckBeforeApply(t *testing.T) {
 	answer, err := f.b.Access(session, "w1")
 	f.must(err)
 	*f.hook = func() { f.must(f.b.EndSession(session)) }
-	*f.armed = 6
+	*f.armed = 9
 	f.code("the session ends between the decision and the apply", f.c.Execute(adjust(answer, "k1", "1")), Unauthenticated)
 	if resolves, applies := f.h.count(); applies != 0 || resolves != 1 || *f.armed != 0 {
 		t.Errorf("the session did not end after the decision and before the apply: %d resolves, %d applies, %d reads left", resolves, applies, *f.armed)
@@ -775,7 +779,7 @@ func TestTheRecheckBeforeApply(t *testing.T) {
 	approver, err := f.b.Access(approverSession, "w1")
 	f.must(err)
 	*f.hook = func() { f.must(f.b.EndSession(approverSession)) }
-	*f.armed = 6
+	*f.armed = 9
 	f.code("the approver's session ends between the check and the apply", f.c.Execute(approve(approver, "a1", "t1")), Unauthenticated)
 	if resolves, applies := f.h.count(); applies != 0 || resolves != 2 || *f.armed != 0 {
 		t.Errorf("the approver's session did not end after the check and before the apply: %d resolves, %d applies, %d reads left", resolves, applies, *f.armed)
@@ -784,7 +788,7 @@ func TestTheRecheckBeforeApply(t *testing.T) {
 	ann := f.answer("ann")
 	admin := f.login("root")
 	*f.hook = func() { f.must(f.w.SuspendMembership(admin, "w1", "cat", 1)) }
-	*f.armed = 6
+	*f.armed = 9
 	got := f.code("an unrelated membership changes between the decision and the apply", f.c.Execute(adjust(ann, "k2", "1")), AuthorityUnavailable)
 	if !got.Err.Retry {
 		t.Errorf("a stale stamp is not retryable")
@@ -867,7 +871,7 @@ func TestTheJournal(t *testing.T) {
 func TestCapacity(t *testing.T) {
 	limits := testLimits
 	limits.Journal = 3
-	f := setupWith(t, limits)
+	f := setupWith(t, solo(limits))
 	f.member("ann")
 	f.grant("ann", gate.Issue, "c1")
 	f.grant("ann", gate.View, "c1", "quantity")
@@ -880,12 +884,15 @@ func TestCapacity(t *testing.T) {
 		"a replay":        adjust(ann, "k1", "1"),
 		"a mutating call": adjust(ann, "k2", "1"),
 		"a reading call":  {Answer: ann, Request: "r", Command: "statement.read", Target: "t1"},
-		"a refused call":  {Answer: ann, Request: "r", Command: "nothing", Target: "t"},
 	} {
 		got := f.code(name+" with a full journal", f.c.Execute(call), DependencyUnavailable)
 		if !got.Err.Retry {
 			t.Errorf("%s: not retryable", name)
 		}
+	}
+	f.code("a refused call with a full journal keeps its code", f.c.Execute(Call{Answer: ann, Request: "r", Command: "nothing", Target: "t"}), UnsupportedCommand)
+	if counted := f.c.Unrecorded("w1"); len(counted) != 2 || counted[0].Code != DependencyUnavailable || counted[0].Count != 3 || counted[1].Code != UnsupportedCommand || counted[1].Count != 1 {
+		t.Errorf("unrecorded counts %+v", counted)
 	}
 	f.code("a call that is not admitted, with a full journal", f.c.Execute(Call{Request: "r", Command: "statement.read", Target: "t1"}), Unauthenticated)
 	if afterResolves, afterApplies := f.h.count(); afterResolves != resolves || afterApplies != applies {
@@ -897,7 +904,7 @@ func TestCapacity(t *testing.T) {
 
 	limits = testLimits
 	limits.Operations = 2
-	f = setupWith(t, limits)
+	f = setupWith(t, solo(limits))
 	f.member("ann")
 	f.grant("ann", gate.Issue, "c1")
 	ann = f.answer("ann")
@@ -1006,7 +1013,7 @@ func TestAMissingTargetIsDeniedAlsoUnderAGrantForEveryCustomer(t *testing.T) {
 func TestAReservedJournalSlotCannotBeTakenByAnotherCall(t *testing.T) {
 	limits := testLimits
 	limits.Journal = 2
-	f := setupWith(t, limits)
+	f := setupWith(t, solo(limits))
 	f.member("ann")
 	f.grant("ann", gate.Issue, "c1")
 	f.grant("ann", gate.View, "c1", "quantity")

@@ -199,6 +199,12 @@ func TestCallKeys(t *testing.T) {
 	if err != nil || reply.Status != "internal_error" || reply.Code != "internal_error" || reply.Operation != "op-x" || reply.Fields != nil {
 		t.Errorf("an error result %+v %v", reply, err)
 	}
+	c.result = func(commands.Call) commands.Result {
+		return commands.Result{Err: &commands.Error{Code: commands.RateLimited, RetryAfter: 750 * time.Millisecond}}
+	}
+	if limited, err := r.Invoke("w1", "j1", Invocation{Conversation: "c1", Tool: "x.read", Target: "t1", Answer: answer}, bot); err != nil || limited.Code != "rate_limited" || limited.RetryAfter != 750*time.Millisecond || limited.Calls != 4 {
+		t.Errorf("a rate-limited call %+v %v", limited, err)
+	}
 }
 
 func TestBudgets(t *testing.T) {

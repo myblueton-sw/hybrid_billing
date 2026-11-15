@@ -22,6 +22,12 @@ type operation struct {
 	user      string
 	digest    [32]byte
 	result    Result
+	created   time.Time
+}
+
+type ordered struct {
+	key operationKey
+	op  *operation
 }
 
 type Registry struct {
@@ -34,15 +40,28 @@ type Registry struct {
 	secret      [32]byte
 	definitions map[string]Definition
 	operations  map[operationKey]*operation
+	order       []ordered
+	first       int
+	stored      held
 	journal     []Record
+	kept        []time.Time
+	head        int
+	sequence    uint64
+	lastKept    time.Time
+	records     held
 	reserved    int
+	buckets     map[holder]*bucket
+	cleaned     int
+	throttled   map[string]map[string]*Throttle
+	aggregated  map[unrecordedKey]*Unrecorded
 }
 
 func New(g *gate.Gate, limits Limits) (*Registry, error) {
 	if g.Clock() == nil || !limits.valid() {
 		return nil, ErrInvalid
 	}
-	r := &Registry{built: true, gate: g, limits: limits, clock: g.Clock(), definitions: map[string]Definition{}, operations: map[operationKey]*operation{}}
+	r := &Registry{built: true, gate: g, limits: limits, clock: g.Clock(), definitions: map[string]Definition{}, operations: map[operationKey]*operation{},
+		stored: newHeld(), records: newHeld(), buckets: map[holder]*bucket{}, cleaned: 1, throttled: map[string]map[string]*Throttle{}, aggregated: map[unrecordedKey]*Unrecorded{}}
 	if _, err := rand.Read(r.secret[:]); err != nil {
 		return nil, ErrUnavailable
 	}
@@ -128,16 +147,6 @@ func (r *Registry) Catalogue() []Entry {
 	return entries
 }
 
-func (r *Registry) reserve() bool {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if len(r.journal)+r.reserved >= r.limits.Journal {
-		return false
-	}
-	r.reserved++
-	return true
-}
-
 func (r *Registry) instant() (at time.Time) {
 	defer func() {
 		if recover() != nil {
@@ -145,26 +154,4 @@ func (r *Registry) instant() (at time.Time) {
 		}
 	}()
 	return r.clock()
-}
-
-func (r *Registry) record(entry Record) {
-	entry.At = r.instant()
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.reserved--
-	entry.Sequence = uint64(len(r.journal)) + 1
-	r.journal = append(r.journal, entry)
-}
-
-func (r *Registry) Journal(after uint64, limit int) []Record {
-	if r == nil || !r.built || limit < 1 {
-		return nil
-	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if after >= uint64(len(r.journal)) {
-		return []Record{}
-	}
-	rest := r.journal[after:]
-	return append([]Record{}, rest[:min(limit, len(rest))]...)
 }

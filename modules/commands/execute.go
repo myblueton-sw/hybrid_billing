@@ -225,8 +225,17 @@ func (r *Registry) Execute(call Call) (result Result) {
 	default:
 		return failure(AuthorityUnavailable, request)
 	}
-	if !r.reserve() {
-		return failure(DependencyUnavailable, request)
+	who := holder{call.Answer.Workspace(), call.Answer.User()}
+	if wait, ok := r.take(who); !ok {
+		limited := failure(RateLimited, request)
+		limited.Err.RetryAfter = wait
+		return limited
+	}
+	reservedAt, recorded := r.reserve(who)
+	if !recorded {
+		result = r.run(call, request, &Record{}, nil, false, time.Time{})
+		r.unrecorded(who, result.Err.Code)
+		return result
 	}
 	locked := false
 	entry := Record{Request: request, Command: marked(call.Command), User: call.Answer.User(), Client: marked(call.Client), Workspace: call.Answer.Workspace(),
@@ -242,15 +251,15 @@ func (r *Registry) Execute(call Call) (result Result) {
 		if result.Err != nil {
 			entry.Outcome, entry.Operation = string(result.Err.Code), result.Err.Operation
 		}
-		r.record(entry)
+		r.record(entry, reservedAt)
 		if locked {
 			r.mutations.Unlock()
 		}
 	}()
-	return r.run(call, request, &entry, &locked)
+	return r.run(call, request, &entry, &locked, true, reservedAt)
 }
 
-func (r *Registry) run(call Call, request string, entry *Record, locked *bool) Result {
+func (r *Registry) run(call Call, request string, entry *Record, locked *bool, recorded bool, reservedAt time.Time) Result {
 	r.mu.Lock()
 	definition, registered := r.definitions[call.Command]
 	r.mu.Unlock()
@@ -270,6 +279,9 @@ func (r *Registry) run(call Call, request string, entry *Record, locked *bool) R
 	entry.Digest = hex.EncodeToString(keyed.Sum(nil))
 	if definition.Approval && call.Client != "" {
 		return failure(PermissionDenied, request)
+	}
+	if !recorded {
+		return failure(DependencyUnavailable, request)
 	}
 	if definition.Mutating {
 		r.mutations.Lock()
@@ -307,17 +319,20 @@ func (r *Registry) run(call Call, request string, entry *Record, locked *bool) R
 	}
 	digest := sha256.Sum256(body)
 	identity := operationKey{installation: call.Answer.Installation(), client: call.Client, command: call.Command, key: call.Key}
+	created := time.Time{}
 	if definition.Mutating {
-		r.mu.Lock()
-		stored, full := r.operations[identity], len(r.operations) >= r.limits.Operations
-		r.mu.Unlock()
+		created = r.instant()
+		stored, room := r.lookup(identity, holder{workspace, user}, created)
 		if stored != nil {
 			if stored.workspace != workspace || stored.user != user || stored.digest != digest {
 				return failure(IdempotencyConflict, request)
 			}
+			if r.expired(stored, created, r.limits.Replay) {
+				return failure(IdempotencyKeyExpired, request)
+			}
 			return replayed(stored.result, request)
 		}
-		if full {
+		if !room {
 			return failure(DependencyUnavailable, request)
 		}
 		if call.Expected != target.Revision {
@@ -345,9 +360,7 @@ func (r *Registry) run(call Call, request string, entry *Record, locked *bool) R
 		Target: call.Target, Resolved: target.Revision, Expected: call.Expected, Rationale: call.Rationale, Fields: copyFields(values), At: at})
 	result, keep := r.finish(definition, call, request, operationID, target, outcome, err, sound, at)
 	if keep {
-		r.mu.Lock()
-		r.operations[identity] = &operation{workspace: workspace, user: user, digest: digest, result: detached(result)}
-		r.mu.Unlock()
+		r.store(identity, &operation{workspace: workspace, user: user, digest: digest, result: detached(result), created: created}, reservedAt)
 	}
 	return result
 }

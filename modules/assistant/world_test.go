@@ -19,7 +19,8 @@ var (
 	operator  = identity.Operator{Reference: "synthetic-operator", Reason: "synthetic-reason"}
 	idLimits  = identity.Limits{BootstrapValidity: time.Hour, InvitationValidity: 72 * time.Hour, CredentialValidity: 720 * time.Hour, SessionIdle: 30 * time.Minute, SessionAbsolute: 8 * time.Hour, Reauthentication: 5 * time.Minute, Attempts: 3, PendingInvitations: 1000, SessionsPerUser: 100000, CredentialsPerServiceUser: 1000, PageSize: 100}
 	catalog   = gate.Catalog{Kinds: []string{"statement", "account", "recipient"}, Fields: map[string]gate.FieldClass{"quantity": gate.General, "unit_cost": gate.Cost}}
-	cmdLimits = commands.Limits{Fields: 8, Value: 200, Rationale: 200, Operations: 1000, Journal: 100000}
+	cmdLimits = commands.Limits{Fields: 8, Value: 200, Rationale: 200, Operations: 1000, Journal: 100000, Workspaces: 1, Users: 10, WorkspaceJournal: 100000,
+		UserJournal: 10000, WorkspaceOperations: 1000, UserOperations: 100, Replay: 24 * time.Hour, Retention: 400 * 24 * time.Hour, Burst: 100000, Refill: time.Millisecond}
 	limits    = Limits{Workspaces: 3, Tools: 20, Jobs: 20, Conversations: 20, Cards: 3, Calls: 5, Targets: 3, Duration: 2 * time.Hour, Retention: 24 * time.Hour, Fields: 3, Bytes: 8}
 	protected = []string{"account", "recipient"}
 	ann       = Actor{ID: "ann", Kind: KindHuman}

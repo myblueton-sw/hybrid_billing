@@ -47,7 +47,7 @@ func (r *Registry) OpenAPI(title, version string) ([]byte, error) {
 	sort.Strings(codes)
 	actions := []string{string(NextAnswer), string(NextCorrect), string(NextInspect), string(NextNone), string(NextOperation), string(NextRetry)}
 	sort.Strings(actions)
-	early := map[Code]bool{Unauthenticated: true, AuthorityUnavailable: true, DependencyUnavailable: true, UnsupportedCapability: true, InternalError: true}
+	early := map[Code]bool{Unauthenticated: true, AuthorityUnavailable: true, DependencyUnavailable: true, UnsupportedCapability: true, InternalError: true, RateLimited: true}
 	paths := object{}
 	for _, entry := range r.Catalogue() {
 		properties, required := object{}, []string{}
@@ -81,7 +81,7 @@ func (r *Registry) OpenAPI(title, version string) ([]byte, error) {
 		for code, rule := range errorRules {
 			switch {
 			case code == UnsupportedCommand, !entry.Supported && !early[code]:
-			case (!entry.Mutating && code == IdempotencyConflict) || (!entry.Approval && code == SelfApprovalDenied):
+			case (!entry.Mutating && (code == IdempotencyConflict || code == IdempotencyKeyExpired)) || (!entry.Approval && code == SelfApprovalDenied):
 			default:
 				statuses[rule.status] = append(statuses[rule.status], string(code))
 			}
@@ -126,7 +126,8 @@ func (r *Registry) OpenAPI(title, version string) ([]byte, error) {
 				"as_of": object{"type": "string", "format": "date-time"}, "fields": object{"type": "object", "additionalProperties": object{"type": "string"}}}},
 			"Error": object{"type": "object", "required": []string{"code", "next_action", "request_id", "retry"}, "properties": object{
 				"code": object{"type": "string", "enum": codes}, "retry": object{"type": "boolean"}, "next_action": object{"type": "string", "enum": actions}, "request_id": identifier,
-				"operation_id": identifier, "fields": object{"type": "array", "items": object{"type": "string"}}}},
+				"operation_id": identifier, "fields": object{"type": "array", "items": object{"type": "string"}},
+				"retry_after_ms": object{"type": "integer", "minimum": 1, "description": "present only for rate_limited; milliseconds rounded up"}}},
 		}},
 	}
 	return json.MarshalIndent(document, "", "  ")

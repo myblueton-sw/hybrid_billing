@@ -146,6 +146,7 @@ func (r *Registry) Invoke(workspace, jobID string, call Invocation, actor Actor)
 	if result.Err != nil {
 		reply.Code = string(result.Err.Code)
 		reply.Operation = result.Err.Operation
+		reply.RetryAfter = result.Err.RetryAfter
 	} else {
 		reply.Fields, reply.Truncated = r.bound(t, result.Fields)
 	}

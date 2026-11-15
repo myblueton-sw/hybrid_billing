@@ -398,6 +398,23 @@ func (r *Registry) Read(workspace string, after uint64, limit int, actor Actor) 
 	return Page{Events: out, Head: s.sequence}, nil
 }
 
+func (r *Registry) Bounds(workspace string, actor Actor) (uint64, uint64, error) {
+	now := r.enter()
+	defer r.leave()
+	if !validID(workspace) || !actor.valid() {
+		return 0, 0, ErrInvalid
+	}
+	if err := actor.system(); err != nil {
+		return 0, 0, err
+	}
+	s := r.workspaces[workspace]
+	if s == nil {
+		return 0, 0, nil
+	}
+	r.sweep(s, now)
+	return s.floor, s.sequence, nil
+}
+
 func Body(e Stored) []byte {
 	document := map[string]any{"id": e.Event.ID, "source": e.Event.Source, "type": e.Event.Type, "specversion": e.SpecVersion,
 		"time": e.Time.UTC().Format(time.RFC3339Nano), "schemaversion": e.Event.SchemaVersion, "data": copyEvent(e.Event).Data}

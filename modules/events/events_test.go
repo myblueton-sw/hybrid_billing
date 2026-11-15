@@ -396,3 +396,23 @@ func TestDigest(t *testing.T) {
 		t.Errorf("digest %s", hex.EncodeToString(got[:]))
 	}
 }
+
+func TestBounds(t *testing.T) {
+	f := setup(t)
+	if floor, head, err := f.r.Bounds("w1", relay); err != nil || floor != 0 || head != 0 || len(f.r.workspaces) != 0 {
+		t.Errorf("an unknown workspace %d %d %v", floor, head, err)
+	}
+	expect(t, "no workspace", third(f.r.Bounds("", relay)), ErrInvalid)
+	expect(t, "an invalid actor", third(f.r.Bounds("w1", Actor{})), ErrInvalid)
+	reason(t, "a human reading bounds", third(f.r.Bounds("w1", ann)), ReasonNotSystem)
+	f.register(invoice)
+	f.must(second(f.r.Publish("w1", event("e1"), relay)))
+	f.advance(time.Minute)
+	f.must(second(f.r.Publish("w1", event("e2"), relay)))
+	f.advance(59 * time.Minute)
+	if floor, head, err := f.r.Bounds("w1", relay); err != nil || floor != 1 || head != 2 {
+		t.Errorf("bounds after a sweep %d %d %v", floor, head, err)
+	}
+}
+
+func third[T, U any](_ T, _ U, err error) error { return err }

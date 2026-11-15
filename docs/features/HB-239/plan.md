@@ -89,7 +89,7 @@ Other rules:
 The register keeps a floor: the last removed sequence, which is 0 when nothing has been removed.
 - If `after` is below the floor, events were removed, and the call returns `ErrExpired` with a `Resync{Floor, Head}` value. The relay records the head, rebuilds its state from current objects, then reads after the head.
 - A cursor beyond the head is `ErrInvalid`.
-- A fresh workspace has floor 0 and head 0. `Retention` must exceed a relay's rebuild time, or the relay meets `ErrExpired` again. HB-240 will add per-consumer low watermarks to this sweep, so retention can be pinned for open deliveries without changing the cursor rules.
+- A fresh workspace has floor 0 and head 0. `Retention` must exceed a relay's rebuild time, or the relay meets `ErrExpired` again. HB-240 chose explicit gap suspension with a recorded lost range instead of per-consumer low watermarks, because pinning would let a stuck receiver block publication.
 
 ## Inbox
 

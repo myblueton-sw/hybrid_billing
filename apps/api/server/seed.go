@@ -6,9 +6,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
+	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
 )
 
 const (
@@ -16,6 +19,10 @@ const (
 	SampleWorkspace = "sample-workspace"
 	EmptyWorkspace  = "workspace"
 	SampleAdmin     = "sample-admin"
+	SampleAdmin2    = "sample-admin-2"
+	AdminLogin      = "admin@example.invalid"
+	Admin2Login     = "admin2@example.invalid"
+	EmptyAdmin      = "admin"
 	PasswordLink    = "local-password"
 )
 
@@ -35,9 +42,7 @@ func (s *Server) Workspace() string {
 	return EmptyWorkspace
 }
 
-func AdminTriple() identity.Triple {
-	return identity.Triple{Connection: PasswordLink, Issuer: Installation, Subject: "admin"}
-}
+func AdminTriple() identity.Triple { return LoginTriple(AdminLogin) }
 
 func checkData(dir string) error {
 	info, err := os.Lstat(dir)
@@ -74,13 +79,22 @@ func (s *Server) Start() error {
 	secret := random(tokenBytes)
 	verifier := verifierOf(secret)
 	now := s.clock()
+	s.bootWorkspace, s.bootUser = s.Workspace(), EmptyAdmin
 	steps := []step{{"arm-bootstrap", func() (bool, error) {
 		return true, s.identity.Installation().ArmBootstrap(verifier, identity.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}, s.Workspace())
 	}}}
+	var lines []string
 	if s.cfg.Seed == SeedSample {
+		s.bootUser = SampleAdmin
 		steps = append(steps, step{"bootstrap-admin", func() (bool, error) {
-			return true, s.identity.Boundary().Bootstrap(verifier, SampleAdmin, AdminTriple(), "admin@example.invalid")
-		}})
+			return true, s.identity.Boundary().Bootstrap(verifier, SampleAdmin, AdminTriple(), AdminLogin)
+		}}, step{"second-admin", func() (bool, error) { return true, s.seedSecondAdmin(now) }},
+			step{"authentication-policy", func() (bool, error) { return true, s.seedPolicy(now) }},
+			step{"password-links", func() (bool, error) {
+				var err error
+				lines, err = s.seedLinks()
+				return true, err
+			}})
 		steps = append(steps, s.seed...)
 	}
 	for _, st := range steps {
@@ -89,10 +103,69 @@ func (s *Server) Start() error {
 		}
 	}
 	if s.cfg.Seed == SeedNone {
-		if err := writeExclusive(link, []byte(s.cfg.Origins[0]+"/activate#"+encode(secret)+"\n")); err != nil {
+		s.boot = activation{verifier: verifier, expires: now.Add(time.Hour), live: true, file: link}
+		lines = []string{s.cfg.Origins[0] + "/activate#" + encode(secret)}
+	}
+	if err := writeExclusive(link, []byte(strings.Join(lines, "\n")+"\n")); err != nil {
+		return err
+	}
+	s.log.Info("activation links written", "file", link)
+	return nil
+}
+
+func run(steps ...func() error) error {
+	for _, step := range steps {
+		if err := step(); err != nil {
 			return err
 		}
-		s.log.Info("activation link written", "file", link)
 	}
 	return nil
+}
+
+func (s *Server) seedSecondAdmin(now time.Time) error {
+	ws, b := s.Workspace(), s.identity.Boundary()
+	first, second, invite := verifierOf(random(tokenBytes)), verifierOf(random(tokenBytes)), verifierOf(random(tokenBytes))
+	defer b.EndSession(first)
+	defer b.EndSession(second)
+	return run(
+		func() error {
+			return s.identity.Installation().CreateUser(identity.Operator{Reference: "seed", Reason: "sample data"}, SampleAdmin2, LoginTriple(Admin2Login), Admin2Login)
+		},
+		func() error { return b.OpenSession(AdminTriple(), first, time.Minute, time.Minute) },
+		func() error {
+			return s.identity.Workspace().Invite(first, ws, "sample-invite", identity.Administrator, invite, identity.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}, SampleAdmin2)
+		},
+		func() error { return b.OpenSession(LoginTriple(Admin2Login), second, time.Minute, time.Minute) },
+		func() error { return s.identity.Workspace().Accept(ws, "sample-invite", invite, second) },
+	)
+}
+
+func (s *Server) seedPolicy(now time.Time) error {
+	ws := s.Workspace()
+	auth := authpolicy.Authentication{Method: authpolicy.MethodPassword, At: now}
+	admin := func(user string) authpolicy.Principal {
+		return authpolicy.Principal{User: user, Workspace: ws, Role: authpolicy.RoleAdministrator, Kind: authpolicy.KindHuman}
+	}
+	var p authpolicy.ProposalView
+	return run(
+		func() (err error) {
+			p, err = s.policy.Propose(authpolicy.Change{Kind: authpolicy.ChangeRevision, Revision: authpolicy.Revision{Workspace: ws, Methods: []string{authpolicy.MethodPassword},
+				MFA: authpolicy.MFANone, MaxAge: 12 * time.Hour}}, admin(SampleAdmin), auth)
+			return err
+		},
+		func() error { _, err := s.policy.Approve(p.Number, admin(SampleAdmin2), auth); return err },
+	)
+}
+
+func (s *Server) seedLinks() ([]string, error) {
+	lines := []string{}
+	issue := func(login string) func() error {
+		return func() error {
+			token, err := s.passwords.Issue(LoginKey(login), passwords.PurposeSet, setLinkValidity)
+			lines = append(lines, login+" "+s.cfg.Origins[0]+"/activate#"+token)
+			return err
+		}
+	}
+	err := run(issue(AdminLogin), issue(Admin2Login))
+	return lines, err
 }

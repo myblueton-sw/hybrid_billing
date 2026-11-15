@@ -14,6 +14,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
+	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
 )
 
 const (
@@ -37,34 +38,42 @@ var (
 var DefaultOrigins = []string{"http://127.0.0.1:5173", "http://localhost:5173", "http://127.0.0.1:4173", "http://localhost:4173"}
 
 type Config struct {
-	Origins  []string
-	Data     string
-	Seed     string
-	Clock    func() time.Time
-	Log      *slog.Logger
-	Kinds    []string
-	Fields   map[string]gate.FieldClass
-	Identity identity.Limits
-	Commands commands.Limits
+	Origins   []string
+	Data      string
+	Seed      string
+	Clock     func() time.Time
+	Log       *slog.Logger
+	Kinds     []string
+	Fields    map[string]gate.FieldClass
+	Identity  identity.Limits
+	Commands  commands.Limits
+	Passwords passwords.Params
 }
 
 type Server struct {
-	cfg      Config
-	clock    func() time.Time
-	log      *slog.Logger
-	identity *identity.Registry
-	gate     *gate.Gate
-	admin    *gate.Administration
-	commands *commands.Registry
-	policy   *authpolicy.Registry
-	domain   sync.RWMutex
-	counter  uint64
-	mutating map[string]bool
-	sessions *sessions
-	origins  map[string]bool
-	hosts    map[string]bool
-	hostMu   sync.RWMutex
-	seed     []step
+	cfg           Config
+	clock         func() time.Time
+	log           *slog.Logger
+	identity      *identity.Registry
+	gate          *gate.Gate
+	admin         *gate.Administration
+	commands      *commands.Registry
+	policy        *authpolicy.Registry
+	domain        sync.RWMutex
+	counter       uint64
+	mutating      map[string]bool
+	sessions      *sessions
+	origins       map[string]bool
+	hosts         map[string]bool
+	hostMu        sync.RWMutex
+	seed          []step
+	passwords     *passwords.Registry
+	limit         *limiter
+	slots         chan struct{}
+	boot          activation
+	bootWorkspace string
+	bootUser      string
+	pause         func()
 }
 
 func IdentityLimits() identity.Limits {
@@ -122,7 +131,8 @@ func New(cfg Config) (*Server, error) {
 	if len(cfg.Origins) > maxOrigins || cfg.Data == "" || (cfg.Seed != SeedSample && cfg.Seed != SeedNone) {
 		return nil, ErrConfig
 	}
-	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{}}
+	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{},
+		limit: &limiter{}, slots: make(chan struct{}, derivations)}
 	s.clock = func() time.Time { return cfg.Clock().UTC() }
 	for _, origin := range cfg.Origins {
 		if !validOrigin(origin) {
@@ -136,6 +146,9 @@ func New(cfg Config) (*Server, error) {
 	if cfg.Commands == (commands.Limits{}) {
 		cfg.Commands = CommandLimits()
 	}
+	if cfg.Passwords == (passwords.Params{}) {
+		cfg.Passwords = passwords.DefaultParams()
+	}
 	steps := []func() error{
 		func() (err error) { s.identity, err = identity.New(Installation, cfg.Identity, s.clock); return },
 		func() (err error) {
@@ -148,6 +161,7 @@ func New(cfg Config) (*Server, error) {
 		},
 		func() (err error) { s.commands, err = commands.New(s.gate, cfg.Commands); return },
 		func() (err error) { s.policy, err = authpolicy.NewRegistry(s.clock); return },
+		func() (err error) { s.passwords, err = passwords.New(s.clock, cfg.Passwords); return },
 	}
 	for _, build := range steps {
 		if build() != nil {
@@ -202,6 +216,8 @@ func (s *Server) Administration() *gate.Administration { return s.admin }
 func (s *Server) Commands() *commands.Registry { return s.commands }
 
 func (s *Server) Policy() *authpolicy.Registry { return s.policy }
+
+func (s *Server) Passwords() *passwords.Registry { return s.passwords }
 
 func (s *Server) Register(d commands.Definition) error {
 	if err := s.commands.Register(d); err != nil {

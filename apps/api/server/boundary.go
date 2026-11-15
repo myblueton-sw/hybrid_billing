@@ -22,6 +22,11 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/openapi.json", s.openapi)
 	mux.HandleFunc("GET /api/v1/session", s.current)
 	mux.HandleFunc("POST /api/v1/commands/{command}", s.command)
+	mux.HandleFunc("GET /api/v1/auth/csrf", s.presession)
+	mux.HandleFunc("POST /api/v1/auth/login", s.login)
+	mux.HandleFunc("POST /api/v1/auth/logout", s.logout)
+	mux.HandleFunc("POST /api/v1/auth/link", s.peek)
+	mux.HandleFunc("POST /api/v1/auth/redeem", s.redeem)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.UnsupportedCommand, r.Header.Get("X-Request-Id"))
 	})

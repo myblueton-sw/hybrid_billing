@@ -12,8 +12,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
+	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
 )
 
 var start = time.Date(2026, 11, 16, 9, 0, 0, 0, time.UTC)
@@ -31,7 +33,7 @@ func setup(t testing.TB, seed string) world {
 	t.Helper()
 	now := start
 	mu := &sync.Mutex{}
-	s, err := New(Config{Data: t.TempDir() + "/data", Seed: seed, Fields: map[string]gate.FieldClass{"state": gate.General}, Clock: func() time.Time {
+	s, err := New(Config{Data: t.TempDir() + "/data", Seed: seed, Fields: map[string]gate.FieldClass{"state": gate.General}, Passwords: fastPasswords(), Clock: func() time.Time {
 		mu.Lock()
 		defer mu.Unlock()
 		return now
@@ -52,6 +54,10 @@ func (f world) ready() world {
 	if err := f.s.Start(); err != nil {
 		f.t.Fatal(err)
 	}
+	if f.s.cfg.Seed == SeedSample && f.s.counter != 5 {
+		f.t.Fatalf("sample seed steps %d", f.s.counter)
+	}
+	f.s.counter = map[string]uint64{SeedSample: 2, SeedNone: 1}[f.s.cfg.Seed]
 	f.h = f.s.Handler()
 	return f
 }
@@ -190,3 +196,11 @@ func (f world) code(t testing.TB, name string, got reply, status int, code strin
 		t.Errorf("%s: got %d %v want %d %s", name, got.status, got.raw, status, code)
 	}
 }
+
+func fastPasswords() passwords.Params {
+	p := passwords.DefaultParams()
+	p.Iterations = 1000
+	return p
+}
+
+func newPolicy(f world) (*authpolicy.Registry, error) { return authpolicy.NewRegistry(f.s.clock) }

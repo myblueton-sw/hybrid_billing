@@ -182,7 +182,11 @@ func (s *Server) seedPolicy(now time.Time) error {
 				MFA: authpolicy.MFANone, MaxAge: 12 * time.Hour}}, admin(SampleAdmin), auth)
 			return err
 		},
-		func() error { _, err := s.policy.Approve(p.Number, admin(SampleAdmin2), auth); return err },
+		func() error {
+			s.recordProposal(p.Number, "Sample data")
+			_, err := s.policy.Approve(p.Number, admin(SampleAdmin2), auth)
+			return err
+		},
 	)
 }
 
@@ -215,7 +219,7 @@ func (s *Server) seedReaderGrants(now time.Time) error {
 }
 
 func (s *Server) seedInstallationGrants(now time.Time) error {
-	return s.grantInstallation(SampleAdmin, now)
+	return run(func() error { return s.grantInstallation(SampleAdmin, now) }, func() error { return s.grantInstallation(SampleAdmin2, now) })
 }
 
 func (s *Server) grantInstallation(user string, now time.Time) error {

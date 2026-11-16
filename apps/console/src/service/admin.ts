@@ -16,6 +16,31 @@ export type UserRow = {
 
 export type UsersPage = { revision: string; next: string; users: UserRow[] };
 
+export type StepRow = { action: string; max_age_seconds: number; mfa: boolean };
+export type RevisionRow = { methods: string[]; mfa: string; max_age_seconds: number; step_up: StepRow[] };
+export type PolicyRow = RevisionRow & { number: number; proposer: string; approver: string; at: string };
+export type ProposalRow = {
+  number: number;
+  target: string;
+  state: "pending" | "applied";
+  proposer: string;
+  approver: string;
+  reason: string;
+  revision: RevisionRow;
+  can_approve: boolean;
+  can_withdraw: boolean;
+  act_until: string;
+};
+export type PolicyPage = {
+  revision: string;
+  policy: PolicyRow | null;
+  proposals: ProposalRow[];
+  now: string;
+  signed_in_at: string;
+  act_until: string;
+  you: string;
+};
+
 export type AdminFailure =
   | "conflict"
   | "refused"
@@ -52,7 +77,10 @@ export type CommandId =
   | "identity.suspend_membership"
   | "identity.reinstate_membership"
   | "identity.remove_membership"
-  | "identity.revoke_invitation";
+  | "identity.revoke_invitation"
+  | "policy.propose"
+  | "policy.approve"
+  | "policy.withdraw";
 
 export type Outcome = { state: string; fields: Record<string, string> };
 
@@ -144,6 +172,18 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
       );
       const fields = (body.fields ?? {}) as Record<string, unknown>;
       return { state: String(body.business_state ?? ""), fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v)])) };
+    },
+    async policy(): Promise<PolicyPage> {
+      const body = await send("/identity/policy", { method: "GET" }, attempt().request);
+      return {
+        revision: String(body.revision ?? ""),
+        policy: (body.policy ?? null) as PolicyRow | null,
+        proposals: Array.isArray(body.proposals) ? (body.proposals as ProposalRow[]) : [],
+        now: String(body.now ?? ""),
+        signed_in_at: String(body.signed_in_at ?? ""),
+        act_until: String(body.act_until ?? ""),
+        you: String(body.you ?? ""),
+      };
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

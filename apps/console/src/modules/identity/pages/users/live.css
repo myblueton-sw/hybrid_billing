@@ -225,6 +225,9 @@
 }
 .remaining-security .live-roles label {
   display: flex;
+  flex-direction: row;
+  font-weight: 400;
+  justify-content: flex-start;
   align-items: center;
   gap: 12px;
   min-block-size: 44px;
@@ -317,4 +320,75 @@
   .remaining-security .live-table table {
     table-layout: auto;
   }
+}
+.remaining-security .live-sections {
+  display: grid;
+  gap: 40px;
+}
+.remaining-security .live-section-head {
+  margin-block-end: 12px;
+}
+.remaining-security .live-facts-grid > div {
+  display: grid;
+  grid-template-columns: minmax(160px, 38%) minmax(0, 1fr);
+  gap: 4px 16px;
+}
+.remaining-security .live-facts-grid dd {
+  margin: 0;
+}
+.remaining-security .live-window {
+  margin-block-start: 12px;
+}
+.remaining-security .live-proposal {
+  border-block-start: 1px solid var(--border-row);
+  padding-block: 20px;
+}
+.remaining-security .live-proposal h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+.remaining-security .live-proposal .live-tools {
+  margin-block-start: 16px;
+}
+.remaining-security .live-compare {
+  margin-block-start: 12px;
+}
+.remaining-security .live-reason-text {
+  margin-block: 12px 0;
+  max-inline-size: 60ch;
+  overflow-wrap: anywhere;
+}
+.remaining-security .live-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.remaining-security .live-step .live-minutes input {
+  inline-size: calc(10ch + 26px);
+}
+.remaining-security .live-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+@media (max-width: 767px) {
+  .remaining-security .live-facts-grid > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.remaining-security .live-step h2 + .live-impact {
+  margin-block-start: 8px;
+}
+.remaining-security .live-compare-stack > div {
+  display: block;
+}
+.remaining-security .live-compare-stack dd + dd {
+  margin-block-start: 2px;
+}
+.remaining-security .live-history .live-col-number {
+  inline-size: 12%;
+}
+.remaining-security .live-history td.live-user {
+  white-space: nowrap;
 }

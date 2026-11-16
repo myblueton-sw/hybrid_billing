@@ -21,10 +21,13 @@ func TestInstallationAdministrationSeed(t *testing.T) {
 	for _, c := range []struct {
 		login   string
 		allowed bool
-	}{{AdminLogin, true}, {Admin2Login, false}} {
+	}{{AdminLogin, true}, {Admin2Login, true}, {MemberLogin, false}} {
 		verifier := verifierOf(random(tokenBytes))
 		if err := b.OpenSession(LoginTriple(c.login), verifier, time.Minute, time.Minute); err != nil {
 			t.Fatal(err)
+		}
+		if c.login == MemberLogin {
+			f.setPassword(MemberLogin, pw)
 		}
 		answer, err := b.Access(verifier, f.s.Workspace())
 		if err != nil {

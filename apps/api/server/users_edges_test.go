@@ -177,7 +177,7 @@ func TestResetEdges(t *testing.T) {
 	got := f.run(root, "identity.issue_reset_link", SampleMember, nil)
 	link := f.collect(root, got.body["fields"].(map[string]any)["link_ref"].(string))
 	for i := 0; i < IdentityLimits().SessionsPerUser; i++ {
-		f.s.OpenSession(LoginTriple(MemberLogin), SampleWorkspace, false)
+		f.s.openFor(LoginTriple(MemberLogin), SampleWorkspace, false)
 	}
 	if got := f.redeem(linkToken(link.body["url"].(string)), "another sample password"); got.status != 204 {
 		t.Errorf("reset while sessions are at the limit %+v", got)
@@ -250,7 +250,6 @@ func TestOperatorAndContract(t *testing.T) {
 	root := f.as(AdminLogin)
 	f.code(t, "self promotion", f.run(root, "identity.change_role", SampleAdmin, map[string]string{"role": "administrator"}), 422, string(commands.PrerequisiteFailed))
 	f.setPassword(Admin2Login, pw)
-	f.s.grantInstallation(SampleAdmin2, f.s.clock())
 	if got := f.run(root, "identity.depart_user", SampleAdmin2, nil); got.status != 200 {
 		t.Fatal(got)
 	}

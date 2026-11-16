@@ -113,7 +113,7 @@ func (s *sessions) drop(v identity.Verifier) {
 	delete(s.byID, v)
 }
 
-func (s *Server) OpenSession(triple identity.Triple, workspace string, secure bool) (cookie *http.Cookie, csrf string, err error) {
+func (s *Server) openFor(triple identity.Triple, workspace string, secure bool) (cookie *http.Cookie, csrf string, err error) {
 	cookie, csrf, _, err = s.openSession(triple, workspace, secure)
 	return cookie, csrf, err
 }

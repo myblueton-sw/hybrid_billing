@@ -18,7 +18,7 @@ type Mode =
 
 type Loaded = { revision: string; next: string; users: UserRow[]; at: Date };
 
-function useWide(): boolean {
+export function useWide(): boolean {
   const query = "(min-width: 1280px)";
   const [wide, setWide] = useState(() => typeof matchMedia === "function" && matchMedia(query).matches);
   useEffect(() => {
@@ -33,7 +33,7 @@ function useWide(): boolean {
 
 const commandOf = (a: Action): CommandId => ("identity." + a) as CommandId;
 
-function Reason({ l, value, onChange, error }: { l: Locale; value: string; onChange: (v: string) => void; error: string }) {
+export function Reason({ l, value, onChange, error }: { l: Locale; value: string; onChange: (v: string) => void; error: string }) {
   const n = utf8Length(value);
   return (
     <div className="service-field live-reason">
@@ -69,15 +69,17 @@ function RoleChoice({ l, value, onChange, allowAdmin }: { l: Locale; value: stri
   );
 }
 
-function reasonProblem(l: Locale, reason: string): string {
+export function reasonProblem(l: Locale, reason: string): string {
   if (!reason.trim()) return w.enterReason(l);
   return utf8Length(reason) > 256 ? w.longReason(l) : "";
 }
 
-function FailureBox({ l, error, focusKey }: { l: Locale; error: unknown; focusKey: number }) {
+export function FailureBox({ l, error, focusKey, describe = failureText }: {
+  l: Locale; error: unknown; focusKey: number; describe?: (l: Locale, e: unknown) => { title: string; body: string };
+}) {
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => { if (focusKey) box.current?.focus(); }, [focusKey]);
-  const shown = failureText(l, error);
+  const shown = describe(l, error);
   return (
     <div className="service-summary" role="alert" tabIndex={-1} ref={box}>
       <h2>{shown.title}</h2>
@@ -86,7 +88,7 @@ function FailureBox({ l, error, focusKey }: { l: Locale; error: unknown; focusKe
   );
 }
 
-function settles(e: unknown): boolean {
+export function settles(e: unknown): boolean {
   return !(e instanceof AdminError) || !["unavailable", "limited", "unauthenticated"].includes(e.failure);
 }
 

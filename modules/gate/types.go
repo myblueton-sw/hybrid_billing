@@ -29,16 +29,18 @@ const (
 	General = auth.General
 	Cost    = auth.Cost
 
-	View                  = auth.View
-	ViewCost              = auth.ViewCost
-	ChangeCustomerPolicy  = auth.ChangeCustomerPolicy
-	ChangeSellingPolicy   = auth.ChangeSellingPolicy
-	RequestApproval       = auth.RequestApproval
-	Approve               = auth.Approve
-	Issue                 = auth.Issue
-	Download              = auth.Download
-	Deliver               = auth.Deliver
-	ApproveSupportSession = auth.ApproveSupportSession
+	View                   = auth.View
+	ViewCost               = auth.ViewCost
+	ChangeCustomerPolicy   = auth.ChangeCustomerPolicy
+	ChangeSellingPolicy    = auth.ChangeSellingPolicy
+	RequestApproval        = auth.RequestApproval
+	Approve                = auth.Approve
+	Issue                  = auth.Issue
+	Download               = auth.Download
+	Deliver                = auth.Deliver
+	ApproveSupportSession  = auth.ApproveSupportSession
+	AdministerInstallation = auth.AdministerInstallation
+	InstallationKind       = auth.InstallationKind
 
 	Active    = auth.Active
 	Suspended = auth.Suspended
@@ -48,21 +50,22 @@ const (
 	SelfApprovalDenied   = auth.SelfApprovalDenied
 	AuthorityUnavailable = auth.AuthorityUnavailable
 
-	ReasonAllowed          = auth.ReasonAllowed
-	ReasonUnavailable      = auth.ReasonUnavailable
-	ReasonInvalidRequest   = auth.ReasonInvalidRequest
-	ReasonPrincipal        = auth.ReasonPrincipal
-	ReasonStamp            = auth.ReasonStamp
-	ReasonNoGrant          = auth.ReasonNoGrant
-	ReasonClient           = auth.ReasonClient
-	ReasonSupportScope     = auth.ReasonSupportScope
-	ReasonSupportSession   = auth.ReasonSupportSession
-	ReasonApprovalRequired = auth.ReasonApprovalRequired
-	ReasonNotHuman         = auth.ReasonNotHuman
-	ReasonAuthor           = auth.ReasonAuthor
-	ReasonSelfApproval     = auth.ReasonSelfApproval
-	ReasonIdentity         = auth.ReasonIdentity
-	ReasonWorkspace        = auth.ReasonWorkspace
+	ReasonAllowed           = auth.ReasonAllowed
+	ReasonUnavailable       = auth.ReasonUnavailable
+	ReasonInvalidRequest    = auth.ReasonInvalidRequest
+	ReasonPrincipal         = auth.ReasonPrincipal
+	ReasonStamp             = auth.ReasonStamp
+	ReasonNoGrant           = auth.ReasonNoGrant
+	ReasonClient            = auth.ReasonClient
+	ReasonSupportScope      = auth.ReasonSupportScope
+	ReasonSupportSession    = auth.ReasonSupportSession
+	ReasonApprovalRequired  = auth.ReasonApprovalRequired
+	ReasonNotHuman          = auth.ReasonNotHuman
+	ReasonAuthor            = auth.ReasonAuthor
+	ReasonSelfApproval      = auth.ReasonSelfApproval
+	ReasonIdentity          = auth.ReasonIdentity
+	ReasonWorkspace         = auth.ReasonWorkspace
+	ReasonInstallationScope = auth.ReasonInstallationScope
 )
 
 var (

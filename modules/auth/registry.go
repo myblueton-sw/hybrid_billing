@@ -14,23 +14,46 @@ type versioned[T any] struct {
 }
 
 type Registry struct {
-	mu           sync.RWMutex
-	installation string
-	instance     [16]byte
-	clock        func() time.Time
-	kinds        map[string]struct{}
-	fields       map[string]FieldClass
-	available    bool
-	generation   uint64
-	subjects     map[string]versioned[Subject]
-	clients      map[string]versioned[Client]
-	grants       map[string]versioned[Grant]
-	delegations  map[string]versioned[Delegation]
-	sessions     map[string]versioned[SupportSession]
-	source       SubjectSource
-	grantJoined  map[string]uint64
-	chainJoined  map[string][2]uint64
-	actorJoined  map[string]uint64
+	mu                    sync.RWMutex
+	installation          string
+	instance              [16]byte
+	clock                 func() time.Time
+	kinds                 map[string]struct{}
+	fields                map[string]FieldClass
+	available             bool
+	generation            uint64
+	subjects              map[string]versioned[Subject]
+	clients               map[string]versioned[Client]
+	grants                map[string]versioned[Grant]
+	delegations           map[string]versioned[Delegation]
+	sessions              map[string]versioned[SupportSession]
+	source                SubjectSource
+	grantJoined           map[string]uint64
+	chainJoined           map[string][2]uint64
+	actorJoined           map[string]uint64
+	installationWorkspace string
+}
+
+func (r *Registry) SetInstallationWorkspace(id string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !validID(id) {
+		return ErrInvalid
+	}
+	if r.installationWorkspace != "" && r.installationWorkspace != id {
+		return ErrConflict
+	}
+	r.installationWorkspace = id
+	return nil
+}
+
+func (r *Registry) inInstallation(workspaceID string) bool {
+	return r.source != nil && workspaceID == r.installationWorkspace
+}
+
+func (r *Registry) installationTerms(terms Terms) bool {
+	return r.inInstallation(terms.Scope.WorkspaceID) && terms.Scope.Customer.all && terms.Scope.LegalEntity.all &&
+		terms.Scope.Contract.all && terms.Period.all
 }
 
 func NewRegistryWithSubjects(installationID string, catalog Catalog, clock func() time.Time, source SubjectSource) (*Registry, error) {
@@ -182,6 +205,9 @@ func (r *Registry) validTerms(terms Terms) bool {
 		!terms.Scope.Contract.valid() || !terms.Period.valid() {
 		return false
 	}
+	if installationAction(terms.Action) && (terms.Kind != InstallationKind || !r.installationTerms(terms)) {
+		return false
+	}
 	return r.validFields(terms.Action, terms.Fields)
 }
 
@@ -192,7 +218,7 @@ func (r *Registry) Describes(action Action, kind string, fields []string) bool {
 	if _, known := actions[action]; !known {
 		return false
 	}
-	if _, known := r.kinds[kind]; !known {
+	if _, known := r.kinds[kind]; !known || (installationAction(action) && kind != InstallationKind) {
 		return false
 	}
 	return r.validFields(action, fields)
@@ -235,7 +261,7 @@ func (r *Registry) AddGrant(grant Grant) error {
 	joined := uint64(0)
 	if grant.SubjectID != "" {
 		subject, known := r.subject(grant.SubjectID)
-		if !known || subject.State != Active || (humanOnly(grant.Terms.Action) && subject.Kind != Human) {
+		if !known || subject.State != Active || ((humanOnly(grant.Terms.Action) || installationAction(grant.Terms.Action)) && subject.Kind != Human) {
 			return ErrInvalid
 		}
 		active := false
@@ -346,7 +372,7 @@ func (r *Registry) AddDelegation(delegation Delegation) error {
 	defer r.mu.Unlock()
 	terms := copyTerms(delegation.Terms)
 	generation := r.subjectsGeneration()
-	if !validID(delegation.ID) || !r.validTerms(terms) || !delegation.Validity.valid() || humanOnly(terms.Action) ||
+	if !validID(delegation.ID) || !r.validTerms(terms) || !delegation.Validity.valid() || humanOnly(terms.Action) || installationAction(terms.Action) ||
 		delegation.DelegatorID == delegation.DelegateID || !r.activeHuman(delegation.DelegatorID) || !r.activeHuman(delegation.DelegateID) {
 		return ErrInvalid
 	}

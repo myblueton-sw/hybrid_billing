@@ -18,21 +18,24 @@ var (
 type Action string
 
 const (
-	View                  Action = "view"
-	ViewCost              Action = "view_cost"
-	ChangeCustomerPolicy  Action = "change_customer_policy"
-	ChangeSellingPolicy   Action = "change_selling_policy"
-	RequestApproval       Action = "request_approval"
-	Approve               Action = "approve"
-	Issue                 Action = "issue"
-	Download              Action = "download"
-	Deliver               Action = "deliver"
-	ApproveSupportSession Action = "approve_support_session"
+	View                   Action = "view"
+	ViewCost               Action = "view_cost"
+	ChangeCustomerPolicy   Action = "change_customer_policy"
+	ChangeSellingPolicy    Action = "change_selling_policy"
+	RequestApproval        Action = "request_approval"
+	Approve                Action = "approve"
+	Issue                  Action = "issue"
+	Download               Action = "download"
+	Deliver                Action = "deliver"
+	ApproveSupportSession  Action = "approve_support_session"
+	AdministerInstallation Action = "administer_installation"
 )
+
+const InstallationKind = "installation"
 
 var actions = map[Action]struct{}{
 	View: {}, ViewCost: {}, ChangeCustomerPolicy: {}, ChangeSellingPolicy: {}, RequestApproval: {},
-	Approve: {}, Issue: {}, Download: {}, Deliver: {}, ApproveSupportSession: {},
+	Approve: {}, Issue: {}, Download: {}, Deliver: {}, ApproveSupportSession: {}, AdministerInstallation: {},
 }
 
 func fieldAction(action Action) bool {
@@ -40,6 +43,8 @@ func fieldAction(action Action) bool {
 }
 
 func humanOnly(action Action) bool { return action == Approve || action == ApproveSupportSession }
+
+func installationAction(action Action) bool { return action == AdministerInstallation }
 
 type FieldClass string
 
@@ -233,21 +238,22 @@ const (
 type Reason string
 
 const (
-	ReasonAllowed          Reason = "allowed"
-	ReasonUnavailable      Reason = "authority_unavailable"
-	ReasonInvalidRequest   Reason = "invalid_request"
-	ReasonPrincipal        Reason = "principal_not_current"
-	ReasonStamp            Reason = "stamp_not_current"
-	ReasonNoGrant          Reason = "no_matching_grant"
-	ReasonClient           Reason = "client_not_allowed"
-	ReasonSupportScope     Reason = "support_scope"
-	ReasonSupportSession   Reason = "support_session_not_current"
-	ReasonApprovalRequired Reason = "approval_check_required"
-	ReasonNotHuman         Reason = "approver_not_human"
-	ReasonAuthor           Reason = "author_unknown"
-	ReasonSelfApproval     Reason = "author_is_approver"
-	ReasonIdentity         Reason = "identity_not_current"
-	ReasonWorkspace        Reason = "workspace_mismatch"
+	ReasonAllowed           Reason = "allowed"
+	ReasonUnavailable       Reason = "authority_unavailable"
+	ReasonInvalidRequest    Reason = "invalid_request"
+	ReasonPrincipal         Reason = "principal_not_current"
+	ReasonStamp             Reason = "stamp_not_current"
+	ReasonNoGrant           Reason = "no_matching_grant"
+	ReasonClient            Reason = "client_not_allowed"
+	ReasonSupportScope      Reason = "support_scope"
+	ReasonSupportSession    Reason = "support_session_not_current"
+	ReasonApprovalRequired  Reason = "approval_check_required"
+	ReasonNotHuman          Reason = "approver_not_human"
+	ReasonAuthor            Reason = "author_unknown"
+	ReasonSelfApproval      Reason = "author_is_approver"
+	ReasonIdentity          Reason = "identity_not_current"
+	ReasonWorkspace         Reason = "workspace_mismatch"
+	ReasonInstallationScope Reason = "installation_scope"
 )
 
 type SubjectSource interface {

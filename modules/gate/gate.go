@@ -96,15 +96,18 @@ func (g *Gate) Clock() func() time.Time {
 	return g.clock
 }
 
-func (g *Gate) run(answer identity.Answer, client, session, workspace string, decide func(auth.Principal) auth.Decision) Decision {
+func (g *Gate) run(answer identity.Answer, client, session string, request Request, decide func(auth.Principal) auth.Decision) Decision {
 	if !g.ready() {
 		return refusal(AuthorityUnavailable, ReasonUnavailable, "")
 	}
 	if denial, ok := g.confirm(answer); !ok {
 		return denial
 	}
-	if workspace != answer.Workspace() {
+	if request.Resource.WorkspaceID != answer.Workspace() {
 		return refusal(PermissionDenied, ReasonWorkspace, answer.User())
+	}
+	if request.Action == AdministerInstallation && (answer.Kind() != identity.Human || answer.Role() != identity.Administrator) {
+		return refusal(PermissionDenied, ReasonInstallationScope, answer.User())
 	}
 	if answer.Kind() != identity.Human && client != "" {
 		return refusal(PermissionDenied, ReasonPrincipal, answer.User())
@@ -124,7 +127,7 @@ func (g *Gate) run(answer identity.Answer, client, session, workspace string, de
 }
 
 func (g *Gate) Decide(answer identity.Answer, client string, request Request) Decision {
-	return g.run(answer, client, "", request.Resource.WorkspaceID, func(principal auth.Principal) auth.Decision {
+	return g.run(answer, client, "", request, func(principal auth.Principal) auth.Decision {
 		return g.permissions.Decide(principal, request)
 	})
 }
@@ -137,7 +140,7 @@ func (g *Gate) DecideInSupport(answer identity.Answer, session string, request R
 	if g.ready() && !supported(answer, session) {
 		return refusal(PermissionDenied, ReasonSupportSession, "")
 	}
-	return g.run(answer, "", session, request.Resource.WorkspaceID, func(principal auth.Principal) auth.Decision {
+	return g.run(answer, "", session, request, func(principal auth.Principal) auth.Decision {
 		return g.permissions.Decide(principal, request)
 	})
 }
@@ -146,7 +149,7 @@ func (g *Gate) Recheck(stamp Stamp, client string, request Request) Decision {
 	if g.ready() && !stamp.issued {
 		return refusal(PermissionDenied, ReasonStamp, "")
 	}
-	return g.run(stamp.answer, client, "", request.Resource.WorkspaceID, func(principal auth.Principal) auth.Decision {
+	return g.run(stamp.answer, client, "", request, func(principal auth.Principal) auth.Decision {
 		return g.permissions.Recheck(stamp.permission, principal, request)
 	})
 }
@@ -158,7 +161,7 @@ func (g *Gate) RecheckInSupport(stamp Stamp, session string, request Request) De
 	if g.ready() && !supported(stamp.answer, session) {
 		return refusal(PermissionDenied, ReasonSupportSession, "")
 	}
-	return g.run(stamp.answer, "", session, request.Resource.WorkspaceID, func(principal auth.Principal) auth.Decision {
+	return g.run(stamp.answer, "", session, request, func(principal auth.Principal) auth.Decision {
 		return g.permissions.Recheck(stamp.permission, principal, request)
 	})
 }
@@ -174,7 +177,7 @@ func (g *Gate) ownAuthor(approver, author string, decided auth.Decision) auth.De
 }
 
 func (g *Gate) CheckApproval(answer identity.Answer, author string, request Request) Decision {
-	return g.run(answer, "", "", request.Resource.WorkspaceID, func(principal auth.Principal) auth.Decision {
+	return g.run(answer, "", "", request, func(principal auth.Principal) auth.Decision {
 		return g.ownAuthor(principal.SubjectID, author, g.permissions.CheckApproval(principal, author, request))
 	})
 }
@@ -183,7 +186,7 @@ func (g *Gate) RecheckApproval(stamp Stamp, author string, request Request) Deci
 	if g.ready() && !stamp.issued {
 		return refusal(PermissionDenied, ReasonStamp, "")
 	}
-	return g.run(stamp.answer, "", "", request.Resource.WorkspaceID, func(principal auth.Principal) auth.Decision {
+	return g.run(stamp.answer, "", "", request, func(principal auth.Principal) auth.Decision {
 		return g.ownAuthor(principal.SubjectID, author, g.permissions.RecheckApproval(stamp.permission, principal, author, request))
 	})
 }
@@ -254,6 +257,13 @@ func (a *Administration) EndSupportSession(id string, expected uint64) error {
 		return ErrUnavailable
 	}
 	return a.permissions.EndSupportSession(id, expected)
+}
+
+func (a *Administration) SetInstallationWorkspace(id string) error {
+	if !a.ready() {
+		return ErrUnavailable
+	}
+	return a.permissions.SetInstallationWorkspace(id)
 }
 
 func (a *Administration) SetAvailable(available bool) error {

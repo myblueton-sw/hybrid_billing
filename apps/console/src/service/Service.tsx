@@ -4,6 +4,7 @@ import HeaderSelect from "../app/HeaderSelect";
 import logo from "../../../../packages/design-system/assets/logo/hb-lockup-color.svg";
 import { c, retryPhrase } from "./copy";
 import { fragmentToken, serviceClient, ServiceError, type LinkInfo, type ServiceClient, type Session } from "./api";
+import { ServiceContext } from "./context";
 import "./service.css";
 import { afterSignIn, emailValid, localeOf, loginValid, passwordProblem, serviceUrl, shellLocale } from "./helpers";
 export { serviceMode } from "./helpers";
@@ -93,7 +94,7 @@ export function PasswordField({
   );
 }
 
-function TextField({
+export function TextField({
   id, label, value, onChange, type = "text", autoComplete, error, locale: l,
 }: {
   id: string; label: string; value: string; onChange: (v: string) => void; type?: string;
@@ -118,9 +119,9 @@ function TextField({
   );
 }
 
-type Problems = Array<{ field: string; message: string }>;
+export type Problems = Array<{ field: string; message: string }>;
 
-function Summary({ locale: l, title, problems, focusKey }: { locale: Locale; title: string; problems: Problems; focusKey: number }) {
+export function Summary({ locale: l, title, problems, focusKey }: { locale: Locale; title: string; problems: Problems; focusKey: number }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => { if (focusKey) ref.current?.focus(); }, [focusKey]);
   return (
@@ -407,7 +408,13 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
   }
   if (session) {
     const shown = shellLocale(hash, locale);
-    return <>{<SessionStrip locale={shown} session={session} onSignOut={() => { setLocale(shown); void signOutIn(shown); }} />}{app}</>;
+    const signOut = () => { setLocale(shown); void signOutIn(shown); };
+    return (
+      <ServiceContext.Provider value={{ session, signOut }}>
+        <SessionStrip locale={shown} session={session} onSignOut={signOut} />
+        {app}
+      </ServiceContext.Provider>
+    );
   }
   if (params.get("view") === "help") return <Frame locale={locale} onLocale={changeLocale}><Help locale={locale} /></Frame>;
   if (session === undefined && !failed) return <Frame locale={locale} onLocale={changeLocale}><p className="service-loading" role="status">{c.loading(locale)}</p></Frame>;

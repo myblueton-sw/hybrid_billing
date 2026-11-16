@@ -7,6 +7,8 @@ import Authentication from "../../modules/identity/pages/authentication/Screen";
 import Access from "../../modules/identity/pages/access/Screen";
 import ServiceAccounts from "../../modules/identity/pages/service-accounts/Screen";
 import MySecurity from "../../modules/identity/pages/my-security/Screen";
+import LiveUsers from "../../modules/identity/pages/users/Live";
+import { useService } from "../../service/context";
 import "../../modules/identity/screen-ui/security.css";
 export type { Props } from "../../modules/identity/screen-ui/types";
 export default function RemainingSecurity(props: Props) {
@@ -21,6 +23,7 @@ export default function RemainingSecurity(props: Props) {
           : props.screenId === "M04"
             ? ServiceAccounts
             : MySecurity;
+  const service = useService();
   if (!allowedView(props.screenId, props.view))
     return (
       <p role="alert">
@@ -30,6 +33,30 @@ export default function RemainingSecurity(props: Props) {
           "هذا العرض الأمني غير متاح.",
         ])}
       </p>
+    );
+  if (service && props.screenId === "M01")
+    return (
+      <div
+        className="remaining-security"
+        data-security-screen="M01"
+        data-security-view={props.view}
+        data-security-phase="live"
+        dir={props.locale === "ar" ? "rtl" : "ltr"}
+        lang={props.locale}
+      >
+        <LiveUsers
+          locale={props.locale}
+          view={props.view}
+          session={service.session}
+          onSignOut={service.signOut}
+          onView={(view) => {
+            const [path, query = ""] = location.hash.replace(/^#/, "").split("?");
+            const q = new URLSearchParams(query);
+            q.set("view", view);
+            location.hash = path + "?" + q.toString();
+          }}
+        />
+      </div>
     );
   return (
     <div

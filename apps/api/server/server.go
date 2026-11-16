@@ -73,6 +73,7 @@ type Server struct {
 	passwords     *passwords.Registry
 	orgs          *organizations.Registry
 	rels          *relationships.Registry
+	plans         *planStore
 	limit         *limiter
 	slots         chan struct{}
 	boot          activation
@@ -148,7 +149,7 @@ func New(cfg Config) (*Server, error) {
 		return nil, ErrConfig
 	}
 	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{},
-		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}}
+		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}, plans: newPlanStore()}
 	s.clock = func() time.Time { return cfg.Clock().UTC() }
 	for _, origin := range cfg.Origins {
 		if !validOrigin(origin) {

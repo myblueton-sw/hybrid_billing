@@ -25,6 +25,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/identity/users", s.listUsers)
 	mux.HandleFunc("GET /api/v1/identity/links/{ref}", s.collect)
 	mux.HandleFunc("GET /api/v1/identity/policy", s.listPolicy)
+	mux.HandleFunc("GET /api/v1/identity/access", s.listAccess)
+	mux.HandleFunc("GET /api/v1/identity/access/preview", s.previewAccess)
 	for path, raw := range s.cfg.Readers {
 		target, _ := readerTarget(raw)
 		mux.HandleFunc("GET "+path, s.reader(target))

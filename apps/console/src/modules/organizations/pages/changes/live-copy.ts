@@ -1,0 +1,197 @@
+import type { Locale } from "../../../../shared/types";
+import { text as t } from "../../../../shared/copy";
+
+const iso = (s: string) => (s ? "\u2068" + s + "\u2069" : s);
+
+export const c = {
+  revision: (l: Locale) => t(l, "Relationship revision", "관계 리비전", "مراجعة العلاقات"),
+  active: (l: Locale, n: number) => t(l, `Active revision ${n}`, `활성 리비전 ${n}`, `المراجعة النشطة ${n}`),
+  openCount: (l: Locale, n: number, max: number) => t(l, `${n} of ${max} open`, `열린 계획 ${n}/${max}개`, `${n} من ${max} مفتوحة`),
+  openPlans: (l: Locale) => t(l, "Open plans", "열린 변경 계획", "الخطط المفتوحة"),
+  from: (l: Locale, d: string) => t(l, `From ${d}`, `${d}부터`, `اعتبارًا من ${d}`),
+  staleTag: (l: Locale) => t(l, "Base changed", "기준 변경됨", "تغيّر الأساس"),
+  selectedTag: (l: Locale) => t(l, "Selected", "선택됨", "محددة"),
+  noOpen: (l: Locale) => t(l, "No open changes.", "열린 변경 계획이 없습니다.", "لا توجد تغييرات مفتوحة."),
+  proposeLink: (l: Locale) => t(l, "Propose a change", "변경 제안하기", "اقتراح تغيير"),
+  choose: (l: Locale) => t(l, "Choose a plan from the list.", "목록에서 계획을 선택하세요.", "اختر خطة من القائمة."),
+  back: (l: Locale) => t(l, "Back to open plans", "열린 계획으로 돌아가기", "العودة إلى الخطط المفتوحة"),
+  backClosed: (l: Locale) => t(l, "Back to closed plans", "종료된 계획으로 돌아가기", "العودة إلى الخطط المغلقة"),
+  limit: (l: Locale, max: number) =>
+    t(l, `${max} plans are open, which is the limit. Activate or discard one before proposing another.`, `열린 변경 계획이 한도인 ${max}개입니다. 새로 제안하려면 먼저 하나를 활성화하거나 폐기하세요.`, `عدد الخطط المفتوحة ${max}، وهو الحد الأقصى. فعّل خطة أو تجاهلها قبل اقتراح أخرى.`),
+  reload: (l: Locale) => t(l, "Reload", "새로 고침", "إعادة التحميل"),
+  targetsTitle: (l: Locale) => t(l, "Change target", "변경 대상", "هدف التغيير"),
+  impactTitle: (l: Locale) => t(l, "Impact review", "영향 검토", "مراجعة الأثر"),
+  approvalTitle: (l: Locale) => t(l, "Approval", "승인", "الاعتماد"),
+  resultTitle: (l: Locale) => t(l, "Results", "처리 결과", "النتائج"),
+  lead: (l: Locale) => t(l, "Proposing creates a plan with its impact fixed. Another administrator activates it.", "제안하면 영향이 고정된 변경 계획이 만들어집니다. 활성화는 다른 관리자가 합니다.", "ينشئ الاقتراح خطة بأثر مثبّت، ويفعّلها مسؤول آخر."),
+  relationship: (l: Locale) => t(l, "Relationship", "관계 종류", "نوع العلاقة"),
+  change: (l: Locale) => t(l, "Change", "변경 방식", "التغيير"),
+  changeHint: (l: Locale) => t(l, "Changing the relationship clears this choice.", "관계 종류를 바꾸면 이 선택이 초기화됩니다.", "يؤدي تغيير نوع العلاقة إلى مسح هذا الاختيار."),
+  action: (l: Locale, a: string) =>
+    a === "set" ? t(l, "Set (replace the current target)", "지정(현재 대상 교체)", "تعيين (استبدال الهدف الحالي)")
+      : a === "end" ? t(l, "End (remove from this date)", "종료(이 날짜부터 해제)", "إنهاء (الإزالة من هذا التاريخ)")
+        : a === "join" ? t(l, "Join the group", "그룹에 추가", "الانضمام إلى المجموعة")
+          : a === "leave" ? t(l, "Leave the group", "그룹에서 제외", "مغادرة المجموعة") : a,
+  actionShort: (l: Locale, a: string) =>
+    a === "set" ? t(l, "Set", "지정", "تعيين") : a === "end" ? t(l, "End", "종료", "إنهاء") : a === "join" ? t(l, "Join", "추가", "انضمام") : a === "leave" ? t(l, "Leave", "제외", "مغادرة") : a,
+  member: (l: Locale) => t(l, "Member", "구성원", "العضو"),
+  memberHint: (l: Locale) => t(l, "Internal units, legal entities and members already in a relationship.", "내부 조직, 법인, 관계에 이미 있는 구성원입니다.", "الوحدات الداخلية والكيانات القانونية والأعضاء الموجودون في علاقة."),
+  enterId: (l: Locale) => t(l, "Enter an ID", "ID 직접 입력", "إدخال معرّف"),
+  pick: (l: Locale) => t(l, "Choose from the list", "목록에서 선택", "الاختيار من القائمة"),
+  idHint: (l: Locale) => t(l, "The server checks this ID when you propose.", "제안할 때 서버가 이 ID를 확인합니다.", "يتحقق الخادم من هذا المعرّف عند الاقتراح."),
+  memberIdLabel: (l: Locale) => t(l, "Member ID", "구성원 ID", "معرّف العضو"),
+  targetIdLabel: (l: Locale) => t(l, "Target ID", "연결 대상 ID", "معرّف الجهة المستهدفة"),
+  choosePlaceholder: (l: Locale) => t(l, "Choose…", "선택하세요…", "اختر…"),
+  target: (l: Locale) => t(l, "Target", "연결 대상", "الجهة المستهدفة"),
+  hintHierarchy: (l: Locale) => t(l, "An active party other than the member.", "구성원이 아닌 활성 법인·조직입니다.", "طرف نشط غير العضو."),
+  hintPayer: (l: Locale) => t(l, "An active legal entity other than the member.", "구성원이 아닌 활성 법인입니다.", "كيان قانوني نشط غير العضو."),
+  hintPool: (l: Locale) => t(l, "Only existing pools and groups. New ones cannot be created here.", "이미 있는 풀·그룹만 고를 수 있으며 여기서 새로 만들 수 없습니다.", "المجمعات والمجموعات الموجودة فقط، ولا يمكن إنشاء جديد هنا."),
+  fromLabel: (l: Locale) => t(l, "Effective from", "적용 시작일", "تاريخ السريان"),
+  fromHint: (l: Locale) =>
+    t(l, "UTC date, today or later. The change applies from the start of that day (00:00 UTC).", "UTC 기준 오늘 이후 날짜입니다. 해당 날짜 00:00(UTC)부터 적용됩니다.", "تاريخ بالتوقيت العالمي المنسق، اليوم أو بعده. يسري التغيير من بداية ذلك اليوم (00:00 UTC)."),
+  current: (l: Locale) => t(l, "Current, from the organizations listing", "현재 관계(조직 목록 기준)", "الوضع الحالي، من قائمة المؤسسات"),
+  onFrom: (l: Locale, d: string) => t(l, `On ${d} (effective from)`, `${d}(적용 시작일)`, `في ${d} (تاريخ السريان)`),
+  today: (l: Locale, d: string) => t(l, `Today, ${d}`, `오늘(${d})`, `اليوم، ${d}`),
+  currentNote: (l: Locale) => t(l, "This is the listing as read, not a computed result.", "조회한 목록 그대로이며 계산 결과가 아닙니다.", "هذه القائمة كما قُرئت، وليست نتيجة محسوبة."),
+  noneOfKind: (l: Locale) => t(l, "No relationship of this kind", "이 종류의 관계 없음", "لا توجد علاقة من هذا النوع"),
+  notInListing: (l: Locale) => t(l, "Not in the loaded listing for this relationship", "불러온 이 관계 목록에 없음", "غير موجود في القائمة المحمّلة لهذه العلاقة"),
+  pickFirst: (l: Locale) => t(l, "Choose a member to see its current relationship.", "구성원을 선택하면 현재 관계를 표시합니다.", "اختر عضوًا لعرض علاقته الحالية."),
+  incomplete: (l: Locale) => t(l, "Some relationship listings did not load completely, so these lists may be incomplete. You can still enter an ID.", "일부 관계 목록을 모두 불러오지 못해 선택지가 빠졌을 수 있습니다. ID를 직접 입력할 수 있습니다.", "لم تُحمّل بعض قوائم العلاقات بالكامل، لذا قد تكون هذه القوائم ناقصة. يمكنك إدخال معرّف."),
+  loadingChoices: (l: Locale) => t(l, "Loading the organizations listing…", "조직 목록을 불러오는 중…", "جارٍ تحميل قائمة المؤسسات…"),
+  propose: (l: Locale) => t(l, "Propose change", "변경 제안", "اقتراح التغيير"),
+  proposing: (l: Locale) => t(l, "Proposing…", "제안하는 중…", "جارٍ الاقتراح…"),
+  eKind: (l: Locale) => t(l, "Choose a relationship.", "관계 종류를 선택하세요.", "اختر نوع العلاقة."),
+  eChange: (l: Locale) => t(l, "Choose a change.", "변경 방식을 선택하세요.", "اختر التغيير."),
+  eMember: (l: Locale) => t(l, "Choose a member or enter its ID.", "구성원을 선택하거나 ID를 입력하세요.", "اختر عضوًا أو أدخل معرّفه."),
+  eTarget: (l: Locale) => t(l, "Choose a target or enter its ID.", "연결 대상을 선택하거나 ID를 입력하세요.", "اختر الجهة المستهدفة أو أدخل معرّفها."),
+  eDate: (l: Locale) => t(l, "Enter a date as YYYY-MM-DD.", "날짜를 YYYY-MM-DD 형식으로 입력하세요.", "أدخل التاريخ بالصيغة YYYY-MM-DD."),
+  ePast: (l: Locale) => t(l, "Enter today or a later date (UTC).", "오늘(UTC) 이후 날짜를 입력하세요.", "أدخل تاريخ اليوم أو تاريخًا لاحقًا (UTC)."),
+  eMemberServer: (l: Locale) => t(l, "Not found in the active revision.", "활성 리비전에서 찾을 수 없습니다.", "غير موجود في المراجعة النشطة."),
+  eTargetServer: (l: Locale) => t(l, "Not usable as a target for this relationship in the active revision.", "활성 리비전에서 이 관계의 연결 대상으로 쓸 수 없습니다.", "لا يمكن استخدامه هدفًا لهذه العلاقة في المراجعة النشطة."),
+  eActionServer: (l: Locale) => t(l, "This change is not allowed for this relationship, or the member already has too many entries.", "이 관계에 허용되지 않는 변경이거나 구성원의 항목이 너무 많습니다.", "هذا التغيير غير مسموح لهذه العلاقة، أو أن لدى العضو إدخالات كثيرة جدًا."),
+  eFromServer: (l: Locale) => t(l, "The server did not accept this date. Enter today or a later date (UTC).", "서버가 이 날짜를 받지 않았습니다. 오늘(UTC) 이후 날짜를 입력하세요.", "لم يقبل الخادم هذا التاريخ. أدخل تاريخ اليوم أو تاريخًا لاحقًا (UTC)."),
+  eServer: (l: Locale) => t(l, "The server did not accept this value.", "서버가 이 값을 받지 않았습니다.", "لم يقبل الخادم هذه القيمة."),
+  conflict: (l: Locale) =>
+    t(l, "Relationships changed while you were working. The latest revision is loaded and your entries are kept. Check and submit again.", "작업하는 동안 관계가 바뀌었습니다. 최신 리비전을 불러왔고 입력 내용은 유지했습니다. 확인 후 다시 제출하세요.", "تغيّرت العلاقات أثناء العمل. حُمّلت أحدث مراجعة واحتُفظ بإدخالاتك. تحقّق ثم أرسل مرة أخرى."),
+  partialPropose: (l: Locale, op: string) =>
+    t(l, `The proposal stopped part way and no plan was kept. Propose the change again. Operation ${op}.`, `제안이 도중에 중단되어 계획이 남지 않았습니다. 변경을 다시 제안하세요. 작업 ${op}.`, `توقف الاقتراح في منتصفه ولم تُحفظ أي خطة. اقترح التغيير مرة أخرى. العملية ${op}.`),
+  stopped: (l: Locale, op: string) =>
+    t(l, `Stopped after a change. Operation ${op}. Check the results before trying again.`, `변경 도중 중단되었습니다. 작업 ${op}. 다시 시도하기 전에 결과를 확인하세요.`, `توقفت العملية بعد إجراء تغيير. العملية ${op}. تحقّق من النتائج قبل إعادة المحاولة.`),
+  renew: (l: Locale) => t(l, "This request expired. Check the values and submit again.", "요청이 만료되었습니다. 값을 확인하고 다시 제출하세요.", "انتهت صلاحية هذا الطلب. تحقّق من القيم وأرسل مرة أخرى."),
+  retry: (l: Locale) => t(l, "The service did not answer. Submit again to resend the same request.", "서비스가 응답하지 않았습니다. 다시 제출하면 같은 요청을 다시 보냅니다.", "لم تستجب الخدمة. أرسل مرة أخرى لإعادة إرسال الطلب نفسه."),
+  failed: (l: Locale) => t(l, "The request failed.", "요청이 실패했습니다.", "فشل الطلب."),
+  progress: (l: Locale) => t(l, "Plan progress", "계획 진행", "تقدّم الخطة"),
+  step: (l: Locale, n: number) => t(l, `Step ${n}`, `${n}단계`, `الخطوة ${n}`),
+  proposed: (l: Locale) => t(l, "Proposed", "제안됨", "مقترحة"),
+  stateWord: (l: Locale, s: string) =>
+    s === "sealed" ? t(l, "Sealed", "영향 고정됨", "مثبّتة الأثر") : s === "rejected" ? t(l, "Rejected", "거부됨", "مرفوضة")
+      : s === "activated" ? t(l, "Activated", "활성화됨", "مفعّلة") : s === "discarded" ? t(l, "Discarded", "폐기됨", "تم تجاهلها")
+        : s === "draft" ? t(l, "Draft", "초안", "مسودة") : t(l, `Unknown state ${s}`, `알 수 없는 상태 ${s}`, `حالة غير معروفة ${s}`),
+  sealedOrRejected: (l: Locale) => t(l, "Sealed or rejected", "영향 고정 또는 거부", "التثبيت أو الرفض"),
+  pending3: (l: Locale) => t(l, "Activated or discarded", "활성화 또는 폐기", "التفعيل أو التجاهل"),
+  stepState: (l: Locale, s: string) =>
+    s === "done" ? t(l, "Done", "완료", "مكتملة") : s === "current" ? t(l, "Current", "현재", "الحالية") : s === "stopped" ? t(l, "Ends here", "여기서 종료", "تنتهي هنا")
+      : s === "na" ? t(l, "Not reached", "진행 전", "لم تبدأ") : t(l, "Unknown", "알 수 없음", "غير معروفة"),
+  notApplicable: (l: Locale) => t(l, "Not applicable: rejected plans cannot be activated", "해당 없음: 거부된 계획은 활성화할 수 없습니다", "غير منطبق: لا يمكن تفعيل الخطط المرفوضة"),
+  facts: {
+    member: (l: Locale) => t(l, "Member", "구성원", "العضو"),
+    kind: (l: Locale) => t(l, "Relationship", "관계 종류", "نوع العلاقة"),
+    change: (l: Locale) => t(l, "Change", "변경 방식", "التغيير"),
+    target: (l: Locale) => t(l, "Target", "연결 대상", "الجهة المستهدفة"),
+    from: (l: Locale) => t(l, "Effective from", "적용 시작일", "تاريخ السريان"),
+    base: (l: Locale) => t(l, "Base revision", "기준 리비전", "المراجعة الأساسية"),
+    proposer: (l: Locale) => t(l, "Proposer", "제안자", "مقدّم الاقتراح"),
+    at: (l: Locale) => t(l, "Proposed at", "제안 시각", "وقت الاقتراح"),
+    reason: (l: Locale) => t(l, "Reason", "사유", "السبب"),
+    state: (l: Locale) => t(l, "State", "상태", "الحالة"),
+  },
+  diff: (l: Locale) => t(l, "Changed members", "변경된 구성원", "الأعضاء المتغيّرون"),
+  colMember: (l: Locale) => t(l, "Member", "구성원", "العضو"),
+  colChange: (l: Locale) => t(l, "Dated change", "날짜별 변경", "التغيير المؤرخ"),
+  colRanges: (l: Locale) => t(l, "Dates that differ", "달라지는 기간", "الفترات المختلفة"),
+  colBefore: (l: Locale) => t(l, "Before (any date)", "변경 전(전체 기간)", "قبل (أي تاريخ)"),
+  colAfter: (l: Locale) => t(l, "After (any date)", "변경 후(전체 기간)", "بعد (أي تاريخ)"),
+  closedHere: (l: Locale) => t(l, "The selected plan is closed and is not in this list. See", "선택한 계획은 종료되어 이 목록에 없습니다. 다음에서 확인하세요:", "الخطة المحددة مغلقة وليست في هذه القائمة. راجع"),
+  timelineNote: (l: Locale) =>
+    t(l, "The before and after lists cover every date in the member's timeline, so a move shows both targets after. The dated change and the ranges say what applies when.", "변경 전후 목록은 구성원 타임라인의 모든 날짜를 포함하므로 이동하면 변경 후에 두 대상이 함께 보입니다. 언제 무엇이 적용되는지는 날짜별 변경과 기간을 보세요.", "تشمل قائمتا قبل وبعد كل تواريخ الجدول الزمني للعضو، لذا يظهر الهدفان معًا بعد النقل. يوضح التغيير المؤرخ والفترات ما يسري ومتى."),
+  leadTo: (l: Locale, d: string, target: string) => t(l, `From ${d}: ${iso(target)}`, `${d}부터: ${iso(target)}`, `اعتبارًا من ${d}: ${iso(target)}`),
+  leadNone: (l: Locale, d: string) => t(l, `From ${d}: no target`, `${d}부터: 대상 없음`, `اعتبارًا من ${d}: بلا هدف`),
+  none: (l: Locale) => t(l, "None", "없음", "لا يوجد"),
+  rangeOpen: (l: Locale, d: string) => t(l, `From ${d}`, `${d}부터`, `اعتبارًا من ${d}`),
+  rangeClosed: (l: Locale, d: string, e: string) => t(l, `From ${d} until ${e} (not included)`, `${d}부터 ${e}까지(${e} 미포함)`, `من ${d} حتى ${e} (غير مشمول)`),
+  notKept: (l: Locale) => t(l, "Changed members are not kept for rejected or discarded plans.", "거부되거나 폐기된 계획은 변경된 구성원을 보관하지 않습니다.", "لا يُحتفظ بالأعضاء المتغيّرين للخطط المرفوضة أو التي تم تجاهلها."),
+  truncated: (l: Locale) => t(l, "Not all members shown. More members changed than are listed here.", "일부만 표시합니다. 여기 표시된 것보다 많은 구성원이 바뀌었습니다.", "لم يُعرض كل الأعضاء. تغيّر أعضاء أكثر مما هو مدرج هنا."),
+  kinds: (l: Locale) => t(l, "Changes by relationship", "관계 종류별 변경", "التغييرات حسب نوع العلاقة"),
+  kindCols: (l: Locale) => [t(l, "Relationship", "관계 종류", "نوع العلاقة"), t(l, "Changed members", "변경된 구성원", "الأعضاء المتغيّرون"), t(l, "Entries before", "변경 전 항목", "الإدخالات قبل"), t(l, "Entries after", "변경 후 항목", "الإدخالات بعد"), t(l, "Earliest change", "가장 이른 변경일", "أقرب تاريخ تغيير")],
+  violations: (l: Locale) => t(l, "Why this plan was rejected", "거부 사유", "سبب رفض الخطة"),
+  rule: (l: Locale, code: string): [string, string] =>
+    code === "no_change" ? [t(l, "No change", "변경 없음", "لا تغيير"), t(l, "The change leaves the relationship as it is.", "이 변경으로 관계가 달라지지 않습니다.", "يترك التغيير العلاقة كما هي.")]
+      : code === "cycle" ? [t(l, "Cycle", "순환", "حلقة"), t(l, "The organization would end up above itself.", "조직이 자기 자신의 상위가 됩니다.", "ستصبح المؤسسة فوق نفسها.")]
+        : code === "depth" ? [t(l, "Too deep", "단계 초과", "عمق زائد"), t(l, "The organization tree would have more levels than allowed.", "조직 트리 단계가 허용 한도를 넘습니다.", "ستتجاوز شجرة المؤسسات عدد المستويات المسموح به.")]
+          : code === "payer_chain" ? [t(l, "Payer chain", "지급 주체 연쇄", "سلسلة جهات دافعة"), t(l, "The payer would itself have a payer at the same time.", "지급 주체에게 같은 기간에 또 다른 지급 주체가 생깁니다.", "سيكون للجهة الدافعة جهة دافعة أخرى في الوقت نفسه.")]
+            : code === "member_and_target" ? [t(l, "Member and target", "구성원이자 대상", "عضو وهدف"), t(l, "The same ID would be both a member and a pool in this relationship.", "같은 ID가 이 관계에서 구성원이자 풀이 됩니다.", "سيكون المعرّف نفسه عضوًا ومجمعًا في هذه العلاقة.")]
+              : code === "plan_limit" ? [t(l, "Too many problems", "문제 과다", "مشكلات كثيرة"), t(l, "More problems were found than can be listed.", "표시할 수 있는 것보다 많은 문제가 발견되었습니다.", "وُجدت مشكلات أكثر مما يمكن عرضه.")]
+                : [t(l, `Rule ${code}`, `규칙 ${code}`, `القاعدة ${code}`), ""],
+  impact: (l: Locale) => t(l, "Impact on money, publication and ERP", "금액·공개·ERP 영향", "الأثر على المبالغ والنشر وERP"),
+  impactRows: (l: Locale) => [t(l, "Money", "금액", "المبالغ"), t(l, "Publication", "공개", "النشر"), "ERP"],
+  notComputed: (l: Locale) => t(l, "Not computed", "미계산", "غير محسوب"),
+  unknownImpact: (l: Locale) => t(l, "Unknown", "알 수 없음", "غير معروف"),
+  notZero: (l: Locale) => t(l, "No amount is shown. This is not zero.", "금액을 표시하지 않으며 0이 아닙니다.", "لا يُعرض أي مبلغ، وهذا ليس صفرًا."),
+  impactNote: (l: Locale) => t(l, "This pre-launch build does not compute these impacts. Nothing here means zero.", "출시 전 빌드는 이 영향을 계산하지 않습니다. 여기의 어떤 표시도 0을 뜻하지 않습니다.", "لا يحسب هذا الإصدار السابق للإطلاق هذا الأثر، ولا شيء هنا يعني صفرًا."),
+  stale: (l: Locale, n: number, b: number) =>
+    t(l, `Base changed. The active revision moved to ${n} after this plan was proposed on revision ${b}. Propose the change again.`, `기준 변경됨. 이 계획을 리비전 ${b}에서 제안한 뒤 활성 리비전이 ${n}(으)로 바뀌었습니다. 변경을 다시 제안하세요.`, `تغيّر الأساس. انتقلت المراجعة النشطة إلى ${n} بعد اقتراح هذه الخطة على المراجعة ${b}. اقترح التغيير مرة أخرى.`),
+  notFound: (l: Locale) => t(l, "This plan is not among the latest plans, or it is no longer kept.", "이 계획은 최근 계획 목록에 없거나 더 이상 보관되지 않습니다.", "هذه الخطة ليست ضمن أحدث الخطط، أو لم تعد محفوظة."),
+  showOpen: (l: Locale) => t(l, "Show open plans", "열린 계획 보기", "عرض الخطط المفتوحة"),
+  toApproval: (l: Locale) => t(l, "Continue to approval", "승인으로 이동", "المتابعة إلى الاعتماد"),
+  another: (l: Locale) => t(l, "Propose another change", "다른 변경 제안", "اقتراح تغيير آخر"),
+  sentence: (l: Locale, a: string, m: string, tg: string, kind: string) => c.sentenceRaw(l, a, iso(m), iso(tg), kind),
+  sentenceRaw: (l: Locale, a: string, member: string, target: string, kind: string) =>
+    a === "set" ? t(l, `${member}: set to ${target}`, `${member}을(를) ${target}(으)로 지정`, `تعيين ${target} لـ${member}`)
+      : a === "end" ? t(l, `${member}: ${kind} ends`, `${member}의 ${kind} 관계 종료`, `إنهاء علاقة ${kind} لـ${member}`)
+        : a === "join" ? t(l, `${member} joins ${target}`, `${member}을(를) ${target}에 추가`, `انضمام ${member} إلى ${target}`)
+          : a === "leave" ? t(l, `${member} leaves ${target}`, `${member}을(를) ${target}에서 제외`, `مغادرة ${member} لـ${target}`) : `${member} ${a} ${target}`,
+  activate: (l: Locale) => t(l, "Activate", "활성화", "التفعيل"),
+  restate: (l: Locale, d: string, sentence: string, kind: string) =>
+    t(l, `Activating applies this change from ${d} (00:00 UTC): ${sentence} in ${kind}. It creates a new relationship revision.`, `활성화하면 ${d} 00:00(UTC)부터 ${kind}에서 다음 변경이 적용됩니다: ${sentence}. 새 관계 리비전이 만들어집니다.`, `يؤدي التفعيل إلى تطبيق هذا التغيير اعتبارًا من ${d} (00:00 UTC): ${sentence} في ${kind}. يُنشئ ذلك مراجعة علاقات جديدة.`),
+  reviewActivate: (l: Locale) => t(l, "Review and activate", "검토 후 활성화", "المراجعة والتفعيل"),
+  confirmActivate: (l: Locale) => t(l, "Confirm activation", "활성화 확인", "تأكيد التفعيل"),
+  activateBtn: (l: Locale, d: string) => t(l, `Activate, effective ${d}`, `활성화(${d}부터 적용)`, `تفعيل (يسري من ${d})`),
+  activating: (l: Locale) => t(l, "Activating…", "활성화하는 중…", "جارٍ التفعيل…"),
+  cancel: (l: Locale) => t(l, "Cancel", "취소", "إلغاء"),
+  blockedTitle: (l: Locale) => t(l, "Activation is not available", "지금은 활성화할 수 없습니다", "التفعيل غير متاح"),
+  own: (l: Locale) => t(l, "You proposed this change. Another administrator must activate it.", "직접 제안한 변경입니다. 다른 관리자가 활성화해야 합니다.", "أنت من اقترح هذا التغيير، ويجب أن يفعّله مسؤول آخر."),
+  staleBlock: (l: Locale) => t(l, "The active revision changed after this was proposed.", "제안 이후 활성 리비전이 바뀌었습니다.", "تغيّرت المراجعة النشطة بعد الاقتراح."),
+  passed: (l: Locale) => t(l, "The effective date has passed.", "적용 시작일이 지났습니다.", "انقضى تاريخ السريان."),
+  otherBlock: (l: Locale) => t(l, "Activation is not available for this plan.", "이 계획은 활성화할 수 없습니다.", "التفعيل غير متاح لهذه الخطة."),
+  next: (l: Locale) => t(l, "Discard this plan and propose it again.", "이 계획을 폐기하고 다시 제안하세요.", "تجاهل هذه الخطة واقترحها مرة أخرى."),
+  discard: (l: Locale) => t(l, "Discard", "폐기", "التجاهل"),
+  reviewDiscard: (l: Locale) => t(l, "Review and discard", "검토 후 폐기", "المراجعة والتجاهل"),
+  confirmDiscard: (l: Locale) => t(l, "Confirm discard", "폐기 확인", "تأكيد التجاهل"),
+  permanent: (l: Locale) =>
+    t(l, "Discarding is permanent. This plan can no longer be activated. To make this change later, propose it again.", "폐기는 되돌릴 수 없습니다. 이 계획은 더 이상 활성화할 수 없으며, 나중에 변경하려면 다시 제안해야 합니다.", "التجاهل نهائي. لن يمكن تفعيل هذه الخطة بعد ذلك، ولإجراء التغيير لاحقًا اقترحه مرة أخرى."),
+  discardBtn: (l: Locale) => t(l, "Discard plan", "계획 폐기", "تجاهل الخطة"),
+  discarding: (l: Locale) => t(l, "Discarding…", "폐기하는 중…", "جارٍ التجاهل…"),
+  keep: (l: Locale) => t(l, "Keep plan", "계획 유지", "الإبقاء على الخطة"),
+  onlySealed: (l: Locale, state: string) =>
+    t(l, `Only sealed plans can be activated or discarded. This plan is ${state}.`, `영향이 고정된 계획만 활성화하거나 폐기할 수 있습니다. 이 계획의 상태: ${state}.`, `لا يمكن تفعيل أو تجاهل إلا الخطط المثبّتة الأثر. حالة هذه الخطة: ${state}.`),
+  stageChanged: (l: Locale) => t(l, "This plan can no longer take this step. The list has been reloaded; check its current state.", "이 계획은 더 이상 이 단계를 진행할 수 없습니다. 목록을 다시 불러왔으니 현재 상태를 확인하세요.", "لم تعد هذه الخطة قادرة على هذه الخطوة. أُعيد تحميل القائمة، فتحقّق من حالتها الحالية."),
+  closed: (l: Locale) => t(l, "Closed plans", "종료된 변경 계획", "الخطط المغلقة"),
+  resultCols: (l: Locale) => [t(l, "Member", "구성원", "العضو"), t(l, "Change", "변경", "التغيير"), t(l, "Effective from", "적용 시작일", "تاريخ السريان"), t(l, "Outcome", "결과", "النتيجة"), t(l, "Proposed", "제안", "الاقتراح")],
+  closing: (l: Locale, k: string, n: number) =>
+    k === "activated" ? t(l, `Activated as revision ${n}`, `리비전 ${n}(으)로 활성화`, `فُعّلت كمراجعة ${n}`)
+      : k === "rejected" ? t(l, "Rejected when proposed", "제안 시 거부됨", "رُفضت عند الاقتراح")
+        : k === "discarded" ? t(l, "Discarded by an administrator", "관리자가 폐기함", "تجاهلها مسؤول")
+          : k === "discarded_stale" ? t(l, "Discarded because the base changed", "기준 변경으로 폐기됨", "تم تجاهلها لتغيّر الأساس")
+            : k === "discarded_expired" ? t(l, "Discarded because the effective date passed", "적용 시작일 경과로 폐기됨", "تم تجاهلها لانقضاء تاريخ السريان") : t(l, "Closing reason not stated", "종료 사유 없음", "سبب الإغلاق غير مذكور"),
+  noClosed: (l: Locale) => t(l, "No closed changes yet.", "아직 종료된 변경이 없습니다.", "لا توجد تغييرات مغلقة بعد."),
+  readOnly: (l: Locale) => t(l, "Read-only. Closed plans cannot be changed.", "읽기 전용입니다. 종료된 계획은 바꿀 수 없습니다.", "للقراءة فقط، ولا يمكن تعديل الخطط المغلقة."),
+  o01Link: (l: Locale, d: string, n: number) => t(l, `Open organizations on ${d}, revision ${n}`, `${d}·리비전 ${n} 기준 조직 보기`, `عرض المؤسسات في ${d}، المراجعة ${n}`),
+  aSealed: (l: Locale) => t(l, "Plan proposed. Its impact is fixed.", "계획을 제안했습니다. 영향이 고정되었습니다.", "اقتُرحت الخطة وثُبّت أثرها."),
+  aRejected: (l: Locale) => t(l, "Plan rejected. See the reasons.", "계획이 거부되었습니다. 사유를 확인하세요.", "رُفضت الخطة. راجع الأسباب."),
+  aActivated: (l: Locale, n: string) => t(l, `Activated. Relationship revision ${n} is now active.`, `활성화했습니다. 관계 리비전 ${n}이(가) 활성 상태입니다.`, `تم التفعيل. مراجعة العلاقات ${n} نشطة الآن.`),
+  aDiscarded: (l: Locale) => t(l, "Plan discarded.", "계획을 폐기했습니다.", "تم تجاهل الخطة."),
+  aReloaded: (l: Locale) => t(l, "Plans reloaded.", "계획 목록을 다시 불러왔습니다.", "أُعيد تحميل الخطط."),
+  loading: (l: Locale) => t(l, "Loading relationship changes…", "관계 변경 계획을 불러오는 중…", "جارٍ تحميل تغييرات العلاقات…"),
+  loadFailed: (l: Locale) => t(l, "Relationship changes could not be loaded.", "관계 변경 계획을 불러오지 못했습니다.", "تعذّر تحميل تغييرات العلاقات."),
+  deniedTitle: (l: Locale) => t(l, "Relationship changes are not available to you", "관계 변경을 사용할 수 없습니다", "تغييرات العلاقات غير متاحة لك"),
+};

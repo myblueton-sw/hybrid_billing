@@ -126,6 +126,77 @@ export type OrgPage = {
   members: OrgMember[];
   next: string;
 };
+export type PlanChange = { kind: string; member: string; action: string; target: string; from: string };
+export type PlanKind = { kind: string; changed: number; entries_before: number; entries_after: number; earliest: string };
+export type PlanViolation = { kind: string; member: string; rule: string };
+export type PlanRange = { from: string; until: string };
+export type PlanMember = { member: string; name: string; differs: PlanRange[]; before: string[]; after: string[] };
+export type PlanRow = {
+  id: string;
+  state: string;
+  closed: string;
+  created: string;
+  proposer: string;
+  proposer_login: string;
+  reason: string;
+  change: PlanChange;
+  member_name: string;
+  target_name: string;
+  base: number;
+  stale: boolean;
+  activated_revision: number;
+  kinds: PlanKind[];
+  violations: PlanViolation[];
+  truncated: boolean;
+  members: PlanMember[];
+  can_activate: boolean;
+  blocked: string;
+};
+export type PlansPage = {
+  revision: string;
+  active_revision: number;
+  open_plans: number;
+  open_limit: number;
+  impact: { money: string; publication: string; erp: string };
+  plans: PlanRow[];
+  you: string;
+};
+
+export function planOf(v: unknown): PlanRow {
+  const r = (v ?? {}) as Record<string, unknown>;
+  const list = <T,>(x: unknown) => (Array.isArray(x) ? (x as T[]) : []);
+  const c = (r.change ?? {}) as Record<string, unknown>;
+  return {
+    id: String(r.id ?? ""),
+    state: String(r.state ?? ""),
+    closed: String(r.closed ?? ""),
+    created: String(r.created ?? ""),
+    proposer: String(r.proposer ?? ""),
+    proposer_login: String(r.proposer_login ?? ""),
+    reason: String(r.reason ?? ""),
+    change: { kind: String(c.kind ?? ""), member: String(c.member ?? ""), action: String(c.action ?? ""), target: String(c.target ?? ""), from: String(c.from ?? "") },
+    member_name: String(r.member_name ?? ""),
+    target_name: String(r.target_name ?? ""),
+    base: Number(r.base ?? 0),
+    stale: r.stale === true,
+    activated_revision: Number(r.activated_revision ?? 0),
+    kinds: list<PlanKind | null>(r.kinds).filter((k): k is PlanKind => !!k && typeof k === "object"),
+    violations: list<PlanViolation | null>(r.violations).filter((v): v is PlanViolation => !!v && typeof v === "object").map((v) => ({ kind: String(v.kind ?? ""), member: String(v.member ?? ""), rule: String(v.rule ?? "") })),
+    truncated: r.truncated === true,
+    members: list<PlanMember | null>(r.members)
+      .filter((m): m is PlanMember => !!m && typeof m === "object")
+      .map((m) => ({
+        member: String(m.member ?? ""),
+        name: String(m.name ?? ""),
+        differs: list<PlanRange | null>(m.differs).filter((d): d is PlanRange => !!d && typeof d === "object").map((d) => ({ from: String(d.from ?? ""), until: String(d.until ?? "") })),
+        before: list<unknown>(m.before).map(String),
+        after: list<unknown>(m.after).map(String),
+      })),
+    can_activate: r.can_activate === true,
+    blocked: String(r.blocked ?? ""),
+  };
+}
+
 export type OrgQuery = { on?: string; kind?: RelationKind; revision?: number; after?: string; limit?: number };
 
 export type PolicyPage = {
@@ -189,7 +260,10 @@ export type CommandId =
   | "service.reinstate"
   | "service.retire"
   | "service.issue_credential"
-  | "service.revoke_credential";
+  | "service.revoke_credential"
+  | "relationship.propose"
+  | "relationship.activate"
+  | "relationship.discard";
 
 export type Outcome = { state: string; fields: Record<string, string> };
 
@@ -384,6 +458,20 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
         kind: String(body.kind ?? "hierarchy") as RelationKind,
         members: list<OrgMember>(body.members).map((m) => ({ ...m, targets: Array.isArray(m.targets) ? m.targets : [], history: Array.isArray(m.history) ? m.history : [] })),
         next: String(body.next ?? ""),
+      };
+    },
+    async plans(): Promise<PlansPage> {
+      const body = await send("/organizations/plans", { method: "GET" }, attempt().request);
+      const impact = (body.impact ?? {}) as Record<string, unknown>;
+      const state = (v: unknown) => (typeof v === "string" && v ? v : "unknown");
+      return {
+        revision: String(body.revision ?? ""),
+        active_revision: Number(body.active_revision ?? 0),
+        open_plans: Number(body.open_plans ?? 0),
+        open_limit: Number(body.open_limit ?? 0),
+        impact: { money: state(impact.money), publication: state(impact.publication), erp: state(impact.erp) },
+        plans: (Array.isArray(body.plans) ? body.plans : []).map(planOf),
+        you: String(body.you ?? ""),
       };
     },
     async collect(ref: string): Promise<string> {

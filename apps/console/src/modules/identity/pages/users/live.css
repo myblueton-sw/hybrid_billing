@@ -315,6 +315,7 @@
   }
   .remaining-security .live-table td[data-label]::before {
     content: attr(data-label) ": ";
+    font-weight: 400;
     color: var(--text-muted);
   }
   .remaining-security .live-table table {
@@ -391,4 +392,138 @@
 }
 .remaining-security .live-history td.live-user {
   white-space: nowrap;
+}
+.remaining-security .live-select {
+  inline-size: 100%;
+  max-inline-size: 440px;
+}
+.remaining-security .live-access table {
+  table-layout: fixed;
+}
+.remaining-security .live-access .live-col-a {
+  inline-size: 30%;
+}
+.remaining-security .live-access .live-col-b {
+  inline-size: 34%;
+}
+.remaining-security .live-access .live-col-c {
+  inline-size: 20%;
+}
+.remaining-security .live-access .live-col-d {
+  inline-size: 16%;
+}
+.remaining-security .live-revoke {
+  min-block-size: 44px;
+  padding: 0 12px;
+}
+.remaining-security .live-ended {
+  margin-block-start: 16px;
+}
+.remaining-security .live-ended summary {
+  cursor: pointer;
+  min-block-size: 44px;
+  padding-block: 10px;
+  box-sizing: border-box;
+}
+.remaining-security .live-effects {
+  display: block;
+}
+.remaining-security .live-effects-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  align-items: flex-start;
+  margin-block: 0 24px;
+}
+.remaining-security .live-effects-form .service-field > label,
+.remaining-security .live-fact-label {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  margin-block-end: 8px;
+}
+.remaining-security .live-fact-box {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+}
+.remaining-security .live-hint-below {
+  margin-block: 8px 0;
+}
+.remaining-security .live-effects-form > button {
+  margin-block-start: 36px;
+  min-block-size: 44px;
+}
+.remaining-security .live-count {
+  margin-block-end: 16px;
+}
+.remaining-security .live-access td.live-user,
+.remaining-security .live-effect-table td.live-user {
+  font-weight: 600;
+}
+.remaining-security .live-access td.live-user .live-sub {
+  font-weight: 400;
+}
+.remaining-security .live-access td.live-user bdi {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.remaining-security .live-effects-form .service-field {
+  inline-size: 280px;
+  margin: 0;
+}
+.remaining-security .live-effects-form .live-customer {
+  inline-size: calc(24ch + 26px);
+}
+.remaining-security .live-inline-fact {
+  margin: 0;
+}
+.remaining-security .live-inline-fact > div {
+  border: 0;
+  padding: 0;
+}
+.remaining-security .live-preview-note {
+  border-block-start: 1px solid var(--border-row);
+  padding-block: 16px;
+  max-inline-size: 68ch;
+  margin: 0 0 24px;
+}
+.remaining-security .live-effect-table table {
+  table-layout: fixed;
+}
+.remaining-security .live-effect-table .live-col-e1 {
+  inline-size: 22%;
+}
+.remaining-security .live-effect-table .live-col-e2 {
+  inline-size: 16%;
+}
+.remaining-security .live-effect-table .live-col-e3 {
+  inline-size: 14%;
+}
+@media (max-width: 767px) {
+  .remaining-security .live-effects-form .service-field,
+  .remaining-security .live-effects-form .live-customer,
+  .remaining-security .live-effects-form button {
+    inline-size: 100%;
+  }
+  .remaining-security .live-effects-form > button {
+    margin-block-start: 0;
+  }
+  .remaining-security .live-revoke {
+    inline-size: 100%;
+    margin-block-start: 8px;
+  }
+  .remaining-security .live-access table,
+  .remaining-security .live-effect-table table {
+    table-layout: auto;
+  }
+  .remaining-security .live-table table,
+  .remaining-security .live-table tbody {
+    display: block;
+    inline-size: 100%;
+  }
+  .remaining-security .live-table colgroup {
+    display: none;
+  }
 }

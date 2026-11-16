@@ -31,6 +31,47 @@ export type ProposalRow = {
   can_withdraw: boolean;
   act_until: string;
 };
+export type ScopeRow = { customer: string; legal_entity: string; contract: string; period: string };
+export type AccessGrant = {
+  id: string;
+  subject: string;
+  client: string;
+  action: string;
+  kind: string;
+  fields: string[];
+  scope: ScopeRow;
+  not_before: string;
+  not_after: string;
+  state: "active" | "revoked" | "expired" | "pending";
+  effective: boolean;
+  version: number;
+};
+export type AccessDelegation = {
+  id: string;
+  delegator: string;
+  delegate: string;
+  parent: string;
+  redelegate: boolean;
+  action: string;
+  kind: string;
+  fields: string[];
+  scope: ScopeRow;
+  not_before: string;
+  not_after: string;
+  state: "active" | "revoked" | "expired" | "pending";
+  version: number;
+};
+export type Ceiling = { action: string; kind: string; fields: string[]; until: string };
+export type AccessPage = {
+  revision: string;
+  grants: AccessGrant[];
+  delegations: AccessDelegation[];
+  catalog: Ceiling[];
+  subjects: { user_id: string; login: string }[];
+  now: string;
+};
+export type Preview = { action: string; field: string; allowed: boolean; reason: string; delegations: string[] };
+
 export type PolicyPage = {
   revision: string;
   policy: PolicyRow | null;
@@ -80,7 +121,10 @@ export type CommandId =
   | "identity.revoke_invitation"
   | "policy.propose"
   | "policy.approve"
-  | "policy.withdraw";
+  | "policy.withdraw"
+  | "access.grant"
+  | "access.revoke_grant"
+  | "access.revoke_delegation";
 
 export type Outcome = { state: string; fields: Record<string, string> };
 
@@ -184,6 +228,24 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
         act_until: String(body.act_until ?? ""),
         you: String(body.you ?? ""),
       };
+    },
+    async access(): Promise<AccessPage> {
+      const body = await send("/identity/access", { method: "GET" }, attempt().request);
+      const list = <T,>(v: unknown) => (Array.isArray(v) ? (v as T[]) : []);
+      return {
+        revision: String(body.revision ?? ""),
+        grants: list<AccessGrant>(body.grants),
+        delegations: list<AccessDelegation>(body.delegations),
+        catalog: list<Ceiling>(body.catalog),
+        subjects: list<{ user_id: string; login: string }>(body.subjects),
+        now: String(body.now ?? ""),
+      };
+    },
+    async preview(subject: string, kind: string, customer = ""): Promise<Preview[]> {
+      const q = new URLSearchParams({ subject, kind });
+      if (customer) q.set("customer", customer);
+      const body = await send("/identity/access/preview?" + q.toString(), { method: "GET" }, attempt().request);
+      return Array.isArray(body.decisions) ? (body.decisions as Preview[]) : [];
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

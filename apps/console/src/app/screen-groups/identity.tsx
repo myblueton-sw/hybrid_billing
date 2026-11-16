@@ -9,6 +9,7 @@ import ServiceAccounts from "../../modules/identity/pages/service-accounts/Scree
 import MySecurity from "../../modules/identity/pages/my-security/Screen";
 import LiveUsers from "../../modules/identity/pages/users/Live";
 import LivePolicy from "../../modules/identity/pages/authentication/Live";
+import LiveAccess from "../../modules/identity/pages/access/Live";
 import { useService } from "../../service/context";
 import "../../modules/identity/screen-ui/security.css";
 export type { Props } from "../../modules/identity/screen-ui/types";
@@ -46,6 +47,30 @@ export default function RemainingSecurity(props: Props) {
         lang={props.locale}
       >
         <LiveUsers
+          locale={props.locale}
+          view={props.view}
+          session={service.session}
+          onSignOut={service.signOut}
+          onView={(view) => {
+            const [path, query = ""] = location.hash.replace(/^#/, "").split("?");
+            const q = new URLSearchParams(query);
+            q.set("view", view);
+            location.hash = path + "?" + q.toString();
+          }}
+        />
+      </div>
+    );
+  if (service && props.screenId === "M03")
+    return (
+      <div
+        className="remaining-security"
+        data-security-screen="M03"
+        data-security-view={props.view}
+        data-security-phase="live"
+        dir={props.locale === "ar" ? "rtl" : "ltr"}
+        lang={props.locale}
+      >
+        <LiveAccess
           locale={props.locale}
           view={props.view}
           session={service.session}

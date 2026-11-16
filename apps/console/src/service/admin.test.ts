@@ -104,3 +104,17 @@ test("the policy read keeps the server times and defaults missing parts", async 
   const empty = await adminClient("tok", fake(200, {}).f).policy();
   assert.deepEqual(empty, { revision: "", policy: null, proposals: [], now: "", signed_in_at: "", act_until: "", you: "" });
 });
+
+test("the access read and preview", async () => {
+  const page = { revision: "r2", grants: [{ id: "g" }], delegations: [], catalog: [{ action: "view" }], subjects: [{ user_id: "u", login: "l" }], now: "n" };
+  const { f, calls } = fake(200, page);
+  assert.deepEqual(await adminClient("t", f).access(), page);
+  assert.equal(calls[0].url, "/api/v1/identity/access");
+  assert.deepEqual(await adminClient("t", fake(200, {}).f).access(), { revision: "", grants: [], delegations: [], catalog: [], subjects: [], now: "" });
+  const p = fake(200, { decisions: [{ action: "view" }] });
+  assert.equal((await adminClient("t", p.f).preview("u 1", "focus_data", "c1")).length, 1);
+  assert.equal(p.calls[0].url, "/api/v1/identity/access/preview?subject=u+1&kind=focus_data&customer=c1");
+  const q = fake(200, {});
+  assert.deepEqual(await adminClient("t", q.f).preview("u", "k"), []);
+  assert.equal(q.calls[0].url, "/api/v1/identity/access/preview?subject=u&kind=k");
+});

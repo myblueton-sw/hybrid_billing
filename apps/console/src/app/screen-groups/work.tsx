@@ -10,6 +10,7 @@ import Assistant from "../../modules/assistant/pages/conversation/Screen";
 import type { Props } from "../../shared/domain-screen-ui/work/contracts";
 import "../../shared/domain-screen-ui/work/screen.css";
 import LiveOrganizations from "../../modules/organizations/pages/organizations/Live";
+import LiveChanges from "../../modules/organizations/pages/changes/Live";
 import { useService } from "../../service/context";
 
 function toView(view: string, extra: Record<string, string> = {}) {
@@ -39,6 +40,12 @@ export default function WorkRemaining(p: Props) {
     return (
       <div className="work-domain remaining-security" data-screen-id="O01" data-source-state="live" dir={p.locale === "ar" ? "rtl" : "ltr"} lang={p.locale} key={`O01:${p.locale}`}>
         <LiveOrganizations locale={p.locale} view={p.view} params={p.params} session={service.session} onSignOut={service.signOut} onView={toView} onParams={toParams} />
+      </div>
+    );
+  if (service && p.screenId === "O02")
+    return (
+      <div className="work-domain remaining-security" data-screen-id="O02" data-source-state="live" dir={p.locale === "ar" ? "rtl" : "ltr"} lang={p.locale} key={`O02:${p.locale}`}>
+        <LiveChanges locale={p.locale} view={p.view} params={p.params} session={service.session} onSignOut={service.signOut} onView={toView} onParams={toParams} />
       </div>
     );
   const leaf =

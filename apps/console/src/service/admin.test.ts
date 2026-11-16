@@ -195,3 +195,21 @@ test("the organizations read builds its query and defaults missing parts", async
   await adminClient("t", z.f).organizations({ revision: 0 });
   assert.equal(z.calls[0].url, "/api/v1/organizations?revision=0");
 });
+
+test("the plans read defaults missing parts and never invents a computed impact", async () => {
+  const r = fake(200, { revision: "r", active_revision: 2, open_plans: 1, open_limit: 16, impact: { money: "not_computed", publication: "", erp: 3 }, you: "u",
+    plans: [{ id: "plan-1", state: "sealed", change: { kind: "hierarchy", member: "m", action: "set", target: "t", from: "2026-12-01" }, can_activate: true,
+      members: [{ member: "m", name: "M", differs: [{ from: "2026-12-01", until: "" }] }, null, { member: "n" }] }, {}] });
+  const got = await adminClient("t", r.f).plans();
+  assert.equal(r.calls[0].url, "/api/v1/organizations/plans");
+  assert.deepEqual(got.impact, { money: "not_computed", publication: "unknown", erp: "unknown" });
+  assert.equal(got.plans[0].can_activate, true);
+  assert.deepEqual(got.plans[0].members[1].differs, []);
+  assert.deepEqual(got.plans[0].members[1].before, []);
+  assert.deepEqual(got.plans[1].change, { kind: "", member: "", action: "", target: "", from: "" });
+  assert.deepEqual([got.plans[1].can_activate, got.plans[1].stale, got.plans[1].kinds, got.plans[1].violations], [false, false, [], []]);
+  const e = await adminClient("t", fake(200, {}).f).plans();
+  assert.deepEqual([e.plans, e.open_limit, e.impact.money], [[], 0, "unknown"]);
+  await assert.rejects(adminClient("t", fake(422, { code: "invalid_request", fields: ["from"] }).f).command("relationship.propose", "relationships", "r", "x", {}, attempt()),
+    (x: AdminError) => x.failure === "invalid" && x.fields[0] === "from");
+});

@@ -50,6 +50,11 @@ func triple(subject string) identity.Triple {
 
 func setup(t testing.TB) world {
 	t.Helper()
+	return setupWith(t, catalog)
+}
+
+func setupWith(t testing.TB, catalog Catalog) world {
+	t.Helper()
 	now, armed, count := start, 0, 0
 	var hook func()
 	clock := func() time.Time {
@@ -606,7 +611,7 @@ func TestZeroValuesAndConstruction(t *testing.T) {
 			"AddSupportSession": g.AddSupportSession(session("s", "a"), identity.Answer{}),
 			"PutClient":         second(a.PutClient(Client{ID: "app", State: Active}, 0)), "AddGrant": a.AddGrant(Grant{}), "RevokeGrant": a.RevokeGrant("g", 1),
 			"AddDelegation": a.AddDelegation(Delegation{}), "RevokeDelegation": a.RevokeDelegation("d", 1),
-			"EndSupportSession": a.EndSupportSession("s", 1), "SetAvailable": a.SetAvailable(true),
+			"EndSupportSession": a.EndSupportSession("s", 1), "SetAvailable": a.SetAvailable(true), "SetInstallationWorkspace": a.SetInstallationWorkspace("w1"),
 		} {
 			if !errors.Is(err, ErrUnavailable) {
 				t.Errorf("%s on a zero value: %v", name, err)

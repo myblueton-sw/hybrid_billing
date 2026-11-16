@@ -81,7 +81,9 @@ func (s *Server) Start() error {
 	verifier := verifierOf(secret)
 	now := s.clock()
 	s.bootWorkspace, s.bootUser = s.Workspace(), EmptyAdmin
-	steps := []step{{"arm-bootstrap", func() (bool, error) {
+	steps := []step{{"installation-workspace", func() (bool, error) {
+		return true, s.admin.SetInstallationWorkspace(s.Workspace())
+	}}, {"arm-bootstrap", func() (bool, error) {
 		return true, s.identity.Installation().ArmBootstrap(verifier, identity.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}, s.Workspace())
 	}}}
 	var lines []string
@@ -92,6 +94,7 @@ func (s *Server) Start() error {
 		}}, step{"second-admin", func() (bool, error) { return true, s.seedSecondAdmin(now) }},
 			step{"authentication-policy", func() (bool, error) { return true, s.seedPolicy(now) }},
 			step{"reader-grants", func() (bool, error) { return true, s.seedReaderGrants(now) }},
+			step{"installation-grants", func() (bool, error) { return true, s.seedInstallationGrants(now) }},
 			step{"password-links", func() (bool, error) {
 				var err error
 				lines, err = s.seedLinks()
@@ -190,4 +193,15 @@ func (s *Server) seedReaderGrants(now time.Time) error {
 		})
 	}
 	return run(steps...)
+}
+
+func (s *Server) seedInstallationGrants(now time.Time) error {
+	terms := gate.Terms{Action: gate.AdministerInstallation, Kind: gate.InstallationKind, Period: gate.AnyPeriod(),
+		Scope: gate.Scope{WorkspaceID: s.Workspace(), Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}}
+	validity := gate.Validity{NotBefore: now, NotAfter: now.Add(readerValidity)}
+	return run(func() error {
+		return s.admin.AddGrant(gate.Grant{ID: "installation-console", ClientID: ConsoleClient, Terms: terms, Validity: validity})
+	}, func() error {
+		return s.admin.AddGrant(gate.Grant{ID: "installation-" + SampleAdmin, SubjectID: SampleAdmin, Terms: terms, Validity: validity})
+	})
 }

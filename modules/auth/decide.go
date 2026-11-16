@@ -156,7 +156,7 @@ func (r *Registry) validRequest(request Request) bool {
 	if _, known := actions[request.Action]; !known {
 		return false
 	}
-	if _, known := r.kinds[request.Kind]; !known {
+	if _, known := r.kinds[request.Kind]; !known || (installationAction(request.Action) && request.Kind != InstallationKind) {
 		return false
 	}
 	return validID(request.Resource.WorkspaceID) && r.validFields(request.Action, request.Fields)
@@ -208,6 +208,9 @@ func (r *Registry) decide(principal Principal, request Request, now time.Time) D
 	if !r.current(principal) || (principal.ClientID != "" && principal.SessionID != "") {
 		return denied(PermissionDenied, ReasonPrincipal, principal)
 	}
+	if installationAction(request.Action) {
+		return r.administer(principal, request, now)
+	}
 	if humanOnly(request.Action) {
 		return denied(PermissionDenied, ReasonApprovalRequired, principal)
 	}
@@ -244,6 +247,20 @@ func (r *Registry) decide(principal Principal, request Request, now time.Time) D
 	allowed.Delegations = chains
 	allowed.Stamp = r.stamp(principal, request, "", false)
 	return allowed
+}
+
+func (r *Registry) administer(principal Principal, request Request, now time.Time) Decision {
+	if !r.inInstallation(request.Resource.WorkspaceID) || principal.SessionID != "" || !r.activeHuman(principal.SubjectID) ||
+		!r.direct(principal.SubjectID, "", request.Action, request.Kind, request.Resource, "", now) {
+		return denied(PermissionDenied, ReasonInstallationScope, principal)
+	}
+	if principal.ClientID != "" {
+		if r.clients[principal.ClientID].value.State != Active || !r.direct("", principal.ClientID, request.Action, request.Kind, request.Resource, "", now) {
+			return denied(PermissionDenied, ReasonClient, principal)
+		}
+	}
+	return Decision{Allowed: true, Code: Allowed, Reason: ReasonAllowed, ActorID: principal.SubjectID, ClientID: principal.ClientID,
+		Stamp: r.stamp(principal, request, "", false)}
 }
 
 func (r *Registry) time() time.Time {

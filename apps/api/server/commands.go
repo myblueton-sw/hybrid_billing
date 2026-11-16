@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
@@ -136,6 +137,11 @@ func (s *Server) access(found session) (identity.Answer, commands.Code) {
 	answer, err := s.identity.Boundary().Access(found.verifier, found.workspace)
 	switch {
 	case err == nil:
+		if !s.fresh(answer, found) {
+			_ = s.identity.Boundary().EndSession(found.verifier)
+			s.sessions.drop(found.verifier)
+			return answer, commands.Unauthenticated
+		}
 		return answer, ""
 	case errors.Is(err, identity.ErrUnavailable):
 		return answer, commands.AuthorityUnavailable
@@ -197,4 +203,11 @@ func (s *Server) execute(command string, call commands.Call, caller identity.Ver
 		s.counter++
 	}
 	return result
+}
+
+func (s *Server) fresh(answer identity.Answer, found session) bool {
+	_, err := s.policy.Evaluate(authpolicy.Principal{User: answer.User(), Workspace: answer.Workspace(), Role: string(answer.Role()), Kind: authpolicy.KindHuman},
+		authpolicy.Authentication{Method: authpolicy.MethodPassword, At: found.created}, "")
+	var refusal authpolicy.Refusal
+	return err == nil || (errors.As(err, &refusal) && refusal.Reason == authpolicy.ReasonNoPolicy)
 }

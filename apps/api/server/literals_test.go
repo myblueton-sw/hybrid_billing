@@ -92,7 +92,7 @@ func TestBodyAndTiming(t *testing.T) {
 	for i := 0; i < 9999; i++ {
 		f.s.sessions.byID[identity.Verifier{byte(i), byte(i >> 8), 2}] = &session{}
 	}
-	if _, _, err := f.s.OpenSession(AdminTriple(), SampleWorkspace, false); err != nil {
+	if _, _, err := f.s.openFor(AdminTriple(), SampleWorkspace, false); err != nil {
 		t.Errorf("ten thousandth session %v", err)
 	}
 	g := setup(t, SeedNone)
@@ -162,7 +162,7 @@ func TestReviewTightening(t *testing.T) {
 	if got.header.Get("X-Request-Id") == "" {
 		t.Errorf("request id fallback %+v", got)
 	}
-	secure, _, err := f.s.OpenSession(AdminTriple(), SampleWorkspace, true)
+	secure, _, err := f.s.openFor(AdminTriple(), SampleWorkspace, true)
 	if err != nil || !secure.Secure {
 		t.Error("secure cookie")
 	}

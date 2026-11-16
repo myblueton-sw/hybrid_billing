@@ -23,7 +23,7 @@ var keys atomic.Int64
 
 func (f world) as(login string) actor {
 	f.t.Helper()
-	cookie, csrf, err := f.s.OpenSession(LoginTriple(login), SampleWorkspace, false)
+	cookie, csrf, err := f.s.openFor(LoginTriple(login), SampleWorkspace, false)
 	if err != nil {
 		f.t.Fatal(err)
 	}
@@ -110,8 +110,17 @@ func (f world) created(a actor, login, role string) (string, string) {
 	return fields["user_id"].(string), linkToken(link.body["url"].(string))
 }
 
+func (f world) withoutSecondHolder() {
+	f.t.Helper()
+	if err := f.s.admin.RevokeGrant("installation-"+SampleAdmin2, 1); err != nil {
+		f.t.Fatal(err)
+	}
+	delete(f.s.dir.holders, SampleAdmin2)
+}
+
 func TestUserAdministrationPermissions(t *testing.T) {
 	f := setup(t, SeedSample).ready()
+	f.withoutSecondHolder()
 	f.setPassword(MemberLogin, pw)
 	root, second, member := f.as(AdminLogin), f.as(Admin2Login), f.as(MemberLogin)
 	if got := f.list(root, ""); got.status != 200 {
@@ -265,6 +274,8 @@ func TestProtectionRules(t *testing.T) {
 	}
 	check("a member", SampleMember, SampleAdmin, true)
 	check("an administrator while a holder remains", SampleAdmin2, SampleAdmin, true)
+	check("the other holder while both hold the grant", SampleAdmin, SampleAdmin2, true)
+	f.withoutSecondHolder()
 	check("the only holder", SampleAdmin, SampleAdmin2, false)
 	delete(members, SampleAdmin2)
 	check("the last administrator", SampleAdmin, "someone", false)
@@ -283,7 +294,6 @@ func TestProtectionRules(t *testing.T) {
 	if failure, ok := err.(*commands.Failure); !ok || failure.Code != commands.PrerequisiteFailed {
 		t.Errorf("only non-holders remain: %v", err)
 	}
-	f.s.grantInstallation(SampleAdmin2, now)
 	f.code(t, "self suspend while another holder remains", f.run(root, "identity.suspend_user", SampleAdmin, nil), 422, string(commands.PrerequisiteFailed))
 	f.s.dir.holders[SampleAdmin2] = now
 	if row := f.row(root, SampleAdmin2); row["installation_administrator"] != false {
@@ -405,7 +415,6 @@ func TestInvitationRecovery(t *testing.T) {
 func TestInviterChangeLosesInvitationAtSignIn(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	f.setPassword(Admin2Login, pw)
-	f.s.grantInstallation(SampleAdmin2, f.s.clock())
 	second := f.as(Admin2Login)
 	user, tok := f.created(second, "lost@example.invalid", "member")
 	root := f.as(AdminLogin)
@@ -589,7 +598,7 @@ func TestSeedNoneActivationGrantsAdministration(t *testing.T) {
 	if got := f.auth("redeem", `{"token":"`+tok+`","password":"`+pw+`","login":"first@example.invalid","email":"first@example.invalid"}`, f.pre()); got.status != 204 {
 		t.Fatalf("activate %+v", got)
 	}
-	cookie, csrf, err := f.s.OpenSession(LoginTriple("first@example.invalid"), EmptyWorkspace, false)
+	cookie, csrf, err := f.s.openFor(LoginTriple("first@example.invalid"), EmptyWorkspace, false)
 	if err != nil {
 		t.Fatal(err)
 	}

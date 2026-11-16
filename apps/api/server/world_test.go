@@ -144,7 +144,7 @@ func (f world) grant(user string) {
 
 func (f world) login() (*http.Cookie, string) {
 	f.t.Helper()
-	cookie, csrf, err := f.s.OpenSession(AdminTriple(), SampleWorkspace, false)
+	cookie, csrf, err := f.s.openFor(AdminTriple(), SampleWorkspace, false)
 	if err != nil {
 		f.t.Fatal(err)
 	}

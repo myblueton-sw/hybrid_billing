@@ -79,6 +79,7 @@ type Server struct {
 	dir           *directory
 	caller        identity.Verifier
 	fault         func(string) bool
+	records       []record
 }
 
 func IdentityLimits() identity.Limits {

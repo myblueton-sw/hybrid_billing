@@ -94,3 +94,13 @@ test("only the latest request is accepted", () => {
   assert.equal(s.latest(first), false);
   assert.equal(s.latest(second), true);
 });
+
+test("the policy read keeps the server times and defaults missing parts", async () => {
+  const page = { revision: "r4", policy: null, proposals: [{ number: 2 }], now: "2026-11-16T09:00:00Z", signed_in_at: "2026-11-16T08:00:00Z", act_until: "", you: "u1" };
+  const { f, calls } = fake(200, page);
+  const got = await adminClient("tok", f).policy();
+  assert.equal(calls[0].url, "/api/v1/identity/policy");
+  assert.deepEqual(got, page);
+  const empty = await adminClient("tok", fake(200, {}).f).policy();
+  assert.deepEqual(empty, { revision: "", policy: null, proposals: [], now: "", signed_in_at: "", act_until: "", you: "" });
+});

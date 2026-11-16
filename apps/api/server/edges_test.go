@@ -65,10 +65,10 @@ func TestEdges(t *testing.T) {
 	for i := 0; i < maxSessions; i++ {
 		h.s.sessions.byID[identity.Verifier{byte(i), byte(i >> 8), 1}] = &session{}
 	}
-	if _, _, err := h.s.OpenSession(AdminTriple(), SampleWorkspace, false); err == nil {
+	if _, _, err := h.s.openFor(AdminTriple(), SampleWorkspace, false); err == nil {
 		t.Error("session cap")
 	}
-	if _, _, err := h.s.OpenSession(identity.Triple{Connection: "x", Issuer: "y", Subject: "z"}, SampleWorkspace, true); err == nil {
+	if _, _, err := h.s.openFor(identity.Triple{Connection: "x", Issuer: "y", Subject: "z"}, SampleWorkspace, true); err == nil {
 		t.Error("unknown identity")
 	}
 	if _, ok := h.s.sessions.get(identity.Verifier{9}); ok {
@@ -107,17 +107,17 @@ func TestCapRefuses(t *testing.T) {
 
 func TestNoOrphans(t *testing.T) {
 	f := setup(t, SeedSample).ready()
-	if _, _, err := f.s.OpenSession(identity.Triple{Connection: "x", Issuer: "y", Subject: "z"}, SampleWorkspace, false); err == nil || len(f.s.sessions.byID) != 0 {
+	if _, _, err := f.s.openFor(identity.Triple{Connection: "x", Issuer: "y", Subject: "z"}, SampleWorkspace, false); err == nil || len(f.s.sessions.byID) != 0 {
 		t.Error("failed identity session leaves no record")
 	}
 	for i := 0; i < maxSessions; i++ {
 		f.s.sessions.byID[identity.Verifier{byte(i), byte(i >> 8), 3}] = &session{}
 	}
 	for i := 0; i < 12; i++ {
-		f.s.OpenSession(AdminTriple(), SampleWorkspace, false)
+		f.s.openFor(AdminTriple(), SampleWorkspace, false)
 	}
 	delete(f.s.sessions.byID, identity.Verifier{0, 0, 3})
-	if _, _, err := f.s.OpenSession(AdminTriple(), SampleWorkspace, false); err != nil {
+	if _, _, err := f.s.openFor(AdminTriple(), SampleWorkspace, false); err != nil {
 		t.Errorf("full store opened no identity sessions %v", err)
 	}
 }

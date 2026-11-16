@@ -2,6 +2,7 @@ package identity
 
 import (
 	"crypto/sha256"
+	"fmt"
 	"math"
 	"reflect"
 	"testing"
@@ -357,6 +358,19 @@ func TestServiceAccounts(t *testing.T) {
 	f.refusal("revoking an unknown credential", f.w.RevokeCredential(admin(), "w1", "ghost"), ReasonUnknown)
 	f.must(f.w.RevokeCredential(admin(), "w1", "c1"))
 	f.refusal("revoking twice", f.w.RevokeCredential(admin(), "w1", "c1"), ReasonState)
+	listed, err := f.w.Credentials(admin(), "w1", "svc")
+	want := []CredentialInfo{{ID: "c1", Validity: Validity{NotBefore: start.Add(time.Minute), NotAfter: start.Add(time.Hour)}, Revoked: true},
+		{ID: "c2", Validity: Validity{NotBefore: start.Add(2 * time.Hour), NotAfter: start.Add(3 * time.Hour)}}}
+	if err != nil || !reflect.DeepEqual(listed, want) {
+		t.Errorf("credentials %+v %v", listed, err)
+	}
+	f.refusal("a member listing credentials", second(f.w.Credentials(f.login("ann"), "w1", "svc")), ReasonNotAdministrator)
+	f.refusal("credentials of a human", second(f.w.Credentials(admin(), "w1", "ann")), ReasonUnknown)
+	f.refusal("credentials from another workspace", second(f.w.Credentials(admin(), "w2", "svc")), ReasonNotAdministrator)
+	f.want("credentials of an invalid identifier", second(f.w.Credentials(admin(), "w1", "")), ErrInvalid)
+	if fields := reflect.TypeOf(CredentialInfo{}); fields.NumField() != 3 {
+		t.Errorf("credential metadata exposes %d fields", fields.NumField())
+	}
 	f.refusal("a revoked credential", second(f.b.AccessByCredential("c1", v("c1"))), ReasonUnknown)
 	f.refusal("recheck after revocation", f.b.Recheck(answer), ReasonAnswer)
 	f.must(f.w.AddCredential(admin(), "w1", "svc", "c3", v("c3"), day))
@@ -637,5 +651,82 @@ func TestCountersRefuseAtTheirMaximum(t *testing.T) {
 	wide := setupWith(t, limits)
 	if users, err := wide.in.Users("root", math.MaxInt); err != nil || len(users) != 0 {
 		t.Errorf("a page as large as the largest integer: %+v %v", users, err)
+	}
+}
+
+func third[A, B any](_ A, _ B, err error) error { return err }
+
+func TestCredentialLookupAndPruning(t *testing.T) {
+	f := setup(t)
+	f.member("ann", Member)
+	admin := func() Verifier { return f.login("root") }
+	f.must(f.w.CreateServiceUser(admin(), "w1", "svc", "ann"))
+	window := Validity{NotBefore: start, NotAfter: start.Add(time.Hour)}
+	f.must(f.w.AddCredential(admin(), "w1", "svc", "c0", v("c0"), window))
+	owner, info, err := f.w.Credential(admin(), "w1", "c0")
+	if err != nil || owner != "svc" || info != (CredentialInfo{ID: "c0", Validity: window}) {
+		t.Fatalf("lookup %s %+v %v", owner, info, err)
+	}
+	f.refusal("a member looking up", third(f.w.Credential(f.login("ann"), "w1", "c0")), ReasonNotAdministrator)
+	f.refusal("an unknown credential", third(f.w.Credential(admin(), "w1", "ghost")), ReasonUnknown)
+	f.refusal("another workspace", third(f.w.Credential(admin(), "w2", "c0")), ReasonNotAdministrator)
+	f.want("an invalid identifier", third(f.w.Credential(admin(), "w1", "")), ErrInvalid)
+	f.want("an invalid workspace", third(f.w.Credential(admin(), "", "c0")), ErrInvalid)
+	f.r.mu.Lock()
+	f.r.users["svc"].workspace = "w9"
+	f.r.mu.Unlock()
+	f.refusal("a credential whose service user moved", third(f.w.Credential(admin(), "w1", "c0")), ReasonUnknown)
+	f.r.mu.Lock()
+	f.r.users["svc"].workspace = "w1"
+	f.r.mu.Unlock()
+	for i := 1; i <= EndedCredentialsKept+2; i++ {
+		id := fmt.Sprintf("c%02d", i)
+		f.must(f.w.AddCredential(admin(), "w1", "svc", id, v(id), Validity{NotBefore: start, NotAfter: start.Add(time.Hour + time.Duration(i)*time.Second)}))
+		f.must(f.w.RevokeCredential(admin(), "w1", id))
+	}
+	list, _ := f.w.Credentials(admin(), "w1", "svc")
+	if len(list) != EndedCredentialsKept+1 || list[0].ID != "c0" || list[1].ID != "c03" || list[len(list)-1].ID != "c22" {
+		t.Errorf("after revocations %d %+v", len(list), list)
+	}
+	f.must(f.w.RevokeCredential(admin(), "w1", "c0"))
+	*f.now = start.Add(2 * time.Hour)
+	f.must(f.w.AddCredential(admin(), "w1", "svc", "late", v("late"), Validity{NotBefore: *f.now, NotAfter: f.now.Add(time.Hour)}))
+	list, _ = f.w.Credentials(admin(), "w1", "svc")
+	if len(list) != EndedCredentialsKept+1 || list[0].ID != "c03" || list[len(list)-1].ID != "late" {
+		t.Errorf("after expiry %d %+v", len(list), list)
+	}
+	f.refusal("a pruned credential", second(f.b.AccessByCredential("c01", v("c01"))), ReasonUnknown)
+	f.must(f.w.AddCredential(admin(), "w1", "svc", "reuse", v("reuse"), Validity{NotBefore: *f.now, NotAfter: f.now.Add(time.Hour)}))
+	old, err := f.b.AccessByCredential("reuse", v("reuse"))
+	f.must(err)
+	f.must(f.w.RevokeCredential(admin(), "w1", "reuse"))
+	f.r.mu.Lock()
+	delete(f.r.credentials, "reuse")
+	f.r.mu.Unlock()
+	f.refusal("an answer for a pruned credential", f.b.Recheck(old), ReasonAnswer)
+	f.must(f.w.AddCredential(admin(), "w1", "svc", "reuse", v("other"), Validity{NotBefore: *f.now, NotAfter: f.now.Add(time.Hour)}))
+	f.refusal("an answer for a pruned and reused identifier", f.b.Recheck(old), ReasonAnswer)
+
+	f.seed("w2", "adm2")
+	other := f.login("adm2")
+	f.refusal("another workspace's administrator looking up", third(f.w.Credential(other, "w2", "late")), ReasonUnknown)
+	f.refusal("another workspace's administrator listing", second(f.w.Credentials(other, "w2", "svc")), ReasonUnknown)
+	f.refusal("another workspace's administrator revoking", f.w.RevokeCredential(other, "w2", "late"), ReasonUnknown)
+}
+
+func TestPruningOrdersEqualEndsByID(t *testing.T) {
+	f := setup(t)
+	f.member("ann", Member)
+	admin := func() Verifier { return f.login("root") }
+	f.must(f.w.CreateServiceUser(admin(), "w1", "svc", "ann"))
+	window := Validity{NotBefore: start, NotAfter: start.Add(time.Hour)}
+	for i := 0; i <= EndedCredentialsKept; i++ {
+		id := fmt.Sprintf("e%02d", i)
+		f.must(f.w.AddCredential(admin(), "w1", "svc", id, v(id), window))
+		f.must(f.w.RevokeCredential(admin(), "w1", id))
+	}
+	list, _ := f.w.Credentials(admin(), "w1", "svc")
+	if len(list) != EndedCredentialsKept || list[0].ID != "e00" || list[len(list)-1].ID != "e19" {
+		t.Errorf("equal ends %d %+v", len(list), list)
 	}
 }

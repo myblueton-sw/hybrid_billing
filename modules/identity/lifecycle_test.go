@@ -646,8 +646,9 @@ func TestAnUnconstructedRegistryRefusesEverything(t *testing.T) {
 			"SuspendServiceUser": w.SuspendServiceUser(v("s"), "w1", "svc", 1), "ReinstateServiceUser": w.ReinstateServiceUser(v("s"), "w1", "svc", 1),
 			"RetireServiceUser": w.RetireServiceUser(v("s"), "w1", "svc", 1), "ServiceUsers": second(w.ServiceUsers(v("s"), "w1", "", 1)),
 			"AddCredential": w.AddCredential(v("s"), "w1", "svc", "c", v("c"), hour), "RevokeCredential": w.RevokeCredential(v("s"), "w1", "c"),
+			"Credentials": second(w.Credentials(v("s"), "w1", "svc")), "Credential": third(w.Credential(v("s"), "w1", "c")),
 		}
-		if len(calls) != 31 {
+		if len(calls) != 33 {
 			t.Fatalf("%d operations are covered", len(calls))
 		}
 		for name, err := range calls {

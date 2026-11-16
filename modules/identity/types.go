@@ -245,3 +245,11 @@ type ServiceInfo struct {
 	Creator string
 	Owner   string
 }
+
+const EndedCredentialsKept = 20
+
+type CredentialInfo struct {
+	ID       string
+	Validity Validity
+	Revoked  bool
+}

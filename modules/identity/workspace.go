@@ -1,6 +1,9 @@
 package identity
 
-import "time"
+import (
+	"sort"
+	"time"
+)
 
 func (r *Registry) countable(found *invitation, now time.Time) bool {
 	if found.state != invitationPending || !now.Before(found.validity.NotAfter) {
@@ -397,8 +400,34 @@ func (h *Workspace) AddCredential(actor Verifier, workspace, serviceID, credenti
 	if held >= r.limits.CredentialsPerServiceUser {
 		return ErrLimit
 	}
-	r.credentials[credentialID] = &credential{user: serviceID, verifier: verifier, validity: validity}
+	if !bump(&r.serial) {
+		return ErrConflict
+	}
+	r.credentials[credentialID] = &credential{serial: r.serial, user: serviceID, verifier: verifier, validity: validity}
+	r.pruneCredentials(serviceID, now)
 	return nil
+}
+
+func (r *Registry) pruneCredentials(serviceID string, now time.Time) {
+	ended := []string{}
+	for id, found := range r.credentials {
+		if found.user == serviceID && (found.revoked || !now.Before(found.validity.NotAfter)) {
+			ended = append(ended, id)
+		}
+	}
+	if len(ended) <= EndedCredentialsKept {
+		return
+	}
+	sort.Slice(ended, func(a, b int) bool {
+		x, y := r.credentials[ended[a]].validity.NotAfter, r.credentials[ended[b]].validity.NotAfter
+		if !x.Equal(y) {
+			return x.After(y)
+		}
+		return ended[a] < ended[b]
+	})
+	for _, id := range ended[EndedCredentialsKept:] {
+		delete(r.credentials, id)
+	}
 }
 
 func (h *Workspace) RevokeCredential(actor Verifier, workspace, credentialID string) error {
@@ -421,5 +450,49 @@ func (h *Workspace) RevokeCredential(actor Verifier, workspace, credentialID str
 		return refused(ReasonState)
 	}
 	found.revoked = true
+	r.pruneCredentials(found.user, r.clock())
 	return nil
+}
+
+func (h *Workspace) Credential(actor Verifier, workspace, credentialID string) (string, CredentialInfo, error) {
+	r, ok := h.open()
+	if !ok {
+		return "", CredentialInfo{}, ErrUnavailable
+	}
+	defer r.mu.Unlock()
+	if !validID(workspace) || !validID(credentialID) {
+		return "", CredentialInfo{}, ErrInvalid
+	}
+	if _, err := r.administrator(actor, workspace, r.clock()); err != nil {
+		return "", CredentialInfo{}, err
+	}
+	found := r.credentials[credentialID]
+	if found == nil || r.users[found.user] == nil || r.users[found.user].workspace != workspace {
+		return "", CredentialInfo{}, refused(ReasonUnknown)
+	}
+	return found.user, CredentialInfo{ID: credentialID, Validity: found.validity, Revoked: found.revoked}, nil
+}
+
+func (h *Workspace) Credentials(actor Verifier, workspace, serviceID string) ([]CredentialInfo, error) {
+	r, ok := h.open()
+	if !ok {
+		return nil, ErrUnavailable
+	}
+	defer r.mu.Unlock()
+	if _, err := r.service(actor, workspace, serviceID); err != nil {
+		return nil, err
+	}
+	ids := []string{}
+	for id, found := range r.credentials {
+		if found.user == serviceID {
+			ids = append(ids, id)
+		}
+	}
+	sort.Strings(ids)
+	list := make([]CredentialInfo, 0, len(ids))
+	for _, id := range ids {
+		found := r.credentials[id]
+		list = append(list, CredentialInfo{ID: id, Validity: found.validity, Revoked: found.revoked})
+	}
+	return list, nil
 }

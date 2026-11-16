@@ -95,6 +95,18 @@ func (s *sessions) get(v identity.Verifier) (session, bool) {
 	return *found, true
 }
 
+func (s *sessions) byLogin(login string) []identity.Verifier {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := []identity.Verifier{}
+	for v, found := range s.byID {
+		if found.login == login {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
 func (s *sessions) drop(v identity.Verifier) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

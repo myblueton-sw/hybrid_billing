@@ -23,6 +23,8 @@ const (
 	SampleAdmin2    = "sample-admin-2"
 	AdminLogin      = "admin@example.invalid"
 	Admin2Login     = "admin2@example.invalid"
+	SampleMember    = "sample-member"
+	MemberLogin     = "member@example.invalid"
 	EmptyAdmin      = "admin"
 	PasswordLink    = "local-password"
 )
@@ -90,14 +92,16 @@ func (s *Server) Start() error {
 	if s.cfg.Seed == SeedSample {
 		s.bootUser = SampleAdmin
 		steps = append(steps, step{"bootstrap-admin", func() (bool, error) {
+			s.dir.add(SampleAdmin, AdminLogin, AdminLogin)
 			return true, s.identity.Boundary().Bootstrap(verifier, SampleAdmin, AdminTriple(), AdminLogin)
 		}}, step{"second-admin", func() (bool, error) { return true, s.seedSecondAdmin(now) }},
+			step{"sample-member", func() (bool, error) { return true, s.seedMember(now) }},
 			step{"authentication-policy", func() (bool, error) { return true, s.seedPolicy(now) }},
 			step{"reader-grants", func() (bool, error) { return true, s.seedReaderGrants(now) }},
 			step{"installation-grants", func() (bool, error) { return true, s.seedInstallationGrants(now) }},
 			step{"password-links", func() (bool, error) {
 				var err error
-				lines, err = s.seedLinks()
+				lines, err = s.seedLinks(now)
 				return true, err
 			}})
 		steps = append(steps, s.seed...)
@@ -147,6 +151,21 @@ func (s *Server) seedSecondAdmin(now time.Time) error {
 		},
 		func() error { return b.OpenSession(LoginTriple(Admin2Login), second, time.Minute, time.Minute) },
 		func() error { return s.identity.Workspace().Accept(ws, "sample-invite", invite, second) },
+		func() error { s.dir.add(SampleAdmin2, Admin2Login, Admin2Login); return nil },
+	)
+}
+
+func (s *Server) seedMember(now time.Time) error {
+	b := s.identity.Boundary()
+	admin := verifierOf(random(tokenBytes))
+	defer b.EndSession(admin)
+	return run(
+		func() error {
+			return s.identity.Installation().CreateUser(identity.Operator{Reference: "seed", Reason: "sample data"}, SampleMember, LoginTriple(MemberLogin), MemberLogin)
+		},
+		func() error { s.dir.add(SampleMember, MemberLogin, MemberLogin); return nil },
+		func() error { return b.OpenSession(AdminTriple(), admin, time.Minute, time.Minute) },
+		func() error { return s.inviteUser(admin, MemberLogin, SampleMember, identity.Member, now) },
 	)
 }
 
@@ -167,16 +186,16 @@ func (s *Server) seedPolicy(now time.Time) error {
 	)
 }
 
-func (s *Server) seedLinks() ([]string, error) {
+func (s *Server) seedLinks(now time.Time) ([]string, error) {
 	lines := []string{}
 	issue := func(login string) func() error {
 		return func() error {
-			token, err := s.passwords.Issue(LoginKey(login), passwords.PurposeSet, setLinkValidity)
+			token, err := s.recordLink(login, passwords.PurposeSet, now)
 			lines = append(lines, login+" "+s.cfg.Origins[0]+"/activate#"+token)
 			return err
 		}
 	}
-	err := run(issue(AdminLogin), issue(Admin2Login))
+	err := run(issue(AdminLogin), issue(Admin2Login), issue(MemberLogin))
 	return lines, err
 }
 
@@ -196,12 +215,26 @@ func (s *Server) seedReaderGrants(now time.Time) error {
 }
 
 func (s *Server) seedInstallationGrants(now time.Time) error {
+	return s.grantInstallation(SampleAdmin, now)
+}
+
+func (s *Server) grantInstallation(user string, now time.Time) error {
+	if s.faulty("grant") {
+		return errPartial
+	}
 	terms := gate.Terms{Action: gate.AdministerInstallation, Kind: gate.InstallationKind, Period: gate.AnyPeriod(),
 		Scope: gate.Scope{WorkspaceID: s.Workspace(), Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}}
-	validity := gate.Validity{NotBefore: now, NotAfter: now.Add(readerValidity)}
-	return run(func() error {
-		return s.admin.AddGrant(gate.Grant{ID: "installation-console", ClientID: ConsoleClient, Terms: terms, Validity: validity})
+	validity := gate.Validity{NotBefore: now, NotAfter: now.Add(installationGrants)}
+	err := run(func() error {
+		if err := s.admin.AddGrant(gate.Grant{ID: "installation-console", ClientID: ConsoleClient, Terms: terms, Validity: validity}); !errors.Is(err, gate.ErrConflict) {
+			return err
+		}
+		return nil
 	}, func() error {
-		return s.admin.AddGrant(gate.Grant{ID: "installation-" + SampleAdmin, SubjectID: SampleAdmin, Terms: terms, Validity: validity})
+		return s.admin.AddGrant(gate.Grant{ID: "installation-" + user, SubjectID: user, Terms: terms, Validity: validity})
 	})
+	if err == nil {
+		s.dir.holders[user] = now.Add(installationGrants)
+	}
+	return err
 }

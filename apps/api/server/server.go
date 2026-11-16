@@ -76,6 +76,9 @@ type Server struct {
 	bootUser      string
 	pause         func()
 	readerSecret  string
+	dir           *directory
+	caller        identity.Verifier
+	fault         func(string) bool
 }
 
 func IdentityLimits() identity.Limits {
@@ -134,7 +137,7 @@ func New(cfg Config) (*Server, error) {
 		return nil, ErrConfig
 	}
 	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{},
-		limit: &limiter{}, slots: make(chan struct{}, derivations)}
+		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory()}
 	s.clock = func() time.Time { return cfg.Clock().UTC() }
 	for _, origin := range cfg.Origins {
 		if !validOrigin(origin) {
@@ -170,6 +173,7 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) { s.commands, err = commands.New(s.gate, cfg.Commands); return },
 		func() (err error) { s.policy, err = authpolicy.NewRegistry(s.clock); return },
 		func() (err error) { s.passwords, err = passwords.New(s.clock, cfg.Passwords); return },
+		s.registerUsers,
 	}
 	for _, build := range steps {
 		if build() != nil {

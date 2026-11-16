@@ -23,7 +23,7 @@ type boundaryCode struct {
 
 var boundaryCodes = []boundaryCode{{CodeBodyTooLarge, http.StatusRequestEntityTooLarge}, {CodeCSRF, http.StatusForbidden},
 	{CodeLinkInvalid, http.StatusUnprocessableEntity}, {CodeMisdirected, http.StatusMisdirectedRequest}, {CodeOrigin, http.StatusForbidden},
-	{CodePasswordForm, http.StatusUnprocessableEntity}}
+	{CodePasswordForm, http.StatusUnprocessableEntity}, {CodeWrongPassword, http.StatusUnprocessableEntity}, {CodePasswordLocked, http.StatusTooManyRequests}}
 
 type errorBody struct {
 	Code         string   `json:"code"`

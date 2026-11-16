@@ -77,6 +77,7 @@ type Server struct {
 	pause         func()
 	readerSecret  string
 	dir           *directory
+	failures      map[identity.Verifier]int
 	caller        identity.Verifier
 	fault         func(string) bool
 	records       []record
@@ -138,7 +139,7 @@ func New(cfg Config) (*Server, error) {
 		return nil, ErrConfig
 	}
 	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{},
-		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory()}
+		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}}
 	s.clock = func() time.Time { return cfg.Clock().UTC() }
 	for _, origin := range cfg.Origins {
 		if !validOrigin(origin) {

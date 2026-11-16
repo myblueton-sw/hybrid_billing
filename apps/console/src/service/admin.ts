@@ -91,6 +91,22 @@ export type ServicesPage = {
   now: string;
 };
 export type Secret = { secret: string; credential: string };
+export type SelfSession = { handle: string; current: boolean; signed_in: string; ends: string };
+export type SelfPage = {
+  user_id: string;
+  login: string;
+  email: string;
+  workspace: string;
+  role: string;
+  identities: { method: string; login: string }[];
+  password_set: boolean;
+  installation_administrator: boolean;
+  sessions: SelfSession[];
+  idle_minutes: number;
+  max_age_seconds: number;
+  signed_in_at: string;
+  now: string;
+};
 
 export type PolicyPage = {
   revision: string;
@@ -113,7 +129,10 @@ export type AdminFailure =
   | "unavailable"
   | "partial"
   | "busy"
-  | "stale";
+  | "stale"
+  | "wrong"
+  | "locked"
+  | "form";
 
 export class AdminError extends Error {
   constructor(
@@ -171,6 +190,9 @@ const codes: Record<string, AdminFailure> = {
   dependency_unavailable: "busy",
   idempotency_conflict: "stale",
   idempotency_key_expired: "stale",
+  current_password_wrong: "wrong",
+  password_locked: "locked",
+  password_form: "form",
 };
 
 export function failureOf(status: number, body: Record<string, unknown>): AdminError {
@@ -294,6 +316,31 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
       const credential = String(body.credential ?? "");
       if (!/^hbsk_[A-Za-z0-9_-]{43}$/.test(secret) || !/^cred-[0-9a-f]{16}$/.test(credential)) throw new AdminError("invalid");
       return { secret, credential };
+    },
+    async me(): Promise<SelfPage> {
+      const body = await send("/me", { method: "GET" }, attempt().request);
+      return {
+        user_id: String(body.user_id ?? ""),
+        login: String(body.login ?? ""),
+        email: String(body.email ?? ""),
+        workspace: String(body.workspace ?? ""),
+        role: String(body.role ?? ""),
+        identities: Array.isArray(body.identities) ? (body.identities as { method: string; login: string }[]) : [],
+        password_set: body.password_set === true,
+        installation_administrator: body.installation_administrator === true,
+        sessions: Array.isArray(body.sessions) ? (body.sessions as SelfSession[]) : [],
+        idle_minutes: Number(body.idle_minutes ?? 0),
+        max_age_seconds: Number(body.max_age_seconds ?? 0),
+        signed_in_at: String(body.signed_in_at ?? ""),
+        now: String(body.now ?? ""),
+      };
+    },
+    async changePassword(current: string, next: string): Promise<void> {
+      await send("/me/password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ current, new: next }) }, attempt().request);
+    },
+    async endSessions(session: string): Promise<number> {
+      const body = await send("/me/sessions/end", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session }) }, attempt().request);
+      return Number(body.ended ?? 0);
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

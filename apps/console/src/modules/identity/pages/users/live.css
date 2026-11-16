@@ -608,3 +608,37 @@
   gap: 8px 16px;
   padding-block: 4px;
 }
+[data-security-screen="M05"] .live-facts dd .live-sub {
+  display: block;
+  margin-block-start: 4px;
+}
+[data-security-screen="M05"] .mysec-sessions table {
+  table-layout: fixed;
+}
+[data-security-screen="M05"] .mysec-sessions .mysec-col-a {
+  inline-size: 36%;
+}
+[data-security-screen="M05"] .mysec-sessions .mysec-col-b {
+  inline-size: 24%;
+}
+[data-security-screen="M05"] .mysec-sessions .mysec-col-c {
+  inline-size: 22%;
+}
+[data-security-screen="M05"] .mysec-sessions .mysec-col-d {
+  inline-size: 18%;
+  min-inline-size: 9.5rem;
+}
+[data-security-screen="M05"] .mysec-sessions .live-revoke {
+  white-space: nowrap;
+}
+@media (max-width: 767px) {
+  [data-security-screen="M05"] .mysec-sessions table {
+    table-layout: auto;
+  }
+}
+[data-security-screen="M05"] .mysec-sessions td.live-user {
+  font-weight: 600;
+}
+[data-security-screen="M05"] .mysec-sessions td.live-user .live-sub {
+  font-weight: 400;
+}

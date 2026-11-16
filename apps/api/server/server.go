@@ -14,7 +14,9 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
+	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
+	"github.com/myblueton-sw/hybrid_billing/modules/relationships"
 )
 
 const (
@@ -69,6 +71,8 @@ type Server struct {
 	hostMu        sync.RWMutex
 	seed          []step
 	passwords     *passwords.Registry
+	orgs          *organizations.Registry
+	rels          *relationships.Registry
 	limit         *limiter
 	slots         chan struct{}
 	boot          activation
@@ -93,6 +97,11 @@ func CommandLimits() commands.Limits {
 	return commands.Limits{Fields: 64, Value: 4096, Rationale: 2000, Operations: 1200000, Journal: 1200000, Workspaces: 2, Users: 20,
 		WorkspaceJournal: 600000, UserJournal: 30000, WorkspaceOperations: 600000, UserOperations: 30000, Replay: time.Hour, Retention: 2 * time.Hour,
 		Burst: 60, Refill: 250 * time.Millisecond}
+}
+
+func RelationshipLimits() relationships.Limits {
+	return relationships.Limits{Depth: relationships.MaxDepth, EntriesPerTimeline: 64, TimelinesPerChunk: 1000, ChunksPerPlan: 100, TimelinesPerPlan: 10000,
+		EntriesPerPlan: 50000, OpenPlans: 16, Violations: 100, PageSize: 100}
 }
 
 func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
@@ -175,6 +184,8 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) { s.commands, err = commands.New(s.gate, cfg.Commands); return },
 		func() (err error) { s.policy, err = authpolicy.NewRegistry(s.clock); return },
 		func() (err error) { s.passwords, err = passwords.New(s.clock, cfg.Passwords); return },
+		func() (err error) { s.orgs, err = organizations.NewRegistry(Installation); return },
+		func() (err error) { s.rels, err = relationships.NewRegistry(RelationshipLimits(), s.clock); return },
 		s.registerUsers,
 	}
 	for _, build := range steps {

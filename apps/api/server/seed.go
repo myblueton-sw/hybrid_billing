@@ -85,6 +85,8 @@ func (s *Server) Start() error {
 	s.bootWorkspace, s.bootUser = s.Workspace(), EmptyAdmin
 	steps := []step{{"installation-workspace", func() (bool, error) {
 		return true, s.admin.SetInstallationWorkspace(s.Workspace())
+	}}, {"organizations-workspace", func() (bool, error) {
+		return true, s.orgWorkspace()
 	}}, {"arm-bootstrap", func() (bool, error) {
 		return true, s.identity.Installation().ArmBootstrap(verifier, identity.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}, s.Workspace())
 	}}}
@@ -98,6 +100,7 @@ func (s *Server) Start() error {
 			step{"sample-member", func() (bool, error) { return true, s.seedMember(now) }},
 			step{"authentication-policy", func() (bool, error) { return true, s.seedPolicy(now) }},
 			step{"reader-grants", func() (bool, error) { return true, s.seedReaderGrants(now) }},
+			step{"organizations", func() (bool, error) { return true, s.seedOrganizations() }},
 			step{"installation-grants", func() (bool, error) { return true, s.seedInstallationGrants(now) }},
 			step{"password-links", func() (bool, error) {
 				var err error

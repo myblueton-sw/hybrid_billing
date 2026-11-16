@@ -1,4 +1,6 @@
+import hmac
 import json
+import os
 import re
 import socket
 import sys
@@ -25,9 +27,13 @@ SLOT_STEP_SECONDS = 0.25
 class OverviewServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, port, actor, ui_port):
+    def __init__(self, port, actor, ui_port, gate_secret_file=None):
         if not re.fullmatch('[a-z][a-z0-9-]{0,63}', actor) or type(ui_port) is not int or not 1 <= ui_port <= 65535:
             raise ValueError('trusted_local_profile')
+        self.gate_secret_file = gate_secret_file
+        self.gate_lock = threading.Lock()
+        self.gate_seen = None
+        self.gate_secret = b''
         self.actor = actor
         self.slots = threading.BoundedSemaphore(2)
         self.admission = threading.BoundedSemaphore(2 + MAX_WAITERS)
@@ -36,6 +42,22 @@ class OverviewServer(ThreadingHTTPServer):
         super().__init__(('127.0.0.1', port), Handler)
         self.origin = f'http://127.0.0.1:{self.server_port}'
         self.origins = {self.origin, f'http://127.0.0.1:{ui_port}'}
+
+    def gate_allows(self, presented):
+        if self.gate_secret_file is None:
+            return True
+        with self.gate_lock:
+            try:
+                stat = os.stat(self.gate_secret_file)
+                seen = (stat.st_mtime_ns, stat.st_size, stat.st_ino)
+                if seen != self.gate_seen:
+                    with open(self.gate_secret_file, 'rb') as f:
+                        self.gate_secret = f.read().strip()
+                    self.gate_seen = seen
+            except OSError:
+                self.gate_secret, self.gate_seen = b'', None
+            secret = self.gate_secret
+        return len(secret) >= 32 and presented is not None and hmac.compare_digest(presented.encode(), secret)
 
     def handle_error(self, request, client_address):
         sys.stderr.write('Collected FOCUS local reader: a request ended without a complete response.\n')
@@ -85,6 +107,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.headers.get('Origin') is not None and self.headers.get('Origin') not in self.server.origins:
             return failure(403, 'origin_denied')
         if self.headers.get('Sec-Fetch-Site') not in (None, 'same-origin', 'none') or self.headers.get_all('X-HB-Local-Client') != ['1']:
+            return failure(403, 'origin_denied')
+        if len(self.headers.get_all('X-HB-Gate-Secret', [])) > 1 or not self.server.gate_allows(self.headers.get('X-HB-Gate-Secret')):
             return failure(403, 'origin_denied')
         if len(self.path) > 8192 or len(self.headers.get_all('Content-Length', [])) > 1 or self.headers.get('Transfer-Encoding') is not None or self.headers.get('Content-Length') not in (None, '0'):
             return failure(400, 'request_invalid')

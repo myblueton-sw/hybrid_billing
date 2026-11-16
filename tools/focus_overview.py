@@ -18,6 +18,7 @@ def main():
     p.add_argument('--pg-port', type=int)
     p.add_argument('--ch-port', type=int)
     p.add_argument('--s3-port', type=int)
+    p.add_argument('--gate-secret-file')
     args = p.parse_args()
     try:
         for kind in ['PG', 'CH', 'S3']:
@@ -25,7 +26,7 @@ def main():
             if value is not None:
                 os.environ[f'HB_LOCAL_{kind}_PORT'] = str(value)
         environment()
-        server = OverviewServer(args.port, args.actor, args.ui_port)
+        server = OverviewServer(args.port, args.actor, args.ui_port, args.gate_secret_file)
         print(f'Collected FOCUS local reader: http://127.0.0.1:{server.server_port}', flush=True)
         server.serve_forever()
     except KeyboardInterrupt:

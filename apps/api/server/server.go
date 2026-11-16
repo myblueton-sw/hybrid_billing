@@ -48,6 +48,7 @@ type Config struct {
 	Identity  identity.Limits
 	Commands  commands.Limits
 	Passwords passwords.Params
+	Readers   map[string]string
 }
 
 type Server struct {
@@ -74,6 +75,7 @@ type Server struct {
 	bootWorkspace string
 	bootUser      string
 	pause         func()
+	readerSecret  string
 }
 
 func IdentityLimits() identity.Limits {
@@ -89,7 +91,7 @@ func CommandLimits() commands.Limits {
 }
 
 func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
-	c := gate.Catalog{Kinds: append([]string{"installation"}, kinds...), Fields: map[string]gate.FieldClass{}}
+	c := gate.Catalog{Kinds: append([]string{"installation", ReaderKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General}}
 	for name, class := range fields {
 		c.Fields[name] = class
 	}
@@ -146,6 +148,12 @@ func New(cfg Config) (*Server, error) {
 	if cfg.Commands == (commands.Limits{}) {
 		cfg.Commands = CommandLimits()
 	}
+	if cfg.Readers == nil {
+		cfg.Readers = DefaultReaders()
+	}
+	if !validReaders(cfg.Readers) {
+		return nil, ErrConfig
+	}
 	if cfg.Passwords == (passwords.Params{}) {
 		cfg.Passwords = passwords.DefaultParams()
 	}
@@ -168,6 +176,7 @@ func New(cfg Config) (*Server, error) {
 			return nil, ErrStart
 		}
 	}
+	s.cfg = cfg
 	return s, nil
 }
 

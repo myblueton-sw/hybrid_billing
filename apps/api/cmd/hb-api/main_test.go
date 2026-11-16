@@ -11,12 +11,14 @@ import (
 
 func TestRun(t *testing.T) {
 	for name, args := range map[string][]string{
-		"flag":     {"--nope"},
-		"listen":   {"--listen", "0.0.0.0:0", "--data", t.TempDir() + "/d"},
-		"seed":     {"--listen", "127.0.0.1:0", "--seed", "bad", "--data", t.TempDir() + "/d"},
-		"origin":   {"--listen", "127.0.0.1:0", "--console-origin", "nope", "--data", t.TempDir() + "/d"},
-		"busy":     {"--listen", "127.0.0.1:1", "--data", t.TempDir() + "/d"},
-		"bad data": {"--listen", "127.0.0.1:0", "--data", "/dev/null/x"},
+		"flag":          {"--nope"},
+		"listen":        {"--listen", "0.0.0.0:0", "--data", t.TempDir() + "/d"},
+		"seed":          {"--listen", "127.0.0.1:0", "--seed", "bad", "--data", t.TempDir() + "/d"},
+		"origin":        {"--listen", "127.0.0.1:0", "--console-origin", "nope", "--data", t.TempDir() + "/d"},
+		"busy":          {"--listen", "127.0.0.1:1", "--data", t.TempDir() + "/d"},
+		"bad data":      {"--listen", "127.0.0.1:0", "--data", "/dev/null/x"},
+		"reader form":   {"--listen", "127.0.0.1:0", "--data", t.TempDir() + "/d", "--reader", "nope"},
+		"reader target": {"--listen", "127.0.0.1:0", "--data", t.TempDir() + "/d", "--reader", "/api/focus-overview=http://10.0.0.1:1"},
 	} {
 		if err := run(args, make(chan os.Signal)); err == nil {
 			t.Errorf("%s accepted", name)
@@ -31,7 +33,7 @@ func TestRun(t *testing.T) {
 	stop := make(chan os.Signal, 1)
 	done := make(chan error, 1)
 	go func() {
-		done <- run([]string{"--listen", addr, "--data", t.TempDir() + "/d", "--console-origin", "http://127.0.0.1:5173"}, stop)
+		done <- run([]string{"--listen", addr, "--data", t.TempDir() + "/d", "--console-origin", "http://127.0.0.1:5173", "--reader", "/api/focus-overview=http://127.0.0.1:1"}, stop)
 	}()
 	var resp *http.Response
 	for i := 0; i < 50; i++ {

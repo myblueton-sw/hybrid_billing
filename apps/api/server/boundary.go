@@ -22,6 +22,10 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/openapi.json", s.openapi)
 	mux.HandleFunc("GET /api/v1/session", s.current)
 	mux.HandleFunc("POST /api/v1/commands/{command}", s.command)
+	for path, raw := range s.cfg.Readers {
+		target, _ := readerTarget(raw)
+		mux.HandleFunc("GET "+path, s.reader(target))
+	}
 	mux.HandleFunc("GET /api/v1/auth/csrf", s.presession)
 	mux.HandleFunc("POST /api/v1/auth/login", s.login)
 	mux.HandleFunc("POST /api/v1/auth/logout", s.logout)

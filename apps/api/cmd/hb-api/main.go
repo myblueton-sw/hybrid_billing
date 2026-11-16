@@ -31,8 +31,9 @@ func run(args []string, stop <-chan os.Signal) error {
 	listen := fs.String("listen", "127.0.0.1:8820", "loopback address")
 	data := fs.String("data", ".hb-api", "data directory")
 	seed := fs.String("seed", server.SeedSample, "sample or none")
-	var list origins
+	var list, readers origins
 	fs.Var(&list, "console-origin", "allowed console origin")
+	fs.Var(&readers, "reader", "reader path=http://127.0.0.1:port, repeatable; replaces the defaults")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -40,7 +41,18 @@ func run(args []string, stop <-chan os.Signal) error {
 		return errors.New("listen address must be loopback")
 	}
 	log := slog.New(slog.NewJSONHandler(os.Stderr, nil))
-	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log})
+	var routes map[string]string
+	if len(readers) > 0 {
+		routes = map[string]string{}
+		for _, r := range readers {
+			path, target, ok := strings.Cut(r, "=")
+			if !ok {
+				return errors.New("reader must be path=url")
+			}
+			routes[path] = target
+		}
+	}
+	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log, Readers: routes})
 	if err != nil {
 		return err
 	}

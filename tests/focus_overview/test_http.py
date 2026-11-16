@@ -2,6 +2,7 @@ import http.client
 import json
 import socket
 import threading
+import os
 import time
 
 import pytest
@@ -284,3 +285,54 @@ def test_failed_write_after_a_failed_query_prints_no_detail(server, monkeypatch,
     with pytest.raises((http.client.RemoteDisconnected, ConnectionError)):
         fetch(server, '/api/focus-overview?provider=offline')
     assert capsys.readouterr().err == LINE
+
+
+@pytest.fixture
+def gated(monkeypatch, tmp_path):
+    calls = []
+    monkeypatch.setattr('modules.focus_import.overview_http.overview', lambda actor, params, deliver: (calls.append(params), deliver({'ok': True})))
+    secret = tmp_path / 'reader-secret'
+    secret.write_text('a' * 43 + '\n')
+    srv = OverviewServer(0, 'reader-company-north', 8805, str(secret))
+    worker = threading.Thread(target=srv.serve_forever, daemon=True)
+    worker.start()
+    yield srv, calls, secret
+    srv.shutdown()
+    srv.server_close()
+    worker.join()
+
+
+def test_gate_secret_required_when_configured(gated):
+    srv, calls, secret = gated
+    ok = fetch((srv, calls), headers={'X-HB-Gate-Secret': 'a' * 43})
+    assert ok[0] == 200
+    for headers in [{}, {'X-HB-Gate-Secret': 'b' * 43}, {'X-HB-Gate-Secret': 'a' * 42}]:
+        assert fetch((srv, calls), headers=headers)[0] == 403
+    assert len(calls) == 1
+    secret.write_text('c' * 43)
+    os.utime(secret, ns=(time.time_ns() + 10**9, time.time_ns() + 10**9))
+    assert fetch((srv, calls), headers={'X-HB-Gate-Secret': 'a' * 43})[0] == 403
+    assert fetch((srv, calls), headers={'X-HB-Gate-Secret': 'c' * 43})[0] == 200
+    secret.write_text('short')
+    os.utime(secret, ns=(time.time_ns() + 2 * 10**9, time.time_ns() + 2 * 10**9))
+    assert fetch((srv, calls), headers={'X-HB-Gate-Secret': 'short'})[0] == 403
+    secret.unlink()
+    assert fetch((srv, calls), headers={'X-HB-Gate-Secret': 'c' * 43})[0] == 403
+    assert len(calls) == 2
+
+
+def test_duplicate_gate_secret_refused(gated):
+    srv, calls, _ = gated
+    connection = http.client.HTTPConnection('127.0.0.1', srv.server_port)
+    connection.putrequest('GET', '/api/focus-overview')
+    connection.putheader('X-HB-Local-Client', '1')
+    connection.putheader('X-HB-Gate-Secret', 'a' * 43)
+    connection.putheader('X-HB-Gate-Secret', 'a' * 43)
+    connection.endheaders()
+    assert connection.getresponse().status == 403
+    connection.close()
+    assert calls == []
+
+
+def test_ungated_reader_unchanged(server):
+    assert fetch(server)[0] == 200

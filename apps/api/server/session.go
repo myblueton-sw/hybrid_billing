@@ -15,7 +15,7 @@ import (
 
 const (
 	CookieName   = "hb_session"
-	CookiePath   = "/api/v1"
+	CookiePath   = "/api"
 	tokenBytes   = 32
 	maxSessions  = 10000
 	maxEvictions = 20

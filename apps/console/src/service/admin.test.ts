@@ -118,3 +118,37 @@ test("the access read and preview", async () => {
   assert.deepEqual(await adminClient("t", q.f).preview("u", "k"), []);
   assert.equal(q.calls[0].url, "/api/v1/identity/access/preview?subject=u&kind=k");
 });
+
+test("the services read defaults missing parts", async () => {
+  const page = {
+    revision: "r3",
+    services: [{ id: "svc-a", state: "active", version: 1, creator: "c", creator_login: "cl", owner: "o", owner_login: "ol", credentials: [{ id: "cred-1" }] }, { id: "svc-b" }],
+    owners: [{ user_id: "u", login: "l" }],
+    limits: { credential_days: 30, credentials_per_service: 10, services: 200 },
+    now: "n",
+  };
+  const { f, calls } = fake(200, page);
+  const got = await adminClient("t", f).services();
+  assert.equal(calls[0].url, "/api/v1/identity/services");
+  assert.equal(got.services[0].credentials.length, 1);
+  assert.deepEqual(got.services[1].credentials, []);
+  assert.deepEqual(got.limits, { credential_days: 30, credentials_per_service: 10, services: 200 });
+  assert.deepEqual(await adminClient("t", fake(200, {}).f).services(), {
+    revision: "",
+    services: [],
+    owners: [],
+    limits: { credential_days: 0, credentials_per_service: 0, services: 0 },
+    now: "",
+  });
+});
+
+test("secret returns only a well-formed secret and credential", async () => {
+  const good = { secret: "hbsk_" + "A".repeat(43), credential: "cred-0123456789abcdef" };
+  const { f, calls } = fake(200, good);
+  assert.deepEqual(await adminClient("t", f).secret("r/1"), good);
+  assert.equal(calls[0].url, "/api/v1/identity/links/r%2F1");
+  for (const bad of [{ ...good, secret: "hbsk_short" }, { ...good, credential: "cred-XYZ" }, { url: "https://x/activate#" + "a".repeat(43) }, { ...good, secret: "<b>" + good.secret }]) {
+    await assert.rejects(adminClient("t", fake(200, bad).f).secret("x"), (e: AdminError) => e.failure === "invalid");
+  }
+  await assert.rejects(adminClient("t", fake(403, { code: "permission_denied" }).f).secret("x"), (e: AdminError) => e.failure === "denied");
+});

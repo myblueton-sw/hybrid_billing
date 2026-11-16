@@ -152,3 +152,28 @@ test("secret returns only a well-formed secret and credential", async () => {
   }
   await assert.rejects(adminClient("t", fake(403, { code: "permission_denied" }).f).secret("x"), (e: AdminError) => e.failure === "denied");
 });
+
+test("self reads and commands", async () => {
+  const page = { user_id: "u", login: "l", email: "e", workspace: "w", role: "member", identities: [{ method: "local-password", login: "l" }], password_set: true,
+    installation_administrator: false, sessions: [{ handle: "h", current: true, signed_in: "a", ends: "b" }], idle_minutes: 30, max_age_seconds: 3600, signed_in_at: "a", now: "n" };
+  const r = fake(200, page);
+  assert.deepEqual(await adminClient("t", r.f).me(), page);
+  assert.equal(r.calls[0].url, "/api/v1/me");
+  const empty = await adminClient("t", fake(200, {}).f).me();
+  assert.deepEqual([empty.identities, empty.sessions, empty.password_set, empty.max_age_seconds], [[], [], false, 0]);
+  const sent: Call[] = [];
+  const noContent = (async (url: string, init: RequestInit) => {
+    sent.push({ url, init });
+    return new Response(null, { status: 204 });
+  }) as unknown as typeof fetch;
+  await adminClient("t", noContent).changePassword("a", "b");
+  assert.equal(sent[0].url, "/api/v1/me/password");
+  assert.equal(sent[0].init.body, JSON.stringify({ current: "a", new: "b" }));
+  const e = fake(200, { ended: 2 });
+  assert.equal(await adminClient("t", e.f).endSessions("others"), 2);
+  assert.equal(e.calls[0].init.body, JSON.stringify({ session: "others" }));
+  assert.equal(await adminClient("t", fake(200, {}).f).endSessions("x"), 0);
+  for (const [code, failure] of [["current_password_wrong", "wrong"], ["password_locked", "locked"], ["password_form", "form"]]) {
+    await assert.rejects(adminClient("t", fake(422, { code }).f).changePassword("a", "b"), (x: AdminError) => x.failure === failure);
+  }
+});

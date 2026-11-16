@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
+	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
 )
@@ -90,6 +91,7 @@ func (s *Server) Start() error {
 			return true, s.identity.Boundary().Bootstrap(verifier, SampleAdmin, AdminTriple(), AdminLogin)
 		}}, step{"second-admin", func() (bool, error) { return true, s.seedSecondAdmin(now) }},
 			step{"authentication-policy", func() (bool, error) { return true, s.seedPolicy(now) }},
+			step{"reader-grants", func() (bool, error) { return true, s.seedReaderGrants(now) }},
 			step{"password-links", func() (bool, error) {
 				var err error
 				lines, err = s.seedLinks()
@@ -108,6 +110,11 @@ func (s *Server) Start() error {
 	}
 	if err := writeExclusive(link, []byte(strings.Join(lines, "\n")+"\n")); err != nil {
 		return err
+	}
+	if len(s.cfg.Readers) > 0 {
+		if err := s.writeReaderSecret(); err != nil {
+			return err
+		}
 	}
 	s.log.Info("activation links written", "file", link)
 	return nil
@@ -168,4 +175,19 @@ func (s *Server) seedLinks() ([]string, error) {
 	}
 	err := run(issue(AdminLogin), issue(Admin2Login))
 	return lines, err
+}
+
+func (s *Server) seedReaderGrants(now time.Time) error {
+	terms := gate.Terms{Action: gate.View, Kind: ReaderKind, Fields: []string{ReaderField}, Period: gate.AnyPeriod(),
+		Scope: gate.Scope{WorkspaceID: s.Workspace(), Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}}
+	validity := gate.Validity{NotBefore: now, NotAfter: now.Add(readerValidity)}
+	steps := []func() error{func() error {
+		return s.admin.AddGrant(gate.Grant{ID: "reader-console", ClientID: ConsoleClient, Terms: terms, Validity: validity})
+	}}
+	for _, user := range []string{SampleAdmin, SampleAdmin2} {
+		steps = append(steps, func() error {
+			return s.admin.AddGrant(gate.Grant{ID: "reader-" + user, SubjectID: user, Terms: terms, Validity: validity})
+		})
+	}
+	return run(steps...)
 }

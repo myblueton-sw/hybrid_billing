@@ -37,6 +37,18 @@ const revision = hash(
     )
     .join("\n"),
 );
+const gated = process.env.HB_GATED === "1";
+const readerPaths = [
+  "/api/focus-overview",
+  "/api/focus-commitments",
+  "/api/focus-marketplace",
+  "/api/focus-receipts",
+  "/api/focus-connections",
+  "/api/focus-collection-status",
+];
+const gatedReaders = Object.fromEntries(
+  readerPaths.map((p) => [p, { target: "http://127.0.0.1:8820", changeOrigin: true }]),
+);
 const proxy = {
   "/api/v1": { target: "http://127.0.0.1:8820", changeOrigin: true },
   "/api/focus-collection-status": { target: "http://127.0.0.1:8810", changeOrigin: true },
@@ -69,6 +81,7 @@ const proxy = {
     target: "http://127.0.0.1:8806",
     changeOrigin: true,
   },
+  ...(gated ? gatedReaders : {}),
 };
 const licensePackages = [
   "react",

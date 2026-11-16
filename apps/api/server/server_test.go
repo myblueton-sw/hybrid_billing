@@ -126,7 +126,7 @@ func TestSessionEndpoint(t *testing.T) {
 		r.AddCookie(&http.Cookie{Name: CookieName, Value: encode([]byte("short"))})
 	}), 401, string(commands.Unauthenticated))
 	cookie, csrf := f.login()
-	if cookie.Path != "/api/v1" || !cookie.HttpOnly || cookie.SameSite != http.SameSiteStrictMode || cookie.MaxAge != 43200 || len(cookie.Value) != 43 {
+	if cookie.Path != "/api" || !cookie.HttpOnly || cookie.SameSite != http.SameSiteStrictMode || cookie.MaxAge != 43200 || len(cookie.Value) != 43 {
 		t.Errorf("cookie %+v", cookie)
 	}
 	with := func(r *http.Request) {
@@ -285,7 +285,7 @@ func TestSeed(t *testing.T) {
 	k.AddStep("quiet", func() (bool, error) { ran = append(ran, "quiet"); return false, nil })
 	k.AddStep("bad", func() (bool, error) { return false, os.ErrInvalid })
 	k.AddStep("never", func() (bool, error) { ran = append(ran, "never"); return true, nil })
-	if err := k.Start(); err != os.ErrInvalid || strings.Join(ran, ",") != "one,quiet" || k.counter != 6 {
+	if err := k.Start(); err != os.ErrInvalid || strings.Join(ran, ",") != "one,quiet" || k.counter != 7 {
 		t.Errorf("steps %v %v %d", err, ran, k.counter)
 	}
 	m, _ := New(Config{Data: t.TempDir() + "/d", Seed: SeedNone})

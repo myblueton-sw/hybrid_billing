@@ -57,3 +57,26 @@ func TestInstallationAdministrationNeedsTheAdministratorRole(t *testing.T) {
 		t.Error("an invitation into another workspace")
 	}
 }
+
+func TestAdministrationListingAndExplain(t *testing.T) {
+	var none *Administration
+	if none.Grants() != nil || none.Delegations() != nil || none.Explain("x", ask(Issue)).Code != AuthorityUnavailable {
+		t.Error("zero administration")
+	}
+	f := setup(t)
+	f.member("ann")
+	id := f.grant("ann", Issue)
+	views := f.a.Grants()
+	if len(views) != 1 || views[0].ID != id || !views[0].Effective {
+		t.Errorf("grants %+v", views)
+	}
+	if len(f.a.Delegations()) != 0 {
+		t.Error("delegations")
+	}
+	if got := f.a.Explain("ann", ask(Issue)); !got.Allowed {
+		t.Errorf("explain %+v", got)
+	}
+	if got := f.a.Explain("root", ask(Issue)); got.Allowed || got.Reason != ReasonNoGrant {
+		t.Errorf("explain without grant %+v", got)
+	}
+}

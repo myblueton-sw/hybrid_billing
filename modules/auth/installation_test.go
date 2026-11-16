@@ -355,3 +355,14 @@ func TestInstallationDecisionsMatchAModel(t *testing.T) {
 		}
 	}
 }
+
+func TestExplainRefusesInstallationForAHolder(t *testing.T) {
+	f := setupInstallation(t, true)
+	if err := f.SetInstallationWorkspace("w1"); err != nil {
+		t.Fatal(err)
+	}
+	f.grant("admin", "alice", installationTerms("w1"))
+	if got := f.Explain("alice", administer("w1")); got.Allowed || got.Reason != ReasonInvalidRequest {
+		t.Errorf("explain an installation action %+v", got)
+	}
+}

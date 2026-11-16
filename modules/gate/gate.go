@@ -266,6 +266,27 @@ func (a *Administration) SetInstallationWorkspace(id string) error {
 	return a.permissions.SetInstallationWorkspace(id)
 }
 
+func (a *Administration) Grants() []GrantView {
+	if !a.ready() {
+		return nil
+	}
+	return a.permissions.Grants()
+}
+
+func (a *Administration) Delegations() []DelegationView {
+	if !a.ready() {
+		return nil
+	}
+	return a.permissions.Delegations()
+}
+
+func (a *Administration) Explain(subjectID string, request Request) Explanation {
+	if !a.ready() {
+		return Explanation{Code: AuthorityUnavailable, Reason: ReasonUnavailable}
+	}
+	return a.permissions.Explain(subjectID, request)
+}
+
 func (a *Administration) SetAvailable(available bool) error {
 	if !a.ready() {
 		return ErrUnavailable

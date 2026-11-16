@@ -123,6 +123,9 @@ func (s *Server) roster(actor identity.Verifier) (map[string]identity.MemberInfo
 	members := map[string]identity.MemberInfo{}
 	after := ""
 	for {
+		if s.faulty("roster") {
+			return nil, identity.ErrUnavailable
+		}
 		page, err := s.identity.Workspace().Members(actor, s.bootWorkspace, after, 100)
 		if err != nil {
 			return nil, err
@@ -353,7 +356,7 @@ func roleField() commands.Field {
 }
 
 func (s *Server) registerUsers() error {
-	for _, d := range append(s.userDefinitions(), s.policyDefinitions()...) {
+	for _, d := range append(append(s.userDefinitions(), s.policyDefinitions()...), s.accessDefinitions()...) {
 		if err := s.Register(d); err != nil {
 			return err
 		}

@@ -17,6 +17,9 @@ type (
 	Validity       = auth.Validity
 	Terms          = auth.Terms
 	Grant          = auth.Grant
+	GrantView      = auth.GrantView
+	DelegationView = auth.DelegationView
+	Explanation    = auth.Explanation
 	Delegation     = auth.Delegation
 	SupportSession = auth.SupportSession
 	Client         = auth.Client

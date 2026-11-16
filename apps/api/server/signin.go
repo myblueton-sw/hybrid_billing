@@ -214,6 +214,9 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.InvalidRequest, request)
 		return
 	}
+	s.domain.RLock()
+	generation := s.dir.generations[login]
+	s.domain.RUnlock()
 	var result string
 	if !s.derive(r.Context(), func() { result = s.passwords.Verify(LoginKey(login), body["password"]) }) {
 		failCode(w, commands.DependencyUnavailable, request)
@@ -223,7 +226,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.Unauthenticated, request)
 		return
 	}
-	cookie, answer, csrf, ok := s.signIn(login, workspace, r.TLS != nil)
+	cookie, answer, csrf, ok := s.signIn(login, workspace, r.TLS != nil, generation)
 	if !ok {
 		failCode(w, commands.Unauthenticated, request)
 		return
@@ -246,15 +249,19 @@ func validWorkspace(id string) bool {
 	return true
 }
 
-func (s *Server) signIn(login, workspace string, secure bool) (*http.Cookie, identity.Answer, string, bool) {
+func (s *Server) signIn(login, workspace string, secure bool, generation uint64) (*http.Cookie, identity.Answer, string, bool) {
 	s.domain.Lock()
 	defer s.domain.Unlock()
+	if s.dir.generations[login] != generation {
+		return nil, identity.Answer{}, "", false
+	}
 	now := s.clock()
 	s.sessions.prune(now.Add(-sessionAbsolute))
 	cookie, csrf, v, err := s.openSession(LoginTriple(login), workspace, secure)
 	if err != nil {
 		return nil, identity.Answer{}, "", false
 	}
+	accepted := workspace == s.bootWorkspace && s.acceptPending(login, v, now)
 	answer, err := s.identity.Boundary().Access(v, workspace)
 	if err == nil {
 		_, err = s.policy.Evaluate(authpolicy.Principal{User: answer.User(), Workspace: workspace, Role: string(answer.Role()), Kind: authpolicy.KindHuman},
@@ -267,6 +274,9 @@ func (s *Server) signIn(login, workspace string, secure bool) (*http.Cookie, ide
 	if err != nil {
 		_ = s.identity.Boundary().EndSession(v)
 		s.sessions.drop(v)
+		if accepted {
+			s.counter++
+		}
 		return nil, identity.Answer{}, "", false
 	}
 	s.counter++
@@ -285,6 +295,7 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
 		s.domain.Lock()
 		_ = s.identity.Boundary().EndSession(found.verifier)
 		s.sessions.drop(found.verifier)
+		s.dir.dropPickups(func(p pickup) bool { return p.session == found.verifier })
 		s.counter++
 		s.domain.Unlock()
 	}
@@ -380,11 +391,35 @@ func (s *Server) setPassword(ctx context.Context, body map[string]string) string
 	}
 	s.domain.Lock()
 	defer s.domain.Unlock()
+	login := link.Key.Subject
+	if link.Purpose == passwords.PurposeReset && !s.resettable(login) {
+		return CodeLinkInvalid
+	}
 	if _, err := s.passwords.Commit(token, record); err != nil {
 		return CodeLinkInvalid
 	}
 	s.counter++
+	delete(s.dir.links, login)
+	if link.Purpose == passwords.PurposeReset {
+		s.dir.generations[login]++
+		s.endSessions(login)
+		return ""
+	}
+	if v, err := s.probe(login); err == nil {
+		s.acceptPending(login, v, s.clock())
+		_ = s.identity.Boundary().EndSession(v)
+	}
 	return ""
+}
+
+func (s *Server) resettable(login string) bool {
+	v, err := s.probe(login)
+	if err != nil {
+		return false
+	}
+	defer s.identity.Boundary().EndSession(v)
+	answer, err := s.identity.Boundary().Access(v, s.bootWorkspace)
+	return err != nil || answer.Role() != identity.Administrator
 }
 
 func (s *Server) activate(ctx context.Context, body map[string]string) string {
@@ -413,6 +448,10 @@ func (s *Server) activate(ctx context.Context, body map[string]string) string {
 		return CodeLinkInvalid
 	}
 	_ = s.passwords.Put(LoginKey(login), record)
+	s.dir.add(s.bootUser, login, email)
+	if err := s.grantInstallation(s.bootUser, s.clock()); err != nil {
+		s.log.Error("installation grant failed at activation")
+	}
 	s.boot.live = false
 	_ = os.Remove(s.boot.file)
 	s.counter++

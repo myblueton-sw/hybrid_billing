@@ -204,21 +204,21 @@ func TestNoPolicyConditions(t *testing.T) {
 	f.s.policy, _ = newPolicy(f)
 	now := f.s.clock()
 	b := f.s.identity.Boundary()
-	f.s.identity.Installation().CreateUser(identity.Operator{Reference: "t", Reason: "t"}, "member-1", LoginTriple("member@example.invalid"), "member@example.invalid")
+	f.s.identity.Installation().CreateUser(identity.Operator{Reference: "t", Reason: "t"}, "member-1", LoginTriple("other@example.invalid"), "other@example.invalid")
 	admin, member, invite := verifierOf(random(32)), verifierOf(random(32)), verifierOf(random(32))
 	b.OpenSession(AdminTriple(), admin, time.Minute, time.Minute)
 	if err := f.s.identity.Workspace().Invite(admin, SampleWorkspace, "inv-member", identity.Member, invite, identity.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}, "member-1"); err != nil {
 		t.Fatal(err)
 	}
-	b.OpenSession(LoginTriple("member@example.invalid"), member, time.Minute, time.Minute)
+	b.OpenSession(LoginTriple("other@example.invalid"), member, time.Minute, time.Minute)
 	if err := f.s.identity.Workspace().Accept(SampleWorkspace, "inv-member", invite, member); err != nil {
 		t.Fatal(err)
 	}
 	b.EndSession(member)
-	rec, _ := f.s.passwords.Hash(LoginKey("member@example.invalid"), pw)
-	f.s.passwords.Put(LoginKey("member@example.invalid"), rec)
+	rec, _ := f.s.passwords.Hash(LoginKey("other@example.invalid"), pw)
+	f.s.passwords.Put(LoginKey("other@example.invalid"), rec)
 	pre := f.pre()
-	f.code(t, "member without policy", f.auth("login", loginBodyFor("member@example.invalid", pw), pre), 401, string(commands.Unauthenticated))
+	f.code(t, "member without policy", f.auth("login", loginBodyFor("other@example.invalid", pw), pre), 401, string(commands.Unauthenticated))
 	if len(f.s.sessions.byID) != 0 {
 		t.Error("member refusal leaves a session")
 	}

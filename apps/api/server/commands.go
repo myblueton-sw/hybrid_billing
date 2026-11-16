@@ -184,12 +184,14 @@ func (s *Server) command(w http.ResponseWriter, r *http.Request) {
 	command := r.PathValue("command")
 	call := commands.Call{Answer: gate.Answer(answer), Client: ConsoleClient, Request: body.RequestID, Command: command, Target: body.TargetID,
 		Key: body.Key, Expected: body.Expected, Rationale: body.Rationale, Fields: body.Fields}
-	writeResult(w, s.execute(command, call))
+	writeResult(w, s.execute(command, call, found.verifier))
 }
 
-func (s *Server) execute(command string, call commands.Call) commands.Result {
+func (s *Server) execute(command string, call commands.Call, caller identity.Verifier) commands.Result {
 	s.domain.Lock()
 	defer s.domain.Unlock()
+	s.caller = caller
+	defer func() { s.caller = identity.Verifier{} }()
 	result := s.commands.Execute(call)
 	if changed(s.mutating[command], result) {
 		s.counter++

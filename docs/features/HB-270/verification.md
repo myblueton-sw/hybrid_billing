@@ -17,7 +17,7 @@ This record verifies [HB-270](https://linear.app/hybrid-billing/issue/HB-270) ag
 | `go test -race -count=1 ./server` | pass, 100.0% statement coverage |
 | `go test -race -count=40` on the new tests | pass |
 | `GOOS=linux GOARCH=386` and `GOOS=windows` builds | pass |
-| Mutation testing of `self.go` (95 mutants) | 10 survived in the full run. Six were then killed by added assertions, each re-run individually: current-first ordering, the revision counter at each change, and `retry` on the 429. The other 4 are listed below. |
+| Mutation testing of `self.go` (95 mutants) | 10 survived in the full run. Seven were then killed by added assertions, each re-run individually: current-first ordering (2), the revision counter at each change (4), and `retry` on the 429 (1). The other 3 are listed below. |
 
 **Equivalent survivors**
 - Two mutants change how an empty or invalid end-sessions body is refused. Both bodies still give the same 422.

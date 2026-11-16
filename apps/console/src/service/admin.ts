@@ -72,6 +72,26 @@ export type AccessPage = {
 };
 export type Preview = { action: string; field: string; allowed: boolean; reason: string; delegations: string[] };
 
+export type CredentialRow = { id: string; not_before: string; not_after: string; state: "active" | "expired" | "revoked"; usable: boolean };
+export type ServiceRow = {
+  id: string;
+  state: "active" | "suspended" | "retired";
+  version: number;
+  creator: string;
+  creator_login: string;
+  owner: string;
+  owner_login: string;
+  credentials: CredentialRow[];
+};
+export type ServicesPage = {
+  revision: string;
+  services: ServiceRow[];
+  owners: { user_id: string; login: string }[];
+  limits: { credential_days: number; credentials_per_service: number; services: number };
+  now: string;
+};
+export type Secret = { secret: string; credential: string };
+
 export type PolicyPage = {
   revision: string;
   policy: PolicyRow | null;
@@ -124,7 +144,13 @@ export type CommandId =
   | "policy.withdraw"
   | "access.grant"
   | "access.revoke_grant"
-  | "access.revoke_delegation";
+  | "access.revoke_delegation"
+  | "service.create"
+  | "service.suspend"
+  | "service.reinstate"
+  | "service.retire"
+  | "service.issue_credential"
+  | "service.revoke_credential";
 
 export type Outcome = { state: string; fields: Record<string, string> };
 
@@ -246,6 +272,28 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
       if (customer) q.set("customer", customer);
       const body = await send("/identity/access/preview?" + q.toString(), { method: "GET" }, attempt().request);
       return Array.isArray(body.decisions) ? (body.decisions as Preview[]) : [];
+    },
+    async services(): Promise<ServicesPage> {
+      const body = await send("/identity/services", { method: "GET" }, attempt().request);
+      const limits = (body.limits ?? {}) as Record<string, unknown>;
+      return {
+        revision: String(body.revision ?? ""),
+        services: Array.isArray(body.services) ? (body.services as ServiceRow[]).map((s) => ({ ...s, credentials: Array.isArray(s.credentials) ? s.credentials : [] })) : [],
+        owners: Array.isArray(body.owners) ? (body.owners as { user_id: string; login: string }[]) : [],
+        limits: {
+          credential_days: Number(limits.credential_days ?? 0),
+          credentials_per_service: Number(limits.credentials_per_service ?? 0),
+          services: Number(limits.services ?? 0),
+        },
+        now: String(body.now ?? ""),
+      };
+    },
+    async secret(ref: string): Promise<Secret> {
+      const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);
+      const secret = String(body.secret ?? "");
+      const credential = String(body.credential ?? "");
+      if (!/^hbsk_[A-Za-z0-9_-]{43}$/.test(secret) || !/^cred-[0-9a-f]{16}$/.test(credential)) throw new AdminError("invalid");
+      return { secret, credential };
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

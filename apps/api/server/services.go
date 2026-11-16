@@ -1,0 +1,392 @@
+package server
+
+import (
+	"encoding/hex"
+	"errors"
+	"net/http"
+	"sort"
+	"time"
+
+	"github.com/myblueton-sw/hybrid_billing/modules/commands"
+	"github.com/myblueton-sw/hybrid_billing/modules/gate"
+	"github.com/myblueton-sw/hybrid_billing/modules/identity"
+)
+
+const (
+	servicesTarget = "services"
+	servicePrefix  = "svc-"
+	secretPrefix   = "hbsk_"
+	maxServices    = 200
+)
+
+type credentialRow struct {
+	ID        string `json:"id"`
+	NotBefore string `json:"not_before"`
+	NotAfter  string `json:"not_after"`
+	State     string `json:"state"`
+	Usable    bool   `json:"usable"`
+}
+
+type serviceRow struct {
+	ID           string          `json:"id"`
+	State        string          `json:"state"`
+	Version      uint64          `json:"version"`
+	Creator      string          `json:"creator"`
+	CreatorLogin string          `json:"creator_login"`
+	Owner        string          `json:"owner"`
+	OwnerLogin   string          `json:"owner_login"`
+	Credentials  []credentialRow `json:"credentials"`
+}
+
+type serviceLimits struct {
+	CredentialDays        int `json:"credential_days"`
+	CredentialsPerService int `json:"credentials_per_service"`
+	Services              int `json:"services"`
+}
+
+type servicesPage struct {
+	Revision string        `json:"revision"`
+	Services []serviceRow  `json:"services"`
+	Owners   []subjectRow  `json:"owners"`
+	Limits   serviceLimits `json:"limits"`
+	Now      string        `json:"now"`
+}
+
+func serviceState(state identity.UserState) string {
+	switch state {
+	case identity.Suspended:
+		return "suspended"
+	case identity.Departed:
+		return "retired"
+	}
+	return "active"
+}
+
+func credentialState(c identity.CredentialInfo, now time.Time) string {
+	switch {
+	case c.Revoked:
+		return "revoked"
+	case !now.Before(c.Validity.NotAfter):
+		return "expired"
+	}
+	return "active"
+}
+
+func (s *Server) serviceUsers(actor identity.Verifier) ([]identity.ServiceInfo, error) {
+	if s.faulty("services") {
+		return nil, identity.ErrUnavailable
+	}
+	out := []identity.ServiceInfo{}
+	after := ""
+	for {
+		batch, err := s.identity.Workspace().ServiceUsers(actor, s.bootWorkspace, after, s.cfg.Identity.PageSize)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, batch...)
+		if len(batch) < s.cfg.Identity.PageSize {
+			return out, nil
+		}
+		after = batch[len(batch)-1].ID
+	}
+}
+
+func (s *Server) credentials(actor identity.Verifier, service string) ([]identity.CredentialInfo, error) {
+	if s.faulty("credentials") {
+		return nil, identity.ErrUnavailable
+	}
+	return s.identity.Workspace().Credentials(actor, s.bootWorkspace, service)
+}
+
+func orderCredentials(list []identity.CredentialInfo, now time.Time) {
+	sort.SliceStable(list, func(a, b int) bool {
+		x, y := credentialState(list[a], now) == "active", credentialState(list[b], now) == "active"
+		if x != y {
+			return x
+		}
+		return list[a].Validity.NotAfter.After(list[b].Validity.NotAfter)
+	})
+}
+
+func (s *Server) credentialRows(actor identity.Verifier, svc identity.ServiceInfo, now time.Time) ([]credentialRow, error) {
+	list, err := s.credentials(actor, svc.ID)
+	if err != nil {
+		return nil, err
+	}
+	orderCredentials(list, now)
+	out := []credentialRow{}
+	for _, c := range list {
+		state := credentialState(c, now)
+		out = append(out, credentialRow{ID: c.ID, NotBefore: stamp(c.Validity.NotBefore), NotAfter: stamp(c.Validity.NotAfter), State: state,
+			Usable: state == "active" && svc.State == identity.Active})
+	}
+	return out, nil
+}
+
+func (s *Server) loginOf(user string) string {
+	if login, ok := s.dir.loginOf(user); ok {
+		return login
+	}
+	return ""
+}
+
+func (s *Server) listServices(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	found, _, ok := s.admitted(w, r)
+	if !ok {
+		return
+	}
+	now := s.clock()
+	owners, err := s.grantees(found.verifier)
+	var services []identity.ServiceInfo
+	if err == nil {
+		services, err = s.serviceUsers(found.verifier)
+	}
+	page := servicesPage{Revision: s.Revision(), Services: []serviceRow{}, Owners: owners, Now: stamp(now),
+		Limits: serviceLimits{CredentialDays: int(s.cfg.Identity.CredentialValidity / (24 * time.Hour)), CredentialsPerService: s.cfg.Identity.CredentialsPerServiceUser, Services: maxServices}}
+	for _, svc := range services {
+		if err != nil {
+			break
+		}
+		var rows []credentialRow
+		rows, err = s.credentialRows(found.verifier, svc, now)
+		page.Services = append(page.Services, serviceRow{ID: svc.ID, State: serviceState(svc.State), Version: svc.Epoch, Creator: svc.Creator,
+			CreatorLogin: s.loginOf(svc.Creator), Owner: svc.Owner, OwnerLogin: s.loginOf(svc.Owner), Credentials: rows})
+	}
+	if err != nil {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
+	writeJSON(w, http.StatusOK, request, page)
+}
+
+func validServiceName(name string) bool {
+	if len(name) < 3 || len(name) > 48 || name[0] == '-' || name[len(name)-1] == '-' {
+		return false
+	}
+	for i := 0; i < len(name); i++ {
+		c := name[i]
+		switch {
+		case c >= 'a' && c <= 'z', c >= '0' && c <= '9':
+		case c == '-' && name[i-1] != '-':
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+type serviceCommand struct {
+	s    *Server
+	kind string
+}
+
+func (s *Server) findService(id string) (identity.ServiceInfo, bool, error) {
+	list, err := s.serviceUsers(s.caller)
+	if err != nil && !errors.Is(err, identity.ErrUnavailable) {
+		return identity.ServiceInfo{}, false, nil
+	}
+	if err != nil {
+		return identity.ServiceInfo{}, false, err
+	}
+	for _, svc := range list {
+		if svc.ID == id {
+			return svc, true, nil
+		}
+	}
+	return identity.ServiceInfo{}, false, nil
+}
+
+func (s *Server) findCredential(id string) (bool, error) {
+	if s.faulty("credentials") {
+		return false, identity.ErrUnavailable
+	}
+	_, _, err := s.identity.Workspace().Credential(s.caller, s.bootWorkspace, id)
+	if err != nil && !errors.Is(err, identity.ErrUnavailable) {
+		return false, nil
+	}
+	return err == nil, err
+}
+
+func (h serviceCommand) Resolve(workspace, target string) (commands.Target, commands.Resolution) {
+	s := h.s
+	if workspace != s.bootWorkspace {
+		return commands.Target{}, commands.NotFound
+	}
+	if h.kind == "create" {
+		if target == servicesTarget {
+			return commands.Target{Revision: s.Revision()}, commands.Found
+		}
+		return commands.Target{}, commands.NotFound
+	}
+	var found bool
+	var err error
+	if h.kind == "revoke_credential" {
+		found, err = s.findCredential(target)
+	} else {
+		_, found, err = s.findService(target)
+	}
+	switch {
+	case err != nil:
+		return commands.Target{}, commands.Unavailable
+	case !found:
+		return commands.Target{}, commands.NotFound
+	}
+	return commands.Target{Revision: s.Revision()}, commands.Found
+}
+
+func (h serviceCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
+	s := h.s
+	if len(ctx.Rationale) > maxRationale {
+		return commands.Outcome{}, commands.Fail(commands.InvalidRequest)
+	}
+	now := s.clock()
+	s.dir.prune(now)
+	var state string
+	var fields map[string]string
+	var err error
+	switch h.kind {
+	case "create":
+		state, err = h.create(ctx)
+	case "revoke_credential":
+		state, err = h.revoke(ctx)
+	default:
+		var svc identity.ServiceInfo
+		svc, _, err = s.findService(ctx.Target)
+		if err == nil {
+			state, fields, err = h.step(ctx, svc, now)
+		}
+	}
+	if err != nil {
+		var failure *commands.Failure
+		if errors.As(err, &failure) || errors.Is(err, errPartial) {
+			return commands.Outcome{}, err
+		}
+		return commands.Outcome{}, mapIdentity(err)
+	}
+	return commands.Outcome{ResultRevision: s.Next(), BusinessState: state, Fields: fields}, nil
+}
+
+func (h serviceCommand) create(ctx commands.Context) (string, error) {
+	s := h.s
+	name := ctx.Fields["name"]
+	if !validServiceName(name) {
+		return "", commands.Fail(commands.InvalidRequest, "name")
+	}
+	owners, err := s.grantees(s.caller)
+	if err != nil {
+		return "", err
+	}
+	existing, err := s.serviceUsers(s.caller)
+	if err != nil {
+		return "", err
+	}
+	if len(existing) >= maxServices {
+		return "", commands.Fail(commands.PrerequisiteFailed)
+	}
+	owner := ctx.Fields["owner"]
+	known := false
+	for _, row := range owners {
+		known = known || row.UserID == owner
+	}
+	if !known {
+		return "", commands.Fail(commands.InvalidRequest, "owner")
+	}
+	if err := s.identity.Workspace().CreateServiceUser(s.caller, s.bootWorkspace, servicePrefix+name, owner); err != nil {
+		if errors.Is(err, identity.ErrConflict) {
+			err = commands.Fail(commands.InvalidRequest, "name")
+		}
+		return "", err
+	}
+	return "service_created", nil
+}
+
+func (h serviceCommand) step(ctx commands.Context, svc identity.ServiceInfo, now time.Time) (string, map[string]string, error) {
+	s := h.s
+	ws := s.identity.Workspace()
+	switch h.kind {
+	case "suspend":
+		if err := ws.SuspendServiceUser(s.caller, s.bootWorkspace, svc.ID, svc.Epoch); err != nil {
+			return "", nil, err
+		}
+		s.dir.dropPickups(func(p pickup) bool { return p.target == svc.ID })
+		return "service_suspended", nil, nil
+	case "reinstate":
+		return "service_active", nil, ws.ReinstateServiceUser(s.caller, s.bootWorkspace, svc.ID, svc.Epoch)
+	case "retire":
+		if err := ws.RetireServiceUser(s.caller, s.bootWorkspace, svc.ID, svc.Epoch); err != nil {
+			return "", nil, err
+		}
+		s.dir.dropPickups(func(p pickup) bool { return p.target == svc.ID })
+		creds, err := s.credentials(s.caller, svc.ID)
+		for _, c := range creds {
+			if err == nil && credentialState(c, now) == "active" {
+				err = ws.RevokeCredential(s.caller, s.bootWorkspace, c.ID)
+			}
+		}
+		if err != nil || s.faulty("retire") {
+			return "", nil, errPartial
+		}
+		return "service_retired", nil, nil
+	}
+	return h.issue(ctx, svc, now)
+}
+
+func (h serviceCommand) issue(ctx commands.Context, svc identity.ServiceInfo, now time.Time) (string, map[string]string, error) {
+	s := h.s
+	if svc.State == identity.Suspended {
+		return "", nil, commands.Fail(commands.PrerequisiteFailed)
+	}
+	days, ok := minutes(ctx.Fields["days"], 1, int(s.cfg.Identity.CredentialValidity/(24*time.Hour)))
+	if !ok {
+		return "", nil, commands.Fail(commands.InvalidRequest, "days")
+	}
+	creds, err := s.credentials(s.caller, svc.ID)
+	if err != nil {
+		return "", nil, err
+	}
+	live := 0
+	for _, c := range creds {
+		if credentialState(c, now) == "active" {
+			live++
+		}
+	}
+	if live >= s.cfg.Identity.CredentialsPerServiceUser {
+		return "", nil, commands.Fail(commands.PrerequisiteFailed)
+	}
+	secret := random(tokenBytes)
+	id := "cred-" + hex.EncodeToString(random(8))
+	validity := identity.Validity{NotBefore: now, NotAfter: now.Add(time.Duration(days) * 24 * time.Hour)}
+	if err := s.identity.Workspace().AddCredential(s.caller, s.bootWorkspace, svc.ID, id, verifierOf(secret), validity); err != nil {
+		return "", nil, err
+	}
+	ref := encode(random(16))
+	s.dir.pickups[ref] = pickup{secret: secretPrefix + encode(secret), credential: id, session: s.caller, target: svc.ID, expires: now.Add(pickupValidity)}
+	return "credential_issued", map[string]string{"credential": id, "secret_ref": ref}, nil
+}
+
+func (h serviceCommand) revoke(ctx commands.Context) (string, error) {
+	s := h.s
+	if err := s.identity.Workspace().RevokeCredential(s.caller, s.bootWorkspace, ctx.Target); err != nil {
+		return "", err
+	}
+	s.dir.dropPickups(func(p pickup) bool { return p.credential == ctx.Target })
+	return "credential_revoked", nil
+}
+
+func (s *Server) serviceDefinitions() []commands.Definition {
+	permission := commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}
+	define := func(id, kind string, fields []commands.Field) commands.Definition {
+		return commands.Definition{ID: id, Permission: permission, Mutating: true, Rationale: true, Fields: fields, Handler: serviceCommand{s: s, kind: kind}}
+	}
+	return []commands.Definition{
+		define("service.create", "create", []commands.Field{{Name: "name", Type: commands.Text, Required: true}, {Name: "owner", Type: commands.ID, Required: true}}),
+		define("service.suspend", "suspend", nil),
+		define("service.reinstate", "reinstate", nil),
+		define("service.retire", "retire", nil),
+		define("service.issue_credential", "issue", []commands.Field{{Name: "days", Type: commands.Integer, Required: true}}),
+		define("service.revoke_credential", "revoke_credential", nil),
+	}
+}

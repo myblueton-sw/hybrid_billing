@@ -163,7 +163,7 @@ func (h *Boundary) AccessByCredential(credentialID string, verifier Verifier) (A
 		return Answer{}, refused(ReasonUser)
 	}
 	return Answer{issued: true, instance: r.instance, installation: r.installation, workspace: owner.workspace, user: found.user, kind: Service,
-		epoch: owner.epoch, role: ServiceRole, notBefore: found.validity.NotBefore, notAfter: found.validity.NotAfter, credential: credentialID}, nil
+		epoch: owner.epoch, role: ServiceRole, notBefore: found.validity.NotBefore, notAfter: found.validity.NotAfter, credential: credentialID, serial: found.serial}, nil
 }
 
 func (h *Boundary) Recheck(answer Answer) error {
@@ -180,7 +180,7 @@ func (h *Boundary) Recheck(answer Answer) error {
 	}
 	if answer.kind == Service {
 		found := r.credentials[answer.credential]
-		if found == nil || found.revoked || found.user != answer.user {
+		if found == nil || found.revoked || found.user != answer.user || found.serial != answer.serial {
 			return refused(ReasonAnswer)
 		}
 		return nil

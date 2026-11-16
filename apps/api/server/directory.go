@@ -30,10 +30,12 @@ type outstanding struct {
 }
 
 type pickup struct {
-	url     string
-	session identity.Verifier
-	target  string
-	expires time.Time
+	url        string
+	secret     string
+	credential string
+	session    identity.Verifier
+	target     string
+	expires    time.Time
 }
 
 type directory struct {

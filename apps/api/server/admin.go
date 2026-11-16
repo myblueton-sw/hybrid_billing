@@ -356,7 +356,7 @@ func roleField() commands.Field {
 }
 
 func (s *Server) registerUsers() error {
-	for _, d := range append(append(s.userDefinitions(), s.policyDefinitions()...), s.accessDefinitions()...) {
+	for _, d := range append(append(append(s.userDefinitions(), s.policyDefinitions()...), s.accessDefinitions()...), s.serviceDefinitions()...) {
 		if err := s.Register(d); err != nil {
 			return err
 		}

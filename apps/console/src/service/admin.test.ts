@@ -177,3 +177,21 @@ test("self reads and commands", async () => {
     await assert.rejects(adminClient("t", fake(422, { code }).f).changePassword("a", "b"), (x: AdminError) => x.failure === failure);
   }
 });
+
+test("the organizations read builds its query and defaults missing parts", async () => {
+  const r = fake(200, { revision: "r", relationship_revision: 2, active_revision: 3, on: "2026-11-16", workspace: { id: "w", profile: "msp" }, parties: [{ id: "p" }],
+    profiles: [], kind: "payer", members: [{ member: "m", name: "", targets: [{ id: "t", name: "" }] }, { member: "n" }], next: "n" });
+  const got = await adminClient("t", r.f).organizations({ on: "2026-11-16", kind: "payer", revision: 2, after: "a b", limit: 5 });
+  assert.equal(r.calls[0].url, "/api/v1/organizations?on=2026-11-16&kind=payer&revision=2&after=a+b&limit=5");
+  assert.equal(got.relationship_revision, 2);
+  assert.deepEqual(got.members[1].targets, []);
+  assert.deepEqual(got.members[1].history, []);
+  assert.equal(got.members[0].history.length, 0);
+  const e = fake(200, {});
+  const empty = await adminClient("t", e.f).organizations();
+  assert.equal(e.calls[0].url, "/api/v1/organizations");
+  assert.deepEqual([empty.kind, empty.parties, empty.members, empty.workspace, empty.next, empty.active_revision], ["hierarchy", [], [], { id: "", profile: "" }, "", 0]);
+  const z = fake(200, {});
+  await adminClient("t", z.f).organizations({ revision: 0 });
+  assert.equal(z.calls[0].url, "/api/v1/organizations?revision=0");
+});

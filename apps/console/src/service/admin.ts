@@ -108,6 +108,26 @@ export type SelfPage = {
   now: string;
 };
 
+export type OrgParty = { id: string; name: string; kind: "legal_entity" | "internal_unit"; parent: string; state: string };
+export type OrgProfile = { id: string; name: string; issuer: string; buyer: string; payer: string; recipient: string; path: string; currency: string; state: string };
+export type OrgTarget = { id: string; name: string };
+export type OrgHistory = { target: string; name: string; from: string; until: string };
+export type OrgMember = { member: string; name: string; targets: OrgTarget[]; history: OrgHistory[] };
+export type RelationKind = "hierarchy" | "payer" | "contract_pool" | "allocation_pool" | "view_group";
+export type OrgPage = {
+  revision: string;
+  relationship_revision: number;
+  active_revision: number;
+  on: string;
+  workspace: { id: string; profile: string };
+  parties: OrgParty[];
+  profiles: OrgProfile[];
+  kind: RelationKind;
+  members: OrgMember[];
+  next: string;
+};
+export type OrgQuery = { on?: string; kind?: RelationKind; revision?: number; after?: string; limit?: number };
+
 export type PolicyPage = {
   revision: string;
   policy: PolicyRow | null;
@@ -341,6 +361,30 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
     async endSessions(session: string): Promise<number> {
       const body = await send("/me/sessions/end", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session }) }, attempt().request);
       return Number(body.ended ?? 0);
+    },
+    async organizations(query: OrgQuery = {}): Promise<OrgPage> {
+      const q = new URLSearchParams();
+      if (query.on) q.set("on", query.on);
+      if (query.kind) q.set("kind", query.kind);
+      if (query.revision !== undefined) q.set("revision", String(query.revision));
+      if (query.after) q.set("after", query.after);
+      if (query.limit) q.set("limit", String(query.limit));
+      const qs = q.toString();
+      const body = await send("/organizations" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request);
+      const list = <T,>(v: unknown) => (Array.isArray(v) ? (v as T[]) : []);
+      const ws = (body.workspace ?? {}) as Record<string, unknown>;
+      return {
+        revision: String(body.revision ?? ""),
+        relationship_revision: Number(body.relationship_revision ?? 0),
+        active_revision: Number(body.active_revision ?? 0),
+        on: String(body.on ?? ""),
+        workspace: { id: String(ws.id ?? ""), profile: String(ws.profile ?? "") },
+        parties: list<OrgParty>(body.parties),
+        profiles: list<OrgProfile>(body.profiles),
+        kind: String(body.kind ?? "hierarchy") as RelationKind,
+        members: list<OrgMember>(body.members).map((m) => ({ ...m, targets: Array.isArray(m.targets) ? m.targets : [], history: Array.isArray(m.history) ? m.history : [] })),
+        next: String(body.next ?? ""),
+      };
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

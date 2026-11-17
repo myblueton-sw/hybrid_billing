@@ -364,7 +364,7 @@ export function rowId(prefix: string, id: string): string {
   return "p03-" + prefix + "-" + id;
 }
 
-export type Reaction = "field" | "reason" | "hint" | "conflict" | "denied" | "signin" | "wait" | "retry" | "renew" | "partial" | "failed";
+export type Reaction = "field" | "reason" | "hint" | "conflict" | "denied" | "signin" | "wait" | "retry" | "renew" | "partial" | "reauth" | "failed";
 
 export function react(failure: string, fields: string[]): Reaction {
   switch (failure) {
@@ -388,13 +388,16 @@ export function react(failure: string, fields: string[]): Reaction {
       return "renew";
     case "partial":
       return "partial";
+    case "reauth":
+    case "reauth_cancelled":
+      return "reauth";
     default:
       return "failed";
   }
 }
 
 export function keepsAttempt(r: Reaction): boolean {
-  return r === "retry";
+  return r === "retry" || r === "reauth";
 }
 
 export type FieldReaction = "built" | "changed" | "reason";

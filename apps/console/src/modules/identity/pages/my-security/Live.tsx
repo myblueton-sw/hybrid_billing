@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { adminClient, AdminError, sequence, type AdminClient, type SelfPage, type SelfSession } from "../../../../service/admin";
+import { AdminError, sequence, type AdminClient, type SelfPage, type SelfSession } from "../../../../service/admin";
+import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
 import { passwordProblem } from "../../../../service/helpers";
@@ -174,7 +175,7 @@ function EndStep({ l, api, page, target, onDone, onCancel, onSignedOut }: {
       const outcome = endOutcome(err);
       if (outcome === "signedOut") { onSignedOut(); return; }
       if (outcome === "gone") { onDone(m.endGone(l)); return; }
-      setFailure(outcome === "limited" ? m.endLimited(l, err instanceof AdminError ? err.retryAfter : 0) : m.unknownResult(l));
+      setFailure(outcome === "limited" ? m.endLimited(l, err instanceof AdminError ? err.retryAfter : 0) : outcome === "reauth" ? c.reauthText(l, err instanceof AdminError ? err.failure : "") : m.unknownResult(l));
       setFocusKey((k) => k + 1);
     } finally {
       setBusy(false);
@@ -242,7 +243,7 @@ function Unavailable({ title, body, extra, action }: { title: string; body: stri
 export default function LiveMySecurity({ locale: l, view, session, onSignOut, onView }: {
   locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void;
 }) {
-  const api = useMemo(() => adminClient(session.csrf), [session.csrf]);
+  const api = useAdminClient();
   const wide = useWide();
   const order = useRef(sequence());
   const [page, setPage] = useState<SelfPage | null>(null);
@@ -413,6 +414,7 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
         [m.longest(l), m.longestValue(l)],
         [m.maxAge(l), page.max_age_seconds > 0 ? m.age(l, page.max_age_seconds) : m.noMaxAge(l)],
         [m.youSignedIn(l), when(l, page.signed_in_at)],
+        [m.lastConfirmed(l), when(l, page.authenticated_at)],
       ]} />
       {prelaunch(m.historyNote(l))}
     </section>

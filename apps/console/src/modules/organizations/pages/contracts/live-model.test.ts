@@ -241,3 +241,10 @@ test("names fall back to the ID, never blank", async () => {
   assert.equal(nameOf("le-9", parties), "le-9");
   assert.equal(nameOf("", parties), "");
 });
+
+test("a step-up refusal or cancellation keeps the attempt and the form", () => {
+  for (const f of ["reauth", "reauth_cancelled"]) {
+    assert.equal(react(f, []), "reauth");
+    assert.equal(keepsAttempt(react(f, [])), true);
+  }
+});

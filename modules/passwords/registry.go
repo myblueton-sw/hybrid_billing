@@ -111,8 +111,7 @@ func (r *Registry) Has(k Key) bool {
 	return r.accounts[k] != nil
 }
 
-func (r *Registry) Verify(k Key, password string) string {
-	now := r.clock()
+func (r *Registry) compare(k Key, password string) (*account, bool) {
 	r.mu.Lock()
 	found := r.accounts[k]
 	record := r.dummy
@@ -124,7 +123,22 @@ func (r *Registry) Verify(k Key, password string) string {
 		r.between()
 	}
 	got := r.derive(record.Salt, []byte(password))
-	match := subtle.ConstantTimeCompare(got.Hash, record.Hash) == 1
+	return found, subtle.ConstantTimeCompare(got.Hash, record.Hash) == 1
+}
+
+func (r *Registry) VerifyHolder(k Key, password string) string {
+	found, match := r.compare(k, password)
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if found == nil || r.accounts[k] != found || !match {
+		return ResultWrong
+	}
+	return ResultOK
+}
+
+func (r *Registry) Verify(k Key, password string) string {
+	now := r.clock()
+	found, match := r.compare(k, password)
 	if found == nil {
 		return ResultWrong
 	}

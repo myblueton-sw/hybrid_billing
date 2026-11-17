@@ -437,3 +437,10 @@ test("decision, impact and done copy in every language never claims a dispatch, 
     }
   }
 });
+
+test("a step-up refusal or cancellation keeps the attempt and the form", () => {
+  for (const f of ["reauth", "reauth_cancelled"]) {
+    assert.equal(react(f, []), "reauth");
+    assert.equal(keepsAttempt(react(f, [])), true);
+  }
+});

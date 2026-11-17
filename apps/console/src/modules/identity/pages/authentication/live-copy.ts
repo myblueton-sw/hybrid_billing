@@ -9,13 +9,27 @@ export const p = {
   mfa: (l: Locale) => t(l, "Multi-factor authentication (MFA)", "다단계 인증(MFA)", "المصادقة متعددة العوامل (MFA)"),
   notRequired: (l: Locale) => t(l, "Not required", "요구하지 않음", "غير مطلوبة"),
   maxAge: (l: Locale) => t(l, "Sign-in valid for", "로그인 유지 시간", "مدة صلاحية تسجيل الدخول"),
-  stepUp: (l: Locale) => t(l, "Recent sign-in for policy changes", "정책 변경 시 최근 로그인 요구", "تسجيل دخول حديث لتغيير السياسة"),
+  stepUp: (l: Locale) => t(l, "Recent password confirmation for policy changes", "정책 변경 시 최근 비밀번호 확인 요구", "تأكيد حديث لكلمة المرور لتغيير السياسة"),
+  effective: (l: Locale) => t(l, "Password confirmation window", "비밀번호 확인 유효 시간", "مدة صلاحية تأكيد كلمة المرور"),
+  stepDefault: (l: Locale, d: string) => t(l, `Default (${d})`, `기본값(${d})`, `الافتراضي (${d})`),
   within: (l: Locale, d: string) => t(l, `Within ${d}`, `${d} 이내`, `خلال ${d}`),
   proposedBy: (l: Locale) => t(l, "Proposed by", "제안자", "اقترحه"),
   approvedBy: (l: Locale) => t(l, "Approved by", "승인자", "اعتمده"),
   applied: (l: Locale) => t(l, "Applied", "적용 시각", "وقت التطبيق"),
   actUntil: (l: Locale, time: string) =>
-    t(l, `Your sign-in allows policy changes until ${time}.`, `현재 로그인으로 ${time}까지 정책을 변경할 수 있습니다.`, `يتيح لك تسجيل دخولك الحالي تغيير السياسة حتى ${time}.`),
+    t(
+      l,
+      `You can change the policy without confirming your password again until ${time}.`,
+      `${time}까지는 비밀번호 재확인 없이 정책을 변경할 수 있습니다.`,
+      `يمكنك تغيير السياسة دون تأكيد كلمة المرور مجددًا حتى ${time}.`,
+    ),
+  staleLine: (l: Locale) =>
+    t(
+      l,
+      "You'll be asked to confirm your password before changing the policy.",
+      "정책을 변경하기 전에 비밀번호 재확인을 요청합니다.",
+      "سيُطلب منك تأكيد كلمة المرور قبل تغيير السياسة.",
+    ),
   pendingTitle: (l: Locale) => t(l, "Pending proposals", "승인 대기 중인 제안", "المقترحات بانتظار الاعتماد"),
   pendingCount: (l: Locale, n: number) => t(l, n === 1 ? "1 pending" : `${n} pending`, `대기 ${n}건`, `${n} بانتظار الاعتماد`),
   proposalColumn: (l: Locale) => t(l, "Proposal", "제안", "المقترح"),
@@ -40,11 +54,21 @@ export const p = {
     ),
   minutes: (l: Locale) => t(l, "minutes", "분", "دقيقة"),
   maxAgeHint: (l: Locale) =>
-    t(l, "5 to 720 minutes. After this time everyone must sign in again.", "5~720분. 이 시간이 지나면 모두 다시 로그인해야 합니다.", "من 5 إلى 720 دقيقة. بعد انقضائها يجب على الجميع تسجيل الدخول مجددًا."),
-  stepNone: (l: Locale) => t(l, "Not required", "요구하지 않음", "غير مطلوب"),
-  stepWithin: (l: Locale) => t(l, "Required within", "다음 시간 이내 요구", "مطلوب خلال"),
+    t(
+      l,
+      "5 to 720 minutes, counted from each person's last sign-in or password confirmation. After this time they must sign in again.",
+      "5~720분. 각 사용자의 마지막 로그인 또는 비밀번호 재확인부터 계산하며, 이 시간이 지나면 다시 로그인해야 합니다.",
+      "من 5 إلى 720 دقيقة، تُحسب من آخر تسجيل دخول أو تأكيد لكلمة المرور لكل شخص. بعد انقضائها يجب عليه تسجيل الدخول مجددًا.",
+    ),
+  stepNone: (l: Locale) => t(l, "Use the 15-minute default", "기본값 15분 사용", "استخدام القيمة الافتراضية 15 دقيقة"),
+  stepWithin: (l: Locale) => t(l, "Set a shorter time", "더 짧은 시간 지정", "تحديد مدة أقصر"),
   stepHint: (l: Locale) =>
-    t(l, "5 minutes up to the \"Sign-in valid for\" value.", "5분부터 '로그인 유지 시간' 값까지 입력할 수 있습니다.", "من 5 دقائق حتى قيمة «مدة صلاحية تسجيل الدخول»."),
+    t(
+      l,
+      "Blank or 0 uses the 15-minute default. A value under 15 minutes is stricter; a longer value still allows 15 minutes.",
+      "비워 두거나 0을 입력하면 기본값 15분을 사용합니다. 15분보다 짧으면 더 엄격해지고, 더 길게 입력해도 15분이 적용됩니다.",
+      "يؤدي ترك الحقل فارغًا أو إدخال 0 إلى استخدام القيمة الافتراضية 15 دقيقة. القيمة الأقل من 15 دقيقة أكثر صرامة، أما القيمة الأطول فتُطبَّق عليها مدة 15 دقيقة.",
+    ),
   stepMinutes: (l: Locale) => t(l, "Minutes for policy changes", "정책 변경 시 요구 시간(분)", "الدقائق لتغيير السياسة"),
   errMaxAge: (l: Locale) => t(l, "Enter a whole number from 5 to 720", "5~720 사이의 정수를 입력하세요", "أدخل عددًا صحيحًا من 5 إلى 720"),
   errStep: (l: Locale, max: number) => t(l, `Enter a whole number from 5 to ${max}`, `5~${max} 사이의 정수를 입력하세요`, `أدخل عددًا صحيحًا من 5 إلى ${max}`),
@@ -55,16 +79,16 @@ export const p = {
   approveNow: (l: Locale, d: string) =>
     t(
       l,
-      `The new policy applies as soon as you approve. Anyone whose sign-in is older than ${d} is signed out and must sign in again.`,
-      `승인하면 새 정책이 즉시 적용됩니다. 로그인한 지 ${d}이(가) 지난 사용자는 로그아웃되며 다시 로그인해야 합니다.`,
-      `تُطبَّق السياسة الجديدة فور اعتمادها. يُسجَّل خروج كل من مضى على تسجيل دخوله أكثر من ${d}، وعليه تسجيل الدخول مجددًا.`,
+      `The new policy applies as soon as you approve. Anyone whose last sign-in or password confirmation is older than ${d} is signed out and must sign in again.`,
+      `승인하면 새 정책이 즉시 적용됩니다. 마지막 로그인 또는 비밀번호 재확인 후 ${d}이(가) 지난 사용자는 로그아웃되며 다시 로그인해야 합니다.`,
+      `تُطبَّق السياسة الجديدة فور اعتمادها. يُسجَّل خروج كل من مضى على آخر تسجيل دخول أو تأكيد لكلمة المرور لديه أكثر من ${d}، وعليه تسجيل الدخول مجددًا.`,
     ),
   approveSelf: (l: Locale) =>
     t(
       l,
-      "Your own sign-in must also meet the new policy. If it does not, the approval is refused.",
-      "승인하는 관리자의 로그인도 새 정책을 충족해야 합니다. 충족하지 않으면 승인이 거부됩니다.",
-      "يجب أن يستوفي تسجيل دخولك أنت أيضًا السياسة الجديدة، وإلا رُفض الاعتماد.",
+      "Your own sign-in must also meet the new policy. If it does not, you'll be asked to confirm your password.",
+      "승인하는 관리자의 로그인도 새 정책을 충족해야 합니다. 충족하지 않으면 비밀번호 재확인을 요청합니다.",
+      "يجب أن يستوفي تسجيل دخولك أنت أيضًا السياسة الجديدة، وإلا سيُطلب منك تأكيد كلمة المرور.",
     ),
   approveDiscard: (l: Locale, list: string) =>
     t(l, `The other pending proposals (${list}) will be discarded.`, `승인 대기 중인 다른 제안(${list})은 폐기됩니다.`, `ستُلغى المقترحات الأخرى بانتظار الاعتماد (${list}).`),
@@ -81,24 +105,14 @@ export const p = {
   doneApproved: (l: Locale, n: number) =>
     t(l, `Proposal ${n} approved. The new policy is in effect.`, `제안 ${n}을(를) 승인했습니다. 새 정책이 적용되었습니다.`, `اعتُمد المقترح ${n}. السياسة الجديدة سارية الآن.`),
   doneWithdrawn: (l: Locale, n: number) => t(l, `Proposal ${n} withdrawn.`, `제안 ${n}을(를) 철회했습니다.`, `سُحب المقترح ${n}.`),
-  staleTitle: (l: Locale) => t(l, "Sign in again to change the policy", "정책을 변경하려면 다시 로그인하세요", "سجّل الدخول مجددًا لتغيير السياسة"),
-  staleBody: (l: Locale, time: string) =>
-    t(
-      l,
-      `You signed in at ${time}. Policy changes need a more recent sign-in. You can still view the policy.`,
-      `${time}에 로그인했습니다. 정책을 변경하려면 더 최근에 로그인해야 합니다. 정책 조회는 계속할 수 있습니다.`,
-      `سجّلت الدخول في ${time}. يتطلب تغيير السياسة تسجيل دخول أحدث. لا يزال بإمكانك عرض السياسة.`,
-    ),
-  staleAction: (l: Locale) => t(l, "Sign out and sign in again", "로그아웃 후 다시 로그인", "تسجيل الخروج ثم الدخول مجددًا"),
-  staleRow: (l: Locale) => t(l, "Sign in again to approve or withdraw.", "승인하거나 철회하려면 다시 로그인하세요.", "سجّل الدخول مجددًا للاعتماد أو السحب."),
   saveFailed: (l: Locale) => t(l, "Could not save this change", "변경을 저장하지 못했습니다", "تعذّر حفظ هذا التغيير"),
   refusedTitle: (l: Locale) => t(l, "This change was refused", "이 변경이 거부되었습니다", "رُفض هذا التغيير"),
   refusedBody: (l: Locale) =>
     t(
       l,
-      "A proposal must be approved by a different administrator, and only its proposer can withdraw it. Your sign-in must also be recent enough. The policy has been reloaded; check it, then try again.",
-      "제안은 제안자가 아닌 다른 관리자가 승인해야 하며, 철회는 제안자만 할 수 있습니다. 로그인도 충분히 최근이어야 합니다. 정책을 다시 불러왔으니 확인한 뒤 다시 시도하세요.",
-      "يجب أن يعتمد المقترحَ مسؤولٌ غير مقترحه، ولا يسحبه إلا مقترحه، ويجب أن يكون تسجيل دخولك حديثًا بما يكفي. أُعيد تحميل السياسة؛ تحقّق منها ثم حاول مجددًا.",
+      "A proposal must be approved by a different administrator, and only its proposer can withdraw it. The policy has been reloaded; check it, then try again.",
+      "제안은 제안자가 아닌 다른 관리자가 승인해야 하며, 철회는 제안자만 할 수 있습니다. 정책을 다시 불러왔으니 확인한 뒤 다시 시도하세요.",
+      "يجب أن يعتمد المقترحَ مسؤولٌ غير مقترحه، ولا يسحبه إلا مقترحه. أُعيد تحميل السياسة؛ تحقّق منها ثم حاول مجددًا.",
     ),
   stageBody: (l: Locale) =>
     t(l, "This proposal is no longer pending. The policy has been reloaded.", "이 제안은 더 이상 승인 대기 상태가 아닙니다. 정책을 다시 불러왔습니다.", "لم يعد هذا المقترح بانتظار الاعتماد. أُعيد تحميل السياسة."),

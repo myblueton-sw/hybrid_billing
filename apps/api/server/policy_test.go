@@ -70,7 +70,8 @@ func TestPolicyReadShape(t *testing.T) {
 		t.Errorf("proposals %+v", list)
 	}
 	if got.body["you"] != SampleAdmin || got.body["now"] != stamp(start) || got.body["signed_in_at"] != stamp(start) ||
-		got.body["act_until"] != stamp(start.Add(12*time.Hour)) || got.body["revision"] != f.s.Revision() {
+		got.body["act_until"] != stamp(start.Add(stepUpDefault)) || got.body["authenticated_at"] != stamp(start) || fmt.Sprint(got.body["step_up_seconds"]) != "900" ||
+		got.body["revision"] != f.s.Revision() {
 		t.Errorf("page %+v", got.body)
 	}
 	f.code(t, "no session", f.policyRead(actor{}), 401, string(commands.Unauthenticated))
@@ -200,7 +201,7 @@ func TestStepUpAndApproverLockout(t *testing.T) {
 	f.applyPolicy("60", "10")
 	root := f.as(AdminLogin)
 	f.advance(11 * time.Minute)
-	f.code(t, "step-up required", f.propose(root, "60", "10"), 422, string(commands.PrerequisiteFailed))
+	f.code(t, "step-up required", f.propose(root, "60", "10"), 403, CodeReauthentication)
 	page := f.policyRead(root).body
 	if page["now"].(string) <= page["act_until"].(string) {
 		t.Errorf("act until not passed %+v", page)
@@ -211,9 +212,16 @@ func TestStepUpAndApproverLockout(t *testing.T) {
 		t.Fatalf("fresh sign-in %+v", got)
 	}
 	target := got.body["fields"].(map[string]any)["proposal"].(string)
-	second := f.as(Admin2Login)
+	f.setPassword(Admin2Login, pw)
+	second := f.signedIn(Admin2Login, pw)
 	f.advance(6 * time.Minute)
-	f.code(t, "approver locked out", f.run(second, "policy.approve", target, nil), 422, string(commands.PrerequisiteFailed))
+	f.code(t, "approver prompted, not locked out", f.run(second, "policy.approve", target, nil), 403, CodeReauthentication)
+	if got := f.reauth(second, pw); got.status != 204 {
+		t.Fatalf("reauthenticate %+v", got)
+	}
+	if got := f.run(second, "policy.approve", target, nil); got.status != 200 || got.body["business_state"] != "applied" {
+		t.Errorf("approval after reauthentication %+v", got)
+	}
 }
 
 func TestMaximumAgeEndsSessionsOnEveryPath(t *testing.T) {
@@ -246,7 +254,7 @@ func TestMaximumAgeEndsSessionsOnEveryPath(t *testing.T) {
 	future := f.as(AdminLogin)
 	v := future.verifier(f)
 	f.s.sessions.mu.Lock()
-	f.s.sessions.byID[v].created = f.s.clock().Add(time.Hour)
+	f.s.sessions.byID[v].authenticated = f.s.clock().Add(time.Hour)
 	f.s.sessions.mu.Unlock()
 	f.code(t, "future sign-in time", f.policyRead(future), 401, string(commands.Unauthenticated))
 }

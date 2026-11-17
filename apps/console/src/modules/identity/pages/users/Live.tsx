@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { adminClient, AdminError, attempt, sequence, type AdminClient, type Attempt, type CommandId, type UserRow } from "../../../../service/admin";
+import { AdminError, attempt, sequence, type AdminClient, type Attempt, type CommandId, type UserRow } from "../../../../service/admin";
+import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
 import { emailValid, loginValid, utf8Length } from "../../../../service/helpers";
@@ -89,7 +90,7 @@ export function FailureBox({ l, error, focusKey, describe = failureText }: {
 }
 
 export function settles(e: unknown): boolean {
-  return !(e instanceof AdminError) || !["unavailable", "limited", "unauthenticated"].includes(e.failure);
+  return !(e instanceof AdminError) || !["unavailable", "limited", "unauthenticated", "reauth", "reauth_cancelled"].includes(e.failure);
 }
 
 function Confirm({ l, user, action, api, revision, onDone, onCancel, onReload }: {
@@ -382,7 +383,7 @@ function Table({ l, view, users, selected, onOpen }: { l: Locale; view: string; 
 export default function LiveUsers({ locale: l, view, session, onSignOut, onView }: {
   locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void;
 }) {
-  const api = useMemo(() => adminClient(session.csrf), [session.csrf]);
+  const api = useAdminClient();
   const wide = useWide();
   const order = useRef(sequence());
   const [data, setData] = useState<Loaded | null>(null);

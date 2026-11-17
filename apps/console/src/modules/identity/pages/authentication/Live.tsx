@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { adminClient, AdminError, attempt, sequence, type AdminClient, type Attempt, type PolicyPage, type ProposalRow, type RevisionRow } from "../../../../service/admin";
+import { AdminError, attempt, sequence, type AdminClient, type Attempt, type PolicyPage, type ProposalRow, type RevisionRow } from "../../../../service/admin";
+import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
 import { Summary, type Problems } from "../../../../service/Service";
 import { FailureBox, Reason, reasonProblem, settles, useWide } from "../users/Live";
 import { w } from "../users/live-copy";
 import { p } from "./live-copy";
-import { canAct, duration, history, methodsText, pending, policyFailure, policyStep, stale, stepText, wholeMinutes, when } from "./live-model";
+import { canAct, duration, effectiveStep, history, methodsText, pending, policyFailure, policyStep, stale, stepMinutes, stepText, wholeMinutes, when } from "./live-model";
 import "../users/live.css";
 
 type Mode = { kind: "propose" } | { kind: "approve" | "withdraw"; row: ProposalRow };
@@ -64,7 +65,7 @@ function Propose({ l, api, page, onDone, onCancel, onReload, stepping }: {
   useEffect(() => { tried.current = attempt(); }, [page.revision]);
   const edit = (f: (v: string) => void) => (v: string) => { tried.current = attempt(); f(v); };
   const maxAge = wholeMinutes(age, 5, 720);
-  const stepValue = stepOn ? wholeMinutes(step, 5, maxAge ?? 720) : 0;
+  const stepValue = stepOn ? stepMinutes(step, maxAge) : 0;
   const same = current !== null && maxAge !== null && stepValue !== null && maxAge * 60 === current.max_age_seconds && (stepValue ?? 0) * 60 === policyStep(current);
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -187,18 +188,6 @@ function Decide({ l, api, page, mode, onDone, onCancel, onReload }: {
   );
 }
 
-function Stale({ l, page, onSignOut }: { l: Locale; page: PolicyPage; onSignOut: () => void }) {
-  return (
-    <section className="live-step" aria-labelledby="policy-stale">
-      <h2 id="policy-stale">{p.staleTitle(l)}</h2>
-      <p className="live-impact">{p.staleBody(l, when(l, page.signed_in_at))}</p>
-      <div className="live-buttons">
-        <button type="button" className="live-primary" onClick={onSignOut}>{p.staleAction(l)}</button>
-      </div>
-    </section>
-  );
-}
-
 function Unavailable({ l, title, body, action }: { l: Locale; title: string; body: string; action?: { label: string; go: () => void } }) {
   return (
     <div className="live-users">
@@ -246,7 +235,7 @@ function Providers({ l, onView }: { l: Locale; onView: (view: string) => void })
 export default function LivePolicy({ locale: l, view, session, onSignOut, onView, onUsers }: {
   locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void; onUsers: () => void;
 }) {
-  const api = useMemo(() => adminClient(session.csrf), [session.csrf]);
+  const api = useAdminClient();
   const wide = useWide();
   const order = useRef(sequence());
   const [page, setPage] = useState<PolicyPage | null>(null);
@@ -292,8 +281,6 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
     panel = <Decide key={mode.kind + mode.row.number} l={l} api={api} page={page} mode={mode} onReload={load}
       onCancel={() => back(`[data-proposal="${mode.row.number}"][data-action="${mode.kind}"]`)}
       onDone={(n, kind) => { say(kind === "approve" ? p.doneApproved(l, n) : p.doneWithdrawn(l, n)); load(); back(kind === "approve" ? "#policy-current" : "#policy-pending"); }} />;
-  } else if (page && late && (wide || mode)) {
-    panel = <Stale l={l} page={page} onSignOut={onSignOut} />;
   } else if (page && (wide || mode?.kind === "propose")) {
     panel = <Propose key={`${page.policy?.number ?? 0}-${formKey}`} l={l} api={api} page={page} onReload={load} stepping={!wide} onCancel={() => back(".policy-propose")}
       onDone={(target) => { say(p.doneProposed(l, p.proposal(l, Number(target.replace("proposal-", ""))))); afterLoad.current = `#${target}`; setFormKey((k) => k + 1); setMode(null); load(); }} />;
@@ -314,12 +301,11 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
                 {page && <p className="live-meta">{w.loadedAt(l, when(l, page.now))}</p>}
               </div>
               <div className="live-tools">
-                {!wide && page && !late && <button type="button" className="live-primary policy-propose" onClick={() => { setNotice(""); setMode({ kind: "propose" }); }}>{p.proposeTitle(l)}</button>}
+                {!wide && page && <button type="button" className="live-primary policy-propose" onClick={() => { setNotice(""); setMode({ kind: "propose" }); }}>{p.proposeTitle(l)}</button>}
                 <button type="button" className="live-secondary" onClick={() => { setNotice(""); load(); }}>{w.reload(l)}</button>
               </div>
             </div>
             {notice && <p className="service-status">{notice}</p>}
-            {!wide && page && late && <Stale l={l} page={page} onSignOut={onSignOut} />}
             {status === "loading" && !page && <p role="status" className="live-meta">{p.loading(l)}</p>}
             {status === "error" && (
               <section className="live-error" role="alert">
@@ -339,11 +325,12 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
                   <div><dt>{p.mfa(l)}</dt><dd>{current.mfa === "none" ? p.notRequired(l) : <span className="live-mono">{current.mfa}</span>}</dd></div>
                   <div><dt>{p.maxAge(l)}</dt><dd>{duration(l, current.max_age_seconds)}</dd></div>
                   <div><dt>{p.stepUp(l)}</dt><dd>{stepText(l, current)}</dd></div>
+                  <div><dt>{p.effective(l)}</dt><dd>{duration(l, effectiveStep(page))}</dd></div>
                   <div><dt>{p.proposedBy(l)}</dt><dd><bdi dir="ltr" className="live-mono">{current.proposer}</bdi></dd></div>
                   <div><dt>{p.approvedBy(l)}</dt><dd><bdi dir="ltr" className="live-mono">{current.approver}</bdi></dd></div>
                   <div><dt>{p.applied(l)}</dt><dd>{when(l, current.at)}</dd></div>
                 </dl>
-                {page.act_until && <p className="live-meta live-window">{p.actUntil(l, when(l, page.act_until))}</p>}
+                {page.act_until && <p className="live-meta live-window">{late ? p.staleLine(l) : p.actUntil(l, when(l, page.act_until))}</p>}
               </>
             )}
           </section>
@@ -355,7 +342,7 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
               </div>
               {rows.length === 0 && <p className="live-empty">{p.noPending(l)}</p>}
               {rows.map((row) => {
-                const act = canAct(page, row);
+                const act = canAct(row);
                 const open = mode && mode.kind !== "propose" && mode.row.number === row.number;
                 return (
                   <article key={row.number} className={"live-proposal" + (open ? " live-selected" : "")} aria-labelledby={row.target}>
@@ -367,7 +354,7 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
                       {act.approve && <button type="button" className="live-secondary" data-proposal={row.number} data-action="approve" onClick={() => { setNotice(""); setMode({ kind: "approve", row }); }}>{p.approve(l)}</button>}
                       {act.withdraw && <button type="button" className="live-secondary" data-proposal={row.number} data-action="withdraw" onClick={() => { setNotice(""); setMode({ kind: "withdraw", row }); }}>{p.withdraw(l)}</button>}
                     </div>
-                    {(late || act.note) && <p className="live-note">{late && !act.approve ? p.staleRow(l) : act.note === "needOther" ? p.needOther(l) : act.note === "staleRow" ? p.staleRow(l) : act.note ? p.cannotApprove(l) : ""}</p>}
+                    {act.note && <p className="live-note">{act.note === "needOther" ? p.needOther(l) : p.cannotApprove(l)}</p>}
                   </article>
                 );
               })}

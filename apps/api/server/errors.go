@@ -19,11 +19,14 @@ const (
 type boundaryCode struct {
 	code   string
 	status int
+	next   commands.NextAction
 }
 
-var boundaryCodes = []boundaryCode{{CodeBodyTooLarge, http.StatusRequestEntityTooLarge}, {CodeCSRF, http.StatusForbidden},
-	{CodeLinkInvalid, http.StatusUnprocessableEntity}, {CodeMisdirected, http.StatusMisdirectedRequest}, {CodeOrigin, http.StatusForbidden},
-	{CodePasswordForm, http.StatusUnprocessableEntity}, {CodeWrongPassword, http.StatusUnprocessableEntity}, {CodePasswordLocked, http.StatusTooManyRequests}}
+var boundaryCodes = []boundaryCode{{CodeBodyTooLarge, http.StatusRequestEntityTooLarge, commands.NextNone}, {CodeCSRF, http.StatusForbidden, commands.NextNone},
+	{CodeLinkInvalid, http.StatusUnprocessableEntity, commands.NextNone}, {CodeMisdirected, http.StatusMisdirectedRequest, commands.NextNone},
+	{CodeOrigin, http.StatusForbidden, commands.NextNone}, {CodePasswordForm, http.StatusUnprocessableEntity, commands.NextNone},
+	{CodeWrongPassword, http.StatusUnprocessableEntity, commands.NextNone}, {CodePasswordLocked, http.StatusTooManyRequests, commands.NextNone},
+	{CodeReauthentication, http.StatusForbidden, NextReauthenticate}}
 
 type errorBody struct {
 	Code         string   `json:"code"`

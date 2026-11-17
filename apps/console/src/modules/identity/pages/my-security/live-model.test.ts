@@ -6,7 +6,7 @@ import { canChange, changeOutcome, checkChange, endOutcome, others } from "./liv
 const page = (change: Partial<SelfPage>): SelfPage => ({
   user_id: "u", login: "l", email: "e", workspace: "w", role: "member", identities: [], password_set: true, installation_administrator: false,
   sessions: [{ handle: "a", current: true, signed_in: "1", ends: "2" }, { handle: "b", current: false, signed_in: "0", ends: "1" }],
-  idle_minutes: 30, max_age_seconds: 0, signed_in_at: "1", now: "1", ...change,
+  idle_minutes: 30, max_age_seconds: 0, signed_in_at: "1", authenticated_at: "1", now: "1", ...change,
 });
 
 test("local checks run before any request", () => {
@@ -39,4 +39,6 @@ test("ending a session that is gone reads as already ended", () => {
   assert.equal(endOutcome(new AdminError("limited")), "limited");
   assert.equal(endOutcome(new AdminError("busy")), "busy");
   assert.equal(endOutcome(null), "busy");
+  assert.equal(endOutcome(new AdminError("reauth")), "reauth");
+  assert.equal(endOutcome(new AdminError("reauth_cancelled")), "reauth");
 });

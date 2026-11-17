@@ -62,13 +62,15 @@ type proposalRow struct {
 }
 
 type policyPage struct {
-	Revision   string        `json:"revision"`
-	Policy     *policyRow    `json:"policy"`
-	Proposals  []proposalRow `json:"proposals"`
-	Now        string        `json:"now"`
-	SignedInAt string        `json:"signed_in_at"`
-	ActUntil   string        `json:"act_until"`
-	You        string        `json:"you"`
+	Revision        string        `json:"revision"`
+	Policy          *policyRow    `json:"policy"`
+	Proposals       []proposalRow `json:"proposals"`
+	Now             string        `json:"now"`
+	SignedInAt      string        `json:"signed_in_at"`
+	AuthenticatedAt string        `json:"authenticated_at"`
+	ActUntil        string        `json:"act_until"`
+	StepUpSeconds   int64         `json:"step_up_seconds"`
+	You             string        `json:"you"`
 }
 
 func revisionOf(r authpolicy.Revision) revisionRow {
@@ -97,16 +99,18 @@ func (s *Server) listPolicy(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, request, s.policyPage(answer.User(), found.created))
+	writeJSON(w, http.StatusOK, request, s.policyPage(answer.User(), found.created, found.authenticated))
 }
 
-func (s *Server) policyPage(you string, signed time.Time) policyPage {
-	page := policyPage{Revision: s.Revision(), Proposals: []proposalRow{}, Now: stamp(s.clock()), SignedInAt: stamp(signed), You: you}
-	limit := time.Duration(-1)
+func (s *Server) policyPage(you string, signed, authenticated time.Time) policyPage {
+	page := policyPage{Revision: s.Revision(), Proposals: []proposalRow{}, Now: stamp(s.clock()), SignedInAt: stamp(signed), AuthenticatedAt: stamp(authenticated),
+		StepUpSeconds: int64(stepUpDefault / time.Second), You: you}
+	limit := stepUpDefault
 	if current, err := s.policy.Policy(s.bootWorkspace); err == nil {
 		page.Policy = &policyRow{revisionRow: revisionOf(current.Revision), Number: current.Number, Proposer: current.Proposer, Approver: current.Approver, At: stamp(current.At)}
-		limit = window(current.Revision)
-		page.ActUntil = stamp(signed.Add(limit))
+		limit = min(limit, window(current.Revision))
+		page.StepUpSeconds = int64(limit / time.Second)
+		page.ActUntil = stamp(authenticated.Add(limit))
 	}
 	applied := 0
 	for i := len(s.records) - 1; i >= 0; i-- {
@@ -121,11 +125,7 @@ func (s *Server) policyPage(you string, signed time.Time) policyPage {
 			applied++
 		} else {
 			row.CanApprove, row.CanWithdraw = view.Proposer != you, view.Proposer == you
-			act := window(view.Change.Revision)
-			if limit >= 0 && limit < act {
-				act = limit
-			}
-			row.ActUntil = stamp(signed.Add(act))
+			row.ActUntil = stamp(authenticated.Add(min(limit, window(view.Change.Revision))))
 		}
 		page.Proposals = append(page.Proposals, row)
 	}
@@ -233,7 +233,7 @@ func (s *Server) actorOf() (authpolicy.Principal, authpolicy.Authentication, boo
 		role = authpolicy.RoleAdministrator
 	}
 	return authpolicy.Principal{User: answer.User(), Workspace: answer.Workspace(), Role: role, Kind: authpolicy.KindHuman},
-		authpolicy.Authentication{Method: authpolicy.MethodPassword, At: found.created}, true
+		authpolicy.Authentication{Method: authpolicy.MethodPassword, At: found.authenticated}, true
 }
 
 func (h policyCommand) Apply(ctx commands.Context) (commands.Outcome, error) {

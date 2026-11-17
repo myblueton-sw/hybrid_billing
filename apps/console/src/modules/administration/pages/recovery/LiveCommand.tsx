@@ -144,6 +144,7 @@ export function CommandForm(props: FormProps) {
           onClose("done");
         } else setMessage({ text, alert: true });
       }
+      else if (reaction === "reauth") setMessage({ text: sc.reauthText(l, failure), alert: true });
       else setMessage({ text: sc.failed(l), alert: true });
     } finally {
       sending.current = false;

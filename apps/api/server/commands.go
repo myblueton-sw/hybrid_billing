@@ -196,6 +196,12 @@ func (s *Server) command(w http.ResponseWriter, r *http.Request) {
 func (s *Server) execute(command string, call commands.Call, caller identity.Verifier) commands.Result {
 	s.domain.Lock()
 	defer s.domain.Unlock()
+	if s.stepUp(command) {
+		if code := s.stepUpCheck(caller, command, call.Target); code != "" {
+			s.cfg.Log.Info("step_up_required", "user", call.Answer.User(), "command", command)
+			return stepUpRefusal(code, call.Request)
+		}
+	}
 	s.caller = caller
 	defer func() { s.caller = identity.Verifier{} }()
 	result := s.commands.Execute(call)
@@ -207,7 +213,7 @@ func (s *Server) execute(command string, call commands.Call, caller identity.Ver
 
 func (s *Server) fresh(answer identity.Answer, found session) bool {
 	_, err := s.policy.Evaluate(authpolicy.Principal{User: answer.User(), Workspace: answer.Workspace(), Role: string(answer.Role()), Kind: authpolicy.KindHuman},
-		authpolicy.Authentication{Method: authpolicy.MethodPassword, At: found.created}, "")
+		authpolicy.Authentication{Method: authpolicy.MethodPassword, At: found.authenticated}, "")
 	var refusal authpolicy.Refusal
 	return err == nil || (errors.As(err, &refusal) && refusal.Reason == authpolicy.ReasonNoPolicy)
 }

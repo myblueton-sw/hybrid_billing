@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { adminClient, AdminError, attempt, type AdminClient, type Attempt, type CommandId, type OrgMember, type OrgParty, type PlanRow, type PlansPage, type RelationKind } from "../../../../service/admin";
+import { AdminError, attempt, type AdminClient, type Attempt, type CommandId, type OrgMember, type OrgParty, type PlanRow, type PlansPage, type RelationKind } from "../../../../service/admin";
+import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { Summary, type Problems } from "../../../../service/Service";
 import { c as sc, retryPhrase } from "../../../../service/copy";
@@ -71,6 +72,7 @@ function failureFor(l: Locale, reaction: Reaction, e: unknown): { title: string;
   if (reaction === "wait") return { title: c.failed(l), body: sc.limited(l, retryPhrase(l, e instanceof AdminError && e.retryAfter ? e.retryAfter : 60)) };
   if (reaction === "retry") return { title: c.failed(l), body: c.retry(l) };
   if (reaction === "renew") return { title: c.failed(l), body: c.renew(l) };
+  if (reaction === "reauth") return { title: c.failed(l), body: sc.reauthText(l, e instanceof AdminError ? e.failure : "") };
   if (reaction === "signin") return { title: c.failed(l), body: w.signInAgain(l) };
   return { title: c.failed(l), body: op ? c.stopped(l, op) : "" };
 }
@@ -223,7 +225,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   locale: Locale; view: string; params: URLSearchParams; session: Session; onSignOut: () => void;
   onView: (view: string, params?: Record<string, string>) => void; onParams: (params: Record<string, string | null>) => void;
 }) {
-  const api = useMemo(() => adminClient(session.csrf), [session.csrf]);
+  const api = useAdminClient();
   const wide = useWide();
   const [page, setPage] = useState<PlansPage | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");

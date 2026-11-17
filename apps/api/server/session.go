@@ -24,11 +24,12 @@ const (
 )
 
 type session struct {
-	verifier  identity.Verifier
-	workspace string
-	csrf      string
-	created   time.Time
-	login     string
+	verifier      identity.Verifier
+	workspace     string
+	csrf          string
+	created       time.Time
+	authenticated time.Time
+	login         string
 }
 
 type sessions struct {
@@ -81,8 +82,19 @@ func (s *sessions) put(v identity.Verifier, workspace, login string, now time.Ti
 		return "", ErrStart
 	}
 	csrf := encode(raw)
-	s.byID[v] = &session{verifier: v, workspace: workspace, csrf: csrf, created: now, login: login}
+	s.byID[v] = &session{verifier: v, workspace: workspace, csrf: csrf, created: now, authenticated: now, login: login}
 	return csrf, nil
+}
+
+func (s *sessions) reauthenticated(v identity.Verifier, at time.Time) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	found := s.byID[v]
+	if found == nil {
+		return false
+	}
+	found.authenticated = at
+	return true
 }
 
 func (s *sessions) get(v identity.Verifier) (session, bool) {

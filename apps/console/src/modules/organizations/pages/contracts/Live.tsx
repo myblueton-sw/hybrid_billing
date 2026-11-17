@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
-import { adminClient, AdminError, type OrgParty } from "../../../../service/admin";
+import { AdminError, type OrgParty } from "../../../../service/admin";
+import { useAdminClient } from "../../../../service/context";
 import type { ContractDetail, ContractRow, ContractsPage } from "../../../../service/contracts";
 import type { Session } from "../../../../service/api";
 import { c as sc, retryPhrase } from "../../../../service/copy";
@@ -31,7 +32,7 @@ export function failureText(l: Locale, e: unknown): { title: string; body: strin
 }
 
 export default function LiveContracts({ locale: l, view, params, session, onSignOut, onParams }: Props) {
-  const api = useMemo(() => adminClient(session.csrf), [session.csrf]);
+  const api = useAdminClient();
   setScope(session.workspace, session.user, session.csrf);
   const wide = useWide();
   const [page, setPage] = useState<ContractsPage | null>(null);

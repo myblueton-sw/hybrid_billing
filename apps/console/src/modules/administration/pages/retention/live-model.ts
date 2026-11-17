@@ -347,7 +347,7 @@ export function holdMatch(page: RetentionPage, me: string, target: string, froze
   return found?.id ?? "";
 }
 
-export type Reaction = "field" | "reason" | "hint" | "conflict" | "denied" | "signin" | "wait" | "retry" | "renew" | "partial" | "failed";
+export type Reaction = "field" | "reason" | "hint" | "conflict" | "denied" | "signin" | "wait" | "retry" | "renew" | "partial" | "reauth" | "failed";
 
 export function react(failure: string, fields: string[]): Reaction {
   switch (failure) {
@@ -371,13 +371,16 @@ export function react(failure: string, fields: string[]): Reaction {
       return "renew";
     case "partial":
       return "partial";
+    case "reauth":
+    case "reauth_cancelled":
+      return "reauth";
     default:
       return "failed";
   }
 }
 
 export function keepsAttempt(r: Reaction): boolean {
-  return r === "retry" || r === "wait";
+  return r === "retry" || r === "wait" || r === "reauth";
 }
 
 export type FieldReaction = "built" | "impact" | "reason" | "period" | "grace" | "owner" | "text";

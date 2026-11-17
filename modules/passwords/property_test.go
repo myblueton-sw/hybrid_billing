@@ -44,7 +44,22 @@ func TestProperty(t *testing.T) {
 		for step := 0; step < 60; step++ {
 			k := keys[rng.Intn(2)]
 			word := words[rng.Intn(3)]
-			switch rng.Intn(8) {
+			switch rng.Intn(9) {
+			case 8:
+				var before lock
+				if accounts[k] != nil {
+					before = lockState(w.r, k)
+				}
+				want := ResultWrong
+				if a := accounts[k]; a != nil && a.password == word {
+					want = ResultOK
+				}
+				if got := w.r.VerifyHolder(k, word); got != want {
+					t.Fatalf("seed %d step %d holder %s want %s", seed, step, got, want)
+				}
+				if accounts[k] != nil && lockState(w.r, k) != before {
+					t.Fatalf("seed %d step %d holder changed the lock state", seed, step)
+				}
 			case 0:
 				rec, _ := w.r.Hash(k, word)
 				w.r.Put(k, rec)

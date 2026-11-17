@@ -22,9 +22,21 @@ export function policyStep(r: RevisionRow): number {
   return r.step_up.find((s) => s.action === "policy.change" && !s.mfa)?.max_age_seconds ?? 0;
 }
 
+export const defaultStepUp = 900;
+
 export function stepText(l: Locale, r: RevisionRow): string {
   const step = policyStep(r);
-  return step ? p.within(l, duration(l, step)) : p.stepNone(l);
+  return step ? p.within(l, duration(l, step)) : p.stepDefault(l, duration(l, defaultStepUp));
+}
+
+export function effectiveStep(page: PolicyPage): number {
+  return page.step_up_seconds > 0 ? page.step_up_seconds : defaultStepUp;
+}
+
+export function stepMinutes(raw: string, maxAge: number | null): number | null {
+  const trimmed = raw.trim();
+  if (trimmed === "" || trimmed === "0") return 0;
+  return wholeMinutes(trimmed, 5, maxAge ?? 720);
 }
 
 export function methodsText(l: Locale, r: RevisionRow): string {
@@ -35,12 +47,11 @@ export function stale(page: PolicyPage): boolean {
   return page.act_until !== "" && page.now > page.act_until;
 }
 
-export function canAct(page: PolicyPage, row: ProposalRow): { approve: boolean; withdraw: boolean; note: string } {
-  const late = row.act_until !== "" && page.now > row.act_until;
+export function canAct(row: ProposalRow): { approve: boolean; withdraw: boolean; note: string } {
   return {
-    approve: row.can_approve && !late,
-    withdraw: row.can_withdraw && !stale(page),
-    note: row.can_withdraw ? "needOther" : row.can_approve ? (late ? "staleRow" : "") : "cannotApprove",
+    approve: row.can_approve,
+    withdraw: row.can_withdraw,
+    note: row.can_withdraw ? "needOther" : row.can_approve ? "" : "cannotApprove",
   };
 }
 
@@ -80,6 +91,9 @@ export function policyFailure(l: Locale, e: unknown): { title: string; body: str
       return { title: p.saveFailed(l), body: w.partial(l, e.operation) };
     case "invalid":
       return { title: c.check(l), body: "" };
+    case "reauth":
+    case "reauth_cancelled":
+      return { title: p.saveFailed(l), body: c.reauthText(l, e.failure) };
     default:
       return { title: p.saveFailed(l), body: w.unavailable(l) };
   }

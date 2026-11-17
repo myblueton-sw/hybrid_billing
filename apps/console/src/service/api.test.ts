@@ -17,12 +17,12 @@ function fake(responses: Array<[number, unknown, Record<string, string>?]>) {
 test("login fetches a pre-session token once and sends it", async () => {
   const { f, calls } = fake([
     [200, { csrf_token: "pre" }],
-    [200, { user: "u", workspace: "w", role: "administrator", csrf_token: "s" }],
+    [200, { user: "u", workspace: "w", role: "administrator", login: "a@b.c", csrf_token: "s" }],
     [401, { code: "unauthenticated" }],
   ]);
   const c = serviceClient(f);
   const s = await c.login("w", "a@b.c", "pw");
-  assert.deepEqual(s, { user: "u", workspace: "w", role: "administrator", csrf: "s" });
+  assert.deepEqual(s, { user: "u", workspace: "w", role: "administrator", login: "a@b.c", csrf: "s" });
   assert.equal(calls[0].url, "/api/v1/auth/csrf");
   assert.equal((calls[0].init.headers as Record<string, string>)["X-HB-Client"], "console");
   assert.equal((calls[1].init.headers as Record<string, string>)["X-CSRF-Token"], "pre");
@@ -87,7 +87,7 @@ test("network failure is unavailable and resets the pre-session token", async ()
 });
 test("logout sends the session token and errors without a body", async () => {
   const { f, calls } = fake([[204, {}]]);
-  await serviceClient(f).logout({ user: "u", workspace: "w", role: "r", csrf: "s" });
+  await serviceClient(f).logout({ user: "u", workspace: "w", role: "r", login: "", csrf: "s" });
   assert.equal((calls[0].init.headers as Record<string, string>)["X-CSRF-Token"], "s");
   const bad = (async () => new Response("not json", { status: 500 })) as unknown as typeof fetch;
   await assert.rejects(serviceClient(bad).current(), (e: ServiceError) => e.failure === "unavailable");

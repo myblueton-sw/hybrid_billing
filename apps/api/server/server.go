@@ -20,9 +20,11 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/installer"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
+	"github.com/myblueton-sw/hybrid_billing/modules/perfgate"
 	"github.com/myblueton-sw/hybrid_billing/modules/plugins"
 	"github.com/myblueton-sw/hybrid_billing/modules/recovery"
 	"github.com/myblueton-sw/hybrid_billing/modules/relationships"
+	"github.com/myblueton-sw/hybrid_billing/modules/releasetrace"
 	"github.com/myblueton-sw/hybrid_billing/modules/retention"
 	"github.com/myblueton-sw/hybrid_billing/modules/webhooks"
 )
@@ -96,6 +98,9 @@ type Server struct {
 	rec             *recoveryStore
 	retention       *retention.Registry
 	ret             *retentionStore
+	trace           *releasetrace.Registry
+	perf            *perfgate.Registry
+	ev              *evidenceStore
 	limit           *limiter
 	slots           chan struct{}
 	boot            activation
@@ -173,7 +178,7 @@ func New(cfg Config) (*Server, error) {
 	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{},
 		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}, plans: newPlanStore(),
 		contracts: newContractStore(), install: newInstallStore(), integ: newIntegrationStore(), signer: newSeedSigner(), rec: newRecoveryStore(),
-		ret: newRetentionStore()}
+		ret: newRetentionStore(), ev: newEvidenceStore()}
 	s.clock = func() time.Time { return cfg.Clock().UTC() }
 	for _, origin := range cfg.Origins {
 		if !validOrigin(origin) {
@@ -232,6 +237,8 @@ func New(cfg Config) (*Server, error) {
 		},
 		func() (err error) { s.recovery, err = recovery.NewRegistry(s.clock); return },
 		func() (err error) { s.retention, err = retention.NewRegistry(s.clock); return },
+		func() (err error) { s.trace, err = releasetrace.NewRegistry(s.clock); return },
+		func() (err error) { s.perf, err = perfgate.NewRegistry(s.clock); return },
 		s.registerUsers,
 	}
 	for _, build := range steps {

@@ -54,7 +54,7 @@ func (f world) ready() world {
 	if err := f.s.Start(); err != nil {
 		f.t.Fatal(err)
 	}
-	if f.s.cfg.Seed == SeedSample && f.s.counter != 15 {
+	if f.s.cfg.Seed == SeedSample && f.s.counter != 16 {
 		f.t.Fatalf("sample seed steps %d", f.s.counter)
 	}
 	f.s.counter = map[string]uint64{SeedSample: 2, SeedNone: 1}[f.s.cfg.Seed]

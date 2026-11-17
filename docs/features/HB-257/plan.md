@@ -159,23 +159,28 @@ The 9 screens that read collected FOCUS sample data stay on the Python services 
 
 Each screen binding replaces the preview's in-memory data with calls to `/api/v1`, keeps the reviewed layout and copy, and fails closed when the service is unreachable. The order follows dependencies:
 
-| Phase | Ticket | Screens | Modules |
+| Phase | Tickets | Screens | Modules |
 | --- | --- | --- | --- |
 | 1 | HB-258 | none (service skeleton, assembly of identity, gate, authpolicy and commands, bootstrap, seed loader, health, OpenAPI) | commands, gate, identity, authpolicy |
-| 2 | HB-259 | L01, L02, L03, plus the session gate in front of the Python endpoints | identity, authpolicy, passwords (new) |
-| 3 | HB-260 | M01–M05 | identity, auth, authpolicy |
-| 4 | HB-261 | O01–O03 | organizations, relationships, contracts, customeraccess |
-| 5 | HB-262 | P01–P07 | installer, plugins, webhooks, recovery, retention, releasetrace, perfgate, simulation, sandbox, licensemode, thirdparty |
-| 6 | HB-263 | B02, B09, B10, B11 | meters, approvals, protected, adjustments, claims, corrections, cases, balances |
-| 7 | HB-264 | I01–I04 | issuance, delivery, erpledger, erpadapters, exports, disclosure |
-| 8 | HB-265 | C01–C03 | customeraccess, issuance, cases |
-| 9 | HB-266 | R01, R02, U03, U04, A01, S03 (older view) | analytics, history, operations, incidents, assistant |
-| 10 | HB-267 | none (end-to-end pre-launch QA in English, Korean and Arabic, handover) | all |
+| 2 | HB-259 (sign-in API), HB-260 (L01–L03), HB-261 (session gate in front of the Python readers) | L01, L02, L03, plus the session gate in front of the Python endpoints | identity, authpolicy, passwords (new) |
+| 3 | HB-262 (installation administration action), HB-263/264 (M01), HB-265 (M02), HB-266/267 (M03), HB-268/269 (M04), HB-270/271 (M05) | M01–M05 | identity, auth, authpolicy |
+| 4 | HB-272/273 (O01), HB-274/275 (O02), HB-280/281 (O03) | O01–O03 | organizations, relationships, contracts, customeraccess |
+| 5 | HB-282/283 (P01), HB-284/285 (P02), HB-286/287 (P03), HB-288/289 (P04), HYB-290 (P05); P06 and P07 not yet ticketed | P01–P07 | installer, plugins, webhooks, recovery, retention, releasetrace, perfgate, simulation, sandbox, licensemode, thirdparty |
+| 6 | not yet ticketed | B02, B09, B10, B11 | meters, approvals, protected, adjustments, claims, corrections, cases, balances |
+| 7 | not yet ticketed | I01–I04 | issuance, delivery, erpledger, erpadapters, exports, disclosure |
+| 8 | not yet ticketed | C01–C03 | customeraccess, issuance, cases |
+| 9 | not yet ticketed | R01, R02, U03, U04, A01, S03 (older view) | analytics, history, operations, incidents, assistant |
+| 10 | not yet ticketed | none (end-to-end pre-launch QA in English, Korean and Arabic, handover) | all |
+
+The ticket column was corrected by [HYB-291](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. The first version gave one placeholder number per phase (HB-258 to HB-267); phases were split into API and screen tickets as they ran, so those numbers went to other work. Linear tickets later moved from team HB to team HYB with the same numbers (HYB-n is HB-n); records written before the move keep the HB prefix.
 
 A phase that turns out too large is split into more tickets in the same order. Each binding ticket:
 - records which screen fields come from which module read or command, extending `docs/ui/screen-binding-register.md`;
 - adds the handlers, commands and seed data it needs in `apps/api`, without changing module rules unless a module change is reviewed separately;
 - runs the console's existing screen QA (`npm run qa:*`) against the real service, and adds API tests, including the gate's refusals.
+- cites the requirement and acceptance IDs from its screen spec's trace section (HB, IAM, AUD, RET) in its plan, and its verification record has a planning cross-check section with a requirement trace (covered, deferred, not connected, or unclassified for owner review) and any deviations from the spec.
+
+**Phase-end audit.** At the end of each phase, a read-only reviewer separate from the writers checks the phase's tickets against this plan and the screen specs, and records the result under `docs/reviews/`. [HYB-291](../../reviews/HYB-291-planning-cross-check/report.md) is the first such audit, covering phases 1–5.
 
 **Pre-launch** is complete for the owner's review when:
 - the 35 Go-bound screens read and change state through the Go service;
@@ -204,6 +209,8 @@ A phase that turns out too large is split into more tickets in the same order. E
 - State and the audit journal reset on every restart. The pre-launch notice says so.
 - The Python FOCUS endpoints are not yet ported to Go.
 - System-level acceptance cases remain NOT_RUN in production form. Phase 10 runs them locally against the pre-launch build only.
+- Screen QA used per-ticket browser QA scripts instead of `npm run qa:*` from HB-260 onward; no record said so before [HYB-291](../../reviews/HYB-291-planning-cross-check/report.md). Whether `npm run qa:*` must run against the service is open for phase 10 or the owner.
+- The audit journal keeps 2 hours (`apps/api/server/server.go:121`) and its test drives 5,400 commands, not the 28,800-record bound above; fix ticket HYB-292.
 
 # Verification plan
 

@@ -49,3 +49,21 @@ These are listed in the plan:
 - a credential whose secret was never collected stays live;
 - the partial-retire timing window;
 - the cost of a read at the cap.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/M04/spec.md:118-128` (HB-268 is the API, HB-269 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-03 | deferred | Addressed within pre-launch scope for the service-account lifecycle under installation administration; registry-wide and leakage acceptance not built. | HB-268/plan.md |
+| HB-05 | not connected | Service credentials cannot authenticate in pre-launch, so no connector can use them. | HB-268/plan.md:159-168 |
+| HB-24 | not connected | No ERP connection; credentials cannot authenticate. | HB-268/plan.md:159-168 |
+| HB-33 | deferred | Commands use the common path; credentials cannot be used against the API. | HB-268/plan.md:159-168 |
+| HB-42 | deferred | Ownership transfer and the owner-departure policy (`retention-access.md:24`) are residuals. | HB-268/plan.md:159-168 |
+| AUD-QA-04 | deferred | OAuth service credentials are not built; credentials cannot authenticate. | HB-268/plan.md:159-168 |
+| IAM-01–IAM-08 | deferred | The service-user lifecycle is built; authentication and use history are not. | HB-268/plan.md:159-168 |

@@ -47,3 +47,23 @@ No review is owner acceptance.
 - Runs, install execution, key and release management, diagnostic requests, support bundles and support access are not connected.
 - The accepted-plan line has no date and preview volume items have no data flag, because the API does not provide them.
 - The external references were recalled, not opened.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/P01/spec.md:118-136` (HB-282 is the API, HB-283 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-03 | deferred | Addressed within pre-launch scope for installation-administration commands with a reason; registry-wide and leakage acceptance not built; support access is not connected. | HB-282/plan.md:87-94 |
+| HB-04 | unclassified – owner review | P01 builds no provider onboarding path. | this section |
+| HB-36 | not connected | Plans, proposals and diagnostics reports are built; runs, install execution, diagnostic request and support bundle are not connected. | HB-282/plan.md:87-94 |
+| HB-39 | unclassified – owner review | No performance budget was built or recorded for P01. | this section |
+| HB-40 | unclassified – owner review | No licence or rights behaviour was built or recorded for P01. | this section |
+| HB-42 | not connected | The support access tab is not bound. | HB-282/plan.md:87-94 |
+| AUD-AR-09 | not connected | Support access is not bound. | HB-282/plan.md:87-94 |
+| AUD-DB-08 | deferred | A stale observation blocks plan approval; handoff links and setup-permission revocation are not built. | HB-282/verification.md Residuals |
+| AUD-DB-13 | deferred | Install previews list volume items; port and volume conflicts and certificate guidance are not verified. | HB-283/verification.md Residuals |

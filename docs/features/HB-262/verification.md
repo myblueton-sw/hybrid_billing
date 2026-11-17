@@ -130,3 +130,16 @@ The mutation counts above are from before the round 1 fixes. Those fixes only ad
 
 - No endpoint uses the action yet; HB-263 will.
 - The gate role check's `answer.Kind() != identity.Human` clause is redundant with the role clause beside it, because a service Answer has the service role, and with auth's `activeHuman`, so no test isolates it. It is kept as defence in depth, and no surviving mutant was reported for that line because the mutation set disables only the first disjunct.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: No screen spec. IDs derived from the phase 3 scope in `docs/features/HB-257/plan.md`. Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-03 | deferred | Addressed within pre-launch scope for the installation administration action, valid only in the once-set installation workspace; registry-wide and leakage acceptance not built. | HB-262/plan.md |
+| HB-36 | deferred | Covered: installation administration is separated from workspace roles. Not covered: installation operation and support paths (P01). | HB-262/plan.md |

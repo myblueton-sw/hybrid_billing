@@ -93,3 +93,30 @@ Base: main `8df51be`. Machine: mac_mini.
 - Administrator-issued resets, MFA and SSO.
 - Locale review of the new copy.
 - Owner screen-review acceptance (FIX) of the bound L01–L03.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/L01/spec.md:18`, `L02/spec.md:18`, `L03/spec.md:18` (HB-259 is the API, HB-260 the screens). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-01 | deferred | Covered: sign-in and activation are bound to one workspace (L02). Not covered: party, organization and billing-entity separation, which L01–L03 do not build. | HB-259/plan.md |
+| HB-03 | deferred | Addressed within pre-launch scope for sign-in sessions evaluated by `authpolicy` (L01, L03); registry-wide and leakage acceptance not built. | HB-259/plan.md |
+| HB-36 | deferred | Covered: first-administrator activation through a one-time link in a 0600 file (L02). Not covered: installation packaging and support paths. | HB-259/plan.md |
+| HB-42 | deferred | Local accounts with set and reset links are built; MFA, SSO and LDAP are residuals. | HB-259/verification.md Residuals |
+| IAM-01 | deferred | Covered: activation and set links are one-time and invalidated on use. Not built or tested: concurrent first-administrator creation and acceptance from another workspace. | HB-259/verification.md |
+| IAM-02 | deferred | Only local password accounts exist; SAML, OIDC and LDAP sign-in are residuals (HB-257 out of scope). | HB-260/plan.md:132-146 |
+| IAM-03 | deferred | Does not arise while only local accounts exist; applies when another identity provider is connected. First recorded here. | this section |
+| IAM-04 | deferred | Local link expiry, one-time use and an identical 401 are built; issuer, audience, signature, nonce, SAML replay and LDAP checks wait for federated sign-in. | HB-260/plan.md:132-146 |
+| IAM-05 | deferred | Suspend and depart belong to M01 (HB-263); effects on keys, jobs and files and the external detection delay are not measured. | HB-263/plan.md |
+| IAM-06 | deferred | Recovery is administrator-issued only (HB-263) with last-administrator protection; MFA recovery and identity unlinking are not built. | HB-259/verification.md Residuals |
+| IAM-07 | deferred | No 100,000-user test; M01 server search and filters are HYB-294. | HYB-291 report |
+
+## Planning cross-check residuals (HYB-291)
+
+- **Administrator reset copy.** L03 said administrator-issued reset links were not available, although HB-263/264 ship `identity.issue_reset_link`. Fixed in HYB-291 (`apps/console/src/service/copy.ts`).
+- **Security-focused review not stated.** HB-257 (Verification for every phase) requires a security-focused review for phases 1–3. This record names design and change reviews but no security-focused review. None is claimed here; a security re-review or a recorded reason is open.

@@ -58,3 +58,35 @@ These are listed in the plan:
 - Rationale is bounded free text and references are ID-shaped; neither can prove it holds no customer data.
 - All state is in memory; nothing persists across restarts.
 - Seed dates are absolute; sample-contract-05 starts on 2027-01-01.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/O03/spec.md:121-155` (HB-280 is the API, HB-281 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-01 | deferred | Covered (O03): contracts are linked to billing profiles and parties. Not built: the three operating profiles on one core, internal settlement without an external invoice, and blocking ineligible cross-entity or cross-currency sums. | HB-280/plan.md |
+| HB-05 | not connected | No source connectors. | HB-280/plan.md:125-133 |
+| HB-08 | deferred | Final evidence can be settled; durable evidence storage waits for the database decision. | HB-280/plan.md:125-133 |
+| HB-10 | not connected | HawkEye results are not connected. | HB-280/plan.md:125-133 |
+| HB-12 | not connected | On-premises cost pools are not connected. | HB-280/plan.md:125-133 |
+| HB-15 | deferred | Lifecycle and state on a day are built; contract creation and change events are out of scope. | HB-280/plan.md:125-133 |
+| HB-16 | not connected | Money is not computed. | HB-280/plan.md:125-133 |
+| HB-18 | not connected | Exchange rates and rounding are not computed. | HB-280/plan.md:125-133 |
+| HB-21 | not connected | `final_amount_decision: not_computed`. | HB-280/plan.md:125-133 |
+| HB-22 | not connected | Prepaid credits are not connected. | HB-280/plan.md:125-133 |
+| HB-23 | deferred | Lifecycle and settlement are single-administrator; two-person review is an owner residual. | HB-280/plan.md:125-133 |
+| HB-24 | not connected | No ERP impact. | HB-280/plan.md:125-133 |
+| HB-25 | not connected | No ERP adapters. | HB-280/plan.md:125-133 |
+| HB-28 | not connected | Documents are not connected. | HB-281/verification.md Residuals |
+| HB-32 | not connected | The assistant is not connected. | HB-280/plan.md:125-133 |
+| HB-37 | deferred | Settle and reopen are built; access-removal plan and late-source window policy are not. | HB-280/plan.md:125-133 |
+| AUD-AR-01 | not connected | No sale computation, so direct and resale paths are not exercised. | HB-280/plan.md:125-133 |
+| AUD-AR-10 | not connected | No fixed-fee or SLA credit computation. | HB-280/plan.md:125-133 |
+| AUD-DB-03 | not connected | No ERP submission. | HB-280/plan.md:125-133 |
+| AUD-QA-01 | unclassified – owner review | Payment account and recipient changes are neither built nor recorded. | this section |
+| AUD-QA-02 | deferred | Covered: contract and settlement states are separate, ending is never shown as settled, pending_final with secured or missing evidence and reopening are built. Not connected: the emergency source-permission revocation path that revokes immediately and records the evidence gap (O03/spec.md:159-161). | HB-280/plan.md |

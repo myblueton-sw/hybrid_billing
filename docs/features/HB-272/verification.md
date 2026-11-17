@@ -75,3 +75,22 @@ These are listed in the plan:
 - a member appears only under kinds where it has a timeline;
 - the sample data is deliberately cross-customer;
 - the workspace-isolation test calls the read directly.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/O01/spec.md:116` (HB-272 is the API, HB-273 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-01 | deferred | Covered (O01): parties, billing profiles and relationship kinds are listed separately. Not built: the three operating profiles on one core, internal settlement without an external invoice, and blocking ineligible cross-entity or cross-currency sums. | HB-272/plan.md |
+| HB-02 | deferred | Read-only explorer over one pinned revision; the group-draft and change-plan actions (`O01/spec.md:72-73`) are missing. | Planning cross-check residuals below |
+| HB-03 | deferred | Addressed within pre-launch scope for an admin-only read; registry-wide and leakage acceptance not built. | HB-272/plan.md:208-215 |
+| HB-14 | deferred | The contract pool is left for O03; legal-entity, relationship-kind and provider filters (`O01/spec.md:61`) are missing; the client-built tree conflicts with `O01/spec.md:102` and UI-04. | HB-273/plan.md:190-199, residuals below |
+
+## Planning cross-check residuals (HYB-291)
+
+- **Missing actions and filters.** The view group draft and create change plan actions (`O01/spec.md:72-73`) and the legal-entity, relationship-kind and provider filters (`O01/spec.md:61`) are not built.

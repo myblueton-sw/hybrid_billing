@@ -153,3 +153,30 @@ Low items:
 - **Copy.** All copy is a draft that needs the owner's language and terminology review.
 - **Owner FIX** of M01 is still open.
 - **Shell issues** outside M01 (design L6) remain open.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/M01/spec.md:118-120` (HB-263 is the API, HB-264 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-03 | deferred | Addressed within pre-launch scope for twelve identity commands under installation administration with last-administrator protection; registry-wide and leakage acceptance not built. | HB-263/plan.md |
+| HB-34 | deferred | Bulk revocation needs asynchronous jobs and manifests and is not built. | HB-263/plan.md:224, HB-264/plan.md:61 |
+| HB-42 | deferred | Invitation, set and reset links, suspend, depart and role change are built; role validity periods and bulk revocation are not. | Planning cross-check residuals below |
+| IAM-01 | deferred | Covered: invitations and set links are one-time. Not built or tested: concurrent first-administrator creation and invitation acceptance from another workspace. | HB-263/verification.md |
+| IAM-02 | deferred | Only local password accounts exist; SAML, OIDC and LDAP sign-in are residuals (HB-257 out of scope). | HB-265/plan.md:177 |
+| IAM-03 | deferred | Does not arise while only local accounts exist. | this section |
+| IAM-04 | deferred | Federated token checks are not built. | HB-265/plan.md:177 |
+| IAM-05 | deferred | Suspend and depart are built in the identity module; effects on keys, jobs and files and detection delay are not measured. | HB-263/plan.md |
+| IAM-06 | deferred | Reset links cannot be issued for administrators and the last administrator is protected; MFA recovery and identity unlinking are not built. | HB-263/plan.md |
+| IAM-07 | deferred | The read only pages (`HB-263/plan.md:105`); server search and the workspace, status, auth method, role and expiry filters (`M01/spec.md:61-63`) are missing; fix ticket HYB-294. | HYB-291 report |
+| IAM-08 | deferred | No reauthentication before suspending a user (`M01/spec.md:73`); step-up applies only to proposing and approving authentication policy changes; fix ticket HYB-293. | HYB-291 report |
+
+## Planning cross-check residuals (HYB-291)
+
+- **Role validity periods and bulk revocation.** Not built; the screen shows bulk revocation as not available (`HB-264/plan.md:61`). Search and filters: HYB-294. Reauthentication before suspend: HYB-293.
+- **Security-focused review not stated.** HB-257 (Verification for every phase) requires a security-focused review for phases 1–3. This record names design and change reviews but no security-focused review. None is claimed here; a security re-review or a recorded reason is open.

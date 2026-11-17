@@ -160,3 +160,29 @@ Renders are in `scratchpad/hb265qa/`.
 - **Copy.** All copy is a draft for the owner's language and terminology review.
 - **Owner FIX** of M02.
 - **Console component tests.** As in HB-264, focus restoration is covered only by browser QA.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/M02/spec.md:24-26`. Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-03 | deferred | Addressed within pre-launch scope for two-person proposal and approval of the authentication policy; registry-wide and leakage acceptance not built. | HB-265/plan.md |
+| HB-36 | deferred | Providers, test login, keys, sync and recovery are shown as not available in pre-launch. | HB-265/plan.md:177-178, :200-208 |
+| HB-42 | deferred | The draft, validated, independently approved, activated trust flow is collapsed into propose then approve-applies. | Planning cross-check residuals below |
+| IAM-01 | unclassified – owner review | M02 adds no creation or invitation path; the spec links IAM-01 for the whole range. | this section |
+| IAM-02 | deferred | Only local password accounts exist; SAML, OIDC and LDAP sign-in are residuals (HB-257 out of scope). | HB-265/plan.md:177 |
+| IAM-03 | unclassified – owner review | M02 has no identity-provider connection that could recreate an account. | this section |
+| IAM-04 | deferred | Federated token checks are not built. | HB-265/plan.md:177 |
+| IAM-05 | unclassified – owner review | M02 has no suspension or departure path. | this section |
+| IAM-06 | deferred | MFA and recovery settings are not available. | HB-265/plan.md:200-208 |
+| IAM-07 | deferred | Directory sync is not available. | HB-265/plan.md:177-178 |
+| IAM-08 | deferred | Maximum age is enforced and policy changes need a fresh sign-in; MFA evidence per method is not built; HYB-293 covers step-up on other commands. | HB-265/verification.md |
+
+## Planning cross-check residuals (HYB-291)
+
+- **Trust flow simplified.** `M02/spec.md:96-131` specifies draft, validated, independently approved and activated stages. HB-265 collapses them into propose, then approve, which applies. This was not recorded before.

@@ -48,7 +48,7 @@ Neither review is owner acceptance.
 
 # Planning cross-check (HYB-291)
 
-Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check. Rows marked "(classified by HYB-301)" replace rows that HYB-291 left unclassified; the [HYB-301 trace classification](../../reviews/HYB-301-trace-classification/report.md) gives the evidence.
 
 ## Requirement trace
 
@@ -57,13 +57,13 @@ Source: `docs/ui/screens/M03/spec.md:133-159` (HB-266 is the API, HB-267 the scr
 | ID | Status | Reason | Record |
 | --- | --- | --- | --- |
 | HB-03 | deferred | Addressed within pre-launch scope for grants, delegation revoke and the effect preview, with self-grant refused; registry-wide and leakage acceptance not built. | HB-266/plan.md |
-| HB-04 | unclassified – owner review | M03 builds no provider onboarding path. | this section |
+| HB-04 | not connected | (classified by HYB-301) M03's part of HB-04 is keeping the setup role apart from export write and collector read (`requirements.json` HB-04 implementation_proposal) and testing operational reads after setup is revoked. Built: grants with a validity window and revoke (HB-266/plan.md:25, 119); the only grantable pair is `view focus_data rows` (HB-266/plan.md:106). Not built: a setup permission. It needs provider onboarding (S02) and collectors; S02 is outside the Go-bound pre-launch scope and served ungated on 8793 (HYB-291 M9). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | HB-23 | deferred | Grant changes apply directly, without the approval request `M03/spec.md:83` requires. | Planning cross-check residuals below |
 | HB-33 | deferred | Grant commands use the common command path with idempotency keys and expected revisions, but after a partial failure a second submit can create a second grant. | HB-267/verification.md:42 |
 | HB-36 | deferred | Support sessions are not available. | HB-266/plan.md:153-161 |
 | HB-42 | deferred | The revocation states received, deny confirmed and cleanup running (`M03/spec.md:84, 109-113`) do not exist. | Planning cross-check residuals below |
 | AUD-AR-09 | deferred | Delegation creation and support sessions are not available; ended delegations are listed by ID only. | HB-266/plan.md:153-161, HB-267/verification.md Residuals |
-| AUD-DB-08 | unclassified – owner review | Onboarding evidence binding is not part of M03's build. | this section |
+| AUD-DB-08 | deferred | (classified by HYB-301) Built: grants expire and can be revoked (HB-266/plan.md:25, 119). Not connected: the CSP-side setup permission with a revocation condition and operational-read-only access after it is revoked (external). Not built: task-scoped expiring handoff links (`M03/spec.md:143-149`), which wait on binding S02 provider onboarding (owner decision; S02 is outside the Go-bound pre-launch scope). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | AUD-QA-04 | deferred | Idempotency keys and expected revisions are enforced; OAuth client credentials, PKCE and the client-user intersection are not built. | HB-266/plan.md |
 | IAM-01–IAM-08 | deferred | Role and revocation paths exist for local users only; approval request, revocation states, bulk paths and federated checks are not built. | Planning cross-check residuals below |
 

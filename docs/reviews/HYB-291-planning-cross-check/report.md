@@ -85,15 +85,15 @@ These IDs are in the specs of screens built in phases 1–5 but appeared in no r
 - **Partly cited:** RET-01–08 (HB-288 only, not P03); QA-06 and QA-09 without the AUD- prefix.
 - **Release gates:** all 43 still read NOT_IMPLEMENTED. That is consistent with pre-launch, but nothing linked them to the built work.
 
-This ticket adds a requirement trace to each verification record (see Changes in this ticket). The UI acceptance IDs in `acceptance-trace.json` (added_tests) are not in any screen spec's trace section, so they are not in the per-ticket traces. Their mapping is left to the owner:
+This ticket adds a requirement trace to each verification record (see Changes in this ticket). The UI acceptance IDs in `acceptance-trace.json` (added_tests) are not in any screen spec's trace section, so they are not in the per-ticket traces. HYB-291 left their mapping to the owner; [HYB-301](../HYB-301-trace-classification/report.md) classified them:
 
 | ID | Criterion (summary) | Screens it plausibly touches | Status |
 | --- | --- | --- | --- |
-| UI-04 | Large lists: filters, selection, paging and totals agree; no full load into the browser | M01, O01, P02 | unclassified – owner review |
-| UI-07 | Authentication and revocation: local, SAML, OIDC, LDAP, MFA, recovery, 100,000 revocations | L01–L03, M01–M05 | unclassified – owner review |
-| UI-08 | Retention and deletion: shortening, impact, hold, partial deletion, backup wait, restore | P03, P04 | unclassified – owner review |
-| UI-09 | Accessibility: keyboard-only flows, status reading, contrast, zoom, colour vision | all phase 2–5 screens | unclassified – owner review |
-| UI-10 | Errors and trust: stale, null, zero, unsupported and unknown kept distinct; no fake success | all phase 2–5 screens | unclassified – owner review |
+| UI-04 | Large lists: filters, selection, paging and totals agree; no full load into the browser | M01–M05, O01–O03, P01–P04 | deferred (classified by [HYB-301](../HYB-301-trace-classification/report.md#ui-04)) |
+| UI-07 | Authentication and revocation: local, SAML, OIDC, LDAP, MFA, recovery, 100,000 revocations | L01–L03, M01–M05 | deferred (classified by [HYB-301](../HYB-301-trace-classification/report.md#ui-07)) |
+| UI-08 | Retention and deletion: shortening, impact, hold, partial deletion, backup wait, restore | P03, P04 | deferred (classified by [HYB-301](../HYB-301-trace-classification/report.md#ui-08)) |
+| UI-09 | Accessibility: keyboard-only flows, status reading, contrast, zoom, colour vision | all phase 2–5 screens | deferred (classified by [HYB-301](../HYB-301-trace-classification/report.md#ui-09)) |
+| UI-10 | Errors and trust: stale, null, zero, unsupported and unknown kept distinct; no fake success | all phase 2–5 screens | deferred (classified by [HYB-301](../HYB-301-trace-classification/report.md#ui-10)) |
 
 # HYB-290 (P05) plan
 
@@ -166,7 +166,8 @@ Each verification record from HB-258 to HB-289 now ends with a "Planning cross-c
 - **covered:** the pre-launch build addresses the whole criterion within pre-launch scope. This is inferred from the built behaviour; the acceptance test stays NOT_RUN.
 - **deferred:** part or all of the ID is not built and is a recorded residual, a later ticket or an owner decision.
 - **not connected:** the ID depends on something pre-launch does not connect (external systems, workers, money computation, durable storage).
-- **unclassified – owner review:** the spec links the ID, but the cross-check could not tie it to built or recorded behaviour.
+- **unclassified – owner review:** the spec links the ID, but the cross-check could not tie it to built or recorded behaviour. After [HYB-301](../HYB-301-trace-classification/report.md) no row has this status.
+- **not applicable** (added by HYB-301): the spec links the ID, but the screen's own field and action contract (or, for a ticket without a spec, its ticket scope) gives it no part of the criterion; the row states the concrete reason.
 
 HB-03 is a mandatory gate (`requirements.json` HB-03: author and approver separation, one permission registry across API, workers, caches, files and search, no leakage under ID tampering, delegation expiry and revocation). It is `deferred` in every record: each ticket addresses it within pre-launch scope for its own path, but registry-wide and leakage acceptance is not built. Rows that cover only part of a criterion are `deferred` and say which part is covered.
 
@@ -181,14 +182,16 @@ HB-258, HB-261 and HB-262 have no screen spec; their IDs are derived from the HB
 
 # Unclassified IDs left for the owner
 
-| Screen | IDs |
-| --- | --- |
-| FOCUS readers (HB-261) | HB-07 |
-| M02 | IAM-01, IAM-03, IAM-05 |
-| M03 | HB-04, AUD-DB-08 |
-| M05 | HB-43, IAM-01, IAM-07 |
-| O03 | AUD-QA-01 |
-| P01 | HB-04, HB-39, HB-40 |
-| P02 | HB-31, HB-37, HB-40 |
-| P04 | HB-21, HB-27, HB-38 |
-| all | UI-04, UI-07, UI-08, UI-09, UI-10 |
+On 2026-11-17 the owner decided to follow the planning documents. [HYB-301](../HYB-301-trace-classification/report.md) classified every ID below; the verification records now carry the new rows, marked "(classified by HYB-301)".
+
+| Screen | IDs | Classification (HYB-301) |
+| --- | --- | --- |
+| FOCUS readers (HB-261) | HB-07 | not applicable |
+| M02 | IAM-01, IAM-03, IAM-05 | not applicable; not connected; deferred |
+| M03 | HB-04, AUD-DB-08 | not connected; deferred |
+| M05 | HB-43, IAM-01, IAM-07 | deferred; not applicable; deferred |
+| O03 | AUD-QA-01 | deferred |
+| P01 | HB-04, HB-39, HB-40 | deferred; deferred; deferred |
+| P02 | HB-31, HB-37, HB-40 | deferred; deferred; deferred |
+| P04 | HB-21, HB-27, HB-38 | deferred; deferred; deferred |
+| all | UI-04, UI-07, UI-08, UI-09, UI-10 | deferred (all five) |

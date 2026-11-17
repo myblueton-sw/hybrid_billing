@@ -61,7 +61,7 @@ These are listed in the plan:
 
 # Planning cross-check (HYB-291)
 
-Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check. Rows marked "(classified by HYB-301)" replace rows that HYB-291 left unclassified; the [HYB-301 trace classification](../../reviews/HYB-301-trace-classification/report.md) gives the evidence.
 
 ## Requirement trace
 
@@ -88,5 +88,5 @@ Source: `docs/ui/screens/O03/spec.md:121-155` (HB-280 is the API, HB-281 the scr
 | AUD-AR-01 | not connected | No sale computation, so direct and resale paths are not exercised. | HB-280/plan.md:125-133 |
 | AUD-AR-10 | not connected | No fixed-fee or SLA credit computation. | HB-280/plan.md:125-133 |
 | AUD-DB-03 | not connected | No ERP submission. | HB-280/plan.md:125-133 |
-| AUD-QA-01 | unclassified – owner review | Payment account and recipient changes are neither built nor recorded. | this section |
+| AUD-QA-01 | deferred | (classified by HYB-301) Built: the Documents and payment tab says it is not connected and names what it will hold (HB-281/plan.md:49). Not built: protected payment, recipient, tax identifier and template references, a separate change draft with verification, approval and a validity period, evidence of confirmation on the existing channel, and refusal of email-only or LLM-generated account changes (`O03/spec.md:56, 75, 151-153`). Confirmation on the existing channel depends on messaging, which pre-launch does not connect. | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | AUD-QA-02 | deferred | Covered: contract and settlement states are separate, ending is never shown as settled, pending_final with secured or missing evidence and reopening are built. Not connected: the emergency source-permission revocation path that revokes immediately and records the evidence gap (O03/spec.md:159-161). | HB-280/plan.md |

@@ -13,11 +13,12 @@ import LiveInstallation from "../../modules/administration/pages/installation/Li
 import LiveIntegrations from "../../modules/administration/pages/integrations/Live";
 import LiveRecovery from "../../modules/administration/pages/recovery/Live";
 import LiveRetention from "../../modules/administration/pages/retention/Live";
+import LiveReleaseEvidence from "../../modules/administration/pages/release-evidence/Live";
 import { useService } from "../../service/context";
 import "../../shared/domain-screen-ui/operations/screen.css";
 export default function Operations(p: Props) {
   const service = useService();
-  const live = !!service && (p.screenId === "P01" || p.screenId === "P02" || p.screenId === "P03" || p.screenId === "P04");
+  const live = !!service && (p.screenId === "P01" || p.screenId === "P02" || p.screenId === "P03" || p.screenId === "P04" || p.screenId === "P05");
   const context = JSON.stringify([
     p.screenId,
     p.view,
@@ -63,6 +64,12 @@ export default function Operations(p: Props) {
     return (
       <div className="work-domain remaining-security" data-screen-id="P04" data-source-state="live" dir={p.locale === "ar" ? "rtl" : "ltr"} lang={p.locale} key={`P04:${p.locale}`}>
         <LiveRetention locale={p.locale} view={p.view} params={p.params} session={service.session} onSignOut={service.signOut} />
+      </div>
+    );
+  if (live && service && p.screenId === "P05")
+    return (
+      <div className="work-domain remaining-security" data-screen-id="P05" data-source-state="live" dir={p.locale === "ar" ? "rtl" : "ltr"} lang={p.locale} key={`P05:${p.locale}`}>
+        <LiveReleaseEvidence locale={p.locale} view={p.view} params={p.params} session={service.session} onSignOut={service.signOut} />
       </div>
     );
   if (live && service && p.screenId === "P01")

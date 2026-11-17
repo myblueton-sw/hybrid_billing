@@ -2,6 +2,7 @@ import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsP
 import { installationOf, type InstallationPage } from "./installation";
 import { integrationsOf, type IntegrationsPage } from "./integrations";
 import { recoveryOf, type RecoveryPage } from "./recovery";
+import { evidenceOf, type EvidencePage } from "./release-evidence";
 import { retentionOf, type RetentionPage } from "./retention";
 
 export type Membership = { role: "administrator" | "member"; state: "active" | "suspended"; version: number };
@@ -311,7 +312,11 @@ export type CommandId =
   | "retention.propose_policy"
   | "retention.place_hold"
   | "retention.propose_release"
-  | "retention.stop_run";
+  | "retention.stop_run"
+  | "release_evidence.approve"
+  | "release_evidence.withdraw"
+  | "release_evidence.retire_requirement"
+  | "release_evidence.retire_profile";
 
 export type Outcome = { state: string; fields: Record<string, string> };
 
@@ -586,6 +591,9 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async retention(): Promise<RetentionPage> {
       return retentionOf(await send("/retention", { method: "GET" }, attempt().request));
+    },
+    async releaseEvidence(request = attempt().request): Promise<EvidencePage> {
+      return evidenceOf(await send("/release-evidence", { method: "GET" }, request));
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

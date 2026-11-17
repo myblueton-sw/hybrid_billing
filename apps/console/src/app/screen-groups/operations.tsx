@@ -9,8 +9,12 @@ import ReleaseEvidence from "../../modules/administration/pages/release-evidence
 import Demo from "../../modules/administration/pages/demo/Screen";
 import Licenses from "../../modules/administration/pages/licenses/Screen";
 import Portal from "../../modules/customer-portal/pages/workspace/Screen";
+import LiveInstallation from "../../modules/administration/pages/installation/Live";
+import { useService } from "../../service/context";
 import "../../shared/domain-screen-ui/operations/screen.css";
 export default function Operations(p: Props) {
+  const service = useService();
+  const live = !!service && p.screenId === "P01";
   const context = JSON.stringify([
     p.screenId,
     p.view,
@@ -23,24 +27,29 @@ export default function Operations(p: Props) {
     p.params.get("contract"),
     p.params.get("asof"),
   ]);
-  useEffect(
-    () =>
-      p.onState(
-        JSON.stringify({
-          screen: p.screenId,
-          view: p.view,
-          source: "unconnected",
-        }),
-        [
-          `${p.screenId}:data:${p.view}`,
-          `${p.screenId}:state:unconnected`,
-          ...(fieldsByScreen[p.screenId] ?? []).map(
-            (f) => `${p.screenId}:field:${f}`,
-          ),
-        ],
-      ),
-    [p.screenId, p.view, p.onState],
-  );
+  useEffect(() => {
+    if (live) return;
+    p.onState(
+      JSON.stringify({
+        screen: p.screenId,
+        view: p.view,
+        source: "unconnected",
+      }),
+      [
+        `${p.screenId}:data:${p.view}`,
+        `${p.screenId}:state:unconnected`,
+        ...(fieldsByScreen[p.screenId] ?? []).map(
+          (f) => `${p.screenId}:field:${f}`,
+        ),
+      ],
+    );
+  }, [p.screenId, p.view, p.onState, live]);
+  if (live && service)
+    return (
+      <div className="work-domain remaining-security" data-screen-id="P01" data-source-state="live" dir={p.locale === "ar" ? "rtl" : "ltr"} lang={p.locale} key={`P01:${p.locale}`}>
+        <LiveInstallation locale={p.locale} view={p.view} params={p.params} session={service.session} onSignOut={service.signOut} />
+      </div>
+    );
   const Screen =
     p.screenId === "P01"
       ? Installation

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { proxyFor } from "./proxy-config";
 const root = fileURLToPath(new URL(".", import.meta.url));
 const foundation = resolve(root, "../../packages/design-system");
 const hash = (data: string | Buffer) =>
@@ -28,6 +29,7 @@ const inputs = [
   resolve(root, "tsconfig.json"),
   resolve(root, "index.html"),
   resolve(root, "vite.config.ts"),
+  resolve(root, "proxy-config.ts"),
 ].sort();
 const revision = hash(
   inputs
@@ -37,52 +39,7 @@ const revision = hash(
     )
     .join("\n"),
 );
-const gated = process.env.HB_GATED === "1";
-const readerPaths = [
-  "/api/focus-overview",
-  "/api/focus-commitments",
-  "/api/focus-marketplace",
-  "/api/focus-receipts",
-  "/api/focus-connections",
-  "/api/focus-collection-status",
-];
-const gatedReaders = Object.fromEntries(
-  readerPaths.map((p) => [p, { target: "http://127.0.0.1:8820", changeOrigin: true }]),
-);
-const proxy = {
-  "/api/v1": { target: "http://127.0.0.1:8820", changeOrigin: true },
-  "/api/focus-collection-status": { target: "http://127.0.0.1:8810", changeOrigin: true },
-  "/api/focus-connections": {
-    target: "http://127.0.0.1:8810",
-    changeOrigin: true,
-  },
-  "/api/focus-receipts": {
-    target: "http://127.0.0.1:8810",
-    changeOrigin: true,
-  },
-  "/api/credit-case-review": {
-    target: "http://127.0.0.1:8806",
-    changeOrigin: true,
-  },
-  "/api/claim-history": { target: "http://127.0.0.1:8806", changeOrigin: true },
-  "/api/approval-review": {
-    target: "http://127.0.0.1:8806",
-    changeOrigin: true,
-  },
-  "/api/focus-marketplace": {
-    target: "http://127.0.0.1:8806",
-    changeOrigin: true,
-  },
-  "/api/focus-commitments": {
-    target: "http://127.0.0.1:8806",
-    changeOrigin: true,
-  },
-  "/api/focus-overview": {
-    target: "http://127.0.0.1:8806",
-    changeOrigin: true,
-  },
-  ...(gated ? gatedReaders : {}),
-};
+const proxy = proxyFor(process.env.HB_GATED === "1");
 const licensePackages = [
   "react",
   "react-dom",

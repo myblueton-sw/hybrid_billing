@@ -84,3 +84,26 @@ The five references were fetched as text through a summarising tool; no page was
 - **Shell overrides:** P04 CSS overrides `.planning-main:has(.p04-live) .planning-tabs` below 768px, and the shell `th` rule within `.p04-live`.
 - **The global `bdi { direction: ltr }` rule** in shared styles still affects P02 and P03 reasons. P04 uses `span[dir=auto]` for free text.
 - **Not connected:** deletion plan proposals and approval, the deletion worker, retry, backup expiry, archive restore, usage and size figures, and a durable decision record. All commands use installation administration.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/P04/spec.md:137-155` (HB-288 is the API, HB-289 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-06 | not connected | No ingestion is bound. | HB-288/plan.md:280-301 |
+| HB-08 | deferred | Holds and runs are shown; the backup catalog and archive are not connected. | HB-288/plan.md:280-301 |
+| HB-11 | not connected | TokenMeter results are not connected. | HB-288/plan.md:280-301 |
+| HB-21 | unclassified – owner review | No billing-ledger effect of retention was built or recorded. | this section |
+| HB-27 | unclassified – owner review | No disclosure or export behaviour was built or recorded. | this section |
+| HB-32 | not connected | The assistant is not connected. | HB-288/plan.md:280-301 |
+| HB-37 | not connected | Deletion worker, backup expiry and archive restore are not connected. | HB-288/verification.md Residuals |
+| HB-38 | unclassified – owner review | No simulator or independent-answer check was built or recorded. | this section |
+| HB-43 | deferred | Policies, expiry, holds, runs and stop are built over `modules/retention`; plan approval, the worker, the decision ledger and separate permissions are not. | HB-288/verification.md Residuals |
+| AUD-AR-05 | not connected | Cited only in the module ticket (`HB-256/plan.md:234`); no AI source fields are retained here. | this section |
+| AUD-QA-10 | deferred | Only synthetic sample data, in memory; rejection of real credentials and separation of assistant conversations are not tested. | this section |
+| RET-01–RET-08 | not connected | NOT_RUN at system level. | HB-288/plan.md:301 |

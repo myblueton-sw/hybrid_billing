@@ -62,3 +62,24 @@ These are listed in the plan:
 - idle-expired sessions can still be listed until pruned;
 - M05 failures share the sign-in lockout;
 - MFA, identity linking, profile changes and notification preferences are unavailable.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/M05/spec.md:18` (HB-270 is the API, HB-271 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-03 | deferred | Addressed within pre-launch scope for own sessions and password change, limited to the signed-in account; registry-wide and leakage acceptance not built. | HB-270/plan.md |
+| HB-31 | deferred | Notification preferences are not available. | HB-271/plan.md:109-111 |
+| HB-42 | deferred | MFA, recovery, identity linking and profile changes are not available. | HB-271/plan.md:154-160 |
+| HB-43 | unclassified – owner review | No retention rule for self-service records was built or recorded. | this section |
+| IAM-01 | unclassified – owner review | M05 has no creation or invitation path. | this section |
+| IAM-04 | deferred | Federated token checks are not built. | HB-271/plan.md:154-160 |
+| IAM-06 | deferred | MFA and recovery are not available. | HB-271/plan.md:109-111 |
+| IAM-07 | unclassified – owner review | The scale criterion does not map to a single-account screen. | this section |
+| IAM-08 | deferred | A password change does not refresh the maximum-age clock; MFA evidence is not built. | HB-270/verification.md Residuals |
+| AUD-QA-08 | deferred | Notifications are not available. | HB-271/plan.md:109-111 |

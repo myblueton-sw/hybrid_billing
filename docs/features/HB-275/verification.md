@@ -79,3 +79,23 @@ No review is owner acceptance. The FIX for O02 remains the owner's.
 - Admin-only.
 - A pruned plan answers activate with the whole-screen unavailable block, because the command layer maps NotFound to `permission_denied`.
 - Shell items: "Work service not connected", the review strip, and the sidebar offset on long pages.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/O02/spec.md:117` (HB-274 is the API, HB-275 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-02 | deferred | Covered: one-member set, end, join and leave plans are drafted, sealed and activated by two people. Not built: allowance preservation, past effective dates, money impact and resuming failed units (HB-14, HB-15, HB-21, HB-23 rows). | HB-274/plan.md |
+| HB-14 | deferred | New pools and groups cannot be created; allowance preservation (`screen-binding-register.md:70`) is not addressed. | HB-274/plan.md:253-265 |
+| HB-15 | deferred | Effective dates cannot be in the past; there is no scheduling. | HB-274/plan.md:253-265 |
+| HB-21 | not connected | Money, publication and ERP impact are not computed, though `O02/spec.md:54` makes it required. | Planning cross-check residuals below |
+| HB-23 | deferred | Two-person approval is between accounts; no B09 approval request (`O02/spec.md:72`), scheduling or resume. | HB-275/plan.md:145-155 |
+
+## Planning cross-check residuals (HYB-291)
+
+- **Activation without money impact.** The screen activates plans although the required money impact (`O02/spec.md:54, 72`) is not computed. Owner acceptance is needed.

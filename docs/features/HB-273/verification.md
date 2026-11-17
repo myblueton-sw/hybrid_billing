@@ -88,3 +88,22 @@ No review is owner acceptance.
 - KO and AR terms (지급 주체, 미귀속, 내부 비용 청구, الجهة الأم and others) need glossary and technical-writing review.
 - The sample data deliberately crosses customers.
 - Screen acceptance (FIX) is the owner's alone.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/O01/spec.md:116` (HB-272 is the API, HB-273 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-01 | deferred | Covered (O01): parties, billing profiles and relationship kinds are listed separately. Not built: the three operating profiles on one core, internal settlement without an external invoice, and blocking ineligible cross-entity or cross-currency sums. | HB-272/plan.md |
+| HB-02 | deferred | Read-only explorer over one pinned revision; the group-draft and change-plan actions (`O01/spec.md:72-73`) are missing. | Planning cross-check residuals below |
+| HB-03 | deferred | Addressed within pre-launch scope for an admin-only read; registry-wide and leakage acceptance not built. | HB-272/plan.md:208-215 |
+| HB-14 | deferred | The contract pool is left for O03; legal-entity, relationship-kind and provider filters (`O01/spec.md:61`) are missing; the client-built tree conflicts with `O01/spec.md:102` and UI-04. | HB-273/plan.md:190-199, residuals below |
+
+## Planning cross-check residuals (HYB-291)
+
+- **Missing actions and filters.** The screen offers neither the view group draft nor the create change plan action (`O01/spec.md:72-73`), nor the legal-entity, relationship-kind and provider filters (`O01/spec.md:61`).

@@ -110,3 +110,29 @@ This record verifies [HB-266](https://linear.app/hybrid-billing/issue/HB-266) ag
 
 - **The M03 screen.** It comes in HB-267.
 - **Delegation creation and support sessions.** They are residuals.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/M03/spec.md:133-159` (HB-266 is the API, HB-267 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-03 | deferred | Addressed within pre-launch scope for grants, delegation revoke and the effect preview, with self-grant refused; registry-wide and leakage acceptance not built. | HB-266/plan.md |
+| HB-04 | unclassified – owner review | M03 builds no provider onboarding path. | this section |
+| HB-23 | deferred | Grant changes apply directly, without the approval request `M03/spec.md:83` requires. | Planning cross-check residuals below |
+| HB-33 | deferred | Grant commands use the common command path with idempotency keys and expected revisions, but after a partial failure a second submit can create a second grant. | HB-267/verification.md:42 |
+| HB-36 | deferred | Support sessions are not available. | HB-266/plan.md:153-161 |
+| HB-42 | deferred | The revocation states received, deny confirmed and cleanup running (`M03/spec.md:84, 109-113`) do not exist. | Planning cross-check residuals below |
+| AUD-AR-09 | deferred | Delegation creation and support sessions are not available; ended delegations are listed by ID only. | HB-266/plan.md:153-161, HB-267/verification.md Residuals |
+| AUD-DB-08 | unclassified – owner review | Onboarding evidence binding is not part of M03's build. | this section |
+| AUD-QA-04 | deferred | Idempotency keys and expected revisions are enforced; OAuth client credentials, PKCE and the client-user intersection are not built. | HB-266/plan.md |
+| IAM-01–IAM-08 | deferred | Role and revocation paths exist for local users only; approval request, revocation states, bulk paths and federated checks are not built. | Planning cross-check residuals below |
+
+## Planning cross-check residuals (HYB-291)
+
+- **No approval request.** `M03/spec.md:83` requires grant changes to go through an approval request at a fixed revision; HB-266 applies them directly.
+- **No revocation states.** The received, deny confirmed and cleanup running states (`M03/spec.md:84, 109-113`) do not exist; a revoke is a single command.

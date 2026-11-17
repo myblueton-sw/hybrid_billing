@@ -43,3 +43,32 @@ No review is owner acceptance.
 - Destinations and permits are server stand-ins over a fixed sample allowlist; `modules/trust` is not bound.
 - Change-review Lows left as they are: paused or suspended subscriptions do not count as duplicates; the read builds the outbox reader per request; the AST checks match package qualifiers by name; another workspace's administrator is simulated in tests. Nits accepted: arming replaces keys without clearing earlier ones (the seed arms once), the ignored `ed25519.GenerateKey` error with `crypto/rand`, the shared not-pending reason string, and the letter mirror's dependence on requests never dispatching.
 - Zeroing keys is best effort; persistence is out of scope.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/P02/spec.md:120-146` (HB-284 is the API, HB-285 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-03 | deferred | Addressed within pre-launch scope for installation-administration commands, a recorded deviation from P02's permission split; registry-wide and leakage acceptance not built. | HB-284/plan.md:363-386 |
+| HB-05 | not connected | No source connectors. | HB-284/plan.md:363-386 |
+| HB-06 | not connected | Dispatch and receipt are not commands. | HB-284/plan.md:363-386 |
+| HB-08 | not connected | No durable evidence storage. | HB-284/plan.md:363-386 |
+| HB-10 | not connected | HawkEye results are not connected. | HB-284/plan.md:363-386 |
+| HB-11 | not connected | TokenMeter results are not connected. | HB-284/plan.md:363-386 |
+| HB-24 | not connected | No ERP connection. | HB-284/plan.md:363-386 |
+| HB-31 | unclassified – owner review | No notification or schedule behaviour was built or recorded for P02. | this section |
+| HB-33 | deferred | Covered: plugin and subscription commands use the common command path. Not built: CLI, AI and external consumer parity, 202 jobs for bulk work, and an API-only business cycle. | HB-284/plan.md |
+| HB-34 | deferred | Deliveries are read; dispatch, confirm, redirect and report are not commands. | HB-284/verification.md Residuals |
+| HB-35 | deferred | Plugin proposals are built; publisher, key, version registration and marks are not commands. | HB-284/verification.md Residuals |
+| HB-37 | unclassified – owner review | No recovery or retention behaviour was built or recorded for P02. | this section |
+| HB-40 | unclassified – owner review | No licence or rights behaviour was built or recorded for P02. | this section |
+| HB-42 | deferred | Separate integrations permissions are not built. | HB-284/plan.md:363-386 |
+| AUD-AR-02 | not connected | Signing, egress and endpoint checks are not commands; destinations are stand-ins over a fixed allowlist. | HB-284/verification.md Residuals |
+| AUD-QA-04 | deferred | Idempotency keys and expected revisions are enforced; token issuance is not built. | HB-284/verification.md Residuals |
+| AUD-QA-05 | deferred | Event and delivery states are shown; dispatch, signing and replay checks are not connected. | HB-285/verification.md Residuals |
+| AUD-QA-06 | deferred | External application origins are a later design. | HB-284/plan.md:385, HB-285/plan.md:688 |

@@ -49,3 +49,23 @@ No review is owner acceptance.
 - Tab links do not keep `installation=`, and switching tabs gives no unsaved-draft warning (the tab bar belongs to the shell; drafts survive in the store).
 - Begin, abandon, prune, writer removal, migration and AU/BL read access are not connected; all commands use installation administration.
 - The external references were recalled, not opened, so they are unverified evidence.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: `docs/ui/screens/P03/spec.md:120-130` (HB-286 is the API, HB-287 the screen). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-08 | deferred | Restore sets and reconciliation are read; durable evidence storage waits for the database decision. | HB-286/plan.md:222-232 |
+| HB-21 | not connected | No billing application ledger is bound. | HB-286/plan.md:222-232 |
+| HB-22 | not connected | Opening balances are not bound. | HB-286/plan.md:227 |
+| HB-34 | not connected | Writer and verifier paths are not commands. | HB-286/verification.md Residuals |
+| HB-37 | deferred | Isolation and lock-release commands are built; begin, abandon, prune, writer removal and migration are not connected. | HB-286/verification.md Residuals |
+| HB-42 | deferred | All commands use installation administration, a deviation from P03's five permissions; AU and BL read access is not provided. | HB-286/verification.md Residuals |
+| HB-43 | deferred | A lock release checks no decision watermark; tombstone reapplication after restore is not connected. | HB-286/verification.md Residuals |
+| AUD-QA-09 | not connected | Opening balances (`modules/balances`) are not bound. | HB-286/plan.md:227 |
+| RET-01–RET-08 | not connected | System-level retention tests are NOT_RUN; P03 did not cite them before this section. | this section |

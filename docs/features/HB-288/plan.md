@@ -27,7 +27,7 @@ sources:
   - registration in `admin.go` (next to `recoveryDefinitions`, `admin.go:361`), the route in `boundary.go` (next to `boundary.go:38`), the registry and store in `server.go` (next to `server.go:94-95,172,229`), the seed step in `seed.go` (after `seed.go:108`);
   - the seed step count in `world_test.go:57` (15 to 16).
 - `docs/features/HB-288/*`.
-- No other module, no console file, no `screens.json` change. `docs/ui/screen-binding-register.md` is not updated, as in HB-286 (residual).
+- No other module, no console file, no `screens.json` change. `docs/ui/screen-binding-register.md` is not updated (residual; the catch-up is HYB-295; corrected by HYB-291).
 
 **Non-goals**
 - No physical, logical or simulated deletion caused by a request: no deletion plan proposal or approval, no claim, retry, report or proceed, no backup expiry record.
@@ -297,7 +297,7 @@ Shown as `not_connected` in the read and absent from the commands:
 - `AdministerInstallation` for every command is a recorded deviation; P04's separate permissions and AU read access are later work.
 - A hold on artifacts of another tenant, references across tenants and `AddTenant` are not exercised from requests; a referrer is never named.
 - Persistence: the register, store and journal reset on restart. Closed proposal entries beyond 200 no longer resolve.
-- `docs/ui/screen-binding-register.md` is not updated, as in HB-286.
+- `docs/ui/screen-binding-register.md` is not updated; the catch-up is HYB-295 (corrected by HYB-291).
 - RET-01 to RET-08 remain NOT_RUN at system level.
 
 # Verification plan

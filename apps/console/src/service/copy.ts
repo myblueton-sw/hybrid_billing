@@ -4,9 +4,9 @@ export const c = {
   notice: (l: Locale) =>
     t(
       l,
-      "Everything entered here, including accounts and passwords you set, is reset whenever the service restarts. Do not use real customer data or a password you use elsewhere.",
-      "서비스를 다시 시작할 때마다 계정과 직접 설정한 비밀번호를 포함해 여기에 입력한 모든 내용이 초기화됩니다. 실제 고객 데이터나 다른 곳에서 쓰는 비밀번호를 사용하지 마세요.",
-      "تُعاد تهيئة كل ما تُدخله هنا، بما في ذلك الحسابات وكلمات المرور التي تعيّنها، عند كل إعادة تشغيل للخدمة. لا تستخدم بيانات عملاء حقيقية أو كلمة مرور تستخدمها في مكان آخر.",
+      "Everything entered here, including accounts, passwords you set and the audit history of changes, is reset whenever the service restarts. Do not use real customer data or a password you use elsewhere.",
+      "서비스를 다시 시작할 때마다 계정, 직접 설정한 비밀번호, 변경 감사 이력을 포함해 여기에 입력한 모든 내용이 초기화됩니다. 실제 고객 데이터나 다른 곳에서 쓰는 비밀번호를 사용하지 마세요.",
+      "تُعاد تهيئة كل ما تُدخله هنا، بما في ذلك الحسابات وكلمات المرور التي تعيّنها وسجل تدقيق التغييرات، عند كل إعادة تشغيل للخدمة. لا تستخدم بيانات عملاء حقيقية أو كلمة مرور تستخدمها في مكان آخر.",
     ),
   noticeLead: (l: Locale) =>
     t(l, "Pre-launch service.", "출시 전 서비스입니다.", "خدمة ما قبل الإطلاق."),
@@ -151,9 +151,9 @@ export const c = {
   forgotBody: (l: Locale) =>
     t(
       l,
-      "Contact your workspace administrator. Administrator-issued reset links are not available yet in this pre-launch version.",
-      "업무 공간 관리자에게 문의하세요. 출시 전 버전에서는 관리자가 재설정 링크를 발급하는 기능이 아직 없습니다.",
-      "تواصل مع مسؤول مساحة العمل. لا تتوفر روابط إعادة التعيين من المسؤول بعد في إصدار ما قبل الإطلاق.",
+      "Ask your workspace administrator to issue a password reset link in Users and access. The link works once. Reset links cannot be issued for administrator accounts; administrators should contact another administrator.",
+      "업무 공간 관리자에게 '사용자·접근'에서 비밀번호 재설정 링크를 발급해 달라고 요청하세요. 링크는 한 번만 사용할 수 있습니다. 관리자 계정에는 재설정 링크를 발급할 수 없으므로 관리자는 다른 관리자에게 문의하세요.",
+      "اطلب من مسؤول مساحة العمل إصدار رابط إعادة تعيين كلمة المرور في «المستخدمون والوصول». يعمل الرابط مرة واحدة. لا يمكن إصدار روابط إعادة التعيين لحسابات المسؤولين، لذا يتواصل المسؤول مع مسؤول آخر.",
     ),
   attempts: (l: Locale) => t(l, "Too many attempts", "시도 횟수를 초과한 경우", "عند تجاوز عدد المحاولات"),
   attemptsBody: (l: Locale) =>

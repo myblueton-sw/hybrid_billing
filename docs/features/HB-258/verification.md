@@ -69,3 +69,20 @@ Details are in plan.md.
 - State resets on restart, by design.
 - TLS, and on Windows the data-directory ownership and file modes, are not enforced.
 - Handlers must call `Revision()` and `Next()` only under the domain lock.
+
+# Planning cross-check (HYB-291)
+
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+
+## Requirement trace
+
+Source: No screen spec. IDs derived from the phase 1 scope in `docs/features/HB-257/plan.md` (State, Seed, Audit). Status meanings are in the [cross-check report](../../reviews/HYB-291-planning-cross-check/report.md#status-meanings). No acceptance test was run.
+
+| ID | Status | Reason | Record |
+| --- | --- | --- | --- |
+| HB-33 | deferred | Covered: commands run through the common command path with idempotency keys and expected revisions; OpenAPI is served. Not built: CLI, AI and external consumer parity, 202 jobs for bulk work, and an API-only business cycle. | HB-258/plan.md |
+| HB-03 | deferred | Addressed within pre-launch scope for the assembled gate and command path; registry-wide and leakage acceptance not built. | HB-258/plan.md |
+| HB-30 | deferred | The command audit journal is in memory and keeps 2 hours (`server.go:121`), not the 8-hour sizing in HB-257:109; fix ticket HYB-292. | HYB-291 report |
+| HB-39 | deferred | Limits are sized, but no test drives the journal to 28,800 records (`server_test.go:237-242` drives 5,400); HYB-292. | HYB-291 report |
+| HB-36 | deferred | Loopback service and cross builds exist; TLS, packaging and Windows file modes are residuals. | HB-258/verification.md Residuals |
+| HB-42 | deferred | Covered: the identity bootstrap is armed with a generated verifier written only to a 0600 file. Not covered: the rest of the user identity and access lifecycle (later tickets). | HB-258/plan.md |

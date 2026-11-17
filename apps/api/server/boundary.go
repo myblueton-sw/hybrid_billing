@@ -34,6 +34,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/contracts", s.listContracts)
 	mux.HandleFunc("GET /api/v1/contracts/{id}", s.readContract)
 	mux.HandleFunc("GET /api/v1/installation", s.readInstallation)
+	mux.HandleFunc("GET /api/v1/integrations", s.readIntegrations)
 	mux.HandleFunc("POST /api/v1/me/password", s.changePassword)
 	mux.HandleFunc("POST /api/v1/me/sessions/end", s.endSelfSessions)
 	for path, raw := range s.cfg.Readers {

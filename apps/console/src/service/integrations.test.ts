@@ -1,0 +1,173 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { AdminError, adminClient } from "./admin";
+import { availOf, deliveryOf, hint, installOf, integrationsOf, markOf, pluginProposalOf, requestOf, storageOf, subscriptionOf } from "./integrations";
+import { fieldReaction, react } from "../modules/administration/pages/integrations/live-model";
+
+type Call = { url: string; init: RequestInit };
+
+function fake(status: number, body: unknown) {
+  const calls: Call[] = [];
+  const f = (async (url: string, init: RequestInit) => {
+    calls.push({ url, init });
+    return new Response(JSON.stringify(body), { status });
+  }) as unknown as typeof fetch;
+  return { f, calls };
+}
+
+const sample = {
+  revision: "r9",
+  now: "2026-11-17T09:00:00Z",
+  state: "configured",
+  clients: {
+    state: "configured",
+    clients: [{ id: "console", kind: "first_party_console", state: "active", grants: [{ id: "g1", action: "view", kind: "focus_data", scope: { customer: "all", legal_entity: "all", contract: "all", period: "any" }, not_before: "2026-01-01T00:00:00Z", not_after: "2027-01-01T00:00:00Z", state: "active" }] }],
+    service_users: [{ id: "svc-1", state: "active", owner: "u1", owner_login: "admin@example.invalid", usable_credentials: 0 }, { id: "svc-2", state: "active", usable_credentials: "2" }],
+    manage_on: "M04",
+    oauth_clients: "not_connected",
+  },
+  modules: {
+    state: "configured",
+    workspace: { id: "ws", runtime: "rt", verification: false },
+    publishers: [{ id: "pub", name: "Sample Publisher", revocation: null, keys: [{ version: "k1", not_before: "", not_after: "", retired: false, compromise: null }] }],
+    plugins: [{ plugin: "p", version: "1.0.0", capabilities: ["read_events:invoice.issued", 3], egress: [], endpoints: ["api"], timeout_seconds: 30, memory_mib: 1.5, concurrency: -1, storage: { namespace: "ns", retention_days: 0, deletion: "retain_for_evidence" }, screens: [{ id: "s", component: "table", label: "Overview", fields: null }], vulnerable: null }],
+    installations: [{ plugin: "p", version: "1.0.0", state: "enabled", reason: "", revision: 2, endpoints: [], disposal: null, can_stop: true, stop_blocked: "", can_disable: true, disable_blocked: "", tokens: "not_issued", runtime: "not_connected" }],
+    proposals: [{ number: 8, target: "plugin-proposal-8", kind: "upgrade", state: "pending", summary: { plugin: "p", version: "1.1.0" }, can_approve: true, approve_blocked: "", can_withdraw: false, withdraw_blocked: "not_proposer" }],
+  },
+  channels: {
+    state: "configured",
+    destinations: [{ id: "sample-erp-webhook", state: "active", source: "sample_allowlist" }],
+    subscribers: ["sample-erp-connector"],
+    subscriptions: [{ id: "s1", target: "webhook-subscription:s1", types: ["invoice.issued"], state: "active", cursor: 3, lag: 0, gaps: [{ after: 1, to: "x" }], actions: { pause: { allowed: true, blocked: "" }, revoke: { allowed: true, blocked: "x" } } }],
+  },
+  events: {
+    state: "configured",
+    types: [{ name: "invoice.issued", schema_version: "1", fields: ["id"], state: "active" }],
+    outbox: { floor: 0, head: 9007199254740993 },
+    deliveries: [{ id: "delivery-3", target: "webhook-letter:delivery-3", subscription: "s1", sequence: 2, kind: "dead", state: "failed", reason: "rejected", attempts: 0, outcome_unknown: "no", redeliver_request: { by: "u1", rationale: "r" }, dismiss_request: null, actions: "bogus" }],
+    dispatcher: "not_connected",
+  },
+};
+
+test("the integrations read parses every section and keeps unknowns visible", async () => {
+  const r = fake(200, sample);
+  const got = await adminClient("t", r.f).integrations();
+  assert.equal(r.calls[0].url, "/api/v1/integrations");
+  assert.equal(r.calls[0].init.method, "GET");
+  assert.equal(got.revision, "r9");
+  assert.equal(got.clients.clients?.[0].grants?.[0].scope.period, "any");
+  assert.equal(got.clients.service_users?.[0].usable_credentials, 0);
+  assert.equal(got.clients.service_users?.[1].usable_credentials, null);
+  assert.equal(got.clients.service_users?.[1].owner_login, "");
+  assert.deepEqual(got.modules.plugins?.[0].capabilities, ["read_events:invoice.issued"]);
+  assert.equal(got.modules.plugins?.[0].timeout_seconds, 30);
+  assert.equal(got.modules.plugins?.[0].memory_mib, null);
+  assert.equal(got.modules.plugins?.[0].concurrency, null);
+  assert.equal(got.modules.plugins?.[0].storage.retention_days, 0);
+  assert.equal(got.modules.plugins?.[0].storage.owner, "");
+  assert.equal(got.modules.plugins?.[0].screens?.[0].fields, null);
+  assert.deepEqual(got.modules.plugins?.[0].egress, []);
+  assert.equal(got.modules.workspace?.verification, false);
+  assert.equal(got.modules.proposals?.[0].can_approve, true);
+  assert.equal(got.modules.proposals?.[0].withdraw_blocked, "not_proposer");
+  const s = got.channels.subscriptions?.[0];
+  assert.equal(s?.lag, 0);
+  assert.deepEqual(s?.gaps, [{ after: 1, to: null }]);
+  assert.equal(s?.history, null);
+  assert.deepEqual(s?.actions.pause, { allowed: true, blocked: "" });
+  assert.deepEqual(s?.actions.revoke, { allowed: false, blocked: "x" });
+  assert.deepEqual(s?.actions.approve, { allowed: false, blocked: "missing" });
+  assert.equal(got.events.outbox.floor, 0);
+  assert.equal(got.events.outbox.head, null);
+  const d = got.events.deliveries?.[0];
+  assert.equal(d?.attempts, 0);
+  assert.equal(d?.outcome_unknown, null);
+  assert.deepEqual(d?.redeliver_request, { by: "u1", by_login: "", rationale: "r" });
+  assert.equal(d?.dismiss_request, null);
+  assert.deepEqual(d?.actions.approve_redeliver, { allowed: false, blocked: "missing" });
+});
+
+test("whole-page and section not_configured, and missing sections, stay distinguishable", () => {
+  const other = integrationsOf({ revision: "r1", now: "x", state: "not_configured" });
+  assert.equal(other.state, "not_configured");
+  assert.equal(other.modules.state, "");
+  assert.equal(other.modules.proposals, null);
+  assert.equal(other.channels.subscriptions, null);
+  const empty = integrationsOf({ ...sample, channels: { state: "not_configured", destinations: [], subscribers: ["c"], subscriptions: [] } });
+  assert.equal(empty.channels.state, "not_configured");
+  assert.deepEqual(empty.channels.subscriptions, []);
+  const broken = integrationsOf({ state: "configured", modules: { workspace: "x", publishers: "no", plugins: [null, 1] } });
+  assert.equal(broken.modules.workspace, null);
+  assert.equal(broken.modules.publishers, null);
+  assert.deepEqual(broken.modules.plugins, []);
+});
+
+test("availability and flat pairs fail closed", () => {
+  assert.deepEqual(availOf(undefined), { allowed: false, blocked: "missing" });
+  assert.deepEqual(availOf({ allowed: true }), { allowed: false, blocked: "missing" });
+  assert.deepEqual(availOf({ allowed: true, blocked: "own_request" }), { allowed: false, blocked: "own_request" });
+  assert.deepEqual(availOf({ allowed: false, blocked: "" }), { allowed: false, blocked: "missing" });
+  assert.deepEqual(availOf({ allowed: "true", blocked: "" }), { allowed: false, blocked: "missing" });
+  assert.deepEqual(availOf({ allowed: true, blocked: 3 }), { allowed: false, blocked: "missing" });
+  assert.deepEqual(hint(true, "own_proposal"), { allowed: false, blocked: "own_proposal" });
+  assert.deepEqual(hint(null, ""), { allowed: false, blocked: "missing" });
+  assert.deepEqual(hint(true, ""), { allowed: true, blocked: "" });
+  const i = installOf({ can_stop: true, stop_blocked: "not_enabled", can_disable: "yes", disable_blocked: "", revision: 1.5 });
+  assert.equal(i.can_stop, false);
+  assert.equal(i.stop_blocked, "not_enabled");
+  assert.equal(i.can_disable, false);
+  assert.equal(i.revision, null);
+  const p = pluginProposalOf({ number: 0, can_approve: true, approve_blocked: "own_proposal" });
+  assert.equal(p.number, null);
+  assert.equal(p.can_approve, false);
+  assert.equal(subscriptionOf({ cursor: -1, lag: 2 ** 60 }).cursor, null);
+  assert.equal(subscriptionOf({ cursor: -1, lag: 2 ** 60 }).lag, null);
+  assert.equal(deliveryOf({ sequence: "2" }).sequence, null);
+});
+
+test("marks and requests distinguish none from unknown", () => {
+  assert.equal(markOf(null), null);
+  assert.equal(markOf(undefined), "unknown");
+  assert.equal(markOf("x"), "unknown");
+  assert.deepEqual(markOf({ by: "u" }), { by: "u", by_login: "", reason: "", confirmed_by: "", confirmed_by_login: "" });
+  assert.equal(requestOf(null), null);
+  assert.equal(requestOf(7), "unknown");
+  assert.deepEqual(storageOf(null), { namespace: "", owner: "", retention_days: null, deletion: "", migration: "" });
+});
+
+test("commands carry the envelope with and without fields and keep the resend identity", async () => {
+  const r = fake(200, { business_state: "pending", fields: { proposal: "10", target: "plugin-proposal-10" } });
+  const api = adminClient("csrf", r.f);
+  const tried = { request: "m01-a", key: "m01-b" };
+  const out = await api.command("integrations.plugin_propose", "plugin:p", "r9", "qa", { kind: "upgrade", version: "1.1.0" }, tried);
+  assert.equal(r.calls[0].url, "/api/v1/commands/integrations.plugin_propose");
+  const body = JSON.parse(String(r.calls[0].init.body));
+  assert.deepEqual(body, { request_id: "m01-a", target_id: "plugin:p", idempotency_key: "m01-b", expected_revision: "r9", rationale: "qa", body: { kind: "upgrade", version: "1.1.0" } });
+  assert.equal((r.calls[0].init.headers as Record<string, string>)["X-Request-Id"], "m01-a");
+  assert.deepEqual(out, { state: "pending", fields: { proposal: "10", target: "plugin-proposal-10" } });
+  await api.command("integrations.plugin_propose", "plugin:p", "r9", "qa", { kind: "upgrade", version: "1.1.0" }, tried);
+  const again = JSON.parse(String(r.calls[1].init.body));
+  assert.equal(again.idempotency_key, body.idempotency_key);
+  assert.equal(again.request_id, body.request_id);
+  const sub = fake(200, { business_state: "proposed", fields: { subscription: "subscription-3" } });
+  const o2 = await adminClient("c", sub.f).command("integrations.subscription_propose", "webhooks", "r1", "x", { destination: "d", types: "a,b" }, tried);
+  assert.equal(o2.fields.subscription, "subscription-3");
+  const letter = fake(200, { business_state: "queued", fields: { delivery: "delivery-3", redelivery: "delivery-7" } });
+  const o3 = await adminClient("c", letter.f).command("integrations.letter_approve_redeliver", "webhook-letter:delivery-3", "r1", "x", {}, tried);
+  assert.deepEqual(JSON.parse(String(letter.calls[0].init.body)).body, {});
+  assert.equal(o3.fields.redelivery, "delivery-7");
+  assert.equal(o3.state, "queued");
+});
+
+test("a duplicate subscription from another proposer is a stage refusal", async () => {
+  const r = fake(409, { code: "invalid_stage" });
+  await assert.rejects(
+    adminClient("c", r.f).command("integrations.subscription_propose", "webhooks", "r1", "x", { destination: "d", types: "a" }, { request: "a", key: "b" }),
+    (e: unknown) => e instanceof AdminError && e.failure === "stage" && react(e.failure, e.fields) === "hint",
+  );
+  const f = fake(400, { code: "invalid_request", fields: ["types"] });
+  await assert.rejects(
+    adminClient("c", f.f).command("integrations.subscription_propose", "webhooks", "r1", "x", { destination: "d", types: "a" }, { request: "a", key: "b" }),
+    (e: unknown) => e instanceof AdminError && e.failure === "invalid" && fieldReaction("integrations.subscription_propose", e.fields) === "choice",
+  );
+});

@@ -1,5 +1,6 @@
 import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsPage } from "./contracts";
 import { installationOf, type InstallationPage } from "./installation";
+import { integrationsOf, type IntegrationsPage } from "./integrations";
 
 export type Membership = { role: "administrator" | "member"; state: "active" | "suspended"; version: number };
 
@@ -278,7 +279,22 @@ export type CommandId =
   | "contract.reopen"
   | "installation.approve"
   | "installation.withdraw"
-  | "installation.propose_plan";
+  | "installation.propose_plan"
+  | "integrations.plugin_approve"
+  | "integrations.plugin_withdraw"
+  | "integrations.plugin_propose"
+  | "integrations.plugin_stop"
+  | "integrations.plugin_disable"
+  | "integrations.subscription_propose"
+  | "integrations.subscription_approve"
+  | "integrations.subscription_pause"
+  | "integrations.subscription_request_resume"
+  | "integrations.subscription_approve_resume"
+  | "integrations.subscription_revoke"
+  | "integrations.letter_request_redeliver"
+  | "integrations.letter_approve_redeliver"
+  | "integrations.letter_request_dismiss"
+  | "integrations.letter_approve_dismiss";
 
 export type Outcome = { state: string; fields: Record<string, string> };
 
@@ -507,6 +523,9 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
     },
     async installation(): Promise<InstallationPage> {
       return installationOf(await send("/installation", { method: "GET" }, attempt().request));
+    },
+    async integrations(): Promise<IntegrationsPage> {
+      return integrationsOf(await send("/integrations", { method: "GET" }, attempt().request));
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

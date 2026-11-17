@@ -1,4 +1,5 @@
 import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsPage } from "./contracts";
+import { installationOf, type InstallationPage } from "./installation";
 
 export type Membership = { role: "administrator" | "member"; state: "active" | "suspended"; version: number };
 
@@ -274,7 +275,10 @@ export type CommandId =
   | "contract.withdraw"
   | "contract.evidence"
   | "contract.settle"
-  | "contract.reopen";
+  | "contract.reopen"
+  | "installation.approve"
+  | "installation.withdraw"
+  | "installation.propose_plan";
 
 export type Outcome = { state: string; fields: Record<string, string> };
 
@@ -500,6 +504,9 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
         if (e instanceof AdminError && e.code === "unsupported_command") return "missing";
         throw e;
       }
+    },
+    async installation(): Promise<InstallationPage> {
+      return installationOf(await send("/installation", { method: "GET" }, attempt().request));
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

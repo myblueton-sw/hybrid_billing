@@ -1,14 +1,35 @@
 import type { Locale } from "../../../../shared/types";
 import type { AccessDelegation, AccessGrant, AccessPage, Preview } from "../../../../service/admin";
+import { when } from "../authentication/live-model";
 import { a, actionLabel, fieldLabel, kindLabel } from "./live-copy";
 
 const rank = (g: AccessGrant) => (g.state === "active" && g.effective ? 0 : g.state === "pending" ? 1 : 2);
 
+const closedStates: string[] = ["revoked", "expired", "ended"];
+
+export const closed = (state: string) => closedStates.includes(state);
+
+export const revocable = (state: string) => state === "active" || state === "pending";
+
+export function stateLine(l: Locale, g: { state: string; not_before: string; not_after: string; effective?: boolean }): [string, string] {
+  if (g.effective === false && g.state === "active") return [a.notApply(l), a.notApplyWhy(l)];
+  switch (g.state) {
+    case "active":
+      return [a.stActive(l), a.until(l, when(l, g.not_after))];
+    case "pending":
+      return [a.stPending(l), a.starts(l, when(l, g.not_before))];
+    case "expired":
+      return [a.stExpired(l), a.ended(l, when(l, g.not_after))];
+    case "revoked":
+      return [a.stRevoked(l), a.ended(l, when(l, g.not_after))];
+  }
+  return [a.stUnconfirmed(l), a.stUnconfirmedWhy(l)];
+}
+
 export function people(page: AccessPage): { current: AccessGrant[]; ended: AccessGrant[] } {
   const mine = page.grants.filter((g) => g.subject !== "");
-  const current = mine.filter((g) => g.state === "active" || g.state === "pending").sort((x, y) => rank(x) - rank(y) || x.id.localeCompare(y.id));
-  const ended = mine.filter((g) => g.state === "revoked" || g.state === "expired");
-  return { current, ended };
+  const current = mine.filter((g) => !closed(g.state)).sort((x, y) => rank(x) - rank(y) || x.id.localeCompare(y.id));
+  return { current, ended: mine.filter((g) => closed(g.state)) };
 }
 
 export function ceilingGrants(page: AccessPage): AccessGrant[] {
@@ -17,8 +38,8 @@ export function ceilingGrants(page: AccessPage): AccessGrant[] {
 
 export function delegationsOf(page: AccessPage): { current: AccessDelegation[]; ended: AccessDelegation[] } {
   return {
-    current: page.delegations.filter((d) => d.state === "active" || d.state === "pending"),
-    ended: page.delegations.filter((d) => d.state === "revoked" || d.state === "expired"),
+    current: page.delegations.filter((d) => !closed(d.state)),
+    ended: page.delegations.filter((d) => closed(d.state)),
   };
 }
 

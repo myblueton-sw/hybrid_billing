@@ -15,9 +15,10 @@ type GrantView struct {
 
 type DelegationView struct {
 	Delegation
-	Version uint64
-	Closed  bool
-	Active  bool
+	Version   uint64
+	Closed    bool
+	Active    bool
+	Effective bool
 }
 
 type Explanation struct {
@@ -61,10 +62,53 @@ func (r *Registry) Delegations() []DelegationView {
 	for _, stored := range r.delegations {
 		d := stored.value
 		d.Terms = copyTerms(d.Terms)
-		out = append(out, DelegationView{Delegation: d, Version: stored.version, Closed: stored.closed, Active: !stored.closed && d.Validity.at(now)})
+		out = append(out, DelegationView{Delegation: d, Version: stored.version, Closed: stored.closed, Active: !stored.closed && d.Validity.at(now), Effective: r.effective(stored, now)})
 	}
 	sort.Slice(out, func(a, b int) bool { return out[a].ID < out[b].ID })
 	return out
+}
+
+func (r *Registry) Generation() uint64 {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.generation
+}
+
+func (r *Registry) linkHolds(stored versioned[Delegation], now time.Time) bool {
+	d := stored.value
+	return !stored.closed && d.Validity.at(now) && r.activeHuman(d.DelegatorID) && r.activeHuman(d.DelegateID) &&
+		r.memberWith(d.Terms.Scope.WorkspaceID, d.DelegatorID, r.chainJoined[d.ID][0]) &&
+		r.memberWith(d.Terms.Scope.WorkspaceID, d.DelegateID, r.chainJoined[d.ID][1]) &&
+		r.holdsInWorkspace(d.DelegateID, d.Terms.Scope.WorkspaceID, now)
+}
+
+func (r *Registry) rootBacked(d Delegation, now time.Time) bool {
+	if !r.backedDirectly(d.DelegatorID, d.Terms, now) {
+		return false
+	}
+	if d.Terms.Action != Download {
+		return true
+	}
+	for _, field := range d.Terms.Fields {
+		view := d.Terms
+		view.Action, view.Fields = r.classView(field), []string{field}
+		if !r.backedDirectly(d.DelegatorID, view, now) {
+			return false
+		}
+	}
+	return true
+}
+
+func (r *Registry) effective(stored versioned[Delegation], now time.Time) bool {
+	for {
+		if !r.linkHolds(stored, now) {
+			return false
+		}
+		if stored.value.ParentID == "" {
+			return r.rootBacked(stored.value, now)
+		}
+		stored = r.delegations[stored.value.ParentID]
+	}
 }
 
 func (r *Registry) Explain(subjectID string, request Request) Explanation {

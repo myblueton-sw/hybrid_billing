@@ -49,7 +49,7 @@ export type AccessGrant = {
   scope: ScopeRow;
   not_before: string;
   not_after: string;
-  state: "active" | "revoked" | "expired" | "pending";
+  state: "active" | "revoked" | "expired" | "pending" | "revocation_unconfirmed";
   effective: boolean;
   version: number;
 };
@@ -65,8 +65,79 @@ export type AccessDelegation = {
   scope: ScopeRow;
   not_before: string;
   not_after: string;
-  state: "active" | "revoked" | "expired" | "pending";
+  state: "active" | "revoked" | "expired" | "pending" | "ended" | "revocation_unconfirmed";
+  effective: boolean;
   version: number;
+};
+export type AccessSetting = { name: string; value: number; unit: string; default: number; min: number; max: number; source: string };
+export type AccessRequest = {
+  id: string;
+  change: "add" | "revoke";
+  subject: string;
+  grant: string;
+  action: string;
+  kind: string;
+  fields: string[];
+  customer: string;
+  days: number;
+  digest: string;
+  state: "pending" | "applied" | "rejected" | "withdrawn" | "expired" | "superseded";
+  current: boolean;
+  proposer: string;
+  proposed_at: string;
+  expires_at: string;
+  reason: string;
+  decided_by: string;
+  decided_at: string;
+  decision_reason: string;
+  result: string;
+  eligible_approvers: number;
+  can_approve: boolean;
+  can_reject: boolean;
+  can_withdraw: boolean;
+  may_end: string[];
+};
+export type CleanupItem = { item: string; state: "done" | "not_applicable" | "outside_scope" | "not_started"; reason: string; refs: string[] };
+export type RevocationState = "received" | "deny_confirmed" | "cleanup_running" | "revocation_complete" | "decision_unconfirmed";
+export type Revocation = {
+  id: string;
+  origin: "this_process" | "ledger_replay";
+  recorded_at: string;
+  target_kind: "grant" | "delegation";
+  target: string;
+  target_present: boolean;
+  replay: "" | "reapplied" | "absent" | "protected";
+  state: RevocationState;
+  history: { state: string; at: string }[];
+  ended_delegations: string[];
+  deny_generation: number;
+  job_state: "running" | "waiting" | "succeeded";
+  job_reason: string;
+  requested_by: string;
+  approved_by: string;
+  request: string;
+  received_at: string;
+  deny_at: string;
+  receipt: { sequence: number; watermark: string; reason: string };
+  verified: boolean;
+  cleanup: CleanupItem[];
+  completed_at: string;
+};
+export type LedgerStatus = {
+  state: "ok" | "recovered" | "isolated" | "stopped" | "full" | "unknown";
+  isolation_reason: string;
+  ledger_id: string;
+  created_at: string;
+  replaces: string;
+  replace_reason: string;
+  replaced_file: string;
+  records: number;
+  watermark: string;
+  checked_at: string;
+  problem_line: number;
+  recovery: { at: string; truncated_bytes: number } | null;
+  not_durable: boolean;
+  file: string;
 };
 export type Ceiling = { action: string; kind: string; fields: string[]; until: string };
 export type AccessPage = {
@@ -76,6 +147,12 @@ export type AccessPage = {
   catalog: Ceiling[];
   subjects: { user_id: string; login: string }[];
   now: string;
+  you: string;
+  started_at: string;
+  settings: AccessSetting[];
+  requests: AccessRequest[];
+  revocations: Revocation[];
+  ledger: LedgerStatus;
 };
 export type Preview = { action: string; field: string; allowed: boolean; reason: string; delegations: string[] };
 
@@ -265,8 +342,11 @@ export type CommandId =
   | "policy.propose"
   | "policy.approve"
   | "policy.withdraw"
-  | "access.grant"
-  | "access.revoke_grant"
+  | "access.request_grant"
+  | "access.request_revoke"
+  | "access.approve_request"
+  | "access.reject_request"
+  | "access.withdraw_request"
   | "access.revoke_delegation"
   | "service.create"
   | "service.suspend"
@@ -318,7 +398,45 @@ export type CommandId =
   | "release_evidence.retire_requirement"
   | "release_evidence.retire_profile";
 
-export type Outcome = { state: string; fields: Record<string, string> };
+export type Outcome = { status: string; state: string; job_id: string; fields: Record<string, string> };
+
+const unknownLedger: LedgerStatus = {
+  state: "unknown", isolation_reason: "", ledger_id: "", created_at: "", replaces: "", replace_reason: "", replaced_file: "", records: 0, watermark: "", checked_at: "",
+  problem_line: 0, recovery: null, not_durable: false, file: "",
+};
+
+export function ledgerOf(v: unknown): LedgerStatus {
+  if (!v || typeof v !== "object") return unknownLedger;
+  const r = v as Record<string, unknown>;
+  const states = ["ok", "recovered", "isolated", "stopped", "full"];
+  const recovery = r.recovery && typeof r.recovery === "object" ? (r.recovery as Record<string, unknown>) : null;
+  return {
+    state: (states.includes(String(r.state)) ? String(r.state) : "unknown") as LedgerStatus["state"],
+    isolation_reason: String(r.isolation_reason ?? ""),
+    ledger_id: String(r.ledger_id ?? ""),
+    created_at: String(r.created_at ?? ""),
+    replaces: String(r.replaces ?? ""),
+    replace_reason: String(r.replace_reason ?? ""),
+    replaced_file: String(r.replaced_file ?? ""),
+    records: Number(r.records ?? 0),
+    watermark: String(r.watermark ?? ""),
+    checked_at: String(r.checked_at ?? ""),
+    problem_line: Number(r.problem_line ?? 0),
+    recovery: recovery ? { at: String(recovery.at ?? ""), truncated_bytes: Number(recovery.truncated_bytes ?? 0) } : null,
+    not_durable: r.not_durable === true,
+    file: String(r.file ?? ""),
+  };
+}
+
+export function outcomeOf(body: Record<string, unknown>): Outcome {
+  const fields = (body.fields ?? {}) as Record<string, unknown>;
+  return {
+    status: String(body.status ?? ""),
+    state: String(body.business_state ?? ""),
+    job_id: String(body.job_id ?? ""),
+    fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v)])),
+  };
+}
 
 export type Attempt = { request: string; key: string };
 
@@ -443,8 +561,7 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
         },
         tried.request,
       );
-      const fields = (body.fields ?? {}) as Record<string, unknown>;
-      return { state: String(body.business_state ?? ""), fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v)])) };
+      return outcomeOf(body);
     },
     async policy(): Promise<PolicyPage> {
       const body = await send("/identity/policy", { method: "GET" }, attempt().request);
@@ -470,6 +587,18 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
         catalog: list<Ceiling>(body.catalog),
         subjects: list<{ user_id: string; login: string }>(body.subjects),
         now: String(body.now ?? ""),
+        you: String(body.you ?? ""),
+        started_at: String(body.started_at ?? ""),
+        settings: list<AccessSetting>(body.settings),
+        requests: list<AccessRequest>(body.requests).map((q) => ({ ...q, fields: Array.isArray(q.fields) ? q.fields : [], may_end: Array.isArray(q.may_end) ? q.may_end : [] })),
+        revocations: list<Revocation>(body.revocations).map((v) => ({
+          ...v,
+          history: Array.isArray(v.history) ? v.history : [],
+          ended_delegations: Array.isArray(v.ended_delegations) ? v.ended_delegations : [],
+          cleanup: Array.isArray(v.cleanup) ? v.cleanup.map((c) => ({ ...c, refs: Array.isArray(c.refs) ? c.refs : [] })) : [],
+          receipt: v.receipt ?? { sequence: 0, watermark: "", reason: "" },
+        })),
+        ledger: ledgerOf(body.ledger),
       };
     },
     async preview(subject: string, kind: string, customer = ""): Promise<Preview[]> {

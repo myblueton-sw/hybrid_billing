@@ -148,7 +148,7 @@ test("command envelopes for every release evidence command", async () => {
   const { f, calls } = fake([200, { business_state: "pending", fields: { module: "release_trace", proposal: "20", target: "trace-proposal-20" } }]);
   const api = adminClient("csrf", f);
   const out = await api.command("release_evidence.retire_requirement", "trace-requirement-2", "r21", "why", { reason: "Scope", replacement: "trace-requirement-3" }, { request: "q1", key: "k1" });
-  assert.deepEqual(out, { state: "pending", fields: { module: "release_trace", proposal: "20", target: "trace-proposal-20" } });
+  assert.deepEqual({ state: out.state, fields: out.fields }, { state: "pending", fields: { module: "release_trace", proposal: "20", target: "trace-proposal-20" } });
   assert.equal(calls[0].url, "/api/v1/commands/release_evidence.retire_requirement");
   assert.deepEqual(JSON.parse(String(calls[0].init.body)), { request_id: "q1", target_id: "trace-requirement-2", idempotency_key: "k1", expected_revision: "r21", rationale: "why", body: { reason: "Scope", replacement: "trace-requirement-3" } });
   await api.command("release_evidence.retire_requirement", "trace-requirement-4", "r21", "why", { reason: "Scope" }, { request: "q2", key: "k2" });

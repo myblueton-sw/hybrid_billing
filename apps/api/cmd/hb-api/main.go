@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -34,9 +35,11 @@ func run(args []string, stop <-chan os.Signal) error {
 	var list, readers origins
 	fs.Var(&list, "console-origin", "allowed console origin")
 	fs.Var(&readers, "reader", "reader path=http://127.0.0.1:port, repeatable; replaces the defaults")
+	access, given := accessFlags(fs)
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
+	given()
 	if !server.Loopback(*listen) {
 		return errors.New("listen address must be loopback")
 	}
@@ -52,10 +55,11 @@ func run(args []string, stop <-chan os.Signal) error {
 			routes[path] = target
 		}
 	}
-	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log, Readers: routes})
+	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log, Readers: routes, Access: *access})
 	if err != nil {
 		return err
 	}
+	defer s.Close()
 	ln, err := net.Listen("tcp", *listen)
 	if err != nil {
 		return err
@@ -80,6 +84,38 @@ func run(args []string, stop <-chan os.Signal) error {
 		defer cancel()
 		return srv.Shutdown(ctx)
 	}
+}
+
+func accessFlags(fs *flag.FlagSet) (*server.AccessSettings, func()) {
+	access := server.DefaultAccessSettings()
+	byFlag := map[string]server.AccessSetting{}
+	for _, setting := range server.AccessSettingList() {
+		byFlag[setting.Flag] = setting
+		fs.Func(setting.Flag, fmt.Sprintf("%s in %s, %d to %d (default %d)", setting.Name, setting.Unit, setting.Min, setting.Max, setting.Default), func(raw string) error {
+			n, ok := settingNumber(raw)
+			if !ok {
+				return fmt.Errorf("%s must be a whole number without sign or leading zero", setting.Flag)
+			}
+			setting.Set(&access, n)
+			return nil
+		})
+	}
+	fs.BoolVar(&access.AcceptNewLedger, "accept-new-decision-ledger", false, "one-time: keep the isolated decision ledger under a new name and start a new one")
+	return &access, func() {
+		fs.Visit(func(f *flag.Flag) {
+			if setting, ok := byFlag[f.Name]; ok {
+				access.Given[setting.Name] = true
+			}
+		})
+	}
+}
+
+func settingNumber(raw string) (int, bool) {
+	if raw == "" || len(raw) > 5 || (len(raw) > 1 && raw[0] == '0') || strings.TrimLeft(raw, "0123456789") != "" {
+		return 0, false
+	}
+	n, err := strconv.Atoi(raw)
+	return n, err == nil
 }
 
 func main() {

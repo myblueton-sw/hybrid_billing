@@ -673,3 +673,71 @@ func TestLinkAndInvitationExpiry(t *testing.T) {
 		}
 	}
 }
+
+func ledgerBlockedWorlds() map[string]func(t *testing.T) world {
+	return map[string]func(t *testing.T) world{
+		"isolated": func(t *testing.T) world {
+			f := setup(t, SeedSample).ready()
+			f.s.Close()
+			corrupt(t, ledgerFile(f))
+			return f.restart(nil)
+		},
+		"stopped": func(t *testing.T) world {
+			f := setup(t, SeedSample).ready()
+			f.stoppedLedger()
+			return f
+		},
+		"full": fullWorld,
+	}
+}
+
+func TestIdentityIncreasesWaitForTheLedger(t *testing.T) {
+	for name, build := range ledgerBlockedWorlds() {
+		t.Run(name, func(t *testing.T) {
+			f := build(t)
+			root := f.as(AdminLogin)
+			refused := func(label string, got reply) {
+				t.Helper()
+				f.code(t, label, got, 503, string(commands.DependencyUnavailable))
+			}
+			unchanged := func(label string, run func() reply) {
+				t.Helper()
+				before := f.list(root, "")
+				refused(label, run())
+				if after := f.list(root, ""); after.raw != before.raw {
+					t.Errorf("%s changed identity state", label)
+				}
+			}
+			unchanged("create an administrator", func() reply {
+				return f.run(root, "identity.create_user", usersTarget, map[string]string{"login": "q6-admin@example.invalid", "email": "q6-admin@example.invalid", "role": "administrator"})
+			})
+			user, _ := f.created(root, "q6-user@example.invalid", "member")
+			if got := f.run(root, "identity.revoke_invitation", user, nil); got.status != 200 {
+				t.Fatalf("revoke invitation %s", got.raw)
+			}
+			unchanged("invite as administrator", func() reply { return f.run(root, "identity.invite", user, map[string]string{"role": "administrator"}) })
+			if got := f.run(root, "identity.invite", user, map[string]string{"role": "member"}); got.status != 200 {
+				t.Errorf("invite as member %s", got.raw)
+			}
+			f.setPassword(MemberLogin, pw)
+			for _, step := range []string{"identity.suspend_user", "identity.suspend_membership"} {
+				if got := f.run(root, step, SampleMember, nil); got.status != 200 {
+					t.Errorf("%s %s", step, got.raw)
+				}
+			}
+			unchanged("reinstate a user", func() reply { return f.run(root, "identity.reinstate_user", SampleMember, nil) })
+			unchanged("reinstate a membership", func() reply { return f.run(root, "identity.reinstate_membership", SampleMember, nil) })
+			unchanged("promote", func() reply {
+				return f.run(root, "identity.change_role", SampleMember, map[string]string{"role": "administrator"})
+			})
+			if got := f.run(root, "identity.change_role", SampleAdmin2, map[string]string{"role": "member"}); got.status != 200 {
+				t.Errorf("a role change away from administrator %s", got.raw)
+			}
+			for _, step := range []string{"identity.remove_membership", "identity.depart_user"} {
+				if got := f.run(root, step, SampleMember, nil); got.status != 200 {
+					t.Errorf("%s %s", step, got.raw)
+				}
+			}
+		})
+	}
+}

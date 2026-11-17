@@ -159,6 +159,7 @@ func TestReaderConfig(t *testing.T) {
 	dataDir := first.s.cfg.Data
 	first.ready()
 	old, _ := os.ReadFile(filepath.Join(dataDir, ReaderSecretFile))
+	first.s.Close()
 	again, _ := New(Config{Data: dataDir, Seed: SeedSample, Passwords: fastPasswords()})
 	if err := again.Start(); err != nil {
 		t.Fatal(err)

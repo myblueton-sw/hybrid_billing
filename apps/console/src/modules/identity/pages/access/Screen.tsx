@@ -257,7 +257,7 @@ export default function Access(props: Props) {
         words={[
           "A support request does not impersonate the customer or confer human approval. Revocation is unconfirmed until the independent decision is durably committed; later cleanup is a separate outcome.",
           "지원 요청은 고객을 사칭하거나 사람 승인 권한을 부여하지 않습니다. 독립 결정이 내구 확정되기 전 회수는 미확정이며 후속 정리는 별도 결과입니다.",
-          "طلب الدعم لا ينتحل هوية العميل ولا يمنح صلاحية موافقة بشرية. يظل الإلغاء غير مؤكد حتى تثبيت القرار المستقل؛ والتنظيف اللاحق نتيجة منفصلة.",
+          "طلب الدعم لا ينتحل هوية العميل ولا يمنح صلاحية موافقة بشرية. يظل الإبطال غير مؤكد حتى تثبيت القرار المستقل؛ والتنظيف اللاحق نتيجة منفصلة.",
         ]}
       />
     </div>

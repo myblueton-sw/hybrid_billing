@@ -77,6 +77,13 @@ func (h userCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 
 func (s *Server) faulty(step string) bool { return s.fault != nil && s.fault(step) }
 
+func (s *Server) increaseAllowed(increase bool) error {
+	if increase && s.ledgerBlocksIncrease() {
+		return commands.Fail(commands.DependencyUnavailable)
+	}
+	return nil
+}
+
 func mapIdentity(err error) error {
 	switch {
 	case errors.Is(err, identity.ErrLastAdministrator):
@@ -218,6 +225,9 @@ func createUser(s *Server, c *change) (string, map[string]string, error) {
 	if !validEmail(email) {
 		return "", nil, commands.Fail(commands.InvalidRequest, "email")
 	}
+	if err := s.increaseAllowed(identity.Role(c.ctx.Fields["role"]) == identity.Administrator); err != nil {
+		return "", nil, err
+	}
 	if s.dir.taken[login] {
 		return "", nil, commands.Fail(commands.PrerequisiteFailed)
 	}
@@ -244,6 +254,9 @@ func createUser(s *Server, c *change) (string, map[string]string, error) {
 }
 
 func inviteExisting(s *Server, c *change) (string, map[string]string, error) {
+	if err := s.increaseAllowed(identity.Role(c.ctx.Fields["role"]) == identity.Administrator); err != nil {
+		return "", nil, err
+	}
 	if _, member := c.members[c.ctx.Target]; member || !c.known || c.user.State != identity.Active {
 		return "", nil, commands.Fail(commands.InvalidStage)
 	}
@@ -286,6 +299,9 @@ func suspendUser(s *Server, c *change) (string, map[string]string, error) {
 }
 
 func reinstateUser(s *Server, c *change) (string, map[string]string, error) {
+	if err := s.increaseAllowed(true); err != nil {
+		return "", nil, err
+	}
 	if err := s.identity.Installation().ReinstateUser(operator(c), c.ctx.Target, c.user.Epoch); err != nil {
 		return "", nil, mapIdentity(err)
 	}
@@ -313,6 +329,9 @@ func departUser(s *Server, c *change) (string, map[string]string, error) {
 
 func changeRole(s *Server, c *change) (string, map[string]string, error) {
 	role := identity.Role(c.ctx.Fields["role"])
+	if err := s.increaseAllowed(role == identity.Administrator); err != nil {
+		return "", nil, err
+	}
 	if err := s.protect(c); err != nil {
 		return "", nil, err
 	}
@@ -327,6 +346,9 @@ func changeRole(s *Server, c *change) (string, map[string]string, error) {
 
 func membershipStep(guarded bool, state string, run func(*Server, *change, uint64) error) func(*Server, *change) (string, map[string]string, error) {
 	return func(s *Server, c *change) (string, map[string]string, error) {
+		if err := s.increaseAllowed(state == "membership_active"); err != nil {
+			return "", nil, err
+		}
 		if guarded {
 			if err := s.protect(c); err != nil {
 				return "", nil, err

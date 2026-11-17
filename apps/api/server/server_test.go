@@ -261,6 +261,7 @@ func TestSeed(t *testing.T) {
 	if f.s.Workspace() != EmptyWorkspace || f.s.counter != 1 {
 		t.Errorf("empty start %d", f.s.counter)
 	}
+	f.s.Close()
 	g, _ := New(Config{Data: dir, Seed: SeedNone})
 	g.Bind(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 1})
 	if err := g.Start(); err != nil {
@@ -270,6 +271,7 @@ func TestSeed(t *testing.T) {
 	if bytes.Equal(again, data) {
 		t.Error("old link replaced")
 	}
+	g.Close()
 	h, _ := New(Config{Data: dir, Seed: SeedSample})
 	if err := h.Start(); err != nil {
 		t.Fatal(err)

@@ -90,6 +90,7 @@ func (s *Server) reader(target *url.URL) http.HandlerFunc {
 			out.Header = keep
 		},
 		ModifyResponse: func(resp *http.Response) error {
+			resp.Header.Set("Cache-Control", "no-store")
 			for name := range resp.Header {
 				if strings.HasPrefix(name, "Set-Cookie") || strings.HasPrefix(name, "Access-Control") {
 					resp.Header.Del(name)

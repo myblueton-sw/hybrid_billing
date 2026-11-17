@@ -280,6 +280,13 @@ func (a *Administration) Delegations() []DelegationView {
 	return a.permissions.Delegations()
 }
 
+func (a *Administration) Generation() uint64 {
+	if !a.ready() {
+		return 0
+	}
+	return a.permissions.Generation()
+}
+
 func (a *Administration) Explain(subjectID string, request Request) Explanation {
 	if !a.ready() {
 		return Explanation{Code: AuthorityUnavailable, Reason: ReasonUnavailable}

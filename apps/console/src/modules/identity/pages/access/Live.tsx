@@ -10,16 +10,23 @@ import { w } from "../users/live-copy";
 import { failureText } from "../users/live-model";
 import { when } from "../authentication/live-model";
 import { a, accessPhrase, actionLabel, fieldLabel, kindLabel } from "./live-copy";
-import { accessText, ceilingGrants, delegationsOf, maxDays, people, reasonText, scopeText, wholeDays } from "./live-model";
+import { accessText, ceilingGrants, delegationsOf, maxDays, people, reasonText, revocable, scopeText, stateLine, wholeDays } from "./live-model";
+import { q, v } from "./request-copy";
+import { additionsPaused, descendantsOf, keepAttempt, pendingRevokeFor, unconfirmedFor } from "./request-model";
+import { DecidePanel, describeRequest, RequestSection, type Decision } from "./Requests";
+import { breakable, loginOf } from "./who";
+import { RevocationSection } from "./Revocations";
 import "../users/live.css";
+import "./access.css";
 
 type Target = { kind: "grant"; row: AccessGrant } | { kind: "delegation"; id: string; who: string; access: string; until: string };
-type Mode = { kind: "form" } | { kind: "revoke"; target: Target };
+type Mode = { kind: "form" } | { kind: "revoke"; target: Target } | { kind: "decide"; action: Decision; id: string };
 
 function describeFor(kind: "grant" | "revoke" | "load") {
   return (l: Locale, e: unknown) => {
+    if (kind === "grant") return describeRequest(l, e);
     if (e instanceof AdminError && kind !== "load") {
-      if (e.failure === "refused") return { title: a.refusedTitle(l), body: kind === "grant" ? a.refusedGrant(l) : a.refusedRevoke(l) };
+      if (e.failure === "refused") return { title: a.refusedTitle(l), body: a.refusedRevoke(l) };
       if (e.failure === "stage") return { title: a.refusedTitle(l), body: a.stageBody(l) };
       if (e.failure === "invalid") return { title: a.refusedTitle(l), body: a.invalidBody(l) };
       if (e.failure === "denied" && kind === "revoke") return { title: a.refusedTitle(l), body: a.goneBody(l) };
@@ -28,28 +35,6 @@ function describeFor(kind: "grant" | "revoke" | "load") {
     if (e instanceof AdminError && (e.failure === "unavailable" || e.failure === "busy")) return { title: w.saveFailed(l), body: a.unavailableBody(l) };
     return failureText(l, e);
   };
-}
-
-function loginOf(page: AccessPage, user: string): string {
-  return page.subjects.find((s) => s.user_id === user)?.login || user;
-}
-
-function breakable(login: string): ReactNode {
-  const at = login.indexOf("@");
-  return at < 0 ? login : <>{login.slice(0, at)}<wbr />{login.slice(at)}</>;
-}
-
-function stateLine(l: Locale, g: { state: string; not_before: string; not_after: string; effective?: boolean }): [string, string] {
-  if (g.effective === false && g.state === "active") return [a.notApply(l), a.notApplyWhy(l)];
-  switch (g.state) {
-    case "pending":
-      return [a.stPending(l), a.starts(l, when(l, g.not_before))];
-    case "expired":
-      return [a.stExpired(l), a.ended(l, when(l, g.not_after))];
-    case "revoked":
-      return [a.stRevoked(l), a.ended(l, when(l, g.not_after))];
-  }
-  return [a.stActive(l), a.until(l, when(l, g.not_after))];
 }
 
 function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }: {
@@ -66,13 +51,17 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
   const [error, setError] = useState<unknown>(null);
   const [focusKey, setFocusKey] = useState(0);
   const tried = useRef<Attempt>(attempt());
+  const kept = useRef(false);
   const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { tried.current = attempt(); }, [page.revision]);
+  useEffect(() => {
+    if (!kept.current) tried.current = attempt();
+    kept.current = false;
+  }, [page.revision]);
   useEffect(() => { if (stepping) heading.current?.focus(); }, [stepping]);
+  const paused = additionsPaused(page.ledger);
   const edit = (f: (v: string) => void) => (v: string) => { tried.current = attempt(); f(v); };
   if (!pair || most < 1) return null;
   const n = wholeDays(days, most);
-  const ends = n ? when(l, new Date(Date.parse(page.now) + n * 86400000).toISOString()) : "";
   const login = choices.find((s) => s.user_id === subject)?.login ?? "";
   const phrase = accessPhrase(l, pair.action, pair.kind, pair.fields) ?? accessText(l, pair.action, pair.fields);
   const submit = async (e: FormEvent) => {
@@ -87,12 +76,13 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
     if (found.length) { setFocusKey((k) => k + 1); return; }
     setBusy(true);
     try {
-      await api.command("access.grant", "grants", page.revision, reason,
+      await api.command("access.request_grant", "grants", page.revision, reason,
         { subject, action: pair.action, kind: pair.kind, fields: pair.fields.join(","), customer: "all", days: String(n) }, tried.current);
       onDone(login);
     } catch (err) {
       if (err instanceof AdminError && err.failure === "invalid" && err.fields.includes("days")) setProblems([{ field: "access-days", message: a.errDays(l, most) }]);
       else setError(err);
+      kept.current = keepAttempt(err);
       if (err instanceof AdminError && err.failure === "stale") tried.current = attempt();
       if (settles(err)) onReload();
       setFocusKey((k) => k + 1);
@@ -103,8 +93,9 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
   const field = (id: string) => problems.find((x) => x.field === id)?.message;
   return (
     <form className="live-step" onSubmit={submit} noValidate>
-      <h2 tabIndex={-1} ref={heading}>{a.grantTitle(l)}</h2>
-      <p className="live-impact">{a.grantLead(l)}</p>
+      <h2 tabIndex={-1} ref={heading}>{q.requestTitle(l)}</h2>
+      <p className="live-impact">{q.requestLead(l)}</p>
+      {paused && <p className="live-strong" id="access-paused">{q.additionsPaused(l)}</p>}
       {problems.length > 0 && <Summary locale={l} title={c.check(l)} problems={problems} focusKey={focusKey} />}
       {error !== null && <FailureBox l={l} error={error} focusKey={focusKey} describe={describeFor("grant")} />}
       {choices.length === 0 ? <p className="live-note">{a.noneEligible(l)}</p> : (
@@ -131,12 +122,12 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
             aria-describedby={["access-days-hint", field("access-days") ? "access-days-error" : ""].filter(Boolean).join(" ")} onChange={(e) => edit(setDays)(e.target.value)} />
           <span>{a.days(l)}</span>
         </span>
-        {ends && <p className="live-note" aria-live="polite">{a.endsOn(l, ends)}</p>}
       </div>
-      {login && ends && <p className="live-impact">{a.grantImpact(l, login, phrase, ends)}</p>}
+      {login && n && <p className="live-impact">{q.requestImpact(l, login, phrase, n)}</p>}
       <Reason l={l} value={reason} onChange={edit(setReason)} error={field("live-reason") ?? ""} />
       <div className="live-buttons">
-        <button type="submit" className="live-primary" aria-busy={busy || undefined} disabled={busy || choices.length === 0}>{busy ? w.saving(l) : a.grantTitle(l)}</button>
+        <button type="submit" className={paused ? "live-primary access-paused" : "live-primary"} aria-busy={busy || undefined} aria-describedby={paused ? "access-paused" : undefined}
+          disabled={busy || choices.length === 0 || paused}>{busy ? w.saving(l) : q.requestTitle(l)}</button>
         {stepping && <button type="button" className="live-secondary" onClick={onCancel}>{w.cancel(l)}</button>}
       </div>
     </form>
@@ -166,8 +157,8 @@ function Revoke({ l, api, page, target, onDone, onCancel, onReload }: {
     setBusy(true);
     setError(null);
     try {
-      await api.command(grant ? "access.revoke_grant" : "access.revoke_delegation", id, page.revision, reason, {}, tried.current);
-      onDone(grant ? a.doneRevokedGrant(l, who) : a.doneRevokedDeleg(l));
+      await api.command(grant ? "access.request_revoke" : "access.revoke_delegation", id, page.revision, reason, {}, tried.current);
+      onDone(grant ? q.revocationRequested(l) : q.doneRevokedDeleg(l));
     } catch (err) {
       setError(err);
       setFocusKey((k) => k + 1);
@@ -177,19 +168,26 @@ function Revoke({ l, api, page, target, onDone, onCancel, onReload }: {
       setBusy(false);
     }
   };
-  const title = grant ? a.revokeGrantTitle(l) : a.revokeDelegTitle(l);
+  const title = grant ? q.requestRevocation(l) : a.revokeDelegTitle(l);
+  const below = grant ? [] : descendantsOf(page, id);
   return (
     <form className="live-step" onSubmit={submit} noValidate>
       <h2 tabIndex={-1} ref={heading}>{title}</h2>
       <p className="live-who"><bdi dir="ltr">{who}</bdi></p>
       {problem && <Summary locale={l} title={c.check(l)} problems={[{ field: "live-reason", message: problem }]} focusKey={focusKey} />}
-      {error !== null && <FailureBox l={l} error={error} focusKey={focusKey} describe={describeFor("revoke")} />}
+      {error !== null && <FailureBox l={l} error={error} focusKey={focusKey} describe={grant ? describeRequest : describeFor("revoke")} />}
       <dl className="live-facts">
         <div><dt>{a.access(l)}</dt><dd>{grant ? `${accessText(l, target.row.action, target.row.fields)} · ${kindLabel(l, target.row.kind) ?? target.row.kind}` : target.access}</dd></div>
         {grant && <div><dt>{a.customer(l)}</dt><dd>{target.row.scope.customer === "all" ? a.allCustomers(l) : target.row.scope.customer}</dd></div>}
         <div><dt>{a.colStatus(l)}</dt><dd>{grant ? stateLine(l, target.row).join(" · ") : target.until}</dd></div>
       </dl>
-      <p className="live-impact">{grant ? a.revokeGrantImpact(l, who) : a.revokeDelegImpact(l, who)}</p>
+      <p className="live-impact">{grant ? q.revokeRequestLead(l, who) : a.revokeDelegImpact(l, who)}</p>
+      {!grant && (
+        <div className="access-impact-list">
+          <h3>{q.descendants(l)}</h3>
+          {below.length === 0 ? <p className="live-note">{q.noDescendants(l)}</p> : <p className="live-mono" dir="ltr">{below.join(", ")}</p>}
+        </div>
+      )}
       <Reason l={l} value={reason} onChange={(v) => { tried.current = attempt(); setReason(v); }} error={problem} />
       <div className="live-buttons">
         <button type="submit" className="live-primary" aria-busy={busy || undefined} disabled={busy}>{busy ? w.saving(l) : title}</button>
@@ -203,7 +201,7 @@ function GrantTable({ l, page, rows, self, selected, onRevoke }: {
   l: Locale; page: AccessPage; rows: AccessGrant[]; self: string; selected: string; onRevoke?: (row: AccessGrant) => void;
 }) {
   return (
-    <div className="security-table-scroll live-table live-access">
+    <div className="security-table-scroll live-table live-access access-grants">
       <table role="table">
         <colgroup><col className="live-col-a" /><col className="live-col-b" /><col className="live-col-c" />{onRevoke && <col className="live-col-d" />}</colgroup>
         <thead role="rowgroup"><tr role="row">
@@ -215,15 +213,18 @@ function GrantTable({ l, page, rows, self, selected, onRevoke }: {
         <tbody role="rowgroup">
           {rows.map((g) => {
             const [state, sub] = stateLine(l, g);
+            const asked = pendingRevokeFor(page, g.id);
             return (
               <tr key={g.id} role="row" className={selected === g.id ? "live-selected" : undefined}>
                 <td role="cell" className="live-user"><bdi dir="ltr">{breakable(loginOf(page, g.subject))}</bdi></td>
                 <td role="cell" data-label={a.colAccess(l)}>{accessText(l, g.action, g.fields)}<span className="live-sub">{scopeText(l, g.kind, g.scope.customer)}</span></td>
-                <td role="cell" data-label={a.colStatus(l)} className={g.effective === false || g.state !== "active" ? "live-strong" : ""}>{state}<span className="live-sub">{sub}</span></td>
+                <td role="cell" data-label={a.colStatus(l)} data-state={g.state} className={g.effective === false || g.state !== "active" ? "live-strong" : ""}>{state}<span className="live-sub">{sub}</span></td>
                 {onRevoke && (
                   <td role="cell">
                     {g.subject === self ? <span className="live-quiet">{a.yourGrant(l)}</span>
-                      : <button type="button" className="live-secondary live-revoke" data-grant={g.id} onClick={() => onRevoke(g)}>{a.revoke(l)}<span className="visually-hidden"> {loginOf(page, g.subject)}</span></button>}
+                      : asked ? <span className="live-quiet" data-requested={g.id}>{q.revocationRequested(l)}</span>
+                      : !revocable(g.state) ? null
+                      : <button type="button" className="live-secondary live-revoke" data-grant={g.id} onClick={() => onRevoke(g)}>{q.requestRevocation(l)}<span className="visually-hidden"> {loginOf(page, g.subject)}</span></button>}
                   </td>
                 )}
               </tr>
@@ -295,6 +296,7 @@ function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPa
         <button type="submit" className="live-primary" disabled={!subject || state === "loading"}>{a.showEffect(l)}</button>
       </form>
       <p className="live-preview-note"><strong>{a.previewLead(l)}</strong> {a.previewNote(l)}</p>
+      {subject && unconfirmedFor(page, subject) && <p className="live-strong" data-unconfirmed="true">{v.previewUnconfirmed(l)}</p>}
       {state === "start" && <p className="live-empty">{a.startHint(l)}</p>}
       {state === "cleared" && <p className="live-empty">{a.cleared(l)}</p>}
       <p className="visually-hidden" role="status" aria-live="polite">{state === "loading" ? a.loading(l) : state === "shown" && result ? a.allowedCount(l, result.rows.filter((r) => r.allowed).length, result.rows.length) : ""}</p>
@@ -410,21 +412,29 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
   const grants = page ? people(page) : { current: [], ended: [] };
   const ceiling = page ? ceilingGrants(page) : [];
   const delegations = page ? delegationsOf(page) : { current: [], ended: [] };
-  const selected = mode?.kind === "revoke" ? (mode.target.kind === "grant" ? mode.target.row.id : mode.target.id) : "";
+  const selected = mode?.kind === "revoke" ? (mode.target.kind === "grant" ? mode.target.row.id : mode.target.id) : mode?.kind === "decide" ? mode.id : "";
+  const deciding = page && mode?.kind === "decide" ? page.requests.find((r) => r.id === mode.id) : undefined;
+  const decide = (action: Decision, id: string) => { setNotice(""); setMode({ kind: "decide", action, id }); };
   const revokeGrant = (row: AccessGrant) => { setNotice(""); setMode({ kind: "revoke", target: { kind: "grant", row } }); };
   let panel: ReactNode = null;
-  if (page && mode?.kind === "revoke") {
+  if (page && mode?.kind === "decide" && deciding) {
+    const back = `[data-request="${mode.id}"] [data-act="${mode.action}"]`;
+    panel = <DecidePanel key={mode.action + mode.id} l={l} api={api} page={page} request={deciding} action={mode.action} onReload={load}
+      onCancel={() => { setMode(null); setFocusTo(back); }}
+      onDone={(message) => { say(message); setMode(null); load(); setFocusTo(mode.action === "approve" && deciding.change === "revoke" ? "#access-revocations" : "#access-requests"); }} />;
+  } else if (page && mode?.kind === "revoke") {
     const back = mode.target.kind === "grant" ? `[data-grant="${mode.target.row.id}"]` : `[data-delegation="${mode.target.id}"]`;
     panel = <Revoke key={selected} l={l} api={api} page={page} target={mode.target} onReload={load}
       onCancel={() => { setMode(null); setFocusTo(back); }}
-      onDone={(message) => { say(message); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo("#access-people"); }} />;
+      onDone={(message) => { say(message); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo(mode.target.kind === "grant" ? "#access-requests" : "#access-revocations"); }} />;
   } else if (page && page.catalog.length > 0 && maxDays(page.catalog[0].until, page.now) > 0 && (wide || mode?.kind === "form")) {
     panel = <GrantForm key={formKey} l={l} api={api} page={page} self={self} stepping={!wide} onReload={load}
       onCancel={() => { setMode(null); setFocusTo(".access-grant-open"); }}
-      onDone={(login) => { say(a.doneGranted(l, login)); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo("#access-people"); }} />;
+      onDone={() => { say(q.requestSent(l)); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo("#access-requests"); }} />;
   }
   const stepping = !wide && mode !== null;
-  const backTo = mode?.kind === "revoke" ? (mode.target.kind === "grant" ? `[data-grant="${mode.target.row.id}"]` : `[data-delegation="${mode.target.id}"]`) : ".access-grant-open";
+  const backTo = mode?.kind === "revoke" ? (mode.target.kind === "grant" ? `[data-grant="${mode.target.row.id}"]` : `[data-delegation="${mode.target.id}"]`)
+    : mode?.kind === "decide" ? `[data-request="${mode.id}"] [data-act="${mode.action}"]` : ".access-grant-open";
   return (
     <div className="live-users" data-live="grants" data-wide={wide ? "true" : "false"}>
       <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
@@ -434,11 +444,11 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
             <div className="live-toolbar">
               <div className="live-heading">
                 <h2 id="access-people" tabIndex={-1}>{a.peopleTitle(l)}</h2>
-                {page && <p className="live-meta">{a.activeCount(l, grants.current.filter((g) => g.state === "active" && g.effective).length)}</p>}
+                {page && <p className="live-meta">{a.activeGrants(l, grants.current.filter((g) => g.state === "active" && g.effective).length)}</p>}
                 {page && <p className="live-meta">{w.loadedAt(l, when(l, page.now))}</p>}
               </div>
               <div className="live-tools">
-                {!wide && page && page.catalog.length > 0 && maxDays(page.catalog[0].until, page.now) > 0 && <button type="button" className="live-primary access-grant-open" onClick={() => { setNotice(""); setMode({ kind: "form" }); }}>{a.grantTitle(l)}</button>}
+                {!wide && page && page.catalog.length > 0 && maxDays(page.catalog[0].until, page.now) > 0 && <button type="button" className="live-primary access-grant-open" onClick={() => { setNotice(""); setMode({ kind: "form" }); }}>{q.requestTitle(l)}</button>}
                 <button type="button" className="live-secondary" onClick={() => { setNotice(""); load(); }}>{w.reload(l)}</button>
               </div>
             </div>
@@ -450,6 +460,8 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
               <details className="live-ended"><summary>{a.endedGrants(l, grants.ended.length)}</summary><GrantTable l={l} page={page} rows={grants.ended} self={self} selected="" /></details>
             )}
           </section>
+          {page && <RequestSection l={l} page={page} selected={selected} onAct={(action, r) => decide(action, r.id)} />}
+          {page && <RevocationSection l={l} page={page} />}
           {page && (
             <section aria-labelledby="access-ceiling">
               <h2 id="access-ceiling" className="live-title">{a.ceilingTitle(l)}</h2>
@@ -474,7 +486,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
             <section aria-labelledby="access-delegations">
               <div className="live-heading live-section-head">
                 <h2 id="access-delegations">{a.delegTitle(l)}</h2>
-                <p className="live-meta">{a.activeCount(l, delegations.current.length)}</p>
+                <p className="live-meta">{a.activeDelegations(l, delegations.current.length)}</p>
               </div>
               {delegations.current.length === 0 ? <p className="live-empty">{a.noDeleg(l)}</p> : (
                 <div className="security-table-scroll live-table live-access">
@@ -494,9 +506,9 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
                             <td role="cell" className="live-user"><bdi dir="ltr">{loginOf(page, d.delegator)}</bdi> {l === "ar" ? "←" : "→"} <bdi dir="ltr">{who}</bdi>
                               {d.parent && <span className="live-sub live-mono">{a.fromParent(l, d.parent)}</span>}{d.redelegate && <span className="live-sub">{a.canRedelegate(l)}</span>}</td>
                             <td role="cell" data-label={a.colAccess(l)}>{accessText(l, d.action, d.fields)}<span className="live-sub">{scopeText(l, d.kind, d.scope.customer)}</span></td>
-                            <td role="cell" data-label={a.colStatus(l)}>{state}<span className="live-sub">{sub}</span></td>
-                            <td role="cell"><button type="button" className="live-secondary live-revoke" data-delegation={d.id}
-                              onClick={() => { setNotice(""); setMode({ kind: "revoke", target: { kind: "delegation", id: d.id, who, access: accessText(l, d.action, d.fields), until: [state, sub].join(" · ") } }); }}>{a.revoke(l)}</button></td>
+                            <td role="cell" data-label={a.colStatus(l)} className={d.state !== "active" ? "live-strong" : ""} data-state={d.state}>{state}<span className="live-sub">{sub}</span></td>
+                            <td role="cell">{revocable(d.state) && <button type="button" className="live-secondary live-revoke" data-delegation={d.id}
+                              onClick={() => { setNotice(""); setMode({ kind: "revoke", target: { kind: "delegation", id: d.id, who, access: accessText(l, d.action, d.fields), until: [state, sub].join(" · ") } }); }}>{a.revoke(l)}</button>}</td>
                           </tr>
                         );
                       })}
@@ -504,13 +516,22 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
                   </table>
                 </div>
               )}
-              {delegations.ended.length > 0 && <details className="live-ended"><summary>{a.endedDeleg(l, delegations.ended.length)}</summary><p className="live-meta">{delegations.ended.map((d) => d.id).join(", ")}</p></details>}
+              {delegations.ended.length > 0 && (
+                <details className="live-ended"><summary>{a.endedDeleg(l, delegations.ended.length)}</summary>
+                  <ul role="list" className="access-ended-delegations access-bullets">
+                    {delegations.ended.map((d) => (
+                      <li key={d.id} data-ended={d.id}><span className="live-mono" dir="ltr">{d.id}</span> · {d.state === "ended" ? v.endedByChain(l) : stateLine(l, d)[0]}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
             </section>
           )}
         </div>
       )}
       {(wide || stepping) && panel && (
-        <aside className="live-panel" aria-label={mode?.kind === "revoke" ? (mode.target.kind === "grant" ? a.revokeGrantTitle(l) : a.revokeDelegTitle(l)) : a.grantTitle(l)}>
+        <aside className="live-panel" aria-label={mode?.kind === "revoke" ? (mode.target.kind === "grant" ? q.requestRevocation(l) : a.revokeDelegTitle(l))
+          : mode?.kind === "decide" ? (mode.action === "approve" ? q.approveTitle(l) : mode.action === "reject" ? q.rejectTitle(l) : q.withdrawTitle(l)) : q.requestTitle(l)}>
           {stepping && <button type="button" className="service-button-link live-back" onClick={() => { setMode(null); setFocusTo(backTo); }}>{a.backToGrants(l)}</button>}
           {panel}
         </aside>

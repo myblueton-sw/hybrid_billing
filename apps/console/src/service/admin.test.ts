@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, adminClient, attempt, failureOf, reauthenticate, sequence } from "./admin";
+import { AdminError, adminClient, attempt, failureOf, ledgerOf, outcomeOf, reauthenticate, sequence } from "./admin";
 
 type Call = { url: string; init: RequestInit };
 
@@ -39,7 +39,7 @@ test("commands send the envelope with csrf and the attempt identity", async () =
   const { f, calls } = fake(200, { business_state: "user_created", fields: { link_ref: "abc", user_id: "u1" } });
   const tried = attempt();
   const out = await adminClient("tok", f).command("identity.create_user", "users", "r3", "why", { login: "a@b.c" }, tried);
-  assert.deepEqual(out, { state: "user_created", fields: { link_ref: "abc", user_id: "u1" } });
+  assert.deepEqual(out, { status: "", state: "user_created", job_id: "", fields: { link_ref: "abc", user_id: "u1" } });
   const sent = JSON.parse(String(calls[0].init.body));
   assert.deepEqual(sent, { request_id: tried.request, target_id: "users", idempotency_key: tried.key, expected_revision: "r3", rationale: "why", body: { login: "a@b.c" } });
   const h = calls[0].init.headers as Record<string, string>;
@@ -109,15 +109,50 @@ test("the policy read keeps the server times and defaults missing parts", async 
 test("the access read and preview", async () => {
   const page = { revision: "r2", grants: [{ id: "g" }], delegations: [], catalog: [{ action: "view" }], subjects: [{ user_id: "u", login: "l" }], now: "n" };
   const { f, calls } = fake(200, page);
-  assert.deepEqual(await adminClient("t", f).access(), page);
+  const got = await adminClient("t", f).access();
+  assert.deepEqual({ revision: got.revision, grants: got.grants, delegations: got.delegations, catalog: got.catalog, subjects: got.subjects, now: got.now }, page);
   assert.equal(calls[0].url, "/api/v1/identity/access");
-  assert.deepEqual(await adminClient("t", fake(200, {}).f).access(), { revision: "", grants: [], delegations: [], catalog: [], subjects: [], now: "" });
+  const empty = await adminClient("t", fake(200, {}).f).access();
+  assert.deepEqual(empty, { revision: "", grants: [], delegations: [], catalog: [], subjects: [], now: "", you: "", started_at: "", settings: [], requests: [], revocations: [], ledger: ledgerOf(null) });
+  assert.equal(empty.ledger.state, "unknown");
+  const full = await adminClient("t", fake(200, {
+    you: "me", started_at: "s", settings: [{ name: "access_request_hours" }],
+    requests: [{ id: "access-request-1" }, { id: "access-request-2", fields: ["rows"], may_end: ["d1"] }],
+    revocations: [{ id: "revocation-1" }, { id: "revocation-2", history: [{ state: "received", at: "t" }], ended_delegations: ["d"], cleanup: [{ item: "C1" }, { item: "C9", refs: ["d"] }], receipt: { sequence: 2, watermark: "2:x", reason: "" } }],
+    ledger: { state: "isolated", isolation_reason: "missing", records: 3, recovery: { at: "a", truncated_bytes: 5 }, not_durable: true },
+  }).f).access();
+  assert.equal(full.you, "me");
+  assert.deepEqual(full.requests.map((q) => [q.fields, q.may_end]), [[[], []], [["rows"], ["d1"]]]);
+  assert.deepEqual(full.revocations[0].receipt, { sequence: 0, watermark: "", reason: "" });
+  assert.deepEqual(full.revocations[0].cleanup, []);
+  assert.deepEqual(full.revocations[1].cleanup.map((c) => c.refs), [[], ["d"]]);
+  assert.equal(full.ledger.state, "isolated");
+  assert.equal(full.ledger.not_durable, true);
+  assert.equal(ledgerOf({ state: "ok", not_durable: "yes" }).not_durable, false);
+  assert.deepEqual(full.ledger.recovery, { at: "a", truncated_bytes: 5 });
+  assert.equal(ledgerOf({ state: "strange" }).state, "unknown");
   const p = fake(200, { decisions: [{ action: "view" }] });
   assert.equal((await adminClient("t", p.f).preview("u 1", "focus_data", "c1")).length, 1);
   assert.equal(p.calls[0].url, "/api/v1/identity/access/preview?subject=u+1&kind=focus_data&customer=c1");
   const q = fake(200, {});
   assert.deepEqual(await adminClient("t", q.f).preview("u", "k"), []);
   assert.equal(q.calls[0].url, "/api/v1/identity/access/preview?subject=u&kind=k");
+});
+
+test("accepted results keep the status and the job", async () => {
+  const { f } = fake(202, { status: "accepted", job_id: "revocation-3", fields: { request: "access-request-2", revocation: "revocation-3" } });
+  const out = await adminClient("t", f).command("access.approve_request", "access-request-2", "r4", "why", { digest: "d" }, attempt());
+  assert.deepEqual(out, { status: "accepted", state: "", job_id: "revocation-3", fields: { request: "access-request-2", revocation: "revocation-3" } });
+  assert.deepEqual(outcomeOf({ status: "completed", business_state: "requested", fields: { request: "access-request-1", digest: "x" } }),
+    { status: "completed", state: "requested", job_id: "", fields: { request: "access-request-1", digest: "x" } });
+});
+
+test("a replayed resend and a changed payload are told apart", async () => {
+  const replay = await adminClient("t", fake(200, { status: "completed", business_state: "requested", replay: true, fields: { request: "access-request-1" } }).f)
+    .command("access.request_grant", "grants", "r1", "why", {}, attempt());
+  assert.equal(replay.fields.request, "access-request-1");
+  await assert.rejects(adminClient("t", fake(409, { code: "idempotency_conflict" }).f).command("access.request_grant", "grants", "r1", "other", {}, attempt()),
+    (e: unknown) => e instanceof AdminError && e.failure === "stale");
 });
 
 test("the services read defaults missing parts", async () => {

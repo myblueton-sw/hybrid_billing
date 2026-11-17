@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/hex"
 	"errors"
 	"net/http"
 	"sort"
@@ -9,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
@@ -53,6 +53,7 @@ type delegationRow struct {
 	NotBefore  string   `json:"not_before"`
 	NotAfter   string   `json:"not_after"`
 	State      string   `json:"state"`
+	Effective  bool     `json:"effective"`
 	Version    uint64   `json:"version"`
 }
 
@@ -69,12 +70,18 @@ type subjectRow struct {
 }
 
 type accessPage struct {
-	Revision    string          `json:"revision"`
-	Grants      []grantRow      `json:"grants"`
-	Delegations []delegationRow `json:"delegations"`
-	Catalog     []ceilingRow    `json:"catalog"`
-	Subjects    []subjectRow    `json:"subjects"`
-	Now         string          `json:"now"`
+	Revision    string             `json:"revision"`
+	Grants      []grantRow         `json:"grants"`
+	Delegations []delegationRow    `json:"delegations"`
+	Catalog     []ceilingRow       `json:"catalog"`
+	Subjects    []subjectRow       `json:"subjects"`
+	Now         string             `json:"now"`
+	You         string             `json:"you"`
+	StartedAt   string             `json:"started_at"`
+	Settings    []settingRow       `json:"settings"`
+	Requests    []changeRequestRow `json:"requests"`
+	Revocations []revocationRow    `json:"revocations"`
+	Ledger      ledgerRow          `json:"ledger"`
 }
 
 type decisionRow struct {
@@ -112,6 +119,25 @@ func stateOf(closed bool, v gate.Validity, now time.Time) string {
 	return "active"
 }
 
+const stateUnconfirmed = "revocation_unconfirmed"
+
+func closedState(state string, unconfirmed bool) string {
+	if state == "revoked" && unconfirmed {
+		return stateUnconfirmed
+	}
+	return state
+}
+
+func (s *Server) unconfirmedTargets() map[string]bool {
+	out := map[string]bool{}
+	for _, v := range s.changes.Revocations(s.bootWorkspace) {
+		if v.State == accesschange.RevocationReceived || v.State == accesschange.RevocationUnconfirmed {
+			out[v.Target.Kind+"/"+v.Target.ID] = true
+		}
+	}
+	return out
+}
+
 func fullScope(t gate.Terms) bool {
 	return t.Scope.Customer.Any() && t.Scope.LegalEntity.Any() && t.Scope.Contract.Any() && t.Period.Any()
 }
@@ -146,7 +172,7 @@ func (s *Server) listAccess(w http.ResponseWriter, r *http.Request) {
 	request := r.Header.Get("X-Request-Id")
 	s.domain.RLock()
 	defer s.domain.RUnlock()
-	found, _, ok := s.admitted(w, r)
+	found, answer, ok := s.admitted(w, r)
 	if !ok {
 		return
 	}
@@ -155,20 +181,32 @@ func (s *Server) listAccess(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.DependencyUnavailable, request)
 		return
 	}
+	facts, err := s.accessFacts(found.verifier)
+	if err != nil {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
 	now := s.clock()
-	page := accessPage{Revision: s.Revision(), Grants: []grantRow{}, Delegations: []delegationRow{}, Catalog: s.ceiling(), Subjects: subjects, Now: stamp(now)}
+	page := accessPage{Revision: s.Revision(), Grants: []grantRow{}, Delegations: []delegationRow{}, Catalog: s.ceiling(), Subjects: subjects, Now: stamp(now),
+		You: answer.User(), StartedAt: stamp(s.startedAt), Settings: s.settingRows(), Requests: facts.requestRows(answer.User()), Revocations: s.revocationRows(),
+		Ledger: s.ledgerRow()}
+	unconfirmed := s.unconfirmedTargets()
 	for _, g := range s.admin.Grants() {
 		if g.Terms.Action == gate.AdministerInstallation {
 			continue
 		}
 		page.Grants = append(page.Grants, grantRow{ID: g.ID, Subject: g.SubjectID, Client: g.ClientID, Action: string(g.Terms.Action), Kind: g.Terms.Kind,
 			Fields: append([]string{}, g.Terms.Fields...), Scope: scopeOf(g.Terms), NotBefore: stamp(g.Validity.NotBefore), NotAfter: stamp(g.Validity.NotAfter),
-			State: stateOf(g.Closed, g.Validity, now), Effective: g.Effective, Version: g.Version})
+			State: closedState(stateOf(g.Closed, g.Validity, now), unconfirmed[accesschange.TargetGrant+"/"+g.ID]), Effective: g.Effective, Version: g.Version})
 	}
 	for _, d := range s.admin.Delegations() {
+		state := closedState(stateOf(d.Closed, d.Validity, now), unconfirmed[accesschange.TargetDelegation+"/"+d.ID])
+		if state == "active" && !d.Effective {
+			state = "ended"
+		}
 		page.Delegations = append(page.Delegations, delegationRow{ID: d.ID, Delegator: d.DelegatorID, Delegate: d.DelegateID, Parent: d.ParentID, Redelegate: d.AllowRedelegation,
 			Action: string(d.Terms.Action), Kind: d.Terms.Kind, Fields: append([]string{}, d.Terms.Fields...), Scope: scopeOf(d.Terms),
-			NotBefore: stamp(d.Validity.NotBefore), NotAfter: stamp(d.Validity.NotAfter), State: stateOf(d.Closed, d.Validity, now), Version: d.Version})
+			NotBefore: stamp(d.Validity.NotBefore), NotAfter: stamp(d.Validity.NotAfter), State: state, Effective: d.Effective, Version: d.Version})
 	}
 	writeJSON(w, http.StatusOK, request, page)
 }
@@ -249,33 +287,6 @@ func mapAccess(err error) error {
 	return commands.Fail(commands.InvalidRequest)
 }
 
-type accessCommand struct {
-	s    *Server
-	kind string
-}
-
-func (h accessCommand) Resolve(workspace, target string) (commands.Target, commands.Resolution) {
-	s := h.s
-	if workspace != s.bootWorkspace {
-		return commands.Target{}, commands.NotFound
-	}
-	switch h.kind {
-	case "grant":
-		if target == grantsTarget {
-			return commands.Target{Revision: s.Revision()}, commands.Found
-		}
-	case "revoke_grant":
-		if _, ok := s.grantView(target); ok {
-			return commands.Target{Revision: s.Revision()}, commands.Found
-		}
-	default:
-		if _, ok := s.delegationView(target); ok {
-			return commands.Target{Revision: s.Revision()}, commands.Found
-		}
-	}
-	return commands.Target{}, commands.NotFound
-}
-
 func (s *Server) grantView(id string) (gate.GrantView, bool) {
 	for _, g := range s.admin.Grants() {
 		if g.ID == id {
@@ -321,99 +332,8 @@ func covers(have, want []string) bool {
 	return true
 }
 
-func (h accessCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
-	s := h.s
-	if len(ctx.Rationale) > maxRationale {
-		return commands.Outcome{}, commands.Fail(commands.InvalidRequest)
-	}
-	now := s.clock()
-	switch h.kind {
-	case "grant":
-		return h.grant(ctx, now)
-	case "revoke_grant":
-		g, _ := s.grantView(ctx.Target)
-		if g.ClientID != "" || g.Terms.Action == gate.AdministerInstallation || g.SubjectID == ctx.User {
-			return commands.Outcome{}, commands.Fail(commands.PrerequisiteFailed)
-		}
-		if err := s.admin.RevokeGrant(g.ID, g.Version); err != nil {
-			return commands.Outcome{}, mapAccess(err)
-		}
-		return commands.Outcome{ResultRevision: s.Next(), BusinessState: "grant_revoked"}, nil
-	}
-	d, _ := s.delegationView(ctx.Target)
-	if err := s.admin.RevokeDelegation(d.ID, d.Version); err != nil {
-		return commands.Outcome{}, mapAccess(err)
-	}
-	return commands.Outcome{ResultRevision: s.Next(), BusinessState: "delegation_revoked"}, nil
-}
-
-func (h accessCommand) grant(ctx commands.Context, now time.Time) (commands.Outcome, error) {
-	s := h.s
-	subject := ctx.Fields["subject"]
-	if subject == ctx.User {
-		return commands.Outcome{}, commands.Fail(commands.PrerequisiteFailed)
-	}
-	subjects, err := s.grantees(s.caller)
-	if err != nil {
-		return commands.Outcome{}, commands.Fail(commands.DependencyUnavailable)
-	}
-	known := false
-	for _, row := range subjects {
-		known = known || row.UserID == subject
-	}
-	if !known {
-		return commands.Outcome{}, commands.Fail(commands.InvalidRequest, "subject")
-	}
-	fields, ok := splitFields(ctx.Fields["fields"])
-	if !ok {
-		return commands.Outcome{}, commands.Fail(commands.InvalidRequest, "fields")
-	}
-	action, kind := gate.Action(ctx.Fields["action"]), ctx.Fields["kind"]
-	var until time.Time
-	for _, c := range s.ceiling() {
-		if c.Action == string(action) && c.Kind == kind && len(fields) > 0 == (len(c.Fields) > 0) && covers(c.Fields, fields) {
-			if at, _ := time.Parse(time.RFC3339, c.Until); at.After(until) {
-				until = at
-			}
-		}
-	}
-	if until.IsZero() {
-		return commands.Outcome{}, commands.Fail(commands.InvalidRequest, "action")
-	}
-	customer := gate.All()
-	switch raw := ctx.Fields["customer"]; {
-	case raw == "all":
-	case validWorkspace(raw) && kind != ReaderKind:
-		customer = gate.One(raw)
-	default:
-		return commands.Outcome{}, commands.Fail(commands.InvalidRequest, "customer")
-	}
-	most := int(until.Sub(now) / (24 * time.Hour))
-	days, ok := minutes(ctx.Fields["days"], 1, most)
-	if !ok {
-		return commands.Outcome{}, commands.Fail(commands.InvalidRequest, "days")
-	}
-	id := "grant-" + hex.EncodeToString(random(8))
-	terms := gate.Terms{Action: action, Kind: kind, Fields: fields, Period: gate.AnyPeriod(),
-		Scope: gate.Scope{WorkspaceID: s.bootWorkspace, Customer: customer, LegalEntity: gate.All(), Contract: gate.All()}}
-	if s.faulty("access") {
-		err = gate.ErrChanged
-	} else {
-		err = s.admin.AddGrant(gate.Grant{ID: id, SubjectID: subject, Terms: terms, Validity: gate.Validity{NotBefore: now, NotAfter: now.Add(time.Duration(days) * 24 * time.Hour)}})
-	}
-	if err != nil {
-		return commands.Outcome{}, mapAccess(err)
-	}
-	return commands.Outcome{ResultRevision: s.Next(), BusinessState: "granted", Fields: map[string]string{"grant": id}}, nil
-}
-
 func (s *Server) accessDefinitions() []commands.Definition {
 	permission := commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}
-	fields := []commands.Field{{Name: "subject", Type: commands.ID, Required: true}, {Name: "action", Type: commands.Text, Required: true}, {Name: "kind", Type: commands.Text, Required: true},
-		{Name: "fields", Type: commands.Text}, {Name: "customer", Type: commands.Text, Required: true}, {Name: "days", Type: commands.Integer, Required: true}}
-	return []commands.Definition{
-		{ID: "access.grant", Permission: permission, Mutating: true, Rationale: true, Fields: fields, Handler: accessCommand{s: s, kind: "grant"}},
-		{ID: "access.revoke_grant", Permission: permission, Mutating: true, Rationale: true, Handler: accessCommand{s: s, kind: "revoke_grant"}},
-		{ID: "access.revoke_delegation", Permission: permission, Mutating: true, Rationale: true, Handler: accessCommand{s: s, kind: "revoke_delegation"}},
-	}
+	return append(s.requestDefinitions(permission),
+		commands.Definition{ID: "access.revoke_delegation", Permission: permission, Mutating: true, Rationale: true, Handler: delegationCommand{s: s}})
 }

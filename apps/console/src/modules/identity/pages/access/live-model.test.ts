@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { AccessGrant, AccessPage } from "../../../../service/admin";
-import { accessText, ceilingGrants, delegationsOf, maxDays, people, reasonText, scopeText, wholeDays } from "./live-model";
+import { ledgerOf, type AccessGrant, type AccessPage } from "../../../../service/admin";
+import { accessText, ceilingGrants, closed, delegationsOf, maxDays, people, reasonText, revocable, scopeText, stateLine, wholeDays } from "./live-model";
 import { a, accessPhrase, actionLabel } from "./live-copy";
 
 const grant = (change: Partial<AccessGrant>): AccessGrant => ({
@@ -9,7 +9,9 @@ const grant = (change: Partial<AccessGrant>): AccessGrant => ({
   scope: { customer: "all", legal_entity: "all", contract: "all", period: "any" },
   not_before: "2026-11-16T00:00:00Z", not_after: "2026-12-16T00:00:00Z", state: "active", effective: true, version: 1, ...change,
 });
-const page = (grants: AccessGrant[]): AccessPage => ({ revision: "r1", grants, delegations: [], catalog: [], subjects: [], now: "2026-11-16T09:00:00Z" });
+const page = (grants: AccessGrant[]): AccessPage => ({
+  revision: "r1", grants, delegations: [], catalog: [], subjects: [], now: "2026-11-16T09:00:00Z", you: "", started_at: "", settings: [], requests: [], revocations: [], ledger: ledgerOf({ state: "ok" }),
+});
 
 test("grants split into current, ended and ceiling", () => {
   const p = page([
@@ -22,9 +24,33 @@ test("grants split into current, ended and ceiling", () => {
   assert.deepEqual(split.ended.map((g) => g.id), ["x", "y"]);
   assert.deepEqual(ceilingGrants(p).map((g) => g.id), ["k"]);
   const d = { ...grant({}), delegator: "a", delegate: "b", parent: "", redelegate: false };
-  const ds = delegationsOf({ ...p, delegations: [{ ...d, id: "d1" }, { ...d, id: "d2", state: "revoked" }, { ...d, id: "d3", state: "pending" }] });
+  const ds = delegationsOf({ ...p, delegations: [{ ...d, id: "d1" }, { ...d, id: "d2", state: "revoked" }, { ...d, id: "d3", state: "pending" }, { ...d, id: "d4", state: "ended" }] });
+  assert.deepEqual(ds.current.map((x) => x.id), ["d1", "d3"]);
+  assert.deepEqual(ds.ended.map((x) => x.id), ["d2", "d4"]);
+});
+
+test("unconfirmed revocations stay open for grants and delegations, and unknown states read unconfirmed", () => {
+  const p = page([grant({ id: "a" }), grant({ id: "r", state: "revocation_unconfirmed" }), grant({ id: "x", state: "revoked" }), grant({ id: "q", state: "future" as AccessGrant["state"] })]);
+  const split = people(p);
+  assert.deepEqual(split.current.map((g) => g.id), ["a", "q", "r"]);
+  assert.deepEqual(split.ended.map((g) => g.id), ["x"]);
+  const d = { ...grant({}), delegator: "a", delegate: "b", parent: "", redelegate: false };
+  const ds = delegationsOf({ ...p, delegations: [{ ...d, id: "d1", state: "revocation_unconfirmed" }, { ...d, id: "d2", state: "revoked" }, { ...d, id: "d3", state: "odd" as "ended" }] });
   assert.deepEqual(ds.current.map((x) => x.id), ["d1", "d3"]);
   assert.deepEqual(ds.ended.map((x) => x.id), ["d2"]);
+  const want = { en: "Revocation not confirmed", ko: "회수 미확정", ar: "الإبطال غير مؤكَّد" } as const;
+  for (const l of ["en", "ko", "ar"] as const) {
+    assert.equal(stateLine(l, grant({ state: "revocation_unconfirmed" }))[0], want[l]);
+    assert.equal(stateLine(l, grant({ state: "something-new" as AccessGrant["state"] }))[0], want[l]);
+    assert.equal(stateLine(l, { ...d, state: "revocation_unconfirmed" })[0], want[l]);
+  }
+  assert.equal(stateLine("en", grant({}))[0], "Active");
+  assert.equal(stateLine("en", grant({ effective: false }))[0], "Does not apply");
+  assert.equal(stateLine("en", grant({ state: "revoked" }))[0], "Revoked");
+  assert.equal(stateLine("en", grant({ state: "expired" }))[0], "Expired");
+  assert.equal(stateLine("en", grant({ state: "pending" }))[0], "Not yet valid");
+  assert.ok(revocable("active") && revocable("pending") && !revocable("revocation_unconfirmed") && !revocable("revoked"));
+  assert.ok(closed("ended") && !closed("revocation_unconfirmed"));
 });
 
 test("days are floored and strict", () => {
@@ -52,4 +78,19 @@ test("labels and reasons", () => {
   const texts = reasons.map((reason) => reasonText("en", { ...base, reason }));
   assert.equal(new Set(texts).size, reasons.length);
   assert.match(texts[6], /odd\)$/);
+});
+
+test("counts and day hints read with counted nouns", () => {
+  assert.equal(a.activeGrants("en", 1), "1 active grant");
+  assert.equal(a.activeGrants("en", 2), "2 active grants");
+  assert.equal(a.activeDelegations("en", 1), "1 active delegation");
+  assert.equal(a.activeDelegations("ar", 2), "تفويضان ساريان");
+  assert.equal(a.activeGrants("ar", 11), "11 صلاحية سارية");
+  assert.equal(a.activeGrants("ko", 3), "유효 3건");
+  assert.equal(a.days("ar"), "عدد الأيام");
+  assert.match(a.daysHint("en", 1, "d"), /^1 to 1 day\./);
+  assert.match(a.daysHint("ar", 29, "d"), /من 1 إلى 29 يومًا/);
+  assert.match(a.daysHint("ar", 2, "d"), /من 1 إلى يومين\./);
+  assert.match(a.daysHint("ko", 29, "d"), /^1~29일\./);
+  assert.equal(a.effectFor("ar", "x"), "الأثر على x");
 });

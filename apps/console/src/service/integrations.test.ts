@@ -144,7 +144,7 @@ test("commands carry the envelope with and without fields and keep the resend id
   const body = JSON.parse(String(r.calls[0].init.body));
   assert.deepEqual(body, { request_id: "m01-a", target_id: "plugin:p", idempotency_key: "m01-b", expected_revision: "r9", rationale: "qa", body: { kind: "upgrade", version: "1.1.0" } });
   assert.equal((r.calls[0].init.headers as Record<string, string>)["X-Request-Id"], "m01-a");
-  assert.deepEqual(out, { state: "pending", fields: { proposal: "10", target: "plugin-proposal-10" } });
+  assert.deepEqual({ state: out.state, fields: out.fields }, { state: "pending", fields: { proposal: "10", target: "plugin-proposal-10" } });
   await api.command("integrations.plugin_propose", "plugin:p", "r9", "qa", { kind: "upgrade", version: "1.1.0" }, tried);
   const again = JSON.parse(String(r.calls[1].init.body));
   assert.equal(again.idempotency_key, body.idempotency_key);

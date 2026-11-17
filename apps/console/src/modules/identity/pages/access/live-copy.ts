@@ -1,19 +1,38 @@
 import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
+import { counted, type Plural } from "../../../../shared/plural";
+
+const counts = {
+  grants: {
+    en: ["1 active grant", "{n} active grants"],
+    ko: "유효 {n}건",
+    ar: ["{n} صلاحية سارية", "صلاحية سارية واحدة", "صلاحيتان ساريتان", "{n} صلاحيات سارية", "{n} صلاحية سارية", "{n} صلاحية سارية"],
+  },
+  delegations: {
+    en: ["1 active delegation", "{n} active delegations"],
+    ko: "유효 {n}건",
+    ar: ["{n} تفويض سارٍ", "تفويض سارٍ واحد", "تفويضان ساريان", "{n} تفويضات سارية", "{n} تفويضًا ساريًا", "{n} تفويض سارٍ"],
+  },
+  days: { en: ["1 day", "{n} days"], ko: "{n}일", ar: ["{n} يوم", "يوم واحد", "يومين", "{n} أيام", "{n} يومًا", "{n} يوم"] },
+} satisfies Record<string, Plural>;
 
 export const a = {
   peopleTitle: (l: Locale) => t(l, "Grants to people", "사용자별 권한 부여", "الصلاحيات الممنوحة للأشخاص"),
-  activeCount: (l: Locale, n: number) => t(l, `${n} active`, `유효 ${n}건`, `${n} سارية`),
+  activeGrants: (l: Locale, n: number) => counted(l, n, counts.grants),
+  activeDelegations: (l: Locale, n: number) => counted(l, n, counts.delegations),
   colPerson: (l: Locale) => t(l, "Person", "사용자", "الشخص"),
   colAccess: (l: Locale) => t(l, "Access", "권한", "الصلاحية"),
   colStatus: (l: Locale) => t(l, "Status", "상태", "الحالة"),
   colActions: (l: Locale) => t(l, "Actions", "작업", "الإجراءات"),
-  revoke: (l: Locale) => t(l, "Revoke", "회수", "إلغاء"),
+  revoke: (l: Locale) => t(l, "Revoke", "회수", "إبطال"),
   yourGrant: (l: Locale) => t(l, "Your grant", "내 권한", "صلاحيتك"),
   stActive: (l: Locale) => t(l, "Active", "유효", "سارية"),
   stPending: (l: Locale) => t(l, "Not yet valid", "아직 유효하지 않음", "لم تبدأ بعد"),
   stExpired: (l: Locale) => t(l, "Expired", "만료됨", "منتهية"),
-  stRevoked: (l: Locale) => t(l, "Revoked", "회수됨", "أُلغيت"),
+  stRevoked: (l: Locale) => t(l, "Revoked", "회수됨", "أُبطلت"),
+  stUnconfirmed: (l: Locale) => t(l, "Revocation not confirmed", "회수 미확정", "الإبطال غير مؤكَّد"),
+  stUnconfirmedWhy: (l: Locale) =>
+    t(l, "Blocked in this server process; see the Revocations section", "이 서버 프로세스에서 차단됨. '회수' 섹션을 확인하세요", "محجوب في عملية الخادم هذه؛ راجع قسم «الإبطال»"),
   until: (l: Locale, d: string) => t(l, `Until ${d}`, `${d}까지`, `حتى ${d}`),
   starts: (l: Locale, d: string) => t(l, `Starts ${d}`, `${d}부터`, `تبدأ في ${d}`),
   ended: (l: Locale, d: string) => t(l, `Ended ${d}`, `${d} 종료`, `انتهت في ${d}`),
@@ -49,14 +68,6 @@ export const a = {
       "لا توجد تفويضات. ينشئ التفويضَ صاحبُ الصلاحية بنفسه، وهذا غير متاح في خدمة ما قبل الإطلاق.",
     ),
   endedDeleg: (l: Locale, n: number) => t(l, `Ended delegations (${n})`, `종료된 위임 (${n})`, `التفويضات المنتهية (${n})`),
-  grantTitle: (l: Locale) => t(l, "Grant access", "권한 부여", "منح الصلاحية"),
-  grantLead: (l: Locale) =>
-    t(
-      l,
-      "Gives one person access within the console ceiling. It applies as soon as you grant it. You can't grant access to yourself.",
-      "콘솔 권한 상한 안에서 사용자 한 명에게 권한을 줍니다. 부여하는 즉시 적용됩니다. 자신에게는 권한을 부여할 수 없습니다.",
-      "تمنح شخصًا واحدًا صلاحية ضمن الحد الأقصى لوحدة التحكم، وتسري فور منحها. لا يمكنك منح صلاحية لنفسك.",
-    ),
   person: (l: Locale) => t(l, "Person", "사용자", "الشخص"),
   choosePerson: (l: Locale) => t(l, "Choose a person", "사용자 선택", "اختر شخصًا"),
   noneEligible: (l: Locale) =>
@@ -73,29 +84,17 @@ export const a = {
   focusAll: (l: Locale) =>
     t(l, "Collected FOCUS data can't be limited to one customer.", "수집된 FOCUS 데이터는 특정 고객으로 제한할 수 없습니다.", "لا يمكن قصر بيانات FOCUS المجمّعة على عميل واحد."),
   duration: (l: Locale) => t(l, "Duration", "기간", "المدة"),
-  days: (l: Locale) => t(l, "days", "일", "يومًا"),
+  days: (l: Locale) => t(l, "days", "일", "عدد الأيام"),
   daysHint: (l: Locale, max: number, d: string) =>
     t(
       l,
-      `1 to ${max} days. Access ends no later than ${d}, when the console ceiling ends.`,
-      `1~${max}일. 콘솔 권한 상한이 끝나는 ${d}보다 늦게 끝날 수 없습니다.`,
-      `من 1 إلى ${max} يومًا. تنتهي الصلاحية في موعد أقصاه ${d}، عند انتهاء الحد الأقصى لوحدة التحكم.`,
+      `1 to ${counted(l, max, counts.days)}. Access ends no later than ${d}, when the console ceiling ends.`,
+      `1~${counted(l, max, counts.days)}. 콘솔 권한 상한이 끝나는 ${d}보다 늦게 끝날 수 없습니다.`,
+      `من 1 إلى ${counted(l, max, counts.days)}. تنتهي الصلاحية في موعد أقصاه ${d}، عند انتهاء الحد الأقصى لوحدة التحكم.`,
     ),
-  endsOn: (l: Locale, d: string) => t(l, `Ends ${d}`, `${d} 종료`, `تنتهي في ${d}`),
   errDays: (l: Locale, max: number) => t(l, `Enter a whole number from 1 to ${max}`, `1~${max} 사이의 정수를 입력하세요`, `أدخل عددًا صحيحًا من 1 إلى ${max}`),
   errPerson: (l: Locale) => t(l, "Choose a person", "사용자를 선택하세요", "اختر شخصًا"),
-  grantImpact: (l: Locale, login: string, access: string, d: string) =>
-    t(l, `${login} will be able to ${access} for all customers until ${d}.`, `${login}님은 ${d}까지 모든 고객에 대해 ${access} 권한을 갖습니다.`, `سيتمكن ${login} من ${access} لجميع العملاء حتى ${d}.`),
-  doneGranted: (l: Locale, login: string) => t(l, `Access granted to ${login}.`, `${login}님에게 권한을 부여했습니다.`, `مُنحت الصلاحية لـ${login}.`),
-  revokeGrantTitle: (l: Locale) => t(l, "Revoke grant", "권한 회수", "إلغاء الصلاحية"),
-  revokeDelegTitle: (l: Locale) => t(l, "Revoke delegation", "위임 회수", "إلغاء التفويض"),
-  revokeGrantImpact: (l: Locale, login: string) =>
-    t(
-      l,
-      `${login} can no longer use this access. This can't be undone; grant access again if it's needed later.`,
-      `${login}님은 더 이상 이 권한을 쓸 수 없습니다. 되돌릴 수 없으며, 필요하면 다시 부여해야 합니다.`,
-      `لن يتمكن ${login} من استخدام هذه الصلاحية بعد الآن. لا يمكن التراجع عن ذلك؛ امنح الصلاحية مجددًا إذا لزم الأمر لاحقًا.`,
-    ),
+  revokeDelegTitle: (l: Locale) => t(l, "Revoke delegation", "위임 회수", "إبطال التفويض"),
   revokeDelegImpact: (l: Locale, login: string) =>
     t(
       l,
@@ -103,17 +102,8 @@ export const a = {
       `${login}님은 이 위임을 통한 권한을 더 이상 쓸 수 없으며, 이 위임에서 이어진 하위 위임도 모두 적용되지 않습니다. 되돌릴 수 없습니다.`,
       `لن يتمكن ${login} من استخدام الصلاحية عبر هذا التفويض، ويتوقف كذلك كل تفويض صادر عنه. لا يمكن التراجع عن ذلك.`,
     ),
-  doneRevokedGrant: (l: Locale, login: string) => t(l, `Grant revoked for ${login}.`, `${login}님의 권한을 회수했습니다.`, `أُلغيت صلاحية ${login}.`),
-  doneRevokedDeleg: (l: Locale) => t(l, "Delegation revoked.", "위임을 회수했습니다.", "أُلغي التفويض."),
   backToGrants: (l: Locale) => t(l, "Back to grants", "부여·위임으로", "العودة إلى المنح"),
   refusedTitle: (l: Locale) => t(l, "This change was refused", "이 변경이 거부되었습니다", "رُفض هذا التغيير"),
-  refusedGrant: (l: Locale) =>
-    t(
-      l,
-      "Access couldn't be granted: it may be to yourself, or this person's access changed while granting. The list has been reloaded; check it and try again.",
-      "권한을 부여하지 못했습니다. 자신에게 부여하려 했거나 부여하는 동안 사용자의 권한 상태가 바뀌었을 수 있습니다. 목록을 다시 불러왔으니 확인한 뒤 다시 시도하세요.",
-      "تعذّر منح الصلاحية: ربما كانت لك أنت، أو تغيّرت صلاحيات هذا الشخص أثناء المنح. أُعيد تحميل القائمة؛ تحقّق منها ثم حاول مجددًا.",
-    ),
   conflictBody: (l: Locale) =>
     t(
       l,
@@ -128,10 +118,10 @@ export const a = {
       l,
       "This grant can't be revoked here. Console ceiling grants and your own grants can't be revoked on this screen. The list has been reloaded.",
       "이 권한은 여기에서 회수할 수 없습니다. 콘솔 권한 상한과 내 권한은 이 화면에서 회수할 수 없습니다. 목록을 다시 불러왔습니다.",
-      "لا يمكن إلغاء هذه الصلاحية هنا؛ فلا تُلغى من هذه الشاشة صلاحيات الحد الأقصى لوحدة التحكم ولا صلاحياتك أنت. أُعيد تحميل القائمة.",
+      "لا يمكن إبطال هذه الصلاحية هنا؛ فلا تُبطَل من هذه الشاشة صلاحيات الحد الأقصى لوحدة التحكم ولا صلاحياتك أنت. أُعيد تحميل القائمة.",
     ),
   stageBody: (l: Locale) =>
-    t(l, "It was already revoked or has ended. The list has been reloaded.", "이미 회수되었거나 종료되었습니다. 목록을 다시 불러왔습니다.", "أُلغيت مسبقًا أو انتهت. أُعيد تحميل القائمة."),
+    t(l, "It is already closed or has ended. The list has been reloaded.", "이미 종료되었습니다. 목록을 다시 불러왔습니다.", "أُغلقت مسبقًا أو انتهت. أُعيد تحميل القائمة."),
   invalidBody: (l: Locale) =>
     t(
       l,
@@ -153,7 +143,7 @@ export const a = {
       "이 사용자의 권한 부여와 위임만 확인합니다. 실제 요청에는 콘솔 자체의 권한과 이 사용자의 유효한 로그인도 필요합니다.",
       "تتحقق من صلاحيات هذا الشخص وتفويضاته فقط. يتطلب الطلب الفعلي أيضًا صلاحية وحدة التحكم نفسها وتسجيل دخول ساريًا لهذا الشخص.",
     ),
-  effectFor: (l: Locale, login: string) => t(l, `Effect for ${login}`, `${login}님의 효력`, `الأثر لـ${login}`),
+  effectFor: (l: Locale, login: string) => t(l, `Effect for ${login}`, `${login}님의 효력`, `الأثر على ${login}`),
   noCustomer: (l: Locale) => t(l, "No customer", "고객 지정 없음", "دون عميل"),
   checkedAt: (l: Locale, time: string) => t(l, `Checked at ${time}`, `${time}에 확인`, `تم التحقق في ${time}`),
   allowedCount: (l: Locale, n: number, total: number) => t(l, `${n} of ${total} checks allowed`, `${total}건 중 ${n}건 허용`, `${n} من أصل ${total} مسموح`),

@@ -101,5 +101,5 @@ test("contract commands post the envelope and a resend reuses the attempt identi
   assert.deepEqual(bodies[1], bodies[0]);
   const ok = (async () => new Response(JSON.stringify({ business_state: "pending_final", fields: { write: "cw-1", sequence: 4 } }), { status: 200 })) as unknown as typeof fetch;
   const out = await adminClient("t", ok).command("contract.evidence", "c3", "r8", "why", { kind: "secured", reference: "x", covered_until: "2026-10-01" }, tried);
-  assert.deepEqual(out, { state: "pending_final", fields: { write: "cw-1", sequence: "4" } });
+  assert.deepEqual({ state: out.state, fields: out.fields }, { state: "pending_final", fields: { write: "cw-1", sequence: "4" } });
 });

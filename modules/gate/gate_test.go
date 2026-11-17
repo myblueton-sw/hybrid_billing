@@ -813,3 +813,12 @@ func TestAdmissionClockAndCatalogue(t *testing.T) {
 		}
 	}
 }
+
+func TestAdministrationGeneration(t *testing.T) {
+	if (&Administration{}).Generation() != 0 {
+		t.Error("unready generation")
+	}
+	if setup(t).a.Generation() == 0 {
+		t.Error("ready generation")
+	}
+}

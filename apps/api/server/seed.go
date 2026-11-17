@@ -115,6 +115,8 @@ func (s *Server) Start() error {
 			}})
 		steps = append(steps, s.seed...)
 	}
+	s.startedAt = now
+	steps = append(steps, step{"decision-ledger", s.openLedger})
 	for _, st := range steps {
 		if err := s.Change(st.name, st.run); err != nil {
 			return err

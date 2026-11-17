@@ -11,9 +11,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
+	"github.com/myblueton-sw/hybrid_billing/modules/decisionledger"
 	"github.com/myblueton-sw/hybrid_billing/modules/events"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
@@ -61,6 +63,7 @@ type Config struct {
 	Commands  commands.Limits
 	Passwords passwords.Params
 	Readers   map[string]string
+	Access    AccessSettings
 }
 
 type Server struct {
@@ -101,6 +104,9 @@ type Server struct {
 	trace           *releasetrace.Registry
 	perf            *perfgate.Registry
 	ev              *evidenceStore
+	changes         *accesschange.Registry
+	ledger          *decisionledger.Ledger
+	startedAt       time.Time
 	limit           *limiter
 	slots           chan struct{}
 	boot            activation
@@ -201,6 +207,10 @@ func New(cfg Config) (*Server, error) {
 	if cfg.Passwords == (passwords.Params{}) {
 		cfg.Passwords = passwords.DefaultParams()
 	}
+	cfg.Access = cfg.Access.withDefaults()
+	if err := cfg.Access.validate(); err != nil {
+		return nil, err
+	}
 	steps := []func() error{
 		func() (err error) { s.identity, err = identity.New(Installation, cfg.Identity, s.clock); return },
 		func() (err error) {
@@ -239,6 +249,7 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) { s.retention, err = retention.NewRegistry(s.clock); return },
 		func() (err error) { s.trace, err = releasetrace.NewRegistry(s.clock); return },
 		func() (err error) { s.perf, err = perfgate.NewRegistry(s.clock); return },
+		func() (err error) { s.changes, err = accesschange.NewRegistry(s.clock, cfg.Access.limits()); return },
 		s.registerUsers,
 	}
 	for _, build := range steps {

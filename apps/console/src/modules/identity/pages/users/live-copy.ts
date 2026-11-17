@@ -188,9 +188,9 @@ export const w = {
   busy: (l: Locale) =>
     t(
       l,
-      "The user service could not complete this change. Try again shortly. If it keeps failing, pending invitations or links may have reached their limit.",
-      "사용자 서비스가 이 변경을 완료하지 못했습니다. 잠시 후 다시 시도하세요. 계속 실패하면 대기 중인 초대나 링크가 한도에 도달했을 수 있습니다.",
-      "تعذّر على خدمة المستخدمين إكمال هذا التغيير. أعد المحاولة بعد قليل. إذا استمر الإخفاق، فربما بلغت الدعوات أو الروابط المعلّقة حدّها.",
+      "The user service could not complete this change. Try again shortly. If it keeps failing, pending invitations or links may have reached their limit, or the decision ledger can't record decisions: reinstating people and giving the administrator role then wait until the decision ledger can record again (see Roles, delegation and effective access). Suspending people still works.",
+      "사용자 서비스가 이 변경을 완료하지 못했습니다. 잠시 후 다시 시도하세요. 계속 실패하면 대기 중인 초대나 링크가 한도에 도달했거나 결정 원장이 결정을 기록할 수 없는 상태일 수 있습니다. 그 경우 계정 정지 해제와 관리자 역할 부여는 결정 원장이 다시 기록할 수 있을 때까지 기다려야 합니다('역할·위임·효력' 참고). 사용자 정지는 계속 할 수 있습니다.",
+      "تعذّر على خدمة المستخدمين إكمال هذا التغيير. أعد المحاولة بعد قليل. إذا استمر الإخفاق، فربما بلغت الدعوات أو الروابط المعلّقة حدّها، أو أن دفتر القرارات لا يستطيع تسجيل القرارات؛ وعندها تنتظر إعادة تفعيل الأشخاص ومنح دور المسؤول حتى يتمكن دفتر القرارات من التسجيل مجددًا (راجع «الأدوار والتفويض والوصول الفعلي»). يظل تعليق الأشخاص ممكنًا.",
     ),
   stale: (l: Locale) =>
     t(

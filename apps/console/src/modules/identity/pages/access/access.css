@@ -1,0 +1,122 @@
+.remaining-security .access-ledger {
+  display: grid;
+  gap: 8px;
+  padding-block: 12px;
+  border-block: 1px solid var(--border-row);
+  margin-block: 0 16px;
+}
+.remaining-security .access-records {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+.remaining-security .access-record {
+  display: grid;
+  gap: 6px;
+  padding-block: 16px;
+  border-block-end: 1px solid var(--border-row);
+}
+.remaining-security .access-record h3 {
+  overflow-wrap: anywhere;
+}
+.remaining-security .access-record h3,
+.remaining-security .access-impact-list h3,
+.remaining-security .access-cleanup h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+.remaining-security .access-record p {
+  margin: 0;
+}
+.remaining-security .access-cleanup {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px 24px;
+}
+.remaining-security .access-bullets {
+  list-style: none;
+  margin: 4px 0 0;
+  padding-inline-start: 20px;
+}
+.remaining-security .access-bullets > li {
+  position: relative;
+}
+.remaining-security .access-bullets > li::before {
+  content: "–";
+  position: absolute;
+  inset-inline-start: -16px;
+}
+.remaining-security .access-wrap {
+  overflow-wrap: anywhere;
+}
+.remaining-security .access-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  max-inline-size: 160px;
+}
+.remaining-security .access-impact-list {
+  margin-block: 16px 24px;
+}
+.remaining-security .access-settings table {
+  margin-block-start: 8px;
+}
+.remaining-security .live-access .live-col-a {
+  inline-size: 26%;
+}
+.remaining-security .live-access .live-col-b {
+  inline-size: 30%;
+}
+.remaining-security .live-access .live-col-c {
+  inline-size: 20%;
+}
+.remaining-security .live-access .live-col-d {
+  inline-size: 24%;
+}
+.remaining-security .access-grants .live-col-a {
+  inline-size: 22%;
+}
+.remaining-security .access-grants .live-col-d {
+  inline-size: 28%;
+}
+.remaining-security .live-access td {
+  overflow-wrap: anywhere;
+}
+.remaining-security .access-actions .live-secondary {
+  white-space: normal;
+  max-inline-size: 100%;
+  text-align: start;
+}
+.remaining-security .live-sections {
+  grid-template-columns: minmax(0, 1fr);
+}
+.remaining-security .access-who {
+  display: block;
+}
+.remaining-security .access-id {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.remaining-security .live-primary.access-paused:disabled {
+  cursor: not-allowed;
+}
+@media (min-width: 768px) {
+  .remaining-security .live-access .live-revoke {
+    white-space: nowrap;
+  }
+}
+@media (max-width: 767px) {
+  .remaining-security .access-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-inline-size: none;
+  }
+  .remaining-security .live-access .live-revoke {
+    white-space: normal;
+    max-inline-size: 100%;
+  }
+}

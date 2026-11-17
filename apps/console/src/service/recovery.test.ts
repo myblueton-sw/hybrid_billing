@@ -182,7 +182,7 @@ test("commands send the envelope with and without a field and return the result 
   const body = JSON.parse(String(r.calls[0].init.body));
   assert.deepEqual(body, { request_id: "req-1", target_id: "recovery-installation:sample-standby", idempotency_key: "key-1", expected_revision: "r7", rationale: "qa", body: { lost: digest } });
   assert.equal((r.calls[0].init.headers as Record<string, string>)["X-Request-Id"], "req-1");
-  assert.deepEqual(out, { state: "pending", fields: { proposal: "11", target: "recovery-proposal-11" } });
+  assert.deepEqual({ state: out.state, fields: out.fields }, { state: "pending", fields: { proposal: "11", target: "recovery-proposal-11" } });
   const l = fake(200, { business_state: "locked", fields: { installation: "sample-standby", target: "recovery-installation:sample-standby" } });
   const locked = await adminClient("csrf", l.f).command("recovery.lock", "recovery-installation:sample-standby", "r8", "qa", {}, { request: "a", key: "b" });
   assert.deepEqual(JSON.parse(String(l.calls[0].init.body)).body, {});

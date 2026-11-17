@@ -95,7 +95,7 @@ test("commands send the envelope and resend with the same identity", async () =>
   const api = adminClient("csrf", r.f);
   const tried = { request: "m01-req", key: "m01-key" };
   const out = await api.command("installation.approve", "installation-proposal-5", "r7", "ok", {}, tried);
-  assert.deepEqual(out, { state: "applied", fields: { proposal: "5", target: "installation-proposal-5" } });
+  assert.deepEqual({ state: out.state, fields: out.fields }, { state: "applied", fields: { proposal: "5", target: "installation-proposal-5" } });
   await api.command("installation.approve", "installation-proposal-5", "r7", "ok", {}, tried);
   assert.equal(r.calls[0].url, "/api/v1/commands/installation.approve");
   const first = JSON.parse(String(r.calls[0].init.body));

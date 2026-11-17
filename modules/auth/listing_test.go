@@ -133,3 +133,70 @@ func TestExplainRacesChanges(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestDelegationEffectiveFollowsTheChainRules(t *testing.T) {
+	f := setupSource(t)
+	f.grant("root", "alice", terms(View, One("c1"), "quantity", "service"))
+	f.grant("home-bob", "bob", terms(RequestApproval, One("c9")))
+	f.grant("home-carol", "carol", terms(RequestApproval, One("c9")))
+	f.grant("down", "dave", terms(Download, One("c1"), "quantity", "unit_cost"))
+	f.grant("down-view", "dave", terms(View, One("c1"), "quantity"))
+	f.grant("home-erin", "erin", terms(RequestApproval, One("c9")))
+	if err := f.delegate("d1", "alice", "bob", "", true, terms(View, One("c1"), "quantity"), always); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.delegate("d2", "bob", "carol", "d1", false, terms(View, One("c1"), "quantity"), always); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.delegate("d3", "dave", "erin", "", false, terms(Download, One("c1"), "quantity"), always); err != nil {
+		t.Fatal(err)
+	}
+	effective := func() map[string]bool {
+		out := map[string]bool{}
+		for _, d := range f.Delegations() {
+			out[d.ID] = d.Effective
+		}
+		return out
+	}
+	if got := effective(); !got["d1"] || !got["d2"] || !got["d3"] {
+		t.Fatalf("all effective %v", got)
+	}
+	generation := f.Generation()
+	if err := f.RevokeGrant("down-view", 1); err != nil {
+		t.Fatal(err)
+	}
+	if f.Generation() != generation+1 {
+		t.Error("generation")
+	}
+	if got := effective(); got["d3"] || !got["d1"] {
+		t.Errorf("download without the view grant %v", got)
+	}
+	if err := f.RevokeGrant("home-carol", 1); err != nil {
+		t.Fatal(err)
+	}
+	if got := effective(); got["d2"] || !got["d1"] {
+		t.Errorf("a delegate without any grant %v", got)
+	}
+	f.grant("home-carol-2", "carol", terms(RequestApproval, One("c9")))
+	if got := effective(); !got["d2"] {
+		t.Errorf("restored %v", got)
+	}
+	if err := f.RevokeDelegation("d1", 1); err != nil {
+		t.Fatal(err)
+	}
+	if got := effective(); got["d1"] || got["d2"] {
+		t.Errorf("a revoked parent ends the child %v", got)
+	}
+	g := setupSource(t)
+	g.grant("root", "alice", terms(View, One("c1"), "quantity"))
+	g.grant("home-bob", "bob", terms(RequestApproval, One("c9")))
+	if err := g.delegate("d1", "alice", "bob", "", false, terms(View, One("c1"), "quantity"), always); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.RevokeGrant("root", 1); err != nil {
+		t.Fatal(err)
+	}
+	if d := g.Delegations()[0]; d.Effective || !d.Active {
+		t.Errorf("a root without its backing grant %+v", d)
+	}
+}

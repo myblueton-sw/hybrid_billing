@@ -2,6 +2,7 @@ import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsP
 import { installationOf, type InstallationPage } from "./installation";
 import { integrationsOf, type IntegrationsPage } from "./integrations";
 import { recoveryOf, type RecoveryPage } from "./recovery";
+import { retentionOf, type RetentionPage } from "./retention";
 
 export type Membership = { role: "administrator" | "member"; state: "active" | "suspended"; version: number };
 
@@ -299,7 +300,13 @@ export type CommandId =
   | "recovery.approve"
   | "recovery.withdraw"
   | "recovery.lock"
-  | "recovery.propose_unlock";
+  | "recovery.propose_unlock"
+  | "retention.approve"
+  | "retention.withdraw"
+  | "retention.propose_policy"
+  | "retention.place_hold"
+  | "retention.propose_release"
+  | "retention.stop_run";
 
 export type Outcome = { state: string; fields: Record<string, string> };
 
@@ -534,6 +541,9 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
     },
     async recovery(): Promise<RecoveryPage> {
       return recoveryOf(await send("/recovery", { method: "GET" }, attempt().request));
+    },
+    async retention(): Promise<RetentionPage> {
+      return retentionOf(await send("/retention", { method: "GET" }, attempt().request));
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

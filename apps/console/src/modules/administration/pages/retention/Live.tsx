@@ -1,0 +1,207 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Locale } from "../../../../shared/types";
+import { adminClient, AdminError } from "../../../../service/admin";
+import type { RetentionPage } from "../../../../service/retention";
+import type { Session } from "../../../../service/api";
+import { c as sc, retryPhrase } from "../../../../service/copy";
+import { k } from "./live-copy";
+import { commandsAllowed, drop, forget, isProposalCommand, pruneRefusals, rowId, selectionOf, setScope, vanished, viewOf } from "./live-model";
+import { Known, Rich, Stamp, ltr } from "./live-format";
+import type { Announce, Shared } from "./LiveCommand";
+import { PoliciesView } from "./LivePolicies";
+import { ExpiryView } from "./LiveExpiry";
+import { HoldsView } from "./LiveHolds";
+import { DeletionView } from "./LiveDeletion";
+import { RestoreView } from "./LiveRestore";
+import { DecisionsView } from "./LiveDecisions";
+import "../../../../shared/domain-screen-ui/work/screen.css";
+import "../../../identity/pages/users/live.css";
+import "./live.css";
+
+type Props = {
+  locale: Locale;
+  view: string;
+  params: URLSearchParams;
+  session: Session;
+  onSignOut: () => void;
+};
+
+function failureText(l: Locale, e: unknown): string {
+  if (e instanceof AdminError) {
+    if (e.failure === "limited") return sc.limited(l, retryPhrase(l, e.retryAfter || 60));
+    if (e.failure === "busy" || e.failure === "unavailable") return sc.unavailable(l);
+  }
+  return "";
+}
+
+function selectedOf(view: string, s: ReturnType<typeof selectionOf>): string {
+  if (s.proposal) return "p04-proposal-" + s.proposal;
+  if (view === "expiry" && s.artifact) return rowId("item", s.artifact);
+  if (view === "expiry" && s.cls) return rowId("class", s.cls);
+  if (view === "policies" && s.cls) return rowId("policy", s.cls);
+  if (view === "holds" && s.hold) return rowId("hold", s.hold);
+  if (view === "deletion" && s.run) return rowId("run", s.run);
+  return "";
+}
+
+export default function LiveRetention({ locale: l, view: rawView, params, session, onSignOut }: Props) {
+  const api = useMemo(() => adminClient(session.csrf), [session.csrf]);
+  setScope(session.workspace, session.user, session.csrf);
+  const view = viewOf(rawView);
+  const [page, setPage] = useState<RetentionPage | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [loadError, setLoadError] = useState<unknown>(null);
+  const [denied, setDenied] = useState(false);
+  const [signedOut, setSignedOut] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [, setTick] = useState(0);
+  const seq = useRef(0);
+  const scrolled = useRef("");
+  const selection = selectionOf(params, page, view);
+  const selectedId = selectedOf(view, selection);
+
+  const load = useCallback(async (): Promise<RetentionPage | null> => {
+    const n = ++seq.current;
+    setBusy(true);
+    try {
+      const got = await api.retention();
+      if (n !== seq.current) return null;
+      pruneRefusals(got);
+      setPage(got);
+      setStatus("ready");
+      setLoadError(null);
+      return got;
+    } catch (e) {
+      if (n !== seq.current) return null;
+      if (e instanceof AdminError && e.failure === "denied") setDenied(true);
+      if (e instanceof AdminError && e.failure === "unauthenticated") setSignedOut(true);
+      setLoadError(e);
+      setStatus("error");
+      return null;
+    } finally {
+      if (n === seq.current) setBusy(false);
+    }
+  }, [api]);
+
+  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (!selectedId || scrolled.current === selectedId) return;
+    scrolled.current = selectedId;
+    document.getElementById(selectedId)?.scrollIntoView({ block: "center" });
+  }, [selectedId]);
+
+  const showNotice = (text: string) => {
+    setNotice(text);
+    requestAnimationFrame(() => document.getElementById("p04-notice")?.focus());
+  };
+
+  const announce = async (text: Announce) => {
+    if (typeof text === "string") {
+      showNotice(text);
+      void load();
+      return;
+    }
+    const got = await load();
+    showNotice(text(got));
+  };
+
+  if (denied) {
+    return (
+      <div className="p04-live">
+        <section className="live-unavailable" aria-labelledby="p04-denied">
+          <h2 id="p04-denied">{k.deniedTitle(l)}</h2>
+          <p>{k.denied(l)}</p>
+        </section>
+      </div>
+    );
+  }
+  if (signedOut) {
+    return (
+      <div className="p04-live">
+        <div className="live-error" role="alert">
+          <h2>{k.sessionEnded(l)}</h2>
+          <button type="button" className="live-secondary" onClick={() => { forget(); onSignOut(); }}>{k.signInAgain(l)}</button>
+        </div>
+      </div>
+    );
+  }
+
+  const configured = page?.state === "configured";
+  const shared: Shared | null = page && configured
+    ? {
+        l, page, api, me: session.user, workspace: session.workspace, selection, canCommand: commandsAllowed(page),
+        onDone: (text) => { void announce(text); },
+        onNotice: showNotice,
+        onReload: load,
+        onSignedOut: () => setSignedOut(true),
+      }
+    : null;
+  const gone = shared ? vanished(shared.page, view) : [];
+  const failure = failureText(l, loadError);
+
+  return (
+    <div className="p04-live" data-live={view} aria-busy={busy || undefined}>
+      <div className="p04-scope">
+        <dl className="p04-scope-facts">
+          <div><dt>{k.workspace(l)}</dt><dd>{page ? <Known l={l} value={session.workspace} /> : "—"}</dd></div>
+          <div><dt>{k.revision(l)}</dt><dd>{page ? <Known l={l} value={page.revision} /> : "—"}</dd></div>
+          <div><dt>{k.now(l)}</dt><dd>{page ? <Stamp l={l} at={page.now} /> : "—"}</dd></div>
+        </dl>
+        <button type="button" className="live-secondary p04-reload" onClick={() => void load()}>{k.reload(l)}</button>
+      </div>
+      <p className="live-note-rule p04-statement"><strong>{k.statementLead(l)}</strong> {k.statement(l)}</p>
+      <p className="p04-note">{k.valuesNote(l)}</p>
+      <p className="p04-note p04-permission">{k.permission(l)}</p>
+      {notice && <div id="p04-notice" className="service-status" tabIndex={-1} role="status"><p><Rich text={notice} /></p></div>}
+      {status === "error" && (
+        <div className="live-error p04-failure" role="alert">
+          <h2>{sc.failed(l)}</h2>
+          {failure && <p>{failure}</p>}
+          <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
+        </div>
+      )}
+      {gone.length > 0 && (
+        <div className="p04-vanished" role="status">
+          {gone.map((g) => (
+            <div key={g.command + g.target} className="live-note-rule">
+              <p>{k.vanished(l)} {ltr(isProposalCommand(g.command) && g.context.proposal ? "#" + g.context.proposal : g.target)}</p>
+              <button type="button" className="live-secondary" onClick={() => { drop(g.command, g.target); setTick((x) => x + 1); }}>{k.dismissNotice(l)}</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="live-toolbar"><h2 id="p04-view-title" tabIndex={-1}>{k.viewTitle(l, view)}</h2></div>
+      {status === "loading" && !page && <p className="live-meta" role="status">{k.loading(l)}</p>}
+      {page && page.state === "not_configured" && (
+        <section className="live-note-rule p04-empty-site"><h2>{k.notConfigured(l)}</h2></section>
+      )}
+      {page && !configured && page.state !== "not_configured" && (
+        <section className="live-note-rule p04-empty-site"><p><Rich text={k.stateUnknown(l, page.state)} /></p></section>
+      )}
+      {shared && (
+        <>
+          {view === "policies" && <p className="live-note-rule p04-lead">{k.policiesLead(l)}</p>}
+          {view === "expiry" && <p className="live-note-rule p04-lead">{k.expiryLead(l)}</p>}
+          {view === "holds" && <p className="live-note-rule p04-lead">{k.holdsLeadA(l)} <strong>{k.holdsLeadB(l)}</strong> {k.holdsLeadC(l)}</p>}
+          {view === "deletion" && <p className="live-note-rule p04-lead">{k.deletionLead(l)}</p>}
+          {view === "decisions" && <p className="live-note-rule p04-lead">{k.decisionsLead(l)}</p>}
+          {!shared.canCommand && view !== "restore" && view !== "decisions" && <p className="live-note-rule p04-readonly" role="status">{k.readOnly(l)}</p>}
+          {view === "policies" ? (
+            <PoliciesView {...shared} />
+          ) : view === "expiry" ? (
+            <ExpiryView {...shared} />
+          ) : view === "holds" ? (
+            <HoldsView {...shared} />
+          ) : view === "deletion" ? (
+            <DeletionView {...shared} />
+          ) : view === "restore" ? (
+            <RestoreView {...shared} />
+          ) : (
+            <DecisionsView {...shared} />
+          )}
+        </>
+      )}
+    </div>
+  );
+}

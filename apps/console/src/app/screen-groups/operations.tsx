@@ -10,11 +10,12 @@ import Demo from "../../modules/administration/pages/demo/Screen";
 import Licenses from "../../modules/administration/pages/licenses/Screen";
 import Portal from "../../modules/customer-portal/pages/workspace/Screen";
 import LiveInstallation from "../../modules/administration/pages/installation/Live";
+import LiveIntegrations from "../../modules/administration/pages/integrations/Live";
 import { useService } from "../../service/context";
 import "../../shared/domain-screen-ui/operations/screen.css";
 export default function Operations(p: Props) {
   const service = useService();
-  const live = !!service && p.screenId === "P01";
+  const live = !!service && (p.screenId === "P01" || p.screenId === "P02");
   const context = JSON.stringify([
     p.screenId,
     p.view,
@@ -44,6 +45,12 @@ export default function Operations(p: Props) {
       ],
     );
   }, [p.screenId, p.view, p.onState, live]);
+  if (live && service && p.screenId === "P02")
+    return (
+      <div className="work-domain remaining-security" data-screen-id="P02" data-source-state="live" dir={p.locale === "ar" ? "rtl" : "ltr"} lang={p.locale} key={`P02:${p.locale}`}>
+        <LiveIntegrations locale={p.locale} view={p.view} params={p.params} session={service.session} onSignOut={service.signOut} />
+      </div>
+    );
   if (live && service)
     return (
       <div className="work-domain remaining-security" data-screen-id="P01" data-source-state="live" dir={p.locale === "ar" ? "rtl" : "ltr"} lang={p.locale} key={`P01:${p.locale}`}>

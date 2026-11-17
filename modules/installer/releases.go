@@ -167,6 +167,10 @@ func (rel Release) encode() []byte {
 	return e.out.Bytes()
 }
 
+func (rel Release) SigningMessage() []byte { return rel.encode() }
+
+func KeyChallenge(version string) []byte { return challenge(version) }
+
 func challenge(version string) []byte {
 	var e encoder
 	e.text(challengeTag)

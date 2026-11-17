@@ -102,6 +102,7 @@ func (s *Server) Start() error {
 			step{"reader-grants", func() (bool, error) { return true, s.seedReaderGrants(now) }},
 			step{"organizations", func() (bool, error) { return true, s.seedOrganizations() }},
 			step{"contracts", func() (bool, error) { return true, s.seedContracts() }},
+			step{"installation", func() (bool, error) { return true, s.seedInstallation(now) }},
 			step{"installation-grants", func() (bool, error) { return true, s.seedInstallationGrants(now) }},
 			step{"password-links", func() (bool, error) {
 				var err error

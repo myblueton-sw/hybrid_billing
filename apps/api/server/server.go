@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/rand"
 	"errors"
 	"log/slog"
 	"net"
@@ -15,6 +16,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
+	"github.com/myblueton-sw/hybrid_billing/modules/installer"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
 	"github.com/myblueton-sw/hybrid_billing/modules/relationships"
@@ -78,6 +80,8 @@ type Server struct {
 	lifecycles      *contracts.Registry
 	contracts       *contractStore
 	lifecycleLimits contracts.Limits
+	installer       *installer.Registry
+	install         *installStore
 	limit           *limiter
 	slots           chan struct{}
 	boot            activation
@@ -154,7 +158,7 @@ func New(cfg Config) (*Server, error) {
 	}
 	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{},
 		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}, plans: newPlanStore(),
-		contracts: newContractStore()}
+		contracts: newContractStore(), install: newInstallStore()}
 	s.clock = func() time.Time { return cfg.Clock().UTC() }
 	for _, origin := range cfg.Origins {
 		if !validOrigin(origin) {
@@ -195,6 +199,10 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) {
 			s.lifecycleLimits = ContractLimits()
 			s.lifecycles, err = contracts.NewRegistry(s.lifecycleLimits, s.clock)
+			return
+		},
+		func() (err error) {
+			s.installer, err = installer.NewRegistry(installer.Config{Random: rand.Reader}, InstallerLimits(), s.clock)
 			return
 		},
 		s.registerUsers,

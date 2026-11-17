@@ -105,6 +105,7 @@ func (s *Server) Start() error {
 			step{"installation", func() (bool, error) { return true, s.seedInstallation(now) }},
 			step{"installation-grants", func() (bool, error) { return true, s.seedInstallationGrants(now) }},
 			step{"integrations", func() (bool, error) { return true, s.seedIntegrations(now) }},
+			step{"recovery", func() (bool, error) { return true, s.seedRecovery(now) }},
 			step{"password-links", func() (bool, error) {
 				var err error
 				lines, err = s.seedLinks(now)

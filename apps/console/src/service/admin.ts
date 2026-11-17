@@ -1,3 +1,5 @@
+import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsPage } from "./contracts";
+
 export type Membership = { role: "administrator" | "member"; state: "active" | "suspended"; version: number };
 
 export type UserRow = {
@@ -231,6 +233,7 @@ export class AdminError extends Error {
     readonly fields: string[] = [],
     readonly retryAfter = 0,
     readonly operation = "",
+    readonly code = "",
   ) {
     super(failure);
   }
@@ -263,7 +266,15 @@ export type CommandId =
   | "service.revoke_credential"
   | "relationship.propose"
   | "relationship.activate"
-  | "relationship.discard";
+  | "relationship.discard"
+  | "contract.suspend"
+  | "contract.resume"
+  | "contract.renew"
+  | "contract.end"
+  | "contract.withdraw"
+  | "contract.evidence"
+  | "contract.settle"
+  | "contract.reopen";
 
 export type Outcome = { state: string; fields: Record<string, string> };
 
@@ -294,8 +305,8 @@ export function failureOf(status: number, body: Record<string, unknown>): AdminE
   const fields = Array.isArray(body.fields) ? body.fields.map(String) : [];
   const operation = typeof body.operation_id === "string" ? body.operation_id : "";
   const failure = codes[code] ?? (status === 401 ? "unauthenticated" : status === 429 ? "limited" : "unavailable");
-  if (failure === "partial" && !operation) return new AdminError("unavailable");
-  return new AdminError(failure, fields, 0, operation);
+  if (failure === "partial" && !operation) return new AdminError("unavailable", [], 0, "", code);
+  return new AdminError(failure, fields, 0, operation, code);
 }
 
 function random(): string {
@@ -473,6 +484,22 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
         plans: (Array.isArray(body.plans) ? body.plans : []).map(planOf),
         you: String(body.you ?? ""),
       };
+    },
+    async contracts(on = ""): Promise<ContractsPage> {
+      const q = on ? "?" + new URLSearchParams({ on }).toString() : "";
+      return contractsPageOf(await send("/contracts" + q, { method: "GET" }, attempt().request));
+    },
+    async contract(id: string, from = "", until = ""): Promise<ContractDetail | "missing"> {
+      const q = new URLSearchParams();
+      if (from) q.set("from", from);
+      if (until) q.set("until", until);
+      const qs = q.toString();
+      try {
+        return contractDetailOf(await send("/contracts/" + encodeURIComponent(id) + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request));
+      } catch (e) {
+        if (e instanceof AdminError && e.code === "unsupported_command") return "missing";
+        throw e;
+      }
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

@@ -440,7 +440,8 @@ func TestIntegrationActorsAndEffectsAreConfined(t *testing.T) {
 				}
 				if restricted[name] && fn.Name.Name != "seedIntegrations" {
 					owner, _ := sel.X.(*ast.SelectorExpr)
-					if name != "Report" || owner == nil || owner.Sel.Name != "installer" && !(owner.Sel.Name == "recovery" && fn.Name.Name == "seedRecovery") {
+					if name != "Report" || owner == nil || owner.Sel.Name != "installer" && !(owner.Sel.Name == "recovery" && fn.Name.Name == "seedRecovery") &&
+						!(owner.Sel.Name == "retention" && fn.Name.Name == "seedRetention") {
 						t.Errorf("%s %s calls %s", src.name, fn.Name.Name, name)
 					}
 				}

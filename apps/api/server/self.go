@@ -32,19 +32,20 @@ type selfIdentity struct {
 }
 
 type selfPage struct {
-	UserID       string         `json:"user_id"`
-	Login        string         `json:"login"`
-	Email        string         `json:"email"`
-	Workspace    string         `json:"workspace"`
-	Role         string         `json:"role"`
-	Identities   []selfIdentity `json:"identities"`
-	PasswordSet  bool           `json:"password_set"`
-	Installation bool           `json:"installation_administrator"`
-	Sessions     []selfSession  `json:"sessions"`
-	IdleMinutes  int            `json:"idle_minutes"`
-	MaxAge       int64          `json:"max_age_seconds"`
-	SignedInAt   string         `json:"signed_in_at"`
-	Now          string         `json:"now"`
+	UserID          string         `json:"user_id"`
+	Login           string         `json:"login"`
+	Email           string         `json:"email"`
+	Workspace       string         `json:"workspace"`
+	Role            string         `json:"role"`
+	Identities      []selfIdentity `json:"identities"`
+	PasswordSet     bool           `json:"password_set"`
+	Installation    bool           `json:"installation_administrator"`
+	Sessions        []selfSession  `json:"sessions"`
+	IdleMinutes     int            `json:"idle_minutes"`
+	MaxAge          int64          `json:"max_age_seconds"`
+	SignedInAt      string         `json:"signed_in_at"`
+	AuthenticatedAt string         `json:"authenticated_at"`
+	Now             string         `json:"now"`
 }
 
 func handleOf(v identity.Verifier) string {
@@ -101,7 +102,7 @@ func (s *Server) readSelf(w http.ResponseWriter, r *http.Request) {
 	page := selfPage{UserID: answer.User(), Login: found.login, Email: person.email, Workspace: answer.Workspace(), Role: string(answer.Role()),
 		Identities: []selfIdentity{{Method: "local-password", Login: found.login}}, PasswordSet: s.passwords.Has(LoginKey(found.login)),
 		Installation: s.dir.holds(answer.User(), now), Sessions: []selfSession{}, IdleMinutes: int(sessionIdle / time.Minute),
-		SignedInAt: stamp(found.created), Now: stamp(now)}
+		SignedInAt: stamp(found.created), AuthenticatedAt: stamp(found.authenticated), Now: stamp(now)}
 	if current, err := s.policy.Policy(answer.Workspace()); err == nil {
 		page.MaxAge = int64(current.Revision.MaxAge / time.Second)
 	}
@@ -134,7 +135,7 @@ func (s *Server) endSelfSessions(w http.ResponseWriter, r *http.Request) {
 	s.domain.Lock()
 	defer s.domain.Unlock()
 	found, answer, ok := s.self(w, r)
-	if !ok {
+	if !ok || !s.stepUpRoute(w, found, answer.User(), "sessions/end", request) {
 		return
 	}
 	body, err := decodeStrings(r.Body, "session")

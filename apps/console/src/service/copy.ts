@@ -63,6 +63,50 @@ export const c = {
       "خدمة تسجيل الدخول لا تستجيب. أعد المحاولة بعد قليل.",
     ),
   signedOut: (l: Locale) => t(l, "You have signed out.", "로그아웃했습니다.", "تم تسجيل خروجك."),
+  reauthTitle: (l: Locale) => t(l, "Confirm your password", "비밀번호 재확인", "تأكيد كلمة المرور"),
+  reauthBody: (l: Locale) =>
+    t(
+      l,
+      "To continue, enter the password for your current account again.",
+      "계속하려면 현재 계정의 비밀번호를 다시 입력해 주세요.",
+      "للمتابعة، أدخل كلمة مرور حسابك الحالي مرة أخرى.",
+    ),
+  reauthConfirm: (l: Locale) => t(l, "Confirm", "확인", "تأكيد"),
+  reauthConfirming: (l: Locale) => t(l, "Confirming…", "확인 중…", "جارٍ التأكيد…"),
+  reauthCancel: (l: Locale) => t(l, "Cancel", "취소", "إلغاء"),
+  reauthEmpty: (l: Locale) => t(l, "Enter your password.", "비밀번호를 입력해 주세요.", "أدخل كلمة المرور."),
+  reauthWrong: (l: Locale) => t(l, "The password is not correct.", "비밀번호가 올바르지 않습니다.", "كلمة المرور غير صحيحة."),
+  reauthChanged: (l: Locale) =>
+    t(
+      l,
+      "Your password was changed while it was being confirmed. Enter your current password and try again.",
+      "확인하는 동안 비밀번호가 변경되었습니다. 현재 비밀번호를 입력해 다시 시도해 주세요.",
+      "تغيّرت كلمة مرورك أثناء تأكيدها. أدخل كلمة المرور الحالية وأعد المحاولة.",
+    ),
+  reauthHint: (l: Locale) =>
+    t(
+      l,
+      "After 5 wrong passwords in a row in this session, you will be signed out.",
+      "이 세션에서 비밀번호를 연속 5번 틀리면 로그아웃됩니다.",
+      "إذا أدخلت كلمة مرور خاطئة 5 مرات متتالية في هذه الجلسة، فسيُسجَّل خروجك.",
+    ),
+  reauthFailed: (l: Locale) =>
+    t(l, "We could not confirm your password. Try again shortly.", "비밀번호를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.", "تعذّر تأكيد كلمة المرور. أعد المحاولة بعد قليل."),
+  reauthRefused: (l: Locale) =>
+    t(
+      l,
+      "Your password was confirmed, but this request was not completed. Try again to continue.",
+      "비밀번호는 확인했지만 이 요청은 완료되지 않았습니다. 다시 시도해 주세요.",
+      "تم تأكيد كلمة المرور، لكن هذا الطلب لم يكتمل. أعد المحاولة للمتابعة.",
+    ),
+  reauthText: (l: Locale, failure: string) => (failure === "reauth" ? c.reauthRefused(l) : c.reauthNotDone(l)),
+  reauthNotDone: (l: Locale) =>
+    t(
+      l,
+      "Your password was not confirmed, so this request was not completed. Try again to continue.",
+      "비밀번호 확인이 완료되지 않아 이 요청은 처리되지 않았습니다. 다시 시도해 주세요.",
+      "لم تُؤكَّد كلمة المرور، لذا لم يكتمل هذا الطلب. أعد المحاولة للمتابعة.",
+    ),
   ended: (l: Locale) =>
     t(l, "Your session has ended. Sign in again.", "세션이 종료되었습니다. 다시 로그인해 주세요.", "انتهت جلستك. سجّل الدخول مرة أخرى."),
   show: (l: Locale) => t(l, "Show", "표시", "إظهار"),

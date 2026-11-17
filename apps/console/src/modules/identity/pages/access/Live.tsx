@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { adminClient, AdminError, attempt, sequence, type AccessGrant, type AccessPage, type AdminClient, type Attempt, type Preview } from "../../../../service/admin";
+import { AdminError, attempt, sequence, type AccessGrant, type AccessPage, type AdminClient, type Attempt, type Preview } from "../../../../service/admin";
+import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
 import { Summary, type Problems } from "../../../../service/Service";
@@ -357,7 +358,7 @@ function Unavailable({ title, body, action }: { title: string; body: string; act
 export default function LiveAccess({ locale: l, view, session, onSignOut, onView }: {
   locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void;
 }) {
-  const api = useMemo(() => adminClient(session.csrf), [session.csrf]);
+  const api = useAdminClient();
   const wide = useWide();
   const order = useRef(sequence());
   const [page, setPage] = useState<AccessPage | null>(null);

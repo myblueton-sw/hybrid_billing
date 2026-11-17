@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
-import { adminClient, AdminError } from "../../../../service/admin";
+import { AdminError } from "../../../../service/admin";
+import { useAdminClient } from "../../../../service/context";
 import type { RetentionPage } from "../../../../service/retention";
 import type { Session } from "../../../../service/api";
 import { c as sc, retryPhrase } from "../../../../service/copy";
@@ -45,7 +46,7 @@ function selectedOf(view: string, s: ReturnType<typeof selectionOf>): string {
 }
 
 export default function LiveRetention({ locale: l, view: rawView, params, session, onSignOut }: Props) {
-  const api = useMemo(() => adminClient(session.csrf), [session.csrf]);
+  const api = useAdminClient();
   setScope(session.workspace, session.user, session.csrf);
   const view = viewOf(rawView);
   const [page, setPage] = useState<RetentionPage | null>(null);

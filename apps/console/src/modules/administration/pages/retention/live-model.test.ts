@@ -6,7 +6,7 @@ import { retentionOf, proposalOf, type RetentionPage } from "../../../../service
 import { sample } from "../../../../service/retention.sample";
 import {
   approveNarrow, approveValuesFor, artifactTarget, blockerPolicy, canonical, changeOf, classTarget, clearReviewed, currentContext, currentFrom, currentOf, decisionLine, deniedOutcome, discard, draftOf,
-  duplicateIn, fieldReaction, holdValues, ownerOption, forget, frozenTargetOk, goneKind, graceProblem, holdMatch, holdTarget, impactValues, keepDraft, keepReviewed, keptKey, listed, partialCounts, pendingFor,
+  duplicateIn, fieldReaction, holdValues, keepsAttempt, ownerOption, forget, frozenTargetOk, goneKind, graceProblem, holdMatch, holdTarget, impactValues, keepDraft, keepReviewed, keptKey, listed, partialCounts, pendingFor,
   pendingNow, pendingPolicyFor, pendingReleaseFor, periodProblem, proposalTarget, pruneRefusals, react, reasonProblem, refusedNow, reviewedChanged, reviewedOf, runNumber, runTarget,
   sameAsCurrent, selectionOf, setScope, settle, snapshotOf, stateSentence, stillAllowed, storeSum, tenantTarget, textProblem, timeKnown, utf8Bytes, vanished, viewOf,
 } from "./live-model";
@@ -471,4 +471,11 @@ test("plan proposals offer no command even with can_withdraw true", () => {
   assert.equal(approveNarrow(plan), "no_command");
   const p = page((s) => { (s.proposals.rows as Over[]).push({ number: 5, target: "retention-proposal-5", kind: "plan", state: "pending", can_withdraw: true, withdraw_blocked: "", summary: { plan: { class: "temporary" } } }); });
   assert.ok(!stillAllowed(p, "retention.withdraw", "retention-proposal-5"));
+});
+
+test("a step-up refusal or cancellation keeps the attempt and the form", () => {
+  for (const f of ["reauth", "reauth_cancelled"]) {
+    assert.equal(react(f, []), "reauth");
+    assert.equal(keepsAttempt(react(f, [])), true);
+  }
 });

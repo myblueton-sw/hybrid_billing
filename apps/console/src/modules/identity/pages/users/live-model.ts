@@ -70,6 +70,9 @@ export function failureText(l: Locale, e: unknown): { title: string; body: strin
       return { title: w.saveFailed(l), body: w.busy(l) };
     case "invalid":
       return { title: c.check(l), body: "" };
+    case "reauth":
+    case "reauth_cancelled":
+      return { title: w.saveFailed(l), body: c.reauthText(l, e.failure) };
     default:
       return { title: w.saveFailed(l), body: w.unavailable(l) };
   }

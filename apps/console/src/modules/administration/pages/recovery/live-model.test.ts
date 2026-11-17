@@ -559,3 +559,10 @@ test("date stamps keep the locale's date-time separator at the end of the date p
   assert.equal(stampParts("en", ""), null);
   assert.equal(stampParts("en", "0001-01-01T00:00:00Z"), null);
 });
+
+test("a step-up refusal or cancellation keeps the attempt and the form", () => {
+  for (const f of ["reauth", "reauth_cancelled"]) {
+    assert.equal(react(f, []), "reauth");
+    assert.equal(keepsAttempt(react(f, [])), true);
+  }
+});

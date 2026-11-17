@@ -315,3 +315,10 @@ test("a destination endpoint is one string with unknown parts named", () => {
   assert.equal(endpoint("", "", "غير معروف"), "غير معروف:غير معروف");
   assert.notEqual(k.form.checkReason("en"), k.form.rationaleLong("en"));
 });
+
+test("a step-up refusal or cancellation keeps the attempt and the form", () => {
+  for (const f of ["reauth", "reauth_cancelled"]) {
+    assert.equal(react(f, []), "reauth");
+    assert.equal(keepsAttempt(react(f, [])), true);
+  }
+});

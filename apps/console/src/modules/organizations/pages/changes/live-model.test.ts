@@ -104,3 +104,12 @@ test("every failure has one reaction and only retries keep the attempt", () => {
   for (const [cmd, f, fields, want] of cases) assert.equal(react(cmd as "propose", f, fields), want, `${cmd} ${f}`);
   assert.deepEqual(["retry", "wait", "renew", "partial", "conflict", "field"].map((r) => keepsAttempt(r as "retry")), [true, true, false, false, false, false]);
 });
+
+test("a step-up refusal or cancellation keeps the attempt", () => {
+  for (const cmd of ["propose", "activate", "discard"] as const) {
+    for (const f of ["reauth", "reauth_cancelled"]) {
+      assert.equal(react(cmd, f, []), "reauth");
+      assert.equal(keepsAttempt(react(cmd, f, [])), true);
+    }
+  }
+});

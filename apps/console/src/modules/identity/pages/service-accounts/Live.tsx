@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { adminClient, AdminError, attempt, sequence, type AdminClient, type Attempt, type CommandId, type CredentialRow, type ServiceRow, type ServicesPage } from "../../../../service/admin";
+import { AdminError, attempt, sequence, type AdminClient, type Attempt, type CommandId, type CredentialRow, type ServiceRow, type ServicesPage } from "../../../../service/admin";
+import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
 import { Summary, type Problems } from "../../../../service/Service";
@@ -70,6 +71,10 @@ function useCommand(api: AdminClient, revision: string, onReload: () => void, ho
       return done;
     } catch (err) {
       setError(err);
+      if (err instanceof AdminError && (err.failure === "reauth" || err.failure === "reauth_cancelled")) {
+        setFocusKey((k) => k + 1);
+        return null;
+      }
       const unknown = err instanceof AdminError && keepsHold(err.failure, held.current !== "");
       if (holdUnknown && unknown) {
         held.current = held.current || revision;
@@ -520,7 +525,7 @@ function Unavailable({ title, body, action }: { title: string; body: string; act
 export default function LiveServices({ locale: l, view, session, onSignOut, onView }: {
   locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void;
 }) {
-  const api = useMemo(() => adminClient(session.csrf), [session.csrf]);
+  const api = useAdminClient();
   const wide = useWide();
   const order = useRef(sequence());
   const [page, setPage] = useState<ServicesPage | null>(null);

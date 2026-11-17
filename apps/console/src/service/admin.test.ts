@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, adminClient, attempt, failureOf, sequence } from "./admin";
+import { AdminError, adminClient, attempt, failureOf, reauthenticate, sequence } from "./admin";
 
 type Call = { url: string; init: RequestInit };
 
@@ -96,13 +96,14 @@ test("only the latest request is accepted", () => {
 });
 
 test("the policy read keeps the server times and defaults missing parts", async () => {
-  const page = { revision: "r4", policy: null, proposals: [{ number: 2 }], now: "2026-11-16T09:00:00Z", signed_in_at: "2026-11-16T08:00:00Z", act_until: "", you: "u1" };
+  const page = { revision: "r4", policy: null, proposals: [{ number: 2 }], now: "2026-11-16T09:00:00Z", signed_in_at: "2026-11-16T08:00:00Z", authenticated_at: "2026-11-16T08:30:00Z",
+    act_until: "", step_up_seconds: 900, you: "u1" };
   const { f, calls } = fake(200, page);
   const got = await adminClient("tok", f).policy();
   assert.equal(calls[0].url, "/api/v1/identity/policy");
   assert.deepEqual(got, page);
   const empty = await adminClient("tok", fake(200, {}).f).policy();
-  assert.deepEqual(empty, { revision: "", policy: null, proposals: [], now: "", signed_in_at: "", act_until: "", you: "" });
+  assert.deepEqual(empty, { revision: "", policy: null, proposals: [], now: "", signed_in_at: "", authenticated_at: "", act_until: "", step_up_seconds: 0, you: "" });
 });
 
 test("the access read and preview", async () => {
@@ -155,7 +156,7 @@ test("secret returns only a well-formed secret and credential", async () => {
 
 test("self reads and commands", async () => {
   const page = { user_id: "u", login: "l", email: "e", workspace: "w", role: "member", identities: [{ method: "local-password", login: "l" }], password_set: true,
-    installation_administrator: false, sessions: [{ handle: "h", current: true, signed_in: "a", ends: "b" }], idle_minutes: 30, max_age_seconds: 3600, signed_in_at: "a", now: "n" };
+    installation_administrator: false, sessions: [{ handle: "h", current: true, signed_in: "a", ends: "b" }], idle_minutes: 30, max_age_seconds: 3600, signed_in_at: "a", authenticated_at: "c", now: "n" };
   const r = fake(200, page);
   assert.deepEqual(await adminClient("t", r.f).me(), page);
   assert.equal(r.calls[0].url, "/api/v1/me");
@@ -212,4 +213,104 @@ test("the plans read defaults missing parts and never invents a computed impact"
   assert.deepEqual([e.plans, e.open_limit, e.impact.money], [[], 0, "unknown"]);
   await assert.rejects(adminClient("t", fake(422, { code: "invalid_request", fields: ["from"] }).f).command("relationship.propose", "relationships", "r", "x", {}, attempt()),
     (x: AdminError) => x.failure === "invalid" && x.fields[0] === "from");
+});
+
+function scripted(replies: [number, unknown][]) {
+  const calls: Call[] = [];
+  const f = (async (url: string, init: RequestInit) => {
+    calls.push({ url, init });
+    const [status, body] = replies[Math.min(calls.length - 1, replies.length - 1)];
+    return new Response(status === 204 ? null : JSON.stringify(body), { status });
+  }) as unknown as typeof fetch;
+  return { f, calls };
+}
+
+const refusal = { code: "reauthentication_required", retry: false, next_action: "reauthenticate", request_id: "x" };
+
+test("a step-up refusal maps to reauth", () => {
+  assert.equal(failureOf(403, refusal).failure, "reauth");
+  assert.equal(failureOf(422, { code: "prerequisite_failed" }).failure, "refused");
+});
+
+test("a refused command is resent once, byte-identical, after reauthentication", async () => {
+  const { f, calls } = scripted([[403, refusal], [200, { business_state: "done" }]]);
+  let prompts = 0;
+  const tried = attempt();
+  const out = await adminClient("tok", f, async () => { prompts++; return true; }).command("identity.suspend_user", "u1", "r3", "why", { a: "1" }, tried);
+  assert.equal(out.state, "done");
+  assert.equal(prompts, 1);
+  assert.equal(calls.length, 2);
+  assert.equal(calls[1].url, calls[0].url);
+  assert.equal(calls[1].init.body, calls[0].init.body);
+  assert.deepEqual(calls[1].init.headers, calls[0].init.headers);
+  assert.equal((calls[1].init.headers as Record<string, string>)["X-Request-Id"], tried.request);
+  assert.equal(JSON.parse(String(calls[1].init.body)).idempotency_key, tried.key);
+});
+
+test("cancel does not resend and a second refusal does not loop", async () => {
+  const cancelled = scripted([[403, refusal]]);
+  await assert.rejects(adminClient("t", cancelled.f, async () => false).command("identity.suspend_user", "u1", "r3", "why", {}, attempt()),
+    (e: AdminError) => e.failure === "reauth_cancelled");
+  assert.equal(cancelled.calls.length, 1);
+  const again = scripted([[403, refusal], [403, refusal], [200, {}]]);
+  let prompts = 0;
+  await assert.rejects(adminClient("t", again.f, async () => { prompts++; return true; }).command("identity.suspend_user", "u1", "r3", "why", {}, attempt()),
+    (e: AdminError) => e.failure === "reauth");
+  assert.equal(again.calls.length, 2);
+  assert.equal(prompts, 1);
+  const plain = scripted([[403, refusal]]);
+  await assert.rejects(adminClient("t", plain.f).command("identity.suspend_user", "u1", "r3", "why", {}, attempt()), (e: AdminError) => e.failure === "reauth");
+  const sessions = scripted([[403, refusal], [200, { ended: 2 }]]);
+  assert.equal(await adminClient("t", sessions.f, async () => true).endSessions("others"), 2);
+  assert.equal(sessions.calls.length, 2);
+});
+
+test("reads are never prompted and other refusals pass through", async () => {
+  let prompts = 0;
+  const stepUp = async () => { prompts++; return true; };
+  const read = scripted([[403, refusal]]);
+  await assert.rejects(adminClient("t", read.f, stepUp).users(), (e: AdminError) => e.failure === "reauth");
+  const mfa = scripted([[422, { code: "prerequisite_failed" }]]);
+  await assert.rejects(adminClient("t", mfa.f, stepUp).command("policy.propose", "policy", "r1", "x", {}, attempt()), (e: AdminError) => e.failure === "refused");
+  assert.equal(prompts, 0);
+  assert.equal(read.calls.length + mfa.calls.length, 2);
+});
+
+test("concurrent refusals share one prompt", async () => {
+  const { f, calls } = scripted([[403, refusal], [403, refusal], [200, {}], [200, {}]]);
+  let opened = 0;
+  let release: (ok: boolean) => void = () => undefined;
+  let shared: Promise<boolean> | null = null;
+  const stepUp = () => {
+    if (!shared) {
+      opened++;
+      shared = new Promise<boolean>((r) => { release = r; });
+    }
+    return shared;
+  };
+  const api = adminClient("t", f, stepUp);
+  const a = api.command("identity.suspend_user", "u1", "r3", "x", {}, attempt());
+  const b = api.command("identity.reinstate_user", "u2", "r3", "x", {}, attempt());
+  await new Promise((r) => setTimeout(r, 0));
+  release(true);
+  await Promise.all([a, b]);
+  assert.equal(opened, 1);
+  assert.equal(calls.length, 4);
+});
+
+test("reauthenticate posts the password once and maps failures", async () => {
+  const ok = scripted([[204, {}]]);
+  await reauthenticate("tok", "secret value", ok.f);
+  assert.equal(ok.calls[0].url, "/api/v1/me/reauthenticate");
+  assert.equal(ok.calls[0].init.body, JSON.stringify({ password: "secret value" }));
+  assert.equal((ok.calls[0].init.headers as Record<string, string>)["X-CSRF-Token"], "tok");
+  assert.equal(ok.calls[0].init.method, "POST");
+  for (const [status, body, want] of [[422, { code: "current_password_wrong" }, "wrong"], [401, { code: "unauthenticated" }, "unauthenticated"],
+    [409, { code: "revision_conflict" }, "conflict"], [503, { code: "dependency_unavailable" }, "busy"]] as [number, unknown, string][]) {
+    await assert.rejects(reauthenticate("t", "p", scripted([[status, body]]).f), (e: AdminError) => e.failure === want);
+  }
+  const broken = (async () => { throw new Error("down"); }) as unknown as typeof fetch;
+  await assert.rejects(reauthenticate("t", "p", broken), (e: AdminError) => e.failure === "unavailable");
+  const garbled = (async () => new Response("x", { status: 500 })) as unknown as typeof fetch;
+  await assert.rejects(reauthenticate("t", "p", garbled), (e: AdminError) => e.failure === "unavailable");
 });

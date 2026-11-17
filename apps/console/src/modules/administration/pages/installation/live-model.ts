@@ -143,7 +143,7 @@ export function reportPassed(failure: string): boolean {
   return failure === "ok";
 }
 
-export type Reaction = "field" | "reason" | "hint" | "conflict" | "denied" | "signin" | "wait" | "retry" | "renew" | "partial" | "failed";
+export type Reaction = "field" | "reason" | "hint" | "conflict" | "denied" | "signin" | "wait" | "retry" | "renew" | "partial" | "reauth" | "failed";
 
 export function react(failure: string, fields: string[]): Reaction {
   switch (failure) {
@@ -167,13 +167,16 @@ export function react(failure: string, fields: string[]): Reaction {
       return "renew";
     case "partial":
       return "partial";
+    case "reauth":
+    case "reauth_cancelled":
+      return "reauth";
     default:
       return "failed";
   }
 }
 
 export function keepsAttempt(r: Reaction): boolean {
-  return r === "retry";
+  return r === "retry" || r === "reauth";
 }
 
 export function planChangedField(fields: string[]): boolean {

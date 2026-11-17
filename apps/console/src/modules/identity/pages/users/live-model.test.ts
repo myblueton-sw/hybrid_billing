@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { AdminError, type UserRow } from "../../../../service/admin";
 import { accountName, failureText, offers, roleName, setup, when } from "./live-model";
 import { w } from "./live-copy";
+import { c } from "../../../../service/copy";
 
 const base: UserRow = {
   user_id: "u1", login: "a@example.invalid", email: "a@example.invalid", state: "active", epoch: 1,
@@ -74,4 +75,13 @@ test("failures have distinct text", () => {
   assert.equal(failureText("en", new AdminError("conflict")).title, w.saveFailed("en"));
   assert.equal(failureText("en", new AdminError("denied")).title, w.deniedTitle("en"));
   assert.equal(failureText("en", new AdminError("invalid")).title, "Check the following");
+});
+
+test("step-up refusals and cancellations have neutral copy in every locale", () => {
+  for (const l of ["en", "ko", "ar"] as const) {
+    for (const f of ["reauth", "reauth_cancelled"] as const) {
+      assert.deepEqual(failureText(l, new AdminError(f)), { title: w.saveFailed(l), body: f === "reauth" ? c.reauthRefused(l) : c.reauthNotDone(l) });
+    }
+    assert.notEqual(failureText(l, new AdminError("reauth")).body, failureText(l, new AdminError("reauth_cancelled")).body);
+  }
 });

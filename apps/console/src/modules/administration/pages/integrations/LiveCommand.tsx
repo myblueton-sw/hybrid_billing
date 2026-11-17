@@ -157,6 +157,7 @@ export function CommandForm(props: FormProps) {
       else if (reaction === "retry") setMessage({ text: k.pendingAttempt(l), alert: true });
       else if (reaction === "renew") setMessage({ text: k.renew(l), alert: true });
       else if (reaction === "partial") setMessage({ text: k.partial(l, err instanceof AdminError ? err.operation : ""), alert: true });
+      else if (reaction === "reauth") setMessage({ text: sc.reauthText(l, failure), alert: true });
       else setMessage({ text: sc.failed(l), alert: true });
     } finally {
       setBusy(false);

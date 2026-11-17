@@ -1,10 +1,12 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../shared/types";
 import HeaderSelect from "../app/HeaderSelect";
 import logo from "../../../../packages/design-system/assets/logo/hb-lockup-color.svg";
 import { c, retryPhrase } from "./copy";
 import { fragmentToken, serviceClient, ServiceError, type LinkInfo, type ServiceClient, type Session } from "./api";
 import { ServiceContext } from "./context";
+import { Reauthenticate } from "./Reauthenticate";
+import { stepUpGate } from "./reauth-model";
 import "./service.css";
 import { afterSignIn, emailValid, localeOf, loginValid, passwordProblem, serviceUrl, shellLocale } from "./helpers";
 export { serviceMode } from "./helpers";
@@ -378,6 +380,20 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
   const [token] = useState(() => fragmentToken(location.hash));
   const [status] = useState(() => params.get("status") ?? "");
   const [check, setCheck] = useState(0);
+  const [prompt, setPrompt] = useState<{ opener: HTMLElement | null; n: number } | null>(null);
+  const lastFocus = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const seen = (e: FocusEvent) => { if (e.target instanceof HTMLElement && !e.target.closest("dialog.service-reauth")) lastFocus.current = e.target; };
+    document.addEventListener("focusin", seen);
+    return () => document.removeEventListener("focusin", seen);
+  }, []);
+  const gate = useMemo(() => stepUpGate(() => {
+    const active = document.activeElement;
+    const opener = active instanceof HTMLElement && active !== document.body ? active : lastFocus.current;
+    setPrompt((p) => ({ opener, n: (p?.n ?? 0) + 1 }));
+  }), []);
+  const stepUp = useCallback(() => gate.request(), [gate]);
+  useEffect(() => () => gate.settle(false), [gate]);
   useLayoutEffect(() => {
     if (activating && location.hash) history.replaceState(null, "", location.pathname + location.search);
     if (!activating && params.has("status")) {
@@ -410,9 +426,16 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
     const shown = shellLocale(hash, locale);
     const signOut = () => { setLocale(shown); void signOutIn(shown); };
     return (
-      <ServiceContext.Provider value={{ session, signOut }}>
+      <ServiceContext.Provider value={{ session, signOut, stepUp }}>
         <SessionStrip locale={shown} session={session} onSignOut={signOut} />
         {app}
+        {prompt && (
+          <Reauthenticate
+            key={prompt.n} locale={shown} login={session.login} csrf={session.csrf} opener={prompt.opener}
+            onDone={(ok) => { setPrompt(null); gate.settle(ok); }}
+            onSignedOut={() => { setPrompt(null); gate.settle(false); location.assign(serviceUrl("signin", shown, "ended")); }}
+          />
+        )}
       </ServiceContext.Provider>
     );
   }

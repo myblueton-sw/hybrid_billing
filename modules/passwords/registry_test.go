@@ -3,6 +3,7 @@ package passwords
 import (
 	"encoding/hex"
 	"errors"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -400,5 +401,127 @@ func TestExpiredLinksPurged(t *testing.T) {
 	r.Commit(tok, rec)
 	if _, err := r.Issue(ann, PurposeSet, time.Hour); err != nil {
 		t.Error("used purged")
+	}
+}
+
+type lock struct {
+	failures int
+	first    time.Time
+	locked   time.Time
+}
+
+func lockState(r *Registry, k Key) lock {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	a := r.accounts[k]
+	return lock{a.failures, a.first, a.locked}
+}
+
+func TestVerifyHolder(t *testing.T) {
+	w := setup(t)
+	if w.r.VerifyHolder(ann, good) != ResultWrong {
+		t.Error("unknown key")
+	}
+	rec, _ := w.r.Hash(ann, good)
+	w.r.Put(ann, rec)
+	if w.r.VerifyHolder(ann, good) != ResultOK || w.r.VerifyHolder(ann, good+"x") != ResultWrong || w.r.VerifyHolder(ann, "") != ResultWrong {
+		t.Error("known answer")
+	}
+	w.r.between = func() {
+		w.r.between = nil
+		again, _ := w.r.Hash(ann, "another good password")
+		w.r.Put(ann, again)
+	}
+	if w.r.VerifyHolder(ann, good) != ResultWrong {
+		t.Error("concurrent put")
+	}
+	w.r.between = func() {
+		w.r.between = nil
+		w.r.Remove(ann)
+	}
+	if w.r.VerifyHolder(ann, "another good password") != ResultWrong {
+		t.Error("concurrent remove")
+	}
+}
+
+func TestVerifyHolderIgnoresLock(t *testing.T) {
+	w := setup(t)
+	rec, _ := w.r.Hash(ann, good)
+	w.r.Put(ann, rec)
+	for i := 0; i < 5; i++ {
+		w.r.Verify(ann, "nope nope nope")
+	}
+	before := lockState(w.r, ann)
+	if w.r.Verify(ann, good) != ResultLocked || before.failures != 5 || !before.locked.Equal(start.Add(15*time.Minute)) || !before.first.Equal(start) {
+		t.Fatalf("not locked %+v", before)
+	}
+	if w.r.VerifyHolder(ann, good) != ResultOK {
+		t.Error("holder refused by a lock set by others")
+	}
+	for i := 0; i < 20; i++ {
+		w.r.VerifyHolder(ann, "nope nope nope")
+	}
+	if after := lockState(w.r, ann); after != before {
+		t.Errorf("lock state changed %+v %+v", before, after)
+	}
+	w.advance(15 * time.Minute)
+	if w.r.Verify(ann, good) != ResultOK {
+		t.Error("lock extended")
+	}
+	for i := 0; i < 10; i++ {
+		w.r.VerifyHolder(ann, "nope nope nope")
+	}
+	if w.r.Verify(ann, good) != ResultOK || lockState(w.r, ann).failures != 0 {
+		t.Error("holder failures created a lock")
+	}
+	for i := 0; i < 3; i++ {
+		w.r.Verify(ann, "nope nope nope")
+	}
+	w.r.VerifyHolder(ann, good)
+	if lockState(w.r, ann).failures != 3 {
+		t.Error("holder success reset the count")
+	}
+}
+
+func TestVerifyHolderTiming(t *testing.T) {
+	if testing.Short() {
+		t.Skip("timing")
+	}
+	r, _ := New(time.Now, DefaultParams())
+	rec, _ := r.Hash(ann, good)
+	r.Put(ann, rec)
+	cases := []struct {
+		k        Key
+		password string
+		want     string
+	}{{ann, good, ResultOK}, {ann, "nope nope nope", ResultWrong}, {Key{Issuer: "prelaunch", Subject: "nobody@example.invalid"}, good, ResultWrong}}
+	runs := make([][]time.Duration, len(cases))
+	for i := 0; i < 20; i++ {
+		for n, c := range cases {
+			began := time.Now()
+			if got := r.VerifyHolder(c.k, c.password); got != c.want {
+				t.Fatalf("result %s", got)
+			}
+			runs[n] = append(runs[n], time.Since(began))
+		}
+	}
+	median := func(d []time.Duration) time.Duration {
+		sort.Slice(d, func(a, b int) bool { return d[a] < d[b] })
+		return d[len(d)/2]
+	}
+	correct, wrong, unknown := median(runs[0]), median(runs[1]), median(runs[2])
+	low, high := min(correct, wrong, unknown), max(correct, wrong, unknown)
+	if high*2 > low*3 {
+		t.Errorf("timing differs: correct %v wrong %v unknown %v", correct, wrong, unknown)
+	}
+}
+
+func TestVerifyHolderUnknownKeyWithTheDummyPassword(t *testing.T) {
+	w := setup(t)
+	if got := w.r.VerifyHolder(ann, "dummy password for timing"); got != ResultWrong {
+		t.Errorf("unknown key matched the dummy record: %s", got)
+	}
+	if got := w.r.Verify(ann, "dummy password for timing"); got != ResultWrong {
+		t.Errorf("verify: %s", got)
 	}
 }

@@ -201,7 +201,14 @@ export const m = {
   minutes: (l: Locale, n: number) => t(l, `${n} minutes`, `${n}분`, `${n} دقيقة`),
   longest: (l: Locale) => t(l, "Longest session", "최대 세션", "أطول جلسة"),
   longestValue: (l: Locale) => t(l, "12 hours after sign-in", "로그인 후 12시간", "12 ساعة بعد تسجيل الدخول"),
-  maxAge: (l: Locale) => t(l, "Workspace sign-in age", "업무 공간 재로그인 주기", "عمر تسجيل الدخول في مساحة العمل"),
+  maxAge: (l: Locale) =>
+    t(
+      l,
+      "Workspace sign-in age (from the last sign-in or password confirmation)",
+      "업무 공간 재로그인 주기(마지막 로그인 또는 비밀번호 재확인 기준)",
+      "عمر تسجيل الدخول في مساحة العمل (من آخر تسجيل دخول أو تأكيد لكلمة المرور)",
+    ),
+  lastConfirmed: (l: Locale) => t(l, "Password last confirmed", "마지막 비밀번호 확인 시각", "آخر تأكيد لكلمة المرور"),
   noMaxAge: (l: Locale) => t(l, "No workspace limit", "업무 공간 제한 없음", "لا يوجد حد لمساحة العمل"),
   youSignedIn: (l: Locale) => t(l, "You signed in at", "로그인 시각", "سجّلت الدخول في"),
   historyNote: (l: Locale) => t(l, "recent access history is not available.", "최근 접근 기록은 볼 수 없습니다.", "سجل الوصول الأخير غير متاح."),

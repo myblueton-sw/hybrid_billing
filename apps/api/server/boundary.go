@@ -39,6 +39,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/retention", s.readRetention)
 	mux.HandleFunc("POST /api/v1/me/password", s.changePassword)
 	mux.HandleFunc("POST /api/v1/me/sessions/end", s.endSelfSessions)
+	mux.HandleFunc("POST /api/v1/me/reauthenticate", s.reauthenticate)
 	for path, raw := range s.cfg.Readers {
 		target, _ := readerTarget(raw)
 		mux.HandleFunc("GET "+path, s.reader(target))
@@ -97,6 +98,7 @@ type sessionBody struct {
 	User      string `json:"user"`
 	Workspace string `json:"workspace"`
 	Role      string `json:"role"`
+	Login     string `json:"login"`
 	CSRF      string `json:"csrf_token"`
 }
 
@@ -116,5 +118,5 @@ func (s *Server) current(w http.ResponseWriter, r *http.Request) {
 		failCode(w, code, request)
 		return
 	}
-	writeJSON(w, http.StatusOK, request, sessionBody{User: answer.User(), Workspace: answer.Workspace(), Role: string(answer.Role()), CSRF: found.csrf})
+	writeJSON(w, http.StatusOK, request, sessionBody{User: answer.User(), Workspace: answer.Workspace(), Role: string(answer.Role()), Login: found.login, CSRF: found.csrf})
 }

@@ -2,6 +2,7 @@ export type Session = {
   user: string;
   workspace: string;
   role: string;
+  login: string;
   csrf: string;
 };
 export type LinkInfo =
@@ -99,6 +100,7 @@ export function serviceClient(f: Fetch = fetch.bind(globalThis)) {
     user: String(j.user),
     workspace: String(j.workspace),
     role: String(j.role),
+    login: typeof j.login === "string" ? j.login : "",
     csrf: String(j.csrf_token),
   });
   return {

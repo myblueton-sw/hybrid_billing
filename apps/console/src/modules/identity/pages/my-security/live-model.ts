@@ -36,13 +36,14 @@ export function changeOutcome(e: unknown, hadWrong: boolean): Outcome {
   return "unknown";
 }
 
-export type EndOutcome = "gone" | "signedOut" | "limited" | "busy";
+export type EndOutcome = "gone" | "signedOut" | "limited" | "reauth" | "busy";
 
 export function endOutcome(e: unknown): EndOutcome {
   if (e instanceof AdminError) {
     if (e.failure === "invalid") return "gone";
     if (e.failure === "unauthenticated") return "signedOut";
     if (e.failure === "limited") return "limited";
+    if (e.failure === "reauth" || e.failure === "reauth_cancelled") return "reauth";
   }
   return "busy";
 }

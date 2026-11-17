@@ -111,6 +111,7 @@ export type SelfPage = {
   idle_minutes: number;
   max_age_seconds: number;
   signed_in_at: string;
+  authenticated_at: string;
   now: string;
 };
 
@@ -211,7 +212,9 @@ export type PolicyPage = {
   proposals: ProposalRow[];
   now: string;
   signed_in_at: string;
+  authenticated_at: string;
   act_until: string;
+  step_up_seconds: number;
   you: string;
 };
 
@@ -229,7 +232,9 @@ export type AdminFailure =
   | "stale"
   | "wrong"
   | "locked"
-  | "form";
+  | "form"
+  | "reauth"
+  | "reauth_cancelled";
 
 export class AdminError extends Error {
   constructor(
@@ -330,7 +335,10 @@ const codes: Record<string, AdminFailure> = {
   current_password_wrong: "wrong",
   password_locked: "locked",
   password_form: "form",
+  reauthentication_required: "reauth",
 };
+
+export type StepUp = () => Promise<boolean>;
 
 export function failureOf(status: number, body: Record<string, unknown>): AdminError {
   const code = String(body.code ?? "");
@@ -351,8 +359,31 @@ export function attempt(): Attempt {
   return { request: "m01-" + random(), key: "m01-" + random() };
 }
 
-export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
-  async function send(path: string, init: RequestInit, request: string): Promise<Record<string, unknown>> {
+export async function reauthenticate(csrf: string, password: string, f: Fetch = fetch.bind(globalThis)): Promise<void> {
+  let r: Response;
+  try {
+    r = await f("/api/v1/me/reauthenticate", {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf, "X-Request-Id": attempt().request },
+      body: JSON.stringify({ password }),
+    });
+  } catch {
+    throw new AdminError("unavailable");
+  }
+  if (r.ok) return;
+  let body: Record<string, unknown> = {};
+  try {
+    body = await r.json();
+  } catch {
+    body = {};
+  }
+  throw failureOf(r.status, body);
+}
+
+export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), stepUp?: StepUp) {
+  async function exchange(path: string, init: RequestInit, request: string): Promise<{ r: Response; body: Record<string, unknown> }> {
     let r: Response;
     try {
       r = await f("/api/v1" + path, {
@@ -369,6 +400,14 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
       body = await r.json();
     } catch {
       body = {};
+    }
+    return { r, body };
+  }
+  async function send(path: string, init: RequestInit, request: string): Promise<Record<string, unknown>> {
+    let { r, body } = await exchange(path, init, request);
+    if (!r.ok && init.method === "POST" && body.code === "reauthentication_required" && stepUp) {
+      if (!(await stepUp())) throw new AdminError("reauth_cancelled", [], 0, "", "reauthentication_required");
+      ({ r, body } = await exchange(path, init, request));
     }
     if (r.ok) return body;
     const failed = failureOf(r.status, body);
@@ -410,7 +449,9 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
         proposals: Array.isArray(body.proposals) ? (body.proposals as ProposalRow[]) : [],
         now: String(body.now ?? ""),
         signed_in_at: String(body.signed_in_at ?? ""),
+        authenticated_at: String(body.authenticated_at ?? ""),
         act_until: String(body.act_until ?? ""),
+        step_up_seconds: Number(body.step_up_seconds ?? 0),
         you: String(body.you ?? ""),
       };
     },
@@ -469,6 +510,7 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
         idle_minutes: Number(body.idle_minutes ?? 0),
         max_age_seconds: Number(body.max_age_seconds ?? 0),
         signed_in_at: String(body.signed_in_at ?? ""),
+        authenticated_at: String(body.authenticated_at ?? ""),
         now: String(body.now ?? ""),
       };
     },

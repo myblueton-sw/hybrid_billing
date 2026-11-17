@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 )
@@ -20,13 +21,19 @@ func (s *Server) Document() ([]byte, error) {
 	info := doc["info"].(map[string]any)
 	info["description"] = description
 	listed := doc["x-errors"].([]any)
-	enum := doc["components"].(map[string]any)["schemas"].(map[string]any)["Error"].(map[string]any)["properties"].(map[string]any)["code"].(map[string]any)
+	props := doc["components"].(map[string]any)["schemas"].(map[string]any)["Error"].(map[string]any)["properties"].(map[string]any)
+	enum, next := props["code"].(map[string]any), props["next_action"].(map[string]any)
 	codes := enum["enum"].([]any)
 	for _, b := range boundaryCodes {
-		listed = append(listed, map[string]any{"code": b.code, "status": b.status, "retry": false, "next_action": string(commands.NextNone)})
+		listed = append(listed, map[string]any{"code": b.code, "status": b.status, "retry": false, "next_action": string(b.next)})
 		codes = append(codes, b.code)
 	}
-	doc["x-errors"], enum["enum"] = listed, codes
+	doc["x-errors"], enum["enum"], next["enum"] = listed, codes, append(next["enum"].([]any), NextReauthenticate)
+	for path, item := range doc["paths"].(map[string]any) {
+		if command, ok := strings.CutPrefix(path, "/commands/"); ok && s.stepUp(command) {
+			item.(map[string]any)["post"].(map[string]any)["x-step-up"] = true
+		}
+	}
 	return json.MarshalIndent(doc, "", "  ")
 }
 

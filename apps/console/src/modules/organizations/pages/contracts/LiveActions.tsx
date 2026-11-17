@@ -199,6 +199,7 @@ export function CommandForm({ commandKey: key, event, onClose, ...shared }: Shar
       else if (reaction === "retry") setMessage({ text: k.form.pending(l, k.command(l, key)), alert: true });
       else if (reaction === "renew") setMessage({ text: k.form.renew(l), alert: true });
       else if (reaction === "partial") setMessage({ text: k.form.partial(l, err instanceof AdminError ? err.operation : ""), alert: true });
+      else if (reaction === "reauth") setMessage({ text: sc.reauthText(l, failure), alert: true });
       else setMessage({ text: sc.failed(l), alert: true });
     } finally {
       setBusy(false);

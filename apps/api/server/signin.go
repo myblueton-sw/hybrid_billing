@@ -199,6 +199,7 @@ type loginBody struct {
 	User      string `json:"user"`
 	Workspace string `json:"workspace"`
 	Role      string `json:"role"`
+	Login     string `json:"login"`
 	CSRF      string `json:"csrf_token"`
 }
 
@@ -233,7 +234,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	}
 	s.limit.refund()
 	http.SetCookie(w, cookie)
-	writeJSON(w, http.StatusOK, request, loginBody{User: answer.User(), Workspace: answer.Workspace(), Role: string(answer.Role()), CSRF: csrf})
+	writeJSON(w, http.StatusOK, request, loginBody{User: answer.User(), Workspace: answer.Workspace(), Role: string(answer.Role()), Login: login, CSRF: csrf})
 }
 
 func validWorkspace(id string) bool {

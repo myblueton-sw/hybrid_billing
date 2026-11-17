@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { adminClient, AdminError, type AdminClient, type OrgMember, type OrgPage, type OrgParty, type OrgProfile, type RelationKind } from "../../../../service/admin";
+import { AdminError, type AdminClient, type OrgMember, type OrgPage, type OrgParty, type OrgProfile, type RelationKind } from "../../../../service/admin";
+import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { useWide } from "../../../identity/pages/users/Live";
 import { w } from "../../../identity/pages/users/live-copy";
@@ -168,7 +169,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   locale: Locale; view: string; params: URLSearchParams; session: Session; onSignOut: () => void;
   onView: (view: string, params?: Record<string, string>) => void; onParams: (params: Record<string, string | null>) => void;
 }) {
-  const api = useMemo(() => adminClient(session.csrf), [session.csrf]);
+  const api = useAdminClient();
   const wide = useWide();
   const [on, setOn] = useState(() => (validDay(params.get("on") ?? "") ? (params.get("on") as string) : todayUTC(new Date())));
   const [draft, setDraft] = useState(on);

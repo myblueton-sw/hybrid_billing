@@ -107,6 +107,7 @@ func (s *Server) Start() error {
 			step{"integrations", func() (bool, error) { return true, s.seedIntegrations(now) }},
 			step{"recovery", func() (bool, error) { return true, s.seedRecovery(now) }},
 			step{"retention", func() (bool, error) { return true, s.seedRetention(now) }},
+			step{"release-evidence", func() (bool, error) { return true, s.seedEvidence(now) }},
 			step{"password-links", func() (bool, error) {
 				var err error
 				lines, err = s.seedLinks(now)

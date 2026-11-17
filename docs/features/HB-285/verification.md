@@ -55,7 +55,7 @@ No review is owner acceptance.
 
 # Planning cross-check (HYB-291)
 
-Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check. Rows marked "(classified by HYB-301)" replace rows that HYB-291 left unclassified; the [HYB-301 trace classification](../../reviews/HYB-301-trace-classification/report.md) gives the evidence.
 
 ## Requirement trace
 
@@ -70,12 +70,12 @@ Source: `docs/ui/screens/P02/spec.md:120-146` (HB-284 is the API, HB-285 the scr
 | HB-10 | not connected | HawkEye results are not connected. | HB-284/plan.md:363-386 |
 | HB-11 | not connected | TokenMeter results are not connected. | HB-284/plan.md:363-386 |
 | HB-24 | not connected | No ERP connection. | HB-284/plan.md:363-386 |
-| HB-31 | unclassified – owner review | No notification or schedule behaviour was built or recorded for P02. | this section |
+| HB-31 | deferred | (classified by HYB-301) P02's part is the subscriptions and channels tab, with API, module and notification-channel permissions not merged (`P02/spec.md:33, 80`). Built: webhook subscriptions with approval, pause, resume and revoke, and delivery states (HB-284/plan.md:80-95). Not built: the separate API, module and channel permissions, an internal recorded deviation where every command uses `AdministerInstallation` (HB-284/plan.md:308-310, 376); notification channels and events, which need external messaging (out of pre-launch scope). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | HB-33 | deferred | Covered: plugin and subscription commands use the common command path. Not built: CLI, AI and external consumer parity, 202 jobs for bulk work, and an API-only business cycle. | HB-284/plan.md |
 | HB-34 | deferred | Deliveries are read; dispatch, confirm, redirect and report are not commands. | HB-284/verification.md Residuals |
 | HB-35 | deferred | Plugin proposals are built; publisher, key, version registration and marks are not commands. | HB-284/verification.md Residuals |
-| HB-37 | unclassified – owner review | No recovery or retention behaviour was built or recorded for P02. | this section |
-| HB-40 | unclassified – owner review | No licence or rights behaviour was built or recorded for P02. | this section |
+| HB-37 | deferred | (classified by HYB-301) Built: each plugin version's storage contract (namespace, owner, delete on removal or keep for evidence for N days, migration kind) is shown, and install and upgrade are refused when it changes (HB-284/plan.md:47-55; HB-285/plan.md:306; `P02/spec.md:51`). Not built: holding webhook dispatch after a restore until external results are reconciled. The P03 recovery register has a writer lock (HB-286/plan.md:38, 49), but no apps/api integration file refers to it, and dispatch is not a command in pre-launch. | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
+| HB-40 | deferred | (classified by HYB-301) Built: plugin versions are signed by a registered publisher key, and a revoked publisher, a compromised key or a vulnerable version blocks install (HB-284/plan.md:47). Not built: the licence check that `P02/spec.md:50, 74` requires in the module manifest and before activation; `modules/plugins` has no licence field. | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | HB-42 | deferred | Separate integrations permissions are not built. | HB-284/plan.md:363-386 |
 | AUD-AR-02 | not connected | Signing, egress and endpoint checks are not commands; destinations are stand-ins over a fixed allowlist. | HB-284/verification.md Residuals |
 | AUD-QA-04 | deferred | Idempotency keys and expected revisions are enforced; token issuance is not built. | HB-284/verification.md Residuals |

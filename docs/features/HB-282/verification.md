@@ -46,7 +46,7 @@ No review is owner acceptance.
 
 # Planning cross-check (HYB-291)
 
-Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check. Rows marked "(classified by HYB-301)" replace rows that HYB-291 left unclassified; the [HYB-301 trace classification](../../reviews/HYB-301-trace-classification/report.md) gives the evidence.
 
 ## Requirement trace
 
@@ -55,10 +55,10 @@ Source: `docs/ui/screens/P01/spec.md:118-136` (HB-282 is the API, HB-283 the scr
 | ID | Status | Reason | Record |
 | --- | --- | --- | --- |
 | HB-03 | deferred | Addressed within pre-launch scope for installation-administration commands with a reason; registry-wide and leakage acceptance not built; support access is not connected. | HB-282/plan.md:87-94 |
-| HB-04 | unclassified – owner review | P01 builds no provider onboarding path. | this section |
+| HB-04 | deferred | (classified by HYB-301) P01's part is setup evidence bound to configuration and a check validity period, and a preview of what will be created (`P01/spec.md:51, 53`). Built: an install preview with services, ports, volumes, data effects, permissions, conflicts and a hash, and a 24-hour observation whose staleness blocks plan approval (HB-282/plan.md, Read). Not built: resource and cost figures, the diagnostic request (needs an authenticated probe, recorded), and the provider readiness states, which belong to S02 and to connectors that pre-launch does not connect. | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | HB-36 | not connected | Plans, proposals and diagnostics reports are built; runs, install execution, diagnostic request and support bundle are not connected. | HB-282/plan.md:87-94 |
-| HB-39 | unclassified – owner review | No performance budget was built or recorded for P01. | this section |
-| HB-40 | unclassified – owner review | No licence or rights behaviour was built or recorded for P01. | this section |
+| HB-39 | deferred | (classified by HYB-301) P01's part is the volume section (`P01/spec.md:104-106`). Built: every P01 list is bounded by module limits (4 sites, 200 reports, 50 proposals in the read; HB-282/plan.md) and read whole. Not built: snapshot and cursor paging, server search and the filters (`P01/spec.md:62-64`), fixed-denominator jobs, and any test at the release profile (over 1 million rows a day, 30 million a month). Resource minimums and performance targets are open (`P01/spec.md:147`). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
+| HB-40 | deferred | (classified by HYB-301) P01's part is upgrade and data carry-over (`requirements.json` HB-40 acceptance). Built: signed releases and upgrade and rollback previews for an installed site; the seed site is not installed (HB-282/plan.md). Not built: distribution notices, licence boundaries, history access after expiry and data migration on upgrade. Licences and notices are P07, which is in phase 5 but not yet ticketed (HB-257/plan.md:168). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | HB-42 | not connected | The support access tab is not bound. | HB-282/plan.md:87-94 |
 | AUD-AR-09 | not connected | Support access is not bound. | HB-282/plan.md:87-94 |
 | AUD-DB-08 | deferred | A stale observation blocks plan approval; handoff links and setup-permission revocation are not built. | HB-282/verification.md Residuals |

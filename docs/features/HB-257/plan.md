@@ -178,7 +178,7 @@ A phase that turns out too large is split into more tickets in the same order. E
 - records which screen fields come from which module read or command, extending `docs/ui/screen-binding-register.md`;
 - adds the handlers, commands and seed data it needs in `apps/api`, without changing module rules unless a module change is reviewed separately;
 - runs the console's existing screen QA (`npm run qa:*`) against the real service, and adds API tests, including the gate's refusals.
-- cites the requirement and acceptance IDs from its screen spec's trace section (HB, IAM, AUD, RET) in its plan, and its verification record has a planning cross-check section with a requirement trace (covered, deferred, not connected, or unclassified for owner review) and any deviations from the spec.
+- cites the requirement and acceptance IDs from its screen spec's trace section (HB, IAM, AUD, RET) in its plan, and its verification record has a planning cross-check section with a requirement trace (covered, deferred, not connected, not applicable with a concrete reason (added by HYB-301), or unclassified for owner review) and any deviations from the spec.
 
 **Phase-end audit.** At the end of each phase, a read-only reviewer separate from the writers checks the phase's tickets against this plan and the screen specs, and records the result under `docs/reviews/`. [HYB-291](../../reviews/HYB-291-planning-cross-check/report.md) is the first such audit, covering phases 1–5.
 

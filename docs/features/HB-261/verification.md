@@ -68,7 +68,7 @@ See plan.md:
 
 # Planning cross-check (HYB-291)
 
-Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check. Rows marked "(classified by HYB-301)" replace rows that HYB-291 left unclassified; the [HYB-301 trace classification](../../reviews/HYB-301-trace-classification/report.md) gives the evidence.
 
 ## Requirement trace
 
@@ -78,4 +78,4 @@ Source: No screen spec. IDs derived from the phase 2 gate scope in `docs/feature
 | --- | --- | --- | --- |
 | HB-03 | deferred | Addressed within pre-launch scope for the six reader paths, forwarded only after the session and the `view` gate action are checked; registry-wide and leakage acceptance not built (no workspace binding in the reader). | HB-261/plan.md |
 | HB-36 | deferred | The gate holds only with both opt-in switches until the phase 10 start script; the onboarding service on 8793 is outside it. | HB-261/plan.md:24, :92, :93 |
-| HB-07 | unclassified – owner review | The nine FOCUS reader screens are outside the phase 1–5 specs; whether they use only the six gated paths is unverified. | HYB-291 report |
+| HB-07 | not applicable | (classified by HYB-301) HB-261 forwards the reader's response body unchanged (only request and response headers are filtered, `apps/api/server/readers.go`) and adds no mapping, conversion or display, so it cannot change FOCUS data meaning; HB-261 has no spec, and its ticket scope is the gate. HB-07 for the nine FOCUS reader screens themselves (received and target FOCUS versions kept apart, cost columns not mixed, null, missing and zero distinct, decimals preserved) is unassessed: it lives in the Python FOCUS import and reader screens built before HB-257, which phases 1–5 do not change. | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |

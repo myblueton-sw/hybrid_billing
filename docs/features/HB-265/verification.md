@@ -163,7 +163,7 @@ Renders are in `scratchpad/hb265qa/`.
 
 # Planning cross-check (HYB-291)
 
-Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check. Rows marked "(classified by HYB-301)" replace rows that HYB-291 left unclassified; the [HYB-301 trace classification](../../reviews/HYB-301-trace-classification/report.md) gives the evidence.
 
 ## Requirement trace
 
@@ -174,11 +174,11 @@ Source: `docs/ui/screens/M02/spec.md:24-26`. Status meanings are in the [cross-c
 | HB-03 | deferred | Addressed within pre-launch scope for two-person proposal and approval of the authentication policy; registry-wide and leakage acceptance not built. | HB-265/plan.md |
 | HB-36 | deferred | Providers, test login, keys, sync and recovery are shown as not available in pre-launch. | HB-265/plan.md:177-178, :200-208 |
 | HB-42 | deferred | The draft, validated, independently approved, activated trust flow is collapsed into propose then approve-applies. | Planning cross-check residuals below |
-| IAM-01 | unclassified – owner review | M02 adds no creation or invitation path; the spec links IAM-01 for the whole range. | this section |
+| IAM-01 | not applicable | (classified by HYB-301) IAM-01 is first-administrator creation, invitation replay and acceptance in another workspace (`retention-access.md:110`). The M02 field and action contract (`M02/spec.md:53-101`) has no creation, invitation or acceptance path; those are L02 and M01 (HB-259, HB-263). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | IAM-02 | deferred | Only local password accounts exist; SAML, OIDC and LDAP sign-in are residuals (HB-257 out of scope). | HB-265/plan.md:177 |
-| IAM-03 | unclassified – owner review | M02 has no identity-provider connection that could recreate an account. | this section |
+| IAM-03 | not connected | (classified by HYB-301) Built: only local password identities, keyed by issuer and login ID (`apps/api/server/signin.go:93`), never by email; a departed login ID can never be created again (HB-263/plan.md:139, 254). Not built: the M02 issuer and stable-subject contract, group mapping and IdP or LDAP connections (`M02/spec.md:58, 64`), so another IdP's or a recreated LDAP account cannot arise; SAML, OIDC and LDAP are out of pre-launch scope (HB-257). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | IAM-04 | deferred | Federated token checks are not built. | HB-265/plan.md:177 |
-| IAM-05 | unclassified – owner review | M02 has no suspension or departure path. | this section |
+| IAM-05 | deferred | (classified by HYB-301) Built: the applied policy's maximum sign-in age is enforced on every request, so a shorter age ends older sessions at their next request (HB-265/plan.md, verification plan). Not built: session impact and invalidation status on a trust change (`M02/spec.md:73`, part of HYB-297), external-status checks and the sensitive-command hold while status is unknown (`M02/spec.md:48-51`; not connected, no external IdP), and effects on keys, jobs and files. | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | IAM-06 | deferred | MFA and recovery settings are not available. | HB-265/plan.md:200-208 |
 | IAM-07 | deferred | Directory sync is not available. | HB-265/plan.md:177-178 |
 | IAM-08 | deferred | Maximum age is enforced and policy changes need a fresh sign-in; MFA evidence per method is not built; HYB-293 covers step-up on other commands. | HB-265/verification.md |

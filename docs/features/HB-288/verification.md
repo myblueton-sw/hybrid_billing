@@ -48,7 +48,7 @@ No review is owner acceptance.
 
 # Planning cross-check (HYB-291)
 
-Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check.
+Added by the [HYB-291 planning cross-check](../../reviews/HYB-291-planning-cross-check/report.md) on 2026-11-17. A record added by HYB-291; it changes no result above except where marked. The findings come from a read-only auditor; the HYB-291 writer agent (delegated by root) wrote this trace, the residual notes and the copy changes; the HYB-291 change review is their first independent check. Rows marked "(classified by HYB-301)" replace rows that HYB-291 left unclassified; the [HYB-301 trace classification](../../reviews/HYB-301-trace-classification/report.md) gives the evidence.
 
 ## Requirement trace
 
@@ -59,11 +59,11 @@ Source: `docs/ui/screens/P04/spec.md:137-155` (HB-288 is the API, HB-289 the scr
 | HB-06 | not connected | No ingestion is bound. | HB-288/plan.md:280-301 |
 | HB-08 | deferred | Holds and runs are shown; the backup catalog and archive are not connected. | HB-288/plan.md:280-301 |
 | HB-11 | not connected | TokenMeter results are not connected. | HB-288/plan.md:280-301 |
-| HB-21 | unclassified – owner review | No billing-ledger effect of retention was built or recorded. | this section |
-| HB-27 | unclassified – owner review | No disclosure or export behaviour was built or recorded. | this section |
+| HB-21 | deferred | (classified by HYB-301) P04's part is protecting minimal claim references from deletion (`P04/spec.md:35-37`) so that a source received again after deletion is not billed twice (HB-43 acceptance, RET-06). Built: the retention register has a `claim` class (`modules/retention/types.go:23`); the seed leaves it without a policy, and references keep a required artifact from deletion (HB-288/plan.md:123). A claim policy can be approved through the screen; only the absence of a deletion-plan command and a worker keeps claims from being deleted. Not built: a rule that keeps minimal duplicate-prevention records after their sources are deleted, and the billing claim ledger itself (phase 6). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
+| HB-27 | deferred | (classified by HYB-301) P04's part is showing ERP and downloaded copies as outside retention control (`P04/spec.md:41, 115`). Built: the screen says backup copies are not tracked (`retention/live-copy.ts:305`). Not built: the statement of copies outside control (HYB-301 Required and missing, item 10). Keeping MSP originals, internal settlement and customer files apart belongs to phases 7–8 (exports and disclosure). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | HB-32 | not connected | The assistant is not connected. | HB-288/plan.md:280-301 |
 | HB-37 | not connected | Deletion worker, backup expiry and archive restore are not connected. | HB-288/verification.md Residuals |
-| HB-38 | unclassified – owner review | No simulator or independent-answer check was built or recorded. | this section |
+| HB-38 | deferred | (classified by HYB-301) P04's part is AUD-QA-10's demo separation (HB-38 detail requirements DB-09, QA-10). Built: the seed is synthetic and marked as sample, the screen says periods are synthetic, and a `conversation` class exists without a policy (HB-288/plan.md:120, 124). Not built: scenario manifests with seed, clock and independent expected values, and demo reset kept apart from operational data. P06 (demo and scenarios) is in phase 5 but not yet ticketed (HB-257/plan.md:168). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | HB-43 | deferred | Policies, expiry, holds, runs and stop are built over `modules/retention`; plan approval, the worker, the decision ledger and separate permissions are not. | HB-288/verification.md Residuals |
 | AUD-AR-05 | not connected | Cited only in the module ticket (`HB-256/plan.md:234`); no AI source fields are retained here. | this section |
 | AUD-QA-10 | deferred | Only synthetic sample data, in memory; rejection of real credentials and separation of assistant conversations are not tested. | this section |

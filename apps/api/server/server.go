@@ -12,6 +12,7 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
+	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
@@ -54,38 +55,41 @@ type Config struct {
 }
 
 type Server struct {
-	cfg           Config
-	clock         func() time.Time
-	log           *slog.Logger
-	identity      *identity.Registry
-	gate          *gate.Gate
-	admin         *gate.Administration
-	commands      *commands.Registry
-	policy        *authpolicy.Registry
-	domain        sync.RWMutex
-	counter       uint64
-	mutating      map[string]bool
-	sessions      *sessions
-	origins       map[string]bool
-	hosts         map[string]bool
-	hostMu        sync.RWMutex
-	seed          []step
-	passwords     *passwords.Registry
-	orgs          *organizations.Registry
-	rels          *relationships.Registry
-	plans         *planStore
-	limit         *limiter
-	slots         chan struct{}
-	boot          activation
-	bootWorkspace string
-	bootUser      string
-	pause         func()
-	readerSecret  string
-	dir           *directory
-	failures      map[identity.Verifier]int
-	caller        identity.Verifier
-	fault         func(string) bool
-	records       []record
+	cfg             Config
+	clock           func() time.Time
+	log             *slog.Logger
+	identity        *identity.Registry
+	gate            *gate.Gate
+	admin           *gate.Administration
+	commands        *commands.Registry
+	policy          *authpolicy.Registry
+	domain          sync.RWMutex
+	counter         uint64
+	mutating        map[string]bool
+	sessions        *sessions
+	origins         map[string]bool
+	hosts           map[string]bool
+	hostMu          sync.RWMutex
+	seed            []step
+	passwords       *passwords.Registry
+	orgs            *organizations.Registry
+	rels            *relationships.Registry
+	plans           *planStore
+	lifecycles      *contracts.Registry
+	contracts       *contractStore
+	lifecycleLimits contracts.Limits
+	limit           *limiter
+	slots           chan struct{}
+	boot            activation
+	bootWorkspace   string
+	bootUser        string
+	pause           func()
+	readerSecret    string
+	dir             *directory
+	failures        map[identity.Verifier]int
+	caller          identity.Verifier
+	fault           func(string) bool
+	records         []record
 }
 
 func IdentityLimits() identity.Limits {
@@ -149,7 +153,8 @@ func New(cfg Config) (*Server, error) {
 		return nil, ErrConfig
 	}
 	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{},
-		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}, plans: newPlanStore()}
+		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}, plans: newPlanStore(),
+		contracts: newContractStore()}
 	s.clock = func() time.Time { return cfg.Clock().UTC() }
 	for _, origin := range cfg.Origins {
 		if !validOrigin(origin) {
@@ -187,6 +192,11 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) { s.passwords, err = passwords.New(s.clock, cfg.Passwords); return },
 		func() (err error) { s.orgs, err = organizations.NewRegistry(Installation); return },
 		func() (err error) { s.rels, err = relationships.NewRegistry(RelationshipLimits(), s.clock); return },
+		func() (err error) {
+			s.lifecycleLimits = ContractLimits()
+			s.lifecycles, err = contracts.NewRegistry(s.lifecycleLimits, s.clock)
+			return
+		},
 		s.registerUsers,
 	}
 	for _, build := range steps {

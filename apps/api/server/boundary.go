@@ -31,6 +31,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/me", s.readSelf)
 	mux.HandleFunc("GET /api/v1/organizations", s.listOrganizations)
 	mux.HandleFunc("GET /api/v1/organizations/plans", s.listPlans)
+	mux.HandleFunc("GET /api/v1/contracts", s.listContracts)
+	mux.HandleFunc("GET /api/v1/contracts/{id}", s.readContract)
 	mux.HandleFunc("POST /api/v1/me/password", s.changePassword)
 	mux.HandleFunc("POST /api/v1/me/sessions/end", s.endSelfSessions)
 	for path, raw := range s.cfg.Readers {

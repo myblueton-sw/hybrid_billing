@@ -1,6 +1,7 @@
 import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsPage } from "./contracts";
 import { installationOf, type InstallationPage } from "./installation";
 import { integrationsOf, type IntegrationsPage } from "./integrations";
+import { recoveryOf, type RecoveryPage } from "./recovery";
 
 export type Membership = { role: "administrator" | "member"; state: "active" | "suspended"; version: number };
 
@@ -294,7 +295,11 @@ export type CommandId =
   | "integrations.letter_request_redeliver"
   | "integrations.letter_approve_redeliver"
   | "integrations.letter_request_dismiss"
-  | "integrations.letter_approve_dismiss";
+  | "integrations.letter_approve_dismiss"
+  | "recovery.approve"
+  | "recovery.withdraw"
+  | "recovery.lock"
+  | "recovery.propose_unlock";
 
 export type Outcome = { state: string; fields: Record<string, string> };
 
@@ -526,6 +531,9 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis)) {
     },
     async integrations(): Promise<IntegrationsPage> {
       return integrationsOf(await send("/integrations", { method: "GET" }, attempt().request));
+    },
+    async recovery(): Promise<RecoveryPage> {
+      return recoveryOf(await send("/recovery", { method: "GET" }, attempt().request));
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

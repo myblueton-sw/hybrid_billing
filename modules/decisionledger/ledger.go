@@ -195,6 +195,9 @@ func (l *Ledger) check(mark marker, marked bool) error {
 		return err
 	}
 	s := verify(h, info.Size())
+	if s.newer > 0 {
+		return ErrFormatNewer
+	}
 	l.oldG, l.verified = s.g, s.decisions
 	if s.ledgerID != "" && !l.markerUsable() {
 		l.status.Generation = s.g
@@ -362,12 +365,22 @@ func (l *Ledger) watermark() string {
 }
 
 func (l *Ledger) append(rec line, at time.Time) string {
-	rec.V, rec.Seq, rec.Prev, rec.At = FormatV1, l.seq+1, l.last, stamp(at)
-	data := encode(rec)
-	if len(data) > RecordLimit {
-		return ReasonCommitFailed
+	return l.appendLines([]line{rec}, at)
+}
+
+func (l *Ledger) appendLines(recs []line, at time.Time) string {
+	out, last, size := []byte{}, l.last, l.size
+	for i := range recs {
+		recs[i].V, recs[i].Seq, recs[i].Prev, recs[i].At = recs[i].format(), l.seq+uint64(i)+1, last, stamp(at)
+		data := encode(recs[i])
+		if len(data) > RecordLimit {
+			return ReasonCommitFailed
+		}
+		size += int64(len(data)) + 1
+		last = hashOf(data)
+		out = append(append(out, data...), '\n')
 	}
-	if l.size+int64(len(data))+1 > l.o.MaxBytes {
+	if size > l.o.MaxBytes {
 		l.status.State = StateFull
 		return ReasonFull
 	}
@@ -375,8 +388,8 @@ func (l *Ledger) append(rec line, at time.Time) string {
 		l.status.State = StateStopped
 		return ReasonCommitFailed
 	}
-	n, err := l.file.Write(append(append([]byte{}, data...), '\n'))
-	if err != nil || n != len(data)+1 {
+	n, err := l.file.Write(out)
+	if err != nil || n != len(out) {
 		l.status.State = StateStopped
 		return ReasonCommitFailed
 	}
@@ -384,8 +397,8 @@ func (l *Ledger) append(rec line, at time.Time) string {
 		l.status.State = StateStopped
 		return ReasonCommitUnknown
 	}
-	l.size += int64(n)
-	l.seq, l.last = rec.Seq, hashOf(data)
+	l.size = size
+	l.seq, l.last = l.seq+uint64(len(recs)), last
 	l.status.Records, l.status.Watermark = l.seq, l.watermark()
 	return ""
 }
@@ -396,19 +409,25 @@ func (l *Ledger) Commit(d Decision) (Receipt, error) {
 	return l.commit(d)
 }
 
-func (l *Ledger) commit(d Decision) (Receipt, error) {
+func (l *Ledger) refusal() error {
 	switch l.status.State {
 	case StateIsolated:
-		return Receipt{}, &CommitError{Reason: ReasonIsolated}
+		return &CommitError{Reason: ReasonIsolated}
 	case StateStopped:
-		return Receipt{}, &CommitError{Reason: ReasonStopped}
+		return &CommitError{Reason: ReasonStopped}
 	case StateFull:
-		return Receipt{}, &CommitError{Reason: ReasonFull}
+		return &CommitError{Reason: ReasonFull}
+	}
+	return nil
+}
+
+func (l *Ledger) commit(d Decision) (Receipt, error) {
+	if err := l.refusal(); err != nil {
+		return Receipt{}, err
 	}
 	at := l.now()
-	rec := line{Kind: KindDecision, Workspace: d.Workspace, Decision: d.Decision, Target: d.Target, TargetVersion: d.TargetVersion, Revocation: d.Revocation,
-		Request: d.Request, RequestDigest: d.RequestDigest, RequestedBy: d.RequestedBy, ApprovedBy: d.ApprovedBy, DenyGeneration: d.DenyGeneration,
-		EndedDelegations: append([]string(nil), d.EndedDelegations...), Trust: lineOf(d.Trust)}
+	rec := lineFor(d)
+	rec.Seq = l.seq + 1
 	if !rec.shaped() || rec.Trust != nil && (rec.Trust.NewEpoch <= l.epochs[d.Workspace] || rec.Trust.NewEpoch>>32 != l.status.Generation ||
 		l.changes[d.Workspace+"/"+rec.Trust.Change]) {
 		return Receipt{}, &CommitError{Reason: ReasonCommitFailed}
@@ -422,6 +441,7 @@ func (l *Ledger) commit(d Decision) (Receipt, error) {
 		l.epochs[d.Workspace] = rec.Trust.NewEpoch
 		l.changes[d.Workspace+"/"+rec.Trust.Change] = true
 	}
+	d.Clock = rec.decision().Clock
 	l.decisions = append(l.decisions, Record{Sequence: l.seq, Watermark: l.watermark(), At: at, Decision: d})
 	return Receipt{Sequence: l.seq, Watermark: l.watermark()}, nil
 }

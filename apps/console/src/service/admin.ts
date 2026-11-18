@@ -5,7 +5,18 @@ import { recoveryOf, type RecoveryPage } from "./recovery";
 import { evidenceOf, type EvidencePage } from "./release-evidence";
 import { retentionOf, type RetentionPage } from "./retention";
 
-export type Membership = { role: "administrator" | "member"; state: "active" | "suspended"; version: number };
+export type RolePeriod = "open" | "bounded" | "ends_soon" | "ended";
+
+export type Membership = {
+  role: "administrator" | "member";
+  state: "active" | "suspended";
+  version: number;
+  role_from: string;
+  role_until: string;
+  role_period: RolePeriod;
+  suspended_for: "" | "role_period_ended" | "bulk_revocation";
+  ledger: "" | "confirmed" | "unconfirmed";
+};
 
 export type UserRow = {
   user_id: string;
@@ -19,9 +30,74 @@ export type UserRow = {
   link_purpose: "" | "set" | "reset";
   link_expires: string;
   installation_administrator: boolean;
+  revocation: { bulk: string; state: string } | null;
 };
 
-export type UsersPage = { revision: string; next: string; users: UserRow[] };
+export type SettingRow = { name: string; value: number; unit: string; default: number; min: number; max: number; source: string };
+
+export type ClockState = {
+  server_time: string;
+  wall_time: string;
+  clock_behind: boolean;
+  clock_ahead: boolean;
+  clock_base: { choice: string; ledger_time: string; wall_time: string; recorded: boolean };
+  wall_lead: { wall_time: string; server_time: string } | null;
+  recovery: { stranded: boolean; records: number[] };
+};
+
+export type UsersPage = {
+  revision: string;
+  next: string;
+  users: UserRow[];
+  clock: ClockState;
+  settings: SettingRow[];
+  ledger_state: string;
+  can_bulk_revoke: boolean;
+};
+
+const periods: RolePeriod[] = ["open", "bounded", "ends_soon", "ended"];
+
+export function membershipOf(v: unknown): Membership | null {
+  if (!v || typeof v !== "object") return null;
+  const m = v as Record<string, unknown>;
+  const suspended = String(m.suspended_for ?? "");
+  const ledger = String(m.ledger ?? "");
+  return {
+    role: m.role === "administrator" ? "administrator" : "member",
+    state: m.state === "suspended" ? "suspended" : "active",
+    version: Number(m.version ?? 0),
+    role_from: String(m.role_from ?? ""),
+    role_until: String(m.role_until ?? ""),
+    role_period: periods.includes(m.role_period as RolePeriod) ? (m.role_period as RolePeriod) : "open",
+    suspended_for: suspended === "role_period_ended" || suspended === "bulk_revocation" ? suspended : "",
+    ledger: ledger === "confirmed" || ledger === "unconfirmed" ? ledger : "",
+  };
+}
+
+export function clockOf(body: Record<string, unknown>): ClockState {
+  const base = (body.clock_base ?? {}) as Record<string, unknown>;
+  const lead = body.wall_lead_beyond_tolerance as Record<string, unknown> | null | undefined;
+  const recovery = (body.recovery_state ?? {}) as Record<string, unknown>;
+  return {
+    server_time: String(body.server_time ?? ""),
+    wall_time: String(body.wall_time ?? ""),
+    clock_behind: body.clock_behind === true,
+    clock_ahead: body.clock_ahead === true,
+    clock_base: { choice: String(base.choice ?? "default"), ledger_time: String(base.ledger_time ?? ""), wall_time: String(base.wall_time ?? ""), recorded: base.recorded === true },
+    wall_lead: lead && typeof lead === "object" ? { wall_time: String(lead.wall_time ?? ""), server_time: String(lead.server_time ?? "") } : null,
+    recovery: { stranded: recovery.stranded === true, records: Array.isArray(recovery.records) ? recovery.records.map(Number) : [] },
+  };
+}
+
+export function settingsOf(v: unknown): SettingRow[] {
+  return Array.isArray(v) ? (v as SettingRow[]) : [];
+}
+
+export function userRowOf(v: unknown): UserRow {
+  const r = v as UserRow & { membership: unknown; revocation: unknown };
+  const rev = r.revocation as Record<string, unknown> | null | undefined;
+  return { ...r, membership: membershipOf(r.membership), revocation: rev && typeof rev === "object" ? { bulk: String(rev.bulk ?? ""), state: String(rev.state ?? "") } : null };
+}
 
 export type StepRow = { action: string; max_age_seconds: number; mfa: boolean };
 export type RevisionRow = { methods: string[]; mfa: string; max_age_seconds: number; step_up: StepRow[] };
@@ -519,6 +595,11 @@ export type CommandId =
   | "identity.reinstate_membership"
   | "identity.remove_membership"
   | "identity.revoke_invitation"
+  | "identity.set_role_period"
+  | "bulk_revocation.add_targets"
+  | "bulk_revocation.prepare"
+  | "bulk_revocation.execute"
+  | "bulk_revocation.discard"
   | "trust.propose"
   | "trust.validate"
   | "trust.approve"
@@ -581,7 +662,7 @@ export type CommandId =
   | "release_evidence.retire_requirement"
   | "release_evidence.retire_profile";
 
-export type Outcome = { status: string; state: string; job_id: string; fields: Record<string, string> };
+export type Outcome = { status: string; state: string; job_id: string; revision?: string; fields: Record<string, string> };
 
 const unknownLedger: LedgerStatus = {
   state: "unknown", isolation_reason: "", ledger_id: "", created_at: "", replaces: "", replace_reason: "", replaced_file: "", records: 0, watermark: "", checked_at: "",
@@ -617,6 +698,7 @@ export function outcomeOf(body: Record<string, unknown>): Outcome {
     status: String(body.status ?? ""),
     state: String(body.business_state ?? ""),
     job_id: String(body.job_id ?? ""),
+    ...(typeof body.result_revision === "string" && body.result_revision ? { revision: body.result_revision } : {}),
     fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v)])),
   };
 }
@@ -736,8 +818,15 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
       return {
         revision: String(body.revision ?? ""),
         next: String(body.next ?? ""),
-        users: Array.isArray(body.users) ? (body.users as UserRow[]) : [],
+        users: Array.isArray(body.users) ? body.users.map(userRowOf) : [],
+        clock: clockOf(body),
+        settings: settingsOf(body.settings),
+        ledger_state: String(body.ledger_state ?? ""),
+        can_bulk_revoke: body.can_bulk_revoke === true,
       };
+    },
+    async read(path: string): Promise<Record<string, unknown>> {
+      return send(path, { method: "GET" }, attempt().request);
     },
     async command(id: CommandId, target: string, expected: string, rationale: string, values: Record<string, string>, tried: Attempt): Promise<Outcome> {
       const body = await send(

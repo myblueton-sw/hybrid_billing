@@ -64,7 +64,19 @@ test("reads page with a cursor", async () => {
   assert.equal(page.next, "u2");
   assert.equal(page.users.length, 1);
   const empty = await adminClient("tok", fake(200, {}).f).users();
-  assert.deepEqual(empty, { revision: "", next: "", users: [] });
+  assert.deepEqual({ revision: empty.revision, next: empty.next, users: empty.users, can: empty.can_bulk_revoke, settings: empty.settings },
+    { revision: "", next: "", users: [], can: false, settings: [] });
+  assert.equal(empty.clock.clock_base.choice, "default");
+  assert.equal(empty.clock.wall_lead, null);
+  const full = await adminClient("tok", fake(200, { users: [{ user_id: "u1", membership: { role: "administrator", state: "suspended", version: 3, role_period: "ended",
+    suspended_for: "role_period_ended", ledger: "unconfirmed", role_until: "2026-11-18T10:00:00Z" }, revocation: { bulk: "bulk-revocation-1", state: "deny_confirmed" } },
+    { user_id: "u2", membership: { role_period: "later", suspended_for: "x", ledger: "x" } }], can_bulk_revoke: true,
+    wall_lead_beyond_tolerance: { wall_time: "a", server_time: "b" }, clock_base: { choice: "ledger", recorded: true }, recovery_state: { stranded: true, records: [3] } }).f).users();
+  assert.deepEqual(full.users[0].membership, { role: "administrator", state: "suspended", version: 3, role_from: "", role_until: "2026-11-18T10:00:00Z", role_period: "ended",
+    suspended_for: "role_period_ended", ledger: "unconfirmed" });
+  assert.deepEqual(full.users[0].revocation, { bulk: "bulk-revocation-1", state: "deny_confirmed" });
+  assert.deepEqual([full.users[1].membership?.role_period, full.users[1].membership?.suspended_for, full.users[1].membership?.ledger, full.users[1].revocation], ["open", "", "", null]);
+  assert.deepEqual([full.can_bulk_revoke, full.clock.wall_lead, full.clock.clock_base.recorded, full.clock.recovery], [true, { wall_time: "a", server_time: "b" }, true, { stranded: true, records: [3] }]);
 });
 
 test("rate limits carry the wait", async () => {

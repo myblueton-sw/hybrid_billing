@@ -40,6 +40,7 @@ func (f world) startWith(t *testing.T, change func(*Config), prepare func(*Serve
 	if err := s.Bind(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 8820}); err != nil {
 		t.Fatal(err)
 	}
+	s.manual = true
 	if prepare != nil {
 		prepare(s)
 	}

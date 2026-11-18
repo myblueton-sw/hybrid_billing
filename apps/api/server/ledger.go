@@ -58,15 +58,25 @@ func (s *Server) openLedger() (bool, error) {
 	s.ledger = l
 	st := l.Status()
 	s.log.Info("decision_ledger_opened", "state", string(st.State), "records", st.Records)
+	if err := s.settleClockBase(); err != nil {
+		l.Close()
+		return false, err
+	}
 	changed, err := s.replayLedger()
 	if err != nil {
 		l.Close()
 		return changed, err
 	}
-	return changed, nil
+	replayed, err := s.replayIdentity()
+	return changed || replayed, err
 }
 
 func (s *Server) Close() error {
+	s.stopOnce.Do(func() {
+		if s.stop != nil {
+			close(s.stop)
+		}
+	})
 	if s.ledger == nil {
 		return nil
 	}
@@ -135,7 +145,7 @@ func (s *Server) replayLedger() (bool, error) {
 	restored := []accesschange.Restored{}
 	for _, rec := range records {
 		d := rec.Decision
-		if d.Trust != nil {
+		if d.Trust != nil || decisionledger.IdentityKind(d.Decision) {
 			continue
 		}
 		if n, ok := accesschange.Number(d.Request, accesschange.RequestPrefix); ok {
@@ -164,7 +174,7 @@ func (s *Server) replayLedger() (bool, error) {
 }
 
 func (s *Server) ledgerBlocksIncrease() bool {
-	if s.ledger == nil {
+	if _, beyond := s.time.leadBeyond(); beyond || s.ledger == nil {
 		return true
 	}
 	switch s.ledger.Status().State {

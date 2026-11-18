@@ -48,7 +48,7 @@ func (s *Server) accessFacts(actor identity.Verifier) (accessFacts, error) {
 
 func (f accessFacts) person(user string) string {
 	m, u := f.members[user], f.users[user]
-	return strings.Join([]string{user, strconv.FormatUint(m.Version, 10), string(m.Role), string(m.State), string(m.UserState), strconv.FormatUint(u.Epoch, 10),
+	return strings.Join([]string{user, strconv.FormatUint(m.Version, 10), string(m.Role), memberState(m), string(m.UserState), strconv.FormatUint(u.Epoch, 10),
 		string(u.State), string(u.Kind)}, "/")
 }
 
@@ -63,7 +63,7 @@ func (f accessFacts) holdsAdmin(user string) bool {
 
 func (f accessFacts) eligible(user string) bool {
 	m, ok := f.members[user]
-	return ok && m.Role == identity.Administrator && m.State == identity.MembershipActive && m.UserState == identity.Active &&
+	return ok && m.Role == identity.Administrator && m.Effective && m.UserState == identity.Active &&
 		f.users[user].Kind == identity.Human && f.holdsAdmin(user)
 }
 
@@ -213,7 +213,7 @@ func (h requestCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 
 func (h requestCommand) addChange(ctx commands.Context, f accessFacts) (accesschange.Change, gate.GrantView, error) {
 	subject := ctx.Fields["subject"]
-	if m, ok := f.members[subject]; !ok || m.State != identity.MembershipActive || m.UserState != identity.Active {
+	if m, ok := f.members[subject]; !ok || !m.Effective || m.UserState != identity.Active {
 		return accesschange.Change{}, gate.GrantView{}, commands.Fail(commands.InvalidRequest, "subject")
 	}
 	fields, ok := splitFields(ctx.Fields["fields"])

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
+	"github.com/myblueton-sw/hybrid_billing/modules/bulkrevoke"
 )
 
 const (
@@ -25,6 +26,14 @@ type AccessSettings struct {
 	AcceptTrustReset    bool
 	CarryTrustFrom      string
 	TrustGeneration     uint64
+	RolePeriodMaxDays   int
+	ClockSkewHours      int
+	RoleWarningDays     int
+	BulkMaxTargets      int
+	BulkMinutes         int
+	BulkPending         int
+	BulkKept            int
+	ClockBase           string
 }
 
 type AccessSetting struct {
@@ -51,18 +60,35 @@ var accessSettings = []AccessSetting{
 	{"decision_ledger_max_mib", "decision-ledger-max-mib", "MiB", 256, 1, 4096, func(s *AccessSettings) *int { return &s.LedgerMaxMiB }},
 }
 
+var identitySettings = []AccessSetting{
+	{"role_period_max_days", "role-period-max-days", "days", 366, 1, 3660, func(s *AccessSettings) *int { return &s.RolePeriodMaxDays }},
+	{"clock_skew_tolerance_hours", "clock-skew-tolerance-hours", "hours", 24, 1, 720, func(s *AccessSettings) *int { return &s.ClockSkewHours }},
+	{"role_period_warning_days", "role-period-warning-days", "days", 14, 1, 90, func(s *AccessSettings) *int { return &s.RoleWarningDays }},
+	{"bulk_revocation_max_targets", "bulk-revocation-max-targets", "people", 500, 1, 5000, func(s *AccessSettings) *int { return &s.BulkMaxTargets }},
+	{"bulk_revocation_manifest_minutes", "bulk-revocation-manifest-minutes", "minutes", 30, 5, 1440, func(s *AccessSettings) *int { return &s.BulkMinutes }},
+	{"bulk_revocation_pending", "bulk-revocation-pending", "lists", 20, 1, 200, func(s *AccessSettings) *int { return &s.BulkPending }},
+	{"bulk_revocation_jobs_kept", "bulk-revocation-jobs-kept", "jobs", 100, 10, 1000, func(s *AccessSettings) *int { return &s.BulkKept }},
+}
+
+const (
+	ClockBaseLedger = "ledger"
+	ClockBaseWall   = "wall"
+)
+
 func AccessSettingList() []AccessSetting { return append([]AccessSetting(nil), accessSettings...) }
+
+func IdentitySettingList() []AccessSetting { return append([]AccessSetting(nil), identitySettings...) }
 
 func DefaultAccessSettings() AccessSettings {
 	s := AccessSettings{Given: map[string]bool{}}
-	for _, a := range accessSettings {
+	for _, a := range append(AccessSettingList(), identitySettings...) {
 		a.Set(&s, a.Default)
 	}
 	return s
 }
 
-func (s AccessSettings) numbersZero() bool {
-	for _, a := range accessSettings {
+func numbersZero(s AccessSettings, list []AccessSetting) bool {
+	for _, a := range list {
 		if a.Value(s) != 0 {
 			return false
 		}
@@ -71,18 +97,25 @@ func (s AccessSettings) numbersZero() bool {
 }
 
 func (s AccessSettings) withDefaults() AccessSettings {
-	if !s.numbersZero() {
-		return s
-	}
 	out := DefaultAccessSettings()
-	out.AcceptNewLedger, out.AcceptTrustReset, out.CarryTrustFrom, out.TrustGeneration = s.AcceptNewLedger, s.AcceptTrustReset, s.CarryTrustFrom, s.TrustGeneration
+	for _, group := range [][]AccessSetting{accessSettings, identitySettings} {
+		if !numbersZero(s, group) {
+			for _, a := range group {
+				a.Set(&out, a.Value(s))
+			}
+		}
+	}
+	if s.Given != nil {
+		out.Given = s.Given
+	}
+	out.AcceptNewLedger, out.AcceptTrustReset, out.CarryTrustFrom, out.TrustGeneration, out.ClockBase = s.AcceptNewLedger, s.AcceptTrustReset, s.CarryTrustFrom, s.TrustGeneration, s.ClockBase
 	return out
 }
 
 func settingError(name string) error { return fmt.Errorf("%w: %s", ErrConfig, name) }
 
 func (s AccessSettings) validate() error {
-	for _, a := range accessSettings {
+	for _, a := range append(AccessSettingList(), identitySettings...) {
 		if v := a.Value(s); v < a.Min || v > a.Max {
 			return settingError(a.Name)
 		}
@@ -92,6 +125,10 @@ func (s AccessSettings) validate() error {
 		return settingError("access_pending_per_workspace")
 	case s.EndedShown > s.EndedKept:
 		return settingError("access_ended_shown")
+	case s.RoleWarningDays > s.RolePeriodMaxDays:
+		return settingError("role_period_warning_days")
+	case s.ClockBase != "" && s.ClockBase != ClockBaseLedger && s.ClockBase != ClockBaseWall:
+		return settingError("clock_base")
 	}
 	return nil
 }
@@ -99,6 +136,10 @@ func (s AccessSettings) validate() error {
 func (s AccessSettings) limits() accesschange.Limits {
 	return accesschange.Limits{Lifetime: time.Duration(s.RequestHours) * time.Hour, PerProposer: s.PendingPerProposer, PerWorkspace: s.PendingPerWorkspace,
 		EndedKept: s.EndedKept, RevocationsKept: s.RevocationsKept}
+}
+
+func (s AccessSettings) bulkLimits() bulkrevoke.Limits {
+	return bulkrevoke.Limits{MaxTargets: s.BulkMaxTargets, Pending: s.BulkPending, Kept: s.BulkKept, Lifetime: time.Duration(s.BulkMinutes) * time.Minute}
 }
 
 type settingRow struct {
@@ -111,9 +152,13 @@ type settingRow struct {
 	Source  string `json:"source"`
 }
 
-func (s *Server) settingRows() []settingRow {
+func (s *Server) settingRows() []settingRow { return s.rowsOf(accessSettings) }
+
+func (s *Server) identitySettingRows() []settingRow { return s.rowsOf(identitySettings) }
+
+func (s *Server) rowsOf(list []AccessSetting) []settingRow {
 	out := []settingRow{}
-	for _, a := range accessSettings {
+	for _, a := range list {
 		source := SourceDefault
 		if s.cfg.Access.Given[a.Name] {
 			source = SourceStartFlag

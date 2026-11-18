@@ -11,6 +11,8 @@ const (
 	MaxGeneration = 1<<32 - 1
 	LineLimit     = 4096
 	FormatV1      = 1
+	FormatV2      = 2
+	BatchLimit    = 256
 	DirName       = "decisions"
 	FileName      = "ledger.jsonl"
 	MarkerName    = "decision-ledger.created"
@@ -64,6 +66,7 @@ var (
 	ErrNothingToReplace = errors.New("there is no isolated decision ledger to replace")
 	ErrInvalid          = errors.New("invalid decision ledger options")
 	ErrGenerations      = errors.New("the decision ledger generations are exhausted")
+	ErrFormatNewer      = errors.New("the decision ledger was written by a newer version")
 	errStartSync        = errors.New("start sync refused by option")
 )
 
@@ -86,6 +89,22 @@ type Decision struct {
 	DenyGeneration   uint64
 	EndedDelegations []string
 	Trust            *Trust
+	Role             string
+	Until            string
+	Increase         string
+	IntentSequence   uint64
+	Effect           string
+	Targets          uint64
+	Held             uint64
+	Excluded         uint64
+	Clock            *ClockBase
+}
+
+type ClockBase struct {
+	LedgerTime time.Time
+	WallTime   time.Time
+	Choice     string
+	Offset     time.Duration
 }
 
 type StepRule struct {

@@ -47,6 +47,7 @@ const (
 	TrustValidate          = auth.TrustValidate
 	TrustApprove           = auth.TrustApprove
 	TrustActivate          = auth.TrustActivate
+	RevokeAccessInBulk     = auth.RevokeAccessInBulk
 	InstallationKind       = auth.InstallationKind
 
 	Active    = auth.Active

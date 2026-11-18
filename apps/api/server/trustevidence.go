@@ -54,7 +54,7 @@ type trustFacts struct {
 
 func (p trustPerson) qualifies(right gate.Action) bool {
 	m := p.member
-	return p.info.Kind == identity.Human && p.info.State == identity.Active && m.State == identity.MembershipActive && m.Role == identity.Administrator &&
+	return p.info.Kind == identity.Human && p.info.State == identity.Active && m.Effective && m.Role == identity.Administrator &&
 		p.password && !p.blocked && p.admitted && p.rights[right].Allowed
 }
 

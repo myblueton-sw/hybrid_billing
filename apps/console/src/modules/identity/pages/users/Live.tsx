@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, attempt, sequence, type AdminClient, type Attempt, type CommandId, type UserRow } from "../../../../service/admin";
+import { AdminError, attempt, sequence, type AdminClient, type Attempt, type ClockState, type CommandId, type SettingRow, type UserRow } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
@@ -8,16 +8,32 @@ import { emailValid, loginValid, utf8Length } from "../../../../service/helpers"
 import { Summary, TextField, type Problems } from "../../../../service/Service";
 import { actionDone, actionLabel, impact, w, type Action } from "./live-copy";
 import { accountName, failureText, offers, roleName, setup, tags, when } from "./live-model";
+import { b } from "./bulk-copy";
+import { selectLoaded, toggle, without, type Selection } from "./bulk-model";
+import { BulkFlow } from "./BulkPrepare";
+import RevocationJobs from "./RevocationJobs";
+import { endError, endFields, initialEnd, PeriodCell, PeriodFact, PeriodForm, RoleEnds, type EndValue } from "./RolePeriod";
+import { CheckCell, HeaderCheck, SelectionBar } from "./Selection";
+import { p } from "./period-copy";
+import { setting } from "./period-model";
 import "./live.css";
+import "./bulk.css";
+import { fill } from "./Stamp";
 
 type Mode =
   | { kind: "none" }
   | { kind: "detail" }
   | { kind: "confirm"; action: Action }
   | { kind: "create" }
-  | { kind: "link"; login: string; purpose: "set" | "reset"; ref: string };
+  | { kind: "link"; login: string; purpose: "set" | "reset"; ref: string }
+  | { kind: "period" };
 
-type Loaded = { revision: string; next: string; users: UserRow[]; at: Date };
+type Loaded = { revision: string; next: string; users: UserRow[]; at: Date; clock: ClockState; settings: SettingRow[]; ledger_state: string; can_bulk_revoke: boolean };
+
+type Context = { clock: ClockState; settings: SettingRow[]; own: string };
+
+let openJobNext = "";
+let kept: { user: string; selection: Selection } = { user: "", selection: new Set() };
 
 export function useWide(): boolean {
   const query = "(min-width: 1280px)";
@@ -93,10 +109,13 @@ export function settles(e: unknown): boolean {
   return !(e instanceof AdminError) || !["unavailable", "limited", "unauthenticated", "reauth", "reauth_cancelled"].includes(e.failure);
 }
 
-function Confirm({ l, user, action, api, revision, onDone, onCancel, onReload }: {
-  l: Locale; user: UserRow; action: Action; api: AdminClient; revision: string;
+function Confirm({ l, user, action, api, revision, ctx, onDone, onCancel, onReload }: {
+  l: Locale; user: UserRow; action: Action; api: AdminClient; revision: string; ctx: Context;
   onDone: (user: string, action: Action, ref: string) => void; onCancel: () => void; onReload: () => void;
 }) {
+  const ends = action === "change_role" || action === "invite";
+  const [end, setEnd] = useState<EndValue>(() => initialEnd(action === "change_role" ? user.membership?.role_until ?? "" : "", ctx.own));
+  const [endProblemText, setEndProblem] = useState("");
   const current = user.membership?.role ?? "";
   const allowAdmin = action === "invite" || !user.link_purpose;
   const [role, setRole] = useState(action === "change_role" && current === "member" && allowAdmin ? "administrator" : "member");
@@ -113,12 +132,14 @@ function Confirm({ l, user, action, api, revision, onDone, onCancel, onReload }:
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const p = reasonProblem(l, reason);
+    const ep = ends ? endError(l, end, ctx.clock, ctx.settings, ctx.own) : "";
     setProblem(p);
-    if (p) { setError(null); setFocusKey((k) => k + 1); return; }
+    setEndProblem(ep);
+    if (p || ep) { setError(null); setFocusKey((k) => k + 1); return; }
     setBusy(true);
     setError(null);
     try {
-      const body: Record<string, string> = action === "change_role" || action === "invite" ? { role } : {};
+      const body: Record<string, string> = ends ? { role, ...endFields(end).values, ...(action === "change_role" ? { end: end.kind } : {}) } : {};
       const out = await api.command(commandOf(action), user.user_id, revision, reason, body, tried.current);
       onDone(user.user_id, action, out.fields.link_ref ?? "");
     } catch (err) {
@@ -134,11 +155,14 @@ function Confirm({ l, user, action, api, revision, onDone, onCancel, onReload }:
     <form className="live-step" onSubmit={submit} noValidate>
       <h2 tabIndex={-1} ref={heading}>{actionLabel[action](l)}</h2>
       <p className="live-who"><bdi dir="ltr">{user.login || user.user_id}</bdi></p>
-      {problem && <Summary locale={l} title={c.check(l)} problems={[{ field: "live-reason", message: problem }]} focusKey={focusKey} />}
+      {(problem || endProblemText) && <Summary locale={l} title={c.check(l)} problems={[endProblemText && { field: "m01-role-end", message: endProblemText }, problem && { field: "live-reason", message: problem }].filter(Boolean) as Problems} focusKey={focusKey} />}
       {error !== null && <FailureBox l={l} error={error} focusKey={focusKey} />}
       <p className="live-impact">{impact(l, action, user.login || user.user_id, roleName(l, current), roleName(l, role))}</p>
-      {(action === "change_role" || action === "invite") && (
-        <RoleChoice l={l} value={role} onChange={edit(setRole)} allowAdmin={allowAdmin} />
+      {ends && (
+        <>
+          <RoleChoice l={l} value={role} onChange={edit(setRole)} allowAdmin={allowAdmin} />
+          <RoleEnds l={l} id="m01-role-end" value={end} onChange={(v) => { tried.current = attempt(); setEnd(v); }} own={ctx.own} clock={ctx.clock} settings={ctx.settings} error={endProblemText} />
+        </>
       )}
       <Reason l={l} value={reason} onChange={edit(setReason)} error={problem} />
       <div className="live-buttons">
@@ -149,10 +173,11 @@ function Confirm({ l, user, action, api, revision, onDone, onCancel, onReload }:
   );
 }
 
-function Create({ l, api, revision, onDone, onCancel, onReload }: {
-  l: Locale; api: AdminClient; revision: string;
+function Create({ l, api, revision, ctx, onDone, onCancel, onReload }: {
+  l: Locale; api: AdminClient; revision: string; ctx: Context;
   onDone: (user: string, login: string, ref: string) => void; onCancel: () => void; onReload: () => void;
 }) {
+  const [end, setEnd] = useState<EndValue>(() => initialEnd("", ctx.own));
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
@@ -173,6 +198,8 @@ function Create({ l, api, revision, onDone, onCancel, onReload }: {
     else if (!loginValid(login) || !emailValid(login) || login.trim() !== login) found.push({ field: "live-login", message: c.badSignInEmail(l) });
     if (!email.trim()) found.push({ field: "live-email", message: c.enterContact(l) });
     else if (!emailValid(email) || email.trim() !== email) found.push({ field: "live-email", message: c.badContact(l) });
+    const ep = endError(l, end, ctx.clock, ctx.settings, ctx.own);
+    if (ep) found.push({ field: "m01-create-end", message: ep });
     const r = reasonProblem(l, reason);
     if (r) found.push({ field: "live-reason", message: r });
     setProblems(found);
@@ -180,12 +207,13 @@ function Create({ l, api, revision, onDone, onCancel, onReload }: {
     if (found.length) { setFocusKey((k) => k + 1); return; }
     setBusy(true);
     try {
-      const out = await api.command("identity.create_user", "users", revision, reason, { login, email, role }, tried.current);
+      const out = await api.command("identity.create_user", "users", revision, reason, { login, email, role, ...endFields(end).values }, tried.current);
       onDone(out.fields.user_id ?? "", login.toLowerCase(), out.fields.link_ref ?? "");
     } catch (err) {
       if (err instanceof AdminError && err.failure === "refused") setProblems([{ field: "live-login", message: w.loginRefused(l) }]);
       else if (err instanceof AdminError && err.failure === "invalid" && err.fields.length) {
-        setProblems(err.fields.map((f) => ({ field: f === "email" ? "live-email" : "live-login", message: f === "email" ? c.badContact(l) : c.badSignInEmail(l) })));
+        setProblems(err.fields.map((f) => f === "role_until" ? { field: "m01-create-end", message: p.capRefused(l) }
+          : { field: f === "email" ? "live-email" : "live-login", message: f === "email" ? c.badContact(l) : c.badSignInEmail(l) }));
       } else setError(err);
       if (err instanceof AdminError && err.failure === "stale") tried.current = attempt();
       if (settles(err)) onReload();
@@ -204,6 +232,7 @@ function Create({ l, api, revision, onDone, onCancel, onReload }: {
       <TextField id="live-login" label={c.signInEmail(l)} value={login} onChange={edit(setLogin)} type="email" autoComplete="off" error={field("live-login")} locale={l} />
       <TextField id="live-email" label={c.contactEmail(l)} value={email} onChange={edit(setEmail)} type="email" autoComplete="off" error={field("live-email")} locale={l} />
       <RoleChoice l={l} value={role} onChange={edit(setRole)} allowAdmin />
+      <RoleEnds l={l} id="m01-create-end" value={end} onChange={(v) => { tried.current = attempt(); setEnd(v); }} own={ctx.own} clock={ctx.clock} settings={ctx.settings} error={field("m01-create-end") ?? ""} />
       <Reason l={l} value={reason} onChange={edit(setReason)} error={field("live-reason") ?? ""} />
       <div className="live-buttons">
         <button type="submit" className="live-primary" aria-busy={busy || undefined} disabled={busy}>{busy ? w.creating(l) : w.create(l)}</button>
@@ -278,8 +307,8 @@ function Pickup({ l, api, login, purpose, refId, expires, notice, onDone }: {
   );
 }
 
-function Detail({ l, user, self, notice, onAction }: {
-  l: Locale; user: UserRow; self: string; notice: string; onAction: (a: Action) => void;
+function Detail({ l, user, self, notice, onAction, serverTime, onJob }: {
+  l: Locale; user: UserRow; self: string; notice: string; onAction: (a: Action) => void; serverTime: string; onJob: (id: string) => void;
 }) {
   const offer = offers(l, user, self);
   const group = (title: string, actions: Action[], notes: string[] = []) =>
@@ -296,12 +325,13 @@ function Detail({ l, user, self, notice, onAction }: {
     );
   return (
     <section className="live-detail-body" aria-labelledby="live-detail-title">
-      {notice && <p className="service-status">{notice}</p>}
+      {notice && <div className="service-status">{notice.split("\n").map((line, i) => <p key={i} className={i === 0 && notice.includes("\n") ? "live-strong" : undefined}>{line}</p>)}</div>}
       <h2 id="live-detail-title" tabIndex={-1}><bdi dir="ltr">{user.login || user.user_id}</bdi></h2>
       <dl className="live-facts">
         <div><dt>{c.contactEmail(l)}</dt><dd><bdi dir="ltr">{user.email || "—"}</bdi></dd></div>
         <div><dt>{w.accountStatus(l)}</dt><dd className={user.state === "active" ? "" : "live-strong"}>{accountName(l, user.state)}</dd></div>
         <div><dt>{w.workspaceRole(l)}</dt><dd>{roleName(l, user.membership?.role ?? "")}</dd></div>
+        <PeriodFact l={l} u={user} serverTime={serverTime} onJob={onJob} />
         <div><dt>{w.membershipStatus(l)}</dt><dd>{user.membership ? (user.membership.state === "active" ? w.active(l) : w.membershipSuspended(l)) : w.noMembership(l)}</dd></div>
         <div><dt>{w.signInSetup(l)}</dt><dd>{setup(l, user)}</dd></div>
         {user.installation_administrator && <div><dt>{w.installationAdmin(l)}</dt><dd>{w.yes(l)}</dd></div>}
@@ -328,26 +358,48 @@ function Cell({ label, className, children }: { label: string; className?: strin
   return <td role="cell" data-label={label} className={className}>{children}</td>;
 }
 
-function Table({ l, view, users, selected, onOpen }: { l: Locale; view: string; users: UserRow[]; selected: string; onOpen: (id: string) => void }) {
+type Select = { on: boolean; selected: Selection; self: string; atLimit: boolean; loaded: string[]; onToggle: (id: string) => void; onAll: () => void };
+
+function Effect({ l, u }: { l: Locale; u: UserRow }) {
+  if (!u.revocation || u.membership?.suspended_for !== "bulk_revocation" && u.state !== "suspended") return null;
+  return (
+    <span className="live-sub m01-effect">
+      {b.suspendedBy(l, u.revocation.bulk.replace("bulk-revocation-", ""))}
+      {u.revocation.state === "decision_unconfirmed" && <span className="live-strong"> · {p.unconfirmed(l)}</span>}
+    </span>
+  );
+}
+
+function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
+  l: Locale; view: string; users: UserRow[]; selected: string; onOpen: (id: string) => void; sel: Select; serverTime: string;
+}) {
+  const check = sel.on && view !== "invitations";
   const head = view === "invitations"
     ? [w.user(l), w.role(l), w.invitationExpires(l), w.setLink(l)]
     : view === "membership"
-      ? [w.user(l), w.workspaceRole(l), w.membershipStatus(l), w.installationAdmin(l)]
-      : [w.user(l), w.accountStatus(l), w.workspaceRole(l), w.signInSetup(l)];
+      ? [w.user(l), w.workspaceRole(l), p.rolePeriod(l), w.membershipStatus(l), w.installationAdmin(l), p.roleAndPeriod(l)]
+      : [w.user(l), w.accountStatus(l), w.workspaceRole(l), p.rolePeriod(l), w.signInSetup(l), p.roleAndPeriod(l)];
+  const folded = (i: number) => (view !== "invitations" && (view === "membership" ? i === 1 || i === 2 || i === 4 : i === 2 || i === 3 || i === 4) ? "m01-l" : view !== "invitations" && i === 5 ? "m01-m" : "");
   return (
-    <div className="security-table-scroll live-table" data-view={view}>
+    <div className="security-table-scroll live-table" data-view={view} data-check={check ? "true" : "false"}>
       <table role="table">
-        <colgroup><col className="live-col-user" /><col /><col /><col /></colgroup>
-        <thead role="rowgroup"><tr role="row">{head.map((h) => <th key={h} scope="col" role="columnheader">{h}</th>)}</tr></thead>
+        <colgroup>{check && <col className="m01-col-check" />}<col className="live-col-user" />{head.slice(1).map((h, i) => <col key={h} className={folded(i + 1)} />)}</colgroup>
+        <thead role="rowgroup"><tr role="row">
+          {check && <HeaderCheck l={l} selected={sel.selected} loaded={sel.loaded} onAll={sel.onAll} cell />}
+          {head.map((h, i) => <th key={h} scope="col" role="columnheader" className={folded(i)}>{h}</th>)}
+        </tr></thead>
         <tbody role="rowgroup">
           {users.map((u) => (
             <tr key={u.user_id} role="row" className={u.user_id === selected ? "live-selected" : undefined}>
+              {check && <CheckCell l={l} u={u} self={sel.self} selected={sel.selected} atLimit={sel.atLimit} onToggle={sel.onToggle} />}
               <td role="cell" className="live-user">
                 <button type="button" className="live-open" data-user-id={u.user_id} aria-current={u.user_id === selected ? "true" : undefined} onClick={() => onOpen(u.user_id)}>
                   <bdi dir="ltr">{u.login || u.user_id}</bdi>
                   <span className="visually-hidden">, {w.openDetails(l)}{u.user_id === selected ? " " + w.selected(l) : ""}</span>
                 </button>
+                {u.user_id === selected && <span className="m01-tag" aria-hidden="true">{b.open(l)}</span>}
                 {u.email && u.email !== u.login && <span className="live-sub"><bdi dir="ltr">{u.email}</bdi></span>}
+                {view === "users" && <span className="live-sub m01-fold live-quiet">{setup(l, u)}</span>}
               </td>
               {view === "invitations" ? (
                 <>
@@ -357,19 +409,32 @@ function Table({ l, view, users, selected, onOpen }: { l: Locale; view: string; 
                 </>
               ) : view === "membership" ? (
                 <>
-                  <Cell label={head[1]}>{roleName(l, u.membership?.role ?? "")}</Cell>
-                  <Cell label={head[2]}>{u.membership ? (u.membership.state === "active" ? w.active(l) : w.membershipSuspended(l)) : w.noMembership(l)}</Cell>
-                  <Cell label={head[3]}>{u.installation_administrator ? w.yes(l) : <><span aria-hidden="true">—</span><span className="visually-hidden">{w.no(l)}</span></>}</Cell>
+                  <Cell label={head[1]} className="m01-l">{roleName(l, u.membership?.role ?? "")}</Cell>
+                  <Cell label={head[2]} className="m01-l"><PeriodCell l={l} u={u} serverTime={serverTime} /></Cell>
+                  <Cell label={head[3]}>{u.membership ? (u.membership.state === "active" ? w.active(l) : w.membershipSuspended(l)) : w.noMembership(l)}<Effect l={l} u={u} /></Cell>
+                  <Cell label={head[4]} className="m01-l">{u.installation_administrator ? w.yes(l) : <><span aria-hidden="true">—</span><span className="visually-hidden">{w.no(l)}</span></>}</Cell>
+                  <Cell label={head[5]} className="m01-m">
+                    {roleName(l, u.membership?.role ?? "")}<span className="live-sub"><PeriodCell l={l} u={u} serverTime={serverTime} /></span>
+                    {u.installation_administrator && <span className="live-sub">{w.installationAdmin(l)}</span>}
+                  </Cell>
                 </>
               ) : (
                 <>
-                  <Cell label={head[1]} className={u.state === "active" ? "" : "live-strong"}>{accountName(l, u.state)}</Cell>
-                  <Cell label={head[2]}>
+                  <Cell label={head[1]} className={u.state === "active" ? "" : "live-strong"}>{accountName(l, u.state)}{u.state === "suspended" && u.membership?.suspended_for !== "bulk_revocation" && <Effect l={l} u={u} />}</Cell>
+                  <Cell label={head[2]} className="m01-l">
                     {roleName(l, u.membership?.role ?? "")}
-                    {u.membership?.state === "suspended" && <span className="live-sub">{w.membershipSuspended(l)}</span>}
+                    {u.membership?.state === "suspended" && <span className="live-sub">{u.membership.suspended_for === "role_period_ended" ? p.ended(l) : w.membershipSuspended(l)}</span>}
+                    {u.membership?.suspended_for === "bulk_revocation" && <Effect l={l} u={u} />}
                     {u.installation_administrator && <span className="live-sub">{w.installationAdmin(l)}</span>}
                   </Cell>
-                  <Cell label={head[3]} className="live-quiet">{setup(l, u)}</Cell>
+                  <Cell label={head[3]} className="m01-l"><PeriodCell l={l} u={u} serverTime={serverTime} /></Cell>
+                  <Cell label={head[4]} className="live-quiet m01-l">{setup(l, u)}</Cell>
+                  <Cell label={head[5]} className="m01-m">
+                    {roleName(l, u.membership?.role ?? "")}<span className="live-sub"><PeriodCell l={l} u={u} serverTime={serverTime} /></span>
+                    {u.membership?.state === "suspended" && <span className="live-sub">{w.membershipSuspended(l)}</span>}
+                    {u.membership?.suspended_for === "bulk_revocation" && <Effect l={l} u={u} />}
+                    {u.installation_administrator && <span className="live-sub">{w.installationAdmin(l)}</span>}
+                  </Cell>
                 </>
               )}
             </tr>
@@ -377,6 +442,29 @@ function Table({ l, view, users, selected, onOpen }: { l: Locale; view: string; 
         </tbody>
       </table>
     </div>
+  );
+}
+
+function Conditions({ l, data }: { l: Locale; data: Loaded }) {
+  const cl = data.clock;
+  const down = ["isolated", "stopped", "full"].includes(data.ledger_state);
+  const baseNotRecorded = cl.clock_base.choice !== "default" && !cl.clock_base.recorded;
+  if (!cl.wall_lead && !down && !baseNotRecorded && !cl.clock_behind && !cl.clock_ahead && !cl.recovery.stranded) return null;
+  return (
+    <section className="m01-conditions" aria-labelledby="m01-conditions-h">
+      <h2 id="m01-conditions-h" className="visually-hidden">{b.notices(l)}</h2>
+      {cl.recovery.stranded && <div className="m01-condition"><p><strong>{b.recovery(l)}</strong></p></div>}
+      {cl.wall_lead && (
+        <div className="m01-condition">
+          {b.wallLead(l).map((line, i) => <p key={i}>{i === 0 ? <strong>{line}</strong> : line}</p>)}
+          <dl className="m01-inline"><div><dt>{b.hostClock(l)}</dt><dd><bdi dir="ltr">{cl.wall_lead.wall_time}</bdi></dd></div>
+            <div><dt>{b.serverTime(l)}</dt><dd><bdi dir="ltr">{cl.wall_lead.server_time}</bdi></dd></div></dl>
+        </div>
+      )}
+      {down && <div className="m01-condition">{b.ledgerDown(l).map((line, i) => <p key={i}>{i === 0 ? <strong>{line}</strong> : line}</p>)}</div>}
+      {baseNotRecorded && <div className="m01-condition"><p><strong>{b.baseNotRecorded(l, cl.clock_base.choice)}</strong></p></div>}
+      {(cl.clock_behind || cl.clock_ahead) && <div className="m01-condition"><p>{p.clockDiffers(l)}</p></div>}
+    </section>
   );
 }
 
@@ -394,33 +482,44 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
   const [notice, setNotice] = useState("");
   const [announce, setAnnounce] = useState("");
   const [focusTo, setFocusTo] = useState("");
+  const [picked, setPicked] = useState<Selection>(() => (kept.user === session.user ? kept.selection : new Set()));
+  useEffect(() => { kept = { user: session.user, selection: picked }; }, [picked, session.user]);
+  const [bulk, setBulk] = useState(false);
+  const [job, setJob] = useState(() => { const id = openJobNext; openJobNext = ""; return id; });
+  const [limitHit, setLimitHit] = useState(false);
+  const names = useRef<Record<string, string>>({});
   const selectedRef = useRef("");
   selectedRef.current = selected;
+  const dataRef = useRef<Loaded | null>(null);
+  dataRef.current = data;
   useEffect(() => {
     if (!focusTo) return;
     document.querySelector<HTMLElement>(focusTo)?.focus();
     setFocusTo("");
   }, [focusTo]);
   const say = (text: string) => {
-    setNotice(text);
     setAnnounce("");
     setTimeout(() => setAnnounce(text), 50);
   };
+  const tell = (text: string) => { setNotice(text); say(text); };
   const load = useCallback((keepNotice = false) => {
     const n = order.current.next();
     setStatus("loading");
     if (!keepNotice) setNotice("");
-    api.users("", 100).then(
+    return api.users("", 100).then(
       (page) => {
-        if (!order.current.latest(n)) return;
+        if (!order.current.latest(n)) return page.revision;
+        for (const u of page.users) names.current[u.user_id] = u.login || u.user_id;
         setData({ ...page, at: new Date() });
         setStatus("ready");
         setError(null);
+        return page.revision;
       },
       (e) => {
-        if (!order.current.latest(n)) return;
+        if (!order.current.latest(n)) return "";
         setError(e);
         setStatus("error");
+        return "";
       },
     );
   }, [api]);
@@ -430,27 +529,31 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
     api.users(data.next, 100).then(
       (page) => {
         if (!order.current.latest(n)) return;
+        for (const u of page.users) names.current[u.user_id] = u.login || u.user_id;
         setData((d) => (d ? { ...page, users: [...d.users, ...page.users], at: new Date() } : d));
       },
       (e) => { if (order.current.latest(n)) { setError(e); setStatus("error"); } },
     );
   };
-  useEffect(() => { load(); }, [load]);
-  useEffect(() => { setMode((m) => ({ kind: m.kind === "none" ? "none" : "detail" })); setNotice(""); }, [view]);
+  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { setMode((m) => ({ kind: m.kind === "none" ? "none" : "detail" })); setNotice(""); setBulk(false); }, [view]);
   const users = data?.users ?? [];
   const user = users.find((u) => u.user_id === selected) ?? null;
+  const self = users.find((u) => u.user_id === session.user);
+  const ctx: Context = { clock: data?.clock ?? { server_time: "", wall_time: "", clock_behind: false, clock_ahead: false, clock_base: { choice: "default", ledger_time: "", wall_time: "", recorded: false }, wall_lead: null, recovery: { stranded: false, records: [] } },
+    settings: data?.settings ?? [], own: self?.membership?.role_until ?? "" };
+  const limit = setting(ctx.settings, "bulk_revocation_max_targets", 500);
   const row = (id: string) => `.live-open[data-user-id="${CSS.escape(id)}"]`;
   const open = (id: string) => { setSelected(id); setNotice(""); setMode({ kind: "detail" }); setFocusTo(wide ? "" : "#live-detail-title"); };
   const close = () => { const id = selected; setMode({ kind: "none" }); setSelected(""); setFocusTo(row(id)); };
   const backToDetail = (action?: Action) => { setMode({ kind: "detail" }); setFocusTo(action ? `[data-action="${action}"]` : "#live-detail-title"); };
+  const stranded = ctx.clock.recovery.stranded;
   if (view === "revocation") {
     return (
-      <div className="live-users" data-live="revocation">
-        <section className="live-unavailable" aria-labelledby="live-revocation">
-          <h2 id="live-revocation">{w.revocationTitle(l)}</h2>
-          <p>{w.revocationBody(l)}</p>
-          <button type="button" className="live-secondary" onClick={() => onView("users")}>{w.goUsers(l)}</button>
-        </section>
+      <div className="live-users m01-live" data-live="revocation" data-wide={wide ? "true" : "false"}>
+        <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
+        {data && <Conditions l={l} data={data} />}
+        <RevocationJobs l={l} api={api} wide={wide} initial={job} self={session.user} revision={data?.revision ?? ""} onSignOut={onSignOut} />
       </div>
     );
   }
@@ -466,11 +569,18 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
   }
   const shown = rowsFor(view, users);
   const title = view === "invitations" ? w.invitationsTitle(l) : view === "membership" ? w.membershipTitle(l) : w.usersTitle(l);
+  const selectable = !!data?.can_bulk_revoke && !stranded;
+  const loaded = shown.filter((u) => u.user_id !== session.user).map((u) => u.user_id);
+  const sel: Select = {
+    on: selectable, selected: picked, self: session.user, atLimit: picked.size >= limit, loaded,
+    onToggle: (id) => { const out = toggle(picked, id, limit); setLimitHit(out.refused); if (out.refused) say(b.limit(l, limit)); else setPicked(out.next); },
+    onAll: () => { const out = selectLoaded(picked, loaded, limit); setLimitHit(out.refused); if (out.refused) say(b.limit(l, limit)); else setPicked(out.next); },
+  };
   const doneAction = (id: string, action: Action, ref: string) => {
-    load(true);
+    void load(true);
     if (selectedRef.current !== id) return;
     const target = users.find((u) => u.user_id === id);
-    say(actionDone[action](l));
+    tell(actionDone[action](l));
     if (target && (action === "issue_set_link" || action === "issue_reset_link")) {
       setMode({ kind: "link", login: target.login, purpose: action === "issue_set_link" ? "set" : "reset", ref });
     } else {
@@ -478,43 +588,70 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
       setFocusTo("#live-detail-title");
     }
   };
+  if (bulk && data && selectable) {
+    const ids = [...picked];
+    const admins = ids.filter((id) => users.find((u) => u.user_id === id)?.membership?.role === "administrator");
+    return (
+      <div className="live-users m01-live" data-live={view} data-wide={wide ? "true" : "false"} data-bulk="effect">
+        <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
+        <Conditions l={l} data={data} />
+        <BulkFlow l={l} api={api} ids={ids} names={names.current} admins={admins} rows={users} serverTime={ctx.clock.server_time} revision={data.revision}
+          onJobs={() => { setBulk(false); onView("revocation"); }} reload={async () => (await load(true)) || dataRef.current?.revision || ""}
+          onBack={() => { setBulk(false); setFocusTo(".m01-prepare"); }} say={say}
+          onDeselect={(id) => setPicked(without(picked, [id]))}
+          onExecuted={(id, targets) => { setPicked(without(picked, targets)); setBulk(false); setJob(id); openJobNext = id; void load(true); onView("revocation"); }} />
+      </div>
+    );
+  }
   let panel: ReactNode = null;
   if (mode.kind === "create") {
-    panel = <Create l={l} api={api} revision={data?.revision ?? ""} onReload={() => load(true)}
+    panel = <Create l={l} api={api} revision={data?.revision ?? ""} ctx={ctx} onReload={() => void load(true)}
       onCancel={() => { if (selected) backToDetail(); else { setMode({ kind: "none" }); setFocusTo(".live-create"); } }}
-      onDone={(id, login, ref) => { setSelected(id); say(w.created(l)); setMode({ kind: "link", login, purpose: "set", ref }); load(true); }} />;
+      onDone={(id, login, ref) => { setSelected(id); tell(w.created(l)); setMode({ kind: "link", login, purpose: "set", ref }); void load(true); }} />;
   } else if (mode.kind === "link") {
     const target = users.find((u) => u.login === mode.login);
     panel = <Pickup key={mode.ref} l={l} api={api} login={mode.login} purpose={mode.purpose} refId={mode.ref} expires={target?.link_expires ?? ""} notice={notice}
       onDone={() => { setNotice(""); if (selected) backToDetail(); else { setMode({ kind: "none" }); setFocusTo(".live-create"); } }} />;
+  } else if (mode.kind === "period" && user && user.membership) {
+    panel = <PeriodForm l={l} user={user} own={ctx.own} clock={ctx.clock} settings={ctx.settings} api={api} revision={data?.revision ?? ""} onReload={() => void load(true)}
+      onCancel={() => backToDetail("set_role_period")}
+      onDone={(lines) => { void load(true); tell(lines.join("\n")); setMode({ kind: "detail" }); setFocusTo("#live-detail-title"); }} />;
   } else if (mode.kind === "confirm" && user) {
     const action = mode.action;
-    panel = <Confirm key={action + user.user_id} l={l} user={user} action={action} api={api} revision={data?.revision ?? ""}
-      onDone={doneAction} onReload={() => load(true)} onCancel={() => backToDetail(action)} />;
+    panel = <Confirm key={action + user.user_id} l={l} user={user} action={action} api={api} revision={data?.revision ?? ""} ctx={ctx}
+      onDone={doneAction} onReload={() => void load(true)} onCancel={() => backToDetail(action)} />;
   } else if (user && mode.kind !== "none") {
-    panel = <Detail l={l} user={user} self={session.user} notice={notice} onAction={(a) => { setNotice(""); setMode({ kind: "confirm", action: a }); }} />;
+    panel = <Detail l={l} user={user} self={session.user} notice={notice} serverTime={ctx.clock.server_time} onJob={(id) => { setJob(id); openJobNext = id; onView("revocation"); }}
+      onAction={(a) => { setNotice(""); setMode(a === "set_role_period" ? { kind: "period" } : { kind: "confirm", action: a }); }} />;
   }
   const stepping = !wide && panel !== null;
   const failure = error ? failureText(l, error) : null;
   const count = view === "invitations" ? w.invitationCount(l, shown.length) : w.count(l, shown.length);
   return (
-    <div className="live-users" data-live={view} data-wide={wide ? "true" : "false"}>
+    <div className="live-users m01-live" data-live={view} data-wide={wide ? "true" : "false"} data-open={panel ? "true" : "false"} data-bulk="none">
       <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
+      {data && <Conditions l={l} data={data} />}
       {!stepping && (
-        <div className="live-list">
+        <div className="live-list m01-list">
           <div className="live-toolbar">
             <div className="live-heading">
               <h2>{title}</h2>
               {status === "ready" && <p className="live-meta">{count}</p>}
-              {data && <p className="live-meta">{w.loadedAt(l, new Intl.DateTimeFormat(tags[l], { timeStyle: "short" }).format(data.at))}</p>}
+              {data && <p className="live-meta">{fill(w.loadedAt(l, "{at}"), <bdi className="m01-part">{new Intl.DateTimeFormat(tags[l], { timeStyle: "short" }).format(data.at)}</bdi>)}</p>}
+              {wide && !panel && <p className="live-meta">{w.pick(l)}</p>}
             </div>
             <div className="live-tools">
-              <button type="button" className="live-secondary" onClick={() => load()}>{w.reload(l)}</button>
-              {view !== "membership" && (
+              <button type="button" className="live-secondary" onClick={() => void load()}>{w.reload(l)}</button>
+              {view !== "membership" && !stranded && (
                 <button type="button" className="live-primary live-create" onClick={() => { setNotice(""); setMode({ kind: "create" }); }}>{w.create(l)}</button>
               )}
             </div>
           </div>
+          {selectable && view !== "invitations" && (
+            <SelectionBar l={l} selected={picked} loaded={loaded} limit={limit} atLimit={limitHit || picked.size >= limit} names={names.current}
+              onPrepare={() => setBulk(true)} onClear={() => { setPicked(new Set()); setFocusTo(".m01-selcount"); }} onRemove={(id) => setPicked(without(picked, [id]))} onAll={sel.onAll} />
+          )}
+          {selectable && view === "invitations" && picked.size > 0 && <p className="m01-selline">{b.elsewhere(l, picked.size)}</p>}
           {status === "loading" && !data && <p role="status" className="live-meta">{w.loading(l)}</p>}
           {status === "error" && failure && (
             <section className="live-error" role="alert">
@@ -523,7 +660,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
               {error instanceof AdminError && error.failure === "unauthenticated" ? (
                 <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
               ) : (
-                <button type="button" className="live-secondary" onClick={() => load()}>{c.tryAgain(l)}</button>
+                <button type="button" className="live-secondary" onClick={() => void load()}>{c.tryAgain(l)}</button>
               )}
             </section>
           )}
@@ -531,18 +668,18 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
             <p className="live-empty">{view === "invitations" ? w.noInvitations(l) : w.empty(l)}</p>
           ) : (
             <div aria-busy={status === "loading" || undefined}>
-              <Table l={l} view={view} users={shown} selected={selected} onOpen={open} />
+              <Table l={l} view={view} users={shown} selected={selected} onOpen={open} sel={sel} serverTime={ctx.clock.server_time} />
             </div>
           ))}
           {data?.next && <button type="button" className="live-secondary live-more" onClick={more}>{w.more(l)}</button>}
         </div>
       )}
-      {(wide || stepping) && (
+      {(stepping || (wide && panel)) && (
         <aside className="live-panel" aria-label={title}>
           {stepping && (
             <button type="button" className="service-button-link live-back" onClick={close}>{w.back(l)}</button>
           )}
-          {panel ?? <p className="live-empty">{w.pick(l)}</p>}
+          {stranded && panel ? <p className="live-unavailable">{b.recovery(l)}</p> : panel}
         </aside>
       )}
     </div>

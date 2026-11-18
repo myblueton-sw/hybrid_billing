@@ -35,9 +35,11 @@ export function offers(l: Locale, u: UserRow, self: string): Offer {
   out.account = u.state === "active" ? ["suspend_user", "depart_user"] : ["reinstate_user", "depart_user"];
   const m = u.membership;
   const promotable = !(m?.role === "member" && u.link_purpose);
+  const ended = m?.role_period === "ended" || m?.suspended_for === "role_period_ended";
   if (!m) out.membership = u.invitation_expires || u.state !== "active" ? [] : ["invite"];
-  else if (m.state === "active") out.membership = promotable ? ["change_role", "suspend_membership", "remove_membership"] : ["suspend_membership", "remove_membership"];
-  else out.membership = ["reinstate_membership", "remove_membership"];
+  else if (ended) out.membership = ["set_role_period", "remove_membership"];
+  else if (m.state === "active") out.membership = promotable ? ["change_role", "set_role_period", "suspend_membership", "remove_membership"] : ["set_role_period", "suspend_membership", "remove_membership"];
+  else out.membership = ["reinstate_membership", "set_role_period", "remove_membership"];
   if (!u.password_set) out.sign = u.login ? ["issue_set_link"] : [];
   else if (m?.role === "administrator") out.notes.push(w.adminResetReason(l));
   else if (u.state !== "active") out.notes.push(w.suspendedResetReason(l));

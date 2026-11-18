@@ -63,6 +63,15 @@ func (d *directory) loginOf(user string) (string, bool) {
 	return found.login, ok
 }
 
+func (d *directory) userOf(login string) (string, bool) {
+	for user, p := range d.people {
+		if p.login == login {
+			return user, true
+		}
+	}
+	return "", false
+}
+
 func (d *directory) invitation(login string, now time.Time) (invite, bool) {
 	found, ok := d.invites[login]
 	return found, ok && now.Before(found.expires)

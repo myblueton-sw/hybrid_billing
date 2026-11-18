@@ -292,10 +292,10 @@ func TestProtectionRules(t *testing.T) {
 	delete(members, SampleAdmin3)
 	check("the last administrator", SampleAdmin, "someone", false)
 	plain := map[string]identity.MemberInfo{
-		"m":  {User: "m", Role: identity.Member, State: identity.MembershipActive, UserState: identity.Active},
+		"m":  {User: "m", Role: identity.Member, State: identity.MembershipActive, UserState: identity.Active, Effective: true},
 		"sa": {User: "sa", Role: identity.Administrator, State: identity.MembershipSuspended, UserState: identity.Active},
-		"su": {User: "su", Role: identity.Administrator, State: identity.MembershipActive, UserState: identity.Suspended},
-		"y":  {User: "y", Role: identity.Administrator, State: identity.MembershipActive, UserState: identity.Active},
+		"su": {User: "su", Role: identity.Administrator, State: identity.MembershipActive, UserState: identity.Suspended, Effective: true},
+		"y":  {User: "y", Role: identity.Administrator, State: identity.MembershipActive, UserState: identity.Active, Effective: true},
 	}
 	for _, target := range []string{"m", "sa", "su"} {
 		if err := f.s.protect(&change{ctx: commands.Context{Target: target, User: "z"}, members: plain, now: now}); err != nil {
@@ -563,7 +563,7 @@ func TestUsersReadPaging(t *testing.T) {
 			row := u.(map[string]any)
 			seen = append(seen, row["user_id"].(string))
 			allowed := map[string]bool{"user_id": true, "login": true, "email": true, "state": true, "epoch": true, "membership": true, "password_set": true,
-				"invitation_expires": true, "link_purpose": true, "link_expires": true, "installation_administrator": true}
+				"invitation_expires": true, "link_purpose": true, "link_expires": true, "installation_administrator": true, "revocation": true}
 			for key := range row {
 				if !allowed[key] {
 					t.Errorf("unexpected key %s", key)
@@ -643,15 +643,6 @@ func TestConcurrentReadsAndCommands(t *testing.T) {
 		<-done
 	}
 	_ = passwords.PurposeSet
-}
-
-func (d *directory) userOf(login string) (string, bool) {
-	for user, found := range d.people {
-		if found.login == login {
-			return user, true
-		}
-	}
-	return "", false
 }
 
 func TestLinkAndInvitationExpiry(t *testing.T) {

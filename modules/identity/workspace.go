@@ -9,17 +9,21 @@ func (r *Registry) countable(found *invitation, now time.Time) bool {
 	if found.state != invitationPending || !now.Before(found.validity.NotAfter) {
 		return false
 	}
-	return r.inviterStands(found)
+	return r.inviterStands(found, now)
 }
 
-func (r *Registry) inviterStands(found *invitation) bool {
+func (r *Registry) inviterStands(found *invitation, now time.Time) bool {
 	inviter := r.users[found.inviter]
 	own := r.member(found.workspace, found.inviter)
 	return inviter != nil && inviter.epoch == found.inviterEpoch && own != nil && own.version == found.inviterVersion &&
-		r.activeAdministrator(found.workspace, found.inviter)
+		r.activeAdministrator(found.workspace, found.inviter, now)
 }
 
 func (h *Workspace) Invite(actor Verifier, workspace, invitationID string, role Role, verifier Verifier, validity Validity, invitee string) error {
+	return h.InviteUntil(actor, workspace, invitationID, role, verifier, validity, invitee, time.Time{})
+}
+
+func (h *Workspace) InviteUntil(actor Verifier, workspace, invitationID string, role Role, verifier Verifier, validity Validity, invitee string, roleUntil time.Time) error {
 	r, ok := h.open()
 	if !ok {
 		return ErrUnavailable
@@ -27,7 +31,8 @@ func (h *Workspace) Invite(actor Verifier, workspace, invitationID string, role 
 	defer r.mu.Unlock()
 	now := r.clock()
 	if !validID(workspace) || !validID(invitationID) || !validID(invitee) || (role != Member && role != Administrator) || !verifier.valid() ||
-		!validity.valid(r.limits.InvitationValidity) || !now.Before(validity.NotAfter) {
+		!validity.valid(r.limits.InvitationValidity) || !now.Before(validity.NotAfter) ||
+		!roleUntil.IsZero() && (!roleUntil.After(validity.NotBefore) || !now.Before(roleUntil)) {
 		return ErrInvalid
 	}
 	found, err := r.administrator(actor, workspace, now)
@@ -46,7 +51,10 @@ func (h *Workspace) Invite(actor Verifier, workspace, invitationID string, role 
 	if pending >= r.limits.PendingInvitations {
 		return ErrLimit
 	}
-	r.invitations[invitationID] = &invitation{workspace: workspace, role: role, verifier: verifier, validity: validity, inviter: found.user,
+	if !roleUntil.IsZero() && roleUntil.Before(validity.NotAfter) {
+		validity.NotAfter = roleUntil
+	}
+	r.invitations[invitationID] = &invitation{workspace: workspace, role: role, roleUntil: roleUntil, verifier: verifier, validity: validity, inviter: found.user,
 		inviterEpoch: found.epoch, inviterVersion: r.member(workspace, found.user).version, invitee: invitee}
 	return nil
 }
@@ -101,7 +109,7 @@ func (h *Workspace) Accept(workspace, invitationID string, verifier, actor Verif
 	if found.invitee != acting.user {
 		return refused(ReasonNotInvitee)
 	}
-	if !r.inviterStands(found) {
+	if !r.inviterStands(found, now) {
 		return refused(ReasonInviter)
 	}
 	if r.member(workspace, acting.user) != nil {
@@ -122,22 +130,22 @@ func (h *Workspace) Accept(workspace, invitationID string, verifier, actor Verif
 		return ErrConflict
 	}
 	found.state = invitationAccepted
-	r.memberships[workspace][acting.user] = &membership{role: found.role, state: MembershipActive, version: version, joined: joined + 1}
+	r.memberships[workspace][acting.user] = &membership{role: found.role, state: MembershipActive, version: version, joined: joined + 1, from: now, until: found.roleUntil}
 	r.generation++
 	return nil
 }
 
-func (r *Registry) transition(actor Verifier, workspace, target string, expected uint64, self bool, apply func(membership) (membership, bool)) error {
+func (r *Registry) transition(actor Verifier, workspace, target string, expected uint64, self bool, now time.Time, dry bool,
+	apply func(membership) (membership, error)) error {
 	if !validID(workspace) || !validID(target) {
 		return ErrInvalid
 	}
-	now := r.clock()
 	acting, err := r.acting(actor, now)
 	if err != nil {
 		return err
 	}
 	own := r.member(workspace, acting.user)
-	if !(self && acting.user == target && own != nil && own.state == MembershipActive) && !r.activeAdministrator(workspace, acting.user) {
+	if !(self && acting.user == target && effective(own, now)) && !r.activeAdministrator(workspace, acting.user, now) {
 		return refused(ReasonNotAdministrator)
 	}
 	found := r.member(workspace, target)
@@ -147,19 +155,33 @@ func (r *Registry) transition(actor Verifier, workspace, target string, expected
 	if found.version != expected {
 		return ErrConflict
 	}
-	next, allowed := apply(*found)
-	if !allowed {
-		return refused(ReasonState)
+	next, err := apply(*found)
+	if err != nil {
+		return err
 	}
-	if r.strands(workspace, target, &next) {
+	if r.strands(workspace, target, &next, now) {
 		return ErrLastAdministrator
 	}
 	if !bump(&next.version) {
 		return ErrConflict
 	}
+	if dry {
+		return nil
+	}
 	*found = next
 	r.generation++
 	return nil
+}
+
+func allowed(ok bool) error {
+	if ok {
+		return nil
+	}
+	return refused(ReasonState)
+}
+
+func ended(found membership, now time.Time) bool {
+	return found.suspendedFor == RolePeriodEnded || !found.until.IsZero() && !now.Before(found.until)
 }
 
 func (h *Workspace) ChangeRole(actor Verifier, workspace, target string, role Role, expected uint64) error {
@@ -168,14 +190,13 @@ func (h *Workspace) ChangeRole(actor Verifier, workspace, target string, role Ro
 		return ErrUnavailable
 	}
 	defer r.mu.Unlock()
-	if role != Member && role != Administrator {
-		return ErrInvalid
+	now := r.clock()
+	found := r.member(workspace, target)
+	until := time.Time{}
+	if found != nil {
+		until = found.until
 	}
-	return r.transition(actor, workspace, target, expected, false, func(found membership) (membership, bool) {
-		changed := found.role != role
-		found.role = role
-		return found, changed
-	})
+	return r.changeRole(actor, workspace, target, role, until, expected, now, false)
 }
 
 func (h *Workspace) SuspendMembership(actor Verifier, workspace, target string, expected uint64) error {
@@ -184,10 +205,10 @@ func (h *Workspace) SuspendMembership(actor Verifier, workspace, target string, 
 		return ErrUnavailable
 	}
 	defer r.mu.Unlock()
-	return r.transition(actor, workspace, target, expected, false, func(found membership) (membership, bool) {
-		allowed := found.state == MembershipActive
-		found.state = MembershipSuspended
-		return found, allowed
+	return r.transition(actor, workspace, target, expected, false, r.clock(), false, func(found membership) (membership, error) {
+		active := found.state == MembershipActive
+		found.state, found.suspendedFor = MembershipSuspended, SuspendedByCommand
+		return found, allowed(active)
 	})
 }
 
@@ -197,10 +218,28 @@ func (h *Workspace) ReinstateMembership(actor Verifier, workspace, target string
 		return ErrUnavailable
 	}
 	defer r.mu.Unlock()
-	return r.transition(actor, workspace, target, expected, false, func(found membership) (membership, bool) {
-		allowed := found.state == MembershipSuspended
-		found.state = MembershipActive
-		return found, allowed
+	return r.reinstateMembership(actor, workspace, target, expected, r.clock(), false)
+}
+
+func (h *Workspace) ReinstateMembershipAt(actor Verifier, workspace, target string, expected uint64, at time.Time) error {
+	r, ok := h.open()
+	if !ok {
+		return ErrUnavailable
+	}
+	defer r.mu.Unlock()
+	return r.reinstateMembership(actor, workspace, target, expected, at, false)
+}
+
+func (r *Registry) reinstateMembership(actor Verifier, workspace, target string, expected uint64, now time.Time, dry bool) error {
+	return r.transition(actor, workspace, target, expected, false, now, dry, func(found membership) (membership, error) {
+		if found.state != MembershipSuspended {
+			return found, refused(ReasonState)
+		}
+		if ended(found, now) {
+			return found, refused(ReasonRolePeriod)
+		}
+		found.state, found.suspendedFor = MembershipActive, SuspendedByCommand
+		return found, nil
 	})
 }
 
@@ -210,9 +249,9 @@ func (h *Workspace) RemoveMembership(actor Verifier, workspace, target string, e
 		return ErrUnavailable
 	}
 	defer r.mu.Unlock()
-	return r.transition(actor, workspace, target, expected, true, func(found membership) (membership, bool) {
+	return r.transition(actor, workspace, target, expected, true, r.clock(), false, func(found membership) (membership, error) {
 		found.state = MembershipRemoved
-		return found, true
+		return found, nil
 	})
 }
 
@@ -225,7 +264,8 @@ func (h *Workspace) Members(actor Verifier, workspace, after string, limit int) 
 	if !validID(workspace) || !r.pageable(after, limit) {
 		return nil, ErrInvalid
 	}
-	if _, err := r.administrator(actor, workspace, r.clock()); err != nil {
+	now := r.clock()
+	if _, err := r.administrator(actor, workspace, now); err != nil {
 		return nil, err
 	}
 	ids := []string{}
@@ -237,7 +277,8 @@ func (h *Workspace) Members(actor Verifier, workspace, after string, limit int) 
 	list := []MemberInfo{}
 	for _, userID := range page(ids, after, limit) {
 		found := r.member(workspace, userID)
-		list = append(list, MemberInfo{User: userID, Role: found.role, State: found.state, Version: found.version, UserState: r.users[userID].state})
+		list = append(list, MemberInfo{User: userID, Role: found.role, State: found.state, Version: found.version, UserState: r.users[userID].state, From: found.from,
+			Until: found.until, SuspendedFor: found.suspendedFor, Effective: effective(found, now)})
 	}
 	return list, nil
 }
@@ -251,12 +292,13 @@ func (h *Workspace) CreateServiceUser(actor Verifier, workspace, serviceID, owne
 	if !validID(workspace) || !validID(serviceID) || !validID(owner) {
 		return ErrInvalid
 	}
-	acting, err := r.administrator(actor, workspace, r.clock())
+	now := r.clock()
+	acting, err := r.administrator(actor, workspace, now)
 	if err != nil {
 		return err
 	}
 	holding := r.member(workspace, owner)
-	if holding == nil || holding.state != MembershipActive || !r.activeHuman(owner) {
+	if !effective(holding, now) || !r.activeHuman(owner) {
 		return refused(ReasonOwner)
 	}
 	if r.users[serviceID] != nil {

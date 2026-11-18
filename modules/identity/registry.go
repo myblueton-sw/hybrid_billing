@@ -48,6 +48,7 @@ const (
 type invitation struct {
 	workspace      string
 	role           Role
+	roleUntil      time.Time
 	verifier       Verifier
 	validity       Validity
 	inviter        string
@@ -59,10 +60,21 @@ type invitation struct {
 }
 
 type membership struct {
-	role    Role
-	state   MembershipState
-	version uint64
-	joined  uint64
+	role         Role
+	state        MembershipState
+	version      uint64
+	joined       uint64
+	from         time.Time
+	until        time.Time
+	suspendedFor SuspendReason
+}
+
+func (r *Registry) effectiveNow(m *membership) bool {
+	return m != nil && m.state == MembershipActive && (m.until.IsZero() || r.clock().Before(m.until))
+}
+
+func effective(m *membership, now time.Time) bool {
+	return m != nil && m.state == MembershipActive && (m.until.IsZero() || now.Before(m.until))
 }
 
 type session struct {
@@ -182,7 +194,7 @@ func (h *Subjects) Member(workspace, userID string) (uint64, bool) {
 		return 1, found.workspace == workspace
 	}
 	own := r.member(workspace, userID)
-	if own == nil || own.state != MembershipActive {
+	if !r.effectiveNow(own) {
 		return 0, false
 	}
 	return own.joined, true
@@ -269,9 +281,9 @@ func (r *Registry) member(workspace, userID string) *membership {
 	return found
 }
 
-func (r *Registry) activeAdministrator(workspace, userID string) bool {
+func (r *Registry) activeAdministrator(workspace, userID string, now time.Time) bool {
 	found := r.member(workspace, userID)
-	return found != nil && found.role == Administrator && found.state == MembershipActive && r.activeHuman(userID)
+	return effective(found, now) && found.role == Administrator && r.activeHuman(userID)
 }
 
 func (r *Registry) administrator(verifier Verifier, workspace string, now time.Time) (*session, error) {
@@ -279,16 +291,16 @@ func (r *Registry) administrator(verifier Verifier, workspace string, now time.T
 	if err != nil {
 		return nil, err
 	}
-	if !r.activeAdministrator(workspace, found.user) {
+	if !r.activeAdministrator(workspace, found.user, now) {
 		return nil, refused(ReasonNotAdministrator)
 	}
 	return found, nil
 }
 
-func (r *Registry) administrators(workspace string) int {
+func (r *Registry) administrators(workspace string, now time.Time) int {
 	count := 0
 	for userID := range r.memberships[workspace] {
-		if r.activeAdministrator(workspace, userID) {
+		if r.activeAdministrator(workspace, userID, now) {
 			count++
 		}
 	}
@@ -304,13 +316,13 @@ func (r *Registry) serviceUsers(workspace string) bool {
 	return false
 }
 
-func (r *Registry) strands(workspace, target string, after *membership) bool {
-	before := r.administrators(workspace)
-	if before == 0 {
+func (r *Registry) strands(workspace, target string, after *membership, now time.Time) bool {
+	before := r.administrators(workspace, now)
+	if before == 0 || after != nil && after.role == Administrator && effective(after, now) && r.activeHuman(target) {
 		return false
 	}
 	remaining := before
-	if r.activeAdministrator(workspace, target) {
+	if r.activeAdministrator(workspace, target, now) {
 		remaining--
 	}
 	if remaining > 0 {
@@ -331,21 +343,21 @@ func (r *Registry) others(workspace, target string) bool {
 	return r.serviceUsers(workspace)
 }
 
-func (r *Registry) onlySeat(workspace, target string) bool {
+func (r *Registry) onlySeat(workspace, target string, now time.Time) bool {
 	own := r.member(workspace, target)
 	if own == nil || own.role != Administrator {
 		return false
 	}
 	for userID := range r.memberships[workspace] {
 		other := r.member(workspace, userID)
-		if userID != target && other != nil && other.role == Administrator && other.state == MembershipActive && r.users[userID] != nil && r.users[userID].state != Departed {
+		if userID != target && effective(other, now) && other.role == Administrator && r.users[userID] != nil && r.users[userID].state != Departed {
 			return false
 		}
 	}
 	return r.others(workspace, target)
 }
 
-func (r *Registry) withoutAdministrator() []string {
+func (r *Registry) withoutAdministrator(now time.Time) []string {
 	set := map[string]struct{}{}
 	for workspace, members := range r.memberships {
 		for userID := range members {
@@ -362,7 +374,7 @@ func (r *Registry) withoutAdministrator() []string {
 	}
 	list := []string{}
 	for workspace := range set {
-		if r.administrators(workspace) == 0 {
+		if r.administrators(workspace, now) == 0 {
 			list = append(list, workspace)
 		}
 	}

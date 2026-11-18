@@ -34,6 +34,7 @@ func setupWith(t testing.TB, change func(*Config)) world {
 	if err := s.Bind(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 8820}); err != nil {
 		t.Fatal(err)
 	}
+	s.manual = true
 	value := 0
 	return world{t: t, s: s, now: &now, mu: mu, value: &value}.ready()
 }
@@ -138,7 +139,7 @@ func TestLimitsFromIdentityAndPasswords(t *testing.T) {
 	if _, live := f.s.dir.link(MemberLogin, f.s.clock()); live {
 		t.Error("a failed reissue left a live link record")
 	}
-	if err := f.s.inviteUser(verifierOf(random(tokenBytes)), "x", other, identity.Member, f.s.clock()); err == nil {
+	if err := f.s.inviteUser(verifierOf(random(tokenBytes)), "x", other, identity.Member, f.s.clock(), time.Time{}); err == nil {
 		t.Error("invite with a stale actor")
 	}
 }

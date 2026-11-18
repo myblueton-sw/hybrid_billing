@@ -159,7 +159,7 @@ func (s *Server) grantees(actor identity.Verifier) ([]subjectRow, error) {
 	}
 	out := []subjectRow{}
 	for user, m := range members {
-		if m.State == identity.MembershipActive && m.UserState == identity.Active {
+		if m.Effective && m.UserState == identity.Active {
 			login, _ := s.dir.loginOf(user)
 			out = append(out, subjectRow{UserID: user, Login: login})
 		}

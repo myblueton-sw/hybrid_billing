@@ -1,14 +1,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, type UserRow } from "../../../../service/admin";
+import { AdminError, type Membership, type UserRow } from "../../../../service/admin";
 import { accountName, failureText, offers, roleName, setup, when } from "./live-model";
 import { w } from "./live-copy";
 import { c } from "../../../../service/copy";
 
+const mem = (role: "member" | "administrator", state: "active" | "suspended", version: number, extra: Partial<Membership> = {}): Membership => ({
+  role, state, version, role_from: "", role_until: "", role_period: "open", suspended_for: "", ledger: "", ...extra,
+});
+
 const base: UserRow = {
   user_id: "u1", login: "a@example.invalid", email: "a@example.invalid", state: "active", epoch: 1,
-  membership: { role: "member", state: "active", version: 1 }, password_set: true, invitation_expires: "",
-  link_purpose: "", link_expires: "", installation_administrator: false,
+  membership: mem("member", "active", 1), password_set: true, invitation_expires: "",
+  link_purpose: "", link_expires: "", installation_administrator: false, revocation: null,
 };
 const row = (change: Partial<UserRow>): UserRow => ({ ...base, ...change });
 
@@ -23,12 +27,12 @@ test("account actions follow the account state", () => {
 });
 
 test("membership actions follow the membership state", () => {
-  assert.deepEqual(offers("en", base, "x").membership, ["change_role", "suspend_membership", "remove_membership"]);
-  assert.deepEqual(offers("en", row({ membership: { role: "member", state: "suspended", version: 2 } }), "x").membership, ["reinstate_membership", "remove_membership"]);
+  assert.deepEqual(offers("en", base, "x").membership, ["change_role", "set_role_period", "suspend_membership", "remove_membership"]);
+  assert.deepEqual(offers("en", row({ membership: mem("member", "suspended", 2) }), "x").membership, ["reinstate_membership", "set_role_period", "remove_membership"]);
   assert.deepEqual(offers("en", row({ membership: null }), "x").membership, ["invite"]);
   assert.deepEqual(offers("en", row({ membership: null, state: "suspended" }), "x").membership, []);
-  assert.deepEqual(offers("en", row({ link_purpose: "reset", link_expires: "2026-11-20T00:00:00Z" }), "x").membership, ["suspend_membership", "remove_membership"]);
-  assert.deepEqual(offers("en", row({ membership: { role: "administrator", state: "active", version: 1 }, link_purpose: "set" }), "x").membership, ["change_role", "suspend_membership", "remove_membership"]);
+  assert.deepEqual(offers("en", row({ link_purpose: "reset", link_expires: "2026-11-20T00:00:00Z" }), "x").membership, ["set_role_period", "suspend_membership", "remove_membership"]);
+  assert.deepEqual(offers("en", row({ membership: mem("administrator", "active", 1), link_purpose: "set" }), "x").membership, ["change_role", "set_role_period", "suspend_membership", "remove_membership"]);
   assert.deepEqual(offers("en", row({ membership: null, invitation_expires: "2026-11-20T00:00:00Z" }), "x").membership, []);
 });
 
@@ -36,7 +40,7 @@ test("sign-in actions follow the password and role", () => {
   assert.deepEqual(offers("en", row({ password_set: false }), "x").sign, ["issue_set_link"]);
   assert.deepEqual(offers("en", row({ password_set: false, login: "" }), "x").sign, []);
   assert.deepEqual(offers("en", base, "x").sign, ["issue_reset_link"]);
-  const admin = offers("en", row({ membership: { role: "administrator", state: "active", version: 1 } }), "x");
+  const admin = offers("en", row({ membership: mem("administrator", "active", 1) }), "x");
   assert.deepEqual(admin.sign, []);
   assert.ok(admin.notes.includes(w.adminResetReason("en")));
   const suspended = offers("en", row({ state: "suspended" }), "x");
@@ -83,5 +87,11 @@ test("step-up refusals and cancellations have neutral copy in every locale", () 
       assert.deepEqual(failureText(l, new AdminError(f)), { title: w.saveFailed(l), body: f === "reauth" ? c.reauthRefused(l) : c.reauthNotDone(l) });
     }
     assert.notEqual(failureText(l, new AdminError("reauth")).body, failureText(l, new AdminError("reauth_cancelled")).body);
+  }
+});
+
+test("a period-ended membership offers a new period and removal only", () => {
+  for (const m of [mem("member", "suspended", 3, { suspended_for: "role_period_ended", role_period: "ended" }), mem("administrator", "active", 2, { role_period: "ended" })]) {
+    assert.deepEqual(offers("en", row({ membership: m }), "x").membership, ["set_role_period", "remove_membership"]);
   }
 });

@@ -40,6 +40,15 @@ const (
 	ReasonAnswer           Reason = "answer_not_current"
 	ReasonOperatorBlock    Reason = "operator_block"
 	ReasonOwner            Reason = "owner_not_eligible"
+	ReasonRolePeriod       Reason = "role_period_ended"
+)
+
+type SuspendReason string
+
+const (
+	SuspendedByCommand SuspendReason = ""
+	RolePeriodEnded    SuspendReason = "role_period_ended"
+	BulkRevocation     SuspendReason = "bulk_revocation"
 )
 
 type refusal struct{ reason Reason }
@@ -231,11 +240,37 @@ type UserInfo struct {
 }
 
 type MemberInfo struct {
-	User      string
-	Role      Role
-	State     MembershipState
-	Version   uint64
-	UserState UserState
+	User         string
+	Role         Role
+	State        MembershipState
+	Version      uint64
+	UserState    UserState
+	From         time.Time
+	Until        time.Time
+	SuspendedFor SuspendReason
+	Effective    bool
+}
+
+type Target struct {
+	User    string
+	Version uint64
+}
+
+type Expired struct {
+	User    string
+	Role    Role
+	Until   time.Time
+	Version uint64
+	Blocked bool
+}
+
+type Recorded struct {
+	User       string
+	UserState  UserState
+	Membership MembershipState
+	Reason     SuspendReason
+	SetUntil   bool
+	Until      time.Time
 }
 
 type ServiceInfo struct {

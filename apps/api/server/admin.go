@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
+	"github.com/myblueton-sw/hybrid_billing/modules/decisionledger"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
@@ -150,7 +151,7 @@ func (s *Server) roster(actor identity.Verifier) (map[string]identity.MemberInfo
 func activeAdministrators(members map[string]identity.MemberInfo) map[string]bool {
 	out := map[string]bool{}
 	for user, found := range members {
-		if found.Role == identity.Administrator && found.State == identity.MembershipActive && found.UserState == identity.Active {
+		if found.Role == identity.Administrator && found.Effective && found.UserState == identity.Active {
 			out[user] = true
 		}
 	}
@@ -162,15 +163,13 @@ func (s *Server) protect(c *change) error {
 	if target == c.ctx.User {
 		return commands.Fail(commands.PrerequisiteFailed)
 	}
-	administrators := activeAdministrators(c.members)
-	if !administrators[target] {
+	if !activeAdministrators(c.members)[target] {
 		return nil
 	}
-	delete(administrators, target)
-	for user := range administrators {
-		if s.dir.holds(user, c.now) {
-			return nil
-		}
+	anchors := s.anchors(c.members, c.now)
+	delete(anchors, target)
+	if len(anchors) > 0 {
+		return nil
 	}
 	return commands.Fail(commands.PrerequisiteFailed)
 }
@@ -183,14 +182,18 @@ func validEmail(email string) bool {
 	return email != "" && len(email) <= 254 && strings.Contains(email, "@") && strings.TrimSpace(email) == email
 }
 
-func (s *Server) inviteUser(actor identity.Verifier, login, user string, role identity.Role, now time.Time) error {
+func (s *Server) inviteUser(actor identity.Verifier, login, user string, role identity.Role, now, until time.Time) error {
 	id := "invitation-" + hex.EncodeToString(random(12))
 	verifier := verifierOf(random(tokenBytes))
-	err := s.identity.Workspace().Invite(actor, s.bootWorkspace, id, role, verifier, identity.Validity{NotBefore: now, NotAfter: now.Add(invitationValidity)}, user)
+	err := s.identity.Workspace().InviteUntil(actor, s.bootWorkspace, id, role, verifier, identity.Validity{NotBefore: now, NotAfter: now.Add(invitationValidity)}, user, until)
 	if err != nil {
 		return err
 	}
-	s.dir.invites[login] = invite{id: id, verifier: verifier, expires: now.Add(invitationValidity)}
+	expires := now.Add(invitationValidity)
+	if !until.IsZero() && until.Before(expires) {
+		expires = until
+	}
+	s.dir.invites[login] = invite{id: id, verifier: verifier, expires: expires}
 	return nil
 }
 
@@ -225,6 +228,10 @@ func createUser(s *Server, c *change) (string, map[string]string, error) {
 	if !validEmail(email) {
 		return "", nil, commands.Fail(commands.InvalidRequest, "email")
 	}
+	until, err := s.checkUntil(c, c.ctx.Fields[fieldUntil])
+	if err != nil {
+		return "", nil, err
+	}
 	if err := s.increaseAllowed(identity.Role(c.ctx.Fields["role"]) == identity.Administrator); err != nil {
 		return "", nil, err
 	}
@@ -242,7 +249,7 @@ func createUser(s *Server, c *change) (string, map[string]string, error) {
 		return "", nil, mapIdentity(err)
 	}
 	s.dir.add(user, login, email)
-	if s.faulty("invite") || s.inviteUser(s.caller, login, user, identity.Role(c.ctx.Fields["role"]), c.now) != nil {
+	if s.faulty("invite") || s.inviteUser(s.caller, login, user, identity.Role(c.ctx.Fields["role"]), c.now, until) != nil {
 		return "", nil, errPartial
 	}
 	fields, err := s.issueLink(c, login, user, passwords.PurposeSet)
@@ -254,6 +261,10 @@ func createUser(s *Server, c *change) (string, map[string]string, error) {
 }
 
 func inviteExisting(s *Server, c *change) (string, map[string]string, error) {
+	until, err := s.checkUntil(c, c.ctx.Fields[fieldUntil])
+	if err != nil {
+		return "", nil, err
+	}
 	if err := s.increaseAllowed(identity.Role(c.ctx.Fields["role"]) == identity.Administrator); err != nil {
 		return "", nil, err
 	}
@@ -263,7 +274,7 @@ func inviteExisting(s *Server, c *change) (string, map[string]string, error) {
 	if _, live := s.dir.invitation(c.login, c.now); live {
 		return "", nil, commands.Fail(commands.InvalidStage)
 	}
-	if err := s.inviteUser(s.caller, c.login, c.ctx.Target, identity.Role(c.ctx.Fields["role"]), c.now); err != nil {
+	if err := s.inviteUser(s.caller, c.login, c.ctx.Target, identity.Role(c.ctx.Fields["role"]), c.now, until); err != nil {
 		return "", nil, mapIdentity(err)
 	}
 	return "invited", nil, nil
@@ -302,10 +313,14 @@ func reinstateUser(s *Server, c *change) (string, map[string]string, error) {
 	if err := s.increaseAllowed(true); err != nil {
 		return "", nil, err
 	}
-	if err := s.identity.Installation().ReinstateUser(operator(c), c.ctx.Target, c.user.Epoch); err != nil {
-		return "", nil, mapIdentity(err)
+	in := s.identity.Installation()
+	fields, err := s.runIncrease(c, increaseStep{kind: decisionledger.IncreaseReinstateUser, version: c.user.Epoch,
+		check: func() error { return in.CheckReinstateUser(operator(c), c.ctx.Target, c.user.Epoch) },
+		apply: func() error { return in.ReinstateUser(operator(c), c.ctx.Target, c.user.Epoch) }})
+	if err != nil {
+		return "", nil, err
 	}
-	return "user_active", nil, nil
+	return "user_active", fields, nil
 }
 
 func departUser(s *Server, c *change) (string, map[string]string, error) {
@@ -327,28 +342,89 @@ func departUser(s *Server, c *change) (string, map[string]string, error) {
 	return "user_departed", nil, nil
 }
 
+func (s *Server) roleEnd(c *change, m identity.MemberInfo) (time.Time, error) {
+	end, raw := c.ctx.Fields["end"], c.ctx.Fields[fieldUntil]
+	switch {
+	case end == endNone && raw != "", end == endAt && raw == "":
+		return time.Time{}, commands.Fail(commands.InvalidRequest, fieldUntil)
+	case end == endNone:
+		return s.checkUntil(c, "")
+	case raw == "":
+		if setter := c.members[c.ctx.User].Until; !setter.IsZero() && (m.Until.IsZero() || m.Until.After(setter)) {
+			return time.Time{}, commands.Fail(commands.InvalidRequest, fieldUntil)
+		}
+		return m.Until, nil
+	}
+	return s.checkUntil(c, raw)
+}
+
+func promotes(role identity.Role, m identity.MemberInfo) bool {
+	return role == identity.Administrator && m.Role != identity.Administrator
+}
+
 func changeRole(s *Server, c *change) (string, map[string]string, error) {
 	role := identity.Role(c.ctx.Fields["role"])
-	if err := s.increaseAllowed(role == identity.Administrator); err != nil {
+	m := c.members[c.ctx.Target]
+	until, err := s.roleEnd(c, m)
+	if err != nil {
+		return "", nil, err
+	}
+	longer, changed := periodIncrease(m.Until, until, restoring(m))
+	increase := promotes(role, m) || longer
+	if err := s.increaseAllowed(promotes(role, m) || longer); err != nil {
 		return "", nil, err
 	}
 	if err := s.protect(c); err != nil {
 		return "", nil, err
 	}
-	if _, live := s.dir.link(c.login, c.now); live && role == identity.Administrator {
+	if _, live := s.dir.link(c.login, c.now); live && promotes(role, m) {
 		return "", nil, commands.Fail(commands.PrerequisiteFailed)
 	}
-	if err := s.identity.Workspace().ChangeRole(s.caller, s.bootWorkspace, c.ctx.Target, role, c.members[c.ctx.Target].Version); err != nil {
+	ws := s.identity.Workspace()
+	state := "role_" + string(role)
+	if increase {
+		fields, err := s.runIncrease(c, increaseStep{kind: decisionledger.IncreaseRolePeriod, version: m.Version, role: string(role), until: untilText(until),
+			check: func() error {
+				return ws.CheckChangeRoleUntil(s.caller, s.bootWorkspace, c.ctx.Target, role, until, m.Version, c.now)
+			},
+			apply: func() error {
+				return ws.ChangeRoleUntil(s.caller, s.bootWorkspace, c.ctx.Target, role, until, m.Version, c.now)
+			}})
+		if err != nil {
+			return "", nil, err
+		}
+		fields["role_until"] = untilText(until)
+		return state, fields, nil
+	}
+	if err := s.decrease(func() error {
+		return ws.ChangeRoleUntil(s.caller, s.bootWorkspace, c.ctx.Target, role, until, m.Version, c.now)
+	}); err != nil {
 		return "", nil, mapIdentity(err)
 	}
-	return "role_" + string(role), nil, nil
+	if !changed {
+		return state, map[string]string{"role_until": untilText(until)}, nil
+	}
+	return state, s.recordDecrease(c, m, role, until), nil
+}
+
+func reinstateMembership(s *Server, c *change) (string, map[string]string, error) {
+	if err := s.increaseAllowed(true); err != nil {
+		return "", nil, err
+	}
+	ws, version := s.identity.Workspace(), c.members[c.ctx.Target].Version
+	fields, err := s.runIncrease(c, increaseStep{kind: decisionledger.IncreaseReinstateMembership, version: version,
+		check: func() error {
+			return ws.CheckReinstateMembership(s.caller, s.bootWorkspace, c.ctx.Target, version, c.now)
+		},
+		apply: func() error { return ws.ReinstateMembershipAt(s.caller, s.bootWorkspace, c.ctx.Target, version, c.now) }})
+	if err != nil {
+		return "", nil, err
+	}
+	return "membership_active", fields, nil
 }
 
 func membershipStep(guarded bool, state string, run func(*Server, *change, uint64) error) func(*Server, *change) (string, map[string]string, error) {
 	return func(s *Server, c *change) (string, map[string]string, error) {
-		if err := s.increaseAllowed(state == "membership_active"); err != nil {
-			return "", nil, err
-		}
 		if guarded {
 			if err := s.protect(c); err != nil {
 				return "", nil, err
@@ -373,6 +449,8 @@ func revokeInvitation(s *Server, c *change) (string, map[string]string, error) {
 	return "invitation_revoked", nil, nil
 }
 
+func untilField() commands.Field { return commands.Field{Name: fieldUntil, Type: commands.Timestamp} }
+
 func roleField() commands.Field {
 	return commands.Field{Name: "role", Type: commands.Enum, Required: true, Values: []string{string(identity.Administrator), string(identity.Member)}}
 }
@@ -381,7 +459,7 @@ func (s *Server) registerUsers() error {
 	definitions := append(append(append(append(s.userDefinitions(), s.trustDefinitions()...), s.accessDefinitions()...), s.serviceDefinitions()...), s.relationshipDefinitions()...)
 	definitions = append(append(append(definitions, s.contractDefinitions()...), s.installationDefinitions()...), s.integrationDefinitions()...)
 	definitions = append(append(definitions, s.recoveryDefinitions()...), s.retentionDefinitions()...)
-	definitions = append(definitions, s.evidenceDefinitions()...)
+	definitions = append(append(definitions, s.evidenceDefinitions()...), s.bulkDefinitions()...)
 	for _, d := range definitions {
 		if err := s.Register(d); err != nil {
 			return err
@@ -399,20 +477,20 @@ func (s *Server) userDefinitions() []commands.Definition {
 	}
 	ws := s.identity.Workspace()
 	entries := []entry{
-		{"identity.create_user", []commands.Field{{Name: "login", Type: commands.Text, Required: true}, {Name: "email", Type: commands.Text, Required: true}, roleField()}, true, createUser},
-		{"identity.invite", []commands.Field{roleField()}, false, inviteExisting},
+		{"identity.create_user", []commands.Field{{Name: "login", Type: commands.Text, Required: true}, {Name: "email", Type: commands.Text, Required: true}, roleField(),
+			untilField()}, true, createUser},
+		{"identity.invite", []commands.Field{roleField(), untilField()}, false, inviteExisting},
 		{"identity.issue_set_link", nil, false, issueSetLink},
 		{"identity.issue_reset_link", nil, false, issueResetLink},
 		{"identity.suspend_user", nil, false, suspendUser},
 		{"identity.reinstate_user", nil, false, reinstateUser},
 		{"identity.depart_user", nil, false, departUser},
-		{"identity.change_role", []commands.Field{roleField()}, false, changeRole},
+		{"identity.change_role", []commands.Field{roleField(), untilField(), {Name: "end", Type: commands.Enum, Values: []string{endAt, endNone}}}, false, changeRole},
+		{"identity.set_role_period", []commands.Field{{Name: "end", Type: commands.Enum, Required: true, Values: []string{endAt, endNone}}, untilField()}, false, setRolePeriod},
 		{"identity.suspend_membership", nil, false, membershipStep(true, "membership_suspended", func(s *Server, c *change, v uint64) error {
 			return ws.SuspendMembership(s.caller, s.bootWorkspace, c.ctx.Target, v)
 		})},
-		{"identity.reinstate_membership", nil, false, membershipStep(false, "membership_active", func(s *Server, c *change, v uint64) error {
-			return ws.ReinstateMembership(s.caller, s.bootWorkspace, c.ctx.Target, v)
-		})},
+		{"identity.reinstate_membership", nil, false, reinstateMembership},
 		{"identity.remove_membership", nil, false, membershipStep(true, "membership_removed", func(s *Server, c *change, v uint64) error {
 			return ws.RemoveMembership(s.caller, s.bootWorkspace, c.ctx.Target, v)
 		})},

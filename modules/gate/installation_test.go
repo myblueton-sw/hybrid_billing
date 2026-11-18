@@ -86,7 +86,7 @@ func TestTrustRightsNeedAHumanAdministrator(t *testing.T) {
 	if got := none.ExplainInstallation("x", "app", administer(), time.Time{}); got.Code != AuthorityUnavailable {
 		t.Errorf("zero administration %+v", got)
 	}
-	for _, action := range []Action{AdministerInstallation, TrustPropose, TrustValidate, TrustApprove, TrustActivate} {
+	for _, action := range []Action{AdministerInstallation, TrustPropose, TrustValidate, TrustApprove, TrustActivate, RevokeAccessInBulk} {
 		if !InstallationAction(action) {
 			t.Errorf("%s is not an installation action", action)
 		}
@@ -98,7 +98,7 @@ func TestTrustRightsNeedAHumanAdministrator(t *testing.T) {
 	f.must(f.a.SetInstallationWorkspace("w1"))
 	second(f.a.PutClient(Client{ID: "app", State: Active}, 0))
 	f.member("ann")
-	for _, right := range []Action{TrustPropose, TrustValidate, TrustApprove, TrustActivate} {
+	for _, right := range []Action{TrustPropose, TrustValidate, TrustApprove, TrustActivate, RevokeAccessInBulk} {
 		terms := installationTerms("w1")
 		terms.Action = right
 		f.must(f.a.AddGrant(Grant{ID: "console-" + string(right), ClientID: "app", Terms: terms, Validity: always}))

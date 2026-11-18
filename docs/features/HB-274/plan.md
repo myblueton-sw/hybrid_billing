@@ -263,3 +263,8 @@ At each proposal, after field validation, sealed plans are discarded automatical
 - The module keeps every plan record it has ever made, so memory grows with each proposal. The bound is the per-user command rate limit, and the store resets on restart.
 - New pools and view groups cannot be created; a change can only use targets that already exist.
 - Finding one member's timeline is O(n) per proposal.
+
+## Amendment 2026-11-18 (HYB-322)
+
+A `member` that is a party must be an active internal unit and is allowed only for `hierarchy`; a legal entity is never a member, and payer, pool and view-group members are source accounts. Other members follow the rule above. See `../HYB-322/verification.md`.
+

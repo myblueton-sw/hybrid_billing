@@ -28,8 +28,12 @@ test("actions follow the kind and only end has no target", () => {
   assert.deepEqual(["set", "end", "join", "leave"].map((a) => needsTarget(a as "set")), [true, false, true, true]);
 });
 
-test("member choices join parties and members without duplicates", () => {
-  assert.deepEqual(memberChoices(parties, members).map((c) => c.id), ["le-a", "acct-1", "acct-2", "unit-b", "le-x"]);
+test("member choices join units and members without duplicates and never offer a legal entity", () => {
+  assert.deepEqual(memberChoices(parties, members).map((c) => c.id), ["acct-1", "acct-2", "unit-b"]);
+  assert.deepEqual(memberChoices(parties, members, "hierarchy").map((c) => c.id), ["acct-1", "acct-2", "unit-b"]);
+  for (const k of ["payer", "contract_pool", "allocation_pool", "view_group"] as const) assert.deepEqual(memberChoices(parties, members, k).map((c) => c.id), ["acct-1", "acct-2"]);
+  const closed: OrgParty[] = [...parties, { id: "unit-c", name: "C unit", kind: "internal_unit", parent: "le-a", state: "suspended" }];
+  assert.deepEqual(memberChoices(closed, [...members, { member: "unit-c", name: "C unit", targets: [], history: [] }], "hierarchy").map((c) => c.id), ["acct-1", "acct-2", "unit-b"]);
   assert.equal(memberChoices([], members).find((c) => c.id === "acct-2")?.name, "acct-2");
 });
 
@@ -125,7 +129,8 @@ test("a payer move leads with the dated change and names fall back to IDs", () =
 test("closed plans keep no members and impact never reads as zero", () => {
   assert.deepEqual(["sealed", "activated", "rejected", "discarded"].map((s) => membersKept(plan({ state: s }))), [true, true, false, false]);
   assert.deepEqual(["not_computed", "", "0", "computed", "Computed"].map(impactOf), ["not_computed", "unknown", "unknown", "computed", "unknown"]);
-  assert.deepEqual(allMemberChoices(parties, [[members[0]], [members[1]]]).map((c) => c.id), ["le-a", "acct-1", "acct-2", "unit-b", "le-x"]);
+  assert.deepEqual(allMemberChoices(parties, [[members[0]], [members[1]]]).map((c) => c.id), ["acct-1", "acct-2", "unit-b"]);
+  assert.deepEqual(allMemberChoices(parties, [[members[0]], [members[1]]], "payer").map((c) => c.id), ["acct-1", "acct-2"]);
 });
 
 test("every failure has one reaction and only retries keep the attempt", () => {

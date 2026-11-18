@@ -45,15 +45,46 @@ export type ClockState = {
   recovery: { stranded: boolean; records: number[] };
 };
 
+export type UsersFilter = { q: string; status: string; membership: string; role: string; period: string; signin: string; invitation: string; holder: string };
+
+export type UsersQuery = Partial<UsersFilter> & { after?: string; limit?: number };
+
 export type UsersPage = {
   revision: string;
   next: string;
+  next_login: string;
   users: UserRow[];
   clock: ClockState;
   settings: SettingRow[];
   ledger_state: string;
   can_bulk_revoke: boolean;
+  filters: UsersFilter;
+  scan_stopped: boolean;
+  scan_budget: number;
+  order: string;
+  list_version: string;
+  auth_methods: { connected: string[]; not_connected: string[] };
+  warning_days: number;
 };
+
+const filterKeys: (keyof UsersFilter)[] = ["q", "status", "membership", "role", "period", "signin", "invitation", "holder"];
+
+export function usersQueryString(query: UsersQuery): string {
+  const q = new URLSearchParams();
+  for (const k of filterKeys) if (query[k]) q.set(k, query[k]!);
+  if (query.after) q.set("after", query.after);
+  q.set("limit", String(query.limit ?? 50));
+  return q.toString();
+}
+
+function filterOf(v: unknown): UsersFilter {
+  const r = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+  return Object.fromEntries(filterKeys.map((k) => [k, String(r[k] ?? "")])) as UsersFilter;
+}
+
+function names(v: unknown): string[] {
+  return Array.isArray(v) ? v.map(String) : [];
+}
 
 const periods: RolePeriod[] = ["open", "bounded", "ends_soon", "ended"];
 
@@ -851,18 +882,25 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     throw failed;
   }
   return {
-    async users(after = "", limit = 50): Promise<UsersPage> {
-      const q = new URLSearchParams({ limit: String(limit) });
-      if (after) q.set("after", after);
-      const body = await send("/identity/users?" + q.toString(), { method: "GET" }, attempt().request);
+    async users(query: UsersQuery = {}): Promise<UsersPage> {
+      const body = await send("/identity/users?" + usersQueryString(query), { method: "GET" }, attempt().request);
+      const methods = (body.auth_methods ?? {}) as Record<string, unknown>;
       return {
         revision: String(body.revision ?? ""),
         next: String(body.next ?? ""),
+        next_login: String(body.next_login ?? ""),
         users: Array.isArray(body.users) ? body.users.map(userRowOf) : [],
         clock: clockOf(body),
         settings: settingsOf(body.settings),
         ledger_state: String(body.ledger_state ?? ""),
         can_bulk_revoke: body.can_bulk_revoke === true,
+        filters: filterOf(body.filters),
+        scan_stopped: body.scan_stopped === true,
+        scan_budget: Number(body.scan_budget ?? 0),
+        order: String(body.order ?? ""),
+        list_version: String(body.list_version ?? ""),
+        auth_methods: { connected: names(methods.connected), not_connected: names(methods.not_connected) },
+        warning_days: Number(body.warning_days ?? 0),
       };
     },
     async read(path: string): Promise<Record<string, unknown>> {

@@ -33,6 +33,7 @@ type AccessSettings struct {
 	BulkMinutes         int
 	BulkPending         int
 	BulkKept            int
+	UserFilterScan      int
 	ClockBase           string
 }
 
@@ -70,6 +71,10 @@ var identitySettings = []AccessSetting{
 	{"bulk_revocation_jobs_kept", "bulk-revocation-jobs-kept", "jobs", 100, 10, 1000, func(s *AccessSettings) *int { return &s.BulkKept }},
 }
 
+var userSettings = []AccessSetting{
+	{"user_filter_scan", "user-filter-scan", "people", 1000, 100, 10000, func(s *AccessSettings) *int { return &s.UserFilterScan }},
+}
+
 const (
 	ClockBaseLedger = "ledger"
 	ClockBaseWall   = "wall"
@@ -79,9 +84,15 @@ func AccessSettingList() []AccessSetting { return append([]AccessSetting(nil), a
 
 func IdentitySettingList() []AccessSetting { return append([]AccessSetting(nil), identitySettings...) }
 
+func UserSettingList() []AccessSetting { return append([]AccessSetting(nil), userSettings...) }
+
+func allSettings() []AccessSetting {
+	return append(append(AccessSettingList(), identitySettings...), userSettings...)
+}
+
 func DefaultAccessSettings() AccessSettings {
 	s := AccessSettings{Given: map[string]bool{}}
-	for _, a := range append(AccessSettingList(), identitySettings...) {
+	for _, a := range allSettings() {
 		a.Set(&s, a.Default)
 	}
 	return s
@@ -98,7 +109,7 @@ func numbersZero(s AccessSettings, list []AccessSetting) bool {
 
 func (s AccessSettings) withDefaults() AccessSettings {
 	out := DefaultAccessSettings()
-	for _, group := range [][]AccessSetting{accessSettings, identitySettings} {
+	for _, group := range [][]AccessSetting{accessSettings, identitySettings, userSettings} {
 		if !numbersZero(s, group) {
 			for _, a := range group {
 				a.Set(&out, a.Value(s))
@@ -115,7 +126,7 @@ func (s AccessSettings) withDefaults() AccessSettings {
 func settingError(name string) error { return fmt.Errorf("%w: %s", ErrConfig, name) }
 
 func (s AccessSettings) validate() error {
-	for _, a := range append(AccessSettingList(), identitySettings...) {
+	for _, a := range allSettings() {
 		if v := a.Value(s); v < a.Min || v > a.Max {
 			return settingError(a.Name)
 		}

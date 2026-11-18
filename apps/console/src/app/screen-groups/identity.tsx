@@ -15,6 +15,19 @@ import LiveMySecurity from "../../modules/identity/pages/my-security/Live";
 import { useService } from "../../service/context";
 import "../../modules/identity/screen-ui/security.css";
 export type { Props } from "../../modules/identity/screen-ui/types";
+function toParams(extra: Record<string, string | null>) {
+  const [path, query = ""] = location.hash.replace(/^#/, "").split("?");
+  const q = new URLSearchParams(query);
+  for (const [k, v] of Object.entries(extra)) {
+    if (v === null) q.delete(k);
+    else q.set(k, v);
+  }
+  const next = path + "?" + q.toString();
+  if (location.hash.replace(/^#/, "") === next) return;
+  history.replaceState(history.state, "", "#" + next);
+  dispatchEvent(new HashChangeEvent("hashchange"));
+}
+
 export default function RemainingSecurity(props: Props) {
   const Screen = props.screenId.startsWith("L")
     ? Entry
@@ -51,6 +64,8 @@ export default function RemainingSecurity(props: Props) {
         <LiveUsers
           locale={props.locale}
           view={props.view}
+          params={props.params}
+          onParams={toParams}
           session={service.session}
           onSignOut={service.signOut}
           onView={(view) => {

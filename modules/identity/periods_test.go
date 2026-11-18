@@ -419,7 +419,7 @@ func TestRecordedPeriodsAndCounterLimits(t *testing.T) {
 	}
 	f.r.memberships["w1"]["ann"].version = ^uint64(0)
 	f.want("a version at its maximum", f.in.ApplyRecorded(operator, "w1", Recorded{User: "ann", Membership: MembershipSuspended}), ErrConflict)
-	f.r.memberships["w2"] = map[string]*membership{"ann": {role: Member, state: MembershipActive, version: 1, joined: 1}}
+	f.r.putMembership("w2", "ann", &membership{role: Member, state: MembershipActive, version: 1, joined: 1})
 	f.r.memberships["w1"]["ann"].version = 3
 	f.must(f.in.SuspendUsers(operator, []Target{{User: "ann", Version: f.epoch("ann")}}))
 }

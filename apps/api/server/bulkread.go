@@ -266,6 +266,22 @@ func (s *Server) readBulk(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, request, detail)
 }
 
+func pageLimit(r *http.Request) (string, int, bool) {
+	after := r.URL.Query().Get("after")
+	limit := 50
+	if raw := r.URL.Query().Get("limit"); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 1 || n > 100 {
+			return "", 0, false
+		}
+		limit = n
+	}
+	if after != "" && !validWorkspace(after) {
+		return "", 0, false
+	}
+	return after, limit, true
+}
+
 func offsetLimit(r *http.Request) (int, int, bool) {
 	after, limit, ok := pageLimit(r)
 	if !ok {

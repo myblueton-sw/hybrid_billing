@@ -558,7 +558,11 @@ func TestUsersReadPaging(t *testing.T) {
 	seen := []string{}
 	after := ""
 	for {
-		page := f.list(root, "?limit=1&after="+after)
+		query := "?limit=1"
+		if after != "" {
+			query += "&after=" + after
+		}
+		page := f.list(root, query)
 		for _, u := range page.body["users"].([]any) {
 			row := u.(map[string]any)
 			seen = append(seen, row["user_id"].(string))
@@ -575,7 +579,7 @@ func TestUsersReadPaging(t *testing.T) {
 			break
 		}
 	}
-	if strings.Join(seen, ",") != "sample-admin,sample-admin-2,sample-admin-3,sample-member" {
+	if strings.Join(seen, ",") != "sample-admin-2,sample-admin-3,sample-admin,sample-member" {
 		t.Errorf("pages %v", seen)
 	}
 	if row := f.row(root, SampleAdmin); row["installation_administrator"] != true || row["email"] != AdminLogin {

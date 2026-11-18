@@ -287,7 +287,7 @@ func (s *Server) grantInstallation(user string, now time.Time) error {
 		return s.admin.AddGrant(gate.Grant{ID: "installation-" + user, SubjectID: user, Terms: terms, Validity: validity})
 	})
 	if err == nil {
-		s.dir.holders[user] = now.Add(installationGrants)
+		s.dir.grant(user, now.Add(installationGrants))
 	}
 	return err
 }

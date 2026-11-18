@@ -130,7 +130,7 @@ func (h *Workspace) Accept(workspace, invitationID string, verifier, actor Verif
 		return ErrConflict
 	}
 	found.state = invitationAccepted
-	r.memberships[workspace][acting.user] = &membership{role: found.role, state: MembershipActive, version: version, joined: joined + 1, from: now, until: found.roleUntil}
+	r.putMembership(workspace, acting.user, &membership{role: found.role, state: MembershipActive, version: version, joined: joined + 1, from: now, until: found.roleUntil})
 	r.generation++
 	return nil
 }
@@ -268,17 +268,12 @@ func (h *Workspace) Members(actor Verifier, workspace, after string, limit int) 
 	if _, err := r.administrator(actor, workspace, now); err != nil {
 		return nil, err
 	}
-	ids := []string{}
-	for userID := range r.memberships[workspace] {
-		if r.member(workspace, userID) != nil {
-			ids = append(ids, userID)
-		}
-	}
+	index := r.memberIndex[workspace]
 	list := []MemberInfo{}
-	for _, userID := range page(ids, after, limit) {
-		found := r.member(workspace, userID)
-		list = append(list, MemberInfo{User: userID, Role: found.role, State: found.state, Version: found.version, UserState: r.users[userID].state, From: found.from,
-			Until: found.until, SuspendedFor: found.suspendedFor, Effective: effective(found, now)})
+	for i := beyond(index, after); i < len(index) && len(list) < limit; i++ {
+		if found := r.member(workspace, index[i]); found != nil {
+			list = append(list, r.memberInfo(index[i], found, now))
+		}
 	}
 	return list, nil
 }
@@ -304,7 +299,7 @@ func (h *Workspace) CreateServiceUser(actor Verifier, workspace, serviceID, owne
 	if r.users[serviceID] != nil {
 		return ErrConflict
 	}
-	r.users[serviceID] = &user{kind: Service, state: Active, epoch: 1, workspace: workspace, creator: acting.user, owner: owner}
+	r.putUser(serviceID, &user{kind: Service, state: Active, epoch: 1, workspace: workspace, creator: acting.user, owner: owner})
 	r.generation++
 	return nil
 }

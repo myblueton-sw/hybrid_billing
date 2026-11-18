@@ -92,7 +92,7 @@ func run(args []string, stop <-chan os.Signal) error {
 func accessFlags(fs *flag.FlagSet) (*server.AccessSettings, func()) {
 	access := server.DefaultAccessSettings()
 	byFlag := map[string]server.AccessSetting{}
-	for _, setting := range append(server.AccessSettingList(), server.IdentitySettingList()...) {
+	for _, setting := range append(append(server.AccessSettingList(), server.IdentitySettingList()...), server.UserSettingList()...) {
 		byFlag[setting.Flag] = setting
 		numberFlag(fs, setting.Flag, setting.Name, setting.Unit, setting.Min, setting.Max, setting.Default, func(n int) { setting.Set(&access, n) })
 	}

@@ -418,7 +418,7 @@ func (s *Server) setPassword(ctx context.Context, body map[string]string) string
 		return CodeLinkInvalid
 	}
 	s.counter++
-	delete(s.dir.links, login)
+	s.dir.dropLink(login)
 	if link.Purpose == passwords.PurposeReset {
 		s.dir.generations[login]++
 		s.endSessions(login)

@@ -40,7 +40,7 @@ func (h *Installation) CreateUser(operator Operator, userID string, triple Tripl
 	if r.users[userID] != nil || r.identities[triple] != nil {
 		return ErrConflict
 	}
-	r.users[userID] = &user{kind: Human, state: Active, epoch: 1}
+	r.putUser(userID, &user{kind: Human, state: Active, epoch: 1})
 	r.link(userID, triple, email)
 	r.generation++
 	return nil
@@ -159,14 +159,10 @@ func (h *Installation) Users(after string, limit int) ([]UserInfo, error) {
 	if !r.pageable(after, limit) {
 		return nil, ErrInvalid
 	}
-	ids := make([]string, 0, len(r.users))
-	for id := range r.users {
-		ids = append(ids, id)
-	}
+	start := beyond(r.userIndex, after)
 	list := []UserInfo{}
-	for _, id := range page(ids, after, limit) {
-		found := r.users[id]
-		list = append(list, UserInfo{ID: id, Kind: found.kind, State: found.state, Epoch: found.epoch, Workspace: found.workspace})
+	for _, id := range r.userIndex[start : start+min(limit, len(r.userIndex)-start)] {
+		list = append(list, userInfo(id, r.users[id]))
 	}
 	return list, nil
 }

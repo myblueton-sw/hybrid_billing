@@ -12,11 +12,12 @@ type entry struct {
 }
 
 type Registry struct {
-	mu      sync.Mutex
-	limits  Limits
-	clock   func() time.Time
-	entries map[uint64]*entry
-	next    uint64
+	mu          sync.Mutex
+	limits      Limits
+	clock       func() time.Time
+	entries     map[uint64]*entry
+	next        uint64
+	latestIndex map[string]map[string]latestRef
 }
 
 func New(limits Limits, clock func() time.Time) (*Registry, error) {
@@ -267,6 +268,7 @@ func (r *Registry) prune() {
 			delete(r.entries, n)
 		}
 	}
+	r.reindex()
 }
 
 func copyView(v View) View {

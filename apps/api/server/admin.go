@@ -109,22 +109,11 @@ func (s *Server) users(after string) ([]identity.UserInfo, error) {
 }
 
 func (s *Server) findUser(id string) (identity.UserInfo, bool, error) {
-	after := ""
-	for {
-		page, err := s.users(after)
-		if err != nil {
-			return identity.UserInfo{}, false, err
-		}
-		for _, found := range page {
-			if found.ID == id {
-				return found, found.Kind == identity.Human, nil
-			}
-		}
-		if len(page) < 100 {
-			return identity.UserInfo{}, false, nil
-		}
-		after = page[len(page)-1].ID
+	if s.faulty("users") {
+		return identity.UserInfo{}, false, identity.ErrUnavailable
 	}
+	found, ok, err := s.identity.Installation().User(id)
+	return found, ok && found.Kind == identity.Human, err
 }
 
 func (s *Server) roster(actor identity.Verifier) (map[string]identity.MemberInfo, error) {
@@ -193,7 +182,7 @@ func (s *Server) inviteUser(actor identity.Verifier, login, user string, role id
 	if !until.IsZero() && until.Before(expires) {
 		expires = until
 	}
-	s.dir.invites[login] = invite{id: id, verifier: verifier, expires: expires}
+	s.dir.invite(login, invite{id: id, verifier: verifier, expires: expires})
 	return nil
 }
 
@@ -202,14 +191,14 @@ func (s *Server) recordLink(login, purpose string, now time.Time) (string, error
 	if err != nil {
 		return "", err
 	}
-	s.dir.links[login] = outstanding{purpose: purpose, expires: now.Add(setLinkValidity)}
+	s.dir.issued(login, outstanding{purpose: purpose, expires: now.Add(setLinkValidity)})
 	return token, nil
 }
 
 func (s *Server) issueLink(c *change, login, user, purpose string) (map[string]string, error) {
 	token, err := s.recordLink(login, purpose, c.now)
 	if err != nil {
-		delete(s.dir.links, login)
+		s.dir.dropLink(login)
 		s.dir.dropPickups(func(p pickup) bool { return p.target == user })
 		return nil, errPartial
 	}
@@ -332,12 +321,12 @@ func departUser(s *Server, c *change) (string, map[string]string, error) {
 	}
 	if c.known {
 		s.passwords.Remove(LoginKey(c.login))
-		delete(s.dir.invites, c.login)
-		delete(s.dir.links, c.login)
-		delete(s.dir.people, c.ctx.Target)
-		delete(s.dir.holders, c.ctx.Target)
+		s.dir.dropInvite(c.login)
+		s.dir.dropLink(c.login)
+		s.dir.dropHolder(c.ctx.Target)
 		s.endSessions(c.login)
 	}
+	s.dir.depart(c.ctx.Target)
 	s.dir.dropPickups(func(p pickup) bool { return p.target == c.ctx.Target })
 	return "user_departed", nil, nil
 }
@@ -445,7 +434,7 @@ func revokeInvitation(s *Server, c *change) (string, map[string]string, error) {
 	if err := s.identity.Workspace().RevokeInvitation(s.caller, s.bootWorkspace, found.id); err != nil {
 		return "", nil, mapIdentity(err)
 	}
-	delete(s.dir.invites, c.login)
+	s.dir.dropInvite(c.login)
 	return "invitation_revoked", nil, nil
 }
 

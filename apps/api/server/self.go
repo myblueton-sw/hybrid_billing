@@ -283,7 +283,7 @@ func (s *Server) changePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.limit.refund()
-	delete(s.dir.links, found.login)
+	s.dir.dropLink(found.login)
 	s.dir.generations[found.login]++
 	n := s.endOthers(found)
 	s.counter++

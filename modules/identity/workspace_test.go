@@ -482,7 +482,7 @@ func (f fixture) seed(workspace, administrator string) {
 	f.t.Helper()
 	f.user(administrator)
 	f.r.mu.Lock()
-	f.r.memberships[workspace] = map[string]*membership{administrator: {role: Administrator, state: MembershipActive, version: 1}}
+	f.r.putMembership(workspace, administrator, &membership{role: Administrator, state: MembershipActive, version: 1})
 	f.r.mu.Unlock()
 }
 
@@ -538,7 +538,7 @@ func TestWorkspacesAreSeparate(t *testing.T) {
 		t.Errorf("without administrator: %v", list)
 	}
 	f.r.mu.Lock()
-	f.r.users["svc3"] = &user{kind: Service, state: Active, epoch: 1, workspace: "w3"}
+	f.r.putUser("svc3", &user{kind: Service, state: Active, epoch: 1, workspace: "w3"})
 	f.r.mu.Unlock()
 	if list, _ := f.in.WithoutAdministrator(); !reflect.DeepEqual(list, []string{"w3"}) {
 		t.Errorf("a workspace with only a service user: %v", list)

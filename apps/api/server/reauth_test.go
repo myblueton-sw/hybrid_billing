@@ -361,11 +361,14 @@ func TestReauthenticationTiming(t *testing.T) {
 	rec, _ := f.s.passwords.Hash(LoginKey(AdminLogin), pw)
 	f.s.passwords.Put(LoginKey(AdminLogin), rec)
 	runs := [2][]time.Duration{}
-	for i := 0; i < 20; i++ {
-		for n, c := range []struct {
-			password string
-			want     int
-		}{{pw, 204}, {"wrong password here", 422}} {
+	cases := []struct {
+		password string
+		want     int
+	}{{pw, 204}, {"wrong password here", 422}}
+	for i := 0; i < 41; i++ {
+		for k := range cases {
+			n := (i + k) % len(cases)
+			c := cases[n]
 			a := f.as(AdminLogin)
 			began := time.Now()
 			if got := f.reauth(a, c.password); got.status != c.want {

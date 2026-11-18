@@ -274,20 +274,23 @@ func TestTrustConcurrentActivation(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	p := f.trustAdmins()
 	one, two := f.approvedChange(p, "60", "0"), f.approvedChange(p, "90", "0")
+	actors := []actor{p.c, f.signedIn(Admin3Login, pw)}
+	bodies := make([]string, 2)
+	for i, id := range []string{one, two} {
+		body, _ := json.Marshal(map[string]any{"request_id": fmt.Sprintf("c%d", i), "target_id": id, "idempotency_key": fmt.Sprintf("c%d", i), "expected_revision": f.revision(p.c),
+			"rationale": "go", "body": f.decisionFields(id)})
+		bodies[i] = string(body)
+	}
+	if a, b := f.revision(p.c), f.revision(actors[1]); a != b {
+		t.Fatalf("revision moved while preparing %s %s", a, b)
+	}
 	var wg sync.WaitGroup
 	results := make([]reply, 2)
-	for i, id := range []string{one, two} {
-		fields := f.decisionFields(id)
-		body, _ := json.Marshal(map[string]any{"request_id": fmt.Sprintf("c%d", i), "target_id": id, "idempotency_key": fmt.Sprintf("c%d", i), "expected_revision": f.revision(p.c),
-			"rationale": "go", "body": fields})
-		a := p.c
-		if i == 1 {
-			a = f.signedIn(Admin3Login, pw)
-		}
+	for i := range bodies {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			results[i] = f.call("trust.activate", string(body), a.cookie, a.csrf)
+			results[i] = f.call("trust.activate", bodies[i], actors[i].cookie, actors[i].csrf)
 		}(i)
 	}
 	wg.Wait()
@@ -306,7 +309,7 @@ func TestTrustConcurrentActivation(t *testing.T) {
 		}
 	}
 	if ok != 1 || activated != 1 {
-		t.Errorf("activations %d %d", ok, activated)
+		t.Errorf("activations %d %d: %d %s / %d %s", ok, activated, results[0].status, results[0].raw, results[1].status, results[1].raw)
 	}
 }
 

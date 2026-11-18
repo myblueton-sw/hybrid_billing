@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"net/http"
 	"sync"
@@ -34,11 +35,47 @@ type session struct {
 }
 
 type sessions struct {
-	mu   sync.Mutex
-	byID map[identity.Verifier]*session
+	mu       sync.Mutex
+	byID     map[identity.Verifier]*session
+	seq      uint64
+	gen      map[string]uint64
+	token    map[string]string
+	count    map[string]int
+	denied   map[identity.Verifier]denial
+	overflow map[string]time.Time
 }
 
-func newSessions() *sessions { return &sessions{byID: map[identity.Verifier]*session{}} }
+type denial struct {
+	login string
+	at    time.Time
+}
+
+func newSessions() *sessions {
+	return &sessions{byID: map[identity.Verifier]*session{}, gen: map[string]uint64{}, token: map[string]string{}, count: map[string]int{},
+		denied: map[identity.Verifier]denial{}, overflow: map[string]time.Time{}}
+}
+
+func (s *sessions) changed(login string) {
+	if s.count[login] <= 0 {
+		delete(s.count, login)
+		delete(s.gen, login)
+		delete(s.token, login)
+		return
+	}
+	s.seq++
+	s.gen[login] = s.seq
+	s.token[login] = hex.EncodeToString(random(16))
+}
+
+func (s *sessions) remove(v identity.Verifier) bool {
+	found := s.byID[v]
+	if found == nil {
+		return false
+	}
+	delete(s.byID, v)
+	s.count[found.login]--
+	return true
+}
 
 func random(n int) []byte {
 	b := make([]byte, n)
@@ -53,10 +90,14 @@ func verifierOf(token []byte) identity.Verifier { return identity.Verifier(sha25
 func (s *sessions) prune(before time.Time) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	touched := map[string]bool{}
 	for v, found := range s.byID {
-		if found.created.Before(before) {
-			delete(s.byID, v)
+		if found.created.Before(before) && s.remove(v) {
+			touched[found.login] = true
 		}
+	}
+	for login := range touched {
+		s.changed(login)
 	}
 }
 
@@ -83,7 +124,11 @@ func (s *sessions) put(v identity.Verifier, workspace, login string, now time.Ti
 		return "", ErrStart
 	}
 	csrf := encode(raw)
+	if s.byID[v] == nil {
+		s.count[login]++
+	}
 	s.byID[v] = &session{verifier: v, workspace: workspace, csrf: csrf, created: now, authenticated: now, login: login, trustEpoch: epoch}
+	s.changed(login)
 	return csrf, nil
 }
 
@@ -145,7 +190,9 @@ func (s *sessions) below(workspace string, epoch uint64) []identity.Verifier {
 func (s *sessions) drop(v identity.Verifier) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	delete(s.byID, v)
+	if found := s.byID[v]; found != nil && s.remove(v) {
+		s.changed(found.login)
+	}
 }
 
 func (s *Server) openFor(triple identity.Triple, workspace string, secure bool) (cookie *http.Cookie, csrf string, err error) {
@@ -156,11 +203,18 @@ func (s *Server) openFor(triple identity.Triple, workspace string, secure bool) 
 func (s *Server) openSession(triple identity.Triple, workspace string, secure bool) (*http.Cookie, string, identity.Verifier, error) {
 	raw := random(tokenBytes)
 	v := verifierOf(raw)
+	if s.sessions.overflowed(triple.Subject) {
+		return nil, "", v, errDeniedFull
+	}
 	csrf, err := s.sessions.put(v, workspace, triple.Subject, s.clock(), s.currentEpoch(workspace))
 	if err != nil {
 		return nil, "", v, err
 	}
 	err = s.identity.Boundary().OpenSession(triple, v, sessionIdle, sessionAbsolute)
+	if errors.Is(err, identity.ErrLimit) {
+		s.settleDenied(triple.Subject)
+		err = s.identity.Boundary().OpenSession(triple, v, sessionIdle, sessionAbsolute)
+	}
 	for tries := 0; errors.Is(err, identity.ErrLimit) && tries < maxEvictions; tries++ {
 		old, ok := s.sessions.oldest(triple.Subject, v)
 		if !ok {
@@ -177,6 +231,8 @@ func (s *Server) openSession(triple identity.Triple, workspace string, secure bo
 	return &http.Cookie{Name: CookieName, Value: encode(raw), Path: CookiePath, HttpOnly: true, SameSite: http.SameSiteStrictMode, Secure: secure,
 		MaxAge: int(sessionAbsolute / time.Second)}, csrf, v, nil
 }
+
+var errDeniedFull = errors.New("denied session set is full")
 
 func (s *Server) lookup(r *http.Request) (session, bool) {
 	c, err := r.Cookie(CookieName)

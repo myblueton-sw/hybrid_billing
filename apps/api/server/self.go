@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
-	"sort"
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
@@ -16,7 +15,6 @@ const (
 	CodeWrongPassword  = "current_password_wrong"
 	CodePasswordLocked = "password_locked"
 	selfAttempts       = 5
-	othersHandle       = "others"
 )
 
 type selfSession struct {
@@ -41,6 +39,8 @@ type selfPage struct {
 	PasswordSet     bool           `json:"password_set"`
 	Installation    bool           `json:"installation_administrator"`
 	Sessions        []selfSession  `json:"sessions"`
+	Generation      string         `json:"sessions_generation"`
+	SessionEnds     []selfEndView  `json:"session_ends"`
 	IdleMinutes     int            `json:"idle_minutes"`
 	MaxAge          int64          `json:"max_age_seconds"`
 	SignedInAt      string         `json:"signed_in_at"`
@@ -72,21 +72,17 @@ func (s *Server) self(w http.ResponseWriter, r *http.Request) (session, identity
 	return found, answer, true
 }
 
-func (s *Server) ownSessions(found session) []session {
+func (s *Server) ownSessions(found session) ([]session, string) {
+	snap := s.sessions.snapshot(found.login)
 	out := []session{}
-	for _, v := range s.sessions.byLogin(found.login) {
-		if got, ok := s.sessions.get(v); ok {
-			out = append(out, got)
+	for _, other := range snap.sessions {
+		if other.verifier == found.verifier {
+			out = append([]session{other}, out...)
+			continue
 		}
+		out = append(out, other)
 	}
-	sort.Slice(out, func(a, b int) bool {
-		x, y := out[a].verifier == found.verifier, out[b].verifier == found.verifier
-		if x != y {
-			return x
-		}
-		return out[a].created.After(out[b].created)
-	})
-	return out
+	return out, snap.token
 }
 
 func (s *Server) readSelf(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +102,9 @@ func (s *Server) readSelf(w http.ResponseWriter, r *http.Request) {
 	if current, err := s.policy.Policy(answer.Workspace()); err == nil {
 		page.MaxAge = int64(current.Revision.MaxAge / time.Second)
 	}
-	for _, other := range s.ownSessions(found) {
+	own, token := s.ownSessions(found)
+	page.Generation, page.SessionEnds = token, s.selfEndViews(answer.User())
+	for _, other := range own {
 		page.Sessions = append(page.Sessions, selfSession{Handle: handleOf(other.verifier), Current: other.verifier == found.verifier,
 			SignedIn: stamp(other.created), Ends: stamp(other.created.Add(sessionAbsolute))})
 	}
@@ -114,57 +112,22 @@ func (s *Server) readSelf(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) endOne(v identity.Verifier) {
-	_ = s.identity.Boundary().EndSession(v)
+	err := s.endModule(v)
 	s.sessions.drop(v)
+	s.settleEnded(v, err)
 	s.dir.dropPickups(func(p pickup) bool { return p.session == v })
 }
 
 func (s *Server) endOthers(found session) int {
 	n := 0
-	for _, other := range s.ownSessions(found) {
+	own, _ := s.ownSessions(found)
+	for _, other := range own {
 		if other.verifier != found.verifier {
 			s.endOne(other.verifier)
 			n++
 		}
 	}
 	return n
-}
-
-func (s *Server) endSelfSessions(w http.ResponseWriter, r *http.Request) {
-	request := r.Header.Get("X-Request-Id")
-	s.domain.Lock()
-	defer s.domain.Unlock()
-	found, answer, ok := s.self(w, r)
-	if !ok || !s.stepUpRoute(w, found, answer.User(), "sessions/end", request) {
-		return
-	}
-	body, err := decodeStrings(r.Body, "session")
-	if err != nil && tooLarge(err) {
-		fail(w, http.StatusRequestEntityTooLarge, CodeBodyTooLarge, request)
-		return
-	}
-	if err != nil || body["session"] == "" {
-		failCode(w, commands.InvalidRequest, request)
-		return
-	}
-	n := 0
-	if body["session"] == othersHandle {
-		n = s.endOthers(found)
-	} else {
-		for _, other := range s.ownSessions(found) {
-			if other.verifier != found.verifier && handleOf(other.verifier) == body["session"] {
-				s.endOne(other.verifier)
-				n = 1
-			}
-		}
-		if n == 0 {
-			failCode(w, commands.InvalidRequest, request)
-			return
-		}
-	}
-	s.counter++
-	s.cfg.Log.Info("sessions_ended", "user", answer.User(), "count", n)
-	writeJSON(w, http.StatusOK, request, map[string]int{"ended": n})
 }
 
 func (s *Server) reserveAttempt(found session) bool {

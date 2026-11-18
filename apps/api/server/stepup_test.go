@@ -168,7 +168,7 @@ func TestPostRoutesAreClassified(t *testing.T) {
 	if f.reauth(a, pw).status != 204 {
 		t.Fatal("reauthenticate")
 	}
-	if got := f.selfPost(a, "sessions/end", `{"session":"others"}`); got.status != 200 || fmt.Sprint(got.body["ended"]) != "1" {
+	if got := f.selfPost(a, "sessions/end", f.othersBody(a)); got.status != 202 || fmt.Sprint(got.body["count"]) != "1" {
 		t.Errorf("after reauthentication %+v", got)
 	}
 	if got := f.selfPost(a, "password", pwBody(pw, newPw)); got.status != 204 {

@@ -136,6 +136,10 @@ func decodeCall(r io.Reader) (callBody, error) {
 func (s *Server) stale(found session) bool { return found.trustEpoch < s.currentEpoch(found.workspace) }
 
 func (s *Server) access(found session) (identity.Answer, commands.Code) {
+	if s.sessions.isDenied(found.verifier) {
+		s.sessions.drop(found.verifier)
+		return identity.Answer{}, commands.Unauthenticated
+	}
 	if s.stale(found) {
 		_ = s.identity.Boundary().EndSession(found.verifier)
 		s.sessions.drop(found.verifier)
@@ -148,6 +152,12 @@ func (s *Server) access(found session) (identity.Answer, commands.Code) {
 			_ = s.identity.Boundary().EndSession(found.verifier)
 			s.sessions.drop(found.verifier)
 			return answer, commands.Unauthenticated
+		}
+		if s.accessHook != nil {
+			s.accessHook(found.verifier)
+		}
+		if s.sessions.isDenied(found.verifier) || !s.sessions.present(found.verifier) {
+			return identity.Answer{}, commands.Unauthenticated
 		}
 		return answer, ""
 	case errors.Is(err, identity.ErrUnavailable):

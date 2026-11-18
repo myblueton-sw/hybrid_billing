@@ -202,7 +202,7 @@ Tracking: [HYB-295](https://linear.app/hybrid-billing/issue/HYB-295). [HB-257](.
 - **Reads.** `GET /api/v1/me` (`boundary.go:35`, `admin.ts:938`, `identity/pages/my-security/Live.tsx:268`).
 - **Commands.** `POST /api/v1/me/password` (`boundary.go:48`, `admin.ts:957`, `my-security/Live.tsx:89`) and `POST /api/v1/me/sessions/end` (`boundary.go:49`, `admin.ts:960`, `my-security/Live.tsx:172`). Neither is on the command path; password changes write a log line, not a journal record (`HB-270/plan.md:158`). Module: identity, passwords.
 - **States.** Read-only account view; password change with shared lockout and honest unconfirmed outcomes; own sessions with end one, end all others and sign out here; recovery and notification views marked unavailable ([HB-271](../features/HB-271/verification.md)).
-- **Not connected / residual.** MFA, recovery, linking of other sign-in methods, profile changes and notification preferences. The M05 preview copy still says "reauthentication" (HYB-293 residual). Open: HYB-306 recent access history (Todo), HYB-307 end other sessions against a fixed session manifest (Todo), HYB-304 (Todo).
+- **Not connected / residual.** MFA, recovery, linking of other sign-in methods, profile changes and notification preferences. The M05 preview copy still says "reauthentication" (HYB-293 residual). Open: HYB-306 recent access history (Todo), HYB-307 end other sessions against a fixed session manifest (implemented on branch `feat/HYB-307-m05-end-other-sessions`, not merged), HYB-304 (Todo).
 - **Verification.** [HB-270](../features/HB-270/verification.md), [HB-271](../features/HB-271/verification.md), [HYB-293](../features/HYB-293/verification.md).
 
 ### Organizations and contracts (O01–O03)

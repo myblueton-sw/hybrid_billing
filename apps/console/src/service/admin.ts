@@ -4,6 +4,7 @@ import { integrationsOf, type IntegrationsPage } from "./integrations";
 import { recoveryOf, type RecoveryPage } from "./recovery";
 import { evidenceOf, type EvidencePage } from "./release-evidence";
 import { retentionOf, type RetentionPage } from "./retention";
+import { selfEndOf, selfSessionOf, type SelfEnd, type SelfSession } from "./self-end";
 
 export type RolePeriod = "open" | "bounded" | "ends_soon" | "ended";
 
@@ -271,7 +272,7 @@ export type ServicesPage = {
   now: string;
 };
 export type Secret = { secret: string; credential: string };
-export type SelfSession = { handle: string; current: boolean; signed_in: string; ends: string };
+export type { SelfSession, SelfEnd, SelfEndRow, SelfItem, SelfRef } from "./self-end";
 export type SelfPage = {
   user_id: string;
   login: string;
@@ -282,6 +283,8 @@ export type SelfPage = {
   password_set: boolean;
   installation_administrator: boolean;
   sessions: SelfSession[];
+  sessions_generation: string;
+  session_ends: SelfEnd[];
   idle_minutes: number;
   max_age_seconds: number;
   signed_in_at: string;
@@ -985,7 +988,9 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
         identities: Array.isArray(body.identities) ? (body.identities as { method: string; login: string }[]) : [],
         password_set: body.password_set === true,
         installation_administrator: body.installation_administrator === true,
-        sessions: Array.isArray(body.sessions) ? (body.sessions as SelfSession[]) : [],
+        sessions: Array.isArray(body.sessions) ? body.sessions.map(selfSessionOf) : [],
+        sessions_generation: String(body.sessions_generation ?? ""),
+        session_ends: Array.isArray(body.session_ends) ? body.session_ends.map(selfEndOf) : [],
         idle_minutes: Number(body.idle_minutes ?? 0),
         max_age_seconds: Number(body.max_age_seconds ?? 0),
         signed_in_at: String(body.signed_in_at ?? ""),
@@ -996,9 +1001,14 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     async changePassword(current: string, next: string): Promise<void> {
       await send("/me/password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ current, new: next }) }, attempt().request);
     },
-    async endSessions(session: string): Promise<number> {
-      const body = await send("/me/sessions/end", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session }) }, attempt().request);
-      return Number(body.ended ?? 0);
+    async endOthers(generation: string, handles: string[]): Promise<SelfEnd> {
+      const body = await send("/me/sessions/end", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session: "others", generation, handles }) },
+        attempt().request);
+      return selfEndOf(body);
+    },
+    async endOne(handle: string): Promise<SelfEnd> {
+      const body = await send("/me/sessions/end", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session: handle }) }, attempt().request);
+      return selfEndOf(body);
     },
     async organizations(query: OrgQuery = {}): Promise<OrgPage> {
       const q = new URLSearchParams();

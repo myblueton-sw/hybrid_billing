@@ -15,32 +15,18 @@ const sessionsWord = (l: Locale, n: number) =>
       ? `세션 ${n}개`
       : plural(l, n, { zero: "لا جلسات", one: "جلسة واحدة", two: "جلستان", few: "{n} جلسات", many: "{n} جلسة", other: "{n} جلسة" });
 
-const otherSessions = (l: Locale, n: number) =>
-  l === "en"
-    ? plural(l, n, { one: "{n} other session", other: "{n} other sessions" })
-    : l === "ko"
-      ? `다른 세션 ${n}개`
-      : plural(l, n, { zero: "لا جلسات أخرى", one: "جلسة أخرى واحدة", two: "جلستان أخريان", few: "{n} جلسات أخرى", many: "{n} جلسة أخرى", other: "{n} جلسة أخرى" });
-
 export const m = {
   loading: (l: Locale) => t(l, "Loading your account…", "내 계정 정보를 불러오는 중…", "جارٍ تحميل معلومات حسابك…"),
   loadFailed: (l: Locale) => t(l, "Your account could not be loaded", "내 계정 정보를 불러오지 못했습니다", "تعذّر تحميل معلومات حسابك"),
   signedOutTitle: (l: Locale) => t(l, "You are signed out", "로그아웃되었습니다", "تم تسجيل خروجك"),
   signedOutBody: (l: Locale) =>
-    t(l, "This session has ended. Sign in again to continue.", "이 세션이 종료되었습니다. 계속하려면 다시 로그인하세요.", "انتهت هذه الجلسة. سجّل الدخول مجددًا للمتابعة."),
+    t(l, "This session's access has ended. Sign in again.", "현재 세션의 접근이 종료되었습니다. 다시 로그인해 주세요.", "انتهى وصول هذه الجلسة. سجّل الدخول مجددًا."),
   lockedOutBody: (l: Locale) =>
     t(
       l,
       "You were signed out after too many wrong current passwords. Your password was not changed, and password sign-in may be locked for up to 15 minutes.",
       "현재 비밀번호를 너무 많이 틀려 로그아웃되었습니다. 비밀번호는 변경되지 않았으며 비밀번호 로그인이 최대 15분간 잠길 수 있습니다.",
       "تم تسجيل خروجك بعد إدخال كلمة المرور الحالية بشكل خاطئ مرات كثيرة. لم تتغير كلمة المرور، وقد يُقفل تسجيل الدخول بكلمة المرور لمدة تصل إلى 15 دقيقة.",
-    ),
-  unknownResult: (l: Locale) =>
-    t(
-      l,
-      "The result could not be confirmed. Reload to check the current state before trying again.",
-      "결과를 확인하지 못했습니다. 다시 시도하기 전에 다시 불러와 현재 상태를 확인하세요.",
-      "تعذّر تأكيد النتيجة. أعد التحميل للتحقق من الحالة الحالية قبل إعادة المحاولة.",
     ),
   accountTitle: (l: Locale) => t(l, "Your account", "내 계정", "حسابك"),
   notRecorded: (l: Locale) => t(l, "Not recorded", "기록 없음", "غير مسجّل"),
@@ -153,7 +139,6 @@ export const m = {
   colActions: (l: Locale) => t(l, "Actions", "작업", "الإجراءات"),
   signOut: (l: Locale) => t(l, "Sign out", "로그아웃", "تسجيل الخروج"),
   end: (l: Locale) => t(l, "End", "종료", "إنهاء"),
-  endOthers: (l: Locale) => t(l, "End all other sessions", "다른 세션 모두 종료", "إنهاء كل الجلسات الأخرى"),
   noOthers: (l: Locale) => t(l, "You have no other sessions.", "다른 세션이 없습니다.", "لا توجد لديك جلسات أخرى."),
   staleNote: (l: Locale, idle: number) =>
     t(
@@ -171,31 +156,12 @@ export const m = {
       "يُسجَّل خروج من يستخدم تلك الجلسة عند طلبه التالي. لا تتأثر هذه الجلسة. لاستخدامها مجددًا يجب تسجيل الدخول من ذلك المتصفح.",
     ),
   endOneButton: (l: Locale) => t(l, "End session", "세션 종료", "إنهاء الجلسة"),
-  endAllTitle: (l: Locale) => t(l, "End all other sessions?", "다른 세션을 모두 종료할까요?", "هل تريد إنهاء كل الجلسات الأخرى؟"),
-  endAllImpact: (l: Locale, n: number) =>
-    t(
-      l,
-      `${otherSessions(l, n)} will be signed out on their next request. This session stays signed in.`,
-      `${otherSessions(l, n)}가 다음 요청에서 로그아웃됩니다. 이 세션은 유지됩니다.`,
-      `سيُسجَّل الخروج من ${otherSessions(l, n)} عند طلبها التالي. تبقى هذه الجلسة مسجّلة.`,
-    ),
-  endAllButton: (l: Locale) => t(l, "End other sessions", "다른 세션 종료", "إنهاء الجلسات الأخرى"),
-  ended: (l: Locale, n: number) =>
-    n === 0
-      ? t(l, "No other sessions were open.", "열려 있는 다른 세션이 없었습니다.", "لم تكن هناك جلسات أخرى مفتوحة.")
-      : t(
-          l,
-          `Ended ${sessionsWord(l, n)}. Some may already have ended from inactivity.`,
-          `${sessionsWord(l, n)}를 종료했습니다. 일부는 이미 비활성으로 종료된 세션일 수 있습니다.`,
-          `تم إنهاء ${sessionsWord(l, n)}. ربما انتهى بعضها مسبقًا بسبب عدم النشاط.`,
-        ),
   endGone: (l: Locale) =>
     t(l, "That session has already ended. The list has been reloaded.", "해당 세션은 이미 종료되었습니다. 목록을 다시 불러왔습니다.", "انتهت تلك الجلسة مسبقًا. أُعيد تحميل القائمة."),
   endLimited: (l: Locale, s: number) =>
     s > 0
       ? t(l, `Too many requests right now. Try again in ${s} seconds.`, `지금은 요청이 너무 많습니다. ${s}초 후 다시 시도하세요.`, `الطلبات كثيرة الآن. أعد المحاولة بعد ${s} ثانية.`)
       : t(l, "Too many requests right now. Try again in a moment.", "지금은 요청이 너무 많습니다. 잠시 후 다시 시도하세요.", "الطلبات كثيرة الآن. أعد المحاولة بعد قليل."),
-  backSessions: (l: Locale) => t(l, "Back to sessions", "세션으로 돌아가기", "العودة إلى الجلسات"),
   limitsTitle: (l: Locale) => t(l, "Session limits", "세션 제한", "حدود الجلسة"),
   idle: (l: Locale) => t(l, "Inactivity limit", "비활성 제한", "حد عدم النشاط"),
   minutes: (l: Locale, n: number) => t(l, `${n} minutes`, `${n}분`, `${n} دقيقة`),

@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Migration import of read-only historical documents with manifest-verified batches, idempotent re-import, quarantined conflicts, numbering and delivery fences, and no secret key material
 description: Second increment of work item W-37. A register imports past documents from dual-controlled source systems in batches. Each batch is bound to the exported manifest's item count and digest, sealed, verified and accepted under dual control. Accepted documents become immutable read-only history that can never be issued, delivered, submitted or changed. Re-importing is idempotent by source identity, and changed content is quarantined, never overwritten. Imported numbers and deliveries become high-water marks and delivery fences. Only parsed public keys and certificates are accepted, never secret key material.
-status: final
+status: stable
 ---
 
 # Scope and ownership

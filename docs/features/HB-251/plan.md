@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Scale gate register with P0 profiles, hardware records, budgets that stay proposals until approved with hardware and a distribution, harness-recorded measured runs and a readiness read that never shows NOT_RUN as passing
 description: Second increment of work item W-39. A register holds the HB-39-V P0 scale gates as profiles with independent axes, hardware records and per-gate metric budgets. Budgets stay proposed until a second human approves them with a distribution evidence digest. Bound harnesses record measured runs. Each run gets a verdict that can be passed only under an approved budget on the same hardware, with exact correctness and the profile's scale actually reached. A readiness read lists every P0 gate that has not passed.
-status: final
+status: stable
 ---
 
 # Scope and ownership

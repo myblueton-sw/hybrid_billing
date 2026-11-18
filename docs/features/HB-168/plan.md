@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Operating profiles and party model
 description: Defines the first domain model of work item W-01, which separates installation, workspace, legal party, billing profile and contract transaction path, with pure rules for issuance path, billing eligibility and aggregation, held in an in-memory registry with expected revisions.
-status: reviewed
+status: stable
 ---
 
 # Scope and ownership

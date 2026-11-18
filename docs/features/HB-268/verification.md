@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-268 verification of the M04 service-account API
 description: Module and apps/api tests, coverage, race, cross builds, mutation results and review outcomes for the credential metadata listing and lookup, the bound on ended credentials, the credential serial, and the service-account read and commands with one-time secret pickups. Run on mac_mini on 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

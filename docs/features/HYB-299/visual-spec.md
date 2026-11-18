@@ -2,7 +2,7 @@
 type: DesignSpecification
 title: HYB-299 M01 role periods and bulk revocation visual specification
 description: Layout source for the M01 service-mode changes in HYB-299. Covers selection in the users table, the bulk revocation steps, the Revocation jobs tab, role period display and editing, refusals and clock conditions. Written by the ui-designer role (read-only). The HYB-299 plan wins on copy, states and truthfulness; this spec wins on layout.
-status: final
+status: stable
 tags: [HYB-299, M01, bulk-revocation, role-period, visual-spec]
 sources:
   - resource: plan.md

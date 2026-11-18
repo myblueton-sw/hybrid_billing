@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-249 demo isolation verification
 description: Actual checks run for W-38 increment 2 (modules/sandbox), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

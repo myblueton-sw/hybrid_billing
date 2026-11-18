@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-255 authentication policy verification
 description: Actual checks run for the W-42 increment modules/authpolicy, plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

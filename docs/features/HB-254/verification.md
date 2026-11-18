@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-254 release trace verification
 description: Actual checks run for W-41 increment 1 (modules/releasetrace), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

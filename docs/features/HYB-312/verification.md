@@ -2,7 +2,7 @@
 type: Verification
 title: HYB-312 P04 copies outside the controlled scope
 description: The P04 deletion storage results now state that copies already sent to ERP or downloaded are outside the controlled scope, as the P04 spec requires; verified by tests, the P04 browser regression and a copy and render review.
-status: final
+status: stable
 tags: [HYB-312, P04, retention, HB-27]
 sources:
   - resource: ../HB-288/plan.md

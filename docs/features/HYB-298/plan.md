@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: M03 grant changes through fixed-revision approval requests, and revocations confirmed by a durable decision ledger in the installation
 description: Fix ticket for finding M3 of the HYB-291 planning cross-check. Grant additions and grant revocations become approval requests that a second administrator approves against a fixed revision. Grant and delegation revocations become revocation records that reach deny confirmed, cleanup running and revocation complete only after an fsynced, hash-chained ledger file in the installation's data directory commits the decision, and show decision unconfirmed otherwise. Request limits and lifetime become installation settings with defaults.
-status: final
+status: stable
 sources:
   - resource: docs/ui/screens/M03/spec.md
   - resource: docs/planning/v1.16/requirements.json

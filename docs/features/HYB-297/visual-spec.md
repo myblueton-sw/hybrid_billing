@@ -2,7 +2,7 @@
 type: DesignSpecification
 title: HYB-297 M02 trust change workflow visual specification
 description: Layout source for the M02 policies view in service mode after the trust change workflow lands. Written by the ui-designer role (read-only). The HYB-297 plan wins on copy, states and truthfulness; this spec wins on layout.
-status: final
+status: stable
 tags: [HYB-297, M02, trust-change, visual-spec]
 sources:
   - resource: plan.md

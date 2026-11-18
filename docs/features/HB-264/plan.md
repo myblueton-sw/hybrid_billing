@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Live M01 user administration screen in the console service mode, bound to the HB-263 API
 description: Phase 3c of the pre-launch plan (HB-257). In service mode M01 renders a live screen backed by the identity read, the identity commands and the one-time link pickup. The unconnected preview stays for the review shell.
-status: final
+status: stable
 ---
 
 # Scope and ownership

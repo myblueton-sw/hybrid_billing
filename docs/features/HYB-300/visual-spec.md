@@ -2,7 +2,7 @@
 type: Visual Spec
 title: HYB-300 Part A visual spec for the O01 filter panel, search and server paging
 description: Layout, type, spacing, states, keyboard order and responsive behaviour for the O01 server-side filters, search, active-filter chips, count certainty, Load more and the scan-stopped state, at 1440, 1280 and 390 in EN, KO and AR, with root decisions; room is left for the Part C view group actions.
-status: final
+status: stable
 tags: [HYB-300, O01, visual-spec, filters, paging, ui-designer]
 sources:
   - resource: plan.md

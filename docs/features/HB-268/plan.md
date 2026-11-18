@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: M04 service-account API with service users, credential metadata, and one-time credential secrets
 description: Phase 3g of the pre-launch plan (HB-257). Adds a read-only credential metadata listing to modules/identity and, in apps/api, a service-account read and commands to create, suspend, reinstate and retire service users and to issue and revoke their credentials. A secret is shown once through the existing pickup path and only its verifier is kept.
-status: final
+status: stable
 ---
 
 # Scope and ownership

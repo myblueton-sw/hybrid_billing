@@ -6,7 +6,7 @@ description: |
   - Adds read-only listings to modules/organizations (parties and billing profiles) and to modules/relationships (member timelines of a revision, paged).
   - Assembles both registries in apps/api with a synthetic sample seed.
   - Serves an organizations read with relationship targets on a chosen day.
-status: final
+status: stable
 ---
 
 # Scope and ownership

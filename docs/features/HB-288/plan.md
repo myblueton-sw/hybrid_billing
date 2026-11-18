@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: P04 retention API over modules/retention with synthetic sample artifacts, policies, holds, deletion runs and tombstones seeded through the module's own flows
 description: Phase 5g of the pre-launch plan. Adds a retention read for the six P04 tabs (policies, expiry, holds, deletion, restore, decisions) and administrator commands with a reason to approve policy and release proposals, withdraw proposals, propose a policy revision, place a hold, propose a hold release and stop a deletion run. Nothing deletes, archives, restores, exports or touches a host after the seed; archive restore, deletion plans, workers, retries and backup expiry are shown as not connected.
-status: final
+status: stable
 tags: [HB-288, pre-launch, retention, api]
 sources:
   - resource: ../HB-257/plan.md

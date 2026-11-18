@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: License mode register with explicit mode selection, dual-controlled ed25519 verification keys, signed evaluation grants on authoritative time, offline-verified purchased entitlements, nonblocking status and DB-14 rights checks
 description: First increment of work item W-40. A register records the selected license mode per installation. Evaluation grants and purchased entitlements are verified offline against trusted public keys only, and an evaluation lasts 336 hours from an authoritative activation instant that repeating an activation never resets. Outcomes are kept apart (invalid, unverifiable, scope mismatch, expired and unverified), a valid registration is never replaced by an invalid one, and the status read gives a persistent nonblocking warning. Overlapping direct and marketplace rights, and billing metrics outside the contracted set, are refused. Nothing is blocked, locked, sent or deleted.
-status: final
+status: stable
 ---
 
 # Scope and ownership

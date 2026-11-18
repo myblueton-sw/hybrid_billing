@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-271 verification of the live M05 my-security screen
 description: Unit tests, build, browser QA (password change, lockout paths, sessions) in EN, KO and AR at 1440 and 390, the M01–M04 regression reruns, and the review outcomes for the live M05 screen. Run on mac_mini on 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

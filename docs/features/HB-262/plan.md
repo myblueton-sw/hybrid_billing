@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Installation administration action in modules/auth, valid only in the recorded installation workspace, for human subjects, never delegable
 description: Phase 3a of the pre-launch plan (HB-257). The permission registry gains an installation administration action whose grants and decisions are confined to one installation workspace recorded once, so that installation-level user operations can later be exposed only to administrators of the bootstrap workspace.
-status: final
+status: stable
 ---
 
 # Scope and ownership

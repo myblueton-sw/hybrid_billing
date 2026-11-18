@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-275 verification of the live O02 relationship change screen
 description: Type checks, unit tests, build, browser QA in EN, KO and AR at 1440 and 390, regressions and review outcomes for the O02 screen bound to the HB-274 change API. Run on mac_mini on 2026-11-17 with synthetic sample data only.
-status: final
+status: stable
 ---
 
 # Scope

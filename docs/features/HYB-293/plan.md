@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Step-up reauthentication for every mutating administration command, with holder-only password re-entry and a console reauthentication dialog
 description: Fix ticket for finding H2 of the HYB-291 planning cross-check. The API refuses every registered mutating command, and the M05 session-ending endpoint, when the session's last password proof is older than the step-up window. A session-holder password re-entry endpoint refreshes that proof and cannot be blocked by third parties. Every console screen that posts commands opens a reauthentication dialog in EN, KO and AR and resends the same frozen request once.
-status: final
+status: stable
 tags: [HYB-293, security, identity, step-up, reauthentication, IAM-08]
 sources:
   - resource: ../../reviews/HYB-291-planning-cross-check/report.md

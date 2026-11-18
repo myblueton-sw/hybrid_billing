@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Retention register with class policy revisions anchored at an immutable start, requires and mentions dependencies, fast legal holds released under dual control, preview-first chunked deletion runs that re-check before every chunk, and tombstones with a watermark for restore checks
 description: First increment of work item W-43. Artifacts are registered with a data class, tenants and an immutable anchor. Class policies set retention periods. Dependencies and legal holds make an artifact ineligible. Deletion runs fix a manifest, block access, and let a worker delete per chunk and store after a re-check. Every deletion leaves a tombstone with a monotonic sequence, and a deleted artifact can never be registered again.
-status: final
+status: stable
 ---
 
 # Scope and ownership

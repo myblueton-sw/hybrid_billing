@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-256 retention register verification
 description: Actual checks run for W-43 increment 1 (modules/retention), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

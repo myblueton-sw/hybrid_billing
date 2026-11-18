@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-247 migration import verification
 description: Actual checks run for W-37 increment 2 (modules/migration), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

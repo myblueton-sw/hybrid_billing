@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-248 simulation core verification
 description: Actual checks run for W-38 increment 1 (modules/simulation), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

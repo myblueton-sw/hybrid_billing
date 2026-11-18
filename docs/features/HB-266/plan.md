@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: M03 access API, with read-only grant and delegation listing, an effect preview, and grant management outside installation administration
 description: Phase 3e of the pre-launch plan (HB-257). modules/auth and modules/gate gain read-only listing and an explain call. apps/api gains an access read, an effect preview and commands to add and revoke grants and revoke delegations, all under the installation administration action.
-status: final
+status: stable
 ---
 
 # Scope and ownership

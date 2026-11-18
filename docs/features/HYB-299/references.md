@@ -2,7 +2,7 @@
 type: Reference
 title: HYB-299 external references
 description: External professional references for M01 role validity periods and bulk revocation, opened by root on 2026-11-18, with what was observed, adopted and rejected.
-status: final
+status: stable
 tags: [HYB-299, M01, references]
 sources:
   - resource: plan.md

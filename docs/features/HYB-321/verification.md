@@ -2,7 +2,7 @@
 type: Verification
 title: HYB-321 flaky test fixes verification
 description: Root's fix and measurements for the flaky TestTrustConcurrentActivation and the timing tests on main, with the tokenmeter report not reproduced.
-status: final
+status: stable
 tags: [HYB-321, tests, flaky]
 sources:
   - resource: ../HYB-297/verification.md

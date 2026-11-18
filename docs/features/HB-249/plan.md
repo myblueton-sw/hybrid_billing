@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Demo isolation with disjoint environment namespaces, reserved mock destinations at an egress choke point, a mock-only typed configuration schema, confined idempotent reset and production admission
 description: Second increment of work item W-38. A register keeps demo and production environments apart by disjoint database, key ring, evidence path and document number namespaces. Demo traffic may reach only registered mock destinations on reserved names. Demo configuration is checked against a typed schema that has no secret or secret-store kind. Reset touches only its own demo environment and is idempotent by reset ID. Production admits only real-origin inputs from itself, never synthetic, public or demo inputs or demo document numbers.
-status: final
+status: stable
 ---
 
 # Scope and ownership

@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: M02 trust change workflow with propose, validate, independent approval and activation under a strictly newer trust epoch
 description: Replaces the M02 propose-then-approve-applies policy flow with the specified trust change workflow. Six commands (trust.propose, trust.validate, trust.approve, trust.activate, trust.reject, trust.cancel) bind each change to the expected old trust epoch, policy revision and digests, require three distinct people with four distinct trust rights, commit every activation with its session invalidation intent to the installation decision ledger before it takes effect, fail closed on unknown or isolated ledger states, and report invalidation progress separately. Revised after security design review round 1.
-status: final
+status: stable
 tags: [HYB-297, security, identity, trust-change, M02, M03, IAM-02, IAM-05, IAM-06, IAM-08]
 sources:
   - resource: ../../ui/screens/M02/spec.md

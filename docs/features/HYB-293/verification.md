@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HYB-293 verification of step-up reauthentication for mutating commands
 description: Checks, browser QA, mutation testing, regression runs and review outcomes for the step-up rule, the holder-only password confirmation endpoint and the console password confirmation dialog, run on mac_mini on 2026-11-17 and 2026-11-18.
-status: final
+status: stable
 tags: [HYB-293, security, identity, step-up, verification]
 sources:
   - resource: plan.md

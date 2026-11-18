@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-273 verification of the live O01 organization and relationship explorer
 description: Unit tests, build, browser QA in EN, KO and AR at 1440 and 390, the M01–M05 regression reruns, and the review outcomes for the live O01 screen. Run on mac_mini on 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

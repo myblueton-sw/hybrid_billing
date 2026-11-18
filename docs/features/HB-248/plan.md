@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Simulation core with dataset and scenario manifests, dual-controlled independent expectations, reproducible runs, a commitment event matrix and integration proof kept apart from demo passes
 description: First increment of work item W-38. A register records dataset manifests with source, hash, licence notice and origin, and scenario manifests that fix seed, virtual clock, versions and the event list. Expected values come from an independent calculation, are approved by a second human and can never be engine output. Runs are compared check by check, and a different output for the same inputs is flagged as non-reproducible. A DB-09 matrix links every commitment event to a scenario, an unsupported record or an open decision. Integration proof is recorded separately and no simulation run can set it.
-status: final
+status: stable
 ---
 
 # Scope and ownership

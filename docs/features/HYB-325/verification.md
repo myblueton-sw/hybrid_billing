@@ -2,7 +2,7 @@
 type: Verification
 title: HYB-325 P04 AI source-body and Assistant conversation statement
 description: The P04 deletion storage results now state that AI usage records hold no prompt or response bodies, that AI usage intake and the Assistant are not connected, and that Assistant conversations are a separate data class whose deletion runs delete only conversations; verified by tests, the P04 browser regression and cropped renders.
-status: final
+status: stable
 tags: [HYB-325, P04, retention, HB-27]
 sources:
   - resource: plan.md

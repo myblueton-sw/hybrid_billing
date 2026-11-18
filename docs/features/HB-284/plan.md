@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: P02 integrations API over modules/plugins, modules/webhooks and modules/events with a synthetic sample publisher, plugin, subscriptions and deliveries
 description: Phase 5c of the pre-launch plan. Adds an integrations read for the four P02 tabs (API clients, modules, subscriptions and channels, events and redelivery) and administrator commands with a reason for plugin proposals, plugin stop and disable, webhook subscription approval, pause, resume and revoke, and dead-letter redelivery and dismissal. Nothing calls a network, dispatches a delivery, issues a plugin token or holds a signing key after the seed.
-status: final
+status: stable
 ---
 
 # Scope and ownership

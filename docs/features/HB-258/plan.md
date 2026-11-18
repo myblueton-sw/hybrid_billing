@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Pre-launch API service skeleton with module assembly, a domain lock and counter as the revision of every target, a session-bound generic command endpoint, and a seed loader that consumes the bootstrap
 description: Phase 1 of the pre-launch plan (HB-257). A standard-library Go program serves the console on loopback, assembles identity, gate, authpolicy and commands with one clock, serializes every domain change under one lock with one counter, runs mutating commands from a session cookie with CSRF and idempotency, and starts from a synthetic seed or an empty installation with a one-time activation link in a 0600 file.
-status: final
+status: stable
 ---
 
 # Scope and ownership

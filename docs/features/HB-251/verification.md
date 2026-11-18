@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-251 scale gate register verification
 description: Actual checks run for W-39 increment 2 (modules/perfgate), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

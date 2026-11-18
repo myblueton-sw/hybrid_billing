@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: M05 self-service security API with the signed-in person's own account, sessions and password change
 description: Phase 3i of the pre-launch plan (HB-257). It adds to apps/api a read of the person's own account, sessions and policy summary, a password change that verifies the current password and ends the person's other sessions, and ending one or all other sessions. No module rules change.
-status: final
+status: stable
 ---
 
 # Scope and ownership

@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Live P03 recovery screen in the console service mode, bound to the HB-286 recovery API
 description: Phase 5f of the pre-launch plan (HB-257 scope). In service mode, P03 shows restore sets with domain verification and history, isolation with generations, stop times, writers, open calls and the lock log, external reconciliation with unknown targets, customer migration as not connected, and the resume decision with pending decision events, lost sequences and every recovery proposal. It offers the four HB-286 commands (approve an unlock, withdraw, lock, propose an unlock) only where the read allows them. Nothing is restored, pruned or deleted, and no host changes; the screen says so.
-status: final
+status: stable
 ---
 
 # Scope and ownership

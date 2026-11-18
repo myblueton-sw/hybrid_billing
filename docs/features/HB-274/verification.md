@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-274 verification of the O02 relationship change API
 description: Tests, property tests, coverage, race, cross builds, mutation results and review outcomes for proposing, validating, activating and discarding relationship plans. Run on mac_mini on 2026-11-17; the test clock is fixed at 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

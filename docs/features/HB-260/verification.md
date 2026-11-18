@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-260 sign-in screens verification
 description: Actual checks run for phase 2b of the pre-launch plan (L01, L02 and L03 bound to the sign-in API in console service mode), plus design and review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope
@@ -90,7 +90,7 @@ Base: main `8df51be`. Machine: mac_mini.
 - The session strip sits above the shell header, not inside it.
 - In Arabic, the logo sits about 20px inside the gutter (canonical logo SVG margin, geometry unchanged).
 - The shell's screens are not yet bound to the service (later phases). The Python readers behind the Go session come in HB-261.
-- Administrator-issued resets, MFA and SSO.
+- Administrator-issued resets, MFA and SSO. (2026-11-18: administrator-issued resets were built by HB-263 and HB-264, PRs #183/#184.)
 - Locale review of the new copy.
 - Owner screen-review acceptance (FIX) of the bound L01–L03.
 

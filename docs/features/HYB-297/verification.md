@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HYB-297 verification — M02 trust change workflow
 description: Rebase deltas against main d102fb4, the review fixes (security S1–S9, render R-*, copy C1–C30, QA gaps), the second review round (render, QA clipping check, security N1–N8 and F7, copy T1–T11), the checks run with their observed results, regressions per runner, mutation results, deviations, plan amendments and residuals.
-status: final
+status: stable
 sources:
   - resource: plan.md
   - resource: visual-spec.md

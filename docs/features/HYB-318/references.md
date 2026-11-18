@@ -2,7 +2,7 @@
 type: Reference
 title: HYB-318 external references
 description: External professional references for the O01-to-O02 change plan handoff and unsaved-input handling, opened by root on 2026-11-18, with what was observed, adopted and rejected.
-status: final
+status: stable
 tags: [HYB-318, O01, O02, references]
 sources:
   - resource: visual-spec.md

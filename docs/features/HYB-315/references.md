@@ -2,7 +2,7 @@
 type: ReferenceRecord
 title: HYB-315 external references record
 description: External references for the P05 screen that root opened on 2026-11-18, with what was observed, adopted and rejected.
-status: final
+status: stable
 tags: [HYB-315, P05, references]
 sources:
   - resource: plan.md

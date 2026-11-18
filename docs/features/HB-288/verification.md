@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-288 verification of the P04 retention API
 description: Format, vet, unit and edge tests with coverage, race runs, cross-platform builds, mutation testing, a smoke run of the built binary and the outcomes of the design and change reviews for the P04 retention API over modules/retention. Run on mac_mini on 2026-11-17.
-status: final
+status: stable
 ---
 
 # Scope

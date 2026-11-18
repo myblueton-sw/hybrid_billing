@@ -2,7 +2,7 @@
 type: Verification
 title: HYB-319 verification for O01 view group drafts and the O02 group draft handoff
 description: Commands, results, browser QA, regressions, mutation and the planning cross-check for HYB-319 (HYB-300 part C), recorded by the implementer before independent review.
-status: final
+status: stable
 tags: [HYB-319, HYB-300, O01, O02, verification, view_group.draft, view-group-drafts]
 sources:
   - resource: ../HYB-300/plan.md

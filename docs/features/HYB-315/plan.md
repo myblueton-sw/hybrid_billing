@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Live P05 support combinations and release evidence screen in the console service mode, bound to the HYB-290 release evidence API
 description: Binds the P05 support combinations and release evidence screen in the console service mode to the HYB-290 read and its four retirement commands, showing every record truthfully as sample evidence with nothing reading ready, active, customer-proven or passed.
-status: final
+status: stable
 tags: [HYB-315, pre-launch, release-evidence, console, P05]
 sources:
   - resource: ../HYB-290/plan.md

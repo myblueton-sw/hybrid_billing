@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Staged dataset versions with bounded idempotent chunks, two-stage exact aggregation, atomic publication and snapshot-pinned cursor pagination
 description: First increment of work item W-39. A register stages a dataset version against an expected row count and digest. Chunks are bounded and idempotent by index, so an interrupted load resumes without duplicates or gaps. Per-chunk partial totals are merged exactly at seal. A sealed version is published atomically while a bounded number of earlier versions stay readable. Rows and totals are read through snapshot-pinned, key-ordered cursors with bounded pages.
-status: final
+status: stable
 ---
 
 # Scope and ownership

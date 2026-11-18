@@ -5,7 +5,7 @@ description: Phase 3h of the pre-launch plan (HB-257). In service mode, M04 rend
   - an accounts view (list, create, suspend, reinstate and retire with reasons);
   - a credentials view (per-account metadata, issue with a one-time secret reveal, and revoke);
   - usage and transfer views marked as not available in pre-launch.
-status: final
+status: stable
 ---
 
 # Scope and ownership

@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-262 verification of the installation administration action
 description: Tests, coverage, mutation and build results for the administer_installation action in modules/auth and modules/gate and its sample seed in apps/api, run on mac_mini on 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

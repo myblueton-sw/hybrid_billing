@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-281 verification of the live O03 contract lifecycle screen
 description: Type check, unit tests, build, Playwright QA against the real API with the sample seed in EN, KO and AR at 1440 and 390 widths, regressions of O01, O02 and M01, and the outcomes of the design review, render comparison and change review. Run on mac_mini on 2026-11-17 with the real clock (UTC 2026-11-17).
-status: final
+status: stable
 ---
 
 # Scope

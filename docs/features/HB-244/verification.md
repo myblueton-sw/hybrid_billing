@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-244 support bundle verification
 description: Actual checks run for W-36 increment 2a (modules/support), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

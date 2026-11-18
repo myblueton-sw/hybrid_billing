@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-272 verification of the O01 organization and relationship read API
 description: Module and apps/api tests, coverage, race, cross builds, mutation results and review outcomes for the party, billing-profile and timeline listings, the synthetic organizations seed and the organizations read. Run on mac_mini on 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

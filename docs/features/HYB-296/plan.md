@@ -2,7 +2,7 @@
 type: Plan
 title: HYB-296 O02 activation held until money, publication and ERP impact evidence exists
 description: Step 1 of the owner's 2026-11-17 decision. The relationship.activate command refuses, and the O02 plans read reports a held state, while the plan has no amount, publication and ERP impact evidence; in pre-launch no producer exists, so every sealed plan is held with a truthful sentence and only discard stays available.
-status: final
+status: stable
 tags: [HYB-296, O02, HB-274, HB-275, HB-257, relationships]
 sources:
   - resource: ../HB-274/plan.md

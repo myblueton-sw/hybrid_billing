@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: M01 role periods and bulk revocation, with expiry and bulk decisions recorded in the installation decision ledger
 description: Adds a role period (start and optional end) to every workspace membership, enforced by a time-aware effective-membership predicate and swept into a durable suspended state at its end, and a bulk revocation flow (targets staged in bounded batches into a caller-owned draft, frozen into a fixed manifest with an impact preview, confirmed, deny first, ledger job header and item records, chunked cleanup on modules/jobs, per-person outcomes) on the M01 users screen, built on the HYB-298 decision ledger and classified for the HYB-297 trust hold. Revised after security design review round 1.
-status: final
+status: stable
 tags: [HYB-299, security, identity, M01, HB-03, HB-34, HB-42, IAM-05, IAM-07, IAM-08]
 sources:
   - resource: docs/ui/screens/M01/spec.md

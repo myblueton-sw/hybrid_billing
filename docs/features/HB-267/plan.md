@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Live M03 access screen in the console service mode, bound to the HB-266 access API
 description: Phase 3f of the pre-launch plan (HB-257). In service mode M03 renders a live screen with a grants view (grants to people, the console ceiling, delegations, a grant form and revoke steps), an effects view (per-field effect preview), and roles and support views marked as not available in pre-launch.
-status: final
+status: stable
 ---
 
 # Scope and ownership

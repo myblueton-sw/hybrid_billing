@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HYB-300 part A verification of O01 server filters, search and paging
 description: Formatting, vet, Go tests with race and coverage, benchmarks, mutation, console type check, unit and render tests, build, browser QA in EN, KO and AR at 1440, 1280 and 390 for every state of the visual spec, and the P01 to P05 regressions for HYB-300 part A. Run on mac_mini on 2026-11-18 with synthetic sample data only.
-status: final
+status: stable
 sources:
   - resource: plan.md
   - resource: visual-spec.md

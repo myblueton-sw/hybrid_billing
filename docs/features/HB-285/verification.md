@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-285 verification of the live P02 integrations screen
 description: Type check, unit tests, build, Playwright QA in four groups against the real API with the sample seed in EN, KO and AR at 1440 and 390 widths, regressions of P01, O03, O02, O01 and M01, and the outcomes of the design review, render comparison and change review. Run on mac_mini on 2026-11-17 with the real clock.
-status: final
+status: stable
 ---
 
 # Scope

@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-261 collected FOCUS reader gate verification
 description: Actual checks run for phase 2c of the pre-launch plan (the session gate in front of the collected FOCUS readers), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

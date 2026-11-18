@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-246 recovery register verification
 description: Actual checks run for W-37 increment 1 (modules/recovery), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

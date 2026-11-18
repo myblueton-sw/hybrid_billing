@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-286 verification of the P03 recovery API
 description: Tests, coverage, race, cross builds, mutation results and review outcomes for the recovery read, the four approve, withdraw, lock and propose-unlock commands, the recovery module's read-only exports and the sample seed. Run on mac_mini on 2026-11-17; the test clock is fixed at 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

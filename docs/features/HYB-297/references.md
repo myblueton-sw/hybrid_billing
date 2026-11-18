@@ -2,7 +2,7 @@
 type: Reference
 title: HYB-297 external references
 description: External professional references for the M02 trust change workflow layout, opened by root on 2026-11-18, with what was observed, adopted and rejected.
-status: final
+status: stable
 tags: [HYB-297, M02, references]
 sources:
   - resource: visual-spec.md

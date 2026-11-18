@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: HYB-300 O01 server filters, create change plan handoff and view group drafts
 description: Fix ticket for finding M4 of the HYB-291 planning cross-check. O01 gains server-side filters and search with stable paging, a create change plan action that hands canonical IDs, an effective date and the relationship revision to O02, and view group drafts that grant nothing and become one O02 change plan; delivered as three ordered parts.
-status: final
+status: stable
 tags: [HYB-300, O01, O02, HB-272, HB-273, HB-274, HB-275, HYB-296, HYB-291, relationships, view-group]
 sources:
   - resource: ../../ui/screens/O01/spec.md

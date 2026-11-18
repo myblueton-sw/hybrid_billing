@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Collected reader slot wait
 description: Defines how the local collected reader waits a bounded time for a request slot and skips callers that have left, so that quick selection changes during slow reads no longer require a manual refresh.
-status: reviewed
+status: stable
 ---
 
 # Scope and ownership

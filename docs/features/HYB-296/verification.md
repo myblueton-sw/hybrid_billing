@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HYB-296 verification of the O02 activation hold
 description: Formatting, vet, Go tests with race and coverage, console type check, unit and render tests, build, browser QA in EN, KO and AR at 1440, 1280 and 390, P01 to P05 regressions and mutation results for holding O02 activation until amount, publication and ERP impact evidence exists. Run on mac_mini on 2026-11-18 with synthetic sample data only.
-status: final
+status: stable
 sources:
   - resource: plan.md
   - resource: ../HB-274/plan.md

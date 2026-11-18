@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Live O01 organization and relationship explorer in the console service mode, bound to the HB-272 read API
 description: Phase 4b of the pre-launch plan (HB-257). In service mode, O01 shows four read-only views over one pinned relationship revision and an as-of day. The tree view lists legal entities, units and accounts. The accounts view joins hierarchy and payer. The groups view covers view groups and allocation pools. The history view shows one member's history. Unattributed and incomplete states are stated in words.
-status: final
+status: stable
 ---
 
 # Scope and ownership

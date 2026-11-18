@@ -29,8 +29,25 @@ func stamp(at time.Time) string {
 }
 
 func Digest(effect Effect, selection string, targets []Target, exclusions []Exclusion) string {
+	return digest(effect, selection, nil, targets, exclusions)
+}
+
+func fixedFields(v View) []string {
+	if v.Selection != Filter {
+		return nil
+	}
+	return []string{CanonicalFilter(v.Filter), strconv.Itoa(v.Matched), stamp(v.FixedAt), v.FixedRevision}
+}
+
+func ListDigest(v View, effect Effect, targets []Target, exclusions []Exclusion) string {
+	return digest(effect, v.Selection, fixedFields(v), targets, exclusions)
+}
+
+func digest(effect Effect, selection string, fixed []string, targets []Target, exclusions []Exclusion) string {
 	p := printer{sum: sha256.New()}
-	p.fields(digestLabel, string(effect), selection, strconv.Itoa(len(targets)))
+	p.fields(digestLabel, string(effect), selection)
+	p.fields(fixed...)
+	p.fields(strconv.Itoa(len(targets)))
 	for _, t := range sortedTargets(targets) {
 		p.fields(t.User, t.Login, t.Role, stamp(t.Until), strconv.FormatUint(t.Version, 10), strconv.FormatUint(t.Epoch, 10), t.UserState, t.MembershipState,
 			strconv.FormatBool(t.Administrator))
@@ -84,7 +101,7 @@ func (r *Registry) Prepare(workspace, owner, draft string, effect Effect, revisi
 	if len(targets) == 0 {
 		return View{}, false, ErrEmpty
 	}
-	digest := Digest(effect, Explicit, targets, exclusions)
+	digest := ListDigest(e.v, effect, targets, exclusions)
 	for _, other := range r.entries {
 		if other.v.Workspace == workspace && other.v.Owner == owner && other.v.State == Prepared && other.v.Effect == effect && other.v.Digest == digest {
 			delete(r.entries, e.v.Number)
@@ -143,6 +160,7 @@ func (r *Registry) Execute(workspace, id, digest, executor string, generation ui
 	}
 	e.v.State, e.v.Executor, e.v.ExecutedAt, e.v.DenyAt, e.v.DenyGeneration, e.v.Items = Executed, executor, now, now, generation, items
 	e.v.Counts = count(e.v)
+	r.index(e)
 	r.prune()
 	return copyView(e.v), nil
 }

@@ -15,7 +15,7 @@ func scaleWorld(t testing.TB, n int) (world, *population) {
 	f := setupWith(t, func(c *Config) {
 		c.Identity.PendingInvitations = 10
 		c.Access = DefaultAccessSettings()
-		c.Access.BulkMaxTargets, c.Access.BulkKept, c.Access.BulkPending = 5000, 100, 200
+		c.Access.BulkMaxTargets, c.Access.BulkKept, c.Access.BulkPending, c.Access.BulkRetainedMax = 5000, 100, 200, 2000000
 	})
 	p := newPopulation(f)
 	began := time.Now()

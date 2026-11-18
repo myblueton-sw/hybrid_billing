@@ -23,6 +23,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/session", s.current)
 	mux.HandleFunc("POST /api/v1/commands/{command}", s.command)
 	mux.HandleFunc("GET /api/v1/identity/users", s.listUsers)
+	mux.HandleFunc("GET /api/v1/identity/users/count", s.countUsers)
 	mux.HandleFunc("GET /api/v1/identity/bulk-revocations", s.listBulk)
 	mux.HandleFunc("GET /api/v1/identity/bulk-revocations/{id}", s.readBulk)
 	mux.HandleFunc("GET /api/v1/identity/bulk-revocations/{id}/items", s.readBulkItems)

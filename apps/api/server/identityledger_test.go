@@ -45,7 +45,7 @@ func TestRestartReappliesBulkRevocationsAndRebuildsJobs(t *testing.T) {
 	groot := g.as(AdminLogin)
 	job := g.job(groot, id)
 	counts := job["counts"].(map[string]any)
-	if job["origin"] != bulkrevoke.OriginReplay || counts["targets"] != 2.0 || counts["excluded"] != 1.0 || counts["succeeded"] != 2.0 || job["job_state"] != "succeeded" ||
+	if job["origin"] != bulkrevoke.OriginReplay || job["selection"] != bulkrevoke.NotRecorded || job["filter"] != nil || counts["targets"] != 2.0 || counts["excluded"] != 1.0 || counts["succeeded"] != 2.0 || job["job_state"] != "succeeded" ||
 		job["recorded_at"] == "" {
 		t.Errorf("rebuilt %+v", job)
 	}

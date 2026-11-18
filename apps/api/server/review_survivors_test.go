@@ -283,7 +283,7 @@ func TestClassifyNamesEveryExclusion(t *testing.T) {
 	r := roster{users: users, members: members}
 	ids := []string{"me", "unknown", "service", "departed", "loner", "ended", "suspended", "fine"}
 	reasons := func(effect bulkrevoke.Effect) map[string]string {
-		targets, exclusions := f.s.classify("me", ids, effect, r, f.s.clock())
+		targets, exclusions := f.s.classify("me", ids, effect, r, f.s.clock(), nil)
 		out := map[string]string{}
 		for _, x := range exclusions {
 			out[x.User] = x.Reason

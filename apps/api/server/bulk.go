@@ -1,7 +1,9 @@
 package server
 
 import (
+	"errors"
 	"strconv"
+	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/bulkrevoke"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
@@ -11,18 +13,33 @@ import (
 
 const ledgerChunk = 256
 
+func (s *Server) stillMatches(draft bulkrevoke.View, r roster, now time.Time) func(string) bool {
+	if draft.Selection != bulkrevoke.Filter {
+		return nil
+	}
+	matcher := newMatcher(filterOf(draft.Filter))
+	return func(id string) bool {
+		var member *identity.MemberInfo
+		if m, ok := r.members[id]; ok {
+			member = &m
+		}
+		return matcher.matches(s.row(r.users[id], member, now), member, now)
+	}
+}
+
 func prepareBulk(s *Server, ctx commands.Context, user string) (commands.Outcome, error) {
 	now := s.clock()
-	ids, err := s.bulk.DraftUsers(ctx.Workspace, user, ctx.Target)
+	draft, err := s.bulk.DraftView(ctx.Workspace, user, ctx.Target)
 	if err != nil {
 		return commands.Outcome{}, commands.Fail(commands.InvalidStage)
 	}
+	ids, _ := s.bulk.DraftUsers(ctx.Workspace, user, ctx.Target)
 	r, err := s.everyone()
 	if err != nil {
 		return commands.Outcome{}, mapIdentity(err)
 	}
 	effect := bulkrevoke.Effect(ctx.Fields["effect"])
-	targets, exclusions := s.classify(user, ids, effect, r, now)
+	targets, exclusions := s.classify(user, ids, effect, r, now, s.stillMatches(draft, r, now))
 	leaving := map[string]bool{}
 	for _, t := range targets {
 		if !s.mayChangeRole(user, t.Role, now) {
@@ -34,6 +51,9 @@ func prepareBulk(s *Server, ctx commands.Context, user string) (commands.Outcome
 		return commands.Outcome{}, commands.Fail(commands.PrerequisiteFailed)
 	}
 	v, _, err := s.bulk.Prepare(ctx.Workspace, user, ctx.Target, effect, s.Revision(), targets, exclusions, s.impact(targets, r, now))
+	if errors.Is(err, bulkrevoke.ErrEmpty) && draft.Selection == bulkrevoke.Filter {
+		return commands.Outcome{}, commands.Fail(commands.InvalidStage)
+	}
 	if err != nil {
 		return commands.Outcome{}, bulkError(err)
 	}

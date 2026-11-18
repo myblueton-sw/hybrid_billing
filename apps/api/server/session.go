@@ -120,6 +120,16 @@ func (s *sessions) byLogin(login string) []identity.Verifier {
 	return out
 }
 
+func (s *sessions) logins() map[string][]identity.Verifier {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := map[string][]identity.Verifier{}
+	for v, found := range s.byID {
+		out[found.login] = append(out[found.login], v)
+	}
+	return out
+}
+
 func (s *sessions) below(workspace string, epoch uint64) []identity.Verifier {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -160,7 +160,11 @@ func (f world) walk(a actor, query string, from ...string) ([]string, []string) 
 }
 
 func filteredWorld(t *testing.T) (world, *population, actor) {
-	f := setupWith(t, func(c *Config) { c.Passwords.Links = 1000 })
+	return filteredWorldWith(t, func(*Config) {})
+}
+
+func filteredWorldWith(t *testing.T, change func(*Config)) (world, *population, actor) {
+	f := setupWith(t, func(c *Config) { c.Passwords.Links = 1000; change(c) })
 	p := newPopulation(f)
 	now := f.s.clock()
 	p.member("u-ann", "ann@example.invalid", identity.Member)
@@ -712,17 +716,17 @@ func TestUsersReadIsRecordedInTheDocument(t *testing.T) {
 
 func TestUserFilterScanSetting(t *testing.T) {
 	for _, value := range []int{99, 10001} {
-		_, err := New(Config{Data: t.TempDir() + "/d", Seed: SeedSample, Access: AccessSettings{UserFilterScan: value}})
+		_, err := New(Config{Data: t.TempDir() + "/d", Seed: SeedSample, Access: AccessSettings{UserFilterScan: value, UserCountScan: 20000}})
 		if err == nil || !strings.HasSuffix(err.Error(), "user_filter_scan") {
 			t.Errorf("%d: %v", value, err)
 		}
 	}
 	for _, value := range []int{100, 10000} {
-		if _, err := New(Config{Data: t.TempDir() + "/d", Seed: SeedSample, Access: AccessSettings{UserFilterScan: value}}); err != nil {
+		if _, err := New(Config{Data: t.TempDir() + "/d", Seed: SeedSample, Access: AccessSettings{UserFilterScan: value, UserCountScan: 20000}}); err != nil {
 			t.Errorf("%d: %v", value, err)
 		}
 	}
-	if (AccessSettings{}).withDefaults().UserFilterScan != 1000 || DefaultAccessSettings().UserFilterScan != 1000 || len(UserSettingList()) != 1 {
+	if (AccessSettings{}).withDefaults().UserFilterScan != 1000 || DefaultAccessSettings().UserFilterScan != 1000 || len(UserSettingList()) != 2 {
 		t.Error("default")
 	}
 }

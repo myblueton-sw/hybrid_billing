@@ -233,7 +233,7 @@ func TestJobStates(t *testing.T) {
 }
 
 func TestPruningKeepsUnfinishedJobs(t *testing.T) {
-	f := setup(t, Limits{MaxTargets: 5, Pending: 10, Kept: 2, Lifetime: time.Hour})
+	f := setup(t, Limits{MaxTargets: 5, MaxMatching: 5, Pending: 10, Kept: 2, Lifetime: time.Hour})
 	ids := []string{}
 	for i := 0; i < 5; i++ {
 		v := prepared(f, "o"+strconv.Itoa(i), "u1")
@@ -258,7 +258,7 @@ func TestPruningKeepsUnfinishedJobs(t *testing.T) {
 }
 
 func TestListOrderAndRestore(t *testing.T) {
-	f := setup(t, Limits{MaxTargets: 5, Pending: 10, Kept: 5, Lifetime: time.Hour})
+	f := setup(t, Limits{MaxTargets: 5, MaxMatching: 5, Pending: 10, Kept: 5, Lifetime: time.Hour})
 	done := prepared(f, "ann", "u1")
 	f.r.Execute("w1", done.ID, done.Digest, "bob", 1, nil)
 	p := prepared(f, "bob", "u1")
@@ -295,7 +295,7 @@ func TestListOrderAndRestore(t *testing.T) {
 }
 
 func TestLatestRevocationPerPerson(t *testing.T) {
-	f := setup(t, Limits{MaxTargets: 5, Pending: 10, Kept: 5, Lifetime: time.Hour})
+	f := setup(t, Limits{MaxTargets: 5, MaxMatching: 5, Pending: 10, Kept: 5, Lifetime: time.Hour})
 	first := prepared(f, "ann", "u1", "u2")
 	f.r.Execute("w1", first.ID, first.Digest, "bob", 1, map[string]string{"u2": HeldChanged})
 	second := prepared(f, "cat", "u1", "u3")

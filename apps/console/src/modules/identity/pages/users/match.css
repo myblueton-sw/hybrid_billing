@@ -1,0 +1,91 @@
+[data-security-screen="M01"] .m01-match {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-block: 12px 0;
+  border-block-start: 1px solid var(--border-row);
+}
+[data-security-screen="M01"] .m01-match p {
+  max-inline-size: 68ch;
+  margin: 0;
+}
+[data-security-screen="M01"] .m01-match-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+[data-security-screen="M01"] .m01-match-actions button,
+[data-security-screen="M01"] .m01-match-open {
+  min-block-size: 44px;
+}
+[data-security-screen="M01"] .m01-match-refusal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+[data-security-screen="M01"] .m01-fixedfilters {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+}
+[data-security-screen="M01"] .m01-fixedlead {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 44px;
+  flex: none;
+}
+[data-security-screen="M01"] .m01-fixedmeta {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+[data-security-screen="M01"] .m01-selnote.m01-ink {
+  font-size: 16px;
+  color: var(--text-body);
+}
+[data-security-screen="M01"] .m01-fixedfacts h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-block: 24px 8px;
+}
+[data-security-screen="M01"] .m01-fixedfacts p {
+  max-inline-size: 68ch;
+}
+[data-security-screen="M01"] .m01-fixedfacts .m01-chips {
+  margin-block: 0;
+}
+[data-security-screen="M01"] .m01-basis {
+  overflow-wrap: anywhere;
+}
+[data-security-screen="M01"] .m01-setting-hint {
+  display: block;
+  font-size: 14px;
+  max-inline-size: 60ch;
+  color: var(--text-body);
+}
+[data-security-screen="M01"] .m01-num bdi {
+  white-space: nowrap;
+}
+[data-security-screen="M01"][lang="ko"] .m01-match {
+  word-break: keep-all;
+}
+@media (max-width: 767px) {
+  [data-security-screen="M01"] .m01-match-actions {
+    flex-direction: column;
+    inline-size: 100%;
+  }
+  [data-security-screen="M01"] .m01-match-open {
+    inline-size: 100%;
+  }
+}
+[data-security-screen="M01"] .m01-selsum .m01-fixedmeta + p {
+  margin-block-start: 8px;
+}
+#content [data-security-screen="M01"] .m01-applied .m01-chips button.m01-chip {
+  font-size: 14px;
+}

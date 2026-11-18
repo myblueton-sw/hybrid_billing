@@ -148,7 +148,7 @@ func TestAFinalCleanupFailureMarksOnlyItsOwnTask(t *testing.T) {
 	}
 	v, _ := f.s.bulk.Get(f.s.bootWorkspace, "", id)
 	f.s.domain.Lock()
-	f.s.jobs, _ = jobs.NewRegistry(cleanupLimits(), f.s.clock)
+	f.s.jobs, _ = jobs.NewRegistry(cleanupLimits(f.s.cfg.Access.BulkMaxMatching), f.s.clock)
 	_, err := f.s.jobs.Create(v.Workspace, v.ID, cleanupKind, cleanupPolicy, []jobs.TaskSpec{{ID: "chunk-1", Input: "0:0", Repeatable: true}, {ID: "chunk-2", Input: "1:1", Repeatable: true}})
 	_ = f.s.bulk.Cleanup(v.Workspace, v.ID, true)
 	f.s.domain.Unlock()

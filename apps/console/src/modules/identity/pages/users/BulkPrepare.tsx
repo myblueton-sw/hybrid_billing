@@ -11,6 +11,9 @@ import { failureText, roleName } from "./live-model";
 import { w } from "./live-copy";
 import { Emph, PeriodCell } from "./RolePeriod";
 import { At, Stamp } from "./Stamp";
+import { m } from "./match-copy";
+import { emptyFilter, type Fixed } from "./match-model";
+import { FixedChips, FixedFacts, fillAll } from "./Matching";
 
 export type Prepared = { detail: BulkDetail; targets: Paged<BulkTarget> | null };
 type Stage =
@@ -18,6 +21,7 @@ type Stage =
   | { kind: "sending"; sent: number; waiting: boolean; resent?: boolean }
   | { kind: "failed"; error: unknown; draft: string; staged: number; revision: string; cause: "" | "draft" | "limit" }
   | { kind: "blocked"; draft: string }
+  | { kind: "closed"; draft: string }
   | { kind: "preview"; prepared: Prepared };
 
 function Sum({ rows }: { rows: [string, React.ReactNode, boolean?][] }) {
@@ -45,7 +49,10 @@ function Excluded({ l, api, id, total }: { l: Locale; api: AdminClient; id: stri
   );
 }
 
-export function PreviewBody({ l, api, prepared, onMore }: { l: Locale; api: AdminClient; prepared: Prepared; onMore: () => void }) {
+const filterReasons = ["self", "not_found", "no_longer_matches", "no_membership", "already_revoked"];
+const explicitReasons = ["self", "not_found", "no_membership", "already_revoked"];
+
+export function PreviewBody({ l, api, prepared, onMore, days = 14 }: { l: Locale; api: AdminClient; prepared: Prepared; onMore: () => void; days?: number }) {
   const { detail, targets } = prepared;
   const i = detail.impact;
   const job = detail.job;
@@ -61,6 +68,7 @@ export function PreviewBody({ l, api, prepared, onMore }: { l: Locale; api: Admi
         <div><dt>{b.excluded(l)}</dt><dd>{job.counts.excluded}</dd></div>
         <div><dt>{b.duplicates(l)}</dt><dd>{job.counts.duplicates}</dd></div>
       </dl>
+      {job.selection === "filter" && <FixedFacts l={l} job={job} days={days} exclusions={detail.exclusions} />}
       <div className="m01-preview-grid">
         <section className="m01-impact" aria-labelledby="m01-impact-h">
           <h3 id="m01-impact-h">{b.impact(l)}</h3>
@@ -83,7 +91,7 @@ export function PreviewBody({ l, api, prepared, onMore }: { l: Locale; api: Admi
         </section>
         <section className="m01-excl" aria-labelledby="m01-excl-h">
           <h3 id="m01-excl-h">{b.excludedN(l, job.counts.excluded)}</h3>
-          <Sum rows={["self", "not_found", "no_membership", "already_revoked"].map((r): [string, React.ReactNode] => [b.reason(l, r), detail.exclusions[r] ?? 0])} />
+          <Sum rows={(job.selection === "filter" ? filterReasons : explicitReasons).map((r): [string, React.ReactNode] => [b.reason(l, r), detail.exclusions[r] ?? 0])} />
           <Excluded l={l} api={api} id={job.id} total={job.counts.excluded} />
         </section>
       </div>
@@ -183,9 +191,10 @@ export function ConfirmDialog({ l, api, prepared, revision, defaultReason, onClo
   );
 }
 
-export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revision, reload, onBack, onJobs, onExecuted, onDeselect, say }: {
+export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revision, reload, onBack, onJobs, onExecuted, onDeselect, say, fixed = null, days = 14, onPrepared, onDiscarded }: {
   l: Locale; api: AdminClient; ids: string[]; names: Record<string, string>; admins: string[]; rows: UserRow[]; serverTime: string; revision: string; reload: () => Promise<string>;
   onBack: () => void; onJobs: () => void; onExecuted: (id: string, targets: string[]) => void; onDeselect: (id: string) => void; say: (text: string) => void;
+  fixed?: Fixed | null; days?: number; onPrepared?: () => void; onDiscarded?: () => void;
 }) {
   const bulk = bulkClient(api);
   const [effect, setEffect] = useState<"suspend_membership" | "suspend_user">("suspend_membership");
@@ -203,6 +212,23 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
     const detail = await bulk.detail(id);
     const page = await bulk.targets(id, after);
     return { detail, targets: previous ? { ...page, rows: [...previous.rows, ...page.rows] } : page };
+  };
+  const prepareFixed = async (f: Fixed) => {
+    setState({ kind: "sending", sent: 0, waiting: false });
+    setTimeout(() => progress.current?.focus(), 0);
+    say(m.checking(l, f.matched));
+    try {
+      const prepared = await api.command("bulk_revocation.prepare", f.draft, await reload(), reason, { effect }, attempt());
+      onPrepared?.();
+      setRev(prepared.revision || (await reload()));
+      setState({ kind: "preview", prepared: await load(prepared.fields.bulk) });
+      say(b.impactTitle(l));
+    } catch (e) {
+      if (e instanceof AdminError && e.failure === "refused") setState({ kind: "blocked", draft: f.draft });
+      else if (e instanceof AdminError && e.failure === "stage") setState({ kind: "closed", draft: f.draft });
+      else setState({ kind: "failed", error: e, draft: "", staged: 0, revision: "", cause: "" });
+      setFocusKey((k) => k + 1);
+    }
   };
   const send = async (draft = "", from = 0, startRevision = rev) => {
     setState({ kind: "sending", sent: 0, waiting: false });
@@ -236,6 +262,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
     const pr = reasonProblem(l, reason);
     setProblem(pr);
     if (pr) { setFocusKey((k) => k + 1); return; }
+    if (fixed) { void prepareFixed(fixed); return; }
     tries.current = Array.from({ length: Math.max(1, Math.ceil(ids.length / 150) + 2) }, () => attempt());
     void send();
   };
@@ -247,6 +274,14 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
     }
     say(b.discarded(l));
     onBack();
+  };
+  const discardFixed = async (id: string) => {
+    try {
+      await api.command("bulk_revocation.discard", id, await reload(), reason || b.discardReason(l), {}, attempt());
+    } catch (e) {
+      if (!(e instanceof AdminError && e.failure === "stage")) return;
+    }
+    onDiscarded?.();
   };
   const sending = state.kind === "sending";
   const proceed = async () => {
@@ -288,7 +323,15 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
               </div>
             </div>
           )}
-          {state.kind === "blocked" && (
+          {fixed && (state.kind === "blocked" || state.kind === "closed") && (
+            <div className="service-summary" role="alert" tabIndex={-1} ref={(el) => el?.focus()}>
+              <h2>{state.kind === "blocked" ? b.refused(l) : b.notPrepared(l)}</h2>
+              <p className="m01-ink">{state.kind === "blocked" ? <Emph l={l} text={m.blockedFilter(l, `${w.workspaceRole(l)}: ${roleName(l, "member")}`)} /> : m.listClosed(l)}</p>
+              <p><strong>{b.nothingRevoked(l)}</strong></p>
+              <button type="button" className="live-secondary m01-discard-list" onClick={() => void discardFixed(state.draft)}>{m.discardList(l)}</button>
+            </div>
+          )}
+          {!fixed && state.kind === "blocked" && (
             <div className="service-summary" role="alert" tabIndex={-1}>
               <h2>{b.refused(l)}</h2>
               <p className="m01-ink"><Emph l={l} text={b.blocked(l)} /></p>
@@ -324,20 +367,30 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
               <Reason l={l} value={reason} onChange={(v) => { if (!sending) setReason(v); }} error={problem} />
               {sending && (
                 <p className="m01-progress" tabIndex={-1} ref={progress}>
-                  {state.waiting ? b.limited(l, state.sent, ids.length) : b.sending(l, state.sent, ids.length)}
+                  {fixed ? m.checking(l, fixed.matched) : state.waiting ? b.limited(l, state.sent, ids.length) : b.sending(l, state.sent, ids.length)}
                   {state.resent && !state.waiting && <> {b.resent(l)}</>}
                 </p>
               )}
-              {!sending && state.kind !== "blocked" && !(state.kind === "failed" && state.draft) && <div className="live-buttons"><button type="submit" className="live-primary">{b.previewImpact(l)}</button></div>}
+              {!sending && state.kind !== "blocked" && state.kind !== "closed" && !(state.kind === "failed" && state.draft) && <div className="live-buttons"><button type="submit" className="live-primary">{b.previewImpact(l)}</button></div>}
             </form>
-            <section className="m01-selsum" aria-labelledby="m01-selsum-h">
-              <h3 id="m01-selsum-h">{b.selectedPeople(l, ids.length)}</h3>
-              <p><strong>{b.nothingRevoked(l)}</strong> {b.serverChecks(l)}</p>
-              <details className="m01-sellist">
-                <summary>{b.showSelected(l, ids.length)}</summary>
-                <ul className="m01-ids">{ids.map((id) => <li key={id}><bdi dir="ltr">{names[id] || id}</bdi></li>)}</ul>
-              </details>
-            </section>
+            {fixed ? (
+              <section className="m01-selsum" aria-labelledby="m01-selsum-h">
+                <h3 id="m01-selsum-h">{m.everyoneMatching(l, fixed.matched)}</h3>
+                <p>{fillAll(m.fixedShort(l, fixed.matched), { "{n}": <strong>{fixed.matched}</strong>, "{at}": <Stamp l={l} iso={fixed.fixed_at} zone={false} /> })}</p>
+                {!emptyFilter(fixed.filter) && <div className="m01-fixedfilters"><span className="m01-fixedlead">{m.fixedFilters(l)}</span><FixedChips l={l} filter={fixed.filter} masked={false} days={days} /></div>}
+                <p className="m01-fixedmeta">{b.bulkN(l, number(fixed.draft))} · {m.baseRevision(l)} <bdi dir="ltr" className="live-mono">{fixed.fixed_revision}</bdi></p>
+                <p><strong>{b.nothingRevoked(l)}</strong> {m.serverChecks(l)}</p>
+              </section>
+            ) : (
+              <section className="m01-selsum" aria-labelledby="m01-selsum-h">
+                <h3 id="m01-selsum-h">{b.selectedPeople(l, ids.length)}</h3>
+                <p><strong>{b.nothingRevoked(l)}</strong> {b.serverChecks(l)}</p>
+                <details className="m01-sellist">
+                  <summary>{b.showSelected(l, ids.length)}</summary>
+                  <ul className="m01-ids">{ids.map((id) => <li key={id}><bdi dir="ltr">{names[id] || id}</bdi></li>)}</ul>
+                </details>
+              </section>
+            )}
           </div>
         </>
       ) : (
@@ -345,7 +398,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
           <h2 id="m01-bulk-title" tabIndex={-1} ref={heading}>{b.impactTitle(l)} <span className="live-meta">{b.bulkN(l, number(state.prepared.detail.job.id))}</span></h2>
           <p className="m01-stepline">{b.step2(l)}</p>
           {expired(state.prepared.detail.job, state.prepared.detail.server_time) && <div className="service-summary" role="alert"><p><Emph l={l} text={b.expired(l)} /></p></div>}
-          <PreviewBody l={l} api={api} prepared={state.prepared} onMore={async () => setState({ kind: "preview", prepared: await load(state.prepared.detail.job.id, state.prepared.targets?.rows.length ?? 0, state.prepared.targets ?? undefined) })} />
+          <PreviewBody l={l} api={api} prepared={state.prepared} days={days} onMore={async () => setState({ kind: "preview", prepared: await load(state.prepared.detail.job.id, state.prepared.targets?.rows.length ?? 0, state.prepared.targets ?? undefined) })} />
           <div className="live-buttons">
             {expired(state.prepared.detail.job, state.prepared.detail.server_time)
               ? <button type="button" className="live-primary" onClick={() => setState({ kind: "effect" })}>{b.prepareAgain(l)}</button>

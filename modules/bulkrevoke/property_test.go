@@ -10,7 +10,7 @@ import (
 func TestPropertyCountsAndStates(t *testing.T) {
 	r := rand.New(rand.NewPCG(299, 7))
 	for round := 0; round < 200; round++ {
-		f := setup(t, Limits{MaxTargets: 40, Pending: 5, Kept: 50, Lifetime: time.Hour})
+		f := setup(t, Limits{MaxTargets: 40, MaxMatching: 40, Pending: 5, Kept: 50, Lifetime: time.Hour})
 		n := 1 + r.IntN(30)
 		users := []string{}
 		for i := 0; i < n; i++ {
@@ -48,6 +48,9 @@ func TestPropertyCountsAndStates(t *testing.T) {
 		check := func(stage string) View {
 			got := mustGet(f, v.ID)
 			c := got.Counts
+			if c != count(got) {
+				t.Fatalf("round %d %s: kept counts %+v, recounted %+v", round, stage, c, count(got))
+			}
 			if c.Targets != c.Succeeded+c.Held+c.Failed+c.Unprocessed || c.Targets != len(targets) || c.Excluded != len(exclusions) {
 				t.Fatalf("round %d %s: %+v", round, stage, c)
 			}

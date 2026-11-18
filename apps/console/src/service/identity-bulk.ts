@@ -1,4 +1,4 @@
-import { AdminError, attempt, clockOf, settingsOf, type AdminClient, type Attempt, type ClockState, type SettingRow } from "./admin";
+import { AdminError, attempt, clockOf, filterOf, settingsOf, usersQueryString, type AdminClient, type Attempt, type ClockState, type SettingRow, type UsersFilter, type UsersQuery } from "./admin";
 
 export type BulkCounts = { targets: number; excluded: number; duplicates: number; succeeded: number; held: number; failed: number; unprocessed: number };
 export type BulkJob = {
@@ -20,7 +20,14 @@ export type BulkJob = {
   cleanup: { done: number; total: number };
   recorded_at: string;
   staged: number;
+  selection: "explicit" | "filter" | "not_recorded";
+  matched: number;
+  fixed_at: string;
+  fixed_revision: string;
+  filter: UsersFilter | null;
+  search_masked: boolean;
 };
+export type MatchCount = { count: number; complete: boolean; over_limit: boolean; limit: number; scan_budget: number; list_version: string; server_time: string };
 export type BulkPage = {
   revision: string;
   started_at: string;
@@ -92,6 +99,8 @@ export function jobOf(v: unknown): BulkJob {
     executed_at: str(j.executed_at), deny_at: str(j.deny_at), digest: str(j.digest), counts: countsOf(j.counts), job_state: jobState, job_reason: str(j.job_reason),
     ledger: { first_sequence: num(ledger.first_sequence), last_sequence: num(ledger.last_sequence), watermark: str(ledger.watermark), reason: str(ledger.reason) },
     cleanup: { done: num(cleanup.done), total: num(cleanup.total) }, recorded_at: str(j.recorded_at), staged: num(j.staged),
+    selection: j.selection === "filter" || j.selection === "not_recorded" ? j.selection : "explicit", matched: num(j.matched), fixed_at: str(j.fixed_at),
+    fixed_revision: str(j.fixed_revision), filter: j.filter && typeof j.filter === "object" ? filterOf(j.filter) : null, search_masked: j.search_masked === true,
   };
 }
 
@@ -114,6 +123,25 @@ export function detailOf(body: Record<string, unknown>): BulkDetail {
       pending: list(i.pending).map((p) => ({ store: str(obj(p).store), count: num(obj(p).count), rechecked: obj(p).rechecked === true })),
     },
   };
+}
+
+export function matchCountOf(body: Record<string, unknown>): MatchCount {
+  return { count: num(body.count), complete: body.complete === true, over_limit: body.over_limit === true, limit: num(body.limit), scan_budget: num(body.scan_budget),
+    list_version: str(body.list_version), server_time: str(body.server_time) };
+}
+
+export function countPath(query: UsersQuery): string {
+  const q = new URLSearchParams(usersQueryString({ ...query, after: "" }));
+  q.delete("limit");
+  q.delete("after");
+  const rest = q.toString();
+  return "/identity/users/count" + (rest ? "?" + rest : "");
+}
+
+export function matchValues(query: UsersQuery): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of ["q", "status", "membership", "role", "period", "signin", "invitation", "holder"] as const) if (query[key]) out[key] = query[key]!;
+  return out;
 }
 
 export function itemOf(v: unknown): BulkItem {
@@ -142,6 +170,9 @@ export function bulkClient(api: AdminClient) {
       const q = new URLSearchParams({ limit: String(limit) });
       if (after) q.set("after", after);
       return bulkPageOf(await api.read(base + "?" + q.toString()));
+    },
+    async count(query: UsersQuery): Promise<MatchCount> {
+      return matchCountOf(await api.read(countPath(query)));
     },
     async detail(id: string): Promise<BulkDetail> {
       return detailOf(await api.read(base + "/" + encodeURIComponent(id)));

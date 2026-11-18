@@ -7,7 +7,7 @@ import (
 )
 
 func TestLatestForEqualsLatestOnTheGivenPeople(t *testing.T) {
-	f := setup(t, Limits{MaxTargets: 5, Pending: 10, Kept: 5, Lifetime: time.Hour})
+	f := setup(t, Limits{MaxTargets: 5, MaxMatching: 5, Pending: 10, Kept: 5, Lifetime: time.Hour})
 	first := prepared(f, "ann", "u1", "u2", "u5")
 	f.r.Execute("w1", first.ID, first.Digest, "bob", 1, map[string]string{"u2": HeldChanged})
 	second := prepared(f, "cat", "u1", "u3")
@@ -34,7 +34,7 @@ func TestLatestForEqualsLatestOnTheGivenPeople(t *testing.T) {
 }
 
 func TestLatestIndexFollowsExecutePruneHeaderAndRestore(t *testing.T) {
-	f := setup(t, Limits{MaxTargets: 5, Pending: 50, Kept: 2, Lifetime: time.Hour})
+	f := setup(t, Limits{MaxTargets: 5, MaxMatching: 5, Pending: 50, Kept: 2, Lifetime: time.Hour})
 	people := []string{"u1", "u2", "u3", "u4"}
 	compare := func(label string) {
 		t.Helper()
@@ -59,7 +59,7 @@ func TestLatestIndexFollowsExecutePruneHeaderAndRestore(t *testing.T) {
 	if f.r.LatestFor("w1", []string{"u1"})["u1"].State == last.State {
 		t.Error("an item state change was not read")
 	}
-	restored, _ := New(Limits{MaxTargets: 5, Pending: 50, Kept: 1, Lifetime: time.Hour}, func() time.Time { return start })
+	restored, _ := New(Limits{MaxTargets: 5, MaxMatching: 5, Pending: 50, Kept: 1, Lifetime: time.Hour}, func() time.Time { return start })
 	restored.Restore(9, []View{{Number: 7, Workspace: "w1", Items: []Item{{Target: Target{User: "u1"}, Outcome: OutcomeUnprocessed}}},
 		{Number: 8, Workspace: "w1", Items: []Item{{Target: Target{User: "u2"}, Outcome: OutcomeSucceeded}}}})
 	if got := restored.LatestFor("w1", []string{"u1", "u2"}); len(got) != 2 || got["u2"].Bulk != ManifestID(8) {
@@ -68,7 +68,7 @@ func TestLatestIndexFollowsExecutePruneHeaderAndRestore(t *testing.T) {
 }
 
 func TestLatestIndexAfterFinishedJobsAreEvicted(t *testing.T) {
-	f := setup(t, Limits{MaxTargets: 5, Pending: 50, Kept: 2, Lifetime: time.Hour})
+	f := setup(t, Limits{MaxTargets: 5, MaxMatching: 5, Pending: 50, Kept: 2, Lifetime: time.Hour})
 	users := map[string][]string{"ann": {"u1", "u2"}, "bob": {"u2", "u3"}, "cat": {"u3"}, "dan": {"u4"}}
 	jobs := []string{}
 	for _, owner := range []string{"ann", "bob", "cat", "dan"} {

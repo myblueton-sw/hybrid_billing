@@ -53,7 +53,7 @@ func TestIdentitySettingsValidation(t *testing.T) {
 	}
 	list := IdentitySettingList()
 	list[0].Name = "x"
-	if IdentitySettingList()[0].Name != "role_period_max_days" || len(IdentitySettingList()) != 7 {
+	if IdentitySettingList()[0].Name != "role_period_max_days" || len(IdentitySettingList()) != 9 {
 		t.Error("the identity settings list aliases")
 	}
 	partial := AccessSettings{RequestHours: 24}.withDefaults()

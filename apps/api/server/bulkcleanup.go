@@ -7,6 +7,7 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
 	"github.com/myblueton-sw/hybrid_billing/modules/bulkrevoke"
+	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/jobs"
 )
 
@@ -18,8 +19,8 @@ const (
 
 var cleanupPolicy = jobs.Policy{Lease: 30 * time.Second, Life: time.Hour, Attempts: 3, BackoffBase: time.Second, BackoffCap: 10 * time.Second}
 
-func cleanupLimits() jobs.Limits {
-	return jobs.Limits{Jobs: 100000, Tasks: 100, Attempts: 3, PerType: 1, PerWorkspace: 1, Batch: 1}
+func cleanupLimits(maxMatching int) jobs.Limits {
+	return jobs.Limits{Jobs: 100000, Tasks: max(100, (maxMatching+cleanupChunk-1)/cleanupChunk), Attempts: 3, PerType: 1, PerWorkspace: 1, Batch: 1}
 }
 
 func bulkCleanupItems(restarted bool) []bulkrevoke.Cleanup {
@@ -108,51 +109,67 @@ func (s *Server) cleanTask(lease jobs.Lease) {
 	if _, err := s.jobs.Extend(ref); err != nil {
 		return
 	}
-	v, found := s.bulk.Get(lease.WorkspaceID, "", lease.JobID)
-	if !found {
-		_, _ = s.jobs.Fail(ref, "job_missing", true)
-		return
-	}
 	from, to := taskSpan(lease.Input)
 	if lease.Checkpoint != "" {
 		done, _ := strconv.Atoi(lease.Checkpoint)
 		from = done + 1
 	}
+	v, err := s.bulk.Span(lease.WorkspaceID, lease.JobID, from, to)
+	if err != nil {
+		_, _ = s.jobs.Fail(ref, "job_missing", true)
+		return
+	}
+	side := s.cleanupSide()
 	checkpoint := lease.Checkpoint
-	for index := from; index <= to && index < len(v.Items); index++ {
-		item := v.Items[index]
+	for n, item := range v.Items {
 		if item.State != bulkrevoke.DenyConfirmed && item.State != bulkrevoke.CleanupRunning {
 			continue
 		}
-		_ = s.bulk.Cleaning(v.Workspace, v.ID, index)
+		_ = s.bulk.Cleaning(v.Workspace, v.ID, item.Index)
 		if s.faulty("cleanup") {
 			report, _ := s.jobs.Fail(ref, "cleanup_failed", false)
 			if report.State == jobs.TaskFailed {
-				for i := index; i <= to && i < len(v.Items); i++ {
-					_ = s.bulk.Failed(v.Workspace, v.ID, i, "retry_budget_spent")
+				for _, rest := range v.Items[n:] {
+					_ = s.bulk.Failed(v.Workspace, v.ID, rest.Index, "retry_budget_spent")
 				}
 			}
 			return
 		}
-		s.cleanPerson(item.Target.User, v.DenyAt)
-		_ = s.bulk.Cleaned(v.Workspace, v.ID, index, bulkCleanupItems(false))
-		checkpoint = strconv.Itoa(index)
+		s.cleanPerson(side, item.Target.User, v.DenyAt)
+		_ = s.bulk.Cleaned(v.Workspace, v.ID, item.Index, bulkCleanupItems(false))
+		checkpoint = strconv.Itoa(item.Index)
 		_ = s.jobs.Checkpoint(ref, checkpoint)
 	}
 	_, _ = s.jobs.Complete(ref, checkpoint)
 }
 
-func (s *Server) cleanPerson(user string, denyAt time.Time) {
-	for _, v := range s.sessionsOf(user) {
+type cleanupSide struct {
+	sessions  map[string][]identity.Verifier
+	byTarget  map[string][]string
+	bySession map[identity.Verifier][]string
+}
+
+func (s *Server) cleanupSide() cleanupSide {
+	out := cleanupSide{sessions: s.sessions.logins(), byTarget: map[string][]string{}, bySession: map[identity.Verifier][]string{}}
+	for ref, p := range s.dir.pickups {
+		out.byTarget[p.target] = append(out.byTarget[p.target], ref)
+		out.bySession[p.session] = append(out.bySession[p.session], ref)
+	}
+	return out
+}
+
+func (s *Server) cleanPerson(side cleanupSide, user string, denyAt time.Time) {
+	login, _ := s.dir.loginOf(user)
+	for _, v := range side.sessions[login] {
 		found, ok := s.sessions.get(v)
 		if !ok || found.created.After(denyAt) {
 			continue
 		}
 		_ = s.identity.Boundary().EndSession(v)
 		s.sessions.drop(v)
-		s.dir.dropPickups(func(p pickup) bool { return p.session == v })
+		s.dir.dropPickupRefs(side.bySession[v])
 	}
-	s.dir.dropPickups(func(p pickup) bool { return p.target == user })
+	s.dir.dropPickupRefs(side.byTarget[user])
 }
 
 func (s *Server) cleaning(v bulkrevoke.View) bulkrevoke.Cleaning {

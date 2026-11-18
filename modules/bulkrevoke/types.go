@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 var (
@@ -56,17 +57,21 @@ const (
 )
 
 const (
-	ExcludedSelf           = "self"
-	ExcludedNotFound       = "not_found"
-	ExcludedNoMembership   = "no_membership"
-	ExcludedAlreadyRevoked = "already_revoked"
-	HeldChanged            = "changed_since_preview"
-	HeldSelf               = "self"
-	RecordNotConfirmed     = "record_not_confirmed"
+	ExcludedSelf            = "self"
+	ExcludedNotFound        = "not_found"
+	ExcludedNoMembership    = "no_membership"
+	ExcludedAlreadyRevoked  = "already_revoked"
+	ExcludedNoLongerMatches = "no_longer_matches"
+	HeldChanged             = "changed_since_preview"
+	HeldSelf                = "self"
+	RecordNotConfirmed      = "record_not_confirmed"
 )
 
 const (
 	Explicit       = "explicit"
+	Filter         = "filter"
+	NotRecorded    = "not_recorded"
+	maxTermBytes   = 64
 	OriginCommand  = "command"
 	OriginReplay   = "ledger_replay"
 	DraftPrefix    = "bulk-draft-"
@@ -107,14 +112,41 @@ func DraftID(n uint64) string { return DraftPrefix + strconv.FormatUint(n, 10) }
 func ManifestID(n uint64) string { return ManifestPrefix + strconv.FormatUint(n, 10) }
 
 type Limits struct {
-	MaxTargets int
-	Pending    int
-	Kept       int
-	Lifetime   time.Duration
+	MaxTargets  int
+	MaxMatching int
+	Pending     int
+	Kept        int
+	Lifetime    time.Duration
 }
 
 func (l Limits) valid() bool {
-	return l.MaxTargets > 0 && l.Pending > 0 && l.Kept > 0 && l.Lifetime > 0
+	return l.MaxTargets > 0 && l.MaxMatching > 0 && l.Pending > 0 && l.Kept > 0 && l.Lifetime > 0
+}
+
+type FilterTerm struct {
+	Key   string
+	Value string
+}
+
+func validTerms(terms []FilterTerm) bool {
+	for i, term := range terms {
+		if !validID(term.Key) || term.Value == "" || len(term.Value) > maxTermBytes || !utf8.ValidString(term.Value) || i > 0 && terms[i-1].Key >= term.Key {
+			return false
+		}
+	}
+	return true
+}
+
+func CanonicalFilter(terms []FilterTerm) string {
+	var b strings.Builder
+	for _, term := range terms {
+		for _, part := range []string{term.Key, term.Value} {
+			b.WriteString(strconv.Itoa(len(part)))
+			b.WriteByte(':')
+			b.WriteString(part)
+		}
+	}
+	return b.String()
 }
 
 type Target struct {
@@ -198,6 +230,10 @@ type View struct {
 	Owner           string
 	Effect          Effect
 	Selection       string
+	Filter          []FilterTerm
+	Matched         int
+	FixedAt         time.Time
+	FixedRevision   string
 	Revision        string
 	Count           int
 	Duplicates      int

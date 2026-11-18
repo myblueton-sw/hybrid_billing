@@ -149,6 +149,27 @@ Read: `GET /api/v1/identity/users?limit=100` (`boundary.go:25`), client `admin.t
 | Role period form | Saved / not durable / unknown / ledger unconfirmed | result `fields.durable` (`increases.go:88`) and `fields.ledger` (`periods.go:130`, `increases.go:88`) | `admin.ts:742` | `users/RolePeriod.tsx:171-172`; notice `users/Live.tsx:618` |
 | Role period form | Unchanged or ended refusal, blocked | `invalid_stage` → `stage`; `prerequisite_failed` → `refused` | `admin.ts:752-753` | `users/RolePeriod.tsx:184-188, 195` |
 
+### Select everyone matching a filter (HYB-323)
+
+Read: `GET /api/v1/identity/users/count` (`boundary.go:26`, `userscount.go`) through `bulkClient.count` (`identity-bulk.ts:174`, path built at `:133`, parsed at `:128`). Command: `bulk_revocation.add_matching` (`bulkstage.go:150`), sent at `users/Matching.tsx:176` with the users query's filter values (`identity-bulk.ts` `matchValues`).
+
+| View/area | Displayed field, column or state | Source | Parser | Rendered at |
+| --- | --- | --- | --- | --- |
+| Selection bar | Select everyone who matches / everyone in the list | derived: `can_bulk_revoke`, Users or Membership view, no fixed list; label from the applied filters | `admin.ts:865` | `users/Matching.tsx:142`; `users/Live.tsx:813` |
+| Match region | Counting, exact, at least, too many, none match | count read `count`, `complete`, `over_limit`, `limit`, `scan_budget`, `server_time` | `identity-bulk.ts:128` | `users/Matching.tsx:200-246` (`data-state` on `#m01-match`) |
+| Match region | Replace confirmation | derived: selected people above zero | none | `users/Matching.tsx` (`#m01-replace`) |
+| Match region | Refusal cause (open draft, none, too many, pending limit, combined) | command refused, then `bulk-revocations?limit=1` `open_draft`, `pending` and a second count read (`match-model.ts` `refusalCause`) | `identity-bulk.ts:120-126` | `users/Matching.tsx:189` |
+| Fixed bar | Fixed line, when counted | command result `fields.matched`, `fixed_at`; the last complete count | `match-model.ts` `fixedOfFields` | `users/Matching.tsx:103`; `users/Live.tsx:808` |
+| Fixed bar | Fixed filters chips, base revision, draft number | result `fields.filter.<key>`, `fixed_revision`, `draft`; after a reload the own open draft row `filter`, `fixed_revision`, `id` | `match-model.ts` `fixedOfJob`; `identity-bulk.ts:90-104` | `users/Matching.tsx:103-138`; recovery at `users/Live.tsx:596` |
+| Fixed bar | Discard list | `bulk_revocation.discard` on the draft | none | `users/Live.tsx` `discardFixed` |
+| Users table | No checkbox column while fixed | derived: fixed list open | none | `users/Live.tsx` (`sel.on`) |
+| Prepare | Everyone matching filters summary | fixed list | none | `users/BulkPrepare.tsx` (filter mode) |
+| Prepare | Anchor dead-end, list closed | `bulk_revocation.prepare` refused `prerequisite_failed` / `invalid_stage` on a filter list | `admin.ts:783-785` | `users/BulkPrepare.tsx:216, 329` |
+| Preview | Fixed list facts, arithmetic, no longer match | `job.selection`, `filter`, `fixed_at`, `matched`, `fixed_revision`, `counts`; `exclusions.no_longer_matches` | `identity-bulk.ts:90-104, 104-118` | `users/BulkPrepare.tsx:71, 94`; `users/Matching.tsx:63` |
+| Jobs view | Selection basis line, Fixed {at} | `jobs[].selection`, `filter`, `search_masked`, `fixed_at` | `identity-bulk.ts:90-104` | `users/RevocationJobs.tsx:187, 202`; `users/Matching.tsx:53` |
+| Job detail | Basis, fixed chips, Search applied | `job.selection`, `filter`, `search_masked`, `matched`, `fixed_at`, `fixed_revision` | `identity-bulk.ts:90-104` | `users/RevocationJobs.tsx:117-140`; `users/Matching.tsx:81` |
+| Settings | Max matching, retained people, the two scan budgets, hints | `settings[]` rows `bulk_revocation_max_matching`, `bulk_revocation_retained_people_max`, `user_filter_scan`, `user_count_scan` | `admin.ts:92-94` | `users/RolePeriod.tsx:132` |
+
 ### Bulk revocation: prepare and preview
 
 Reads: `GET /api/v1/identity/bulk-revocations` (`boundary.go:26`), `/{id}` (`:27`), `/{id}/items` (`:28`), `/{id}/targets` (`:29`), all through `admin.ts:868` (`read`) and `bulkClient` (`identity-bulk.ts:138-169`). Server shapes in `bulkread.go:12-162`.
@@ -648,5 +669,5 @@ Read: `GET /api/v1/me` (`boundary.go:35`), client and parser `admin.ts:938-956`,
 ## Unknowns and mismatches
 
 - **Unknown.** None of the rows above is marked unknown.
-- **Server fields that no console parser reads:** `trust.stricter_fields` (`policy.go:69`, not in `policyPageOf`, `admin.ts:568-573`); `jobs[].selection` and `job.selection` (`bulkread.go:39`, not in `jobOf`, `identity-bulk.ts:83-96`); `impact.api_keys` and `impact.pending_jobs` (`bulkread.go:85, 87`, not in `detailOf`; the preview shows fixed "not applicable" copy instead, `users/BulkPrepare.tsx:73, 77`); `revocations[].target_version` (`revocations.go:35`, not in the `Revocation` type, `admin.ts:167-190`, although the spread at `admin.ts:900-901` keeps it at run time); trust command result `fields.reason` and `fields.your_session_ended` (`trust.go:314, 320`), `fields.change_revision` (`trust.go:143`); set-role-period result `fields.role_until` (`periods.go:130`); bulk result `fields.digest`, `fields.targets` and `fields.count` (`bulk.go:40, 105`, `bulkstage.go:86`).
+- **Server fields that no console parser reads:** `trust.stricter_fields` (`policy.go:69`, not in `policyPageOf`, `admin.ts:568-573`); `impact.api_keys` and `impact.pending_jobs` (`bulkread.go:85, 87`, not in `detailOf`; the preview shows fixed "not applicable" copy instead, `users/BulkPrepare.tsx:73, 77`); `revocations[].target_version` (`revocations.go:35`, not in the `Revocation` type, `admin.ts:167-190`, although the spread at `admin.ts:900-901` keeps it at run time); trust command result `fields.reason` and `fields.your_session_ended` (`trust.go:314, 320`), `fields.change_revision` (`trust.go:143`); set-role-period result `fields.role_until` (`periods.go:130`); bulk result `fields.digest`, `fields.targets` and `fields.count` (`bulk.go:40, 105`, `bulkstage.go:86`).
 - **Parser type wider than the read.** `access`, `services` and `me` cast their row arrays without checking each field (`admin.ts:891-894, 921, 946, 949`), unlike `userRowOf`, `trustChangeOf` and the bulk parsers. A missing field arrives as `undefined` rather than an empty string or zero.

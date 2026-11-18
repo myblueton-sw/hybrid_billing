@@ -143,7 +143,7 @@ func failRead(w http.ResponseWriter, code commands.Code, request string, fields 
 
 func (s *Server) listUsers(w http.ResponseWriter, r *http.Request) {
 	request := r.Header.Get("X-Request-Id")
-	query, code := parseUsersQuery(r.URL.Query())
+	query, code, _ := parseUsersQuery(r.URL.Query())
 	if code != "" {
 		failRead(w, code, request)
 		return
@@ -216,46 +216,21 @@ func (s *Server) people(actor identity.Verifier, ids []string) (map[string]ident
 }
 
 type usersScan struct {
-	s        *Server
-	actor    identity.Verifier
-	query    usersQuery
-	matcher  userMatcher
-	now      time.Time
-	budget   int
-	examined int
-	last     userCursor
-	rows     []userRow
+	peopleWalk
+	query   usersQuery
+	matcher userMatcher
+	rows    []userRow
 }
 
 func (c *usersScan) segment(ids []string, departed bool) (bool, error) {
-	for len(ids) > 0 {
-		chunk := ids[:min(len(ids), identity.PeopleLimit, c.budget-c.examined)]
-		if len(chunk) == 0 {
-			return true, nil
+	rest, err := c.walk(ids, departed, func(row userRow, member *identity.MemberInfo) bool {
+		if !c.matcher.matches(row, member, c.now) {
+			return false
 		}
-		found, err := c.s.people(c.actor, chunk)
-		if err != nil {
-			return false, err
-		}
-		for i, id := range chunk {
-			c.examined++
-			c.last = userCursor{departed: departed, user: id}
-			p := found[id]
-			if p.User.Kind != identity.Human {
-				continue
-			}
-			row := c.s.row(p.User, p.Member, c.now)
-			if !c.matcher.matches(row, p.Member, c.now) {
-				continue
-			}
-			c.rows = append(c.rows, row)
-			if len(c.rows) == c.query.limit {
-				return i+1 < len(ids), nil
-			}
-		}
-		ids = ids[len(chunk):]
-	}
-	return false, nil
+		c.rows = append(c.rows, row)
+		return len(c.rows) == c.query.limit
+	})
+	return len(rest) > 0, err
 }
 
 func (s *Server) usersPage(actor identity.Verifier, query usersQuery) (usersPage, error) {
@@ -264,7 +239,7 @@ func (s *Server) usersPage(actor identity.Verifier, query usersQuery) (usersPage
 		return usersPage{}, err
 	}
 	now := s.clock()
-	scan := &usersScan{s: s, actor: actor, query: query, matcher: newMatcher(query.filter), now: now, budget: s.cfg.Access.UserFilterScan, rows: []userRow{}}
+	scan := &usersScan{peopleWalk: peopleWalk{s: s, actor: actor, now: now, budget: s.cfg.Access.UserFilterScan}, query: query, matcher: newMatcher(query.filter), rows: []userRow{}}
 	more, err := scan.segment(login, false)
 	if err == nil && !more && len(scan.rows) < query.limit {
 		more, err = scan.segment(departed, true)
@@ -274,7 +249,7 @@ func (s *Server) usersPage(actor identity.Verifier, query usersQuery) (usersPage
 	if err != nil {
 		return usersPage{}, err
 	}
-	out := usersPage{Revision: s.Revision(), Users: scan.rows, clockRows: s.clockRows(now), Settings: s.identitySettingRows(), LedgerState: s.ledgerRow().State,
+	out := usersPage{Revision: s.Revision(), Users: scan.rows, clockRows: s.clockRows(now), Settings: s.bulkSettingRows(), LedgerState: s.ledgerRow().State,
 		Filters: query.filter, ScanBudget: scan.budget, Order: usersOrder, ListVersion: s.listVersion(),
 		AuthMethods: authMethods{Connected: []string{"password"}, NotConnected: []string{"saml", "oidc", "ldap"}}, WarningDays: s.cfg.Access.RoleWarningDays}
 	if more {

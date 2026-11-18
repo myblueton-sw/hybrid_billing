@@ -288,7 +288,10 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) { s.perf, err = perfgate.NewRegistry(s.clock); return },
 		func() (err error) { s.changes, err = accesschange.NewRegistry(s.clock, cfg.Access.limits()); return },
 		func() (err error) { s.bulk, err = bulkrevoke.New(cfg.Access.bulkLimits(), s.clock); return },
-		func() (err error) { s.jobs, err = jobs.NewRegistry(cleanupLimits(), s.clock); return },
+		func() (err error) {
+			s.jobs, err = jobs.NewRegistry(cleanupLimits(cfg.Access.BulkMaxMatching), s.clock)
+			return
+		},
 		s.registerUsers,
 	}
 	for _, build := range steps {

@@ -32,6 +32,7 @@ export function HeaderCheck({ l, selected, loaded, onAll, cell }: { l: Locale; s
   const box = useRef<HTMLInputElement>(null);
   const state = headerState(selected, loaded);
   useEffect(() => { if (box.current) box.current.indeterminate = state === "mixed"; }, [state]);
+  if (loaded.length === 0) return cell ? <th scope="col" className="m01-check" /> : null;
   const input = (
     <label className={cell ? "m01-hit" : "live-check m01-select-loaded"}>
       <input type="checkbox" ref={box} checked={state === "checked"} onChange={onAll} data-select-loaded="true" />

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, adminClient, attempt, failureOf, ledgerOf, outcomeOf, planOf, reauthenticate, sequence } from "./admin";
+import { AdminError, adminClient, attempt, failureOf, ledgerOf, outcomeOf, planOf, reauthenticate, sequence, usersQueryString } from "./admin";
 
 type Call = { url: string; init: RequestInit };
 
@@ -58,8 +58,8 @@ test("attempts are fresh per confirmation", () => {
 
 test("reads page with a cursor", async () => {
   const { f, calls } = fake(200, { revision: "r9", next: "u2", users: [{ user_id: "u1" }] });
-  const page = await adminClient("tok", f).users("u0", 2);
-  assert.equal(calls[0].url, "/api/v1/identity/users?limit=2&after=u0");
+  const page = await adminClient("tok", f).users({ after: "a:u0", limit: 2 });
+  assert.equal(calls[0].url, "/api/v1/identity/users?after=a%3Au0&limit=2");
   assert.equal(page.revision, "r9");
   assert.equal(page.next, "u2");
   assert.equal(page.users.length, 1);
@@ -77,6 +77,23 @@ test("reads page with a cursor", async () => {
   assert.deepEqual(full.users[0].revocation, { bulk: "bulk-revocation-1", state: "deny_confirmed" });
   assert.deepEqual([full.users[1].membership?.role_period, full.users[1].membership?.suspended_for, full.users[1].membership?.ledger, full.users[1].revocation], ["open", "", "", null]);
   assert.deepEqual([full.can_bulk_revoke, full.clock.wall_lead, full.clock.clock_base.recorded, full.clock.recovery], [true, { wall_time: "a", server_time: "b" }, true, { stranded: true, records: [3] }]);
+});
+
+test("users query sends only the set filters and reads the page facts", async () => {
+  assert.equal(usersQueryString({}), "limit=50");
+  assert.equal(usersQueryString({ q: "김 a", status: "active", membership: "", role: "member", period: "ends_soon", signin: "set_link", invitation: "pending", holder: "true", after: "d:u9", limit: 7 }),
+    "q=%EA%B9%80+a&status=active&role=member&period=ends_soon&signin=set_link&invitation=pending&holder=true&after=d%3Au9&limit=7");
+  const { f, calls } = fake(200, { next_login: "ann@x", filters: { q: "ann", status: "active", extra: "x" }, scan_stopped: true, scan_budget: 1000, order: "login_then_departed_user_id",
+    list_version: "7.3", auth_methods: { connected: ["password"], not_connected: ["saml", "oidc", "ldap"] }, warning_days: 14 });
+  const page = await adminClient("tok", f).users({ membership: "none" });
+  assert.equal(calls[0].url, "/api/v1/identity/users?membership=none&limit=50");
+  assert.deepEqual(page.filters, { q: "ann", status: "active", membership: "", role: "", period: "", signin: "", invitation: "", holder: "" });
+  assert.deepEqual([page.scan_stopped, page.scan_budget, page.order, page.list_version, page.warning_days, page.next_login], [true, 1000, "login_then_departed_user_id", "7.3", 14, "ann@x"]);
+  assert.deepEqual(page.auth_methods, { connected: ["password"], not_connected: ["saml", "oidc", "ldap"] });
+  const bare = await adminClient("tok", fake(200, { auth_methods: { connected: "x" } }).f).users();
+  assert.deepEqual([bare.scan_stopped, bare.scan_budget, bare.list_version, bare.auth_methods, bare.warning_days, bare.filters.q, bare.next_login], [false, 0, "", { connected: [], not_connected: [] }, 0, "", ""]);
+  await assert.rejects(adminClient("t", fake(409, { code: "revision_conflict", fields: ["after"] }).f).users({ after: "a:u1" }),
+    (e: AdminError) => e.failure === "conflict" && e.fields[0] === "after");
 });
 
 test("rate limits carry the wait", async () => {

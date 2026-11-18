@@ -1,6 +1,7 @@
 package server
 
 import (
+	"sort"
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
@@ -40,6 +41,10 @@ type pickup struct {
 
 type directory struct {
 	people      map[string]person
+	byLogin     map[string]string
+	order       []string
+	departed    []string
+	version     uint64
 	taken       map[string]bool
 	holders     map[string]time.Time
 	invites     map[string]invite
@@ -49,13 +54,88 @@ type directory struct {
 }
 
 func newDirectory() *directory {
-	return &directory{people: map[string]person{}, taken: map[string]bool{}, holders: map[string]time.Time{}, invites: map[string]invite{},
+	return &directory{people: map[string]person{}, byLogin: map[string]string{}, taken: map[string]bool{}, holders: map[string]time.Time{}, invites: map[string]invite{},
 		links: map[string]outstanding{}, generations: map[string]uint64{}, pickups: map[string]pickup{}}
 }
 
+func (d *directory) position(user, login string) int {
+	return sort.Search(len(d.order), func(i int) bool {
+		other := d.order[i]
+		at := d.people[other].login
+		return at > login || at == login && other >= user
+	})
+}
+
 func (d *directory) add(user, login, email string) {
+	d.remove(user)
+	at := d.position(user, login)
 	d.people[user] = person{login: login, email: email}
+	d.byLogin[login] = user
 	d.taken[login] = true
+	d.order = append(d.order, "")
+	copy(d.order[at+1:], d.order[at:])
+	d.order[at] = user
+	d.version++
+}
+
+func (d *directory) remove(user string) {
+	found, ok := d.people[user]
+	if !ok {
+		return
+	}
+	at := d.position(user, found.login)
+	d.order = append(d.order[:at], d.order[at+1:]...)
+	delete(d.people, user)
+	delete(d.byLogin, found.login)
+	d.version++
+}
+
+func (d *directory) depart(user string) {
+	d.remove(user)
+	at := sort.SearchStrings(d.departed, user)
+	if at < len(d.departed) && d.departed[at] == user {
+		return
+	}
+	d.departed = append(d.departed, "")
+	copy(d.departed[at+1:], d.departed[at:])
+	d.departed[at] = user
+	d.version++
+}
+
+func (d *directory) invite(login string, found invite) {
+	d.invites[login] = found
+	d.version++
+}
+
+func (d *directory) dropInvite(login string) {
+	if _, ok := d.invites[login]; ok {
+		delete(d.invites, login)
+		d.version++
+	}
+}
+
+func (d *directory) issued(login string, found outstanding) {
+	d.links[login] = found
+	d.version++
+}
+
+func (d *directory) dropLink(login string) {
+	if _, ok := d.links[login]; ok {
+		delete(d.links, login)
+		d.version++
+	}
+}
+
+func (d *directory) grant(user string, expires time.Time) {
+	d.holders[user] = expires
+	d.version++
+}
+
+func (d *directory) dropHolder(user string) {
+	if _, ok := d.holders[user]; ok {
+		delete(d.holders, user)
+		d.version++
+	}
 }
 
 func (d *directory) loginOf(user string) (string, bool) {
@@ -64,12 +144,8 @@ func (d *directory) loginOf(user string) (string, bool) {
 }
 
 func (d *directory) userOf(login string) (string, bool) {
-	for user, p := range d.people {
-		if p.login == login {
-			return user, true
-		}
-	}
-	return "", false
+	user, ok := d.byLogin[login]
+	return user, ok
 }
 
 func (d *directory) invitation(login string, now time.Time) (invite, bool) {

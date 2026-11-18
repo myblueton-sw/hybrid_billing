@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, attempt, sequence, type AdminClient, type Attempt, type ClockState, type CommandId, type SettingRow, type UserRow } from "../../../../service/admin";
+import { AdminError, attempt, sequence, type AdminClient, type Attempt, type ClockState, type CommandId, type SettingRow, type UserRow, type UsersPage } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
 import { emailValid, loginValid, utf8Length } from "../../../../service/helpers";
 import { Summary, TextField, type Problems } from "../../../../service/Service";
 import { actionDone, actionLabel, impact, w, type Action } from "./live-copy";
-import { accountName, failureText, offers, roleName, setup, tags, when } from "./live-model";
+import { accountName, failureText, offers, roleName, setup, tags } from "./live-model";
 import { b } from "./bulk-copy";
 import { selectLoaded, toggle, without, type Selection } from "./bulk-model";
 import { BulkFlow } from "./BulkPrepare";
@@ -18,7 +18,10 @@ import { p } from "./period-copy";
 import { setting } from "./period-model";
 import "./live.css";
 import "./bulk.css";
-import { fill } from "./Stamp";
+import { At, fill, Stamp } from "./Stamp";
+import { bare, fc } from "./filter-copy";
+import { appliedKeys, filterViews, linkOf, selectableIds, loginParts, lostPerson, membershipEnded, merge, noFilters, parseLink, queryOf, sameInstant, without as dropFilter, type FilterKey, type UserFilters } from "./filter-model";
+import { FilterBand, PagingArea, ScopeLine, type Paging } from "./filters";
 
 type Mode =
   | { kind: "none" }
@@ -28,7 +31,7 @@ type Mode =
   | { kind: "link"; login: string; purpose: "set" | "reset"; ref: string }
   | { kind: "period" };
 
-type Loaded = { revision: string; next: string; users: UserRow[]; at: Date; clock: ClockState; settings: SettingRow[]; ledger_state: string; can_bulk_revoke: boolean };
+type Loaded = Omit<UsersPage, "clock"> & { at: Date; clock: ClockState; first: string };
 
 type Context = { clock: ClockState; settings: SettingRow[]; own: string };
 
@@ -288,7 +291,7 @@ function Pickup({ l, api, login, purpose, refId, expires, notice, onDone }: {
             <button type="button" className="live-primary" onClick={doCopy}>{w.copy(l)}</button>
           </div>
           <p role="status" className="live-copy-state">{copy === "done" ? w.copied(l) : copy === "failed" ? w.copyFailed(l) : ""}</p>
-          {expires && <p>{w.linkExpires(l, when(l, expires))}</p>}
+          {expires && <p><At l={l} template={w.linkExpires(l, "{at}")} iso={expires} zone={false} /></p>}
           <p className="live-impact">{w.shownOnce(l)}</p>
           <p className="live-impact">{w.handOver(l, login)}</p>
         </>
@@ -332,8 +335,8 @@ function Detail({ l, user, self, notice, onAction, serverTime, onJob }: {
         <div><dt>{w.accountStatus(l)}</dt><dd className={user.state === "active" ? "" : "live-strong"}>{accountName(l, user.state)}</dd></div>
         <div><dt>{w.workspaceRole(l)}</dt><dd>{roleName(l, user.membership?.role ?? "")}</dd></div>
         <PeriodFact l={l} u={user} serverTime={serverTime} onJob={onJob} />
-        <div><dt>{w.membershipStatus(l)}</dt><dd>{user.membership ? (user.membership.state === "active" ? w.active(l) : w.membershipSuspended(l)) : w.noMembership(l)}</dd></div>
-        <div><dt>{w.signInSetup(l)}</dt><dd>{setup(l, user)}</dd></div>
+        <div><dt>{w.membershipStatus(l)}</dt><dd>{membershipWord(l, user)}</dd></div>
+        <div><dt>{w.signInSetup(l)}</dt><dd><SetupText l={l} u={user} /></dd></div>
         {user.installation_administrator && <div><dt>{w.installationAdmin(l)}</dt><dd>{w.yes(l)}</dd></div>}
         <div><dt>{w.userId(l)}</dt><dd className="live-mono"><bdi dir="ltr">{user.user_id}</bdi></dd></div>
       </dl>
@@ -350,8 +353,21 @@ function Detail({ l, user, self, notice, onAction, serverTime, onJob }: {
   );
 }
 
-function rowsFor(view: string, users: UserRow[]): UserRow[] {
-  return view === "invitations" ? users.filter((u) => u.invitation_expires || u.link_purpose === "set") : users;
+function SetupText({ l, u }: { l: Locale; u: UserRow }) {
+  if (u.link_purpose === "set") return <At l={l} template={fc.setLinkAt(l)} iso={u.link_expires} zone={false} />;
+  if (u.link_purpose === "reset") return <At l={l} template={fc.resetLinkAt(l)} iso={u.link_expires} zone={false} />;
+  if (u.invitation_expires) return <At l={l} template={w.invitationPending(l, "{at}")} iso={u.invitation_expires} zone={false} />;
+  return <>{setup(l, u)}</>;
+}
+
+function Breakable({ text }: { text: string }) {
+  return <>{loginParts(text).map((part, i) => <span key={i}>{i > 0 && <wbr />}{part}</span>)}</>;
+}
+
+function membershipWord(l: Locale, u: UserRow): string {
+  if (!u.membership) return w.noMembership(l);
+  if (membershipEnded(u)) return fc.membershipEnded(l);
+  return u.membership.state === "active" ? w.active(l) : w.membershipSuspended(l);
 }
 
 function Cell({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
@@ -394,27 +410,29 @@ function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
               {check && <CheckCell l={l} u={u} self={sel.self} selected={sel.selected} atLimit={sel.atLimit} onToggle={sel.onToggle} />}
               <td role="cell" className="live-user">
                 <button type="button" className="live-open" data-user-id={u.user_id} aria-current={u.user_id === selected ? "true" : undefined} onClick={() => onOpen(u.user_id)}>
-                  <bdi dir="ltr">{u.login || u.user_id}</bdi>
+                  <bdi dir="ltr" className={u.login ? undefined : "live-mono"}>{u.login ? <Breakable text={u.login} /> : u.user_id}</bdi>
                   <span className="visually-hidden">, {w.openDetails(l)}{u.user_id === selected ? " " + w.selected(l) : ""}</span>
                 </button>
                 {u.user_id === selected && <span className="m01-tag" aria-hidden="true">{b.open(l)}</span>}
                 {u.email && u.email !== u.login && <span className="live-sub"><bdi dir="ltr">{u.email}</bdi></span>}
-                {view === "users" && <span className="live-sub m01-fold live-quiet">{setup(l, u)}</span>}
+                {u.state === "departed" && <span className="live-sub m01-departed">{fc.departedRow(l)}</span>}
+                {view === "users" && <span className="live-sub m01-fold live-quiet"><SetupText l={l} u={u} /></span>}
               </td>
               {view === "invitations" ? (
                 <>
                   <Cell label={head[1]}>{roleName(l, u.membership?.role ?? "")}</Cell>
-                  <Cell label={head[2]}>{u.invitation_expires ? when(l, u.invitation_expires) : "—"}</Cell>
-                  <Cell label={head[3]} className="live-quiet">{u.link_purpose === "set" ? w.setIssued(l, when(l, u.link_expires)) : w.notIssued(l)}</Cell>
+                  <Cell label={head[2]}><Stamp l={l} iso={u.invitation_expires} zone={false} /></Cell>
+                  <Cell label={head[3]} className="live-quiet">{u.link_purpose !== "set" ? w.notIssued(l) : sameInstant(u.link_expires, u.invitation_expires) ? fc.linkWithInvitation(l)
+                    : <At l={l} template={fc.linkIssued(l)} iso={u.link_expires} zone={false} />}</Cell>
                 </>
               ) : view === "membership" ? (
                 <>
                   <Cell label={head[1]} className="m01-l">{roleName(l, u.membership?.role ?? "")}</Cell>
                   <Cell label={head[2]} className="m01-l"><PeriodCell l={l} u={u} serverTime={serverTime} /></Cell>
-                  <Cell label={head[3]}>{u.membership ? (u.membership.state === "active" ? w.active(l) : w.membershipSuspended(l)) : w.noMembership(l)}<Effect l={l} u={u} /></Cell>
+                  <Cell label={head[3]}>{membershipWord(l, u)}<Effect l={l} u={u} /></Cell>
                   <Cell label={head[4]} className="m01-l">{u.installation_administrator ? w.yes(l) : <><span aria-hidden="true">—</span><span className="visually-hidden">{w.no(l)}</span></>}</Cell>
                   <Cell label={head[5]} className="m01-m">
-                    {roleName(l, u.membership?.role ?? "")}<span className="live-sub"><PeriodCell l={l} u={u} serverTime={serverTime} /></span>
+                    {roleName(l, u.membership?.role ?? "")}{u.membership && <span className="live-sub"><PeriodCell l={l} u={u} serverTime={serverTime} /></span>}
                     {u.installation_administrator && <span className="live-sub">{w.installationAdmin(l)}</span>}
                   </Cell>
                 </>
@@ -428,9 +446,9 @@ function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
                     {u.installation_administrator && <span className="live-sub">{w.installationAdmin(l)}</span>}
                   </Cell>
                   <Cell label={head[3]} className="m01-l"><PeriodCell l={l} u={u} serverTime={serverTime} /></Cell>
-                  <Cell label={head[4]} className="live-quiet m01-l">{setup(l, u)}</Cell>
+                  <Cell label={head[4]} className="live-quiet m01-l"><SetupText l={l} u={u} /></Cell>
                   <Cell label={head[5]} className="m01-m">
-                    {roleName(l, u.membership?.role ?? "")}<span className="live-sub"><PeriodCell l={l} u={u} serverTime={serverTime} /></span>
+                    {roleName(l, u.membership?.role ?? "")}{u.membership && <span className="live-sub"><PeriodCell l={l} u={u} serverTime={serverTime} /></span>}
                     {u.membership?.state === "suspended" && <span className="live-sub">{w.membershipSuspended(l)}</span>}
                     {u.membership?.suspended_for === "bulk_revocation" && <Effect l={l} u={u} />}
                     {u.installation_administrator && <span className="live-sub">{w.installationAdmin(l)}</span>}
@@ -468,15 +486,28 @@ function Conditions({ l, data }: { l: Locale; data: Loaded }) {
   );
 }
 
-export default function LiveUsers({ locale: l, view, session, onSignOut, onView }: {
+export default function LiveUsers({ locale: l, view, session, onSignOut, onView, params = new URLSearchParams(), onParams = () => {} }: {
   locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void;
+  params?: URLSearchParams; onParams?: (next: Record<string, string | null>) => void;
 }) {
   const api = useAdminClient();
   const wide = useWide();
   const order = useRef(sequence());
+  const link = parseLink(params);
+  const filters = link.filters;
+  const query = queryOf(view, filters);
+  const queryKey = JSON.stringify(query);
+  const queryRef = useRef(query);
+  queryRef.current = query;
   const [data, setData] = useState<Loaded | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<unknown>(null);
+  const [paging, setPaging] = useState<Paging>("idle");
+  const [changed, setChanged] = useState(false);
+  const [badLink, setBadLink] = useState(false);
+  const [bandOpen, setBandOpen] = useState(false);
+  const [freshRead, setFreshRead] = useState(true);
+  const [actionResult, setActionResult] = useState<{ who: string; login: boolean; text: string } | null>(null);
   const [selected, setSelected] = useState("");
   const [mode, setMode] = useState<Mode>({ kind: "none" });
   const [notice, setNotice] = useState("");
@@ -490,27 +521,50 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
   const names = useRef<Record<string, string>>({});
   const selectedRef = useRef("");
   selectedRef.current = selected;
+  const modeRef = useRef("none");
+  modeRef.current = mode.kind;
+  const noticeRef = useRef("");
+  noticeRef.current = notice;
   const dataRef = useRef<Loaded | null>(null);
   dataRef.current = data;
+  const pending = useRef<"" | "filter" | "removed">("");
+  const shownQuery = useRef("");
   useEffect(() => {
     if (!focusTo) return;
     document.querySelector<HTMLElement>(focusTo)?.focus();
     setFocusTo("");
   }, [focusTo]);
+  const paramsKey = params.toString();
+  useEffect(() => {
+    if (!link.bad) return;
+    setBadLink(true);
+    onParams(linkOf(filters));
+  }, [paramsKey]);
   const say = (text: string) => {
     setAnnounce("");
     setTimeout(() => setAnnounce(text), 50);
   };
   const tell = (text: string) => { setNotice(text); say(text); };
+  const countLine = (page: { next: string; users: UserRow[] }) => (page.users.length === 0 ? fc.noneShown(l) : page.next ? fc.shownMore(l, page.users.length) : fc.shownAll(l, page.users.length));
   const load = useCallback((keepNotice = false) => {
     const n = order.current.next();
+    const asked = queryRef.current;
+    const key = JSON.stringify(asked);
+    const fresh = shownQuery.current !== key;
+    setFreshRead(fresh);
+    if (fresh) setActionResult(null);
     setStatus("loading");
+    setPaging("idle");
+    if (fresh) setData((d) => (d ? { ...d, users: [], next: "", next_login: "", scan_stopped: false } : d));
     if (!keepNotice) setNotice("");
-    return api.users("", 100).then(
+    return api.users(asked).then(
       (page) => {
         if (!order.current.latest(n)) return page.revision;
         for (const u of page.users) names.current[u.user_id] = u.login || u.user_id;
-        setData({ ...page, at: new Date() });
+        shownQuery.current = key;
+        setFreshRead(false);
+        setData({ ...page, at: new Date(), first: page.list_version });
+        setChanged(false);
         setStatus("ready");
         setError(null);
         return page.revision;
@@ -522,37 +576,87 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
         return "";
       },
     );
-  }, [api]);
+  }, [api, queryKey]);
+  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { setMode((m) => ({ kind: m.kind === "none" ? "none" : "detail" })); setNotice(""); setActionResult(null); setBulk(false); setBandOpen(false); }, [view]);
+  const users = data?.users ?? [];
+  const applied = appliedKeys(filters).length;
+  useEffect(() => {
+    if (status !== "ready" || !data) return;
+    const kind = pending.current;
+    pending.current = "";
+    const lostId = selectedRef.current;
+    const lost = lostPerson(modeRef.current, lostId, data.users);
+    if (lost) {
+      const inPanel = !!document.activeElement?.closest("aside.live-panel") || document.activeElement === document.body;
+      setMode({ kind: "none" });
+      setSelected("");
+      if (inPanel) setFocusTo(wide ? "#m01-q" : filterViews.includes(view) ? "#m01-filters-toggle" : ".live-toolbar h2");
+    }
+    const count = countLine(data);
+    const gone = lost ? (appliedKeys(filters).length > 0 ? fc.openFiltered(l) : fc.openNotLoaded(l)) : "";
+    if (!kind && !gone) return;
+    const result = lost && !kind ? noticeRef.current : "";
+    const who = names.current[lostId] || lostId;
+    if (result) setActionResult({ who, login: who !== lostId, text: result });
+    say([kind === "removed" ? fc.removed(l, count) : kind ? fc.updated(l, count, appliedKeys(filters).length) : "", result ? `${who}: ${bare(result.replace(/\n/g, " "))}.` : "", gone].filter(Boolean).join(" "));
+  }, [status, data]);
+  const apply = (next: UserFilters, kind: "filter" | "removed" = "filter") => {
+    pending.current = kind;
+    setBadLink(false);
+    onParams(linkOf(next));
+  };
+  const removeChip = (key: FilterKey) => {
+    const keys = appliedKeys(filters);
+    const i = keys.indexOf(key);
+    const target = keys[i + 1] ?? keys[i - 1];
+    setFocusTo(target ? "#m01-chip-" + target : wide ? "#m01-q" : "#m01-filters-toggle");
+    apply(dropFilter(filters, key), "removed");
+  };
+  const clearAll = () => { setFocusTo(wide ? "#m01-q" : "#m01-filters-toggle"); apply(noFilters, "removed"); };
+  const row = (id: string) => `.live-open[data-user-id="${CSS.escape(id)}"]`;
   const more = () => {
-    if (!data?.next) return;
+    const d = dataRef.current;
+    if (!d?.next || paging === "more") return;
     const n = order.current.next();
-    api.users(data.next, 100).then(
+    setPaging("more");
+    api.users({ ...queryRef.current, after: d.next }).then(
       (page) => {
         if (!order.current.latest(n)) return;
         for (const u of page.users) names.current[u.user_id] = u.login || u.user_id;
-        setData((d) => (d ? { ...page, users: [...d.users, ...page.users], at: new Date() } : d));
+        const before = new Set(d.users.map((u) => u.user_id));
+        const added = page.users.find((u) => !before.has(u.user_id));
+        setData((x) => (x ? { ...page, users: merge(x.users, page.users), at: new Date(), first: x.first } : x));
+        if (page.list_version !== d.first) setChanged(true);
+        setPaging("idle");
+        if (added) setFocusTo(row(added.user_id));
       },
-      (e) => { if (order.current.latest(n)) { setError(e); setStatus("error"); } },
+      (e) => {
+        if (!order.current.latest(n)) return;
+        const restart = e instanceof AdminError && e.failure === "conflict" && e.fields.includes("after");
+        setPaging(restart ? "restart" : "failed");
+        if (restart) setFocusTo("#m01-start-again");
+      },
     );
   };
-  useEffect(() => { void load(); }, [load]);
-  useEffect(() => { setMode((m) => ({ kind: m.kind === "none" ? "none" : "detail" })); setNotice(""); setBulk(false); }, [view]);
-  const users = data?.users ?? [];
-  const user = users.find((u) => u.user_id === selected) ?? null;
   const self = users.find((u) => u.user_id === session.user);
+  const user = users.find((u) => u.user_id === selected) ?? null;
   const ctx: Context = { clock: data?.clock ?? { server_time: "", wall_time: "", clock_behind: false, clock_ahead: false, clock_base: { choice: "default", ledger_time: "", wall_time: "", recorded: false }, wall_lead: null, recovery: { stranded: false, records: [] } },
     settings: data?.settings ?? [], own: self?.membership?.role_until ?? "" };
   const limit = setting(ctx.settings, "bulk_revocation_max_targets", 500);
-  const row = (id: string) => `.live-open[data-user-id="${CSS.escape(id)}"]`;
-  const open = (id: string) => { setSelected(id); setNotice(""); setMode({ kind: "detail" }); setFocusTo(wide ? "" : "#live-detail-title"); };
+  const days = data?.warning_days || setting(ctx.settings, "role_period_warning_days", 14);
+  const open = (id: string) => { setSelected(id); setNotice(""); setActionResult(null); setMode({ kind: "detail" }); setFocusTo(wide ? "" : "#live-detail-title"); };
   const close = () => { const id = selected; setMode({ kind: "none" }); setSelected(""); setFocusTo(row(id)); };
   const backToDetail = (action?: Action) => { setMode({ kind: "detail" }); setFocusTo(action ? `[data-action="${action}"]` : "#live-detail-title"); };
   const stranded = ctx.clock.recovery.stranded;
+  const scope = <ScopeLine l={l} workspace={session.workspace} />;
   if (view === "revocation") {
     return (
       <div className="live-users m01-live" data-live="revocation" data-wide={wide ? "true" : "false"}>
         <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
+        {scope}
         {data && <Conditions l={l} data={data} />}
+        {applied > 0 && <p className="m01-note">{fc.jobsNote(l)}</p>}
         <RevocationJobs l={l} api={api} wide={wide} initial={job} self={session.user} revision={data?.revision ?? ""} onSignOut={onSignOut} />
       </div>
     );
@@ -567,10 +671,9 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
       </div>
     );
   }
-  const shown = rowsFor(view, users);
   const title = view === "invitations" ? w.invitationsTitle(l) : view === "membership" ? w.membershipTitle(l) : w.usersTitle(l);
   const selectable = !!data?.can_bulk_revoke && !stranded;
-  const loaded = shown.filter((u) => u.user_id !== session.user).map((u) => u.user_id);
+  const loaded = selectableIds(status === "ready" ? "ready" : freshRead ? "fresh" : "reloading", users, session.user);
   const sel: Select = {
     on: selectable, selected: picked, self: session.user, atLimit: picked.size >= limit, loaded,
     onToggle: (id) => { const out = toggle(picked, id, limit); setLimitHit(out.refused); if (out.refused) say(b.limit(l, limit)); else setPicked(out.next); },
@@ -626,17 +729,30 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
   }
   const stepping = !wide && panel !== null;
   const failure = error ? failureText(l, error) : null;
-  const count = view === "invitations" ? w.invitationCount(l, shown.length) : w.count(l, shown.length);
+  const count = data ? countLine(data) : "";
+  const paging_ = data && (
+    <PagingArea l={l} next={data.next} nextLogin={data.next_login} stopped={data.scan_stopped} paging={paging} changed={changed} count={count} compact={!wide && typeof matchMedia === "function" && matchMedia("(max-width: 767px)").matches}
+      onMore={more} onReload={() => void load()} onRestart={() => void load()} />
+  );
+  const filtered = applied > 0;
+  const empty = data?.scan_stopped ? fc.noMatchesYet(l) : filtered ? fc.filteredEmpty(l) : view === "invitations" ? w.noInvitations(l) : w.empty(l);
   return (
     <div className="live-users m01-live" data-live={view} data-wide={wide ? "true" : "false"} data-open={panel ? "true" : "false"} data-bulk="none">
       <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
+      {scope}
       {data && <Conditions l={l} data={data} />}
+      {!stepping && badLink && <p className="service-status m01-badlink" role="status">{fc.badLink(l)}</p>}
+      {!stepping && filterViews.includes(view) && (
+        <FilterBand l={l} view={view} wide={wide} open={bandOpen} filters={filters} days={days} auth={data?.auth_methods ?? { connected: [], not_connected: [] }} onToggle={() => setBandOpen((o) => !o)}
+          onChange={(next) => apply(next)} onRemove={removeChip} onClearAll={clearAll} />
+      )}
       {!stepping && (
         <div className="live-list m01-list">
           <div className="live-toolbar">
             <div className="live-heading">
               <h2>{title}</h2>
-              {status === "ready" && <p className="live-meta">{count}</p>}
+              {status === "ready" && users.length > 0 && <p className="live-meta m01-count">{count}</p>}
+              <p className="live-meta m01-order">{fc.order(l)}</p>
               {data && <p className="live-meta">{fill(w.loadedAt(l, "{at}"), <bdi className="m01-part">{new Intl.DateTimeFormat(tags[l], { timeStyle: "short" }).format(data.at)}</bdi>)}</p>}
               {wide && !panel && <p className="live-meta">{w.pick(l)}</p>}
             </div>
@@ -647,12 +763,19 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
               )}
             </div>
           </div>
+          {actionResult && (
+            <div className="service-status m01-actionresult" role="status">
+              {actionResult.text.split("\n").map((line, i) => (
+                <p key={i}>{i === 0 && <><bdi dir="ltr" className={actionResult.login ? undefined : "live-mono"}>{actionResult.who}</bdi>: </>}{line}</p>
+              ))}
+            </div>
+          )}
           {selectable && view !== "invitations" && (
             <SelectionBar l={l} selected={picked} loaded={loaded} limit={limit} atLimit={limitHit || picked.size >= limit} names={names.current}
               onPrepare={() => setBulk(true)} onClear={() => { setPicked(new Set()); setFocusTo(".m01-selcount"); }} onRemove={(id) => setPicked(without(picked, [id]))} onAll={sel.onAll} />
           )}
           {selectable && view === "invitations" && picked.size > 0 && <p className="m01-selline">{b.elsewhere(l, picked.size)}</p>}
-          {status === "loading" && !data && <p role="status" className="live-meta">{w.loading(l)}</p>}
+          {status === "loading" && users.length === 0 && <p role="status" className="live-meta">{w.loading(l)}</p>}
           {status === "error" && failure && (
             <section className="live-error" role="alert">
               <h2>{w.loadFailed(l)}</h2>
@@ -664,14 +787,18 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView 
               )}
             </section>
           )}
-          {data && status !== "error" && (shown.length === 0 ? (
-            <p className="live-empty">{view === "invitations" ? w.noInvitations(l) : w.empty(l)}</p>
-          ) : (
-            <div aria-busy={status === "loading" || undefined}>
-              <Table l={l} view={view} users={shown} selected={selected} onOpen={open} sel={sel} serverTime={ctx.clock.server_time} />
+          {data && status === "ready" && users.length === 0 ? (
+            <div className={"live-empty m01-empty" + (data.scan_stopped ? " m01-stop-empty" : "")}>
+              <p>{empty}</p>
+              {filtered && !data.scan_stopped && <button type="button" className="service-button-link" onClick={clearAll}>{fc.clearAll(l)}</button>}
+              {data.scan_stopped && paging_}
             </div>
-          ))}
-          {data?.next && <button type="button" className="live-secondary live-more" onClick={more}>{w.more(l)}</button>}
+          ) : users.length > 0 && status !== "error" && (
+            <div aria-busy={status === "loading" || undefined}>
+              <Table l={l} view={view} users={users} selected={selected} onOpen={open} sel={sel} serverTime={ctx.clock.server_time} />
+            </div>
+          )}
+          {data && status !== "error" && !(status === "ready" && users.length === 0 && data.scan_stopped) && paging_}
         </div>
       )}
       {(stepping || (wide && panel)) && (

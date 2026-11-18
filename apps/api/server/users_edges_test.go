@@ -45,7 +45,7 @@ func TestIdentityUnavailablePaths(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	root := f.as(AdminLogin)
 	revision := f.revision(root)
-	f.s.fault = func(at string) bool { return at == "users" }
+	f.s.fault = func(at string) bool { return at == "users" || at == "people" }
 	h := userCommand{s: f.s}
 	if _, res := h.Resolve(SampleWorkspace, SampleMember); res != commands.Unavailable {
 		t.Errorf("resolve %v", res)
@@ -63,7 +63,7 @@ func TestIdentityUnavailablePaths(t *testing.T) {
 	if _, err := f.s.roster(verifierOf(random(tokenBytes))); err == nil {
 		t.Error("roster for a stale actor")
 	}
-	if _, err := f.s.usersPage(verifierOf(random(tokenBytes)), "", 10); err == nil {
+	if _, err := f.s.usersPage(verifierOf(random(tokenBytes)), usersQuery{limit: 10}); err == nil {
 		t.Error("page for a stale actor")
 	}
 	if err := f.s.registerUsers(); err == nil {
@@ -82,6 +82,7 @@ func TestManyUsersPage(t *testing.T) {
 		id := fmt.Sprintf("bulk-%03d", i)
 		login := id + "@example.invalid"
 		f.s.identity.Installation().CreateUser(seedOperator, id, LoginTriple(login), login)
+		f.s.dir.add(id, login, login)
 		f.s.identity.Workspace().Invite(admin, SampleWorkspace, "inv-"+id, identity.Member, verifierOf([]byte(id)), identity.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}, id)
 		v := verifierOf(random(tokenBytes))
 		f.s.identity.Boundary().OpenSession(LoginTriple(login), v, time.Minute, time.Minute)

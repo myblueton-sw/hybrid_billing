@@ -26,9 +26,9 @@ func (h *Boundary) Bootstrap(verifier Verifier, userID string, triple Triple, em
 		return refused(ReasonVerifier)
 	}
 	r.boot.consumed = true
-	r.users[userID] = &user{kind: Human, state: Active, epoch: 1}
+	r.putUser(userID, &user{kind: Human, state: Active, epoch: 1})
 	r.link(userID, triple, email)
-	r.memberships[r.boot.workspace] = map[string]*membership{userID: {role: Administrator, state: MembershipActive, version: 1, joined: 1, from: r.clock()}}
+	r.putMembership(r.boot.workspace, userID, &membership{role: Administrator, state: MembershipActive, version: 1, joined: 1, from: r.clock()})
 	r.generation++
 	return nil
 }

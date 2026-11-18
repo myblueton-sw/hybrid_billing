@@ -51,8 +51,9 @@ test("sign-in actions follow the password and role", () => {
 });
 
 test("setup text names the outstanding link before the password state", () => {
-  assert.match(setup("en", row({ link_purpose: "set", link_expires: "2026-11-20T09:00:00Z" })), /^Set link issued, expires /);
-  assert.match(setup("en", row({ link_purpose: "reset", link_expires: "2026-11-20T09:00:00Z" })), /^Reset link issued/);
+  assert.match(setup("en", row({ link_purpose: "set", link_expires: "2026-11-20T09:00:00Z" })), /^Password set link issued, expires /);
+  assert.match(setup("en", row({ link_purpose: "reset", link_expires: "2026-11-20T09:00:00Z" })), /^Password reset link issued, expires /);
+  assert.equal("setIssued" in w || "resetIssued" in w, false);
   assert.match(setup("en", row({ password_set: false, invitation_expires: "2026-11-20T09:00:00Z" })), /^Invitation pending until /);
   assert.equal(setup("en", base), w.passwordSet("en"));
   assert.equal(setup("en", row({ password_set: false })), w.noPassword("en"));

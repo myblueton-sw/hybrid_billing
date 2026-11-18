@@ -15,29 +15,10 @@ export type Action =
   | "revoke_invitation"
   | "set_role_period";
 
-const plural = (l: Locale, n: number) => {
-  if (l === "en") return n === 1 ? "1 user" : `${n} users`;
-  if (l === "ko") return `사용자 ${n}명`;
-  const rule = new Intl.PluralRules("ar").select(n);
-  if (n === 1) return "مستخدم واحد";
-  if (n === 2) return "مستخدمان";
-  return rule === "few" ? `${n} مستخدمين` : `${n} مستخدمًا`;
-};
-
-const invitationCount = (l: Locale, n: number) => {
-  if (l === "en") return n === 1 ? "1 invitation" : `${n} invitations`;
-  if (l === "ko") return `초대 ${n}건`;
-  if (n === 1) return "دعوة واحدة";
-  if (n === 2) return "دعوتان";
-  return new Intl.PluralRules("ar").select(n) === "few" ? `${n} دعوات` : `${n} دعوة`;
-};
-
 export const w = {
-  invitationCount,
   usersTitle: (l: Locale) => t(l, "Users", "사용자", "المستخدمون"),
   invitationsTitle: (l: Locale) => t(l, "Pending invitations", "대기 중인 초대", "الدعوات بانتظار القبول"),
   membershipTitle: (l: Locale) => t(l, "Workspace membership", "업무 공간 소속", "العضوية في مساحة العمل"),
-  count: plural,
   loadedAt: (l: Locale, time: string) => t(l, `Loaded at ${time}`, `${time}에 불러옴`, `تم التحميل في ${time}`),
   reload: (l: Locale) => t(l, "Reload", "다시 불러오기", "إعادة التحميل"),
   create: (l: Locale) => t(l, "Create user", "사용자 추가", "إضافة مستخدم"),
@@ -66,10 +47,6 @@ export const w = {
   passwordSet: (l: Locale) => t(l, "Password set", "비밀번호 설정됨", "تم تعيين كلمة المرور"),
   invitationPending: (l: Locale, time: string) =>
     t(l, `Invitation pending until ${time}`, `초대 대기 중 · ${time}까지`, `دعوة بانتظار القبول حتى ${time}`),
-  setIssued: (l: Locale, time: string) =>
-    t(l, `Set link issued, expires ${time}`, `설정 링크 발급됨 · ${time} 만료`, `صدر رابط التعيين، ينتهي في ${time}`),
-  resetIssued: (l: Locale, time: string) =>
-    t(l, `Reset link issued, expires ${time}`, `재설정 링크 발급됨 · ${time} 만료`, `صدر رابط إعادة التعيين، ينتهي في ${time}`),
   notIssued: (l: Locale) => t(l, "Not issued", "미발급", "لم يُصدر"),
   noPassword: (l: Locale) => t(l, "No password yet", "비밀번호 미설정", "لم تُعيَّن كلمة مرور بعد"),
   pick: (l: Locale) =>

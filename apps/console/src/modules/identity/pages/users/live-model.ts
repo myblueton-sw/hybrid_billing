@@ -2,6 +2,7 @@ import type { Locale } from "../../../../shared/types";
 import { AdminError, type UserRow } from "../../../../service/admin";
 import { c, retryPhrase } from "../../../../service/copy";
 import { w, type Action } from "./live-copy";
+import { fc } from "./filter-copy";
 
 export const tags: Record<Locale, string> = { en: "en-US", ko: "ko-KR", ar: "ar" };
 
@@ -20,8 +21,8 @@ export function accountName(l: Locale, state: string): string {
 }
 
 export function setup(l: Locale, u: UserRow): string {
-  if (u.link_purpose === "set") return w.setIssued(l, when(l, u.link_expires));
-  if (u.link_purpose === "reset") return w.resetIssued(l, when(l, u.link_expires));
+  if (u.link_purpose === "set") return fc.setLinkAt(l).replace("{at}", when(l, u.link_expires));
+  if (u.link_purpose === "reset") return fc.resetLinkAt(l).replace("{at}", when(l, u.link_expires));
   if (u.invitation_expires) return w.invitationPending(l, when(l, u.invitation_expires));
   return u.password_set ? w.passwordSet(l) : w.noPassword(l);
 }

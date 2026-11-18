@@ -97,23 +97,27 @@ type credential struct {
 }
 
 type Registry struct {
-	mu           sync.Mutex
-	built        bool
-	installation string
-	instance     [16]byte
-	limits       Limits
-	clock        func() time.Time
-	users        map[string]*user
-	identities   map[Triple]*identityRecord
-	boot         bootstrap
-	invitations  map[string]*invitation
-	memberships  map[string]map[string]*membership
-	sessions     map[Verifier]*session
-	serials      map[uint64]*session
-	byUser       map[string]map[Verifier]struct{}
-	serial       uint64
-	credentials  map[string]*credential
-	generation   uint64
+	mu             sync.Mutex
+	built          bool
+	installation   string
+	instance       [16]byte
+	limits         Limits
+	clock          func() time.Time
+	users          map[string]*user
+	identities     map[Triple]*identityRecord
+	boot           bootstrap
+	invitations    map[string]*invitation
+	memberships    map[string]map[string]*membership
+	sessions       map[Verifier]*session
+	serials        map[uint64]*session
+	byUser         map[string]map[Verifier]struct{}
+	serial         uint64
+	credentials    map[string]*credential
+	generation     uint64
+	userIndex      []string
+	memberIndex    map[string][]string
+	usersVersion   uint64
+	membersVersion map[string]uint64
 }
 
 type Installation struct{ r *Registry }
@@ -131,7 +135,8 @@ func New(installation string, limits Limits, clock func() time.Time) (*Registry,
 	r := &Registry{built: true, installation: installation, limits: limits, clock: clock,
 		users: map[string]*user{}, identities: map[Triple]*identityRecord{}, invitations: map[string]*invitation{},
 		memberships: map[string]map[string]*membership{}, sessions: map[Verifier]*session{}, serials: map[uint64]*session{},
-		byUser: map[string]map[Verifier]struct{}{}, credentials: map[string]*credential{}}
+		byUser: map[string]map[Verifier]struct{}{}, credentials: map[string]*credential{},
+		memberIndex: map[string][]string{}, membersVersion: map[string]uint64{}}
 	if _, err := rand.Read(r.instance[:]); err != nil {
 		return nil, ErrUnavailable
 	}
@@ -390,10 +395,40 @@ func (r *Registry) drop(userID string) {
 	delete(r.byUser, userID)
 }
 
+func beyond(ids []string, after string) int {
+	return sort.Search(len(ids), func(i int) bool { return ids[i] > after })
+}
+
 func page(ids []string, after string, limit int) []string {
 	sort.Strings(ids)
-	start := sort.Search(len(ids), func(i int) bool { return ids[i] > after })
+	start := beyond(ids, after)
 	return ids[start : start+min(limit, len(ids)-start)]
+}
+
+func insertSorted(ids []string, id string) []string {
+	at := sort.SearchStrings(ids, id)
+	if at < len(ids) && ids[at] == id {
+		return ids
+	}
+	ids = append(ids, "")
+	copy(ids[at+1:], ids[at:])
+	ids[at] = id
+	return ids
+}
+
+func (r *Registry) putUser(id string, found *user) {
+	r.users[id] = found
+	r.userIndex = insertSorted(r.userIndex, id)
+	r.usersVersion++
+}
+
+func (r *Registry) putMembership(workspace, id string, found *membership) {
+	if r.memberships[workspace] == nil {
+		r.memberships[workspace] = map[string]*membership{}
+	}
+	r.memberships[workspace][id] = found
+	r.memberIndex[workspace] = insertSorted(r.memberIndex[workspace], id)
+	r.membersVersion[workspace]++
 }
 
 func (r *Registry) pageable(after string, limit int) bool {

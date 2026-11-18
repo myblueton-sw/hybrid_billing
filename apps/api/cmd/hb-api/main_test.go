@@ -288,6 +288,7 @@ func TestIdentitySettingFlags(t *testing.T) {
 		t.Errorf("identity flags %+v", access)
 	}
 }
+
 func TestViewGroupDraftFlags(t *testing.T) {
 	for name, args := range map[string][]string{
 		"open below":      {"--view-group-drafts-open", "0"},
@@ -320,5 +321,33 @@ func TestViewGroupDraftFlags(t *testing.T) {
 		if !strings.Contains(usage.String(), want) {
 			t.Errorf("usage missing %s", want)
 		}
+	}
+}
+func TestUserFilterScanFlag(t *testing.T) {
+	for name, args := range map[string][]string{
+		"below":        {"--user-filter-scan", "99"},
+		"above":        {"--user-filter-scan", "10001"},
+		"leading zero": {"--user-filter-scan", "0500"},
+	} {
+		full := append([]string{"--listen", "127.0.0.1:0", "--data", t.TempDir() + "/d"}, args...)
+		if err := run(full, make(chan os.Signal)); err == nil {
+			t.Errorf("%s accepted", name)
+		}
+	}
+	fs := flag.NewFlagSet("t", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	access, given := accessFlags(fs)
+	if err := fs.Parse([]string{"--user-filter-scan", "250"}); err != nil {
+		t.Fatal(err)
+	}
+	given()
+	if access.UserFilterScan != 250 || !access.Given["user_filter_scan"] {
+		t.Errorf("flags %+v", access.UserFilterScan)
+	}
+	var usage strings.Builder
+	fs.SetOutput(&usage)
+	fs.PrintDefaults()
+	if !strings.Contains(usage.String(), "user_filter_scan in people, 100 to 10000 (default 1000)") {
+		t.Errorf("usage %s", usage.String())
 	}
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -42,14 +43,27 @@ type userRow struct {
 	Revocation        *revocationRef `json:"revocation"`
 }
 
+type authMethods struct {
+	Connected    []string `json:"connected"`
+	NotConnected []string `json:"not_connected"`
+}
+
 type usersPage struct {
-	Revision string    `json:"revision"`
-	Next     string    `json:"next"`
-	Users    []userRow `json:"users"`
+	Revision  string    `json:"revision"`
+	Next      string    `json:"next"`
+	NextLogin string    `json:"next_login"`
+	Users     []userRow `json:"users"`
 	clockRows
 	Settings      []settingRow `json:"settings"`
 	LedgerState   string       `json:"ledger_state"`
 	CanBulkRevoke bool         `json:"can_bulk_revoke"`
+	Filters       userFilter   `json:"filters"`
+	ScanStopped   bool         `json:"scan_stopped"`
+	ScanBudget    int          `json:"scan_budget"`
+	Order         string       `json:"order"`
+	ListVersion   string       `json:"list_version"`
+	AuthMethods   authMethods  `json:"auth_methods"`
+	WarningDays   int          `json:"warning_days"`
 }
 
 func stamp(t time.Time) string { return t.UTC().Format(time.RFC3339) }
@@ -108,27 +122,30 @@ func (s *Server) admitted(w http.ResponseWriter, r *http.Request) (session, iden
 	return found, answer, true
 }
 
-func pageLimit(r *http.Request) (string, int, bool) {
-	after := r.URL.Query().Get("after")
-	limit := 50
-	if raw := r.URL.Query().Get("limit"); raw != "" {
-		n, err := strconv.Atoi(raw)
-		if err != nil || n < 1 || n > 100 {
-			return "", 0, false
-		}
-		limit = n
-	}
-	if after != "" && !validWorkspace(after) {
-		return "", 0, false
-	}
-	return after, limit, true
+var (
+	errListChanged = errors.New("the cursor person left the login order")
+	errBadCursor   = errors.New("the cursor names no listed person")
+)
+
+var readRules = map[commands.Code]struct {
+	status int
+	next   commands.NextAction
+}{
+	commands.InvalidRequest:        {http.StatusUnprocessableEntity, commands.NextCorrect},
+	commands.UnsupportedCapability: {http.StatusNotImplemented, commands.NextNone},
+	commands.RevisionConflict:      {http.StatusConflict, commands.NextInspect},
+}
+
+func failRead(w http.ResponseWriter, code commands.Code, request string, fields ...string) {
+	rule := readRules[code]
+	writeJSON(w, rule.status, request, errorBody{Code: string(code), NextAction: string(rule.next), RequestID: request, Fields: fields})
 }
 
 func (s *Server) listUsers(w http.ResponseWriter, r *http.Request) {
 	request := r.Header.Get("X-Request-Id")
-	after, limit, ok := pageLimit(r)
-	if !ok {
-		failCode(w, commands.InvalidRequest, request)
+	query, code := parseUsersQuery(r.URL.Query())
+	if code != "" {
+		failRead(w, code, request)
 		return
 	}
 	s.domain.RLock()
@@ -137,8 +154,19 @@ func (s *Server) listUsers(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	page, err := s.usersPage(found.verifier, after, limit)
-	if err != nil {
+	if answer.Workspace() != s.bootWorkspace {
+		failCode(w, commands.PermissionDenied, request)
+		return
+	}
+	page, err := s.usersPage(found.verifier, query)
+	switch {
+	case errors.Is(err, errListChanged):
+		failRead(w, commands.RevisionConflict, request, "after")
+		return
+	case errors.Is(err, errBadCursor):
+		failRead(w, commands.InvalidRequest, request, "after")
+		return
+	case err != nil:
 		failCode(w, commands.DependencyUnavailable, request)
 		return
 	}
@@ -146,45 +174,131 @@ func (s *Server) listUsers(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, request, page)
 }
 
-func (s *Server) usersPage(actor identity.Verifier, after string, limit int) (usersPage, error) {
-	members, err := s.roster(actor)
+func (s *Server) listVersion() string {
+	return strconv.FormatUint(s.identity.Subjects().Generation(), 10) + "." + strconv.FormatUint(s.dir.version, 10)
+}
+
+func (s *Server) resume(after *userCursor) ([]string, []string, error) {
+	d := s.dir
+	if after == nil {
+		return d.order, d.departed, nil
+	}
+	if after.departed {
+		at := sort.SearchStrings(d.departed, after.user)
+		if at == len(d.departed) || d.departed[at] != after.user {
+			return nil, nil, errBadCursor
+		}
+		return nil, d.departed[at+1:], nil
+	}
+	if login, ok := d.loginOf(after.user); ok {
+		return d.order[d.position(after.user, login)+1:], d.departed, nil
+	}
+	found, ok, err := s.findUser(after.user)
+	switch {
+	case err != nil:
+		return nil, nil, err
+	case ok && found.State == identity.Departed:
+		return nil, nil, errListChanged
+	}
+	return nil, nil, errBadCursor
+}
+
+func (s *Server) people(actor identity.Verifier, ids []string) (map[string]identity.Person, error) {
+	if s.faulty("people") {
+		return nil, identity.ErrUnavailable
+	}
+	found, err := s.identity.Workspace().People(actor, s.bootWorkspace, ids)
+	out := make(map[string]identity.Person, len(found))
+	for _, p := range found {
+		out[p.User.ID] = p
+	}
+	return out, err
+}
+
+type usersScan struct {
+	s        *Server
+	actor    identity.Verifier
+	query    usersQuery
+	matcher  userMatcher
+	now      time.Time
+	budget   int
+	examined int
+	last     userCursor
+	rows     []userRow
+}
+
+func (c *usersScan) segment(ids []string, departed bool) (bool, error) {
+	for len(ids) > 0 {
+		chunk := ids[:min(len(ids), identity.PeopleLimit, c.budget-c.examined)]
+		if len(chunk) == 0 {
+			return true, nil
+		}
+		found, err := c.s.people(c.actor, chunk)
+		if err != nil {
+			return false, err
+		}
+		for i, id := range chunk {
+			c.examined++
+			c.last = userCursor{departed: departed, user: id}
+			p := found[id]
+			if p.User.Kind != identity.Human {
+				continue
+			}
+			row := c.s.row(p.User, p.Member, c.now)
+			if !c.matcher.matches(row, p.Member, c.now) {
+				continue
+			}
+			c.rows = append(c.rows, row)
+			if len(c.rows) == c.query.limit {
+				return i+1 < len(ids), nil
+			}
+		}
+		ids = ids[len(chunk):]
+	}
+	return false, nil
+}
+
+func (s *Server) usersPage(actor identity.Verifier, query usersQuery) (usersPage, error) {
+	login, departed, err := s.resume(query.after)
 	if err != nil {
 		return usersPage{}, err
 	}
 	now := s.clock()
-	out := usersPage{Revision: s.Revision(), Users: []userRow{}, clockRows: s.clockRows(now), Settings: s.identitySettingRows(), LedgerState: s.ledgerRow().State}
-	latest := s.bulk.Latest(s.bootWorkspace)
-	for {
-		batch, err := s.users(after)
-		if err != nil {
-			return usersPage{}, err
-		}
-		for _, found := range batch {
-			if found.Kind != identity.Human {
-				continue
-			}
-			if len(out.Users) == limit {
-				out.Next = out.Users[limit-1].UserID
-				return out, nil
-			}
-			row := s.row(found, members, now)
-			if l, ok := latest[found.ID]; ok {
-				row.Revocation = &revocationRef{Bulk: l.Bulk, State: l.State}
-			}
-			out.Users = append(out.Users, row)
-		}
-		if len(batch) < 100 {
-			return out, nil
-		}
-		after = batch[len(batch)-1].ID
+	scan := &usersScan{s: s, actor: actor, query: query, matcher: newMatcher(query.filter), now: now, budget: s.cfg.Access.UserFilterScan, rows: []userRow{}}
+	more, err := scan.segment(login, false)
+	if err == nil && !more && len(scan.rows) < query.limit {
+		more, err = scan.segment(departed, true)
+	} else if err == nil && !more {
+		more = len(departed) > 0
 	}
+	if err != nil {
+		return usersPage{}, err
+	}
+	out := usersPage{Revision: s.Revision(), Users: scan.rows, clockRows: s.clockRows(now), Settings: s.identitySettingRows(), LedgerState: s.ledgerRow().State,
+		Filters: query.filter, ScanBudget: scan.budget, Order: usersOrder, ListVersion: s.listVersion(),
+		AuthMethods: authMethods{Connected: []string{"password"}, NotConnected: []string{"saml", "oidc", "ldap"}}, WarningDays: s.cfg.Access.RoleWarningDays}
+	if more {
+		out.Next, out.NextLogin = scan.last.String(), s.dir.people[scan.last.user].login
+		out.ScanStopped = len(scan.rows) < query.limit
+	}
+	ids := make([]string, 0, len(scan.rows))
+	for _, row := range scan.rows {
+		ids = append(ids, row.UserID)
+	}
+	latest := s.bulk.LatestFor(s.bootWorkspace, ids)
+	for i := range out.Users {
+		if l, ok := latest[out.Users[i].UserID]; ok {
+			out.Users[i].Revocation = &revocationRef{Bulk: l.Bulk, State: l.State}
+		}
+	}
+	return out, nil
 }
 
-func (s *Server) row(found identity.UserInfo, members map[string]identity.MemberInfo, now time.Time) userRow {
+func (s *Server) row(found identity.UserInfo, m *identity.MemberInfo, now time.Time) userRow {
 	row := userRow{UserID: found.ID, State: string(found.State), Epoch: found.Epoch, Holder: s.dir.holds(found.ID, now)}
-	if m, ok := members[found.ID]; ok {
+	if m != nil {
 		row.Membership = &memberRow{Role: string(m.Role), State: string(m.State), Version: m.Version, RoleFrom: stampOr(m.From), RoleUntil: stampOr(m.Until),
-			RolePeriod: s.rolePeriod(m, now), SuspendedFor: string(m.SuspendedFor), Ledger: s.memberLedger[found.ID]}
+			RolePeriod: s.rolePeriod(*m, now), SuspendedFor: string(m.SuspendedFor), Ledger: s.memberLedger[found.ID]}
 	}
 	if p, ok := s.dir.people[found.ID]; ok {
 		row.Login, row.Email = p.login, p.email
@@ -251,7 +365,7 @@ func (s *Server) probe(login string) (identity.Verifier, error) {
 func (s *Server) acceptPending(login string, actor identity.Verifier, now time.Time) bool {
 	found, live := s.dir.invitation(login, now)
 	_, present := s.dir.invites[login]
-	delete(s.dir.invites, login)
+	s.dir.dropInvite(login)
 	if live && s.identity.Workspace().Accept(s.bootWorkspace, found.id, found.verifier, actor) == nil {
 		if user, ok := s.dir.userOf(login); ok {
 			s.applyAwaiting(user)

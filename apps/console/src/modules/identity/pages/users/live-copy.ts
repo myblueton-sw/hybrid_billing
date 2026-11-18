@@ -41,6 +41,7 @@ export const w = {
   administrator: (l: Locale) => t(l, "Administrator", "관리자", "مسؤول"),
   member: (l: Locale) => t(l, "Member", "멤버", "عضو"),
   noMembership: (l: Locale) => t(l, "No membership", "소속 없음", "بلا عضوية"),
+  noRole: (l: Locale) => t(l, "No role", "역할 없음", "بلا دور"),
   membershipSuspended: (l: Locale) => t(l, "Membership suspended", "소속 정지됨", "العضوية معلّقة"),
   yes: (l: Locale) => t(l, "Yes", "예", "نعم"),
   no: (l: Locale) => t(l, "No", "아니요", "لا"),

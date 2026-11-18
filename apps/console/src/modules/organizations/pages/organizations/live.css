@@ -540,3 +540,25 @@
     overflow-wrap: anywhere;
   }
 }
+.o01-live .o01-plan-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: auto;
+  border-radius: 0;
+  text-decoration: none;
+  color: var(--hb-ink);
+  background: transparent;
+}
+.o01-live .o01-plan-link:hover {
+  background: var(--surface-hover);
+  color: var(--hb-ink);
+}
+.o01-live .o01-plan-hint {
+  max-inline-size: 60ch;
+  margin-block: 8px 0;
+}
+.o01-live .o01-plan-hint time,
+.o01-live .o01-plan-hint bdi {
+  white-space: nowrap;
+}

@@ -11,7 +11,7 @@ import { refusal } from "./live-model";
 const assetStub = /\.(css|svg)(\?.*)?$/;
 if (typeof nodeModule.registerHooks === "function") nodeModule.registerHooks({ load: (url, context, next) => (assetStub.test(url) ? { format: "module", source: "export default ''", shortCircuit: true } : next(url, context)) });
 else nodeModule.register("data:text/javascript," + encodeURIComponent(`export async function load(url, context, next) { return ${assetStub}.test(url) ? { format: "module", source: "export default ''", shortCircuit: true } : next(url, context); }`));
-const { Approval, Detail, ImpactActions, Steps, decisionLabel } = await import("./Live");
+const { Approval, BaseFact, Detail, HandoffNote, ImpactActions, Steps, decisionLabel } = await import("./Live");
 
 const locales: Locale[] = ["en", "ko", "ar"];
 const computed = { money: "computed", publication: "computed", erp: "computed" };
@@ -131,4 +131,61 @@ test("renamed words and the refused notice follow the reloaded row", () => {
   assert.equal(c.refused("ar", refusal(plan({ impact: computed, blocked: "own_proposal" }))), c.own("ar"));
   assert.equal(c.refused("en", refusal(undefined)), c.otherBlock("en"));
   assert.equal(c.heldLead("en"), "Activation is held: the impact of this change on amounts, publication and ERP has not been calculated.");
+});
+
+const bare = (html: string) => html.replace(/<[^>]+>/g, "").replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+const carried = (over: Record<string, unknown> = {}) => ({ kind: "hierarchy" as const, member: "acct-1", from: "", passed: "", base: 2 as number | null, dropped: false, refused: false, ...over });
+const note = (l: Locale, h: ReturnType<typeof carried>, active: number) => renderToStaticMarkup(<HandoffNote l={l} h={h} active={active} onUseBase={noop} />);
+
+test("the handoff block states the prefill and the carried base, with no live role", () => {
+  for (const l of locales) {
+    const html = note(l, carried(), 2);
+    assert.match(html, /^<div id="o02-handoff" class="live-note-rule o02-handoff" tabindex="-1">/, l);
+    assert.ok(!html.includes("role="), l);
+    assert.ok(bare(html).includes(bare(c.prefilled(l, "2"))), l);
+    assert.ok(html.includes('<bdi dir="ltr">2</bdi>'), l);
+    assert.ok(!html.includes("o02-use-base") && !bare(html).includes(c.staleTag(l)), l);
+    assert.ok(!bare(html).includes(c.linkDropped(l)), l);
+    const none = bare(note(l, carried({ base: null }), 5));
+    assert.ok(none.includes(c.prefilledNoBase(l)) && !none.includes(c.staleTag(l)), l);
+  }
+});
+
+test("a changed base shows the notice and the button that is the only way to move the base", () => {
+  for (const l of locales) {
+    const html = note(l, carried(), 4);
+    const text = bare(html);
+    assert.ok(text.includes(`${c.staleTag(l)}.`) && text.includes(bare(c.baseChanged(l, "2", "4"))), l);
+    assert.match(html, /<button type="button" id="o02-use-base" class="live-secondary o02-use-base"><span>.*<bdi dir="ltr">4<\/bdi>.*<\/span><\/button>/, l);
+    assert.ok(text.includes(bare(c.useBase(l, "4"))), l);
+    assert.equal((html.match(/<button/g) ?? []).length, 1, l);
+    const refused = bare(note(l, carried({ refused: true }), 4));
+    assert.ok(refused.includes(bare(c.baseRefused(l, "2", "4"))) && !refused.includes(bare(c.baseChanged(l, "2", "4"))), l);
+  }
+  assert.ok(bare(note("en", carried(), 4)).includes("This change is based on relationship revision 2, but revision 4 is now active."));
+  assert.ok(note("ko", carried({ refused: true }), 4).includes('style="white-space:nowrap">리비전이 <bdi dir="ltr">2</bdi>에서</span>'));
+  assert.equal(c.useBase("ko", "4"), "리비전 4 기준으로 하기");
+});
+
+test("dropped link values and a passed date are stated in the block", () => {
+  for (const l of locales) {
+    const text = bare(note(l, carried({ dropped: true, passed: "2026-11-01" }), 2));
+    assert.ok(text.includes(c.linkDropped(l)), l);
+    assert.ok(text.includes(bare(c.fromPassed(l, "x")).split("x")[0].trim()), l);
+    const only = bare(note(l, carried({ kind: "", member: "", base: null, dropped: true }), 2));
+    assert.ok(only.includes(c.linkDropped(l)) && !only.includes(c.prefilledNoBase(l)), l);
+  }
+  assert.ok(note("en", carried({ passed: "2026-11-01" }), 2).includes('<time dateTime="2026-11-01">'));
+});
+
+test("the base fact reads active or names the active revision", () => {
+  for (const l of locales) {
+    const same = bare(renderToStaticMarkup(<BaseFact l={l} base={3} active={3} />));
+    assert.ok(same.includes(c.baseFact(l)) && same.includes(c.baseActive(l)), l);
+    const other = bare(renderToStaticMarkup(<BaseFact l={l} base={3} active={5} />));
+    assert.ok(other.includes(c.baseNotActive(l, 5)), l);
+  }
+  assert.ok(renderToStaticMarkup(<BaseFact l="en" base={3} active={5} />).includes('<dd><bdi dir="ltr">3</bdi> · not active; revision 5 is active</dd>'));
+  assert.equal(c.eBase("en", 3, 5), "This change is based on revision\u00a0\u20683\u2069, but revision\u00a0\u20685\u2069 is active. Choose \"Base on revision\u00a0\u20685\u2069\" first.");
+  assert.ok(c.eBase("ko", 3, 5).includes("리비전\u00a0\u20683\u2069\u2060이지만") && c.eBase("ko", 3, 5).includes("\u20685\u2069\u2060입니다"));
 });

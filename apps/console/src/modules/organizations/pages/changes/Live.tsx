@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, type AdminClient, type Attempt, type CommandId, type OrgMember, type OrgParty, type PlanRow, type PlansPage, type RelationKind } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
@@ -11,8 +12,8 @@ import { o } from "../../../organizations/pages/organizations/live-copy";
 import { todayUTC, validDay } from "../../../organizations/pages/organizations/live-model";
 import { c } from "./live-copy";
 import {
-  actionsFor, allMemberChoices, blocked, canActivate, closing, currentOn, findPlan, held, impactDone, impactOf, impactUnread, keepsAttempt, kinds, lead, membersKept, minFrom,
-  nameOf, needsTarget, partition, react, refusal, showOpenCount, steps, targetChoices, type Action, type Blocked, type Choice, type Command, type Reaction,
+  actionsFor, adopted, afterConflict, allMemberChoices, baseBlocks, baseField, baseStale, blocked, canActivate, closing, currentOn, currentView, fill, findPlan, formStep, memberMode, held, impactDone, impactOf, impactUnread, keepsAttempt, kinds, lead, membersKept, minFrom,
+  nameOf, needsTarget, partition, prefilled, react, readHandoff, refusal, showOpenCount, steps, targetChoices, type Action, type Blocked, type Choice, type Command, type Carried, type Reaction,
 } from "./live-model";
 import "../../../identity/pages/users/live.css";
 import "./live.css";
@@ -306,11 +307,38 @@ export function ImpactActions({ l, p, onDecision, onAnother }: { l: Locale; p: P
 
 type Form = { kind: RelationKind | ""; action: Action | ""; member: string; memberById: boolean; target: string; targetById: boolean; from: string; reason: string };
 const emptyForm: Form = { kind: "", action: "", member: "", memberById: false, target: "", targetById: false, from: "", reason: "" };
-type Errors = Partial<Record<"kind" | "action" | "member" | "target" | "from" | "reason", string>>;
+type Errors = Partial<Record<"base" | "kind" | "action" | "member" | "target" | "from" | "reason", string>>;
+const listViews = ["impact", "approval", "result"];
 
-export default function LiveChanges({ locale: l, view, params, session, onSignOut, onView, onParams }: {
+export function HandoffNote({ l, h, active, onUseBase }: { l: Locale; h: Carried; active: number; onUseBase: () => void }) {
+  const stale = baseStale(h.base, active);
+  const rev = (n: number) => <bdi dir="ltr">{n}</bdi>;
+  return (
+    <div id="o02-handoff" className="live-note-rule o02-handoff" tabIndex={-1}>
+      {h.dropped && <p>{c.linkDropped(l)}</p>}
+      {prefilled(h) && <p>{h.base !== null ? fill(c.prefilled(l, "{r}"), { r: rev(h.base) }) : c.prefilledNoBase(l)}</p>}
+      {h.passed && <p>{fill(c.fromPassed(l, "{d}"), { d: <time dateTime={h.passed}>{day(l, h.passed)}</time> })}</p>}
+      {stale && h.base !== null && (
+        <>
+          <p><strong>{c.staleTag(l)}.</strong> {fill((h.refused ? c.baseRefused : c.baseChanged)(l, "{r}", "{a}"), { r: rev(h.base), a: rev(active) })}</p>
+          <button type="button" id="o02-use-base" className="live-secondary o02-use-base" onClick={onUseBase}><span>{fill(c.useBase(l, "{a}"), { a: rev(active) })}</span></button>
+        </>
+      )}
+    </div>
+  );
+}
+
+export function BaseFact({ l, base, active }: { l: Locale; base: number; active: number }) {
+  return (
+    <dl className="live-facts o02-base">
+      <div><dt>{c.baseFact(l)}</dt><dd><bdi dir="ltr">{base}</bdi> · {baseStale(base, active) ? c.baseNotActive(l, active) : c.baseActive(l)}</dd></div>
+    </dl>
+  );
+}
+
+export default function LiveChanges({ locale: l, view, params, session, onSignOut, onView, onParams, onDirty }: {
   locale: Locale; view: string; params: URLSearchParams; session: Session; onSignOut: () => void;
-  onView: (view: string, params?: Record<string, string>) => void; onParams: (params: Record<string, string | null>) => void;
+  onView: (view: string, params?: Record<string, string>) => void; onParams: (params: Record<string, string | null>) => void; onDirty?: (dirty: boolean) => void;
 }) {
   const api = useAdminClient();
   const wide = useWide();
@@ -325,7 +353,12 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const [notice, setNotice] = useState<Notice>(null);
   const [failure, setFailure] = useState<Failure>(null);
   const [denied, setDenied] = useState(false);
-  const [form, setForm] = useState<Form>(emptyForm);
+  const [initial] = useState(() => (listViews.includes(view) ? null : readHandoff(params, todayUTC(new Date()))));
+  const [handoff, setHandoff] = useState<Carried | null>(initial && { ...initial, refused: false });
+  const [form, setForm] = useState<Form>(initial ? { ...emptyForm, kind: initial.kind, member: initial.member, from: initial.from } : emptyForm);
+  const [touched, setTouched] = useState(false);
+  const resolveMember = useRef(!!initial?.member);
+  const greetedHandoff = useRef(false);
   const [errors, setErrors] = useState<Errors>({});
   const [summaryKey, setSummaryKey] = useState(0);
   const [busy, setBusy] = useState<Command | null>(null);
@@ -393,6 +426,34 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     if (what !== "open") say(what === "rejected" ? c.aRejected(l) : what === "activated" ? c.aActivated(l, m[2]) : what === "discarded" ? c.aDiscarded(l) : c.aSealed(l));
     setFocusTo("#o02-plan-title");
   }, [arrived, page, status]);
+  useEffect(() => {
+    if (initial) onParams({ kind: null, member: null, from: null, base: null });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { onDirty?.(touched); }, [touched]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => onDirty?.(false), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!page || !handoff || greetedHandoff.current) return;
+    greetedHandoff.current = true;
+    setFocusTo("#o02-handoff");
+  }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!resolveMember.current) return;
+    const listed = !!choices && allMemberChoices(choices.parties, kinds.map((k) => choices.byKind[k] ?? [])).some((m) => m.id === form.member);
+    const mode = memberMode(!!choices || choicesFailed, listed, touched);
+    if (mode === null) return;
+    resolveMember.current = false;
+    if (mode === "id") setForm((f) => ({ ...f, memberById: true }));
+  }, [choices, choicesFailed]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!listViews.includes(view)) return;
+    setHandoff(null);
+    const step = formStep("left", touched);
+    if (step.resetForm) {
+      setForm(emptyForm);
+      setErrors({});
+    }
+    setTouched(step.touched);
+  }, [view]); // eslint-disable-line react-hooks/exhaustive-deps
   const lastActive = useRef(0);
   useEffect(() => {
     if (!page) return;
@@ -411,7 +472,9 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const selected = findPlan(page?.plans ?? [], selectedId);
 
   const edit = (patch: Partial<Form>) => {
-    attempts.current.propose = undefined;
+    const step = formStep("edit", touched);
+    if (step.clearAttempt) attempts.current.propose = undefined;
+    setTouched(step.touched);
     setForm((f) => ({ ...f, ...patch }));
     setErrors((e) => {
       const next = { ...e };
@@ -446,11 +509,12 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   };
 
   const fieldId = (f: keyof Errors): string =>
-    f === "kind" ? "o02-kind-0" : f === "action" ? "o02-change-0" : f === "member" ? (form.memberById ? "o02-member-id" : "o02-member")
+    f === "base" ? "o02-use-base" : f === "kind" ? "o02-kind-0" : f === "action" ? "o02-change-0" : f === "member" ? (form.memberById ? "o02-member-id" : "o02-member")
       : f === "target" ? (form.targetById ? "o02-target-id" : "o02-target") : f === "from" ? "o02-from" : "live-reason";
 
   const validate = (): Errors => {
     const e: Errors = {};
+    if (handoff && handoff.base !== null && page && baseBlocks(handoff, page.active_revision)) e.base = c.eBase(l, handoff.base, page.active_revision);
     if (!form.kind) e.kind = c.eKind(l);
     if (!form.action) e.action = c.eChange(l);
     if (!form.member.trim()) e.member = c.eMember(l);
@@ -493,7 +557,18 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
       return;
     }
     if (reaction === "stage") { await load(true); setNotice({ text: c.stageChanged(l) }); setFocusTo("#o02-notice"); return; }
-    if (reaction === "conflict") { await load(true); setNotice({ text: c.conflict(l) }); setFocusTo("#o02-notice"); return; }
+    if (reaction === "conflict") {
+      const got = await load(true);
+      const next = afterConflict(handoff, cmd, got ? got.active_revision : null);
+      if (next.shown === "base") {
+        setHandoff(next.handoff);
+        setFocusTo("#o02-handoff");
+        return;
+      }
+      setNotice({ text: c.conflict(l) });
+      setFocusTo("#o02-notice");
+      return;
+    }
     if (reaction === "partial" && cmd === "propose") {
       await load(true);
       setNotice({ text: c.partialPropose(l, cause instanceof AdminError ? cause.operation : ""), alert: true });
@@ -511,13 +586,19 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     if (Object.keys(found).length) { setSummaryKey((k) => k + 1); return; }
     const values: Record<string, string> = { kind: form.kind, member: form.member.trim(), action: form.action, from: form.from };
     if (form.action && needsTarget(form.action)) values.target = form.target.trim();
+    Object.assign(values, baseField(handoff));
     try {
       const out = await run("propose", "relationship.propose", "relationships", form.reason, values);
       if (!out) return;
       const id = out.fields.plan ?? "";
       await load(true);
-      setForm(emptyForm);
-      setErrors({});
+      const step = formStep("proposed", touched);
+      if (step.resetForm) {
+        setForm(emptyForm);
+        setErrors({});
+      }
+      setHandoff(null);
+      flushSync(() => { setTouched(step.touched); onDirty?.(step.touched); });
       onView("impact", { plan: id, done: out.state === "rejected" ? "rejected" : "sealed" });
     } catch (err) {
       await handle(err, "propose");
@@ -553,6 +634,21 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     setFocusTo("#o02-plan-title");
   };
   const back = () => { setStepped(false); setFocusTo(`[data-plan="${typeof CSS !== "undefined" && CSS.escape ? CSS.escape(selectedId) : selectedId}"]`); };
+
+  const adoptBase = () => {
+    if (!page || !handoff) return;
+    const step = formStep("adopt", touched);
+    if (step.clearAttempt) attempts.current.propose = undefined;
+    setTouched(step.touched);
+    setHandoff(adopted(handoff, page.active_revision));
+    setErrors((e) => {
+      const next = { ...e };
+      delete next.base;
+      return next;
+    });
+    say(c.baseAdopted(l, page.active_revision));
+    setFocusTo("#o02-current-title");
+  };
 
   const reload = async () => {
     const got = await load();
@@ -601,27 +697,32 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   }
   if (!page) return null;
 
-  const problems: Problems = (["kind", "action", "member", "target", "from", "reason"] as const).filter((f) => errors[f]).map((f) => ({ field: fieldId(f), message: errors[f] as string }));
+  const problems: Problems = (["base", "kind", "action", "member", "target", "from", "reason"] as const).filter((f) => errors[f]).map((f) => ({ field: fieldId(f), message: errors[f] as string }));
   const errorText = (f: keyof Errors, id: string) => errors[f] && <p className="service-field-error" id={id + "-error"}><span className="visually-hidden">{sc.errorPrefix(l)} </span>{errors[f]}</p>;
   const described = (f: keyof Errors, id: string, hint?: string) => [hint, errors[f] ? id + "-error" : ""].filter(Boolean).join(" ") || undefined;
 
   const kindMembers = form.kind ? choices?.byKind[form.kind] ?? [] : [];
   const memberList: Choice[] = allMemberChoices(parties, kinds.map((k) => choices?.byKind[k] ?? []));
+  const pendingMember = resolveMember.current && !form.memberById && form.member && !memberList.some((m) => m.id === form.member) ? form.member : "";
   const targetList: Choice[] = form.kind ? targetChoices(form.kind, form.member, parties, kindMembers) : [];
   const targetHint = form.kind === "hierarchy" ? c.hintHierarchy(l) : form.kind === "payer" ? c.hintPayer(l) : c.hintPool(l);
   const currentTargets = (on: string): ReactNode => {
     if (!form.kind || !form.member) return null;
     const got = currentOn(form.member, kindMembers, on);
-    if (got === null) return <span className="live-quiet">{choices?.complete ? c.noneOfKind(l) : c.notInListing(l)}</span>;
-    if (got.length === 0) return <span className="live-quiet">{c.none(l)}</span>;
+    const shown = currentView(!!choices || choicesFailed, !!choices?.complete, got);
+    if (shown === "loading") return <span className="live-quiet">{c.loadingChoices(l)}</span>;
+    if (shown === "none_of_kind") return <span className="live-quiet">{c.noneOfKind(l)}</span>;
+    if (shown === "not_in_listing") return <span className="live-quiet">{c.notInListing(l)}</span>;
+    if (shown === "none" || !got) return <span className="live-quiet">{c.none(l)}</span>;
     return <ul className="o02-ranges">{got.map((t) => <li key={t.id}><Named id={t.id} name={t.name} /></li>)}</ul>;
   };
 
   const targetsView = (
     <form className="o02-target" onSubmit={(e) => void propose(e)} noValidate aria-busy={busy === "propose" || undefined}>
       <div className="o02-fields">
+        {handoff && handoff.base !== null && <BaseFact l={l} base={handoff.base} active={page.active_revision} />}
         {problems.length > 0 && <Summary locale={l} title={sc.check(l)} problems={problems} focusKey={summaryKey} />}
-        {!choices && !choicesFailed && <p className="live-meta" role="status">{c.loadingChoices(l)}</p>}
+        {!choices && !choicesFailed && <p className="live-meta o02-choices-loading" role="status">{c.loadingChoices(l)}</p>}
         {(choicesFailed || (choices && !choices.complete)) && <p className="live-note">{c.incomplete(l)}</p>}
         <fieldset className="live-roles" aria-describedby={errors.kind ? "o02-kind-error" : undefined}>
           <legend>{c.relationship(l)}</legend>
@@ -653,6 +754,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
             : (
               <select id="o02-member" className="live-select" value={form.member} aria-invalid={errors.member ? true : undefined} aria-describedby={described("member", "o02-member", "o02-member-hint")} onChange={(e) => edit({ member: e.target.value })}>
                 <option value="">{c.choosePlaceholder(l)}</option>
+                {pendingMember && <option value={pendingMember}>{pendingMember}</option>}
                 {memberList.map((m) => <option key={m.id} value={m.id}>{m.name === m.id ? m.id : `${m.name} (${m.id})`}</option>)}
               </select>
             )}
@@ -683,7 +785,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
         <Reason l={l} value={form.reason} onChange={(v) => edit({ reason: v })} error={errors.reason ?? ""} />
       </div>
       <aside className="o02-current" aria-labelledby="o02-current-title">
-        <h3 id="o02-current-title">{c.current(l)}</h3>
+        <h3 id="o02-current-title" tabIndex={-1}>{c.current(l)}</h3>
         {!form.kind || !form.member ? <p className="live-empty">{c.pickFirst(l)}</p> : (
           <>
             <dl className="live-facts">
@@ -815,6 +917,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
       {noticeBox}
       {failureBox}
       {heading}
+      {single && handoff && <HandoffNote l={l} h={handoff} active={page.active_revision} onUseBase={adoptBase} />}
       {single ? main : (
         <div className={"live-users" + (split ? " o02-open" : "")} data-wide={split ? "true" : "false"}>
           {!(stepped && !split) && <div className="live-list live-sections">{main}</div>}

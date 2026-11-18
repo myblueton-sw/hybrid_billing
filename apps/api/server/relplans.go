@@ -322,9 +322,17 @@ func (h relationshipCommand) propose(ctx commands.Context) (string, map[string]s
 	if from.Before(today(now)) {
 		return "", nil, refuse(commands.InvalidRequest, "from")
 	}
+	raw, pinned := ctx.Fields["base"]
+	base, err := strconv.ParseUint(raw, 10, 64)
+	if pinned && (err != nil || strconv.FormatUint(base, 10) != raw) {
+		return "", nil, refuse(commands.InvalidRequest, "base")
+	}
 	active, err := s.activeRevision(ws)
 	if err != nil {
 		return "", nil, refuse(commands.DependencyUnavailable)
+	}
+	if pinned && base != active {
+		return "", nil, refuse(commands.RevisionConflict)
 	}
 	if err := s.checkIDs(ws, active, kind, c); err != nil {
 		if errors.As(err, new(*commands.Failure)) {
@@ -427,6 +435,7 @@ func (s *Server) relationshipDefinitions() []commands.Definition {
 		{Name: "action", Type: commands.Enum, Required: true, Values: []string{"set", "end", "join", "leave"}},
 		{Name: "target", Type: commands.Text},
 		{Name: "from", Type: commands.Text, Required: true},
+		{Name: "base", Type: commands.Integer},
 	}
 	define := func(id, kind string, f []commands.Field) commands.Definition {
 		return commands.Definition{ID: id, Permission: permission, Mutating: true, Rationale: true, Fields: f, Handler: relationshipCommand{s: s, kind: kind}}

@@ -33,6 +33,15 @@ export const o = {
   external: (l: Locale) => t(l, "External invoice", "외부 청구서", "فاتورة خارجية"),
   chargeback: (l: Locale) => t(l, "Internal chargeback", "내부 비용 청구", "تحميل داخلي للتكاليف"),
   viewHistory: (l: Locale) => t(l, "View history", "이력 보기", "عرض السجل"),
+  createPlan: (l: Locale) => t(l, "Create change plan", "변경 계획 만들기", "إنشاء خطة تغيير"),
+  planHint: (l: Locale, kind: string, r: string, d: string) =>
+    t(l, `Opens Organization changes with this member, its ${kind.toLowerCase()} relationship, relationship revision ${r} and effective date ${d} filled in. Nothing changes until a plan is activated.`,
+      `조직 변경 계획 화면을 엽니다. 이 구성원, ${kind} 관계, 관계 리비전 ${r}, 적용 시작일(${d})이 미리 입력됩니다. 계획이 활성화되기 전에는 아무것도 바뀌지 않습니다.`,
+      `يفتح شاشة «تغييرات المؤسسة» مع تعبئة هذا العضو وعلاقة ${kind} ومراجعة العلاقات ${r} وتاريخ السريان ${d}. لا يتغيّر شيء حتى تُفعَّل خطة.`),
+  planHintNoDate: (l: Locale, kind: string, r: string) =>
+    t(l, `Opens Organization changes with this member, its ${kind.toLowerCase()} relationship and relationship revision ${r} filled in. Choose the effective date there. Nothing changes until a plan is activated.`,
+      `조직 변경 계획 화면을 엽니다. 이 구성원, ${kind} 관계, 관계 리비전 ${r}이(가) 미리 입력됩니다. 적용 시작일은 그 화면에서 고르세요. 계획이 활성화되기 전에는 아무것도 바뀌지 않습니다.`,
+      `يفتح شاشة «تغييرات المؤسسة» مع تعبئة هذا العضو وعلاقة ${kind} ومراجعة العلاقات ${r}. اختر تاريخ السريان هناك. لا يتغيّر شيء حتى تُفعَّل خطة.`),
   accountsTitle: (l: Locale) => t(l, "Source accounts", "원천 계정", "حسابات المصدر"),
   colAccount: (l: Locale) => t(l, "Account", "계정", "الحساب"),
   orgOn: (l: Locale, d: string) => t(l, `Organization on ${d}`, `${d} 기준 조직`, `المؤسسة في ${d}`),

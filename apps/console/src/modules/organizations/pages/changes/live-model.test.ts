@@ -2,6 +2,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { OrgMember, OrgParty, PlanRow } from "../../../../service/admin";
 import { planOf } from "../../../../service/admin";
+import { renderToStaticMarkup } from "react-dom/server";
+import { createElement } from "react";
+import { currentView } from "./live-model";
+import { adopted, afterConflict, baseBlocks, baseField, baseStale, canonicalRevision, conflictShown, fill, formStep, handoffHref, memberMode, prefilled, readHandoff, type Carried } from "./live-model";
 import { canActivate, showOpenCount, actionsFor, allMemberChoices, held, impactDone, impactOf, impactUnread, keepsAttempt, lead, membersKept, nameOf, react, refusal, blocked, closing, currentOn, findPlan, memberChoices, minFrom, needsTarget, partition, steps, targetChoices } from "./live-model";
 
 const parties: OrgParty[] = [
@@ -154,4 +158,115 @@ test("a refused activation is explained by the reloaded row", () => {
   assert.equal(refusal(plan({ can_activate: true, impact: computed })), "other");
   assert.equal(refusal(plan({ state: "activated", blocked: "impact_not_computed" })), "other");
   assert.equal(refusal(undefined), "other");
+});
+
+const link = (q: string) => readHandoff(new URLSearchParams(q), "2026-11-18");
+
+test("the handoff link carries kind, member, a date from today, the base and the language, never names", () => {
+  assert.equal(handoffHref({ kind: "payer", member: "acct-1", from: "2026-11-18", base: 3, lang: "ko" }), "#/organization-changes?view=targets&kind=payer&member=acct-1&from=2026-11-18&base=3&lang=ko");
+  assert.equal(handoffHref({ kind: "view_group", member: "acct-2", from: "", base: 0, lang: "" }), "#/organization-changes?view=targets&kind=view_group&member=acct-2&base=0");
+  const back = readHandoff(new URLSearchParams(handoffHref({ kind: "hierarchy", member: "unit-b", from: "2026-12-01", base: 7, lang: "ar" }).split("?")[1]), "2026-11-18");
+  assert.deepEqual(back, { kind: "hierarchy", member: "unit-b", from: "2026-12-01", passed: "", base: 7, dropped: false });
+});
+
+test("link values are read once with unknown kinds, malformed IDs and bad bases dropped", () => {
+  assert.equal(link("view=targets&lang=en"), null);
+  assert.deepEqual(link("kind=other&member=acct-1&base=2"), { kind: "", member: "acct-1", from: "", passed: "", base: 2, dropped: true });
+  assert.deepEqual(link("kind=payer&member=bad%20id"), { kind: "payer", member: "", from: "", passed: "", base: null, dropped: true });
+  assert.deepEqual(link("member=acct-1&from=2026-11-17"), { kind: "", member: "acct-1", from: "", passed: "2026-11-17", base: null, dropped: false });
+  assert.deepEqual(link("member=acct-1&from=2026-11-18"), { kind: "", member: "acct-1", from: "2026-11-18", passed: "", base: null, dropped: false });
+  assert.equal(link("member=acct-1&from=2026-02-30")?.dropped, true);
+  assert.equal(link("member=acct-1&from=2026-02-30")?.from, "");
+  for (const bad of ["", "-1", "01", "1.0", "x", "18446744073709551616", "9007199254740993", "+1"]) {
+    const got = link("member=acct-1&base=" + encodeURIComponent(bad));
+    assert.equal(got?.base, null, bad);
+    assert.equal(got?.dropped, true, bad);
+  }
+  assert.equal(link("base=0")?.base, 0);
+  assert.equal(link("base=9007199254740991")?.base, 9007199254740991);
+  assert.equal(canonicalRevision("12"), 12);
+  assert.equal(canonicalRevision("1234567890123456"), 1234567890123456);
+  assert.equal(canonicalRevision("12345678901234567"), null);
+});
+
+test("a prefill note needs a carried value and the base compares with the active revision", () => {
+  assert.equal(prefilled({ kind: "", member: "", from: "", passed: "2026-01-01", base: null, dropped: true }), false);
+  for (const h of [{ kind: "payer" as const }, { member: "a" }, { from: "2026-12-01" }, { base: 0 }])
+    assert.equal(prefilled({ kind: "", member: "", from: "", passed: "", base: null, dropped: false, ...h }), true);
+  assert.equal(baseStale(null, 4), false);
+  assert.equal(baseStale(4, 4), false);
+  assert.equal(baseStale(3, 4), true);
+  assert.equal(baseStale(0, 1), true);
+});
+
+test("a refused propose shows the base notice only when the reloaded active revision differs from the carried base", () => {
+  assert.equal(react("propose", "conflict", []), "conflict");
+  assert.equal(conflictShown(3, 4), "base");
+  assert.equal(conflictShown(4, 4), "plain");
+  assert.equal(conflictShown(null, 4), "plain");
+  assert.equal(conflictShown(3, null), "plain");
+});
+
+test("fill puts nodes in place of placeholders and leaves other text", () => {
+  const nb = (inner: string) => `<span class="hb-nowrap" style="white-space:nowrap">${inner}</span>`;
+  const html = renderToStaticMarkup(createElement("p", null, fill("From {r} to {a}, {x}.", { r: createElement("bdi", { dir: "ltr" }, 1), a: createElement("b", null, 2) })));
+  assert.equal(html, `<p>${nb('From <bdi dir="ltr">1</bdi>')} ${nb("to <b>2</b>,")} {x}.</p>`);
+  const ko = renderToStaticMarkup(createElement("p", null, fill("관계 리비전이 {r}에서 {a}(으)로 바뀌었습니다.", { r: "0", a: "1" })));
+  assert.equal(ko, `<p>관계 ${nb("리비전이 0에서")} ${nb("1(으)로")} 바뀌었습니다.</p>`);
+  const date = renderToStaticMarkup(createElement("p", null, fill("적용 시작일({d})이 미리", { d: "D" })));
+  assert.equal(date, `<p>적용 ${nb("시작일(D)이")} 미리</p>`);
+  assert.equal(renderToStaticMarkup(createElement("p", null, fill("{a}", { a: "x" }))), "<p>x</p>");
+});
+
+const carry = (base: number | null, refused = false): Carried => ({ kind: "hierarchy", member: "acct-1", from: "", passed: "", base, dropped: false, refused });
+
+test("unsaved input follows user edits only: base adoption keeps it, a proposal or leaving clears it", () => {
+  assert.deepEqual(formStep("edit", false), { touched: true, clearAttempt: true, resetForm: false });
+  assert.deepEqual(formStep("adopt", false), { touched: false, clearAttempt: true, resetForm: false });
+  assert.deepEqual(formStep("adopt", true), { touched: true, clearAttempt: true, resetForm: false });
+  assert.deepEqual(formStep("proposed", true), { touched: false, clearAttempt: true, resetForm: true });
+  assert.deepEqual(formStep("left", true), { touched: false, clearAttempt: false, resetForm: true });
+  assert.deepEqual(formStep("left", false), { touched: false, clearAttempt: false, resetForm: false });
+});
+
+test("a stale base blocks the proposal until adopted and is sent only when carried", () => {
+  assert.equal(baseBlocks(carry(1), 2), true);
+  assert.equal(baseBlocks(carry(2), 2), false);
+  assert.equal(baseBlocks(carry(null), 2), false);
+  assert.equal(baseBlocks(null, 2), false);
+  assert.equal(baseBlocks(carry(1), null), false);
+  const moved = adopted(carry(1, true), 4);
+  assert.deepEqual([moved.base, moved.refused, moved.member], [4, false, "acct-1"]);
+  assert.equal(baseBlocks(moved, 4), false);
+  assert.deepEqual(baseField(carry(0)), { base: "0" });
+  assert.deepEqual(baseField(carry(null)), {});
+  assert.deepEqual(baseField(null), {});
+});
+
+test("the member mode is decided once the choices settle and never after an edit", () => {
+  assert.equal(memberMode(false, false, false), null);
+  assert.equal(memberMode(true, true, false), "list");
+  assert.equal(memberMode(true, false, false), "id");
+  assert.equal(memberMode(true, false, true), "keep");
+  assert.equal(memberMode(true, true, true), "keep");
+});
+
+test("a conflict refusal marks the base only for a proposal whose carried base differs from the reloaded revision", () => {
+  const stale = afterConflict(carry(1), "propose", 2);
+  assert.equal(stale.shown, "base");
+  assert.equal(stale.handoff?.refused, true);
+  for (const [h, cmd, r] of [[carry(2), "propose", 2], [carry(null), "propose", 2], [null, "propose", 2], [carry(1), "activate", 2], [carry(1), "propose", null]] as const) {
+    const got = afterConflict(h, cmd, r);
+    assert.equal(got.shown, "plain");
+    assert.equal(got.handoff, h);
+  }
+});
+
+test("the Current aside waits for the same listing read as the member choices before it claims anything", () => {
+  assert.equal(currentView(false, false, null), "loading");
+  assert.equal(currentView(false, true, [{ id: "u", name: "U" }]), "loading");
+  assert.equal(currentView(true, false, null), "not_in_listing");
+  assert.equal(currentView(true, true, null), "none_of_kind");
+  assert.equal(currentView(true, true, []), "none");
+  assert.equal(currentView(true, false, [{ id: "u", name: "U" }]), "targets");
 });

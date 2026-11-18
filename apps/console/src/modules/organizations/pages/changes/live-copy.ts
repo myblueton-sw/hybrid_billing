@@ -200,5 +200,29 @@ export const c = {
   aReloaded: (l: Locale) => t(l, "Plans reloaded.", "계획 목록을 다시 불러왔습니다.", "أُعيد تحميل الخطط."),
   loading: (l: Locale) => t(l, "Loading relationship changes…", "관계 변경 계획을 불러오는 중…", "جارٍ تحميل تغييرات العلاقات…"),
   loadFailed: (l: Locale) => t(l, "Relationship changes could not be loaded.", "관계 변경 계획을 불러오지 못했습니다.", "تعذّر تحميل تغييرات العلاقات."),
+  prefilled: (l: Locale, r: string) =>
+    t(l, `Prefilled from Organizations and relationships, based on relationship revision ${r}. Choose the change and the target.`, `조직·관계 탐색에서 가져온 값입니다. 관계 리비전 ${r} 기준입니다. 변경 방식과 연결 대상을 고르세요.`, `قيم مأخوذة من شاشة «المؤسسات والعلاقات»، استنادًا إلى مراجعة العلاقات ${r}. اختر التغيير والجهة المستهدفة.`),
+  prefilledNoBase: (l: Locale) =>
+    t(l, "Prefilled from Organizations and relationships. Choose the change and the target.", "조직·관계 탐색에서 가져온 값입니다. 변경 방식과 연결 대상을 고르세요.", "قيم مأخوذة من شاشة «المؤسسات والعلاقات». اختر التغيير والجهة المستهدفة."),
+  baseChanged: (l: Locale, r: string, a: string) =>
+    t(l, `This change is based on relationship revision ${r}, but revision ${a} is now active. Check the current relationships, then base it on revision ${a}.`,
+      `이 변경은 관계 리비전 ${r} 기준이지만 지금 활성 리비전은 ${a}입니다. 현재 관계를 확인한 뒤 리비전 ${a} 기준으로 바꾸세요.`,
+      `يستند هذا التغيير إلى مراجعة العلاقات ${r}، لكن المراجعة النشطة الآن ${a}. راجِع العلاقات الحالية ثم اتخذ المراجعة ${a} أساسًا.`),
+  baseRefused: (l: Locale, r: string, a: string) =>
+    t(l, `The change was not proposed. The relationship revision changed from ${r} to ${a}. Your entries are kept. Check the current relationships, then base the change on revision ${a}.`,
+      `변경이 제안되지 않았습니다. 관계 리비전이 ${r}에서 ${a}(으)로 바뀌었습니다. 입력 내용은 유지했습니다. 현재 관계를 확인한 뒤 리비전 ${a} 기준으로 바꾸세요.`,
+      `لم يُقترح التغيير. تغيّرت مراجعة العلاقات من ${r} إلى ${a}. احتُفظ بإدخالاتك. راجِع العلاقات الحالية ثم اتخذ المراجعة ${a} أساسًا للتغيير.`),
+  useBase: (l: Locale, a: string) => t(l, `Base on revision ${a}`, `리비전 ${a} 기준으로 하기`, `اتخاذ المراجعة ${a} أساسًا`),
+  baseAdopted: (l: Locale, a: number) => t(l, `The change is now based on relationship revision ${a}.`, `이제 관계 리비전 ${a}이(가) 기준입니다.`, `يستند التغيير الآن إلى مراجعة العلاقات ${a}.`),
+  baseFact: (l: Locale) => t(l, "Based on relationship revision", "기준 관계 리비전", "مراجعة العلاقات المتخذة أساسًا"),
+  baseActive: (l: Locale) => t(l, "active", "활성", "نشطة"),
+  baseNotActive: (l: Locale, a: number) => t(l, `not active; revision ${a} is active`, `활성 아님(활성 리비전 ${a})`, `غير نشطة؛ المراجعة النشطة ${a}`),
+  eBase: (l: Locale, r: number, a: number) =>
+    t(l, `This change is based on revision\u00a0${iso(String(r))}, but revision\u00a0${iso(String(a))} is active. Choose "Base on revision\u00a0${iso(String(a))}" first.`,
+      `이 변경의 기준은 리비전\u00a0${iso(String(r))}\u2060이지만 활성 리비전은\u00a0${iso(String(a))}\u2060입니다. 먼저 "리비전\u00a0${iso(String(a))} 기준으로 하기"를 고르세요.`,
+      `يستند هذا التغيير إلى المراجعة\u00a0${iso(String(r))} بينما المراجعة النشطة\u00a0${iso(String(a))}. اختر أولًا «اتخاذ المراجعة\u00a0${iso(String(a))} أساسًا».`),
+  fromPassed: (l: Locale, d: string) =>
+    t(l, `The effective date in the link, ${d}, has passed, so it was not filled in. Choose today or a later date (UTC).`, `링크의 적용 시작일(${d})이 지나 입력하지 않았습니다. 오늘(UTC) 이후 날짜를 고르세요.`, `تاريخ السريان الوارد في الرابط (${d}) قد مضى، لذا لم يُملأ. اختر تاريخ اليوم أو تاريخًا لاحقًا (UTC).`),
+  linkDropped: (l: Locale) => t(l, "A value in the link was not valid and was removed.", "링크에서 올바르지 않은 값을 제거했습니다.", "أُزيلت من الرابط قيمة غير صالحة."),
   deniedTitle: (l: Locale) => t(l, "Relationship changes are not available to you", "관계 변경을 사용할 수 없습니다", "تغييرات العلاقات غير متاحة لك"),
 };

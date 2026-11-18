@@ -112,3 +112,51 @@ test("the filtered empty state names the scope and offers to clear the filters",
     assert.notEqual(o.filteredEmpty(l, "d"), o.noAccounts(l));
   }
 });
+
+const { PlanActions, planMember, planNode } = await import("./Live");
+const bare = (html: string) => html.replace(/<[^>]+>/g, "").replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+const actions = (l: Locale, plan: { kind: "hierarchy" | "payer" | "view_group"; member: string; base: number } | null, on: string, child = true) =>
+  renderToStaticMarkup(<PlanActions l={l} plan={plan} on={on} today="2026-11-18" lang={l}>{child && <button type="button" id="history">{o.viewHistory(l)}</button>}</PlanActions>);
+
+test("Create change plan is a link before View history carrying kind, member, date and revision only", () => {
+  for (const l of locales) {
+    const html = actions(l, { kind: "payer", member: "acct-1", base: 3 }, "2026-12-01");
+    assert.ok(html.includes(`<a id="o01-create-plan" class="live-secondary o01-plan-link" href="#/organization-changes?view=targets&amp;kind=payer&amp;member=acct-1&amp;from=2026-12-01&amp;base=3&amp;lang=${l}" aria-describedby="o01-plan-hint">${o.createPlan(l)}</a>`), l);
+    assert.ok(html.indexOf("o01-create-plan") < html.indexOf('id="history"'), l);
+    assert.ok(html.includes('<p id="o01-plan-hint" class="live-note o01-plan-hint">'), l);
+    assert.ok(html.includes('<bdi dir="ltr">3</bdi>') && html.includes('<time dateTime="2026-12-01">'), l);
+    assert.ok(bare(html).includes(bare(o.planHint(l, o.kind(l, "payer"), "3", "x")).split("x")[0]), l);
+    assert.ok(!html.includes("Account") && !html.includes("disabled"), l);
+  }
+  assert.equal(o.createPlan("ko"), "변경 계획 만들기");
+});
+
+test("a past as-of date is not carried and the hint asks for the date in O02", () => {
+  for (const l of locales) {
+    const html = actions(l, { kind: "hierarchy", member: "unit-1", base: 1 }, "2026-11-17");
+    assert.ok(html.includes("href=\"#/organization-changes?view=targets&amp;kind=hierarchy&amp;member=unit-1&amp;base=1&amp;lang=" + l + '"'), l);
+    assert.ok(bare(html).includes(bare(o.planHintNoDate(l, o.kind(l, "hierarchy"), "1"))), l);
+    assert.ok(!html.includes("<time"), l);
+  }
+  assert.ok(actions("en", { kind: "view_group", member: "a", base: 2 }, "2026-11-18").includes("from=2026-11-18"));
+});
+
+test("without a plan target the action and its hint are absent, never disabled", () => {
+  for (const l of locales) {
+    const html = actions(l, null, "2026-12-01");
+    assert.ok(!html.includes("o01-create-plan") && !html.includes("o01-plan-hint") && html.includes('id="history"'), l);
+    assert.equal(actions(l, null, "2026-12-01", false), "", l);
+    const alone = actions(l, { kind: "view_group", member: "acct-3", base: 1 }, "2026-12-01", false);
+    assert.ok(alone.startsWith('<div class="live-buttons"><a id="o01-create-plan"'), l);
+  }
+});
+
+test("in the tree only loaded units and accounts can be a hierarchy member, never a legal entity", () => {
+  const leaf = { id: "acct-1", name: "A", kind: "account" as const, state: "", source: "relationship" as const, children: [] };
+  const unit = { id: "unit-1", name: "U", kind: "internal_unit" as const, state: "active", source: "registry" as const, children: [leaf] };
+  const root = { id: "le-1", name: "L", kind: "legal_entity" as const, state: "active", source: "none" as const, children: [unit] };
+  const odd = { id: "x-1", name: "x-1", kind: "unknown" as const, state: "", source: "none" as const, children: [] };
+  assert.equal(planNode([root, odd], "acct-1"), leaf);
+  assert.equal(planNode([root], "nope"), undefined);
+  assert.deepEqual([root, unit, leaf, odd, undefined].map(planMember), [false, true, true, false, false]);
+});

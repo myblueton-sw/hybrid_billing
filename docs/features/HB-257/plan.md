@@ -210,7 +210,7 @@ A phase that turns out too large is split into more tickets in the same order. E
 - The Python FOCUS endpoints are not yet ported to Go.
 - System-level acceptance cases remain NOT_RUN in production form. Phase 10 runs them locally against the pre-launch build only.
 - Screen QA used per-ticket browser QA scripts instead of `npm run qa:*` from HB-260 onward; no record said so before [HYB-291](../../reviews/HYB-291-planning-cross-check/report.md). Whether `npm run qa:*` must run against the service is open for phase 10 or the owner.
-- The audit journal keeps 2 hours (`apps/api/server/server.go:121`) and its test drives 5,400 commands, not the 28,800-record bound above; fix ticket HYB-292.
+- Closed by HYB-292: the audit journal and idempotency store keep 8 hours with a 1-second refill, and `TestEightHourSession` drives 28,800 mutations and on past the retention.
 
 # Verification plan
 

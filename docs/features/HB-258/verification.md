@@ -82,7 +82,7 @@ Source: No screen spec. IDs derived from the phase 1 scope in `docs/features/HB-
 | --- | --- | --- | --- |
 | HB-33 | deferred | Covered: commands run through the common command path with idempotency keys and expected revisions; OpenAPI is served. Not built: CLI, AI and external consumer parity, 202 jobs for bulk work, and an API-only business cycle. | HB-258/plan.md |
 | HB-03 | deferred | Addressed within pre-launch scope for the assembled gate and command path; registry-wide and leakage acceptance not built. | HB-258/plan.md |
-| HB-30 | deferred | The command audit journal is in memory and keeps 2 hours (`server.go:121`), not the 8-hour sizing in HB-257:109; fix ticket HYB-292. | HYB-291 report |
-| HB-39 | deferred | Limits are sized, but no test drives the journal to 28,800 records (`server_test.go:237-242` drives 5,400); HYB-292. | HYB-291 report |
+| HB-30 | deferred | Closed by HYB-292: the in-memory audit journal keeps 8 hours, matching HB-257:109. Still deferred: durable storage; the journal resets with the process. | HYB-292/verification.md |
+| HB-39 | deferred | Closed by HYB-292 for the command limits: `TestEightHourSession` drives one user through 28,800 mutations at one per second and on past the retention; the limits keep the newest records. Still deferred: the rest of HB-39 (large-scale processing budgets). | HYB-292/verification.md |
 | HB-36 | deferred | Loopback service and cross builds exist; TLS, packaging and Windows file modes are residuals. | HB-258/verification.md Residuals |
 | HB-42 | deferred | Covered: the identity bootstrap is armed with a generated verifier written only to a 0600 file. Not covered: the rest of the user identity and access lifecycle (later tickets). | HB-258/plan.md |

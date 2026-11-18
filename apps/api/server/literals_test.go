@@ -22,8 +22,8 @@ func TestLiterals(t *testing.T) {
 		t.Error("identity limits")
 	}
 	if CommandLimits() != (commands.Limits{Fields: 64, Value: 4096, Rationale: 2000, Operations: 1200000, Journal: 1200000, Workspaces: 2, Users: 20,
-		WorkspaceJournal: 600000, UserJournal: 30000, WorkspaceOperations: 600000, UserOperations: 30000, Replay: time.Hour, Retention: 2 * time.Hour,
-		Burst: 60, Refill: 250 * time.Millisecond}) {
+		WorkspaceJournal: 600000, UserJournal: 30000, WorkspaceOperations: 600000, UserOperations: 30000, Replay: time.Hour, Retention: 8 * time.Hour,
+		Burst: 60, Refill: time.Second}) {
 		t.Error("command limits")
 	}
 	if strings.Join(DefaultOrigins, " ") != "http://127.0.0.1:5173 http://localhost:5173 http://127.0.0.1:4173 http://localhost:4173" {

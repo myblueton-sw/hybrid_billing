@@ -70,6 +70,7 @@ type Config struct {
 	Readers   map[string]string
 	Access    AccessSettings
 	Org       OrgSettings
+	Plugins   PluginSettings
 }
 
 type Server struct {
@@ -240,6 +241,13 @@ func New(cfg Config) (*Server, error) {
 	if err := cfg.Org.validate(); err != nil {
 		return nil, err
 	}
+	licenses, err := cfg.Plugins.licenses()
+	if err != nil {
+		return nil, err
+	}
+	if err := sampleLicensed(cfg.Seed, licenses); err != nil {
+		return nil, err
+	}
 	steps := []func() error{
 		func() (err error) { s.identity, err = identity.New(Installation, cfg.Identity, s.clock); return },
 		func() (err error) {
@@ -266,7 +274,7 @@ func New(cfg Config) (*Server, error) {
 		},
 		func() (err error) { s.events, err = events.NewRegistry(EventLimits(), s.clock); return },
 		func() (err error) {
-			s.plugins, err = plugins.NewRegistry(plugins.Config{Core: pluginCore, Destinations: integrationDestinations{s: s}, Random: rand.Reader}, PluginLimits(), s.clock)
+			s.plugins, err = plugins.NewRegistry(plugins.Config{Core: pluginCore, Destinations: integrationDestinations{s: s}, Random: rand.Reader, Licenses: licenses}, PluginLimits(), s.clock)
 			return
 		},
 		func() (err error) {

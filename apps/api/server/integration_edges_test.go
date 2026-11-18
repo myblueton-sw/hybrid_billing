@@ -25,7 +25,7 @@ func TestIntegrationsReadFaults(t *testing.T) {
 	root := f.as(AdminLogin)
 	at := ""
 	f.s.fault = func(step string) bool { return step == at }
-	for _, step := range []string{"integrations-read", "plugins-publisher", "plugins-version", "plugins-installation", "plugins-workspace", "plugins-recheck", "webhooks-subscription",
+	for _, step := range []string{"integrations-read", "plugins-publisher", "plugins-version", "plugins-installation", "plugins-workspace", "plugins-recheck", "plugins-licenses", "webhooks-subscription",
 		"webhooks-keys", "webhooks-deliveries", "events-bounds", "services"} {
 		at = step
 		f.code(t, step, f.integrations(root), 503, "dependency_unavailable")
@@ -72,7 +72,7 @@ func TestIntegrationCommandFaults(t *testing.T) {
 	}
 	at = ""
 	f.s.fault = nil
-	if len(f.s.integ.redeliver) != 0 || len(f.s.integ.subscription(sampleSubscription).history) != before || f.s.integ.counter != 0 || len(f.s.integ.entries) != 9 {
+	if len(f.s.integ.redeliver) != 0 || len(f.s.integ.subscription(sampleSubscription).history) != before || f.s.integ.counter != 0 || len(f.s.integ.entries) != 10 {
 		t.Errorf("faults changed the store")
 	}
 	read := f.integrations(root)
@@ -95,7 +95,7 @@ func TestIntegrationSeed(t *testing.T) {
 		t.Fatal(err)
 	}
 	c := s.integ
-	if len(c.entries) != 9 || strings.Join(c.publishers, ",") != samplePublisher || len(c.plugins) != 1 || strings.Join(c.plugins[0].versions, ",") != "1.0.0,1.1.0" ||
+	if len(c.entries) != 10 || strings.Join(c.publishers, ",") != samplePublisher || len(c.plugins) != 1 || strings.Join(c.plugins[0].versions, ",") != "1.0.0,1.1.0,1.2.0" ||
 		c.workspace != SampleWorkspace || len(c.subscriptions) != 2 || fmt.Sprint(c.subscriptions[0].letters) != "[delivery-3]" || len(c.types) != 2 ||
 		fmt.Sprint(c.redeliver) != "map[delivery-3:{sample-admin Sample data}]" || len(c.dismiss) != 0 || s.signer.keys != nil {
 		t.Fatalf("seed store %+v", c)
@@ -295,12 +295,12 @@ func TestIntegrationStoreAndTargets(t *testing.T) {
 		t.Errorf("letters %v", e.letters)
 	}
 	f := setup(t, SeedSample).ready()
-	for target, want := range map[string]uint64{pluginProposalAt(1): 1, pluginProposalAt(9): 9} {
+	for target, want := range map[string]uint64{pluginProposalAt(1): 1, pluginProposalAt(9): 9, pluginProposalAt(10): 10} {
 		if e := f.s.pluginEntryOf(target); e == nil || e.view.Number != want {
 			t.Errorf("%s: %v", target, e)
 		}
 	}
-	for _, target := range []string{"", "plugin-proposal-", pluginProposalAt(0), pluginProposalAt(10), "plugin-proposal-+9", "plugin-proposal-09", "plugin-proposal-9x",
+	for _, target := range []string{"", "plugin-proposal-", pluginProposalAt(0), pluginProposalAt(11), "plugin-proposal-+9", "plugin-proposal-09", "plugin-proposal-9x",
 		"plugin-proposal-18446744073709551616", "x-plugin-proposal-9", "installation-proposal-9"} {
 		if f.s.pluginEntryOf(target) != nil {
 			t.Errorf("%s resolved", target)

@@ -27,6 +27,8 @@ var (
 	events = Capability{Kind: CapabilityReadEvents, Target: "invoice.issued"}
 	call   = Capability{Kind: CapabilityCallCommand, Target: "invoice.void"}
 	screen = Capability{Kind: CapabilityServeScreen, Target: "overview"}
+
+	permittedLicenses = []string{"Apache-2.0", "MIT"}
 )
 
 type destinations struct {
@@ -95,7 +97,7 @@ func setupWith(t testing.TB, l Limits) world {
 	mu := &sync.Mutex{}
 	d := &destinations{active: true}
 	e := &entropy{}
-	r, err := NewRegistry(Config{Core: "2.4.0", Destinations: d, Random: e}, l, func() time.Time {
+	r, err := NewRegistry(Config{Core: "2.4.0", Destinations: d, Random: e, Licenses: permittedLicenses}, l, func() time.Time {
 		mu.Lock()
 		defer mu.Unlock()
 		return now
@@ -152,7 +154,7 @@ func (f world) publisher(id string) {
 
 func manifest(plugin, number string) Manifest {
 	sum := sha256.Sum256([]byte("synthetic-package-" + plugin + number))
-	return Manifest{Plugin: plugin, Version: number, Publisher: "acme", Key: "k1", Digest: hex.EncodeToString(sum[:]),
+	return Manifest{Plugin: plugin, Version: number, Publisher: "acme", Key: "k1", Digest: hex.EncodeToString(sum[:]), License: "MIT",
 		Core: CoreRange{Min: "2.0.0", Max: "2.9.9"}, Capabilities: []Capability{call, events, screen}, Egress: []string{"crm"},
 		Endpoints: []string{"api"}, Limits: RuntimeLimits{Timeout: time.Second, MemoryMiB: 64, Concurrency: 2},
 		Storage: Storage{Namespace: plugin + "-data", Owner: "acme", RetentionDays: 30, Deletion: RetainForEvidence, Migration: MigrationAdditive},

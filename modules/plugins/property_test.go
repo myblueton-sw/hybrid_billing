@@ -1,6 +1,8 @@
 package plugins
 
 import (
+	"errors"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -29,6 +31,8 @@ type model struct {
 	confirmed  map[string]bool
 	tokens     []modelToken
 	now        time.Time
+	licenses   map[[2]string]string
+	permitted  map[string]bool
 }
 
 var (
@@ -36,6 +40,7 @@ var (
 	propertyPlugins    = []string{"ledger", "audit"}
 	propertyVersions   = []string{"1.0.0", "1.1.0", "1.2.0"}
 	propertyRuntimes   = map[string]Actor{"w1": run1, "w2": run2, "v1": runV}
+	propertyLicenses   = []string{"Apache-2.0", "GPL-3.0-only", "LicenseRef-closed", "MIT"}
 )
 
 func publisherOf(plugin string) string {
@@ -46,7 +51,10 @@ func publisherOf(plugin string) string {
 }
 
 func (m *model) runnable(workspace, plugin, number string) bool {
-	if m.revoked[publisherOf(plugin)] || publisherOf(plugin) == "acme" && m.compromise {
+	if !m.trusted(plugin) {
+		return false
+	}
+	if !m.permitted[m.licenses[[2]string{plugin, number}]] {
 		return false
 	}
 	return !m.vulnerable[[2]string{plugin, number}] || workspace == "v1"
@@ -85,15 +93,37 @@ func (m *model) valid(t modelToken) bool {
 	return i.present && i.state == StateEnabled && i.revision == t.revision && m.now.Before(t.expiry)
 }
 
-func propertyWorld(t *testing.T) world {
+func propertyLicensing(rng *rand.Rand) (map[[2]string]string, map[string]bool, []string) {
+	licenses, permitted, list := map[[2]string]string{}, map[string]bool{}, []string{}
+	for _, plugin := range propertyPlugins {
+		for _, number := range propertyVersions {
+			licenses[[2]string{plugin, number}] = propertyLicenses[rng.Intn(len(propertyLicenses))]
+		}
+	}
+	for _, license := range propertyLicenses {
+		if rng.Intn(3) > 0 {
+			permitted[license] = true
+			list = append(list, license)
+		}
+	}
+	return licenses, permitted, list
+}
+
+func propertyWorld(t *testing.T, licenses map[[2]string]string, list []string) world {
 	f := setup(t)
+	f.r.config.Licenses = list
 	f.publisher("acme")
 	f.publisher("beta")
 	for _, plugin := range propertyPlugins {
 		for _, number := range propertyVersions {
 			m := manifest(plugin, number)
 			m.Publisher = publisherOf(plugin)
+			m.License = licenses[[2]string{plugin, number}]
 			f.version(m)
+			view, err := f.r.Version(plugin, number)
+			if err != nil || view.Permitted != containsText(list, m.License) {
+				t.Fatalf("%s %s permitted %v %v", plugin, number, view.Permitted, err)
+			}
 		}
 	}
 	f.workspace("w1", "run-1", false)
@@ -114,8 +144,10 @@ func TestLifecycleProperty(t *testing.T) {
 
 func runProperty(t *testing.T, seed int64, steps int) {
 	rng := rand.New(rand.NewSource(seed))
-	f := propertyWorld(t)
-	m := &model{installs: map[[2]string]*modelInstall{}, vulnerable: map[[2]string]bool{}, revoked: map[string]bool{}, confirmed: map[string]bool{}, now: start}
+	licenses, permitted, list := propertyLicensing(rng)
+	f := propertyWorld(t, licenses, list)
+	m := &model{installs: map[[2]string]*modelInstall{}, vulnerable: map[[2]string]bool{}, revoked: map[string]bool{}, confirmed: map[string]bool{}, now: start,
+		licenses: licenses, permitted: permitted}
 	for step := 0; step < steps; step++ {
 		w := propertyWorkspaces[rng.Intn(len(propertyWorkspaces))]
 		p := propertyPlugins[rng.Intn(len(propertyPlugins))]
@@ -127,14 +159,14 @@ func runProperty(t *testing.T, seed int64, steps int) {
 		switch op {
 		case 0:
 			want = (!i.present || i.state == StateRemoved) && m.runnable(w, p, v)
-			err = f.try(at(ChangeInstall, w, p, v))
+			err = f.tryChecked(t, at(ChangeInstall, w, p, v))
 			if want {
 				i.present, i.state, i.version = true, StateInstalled, v
 				i.revision++
 			}
 		case 1:
 			want = i.present && (i.state == StateInstalled || i.state == StateStopped) && m.runnable(w, p, i.version)
-			err = f.try(at(ChangeEnable, w, p, ""))
+			err = f.tryChecked(t, at(ChangeEnable, w, p, ""))
 			if want {
 				i.state = StateEnabled
 				i.revision++
@@ -159,14 +191,14 @@ func runProperty(t *testing.T, seed int64, steps int) {
 				kind, order = ChangeRollback, -1
 			}
 			want = i.present && i.state != StateRemoved && compare(v, i.version) == order && m.runnable(w, p, v)
-			err = f.try(at(kind, w, p, v))
+			err = f.tryChecked(t, at(kind, w, p, v))
 			if want {
 				i.version = v
 				i.revision++
 			}
 		case 6:
 			want = i.present && i.state != StateRemoved
-			err = f.try(at(ChangeRemove, w, p, ""))
+			err = f.tryChecked(t, at(ChangeRemove, w, p, ""))
 			if want {
 				i.state = StateRemoved
 				i.revision++
@@ -228,6 +260,12 @@ func runProperty(t *testing.T, seed int64, steps int) {
 			m.now = m.now.Add(d)
 			want = true
 		}
+		if target, ready := m.licenseStep(op, i, v); ready && m.trusted(p) && !m.permitted[m.licenses[[2]string{p, target}]] {
+			var refusal Refusal
+			if !errors.As(err, &refusal) || refusal.Reason != ReasonLicenseNotPermitted {
+				t.Fatalf("seed %d step %d op %d %s %s %s: %v; want %s", seed, step, op, w, p, v, err, ReasonLicenseNotPermitted)
+			}
+		}
 		if (err == nil) != want {
 			t.Fatalf("seed %d step %d op %d %s %s %s: err %v want success %v", seed, step, op, w, p, v, err, want)
 		}
@@ -251,4 +289,46 @@ func runProperty(t *testing.T, seed int64, steps int) {
 			}
 		}
 	}
+}
+
+func containsText(list []string, value string) bool {
+	for _, item := range list {
+		if item == value {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *model) trusted(plugin string) bool {
+	return !m.revoked[publisherOf(plugin)] && !(publisherOf(plugin) == "acme" && m.compromise)
+}
+
+func (m *model) licenseStep(op int, i *modelInstall, v string) (string, bool) {
+	live := i.present && i.state != StateRemoved
+	switch op {
+	case 0:
+		return v, !live
+	case 1:
+		return i.version, live && (i.state == StateInstalled || i.state == StateStopped)
+	case 4:
+		return v, live && compare(v, i.version) == 1
+	case 5:
+		return v, live && compare(v, i.version) == -1
+	}
+	return "", false
+}
+
+func (f world) tryChecked(t *testing.T, c Change) error {
+	t.Helper()
+	p, err := f.r.Propose(c, ann)
+	if err != nil {
+		return err
+	}
+	checked := f.r.Recheck(p.Number)
+	_, err = f.r.Approve(p.Number, bob)
+	if fmt.Sprint(checked) != fmt.Sprint(err) {
+		t.Fatalf("%s: recheck %v, approve %v", c.Kind, checked, err)
+	}
+	return err
 }

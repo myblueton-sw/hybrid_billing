@@ -141,7 +141,7 @@ export function blockerPolicy(code: string, pendingProposal = false): Explain {
   return hiddenCodes.includes(code) ? "hidden" : "explain";
 }
 
-export const dryRunBlocked = ["signature_invalid", "vulnerable", "revoked", "key_inactive", "publisher_inactive", "incompatible"];
+export const dryRunBlocked = ["signature_invalid", "vulnerable", "revoked", "key_inactive", "publisher_inactive", "incompatible", "license_not_permitted"];
 
 export const semver = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
 
@@ -187,21 +187,40 @@ export function trusted(page: IntegrationsPage, v: PluginVersion): boolean {
   return !!key && key.compromise === null;
 }
 
+export function permitted(v: PluginVersion): boolean {
+  return v.license_state === "permitted";
+}
+
+export function refusedByList(v: PluginVersion | undefined): boolean {
+  return v?.license_state === "not_permitted";
+}
+
 export function runnable(page: IntegrationsPage, v: PluginVersion): boolean {
-  if (!trusted(page, v)) return false;
+  if (!trusted(page, v) || !permitted(v)) return false;
   return v.vulnerable === null || page.modules.workspace?.verification === true;
 }
 
-export type ProposeBlocker = { code: "no_command" | "no_workspace" | "no_version" | "unknown_state" | "unknown_list" | "untrusted" } | { code: "duplicate"; number: string; own: boolean };
+export function versionOf(page: IntegrationsPage, plugin: string, version: string): PluginVersion | undefined {
+  return (page.modules.plugins ?? []).find((v) => v.plugin === plugin && v.version === version);
+}
 
-export type ProposeOffer = { options: Change[]; blocker: ProposeBlocker | null };
+export function licenseRefused(page: IntegrationsPage, plugin: string, version: string): boolean {
+  if (!plugin || !version) return false;
+  const v = versionOf(page, plugin, version);
+  return !v || !permitted(v);
+}
+
+export type ProposeBlocker = { code: "no_command" | "no_workspace" | "no_version" | "unknown_state" | "unknown_list" | "untrusted" | "license" | "license_unknown" } | { code: "duplicate"; number: string; own: boolean };
+
+export type ProposeOffer = { options: Change[]; blocker: ProposeBlocker | null; withheld: PluginVersion[] };
 
 export function pendingChange(page: IntegrationsPage, plugin: string, c: Change): PluginProposal | undefined {
   return (page.modules.proposals ?? []).find((p) => p.state === "pending" && p.kind === c.kind && p.summary.plugin === plugin && p.summary.version === c.version);
 }
 
 export function proposeOffer(page: IntegrationsPage, me: string, plugin: string): ProposeOffer {
-  const none = (blocker: ProposeBlocker): ProposeOffer => ({ options: [], blocker });
+  let withheld: PluginVersion[] = [];
+  const none = (blocker: ProposeBlocker): ProposeOffer => ({ options: [], blocker, withheld });
   if (!pluginTarget(plugin)) return none({ code: "no_command" });
   if (!page.modules.workspace) return none({ code: "no_workspace" });
   if (page.modules.installations === null) return none({ code: "unknown_state" });
@@ -212,6 +231,9 @@ export function proposeOffer(page: IntegrationsPage, me: string, plugin: string)
   if (install && !installStates.includes(install.state)) return none({ code: "unknown_state" });
   const candidates: Change[] = [];
   const ok = versions.filter((v) => runnable(page, v));
+  const licenseOnly = versions.filter((v) => !permitted(v) && runnable(page, { ...v, license_state: "permitted" }));
+  const settled = install && install.state !== "removed" && install.state !== "installed" && install.state !== "stopped";
+  withheld = licenseOnly.filter((v) => !settled || v.version !== install.version);
   if (!install || install.state === "removed") {
     for (const v of ok) candidates.push({ kind: "install", version: v.version });
   } else {
@@ -231,9 +253,11 @@ export function proposeOffer(page: IntegrationsPage, me: string, plugin: string)
     if (same) dup = dup ?? same;
     else options.push(c);
   }
-  if (options.length > 0) return { options, blocker: null };
+  if (options.length > 0) return { options, blocker: null, withheld };
   if (dup) return none({ code: "duplicate", number: dup.number === null ? "" : String(dup.number), own: !!me && dup.proposer === me });
-  return none({ code: ok.length < versions.length ? "untrusted" : "no_version" });
+  if (ok.length < versions.length && ok.length + licenseOnly.length === versions.length) return none({ code: licenseOnly.every(refusedByList) ? "license" : "license_unknown" });
+  if (ok.length < versions.length) return none({ code: "untrusted" });
+  return none({ code: "no_version" });
 }
 
 export function proposeValues(c: Change): Record<string, string> {
@@ -431,7 +455,7 @@ export function reasonProblem(v: string): "" | "missing" | "long" {
 export type Pending = { key: string; request: string; expected: string; values: string; snapshot: string[]; context: Record<string, string> };
 const pending = new Map<string, Pending>();
 const drafts = new Map<string, Record<string, string>>();
-const refusals = new Set<string>();
+const refusals = new Map<string, string>();
 
 let scope = "";
 
@@ -507,8 +531,9 @@ export function drop(command: string, target: string): void {
 
 export function settle(command: string, target: string, reaction: Reaction | "ok"): void {
   if (reaction !== "ok" && keepsAttempt(reaction)) return;
+  const values = pending.get(slot(command, target))?.values ?? "";
   pending.delete(slot(command, target));
-  if (reaction === "hint") refusals.add(slot(command, target));
+  if (reaction === "hint") refusals.set(slot(command, target), values);
   else refusals.delete(slot(command, target));
 }
 
@@ -516,8 +541,22 @@ export function refusedNow(command: string, target: string): boolean {
   return refusals.has(slot(command, target));
 }
 
+export function refusedValues(command: string, target: string): Record<string, string> {
+  try {
+    const v = JSON.parse(refusals.get(slot(command, target)) ?? "") as unknown;
+    return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function refusedLicense(page: IntegrationsPage, plugin: string, kind: string, version: string): string {
+  const target = kind === "enable" ? installOf(page, plugin)?.version ?? "" : kind === "install" || kind === "upgrade" || kind === "rollback" ? version : "";
+  return target && licenseRefused(page, plugin, target) ? target : "";
+}
+
 export function pruneRefusals(page: IntegrationsPage, me: string): void {
-  for (const id of [...refusals]) {
+  for (const id of [...refusals.keys()]) {
     const at = unslot(id);
     if (!at) {
       refusals.delete(id);

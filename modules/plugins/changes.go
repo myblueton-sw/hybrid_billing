@@ -93,10 +93,21 @@ func (r *Registry) runnable(w *workspace, v *version) string {
 	switch {
 	case p.revocation != nil || k.compromise != nil:
 		return ReasonRevoked
+	case !r.permitted(v.manifest.License):
+		return ReasonLicenseNotPermitted
 	case v.vulnerable != nil && !w.view.Verification:
 		return ReasonVulnerable
 	}
 	return ""
+}
+
+func (r *Registry) permitted(license string) bool {
+	for _, value := range r.config.Licenses {
+		if value == license {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *Registry) compatible(m Manifest) bool {

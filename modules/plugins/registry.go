@@ -108,9 +108,10 @@ type Registry struct {
 }
 
 func NewRegistry(config Config, limits Limits, clock func() time.Time) (*Registry, error) {
-	if _, ok := semver(config.Core); !ok || config.Destinations == nil || config.Random == nil || clock == nil || !limits.valid() {
+	if _, ok := semver(config.Core); !ok || config.Destinations == nil || config.Random == nil || clock == nil || !limits.valid() || !validLicenses(config.Licenses) {
 		return nil, ErrInvalid
 	}
+	config.Licenses = append([]string{}, config.Licenses...)
 	return &Registry{config: config, limits: limits, clock: clock, publishers: map[string]*publisher{}, plugins: map[string]*plugin{},
 		workspaces: map[string]*workspace{}, runtimes: map[string]string{}, fingerprints: map[string]bool{}, tokens: map[[sha256.Size]byte]*issued{},
 		proposals: map[uint64]*proposal{}, scopes: map[string]*scope{}}, nil

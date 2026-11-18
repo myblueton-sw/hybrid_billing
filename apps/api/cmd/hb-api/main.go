@@ -38,11 +38,13 @@ func run(args []string, stop <-chan os.Signal) error {
 	fs.Var(&readers, "reader", "reader path=http://127.0.0.1:port, repeatable; replaces the defaults")
 	access, given := accessFlags(fs)
 	org, orgGiven := orgFlags(fs)
+	licenses, licensesGiven := pluginFlags(fs)
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	given()
 	orgGiven()
+	licensesGiven()
 	if !server.Loopback(*listen) {
 		return errors.New("listen address must be loopback")
 	}
@@ -58,7 +60,7 @@ func run(args []string, stop <-chan os.Signal) error {
 			routes[path] = target
 		}
 	}
-	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log, Readers: routes, Access: *access, Org: *org})
+	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log, Readers: routes, Access: *access, Org: *org, Plugins: *licenses})
 	if err != nil {
 		return err
 	}
@@ -134,6 +136,23 @@ func orgFlags(fs *flag.FlagSet) (*server.OrgSettings, func()) {
 		fs.Visit(func(f *flag.Flag) {
 			if setting, ok := byFlag[f.Name]; ok {
 				org.Given[setting.Name] = true
+			}
+		})
+	}
+}
+
+func pluginFlags(fs *flag.FlagSet) (*server.PluginSettings, func()) {
+	p := &server.PluginSettings{}
+	fs.Func("plugin-licenses", "permitted plugin licenses, comma-separated SPDX identifiers or LicenseRef- identifiers without spaces; empty permits none (default "+
+		strings.Join(server.DefaultPluginLicenses(), ",")+")", func(raw string) error {
+		p.Raw = raw
+		p.Uses++
+		return nil
+	})
+	return p, func() {
+		fs.Visit(func(f *flag.Flag) {
+			if f.Name == "plugin-licenses" {
+				p.Given = true
 			}
 		})
 	}

@@ -238,6 +238,7 @@ export const blockerWords: Words = {
   incompatible: ["The version does not support this core version.", "버전이 이 코어 버전을 지원하지 않습니다.", "لا يدعم الإصدار هذا الإصدار الأساسي."],
   vulnerable: ["The version is marked vulnerable and cannot run outside a verification workspace.", "버전에 취약 표시가 있어 검증용 업무 공간 밖에서는 실행할 수 없습니다.", "الإصدار موسوم بأنه معرّض للخطر ولا يمكن تشغيله خارج مساحة عمل للتحقق."],
   revoked: ["The publisher or its key is revoked or compromised.", "게시자 또는 키가 회수되었거나 손상되었습니다.", "الناشر أو مفتاحه مُلغى أو مخترق."],
+  license_not_permitted: ["The version's license is not on this installation's list of permitted plugin licenses.", "버전의 라이선스가 이 설치의 허용 플러그인 라이선스 목록에 없습니다.", "ترخيص الإصدار ليس ضمن قائمة تراخيص الإضافات المسموح بها في هذا التثبيت."],
   isolated: ["The plugin is isolated.", "플러그인이 격리되어 있습니다.", "الإضافة معزولة."],
   expired: ["The proposal's evidence has expired.", "제안의 증빙이 만료되었습니다.", "انتهت صلاحية أدلة المقترح."],
   not_found: ["Something this proposal names is no longer registered.", "이 제안이 가리키는 항목이 더 이상 등록되어 있지 않습니다.", "شيء يذكره هذا المقترح لم يعد مسجّلًا."],
@@ -263,8 +264,18 @@ export const unverifiedSentence: [string, string, string] = [
   "إصدار أو وجهة أو صلاحية غير موثّقة. لا يمكن تفعيلها.",
 ];
 
+export const licenseStateWords: Words = {
+  permitted: ["Permitted on this installation", "이 설치에서 허용됨", "مسموح به في هذا التثبيت"],
+  not_permitted: ["Not permitted on this installation.", "이 설치에서 허용되지 않음.", "غير مسموح به في هذا التثبيت."],
+};
+
+export const licenseSourceWords: Words = {
+  default: ["installation default", "설치 기본값", "الإعداد الافتراضي للتثبيت"],
+  start_flag: ["set when the server started", "서버 시작 시 지정", "حُدّد عند بدء الخادم"],
+};
+
 export const allWordTables: Record<string, Words> = {
   sectionWords, connectionWords, clientKindWords, clientStateWords, grantStateWords, scopeWords, serviceUserWords, installWords, installReasonWords, capabilityWords,
   componentWords, deletionWords, migrationWords, proposalKindWords, proposalStateWords, destinationWords, sourceWords, subscriptionWords, subscriptionReasonWords,
-  keyStateWords, historyWords, eventStateWords, deliveryKindWords, jobWords, deliveryReasonWords, resultWords, changeWords, summaryWords, blockerWords, notPendingWords,
+  keyStateWords, historyWords, eventStateWords, deliveryKindWords, jobWords, deliveryReasonWords, resultWords, changeWords, summaryWords, blockerWords, notPendingWords, licenseStateWords, licenseSourceWords,
 };

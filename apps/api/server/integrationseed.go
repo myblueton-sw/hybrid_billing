@@ -285,9 +285,10 @@ func sampleHash(text string) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func sampleManifest(version string) plugins.Manifest {
+func sampleManifest(version, license string) plugins.Manifest {
 	return plugins.Manifest{Plugin: samplePlugin, Version: version, Publisher: samplePublisher, Key: samplePluginKey, Digest: sampleHash(samplePlugin + "-" + version),
-		Core: plugins.CoreRange{Min: "1.0.0", Max: "1.9.9"}, Capabilities: []plugins.Capability{{Kind: plugins.CapabilityReadEvents, Target: typeInvoice},
+		License: license,
+		Core:    plugins.CoreRange{Min: "1.0.0", Max: "1.9.9"}, Capabilities: []plugins.Capability{{Kind: plugins.CapabilityReadEvents, Target: typeInvoice},
 			{Kind: plugins.CapabilityServeScreen, Target: "overview"}}, Egress: []string{sampleEgress}, Endpoints: []string{"api"},
 		Limits:  plugins.RuntimeLimits{Timeout: 30 * time.Second, MemoryMiB: 128, Concurrency: 2},
 		Storage: plugins.Storage{Namespace: sampleNamespace, Owner: samplePublisher, RetentionDays: 30, Deletion: plugins.RetainForEvidence, Migration: plugins.MigrationAdditive},
@@ -300,8 +301,8 @@ func (s *Server) seedPlugins(now time.Time) error {
 	key := plugins.Change{Kind: plugins.ChangeKey, Key: plugins.PublisherKey{Publisher: samplePublisher, Version: samplePluginKey, Public: public, NotBefore: now,
 		NotAfter: now.Add(sampleKeyLife), Proof: ed25519.Sign(private, plugins.KeyChallenge(samplePublisher, samplePluginKey))}}
 	versions := []plugins.Change{}
-	for _, version := range []string{"1.0.0", "1.1.0"} {
-		m := sampleManifest(version)
+	for _, release := range [][2]string{{"1.0.0", sampleLicense}, {"1.1.0", sampleLicense}, {"1.2.0", sampleClosedLicense}} {
+		m := sampleManifest(release[0], release[1])
 		versions = append(versions, plugins.Change{Kind: plugins.ChangeVersion, Manifest: m, Signature: ed25519.Sign(private, m.SigningMessage())})
 	}
 	clear(private)
@@ -338,6 +339,7 @@ func (s *Server) seedPlugins(now time.Time) error {
 		approved(at(plugins.ChangeEnable, "")),
 		pending(at(plugins.ChangeUpgrade, "1.1.0"), second),
 		pending(endpoint, first),
+		approved(versions[2]),
 	)
 }
 

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"math/big"
 	"strconv"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -25,7 +26,10 @@ const (
 	maxMemory       = 4096
 	maxConcurrency  = 64
 	maxComponent    = 6
-	manifestTag     = "hybrid-billing/plugin/v1"
+	maxLicenseBytes = 64
+	maxLicenses     = 64
+	licenseRef      = "LicenseRef-"
+	manifestTag     = "hybrid-billing/plugin/v2"
 	challengeTag    = "hybrid-billing/plugin-key/v1"
 )
 
@@ -69,6 +73,40 @@ func validText(text string) bool {
 	}
 	return true
 }
+
+func licenseByte(c byte) bool {
+	return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '.' || c == '-'
+}
+
+func validLicense(text string) bool {
+	if len(text) == 0 || len(text) > maxLicenseBytes {
+		return false
+	}
+	for index := 0; index < len(text); index++ {
+		if !licenseByte(text[index]) {
+			return false
+		}
+	}
+	if rest, found := strings.CutPrefix(text, licenseRef); found {
+		return rest != ""
+	}
+	first := text[0]
+	return first != '.' && first != '-' && !strings.HasPrefix(strings.ToLower(text), strings.ToLower(licenseRef))
+}
+
+func validLicenses(list []string) bool {
+	if len(list) > maxLicenses {
+		return false
+	}
+	for index, value := range list {
+		if !validLicense(value) || index > 0 && list[index-1] >= value {
+			return false
+		}
+	}
+	return true
+}
+
+func ValidLicenses(list []string) bool { return validLicenses(list) }
 
 func validHex(text string) bool {
 	if len(text) != 64 {
@@ -144,7 +182,7 @@ func has(capabilities []Capability, c Capability) bool {
 }
 
 func (m Manifest) valid() bool {
-	if !validID(m.Plugin) || !validID(m.Publisher) || !validID(m.Key) || !validHex(m.Digest) {
+	if !validID(m.Plugin) || !validID(m.Publisher) || !validID(m.Key) || !validHex(m.Digest) || !validLicense(m.License) {
 		return false
 	}
 	if _, ok := semver(m.Version); !ok {
@@ -237,7 +275,7 @@ func (e *encoder) count(value int) { e.number(int64(value)) }
 
 func (m Manifest) encode() []byte {
 	var e encoder
-	for _, value := range []string{manifestTag, m.Plugin, m.Version, m.Publisher, m.Key, m.Digest, m.Core.Min, m.Core.Max} {
+	for _, value := range []string{manifestTag, m.Plugin, m.Version, m.Publisher, m.Key, m.Digest, m.License, m.Core.Min, m.Core.Max} {
 		e.text(value)
 	}
 	e.count(len(m.Capabilities))

@@ -198,6 +198,26 @@
   padding-block-start: 24px;
   border-block-start: 1px solid var(--border-row);
 }
+.p02-licenses {
+  margin-block-start: 8px;
+}
+.p02-license-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+.p02-license-line {
+  display: block;
+}
+.p02-license-flag {
+  font-weight: 600;
+}
+.p02-withheld {
+  margin-block: 8px 0;
+}
 .p02-clients,
 .p02-destinations {
   margin-block-start: 8px;

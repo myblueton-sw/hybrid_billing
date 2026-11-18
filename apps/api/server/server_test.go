@@ -108,8 +108,9 @@ func TestConfig(t *testing.T) {
 
 func limitsOK() bool {
 	l := CommandLimits()
+	sustained := int(l.Retention/l.Refill) + l.Burst
 	return l.Workspaces*l.WorkspaceJournal <= l.Journal && l.Users*l.UserJournal <= l.WorkspaceJournal && l.Retention > l.Replay &&
-		l.UserJournal > int(4*l.Retention/time.Second)
+		l.UserJournal >= sustained && l.UserOperations >= sustained && l.Retention >= 8*time.Hour && l.Refill <= time.Second
 }
 
 func TestSessionEndpoint(t *testing.T) {

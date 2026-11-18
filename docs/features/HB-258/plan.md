@@ -79,7 +79,7 @@ Errors use the module's `Error` schema: `code`, `retry`, `next_action`, `request
   - attempts 5, pending invitations 1,000, sessions per user 10, credentials per service user 10, page size 100.
 - **gate:** the catalogue holds the kinds and fields that registered commands need. Phase 1 registers only the kind `installation` for the health and session reads. One console client, `console`, is put active.
 - **authpolicy:** an empty registry. Phase 2 seeds the policy.
-- **commands**, with every limit set. They are sized so that a reviewer issuing one command per second never reaches a cap: retention keeps the last hour, and older records are swept.
+- **commands**, with every limit set. They are sized so that a reviewer issuing one command per second never reaches a cap: retention keeps the last hour, and older records are swept (amended by HYB-292: 8 hours, see the amendment at the end).
 
   | Limit | Value |
   | --- | --- |
@@ -264,3 +264,7 @@ Checks:
   - L5. `run()` tests cover flag, listen, seed, origin, port and data errors, a real start, the header limit and shutdown.
   - L7. Trailing data over 1 MiB is 413. Command results always carry the module's request marker in `X-Request-Id`.
   - L6. `Revision()` and `Next()` read the counter without locking and are only for handlers called under the domain lock. This is a stated rule for later phases.
+
+## Amendment 2026-11-18 (HYB-292)
+
+`Retention` is 8 hours and `Refill` is 1 second (sustained 1 command per second after the 60-call burst), so a reviewer at one command per second is served for an eight-hour session (HB-257 plan line 109). Every share keeps its value. The guarantee above is unchanged: the user shares (30,000) exceed the sustained rate over the retention plus the burst (28,860), so a runaway loop is throttled with 429, never locked out by the cap. See `../HYB-292/plan.md`.

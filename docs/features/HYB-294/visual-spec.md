@@ -223,6 +223,8 @@ The Reload and Create user positions are unchanged. Reload loads page one again 
 
 **Parity rule:** at L, M and the stacked layout, the number of visible `th` equals the number of visible `td` in every row. That includes departed rows, rows with no membership and the caller's own row (`m01-self`). Hidden duplicates use `display:none`, as in HYB-299.
 
+**HYB-331 amendment (2026-11-19):** on the Membership tab the membership status column already says "No membership", so a row with no membership no longer repeats it in the role cell. The Workspace role cell (L) and the role line of the Role and period cell (M and stacked) show "—" plus the visually hidden "No role" [TW] (KO "역할 없음", AR "بلا دور"); the membership status cell keeps "No membership". The Users and Invitations tabs, which have no membership status column, and the row detail keep "No membership" in the role value. This replaces the "role cell keeps 'No membership'" bullet above for the Membership tab only.
+
 ## 11. States
 
 | State | Rendering |

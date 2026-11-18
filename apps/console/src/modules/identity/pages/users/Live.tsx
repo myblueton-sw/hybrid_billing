@@ -376,6 +376,11 @@ function membershipWord(l: Locale, u: UserRow): string {
   return u.membership.state === "active" ? w.active(l) : w.membershipSuspended(l);
 }
 
+function RoleBeside({ l, u }: { l: Locale; u: UserRow }) {
+  if (!u.membership) return <><span aria-hidden="true">—</span><span className="visually-hidden">{w.noRole(l)}</span></>;
+  return <>{roleName(l, u.membership.role)}</>;
+}
+
 function Cell({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
   return <td role="cell" data-label={label} className={className}>{children}</td>;
 }
@@ -392,7 +397,7 @@ function Effect({ l, u }: { l: Locale; u: UserRow }) {
   );
 }
 
-function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
+export function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
   l: Locale; view: string; users: UserRow[]; selected: string; onOpen: (id: string) => void; sel: Select; serverTime: string;
 }) {
   const check = sel.on && view !== "invitations";
@@ -433,12 +438,12 @@ function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
                 </>
               ) : view === "membership" ? (
                 <>
-                  <Cell label={head[1]} className="m01-l">{roleName(l, u.membership?.role ?? "")}</Cell>
+                  <Cell label={head[1]} className="m01-l"><RoleBeside l={l} u={u} /></Cell>
                   <Cell label={head[2]} className="m01-l"><PeriodCell l={l} u={u} serverTime={serverTime} /></Cell>
                   <Cell label={head[3]}>{membershipWord(l, u)}<Effect l={l} u={u} /></Cell>
                   <Cell label={head[4]} className="m01-l">{u.installation_administrator ? w.yes(l) : <><span aria-hidden="true">—</span><span className="visually-hidden">{w.no(l)}</span></>}</Cell>
                   <Cell label={head[5]} className="m01-m">
-                    {roleName(l, u.membership?.role ?? "")}{u.membership && <span className="live-sub"><PeriodCell l={l} u={u} serverTime={serverTime} /></span>}
+                    <RoleBeside l={l} u={u} />{u.membership && <span className="live-sub"><PeriodCell l={l} u={u} serverTime={serverTime} /></span>}
                     {u.installation_administrator && <span className="live-sub">{w.installationAdmin(l)}</span>}
                   </Cell>
                 </>

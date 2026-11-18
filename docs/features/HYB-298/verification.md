@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HYB-298 verification — M03 approval requests, revocation states and the decision ledger
 description: What was built against the HYB-298 plan, the checks that were run with their observed results, the rebase deltas against main be1bfa3, deviations from the plan and what remains unverified.
-status: final
+status: stable
 sources:
   - resource: plan.md
 ---

@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: User administration API for M01 on the commands path, gated by the installation administration action
 description: Phase 3b of the pre-launch plan (HB-257). apps/api gains a user list read and identity administration commands. User creation brings a workspace invitation, accepted at the first password set. Password-set and reset links are issued by administrators and picked up once outside command results.
-status: final
+status: stable
 ---
 
 # Scope and ownership

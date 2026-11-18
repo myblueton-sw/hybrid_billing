@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-284 verification of the P02 integrations API
 description: Tests, coverage, race, cross builds, mutation results and review outcomes for the integrations read, the fifteen plugin, subscription and dead-letter commands, the plugins signing wrappers and dry run, and the sample seed with keys generated at start and a narrowly scoped seed signer. Run on mac_mini on 2026-11-17; the test clock is fixed at 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

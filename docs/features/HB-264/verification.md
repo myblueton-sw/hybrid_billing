@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-264 verification of the live M01 user administration screen
 description: Unit tests, browser QA on the production build against a live apps/api with the sample seed, design comparison by the ui-designer role and the change review, run on mac_mini on 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope
@@ -165,8 +165,8 @@ Source: `docs/ui/screens/M01/spec.md:118-120` (HB-263 is the API, HB-264 the scr
 | ID | Status | Reason | Record |
 | --- | --- | --- | --- |
 | HB-03 | deferred | Addressed within pre-launch scope for twelve identity commands under installation administration with last-administrator protection; registry-wide and leakage acceptance not built. | HB-263/plan.md |
-| HB-34 | deferred | Bulk revocation needs asynchronous jobs and manifests and is not built. | HB-263/plan.md:224, HB-264/plan.md:61 |
-| HB-42 | deferred | Invitation, set and reset links, suspend, depart and role change are built; role validity periods and bulk revocation are not. | Planning cross-check residuals below |
+| HB-34 | deferred | Bulk revocation needs asynchronous jobs and manifests and is not built. 2026-11-18: built by HYB-299 (PR #218). | HB-263/plan.md:224, HB-264/plan.md:61 |
+| HB-42 | deferred | Invitation, set and reset links, suspend, depart and role change are built; role validity periods and bulk revocation are not. 2026-11-18: both built by HYB-299 (PR #218). | Planning cross-check residuals below |
 | IAM-01 | deferred | Covered: invitations and set links are one-time. Not built or tested: concurrent first-administrator creation and invitation acceptance from another workspace. | HB-263/verification.md |
 | IAM-02 | deferred | Only local password accounts exist; SAML, OIDC and LDAP sign-in are residuals (HB-257 out of scope). | HB-265/plan.md:177 |
 | IAM-03 | deferred | Does not arise while only local accounts exist. | this section |

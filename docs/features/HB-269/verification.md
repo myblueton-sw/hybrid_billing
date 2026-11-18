@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-269 verification of the live M04 service-account screen
 description: Unit tests, build, browser QA (including failure paths for the one-time secret and the held issue retry) in EN, KO and AR at 1440 and 390, the M01–M03 regression reruns, and the review outcomes for the live M04 screen. Run on mac_mini on 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

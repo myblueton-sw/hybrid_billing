@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Still-working line on reader-backed screens
 description: Defines one shared line that the reader-backed screens add to their loading state after a few seconds, now that a read can wait for the collected reader before it is served.
-status: reviewed
+status: stable
 ---
 
 # Scope and ownership

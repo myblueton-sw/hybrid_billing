@@ -2,7 +2,7 @@
 type: Reference
 title: HYB-300 external references
 description: External professional references for the O01 filter band, applied-filter chips and server paging, opened by root on 2026-11-18, with what was observed, adopted and rejected.
-status: final
+status: stable
 tags: [HYB-300, O01, references]
 sources:
   - resource: plan.md

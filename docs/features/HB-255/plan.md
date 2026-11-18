@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Authentication policy with allowed methods, MFA scope and step-up evaluated against the current revision, dual-controlled revisions that cannot lock out their approver, and block-first chunked bulk revocation
 description: Increment of work item W-42 after HB-172 and HB-173. A per-workspace authentication policy names the allowed methods, the MFA scope and step-up rules with a maximum authentication age. An authentication event is evaluated against the current revision. Revisions are dual-controlled, and the approver must satisfy the new revision. Bulk revocation over a fixed scope blocks the whole scope before any chunk runs, and resumes by chunk.
-status: final
+status: stable
 ---
 
 # Scope and ownership

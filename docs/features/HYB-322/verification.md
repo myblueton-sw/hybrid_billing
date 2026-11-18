@@ -2,7 +2,7 @@
 type: Verification
 title: HYB-322 legal entity member refusal verification
 description: relationship.propose now refuses a legal entity as a member of any relationship and an internal unit as a member of any kind other than the organization hierarchy, narrowing the HB-274 member rule after the HYB-318 finding.
-status: final
+status: stable
 tags: [HYB-322, O02, relationships, HB-274]
 sources:
   - resource: ../HB-274/plan.md

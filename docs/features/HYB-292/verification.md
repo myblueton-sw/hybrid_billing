@@ -2,7 +2,7 @@
 type: Verification
 title: HYB-292 verification
 description: Checks, mutation results, browser regressions, reviews and the planning cross-check for the eight-hour command journal sizing.
-status: final
+status: stable
 tags: [HYB-292, HB-257, HB-258, HB-30, HB-39, verification]
 sources:
   - resource: plan.md

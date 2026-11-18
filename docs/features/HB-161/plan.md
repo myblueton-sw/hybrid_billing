@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: U01 source rows and aggregates in the S04 source-field terms
 description: Defines how U01 presents its collected source rows, account mapping and aggregates with the shared source-field vocabulary and value states, without changing its projection, selection, paging or permissions.
-status: reviewed
+status: stable
 ---
 
 # Scope and ownership

@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: P01 installation API over modules/installer with a synthetic sample site, release and plan
 description: Phase 5a of the pre-launch plan (HB-257, HB-262 scope). Adds an installation read (site, installed state, releases with marks, proposals, install and upgrade previews, diagnostics destinations and reports with guidance) and administrator commands with a reason to approve or withdraw installer proposals and propose acceptance of the current install plan. Nothing changes a real host, downloads anything or holds a real key.
-status: final
+status: stable
 ---
 
 # Scope and ownership

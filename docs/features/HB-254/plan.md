@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Release trace with namespaced requirement records, computed states kept apart from customer proof, a support matrix activated only after two parallel-reconciled billing periods and required test categories, and a release gate that refuses to omit common file features
 description: First increment of work item W-41. A register records each requirement with its source location, owner, interfaces, test IDs and blocking flag, under a namespace, so that results are never reused by name alone. Test results recorded by bound harnesses make a requirement's state computed per build: designed, implemented, tested or customer proven, kept apart. Support paths (provider, contract, account role, version, issuance path) are activated under dual control only after two consecutive matched parallel-reconciliation periods on real data, passing evidence for every required category and real-path proof. A release gate reads every selected and common requirement and path, and NOT_RUN never passes.
-status: final
+status: stable
 ---
 
 # Scope and ownership

@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-263 verification of the user administration API for M01
 description: Tests, coverage, mutation and build results for the identity read, the twelve identity commands, link pickup, invitation acceptance, reset handling and the seed changes in apps/api. Run on mac_mini on 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

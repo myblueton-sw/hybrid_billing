@@ -8,7 +8,7 @@ description: |
   - a methods view (password change);
   - a sessions view (own sessions, end one or all others, sign out here);
   - recovery and notifications views marked unavailable in pre-launch.
-status: final
+status: stable
 ---
 
 # Scope and ownership

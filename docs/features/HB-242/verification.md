@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-242 plugin registry verification
 description: Actual checks run for the first increment of W-35 (modules/plugins), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

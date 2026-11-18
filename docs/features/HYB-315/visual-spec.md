@@ -2,7 +2,7 @@
 type: DesignSpecification
 title: HYB-315 P05 visual specification
 description: Binding visual source for the P05 release evidence screen in service mode, written by the ui-designer role and amended by root; the plan wins on copy, truthfulness and state wording.
-status: final
+status: stable
 tags: [HYB-315, P05, release-evidence]
 sources:
   - resource: plan.md

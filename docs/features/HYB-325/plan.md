@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: HYB-325 P04 storage results state AI source-body non-collection and the separate Assistant conversation data class
 description: Adds one note to the P04 deletion storage results, next to the HYB-312 outside-scope note, that states only what this build does — AI usage records have no prompt or response body fields and AI usage intake is not connected; Assistant conversations are their own retention data class whose deletion runs delete only conversations; the Assistant is not connected.
-status: final
+status: stable
 tags: [HYB-325, P04, retention, HB-27]
 sources:
   - resource: ../HYB-312/verification.md

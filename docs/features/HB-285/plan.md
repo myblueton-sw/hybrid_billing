@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Live P02 integrations screen in the console service mode, bound to the HB-284 integrations API
 description: Phase 5c of the pre-launch plan (HB-257 scope). In service mode, P02 shows the console API client with its grants and the service users managed on M04, the plugin registry with publishers, versions, the installation and plugin proposals, webhook destinations and subscriptions with their keys and history, and event types, the outbox and deliveries with dead letters. It offers the fifteen HB-284 commands only where the read allows them. Nothing is dispatched, sent, signed or issued, and the screen says so.
-status: final
+status: stable
 ---
 
 # Scope and ownership

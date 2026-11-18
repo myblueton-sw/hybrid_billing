@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: P05 release evidence API over modules/releasetrace and modules/perfgate with synthetic sample requirements, builds, test results, support paths and load runs seeded through the modules' own flows
 description: Phase 5i of the pre-launch plan. Adds a release evidence read for the five P05 tabs (matrix, requirements, artifacts, load, decisions) and administrator commands with a reason to approve and withdraw retirement proposals and to propose a requirement or load profile retirement. Nothing activates a support path, records customer proof, approves a load budget, records a result, revokes a harness or claims a release; activation, support decisions, revocation, evidence files and real measurements are shown as not connected.
-status: final
+status: stable
 tags: [HYB-290, pre-launch, release-evidence, api]
 sources:
   - resource: ../HB-257/plan.md

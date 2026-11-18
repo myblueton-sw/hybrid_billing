@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-282 verification of the P01 installation API
 description: Tests, coverage, race, cross builds, mutation results and review outcomes for the installation read, the installer proposal commands and the sample seed with a key generated at start. Run on mac_mini on 2026-11-17; the test clock is fixed at 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

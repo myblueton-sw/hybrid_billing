@@ -2,7 +2,7 @@
 type: Visual Spec
 title: HYB-319 visual spec for O01 view group drafts, page multi-selection and the O02 group draft handoff
 description: Layout, type, spacing, states, focus order, locale and responsive rules for page multi-selection in the O01 accounts and not-in-a-view-group lists, the "Start a view group draft" flow, the drafts list, the draft panel with batched saves, discard, the O02 group draft handoff as the propose confirmation, draft-name labelling and the persistent not-ownership note, with decisions for root.
-status: final
+status: stable
 tags: [HYB-319, HYB-300, O01, O02, visual-spec, view-group, draft, bulk-selection, ui-designer]
 sources:
   - resource: ../HYB-300/plan.md

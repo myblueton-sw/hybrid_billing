@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Session gate in front of the collected FOCUS readers, with a shared secret the gated reader requires and a console proxy switch
 description: Phase 2c of the pre-launch plan (HB-257). The API service forwards the six collected FOCUS reader paths to the loopback readers only after the session, identity access and a gate view permission are checked, and the reader can require a shared secret so local clients cannot go around the gate.
-status: final
+status: stable
 ---
 
 # Scope and ownership

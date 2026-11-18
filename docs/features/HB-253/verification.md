@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-253 third-party component register verification
 description: Actual checks run for W-40 increment 2 (modules/thirdparty), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

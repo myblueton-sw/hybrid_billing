@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Component register with pinned candidates, evidence digests, adoption rules for offline operation, telemetry and license boundaries, and release manifests checked for exact versions and notices
 description: Second increment of work item W-40. A register records third-party candidates and components pinned to an exact version and commit, with licence, notice, SBOM and test evidence digests, offline and telemetry behaviour, and modification and distribution modes. Adoption requires passing tests, offline operation, no required telemetry and a licence allowed for the declared distribution. A release manifest is checked so that every shipped component is adopted at its exact pinned version with its notice, and it gets a deterministic notice bundle digest.
-status: final
+status: stable
 ---
 
 # Scope and ownership

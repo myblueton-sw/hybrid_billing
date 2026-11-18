@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-270 verification of the M05 self-service security API
 description: Tests, coverage, race, cross builds, mutation results and review outcomes for the own-account read, the password change and ending one's own sessions. Run on mac_mini on 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

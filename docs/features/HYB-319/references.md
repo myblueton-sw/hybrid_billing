@@ -2,7 +2,7 @@
 type: Reference
 title: HYB-319 external references
 description: External professional references for O01 view group drafts, page multi-selection and the review-before-commit handoff, opened by root on 2026-11-18, with what was observed, adopted and rejected.
-status: final
+status: stable
 tags: [HYB-319, O01, references]
 sources:
   - resource: visual-spec.md

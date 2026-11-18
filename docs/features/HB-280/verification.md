@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-280 verification of the O03 contract read and lifecycle API
 description: Tests, property test, coverage, race, cross builds, mutation results and review outcomes for the contract list and detail reads and the suspend, resume, renew, end, withdraw, evidence, settle and reopen commands. Run on mac_mini on 2026-11-17; the test clock is fixed at 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope

@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Exact-decimal primitives and largest_remainder_v1 calculator
 description: Defines the first server-side numeric packages, an exact bounded decimal with explicit rounding and a whole-pool allocation calculator, implemented in Go against the proposed numeric and allocation contracts with a synthetic profile.
-status: reviewed
+status: stable
 ---
 
 # Scope and ownership

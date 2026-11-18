@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-245 installer upgrade verification
 description: Actual checks run for W-36 increment 2b (installer upgrades and software rollback), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

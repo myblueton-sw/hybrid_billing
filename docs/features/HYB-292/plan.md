@@ -2,7 +2,7 @@
 type: Plan
 title: HYB-292 audit journal sized for an eight-hour review session
 description: Raises command journal and idempotency retention from two to eight hours and the sustained rate limit refill from 250 ms to 1 s, so a reviewer at one command per second fits for eight hours and a runaway loop is still throttled rather than locked out, with a test that drives one user through 28,800 mutations and on past the retention.
-status: final
+status: stable
 tags: [HYB-292, HB-257, HB-258, HB-177, HB-30, HB-39, commands, audit]
 sources:
   - resource: ../HB-257/plan.md

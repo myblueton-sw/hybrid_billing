@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-258 pre-launch API service skeleton verification
 description: Actual checks run for phase 1 of the pre-launch plan (apps/api), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

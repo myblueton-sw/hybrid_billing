@@ -2,7 +2,7 @@
 type: Verification
 title: HYB-318 verification for the O01 create change plan handoff and the O02 base revision
 description: Commands, results, browser QA, regressions, mutation and the planning cross-check for HYB-318 (HYB-300 part B), recorded by the implementer before independent review.
-status: final
+status: stable
 tags: [HYB-318, HYB-300, O01, O02, verification, relationship.propose, base]
 sources:
   - resource: ../HYB-300/plan.md

@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HYB-315 verification of the P05 support combinations and release evidence screen
 description: Checks, browser QA, regression runs, review outcomes and the planning cross-check for the P05 service-mode screen bound to the HYB-290 release evidence API, run on mac_mini on 2026-11-18.
-status: final
+status: stable
 tags: [HYB-315, P05, release-evidence, screen, verification]
 sources:
   - resource: plan.md

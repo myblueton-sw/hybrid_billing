@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-259 passwords module and sign-in API verification
 description: Actual checks run for phase 2a of the pre-launch plan (modules/passwords and the apps/api sign-in endpoints), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Live O02 relationship change and impact review in the console service mode, bound to the HB-274 change API
 description: Phase 4c of the pre-launch plan (HB-257). In service mode, O02 proposes a one-member relationship change from an effective date, shows the sealed plan's changed members, violations and impact (money, publication and ERP stated as not computed), lets a second administrator activate it or anyone discard it with a reason, and lists results. Scheduling and partial resume stay out.
-status: final
+status: stable
 ---
 
 # Scope and ownership

@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Pre-launch phase plan for a Go API service that assembles the domain modules in memory with synthetic seed data, signs people in locally, and backs the console's unconnected screens
 description: Phase plan requested by the owner on 2026-11-16. It defines the service runtime, in-memory state with a synthetic seed, sign-in, the screen binding order, the ticket sequence and what stays out, so that a pre-launch build runs end to end for the owner to review. Durable storage waits for the owner's database decision.
-status: final
+status: stable
 ---
 
 # Scope and ownership

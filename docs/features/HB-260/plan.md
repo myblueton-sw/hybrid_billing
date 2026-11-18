@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Sign-in screens L01, L02 and L03 bound to the pre-launch sign-in API in a console service mode with a fixed pre-launch notice and a session strip
 description: Phase 2b of the pre-launch plan (HB-257). The console gains a service mode in which it requires a session. L01 signs in, L02 sets a password or activates the first administrator from a one-time link whose token stays in the URL fragment, L03 gives administrator-assisted recovery guidance, and every service-mode screen shows that data resets on restart.
-status: final
+status: stable
 ---
 
 # Scope and ownership
@@ -139,7 +139,7 @@ There is no form.
 
 - The session strip is not yet integrated into the shell header.
 - The shell's screens are not yet bound to the service (later phases).
-- Administrator-issued resets (phase 3).
+- Administrator-issued resets (phase 3). (2026-11-18: built by HB-263 and HB-264, PRs #183/#184.)
 - MFA and SSO.
 - Locale review of all new copy by competent reviewers.
 - Owner screen-review acceptance (FIX) of the bound L01–L03.

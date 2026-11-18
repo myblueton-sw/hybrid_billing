@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HYB-290 verification of the P05 release evidence API
 description: Format, vet, unit and edge tests with coverage, race runs, cross-platform builds, mutation testing, a smoke run of the built binary, the design and change review outcomes and the planning cross-check for the P05 release evidence API over modules/releasetrace and modules/perfgate. Run on mac_mini on 2026-11-17 and 2026-11-18.
-status: final
+status: stable
 tags: [HYB-290, pre-launch, release-evidence, verification]
 sources:
   - resource: plan.md

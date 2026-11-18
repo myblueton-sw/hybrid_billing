@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: P03 recovery API over modules/recovery with a synthetic sample installation in recovery and a locked standby installation
 description: Phase 5e of the pre-launch plan. Adds a recovery read for the five P03 tabs (restore sets, isolation, external reconciliation, customer migration, resume decision) and administrator commands with a reason to approve unlock proposals, withdraw recovery proposals, lock an installation and propose an unlock. Nothing restores, prunes or deletes data, contacts a network or acts as a writer or verifier after the seed; customer migration is shown as not connected.
-status: final
+status: stable
 ---
 
 # Scope and ownership

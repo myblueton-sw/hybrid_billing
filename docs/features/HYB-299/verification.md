@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HYB-299 M01 role periods and bulk revocation, implementation verification
 description: What was built against the approved plan (design rounds 1-5 and the root amendment), the review fixes of 2026-11-18 (security, render and technical writing), the checks run with their observed results, browser QA, regressions, mutation, deviations, plan-text changes for root and residuals. Written by the implementer; the reviews have not re-reviewed this build.
-status: final
+status: stable
 tags: [HYB-299, verification, M01, role-period, bulk-revocation]
 sources:
   - resource: plan.md

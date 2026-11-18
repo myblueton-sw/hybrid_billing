@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: M02 authentication policy, API and live screen, limited to what pre-launch sign-in can satisfy
 description: Phase 3d of the pre-launch plan (HB-257). apps/api gains a policy read and three policy commands over modules/authpolicy with two-person approval. The console gains a live M02 screen in service mode. Only revisions that password sign-in can satisfy can be proposed.
-status: final
+status: stable
 ---
 
 # Scope and ownership

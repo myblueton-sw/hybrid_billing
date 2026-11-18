@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-252 license mode register verification
 description: Actual checks run for W-40 increment 1 (modules/licensemode), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

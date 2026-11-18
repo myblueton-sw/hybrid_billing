@@ -2,7 +2,7 @@
 type: Visual Spec
 title: HYB-318 visual spec for the O01 Create change plan handoff and the O02 prefill and base revision states
 description: Placement, labels, states, layout, focus order, locale and responsive rules for the O01 "Create change plan" action, O02's arrival with prefilled values, the read-only carried base revision, the base-changed notice with "Base on revision N" and the refused-propose state, with root decisions.
-status: final
+status: stable
 tags: [HYB-318, HYB-300, O01, O02, visual-spec, handoff, revision, ui-designer]
 sources:
   - resource: ../HYB-300/plan.md

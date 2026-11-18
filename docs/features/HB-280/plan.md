@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: O03 contract read and lifecycle API over modules/contracts
 description: Phase 4d of the pre-launch plan (HB-257). Adds synthetic sample contracts linked to billing profiles, a contract list and detail read, and administrator commands with a reason that suspend, resume, renew or end a contract, withdraw a future event, record final evidence, settle and reopen, all through the modules/contracts registry. Proration and money stay not computed in pre-launch.
-status: final
+status: stable
 ---
 
 # Scope and ownership

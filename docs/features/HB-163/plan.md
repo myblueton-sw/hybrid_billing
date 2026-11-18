@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Collected reader waiting places and error output
 description: Defines how a waiting read whose caller has left frees its waiting place early and how the reader's unhandled-error output is reduced to one fixed line.
-status: reviewed
+status: stable
 ---
 
 # Scope and ownership

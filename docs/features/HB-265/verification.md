@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-265 verification of the M02 authentication policy API and live screen
 description: Go tests, coverage and mutation results for the policy read, the three policy commands and the maximum-age check on every request, plus console unit tests and browser QA on the production build against a live apps/api. Run on mac_mini on 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope
@@ -185,4 +185,4 @@ Source: `docs/ui/screens/M02/spec.md:24-26`. Status meanings are in the [cross-c
 
 ## Planning cross-check residuals (HYB-291)
 
-- **Trust flow simplified.** `M02/spec.md:96-131` specifies draft, validated, independently approved and activated stages. HB-265 collapses them into propose, then approve, which applies. This was not recorded before.
+- **Trust flow simplified.** `M02/spec.md:96-131` specifies draft, validated, independently approved and activated stages. HB-265 collapses them into propose, then approve, which applies. This was not recorded before. 2026-11-18: the full draft, validate, approve and activate workflow was built by HYB-297 (PR #215).

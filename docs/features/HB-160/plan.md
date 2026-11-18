@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: B07 source-row evidence in the S04 source-field terms
 description: Defines how B07 presents its collected marketplace source rows and scope identity with the shared source-field vocabulary and value states, without changing its projection, field states, classification or aggregates.
-status: reviewed
+status: stable
 ---
 
 # Scope and ownership

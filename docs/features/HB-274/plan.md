@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: O02 relationship change API with drafted, validated and two-person-activated relationship plans
 description: Phase 4c of the pre-launch plan (HB-257). Adds apps/api commands that draft a one-member relationship change and seal it through modules/relationships, activate a sealed plan by a second installation administrator against the expected revision and digest, and discard a plan, plus a plans read. Money, publication and ERP impact are reported as not computed in pre-launch.
-status: final
+status: stable
 ---
 
 # Scope and ownership

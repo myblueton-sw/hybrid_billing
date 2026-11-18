@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Live P01 installation screen in the console service mode, bound to the HB-282 installation API
 description: Phase 5b of the pre-launch plan (HB-257, HB-262 scope). In service mode, P01 shows the site, observation, install, upgrade and rollback previews and releases on the plan view, installer proposals with dry-run blockers and the approve, withdraw and propose-plan commands, and allowlisted destinations with guided probe reports on the diagnostics view. Diagnostic requests, support bundles and support access are stated as not connected. Approval installs nothing, and the screen says so.
-status: final
+status: stable
 ---
 
 # Scope and ownership

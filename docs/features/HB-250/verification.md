@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-250 publication register verification
 description: Actual checks run for W-39 increment 1 (modules/publication), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

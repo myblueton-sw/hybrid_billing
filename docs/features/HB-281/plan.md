@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: Live O03 contract and service lifecycle screen in the console service mode, bound to the HB-280 contracts API
 description: Phase 4e of the pre-launch plan (HB-257). In service mode, O03 lists contracts with their parties, path, period, contract state and final settlement state, and shows a selected contract's parties, billing schedule, components, and termination and final settlement. Administrators suspend, resume, renew, end or withdraw lifecycle events and record evidence, settle or reopen, each with a reason and a confirm step, guided by the API's action hints. Money, proration, documents, payment terms and recognition are stated as not connected or not computed.
-status: final
+status: stable
 ---
 
 # Scope and ownership

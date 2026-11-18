@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-266 verification of the M03 access API
 description: Module and apps/api tests, coverage, mutation and build results for the read-only grant and delegation listing, Explain, the access read and preview, and the grant and revoke commands. Run on mac_mini on 2026-11-16.
-status: final
+status: stable
 ---
 
 # Scope
@@ -123,7 +123,7 @@ Source: `docs/ui/screens/M03/spec.md:133-159` (HB-266 is the API, HB-267 the scr
 | --- | --- | --- | --- |
 | HB-03 | deferred | Addressed within pre-launch scope for grants, delegation revoke and the effect preview, with self-grant refused; registry-wide and leakage acceptance not built. | HB-266/plan.md |
 | HB-04 | not connected | (classified by HYB-301) M03's part of HB-04 is keeping the setup role apart from export write and collector read (`requirements.json` HB-04 implementation_proposal) and testing operational reads after setup is revoked. Built: grants with a validity window and revoke (HB-266/plan.md:25, 119); the only grantable pair is `view focus_data rows` (HB-266/plan.md:106). Not built: a setup permission. It needs provider onboarding (S02) and collectors; S02 is outside the Go-bound pre-launch scope and served ungated on 8793 (HYB-291 M9). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
-| HB-23 | deferred | Grant changes apply directly, without the approval request `M03/spec.md:83` requires. | Planning cross-check residuals below |
+| HB-23 | deferred | Grant changes apply directly, without the approval request `M03/spec.md:83` requires. 2026-11-18: the approval request was built by HYB-298 (PR #212). | Planning cross-check residuals below |
 | HB-33 | deferred | Grant commands use the common command path with idempotency keys and expected revisions, but after a partial failure a second submit can create a second grant. | HB-267/verification.md:42 |
 | HB-36 | deferred | Support sessions are not available. | HB-266/plan.md:153-161 |
 | HB-42 | deferred | The revocation states received, deny confirmed and cleanup running (`M03/spec.md:84, 109-113`) do not exist. | Planning cross-check residuals below |

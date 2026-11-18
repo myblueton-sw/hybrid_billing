@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HB-243 installer register verification
 description: Actual checks run for the first increment of W-36 (modules/installer), plus review outcomes and residuals.
-status: final
+status: stable
 ---
 
 # Scope

@@ -12,32 +12,72 @@ import (
 )
 
 type memberRow struct {
-	Role    string `json:"role"`
-	State   string `json:"state"`
-	Version uint64 `json:"version"`
+	Role         string `json:"role"`
+	State        string `json:"state"`
+	Version      uint64 `json:"version"`
+	RoleFrom     string `json:"role_from"`
+	RoleUntil    string `json:"role_until"`
+	RolePeriod   string `json:"role_period"`
+	SuspendedFor string `json:"suspended_for"`
+	Ledger       string `json:"ledger"`
+}
+
+type revocationRef struct {
+	Bulk  string `json:"bulk"`
+	State string `json:"state"`
 }
 
 type userRow struct {
-	UserID            string     `json:"user_id"`
-	Login             string     `json:"login"`
-	Email             string     `json:"email"`
-	State             string     `json:"state"`
-	Epoch             uint64     `json:"epoch"`
-	Membership        *memberRow `json:"membership"`
-	PasswordSet       bool       `json:"password_set"`
-	InvitationExpires string     `json:"invitation_expires"`
-	LinkPurpose       string     `json:"link_purpose"`
-	LinkExpires       string     `json:"link_expires"`
-	Holder            bool       `json:"installation_administrator"`
+	UserID            string         `json:"user_id"`
+	Login             string         `json:"login"`
+	Email             string         `json:"email"`
+	State             string         `json:"state"`
+	Epoch             uint64         `json:"epoch"`
+	Membership        *memberRow     `json:"membership"`
+	PasswordSet       bool           `json:"password_set"`
+	InvitationExpires string         `json:"invitation_expires"`
+	LinkPurpose       string         `json:"link_purpose"`
+	LinkExpires       string         `json:"link_expires"`
+	Holder            bool           `json:"installation_administrator"`
+	Revocation        *revocationRef `json:"revocation"`
 }
 
 type usersPage struct {
 	Revision string    `json:"revision"`
 	Next     string    `json:"next"`
 	Users    []userRow `json:"users"`
+	clockRows
+	Settings      []settingRow `json:"settings"`
+	LedgerState   string       `json:"ledger_state"`
+	CanBulkRevoke bool         `json:"can_bulk_revoke"`
 }
 
 func stamp(t time.Time) string { return t.UTC().Format(time.RFC3339) }
+
+func stampOr(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return stamp(t)
+}
+
+func (s *Server) rolePeriod(m identity.MemberInfo, now time.Time) string {
+	warning := time.Duration(s.cfg.Access.RoleWarningDays) * 24 * time.Hour
+	switch {
+	case m.SuspendedFor == identity.RolePeriodEnded || !m.Until.IsZero() && !now.Before(m.Until):
+		return "ended"
+	case m.Until.IsZero():
+		return "open"
+	case m.Until.Sub(now) <= warning:
+		return "ends_soon"
+	}
+	return "bounded"
+}
+
+func (s *Server) canBulk(answer identity.Answer) bool {
+	return s.gate.Decide(gate.Answer(answer), ConsoleClient, gate.Request{Action: gate.RevokeAccessInBulk, Kind: gate.InstallationKind,
+		Resource: gate.Resource{WorkspaceID: answer.Workspace()}}).Allowed
+}
 
 func (s *Server) admitted(w http.ResponseWriter, r *http.Request) (session, identity.Answer, bool) {
 	request := r.Header.Get("X-Request-Id")
@@ -93,7 +133,7 @@ func (s *Server) listUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	s.domain.RLock()
 	defer s.domain.RUnlock()
-	found, _, ok := s.admitted(w, r)
+	found, answer, ok := s.admitted(w, r)
 	if !ok {
 		return
 	}
@@ -102,6 +142,7 @@ func (s *Server) listUsers(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.DependencyUnavailable, request)
 		return
 	}
+	page.CanBulkRevoke = s.canBulk(answer) && len(s.stranded) == 0
 	writeJSON(w, http.StatusOK, request, page)
 }
 
@@ -111,7 +152,8 @@ func (s *Server) usersPage(actor identity.Verifier, after string, limit int) (us
 		return usersPage{}, err
 	}
 	now := s.clock()
-	out := usersPage{Revision: s.Revision(), Users: []userRow{}}
+	out := usersPage{Revision: s.Revision(), Users: []userRow{}, clockRows: s.clockRows(now), Settings: s.identitySettingRows(), LedgerState: s.ledgerRow().State}
+	latest := s.bulk.Latest(s.bootWorkspace)
 	for {
 		batch, err := s.users(after)
 		if err != nil {
@@ -125,7 +167,11 @@ func (s *Server) usersPage(actor identity.Verifier, after string, limit int) (us
 				out.Next = out.Users[limit-1].UserID
 				return out, nil
 			}
-			out.Users = append(out.Users, s.row(found, members, now))
+			row := s.row(found, members, now)
+			if l, ok := latest[found.ID]; ok {
+				row.Revocation = &revocationRef{Bulk: l.Bulk, State: l.State}
+			}
+			out.Users = append(out.Users, row)
 		}
 		if len(batch) < 100 {
 			return out, nil
@@ -137,7 +183,8 @@ func (s *Server) usersPage(actor identity.Verifier, after string, limit int) (us
 func (s *Server) row(found identity.UserInfo, members map[string]identity.MemberInfo, now time.Time) userRow {
 	row := userRow{UserID: found.ID, State: string(found.State), Epoch: found.Epoch, Holder: s.dir.holds(found.ID, now)}
 	if m, ok := members[found.ID]; ok {
-		row.Membership = &memberRow{Role: string(m.Role), State: string(m.State), Version: m.Version}
+		row.Membership = &memberRow{Role: string(m.Role), State: string(m.State), Version: m.Version, RoleFrom: stampOr(m.From), RoleUntil: stampOr(m.Until),
+			RolePeriod: s.rolePeriod(m, now), SuspendedFor: string(m.SuspendedFor), Ledger: s.memberLedger[found.ID]}
 	}
 	if p, ok := s.dir.people[found.ID]; ok {
 		row.Login, row.Email = p.login, p.email
@@ -205,8 +252,10 @@ func (s *Server) acceptPending(login string, actor identity.Verifier, now time.T
 	found, live := s.dir.invitation(login, now)
 	_, present := s.dir.invites[login]
 	delete(s.dir.invites, login)
-	if live {
-		_ = s.identity.Workspace().Accept(s.bootWorkspace, found.id, found.verifier, actor)
+	if live && s.identity.Workspace().Accept(s.bootWorkspace, found.id, found.verifier, actor) == nil {
+		if user, ok := s.dir.userOf(login); ok {
+			s.applyAwaiting(user)
+		}
 	}
 	return present
 }

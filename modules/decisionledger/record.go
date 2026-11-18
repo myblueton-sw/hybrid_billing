@@ -44,6 +44,18 @@ type line struct {
 	DenyGeneration   uint64     `json:"deny_generation,omitempty"`
 	EndedDelegations []string   `json:"ended_delegations,omitempty"`
 	Trust            *trustLine `json:"trust,omitempty"`
+	Role             string     `json:"role,omitempty"`
+	Until            string     `json:"until,omitempty"`
+	Increase         string     `json:"increase,omitempty"`
+	IntentSequence   uint64     `json:"intent_sequence,omitempty"`
+	Effect           string     `json:"effect,omitempty"`
+	Targets          uint64     `json:"targets,omitempty"`
+	Held             uint64     `json:"held,omitempty"`
+	Excluded         uint64     `json:"excluded,omitempty"`
+	LedgerTime       string     `json:"ledger_time,omitempty"`
+	WallTime         string     `json:"wall_time,omitempty"`
+	Choice           string     `json:"choice,omitempty"`
+	OffsetNanos      int64      `json:"offset_ns,omitempty"`
 	Sum              string     `json:"sum"`
 }
 
@@ -83,7 +95,7 @@ func (l line) shaped() bool {
 	case KindRecovery:
 		return l.TruncatedBytes > 0 && validTime(l.RecoveredAt) && l.genesisEmpty() && l.decisionEmpty()
 	case KindDecision:
-		return l.Workspace != "" && l.genesisEmpty() && l.TruncatedBytes == 0 && l.RecoveredAt == "" && (l.revocationShaped() || l.trustShaped())
+		return l.Workspace != "" && l.genesisEmpty() && l.TruncatedBytes == 0 && l.RecoveredAt == "" && (l.revocationShaped() || l.trustShaped() || l.identityShaped())
 	}
 	return false
 }
@@ -93,12 +105,13 @@ func (l line) annotated() bool {
 }
 
 func (l line) revocationShaped() bool {
-	return (l.Decision == RevokeGrant || l.Decision == RevokeDelegation) && l.Target != "" && l.Revocation != "" && l.RequestedBy != "" && l.Trust == nil
+	return (l.Decision == RevokeGrant || l.Decision == RevokeDelegation) && l.Target != "" && l.Revocation != "" && l.RequestedBy != "" && l.Trust == nil &&
+		l.identityEmpty()
 }
 
 func (l line) trustShaped() bool {
 	return l.Decision == TrustActivation && l.Target == "" && l.TargetVersion == 0 && l.Revocation == "" && l.Request == "" && l.RequestDigest == "" &&
-		l.RequestedBy == "" && l.ApprovedBy == "" && l.DenyGeneration == 0 && len(l.EndedDelegations) == 0 && l.Trust != nil && l.Trust.shaped()
+		l.RequestedBy == "" && l.ApprovedBy == "" && l.DenyGeneration == 0 && len(l.EndedDelegations) == 0 && l.Trust != nil && l.Trust.shaped() && l.identityEmpty()
 }
 
 func (l line) genesisEmpty() bool {
@@ -107,7 +120,7 @@ func (l line) genesisEmpty() bool {
 
 func (l line) decisionEmpty() bool {
 	return l.Workspace == "" && l.Decision == "" && l.Target == "" && l.TargetVersion == 0 && l.Revocation == "" && l.Request == "" && l.RequestDigest == "" &&
-		l.RequestedBy == "" && l.ApprovedBy == "" && l.DenyGeneration == 0 && len(l.EndedDelegations) == 0 && l.Trust == nil
+		l.RequestedBy == "" && l.ApprovedBy == "" && l.DenyGeneration == 0 && len(l.EndedDelegations) == 0 && l.Trust == nil && l.identityEmpty()
 }
 
 func decodeLine(data []byte) (line, bool) {
@@ -137,6 +150,7 @@ type scan struct {
 	changes   map[string]bool
 	highest   uint64
 	decisions []Record
+	newer     int
 }
 
 func (s *scan) accept(l line, data []byte) {
@@ -148,8 +162,7 @@ func (s *scan) accept(l line, data []byte) {
 		s.genesis = Successor{Generation: l.G, TrustReset: l.TrustReset, GenerationStated: l.GenerationStated, CarriedFrom: l.CarriedLedger, ReplacedLine: l.ReplacedLine}
 		s.createdAt, _ = time.Parse(time.RFC3339Nano, l.CreatedAt)
 	case KindDecision:
-		d := Decision{Workspace: l.Workspace, Decision: l.Decision, Target: l.Target, TargetVersion: l.TargetVersion, Revocation: l.Revocation, Request: l.Request,
-			RequestDigest: l.RequestDigest, RequestedBy: l.RequestedBy, ApprovedBy: l.ApprovedBy, DenyGeneration: l.DenyGeneration, EndedDelegations: l.EndedDelegations}
+		d := l.decision()
 		if l.Trust != nil {
 			d.Trust = l.Trust.trust()
 			s.epochs[l.Workspace] = l.Trust.NewEpoch
@@ -164,7 +177,7 @@ func (s *scan) accept(l line, data []byte) {
 
 func (s *scan) next(data []byte) (line, bool) {
 	l, ok := decodeLine(data)
-	return l, ok && l.V == FormatV1 && l.Seq == s.records+1 && l.Prev == s.last && (l.Kind == KindGenesis) == (l.Seq == 1) && validTime(l.At) && l.shaped()
+	return l, ok && l.V == l.format() && l.Seq == s.records+1 && l.Prev == s.last && (l.Kind == KindGenesis) == (l.Seq == 1) && validTime(l.At) && l.shaped()
 }
 
 func (s *scan) ordered(l line) bool {
@@ -185,12 +198,23 @@ func (s *scan) confirmedTail(data []byte) (line, []byte, bool) {
 	return l, trimmed, ok
 }
 
+func newer(data []byte) bool {
+	var head struct {
+		V int `json:"v"`
+	}
+	return json.Unmarshal(bytes.TrimSuffix(data, []byte("\n")), &head) == nil && head.V > FormatV2
+}
+
 func verify(r io.ReaderAt, size int64) scan {
 	s := scan{last: genesisPrev, epochs: map[string]uint64{}, changes: map[string]bool{}}
 	reader := bufio.NewReaderSize(io.NewSectionReader(r, 0, size), LineLimit+1)
 	for {
 		data, err := reader.ReadSlice('\n')
 		number := int(s.records) + 1
+		if newer(data) {
+			s.newer = number
+			return s
+		}
 		if errors.Is(err, io.EOF) {
 			if len(data) > 0 {
 				if l, kept, ok := s.confirmedTail(data); ok {

@@ -200,7 +200,8 @@ func TestMembershipOperations(t *testing.T) {
 	f.must(f.in.SuspendUser(operator, "bob", 1))
 	f.must(f.w.ChangeRole(admin(), "w1", "bob", Member, 5))
 	members, err := f.w.Members(admin(), "w1", "", 2)
-	want := []MemberInfo{{User: "ann", Role: Administrator, State: MembershipActive, Version: 2, UserState: Active}, {User: "bob", Role: Member, State: MembershipActive, Version: 6, UserState: Suspended}}
+	want := []MemberInfo{{User: "ann", Role: Administrator, State: MembershipActive, Version: 2, UserState: Active, From: *f.now, Effective: true},
+		{User: "bob", Role: Member, State: MembershipActive, Version: 6, UserState: Suspended, From: *f.now, Effective: true}}
 	if err != nil || !reflect.DeepEqual(members, want) {
 		t.Errorf("first page %+v %v", members, err)
 	}

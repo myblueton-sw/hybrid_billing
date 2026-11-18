@@ -17,18 +17,18 @@ func requestFor(action Action, workspace string) Request {
 	return Request{Action: action, Kind: InstallationKind, Resource: Resource{WorkspaceID: workspace}}
 }
 
-func TestInstallationActionsAreExactlyTheFive(t *testing.T) {
-	five := map[Action]bool{AdministerInstallation: true, TrustPropose: true, TrustValidate: true, TrustApprove: true, TrustActivate: true}
+func TestInstallationActionsAreExactlyTheSix(t *testing.T) {
+	five := map[Action]bool{AdministerInstallation: true, TrustPropose: true, TrustValidate: true, TrustApprove: true, TrustActivate: true, RevokeAccessInBulk: true}
 	for action := range actions {
 		if InstallationAction(action) != five[action] {
 			t.Errorf("%s: %v", action, InstallationAction(action))
 		}
 	}
-	if InstallationAction("trust_unknown") || len(five) != 5 {
+	if InstallationAction("trust_unknown") || len(five) != 6 {
 		t.Error("an unknown action is an installation action")
 	}
 	f := setupInstallation(t, true)
-	for _, right := range trustRights {
+	for _, right := range append(trustRights, RevokeAccessInBulk) {
 		if !f.Describes(right, InstallationKind, nil) || f.Describes(right, "usage_statement", nil) || f.Describes(right, InstallationKind, []string{"quantity"}) {
 			t.Errorf("%s description", right)
 		}

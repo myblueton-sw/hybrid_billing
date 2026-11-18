@@ -141,6 +141,7 @@ func TestGrantChangesHaveFixedCallSites(t *testing.T) {
 		"seed.go seedReaderGrants AddGrant":                 true,
 		"seed.go grantInstallation AddGrant":                true,
 		"seed.go grantTrust AddGrant":                       true,
+		"seed.go grantBulk AddGrant":                        true,
 	}
 	entries, _ := os.ReadDir(".")
 	found := []string{}

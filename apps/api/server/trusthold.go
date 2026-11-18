@@ -14,6 +14,7 @@ const (
 	holdPerCommand     = "per_command"
 	holdNoInvitations  = "allow_without_invitations"
 	holdResetLinkOnly  = "reset_link_only"
+	holdPeriodDecrease = "period_decrease"
 )
 
 type holdRule struct {
@@ -36,7 +37,12 @@ var holdTable = map[string]holdRule{
 	"identity.suspend_membership":              {holdAllow, reasonReduce},
 	"identity.depart_user":                     {holdAllow, reasonReduce},
 	"identity.remove_membership":               {holdAllow, reasonReduce},
-	"identity.change_role":                     {holdRoleDecrease, "a change to member reduces access; to administrator it is an increase"},
+	"identity.change_role":                     {holdRoleDecrease, "a change that neither promotes to administrator nor lengthens or removes the role end reduces access; anything else is an increase"},
+	"identity.set_role_period":                 {holdPeriodDecrease, "a shorter role period reduces access; a longer, removed or restoring period is an increase"},
+	"bulk_revocation.execute":                  {holdAllow, reasonReduce},
+	"bulk_revocation.add_targets":              {holdAllow, "stages a reduction and changes no access"},
+	"bulk_revocation.prepare":                  {holdAllow, "freezes a reduction and changes no access"},
+	"bulk_revocation.discard":                  {holdAllow, reasonPending},
 	"identity.revoke_invitation":               {holdAllow, reasonReduce},
 	"identity.create_user":                     {holdRefuse, reasonIncrease},
 	"identity.invite":                          {holdRefuse, reasonIncrease},
@@ -127,20 +133,15 @@ func (s *Server) enterHold(reason string) {
 	s.log.Error("trust_hold_entered", "reason", reason)
 }
 
-func (s *Server) holdAllows(command string, call commands.Call) bool {
+func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
 	rule, known := holdTable[command]
 	switch {
 	case !known:
 		return false
 	case rule.rule == holdAllow:
 		return true
-	case rule.rule == holdRoleDecrease:
-		for _, v := range call.Fields {
-			if v.Name == "role" {
-				return v.Value == string(identity.Member)
-			}
-		}
-		return false
+	case rule.rule == holdPeriodDecrease, rule.rule == holdRoleDecrease:
+		return s.holdPeriodDecrease(caller, call, command)
 	case rule.rule == holdRevokeApproval:
 		n, ok := accesschange.Number(call.Target, accesschange.RequestPrefix)
 		v, found := s.changes.Request(n, call.Answer.Workspace())

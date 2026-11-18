@@ -76,6 +76,9 @@ func (s *Server) Start() error {
 	if err := checkData(s.cfg.Data); err != nil {
 		return err
 	}
+	if err := s.setClockBase(); err != nil {
+		return err
+	}
 	link := filepath.Join(s.cfg.Data, ActivationFile)
 	if err := os.Remove(link); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
@@ -106,6 +109,7 @@ func (s *Server) Start() error {
 			step{"installation", func() (bool, error) { return true, s.seedInstallation(now) }},
 			step{"installation-grants", func() (bool, error) { return true, s.seedInstallationGrants(now) }},
 			step{"trust-grants", func() (bool, error) { return true, s.seedTrustGrants(now) }},
+			step{"bulk-grants", func() (bool, error) { return true, s.seedBulkGrants(now) }},
 			step{"integrations", func() (bool, error) { return true, s.seedIntegrations(now) }},
 			step{"recovery", func() (bool, error) { return true, s.seedRecovery(now) }},
 			step{"retention", func() (bool, error) { return true, s.seedRetention(now) }},
@@ -118,7 +122,7 @@ func (s *Server) Start() error {
 		steps = append(steps, s.seed...)
 	}
 	s.startedAt = now
-	steps = append(steps, step{"decision-ledger", s.openLedger}, step{"trust-replay", s.replayTrust})
+	steps = append(steps, step{"decision-ledger", s.openLedger}, step{"trust-replay", s.replayTrust}, step{"role-sweep", func() (bool, error) { return s.sweepRoles(), nil }})
 	for _, st := range steps {
 		if err := s.Change(st.name, st.run); err != nil {
 			return err
@@ -137,6 +141,7 @@ func (s *Server) Start() error {
 		}
 	}
 	s.log.Info("activation links written", "file", link)
+	s.runWorker()
 	return nil
 }
 
@@ -178,7 +183,7 @@ func (s *Server) seedMember(now time.Time) error {
 		},
 		func() error { s.dir.add(SampleMember, MemberLogin, MemberLogin); return nil },
 		func() error { return b.OpenSession(AdminTriple(), admin, time.Minute, time.Minute) },
-		func() error { return s.inviteUser(admin, MemberLogin, SampleMember, identity.Member, now) },
+		func() error { return s.inviteUser(admin, MemberLogin, SampleMember, identity.Member, now, time.Time{}) },
 	)
 }
 
@@ -243,6 +248,27 @@ func (s *Server) grantTrust(user string, now time.Time) error {
 		})
 	}
 	return run(steps...)
+}
+
+func (s *Server) seedBulkGrants(now time.Time) error {
+	return run(func() error { return s.grantBulk(SampleAdmin, now) }, func() error { return s.grantBulk(SampleAdmin2, now) })
+}
+
+func (s *Server) grantBulk(user string, now time.Time) error {
+	if s.faulty("bulk-grant") {
+		return errPartial
+	}
+	terms := gate.Terms{Action: gate.RevokeAccessInBulk, Kind: gate.InstallationKind, Period: gate.AnyPeriod(),
+		Scope: gate.Scope{WorkspaceID: s.Workspace(), Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}}
+	validity := gate.Validity{NotBefore: now, NotAfter: now.Add(installationGrants)}
+	return run(func() error {
+		if err := s.admin.AddGrant(gate.Grant{ID: "bulk-right-console", ClientID: ConsoleClient, Terms: terms, Validity: validity}); !errors.Is(err, gate.ErrConflict) {
+			return err
+		}
+		return nil
+	}, func() error {
+		return s.admin.AddGrant(gate.Grant{ID: "bulk-right-" + user, SubjectID: user, Terms: terms, Validity: validity})
+	})
 }
 
 func (s *Server) grantInstallation(user string, now time.Time) error {

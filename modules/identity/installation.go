@@ -1,5 +1,7 @@
 package identity
 
+import "math"
+
 func (h *Installation) ArmBootstrap(verifier Verifier, validity Validity, workspace string) error {
 	r, ok := h.open()
 	if !ok {
@@ -80,6 +82,14 @@ func (h *Installation) SuspendUser(operator Operator, userID string, expected ui
 }
 
 func (h *Installation) ReinstateUser(operator Operator, userID string, expected uint64) error {
+	return h.reinstateUser(operator, userID, expected, false)
+}
+
+func (h *Installation) CheckReinstateUser(operator Operator, userID string, expected uint64) error {
+	return h.reinstateUser(operator, userID, expected, true)
+}
+
+func (h *Installation) reinstateUser(operator Operator, userID string, expected uint64, dry bool) error {
 	r, ok := h.open()
 	if !ok {
 		return ErrUnavailable
@@ -89,9 +99,13 @@ func (h *Installation) ReinstateUser(operator Operator, userID string, expected 
 	if err != nil {
 		return err
 	}
-	if found.state != Suspended || !bump(&found.epoch) {
+	if found.state != Suspended || found.epoch == math.MaxUint64 {
 		return ErrConflict
 	}
+	if dry {
+		return nil
+	}
+	found.epoch++
 	found.state, found.operatorBlock = Active, false
 	r.generation++
 	return nil
@@ -110,8 +124,9 @@ func (h *Installation) DepartUser(operator Operator, userID string, expected uin
 	if found.state == Departed {
 		return ErrConflict
 	}
+	now := r.clock()
 	for workspace := range r.memberships {
-		if r.member(workspace, userID) != nil && (r.strands(workspace, userID, nil) || r.onlySeat(workspace, userID)) {
+		if r.member(workspace, userID) != nil && (r.strands(workspace, userID, nil, now) || r.onlySeat(workspace, userID, now)) {
 			return ErrLastAdministrator
 		}
 	}
@@ -162,5 +177,5 @@ func (h *Installation) WithoutAdministrator() ([]string, error) {
 		return nil, ErrUnavailable
 	}
 	defer r.mu.Unlock()
-	return r.withoutAdministrator(), nil
+	return r.withoutAdministrator(r.clock()), nil
 }

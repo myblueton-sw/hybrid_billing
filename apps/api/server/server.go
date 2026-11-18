@@ -14,6 +14,7 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
+	"github.com/myblueton-sw/hybrid_billing/modules/bulkrevoke"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
 	"github.com/myblueton-sw/hybrid_billing/modules/decisionledger"
@@ -21,6 +22,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/installer"
+	"github.com/myblueton-sw/hybrid_billing/modules/jobs"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
 	"github.com/myblueton-sw/hybrid_billing/modules/perfgate"
@@ -58,6 +60,7 @@ type Config struct {
 	Data      string
 	Seed      string
 	Clock     func() time.Time
+	Elapsed   func() time.Duration
 	Log       *slog.Logger
 	Kinds     []string
 	Fields    map[string]gate.FieldClass
@@ -72,6 +75,7 @@ type Config struct {
 type Server struct {
 	cfg             Config
 	clock           func() time.Time
+	time            *serverClock
 	log             *slog.Logger
 	identity        *identity.Registry
 	gate            *gate.Gate
@@ -126,6 +130,19 @@ type Server struct {
 	hold            *trustHold
 	progress        map[string]trustProgress
 	random          io.Reader
+	memberLedger    map[string]string
+	roleEnds        uint64
+	bulk            *bulkrevoke.Registry
+	jobs            *jobs.Registry
+	answer          gate.Answer
+	stranded        []uint64
+	clockChoice     clockChoice
+	replayNotes     map[string]string
+	stop            chan struct{}
+	wake            chan struct{}
+	stopOnce        sync.Once
+	manual          bool
+	awaiting        map[string]awaitingReplay
 }
 
 func IdentityLimits() identity.Limits {
@@ -176,9 +193,6 @@ func cutScheme(origin string) (string, bool) {
 }
 
 func New(cfg Config) (*Server, error) {
-	if cfg.Clock == nil {
-		cfg.Clock = time.Now
-	}
 	if cfg.Log == nil {
 		cfg.Log = slog.New(slog.DiscardHandler)
 	}
@@ -191,8 +205,10 @@ func New(cfg Config) (*Server, error) {
 	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{},
 		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}, plans: newPlanStore(),
 		contracts: newContractStore(), install: newInstallStore(), integ: newIntegrationStore(), signer: newSeedSigner(), rec: newRecoveryStore(),
-		ret: newRetentionStore(), ev: newEvidenceStore(), progress: map[string]trustProgress{}, random: rand.Reader}
-	s.clock = func() time.Time { return cfg.Clock().UTC() }
+		ret: newRetentionStore(), ev: newEvidenceStore(), progress: map[string]trustProgress{}, random: rand.Reader, memberLedger: map[string]string{},
+		replayNotes: map[string]string{}, awaiting: map[string]awaitingReplay{}, stop: make(chan struct{}), wake: make(chan struct{}, 1)}
+	s.time = newServerClock(cfg.Clock, cfg.Elapsed, cfg.Log)
+	s.clock = s.time.now
 	for _, origin := range cfg.Origins {
 		if !validOrigin(origin) {
 			return nil, ErrConfig
@@ -261,6 +277,8 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) { s.trace, err = releasetrace.NewRegistry(s.clock); return },
 		func() (err error) { s.perf, err = perfgate.NewRegistry(s.clock); return },
 		func() (err error) { s.changes, err = accesschange.NewRegistry(s.clock, cfg.Access.limits()); return },
+		func() (err error) { s.bulk, err = bulkrevoke.New(cfg.Access.bulkLimits(), s.clock); return },
+		func() (err error) { s.jobs, err = jobs.NewRegistry(cleanupLimits(), s.clock); return },
 		s.registerUsers,
 	}
 	for _, build := range steps {

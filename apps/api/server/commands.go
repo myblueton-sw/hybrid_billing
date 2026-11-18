@@ -209,12 +209,18 @@ func boundaryResult(code commands.Code, request string) commands.Result {
 func (s *Server) execute(command string, call commands.Call, caller identity.Verifier) commands.Result {
 	s.domain.Lock()
 	defer s.domain.Unlock()
+	if s.sweepRoles() {
+		s.counter++
+	}
 	found, ok := s.sessions.get(caller)
 	if !ok || s.stale(found) {
 		s.endOne(caller)
 		return boundaryResult(commands.Unauthenticated, call.Request)
 	}
-	if s.held() && !s.holdAllows(command, call) {
+	if len(s.stranded) > 0 && s.mutating[command] {
+		return boundaryResult(commands.DependencyUnavailable, call.Request)
+	}
+	if s.held() && !s.holdAllows(command, call, caller) {
 		s.cfg.Log.Info("trust_hold_refused", "user", call.Answer.User(), "command", command)
 		return boundaryResult(commands.DependencyUnavailable, call.Request)
 	}
@@ -224,8 +230,8 @@ func (s *Server) execute(command string, call commands.Call, caller identity.Ver
 			return stepUpRefusal(code, call.Request)
 		}
 	}
-	s.caller = caller
-	defer func() { s.caller = identity.Verifier{} }()
+	s.caller, s.answer = caller, call.Answer
+	defer func() { s.caller, s.answer = identity.Verifier{}, gate.Answer{} }()
 	result := s.commands.Execute(call)
 	if changed(s.mutating[command], result) {
 		s.counter++

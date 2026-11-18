@@ -44,6 +44,7 @@ func setup(t testing.TB, seed string) world {
 	if err := s.Bind(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 8820}); err != nil {
 		t.Fatal(err)
 	}
+	s.manual = true
 	value := 0
 	w := world{t: t, s: s, now: &now, mu: mu, value: &value}
 	return w
@@ -54,7 +55,7 @@ func (f world) ready() world {
 	if err := f.s.Start(); err != nil {
 		f.t.Fatal(err)
 	}
-	if f.s.cfg.Seed == SeedSample && f.s.counter != 19 {
+	if f.s.cfg.Seed == SeedSample && f.s.counter != 20 {
 		f.t.Fatalf("sample seed steps %d", f.s.counter)
 	}
 	f.s.counter = map[string]uint64{SeedSample: 2, SeedNone: 1}[f.s.cfg.Seed]

@@ -255,3 +255,32 @@ func TestOrgSettingFlagAtItsLowerBoundStarts(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+func TestIdentitySettingFlags(t *testing.T) {
+	for name, args := range map[string][]string{
+		"longest period above its bound": {"--role-period-max-days", "3661"},
+		"tolerance zero":                 {"--clock-skew-tolerance-hours", "0"},
+		"warning signed":                 {"--role-period-warning-days", "+5"},
+		"targets hex":                    {"--bulk-revocation-max-targets", "0x10"},
+		"lifetime leading zero":          {"--bulk-revocation-manifest-minutes", "05"},
+		"pending above its bound":        {"--bulk-revocation-pending", "201"},
+		"kept below its bound":           {"--bulk-revocation-jobs-kept", "9"},
+		"warning above the longest":      {"--role-period-max-days", "10", "--role-period-warning-days", "11"},
+		"an unknown clock base":          {"--clock-base", "host"},
+		"a clock base without a lead":    {"--clock-base", "wall"},
+	} {
+		full := append([]string{"--listen", "127.0.0.1:0", "--data", t.TempDir() + "/d"}, args...)
+		if err := run(full, make(chan os.Signal)); err == nil {
+			t.Errorf("%s accepted", name)
+		}
+	}
+	fs := flag.NewFlagSet("t", flag.ContinueOnError)
+	access, given := accessFlags(fs)
+	if err := fs.Parse([]string{"--bulk-revocation-max-targets", "5000", "--clock-base", "ledger"}); err != nil {
+		t.Fatal(err)
+	}
+	given()
+	if access.BulkMaxTargets != 5000 || !access.Given["bulk_revocation_max_targets"] || access.Given["role_period_max_days"] || access.RolePeriodMaxDays != 366 ||
+		access.ClockBase != "ledger" || access.ClockSkewHours != 24 || access.RoleWarningDays != 14 || access.BulkMinutes != 30 || access.BulkPending != 20 || access.BulkKept != 100 {
+		t.Errorf("identity flags %+v", access)
+	}
+}

@@ -92,10 +92,17 @@ func run(args []string, stop <-chan os.Signal) error {
 func accessFlags(fs *flag.FlagSet) (*server.AccessSettings, func()) {
 	access := server.DefaultAccessSettings()
 	byFlag := map[string]server.AccessSetting{}
-	for _, setting := range server.AccessSettingList() {
+	for _, setting := range append(server.AccessSettingList(), server.IdentitySettingList()...) {
 		byFlag[setting.Flag] = setting
 		numberFlag(fs, setting.Flag, setting.Name, setting.Unit, setting.Min, setting.Max, setting.Default, func(n int) { setting.Set(&access, n) })
 	}
+	fs.Func("clock-base", "one-time: ledger or wall; accepted only when the decision ledger's latest time is beyond the clock skew tolerance, or when its latest clock base choice cannot be verified", func(raw string) error {
+		if raw != server.ClockBaseLedger && raw != server.ClockBaseWall {
+			return fmt.Errorf("clock-base must be %s or %s", server.ClockBaseLedger, server.ClockBaseWall)
+		}
+		access.ClockBase = raw
+		return nil
+	})
 	fs.BoolVar(&access.AcceptNewLedger, "accept-new-decision-ledger", false, "one-time: keep the isolated decision ledger under a new name and start a new one")
 	fs.BoolVar(&access.AcceptTrustReset, "accept-trust-reset", false, "one-time, with accept-new-decision-ledger: the replaced ledger has no carryable trust record; the installation default sign-in rules become active")
 	fs.StringVar(&access.CarryTrustFrom, "carry-trust-from", "", "one-time, with accept-new-decision-ledger: carry the latest trust record of the replaced ledger with this genesis ledger ID")

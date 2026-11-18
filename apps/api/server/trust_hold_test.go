@@ -10,15 +10,17 @@ import (
 	"testing"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
+	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 )
 
-var holdAllowed = []string{"access.reject_request", "access.request_revoke", "access.revoke_delegation", "access.withdraw_request", "identity.depart_user",
+var holdAllowed = []string{"access.reject_request", "access.request_revoke", "access.revoke_delegation", "access.withdraw_request", "bulk_revocation.add_targets",
+	"bulk_revocation.discard", "bulk_revocation.execute", "bulk_revocation.prepare", "identity.depart_user",
 	"identity.remove_membership", "identity.revoke_invitation", "identity.suspend_membership", "identity.suspend_user", "installation.withdraw",
 	"integrations.plugin_disable", "integrations.plugin_stop", "integrations.plugin_withdraw", "integrations.subscription_pause", "integrations.subscription_revoke",
 	"recovery.lock", "recovery.withdraw", "relationship.discard", "release_evidence.withdraw", "retention.place_hold", "retention.stop_run", "retention.withdraw",
 	"service.retire", "service.revoke_credential", "service.suspend"}
 
-var holdConditional = []string{"access.approve_request", "identity.change_role"}
+var holdConditional = []string{"access.approve_request", "identity.change_role", "identity.set_role_period"}
 
 var holdRefused = []string{"access.request_grant", "contract.end", "contract.evidence", "contract.renew", "contract.reopen", "contract.resume", "contract.settle",
 	"contract.suspend", "contract.withdraw", "identity.create_user", "identity.invite", "identity.issue_reset_link", "identity.issue_set_link",
@@ -48,7 +50,7 @@ func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 			t.Errorf("hold row %s has no reason", id)
 		}
 		key := rule.rule
-		if key == holdRoleDecrease || key == holdRevokeApproval {
+		if key == holdRoleDecrease || key == holdRevokeApproval || key == holdPeriodDecrease {
 			key = "conditional"
 		}
 		byRule[key] = append(byRule[key], id)
@@ -60,7 +62,7 @@ func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 			t.Errorf("%s rows\n%v\nwant\n%v", key, got, want)
 		}
 	}
-	if len(registered) != 73 || len(holdTable) != 73 {
+	if len(registered) != 78 || len(holdTable) != 78 {
 		t.Errorf("registered %d rows %d", len(registered), len(holdTable))
 	}
 	data, err := os.ReadFile("boundary.go")
@@ -79,7 +81,7 @@ func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 	if len(routes) != len(holdRoutes) || len(holdRoutes) != 8 {
 		t.Errorf("routes %d rows %d", len(routes), len(holdRoutes))
 	}
-	if f.s.holdAllows("synthetic.unknown", commands.Call{}) {
+	if f.s.holdAllows("synthetic.unknown", commands.Call{}, identity.Verifier{}) {
 		t.Error("an unlisted command is allowed")
 	}
 }

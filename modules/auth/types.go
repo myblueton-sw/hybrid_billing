@@ -33,6 +33,7 @@ const (
 	TrustValidate          Action = "trust_validate"
 	TrustApprove           Action = "trust_approve"
 	TrustActivate          Action = "trust_activate"
+	RevokeAccessInBulk     Action = "revoke_access_in_bulk"
 )
 
 const InstallationKind = "installation"
@@ -40,7 +41,7 @@ const InstallationKind = "installation"
 var actions = map[Action]struct{}{
 	View: {}, ViewCost: {}, ChangeCustomerPolicy: {}, ChangeSellingPolicy: {}, RequestApproval: {},
 	Approve: {}, Issue: {}, Download: {}, Deliver: {}, ApproveSupportSession: {}, AdministerInstallation: {},
-	TrustPropose: {}, TrustValidate: {}, TrustApprove: {}, TrustActivate: {},
+	TrustPropose: {}, TrustValidate: {}, TrustApprove: {}, TrustActivate: {}, RevokeAccessInBulk: {},
 }
 
 func fieldAction(action Action) bool {
@@ -51,7 +52,7 @@ func humanOnly(action Action) bool { return action == Approve || action == Appro
 
 func InstallationAction(action Action) bool {
 	switch action {
-	case AdministerInstallation, TrustPropose, TrustValidate, TrustApprove, TrustActivate:
+	case AdministerInstallation, TrustPropose, TrustValidate, TrustApprove, TrustActivate, RevokeAccessInBulk:
 		return true
 	}
 	return false

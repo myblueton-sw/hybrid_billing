@@ -12,7 +12,8 @@ export type Action =
   | "invite"
   | "issue_set_link"
   | "issue_reset_link"
-  | "revoke_invitation";
+  | "revoke_invitation"
+  | "set_role_period";
 
 const plural = (l: Locale, n: number) => {
   if (l === "en") return n === 1 ? "1 user" : `${n} users`;
@@ -42,7 +43,7 @@ export const w = {
   create: (l: Locale) => t(l, "Create user", "사용자 추가", "إضافة مستخدم"),
   more: (l: Locale) => t(l, "Show more users", "사용자 더 보기", "عرض المزيد من المستخدمين"),
   openDetails: (l: Locale) => t(l, "Open details", "상세 열기", "فتح التفاصيل"),
-  selected: (l: Locale) => t(l, "(selected)", "(선택됨)", "(محدد)"),
+  selected: (l: Locale) => t(l, "(open)", "(열림)", "(مفتوح)"),
   user: (l: Locale) => t(l, "User", "사용자", "المستخدم"),
   accountStatus: (l: Locale) => t(l, "Account status", "계정 상태", "حالة الحساب"),
   workspaceRole: (l: Locale) => t(l, "Workspace role", "업무 공간 역할", "الدور في مساحة العمل"),
@@ -190,7 +191,7 @@ export const w = {
       l,
       "The user service could not complete this change. Try again shortly. If it keeps failing, pending invitations or links may have reached their limit, or the decision ledger can't record decisions: reinstating people and giving the administrator role then wait until the decision ledger can record again (see Roles, delegation and effective access). Suspending people still works.",
       "사용자 서비스가 이 변경을 완료하지 못했습니다. 잠시 후 다시 시도하세요. 계속 실패하면 대기 중인 초대나 링크가 한도에 도달했거나 결정 원장이 결정을 기록할 수 없는 상태일 수 있습니다. 그 경우 계정 정지 해제와 관리자 역할 부여는 결정 원장이 다시 기록할 수 있을 때까지 기다려야 합니다('역할·위임·효력' 참고). 사용자 정지는 계속 할 수 있습니다.",
-      "تعذّر على خدمة المستخدمين إكمال هذا التغيير. أعد المحاولة بعد قليل. إذا استمر الإخفاق، فربما بلغت الدعوات أو الروابط المعلّقة حدّها، أو أن دفتر القرارات لا يستطيع تسجيل القرارات؛ وعندها تنتظر إعادة تفعيل الأشخاص ومنح دور المسؤول حتى يتمكن دفتر القرارات من التسجيل مجددًا (راجع «الأدوار والتفويض والوصول الفعلي»). يظل تعليق الأشخاص ممكنًا.",
+      "تعذّر على خدمة المستخدمين إكمال هذا التغيير. أعد المحاولة بعد قليل. إذا استمر الإخفاق، فربما بلغت الدعوات أو الروابط التي لم تُستخدم بعد حدّها، أو أن دفتر القرارات لا يستطيع تسجيل القرارات؛ وعندها تنتظر إعادة تفعيل الأشخاص ومنح دور المسؤول حتى يتمكن دفتر القرارات من التسجيل مجددًا (راجع «الأدوار والتفويض والوصول الفعلي»). يظل تعليق الأشخاص ممكنًا.",
     ),
   stale: (l: Locale) =>
     t(
@@ -222,20 +223,6 @@ export const w = {
       `변경이 일부만 적용되었을 수 있습니다. 다시 시도하기 전에 목록을 다시 불러와 이 사용자의 상태를 확인하세요. 참조 번호: ${op}`,
       `ربما طُبّق التغيير جزئيًا فقط. أعد تحميل القائمة وتحقّق من هذا المستخدم قبل المحاولة مرة أخرى. المرجع: ${op}`,
     ),
-  revocationTitle: (l: Locale) =>
-    t(
-      l,
-      "Revocation jobs are not available in pre-launch",
-      "출시 전 서비스에서는 회수 작업을 사용할 수 없습니다",
-      "مهام الإلغاء غير متاحة في خدمة ما قبل الإطلاق",
-    ),
-  revocationBody: (l: Locale) =>
-    t(
-      l,
-      "Bulk revocation is not part of this pre-launch service. To end one person's access, open them on the Users tab, then suspend the account, remove them from the workspace or mark them as departed.",
-      "일괄 회수는 출시 전 서비스에 포함되지 않습니다. 한 사람의 접근을 끝내려면 사용자 탭에서 해당 사용자를 열고 계정 정지, 업무 공간에서 제거 또는 퇴사 처리를 하세요.",
-      "الإلغاء الجماعي ليس جزءًا من خدمة ما قبل الإطلاق. لإنهاء وصول شخص واحد، افتحه في تبويب المستخدمين، ثم علّق الحساب أو أزله من مساحة العمل أو حدّده كمغادر.",
-    ),
   goUsers: (l: Locale) => t(l, "Go to Users", "사용자 탭으로 이동", "الانتقال إلى المستخدمين"),
   signInAgain: (l: Locale) => t(l, "Sign in again", "다시 로그인", "تسجيل الدخول مجددًا"),
 };
@@ -252,6 +239,7 @@ export const actionLabel: Record<Action, (l: Locale) => string> = {
   issue_set_link: (l) => t(l, "Issue password set link", "비밀번호 설정 링크 발급", "إصدار رابط تعيين كلمة المرور"),
   issue_reset_link: (l) => t(l, "Issue password reset link", "비밀번호 재설정 링크 발급", "إصدار رابط إعادة تعيين كلمة المرور"),
   revoke_invitation: (l) => t(l, "Revoke invitation", "초대 취소", "إلغاء الدعوة"),
+  set_role_period: (l) => t(l, "Change role period", "역할 기간 변경", "تغيير مدة الدور"),
 };
 
 export const actionDone: Record<Action, (l: Locale) => string> = {
@@ -266,10 +254,13 @@ export const actionDone: Record<Action, (l: Locale) => string> = {
   issue_set_link: (l) => t(l, "Link issued. Copy it below.", "링크를 발급했습니다. 아래에서 복사하세요.", "صدر الرابط. انسخه أدناه."),
   issue_reset_link: (l) => t(l, "Link issued. Copy it below.", "링크를 발급했습니다. 아래에서 복사하세요.", "صدر الرابط. انسخه أدناه."),
   revoke_invitation: (l) => t(l, "Invitation revoked", "초대를 취소했습니다", "تم إلغاء الدعوة"),
+  set_role_period: (l) => t(l, "Role period changed", "역할 기간을 변경했습니다", "تم تغيير مدة الدور"),
 };
 
 export function impact(l: Locale, action: Action, login: string, role: string, next: string): string {
   switch (action) {
+    case "set_role_period":
+      return "";
     case "suspend_user":
       return t(
         l,
@@ -340,7 +331,7 @@ export function impact(l: Locale, action: Action, login: string, role: string, n
         l,
         `The pending invitation for ${login} is cancelled. If they still use their set link, they get a password but no workspace membership.`,
         `${login} 사용자의 대기 중인 초대가 취소됩니다. 이후 설정 링크를 사용하면 비밀번호는 설정되지만 업무 공간 소속은 생기지 않습니다.`,
-        `تُلغى الدعوة المعلّقة لـ${login}. إذا استخدم رابط التعيين لاحقًا، يحصل على كلمة مرور دون عضوية في مساحة العمل.`,
+        `تُلغى الدعوة التي لم تُقبل بعد الموجّهة إلى ${login}. إذا استخدم رابط التعيين لاحقًا، يحصل على كلمة مرور دون عضوية في مساحة العمل.`,
       );
   }
 }

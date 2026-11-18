@@ -256,6 +256,9 @@ func (s *Server) signIn(login, workspace string, secure bool, generation uint64)
 	if s.dir.generations[login] != generation {
 		return nil, identity.Answer{}, "", false
 	}
+	if s.sweepRoles() {
+		s.counter++
+	}
 	now := s.clock()
 	s.sessions.prune(now.Add(-sessionAbsolute))
 	cookie, csrf, v, err := s.openSession(LoginTriple(login), workspace, secure)
@@ -401,6 +404,9 @@ func (s *Server) setPassword(ctx context.Context, body map[string]string) string
 	}
 	s.domain.Lock()
 	defer s.domain.Unlock()
+	if s.sweepRoles() {
+		s.counter++
+	}
 	login := link.Key.Subject
 	if link.Purpose != passwords.PurposeReset && s.held() {
 		return string(commands.DependencyUnavailable)
@@ -470,6 +476,9 @@ func (s *Server) activate(ctx context.Context, body map[string]string) string {
 	}
 	if err := s.grantTrust(s.bootUser, s.clock()); err != nil {
 		s.log.Error("trust grant failed at activation")
+	}
+	if err := s.grantBulk(s.bootUser, s.clock()); err != nil {
+		s.log.Error("bulk revocation grant failed at activation")
 	}
 	s.boot.live = false
 	_ = os.Remove(s.boot.file)

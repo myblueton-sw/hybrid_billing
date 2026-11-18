@@ -25,7 +25,7 @@ func (h *Boundary) Bootstrap(verifier Verifier, userID string, triple Triple, em
 	r.boot.consumed = true
 	r.users[userID] = &user{kind: Human, state: Active, epoch: 1}
 	r.link(userID, triple, email)
-	r.memberships[r.boot.workspace] = map[string]*membership{userID: {role: Administrator, state: MembershipActive, version: 1, joined: 1}}
+	r.memberships[r.boot.workspace] = map[string]*membership{userID: {role: Administrator, state: MembershipActive, version: 1, joined: 1, from: r.clock()}}
 	r.generation++
 	return nil
 }
@@ -126,7 +126,10 @@ func (h *Boundary) Access(verifier Verifier, workspace string) (Answer, error) {
 		return Answer{}, err
 	}
 	own := r.member(workspace, found.user)
-	if own == nil || own.state != MembershipActive {
+	if !effective(own, now) {
+		if own != nil && ended(*own, now) {
+			return Answer{}, refused(ReasonExpired)
+		}
 		return Answer{}, refused(ReasonMembership)
 	}
 	if extended := now.Add(found.idle); extended.After(found.idleExpiry) {
@@ -135,8 +138,12 @@ func (h *Boundary) Access(verifier Verifier, workspace string) (Answer, error) {
 	if found.idleExpiry.After(found.absolute) {
 		found.idleExpiry = found.absolute
 	}
+	notAfter := found.absolute
+	if !own.until.IsZero() && own.until.Before(notAfter) {
+		notAfter = own.until
+	}
 	return Answer{issued: true, instance: r.instance, installation: r.installation, workspace: workspace, user: found.user, kind: Human,
-		epoch: found.epoch, role: own.role, notBefore: found.opened, notAfter: found.absolute, version: own.version, serial: found.serial, identity: found.identity}, nil
+		epoch: found.epoch, role: own.role, notBefore: found.opened, notAfter: notAfter, version: own.version, serial: found.serial, identity: found.identity}, nil
 }
 
 func (h *Boundary) AccessByCredential(credentialID string, verifier Verifier) (Answer, error) {
@@ -188,7 +195,7 @@ func (h *Boundary) Recheck(answer Answer) error {
 	own := r.member(answer.workspace, answer.user)
 	linked := r.identities[answer.identity]
 	opened := r.serials[answer.serial]
-	if own == nil || own.state != MembershipActive || own.role != answer.role || own.version != answer.version ||
+	if !effective(own, now) || own.role != answer.role || own.version != answer.version ||
 		linked == nil || !linked.linked || linked.user != answer.user || opened == nil || opened.user != answer.user {
 		return refused(ReasonAnswer)
 	}

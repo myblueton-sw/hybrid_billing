@@ -847,7 +847,7 @@ func (s *Server) retentionApprovers(verifier identity.Verifier, now time.Time) (
 	}
 	out := []string{}
 	for user, m := range members {
-		if m.State == identity.MembershipActive && m.UserState == identity.Active && s.dir.holds(user, now) {
+		if m.Effective && m.UserState == identity.Active && s.dir.holds(user, now) {
 			out = append(out, user)
 		}
 	}

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, attempt, type AdminClient, type Attempt, type CommandId, type OrgMember, type OrgParty, type PlanRow, type PlansPage, type RelationKind } from "../../../../service/admin";
+import { AdminError, attempt, type AdminClient, type Attempt, type CommandId, type DraftMember, type GroupDraft, type OrgMember, type OrgParty, type PlanRow, type PlansPage, type RelationKind } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { Summary, type Problems } from "../../../../service/Service";
@@ -14,6 +14,7 @@ import { c } from "./live-copy";
 import {
   actionsFor, adopted, afterConflict, allMemberChoices, baseBlocks, baseField, baseStale, blocked, canActivate, closing, currentOn, currentView, fill, findPlan, formStep, memberMode, held, impactDone, impactOf, impactUnread, keepsAttempt, kinds, lead, membersKept, minFrom,
   nameOf, needsTarget, partition, prefilled, react, readHandoff, refusal, showOpenCount, steps, targetChoices, type Action, type Blocked, type Choice, type Command, type Carried, type Reaction,
+  draftLoad, groupRefusal, planTitle, type DraftLoad,
 } from "./live-model";
 import "../../../identity/pages/users/live.css";
 import "./live.css";
@@ -116,7 +117,7 @@ const impactWord = (l: Locale, v: string) => {
 };
 
 function Named({ id, name }: { id: string; name: string }) {
-  return <><bdi>{name}</bdi>{name !== id && <span className="live-sub live-mono">{ltr(id)}</span>}</>;
+  return name === id ? <bdi dir="ltr" className="o02-id-name">{id}</bdi> : <><bdi>{name}</bdi><span className="live-sub live-mono">{ltr(id)}</span></>;
 }
 
 export function Detail({ l, p, page, parties, members, full, titleRef }: {
@@ -131,13 +132,14 @@ export function Detail({ l, p, page, parties, members, full, titleRef }: {
   const b = blocked(p);
   return (
     <>
-      <h2 id="o02-plan-title" tabIndex={-1} ref={titleRef}>{c.sentence(l, p.change.action, memberName, targetName, kindName)}</h2>
+      <h2 id="o02-plan-title" tabIndex={-1} ref={titleRef}>{p.draft ? fill(c.groupLead(l, "{g}", "{n}", "{d}"), { g: <bdi dir="ltr">{planTitle(p)}</bdi>, n: <>{p.draft.member_count}</>, d: <time dateTime={p.change.from}>{day(l, p.change.from)}</time> }) : c.sentence(l, p.change.action, memberName, targetName, kindName)}</h2>
+      {p.draft?.new_group && <p className="o02-draft-name"><span className="o02-draft-label">{c.draftName(l)}</span> <bdi>{p.draft.name}</bdi></p>}
       <p className="live-sub live-mono">{ltr(p.id)}</p>
       <Steps l={l} p={p} />
       {p.stale && <div className="live-note-rule"><p><strong>{c.staleTag(l)}.</strong> {c.stale(l, page.active_revision, p.base)}</p></div>}
       {p.truncated && <div className="live-note-rule"><p>{c.truncated(l)}</p></div>}
       <dl className="live-facts o02-summary">
-        <div><dt>{c.facts.member(l)}</dt><dd><Named id={p.change.member} name={memberName} /></dd></div>
+        {p.draft ? <div><dt>{c.membersFact(l)}</dt><dd>{p.draft.member_count}</dd></div> : <div><dt>{c.facts.member(l)}</dt><dd><Named id={p.change.member} name={memberName} /></dd></div>}
         <div><dt>{c.facts.kind(l)}</dt><dd>{kindName}</dd></div>
         <div><dt>{c.facts.change(l)}</dt><dd>{c.actionShort(l, p.change.action)}</dd></div>
         <div><dt>{c.facts.target(l)}</dt><dd>{p.change.target ? <Named id={p.change.target} name={targetName} /> : c.none(l)}</dd></div>
@@ -159,7 +161,7 @@ export function Detail({ l, p, page, parties, members, full, titleRef }: {
                   return (
                     <li key={i}>
                       <strong>{title}</strong>
-                      {body && <p>{body}</p>}
+                      {p.draft && v.rule === "plan_limit" ? <p>{c.planLimit(l)}</p> : body && <p>{body}</p>}
                       <span className="live-sub live-mono">{ltr([v.rule, v.kind, v.member].filter(Boolean).join(" · "))}</span>
                     </li>
                   );
@@ -171,6 +173,23 @@ export function Detail({ l, p, page, parties, members, full, titleRef }: {
             <h3 id="o02-diff-title">{c.diff(l)}</h3>
             {!membersKept(p) ? <p className="live-note">{c.notKept(l)}</p> : p.members.length === 0 ? <p className="live-note">{c.none(l)}</p> : (
               <>
+                {p.draft ? (
+                  <div className="security-table-scroll live-table o02-diff o02-group-diff">
+                    <table>
+                      <thead><tr><th scope="col">{c.colMember(l)}</th><th scope="col">{c.colRanges(l)}</th><th scope="col">{c.colBefore(l)}</th><th scope="col">{c.colAfter(l)}</th></tr></thead>
+                      <tbody>
+                        {p.members.map((m) => (
+                          <tr key={m.member}>
+                            <td data-label={c.colMember(l)}><Named id={m.member} name={m.name || named(m.member)} /></td>
+                            <td data-label={c.colRanges(l)}>{m.differs.length === 0 ? c.none(l) : <ul className="o02-ranges">{m.differs.map((r) => <li key={r.from + r.until}><DatedRange l={l} from={r.from} until={r.until} /></li>)}</ul>}</td>
+                            <td data-label={c.colBefore(l)}>{m.before.length === 0 ? c.none(l) : <ul className="o02-ranges">{m.before.map((id) => <li key={id}><Named id={id} name={named(id)} /></li>)}</ul>}</td>
+                            <td data-label={c.colAfter(l)}>{m.after.length === 0 ? c.none(l) : <ul className="o02-ranges">{m.after.map((id) => <li key={id}><Named id={id} name={named(id)} /></li>)}</ul>}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
                 <div className="security-table-scroll live-table o02-diff">
                   <table>
                     <colgroup><col className="o02-c20" /><col className="o02-c24" /><col className="o02-c16" /><col className="o02-c20" /><col className="o02-c20" /></colgroup>
@@ -190,6 +209,7 @@ export function Detail({ l, p, page, parties, members, full, titleRef }: {
                     </tbody>
                   </table>
                 </div>
+                )}
                 <p className="live-note">{c.timelineNote(l)}</p>
               </>
             )}
@@ -254,7 +274,7 @@ export function Approval({ l, p, sentence, kindName, confirm, busy, reason, onOp
         {held(b) ? null : !canActivate(p) ? (
           <div className="live-blocked">
             <p><strong>{c.blockedTitle(l)}</strong></p>
-            <ul><li>{b === "own" ? c.own(l) : b === "stale" ? c.staleBlock(l) : b === "passed" ? c.passed(l) : c.otherBlock(l)}</li></ul>
+            <ul><li>{b === "own" ? c.own(l) : b === "own_draft" ? c.ownDraft(l) : b === "stale" ? c.staleBlock(l) : b === "passed" ? c.passed(l) : c.otherBlock(l)}</li></ul>
             {(b === "stale" || b === "passed") && <p className="live-note">{c.next(l)}</p>}
           </div>
         ) : confirm !== "activate" ? (
@@ -328,6 +348,52 @@ export function HandoffNote({ l, h, active, onUseBase }: { l: Locale; h: Carried
   );
 }
 
+export function DatedRange({ l, from, until }: { l: Locale; from: string; until: string }) {
+  const text = until ? c.rangeClosed(l, "{d}", "{e}") : c.rangeOpen(l, "{d}");
+  return <>{text.split(/(\{[de]\})/).map((x, i) => (x === "{d}" ? <time key={i} className="o02-nowrap" dateTime={from}>{day(l, from)}</time>
+    : x === "{e}" ? <time key={i} className="o02-nowrap" dateTime={until}>{day(l, until)}</time> : x))}</>;
+}
+
+export type GroupLoad = { status: DraftLoad; draft: GroupDraft | null; members: DraftMember[] };
+
+export function GroupHandoff({ l, h, group, active, onUseBase, onRetry }: { l: Locale; h: Carried; group: GroupLoad; active: number; onUseBase: () => void; onRetry: () => void }) {
+  const stale = baseStale(h.base, active);
+  const rev = (n: number) => <bdi dir="ltr">{n}</bdi>;
+  const d = group.status === "ready" ? group.draft : null;
+  return (
+    <div id="o02-handoff" className="live-note-rule o02-handoff o02-group-handoff" tabIndex={-1}>
+      <p><strong>{c.groupTitle(l)}</strong></p>
+      {h.dropped && <p>{c.linkDropped(l)}</p>}
+      {h.passed && <p>{fill(c.fromPassed(l, "{d}"), { d: <time dateTime={h.passed}>{day(l, h.passed)}</time> })}</p>}
+      {group.status === "loading" && <p className="live-meta">{c.draftLoading(l)}</p>}
+      {group.status === "missing" && <p>{c.draftMissing(l)}</p>}
+      {group.status === "closed" && <p>{c.draftNotOpen(l)}</p>}
+      {group.status === "error" && <><p>{c.draftFailed(l)}</p><button type="button" className="live-secondary" onClick={onRetry}>{o.tryAgain(l)}</button></>}
+      {d && (
+        <>
+          <dl className="live-facts">
+            {d.new_group && <div><dt>{c.draftNameFact(l)}</dt><dd><bdi>{d.name}</bdi></dd></div>}
+            <div><dt>{c.groupFact(l)}</dt><dd>{d.new_group ? c.newGroup(l) : <bdi>{d.group_label || d.group}</bdi>} <bdi dir="ltr" className="live-mono o02-nowrap">{d.group}</bdi></dd></div>
+            <div><dt>{c.membersFact(l)}</dt><dd>{d.member_count}</dd></div>
+          </dl>
+          <p>{c.notOwnership(l)}</p>
+          <p>{c.draftEffect(l, d.member_count)}</p>
+          <h3>{c.membersFirst(l, group.members.length, d.member_count)}</h3>
+          <ul className="o02-group-members">
+            {group.members.map((m) => <li key={m.id}><bdi>{m.name || m.id}</bdi> <bdi dir="ltr" className="live-mono o02-nowrap">{m.id}</bdi></li>)}
+          </ul>
+        </>
+      )}
+      {stale && h.base !== null && (
+        <>
+          <p><strong>{c.staleTag(l)}.</strong> {fill((h.refused ? c.baseRefused : c.baseChanged)(l, "{r}", "{a}"), { r: rev(h.base), a: rev(active) })}</p>
+          <button type="button" id="o02-use-base" className="live-secondary o02-use-base" onClick={onUseBase}><span>{fill(c.useBase(l, "{a}"), { a: rev(active) })}</span></button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function BaseFact({ l, base, active }: { l: Locale; base: number; active: number }) {
   return (
     <dl className="live-facts o02-base">
@@ -372,6 +438,8 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const today = todayUTC(new Date());
   const selectedId = params.get("plan") ?? "";
   const [arrived] = useState(() => params.get("done") ?? "");
+  const [group, setGroup] = useState<{ status: DraftLoad; draft: GroupDraft | null; members: DraftMember[] }>({ status: "loading", draft: null, members: [] });
+  const draftId = handoff?.draft ?? "";
 
   const load = useCallback(async (quiet = false): Promise<PlansPage | null> => {
     const n = ++seq.current;
@@ -427,7 +495,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     setFocusTo("#o02-plan-title");
   }, [arrived, page, status]);
   useEffect(() => {
-    if (initial) onParams({ kind: null, member: null, from: null, base: null });
+    if (initial) onParams({ kind: null, member: null, from: null, base: null, draft: null });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { onDirty?.(touched); }, [touched]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => onDirty?.(false), []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -454,6 +522,25 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     }
     setTouched(step.touched);
   }, [view]); // eslint-disable-line react-hooks/exhaustive-deps
+  const loadGroup = useCallback(async (id: string) => {
+    setGroup((g) => ({ ...g, status: "loading" }));
+    try {
+      let after = "";
+      let found: GroupDraft | null = null;
+      for (let i = 0; i < 40 && !found; i++) {
+        const got = await api.viewGroupDrafts(after, 50);
+        found = got.drafts.find((d) => d.id === id) ?? null;
+        after = got.next;
+        if (!after) break;
+      }
+      const members = found ? await api.draftMembers(id, "", 50) : "missing";
+      setGroup({ status: draftLoad(found), draft: found, members: members === "missing" ? [] : members.members });
+    } catch (e) {
+      if (e instanceof AdminError && e.failure === "denied") setDenied(true);
+      setGroup({ status: draftLoad("error"), draft: null, members: [] });
+    }
+  }, [api]);
+  useEffect(() => { if (initial?.draft) void loadGroup(initial.draft); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const lastActive = useRef(0);
   useEffect(() => {
     if (!page) return;
@@ -515,10 +602,11 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const validate = (): Errors => {
     const e: Errors = {};
     if (handoff && handoff.base !== null && page && baseBlocks(handoff, page.active_revision)) e.base = c.eBase(l, handoff.base, page.active_revision);
-    if (!form.kind) e.kind = c.eKind(l);
-    if (!form.action) e.action = c.eChange(l);
-    if (!form.member.trim()) e.member = c.eMember(l);
-    if (form.action && needsTarget(form.action) && !form.target.trim()) e.target = c.eTarget(l);
+    if (draftId && handoff?.base === null) e.base = c.eServer(l);
+    if (!draftId && !form.kind) e.kind = c.eKind(l);
+    if (!draftId && !form.action) e.action = c.eChange(l);
+    if (!draftId && !form.member.trim()) e.member = c.eMember(l);
+    if (!draftId && form.action && needsTarget(form.action) && !form.target.trim()) e.target = c.eTarget(l);
     if (!validDay(form.from)) e.from = c.eDate(l);
     else if (!minFrom(today, form.from)) e.from = c.ePast(l);
     const r = reasonProblem(l, form.reason);
@@ -531,6 +619,11 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     const cause = (err as { cause?: unknown }).cause;
     const fields = cause instanceof AdminError ? cause.fields : [];
     if (reaction === "denied") { setDenied(true); return; }
+    if (cmd === "propose" && draftId) {
+      const kind = groupRefusal(reaction, fields);
+      if (kind === "draft") { setNotice({ text: c.draftRefused(l), alert: true }); setFocusTo("#o02-notice"); return; }
+      if (reaction === "stage") { await loadGroup(draftId); setNotice({ text: c.draftNotOpen(l) }); setFocusTo("#o02-notice"); return; }
+    }
     if (reaction === "field") {
       const known: Errors = {};
       for (const f of fields) {
@@ -538,6 +631,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
         else if (f === "target") known.target = c.eTargetServer(l);
         else if (f === "from") known.from = c.eFromServer(l);
         else if (f === "action" || f === "kind") known.action = c.eActionServer(l);
+        else if (f === "base") known.base = c.eServer(l);
         else known.reason = c.eServer(l);
       }
       setErrors(known);
@@ -584,11 +678,11 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     const found = validate();
     setErrors(found);
     if (Object.keys(found).length) { setSummaryKey((k) => k + 1); return; }
-    const values: Record<string, string> = { kind: form.kind, member: form.member.trim(), action: form.action, from: form.from };
-    if (form.action && needsTarget(form.action)) values.target = form.target.trim();
+    const values: Record<string, string> = draftId ? { from: form.from } : { kind: form.kind, member: form.member.trim(), action: form.action, from: form.from };
+    if (!draftId && form.action && needsTarget(form.action)) values.target = form.target.trim();
     Object.assign(values, baseField(handoff));
     try {
-      const out = await run("propose", "relationship.propose", "relationships", form.reason, values);
+      const out = await run("propose", draftId ? "view_group.propose" : "relationship.propose", draftId || "relationships", form.reason, values);
       if (!out) return;
       const id = out.fields.plan ?? "";
       await load(true);
@@ -647,7 +741,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
       return next;
     });
     say(c.baseAdopted(l, page.active_revision));
-    setFocusTo("#o02-current-title");
+    setFocusTo(draftId ? "#o02-from" : "#o02-current-title");
   };
 
   const reload = async () => {
@@ -716,6 +810,27 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     if (shown === "none" || !got) return <span className="live-quiet">{c.none(l)}</span>;
     return <ul className="o02-ranges">{got.map((t) => <li key={t.id}><Named id={t.id} name={t.name} /></li>)}</ul>;
   };
+
+  const groupView = (
+    <form className="o02-target o02-group" onSubmit={(e) => void propose(e)} noValidate aria-busy={busy === "propose" || undefined}>
+      <div className="o02-fields">
+        {handoff && handoff.base !== null && <BaseFact l={l} base={handoff.base} active={page.active_revision} />}
+        {problems.length > 0 && <Summary locale={l} title={sc.check(l)} problems={problems} focusKey={summaryKey} />}
+        <div className="service-field">
+          <label htmlFor="o02-from">{c.fromLabel(l)}</label>
+          <p className="service-hint" id="o02-from-hint">{c.fromHint(l)}</p>
+          {errorText("from", "o02-from")}
+          <input id="o02-from" type="date" className="o02-date" min={today} value={form.from} aria-invalid={errors.from ? true : undefined} aria-describedby={described("from", "o02-from", "o02-from-hint")} onChange={(e) => edit({ from: e.target.value })} />
+        </div>
+        <Reason l={l} value={form.reason} onChange={(v) => edit({ reason: v })} error={errors.reason ?? ""} />
+      </div>
+      {group.status === "ready" && (
+        <div className="live-buttons o02-form-actions">
+          <button type="submit" className="live-primary" disabled={busy === "propose"} aria-busy={busy === "propose" || undefined}>{busy === "propose" ? c.proposing(l) : c.propose(l)}</button>
+        </div>
+      )}
+    </form>
+  );
 
   const targetsView = (
     <form className="o02-target" onSubmit={(e) => void propose(e)} noValidate aria-busy={busy === "propose" || undefined}>
@@ -815,8 +930,8 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
       ) : (
         <ul className="o02-plans">
           {rows.map((p) => {
-            const memberName = p.member_name || nameOf(p.change.member, parties, allMembers);
-            const targetName = p.change.target ? p.target_name || nameOf(p.change.target, parties, allMembers) : "";
+            const memberName = p.draft ? planTitle(p) : p.member_name || nameOf(p.change.member, parties, allMembers);
+            const targetName = p.draft ? "" : p.change.target ? p.target_name || nameOf(p.change.target, parties, allMembers) : "";
             const current = p.id === selectedId;
             return (
               <li key={p.id}>
@@ -844,9 +959,10 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     const memberName = p.member_name || nameOf(p.change.member, parties, allMembers);
     const targetName = p.change.target ? p.target_name || nameOf(p.change.target, parties, allMembers) : "";
     const kindName = o.kind(l, p.change.kind);
+    const sentence = p.draft ? c.groupLead(l, planTitle(p), p.draft.member_count, day(l, p.change.from)) : c.sentence(l, p.change.action, memberName, targetName, kindName);
     const reasonBox = <Reason l={l} value={actReason} onChange={(v) => { setActReason(v); setActError(""); attempts.current.activate = undefined; attempts.current.discard = undefined; }} error={actError} />;
     return (
-      <Approval l={l} p={p} sentence={c.sentence(l, p.change.action, memberName, targetName, kindName)} kindName={kindName} confirm={confirm} busy={busy} reason={reasonBox}
+      <Approval l={l} p={p} sentence={sentence} kindName={kindName} confirm={confirm} busy={busy} reason={reasonBox}
         onOpen={(k) => { opener.current = k === "activate" ? "#o02-open-activate" : "#o02-open-discard"; setConfirm(k); setFocusTo("#o02-confirm-title"); }}
         onDecide={(k) => void decide(k, p)} onCancel={() => { setConfirm(null); setActError(""); setFocusTo(opener.current); }} />
     );
@@ -877,12 +993,12 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
               <thead><tr>{cols.map((h) => <th scope="col" key={h}>{h}</th>)}</tr></thead>
               <tbody>
                 {closed.map((p) => {
-                  const memberName = p.member_name || nameOf(p.change.member, parties, allMembers);
-                  const targetName = p.change.target ? p.target_name || nameOf(p.change.target, parties, allMembers) : "";
+                  const memberName = p.draft ? planTitle(p) : p.member_name || nameOf(p.change.member, parties, allMembers);
+                  const targetName = p.draft ? "" : p.change.target ? p.target_name || nameOf(p.change.target, parties, allMembers) : "";
                   const current = p.id === selectedId;
                   return (
                     <tr key={p.id} className={current ? "live-selected" : undefined}>
-                      <td data-label={cols[0]} className="live-user"><button type="button" className="live-open" data-plan={p.id} aria-current={current ? "true" : undefined} onClick={() => select(p.id)}><bdi>{memberName}</bdi></button><span className="live-sub live-mono">{ltr(p.change.member)}</span></td>
+                      <td data-label={cols[0]} className="live-user"><button type="button" className="live-open" data-plan={p.id} aria-current={current ? "true" : undefined} onClick={() => select(p.id)}><bdi>{memberName}</bdi></button><span className="live-sub live-mono">{ltr(p.change.member || p.change.target)}</span></td>
                       <td data-label={cols[1]}>{c.actionShort(l, p.change.action)} · {o.kind(l, p.change.kind)}{targetName && <span className="live-sub"><bdi>{targetName}</bdi></span>}</td>
                       <td data-label={cols[2]}><time dateTime={p.change.from}>{day(l, p.change.from)}</time></td>
                       <td data-label={cols[3]}><span className="o02-tag">{c.stateWord(l, p.state)}</span><span className="live-sub">{c.closing(l, closing(p), p.activated_revision)}</span></td>
@@ -906,7 +1022,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     ) : notFound || (closed.length > 0 ? <p className="live-empty">{c.choose(l)}</p> : null);
   } else {
     single = true;
-    main = targetsView;
+    main = draftId ? groupView : targetsView;
   }
 
   const showPanel = !single && (split ? panel !== null : stepped);
@@ -917,7 +1033,8 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
       {noticeBox}
       {failureBox}
       {heading}
-      {single && handoff && <HandoffNote l={l} h={handoff} active={page.active_revision} onUseBase={adoptBase} />}
+      {single && handoff && (draftId ? <GroupHandoff l={l} h={handoff} group={group} active={page.active_revision} onUseBase={adoptBase} onRetry={() => void loadGroup(draftId)} />
+        : <HandoffNote l={l} h={handoff} active={page.active_revision} onUseBase={adoptBase} />)}
       {single ? main : (
         <div className={"live-users" + (split ? " o02-open" : "")} data-wide={split ? "true" : "false"}>
           {!(stepped && !split) && <div className="live-list live-sections">{main}</div>}

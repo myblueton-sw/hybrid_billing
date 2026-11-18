@@ -742,3 +742,13 @@ These supersede the matching Part B text above; details are in `../HYB-318/visua
 5. Copy follows the technical-writing review: the form is "this change" until Propose; screen and field names match actual titles; numbers and attached words never break across lines.
 6. The Current aside shows its loading state until the shared choices read settles.
 
+## Root amendments after the Part C reviews (HYB-319, 2026-11-18)
+
+These supersede the matching Part C text above; details are in `../HYB-319/visual-spec.md` §16 and `../HYB-319/verification.md`.
+
+1. **Separation of duties.** A draft records everyone who created or edited it; propose copies them into the plan; `relationship.activate` refuses (`prerequisite_failed`) when the activator is the proposer or any editor, and the plans read shows `own_proposal` to them.
+2. **Plan snapshot.** Each plan proposed from a draft stores the draft name, group and member count at propose time, so a closed group plan keeps its title after the draft is pruned.
+3. **Duplicate and invalid adds.** Before saving, the console drops IDs already in the draft and IDs that are not source accounts, and states both counts; the server stays authoritative.
+4. **Refusals without fields.** `view_group.propose` refusals for members or the group arrive without a field (the registry copies only declared fields); O02 states that the draft was not accepted as it is. An unknown draft answers `permission_denied` from the registry; O01 then shows that the draft no longer exists.
+5. **Hold rows.** `view_group.discard_draft` is allowed during a trust hold; `view_group.draft`, `edit` and `propose` are refused.
+

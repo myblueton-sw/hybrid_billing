@@ -4,7 +4,7 @@ import type { OrgMember, OrgParty, PlanRow } from "../../../../service/admin";
 import { planOf } from "../../../../service/admin";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
-import { currentView } from "./live-model";
+import { currentView, draftLoad, groupRefusal, planTitle } from "./live-model";
 import { adopted, afterConflict, baseBlocks, baseField, baseStale, canonicalRevision, conflictShown, fill, formStep, handoffHref, memberMode, prefilled, readHandoff, type Carried } from "./live-model";
 import { canActivate, showOpenCount, actionsFor, allMemberChoices, held, impactDone, impactOf, impactUnread, keepsAttempt, lead, membersKept, nameOf, react, refusal, blocked, closing, currentOn, findPlan, memberChoices, minFrom, needsTarget, partition, steps, targetChoices } from "./live-model";
 
@@ -166,15 +166,15 @@ test("the handoff link carries kind, member, a date from today, the base and the
   assert.equal(handoffHref({ kind: "payer", member: "acct-1", from: "2026-11-18", base: 3, lang: "ko" }), "#/organization-changes?view=targets&kind=payer&member=acct-1&from=2026-11-18&base=3&lang=ko");
   assert.equal(handoffHref({ kind: "view_group", member: "acct-2", from: "", base: 0, lang: "" }), "#/organization-changes?view=targets&kind=view_group&member=acct-2&base=0");
   const back = readHandoff(new URLSearchParams(handoffHref({ kind: "hierarchy", member: "unit-b", from: "2026-12-01", base: 7, lang: "ar" }).split("?")[1]), "2026-11-18");
-  assert.deepEqual(back, { kind: "hierarchy", member: "unit-b", from: "2026-12-01", passed: "", base: 7, dropped: false });
+  assert.deepEqual(back, { kind: "hierarchy", member: "unit-b", from: "2026-12-01", passed: "", base: 7, dropped: false, draft: "" });
 });
 
 test("link values are read once with unknown kinds, malformed IDs and bad bases dropped", () => {
   assert.equal(link("view=targets&lang=en"), null);
-  assert.deepEqual(link("kind=other&member=acct-1&base=2"), { kind: "", member: "acct-1", from: "", passed: "", base: 2, dropped: true });
-  assert.deepEqual(link("kind=payer&member=bad%20id"), { kind: "payer", member: "", from: "", passed: "", base: null, dropped: true });
-  assert.deepEqual(link("member=acct-1&from=2026-11-17"), { kind: "", member: "acct-1", from: "", passed: "2026-11-17", base: null, dropped: false });
-  assert.deepEqual(link("member=acct-1&from=2026-11-18"), { kind: "", member: "acct-1", from: "2026-11-18", passed: "", base: null, dropped: false });
+  assert.deepEqual(link("kind=other&member=acct-1&base=2"), { kind: "", member: "acct-1", from: "", passed: "", base: 2, dropped: true, draft: "" });
+  assert.deepEqual(link("kind=payer&member=bad%20id"), { kind: "payer", member: "", from: "", passed: "", base: null, dropped: true, draft: "" });
+  assert.deepEqual(link("member=acct-1&from=2026-11-17"), { kind: "", member: "acct-1", from: "", passed: "2026-11-17", base: null, dropped: false, draft: "" });
+  assert.deepEqual(link("member=acct-1&from=2026-11-18"), { kind: "", member: "acct-1", from: "2026-11-18", passed: "", base: null, dropped: false, draft: "" });
   assert.equal(link("member=acct-1&from=2026-02-30")?.dropped, true);
   assert.equal(link("member=acct-1&from=2026-02-30")?.from, "");
   for (const bad of ["", "-1", "01", "1.0", "x", "18446744073709551616", "9007199254740993", "+1"]) {
@@ -190,9 +190,9 @@ test("link values are read once with unknown kinds, malformed IDs and bad bases 
 });
 
 test("a prefill note needs a carried value and the base compares with the active revision", () => {
-  assert.equal(prefilled({ kind: "", member: "", from: "", passed: "2026-01-01", base: null, dropped: true }), false);
+  assert.equal(prefilled({ kind: "", member: "", from: "", passed: "2026-01-01", base: null, dropped: true, draft: "" }), false);
   for (const h of [{ kind: "payer" as const }, { member: "a" }, { from: "2026-12-01" }, { base: 0 }])
-    assert.equal(prefilled({ kind: "", member: "", from: "", passed: "", base: null, dropped: false, ...h }), true);
+    assert.equal(prefilled({ kind: "", member: "", from: "", passed: "", base: null, dropped: false, draft: "", ...h }), true);
   assert.equal(baseStale(null, 4), false);
   assert.equal(baseStale(4, 4), false);
   assert.equal(baseStale(3, 4), true);
@@ -218,7 +218,7 @@ test("fill puts nodes in place of placeholders and leaves other text", () => {
   assert.equal(renderToStaticMarkup(createElement("p", null, fill("{a}", { a: "x" }))), "<p>x</p>");
 });
 
-const carry = (base: number | null, refused = false): Carried => ({ kind: "hierarchy", member: "acct-1", from: "", passed: "", base, dropped: false, refused });
+const carry = (base: number | null, refused = false): Carried => ({ kind: "hierarchy", member: "acct-1", from: "", passed: "", base, dropped: false, draft: "", refused });
 
 test("unsaved input follows user edits only: base adoption keeps it, a proposal or leaving clears it", () => {
   assert.deepEqual(formStep("edit", false), { touched: true, clearAttempt: true, resetForm: false });
@@ -269,4 +269,37 @@ test("the Current aside waits for the same listing read as the member choices be
   assert.equal(currentView(true, true, null), "none_of_kind");
   assert.equal(currentView(true, true, []), "none");
   assert.equal(currentView(true, false, [{ id: "u", name: "U" }]), "targets");
+});
+
+test("a draft link carries only the draft, the date and the base; kind and member are ignored", () => {
+  assert.deepEqual(link("draft=vgd-0123456789abcdef&from=2026-12-01&base=3&kind=payer&member=acct-1"),
+    { kind: "", member: "", from: "2026-12-01", passed: "", base: 3, dropped: false, draft: "vgd-0123456789abcdef" });
+  for (const bad of ["vgd-1", "VGD-0123456789ABCDEF", "plan-0123456789abcdef", "", "vgd-0123456789abcdeg"]) {
+    const got = link("draft=" + encodeURIComponent(bad));
+    assert.equal(got?.draft, "", bad);
+    assert.equal(got?.dropped, true, bad);
+  }
+  assert.equal(prefilled({ kind: "", member: "", from: "", passed: "", base: null, dropped: false, draft: "vgd-0123456789abcdef" }), true);
+});
+
+test("group plans are titled by their group, drafts load into a state and propose refusals map", () => {
+  const plan = (over: Partial<PlanRow>) => ({ ...planOf({ change: { target: "group-1" }, member_name: "M" }), ...over });
+  assert.equal(planTitle(plan({})), "M");
+  assert.equal(planTitle(plan({ draft: { id: "vgd-1", name: "Ops", group: "group-1", new_group: true, member_count: 2 } })), "group-1");
+  assert.equal(planTitle(plan({ draft: { id: "vgd-1", name: "Ops", group: "group-1", new_group: true, member_count: 2 }, target_name: "Ops" })), "Ops");
+  assert.equal(draftLoad("error"), "error");
+  assert.equal(draftLoad(null), "missing");
+  assert.equal(draftLoad({ state: "open" }), "ready");
+  for (const s of ["proposed", "activated", "discarded", "unknown"]) assert.equal(draftLoad({ state: s }), "closed");
+  assert.equal(groupRefusal("field", ["from"]), "field");
+  assert.equal(groupRefusal("field", []), "draft");
+  assert.equal(groupRefusal("reason", []), "draft");
+  assert.equal(groupRefusal("conflict", []), "other");
+});
+
+test("an editor of the plan's draft is blocked with its own reason", () => {
+  const p = planOf({ state: "sealed", blocked: "own_draft", impact: { money: "computed", publication: "computed", erp: "computed" } });
+  assert.equal(blocked(p), "own_draft");
+  assert.equal(refusal(p), "own_draft");
+  assert.equal(blocked(planOf({ state: "sealed", blocked: "own_proposal", impact: { money: "computed", publication: "computed", erp: "computed" } })), "own");
 });

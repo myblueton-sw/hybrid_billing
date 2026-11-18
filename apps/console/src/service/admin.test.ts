@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, adminClient, attempt, failureOf, ledgerOf, outcomeOf, reauthenticate, sequence } from "./admin";
+import { AdminError, adminClient, attempt, failureOf, ledgerOf, outcomeOf, planOf, reauthenticate, sequence } from "./admin";
 
 type Call = { url: string; init: RequestInit };
 
@@ -423,4 +423,44 @@ test("reauthenticate posts the password once and maps failures", async () => {
   await assert.rejects(reauthenticate("t", "p", broken), (e: AdminError) => e.failure === "unavailable");
   const garbled = (async () => new Response("x", { status: 500 })) as unknown as typeof fetch;
   await assert.rejects(reauthenticate("t", "p", garbled), (e: AdminError) => e.failure === "unavailable");
+});
+
+test("the view group drafts read defaults missing parts and never invents a state", async () => {
+  const r = fake(200, { revision: "r4", active_revision: 2, open: 1, open_limit: 16, next: "vgd-2",
+    settings: [{ name: "view_group_drafts_open", value: 16, unit: "drafts", default: 16, min: 1, max: 200, source: "default" }],
+    drafts: [{ id: "vgd-1", name: "Ops", group: "group-1", group_label: "group-1", new_group: true, member_count: 2, members: [{ id: "a", name: "A" }, null, {}],
+      author: "u", author_login: "root", created: "c", updated: "u2", state: "proposed", activated_revision: 0, plan: { id: "plan-1", state: "sealed", blocked: "impact_not_computed" } },
+    {}, null, { state: "Weird", plan: "x", members: "y" }] });
+  const got = await adminClient("t", r.f).viewGroupDrafts("vgd-0", 10);
+  assert.equal(r.calls[0].url, "/api/v1/organizations/view-group-drafts?after=vgd-0&limit=10");
+  assert.deepEqual([got.revision, got.active_revision, got.open, got.open_limit, got.next, got.settings.length], ["r4", 2, 1, 16, "vgd-2", 1]);
+  const d = got.drafts[0];
+  assert.deepEqual(d.members, [{ id: "a", name: "A" }, { id: "", name: "" }]);
+  assert.deepEqual(d.plan, { id: "plan-1", state: "sealed", closed: "", blocked: "impact_not_computed", rule: "" });
+  assert.deepEqual([d.state, d.new_group, d.member_count, d.author_login, d.pruned], ["proposed", true, 2, "root", false]);
+  assert.deepEqual([got.drafts[1].state, got.drafts[1].plan, got.drafts[1].members, got.drafts[2].id], ["unknown", null, [], ""]);
+  assert.deepEqual([got.drafts[3].state, got.drafts[3].plan, got.drafts[3].members], ["unknown", null, []]);
+  const e = fake(200, {});
+  const empty = await adminClient("t", e.f).viewGroupDrafts();
+  assert.equal(e.calls[0].url, "/api/v1/organizations/view-group-drafts");
+  assert.deepEqual([empty.drafts, empty.settings, empty.next, empty.open_limit], [[], [], "", 0]);
+});
+
+test("the draft members read pages, reports a missing draft and keeps other failures", async () => {
+  const r = fake(200, { revision: "r", draft: "vgd-1", member_count: 3, pruned: true, next: "b", members: [{ id: "a", name: "A" }, { id: "b" }] });
+  const got = await adminClient("t", r.f).draftMembers("vgd 1", "a", 2);
+  assert.equal(r.calls[0].url, "/api/v1/organizations/view-group-drafts/vgd%201/members?after=a&limit=2");
+  assert.deepEqual(got, { revision: "r", draft: "vgd-1", member_count: 3, pruned: true, next: "b", members: [{ id: "a", name: "A" }, { id: "b", name: "" }] });
+  const e = fake(200, {});
+  assert.deepEqual(await adminClient("t", e.f).draftMembers("vgd-1"), { revision: "", draft: "", member_count: 0, pruned: false, next: "", members: [] });
+  assert.equal(e.calls[0].url, "/api/v1/organizations/view-group-drafts/vgd-1/members");
+  assert.equal(await adminClient("t", fake(404, { code: "unsupported_command" }).f).draftMembers("vgd-x"), "missing");
+  await assert.rejects(adminClient("t", fake(503, { code: "dependency_unavailable" }).f).draftMembers("vgd-x"), (x: AdminError) => x.failure === "busy");
+});
+
+test("a plan row carries its draft block or null", () => {
+  assert.deepEqual(planOf({ draft: { id: "vgd-1", name: "Ops", group: "group-1", new_group: true, member_count: 3 } }).draft, { id: "vgd-1", name: "Ops", group: "group-1", new_group: true, member_count: 3 });
+  assert.deepEqual(planOf({ draft: {} }).draft, { id: "", name: "", group: "", new_group: false, member_count: 0 });
+  assert.equal(planOf({ draft: null }).draft, null);
+  assert.equal(planOf({}).draft, null);
 });

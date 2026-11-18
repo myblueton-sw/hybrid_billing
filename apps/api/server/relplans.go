@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"net/http"
+	"slices"
 	"sort"
 	"strconv"
 	"time"
@@ -40,7 +41,14 @@ type planMeta struct {
 	change    planChange
 	closed    string
 	activated uint64
+	draft     string
+	snapshot  *planDraftRow
+	editors   []string
 	seq       uint64
+}
+
+func (m *planMeta) authoredBy(user string) bool {
+	return m.proposer == "" || m.proposer == user || slices.Contains(m.editors, user)
 }
 
 type planStore struct {
@@ -349,7 +357,17 @@ func (h relationshipCommand) propose(ctx commands.Context) (string, map[string]s
 		return "", nil, refuse(commands.InvalidRequest, "action")
 	}
 	s.discardStale(ws, active, now)
+	id, err := s.sealPlan(ws, active, []relationships.Timeline{{Kind: kind, Member: c.Member, Entries: built}})
+	if err != nil {
+		return "", nil, err
+	}
+	s.plans.put(&planMeta{workspace: ws, id: id, proposer: ctx.User, created: now, reason: ctx.Rationale, change: c})
+	return string(s.planState(s.plans.get(ws, id)).State), map[string]string{"plan": id}, nil
+}
+
+func (s *Server) sealPlan(ws string, active uint64, timelines []relationships.Timeline) (string, error) {
 	id := "plan-" + hex.EncodeToString(random(8))
+	var err error
 	if s.faulty("plan-draft") {
 		err = relationships.ErrConflict
 	} else {
@@ -357,25 +375,29 @@ func (h relationshipCommand) propose(ctx commands.Context) (string, map[string]s
 	}
 	if err != nil {
 		if errors.Is(err, relationships.ErrLimit) {
-			return "", nil, refuse(commands.PrerequisiteFailed)
+			return "", refuse(commands.PrerequisiteFailed)
 		}
-		return "", nil, refuse(commands.InternalError)
+		return "", refuse(commands.InternalError)
 	}
+	size := s.relLimits.TimelinesPerChunk
+	chunks := 0
 	var sealErr error
-	if s.faulty("plan-chunk") {
-		sealErr = relationships.ErrInvalid
-	} else {
-		sealErr = s.rels.AddChunk(ws, id, 0, []relationships.Timeline{{Kind: kind, Member: c.Member, Entries: built}})
+	for start := 0; start < len(timelines) && sealErr == nil; start += size {
+		if s.faulty("plan-chunk") {
+			sealErr = relationships.ErrInvalid
+		} else {
+			sealErr = s.rels.AddChunk(ws, id, chunks, timelines[start:min(len(timelines), start+size)])
+		}
+		chunks++
 	}
 	if sealErr == nil {
-		_, sealErr = s.rels.Seal(ws, id, 1)
+		_, sealErr = s.rels.Seal(ws, id, chunks)
 	}
 	if sealErr != nil && !errors.Is(sealErr, relationships.ErrRejected) {
 		_ = s.rels.Discard(ws, id)
-		return "", nil, errPlanPartial
+		return "", errPlanPartial
 	}
-	s.plans.put(&planMeta{workspace: ws, id: id, proposer: ctx.User, created: now, reason: ctx.Rationale, change: c})
-	return string(s.planState(s.plans.get(ws, id)).State), map[string]string{"plan": id}, nil
+	return id, nil
 }
 
 func (h relationshipCommand) activate(ctx commands.Context) (string, map[string]string, error) {
@@ -397,7 +419,7 @@ func (h relationshipCommand) activate(ctx commands.Context) (string, map[string]
 		return "", nil, refuse(commands.DependencyUnavailable)
 	case !impact.computed():
 		return "", nil, refuse(commands.PrerequisiteFailed)
-	case m.proposer == "" || m.proposer == ctx.User:
+	case m.authoredBy(ctx.User):
 		return "", nil, refuse(commands.PrerequisiteFailed)
 	}
 	var number uint64
@@ -410,6 +432,9 @@ func (h relationshipCommand) activate(ctx commands.Context) (string, map[string]
 		return "", nil, refuse(commands.InvalidStage)
 	}
 	m.activated = number
+	if m.draft != "" {
+		s.draftActivated(ws, m.draft, number)
+	}
 	return "activated", map[string]string{"revision": strconv.FormatUint(number, 10)}, nil
 }
 
@@ -495,6 +520,15 @@ type planRow struct {
 	Impact        planImpact     `json:"impact"`
 	CanActivate   bool           `json:"can_activate"`
 	Blocked       string         `json:"blocked"`
+	Draft         *planDraftRow  `json:"draft"`
+}
+
+type planDraftRow struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Group       string `json:"group"`
+	NewGroup    bool   `json:"new_group"`
+	MemberCount int    `json:"member_count"`
 }
 
 type plansPage struct {
@@ -510,8 +544,12 @@ type plansPage struct {
 func (s *Server) planRow(m *planMeta, active uint64, reader string, now time.Time) planRow {
 	info := s.planState(m)
 	row := planRow{ID: m.id, State: string(info.State), Closed: m.closed, Created: stamp(m.created), Proposer: m.proposer, ProposerLogin: s.loginOf(m.proposer),
-		Reason: m.reason, Change: m.change, MemberName: orgName(m.change.Member), TargetName: orgName(m.change.Target), Base: info.Base,
+		Reason: m.reason, Change: m.change, MemberName: s.label(m.workspace, m.change.Member), TargetName: s.label(m.workspace, m.change.Target), Base: info.Base,
 		Activated: m.activated, Kinds: []kindRow{}, Violations: []violationRow{}, Truncated: info.Truncated, Members: []changedRow{}}
+	if m.snapshot != nil {
+		snap := *m.snapshot
+		row.Draft = &snap
+	}
 	kinds := []string{}
 	for k := range info.Kinds {
 		kinds = append(kinds, string(k))
@@ -527,7 +565,7 @@ func (s *Server) planRow(m *planMeta, active uint64, reader string, now time.Tim
 		if info.State == relationships.PlanSealed || info.State == relationships.PlanActivated {
 			changes, _ := s.rels.ChangedMembers(m.workspace, m.id, relationships.Kind(k), "", planMembersShown)
 			for _, c := range changes {
-				cr := changedRow{Member: c.Member, Name: orgName(c.Member), Differs: []rangeRow{}, Before: append([]string{}, c.Before...), After: append([]string{}, c.After...)}
+				cr := changedRow{Member: c.Member, Name: s.label(m.workspace, c.Member), Differs: []rangeRow{}, Before: append([]string{}, c.Before...), After: append([]string{}, c.After...)}
 				for _, iv := range c.Differs {
 					rr := rangeRow{From: iv.Start().ISO()}
 					if end, bounded := iv.End(); bounded {
@@ -547,25 +585,31 @@ func (s *Server) planRow(m *planMeta, active uint64, reader string, now time.Tim
 		impact = impactAll(impactUnknown)
 	}
 	row.Impact = impact
-	from, _ := parseDay(m.change.From)
 	if info.State == relationships.PlanSealed {
 		row.Stale = info.Base != active
-		switch {
-		case row.Stale:
-			row.Blocked = "stale"
-		case from.Before(today(now)):
-			row.Blocked = "effective_date_passed"
-		case impactErr != nil:
-			row.Blocked = "impact_unavailable"
-		case !impact.computed():
-			row.Blocked = "impact_not_computed"
-		case m.proposer == "" || m.proposer == reader:
-			row.Blocked = "own_proposal"
-		default:
-			row.CanActivate = true
-		}
+		row.Blocked = blockedOf(m, info, active, impact, impactErr, reader, now)
+		row.CanActivate = row.Blocked == ""
 	}
 	return row
+}
+
+func blockedOf(m *planMeta, info relationships.PlanInfo, active uint64, impact planImpact, impactErr error, reader string, now time.Time) string {
+	from, _ := parseDay(m.change.From)
+	switch {
+	case info.Base != active:
+		return "stale"
+	case from.Before(today(now)):
+		return "effective_date_passed"
+	case impactErr != nil:
+		return "impact_unavailable"
+	case !impact.computed():
+		return "impact_not_computed"
+	case m.proposer == "" || m.proposer == reader:
+		return "own_proposal"
+	case m.authoredBy(reader):
+		return "own_draft"
+	}
+	return ""
 }
 
 func (s *Server) listPlans(w http.ResponseWriter, r *http.Request) {

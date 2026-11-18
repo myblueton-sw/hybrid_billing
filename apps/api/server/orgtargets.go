@@ -48,7 +48,7 @@ func (s *Server) targetsPage(ws string, number uint64, q orgQuery, budget int) (
 			}
 			examined++
 			cursor = id
-			if !matchesSearch(id, q.filter.q) {
+			if !matchesSearch(id, q.filter.q) && !s.labelMatches(ws, id, q.filter.q) {
 				continue
 			}
 			if len(rows) == q.limit {
@@ -58,7 +58,7 @@ func (s *Server) targetsPage(ws string, number uint64, q orgQuery, budget int) (
 			if err != nil {
 				return nil, "", false, err
 			}
-			rows = append(rows, targetRow{ID: id, Name: orgName(id), MembersOn: len(members)})
+			rows = append(rows, targetRow{ID: id, Name: s.label(ws, id), MembersOn: len(members)})
 		}
 		if len(ids) < size {
 			return rows, "", false, nil

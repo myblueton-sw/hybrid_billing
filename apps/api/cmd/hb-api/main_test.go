@@ -94,7 +94,10 @@ func TestAccessSettingFlags(t *testing.T) {
 	if n, ok := settingNumber("12345"); !ok || n != 12345 {
 		t.Error("five digits")
 	}
-	for _, raw := range []string{"", "123456", "+5", "-5", "05", "0x10", "1.5", " 5"} {
+	if n, ok := settingNumber("100000"); !ok || n != 100000 {
+		t.Error("six digits")
+	}
+	for _, raw := range []string{"", "1234567", "+5", "-5", "05", "0x10", "1.5", " 5"} {
 		if n, ok := settingNumber(raw); ok || n != 0 {
 			t.Errorf("%q gave %d %v", raw, n, ok)
 		}
@@ -255,6 +258,7 @@ func TestOrgSettingFlagAtItsLowerBoundStarts(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
 func TestIdentitySettingFlags(t *testing.T) {
 	for name, args := range map[string][]string{
 		"longest period above its bound": {"--role-period-max-days", "3661"},
@@ -282,5 +286,39 @@ func TestIdentitySettingFlags(t *testing.T) {
 	if access.BulkMaxTargets != 5000 || !access.Given["bulk_revocation_max_targets"] || access.Given["role_period_max_days"] || access.RolePeriodMaxDays != 366 ||
 		access.ClockBase != "ledger" || access.ClockSkewHours != 24 || access.RoleWarningDays != 14 || access.BulkMinutes != 30 || access.BulkPending != 20 || access.BulkKept != 100 {
 		t.Errorf("identity flags %+v", access)
+	}
+}
+func TestViewGroupDraftFlags(t *testing.T) {
+	for name, args := range map[string][]string{
+		"open below":      {"--view-group-drafts-open", "0"},
+		"open above":      {"--view-group-drafts-open", "201"},
+		"members above":   {"--view-group-draft-members", "10001"},
+		"kept below":      {"--view-group-drafts-kept", "49"},
+		"activated below": {"--view-group-activated-kept", "99"},
+		"activated above": {"--view-group-activated-kept", "100001"},
+	} {
+		full := append([]string{"--listen", "127.0.0.1:0", "--data", t.TempDir() + "/d"}, args...)
+		if err := run(full, make(chan os.Signal)); err == nil {
+			t.Errorf("%s accepted", name)
+		}
+	}
+	fs := flag.NewFlagSet("t", flag.ContinueOnError)
+	org, given := orgFlags(fs)
+	if err := fs.Parse([]string{"--view-group-drafts-open", "200", "--view-group-draft-members", "10000", "--view-group-drafts-kept", "50", "--view-group-activated-kept", "100"}); err != nil {
+		t.Fatal(err)
+	}
+	given()
+	if org.DraftsOpen != 200 || org.DraftMembers != 10000 || org.DraftsKept != 50 || org.ActivatedKept != 100 || org.FilterScan != 1000 ||
+		!org.Given["view_group_drafts_open"] || !org.Given["view_group_activated_kept"] || org.Given["org_filter_scan"] {
+		t.Errorf("flags %+v", org)
+	}
+	var usage strings.Builder
+	fs.SetOutput(&usage)
+	fs.PrintDefaults()
+	for _, want := range []string{"view_group_drafts_open in drafts, 1 to 200 (default 16)", "view_group_draft_members in members, 1 to 10000 (default 1000)",
+		"view_group_drafts_kept in drafts, 50 to 10000 (default 200)", "view_group_activated_kept in drafts, 100 to 100000 (default 1000)"} {
+		if !strings.Contains(usage.String(), want) {
+			t.Errorf("usage missing %s", want)
+		}
 	}
 }

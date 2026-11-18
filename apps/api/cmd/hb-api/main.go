@@ -151,7 +151,7 @@ func numberFlag(fs *flag.FlagSet, name, setting, unit string, low, high, initial
 }
 
 func settingNumber(raw string) (int, bool) {
-	if raw == "" || len(raw) > 5 || (len(raw) > 1 && raw[0] == '0') || strings.TrimLeft(raw, "0123456789") != "" {
+	if raw == "" || len(raw) > 6 || (len(raw) > 1 && raw[0] == '0') || strings.TrimLeft(raw, "0123456789") != "" {
 		return 0, false
 	}
 	n, err := strconv.Atoi(raw)

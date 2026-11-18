@@ -20,3 +20,11 @@ test("Organization changes receives the shell's unsaved-input reporter", () => {
   assert.equal(got.view, "targets");
   assert.equal(got.locale, "ko");
 });
+
+test("Organizations receives the same unsaved-input reporter", () => {
+  const onDirty = (_: boolean) => undefined;
+  const session = { user: "u", workspace: "w", role: "administrator", login: "a@example.invalid", csrf: "t" };
+  const got = changeProps({ screenId: "O01", locale: "ar", params: new URLSearchParams("view=accounts"), view: "accounts", onState: () => undefined, onDirty }, { session, signOut: () => undefined });
+  assert.equal(got.onDirty, onDirty);
+  assert.equal(got.view, "accounts");
+});

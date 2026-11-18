@@ -2,7 +2,7 @@
 type: DesignSpecification
 title: HYB-307 M05 end other sessions visual specification
 description: Layout source for the HYB-307 changes to the M05 Sessions view. It covers the entry point, the confirmation dialog with a fixed session list, the result object that shows "Access blocked" apart from "Cleanup", sessions held because they started after the list, sessions already gone, single-session End, failure and step-up states, polling, focus, RTL, widths and rendered-QA checks. Written by the ui-designer role (read-only). The HYB-307 plan wins on copy, states and truthfulness; this spec wins on layout.
-status: draft
+status: stable
 tags: [HYB-307, M05, sessions, IAM-07, visual-spec]
 sources:
   - resource: plan.md

@@ -221,7 +221,7 @@ One more synthetic user is added: `sample-member` (`member@example.invalid`, rol
 
 # Not in this ticket (residuals)
 
-- **Bulk revocation (M01 tab 4).** It needs asynchronous jobs and manifests. The screen will show it as not available in pre-launch.
+- **Bulk revocation (M01 tab 4).** It needs asynchronous jobs and manifests. The screen will show it as not available in pre-launch. (2026-11-18: built by HYB-299, PR #218.)
 - **Delivering links by email or message.** Not permitted; the administrator hands the link over out of band.
 - **Granting or revoking the installation action by command**, and a separate workspace-administration action for multi-workspace builds.
 - **Administrator password recovery.** An owner decision; reset links are refused for administrators.

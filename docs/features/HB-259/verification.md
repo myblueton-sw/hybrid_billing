@@ -87,7 +87,7 @@ Details are in plan.md.
 # Residuals
 
 - The sign-in screens (HB-260) and the session gate in front of the Python endpoints (HB-261).
-- Administrator-issued resets and ending a user's sessions on reset (phase 3).
+- Administrator-issued resets and ending a user's sessions on reset (phase 3). (2026-11-18: both built by HB-263 and HB-264, PRs #183/#184; a redeemed reset ends the user's sessions, HB-264/plan.md:87.)
 - MFA, SSO, LDAP; Unicode normalization of passwords and breached-password checks.
 - The lockout and limiter values are provisional. A local process can lock a known login for 15-minute periods.
 - With `--seed=none`, the policy needs a second administrator, who comes in phase 3.

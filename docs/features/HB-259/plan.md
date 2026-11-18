@@ -169,7 +169,7 @@ The links go through `/activate` (the L02 screen, HB-260). The token is in the f
 
 # Residuals
 
-- Administrator-issued resets (phase 3, M01).
+- Administrator-issued resets (phase 3, M01). (2026-11-18: built by HB-263 and HB-264, PRs #183/#184.)
 - MFA, SSO and LDAP.
 - Password Unicode normalization and breached-password checks.
 - The limiter and lockout values, which are provisional. A local process can lock a known login for 15-minute periods, or exhaust the global limiter, and so deny sign-in. This is accepted for a loopback pre-launch build; an unlock path comes with administrator resets in phase 3.

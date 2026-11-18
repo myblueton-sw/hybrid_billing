@@ -178,5 +178,5 @@ Source: `docs/ui/screens/M01/spec.md:118-120` (HB-263 is the API, HB-264 the scr
 
 ## Planning cross-check residuals (HYB-291)
 
-- **Role validity periods and bulk revocation.** Not built; the screen shows bulk revocation as not available (`HB-264/plan.md:61`). Search and filters: HYB-294. Reauthentication before suspend: HYB-293. (2026-11-18: both built by HYB-299, PR #218.)
+- **Role validity periods and bulk revocation.** Not built; the screen shows bulk revocation as not available (`HB-264/plan.md:61`). Search and filters: HYB-294. Reauthentication before suspend: HYB-293. (2026-11-18: both built by HYB-299, PR #218; role validity covered by interpretation, HYB-299 Q2.)
 - **Security-focused review not stated.** HB-257 (Verification for every phase) requires a security-focused review for phases 1–3. This record names design and change reviews but no security-focused review. None is claimed here; a security re-review or a recorded reason is open.

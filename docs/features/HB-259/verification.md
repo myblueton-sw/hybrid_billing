@@ -106,7 +106,7 @@ Source: `docs/ui/screens/L01/spec.md:18`, `L02/spec.md:18`, `L03/spec.md:18` (HB
 | HB-03 | deferred | Addressed within pre-launch scope for sign-in sessions evaluated by `authpolicy` (L01, L03); registry-wide and leakage acceptance not built. | HB-259/plan.md |
 | HB-36 | deferred | Covered: first-administrator activation through a one-time link in a 0600 file (L02). Not covered: installation packaging and support paths. | HB-259/plan.md |
 | HB-42 | deferred | Local accounts with set and reset links are built; MFA, SSO and LDAP are residuals. | HB-259/verification.md Residuals |
-| IAM-01 | deferred | Covered: activation and set links are one-time and invalidated on use. Not built or tested: concurrent first-administrator creation and acceptance from another workspace. | HB-259/verification.md |
+| IAM-01 | deferred | Covered: activation and set links are one-time and invalidated on use. Not built or tested: concurrent first-administrator creation and acceptance from another workspace. 2026-11-18: see [HYB-303/verification.md](../HYB-303/verification.md); `retention-access.md:49` not fully covered (restart re-arming, HYB-303 R1). | HB-259/verification.md |
 | IAM-02 | deferred | Only local password accounts exist; SAML, OIDC and LDAP sign-in are residuals (HB-257 out of scope). | HB-260/plan.md:132-146 |
 | IAM-03 | deferred | Does not arise while only local accounts exist; applies when another identity provider is connected. First recorded here. | this section |
 | IAM-04 | deferred | Local link expiry, one-time use and an identical 401 are built; issuer, audience, signature, nonce, SAML replay and LDAP checks wait for federated sign-in. | HB-260/plan.md:132-146 |

@@ -398,7 +398,7 @@ func detached(result Result) Result {
 
 func (r *Registry) finish(definition Definition, call Call, request, operationID string, target Target, outcome Outcome, err error, sound bool, at time.Time) (Result, bool) {
 	empty := !outcome.Accepted && outcome.JobID == "" && outcome.ResultRevision == "" && outcome.BusinessState == "" && len(outcome.Fields) == 0
-	if named, isNamed := err.(*Failure); sound && isNamed && named != nil && handlerCodes[named.Code] && empty {
+	if named, isNamed := err.(*Failure); sound && isNamed && named != nil && handlerCodes[named.Code] && (!declarable[named.Code] || declares(definition, named.Code)) && empty {
 		var fields []string
 		if named.Code == InvalidRequest {
 			for _, declared := range definition.Fields {

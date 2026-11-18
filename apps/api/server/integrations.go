@@ -331,7 +331,7 @@ func (s *Server) markOf(m *plugins.Mark) *installMarkRow {
 func (s *Server) clientsOf(verifier identity.Verifier, now time.Time) (clientsSection, error) {
 	console := clientRow{ID: ConsoleClient, Kind: "first_party_console", State: "active", Grants: []clientGrantRow{}}
 	for _, g := range s.admin.Grants() {
-		if g.ClientID != ConsoleClient || g.Terms.Action == gate.AdministerInstallation {
+		if g.ClientID != ConsoleClient || gate.InstallationAction(g.Terms.Action) {
 			continue
 		}
 		console.Grants = append(console.Grants, clientGrantRow{ID: g.ID, Action: string(g.Terms.Action), Kind: g.Terms.Kind, Scope: scopeOf(g.Terms),

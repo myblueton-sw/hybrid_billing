@@ -707,6 +707,7 @@ func TestEvidenceReadAgreesWithModules(t *testing.T) {
 
 func TestEvidenceReadBlockers(t *testing.T) {
 	f := setup(t, SeedSample).ready()
+	f.withoutThirdAdmin()
 	root, second := f.as(AdminLogin), f.as(Admin2Login)
 	e, err := f.s.tracePropose(releasetrace.Change{Kind: releasetrace.ChangeImplemented, Implemented: releasetrace.Implemented{Key: evKey("sample-erp-template"),
 		Commit: sampleHash("x")[:40]}}, evA1, "injected")

@@ -121,7 +121,7 @@ func TestConcurrency(t *testing.T) {
 				f.r.Evaluate(member("u"+itoa(n)), f.weak(), "")
 				f.r.Complete(id, m%4, worker)
 				f.r.Current("w1", 2)
-				f.r.Propose(Change{Kind: ChangeRevision, Revision: Revision{Workspace: "w1", Methods: Methods, MFA: MFANone, MaxAge: time.Duration(n*100+m+2) * time.Minute}}, admin("p"+itoa(n)), f.strong())
+				f.r.Propose(planOf("c"+itoa(n*100+m)), admin("p"+itoa(n)), f.strong())
 			}
 		}(n)
 	}

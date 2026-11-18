@@ -23,8 +23,9 @@ func TestAccessSettingsValidation(t *testing.T) {
 			t.Errorf("%s: %v", name, err)
 		}
 	}
-	zero := AccessSettings{AcceptNewLedger: true}.withDefaults()
-	if zero.RequestHours != 168 || zero.LedgerMaxMiB != 256 || !zero.AcceptNewLedger || zero.validate() != nil {
+	zero := AccessSettings{AcceptNewLedger: true, AcceptTrustReset: true, CarryTrustFrom: "x", TrustGeneration: 3}.withDefaults()
+	if zero.RequestHours != 168 || zero.LedgerMaxMiB != 256 || !zero.AcceptNewLedger || zero.validate() != nil || !zero.AcceptTrustReset || zero.CarryTrustFrom != "x" ||
+		zero.TrustGeneration != 3 {
 		t.Errorf("defaults %+v", zero)
 	}
 	list := AccessSettingList()

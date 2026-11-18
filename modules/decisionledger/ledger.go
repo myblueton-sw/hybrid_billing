@@ -35,6 +35,7 @@ type system interface {
 type marker struct {
 	LedgerID  string `json:"ledger_id"`
 	CreatedAt string `json:"created_at"`
+	G         uint64 `json:"g,omitempty"`
 }
 
 type Ledger struct {
@@ -49,7 +50,13 @@ type Ledger struct {
 	seq       uint64
 	last      string
 	oldID     string
+	oldG      uint64
+	mark      marker
+	marked    bool
 	decisions []Record
+	verified  []Record
+	epochs    map[string]uint64
+	changes   map[string]bool
 	status    Status
 }
 
@@ -59,7 +66,7 @@ func open(o Options, sys system) (*Ledger, error) {
 	if o.Dir == "" || o.MaxBytes <= 0 || o.Clock == nil || o.Random == nil {
 		return nil, ErrInvalid
 	}
-	l := &Ledger{o: o, sys: sys, dir: filepath.Join(o.Dir, DirName), marker: filepath.Join(o.Dir, MarkerName), last: genesisPrev}
+	l := &Ledger{o: o, sys: sys, dir: filepath.Join(o.Dir, DirName), marker: filepath.Join(o.Dir, MarkerName), last: genesisPrev, epochs: map[string]uint64{}, changes: map[string]bool{}}
 	l.path = filepath.Join(l.dir, FileName)
 	l.status = Status{State: StateOK, CheckedAt: l.now(), File: RelativeFile}
 	if err := l.ensureDir(); err != nil {
@@ -69,13 +76,17 @@ func open(o Options, sys system) (*Ledger, error) {
 	if err != nil {
 		return nil, err
 	}
+	l.mark, l.marked = mark, marked
+	if l.markerUsable() {
+		l.status.Generation, l.status.MarkerUsable = mark.G, true
+	}
 	_, statErr := os.Lstat(l.path)
 	switch {
 	case errors.Is(statErr, fs.ErrNotExist) && !marked:
 		if o.AcceptNew {
 			return nil, ErrNothingToReplace
 		}
-		if err := l.create("", ""); err != nil {
+		if err := l.create("", "", Successor{}); err != nil {
 			l.Close()
 			return nil, err
 		}
@@ -143,8 +154,12 @@ func missingIsNil(err error) error {
 	return err
 }
 
-func (l *Ledger) writeMarker(id string, created time.Time) error {
-	data, _ := json.Marshal(marker{LedgerID: id, CreatedAt: stamp(created)})
+func (l *Ledger) markerUsable() bool {
+	return l.marked && hexID(l.mark.LedgerID, 32) && l.mark.G < MaxGeneration
+}
+
+func (l *Ledger) writeMarker(id string, created time.Time, g uint64) error {
+	data, _ := json.Marshal(marker{LedgerID: id, CreatedAt: stamp(created), G: g})
 	f, err := os.CreateTemp(l.o.Dir, MarkerName+".*")
 	if err != nil {
 		return err
@@ -180,6 +195,10 @@ func (l *Ledger) check(mark marker, marked bool) error {
 		return err
 	}
 	s := verify(h, info.Size())
+	l.oldG, l.verified = s.g, s.decisions
+	if s.ledgerID != "" && !l.markerUsable() {
+		l.status.Generation = s.g
+	}
 	switch {
 	case s.problem > 0 && marked && s.ledgerID != "" && mark.LedgerID != s.ledgerID:
 		l.oldID = s.ledgerID
@@ -188,7 +207,11 @@ func (l *Ledger) check(mark marker, marked bool) error {
 	case s.problem > 0:
 		l.oldID, l.decisions = s.ledgerID, s.decisions
 		l.status.NotDurable = l.startSync() != nil
-		l.isolate(IsolationIntegrity, s.problem)
+		reason := IsolationIntegrity
+		if s.order {
+			reason = IsolationOrder
+		}
+		l.isolate(reason, s.problem)
 		return nil
 	case s.records == 0 && marked:
 		l.isolate(IsolationIntegrity, 1)
@@ -197,7 +220,7 @@ func (l *Ledger) check(mark marker, marked bool) error {
 		if err := l.truncate(0); err != nil {
 			return err
 		}
-		return l.genesis("", "")
+		return l.genesis("", "", Successor{})
 	case marked && mark.LedgerID != s.ledgerID:
 		l.oldID = s.ledgerID
 		l.isolate(IsolationMismatch, 0)
@@ -216,7 +239,7 @@ func (l *Ledger) check(mark marker, marked bool) error {
 		}
 	}
 	if !marked {
-		if err := l.writeMarker(s.ledgerID, s.createdAt); err != nil {
+		if err := l.writeMarker(s.ledgerID, s.createdAt, s.g); err != nil {
 			return err
 		}
 	}
@@ -232,7 +255,8 @@ func (l *Ledger) startSync() error {
 }
 
 func (l *Ledger) adopt(s scan) {
-	l.size, l.seq, l.last, l.decisions = s.size, s.records, s.last, s.decisions
+	l.size, l.seq, l.last, l.decisions, l.epochs, l.changes = s.size, s.records, s.last, s.decisions, s.epochs, s.changes
+	l.status.Generation, l.status.Genesis = s.g, s.genesis
 	l.status.LedgerID, l.status.CreatedAt, l.status.Replaces, l.status.ReplaceReason = s.ledgerID, s.createdAt, s.replaces, s.reason
 	l.status.Records, l.status.Watermark = s.records, l.watermark()
 }
@@ -265,7 +289,7 @@ func (l *Ledger) fullAtStart() {
 	}
 }
 
-func (l *Ledger) create(replaces, reason string) error {
+func (l *Ledger) create(replaces, reason string, next Successor) error {
 	h, err := l.sys.openFile(l.path, true)
 	if err != nil {
 		return err
@@ -278,22 +302,32 @@ func (l *Ledger) create(replaces, reason string) error {
 	if err := l.sys.syncDir(l.dir); err != nil {
 		return err
 	}
-	return l.genesis(replaces, reason)
+	return l.genesis(replaces, reason, next)
 }
 
-func (l *Ledger) genesis(replaces, reason string) error {
+func (l *Ledger) genesis(replaces, reason string, next Successor) error {
 	var raw [16]byte
 	if _, err := io.ReadFull(l.o.Random, raw[:]); err != nil {
 		return err
 	}
 	id, at := hex.EncodeToString(raw[:]), l.now()
-	l.size, l.seq, l.last, l.decisions = 0, 0, genesisPrev, nil
+	l.size, l.seq, l.last, l.decisions, l.verified, l.epochs, l.changes = 0, 0, genesisPrev, nil, nil, map[string]uint64{}, map[string]bool{}
 	l.status.State = StateOK
-	if failed := l.append(line{Kind: KindGenesis, LedgerID: id, CreatedAt: stamp(at), Replaces: replaces, ReplaceReason: reason}, at); failed != "" {
+	carry := next.Carry
+	next.Carry = nil
+	head := line{Kind: KindGenesis, LedgerID: id, CreatedAt: stamp(at), Replaces: replaces, ReplaceReason: reason, G: next.Generation, TrustReset: next.TrustReset,
+		GenerationStated: next.GenerationStated, CarriedLedger: next.CarriedFrom, ReplacedLine: next.ReplacedLine}
+	if failed := l.append(head, at); failed != "" {
 		return &CommitError{Reason: failed}
 	}
 	l.status.LedgerID, l.status.CreatedAt, l.status.Replaces, l.status.ReplaceReason = id, at, replaces, reason
-	if err := l.writeMarker(id, at); err != nil {
+	l.status.Generation, l.status.Genesis = next.Generation, next
+	for _, d := range carry {
+		if _, err := l.commit(d); err != nil {
+			return err
+		}
+	}
+	if err := l.writeMarker(id, at, next.Generation); err != nil {
 		return err
 	}
 	l.fullAtStart()
@@ -306,6 +340,10 @@ func (l *Ledger) replace() error {
 		replaces = UnknownLedger
 	}
 	reason := string(l.status.Isolation)
+	next, err := l.successor()
+	if err != nil {
+		return err
+	}
 	if l.file != nil {
 		l.file.Close()
 		l.file = nil
@@ -316,7 +354,7 @@ func (l *Ledger) replace() error {
 		l.status.ReplacedFile = name
 	}
 	l.status.Isolation, l.status.ProblemLine = "", 0
-	return l.create(replaces, reason)
+	return l.create(replaces, reason, next)
 }
 
 func (l *Ledger) watermark() string {
@@ -342,7 +380,7 @@ func (l *Ledger) append(rec line, at time.Time) string {
 		l.status.State = StateStopped
 		return ReasonCommitFailed
 	}
-	if l.file.Sync() != nil {
+	if l.file.Sync() != nil || l.o.FailSync != nil && l.o.FailSync() {
 		l.status.State = StateStopped
 		return ReasonCommitUnknown
 	}
@@ -355,6 +393,10 @@ func (l *Ledger) append(rec line, at time.Time) string {
 func (l *Ledger) Commit(d Decision) (Receipt, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	return l.commit(d)
+}
+
+func (l *Ledger) commit(d Decision) (Receipt, error) {
 	switch l.status.State {
 	case StateIsolated:
 		return Receipt{}, &CommitError{Reason: ReasonIsolated}
@@ -366,14 +408,20 @@ func (l *Ledger) Commit(d Decision) (Receipt, error) {
 	at := l.now()
 	rec := line{Kind: KindDecision, Workspace: d.Workspace, Decision: d.Decision, Target: d.Target, TargetVersion: d.TargetVersion, Revocation: d.Revocation,
 		Request: d.Request, RequestDigest: d.RequestDigest, RequestedBy: d.RequestedBy, ApprovedBy: d.ApprovedBy, DenyGeneration: d.DenyGeneration,
-		EndedDelegations: append([]string(nil), d.EndedDelegations...)}
-	if !rec.shaped() {
+		EndedDelegations: append([]string(nil), d.EndedDelegations...), Trust: lineOf(d.Trust)}
+	if !rec.shaped() || rec.Trust != nil && (rec.Trust.NewEpoch <= l.epochs[d.Workspace] || rec.Trust.NewEpoch>>32 != l.status.Generation ||
+		l.changes[d.Workspace+"/"+rec.Trust.Change]) {
 		return Receipt{}, &CommitError{Reason: ReasonCommitFailed}
 	}
 	if reason := l.append(rec, at); reason != "" {
 		return Receipt{}, &CommitError{Reason: reason}
 	}
 	d.EndedDelegations = rec.EndedDelegations
+	if rec.Trust != nil {
+		d.Trust = rec.Trust.trust()
+		l.epochs[d.Workspace] = rec.Trust.NewEpoch
+		l.changes[d.Workspace+"/"+rec.Trust.Change] = true
+	}
 	l.decisions = append(l.decisions, Record{Sequence: l.seq, Watermark: l.watermark(), At: at, Decision: d})
 	return Receipt{Sequence: l.seq, Watermark: l.watermark()}, nil
 }
@@ -389,15 +437,34 @@ func (l *Ledger) Status() Status {
 	return out
 }
 
-func (l *Ledger) Decisions() []Record {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	out := make([]Record, len(l.decisions))
-	for i, r := range l.decisions {
+func copyRecords(in []Record) []Record {
+	out := make([]Record, len(in))
+	for i, r := range in {
 		r.Decision.EndedDelegations = append([]string(nil), r.Decision.EndedDelegations...)
+		if r.Decision.Trust != nil {
+			t := *r.Decision.Trust
+			t.Config.Methods = append([]string{}, t.Config.Methods...)
+			t.Config.StepUp = append([]StepRule{}, t.Config.StepUp...)
+			r.Decision.Trust = &t
+		}
 		out[i] = r
 	}
 	return out
+}
+
+func (l *Ledger) Decisions() []Record {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return copyRecords(l.decisions)
+}
+
+func (l *Ledger) Verified() []Record {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.status.State == StateIsolated {
+		return copyRecords(l.verified)
+	}
+	return copyRecords(l.decisions)
 }
 
 func (l *Ledger) Close() error {

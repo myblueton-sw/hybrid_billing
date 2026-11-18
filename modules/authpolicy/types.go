@@ -118,11 +118,24 @@ type Revision struct {
 }
 
 type RevisionView struct {
-	Revision Revision
-	Number   uint64
-	Proposer string
-	Approver string
-	At       time.Time
+	Revision  Revision
+	Number    uint64
+	Epoch     uint64
+	Proposer  string
+	Validator string
+	Approver  string
+	Activator string
+	At        time.Time
+}
+
+type Publication struct {
+	Revision  Revision
+	Epoch     uint64
+	Number    uint64
+	Proposer  string
+	Validator string
+	Approver  string
+	Activator string
 }
 
 type Decision struct {

@@ -17,6 +17,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
+	"github.com/myblueton-sw/hybrid_billing/modules/trustchange"
 )
 
 func (f world) reauth(a actor, password string) reply {
@@ -26,18 +27,7 @@ func (f world) reauth(a actor, password string) reply {
 
 func (f world) directPolicy(rev authpolicy.Revision) {
 	f.t.Helper()
-	at := authpolicy.Authentication{Method: authpolicy.MethodPassword, At: f.s.clock(), Factors: []string{authpolicy.FactorOTP}}
-	first := authpolicy.Principal{User: SampleAdmin, Workspace: SampleWorkspace, Role: authpolicy.RoleAdministrator, Kind: authpolicy.KindHuman}
-	second := first
-	second.User = SampleAdmin2
-	rev.Workspace, rev.Methods, rev.MFA = SampleWorkspace, []string{authpolicy.MethodPassword}, authpolicy.MFANone
-	view, err := f.s.policy.Propose(authpolicy.Change{Kind: authpolicy.ChangeRevision, Revision: rev}, first, at)
-	if err != nil {
-		f.t.Fatal(err)
-	}
-	if _, err := f.s.policy.Approve(view.Number, second, at); err != nil {
-		f.t.Fatal(err)
-	}
+	f.publishDirect(rev)
 }
 
 func refused(t testing.TB, name string, got reply) {
@@ -94,7 +84,7 @@ func TestEveryRegisteredMutatingCommandRequiresStepUp(t *testing.T) {
 	if len(ids) != mutating || len(ids) < 63 || len(exempt) != 0 {
 		t.Fatalf("registry %d catalogue %d exempt %d", len(ids), mutating, len(exempt))
 	}
-	for _, family := range []string{"access", "contract", "identity", "installation", "integrations", "policy", "recovery", "relationship", "retention", "service"} {
+	for _, family := range []string{"access", "contract", "identity", "installation", "integrations", "trust", "recovery", "relationship", "retention", "service"} {
 		if families[family] == 0 {
 			t.Errorf("family %s has no mutating command", family)
 		}
@@ -140,8 +130,8 @@ func TestPostRoutesAreClassified(t *testing.T) {
 		t.Fatal(err)
 	}
 	found := map[string]bool{}
-	for _, m := range regexp.MustCompile(`"POST (/[^"]+)"`).FindAllStringSubmatch(string(data), -1) {
-		found[m[1]] = true
+	for _, m := range regexp.MustCompile(`"(POST|PUT|PATCH|DELETE) (/[^"]+)"`).FindAllStringSubmatch(string(data), -1) {
+		found[m[2]] = true
 	}
 	listed := map[string]bool{}
 	for _, r := range postRoutes {
@@ -304,11 +294,11 @@ func TestStepUpWindows(t *testing.T) {
 			f.setPassword(AdminLogin, pw)
 			a := f.signedIn(AdminLogin, pw)
 			f.advance(c.window)
-			if got := f.propose(a, "60", "5"); got.status != 200 {
+			if got := f.trustPropose(a, "60", "5"); got.status != 200 {
 				t.Errorf("at the window %+v", got)
 			}
 			f.advance(time.Nanosecond)
-			refused(t, "past the window", f.propose(a, "61", "5"))
+			refused(t, "past the window", f.trustPropose(a, "61", "5"))
 			page := f.policyRead(a).body
 			if fmt.Sprint(page["step_up_seconds"]) != fmt.Sprint(int64(c.window/time.Second)) || page["act_until"] != stamp(start.Add(c.window)) {
 				t.Errorf("page window %+v", page)
@@ -317,57 +307,57 @@ func TestStepUpWindows(t *testing.T) {
 	}
 }
 
-func TestApproveUsesTheCandidateWindow(t *testing.T) {
+func TestValidateUsesTheCandidateWindow(t *testing.T) {
 	for _, c := range []struct{ name, age, step string }{{"candidate rule", "60", "5"}, {"candidate maximum age", "5", "0"}} {
 		t.Run(c.name, func(t *testing.T) {
 			f := setup(t, SeedSample).ready()
 			f.setPassword(Admin2Login, pw)
-			got := f.propose(f.as(AdminLogin), c.age, c.step)
-			if got.status != 200 {
-				t.Fatalf("propose %+v", got)
-			}
-			target := got.body["fields"].(map[string]any)["proposal"].(string)
+			id := changeOf(t, f.trustPropose(f.as(AdminLogin), c.age, c.step))
 			second := f.signedIn(Admin2Login, pw)
 			f.advance(5 * time.Minute)
 			if f.reauth(second, pw).status != 204 {
 				t.Fatal("reauthenticate")
 			}
-			for _, row := range f.proposals(second) {
-				if row["target"] == target && row["act_until"] != stamp(start.Add(10*time.Minute)) {
-					t.Errorf("row act until %+v", row)
+			for _, row := range f.policyRead(second).body["changes"].([]any) {
+				if r := row.(map[string]any); r["id"] == id && r["act_until"] != stamp(start.Add(10*time.Minute)) {
+					t.Errorf("row act until %+v", r)
 				}
 			}
 			f.advance(10 * time.Minute)
 			before := f.s.counter
-			refused(t, "dead end becomes a prompt", f.run(second, "policy.approve", target, nil))
+			refused(t, "dead end becomes a prompt", f.trustValidate(second, id))
 			if f.s.counter != before || f.reauth(second, pw).status != 204 {
 				t.Fatal("reauthenticate")
 			}
-			if got := f.run(second, "policy.approve", target, nil); got.status != 200 || got.body["business_state"] != "applied" {
-				t.Errorf("approval after reauthentication %+v", got)
+			if got := f.trustValidate(second, id); got.status != 200 {
+				t.Errorf("validation after reauthentication %+v", got)
+			}
+			if limit, _ := f.s.stepUpTerms(SampleWorkspace, SampleAdmin2, "trust.approve", id); limit != stepUpDefault {
+				t.Errorf("only validation takes the candidate window %v", limit)
 			}
 		})
 	}
 	f := setup(t, SeedSample).ready()
-	if limit, mfa := f.s.stepUpTerms(SampleWorkspace, approveCommand, "proposal-x"); limit != stepUpDefault || mfa {
-		t.Errorf("unparsed target %v %v", limit, mfa)
+	id := changeOf(t, f.trustPropose(f.as(AdminLogin), "5", "0"))
+	for _, target := range []string{"trust-x", "trust-00000000-9", ""} {
+		if limit, mfa := f.s.stepUpTerms(SampleWorkspace, SampleAdmin2, validateCommand, target); limit != stepUpDefault || mfa {
+			t.Errorf("target %q %v %v", target, limit, mfa)
+		}
 	}
-	if limit, _ := f.s.stepUpTerms(SampleWorkspace, approveCommand, "proposal-99"); limit != stepUpDefault {
-		t.Errorf("missing target %v", limit)
+	if limit, _ := f.s.stepUpTerms("elsewhere", SampleAdmin2, validateCommand, id); limit != stepUpDefault {
+		t.Errorf("a change of another workspace contributes nothing %v", limit)
 	}
-	at := authpolicy.Authentication{Method: authpolicy.MethodPassword, At: f.s.clock()}
-	plan, err := f.s.policy.Propose(authpolicy.Change{Kind: authpolicy.ChangePlan, Plan: authpolicy.Plan{Workspace: SampleWorkspace, Users: []string{SampleMember}, Chunk: 1, Reason: "r"}},
-		authpolicy.Principal{User: SampleAdmin, Workspace: SampleWorkspace, Role: authpolicy.RoleAdministrator, Kind: authpolicy.KindHuman}, at)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if limit, _ := f.s.stepUpTerms(SampleWorkspace, approveCommand, fmt.Sprintf("proposal-%d", plan.Number)); limit != stepUpDefault {
-		t.Errorf("a plan proposal has no candidate revision %v", limit)
+	if limit, _ := f.s.stepUpTerms(SampleWorkspace, SampleAdmin2, validateCommand, id); limit != 5*time.Minute {
+		t.Errorf("the candidate window %v", limit)
 	}
 	empty, _ := newPolicy(f)
 	f.s.policy = empty
-	if limit, mfa := f.s.stepUpTerms(SampleWorkspace, "identity.suspend_user", ""); limit != stepUpDefault || mfa {
+	if limit, mfa := f.s.stepUpTerms(SampleWorkspace, SampleAdmin2, "identity.suspend_user", ""); limit != stepUpDefault || mfa {
 		t.Errorf("no policy %v %v", limit, mfa)
+	}
+	f.s.trust = nil
+	if limit, _ := f.s.stepUpTerms(SampleWorkspace, SampleAdmin2, validateCommand, id); limit != stepUpDefault {
+		t.Errorf("no registry %v", limit)
 	}
 }
 
@@ -377,7 +367,7 @@ func TestMFARulesFailClosed(t *testing.T) {
 		rule authpolicy.StepUp
 		run  func(f world, a actor) reply
 	}{
-		{"policy", authpolicy.StepUp{Action: authpolicy.ActionPolicyChange, MaxAge: 30 * time.Minute, MFA: true}, func(f world, a actor) reply { return f.propose(a, "60", "0") }},
+		{"policy", authpolicy.StepUp{Action: authpolicy.ActionPolicyChange, MaxAge: 30 * time.Minute, MFA: true}, func(f world, a actor) reply { return f.trustPropose(a, "60", "0") }},
 		{"suspend", authpolicy.StepUp{Action: ActionSensitive, MaxAge: 30 * time.Minute, MFA: true}, func(f world, a actor) reply {
 			return f.run(a, "identity.suspend_user", SampleMember, nil)
 		}},
@@ -406,7 +396,7 @@ func TestMFARulesFailClosed(t *testing.T) {
 
 func TestStepUpCheckWithoutSession(t *testing.T) {
 	f := setup(t, SeedSample).ready()
-	if code := f.s.stepUpCheck(identity.Verifier{9}, "identity.suspend_user", ""); code != commands.Unauthenticated {
+	if code := f.s.stepUpCheck(identity.Verifier{9}, SampleAdmin, "identity.suspend_user", ""); code != commands.Unauthenticated {
 		t.Errorf("missing session %s", code)
 	}
 	result := stepUpRefusal(commands.Unauthenticated, "r")
@@ -418,10 +408,10 @@ func TestStepUpCheckWithoutSession(t *testing.T) {
 	f.s.sessions.mu.Lock()
 	f.s.sessions.byID[v].authenticated = f.s.clock().Add(time.Nanosecond)
 	f.s.sessions.mu.Unlock()
-	if code := f.s.stepUpCheck(v, "identity.suspend_user", ""); code != CodeReauthentication {
+	if code := f.s.stepUpCheck(v, SampleAdmin, "identity.suspend_user", ""); code != CodeReauthentication {
 		t.Errorf("future authentication time %s", code)
 	}
-	if stepUpAction("policy.withdraw") != authpolicy.ActionPolicyChange || stepUpAction("sessions/end") != ActionSensitive || stepUpAction("policyx") != ActionSensitive {
+	if stepUpAction("trust.cancel") != authpolicy.ActionPolicyChange || stepUpAction("policy.withdraw") != ActionSensitive || stepUpAction("sessions/end") != ActionSensitive || stepUpAction("policyx") != ActionSensitive {
 		t.Error("action names")
 	}
 }
@@ -545,25 +535,21 @@ func logLines(t testing.TB, raw, msg string) []map[string]any {
 func TestProposalLimitStillMapped(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	root := f.as(AdminLogin)
-	for i := 0; i < 25; i++ {
-		if got := f.propose(root, fmt.Sprint(10+i), "0"); got.status != 200 {
+	for i := 0; i < trustchange.MaxOpenPerProposer; i++ {
+		if got := f.trustPropose(root, fmt.Sprint(10+i), "0"); got.status != 200 {
 			t.Fatalf("propose %d %+v", i, got)
 		}
 	}
-	f.code(t, "pending limit", f.propose(root, "40", "0"), 503, string(commands.DependencyUnavailable))
+	f.code(t, "pending limit", f.trustPropose(root, "40", "0"), 503, string(commands.DependencyUnavailable))
 }
 
-func TestCandidateRuleOnlyAppliesToApprove(t *testing.T) {
+func TestCandidateRuleOnlyAppliesToValidate(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	f.setPassword(AdminLogin, pw)
 	root := f.signedIn(AdminLogin, pw)
-	got := f.propose(root, "60", "5")
-	if got.status != 200 {
-		t.Fatalf("propose %+v", got)
-	}
-	target := got.body["fields"].(map[string]any)["proposal"].(string)
+	id := changeOf(t, f.trustPropose(root, "60", "5"))
 	f.advance(10 * time.Minute)
-	if got := f.run(root, "policy.withdraw", target, nil); got.status != 200 || got.body["business_state"] != "withdrawn" {
-		t.Errorf("withdraw judged by the candidate's 5-minute rule: %+v", got)
+	if got := f.trustEnd(root, "trust.cancel", id); got.status != 200 || got.body["business_state"] != "cancelled" {
+		t.Errorf("cancel judged by the candidate's 5-minute rule: %+v", got)
 	}
 }

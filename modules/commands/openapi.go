@@ -81,7 +81,8 @@ func (r *Registry) OpenAPI(title, version string) ([]byte, error) {
 		for code, rule := range errorRules {
 			switch {
 			case code == UnsupportedCommand, !entry.Supported && !early[code]:
-			case (!entry.Mutating && (code == IdempotencyConflict || code == IdempotencyKeyExpired)) || (!entry.Approval && code == SelfApprovalDenied):
+			case (!entry.Mutating && (code == IdempotencyConflict || code == IdempotencyKeyExpired)) || (code == SelfApprovalDenied && !entry.Approval && !declared(entry, code)):
+			case code != SelfApprovalDenied && declarable[code] && !declared(entry, code):
 			default:
 				statuses[rule.status] = append(statuses[rule.status], string(code))
 			}
@@ -142,4 +143,13 @@ func joined(names []string) string {
 		text += name
 	}
 	return text
+}
+
+func declared(entry Entry, code Code) bool {
+	for _, c := range entry.Refusals {
+		if c == code {
+			return true
+		}
+	}
+	return false
 }

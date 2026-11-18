@@ -367,6 +367,7 @@ func (f world) retAgrees(t *testing.T, got reply) {
 
 func TestRetentionReadShape(t *testing.T) {
 	f := setup(t, SeedSample).ready()
+	f.withoutThirdAdmin()
 	root := f.as(AdminLogin)
 	got := f.retentionRead(root)
 	if got.status != 200 || got.body["state"] != "configured" || got.body["now"] != stamp(start) || got.body["revision"] != f.s.Revision() {
@@ -626,6 +627,7 @@ func retFields(kind string, all map[string]string) map[string]string {
 
 func TestRetentionReadBlockers(t *testing.T) {
 	f := setup(t, SeedSample).ready()
+	f.withoutThirdAdmin()
 	f.setPassword(MemberLogin, pw)
 	root, second := f.as(AdminLogin), f.as(Admin2Login)
 	plan, err := f.s.retentionPropose(retention.Change{Kind: retention.ChangePlan, Plan: retention.DeletionPlan{Class: retention.ClassSource,

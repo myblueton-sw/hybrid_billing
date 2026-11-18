@@ -378,7 +378,7 @@ func roleField() commands.Field {
 }
 
 func (s *Server) registerUsers() error {
-	definitions := append(append(append(append(s.userDefinitions(), s.policyDefinitions()...), s.accessDefinitions()...), s.serviceDefinitions()...), s.relationshipDefinitions()...)
+	definitions := append(append(append(append(s.userDefinitions(), s.trustDefinitions()...), s.accessDefinitions()...), s.serviceDefinitions()...), s.relationshipDefinitions()...)
 	definitions = append(append(append(definitions, s.contractDefinitions()...), s.installationDefinitions()...), s.integrationDefinitions()...)
 	definitions = append(append(definitions, s.recoveryDefinitions()...), s.retentionDefinitions()...)
 	definitions = append(definitions, s.evidenceDefinitions()...)

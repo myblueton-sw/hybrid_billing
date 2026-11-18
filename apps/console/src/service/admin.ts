@@ -25,19 +25,8 @@ export type UsersPage = { revision: string; next: string; users: UserRow[] };
 
 export type StepRow = { action: string; max_age_seconds: number; mfa: boolean };
 export type RevisionRow = { methods: string[]; mfa: string; max_age_seconds: number; step_up: StepRow[] };
-export type PolicyRow = RevisionRow & { number: number; proposer: string; approver: string; at: string };
-export type ProposalRow = {
-  number: number;
-  target: string;
-  state: "pending" | "applied";
-  proposer: string;
-  approver: string;
-  reason: string;
-  revision: RevisionRow;
-  can_approve: boolean;
-  can_withdraw: boolean;
-  act_until: string;
-};
+export type EpochRow = { value: string; generation: number; number: number };
+export type PolicyRow = RevisionRow & { number: number; epoch: EpochRow; proposer: string; validator: string; approver: string; activator: string; at: string };
 export type ScopeRow = { customer: string; legal_entity: string; contract: string; period: string };
 export type AccessGrant = {
   id: string;
@@ -289,17 +278,185 @@ export function planOf(v: unknown): PlanRow {
 
 export type OrgQuery = { on?: string; kind?: RelationKind; revision?: number; after?: string; limit?: number };
 
+export type TrustHold = { reason: string; since: string };
+export type TrustRow = {
+  epoch: string;
+  epoch_generation: number;
+  epoch_number: number;
+  policy_number: number;
+  digest: string;
+  origin: "seed" | "this_process" | "ledger_replay" | "carried" | "";
+  carried_from: string;
+  carried_line: number;
+  durable_unconfirmed: boolean;
+  activated_at: string;
+  reset_at: string;
+  older_record_ignored: boolean;
+  proposer: string;
+  validator: string;
+  approver: string;
+  activator: string;
+  change: string;
+  hold: TrustHold | null;
+};
+export type TrustLedger = {
+  state: string;
+  isolation_reason: string;
+  problem_line: number;
+  records: number;
+  watermark: string;
+  generation: number;
+  generation_stated: boolean;
+  not_durable: boolean;
+};
+export type TrustRights = { propose: boolean; validate: boolean; approve: boolean; activate: boolean };
+export type TrustHolders = { qualifying_people: number; members: number; needed: number; enrolment: string; ready: boolean; missing: string[] };
+export type TrustItem = { item: string; result: string; reason: string; detail: string };
+export type TrustValidation = { result: string; at: string; evidence_digest: string; evidence_current: boolean; items: TrustItem[] };
+export type TrustImpact = { members: number; sessions: number; affected_ids: string[]; weakens_mfa: boolean; signs_out_everyone: boolean };
+export type TrustActivation = { epoch: EpochRow; ledger_sequence: number; watermark: string; at: string };
+export type TrustJob = { id: string; state: string; reason: string };
+export type TrustProgress = { item: string; result: string; ended: number; remaining: number; reason: string };
+export type TrustInvalidation = { state: string; items: TrustProgress[] };
+export type TrustCan = { revise: boolean; validate: boolean; approve: boolean; activate: boolean; reject: boolean; cancel: boolean };
+export type TrustWhy = { approve: string; activate: string };
+export type TrustHistory = { state: string; by: string; at: string; rationale: string };
+export type TrustState = "draft" | "validated" | "independently_approved" | "activated" | "rejected" | "cancelled" | "superseded" | "activation_unknown";
+export type TrustChange = {
+  id: string;
+  number: number;
+  state: TrustState;
+  change_revision: number;
+  change_digest: string;
+  old_epoch: EpochRow;
+  old_policy: number;
+  old_digest: string;
+  new_digest: string;
+  candidate: RevisionRow;
+  proposer: string;
+  validator: string;
+  approver: string;
+  activator: string;
+  superseded_by: string;
+  superseded_epoch: EpochRow | null;
+  earlier_run: boolean;
+  run_started_at: string;
+  validation: TrustValidation | null;
+  impact: TrustImpact;
+  activation: TrustActivation | null;
+  job: TrustJob | null;
+  invalidation: TrustInvalidation | null;
+  can: TrustCan;
+  why_not: TrustWhy;
+  act_until: string;
+  history: TrustHistory[];
+};
 export type PolicyPage = {
   revision: string;
   policy: PolicyRow | null;
-  proposals: ProposalRow[];
   now: string;
   signed_in_at: string;
   authenticated_at: string;
   act_until: string;
   step_up_seconds: number;
   you: string;
+  started_at: string;
+  trust: TrustRow;
+  ledger: TrustLedger;
+  rights: TrustRights;
+  holders: TrustHolders;
+  changes: TrustChange[];
 };
+
+const str = (v: unknown) => (typeof v === "string" ? v : "");
+const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
+const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+
+export function epochOf(v: unknown): EpochRow {
+  const r = obj(v);
+  return { value: str(r.value), generation: num(r.generation), number: num(r.number) };
+}
+
+function revisionOf(v: unknown): RevisionRow {
+  const r = obj(v);
+  return {
+    methods: list(r.methods).map(String),
+    mfa: str(r.mfa),
+    max_age_seconds: num(r.max_age_seconds),
+    step_up: list(r.step_up).map((x) => { const s = obj(x); return { action: str(s.action), max_age_seconds: num(s.max_age_seconds), mfa: s.mfa === true }; }),
+  };
+}
+
+const trustStates: TrustState[] = ["draft", "validated", "independently_approved", "activated", "rejected", "cancelled", "superseded", "activation_unknown"];
+
+export function trustChangeOf(v: unknown): TrustChange {
+  const r = obj(v);
+  const val = r.validation ? obj(r.validation) : null;
+  const imp = obj(r.impact);
+  const act = r.activation ? obj(r.activation) : null;
+  const job = r.job ? obj(r.job) : null;
+  const inv = r.invalidation ? obj(r.invalidation) : null;
+  const can = obj(r.can);
+  const why = obj(r.why_not);
+  const state = trustStates.includes(r.state as TrustState) ? (r.state as TrustState) : "draft";
+  return {
+    id: str(r.id), number: num(r.number), state, change_revision: num(r.change_revision), change_digest: str(r.change_digest), old_epoch: epochOf(r.old_epoch),
+    old_policy: num(r.old_policy), old_digest: str(r.old_digest), new_digest: str(r.new_digest), candidate: revisionOf(r.candidate), proposer: str(r.proposer),
+    validator: str(r.validator), approver: str(r.approver), activator: str(r.activator), superseded_by: str(r.superseded_by),
+    superseded_epoch: r.superseded_epoch ? epochOf(r.superseded_epoch) : null, earlier_run: r.earlier_run === true, run_started_at: str(r.run_started_at),
+    validation: val && {
+      result: str(val.result), at: str(val.at), evidence_digest: str(val.evidence_digest), evidence_current: val.evidence_current === true,
+      items: list(val.items).map((x) => { const i = obj(x); return { item: str(i.item), result: str(i.result), reason: str(i.reason), detail: str(i.detail) }; }),
+    },
+    impact: { members: num(imp.members), sessions: num(imp.sessions), affected_ids: list(imp.affected_ids).map(String), weakens_mfa: imp.weakens_mfa === true, signs_out_everyone: imp.signs_out_everyone !== false },
+    activation: act && { epoch: epochOf(act.epoch), ledger_sequence: num(act.ledger_sequence), watermark: str(act.watermark), at: str(act.at) },
+    job: job && { id: str(job.id), state: str(job.state), reason: str(job.reason) },
+    invalidation: inv && {
+      state: str(inv.state),
+      items: list(inv.items).map((x) => { const i = obj(x); return { item: str(i.item), result: str(i.result), ended: num(i.ended), remaining: num(i.remaining), reason: str(i.reason) }; }),
+    },
+    can: { revise: can.revise === true, validate: can.validate === true, approve: can.approve === true, activate: can.activate === true, reject: can.reject === true, cancel: can.cancel === true },
+    why_not: { approve: str(why.approve), activate: str(why.activate) },
+    act_until: str(r.act_until),
+    history: list(r.history).map((x) => { const h = obj(x); return { state: str(h.state), by: str(h.by), at: str(h.at), rationale: str(h.rationale) }; }),
+  };
+}
+
+export function policyPageOf(body: Record<string, unknown>): PolicyPage {
+  const t = obj(body.trust);
+  const hold = t.hold ? obj(t.hold) : null;
+  const led = obj(body.ledger);
+  const rights = obj(body.rights);
+  const holders = obj(body.holders);
+  const origins = ["seed", "this_process", "ledger_replay", "carried"];
+  const p = body.policy ? obj(body.policy) : null;
+  return {
+    revision: str(body.revision),
+    policy: p && { ...revisionOf(p), number: num(p.number), epoch: epochOf(p.epoch), proposer: str(p.proposer), validator: str(p.validator), approver: str(p.approver), activator: str(p.activator), at: str(p.at) },
+    now: str(body.now),
+    signed_in_at: str(body.signed_in_at),
+    authenticated_at: str(body.authenticated_at),
+    act_until: str(body.act_until),
+    step_up_seconds: num(body.step_up_seconds),
+    you: str(body.you),
+    started_at: str(body.started_at),
+    trust: {
+      epoch: str(t.epoch), epoch_generation: num(t.epoch_generation), epoch_number: num(t.epoch_number), policy_number: num(t.policy_number), digest: str(t.digest),
+      origin: (origins.includes(str(t.origin)) ? str(t.origin) : "") as TrustRow["origin"], carried_from: str(t.carried_from), carried_line: num(t.carried_line),
+      durable_unconfirmed: t.durable_unconfirmed === true, activated_at: str(t.activated_at), reset_at: str(t.reset_at), older_record_ignored: t.older_record_ignored === true, proposer: str(t.proposer), validator: str(t.validator),
+      approver: str(t.approver), activator: str(t.activator), change: str(t.change), hold: hold && { reason: str(hold.reason), since: str(hold.since) },
+    },
+    ledger: {
+      state: str(led.state) || "unknown", isolation_reason: str(led.isolation_reason), problem_line: num(led.problem_line), records: num(led.records), watermark: str(led.watermark),
+      generation: num(led.generation), generation_stated: led.generation_stated === true, not_durable: led.not_durable === true,
+    },
+    rights: { propose: rights.propose === true, validate: rights.validate === true, approve: rights.approve === true, activate: rights.activate === true },
+    holders: { qualifying_people: num(holders.qualifying_people), members: num(holders.members), needed: num(holders.needed) || 3, enrolment: str(holders.enrolment), ready: holders.ready === true,
+      missing: Array.isArray(holders.missing) ? holders.missing.map((x) => String(x)) : [] },
+    changes: list(body.changes).map(trustChangeOf),
+  };
+}
 
 export type AdminFailure =
   | "conflict"
@@ -317,7 +474,13 @@ export type AdminFailure =
   | "locked"
   | "form"
   | "reauth"
-  | "reauth_cancelled";
+  | "reauth_cancelled"
+  | "self"
+  | "epoch"
+  | "approval_stale"
+  | "evidence_stale"
+  | "needs_approval"
+  | "trust_unavailable";
 
 export class AdminError extends Error {
   constructor(
@@ -344,9 +507,12 @@ export type CommandId =
   | "identity.reinstate_membership"
   | "identity.remove_membership"
   | "identity.revoke_invitation"
-  | "policy.propose"
-  | "policy.approve"
-  | "policy.withdraw"
+  | "trust.propose"
+  | "trust.validate"
+  | "trust.approve"
+  | "trust.activate"
+  | "trust.reject"
+  | "trust.cancel"
   | "access.request_grant"
   | "access.request_revoke"
   | "access.approve_request"
@@ -464,6 +630,11 @@ const codes: Record<string, AdminFailure> = {
   password_locked: "locked",
   password_form: "form",
   reauthentication_required: "reauth",
+  self_approval_denied: "self",
+  authority_epoch_conflict: "epoch",
+  approval_stale: "approval_stale",
+  evidence_stale: "evidence_stale",
+  independent_approval_required: "needs_approval",
 };
 
 export type StepUp = () => Promise<boolean>;
@@ -569,18 +740,7 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
       return outcomeOf(body);
     },
     async policy(): Promise<PolicyPage> {
-      const body = await send("/identity/policy", { method: "GET" }, attempt().request);
-      return {
-        revision: String(body.revision ?? ""),
-        policy: (body.policy ?? null) as PolicyRow | null,
-        proposals: Array.isArray(body.proposals) ? (body.proposals as ProposalRow[]) : [],
-        now: String(body.now ?? ""),
-        signed_in_at: String(body.signed_in_at ?? ""),
-        authenticated_at: String(body.authenticated_at ?? ""),
-        act_until: String(body.act_until ?? ""),
-        step_up_seconds: Number(body.step_up_seconds ?? 0),
-        you: String(body.you ?? ""),
-      };
+      return policyPageOf(await send("/identity/policy", { method: "GET" }, attempt().request));
     },
     async access(): Promise<AccessPage> {
       const body = await send("/identity/access", { method: "GET" }, attempt().request);

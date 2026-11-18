@@ -1,17 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, type PolicyPage, type ProposalRow } from "../../../../service/admin";
-import { canAct, duration, effectiveStep, history, methodsText, pending, policyFailure, policyStep, stale, stepMinutes, stepText, wholeMinutes, when } from "./live-model";
+import { AdminError, policyPageOf, type PolicyPage } from "../../../../service/admin";
+import { duration, effectiveStep, methodsText, policyFailure, policyStep, stale, stepMinutes, stepText, wholeMinutes, when } from "./live-model";
 import { c } from "../../../../service/copy";
 import { p } from "./live-copy";
 
 const rev = { methods: ["password"], mfa: "none", max_age_seconds: 3600, step_up: [{ action: "policy.change", max_age_seconds: 600, mfa: false }] };
-const row = (change: Partial<ProposalRow>): ProposalRow => ({
-  number: 2, target: "proposal-2", state: "pending", proposer: "a", approver: "", reason: "r", revision: rev,
-  can_approve: true, can_withdraw: false, act_until: "2026-11-16T09:10:00Z", ...change,
-});
 const page = (change: Partial<PolicyPage>): PolicyPage => ({
-  revision: "r1", policy: null, proposals: [], now: "2026-11-16T09:00:00Z", signed_in_at: "2026-11-16T08:55:00Z", authenticated_at: "2026-11-16T08:55:00Z",
+  ...policyPageOf({}), revision: "r1", now: "2026-11-16T09:00:00Z", signed_in_at: "2026-11-16T08:55:00Z", authenticated_at: "2026-11-16T08:55:00Z",
   act_until: "2026-11-16T09:05:00Z", step_up_seconds: 600, you: "b", ...change,
 });
 
@@ -40,13 +36,8 @@ test("staleness compares server times only", () => {
   assert.equal(stale(page({ act_until: "" })), false);
 });
 
-test("actions follow the server flags and stay enabled past the window", () => {
-  assert.deepEqual(canAct(row({})), { approve: true, withdraw: false, note: "" });
-  assert.deepEqual(canAct(row({ act_until: "2026-11-16T08:00:00Z" })), { approve: true, withdraw: false, note: "" });
-  assert.deepEqual(canAct(row({ can_approve: false, can_withdraw: true })), { approve: false, withdraw: true, note: "needOther" });
-  assert.deepEqual(canAct(row({ can_approve: false })), { approve: false, withdraw: false, note: "cannotApprove" });
+test("the stale line exists in every language", () => {
   for (const l of ["en", "ko", "ar"] as const) assert.notEqual(p.staleLine(l), "");
-  assert.equal("staleRow" in p || "staleAction" in p || "staleTitle" in p, false);
 });
 
 test("blank or zero step minutes use the default", () => {
@@ -56,12 +47,6 @@ test("blank or zero step minutes use the default", () => {
   assert.equal(stepMinutes("4", 60), null);
   assert.equal(stepMinutes("61", 60), null);
   assert.equal(stepMinutes("700", null), 700);
-});
-
-test("pending and history split", () => {
-  const all = page({ proposals: [row({}), row({ number: 1, state: "applied" })] });
-  assert.equal(pending(all).length, 1);
-  assert.equal(history(all)[0].number, 1);
 });
 
 test("whole minutes are strict", () => {

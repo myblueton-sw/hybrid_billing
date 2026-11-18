@@ -43,7 +43,7 @@ func TestRequestRejectAndWithdraw(t *testing.T) {
 	id := requestOf(asked)
 	row := f.requestRow(root, id)
 	if row["state"] != "pending" || row["current"] != true || row["can_withdraw"] != true || row["can_approve"] != false || row["can_reject"] != false ||
-		fmt.Sprint(row["eligible_approvers"]) != "1" || row["proposer"] != SampleAdmin || row["reason"] != "sample reason" || row["change"] != "add" || fmt.Sprint(row["days"]) != "10" {
+		fmt.Sprint(row["eligible_approvers"]) != "2" || row["proposer"] != SampleAdmin || row["reason"] != "sample reason" || row["change"] != "add" || fmt.Sprint(row["days"]) != "10" {
 		t.Errorf("proposer view %+v", row)
 	}
 	other := f.requestRow(second, id)
@@ -86,6 +86,7 @@ func TestRequestRejectAndWithdraw(t *testing.T) {
 
 func TestNoEligibleApprover(t *testing.T) {
 	f := setup(t, SeedSample).ready()
+	f.withoutThirdAdmin()
 	f.setPassword(MemberLogin, pw)
 	root, second := f.as(AdminLogin), f.as(Admin2Login)
 	if got := f.revokeVia(root, second, "reader-"+SampleAdmin2); got.status != 202 {
@@ -109,7 +110,7 @@ func TestHolderApprovesButCannotRejectTheirRevocation(t *testing.T) {
 	asked := f.run(root, "access.request_revoke", "reader-"+SampleAdmin2, nil)
 	row := f.requestRow(second, requestOf(asked))
 	if row["can_reject"] != false || row["can_approve"] != true || row["subject"] != SampleAdmin2 || row["action"] != "view" || row["grant"] != "reader-"+SampleAdmin2 ||
-		fmt.Sprint(row["eligible_approvers"]) != "1" {
+		fmt.Sprint(row["eligible_approvers"]) != "2" {
 		t.Errorf("holder view %+v", row)
 	}
 	f.code(t, "holder reject", f.run(second, "access.reject_request", requestOf(asked), nil), 422, string(commands.PrerequisiteFailed))

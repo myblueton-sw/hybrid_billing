@@ -100,13 +100,23 @@ func open() Revision {
 
 func standard(t testing.TB) world {
 	f := setup(t)
-	f.by(Change{Kind: ChangeRevision, Revision: open()}, ann, bob)
+	f.revise(open())
 	return f
 }
 
-func (f world) revise(x Revision) {
+func (f world) revise(x Revision) RevisionView {
 	f.t.Helper()
-	f.by(Change{Kind: ChangeRevision, Revision: x}, ann, bob)
+	epoch, number := uint64(1), uint64(1)
+	if w := f.r.workspaces[x.Workspace]; w != nil {
+		epoch, number = w.revisions[len(w.revisions)-1].Epoch+1, w.number+1
+	}
+	v, err := f.r.Publish(Publication{Revision: x, Epoch: epoch, Number: number, Proposer: "ann", Validator: "ann", Approver: "bob", Activator: "cat"})
+	f.must(err)
+	return v
+}
+
+func planOf(users ...string) Change {
+	return Change{Kind: ChangePlan, Plan: Plan{Workspace: "w1", Users: users, Chunk: 1, Reason: "r"}}
 }
 
 func (f world) block(users []string, chunk int) string {

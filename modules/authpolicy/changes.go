@@ -46,10 +46,6 @@ func clean(c Change) (Change, error) {
 
 func (r *Registry) check(c Change, proposer, approver string) error {
 	switch c.Kind {
-	case ChangeRevision:
-		if r.workspaces[c.Revision.Workspace] == nil && len(r.workspaces) >= maxWorkspaces {
-			return ErrLimit
-		}
 	case ChangePlan:
 		if r.workspaces[c.Plan.Workspace].active >= maxActivePlans {
 			return ErrLimit
@@ -70,17 +66,6 @@ func (r *Registry) check(c Change, proposer, approver string) error {
 
 func (r *Registry) apply(c Change, by people, now time.Time) {
 	switch c.Kind {
-	case ChangeRevision:
-		w := r.workspaces[c.Revision.Workspace]
-		if w == nil {
-			w = &workspace{}
-			r.workspaces[c.Revision.Workspace] = w
-		}
-		w.number++
-		w.revisions = append(w.revisions, RevisionView{Revision: copyChange(c).Revision, Number: w.number, Proposer: by.proposer, Approver: by.approver, At: now})
-		if len(w.revisions) > maxKeptRevisions {
-			w.revisions = w.revisions[1:]
-		}
 	case ChangePlan:
 		space := c.Plan.Workspace
 		w := r.workspaces[space]

@@ -145,7 +145,7 @@ func fullScope(t gate.Terms) bool {
 func (s *Server) ceiling() []ceilingRow {
 	out := []ceilingRow{}
 	for _, g := range s.admin.Grants() {
-		if g.ClientID == ConsoleClient && g.Active && g.Terms.Action != gate.AdministerInstallation && g.Terms.Scope.WorkspaceID == s.bootWorkspace && fullScope(g.Terms) {
+		if g.ClientID == ConsoleClient && g.Active && !gate.InstallationAction(g.Terms.Action) && g.Terms.Scope.WorkspaceID == s.bootWorkspace && fullScope(g.Terms) {
 			out = append(out, ceilingRow{Action: string(g.Terms.Action), Kind: g.Terms.Kind, Fields: append([]string{}, g.Terms.Fields...), Until: stamp(g.Validity.NotAfter)})
 		}
 	}
@@ -192,7 +192,7 @@ func (s *Server) listAccess(w http.ResponseWriter, r *http.Request) {
 		Ledger: s.ledgerRow()}
 	unconfirmed := s.unconfirmedTargets()
 	for _, g := range s.admin.Grants() {
-		if g.Terms.Action == gate.AdministerInstallation {
+		if gate.InstallationAction(g.Terms.Action) {
 			continue
 		}
 		page.Grants = append(page.Grants, grantRow{ID: g.ID, Subject: g.SubjectID, Client: g.ClientID, Action: string(g.Terms.Action), Kind: g.Terms.Kind,
@@ -294,6 +294,11 @@ func (s *Server) grantView(id string) (gate.GrantView, bool) {
 		}
 	}
 	return gate.GrantView{}, false
+}
+
+func (s *Server) accessGrant(id string) (gate.GrantView, bool) {
+	g, ok := s.grantView(id)
+	return g, ok && !gate.InstallationAction(g.Terms.Action)
 }
 
 func (s *Server) delegationView(id string) (gate.DelegationView, bool) {

@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
@@ -21,8 +20,10 @@ const (
 	EmptyWorkspace  = "workspace"
 	SampleAdmin     = "sample-admin"
 	SampleAdmin2    = "sample-admin-2"
+	SampleAdmin3    = "sample-admin-3"
 	AdminLogin      = "admin@example.invalid"
 	Admin2Login     = "admin2@example.invalid"
+	Admin3Login     = "admin3@example.invalid"
 	SampleMember    = "sample-member"
 	MemberLogin     = "member@example.invalid"
 	EmptyAdmin      = "admin"
@@ -96,14 +97,15 @@ func (s *Server) Start() error {
 		steps = append(steps, step{"bootstrap-admin", func() (bool, error) {
 			s.dir.add(SampleAdmin, AdminLogin, AdminLogin)
 			return true, s.identity.Boundary().Bootstrap(verifier, SampleAdmin, AdminTriple(), AdminLogin)
-		}}, step{"second-admin", func() (bool, error) { return true, s.seedSecondAdmin(now) }},
+		}}, step{"second-admin", func() (bool, error) { return true, s.seedAdmin(SampleAdmin2, Admin2Login, "sample-invite", now) }},
+			step{"third-admin", func() (bool, error) { return true, s.seedAdmin(SampleAdmin3, Admin3Login, "sample-invite-3", now) }},
 			step{"sample-member", func() (bool, error) { return true, s.seedMember(now) }},
-			step{"authentication-policy", func() (bool, error) { return true, s.seedPolicy(now) }},
 			step{"reader-grants", func() (bool, error) { return true, s.seedReaderGrants(now) }},
 			step{"organizations", func() (bool, error) { return true, s.seedOrganizations() }},
 			step{"contracts", func() (bool, error) { return true, s.seedContracts() }},
 			step{"installation", func() (bool, error) { return true, s.seedInstallation(now) }},
 			step{"installation-grants", func() (bool, error) { return true, s.seedInstallationGrants(now) }},
+			step{"trust-grants", func() (bool, error) { return true, s.seedTrustGrants(now) }},
 			step{"integrations", func() (bool, error) { return true, s.seedIntegrations(now) }},
 			step{"recovery", func() (bool, error) { return true, s.seedRecovery(now) }},
 			step{"retention", func() (bool, error) { return true, s.seedRetention(now) }},
@@ -116,7 +118,7 @@ func (s *Server) Start() error {
 		steps = append(steps, s.seed...)
 	}
 	s.startedAt = now
-	steps = append(steps, step{"decision-ledger", s.openLedger})
+	steps = append(steps, step{"decision-ledger", s.openLedger}, step{"trust-replay", s.replayTrust})
 	for _, st := range steps {
 		if err := s.Change(st.name, st.run); err != nil {
 			return err
@@ -147,22 +149,22 @@ func run(steps ...func() error) error {
 	return nil
 }
 
-func (s *Server) seedSecondAdmin(now time.Time) error {
+func (s *Server) seedAdmin(user, login, invitation string, now time.Time) error {
 	ws, b := s.Workspace(), s.identity.Boundary()
 	first, second, invite := verifierOf(random(tokenBytes)), verifierOf(random(tokenBytes)), verifierOf(random(tokenBytes))
 	defer b.EndSession(first)
 	defer b.EndSession(second)
 	return run(
 		func() error {
-			return s.identity.Installation().CreateUser(identity.Operator{Reference: "seed", Reason: "sample data"}, SampleAdmin2, LoginTriple(Admin2Login), Admin2Login)
+			return s.identity.Installation().CreateUser(identity.Operator{Reference: "seed", Reason: "sample data"}, user, LoginTriple(login), login)
 		},
 		func() error { return b.OpenSession(AdminTriple(), first, time.Minute, time.Minute) },
 		func() error {
-			return s.identity.Workspace().Invite(first, ws, "sample-invite", identity.Administrator, invite, identity.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}, SampleAdmin2)
+			return s.identity.Workspace().Invite(first, ws, invitation, identity.Administrator, invite, identity.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}, user)
 		},
-		func() error { return b.OpenSession(LoginTriple(Admin2Login), second, time.Minute, time.Minute) },
-		func() error { return s.identity.Workspace().Accept(ws, "sample-invite", invite, second) },
-		func() error { s.dir.add(SampleAdmin2, Admin2Login, Admin2Login); return nil },
+		func() error { return b.OpenSession(LoginTriple(login), second, time.Minute, time.Minute) },
+		func() error { return s.identity.Workspace().Accept(ws, invitation, invite, second) },
+		func() error { s.dir.add(user, login, login); return nil },
 	)
 }
 
@@ -180,27 +182,6 @@ func (s *Server) seedMember(now time.Time) error {
 	)
 }
 
-func (s *Server) seedPolicy(now time.Time) error {
-	ws := s.Workspace()
-	auth := authpolicy.Authentication{Method: authpolicy.MethodPassword, At: now}
-	admin := func(user string) authpolicy.Principal {
-		return authpolicy.Principal{User: user, Workspace: ws, Role: authpolicy.RoleAdministrator, Kind: authpolicy.KindHuman}
-	}
-	var p authpolicy.ProposalView
-	return run(
-		func() (err error) {
-			p, err = s.policy.Propose(authpolicy.Change{Kind: authpolicy.ChangeRevision, Revision: authpolicy.Revision{Workspace: ws, Methods: []string{authpolicy.MethodPassword},
-				MFA: authpolicy.MFANone, MaxAge: 12 * time.Hour}}, admin(SampleAdmin), auth)
-			return err
-		},
-		func() error {
-			s.recordProposal(p.Number, "Sample data")
-			_, err := s.policy.Approve(p.Number, admin(SampleAdmin2), auth)
-			return err
-		},
-	)
-}
-
 func (s *Server) seedLinks(now time.Time) ([]string, error) {
 	lines := []string{}
 	issue := func(login string) func() error {
@@ -210,7 +191,7 @@ func (s *Server) seedLinks(now time.Time) ([]string, error) {
 			return err
 		}
 	}
-	err := run(issue(AdminLogin), issue(Admin2Login), issue(MemberLogin))
+	err := run(issue(AdminLogin), issue(Admin2Login), issue(Admin3Login), issue(MemberLogin))
 	return lines, err
 }
 
@@ -230,7 +211,38 @@ func (s *Server) seedReaderGrants(now time.Time) error {
 }
 
 func (s *Server) seedInstallationGrants(now time.Time) error {
-	return run(func() error { return s.grantInstallation(SampleAdmin, now) }, func() error { return s.grantInstallation(SampleAdmin2, now) })
+	return run(func() error { return s.grantInstallation(SampleAdmin, now) }, func() error { return s.grantInstallation(SampleAdmin2, now) },
+		func() error { return s.grantInstallation(SampleAdmin3, now) })
+}
+
+var trustRights = []gate.Action{gate.TrustPropose, gate.TrustValidate, gate.TrustApprove, gate.TrustActivate}
+
+var trustGrantUntil = time.Date(9999, 12, 31, 0, 0, 0, 0, time.UTC)
+
+func (s *Server) seedTrustGrants(now time.Time) error {
+	return run(func() error { return s.grantTrust(SampleAdmin, now) }, func() error { return s.grantTrust(SampleAdmin2, now) },
+		func() error { return s.grantTrust(SampleAdmin3, now) })
+}
+
+func (s *Server) grantTrust(user string, now time.Time) error {
+	if s.faulty("trust-grant") {
+		return errPartial
+	}
+	validity := gate.Validity{NotBefore: now, NotAfter: trustGrantUntil}
+	steps := []func() error{}
+	for _, right := range trustRights {
+		terms := gate.Terms{Action: right, Kind: gate.InstallationKind, Period: gate.AnyPeriod(),
+			Scope: gate.Scope{WorkspaceID: s.Workspace(), Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}}
+		steps = append(steps, func() error {
+			if err := s.admin.AddGrant(gate.Grant{ID: "trust-" + string(right) + "-console", ClientID: ConsoleClient, Terms: terms, Validity: validity}); !errors.Is(err, gate.ErrConflict) {
+				return err
+			}
+			return nil
+		}, func() error {
+			return s.admin.AddGrant(gate.Grant{ID: "trust-" + string(right) + "-" + user, SubjectID: user, Terms: terms, Validity: validity})
+		})
+	}
+	return run(steps...)
 }
 
 func (s *Server) grantInstallation(user string, now time.Time) error {

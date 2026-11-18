@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/apps/api/server"
+	"github.com/myblueton-sw/hybrid_billing/modules/decisionledger"
 )
 
 type origins []string
@@ -101,6 +102,16 @@ func accessFlags(fs *flag.FlagSet) (*server.AccessSettings, func()) {
 		})
 	}
 	fs.BoolVar(&access.AcceptNewLedger, "accept-new-decision-ledger", false, "one-time: keep the isolated decision ledger under a new name and start a new one")
+	fs.BoolVar(&access.AcceptTrustReset, "accept-trust-reset", false, "one-time, with accept-new-decision-ledger: the replaced ledger has no carryable trust record; the installation default sign-in rules become active")
+	fs.StringVar(&access.CarryTrustFrom, "carry-trust-from", "", "one-time, with accept-new-decision-ledger: carry the latest trust record of the replaced ledger with this genesis ledger ID")
+	fs.Func("trust-generation", "one-time, with accept-new-decision-ledger when the marker and the ledger are both unusable: the new ledger generation, above every retained one and below 4294967295", func(raw string) error {
+		n, err := strconv.ParseUint(raw, 10, 64)
+		if err != nil || strconv.FormatUint(n, 10) != raw || n == 0 || n >= decisionledger.MaxGeneration {
+			return fmt.Errorf("trust-generation must be a whole number from 1 to %d", uint64(decisionledger.MaxGeneration)-1)
+		}
+		access.TrustGeneration = n
+		return nil
+	})
 	return &access, func() {
 		fs.Visit(func(f *flag.Flag) {
 			if setting, ok := byFlag[f.Name]; ok {

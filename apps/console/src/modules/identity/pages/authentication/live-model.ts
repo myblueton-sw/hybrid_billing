@@ -1,5 +1,5 @@
 import type { Locale } from "../../../../shared/types";
-import { AdminError, type PolicyPage, type ProposalRow, type RevisionRow } from "../../../../service/admin";
+import { AdminError, type PolicyPage, type RevisionRow } from "../../../../service/admin";
 import { c, retryPhrase } from "../../../../service/copy";
 import { w } from "../users/live-copy";
 import { p } from "./live-copy";
@@ -45,22 +45,6 @@ export function methodsText(l: Locale, r: RevisionRow): string {
 
 export function stale(page: PolicyPage): boolean {
   return page.act_until !== "" && page.now > page.act_until;
-}
-
-export function canAct(row: ProposalRow): { approve: boolean; withdraw: boolean; note: string } {
-  return {
-    approve: row.can_approve,
-    withdraw: row.can_withdraw,
-    note: row.can_withdraw ? "needOther" : row.can_approve ? "" : "cannotApprove",
-  };
-}
-
-export function pending(page: PolicyPage): ProposalRow[] {
-  return page.proposals.filter((r) => r.state === "pending");
-}
-
-export function history(page: PolicyPage): ProposalRow[] {
-  return page.proposals.filter((r) => r.state === "applied");
 }
 
 export function wholeMinutes(raw: string, low: number, high: number): number | null {

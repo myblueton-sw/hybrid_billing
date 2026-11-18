@@ -85,6 +85,13 @@ func (r *Registry) validDefinition(definition Definition) bool {
 		permission.Action == gate.ApproveSupportSession || !r.gate.Describes(permission.Action, permission.Kind, permission.Fields) {
 		return false
 	}
+	refusals := map[Code]bool{}
+	for _, code := range definition.Refusals {
+		if !declarable[code] || refusals[code] || code == SelfApprovalDenied && definition.Approval {
+			return false
+		}
+		refusals[code] = true
+	}
 	names := map[string]bool{}
 	for _, field := range definition.Fields {
 		if !validID(field.Name) || names[field.Name] || !knownType(field.Type) || (field.Type == Enum) != (len(field.Values) > 0) {
@@ -110,6 +117,7 @@ func copyDefinition(definition Definition) Definition {
 		fields[index] = field
 	}
 	definition.Fields = fields
+	definition.Refusals = append([]Code(nil), definition.Refusals...)
 	return definition
 }
 
@@ -143,7 +151,7 @@ func (r *Registry) Catalogue() []Entry {
 	for _, stored := range r.definitions {
 		definition := copyDefinition(stored)
 		entries = append(entries, Entry{ID: definition.ID, Permission: definition.Permission, Approval: definition.Approval, Mutating: definition.Mutating,
-			Rationale: definition.Rationale, Fields: definition.Fields, Supported: definition.Handler != nil})
+			Rationale: definition.Rationale, Fields: definition.Fields, Refusals: definition.Refusals, Supported: definition.Handler != nil})
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].ID < entries[j].ID })
 	return entries

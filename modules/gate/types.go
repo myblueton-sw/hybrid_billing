@@ -43,6 +43,10 @@ const (
 	Deliver                = auth.Deliver
 	ApproveSupportSession  = auth.ApproveSupportSession
 	AdministerInstallation = auth.AdministerInstallation
+	TrustPropose           = auth.TrustPropose
+	TrustValidate          = auth.TrustValidate
+	TrustApprove           = auth.TrustApprove
+	TrustActivate          = auth.TrustActivate
 	InstallationKind       = auth.InstallationKind
 
 	Active    = auth.Active
@@ -113,3 +117,5 @@ type Decision struct {
 	Delegations []string
 	Stamp       Stamp
 }
+
+func InstallationAction(action Action) bool { return auth.InstallationAction(action) }

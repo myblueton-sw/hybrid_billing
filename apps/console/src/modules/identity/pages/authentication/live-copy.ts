@@ -2,8 +2,6 @@ import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
 
 export const p = {
-  currentTitle: (l: Locale) => t(l, "Current policy", "현재 정책", "السياسة الحالية"),
-  revision: (l: Locale) => t(l, "Policy revision", "정책 개정 번호", "رقم مراجعة السياسة"),
   methods: (l: Locale) => t(l, "Sign-in methods", "로그인 방식", "طرق تسجيل الدخول"),
   passwordOnly: (l: Locale) => t(l, "Password only", "비밀번호만", "كلمة المرور فقط"),
   mfa: (l: Locale) => t(l, "Multi-factor authentication (MFA)", "다단계 인증(MFA)", "المصادقة متعددة العوامل (MFA)"),
@@ -13,9 +11,6 @@ export const p = {
   effective: (l: Locale) => t(l, "Password confirmation window", "비밀번호 확인 유효 시간", "مدة صلاحية تأكيد كلمة المرور"),
   stepDefault: (l: Locale, d: string) => t(l, `Default (${d})`, `기본값(${d})`, `الافتراضي (${d})`),
   within: (l: Locale, d: string) => t(l, `Within ${d}`, `${d} 이내`, `خلال ${d}`),
-  proposedBy: (l: Locale) => t(l, "Proposed by", "제안자", "اقترحه"),
-  approvedBy: (l: Locale) => t(l, "Approved by", "승인자", "اعتمده"),
-  applied: (l: Locale) => t(l, "Applied", "적용 시각", "وقت التطبيق"),
   actUntil: (l: Locale, time: string) =>
     t(
       l,
@@ -30,28 +25,10 @@ export const p = {
       "정책을 변경하기 전에 비밀번호 재확인을 요청합니다.",
       "سيُطلب منك تأكيد كلمة المرور قبل تغيير السياسة.",
     ),
-  pendingTitle: (l: Locale) => t(l, "Pending proposals", "승인 대기 중인 제안", "المقترحات بانتظار الاعتماد"),
-  pendingCount: (l: Locale, n: number) => t(l, n === 1 ? "1 pending" : `${n} pending`, `대기 ${n}건`, `${n} بانتظار الاعتماد`),
-  proposalColumn: (l: Locale) => t(l, "Proposal", "제안", "المقترح"),
-  proposal: (l: Locale, n: number) => t(l, `Proposal ${n}`, `제안 ${n}`, `المقترح ${n}`),
   setting: (l: Locale) => t(l, "Setting", "항목", "الإعداد"),
   current: (l: Locale) => t(l, "Current", "현재", "الحالي"),
   proposed: (l: Locale) => t(l, "Proposed", "제안", "المقترح"),
   changed: (l: Locale) => t(l, "(changed)", "(변경)", "(تغيّر)"),
-  approve: (l: Locale) => t(l, "Approve", "승인", "اعتماد"),
-  withdraw: (l: Locale) => t(l, "Withdraw", "철회", "سحب"),
-  needOther: (l: Locale) => t(l, "Another administrator must approve this proposal.", "다른 관리자가 이 제안을 승인해야 합니다.", "يجب أن يعتمد مسؤول آخر هذا المقترح."),
-  cannotApprove: (l: Locale) => t(l, "You cannot approve this proposal.", "이 제안을 승인할 수 없습니다.", "لا يمكنك اعتماد هذا المقترح."),
-  historyTitle: (l: Locale) => t(l, "Applied changes", "적용된 변경", "التغييرات المطبّقة"),
-  last10: (l: Locale) => t(l, "Last 10", "최근 10건", "آخر 10"),
-  proposeTitle: (l: Locale) => t(l, "Propose a change", "변경 제안", "اقتراح تغيير"),
-  proposeLead: (l: Locale) =>
-    t(
-      l,
-      "Another administrator must approve this change before it applies. Sign-in stays password only and MFA stays not required in pre-launch.",
-      "다른 관리자가 승인해야 변경이 적용됩니다. 출시 전 서비스에서는 비밀번호 로그인만 사용하며 MFA는 요구하지 않습니다.",
-      "يجب أن يعتمد مسؤول آخر هذا التغيير قبل تطبيقه. في خدمة ما قبل الإطلاق يبقى تسجيل الدخول بكلمة المرور فقط ولا تُطلب MFA.",
-    ),
   minutes: (l: Locale) => t(l, "minutes", "분", "دقيقة"),
   maxAgeHint: (l: Locale) =>
     t(
@@ -73,49 +50,17 @@ export const p = {
   errMaxAge: (l: Locale) => t(l, "Enter a whole number from 5 to 720", "5~720 사이의 정수를 입력하세요", "أدخل عددًا صحيحًا من 5 إلى 720"),
   errStep: (l: Locale, max: number) => t(l, `Enter a whole number from 5 to ${max}`, `5~${max} 사이의 정수를 입력하세요`, `أدخل عددًا صحيحًا من 5 إلى ${max}`),
   same: (l: Locale) => t(l, "These values match the current policy.", "현재 정책과 같은 값입니다.", "هذه القيم مطابقة للسياسة الحالية."),
-  submit: (l: Locale) => t(l, "Submit proposal", "제안 제출", "إرسال المقترح"),
-  back: (l: Locale) => t(l, "Back to sign-in policy", "로그인 정책으로", "العودة إلى سياسة تسجيل الدخول"),
-  approveTitle: (l: Locale, n: number) => t(l, `Approve proposal ${n}`, `제안 ${n} 승인`, `اعتماد المقترح ${n}`),
-  approveNow: (l: Locale, d: string) =>
-    t(
-      l,
-      `The new policy applies as soon as you approve. Anyone whose last sign-in or password confirmation is older than ${d} is signed out and must sign in again.`,
-      `승인하면 새 정책이 즉시 적용됩니다. 마지막 로그인 또는 비밀번호 재확인 후 ${d}이(가) 지난 사용자는 로그아웃되며 다시 로그인해야 합니다.`,
-      `تُطبَّق السياسة الجديدة فور اعتمادها. يُسجَّل خروج كل من مضى على آخر تسجيل دخول أو تأكيد لكلمة المرور لديه أكثر من ${d}، وعليه تسجيل الدخول مجددًا.`,
-    ),
-  approveSelf: (l: Locale) =>
-    t(
-      l,
-      "Your own sign-in must also meet the new policy. If it does not, you'll be asked to confirm your password.",
-      "승인하는 관리자의 로그인도 새 정책을 충족해야 합니다. 충족하지 않으면 비밀번호 재확인을 요청합니다.",
-      "يجب أن يستوفي تسجيل دخولك أنت أيضًا السياسة الجديدة، وإلا سيُطلب منك تأكيد كلمة المرور.",
-    ),
-  approveDiscard: (l: Locale, list: string) =>
-    t(l, `The other pending proposals (${list}) will be discarded.`, `승인 대기 중인 다른 제안(${list})은 폐기됩니다.`, `ستُلغى المقترحات الأخرى بانتظار الاعتماد (${list}).`),
-  withdrawTitle: (l: Locale, n: number) => t(l, `Withdraw proposal ${n}`, `제안 ${n} 철회`, `سحب المقترح ${n}`),
-  withdrawImpact: (l: Locale) =>
-    t(
-      l,
-      "The proposal is deleted and can no longer be approved. The current policy does not change.",
-      "제안이 삭제되어 더 이상 승인할 수 없습니다. 현재 정책은 바뀌지 않습니다.",
-      "يُحذف المقترح ولا يمكن اعتماده بعد ذلك. لا تتغيّر السياسة الحالية.",
-    ),
-  doneProposed: (l: Locale, n: string) =>
-    t(l, `${n} submitted. Another administrator must approve it.`, `${n}을(를) 제출했습니다. 다른 관리자의 승인이 필요합니다.`, `أُرسل ${n}. يلزم اعتماده من مسؤول آخر.`),
-  doneApproved: (l: Locale, n: number) =>
-    t(l, `Proposal ${n} approved. The new policy is in effect.`, `제안 ${n}을(를) 승인했습니다. 새 정책이 적용되었습니다.`, `اعتُمد المقترح ${n}. السياسة الجديدة سارية الآن.`),
-  doneWithdrawn: (l: Locale, n: number) => t(l, `Proposal ${n} withdrawn.`, `제안 ${n}을(를) 철회했습니다.`, `سُحب المقترح ${n}.`),
   saveFailed: (l: Locale) => t(l, "Could not save this change", "변경을 저장하지 못했습니다", "تعذّر حفظ هذا التغيير"),
   refusedTitle: (l: Locale) => t(l, "This change was refused", "이 변경이 거부되었습니다", "رُفض هذا التغيير"),
   refusedBody: (l: Locale) =>
     t(
       l,
-      "A proposal must be approved by a different administrator, and only its proposer can withdraw it. The policy has been reloaded; check it, then try again.",
-      "제안은 제안자가 아닌 다른 관리자가 승인해야 하며, 철회는 제안자만 할 수 있습니다. 정책을 다시 불러왔으니 확인한 뒤 다시 시도하세요.",
-      "يجب أن يعتمد المقترحَ مسؤولٌ غير مقترحه، ولا يسحبه إلا مقترحه. أُعيد تحميل السياسة؛ تحقّق منها ثم حاول مجددًا.",
+      "A rule refused this step. The trust changes have been reloaded; check them, then try again.",
+      "규칙에 따라 이 단계가 거부되었습니다. 신뢰 변경을 다시 불러왔으니 확인한 뒤 다시 시도하세요.",
+      "رفضت قاعدةٌ هذه الخطوة. أُعيد تحميل تغييرات الثقة؛ تحقّق منها ثم حاول مجددًا.",
     ),
   stageBody: (l: Locale) =>
-    t(l, "This proposal is no longer pending. The policy has been reloaded.", "이 제안은 더 이상 승인 대기 상태가 아닙니다. 정책을 다시 불러왔습니다.", "لم يعد هذا المقترح بانتظار الاعتماد. أُعيد تحميل السياسة."),
+    t(l, "This change is no longer in a state that allows this step. It has been reloaded.", "이 변경은 더 이상 이 단계를 진행할 수 있는 상태가 아닙니다. 다시 불러왔습니다.", "لم يعد هذا التغيير في حالة تسمح بهذه الخطوة. أُعيد تحميله."),
   conflictBody: (l: Locale) =>
     t(
       l,
@@ -127,15 +72,6 @@ export const p = {
     t(l, "The policy service could not complete this change. Try again shortly.", "정책 서비스가 이 변경을 완료하지 못했습니다. 잠시 후 다시 시도하세요.", "تعذّر على خدمة السياسات إكمال هذا التغيير. أعد المحاولة بعد قليل."),
   loading: (l: Locale) => t(l, "Loading the sign-in policy…", "로그인 정책을 불러오는 중…", "جارٍ تحميل سياسة تسجيل الدخول…"),
   loadFailed: (l: Locale) => t(l, "The sign-in policy could not be loaded", "로그인 정책을 불러오지 못했습니다", "تعذّر تحميل سياسة تسجيل الدخول"),
-  noPolicy: (l: Locale) =>
-    t(
-      l,
-      "No sign-in policy has been applied yet. Until one is approved, administrators can sign in and members cannot.",
-      "아직 적용된 로그인 정책이 없습니다. 정책이 승인되기 전에는 관리자만 로그인할 수 있습니다.",
-      "لم تُطبَّق أي سياسة لتسجيل الدخول بعد. إلى أن تُعتمد سياسة، يستطيع المسؤولون فقط تسجيل الدخول.",
-    ),
-  noPending: (l: Locale) => t(l, "No pending proposals.", "승인 대기 중인 제안이 없습니다.", "لا توجد مقترحات بانتظار الاعتماد."),
-  noHistory: (l: Locale) => t(l, "No changes applied yet.", "아직 적용된 변경이 없습니다.", "لم تُطبَّق أي تغييرات بعد."),
   deniedTitle: (l: Locale) => t(l, "You can't manage the sign-in policy here", "여기에서는 로그인 정책을 관리할 수 없습니다", "لا يمكنك إدارة سياسة تسجيل الدخول هنا"),
   denied: (l: Locale) =>
     t(

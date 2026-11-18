@@ -91,7 +91,7 @@ func TestRevocation(t *testing.T) {
 	expect(t, "plan missing", second(g.r.Plan("w1/9")), ErrNotFound)
 	h := standard(t)
 	h.block([]string{"cat"}, 1)
-	reason(t, "blocked admin cannot act", second(h.r.Propose(Change{Kind: ChangeRevision, Revision: open()}, cat, h.strong())), ReasonBlocked)
+	reason(t, "blocked admin cannot act", second(h.r.Propose(planOf("q"), cat, h.strong())), ReasonBlocked)
 	if !errors.Is(Refusal{Reason: "x"}, ErrRejected) || (Refusal{Reason: "x"}).Error() != ErrRejected.Error()+": x" {
 		t.Error("refusal")
 	}

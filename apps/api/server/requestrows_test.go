@@ -26,7 +26,7 @@ func TestOnlyAdministratorsAreEligibleApprovers(t *testing.T) {
 		Scope: gate.Scope{WorkspaceID: SampleWorkspace, Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}}
 	f.must(f.s.admin.AddGrant(gate.Grant{ID: "installation-member", SubjectID: SampleMember, Terms: terms, Validity: gate.Validity{NotBefore: start, NotAfter: start.Add(time.Hour)}}))
 	asked := f.run(root, "access.request_revoke", "reader-"+SampleAdmin2, nil)
-	if row := f.requestRow(root, requestOf(asked)); fmt.Sprint(row["eligible_approvers"]) != "1" {
+	if row := f.requestRow(root, requestOf(asked)); fmt.Sprint(row["eligible_approvers"]) != "2" {
 		t.Errorf("a member holding installation administration counted as an approver %+v", row["eligible_approvers"])
 	}
 	f.s.caller = root.verifier(f)

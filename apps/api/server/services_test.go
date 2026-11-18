@@ -91,7 +91,7 @@ func TestServicesReadShape(t *testing.T) {
 		t.Errorf("limits %v", limits)
 	}
 	owners := fmt.Sprint(got.body["owners"])
-	if !strings.Contains(owners, SampleMember) || !strings.Contains(owners, MemberLogin) || len(got.body["owners"].([]any)) != 3 {
+	if !strings.Contains(owners, SampleMember) || !strings.Contains(owners, MemberLogin) || len(got.body["owners"].([]any)) != 4 {
 		t.Errorf("owners %s", owners)
 	}
 	f.code(t, "no session", f.servicesRead(actor{}), 401, string(commands.Unauthenticated))

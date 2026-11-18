@@ -71,7 +71,7 @@ func TestSignInEdges(t *testing.T) {
 	h.code(t, "bootstrap consumed", h.auth("redeem", hbody, hp), 422, CodeLinkInvalid)
 	k := setup(t, SeedSample)
 	k = k.ready()
-	if err := k.s.seedSecondAdmin(k.s.clock()); err == nil {
+	if err := k.s.seedAdmin(SampleAdmin2, Admin2Login, "sample-invite", k.s.clock()); err == nil {
 		t.Error("second admin twice")
 	}
 	full := fastPasswords()
@@ -228,18 +228,7 @@ func TestNoPolicyConditions(t *testing.T) {
 	}
 	g := setup(t, SeedSample).ready()
 	g.setPassword(AdminLogin, pw)
-	auth := authpolicy.Authentication{Method: authpolicy.MethodPassword, Factors: []string{authpolicy.FactorOTP}, At: g.s.clock()}
-	adminP := func(user string) authpolicy.Principal {
-		return authpolicy.Principal{User: user, Workspace: SampleWorkspace, Role: authpolicy.RoleAdministrator, Kind: authpolicy.KindHuman}
-	}
-	p, err := g.s.policy.Propose(authpolicy.Change{Kind: authpolicy.ChangeRevision, Revision: authpolicy.Revision{Workspace: SampleWorkspace,
-		Methods: []string{authpolicy.MethodPassword}, MFA: authpolicy.MFAEveryone, MaxAge: 12 * time.Hour}}, adminP(SampleAdmin), auth)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := g.s.policy.Approve(p.Number, adminP(SampleAdmin2), auth); err != nil {
-		t.Fatal(err)
-	}
+	g.publishDirect(authpolicy.Revision{Methods: []string{authpolicy.MethodPassword}, MFA: authpolicy.MFAEveryone, MaxAge: 12 * time.Hour})
 	gp := g.pre()
 	g.code(t, "admin refused by policy", g.auth("login", loginBodyFor(AdminLogin, pw), gp), 401, string(commands.Unauthenticated))
 	if len(g.s.sessions.byID) != 0 {

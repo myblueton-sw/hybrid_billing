@@ -36,6 +36,8 @@ type ledgerRow struct {
 
 func ledgerStartError(err error) error {
 	switch {
+	case errors.Is(err, ErrConfig):
+		return err
 	case errors.Is(err, decisionledger.ErrLocked):
 		return fmt.Errorf("%w: %w", ErrStart, err)
 	case errors.Is(err, decisionledger.ErrBound):
@@ -48,7 +50,8 @@ func ledgerStartError(err error) error {
 
 func (s *Server) openLedger() (bool, error) {
 	l, err := decisionledger.Open(decisionledger.Options{Dir: s.cfg.Data, MaxBytes: int64(s.cfg.Access.LedgerMaxMiB) * mib, AcceptNew: s.cfg.Access.AcceptNewLedger,
-		FailStartSync: s.faulty("ledger-start-sync"), Clock: s.clock, Random: rand.Reader})
+		FailStartSync: s.faulty("ledger-start-sync"), FailSync: func() bool { return s.faulty("ledger-sync") }, Clock: s.clock, Random: rand.Reader,
+		Successor: s.trustSuccessor})
 	if err != nil {
 		return false, ledgerStartError(err)
 	}
@@ -71,7 +74,7 @@ func (s *Server) Close() error {
 }
 
 func protectedGrant(g gate.GrantView) bool {
-	return g.ClientID != "" || g.Terms.Action == gate.AdministerInstallation
+	return g.ClientID != "" || gate.InstallationAction(g.Terms.Action)
 }
 
 func (s *Server) replayRevoke(revoke func() error) error {
@@ -132,6 +135,9 @@ func (s *Server) replayLedger() (bool, error) {
 	restored := []accesschange.Restored{}
 	for _, rec := range records {
 		d := rec.Decision
+		if d.Trust != nil {
+			continue
+		}
 		if n, ok := accesschange.Number(d.Request, accesschange.RequestPrefix); ok {
 			requests = max(requests, n)
 		}

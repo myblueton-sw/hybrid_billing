@@ -30,6 +30,7 @@ type session struct {
 	created       time.Time
 	authenticated time.Time
 	login         string
+	trustEpoch    uint64
 }
 
 type sessions struct {
@@ -74,7 +75,7 @@ func (s *sessions) oldest(login string, except identity.Verifier) (identity.Veri
 	return best.verifier, true
 }
 
-func (s *sessions) put(v identity.Verifier, workspace, login string, now time.Time) (string, error) {
+func (s *sessions) put(v identity.Verifier, workspace, login string, now time.Time, epoch uint64) (string, error) {
 	raw := random(tokenBytes)
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -82,7 +83,7 @@ func (s *sessions) put(v identity.Verifier, workspace, login string, now time.Ti
 		return "", ErrStart
 	}
 	csrf := encode(raw)
-	s.byID[v] = &session{verifier: v, workspace: workspace, csrf: csrf, created: now, authenticated: now, login: login}
+	s.byID[v] = &session{verifier: v, workspace: workspace, csrf: csrf, created: now, authenticated: now, login: login, trustEpoch: epoch}
 	return csrf, nil
 }
 
@@ -119,6 +120,18 @@ func (s *sessions) byLogin(login string) []identity.Verifier {
 	return out
 }
 
+func (s *sessions) below(workspace string, epoch uint64) []identity.Verifier {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := []identity.Verifier{}
+	for v, found := range s.byID {
+		if found.workspace == workspace && found.trustEpoch < epoch {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
 func (s *sessions) drop(v identity.Verifier) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -133,7 +146,7 @@ func (s *Server) openFor(triple identity.Triple, workspace string, secure bool) 
 func (s *Server) openSession(triple identity.Triple, workspace string, secure bool) (*http.Cookie, string, identity.Verifier, error) {
 	raw := random(tokenBytes)
 	v := verifierOf(raw)
-	csrf, err := s.sessions.put(v, workspace, triple.Subject, s.clock())
+	csrf, err := s.sessions.put(v, workspace, triple.Subject, s.clock(), s.currentEpoch(workspace))
 	if err != nil {
 		return nil, "", v, err
 	}

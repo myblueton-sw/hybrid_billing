@@ -95,15 +95,43 @@ test("only the latest request is accepted", () => {
   assert.equal(s.latest(second), true);
 });
 
-test("the policy read keeps the server times and defaults missing parts", async () => {
-  const page = { revision: "r4", policy: null, proposals: [{ number: 2 }], now: "2026-11-16T09:00:00Z", signed_in_at: "2026-11-16T08:00:00Z", authenticated_at: "2026-11-16T08:30:00Z",
-    act_until: "", step_up_seconds: 900, you: "u1" };
+test("the policy read keeps the server times and the trust model and defaults missing parts", async () => {
+  const change = {
+    id: "trust-0a1b2c3d-1", number: 1, state: "independently_approved", change_revision: 2, change_digest: "c".repeat(64), old_epoch: { value: "4294967297", generation: 1, number: 1 },
+    old_policy: 3, old_digest: "o".repeat(64), new_digest: "n".repeat(64), candidate: { methods: ["password"], mfa: "none", max_age_seconds: 3600, step_up: [{ action: "policy.change", max_age_seconds: 600, mfa: false }] },
+    proposer: "a", validator: "b", approver: "b", activator: "", superseded_by: "", superseded_epoch: null, earlier_run: false, run_started_at: "",
+    validation: { result: "validated", at: "t", evidence_digest: "e".repeat(64), evidence_current: true, items: [{ item: "test_login", result: "verified", reason: "", detail: "" }] },
+    impact: { members: 3, sessions: 2, affected_ids: ["a", "b", "c"], weakens_mfa: false, signs_out_everyone: true }, activation: null, job: null, invalidation: null,
+    can: { revise: false, validate: true, approve: false, activate: true, reject: true, cancel: false }, why_not: { approve: "not_validated", activate: "" }, act_until: "x",
+    history: [{ state: "draft", by: "a", at: "t", rationale: "why" }],
+  };
+  const page = {
+    revision: "r4", policy: { methods: ["password"], mfa: "none", max_age_seconds: 43200, step_up: [], number: 1, epoch: { value: "1", generation: 0, number: 1 }, proposer: "", validator: "", approver: "", activator: "", at: "t" },
+    now: "2026-11-16T09:00:00Z", signed_in_at: "2026-11-16T08:00:00Z", authenticated_at: "2026-11-16T08:30:00Z", act_until: "", step_up_seconds: 900, you: "u1", started_at: "s",
+    trust: { epoch: "1", epoch_generation: 0, epoch_number: 1, policy_number: 1, digest: "d", origin: "seed", carried_from: "", carried_line: 0, durable_unconfirmed: false, activated_at: "",
+      reset_at: "", older_record_ignored: false, proposer: "", validator: "", approver: "", activator: "", change: "", hold: { reason: "commit_unknown", since: "t" } },
+    ledger: { state: "ok", isolation_reason: "", problem_line: 0, records: 2, watermark: "2:x", generation: 0, generation_stated: false, not_durable: false },
+    rights: { propose: true, validate: true, approve: true, activate: true }, holders: { qualifying_people: 3, members: 3, needed: 3, enrolment: "not_decided", ready: true, missing: [] }, changes: [change],
+  };
   const { f, calls } = fake(200, page);
   const got = await adminClient("tok", f).policy();
   assert.equal(calls[0].url, "/api/v1/identity/policy");
   assert.deepEqual(got, page);
-  const empty = await adminClient("tok", fake(200, {}).f).policy();
-  assert.deepEqual(empty, { revision: "", policy: null, proposals: [], now: "", signed_in_at: "", authenticated_at: "", act_until: "", step_up_seconds: 0, you: "" });
+  const empty = await adminClient("tok", fake(200, { changes: [{ state: "nonsense" }], trust: { origin: "elsewhere" } }).f).policy();
+  assert.equal(empty.policy, null);
+  assert.equal(empty.trust.origin, "");
+  assert.equal(empty.trust.hold, null);
+  assert.equal(empty.ledger.state, "unknown");
+  assert.equal(empty.holders.needed, 3);
+  assert.equal(empty.changes[0].state, "draft");
+  assert.equal(empty.changes[0].validation, null);
+  assert.equal(empty.changes[0].impact.signs_out_everyone, true);
+});
+
+test("trust refusals map to their own failures", () => {
+  const cases: [string, AdminError["failure"]][] = [["self_approval_denied", "self"], ["authority_epoch_conflict", "epoch"], ["approval_stale", "approval_stale"],
+    ["evidence_stale", "evidence_stale"], ["independent_approval_required", "needs_approval"]];
+  for (const [code, failure] of cases) assert.equal(failureOf(409, { code }).failure, failure, code);
 });
 
 test("the access read and preview", async () => {
@@ -314,7 +342,7 @@ test("reads are never prompted and other refusals pass through", async () => {
   const read = scripted([[403, refusal]]);
   await assert.rejects(adminClient("t", read.f, stepUp).users(), (e: AdminError) => e.failure === "reauth");
   const mfa = scripted([[422, { code: "prerequisite_failed" }]]);
-  await assert.rejects(adminClient("t", mfa.f, stepUp).command("policy.propose", "policy", "r1", "x", {}, attempt()), (e: AdminError) => e.failure === "refused");
+  await assert.rejects(adminClient("t", mfa.f, stepUp).command("trust.propose", "trust", "r1", "x", {}, attempt()), (e: AdminError) => e.failure === "refused");
   assert.equal(prompts, 0);
   assert.equal(read.calls.length + mfa.calls.length, 2);
 });

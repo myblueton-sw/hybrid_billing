@@ -94,7 +94,7 @@ func TestManyUsersPage(t *testing.T) {
 		t.Fatalf("first page %d %v", len(got.body["users"].([]any)), got.body["next"])
 	}
 	rest := f.list(root, "?limit=100&after="+got.body["next"].(string))
-	if len(rest.body["users"].([]any)) != 8 || rest.body["next"] != "" {
+	if len(rest.body["users"].([]any)) != 9 || rest.body["next"] != "" {
 		t.Errorf("second page %d", len(rest.body["users"].([]any)))
 	}
 	if row := f.row(root, "sample-member"); row != nil {
@@ -111,7 +111,7 @@ func TestManyUsersPage(t *testing.T) {
 }
 
 func TestLimitsFromIdentityAndPasswords(t *testing.T) {
-	f := setupWith(t, func(c *Config) { c.Identity.PendingInvitations = 2; c.Passwords.Links = 4 })
+	f := setupWith(t, func(c *Config) { c.Identity.PendingInvitations = 2; c.Passwords.Links = 5 })
 	root := f.as(AdminLogin)
 	user, _ := f.created(root, "one@example.invalid", "member")
 	f.run(root, "identity.revoke_invitation", user, nil)

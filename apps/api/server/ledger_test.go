@@ -300,7 +300,7 @@ func TestLedgerIsolation(t *testing.T) {
 	if found, _ := h.s.grantView("reader-" + SampleAdmin2); found.Closed {
 		t.Error("a revocation made in isolation was replayed")
 	}
-	replaced := h.restart(func(c *Config) { c.Access.AcceptNewLedger = true })
+	replaced := h.restart(func(c *Config) { c.Access.AcceptNewLedger, c.Access.AcceptTrustReset = true, true })
 	st := replaced.ledgerState(replaced.as(AdminLogin))
 	if st["state"] != "ok" || st["replace_reason"] != "integrity_failed" || st["replaces"] == "" || !strings.HasPrefix(st["replaced_file"].(string), "ledger.jsonl.replaced-") {
 		t.Errorf("replaced %+v", st)
@@ -336,7 +336,7 @@ func TestLedgerMissingWithMarkerIsolates(t *testing.T) {
 	if _, err := os.Stat(ledgerFile(f)); !errors.Is(err, fs.ErrNotExist) {
 		t.Error("a missing ledger was recreated without the operator")
 	}
-	h := g.restart(func(c *Config) { c.Access.AcceptNewLedger = true })
+	h := g.restart(func(c *Config) { c.Access.AcceptNewLedger, c.Access.AcceptTrustReset = true, true })
 	if st := h.ledgerState(h.as(AdminLogin)); st["state"] != "ok" || st["replaces"] != "unknown" || st["replace_reason"] != "missing" {
 		t.Errorf("replaced %+v", st)
 	}
@@ -466,7 +466,7 @@ func TestHeldLockFailsStart(t *testing.T) {
 	g := setup(t, SeedSample)
 	g.s.cfg.Data = f.s.cfg.Data
 	err := g.s.Start()
-	if !errors.Is(err, ErrStart) || !strings.Contains(err.Error(), "in use by another process") || g.s.counter != 17 {
+	if !errors.Is(err, ErrStart) || !strings.Contains(err.Error(), "in use by another process") || g.s.counter != 18 {
 		t.Errorf("held lock %v counter %d", err, g.s.counter)
 	}
 	for _, c := range []struct {
@@ -752,16 +752,16 @@ func TestReplayCountsOnlyWhatItCloses(t *testing.T) {
 		present bool
 		replay  string
 	}{
-		"absent grant":         {grant("gone"), nil, 17, false, "absent"},
-		"protected grant":      {grant("reader-console"), nil, 17, true, "protected"},
-		"open grant":           {grant("reader-" + SampleAdmin2), nil, 18, true, "reapplied"},
-		"already closed grant": {grant("reader-" + SampleAdmin2), func(g world) error { return g.s.admin.RevokeGrant("reader-"+SampleAdmin2, 1) }, 18, true, "reapplied"},
-		"absent delegation":    {delegation("del-s"), nil, 17, false, "absent"},
-		"open delegation":      {delegation("del-s"), add, 19, true, "reapplied"},
+		"absent grant":         {grant("gone"), nil, 19, false, "absent"},
+		"protected grant":      {grant("reader-console"), nil, 19, true, "protected"},
+		"open grant":           {grant("reader-" + SampleAdmin2), nil, 20, true, "reapplied"},
+		"already closed grant": {grant("reader-" + SampleAdmin2), func(g world) error { return g.s.admin.RevokeGrant("reader-"+SampleAdmin2, 1) }, 20, true, "reapplied"},
+		"absent delegation":    {delegation("del-s"), nil, 19, false, "absent"},
+		"open delegation":      {delegation("del-s"), add, 21, true, "reapplied"},
 		"already closed delegation": {delegation("del-s"), func(g world) error {
 			add(g)
 			return g.s.admin.RevokeDelegation("del-s", 1)
-		}, 18, true, "reapplied"},
+		}, 20, true, "reapplied"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			g, counter := replayScenario(t, c.record, c.step)

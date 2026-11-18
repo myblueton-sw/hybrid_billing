@@ -2,7 +2,7 @@ import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
 import { counted, type Plural } from "../../../../shared/plural";
 
-const units = {
+export const units = {
   days: { en: ["1 day", "{n} days"], ko: "{n}일", ar: ["{n} يوم", "يوم واحد", "يومين", "{n} أيام", "{n} يومًا", "{n} يوم"] },
   hours: { en: ["1 hour", "{n} hours"], ko: "{n}시간", ar: ["{n} ساعة", "ساعة واحدة", "ساعتان", "{n} ساعات", "{n} ساعة", "{n} ساعة"] },
   requests: { en: ["1 request", "{n} requests"], ko: "{n}건", ar: ["{n} طلب", "طلب واحد", "طلبان", "{n} طلبات", "{n} طلبًا", "{n} طلب"] },

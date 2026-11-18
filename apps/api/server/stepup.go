@@ -7,6 +7,7 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
+	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 )
 
@@ -15,7 +16,7 @@ const (
 	NextReauthenticate   = "reauthenticate"
 	ActionSensitive      = "command.sensitive"
 	stepUpDefault        = 15 * time.Minute
-	approveCommand       = "policy.approve"
+	validateCommand      = "trust.validate"
 	maxRequestID         = 128
 )
 
@@ -40,7 +41,7 @@ var postRoutes = []postRoute{
 func (s *Server) stepUp(command string) bool { return s.mutating[command] && !exempt[command] }
 
 func stepUpAction(command string) string {
-	if strings.HasPrefix(command, "policy.") {
+	if strings.HasPrefix(command, "trust.") {
 		return authpolicy.ActionPolicyChange
 	}
 	return ActionSensitive
@@ -55,29 +56,30 @@ func tighten(limit time.Duration, mfa bool, r authpolicy.Revision, action string
 	return limit, mfa
 }
 
-func (s *Server) stepUpTerms(workspace, command, target string) (time.Duration, bool) {
+func (s *Server) stepUpTerms(workspace, user, command, target string) (time.Duration, bool) {
 	action := stepUpAction(command)
 	limit, mfa := stepUpDefault, false
 	if current, err := s.policy.Policy(workspace); err == nil {
 		limit, mfa = tighten(limit, mfa, current.Revision, action)
 	}
-	if command != approveCommand {
+	if command != validateCommand || s.trust == nil || !s.holdsRight(user, gate.TrustValidate, s.clock()) {
 		return limit, mfa
 	}
-	view, err := s.policy.Proposal(proposalNumber(target))
-	if err != nil || view.Change.Kind != authpolicy.ChangeRevision {
+	view, ok := s.trust.Get(target, workspace)
+	if !ok {
 		return limit, mfa
 	}
-	limit, mfa = tighten(limit, mfa, view.Change.Revision, action)
-	return min(limit, view.Change.Revision.MaxAge), mfa
+	candidate := revisionFor(workspace, view.Candidate)
+	limit, mfa = tighten(limit, mfa, candidate, action)
+	return min(limit, candidate.MaxAge), mfa
 }
 
-func (s *Server) stepUpCheck(caller identity.Verifier, command, target string) commands.Code {
+func (s *Server) stepUpCheck(caller identity.Verifier, user, command, target string) commands.Code {
 	found, ok := s.sessions.get(caller)
 	if !ok {
 		return commands.Unauthenticated
 	}
-	limit, mfa := s.stepUpTerms(found.workspace, command, target)
+	limit, mfa := s.stepUpTerms(found.workspace, user, command, target)
 	if mfa {
 		return commands.PrerequisiteFailed
 	}
@@ -125,7 +127,7 @@ func stepUpRefusal(code commands.Code, request string) commands.Result {
 }
 
 func (s *Server) stepUpRoute(w http.ResponseWriter, found session, user, route, request string) bool {
-	code := s.stepUpCheck(found.verifier, route, "")
+	code := s.stepUpCheck(found.verifier, user, route, "")
 	if code == "" {
 		return true
 	}

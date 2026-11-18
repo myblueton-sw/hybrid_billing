@@ -83,7 +83,7 @@ func (f accessFacts) covered(user string, c accesschange.Change) bool {
 func (f accessFacts) ceilingFor(c accesschange.Change) (gate.GrantView, bool) {
 	var found gate.GrantView
 	for _, g := range f.grants {
-		if g.ClientID == ConsoleClient && g.Active && g.Terms.Action != gate.AdministerInstallation && g.Terms.Scope.WorkspaceID == f.s.bootWorkspace && fullScope(g.Terms) &&
+		if g.ClientID == ConsoleClient && g.Active && !gate.InstallationAction(g.Terms.Action) && g.Terms.Scope.WorkspaceID == f.s.bootWorkspace && fullScope(g.Terms) &&
 			string(g.Terms.Action) == c.Action && g.Terms.Kind == c.ResourceKind && len(c.Fields) > 0 == (len(g.Terms.Fields) > 0) && covers(g.Terms.Fields, c.Fields) &&
 			g.Validity.NotAfter.After(found.Validity.NotAfter) {
 			found = g
@@ -165,7 +165,7 @@ func (h requestCommand) Resolve(workspace, target string) (commands.Target, comm
 	case "request_grant":
 		found = target == grantsTarget
 	case "request_revoke":
-		_, found = s.grantView(target)
+		_, found = s.accessGrant(target)
 	default:
 		n, ok := accesschange.Number(target, accesschange.RequestPrefix)
 		_, known := s.changes.Request(n, workspace)

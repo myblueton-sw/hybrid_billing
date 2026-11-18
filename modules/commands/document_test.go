@@ -165,7 +165,7 @@ func TestOpenAPIDocument(t *testing.T) {
 		codes = append(codes, string(code))
 	}
 	sort.Strings(codes)
-	if strings.Join(listed, ",") != strings.Join(codes, ",") || len(codes) != 15 {
+	if strings.Join(listed, ",") != strings.Join(codes, ",") || len(codes) != 19 {
 		t.Errorf("error catalogue %v", listed)
 	}
 	empty, err := New(f.g, testLimits)
@@ -189,6 +189,8 @@ func TestTheErrorCatalogue(t *testing.T) {
 		UnsupportedCommand: {404, false, NextNone}, UnsupportedCapability: {501, false, NextNone},
 		AuthorityUnavailable: {503, true, NextRetry}, DependencyUnavailable: {503, true, NextRetry}, InternalError: {500, false, NextNone},
 		RateLimited: {429, true, NextRetry}, IdempotencyKeyExpired: {409, false, NextInspect},
+		AuthorityEpochConflict: {409, false, NextInspect}, ApprovalStale: {409, false, NextInspect}, EvidenceStale: {409, false, NextInspect},
+		IndependentApprovalRequired: {422, false, NextCorrect},
 	}
 	if len(errorRules) != len(want) {
 		t.Fatalf("%d codes", len(errorRules))
@@ -203,7 +205,12 @@ func TestTheErrorCatalogue(t *testing.T) {
 			t.Errorf("handler code %s is not in the catalogue", code)
 		}
 	}
-	if len(handlerCodes) != 7 || handlerCodes[Unauthenticated] || handlerCodes[InternalError] || handlerCodes[IdempotencyConflict] {
+	for _, code := range []Code{SelfApprovalDenied, AuthorityEpochConflict, ApprovalStale, EvidenceStale, IndependentApprovalRequired} {
+		if !handlerCodes[code] {
+			t.Errorf("%s is not accepted from handlers", code)
+		}
+	}
+	if len(handlerCodes) != 12 || handlerCodes[Unauthenticated] || handlerCodes[InternalError] || handlerCodes[IdempotencyConflict] {
 		t.Errorf("handler codes %v", handlerCodes)
 	}
 }

@@ -392,7 +392,7 @@ export const s = {
   range: (l: Locale, min: number, max: number, def: number) =>
     t(l, `${min}–${max}, default ${def}`, `${min}~${max}, 기본값 ${def}`, `من ${min} إلى ${max}، الافتراضي ${def}`),
   source: {
-    default: (l: Locale) => t(l, "Installation default", "설치 기본값", "القيمة الافتراضية للتثبيت"),
+    default: (l: Locale) => t(l, "Installation default", "설치 기본값", "الإعداد الافتراضي للتثبيت"),
     start_flag: (l: Locale) => t(l, "Set when the server started", "서버 시작 시 지정", "حُدّد عند بدء الخادم"),
   },
   name: {

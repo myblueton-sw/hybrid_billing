@@ -163,3 +163,9 @@ test("waiting counts and Arabic request wording", async () => {
   assert.match(q.approveLead("ar"), /المحتوى وبصمة الطلب/);
   assert.match(q.revokeRequestLead("ar", "W"), /ويمكن أن يعتمده W أيضًا/);
 });
+
+test("the settings source words use the glossary term for installation default in every locale", () => {
+  assert.equal(settingSource("ar", { source: "default" } as never), "الإعداد الافتراضي للتثبيت");
+  assert.equal(settingSource("ko", { source: "default" } as never), "설치 기본값");
+  assert.equal(settingSource("en", { source: "default" } as never), "Installation default");
+});

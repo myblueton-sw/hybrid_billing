@@ -19,93 +19,85 @@ type proposalStore struct {
 	name      string
 	prefix    string
 	rechecked bool
-	count     func(s *Server, user string) int
+	each      func(s *Server, visit func(proposer string))
+}
+
+func (p proposalStore) count(s *Server, user string) int {
+	return p.tally(s)[user]
+}
+
+func (p proposalStore) tally(s *Server) map[string]int {
+	out := map[string]int{}
+	p.each(s, func(proposer string) { out[proposer]++ })
+	return out
 }
 
 var proposalStores = []proposalStore{
-	{"trust_changes", "trust", true, func(s *Server, user string) int {
-		n := 0
+	{"trust_changes", "trust", true, func(s *Server, visit func(string)) {
 		for _, v := range s.trust.List(s.bootWorkspace) {
-			if v.Proposer == user && trustchange.Open(v.State) {
-				n++
+			if trustchange.Open(v.State) {
+				visit(v.Proposer)
 			}
 		}
-		return n
 	}},
-	{"access_requests", "access", true, func(s *Server, user string) int {
-		n := 0
+	{"access_requests", "access", true, func(s *Server, visit func(string)) {
 		for _, v := range s.changes.Requests(s.bootWorkspace) {
-			if v.Proposer == user && v.State == accesschange.StatePending {
-				n++
+			if v.State == accesschange.StatePending {
+				visit(v.Proposer)
 			}
 		}
-		return n
 	}},
-	{"retention_proposals", "retention", false, func(s *Server, user string) int {
-		n := 0
+	{"retention_proposals", "retention", false, func(s *Server, visit func(string)) {
 		for _, e := range s.ret.entries {
-			if e.view.Proposer == user && e.view.State == retention.ProposalPending {
-				n++
+			if e.view.State == retention.ProposalPending {
+				visit(e.view.Proposer)
 			}
 		}
-		return n
 	}},
-	{"recovery_proposals", "recovery", false, func(s *Server, user string) int {
-		n := 0
+	{"recovery_proposals", "recovery", false, func(s *Server, visit func(string)) {
 		for _, e := range s.rec.entries {
-			if e.view.Proposer == user && e.view.State == recovery.ProposalPending {
-				n++
+			if e.view.State == recovery.ProposalPending {
+				visit(e.view.Proposer)
 			}
 		}
-		return n
 	}},
-	{"installation_proposals", "installation", false, func(s *Server, user string) int {
-		n := 0
+	{"installation_proposals", "installation", false, func(s *Server, visit func(string)) {
 		for _, e := range s.install.entries {
-			if e.view.Proposer == user && e.view.State == installer.ProposalPending {
-				n++
+			if e.view.State == installer.ProposalPending {
+				visit(e.view.Proposer)
 			}
 		}
-		return n
 	}},
-	{"integration_proposals", "integrations", false, func(s *Server, user string) int {
-		n := 0
+	{"integration_proposals", "integrations", false, func(s *Server, visit func(string)) {
 		for _, e := range s.integ.entries {
-			if e.view.Proposer == user && e.view.State == plugins.ProposalPending {
-				n++
+			if e.view.State == plugins.ProposalPending {
+				visit(e.view.Proposer)
 			}
 		}
 		for _, e := range s.integ.subscriptions {
-			if v, err := s.subscriptionOf(e.id); err == nil && e.proposer == user && v.State == webhooks.SubscriptionProposed {
-				n++
+			if v, err := s.subscriptionOf(e.id); err == nil && v.State == webhooks.SubscriptionProposed {
+				visit(e.proposer)
 			}
 		}
 		for _, requests := range []map[string]letterRequest{s.integ.redeliver, s.integ.dismiss} {
 			for _, r := range requests {
-				if r.by == user {
-					n++
-				}
+				visit(r.by)
 			}
 		}
-		return n
 	}},
-	{"relationship_plans", "relationship", false, func(s *Server, user string) int {
-		n := 0
+	{"relationship_plans", "relationship", false, func(s *Server, visit func(string)) {
 		for _, m := range s.plans.byKey {
-			if m.proposer == user && m.closed == "" && m.activated == 0 {
-				n++
+			if m.closed == "" && m.activated == 0 {
+				visit(m.proposer)
 			}
 		}
-		return n
 	}},
-	{"release_evidence_proposals", "release_evidence", false, func(s *Server, user string) int {
-		n := 0
+	{"release_evidence_proposals", "release_evidence", false, func(s *Server, visit func(string)) {
 		for _, e := range s.ev.entries {
-			if e.proposer == user && e.state == entryPending {
-				n++
+			if e.state == entryPending {
+				visit(e.proposer)
 			}
 		}
-		return n
 	}},
 }
 
@@ -142,7 +134,7 @@ func (s *Server) everyone() (roster, error) {
 	}
 }
 
-func (s *Server) classify(caller string, ids []string, effect bulkrevoke.Effect, r roster, now time.Time) ([]bulkrevoke.Target, []bulkrevoke.Exclusion) {
+func (s *Server) classify(caller string, ids []string, effect bulkrevoke.Effect, r roster, now time.Time, still func(string) bool) ([]bulkrevoke.Target, []bulkrevoke.Exclusion) {
 	targets, exclusions := []bulkrevoke.Target{}, []bulkrevoke.Exclusion{}
 	for _, id := range ids {
 		login, _ := s.dir.loginOf(id)
@@ -154,6 +146,8 @@ func (s *Server) classify(caller string, ids []string, effect bulkrevoke.Effect,
 			reason = bulkrevoke.ExcludedSelf
 		case !known || u.Kind != identity.Human || u.State == identity.Departed || effect == bulkrevoke.SuspendUser && !member:
 			reason, login = bulkrevoke.ExcludedNotFound, ""
+		case still != nil && !still(id):
+			reason = bulkrevoke.ExcludedNoLongerMatches
 		case !member:
 			reason = bulkrevoke.ExcludedNoMembership
 		case effect == bulkrevoke.SuspendMembership && !m.Effective, effect == bulkrevoke.SuspendUser && u.State != identity.Active:
@@ -178,14 +172,33 @@ func (s *Server) sessionsOf(user string) []identity.Verifier {
 	return s.sessions.byLogin(login)
 }
 
-func (s *Server) pickupsOf(user string) int {
-	own := map[identity.Verifier]bool{}
-	for _, v := range s.sessionsOf(user) {
-		own[v] = true
+type sideIndex struct {
+	sessions map[string][]identity.Verifier
+	owner    map[identity.Verifier]string
+	byTarget map[string][]pickup
+	byLogin  map[string][]pickup
+}
+
+func (s *Server) sideIndex() sideIndex {
+	out := sideIndex{sessions: s.sessions.logins(), owner: map[identity.Verifier]string{}, byTarget: map[string][]pickup{}, byLogin: map[string][]pickup{}}
+	for login, list := range out.sessions {
+		for _, v := range list {
+			out.owner[v] = login
+		}
 	}
-	n := 0
 	for _, p := range s.dir.pickups {
-		if p.target == user || own[p.session] {
+		out.byTarget[p.target] = append(out.byTarget[p.target], p)
+		if login, ok := out.owner[p.session]; ok {
+			out.byLogin[login] = append(out.byLogin[login], p)
+		}
+	}
+	return out
+}
+
+func (x sideIndex) pickupsOf(user, login string) int {
+	n := len(x.byTarget[user])
+	for _, p := range x.byLogin[login] {
+		if p.target != user {
 			n++
 		}
 	}
@@ -210,6 +223,7 @@ func (s *Server) ownedServices(targets map[string]bool) int {
 
 func (s *Server) impact(targets []bulkrevoke.Target, r roster, now time.Time) bulkrevoke.Impact {
 	out := bulkrevoke.Impact{ComputedAt: now, People: len(targets)}
+	side := s.sideIndex()
 	leaving := map[string]bool{}
 	for _, t := range targets {
 		leaving[t.User] = true
@@ -230,8 +244,9 @@ func (s *Server) impact(targets []bulkrevoke.Target, r roster, now time.Time) bu
 		if s.holdsRight(t.User, gate.RevokeAccessInBulk, now) {
 			out.BulkHolders++
 		}
-		out.Sessions += len(s.sessionsOf(t.User))
-		out.Pickups += s.pickupsOf(t.User)
+		login, _ := s.dir.loginOf(t.User)
+		out.Sessions += len(side.sessions[login])
+		out.Pickups += side.pickupsOf(t.User, login)
 	}
 	out.ServiceUsers = s.ownedServices(leaving)
 	anchors := s.anchors(r.members, now)
@@ -240,9 +255,9 @@ func (s *Server) impact(targets []bulkrevoke.Target, r roster, now time.Time) bu
 	}
 	out.AnchorsAfter = len(anchors)
 	for _, store := range proposalStores {
-		count := 0
+		tally, count := store.tally(s), 0
 		for _, t := range targets {
-			count += store.count(s, t.User)
+			count += tally[t.User]
 		}
 		out.Pending = append(out.Pending, bulkrevoke.PendingStore{Store: store.name, Count: count, Rechecked: store.rechecked})
 	}

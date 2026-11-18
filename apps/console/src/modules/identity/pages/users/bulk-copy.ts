@@ -17,8 +17,6 @@ export const b = {
   none: (l: Locale) => t(l, "No one selected. Use the checkboxes to choose people.", "선택한 사람이 없습니다. 확인란으로 사람을 고르세요.", "لم يُحدَّد أحد. استخدم خانات الاختيار لاختيار الأشخاص."),
   prepare: (l: Locale) => t(l, "Prepare revocation", "회수 준비", "تحضير الإبطال"),
   clear: (l: Locale) => t(l, "Clear", "지우기", "مسح"),
-  filterWide: (l: Locale) =>
-    t(l, "Selecting every person in a search result is not available yet. Load more rows to add them.", "검색 결과 전체 선택은 아직 제공하지 않습니다. 더 불러온 뒤 선택하세요.", "لا يتوفر بعد تحديد كل الأشخاص في نتيجة بحث. حمّل مزيدًا من الصفوف لإضافتهم."),
   limit: (l: Locale, max: number) =>
     t(l, `At most ${people(l, max)} can be in one revocation. Remove someone before adding more.`, `한 번의 회수에는 최대 ${max}명까지 넣을 수 있습니다. 더 추가하려면 먼저 누군가를 빼세요.`,
       `يمكن أن يضم الإبطال الواحد ${people(l, max)} على الأكثر. أزل أحدًا قبل إضافة المزيد.`),
@@ -63,7 +61,7 @@ export const b = {
   pendingLimit: (l: Locale) =>
     t(l, "The server did not start a new draft. This workspace has reached its limit of lists waiting to run. On Revocation jobs, wait until a prepared list is executed, discarded or expires.",
       "서버가 새 초안을 만들지 않았습니다. 이 업무 공간의 대기 목록 한도에 도달했습니다. 회수 작업 탭에서 준비된 목록이 실행·버림·만료될 때까지 기다리세요.",
-      "لم يبدأ الخادم مسودة جديدة. بلغت مساحة العمل حد القوائم قيد الانتظار. في «مهام الإبطال» انتظر حتى تُنفَّذ قائمة محضَّرة أو تُتجاهَل أو تنتهي صلاحيتها."),
+      "لم يبدأ الخادم مسودة جديدة. بلغت مساحة العمل حد القوائم بانتظار التنفيذ. في «مهام الإبطال» انتظر حتى تُنفَّذ قائمة محضَّرة أو تُتجاهَل أو تنتهي صلاحيتها."),
   openJobs: (l: Locale) => t(l, "Open Revocation jobs", "회수 작업 열기", "فتح «مهام الإبطال»"),
   impactTitle: (l: Locale) => t(l, "Impact preview", "영향 미리보기", "معاينة الأثر"),
   bulkN: (l: Locale, n: string) => t(l, `Bulk revocation ${n}`, `대량 회수 ${n}`, `الإبطال الجماعي ${n}`),
@@ -111,7 +109,7 @@ export const b = {
   otherWorkspaces: (l: Locale) => t(l, "Other workspaces are not changed", "다른 업무 공간은 바뀌지 않습니다", "لا تتغير مساحات العمل الأخرى"),
   reason: (l: Locale, r: string) =>
     ({ self: t(l, "Self", "본인", "الشخص نفسه"), not_found: t(l, "Not found", "찾을 수 없음", "غير موجود"), no_membership: t(l, "No membership", "소속 없음", "لا عضوية"),
-      already_revoked: t(l, "Already revoked", "이미 회수됨", "مُبطَل مسبقًا"), changed_since_preview: t(l, "Held: changed after preview", "보류: 미리보기 후 변경됨", "مُستبعَد مؤقتًا: تغيّر بعد المعاينة") } as Record<string, string>)[r] ?? r,
+      already_revoked: t(l, "Already revoked", "이미 회수됨", "مُبطَل مسبقًا"), no_longer_matches: t(l, "No longer matches the filters", "더 이상 필터에 맞지 않음", "لم يعد يطابق عوامل التصفية"), changed_since_preview: t(l, "Held: changed after preview", "보류: 미리보기 후 변경됨", "مُستبعَد مؤقتًا: تغيّر بعد المعاينة") } as Record<string, string>)[r] ?? r,
   excludedN: (l: Locale, n: number) => t(l, `Excluded (${n})`, `제외(${n})`, `مستثنى (غير محسوب): ${n}`),
   toRevokeN: (l: Locale, n: number) => t(l, `People to revoke (${n})`, `회수 대상(${n})`, `الأشخاص المراد إبطالهم (${n})`),
   showing: (l: Locale, a: number, n: number) => t(l, `Showing ${a} of ${n}.`, `${n}명 중 ${a}명 표시.`, `يُعرض ${a} من ${n}.`),
@@ -242,8 +240,12 @@ export const b = {
   settingName: (l: Locale, name: string) =>
     ({ role_period_max_days: t(l, "Longest role period", "최장 역할 기간", "أطول مدة دور"), clock_skew_tolerance_hours: t(l, "Clock skew tolerance", "시계 차이 허용 범위", "تفاوت الساعة المسموح"),
       role_period_warning_days: t(l, "Ends soon window", "곧 종료 표시 기간", "نافذة قرب الانتهاء"), bulk_revocation_max_targets: t(l, "People per bulk revocation", "대량 회수당 인원", "الأشخاص لكل إبطال جماعي"),
-      bulk_revocation_manifest_minutes: t(l, "Draft and prepared list lifetime", "초안·준비 목록 유효 시간", "عمر المسودة والقائمة المحضَّرة"), bulk_revocation_pending: t(l, "Lists waiting to run per workspace", "업무 공간당 대기 목록", "القوائم قيد الانتظار لكل مساحة عمل"),
-      bulk_revocation_jobs_kept: t(l, "Bulk jobs kept", "보관하는 대량 작업", "المهام الجماعية المحفوظة") } as Record<string, string>)[name] ?? name,
+      bulk_revocation_manifest_minutes: t(l, "Draft and prepared list lifetime", "초안·준비 목록 유효 시간", "عمر المسودة والقائمة المحضَّرة"), bulk_revocation_pending: t(l, "Lists waiting to run per workspace", "업무 공간당 대기 목록", "القوائم بانتظار التنفيذ لكل مساحة عمل"),
+      bulk_revocation_jobs_kept: t(l, "Bulk jobs kept", "보관하는 대량 작업", "المهام الجماعية المحفوظة"),
+      bulk_revocation_max_matching: t(l, "People per filter-wide revocation", "필터 전체 회수당 인원", "الأشخاص لكل إبطال حسب التصفية"),
+      bulk_revocation_retained_people_max: t(l, "People kept in revocation lists in memory", "메모리에 보관하는 회수 목록 인원", "الأشخاص المحفوظون في قوائم الإبطال في الذاكرة"),
+      user_filter_scan: t(l, "People examined per search page", "검색 페이지당 확인 인원", "الأشخاص المفحوصون لكل صفحة بحث"),
+      user_count_scan: t(l, "People examined per count", "집계당 확인 인원", "الأشخاص المفحوصون لكل عدّ") } as Record<string, string>)[name] ?? name,
   settingCols: (l: Locale) => [t(l, "Setting", "설정", "الإعداد"), t(l, "Value", "값", "القيمة"), t(l, "Default", "기본값", "الافتراضي"), t(l, "Allowed", "허용 범위", "المسموح"), t(l, "Source", "출처", "المصدر")],
   source: (l: Locale, s: string) => (s === "start_flag" ? t(l, "Start flag", "시작 플래그", "علم البدء") : t(l, "Default", "기본값", "الافتراضي")),
   notices: (l: Locale) => t(l, "Notices", "알림", "تنبيهات"),

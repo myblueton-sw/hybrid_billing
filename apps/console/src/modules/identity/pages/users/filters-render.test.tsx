@@ -130,7 +130,7 @@ test("the select-loaded control is not rendered when nothing is loaded", async (
   const { SelectionBar, HeaderCheck } = await import("./Selection");
   const bar = (loaded: string[]) => renderToStaticMarkup(<SelectionBar l="en" selected={new Set(["u1"])} loaded={loaded} limit={500} atLimit={false} names={{}} onPrepare={noop} onClear={noop} onRemove={noop} onAll={noop} />);
   assert.ok(bar(["u2"]).includes("data-select-loaded"));
-  assert.ok(!bar([]).includes("data-select-loaded") && bar([]).includes("m01-notloaded") && bar([]).includes("m01-selnote"));
+  assert.ok(!bar([]).includes("data-select-loaded") && bar([]).includes("m01-notloaded") && !bar([]).includes("m01-selnote"));
   const cell = renderToStaticMarkup(<table><thead><tr><HeaderCheck l="en" selected={new Set()} loaded={[]} onAll={noop} cell /></tr></thead></table>);
   assert.ok(cell.includes('<th scope="col" class="m01-check"></th>'), cell);
 });

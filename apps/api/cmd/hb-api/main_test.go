@@ -99,7 +99,10 @@ func TestAccessSettingFlags(t *testing.T) {
 	if n, ok := settingNumber("100000"); !ok || n != 100000 {
 		t.Error("six digits")
 	}
-	for _, raw := range []string{"", "1234567", "+5", "-5", "05", "0x10", "1.5", " 5"} {
+	if n, ok := settingNumber("20000000"); !ok || n != 20000000 {
+		t.Error("eight digits")
+	}
+	for _, raw := range []string{"", "123456789", "+5", "-5", "05", "0x10", "1.5", " 5"} {
 		if n, ok := settingNumber(raw); ok || n != 0 {
 			t.Errorf("%q gave %d %v", raw, n, ok)
 		}
@@ -401,5 +404,51 @@ func TestPluginLicenseFlags(t *testing.T) {
 	fs.PrintDefaults()
 	if !strings.Contains(usage.String(), "(default Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,LGPL-2.1-only,LGPL-3.0-only,MIT,MPL-2.0,Zlib)") {
 		t.Errorf("usage %s", usage.String())
+	}
+}
+
+func TestMatchingSettingFlags(t *testing.T) {
+	for name, args := range map[string][]string{
+		"matching below":     {"--bulk-revocation-max-matching", "0"},
+		"matching above":     {"--bulk-revocation-max-matching", "100001"},
+		"matching below max": {"--bulk-revocation-max-targets", "600", "--bulk-revocation-max-matching", "599"},
+		"count scan below":   {"--user-count-scan", "999"},
+		"count scan above":   {"--user-count-scan", "100001"},
+		"retained below":     {"--bulk-revocation-retained-people-max", "9999"},
+		"retained above":     {"--bulk-revocation-retained-people-max", "20000001"},
+		"retained exceeded":  {"--bulk-revocation-jobs-kept", "1000", "--bulk-revocation-pending", "200", "--bulk-revocation-max-targets", "5000", "--bulk-revocation-max-matching", "5000"},
+	} {
+		full := append([]string{"--listen", "127.0.0.1:0", "--data", t.TempDir() + "/d"}, args...)
+		if err := run(full, make(chan os.Signal)); err == nil {
+			t.Errorf("%s accepted", name)
+		}
+	}
+	full := []string{"--listen", "127.0.0.1:0", "--data", t.TempDir() + "/d", "--bulk-revocation-jobs-kept", "1000", "--bulk-revocation-pending", "200",
+		"--bulk-revocation-max-targets", "5000", "--bulk-revocation-max-matching", "5000"}
+	err := run(full, make(chan os.Signal))
+	for _, want := range []string{"bulk_revocation_retained_people_max 1100000", "bulk_revocation_jobs_kept 1000", "bulk_revocation_pending 200", "bulk_revocation_max_matching 5000", "= 11000000"} {
+		if err == nil || !strings.Contains(err.Error(), want) {
+			t.Errorf("the refusal does not name %q: %v", want, err)
+		}
+	}
+	fs := flag.NewFlagSet("t", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	access, given := accessFlags(fs)
+	if err := fs.Parse([]string{"--bulk-revocation-max-matching", "100000", "--user-count-scan", "100000", "--bulk-revocation-retained-people-max", "20000000"}); err != nil {
+		t.Fatal(err)
+	}
+	given()
+	if access.BulkMaxMatching != 100000 || access.UserCountScan != 100000 || access.BulkRetainedMax != 20000000 || !access.Given["bulk_revocation_max_matching"] ||
+		!access.Given["user_count_scan"] || !access.Given["bulk_revocation_retained_people_max"] {
+		t.Errorf("flags %+v", access)
+	}
+	var usage strings.Builder
+	fs.SetOutput(&usage)
+	fs.PrintDefaults()
+	for _, want := range []string{"bulk_revocation_max_matching in people, 1 to 100000 (default 5000)", "user_count_scan in people, 1000 to 100000 (default 20000)",
+		"bulk_revocation_retained_people_max in people, 10000 to 20000000 (default 1100000); start is refused when (2 × bulk_revocation_jobs_kept + bulk_revocation_pending) × bulk_revocation_max_matching exceeds it"} {
+		if !strings.Contains(usage.String(), want) {
+			t.Errorf("usage missing %s", want)
+		}
 	}
 }

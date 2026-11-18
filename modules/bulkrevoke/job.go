@@ -39,8 +39,36 @@ func (r *Registry) update(workspace, id string, change func(*View) bool) error {
 	if !change(&e.v) {
 		return ErrState
 	}
-	e.v.Counts = count(e.v)
 	return nil
+}
+
+func settle(v *View, index int, outcome Outcome) {
+	v.Items[index].Outcome = outcome
+	v.Counts.Unprocessed--
+	if outcome == OutcomeSucceeded {
+		v.Counts.Succeeded++
+		return
+	}
+	v.Counts.Failed++
+}
+
+func (r *Registry) Span(workspace, id string, from, to int) (View, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	e := r.executed(workspace, id)
+	if e == nil {
+		return View{}, ErrNotFound
+	}
+	v := e.v
+	v.Targets, v.Exclusions, v.Items = nil, nil, nil
+	v = copyView(v)
+	from, to = max(from, 0), min(to, len(e.v.Items)-1)
+	for index := from; index <= to; index++ {
+		item := e.v.Items[index]
+		item.Cleanup = append([]Cleanup(nil), item.Cleanup...)
+		v.Items = append(v.Items, item)
+	}
+	return v, nil
 }
 
 func pending(item Item) bool { return item.Outcome == OutcomeUnprocessed }
@@ -108,7 +136,8 @@ func (r *Registry) Cleaned(workspace, id string, index int, cleanup []Cleanup) e
 		if index < 0 || index >= len(v.Items) || !pending(v.Items[index]) || v.Items[index].State != CleanupRunning {
 			return false
 		}
-		v.Items[index].State, v.Items[index].Outcome, v.Items[index].Cleanup = Complete, OutcomeSucceeded, append([]Cleanup(nil), cleanup...)
+		v.Items[index].State, v.Items[index].Cleanup = Complete, append([]Cleanup(nil), cleanup...)
+		settle(v, index, OutcomeSucceeded)
 		return true
 	})
 }
@@ -118,7 +147,8 @@ func (r *Registry) Failed(workspace, id string, index int, reason string) error 
 		if index < 0 || index >= len(v.Items) || !pending(v.Items[index]) || v.Items[index].State != DenyConfirmed && v.Items[index].State != CleanupRunning {
 			return false
 		}
-		v.Items[index].State, v.Items[index].Outcome, v.Items[index].Reason = DenyConfirmed, OutcomeFailed, reason
+		v.Items[index].State, v.Items[index].Reason = DenyConfirmed, reason
+		settle(v, index, OutcomeFailed)
 		return true
 	})
 }

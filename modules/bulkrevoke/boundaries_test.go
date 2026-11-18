@@ -74,7 +74,7 @@ func TestIndexAndPageBoundaries(t *testing.T) {
 }
 
 func TestOrderPruningAndReplayedJobs(t *testing.T) {
-	f := setup(t, Limits{MaxTargets: 5, Pending: 10, Kept: 1, Lifetime: time.Hour})
+	f := setup(t, Limits{MaxTargets: 5, MaxMatching: 5, Pending: 10, Kept: 1, Lifetime: time.Hour})
 	d := f.add("ann", "", "u1")
 	v := prepared(f, "bob", "u2")
 	f.r.Execute("w1", v.ID, v.Digest, "cat", 1, nil)

@@ -9,7 +9,12 @@ import { Summary, TextField, type Problems } from "../../../../service/Service";
 import { actionDone, actionLabel, impact, w, type Action } from "./live-copy";
 import { accountName, failureText, offers, roleName, setup, tags } from "./live-model";
 import { b } from "./bulk-copy";
-import { selectLoaded, toggle, without, type Selection } from "./bulk-model";
+import { number, selectLoaded, toggle, without, type Selection } from "./bulk-model";
+import { bulkClient } from "../../../../service/identity-bulk";
+import { FixedBar, MatchAction, plainFixedLine } from "./Matching";
+import { m } from "./match-copy";
+import { fixedOfJob, type Fixed } from "./match-model";
+import { dateParts } from "./period-model";
 import { BulkFlow } from "./BulkPrepare";
 import RevocationJobs from "./RevocationJobs";
 import { endError, endFields, initialEnd, PeriodCell, PeriodFact, PeriodForm, RoleEnds, type EndValue } from "./RolePeriod";
@@ -37,6 +42,7 @@ type Context = { clock: ClockState; settings: SettingRow[]; own: string };
 
 let openJobNext = "";
 let kept: { user: string; selection: Selection } = { user: "", selection: new Set() };
+let keptFixed: { user: string; fixed: Fixed | null } = { user: "", fixed: null };
 
 export function useWide(): boolean {
   const query = "(min-width: 1280px)";
@@ -515,6 +521,9 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   const [focusTo, setFocusTo] = useState("");
   const [picked, setPicked] = useState<Selection>(() => (kept.user === session.user ? kept.selection : new Set()));
   useEffect(() => { kept = { user: session.user, selection: picked }; }, [picked, session.user]);
+  const [fixed, setFixed] = useState<Fixed | null>(() => (keptFixed.user === session.user ? keptFixed.fixed : null));
+  const [fixError, setFixError] = useState<unknown>(null);
+  useEffect(() => { keptFixed = { user: session.user, fixed }; }, [fixed, session.user]);
   const [bulk, setBulk] = useState(false);
   const [job, setJob] = useState(() => { const id = openJobNext; openJobNext = ""; return id; });
   const [limitHit, setLimitHit] = useState(false);
@@ -578,6 +587,17 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
     );
   }, [api, queryKey]);
   useEffect(() => { void load(); }, [load]);
+  const canBulk = !!data?.can_bulk_revoke;
+  useEffect(() => {
+    if (!canBulk) return;
+    let live = true;
+    bulkClient(api).list("", 1).then((page) => {
+      if (!live) return;
+      const found = page.jobs[0] ? fixedOfJob(page.jobs[0], session.user) : null;
+      setFixed((was) => (found && was && was.draft === found.draft ? { ...found, counted: was.counted, countedAtLeast: was.countedAtLeast } : found));
+    }, () => undefined);
+    return () => { live = false; };
+  }, [canBulk, api, session.user]);
   useEffect(() => { setMode((m) => ({ kind: m.kind === "none" ? "none" : "detail" })); setNotice(""); setActionResult(null); setBulk(false); setBandOpen(false); }, [view]);
   const users = data?.users ?? [];
   const applied = appliedKeys(filters).length;
@@ -673,9 +693,22 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   }
   const title = view === "invitations" ? w.invitationsTitle(l) : view === "membership" ? w.membershipTitle(l) : w.usersTitle(l);
   const selectable = !!data?.can_bulk_revoke && !stranded;
+  const pendingLimit = setting(ctx.settings, "bulk_revocation_pending", 20);
+  const fixedNow = selectable ? fixed : null;
+  const reloadRevision = async () => (await load(true)) || dataRef.current?.revision || "";
+  const gone = (text: string) => { setFixed(null); setFixError(null); setFocusTo(".m01-match-open"); say(text); };
+  const discardFixed = async () => {
+    if (!fixedNow) return;
+    try {
+      await api.command("bulk_revocation.discard", fixedNow.draft, await reloadRevision(), b.discardReason(l), {}, attempt());
+    } catch (e) {
+      if (!(e instanceof AdminError && e.failure === "stage")) { setFixError(e); return; }
+    }
+    gone(m.discarded(l));
+  };
   const loaded = selectableIds(status === "ready" ? "ready" : freshRead ? "fresh" : "reloading", users, session.user);
   const sel: Select = {
-    on: selectable, selected: picked, self: session.user, atLimit: picked.size >= limit, loaded,
+    on: selectable && !fixedNow, selected: picked, self: session.user, atLimit: picked.size >= limit, loaded,
     onToggle: (id) => { const out = toggle(picked, id, limit); setLimitHit(out.refused); if (out.refused) say(b.limit(l, limit)); else setPicked(out.next); },
     onAll: () => { const out = selectLoaded(picked, loaded, limit); setLimitHit(out.refused); if (out.refused) say(b.limit(l, limit)); else setPicked(out.next); },
   };
@@ -692,14 +725,15 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
     }
   };
   if (bulk && data && selectable) {
-    const ids = [...picked];
+    const ids = fixedNow ? [] : [...picked];
     const admins = ids.filter((id) => users.find((u) => u.user_id === id)?.membership?.role === "administrator");
     return (
       <div className="live-users m01-live" data-live={view} data-wide={wide ? "true" : "false"} data-bulk="effect">
         <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
         <Conditions l={l} data={data} />
         <BulkFlow l={l} api={api} ids={ids} names={names.current} admins={admins} rows={users} serverTime={ctx.clock.server_time} revision={data.revision}
-          onJobs={() => { setBulk(false); onView("revocation"); }} reload={async () => (await load(true)) || dataRef.current?.revision || ""}
+          fixed={fixedNow} days={days} onPrepared={() => setFixed(null)} onDiscarded={() => { setBulk(false); gone(m.discarded(l)); }}
+          onJobs={() => { setBulk(false); onView("revocation"); }} reload={reloadRevision}
           onBack={() => { setBulk(false); setFocusTo(".m01-prepare"); }} say={say}
           onDeselect={(id) => setPicked(without(picked, [id]))}
           onExecuted={(id, targets) => { setPicked(without(picked, targets)); setBulk(false); setJob(id); openJobNext = id; void load(true); onView("revocation"); }} />
@@ -770,8 +804,15 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
               ))}
             </div>
           )}
-          {selectable && view !== "invitations" && (
+          {selectable && view !== "invitations" && fixedNow && (
+            <FixedBar l={l} f={fixedNow} filters={filters} days={days} number={number(fixedNow.draft)} error={fixError} say={say}
+              onPrepare={() => setBulk(true)} onDiscard={() => void discardFixed()} />
+          )}
+          {selectable && view !== "invitations" && !fixedNow && (
             <SelectionBar l={l} selected={picked} loaded={loaded} limit={limit} atLimit={limitHit || picked.size >= limit} names={names.current}
+              match={<MatchAction l={l} api={api} query={query} filters={filters} picked={picked.size} pendingLimit={pendingLimit} reload={reloadRevision} say={say}
+                onJobs={() => onView("revocation")}
+                onFixed={(f) => { setPicked(new Set()); setFixed(f); setFixError(null); setFocusTo(".m01-selcount"); say(m.afterFix(l, plainFixedLine(l, f, dateParts(l, f.fixed_at).time))); }} />}
               onPrepare={() => setBulk(true)} onClear={() => { setPicked(new Set()); setFocusTo(".m01-selcount"); }} onRemove={(id) => setPicked(without(picked, [id]))} onAll={sel.onAll} />
           )}
           {selectable && view === "invitations" && picked.size > 0 && <p className="m01-selline">{b.elsewhere(l, picked.size)}</p>}

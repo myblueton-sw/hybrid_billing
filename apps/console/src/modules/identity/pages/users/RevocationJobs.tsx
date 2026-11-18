@@ -10,6 +10,9 @@ import { failureText, roleName } from "./live-model";
 import { At, fill, Stamp } from "./Stamp";
 import { Settings } from "./RolePeriod";
 import { w } from "./live-copy";
+import { m } from "./match-copy";
+import { BasisFacts, BasisLine } from "./Matching";
+import { setting } from "./period-model";
 
 export function ReasonCode({ l, code }: { l: Locale; code: string }) {
   const known = b.reasonCode(l, code);
@@ -86,9 +89,9 @@ function Scope({ l }: { l: Locale }) {
 
 type Opened = { detail: BulkDetail; items: Paged<BulkItem>; targets: Paged<BulkTarget> | null };
 
-function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, outcome, onOutcome, self }: {
+function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, outcome, onOutcome, self, days }: {
   l: Locale; api: AdminClient; opened: Opened; revision: string; wide: boolean; onClose: () => void; onReload: () => void; onMore: () => void;
-  outcome: string; onOutcome: (o: string) => void; self: string;
+  outcome: string; onOutcome: (o: string) => void; self: string; days: number;
 }) {
   const job = opened.detail.job;
   const heading = useRef<HTMLHeadingElement>(null);
@@ -111,7 +114,8 @@ function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, out
       </div>
       {job.state === "prepared" ? (
         <>
-          <PreviewBody l={l} api={api} prepared={{ detail: opened.detail, targets: opened.targets }} onMore={onMore} />
+          {job.selection !== "filter" && <BasisFacts l={l} job={job} days={days} />}
+          <PreviewBody l={l} api={api} prepared={{ detail: opened.detail, targets: opened.targets }} onMore={onMore} days={days} />
           <div className="live-buttons">
             {owner && <button type="button" className="live-primary m01-continue" onClick={() => setConfirming(true)}>{b.continue(l)}</button>}
             {owner && <button type="button" className="live-secondary" onClick={() => void discard()}>{b.discard(l)}</button>}
@@ -122,13 +126,18 @@ function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, out
         </>
       ) : job.state === "draft" ? (
         <>
+          <BasisFacts l={l} job={job} days={days} />
           <StateLine l={l} job={job} />
           {owner && <button type="button" className="live-secondary" onClick={() => void discard()}>{b.discardDraft(l)}</button>}
         </>
       ) : job.state !== "executed" ? (
-        <StateLine l={l} job={job} />
+        <>
+          <BasisFacts l={l} job={job} days={days} />
+          <StateLine l={l} job={job} />
+        </>
       ) : (
         <>
+          <BasisFacts l={l} job={job} days={days} />
           <StateLine l={l} job={job} />
           <Counts l={l} job={job} />
           <dl className="m01-sum">
@@ -168,13 +177,14 @@ function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, out
   );
 }
 
-function JobTable({ l, jobs, open, onOpen }: { l: Locale; jobs: BulkJob[]; open: string; onOpen: (id: string) => void }) {
+function JobTable({ l, jobs, open, onOpen, days }: { l: Locale; jobs: BulkJob[]; open: string; onOpen: (id: string) => void; days: number }) {
   const strong = (j: BulkJob) => ["unconfirmed", "not_started", "waiting", "partial"].includes(jobWords(j));
   const people = (j: BulkJob) =>
     j.state === "draft" ? <>{b.notCounted(l)}{j.staged > 0 && <span className="live-sub m01-line">{b.sentSoFar(l, j.staged)}</span>}</>
       : <>{j.state === "executed" ? b.equation(l, j.counts) : b.people(l, j.counts.targets)}{j.counts.excluded > 0 && <span className="live-sub m01-line">{b.excludedCount(l, j.counts.excluded)}</span>}</>;
   const when = (j: BulkJob) =>
-    j.state === "prepared" ? <At l={l} template={b.validUntil(l)} iso={j.expires_at} zone={false} /> : j.executed_at ? <At l={l} template={b.executed(l)} iso={j.executed_at} zone={false} /> : "—";
+    j.state === "prepared" ? <At l={l} template={b.validUntil(l)} iso={j.expires_at} zone={false} /> : j.executed_at ? <At l={l} template={b.executed(l)} iso={j.executed_at} zone={false} />
+      : j.state === "draft" && j.selection === "filter" && j.fixed_at ? <At l={l} template={m.fixedWhen(l)} iso={j.fixed_at} zone={false} /> : "—";
   return (
     <div className="security-table-scroll">
       <table className="m01-jobs-table">
@@ -189,6 +199,7 @@ function JobTable({ l, jobs, open, onOpen }: { l: Locale; jobs: BulkJob[]; open:
                 </span>
                 {j.effect && <span className="live-sub m01-line">{j.effect === "suspend_user" ? b.suspendUser(l) : b.suspendMembership(l)}</span>}
                 {j.origin === "ledger_replay" && <span className="live-sub m01-line">{b.fromEarlier(l)}</span>}
+                <BasisLine l={l} job={j} days={days} />
                 <span className={"live-sub m01-compact" + (strong(j) ? " m01-strong" : "")}>{b.words(l, jobWords(j))}</span>
                 <span className="live-sub m01-compact">{people(j)}</span>
               </td>
@@ -257,10 +268,11 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
     return <section className="live-unavailable"><h2>{w.deniedTitle(l)}</h2><p>{w.denied(l)}</p></section>;
   }
   const groupsOf = split(page?.jobs ?? []);
+  const days = setting(page?.settings ?? [], "role_period_warning_days", 14);
   const close = () => { const id = open; setOpen(""); setOpened(null); setTimeout(() => document.querySelector<HTMLElement>(`[data-job="${CSS.escape(id)}"]`)?.focus(), 0); };
   const detail = opened && open ? (
     <Detail l={l} api={api} opened={opened} revision={page?.revision ?? revision} wide={wide} onClose={close} onReload={() => { load(); void openJob(open); }} onMore={() => void more()}
-      outcome={outcome} onOutcome={(o) => { setOutcome(o); void openJob(open, o); }} self={self} />
+      outcome={outcome} onOutcome={(o) => { setOutcome(o); void openJob(open, o); }} self={self} days={days} />
   ) : null;
   const stepping = !wide && detail;
   return (
@@ -288,14 +300,14 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
                 {page.jobs.length === 0 && <p className="live-empty">{b.noJobsYet(l)}</p>}
                 {page.jobs.length > 0 && <>
                   <h3>{b.notExecuted(l, groupsOf.open.length)}</h3>
-                  {groupsOf.open.length ? <JobTable l={l} jobs={groupsOf.open} open={open} onOpen={(id) => void openJob(id)} /> : <p className="live-empty">{b.noOpen(l)}</p>}
+                  {groupsOf.open.length ? <JobTable l={l} jobs={groupsOf.open} open={open} days={days} onOpen={(id) => void openJob(id)} /> : <p className="live-empty">{b.noOpen(l)}</p>}
                   <h3>{b.jobsN(l, groupsOf.executed.length)}</h3>
-                  {groupsOf.executed.length ? <JobTable l={l} jobs={groupsOf.executed} open={open} onOpen={(id) => void openJob(id)} /> : <p className="live-empty">{b.noExecuted(l)}</p>}
+                  {groupsOf.executed.length ? <JobTable l={l} jobs={groupsOf.executed} open={open} days={days} onOpen={(id) => void openJob(id)} /> : <p className="live-empty">{b.noExecuted(l)}</p>}
                 </>}
                 {groupsOf.ended.length > 0 && (
                   <details className="m01-ended">
                     <summary>{b.endedN(l, groupsOf.ended.length)}</summary>
-                    <JobTable l={l} jobs={groupsOf.ended} open={open} onOpen={(id) => void openJob(id)} />
+                    <JobTable l={l} jobs={groupsOf.ended} open={open} days={days} onOpen={(id) => void openJob(id)} />
                   </details>
                 )}
                 {page.next && <><p className="live-meta">{b.loadedJobs(l, page.jobs.length)}</p><button type="button" className="live-secondary" onClick={() => void moreJobs()}>{b.moreJobs(l)}</button></>}

@@ -30,10 +30,13 @@ type AccessSettings struct {
 	ClockSkewHours      int
 	RoleWarningDays     int
 	BulkMaxTargets      int
+	BulkMaxMatching     int
+	BulkRetainedMax     int
 	BulkMinutes         int
 	BulkPending         int
 	BulkKept            int
 	UserFilterScan      int
+	UserCountScan       int
 	ClockBase           string
 }
 
@@ -66,13 +69,16 @@ var identitySettings = []AccessSetting{
 	{"clock_skew_tolerance_hours", "clock-skew-tolerance-hours", "hours", 24, 1, 720, func(s *AccessSettings) *int { return &s.ClockSkewHours }},
 	{"role_period_warning_days", "role-period-warning-days", "days", 14, 1, 90, func(s *AccessSettings) *int { return &s.RoleWarningDays }},
 	{"bulk_revocation_max_targets", "bulk-revocation-max-targets", "people", 500, 1, 5000, func(s *AccessSettings) *int { return &s.BulkMaxTargets }},
+	{"bulk_revocation_max_matching", "bulk-revocation-max-matching", "people", 5000, 1, 100000, func(s *AccessSettings) *int { return &s.BulkMaxMatching }},
 	{"bulk_revocation_manifest_minutes", "bulk-revocation-manifest-minutes", "minutes", 30, 5, 1440, func(s *AccessSettings) *int { return &s.BulkMinutes }},
 	{"bulk_revocation_pending", "bulk-revocation-pending", "lists", 20, 1, 200, func(s *AccessSettings) *int { return &s.BulkPending }},
 	{"bulk_revocation_jobs_kept", "bulk-revocation-jobs-kept", "jobs", 100, 10, 1000, func(s *AccessSettings) *int { return &s.BulkKept }},
+	{"bulk_revocation_retained_people_max", "bulk-revocation-retained-people-max", "people", 1100000, 10000, 20000000, func(s *AccessSettings) *int { return &s.BulkRetainedMax }},
 }
 
 var userSettings = []AccessSetting{
 	{"user_filter_scan", "user-filter-scan", "people", 1000, 100, 10000, func(s *AccessSettings) *int { return &s.UserFilterScan }},
+	{"user_count_scan", "user-count-scan", "people", 20000, 1000, 100000, func(s *AccessSettings) *int { return &s.UserCountScan }},
 }
 
 const (
@@ -140,9 +146,27 @@ func (s AccessSettings) validate() error {
 		return settingError("role_period_warning_days")
 	case s.ClockBase != "" && s.ClockBase != ClockBaseLedger && s.ClockBase != ClockBaseWall:
 		return settingError("clock_base")
+	case s.BulkMaxMatching < s.BulkMaxTargets:
+		return settingError("bulk_revocation_max_matching")
+	case s.RetainedPeople() > s.BulkRetainedMax:
+		return fmt.Errorf("%w: bulk_revocation_retained_people_max %d is below %s = %d", ErrConfig, s.BulkRetainedMax, retainedFormula(s), s.RetainedPeople())
 	}
 	return nil
 }
+
+func (s AccessSettings) RetainedPeople() int {
+	return (2*s.BulkKept + s.BulkPending) * s.BulkMaxMatching
+}
+
+func retainedFormula(s AccessSettings) string {
+	return fmt.Sprintf("(2 × bulk_revocation_jobs_kept %d + bulk_revocation_pending %d) × bulk_revocation_max_matching %d", s.BulkKept, s.BulkPending, s.BulkMaxMatching)
+}
+
+var settingNotes = map[string]string{
+	"bulk_revocation_retained_people_max": "; start is refused when (2 × bulk_revocation_jobs_kept + bulk_revocation_pending) × bulk_revocation_max_matching exceeds it",
+}
+
+func SettingNote(name string) string { return settingNotes[name] }
 
 func (s AccessSettings) limits() accesschange.Limits {
 	return accesschange.Limits{Lifetime: time.Duration(s.RequestHours) * time.Hour, PerProposer: s.PendingPerProposer, PerWorkspace: s.PendingPerWorkspace,
@@ -150,7 +174,7 @@ func (s AccessSettings) limits() accesschange.Limits {
 }
 
 func (s AccessSettings) bulkLimits() bulkrevoke.Limits {
-	return bulkrevoke.Limits{MaxTargets: s.BulkMaxTargets, Pending: s.BulkPending, Kept: s.BulkKept, Lifetime: time.Duration(s.BulkMinutes) * time.Minute}
+	return bulkrevoke.Limits{MaxTargets: s.BulkMaxTargets, MaxMatching: s.BulkMaxMatching, Pending: s.BulkPending, Kept: s.BulkKept, Lifetime: time.Duration(s.BulkMinutes) * time.Minute}
 }
 
 type settingRow struct {
@@ -165,7 +189,9 @@ type settingRow struct {
 
 func (s *Server) settingRows() []settingRow { return s.rowsOf(accessSettings) }
 
-func (s *Server) identitySettingRows() []settingRow { return s.rowsOf(identitySettings) }
+func (s *Server) bulkSettingRows() []settingRow {
+	return append(s.rowsOf(identitySettings), s.rowsOf(userSettings)...)
+}
 
 func (s *Server) rowsOf(list []AccessSetting) []settingRow {
 	out := []settingRow{}

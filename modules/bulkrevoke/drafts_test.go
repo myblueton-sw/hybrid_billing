@@ -25,7 +25,7 @@ func setup(t testing.TB, limits Limits) fixture {
 	return fixture{t: t, r: r, now: &now}
 }
 
-var defaults = Limits{MaxTargets: 5, Pending: 3, Kept: 2, Lifetime: 30 * time.Minute}
+var defaults = Limits{MaxTargets: 5, MaxMatching: 8, Pending: 3, Kept: 2, Lifetime: 30 * time.Minute}
 
 func (f fixture) want(name string, err, want error) {
 	f.t.Helper()
@@ -44,8 +44,8 @@ func (f fixture) add(owner, draft string, users ...string) View {
 }
 
 func TestNewChecksItsInputs(t *testing.T) {
-	for name, l := range map[string]Limits{"no targets": {Pending: 1, Kept: 1, Lifetime: 1}, "no pending": {MaxTargets: 1, Kept: 1, Lifetime: 1},
-		"no kept": {MaxTargets: 1, Pending: 1, Lifetime: 1}, "no lifetime": {MaxTargets: 1, Pending: 1, Kept: 1}} {
+	for name, l := range map[string]Limits{"no targets": {MaxMatching: 1, Pending: 1, Kept: 1, Lifetime: 1}, "no matching": {MaxTargets: 1, Pending: 1, Kept: 1, Lifetime: 1}, "no pending": {MaxTargets: 1, MaxMatching: 1, Kept: 1, Lifetime: 1},
+		"no kept": {MaxTargets: 1, MaxMatching: 1, Pending: 1, Lifetime: 1}, "no lifetime": {MaxTargets: 1, MaxMatching: 1, Pending: 1, Kept: 1}} {
 		if _, err := New(l, time.Now); !errors.Is(err, ErrInvalid) {
 			t.Errorf("%s: %v", name, err)
 		}

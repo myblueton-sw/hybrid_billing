@@ -12,19 +12,20 @@ type entry struct {
 }
 
 type Registry struct {
-	mu          sync.Mutex
-	limits      Limits
-	clock       func() time.Time
-	entries     map[uint64]*entry
-	next        uint64
-	latestIndex map[string]map[string]latestRef
+	mu      sync.Mutex
+	limits  Limits
+	clock   func() time.Time
+	entries map[uint64]*entry
+	next    uint64
+	refs    map[string]map[string][]latestRef
+	visited int
 }
 
 func New(limits Limits, clock func() time.Time) (*Registry, error) {
 	if !limits.valid() || clock == nil {
 		return nil, ErrInvalid
 	}
-	return &Registry{limits: limits, clock: clock, entries: map[uint64]*entry{}}, nil
+	return &Registry{limits: limits, clock: clock, entries: map[uint64]*entry{}, refs: map[string]map[string][]latestRef{}}, nil
 }
 
 func (r *Registry) now() time.Time { return r.clock().UTC().Round(0) }
@@ -121,6 +122,8 @@ func (r *Registry) Add(workspace, owner, draft string, users []string) (View, er
 		e = &entry{v: View{Number: r.next + 1, Workspace: workspace, State: Draft, Origin: OriginCommand, Owner: owner, Selection: Explicit}, users: map[string]bool{}}
 	} else if e = r.visible(workspace, owner, draft); e == nil || e.v.State != Draft {
 		return View{}, ErrNotFound
+	} else if e.v.Selection != Explicit {
+		return View{}, ErrState
 	}
 	added, repeated := map[string]bool{}, 0
 	for _, id := range users {
@@ -141,6 +144,52 @@ func (r *Registry) Add(workspace, owner, draft string, users []string) (View, er
 		e.users[id] = true
 	}
 	e.v.ID, e.v.Count, e.v.Duplicates, e.v.Updated, e.v.ExpiresAt = DraftID(e.v.Number), len(e.users), e.v.Duplicates+repeated, now, now.Add(r.limits.Lifetime)
+	return copyView(e.v), nil
+}
+
+func (r *Registry) AddMatching(workspace, owner string, terms []FilterTerm, users []string, fixedAt time.Time, revision string) (View, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !validID(workspace) || !validID(owner) || !validTerms(terms) || fixedAt.IsZero() || revision == "" || len(revision) > maxIDBytes {
+		return View{}, ErrInvalid
+	}
+	if len(users) == 0 {
+		return View{}, ErrEmpty
+	}
+	if len(users) > r.limits.MaxMatching {
+		return View{}, ErrTooMany
+	}
+	set := make(map[string]bool, len(users))
+	for _, id := range users {
+		if !validID(id) || set[id] {
+			return View{}, ErrInvalid
+		}
+		set[id] = true
+	}
+	now := r.now()
+	r.expire(now)
+	if r.openDraft(workspace, owner) != nil {
+		return View{}, ErrOpenDraft
+	}
+	if r.pending(workspace) >= r.limits.Pending {
+		return View{}, ErrPending
+	}
+	r.next++
+	e := &entry{v: View{Number: r.next, ID: DraftID(r.next), Workspace: workspace, State: Draft, Origin: OriginCommand, Owner: owner, Selection: Filter,
+		Filter: append([]FilterTerm(nil), terms...), Matched: len(users), FixedAt: fixedAt.UTC().Round(0), FixedRevision: revision, Count: len(users), Updated: now,
+		ExpiresAt: now.Add(r.limits.Lifetime)}, users: set}
+	r.entries[e.v.Number] = e
+	return copyView(e.v), nil
+}
+
+func (r *Registry) DraftView(workspace, owner, draft string) (View, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.expire(r.now())
+	e := r.visible(workspace, owner, draft)
+	if e == nil || e.v.State != Draft {
+		return View{}, ErrNotFound
+	}
 	return copyView(e.v), nil
 }
 
@@ -206,8 +255,10 @@ func (r *Registry) List(workspace, caller string) []View {
 	out := []View{}
 	for _, e := range r.entries {
 		if e.v.Workspace == workspace && (frozen(e.v) || e.v.Owner == caller) {
-			v := copyView(e.v)
+			v := e.v
 			v.Items, v.Targets, v.Exclusions = nil, nil, nil
+			v = copyView(v)
+			v.Items = nil
 			out = append(out, v)
 		}
 	}
@@ -234,7 +285,12 @@ func (r *Registry) Restore(next uint64, jobs []View) {
 		v.State, v.Origin = Executed, OriginReplay
 		v.ID = ManifestID(v.Number)
 		v.Counts = count(v)
-		r.entries[v.Number] = &entry{v: copyView(v), users: map[string]bool{}}
+		if old := r.entries[v.Number]; old != nil && old.v.State == Executed {
+			r.unindex(old)
+		}
+		e := &entry{v: copyView(v), users: map[string]bool{}}
+		r.entries[v.Number] = e
+		r.index(e)
 		r.next = max(r.next, v.Number)
 	}
 	r.prune()
@@ -265,13 +321,16 @@ func (r *Registry) prune() {
 	for _, list := range [][]uint64{executed, ended} {
 		sort.Slice(list, func(a, b int) bool { return list[a] > list[b] })
 		for _, n := range list[min(len(list), r.limits.Kept):] {
+			if e := r.entries[n]; e.v.State == Executed {
+				r.unindex(e)
+			}
 			delete(r.entries, n)
 		}
 	}
-	r.reindex()
 }
 
 func copyView(v View) View {
+	v.Filter = append([]FilterTerm(nil), v.Filter...)
 	v.Targets = append([]Target(nil), v.Targets...)
 	v.Exclusions = append([]Exclusion(nil), v.Exclusions...)
 	v.Impact.Pending = append([]PendingStore(nil), v.Impact.Pending...)

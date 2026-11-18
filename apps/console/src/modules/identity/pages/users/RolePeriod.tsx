@@ -8,6 +8,7 @@ import { bounds, dateParts, direction, endProblem, endFields, initialEnd, localI
 
 export { endFields, initialEnd, type EndValue };
 import { b } from "./bulk-copy";
+import { m } from "./match-copy";
 import { failureText as failure } from "./live-model";
 import { w } from "./live-copy";
 import { FailureBox, Reason, reasonProblem, settles } from "./Live";
@@ -128,7 +129,7 @@ export function Settings({ l, settings }: { l: Locale; settings: SettingRow[] })
           <tbody>
             {settings.map((s) => (
               <tr key={s.name}>
-                <td data-label={cols[0]}>{b.settingName(l, s.name)}</td>
+                <td data-label={cols[0]}>{b.settingName(l, s.name)}{m.settingHint(l, s.name) && <span className="live-sub m01-line m01-setting-hint">{m.settingHint(l, s.name)}</span>}</td>
                 <td data-label={cols[1]} className="m01-num"><bdi dir="ltr">{s.value}</bdi> {s.unit}</td>
                 <td data-label={cols[2]} className="m01-num"><bdi dir="ltr">{s.default}</bdi></td>
                 <td data-label={cols[3]} className="m01-num"><bdi dir="ltr">{s.min}–{s.max}</bdi></td>

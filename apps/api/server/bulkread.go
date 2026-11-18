@@ -46,6 +46,11 @@ type bulkRow struct {
 	Digest     string      `json:"digest"`
 	Counts     bulkCounts  `json:"counts"`
 	Staged     int         `json:"staged"`
+	Matched    int         `json:"matched"`
+	FixedAt    string      `json:"fixed_at"`
+	FixedRev   string      `json:"fixed_revision"`
+	Filter     *userFilter `json:"filter"`
+	Masked     bool        `json:"search_masked"`
 	JobState   string      `json:"job_state"`
 	JobReason  string      `json:"job_reason"`
 	Ledger     bulkLedger  `json:"ledger"`
@@ -163,10 +168,17 @@ type bulkTargetsPage struct {
 
 var outsideScope = []string{"B7", "B8", "B9", "B10"}
 
-func (s *Server) bulkRow(v bulkrevoke.View) bulkRow {
+func (s *Server) bulkRow(v bulkrevoke.View, caller string) bulkRow {
 	row := bulkRow{ID: v.ID, State: string(v.State), Origin: v.Origin, Effect: string(v.Effect), Selection: v.Selection, Preparer: v.Owner,
 		PreparedAt: stampOr(v.PreparedAt), ExpiresAt: stampOr(v.ExpiresAt), Executor: v.Executor, ExecutedAt: stampOr(v.ExecutedAt), DenyAt: stampOr(v.DenyAt),
 		Digest: v.Digest, Counts: bulkCounts(v.Counts), RecordedAt: stampOr(v.RecordedAt), Staged: v.Count}
+	if v.Selection == bulkrevoke.Filter {
+		filter := filterOf(v.Filter)
+		if caller != v.Owner && filter.Q != "" {
+			filter.Q, row.Masked = "", true
+		}
+		row.Filter, row.Matched, row.FixedAt, row.FixedRev = &filter, v.Matched, stampOr(v.FixedAt), v.FixedRevision
+	}
 	if v.State != bulkrevoke.Executed {
 		return row
 	}
@@ -211,7 +223,7 @@ func (s *Server) listBulk(w http.ResponseWriter, r *http.Request) {
 	now := s.clock()
 	pending, open := s.bulk.Limits(s.bootWorkspace, user)
 	page := bulkPage{Revision: s.Revision(), StartedAt: stamp(s.startedAt), CanPrepare: s.canBulk(answer) && len(s.stranded) == 0, OpenDraft: open, Pending: pending,
-		Jobs: []bulkRow{}, Settings: s.identitySettingRows(), Ledger: s.ledgerRow().State, clockRows: s.clockRows(now)}
+		Jobs: []bulkRow{}, Settings: s.bulkSettingRows(), Ledger: s.ledgerRow().State, clockRows: s.clockRows(now)}
 	rows := s.bulk.List(s.bootWorkspace, user)
 	start := 0
 	if after != "" {
@@ -224,7 +236,7 @@ func (s *Server) listBulk(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, v := range rows[start:min(len(rows), start+limit)] {
 		full, _ := s.bulk.Get(s.bootWorkspace, user, v.ID)
-		page.Jobs = append(page.Jobs, s.bulkRow(full))
+		page.Jobs = append(page.Jobs, s.bulkRow(full, user))
 	}
 	if start+limit < len(rows) {
 		page.Next = page.Jobs[len(page.Jobs)-1].ID
@@ -258,8 +270,11 @@ func (s *Server) readBulk(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.UnsupportedCommand, request)
 		return
 	}
-	detail := bulkDetail{Revision: s.Revision(), ServerTime: stamp(s.clock()), Job: s.bulkRow(v), Impact: impactOf(v.Impact, v.Effect), Outside: outsideScope,
+	detail := bulkDetail{Revision: s.Revision(), ServerTime: stamp(s.clock()), Job: s.bulkRow(v, user), Impact: impactOf(v.Impact, v.Effect), Outside: outsideScope,
 		Exclusions: map[string]int{bulkrevoke.ExcludedSelf: 0, bulkrevoke.ExcludedNotFound: 0, bulkrevoke.ExcludedNoMembership: 0, bulkrevoke.ExcludedAlreadyRevoked: 0}}
+	if v.Selection == bulkrevoke.Filter {
+		detail.Exclusions[bulkrevoke.ExcludedNoLongerMatches] = 0
+	}
 	for _, x := range v.Exclusions {
 		detail.Exclusions[x.Reason]++
 	}

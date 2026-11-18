@@ -77,7 +77,7 @@ export function usersQueryString(query: UsersQuery): string {
   return q.toString();
 }
 
-function filterOf(v: unknown): UsersFilter {
+export function filterOf(v: unknown): UsersFilter {
   const r = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
   return Object.fromEntries(filterKeys.map((k) => [k, String(r[k] ?? "")])) as UsersFilter;
 }
@@ -664,6 +664,7 @@ export type CommandId =
   | "identity.revoke_invitation"
   | "identity.set_role_period"
   | "bulk_revocation.add_targets"
+  | "bulk_revocation.add_matching"
   | "bulk_revocation.prepare"
   | "bulk_revocation.execute"
   | "bulk_revocation.discard"

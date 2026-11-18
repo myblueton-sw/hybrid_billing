@@ -13,7 +13,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 )
 
-var holdAllowed = []string{"access.reject_request", "access.request_revoke", "access.revoke_delegation", "access.withdraw_request", "bulk_revocation.add_targets",
+var holdAllowed = []string{"access.reject_request", "access.request_revoke", "access.revoke_delegation", "access.withdraw_request", "bulk_revocation.add_matching", "bulk_revocation.add_targets",
 	"bulk_revocation.discard", "bulk_revocation.execute", "bulk_revocation.prepare", "identity.depart_user",
 	"identity.remove_membership", "identity.revoke_invitation", "identity.suspend_membership", "identity.suspend_user", "installation.withdraw",
 	"integrations.plugin_disable", "integrations.plugin_stop", "integrations.plugin_withdraw", "integrations.subscription_pause", "integrations.subscription_revoke",
@@ -63,7 +63,7 @@ func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 			t.Errorf("%s rows\n%v\nwant\n%v", key, got, want)
 		}
 	}
-	if len(registered) != 82 || len(holdTable) != 82 {
+	if len(registered) != 83 || len(holdTable) != 83 {
 		t.Errorf("registered %d rows %d", len(registered), len(holdTable))
 	}
 	data, err := os.ReadFile("boundary.go")

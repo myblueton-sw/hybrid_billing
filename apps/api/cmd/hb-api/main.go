@@ -96,7 +96,7 @@ func accessFlags(fs *flag.FlagSet) (*server.AccessSettings, func()) {
 	byFlag := map[string]server.AccessSetting{}
 	for _, setting := range append(append(server.AccessSettingList(), server.IdentitySettingList()...), server.UserSettingList()...) {
 		byFlag[setting.Flag] = setting
-		numberFlag(fs, setting.Flag, setting.Name, setting.Unit, setting.Min, setting.Max, setting.Default, func(n int) { setting.Set(&access, n) })
+		numberFlag(fs, setting.Flag, setting.Name, setting.Unit, setting.Min, setting.Max, setting.Default, server.SettingNote(setting.Name), func(n int) { setting.Set(&access, n) })
 	}
 	fs.Func("clock-base", "one-time: ledger or wall; accepted only when the decision ledger's latest time is beyond the clock skew tolerance, or when its latest clock base choice cannot be verified", func(raw string) error {
 		if raw != server.ClockBaseLedger && raw != server.ClockBaseWall {
@@ -130,7 +130,7 @@ func orgFlags(fs *flag.FlagSet) (*server.OrgSettings, func()) {
 	byFlag := map[string]server.OrgSetting{}
 	for _, setting := range server.OrgSettingList() {
 		byFlag[setting.Flag] = setting
-		numberFlag(fs, setting.Flag, setting.Name, setting.Unit, setting.Min, setting.Max, setting.Default, func(n int) { setting.Set(&org, n) })
+		numberFlag(fs, setting.Flag, setting.Name, setting.Unit, setting.Min, setting.Max, setting.Default, "", func(n int) { setting.Set(&org, n) })
 	}
 	return &org, func() {
 		fs.Visit(func(f *flag.Flag) {
@@ -158,8 +158,8 @@ func pluginFlags(fs *flag.FlagSet) (*server.PluginSettings, func()) {
 	}
 }
 
-func numberFlag(fs *flag.FlagSet, name, setting, unit string, low, high, initial int, set func(int)) {
-	fs.Func(name, fmt.Sprintf("%s in %s, %d to %d (default %d)", setting, unit, low, high, initial), func(raw string) error {
+func numberFlag(fs *flag.FlagSet, name, setting, unit string, low, high, initial int, note string, set func(int)) {
+	fs.Func(name, fmt.Sprintf("%s in %s, %d to %d (default %d)%s", setting, unit, low, high, initial, note), func(raw string) error {
 		n, ok := settingNumber(raw)
 		if !ok {
 			return fmt.Errorf("%s must be a whole number without sign or leading zero", name)
@@ -170,7 +170,7 @@ func numberFlag(fs *flag.FlagSet, name, setting, unit string, low, high, initial
 }
 
 func settingNumber(raw string) (int, bool) {
-	if raw == "" || len(raw) > 6 || (len(raw) > 1 && raw[0] == '0') || strings.TrimLeft(raw, "0123456789") != "" {
+	if raw == "" || len(raw) > 8 || (len(raw) > 1 && raw[0] == '0') || strings.TrimLeft(raw, "0123456789") != "" {
 		return 0, false
 	}
 	n, err := strconv.Atoi(raw)

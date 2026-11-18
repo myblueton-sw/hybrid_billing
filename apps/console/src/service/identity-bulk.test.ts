@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { adminClient, AdminError, attempt } from "./admin";
-import { batches, bulkClient, bulkPageOf, detailOf, stage, StageError, stagedBatches } from "./identity-bulk";
+import { batches, bulkClient, bulkPageOf, countPath, detailOf, jobOf, matchValues, stage, StageError, stagedBatches } from "./identity-bulk";
 
 type Call = { url: string; body: Record<string, unknown> };
 
@@ -112,4 +112,23 @@ test("the bulk reads build their paths and default missing parts", async () => {
   const odd = bulkPageOf({ jobs: [{ effect: "remove", job_state: "done", counts: { targets: "x" } }] });
   assert.deepEqual([odd.jobs[0].effect, odd.jobs[0].job_state, odd.jobs[0].counts.targets], ["", "", 0]);
   assert.deepEqual(detailOf({}).impact.pending, []);
+});
+
+test("filter-wide rows, the count read and the command values", async () => {
+  const filter = jobOf({ selection: "filter", matched: 9, fixed_at: "2026-11-19T10:00:00Z", fixed_revision: "r4", filter: { role: "member", q: "" }, search_masked: true });
+  assert.deepEqual([filter.selection, filter.matched, filter.fixed_at, filter.fixed_revision, filter.filter?.role, filter.filter?.q, filter.search_masked],
+    ["filter", 9, "2026-11-19T10:00:00Z", "r4", "member", "", true]);
+  const plain = jobOf({});
+  assert.deepEqual([plain.selection, plain.filter, plain.search_masked, jobOf({ selection: "not_recorded" }).selection, jobOf({ selection: "odd", filter: "x" }).selection, jobOf({ filter: "x" }).filter],
+    ["explicit", null, false, "not_recorded", "explicit", null]);
+  assert.equal(countPath({ limit: 50 }), "/identity/users/count");
+  assert.equal(countPath({ q: "ann", role: "member", holder: "true", after: "a:u1", limit: 50 }), "/identity/users/count?q=ann&role=member&holder=true");
+  assert.deepEqual(matchValues({ q: "ann", status: "", role: "member", after: "a:u1", limit: 50 }), { q: "ann", role: "member" });
+  const { f, calls } = scripted([[200, { count: 12, complete: true, over_limit: false, limit: 5000, scan_budget: 20000, list_version: "3.4", server_time: "2026-11-19T10:00:00Z" }],
+    [200, {}]]);
+  const b = bulkClient(adminClient("t", f));
+  const c = await b.count({ membership: "active", limit: 50 });
+  assert.equal(calls[0].url, "/api/v1/identity/users/count?membership=active");
+  assert.deepEqual(c, { count: 12, complete: true, over_limit: false, limit: 5000, scan_budget: 20000, list_version: "3.4", server_time: "2026-11-19T10:00:00Z" });
+  assert.deepEqual(await b.count({}), { count: 0, complete: false, over_limit: false, limit: 0, scan_budget: 0, list_version: "", server_time: "" });
 });

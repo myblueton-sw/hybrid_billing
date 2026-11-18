@@ -264,7 +264,7 @@ func (s *Server) rebuildJobs(records []decisionledger.Record) {
 			continue
 		}
 		jobs[d.Target] = &bulkrevoke.View{Number: n, Workspace: d.Workspace, Effect: bulkrevoke.Effect(d.Effect), Owner: d.RequestedBy, Executor: d.ApprovedBy,
-			Digest: d.RequestDigest, DenyGeneration: d.DenyGeneration, RecordedAt: rec.At, ExecutedAt: rec.At, DenyAt: rec.At, Selection: bulkrevoke.Explicit,
+			Digest: d.RequestDigest, DenyGeneration: d.DenyGeneration, RecordedAt: rec.At, ExecutedAt: rec.At, DenyAt: rec.At, Selection: bulkrevoke.NotRecorded,
 			ReplayHeld: int(d.Held), ReplayExcluded: int(d.Excluded), Header: bulkrevoke.Receipt{Sequence: rec.Sequence, Watermark: rec.Watermark}, Headed: true}
 		order, targets[d.Target] = append(order, d.Target), int(d.Targets)
 	}

@@ -203,3 +203,9 @@ func (d *directory) dropPickups(match func(pickup) bool) {
 		}
 	}
 }
+
+func (d *directory) dropPickupRefs(refs []string) {
+	for _, ref := range refs {
+		delete(d.pickups, ref)
+	}
+}

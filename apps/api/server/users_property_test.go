@@ -309,7 +309,7 @@ func randomFilter(rng *rand.Rand, people map[string]*modelPerson) url.Values {
 func (f world) expected(p *population, filter url.Values) []string {
 	f.t.Helper()
 	now := f.s.clock()
-	query, code := parseUsersQuery(filter)
+	query, code, _ := parseUsersQuery(filter)
 	if code != "" {
 		f.t.Fatalf("filter %v %s", filter, code)
 	}

@@ -9,6 +9,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/bulkrevoke"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
@@ -90,12 +91,18 @@ func parseSearch(raw string) (string, bool) {
 	return q, q != "" && len(q) <= userSearchBytes && utf8.ValidString(q)
 }
 
-func parseUsersQuery(values url.Values) (usersQuery, commands.Code) {
+func parseUsersQuery(values url.Values) (usersQuery, commands.Code, string) {
 	out := usersQuery{limit: userPageDefault}
 	method := false
-	for key, list := range values {
+	keys := make([]string, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	slices.Sort(keys)
+	for _, key := range keys {
+		list := values[key]
 		if len(list) != 1 || list[0] == "" {
-			return out, commands.InvalidRequest
+			return out, commands.InvalidRequest, key
 		}
 		raw, ok := list[0], true
 		switch key {
@@ -115,13 +122,42 @@ func parseUsersQuery(values url.Values) (usersQuery, commands.Code) {
 			}
 		}
 		if !ok {
-			return out, commands.InvalidRequest
+			return out, commands.InvalidRequest, key
 		}
 	}
 	if method {
-		return out, commands.UnsupportedCapability
+		return out, commands.UnsupportedCapability, "method"
 	}
-	return out, ""
+	return out, "", ""
+}
+
+var filterKeys = []string{"holder", "invitation", "membership", "period", "q", "role", "signin", "status"}
+
+func (f *userFilter) term(key string) *string {
+	if key == "q" {
+		return &f.Q
+	}
+	return f.field(key)
+}
+
+func (f userFilter) terms() []bulkrevoke.FilterTerm {
+	out := []bulkrevoke.FilterTerm{}
+	for _, key := range filterKeys {
+		if value := *f.term(key); value != "" {
+			out = append(out, bulkrevoke.FilterTerm{Key: key, Value: value})
+		}
+	}
+	return out
+}
+
+func filterOf(terms []bulkrevoke.FilterTerm) userFilter {
+	var f userFilter
+	for _, term := range terms {
+		if field := f.term(term.Key); field != nil {
+			*field = term.Value
+		}
+	}
+	return f
 }
 
 func foldRune(r rune) rune {

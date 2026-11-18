@@ -213,7 +213,9 @@ func (s *Server) checkIDs(ws string, active uint64, kind relationships.Kind, c p
 	for _, p := range parties {
 		party[p.ID] = p
 	}
-	if _, isParty := party[c.Member]; !isParty {
+	if p, isParty := party[c.Member]; isParty && (p.Kind == organizations.LegalEntity || kind != relationships.Hierarchy || p.State != organizations.Active) {
+		return refuse(commands.InvalidRequest, "member")
+	} else if !isParty {
 		found, err := s.knownIn(ws, active, func(_ relationships.Kind, line relationships.Timeline) bool { return line.Member == c.Member }, relationKinds...)
 		if err != nil {
 			return err

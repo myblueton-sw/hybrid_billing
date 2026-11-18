@@ -506,7 +506,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!resolveMember.current) return;
-    const listed = !!choices && allMemberChoices(choices.parties, kinds.map((k) => choices.byKind[k] ?? [])).some((m) => m.id === form.member);
+    const listed = !!choices && allMemberChoices(choices.parties, kinds.map((k) => choices.byKind[k] ?? []), form.kind || undefined).some((m) => m.id === form.member);
     const mode = memberMode(!!choices || choicesFailed, listed, touched);
     if (mode === null) return;
     resolveMember.current = false;
@@ -796,7 +796,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const described = (f: keyof Errors, id: string, hint?: string) => [hint, errors[f] ? id + "-error" : ""].filter(Boolean).join(" ") || undefined;
 
   const kindMembers = form.kind ? choices?.byKind[form.kind] ?? [] : [];
-  const memberList: Choice[] = allMemberChoices(parties, kinds.map((k) => choices?.byKind[k] ?? []));
+  const memberList: Choice[] = allMemberChoices(parties, kinds.map((k) => choices?.byKind[k] ?? []), form.kind || undefined);
   const pendingMember = resolveMember.current && !form.memberById && form.member && !memberList.some((m) => m.id === form.member) ? form.member : "";
   const targetList: Choice[] = form.kind ? targetChoices(form.kind, form.member, parties, kindMembers) : [];
   const targetHint = form.kind === "hierarchy" ? c.hintHierarchy(l) : form.kind === "payer" ? c.hintPayer(l) : c.hintPool(l);

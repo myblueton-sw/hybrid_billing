@@ -115,24 +115,29 @@ func TestProposalRefusals(t *testing.T) {
 	f.setPassword(MemberLogin, pw)
 	root := f.as(AdminLogin)
 	for name, c := range map[string][5]string{
-		"view group with set":       {"view_group", "sample-acct-01", "set", "sample-view-north", "2026-12-01"},
-		"hierarchy with join":       {"hierarchy", "sample-acct-01", "join", "sample-le-north", "2026-12-01"},
-		"set without target":        {"hierarchy", "sample-acct-01", "set", "", "2026-12-01"},
-		"end with target":           {"hierarchy", "sample-acct-01", "end", "sample-le-north", "2026-12-01"},
-		"target equals member":      {"hierarchy", "sample-acct-01", "set", "sample-acct-01", "2026-12-01"},
-		"bad date":                  {"hierarchy", "sample-acct-01", "set", "sample-unit-north-ops", "2026-12-32"},
-		"bad target characters":     {"hierarchy", "sample-acct-01", "set", "bad target", "2026-12-01"},
-		"a party as its own parent": {"hierarchy", "sample-unit-north-ops", "set", "sample-unit-north-ops", "2026-12-01"},
-		"past date":                 {"hierarchy", "sample-acct-01", "set", "sample-unit-north-data", "2026-11-15"},
-		"unknown member":            {"hierarchy", "sample-acct-99", "set", "sample-unit-north-data", "2026-12-01"},
-		"unknown hierarchy target":  {"hierarchy", "sample-acct-01", "set", "sample-unit-nowhere", "2026-12-01"},
-		"payer to a unit":           {"payer", "sample-acct-01", "set", "sample-unit-north-data", "2026-12-01"},
-		"unknown pool":              {"allocation_pool", "sample-acct-01", "set", "sample-pool-new", "2026-12-01"},
-		"unknown view group":        {"view_group", "sample-acct-01", "join", "sample-view-east", "2026-12-01"},
+		"view group with set":          {"view_group", "sample-acct-01", "set", "sample-view-north", "2026-12-01"},
+		"hierarchy with join":          {"hierarchy", "sample-acct-01", "join", "sample-le-north", "2026-12-01"},
+		"set without target":           {"hierarchy", "sample-acct-01", "set", "", "2026-12-01"},
+		"end with target":              {"hierarchy", "sample-acct-01", "end", "sample-le-north", "2026-12-01"},
+		"target equals member":         {"hierarchy", "sample-acct-01", "set", "sample-acct-01", "2026-12-01"},
+		"bad date":                     {"hierarchy", "sample-acct-01", "set", "sample-unit-north-ops", "2026-12-32"},
+		"bad target characters":        {"hierarchy", "sample-acct-01", "set", "bad target", "2026-12-01"},
+		"a party as its own parent":    {"hierarchy", "sample-unit-north-ops", "set", "sample-unit-north-ops", "2026-12-01"},
+		"past date":                    {"hierarchy", "sample-acct-01", "set", "sample-unit-north-data", "2026-11-15"},
+		"unknown member":               {"hierarchy", "sample-acct-99", "set", "sample-unit-north-data", "2026-12-01"},
+		"unknown hierarchy target":     {"hierarchy", "sample-acct-01", "set", "sample-unit-nowhere", "2026-12-01"},
+		"payer to a unit":              {"payer", "sample-acct-01", "set", "sample-unit-north-data", "2026-12-01"},
+		"unknown pool":                 {"allocation_pool", "sample-acct-01", "set", "sample-pool-new", "2026-12-01"},
+		"unknown view group":           {"view_group", "sample-acct-01", "join", "sample-view-east", "2026-12-01"},
+		"legal entity in hierarchy":    {"hierarchy", "sample-le-north", "set", "sample-le-south", "2026-12-01"},
+		"legal entity as payer member": {"payer", "sample-le-north", "set", "sample-le-south", "2026-12-01"},
+		"unit as payer member":         {"payer", "sample-unit-north-ops", "set", "sample-le-north", "2026-12-01"},
+		"unit in an allocation pool":   {"allocation_pool", "sample-unit-north-ops", "set", "sample-pool-shared", "2026-12-01"},
 	} {
 		field := map[string]string{"view group with set": "action", "hierarchy with join": "action", "set without target": "target", "end with target": "target",
 			"target equals member": "target", "bad date": "from", "bad target characters": "target", "a party as its own parent": "target", "past date": "from", "unknown member": "member",
-			"unknown hierarchy target": "target", "payer to a unit": "target", "unknown pool": "target", "unknown view group": "target"}[name]
+			"unknown hierarchy target": "target", "payer to a unit": "target", "unknown pool": "target", "unknown view group": "target",
+			"legal entity in hierarchy": "member", "legal entity as payer member": "member", "unit as payer member": "member", "unit in an allocation pool": "member"}[name]
 		f.failed(t, name, f.proposeChange(root, c[0], c[1], c[2], c[3], c[4]), commands.InvalidRequest, field)
 	}
 	f.failed(t, "bad kind", f.proposeChange(root, "other", "sample-acct-01", "set", "sample-unit-north-data", "2026-12-01"), commands.InvalidRequest)
@@ -140,6 +145,10 @@ func TestProposalRefusals(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.failed(t, "inactive payer", f.proposeChange(root, "payer", "sample-acct-01", "set", "sample-le-closed", "2026-12-01"), commands.InvalidRequest, "target")
+	if _, err := f.s.orgs.PutParty(organizations.Party{ID: "sample-unit-closed", WorkspaceID: SampleWorkspace, Kind: organizations.InternalUnit, ParentID: "sample-le-north", State: organizations.Suspended}, 0); err != nil {
+		t.Fatal(err)
+	}
+	f.failed(t, "suspended unit as member", f.proposeChange(root, "hierarchy", "sample-unit-closed", "set", "sample-le-north", "2026-12-01"), commands.InvalidRequest, "member")
 	f.failed(t, "member", f.runWith(f.as(MemberLogin), f.revision(root), "relationship.propose", relationshipsTarget,
 		map[string]string{"kind": "hierarchy", "member": "sample-acct-01", "action": "set", "target": "sample-unit-north-data", "from": "2026-12-01"}), commands.PermissionDenied)
 	f.failed(t, "wrong target", f.run(root, "relationship.propose", "elsewhere", map[string]string{"kind": "hierarchy", "member": "sample-acct-01", "action": "end", "from": "2026-12-01"}), commands.PermissionDenied)
@@ -161,7 +170,12 @@ func TestRejectedPlansAndViewGroups(t *testing.T) {
 	if same.body["business_state"] != "rejected" || row["state"] != "rejected" || fmt.Sprint(row["violations"]) != "[map[kind: member: rule:no_change]]" || len(row["members"].([]any)) != 0 {
 		t.Errorf("no change %+v", row)
 	}
-	cycle := f.proposeChange(root, "hierarchy", "sample-le-north", "set", "sample-unit-north-ops", "2026-12-01")
+	f.failed(t, "a legal entity under its own unit", f.proposeChange(root, "hierarchy", "sample-le-north", "set", "sample-unit-north-ops", "2026-12-01"), commands.InvalidRequest, "member")
+	under := planID(t, f.proposeChange(root, "hierarchy", "sample-unit-north-ops", "set", "sample-unit-north-data", "2026-12-01"))
+	if act := f.run(second, "relationship.activate", under, nil); act.status != 200 {
+		t.Fatalf("unit under unit %+v", act)
+	}
+	cycle := f.proposeChange(root, "hierarchy", "sample-unit-north-data", "set", "sample-unit-north-ops", "2026-12-01")
 	if r := f.planRow(root, planID(t, cycle)); r["state"] != "rejected" || !strings.Contains(fmt.Sprint(r["violations"]), "cycle") {
 		t.Errorf("cycle %+v", r)
 	}
@@ -295,8 +309,18 @@ func TestPlanReadsAcrossPagesAndLimits(t *testing.T) {
 	if _, err := f.s.timelineOf(ws, 1, relationships.Hierarchy, "sample-acct-01"); err == nil {
 		t.Error("timelines fault")
 	}
-	f.failed(t, "timelines fault on the target", f.proposeChange(root, "allocation_pool", "sample-unit-north-ops", "set", "sample-pool-shared", "2026-12-01"), commands.DependencyUnavailable)
-	f.failed(t, "timelines fault on the member", f.proposeChange(root, "hierarchy", "sample-unit-north-ops", "set", "sample-le-south", "2026-12-01"), commands.DependencyUnavailable)
+	f.failed(t, "timelines fault on the member", f.proposeChange(root, "allocation_pool", "sample-acct-01", "set", "sample-pool-shared", "2026-12-01"), commands.DependencyUnavailable)
+	calls := 0
+	f.s.fault = func(at string) bool {
+		if at != "plan-timelines" {
+			return false
+		}
+		calls++
+		return calls > 1
+	}
+	f.failed(t, "timelines fault on the target", f.proposeChange(root, "allocation_pool", "sample-acct-01", "set", "sample-pool-shared", "2026-12-01"), commands.DependencyUnavailable)
+	f.s.fault = func(at string) bool { return at == "plan-timelines" }
+	f.failed(t, "timelines fault while building a unit timeline", f.proposeChange(root, "hierarchy", "sample-unit-north-ops", "set", "sample-le-south", "2026-12-01"), commands.DependencyUnavailable)
 	f.s.fault = func(at string) bool { return at == "plan-draft" }
 	f.failed(t, "draft collision", f.proposeChange(root, "hierarchy", "sample-acct-01", "set", "sample-unit-north-data", "2026-12-01"), commands.InternalError)
 	f.s.fault = func(at string) bool { return at == "plan-activate" }

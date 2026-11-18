@@ -18,10 +18,16 @@ function sorted(choices: Map<string, string>): Choice[] {
   return [...choices].map(([id, name]) => ({ id, name: label(name, id) })).sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 }
 
-export function memberChoices(parties: OrgParty[], members: OrgMember[]): Choice[] {
+export function memberChoices(parties: OrgParty[], members: OrgMember[], kind?: RelationKind): Choice[] {
   const out = new Map<string, string>();
-  for (const p of parties) out.set(p.id, p.name);
-  for (const m of members) if (!out.has(m.member)) out.set(m.member, m.name);
+  const unitsAllowed = !kind || kind === "hierarchy";
+  const partyKind = new Map(parties.map((p) => [p.id, p.state === "active" ? p.kind : "inactive"]));
+  for (const p of parties) if (unitsAllowed && p.kind === "internal_unit" && p.state === "active") out.set(p.id, p.name);
+  for (const m of members) {
+    const k = partyKind.get(m.member);
+    if (k === "legal_entity" || k === "inactive" || (k && !unitsAllowed) || out.has(m.member)) continue;
+    out.set(m.member, m.name);
+  }
   return sorted(out);
 }
 
@@ -121,8 +127,8 @@ export function findPlan(plans: PlanRow[], id: string): PlanRow | undefined {
   return id ? plans.find((p) => p.id === id) : undefined;
 }
 
-export function allMemberChoices(parties: OrgParty[], byKind: OrgMember[][]): Choice[] {
-  return memberChoices(parties, byKind.flat());
+export function allMemberChoices(parties: OrgParty[], byKind: OrgMember[][], kind?: RelationKind): Choice[] {
+  return memberChoices(parties, byKind.flat(), kind);
 }
 
 export function nameOf(id: string, parties: OrgParty[], members: OrgMember[]): string {

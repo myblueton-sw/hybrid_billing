@@ -84,6 +84,8 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 | watermark / `<seq>:<sha256>` | 결정 워터마크 | Confirmed watermark | علامة التأكيد | The sequence and hash of the last record the ledger confirmed. Not a timestamp and not proof that the file was not replaced as a whole. | M03 expert detail |
 | installation-setting / `-access-*`, `-decision-ledger-max-mib` flags | 설치 설정 | Installation setting | إعداد التثبيت | A value chosen when the server starts, with a validated range and a default. Not editable on screen and not a workspace policy. | M03 approval settings disclosure |
 | outside-controlled-scope / cleanup `outside_scope` | 통제 범위 밖 | Outside the controlled scope | خارج النطاق المتحكَّم فيه | Cleanup items the product cannot reach, such as copies already shown or downloaded. Never counted as cleaned. | M03 revocation cleanup inventory |
+| ai-source-body / prompt and response text of AI usage | 프롬프트·응답 본문 | Prompt and response bodies | نصوص الموجّهات والردود | The text sent to and returned by an AI model. AI usage records have no field for it (`modules/tokenmeter` Event). Not "token counts", and not a claim that consumer identifiers are pseudonymous. | P04 deletion storage results (HYB-325); KO and AR are AI drafts pending native-language review |
+| assistant-conversations / retention class `conversation` | Assistant 대화 | Assistant conversations | محادثات المساعد | The P04 data class for Assistant conversations, separate from billing records; a deletion run for it deletes only conversations, never the records that refer to them. Not billing evidence, an approval or an audit record; attachments and tool-run references are not modelled in it. | P04 data classes and deletion storage results (HYB-325) |
 
 # B01 labels
 

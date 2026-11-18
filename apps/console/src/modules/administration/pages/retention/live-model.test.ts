@@ -494,3 +494,22 @@ test("storage results state that ERP and downloaded copies are outside the contr
   assert.match(texts[2], /ERP/);
   assert.equal(new Set(texts).size, 3);
 });
+
+test("storage results state that AI source bodies are not collected and Assistant conversations are a separate data class", async () => {
+  const { readFileSync } = await import("node:fs");
+  const source = readFileSync(new URL("./LiveDeletion.tsx", import.meta.url), "utf8");
+  assert.match(source, /<p className="p04-small">\{k\.outsideNote\(l\)\}<\/p>\s*<p className="p04-small">\{k\.aiNote\(l\)\}<\/p>/);
+  const texts = (["en", "ko", "ar"] as const).map((l) => k.aiNote(l));
+  assert.match(texts[0], /no field for prompt or response bodies/);
+  assert.match(texts[0], /Assistant conversations are their own data class/);
+  assert.match(texts[0], /does not delete the records that refer to them/);
+  assert.match(texts[0], /AI usage intake and the Assistant are not connected/);
+  assert.doesNotMatch(texts[0], /only token counts/);
+  assert.match(texts[1], /프롬프트·응답 본문 필드가 없습니다/);
+  assert.match(texts[1], /별도 자료 등급/);
+  assert.match(texts[1], /AI 사용량 수집과 Assistant가 연결되어 있지 않습니다/);
+  assert.match(texts[2], /حقل لنصوص الموجّهات أو الردود/);
+  assert.match(texts[2], /محادثات المساعد فئة بيانات مستقلة/);
+  assert.match(texts[2], /غير متصلين/);
+  assert.equal(new Set(texts).size, 3);
+});

@@ -327,7 +327,7 @@ Behaviour found by HYB-291 and HYB-301 that the planning requires within phases 
 | 12 | A check across screens for unknown, stale, zero and not-connected states, fake success and dead actions | UI-10; `ui-design.md:553` | no | Error and trust state check of the phase 2–5 screens |
 | 13 | Three Python paths that still bypass the gate | `HB-257/plan.md:153`; `apps/console/vite.config.ts:63-71` | no | Remove or gate the remaining direct Python proxy paths |
 | 14 | Separate API, module and channel permissions, plus stop and reprocess permissions, on P02 commands | HB-31, HB-42; `P02/spec.md:33, 70-76` | yes, as a deviation (`HB-284/plan.md:308-310, 376`) | Split the P02 integration permissions |
-| 15 | Concurrent first-administrator creation blocked, and acceptance of an activation or invitation link from another workspace refused, with tests | IAM-01; `retention-access.md:110` | yes, as not built or tested (`HB-259/verification.md:109`, `HB-263/verification.md:204`) | IAM-01 concurrent bootstrap and cross-workspace acceptance for L02 and M01 |
+| 15 | Concurrent first-administrator creation blocked, and acceptance of an activation or invitation link from another workspace refused, with tests | IAM-01; `retention-access.md:110` | yes, as not built or tested (`HB-259/verification.md:109`, `HB-263/verification.md:204`) | IAM-01 concurrent bootstrap and cross-workspace acceptance for L02 and M01. 2026-11-18: see [HYB-303/verification.md](../../features/HYB-303/verification.md); `retention-access.md:49` not fully covered (restart re-arming, HYB-303 R1) |
 
 Notes:
 - **Items 1 and 2.** They extend HYB-294 (M01) and HYB-300 (O01) to the other screens.

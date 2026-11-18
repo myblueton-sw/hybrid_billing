@@ -14,6 +14,9 @@ func (h *Boundary) Bootstrap(verifier Verifier, userID string, triple Triple, em
 	if !r.boot.armed || r.boot.consumed || r.boot.locked {
 		return refused(ReasonBootstrap)
 	}
+	if len(r.users) != 0 || r.identities[triple] != nil {
+		return refused(ReasonBootstrap)
+	}
 	if !r.boot.validity.at(r.clock()) {
 		return refused(ReasonExpired)
 	}

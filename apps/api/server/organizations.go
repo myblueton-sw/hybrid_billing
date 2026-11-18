@@ -208,7 +208,7 @@ func (s *Server) readOrganizations(ws string, q orgQuery) (orgPage, error) {
 	}
 	page.Next, page.ScanStopped = found.next, found.stopped
 	for _, line := range found.lines {
-		page.Members = append(page.Members, timelineRow{Member: line.Member, Name: orgName(line.Member), Targets: covering(line.Entries, q.on), History: historyOf(line.Entries)})
+		page.Members = append(page.Members, timelineRow{Member: line.Member, Name: orgName(line.Member), Targets: s.labelled(ws, covering(line.Entries, q.on)), History: s.labelledHistory(ws, historyOf(line.Entries))})
 	}
 	return page, nil
 }

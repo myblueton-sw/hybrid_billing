@@ -48,7 +48,7 @@ export const c = {
   hintPool: (l: Locale) => t(l, "Only existing pools and groups. New ones cannot be created here.", "이미 있는 풀·그룹만 고를 수 있으며 여기서 새로 만들 수 없습니다.", "المجمعات والمجموعات الموجودة فقط، ولا يمكن إنشاء جديد هنا."),
   fromLabel: (l: Locale) => t(l, "Effective from", "적용 시작일", "تاريخ السريان"),
   fromHint: (l: Locale) =>
-    t(l, "UTC date, today or later. The change applies from the start of that day (00:00 UTC).", "UTC 기준 오늘 이후 날짜입니다. 해당 날짜 00:00(UTC)부터 적용됩니다.", "تاريخ بالتوقيت العالمي المنسق، اليوم أو بعده. يسري التغيير من بداية ذلك اليوم (00:00 UTC)."),
+    t(l, "UTC date, today or later. The change applies from the start of that day (00:00 UTC).", "UTC 기준 오늘 이후 날짜입니다. 해당 날짜 UTC 00:00부터 적용됩니다.", "تاريخ بالتوقيت العالمي المنسق، اليوم أو بعده. يسري التغيير من بداية ذلك اليوم (00:00 UTC)."),
   current: (l: Locale) => t(l, "Current, from the organizations listing", "현재 관계(조직 목록 기준)", "الوضع الحالي، من قائمة المؤسسات"),
   onFrom: (l: Locale, d: string) => t(l, `On ${d} (effective from)`, `${d}(적용 시작일)`, `في ${d} (تاريخ السريان)`),
   today: (l: Locale, d: string) => t(l, `Today, ${d}`, `오늘(${d})`, `اليوم، ${d}`),
@@ -91,7 +91,7 @@ export const c = {
     s === "done" ? t(l, "Done", "완료", "مكتملة") : s === "current" ? t(l, "Current", "현재", "الحالية") : s === "held" ? t(l, "Held", "보류", "معلَّقة")
       : s === "stopped" ? t(l, "Ends here", "여기서 종료", "تنتهي هنا") : s === "na" ? t(l, "Not reached", "진행 전", "لم تبدأ") : t(l, "Unknown", "알 수 없음", "غير معروفة"),
   approvalHeld: (l: Locale, b: string) =>
-    b === "own" ? t(l, "Proposed by you", "직접 제안함", "اقترحتها أنت") : b === "stale" ? t(l, "Base changed", "기준 변경됨", "تغيّر الأساس")
+    b === "own" ? t(l, "Proposed by you", "직접 제안함", "اقترحتها أنت") : b === "own_draft" ? t(l, "Draft created or edited by you", "직접 만들거나 고친 초안", "مسودة أنشأتَها أو عدّلتها") : b === "stale" ? t(l, "Base changed", "기준 변경됨", "تغيّر الأساس")
       : b === "passed" ? t(l, "Effective date passed", "적용 시작일 지남", "انقضى تاريخ السريان") : t(l, "Not available", "사용할 수 없음", "غير متاح"),
   heldLead: (l: Locale) => t(l, "Activation is held: the impact of this change on amounts, publication and ERP has not been calculated.", "활성화 보류: 이 변경의 금액·공개·ERP 영향이 계산되지 않았습니다.", "التفعيل معلَّق: لم يُحتسب أثر هذا التغيير على المبالغ والنشر وERP."),
   heldNext: (l: Locale) => t(l, "Impact calculation and the approval request are planned with the billing modules. Until then this plan can only be discarded.", "영향 계산과 승인 요청은 과금 모듈과 함께 제공될 예정입니다. 그전까지 이 계획은 폐기만 할 수 있습니다.", "سيُتاح احتساب الأثر وطلب الاعتماد مع وحدات الفوترة. حتى ذلك الحين لا يمكن إلا تجاهل هذه الخطة."),
@@ -113,8 +113,8 @@ export const c = {
   colMember: (l: Locale) => t(l, "Member", "구성원", "العضو"),
   colChange: (l: Locale) => t(l, "Dated change", "날짜별 변경", "التغيير المؤرخ"),
   colRanges: (l: Locale) => t(l, "Dates that differ", "달라지는 기간", "الفترات المختلفة"),
-  colBefore: (l: Locale) => t(l, "Before (any date)", "변경 전(전체 기간)", "قبل (أي تاريخ)"),
-  colAfter: (l: Locale) => t(l, "After (any date)", "변경 후(전체 기간)", "بعد (أي تاريخ)"),
+  colBefore: (l: Locale) => t(l, "Before (any date)", "변경 전 (전체 기간)", "قبل (أي تاريخ)"),
+  colAfter: (l: Locale) => t(l, "After (any date)", "변경 후 (전체 기간)", "بعد (أي تاريخ)"),
   closedHere: (l: Locale) => t(l, "The selected plan is closed and is not in this list. See", "선택한 계획은 종료되어 이 목록에 없습니다. 다음에서 확인하세요:", "الخطة المحددة مغلقة وليست في هذه القائمة. راجع"),
   timelineNote: (l: Locale) =>
     t(l, "The before and after lists cover every date in the member's timeline, so a move shows both targets after. The dated change and the ranges say what applies when.", "변경 전후 목록은 구성원 타임라인의 모든 날짜를 포함하므로 이동하면 변경 후에 두 대상이 함께 보입니다. 언제 무엇이 적용되는지는 날짜별 변경과 기간을 보세요.", "تشمل قائمتا قبل وبعد كل تواريخ الجدول الزمني للعضو، لذا يظهر الهدفان معًا بعد النقل. يوضح التغيير المؤرخ والفترات ما يسري ومتى."),
@@ -166,10 +166,12 @@ export const c = {
   cancel: (l: Locale) => t(l, "Cancel", "취소", "إلغاء"),
   blockedTitle: (l: Locale) => t(l, "Activation is not available", "지금은 활성화할 수 없습니다", "التفعيل غير متاح"),
   own: (l: Locale) => t(l, "You proposed this change. Another administrator must activate it.", "직접 제안한 변경입니다. 다른 관리자가 활성화해야 합니다.", "أنت من اقترح هذا التغيير، ويجب أن يفعّله مسؤول آخر."),
+  ownDraft: (l: Locale) =>
+    t(l, "You created or edited the draft for this plan. Another administrator must activate it.", "이 계획의 초안을 직접 만들거나 고쳤습니다. 다른 관리자가 활성화해야 합니다.", "أنشأتَ مسودة هذه الخطة أو عدّلتها، ويجب أن يفعّلها مسؤول آخر."),
   staleBlock: (l: Locale) => t(l, "The active revision changed after this was proposed.", "제안 이후 활성 리비전이 바뀌었습니다.", "تغيّرت المراجعة النشطة بعد الاقتراح."),
   passed: (l: Locale) => t(l, "The effective date has passed.", "적용 시작일이 지났습니다.", "انقضى تاريخ السريان."),
   otherBlock: (l: Locale) => t(l, "Activation is not available for this plan.", "이 계획은 활성화할 수 없습니다.", "التفعيل غير متاح لهذه الخطة."),
-  refused: (l: Locale, r: string) => (r === "impact" ? c.heldLead(l) : r === "impact_unknown" ? c.heldUnknownLead(l) : r === "own" ? c.own(l) : c.otherBlock(l)),
+  refused: (l: Locale, r: string) => (r === "impact" ? c.heldLead(l) : r === "impact_unknown" ? c.heldUnknownLead(l) : r === "own" ? c.own(l) : r === "own_draft" ? c.ownDraft(l) : c.otherBlock(l)),
   next: (l: Locale) => t(l, "Discard this plan and propose it again.", "이 계획을 폐기하고 다시 제안하세요.", "تجاهل هذه الخطة واقترحها مرة أخرى."),
   discard: (l: Locale) => t(l, "Discard", "폐기", "التجاهل"),
   reviewDiscard: (l: Locale) => t(l, "Review and discard", "검토 후 폐기", "المراجعة والتجاهل"),
@@ -224,5 +226,32 @@ export const c = {
   fromPassed: (l: Locale, d: string) =>
     t(l, `The effective date in the link, ${d}, has passed, so it was not filled in. Choose today or a later date (UTC).`, `링크의 적용 시작일(${d})이 지나 입력하지 않았습니다. 오늘(UTC) 이후 날짜를 고르세요.`, `تاريخ السريان الوارد في الرابط (${d}) قد مضى، لذا لم يُملأ. اختر تاريخ اليوم أو تاريخًا لاحقًا (UTC).`),
   linkDropped: (l: Locale) => t(l, "A value in the link was not valid and was removed.", "링크에서 올바르지 않은 값을 제거했습니다.", "أُزيلت من الرابط قيمة غير صالحة."),
+  groupTitle: (l: Locale) => t(l, "Change plan for a view group draft", "조회 그룹 초안의 변경 계획", "خطة تغيير لمسودة مجموعة عرض"),
+  draftEffect: (l: Locale, n: number) =>
+    t(l, `Proposing creates one change plan that, if activated, adds all ${n} members to this group from the effective date. If the plan passes its checks, activation is held: the impact of this change on amounts, publication and ERP has not been calculated.`,
+      `제안하면 구성원 ${n}개 전체를 적용 시작일부터 이 그룹에 추가하는 변경 계획 하나가 만들어지며, 구성원은 계획이 활성화될 때 추가됩니다. 검사를 통과해도 활성화 보류: 이 변경의 금액·공개·ERP 영향이 계산되지 않았습니다.`,
+      `يُنشئ الاقتراح خطة تغيير واحدة تضيف، إذا فُعّلت، كل الأعضاء (${n}) إلى هذه المجموعة اعتبارًا من تاريخ السريان. وإذا اجتازت الخطة الفحص، يبقى التفعيل معلَّقًا: لم يُحتسب أثر هذا التغيير على المبالغ والنشر وERP.`),
+  membersFirst: (l: Locale, m: number, n: number) => t(l, `Members (first ${m} of ${n})`, `구성원(${n}개 중 처음 ${m}개)`, `الأعضاء (أول ${m} من ${n})`),
+  draftNameFact: (l: Locale) => t(l, "Draft name", "초안 이름", "اسم المسودة"),
+  draftName: (l: Locale) => t(l, "Draft name:", "초안 이름:", "اسم المسودة:"),
+  groupFact: (l: Locale) => t(l, "Group", "그룹", "المجموعة"),
+  newGroup: (l: Locale) => t(l, "New group", "새 그룹", "مجموعة جديدة"),
+  membersFact: (l: Locale) => t(l, "Members", "구성원", "الأعضاء"),
+  groupLead: (l: Locale, group: string, n: number | string, d: string) =>
+    t(l, `Join view group ${iso(group)}: ${n} members from ${d}`, `조회 그룹 ${iso(group)}에 추가: ${d}부터 구성원 ${n}개`, `الانضمام إلى مجموعة العرض ${iso(group)}: عدد الأعضاء ${n}، اعتبارًا من ${d}`),
+  planLimit: (l: Locale) =>
+    t(l, "This change is too large for one plan. Remove members from the draft and propose again.", "한 계획에 담기에는 변경이 너무 큽니다. 초안에서 구성원을 줄인 뒤 다시 제안하세요.", "هذا التغيير أكبر من أن تتسع له خطة واحدة. أزِل أعضاء من المسودة ثم اقترح مجددًا."),
+  draftLoading: (l: Locale) => t(l, "Loading the view group draft…", "조회 그룹 초안을 불러오는 중입니다…", "جارٍ تحميل مسودة مجموعة العرض…"),
+  draftMissing: (l: Locale) => t(l, "This view group draft no longer exists, so no change plan can be created from it.", "이 조회 그룹 초안은 더 이상 없어 변경 계획을 만들 수 없습니다.", "لم تعد مسودة مجموعة العرض هذه موجودة، لذا لا يمكن إنشاء خطة تغيير منها."),
+  draftNotOpen: (l: Locale) => t(l, "This view group draft is not open, so no change plan can be created from it. Open it in Organizations and relationships to see its state.", "이 조회 그룹 초안은 열린 상태가 아니어서 변경 계획을 만들 수 없습니다. 조직·관계 탐색에서 상태를 확인하세요.", "مسودة مجموعة العرض هذه ليست مفتوحة، لذا لا يمكن إنشاء خطة تغيير منها. افتحها في شاشة «المؤسسات والعلاقات» لمعرفة حالتها."),
+  draftFailed: (l: Locale) => t(l, "The view group draft could not be loaded.", "조회 그룹 초안을 불러오지 못했습니다.", "تعذر تحميل مسودة مجموعة العرض."),
+  draftRefused: (l: Locale) =>
+    t(l, "The change plan was not created: this draft was not accepted as it is. A member or the group may have changed in the active relationships. Check the draft in Organizations and relationships.",
+      "변경 계획을 만들지 않았습니다. 이 초안을 지금 상태로는 받을 수 없습니다. 활성 관계에서 구성원이나 그룹이 바뀌었을 수 있습니다. 조직·관계 탐색에서 초안을 확인하세요.",
+      "لم تُنشأ خطة التغيير: لم تُقبل هذه المسودة كما هي. ربما تغيّر عضو أو المجموعة في العلاقات النشطة. راجع المسودة في شاشة «المؤسسات والعلاقات»."),
+  notOwnership: (l: Locale) =>
+    t(l, "A view group is not ownership. Creating or editing a draft grants no access and changes no relationship. Members join only when a change plan is activated.",
+      "조회 그룹은 소유권이 아닙니다. 초안을 만들거나 고쳐도 접근 권한이 부여되지 않고 관계도 바뀌지 않습니다. 변경 계획이 활성화되어야 구성원이 추가됩니다.",
+      "مجموعة العرض ليست ملكية. إنشاء المسودة أو تعديلها لا يمنح أي صلاحية وصول ولا يغيّر أي علاقة. ينضم الأعضاء فقط عند تفعيل خطة تغيير."),
   deniedTitle: (l: Locale) => t(l, "Relationship changes are not available to you", "관계 변경을 사용할 수 없습니다", "تغييرات العلاقات غير متاحة لك"),
 };

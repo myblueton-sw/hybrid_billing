@@ -44,7 +44,7 @@ export default function WorkRemaining(p: Props) {
   if (service && p.screenId === "O01")
     return (
       <div className="work-domain remaining-security" data-screen-id="O01" data-source-state="live" dir={p.locale === "ar" ? "rtl" : "ltr"} lang={p.locale} key={`O01:${p.locale}`}>
-        <LiveOrganizations locale={p.locale} view={p.view} params={p.params} session={service.session} onSignOut={service.signOut} onView={toView} onParams={toParams} />
+        <LiveOrganizations {...changeProps(p, service)} />
       </div>
     );
   if (service && p.screenId === "O02")

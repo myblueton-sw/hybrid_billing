@@ -416,3 +416,44 @@
 .o02-live .o02-choices-loading {
   margin-block: 0 24px;
 }
+.o02-group-handoff > * {
+  max-inline-size: 68ch;
+}
+.o02-group-handoff .o02-group-members {
+  max-inline-size: none;
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px 24px;
+}
+@media (min-width: 768px) {
+  .o02-group-handoff .o02-group-members {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+.o02-group-members li {
+  min-block-size: 32px;
+  overflow-wrap: anywhere;
+}
+.o02-live .o02-nowrap {
+  white-space: nowrap;
+}
+.o02-draft-name {
+  font-size: 14px;
+  margin-block: 0 4px;
+}
+.o02-draft-label {
+  font-weight: 600;
+}
+.o02-live .o02-group-diff table {
+  table-layout: auto;
+  inline-size: 100%;
+}
+@media (min-width: 768px) {
+  .o02-live .o02-group-diff :is(.live-mono, .o02-id-name) {
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+}

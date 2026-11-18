@@ -11,7 +11,7 @@ import { refusal } from "./live-model";
 const assetStub = /\.(css|svg)(\?.*)?$/;
 if (typeof nodeModule.registerHooks === "function") nodeModule.registerHooks({ load: (url, context, next) => (assetStub.test(url) ? { format: "module", source: "export default ''", shortCircuit: true } : next(url, context)) });
 else nodeModule.register("data:text/javascript," + encodeURIComponent(`export async function load(url, context, next) { return ${assetStub}.test(url) ? { format: "module", source: "export default ''", shortCircuit: true } : next(url, context); }`));
-const { Approval, BaseFact, Detail, HandoffNote, ImpactActions, Steps, decisionLabel } = await import("./Live");
+const { Approval, BaseFact, DatedRange, Detail, GroupHandoff, HandoffNote, ImpactActions, Steps, decisionLabel } = await import("./Live");
 
 const locales: Locale[] = ["en", "ko", "ar"];
 const computed = { money: "computed", publication: "computed", erp: "computed" };
@@ -134,7 +134,7 @@ test("renamed words and the refused notice follow the reloaded row", () => {
 });
 
 const bare = (html: string) => html.replace(/<[^>]+>/g, "").replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
-const carried = (over: Record<string, unknown> = {}) => ({ kind: "hierarchy" as const, member: "acct-1", from: "", passed: "", base: 2 as number | null, dropped: false, refused: false, ...over });
+const carried = (over: Record<string, unknown> = {}) => ({ kind: "hierarchy" as const, member: "acct-1", from: "", passed: "", base: 2 as number | null, dropped: false, draft: "", refused: false, ...over });
 const note = (l: Locale, h: ReturnType<typeof carried>, active: number) => renderToStaticMarkup(<HandoffNote l={l} h={h} active={active} onUseBase={noop} />);
 
 test("the handoff block states the prefill and the carried base, with no live role", () => {
@@ -188,4 +188,66 @@ test("the base fact reads active or names the active revision", () => {
   assert.ok(renderToStaticMarkup(<BaseFact l="en" base={3} active={5} />).includes('<dd><bdi dir="ltr">3</bdi> · not active; revision 5 is active</dd>'));
   assert.equal(c.eBase("en", 3, 5), "This change is based on revision\u00a0\u20683\u2069, but revision\u00a0\u20685\u2069 is active. Choose \"Base on revision\u00a0\u20685\u2069\" first.");
   assert.ok(c.eBase("ko", 3, 5).includes("리비전\u00a0\u20683\u2069\u2060이지만") && c.eBase("ko", 3, 5).includes("\u20685\u2069\u2060입니다"));
+});
+
+const groupDraft = { id: "vgd-0123456789abcdef", name: "Ops reviewers", group: "group-00112233aabbccdd", group_label: "group-00112233aabbccdd", new_group: true, member_count: 3,
+  members: [], author: "u", author_login: "root", created: "", updated: "", discarded: "", state: "open" as const, activated_revision: 0, pruned: false, plan: null };
+const group = (l: Locale, status: "loading" | "ready" | "missing" | "closed" | "error", h = carried({ kind: "", member: "", draft: groupDraft.id, base: 1 }), active = 1, over = {}) =>
+  renderToStaticMarkup(<GroupHandoff l={l} h={h} group={{ status, draft: status === "ready" ? { ...groupDraft, ...over } : null, members: [{ id: "sample-acct-01", name: "Account 01" }, { id: "sample-acct-02", name: "" }] }}
+    active={active} onUseBase={noop} onRetry={noop} />);
+
+test("the group draft handoff is the propose confirmation with the note, the effect and the first members", () => {
+  for (const l of locales) {
+    const html = group(l, "ready");
+    const text = bare(html).replace(/⁨|⁩/g, "");
+    for (const want of [c.groupTitle(l), c.draftNameFact(l), "Ops reviewers", c.newGroup(l), "group-00112233aabbccdd", c.notOwnership(l), c.draftEffect(l, 3), c.membersFirst(l, 2, 3), "Account 01", "sample-acct-02"]) {
+      assert.ok(text.includes(want), `${l} ${want}`);
+    }
+    assert.ok(html.startsWith('<div id="o02-handoff" class="live-note-rule o02-handoff o02-group-handoff" tabindex="-1">') && !html.includes('role="status"'), l);
+    assert.ok(!html.includes("o02-use-base"), l);
+    const existing = group(l, "ready", undefined, 1, { new_group: false, name: "", group: "sample-view-north", group_label: "North view group" });
+    assert.ok(!bare(existing).includes(c.draftNameFact(l)) && bare(existing).includes("North view group"), l);
+    const stale = group(l, "ready", carried({ kind: "", member: "", draft: groupDraft.id, base: 1 }), 2);
+    assert.ok(stale.includes('id="o02-use-base"') && bare(stale).includes(bare(c.useBase(l, "2"))), l);
+    assert.ok(bare(group(l, "loading")).includes(c.draftLoading(l)) && !bare(group(l, "loading")).includes(c.notOwnership(l)), l);
+    assert.ok(bare(group(l, "missing")).includes(c.draftMissing(l)), l);
+    assert.ok(bare(group(l, "closed")).includes(c.draftNotOpen(l)), l);
+    assert.ok(bare(group(l, "error")).includes(c.draftFailed(l)), l);
+  }
+});
+
+test("a group plan leads with its group and member count and names the draft only as a draft name", () => {
+  for (const l of locales) {
+    const p = plan({ change: { kind: "view_group", member: "", action: "join", target: "group-00112233aabbccdd", from: "2026-12-01" }, draft: { id: "vgd-1", name: "Ops reviewers", group: "group-00112233aabbccdd", new_group: true, member_count: 3 },
+      violations: [{ kind: "", member: "", rule: "plan_limit" }] });
+    const html = detail(l, p);
+    const text = bare(html).replace(/⁨|⁩/g, "");
+    assert.ok(text.includes(c.groupLead(l, "group-00112233aabbccdd", 3, "").replace(/⁨|⁩/g, "").trim().split(":")[0]), l);
+    assert.ok(text.includes(c.draftName(l)) && text.includes("Ops reviewers") && text.includes(c.planLimit(l)) && text.includes(c.membersFact(l)), l);
+    const h2 = /<h2[^>]*>([^]*?)<\/h2>/.exec(html)?.[1] ?? "";
+    assert.ok(!h2.includes("Ops reviewers") && h2.includes("group-00112233aabbccdd"), l);
+    assert.ok(html.indexOf(c.draftName(l)) < html.indexOf("o02-steps"), l);
+    const held = plain(approval(l, p));
+    assert.ok(held.includes(c.heldLead(l)), l);
+    const existing = detail(l, plan({ change: { kind: "view_group", member: "", action: "join", target: "sample-view-north", from: "2026-12-01" }, target_name: "North view group",
+      draft: { id: "vgd-2", name: "", group: "sample-view-north", new_group: false, member_count: 2 } }));
+    assert.ok(!bare(existing).includes(c.draftName(l)) && bare(existing).includes("North view group"), l);
+  }
+});
+
+test("group plan ranges keep each date whole in its own time element", () => {
+  for (const l of locales) {
+    const open = renderToStaticMarkup(<DatedRange l={l} from="2026-12-20" until="" />);
+    assert.ok(/<time class="o02-nowrap" dateTime="2026-12-20">[^<]+<\/time>/.test(open) && !open.includes("hb-nowrap"), l);
+    const closed = renderToStaticMarkup(<DatedRange l={l} from="2026-12-20" until="2027-01-05" />);
+    assert.ok((closed.match(/<time class="o02-nowrap"/g) ?? []).length >= 2, l);
+  }
+});
+
+test("an editor sees the draft reason, not the proposer reason", () => {
+  for (const l of locales) {
+    const html = approval(l, plan({ blocked: "own_draft", impact: computed }));
+    assert.ok(plain(html).includes(c.ownDraft(l)) && !plain(html).includes(c.own(l)), l);
+    assert.equal(c.refused(l, "own_draft"), c.ownDraft(l));
+  }
 });

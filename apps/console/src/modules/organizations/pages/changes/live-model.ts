@@ -77,10 +77,11 @@ export function canActivate(p: PlanRow): boolean {
   return p.state === "sealed" && p.can_activate && impactDone(p);
 }
 
-export type Blocked = "own" | "stale" | "passed" | "impact" | "impact_unknown" | "other" | "";
+export type Blocked = "own" | "own_draft" | "stale" | "passed" | "impact" | "impact_unknown" | "other" | "";
 export function blocked(p: PlanRow): Blocked {
   if (p.state !== "sealed" || canActivate(p)) return "";
   if (p.blocked === "own_proposal") return "own";
+  if (p.blocked === "own_draft") return "own_draft";
   if (p.blocked === "stale") return "stale";
   if (p.blocked === "effective_date_passed") return "passed";
   if (p.blocked === "impact_not_computed") return "impact";
@@ -93,10 +94,10 @@ export function held(b: Blocked): boolean {
   return b === "impact" || b === "impact_unknown";
 }
 
-export type Refusal = "impact" | "impact_unknown" | "own" | "other";
+export type Refusal = "impact" | "impact_unknown" | "own" | "own_draft" | "other";
 export function refusal(p: PlanRow | undefined): Refusal {
   const b = p ? blocked(p) : "";
-  return b === "impact" || b === "impact_unknown" || b === "own" ? b : "other";
+  return b === "impact" || b === "impact_unknown" || b === "own" || b === "own_draft" ? b : "other";
 }
 
 export function showOpenCount(openLimit: number): boolean {
@@ -210,8 +211,8 @@ export function handoffHref(h: HandoffLink): string {
   return "#/organization-changes?" + q.toString();
 }
 
-export const handoffKeys = ["kind", "member", "from", "base"] as const;
-export type Handoff = { kind: RelationKind | ""; member: string; from: string; passed: string; base: number | null; dropped: boolean };
+export const handoffKeys = ["kind", "member", "from", "base", "draft"] as const;
+export type Handoff = { kind: RelationKind | ""; member: string; from: string; passed: string; base: number | null; dropped: boolean; draft: string };
 
 export function canonicalRevision(raw: string): number | null {
   if (!/^(0|[1-9][0-9]{0,15})$/.test(raw)) return null;
@@ -221,7 +222,7 @@ export function canonicalRevision(raw: string): number | null {
 
 export function readHandoff(p: URLSearchParams, today: string): Handoff | null {
   if (!handoffKeys.some((k) => p.has(k))) return null;
-  const out: Handoff = { kind: "", member: "", from: "", passed: "", base: null, dropped: false };
+  const out: Handoff = { kind: "", member: "", from: "", passed: "", base: null, dropped: false, draft: "" };
   const kind = p.get("kind");
   if (kind !== null) {
     if ((kinds as string[]).includes(kind)) out.kind = kind as RelationKind;
@@ -243,11 +244,37 @@ export function readHandoff(p: URLSearchParams, today: string): Handoff | null {
     out.base = canonicalRevision(base);
     if (out.base === null) out.dropped = true;
   }
+  const draft = p.get("draft");
+  if (draft !== null) {
+    if (/^vgd-[0-9a-f]{16}$/.test(draft)) {
+      out.draft = draft;
+      out.kind = "";
+      out.member = "";
+    } else out.dropped = true;
+  }
   return out;
 }
 
 export function prefilled(h: Handoff): boolean {
-  return !!(h.kind || h.member || h.from || h.base !== null);
+  return !!(h.kind || h.member || h.from || h.base !== null || h.draft);
+}
+
+export function planTitle(p: PlanRow): string {
+  return p.draft ? p.target_name || p.change.target : p.member_name;
+}
+
+export type DraftLoad = "loading" | "ready" | "missing" | "closed" | "error";
+export function draftLoad(found: { state: string } | null | "error"): DraftLoad {
+  if (found === "error") return "error";
+  if (!found) return "missing";
+  return found.state === "open" ? "ready" : "closed";
+}
+
+export type GroupRefusal = "field" | "draft" | "other";
+export function groupRefusal(reaction: string, fields: string[]): GroupRefusal {
+  if (reaction === "field") return fields.length > 0 ? "field" : "draft";
+  if (reaction === "reason") return "draft";
+  return "other";
 }
 
 export function baseStale(base: number | null, active: number): boolean {

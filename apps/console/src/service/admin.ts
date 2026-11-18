@@ -314,7 +314,9 @@ export type PlanRow = {
   impact: PlanImpact;
   can_activate: boolean;
   blocked: string;
+  draft: PlanDraft | null;
 };
+export type PlanDraft = { id: string; name: string; group: string; new_group: boolean; member_count: number };
 export type PlansPage = {
   revision: string;
   active_revision: number;
@@ -358,6 +360,40 @@ export function planOf(v: unknown): PlanRow {
     impact: { money: impactState(impact.money), publication: impactState(impact.publication), erp: impactState(impact.erp) },
     can_activate: r.can_activate === true,
     blocked: String(r.blocked ?? ""),
+    draft: planDraftOf(r.draft),
+  };
+}
+
+function planDraftOf(v: unknown): PlanDraft | null {
+  if (!v || typeof v !== "object") return null;
+  const d = v as Record<string, unknown>;
+  return { id: String(d.id ?? ""), name: String(d.name ?? ""), group: String(d.group ?? ""), new_group: d.new_group === true, member_count: Number(d.member_count ?? 0) };
+}
+
+export type DraftState = "open" | "proposed" | "activated" | "discarded" | "unknown";
+export type DraftPlan = { id: string; state: string; closed: string; blocked: string; rule: string };
+export type DraftMember = { id: string; name: string };
+export type GroupDraft = {
+  id: string; name: string; group: string; group_label: string; new_group: boolean; member_count: number; members: DraftMember[];
+  author: string; author_login: string; created: string; updated: string; discarded: string; state: DraftState; activated_revision: number; pruned: boolean; plan: DraftPlan | null;
+};
+export type DraftsPage = { revision: string; active_revision: number; settings: AccessSetting[]; open: number; open_limit: number; drafts: GroupDraft[]; next: string };
+export type DraftMembersPage = { revision: string; draft: string; member_count: number; pruned: boolean; members: DraftMember[]; next: string };
+
+const draftStates: DraftState[] = ["open", "proposed", "activated", "discarded"];
+const memberList = (v: unknown): DraftMember[] =>
+  (Array.isArray(v) ? v : []).filter((m) => !!m && typeof m === "object").map((m: Record<string, unknown>) => ({ id: String(m.id ?? ""), name: String(m.name ?? "") }));
+
+export function groupDraftOf(v: unknown): GroupDraft {
+  const r = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+  const p = r.plan && typeof r.plan === "object" ? (r.plan as Record<string, unknown>) : null;
+  const state = String(r.state ?? "") as DraftState;
+  return {
+    id: String(r.id ?? ""), name: String(r.name ?? ""), group: String(r.group ?? ""), group_label: String(r.group_label ?? ""), new_group: r.new_group === true,
+    member_count: Number(r.member_count ?? 0), members: memberList(r.members), author: String(r.author ?? ""), author_login: String(r.author_login ?? ""),
+    created: String(r.created ?? ""), updated: String(r.updated ?? ""), discarded: String(r.discarded ?? ""), state: draftStates.includes(state) ? state : "unknown",
+    activated_revision: Number(r.activated_revision ?? 0), pruned: r.pruned === true,
+    plan: p && { id: String(p.id ?? ""), state: String(p.state ?? ""), closed: String(p.closed ?? ""), blocked: String(p.blocked ?? ""), rule: String(p.rule ?? "") },
   };
 }
 
@@ -621,6 +657,10 @@ export type CommandId =
   | "relationship.propose"
   | "relationship.activate"
   | "relationship.discard"
+  | "view_group.draft"
+  | "view_group.edit"
+  | "view_group.discard_draft"
+  | "view_group.propose"
   | "contract.suspend"
   | "contract.resume"
   | "contract.renew"
@@ -988,6 +1028,35 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
         plans: (Array.isArray(body.plans) ? body.plans : []).map(planOf),
         you: String(body.you ?? ""),
       };
+    },
+    async viewGroupDrafts(after = "", limit = 0): Promise<DraftsPage> {
+      const q = new URLSearchParams();
+      if (after) q.set("after", after);
+      if (limit) q.set("limit", String(limit));
+      const qs = q.toString();
+      const body = await send("/organizations/view-group-drafts" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request);
+      return {
+        revision: String(body.revision ?? ""),
+        active_revision: Number(body.active_revision ?? 0),
+        settings: Array.isArray(body.settings) ? (body.settings as AccessSetting[]) : [],
+        open: Number(body.open ?? 0),
+        open_limit: Number(body.open_limit ?? 0),
+        drafts: (Array.isArray(body.drafts) ? body.drafts : []).map(groupDraftOf),
+        next: String(body.next ?? ""),
+      };
+    },
+    async draftMembers(id: string, after = "", limit = 0): Promise<DraftMembersPage | "missing"> {
+      const q = new URLSearchParams();
+      if (after) q.set("after", after);
+      if (limit) q.set("limit", String(limit));
+      const qs = q.toString();
+      try {
+        const body = await send("/organizations/view-group-drafts/" + encodeURIComponent(id) + "/members" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request);
+        return { revision: String(body.revision ?? ""), draft: String(body.draft ?? ""), member_count: Number(body.member_count ?? 0), pruned: body.pruned === true, members: memberList(body.members), next: String(body.next ?? "") };
+      } catch (e) {
+        if (e instanceof AdminError && e.code === "unsupported_command") return "missing";
+        throw e;
+      }
     },
     async contracts(on = ""): Promise<ContractsPage> {
       const q = on ? "?" + new URLSearchParams({ on }).toString() : "";

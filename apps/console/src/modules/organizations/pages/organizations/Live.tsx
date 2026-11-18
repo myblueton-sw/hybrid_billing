@@ -12,6 +12,8 @@ import {
 } from "./live-model";
 import { countText, FilterBand, FilteredEmpty, MoreBar, SearchForm } from "./filters";
 import { fill, handoffHref } from "../changes/live-model";
+import { DraftPanel, DraftsSection, HeaderCheck, RowCheck, SelectionBar, useDraftEditor, useDraftList } from "./drafts";
+import { allShown, header, toggled } from "./drafts-model";
 import "../../../identity/pages/users/live.css";
 import "./live.css";
 
@@ -272,9 +274,15 @@ function all(nodes: TreeNode[], out: string[] = []): string[] {
   return out;
 }
 
+function conflictLabel(l: Locale, n: number): ReactNode {
+  const text = o.conflict(l, n);
+  const at = text.indexOf("(");
+  return at < 0 ? text : <>{text.slice(0, at)}<span className="o01-nowrap">{text.slice(at)}</span></>;
+}
+
 function sideText(l: Locale, s: Side, none: string, empty: string): ReactNode {
   if (s.state === "target") return <bdi>{label(s.target.name, s.target.id)}</bdi>;
-  if (s.state === "conflict") return <><strong>{o.conflict(l, s.targets.length)}</strong><span className="live-sub">{s.targets.map((x) => label(x.name, x.id)).join(", ")}</span></>;
+  if (s.state === "conflict") return <><strong>{conflictLabel(l, s.targets.length)}</strong><span className="live-sub">{s.targets.map((x) => label(x.name, x.id)).join(", ")}</span></>;
   return s.state === "unattributed" ? <strong>{empty}</strong> : <span className="live-quiet">{none}</span>;
 }
 
@@ -296,9 +304,9 @@ function useMemberFacts(store: Store, selected: string, enabled: boolean, onRefu
   return facts && facts.key === key ? facts : null;
 }
 
-export default function LiveOrganizations({ locale: l, view, params, session, onSignOut, onView, onParams }: {
+export default function LiveOrganizations({ locale: l, view, params, session, onSignOut, onView, onParams, onDirty }: {
   locale: Locale; view: string; params: URLSearchParams; session: Session; onSignOut: () => void;
-  onView: (view: string, params?: Record<string, string>) => void; onParams: (params: Record<string, string | null>) => void;
+  onView: (view: string, params?: Record<string, string>) => void; onParams: (params: Record<string, string | null>) => void; onDirty?: (dirty: boolean) => void;
 }) {
   const api = useAdminClient();
   const wide = useWide();
@@ -326,6 +334,11 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   const [picking, setPicking] = useState(() => !linkedId(params, "member").id);
   const [announce, setAnnounce] = useState("");
   const [focusTo, setFocusTo] = useState("");
+  const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [selCleared, setSelCleared] = useState(false);
+  const draftList = useDraftList(api, view === "accounts" || view === "groups");
+  const editor = useDraftEditor({ api, l, list: draftList, onDirty, say: setAnnounce, focus: setFocusTo });
+  useEffect(() => { if (editor.leave && !wide) setStepped(true); }, [editor.leave]); // eslint-disable-line react-hooks/exhaustive-deps
   const removed = useRef(false);
   const opened = useRef(false);
   const focusHistory = useRef(params.get("from") === "link");
@@ -380,6 +393,20 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   };
   const scope = `${store.epoch}|${on}`;
   const rk = filters.rk;
+  const listKey = `${scope}|${base?.revision ?? ""}|${rk}|${filters.entity}|${filters.ua}|${filters.q}|${groupKind}`;
+  const lastList = useRef(listKey);
+  const clearedNote = useRef(false);
+  useEffect(() => {
+    if (lastList.current === listKey) return;
+    lastList.current = listKey;
+    setChecked((c) => {
+      if (c.size === 0) return c;
+      setSelCleared(true);
+      clearedNote.current = true;
+      setAnnounce(o.selCleared(l));
+      return new Set();
+    });
+  }, [listKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const accounts = usePages<AccountRow>(view === "accounts" ? `a|${scope}|${rk}|${filters.entity}|${filters.ua}|${filters.q}` : null, async (after) => {
     const page = await store.org({ kind: rk, subject: "account", entity: filters.entity || undefined, unattributed: filters.ua, q: filters.q || undefined, after: after || undefined, limit: listPage });
     const ids = page.members.map((m) => m.member);
@@ -423,7 +450,9 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
       }
     } else {
       const shown = count || o.noneShown(l).replace(/\.$/, "");
-      setAnnounce(removed.current ? o.filterRemoved(l, shown) : o.readAnnounce(l, shown, appliedKeys(view, filters).length));
+      const read = removed.current ? o.filterRemoved(l, shown) : o.readAnnounce(l, shown, appliedKeys(view, filters).length);
+      setAnnounce(clearedNote.current ? `${o.selCleared(l)} ${read}` : read);
+      clearedNote.current = false;
     }
     removed.current = false;
     seen.current = { key: primary.key, n };
@@ -475,17 +504,23 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
     apply(clearedAll(view, filters));
     setFocusTo(fallbackFocus);
   };
-  const selectNode = (id: string) => {
+  const selectNode = (id: string) => editor.guarded(() => {
+    editor.drop();
     setSelected(id);
     if (id !== selected) onParams({ sel: id });
     setSelectedGroup("");
     if (!wide) { setStepped(true); setFocusTo("#o01-detail-title"); }
-  };
-  const selectGroup = (id: string) => {
+  });
+  const selectGroup = (id: string) => editor.guarded(() => {
+    editor.drop();
     setSelectedGroup(id);
     if (!wide) { setStepped(true); setFocusTo("#o01-detail-title"); }
+  });
+  const back = () => {
+    setStepped(false);
+    setFocusTo(editor.target ? "#o01-return-draft" : `.live-open[data-id="${selectedGroup || selected}"]`);
   };
-  const back = () => { setStepped(false); setFocusTo(`.live-open[data-id="${selectedGroup || selected}"]`); };
+  const stepIn = () => { if (!wide) setStepped(true); };
   const toHistory = (member: string) => {
     setHistoryMember(member);
     setPicking(false);
@@ -550,16 +585,17 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
       </section>
     );
   };
-  const listHead = (title: string, meta: ReactNode) => (
+  const listHead = (title: string, meta: ReactNode, end: ReactNode = null) => (
     <div className="o01-list-head">
       <div className="live-heading">
         <h2 id="o01-view-title" tabIndex={-1}>{title}</h2>
         {meta && <p className="live-meta">{meta}</p>}
       </div>
+      {end}
     </div>
   );
   const pagedMeta = (p: Pager<unknown>, groups = false): ReactNode =>
-    p.current && p.status !== "loading" && p.status !== "error" ? <>{countOf(p).n > 0 && <>{countText(l, countOf(p), groups)} · </>}{o.relationshipsOn(l, day(l, on))}</> : null;
+    p.current && p.status !== "loading" && p.status !== "error" ? <>{countOf(p).n > 0 && <>{countText(l, countOf(p), groups)} · </>}{dated(o.relationshipsOn(l, day(l, on)))}</> : null;
   const more = (p: Pager<unknown>, groups = false) => (
     <MoreBar l={l} next={p.next} stopped={p.stopped} status={p.status} count={countText(l, countOf(p), groups)} compact={!wide} onMore={p.more} />
   );
@@ -574,11 +610,43 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   const today = todayUTC(new Date());
   const lang = params.get("lang") ?? "";
   const planFor = (kind: RelationKind, member: string): PlanTarget | null => (base && status === "ready" ? { kind, member, base: base.revision } : null);
+  const checking = draftList.status === "ready" && (view === "accounts" || (view === "groups" && groupKind === "view_group"));
+  const pickRows: { id: string; name: string }[] = view === "accounts" ? accounts.rows.map((r) => ({ id: r.id, name: r.name })) : view === "groups" ? outside.rows.map((m) => ({ id: m.member, name: m.name })) : [];
+  const editing = editor.editing;
+  const cap = Math.max(0, draftList.maxMembers - (editing ? editor.count : 0));
+  const toggle = (id: string) => { setSelCleared(false); setChecked((c) => toggled(c, id, cap)); };
+  const toggleAll = () => { setSelCleared(false); setChecked((c) => allShown(c, pickRows.map((r) => r.id), cap)); };
+  const picked = () => pickRows.filter((r) => checked.has(r.id)).map((r) => ({ id: r.id, name: r.name === r.id ? "" : r.name }));
+  const startDraft = () => {
+    const rows = picked();
+    editor.openNew(rows);
+    setChecked(new Set());
+    setAnnounce(o.movedToDraft(l, rows.length));
+    stepIn();
+  };
+  const addToDraft = () => {
+    const got = editor.addRows(picked());
+    setChecked(new Set());
+    setAnnounce([o.addedToDraft(l, got.added, got.already), got.over > 0 ? o.overCap(l, got.over, draftList.maxMembers) : ""].filter(Boolean).join(" "));
+  };
+  const openDraft = (d: Parameters<typeof editor.openDraft>[0]) => { setSelectedGroup(""); editor.openDraft(d); stepIn(); };
+  const newDraft = () => { setSelectedGroup(""); editor.openNew([]); stepIn(); };
+  const bar = checking ? (
+    <SelectionBar l={l} n={checked.size} k={pickRows.length} cap={cap} atCap={checked.size > 0 && checked.size >= cap} limitReached={draftList.limit > 0 && draftList.open >= draftList.limit}
+      limit={draftList.limit} editing={editing} cleared={selCleared} wide={wide} onClear={() => setChecked(new Set())} onStart={startDraft} onAdd={addToDraft} onSelectAll={toggleAll} />
+  ) : null;
+  const returnLink = editor.target && !wide && !stepped ? (
+    <button type="button" id="o01-return-draft" className="service-button-link" onClick={() => { setStepped(true); setFocusTo("#o01-draft-title"); }}>{o.returnToDraft(l)}</button>
+  ) : null;
+  const headEnd = bar || returnLink ? <div className="o01-head-end">{returnLink}{bar}</div> : null;
+  const checkCell = (id: string, name: string) => (
+    <RowCheck l={l} id={id} name={name} checked={checked.has(id)} disabled={!checked.has(id) && checked.size >= cap} stacked onToggle={() => toggle(id)} />
+  );
   const memberDetail = (hier: OrgMember | undefined, hierLoaded: boolean, fallbackName: string, isAccount: boolean, plan: PlanTarget | null, pending = false) => {
     if (!selected || !base) return null;
     const p = party(selected);
     const parentFact: [string, ReactNode] = hier
-      ? [o.parentOn(l, day(l, on)), hier.targets.length > 1 ? <strong>{o.conflict(l, hier.targets.length)}</strong>
+      ? [o.parentOn(l, day(l, on)), hier.targets.length > 1 ? <strong>{conflictLabel(l, hier.targets.length)}</strong>
         : hier.targets[0] ? <bdi>{label(hier.targets[0].name, hier.targets[0].id)}</bdi> : <strong>{o.unattributed(l)}</strong>]
       : !hierLoaded ? [o.parentOn(l, day(l, on)), <span className="live-quiet">{pending ? o.loadingMore(l) : o.notLoaded(l)}</span>]
         : p?.parent ? [o.registryParent(l), <bdi>{label(party(p.parent)?.name ?? "", p.parent)}</bdi>]
@@ -658,7 +726,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
                       {built.conflicts.map((c) => (
                         <div key={c.node.id}>
                           {sub([c.node])}
-                          <p className="live-note">{o.conflict(l, c.targets.length)}: {c.targets.map((x) => label(x.name, x.id)).join(", ")}</p>
+                          <p className="live-note">{conflictLabel(l, c.targets.length)}: {c.targets.map((x) => label(x.name, x.id)).join(", ")}</p>
                         </div>
                       ))}
                     </section>
@@ -703,16 +771,17 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
     const kindLabel = o.kind(l, rk);
     main = (
       <section aria-labelledby="o01-view-title">
-        {listHead(o.accountsTitle(l), pagedMeta(accounts))}
+        {listHead(o.accountsTitle(l), pagedMeta(accounts), headEnd)}
         {pageError ?? pagerState(accounts, o.loadingAccounts(l, day(l, on)))}
         {accounts.current && accounts.status !== "loading" && accounts.status !== "error" && (
           rows.length === 0 ? (
             accounts.stopped ? null : narrowing(view, filters).length > 0 ? filteredEmpty : <p className="live-empty">{o.noAccounts(l)}</p>
           ) : (
-            <div className="security-table-scroll live-table o01-accounts">
+            <div className={"security-table-scroll live-table o01-accounts" + (checking ? " o01-checkable" : "")}>
               <table role="table">
 
                 <thead role="rowgroup"><tr role="row">
+                  {checking && <th scope="col" role="columnheader" className="o01-check"><HeaderCheck l={l} state={header(checked, rows.map((r) => r.id))} onToggle={toggleAll} /></th>}
                   <th scope="col" role="columnheader">{o.colAccount(l)}</th>
                   <th scope="col" role="columnheader">{o.colOrganization(l)}</th>
                   <th scope="col" role="columnheader">{o.payer(l)}</th>
@@ -722,6 +791,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
                 <tbody role="rowgroup">
                   {rows.map((r) => (
                     <tr key={r.id} role="row" className={selected === r.id ? "live-selected" : undefined}>
+                      {checking && <td role="cell" className="o01-check">{checkCell(r.id, r.name)}</td>}
                       <td role="cell" className="live-user"><button type="button" className="live-open" data-id={r.id} aria-current={selected === r.id ? "true" : undefined} onClick={() => selectNode(r.id)}><bdi className={r.name === r.id ? "o01-id-name" : undefined}>{r.name}</bdi></button><span className="live-sub live-mono">{ltr(r.id)}</span></td>
                       <td role="cell" data-label={o.orgOn(l, day(l, on))}>{sideText(l, r.unit, o.noHierarchy(l), o.unattributed(l))}</td>
                       <td role="cell" data-label={o.payerOn(l, day(l, on))}>{sideText(l, r.payer, o.noPayer(l), o.noPayerDay(l))}</td>
@@ -766,8 +836,9 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
     ) : !selected ? null : outsideRow ? memberDetail(facts?.hier, !!facts, outsideRow.name, true, planFor(groupKind, selected), !facts) : notInView;
     main = (
       <section aria-labelledby="o01-view-title">
-        {listHead(o.groupsTitle(l), pagedMeta(groupList, true))}
+        {listHead(o.groupsTitle(l), pagedMeta(groupList, true), returnLink)}
         <div className="live-note-rule"><p>{groupKind === "view_group" ? o.viewNote(l) : o.poolNote(l)}</p></div>
+        {groupKind === "view_group" && <DraftsSection l={l} list={draftList} lang={lang} current={editor.draft?.id ?? ""} onOpen={openDraft} onNew={newDraft} />}
         {pageError ?? pagerState(groupList, o.loadingGroups(l, day(l, on)))}
         {groupList.current && groupList.status !== "loading" && groupList.status !== "error" && (
           groupsRows.length === 0 ? (groupList.stopped ? <p className="live-empty">{o.noMatchesYet(l)}</p> : filters.q ? filteredEmpty : <p className="live-empty">{o.noGroupsOn(l, day(l, on))}</p>) : (
@@ -791,14 +862,19 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
         )}
         {groupList.current && more(groupList, true)}
         <section aria-labelledby="o01-outside" className="o01-outside">
-          <h3 id="o01-outside">{groupKind === "view_group" ? o.notInView(l, day(l, on)) : o.notInPool(l, day(l, on))}</h3>
+          <div className="o01-list-head o01-sub-head">
+            <div className="live-heading">
+              <h3 id="o01-outside">{dated(groupKind === "view_group" ? o.notInView(l, day(l, on)) : o.notInPool(l, day(l, on)))}</h3>
+              {outside.current && outside.status !== "loading" && outside.status !== "error" && outside.rows.length > 0 && <p className="live-meta">{countText(l, countOf(outside))}</p>}
+            </div>
+            {bar}
+          </div>
           {pagerState(outside, groupKind === "view_group" ? o.loadingOutsideView(l, day(l, on)) : o.loadingOutsidePool(l, day(l, on)))}
           {outside.current && outside.status !== "loading" && outside.status !== "error" && (
             outside.rows.length === 0 ? (outside.stopped ? <p className="live-empty">{o.noMatchesYet(l)}</p> : filters.entity ? filteredEmpty : <p className="live-empty">{o.noneUnattributed(l)}</p>) : (
               <>
-                <p className="live-meta">{countText(l, countOf(outside))}</p>
                 <ul className="o01-plain">{outside.rows.map((m) => (
-                  <li key={m.member}><button type="button" className="live-open" data-id={m.member} aria-current={selected === m.member && !selectedGroup ? "true" : undefined} onClick={() => selectNode(m.member)}><bdi>{label(m.name, m.member)}</bdi></button> <span className="live-mono live-quiet">{ltr(m.member)}</span></li>
+                  <li key={m.member} className={checking ? "o01-pick" : undefined}>{checking && checkCell(m.member, label(m.name, m.member))}<button type="button" className="live-open" data-id={m.member} aria-current={selected === m.member && !selectedGroup ? "true" : undefined} onClick={() => selectNode(m.member)}><bdi>{label(m.name, m.member)}</bdi></button> <span className="live-mono live-quiet">{ltr(m.member)}</span></li>
                 ))}</ul>
               </>
             )
@@ -864,7 +940,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
                     </tbody>
                   </table>
                 </div>
-                {conflicting && <p className="live-note"><strong>{o.conflict(l, applying.length)}</strong></p>}
+                {conflicting && <p className="live-note"><strong>{conflictLabel(l, applying.length)}</strong></p>}
                 <p className="live-note">{o.endNote(l)}</p>
                 <PlanActions l={l} plan={planFor(rk, chosen.member)} on={on} today={today} lang={lang} />
               </section>
@@ -889,6 +965,17 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
       filters={filters} entities={entities} onChange={apply} onRemove={removeFilter} onClearAll={clearAll}
       groupKind={groupKind} onGroupKind={(k) => { setGroupKind(k); setSelectedGroup(""); }} history={historyPick} />
   );
+  if (editor.target && (view === "accounts" || view === "groups")) {
+    const searchAccounts = async (q: string, after: string) => {
+      const page = await store.org({ kind: "view_group", subject: "account", q: q || undefined, after: after || undefined, limit: 10 });
+      return { rows: page.members, next: page.next };
+    };
+    const searchGroups = async (q: string) => {
+      const page = await store.targets({ kind: "view_group", q: q || undefined, limit: 10 });
+      return { rows: page.targets, next: "" };
+    };
+    detail = <DraftPanel l={l} e={editor} list={draftList} lang={lang} on={on} today={today} base={base?.revision ?? draftList.active} searchAccounts={searchAccounts} searchGroups={searchGroups} />;
+  }
   const showPanel = view !== "history" && (wide || stepped);
   return (
     <div className={"o01-live" + (view === "history" ? " o01-single" : "")} data-live={view}>
@@ -896,7 +983,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
       {scopeForm}
       {notices}
       {band}
-      <div className="live-users" data-wide={wide ? "true" : "false"}>
+      <div className="live-users" data-wide={wide ? "true" : "false"} data-mode={editor.target && view === "groups" ? "draft" : view === "accounts" && checking ? "pick" : undefined}>
         {!(stepped && !wide) && <div className="live-list live-sections" id="o01-list">{main}</div>}
         {showPanel && (
           <aside className="live-panel" aria-label={o.selectHint(l)}>

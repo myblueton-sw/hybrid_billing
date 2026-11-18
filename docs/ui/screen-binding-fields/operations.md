@@ -1,0 +1,376 @@
+---
+type: Screen Binding Field Map
+title: Field bindings of the operations screens P01 to P05
+description: For each field, column and state of the service-mode screens P01 installation, P02 integrations, P03 recovery, P04 retention and P05 release evidence, the read or command and JSON field it comes from, or the client-side derivation, with the parser line and the console line that renders it.
+status: stable
+tags: [HYB-295, screen-binding, P01, P02, P03, P04, P05]
+sources:
+  - resource: ../screen-binding-register.md
+  - resource: ../../features/HB-257/plan.md
+  - resource: ../../../apps/console/src/service/installation.ts
+  - resource: ../../../apps/console/src/service/integrations.ts
+  - resource: ../../../apps/console/src/service/recovery.ts
+  - resource: ../../../apps/console/src/service/retention.ts
+  - resource: ../../../apps/console/src/service/release-evidence.ts
+  - resource: ../../../apps/api/server/boundary.go
+---
+
+# Operations field bindings
+
+This is part of the [screen binding register](../screen-binding-register.md#pre-launch-service-bindings), as `HB-257/plan.md:177-178` requires ("records which screen fields come from which module read or command"). The register lists the reads and commands per screen; this file adds the field level. It was written from the code at main `82c9272`. **Owner acceptance is pending for every screen here.**
+
+- **Short paths.** Page paths start at `apps/console/src/modules/administration/pages/` (for example `installation/Live.tsx`). `admin.ts`, `installation.ts`, `integrations.ts`, `recovery.ts`, `retention.ts` and `release-evidence.ts` are under `apps/console/src/service/`. Server files are under `apps/api/server/`.
+- **Reads.** Client methods are at `admin.ts:1077-1091`; routes are registered at `boundary.go:43-47`. Each read answers either the full page or, for a workspace outside the installation, only `{revision, now, state: "not_configured"}` (`installation.go:193-197`, used by every handler below).
+- **Server rows.** JSON shapes: `installation.go:30-215`, `integrations.go:29-315`, `recovery.go:29-212`, `retention.go:46-316`, `evidence.go:31-251` and `evidenceload.go:15-108`.
+- **Commands.** Every command goes through `admin.ts:871` (`POST /api/v1/commands/{command}`). The result is parsed by `outcomeOf` (`admin.ts:735-743`): `business_state` becomes the outcome state and `fields` the result fields. A failure is parsed by `failureOf` (`admin.ts:776-783`) with the code table at `admin.ts:750-772`.
+- **Copy.** Headings, labels, state words and "not connected" sentences are fixed copy (`k.*`, `f.*`, `sc.*`) unless the Source column names a JSON field. A code value is turned into words by a table; a value outside the table shows "Unknown (code)" (P01–P04 `Code` in each `live-format.tsx`) or, on P05, an "unexpected value" locator (`release-evidence/live-format.tsx:61-72`).
+- **Derived** means computed in the browser; the Parser column then cites the derivation line.
+- **Unknown** in this file means the binding could not be determined from the code. No field needed that mark.
+
+## P01 Installation
+
+`GET /api/v1/installation` (`boundary.go:43`, handler `installation.go:428-447`), parsed by `installationOf` (`installation.ts:205-232`). Views: `plan` (default), `diagnostics`, `support`, `access` (`installation/live-model.ts:3-7`). Commands: `installation.approve`, `installation.withdraw`, `installation.propose_plan` (`installation.go:547-557`); result fields `proposal`, `target` and business state (`installation.go:543-544`).
+
+| View/area | Displayed field, column or state | Source | Parser | Rendered at |
+| --- | --- | --- | --- | --- |
+| All | Loading | no response yet | none | `installation/Live.tsx:139` |
+| All | Denied | `permission_denied` failure | `admin.ts:755`, `:780` | `installation/Live.tsx:61`, `:83-91` |
+| All | Session ended, Sign in again | `unauthenticated` or `csrf_refused` failure | `admin.ts:756-757` | `installation/Live.tsx:62`, `:93-101` |
+| All | Load failed (limited with wait, unavailable, other) with Try again | other failure; `dependency_unavailable` from `installation.go:442-444` | `admin.ts:758`, `:760`, `:780` | `installation/Live.tsx:24-30`, `:131-137` |
+| All | Site ID and platform (scope bar) | `site.id`, `site.platform` (`os/arch`, `installation.go:398`) | `installation.ts:212` | `installation/Live.tsx:122` |
+| All | Revision | `revision` | `installation.ts:209` | `installation/Live.tsx:124` |
+| All | Server time | `now` | `installation.ts:210` | `installation/LivePlan.tsx:272`, `installation/Live.tsx:125` |
+| All | Statement that nothing is installed | fixed copy | none | `installation/Live.tsx:129` |
+| All | Command notice | command outcome text | `admin.ts:735` | `installation/Live.tsx:130` |
+| All | Not configured | `state = not_configured` (no site, or other workspace, `installation.go:437-439`) | `installation.ts:211` | `installation/Live.tsx:140-142` |
+| All | Unknown page state | any other `state` | `installation.ts:211` | `installation/Live.tsx:143-145` |
+| Support, Access | Not connected, with the list of what the view will hold | fixed copy | none | `installation/Live.tsx:146-147`, `:157-165` |
+| Plan | Observation state tag | `observation.state` (`fresh`, `stale`, `missing`, `unknown`; `installation.go:251-263`) | `installation.ts:213` | `installation/LivePlan.tsx:109` |
+| Plan | Observed at, expires at | `observation.observed_at`, `observation.expires_at` | `installation.ts:213` | `installation/LivePlan.tsx:112-113` |
+| Plan | Not observed; observation unknown | `observation.state` | `installation.ts:213` | `installation/LivePlan.tsx:110-111`, `:114-115` |
+| Plan | Observation blocks approval; restart note when stale | derived from `observation.state` | `installation/live-model.ts:30-32` | `installation/LivePlan.tsx:117-118` |
+| Plan | Installed: not installed | `installed.state = not_installed` | `installation.ts:129` | `installation/LivePlan.tsx:134-135` |
+| Plan | Installed version and state tag | `installed.version`, `installed.state` | `installation.ts:129-130` | `installation/LivePlan.tsx:138` |
+| Plan | Owned services with ports | `installed.services[]` (`name`, `ports`) | `installation.ts:131` | `installation/LivePlan.tsx:143-145` |
+| Plan | Owned volumes: host path, data or no data or data unknown, detached | `installed.volumes[]` (`host`, `data`, `detached`); `logical` is parsed but not shown | `installation.ts:132` | `installation/LivePlan.tsx:151-155` |
+| Plan | History count, backups count | number of `installed.history[]` and `installed.backups[]` rows | `installation.ts:104`, `:133-134` | `installation/LivePlan.tsx:123-127`, `:158-159` |
+| Plan | Install plan: version, hash, availability | `preview.version`, `preview.hash`, `preview.state`, `preview.reason` | `installation.ts:108-124`, `:216` | `installation/LivePlan.tsx:65-81`, `:248` |
+| Plan | Not applicable reason (no release, nothing installed, no newer, no earlier) | derived from `preview.kind` and `installed.state` | `installation/live-model.ts:127-131` | `installation/LivePlan.tsx:68`, `:73` |
+| Plan | Plan basis: pending proposal or current release | derived from `preview.version` and the newest pending `plan` proposal | `installation/live-model.ts:106-111` | `installation/LivePlan.tsx:249` |
+| Plan | Last accepted plan and who approved it | derived: newest applied `plan` proposal (`approver_login`/`approver` or `closed_by…`, `summary.plan_version`) | `installation/live-model.ts:113-115` | `installation/LivePlan.tsx:250-256` |
+| Plan | Conflicts (unknown, none, list of target and conflict) | `preview.conflicts[]` (`target`, `conflict`) | `installation.ts:122` | `installation/LivePlan.tsx:24-44` |
+| Plan | Effects: services, ports, volumes, data effects, permissions, leftovers (unknown, none, list) | `preview.services[]`, `ports[]`, `volumes[]` (`target`, `action`, `conflict`), `data_effects[]` (`volume`, `effect`), `permissions[]`, `leftovers[]` | `installation.ts:116-121` | `installation/LivePlan.tsx:9-22`, `:46-63`; shown only when available (`installation/live-model.ts:121-123`) |
+| Plan | Upgrade and rollback cells: version, hash, availability, effects fold | `upgrade`, `rollback` (same shape as `preview`) | `installation.ts:217-218` | `installation/LivePlan.tsx:83-103` |
+| Plan | Propose plan: offered, or blocker sentence (unavailable, not applicable, unknown state, conflicts, conflicts unknown, hash, accepted, waiting) | derived from `preview` and `proposals[]` | `installation/live-model.ts:90-104` | `installation/LiveProposals.tsx:318-356` |
+| Plan | Own stale proposal warning | derived: own pending `plan` proposal with another hash | `installation/live-model.ts:101-103` | `installation/LiveProposals.tsx:347` |
+| Plan | Propose confirmation: version and hash sent | `preview.version`, `preview.hash`, or the frozen values of a pending attempt | `installation/LiveProposals.tsx:326-329` | `installation/LiveProposals.tsx:361-366` |
+| Plan | Propose result: proposal number, or duplicate | `installation.propose_plan` → `fields.proposal`; duplicate derived against the loaded list | `admin.ts:742`; `installation/live-model.ts:117-119` | `installation/LiveProposals.tsx:369` |
+| Plan | Proposals: empty; newest-50 note | `proposals[]` (server keeps the newest 50, `installation.go:415`) | `installation.ts:219` | `installation/LiveProposals.tsx:300-301` |
+| Plan | Waiting and closed groups with counts | derived: split by `state = pending`, sorted by `number` | `installation/live-model.ts:34-37` | `installation/LiveProposals.tsx:302-313` |
+| Plan | Proposal row: number, kind, state tag, proposed by, created | `number`, `kind`, `state`, `proposer_login`/`proposer`, `created_at` | `installation.ts:178-203` | `installation/LiveProposals.tsx:226-231` |
+| Plan | Proposal summary by kind (key, release, site, probe, config, destination host:port and ranges, plan, upgrade, rollback) | `summary.key_version`, `release_version`, `site`, `host`, `port`, `ranges`, `plan_version`; `destination` and `plan_admin` are parsed but not shown | `installation.ts:156-170`; `installation/live-model.ts:43-64` | `installation/LiveProposals.tsx:160-174`, `:234` |
+| Plan | Proposer's reason (pending) | `rationale` | `installation.ts:192` | `installation/LiveProposals.tsx:235` |
+| Plan | Proposed hash, current hash, hash changed | `summary.plan_hash`, `current_hash` | `installation.ts:167`, `:201`; `installation/live-model.ts:72-74` | `installation/LiveProposals.tsx:236-244` |
+| Plan | Closed line (approved by, withdrawn by, closed by) and closing reason | `state`, `approver_login`/`approver`, `closed_by_login`/`closed_by`, `closing_rationale` | `installation.ts:188-195` | `installation/LiveProposals.tsx:218-222`, `:245-252` |
+| Plan | Approve, Withdraw offered | `can_approve`, `approve_blocked`, `can_withdraw`, `withdraw_blocked` (`installation.go:320-345`) | `installation.ts:172-176`, `:197-200` | `installation/LiveProposals.tsx:201-202`, `:261-274` |
+| Plan | Blocked sentences (no command target, approve blocked by code, withdraw blocked) | `approve_blocked`, `withdraw_blocked`; target checked against `number` | `installation/live-model.ts:17-20`, `:78-80` | `installation/LiveProposals.tsx:204-207`, `:255-259` |
+| Plan | Kept refusal note | derived: last command refused with a hint | `installation/live-model.ts:242-251` | `installation/LiveProposals.tsx:203`, `:345` |
+| Plan | Confirmation facts: number, kind, summary, proposed hash, proposer's reason | proposal row | `installation.ts:178-203` | `installation/LiveProposals.tsx:180-190` |
+| Plan | Approve or withdraw result | `business_state` | `admin.ts:739` | `installation/LiveProposals.tsx:282` |
+| Plan | Command form messages: pending attempt, plan changed, conflict, gone, limited, retry, renew, partial with operation, step-up, failed | failure code, `fields`, `operation_id` | `admin.ts:776-783`; `installation/live-model.ts:148-176` | `installation/LiveProposals.tsx:84-110`, `:119-124` |
+| Plan | Releases: empty | `releases[]` | `installation.ts:215` | `installation/LivePlan.tsx:185-186` |
+| Plan | Release row: version, key version, upgrade from, platforms | `releases[].version`, `key_version`, `upgrade_from`, `platforms` | `installation.ts:143-148` | `installation/LivePlan.tsx:203-206` |
+| Plan | Release services with ports and artifact kind | `releases[].services[]` (`name`, `ports`, `artifact`) joined to `artifacts[]` (`name`, `kind`) | `installation.ts:149`, `:151`; join at `installation/LivePlan.tsx:209` | `installation/LivePlan.tsx:207-218` |
+| Plan | Release volumes with data flag | `releases[].volumes[]` (`name`, `data`) | `installation.ts:150` | `installation/LivePlan.tsx:219-223` |
+| Plan | Release mark: none, marked by with reason, confirmed by | `releases[].mark` (`by`, `by_login`, `reason`, `confirmed_by`, `confirmed_by_login`) | `installation.ts:138-141` | `installation/LivePlan.tsx:167-178`, `:224` |
+| Diagnostics | Allowlisted destinations: empty; ID, host, port, ranges | `destinations[]` (`id`, `host`, `port`, `ranges`) | `installation.ts:220` | `installation/Live.tsx:170-194` |
+| Diagnostics | Check reports: empty; check, target and resolved address, status, action required, route, next steps | `reports[]` (`kind`, `destination`, `address`, `failure`, `via`, `cause`, `steps`) | `installation.ts:221-229` | `installation/Live.tsx:195-232` |
+| Diagnostics | Action required or none | derived: `failure = ok` | `installation/live-model.ts:142-144` | `installation/Live.tsx:220` |
+| Diagnostics | Diagnostic requests: not connected | fixed copy | none | `installation/Live.tsx:233-236` |
+| None | Not displayed | `runs` (always `none`, `installation.go:381`), `site.probe` | `installation.ts:230`, `:212` | not rendered |
+
+## P02 Integrations
+
+`GET /api/v1/integrations` (`boundary.go:44`, handler `integrations.go:701-720`), parsed by `integrationsOf` (`integrations.ts:429-439`). Views: `clients` (default), `modules`, `channels`, `events` (`integrations/live-model.ts:3-7`). Each section carries its own `state` (`integrations.go:317-322`); the Modules, Channels and Events views check it (`integrations/Live.tsx:121-122`, `:175-188`); the Clients view does not read `clients.state`. Commands: fifteen `integrations.*` IDs (register entry); result fields `proposal`, `subscription`, `delivery`, `redelivery`, `target` (`integrationcmds.go:142`, `:206`, `:211`, `:326`, `:344`).
+
+| View/area | Displayed field, column or state | Source | Parser | Rendered at |
+| --- | --- | --- | --- | --- |
+| All | Loading; denied; session ended; load failed with Try again | as P01 | `admin.ts:750-783` | `integrations/Live.tsx:68-69`, `:90-109`, `:139-147` |
+| All | Workspace (scope bar) | session `workspace`, not the read | none | `integrations/Live.tsx:130` |
+| All | Revision, server time | `revision`, `now` | `integrations.ts:431-432` | `integrations/Live.tsx:131-132` |
+| All | Statement, permission note, view lead | fixed copy | none | `integrations/Live.tsx:136-137`, `:156-158` |
+| All | Not configured; unknown page state | `state` | `integrations.ts:433` | `integrations/Live.tsx:148-153` |
+| All | Read only (commands withheld) | derived: empty `revision` | `integrations/live-model.ts:90-92` | `integrations/Live.tsx:159` |
+| All | Vanished-target notices (letter, redeliver hint with event, other) | derived: pending attempt whose target left the read | `integrations/live-model.ts:532` | `integrations/Live.tsx:160-174` |
+| Modules, Channels, Events | Section unknown, or section not configured | `modules.state`, `channels.state`, `events.state` | `integrations.ts:329`, `:382`, `:412` | `integrations/Live.tsx:175-188`, `integrations/LiveChannels.tsx:316-318` |
+| Clients | API clients: unknown, none; client, kind, state, grant count | `clients.clients[]` (`id`, `kind`, `state`, `grants`) | `integrations.ts:229` | `integrations/LiveClients.tsx:63-88` |
+| Clients | Grants per client: unknown, none; grant, action, data kind, scope (customer, legal entity, contract, period), from, until, state | `clients.clients[].grants[]` (`id`, `action`, `kind`, `scope.*`, `not_before`, `not_after`, `state`) | `integrations.ts:212-223` | `integrations/LiveClients.tsx:8-54`, `:90-98` |
+| Clients | Service users: unknown, none; user, state, owner, usable credentials | `clients.service_users[]` (`id`, `state`, `owner_login`/`owner`, `usable_credentials`) | `integrations.ts:230` | `integrations/LiveClients.tsx:99-126` |
+| Clients | Manage on M04 link, or unknown management screen | `clients.manage_on` | `integrations.ts:231` | `integrations/LiveClients.tsx:127-131` |
+| Clients | OAuth clients connection | `clients.oauth_clients` | `integrations.ts:232` | `integrations/LiveClients.tsx:133-138` |
+| Modules | Plugin workspace: none; ID, runtime identity, verification workspace | `modules.workspace` (`id`, `runtime`, `verification`) | `integrations.ts:327`, `:330` | `integrations/LiveModules.tsx:19-30` |
+| Modules | Publishers: unknown, none; name and ID, revoked or not, keys with validity, retired or current, compromise mark | `modules.publishers[]` (`id`, `name`, `revocation`, `keys[]` with `version`, `not_before`, `not_after`, `retired`, `compromise`) | `integrations.ts:331-336`, marks `:195-199` | `integrations/LiveModules.tsx:31-55` |
+| Modules | Registering not connected | fixed copy | none | `integrations/LiveModules.tsx:57` |
+| Modules | Installations: one block per plugin ID from installations and versions; none | `modules.installations[]` and `modules.plugins[]` | `integrations.ts:337-338`; `integrations/live-model.ts:172-177` | `integrations/LiveModules.tsx:219-258` |
+| Modules | Installed version and state tag, or not installed, or unknown | `installations[].version`, `state` | `integrations.ts:266-268` | `integrations/LiveModules.tsx:232-235` |
+| Modules | Install reason, registry revision, tokens, runtime | `installations[].reason`, `revision`, `tokens`, `runtime` | `integrations.ts:269-270`, `:277-278` | `integrations/LiveModules.tsx:238-243` |
+| Modules | Approved endpoints: unknown, none; endpoint, fingerprint, approved by | `installations[].endpoints[]` (`id`, `fingerprint`, `approver_login`/`approver`) | `integrations.ts:271` | `integrations/LiveModules.tsx:62-87` |
+| Modules | Storage after removal (removed plugins) | `installations[].disposal` (`deletion`, `retention_days`, `migration`) | `integrations.ts:272`, `:207-210`; words at `integrations/live-copy.ts:513-517` | `integrations/LiveModules.tsx:245-250` |
+| Modules | Stop, Disable offered or blocked | `can_stop`, `stop_blocked`, `can_disable`, `disable_blocked` | `integrations.ts:263-264`, `:273-276` | `integrations/LiveModules.tsx:91-110` |
+| Modules | Stop or disable confirmation facts and result | `installations[].plugin`, `version`, `state`; command `business_state` | `admin.ts:739` | `integrations/LiveModules.tsx:111-126` |
+| Modules | Propose change: options (install, upgrade, rollback, enable, remove) or blocker (no command, no workspace, unknown state, unknown list, no version, untrusted, duplicate) | derived from `workspace`, `publishers`, `plugins`, `installations`, `proposals` | `integrations/live-model.ts:203-237` | `integrations/LiveModules.tsx:145-217` |
+| Modules | Propose confirmation: plugin, change, version, installed, storage after removal | chosen change; `installations[]`; `plugins[].storage` | `integrations/live-model.ts:239-241` | `integrations/LiveModules.tsx:197-208` |
+| Modules | Propose result: proposal number or duplicate | `integrations.plugin_propose` → `fields.proposal` | `admin.ts:742` | `integrations/LiveModules.tsx:211` |
+| Modules | Proposals: unknown, none, newest-50 note, waiting and closed groups | `modules.proposals[]` | `integrations.ts:339`; `integrations/live-model.ts:104-108` | `integrations/LiveProposals.tsx:132-156` |
+| Modules | Proposal row: number, kind, state, proposed by, created, summary, reason, closed line, closing reason | `number`, `kind`, `state`, `proposer…`, `created_at`, `summary.*` (`publisher`, `publisher_name`, `key_version`, `key_not_before`, `key_not_after`, `plugin`, `version`, `workspace`, `runtime`, `endpoint`, `fingerprint`), `rationale`, `approver…`, `closed_by…`, `closing_rationale` | `integrations.ts:282-323`; summary parts `integrations/live-model.ts:114-133` | `integrations/LiveProposals.tsx:10-29`, `:70-96` |
+| Modules | May have been applied (attempt outlived the pending row) | derived | `integrations/LiveProposals.tsx:56-63` | `integrations/LiveProposals.tsx:90` |
+| Modules | Approve, Withdraw offered or blocked; result | `can_approve`, `approve_blocked`, `can_withdraw`, `withdraw_blocked`; `business_state` | `integrations.ts:300-301`, `:318-321` | `integrations/LiveProposals.tsx:54-68`, `:97-124` |
+| Modules | Versions: unknown, none; plugin, version and digest, capabilities, egress and endpoints, signed by key and publisher, core range, vulnerable mark | `modules.plugins[]` (`plugin`, `version`, `digest`, `capabilities`, `egress`, `endpoints`, `key_version`, `publisher`, `core_min`, `core_max`, `vulnerable`) | `integrations.ts:236-260` | `integrations/LiveModules.tsx:331-375` |
+| Modules | Capability kind and target, or unknown | derived from each capability string | `integrations/live-model.ts:366-373` | `integrations/LiveModules.tsx:273-284` |
+| Modules | Limits fold: timeout, memory, concurrency; storage contract; screens with fields | `plugins[].timeout_seconds`, `memory_mib`, `concurrency`, `storage.*`, `screens[]` (`label`, `component`, `fields[]` with `label`, `source`) | `integrations.ts:248-257` | `integrations/LiveModules.tsx:286-329` |
+| Channels | Destinations: unknown, none; destination, state, source | `channels.destinations[]` (`id`, `state`, `source`) | `integrations.ts:383` | `integrations/LiveChannels.tsx:15-41` |
+| Channels | Subscriptions: unknown, none | `channels.subscriptions[]` | `integrations.ts:385` | `integrations/LiveChannels.tsx:309-314` |
+| Channels | Subscription row: ID, state and reason, subscriber, destination, created, event types, cursor and lag, gaps, proposed, approved and resumed by, reason | `subscriptions[].id`, `state`, `reason`, `subscriber`, `destination`, `created_at`, `types`, `cursor`, `lag`, `gaps[]` (`after`, `to`), `proposer…`, `approver…`, `resumer…`, `rationale` | `integrations.ts:343-377` | `integrations/LiveChannels.tsx:128-165` |
+| Channels | History and keys fold: action, by, reason; key, from, until, state, proposed by, approved by; signer note | `subscriptions[].history[]`, `keys[]`, `signer` | `integrations.ts:363-374` | `integrations/LiveChannels.tsx:43-98` |
+| Channels | Approve, approve resume, pause, request resume, revoke offered or blocked; result | `subscriptions[].actions.<action>` (`allowed`, `blocked`); `business_state`, `fields.subscription` | `integrations.ts:177-193`, `:375` | `integrations/LiveChannels.tsx:117-194` |
+| Channels | Propose subscription: blocker (no types, no destination, no subscriber, unknown list) | derived from `events.types`, `channels.destinations`, `channels.subscribers`, `channels.subscriptions` | `integrations/live-model.ts:245-252` | `integrations/LiveChannels.tsx:201-232` |
+| Channels | Propose form: subscriber, active destinations, inactive ones listed, event type choices, already covered | `channels.subscribers[0]`, `destinations[]`, `events.types[].name`; covered derived | `integrations/live-model.ts:260-283` | `integrations/LiveChannels.tsx:233-293` |
+| Channels | Propose result: subscription or duplicate | `integrations.subscription_propose` → `fields.subscription` | `admin.ts:742` | `integrations/LiveChannels.tsx:291` |
+| Events | Oldest and newest event, dispatcher connection | `events.outbox.floor`, `events.outbox.head`, `events.dispatcher` | `integrations.ts:423-425` | `integrations/LiveEvents.tsx:11-20` |
+| Events | Event types: unknown, none; type, schema, fields, state, proposed by, approved by | `events.types[]` (`name`, `schema_version`, `fields`, `state`, `proposer…`, `approver…`) | `integrations.ts:413-422` | `integrations/LiveEvents.tsx:22-56` |
+| Events | Deliveries: unknown, none; filtered by subscription with Show all | `events.deliveries[]`; filter from the `subscription` parameter | `integrations.ts:424`; `integrations/live-model.ts:345-349` | `integrations/LiveEvents.tsx:130-142` |
+| Events | Delivery row: delivery, subscription link, sequence, source and event ID, kind, state, reason, attempts | `deliveries[].id`, `subscription`, `sequence`, `source`, `event_id`, `kind`, `state`, `reason`, `attempts` | `integrations.ts:389-406` | `integrations/LiveEvents.tsx:162-171` |
+| Events | Waiting for resume | derived: `waiting` delivery of a paused or suspended subscription | `integrations/live-model.ts:351-355` | `integrations/LiveEvents.tsx:168` |
+| Events | Outcome unknown, outcome missing, subscription revoked | `deliveries[].outcome_unknown`; revoked derived | `integrations.ts:401`; `integrations/live-model.ts:357-360` | `integrations/LiveEvents.tsx:172-177` |
+| Events | Dead letter: no requests; redeliver and dismiss requests with requester and reason, or unknown | `deliveries[].redeliver_request`, `dismiss_request` (`by`, `by_login`, `rationale`) | `integrations.ts:201-205`, `:402-403` | `integrations/LiveEvents.tsx:58-68`, `:92-95` |
+| Events | Request or approve redeliver or dismiss offered or blocked; confirmation facts; result | `deliveries[].actions.<action>`; `fields.redelivery` | `integrations.ts:404`; `admin.ts:742` | `integrations/LiveEvents.tsx:79-128` |
+| All forms | Pending attempt, versions changed, choice changed, conflict, gone or applied, limited, retry, renew, partial, step-up, failed | failure code, `fields`, `operation_id` | `admin.ts:776-783` | `integrations/LiveCommand.tsx:99-158` |
+
+## P03 Recovery
+
+`GET /api/v1/recovery` (`boundary.go:45`, handler `recovery.go:441-461`), parsed by `recoveryOf` (`recovery.ts:281-294`). The page is `not_configured` when the workspace has no visible installation (`recovery.go:450-453`). Views: `sets` (default), `isolation`, `reconciliation`, `migration`, `resume` (`recovery/live-model.ts:3`). Commands: `recovery.approve`, `recovery.withdraw`, `recovery.lock`, `recovery.propose_unlock`; result fields `proposal` or `installation` and `target` (`recoverycmds.go:94`, `:131`).
+
+| View/area | Displayed field, column or state | Source | Parser | Rendered at |
+| --- | --- | --- | --- | --- |
+| All | Loading; denied; session ended; load failed with Try again | as P01 | `admin.ts:750-783` | `recovery/Live.tsx:69-70`, `:101-119`, `:152-158`, `:170` |
+| All | Workspace (session), revision, server time | session `workspace`; `revision`, `now` | `recovery.ts:284-285` | `recovery/Live.tsx:143-145` |
+| All | Statement, permission note, view lead | fixed copy | none | `recovery/Live.tsx:149-150`, `:137`, `:178-183` |
+| All | Not configured; unknown page state | `state` | `recovery.ts:286` | `recovery/Live.tsx:171-176` |
+| All | Read only | derived: empty `revision` | `recovery/live-model.ts:52-54` | `recovery/Live.tsx:185` |
+| All | Vanished-target notices | derived | `recovery/live-model.ts:523` | `recovery/Live.tsx:159-168` |
+| All | Section unknown | `sets.state`, `isolation.state`, `reconciliation.state`, `migration.state`, `resume.state` | `recovery.ts:276-279`, `:287-291` | `recovery/Live.tsx:132-134`, `:186-187` |
+| Sets | Rows: none | `sets.rows[]` | `recovery.ts:154-171` | `recovery/LiveSets.tsx:146` |
+| Sets | Installation | `sets.rows[].installation` | `recovery.ts:156` | `recovery/LiveSets.tsx:167` |
+| Sets | Restore: open recovery ID, none, or other state | `sets.rows[].recovery.state`, `recovery.id` | `recovery.ts:138-152` | `recovery/LiveSets.tsx:168` |
+| Sets | As of; no restore point | `recovery.as_of`; no point derived (open with zero domains) | `recovery.ts:145`; `recovery/live-model.ts:99-101` | `recovery/LiveSets.tsx:169` |
+| Sets | Generation; installation and point generation while open | `sets.rows[].generation`, `recovery.point_generation` | `recovery.ts:147`, `:158` | `recovery/LiveSets.tsx:44-52`, `:170` |
+| Sets | Evidence: verified of total, mismatched, not checked; not applicable; no point; unknown | derived from `recovery.domains[].status` | `recovery/live-model.ts:105-121` | `recovery/LiveSets.tsx:9-21`, `:171` |
+| Sets | Watermark: outside recovery, mode, events pending, declared lost | derived from the resume row (`mode`, `pending_total`, `lost`) | `recovery/live-model.ts:125-131` | `recovery/LiveSets.tsx:23-34`, `:172` |
+| Sets | External reconciled of total; none; no point; unknown | derived from `reconciliation.rows[].externals[].status` | `recovery/live-model.ts:144-150` | `recovery/LiveSets.tsx:36-42`, `:173` |
+| Sets | Lock (public state) | `sets.rows[].state` | `recovery.ts:157` | `recovery/LiveSets.tsx:174` |
+| Sets | Jump links to isolation, reconciliation (when a row exists), resume | derived | `recovery/live-model.ts:76-78` | `recovery/LiveSets.tsx:178-184` |
+| Sets | Begin and abandon: not connected | `sets.rows[].begin`, `abandon` | `recovery.ts:168-169` | `recovery/LiveSets.tsx:185-187` |
+| Sets | Restore point fold: phase, backup reference, manifest digest, no checksums note | `recovery.phase`, `backup_reference`, `manifest_digest` | `recovery.ts:146-149` | `recovery/LiveSets.tsx:63-77` |
+| Sets | Domain checks: domain, status, chunks (none, unknown, count differs, list, first 100) | `recovery.domains[]` (`domain`, `status`, `mismatch_chunks`) | `recovery.ts:150`; `recovery/live-model.ts:154-159` | `recovery/LiveSets.tsx:54-61`, `:78-99` |
+| Sets | History: unknown, none, more; recovery, manifest, generation, outcome, lost | `sets.rows[].history[]` (`recovery`, `manifest_digest`, `generation`, `outcome`, `lost_count`), `history_total` | `recovery.ts:160-167`; `recovery/live-model.ts:135-140` | `recovery/LiveSets.tsx:105-141` |
+| Isolation | Rows: none | `isolation.rows[]` | `recovery.ts:173-191` | `recovery/LiveIsolation.tsx:135` |
+| Isolation | Installation and state tag | `isolation.rows[].installation`, `state` | `recovery.ts:176-177` | `recovery/LiveIsolation.tsx:148-149` |
+| Isolation | Generation | `isolation.rows[].generation` | `recovery.ts:178` | `recovery/LiveIsolation.tsx:152` |
+| Isolation | Stopped at; not stopped; unknown | `isolation.rows[].stopped_at` with `state` | `recovery.ts:179`; `recovery/live-model.ts:170-173` | `recovery/LiveIsolation.tsx:153` |
+| Isolation | Writers (none, list) with no-removal note; verifier | `isolation.rows[].writers`, `verifier` | `recovery.ts:182-183` | `recovery/LiveIsolation.tsx:154-161` |
+| Isolation | Permits shown or never shown | `isolation.rows[].permits` | `recovery.ts:188` | `recovery/LiveIsolation.tsx:162-168` |
+| Isolation | Open calls: not shown, none, unknown with code, list with "showing of"; call, writer, deadline, target key, series and number | `open_calls_source`, `open_calls[]` (`id`, `writer`, `deadline`, `key`, `series`, `number`), `open_calls_total` | `recovery.ts:184-186`; `recovery/live-model.ts:177-183` | `recovery/LiveIsolation.tsx:10-40` |
+| Isolation | Other-scope calls present or unknown; deadline note | `isolation.rows[].other_scope_present` | `recovery.ts:187` | `recovery/LiveIsolation.tsx:41-44` |
+| Isolation | Lock log: none; time, administrator, reason | `isolation.rows[].locks[]` (`at`, `by_login`/`by`, `rationale`) | `recovery.ts:189` | `recovery/LiveIsolation.tsx:49-74` |
+| Isolation | Lock offered or blocked | `can_lock`, `lock_blocked` | `recovery.ts:174`, `:180-181` | `recovery/LiveIsolation.tsx:97-115` |
+| Isolation | Lock confirmation: installation, state, generation to next, begin proposals retired | derived basis (isolation or set row, pending `begin` proposals), or the frozen basis of a pending attempt | `recovery/live-model.ts:292-306` | `recovery/LiveIsolation.tsx:76-95`, `:116-127` |
+| Isolation | Lock result: locked, or result unknown | `recovery.lock` → `business_state`, `fields.installation` | `admin.ts:739-742` | `recovery/LiveIsolation.tsx:124` |
+| Reconciliation | Not configured (no open recovery rows) | `reconciliation.state = not_configured` (`recovery.go:432`) | `recovery.ts:289` | `recovery/Live.tsx:193` |
+| Reconciliation | External systems: none, no point; system, kind, status | `reconciliation.rows[].externals[]` (`id`, `kind`, `status`) | `recovery.ts:196` | `recovery/LiveReconciliation.tsx:8-33` |
+| Reconciliation | Unknown targets: "showing of", unknown, none; key, series, number, fenced, high water (number, no series, unknown) | `unknown_targets[]` (`key`, `series`, `number`, `fenced`, `high_water`), `unknown_total` | `recovery.ts:197-198`; `recovery/live-model.ts:163-166` | `recovery/LiveReconciliation.tsx:35-73` |
+| Reconciliation | Other-scope targets present or unknown | `reconciliation.rows[].other_scope_present` | `recovery.ts:199` | `recovery/LiveReconciliation.tsx:74` |
+| Reconciliation | Skipped count, reconciler connection, closing note | `skipped`, `reconciler` | `recovery.ts:200-201` | `recovery/LiveReconciliation.tsx:100-103`, `:110` |
+| Migration | Not connected; modules that will follow | `migration.state` (`not_connected`), `migration.modules` | `recovery.ts:290` | `recovery/LiveMigration.tsx:5-19` |
+| Resume | Rows: none | `resume.rows[]` | `recovery.ts:205-218` | `recovery/LiveResume.tsx:117` |
+| Resume | Installation and isolation state tag | `resume.rows[].installation`; state from the isolation row | `recovery.ts:208`; `recovery/live-model.ts:72-74` | `recovery/LiveResume.tsx:129-132` |
+| Resume | Mode, phase, generation, lost sequences (unknown, none, first 50 and rest) | `resume.rows[].mode`, `phase`, `lost`; generation from the isolation row | `recovery.ts:209-213`; `recovery/live-model.ts:191-195` | `recovery/LiveResume.tsx:133-138` |
+| Resume | Mode note (none, lock release) | `resume.rows[].mode` | `recovery.ts:209` | `recovery/LiveResume.tsx:139-140` |
+| Resume | Pending decision events: "showing of", unknown, none; sequence, kind, domain, recorded | `pending_events[]` (`sequence`, `kind`, `domain`, `at`), `pending_total` | `recovery.ts:211-212` | `recovery/LiveResume.tsx:76-111`, `:141` |
+| Resume | Lost digest | `resume.rows[].lost_digest` | `recovery.ts:214` | `recovery/LiveResume.tsx:142-144` |
+| Resume | Propose unlock offered, blocked, already proposed with link, or narrowed (no command, unreadable) | `can_propose_unlock`, `unlock_blocked`; narrowing and duplicate derived | `recovery.ts:206`, `:215-216`; `recovery/live-model.ts:240-247`, `:262-268` | `recovery/LiveResume.tsx:26-57` |
+| Resume | Propose confirmation: installation, mode, state, generation, lost sequences, digest; value sent `lost` = `lost_digest` | derived basis | `recovery/live-model.ts:292-306` | `recovery/LiveResume.tsx:12-24`, `:46`, `:58-71` |
+| Resume | Propose result: proposal number, duplicate, or result unknown | `recovery.propose_unlock` → `business_state`, `fields.proposal` | `admin.ts:739-742` | `recovery/LiveResume.tsx:66-68` |
+| Resume | Proposals: unknown, none, newest note, waiting and closed groups, applied note | `proposals[]` | `recovery.ts:292` | `recovery/LiveProposals.tsx:159-184` |
+| Resume | Proposal row: number, kind, state, proposed by, created, summary, reason, installation link, closed line, closing reason, retired | `number`, `kind`, `installation`, `state`, `created_at`, `proposer…`, `summary.*` (only the fields of the kind are kept), `rationale`, `approver…`, `closed_by…`, `closing_rationale` | `recovery.ts:220-274`; summary parts `recovery/live-model.ts:207-228` | `recovery/LiveProposals.tsx:13-25`, `:91-122` |
+| Resume | Approve (unlock only), Withdraw offered, blocked or narrowed (resume unknown, generation unknown, changed) | `can_approve`, `approve_blocked`, `can_withdraw`, `withdraw_blocked`; narrowing compares `summary.unlock_generation` and `summary.lost_digest` with the read | `recovery.ts:249-250`; `recovery/live-model.ts:270-280` | `recovery/LiveProposals.tsx:57-80`, `:123-153` |
+| Resume | Approve confirmation: proposer, reason, installation now | proposal row and derived basis | `recovery/live-model.ts:292-306` | `recovery/LiveProposals.tsx:31-46` |
+| Resume | Approve result with serving after reload; withdraw result; result unknown | `business_state`; reload checks the isolation `state` | `admin.ts:739` | `recovery/LiveProposals.tsx:89`, `:144-148` |
+
+## P04 Retention
+
+`GET /api/v1/retention` (`boundary.go:46`, handler `retention.go:888-907`), parsed by `retentionOf` (`retention.ts:406-420`). The hold form also reads `GET /api/v1/identity/access` (`boundary.go:32`, `admin.ts:886`) for the owner choice. Views: `policies`, `expiry`, `holds`, `deletion`, `restore`, `decisions`. Commands: `retention.approve`, `withdraw`, `propose_policy`, `place_hold`, `propose_release`, `stop_run`; result fields `proposal`, `hold` with the three hold counts, `run` with `stopped` (`retentioncmds.go:154`, `:307-315`, `:351`).
+
+| View/area | Displayed field, column or state | Source | Parser | Rendered at |
+| --- | --- | --- | --- | --- |
+| All | Loading; denied; session ended; load failed with Try again | as P01 | `admin.ts:750-783` | `retention/Live.tsx:78-79`, `:110-128`, `:158-164`, `:176` |
+| All | Workspace (session), revision, server time | session `workspace`; `revision`, `now` | `retention.ts:409-410` | `retention/Live.tsx:148-150` |
+| All | Statement, provisional values note, permission note, view leads | fixed copy | none | `retention/Live.tsx:154-156`, `:185-189` |
+| All | Not configured; unknown page state | `state` | `retention.ts:411` | `retention/Live.tsx:177-182` |
+| All | Read only (not on Restore or Decisions) | derived: empty `revision` | `retention/live-model.ts:94-96` | `retention/Live.tsx:190` |
+| All | Vanished-target notices | derived | `retention/live-model.ts:568` | `retention/Live.tsx:165-174` |
+| Policies | Unknown list | `policies` not an array | `retention.ts:412` | `retention/LivePolicies.tsx:171-172` |
+| Policies | Class | `policies[].class` | `retention.ts:210` | `retention/LivePolicies.tsx:95` |
+| Policies | No policy | `policies[].policy = null` | `retention.ts:194-195` | `retention/LivePolicies.tsx:96-97` |
+| Policies | Revision, period days, grace days | `policy.revision`, `period_days`, `grace_days` | `retention.ts:198-200` | `retention/LivePolicies.tsx:100-102` |
+| Policies | Total days | derived: period + grace | `retention/LivePolicies.tsx:103` | `retention/LivePolicies.tsx:103` |
+| Policies | Starts from | `policies[].origin` | `retention.ts:213` | `retention/LivePolicies.tsx:106` |
+| Policies | Scope and archive rule connection | `policies[].scope`, `archive_rule` | `retention.ts:214-215` | `retention/LivePolicies.tsx:107-110` |
+| Policies | Approved by, at, proposed by | `policy.approver`, `approved_at`, `proposer` (`{id, login}`) | `retention.ts:179-182`, `:201-203` | `retention/LivePolicies.tsx:111-119` |
+| Policies | Pending proposal link (own or other) | `policies[].pending` matched to `proposals.rows[]` | `retention.ts:216`; `retention/live-model.ts:228-232` | `retention/LivePolicies.tsx:121-122` |
+| Policies | Propose change offered or blocked | `can_propose`, `propose_blocked` | `retention.ts:208`, `:217-218` | `retention/LivePolicies.tsx:76-91`, `:123-127` |
+| Policies | Propose form and confirmation: period, grace, current, proposed, change (shorter, longer, same, new), next revision, shortening sentence | entered values; current from `policy` | `retention/LivePolicies.tsx:12-74` | `retention/LivePolicies.tsx:137-157` |
+| Policies | Propose result: proposal, duplicate, or result unknown | `retention.propose_policy` → `business_state`, `fields.proposal` | `admin.ts:739-742` | `retention/LivePolicies.tsx:151-155` |
+| Expiry | Population note, decision note | `expiry[].population` (first non-empty) | `retention.ts:251` | `retention/LiveExpiry.tsx:160-166` |
+| Expiry | Unknown list; class jump links with totals | `expiry[]` (`class`, `total`) | `retention.ts:413`, `:250-253` | `retention/LiveExpiry.tsx:167-177` |
+| Expiry | Class heading and item count | `expiry[].class`, `total` | `retention.ts:250`, `:253` | `retention/LiveExpiry.tsx:116-119` |
+| Expiry | Standing strip: eligible, held, referenced, not due, no policy, in run, deleted | `expiry[].counts.<key>` | `retention.ts:166`, `:189-192`, `:252` | `retention/LiveExpiry.tsx:10-24`, `:120` |
+| Expiry | Usage, growth, bytes connection | `expiry[].usage`, `growth`, `bytes` | `retention.ts:256-258` | `retention/LiveExpiry.tsx:121-124` |
+| Expiry | Other population note; "showing of" | `population`, `more`, `total` | `retention.ts:251`, `:253-254` | `retention/LiveExpiry.tsx:125-126` |
+| Expiry | Items: unknown, none, unknown when empty but total is not 0 | `expiry[].artifacts[]` | `retention.ts:255` | `retention/LiveExpiry.tsx:127-131` |
+| Expiry | Item ID; shared or shared unknown | `artifacts[].id`, `shared` | `retention.ts:230`, `:240` | `retention/LiveExpiry.tsx:49-53` |
+| Expiry | Due (or never) and start | `artifacts[].due_at` (null means never), `anchor` | `retention.ts:222-225`, `:231-232` | `retention/LiveExpiry.tsx:54-57` |
+| Expiry | Stores | `artifacts[].stores` | `retention.ts:233` | `retention/LiveExpiry.tsx:58-60` |
+| Expiry | Access and decision line | `artifacts[].access`, `decision` | `retention.ts:234`, `:241`; `retention/live-model.ts:272-276` | `retention/LiveExpiry.tsx:26-31`, `:61-64` |
+| Expiry | Standing with held and damaged tags | `artifacts[].standing`, `held`, `damaged` | `retention.ts:235-237` | `retention/LiveExpiry.tsx:65-73` |
+| Expiry | Run link, run outside this workspace, unknown, none | `artifacts[].run` (`target`, `label`), `other_scope` | `retention.ts:184-187`, `:238-239` | `retention/LiveExpiry.tsx:74-86` |
+| Expiry | Place hold offered or blocked | `holdable`, `hold_blocked`, `hold_target` | `retention.ts:228`, `:242-244` | `retention/LiveExpiry.tsx:33-46`, `:87-93` |
+| Holds | Workspace hold button with note and pending attempt | `holds.tenant_target` checked against the session workspace | `retention.ts:300`; `retention/live-model.ts:54-58` | `retention/LiveHolds.tsx:156-179` |
+| Holds | Hold form: owner list (loading, failed with Try again, empty, choices), hold reason, class (workspace hold) | `GET /api/v1/identity/access` → `subjects[]` (`user_id`, `login`; `access.go:68`, `:77`) | `retention.ts:424-430` | `retention/LiveHoldForm.tsx:13-97` |
+| Holds | Hold confirmation: target, owner, reason, impact (deleted, damaged, in run, other run, workspace covers) | entered values; item context from the artifact row | `retention/LiveHoldForm.tsx:100-112` | `retention/LiveHoldForm.tsx:114-172` |
+| Holds | Hold result: in force, partially preserved with three counts, result unknown; stale attempt matched to an existing hold | `retention.place_hold` → `business_state` (`held`, `partially_preserved`), `fields.hold`, `not_preserved`, `outcome_pending`, `partially_deleted` | `admin.ts:739-742`; `retention/live-model.ts:635-638` | `retention/LiveHoldForm.tsx:174-184` |
+| Holds | "Showing newest"; unknown; none; unknown when empty but total is not 0 | `holds.more`, `total`, `rows[]` | `retention.ts:296-299` | `retention/LiveHolds.tsx:188-195` |
+| Holds | Hold ID and state (in force, released, unknown) | `holds.rows[].id`, `released` | `retention.ts:274`, `:281` | `retention/LiveHolds.tsx:96-97` |
+| Holds | Owner, placed by, placed at, hold reason, placing reason | `owner`, `placer`, `placed_at`, `reason`, `rationale` | `retention.ts:276-280` | `retention/LiveHolds.tsx:100-106` |
+| Holds | Covers (workspace with classes, items, nothing, unknown) | `scope.workspace`, `scope.classes`, `scope.artifacts` | `retention.ts:282`; `retention/live-format.tsx:94-104` | `retention/LiveHolds.tsx:108-109` |
+| Holds | Cannot or could not preserve: counts strip, other scope, unknown | `counts.<not_preserved, outcome_pending, partially_deleted>`, `counts_scope` (`retention.go:544-546`) | `retention.ts:168`, `:283-284` | `retention/LiveHolds.tsx:31-33`, `:110-117` |
+| Holds | Outcomes: unknown, none; item, outcome, per-store results; only-listed note; more or maybe more | `outcomes[]` (`artifact`, `outcome`, `stores` map), `outcomes_more` | `retention.ts:262-267`, `:285-286` | `retention/LiveHolds.tsx:35-70` |
+| Holds | Propose release offered, blocked (placer, already proposed, code), state sentence, pending link | `can_propose_release`, `release_blocked`, `release` | `retention.ts:270`, `:287-289`; `retention/live-model.ts:234-238` | `retention/LiveHolds.tsx:72-130` |
+| Holds | Release confirmation and result: proposal, duplicate, result unknown | entered reason; `fields.proposal`, `business_state` | `admin.ts:739-742` | `retention/LiveHolds.tsx:131-150` |
+| Holds | Required references: population note, "showing of", unknown, none; item, class | `holds.references` (`population`, `total`, `more`, `rows[]` with `id`, `class`) | `retention.ts:301` | `retention/LiveHolds.tsx:196-222` |
+| Deletion | Worker, retry, backup expiry, plan proposals connection | `deletion.worker`, `retry`, `backup_expiry`, `propose_plan` | `retention.ts:338-341` | `retention/LiveDeletion.tsx:192-200` |
+| Deletion | "Showing newest"; unknown; none; unknown when empty but total is not 0 | `deletion.more`, `total`, `rows[]` | `retention.ts:335-337` | `retention/LiveDeletion.tsx:201-208` |
+| Deletion | Run label and state tag; state note | `rows[].run.label`, `state` | `retention.ts:309`, `:312` | `retention/LiveDeletion.tsx:133-137` |
+| Deletion | Class, policy revision, decision, chunks (count and next), chunk size, lease, damaged | `class`, `revision`, `decision`, `chunks`, `next_chunk`, `chunk_size`, `lease_seconds`, `damaged` | `retention.ts:310-319` | `retention/LiveDeletion.tsx:130`, `:138-145` |
+| Deletion | Proposed by, approved by, stopped by (not stopped, unknown), plan reason, stopped-by line | `proposer`, `approver`, `stopper` (null means not stopped), `reason` | `retention.ts:318`, `:320-323` | `retention/LiveDeletion.tsx:146-151` |
+| Deletion | Outcome counts strip: pending, deleting, deleted, failed, held, referenced, not due, stopped | `rows[].counts.<key>` | `retention.ts:167`, `:324` | `retention/LiveDeletion.tsx:152-153` |
+| Deletion | Stop run offered, blocked, state sentence | `can_stop`, `stop_blocked` | `retention.ts:306`, `:327-328` | `retention/LiveDeletion.tsx:111-127`, `:154-160` |
+| Deletion | Stop confirmation: run, class, state, not yet claimed | `run.label`, `class`, `state`, `counts.pending` | `retention.ts:309-312`, `:324` | `retention/LiveDeletion.tsx:11-20`, `:165-166` |
+| Deletion | Stop result: run, stopped count, state after reload | `retention.stop_run` → `fields.run`, `fields.stopped`, `business_state` | `admin.ts:739-742` | `retention/LiveDeletion.tsx:168-176` |
+| Deletion | Per store: sums do not balance warning; unknown; none; store, target, deleted, failed, excluded, pending | `rows[].stores[]` | `retention.ts:325`; balance at `retention/live-model.ts:266` | `retention/LiveDeletion.tsx:27-67` |
+| Deletion | Sum and backup note; copies outside the controlled scope; AI usage and Assistant data not connected | fixed copy (HYB-312, HYB-325) | none | `retention/LiveDeletion.tsx:68-70` |
+| Deletion | Items: "showing of", unknown, none; item (link to expiry when listed), outcome | `rows[].artifacts` (`total`, `more`, `rows[]` with `id`, `outcome`) | `retention.ts:307`, `:326` | `retention/LiveDeletion.tsx:75-109` |
+| Deletion, Policies, Holds | Proposals by kind (plan, policy, release): plan read-only note, newest or maybe more, unknown, none, waiting and closed groups, applied note | `proposals` (`total`, `more`, `rows[]`) | `retention.ts:418` | `retention/LiveProposals.tsx:258-287` |
+| Proposals | Row: number, state, proposed by, created | `number`, `state`, `proposer`, `created_at` | `retention.ts:384-389` | `retention/LiveProposals.tsx:166-171` |
+| Proposals | Summary: policy (class, period, grace, total), plan (count, class, chunk size, lease, reason), release (hold, reason) | `summary.policy`, `summary.plan`, `summary.release` (only the one matching `kind` is kept) | `retention.ts:379-396` | `retention/LiveProposals.tsx:15-38`, `:173` |
+| Proposals | Impact at proposal | `summary.policy.impact_at_proposal` (`as_of`, `count`) | `retention.ts:363-366`, `:394` | `retention/LiveProposals.tsx:58-62`, `:174` |
+| Proposals | Impact now with digest, or unreadable (pending, shortening only) | `impact_required`, `impact_now` (`as_of`, `count`, `workspace_count`, `digest`) | `retention.ts:368-372`, `:397-398` | `retention/LiveProposals.tsx:46-56`, `:175` |
+| Proposals | Reason, hold link, closed line, closing reason, retired, may have been applied | `rationale`, `release.hold`, `approver`, `closed_by`, `closing_rationale`, `state` | `retention.ts:390-393` | `retention/LiveProposals.tsx:156-201` |
+| Proposals | Approve, Withdraw offered, blocked, narrowed, state sentence (never for plan proposals) | `can_approve`, `approve_blocked`, `can_withdraw`, `withdraw_blocked` | `retention.ts:375-376`, `:399-402` | `retention/LiveProposals.tsx:113-144`, `:202-214` |
+| Proposals | Approve confirmation: proposal, proposer, summary, reason, current policy, items that become due, in workspace, computed at, digest; hold facts; impact changed warning | proposal row; current policy and hold from the read; reviewed impact kept in the browser | `retention/LiveProposals.tsx:64-68`, `:146-155` | `retention/LiveProposals.tsx:70-105`, `:215-233` |
+| Proposals | Approve or withdraw result (policy applied, release applied with released-after check, withdrawn, result unknown) | `business_state` | `admin.ts:739` | `retention/LiveProposals.tsx:229-231`, `:247` |
+| Restore | Not connected, or unknown with code | `restore.state` (`not_connected`, `retention.go:867`) | `retention.ts:416` | `retention/LiveRestore.tsx:5-9` |
+| Decisions | Watermark, ledger, epoch, durable commit, restore check | `decisions.watermark`, `ledger`, `epoch`, `durable_commit`, `restore_check` | `retention.ts:349`, `:356-359` | `retention/LiveDecisions.tsx:12-18` |
+| Decisions | Window and total line; newest 50 or maybe more | `decisions.tombstones.window`, `total`, `more` | `retention.ts:351-353` | `retention/LiveDecisions.tsx:21-25` |
+| Decisions | Records: unknown, none; sequence, item (link when listed), class, run (link, outside, unknown, none), recorded, decision | `tombstones.rows[]` (`sequence`, `artifact`, `class`, `run`, `other_scope`, `at`, `decision`) | `retention.ts:354` | `retention/LiveDecisions.tsx:26-69` |
+| Decisions | Skip note | fixed copy | none | `retention/LiveDecisions.tsx:70` |
+| All forms | Pending attempt, field errors, conflict, gone, limited, retry, renew, partial, step-up, failed | failure code, `fields`, `operation_id` | `admin.ts:776-783` | `retention/LiveCommand.tsx:156-211` |
+
+## P05 Support combinations and release evidence
+
+`GET /api/v1/release-evidence` (`boundary.go:47`, handler `evidence.go:739-758`), parsed by `evidenceOf` (`release-evidence.ts:423-456`). Every list is `{total, more, rows}` (`evidence.go:31-35`, `release-evidence.ts:188-191`). Views: `matrix` (default), `requirements`, `artifacts`, `load`, `decisions`. Wide screens show a split list and detail; narrow screens step into the detail (`release-evidence/live-model.ts:16-18`). Commands: `release_evidence.approve`, `withdraw`, `retire_requirement`, `retire_profile`; result fields `module`, `proposal`, `target` and business state (`evidencecmds.go:122`).
+
+| View/area | Displayed field, column or state | Source | Parser | Rendered at |
+| --- | --- | --- | --- | --- |
+| All | Loading | no response yet | none | `release-evidence/Live.tsx:287` |
+| All | Denied | first `permission_denied` | `admin.ts:755`; `release-evidence/live-model.ts:462-470` | `release-evidence/Live.tsx:120-125`, `:213-223` |
+| All | Access revoked (denied after an earlier success) | `permission_denied` after a successful read | `release-evidence/live-model.ts:457-474` | `release-evidence/Live.tsx:202-212` |
+| All | Session ended | `unauthenticated` | `admin.ts:756-757` | `release-evidence/Live.tsx:127`, `:224-233` |
+| All | Load failed: busy or other, code, request ID, next step, Try again | failure code and the request ID of the read | `admin.ts:776-783`; detail `release-evidence/LiveCommand.tsx:92` | `release-evidence/Live.tsx:33-42`, `:267-275` |
+| All | Workspace (session), revision, server time | session `workspace`; `revision`, `now` | `release-evidence.ts:430-431` | `release-evidence/Live.tsx:186-188` |
+| All | Candidate fact: version and build, or none selected | `candidate` (`version`, `build`) or null | `release-evidence.ts:417-421` | `release-evidence/Live.tsx:189-194` |
+| All | Statement; candidate line; release not connected or unexpected | fixed copy; `candidate.release` | `release-evidence.ts:420` | `release-evidence/Live.tsx:67-78`, `:255-256` |
+| All | Origin note: sample seed, empty, unexpected | `<view>.origin` | `release-evidence.ts:434-454` | `release-evidence/Live.tsx:53-65`, `:259` |
+| All | Open decisions and permission notes | fixed copy | none | `release-evidence/Live.tsx:260-261` |
+| All | Not configured; unexpected page state | `state` | `release-evidence.ts:432` | `release-evidence/Live.tsx:288-291` |
+| All | Read only (commands withheld when `revision` is empty or the last read failed) | derived | `release-evidence/live-model.ts:83-85`; `release-evidence/Live.tsx:238` | `release-evidence/Live.tsx:294` |
+| All | Vanished-target notices | derived | `release-evidence/live-model.ts:638-646` | `release-evidence/Live.tsx:276-285` |
+| Matrix | Lead; blocked lead (any path with blockers, unknown blockers or a non-allowed state) | derived from `paths.rows[]` | `release-evidence/LiveMatrix.tsx:250` | `release-evidence/LiveMatrix.tsx:253-254` |
+| Matrix | Customer proof intake not connected, or unexpected | `paths.rows[].customer_proof_intake` | `release-evidence.ts:245` | `release-evidence/LiveMatrix.tsx:255` |
+| Matrix | Paths: unknown, none, "showing 50" | `matrix.paths` | `release-evidence.ts:434` | `release-evidence/LiveMatrix.tsx:259`, `:290` |
+| Matrix | Combination: path ID, provider, contract, role, version, issuance, template (or none) | `paths.rows[].id`, `provider`, `contract`, `role`, `version`, `issuance`, `template` | `release-evidence.ts:228-234` | `release-evidence/LiveMatrix.tsx:96-107`, `:117`, `:143` |
+| Matrix | Path state, or unexpected (`active`, or a build set) | `paths.rows[].state`, `build` (null expected) | `release-evidence.ts:235-236`; `release-evidence/live-model.ts:106-110` | `release-evidence/LiveMatrix.tsx:66-70` |
+| Matrix | Requirement IDs with link and state, "showing 50" | `paths.rows[].requirements` (`label`, `target`, `state`) | `release-evidence.ts:237` | `release-evidence/LiveMatrix.tsx:72-94` |
+| Matrix | Design, implementation (with commit) count of | `columns.design`, `columns.implementation` (`count`, `of`) | `release-evidence.ts:199-202`, `:238` | `release-evidence/LiveMatrix.tsx:10-13`, `:148-152` |
+| Matrix | Test count and failing, or not evaluated (no candidate), unknown | `columns.test` (null before a candidate), `columns.failing` | `release-evidence.ts:238`; `release-evidence/live-format.tsx:43-49` | `release-evidence/LiveMatrix.tsx:15-25` |
+| Matrix | Customer proof count, unexpected when above 0 | `columns.customer_proof` | `release-evidence.ts:238`; `release-evidence/live-model.ts:127-129` | `release-evidence/LiveMatrix.tsx:27-37` |
+| Matrix | Last observed: not evaluated, no result, unknown, time | `paths.rows[].last_observed` | `release-evidence.ts:241` | `release-evidence/LiveMatrix.tsx:39-43` |
+| Matrix | Blockers: problem words and subject, count, unexpected when empty or `path_build` | `paths.rows[].blockers[]` (`problem`, `subject`) | `release-evidence.ts:221-223`, `:242`; `release-evidence/live-model.ts:131-137` | `release-evidence/LiveMatrix.tsx:45-64` |
+| Matrix | Reduced row (split mode) | same fields | as above | `release-evidence/LiveMatrix.tsx:121-136` |
+| Matrix detail | Summary list; support since (fixed) | path row | as above | `release-evidence/LiveMatrix.tsx:165-186` |
+| Matrix detail | Test cases per requirement: missing, unknown, none, test blocks | requirement row found by `target` → `tests` | `release-evidence.ts:286` | `release-evidence/LiveMatrix.tsx:187-204` |
+| Matrix detail | Categories: true, false, unknown | `paths.rows[].categories` | `release-evidence.ts:214-217`, `:239` | `release-evidence/LiveMatrix.tsx:205-218` |
+| Matrix detail | Reconciliations: period, matched, differences, newest 12, note | `paths.rows[].reconciliations` | `release-evidence.ts:240` | `release-evidence/LiveMatrix.tsx:219-232` |
+| Matrix detail | Activation, support decision, intake: not connected or unexpected | `activation`, `support_decision`, `customer_proof_intake` | `release-evidence.ts:243-245` | `release-evidence/LiveMatrix.tsx:233-238` |
+| Matrix | Link evidence, record support, request activation: not connected | fixed copy | none | `release-evidence/LiveMatrix.tsx:294-301` |
+| Requirements | Gate: not evaluated, unknown, title with problem count, unexpected ready | `requirements.gate` (`ready`, `problems`) | `release-evidence.ts:295-298` | `release-evidence/LiveRequirements.tsx:107-118` |
+| Requirements | Gate problems: problem, subject, "showing 100" | `gate.problems` | `release-evidence.ts:297` | `release-evidence/LiveRequirements.tsx:119-137` |
+| Requirements | Retired blocking requirements; templates (none or unexpected); release not connected | `gate.retired_blocking`, `templates`, `release` | `release-evidence.ts:297` | `release-evidence/LiveRequirements.tsx:138-142` |
+| Requirements | Compare builds: not evaluated, too few, pickers, more note, same, differences table | derived from `requirements.rows[].states` and `builds_more`; pair from the `from`/`to` parameters | `release-evidence/live-model.ts:295-330` | `release-evidence/LiveRequirements.tsx:147-209` |
+| Requirements | Requirements: unknown, none, "showing 50" | `requirements.requirements` | `release-evidence.ts:435` | `release-evidence/LiveRequirements.tsx:409`, `:436` |
+| Requirements | Requirement label with common, blocking, retired tags; retired line with replacement | `label`, `common`, `blocking`, `retired`, `replacement` | `release-evidence.ts:272`, `:278-283` | `release-evidence/LiveRequirements.tsx:23-36`, `:294-302` |
+| Requirements | References: source, owner, interfaces | `source`, `owner`, `interfaces` | `release-evidence.ts:275-277` | `release-evidence/LiveRequirements.tsx:308-314` |
+| Requirements | State at candidate (not evaluated, unknown, unexpected `customer_proven`, word, sample note) | derived: `states[candidate.build]` | `release-evidence/live-model.ts:112-115`, `:158-161` | `release-evidence/LiveRequirements.tsx:15-21`, `:316` |
+| Requirements | Implementation commit (none, malformed, short) | `commit` | `release-evidence.ts:281` | `release-evidence/live-format.tsx:97-101`, `release-evidence/LiveRequirements.tsx:317` |
+| Requirements | Tests summary: total, pass, fail, no result, shown note | `tests` (`total`, `more`, `rows[].latest_outcome`) | `release-evidence.ts:286`; `release-evidence/live-model.ts:165-176` | `release-evidence/LiveRequirements.tsx:74-89`, `:318` |
+| Requirements | Propose retirement offered, no command, no usable replacement, blocked, state sentence, pending link | `can_retire`, `retire_blocked`, `replacement_required`, `replacements`, `retire` | `release-evidence.ts:268-291`; `release-evidence/live-model.ts:213-221` | `release-evidence/LiveRequirements.tsx:266-326` |
+| Requirements | Retire form: reason, replacement choice (required or none), more note | `replacements` (`rows[]` with `target`, `label`, `more`), `replacement_required` | `release-evidence.ts:288-289` | `release-evidence/LiveRetireForm.tsx:20-64` |
+| Requirements | Retire confirmation: requirement and tags, state, tests, replacement and its state, reason, impact | derived context | `release-evidence/LiveRequirements.tsx:332-339` | `release-evidence/LiveRequirements.tsx:220-259` |
+| Requirements | Retire result: proposal, duplicate, result unknown | `release_evidence.retire_requirement` → `business_state`, `fields.proposal` | `admin.ts:739-742` | `release-evidence/LiveRequirements.tsx:342-346` |
+| Requirement detail | Source, owner, interfaces, state, commit, design digest, retirement, evidence files not connected | `source`, `owner`, `interfaces`, `commit`, `design`, `retired` | `release-evidence.ts:275-283` | `release-evidence/LiveRequirements.tsx:363-372` |
+| Requirement detail | States by build; more builds or maybe more | `states`, `builds_more` | `release-evidence.ts:262-265`, `:284-285` | `release-evidence/LiveRequirements.tsx:373-379` |
+| Requirement detail | Tests: ID, category, outcome, counted, passes, failures, not run or not counted reason, "showing 50" | `tests.rows[]` (`id`, `category`, `latest_outcome`, `counted`, `passes`, `failures`, `not_run_reason`, `not_counted_reason`) | `release-evidence.ts:249-260`; `release-evidence/live-model.ts:178-182` | `release-evidence/LiveRequirements.tsx:38-72`, `:380-386` |
+| Artifacts | Files, logs, environment, content: not connected or unexpected | `artifacts.files`, `logs`, `environment`, `content` | `release-evidence.ts:441-444` | `release-evidence/LiveArtifacts.tsx:50-56` |
+| Artifacts | Builds: none; build, commit (or malformed), registration order, "showing 50" | `artifacts.builds` (`build`, `commit`, `order`) | `release-evidence.ts:438` | `release-evidence/LiveArtifacts.tsx:58-83` |
+| Artifacts | Harnesses: none; register, ID, revocation | `artifacts.harnesses` (`module`, `id`, `revocation`) | `release-evidence.ts:439` | `release-evidence/LiveArtifacts.tsx:84-106` |
+| Artifacts | Results: none; test (link to the requirement), namespace, build, outcome, counted and reason, passes, failures, harness, recorded at, evidence digest | `artifacts.results` (`test`, `namespace`, `build`, `latest_outcome`, `counted`, `not_counted_reason`, `passes`, `failures`, `harness`, `at`, `evidence`) | `release-evidence.ts:300-314`, `:440`; link `release-evidence/live-model.ts:277-280` | `release-evidence/LiveArtifacts.tsx:14-45`, `:108-133` |
+| Load | Planning targets, SCALE-11 note, measurement | `load.planning_targets`, `load.measurement` | `release-evidence.ts:451-452` | `release-evidence/LiveLoad.tsx:340-345` |
+| Load | Readiness: not evaluated, unknown, title, unexpected ready | `load.readiness` (`ready`, `gates`) | `release-evidence.ts:370-381` | `release-evidence/LiveLoad.tsx:49-56` |
+| Load | Gates: gate, status (unexpected `passed`), profiles (status, run or no run), retired profiles, failures not connected | `readiness.gates[]` (`gate`, `status`, `profiles[]`, `retired[]` with `profile`, `status`, `run`) | `release-evidence.ts:368`, `:372-379` | `release-evidence/LiveLoad.tsx:15-47`, `:57-83` |
+| Load | Hardware: none; ID, CPUs, memory, disk, storage, spec digest, "showing 50" | `load.hardware` (`id`, `cpus`, `memory_mib`, `disk_gib`, `storage`, `spec`) | `release-evidence.ts:448` | `release-evidence/LiveLoad.tsx:88-114` |
+| Load | Profiles: none, "showing 50" | `load.profiles` | `release-evidence.ts:449` | `release-evidence/LiveLoad.tsx:348-352` |
+| Load | Profile: ID, gate, status at candidate, retired tag, dataset and expected digests | `profiles.rows[].id`, `gate`, `status`, `retired`, `dataset`, `expected` | `release-evidence.ts:347-366` | `release-evidence/LiveLoad.tsx:280-294` |
+| Load | Active budget: unknown, none, unexpected (approved or approval set), proposed; ID, hardware, limits, proposed by, registration approved by, budget approval not connected | `active_budget` (`id`, `state`, `hardware`, `limits`, `proposer`, `approver`, `approval_by`, `approved_by`, `approved_at`) | `release-evidence.ts:316-328`, `:358-359`; `release-evidence/live-model.ts:121-125` | `release-evidence/LiveLoad.tsx:116-150` |
+| Load | Axes: unknown, values | `profiles.rows[].axes` (`rows_run` … `backlog_rows`, `evidenceload.go:24-38`) | `release-evidence.ts:204-212`, `:354` | `release-evidence/LiveLoad.tsx:298-305` |
+| Load | Runs: none; run, build, verdict (unexpected `passed`), rows, duration, recorded at, harness, newest 20 | `profiles.rows[].runs` (`number`, `build`, `verdict`, `rows`, `duration_s`, `at`, `harness`) | `release-evidence.ts:330-345`, `:361` | `release-evidence/LiveLoad.tsx:152-200` |
+| Load | Run follow row: hardware, mismatches, interrupted, metrics (not measured when null) | `runs.rows[].hardware`, `mismatches`, `interrupted`, `metrics` | `release-evidence.ts:335-340` | `release-evidence/LiveLoad.tsx:116-120`, `:201-210` |
+| Load | Propose retirement offered or blocked; confirmation facts (profile, gate, status, budget, runs) and impact; result | `can_retire`, `retire_blocked`, `retire`; `fields.proposal`, `business_state` | `release-evidence.ts:348-349`, `:362-364`; `release-evidence/live-model.ts:223-229` | `release-evidence/LiveLoad.tsx:228-256`, `:258-333` |
+| Decisions | Support decisions, activation review not connected; ledger in memory | `decisions.support_decisions`, `activation_review`, `ledger` | `release-evidence.ts:454` | `release-evidence/LiveDecisions.tsx:228-232` |
+| Decisions | Proposals: newest 50 or maybe more, unknown, none; waiting and closed groups | `decisions.proposals` | `release-evidence.ts:454` | `release-evidence/LiveDecisions.tsx:233-245` |
+| Decisions | Row: module, number, kind, state (unexpected for applied activate, proof or approval), proposed by, created | `module`, `number`, `kind`, `state`, `proposer` (`id`, `login`, `directory`), `created_at` | `release-evidence.ts:193-197`, `:393-415`; `release-evidence/live-model.ts:139-142` | `release-evidence/LiveDecisions.tsx:110-114`, `:155-162` |
+| Decisions | Summary by module and kind | `summary` (`label`, `replacement`, `reason`, `commit`, `build`, `harness`, `path`, `period`, `matched`, `differences`, `profile`, `gate`, `hardware`, `budget`; `evidence.go:607-635`, `evidenceload.go:226`) | `release-evidence.ts:383-391` | `release-evidence/LiveDecisions.tsx:19-52`, `:164` |
+| Decisions | Reason; store retired; approved or registration approved by; withdrawn by; closing reason; applied note; read-only kind | `rationale`, `state`, `approver`, `closed_by`, `closing_rationale` | `release-evidence.ts:404-408` | `release-evidence/LiveDecisions.tsx:165-177` |
+| Decisions | Approve, Withdraw (retire proposals only) offered or blocked | `can_approve`, `approve_blocked`, `can_withdraw`, `withdraw_blocked` | `release-evidence.ts:394-395`, `:410-413`; `release-evidence/live-model.ts:231-237` | `release-evidence/LiveDecisions.tsx:116-148`, `:178-186` |
+| Decisions | Approve confirmation: proposal, proposer, summary, reason, requirement or profile now, replacement, not in this read; impact | proposal row and the matching requirement or profile | `release-evidence/LiveDecisions.tsx:54-68` | `release-evidence/LiveDecisions.tsx:70-108`, `:187-197` |
+| Decisions | Approve or withdraw result | `business_state` | `admin.ts:739` | `release-evidence/LiveDecisions.tsx:194`, `:210` |
+| None | Not displayed | `load.readiness.gates[].profiles[].failures` (fixed "not connected" copy instead), `requirements.rows[].namespace` and `id` (used only to link results) | `release-evidence.ts:368`, `:273-274` | not rendered |
+
+## Parser and server JSON differences
+
+Found while writing this map; no code was changed.
+
+- **P01 `site.config_overrides` is not parsed.** The server sends it (`installation.go:67`, always an empty list at `installation.go:398`); `installationOf` keeps only `id`, `platform` and `probe` (`installation.ts:212`).
+- **P01 history and backups are reduced to counts.** The server sends `installed.history[]` rows (`kind`, `from`, `to`, `run`, `backup`, `runs`; `installation.go:88-95`) and `installed.backups[]` strings; the parser keeps only their number (`installation.ts:104`, `:133-134`).
+- **Parsed but never shown.** P01 `runs`, `site.probe`, `installed.volumes[].logical`, `summary.destination`, `summary.plan_admin`; P05 gate-profile `failures`. These match the server shape, but no screen line reads them.
+- **P02 Clients view ignores `clients.state`.** The server sets it (`integrations.go:64`); the parser keeps it (`integrations.ts:228`), but the view check covers only Modules, Channels and Events (`integrations/Live.tsx:121-122`).
+
+Every other field the parsers read has a matching JSON tag on the server. Nullable server fields (`*string`, `*uint64`, `*int64` and pointer rows) are read as `null` by the parsers, and pointer persons with a null `login` read as an empty string (`retention.ts:181`) or `null` (`release-evidence.ts:196`).

@@ -66,6 +66,7 @@ type Config struct {
 	Passwords passwords.Params
 	Readers   map[string]string
 	Access    AccessSettings
+	Org       OrgSettings
 }
 
 type Server struct {
@@ -215,6 +216,10 @@ func New(cfg Config) (*Server, error) {
 	}
 	cfg.Access = cfg.Access.withDefaults()
 	if err := cfg.Access.validate(); err != nil {
+		return nil, err
+	}
+	cfg.Org = cfg.Org.withDefaults()
+	if err := cfg.Org.validate(); err != nil {
 		return nil, err
 	}
 	steps := []func() error{

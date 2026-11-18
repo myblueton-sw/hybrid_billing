@@ -258,6 +258,33 @@ test("the organizations read builds its query and defaults missing parts", async
   const z = fake(200, {});
   await adminClient("t", z.f).organizations({ revision: 0 });
   assert.equal(z.calls[0].url, "/api/v1/organizations?revision=0");
+  assert.deepEqual([empty.filters, empty.provider_filter, empty.scan_stopped, empty.scan_budget], [{ subject: "any", entity: "", unattributed: false, q: "", member_count: 0, target: "" }, "", false, 0]);
+});
+
+test("the organizations read sends the server filters and reads their echo", async () => {
+  const r = fake(200, { filters: { subject: "account", entity: "le-1", unattributed: true, q: "a b", member_count: 2, target: "g-1" }, provider_filter: "not_connected", scan_stopped: true, scan_budget: 1000 });
+  const got = await adminClient("t", r.f).organizations({ kind: "view_group", subject: "account", entity: "le-1", unattributed: true, q: "a b", member: ["m-2", "m-1"], target: "g-1" });
+  assert.equal(r.calls[0].url, "/api/v1/organizations?kind=view_group&subject=account&entity=le-1&unattributed=true&q=a+b&member=m-2&member=m-1&target=g-1");
+  assert.deepEqual(got.filters, { subject: "account", entity: "le-1", unattributed: true, q: "a b", member_count: 2, target: "g-1" });
+  assert.deepEqual([got.provider_filter, got.scan_stopped, got.scan_budget], ["not_connected", true, 1000]);
+  const off = fake(200, { scan_stopped: "true", filters: { unattributed: "true" } });
+  const plain = await adminClient("t", off.f).organizations({ unattributed: false, member: [] });
+  assert.equal(off.calls[0].url, "/api/v1/organizations");
+  assert.deepEqual([plain.scan_stopped, plain.filters.unattributed], [false, false]);
+});
+
+test("the targets read builds its query and defaults missing parts", async () => {
+  const r = fake(200, { revision: "r", relationship_revision: 2, active_revision: 3, on: "2026-11-16", kind: "allocation_pool", next: "g-2", scan_stopped: true,
+    targets: [{ id: "g-1", name: "One", members_on: 4 }, {}, null] });
+  const got = await adminClient("t", r.f).targets({ kind: "view_group", on: "2026-11-16", revision: 0, after: "g 0", limit: 5, q: "north" });
+  assert.equal(r.calls[0].url, "/api/v1/organizations/targets?kind=view_group&on=2026-11-16&revision=0&after=g+0&limit=5&q=north");
+  assert.deepEqual(got.targets, [{ id: "g-1", name: "One", members_on: 4 }, { id: "", name: "", members_on: 0 }, { id: "", name: "", members_on: 0 }]);
+  assert.deepEqual([got.kind, got.next, got.scan_stopped, got.relationship_revision, got.active_revision, got.on, got.revision], ["allocation_pool", "g-2", true, 2, 3, "2026-11-16", "r"]);
+  const e = fake(200, {});
+  const empty = await adminClient("t", e.f).targets({ kind: "payer" });
+  assert.equal(e.calls[0].url, "/api/v1/organizations/targets?kind=payer");
+  assert.deepEqual([empty.kind, empty.targets, empty.next, empty.scan_stopped, empty.relationship_revision], ["payer", [], "", false, 0]);
+  await assert.rejects(adminClient("t", fake(422, { code: "invalid_request" }).f).targets({ kind: "payer" }), (x: AdminError) => x.failure === "invalid");
 });
 
 test("the plans read defaults missing parts and never invents a computed impact", async () => {

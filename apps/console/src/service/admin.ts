@@ -199,7 +199,16 @@ export type OrgPage = {
   kind: RelationKind;
   members: OrgMember[];
   next: string;
+  filters: OrgFilters;
+  provider_filter: string;
+  scan_stopped: boolean;
+  scan_budget: number;
 };
+export type OrgSubject = "account" | "party" | "any";
+export type OrgFilters = { subject: string; entity: string; unattributed: boolean; q: string; member_count: number; target: string };
+export type OrgTargetRow = { id: string; name: string; members_on: number };
+export type TargetsQuery = { kind: RelationKind; on?: string; revision?: number; after?: string; limit?: number; q?: string };
+export type TargetsPage = { revision: string; relationship_revision: number; active_revision: number; on: string; kind: RelationKind; targets: OrgTargetRow[]; next: string; scan_stopped: boolean };
 export type PlanChange = { kind: string; member: string; action: string; target: string; from: string };
 export type PlanKind = { kind: string; changed: number; entries_before: number; entries_after: number; earliest: string };
 export type PlanViolation = { kind: string; member: string; rule: string };
@@ -276,7 +285,10 @@ export function planOf(v: unknown): PlanRow {
   };
 }
 
-export type OrgQuery = { on?: string; kind?: RelationKind; revision?: number; after?: string; limit?: number };
+export type OrgQuery = {
+  on?: string; kind?: RelationKind; revision?: number; after?: string; limit?: number;
+  subject?: OrgSubject; entity?: string; unattributed?: boolean; q?: string; member?: string[]; target?: string;
+};
 
 export type TrustHold = { reason: string; since: string };
 export type TrustRow = {
@@ -827,10 +839,17 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
       if (query.revision !== undefined) q.set("revision", String(query.revision));
       if (query.after) q.set("after", query.after);
       if (query.limit) q.set("limit", String(query.limit));
+      if (query.subject) q.set("subject", query.subject);
+      if (query.entity) q.set("entity", query.entity);
+      if (query.unattributed) q.set("unattributed", "true");
+      if (query.q) q.set("q", query.q);
+      for (const id of query.member ?? []) q.append("member", id);
+      if (query.target) q.set("target", query.target);
       const qs = q.toString();
       const body = await send("/organizations" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request);
       const list = <T,>(v: unknown) => (Array.isArray(v) ? (v as T[]) : []);
       const ws = (body.workspace ?? {}) as Record<string, unknown>;
+      const echo = (body.filters ?? {}) as Record<string, unknown>;
       return {
         revision: String(body.revision ?? ""),
         relationship_revision: Number(body.relationship_revision ?? 0),
@@ -842,6 +861,32 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
         kind: String(body.kind ?? "hierarchy") as RelationKind,
         members: list<OrgMember>(body.members).map((m) => ({ ...m, targets: Array.isArray(m.targets) ? m.targets : [], history: Array.isArray(m.history) ? m.history : [] })),
         next: String(body.next ?? ""),
+        filters: {
+          subject: String(echo.subject ?? "any"), entity: String(echo.entity ?? ""), unattributed: echo.unattributed === true, q: String(echo.q ?? ""),
+          member_count: Number(echo.member_count ?? 0), target: String(echo.target ?? ""),
+        },
+        provider_filter: String(body.provider_filter ?? ""),
+        scan_stopped: body.scan_stopped === true,
+        scan_budget: Number(body.scan_budget ?? 0),
+      };
+    },
+    async targets(query: TargetsQuery): Promise<TargetsPage> {
+      const q = new URLSearchParams({ kind: query.kind });
+      if (query.on) q.set("on", query.on);
+      if (query.revision !== undefined) q.set("revision", String(query.revision));
+      if (query.after) q.set("after", query.after);
+      if (query.limit) q.set("limit", String(query.limit));
+      if (query.q) q.set("q", query.q);
+      const body = await send("/organizations/targets?" + q.toString(), { method: "GET" }, attempt().request);
+      return {
+        revision: String(body.revision ?? ""),
+        relationship_revision: Number(body.relationship_revision ?? 0),
+        active_revision: Number(body.active_revision ?? 0),
+        on: String(body.on ?? ""),
+        kind: String(body.kind ?? query.kind) as RelationKind,
+        targets: (Array.isArray(body.targets) ? (body.targets as Record<string, unknown>[]) : []).map((t) => ({ id: String(t?.id ?? ""), name: String(t?.name ?? ""), members_on: Number(t?.members_on ?? 0) })),
+        next: String(body.next ?? ""),
+        scan_stopped: body.scan_stopped === true,
       };
     },
     async plans(): Promise<PlansPage> {

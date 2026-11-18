@@ -182,3 +182,76 @@ func TestAccessSettingFlagsReachTheRead(t *testing.T) {
 		t.Errorf("a bound below the ledger size %v", err)
 	}
 }
+
+func TestOrgSettingFlags(t *testing.T) {
+	for name, args := range map[string][]string{
+		"below":        {"--org-filter-scan", "99"},
+		"above":        {"--org-filter-scan", "10001"},
+		"signed":       {"--org-filter-scan", "+500"},
+		"leading zero": {"--org-filter-scan", "0500"},
+		"empty":        {"--org-filter-scan", ""},
+	} {
+		full := append([]string{"--listen", "127.0.0.1:0", "--data", t.TempDir() + "/d"}, args...)
+		if err := run(full, make(chan os.Signal)); err == nil {
+			t.Errorf("%s accepted", name)
+		}
+	}
+	fs := flag.NewFlagSet("t", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	org, given := orgFlags(fs)
+	if err := fs.Parse([]string{"--org-filter-scan", "0x10"}); err == nil || !strings.Contains(err.Error(), "org-filter-scan must be a whole number") {
+		t.Errorf("a refused value is named %v", err)
+	}
+	fs = flag.NewFlagSet("t", flag.ContinueOnError)
+	org, given = orgFlags(fs)
+	if err := fs.Parse(nil); err != nil {
+		t.Fatal(err)
+	}
+	given()
+	if org.FilterScan != 1000 || org.Given["org_filter_scan"] {
+		t.Errorf("defaults %+v", org)
+	}
+	fs = flag.NewFlagSet("t", flag.ContinueOnError)
+	org, given = orgFlags(fs)
+	if err := fs.Parse([]string{"--org-filter-scan", "250"}); err != nil {
+		t.Fatal(err)
+	}
+	given()
+	if org.FilterScan != 250 || !org.Given["org_filter_scan"] {
+		t.Errorf("flags %+v", org)
+	}
+	var usage strings.Builder
+	fs.SetOutput(&usage)
+	fs.PrintDefaults()
+	if !strings.Contains(usage.String(), "org_filter_scan in timelines, 100 to 10000 (default 1000)") {
+		t.Errorf("usage %s", usage.String())
+	}
+}
+
+func TestOrgSettingFlagAtItsLowerBoundStarts(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr := ln.Addr().String()
+	ln.Close()
+	stop := make(chan os.Signal, 1)
+	done := make(chan error, 1)
+	go func() {
+		done <- run([]string{"--listen", addr, "--data", t.TempDir() + "/d", "--org-filter-scan", "100"}, stop)
+	}()
+	var resp *http.Response
+	for deadline := time.Now().Add(30 * time.Second); time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
+		if resp, err = http.Get("http://" + addr + "/api/v1/health"); err == nil {
+			resp.Body.Close()
+			break
+		}
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	stop <- os.Interrupt
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+}

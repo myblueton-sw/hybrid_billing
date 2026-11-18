@@ -1,6 +1,5 @@
 import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
-
 export const o = {
   asOf: (l: Locale) => t(l, "As of (UTC)", "기준일(UTC)", "التاريخ المرجعي (UTC)"),
   show: (l: Locale) => t(l, "Show", "조회", "عرض"),
@@ -104,7 +103,7 @@ export const o = {
   conflictTitle: (l: Locale, d: string) => t(l, `Conflicting attribution on ${d}`, `${d} 귀속 충돌`, `إسناد متعارض في ${d}`),
   cycleTitle: (l: Locale) => t(l, "Cycle detected: these cannot be placed in the tree", "순환 감지: 트리에 배치할 수 없음", "تم اكتشاف دورة: لا يمكن وضعها في الشجرة"),
   registryParent: (l: Locale) => t(l, "Registered parent (current registry)", "등록된 상위 조직(현재 등록 정보)", "الجهة الأم المسجّلة (السجل الحالي)"),
-  entryFrom: (l: Locale) => t(l, "Entry from", "관계 시작일", "بداية الإدخال"),
+  entryFrom: (l: Locale) => t(l, "Organization since", "조직 귀속 시작일", "بداية الانتساب للمؤسسة"),
   currentRegistry: (l: Locale) =>
     t(l, "Parties and billing profiles show the current registry. Relationships show the selected revision and date.", "법인·조직과 청구 프로필은 현재 등록 정보이며, 관계는 선택한 리비전과 기준일을 따릅니다.", "تعرض الأطراف وملفات الفوترة السجل الحالي، وتعرض العلاقات المراجعة والتاريخ المحددين."),
   inconsistent: (l: Locale) =>
@@ -116,4 +115,62 @@ export const o = {
   selectHint: (l: Locale) => t(l, "Select an item to see its details.", "항목을 선택하면 상세가 표시됩니다.", "اختر عنصرًا لعرض تفاصيله."),
   announce: (l: Locale, r: number, d: string, n: number) =>
     t(l, `Revision ${r}, as of ${d}, ${n} members loaded`, `리비전 ${r}, 기준일 ${d}, 구성원 ${n}개 불러옴`, `المراجعة ${r}، بتاريخ ${d}، تم تحميل ${n} من الأعضاء`),
+  filters: (l: Locale) => t(l, "Filters", "필터", "عوامل التصفية"),
+  filtersApplied: (l: Locale, n: number) => t(l, `Filters · ${n} applied`, `필터 · ${n}개 적용`, `عوامل التصفية · المطبّقة: ${n}`),
+  entity: (l: Locale) => t(l, "Legal entity", "법인", "الكيان القانوني"),
+  allEntities: (l: Locale) => t(l, "All legal entities", "모든 법인", "كل الكيانات القانونية"),
+  relKind: (l: Locale) => t(l, "Relationship kind", "관계 종류", "نوع العلاقة"),
+  search: (l: Locale) => t(l, "Search name or ID", "이름 또는 ID 검색", "ابحث بالاسم أو المعرّف"),
+  searchGroups: (l: Locale) => t(l, "Search groups by name or ID", "이름 또는 ID로 그룹 검색", "ابحث عن المجموعات بالاسم أو المعرّف"),
+  searchButton: (l: Locale) => t(l, "Search", "검색", "بحث"),
+  searchTooLong: (l: Locale) => t(l, "The search text is too long. Shorten it and search again.", "검색어가 너무 깁니다. 줄여서 다시 검색하세요.", "نص البحث طويل جدًا. اختصره وابحث مجددًا."),
+  filterMembers: (l: Locale) => t(l, "Filter members", "구성원 필터", "تصفية الأعضاء"),
+  provider: (l: Locale) => t(l, "Provider", "공급사", "المزوّد"),
+  providerNote: (l: Locale) =>
+    t(l, "Not available yet: source accounts are not linked to provider connections.", "아직 사용할 수 없습니다. 원천 계정과 공급사 연결이 연계되어 있지 않습니다.", "غير متاح بعد: حسابات المصدر غير مرتبطة باتصالات المزوّدين."),
+  appliedFilters: (l: Locale) => t(l, "Applied filters:", "적용한 필터:", "عوامل التصفية المطبّقة:"),
+  clearAll: (l: Locale) => t(l, "Clear all filters", "필터 모두 제거", "مسح كل عوامل التصفية"),
+  removeFilter: (l: Locale, chip: string) => t(l, `Remove filter ${chip}`, `필터 제거: ${chip}`, `إزالة عامل التصفية ${chip}`),
+  chip: (field: string, value: string) => `${field}: ${value}`,
+  membersChip: (l: Locale, value: string) => t(l, `Members: ${value}`, `구성원: ${value}`, `الأعضاء: ${value}`),
+  groupsChip: (l: Locale, q: string) => t(l, `Groups: ${q}`, `그룹: ${q}`, `المجموعات: ${q}`),
+  treeFilters: (l: Locale) =>
+    t(l, "Filters apply to the accounts, groups and history views. The tree shows the loaded organization structure.", "필터는 원천 계정·조회 그룹·귀속 이력 보기에 적용됩니다. 트리는 불러온 조직 구조를 보여줍니다.", "تنطبق عوامل التصفية على عروض الحسابات والمجموعات والسجل. تعرض الشجرة بنية المؤسسة المحمّلة."),
+  shownMore: (l: Locale, n: number) => t(l, `${n} shown; more may exist`, `${n}개 표시, 더 있을 수 있음`, `المعروض: ${n}؛ قد يوجد المزيد`),
+  shownAll: (l: Locale, n: number) => t(l, `${n} shown; end of list`, `${n}개 표시, 목록 끝`, `المعروض: ${n}؛ نهاية القائمة`),
+  groupsShownMore: (l: Locale, n: number) => t(l, `Groups shown: ${n}; more may exist`, `그룹 ${n}개 표시, 더 있을 수 있음`, `المجموعات المعروضة: ${n}؛ قد يوجد المزيد`),
+  groupsShownAll: (l: Locale, n: number) => t(l, `Groups shown: ${n}; end of list`, `그룹 ${n}개 표시, 목록 끝`, `المجموعات المعروضة: ${n}؛ نهاية القائمة`),
+  noneShown: (l: Locale) => t(l, "No items shown.", "표시된 항목이 없습니다.", "لا توجد عناصر معروضة."),
+  relationshipsOn: (l: Locale, d: string) => t(l, `Relationships on ${d}`, `${d} 기준 관계`, `العلاقات بتاريخ ${d}`),
+  searchedThrough: (l: Locale) => t(l, "Searched up to {id}.", "{id}까지 검색했습니다.", "تم البحث حتى {id}."),
+  noMatchesYet: (l: Locale) => t(l, "No matches yet.", "지금까지 일치하는 항목이 없습니다.", "لا توجد نتائج مطابقة حتى الآن."),
+  continueSearching: (l: Locale) => t(l, "Continue searching", "이어서 검색", "متابعة البحث"),
+  loadingMore: (l: Locale) => t(l, "Loading…", "불러오는 중…", "جارٍ التحميل…"),
+  nextFailed: (l: Locale) => t(l, "The next page could not be loaded. The rows shown are kept.", "다음 페이지를 불러오지 못했습니다. 표시된 행은 유지됩니다.", "تعذر تحميل الصفحة التالية. تم الاحتفاظ بالصفوف المعروضة."),
+  filteredEmpty: (l: Locale, d: string) =>
+    t(l, `No items match these filters in your permitted scope on ${d}.`, `${d} 기준 허용 범위에서 이 필터에 맞는 항목이 없습니다.`, `لا عناصر تطابق عوامل التصفية هذه ضمن نطاقك المسموح في ${d}.`),
+  badFilter: (l: Locale) => t(l, "One or more filters in the link were not valid and were removed.", "링크의 필터 중 올바르지 않은 값을 제거했습니다.", "أُزيل من الرابط ما كان غير صالح من عوامل التصفية."),
+  moreShown: (l: Locale, k: number, count: string) => t(l, `${k} more shown. ${count}.`, `${k}개 더 표시. ${count}.`, `المعروض الإضافي: ${k}. ${count}.`),
+  filterRemoved: (l: Locale, count: string) => t(l, `Filter removed. ${count}.`, `필터를 제거했습니다. ${count}.`, `أُزيل عامل التصفية. ${count}.`),
+  readAnnounce: (l: Locale, count: string, n: number) => t(l, `${count}. Filters applied: ${n}.`, `${count}. 적용된 필터 ${n}개.`, `${count}. عوامل التصفية المطبّقة: ${n}.`),
+  loadingAccounts: (l: Locale, d: string) => t(l, `Loading source accounts on ${d}…`, `${d} 기준 원천 계정을 불러오는 중입니다…`, `جارٍ تحميل حسابات المصدر في ${d}…`),
+  loadingGroups: (l: Locale, d: string) => t(l, `Loading groups and pools on ${d}…`, `${d} 기준 그룹과 풀을 불러오는 중입니다…`, `جارٍ تحميل المجموعات والمجمعات في ${d}…`),
+  loadingMembers: (l: Locale, d: string) => t(l, `Loading members on ${d}…`, `${d} 기준 구성원을 불러오는 중입니다…`, `جارٍ تحميل الأعضاء في ${d}…`),
+  loadingOutsideView: (l: Locale, d: string) => t(l, `Loading members not in a view group on ${d}…`, `${d} 기준 조회 그룹에 없는 구성원을 불러오는 중입니다…`, `جارٍ تحميل الأعضاء خارج مجموعات العرض في ${d}…`),
+  loadingOutsidePool: (l: Locale, d: string) => t(l, `Loading members not in an allocation pool on ${d}…`, `${d} 기준 배분 풀에 없는 구성원을 불러오는 중입니다…`, `جارٍ تحميل الأعضاء خارج مجمعات التوزيع في ${d}…`),
+  searchingMembers: (l: Locale) => t(l, "Searching members…", "구성원을 검색하는 중입니다…", "جارٍ البحث عن الأعضاء…"),
+  loadingTimeline: (l: Locale) => t(l, "Loading relationship history…", "관계 이력을 불러오는 중입니다…", "جارٍ تحميل سجل العلاقات…"),
+  groupMembersFiltered: (l: Locale, d: string) =>
+    t(l, `No members of this group match the member filters on ${d}.`, `${d} 기준 이 그룹에 구성원 필터와 맞는 구성원이 없습니다.`, `لا أعضاء في هذه المجموعة يطابقون عوامل تصفية الأعضاء في ${d}.`),
+  groupMembersNone: (l: Locale, d: string) => t(l, `No members in this group on ${d}.`, `${d} 기준 이 그룹에 구성원이 없습니다.`, `لا أعضاء في هذه المجموعة في ${d}.`),
+  selNotLoaded: (l: Locale) => t(l, "Not on the loaded pages of this view.", "이 보기에서 불러온 페이지에 없습니다.", "ليس ضمن الصفحات المحمّلة في هذا العرض."),
+  selected: (l: Locale) => t(l, "Selected:", "선택:", "المحدد:"),
+  membersAll: (l: Locale, d: string) => t(l, `All members on ${d}`, `${d} 기준 전체 구성원`, `كل الأعضاء في ${d}`),
+  kindOn: (l: Locale, kind: string, d: string) => t(l, `${kind} on ${d}`, `${d} 기준 ${kind}`, `${kind} في ${d}`),
+  noKind: (l: Locale) => t(l, "No relationship of this kind", "해당 관계 없음", "لا توجد علاقة من هذا النوع"),
+  colOrganization: (l: Locale) => t(l, "Organization", "조직", "المؤسسة"),
+  memberLabel: (l: Locale) => t(l, "Member:", "구성원:", "العضو:"),
+  change: (l: Locale) => t(l, "Change", "변경", "تغيير"),
+  groupMembers: (l: Locale) => t(l, "Members", "구성원", "الأعضاء"),
+  noResults: (l: Locale) => t(l, "No members match this search on this date.", "이 기준일에 검색어와 일치하는 구성원이 없습니다.", "لا أعضاء يطابقون هذا البحث في هذا التاريخ."),
 };

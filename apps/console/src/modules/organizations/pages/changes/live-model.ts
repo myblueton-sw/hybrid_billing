@@ -52,27 +52,50 @@ export function partition(plans: PlanRow[]): { open: PlanRow[]; closed: PlanRow[
   return { open: plans.filter(isOpen), closed: plans.filter((p) => !isOpen(p)) };
 }
 
-export type Step = "done" | "current" | "stopped" | "na" | "unknown";
-export function steps(p: PlanRow): [Step, Step, Step] {
-  if (p.state === "activated") return ["done", "done", "done"];
-  if (p.state === "rejected") return ["done", "stopped", "na"];
-  if (p.state === "discarded") return ["done", "done", "stopped"];
-  if (p.state === "sealed") return ["done", "done", "current"];
-  if (p.state === "draft") return ["done", "current", "na"];
-  return ["unknown", "unknown", "unknown"];
+export function impactDone(p: PlanRow): boolean {
+  return p.impact.money === "computed" && p.impact.publication === "computed" && p.impact.erp === "computed";
+}
+
+export function impactUnread(p: PlanRow): boolean {
+  return p.impact.money === "unknown" || p.impact.publication === "unknown" || p.impact.erp === "unknown";
+}
+
+export type Step = "done" | "current" | "held" | "stopped" | "na" | "unknown";
+export type Steps = [Step, Step, Step, Step];
+export function steps(p: PlanRow): Steps {
+  const impact: Step = impactDone(p) ? "done" : "held";
+  if (p.state === "draft") return ["current", "na", "na", "na"];
+  if (p.state === "rejected") return ["stopped", "na", "na", "na"];
+  if (p.state === "activated") return ["done", impact, "done", "done"];
+  if (p.state === "discarded") return impact === "done" ? ["done", "done", "stopped", "na"] : ["done", "stopped", "na", "na"];
+  if (p.state === "sealed") return impact === "held" ? ["done", "held", "na", "na"] : ["done", "done", canActivate(p) ? "current" : "held", "na"];
+  return ["unknown", "unknown", "unknown", "unknown"];
 }
 
 export function canActivate(p: PlanRow): boolean {
-  return p.state === "sealed" && p.can_activate;
+  return p.state === "sealed" && p.can_activate && impactDone(p);
 }
 
-export type Blocked = "own" | "stale" | "passed" | "other" | "";
+export type Blocked = "own" | "stale" | "passed" | "impact" | "impact_unknown" | "other" | "";
 export function blocked(p: PlanRow): Blocked {
   if (p.state !== "sealed" || canActivate(p)) return "";
   if (p.blocked === "own_proposal") return "own";
   if (p.blocked === "stale") return "stale";
   if (p.blocked === "effective_date_passed") return "passed";
+  if (p.blocked === "impact_not_computed") return "impact";
+  if (p.blocked === "impact_unavailable") return "impact_unknown";
+  if (!impactDone(p)) return impactUnread(p) ? "impact_unknown" : "impact";
   return "other";
+}
+
+export function held(b: Blocked): boolean {
+  return b === "impact" || b === "impact_unknown";
+}
+
+export type Refusal = "impact" | "impact_unknown" | "own" | "other";
+export function refusal(p: PlanRow | undefined): Refusal {
+  const b = p ? blocked(p) : "";
+  return b === "impact" || b === "impact_unknown" || b === "own" ? b : "other";
 }
 
 export function showOpenCount(openLimit: number): boolean {
@@ -119,9 +142,9 @@ export function membersKept(p: PlanRow): boolean {
   return p.state === "sealed" || p.state === "activated";
 }
 
-export type Impact = "not_computed" | "unknown";
+export type Impact = "computed" | "not_computed" | "unknown";
 export function impactOf(v: string): Impact {
-  return v === "not_computed" ? "not_computed" : "unknown";
+  return v === "computed" || v === "not_computed" ? v : "unknown";
 }
 
 export const maxReason = 256;
@@ -131,7 +154,7 @@ export type Reaction =
   | "field"
   | "reason"
   | "limit"
-  | "own"
+  | "refused"
   | "stage"
   | "conflict"
   | "denied"
@@ -147,7 +170,7 @@ export function react(cmd: Command, failure: string, fields: string[]): Reaction
     case "invalid":
       return cmd === "propose" && fields.length > 0 ? "field" : "reason";
     case "refused":
-      return cmd === "propose" ? "limit" : "own";
+      return cmd === "propose" ? "limit" : "refused";
     case "stage":
       return "stage";
     case "conflict":

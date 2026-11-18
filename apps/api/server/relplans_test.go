@@ -60,9 +60,13 @@ func TestProposeAndActivateMovesAttribution(t *testing.T) {
 	row := f.planRow(root, id)
 	change := row["change"].(map[string]any)
 	if row["state"] != "sealed" || row["proposer"] != SampleAdmin || row["proposer_login"] != AdminLogin || row["reason"] != "sample reason" ||
-		change["target"] != "sample-unit-north-data" || row["member_name"] != "Account 01 (sample)" || row["can_activate"] != false || row["blocked"] != "own_proposal" ||
-		fmt.Sprint(row["base"]) != "1" || row["stale"] != false {
+		change["target"] != "sample-unit-north-data" || row["member_name"] != "Account 01 (sample)" || row["can_activate"] != false || row["blocked"] != "impact_not_computed" ||
+		fmt.Sprint(row["base"]) != "1" || row["stale"] != false || fmt.Sprint(row["impact"]) != "map[erp:not_computed money:not_computed publication:not_computed]" {
 		t.Fatalf("row %+v", row)
+	}
+	f.s.plans.impact = computedImpact
+	if r := f.planRow(root, id); r["blocked"] != "own_proposal" || r["can_activate"] != false || fmt.Sprint(r["impact"]) != "map[erp:computed money:computed publication:computed]" {
+		t.Fatalf("row with impact %+v", r)
 	}
 	changed := row["members"].([]any)
 	m := changed[0].(map[string]any)
@@ -149,6 +153,7 @@ func TestProposalRefusals(t *testing.T) {
 
 func TestRejectedPlansAndViewGroups(t *testing.T) {
 	f := setup(t, SeedSample).ready()
+	f.s.plans.impact = computedImpact
 	root, second := f.as(AdminLogin), f.as(Admin2Login)
 	same := f.proposeChange(root, "hierarchy", "sample-acct-01", "set", "sample-unit-north-ops", "2026-12-01")
 	id := planID(t, same)
@@ -184,6 +189,7 @@ func TestRejectedPlansAndViewGroups(t *testing.T) {
 
 func TestStaleExpiredAndDiscardedPlans(t *testing.T) {
 	f := setup(t, SeedSample).ready()
+	f.s.plans.impact = computedImpact
 	root, second := f.as(AdminLogin), f.as(Admin2Login)
 	a := planID(t, f.proposeChange(root, "hierarchy", "sample-acct-01", "set", "sample-unit-north-data", "2026-12-01"))
 	b := planID(t, f.proposeChange(root, "hierarchy", "sample-acct-03", "set", "sample-unit-north-ops", "2026-12-01"))
@@ -222,6 +228,7 @@ func TestStaleExpiredAndDiscardedPlans(t *testing.T) {
 
 func TestPlanReadsAcrossPagesAndLimits(t *testing.T) {
 	f := setup(t, SeedSample).ready()
+	f.s.plans.impact = computedImpact
 	root, second := f.as(AdminLogin), f.as(Admin2Login)
 	bulk := []relationships.Timeline{}
 	for i := 0; i < 120; i++ {
@@ -341,6 +348,10 @@ func TestPlanMetadataCapKeepsOpenPlans(t *testing.T) {
 		t.Errorf("shown %d, open plan shown %v", len(got.body["plans"].([]any)), strings.Contains(ids, open))
 	}
 	f.s.plans.get(SampleWorkspace, open).proposer = ""
+	if r := f.planRow(f.as(Admin2Login), open); r["can_activate"] != false || r["blocked"] != "impact_not_computed" {
+		t.Errorf("empty proposer row without impact %+v", r)
+	}
+	f.s.plans.impact = computedImpact
 	if r := f.planRow(f.as(Admin2Login), open); r["can_activate"] != false || r["blocked"] != "own_proposal" {
 		t.Errorf("empty proposer row %+v", r)
 	}

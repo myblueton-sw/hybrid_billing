@@ -216,6 +216,9 @@ export type PlanKind = { kind: string; changed: number; entries_before: number; 
 export type PlanViolation = { kind: string; member: string; rule: string };
 export type PlanRange = { from: string; until: string };
 export type PlanMember = { member: string; name: string; differs: PlanRange[]; before: string[]; after: string[] };
+export type ImpactState = "computed" | "not_computed" | "unknown";
+export type PlanImpact = { money: ImpactState; publication: ImpactState; erp: ImpactState };
+const impactState = (v: unknown): ImpactState => (v === "computed" || v === "not_computed" ? v : "unknown");
 export type PlanRow = {
   id: string;
   state: string;
@@ -234,6 +237,7 @@ export type PlanRow = {
   violations: PlanViolation[];
   truncated: boolean;
   members: PlanMember[];
+  impact: PlanImpact;
   can_activate: boolean;
   blocked: string;
 };
@@ -242,7 +246,6 @@ export type PlansPage = {
   active_revision: number;
   open_plans: number;
   open_limit: number;
-  impact: { money: string; publication: string; erp: string };
   plans: PlanRow[];
   you: string;
 };
@@ -251,6 +254,7 @@ export function planOf(v: unknown): PlanRow {
   const r = (v ?? {}) as Record<string, unknown>;
   const list = <T,>(x: unknown) => (Array.isArray(x) ? (x as T[]) : []);
   const c = (r.change ?? {}) as Record<string, unknown>;
+  const impact = (r.impact && typeof r.impact === "object" ? r.impact : {}) as Record<string, unknown>;
   return {
     id: String(r.id ?? ""),
     state: String(r.state ?? ""),
@@ -277,6 +281,7 @@ export function planOf(v: unknown): PlanRow {
         before: list<unknown>(m.before).map(String),
         after: list<unknown>(m.after).map(String),
       })),
+    impact: { money: impactState(impact.money), publication: impactState(impact.publication), erp: impactState(impact.erp) },
     can_activate: r.can_activate === true,
     blocked: String(r.blocked ?? ""),
   };
@@ -681,14 +686,11 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async plans(): Promise<PlansPage> {
       const body = await send("/organizations/plans", { method: "GET" }, attempt().request);
-      const impact = (body.impact ?? {}) as Record<string, unknown>;
-      const state = (v: unknown) => (typeof v === "string" && v ? v : "unknown");
       return {
         revision: String(body.revision ?? ""),
         active_revision: Number(body.active_revision ?? 0),
         open_plans: Number(body.open_plans ?? 0),
         open_limit: Number(body.open_limit ?? 0),
-        impact: { money: state(impact.money), publication: state(impact.publication), erp: state(impact.erp) },
         plans: (Array.isArray(body.plans) ? body.plans : []).map(planOf),
         you: String(body.you ?? ""),
       };

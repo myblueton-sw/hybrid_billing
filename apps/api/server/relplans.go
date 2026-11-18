@@ -44,8 +44,36 @@ type planMeta struct {
 }
 
 type planStore struct {
-	byKey map[string]*planMeta
-	seq   uint64
+	byKey  map[string]*planMeta
+	seq    uint64
+	impact func(*planMeta) (planImpact, error)
+}
+
+const (
+	impactComputed    = "computed"
+	impactNotComputed = "not_computed"
+	impactUnknown     = "unknown"
+)
+
+type planImpact struct {
+	Money       string `json:"money"`
+	Publication string `json:"publication"`
+	ERP         string `json:"erp"`
+}
+
+func impactAll(state string) planImpact {
+	return planImpact{Money: state, Publication: state, ERP: state}
+}
+
+func (p planImpact) computed() bool {
+	return p.Money == impactComputed && p.Publication == impactComputed && p.ERP == impactComputed
+}
+
+func (s *Server) impactOf(m *planMeta) (planImpact, error) {
+	if s.plans.impact == nil {
+		return impactAll(impactNotComputed), nil
+	}
+	return s.plans.impact(m)
 }
 
 func newPlanStore() *planStore { return &planStore{byKey: map[string]*planMeta{}} }
@@ -354,6 +382,13 @@ func (h relationshipCommand) activate(ctx commands.Context) (string, map[string]
 		return "", nil, refuse(commands.DependencyUnavailable)
 	case info.State != relationships.PlanSealed || info.Base != active || from.Before(today(s.clock())):
 		return "", nil, refuse(commands.InvalidStage)
+	}
+	impact, impactErr := s.impactOf(m)
+	switch {
+	case impactErr != nil:
+		return "", nil, refuse(commands.DependencyUnavailable)
+	case !impact.computed():
+		return "", nil, refuse(commands.PrerequisiteFailed)
 	case m.proposer == "" || m.proposer == ctx.User:
 		return "", nil, refuse(commands.PrerequisiteFailed)
 	}
@@ -448,6 +483,7 @@ type planRow struct {
 	Violations    []violationRow `json:"violations"`
 	Truncated     bool           `json:"truncated"`
 	Members       []changedRow   `json:"members"`
+	Impact        planImpact     `json:"impact"`
 	CanActivate   bool           `json:"can_activate"`
 	Blocked       string         `json:"blocked"`
 }
@@ -497,6 +533,11 @@ func (s *Server) planRow(m *planMeta, active uint64, reader string, now time.Tim
 	for _, v := range info.Violations {
 		row.Violations = append(row.Violations, violationRow{Kind: string(v.Kind), Member: v.Member, Rule: string(v.Rule)})
 	}
+	impact, impactErr := s.impactOf(m)
+	if impactErr != nil {
+		impact = impactAll(impactUnknown)
+	}
+	row.Impact = impact
 	from, _ := parseDay(m.change.From)
 	if info.State == relationships.PlanSealed {
 		row.Stale = info.Base != active
@@ -505,6 +546,10 @@ func (s *Server) planRow(m *planMeta, active uint64, reader string, now time.Tim
 			row.Blocked = "stale"
 		case from.Before(today(now)):
 			row.Blocked = "effective_date_passed"
+		case impactErr != nil:
+			row.Blocked = "impact_unavailable"
+		case !impact.computed():
+			row.Blocked = "impact_not_computed"
 		case m.proposer == "" || m.proposer == reader:
 			row.Blocked = "own_proposal"
 		default:

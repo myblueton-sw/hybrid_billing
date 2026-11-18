@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { OrgMember, OrgParty, PlanRow } from "../../../../service/admin";
 import { planOf } from "../../../../service/admin";
-import { canActivate, showOpenCount, actionsFor, allMemberChoices, impactOf, keepsAttempt, lead, membersKept, nameOf, react, blocked, closing, currentOn, findPlan, memberChoices, minFrom, needsTarget, partition, steps, targetChoices } from "./live-model";
+import { canActivate, showOpenCount, actionsFor, allMemberChoices, held, impactDone, impactOf, impactUnread, keepsAttempt, lead, membersKept, nameOf, react, refusal, blocked, closing, currentOn, findPlan, memberChoices, minFrom, needsTarget, partition, steps, targetChoices } from "./live-model";
 
 const parties: OrgParty[] = [
   { id: "le-a", name: "A Corp", kind: "legal_entity", parent: "", state: "active" },
@@ -15,6 +15,8 @@ const members: OrgMember[] = [
   { member: "unit-b", name: "B unit", targets: [], history: [] },
 ];
 const plan = (over: Record<string, unknown>): PlanRow => planOf({ id: "p", state: "sealed", ...over });
+const computed = { money: "computed", publication: "computed", erp: "computed" };
+const notComputed = { money: "not_computed", publication: "not_computed", erp: "not_computed" };
 
 test("actions follow the kind and only end has no target", () => {
   assert.deepEqual(actionsFor("view_group"), ["join", "leave"]);
@@ -41,22 +43,52 @@ test("the current relationship comes from history on the day", () => {
   assert.equal(currentOn("acct-9", members, "2026-06-01"), null);
 });
 
+test("four steps follow target, impact, approval and apply, and impact comes from the row", () => {
+  assert.deepEqual(steps(plan({ state: "draft" })), ["current", "na", "na", "na"]);
+  assert.deepEqual(steps(plan({ impact: notComputed, blocked: "impact_not_computed" })), ["done", "held", "na", "na"]);
+  assert.deepEqual(steps(plan({ blocked: "impact_unavailable" })), ["done", "held", "na", "na"]);
+  assert.deepEqual(steps(plan({ impact: notComputed, blocked: "stale", stale: true })), ["done", "held", "na", "na"]);
+  assert.deepEqual(steps(plan({ impact: notComputed, blocked: "effective_date_passed" })), ["done", "held", "na", "na"]);
+  assert.deepEqual(steps(plan({ impact: notComputed, can_activate: true })), ["done", "held", "na", "na"]);
+  assert.deepEqual(steps(plan({ impact: computed, can_activate: true })), ["done", "done", "current", "na"]);
+  for (const b of ["stale", "effective_date_passed", "own_proposal"]) assert.deepEqual(steps(plan({ impact: computed, blocked: b })), ["done", "done", "held", "na"], b);
+  assert.deepEqual(steps(plan({ state: "activated", impact: computed })), ["done", "done", "done", "done"]);
+  assert.deepEqual(steps(plan({ state: "activated", impact: notComputed })), ["done", "held", "done", "done"]);
+  assert.deepEqual(steps(plan({ state: "rejected" })), ["stopped", "na", "na", "na"]);
+  for (const closed of ["discarded", "discarded_stale", "discarded_expired"]) {
+    assert.deepEqual(steps(plan({ state: "discarded", closed, impact: notComputed })), ["done", "stopped", "na", "na"], closed);
+    assert.deepEqual(steps(plan({ state: "discarded", closed, impact: computed })), ["done", "done", "stopped", "na"], closed);
+  }
+  assert.deepEqual(steps(plan({ state: "weird" })), ["unknown", "unknown", "unknown", "unknown"]);
+  for (const part of ["money", "publication", "erp"]) {
+    const one = { ...computed, [part]: "not_computed" };
+    assert.equal(impactDone(plan({ impact: one })), false, part);
+    assert.deepEqual(steps(plan({ impact: one, can_activate: true })), ["done", "held", "na", "na"], part);
+    assert.equal(impactUnread(plan({ impact: { ...computed, [part]: "unknown" } })), true, part);
+    assert.equal(impactUnread(plan({ impact: one })), false, part);
+  }
+  assert.equal(impactDone(plan({ impact: computed })), true);
+  assert.equal(impactUnread(plan({})), true);
+});
+
 test("steps, blocks and closings are stated for every state", () => {
-  assert.deepEqual(steps(plan({})), ["done", "done", "current"]);
-  assert.deepEqual(steps(plan({ state: "draft" })), ["done", "current", "na"]);
-  assert.deepEqual(steps(plan({ state: "rejected" })), ["done", "stopped", "na"]);
-  assert.deepEqual(steps(plan({ state: "weird" })), ["unknown", "unknown", "unknown"]);
   assert.equal(canActivate(plan({ state: "activated", can_activate: true })), false);
-  assert.equal(canActivate(plan({ can_activate: true })), true);
+  assert.equal(canActivate(plan({ can_activate: true, impact: computed })), true);
+  assert.equal(canActivate(plan({ can_activate: true, impact: notComputed })), false);
+  assert.equal(canActivate(plan({ can_activate: true })), false);
+  for (const part of ["money", "publication", "erp"]) assert.equal(canActivate(plan({ can_activate: true, impact: { ...computed, [part]: "not_computed" } })), false, part);
+  assert.equal(blocked(plan({ can_activate: true, impact: notComputed })), "impact");
+  assert.equal(blocked(plan({ can_activate: true, impact: { ...computed, erp: "unknown" } })), "impact_unknown");
+  assert.equal(blocked(plan({ blocked: "", impact: computed })), "other");
   assert.deepEqual([showOpenCount(16), showOpenCount(0), showOpenCount(NaN)], [true, false, false]);
-  assert.deepEqual(steps(plan({ state: "activated" })), ["done", "done", "done"]);
-  assert.deepEqual(steps(plan({ state: "discarded", closed: "discarded_stale" })), ["done", "done", "stopped"]);
-  assert.deepEqual(steps(plan({ state: "discarded", closed: "" })), ["done", "done", "stopped"]);
-  assert.equal(blocked(plan({ can_activate: true })), "");
+  assert.equal(blocked(plan({ can_activate: true, impact: computed })), "");
+  assert.equal(blocked(plan({ blocked: "impact_not_computed" })), "impact");
+  assert.equal(blocked(plan({ blocked: "impact_unavailable" })), "impact_unknown");
+  assert.deepEqual(["impact", "impact_unknown", "own", "stale", "passed", "other", ""].map((b) => held(b as "impact")), [true, true, false, false, false, false, false]);
   assert.equal(blocked(plan({ blocked: "own_proposal" })), "own");
   assert.equal(blocked(plan({ blocked: "stale" })), "stale");
   assert.equal(blocked(plan({ blocked: "effective_date_passed" })), "passed");
-  assert.equal(blocked(plan({ blocked: "" })), "other");
+  assert.equal(blocked(plan({ blocked: "" })), "impact_unknown");
   assert.equal(blocked(plan({ state: "activated" })), "");
   assert.equal(closing(plan({ state: "activated" })), "activated");
   assert.equal(closing(plan({ state: "rejected" })), "rejected");
@@ -74,7 +106,6 @@ test("open plans and results are split, and the date floor is today", () => {
   assert.equal(minFrom("2026-11-17", "2026-11-16"), false);
 });
 
-
 test("a payer move leads with the dated change and names fall back to IDs", () => {
   const move = plan({ change: { kind: "payer", member: "acct-1", action: "set", target: "le-b", from: "2026-12-01" }, members: [{ member: "acct-1", before: ["le-a"], after: ["le-a", "le-b"], differs: [{ from: "2026-12-01", until: "" }] }] });
   assert.deepEqual(lead(move), { from: "2026-12-01", target: "le-b" });
@@ -89,14 +120,14 @@ test("a payer move leads with the dated change and names fall back to IDs", () =
 
 test("closed plans keep no members and impact never reads as zero", () => {
   assert.deepEqual(["sealed", "activated", "rejected", "discarded"].map((s) => membersKept(plan({ state: s }))), [true, true, false, false]);
-  assert.deepEqual(["not_computed", "", "0", "computed"].map(impactOf), ["not_computed", "unknown", "unknown", "unknown"]);
+  assert.deepEqual(["not_computed", "", "0", "computed", "Computed"].map(impactOf), ["not_computed", "unknown", "unknown", "computed", "unknown"]);
   assert.deepEqual(allMemberChoices(parties, [[members[0]], [members[1]]]).map((c) => c.id), ["le-a", "acct-1", "acct-2", "unit-b", "le-x"]);
 });
 
 test("every failure has one reaction and only retries keep the attempt", () => {
   const cases: [string, string, string[], string][] = [
     ["propose", "invalid", ["member"], "field"], ["propose", "invalid", [], "reason"], ["activate", "invalid", ["x"], "reason"],
-    ["propose", "refused", [], "limit"], ["activate", "refused", [], "own"], ["discard", "refused", [], "own"],
+    ["propose", "refused", [], "limit"], ["activate", "refused", [], "refused"], ["discard", "refused", [], "refused"],
     ["activate", "stage", [], "stage"], ["activate", "conflict", [], "conflict"], ["discard", "denied", [], "denied"],
     ["propose", "unauthenticated", [], "signin"], ["propose", "limited", [], "wait"], ["activate", "busy", [], "retry"],
     ["activate", "unavailable", [], "retry"], ["propose", "stale", [], "renew"], ["propose", "partial", [], "partial"], ["activate", "wrong", [], "failed"],
@@ -112,4 +143,15 @@ test("a step-up refusal or cancellation keeps the attempt", () => {
       assert.equal(keepsAttempt(react(cmd, f, [])), true);
     }
   }
+});
+
+test("a refused activation is explained by the reloaded row", () => {
+  assert.equal(refusal(plan({ blocked: "impact_not_computed" })), "impact");
+  assert.equal(refusal(plan({ blocked: "impact_unavailable" })), "impact_unknown");
+  assert.equal(refusal(plan({ blocked: "own_proposal" })), "own");
+  assert.equal(refusal(plan({ blocked: "stale" })), "other");
+  assert.equal(refusal(plan({ blocked: "effective_date_passed" })), "other");
+  assert.equal(refusal(plan({ can_activate: true, impact: computed })), "other");
+  assert.equal(refusal(plan({ state: "activated", blocked: "impact_not_computed" })), "other");
+  assert.equal(refusal(undefined), "other");
 });

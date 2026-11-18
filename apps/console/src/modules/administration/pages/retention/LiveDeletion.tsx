@@ -67,6 +67,7 @@ function Stores({ l, r }: { l: Locale; r: RunRow }) {
       )}
       <p className="p04-small live-quiet">{k.sumNote(l)} {k.backupNote(l)}</p>
       <p className="p04-small">{k.outsideNote(l)}</p>
+      <p className="p04-small">{k.aiNote(l)}</p>
     </>
   );
 }

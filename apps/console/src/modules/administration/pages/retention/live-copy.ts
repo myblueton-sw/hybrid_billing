@@ -309,6 +309,13 @@ export const k = {
       "ERP로 이미 보낸 사본과 다운로드한 사본은 통제 범위 밖입니다. 여기서 삭제해도 그 사본은 삭제되지 않습니다.",
       "النسخ المرسلة مسبقًا إلى ERP أو التي نُزِّلت خارج النطاق المتحكَّم فيه: الحذف هنا لا يحذفها.",
     ),
+  aiNote: (l: Locale) =>
+    t(
+      l,
+      "AI usage records have no field for prompt or response bodies. Assistant conversations are their own data class: deleting them does not delete the records that refer to them. AI usage intake and the Assistant are not connected in this build.",
+      "AI 사용량 기록에는 프롬프트·응답 본문 필드가 없습니다. Assistant 대화는 별도 자료 등급이며, 대화를 삭제해도 대화를 참조하는 기록은 삭제되지 않습니다. 이 빌드에서는 AI 사용량 수집과 Assistant가 연결되어 있지 않습니다.",
+      "لا تحتوي سجلات استخدام الذكاء الاصطناعي على حقل لنصوص الموجّهات أو الردود. محادثات المساعد فئة بيانات مستقلة، وحذفها لا يحذف السجلات التي تشير إليها. استلام استخدام الذكاء الاصطناعي والمساعد غير متصلين في هذا الإصدار.",
+    ),
   backupNote: (l: Locale) => t(l, "Backup copies are not tracked (backup expiry not connected).", "백업 사본은 추적하지 않습니다(백업 만료 미연결).", "لا تُتتبَّع النسخ الاحتياطية (انتهاء النسخ الاحتياطية غير متصل)."),
   colStore: (l: Locale) => t(l, "Store", "저장소", "المخزن"),
   colTarget: (l: Locale) => t(l, "Target", "대상", "الهدف"),

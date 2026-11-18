@@ -37,10 +37,12 @@ func run(args []string, stop <-chan os.Signal) error {
 	fs.Var(&list, "console-origin", "allowed console origin")
 	fs.Var(&readers, "reader", "reader path=http://127.0.0.1:port, repeatable; replaces the defaults")
 	access, given := accessFlags(fs)
+	org, orgGiven := orgFlags(fs)
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	given()
+	orgGiven()
 	if !server.Loopback(*listen) {
 		return errors.New("listen address must be loopback")
 	}
@@ -56,7 +58,7 @@ func run(args []string, stop <-chan os.Signal) error {
 			routes[path] = target
 		}
 	}
-	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log, Readers: routes, Access: *access})
+	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log, Readers: routes, Access: *access, Org: *org})
 	if err != nil {
 		return err
 	}
@@ -92,14 +94,7 @@ func accessFlags(fs *flag.FlagSet) (*server.AccessSettings, func()) {
 	byFlag := map[string]server.AccessSetting{}
 	for _, setting := range server.AccessSettingList() {
 		byFlag[setting.Flag] = setting
-		fs.Func(setting.Flag, fmt.Sprintf("%s in %s, %d to %d (default %d)", setting.Name, setting.Unit, setting.Min, setting.Max, setting.Default), func(raw string) error {
-			n, ok := settingNumber(raw)
-			if !ok {
-				return fmt.Errorf("%s must be a whole number without sign or leading zero", setting.Flag)
-			}
-			setting.Set(&access, n)
-			return nil
-		})
+		numberFlag(fs, setting.Flag, setting.Name, setting.Unit, setting.Min, setting.Max, setting.Default, func(n int) { setting.Set(&access, n) })
 	}
 	fs.BoolVar(&access.AcceptNewLedger, "accept-new-decision-ledger", false, "one-time: keep the isolated decision ledger under a new name and start a new one")
 	fs.BoolVar(&access.AcceptTrustReset, "accept-trust-reset", false, "one-time, with accept-new-decision-ledger: the replaced ledger has no carryable trust record; the installation default sign-in rules become active")
@@ -119,6 +114,33 @@ func accessFlags(fs *flag.FlagSet) (*server.AccessSettings, func()) {
 			}
 		})
 	}
+}
+
+func orgFlags(fs *flag.FlagSet) (*server.OrgSettings, func()) {
+	org := server.DefaultOrgSettings()
+	byFlag := map[string]server.OrgSetting{}
+	for _, setting := range server.OrgSettingList() {
+		byFlag[setting.Flag] = setting
+		numberFlag(fs, setting.Flag, setting.Name, setting.Unit, setting.Min, setting.Max, setting.Default, func(n int) { setting.Set(&org, n) })
+	}
+	return &org, func() {
+		fs.Visit(func(f *flag.Flag) {
+			if setting, ok := byFlag[f.Name]; ok {
+				org.Given[setting.Name] = true
+			}
+		})
+	}
+}
+
+func numberFlag(fs *flag.FlagSet, name, setting, unit string, low, high, initial int, set func(int)) {
+	fs.Func(name, fmt.Sprintf("%s in %s, %d to %d (default %d)", setting, unit, low, high, initial), func(raw string) error {
+		n, ok := settingNumber(raw)
+		if !ok {
+			return fmt.Errorf("%s must be a whole number without sign or leading zero", name)
+		}
+		set(n)
+		return nil
+	})
 }
 
 func settingNumber(raw string) (int, bool) {

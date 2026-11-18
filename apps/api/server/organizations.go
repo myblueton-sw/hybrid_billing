@@ -74,6 +74,10 @@ type orgPage struct {
 	Kind         string        `json:"kind"`
 	Members      []timelineRow `json:"members"`
 	Next         string        `json:"next"`
+	Filters      filterEcho    `json:"filters"`
+	Provider     string        `json:"provider_filter"`
+	ScanStopped  bool          `json:"scan_stopped"`
+	ScanBudget   int           `json:"scan_budget"`
 }
 
 type orgQuery struct {
@@ -83,6 +87,7 @@ type orgQuery struct {
 	limit    int
 	revision uint64
 	pinned   bool
+	filter   orgFilter
 }
 
 func parseDay(raw string) (relationships.Day, bool) {
@@ -133,7 +138,9 @@ func (s *Server) orgQuery(r *http.Request) (orgQuery, bool) {
 		}
 		out.revision, out.pinned = n, true
 	}
-	return out, true
+	var ok bool
+	out.filter, ok = parseFilter(q, out.after)
+	return out, ok
 }
 
 func covering(entries []relationships.Entry, day relationships.Day) []namedRow {
@@ -175,26 +182,32 @@ func (s *Server) readOrganizations(ws string, q orgQuery) (orgPage, error) {
 		}
 		number = q.revision
 	}
-	lines, errLines := s.rels.Timelines(ws, number, q.kind, q.after, q.limit+1)
-	if err := errors.Join(errWorkspace, errParties, errProfiles, errActive, errLines); err != nil {
+	if err := errors.Join(errWorkspace, errParties, errProfiles, errActive); err != nil {
 		return orgPage{}, err
 	}
 	if len(parties) > orgCap || len(profiles) > orgCap {
 		return orgPage{}, errors.New("organization listing above the pre-launch cap")
 	}
-	page := orgPage{Revision: s.Revision(), Relationship: number, Active: active, On: q.on.ISO(), Workspace: workspaceRow{ID: ws, Profile: string(workspace.Profile)}, Parties: []partyRow{}, Profiles: []profileRow{}, Kind: string(q.kind), Members: []timelineRow{}}
+	if q.filter.entity != "" && !legalEntity(parties, q.filter.entity) {
+		return orgPage{}, errInvalidQuery
+	}
+	scan := &orgScan{s: s, ws: ws, number: number, q: q, parties: map[string]bool{}}
+	page := orgPage{Revision: s.Revision(), Relationship: number, Active: active, On: q.on.ISO(), Workspace: workspaceRow{ID: ws, Profile: string(workspace.Profile)}, Parties: []partyRow{}, Profiles: []profileRow{}, Kind: string(q.kind), Members: []timelineRow{},
+		Filters: q.filter.echo(), Provider: providerFilter, ScanBudget: s.cfg.Org.FilterScan}
 	for _, p := range parties {
+		scan.parties[p.ID] = true
 		page.Parties = append(page.Parties, partyRow{ID: p.ID, Name: orgName(p.ID), Kind: string(p.Kind), Parent: p.ParentID, State: string(p.State)})
 	}
 	for _, p := range profiles {
 		page.Profiles = append(page.Profiles, profileRow{ID: p.ID, Name: orgName(p.ID), Issuer: p.IssuerID, Buyer: p.BuyerID, Payer: p.PayerID,
 			Recipient: p.RecipientID, Path: string(p.Path), Currency: p.Currency, State: string(p.State)})
 	}
-	if len(lines) > q.limit {
-		lines = lines[:q.limit]
-		page.Next = lines[len(lines)-1].Member
+	found, err := scan.page(s.cfg.Org.FilterScan)
+	if err != nil {
+		return orgPage{}, err
 	}
-	for _, line := range lines {
+	page.Next, page.ScanStopped = found.next, found.stopped
+	for _, line := range found.lines {
 		page.Members = append(page.Members, timelineRow{Member: line.Member, Name: orgName(line.Member), Targets: covering(line.Entries, q.on), History: historyOf(line.Entries)})
 	}
 	return page, nil
@@ -208,6 +221,10 @@ func (s *Server) listOrganizations(w http.ResponseWriter, r *http.Request) {
 	defer s.domain.RUnlock()
 	_, answer, ok := s.admitted(w, r)
 	if !ok {
+		return
+	}
+	if r.URL.Query().Has("provider") {
+		failModule(w, commands.UnsupportedCapability, http.StatusNotImplemented, false, commands.NextNone, request)
 		return
 	}
 	q, valid := s.orgQuery(r)

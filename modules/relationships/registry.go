@@ -15,6 +15,7 @@ type revision struct {
 	info      RevisionInfo
 	timelines map[key][]Entry
 	members   map[key][]string
+	index     index
 }
 
 type chunk struct {

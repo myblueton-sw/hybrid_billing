@@ -1,17 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, type AdminClient, type OrgMember, type OrgPage, type OrgParty, type OrgProfile, type RelationKind } from "../../../../service/admin";
+import { AdminError, type AdminClient, type OrgMember, type OrgPage, type OrgParty, type OrgProfile, type OrgQuery, type OrgTargetRow, type RelationKind, type TargetsPage, type TargetsQuery } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { useWide } from "../../../identity/pages/users/Live";
 import { w } from "../../../identity/pages/users/live-copy";
 import { o } from "./live-copy";
-import { accounts, applies, covering, groups, label, loaded, newer, todayUTC, tree, validDay, type Progress, type Side, type TreeNode } from "./live-model";
+import {
+  accountRows, appended, appliedKeys, applies, cleared, clearedAll, countOf, covering, filterParams, FilterRefused, firstPage, joinKinds, label, legacyKind, linkedId, loaded, narrowing,
+  newer, nextFocus, pinnedRead, readFilters, refusal, todayUTC, tree, validDay, type AccountRow, type FilterKey, type Filters, type Paged, type Progress, type Side, type TreeNode,
+} from "./live-model";
+import { countText, FilterBand, FilteredEmpty, MoreBar, SearchForm } from "./filters";
 import "../../../identity/pages/users/live.css";
 import "./live.css";
 
 const maxPages = 10;
 const pageSize = 99;
+const listPage = 50;
+const searchPage = 10;
 
 type Loaded = { members: OrgMember[]; next: string; complete: boolean; failed: boolean };
 const progressOf = (c: Loaded | undefined): Progress => ({ complete: !!c && c.complete && !c.failed, cursor: c && c.members.length ? c.members[c.members.length - 1].member : "" });
@@ -41,6 +47,8 @@ function Facts({ items }: { items: [string, ReactNode][] }) {
   );
 }
 
+const invalidRead = (err: unknown) => err instanceof AdminError && err.failure === "invalid";
+
 function useStore(api: AdminClient, on: string, initialPin: number | null, onPin: (revision: number | null) => void) {
   const [base, setBase] = useState<Base | null>(null);
   const [cache, setCache] = useState<Partial<Record<RelationKind, Loaded>>>({});
@@ -49,12 +57,13 @@ function useStore(api: AdminClient, on: string, initialPin: number | null, onPin
   const [newest, setNewest] = useState(0);
   const [notice, setNotice] = useState("");
   const [inconsistent, setInconsistent] = useState(false);
+  const [epoch, setEpoch] = useState(0);
   const state = useRef("");
   const pinned = useRef<number | null>(null);
   const restarted = useRef(false);
   const token = useRef(0);
   const busy = useRef(new Set<RelationKind>());
-  const reset = useCallback(() => {
+  const reset = useCallback((bump = true) => {
     token.current += 1;
     pinned.current = null;
     busy.current.clear();
@@ -62,27 +71,48 @@ function useStore(api: AdminClient, on: string, initialPin: number | null, onPin
     setCache({});
     setNewest(0);
     setInconsistent(false);
+    setError(null);
     state.current = "";
     setStatus("loading");
+    if (bump) setEpoch((e) => e + 1);
   }, []);
   const seeded = useRef<{ on: string; pin: number | null } | null>(null);
   useEffect(() => {
     restarted.current = false;
     const keep = seeded.current === null || seeded.current.on === on;
     const pin = seeded.current === null ? initialPin : seeded.current.pin;
-    reset();
+    reset(seeded.current !== null);
     if (keep) pinned.current = pin;
     seeded.current = { on, pin: keep ? pin : null };
   }, [on, reset]); // eslint-disable-line react-hooks/exhaustive-deps
-  const absorb = (page: OrgPage) => {
+  const pin = (relationship: number, active: number) => {
     if (pinned.current === null) {
-      pinned.current = page.relationship_revision;
-      onPin(page.relationship_revision);
+      pinned.current = relationship;
+      onPin(relationship);
     }
+    if (newer(active, relationship)) setNewest(active);
+  };
+  const absorb = (page: OrgPage) => {
+    pin(page.relationship_revision, page.active_revision);
     if (state.current && state.current !== page.revision) setInconsistent(true);
     state.current = page.revision;
     setBase({ parties: page.parties, profiles: page.profiles, workspace: page.workspace, revision: page.relationship_revision, active: page.active_revision });
-    if (newer(page.active_revision, page.relationship_revision)) setNewest(page.active_revision);
+  };
+  const l0 = useRef<Locale>("en");
+  const fail = (err: unknown): boolean => {
+    if (err instanceof AdminError && err.failure === "invalid" && pinned.current !== null && !restarted.current) {
+      restarted.current = true;
+      setNotice(o.revisionReset(l0.current, pinned.current));
+      reset();
+      onPin(null);
+      return true;
+    }
+    if (err instanceof AdminError && (err.failure === "denied" || err.failure === "unauthenticated")) {
+      setError(err);
+      setStatus("error");
+      return true;
+    }
+    return false;
   };
   const load = useCallback(async (kind: RelationKind, more = false) => {
     if (busy.current.has(kind)) return;
@@ -101,22 +131,72 @@ function useStore(api: AdminClient, on: string, initialPin: number | null, onPin
       }
     } catch (err) {
       if (mine !== token.current) return;
-      if (err instanceof AdminError && err.failure === "invalid" && pinned.current !== null && !restarted.current) {
-        restarted.current = true;
-        setNotice(o.revisionReset(l0.current, pinned.current));
-        reset();
-        onPin(null);
-        return;
-      }
+      if (fail(err)) return;
       if (current.members.length > 0) setCache((c) => ({ ...c, [kind]: { ...current, failed: true } }));
       else { setError(err); setStatus("error"); }
     } finally {
       if (mine === token.current) busy.current.delete(kind);
     }
   }, [api, on, cache, reset]); // eslint-disable-line react-hooks/exhaustive-deps
-  const l0 = useRef<Locale>("en");
+  const org = useCallback(async (query: OrgQuery): Promise<OrgPage> => {
+    const mine = token.current;
+    const page = await pinnedRead((revision) => api.organizations({ ...query, on, revision }), pinned.current, invalidRead);
+    if (mine === token.current) { absorb(page); setStatus("ready"); }
+    return page;
+  }, [api, on]); // eslint-disable-line react-hooks/exhaustive-deps
+  const targets = useCallback(async (query: TargetsQuery): Promise<TargetsPage> => {
+    const mine = token.current;
+    const page = await pinnedRead((revision) => api.targets({ ...query, on, revision }), pinned.current, invalidRead);
+    if (mine === token.current) { pin(page.relationship_revision, page.active_revision); setStatus("ready"); }
+    return page;
+  }, [api, on]); // eslint-disable-line react-hooks/exhaustive-deps
   const fresh = useCallback(() => { restarted.current = false; reset(); onPin(null); }, [reset]); // eslint-disable-line react-hooks/exhaustive-deps
-  return { base, cache, status, error, newest, notice, setNotice, load, reset: fresh, l0, inconsistent };
+  return { base, cache, status, error, newest, notice, setNotice, load, reset: fresh, l0, inconsistent, epoch, org, targets, fail };
+}
+
+type Store = ReturnType<typeof useStore>;
+type Fetched<T> = { rows: T[]; next: string; stopped: boolean };
+type Pager<T> = Paged<T> & { key: string | null; current: boolean; more: () => void; retry: () => void };
+
+function usePages<T>(key: string | null, fetch: (after: string) => Promise<Fetched<T>>, onError: (err: unknown) => boolean): Pager<T> {
+  const [state, setState] = useState<Paged<T> & { key: string | null }>(() => ({ ...firstPage<T>(), key: null }));
+  const token = useRef(0);
+  const fetchRef = useRef(fetch);
+  fetchRef.current = fetch;
+  const errorRef = useRef(onError);
+  errorRef.current = onError;
+  const run = useCallback(async (owner: string, after: string, prev: Paged<T> | null) => {
+    const mine = ++token.current;
+    try {
+      const page = await fetchRef.current(after);
+      if (mine !== token.current) return;
+      setState({ ...appended(prev ?? firstPage<T>(), page.rows, page.next, page.stopped), key: owner });
+    } catch (err) {
+      if (mine !== token.current) return;
+      if (errorRef.current(err)) return;
+      setState(prev ? { ...prev, status: "moreFailed", key: owner } : { ...firstPage<T>(), status: "error", error: err, key: owner });
+    }
+  }, []);
+  useEffect(() => {
+    token.current += 1;
+    if (key === null) return;
+    setState({ ...firstPage<T>(), key });
+    void run(key, "", null);
+  }, [key, run]);
+  const current = key !== null && state.key === key;
+  const more = () => {
+    if (!current || state.status === "more" || !state.next) return;
+    const prev = { ...state, status: "ready" as const };
+    setState({ ...state, status: "more" });
+    void run(state.key as string, state.next, prev);
+  };
+  const retry = () => {
+    if (key === null) return;
+    setState({ ...firstPage<T>(), key });
+    void run(key, "", null);
+  };
+  const shown: Paged<T> = current ? state : firstPage<T>();
+  return { ...shown, key, current, more, retry };
 }
 
 function Toggle({ l, node, open, onToggle }: { l: Locale; node: TreeNode; open: boolean; onToggle: () => void }) {
@@ -161,8 +241,25 @@ function all(nodes: TreeNode[], out: string[] = []): string[] {
 function sideText(l: Locale, s: Side, none: string, empty: string): ReactNode {
   if (s.state === "target") return <bdi>{label(s.target.name, s.target.id)}</bdi>;
   if (s.state === "conflict") return <><strong>{o.conflict(l, s.targets.length)}</strong><span className="live-sub">{s.targets.map((x) => label(x.name, x.id)).join(", ")}</span></>;
-  if (s.state === "unloaded") return <span className="live-quiet">{o.notLoaded(l)}</span>;
   return s.state === "unattributed" ? <strong>{empty}</strong> : <span className="live-quiet">{none}</span>;
+}
+
+function useMemberFacts(store: Store, selected: string, enabled: boolean, onRefused: () => void) {
+  const [facts, setFacts] = useState<{ id: string; key: string; hier: OrgMember | undefined } | null>(null);
+  const key = `${store.epoch}|${selected}`;
+  useEffect(() => {
+    if (!enabled || !selected) return;
+    let live = true;
+    store.org({ kind: "hierarchy", member: [selected] })
+      .then((page) => { if (live) setFacts({ id: selected, key, hier: page.members[0] }); })
+      .catch((err) => {
+        if (!live) return;
+        if (err instanceof FilterRefused) onRefused();
+        else if (!store.fail(err)) setFacts(null);
+      });
+    return () => { live = false; };
+  }, [key, enabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  return facts && facts.key === key ? facts : null;
 }
 
 export default function LiveOrganizations({ locale: l, view, params, session, onSignOut, onView, onParams }: {
@@ -178,48 +275,134 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   const store = useStore(api, on, initialPin, (r) => onParams({ revision: r === null ? null : String(r) }));
   store.l0.current = l;
   const { base, cache, status, error, newest } = store;
-  const [selected, setSelected] = useState("");
+  const [filters, setFilters] = useState<Filters>(() => {
+    const linked = readFilters(params).filters;
+    const legacy = legacyKind(params);
+    return legacy ? { ...linked, rk: legacy } : linked;
+  });
+  const [badFilter, setBadFilter] = useState(false);
+  const [selected, setSelected] = useState(() => linkedId(params, "sel").id);
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [stepped, setStepped] = useState(false);
   const [open, setOpenSet] = useState<Set<string>>(new Set());
-  const [onlyUnattributed, setOnlyUnattributed] = useState(false);
+  const [bandOpen, setBandOpen] = useState<Set<string>>(new Set());
   const [groupKind, setGroupKind] = useState<RelationKind>("view_group");
-  const [historyKind, setHistoryKind] = useState<RelationKind>(() => {
-    const k = params.get("kind");
-    return k === "payer" || k === "contract_pool" || k === "allocation_pool" || k === "view_group" ? k : "hierarchy";
-  });
-  const [historyMember, setHistoryMember] = useState(params.get("member") ?? "");
+  const [historyMember, setHistoryMember] = useState(() => linkedId(params, "member").id);
+  const [historyQ, setHistoryQ] = useState("");
+  const [picking, setPicking] = useState(() => !linkedId(params, "member").id);
   const [announce, setAnnounce] = useState("");
   const [focusTo, setFocusTo] = useState("");
+  const removed = useRef(false);
   const opened = useRef(false);
-  const focusedHistory = useRef(false);
+  const focusHistory = useRef(params.get("from") === "link");
   useEffect(() => {
-    if (focusedHistory.current || view !== "history" || params.get("from") !== "link" || !cache[historyKind]) return;
-    focusedHistory.current = true;
-    onParams({ from: null });
-    document.getElementById("o01-history-member")?.focus();
-  }, [view, cache, historyKind]); // eslint-disable-line react-hooks/exhaustive-deps
-  const needs: RelationKind[] = view === "tree" ? ["hierarchy"] : view === "accounts" ? ["hierarchy", "payer"] : view === "groups" ? [groupKind, "hierarchy"] : [historyKind];
+    const removedKeys: Record<string, string | null> = Object.fromEntries(readFilters(params).invalid.map((k) => [k, null]));
+    for (const key of ["sel", "member"]) if (linkedId(params, key).invalid) removedKeys[key] = null;
+    const legacy = legacyKind(params);
+    const changes: Record<string, string | null> = legacy ? { ...removedKeys, kind: null, rk: legacy === "hierarchy" ? null : legacy } : params.has("kind") ? { ...removedKeys, kind: null } : removedKeys;
+    if (Object.keys(changes).length > 0) onParams(changes);
+    if (Object.keys(removedKeys).length > 0) setBadFilter(true);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const filterKey = ["entity", "rk", "ua", "q"].map((k) => params.get(k) ?? "").join("|");
   useEffect(() => {
-    for (const k of needs) {
-      if (!cache[k]) void store.load(k);
-      if (!base) break;
-    }
-  }, [view, groupKind, historyKind, on, cache]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { setSelected(""); setStepped(false); }, [view, on]);
+    const { filters: linked, invalid } = readFilters(params);
+    if (invalid.length === 0) setFilters((f) => (f.entity === linked.entity && f.rk === linked.rk && f.ua === linked.ua && f.q === linked.q ? f : linked));
+  }, [filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const member = linkedId(params, "member").id;
+    if (member === historyMember) return;
+    setHistoryMember(member);
+    setPicking(!member);
+  }, [linkedId(params, "member").id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (view === "tree" && !cache.hierarchy) void store.load("hierarchy");
+  }, [view, on, cache]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setStepped(false); }, [view]);
   useEffect(() => {
     if (!focusTo) return;
     document.querySelector<HTMLElement>(focusTo)?.focus();
     setFocusTo("");
   }, [focusTo]);
-  const primary = view === "groups" ? [groupKind] : needs;
-  const loadedKinds = primary.map((k) => cache[k]).filter(Boolean) as Loaded[];
-  const ready = loadedKinds.length === primary.length;
-  const complete = ready && loadedKinds.every((c) => c.complete && !c.failed);
-  const failedMid = loadedKinds.some((c) => c.failed);
-  const count = loadedKinds.reduce((n, c) => Math.max(n, c.members.length), 0);
+  const dropLinked = (changes: Record<string, string | null>) => {
+    onParams(changes);
+    setBadFilter(true);
+  };
+  const fail = (err: unknown) => {
+    const action = refusal(err, filters.entity);
+    if (action === "store") return store.fail(err);
+    if (action === "error") return false;
+    setFilters((f) => ({ ...f, entity: "" }));
+    dropLinked({ entity: null });
+    return true;
+  };
+  const failMember = (err: unknown) => {
+    const action = refusal(err, historyMember);
+    if (action === "store") return store.fail(err);
+    if (action === "error") return false;
+    setHistoryMember("");
+    setPicking(true);
+    dropLinked({ member: null });
+    return true;
+  };
+  const scope = `${store.epoch}|${on}`;
+  const rk = filters.rk;
+  const accounts = usePages<AccountRow>(view === "accounts" ? `a|${scope}|${rk}|${filters.entity}|${filters.ua}|${filters.q}` : null, async (after) => {
+    const page = await store.org({ kind: rk, subject: "account", entity: filters.entity || undefined, unattributed: filters.ua, q: filters.q || undefined, after: after || undefined, limit: listPage });
+    const ids = page.members.map((m) => m.member);
+    const joined: Partial<Record<RelationKind, OrgMember[]>> = {};
+    for (const k of ids.length ? joinKinds(rk) : []) joined[k] = (await store.org({ kind: k, member: ids })).members;
+    return { rows: accountRows(page.members, rk, joined, on), next: page.next, stopped: page.scan_stopped };
+  }, fail);
+  const groupList = usePages<OrgTargetRow>(view === "groups" ? `g|${scope}|${groupKind}|${filters.q}` : null, async (after) => {
+    const page = await store.targets({ kind: groupKind, q: filters.q || undefined, after: after || undefined, limit: listPage });
+    return { rows: page.targets, next: page.next, stopped: page.scan_stopped };
+  }, fail);
+  const memberFilter = { entity: filters.entity || undefined };
+  const outside = usePages<OrgMember>(view === "groups" ? `o|${scope}|${groupKind}|${filters.entity}` : null, async (after) => {
+    const page = await store.org({ kind: groupKind, subject: "account", unattributed: true, entity: memberFilter.entity, after: after || undefined, limit: listPage });
+    return { rows: page.members, next: page.next, stopped: page.scan_stopped };
+  }, fail);
+  const groupMembers = usePages<OrgMember>(view === "groups" && selectedGroup ? `m|${scope}|${groupKind}|${selectedGroup}|${filters.entity}` : null, async (after) => {
+    const page = await store.org({ kind: groupKind, target: selectedGroup, ...memberFilter, after: after || undefined, limit: listPage });
+    return { rows: page.members, next: page.next, stopped: page.scan_stopped };
+  }, fail);
+  const results = usePages<OrgMember>(view === "history" && picking && historyQ ? `s|${scope}|${rk}|${historyQ}` : null, async (after) => {
+    const page = await store.org({ kind: rk, q: historyQ, after: after || undefined, limit: searchPage });
+    return { rows: page.members, next: page.next, stopped: page.scan_stopped };
+  }, fail);
+  const timeline = usePages<OrgMember>(view === "history" && historyMember ? `t|${scope}|${rk}|${historyMember}` : null, async () => {
+    const page = await store.org({ kind: rk, member: [historyMember] });
+    return { rows: page.members, next: "", stopped: false };
+  }, failMember);
+  const facts = useMemberFacts(store, selected, view === "accounts" || view === "groups", () => { setSelected(""); dropLinked({ sel: null }); });
+  const primary: Pager<unknown> | null = view === "accounts" ? accounts : view === "groups" ? groupList : null;
+  const seen = useRef<{ key: string | null; n: number }>({ key: null, n: 0 });
   useEffect(() => {
-    if (ready && complete && base) setAnnounce(o.announce(l, base.revision, on, count));
-  }, [ready, complete, base?.revision, on, count]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!primary || !primary.current || primary.status !== "ready") return;
+    const count = countText(l, countOf(primary), view === "groups");
+    const n = primary.rows.length;
+    if (seen.current.key === primary.key) {
+      if (n > seen.current.n) {
+        setAnnounce(o.moreShown(l, n - seen.current.n, count));
+        const row = primary.rows[seen.current.n] as AccountRow | OrgTargetRow;
+        setFocusTo(`#o01-list .live-open[data-id="${row.id}"]`);
+      }
+    } else {
+      const shown = count || o.noneShown(l).replace(/\.$/, "");
+      setAnnounce(removed.current ? o.filterRemoved(l, shown) : o.readAnnounce(l, shown, appliedKeys(view, filters).length));
+    }
+    removed.current = false;
+    seen.current = { key: primary.key, n };
+  }, [primary?.key, primary?.status, primary?.rows.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (view === "tree" && cache.hierarchy?.complete && base) setAnnounce(o.announce(l, base.revision, on, cache.hierarchy.members.length));
+  }, [view, cache.hierarchy, base?.revision, on]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!focusHistory.current || view !== "history" || !timeline.current || timeline.status !== "ready") return;
+    focusHistory.current = false;
+    if (params.get("from") === "link") onParams({ from: null });
+    setFocusTo("#o01-history-title");
+  }, [view, timeline.current, timeline.status]); // eslint-disable-line react-hooks/exhaustive-deps
   const built = useMemo(() => (base && cache.hierarchy ? tree(base.parties, cache.hierarchy.members, progressOf(cache.hierarchy)) : null), [base, cache.hierarchy]);
   useEffect(() => {
     if (built && !opened.current) {
@@ -242,18 +425,40 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
       setOn(draft);
     }
   };
+  const apply = (next: Filters) => {
+    setFilters(next);
+    onParams(filterParams(next));
+  };
+  const fallbackFocus = wide ? (view === "history" ? "#o01-kind" : "#o01-q") : "#o01-filters-toggle";
+  const removeFilter = (key: FilterKey) => {
+    const to = nextFocus(appliedKeys(view, filters), key);
+    removed.current = true;
+    apply(cleared(filters, key));
+    setFocusTo(to ? "#o01-chip-" + to : fallbackFocus);
+  };
+  const clearAll = () => {
+    removed.current = true;
+    apply(clearedAll(view, filters));
+    setFocusTo(fallbackFocus);
+  };
   const selectNode = (id: string) => {
     setSelected(id);
+    if (id !== selected) onParams({ sel: id });
+    setSelectedGroup("");
     if (!wide) { setStepped(true); setFocusTo("#o01-detail-title"); }
   };
-  const back = () => { setStepped(false); setFocusTo(`.live-open[data-id="${selected}"]`); };
-  const toHistory = (kind: RelationKind, member: string) => {
-    setHistoryKind(kind);
-    setHistoryMember(member);
-    onView("history", { on, kind, member, from: "link" });
-    setFocusTo("#o01-history-member");
+  const selectGroup = (id: string) => {
+    setSelectedGroup(id);
+    if (!wide) { setStepped(true); setFocusTo("#o01-detail-title"); }
   };
-  const scope = (
+  const back = () => { setStepped(false); setFocusTo(`.live-open[data-id="${selectedGroup || selected}"]`); };
+  const toHistory = (member: string) => {
+    setHistoryMember(member);
+    setPicking(false);
+    focusHistory.current = true;
+    onView("history", { on, member, from: "link" });
+  };
+  const scopeForm = (
     <form className="o01-scope" onSubmit={submit} noValidate>
       <div className="service-field">
         <label htmlFor="o01-on">{o.asOf(l)}</label>
@@ -276,6 +481,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   const notices = (
     <>
       {store.notice && <p className="service-status" role="status">{store.notice}</p>}
+      {badFilter && <p className="service-status" role="status">{o.badFilter(l)}</p>}
       {store.inconsistent && (
         <div className="o01-newer" role="status">
           <p>{o.inconsistent(l)}</p>
@@ -290,52 +496,65 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
       )}
     </>
   );
-  const loadState = status === "loading" && !ready ? <p role="status" className="live-meta">{o.loading(l, day(l, on))}</p>
-    : status === "error" ? (
+  const pageError = status === "error" ? (
+    <section className="live-error" role="alert">
+      <h2>{o.failedTitle(l)}</h2>
+      <p>{error instanceof AdminError && error.failure === "unauthenticated" ? w.signInAgain(l) : o.failed(l)}</p>
+      {error instanceof AdminError && error.failure === "unauthenticated"
+        ? <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
+        : <button type="button" className="live-secondary" onClick={() => store.reset()}>{o.tryAgain(l)}</button>}
+    </section>
+  ) : null;
+  const pagerState = (p: Pager<unknown>, loading: string): ReactNode => {
+    if (p.status === "loading") return <p role="status" className="live-meta">{loading}</p>;
+    if (p.status !== "error") return null;
+    return (
       <section className="live-error" role="alert">
         <h2>{o.failedTitle(l)}</h2>
-        <p>{error instanceof AdminError && error.failure === "unauthenticated" ? w.signInAgain(l) : o.failed(l)}</p>
-        {error instanceof AdminError && error.failure === "unauthenticated"
-          ? <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
-          : <button type="button" className="live-secondary" onClick={() => store.reset()}>{o.tryAgain(l)}</button>}
+        <p>{o.failed(l)}</p>
+        <button type="button" className="live-secondary" onClick={p.retry}>{o.tryAgain(l)}</button>
       </section>
-    ) : null;
-  const incompleteNote = ready && !complete && (
-    <div className="live-note-rule o01-incomplete" role="status">
-      <p>{o.incomplete(l)}</p>
-      <button type="button" className="live-secondary" onClick={() => { for (const k of primary) if (!cache[k]?.complete) void store.load(k, true); }}>{failedMid ? o.continueLoading(l) : o.loadMore(l)}</button>
-    </div>
-  );
-  const toolbar = (title: string) => (
-    <div className="live-toolbar">
+    );
+  };
+  const listHead = (title: string, meta: ReactNode) => (
+    <div className="o01-list-head">
       <div className="live-heading">
         <h2 id="o01-view-title" tabIndex={-1}>{title}</h2>
-        {ready && <p className="live-meta">{o.loaded(l, count)} · <Dated l={l} iso={on} /></p>}
+        {meta && <p className="live-meta">{meta}</p>}
       </div>
     </div>
   );
+  const pagedMeta = (p: Pager<unknown>, groups = false): ReactNode =>
+    p.current && p.status !== "loading" && p.status !== "error" ? <>{countOf(p).n > 0 && <>{countText(l, countOf(p), groups)} · </>}{o.relationshipsOn(l, day(l, on))}</> : null;
+  const more = (p: Pager<unknown>, groups = false) => (
+    <MoreBar l={l} next={p.next} stopped={p.stopped} status={p.status} count={countText(l, countOf(p), groups)} compact={!wide} onMore={p.more} />
+  );
+  const dated = (text: string): ReactNode => {
+    const at = text.indexOf(day(l, on));
+    if (at < 0) return text;
+    return <>{text.slice(0, at)}<time dateTime={on}>{day(l, on)}</time>{text.slice(at + day(l, on).length)}</>;
+  };
+  const filteredEmpty = <FilteredEmpty l={l} date={day(l, on)} onClear={clearAll} />;
   const party = (id: string) => base?.parties.find((p) => p.id === id);
   const memberOf = (kind: RelationKind, id: string) => cache[kind]?.members.find((m) => m.member === id);
-  const detail = (() => {
+  const memberDetail = (hier: OrgMember | undefined, hierLoaded: boolean, fallbackName: string, isAccount: boolean, pending = false) => {
     if (!selected || !base) return null;
     const p = party(selected);
-    const hier = memberOf("hierarchy", selected);
-    const hp = progressOf(cache.hierarchy);
     const parentFact: [string, ReactNode] = hier
       ? [o.parentOn(l, day(l, on)), hier.targets.length > 1 ? <strong>{o.conflict(l, hier.targets.length)}</strong>
         : hier.targets[0] ? <bdi>{label(hier.targets[0].name, hier.targets[0].id)}</bdi> : <strong>{o.unattributed(l)}</strong>]
-      : !loaded(selected, hp) ? [o.parentOn(l, day(l, on)), <span className="live-quiet">{o.notLoaded(l)}</span>]
+      : !hierLoaded ? [o.parentOn(l, day(l, on)), <span className="live-quiet">{pending ? o.loadingMore(l) : o.notLoaded(l)}</span>]
         : p?.parent ? [o.registryParent(l), <bdi>{label(party(p.parent)?.name ?? "", p.parent)}</bdi>]
           : [o.parentOn(l, day(l, on)), <span className="live-quiet">{o.noHierarchy(l)}</span>];
     const since = hier && hier.targets.length === 1 ? covering(hier.history, on)?.from ?? "" : "";
     const roles = base.profiles.filter((pr) => [pr.issuer, pr.buyer, pr.payer, pr.recipient].includes(selected));
-    const name = p ? label(p.name, p.id) : label(hier?.name ?? memberOf("payer", selected)?.name ?? "", selected);
+    const name = p ? label(p.name, p.id) : label(hier?.name || fallbackName, selected);
     return (
       <section className="live-step" aria-labelledby="o01-detail-title">
         <h2 id="o01-detail-title" tabIndex={-1}><bdi>{name}</bdi></h2>
         <Facts items={[
           [o.idLabel(l), <span className="live-mono">{ltr(selected)}</span>],
-          [o.kindLabel(l), kindName(l, p ? p.kind : hier || memberOf("payer", selected) || cache[groupKind]?.members.some((x) => x.member === selected) ? "account" : "unknown")],
+          [o.kindLabel(l), kindName(l, p ? p.kind : isAccount ? "account" : "unknown")],
           parentFact,
           ...(p ? [[o.state(l), p.state === "active" ? o.stateActive(l) : o.stateSuspended(l)] as [string, ReactNode]] : []),
           ...(since ? [[o.entryFrom(l), <Dated l={l} iso={since} />] as [string, ReactNode]] : []),
@@ -353,17 +572,31 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
           </>
         )}
         <div className="live-buttons">
-          <button type="button" className="service-button-link" onClick={() => toHistory("hierarchy", selected)}>{o.viewHistory(l)}</button>
+          <button type="button" className="service-button-link" onClick={() => toHistory(selected)}>{o.viewHistory(l)}</button>
         </div>
       </section>
     );
-  })();
+  };
+  const notInView = (
+    <p className="o01-not-loaded" role="status">{o.selected(l)} <bdi dir="ltr" className="live-mono">{selected}</bdi>. {o.selNotLoaded(l)}</p>
+  );
+  let detail: ReactNode = null;
   let main: ReactNode = null;
   if (view === "tree") {
+    const hp = progressOf(cache.hierarchy);
+    const hier = memberOf("hierarchy", selected);
+    detail = memberDetail(hier, loaded(selected, hp), "", !!hier);
+    const complete = !!cache.hierarchy && cache.hierarchy.complete && !cache.hierarchy.failed;
+    const ready = !!cache.hierarchy;
     main = (
       <section aria-labelledby="o01-view-title">
-        {toolbar(o.treeTitle(l))}
-        {loadState}
+        <div className="live-toolbar">
+          <div className="live-heading">
+            <h2 id="o01-view-title" tabIndex={-1}>{o.treeTitle(l)}</h2>
+            {ready && <p className="live-meta">{o.loaded(l, cache.hierarchy?.members.length ?? 0)} · <Dated l={l} iso={on} /></p>}
+          </div>
+        </div>
+        {status === "loading" && !ready ? <p role="status" className="live-meta">{o.loading(l, day(l, on))}</p> : pageError}
         {built && (
           <>
             {(() => {
@@ -414,165 +647,218 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
                 </>
               );
             })()}
-            {incompleteNote}
+            {ready && !complete && (
+              <div className="live-note-rule o01-incomplete" role="status">
+                <p>{o.incomplete(l)}</p>
+                <button type="button" className="live-secondary" onClick={() => void store.load("hierarchy", true)}>{cache.hierarchy?.failed ? o.continueLoading(l) : o.loadMore(l)}</button>
+              </div>
+            )}
           </>
         )}
       </section>
     );
   } else if (view === "accounts") {
-    const rows = base && cache.hierarchy && cache.payer ? accounts(base.parties, cache.hierarchy.members, cache.payer.members, on, progressOf(cache.hierarchy), progressOf(cache.payer)) : null;
-    const shown = rows?.filter((r) => !onlyUnattributed || r.unit.state === "unattributed");
+    const rows = accounts.rows;
+    const row = rows.find((r) => r.id === selected);
+    detail = !selected ? null : row ? memberDetail(facts?.hier, !!facts, row.name, true, !facts) : notInView;
+    const other = rk !== "hierarchy" && rk !== "payer";
+    const kindLabel = o.kind(l, rk);
     main = (
       <section aria-labelledby="o01-view-title">
-        {toolbar(o.accountsTitle(l))}
-        {loadState}
-        {rows && (
-          <>
-            <label className="live-check o01-filter"><input type="checkbox" checked={onlyUnattributed} onChange={(e) => setOnlyUnattributed(e.target.checked)} />{o.onlyUnattributed(l)}</label>
-            {shown && shown.length === 0 ? <p className="live-empty">{onlyUnattributed ? o.noneUnattributed(l) : !complete ? o.incomplete(l) : o.noAccounts(l)}</p> : (
-              <div className="security-table-scroll live-table o01-accounts">
-                <table role="table">
-                  <colgroup><col className="o01-c30" /><col className="o01-c26" /><col className="o01-c26" /><col className="o01-c18" /></colgroup>
-                  <thead role="rowgroup"><tr role="row">
-                    <th scope="col" role="columnheader">{o.colAccount(l)}</th>
-                    <th scope="col" role="columnheader">{o.orgOn(l, day(l, on))}</th>
-                    <th scope="col" role="columnheader">{o.payerOn(l, day(l, on))}</th>
-                    <th scope="col" role="columnheader">{o.entryFrom(l)}</th>
-                  </tr></thead>
-                  <tbody role="rowgroup">
-                    {shown?.map((r) => (
-                      <tr key={r.id} role="row" className={selected === r.id ? "live-selected" : undefined}>
-                        <td role="cell" className="live-user"><button type="button" className="live-open" data-id={r.id} onClick={() => selectNode(r.id)}><bdi>{r.name}</bdi></button><span className="live-sub live-mono">{ltr(r.id)}</span></td>
-                        <td role="cell" data-label={o.orgOn(l, day(l, on))}>{sideText(l, r.unit, o.noHierarchy(l), o.unattributed(l))}</td>
-                        <td role="cell" data-label={o.payerOn(l, day(l, on))}>{sideText(l, r.payer, o.noPayer(l), o.noPayerDay(l))}</td>
-                        <td role="cell" data-label={o.entryFrom(l)}>{r.entryFrom ? <Dated l={l} iso={r.entryFrom} /> : ""}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {incompleteNote}
-          </>
-        )}
-      </section>
-    );
-  } else if (view === "groups") {
-    const g = cache[groupKind] ? groups(cache[groupKind]!.members) : null;
-    main = (
-      <section aria-labelledby="o01-view-title">
-        {toolbar(o.groupsTitle(l))}
-        <fieldset className="live-roles o01-kinds">
-          <legend>{o.relationship(l)}</legend>
-          {(["view_group", "allocation_pool"] as RelationKind[]).map((k) => (
-            <label key={k}><input type="radio" name="o01-group-kind" value={k} checked={groupKind === k} onChange={() => { setGroupKind(k); setSelected(""); }} />{o.kind(l, k)}</label>
-          ))}
-        </fieldset>
-        {loadState}
-        {g && (
-          <>
-            <div className="live-note-rule"><p>{groupKind === "view_group" ? o.viewNote(l) : o.poolNote(l)}</p></div>
-            {g.groups.length === 0 ? <p className="live-empty">{!complete ? o.incomplete(l) : g.outside.length > 0 ? o.noGroupsOn(l, day(l, on)) : o.emptyKind(l, o.kind(l, groupKind), base?.revision ?? 0)}</p> : (
-              <div className="security-table-scroll live-table o01-groups">
-                <table role="table">
-                  <colgroup><col className="o01-c34" /><col /><col className="o01-c14" /></colgroup>
-                  <thead role="rowgroup"><tr role="row">
-                    <th scope="col" role="columnheader">{o.colGroup(l)}</th>
-                    <th scope="col" role="columnheader">{o.membersOn(l, day(l, on))}</th>
-                    <th scope="col" role="columnheader">{o.membersLoaded(l)}</th>
-                  </tr></thead>
-                  <tbody role="rowgroup">
-                    {g.groups.map((grp) => (
-                      <tr key={grp.id} role="row">
-                        <td role="cell" className="live-user"><bdi>{grp.name}</bdi><span className="live-sub live-mono">{ltr(grp.id)}</span></td>
-                        <td role="cell" data-label={o.membersOn(l, day(l, on))}>
-                          <ul className="o01-inline">
-                            {grp.members.map((m) => <li key={m.id}><button type="button" className="live-open" data-id={m.id} onClick={() => selectNode(m.id)}><bdi>{m.name}</bdi></button></li>)}
-                          </ul>
-                        </td>
-                        <td role="cell" data-label={o.membersLoaded(l)}>{grp.members.length}{complete ? "" : ` ${o.incompleteMark(l)}`}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {g.outside.length > 0 && (
-              <section aria-labelledby="o01-outside">
-                <h3 id="o01-outside">{groupKind === "view_group" ? o.notInView(l, day(l, on)) : o.notInPool(l, day(l, on))}</h3>
-                <ul className="o01-plain">{g.outside.map((m) => <li key={m.member}><bdi>{label(m.name, m.member)}</bdi> <span className="live-mono live-quiet">{ltr(m.member)}</span></li>)}</ul>
-              </section>
-            )}
-            {incompleteNote}
-          </>
-        )}
-      </section>
-    );
-  } else {
-    const list = cache[historyKind]?.members ?? [];
-    const chosen = list.find((m) => m.member === historyMember);
-    const applying = chosen ? chosen.history.filter((h) => applies(h, on)) : [];
-    const conflicting = applying.length > 1 && (historyKind === "hierarchy" || historyKind === "payer");
-    main = (
-      <section aria-labelledby="o01-view-title">
-        {toolbar(o.historyTitle(l))}
-        <div className="o01-history-pick">
-          <div className="service-field">
-            <label htmlFor="o01-history-kind">{o.relationship(l)}</label>
-            <select id="o01-history-kind" className="live-select" value={historyKind} onChange={(e) => setHistoryKind(e.target.value as RelationKind)}>
-              {(["hierarchy", "payer", "contract_pool", "allocation_pool", "view_group"] as RelationKind[]).map((k) => <option key={k} value={k}>{o.kind(l, k)}</option>)}
-            </select>
-          </div>
-          <div className="service-field">
-            <label htmlFor="o01-history-member">{o.member(l)}</label>
-            <select id="o01-history-member" className="live-select" value={historyMember} onChange={(e) => setHistoryMember(e.target.value)}>
-              <option value="">{o.chooseMember(l)}</option>
-              {list.map((m) => <option key={m.member} value={m.member}>{label(m.name, m.member)} ({m.member})</option>)}
-            </select>
-          </div>
-        </div>
-        {loadState}
-        {historyMember && cache[historyKind] && !chosen && <p className="live-empty">{loaded(historyMember, progressOf(cache[historyKind])) ? o.noTimeline(l) : o.notLoadedMember(l)}</p>}
-        {chosen && (
-          <section aria-labelledby="o01-history-title">
-            <h3 id="o01-history-title" tabIndex={-1}><bdi>{label(chosen.name, chosen.member)}</bdi> <span className="live-mono live-quiet">{ltr(chosen.member)}</span></h3>
-            <div className="security-table-scroll live-table o01-history">
+        {listHead(o.accountsTitle(l), pagedMeta(accounts))}
+        {pageError ?? pagerState(accounts, o.loadingAccounts(l, day(l, on)))}
+        {accounts.current && accounts.status !== "loading" && accounts.status !== "error" && (
+          rows.length === 0 ? (
+            accounts.stopped ? null : narrowing(view, filters).length > 0 ? filteredEmpty : <p className="live-empty">{o.noAccounts(l)}</p>
+          ) : (
+            <div className="security-table-scroll live-table o01-accounts">
               <table role="table">
-                <colgroup><col className="o01-c40" /><col className="o01-c20" /><col className="o01-c20" /><col className="o01-c20" /></colgroup>
+
                 <thead role="rowgroup"><tr role="row">
-                  <th scope="col" role="columnheader">{o.colTarget(l)}</th>
-                  <th scope="col" role="columnheader">{o.colFrom(l)}</th>
-                  <th scope="col" role="columnheader">{o.colUntil(l)}</th>
-                  <th scope="col" role="columnheader">{o.colOn(l, day(l, on))}</th>
+                  <th scope="col" role="columnheader">{o.colAccount(l)}</th>
+                  <th scope="col" role="columnheader">{o.colOrganization(l)}</th>
+                  <th scope="col" role="columnheader">{o.payer(l)}</th>
+                  {other && <th scope="col" role="columnheader">{kindLabel}</th>}
+                  <th scope="col" role="columnheader">{o.entryFrom(l)}</th>
                 </tr></thead>
                 <tbody role="rowgroup">
-                  {[...chosen.history].sort((a, b) => a.from.localeCompare(b.from)).map((h) => (
-                    <tr key={h.target + h.from} role="row">
-                      <td role="cell" className="live-user"><bdi>{label(h.name, h.target)}</bdi><span className="live-sub live-mono">{ltr(h.target)}</span></td>
-                      <td role="cell" data-label={o.colFrom(l)}><Dated l={l} iso={h.from} /></td>
-                      <td role="cell" data-label={o.colUntil(l)}>{h.until ? <Dated l={l} iso={h.until} /> : o.noEnd(l)}</td>
-                      <td role="cell" data-label={o.colOn(l, day(l, on))}>{applying.includes(h) ? <strong>{o.applies(l)}</strong> : ""}</td>
+                  {rows.map((r) => (
+                    <tr key={r.id} role="row" className={selected === r.id ? "live-selected" : undefined}>
+                      <td role="cell" className="live-user"><button type="button" className="live-open" data-id={r.id} aria-current={selected === r.id ? "true" : undefined} onClick={() => selectNode(r.id)}><bdi className={r.name === r.id ? "o01-id-name" : undefined}>{r.name}</bdi></button><span className="live-sub live-mono">{ltr(r.id)}</span></td>
+                      <td role="cell" data-label={o.orgOn(l, day(l, on))}>{sideText(l, r.unit, o.noHierarchy(l), o.unattributed(l))}</td>
+                      <td role="cell" data-label={o.payerOn(l, day(l, on))}>{sideText(l, r.payer, o.noPayer(l), o.noPayerDay(l))}</td>
+                      {other && r.other && <td role="cell" data-label={o.kindOn(l, kindLabel, day(l, on))}>{sideText(l, r.other, o.noKind(l), o.unattributed(l))}</td>}
+                      <td role="cell" data-label={o.entryFrom(l)}>{r.entryFrom ? <Dated l={l} iso={r.entryFrom} /> : ""}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            {conflicting && <p className="live-note"><strong>{o.conflict(l, applying.length)}</strong></p>}
-            <p className="live-note">{o.endNote(l)}</p>
-          </section>
+          )
         )}
-        {incompleteNote}
+        {accounts.current && rows.length === 0 && accounts.stopped && <p className="live-empty">{o.noMatchesYet(l)}</p>}
+        {accounts.current && more(accounts)}
+      </section>
+    );
+  } else if (view === "groups") {
+    const groupsRows = groupList.rows;
+    const outsideRow = outside.rows.find((m) => m.member === selected);
+    const group = groupsRows.find((g) => g.id === selectedGroup);
+    detail = selectedGroup ? (
+      <section className="live-step" aria-labelledby="o01-detail-title">
+        <h2 id="o01-detail-title" tabIndex={-1}><bdi>{group ? label(group.name, group.id) : selectedGroup}</bdi></h2>
+        <Facts items={[
+          [o.idLabel(l), <span className="live-mono">{ltr(selectedGroup)}</span>],
+          [o.kindLabel(l), o.kind(l, groupKind)],
+          ...(group ? [[o.membersAll(l, day(l, on)), String(group.members_on)] as [string, ReactNode]] : []),
+        ]} />
+        <h3>{o.groupMembers(l)}</h3>
+        {pagerState(groupMembers, o.loadingMembers(l, day(l, on)))}
+        {groupMembers.current && groupMembers.status !== "loading" && groupMembers.status !== "error" && (
+          groupMembers.rows.length === 0 ? (groupMembers.stopped ? null : <p className="live-empty">{filters.entity ? o.groupMembersFiltered(l, day(l, on)) : o.groupMembersNone(l, day(l, on))}</p>) : (
+            <>
+              <p className="live-meta">{countText(l, countOf(groupMembers))}</p>
+              <ul className="o01-plain">{groupMembers.rows.map((m) => <li key={m.member}><bdi>{label(m.name, m.member)}</bdi> <span className="live-mono live-quiet">{ltr(m.member)}</span></li>)}</ul>
+            </>
+          )
+        )}
+        {groupMembers.current && groupMembers.rows.length === 0 && groupMembers.stopped && <p className="live-empty">{o.noMatchesYet(l)}</p>}
+        {groupMembers.current && <MoreBar l={l} next={groupMembers.next} stopped={groupMembers.stopped} status={groupMembers.status} count={countText(l, countOf(groupMembers))} compact={false} onMore={groupMembers.more} />}
+      </section>
+    ) : !selected ? null : outsideRow ? memberDetail(facts?.hier, !!facts, outsideRow.name, true, !facts) : notInView;
+    main = (
+      <section aria-labelledby="o01-view-title">
+        {listHead(o.groupsTitle(l), pagedMeta(groupList, true))}
+        <div className="live-note-rule"><p>{groupKind === "view_group" ? o.viewNote(l) : o.poolNote(l)}</p></div>
+        {pageError ?? pagerState(groupList, o.loadingGroups(l, day(l, on)))}
+        {groupList.current && groupList.status !== "loading" && groupList.status !== "error" && (
+          groupsRows.length === 0 ? (groupList.stopped ? <p className="live-empty">{o.noMatchesYet(l)}</p> : filters.q ? filteredEmpty : <p className="live-empty">{o.noGroupsOn(l, day(l, on))}</p>) : (
+            <div className="security-table-scroll live-table o01-groups">
+              <table role="table">
+                <thead role="rowgroup"><tr role="row">
+                  <th scope="col" role="columnheader">{o.colGroup(l)}</th>
+                  <th scope="col" role="columnheader">{dated(o.membersAll(l, day(l, on)))}</th>
+                </tr></thead>
+                <tbody role="rowgroup">
+                  {groupsRows.map((g) => (
+                    <tr key={g.id} role="row" className={selectedGroup === g.id ? "live-selected" : undefined}>
+                      <td role="cell" className="live-user"><button type="button" className="live-open" data-id={g.id} aria-current={selectedGroup === g.id ? "true" : undefined} onClick={() => selectGroup(g.id)}><bdi className={g.name ? undefined : "o01-id-name"}>{label(g.name, g.id)}</bdi></button><span className="live-sub live-mono">{ltr(g.id)}</span></td>
+                      <td role="cell" data-label={o.membersAll(l, day(l, on))}>{g.members_on}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
+        {groupList.current && more(groupList, true)}
+        <section aria-labelledby="o01-outside" className="o01-outside">
+          <h3 id="o01-outside">{groupKind === "view_group" ? o.notInView(l, day(l, on)) : o.notInPool(l, day(l, on))}</h3>
+          {pagerState(outside, groupKind === "view_group" ? o.loadingOutsideView(l, day(l, on)) : o.loadingOutsidePool(l, day(l, on)))}
+          {outside.current && outside.status !== "loading" && outside.status !== "error" && (
+            outside.rows.length === 0 ? (outside.stopped ? <p className="live-empty">{o.noMatchesYet(l)}</p> : filters.entity ? filteredEmpty : <p className="live-empty">{o.noneUnattributed(l)}</p>) : (
+              <>
+                <p className="live-meta">{countText(l, countOf(outside))}</p>
+                <ul className="o01-plain">{outside.rows.map((m) => (
+                  <li key={m.member}><button type="button" className="live-open" data-id={m.member} aria-current={selected === m.member && !selectedGroup ? "true" : undefined} onClick={() => selectNode(m.member)}><bdi>{label(m.name, m.member)}</bdi></button> <span className="live-mono live-quiet">{ltr(m.member)}</span></li>
+                ))}</ul>
+              </>
+            )
+          )}
+          {outside.current && more(outside)}
+        </section>
+      </section>
+    );
+  } else {
+    const chosen = timeline.rows[0];
+    const applying = chosen ? chosen.history.filter((h) => applies(h, on)) : [];
+    const conflicting = applying.length > 1 && (rk === "hierarchy" || rk === "payer");
+    const pick = (m: OrgMember) => {
+      setHistoryMember(m.member);
+      setPicking(false);
+      focusHistory.current = true;
+      onParams({ member: m.member });
+    };
+    main = (
+      <section aria-labelledby="o01-view-title">
+        {listHead(o.historyTitle(l), null)}
+        {pageError}
+        {picking && historyQ && (
+          <>
+            {pagerState(results, o.searchingMembers(l))}
+            {results.current && results.status !== "loading" && results.status !== "error" && (results.rows.length === 0 ? (results.stopped ? null : <p className="live-empty">{o.noResults(l)}</p>) : (
+              <>
+                <p className="live-meta">{countText(l, countOf(results))}</p>
+                <ul className="o01-plain o01-results">{results.rows.map((m) => (
+                  <li key={m.member}><button type="button" className="live-open" data-id={m.member} onClick={() => pick(m)}><bdi>{label(m.name, m.member)}</bdi> <span className="live-mono live-quiet">{ltr(m.member)}</span></button></li>
+                ))}</ul>
+              </>
+            ))}
+            {results.current && results.rows.length === 0 && results.stopped && <p className="live-empty">{o.noMatchesYet(l)}</p>}
+            {results.current && <MoreBar l={l} next={results.next} stopped={results.stopped} status={results.status} count={countText(l, countOf(results))} compact={!wide} onMore={results.more} />}
+          </>
+        )}
+        {historyMember && (
+          <>
+            {pagerState(timeline, o.loadingTimeline(l))}
+            {timeline.current && timeline.status === "ready" && !chosen && <p className="live-empty">{o.noTimeline(l)}</p>}
+            {chosen && (
+              <section aria-labelledby="o01-history-title">
+                <h3 id="o01-history-title" tabIndex={-1}><bdi>{label(chosen.name, chosen.member)}</bdi> <span className="live-mono live-quiet">{ltr(chosen.member)}</span></h3>
+                <div className="security-table-scroll live-table o01-history">
+                  <table role="table">
+                    <colgroup><col className="o01-c40" /><col className="o01-c20" /><col className="o01-c20" /><col className="o01-c20" /></colgroup>
+                    <thead role="rowgroup"><tr role="row">
+                      <th scope="col" role="columnheader">{o.colTarget(l)}</th>
+                      <th scope="col" role="columnheader">{o.colFrom(l)}</th>
+                      <th scope="col" role="columnheader">{o.colUntil(l)}</th>
+                      <th scope="col" role="columnheader">{dated(o.colOn(l, day(l, on)))}</th>
+                    </tr></thead>
+                    <tbody role="rowgroup">
+                      {[...chosen.history].sort((a, b) => a.from.localeCompare(b.from)).map((h) => (
+                        <tr key={h.target + h.from} role="row">
+                          <td role="cell" className="live-user"><bdi>{label(h.name, h.target)}</bdi><span className="live-sub live-mono">{ltr(h.target)}</span></td>
+                          <td role="cell" data-label={o.colFrom(l)}><Dated l={l} iso={h.from} /></td>
+                          <td role="cell" data-label={o.colUntil(l)}>{h.until ? <Dated l={l} iso={h.until} /> : o.noEnd(l)}</td>
+                          <td role="cell" data-label={o.colOn(l, day(l, on))}>{applying.includes(h) ? <strong>{o.applies(l)}</strong> : ""}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {conflicting && <p className="live-note"><strong>{o.conflict(l, applying.length)}</strong></p>}
+                <p className="live-note">{o.endNote(l)}</p>
+              </section>
+            )}
+          </>
+        )}
       </section>
     );
   }
+  const historyPick = view !== "history" ? null : picking ? (
+    <SearchForm l={l} id="o01-history-q" labelText={o.search(l)} value={historyQ} onSearch={setHistoryQ} />
+  ) : (
+    <p className="o01-member-chosen">
+      <span className="o01-provider-label">{o.memberLabel(l)}</span>{" "}
+      <bdi>{label(timeline.rows[0]?.name ?? "", historyMember)}</bdi> <span className="live-mono live-quiet">{ltr(historyMember)}</span>{" "}
+      <button type="button" className="service-button-link" onClick={() => { setPicking(true); setFocusTo("#o01-history-q"); }}>{o.change(l)}</button>
+    </p>
+  );
+  const entities = (base?.parties ?? []).filter((p) => p.kind === "legal_entity");
+  const band = (
+    <FilterBand l={l} view={view} wide={wide} open={bandOpen.has(view)} onToggle={() => setBandOpen((s) => { const n = new Set(s); if (n.has(view)) n.delete(view); else n.add(view); return n; })}
+      filters={filters} entities={entities} onChange={apply} onRemove={removeFilter} onClearAll={clearAll}
+      groupKind={groupKind} onGroupKind={(k) => { setGroupKind(k); setSelectedGroup(""); }} history={historyPick} />
+  );
   const showPanel = view !== "history" && (wide || stepped);
   return (
     <div className={"o01-live" + (view === "history" ? " o01-single" : "")} data-live={view}>
       <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
-      {scope}
+      {scopeForm}
       {notices}
+      {band}
       <div className="live-users" data-wide={wide ? "true" : "false"}>
-        {!(stepped && !wide) && <div className="live-list live-sections">{main}</div>}
+        {!(stepped && !wide) && <div className="live-list live-sections" id="o01-list">{main}</div>}
         {showPanel && (
           <aside className="live-panel" aria-label={o.selectHint(l)}>
             {stepped && !wide && <button type="button" className="service-button-link live-back" onClick={back}>{o.back(l)}</button>}

@@ -42,7 +42,7 @@
       "asof"
     ],
     "titleKo": "조직·관계 탐색",
-    "scopeLabelKo": "기준일·법인·관계 종류·미귀속·공급자",
+    "scopeLabelKo": "기준일·법인·관계 종류·미귀속·공급사",
     "purposeKo": "법인/부서/프로젝트, 조회 그룹, 원천 계정 종류·귀속 유효기간, 공유 배분·권한 근거",
     "commandReferences": [],
     "actionEvidence": "관계 상세; 변경 계획 만들기 (→O02 draft); 조회 그룹 초안 (grants no permission)."

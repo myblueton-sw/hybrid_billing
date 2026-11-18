@@ -185,4 +185,4 @@ Source: `docs/ui/screens/M02/spec.md:24-26`. Status meanings are in the [cross-c
 
 ## Planning cross-check residuals (HYB-291)
 
-- **Trust flow simplified.** `M02/spec.md:96-131` specifies draft, validated, independently approved and activated stages. HB-265 collapses them into propose, then approve, which applies. This was not recorded before. 2026-11-18: the full draft, validate, approve and activate workflow was built by HYB-297 (PR #215).
+- **Trust flow simplified.** `M02/spec.md:96-131` specifies draft, validated, independently approved and activated stages. HB-265 collapses them into propose, then approve, which applies. This was not recorded before. 2026-11-18: the full draft, validate, approve and activate workflow was built by HYB-297 (PR #215); activation on a non-sample installation stays blocked until enrolment is decided (HYB-297 R4/Q3).

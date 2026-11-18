@@ -24,12 +24,14 @@ sources:
   - `HB-264/verification.md:168-169`: bulk revocation and role validity periods built by HYB-299 (PR #218).
   - `HB-265/verification.md:188`: trust workflow built by HYB-297 (PR #215).
   - `HB-266/verification.md:126`, `HB-267/verification.md:61`: grant approval request built by HYB-298 (PR #212).
+  - After the review (round 1 FAIL: the same resolved residuals were left stale in sibling records), also: `HB-263/verification.md:202-203, 215-216`; `HB-264/verification.md:181`; `HB-266/verification.md:129, 133, 137-138`; `HB-267/verification.md:64, 68, 72`. Caveats added where the later record carries one: role validity covered by interpretation (HYB-299 Q2); trust activation on a non-sample installation blocked until enrolment is decided (HYB-297 R4/Q3); federated checks still open.
 
 ## Checks
 
 - `python3 -m unittest discover -s tests/docs_format -v`: 2 tests OK.
 - The same test against the unchanged documents (stash): FAILED, listing every `final` and `reviewed` file — the check is shown to fail before the fix.
-- `git diff --stat`: 124 status lines plus 7 annotated residual lines; no other line changed.
+- `git diff --stat`: 124 status lines plus 19 annotated residual lines; no other line changed.
+- Independent review: round 1 FAIL (incomplete annotation, caveats); fixed as above. The test reads every tracked `.md`, which is wider than the rule's `docs/` scope; tool files without front matter are skipped, and the wider scope is kept on purpose.
 
 ## Residuals
 

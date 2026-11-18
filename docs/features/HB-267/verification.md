@@ -61,13 +61,13 @@ Source: `docs/ui/screens/M03/spec.md:133-159` (HB-266 is the API, HB-267 the scr
 | HB-23 | deferred | Grant changes apply directly, without the approval request `M03/spec.md:83` requires. 2026-11-18: the approval request was built by HYB-298 (PR #212). | Planning cross-check residuals below |
 | HB-33 | deferred | Grant commands use the common command path with idempotency keys and expected revisions, but after a partial failure a second submit can create a second grant. | HB-267/verification.md:42 |
 | HB-36 | deferred | Support sessions are not available. | HB-266/plan.md:153-161 |
-| HB-42 | deferred | The revocation states received, deny confirmed and cleanup running (`M03/spec.md:84, 109-113`) do not exist. | Planning cross-check residuals below |
+| HB-42 | deferred | The revocation states received, deny confirmed and cleanup running (`M03/spec.md:84, 109-113`) do not exist. 2026-11-18: built by HYB-298 (PR #212); received, deny confirmed and cleanup running pass inside one command. | Planning cross-check residuals below |
 | AUD-AR-09 | deferred | Delegation creation and support sessions are not available; ended delegations are listed by ID only. | HB-266/plan.md:153-161, HB-267/verification.md Residuals |
 | AUD-DB-08 | deferred | (classified by HYB-301) Built: grants expire and can be revoked (HB-266/plan.md:25, 119). Not connected: the CSP-side setup permission with a revocation condition and operational-read-only access after it is revoked (external). Not built: task-scoped expiring handoff links (`M03/spec.md:143-149`), which wait on binding S02 provider onboarding (owner decision; S02 is outside the Go-bound pre-launch scope). | [HYB-301 report](../../reviews/HYB-301-trace-classification/report.md) |
 | AUD-QA-04 | deferred | Idempotency keys and expected revisions are enforced; OAuth client credentials, PKCE and the client-user intersection are not built. | HB-266/plan.md |
-| IAM-01–IAM-08 | deferred | Role and revocation paths exist for local users only; approval request, revocation states, bulk paths and federated checks are not built. | Planning cross-check residuals below |
+| IAM-01–IAM-08 | deferred | Role and revocation paths exist for local users only; approval request, revocation states, bulk paths and federated checks are not built. 2026-11-18: approval request and revocation states built by HYB-298 (PR #212), bulk revocation by HYB-299 (PR #218); federated checks remain open. | Planning cross-check residuals below |
 
 ## Planning cross-check residuals (HYB-291)
 
-- **Approval request and revocation states.** The screen applies grants directly and shows no revocation states (`M03/spec.md:83-84, 109-113`); see HB-266.
+- **Approval request and revocation states.** The screen applies grants directly and shows no revocation states (`M03/spec.md:83-84, 109-113`); see HB-266. (2026-11-18: built by HYB-298, PR #212.)
 - **Security-focused review not stated.** HB-257 (Verification for every phase) requires a security-focused review for phases 1–3. This record names design and change reviews but no security-focused review. None is claimed here; a security re-review or a recorded reason is open.

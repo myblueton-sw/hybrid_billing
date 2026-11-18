@@ -199,8 +199,8 @@ Source: `docs/ui/screens/M01/spec.md:118-120` (HB-263 is the API, HB-264 the scr
 | ID | Status | Reason | Record |
 | --- | --- | --- | --- |
 | HB-03 | deferred | Addressed within pre-launch scope for twelve identity commands under installation administration with last-administrator protection; registry-wide and leakage acceptance not built. | HB-263/plan.md |
-| HB-34 | deferred | Bulk revocation needs asynchronous jobs and manifests and is not built. | HB-263/plan.md:224, HB-264/plan.md:61 |
-| HB-42 | deferred | Invitation, set and reset links, suspend, depart and role change are built; role validity periods and bulk revocation are not. | Planning cross-check residuals below |
+| HB-34 | deferred | Bulk revocation needs asynchronous jobs and manifests and is not built. 2026-11-18: built by HYB-299 (PR #218). | HB-263/plan.md:224, HB-264/plan.md:61 |
+| HB-42 | deferred | Invitation, set and reset links, suspend, depart and role change are built; role validity periods and bulk revocation are not. 2026-11-18: both built by HYB-299 (PR #218); role validity covered by interpretation (HYB-299 Q2). | Planning cross-check residuals below |
 | IAM-01 | deferred | Covered: invitations and set links are one-time. Not built or tested: concurrent first-administrator creation and invitation acceptance from another workspace. 2026-11-18: see [HYB-303/verification.md](../HYB-303/verification.md); `retention-access.md:49` not fully covered (restart re-arming, HYB-303 R1). | HB-263/verification.md |
 | IAM-02 | deferred | Only local password accounts exist; SAML, OIDC and LDAP sign-in are residuals (HB-257 out of scope). | HB-265/plan.md:177 |
 | IAM-03 | deferred | Does not arise while only local accounts exist. | this section |
@@ -212,6 +212,6 @@ Source: `docs/ui/screens/M01/spec.md:118-120` (HB-263 is the API, HB-264 the scr
 
 ## Planning cross-check residuals (HYB-291)
 
-- **Role validity periods.** `M01/spec.md:52` gives each role binding a validity interval; roles have no validity period.
-- **Bulk revocation.** Not built (`HB-263/plan.md:224`); it needs asynchronous jobs and manifests.
+- **Role validity periods.** `M01/spec.md:52` gives each role binding a validity interval; roles have no validity period. (2026-11-18: built by HYB-299, PR #218; covered by interpretation, HYB-299 Q2.)
+- **Bulk revocation.** Not built (`HB-263/plan.md:224`); it needs asynchronous jobs and manifests. (2026-11-18: built by HYB-299, PR #218.)
 - **Search and filters.** Missing; fix ticket HYB-294. **Reauthentication before suspend.** Missing; fix ticket HYB-293.

@@ -110,8 +110,19 @@ func TestIntegrationsReadShape(t *testing.T) {
 	}
 	versions := modules["plugins"].([]any)
 	first := versions[0].(map[string]any)
-	if len(versions) != 2 || first["version"] != "1.0.0" || versions[1].(map[string]any)["version"] != "1.1.0" || first["digest"] != sampleHash("sample-ledger-export-1.0.0") {
+	if len(versions) != 3 || first["version"] != "1.0.0" || versions[1].(map[string]any)["version"] != "1.1.0" || first["digest"] != sampleHash("sample-ledger-export-1.0.0") {
 		t.Fatalf("versions %v", versions)
+	}
+	licensing := []string{}
+	for _, v := range versions {
+		row := v.(map[string]any)
+		licensing = append(licensing, fmt.Sprint(row["version"], " ", row["license"], " ", row["license_state"]))
+	}
+	if s := strings.Join(licensing, ","); s != "1.0.0 Apache-2.0 permitted,1.1.0 Apache-2.0 permitted,1.2.0 LicenseRef-sample-proprietary not_permitted" {
+		t.Errorf("licenses %s", s)
+	}
+	if s := fmt.Sprint(modules["licenses"]); s != "map[permitted:[Apache-2.0 BSD-2-Clause BSD-3-Clause ISC LGPL-2.1-only LGPL-3.0-only MIT MPL-2.0 Zlib] source:default]" {
+		t.Errorf("license list %s", s)
 	}
 	if s := fmt.Sprint(first["capabilities"], first["egress"], first["endpoints"], first["timeout_seconds"], first["memory_mib"], first["concurrency"], first["core_min"], first["core_max"],
 		first["key_version"], first["publisher"], first["vulnerable"]); s != "[read_events:invoice.issued serve_screen:overview] [sample-erp] [api] 30 128 21.0.01.9.9sample-plugin-key-1sample-publisher<nil>" {
@@ -130,7 +141,7 @@ func TestIntegrationsReadShape(t *testing.T) {
 		row := p.(map[string]any)
 		kinds = append(kinds, fmt.Sprintf("%v:%v:%v", row["number"], row["kind"], row["state"]))
 	}
-	if strings.Join(kinds, ",") != "9:endpoint:pending,8:upgrade:pending,7:enable:applied,6:install:applied,5:workspace:applied,4:version:applied,3:version:applied,2:key:applied,1:publisher:applied" {
+	if strings.Join(kinds, ",") != "10:version:applied,9:endpoint:pending,8:upgrade:pending,7:enable:applied,6:install:applied,5:workspace:applied,4:version:applied,3:version:applied,2:key:applied,1:publisher:applied" {
 		t.Errorf("proposals %v", kinds)
 	}
 	endpoint, upgrade := pluginProposal(t, got, 9), pluginProposal(t, got, 8)
@@ -316,7 +327,7 @@ func leakValues(t *testing.T, f world, captured []byte) []string {
 		t.Fatal(err)
 	}
 	add(p.Keys[0].Public)
-	for _, version := range []string{"1.0.0", "1.1.0"} {
+	for _, version := range []string{"1.0.0", "1.1.0", "1.2.0"} {
 		v, err := f.s.plugins.Version(samplePlugin, version)
 		if err != nil {
 			t.Fatal(err)

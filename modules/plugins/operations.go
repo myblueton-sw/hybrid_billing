@@ -140,8 +140,15 @@ func (r *Registry) found(plugin, number string) (*version, error) {
 	return p.versions[number], nil
 }
 
-func viewVersion(v *version) VersionView {
-	return VersionView{Manifest: copyManifest(v.manifest), Signature: append([]byte(nil), v.signature...), Vulnerable: copyMark(v.vulnerable)}
+func (r *Registry) viewVersion(v *version) VersionView {
+	return VersionView{Manifest: copyManifest(v.manifest), Signature: append([]byte(nil), v.signature...), Vulnerable: copyMark(v.vulnerable),
+		Permitted: r.permitted(v.manifest.License)}
+}
+
+func (r *Registry) Licenses() []string {
+	r.enter()
+	defer r.leave()
+	return append([]string{}, r.config.Licenses...)
 }
 
 func (r *Registry) Version(plugin, number string) (VersionView, error) {
@@ -151,7 +158,7 @@ func (r *Registry) Version(plugin, number string) (VersionView, error) {
 	if err != nil {
 		return VersionView{}, err
 	}
-	return viewVersion(v), nil
+	return r.viewVersion(v), nil
 }
 
 func (r *Registry) publisherKey(publisher, version string) (*publisher, *key, error) {

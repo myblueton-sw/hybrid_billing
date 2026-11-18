@@ -4,11 +4,12 @@ import type { PluginInstall, PluginVersion } from "../../../../service/integrati
 import { k, storageText } from "./live-copy";
 import {
   blockerPolicy, capabilityOf, changeKey, frozenValues, installOf, keepDraft, draftOf, pendingNow, pluginIds, pluginTarget, proposeOffer, proposeValues, refusedNow, duplicateIn,
+  refusedByList, refusedLicense, refusedValues,
   type Change, type ChangeKind, changeKinds,
 } from "./live-model";
 import { Code, Known, ListOr, MarkText, Num, Prose, Who, fsi, ltr, stamp } from "./live-format";
 import { CommandForm, RowNote, blockerLines, plain, useOpen, type Blocker, type Shared } from "./LiveCommand";
-import { Proposals } from "./LiveProposals";
+import { LicenseLine, Marked, Proposals, keptLicenseText } from "./LiveProposals";
 
 function Registry({ l, page }: Shared) {
   const w = page.modules.workspace;
@@ -128,6 +129,23 @@ function RuntimeActions({ i, ...shared }: Shared & { i: PluginInstall }) {
   );
 }
 
+function Licenses({ l, page }: Shared) {
+  const { permitted, source } = page.modules.licenses;
+  return (
+    <section className="p02-section p02-licenses" aria-labelledby="p02-licenses-title">
+      <h3 id="p02-licenses-title">{k.licensesTitle(l, source)}</h3>
+      {permitted === null ? (
+        <p>{k.licensesUnknown(l)}</p>
+      ) : permitted.length === 0 ? (
+        <p>{k.licensesEmpty(l)}</p>
+      ) : (
+        <ul className="p02-license-list">{permitted.map((id) => <li key={id}>{ltr(id)}</li>)}</ul>
+      )}
+      <p className="p02-small live-quiet">{k.licensesNote(l)}</p>
+    </section>
+  );
+}
+
 function ChangeText({ l, c }: { l: Locale; c: Change }) {
   const [before, after = ""] = k.change(l, c.kind, "\u0000").split("\u0000");
   return <>{before}{c.version ? ltr(c.version) : null}{after}</>;
@@ -157,7 +175,17 @@ function Propose({ plugin, ...shared }: Shared & { plugin: string }) {
   const chosen = choice && options.some((o) => changeKey(o) === changeKey(choice)) ? choice : null;
   const install = installOf(page, plugin);
   const refused = target ? refusedNow("integrations.plugin_propose", target) : false;
+  const tried = refused ? refusedValues("integrations.plugin_propose", target) : {};
+  const refusedFor = refused ? refusedLicense(page, plugin, tried.kind ?? "", tried.version ?? "") : "";
+  const keptText = !refused ? "" : refusedFor ? <Marked text={keptLicenseText(l, page, plugin, refusedFor, tried.kind === "enable" ? "enable" : "propose")} /> : k.kept(l, "propose_plugin");
   const id = "p02-propose-" + plugin.replace(/[^A-Za-z0-9-]/g, "");
+  const enableVersion = install && (install.state === "installed" || install.state === "stopped") ? install.version : "";
+  const noteText = (v: PluginVersion) =>
+    v.version === enableVersion
+      ? refusedByList(v) ? k.enableNotOffered(l, v.version, v.license || k.unknown(l)) : k.enableNotOfferedUnknown(l, v.version)
+      : refusedByList(v) ? k.notOffered(l, v.version, v.license || k.unknown(l)) : k.notOfferedUnknown(l, v.version);
+  const noteId = (v: PluginVersion) => id + "-withheld-" + v.version.replace(/[^0-9]/g, "-");
+  const notes = offer.withheld.map((v) => <p key={v.version} id={noteId(v)} className="p02-small p02-withheld"><Marked text={noteText(v)} /></p>);
   const blocker = offer.blocker;
   const blockerText = !blocker ? "" : blocker.code === "duplicate" ? k.proposeBlocker(l, blocker.own ? "duplicate_own" : "duplicate", blocker.number) : k.proposeBlocker(l, blocker.code, "");
   const current = install ? (page.modules.plugins ?? []).find((v) => v.plugin === plugin && v.version === install.version) : undefined;
@@ -169,7 +197,8 @@ function Propose({ plugin, ...shared }: Shared & { plugin: string }) {
 
   return (
     <section className="p02-propose" aria-label={k.proposeChange(l, plugin)}>
-      <RowNote kept={refused ? k.kept(l, "propose_plugin") : ""} blockers={!usable && blockerText ? [plain(blockerText)] : []} focus={focusNote} />
+      <RowNote kept={keptText} blockers={!usable && blockerText ? [plain(blockerText)] : []} focus={focusNote} />
+      {!(open && usable) && notes}
       {usable && !open && (
         <div className="live-buttons">
           <button type="button" className="live-secondary" aria-expanded={open === "propose"} data-opener={mark("propose")} onClick={() => toggle("propose")}>{k.proposeChange(l, plugin)}</button>
@@ -191,6 +220,7 @@ function Propose({ plugin, ...shared }: Shared & { plugin: string }) {
                   <span><ChangeText l={l} c={o} /></span>
                 </label>
               ))}
+              {notes}
             </fieldset>
           }
           choiceProblems={() => (chosen ? [] : [{ field: id + "-first", message: k.chooseChange(l) }])}
@@ -360,6 +390,7 @@ function Versions({ l, page }: Shared) {
                     <td data-label={k.colVerification(l)}>
                       <Signed l={l} keyVersion={v.key_version} publisher={v.publisher} />
                       <span className="live-sub">{k.core(l)} {ltr((v.core_min || k.unknown(l)) + " – " + (v.core_max || k.unknown(l)))}</span>
+                      <span className={"live-sub p02-license" + (v.license_state === "permitted" ? "" : " p02-license-refused")}><LicenseLine l={l} v={v} /></span>
                     </td>
                     <td data-label={k.colVulnerable(l)}><MarkText l={l} m={v.vulnerable} lead={k.markedVulnerable} /></td>
                   </tr>
@@ -377,6 +408,7 @@ function Versions({ l, page }: Shared) {
 export function ModulesView(shared: Shared) {
   return (
     <>
+      <Licenses {...shared} />
       <Registry {...shared} />
       <Installations {...shared} />
       <Proposals {...shared} />

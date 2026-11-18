@@ -83,14 +83,14 @@ func TestIntegrationPluginPropose(t *testing.T) {
 	f.unchanged(t, "install while installed", f.run(root, "integrations.plugin_propose", samplePluginAt, map[string]string{"kind": "install", "version": "1.0.0"}), "invalid_stage")
 	f.ok(t, "approve upgrade", f.run(root, "integrations.plugin_approve", pluginProposalAt(8), nil), "applied", "")
 	fields := map[string]string{"kind": "rollback", "version": "1.0.0"}
-	f.ok(t, "propose rollback", f.run(root, "integrations.plugin_propose", samplePluginAt, fields), "pending", "map[proposal:10 target:plugin-proposal-10]")
-	f.ok(t, "duplicate", f.admin(root, "integrations.plugin_propose", samplePluginAt, "again", fields), "pending", "map[proposal:10 target:plugin-proposal-10]")
-	mine := pluginProposal(t, f.integrations(root), 10)
+	f.ok(t, "propose rollback", f.run(root, "integrations.plugin_propose", samplePluginAt, fields), "pending", "map[proposal:11 target:plugin-proposal-11]")
+	f.ok(t, "duplicate", f.admin(root, "integrations.plugin_propose", samplePluginAt, "again", fields), "pending", "map[proposal:11 target:plugin-proposal-11]")
+	mine := pluginProposal(t, f.integrations(root), 11)
 	if s := fmt.Sprint(mine["rationale"], " ", mine["summary"].(map[string]any)["version"], " ", blockedAs(mine), " ", len(f.s.integ.entries)); s !=
-		"sample reason 1.0.0 false own_proposal true  10" {
+		"sample reason 1.0.0 false own_proposal true  11" {
 		t.Errorf("proposal %s", s)
 	}
-	if s := blockedAs(pluginProposal(t, f.integrations(second), 10)); s != "true  false not_proposer" {
+	if s := blockedAs(pluginProposal(t, f.integrations(second), 11)); s != "true  false not_proposer" {
 		t.Errorf("second %s", s)
 	}
 	for _, c := range []map[string]string{{"kind": "install", "version": "9.9.9"}, {"kind": "upgrade"}, {"kind": "rollback", "version": "1.0"}, {"kind": "enable", "version": "1.0.0"},
@@ -103,7 +103,7 @@ func TestIntegrationPluginPropose(t *testing.T) {
 	f.s.integ.workspace = ""
 	f.unchanged(t, "no plugin workspace", f.run(root, "integrations.plugin_propose", samplePluginAt, map[string]string{"kind": "enable"}), "invalid_stage")
 	f.s.integ.workspace = SampleWorkspace
-	f.ok(t, "approve rollback", f.run(second, "integrations.plugin_approve", pluginProposalAt(10), nil), "applied", "")
+	f.ok(t, "approve rollback", f.run(second, "integrations.plugin_approve", pluginProposalAt(11), nil), "applied", "")
 	if v := installedRow(t, f.integrations(root)); v["version"] != "1.0.0" {
 		t.Errorf("rolled back %v", v)
 	}
@@ -112,7 +112,7 @@ func TestIntegrationPluginPropose(t *testing.T) {
 func TestIntegrationPluginBlockersFromRecheck(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	root, second := f.as(AdminLogin), f.as(Admin2Login)
-	f.ok(t, "second upgrade", f.run(root, "integrations.plugin_propose", samplePluginAt, map[string]string{"kind": "upgrade", "version": "1.1.0"}), "pending", "map[proposal:10 target:plugin-proposal-10]")
+	f.ok(t, "second upgrade", f.run(root, "integrations.plugin_propose", samplePluginAt, map[string]string{"kind": "upgrade", "version": "1.1.0"}), "pending", "map[proposal:11 target:plugin-proposal-11]")
 	endpoint := f.s.integ.entry(9).view.Change
 	if _, err := f.s.pluginPropose(endpoint, sampleAdmin2Plugin, "twin"); err != nil {
 		t.Fatal(err)
@@ -121,23 +121,23 @@ func TestIntegrationPluginBlockersFromRecheck(t *testing.T) {
 	f.ok(t, "approve endpoint", f.run(second, "integrations.plugin_approve", pluginProposalAt(9), nil), "applied", "")
 	f.s.integ.keep(&pluginEntry{view: plugins.ProposalView{Number: 999, State: plugins.ProposalPending, Proposer: SampleAdmin2, Change: plugins.Change{Kind: plugins.ChangeEnable}}})
 	read := f.integrations(second)
-	if s := blockedAs(pluginProposal(t, read, 10)); s != "false direction false not_proposer" {
+	if s := blockedAs(pluginProposal(t, read, 11)); s != "false direction false not_proposer" {
 		t.Errorf("direction %s", s)
 	}
 	read = f.integrations(root)
-	if s := blockedAs(pluginProposal(t, read, 11)) + "|" + blockedAs(pluginProposal(t, read, 999)); s != "false conflict false not_proposer|false not_found false not_proposer" {
+	if s := blockedAs(pluginProposal(t, read, 12)) + "|" + blockedAs(pluginProposal(t, read, 999)); s != "false conflict false not_proposer|false not_found false not_proposer" {
 		t.Errorf("conflict and not found %s", s)
 	}
-	f.unchanged(t, "approve direction", f.run(second, "integrations.plugin_approve", pluginProposalAt(10), nil), "invalid_stage")
-	f.unchanged(t, "approve conflict", f.run(root, "integrations.plugin_approve", pluginProposalAt(11), nil), "invalid_stage")
+	f.unchanged(t, "approve direction", f.run(second, "integrations.plugin_approve", pluginProposalAt(11), nil), "invalid_stage")
+	f.unchanged(t, "approve conflict", f.run(root, "integrations.plugin_approve", pluginProposalAt(12), nil), "invalid_stage")
 	f.unchanged(t, "approve missing", f.run(root, "integrations.plugin_approve", pluginProposalAt(999), nil), "invalid_stage")
 	g := setup(t, SeedSample).ready()
 	groot, gsecond := g.as(AdminLogin), g.as(Admin2Login)
 	g.ok(t, "stop", g.run(groot, "integrations.plugin_stop", samplePluginAt, nil), "stopped", "map[target:plugin:sample-ledger-export]")
 	g.ok(t, "enable by first", g.run(groot, "integrations.plugin_propose", samplePluginAt, map[string]string{"kind": "enable"}), "pending", "")
 	g.ok(t, "enable by second", g.run(gsecond, "integrations.plugin_propose", samplePluginAt, map[string]string{"kind": "enable"}), "pending", "")
-	g.ok(t, "approve enable", g.run(gsecond, "integrations.plugin_approve", pluginProposalAt(10), nil), "applied", "")
-	if s := blockedAs(pluginProposal(t, g.integrations(groot), 11)); s != "false not_allowed_state false not_proposer" {
+	g.ok(t, "approve enable", g.run(gsecond, "integrations.plugin_approve", pluginProposalAt(11), nil), "applied", "")
+	if s := blockedAs(pluginProposal(t, g.integrations(groot), 12)); s != "false not_allowed_state false not_proposer" {
 		t.Errorf("not allowed state %s", s)
 	}
 }
@@ -146,7 +146,7 @@ func TestIntegrationPluginLimitMapsToPrerequisite(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	small := PluginLimits()
 	small.Publishers = 2
-	r, err := plugins.NewRegistry(plugins.Config{Core: pluginCore, Destinations: integrationDestinations{s: f.s}, Random: strings.NewReader(strings.Repeat("x", 64))}, small, f.s.clock)
+	r, err := plugins.NewRegistry(plugins.Config{Core: pluginCore, Destinations: integrationDestinations{s: f.s}, Random: strings.NewReader(strings.Repeat("x", 64)), Licenses: DefaultPluginLicenses()}, small, f.s.clock)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,11 +163,11 @@ func TestIntegrationPluginLimitMapsToPrerequisite(t *testing.T) {
 		}
 	}
 	root, second := f.as(AdminLogin), f.as(Admin2Login)
-	f.ok(t, "approve b", f.run(second, "integrations.plugin_approve", pluginProposalAt(10), nil), "applied", "")
-	if s := blockedAs(pluginProposal(t, f.integrations(second), 11)); s != "false limit false not_proposer" {
+	f.ok(t, "approve b", f.run(second, "integrations.plugin_approve", pluginProposalAt(11), nil), "applied", "")
+	if s := blockedAs(pluginProposal(t, f.integrations(second), 12)); s != "false limit false not_proposer" {
 		t.Errorf("limit %s", s)
 	}
-	f.unchanged(t, "limit", f.run(second, "integrations.plugin_approve", pluginProposalAt(11), nil), "prerequisite_failed")
+	f.unchanged(t, "limit", f.run(second, "integrations.plugin_approve", pluginProposalAt(12), nil), "prerequisite_failed")
 	if n := len(part(f.integrations(root), "modules")["publishers"].([]any)); n != 2 {
 		t.Errorf("publishers %d", n)
 	}
@@ -190,7 +190,7 @@ func TestIntegrationPluginStopAndDisable(t *testing.T) {
 	f.unchanged(t, "disable installed", f.run(root, "integrations.plugin_disable", samplePluginAt, nil), "invalid_stage")
 	f.unchanged(t, "stop installed", f.run(root, "integrations.plugin_stop", samplePluginAt, nil), "invalid_stage")
 	f.ok(t, "propose remove", f.run(root, "integrations.plugin_propose", samplePluginAt, map[string]string{"kind": "remove"}), "pending", "")
-	f.ok(t, "approve remove", f.run(second, "integrations.plugin_approve", pluginProposalAt(10), nil), "applied", "")
+	f.ok(t, "approve remove", f.run(second, "integrations.plugin_approve", pluginProposalAt(11), nil), "applied", "")
 	v = installedRow(t, f.integrations(root))
 	if s := fmt.Sprint(v["state"], " ", v["disposal"], " ", v["disable_blocked"]); s != "removed map[deletion:retain_for_evidence migration:additive namespace:sample-ledger-export-data "+
 		"owner:sample-publisher retention_days:30] not_allowed_state" {
@@ -481,7 +481,7 @@ func TestIntegrationsLeakNothing(t *testing.T) {
 		{root, "plugin_approve", pluginProposalAt(8), nil, 200},
 		{second, "plugin_approve", pluginProposalAt(9), nil, 200},
 		{root, "plugin_propose", samplePluginAt, map[string]string{"kind": "rollback", "version": "1.0.0"}, 200},
-		{root, "plugin_withdraw", pluginProposalAt(10), nil, 200},
+		{root, "plugin_withdraw", pluginProposalAt(11), nil, 200},
 		{root, "plugin_stop", samplePluginAt, nil, 200},
 		{root, "plugin_disable", samplePluginAt, nil, 200},
 		{root, "subscription_approve", subscriptionAt(samplePayments), nil, 200},

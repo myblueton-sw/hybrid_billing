@@ -213,7 +213,7 @@ export function CommandForm(props: FormProps) {
 
 export type Blocker = { label: string; text: string };
 
-export function RowNote({ kept, blockers, focus }: { kept: string; blockers: Blocker[]; focus: number }) {
+export function RowNote({ kept, blockers, focus }: { kept: ReactNode; blockers: Blocker[]; focus: number }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => { if (focus) ref.current?.focus(); }, [focus]);
   if (!kept && blockers.length === 0) return null;

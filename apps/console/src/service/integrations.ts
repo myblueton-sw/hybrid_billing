@@ -8,6 +8,11 @@ export type ApiClient = { id: string; kind: string; state: string; grants: Clien
 export type ServiceUser = { id: string; state: string; owner: string; owner_login: string; usable_credentials: number | null };
 export type ClientsSection = { state: string; clients: ApiClient[] | null; service_users: ServiceUser[] | null; manage_on: string; oauth_clients: string };
 
+export const licenseStates = ["permitted", "not_permitted"] as const;
+export type LicenseState = (typeof licenseStates)[number] | "unknown";
+export const licenseSources = ["default", "start_flag"] as const;
+export type LicenseSource = (typeof licenseSources)[number] | "unknown";
+export type LicenseList = { permitted: string[] | null; source: LicenseSource };
 export type PluginWorkspace = { id: string; runtime: string; verification: boolean | null };
 export type PublisherKey = { version: string; not_before: string; not_after: string; retired: boolean | null; compromise: MarkValue };
 export type Publisher = { id: string; name: string; revocation: MarkValue; keys: PublisherKey[] | null };
@@ -20,6 +25,8 @@ export type PluginVersion = {
   publisher: string;
   key_version: string;
   digest: string;
+  license: string;
+  license_state: LicenseState;
   core_min: string;
   core_max: string;
   capabilities: string[] | null;
@@ -83,6 +90,7 @@ export type PluginProposal = {
 };
 export type ModulesSection = {
   state: string;
+  licenses: LicenseList;
   workspace: PluginWorkspace | null;
   publishers: Publisher[] | null;
   plugins: PluginVersion[] | null;
@@ -233,6 +241,15 @@ export function clientsOf(v: unknown): ClientsSection {
   };
 }
 
+export function licenseStateOf(v: unknown): LicenseState {
+  return (licenseStates as readonly unknown[]).includes(v) ? (v as LicenseState) : "unknown";
+}
+
+export function licensesOf(v: unknown): LicenseList {
+  const r = obj(v);
+  return { permitted: strs(r.permitted), source: (licenseSources as readonly unknown[]).includes(r.source) ? (r.source as LicenseSource) : "unknown" };
+}
+
 function versionOf(r: Raw): PluginVersion {
   return {
     plugin: str(r.plugin),
@@ -240,6 +257,8 @@ function versionOf(r: Raw): PluginVersion {
     publisher: str(r.publisher),
     key_version: str(r.key_version),
     digest: str(r.digest),
+    license: str(r.license),
+    license_state: licenseStateOf(r.license_state),
     core_min: str(r.core_min),
     core_max: str(r.core_max),
     capabilities: strs(r.capabilities),
@@ -327,6 +346,7 @@ export function modulesOf(v: unknown): ModulesSection {
   const w = isRow(r.workspace) ? r.workspace : null;
   return {
     state: str(r.state),
+    licenses: licensesOf(r.licenses),
     workspace: w ? { id: str(w.id), runtime: str(w.runtime), verification: flag(w.verification) } : null,
     publishers: rows(r.publishers, (p) => ({
       id: str(p.id),

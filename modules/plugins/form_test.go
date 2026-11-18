@@ -57,7 +57,7 @@ func TestNewRegistryForm(t *testing.T) {
 	}
 }
 
-const manifestAnswer = "6bf3e80ce77942ec3f16854f8869c07e4e6cd2dcf9caeeff0b0d6d6b4bd5444c"
+const manifestAnswer = "f0a3c61026f102daa3f8dcd99d08dd066a8a01592f6aee6f1f35659bc980d888"
 
 func TestSemver(t *testing.T) {
 	for _, text := range []string{"0.0.0", "1.2.3", "999999.0.10"} {
@@ -266,6 +266,7 @@ func TestEncodingKnownAnswers(t *testing.T) {
 		"publisher":   func(m *Manifest) { m.Publisher = "other" },
 		"key":         func(m *Manifest) { m.Key = "k2" },
 		"digest":      func(m *Manifest) { m.Digest = strings.Repeat("0", 64) },
+		"license":     func(m *Manifest) { m.License = "Apache-2.0" },
 		"core min":    func(m *Manifest) { m.Core.Min = "2.0.1" },
 		"core max":    func(m *Manifest) { m.Core.Max = "2.9.8" },
 		"cap kind":    func(m *Manifest) { m.Capabilities[1].Kind = CapabilityServeScreen },

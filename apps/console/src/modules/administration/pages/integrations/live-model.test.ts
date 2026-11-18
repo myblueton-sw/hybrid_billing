@@ -5,6 +5,7 @@ import {
   blockerPolicy, compareVersions, coveredBy, deliveriesShown, deniedOutcome, discard, draftOf, duplicateIn, fieldReaction, forget, frozenValues, keepDraft, keepsAttempt, letterTarget,
   commandsAllowed, normalTypes, ordered, pendingFor, pendingNow, pluginTarget, proposalTarget, proposeOffer, proposeValues, pruneRefusals, react, reasonProblem, refusedNow, selectionOf, setScope,
   settle, snapshotOf, subscribeBlocker, subscribeProblems, subscriptionTarget, summaryOf, timeKnown, utf8Bytes, vanished, viewOf, waitsForResume, capabilityOf, type CommandKey,
+  dryRunBlocked, refusedByList, refusedLicense, refusedValues, runnable,
 } from "./live-model";
 import { k, storageText } from "./live-copy";
 import { allWordTables, blockerWords } from "./live-codes";
@@ -14,7 +15,7 @@ const me = "u1";
 const other = "u2";
 const avail = (blocked = "") => ({ allowed: blocked === "", blocked });
 
-const version = (v: string, over: Record<string, unknown> = {}) => ({ plugin: "p", version: v, publisher: "pub", key_version: "k1", vulnerable: null, ...over });
+const version = (v: string, over: Record<string, unknown> = {}) => ({ plugin: "p", version: v, publisher: "pub", key_version: "k1", vulnerable: null, license: "MIT", license_state: "permitted", ...over });
 const proposal = (n: number, kind: string, state: string, proposer: string, summary: Record<string, unknown> = {}, over: Record<string, unknown> = {}) => ({
   number: n, target: "plugin-proposal-" + n, kind, state, proposer, summary: { plugin: "p", ...summary }, can_approve: false, approve_blocked: "own_proposal", can_withdraw: true, withdraw_blocked: "", ...over,
 });
@@ -394,9 +395,9 @@ test("waiting deliveries of a paused subscription wait for the resume; capabilit
 });
 
 test("null lists fail closed and a malformed plugin ID has its own blocker", () => {
-  assert.deepEqual(proposeOffer(page({ modules: { installations: null } }), me, "p"), { options: [], blocker: { code: "unknown_state" } });
-  assert.deepEqual(proposeOffer(page({ modules: { proposals: null } }), me, "p"), { options: [], blocker: { code: "unknown_list" } });
-  assert.deepEqual(proposeOffer(page(), me, "p/x"), { options: [], blocker: { code: "no_command" } });
+  assert.deepEqual(proposeOffer(page({ modules: { installations: null } }), me, "p"), { options: [], blocker: { code: "unknown_state" }, withheld: [] });
+  assert.deepEqual(proposeOffer(page({ modules: { proposals: null } }), me, "p"), { options: [], blocker: { code: "unknown_list" }, withheld: [] });
+  assert.deepEqual(proposeOffer(page(), me, "p/x"), { options: [], blocker: { code: "no_command" }, withheld: [] });
   assert.deepEqual(proposeOffer(page({ modules: { workspace: null } }), me, "p/x").blocker, { code: "no_command" });
   assert.equal(subscribeBlocker(page({ channels: { subscriptions: null } })), "unknown_list");
   assert.deepEqual(coveredBy(page({ channels: { subscriptions: null } }), me, "erp", ["invoice.issued"]), { id: "", own: false });
@@ -443,4 +444,179 @@ test("a step-up refusal or cancellation keeps the attempt and the form", () => {
     assert.equal(react(f, []), "reauth");
     assert.equal(keepsAttempt(react(f, [])), true);
   }
+});
+
+test("a license that is not permitted, or unknown, keeps a version from being offered", () => {
+  const closed = (state: string) => version("1.2.0", { license: "LicenseRef-closed", license_state: state });
+  assert.equal(runnable(page(), page().modules.plugins![0]), true);
+  for (const state of ["not_permitted", "unknown", "PERMITTED", ""]) {
+    const p = page({ modules: { plugins: [version("1.0.0"), version("1.1.0"), closed(state)] } });
+    assert.equal(runnable(p, p.modules.plugins![2]), false, state);
+    assert.deepEqual(kinds(p), ["upgrade:1.1.0", "remove"], state);
+    assert.deepEqual(proposeOffer(p, me, "p").withheld.map((v) => v.version), ["1.2.0"], state);
+  }
+  const fresh = page({ modules: { installations: [], plugins: [closed("not_permitted"), version("1.3.0", { license: "GPL-3.0-only", license_state: "not_permitted" })] } });
+  assert.deepEqual(kinds(fresh), []);
+  assert.deepEqual(proposeOffer(fresh, me, "p").blocker, { code: "license" });
+  assert.deepEqual(proposeOffer(fresh, me, "p").withheld.map((v) => v.version), ["1.2.0", "1.3.0"]);
+  const unknownOnly = page({ modules: { installations: [], plugins: [closed("not_permitted"), version("1.3.0", { license_state: "odd" })] } });
+  assert.deepEqual(proposeOffer(unknownOnly, me, "p").blocker, { code: "license_unknown" });
+  assert.equal(refusedByList(unknownOnly.modules.plugins![0]), true);
+  assert.equal(refusedByList(unknownOnly.modules.plugins![1]), false);
+  assert.equal(refusedByList(undefined), false);
+  const mixed = page({ modules: { installations: [], plugins: [closed("not_permitted"), version("1.3.0", { vulnerable: { by: "u" } })] } });
+  assert.deepEqual(proposeOffer(mixed, me, "p").blocker, { code: "untrusted" });
+  const vulnerableClosed = page({ modules: { installations: [], plugins: [version("1.2.0", { license_state: "not_permitted", vulnerable: { by: "u" } })] } });
+  assert.deepEqual(proposeOffer(vulnerableClosed, me, "p").withheld, []);
+  const stopped = page({ modules: { plugins: [version("1.0.0", { license_state: "not_permitted" }), version("1.1.0")], installations: [{ plugin: "p", version: "1.0.0", state: "stopped" }] } });
+  assert.deepEqual(kinds(stopped), ["upgrade:1.1.0", "remove"]);
+  assert.deepEqual(proposeOffer(stopped, me, "p").withheld.map((v) => v.version), ["1.0.0"]);
+  const enabled = page({ modules: { plugins: [version("1.0.0", { license_state: "not_permitted" }), version("1.1.0")] } });
+  assert.deepEqual(proposeOffer(enabled, me, "p").withheld, []);
+  for (const l of locales) {
+    assert.ok(k.proposeBlocker(l, "license", "").length > 0);
+    assert.notEqual(k.proposeBlocker(l, "license", ""), k.proposeBlocker(l, "zzz", ""));
+  }
+});
+
+test("the license refusal reason and the blocked sentence", () => {
+  assert.ok(dryRunBlocked.includes("license_not_permitted"));
+  for (const l of locales) {
+    assert.equal(blockerWords.license_not_permitted.length, 3);
+    assert.equal(k.blocker(l, "license_not_permitted", "plugin_approve"), blockerWords.license_not_permitted[locales.indexOf(l)]);
+    assert.ok(k.blockerExtra(l, "license_not_permitted").length > 0);
+  }
+  assert.equal(k.blocker("en", "license_not_permitted", "plugin_approve"), "The version's license is not on this installation's list of permitted plugin licenses.");
+  assert.equal(k.blockerExtra("en", "license_not_permitted"), "Unverified version, destination or permission. It cannot be activated.");
+  const fixture = page({ modules: { proposals: [proposal(10, "upgrade", "pending", other, { version: "1.1.0" }, { can_approve: false, approve_blocked: "license_not_permitted" })] } });
+  const p = fixture.modules.proposals![0];
+  assert.equal(p.can_approve, false);
+  assert.equal(p.approve_blocked, "license_not_permitted");
+  assert.equal(blockerPolicy(p.approve_blocked, true), "explain");
+});
+
+test("a refusal names the license only when the target version is not permitted in the read fetched after it", () => {
+  setScope("ws", me, "license-session");
+  const p = page({ modules: { plugins: [version("1.0.0"), version("1.1.0"), version("1.2.0", { license: "LicenseRef-closed", license_state: "not_permitted" })] } });
+  assert.equal(refusedLicense(p, "p", "upgrade", "1.2.0"), "1.2.0");
+  assert.equal(refusedLicense(p, "p", "upgrade", "1.1.0"), "");
+  assert.equal(refusedLicense(p, "p", "upgrade", "9.9.9"), "9.9.9");
+  assert.equal(refusedLicense(p, "p", "remove", ""), "");
+  assert.equal(refusedLicense(p, "p", "enable", ""), "");
+  const off = page({ modules: { plugins: [version("1.0.0", { license_state: "not_permitted" })] } });
+  assert.equal(refusedLicense(off, "p", "enable", ""), "1.0.0");
+  assert.equal(refusedLicense(off, "p", "rollback", ""), "");
+  const target = pluginTarget("p");
+  pendingFor("integrations.plugin_propose", target, { kind: "upgrade", version: "1.2.0" }, "r1", () => ({ request: "q1", key: "k1" }));
+  settle("integrations.plugin_propose", target, "hint");
+  assert.equal(refusedNow("integrations.plugin_propose", target), true);
+  assert.deepEqual(refusedValues("integrations.plugin_propose", target), { kind: "upgrade", version: "1.2.0" });
+  settle("integrations.plugin_propose", target, "ok");
+  assert.deepEqual(refusedValues("integrations.plugin_propose", target), {});
+  settle("integrations.plugin_propose", target, "hint");
+  assert.deepEqual(refusedValues("integrations.plugin_propose", target), {});
+  for (const l of locales) assert.ok(k.keptLicense(l, "1.2.0", "LicenseRef-closed").includes("LicenseRef-closed"));
+  forget();
+});
+
+test("license copy exists in every language and never claims a legal finding", () => {
+  for (const l of locales) {
+    for (const s of ["default", "start_flag"]) assert.ok(k.licensesTitle(l, s).length > 0);
+    assert.notEqual(k.licensesTitle(l, "odd"), k.licensesTitle(l, "default"));
+    for (const s of ["permitted", "not_permitted", "unknown"]) assert.ok(k.licenseState(l, s).length > 0);
+    for (const text of [k.licensesNote(l), k.licensesEmpty(l), k.licensesUnknown(l), k.notOffered(l, "1.2.0", "X"), k.licenseUnknown(l), k.targetLicense(l, "1.0.0")]) assert.ok(text.length > 0);
+  }
+  assert.equal(k.licenseState("en", "not_permitted"), "Not permitted on this installation.");
+  assert.equal(k.licenseConsequence("en"), "It cannot be installed, upgraded to or enabled.");
+  assert.equal(k.licenseState("en", "unknown"), "Unknown. Treated as not permitted.");
+  assert.equal(k.licensesTitle("en", "default"), "Permitted plugin licenses (installation default)");
+  assert.equal(k.licensesTitle("en", "start_flag"), "Permitted plugin licenses (set when the server started)");
+  assert.equal(k.licensesTitle("ko", "start_flag"), "허용 플러그인 라이선스(서버 시작 시 지정)");
+  assert.equal(k.licensesTitle("ar", "start_flag"), "تراخيص الإضافات المسموح بها (حُدّد عند بدء الخادم)");
+  assert.equal(k.licensesNote("en"), "An installation setting: it changes only when the server is restarted with a different list. This list is an installation policy, not a legal review.");
+  assert.equal(k.keptLicense("en", "1.2.0", "X"), "Version ⁨1.2.0⁩ has the license ⁨X⁩, which is not permitted on this installation.");
+  assert.equal(k.notOfferedUnknown("en", "1.2.0"), "Version ⁨1.2.0⁩ is not offered: its license is unknown, so it is treated as not permitted.");
+  assert.equal(k.enableNotOffered("en", "1.0.0", "X"), "Enable is not offered: the installed version ⁨1.0.0⁩ has the license ⁨X⁩, which is not permitted on this installation.");
+  for (const l of locales) {
+    for (const text of [k.licenseConsequence(l), k.notOfferedUnknown(l, "1.2.0"), k.enableNotOffered(l, "1.0.0", "X"), k.enableNotOfferedUnknown(l, "1.0.0"), k.keptLicenseUnknown(l, "1.2.0")]) assert.ok(text.length > 0);
+    for (const text of [k.notOfferedUnknown(l, "1.2.0"), k.enableNotOfferedUnknown(l, "1.0.0"), k.keptLicenseUnknown(l, "1.2.0")]) {
+      assert.ok(!text.includes(k.notOffered(l, "", "").slice(-12)), l + " " + text);
+    }
+    assert.notEqual(k.proposeBlocker(l, "license_unknown", ""), k.proposeBlocker(l, "license", ""));
+  }
+  assert.ok(!k.notOfferedUnknown("en", "1.2.0").includes("is not permitted on this installation"));
+  assert.ok(!k.keptLicenseUnknown("en", "1.2.0").includes("which is not permitted"));
+  assert.equal(k.notOffered("en", "1.2.0", "X"), "Version ⁨1.2.0⁩ is not offered: its license ⁨X⁩ is not permitted on this installation.");
+  assert.ok(!/\b(compliant|legal(ly)? (approved|cleared))\b/i.test(k.licensesNote("en")));
+});
+
+test("the modules view renders licenses, withheld versions and a license-blocked approval without an Approve button", async () => {
+  const nodeModule = await import("node:module");
+  const stub = /\.(css|svg)(\?.*)?$/;
+  if (typeof nodeModule.registerHooks === "function") nodeModule.registerHooks({ load: (url, context, next) => (stub.test(url) ? { format: "module", source: "export default ''", shortCircuit: true } : next(url, context)) });
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { ModulesView } = await import("./LiveModules");
+  const { keptLicenseText } = await import("./LiveProposals");
+  const p = page({
+    modules: {
+      licenses: { permitted: ["Apache-2.0", "MIT"], source: "default" },
+      plugins: [version("1.0.0"), version("1.1.0"), version("1.2.0", { license: "LicenseRef-closed", license_state: "not_permitted" })],
+      proposals: [proposal(10, "upgrade", "pending", other, { version: "1.2.0" }, { can_approve: false, approve_blocked: "license_not_permitted", can_withdraw: false, withdraw_blocked: "not_proposer" })],
+    },
+  });
+  const html = (l: "en" | "ko" | "ar", q = p) =>
+    renderToStaticMarkup(createElement(ModulesView, { l, page: q, api: {} as never, me, selection: { proposal: "", subscription: "", delivery: "" }, canCommand: true, onDone: () => undefined,
+      onNotice: () => undefined, onReload: async () => null, onSignedOut: () => undefined }));
+  const text = (l: "en" | "ko" | "ar", q = p) => html(l, q).replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/\s+/g, " ");
+  const en = text("en");
+  const raw = html("en");
+  assert.ok(en.includes("Permitted plugin licenses (installation default)"), en);
+  assert.ok(en.includes("This list is an installation policy, not a legal review."));
+  assert.ok(/License: .{0,12}MIT.{0,12} Permitted on this installation/.test(en));
+  assert.ok(/<span class="p02-license-line">License: <bdi dir="ltr" class="live-mono">LicenseRef-closed<\/bdi><\/span><span class="p02-license-line"><strong class="p02-license-flag">Not permitted on this installation\.<\/strong> It cannot be installed, upgraded to or enabled\.<\/span>/.test(raw));
+  assert.ok(/Version .{0,4}1\.2\.0.{0,4} is not offered: its license .{0,4}LicenseRef-closed.{0,4} is not permitted on this installation\./.test(en));
+  assert.ok(raw.includes('<bdi dir="ltr" class="live-mono">LicenseRef-closed</bdi>') && /p02-withheld[^>]*>.*<bdi dir="ltr" class="live-mono">1\.2\.0<\/bdi>/.test(raw));
+  assert.ok(/License of .{0,4}1\.2\.0.{0,4}: .{0,4}LicenseRef-closed.{0,4} Not permitted/.test(en));
+  assert.ok(en.includes("The version's license is not on this installation's list of permitted plugin licenses."));
+  assert.ok(en.includes("Unverified version, destination or permission. It cannot be activated."));
+  assert.ok(!/>\s*Approve\s*</.test(renderToStaticMarkup(createElement(ModulesView, { l: "en", page: p, api: {} as never, me, selection: { proposal: "", subscription: "", delivery: "" }, canCommand: true,
+    onDone: () => undefined, onNotice: () => undefined, onReload: async () => null, onSignedOut: () => undefined }))));
+  for (const l of ["ko", "ar"] as const) assert.ok(text(l).includes(k.licensesTitle(l, "default")));
+  const empty = text("en", page({ modules: { licenses: { permitted: [], source: "start_flag" } } }));
+  assert.ok(empty.includes("Permitted plugin licenses (set when the server started)") && empty.includes("No plugin license is permitted on this installation"));
+  const unknownVersion = text("en", page({ modules: { plugins: [version("1.0.0"), version("1.1.0"), version("1.2.0", { license: "", license_state: "odd" })] } }));
+  assert.ok(unknownVersion.includes("is not offered: its license is unknown, so it is treated as not permitted.") && unknownVersion.includes("Unknown. Treated as not permitted."));
+  const stopped = text("en", page({ modules: { plugins: [version("1.0.0", { license: "LicenseRef-closed", license_state: "not_permitted" }), version("1.1.0")],
+    installations: [{ plugin: "p", version: "1.0.0", state: "stopped" }], proposals: [proposal(11, "enable", "pending", other, {})] } }));
+  assert.ok(/Enable is not offered: the installed version .{0,4}1\.0\.0.{0,4} has the license .{0,4}LicenseRef-closed.{0,4}, which is not permitted on this installation\./.test(stopped), stopped);
+  assert.ok(/License of .{0,4}1\.0\.0.{0,4}: .{0,4}LicenseRef-closed.{0,4} Not permitted/.test(stopped));
+  const closedPage = page({ modules: { plugins: [version("1.0.0"), version("1.2.0", { license: "LicenseRef-closed", license_state: "not_permitted" }), version("1.3.0", { license_state: "odd" })] } });
+  const lead = "The plugin registry refused this change. Nothing changed. ";
+  const closedEn = "Version ⁨1.2.0⁩ has the license ⁨LicenseRef-closed⁩, which is not permitted on this installation. ";
+  const unknownEn = "The license of version ⁨1.3.0⁩ is unknown, so it is treated as not permitted. ";
+  const next = {
+    propose: "Choose another version; the permitted list changes only when the server is restarted with a different list.",
+    enable: "Propose an upgrade or rollback to a permitted version instead.",
+    approve: "This proposal cannot be approved; the proposer can withdraw it. The permitted list changes only when the server is restarted with a different list.",
+  } as const;
+  for (const context of ["propose", "enable", "approve"] as const) {
+    assert.equal(keptLicenseText("en", closedPage, "p", "1.2.0", context), lead + closedEn + next[context]);
+    assert.equal(keptLicenseText("en", closedPage, "p", "1.3.0", context), lead + unknownEn + next[context]);
+    assert.ok(keptLicenseText("en", closedPage, "p", "9.9.9", context).includes("is unknown"));
+    for (const l of locales) {
+      const text = keptLicenseText(l, closedPage, "p", "1.2.0", context);
+      assert.ok(text.startsWith(k.kept(l, "plugin")) && text.endsWith(k.keptLicenseNext(l, context)), l + " " + context);
+      assert.ok(keptLicenseText(l, closedPage, "p", "1.3.0", context).endsWith(k.keptLicenseNext(l, context)));
+    }
+  }
+  assert.equal(k.keptLicenseNext("ko", "approve"), "이 제안은 승인할 수 없습니다. 제안자가 철회할 수 있습니다. 허용 목록은 다른 목록으로 서버를 다시 시작해야 바뀝니다.");
+  assert.equal(k.keptLicenseNext("ar", "approve"), "لا يمكن اعتماد هذا المقترح، ويمكن لصاحبه سحبه. لا تتغيّر القائمة المسموح بها إلا بإعادة تشغيل الخادم بقائمة مختلفة.");
+  assert.equal(k.keptLicenseNext("ko", "enable"), "대신 허용된 버전으로 업그레이드 또는 롤백을 제안하세요.");
+  assert.equal(k.keptLicenseNext("ar", "enable"), "اقترح بدلًا من ذلك ترقية أو إرجاعًا إلى إصدار مسموح به.");
+  assert.equal(k.keptLicenseNext("ko", "propose"), "다른 버전을 선택하세요. 허용 목록은 다른 목록으로 서버를 다시 시작해야 바뀝니다.");
+  assert.equal(k.keptLicenseNext("ar", "propose"), "اختر إصدارًا آخر؛ لا تتغيّر القائمة المسموح بها إلا بإعادة تشغيل الخادم بقائمة مختلفة.");
+  assert.ok(new Set(["propose", "enable", "approve"].map((c) => k.keptLicenseNext("en", c))).size === 3);
+  const unknown = text("en", page({ modules: { licenses: null } }));
+  assert.ok(unknown.includes("The list of permitted plugin licenses is unknown"));
 });

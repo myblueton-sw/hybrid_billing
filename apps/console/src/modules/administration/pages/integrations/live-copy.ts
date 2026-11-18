@@ -2,7 +2,7 @@ import type { Locale } from "../../../../shared/types";
 import type { Storage } from "../../../../service/integrations";
 import { text as t } from "../../../../shared/copy";
 import {
-  blockerWords, capabilityWords, changeWords, clientKindWords, clientStateWords, componentWords, connectionWords, deletionWords, deliveryKindWords, deliveryReasonWords,
+  blockerWords, capabilityWords, licenseSourceWords, licenseStateWords, changeWords, clientKindWords, clientStateWords, componentWords, connectionWords, deletionWords, deliveryKindWords, deliveryReasonWords,
   destinationWords, eventStateWords, grantStateWords, historyWords, installReasonWords, installWords, jobWords, keyStateWords, letterRevoked, migrationWords, notPendingWords,
   proposalKindWords, proposalStateWords, resultWords, scopeWords, serviceUserWords, sourceWords, subscriptionReasonWords, subscriptionWords, unknownCode, unverifiedSentence,
   words,
@@ -127,6 +127,34 @@ export const k = {
       "승인하면 플러그인 레지스트리에 결정이 기록됩니다. 이 빌드에서는 플러그인 실행 환경이 연결되어 있지 않아 플러그인이 실행되지 않고 플러그인 토큰도 발급되지 않습니다.",
       "يسجّل الاعتماد القرار في سجل الإضافات. لا تعمل أي إضافة ولا يُصدَر رمز لها، لأن بيئة تشغيل الإضافات غير متصلة في هذا الإصدار.",
     ),
+  licenseLabel: (l: Locale) => t(l, "License", "라이선스", "الترخيص"),
+  licenseState: (l: Locale, s: string) => (has(licenseStateWords, s) ? words(l, licenseStateWords, s) : t(l, "Unknown. Treated as not permitted.", "알 수 없음. 허용되지 않은 것으로 처리합니다.", "غير معروف. يُعامل على أنه غير مسموح به.")),
+  licenseConsequence: (l: Locale) => t(l, "It cannot be installed, upgraded to or enabled.", "설치·업그레이드·사용 설정할 수 없습니다.", "لا يمكن تثبيته أو الترقية إليه أو تفعيله."),
+  licenseUnknown: (l: Locale) => t(l, "License: unknown. Treated as not permitted.", "라이선스: 알 수 없음. 허용되지 않은 것으로 처리합니다.", "الترخيص: غير معروف. يُعامل على أنه غير مسموح به."),
+  licensesTitle: (l: Locale, source: string) =>
+    has(licenseSourceWords, source)
+      ? t(l, `Permitted plugin licenses (${words(l, licenseSourceWords, source)})`, `허용 플러그인 라이선스(${words(l, licenseSourceWords, source)})`, `تراخيص الإضافات المسموح بها (${words(l, licenseSourceWords, source)})`)
+      : t(l, "Permitted plugin licenses (source unknown)", "허용 플러그인 라이선스(출처 알 수 없음)", "تراخيص الإضافات المسموح بها (المصدر غير معروف)"),
+  licensesNote: (l: Locale) =>
+    t(
+      l,
+      "An installation setting: it changes only when the server is restarted with a different list. This list is an installation policy, not a legal review.",
+      "설치 설정입니다. 다른 목록으로 서버를 다시 시작해야 바뀝니다. 이 목록은 설치 정책이며 법률 검토가 아닙니다.",
+      "هذا إعداد تثبيت، ولا يتغيّر إلا بإعادة تشغيل الخادم بقائمة مختلفة. هذه القائمة سياسة تثبيت وليست مراجعة قانونية.",
+    ),
+  licensesEmpty: (l: Locale) =>
+    t(l, "No plugin license is permitted on this installation, so no plugin can be installed, upgraded to or enabled.", "이 설치에서 허용된 플러그인 라이선스가 없어 어떤 플러그인도 설치·업그레이드·사용 설정할 수 없습니다.", "لا يُسمح بأي ترخيص إضافة في هذا التثبيت، لذا لا يمكن تثبيت أي إضافة أو الترقية إليها أو تفعيلها."),
+  licensesUnknown: (l: Locale) =>
+    t(l, "The list of permitted plugin licenses is unknown, so no plugin can be installed, upgraded to or enabled from here.", "허용 플러그인 라이선스 목록을 알 수 없어 여기에서 플러그인을 설치·업그레이드·사용 설정할 수 없습니다.", "قائمة تراخيص الإضافات المسموح بها غير معروفة، لذا لا يمكن تثبيت أي إضافة أو الترقية إليها أو تفعيلها من هنا."),
+  notOffered: (l: Locale, v: string, id: string) =>
+    t(l, `Version ${iso(v)} is not offered: its license ${iso(id)} is not permitted on this installation.`, `${iso(v)} 버전은 제안할 수 없습니다. 라이선스 ${iso(id)}이(가) 이 설치에서 허용되지 않습니다.`, `لا يُعرض الإصدار ${iso(v)}: ترخيصه ${iso(id)} غير مسموح به في هذا التثبيت.`),
+  notOfferedUnknown: (l: Locale, v: string) =>
+    t(l, `Version ${iso(v)} is not offered: its license is unknown, so it is treated as not permitted.`, `${iso(v)} 버전은 제안할 수 없습니다. 라이선스를 알 수 없어 허용되지 않은 것으로 처리합니다.`, `لا يُعرض الإصدار ${iso(v)}: ترخيصه غير معروف، لذا يُعامل على أنه غير مسموح به.`),
+  enableNotOffered: (l: Locale, v: string, id: string) =>
+    t(l, `Enable is not offered: the installed version ${iso(v)} has the license ${iso(id)}, which is not permitted on this installation.`, `사용 설정은 제안할 수 없습니다. 설치된 ${iso(v)} 버전의 라이선스 ${iso(id)}은(는) 이 설치에서 허용되지 않습니다.`, `لا يُعرض التفعيل: للإصدار المثبّت ${iso(v)} الترخيص ${iso(id)}، وهو غير مسموح به في هذا التثبيت.`),
+  enableNotOfferedUnknown: (l: Locale, v: string) =>
+    t(l, `Enable is not offered: the license of the installed version ${iso(v)} is unknown, so it is treated as not permitted.`, `사용 설정은 제안할 수 없습니다. 설치된 ${iso(v)} 버전의 라이선스를 알 수 없어 허용되지 않은 것으로 처리합니다.`, `لا يُعرض التفعيل: ترخيص الإصدار المثبّت ${iso(v)} غير معروف، لذا يُعامل على أنه غير مسموح به.`),
+  targetLicense: (l: Locale, v: string) => t(l, `License of ${iso(v)}`, `${iso(v)} 라이선스`, `ترخيص ${iso(v)}`),
   workspaceTitle: (l: Locale) => t(l, "Plugin workspace", "플러그인 업무 공간", "مساحة عمل الإضافات"),
   workspaceId: (l: Locale) => t(l, "Workspace", "업무 공간", "مساحة العمل"),
   runtimeIdentity: (l: Locale) => t(l, "Runtime identity", "실행 ID", "هوية التشغيل"),
@@ -201,7 +229,11 @@ export const k = {
       case "no_version":
         return t(l, "No other version is registered.", "등록된 다른 버전이 없습니다.", "لا يوجد إصدار آخر مسجّل.");
       case "untrusted":
-        return t(l, "No registered version can be proposed: each is marked vulnerable, or its publisher or key is revoked or compromised.", "제안할 수 있는 등록 버전이 없습니다. 모두 취약 표시가 있거나 게시자·키가 회수 또는 손상되었습니다.", "لا يمكن اقتراح أي إصدار مسجّل: كل منها موسوم بأنه معرّض للخطر أو ناشره أو مفتاحه مُلغى أو مخترق.");
+        return t(l, "No registered version can be proposed: each is marked vulnerable, has a license not permitted on this installation, or its publisher or key is revoked or compromised.", "제안할 수 있는 등록 버전이 없습니다. 모두 취약 표시가 있거나, 라이선스가 이 설치에서 허용되지 않거나, 게시자·키가 회수 또는 손상되었습니다.", "لا يمكن اقتراح أي إصدار مسجّل: كل منها موسوم بأنه معرّض للخطر، أو ترخيصه غير مسموح به في هذا التثبيت، أو ناشره أو مفتاحه مُلغى أو مخترق.");
+      case "license_unknown":
+        return t(l, "No registered version can be proposed: the license of each is unknown or not permitted on this installation, and an unknown license is treated as not permitted.", "제안할 수 있는 등록 버전이 없습니다. 모든 버전의 라이선스가 알 수 없거나 이 설치에서 허용되지 않으며, 알 수 없는 라이선스는 허용되지 않은 것으로 처리합니다.", "لا يمكن اقتراح أي إصدار مسجّل: ترخيص كل منها غير معروف أو غير مسموح به في هذا التثبيت، ويُعامل الترخيص غير المعروف على أنه غير مسموح به.");
+      case "license":
+        return t(l, "No registered version can be proposed: the license of each is not permitted on this installation.", "제안할 수 있는 등록 버전이 없습니다. 모든 버전의 라이선스가 이 설치에서 허용되지 않습니다.", "لا يمكن اقتراح أي إصدار مسجّل: ترخيص كل منها غير مسموح به في هذا التثبيت.");
       case "unknown_state":
         return t(l, "The plugin's installation state is unknown, so no change can be proposed.", "플러그인 설치 상태를 알 수 없어 변경을 제안할 수 없습니다.", "حالة تثبيت الإضافة غير معروفة، لذا لا يمكن اقتراح أي تغيير.");
       case "duplicate_own":
@@ -472,6 +504,16 @@ export const k = {
         return t(l, "This dead-letter action was refused. Nothing changed. It may already have been redelivered, dismissed or requested.", "이 실패 보관 건 작업이 거부되었습니다. 바뀐 것은 없습니다. 이미 재발송·정리되었거나 요청되었을 수 있습니다.", "رُفض إجراء الرسالة غير المُسلّمة هذا. لم يتغيّر شيء. ربما أُعيد تسليمها أو أُزيلت أو طُلب ذلك بالفعل.");
     }
   },
+  keptLicense: (l: Locale, v: string, id: string) =>
+    t(l, `Version ${iso(v)} has the license ${iso(id)}, which is not permitted on this installation.`, `${iso(v)} 버전의 라이선스 ${iso(id)}은(는) 이 설치에서 허용되지 않습니다.`, `للإصدار ${iso(v)} الترخيص ${iso(id)}، وهو غير مسموح به في هذا التثبيت.`),
+  keptLicenseUnknown: (l: Locale, v: string) =>
+    t(l, `The license of version ${iso(v)} is unknown, so it is treated as not permitted.`, `${iso(v)} 버전의 라이선스를 알 수 없어 허용되지 않은 것으로 처리합니다.`, `ترخيص الإصدار ${iso(v)} غير معروف، لذا يُعامل على أنه غير مسموح به.`),
+  keptLicenseNext: (l: Locale, context: string) =>
+    context === "approve"
+      ? t(l, "This proposal cannot be approved; the proposer can withdraw it. The permitted list changes only when the server is restarted with a different list.", "이 제안은 승인할 수 없습니다. 제안자가 철회할 수 있습니다. 허용 목록은 다른 목록으로 서버를 다시 시작해야 바뀝니다.", "لا يمكن اعتماد هذا المقترح، ويمكن لصاحبه سحبه. لا تتغيّر القائمة المسموح بها إلا بإعادة تشغيل الخادم بقائمة مختلفة.")
+      : context === "enable"
+        ? t(l, "Propose an upgrade or rollback to a permitted version instead.", "대신 허용된 버전으로 업그레이드 또는 롤백을 제안하세요.", "اقترح بدلًا من ذلك ترقية أو إرجاعًا إلى إصدار مسموح به.")
+        : t(l, "Choose another version; the permitted list changes only when the server is restarted with a different list.", "다른 버전을 선택하세요. 허용 목록은 다른 목록으로 서버를 다시 시작해야 바뀝니다.", "اختر إصدارًا آخر؛ لا تتغيّر القائمة المسموح بها إلا بإعادة تشغيل الخادم بقائمة مختلفة."),
   keptWithdraw: (l: Locale) => t(l, "The plugin registry refused this withdrawal. Nothing changed.", "플러그인 레지스트리가 이 철회를 거부했습니다. 바뀐 것은 없습니다.", "رفض سجل الإضافات هذا السحب. لم يتغيّر شيء."),
   gone: (l: Locale, g: Group) => {
     switch (g) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"errors"
 	"flag"
 	"io"
 	"net"
@@ -12,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/apps/api/server"
 	"github.com/myblueton-sw/hybrid_billing/modules/decisionledger"
 )
 
@@ -348,6 +350,56 @@ func TestUserFilterScanFlag(t *testing.T) {
 	fs.SetOutput(&usage)
 	fs.PrintDefaults()
 	if !strings.Contains(usage.String(), "user_filter_scan in people, 100 to 10000 (default 1000)") {
+		t.Errorf("usage %s", usage.String())
+	}
+}
+
+func TestPluginLicenseFlags(t *testing.T) {
+	parse := func(args ...string) *server.PluginSettings {
+		t.Helper()
+		fs := flag.NewFlagSet("t", flag.ContinueOnError)
+		fs.SetOutput(io.Discard)
+		p, given := pluginFlags(fs)
+		if err := fs.Parse(args); err != nil {
+			t.Fatal(err)
+		}
+		given()
+		return p
+	}
+	cases := map[string]struct {
+		args []string
+		want server.PluginSettings
+	}{
+		"absent":   {nil, server.PluginSettings{}},
+		"empty":    {[]string{"--plugin-licenses="}, server.PluginSettings{Raw: "", Given: true, Uses: 1}},
+		"list":     {[]string{"--plugin-licenses", "MIT, ISC"}, server.PluginSettings{Raw: "MIT, ISC", Given: true, Uses: 1}},
+		"repeated": {[]string{"--plugin-licenses", "MIT", "--plugin-licenses", "ISC"}, server.PluginSettings{Raw: "ISC", Given: true, Uses: 2}},
+	}
+	for name, c := range cases {
+		if got := parse(c.args...); *got != c.want {
+			t.Errorf("%s: %+v", name, *got)
+		}
+	}
+	for name, args := range map[string][]string{
+		"space":            {"--plugin-licenses", "Apache-2.0, MIT"},
+		"repeated":         {"--plugin-licenses", "Apache-2.0", "--plugin-licenses", "Apache-2.0"},
+		"seed needs":       {"--plugin-licenses", "MIT"},
+		"empty with seed":  {"--plugin-licenses="},
+		"trailing comma":   {"--plugin-licenses", "Apache-2.0,"},
+		"malformed member": {"--plugin-licenses", "Apache-2.0,MIT OR ISC"},
+	} {
+		full := append([]string{"--listen", "127.0.0.1:0", "--data", t.TempDir() + "/d"}, args...)
+		err := run(full, make(chan os.Signal))
+		if !errors.Is(err, server.ErrConfig) || !strings.HasSuffix(err.Error(), "plugin_licenses") {
+			t.Errorf("%s: %v", name, err)
+		}
+	}
+	fs := flag.NewFlagSet("t", flag.ContinueOnError)
+	pluginFlags(fs)
+	var usage strings.Builder
+	fs.SetOutput(&usage)
+	fs.PrintDefaults()
+	if !strings.Contains(usage.String(), "(default Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,LGPL-2.1-only,LGPL-3.0-only,MIT,MPL-2.0,Zlib)") {
 		t.Errorf("usage %s", usage.String())
 	}
 }

@@ -94,6 +94,7 @@ const (
 	ReasonNotEnabled          = "not_enabled"
 	ReasonTimeout             = "timeout"
 	ReasonOperator            = "operator"
+	ReasonLicenseNotPermitted = "license_not_permitted"
 )
 
 type Refusal struct {
@@ -112,6 +113,7 @@ type Config struct {
 	Core         string
 	Destinations Destinations
 	Random       io.Reader
+	Licenses     []string
 }
 
 type Limits struct {
@@ -191,6 +193,7 @@ type Manifest struct {
 	Publisher    string
 	Key          string
 	Digest       string
+	License      string
 	Core         CoreRange
 	Capabilities []Capability
 	Egress       []string
@@ -265,6 +268,7 @@ type VersionView struct {
 	Manifest   Manifest
 	Signature  []byte
 	Vulnerable *Mark
+	Permitted  bool
 }
 
 type EndpointView struct {

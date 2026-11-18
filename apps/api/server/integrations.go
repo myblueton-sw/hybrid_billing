@@ -116,6 +116,8 @@ type pluginVersionRow struct {
 	Publisher    string          `json:"publisher"`
 	Key          string          `json:"key_version"`
 	Digest       string          `json:"digest"`
+	License      string          `json:"license"`
+	LicenseState string          `json:"license_state"`
 	CoreMin      string          `json:"core_min"`
 	CoreMax      string          `json:"core_max"`
 	Capabilities []string        `json:"capabilities"`
@@ -187,8 +189,14 @@ type pluginProposalRow struct {
 	WithdrawBlocked  string           `json:"withdraw_blocked"`
 }
 
+type licensesRow struct {
+	Permitted []string `json:"permitted"`
+	Source    string   `json:"source"`
+}
+
 type modulesSection struct {
 	State         string              `json:"state"`
+	Licenses      licensesRow         `json:"licenses"`
 	Workspace     *pluginWorkspaceRow `json:"workspace"`
 	Publishers    []publisherRow      `json:"publishers"`
 	Plugins       []pluginVersionRow  `json:"plugins"`
@@ -380,7 +388,7 @@ func (s *Server) versionOf(plugin, version string) (pluginVersionRow, error) {
 		return pluginVersionRow{}, err
 	}
 	m := v.Manifest
-	row := pluginVersionRow{Plugin: m.Plugin, Version: m.Version, Publisher: m.Publisher, Key: m.Key, Digest: m.Digest, CoreMin: m.Core.Min, CoreMax: m.Core.Max,
+	row := pluginVersionRow{Plugin: m.Plugin, Version: m.Version, Publisher: m.Publisher, Key: m.Key, Digest: m.Digest, License: m.License, LicenseState: licenseState(v.Permitted), CoreMin: m.Core.Min, CoreMax: m.Core.Max,
 		Capabilities: []string{}, Egress: append([]string{}, m.Egress...), Endpoints: append([]string{}, m.Endpoints...), Timeout: int64(m.Limits.Timeout / time.Second),
 		MemoryMiB: m.Limits.MemoryMiB, Concurrency: m.Limits.Concurrency, Storage: storageOf(m.Storage), Screens: []screenRow{}, Vulnerable: s.markOf(v.Vulnerable)}
 	for _, c := range m.Capabilities {
@@ -394,6 +402,13 @@ func (s *Server) versionOf(plugin, version string) (pluginVersionRow, error) {
 		row.Screens = append(row.Screens, screen)
 	}
 	return row, nil
+}
+
+func licenseState(permitted bool) string {
+	if permitted {
+		return licenseStatePermitted
+	}
+	return licenseStateRefused
 }
 
 func (s *Server) installationOf(plugin string) (plugins.InstallationView, error) {
@@ -478,8 +493,8 @@ func (s *Server) pluginProposalOf(e *pluginEntry, reader string) (pluginProposal
 func (s *Server) modulesOf(reader string) (modulesSection, error) {
 	c := s.integ
 	out := modulesSection{State: configured(len(c.publishers) > 0 || len(c.plugins) > 0 || c.workspace != ""), Publishers: []publisherRow{},
-		Plugins: []pluginVersionRow{}, Installations: []pluginInstallRow{}, Proposals: []pluginProposalRow{}}
-	errs := []error{}
+		Plugins: []pluginVersionRow{}, Installations: []pluginInstallRow{}, Proposals: []pluginProposalRow{}, Licenses: licensesRow{Permitted: []string{}, Source: s.cfg.Plugins.source()}}
+	errs := []error{s.pluginCall("licenses", func() error { out.Licenses.Permitted = s.plugins.Licenses(); return nil })}
 	if c.workspace != "" {
 		var w plugins.Workspace
 		err := s.pluginCall("workspace", func() (err error) { w, err = s.plugins.Workspace(c.workspace); return })

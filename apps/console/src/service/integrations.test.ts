@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AdminError, adminClient } from "./admin";
-import { availOf, deliveryOf, hint, installOf, integrationsOf, markOf, pluginProposalOf, requestOf, storageOf, subscriptionOf } from "./integrations";
+import { availOf, deliveryOf, hint, installOf, integrationsOf, licenseStateOf, licensesOf, markOf, pluginProposalOf, requestOf, storageOf, subscriptionOf } from "./integrations";
 import { fieldReaction, react } from "../modules/administration/pages/integrations/live-model";
 
 type Call = { url: string; init: RequestInit };
@@ -170,4 +170,16 @@ test("a duplicate subscription from another proposer is a stage refusal", async 
     adminClient("c", f.f).command("integrations.subscription_propose", "webhooks", "r1", "x", { destination: "d", types: "a" }, { request: "a", key: "b" }),
     (e: unknown) => e instanceof AdminError && e.failure === "invalid" && fieldReaction("integrations.subscription_propose", e.fields) === "choice",
   );
+});
+
+test("license fields fail closed", () => {
+  for (const [raw, want] of [["permitted", "permitted"], ["not_permitted", "not_permitted"], ["PERMITTED", "unknown"], ["", "unknown"], [null, "unknown"], [1, "unknown"], [undefined, "unknown"]] as const) {
+    assert.equal(licenseStateOf(raw), want, String(raw));
+  }
+  assert.deepEqual(licensesOf(undefined), { permitted: null, source: "unknown" });
+  assert.deepEqual(licensesOf({ permitted: ["MIT", 3, "Zlib"], source: "start_flag" }), { permitted: ["MIT", "Zlib"], source: "start_flag" });
+  assert.deepEqual(licensesOf({ permitted: [], source: "installation_setting" }), { permitted: [], source: "unknown" });
+  const page = integrationsOf({ modules: { licenses: { permitted: ["Apache-2.0"], source: "default" }, plugins: [{ plugin: "p", version: "1.0.0", license: "Apache-2.0", license_state: "permitted" }, { plugin: "p", version: "1.1.0", license: 7 }] } });
+  assert.deepEqual(page.modules.licenses, { permitted: ["Apache-2.0"], source: "default" });
+  assert.deepEqual(page.modules.plugins!.map((v) => [v.license, v.license_state]), [["Apache-2.0", "permitted"], ["", "unknown"]]);
 });

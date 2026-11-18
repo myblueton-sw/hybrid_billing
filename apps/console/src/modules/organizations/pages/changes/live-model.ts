@@ -1,5 +1,6 @@
+import { createElement, Fragment, type ReactNode } from "react";
 import type { OrgMember, OrgParty, PlanRow, RelationKind } from "../../../../service/admin";
-import { applies, label } from "../organizations/live-model";
+import { applies, label, validDay, validId } from "../organizations/live-model";
 
 export const kinds: RelationKind[] = ["hierarchy", "payer", "contract_pool", "allocation_pool", "view_group"];
 export type Action = "set" | "end" | "join" | "leave";
@@ -198,4 +199,135 @@ export function react(cmd: Command, failure: string, fields: string[]): Reaction
 
 export function keepsAttempt(r: Reaction): boolean {
   return r === "retry" || r === "wait" || r === "reauth";
+}
+
+export type HandoffLink = { kind: RelationKind; member: string; from: string; base: number; lang: string };
+export function handoffHref(h: HandoffLink): string {
+  const q = new URLSearchParams({ view: "targets", kind: h.kind, member: h.member });
+  if (h.from) q.set("from", h.from);
+  q.set("base", String(h.base));
+  if (h.lang) q.set("lang", h.lang);
+  return "#/organization-changes?" + q.toString();
+}
+
+export const handoffKeys = ["kind", "member", "from", "base"] as const;
+export type Handoff = { kind: RelationKind | ""; member: string; from: string; passed: string; base: number | null; dropped: boolean };
+
+export function canonicalRevision(raw: string): number | null {
+  if (!/^(0|[1-9][0-9]{0,15})$/.test(raw)) return null;
+  const n = Number(raw);
+  return Number.isSafeInteger(n) ? n : null;
+}
+
+export function readHandoff(p: URLSearchParams, today: string): Handoff | null {
+  if (!handoffKeys.some((k) => p.has(k))) return null;
+  const out: Handoff = { kind: "", member: "", from: "", passed: "", base: null, dropped: false };
+  const kind = p.get("kind");
+  if (kind !== null) {
+    if ((kinds as string[]).includes(kind)) out.kind = kind as RelationKind;
+    else out.dropped = true;
+  }
+  const member = p.get("member");
+  if (member !== null) {
+    if (validId(member)) out.member = member;
+    else out.dropped = true;
+  }
+  const from = p.get("from");
+  if (from !== null) {
+    if (!validDay(from)) out.dropped = true;
+    else if (minFrom(today, from)) out.from = from;
+    else out.passed = from;
+  }
+  const base = p.get("base");
+  if (base !== null) {
+    out.base = canonicalRevision(base);
+    if (out.base === null) out.dropped = true;
+  }
+  return out;
+}
+
+export function prefilled(h: Handoff): boolean {
+  return !!(h.kind || h.member || h.from || h.base !== null);
+}
+
+export function baseStale(base: number | null, active: number): boolean {
+  return base !== null && base !== active;
+}
+
+export type ConflictShown = "base" | "plain";
+export function conflictShown(base: number | null, reloaded: number | null): ConflictShown {
+  return base !== null && reloaded !== null && base !== reloaded ? "base" : "plain";
+}
+
+export function fill(text: string, parts: Record<string, ReactNode>): ReactNode {
+  const pieces = text.split(/(\{[a-z]\})/);
+  const out: ReactNode[] = [];
+  let rest = "";
+  const flush = (key: number) => {
+    if (rest) out.push(createElement(Fragment, { key: "t" + key }, rest));
+    rest = "";
+  };
+  for (let i = 0; i < pieces.length; i++) {
+    const m = /^\{([a-z])\}$/.exec(pieces[i]);
+    if (!m || !(m[1] in parts)) {
+      rest += pieces[i];
+      continue;
+    }
+    const before = /\S+ ?$/.exec(rest)?.[0] ?? "";
+    rest = rest.slice(0, rest.length - before.length);
+    flush(i);
+    const after = /^\S+/.exec(pieces[i + 1] ?? "")?.[0] ?? "";
+    if (after) pieces[i + 1] = pieces[i + 1].slice(after.length);
+    out.push(before || after ? createElement("span", { key: i, className: "hb-nowrap", style: { whiteSpace: "nowrap" } }, before, parts[m[1]], after) : createElement(Fragment, { key: i }, parts[m[1]]));
+  }
+  flush(pieces.length);
+  return createElement(Fragment, null, ...out);
+}
+
+export type Carried = Handoff & { refused: boolean };
+
+export type FormStep = "edit" | "adopt" | "proposed" | "left";
+export type StepEffect = { touched: boolean; clearAttempt: boolean; resetForm: boolean };
+export function formStep(step: FormStep, touched: boolean): StepEffect {
+  switch (step) {
+    case "edit":
+      return { touched: true, clearAttempt: true, resetForm: false };
+    case "adopt":
+      return { touched, clearAttempt: true, resetForm: false };
+    case "proposed":
+      return { touched: false, clearAttempt: true, resetForm: true };
+    default:
+      return { touched: false, clearAttempt: false, resetForm: touched };
+  }
+}
+
+export function adopted(h: Carried, active: number): Carried {
+  return { ...h, base: active, refused: false };
+}
+
+export function baseBlocks(h: Carried | null, active: number | null): boolean {
+  return !!h && active !== null && baseStale(h.base, active);
+}
+
+export function baseField(h: Carried | null): Record<string, string> {
+  return h && h.base !== null ? { base: String(h.base) } : {};
+}
+
+export type MemberMode = "list" | "id" | "keep";
+export function memberMode(settled: boolean, listed: boolean, touched: boolean): MemberMode | null {
+  if (!settled) return null;
+  if (touched) return "keep";
+  return listed ? "list" : "id";
+}
+
+export function afterConflict(h: Carried | null, cmd: Command, reloaded: number | null): { handoff: Carried | null; shown: ConflictShown } {
+  if (cmd !== "propose" || !h || conflictShown(h.base, reloaded) === "plain") return { handoff: h, shown: "plain" };
+  return { handoff: { ...h, refused: true }, shown: "base" };
+}
+
+export type CurrentView = "loading" | "none_of_kind" | "not_in_listing" | "none" | "targets";
+export function currentView(settled: boolean, complete: boolean, got: Choice[] | null): CurrentView {
+  if (!settled) return "loading";
+  if (got === null) return complete ? "none_of_kind" : "not_in_listing";
+  return got.length === 0 ? "none" : "targets";
 }

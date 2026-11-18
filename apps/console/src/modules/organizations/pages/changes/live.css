@@ -384,3 +384,35 @@
   text-underline-offset: 4px;
   cursor: pointer;
 }
+.o02-live .o02-handoff {
+  margin-block-end: 24px;
+}
+.o02-live .o02-handoff > * {
+  max-inline-size: 68ch;
+}
+.o02-live .o02-handoff p + p {
+  margin-block-start: 8px;
+}
+.o02-live .o02-use-base {
+  margin-block-start: 12px;
+  inline-size: auto;
+}
+.o02-live .o02-base {
+  margin-block: 0 24px;
+}
+@media (max-width: 767px) {
+  .o02-live .o02-use-base {
+    inline-size: 100%;
+  }
+}
+.o02-live .o02-handoff time,
+.o02-live .o02-handoff bdi {
+  white-space: nowrap;
+}
+.o02-live #o02-handoff:focus,
+.o02-live #o02-current-title:focus {
+  outline: none;
+}
+.o02-live .o02-choices-loading {
+  margin-block: 0 24px;
+}

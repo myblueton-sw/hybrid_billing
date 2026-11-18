@@ -731,3 +731,14 @@ Part A merged under HYB-300; Parts B and C continue as HYB-318 and HYB-319, the 
 7. Copy follows the technical-writing review: "Organization since", "{n} shown; end of list", "Groups shown: {n}; …", "All members on {date}", "Searched up to {id}.", one loading sentence per list, no count at zero ("No items shown." announced), plural bad-link notice.
 8. Tables use automatic layout at full width; dates and IDs never wrap; cells wrap only between words at 768px and above; the overflow wrapper is a fallback only.
 
+## Root amendments after the Part B reviews (HYB-318, 2026-11-18)
+
+These supersede the matching Part B text above; details are in `../HYB-318/visual-spec.md` §12 and `../HYB-318/verification.md`.
+
+1. O02 compares the carried base with the active revision on every plans read, blocks Propose on the client while the base is stale (`eBase`), and moves the base only through "Base on revision N", which clears the propose attempt and does not mark the form dirty.
+2. The arrival block takes focus without `role=status`; programmatic focus targets show no outline.
+3. A refused propose shows exactly one message: the base-refused notice when the base differs from the reloaded active revision, otherwise the plain conflict sentence.
+4. "Create change plan" is absent (not disabled) on legal entities, group panels, unloaded selections and history without a timeline. The server still accepts a legal entity as a hierarchy member (HYB-322).
+5. Copy follows the technical-writing review: the form is "this change" until Propose; screen and field names match actual titles; numbers and attached words never break across lines.
+6. The Current aside shows its loading state until the shared choices read settles.
+

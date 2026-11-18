@@ -12,7 +12,7 @@ import "../../shared/domain-screen-ui/work/screen.css";
 import LiveOrganizations from "../../modules/organizations/pages/organizations/Live";
 import LiveChanges from "../../modules/organizations/pages/changes/Live";
 import LiveContracts from "../../modules/organizations/pages/contracts/Live";
-import { useService } from "../../service/context";
+import { useService, type ServiceSession } from "../../service/context";
 
 function toView(view: string, extra: Record<string, string> = {}) {
   const [path, query = ""] = location.hash.replace(/^#/, "").split("?");
@@ -35,6 +35,10 @@ function toParams(extra: Record<string, string | null>) {
   dispatchEvent(new HashChangeEvent("hashchange"));
 }
 
+export function changeProps(p: Props, service: Pick<ServiceSession, "session" | "signOut">) {
+  return { locale: p.locale, view: p.view, params: p.params, session: service.session, onSignOut: service.signOut, onView: toView, onParams: toParams, onDirty: p.onDirty };
+}
+
 export default function WorkRemaining(p: Props) {
   const service = useService();
   if (service && p.screenId === "O01")
@@ -46,7 +50,7 @@ export default function WorkRemaining(p: Props) {
   if (service && p.screenId === "O02")
     return (
       <div className="work-domain remaining-security" data-screen-id="O02" data-source-state="live" dir={p.locale === "ar" ? "rtl" : "ltr"} lang={p.locale} key={`O02:${p.locale}`}>
-        <LiveChanges locale={p.locale} view={p.view} params={p.params} session={service.session} onSignOut={service.signOut} onView={toView} onParams={toParams} />
+        <LiveChanges {...changeProps(p, service)} />
       </div>
     );
   if (service && p.screenId === "O03")

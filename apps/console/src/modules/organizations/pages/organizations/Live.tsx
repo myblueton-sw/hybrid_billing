@@ -11,6 +11,7 @@ import {
   newer, nextFocus, pinnedRead, readFilters, refusal, todayUTC, tree, validDay, type AccountRow, type FilterKey, type Filters, type Paged, type Progress, type Side, type TreeNode,
 } from "./live-model";
 import { countText, FilterBand, FilteredEmpty, MoreBar, SearchForm } from "./filters";
+import { fill, handoffHref } from "../changes/live-model";
 import "../../../identity/pages/users/live.css";
 import "./live.css";
 
@@ -34,6 +35,39 @@ const ltr = (s: string) => <bdi dir="ltr">{s}</bdi>;
 function Dated({ l, iso }: { l: Locale; iso: string }) {
   return <time dateTime={iso}>{day(l, iso)}</time>;
 }
+
+export type PlanTarget = { kind: RelationKind; member: string; base: number };
+
+export function PlanActions({ l, plan, on, today, lang, children }: { l: Locale; plan: PlanTarget | null; on: string; today: string; lang: string; children?: ReactNode }) {
+  if (!plan && !children) return null;
+  const from = plan && on >= today ? on : "";
+  const r = plan && <bdi dir="ltr">{plan.base}</bdi>;
+  const kind = plan ? o.kind(l, plan.kind) : "";
+  return (
+    <>
+      <div className="live-buttons">
+        {plan && <a id="o01-create-plan" className="live-secondary o01-plan-link" href={handoffHref({ ...plan, from, lang })} aria-describedby="o01-plan-hint">{o.createPlan(l)}</a>}
+        {children}
+      </div>
+      {plan && (
+        <p id="o01-plan-hint" className="live-note o01-plan-hint">
+          {from ? fill(o.planHint(l, kind, "{r}", "{d}"), { r, d: <Dated l={l} iso={from} /> }) : fill(o.planHintNoDate(l, kind, "{r}"), { r })}
+        </p>
+      )}
+    </>
+  );
+}
+
+export function planNode(nodes: TreeNode[], id: string): TreeNode | undefined {
+  for (const n of nodes) {
+    if (n.id === id) return n;
+    const found = planNode(n.children, id);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+export const planMember = (n: TreeNode | undefined) => !!n && (n.kind === "internal_unit" || n.kind === "account");
 
 function kindName(l: Locale, kind: string): string {
   return kind === "legal_entity" ? o.legalEntity(l) : kind === "internal_unit" ? o.internalUnit(l) : kind === "account" ? o.account(l) : o.unknown(l);
@@ -537,7 +571,10 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   const filteredEmpty = <FilteredEmpty l={l} date={day(l, on)} onClear={clearAll} />;
   const party = (id: string) => base?.parties.find((p) => p.id === id);
   const memberOf = (kind: RelationKind, id: string) => cache[kind]?.members.find((m) => m.member === id);
-  const memberDetail = (hier: OrgMember | undefined, hierLoaded: boolean, fallbackName: string, isAccount: boolean, pending = false) => {
+  const today = todayUTC(new Date());
+  const lang = params.get("lang") ?? "";
+  const planFor = (kind: RelationKind, member: string): PlanTarget | null => (base && status === "ready" ? { kind, member, base: base.revision } : null);
+  const memberDetail = (hier: OrgMember | undefined, hierLoaded: boolean, fallbackName: string, isAccount: boolean, plan: PlanTarget | null, pending = false) => {
     if (!selected || !base) return null;
     const p = party(selected);
     const parentFact: [string, ReactNode] = hier
@@ -571,9 +608,9 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
             )}
           </>
         )}
-        <div className="live-buttons">
+        <PlanActions l={l} plan={plan} on={on} today={today} lang={lang}>
           <button type="button" className="service-button-link" onClick={() => toHistory(selected)}>{o.viewHistory(l)}</button>
-        </div>
+        </PlanActions>
       </section>
     );
   };
@@ -585,7 +622,8 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   if (view === "tree") {
     const hp = progressOf(cache.hierarchy);
     const hier = memberOf("hierarchy", selected);
-    detail = memberDetail(hier, loaded(selected, hp), "", !!hier);
+    const node = built ? planNode([...built.roots, ...built.unattributed, ...built.conflicts.map((x) => x.node), ...built.cycles], selected) : undefined;
+    detail = memberDetail(hier, loaded(selected, hp), "", !!hier, planMember(node) && loaded(selected, hp) ? planFor("hierarchy", selected) : null);
     const complete = !!cache.hierarchy && cache.hierarchy.complete && !cache.hierarchy.failed;
     const ready = !!cache.hierarchy;
     main = (
@@ -660,7 +698,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   } else if (view === "accounts") {
     const rows = accounts.rows;
     const row = rows.find((r) => r.id === selected);
-    detail = !selected ? null : row ? memberDetail(facts?.hier, !!facts, row.name, true, !facts) : notInView;
+    detail = !selected ? null : row ? memberDetail(facts?.hier, !!facts, row.name, true, planFor(rk, selected), !facts) : notInView;
     const other = rk !== "hierarchy" && rk !== "payer";
     const kindLabel = o.kind(l, rk);
     main = (
@@ -725,7 +763,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
         {groupMembers.current && groupMembers.rows.length === 0 && groupMembers.stopped && <p className="live-empty">{o.noMatchesYet(l)}</p>}
         {groupMembers.current && <MoreBar l={l} next={groupMembers.next} stopped={groupMembers.stopped} status={groupMembers.status} count={countText(l, countOf(groupMembers))} compact={false} onMore={groupMembers.more} />}
       </section>
-    ) : !selected ? null : outsideRow ? memberDetail(facts?.hier, !!facts, outsideRow.name, true, !facts) : notInView;
+    ) : !selected ? null : outsideRow ? memberDetail(facts?.hier, !!facts, outsideRow.name, true, planFor(groupKind, selected), !facts) : notInView;
     main = (
       <section aria-labelledby="o01-view-title">
         {listHead(o.groupsTitle(l), pagedMeta(groupList, true))}
@@ -828,6 +866,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
                 </div>
                 {conflicting && <p className="live-note"><strong>{o.conflict(l, applying.length)}</strong></p>}
                 <p className="live-note">{o.endNote(l)}</p>
+                <PlanActions l={l} plan={planFor(rk, chosen.member)} on={on} today={today} lang={lang} />
               </section>
             )}
           </>

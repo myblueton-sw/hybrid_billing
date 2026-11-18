@@ -479,3 +479,18 @@ test("a step-up refusal or cancellation keeps the attempt and the form", () => {
     assert.equal(keepsAttempt(react(f, [])), true);
   }
 });
+
+test("storage results state that ERP and downloaded copies are outside the controlled scope", async () => {
+  const { readFileSync } = await import("node:fs");
+  const source = readFileSync(new URL("./LiveDeletion.tsx", import.meta.url), "utf8");
+  assert.match(source, /\{k\.sumNote\(l\)\} \{k\.backupNote\(l\)\}<\/p>\s*<p className="p04-small">\{k\.outsideNote\(l\)\}<\/p>/);
+  const texts = (["en", "ko", "ar"] as const).map((l) => k.outsideNote(l));
+  assert.match(texts[0], /ERP/);
+  assert.match(texts[0], /downloaded/);
+  assert.match(texts[0], /outside the controlled scope/);
+  assert.match(texts[1], /통제 범위 밖/);
+  assert.match(texts[2], /خارج النطاق المتحكَّم فيه/);
+  assert.match(texts[1], /ERP/);
+  assert.match(texts[2], /ERP/);
+  assert.equal(new Set(texts).size, 3);
+});

@@ -302,6 +302,13 @@ export const k = {
       "대상 = 삭제 + 실패 + 제외 + 대기. 제외 항목은 보존 보류·참조·기한 전·중지 항목입니다.",
       "الهدف = محذوف + فشل + مستبعد + معلّق. العناصر المستبعدة معلّقة الحذف أو مطلوبة أو لم يحن موعدها أو موقوفة.",
     ),
+  outsideNote: (l: Locale) =>
+    t(
+      l,
+      "Copies already sent to ERP or downloaded are outside the controlled scope: deleting here does not delete them.",
+      "ERP로 이미 보낸 사본과 다운로드한 사본은 통제 범위 밖입니다. 여기서 삭제해도 그 사본은 삭제되지 않습니다.",
+      "النسخ المرسلة مسبقًا إلى ERP أو التي نُزِّلت خارج النطاق المتحكَّم فيه: الحذف هنا لا يحذفها.",
+    ),
   backupNote: (l: Locale) => t(l, "Backup copies are not tracked (backup expiry not connected).", "백업 사본은 추적하지 않습니다(백업 만료 미연결).", "لا تُتتبَّع النسخ الاحتياطية (انتهاء النسخ الاحتياطية غير متصل)."),
   colStore: (l: Locale) => t(l, "Store", "저장소", "المخزن"),
   colTarget: (l: Locale) => t(l, "Target", "대상", "الهدف"),

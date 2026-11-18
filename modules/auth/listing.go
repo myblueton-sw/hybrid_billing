@@ -114,7 +114,7 @@ func (r *Registry) effective(stored versioned[Delegation], now time.Time) bool {
 func (r *Registry) Explain(subjectID string, request Request) Explanation {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	if installationAction(request.Action) || humanOnly(request.Action) {
+	if InstallationAction(request.Action) || humanOnly(request.Action) {
 		return Explanation{Code: PermissionDenied, Reason: ReasonInvalidRequest}
 	}
 	subject, _ := r.subject(subjectID)

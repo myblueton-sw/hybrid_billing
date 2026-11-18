@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/rand"
 	"errors"
+	"io"
 	"log/slog"
 	"net"
 	"net/netip"
@@ -28,6 +29,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/relationships"
 	"github.com/myblueton-sw/hybrid_billing/modules/releasetrace"
 	"github.com/myblueton-sw/hybrid_billing/modules/retention"
+	"github.com/myblueton-sw/hybrid_billing/modules/trustchange"
 	"github.com/myblueton-sw/hybrid_billing/modules/webhooks"
 )
 
@@ -118,7 +120,11 @@ type Server struct {
 	failures        map[identity.Verifier]int
 	caller          identity.Verifier
 	fault           func(string) bool
-	records         []record
+	trust           *trustchange.Registry
+	trustOrigin     trustOrigin
+	hold            *trustHold
+	progress        map[string]trustProgress
+	random          io.Reader
 }
 
 func IdentityLimits() identity.Limits {
@@ -184,7 +190,7 @@ func New(cfg Config) (*Server, error) {
 	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{},
 		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}, plans: newPlanStore(),
 		contracts: newContractStore(), install: newInstallStore(), integ: newIntegrationStore(), signer: newSeedSigner(), rec: newRecoveryStore(),
-		ret: newRetentionStore(), ev: newEvidenceStore()}
+		ret: newRetentionStore(), ev: newEvidenceStore(), progress: map[string]trustProgress{}, random: rand.Reader}
 	s.clock = func() time.Time { return cfg.Clock().UTC() }
 	for _, origin := range cfg.Origins {
 		if !validOrigin(origin) {

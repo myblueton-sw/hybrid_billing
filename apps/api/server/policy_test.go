@@ -13,7 +13,6 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
-	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 )
 
 func (f world) policyRead(a actor) reply {
@@ -26,31 +25,27 @@ func (f world) policyRead(a actor) reply {
 	})
 }
 
-func (f world) propose(a actor, maxAge, step string) reply {
+func (f world) publishDirect(rev authpolicy.Revision) {
 	f.t.Helper()
-	return f.run(a, "policy.propose", policyTarget, map[string]string{"max_age_minutes": maxAge, "step_up_minutes": step})
-}
-
-func (f world) proposals(a actor) []map[string]any {
-	f.t.Helper()
-	out := []map[string]any{}
-	for _, p := range f.policyRead(a).body["proposals"].([]any) {
-		out = append(out, p.(map[string]any))
+	base, _ := f.s.trustBase(SampleWorkspace)
+	rev.Workspace = SampleWorkspace
+	if len(rev.Methods) == 0 {
+		rev.Methods, rev.MFA = []string{authpolicy.MethodPassword}, authpolicy.MFANone
 	}
-	return out
+	next, _ := nextEpoch(base.Epoch, f.s.generation())
+	if _, err := f.s.policy.Publish(authpolicy.Publication{Revision: rev, Epoch: next, Number: base.Policy + 1, Proposer: SampleAdmin, Validator: SampleAdmin2,
+		Approver: SampleAdmin2, Activator: SampleAdmin3}); err != nil {
+		f.t.Fatal(err)
+	}
 }
 
 func (f world) applyPolicy(maxAge, step string) {
 	f.t.Helper()
-	root, second := f.as(AdminLogin), f.as(Admin2Login)
-	got := f.propose(root, maxAge, step)
-	if got.status != 200 {
-		f.t.Fatalf("propose %+v", got)
+	c, err := proposedCandidate(map[string]string{"max_age_minutes": maxAge, "step_up_minutes": step})
+	if err != nil {
+		f.t.Fatal(err)
 	}
-	target := got.body["fields"].(map[string]any)["proposal"].(string)
-	if got := f.run(second, "policy.approve", target, nil); got.status != 200 {
-		f.t.Fatalf("approve %+v", got)
-	}
+	f.publishDirect(revisionFor(SampleWorkspace, c))
 }
 
 func TestPolicyReadShape(t *testing.T) {
@@ -61,18 +56,29 @@ func TestPolicyReadShape(t *testing.T) {
 		t.Fatalf("read %+v", got)
 	}
 	policy := got.body["policy"].(map[string]any)
-	if fmt.Sprint(policy["number"]) != fmt.Sprint(1) || policy["proposer"] != SampleAdmin || policy["approver"] != SampleAdmin2 || policy["mfa"] != "none" ||
-		fmt.Sprint(policy["max_age_seconds"]) != fmt.Sprint(12*3600) || len(policy["step_up"].([]any)) != 0 {
+	epoch := policy["epoch"].(map[string]any)
+	if fmt.Sprint(policy["number"]) != "1" || policy["proposer"] != "" || policy["mfa"] != "none" || fmt.Sprint(policy["max_age_seconds"]) != fmt.Sprint(12*3600) ||
+		len(policy["step_up"].([]any)) != 0 || epoch["value"] != "1" || fmt.Sprint(epoch["generation"]) != "0" || fmt.Sprint(epoch["number"]) != "1" {
 		t.Errorf("policy %+v", policy)
 	}
-	list := f.proposals(root)
-	if len(list) != 1 || list[0]["state"] != "applied" || list[0]["reason"] != "Sample data" || list[0]["target"] != "proposal-1" {
-		t.Errorf("proposals %+v", list)
+	trust := got.body["trust"].(map[string]any)
+	if trust["epoch"] != "1" || trust["origin"] != originSeed || trust["hold"] != nil || fmt.Sprint(trust["policy_number"]) != "1" || len(trust["digest"].(string)) != 64 {
+		t.Errorf("trust %+v", trust)
 	}
-	if got.body["you"] != SampleAdmin || got.body["now"] != stamp(start) || got.body["signed_in_at"] != stamp(start) ||
+	if got.body["you"] != SampleAdmin || got.body["now"] != stamp(start) || got.body["signed_in_at"] != stamp(start) || got.body["started_at"] != stamp(start) ||
 		got.body["act_until"] != stamp(start.Add(stepUpDefault)) || got.body["authenticated_at"] != stamp(start) || fmt.Sprint(got.body["step_up_seconds"]) != "900" ||
-		got.body["revision"] != f.s.Revision() {
+		got.body["revision"] != f.s.Revision() || len(got.body["changes"].([]any)) != 0 {
 		t.Errorf("page %+v", got.body)
+	}
+	if _, old := got.body["proposals"]; old {
+		t.Error("the proposals list is still served")
+	}
+	rights := got.body["rights"].(map[string]any)
+	holders := got.body["holders"].(map[string]any)
+	ledger := got.body["ledger"].(map[string]any)
+	if rights["propose"] != true || rights["activate"] != true || fmt.Sprint(holders["qualifying_people"]) != "0" || fmt.Sprint(holders["needed"]) != "3" || fmt.Sprint(holders["members"]) != "3" ||
+		holders["enrolment"] != "not_decided" || ledger["state"] != "ok" || fmt.Sprint(ledger["generation"]) != "0" {
+		t.Errorf("rights %+v holders %+v ledger %+v", rights, holders, ledger)
 	}
 	f.code(t, "no session", f.policyRead(actor{}), 401, string(commands.Unauthenticated))
 	f.code(t, "bad csrf", f.policyRead(actor{root.cookie, "x"}), 403, CodeCSRF)
@@ -83,77 +89,9 @@ func TestPolicyReadShape(t *testing.T) {
 	none.auth("redeem", `{"token":"`+tok+`","password":"`+pw+`","login":"first@example.invalid","email":"first@example.invalid"}`, none.pre())
 	cookie, csrf, _ := none.s.openFor(LoginTriple("first@example.invalid"), EmptyWorkspace, false)
 	empty := none.policyRead(actor{cookie, csrf})
-	if empty.status != 200 || empty.body["policy"] != nil || empty.body["act_until"] != "" {
+	if empty.status != 200 || empty.body["policy"] != nil || empty.body["act_until"] != "" || empty.body["trust"].(map[string]any)["epoch"] != "0" {
 		t.Errorf("no policy %+v", empty.body)
 	}
-}
-
-func TestProposeApproveWithdraw(t *testing.T) {
-	f := setup(t, SeedSample).ready()
-	root, second := f.as(AdminLogin), f.as(Admin2Login)
-	first := f.admin(root, "policy.propose", policyTarget, "Shorter sign-in", map[string]string{"max_age_minutes": "60", "step_up_minutes": "10"})
-	if first.status != 200 || first.body["business_state"] != "proposed" {
-		t.Fatalf("propose %+v", first)
-	}
-	a := first.body["fields"].(map[string]any)["proposal"].(string)
-	b := f.propose(root, "120", "0").body["fields"].(map[string]any)["proposal"].(string)
-	mine := f.proposals(root)
-	if len(mine) != 3 || mine[0]["target"] != b || mine[1]["target"] != a || mine[1]["reason"] != "Shorter sign-in" || mine[0]["can_withdraw"] != true || mine[0]["can_approve"] != false {
-		t.Errorf("proposer view %+v", mine)
-	}
-	if mine[1]["act_until"] != stamp(start.Add(10*time.Minute)) {
-		t.Errorf("act until %+v", mine[1]["act_until"])
-	}
-	theirs := f.proposals(second)
-	if theirs[0]["can_approve"] != true || theirs[0]["can_withdraw"] != false {
-		t.Errorf("other view %+v", theirs[0])
-	}
-	f.code(t, "self approval", f.run(root, "policy.approve", a, nil), 422, string(commands.PrerequisiteFailed))
-	f.code(t, "withdraw by another", f.run(second, "policy.withdraw", a, nil), 422, string(commands.PrerequisiteFailed))
-	before := f.s.counter
-	if got := f.run(second, "policy.approve", a, nil); got.status != 200 || got.body["business_state"] != "applied" || f.s.counter <= before {
-		t.Fatalf("approve %+v", got)
-	}
-	page := f.policyRead(root).body
-	policy := page["policy"].(map[string]any)
-	if fmt.Sprint(policy["number"]) != fmt.Sprint(2) || fmt.Sprint(policy["max_age_seconds"]) != fmt.Sprint(3600) || fmt.Sprint(policy["step_up"].([]any)[0].(map[string]any)["max_age_seconds"]) != fmt.Sprint(600) {
-		t.Errorf("applied policy %+v", policy)
-	}
-	for _, p := range f.proposals(root) {
-		if p["target"] == b {
-			t.Error("discarded proposal still listed")
-		}
-	}
-	f.code(t, "approve a discarded proposal", f.run(second, "policy.approve", b, nil), 403, string(commands.PermissionDenied))
-	f.code(t, "approve an applied proposal", f.run(root, "policy.approve", a, nil), 422, string(commands.InvalidStage))
-	f.code(t, "approve an applied proposal again by its approver", f.run(second, "policy.approve", a, nil), 422, string(commands.InvalidStage))
-	dup := f.propose(root, "200", "0")
-	if dup.status != 200 {
-		t.Fatal(dup.raw)
-	}
-	f.code(t, "an identical proposal by the same proposer", f.propose(root, "200", "0"), 422, string(commands.InvalidStage))
-	c := f.propose(root, "90", "10").body["fields"].(map[string]any)["proposal"].(string)
-	if got := f.run(root, "policy.withdraw", c, nil); got.status != 200 || got.body["business_state"] != "withdrawn" {
-		t.Errorf("withdraw %+v", got)
-	}
-	wide := f.propose(root, "100", "0").body["fields"].(map[string]any)["proposal"].(string)
-	for _, p := range f.proposals(root) {
-		if p["target"] == wide && p["act_until"] != stamp(start.Add(10*time.Minute)) {
-			t.Errorf("a proposal is limited by the current policy window %+v", p)
-		}
-	}
-	if f.s.recorded(mustNumber(t, c)) {
-		t.Error("withdrawn record kept after the next change")
-	}
-}
-
-func mustNumber(t testing.TB, target string) uint64 {
-	t.Helper()
-	n := proposalNumber(target)
-	if n == 0 {
-		t.Fatalf("target %s", target)
-	}
-	return n
 }
 
 func TestProposeValidation(t *testing.T) {
@@ -163,64 +101,35 @@ func TestProposeValidation(t *testing.T) {
 		{"-1", "0", "max_age_minutes"}, {"0", "0", "max_age_minutes"}, {"4", "0", "max_age_minutes"}, {"721", "0", "max_age_minutes"},
 		{"99999999999999999999", "0", "max_age_minutes"}, {"60", "4", "step_up_minutes"}, {"60", "61", "step_up_minutes"}, {"60", "-5", "step_up_minutes"},
 	} {
-		got := f.propose(root, c.age, c.step)
+		got := f.trustPropose(root, c.age, c.step)
 		if got.status != 422 || !strings.Contains(got.raw, c.field) {
 			t.Errorf("%s/%s: %+v", c.age, c.step, got.raw)
 		}
 	}
-	for _, c := range [][2]string{{"5", "0"}, {"720", "720"}, {"60", "60"}, {"60", "5"}} {
-		if got := f.propose(root, c[0], c[1]); got.status != 200 {
+	for _, c := range [][2]string{{"5", "0"}, {"719", "719"}, {"60", "60"}, {"60", "5"}} {
+		if got := f.trustPropose(root, c[0], c[1]); got.status != 200 {
 			t.Errorf("%v: %+v", c, got.raw)
 		}
 	}
+	f.code(t, "the current configuration", f.trustPropose(root, "720", "0"), 422, string(commands.InvalidRequest))
 	for _, raw := range []string{"007", "1a", "", "12345"} {
 		if _, ok := minutes(raw, 0, 720); ok {
 			t.Errorf("minutes %q", raw)
 		}
 	}
-	for _, target := range []string{"1", "12", "proposal-", "proposal-01", "proposal-x", "proposal-99", "policy-1", "proposal-99999999999999999999"} {
-		f.code(t, target, f.run(root, "policy.withdraw", target, nil), 403, string(commands.PermissionDenied))
+	for _, target := range []string{"1", "trust-", "trust-x-1", "proposal-1", "trust-00000000-99", "trust-99999999999999999999"} {
+		f.code(t, target, f.run(root, "trust.cancel", target, map[string]string{"expected_change_revision": "1"}), 403, string(commands.PermissionDenied))
 	}
-	stray, err := f.s.policy.Propose(authpolicy.Change{Kind: authpolicy.ChangeRevision, Revision: authpolicy.Revision{Workspace: SampleWorkspace, Methods: []string{authpolicy.MethodPassword},
-		MFA: authpolicy.MFANone, MaxAge: time.Hour}}, authpolicy.Principal{User: SampleAdmin, Workspace: SampleWorkspace, Role: authpolicy.RoleAdministrator, Kind: authpolicy.KindHuman},
-		authpolicy.Authentication{Method: authpolicy.MethodPassword, At: f.s.clock()})
-	if err != nil {
-		t.Fatal(err)
+	f.code(t, "propose with a wrong target", f.run(root, "trust.propose", "elsewhere", f.proposeFields("60", "0")), 403, string(commands.PermissionDenied))
+	f.code(t, "long rationale", f.admin(root, "trust.propose", trustTarget, strings.Repeat("x", maxRationale+1), f.proposeFields("60", "0")), 422, string(commands.InvalidRequest))
+	if got := f.admin(root, "trust.propose", trustTarget, strings.Repeat("x", maxRationale), f.proposeFields("61", "0")); got.status != 200 {
+		t.Errorf("a rationale at the limit %s", got.raw)
 	}
-	f.code(t, "a proposal apps/api did not record", f.run(root, "policy.withdraw", fmt.Sprintf("proposal-%d", stray.Number), nil), 403, string(commands.PermissionDenied))
-	f.code(t, "propose with a wrong target", f.run(root, "policy.propose", "elsewhere", map[string]string{"max_age_minutes": "60", "step_up_minutes": "0"}), 403, string(commands.PermissionDenied))
-	f.code(t, "long rationale", f.admin(root, "policy.propose", policyTarget, strings.Repeat("x", maxRationale+1), map[string]string{"max_age_minutes": "60", "step_up_minutes": "0"}),
-		422, string(commands.InvalidRequest))
-	if _, res := (policyCommand{s: f.s, kind: "propose"}).Resolve("elsewhere", policyTarget); res != commands.NotFound {
+	if _, res := (trustCommand{s: f.s, kind: "propose"}).Resolve("elsewhere", trustTarget); res != commands.NotFound {
 		t.Error("other workspace")
 	}
-}
-
-func TestStepUpAndApproverLockout(t *testing.T) {
-	f := setup(t, SeedSample).ready()
-	f.applyPolicy("60", "10")
-	root := f.as(AdminLogin)
-	f.advance(11 * time.Minute)
-	f.code(t, "step-up required", f.propose(root, "60", "10"), 403, CodeReauthentication)
-	page := f.policyRead(root).body
-	if page["now"].(string) <= page["act_until"].(string) {
-		t.Errorf("act until not passed %+v", page)
-	}
-	root = f.as(AdminLogin)
-	got := f.propose(root, "5", "0")
-	if got.status != 200 {
-		t.Fatalf("fresh sign-in %+v", got)
-	}
-	target := got.body["fields"].(map[string]any)["proposal"].(string)
-	f.setPassword(Admin2Login, pw)
-	second := f.signedIn(Admin2Login, pw)
-	f.advance(6 * time.Minute)
-	f.code(t, "approver prompted, not locked out", f.run(second, "policy.approve", target, nil), 403, CodeReauthentication)
-	if got := f.reauth(second, pw); got.status != 204 {
-		t.Fatalf("reauthenticate %+v", got)
-	}
-	if got := f.run(second, "policy.approve", target, nil); got.status != 200 || got.body["business_state"] != "applied" {
-		t.Errorf("approval after reauthentication %+v", got)
+	for _, id := range []string{"policy.propose", "policy.approve", "policy.withdraw"} {
+		f.code(t, id, f.run(root, id, "policy", nil), 404, string(commands.UnsupportedCommand))
 	}
 }
 
@@ -270,52 +179,10 @@ func TestClockRegressionRefusesSignIn(t *testing.T) {
 	}
 }
 
-func TestPolicyActorAndErrors(t *testing.T) {
-	f := setup(t, SeedSample).ready()
-	if _, err := (policyCommand{s: f.s, kind: "propose"}).Apply(commands.Context{Fields: map[string]string{"max_age_minutes": "60", "step_up_minutes": "0"}}); err.(*commands.Failure).Code != commands.PermissionDenied {
-		t.Errorf("missing session: %v", err)
-	}
-	f.s.caller = f.as(AdminLogin).verifier(f)
-	f.s.identity.Boundary().EndSession(f.s.caller)
-	if _, _, ok := f.s.actorOf(); ok {
-		t.Error("ended identity session")
-	}
-	kept := f.as(AdminLogin).verifier(f)
-	f.s.sessions.drop(kept)
-	f.s.caller = kept
-	if _, err := (policyCommand{s: f.s, kind: "propose"}).Apply(commands.Context{Fields: map[string]string{"max_age_minutes": "60", "step_up_minutes": "0"}}); err.(*commands.Failure).Code != commands.PermissionDenied {
-		t.Errorf("identity session without a table entry: %v", err)
-	}
-	f.s.caller = identity.Verifier{}
+func TestWindow(t *testing.T) {
 	other := authpolicy.Revision{MaxAge: time.Hour, StepUp: []authpolicy.StepUp{{Action: authpolicy.ActionPolicyChange, MaxAge: 30 * time.Minute}, {Action: "zz.other", MaxAge: time.Minute}}}
 	if window(other) != 30*time.Minute {
 		t.Errorf("window %v", window(other))
-	}
-	for _, c := range []struct {
-		err  error
-		code commands.Code
-	}{{authpolicy.Refusal{Reason: authpolicy.ReasonNotPending}, commands.InvalidStage}, {authpolicy.ErrNotFound, commands.InvalidStage},
-		{authpolicy.Refusal{Reason: authpolicy.ReasonSelfApproval}, commands.PrerequisiteFailed}, {authpolicy.ErrLimit, commands.DependencyUnavailable},
-		{authpolicy.ErrInvalid, commands.InvalidRequest}} {
-		if got := mapPolicy(c.err).(*commands.Failure).Code; got != c.code {
-			t.Errorf("%v: %s", c.err, got)
-		}
-	}
-	f.s.records = nil
-	for i := 0; i < maxRecords+50; i++ {
-		f.s.records = append(f.s.records, record{number: 1, reason: fmt.Sprint(i)})
-	}
-	f.s.pruneRecords()
-	if len(f.s.records) != maxRecords || f.s.records[0].reason != "50" {
-		t.Errorf("cap %d %s", len(f.s.records), f.s.records[0].reason)
-	}
-	f.s.recordProposal(1, "again")
-	if len(f.s.records) != maxRecords {
-		t.Error("duplicate record")
-	}
-	page := f.policyRead(f.as(AdminLogin))
-	if len(page.body["proposals"].([]any)) != appliedShown {
-		t.Errorf("applied shown %d", len(page.body["proposals"].([]any)))
 	}
 }
 
@@ -331,7 +198,8 @@ func TestSecondHolderTrustBoundaryIsPinned(t *testing.T) {
 	doc := map[string]any{}
 	_ = json.Unmarshal(f.mustOpenAPI(), &doc)
 	raw, _ := json.Marshal(doc)
-	if !strings.Contains(string(raw), `"required":["max_age_minutes","step_up_minutes"]`) || !strings.Contains(string(raw), "policy.approve") {
+	if !strings.Contains(string(raw), `"required":["expected_epoch","expected_policy","max_age_minutes","step_up_minutes"]`) || !strings.Contains(string(raw), "trust.activate") ||
+		strings.Contains(string(raw), "policy.approve") {
 		t.Error("openapi")
 	}
 }
@@ -357,7 +225,6 @@ func TestOnlySignInOpensSessions(t *testing.T) {
 func TestConcurrentPolicyReadsAndCommands(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	root := f.as(AdminLogin)
-	f.s.records = append(f.s.records, record{number: 999, reason: "dead"})
 	var wg sync.WaitGroup
 	for i := 0; i < 4; i++ {
 		wg.Add(1)
@@ -369,18 +236,12 @@ func TestConcurrentPolicyReadsAndCommands(t *testing.T) {
 		}()
 	}
 	for i := 0; i < 3; i++ {
-		body := fmt.Sprintf(`{"request_id":"c%d","target_id":"policy","idempotency_key":"c%d","expected_revision":"%s","rationale":"x","body":{"max_age_minutes":"%d","step_up_minutes":"0"}}`, i, i, f.s.Revision(), 60+i)
-		f.call("policy.propose", body, root.cookie, root.csrf)
+		body := fmt.Sprintf(`{"request_id":"c%d","target_id":"trust","idempotency_key":"c%d","expected_revision":"%s","rationale":"x","body":{"max_age_minutes":"%d","step_up_minutes":"0","expected_epoch":"1","expected_policy":"1"}}`, i, i, f.s.Revision(), 60+i)
+		f.call("trust.propose", body, root.cookie, root.csrf)
 	}
 	wg.Wait()
-	if f.s.recorded(999) {
-		t.Error("dead record kept after commands")
-	}
-	f.s.records = append(f.s.records, record{number: 998, reason: "dead"})
-	for _, p := range f.proposals(root) {
-		if p["number"] == nil || fmt.Sprint(p["number"]) == "0" || fmt.Sprint(p["number"]) == "998" {
-			t.Errorf("dead record listed %+v", p)
-		}
+	if n := len(f.policyRead(root).body["changes"].([]any)); n != 3 {
+		t.Errorf("changes %d", n)
 	}
 }
 

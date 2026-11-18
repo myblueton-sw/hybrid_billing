@@ -104,7 +104,7 @@ func (r *Registry) current(id string) *RevisionView {
 	return &w.revisions[len(w.revisions)-1]
 }
 
-func (r *Registry) actor(p Principal, a Authentication, space, kind string, now time.Time) error {
+func (r *Registry) actor(p Principal, a Authentication, space string, now time.Time) error {
 	switch {
 	case !validID(p.User) || !oneOf(p.Kind, KindHuman, KindSystem, KindAssistant):
 		return ErrInvalid
@@ -123,20 +123,14 @@ func (r *Registry) actor(p Principal, a Authentication, space, kind string, now 
 		return refuse(ReasonNotAdministrator)
 	}
 	rev := r.current(space)
-	switch {
-	case rev != nil:
-		return r.judge(p, a, ActionPolicyChange, rev.Revision, now)
-	case kind != ChangeRevision:
+	if rev == nil {
 		return refuse(ReasonNoPolicy)
 	}
-	return nil
+	return r.judge(p, a, ActionPolicyChange, rev.Revision, now)
 }
 
 func (r *Registry) workspaceOf(c Change) string {
-	switch c.Kind {
-	case ChangeRevision:
-		return c.Revision.Workspace
-	case ChangePlan:
+	if c.Kind == ChangePlan {
 		return c.Plan.Workspace
 	}
 	return c.Lift.Plan[:strings.LastIndexByte(c.Lift.Plan, '/')]
@@ -146,11 +140,11 @@ func (r *Registry) Propose(c Change, p Principal, a Authentication) (ProposalVie
 	now := r.enter()
 	defer r.leave()
 	c, err := clean(c)
-	if err != nil {
-		return ProposalView{}, err
+	if err != nil || c.Kind == ChangeRevision {
+		return ProposalView{}, ErrInvalid
 	}
 	space := r.workspaceOf(c)
-	if err := r.actor(p, a, space, c.Kind, now); err != nil {
+	if err := r.actor(p, a, space, now); err != nil {
 		return ProposalView{}, err
 	}
 	code := encodeChange(c)
@@ -189,7 +183,7 @@ func (r *Registry) Approve(number uint64, p Principal, a Authentication) (Propos
 	if x == nil {
 		return ProposalView{}, ErrNotFound
 	}
-	if err := r.actor(p, a, x.view.Workspace, x.view.Change.Kind, now); err != nil {
+	if err := r.actor(p, a, x.view.Workspace, now); err != nil {
 		return ProposalView{}, err
 	}
 	switch {
@@ -202,11 +196,6 @@ func (r *Registry) Approve(number uint64, p Principal, a Authentication) (Propos
 	}
 	if err := r.check(x.view.Change, x.view.Proposer, p.User); err != nil {
 		return ProposalView{}, err
-	}
-	if x.view.Change.Kind == ChangeRevision {
-		if r.judge(p, a, ActionPolicyChange, x.view.Change.Revision, now) != nil {
-			return ProposalView{}, refuse(ReasonApproverLockedOut)
-		}
 	}
 	x.view.State, x.view.Approver = ProposalApplied, p.User
 	r.pending = drop(r.pending, number)
@@ -227,7 +216,7 @@ func (r *Registry) Withdraw(number uint64, p Principal, a Authentication) (Propo
 	if x == nil {
 		return ProposalView{}, ErrNotFound
 	}
-	if err := r.actor(p, a, x.view.Workspace, x.view.Change.Kind, now); err != nil {
+	if err := r.actor(p, a, x.view.Workspace, now); err != nil {
 		return ProposalView{}, err
 	}
 	switch {

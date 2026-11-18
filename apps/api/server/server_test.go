@@ -279,7 +279,7 @@ func TestSeed(t *testing.T) {
 	}
 	sample, err := os.ReadFile(link)
 	lines := strings.Split(strings.TrimSpace(string(sample)), "\n")
-	if err != nil || len(lines) != 3 || !strings.HasPrefix(lines[0], AdminLogin+" http://127.0.0.1:5173/activate#") || !strings.HasPrefix(lines[1], Admin2Login+" ") || bytes.Equal(sample, again) {
+	if err != nil || len(lines) != 4 || !strings.HasPrefix(lines[0], AdminLogin+" http://127.0.0.1:5173/activate#") || !strings.HasPrefix(lines[1], Admin2Login+" ") || bytes.Equal(sample, again) {
 		t.Errorf("sample links %q", sample)
 	}
 	ran := []string{}
@@ -288,7 +288,7 @@ func TestSeed(t *testing.T) {
 	k.AddStep("quiet", func() (bool, error) { ran = append(ran, "quiet"); return false, nil })
 	k.AddStep("bad", func() (bool, error) { return false, os.ErrInvalid })
 	k.AddStep("never", func() (bool, error) { ran = append(ran, "never"); return true, nil })
-	if err := k.Start(); err != os.ErrInvalid || strings.Join(ran, ",") != "one,quiet" || k.counter != 18 {
+	if err := k.Start(); err != os.ErrInvalid || strings.Join(ran, ",") != "one,quiet" || k.counter != 19 {
 		t.Errorf("steps %v %v %d", err, ran, k.counter)
 	}
 	m, _ := New(Config{Data: t.TempDir() + "/d", Seed: SeedNone})

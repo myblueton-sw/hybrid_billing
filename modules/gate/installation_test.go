@@ -80,3 +80,35 @@ func TestAdministrationListingAndExplain(t *testing.T) {
 		t.Errorf("explain without grant %+v", got)
 	}
 }
+
+func TestTrustRightsNeedAHumanAdministrator(t *testing.T) {
+	var none *Administration
+	if got := none.ExplainInstallation("x", "app", administer(), time.Time{}); got.Code != AuthorityUnavailable {
+		t.Errorf("zero administration %+v", got)
+	}
+	for _, action := range []Action{AdministerInstallation, TrustPropose, TrustValidate, TrustApprove, TrustActivate} {
+		if !InstallationAction(action) {
+			t.Errorf("%s is not an installation action", action)
+		}
+	}
+	if InstallationAction(Issue) || InstallationAction(Approve) {
+		t.Error("an ordinary action is an installation action")
+	}
+	f := setupWith(t, Catalog{Kinds: []string{"usage_statement", InstallationKind}, Fields: map[string]FieldClass{"quantity": General}})
+	f.must(f.a.SetInstallationWorkspace("w1"))
+	second(f.a.PutClient(Client{ID: "app", State: Active}, 0))
+	f.member("ann")
+	for _, right := range []Action{TrustPropose, TrustValidate, TrustApprove, TrustActivate} {
+		terms := installationTerms("w1")
+		terms.Action = right
+		f.must(f.a.AddGrant(Grant{ID: "console-" + string(right), ClientID: "app", Terms: terms, Validity: always}))
+		f.must(f.a.AddGrant(Grant{ID: "root-" + string(right), SubjectID: "root", Terms: terms, Validity: always}))
+		f.must(f.a.AddGrant(Grant{ID: "ann-" + string(right), SubjectID: "ann", Terms: terms, Validity: always}))
+		request := Request{Action: right, Kind: InstallationKind, Resource: Resource{WorkspaceID: "w1"}}
+		f.expect("the administrator holding "+string(right), f.g.Decide(f.answer("root"), "app", request), true, ReasonAllowed)
+		f.expect("a member holding "+string(right), f.g.Decide(f.answer("ann"), "app", request), false, ReasonInstallationScope)
+		if got := f.a.ExplainInstallation("root", "app", request, *f.now); !got.Allowed {
+			t.Errorf("explain %s %+v", right, got)
+		}
+	}
+}

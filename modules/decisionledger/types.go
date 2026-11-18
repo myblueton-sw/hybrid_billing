@@ -7,14 +7,15 @@ import (
 )
 
 const (
-	RecordLimit  = 2048
-	LineLimit    = 4096
-	FormatV1     = 1
-	DirName      = "decisions"
-	FileName     = "ledger.jsonl"
-	MarkerName   = "decision-ledger.created"
-	RelativeFile = DirName + "/" + FileName
-	ReplacedTag  = ".replaced-"
+	RecordLimit   = 2048
+	MaxGeneration = 1<<32 - 1
+	LineLimit     = 4096
+	FormatV1      = 1
+	DirName       = "decisions"
+	FileName      = "ledger.jsonl"
+	MarkerName    = "decision-ledger.created"
+	RelativeFile  = DirName + "/" + FileName
+	ReplacedTag   = ".replaced-"
 
 	KindGenesis  = "genesis"
 	KindRecovery = "recovery"
@@ -22,7 +23,11 @@ const (
 
 	RevokeGrant      = "revoke_grant"
 	RevokeDelegation = "revoke_delegation"
+	TrustActivation  = "trust_activation"
 	UnknownLedger    = "unknown"
+
+	OriginActivation = "activation"
+	OriginCarried    = "carried"
 )
 
 type State string
@@ -41,6 +46,7 @@ const (
 	IsolationMissing   Isolation = "missing"
 	IsolationIntegrity Isolation = "integrity_failed"
 	IsolationMismatch  Isolation = "id_mismatch"
+	IsolationOrder     Isolation = "epoch_order"
 )
 
 const (
@@ -57,6 +63,7 @@ var (
 	ErrBound            = errors.New("the decision ledger is larger than its configured bound")
 	ErrNothingToReplace = errors.New("there is no isolated decision ledger to replace")
 	ErrInvalid          = errors.New("invalid decision ledger options")
+	ErrGenerations      = errors.New("the decision ledger generations are exhausted")
 	errStartSync        = errors.New("start sync refused by option")
 )
 
@@ -78,6 +85,75 @@ type Decision struct {
 	ApprovedBy       string
 	DenyGeneration   uint64
 	EndedDelegations []string
+	Trust            *Trust
+}
+
+type StepRule struct {
+	Action        string
+	MaxAgeSeconds int64
+	MFA           bool
+}
+
+type Config struct {
+	Methods       []string
+	MFA           string
+	MaxAgeSeconds int64
+	StepUp        []StepRule
+}
+
+type Trust struct {
+	Change           string
+	ChangeRevision   uint64
+	ChangeDigest     string
+	EvidenceDigest   string
+	OldEpoch         uint64
+	NewEpoch         uint64
+	OldPolicy        uint64
+	NewPolicy        uint64
+	OldDigest        string
+	NewDigest        string
+	Config           Config
+	ProposedBy       string
+	ValidatedBy      string
+	ApprovedBy       string
+	ActivatedBy      string
+	ApprovedAt       time.Time
+	RunStartedAt     time.Time
+	InvalidateBelow  uint64
+	AffectedSessions uint64
+	Origin           string
+	CarriedFrom      string
+	CarriedLine      int
+}
+
+type Retained struct {
+	File         string
+	Generation   uint64
+	GenesisRead  bool
+	HighestEpoch uint64
+}
+
+type Prior struct {
+	Isolation        Isolation
+	ProblemLine      int
+	MarkerUsable     bool
+	MarkerID         string
+	MarkerGeneration uint64
+	LedgerID         string
+	Generation       uint64
+	Verified         []Record
+	Retained         []Retained
+	Unverified       uint64
+	UnverifiedRead   bool
+}
+
+type Successor struct {
+	Generation       uint64
+	TrustReset       bool
+	GenerationStated bool
+	CarriedFrom      string
+	ReplacedLine     int
+	Carry            []Decision
 }
 
 type Record struct {
@@ -112,6 +188,9 @@ type Status struct {
 	Recovery      *Recovery
 	NotDurable    bool
 	File          string
+	Generation    uint64
+	MarkerUsable  bool
+	Genesis       Successor
 }
 
 type Options struct {
@@ -119,6 +198,8 @@ type Options struct {
 	MaxBytes      int64
 	AcceptNew     bool
 	FailStartSync bool
+	FailSync      func() bool
 	Clock         func() time.Time
 	Random        io.Reader
+	Successor     func(Prior) (Successor, error)
 }

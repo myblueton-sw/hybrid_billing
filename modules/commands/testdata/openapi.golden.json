@@ -5,10 +5,14 @@
         "properties": {
           "code": {
             "enum": [
+              "approval_stale",
+              "authority_epoch_conflict",
               "authority_unavailable",
               "dependency_unavailable",
+              "evidence_stale",
               "idempotency_conflict",
               "idempotency_key_expired",
+              "independent_approval_required",
               "internal_error",
               "invalid_request",
               "invalid_stage",
@@ -740,6 +744,18 @@
   "x-anonymous-access": false,
   "x-errors": [
     {
+      "code": "approval_stale",
+      "next_action": "inspect_current_state",
+      "retry": false,
+      "status": 409
+    },
+    {
+      "code": "authority_epoch_conflict",
+      "next_action": "inspect_current_state",
+      "retry": false,
+      "status": 409
+    },
+    {
       "code": "authority_unavailable",
       "next_action": "retry_later",
       "retry": true,
@@ -752,6 +768,12 @@
       "status": 503
     },
     {
+      "code": "evidence_stale",
+      "next_action": "inspect_current_state",
+      "retry": false,
+      "status": 409
+    },
+    {
       "code": "idempotency_conflict",
       "next_action": "inspect_current_state",
       "retry": false,
@@ -762,6 +784,12 @@
       "next_action": "inspect_current_state",
       "retry": false,
       "status": 409
+    },
+    {
+      "code": "independent_approval_required",
+      "next_action": "correct_request",
+      "retry": false,
+      "status": 422
     },
     {
       "code": "internal_error",

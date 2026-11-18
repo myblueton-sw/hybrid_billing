@@ -262,7 +262,7 @@ func (s *Server) signIn(login, workspace string, secure bool, generation uint64)
 	if err != nil {
 		return nil, identity.Answer{}, "", false
 	}
-	accepted := workspace == s.bootWorkspace && s.acceptPending(login, v, now)
+	accepted := workspace == s.bootWorkspace && !s.held() && s.acceptPending(login, v, now)
 	answer, err := s.identity.Boundary().Access(v, workspace)
 	if err == nil {
 		_, err = s.policy.Evaluate(authpolicy.Principal{User: answer.User(), Workspace: workspace, Role: string(answer.Role()), Kind: authpolicy.KindHuman},
@@ -352,11 +352,15 @@ func (s *Server) redeem(w http.ResponseWriter, r *http.Request) {
 	}
 	s.domain.RLock()
 	activate := s.activating(body["token"])
+	refused := s.held() && (activate || !s.resetLink(body["token"]))
 	s.domain.RUnlock()
 	var code string
-	if activate {
+	switch {
+	case refused:
+		code = string(commands.DependencyUnavailable)
+	case activate:
 		code = s.activate(r.Context(), body)
-	} else {
+	default:
 		code = s.setPassword(r.Context(), body)
 	}
 	switch code {
@@ -369,6 +373,11 @@ func (s *Server) redeem(w http.ResponseWriter, r *http.Request) {
 	default:
 		fail(w, http.StatusUnprocessableEntity, code, request)
 	}
+}
+
+func (s *Server) resetLink(token string) bool {
+	link, err := s.passwords.Peek(token)
+	return err != nil || link.Purpose == passwords.PurposeReset
 }
 
 func (s *Server) setPassword(ctx context.Context, body map[string]string) string {
@@ -393,6 +402,9 @@ func (s *Server) setPassword(ctx context.Context, body map[string]string) string
 	s.domain.Lock()
 	defer s.domain.Unlock()
 	login := link.Key.Subject
+	if link.Purpose != passwords.PurposeReset && s.held() {
+		return string(commands.DependencyUnavailable)
+	}
 	if link.Purpose == passwords.PurposeReset && !s.resettable(login) {
 		return CodeLinkInvalid
 	}
@@ -445,6 +457,9 @@ func (s *Server) activate(ctx context.Context, body map[string]string) string {
 	if !s.activating(body["token"]) {
 		return CodeLinkInvalid
 	}
+	if s.held() {
+		return string(commands.DependencyUnavailable)
+	}
 	if err := s.identity.Boundary().Bootstrap(s.boot.verifier, s.bootUser, LoginTriple(login), email); err != nil {
 		return CodeLinkInvalid
 	}
@@ -452,6 +467,9 @@ func (s *Server) activate(ctx context.Context, body map[string]string) string {
 	s.dir.add(s.bootUser, login, email)
 	if err := s.grantInstallation(s.bootUser, s.clock()); err != nil {
 		s.log.Error("installation grant failed at activation")
+	}
+	if err := s.grantTrust(s.bootUser, s.clock()); err != nil {
+		s.log.Error("trust grant failed at activation")
 	}
 	s.boot.live = false
 	_ = os.Remove(s.boot.file)

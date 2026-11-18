@@ -205,3 +205,22 @@ O02 makes amount, publication and ERP impact evidence required before a relation
 | changes-locked / sealed | 변경 고정됨 | Changes locked | التغييرات مقفلة | The plan's relationship changes and changed-member diff are locked at proposal. Does not mean its impact on amounts, publication or ERP is locked or calculated. Replaces 영향 고정됨 / Sealed / مثبّتة الأثر on O02. |
 | impact-not-calculated / not_computed | 계산되지 않음 | Not calculated | لم يُحتسب | No impact has been calculated for this part (amounts, publication or ERP). Used for the impact row tag and the Impact step note. Never zero and never "no impact". Replaces 미계산 / Not computed / غير محسوب on O02. |
 | impact-could-not-be-read / unknown, impact_unavailable | 확인하지 못함 | Could not be read | تعذّرت القراءة | The impact evidence for this plan could not be read, so whether it exists is unknown. Used for the impact row tag and the Impact step note. Not "not calculated" and not zero. Replaces 알 수 없음 / Unknown / غير معروف on O02 impact rows. |
+
+## M02 trust change terms (HYB-297)
+
+[HYB-297](https://linear.app/hybrid-billing/issue/HYB-297) replaces the M02 propose-then-approve flow with the trust change workflow. KO and AR are AI drafts awaiting the technical-writing review; the main KO and AR surface says 신뢰 버전 / إصدار الثقة; "epoch" is kept only in the version label and the technical details (review decision C16, 2026-11-18).
+
+| Concept | KO | EN | AR | Meaning and forbidden implication |
+| --- | --- | --- | --- | --- |
+| trust-change / trust.* | 신뢰 변경 | Trust change | تغيير الثقة | A proposed sign-in rule configuration bound to an old trust version and digests. A draft, validation or approval never changes the active rules; only activation does. |
+| trust-version / epoch | 신뢰 버전(epoch); 본문은 신뢰 버전 | Trust version (epoch) | إصدار الثقة (epoch)؛ في النص إصدار الثقة | Shown as "g.n" from the ledger generation and the number within it. Never formatted from the raw decimal value; a rollback gets a newer version, never an older one. |
+| validate / trust.validate | 검증 | Validate | التحقق | Records evidence (test login, recovery path, not-applicable items) for the exact change. Not approval and not activation; a blocked result keeps the change a draft. |
+| independent-approval / trust.approve | 독립 승인 | Independent approval | الاعتماد المستقل | Approval by a holder of the approval right who did not propose the change. Cleared when the change is revised or re-validated with different evidence; unusable for activation while the evidence is stale. Not activation. |
+| activate / trust.activate | 활성화 | Activate | تفعيل | Commits the change to the decision ledger first, then applies it under a newer trust version and signs out everyone in the workspace. Done by a third person. |
+| supersede / superseded | 대체됨 | Superseded | مُستبدَل | Another change was activated on the same old version, so this one can no longer be activated. Not a rejection. |
+| invalidation-progress | 무효화 진행 상황 | Invalidation progress | تقدّم إلغاء الصلاحية | Per-item result of ending old sessions and evidence after activation (done, in progress, unknown, not applicable, outside scope). Unknown is never shown as done. |
+| activation-unknown / activation_unknown | 활성화 확인 안 됨 | Activation not confirmed | لم يُؤكَّد التفعيل | The server could not confirm that the activation record was saved. Never labelled activated; resolved only at the next server start. |
+| trust-hold | 신뢰 보류 | Trust hold | حجز الثقة | After an unconfirmed activation, only access reductions, stops of running operations, withdrawals, retention holds, ending sessions, password changes and already issued reset links work until restart. |
+| trust-rights / trust_propose, trust_validate, trust_approve, trust_activate | 신뢰 권한 | Trust rights | صلاحيات الثقة | Four installation rights separate from installation administration; neither implies the other. Granted only by the sample seed and the bootstrap today; enrolment is not decided. |
+| blocked (validation result) | 차단됨 | Blocked | يمنع المتابعة | A validation check that holds the change as a draft; it cannot be approved or activated until a validation passes. |
+| activation-attempted-by | 활성화 시도자 | Activation attempted by | مَن حاول التفعيل | The administrator who ran an activation that could not be confirmed. Never "activated by". |

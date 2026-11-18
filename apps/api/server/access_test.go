@@ -98,7 +98,7 @@ func TestAccessReadShape(t *testing.T) {
 		t.Errorf("catalog %+v", catalog)
 	}
 	subjects := fmt.Sprint(got.body["subjects"])
-	if !strings.Contains(subjects, SampleMember) || !strings.Contains(subjects, MemberLogin) || len(got.body["subjects"].([]any)) != 3 {
+	if !strings.Contains(subjects, SampleMember) || !strings.Contains(subjects, MemberLogin) || len(got.body["subjects"].([]any)) != 4 {
 		t.Errorf("subjects %s", subjects)
 	}
 	ledger := got.body["ledger"].(map[string]any)
@@ -199,8 +199,11 @@ func TestRevokeRules(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	f.setPassword(MemberLogin, pw)
 	root, second := f.as(AdminLogin), f.as(Admin2Login)
-	for _, id := range []string{"installation-" + SampleAdmin2, "installation-" + SampleAdmin, "reader-console", "reader-" + SampleAdmin} {
+	for _, id := range []string{"reader-console", "reader-" + SampleAdmin} {
 		f.code(t, id, f.run(root, "access.request_revoke", id, nil), 422, string(commands.PrerequisiteFailed))
+	}
+	for _, id := range []string{"installation-" + SampleAdmin2, "installation-" + SampleAdmin, "trust-trust_approve-" + SampleAdmin2, "trust-trust_activate-console"} {
+		f.code(t, id, f.run(root, "access.request_revoke", id, nil), 403, string(commands.PermissionDenied))
 	}
 	f.code(t, "unknown grant", f.run(root, "access.request_revoke", "missing", nil), 403, string(commands.PermissionDenied))
 	if got := f.run(root, "access.request_revoke", "reader-"+SampleAdmin2, nil); got.status != 200 {

@@ -98,22 +98,6 @@ func (e *encoder) list(values []string) {
 func encodeChange(c Change) string {
 	e := &encoder{}
 	e.text(c.Kind)
-	x := c.Revision
-	e.text(x.Workspace)
-	e.list(x.Methods)
-	e.list(x.Issuers)
-	e.text(x.MFA)
-	e.number(int64(x.MaxAge))
-	e.number(int64(len(x.StepUp)))
-	for _, s := range x.StepUp {
-		e.text(s.Action)
-		e.number(int64(s.MaxAge))
-		if s.MFA {
-			e.number(1)
-		} else {
-			e.number(0)
-		}
-	}
 	p := c.Plan
 	e.text(p.ID)
 	e.text(p.Workspace)

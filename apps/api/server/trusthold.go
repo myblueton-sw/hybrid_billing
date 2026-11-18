@@ -1,0 +1,150 @@
+package server
+
+import (
+	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
+	"github.com/myblueton-sw/hybrid_billing/modules/commands"
+	"github.com/myblueton-sw/hybrid_billing/modules/identity"
+)
+
+const (
+	holdAllow          = "allow"
+	holdRefuse         = "refuse"
+	holdRoleDecrease   = "role_decrease"
+	holdRevokeApproval = "revoke_approval"
+	holdPerCommand     = "per_command"
+	holdNoInvitations  = "allow_without_invitations"
+	holdResetLinkOnly  = "reset_link_only"
+)
+
+type holdRule struct {
+	rule   string
+	reason string
+}
+
+const (
+	reasonReduce   = "reduces access"
+	reasonPending  = "withdraws or ends a pending proposal"
+	reasonStop     = "stops a harmful or outbound effect"
+	reasonPlace    = "places a hold"
+	reasonIncrease = "adds or restores access"
+	reasonChange   = "changes the installation, delivery, organization or business state"
+	reasonTrust    = "the trust workflow is frozen until restart"
+)
+
+var holdTable = map[string]holdRule{
+	"identity.suspend_user":                    {holdAllow, reasonReduce},
+	"identity.suspend_membership":              {holdAllow, reasonReduce},
+	"identity.depart_user":                     {holdAllow, reasonReduce},
+	"identity.remove_membership":               {holdAllow, reasonReduce},
+	"identity.change_role":                     {holdRoleDecrease, "a change to member reduces access; to administrator it is an increase"},
+	"identity.revoke_invitation":               {holdAllow, reasonReduce},
+	"identity.create_user":                     {holdRefuse, reasonIncrease},
+	"identity.invite":                          {holdRefuse, reasonIncrease},
+	"identity.reinstate_user":                  {holdRefuse, reasonIncrease},
+	"identity.reinstate_membership":            {holdRefuse, reasonIncrease},
+	"identity.issue_set_link":                  {holdRefuse, "issues a credential path"},
+	"identity.issue_reset_link":                {holdRefuse, "issues a credential path"},
+	"access.request_revoke":                    {holdAllow, reasonReduce},
+	"access.revoke_delegation":                 {holdAllow, reasonReduce},
+	"access.approve_request":                   {holdRevokeApproval, "approving a revoke reduces access; approving an addition is an increase"},
+	"access.reject_request":                    {holdAllow, reasonPending},
+	"access.withdraw_request":                  {holdAllow, reasonPending},
+	"access.request_grant":                     {holdRefuse, reasonIncrease},
+	"service.suspend":                          {holdAllow, reasonReduce},
+	"service.retire":                           {holdAllow, reasonReduce},
+	"service.revoke_credential":                {holdAllow, reasonReduce},
+	"service.create":                           {holdRefuse, reasonIncrease},
+	"service.reinstate":                        {holdRefuse, reasonIncrease},
+	"service.issue_credential":                 {holdRefuse, reasonIncrease},
+	"recovery.lock":                            {holdAllow, reasonStop},
+	"recovery.withdraw":                        {holdAllow, reasonPending},
+	"recovery.approve":                         {holdRefuse, "could lift containment"},
+	"recovery.propose_unlock":                  {holdRefuse, "could lift containment"},
+	"retention.place_hold":                     {holdAllow, reasonPlace},
+	"retention.stop_run":                       {holdAllow, reasonStop},
+	"retention.withdraw":                       {holdAllow, reasonPending},
+	"retention.approve":                        {holdRefuse, "could release a hold or start deletion"},
+	"retention.propose_policy":                 {holdRefuse, "could release a hold or start deletion"},
+	"retention.propose_release":                {holdRefuse, "could release a hold or start deletion"},
+	"integrations.plugin_stop":                 {holdAllow, reasonStop},
+	"integrations.plugin_disable":              {holdAllow, reasonStop},
+	"integrations.subscription_pause":          {holdAllow, reasonStop},
+	"integrations.subscription_revoke":         {holdAllow, reasonStop},
+	"integrations.plugin_withdraw":             {holdAllow, reasonPending},
+	"integrations.plugin_propose":              {holdRefuse, reasonChange},
+	"integrations.plugin_approve":              {holdRefuse, reasonChange},
+	"integrations.subscription_propose":        {holdRefuse, reasonChange},
+	"integrations.subscription_approve":        {holdRefuse, reasonChange},
+	"integrations.subscription_request_resume": {holdRefuse, reasonChange},
+	"integrations.subscription_approve_resume": {holdRefuse, reasonChange},
+	"integrations.letter_request_redeliver":    {holdRefuse, reasonChange},
+	"integrations.letter_approve_redeliver":    {holdRefuse, reasonChange},
+	"integrations.letter_request_dismiss":      {holdRefuse, reasonChange},
+	"integrations.letter_approve_dismiss":      {holdRefuse, reasonChange},
+	"installation.withdraw":                    {holdAllow, reasonPending},
+	"installation.approve":                     {holdRefuse, reasonChange},
+	"installation.propose_plan":                {holdRefuse, reasonChange},
+	"relationship.discard":                     {holdAllow, reasonPending},
+	"relationship.propose":                     {holdRefuse, reasonChange},
+	"relationship.activate":                    {holdRefuse, reasonChange},
+	"contract.suspend":                         {holdRefuse, reasonChange},
+	"contract.resume":                          {holdRefuse, reasonChange},
+	"contract.renew":                           {holdRefuse, reasonChange},
+	"contract.end":                             {holdRefuse, reasonChange},
+	"contract.withdraw":                        {holdRefuse, reasonChange},
+	"contract.evidence":                        {holdRefuse, reasonChange},
+	"contract.settle":                          {holdRefuse, reasonChange},
+	"contract.reopen":                          {holdRefuse, reasonChange},
+	"release_evidence.withdraw":                {holdAllow, reasonPending},
+	"release_evidence.approve":                 {holdRefuse, reasonChange},
+	"release_evidence.retire_requirement":      {holdRefuse, reasonChange},
+	"release_evidence.retire_profile":          {holdRefuse, reasonChange},
+	"trust.propose":                            {holdRefuse, reasonTrust},
+	"trust.validate":                           {holdRefuse, reasonTrust},
+	"trust.approve":                            {holdRefuse, reasonTrust},
+	"trust.activate":                           {holdRefuse, reasonTrust},
+	"trust.reject":                             {holdRefuse, reasonTrust},
+	"trust.cancel":                             {holdRefuse, reasonTrust},
+}
+
+var holdRoutes = map[string]holdRule{
+	"/api/v1/commands/{command}": {holdPerCommand, "each command follows the command table"},
+	"/api/v1/me/sessions/end":    {holdAllow, "ends sessions"},
+	"/api/v1/me/password":        {holdAllow, "changes the caller's own password"},
+	"/api/v1/me/reauthenticate":  {holdAllow, "password confirmation for the allowed step-up commands"},
+	"/api/v1/auth/login":         {holdNoInvitations, "signs in to existing memberships only, so administrators can read and reduce"},
+	"/api/v1/auth/logout":        {holdAllow, "ends a session"},
+	"/api/v1/auth/link":          {holdAllow, "reads a link without using it"},
+	"/api/v1/auth/redeem":        {holdResetLinkOnly, "a reset link only rotates an existing credential; a set link or activation adds an account"},
+}
+
+func (s *Server) held() bool { return s.hold != nil }
+
+func (s *Server) enterHold(reason string) {
+	if s.hold == nil {
+		s.hold = &trustHold{reason: reason, since: s.clock()}
+	}
+	s.log.Error("trust_hold_entered", "reason", reason)
+}
+
+func (s *Server) holdAllows(command string, call commands.Call) bool {
+	rule, known := holdTable[command]
+	switch {
+	case !known:
+		return false
+	case rule.rule == holdAllow:
+		return true
+	case rule.rule == holdRoleDecrease:
+		for _, v := range call.Fields {
+			if v.Name == "role" {
+				return v.Value == string(identity.Member)
+			}
+		}
+		return false
+	case rule.rule == holdRevokeApproval:
+		n, ok := accesschange.Number(call.Target, accesschange.RequestPrefix)
+		v, found := s.changes.Request(n, call.Answer.Workspace())
+		return ok && found && v.Change.Kind == accesschange.ChangeRevoke
+	}
+	return false
+}

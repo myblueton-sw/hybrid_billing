@@ -1,0 +1,456 @@
+.remaining-security .m02-live {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  min-inline-size: 0;
+  container-type: inline-size;
+}
+.remaining-security .m02-live p,
+.remaining-security .m02-live li,
+dialog.m02-confirm p {
+  max-inline-size: 68ch;
+}
+.remaining-security .m02-live :is(h2, h3, p) {
+  margin: 0;
+}
+:lang(ko) .m02-live :is(h2, h3, p, li, dd),
+dialog.m02-confirm:lang(ko) :is(h2, h3, p, li, dd) {
+  word-break: keep-all;
+}
+.remaining-security .m02-live h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+.remaining-security .m02-live h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-block: 24px 8px;
+}
+.remaining-security .m02-live :is(h2, h3, section)[tabindex="-1"]:focus:not(:focus-visible) {
+  outline: none;
+}
+.remaining-security .m02-conditions .m02-condition {
+  padding-block: 16px;
+  border-block-end: 1px solid var(--border-row);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.remaining-security .m02-conditions .m02-condition:first-of-type {
+  border-block-start: 1px solid var(--border-row);
+}
+.remaining-security .m02-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px 16px;
+  margin-block: 0 16px;
+}
+.remaining-security .m02-current-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px 48px;
+}
+@container (min-width: 880px) {
+  .remaining-security .m02-current-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+.remaining-security .m02-group {
+  min-inline-size: 0;
+  container-type: inline-size;
+}
+.remaining-security .m02-group h3 {
+  margin-block-start: 0;
+}
+.remaining-security :is(.m02-facts, .m02-sum, .m02-confirm-facts) {
+  margin: 0;
+}
+.remaining-security .m02-facts > div,
+.remaining-security .m02-sum > div,
+dialog.m02-confirm .m02-confirm-facts > div,
+dialog.m02-confirm .m02-sum > div {
+  display: grid;
+  grid-template-columns: minmax(140px, 40%) minmax(0, 1fr);
+  gap: 4px 16px;
+  padding-block: 10px;
+  border-block-start: 1px solid var(--border-row);
+}
+@container (max-width: 420px) {
+  .remaining-security .m02-facts > div,
+  .remaining-security .m02-sum > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.remaining-security .m02-live dt,
+dialog.m02-confirm dt {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.remaining-security .m02-live dd,
+dialog.m02-confirm dd {
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.remaining-security .m02-sum > .m02-wide,
+dialog.m02-confirm .m02-wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+.remaining-security .m02-sum > .m02-wide dd .live-mono,
+dialog.m02-confirm .m02-wide dd .live-mono {
+  font-size: 14px;
+}
+.remaining-security .m02-ledger,
+.remaining-security .m02-rights {
+  font-size: 14px;
+  margin-block-start: 12px;
+}
+.remaining-security .m02-result {
+  color: var(--hb-ink);
+}
+.remaining-security .m02-result.live-quiet {
+  color: var(--text-muted);
+}
+.remaining-security .m02-note,
+.remaining-security .m02-sub {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.remaining-security .m02-changes-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-block-end: 24px;
+}
+.remaining-security .m02-changes-head .m02-toolbar {
+  margin-block-end: 4px;
+}
+.remaining-security .m02-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.remaining-security .m02-split[data-mode="split"][data-open="true"] {
+  grid-template-columns: minmax(320px, 2fr) minmax(0, 3fr);
+}
+.remaining-security .m02-lists {
+  min-inline-size: 0;
+  container-type: inline-size;
+}
+.remaining-security .m02-lists > h3:first-child {
+  margin-block-start: 0;
+}
+.remaining-security aside.m02-detail {
+  min-inline-size: 0;
+  container-type: inline-size;
+  border-inline-start: 1px solid var(--border-row);
+  padding-inline-start: 32px;
+  position: sticky;
+  inset-block-start: 16px;
+  max-block-size: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.remaining-security aside.m02-detail[tabindex="0"]:focus-visible {
+  outline-offset: -2px;
+}
+.remaining-security .m02-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.remaining-security .m02-table .m02-c1 { inline-size: 18%; }
+.remaining-security .m02-table .m02-c2 { inline-size: 22%; }
+.remaining-security .m02-table .m02-c3 { inline-size: 16%; }
+.remaining-security .m02-table .m02-c4 { inline-size: 14%; }
+.remaining-security .m02-table .m02-c5 { inline-size: 30%; }
+.remaining-security .m02-live table,
+.remaining-security dialog.m02-confirm table {
+  white-space: normal;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+.remaining-security :is(.m02-live, dialog.m02-confirm) thead,
+.remaining-security :is(.m02-live, dialog.m02-confirm) thead tr {
+  background: none;
+}
+.remaining-security :is(.m02-live, dialog.m02-confirm) tbody tr:hover td {
+  background: none;
+}
+#content [data-remaining-screen] .remaining-security .m02-live table th,
+#content [data-remaining-screen] .remaining-security dialog.m02-confirm table th,
+.remaining-security .m02-live table th,
+.remaining-security dialog.m02-confirm table th {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: start;
+  padding: 8px 12px 8px 0;
+  background: none;
+  position: static;
+  block-size: auto;
+  height: auto;
+  color: var(--hb-ink);
+  border-block-end: 1px solid var(--border-row);
+}
+.remaining-security .m02-live table td,
+.remaining-security dialog.m02-confirm table td {
+  padding: 12px 12px 12px 0;
+  vertical-align: top;
+  border-block-start: 1px solid var(--border-row);
+  overflow-wrap: break-word;
+  block-size: auto;
+  height: auto;
+}
+.remaining-security :is(.m02-live, dialog.m02-confirm) table td .live-mono {
+  overflow-wrap: anywhere;
+}
+.remaining-security :is(.m02-live, dialog.m02-confirm) table td.m02-word {
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+.remaining-security .m02-table tr[aria-current="true"] td {
+  background: var(--surface-hover);
+}
+.remaining-security .m02-open {
+  background: none;
+  border: 0;
+  padding: 10px 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--hb-ink);
+  text-decoration: underline;
+  text-align: start;
+  cursor: pointer;
+  min-block-size: 44px;
+}
+.remaining-security .m02-tag {
+  display: inline-block;
+  margin-inline-start: 8px;
+  padding: 0 6px;
+  border: 1px solid var(--border-control);
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--hb-ink);
+}
+@container (max-width: 719px) {
+  .remaining-security .m02-table:not(.m02-reduced),
+  .remaining-security .m02-table:not(.m02-reduced) :is(tbody, tr, td) {
+    display: block;    inline-size: auto;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+  }
+  .remaining-security .m02-table:not(.m02-reduced) colgroup,
+  .remaining-security .m02-table:not(.m02-reduced) thead {
+    display: none;
+  }
+  .remaining-security .m02-table:not(.m02-reduced) tr {
+    border-block-start: 1px solid var(--border-row);
+    padding-block: 8px;
+  }
+  .remaining-security .m02-table:not(.m02-reduced) td {
+    border: 0;
+    padding-block: 4px;
+    block-size: auto;
+    height: auto;
+    min-block-size: 0;
+  }
+  .remaining-security .m02-table:not(.m02-reduced) td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+}
+.remaining-security .m02-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.remaining-security .m02-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px 16px;
+}
+.remaining-security .m02-close,
+.remaining-security .m02-back {
+  min-block-size: 44px;
+}
+.remaining-security .m02-state-line {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.remaining-security .m02-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 4px 0;
+}
+.remaining-security .m02-detail-body section h3 {
+  margin-block-start: 16px;
+}
+.remaining-security :is(.m02-compare-table, .m02-findings-wrap) table {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+@container (max-width: 479px) {
+  .remaining-security :is(.m02-findings, .m02-invalidation, .m02-compare-table table),
+  .remaining-security :is(.m02-findings, .m02-invalidation, .m02-compare-table table) :is(tbody, tr, td) {
+    display: block;    inline-size: auto;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+  }
+  .remaining-security :is(.m02-findings, .m02-invalidation, .m02-compare-table table) :is(thead, colgroup) {
+    display: none;
+  }
+  .remaining-security :is(.m02-findings, .m02-invalidation, .m02-compare-table table) tr {
+    border-block-start: 1px solid var(--border-row);
+    padding-block: 8px;
+  }
+  .remaining-security :is(.m02-findings, .m02-invalidation, .m02-compare-table table) td {
+    border: 0;
+    padding-block: 4px;
+    block-size: auto;
+    height: auto;
+    min-block-size: 0;
+  }
+  .remaining-security :is(.m02-findings, .m02-invalidation, .m02-compare-table table) td:first-child {
+    font-weight: 600;
+  }
+  .remaining-security :is(.m02-findings, .m02-invalidation, .m02-compare-table table) td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+}
+.remaining-security .m02-members summary,
+.remaining-security .m02-expert summary,
+dialog.m02-confirm .m02-members summary {
+  min-block-size: 44px;
+  display: list-item;
+  padding-block: 10px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.remaining-security :is(.m02-live, dialog.m02-confirm) .m02-actor {
+  white-space: nowrap;
+}
+.remaining-security .m02-form .live-impact {
+  margin-block-end: 24px;
+}
+.remaining-security .m02-ids,
+dialog.m02-confirm .m02-ids {
+  columns: 18ch auto;
+  column-gap: 24px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.remaining-security .m02-history {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.remaining-security .m02-history li {
+  border-block-start: 1px solid var(--border-row);
+  padding-block: 12px;
+}
+.remaining-security .m02-free {
+  unicode-bidi: isolate;
+  overflow-wrap: anywhere;
+}
+.remaining-security .m02-step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-inline-size: 0;
+  container-type: inline-size;
+}
+.remaining-security .m02-after {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+dialog.m02-confirm {
+  inline-size: min(720px, calc(100vw - 32px));
+  max-block-size: 90dvh;
+  padding: 24px;
+  overflow: auto;
+  container-type: inline-size;
+}
+dialog.m02-confirm form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+dialog.m02-confirm h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+dialog.m02-confirm h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+dialog.m02-confirm p {
+  margin: 0;
+}
+dialog.m02-confirm .m02-confirm-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 32px;
+  margin: 0;
+}
+@container (min-width: 600px) {
+  dialog.m02-confirm .m02-confirm-facts {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  dialog.m02-confirm .m02-confirm-facts > .m02-wide {
+    grid-column: 1 / -1;
+  }
+}
+dialog.m02-confirm .m02-confirm-facts > div {
+  grid-template-columns: minmax(0, 1fr);
+}
+dialog.m02-confirm .m02-consequence {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+dialog.m02-confirm .live-reason textarea {
+  max-inline-size: 440px;
+  inline-size: calc(100% - 6px);
+  margin-inline: 3px;
+}
+dialog.m02-confirm .m02-confirm-actions {
+  margin-block: 8px 0;
+}
+@media (max-width: 767px) {
+  dialog.m02-confirm {
+    inline-size: 100vw;
+    max-inline-size: 100vw;
+    block-size: 100dvh;
+    max-block-size: 100dvh;
+    margin: 0;
+    padding: 16px;
+    border: 0;
+  }
+  dialog.m02-confirm .m02-confirm-actions button,
+  .remaining-security .m02-live .live-buttons button,
+  .remaining-security .m02-live .m02-actions button,
+  .remaining-security .m02-live .m02-propose {
+    inline-size: 100%;
+  }
+}

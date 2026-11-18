@@ -156,7 +156,7 @@ func (r *Registry) validRequest(request Request) bool {
 	if _, known := actions[request.Action]; !known {
 		return false
 	}
-	if _, known := r.kinds[request.Kind]; !known || (installationAction(request.Action) && request.Kind != InstallationKind) {
+	if _, known := r.kinds[request.Kind]; !known || (InstallationAction(request.Action) && request.Kind != InstallationKind) {
 		return false
 	}
 	return validID(request.Resource.WorkspaceID) && r.validFields(request.Action, request.Fields)
@@ -208,7 +208,7 @@ func (r *Registry) decide(principal Principal, request Request, now time.Time) D
 	if !r.current(principal) || (principal.ClientID != "" && principal.SessionID != "") {
 		return denied(PermissionDenied, ReasonPrincipal, principal)
 	}
-	if installationAction(request.Action) {
+	if InstallationAction(request.Action) {
 		return r.administer(principal, request, now)
 	}
 	if humanOnly(request.Action) {

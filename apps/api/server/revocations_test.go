@@ -140,6 +140,7 @@ func TestGrantChangesHaveFixedCallSites(t *testing.T) {
 		"ledger.go replayOne RevokeDelegation":              true,
 		"seed.go seedReaderGrants AddGrant":                 true,
 		"seed.go grantInstallation AddGrant":                true,
+		"seed.go grantTrust AddGrant":                       true,
 	}
 	entries, _ := os.ReadDir(".")
 	found := []string{}

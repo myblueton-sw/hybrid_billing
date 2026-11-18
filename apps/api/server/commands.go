@@ -133,7 +133,14 @@ func decodeCall(r io.Reader) (callBody, error) {
 	return c, nil
 }
 
+func (s *Server) stale(found session) bool { return found.trustEpoch < s.currentEpoch(found.workspace) }
+
 func (s *Server) access(found session) (identity.Answer, commands.Code) {
+	if s.stale(found) {
+		_ = s.identity.Boundary().EndSession(found.verifier)
+		s.sessions.drop(found.verifier)
+		return identity.Answer{}, commands.Unauthenticated
+	}
 	answer, err := s.identity.Boundary().Access(found.verifier, found.workspace)
 	switch {
 	case err == nil:
@@ -193,11 +200,26 @@ func (s *Server) command(w http.ResponseWriter, r *http.Request) {
 	writeResult(w, s.execute(command, call, found.verifier))
 }
 
+func boundaryResult(code commands.Code, request string) commands.Result {
+	request = echoRequest(request)
+	rule := moduleRules[code]
+	return commands.Result{Request: request, Err: &commands.Error{Code: code, Status: rule.status, Retry: rule.retry, Next: rule.next, Request: request}}
+}
+
 func (s *Server) execute(command string, call commands.Call, caller identity.Verifier) commands.Result {
 	s.domain.Lock()
 	defer s.domain.Unlock()
+	found, ok := s.sessions.get(caller)
+	if !ok || s.stale(found) {
+		s.endOne(caller)
+		return boundaryResult(commands.Unauthenticated, call.Request)
+	}
+	if s.held() && !s.holdAllows(command, call) {
+		s.cfg.Log.Info("trust_hold_refused", "user", call.Answer.User(), "command", command)
+		return boundaryResult(commands.DependencyUnavailable, call.Request)
+	}
 	if s.stepUp(command) {
-		if code := s.stepUpCheck(caller, command, call.Target); code != "" {
+		if code := s.stepUpCheck(caller, call.Answer.User(), command, call.Target); code != "" {
 			s.cfg.Log.Info("step_up_required", "user", call.Answer.User(), "command", command)
 			return stepUpRefusal(code, call.Request)
 		}

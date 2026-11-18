@@ -205,7 +205,7 @@ func (r *Registry) validTerms(terms Terms) bool {
 		!terms.Scope.Contract.valid() || !terms.Period.valid() {
 		return false
 	}
-	if installationAction(terms.Action) && (terms.Kind != InstallationKind || !r.installationTerms(terms)) {
+	if InstallationAction(terms.Action) && (terms.Kind != InstallationKind || !r.installationTerms(terms)) {
 		return false
 	}
 	return r.validFields(terms.Action, terms.Fields)
@@ -218,7 +218,7 @@ func (r *Registry) Describes(action Action, kind string, fields []string) bool {
 	if _, known := actions[action]; !known {
 		return false
 	}
-	if _, known := r.kinds[kind]; !known || (installationAction(action) && kind != InstallationKind) {
+	if _, known := r.kinds[kind]; !known || (InstallationAction(action) && kind != InstallationKind) {
 		return false
 	}
 	return r.validFields(action, fields)
@@ -261,7 +261,7 @@ func (r *Registry) AddGrant(grant Grant) error {
 	joined := uint64(0)
 	if grant.SubjectID != "" {
 		subject, known := r.subject(grant.SubjectID)
-		if !known || subject.State != Active || ((humanOnly(grant.Terms.Action) || installationAction(grant.Terms.Action)) && subject.Kind != Human) {
+		if !known || subject.State != Active || ((humanOnly(grant.Terms.Action) || InstallationAction(grant.Terms.Action)) && subject.Kind != Human) {
 			return ErrInvalid
 		}
 		active := false
@@ -372,7 +372,7 @@ func (r *Registry) AddDelegation(delegation Delegation) error {
 	defer r.mu.Unlock()
 	terms := copyTerms(delegation.Terms)
 	generation := r.subjectsGeneration()
-	if !validID(delegation.ID) || !r.validTerms(terms) || !delegation.Validity.valid() || humanOnly(terms.Action) || installationAction(terms.Action) ||
+	if !validID(delegation.ID) || !r.validTerms(terms) || !delegation.Validity.valid() || humanOnly(terms.Action) || InstallationAction(terms.Action) ||
 		delegation.DelegatorID == delegation.DelegateID || !r.activeHuman(delegation.DelegatorID) || !r.activeHuman(delegation.DelegateID) {
 		return ErrInvalid
 	}

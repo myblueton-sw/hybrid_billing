@@ -22,6 +22,9 @@ type AccessSettings struct {
 	LedgerMaxMiB        int
 	Given               map[string]bool
 	AcceptNewLedger     bool
+	AcceptTrustReset    bool
+	CarryTrustFrom      string
+	TrustGeneration     uint64
 }
 
 type AccessSetting struct {
@@ -72,7 +75,7 @@ func (s AccessSettings) withDefaults() AccessSettings {
 		return s
 	}
 	out := DefaultAccessSettings()
-	out.AcceptNewLedger = s.AcceptNewLedger
+	out.AcceptNewLedger, out.AcceptTrustReset, out.CarryTrustFrom, out.TrustGeneration = s.AcceptNewLedger, s.AcceptTrustReset, s.CarryTrustFrom, s.TrustGeneration
 	return out
 }
 

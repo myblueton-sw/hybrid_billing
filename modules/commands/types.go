@@ -31,6 +31,11 @@ const (
 	InternalError         Code = "internal_error"
 	RateLimited           Code = "rate_limited"
 	IdempotencyKeyExpired Code = "idempotency_key_expired"
+
+	AuthorityEpochConflict      Code = "authority_epoch_conflict"
+	ApprovalStale               Code = "approval_stale"
+	EvidenceStale               Code = "evidence_stale"
+	IndependentApprovalRequired Code = "independent_approval_required"
 )
 
 type NextAction string
@@ -66,11 +71,28 @@ var errorRules = map[Code]errorRule{
 	InternalError:         {500, false, NextNone},
 	RateLimited:           {429, true, NextRetry},
 	IdempotencyKeyExpired: {409, false, NextInspect},
+
+	AuthorityEpochConflict:      {409, false, NextInspect},
+	ApprovalStale:               {409, false, NextInspect},
+	EvidenceStale:               {409, false, NextInspect},
+	IndependentApprovalRequired: {422, false, NextCorrect},
 }
 
 var handlerCodes = map[Code]bool{
 	UnsupportedCapability: true, InvalidStage: true, RevisionConflict: true, PrerequisiteFailed: true,
-	DependencyUnavailable: true, PermissionDenied: true, InvalidRequest: true,
+	DependencyUnavailable: true, PermissionDenied: true, InvalidRequest: true, SelfApprovalDenied: true,
+	AuthorityEpochConflict: true, ApprovalStale: true, EvidenceStale: true, IndependentApprovalRequired: true,
+}
+
+var declarable = map[Code]bool{SelfApprovalDenied: true, AuthorityEpochConflict: true, ApprovalStale: true, EvidenceStale: true, IndependentApprovalRequired: true}
+
+func declares(definition Definition, code Code) bool {
+	for _, c := range definition.Refusals {
+		if c == code {
+			return true
+		}
+	}
+	return false
 }
 
 type Error struct {
@@ -174,6 +196,7 @@ type Definition struct {
 	Mutating   bool
 	Rationale  bool
 	Fields     []Field
+	Refusals   []Code
 	Handler    Handler
 }
 
@@ -291,6 +314,7 @@ type Entry struct {
 	Mutating   bool
 	Rationale  bool
 	Fields     []Field
+	Refusals   []Code
 	Supported  bool
 }
 

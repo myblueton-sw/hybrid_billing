@@ -116,6 +116,17 @@ func (f world) withoutSecondHolder() {
 		f.t.Fatal(err)
 	}
 	delete(f.s.dir.holders, SampleAdmin2)
+	f.withoutThirdAdmin()
+}
+
+func (f world) withoutThirdAdmin() {
+	f.t.Helper()
+	if g, ok := f.s.grantView("installation-" + SampleAdmin3); ok && !g.Closed {
+		if err := f.s.admin.RevokeGrant(g.ID, g.Version); err != nil {
+			f.t.Fatal(err)
+		}
+	}
+	delete(f.s.dir.holders, SampleAdmin3)
 }
 
 func TestUserAdministrationPermissions(t *testing.T) {
@@ -278,6 +289,7 @@ func TestProtectionRules(t *testing.T) {
 	f.withoutSecondHolder()
 	check("the only holder", SampleAdmin, SampleAdmin2, false)
 	delete(members, SampleAdmin2)
+	delete(members, SampleAdmin3)
 	check("the last administrator", SampleAdmin, "someone", false)
 	plain := map[string]identity.MemberInfo{
 		"m":  {User: "m", Role: identity.Member, State: identity.MembershipActive, UserState: identity.Active},
@@ -563,7 +575,7 @@ func TestUsersReadPaging(t *testing.T) {
 			break
 		}
 	}
-	if strings.Join(seen, ",") != "sample-admin,sample-admin-2,sample-member" {
+	if strings.Join(seen, ",") != "sample-admin,sample-admin-2,sample-admin-3,sample-member" {
 		t.Errorf("pages %v", seen)
 	}
 	if row := f.row(root, SampleAdmin); row["installation_administrator"] != true || row["email"] != AdminLogin {

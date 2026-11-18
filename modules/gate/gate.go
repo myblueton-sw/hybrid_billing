@@ -106,7 +106,7 @@ func (g *Gate) run(answer identity.Answer, client, session string, request Reque
 	if request.Resource.WorkspaceID != answer.Workspace() {
 		return refusal(PermissionDenied, ReasonWorkspace, answer.User())
 	}
-	if request.Action == AdministerInstallation && (answer.Kind() != identity.Human || answer.Role() != identity.Administrator) {
+	if InstallationAction(request.Action) && (answer.Kind() != identity.Human || answer.Role() != identity.Administrator) {
 		return refusal(PermissionDenied, ReasonInstallationScope, answer.User())
 	}
 	if answer.Kind() != identity.Human && client != "" {
@@ -292,6 +292,13 @@ func (a *Administration) Explain(subjectID string, request Request) Explanation 
 		return Explanation{Code: AuthorityUnavailable, Reason: ReasonUnavailable}
 	}
 	return a.permissions.Explain(subjectID, request)
+}
+
+func (a *Administration) ExplainInstallation(subjectID, clientID string, request Request, now time.Time) Explanation {
+	if !a.ready() {
+		return Explanation{Code: AuthorityUnavailable, Reason: ReasonUnavailable}
+	}
+	return a.permissions.ExplainInstallation(subjectID, clientID, request, now)
 }
 
 func (a *Administration) SetAvailable(available bool) error {

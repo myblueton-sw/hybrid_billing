@@ -114,6 +114,23 @@ func TestAccessSettingFlags(t *testing.T) {
 	if access.RequestHours != 24 || !access.Given["access_request_hours"] || access.Given["access_ended_kept"] || !access.AcceptNewLedger || access.EndedKept != 1000 {
 		t.Errorf("flags %+v", access)
 	}
+	fs = flag.NewFlagSet("t", flag.ContinueOnError)
+	access, _ = accessFlags(fs)
+	if err := fs.Parse([]string{"--accept-new-decision-ledger", "--accept-trust-reset", "--carry-trust-from", "abc", "--trust-generation", "5"}); err != nil {
+		t.Fatal(err)
+	}
+	if !access.AcceptTrustReset || access.CarryTrustFrom != "abc" || access.TrustGeneration != 5 {
+		t.Errorf("trust flags %+v", access)
+	}
+	for raw, ok := range map[string]bool{"4294967294": true, "4294967295": false, "4294967296": false, "18446744073709551615": false, "0": false, "+1": false, "x": false} {
+		fs = flag.NewFlagSet("t", flag.ContinueOnError)
+		fs.SetOutput(io.Discard)
+		access, _ = accessFlags(fs)
+		err := fs.Parse([]string{"--trust-generation", raw})
+		if (err == nil) != ok || err != nil && !strings.Contains(err.Error(), "from 1 to 4294967294") {
+			t.Errorf("trust-generation %s: %v", raw, err)
+		}
+	}
 	if _, ok := settingNumber("0"); !ok {
 		t.Error("zero is canonical and refused by its bound")
 	}

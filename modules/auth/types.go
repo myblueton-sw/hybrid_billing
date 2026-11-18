@@ -29,6 +29,10 @@ const (
 	Deliver                Action = "deliver"
 	ApproveSupportSession  Action = "approve_support_session"
 	AdministerInstallation Action = "administer_installation"
+	TrustPropose           Action = "trust_propose"
+	TrustValidate          Action = "trust_validate"
+	TrustApprove           Action = "trust_approve"
+	TrustActivate          Action = "trust_activate"
 )
 
 const InstallationKind = "installation"
@@ -36,6 +40,7 @@ const InstallationKind = "installation"
 var actions = map[Action]struct{}{
 	View: {}, ViewCost: {}, ChangeCustomerPolicy: {}, ChangeSellingPolicy: {}, RequestApproval: {},
 	Approve: {}, Issue: {}, Download: {}, Deliver: {}, ApproveSupportSession: {}, AdministerInstallation: {},
+	TrustPropose: {}, TrustValidate: {}, TrustApprove: {}, TrustActivate: {},
 }
 
 func fieldAction(action Action) bool {
@@ -44,7 +49,13 @@ func fieldAction(action Action) bool {
 
 func humanOnly(action Action) bool { return action == Approve || action == ApproveSupportSession }
 
-func installationAction(action Action) bool { return action == AdministerInstallation }
+func InstallationAction(action Action) bool {
+	switch action {
+	case AdministerInstallation, TrustPropose, TrustValidate, TrustApprove, TrustActivate:
+		return true
+	}
+	return false
+}
 
 type FieldClass string
 

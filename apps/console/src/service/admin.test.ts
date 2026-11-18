@@ -233,19 +233,27 @@ test("the organizations read builds its query and defaults missing parts", async
 });
 
 test("the plans read defaults missing parts and never invents a computed impact", async () => {
-  const r = fake(200, { revision: "r", active_revision: 2, open_plans: 1, open_limit: 16, impact: { money: "not_computed", publication: "", erp: 3 }, you: "u",
+  const r = fake(200, { revision: "r", active_revision: 2, open_plans: 1, open_limit: 16, impact: { money: "computed", publication: "computed", erp: "computed" }, you: "u",
     plans: [{ id: "plan-1", state: "sealed", change: { kind: "hierarchy", member: "m", action: "set", target: "t", from: "2026-12-01" }, can_activate: true,
-      members: [{ member: "m", name: "M", differs: [{ from: "2026-12-01", until: "" }] }, null, { member: "n" }] }, {}] });
+      impact: { money: "not_computed", publication: "", erp: 3 },
+      members: [{ member: "m", name: "M", differs: [{ from: "2026-12-01", until: "" }] }, null, { member: "n" }] }, {},
+      { id: "plan-3", impact: { money: "computed", publication: "Computed", erp: "computed" } }, { id: "plan-4", impact: "computed" },
+      { id: "plan-5", impact: { money: "computed", publication: "computed", erp: "computed" } }] });
   const got = await adminClient("t", r.f).plans();
   assert.equal(r.calls[0].url, "/api/v1/organizations/plans");
-  assert.deepEqual(got.impact, { money: "not_computed", publication: "unknown", erp: "unknown" });
+  assert.equal("impact" in got, false);
+  assert.deepEqual(got.plans[0].impact, { money: "not_computed", publication: "unknown", erp: "unknown" });
+  assert.deepEqual(got.plans[1].impact, { money: "unknown", publication: "unknown", erp: "unknown" });
+  assert.deepEqual(got.plans[2].impact, { money: "computed", publication: "unknown", erp: "computed" });
+  assert.deepEqual(got.plans[3].impact, { money: "unknown", publication: "unknown", erp: "unknown" });
+  assert.deepEqual(got.plans[4].impact, { money: "computed", publication: "computed", erp: "computed" });
   assert.equal(got.plans[0].can_activate, true);
   assert.deepEqual(got.plans[0].members[1].differs, []);
   assert.deepEqual(got.plans[0].members[1].before, []);
   assert.deepEqual(got.plans[1].change, { kind: "", member: "", action: "", target: "", from: "" });
   assert.deepEqual([got.plans[1].can_activate, got.plans[1].stale, got.plans[1].kinds, got.plans[1].violations], [false, false, [], []]);
   const e = await adminClient("t", fake(200, {}).f).plans();
-  assert.deepEqual([e.plans, e.open_limit, e.impact.money], [[], 0, "unknown"]);
+  assert.deepEqual([e.plans, e.open_limit], [[], 0]);
   await assert.rejects(adminClient("t", fake(422, { code: "invalid_request", fields: ["from"] }).f).command("relationship.propose", "relationships", "r", "x", {}, attempt()),
     (x: AdminError) => x.failure === "invalid" && x.fields[0] === "from");
 });

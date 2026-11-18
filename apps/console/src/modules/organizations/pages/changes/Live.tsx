@@ -11,8 +11,8 @@ import { o } from "../../../organizations/pages/organizations/live-copy";
 import { todayUTC, validDay } from "../../../organizations/pages/organizations/live-model";
 import { c } from "./live-copy";
 import {
-  actionsFor, allMemberChoices, blocked, canActivate, closing, currentOn, findPlan, impactOf, keepsAttempt, kinds, lead, membersKept, minFrom,
-  nameOf, needsTarget, partition, react, showOpenCount, steps, targetChoices, type Action, type Choice, type Command, type Reaction,
+  actionsFor, allMemberChoices, blocked, canActivate, closing, currentOn, findPlan, held, impactDone, impactOf, impactUnread, keepsAttempt, kinds, lead, membersKept, minFrom,
+  nameOf, needsTarget, partition, react, refusal, showOpenCount, steps, targetChoices, type Action, type Blocked, type Choice, type Command, type Reaction,
 } from "./live-model";
 import "../../../identity/pages/users/live.css";
 import "./live.css";
@@ -77,31 +77,48 @@ function failureFor(l: Locale, reaction: Reaction, e: unknown): { title: string;
   return { title: c.failed(l), body: op ? c.stopped(l, op) : "" };
 }
 
-function Steps({ l, p }: { l: Locale; p: PlanRow }) {
+export function Steps({ l, p }: { l: Locale; p: PlanRow }) {
   const s = steps(p);
-  const labels = [
-    c.proposed(l),
-    p.state === "sealed" || p.state === "rejected" || p.state === "activated" || p.state === "discarded" ? c.stateWord(l, p.state === "activated" || p.state === "discarded" ? "sealed" : p.state) : c.sealedOrRejected(l),
-    p.state === "activated" || p.state === "discarded" ? c.stateWord(l, p.state) : p.state === "rejected" ? c.notApplicable(l) : c.pending3(l),
-  ];
+  const names = c.stepNames(l);
+  const note = (i: number): string => {
+    if (s[i] === "held") return i === 1 ? (impactUnread(p) ? c.unknownImpact(l) : c.notComputed(l)) : c.approvalHeld(l, blocked(p));
+    if (s[i] === "stopped") return c.stateWord(l, p.state);
+    return "";
+  };
   return (
     <ol className="o02-steps" aria-label={c.progress(l)}>
       {s.map((state, i) => (
         <li key={i} className="o02-step" aria-current={state === "current" ? "step" : undefined} data-state={state}>
           <span className="o02-step-n">{c.step(l, i + 1)}</span>
-          <span className="o02-step-label">{labels[i]}</span>
+          <span className="o02-step-label">{names[i]}</span>
           <span className="o02-step-state">{c.stepState(l, state)}</span>
+          {note(i) && <span className="o02-step-note">{note(i)}</span>}
         </li>
       ))}
     </ol>
   );
 }
 
+export function Held({ l, b }: { l: Locale; b: Blocked }) {
+  const unread = b === "impact_unknown";
+  return (
+    <div className="live-blocked o02-held">
+      <p className="o02-held-lead">{unread ? c.heldUnknownLead(l) : c.heldLead(l)}</p>
+      <p>{unread ? c.heldUnknownNext(l) : c.heldNext(l)}</p>
+    </div>
+  );
+}
+
+const impactWord = (l: Locale, v: string) => {
+  const i = impactOf(v);
+  return i === "computed" ? c.computedImpact(l) : i === "not_computed" ? c.notComputed(l) : c.unknownImpact(l);
+};
+
 function Named({ id, name }: { id: string; name: string }) {
   return <><bdi>{name}</bdi>{name !== id && <span className="live-sub live-mono">{ltr(id)}</span>}</>;
 }
 
-function Detail({ l, p, page, parties, members, full, titleRef }: {
+export function Detail({ l, p, page, parties, members, full, titleRef }: {
   l: Locale; p: PlanRow; page: PlansPage; parties: OrgParty[]; members: OrgMember[]; full: boolean; titleRef?: React.Ref<HTMLHeadingElement>;
 }) {
   const named = (id: string) => nameOf(id, parties, members);
@@ -109,7 +126,8 @@ function Detail({ l, p, page, parties, members, full, titleRef }: {
   const memberName = p.member_name || named(p.change.member);
   const targetName = p.change.target ? p.target_name || named(p.change.target) : "";
   const ld = lead(p);
-  const impact = [page.impact.money, page.impact.publication, page.impact.erp];
+  const impact = [p.impact.money, p.impact.publication, p.impact.erp];
+  const b = blocked(p);
   return (
     <>
       <h2 id="o02-plan-title" tabIndex={-1} ref={titleRef}>{c.sentence(l, p.change.action, memberName, targetName, kindName)}</h2>
@@ -201,12 +219,13 @@ function Detail({ l, p, page, parties, members, full, titleRef }: {
           )}
           <section aria-labelledby="o02-impact-title">
             <h3 id="o02-impact-title">{c.impact(l)}</h3>
-            <p className="live-impact">{c.impactNote(l)}</p>
+            {held(b) && <p className="o02-held-lead">{b === "impact_unknown" ? c.heldUnknownLead(l) : c.heldLead(l)}</p>}
+            {!impactDone(p) && <p className="live-impact">{c.impactNote(l)}</p>}
             <dl className="o02-impact">
               {c.impactRows(l).map((row, i) => (
                 <div key={row}>
                   <dt>{row}</dt>
-                  <dd><span className="o02-tag">{impactOf(impact[i]) === "not_computed" ? c.notComputed(l) : c.unknownImpact(l)}</span> <span className="live-sub">{c.notZero(l)}</span></dd>
+                  <dd><span className="o02-tag">{impactWord(l, impact[i])}</span>{impactOf(impact[i]) !== "computed" && <> <span className="live-sub">{c.notZero(l)}</span></>}</dd>
                 </div>
               ))}
             </dl>
@@ -214,6 +233,74 @@ function Detail({ l, p, page, parties, members, full, titleRef }: {
         </div>
       )}
     </>
+  );
+}
+
+type Decision = "activate" | "discard";
+
+export function Approval({ l, p, sentence, kindName, confirm, busy, reason, onOpen, onDecide, onCancel }: {
+  l: Locale; p: PlanRow; sentence: string; kindName: string; confirm: Decision | null; busy: Command | null; reason: ReactNode;
+  onOpen: (k: Decision) => void; onDecide: (k: Decision) => void; onCancel: () => void;
+}) {
+  if (p.state !== "sealed") return <p className="live-note">{c.onlySealed(l, c.stateWord(l, p.state))}</p>;
+  const b = blocked(p);
+  return (
+    <div className="live-sections">
+      <section className="live-group" aria-labelledby="o02-activate-title">
+        <h3 id="o02-activate-title">{c.activate(l)}</h3>
+        {held(b) && <Held l={l} b={b} />}
+        <p className="live-impact">{c.restate(l, day(l, p.change.from), sentence, kindName)}</p>
+        {held(b) ? null : !canActivate(p) ? (
+          <div className="live-blocked">
+            <p><strong>{c.blockedTitle(l)}</strong></p>
+            <ul><li>{b === "own" ? c.own(l) : b === "stale" ? c.staleBlock(l) : b === "passed" ? c.passed(l) : c.otherBlock(l)}</li></ul>
+            {(b === "stale" || b === "passed") && <p className="live-note">{c.next(l)}</p>}
+          </div>
+        ) : confirm !== "activate" ? (
+          <button type="button" id="o02-open-activate" className="live-secondary" disabled={confirm !== null} onClick={() => onOpen("activate")}>{c.reviewActivate(l)}</button>
+        ) : (
+          <div className="o02-confirm">
+            <h3 id="o02-confirm-title" tabIndex={-1}>{c.confirmActivate(l)}</h3>
+            <dl className="live-facts">
+              <div><dt>{c.facts.from(l)}</dt><dd>{day(l, p.change.from)} (00:00 UTC)</dd></div>
+              <div><dt>{c.facts.change(l)}</dt><dd>{sentence}</dd></div>
+            </dl>
+            {reason}
+            <div className="live-buttons">
+              <button type="button" className="live-primary" disabled={busy !== null} aria-busy={busy === "activate" || undefined} onClick={() => onDecide("activate")}>{busy === "activate" ? c.activating(l) : c.activateBtn(l, day(l, p.change.from))}</button>
+              <button type="button" className="live-secondary" disabled={busy !== null} onClick={onCancel}>{c.cancel(l)}</button>
+            </div>
+          </div>
+        )}
+      </section>
+      <section className="live-group" aria-labelledby="o02-discard-title">
+        <h3 id="o02-discard-title">{c.discard(l)}</h3>
+        {confirm !== "discard" ? (
+          <button type="button" id="o02-open-discard" className="live-secondary" disabled={confirm !== null} onClick={() => onOpen("discard")}>{c.reviewDiscard(l)}</button>
+        ) : (
+          <div className="o02-confirm">
+            <h3 id="o02-confirm-title" tabIndex={-1}>{c.confirmDiscard(l)}</h3>
+            <p className="live-impact"><strong>{c.permanent(l)}</strong></p>
+            {reason}
+            <div className="live-buttons">
+              <button type="button" className="live-primary" disabled={busy !== null} aria-busy={busy === "discard" || undefined} onClick={() => onDecide("discard")}>{busy === "discard" ? c.discarding(l) : c.discardBtn(l)}</button>
+              <button type="button" className="live-secondary" disabled={busy !== null} onClick={onCancel}>{c.keep(l)}</button>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+export const decisionLabel = (l: Locale, p: PlanRow) => (held(blocked(p)) ? c.toDiscard(l) : c.toApproval(l));
+
+export function ImpactActions({ l, p, onDecision, onAnother }: { l: Locale; p: PlanRow; onDecision: () => void; onAnother: () => void }) {
+  return (
+    <div className="live-buttons">
+      {p.state === "sealed" && <button type="button" className="live-primary" onClick={onDecision}>{decisionLabel(l, p)}</button>}
+      <button type="button" className="service-button-link" onClick={onAnother}>{c.another(l)}</button>
+    </div>
   );
 }
 
@@ -375,7 +462,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     return e;
   };
 
-  const handle = async (err: unknown, cmd: Command) => {
+  const handle = async (err: unknown, cmd: Command, target = "") => {
     const reaction = (err as { reaction?: Reaction }).reaction ?? "failed";
     const cause = (err as { cause?: unknown }).cause;
     const fields = cause instanceof AdminError ? cause.fields : [];
@@ -399,7 +486,12 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
       return;
     }
     if (reaction === "limit") { await load(true); setNotice({ text: c.limit(l, page?.open_limit ?? 0) }); setFocusTo("#o02-notice"); return; }
-    if (reaction === "own") { await load(true); setNotice({ text: c.own(l) }); setFocusTo("#o02-notice"); return; }
+    if (reaction === "refused") {
+      const got = await load(true);
+      setNotice({ text: c.refused(l, refusal(findPlan(got?.plans ?? [], target))) });
+      setFocusTo("#o02-notice");
+      return;
+    }
     if (reaction === "stage") { await load(true); setNotice({ text: c.stageChanged(l) }); setFocusTo("#o02-notice"); return; }
     if (reaction === "conflict") { await load(true); setNotice({ text: c.conflict(l) }); setFocusTo("#o02-notice"); return; }
     if (reaction === "partial" && cmd === "propose") {
@@ -444,7 +536,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
       setConfirm(null);
       onView("result", { plan: p.id, done: kind === "activate" ? `activated:${out.fields.revision ?? ""}` : "discarded" });
     } catch (err) {
-      await handle(err, kind);
+      await handle(err, kind, p.id);
     }
   };
 
@@ -647,58 +739,14 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const o01Href = (p: PlanRow) => `#/organizations?${new URLSearchParams({ ...(lang ? { lang } : {}), view: "tree", on: p.change.from, revision: String(p.activated_revision) }).toString()}`;
 
   const approvalBody = (p: PlanRow) => {
-    if (p.state !== "sealed") return <p className="live-note">{c.onlySealed(l, c.stateWord(l, p.state))}</p>;
-    const b = blocked(p);
     const memberName = p.member_name || nameOf(p.change.member, parties, allMembers);
     const targetName = p.change.target ? p.target_name || nameOf(p.change.target, parties, allMembers) : "";
     const kindName = o.kind(l, p.change.kind);
-    const sentence = c.sentence(l, p.change.action, memberName, targetName, kindName);
     const reasonBox = <Reason l={l} value={actReason} onChange={(v) => { setActReason(v); setActError(""); attempts.current.activate = undefined; attempts.current.discard = undefined; }} error={actError} />;
     return (
-      <div className="live-sections">
-        <section className="live-group" aria-labelledby="o02-activate-title">
-          <h3 id="o02-activate-title">{c.activate(l)}</h3>
-          <p className="live-impact">{c.restate(l, day(l, p.change.from), sentence, kindName)}</p>
-          {!canActivate(p) ? (
-            <div className="live-blocked">
-              <p><strong>{c.blockedTitle(l)}</strong></p>
-              <ul><li>{b === "own" ? c.own(l) : b === "stale" ? c.staleBlock(l) : b === "passed" ? c.passed(l) : c.otherBlock(l)}</li></ul>
-              {(b === "stale" || b === "passed") && <p className="live-note">{c.next(l)}</p>}
-            </div>
-          ) : confirm !== "activate" ? (
-            <button type="button" id="o02-open-activate" className="live-secondary" disabled={confirm !== null} onClick={() => { opener.current = "#o02-open-activate"; setConfirm("activate"); setFocusTo("#o02-confirm-title"); }}>{c.reviewActivate(l)}</button>
-          ) : (
-            <div className="o02-confirm">
-              <h3 id="o02-confirm-title" tabIndex={-1}>{c.confirmActivate(l)}</h3>
-              <dl className="live-facts">
-                <div><dt>{c.facts.from(l)}</dt><dd>{day(l, p.change.from)} (00:00 UTC)</dd></div>
-                <div><dt>{c.facts.change(l)}</dt><dd>{sentence}</dd></div>
-              </dl>
-              {reasonBox}
-              <div className="live-buttons">
-                <button type="button" className="live-primary" disabled={busy !== null} aria-busy={busy === "activate" || undefined} onClick={() => void decide("activate", p)}>{busy === "activate" ? c.activating(l) : c.activateBtn(l, day(l, p.change.from))}</button>
-                <button type="button" className="live-secondary" disabled={busy !== null} onClick={() => { setConfirm(null); setActError(""); setFocusTo(opener.current); }}>{c.cancel(l)}</button>
-              </div>
-            </div>
-          )}
-        </section>
-        <section className="live-group" aria-labelledby="o02-discard-title">
-          <h3 id="o02-discard-title">{c.discard(l)}</h3>
-          {confirm !== "discard" ? (
-            <button type="button" id="o02-open-discard" className="live-secondary" disabled={confirm !== null} onClick={() => { opener.current = "#o02-open-discard"; setConfirm("discard"); setFocusTo("#o02-confirm-title"); }}>{c.reviewDiscard(l)}</button>
-          ) : (
-            <div className="o02-confirm">
-              <h3 id="o02-confirm-title" tabIndex={-1}>{c.confirmDiscard(l)}</h3>
-              <p className="live-impact"><strong>{c.permanent(l)}</strong></p>
-              {reasonBox}
-              <div className="live-buttons">
-                <button type="button" className="live-primary" disabled={busy !== null} aria-busy={busy === "discard" || undefined} onClick={() => void decide("discard", p)}>{busy === "discard" ? c.discarding(l) : c.discardBtn(l)}</button>
-                <button type="button" className="live-secondary" disabled={busy !== null} onClick={() => { setConfirm(null); setActError(""); setFocusTo(opener.current); }}>{c.keep(l)}</button>
-              </div>
-            </div>
-          )}
-        </section>
-      </div>
+      <Approval l={l} p={p} sentence={c.sentence(l, p.change.action, memberName, targetName, kindName)} kindName={kindName} confirm={confirm} busy={busy} reason={reasonBox}
+        onOpen={(k) => { opener.current = k === "activate" ? "#o02-open-activate" : "#o02-open-discard"; setConfirm(k); setFocusTo("#o02-confirm-title"); }}
+        onDecide={(k) => void decide(k, p)} onCancel={() => { setConfirm(null); setActError(""); setFocusTo(opener.current); }} />
     );
   };
 
@@ -711,10 +759,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
       <section className="live-step o02-detail" aria-labelledby="o02-plan-title">
         <Detail l={l} p={selected} page={page} parties={parties} members={allMembers} full={view === "impact"} />
         {view === "impact" ? (
-          <div className="live-buttons">
-            {selected.state === "sealed" && <button type="button" className="live-primary" onClick={() => onView("approval", { plan: selected.id, done: "open" })}>{c.toApproval(l)}</button>}
-            <button type="button" className="service-button-link" onClick={() => onView("targets")}>{c.another(l)}</button>
-          </div>
+          <ImpactActions l={l} p={selected} onDecision={() => onView("approval", { plan: selected.id, done: "open" })} onAnother={() => onView("targets")} />
         ) : approvalBody(selected)}
       </section>
     ) : notFound || (open.length > 0 ? <p className="live-empty">{c.choose(l)}</p> : null);
@@ -754,7 +799,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
         <Detail l={l} p={selected} page={page} parties={parties} members={allMembers} full />
         <p className="live-note">{c.readOnly(l)}</p>
         {selected.state === "activated" && selected.activated_revision > 0 && <p className="o02-link"><a href={o01Href(selected)}>{c.o01Link(l, day(l, selected.change.from), selected.activated_revision)}</a></p>}
-        {selected.state === "sealed" && <button type="button" className="service-button-link" onClick={() => onView("approval", { plan: selected.id })}>{c.toApproval(l)}</button>}
+        {selected.state === "sealed" && <button type="button" className="service-button-link" onClick={() => onView("approval", { plan: selected.id })}>{decisionLabel(l, selected)}</button>}
       </section>
     ) : notFound || (closed.length > 0 ? <p className="live-empty">{c.choose(l)}</p> : null);
   } else {

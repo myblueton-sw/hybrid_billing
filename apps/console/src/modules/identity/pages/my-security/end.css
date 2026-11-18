@@ -1,0 +1,327 @@
+dialog.mysec-end {
+  inline-size: min(640px, calc(100vw - 32px));
+  max-block-size: 90dvh;
+  overflow: auto;
+  padding: 24px;
+}
+
+dialog.mysec-end h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+dialog.mysec-end h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+dialog.mysec-end .mysec-end-lead,
+dialog.mysec-end .mysec-end-scope,
+dialog.mysec-end .mysec-end-note {
+  max-inline-size: 68ch;
+  margin: 12px 0 0;
+}
+
+dialog.mysec-end .mysec-end-scope {
+  font-weight: 600;
+}
+
+dialog.mysec-end .mysec-end-note {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+dialog.mysec-end .mysec-manifest-head {
+  margin-block-start: 24px;
+}
+
+dialog.mysec-end .mysec-manifest {
+  margin-block-start: 12px;
+}
+
+dialog.mysec-end .mysec-manifest table {
+  inline-size: 100%;
+  table-layout: fixed;
+}
+
+dialog.mysec-end .mysec-manifest th:first-child {
+  inline-size: 12.5rem;
+}
+
+dialog.mysec-end .mysec-nw {
+  white-space: nowrap;
+}
+
+dialog.mysec-end .mysec-manifest .live-mono {
+  font-size: 16px;
+}
+
+dialog.mysec-end .live-buttons {
+  margin-block-start: 24px;
+}
+
+dialog.mysec-end h2:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (max-width: 767px) {
+  dialog.mysec-end {
+    inline-size: 100vw;
+    max-inline-size: 100vw;
+    block-size: 100dvh;
+    max-block-size: 100dvh;
+    margin: 0;
+    padding: 16px;
+    border: 0;
+  }
+
+  dialog.mysec-end .live-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  dialog.mysec-end .live-buttons button {
+    inline-size: 100%;
+  }
+}
+
+[data-security-screen="M05"] .mysec-changed:focus:not(:focus-visible),
+[data-security-screen="M05"] .mysec-op-summary h4:focus:not(:focus-visible) {
+  outline: none;
+}
+
+[data-security-screen="M05"] .mysec-ends {
+  margin-block: 16px 32px;
+}
+
+[data-security-screen="M05"] .mysec-ends h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+[data-security-screen="M05"] .mysec-ends > .live-meta {
+  max-inline-size: 68ch;
+}
+
+[data-security-screen="M05"] .mysec-ops,
+[data-security-screen="M05"] .mysec-op-list,
+[data-security-screen="M05"] .mysec-held-list,
+[data-security-screen="M05"] .mysec-item-group ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+[data-security-screen="M05"] .mysec-ops {
+  margin-block-start: 12px;
+}
+
+[data-security-screen="M05"] .mysec-op {
+  border-block-start: 1px solid var(--border-row);
+  padding-block: 16px;
+}
+
+[data-security-screen="M05"] .mysec-op-summary {
+  min-block-size: 44px;
+  display: list-item;
+  padding-block: 10px;
+  cursor: pointer;
+}
+
+[data-security-screen="M05"] .mysec-op-summary h4 {
+  display: inline;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  word-break: keep-all;
+}
+
+[data-security-screen="M05"] .mysec-op-body > * + * {
+  margin-block-start: 16px;
+}
+
+[data-security-screen="M05"] .mysec-op-state p,
+[data-security-screen="M05"] .mysec-held p,
+[data-security-screen="M05"] .mysec-gone,
+[data-security-screen="M05"] .mysec-equation,
+[data-security-screen="M05"] .mysec-op-row p,
+[data-security-screen="M05"] .mysec-item-group li {
+  max-inline-size: 68ch;
+  margin: 0;
+  word-break: keep-all;
+}
+
+[data-security-screen="M05"] .mysec-op-state p + p {
+  margin-block-start: 8px;
+}
+
+[data-security-screen="M05"] .mysec-strong {
+  font-weight: 600;
+}
+
+[data-security-screen="M05"] .mysec-op-lines {
+  max-inline-size: none;
+  margin: 16px 0 0;
+}
+
+[data-security-screen="M05"] .mysec-op-lines > div {
+  display: grid;
+  grid-template-columns: minmax(10rem, max-content) minmax(0, 1fr);
+  column-gap: 24px;
+  padding-block: 12px;
+  border-block-start: 1px solid var(--border-row);
+}
+
+[data-security-screen="M05"] .mysec-op-lines > div:last-child {
+  border-block-end: 1px solid var(--border-row);
+}
+
+[data-security-screen="M05"] .mysec-op-lines > div > dt {
+  font-weight: 600;
+  word-break: keep-all;
+}
+
+[data-security-screen="M05"] .mysec-op-lines dd {
+  margin: 0;
+  container-type: inline-size;
+}
+
+[data-security-screen="M05"] .mysec-counts {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 4px 24px;
+  margin: 8px 0 0;
+}
+
+@container (min-width: 380px) {
+  [data-security-screen="M05"] .mysec-counts {
+    grid-template-columns: repeat(4, max-content);
+  }
+}
+
+[data-security-screen="M05"] .mysec-counts > div {
+  min-inline-size: 0;
+}
+
+[data-security-screen="M05"] .mysec-counts dt {
+  font-size: 14px;
+  color: var(--text-muted);
+  word-break: keep-all;
+}
+
+[data-security-screen="M05"] .mysec-counts dd {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-security-screen="M05"] .mysec-equation {
+  margin-block-start: 8px;
+}
+
+[data-security-screen="M05"] .mysec-held h5,
+[data-security-screen="M05"] .mysec-op-sessions h5 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+[data-security-screen="M05"] .mysec-go-password {
+  min-block-size: 44px;
+  margin-block: 8px;
+  border: 0;
+  background: none;
+  padding: 10px 0;
+  color: var(--hb-ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font: inherit;
+  cursor: pointer;
+}
+
+[data-security-screen="M05"] .mysec-op-body > .live-sub .live-mono {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+[data-security-screen="M05"] .mysec-held-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  padding-block: 8px;
+  border-block-start: 1px solid var(--border-row);
+}
+
+[data-security-screen="M05"] .mysec-no-longer {
+  font-size: 14px;
+}
+
+[data-security-screen="M05"] .mysec-op-row {
+  border-block-start: 1px solid var(--border-row);
+  padding-block: 12px;
+  display: grid;
+  grid-template-columns: minmax(12rem, 34%) minmax(0, 1fr);
+  gap: 4px 24px;
+}
+
+[data-security-screen="M05"] .mysec-op-row .live-sub {
+  display: block;
+}
+
+[data-security-screen="M05"] .mysec-items summary {
+  min-block-size: 44px;
+  display: list-item;
+  padding-block: 10px;
+  cursor: pointer;
+}
+
+[data-security-screen="M05"] .mysec-item-group h6 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 8px 0 0;
+}
+
+[data-security-screen="M05"] .mysec-item-group li {
+  padding-block: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-security-screen="M05"] .mysec-reason {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+[data-security-screen="M05"] .mysec-checked {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+[data-security-screen="M05"] .mysec-check-again {
+  margin-block-start: 8px;
+}
+
+[data-security-screen="M05"] .mysec-tag {
+  display: block;
+  inline-size: max-content;
+  margin: 4px 0 0;
+  padding: 0 6px;
+  border: 1px solid var(--border-control);
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--hb-ink);
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  [data-security-screen="M05"] .mysec-op-row,
+  [data-security-screen="M05"] .mysec-op-lines > div {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 4px;
+  }
+}

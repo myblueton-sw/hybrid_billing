@@ -144,7 +144,7 @@ func TestHoldAllowsDecreasesOnly(t *testing.T) {
 		t.Errorf("a role decrease %s", got.raw)
 	}
 	f.code(t, "a role without a value", f.run(root, "identity.change_role", SampleAdmin2, nil), 503, string(commands.DependencyUnavailable))
-	if got := f.selfPost(root, "sessions/end", `{"session":"others"}`); got.status != 200 {
+	if got := f.selfPost(root, "sessions/end", f.othersBody(root)); got.status != 202 {
 		t.Errorf("ending sessions %s", got.raw)
 	}
 	if got := f.reauth(root, pw); got.status != 204 {

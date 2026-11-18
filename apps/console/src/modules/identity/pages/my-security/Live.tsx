@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, sequence, type AdminClient, type SelfPage, type SelfSession } from "../../../../service/admin";
+import { AdminError, sequence, type AdminClient, type SelfEnd, type SelfPage, type SelfSession } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
@@ -11,10 +11,15 @@ import { w } from "../users/live-copy";
 import { roleName } from "../users/live-model";
 import { when } from "../authentication/live-model";
 import { m } from "./live-copy";
-import { canChange, changeOutcome, checkChange, endOutcome, others } from "./live-model";
+import { canChange, changeOutcome, checkChange, heldTags, others, running } from "./live-model";
+import { e, whenSeconds } from "./end-copy";
+import { EndDialog, EndsRegion, stateSentence, type Check, type EndResult, type EndTarget } from "./EndOthers";
 import "../users/live.css";
 
-type Mode = { kind: "list" } | { kind: "password" } | { kind: "end"; handle: string } | { kind: "endAll" };
+type Mode = { kind: "list" } | { kind: "password" };
+
+const pollEvery = 2000;
+const pollWindow = 30000;
 
 const ltr = (s: string) => <bdi dir="ltr">{s}</bdi>;
 
@@ -154,49 +159,7 @@ function FailureNote({ focusKey, title, body }: { focusKey: number; title: strin
   );
 }
 
-function EndStep({ l, api, page, target, onDone, onCancel, onSignedOut }: {
-  l: Locale; api: AdminClient; page: SelfPage; target: Mode; onDone: (message: string) => void; onCancel: () => void; onSignedOut: () => void;
-}) {
-  const heading = useRef<HTMLHeadingElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [failure, setFailure] = useState("");
-  const [focusKey, setFocusKey] = useState(0);
-  useEffect(() => heading.current?.focus(), []);
-  const one = target.kind === "end" ? page.sessions.find((s) => s.handle === target.handle) : undefined;
-  const count = others(page).length;
-  const go = async () => {
-    if (busy) return;
-    setBusy(true);
-    setFailure("");
-    try {
-      const n = await api.endSessions(target.kind === "end" ? target.handle : "others");
-      onDone(m.ended(l, n));
-    } catch (err) {
-      const outcome = endOutcome(err);
-      if (outcome === "signedOut") { onSignedOut(); return; }
-      if (outcome === "gone") { onDone(m.endGone(l)); return; }
-      setFailure(outcome === "limited" ? m.endLimited(l, err instanceof AdminError ? err.retryAfter : 0) : outcome === "reauth" ? c.reauthText(l, err instanceof AdminError ? err.failure : "") : m.unknownResult(l));
-      setFocusKey((k) => k + 1);
-    } finally {
-      setBusy(false);
-    }
-  };
-  const title = target.kind === "end" ? m.endOneTitle(l) : m.endAllTitle(l);
-  return (
-    <section className="live-step" aria-labelledby="mysec-end-title">
-      <h2 id="mysec-end-title" tabIndex={-1} ref={heading}>{title}</h2>
-      {failure && <FailureNote focusKey={focusKey} title={w.saveFailed(l)} body={failure} />}
-      {one && <Facts items={[[m.reference(l), <span className="live-mono">{ltr(one.handle)}</span>], [m.colSignedIn(l), when(l, one.signed_in)], [m.colEnds(l), when(l, one.ends)]]} />}
-      <p className="live-impact">{target.kind === "end" ? m.endOneImpact(l) : m.endAllImpact(l, count)}</p>
-      <div className="live-buttons">
-        <button type="button" className="live-primary" aria-busy={busy || undefined} disabled={busy} onClick={go}>{busy ? w.saving(l) : target.kind === "end" ? m.endOneButton(l) : m.endAllButton(l)}</button>
-        <button type="button" className="live-secondary" onClick={onCancel}>{w.cancel(l)}</button>
-      </div>
-    </section>
-  );
-}
-
-function SessionTable({ l, rows, selected, onEnd, onSignOut }: { l: Locale; rows: SelfSession[]; selected: string; onEnd: (s: SelfSession) => void; onSignOut: () => void }) {
+function SessionTable({ l, rows, held, onEnd, onSignOut }: { l: Locale; rows: SelfSession[]; held: Set<string>; onEnd: (s: SelfSession) => void; onSignOut: () => void }) {
   return (
     <div className="security-table-scroll live-table mysec-sessions">
       <table role="table">
@@ -209,8 +172,9 @@ function SessionTable({ l, rows, selected, onEnd, onSignOut }: { l: Locale; rows
         </tr></thead>
         <tbody role="rowgroup">
           {rows.map((s) => (
-            <tr key={s.handle} role="row" className={selected === s.handle ? "live-selected" : undefined}>
+            <tr key={s.handle} role="row">
               <td role="cell" className="live-user">{s.current ? m.thisSession(l) : m.otherSession(l)}
+                {held.has(s.handle) && <span className="mysec-tag">{e.tag(l)}</span>}
                 <span className="live-sub">{m.reference(l)} <span className="live-mono">{ltr(s.handle)}</span></span></td>
               <td role="cell" data-label={m.colSignedIn(l)}>{when(l, s.signed_in)}</td>
               <td role="cell" data-label={m.colEnds(l)}>{when(l, s.ends)}</td>
@@ -263,22 +227,73 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
     setFocusTo("");
   }, [focusTo]);
   const say = (text: string) => { setNotice(text); setAnnounce(""); setTimeout(() => setAnnounce(text), 50); };
-  const load = useCallback(() => {
+  const [endTarget, setEndTarget] = useState<EndTarget | null>(null);
+  const invoker = useRef<HTMLElement | null>(null);
+  const [changedNote, setChangedNote] = useState("");
+  const [opened, setOpened] = useState<Record<string, boolean>>({});
+  const [check, setCheck] = useState<Check>({ at: "", mode: "idle" });
+  const [deadline, setDeadline] = useState(0);
+  const states = useRef<Record<string, string>>({});
+  const remember = (got: SelfPage) => { for (const op of got.session_ends) states.current[op.operation] = op.state; };
+  const load = useCallback((after?: (got: SelfPage) => void) => {
     const n = order.current.next();
     api.me().then(
-      (got) => { if (order.current.latest(n)) { setPage(got); setStatus("ready"); setError(null); } },
-      (e) => {
+      (got) => {
         if (!order.current.latest(n)) return;
-        if (e instanceof AdminError && e.failure === "unauthenticated") setSignedOut((s) => s || "plain");
-        setError(e);
+        remember(got);
+        setPage(got);
+        setStatus("ready");
+        setError(null);
+        after?.(got);
+      },
+      (err) => {
+        if (!order.current.latest(n)) return;
+        if (err instanceof AdminError && err.failure === "unauthenticated") setSignedOut((s) => s || "plain");
+        setError(err);
         setStatus("error");
       },
     );
   }, [api]);
+  const poll = useCallback((restart: boolean) => {
+    const n = order.current.next();
+    api.me().then(
+      (got) => {
+        if (!order.current.latest(n)) return;
+        const changed = got.session_ends.find((op) => states.current[op.operation] === "cleanup_running" && op.state !== "cleanup_running");
+        remember(got);
+        setPage(got);
+        if (changed) say(stateSentence(l, changed));
+        const live = running(got);
+        if (restart && live) setDeadline(Date.now() + pollWindow);
+        setCheck({ at: got.now, mode: live ? "polling" : "idle" });
+        if (document.activeElement === document.body) {
+          const newest = got.session_ends[0];
+          if (newest) setFocusTo(`#mysec-op-${newest.operation}`);
+        }
+      },
+      (err) => {
+        if (!order.current.latest(n)) return;
+        if (err instanceof AdminError && err.failure === "unauthenticated") { setSignedOut((s) => s || "plain"); return; }
+        setDeadline(0);
+        setCheck((c0) => ({ at: c0.at, mode: "failed" }));
+      },
+    );
+  }, [api, l]);
+  useEffect(() => {
+    if (!deadline || !running(page) || view !== "sessions") return;
+    if (Date.now() >= deadline) {
+      setDeadline(0);
+      setCheck((c0) => ({ at: c0.at, mode: "stopped" }));
+      say(e.stillRunning(l, whenSeconds(l, page ? page.now : "")));
+      return;
+    }
+    const timer = setTimeout(() => poll(false), pollEvery);
+    return () => clearTimeout(timer);
+  }, [deadline, page, poll, view, l]);
   useEffect(() => { if (view !== "recovery" && view !== "notifications") load(); }, [load, view]);
   const viewRef = useRef(view);
   useEffect(() => {
-    if (viewRef.current !== view) { setMode({ kind: "list" }); setNotice(""); if (!pending.current) setFormKey((k) => k + 1); }
+    if (viewRef.current !== view) { setMode({ kind: "list" }); setNotice(""); setChangedNote(""); setDeadline(0); if (!pending.current) setFormKey((k) => k + 1); }
     viewRef.current = view;
   }, [view]);
   useEffect(() => { if (!pending.current) setFormKey((k) => k + 1); }, [l]);
@@ -304,7 +319,7 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
       </div>
       <div className="live-tools">
         {tools}
-        <button type="button" className="live-secondary" onClick={() => { setNotice(""); load(); }}>{w.reload(l)}</button>
+        <button type="button" className="live-secondary" onClick={() => { setNotice(""); setChangedNote(""); load(); }}>{w.reload(l)}</button>
       </div>
     </div>
   );
@@ -315,7 +330,7 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
         <section className="live-error" role="alert">
           <h2>{m.loadFailed(l)}</h2>
           <p>{m.loadRetry(l)}</p>
-          <button type="button" className="live-secondary" onClick={load}>{c.tryAgain(l)}</button>
+          <button type="button" className="live-secondary" onClick={() => load()}>{c.tryAgain(l)}</button>
         </section>
       )}
     </>
@@ -348,8 +363,7 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
     );
   }
   const stepping = !wide && mode.kind !== "list";
-  const backTo = mode.kind === "end" ? `[data-session="${mode.handle}"]` : mode.kind === "endAll" ? ".mysec-end-others" : ".mysec-password-open";
-  const back = () => { setMode({ kind: "list" }); setFocusTo(backTo); };
+  const back = () => { setMode({ kind: "list" }); setFocusTo(".mysec-password-open"); };
   if (view === "methods") {
     const form = page && (
       <PasswordForm key={formKey} l={l} api={api} page={page} stepping={stepping} hadWrong={hadWrong} pending={pending} onWrong={() => setHadWrong(true)}
@@ -401,11 +415,46 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
     );
   }
   const rows = page?.sessions ?? [];
-  const selected = mode.kind === "end" ? mode.handle : "";
-  const finishEnd = (message: string) => { say(message); setMode({ kind: "list" }); load(); setFocusTo("#mysec-sessions-title"); };
-  const step = page && (mode.kind === "end" || mode.kind === "endAll")
-    ? <EndStep key={mode.kind === "end" ? mode.handle : "all"} l={l} api={api} page={page} target={mode} onDone={finishEnd} onCancel={back} onSignedOut={() => setSignedOut("plain")} />
-    : null;
+  const openEnd = (target: EndTarget) => {
+    invoker.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setNotice("");
+    setChangedNote("");
+    setEndTarget(target);
+  };
+  const backFocus = () => {
+    const el = invoker.current;
+    if (el && el.isConnected) el.focus();
+    else setFocusTo("#mysec-sessions-title");
+  };
+  const showOp = (op: SelfEnd) => {
+    setPage((p) => (p ? { ...p, session_ends: [op, ...p.session_ends.filter((o) => o.operation !== op.operation)].slice(0, 5) } : p));
+    states.current[op.operation] = op.state;
+    setOpened((o) => ({ ...o, [op.operation]: true }));
+    const held = op.kind === "others" && op.not_included.length > 0 ? " " + e.heldAnnounce(l, op.not_included.length) : "";
+    say((op.replay ? e.replay(l) + " " : "") + stateSentence(l, op) + held);
+    setNotice("");
+    setFocusTo(`#mysec-op-${op.operation}`);
+    load((got) => {
+      setCheck({ at: got.now, mode: running(got) ? "polling" : "idle" });
+      if (running(got)) setDeadline(Date.now() + pollWindow);
+    });
+  };
+  const closeEnd = (r: EndResult) => {
+    setEndTarget(null);
+    if (r.type === "done") { showOp(r.op); return; }
+    if (r.type === "signedOut") { setSignedOut("plain"); return; }
+    if (r.type === "changed" || r.type === "gone") {
+      const text = r.type === "changed" ? e.changed(l) : m.endGone(l);
+      load(() => { setChangedNote(text); say(text); setFocusTo(".mysec-changed"); });
+      return;
+    }
+    if (r.type === "reload") {
+      load((got) => setFocusTo(got.session_ends[0] ? `#mysec-op-${got.session_ends[0].operation}` : "#mysec-sessions-title"));
+      return;
+    }
+    backFocus();
+  };
+  const dialog = page && endTarget && <EndDialog l={l} api={api} page={page} target={endTarget} onClose={closeEnd} />;
   const limits = page && (
     <section aria-labelledby="mysec-limits-title">
       <h2 id="mysec-limits-title" className="live-title">{m.limitsTitle(l)}</h2>
@@ -426,13 +475,15 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
         <div className="live-list live-sections">
           <section aria-labelledby="mysec-sessions-title">
             {toolbar("mysec-sessions-title", m.sessionsTitle(l), page && <p className="live-meta">{m.count(l, rows.length)}</p>,
-              page && others(page).length > 0 && <button type="button" className="live-secondary mysec-end-others" onClick={() => { setNotice(""); setMode({ kind: "endAll" }); }}>{m.endOthers(l)}</button>)}
-            {notice && <p className="service-status">{notice}</p>}
+              page && others(page).length > 0 && <button type="button" className="live-secondary mysec-end-others" onClick={() => openEnd({ kind: "others" })}>{e.entry(l)}</button>)}
+            {changedNote && <p className="service-status mysec-changed" tabIndex={-1}>{changedNote}</p>}
             {loadState}
             {page && (
               <>
+                <EndsRegion l={l} page={page} opened={opened} onToggle={(op, open) => setOpened((o) => ({ ...o, [op]: open }))} check={check}
+                  onEndHeld={(handle) => openEnd({ kind: "one", handle })} onGoPassword={() => onView("methods")} onCheckAgain={() => poll(true)} />
                 {prelaunch(m.staleNote(l, page.idle_minutes))}
-                <SessionTable l={l} rows={rows} selected={selected} onSignOut={onSignOut} onEnd={(s) => { setNotice(""); setMode({ kind: "end", handle: s.handle }); }} />
+                <SessionTable l={l} rows={rows} held={heldTags(page)} onSignOut={onSignOut} onEnd={(s) => openEnd({ kind: "one", handle: s.handle })} />
                 {others(page).length === 0 && <p className="live-empty">{m.noOthers(l)}</p>}
               </>
             )}
@@ -440,13 +491,8 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
           {!wide && limits}
         </div>
       )}
-      {page && wide && <aside className="live-panel" aria-label={m.limitsTitle(l)}>{step ?? limits}</aside>}
-      {stepping && step && (
-        <aside className="live-panel" aria-label={m.sessionsTitle(l)}>
-          <button type="button" className="service-button-link live-back" onClick={back}>{m.backSessions(l)}</button>
-          {step}
-        </aside>
-      )}
+      {page && wide && <aside className="live-panel" aria-label={m.limitsTitle(l)}>{limits}</aside>}
+      {dialog}
     </div>
   );
 }

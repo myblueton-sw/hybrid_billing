@@ -228,6 +228,10 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cookie, answer, csrf, ok := s.signIn(login, workspace, r.TLS != nil, generation)
+	if !ok && s.sessions.overflowed(login) {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
 	if !ok {
 		failCode(w, commands.Unauthenticated, request)
 		return

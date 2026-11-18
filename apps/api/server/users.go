@@ -325,6 +325,10 @@ func (s *Server) endSessions(login string) {
 func (s *Server) probe(login string) (identity.Verifier, error) {
 	v := verifierOf(random(tokenBytes))
 	err := s.identity.Boundary().OpenSession(LoginTriple(login), v, time.Minute, time.Minute)
+	if errors.Is(err, identity.ErrLimit) {
+		s.settleDenied(login)
+		err = s.identity.Boundary().OpenSession(LoginTriple(login), v, time.Minute, time.Minute)
+	}
 	for tries := 0; errors.Is(err, identity.ErrLimit) && tries < maxEvictions; tries++ {
 		old, ok := s.sessions.oldest(login, v)
 		if !ok {

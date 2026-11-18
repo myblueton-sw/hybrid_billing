@@ -594,7 +594,7 @@ Read: `GET /api/v1/identity/services` (`boundary.go:34`), client and parser `adm
 
 ## M05 My security
 
-Read: `GET /api/v1/me` (`boundary.go:35`), client and parser `admin.ts:938-956`, called at `my-security/Live.tsx:268` for every view except recovery and notifications (`:278`). Server shape `selfPage` (`self.go:34-49`) with `selfSession` (`self.go:22-27`) and `selfIdentity` (`self.go:29-32`). The `identities` and `sessions` arrays are cast without per-field normalisation (`admin.ts:946, 949`). Calls outside the command path: `POST /api/v1/me/password` (`boundary.go:48`, `admin.ts:957-959`) and `POST /api/v1/me/sessions/end` (`boundary.go:49`, `admin.ts:960-963`, answer `ended`, `self.go:167`).
+Read: `GET /api/v1/me` (`boundary.go:35`), client and parser `admin.ts:978-998`, called at `my-security/Live.tsx` `load` and `poll` for every view except recovery and notifications. Server shape `selfPage` (`self.go:34-51`) with `selfSession` (`self.go:22-27`), `selfIdentity` (`self.go:29-32`) and, since HYB-307, `sessions_generation` (`self.go:42`, an opaque per-login token) and `session_ends` (`self.go:43`, `selfEndView` at `selfend.go:68-83`). Sessions are normalised field by field (`selfSessionOf`, `service/self-end.ts`); `identities` is still cast without per-field normalisation. Calls outside the command path: `POST /api/v1/me/password` (`boundary.go:48`) and `POST /api/v1/me/sessions/end` (`boundary.go:49`, handler `selfend.go:267`; client `endOthers` and `endOne`, `admin.ts:1003-1011`; answer parsed by `selfEndOf`, `service/self-end.ts:47`).
 
 ### Views and page states
 
@@ -606,7 +606,6 @@ Read: `GET /api/v1/me` (`boundary.go:35`), client and parser `admin.ts:938-956`,
 | All views | Loading | derived: no page yet | none | `my-security/Live.tsx:313` |
 | All views | Load failed, Try again | any other failed `me` read | `admin.ts:776-783` | `my-security/Live.tsx:314-320` |
 | All views | Loaded at | `now` (`self.go:48`) | `admin.ts:954` | `my-security/Live.tsx:303` |
-| Sessions view | Done notice | derived: end-session result copy | none | `my-security/Live.tsx:265, 430` |
 
 ### Account view
 
@@ -644,25 +643,32 @@ Read: `GET /api/v1/me` (`boundary.go:35`), client and parser `admin.ts:938-956`,
 | View/area | Displayed field, column or state | Source | Parser | Rendered at |
 | --- | --- | --- | --- | --- |
 | Header | Session count | derived: number of `sessions[]` | `admin.ts:949` | `my-security/Live.tsx:428` |
-| Header | End all other sessions | derived: at least one session with `current` false (`my-security/live-model.ts:16-18`) | `admin.ts:949` | `my-security/Live.tsx:429` |
 | Sessions | Stale-list note with idle minutes | `idle_minutes` (`self.go:44`) | `admin.ts:950` | `my-security/Live.tsx:434` |
 | Sessions table | Column headings | fixed copy | none | `my-security/Live.tsx:204-209` |
 | Sessions table | This or other session, reference | `sessions[].current`, `handle` (`self.go:23-24`) | `admin.ts:949` | `my-security/Live.tsx:213-214` |
 | Sessions table | Signed in | `sessions[].signed_in` (`self.go:25`) | `admin.ts:949` | `my-security/Live.tsx:215` |
 | Sessions table | Ends | `sessions[].ends` (`self.go:26`) | `admin.ts:949` | `my-security/Live.tsx:216` |
-| Sessions table | Sign out here, or End | derived from `current` | `admin.ts:949` | `my-security/Live.tsx:217-221` |
 | Sessions | No other sessions | derived | none | `my-security/Live.tsx:436` |
 | Limits | Idle limit | `idle_minutes` | `admin.ts:950` | `my-security/Live.tsx:413` |
 | Limits | Longest session | fixed copy `m.longestValue`, not from the read | none | `my-security/Live.tsx:414` |
 | Limits | Maximum sign-in age | `max_age_seconds` (`self.go:45`); none when zero | `admin.ts:951` | `my-security/Live.tsx:415` |
 | Limits | You signed in, last confirmed | `signed_in_at`, `authenticated_at` (`self.go:46-47`) | `admin.ts:952-953` | `my-security/Live.tsx:416-417` |
 | Limits | Recent access history not available note | fixed copy | none | `my-security/Live.tsx:419` |
-| End step | Reference, signed in, ends (one session) | `handle`, `signed_in`, `ends` of the chosen session | `admin.ts:949` | `my-security/Live.tsx:165, 189` |
-| End step | Impact (one, or all others with count) | derived count of other sessions | none | `my-security/Live.tsx:166, 190` |
-| End step | Call | `POST /api/v1/me/sessions/end` with `session` = handle or `others` | `admin.ts:960-963` | `my-security/Live.tsx:172` |
-| End step | Ended N | answer `ended` (`self.go:167`) | `admin.ts:962` | `my-security/Live.tsx:173` |
-| End step | Session already gone | `invalid_request` → `invalid` (`my-security/live-model.ts:41-49`) | `admin.ts:754` | `my-security/Live.tsx:177` |
-| End step | Limited, step-up needed, result unknown | `rate_limited`, `reauthentication_required` or cancelled, other | `admin.ts:758, 766, 842` | `my-security/Live.tsx:178, 188` |
+| Header | End other sessions (entry) | derived: at least one session with `current` false (`my-security/live-model.ts` `others`) | `admin.ts:990` | `my-security/Live.tsx:478` |
+| Sessions table | Sign out here, or End (opens the single-session dialog) | derived from `current` | `admin.ts:990` | `my-security/Live.tsx:176-186` |
+| Sessions table | Started after your list tag | `session_ends[newest others].not_included[].handle` still in `sessions[]` (`live-model.ts` `heldTags`) | `self-end.ts:47` | `my-security/Live.tsx:177` |
+| Sessions | List changed notice (after a 422) | `invalid_request` → `changed` (others) or `gone` (one) (`live-model.ts` `submitOutcome`) | `admin.ts` `failureOf` | `my-security/Live.tsx:479` |
+| End dialog | Fresh list, its time with seconds, this session's reference | a second `GET /me`: `sessions[]` with `current` false, `now`, the current `handle` | `admin.ts:978-998` | `my-security/EndOthers.tsx:41, 113-140` |
+| End dialog | Call (others) | `POST /api/v1/me/sessions/end` with `session` `others`, `generation` = the read's `sessions_generation`, `handles` = the listed rows | `admin.ts:1003-1007` | `my-security/EndOthers.tsx:70` |
+| End dialog | Call (one) | the same route with `session` = handle | `admin.ts:1008-1011` | `my-security/EndOthers.tsx:70` |
+| End dialog | Limited, step-up refused or cancelled, MFA rule, result unknown, Reload and close | `rate_limited`, `reauthentication_required`, `prerequisite_failed`, other (`live-model.ts` `submitOutcome`) | `admin.ts` `failureOf` | `my-security/EndOthers.tsx:72-80, 142-152` |
+| Recent session ends | Operation heading, blocked time, cleanup word, reference, replay line | `session_ends[].kind`, `blocked_at`, `state`, `count`, `operation`, `replay` (`selfend.go:68-83`) | `self-end.ts:47` | `my-security/EndOthers.tsx:208-221` |
+| Recent session ends | State sentence | `state`, `count`, `cleanup.failed` | `self-end.ts:47` | `my-security/EndOthers.tsx:221` |
+| Recent session ends | Access blocked line; Cleanup line, counts and sentence | `blocked_at`, `count`; `cleanup.done`, `already_ended`, `pending`, `failed` | `self-end.ts:47` | `my-security/EndOthers.tsx:222-243` |
+| Recent session ends | Started after your list block with End actions | `not_included[]` (kind `others` only), presence in `sessions[]` | `self-end.ts:47` | `my-security/EndOthers.tsx:246-263` |
+| Recent session ends | Changed with nothing to list; already gone count | `generation_changed`; `sessions[].result` = `already_gone` | `self-end.ts:47` | `my-security/EndOthers.tsx:264-265` |
+| Recent session ends | Per-session result and cleanup details (C1–C8 by group, outside-scope rows always shown) | `sessions[].result`, `sessions[].items[]` | `self-end.ts:47` | `my-security/EndOthers.tsx:157-189, 266-286` |
+| Recent session ends | Checked at, still in progress, could not check, Check again | `now` of each poll; client 2 s polling for at most 30 s | `admin.ts:978-998` | `my-security/EndOthers.tsx:290-297`, `Live.tsx:258-291` |
 
 **Parsed but not displayed on M05:** none found beyond `identities[].method`.
 
@@ -670,4 +676,4 @@ Read: `GET /api/v1/me` (`boundary.go:35`), client and parser `admin.ts:938-956`,
 
 - **Unknown.** None of the rows above is marked unknown.
 - **Server fields that no console parser reads:** `trust.stricter_fields` (`policy.go:69`, not in `policyPageOf`, `admin.ts:568-573`); `impact.api_keys` and `impact.pending_jobs` (`bulkread.go:85, 87`, not in `detailOf`; the preview shows fixed "not applicable" copy instead, `users/BulkPrepare.tsx:73, 77`); `revocations[].target_version` (`revocations.go:35`, not in the `Revocation` type, `admin.ts:167-190`, although the spread at `admin.ts:900-901` keeps it at run time); trust command result `fields.reason` and `fields.your_session_ended` (`trust.go:314, 320`), `fields.change_revision` (`trust.go:143`); set-role-period result `fields.role_until` (`periods.go:130`); bulk result `fields.digest`, `fields.targets` and `fields.count` (`bulk.go:40, 105`, `bulkstage.go:86`).
-- **Parser type wider than the read.** `access`, `services` and `me` cast their row arrays without checking each field (`admin.ts:891-894, 921, 946, 949`), unlike `userRowOf`, `trustChangeOf` and the bulk parsers. A missing field arrives as `undefined` rather than an empty string or zero.
+- **Parser type wider than the read.** `access`, `services` and `me` cast their row arrays without checking each field (`admin.ts:891-894, 921`, and `identities` in `me`), unlike `userRowOf`, `trustChangeOf` and the bulk parsers. A missing field arrives as `undefined` rather than an empty string or zero.

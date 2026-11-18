@@ -146,6 +146,11 @@ type Server struct {
 	stopOnce        sync.Once
 	manual          bool
 	awaiting        map[string]awaitingReplay
+	selfEnds        map[string][]*selfEnd
+	selfSeq         uint64
+	retries         map[identity.Verifier]*selfRetry
+	selfEndHook     func()
+	accessHook      func(identity.Verifier)
 }
 
 func IdentityLimits() identity.Limits {
@@ -206,7 +211,7 @@ func New(cfg Config) (*Server, error) {
 		return nil, ErrConfig
 	}
 	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{},
-		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}, plans: newPlanStore(), drafts: newDraftStore(), relLimits: RelationshipLimits(),
+		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}, selfEnds: map[string][]*selfEnd{}, retries: map[identity.Verifier]*selfRetry{}, plans: newPlanStore(), drafts: newDraftStore(), relLimits: RelationshipLimits(),
 		contracts: newContractStore(), install: newInstallStore(), integ: newIntegrationStore(), signer: newSeedSigner(), rec: newRecoveryStore(),
 		ret: newRetentionStore(), ev: newEvidenceStore(), progress: map[string]trustProgress{}, random: rand.Reader, memberLedger: map[string]string{},
 		replayNotes: map[string]string{}, awaiting: map[string]awaitingReplay{}, stop: make(chan struct{}), wake: make(chan struct{}, 1)}

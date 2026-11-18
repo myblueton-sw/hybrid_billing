@@ -83,7 +83,9 @@ func (s *Server) startCleanup(v bulkrevoke.View) {
 }
 
 func (s *Server) drainCleanup() int {
-	done := 0
+	s.domain.Lock()
+	done := s.drainSelfEnds()
+	s.domain.Unlock()
 	for {
 		s.domain.Lock()
 		leases, err := s.jobs.Lease(cleanupWorker, []string{cleanupKind}, 1)

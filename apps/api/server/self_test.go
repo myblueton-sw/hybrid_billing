@@ -275,14 +275,14 @@ func TestEndOwnSessions(t *testing.T) {
 	if f.s.counter != before+1 {
 		t.Errorf("counter %d -> %d", before, f.s.counter)
 	}
-	if got.status != 200 || fmt.Sprint(got.body["ended"]) != "1" {
+	if got.status != 202 || fmt.Sprint(got.body["count"]) != "1" || got.body["kind"] != "one" || len(got.body["not_included"].([]any)) != 0 {
 		t.Fatalf("end one %+v", got)
 	}
 	if n := len(f.me(a).body["sessions"].([]any)); n != 2 {
 		t.Errorf("after one %d", n)
 	}
-	got = f.selfPost(a, "sessions/end", `{"session":"others"}`)
-	if got.status != 200 || fmt.Sprint(got.body["ended"]) != "1" {
+	got = f.selfPost(a, "sessions/end", f.othersBody(a))
+	if got.status != 202 || fmt.Sprint(got.body["count"]) != "1" || got.body["state"] != "complete" {
 		t.Fatalf("end others %+v", got)
 	}
 	f.code(t, "b ended", f.me(b), 401, string(commands.Unauthenticated))
@@ -303,7 +303,7 @@ func TestEndingASessionDropsItsPickups(t *testing.T) {
 	if _, ok := f.s.dir.pickups[ref]; !ok {
 		t.Fatal("no pickup")
 	}
-	f.selfPost(a, "sessions/end", `{"session":"others"}`)
+	f.selfPost(a, "sessions/end", f.othersBody(a))
 	if _, ok := f.s.dir.pickups[ref]; ok {
 		t.Error("an ended session's pickup was kept")
 	}

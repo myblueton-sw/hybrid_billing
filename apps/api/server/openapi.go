@@ -37,6 +37,7 @@ func (s *Server) Document() ([]byte, error) {
 		}
 	}
 	doc["x-reads"] = map[string]any{"/identity/users": usersReadPath(), "/identity/users/count": usersCountPath(), "/identity/bulk-revocations": bulkReadsPath()}
+	doc["x-self"] = selfPaths()
 	return json.MarshalIndent(doc, "", "  ")
 }
 

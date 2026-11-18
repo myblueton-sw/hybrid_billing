@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AdminError, adminClient, attempt, failureOf, ledgerOf, outcomeOf, planOf, reauthenticate, sequence, usersQueryString } from "./admin";
+import { selfEndOf, selfSessionOf } from "./self-end";
 
 type Call = { url: string; init: RequestInit };
 
@@ -248,12 +249,13 @@ test("secret returns only a well-formed secret and credential", async () => {
 
 test("self reads and commands", async () => {
   const page = { user_id: "u", login: "l", email: "e", workspace: "w", role: "member", identities: [{ method: "local-password", login: "l" }], password_set: true,
-    installation_administrator: false, sessions: [{ handle: "h", current: true, signed_in: "a", ends: "b" }], idle_minutes: 30, max_age_seconds: 3600, signed_in_at: "a", authenticated_at: "c", now: "n" };
+    installation_administrator: false, sessions: [{ handle: "h", current: true, signed_in: "a", ends: "b" }], sessions_generation: "g", session_ends: [], idle_minutes: 30,
+    max_age_seconds: 3600, signed_in_at: "a", authenticated_at: "c", now: "n" };
   const r = fake(200, page);
   assert.deepEqual(await adminClient("t", r.f).me(), page);
   assert.equal(r.calls[0].url, "/api/v1/me");
   const empty = await adminClient("t", fake(200, {}).f).me();
-  assert.deepEqual([empty.identities, empty.sessions, empty.password_set, empty.max_age_seconds], [[], [], false, 0]);
+  assert.deepEqual([empty.identities, empty.sessions, empty.password_set, empty.max_age_seconds, empty.sessions_generation, empty.session_ends], [[], [], false, 0, "", []]);
   const sent: Call[] = [];
   const noContent = (async (url: string, init: RequestInit) => {
     sent.push({ url, init });
@@ -262,10 +264,13 @@ test("self reads and commands", async () => {
   await adminClient("t", noContent).changePassword("a", "b");
   assert.equal(sent[0].url, "/api/v1/me/password");
   assert.equal(sent[0].init.body, JSON.stringify({ current: "a", new: "b" }));
-  const e = fake(200, { ended: 2 });
-  assert.equal(await adminClient("t", e.f).endSessions("others"), 2);
-  assert.equal(e.calls[0].init.body, JSON.stringify({ session: "others" }));
-  assert.equal(await adminClient("t", fake(200, {}).f).endSessions("x"), 0);
+  const e = fake(202, { operation: "session-end-1", kind: "others", count: 2, state: "cleanup_running" });
+  const op = await adminClient("t", e.f).endOthers("g", ["a", "b"]);
+  assert.deepEqual([op.operation, op.count, op.state], ["session-end-1", 2, "cleanup_running"]);
+  assert.equal(e.calls[0].init.body, JSON.stringify({ session: "others", generation: "g", handles: ["a", "b"] }));
+  const one = fake(202, { kind: "one", not_included: [{ handle: "x" }] });
+  assert.deepEqual((await adminClient("t", one.f).endOne("h1")).not_included, []);
+  assert.equal(one.calls[0].init.body, JSON.stringify({ session: "h1" }));
   for (const [code, failure] of [["current_password_wrong", "wrong"], ["password_locked", "locked"], ["password_form", "form"]]) {
     await assert.rejects(adminClient("t", fake(422, { code }).f).changePassword("a", "b"), (x: AdminError) => x.failure === failure);
   }
@@ -387,8 +392,8 @@ test("cancel does not resend and a second refusal does not loop", async () => {
   assert.equal(prompts, 1);
   const plain = scripted([[403, refusal]]);
   await assert.rejects(adminClient("t", plain.f).command("identity.suspend_user", "u1", "r3", "why", {}, attempt()), (e: AdminError) => e.failure === "reauth");
-  const sessions = scripted([[403, refusal], [200, { ended: 2 }]]);
-  assert.equal(await adminClient("t", sessions.f, async () => true).endSessions("others"), 2);
+  const sessions = scripted([[403, refusal], [202, { count: 2 }]]);
+  assert.equal((await adminClient("t", sessions.f, async () => true).endOthers("g", ["a"])).count, 2);
   assert.equal(sessions.calls.length, 2);
 });
 
@@ -480,4 +485,21 @@ test("a plan row carries its draft block or null", () => {
   assert.deepEqual(planOf({ draft: {} }).draft, { id: "", name: "", group: "", new_group: false, member_count: 0 });
   assert.equal(planOf({ draft: null }).draft, null);
   assert.equal(planOf({}).draft, null);
+});
+
+test("session end answers are parsed field by field into a closed shape", () => {
+  const op = selfEndOf({
+    operation: "session-end-3", kind: "others", count: 1, state: "cleanup_incomplete", blocked_at: "t", list_generation: "a", current_generation: "b", generation_changed: true,
+    digest: "d", cleanup: { done: 0, already_ended: 0, failed: 1, pending: 0 }, replay: true,
+    sessions: [{ handle: "h", signed_in: "s", result: "ended", items: [{ item: "C3", state: "failed", reason: "retry_budget_spent" }, { item: "C9", state: "weird" }] },
+      { handle: "g", result: "already_gone" }, { handle: "q", result: "nonsense" }],
+    not_included: [{ handle: "n", signed_in: "s2" }, "junk"],
+  });
+  assert.deepEqual(op.sessions.map((s) => s.result), ["ended", "already_gone", "already_gone"]);
+  assert.deepEqual(op.sessions[0].items, [{ item: "C3", state: "failed", reason: "retry_budget_spent" }, { item: "C9", state: "pending", reason: "" }]);
+  assert.deepEqual(op.not_included, [{ handle: "n", signed_in: "s2" }, { handle: "", signed_in: "" }]);
+  assert.deepEqual([op.state, op.generation_changed, op.replay, op.cleanup.failed], ["cleanup_incomplete", true, true, 1]);
+  const empty = selfEndOf(null);
+  assert.deepEqual([empty.kind, empty.state, empty.count, empty.sessions, empty.not_included], ["others", "cleanup_running", 0, [], []]);
+  assert.deepEqual(selfSessionOf({ handle: 5, current: "yes" }), { handle: "", current: false, signed_in: "", ends: "" });
 });

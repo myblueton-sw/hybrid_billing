@@ -1,3 +1,5 @@
+import { RefusalDetail } from "../../../../service/RefusalDetail";
+import { refusalDetail, type RefusalDetail as Detail } from "../../../../service/refusal";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, type AdminClient } from "../../../../service/admin";
@@ -8,7 +10,7 @@ import { k } from "./live-copy";
 import { r } from "./rights-copy";
 import { actionRight, markLost } from "./live-rights";
 import {
-  clearDraft, commandRight, deniedOutcome, discard, draftOf, fieldReaction, frozenValues, groupOf, keepDraft, pendingFor, pendingNow, react, reasonProblem, settle, snapshotOf, utf8Bytes,
+  currentScope, clearDraft, commandRight, deniedOutcome, discard, draftOf, fieldReaction, frozenValues, groupOf, keepDraft, pendingFor, pendingNow, react, reasonProblem, settle, snapshotOf, utf8Bytes,
   type CommandKey, type Reaction, type Selection,
 } from "./live-model";
 
@@ -19,11 +21,12 @@ export type Shared = {
   me: string;
   selection: Selection;
   canCommand: boolean;
+  onAttempt?: () => void;
   onDone: (text: string) => void;
-  onNotice: (text: string) => void;
+  onNotice: (text: string, detail?: Detail) => void;
   onReload: () => Promise<IntegrationsPage | null>;
-  onSignedOut: () => void;
-  onLostAccess: () => void;
+  onSignedOut: (detail?: Detail) => void;
+  onLostAccess: (detail?: Detail) => void;
 };
 
 export type ChoiceField = "destination" | "types";
@@ -59,6 +62,7 @@ export function CommandForm(props: FormProps) {
   const [summaryKey, setSummaryKey] = useState(0);
   const [step, setStep] = useState<"edit" | "confirm">("edit");
   const [busy, setBusy] = useState(false);
+  const [detail, setDetail] = useState<Detail>();
   const [message, setMessage] = useState<{ text: string; alert: boolean } | null>(null);
   const confirmTitle = useRef<HTMLHeadingElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
@@ -70,6 +74,7 @@ export function CommandForm(props: FormProps) {
   useEffect(() => {
     discard(command, target, { ...values, rationale: rationale.trim() });
     setChoiceErrors([]);
+    setDetail(undefined);
   }, [shown]);
 
   const set = (v: string) => {
@@ -78,6 +83,7 @@ export function CommandForm(props: FormProps) {
     discard(command, target, { ...values, rationale: v.trim() });
     setReasonError("");
     setMessage(null);
+    setDetail(undefined);
   };
 
   const reasonText = (v: string) => {
@@ -87,6 +93,7 @@ export function CommandForm(props: FormProps) {
 
   const review = (e: FormEvent) => {
     e.preventDefault();
+    setDetail(undefined);
     const found = reasonText(rationale);
     const choices = props.choiceProblems ? props.choiceProblems() : [];
     setReasonError(found);
@@ -97,29 +104,37 @@ export function CommandForm(props: FormProps) {
 
   const send = async () => {
     if (busy) return;
+    const scope = currentScope();
     setBusy(true);
     setMessage(null);
+    setDetail(undefined);
     const reason = rationale.trim();
     const hadPending = !!pendingNow(command, target);
     const tried = pendingFor(command, target, { ...values, rationale: reason }, page.revision, attempt, snapshotOf(page, command), props.context ?? {});
+    props.onAttempt?.();
     try {
       const out = await api.command(command, target, tried.expected, reason, values, { request: tried.request, key: tried.key });
+      if (scope !== currentScope()) return;
       settle(command, target, "ok");
       clearDraft(command, target);
       const closed = out.state === "closed" && out.fields.reason === "requester_lost_right";
       onDone(closed ? r.closedLost(l, props.object ?? "") : done(out.fields, out.state, tried.snapshot));
       onClose("done");
     } catch (err) {
+      if (scope !== currentScope()) return;
+      const detail = refusalDetail(err);
+      setDetail(detail);
       const failure = err instanceof AdminError ? err.failure : "failed";
       const fields = err instanceof AdminError ? err.fields : [];
       const reaction: Reaction = react(failure, fields);
-      settle(command, target, reaction);
+      settle(command, target, reaction, detail);
       setStep(reaction === "conflict" ? "confirm" : "edit");
       if (reaction === "field") {
         const how = fieldReaction(command, fields);
         if (how === "changed") {
           setMessage({ text: k.versionsChanged(l), alert: false });
           await onReload();
+          if (scope !== currentScope()) return;
         } else if (how === "kind") setMessage({ text: k.kindBug(l), alert: true });
         else if (how === "built") setMessage({ text: k.builtBug(l), alert: true });
         else if (how === "choice") {
@@ -131,6 +146,7 @@ export function CommandForm(props: FormProps) {
           setChoiceErrors(list);
           setSummaryKey((n) => n + 1);
           await onReload();
+          if (scope !== currentScope()) return;
         } else {
           setReasonError(reasonProblem(rationale) === "long" ? k.form.rationaleLong(l) : k.form.checkReason(l));
           setSummaryKey((n) => n + 1);
@@ -140,19 +156,22 @@ export function CommandForm(props: FormProps) {
         setSummaryKey((n) => n + 1);
       } else if (reaction === "hint") {
         await onReload();
+        if (scope !== currentScope()) return;
         onClose("refused");
       } else if (reaction === "conflict") {
         setMessage({ text: k.conflictAgain(l), alert: false });
         await onReload();
+        if (scope !== currentScope()) return;
       } else if (reaction === "denied") {
         const got = await onReload();
+        if (scope !== currentScope()) return;
         if (!got) {
           setMessage({ text: k.gone(l, groupOf(command)), alert: true });
-          onLostAccess();
+          onLostAccess(detail);
         } else {
           const outcome = deniedOutcome(command, target, hadPending, got);
           if (outcome === "no_right") {
-            markLost(command, target, commandRight[command]);
+            markLost(command, target, commandRight[command], detail);
             onClose("refused");
             return;
           }
@@ -161,10 +180,11 @@ export function CommandForm(props: FormProps) {
             outcome === "applied_letter"
               ? k.vanishedLetter(l) + (command === "integrations.letter_approve_redeliver" ? " " + k.vanishedHint(l, event) : "")
               : outcome === "applied_proposal" ? k.vanishedProposal(l) : k.gone(l, groupOf(command)),
+            detail,
           );
           onClose("done");
         }
-      } else if (reaction === "signin") onSignedOut();
+      } else if (reaction === "signin") onSignedOut(detail);
       else if (reaction === "wait") setMessage({ text: sc.limited(l, retryPhrase(l, err instanceof AdminError ? err.retryAfter || 60 : 60)), alert: true });
       else if (reaction === "retry") setMessage({ text: k.pendingAttempt(l), alert: true });
       else if (reaction === "renew") setMessage({ text: k.renew(l), alert: true });
@@ -172,7 +192,7 @@ export function CommandForm(props: FormProps) {
       else if (reaction === "reauth") setMessage({ text: sc.reauthText(l, failure), alert: true });
       else setMessage({ text: sc.failed(l), alert: true });
     } finally {
-      setBusy(false);
+      if (scope === currentScope()) setBusy(false);
     }
   };
 
@@ -185,8 +205,10 @@ export function CommandForm(props: FormProps) {
       {message && (
         <div ref={messageRef} tabIndex={-1} className={message.alert ? "live-error" : "live-note-rule"} role={message.alert ? "alert" : "status"}>
           <p>{message.text}</p>
+          <RefusalDetail locale={l} detail={detail} />
         </div>
       )}
+      {!message && <RefusalDetail locale={l} detail={detail} />}
       {step === "edit" ? (
         <form className="p02-form" noValidate onSubmit={review} aria-busy={busy || undefined}>
           {problems.length > 0 && <Summary locale={l} title={sc.check(l)} problems={problems} focusKey={summaryKey} />}
@@ -225,7 +247,7 @@ export function CommandForm(props: FormProps) {
 
 export type Blocker = { label: string; text: string };
 
-export function RowNote({ kept, blockers, focus }: { kept: ReactNode; blockers: Blocker[]; focus: number }) {
+export function RowNote({ kept, blockers, focus, detail, l = "en" }: { kept: ReactNode; blockers: Blocker[]; focus: number; detail?: Detail; l?: Locale }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => { if (focus) ref.current?.focus(); }, [focus]);
   if (!kept && blockers.length === 0) return null;
@@ -238,7 +260,7 @@ export function RowNote({ kept, blockers, focus }: { kept: ReactNode; blockers: 
   });
   return (
     <div className="p02-row-note" ref={ref} tabIndex={-1} role={focus ? "status" : undefined}>
-      {kept && <p className="live-note-rule">{kept}</p>}
+      {kept && <><p className="live-note-rule">{kept}</p><RefusalDetail locale={l} detail={detail} /><p>{k.reviewBeforeRetry(l)}</p></>}
       {list.length > 0 && (
         <ul className="p02-blocked">
           {list.map((b) => <li key={b.label + b.text}>{b.label && <strong>{b.label}: </strong>}{b.text}</li>)}

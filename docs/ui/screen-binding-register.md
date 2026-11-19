@@ -130,6 +130,10 @@ Tracking: [HYB-295](https://linear.app/hybrid-billing/issue/HYB-295). [HB-257](.
 - **Open tickets on every phase 2–5 screen.** Accessibility verification HYB-313 (UI-09) and error and trust state check HYB-314 (UI-10), both Todo. The residuals of HB-260, HB-267, HB-269, HB-271, HB-273, HB-275, HB-281, HB-283, HB-285, HB-287, HB-289, HYB-296, HYB-297, HYB-298, HYB-299, HYB-300, HYB-315 and HYB-318 record the KO and AR copy as an AI draft or as pending terminology and native-language review.
 - **Process gaps (HYB-291).** The per-ticket rule of running `npm run qa:*` was replaced by per-ticket browser QA (HYB-291 L3), and a security-focused review is not stated for HB-260, HB-264 and HB-267 (HYB-291 M8).
 
+### Command feedback follow-up (HYB-330)
+
+P01–P05 now preserve response-derived error codes and request IDs beside inline, retained and terminal command feedback. Missing server metadata, local validation, network failures and cancelled password confirmation do not fabricate diagnostics. Retained details follow the exact action, target and session; new attempts, success and pruning clear them. P02 permission-loss notes are included. See [HYB-330 verification](../features/HYB-330/verification.md). This candidate changes feedback items only and does not establish owner FIX or complete the other residuals below.
+
 ### Sign-in screens (L01–L03)
 
 **L01 Sign in**

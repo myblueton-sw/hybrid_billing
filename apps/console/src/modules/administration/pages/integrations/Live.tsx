@@ -1,3 +1,5 @@
+import { RefusalDetail } from "../../../../service/RefusalDetail";
+import { refusalDetail, type RefusalDetail as Detail } from "../../../../service/refusal";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError } from "../../../../service/admin";
@@ -6,7 +8,7 @@ import type { IntegrationsPage } from "../../../../service/integrations";
 import type { Session } from "../../../../service/api";
 import { c as sc, retryPhrase } from "../../../../service/copy";
 import { k } from "./live-copy";
-import { commandsAllowed, drop, forget, pruneRefusals, selectionOf, setScope, vanished, viewOf } from "./live-model";
+import { currentScope, commandsAllowed, drop, forget, pruneRefusals, selectionOf, setScope, vanished, viewOf } from "./live-model";
 import { Known, fsi, ltr, stamp } from "./live-format";
 import type { Shared } from "./LiveCommand";
 import { ClientsView } from "./LiveClients";
@@ -48,6 +50,8 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
   const [denied, setDenied] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [lostAccess, setLostAccess] = useState(false);
+  const [noticeDetail, setNoticeDetail] = useState<Detail>();
+  const [commandDetail, setCommandDetail] = useState<Detail>();
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
@@ -58,10 +62,11 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
 
   const load = useCallback(async (): Promise<IntegrationsPage | null> => {
     const n = ++seq.current;
+    const scope = currentScope();
     setBusy(true);
     try {
       const got = await api.integrations();
-      if (n !== seq.current) return null;
+      if (n !== seq.current || scope !== currentScope()) return null;
       pruneRefusals(got, session.user);
       pruneLost(got);
       setPage(got);
@@ -69,25 +74,26 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
       setLoadError(null);
       return got;
     } catch (e) {
-      if (n !== seq.current) return null;
+      if (n !== seq.current || scope !== currentScope()) return null;
       if (e instanceof AdminError && e.failure === "denied") setDenied(true);
       if (e instanceof AdminError && e.failure === "unauthenticated") setSignedOut(true);
       setLoadError(e);
       setStatus("error");
       return null;
     } finally {
-      if (n === seq.current) setBusy(false);
+      if (n === seq.current && scope === currentScope()) setBusy(false);
     }
   }, [api, session.user]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
   useEffect(() => {
     if (!selectedId || scrolled.current) return;
     scrolled.current = true;
     document.getElementById(selectedId)?.scrollIntoView({ block: "center" });
   }, [selectedId]);
 
-  const showNotice = (text: string) => {
+  const showNotice = (text: string, detail?: Detail) => {
+    setNoticeDetail(detail);
     setNotice(text);
     requestAnimationFrame(() => document.getElementById("p02-notice")?.focus());
   };
@@ -99,6 +105,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
           <h2 id="p02-denied" tabIndex={-1} ref={(h) => { if (h && lostAccess) h.focus(); }}>{k.deniedTitle(l)}</h2>
           {lostAccess && <p className="p02-lost-access" role="status">{r.lastActionLost(l)}</p>}
           <p>{k.denied(l)}</p>
+          <RefusalDetail locale={l} detail={commandDetail ?? refusalDetail(loadError)} />
         </section>
       </div>
     );
@@ -108,6 +115,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
       <div className="p02-live">
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
+          <RefusalDetail locale={l} detail={commandDetail ?? refusalDetail(loadError)} />
           <button type="button" className="live-secondary" onClick={() => { forget(); forgetLost(); onSignOut(); }}>{k.signInAgain(l)}</button>
         </div>
       </div>
@@ -118,11 +126,12 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
   const shared: Shared | null = page && configured
     ? {
         l, page, api, me: session.user, selection, canCommand: commandsAllowed(page) && status !== "error",
+        onAttempt: () => { setTick((n) => n + 1); setNotice(""); setNoticeDetail(undefined); },
         onDone: (text: string) => { showNotice(text); void load(); },
         onNotice: showNotice,
         onReload: load,
-        onSignedOut: () => setSignedOut(true),
-        onLostAccess: () => setLostAccess(true),
+        onSignedOut: (detail) => { setCommandDetail(detail); setSignedOut(true); },
+        onLostAccess: (detail) => { setCommandDetail(detail); setLostAccess(true); },
       }
     : null;
   const hidden = shared ? withheld(shared.page, view) : false;
@@ -152,11 +161,12 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
           <p className="p02-rights" id="p02-rights" data-rights={held.join(" ")}><strong>{r.rightsLead(l)}</strong> {rightList(l, held)}.</p>
         )
       )}
-      {notice && <div id="p02-notice" className="service-status" tabIndex={-1} role="status"><p>{notice}</p></div>}
+      {notice && <div id="p02-notice" className="service-status" tabIndex={-1} role="status"><p>{notice}</p><RefusalDetail locale={l} detail={noticeDetail} /></div>}
       {status === "error" && (
         <div className="live-error p02-failure" role="alert">
           <h2>{r.loadFailed(l)}</h2>
           {failure && <p>{failure}</p>}
+          <RefusalDetail locale={l} detail={refusalDetail(loadError)} />
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>
       )}

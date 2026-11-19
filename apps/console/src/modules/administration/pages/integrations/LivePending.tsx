@@ -1,3 +1,4 @@
+import { feedbackDetail } from "./live-model";
 import type { OwnPending } from "../../../../service/integrations";
 import { k } from "./live-copy";
 import { ltr } from "./live-format";
@@ -21,7 +22,7 @@ function Item({ p, ...shared }: Shared & { p: OwnPending }) {
       </div>
       <div className="p02-body">
         <p>{r.forTarget(l)} {ltr(p.object || p.target)}</p>
-        <RowNote kept={kept} blockers={[]} focus={focusNote} />
+        <RowNote l={l} detail={feedbackDetail([[command, p.target]])} kept={kept} blockers={[]} focus={focusNote} />
         {usable && !open && (
           <div className="live-buttons">
             <button

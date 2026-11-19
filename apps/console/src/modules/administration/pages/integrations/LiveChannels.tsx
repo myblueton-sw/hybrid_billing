@@ -1,3 +1,4 @@
+import { feedbackDetail } from "./live-model";
 import { useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { subscriptionActions, type Subscription, type SubscriptionAction } from "../../../../service/integrations";
@@ -9,7 +10,7 @@ import {
 import { Code, Known, ListOr, Num, Prose, Who, fsi, href, ltr, stamp } from "./live-format";
 import { CommandForm, RowNote, blockerLines, plain, useOpen, type Blocker, type Shared } from "./LiveCommand";
 import { resumeRequestTarget } from "./live-model";
-import { lostAny, lostRight, subscriptionApplies } from "./live-rights";
+import { lostFor, lostRight, subscriptionApplies } from "./live-rights";
 import { r } from "./rights-copy";
 import { Marked } from "./LiveProposals";
 
@@ -137,7 +138,7 @@ function SubRow({ s, ...shared }: Shared & { s: Subscription }) {
   const resumeRequest = s.resume_request !== null && s.resume_request !== "unknown" ? resumeRequestTarget(s.resume_request) : "";
   const targetOf = (a: SubscriptionAction) => (a === "withdraw_resume" ? resumeRequest : target);
   const usable = (a: SubscriptionAction) => shared.canCommand && !!targetOf(a) && (s.actions[a].allowed || !!pendingNow(commandOf(a), targetOf(a)));
-  const lost = target ? lostAny(subscriptionActions.map(commandOf), target) || (resumeRequest ? lostRight("integrations.subscription_withdraw_resume", resumeRequest) : "") : "";
+  const lost = target ? lostFor(subscriptionActions.map((a) => [commandOf(a), targetOf(a)])) : "";
   const kept = !target ? "" : lost ? r.noLongerHeld(l, lost) : subscriptionActions.some((a) => refusedNow(commandOf(a), targetOf(a))) ? k.kept(l, "subscription") : "";
   const explains = (a: SubscriptionAction) => {
     const code = s.actions[a].blocked;
@@ -188,7 +189,7 @@ function SubRow({ s, ...shared }: Shared & { s: Subscription }) {
         <p className="p02-small">{k.reason(l)}: <Prose l={l} value={s.rationale} empty={k.noReason(l)} /></p>
         {s.id && <p className="p02-small"><a className="p02-link" href={href(l, "events", { subscription: s.id })}>{k.deliveriesLink(l)}</a></p>}
         <Fold l={l} s={s} />
-        <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+        <RowNote l={l} detail={feedbackDetail(subscriptionActions.map((a) => [commandOf(a), targetOf(a)]))} kept={kept} blockers={blockers} focus={focusNote} />
         {shown.length > 0 && (
           <div className="live-buttons">
             {shown.map((a) => (
@@ -253,6 +254,7 @@ function ProposeSub(shared: Shared) {
     <section className="p02-section p02-propose-sub" aria-labelledby="p02-propose-sub-title">
       <h3 id="p02-propose-sub-title">{k.proposeSubTitle(l)}</h3>
       <RowNote
+        l={l} detail={feedbackDetail([["integrations.subscription_propose", webhooksTarget]])}
         kept={lost ? r.noLongerHeld(l, lost) : refused ? k.kept(l, "propose_subscription") : ""}
         blockers={noRight ? blockerLines(l, "no_right", "propose_subscription") : !usable && blocked ? [plain(k.subBlocker(l, blocked))] : []}
         focus={focusNote}

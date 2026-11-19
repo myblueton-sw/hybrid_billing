@@ -1,4 +1,5 @@
-import { forgetLost } from "./live-rights";
+import { Refusals, type RefusalDetail } from "../../../../service/refusal";
+import { forgetLost, lostRight, lostDetail } from "./live-rights";
 import type { Delivery, IntegrationsPage, PluginInstall, PluginProposal, PluginVersion, RightId, Subscription } from "../../../../service/integrations";
 
 export const views = ["clients", "modules", "channels", "events"];
@@ -526,13 +527,17 @@ export function reasonProblem(v: string): "" | "missing" | "long" {
 export type Pending = { key: string; request: string; expected: string; values: string; snapshot: string[]; context: Record<string, string> };
 const pending = new Map<string, Pending>();
 const drafts = new Map<string, Record<string, string>>();
-const refusals = new Map<string, string>();
+const refusals = new Refusals<string>();
 
 let scope = "";
+let generation = 0;
+
+export function currentScope(): number { return generation; }
 
 export function setScope(workspace: string, user: string, session: string): void {
   const next = workspace + "\u0000" + user + "\u0000" + session;
   if (next !== scope) {
+    generation++;
     forgetLost();
     pending.clear();
     drafts.clear();
@@ -542,6 +547,7 @@ export function setScope(workspace: string, user: string, session: string): void
 }
 
 export function forget(): void {
+  generation++;
   pending.clear();
   drafts.clear();
   refusals.clear();
@@ -576,6 +582,7 @@ export function pendingFor(
   const frozen = JSON.stringify(values);
   const kept = pending.get(id);
   if (kept && kept.values === frozen) return kept;
+  refusals.delete(id);
   const tried = fresh();
   const next = { key: tried.key, request: tried.request, expected, values: frozen, snapshot: [...snapshot], context: { ...context } };
   pending.set(id, next);
@@ -601,16 +608,23 @@ export function drop(command: string, target: string): void {
   pending.delete(slot(command, target));
 }
 
-export function settle(command: string, target: string, reaction: Reaction | "ok"): void {
+export function settle(command: string, target: string, reaction: Reaction | "ok", detail?: RefusalDetail): void {
   if (reaction !== "ok" && keepsAttempt(reaction)) return;
   const values = pending.get(slot(command, target))?.values ?? "";
   pending.delete(slot(command, target));
-  if (reaction === "hint") refusals.set(slot(command, target), values);
+  if (reaction === "hint") refusals.set(slot(command, target), values, detail);
   else refusals.delete(slot(command, target));
 }
 
 export function refusedNow(command: string, target: string): boolean {
   return refusals.has(slot(command, target));
+}
+
+export function feedbackDetail(actions: [CommandKey, string][]): RefusalDetail | undefined {
+  const lost = actions.find(([command, target]) => lostRight(command, target));
+  if (lost) return lostDetail(...lost);
+  const refused = actions.find(([command, target]) => refusedNow(command, target));
+  return refused ? refusals.detail(slot(...refused)) : undefined;
 }
 
 export function refusedValues(command: string, target: string): Record<string, string> {

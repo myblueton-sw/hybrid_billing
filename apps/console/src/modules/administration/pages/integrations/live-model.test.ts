@@ -768,3 +768,29 @@ test("lost-right marks are cleared when the signed-in user changes", async () =>
   setScope("w1", "u2", "s1");
   assert.equal(lostRight("integrations.plugin_stop", "plugin:p"), "");
 });
+
+
+test("retained diagnostics match the selected command, scope and permission-loss message", async () => {
+  const { feedbackDetail } = await import("./live-model");
+  const { markLost, pruneLost, lostFor } = await import("./live-rights");
+  forget();
+  setScope("ws", me, "s");
+  const stop: [CommandKey, string] = ["integrations.plugin_stop", "plugin:p"];
+  const disable: [CommandKey, string] = ["integrations.plugin_disable", "plugin:p"];
+  settle(...stop, "hint", { code: "invalid_stage", request: "stop-response" });
+  settle(...disable, "hint", { code: "prerequisite_failed", request: "disable-response" });
+  assert.equal(feedbackDetail([stop, disable])?.request, "stop-response");
+  settle(...stop, "ok");
+  assert.equal(feedbackDetail([stop, disable])?.request, "disable-response");
+  markLost(...stop, "stop_modules", { code: "permission_denied", request: "denied-response" });
+  assert.equal(feedbackDetail([stop, disable])?.request, "denied-response");
+  assert.equal(lostFor([stop]), "stop_modules");
+  pruneLost({ ...page(), rights: { stop_modules: true } } as IntegrationsPage);
+  assert.equal(feedbackDetail([stop, disable])?.request, "disable-response");
+  assert.equal(feedbackDetail([[stop[0], "plugin:another"]]), undefined);
+  pruneRefusals(page({ modules: { plugins: [], installations: [] } }), me);
+  assert.equal(feedbackDetail([disable]), undefined);
+  settle(...stop, "hint", { code: "invalid_stage", request: "old-session" });
+  setScope("ws", me, "new-session");
+  assert.equal(feedbackDetail([stop, disable]), undefined);
+});

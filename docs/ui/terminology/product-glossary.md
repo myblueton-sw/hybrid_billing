@@ -388,3 +388,15 @@ Candidate copy from the stable HYB-333 plan and implemented M04 messages. Semant
 | credential-secret-pickup-state / `collected` | 비밀 값 반환됨 | Secret returned once | أُعيدت القيمة السرية مرة واحدة | Server returned the secret once. Does not prove delivery to the person or storage. This state adds no status sub-line. |
 | credential-secret-pickup-state / `never_collected` | 비밀 값 수령 안 됨 | Secret never collected | لم تُستلَم القيمة السرية | Pickup ended without the server returning the secret. Credential remains active until separately revoked or expired. |
 | issue-outcome-unknown | 발급 결과 확인 안 됨 | Issue outcome unknown | نتيجة الإصدار غير معروفة | Request may have committed. Same-request retry retains its original identity; never call it failed or definitely issued. |
+
+
+## Server response diagnostics (HYB-330)
+
+Scoped semantic review passed; native-language approval remains pending. Sources inspected on 2026-11-20: [Microsoft Korean diagnostics](https://learn.microsoft.com/ko-kr/entra/identity/devices/troubleshoot-device-dsregcmd) and [Arabic sign-in activity details](https://learn.microsoft.com/ar-sa/azure/active-directory/reports-monitoring/concept-sign-in-log-activity-details). Existing P05 copy supplies the request-ID label. These sources establish professional diagnostic usage, not regional acceptance of this product.
+
+| Concept | Korean candidate | English candidate | Arabic candidate | Meaning and excluded implications |
+| --- | --- | --- | --- | --- |
+| response-error-code | 오류 코드 | Error code | رمز الخطأ | The bounded machine code actually returned by the service. Not a translated local reaction or a read-derived blocker. |
+| response-request-id | 요청 ID | Request ID | معرّف الطلب | The request identity returned in the response. Never substitute an attempted browser ID when the response has no identity. |
+
+P01 through P05 place these details beside the matching feedback, with LTR isolation and wrapping. P02 retained refusals also ask the user to review current state before retrying. No diagnostic value implies that an unknown outcome failed or that a command succeeded.

@@ -1,3 +1,4 @@
+import { feedbackDetail } from "./live-model";
 import type { Locale } from "../../../../shared/types";
 import type { IntegrationsPage, PluginProposal, PluginVersion } from "../../../../service/integrations";
 import { summaryWords, words } from "./live-codes";
@@ -144,7 +145,7 @@ function Row({ p, ...shared }: Shared & { p: PluginProposal }) {
         )}
         {pendingRow && (
           <>
-            <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+            <RowNote l={l} detail={feedbackDetail([["integrations.plugin_approve", target], ["integrations.plugin_withdraw", target]])} kept={kept} blockers={blockers} focus={focusNote} />
             {(approveUsable || withdrawUsable) && !open && (
               <div className="live-buttons">
                 {approveUsable && (!open || open === "integrations.plugin_approve") && (

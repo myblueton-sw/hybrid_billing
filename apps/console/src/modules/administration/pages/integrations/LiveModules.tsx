@@ -1,3 +1,4 @@
+import { feedbackDetail } from "./live-model";
 import { useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { PluginInstall, PluginVersion } from "../../../../service/integrations";
@@ -106,7 +107,7 @@ function RuntimeActions({ i, ...shared }: Shared & { i: PluginInstall }) {
   if (target && !disableUsable && !i.can_disable && shows(i.disable_blocked, "disable")) blockers.push(...blockerLines(l, i.disable_blocked, "disable", k.disable(l)));
   return (
     <>
-      <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+      <RowNote l={l} detail={feedbackDetail([["integrations.plugin_stop", target], ["integrations.plugin_disable", target]])} kept={kept} blockers={blockers} focus={focusNote} />
       {(stopUsable || disableUsable) && !open && (
         <div className="live-buttons">
           {stopUsable && (!open || open === "integrations.plugin_stop") && <button type="button" className="live-secondary" aria-expanded={open === "integrations.plugin_stop"} data-opener={mark("integrations.plugin_stop")} onClick={() => toggle("integrations.plugin_stop")}>{k.stop(l)}</button>}
@@ -204,6 +205,7 @@ function Propose({ plugin, ...shared }: Shared & { plugin: string }) {
   return (
     <section className="p02-propose" aria-label={k.proposeChange(l, plugin)}>
       <RowNote
+        l={l} detail={feedbackDetail([["integrations.plugin_propose", target]])}
         kept={keptText}
         blockers={noRight ? blockerLines(l, "no_right", "propose_plugin", r.proposeChange(l)) : !usable && blockerText ? [plain(blockerText)] : []}
         focus={focusNote}

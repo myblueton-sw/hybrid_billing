@@ -1,0 +1,15 @@
+.service-refusal-detail {
+  display: grid;
+  gap: 0.5rem;
+  margin-block: 0.5rem;
+  min-inline-size: 0;
+}
+
+.service-refusal-detail > div {
+  min-inline-size: 0;
+}
+
+.service-refusal-detail dd {
+  margin-inline-start: 0;
+  overflow-wrap: anywhere;
+}

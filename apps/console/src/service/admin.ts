@@ -658,6 +658,7 @@ export class AdminError extends Error {
     readonly retryAfter = 0,
     readonly operation = "",
     readonly code = "",
+    readonly request = "",
   ) {
     super(failure);
   }
@@ -842,12 +843,13 @@ const codes: Record<string, AdminFailure> = {
 export type StepUp = () => Promise<boolean>;
 
 export function failureOf(status: number, body: Record<string, unknown>): AdminError {
-  const code = String(body.code ?? "");
+  const code = typeof body.code === "string" && /^[a-z][a-z0-9_]{0,127}$/.test(body.code) ? body.code : "";
+  const request = typeof body.request_id === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(body.request_id) ? body.request_id : "";
   const fields = Array.isArray(body.fields) ? body.fields.map(String) : [];
   const operation = typeof body.operation_id === "string" ? body.operation_id : "";
   const failure = codes[code] ?? (status === 401 ? "unauthenticated" : status === 429 ? "limited" : "unavailable");
-  if (failure === "partial" && !operation) return new AdminError("unavailable", [], 0, "", code);
-  return new AdminError(failure, fields, 0, operation, code);
+  if (failure === "partial" && !operation) return new AdminError("unavailable", [], 0, "", code, request);
+  return new AdminError(failure, fields, 0, operation, code, request);
 }
 
 function random(): string {
@@ -914,7 +916,7 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     const failed = failureOf(r.status, body);
     const retry = Number(r.headers.get("Retry-After") ?? "0");
     if (failed.failure === "limited" && Number.isFinite(retry) && retry > 0) {
-      throw new AdminError("limited", [], retry);
+      throw new AdminError("limited", failed.fields, retry, failed.operation, failed.code, failed.request);
     }
     throw failed;
   }

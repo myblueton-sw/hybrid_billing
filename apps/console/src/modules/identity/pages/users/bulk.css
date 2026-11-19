@@ -60,6 +60,9 @@ html[dir="rtl"] dialog.m01-confirm bdi.m01-part:not([dir="ltr"]) {
 [data-security-screen="M01"] .live-sub bdi {
   white-space: nowrap;
 }
+[data-security-screen="M01"] .m01-opener {
+  display: block;
+}
 [data-security-screen="M01"] .m01-tag {
   display: inline-block;
   margin-inline: 8px;
@@ -379,7 +382,44 @@ dialog.m01-confirm .m01-scope {
 }
 [data-security-screen="M01"] .m01-jobs-list {
   container-type: inline-size;
+  container-name: m01jobs;
   min-inline-size: 0;
+}
+@container m01jobs (max-width: 599px) {
+  [data-security-screen="M01"] .m01-jobs-table thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  [data-security-screen="M01"] .m01-jobs-table {
+    min-inline-size: 0;
+  }
+  [data-security-screen="M01"] .m01-jobs-table,
+  [data-security-screen="M01"] .m01-jobs-table tbody,
+  [data-security-screen="M01"] .m01-jobs-table tr,
+  [data-security-screen="M01"] .m01-jobs-table td {
+    display: block;
+  }
+  [data-security-screen="M01"] .m01-jobs-table tr {
+    padding-block: 8px;
+    padding-inline: 12px;
+    border-block-end: 1px solid var(--border-row);
+  }
+  [data-security-screen="M01"] .m01-jobs-table td {
+    block-size: auto;
+    padding: 2px 0;
+    border: 0;
+  }
+  [data-security-screen="M01"] .m01-jobs-table td::before {
+    content: attr(data-label) ": ";
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  [data-security-screen="M01"] .m01-jobs-table td:first-child::before {
+    content: none;
+  }
 }
 [data-security-screen="M01"] aside.m01-job {
   border-inline-start: 1px solid var(--border-row);
@@ -406,9 +446,11 @@ dialog.m01-confirm .m01-scope {
   cursor: pointer;
   text-align: start;
 }
-[data-security-screen="M01"] .m01-jobs-table td,
-[data-security-screen="M01"] .m01-jobs-table th {
+[data-security-screen="M01"] .m01-jobs-table td {
   overflow-wrap: anywhere;
+}
+#content [data-security-screen="M01"] :is(.m01-jobs-table, .m01-settings table) th {
+  overflow-wrap: normal;
 }
 [data-security-screen="M01"] .m01-detail-head {
   display: flex;
@@ -573,6 +615,7 @@ dialog.m01-confirm .m01-ink strong {
     border-block-end: 1px solid var(--border-row);
   }
   [data-security-screen="M01"] .m01-settings td {
+    block-size: auto;
     padding: 2px 0;
   }
   [data-security-screen="M01"] .m01-settings td::before {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/bulkrevoke"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
+	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 )
 
 const description = "Command catalogue served on loopback by the pre-launch API service under /api/v1. State is in memory and resets on restart. No operation is anonymous: every command needs a session cookie and the CSRF header."
@@ -36,7 +37,8 @@ func (s *Server) Document() ([]byte, error) {
 			item.(map[string]any)["post"].(map[string]any)["x-step-up"] = true
 		}
 	}
-	doc["x-reads"] = map[string]any{"/identity/users": usersReadPath(), "/identity/users/count": usersCountPath(), "/identity/bulk-revocations": bulkReadsPath()}
+	doc["x-reads"] = map[string]any{"/identity/users": usersReadPath(), "/identity/users/count": usersCountPath(), "/identity/bulk-revocations": bulkReadsPath(),
+		"/identity/services": servicesReadPath(), "/integrations": integrationsReadPath()}
 	doc["x-self"] = selfPaths()
 	return json.MarshalIndent(doc, "", "  ")
 }
@@ -101,6 +103,28 @@ func usersCountPath() map[string]any {
 			"503": readCodes(readError(commands.DependencyUnavailable), string(commands.AuthorityUnavailable), string(commands.DependencyUnavailable))}}}
 }
 
+func integrationsReadPath() map[string]any {
+	admission := []string{}
+	for _, right := range append(gate.IntegrationRights(), gate.AdministerInstallation) {
+		admission = append(admission, string(right))
+	}
+	areas := map[string]any{"clients": []string{string(gate.AdministerAPIClients)}}
+	for name, rights := range map[string][]gate.Action{"modules": moduleRights, "channels": channelRights, "events": channelRights} {
+		list := []string{}
+		for _, right := range rights {
+			list = append(list, string(right))
+		}
+		areas[name] = list
+	}
+	return map[string]any{"get": map[string]any{"operationId": "integrations.read", "x-admission": admission, "x-area-rights": areas,
+		"x-withheld": "state not_permitted, no other field", "x-blocked-first": blockedNoRight,
+		"x-changed": "before HYB-310 every integrations command and the whole read required administer_installation",
+		"responses": map[string]any{"200": map[string]any{"description": "rights, own pending items and each area or its withheld state"},
+			"401": readCodes(readError(commands.Unauthenticated), string(commands.Unauthenticated)),
+			"403": readCodes(readError(commands.PermissionDenied), CodeCSRF, string(commands.PermissionDenied)),
+			"503": readCodes(readError(commands.DependencyUnavailable), string(commands.AuthorityUnavailable), string(commands.DependencyUnavailable))}}}
+}
+
 func bulkReadsPath() map[string]any {
 	return map[string]any{"get": map[string]any{"operationId": "identity.bulk_revocations",
 		"x-selection":     []string{bulkrevoke.Explicit, bulkrevoke.Filter, bulkrevoke.NotRecorded},
@@ -120,4 +144,20 @@ func (s *Server) openapi(w http.ResponseWriter, r *http.Request) {
 	headers(w, request)
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(doc)
+}
+
+func servicesReadPath() map[string]any {
+	str := map[string]any{"type": "string"}
+	pickup := map[string]any{"type": "string", "enum": []string{pickupOpen, pickupCollected, pickupNever},
+		"x-present-when": "the credential state is active and the server recorded its issue",
+		"x-meaning": map[string]string{pickupOpen: "the issuing session could collect the secret now", pickupCollected: "the server returned the secret once; it does not confirm the secret was stored",
+			pickupNever: "the pickup ended without a successful read; no one can obtain this secret from the server"}}
+	until := map[string]any{"type": "string", "format": "date-time", "x-present-when": "secret_pickup is open",
+		"x-meaning": "estimated end: the earliest of the pickup expiry and the issuing session's absolute and idle ends at this read; activity can move it later and a sign-out can end it sooner"}
+	credential := map[string]any{"type": "object", "properties": map[string]any{"id": str, "not_before": str, "not_after": str, "state": str, "usable": map[string]any{"type": "boolean"},
+		"secret_pickup": pickup, "secret_pickup_until": until}}
+	limits := map[string]any{"type": "object", "properties": map[string]any{"credential_days": map[string]any{"type": "integer"}, "credentials_per_service": map[string]any{"type": "integer"},
+		"services": map[string]any{"type": "integer"}, "replay_seconds": map[string]any{"type": "integer", "x-meaning": "how long a command's idempotency key replays its stored outcome"}}}
+	return map[string]any{"get": map[string]any{"operationId": "identity.services", "x-credential": credential, "x-limits": limits,
+		"x-never": "the secret and its pickup reference are never part of this read"}}
 }

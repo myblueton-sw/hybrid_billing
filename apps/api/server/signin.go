@@ -18,6 +18,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
+	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
 )
@@ -517,6 +518,11 @@ func (s *Server) activate(ctx context.Context, body map[string]string) string {
 	}
 	if err := s.grantBulk(s.bootUser, s.clock()); err != nil {
 		s.log.Error("bulk revocation grant failed at activation")
+	}
+	if err := s.grantIntegration(s.bootUser, gate.IntegrationRights(), s.clock()); errors.Is(err, errRollback) {
+		s.log.Error("integration grants rolled back incompletely")
+	} else if err != nil {
+		s.log.Error("integration grants failed at activation")
 	}
 	s.boot.live = false
 	_ = os.Remove(s.boot.file)

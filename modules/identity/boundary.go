@@ -115,38 +115,49 @@ func (h *Boundary) EndSession(verifier Verifier) error {
 }
 
 func (h *Boundary) Access(verifier Verifier, workspace string) (Answer, error) {
+	answer, _, err := h.admit(verifier, workspace, true)
+	return answer, err
+}
+
+func (h *Boundary) Peek(verifier Verifier, workspace string) (Answer, time.Time, error) {
+	return h.admit(verifier, workspace, false)
+}
+
+func (h *Boundary) admit(verifier Verifier, workspace string, touch bool) (Answer, time.Time, error) {
 	r, ok := h.open()
 	if !ok {
-		return Answer{}, ErrUnavailable
+		return Answer{}, time.Time{}, ErrUnavailable
 	}
 	defer r.mu.Unlock()
 	if !validID(workspace) {
-		return Answer{}, ErrInvalid
+		return Answer{}, time.Time{}, ErrInvalid
 	}
 	now := r.clock()
 	found, err := r.acting(verifier, now)
 	if err != nil {
-		return Answer{}, err
+		return Answer{}, time.Time{}, err
 	}
 	own := r.member(workspace, found.user)
 	if !effective(own, now) {
 		if own != nil && ended(*own, now) {
-			return Answer{}, refused(ReasonExpired)
+			return Answer{}, time.Time{}, refused(ReasonExpired)
 		}
-		return Answer{}, refused(ReasonMembership)
+		return Answer{}, time.Time{}, refused(ReasonMembership)
 	}
-	if extended := now.Add(found.idle); extended.After(found.idleExpiry) {
-		found.idleExpiry = extended
-	}
-	if found.idleExpiry.After(found.absolute) {
-		found.idleExpiry = found.absolute
+	if touch {
+		if extended := now.Add(found.idle); extended.After(found.idleExpiry) {
+			found.idleExpiry = extended
+		}
+		if found.idleExpiry.After(found.absolute) {
+			found.idleExpiry = found.absolute
+		}
 	}
 	notAfter := found.absolute
 	if !own.until.IsZero() && own.until.Before(notAfter) {
 		notAfter = own.until
 	}
 	return Answer{issued: true, instance: r.instance, installation: r.installation, workspace: workspace, user: found.user, kind: Human,
-		epoch: found.epoch, role: own.role, notBefore: found.opened, notAfter: notAfter, version: own.version, serial: found.serial, identity: found.identity}, nil
+		epoch: found.epoch, role: own.role, notBefore: found.opened, notAfter: notAfter, version: own.version, serial: found.serial, identity: found.identity}, found.idleExpiry, nil
 }
 
 func (h *Boundary) AccessByCredential(credentialID string, verifier Verifier) (Answer, error) {

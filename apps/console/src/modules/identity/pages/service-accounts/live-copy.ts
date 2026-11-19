@@ -1,9 +1,12 @@
 import type { Locale } from "../../../../shared/types";
 import { text as t } from "../../../../shared/copy";
+import { counted } from "../../../../shared/plural";
 
 const iso = (id: string): string => `\u2068${id}\u2069`;
 
 export const v = {
+  heldRequest: (l: Locale) => t(l, "Request reference:", "요청 참조:", "مرجع الطلب:"),
+  heldCode: (l: Locale) => t(l, "Code:", "코드:", "الرمز:"),
   listTitle: (l: Locale) => t(l, "Service accounts", "서비스 계정", "حسابات الخدمة"),
   credTitle: (l: Locale) => t(l, "Credentials", "자격 증명", "بيانات الاعتماد"),
   count: (l: Locale, n: number, max: number) => t(l, `${n} of ${max} service accounts`, `서비스 계정 ${n}/${max}개`, `${n} من ${max} حساب خدمة`),
@@ -78,7 +81,7 @@ export const v = {
     t(
       l,
       "Its credentials stop being usable and unread secrets are discarded. You can reinstate it later.",
-      "자격 증명을 사용할 수 없게 되고 아직 확인하지 않은 비밀 값은 폐기됩니다. 나중에 정지를 해제할 수 있습니다.",
+      "자격 증명을 사용할 수 없게 되고 아직 확인하지 않은 비밀값은 폐기됩니다. 나중에 정지를 해제할 수 있습니다.",
       "تتوقف بيانات اعتماده عن العمل وتُحذف القيم السرية غير المقروءة. يمكنك إعادة تفعيله لاحقًا.",
     ),
   reinstateTitle: (l: Locale) => t(l, "Reinstate service account", "서비스 계정 정지 해제", "إعادة تفعيل حساب الخدمة"),
@@ -103,7 +106,7 @@ export const v = {
     t(
       l,
       "A new secret is created and shown once. It is held for up to 10 minutes until you see it; after that only a verifier is kept.",
-      "새 비밀 값을 만들어 한 번만 보여 줍니다. 확인할 때까지 최대 10분간 보관하며, 이후에는 검증 값만 남습니다.",
+      "새 비밀값을 만들어 한 번만 보여 줍니다. 확인할 때까지 최대 10분간 보관하며, 이후에는 검증 값만 남습니다.",
       "تُنشأ قيمة سرية جديدة وتُعرض مرة واحدة، وتُحفظ حتى 10 دقائق إلى أن تراها، ثم لا يُحفظ إلا مُحقِّقها.",
     ),
   validFor: (l: Locale) => t(l, "Valid for", "유효 기간", "مدة الصلاحية"),
@@ -123,8 +126,8 @@ export const v = {
       `لدى ${iso(id)} الحد الأقصى من بيانات الاعتماد النشطة (${max}). أبطِل واحدة أولًا.`,
     ),
   doneIssued: (l: Locale, cred: string) => t(l, `Credential ${iso(cred)} issued.`, `자격 증명 ${iso(cred)}을(를) 발급했습니다.`, `صدرت بيانات الاعتماد ${iso(cred)}.`),
-  revealTitle: (l: Locale) => t(l, "Store the secret now", "지금 비밀 값을 보관하세요", "احفظ القيمة السرية الآن"),
-  secretLabel: (l: Locale) => t(l, "Secret (shown once)", "비밀 값(한 번만 표시)", "القيمة السرية (تُعرض مرة واحدة)"),
+  revealTitle: (l: Locale) => t(l, "Store the secret now", "지금 비밀값을 보관하세요", "احفظ القيمة السرية الآن"),
+  secretLabel: (l: Locale) => t(l, "Secret (shown once)", "비밀값(한 번만 표시)", "القيمة السرية (تُعرض مرة واحدة)"),
   secretHint: (l: Locale) =>
     t(
       l,
@@ -133,31 +136,137 @@ export const v = {
       "احفظها في أداة إدارة الأسرار مع معرّف بيانات الاعتماد المعروض أعلاه.",
     ),
   shownOnce: (l: Locale) =>
-    t(l, "You won't be able to see this secret again after you leave this step.", "이 단계를 벗어나면 이 비밀 값을 다시 볼 수 없습니다.", "لن تتمكن من رؤية هذه القيمة مجددًا بعد مغادرة هذه الخطوة."),
-  ackLabel: (l: Locale) => t(l, "I have stored this secret", "비밀 값을 보관했습니다", "حفظتُ هذه القيمة السرية"),
+    t(l, "You won't be able to see this secret again after you leave this step.", "이 단계를 벗어나면 이 비밀값을 다시 볼 수 없습니다.", "لن تتمكن من رؤية هذه القيمة مجددًا بعد مغادرة هذه الخطوة."),
+  ackLabel: (l: Locale) => t(l, "I have stored this secret", "비밀값을 보관했습니다", "حفظتُ هذه القيمة السرية"),
   ackError: (l: Locale) =>
-    t(l, "Confirm that you stored the secret, or revoke this credential.", "비밀 값을 보관했는지 확인하거나 이 자격 증명을 폐기하세요.", "أكّد أنك حفظت القيمة السرية، أو أبطِل بيانات الاعتماد هذه."),
+    t(l, "Confirm that you stored the secret, or revoke this credential.", "비밀값을 보관했는지 확인하거나 이 자격 증명을 폐기하세요.", "أكّد أنك حفظت القيمة السرية، أو أبطِل بيانات الاعتماد هذه."),
+  pickupOpen: (l: Locale) => t(l, "Secret not collected yet · pickup open, estimated to end", "비밀값 미수령 · 수령 가능, 예상 종료", "لم يُستلَم السر بعد · الاستلام متاح، ويُقدَّر انتهاؤه في"),
+  pickupNever: (l: Locale) => t(l, "Secret never collected", "비밀값 수령 안 됨", "لم يُستلَم السر"),
+  neverTitle: (l: Locale) => t(l, "Credentials whose secret was never collected", "비밀값이 수령되지 않은 자격 증명", "بيانات اعتماد لم يُستلَم سرّها"),
+  neverLead: (l: Locale) =>
+    t(
+      l,
+      "No one received the secret of these credentials, and it can't be shown any more. Revoke each one, and issue a new credential if you need one.",
+      "이 자격 증명의 비밀값은 아무도 받지 않았고 더 이상 표시할 수 없습니다. 각각 폐기하고, 필요하면 새로 발급하세요.",
+      "لم يستلم أحد سرّ بيانات الاعتماد هذه، ولم يعد بالإمكان عرضه. أبطِل كلًّا منها، وأصدر بيانات اعتماد جديدة عند الحاجة.",
+    ),
+  neverMore: (l: Locale, n: number) => counted(l, n, { en: ["{n} more", "{n} more"], ko: "{n}개 더 보기", ar: ["{n} أخرى", "واحدة أخرى", "اثنتان أخريان", "{n} أخرى", "{n} أخرى", "{n} أخرى"] }),
+  revokeNeverReason: (l: Locale) => t(l, "Secret never collected", "비밀값 수령 안 됨", "لم يُستلَم السر"),
+  revokeNotShownReason: (l: Locale) => t(l, "Secret not shown at issue", "발급 시 비밀값 미표시", "لم يُعرض السر عند الإصدار"),
+  attemptsTitle: (l: Locale) => t(l, "Credential issues to check", "확인이 필요한 자격 증명 발급", "عمليات إصدار بيانات اعتماد تحتاج إلى تحقق"),
+  attemptsDiscardNote: (l: Locale) =>
+    t(
+      l,
+      "Discarding removes this reminder only. Any credential the server issued stays in the list.",
+      "버리면 이 알림만 사라집니다. 서버가 발급한 자격 증명은 목록에 그대로 남습니다.",
+      "إلغاء المحاولة يزيل هذا التذكير فقط. تبقى أي بيانات اعتماد أصدرها الخادم في القائمة.",
+    ),
+  attemptSending: (l: Locale, service: string) => t(l, `Issuing a credential for ${iso(service)}…`, `${iso(service)} 자격 증명 발급 중…`, `جارٍ إصدار بيانات اعتماد لـ ${iso(service)}…`),
+  attemptUnknown: (l: Locale, service: string): [string, string] =>
+    l === "ko"
+      ? [`${iso(service)} 발급 결과 확인 안 됨.`, "서버가 이미 자격 증명을 발급했을 수 있습니다."]
+      : l === "ar"
+        ? [`إصدار لـ ${iso(service)}: النتيجة غير معروفة.`, "ربما أصدر الخادم بيانات الاعتماد بالفعل."]
+        : [`Issue for ${iso(service)}: outcome unknown.`, "The server may already have issued a credential."],
+  attemptIssued: (l: Locale, credential: string, service: string) =>
+    t(
+      l,
+      `Credential ${iso(credential)} was issued for ${iso(service)}. Its secret has not been shown yet.`,
+      `${iso(service)}에 자격 증명 ${iso(credential)}이(가) 발급되었습니다. 비밀값은 아직 표시되지 않았습니다.`,
+      `صدرت بيانات الاعتماد ${iso(credential)} لـ ${iso(service)}. لم يُعرض سرّها بعد.`,
+    ),
+  attemptLapsed: (l: Locale, service: string): [string, string] =>
+    l === "ko"
+      ? [`${iso(service)} 발급 결과를 더 이상 확인할 수 없습니다.`, "이 계정에 '비밀값 수령 안 됨' 자격 증명이 있으면 폐기하세요."]
+      : l === "ar"
+        ? [`إصدار لـ ${iso(service)}: لم يعد بالإمكان التحقق من النتيجة.`, "إن ظهرت لبيانات اعتماد هذا الحساب عبارة «لم يُستلَم السر» فأبطِلها."]
+        : [`Issue for ${iso(service)}: the outcome can no longer be checked.`, "If a credential of this account shows \"Secret never collected\", revoke it."],
+  openIssue: (l: Locale) => t(l, "Open issue form", "발급 양식 열기", "فتح نموذج الإصدار"),
+  discardAttempt: (l: Locale) => t(l, "Discard", "버리기", "إلغاء المحاولة"),
+  startOver: (l: Locale) => t(l, "Discard and start over", "버리고 새로 시작", "إلغاء المحاولة والبدء من جديد"),
+  heldTitle: (l: Locale) => t(l, "Outcome unknown", "결과 확인 안 됨", "النتيجة غير معروفة"),
+  lapsedTitle: (l: Locale) => t(l, "Outcome can no longer be checked", "결과를 더 이상 확인할 수 없음", "لم يعد بالإمكان التحقق من النتيجة"),
+  heldLead: (l: Locale) =>
+    t(
+      l,
+      "The outcome of this request is unknown. Try again sends the same request. If the server already issued the credential, you get that credential and its secret, not a second one.",
+      "이 요청의 결과를 확인하지 못했습니다. 다시 시도하면 같은 요청을 보냅니다. 서버가 이미 발급했다면 두 번째 자격 증명이 아니라 그 자격 증명과 비밀값을 받습니다.",
+      "نتيجة هذا الطلب غير معروفة. تؤدي إعادة المحاولة إلى إرسال الطلب نفسه. إن كان الخادم قد أصدر بيانات الاعتماد فستحصل عليها وعلى سرّها، لا على بيانات اعتماد ثانية.",
+    ),
+  sendingLead: (l: Locale) =>
+    t(l, "Sending this request. The values are locked until the server answers.", "요청을 보내는 중입니다. 서버가 응답할 때까지 값을 바꿀 수 없습니다.", "جارٍ إرسال هذا الطلب. القيم مقفلة إلى أن يردّ الخادم."),
+  lockedNote: (l: Locale) =>
+    t(l, "The values are locked so that Try again sends exactly the same request.", "다시 시도가 같은 요청을 보내도록 값을 잠갔습니다.", "القيم مقفلة كي تُرسل إعادة المحاولة الطلب نفسه تمامًا."),
+  retryRefused: (l: Locale) =>
+    t(
+      l,
+      "Try again was refused because service accounts changed. This answer covers only the repeated request: if the first request went through, its credential is in the list.",
+      "서비스 계정이 바뀌어 다시 시도가 거부되었습니다. 이 응답은 다시 보낸 요청에만 해당합니다. 첫 요청이 처리되었다면 그 자격 증명이 목록에 있습니다.",
+      "رُفضت إعادة المحاولة لأن حسابات الخدمة تغيّرت. يخص هذا الرد الطلب المُعاد فقط: إن نُفِّذ الطلب الأول فبيانات اعتماده في القائمة.",
+    ),
+  createRetryRefused: (l: Locale, id: string) =>
+    t(
+      l,
+      `Try again was refused. This answer covers only the repeated request: if the first request went through, ${iso(id)} is in the list.`,
+      `다시 시도가 거부되었습니다. 이 응답은 다시 보낸 요청에만 해당합니다. 첫 요청이 처리되었다면 ${iso(id)}이(가) 목록에 있습니다.`,
+      `رُفضت إعادة المحاولة. يخص هذا الرد الطلب المُعاد فقط: إن نُفِّذ الطلب الأول فإن ${iso(id)} في القائمة.`,
+    ),
+  createHeldLead: (l: Locale) =>
+    t(
+      l,
+      "The outcome of this request is unknown. Try again sends the same request and does not create a second account.",
+      "이 요청의 결과를 확인하지 못했습니다. 다시 시도하면 같은 요청을 보내며 계정을 두 번 만들지 않습니다.",
+      "نتيجة هذا الطلب غير معروفة. تؤدي إعادة المحاولة إلى إرسال الطلب نفسه ولا تُنشئ حسابًا ثانيًا.",
+    ),
+  createLapsed: (l: Locale, id: string) =>
+    t(
+      l,
+      `The outcome of this request can no longer be checked. If ${iso(id)} is in the list, it may come from this request.`,
+      `이 요청의 결과를 더 이상 확인할 수 없습니다. 목록에 ${iso(id)}이(가) 있다면 이 요청으로 만들어졌을 수 있습니다.`,
+      `لم يعد بالإمكان التحقق من نتيجة هذا الطلب. إن ظهر ${iso(id)} في القائمة فقد يكون ناتجًا عن هذا الطلب.`,
+    ),
+  errNameTakenMine: (l: Locale, id: string) =>
+    t(
+      l,
+      `${iso(id)} already exists and you created it. Your earlier request may have gone through; check the list.`,
+      `${iso(id)}은(는) 이미 있으며 내가 만든 계정입니다. 이전 요청이 처리되었을 수 있으니 목록을 확인하세요.`,
+      `${iso(id)} موجود بالفعل وقد أنشأته أنت. ربما نُفِّذ طلبك السابق؛ تحقّق من القائمة.`,
+    ),
+  accountsAttemptsNote: (l: Locale, n: number) =>
+    counted(l, n, {
+      en: ["{n} credential issue needs checking on the Credentials tab.", "{n} credential issues need checking on the Credentials tab."],
+      ko: "자격 증명 탭에서 확인이 필요한 발급이 {n}건 있습니다.",
+      ar: [
+        "لا توجد عمليات إصدار تحتاج إلى تحقق في تبويب «بيانات الاعتماد».",
+        "توجد عملية إصدار واحدة تحتاج إلى تحقق في تبويب «بيانات الاعتماد».",
+        "توجد عمليتا إصدار تحتاجان إلى تحقق في تبويب «بيانات الاعتماد».",
+        "توجد {n} عمليات إصدار تحتاج إلى تحقق في تبويب «بيانات الاعتماد».",
+        "توجد {n} عملية إصدار تحتاج إلى تحقق في تبويب «بيانات الاعتماد».",
+        "توجد {n} عملية إصدار تحتاج إلى تحقق في تبويب «بيانات الاعتماد».",
+      ],
+    }),
+  goCredentials: (l: Locale) => t(l, "Go to Credentials", "'자격 증명'으로 이동", "الانتقال إلى «بيانات الاعتماد»"),
   done: (l: Locale) => t(l, "Done", "완료", "تم"),
   notStored: (l: Locale) => t(l, "I didn't store it: revoke", "보관하지 못함: 폐기", "لم أحفظها: إبطال"),
-  revokeUnstoredReason: (l: Locale) => t(l, "Secret not stored at issue", "발급 시 비밀 값 미보관", "لم تُحفظ القيمة السرية عند الإصدار"),
-  showSecret: (l: Locale) => t(l, "Show secret", "비밀 값 보기", "عرض القيمة السرية"),
+  revokeUnstoredReason: (l: Locale) => t(l, "Secret not stored at issue", "발급 시 비밀값 미보관", "لم تُحفظ القيمة السرية عند الإصدار"),
+  showSecret: (l: Locale) => t(l, "Show secret", "비밀값 보기", "عرض القيمة السرية"),
   secretGone: (l: Locale) =>
     t(
       l,
       "The secret can no longer be shown. Revoke this credential and issue a new one.",
-      "비밀 값을 더 이상 표시할 수 없습니다. 이 자격 증명을 폐기하고 새로 발급하세요.",
+      "비밀값을 더 이상 표시할 수 없습니다. 이 자격 증명을 폐기하고 새로 발급하세요.",
       "لم يعد بالإمكان عرض القيمة السرية. أبطِل بيانات الاعتماد هذه وأصدر غيرها.",
     ),
   secretRetry: (l: Locale) =>
     t(
       l,
       "The secret couldn't be loaded. Try once more; if it was already delivered, it can't be shown again and you should revoke this credential.",
-      "비밀 값을 불러오지 못했습니다. 한 번 더 시도하세요. 이미 전달된 경우 다시 표시할 수 없으니 이 자격 증명을 폐기하세요.",
+      "비밀값을 불러오지 못했습니다. 한 번 더 시도하세요. 이미 전달된 경우 다시 표시할 수 없으니 이 자격 증명을 폐기하세요.",
       "تعذّر تحميل القيمة السرية. حاول مرة أخرى؛ وإن كانت قد سُلّمت فلا يمكن عرضها مجددًا وعليك إبطال بيانات الاعتماد هذه.",
     ),
-  unstoredTitle: (l: Locale) => t(l, "Secrets not confirmed as stored", "보관이 확인되지 않은 비밀 값", "قيم سرية لم يُؤكَّد حفظها"),
+  unstoredTitle: (l: Locale) => t(l, "Secrets not confirmed as stored", "보관이 확인되지 않은 비밀값", "قيم سرية لم يُؤكَّد حفظها"),
   unstoredLead: (l: Locale) =>
-    t(l, "If a secret wasn't saved, revoke its credential.", "비밀 값을 보관하지 않았다면 해당 자격 증명을 폐기하세요.", "إن لم تُحفظ قيمة سرية فأبطِل بيانات اعتمادها."),
+    t(l, "If a secret wasn't saved, revoke its credential.", "비밀값을 보관하지 않았다면 해당 자격 증명을 폐기하세요.", "إن لم تُحفظ قيمة سرية فأبطِل بيانات اعتمادها."),
   dismiss: (l: Locale) => t(l, "Dismiss", "알림 지우기", "تجاهل"),
   revokeTitle: (l: Locale) => t(l, "Revoke credential", "자격 증명 폐기", "إبطال بيانات الاعتماد"),
   revoke: (l: Locale) => t(l, "Revoke", "폐기", "إبطال"),

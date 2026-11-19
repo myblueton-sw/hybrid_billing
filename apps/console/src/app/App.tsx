@@ -59,6 +59,7 @@ import Overview from "../modules/operations/pages/overview/Screen";
 import Closing from "../modules/operations/pages/core-index-close/Screen";
 import logo from "../../../../packages/design-system/assets/logo/hb-lockup-color.svg";
 import "../planning/planning.css";
+import { guardUnload } from "../shared/unload-intent";
 const personas = ["all", "OP", "AM", "PR", "BL", "AP", "CP", "AU", "CU", "IA"];
 export default function App() {
   const [mobile, setMobile] = useState(() => window.innerWidth < 768);
@@ -263,12 +264,7 @@ export default function App() {
     document.getElementById("main")?.focus({ preventScroll: true });
   }, [screenKey]);
   useEffect(() => {
-    const h = (e: BeforeUnloadEvent) => {
-      if (dirty) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
+    const h = guardUnload(() => dirty);
     window.addEventListener("beforeunload", h);
     return () => window.removeEventListener("beforeunload", h);
   }, [dirty]);

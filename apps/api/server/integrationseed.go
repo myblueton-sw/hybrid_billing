@@ -34,6 +34,9 @@ type pluginEntry struct {
 	rationale string
 	closedBy  string
 	closing   string
+	reason    string
+	request   string
+	trigger   string
 }
 
 type pluginRecord struct {
@@ -45,6 +48,8 @@ type actionRecord struct {
 	action    string
 	actor     string
 	rationale string
+	reason    string
+	request   string
 }
 
 type subscriptionEntry struct {
@@ -54,9 +59,12 @@ type subscriptionEntry struct {
 	rationale string
 	history   []actionRecord
 	letters   []string
+	proposed  bool
+	resume    *letterRequest
 }
 
 type letterRequest struct {
+	id        string
 	by        string
 	rationale string
 }
@@ -79,10 +87,12 @@ type integrationStore struct {
 	dismiss       map[string]letterRequest
 	types         []typeRecord
 	counter       int
+	requests      *requestBook
+	held          map[string]string
 }
 
 func newIntegrationStore() *integrationStore {
-	return &integrationStore{redeliver: map[string]letterRequest{}, dismiss: map[string]letterRequest{}}
+	return &integrationStore{redeliver: map[string]letterRequest{}, dismiss: map[string]letterRequest{}, requests: newRequestBook(), held: map[string]string{}}
 }
 
 func (c *integrationStore) entry(number uint64) *pluginEntry {
@@ -245,7 +255,7 @@ func (s *Server) subscriptionPropose(sub webhooks.Subscription, by webhooks.Acto
 	}
 	e := s.integ.subscription(sub.ID)
 	if e == nil {
-		e = &subscriptionEntry{id: sub.ID, created: s.clock(), proposer: by.ID, rationale: rationale}
+		e = &subscriptionEntry{id: sub.ID, created: s.clock(), proposer: by.ID, rationale: rationale, proposed: true}
 		s.integ.subscriptions = append(s.integ.subscriptions, e)
 	}
 	return e, view, nil
@@ -258,6 +268,7 @@ func (s *Server) subscriptionStep(e *subscriptionEntry, action string, by webhoo
 		return view, err
 	}
 	e.history = append(e.history, actionRecord{action: action, actor: by.ID, rationale: rationale})
+	e.settle(view)
 	return view, nil
 }
 
@@ -362,7 +373,7 @@ func (s *Server) seedIntegrations(now time.Time) error {
 	round := func(status string, last bool) func() error {
 		return func() error {
 			var leases []webhooks.Lease
-			if err := s.webhookCall("dispatch", func() (err error) { leases, err = s.webhooks.Dispatch(ws, 1, relay); return }); err != nil {
+			if err := s.webhookCall("dispatch", func() (err error) { leases, err = s.dispatchDeliveries(1, relay); return }); err != nil {
 				return err
 			}
 			if len(leases) != 1 {
@@ -422,7 +433,9 @@ func (s *Server) seedIntegrations(now time.Time) error {
 			if err := s.webhookCall("request_redeliver", func() error { return s.webhooks.RequestRedeliver(ws, sampleSubscription, letter, ann) }); err != nil {
 				return err
 			}
-			s.integ.redeliver[letter] = letterRequest{by: ann.ID, rationale: installSeedReason}
+			r := s.integ.newRequest(requestRedeliver, ann.ID, letter, sampleSubscription)
+			r.rationale = installSeedReason
+			s.integ.redeliver[letter] = r
 			return nil
 		},
 		func() error {

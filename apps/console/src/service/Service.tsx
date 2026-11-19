@@ -7,6 +7,7 @@ import { fragmentToken, serviceClient, ServiceError, type LinkInfo, type Service
 import { ServiceContext } from "./context";
 import { Reauthenticate } from "./Reauthenticate";
 import { stepUpGate } from "./reauth-model";
+import { leaveDeliberately, stayAgain, watchRestore } from "../shared/unload-intent";
 import "./service.css";
 import { afterSignIn, emailValid, localeOf, loginValid, passwordProblem, serviceUrl, shellLocale } from "./helpers";
 export { serviceMode } from "./helpers";
@@ -393,6 +394,8 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
     setPrompt((p) => ({ opener, n: (p?.n ?? 0) + 1 }));
   }), []);
   const stepUp = useCallback(() => gate.request(), [gate]);
+  useEffect(() => watchRestore(window), []);
+  useEffect(() => { if (session) stayAgain(); }, [session]);
   useEffect(() => () => gate.settle(false), [gate]);
   useLayoutEffect(() => {
     if (activating && location.hash) history.replaceState(null, "", location.pathname + location.search);
@@ -417,6 +420,7 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
   };
   const signOutIn = async (l: Locale) => {
     if (session) await client.logout(session).catch(() => undefined);
+    leaveDeliberately();
     location.assign(serviceUrl("signin", l, "signed-out"));
   };
   if (activating) {
@@ -433,7 +437,7 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
           <Reauthenticate
             key={prompt.n} locale={shown} login={session.login} csrf={session.csrf} opener={prompt.opener}
             onDone={(ok) => { setPrompt(null); gate.settle(ok); }}
-            onSignedOut={() => { setPrompt(null); gate.settle(false); location.assign(serviceUrl("signin", shown, "ended")); }}
+            onSignedOut={() => { setPrompt(null); gate.settle(false); leaveDeliberately(); location.assign(serviceUrl("signin", shown, "ended")); }}
           />
         )}
       </ServiceContext.Provider>
@@ -454,4 +458,3 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
     </Frame>
   );
 }
-

@@ -642,3 +642,143 @@
 [data-security-screen="M05"] .mysec-sessions td.live-user .live-sub {
   font-weight: 400;
 }
+[data-security-screen="M04"] .live-attempts,
+[data-security-screen="M04"] .live-never,
+[data-security-screen="M04"] .live-held {
+  border: 1px solid var(--border-control);
+  padding: 16px;
+  box-shadow: none;
+}
+[data-security-screen="M04"] .live-attempts,
+[data-security-screen="M04"] .live-never {
+  margin-block: 0 16px;
+}
+[data-security-screen="M04"] .live-held {
+  margin-block: 16px 24px;
+  color: var(--hb-ink);
+}
+[data-security-screen="M04"] .live-attempts h3,
+[data-security-screen="M04"] .live-never h3,
+[data-security-screen="M04"] .live-held h3 {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--hb-ink);
+  margin: 0 0 8px;
+}
+[data-security-screen="M04"] .live-attempts > p,
+[data-security-screen="M04"] .live-never > p {
+  color: var(--text-muted);
+  max-inline-size: 68ch;
+  margin: 0 0 8px;
+}
+[data-security-screen="M04"] .live-held p {
+  max-inline-size: 68ch;
+  margin: 0 0 8px;
+}
+[data-security-screen="M04"] .live-held p:last-child {
+  margin-block-end: 0;
+}
+[data-security-screen="M04"] .live-attempts ul,
+[data-security-screen="M04"] .live-never ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+[data-security-screen="M04"] .live-attempts li,
+[data-security-screen="M04"] .live-never li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-block: 12px;
+}
+[data-security-screen="M04"] .live-attempts li + li,
+[data-security-screen="M04"] .live-never li + li {
+  border-block-start: 1px solid var(--border-row);
+}
+[data-security-screen="M04"] .live-row-text {
+  flex: 1 1 32ch;
+  max-inline-size: 68ch;
+  min-inline-size: 0;
+  color: var(--hb-ink);
+}
+[data-security-screen="M04"] .live-row-sub {
+  display: block;
+  margin-block-start: 4px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+[data-security-screen="M04"] .live-attempts .live-row-buttons > button,
+[data-security-screen="M04"] .live-never .live-row-buttons > button {
+  min-block-size: 44px;
+  padding: 0 16px;
+}
+[data-security-screen="M04"] .live-never .live-ended {
+  margin-block-start: 8px;
+}
+[data-security-screen="M04"] .live-pickup,
+[data-security-screen="M04"] .live-pickup-never {
+  display: block;
+  margin-block-start: 4px;
+  font-size: 14px;
+  line-height: 20px;
+}
+[data-security-screen="M04"] .live-pickup {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+[data-security-screen="M04"] .live-strong .live-sub.live-pickup-never,
+[data-security-screen="M04"] .live-pickup-never {
+  color: var(--hb-ink);
+  font-weight: 600;
+}
+[data-security-screen="M04"] .live-nowrap {
+  display: inline-block;
+  white-space: nowrap;
+}
+[data-security-screen="M04"] .live-step input[readonly],
+[data-security-screen="M04"] .live-step textarea[readonly] {
+  background: var(--surface-hover);
+  color: var(--hb-ink);
+  cursor: default;
+}
+[data-security-screen="M04"] .live-secondary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+@media (min-width: 768px) {
+  [data-security-screen="M04"] .live-creds .live-col-a {
+    inline-size: 27%;
+  }
+  [data-security-screen="M04"] .live-creds .live-col-b {
+    inline-size: 29%;
+  }
+  [data-security-screen="M04"] .live-creds .live-col-c {
+    inline-size: 28%;
+  }
+  [data-security-screen="M04"] .live-creds .live-col-d {
+    inline-size: 16%;
+  }
+}
+@media (max-width: 767px) {
+  [data-security-screen="M04"] .live-attempts li,
+  [data-security-screen="M04"] .live-never li {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  [data-security-screen="M04"] .live-attempts .live-row-buttons,
+  [data-security-screen="M04"] .live-never .live-row-buttons {
+    flex-direction: column;
+  }
+  [data-security-screen="M04"] .live-attempts .live-row-buttons > button,
+  [data-security-screen="M04"] .live-never .live-row-buttons > button {
+    inline-size: 100%;
+  }
+}
+
+[data-security-screen="M04"] .live-creds td.live-user bdi {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}

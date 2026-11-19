@@ -516,7 +516,7 @@ Read: `GET /api/v1/identity/access` (`boundary.go:32`), client and parser `admin
 
 ## M04 Service accounts
 
-Read: `GET /api/v1/identity/services` (`boundary.go:34`), client and parser `admin.ts:916-930`, called at `service-accounts/Live.tsx:551` for the accounts and credentials views (`:556`). Server shape `servicesPage` (`services.go:47-53`) with `serviceRow` (`services.go:30-39`), `credentialRow` (`services.go:22-28`) and `serviceLimits` (`services.go:41-45`). The service and credential rows are cast without per-field normalisation (`admin.ts:921`). Secret pickup: `GET /api/v1/identity/links/{ref}` (`boundary.go:30`), `admin.ts:931-937`, server answer `secret`, `credential` (`users.go:221-222`).
+Read: `GET /api/v1/identity/services` (`boundary.go:34`), client and parser `admin.ts:916-930`, called at `service-accounts/Live.tsx:551` for the accounts and credentials views (`:556`). Server shape `servicesPage` (`services.go:47-53`) with `serviceRow` (`services.go:30-39`), `credentialRow` (`services.go:22-28`) and `serviceLimits` (`services.go:41-45`). HYB-333 normalizes credential pickup metadata with `credentialRowOf` in `service/admin.ts`; the broader service row remains a cast. Secret pickup: `GET /api/v1/identity/links/{ref}` (`boundary.go:30`), `admin.ts:931-937`, server answer `secret`, `credential` (`users.go:221-222`).
 
 ### Views and page states
 
@@ -589,6 +589,23 @@ Read: `GET /api/v1/identity/services` (`boundary.go:34`), client and parser `adm
 | Revoke step | Credential, service, status | credential ID; row looked up in `services[].credentials` for `credentialState` | `admin.ts:921` | `service-accounts/Live.tsx:428, 439, 442` |
 | Revoke step | Command | `service.revoke_credential` | `admin.ts:871` | `service-accounts/Live.tsx:434` |
 | Revoke step | Already revoked | `invalid_stage` → `stage` | `admin.ts:753` | `service-accounts/Live.tsx:33-35, 441` |
+
+### HYB-333 pickup and unknown-outcome bindings
+
+Implementation candidate; test, render and copy verification remain pending for the combined review.
+
+| Area | Field or behavior | Producer | Consumer |
+| --- | --- | --- | --- |
+| Credential status | `secret_pickup`: open, collected, never_collected; inactive rows omit it | `apps/api/server/services.go`: `openPickups`, `pickupStates` | `service/admin.ts`: `credentialRowOf`; `service-accounts/live-model.ts`: `pickupLabel`; `Live.tsx`: credential table |
+| Pickup timing | `secret_pickup_until`, estimated from pickup, session idle and absolute ends | `services.go`: `pickupLive`; side-effect-free `identity.Boundary.Peek` | `pickupLabel`, credential status sub-line |
+| Retry window | `limits.replay_seconds` | `services.go`: command registry configuration | `issue-attempts.ts`: `submit`; `live-model.ts`: `outsideWindow` |
+| Issue reminders | sending, unknown, issued, lapsed; immutable original request and values | page-memory `issue-attempts.ts` store, scoped to user and service | `Live.tsx`: `AttemptsRegion`, held issue form, Show secret and Revoke |
+| Never-collected reminders | active credentials with `secret_pickup = never_collected` | services read; `live-model.ts`: `neverCollected` | `Live.tsx`: `NeverRegion`; revoke reason prefilled |
+| Leave and sign-out | accidental unload guarded; deliberate sign-out clears entries and marks | `shared/unload-intent.ts`; `Service.tsx` | issue store, Reveal and App unload guards |
+| Create retry | held request preserves body and attempt; definitive refusal renews only after idle | `live-model.ts`: `attemptState`, `settleFailure` | `Live.tsx`: `CreateForm`, `HeldBlock` |
+| Revoke focus | invoking control, then current view heading | `live-model.ts`: `returnFocus`; mode `from` | `Live.tsx`: cancel and narrow Back |
+
+No secret, pickup reference, request key or rationale is added to reminder DOM attributes or browser storage. Pickup references remain in page memory for one-time reveal.
 
 **Parsed but not displayed on M04:** service `version`.
 

@@ -288,7 +288,7 @@ func TestSeed(t *testing.T) {
 	k.AddStep("quiet", func() (bool, error) { ran = append(ran, "quiet"); return false, nil })
 	k.AddStep("bad", func() (bool, error) { return false, os.ErrInvalid })
 	k.AddStep("never", func() (bool, error) { ran = append(ran, "never"); return true, nil })
-	if err := k.Start(); err != os.ErrInvalid || strings.Join(ran, ",") != "one,quiet" || k.counter != 20 {
+	if err := k.Start(); err != os.ErrInvalid || strings.Join(ran, ",") != "one,quiet" || k.counter != 21 {
 		t.Errorf("steps %v %v %d", err, ran, k.counter)
 	}
 	m, _ := New(Config{Data: t.TempDir() + "/d", Seed: SeedNone})

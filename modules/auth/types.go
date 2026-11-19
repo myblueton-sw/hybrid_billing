@@ -34,7 +34,19 @@ const (
 	TrustApprove           Action = "trust_approve"
 	TrustActivate          Action = "trust_activate"
 	RevokeAccessInBulk     Action = "revoke_access_in_bulk"
+	AdministerAPIClients   Action = "administer_api_clients"
+	AdministerModules      Action = "administer_modules"
+	ApproveModules         Action = "approve_modules"
+	StopModules            Action = "stop_modules"
+	AdministerChannels     Action = "administer_channels"
+	ApproveChannels        Action = "approve_channels"
+	StopChannels           Action = "stop_channels"
+	ReprocessEvents        Action = "reprocess_events"
 )
+
+func IntegrationRights() []Action {
+	return []Action{AdministerAPIClients, AdministerModules, ApproveModules, StopModules, AdministerChannels, ApproveChannels, StopChannels, ReprocessEvents}
+}
 
 const InstallationKind = "installation"
 
@@ -42,6 +54,8 @@ var actions = map[Action]struct{}{
 	View: {}, ViewCost: {}, ChangeCustomerPolicy: {}, ChangeSellingPolicy: {}, RequestApproval: {},
 	Approve: {}, Issue: {}, Download: {}, Deliver: {}, ApproveSupportSession: {}, AdministerInstallation: {},
 	TrustPropose: {}, TrustValidate: {}, TrustApprove: {}, TrustActivate: {}, RevokeAccessInBulk: {},
+	AdministerAPIClients: {}, AdministerModules: {}, ApproveModules: {}, StopModules: {}, AdministerChannels: {}, ApproveChannels: {}, StopChannels: {},
+	ReprocessEvents: {},
 }
 
 func fieldAction(action Action) bool {
@@ -52,7 +66,8 @@ func humanOnly(action Action) bool { return action == Approve || action == Appro
 
 func InstallationAction(action Action) bool {
 	switch action {
-	case AdministerInstallation, TrustPropose, TrustValidate, TrustApprove, TrustActivate, RevokeAccessInBulk:
+	case AdministerInstallation, TrustPropose, TrustValidate, TrustApprove, TrustActivate, RevokeAccessInBulk,
+		AdministerAPIClients, AdministerModules, ApproveModules, StopModules, AdministerChannels, ApproveChannels, StopChannels, ReprocessEvents:
 		return true
 	}
 	return false
@@ -66,8 +81,9 @@ const (
 )
 
 type Catalog struct {
-	Kinds  []string
-	Fields map[string]FieldClass
+	AuthorClient string
+	Kinds        []string
+	Fields       map[string]FieldClass
 }
 
 type SubjectKind string
@@ -266,6 +282,7 @@ const (
 	ReasonIdentity          Reason = "identity_not_current"
 	ReasonWorkspace         Reason = "workspace_mismatch"
 	ReasonInstallationScope Reason = "installation_scope"
+	ReasonNotAuthor         Reason = "not_author"
 )
 
 type SubjectSource interface {

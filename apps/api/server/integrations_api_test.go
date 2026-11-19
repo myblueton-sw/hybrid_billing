@@ -165,7 +165,7 @@ func TestIntegrationsReadShape(t *testing.T) {
 	invoices := subscriptionRowFor(t, got, sampleSubscription)
 	if s := fmt.Sprint(invoices["state"], invoices["cursor"], invoices["lag"], invoices["types"], invoices["destination"], invoices["proposer_login"], invoices["approver_login"], invoices["signer"],
 		invoices["history"], invoices["target"]); s != "active3 0 [invoice.issued]sample-erp-webhookadmin@example.invalidadmin2@example.invalidnot_connected"+
-		"[map[action:approve actor:sample-admin-2 actor_login:admin2@example.invalid rationale:Sample data]]webhook-subscription:sample-erp-invoices" {
+		"[map[action:approve actor:sample-admin-2 actor_login:admin2@example.invalid rationale:Sample data reason: request:]]webhook-subscription:sample-erp-invoices" {
 		t.Errorf("invoices %s", s)
 	}
 	if s := fmt.Sprint(invoices["keys"]); s != "[map[approver:sample-admin-2 approver_login:admin2@example.invalid not_after:2027-05-15T09:00:00Z not_before:2026-11-16T09:00:00Z "+
@@ -191,7 +191,7 @@ func TestIntegrationsReadShape(t *testing.T) {
 	}
 	dead := deliveryRowFor(t, got, sampleLetter)
 	if s := fmt.Sprint(dead["kind"], dead["state"], dead["reason"], dead["sequence"], dead["event_id"], dead["source"], dead["redeliver_request"], dead["dismiss_request"], dead["target"]); s !=
-		"deadfailedrejected2sample-invoice-2urn:sample-billingmap[by:sample-admin by_login:admin@example.invalid rationale:Sample data] <nil>webhook-letter:delivery-3" {
+		"deadfailedrejected2sample-invoice-2urn:sample-billingmap[by:sample-admin by_login:admin@example.invalid id:letter-request-1 rationale:Sample data target:webhook-letter-request:letter-request-1] <nil>webhook-letter:delivery-3" {
 		t.Errorf("dead letter %s", s)
 	}
 	if s := actionsOf(dead); s != "request_redeliver=false/already_requested approve_redeliver=false/own_request request_dismiss=true/ approve_dismiss=false/not_requested" {
@@ -451,6 +451,17 @@ func TestIntegrationsReadGaps(t *testing.T) {
 		g.Terms, g.Validity = terms, gate.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}
 		if err := f.s.admin.AddGrant(g); err != nil {
 			t.Fatal(err)
+		}
+	}
+	for _, right := range gate.IntegrationRights() {
+		lateTerms := terms
+		lateTerms.Action = right
+		for _, g := range []gate.Grant{{ID: "late-console-" + string(right), ClientID: ConsoleClient}, {ID: "late-" + string(right) + "-" + SampleAdmin, SubjectID: SampleAdmin},
+			{ID: "late-" + string(right) + "-" + SampleAdmin2, SubjectID: SampleAdmin2}} {
+			g.Terms, g.Validity = lateTerms, gate.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}
+			if err := f.s.admin.AddGrant(g); err != nil {
+				t.Fatal(err)
+			}
 		}
 	}
 	root, second := f.as(AdminLogin), f.as(Admin2Login)

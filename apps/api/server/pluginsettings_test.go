@@ -87,7 +87,7 @@ func TestPluginLicensesInTheRead(t *testing.T) {
 		c.Seed = SeedNone
 		c.Plugins = PluginSettings{Raw: "", Given: true, Uses: 1}
 	})
-	modules, err := f.s.modulesOf("")
+	modules, err := f.s.modulesOf(fullViewer(f.s, ""))
 	raw, _ := json.Marshal(modules.Licenses)
 	if err != nil || string(raw) != `{"permitted":[],"source":"start_flag"}` {
 		t.Errorf("empty list without the seed %s %v", raw, err)

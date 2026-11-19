@@ -82,6 +82,7 @@ func (r *Registry) validDefinition(definition Definition) bool {
 	permission := definition.Permission
 	if !validID(definition.ID) || !validID(permission.Kind) || permission.Action == "" || len(definition.Fields) > r.limits.Fields ||
 		definition.Approval != (permission.Action == gate.Approve) || (definition.Approval && !definition.Mutating) ||
+		definition.Author && (!definition.Mutating || definition.Approval || !gate.InstallationAction(permission.Action)) ||
 		permission.Action == gate.ApproveSupportSession || !r.gate.Describes(permission.Action, permission.Kind, permission.Fields) {
 		return false
 	}
@@ -150,7 +151,7 @@ func (r *Registry) Catalogue() []Entry {
 	entries := make([]Entry, 0, len(r.definitions))
 	for _, stored := range r.definitions {
 		definition := copyDefinition(stored)
-		entries = append(entries, Entry{ID: definition.ID, Permission: definition.Permission, Approval: definition.Approval, Mutating: definition.Mutating,
+		entries = append(entries, Entry{ID: definition.ID, Permission: definition.Permission, Approval: definition.Approval, Author: definition.Author, Mutating: definition.Mutating,
 			Rationale: definition.Rationale, Fields: definition.Fields, Refusals: definition.Refusals, Supported: definition.Handler != nil})
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].ID < entries[j].ID })

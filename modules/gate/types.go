@@ -48,6 +48,14 @@ const (
 	TrustApprove           = auth.TrustApprove
 	TrustActivate          = auth.TrustActivate
 	RevokeAccessInBulk     = auth.RevokeAccessInBulk
+	AdministerAPIClients   = auth.AdministerAPIClients
+	AdministerModules      = auth.AdministerModules
+	ApproveModules         = auth.ApproveModules
+	StopModules            = auth.StopModules
+	AdministerChannels     = auth.AdministerChannels
+	ApproveChannels        = auth.ApproveChannels
+	StopChannels           = auth.StopChannels
+	ReprocessEvents        = auth.ReprocessEvents
 	InstallationKind       = auth.InstallationKind
 
 	Active    = auth.Active
@@ -74,6 +82,7 @@ const (
 	ReasonIdentity          = auth.ReasonIdentity
 	ReasonWorkspace         = auth.ReasonWorkspace
 	ReasonInstallationScope = auth.ReasonInstallationScope
+	ReasonNotAuthor         = auth.ReasonNotAuthor
 )
 
 var (
@@ -120,3 +129,5 @@ type Decision struct {
 }
 
 func InstallationAction(action Action) bool { return auth.InstallationAction(action) }
+
+func IntegrationRights() []Action { return auth.IntegrationRights() }

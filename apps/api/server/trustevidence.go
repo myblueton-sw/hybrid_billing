@@ -226,9 +226,13 @@ func refusalReason(err error) string {
 	return "invalid"
 }
 
-func (s *Server) holdsRight(user string, right gate.Action, now time.Time) bool {
+func (s *Server) explainRight(user string, right gate.Action, now time.Time) gate.Explanation {
 	request := gate.Request{Action: right, Kind: gate.InstallationKind, Resource: gate.Resource{WorkspaceID: s.bootWorkspace}}
-	return s.admin.ExplainInstallation(user, ConsoleClient, request, now).Allowed
+	return s.admin.ExplainInstallation(user, ConsoleClient, request, now)
+}
+
+func (s *Server) holdsRight(user string, right gate.Action, now time.Time) bool {
+	return s.explainRight(user, right, now).Allowed
 }
 
 func (s *Server) rightsOf(user string, now time.Time) rightsRow {

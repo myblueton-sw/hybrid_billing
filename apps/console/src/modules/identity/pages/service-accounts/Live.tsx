@@ -1,16 +1,20 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, sequence, type AdminClient, type CommandId, type CredentialRow, type ServiceRow, type ServicesPage } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
+import { utf8Length } from "../../../../service/helpers";
 import { Summary, type Problems } from "../../../../service/Service";
 import { FailureBox, Reason, reasonProblem, settles, useWide } from "../users/Live";
 import { w } from "../users/live-copy";
 import { failureText } from "../users/live-model";
 import { when } from "../authentication/live-model";
 import { v } from "./live-copy";
-import { attemptState, credentials, credentialState, initialService, keepsHold, issueBlock, liveCount, panelShown, pinIssue, prefix, serviceState, split, validName, wholeDays } from "./live-model";
+import { attemptState, credentials, credentialState, formVisible, initialService, keepsHold, issueBlock, liveCount, neverCollected, outsideWindow, panelShown, pickupLabel, pinIssue, prefix, returnFocus, serviceState, settleFailure, split, takenByMe, validName, wholeDays } from "./live-model";
+import { issueAttempts, type Entry } from "./issue-attempts";
+import { guardUnload } from "../../../../shared/unload-intent";
+import { HeldBlock } from "./Held";
 import { flushSync } from "react-dom";
 import "../users/live.css";
 
@@ -21,7 +25,7 @@ type Mode =
   | { kind: "detail"; id: string }
   | { kind: "step"; id: string; action: Action }
   | { kind: "reveal"; ref: string; service: string; credential: string; until: string }
-  | { kind: "revoke"; id: string; service: string; reason: string };
+  | { kind: "revoke"; id: string; service: string; reason: string; from: string };
 
 function describeFor(kind: Kind, max = 0, retire = false) {
   return (l: Locale, e: unknown) => {
@@ -52,35 +56,44 @@ function describeFor(kind: Kind, max = 0, retire = false) {
   };
 }
 
-function useCommand(api: AdminClient, revision: string, onReload: () => void, holdUnknown = false) {
+type Held = "idle" | "sending" | "unknown" | "lapsed";
+
+const elapsedSince = (first: { mono: number; wall: number }) => Math.max(performance.now() - first.mono, Date.now() - first.wall);
+
+function useCommand(api: AdminClient, revision: string, onReload: () => void, window = -1) {
+  const hold = window >= 0;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [focusKey, setFocusKey] = useState(0);
   const [track] = useState(() => attemptState(attempt));
-  const [holding, setHolding] = useState(false);
+  const [phase, setPhase] = useState<Held>("idle");
+  const [retried, setRetried] = useState(false);
+  const first = useRef({ mono: 0, wall: 0 });
   useEffect(() => track.revised(), [track, revision]);
-  const renew = () => { track.renew(); setHolding(false); };
+  const renew = () => { track.renew(); };
   const run = async (id: CommandId, target: string, reason: string, values: Record<string, string>) => {
+    const retry = hold && phase === "unknown";
+    if (retry && outsideWindow(elapsedSince(first.current), window)) {
+      setPhase("lapsed");
+      setFocusKey((k) => k + 1);
+      return null;
+    }
     setBusy(true);
     setError(null);
+    setRetried(retry);
+    if (hold) setPhase("sending");
     const sent = track.send(revision);
+    if (!retry) first.current = { mono: performance.now(), wall: Date.now() };
     try {
       const done = await api.command(id, target, sent.expected, reason, values, sent.attempt);
       track.succeeded();
-      setHolding(false);
+      setPhase("idle");
       return done;
     } catch (err) {
       setError(err);
-      if (err instanceof AdminError && (err.failure === "reauth" || err.failure === "reauth_cancelled")) {
-        setFocusKey((k) => k + 1);
-        return null;
-      }
-      const unknown = err instanceof AdminError && keepsHold(err.failure, track.held() !== "");
-      if (holdUnknown && unknown) {
-        track.keep(revision);
-        setHolding(true);
-      } else renew();
-      if (settles(err) || unknown) onReload();
+      const next = settleFailure(track, err, hold, sent.expected, hold && outsideWindow(elapsedSince(first.current), window, true));
+      if (hold) setPhase(next === "unknown" || next === "lapsed" ? next : "idle");
+      if (next !== "kept" && (hold || settles(err) || (err instanceof AdminError && keepsHold(err.failure, false)))) onReload();
       setFocusKey((k) => k + 1);
       return null;
     } finally {
@@ -88,14 +101,38 @@ function useCommand(api: AdminClient, revision: string, onReload: () => void, ho
       setBusy(false);
     }
   };
-  const hold = (err: AdminError) => {
-    track.keep(revision);
-    setHolding(true);
-    setError(err);
-    setFocusKey((k) => k + 1);
-    onReload();
+  const discard = () => {
+    if (!track.renew()) return false;
+    setPhase("idle");
+    setError(null);
+    setRetried(false);
+    return true;
   };
-  return { busy, error, focusKey, setFocusKey, renew, run, setError, holding, hold };
+  return { busy, error, focusKey, setFocusKey, renew, run, setError, phase, retried, discard, request: track.request };
+}
+
+export const issues = issueAttempts(attempt, { mono: () => performance.now(), wall: () => Date.now() }, typeof window === "undefined" ? undefined : window);
+
+const afterView = { focus: "", view: "" };
+
+function useIssues() {
+  return useSyncExternalStore(issues.subscribe, issues.version);
+}
+
+
+const describedBy = (...ids: string[]) => ids.filter(Boolean).join(" ") || undefined;
+
+function LockableReason({ l, value, onChange, error, locked, extra }: { l: Locale; value: string; onChange: (v: string) => void; error: string; locked: boolean; extra?: string }) {
+  if (!locked) return <Reason l={l} value={value} onChange={onChange} error={error} />;
+  const n = utf8Length(value);
+  return (
+    <div className="service-field live-reason">
+      <label htmlFor="live-reason">{w.reason(l)}</label>
+      <p className="service-hint" id="live-reason-hint">{w.reasonHint(l)}</p>
+      <textarea id="live-reason" rows={3} value={value} readOnly aria-describedby={describedBy("live-reason-hint", extra ?? "")} />
+      <p className="live-counter" aria-live="off">{w.bytes(l, n)}</p>
+    </div>
+  );
 }
 
 function Facts({ items }: { items: [string, ReactNode][] }) {
@@ -106,79 +143,108 @@ function Facts({ items }: { items: [string, ReactNode][] }) {
   );
 }
 
-const pending = new Map<string, string[]>();
-
 const ltr = (s: string) => <bdi dir="ltr">{s}</bdi>;
 
-function CreateForm({ l, api, page, stepping, onDone, onReload }: {
-  l: Locale; api: AdminClient; page: ServicesPage; stepping: boolean; onDone: (id: string) => void; onReload: () => void;
+function CreateForm({ l, api, page, user, stepping, onDone, onReload, onPin }: {
+  l: Locale; api: AdminClient; page: ServicesPage; user: string; stepping: boolean; onDone: (id: string) => void; onReload: () => void; onPin: () => void;
 }) {
   const [name, setName] = useState("");
   const [owner, setOwner] = useState("");
   const [reason, setReason] = useState("");
   const [problems, setProblems] = useState<Problems>([]);
-  const cmd = useCommand(api, page.revision, onReload);
+  const cmd = useCommand(api, page.revision, onReload, page.limits.replay_seconds);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (stepping) heading.current?.focus(); }, [stepping]);
-  const edit = (f: (x: string) => void) => (x: string) => { cmd.renew(); f(x); };
+  const locked = cmd.phase === "sending" || cmd.phase === "unknown";
+  const edit = (f: (x: string) => void) => (x: string) => { if (locked) return; cmd.renew(); f(x); };
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    const found: Problems = [];
-    if (!validName(name)) found.push({ field: "svc-name", message: v.errName(l) });
-    if (!owner) found.push({ field: "svc-owner", message: v.errOwner(l) });
-    const r = reasonProblem(l, reason);
-    if (r) found.push({ field: "live-reason", message: r });
-    setProblems(found);
-    cmd.setError(null);
-    if (found.length) { cmd.setFocusKey((k) => k + 1); return; }
+    if (cmd.phase === "sending" || cmd.phase === "lapsed") return;
+    if (cmd.phase !== "unknown") {
+      const found: Problems = [];
+      if (!validName(name)) found.push({ field: "svc-name", message: v.errName(l) });
+      if (!owner) found.push({ field: "svc-owner", message: v.errOwner(l) });
+      const r = reasonProblem(l, reason);
+      if (r) found.push({ field: "live-reason", message: r });
+      setProblems(found);
+      cmd.setError(null);
+      if (found.length) { cmd.setFocusKey((k) => k + 1); return; }
+    }
+    onPin();
     const done = await cmd.run("service.create", "services", reason, { name, owner });
     if (done) onDone(prefix + name);
   };
-  const failure = cmd.error instanceof AdminError && cmd.error.failure === "invalid" ? cmd.error.fields : [];
+  const startOver = () => { if (cmd.discard()) document.getElementById("svc-name")?.focus(); };
+  const failure = cmd.phase === "idle" && cmd.error instanceof AdminError && cmd.error.failure === "invalid" ? cmd.error.fields : [];
   const field = (id: string) => {
     const local = problems.find((x) => x.field === id)?.message;
     if (local) return local;
-    if (id === "svc-name" && failure.includes("name")) return v.errNameTaken(l);
+    if (id === "svc-name" && failure.includes("name")) return takenByMe(page, name, user) ? v.errNameTakenMine(l, prefix + name) : v.errNameTaken(l);
     if (id === "svc-owner" && failure.includes("owner")) return v.errOwner(l);
     return "";
   };
-  const shownError = failure.length ? null : cmd.error;
+  const shownError = failure.length || cmd.phase !== "idle" ? null : cmd.error;
+  const ownerLogin = page.owners.find((o) => o.user_id === owner)?.login || owner;
+  const held = locked ? "svc-create-held-lead" : "";
+  const note = cmd.phase === "unknown" ? "svc-create-locked-note" : "";
+  const describe = cmd.retried
+    ? (x: Locale, err: unknown) => (err instanceof AdminError && err.failure !== "invalid" ? { title: v.refusedTitle(x), body: v.createRetryRefused(x, prefix + name) } : describeFor("create", page.limits.services)(x, err))
+    : describeFor("create", page.limits.services);
   return (
     <form className="live-step" onSubmit={submit} noValidate>
       <h2 tabIndex={-1} ref={heading}>{v.createTitle(l)}</h2>
       <p className="live-impact">{v.createLead(l)}</p>
+      <HeldBlock l={l} id="svc-create" error={cmd.error} request={cmd.request()} phase={cmd.phase} lead={v.createHeldLead(l)} focusKey={cmd.phase === "unknown" || cmd.phase === "lapsed" ? cmd.focusKey : 0}
+        lapsed={<p>{v.createLapsed(l, prefix + name)}</p>} />
       {(problems.length > 0 || failure.length > 0) && (
         <Summary locale={l} title={c.check(l)} focusKey={cmd.focusKey}
           problems={problems.length ? problems : (["svc-name", "svc-owner"].filter((id) => field(id)).map((id) => ({ field: id, message: field(id) })))} />
       )}
-      {shownError !== null && <FailureBox l={l} error={shownError} focusKey={cmd.focusKey} describe={describeFor("create", page.limits.services)} />}
-      <div className="service-field">
-        <label htmlFor="svc-name">{v.name(l)}</label>
-        <p className="service-hint" id="svc-name-hint">{v.nameHint(l)}</p>
-        {field("svc-name") && <p className="service-field-error" id="svc-name-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{field("svc-name")}</p>}
-        <span className="live-unit live-prefixed" dir="ltr">
-          <span className="live-mono" aria-hidden="true">{prefix}</span>
-          <input id="svc-name" className="live-mono" autoComplete="off" spellCheck={false} value={name} aria-invalid={field("svc-name") ? true : undefined}
-            aria-describedby={["svc-name-hint", field("svc-name") ? "svc-name-error" : ""].filter(Boolean).join(" ")} onChange={(e) => edit(setName)(e.target.value)} />
-        </span>
-        <p className="live-note">{v.idPreview(l)} <bdi dir="ltr" className="live-mono">{prefix + (name || "…")}</bdi></p>
-      </div>
-      {page.owners.length === 0 ? <p className="live-note">{v.noOwners(l)}</p> : (
-        <div className="service-field">
-          <label htmlFor="svc-owner">{v.owner(l)}</label>
-          <p className="service-hint" id="svc-owner-hint">{v.ownerHint(l)}</p>
-          {field("svc-owner") && <p className="service-field-error" id="svc-owner-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{field("svc-owner")}</p>}
-          <select id="svc-owner" className="live-select" value={owner} aria-invalid={field("svc-owner") ? true : undefined}
-            aria-describedby={["svc-owner-hint", field("svc-owner") ? "svc-owner-error" : ""].filter(Boolean).join(" ")} onChange={(e) => edit(setOwner)(e.target.value)}>
-            <option value="">{v.chooseOwner(l)}</option>
-            {page.owners.map((o) => <option key={o.user_id} value={o.user_id}>{o.login || o.user_id}</option>)}
-          </select>
-        </div>
+      {shownError !== null && <FailureBox l={l} error={shownError} focusKey={cmd.focusKey} describe={describe} />}
+      {cmd.phase === "lapsed" ? (
+        <Facts items={[[v.name(l), <span className="live-mono">{ltr(prefix + name)}</span>], [v.owner(l), ltr(ownerLogin)], [w.reason(l), reason || "—"]]} />
+      ) : (
+        <>
+          <div className="service-field">
+            <label htmlFor="svc-name">{v.name(l)}</label>
+            <p className="service-hint" id="svc-name-hint">{v.nameHint(l)}</p>
+            {field("svc-name") && <p className="service-field-error" id="svc-name-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{field("svc-name")}</p>}
+            <span className="live-unit live-prefixed" dir="ltr">
+              <span className="live-mono" aria-hidden="true">{prefix}</span>
+              <input id="svc-name" className="live-mono" autoComplete="off" spellCheck={false} value={name} readOnly={locked} aria-invalid={field("svc-name") ? true : undefined}
+                aria-describedby={describedBy("svc-name-hint", field("svc-name") ? "svc-name-error" : "", held, note)} onChange={(e) => edit(setName)(e.target.value)} />
+            </span>
+            <p className="live-note">{v.idPreview(l)} <bdi dir="ltr" className="live-mono">{prefix + (name || "…")}</bdi></p>
+          </div>
+          {page.owners.length === 0 && !locked ? <p className="live-note">{v.noOwners(l)}</p> : (
+            <div className="service-field">
+              <label htmlFor="svc-owner">{v.owner(l)}</label>
+              <p className="service-hint" id="svc-owner-hint">{v.ownerHint(l)}</p>
+              {field("svc-owner") && <p className="service-field-error" id="svc-owner-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{field("svc-owner")}</p>}
+              {locked ? (
+                <input id="svc-owner" className="live-select" dir="ltr" readOnly value={ownerLogin} aria-describedby={describedBy("svc-owner-hint", held, note)} />
+              ) : (
+                <select id="svc-owner" className="live-select" value={owner} aria-invalid={field("svc-owner") ? true : undefined}
+                  aria-describedby={describedBy("svc-owner-hint", field("svc-owner") ? "svc-owner-error" : "")} onChange={(e) => edit(setOwner)(e.target.value)}>
+                  <option value="">{v.chooseOwner(l)}</option>
+                  {page.owners.map((o) => <option key={o.user_id} value={o.user_id}>{o.login || o.user_id}</option>)}
+                </select>
+              )}
+            </div>
+          )}
+          <Facts items={[[v.credentialsFact(l), v.credAfter(l)]]} />
+          <LockableReason l={l} value={reason} onChange={edit(setReason)} error={field("live-reason")} locked={locked} extra={describedBy(held, note)} />
+        </>
       )}
-      <Facts items={[[v.credentialsFact(l), v.credAfter(l)]]} />
-      <Reason l={l} value={reason} onChange={edit(setReason)} error={field("live-reason")} />
       <div className="live-buttons">
-        <button type="submit" className="live-primary" aria-busy={cmd.busy || undefined} disabled={cmd.busy || page.owners.length === 0}>{cmd.busy ? w.saving(l) : v.createTitle(l)}</button>
+        {cmd.phase !== "lapsed" && (
+          <button type="submit" className="live-primary" aria-busy={cmd.busy || undefined} disabled={cmd.busy || (page.owners.length === 0 && !locked)}>
+            {cmd.busy ? w.saving(l) : cmd.phase === "unknown" ? c.tryAgain(l) : v.createTitle(l)}
+          </button>
+        )}
+        {(cmd.phase === "unknown" || cmd.phase === "lapsed" || (cmd.phase === "sending" && cmd.retried)) && (
+          <button type="button" className="live-secondary" disabled={cmd.phase === "sending"} onClick={startOver}>{v.startOver(l)}</button>
+        )}
       </div>
     </form>
   );
@@ -252,73 +318,119 @@ function StateStep({ l, api, page, s, action, onDone, onCancel, onReload }: {
   );
 }
 
-function IssueForm({ l, api, page, s, stepping, onIssued, onReload, onAccounts, onPin }: {
-  l: Locale; api: AdminClient; page: ServicesPage; s: ServiceRow; stepping: boolean;
-  onIssued: (ref: string, credential: string, until: string) => void; onReload: () => void; onAccounts: () => void; onPin: () => void;
+function IssueForm({ l, api, page, s, user, stepping, onReload, onAccounts, onPin, onShowSecret }: {
+  l: Locale; api: AdminClient; page: ServicesPage; s: ServiceRow; user: string; stepping: boolean; onReload: () => void; onAccounts: () => void; onPin: () => void; onShowSecret: () => void;
 }) {
+  useIssues();
   const max = page.limits.credential_days;
-  const [days, setDays] = useState(String(max));
-  const [reason, setReason] = useState("");
+  const entry = issues.get(user, s.id);
+  const refusal = issues.refusal(user, s.id);
+  const [days, setDays] = useState(entry?.days ?? String(max));
+  const [reason, setReason] = useState(entry?.reason ?? "");
   const [problems, setProblems] = useState<Problems>([]);
-  const cmd = useCommand(api, page.revision, onReload, true);
+  const [focusKey, setFocusKey] = useState(0);
+  const [blockKey, setBlockKey] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (stepping) heading.current?.focus(); }, [stepping]);
-  const block = cmd.holding ? "" : issueBlock(s, page.limits.credentials_per_service);
-  const n = wholeDays(days, max);
+  const phase: Held | "issued" = entry?.phase ?? "idle";
+  const seen = useRef(phase);
+  useEffect(() => {
+    if (seen.current !== phase && (phase === "unknown" || phase === "lapsed")) setBlockKey((k) => k + 1);
+    seen.current = phase;
+  }, [phase]);
+  const locked = phase === "sending" || phase === "unknown" || phase === "issued";
+  const shownDays = entry ? entry.days : days;
+  const shownReason = entry ? entry.reason : reason;
+  const block = entry ? "" : issueBlock(s, page.limits.credentials_per_service);
+  const n = wholeDays(shownDays, max);
   const ends = n ? when(l, new Date(Date.parse(page.now) + n * 86400000).toISOString()) : "";
+  const send = async (values: { days: string; reason: string }) => {
+    onPin();
+    const sent = await issues.submit(user, s.id, values, page.revision, page.limits.replay_seconds,
+      (tried, expected) => api.command("service.issue_credential", s.id, expected, values.reason, { days: values.days }, tried));
+    if (sent.kind === "removed") setFocusKey((k) => k + 1);
+    if (sent.kind !== "issued" && sent.kind !== "refused") onReload();
+  };
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (phase === "sending" || phase === "issued" || phase === "lapsed") return;
+    if (entry && phase === "unknown") return send({ days: entry.days, reason: entry.reason });
     const found: Problems = [];
     if (n === null) found.push({ field: "svc-days", message: v.errDays(l, max) });
     const r = reasonProblem(l, reason);
     if (r) found.push({ field: "live-reason", message: r });
     setProblems(found);
-    cmd.setError(null);
-    if (found.length) { cmd.setFocusKey((k) => k + 1); return; }
-    onPin();
-    const done = await cmd.run("service.issue_credential", s.id, reason, { days: String(n) });
-    if (!done) return;
-    const credential = done.fields.credential ?? "";
-    const ref = done.fields.secret_ref ?? "";
-    if (!/^cred-[0-9a-f]{16}$/.test(credential) || !/^[A-Za-z0-9_-]{16,64}$/.test(ref)) {
-      cmd.hold(new AdminError("unavailable"));
-      return;
-    }
-    onIssued(ref, credential, new Date(Date.parse(page.now) + (n ?? 0) * 86400000).toISOString());
+    issues.clearRefusal(user, s.id);
+    if (found.length) { setFocusKey((k) => k + 1); return; }
+    return send({ days: String(n), reason });
+  };
+  const startOver = () => {
+    if (!entry) return;
+    const kept = { days: entry.days, reason: entry.reason };
+    if (!issues.discard(user, s.id)) return;
+    setDays(kept.days);
+    setReason(kept.reason);
+    document.getElementById("svc-days")?.focus();
   };
   const field = (id: string) => problems.find((x) => x.field === id)?.message ?? "";
-  const daysError = field("svc-days") || (cmd.error instanceof AdminError && cmd.error.failure === "invalid" && cmd.error.fields.includes("days") ? v.errDays(l, max) : "");
-  const refused = cmd.error instanceof AdminError && cmd.error.failure === "refused";
+  const error = refusal?.error ?? null;
+  const daysError = field("svc-days") || (error instanceof AdminError && error.failure === "invalid" && error.fields.includes("days") ? v.errDays(l, max) : "");
+  const refused = error instanceof AdminError && error.failure === "refused";
+  const describe = refusal?.retry ? () => ({ title: v.refusedTitle(l), body: v.retryRefused(l) }) : describeFor("issue");
+  const held = locked ? (phase === "issued" ? "svc-issued-lead" : "svc-held-lead") : "";
+  const note = phase === "unknown" ? "svc-locked-note" : "";
+  const edit = (f: (x: string) => void) => (x: string) => { if (locked) return; issues.clearRefusal(user, s.id); f(x); };
   return (
     <form className="live-step" onSubmit={submit} noValidate>
-      <h2 tabIndex={-1} ref={heading}>{v.issueTitle(l)}</h2>
+      <h2 id="svc-issue-title" tabIndex={-1} ref={heading}>{v.issueTitle(l)}</h2>
       <p className="live-who live-mono">{ltr(s.id)}</p>
-      {(block !== "" || refused) && cmd.error !== null && <FailureBox l={l} error={cmd.error} focusKey={cmd.focusKey} describe={describeFor("issue")} />}
+      {(block !== "" || refused) && error !== null && <FailureBox l={l} error={error} focusKey={focusKey} describe={describe} />}
       {block === "retired" ? <p className="live-impact">{v.blockedRetired(l)}</p>
-        : block === "suspended" || (refused && !cmd.holding && s.state === "suspended") ? (
+        : block === "suspended" || (refused && s.state === "suspended") ? (
           <>
             <p className="live-impact">{v.blockedSuspended(l, s.id)}</p>
             <div className="live-buttons"><button type="button" className="live-secondary" onClick={onAccounts}>{v.goAccounts(l)}</button></div>
           </>
-        ) : block === "limit" || (refused && !cmd.holding) ? <p className="live-impact">{v.blockedLimit(l, s.id, page.limits.credentials_per_service)}</p> : (
+        ) : block === "limit" || refused ? <p className="live-impact">{v.blockedLimit(l, s.id, page.limits.credentials_per_service)}</p> : (
           <>
-            <p className="live-impact">{v.issueLead(l)}</p>
-            {(problems.length > 0 || daysError) && <Summary locale={l} title={c.check(l)} focusKey={cmd.focusKey} problems={problems.length ? problems : [{ field: "svc-days", message: daysError }]} />}
-            {cmd.error !== null && !daysError && <FailureBox l={l} error={cmd.error} focusKey={cmd.focusKey} describe={describeFor("issue")} />}
-            <div className="service-field live-minutes">
-              <label htmlFor="svc-days">{v.validFor(l)}</label>
-              <p className="service-hint" id="svc-days-hint">{v.daysHint(l, max)}</p>
-              {daysError && <p className="service-field-error" id="svc-days-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{daysError}</p>}
-              <span className="live-unit">
-                <input id="svc-days" inputMode="numeric" dir="ltr" value={days} aria-invalid={daysError ? true : undefined}
-                  aria-describedby={["svc-days-hint", daysError ? "svc-days-error" : ""].filter(Boolean).join(" ")} onChange={(e) => { cmd.renew(); setDays(e.target.value); }} />
-                <span>{v.days(l)}</span>
-              </span>
-              {ends && <p className="live-note" aria-live="polite">{v.endsOn(l, ends)}</p>}
-            </div>
-            <Reason l={l} value={reason} onChange={(x) => { cmd.renew(); setReason(x); }} error={field("live-reason")} />
+            {phase === "idle" && <p className="live-impact">{v.issueLead(l)}</p>}
+            <HeldBlock l={l} id="svc" error={entry?.error} request={entry?.track.request()} phase={phase === "issued" ? "idle" : phase} lead={v.heldLead(l)} focusKey={blockKey}
+              lapsed={<p>{v.attemptLapsed(l, s.id).join(" ")}</p>} />
+            {phase === "issued" && entry?.issued && (
+              <div className="live-held">
+                <p id="svc-issued-lead">{v.attemptIssued(l, entry.issued.credential, s.id)}</p>
+                <div className="live-buttons"><button type="button" className="live-primary" onClick={onShowSecret}>{v.showSecret(l)}</button></div>
+              </div>
+            )}
+            {(problems.length > 0 || daysError) && <Summary locale={l} title={c.check(l)} focusKey={focusKey} problems={problems.length ? problems : [{ field: "svc-days", message: daysError }]} />}
+            {error !== null && !daysError && <FailureBox l={l} error={error} focusKey={focusKey} describe={describe} />}
+            {phase === "lapsed" ? (
+              <Facts items={[[v.validFor(l), `${shownDays} ${v.days(l)}`], [w.reason(l), shownReason || "—"]]} />
+            ) : (
+              <>
+                <div className="service-field live-minutes">
+                  <label htmlFor="svc-days">{v.validFor(l)}</label>
+                  <p className="service-hint" id="svc-days-hint">{v.daysHint(l, max)}</p>
+                  {daysError && <p className="service-field-error" id="svc-days-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{daysError}</p>}
+                  <span className="live-unit">
+                    <input id="svc-days" inputMode="numeric" dir="ltr" value={shownDays} readOnly={locked} aria-invalid={daysError ? true : undefined}
+                      aria-describedby={describedBy("svc-days-hint", daysError ? "svc-days-error" : "", held, note)} onChange={(e) => edit(setDays)(e.target.value)} />
+                    <span>{v.days(l)}</span>
+                  </span>
+                  {ends && <p className="live-note" aria-live="polite">{v.endsOn(l, ends)}</p>}
+                </div>
+                <LockableReason l={l} value={shownReason} onChange={edit(setReason)} error={field("live-reason")} locked={locked} extra={describedBy(held, note)} />
+              </>
+            )}
             <div className="live-buttons">
-              <button type="submit" className="live-primary" aria-busy={cmd.busy || undefined} disabled={cmd.busy}>{cmd.busy ? w.saving(l) : cmd.holding ? c.tryAgain(l) : v.issueTitle(l)}</button>
+              {phase !== "lapsed" && (
+                <button type="submit" className="live-primary" aria-busy={phase === "sending" || undefined} disabled={phase === "sending" || phase === "issued"}>
+                  {phase === "sending" ? w.saving(l) : phase === "unknown" ? c.tryAgain(l) : v.issueTitle(l)}
+                </button>
+              )}
+              {(phase === "unknown" || phase === "lapsed" || (phase === "sending" && entry?.retry)) && (
+                <button type="button" className="live-secondary" disabled={phase === "sending"} onClick={startOver}>{v.startOver(l)}</button>
+              )}
             </div>
           </>
         )}
@@ -360,7 +472,7 @@ function Reveal({ l, api, service, refId, credential, until, onDone, onRevoke, o
   useEffect(() => { if (retried.current && state === "shown") heading.current?.focus(); }, [state]);
   useEffect(() => {
     if (state !== "shown") return;
-    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    const warn = guardUnload(() => true);
     addEventListener("beforeunload", warn);
     return () => removeEventListener("beforeunload", warn);
   }, [state]);
@@ -480,9 +592,15 @@ function ServiceTable({ l, rows, max, selected, onManage }: { l: Locale; rows: S
   );
 }
 
+function PickupTime({ l, iso }: { l: Locale; iso: string }) {
+  const date = new Date(iso);
+  const locale = { en: "en-US", ko: "ko-KR", ar: "ar" }[l];
+  return <bdi dir="ltr"><bdi dir="ltr" className="live-nowrap">{new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date).replace(/[\u061c\u200e\u200f]/g, "")}</bdi>{" "}<bdi dir="ltr" className="live-nowrap">{new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(date).replace(/[\u061c\u200e\u200f]/g, "")}</bdi></bdi>;
+}
+
 function CredentialTable({ l, rows, selected, onRevoke, retired = false }: { l: Locale; rows: CredentialRow[]; selected: string; onRevoke?: (c: CredentialRow) => void; retired?: boolean }) {
   return (
-    <div className="security-table-scroll live-table live-access">
+    <div className="security-table-scroll live-table live-access live-creds">
       <table role="table">
         <colgroup><col className="live-col-a" /><col className="live-col-b" /><col className="live-col-c" />{onRevoke && <col className="live-col-d" />}</colgroup>
         <thead role="rowgroup"><tr role="row">
@@ -494,11 +612,13 @@ function CredentialTable({ l, rows, selected, onRevoke, retired = false }: { l: 
         <tbody role="rowgroup">
           {rows.map((x) => {
             const [state, sub] = credentialState(l, x, retired);
+            const pickup = onRevoke ? pickupLabel(l, x) : null;
             return (
               <tr key={x.id} role="row" className={selected === x.id ? "live-selected" : undefined}>
                 <td role="cell" className="live-user live-mono">{ltr(x.id)}</td>
                 <td role="cell" data-label={v.colValid(l)}><span className="live-to">{v.from(l, when(l, x.not_before))}</span><span className="live-to">{v.until(l, when(l, x.not_after))}</span></td>
-                <td role="cell" data-label={v.colStatus(l)} className={x.state !== "active" || !x.usable ? "live-strong" : ""}>{state}{sub && <span className="live-sub">{sub}</span>}</td>
+                <td role="cell" data-label={v.colStatus(l)} className={x.state !== "active" || !x.usable ? "live-strong" : ""}>{state}{sub && <span className="live-sub">{sub}</span>}
+                  {pickup && <span className={pickup.never ? "live-sub live-pickup-never" : "live-sub live-pickup"}>{pickup.text}{pickup.time && <> <PickupTime l={l} iso={x.secret_pickup_until!} /></>}</span>}</td>
                 {onRevoke && (
                   <td role="cell"><button type="button" className="live-secondary live-revoke" data-credential={x.id} onClick={() => onRevoke(x)}>{v.revoke(l)}<span className="visually-hidden"> {x.id}</span></button></td>
                 )}
@@ -523,9 +643,77 @@ function Unavailable({ title, body, action }: { title: string; body: string; act
   );
 }
 
+function AttemptsRegion({ l, entries, onOpen, onDiscard, onShow, onRevoke }: {
+  l: Locale; entries: Entry[]; onOpen: (service: string) => void; onDiscard: (service: string) => void; onShow: (service: string) => void; onRevoke: (e: Entry) => void;
+}) {
+  const discardable = entries.some((e) => e.phase === "unknown" || e.phase === "lapsed");
+  return (
+    <section className="live-attempts" aria-labelledby="svc-attempts-title">
+      <h3 id="svc-attempts-title" tabIndex={-1}>{v.attemptsTitle(l)}</h3>
+      {discardable && <p>{v.attemptsDiscardNote(l)}</p>}
+      <ul>
+        {entries.map((e) => {
+          const [head, rest] = e.phase === "lapsed" ? v.attemptLapsed(l, e.service) : v.attemptUnknown(l, e.service);
+          return (
+            <li key={e.service} data-attempt={e.service}>
+              {e.phase === "sending" && <span className="live-row-text" aria-busy="true">{v.attemptSending(l, e.service)}</span>}
+              {(e.phase === "unknown" || e.phase === "lapsed") && <span className="live-row-text"><strong>{head}</strong> {rest}</span>}
+              {e.phase === "issued" && e.issued && <span className="live-row-text">{v.attemptIssued(l, e.issued.credential, e.service)}</span>}
+              {e.phase !== "sending" && (
+                <span className="live-row-buttons">
+                  {e.phase === "unknown" && <button type="button" className="live-secondary" onClick={() => onOpen(e.service)}>{v.openIssue(l)}<span className="visually-hidden"> {e.service}</span></button>}
+                  {e.phase === "issued" && <button type="button" className="live-primary" onClick={() => onShow(e.service)}>{v.showSecret(l)}<span className="visually-hidden"> {e.service}</span></button>}
+                  {e.phase === "issued" && e.issued && (
+                    <button type="button" className="live-secondary" data-attempt-revoke={e.service} onClick={() => onRevoke(e)}>{v.revoke(l)}<span className="visually-hidden"> {e.issued.credential}</span></button>
+                  )}
+                  {(e.phase === "unknown" || e.phase === "lapsed") && <button type="button" className="live-secondary" onClick={() => onDiscard(e.service)}>{v.discardAttempt(l)}<span className="visually-hidden"> {e.service}</span></button>}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function NeverRow({ l, service, c, onRevoke }: { l: Locale; service: string; c: CredentialRow; onRevoke: (service: string, id: string) => void }) {
+  return (
+    <li data-never={c.id}>
+      <span className="live-row-text">
+        <strong><span className="live-mono">{ltr(c.id)}</span> · <span className="live-mono">{ltr(service)}</span></strong>
+        <span className="live-row-sub">{v.until(l, when(l, c.not_after))}</span>
+      </span>
+      <span className="live-row-buttons">
+        <button type="button" className="live-secondary" data-never-revoke={c.id} onClick={() => onRevoke(service, c.id)}>{v.revoke(l)}<span className="visually-hidden"> {c.id}</span></button>
+      </span>
+    </li>
+  );
+}
+
+function NeverRegion({ l, rows, onRevoke }: { l: Locale; rows: { service: string; credential: CredentialRow }[]; onRevoke: (service: string, id: string) => void }) {
+  const first = rows.slice(0, 5);
+  const more = rows.slice(5);
+  return (
+    <section className="live-never" aria-labelledby="svc-never-title">
+      <h3 id="svc-never-title" tabIndex={-1}>{v.neverTitle(l)}</h3>
+      <p>{v.neverLead(l)}</p>
+      <ul>{first.map((r) => <NeverRow key={r.credential.id} l={l} service={r.service} c={r.credential} onRevoke={onRevoke} />)}</ul>
+      {more.length > 0 && (
+        <details className="live-ended">
+          <summary>{v.neverMore(l, more.length)}</summary>
+          <ul>{more.map((r) => <NeverRow key={r.credential.id} l={l} service={r.service} c={r.credential} onRevoke={onRevoke} />)}</ul>
+        </details>
+      )}
+    </section>
+  );
+}
+
 export default function LiveServices({ locale: l, view, session, onSignOut, onView }: {
   locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void;
 }) {
+  useIssues();
+  const user = session.user;
   const api = useAdminClient();
   const wide = useWide();
   const order = useRef(sequence());
@@ -534,38 +722,72 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
   const [error, setError] = useState<unknown>(null);
   const [mode, setMode] = useState<Mode>({ kind: "form" });
   const [chosen, setChosen] = useState("");
-  const [unstored, setUnstoredState] = useState<string[]>(() => pending.get(session.user) ?? []);
-  const setUnstored = (f: (u: string[]) => string[]) => setUnstoredState((u) => { const next = f(u); pending.set(session.user, next); return next; });
   const [notice, setNotice] = useState("");
   const [announce, setAnnounce] = useState("");
   const [focusTo, setFocusTo] = useState("");
   const [formKey, setFormKey] = useState(0);
   const [open, setOpen] = useState(false);
+
+  const unstored = issues.marks(user);
+  const attempts = issues.list(user);
+  const credentialsView = view === "credentials";
   useEffect(() => {
-    if (!focusTo) return;
-    (document.querySelector<HTMLElement>(focusTo) ?? document.querySelector<HTMLElement>("#svc-list-title"))?.focus();
+    if (afterView.focus && afterView.view === view) { setFocusTo(afterView.focus); afterView.focus = ""; }
+  }, [view]);
+  useEffect(() => {
+    if (!focusTo || !page) return;
+    for (const sel of returnFocus(focusTo, credentialsView)) {
+      const el = document.querySelector<HTMLElement>(sel);
+      if (el) { el.focus(); break; }
+    }
     setFocusTo("");
-  }, [focusTo]);
-  const say = (text: string) => { setNotice(text); setAnnounce(""); setTimeout(() => setAnnounce(text), 50); };
+  }, [focusTo, credentialsView, page]);
+  const tell = (text: string) => { setAnnounce(""); setTimeout(() => setAnnounce(text), 50); };
+  const say = (text: string) => { setNotice(text); tell(text); };
   const load = useCallback(() => {
     const n = order.current.next();
+    const seq = issues.readStarted();
     api.services().then(
-      (got) => { if (order.current.latest(n)) { setPage(got); setStatus("ready"); setError(null); } },
+      (got) => { issues.reconcile(user, got, seq); if (order.current.latest(n)) { setPage(got); setStatus("ready"); setError(null); } },
       (e) => { if (order.current.latest(n)) { setError(e); setStatus("error"); } },
     );
-  }, [api]);
+  }, [api, user]);
   useEffect(() => { if (view === "accounts" || view === "credentials") load(); }, [load, view]);
   const viewRef = useRef(view);
   useEffect(() => {
-    if (viewRef.current !== view) { setMode({ kind: "form" }); setNotice(""); setOpen(false); }
+    if (viewRef.current !== view) {
+      setMode({ kind: "form" });
+      setNotice("");
+      setOpen(false);
+    }
     viewRef.current = view;
   }, [view]);
+  const currentId = page ? initialService(page, chosen) : "";
+  const visibleFor = (service: string) => formVisible({ view, mode: mode.kind, current: currentId, service, wide, open, visibility: typeof document === "undefined" ? "hidden" : document.visibilityState });
+  const showSecret = (service: string) => {
+    const got = issues.consume(user, service);
+    if (!got) return;
+    issues.mark(user, got.credential);
+    setNotice("");
+    setChosen(service);
+    load();
+    setMode({ kind: "reveal", ref: got.ref, service, credential: got.credential, until: got.until });
+  };
+  const phases = useRef(new Map<string, string>(attempts.map((e) => [e.service, e.phase])));
   useEffect(() => {
-    if (unstored.length === 0) return;
-    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); };
-    addEventListener("beforeunload", warn);
-    return () => removeEventListener("beforeunload", warn);
-  }, [unstored.length]);
+    const seen = new Map<string, string>();
+    for (const e of attempts) {
+      seen.set(e.service, e.phase);
+      if (phases.current.get(e.service) === e.phase) continue;
+      const visible = visibleFor(e.service);
+      if (e.phase === "issued" && visible) { showSecret(e.service); continue; }
+      if (visible) continue;
+      if (e.phase === "unknown") tell(v.attemptUnknown(l, e.service).join(" "));
+      if (e.phase === "lapsed") tell(v.attemptLapsed(l, e.service).join(" "));
+      if (e.phase === "issued" && e.issued) tell(v.attemptIssued(l, e.issued.credential, e.service));
+    }
+    phases.current = seen;
+  });
   const toAccounts = { label: v.goAccounts(l), go: () => onView("accounts") };
   if (view === "usage") return <Unavailable title={v.usageTitle(l)} body={v.usageBody(l)} action={toAccounts} />;
   if (view === "transfer") return <Unavailable title={v.transferTitle(l)} body={v.transferBody(l)} action={toAccounts} />;
@@ -584,8 +806,15 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
   const max = page?.limits.credentials_per_service ?? 0;
   const find = (id: string) => page?.services.find((s) => s.id === id);
   const finished = (message: string, next: Mode, focus: string) => { say(message); setMode(next); setOpen(false); setFormKey((k) => k + 1); load(); setFocusTo(focus); };
-  const credentialsView = view === "credentials";
-  const current = page ? find(initialService(page, chosen)) : undefined;
+  const current = page ? find(currentId) : undefined;
+  const revoke = (id: string, service: string, reason: string, from: string) => { setNotice(""); setMode({ kind: "revoke", id, service, reason, from }); };
+  const openIssue = (service: string) => { setNotice(""); setChosen(service); setMode({ kind: "form" }); setOpen(true); setFocusTo("#svc-issue-title"); };
+  const discard = (service: string) => {
+    const at = attempts.findIndex((e) => e.service === service);
+    const next = attempts[at + 1] ?? attempts[at - 1];
+    if (!issues.discard(user, service)) return;
+    setFocusTo(next ? `[data-attempt="${next.service}"] button` : "#svc-cred-title");
+  };
   let panel: ReactNode = null;
   let back = "";
   let backTo = credentialsView ? "#svc-cred-title" : "#svc-list-title";
@@ -602,7 +831,7 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
         onCancel={() => setMode({ kind: "detail", id: done })} onDone={(message) => finished(message, { kind: "detail", id: done }, "#svc-detail-title")} />;
       backTo = `[data-service="${s.id}"]`;
     } else if (wide || mode.kind === "form") {
-      panel = <CreateForm key={formKey} l={l} api={api} page={page} stepping={!wide} onReload={load}
+      panel = <CreateForm key={formKey} l={l} api={api} page={page} user={user} stepping={!wide} onReload={load} onPin={() => setOpen(true)}
         onDone={(id) => finished(v.doneCreated(l, id), { kind: "detail", id }, "#svc-detail-title")} />;
       backTo = ".svc-create-open";
     }
@@ -610,28 +839,32 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
   }
   if (page && credentialsView && current) {
     if (mode.kind === "reveal") {
-      panel = <Reveal key={mode.ref} l={l} api={api} service={mode.service} refId={mode.ref} credential={mode.credential}
-        until={find(mode.service)?.credentials.find((x) => x.id === mode.credential)?.not_after ?? mode.until}
+      const shown = mode;
+      panel = <Reveal key={shown.ref} l={l} api={api} service={shown.service} refId={shown.ref} credential={shown.credential}
+        until={find(shown.service)?.credentials.find((x) => x.id === shown.credential)?.not_after ?? shown.until}
         onLeave={() => { setMode({ kind: "form" }); setOpen(false); load(); setFocusTo("#svc-cred-title"); }}
-        onDone={() => { setUnstored((u) => u.filter((x) => x !== mode.credential)); setMode({ kind: "form" }); setOpen(false); setFormKey((k) => k + 1); load(); setFocusTo("#svc-cred-title"); }}
-        onRevoke={() => setMode({ kind: "revoke", id: mode.credential, service: mode.service, reason: v.revokeUnstoredReason(l) })} />;
+        onDone={() => { issues.unmark(user, shown.credential); setMode({ kind: "form" }); setOpen(false); setFormKey((k) => k + 1); load(); setFocusTo("#svc-cred-title"); }}
+        onRevoke={() => revoke(shown.credential, shown.service, v.revokeUnstoredReason(l), `[data-credential="${shown.credential}"]`)} />;
     } else if (mode.kind === "revoke") {
       const target = mode;
       panel = <RevokeStep key={target.id} l={l} api={api} page={page} id={target.id} service={target.service} initial={target.reason} onReload={load}
-        onCancel={() => { setMode({ kind: "form" }); setOpen(false); setFocusTo(`[data-credential="${target.id}"]`); }}
-        onDone={(message) => { setUnstored((u) => u.filter((x) => x !== target.id)); finished(message, { kind: "form" }, "#svc-cred-title"); }} />;
-      backTo = `[data-credential="${target.id}"]`;
+        onCancel={() => { setMode({ kind: "form" }); setOpen(false); setFocusTo(target.from); }}
+        onDone={(message) => { issues.unmark(user, target.id); issues.revoked(user, target.id); finished(message, { kind: "form" }, "#svc-cred-title"); }} />;
+      backTo = target.from;
     } else if (wide || mode.kind === "form") {
-      panel = <IssueForm key={current.id + formKey} l={l} api={api} page={page} s={current} stepping={!wide} onReload={load} onAccounts={() => onView("accounts")} onPin={() => { const pin = pinIssue(current.id); setChosen(pin.chosen); setOpen(pin.open); }}
-        onIssued={(ref, credential, until) => { setNotice(""); setUnstored((u) => (u.includes(credential) ? u : [...u, credential])); load(); setMode({ kind: "reveal", ref, service: current.id, credential, until }); }} />;
+      panel = <IssueForm key={current.id + formKey} l={l} api={api} page={page} s={current} user={user} stepping={!wide} onReload={load} onAccounts={() => onView("accounts")}
+        onPin={() => { const pin = pinIssue(current.id); setChosen(pin.chosen); setOpen(pin.open); }} onShowSecret={() => showSecret(current.id)} />;
       backTo = ".svc-issue-open";
     }
     back = v.backCreds(l);
   }
-  const stepping = !wide && (mode.kind !== "form" || open);
   const groups = page ? split(page) : { current: [], retired: [] };
   const creds = current ? credentials(current) : { current: [], ended: [] };
   const selected = mode.kind === "detail" || mode.kind === "step" ? mode.id : mode.kind === "revoke" ? mode.id : "";
+  const never = page ? neverCollected(page) : [];
+  const neverIds = new Set(never.map((r) => r.credential.id));
+  const unstoredShown = unstored.filter((id) => !neverIds.has(id));
+  const serviceOf = (id: string) => page?.services.find((x) => x.credentials.some((y) => y.id === id))?.id ?? "";
   const list = !credentialsView ? (
     <section aria-labelledby="svc-list-title">
       <div className="live-toolbar">
@@ -646,6 +879,11 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
         </div>
       </div>
       {notice && <p className="service-status">{notice}</p>}
+      {attempts.length > 0 && (
+        <div className="live-note-rule live-attempts-note">
+          <p>{v.accountsAttemptsNote(l, attempts.length)} <button type="button" className="service-button-link" onClick={() => { afterView.focus = "#svc-attempts-title"; afterView.view = "credentials"; onView("credentials"); }}>{v.goCredentials(l)}</button></p>
+        </div>
+      )}
       {status === "loading" && !page && <p role="status" className="live-meta">{v.loading(l)}</p>}
       {loadError}
       {page && (groups.current.length === 0 ? <p className="live-empty">{v.noServices(l)}</p>
@@ -667,17 +905,22 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
         </div>
       </div>
       {notice && <p className="service-status">{notice}</p>}
-      {mode.kind !== "reveal" && unstored.length > 0 && (
+      {attempts.length > 0 && (
+        <AttemptsRegion l={l} entries={attempts} onOpen={openIssue} onDiscard={discard} onShow={showSecret}
+          onRevoke={(e) => e.issued && revoke(e.issued.credential, e.service, v.revokeNotShownReason(l), `[data-attempt-revoke="${e.service}"]`)} />
+      )}
+      {never.length > 0 && <NeverRegion l={l} rows={never} onRevoke={(service, id) => revoke(id, service, v.revokeNeverReason(l), `[data-never-revoke="${id}"]`)} />}
+      {mode.kind !== "reveal" && unstoredShown.length > 0 && (
         <div className="service-summary live-unstored">
           <h3>{v.unstoredTitle(l)}</h3>
           <p>{v.unstoredLead(l)}</p>
           <ul className="live-unstored-list">
-            {unstored.map((id) => (
+            {unstoredShown.map((id) => (
               <li key={id}>
-                <span><span className="live-mono">{ltr(id)}</span> · <span className="live-mono">{ltr(page?.services.find((x) => x.credentials.some((y) => y.id === id))?.id ?? "")}</span></span>
+                <span><span className="live-mono">{ltr(id)}</span> · <span className="live-mono">{ltr(serviceOf(id))}</span></span>
                 <span className="live-row-buttons">
-                  <button type="button" className="live-secondary" onClick={() => setMode({ kind: "revoke", id, service: page?.services.find((x) => x.credentials.some((y) => y.id === id))?.id ?? current?.id ?? "", reason: v.revokeUnstoredReason(l) })}>{v.revoke(l)}<span className="visually-hidden"> {id}</span></button>
-                  <button type="button" className="live-secondary" onClick={() => setUnstored((u) => u.filter((x) => x !== id))}>{v.dismiss(l)}<span className="visually-hidden"> {id}</span></button>
+                  <button type="button" className="live-secondary" data-unstored-revoke={id} onClick={() => revoke(id, serviceOf(id) || current?.id || "", v.revokeUnstoredReason(l), `[data-unstored-revoke="${id}"]`)}>{v.revoke(l)}<span className="visually-hidden"> {id}</span></button>
+                  <button type="button" className="live-secondary" onClick={() => issues.unmark(user, id)}>{v.dismiss(l)}<span className="visually-hidden"> {id}</span></button>
                 </span>
               </li>
             ))}
@@ -703,7 +946,7 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
           <div className="live-note-rule"><p><strong>{v.prelaunchLead(l)}</strong> {v.prelaunchNote(l)}</p></div>
           <p className="live-meta live-count">{v.credSummary(l, liveCount(current), max)}</p>
           {creds.current.length === 0 ? <p className="live-empty">{v.noCreds(l, current.id)}</p>
-            : <CredentialTable l={l} rows={creds.current} retired={current.state === "retired"} selected={selected} onRevoke={(x) => { setNotice(""); setMode({ kind: "revoke", id: x.id, service: current.id, reason: "" }); }} />}
+            : <CredentialTable l={l} rows={creds.current} retired={current.state === "retired"} selected={selected} onRevoke={(x) => revoke(x.id, current.id, "", `[data-credential="${x.id}"]`)} />}
           {creds.ended.length > 0 && (
             <details className="live-ended"><summary>{v.endedGroup(l, creds.ended.length)}</summary><CredentialTable l={l} rows={creds.ended} selected="" /></details>
           )}

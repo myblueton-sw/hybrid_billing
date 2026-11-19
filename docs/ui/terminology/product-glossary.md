@@ -351,3 +351,15 @@ M01 can fix everyone who matches the current filters into one revocation list on
 | discard-list | 목록 버리기 | Discard list | تجاهل القائمة | Drops the fixed list; nothing was revoked. KO uses 버리기, as the module's other discard actions do. |
 | base-revision / `fixed_revision` | 기준 개정 번호 | Base revision | رقم التعديل الأساسي | The server revision when the list was fixed; part of the list's digest. |
 | settings: max matching, retained people, scan budgets | 필터 전체 회수당 인원 / 메모리에 보관하는 회수 목록 인원 / 검색 페이지당 확인 인원 / 집계당 확인 인원 | People per filter-wide revocation / People kept in revocation lists in memory / People examined per search page / People examined per count | الأشخاص لكل إبطال حسب التصفية / الأشخاص المحفوظون في قوائم الإبطال في الذاكرة / الأشخاص المفحوصون لكل صفحة بحث / الأشخاص المفحوصون لكل عدّ | Changeable installation defaults (start flags). The retained-people hint says "lists waiting to run", never "pending". AR uses «القوائم بانتظار التنفيذ» for lists waiting to run in the setting name, the hint and the pending-limit refusal (R-C4); «قيد الانتظار» stays for pending work. |
+
+
+## Credential pickup and unknown outcomes (HYB-333)
+
+Candidate copy from the stable HYB-333 plan and implemented M04 messages. Semantic and regional review is deferred to the combined review; no native-language approval is claimed.
+
+| Concept | Korean candidate | English candidate | Arabic candidate | Meaning and excluded implications |
+| --- | --- | --- | --- | --- |
+| credential-secret-pickup-state / `open` | 비밀 값 미수령 · 수령 가능 | Secret not collected yet · pickup open | لم تُستلَم القيمة السرية بعد · الاستلام متاح | Pickup is still available to the issuing session at this read; its end is estimated and can become earlier. |
+| credential-secret-pickup-state / `collected` | 비밀 값 반환됨 | Secret returned once | أُعيدت القيمة السرية مرة واحدة | Server returned the secret once. Does not prove delivery to the person or storage. This state adds no status sub-line. |
+| credential-secret-pickup-state / `never_collected` | 비밀 값 수령 안 됨 | Secret never collected | لم تُستلَم القيمة السرية | Pickup ended without the server returning the secret. Credential remains active until separately revoked or expired. |
+| issue-outcome-unknown | 발급 결과 확인 안 됨 | Issue outcome unknown | نتيجة الإصدار غير معروفة | Request may have committed. Same-request retry retains its original identity; never call it failed or definitely issued. |

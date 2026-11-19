@@ -1,5 +1,5 @@
 import type { Locale } from "../../../../shared/types";
-import type { Attempt, CredentialRow, ServiceRow, ServicesPage } from "../../../../service/admin";
+import { AdminError, type Attempt, type CredentialRow, type ServiceRow, type ServicesPage } from "../../../../service/admin";
 import { when } from "../authentication/live-model";
 import { v } from "./live-copy";
 
@@ -73,6 +73,7 @@ export function attemptState(fresh: () => Attempt) {
   let spent = false;
   return {
     held: () => held,
+    request: () => tried.request,
     revised() {
       if (held || sending) return;
       tried = fresh();
@@ -85,7 +86,88 @@ export function attemptState(fresh: () => Attempt) {
     },
     succeeded() { held = ""; spent = true; },
     keep(revision: string) { held = held || revision; },
-    renew() { held = ""; tried = fresh(); spent = false; },
+    renew(): boolean {
+      if (sending) return false;
+      held = "";
+      tried = fresh();
+      spent = false;
+      return true;
+    },
+    sending: () => sending,
     idle() { sending = false; },
   };
+}
+
+export type Track = ReturnType<typeof attemptState>;
+export type NextPhase = "unknown" | "lapsed" | "remove";
+
+export function nextPhase(retry: boolean, err: unknown, outside: boolean): NextPhase {
+  if (!(err instanceof AdminError)) return "unknown";
+  switch (err.failure) {
+    case "busy":
+    case "unavailable":
+    case "limited":
+    case "unauthenticated":
+      return "unknown";
+    case "partial":
+      return retry ? "lapsed" : "unknown";
+    case "reauth":
+    case "reauth_cancelled":
+      return retry ? "unknown" : "remove";
+    case "conflict":
+    case "refused":
+    case "stage":
+    case "invalid":
+      return retry && outside ? "lapsed" : "remove";
+    case "denied":
+      return retry ? "lapsed" : "remove";
+  }
+  return "lapsed";
+}
+
+export function outsideWindow(elapsedMs: number, windowSeconds: number, unknownIsOutside = false): boolean {
+  if (windowSeconds <= 0) return unknownIsOutside;
+  const margin = Math.min(60, windowSeconds / 10);
+  return elapsedMs >= (windowSeconds - margin) * 1000;
+}
+
+export function settleFailure(track: Track, err: unknown, holdUnknown: boolean, revision: string, outside = false): NextPhase | "kept" {
+  const retry = track.held() !== "";
+  track.idle();
+  if (!holdUnknown) {
+    if (err instanceof AdminError && (err.failure === "reauth" || err.failure === "reauth_cancelled")) return "kept";
+    track.renew();
+    return "remove";
+  }
+  const next = nextPhase(retry, err, outside);
+  if (next === "unknown") track.keep(revision);
+  if (next === "remove") track.renew();
+  return next;
+}
+
+export function returnFocus(from: string, credentialsView: boolean): string[] {
+  return [from, credentialsView ? "#svc-cred-title" : "#svc-list-title"].filter(Boolean);
+}
+
+export function pickupLabel(l: Locale, c: CredentialRow): { text: string; time: string; never: boolean } | null {
+  if (c.state !== "active") return null;
+  if (c.secret_pickup === "never_collected") return { text: v.pickupNever(l), time: "", never: true };
+  if (c.secret_pickup === "open" && c.secret_pickup_until) return { text: v.pickupOpen(l), time: when(l, c.secret_pickup_until), never: false };
+  return null;
+}
+
+export function neverCollected(page: ServicesPage): { service: string; credential: CredentialRow }[] {
+  const out: { service: string; credential: CredentialRow }[] = [];
+  for (const s of page.services) {
+    for (const c of s.credentials) if (c.state === "active" && c.secret_pickup === "never_collected") out.push({ service: s.id, credential: c });
+  }
+  return out.sort((a, b) => (a.service === b.service ? (a.credential.id < b.credential.id ? -1 : 1) : a.service < b.service ? -1 : 1));
+}
+
+export function takenByMe(page: ServicesPage, name: string, user: string): boolean {
+  return page.services.some((s) => s.id === prefix + name && s.creator === user);
+}
+
+export function formVisible(o: { view: string; mode: string; current: string; service: string; wide: boolean; open: boolean; visibility: string }): boolean {
+  return o.view === "credentials" && o.mode === "form" && o.current === o.service && panelShown(o.wide, true, o.open) && o.visibility === "visible";
 }

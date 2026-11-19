@@ -253,7 +253,16 @@ export type AccessPage = {
 };
 export type Preview = { action: string; field: string; allowed: boolean; reason: string; delegations: string[] };
 
-export type CredentialRow = { id: string; not_before: string; not_after: string; state: "active" | "expired" | "revoked"; usable: boolean };
+export type SecretPickup = "open" | "collected" | "never_collected";
+export type CredentialRow = {
+  id: string;
+  not_before: string;
+  not_after: string;
+  state: "active" | "expired" | "revoked";
+  usable: boolean;
+  secret_pickup?: SecretPickup;
+  secret_pickup_until?: string;
+};
 export type ServiceRow = {
   id: string;
   state: "active" | "suspended" | "retired";
@@ -268,7 +277,7 @@ export type ServicesPage = {
   revision: string;
   services: ServiceRow[];
   owners: { user_id: string; login: string }[];
-  limits: { credential_days: number; credentials_per_service: number; services: number };
+  limits: { credential_days: number; credentials_per_service: number; services: number; replay_seconds: number };
   now: string;
 };
 export type Secret = { secret: string; credential: string };
@@ -772,6 +781,23 @@ export function ledgerOf(v: unknown): LedgerStatus {
   };
 }
 
+const pickups: SecretPickup[] = ["open", "collected", "never_collected"];
+
+export function credentialRowOf(raw: unknown): CredentialRow {
+  const c = (raw ?? {}) as Record<string, unknown>;
+  const row: CredentialRow = {
+    id: String(c.id ?? ""),
+    not_before: String(c.not_before ?? ""),
+    not_after: String(c.not_after ?? ""),
+    state: String(c.state ?? "") as CredentialRow["state"],
+    usable: c.usable === true,
+  };
+  const pickup = pickups.find((p) => p === c.secret_pickup);
+  const until = typeof c.secret_pickup_until === "string" && !Number.isNaN(Date.parse(c.secret_pickup_until)) ? c.secret_pickup_until : "";
+  if (row.state !== "active" || !pickup || (pickup === "open" && !until)) return row;
+  return pickup === "open" ? { ...row, secret_pickup: pickup, secret_pickup_until: until } : { ...row, secret_pickup: pickup };
+}
+
 export function outcomeOf(body: Record<string, unknown>): Outcome {
   const fields = (body.fields ?? {}) as Record<string, unknown>;
   return {
@@ -965,12 +991,13 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
       const limits = (body.limits ?? {}) as Record<string, unknown>;
       return {
         revision: String(body.revision ?? ""),
-        services: Array.isArray(body.services) ? (body.services as ServiceRow[]).map((s) => ({ ...s, credentials: Array.isArray(s.credentials) ? s.credentials : [] })) : [],
+        services: Array.isArray(body.services) ? (body.services as ServiceRow[]).map((s) => ({ ...s, credentials: Array.isArray(s.credentials) ? s.credentials.map(credentialRowOf) : [] })) : [],
         owners: Array.isArray(body.owners) ? (body.owners as { user_id: string; login: string }[]) : [],
         limits: {
           credential_days: Number(limits.credential_days ?? 0),
           credentials_per_service: Number(limits.credentials_per_service ?? 0),
           services: Number(limits.services ?? 0),
+          replay_seconds: Number.isInteger(limits.replay_seconds) && Number(limits.replay_seconds) > 0 ? Number(limits.replay_seconds) : 0,
         },
         now: String(body.now ?? ""),
       };

@@ -226,14 +226,40 @@ test("the services read defaults missing parts", async () => {
   assert.equal(calls[0].url, "/api/v1/identity/services");
   assert.equal(got.services[0].credentials.length, 1);
   assert.deepEqual(got.services[1].credentials, []);
-  assert.deepEqual(got.limits, { credential_days: 30, credentials_per_service: 10, services: 200 });
+  assert.deepEqual(got.limits, { credential_days: 30, credentials_per_service: 10, services: 200, replay_seconds: 0 });
   assert.deepEqual(await adminClient("t", fake(200, {}).f).services(), {
     revision: "",
     services: [],
     owners: [],
-    limits: { credential_days: 0, credentials_per_service: 0, services: 0 },
+    limits: { credential_days: 0, credentials_per_service: 0, services: 0, replay_seconds: 0 },
     now: "",
   });
+});
+
+test("the services read keeps a valid pickup state and replay window and never copies secrets", async () => {
+  const at = "2026-11-19T10:10:00Z";
+  const rows = [
+    { id: "c-open", state: "active", usable: true, secret_pickup: "open", secret_pickup_until: at, secret: "hbsk_x", secret_ref: "ref" },
+    { id: "c-never", state: "active", usable: true, secret_pickup: "never_collected", secret_pickup_until: at },
+    { id: "c-got", state: "active", usable: true, secret_pickup: "collected" },
+    { id: "c-odd", state: "active", usable: true, secret_pickup: "stored" },
+    { id: "c-open-no-time", state: "active", usable: true, secret_pickup: "open", secret_pickup_until: "soon" },
+    { id: "c-ended", state: "revoked", usable: false, secret_pickup: "never_collected" },
+  ];
+  const page = { services: [{ id: "svc-a", credentials: rows }], limits: { replay_seconds: 3600 } };
+  const got = await adminClient("t", fake(200, page).f).services();
+  const [open, never, collected, odd, noTime, ended] = got.services[0].credentials;
+  assert.deepEqual(open, { id: "c-open", not_before: "", not_after: "", state: "active", usable: true, secret_pickup: "open", secret_pickup_until: at });
+  assert.deepEqual(Object.keys(never).sort(), ["id", "not_after", "not_before", "secret_pickup", "state", "usable"]);
+  assert.equal(never.secret_pickup, "never_collected");
+  assert.equal(collected.secret_pickup, "collected");
+  for (const row of [odd, noTime, ended]) assert.equal(row.secret_pickup, undefined, row.id);
+  assert.equal(JSON.stringify(got).includes("hbsk_"), false);
+  assert.equal(JSON.stringify(got).includes("ref"), false);
+  assert.equal(got.limits.replay_seconds, 3600);
+  for (const bad of [-1, 0, 1.5, "3600", null]) {
+    assert.equal((await adminClient("t", fake(200, { limits: { replay_seconds: bad } }).f).services()).limits.replay_seconds, 0, String(bad));
+  }
 });
 
 test("secret returns only a well-formed secret and credential", async () => {

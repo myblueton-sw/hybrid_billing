@@ -13,10 +13,13 @@ import (
 )
 
 const (
-	servicesTarget = "services"
-	servicePrefix  = "svc-"
-	secretPrefix   = "hbsk_"
-	maxServices    = 200
+	pickupOpen      = "open"
+	pickupCollected = "collected"
+	pickupNever     = "never_collected"
+	servicesTarget  = "services"
+	servicePrefix   = "svc-"
+	secretPrefix    = "hbsk_"
+	maxServices     = 200
 )
 
 type credentialRow struct {
@@ -25,6 +28,8 @@ type credentialRow struct {
 	NotAfter  string `json:"not_after"`
 	State     string `json:"state"`
 	Usable    bool   `json:"usable"`
+	Pickup    string `json:"secret_pickup,omitempty"`
+	PickupEnd string `json:"secret_pickup_until,omitempty"`
 }
 
 type serviceRow struct {
@@ -42,6 +47,7 @@ type serviceLimits struct {
 	CredentialDays        int `json:"credential_days"`
 	CredentialsPerService int `json:"credentials_per_service"`
 	Services              int `json:"services"`
+	ReplaySeconds         int `json:"replay_seconds"`
 }
 
 type servicesPage struct {
@@ -123,6 +129,59 @@ func (s *Server) credentialRows(actor identity.Verifier, svc identity.ServiceInf
 	return out, nil
 }
 
+func (s *Server) pickupLive(p pickup) (time.Time, bool) {
+	found, ok := s.sessions.get(p.session)
+	if !ok || s.sessions.isDenied(p.session) || s.stale(found) {
+		return time.Time{}, false
+	}
+	answer, idle, err := s.identity.Boundary().Peek(p.session, found.workspace)
+	if err != nil || !s.fresh(answer, found) {
+		return time.Time{}, false
+	}
+	decision := s.gate.Decide(gate.Answer(answer), ConsoleClient, gate.Request{Action: gate.AdministerInstallation, Kind: gate.InstallationKind,
+		Resource: gate.Resource{WorkspaceID: answer.Workspace()}})
+	if !decision.Allowed {
+		return time.Time{}, false
+	}
+	until := p.expires
+	for _, end := range []time.Time{answer.NotAfter(), idle} {
+		if end.Before(until) {
+			until = end
+		}
+	}
+	return until, true
+}
+
+func (s *Server) openPickups() map[string]time.Time {
+	now := s.clock()
+	out := map[string]time.Time{}
+	for _, p := range s.dir.pickups {
+		if p.credential == "" || !now.Before(p.expires) {
+			continue
+		}
+		if until, ok := s.pickupLive(p); ok {
+			out[p.credential] = until
+		}
+	}
+	return out
+}
+
+func (s *Server) pickupStates(rows []credentialRow, open map[string]time.Time) {
+	for i := range rows {
+		found, known := s.dir.collected[rows[i].ID]
+		until, waiting := open[rows[i].ID]
+		switch {
+		case rows[i].State != "active" || !known:
+		case waiting:
+			rows[i].Pickup, rows[i].PickupEnd = pickupOpen, stamp(until)
+		case found.collected:
+			rows[i].Pickup = pickupCollected
+		default:
+			rows[i].Pickup = pickupNever
+		}
+	}
+}
+
 func (s *Server) loginOf(user string) string {
 	if login, ok := s.dir.loginOf(user); ok {
 		return login
@@ -145,13 +204,16 @@ func (s *Server) listServices(w http.ResponseWriter, r *http.Request) {
 		services, err = s.serviceUsers(found.verifier)
 	}
 	page := servicesPage{Revision: s.Revision(), Services: []serviceRow{}, Owners: owners, Now: stamp(now),
-		Limits: serviceLimits{CredentialDays: int(s.cfg.Identity.CredentialValidity / (24 * time.Hour)), CredentialsPerService: s.cfg.Identity.CredentialsPerServiceUser, Services: maxServices}}
+		Limits: serviceLimits{CredentialDays: int(s.cfg.Identity.CredentialValidity / (24 * time.Hour)), CredentialsPerService: s.cfg.Identity.CredentialsPerServiceUser, Services: maxServices,
+			ReplaySeconds: int(s.cfg.Commands.Replay / time.Second)}}
+	pickups := s.openPickups()
 	for _, svc := range services {
 		if err != nil {
 			break
 		}
 		var rows []credentialRow
 		rows, err = s.credentialRows(found.verifier, svc, now)
+		s.pickupStates(rows, pickups)
 		page.Services = append(page.Services, serviceRow{ID: svc.ID, State: serviceState(svc.State), Version: svc.Epoch, Creator: svc.Creator,
 			CreatorLogin: s.loginOf(svc.Creator), Owner: svc.Owner, OwnerLogin: s.loginOf(svc.Owner), Credentials: rows})
 	}
@@ -323,7 +385,9 @@ func (h serviceCommand) step(ctx commands.Context, svc identity.ServiceInfo, now
 		creds, err := s.credentials(s.caller, svc.ID)
 		for _, c := range creds {
 			if err == nil && credentialState(c, now) == "active" {
-				err = ws.RevokeCredential(s.caller, s.bootWorkspace, c.ID)
+				if err = ws.RevokeCredential(s.caller, s.bootWorkspace, c.ID); err == nil {
+					delete(s.dir.collected, c.ID)
+				}
 			}
 		}
 		if err != nil || s.faulty("retire") {
@@ -347,12 +411,14 @@ func (h serviceCommand) issue(ctx commands.Context, svc identity.ServiceInfo, no
 	if err != nil {
 		return "", nil, err
 	}
-	live := 0
+	active := map[string]bool{}
 	for _, c := range creds {
 		if credentialState(c, now) == "active" {
-			live++
+			active[c.ID] = true
 		}
 	}
+	s.dir.forget(svc.ID, active)
+	live := len(active)
 	if live >= s.cfg.Identity.CredentialsPerServiceUser {
 		return "", nil, commands.Fail(commands.PrerequisiteFailed)
 	}
@@ -364,6 +430,7 @@ func (h serviceCommand) issue(ctx commands.Context, svc identity.ServiceInfo, no
 	}
 	ref := encode(random(16))
 	s.dir.pickups[ref] = pickup{secret: secretPrefix + encode(secret), credential: id, session: s.caller, target: svc.ID, expires: now.Add(pickupValidity)}
+	s.dir.collected[id] = delivery{service: svc.ID}
 	return "credential_issued", map[string]string{"credential": id, "secret_ref": ref}, nil
 }
 
@@ -373,6 +440,7 @@ func (h serviceCommand) revoke(ctx commands.Context) (string, error) {
 		return "", err
 	}
 	s.dir.dropPickups(func(p pickup) bool { return p.credential == ctx.Target })
+	delete(s.dir.collected, ctx.Target)
 	return "credential_revoked", nil
 }
 

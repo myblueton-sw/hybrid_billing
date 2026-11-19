@@ -39,6 +39,11 @@ type pickup struct {
 	expires    time.Time
 }
 
+type delivery struct {
+	service   string
+	collected bool
+}
+
 type directory struct {
 	people      map[string]person
 	byLogin     map[string]string
@@ -51,11 +56,12 @@ type directory struct {
 	links       map[string]outstanding
 	generations map[string]uint64
 	pickups     map[string]pickup
+	collected   map[string]delivery
 }
 
 func newDirectory() *directory {
 	return &directory{people: map[string]person{}, byLogin: map[string]string{}, taken: map[string]bool{}, holders: map[string]time.Time{}, invites: map[string]invite{},
-		links: map[string]outstanding{}, generations: map[string]uint64{}, pickups: map[string]pickup{}}
+		links: map[string]outstanding{}, generations: map[string]uint64{}, pickups: map[string]pickup{}, collected: map[string]delivery{}}
 }
 
 func (d *directory) position(user, login string) int {
@@ -207,5 +213,13 @@ func (d *directory) dropPickups(match func(pickup) bool) {
 func (d *directory) dropPickupRefs(refs []string) {
 	for _, ref := range refs {
 		delete(d.pickups, ref)
+	}
+}
+
+func (d *directory) forget(service string, keep map[string]bool) {
+	for id, found := range d.collected {
+		if found.service == service && !keep[id] {
+			delete(d.collected, id)
+		}
 	}
 }

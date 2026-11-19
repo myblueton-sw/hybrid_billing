@@ -308,6 +308,7 @@ func (s *Server) collect(w http.ResponseWriter, r *http.Request) {
 	}
 	delete(s.dir.pickups, ref)
 	if p.secret != "" {
+		s.dir.collected[p.credential] = delivery{service: p.target, collected: true}
 		writeJSON(w, http.StatusOK, request, map[string]string{"secret": p.secret, "credential": p.credential})
 		return
 	}

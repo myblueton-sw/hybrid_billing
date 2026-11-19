@@ -241,7 +241,7 @@ func TestBulkImpactCountsOnlyThePersonsOpenProposals(t *testing.T) {
 		t.Errorf("another person's proposals were counted %+v", counts)
 	}
 	for _, store := range proposalStores {
-		if rechecked[store.name] != (store.name == "trust_changes" || store.name == "access_requests") {
+		if rechecked[store.name] != (store.name == "trust_changes" || store.name == "access_requests" || store.name == "integration_proposals") {
 			t.Errorf("%s rechecked %v", store.name, rechecked[store.name])
 		}
 	}

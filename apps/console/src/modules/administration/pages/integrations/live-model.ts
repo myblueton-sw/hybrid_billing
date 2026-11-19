@@ -1,4 +1,5 @@
-import type { Delivery, IntegrationsPage, PluginInstall, PluginProposal, PluginVersion, Subscription } from "../../../../service/integrations";
+import { forgetLost } from "./live-rights";
+import type { Delivery, IntegrationsPage, PluginInstall, PluginProposal, PluginVersion, RightId, Subscription } from "../../../../service/integrations";
 
 export const views = ["clients", "modules", "channels", "events"];
 
@@ -26,7 +27,12 @@ export type CommandKey =
   | "integrations.letter_request_redeliver"
   | "integrations.letter_approve_redeliver"
   | "integrations.letter_request_dismiss"
-  | "integrations.letter_approve_dismiss";
+  | "integrations.letter_approve_dismiss"
+  | "integrations.subscription_withdraw"
+  | "integrations.subscription_withdraw_resume"
+  | "integrations.letter_withdraw_redeliver"
+  | "integrations.letter_withdraw_dismiss"
+  | "integrations.redelivery_reapprove";
 
 export const commandKeys: CommandKey[] = [
   "integrations.plugin_approve",
@@ -44,9 +50,49 @@ export const commandKeys: CommandKey[] = [
   "integrations.letter_approve_redeliver",
   "integrations.letter_request_dismiss",
   "integrations.letter_approve_dismiss",
+  "integrations.subscription_withdraw",
+  "integrations.subscription_withdraw_resume",
+  "integrations.letter_withdraw_redeliver",
+  "integrations.letter_withdraw_dismiss",
+  "integrations.redelivery_reapprove",
 ];
 
-export type Group = "proposal" | "plugin" | "propose_plugin" | "propose_subscription" | "subscription" | "letter";
+export const commandRight: Record<CommandKey, RightId> = {
+  "integrations.plugin_approve": "approve_modules",
+  "integrations.plugin_withdraw": "administer_modules",
+  "integrations.plugin_propose": "administer_modules",
+  "integrations.plugin_stop": "stop_modules",
+  "integrations.plugin_disable": "stop_modules",
+  "integrations.subscription_propose": "administer_channels",
+  "integrations.subscription_approve": "approve_channels",
+  "integrations.subscription_pause": "stop_channels",
+  "integrations.subscription_request_resume": "administer_channels",
+  "integrations.subscription_approve_resume": "approve_channels",
+  "integrations.subscription_revoke": "stop_channels",
+  "integrations.letter_request_redeliver": "reprocess_events",
+  "integrations.letter_approve_redeliver": "reprocess_events",
+  "integrations.letter_request_dismiss": "reprocess_events",
+  "integrations.letter_approve_dismiss": "reprocess_events",
+  "integrations.subscription_withdraw": "administer_channels",
+  "integrations.subscription_withdraw_resume": "administer_channels",
+  "integrations.letter_withdraw_redeliver": "reprocess_events",
+  "integrations.letter_withdraw_dismiss": "reprocess_events",
+  "integrations.redelivery_reapprove": "reprocess_events",
+};
+
+const authorCommands: CommandKey[] = [
+  "integrations.plugin_withdraw",
+  "integrations.subscription_withdraw",
+  "integrations.subscription_withdraw_resume",
+  "integrations.letter_withdraw_redeliver",
+  "integrations.letter_withdraw_dismiss",
+];
+
+export function authorOnly(command: CommandKey): boolean {
+  return authorCommands.includes(command);
+}
+
+export type Group = "proposal" | "plugin" | "propose_plugin" | "propose_subscription" | "subscription" | "letter" | "resume_request" | "letter_request" | "redelivery";
 
 export function groupOf(command: CommandKey): Group {
   const kind = command.slice("integrations.".length);
@@ -54,13 +100,16 @@ export function groupOf(command: CommandKey): Group {
   if (kind === "plugin_propose") return "propose_plugin";
   if (kind === "plugin_stop" || kind === "plugin_disable") return "plugin";
   if (kind === "subscription_propose") return "propose_subscription";
+  if (kind === "subscription_withdraw_resume") return "resume_request";
+  if (kind === "letter_withdraw_redeliver" || kind === "letter_withdraw_dismiss") return "letter_request";
+  if (kind === "redelivery_reapprove") return "redelivery";
   if (kind.startsWith("subscription_")) return "subscription";
   return "letter";
 }
 
 export function viewOfCommand(command: CommandKey): string {
   const g = groupOf(command);
-  return g === "proposal" || g === "plugin" || g === "propose_plugin" ? "modules" : g === "letter" ? "events" : "channels";
+  return g === "proposal" || g === "plugin" || g === "propose_plugin" ? "modules" : g === "letter" || g === "letter_request" || g === "redelivery" ? "events" : "channels";
 }
 
 const idChars = /^[A-Za-z0-9._:-]{1,128}$/;
@@ -80,6 +129,18 @@ export function subscriptionTarget(s: Subscription): string {
 
 export function letterTarget(d: Delivery): string {
   return d.id && d.target === "webhook-letter:" + d.id && validTarget(d.target) ? d.target : "";
+}
+
+export function redeliveryTarget(d: Delivery): string {
+  return d.id && d.hold && d.target === "webhook-redelivery:" + d.id && validTarget(d.target) ? d.target : "";
+}
+
+export function resumeRequestTarget(r: { id: string; target: string }): string {
+  return r.id && r.target === "webhook-resume-request:" + r.id && validTarget(r.target) ? r.target : "";
+}
+
+export function letterRequestTarget(r: { id: string; target: string }): string {
+  return r.id && r.target === "webhook-letter-request:" + r.id && validTarget(r.target) ? r.target : "";
 }
 
 export function pluginTarget(plugin: string): string {
@@ -317,6 +378,9 @@ export function listed(page: IntegrationsPage, command: CommandKey, target: stri
       return target === webhooksTarget;
     case "subscription":
       return (page.channels.subscriptions ?? []).some((s) => s.target === target);
+    case "resume_request":
+    case "letter_request":
+      return (page.own_pending ?? []).some((p) => p.target === target);
     default:
       return (page.events.deliveries ?? []).some((d) => d.target === target);
   }
@@ -344,6 +408,13 @@ export function stillAllowed(page: IntegrationsPage, me: string, command: Comman
     case "subscription": {
       const s = (page.channels.subscriptions ?? []).find((x) => x.target === target);
       return !!s && s.actions[subAction(command)].allowed;
+    }
+    case "resume_request":
+    case "letter_request":
+      return (page.own_pending ?? []).some((p) => p.target === target);
+    case "redelivery": {
+      const d = (page.events.deliveries ?? []).find((x) => x.target === target);
+      return !!d && d.actions.reapprove.allowed;
     }
     default: {
       const d = (page.events.deliveries ?? []).find((x) => x.target === target);
@@ -462,6 +533,7 @@ let scope = "";
 export function setScope(workspace: string, user: string, session: string): void {
   const next = workspace + "\u0000" + user + "\u0000" + session;
   if (next !== scope) {
+    forgetLost();
     pending.clear();
     drafts.clear();
     refusals.clear();
@@ -600,9 +672,10 @@ export function duplicateIn(snapshot: string[], id: string): boolean {
   return !!id && snapshot.includes(id);
 }
 
-export type Denied = "applied_letter" | "applied_proposal" | "gone";
+export type Denied = "applied_letter" | "applied_proposal" | "gone" | "no_right";
 
 export function deniedOutcome(command: CommandKey, target: string, hadPending: boolean, page: IntegrationsPage): Denied {
+  if (page.rights !== null && !page.rights[commandRight[command]] && !authorOnly(command)) return "no_right";
   if (!hadPending || listed(page, command, target)) return "gone";
   if (command === "integrations.letter_approve_redeliver" || command === "integrations.letter_approve_dismiss") return "applied_letter";
   if (groupOf(command) === "proposal") return "applied_proposal";

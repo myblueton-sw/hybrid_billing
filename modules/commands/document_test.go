@@ -210,7 +210,7 @@ func TestTheErrorCatalogue(t *testing.T) {
 			t.Errorf("%s is not accepted from handlers", code)
 		}
 	}
-	if len(handlerCodes) != 12 || handlerCodes[Unauthenticated] || handlerCodes[InternalError] || handlerCodes[IdempotencyConflict] {
+	if len(handlerCodes) != 13 || !handlerCodes[AuthorityUnavailable] || handlerCodes[Unauthenticated] || handlerCodes[InternalError] || handlerCodes[IdempotencyConflict] {
 		t.Errorf("handler codes %v", handlerCodes)
 	}
 }

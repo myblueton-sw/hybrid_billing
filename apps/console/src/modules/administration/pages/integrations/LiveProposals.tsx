@@ -6,6 +6,8 @@ import { actor, blockerPolicy, drop, installOf, ordered, pendingNow, proposalTar
 import { Code, Known, Prose, fsi, ltr, stamp } from "./live-format";
 import { useEffect, useState } from "react";
 import { CommandForm, RowNote, blockerLines, plain, useOpen, type Blocker, type Shared } from "./LiveCommand";
+import { lostRight } from "./live-rights";
+import { r } from "./rights-copy";
 
 export function SummaryText({ l, p }: { l: Locale; p: PluginProposal }) {
   const s = summaryOf(p);
@@ -102,13 +104,17 @@ function Row({ p, ...shared }: Shared & { p: PluginProposal }) {
   }, [stale, target]);
   const licensed = refusedLicense(page, p.summary.plugin, p.kind, p.summary.version);
   const approveKept = licensed ? <Marked text={keptLicenseText(l, page, p.summary.plugin, licensed, "approve")} /> : k.kept(l, "proposal");
-  const kept = !target ? "" : refusedNow("integrations.plugin_approve", target) ? approveKept : refusedNow("integrations.plugin_withdraw", target) ? k.keptWithdraw(l) : "";
+  const lost = target ? lostRight("integrations.plugin_approve", target) : "";
+  const kept = !target ? "" : lost ? r.noLongerHeld(l, lost) : refusedNow("integrations.plugin_approve", target) ? approveKept : refusedNow("integrations.plugin_withdraw", target) ? k.keptWithdraw(l) : "";
   const blockers: Blocker[] = [];
   if (pendingRow && !target) blockers.push(plain(k.noCommand(l)));
   if (pendingRow && target && !approveUsable && !p.can_approve && blockerPolicy(p.approve_blocked, true) === "explain") blockers.push(...blockerLines(l, p.approve_blocked, "plugin_approve", k.approve(l)));
   if (pendingRow && target && !withdrawUsable && !p.can_withdraw && blockerPolicy(p.withdraw_blocked, true) === "explain") blockers.push(...blockerLines(l, p.withdraw_blocked, "plugin_withdraw", k.withdraw(l)));
   const current = selection.proposal !== "" && selection.proposal === String(p.number);
-  const closedLine = p.state === "applied"
+  const lostClosure = p.state === "closed" && p.closing_reason === "requester_lost_right";
+  const closedLine = lostClosure
+    ? r.closedFound(l, actor(p.closure_trigger_login, p.closure_trigger) || k.unknown(l), p.closed_request || k.unknown(l))
+    : p.state === "applied"
     ? k.approvedBy(l, actor(p.approver_login || p.closed_by_login, p.approver || p.closed_by) || k.unknown(l))
     : p.state === "withdrawn"
       ? k.withdrawnBy(l, actor(p.closed_by_login, p.closed_by) || k.unknown(l))
@@ -130,9 +136,9 @@ function Row({ p, ...shared }: Shared & { p: PluginProposal }) {
         {!pendingRow && (
           <>
             {applied && <p className="live-note-rule" role="status">{k.mayApplied(l)}</p>}
-            <p className="p02-small">{closedLine}</p>
+            {!lostClosure && <p className="p02-small">{closedLine}</p>}
             <dl className="live-facts p02-closed">
-              <div><dt>{k.closingReason(l)}</dt><dd><Prose l={l} value={p.closing_rationale} empty={k.noReason(l)} /></dd></div>
+              <div><dt>{k.closingReason(l)}</dt><dd>{lostClosure ? <Marked text={closedLine} /> : <Prose l={l} value={p.closing_rationale} empty={k.noReason(l)} />}</dd></div>
             </dl>
           </>
         )}
@@ -161,6 +167,7 @@ function Row({ p, ...shared }: Shared & { p: PluginProposal }) {
                 impact={open === "integrations.plugin_approve" ? k.approveImpact(l) : k.withdrawImpact(l)}
                 verb={open === "integrations.plugin_approve" ? k.approveVerb(l, n) : k.withdrawVerb(l, n)}
                 done={(_, state) => (open === "integrations.plugin_approve" ? k.approvedDone(l, n, k.result(l, state)) : k.withdrawnDone(l, n))}
+                object={r.proposalObject(l, n)}
                 onClose={close}
               />
             )}

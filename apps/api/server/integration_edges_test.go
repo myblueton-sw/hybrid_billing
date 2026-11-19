@@ -61,11 +61,8 @@ func TestIntegrationCommandFaults(t *testing.T) {
 		{"webhooks-approve", subApproveKind, subscriptionAt(samplePayments), root},
 		{"webhooks-pause", subPauseKind, subscriptionAt(sampleSubscription), root},
 		{"webhooks-request_resume", subRequestKind, subscriptionAt(sampleSubscription), root},
-		{"webhooks-approve_resume", subResumeKind, subscriptionAt(sampleSubscription), root},
 		{"webhooks-revoke", subRevokeKind, subscriptionAt(sampleSubscription), root},
 		{"webhooks-request_redeliver", letterRedeliverKind, letterAt(sampleLetter), root},
-		{"webhooks-approve_redeliver", letterAgainKind, letterAt(sampleLetter), second},
-		{"webhooks-approve_dismiss", letterDropKind, letterAt(sampleLetter), second},
 	} {
 		at = c.step
 		f.code(t, c.step+" "+c.command, f.run(c.who, integrationCommand+c.command, c.target, fieldsFor(c.command)), 500, "internal_error")
@@ -79,6 +76,23 @@ func TestIntegrationCommandFaults(t *testing.T) {
 	if s := fmt.Sprint(pluginProposal(t, read, 8)["state"], pluginProposal(t, read, 9)["state"], installedRow(t, read)["state"], subscriptionRowFor(t, read, sampleSubscription)["state"]); s !=
 		"pendingpendingenabledactive" {
 		t.Errorf("faults changed state %s", s)
+	}
+	f.ok(t, "pause", f.run(root, integrationCommand+subPauseKind, subscriptionAt(sampleSubscription), nil), "paused", "")
+	f.ok(t, "request resume", f.run(root, integrationCommand+subRequestKind, subscriptionAt(sampleSubscription), nil), "paused", "")
+	f.ok(t, "request redelivery", f.run(root, integrationCommand+letterRedeliverKind, letterAt(sampleLetter), nil), "requested", "")
+	f.ok(t, "request dismissal", f.run(root, integrationCommand+letterDismissKind, letterAt(sampleLetter), nil), "requested", "")
+	f.s.fault = func(step string) bool { return step == at }
+	for _, c := range []struct{ step, command, target string }{
+		{"webhooks-approve_resume", subResumeKind, subscriptionAt(sampleSubscription)},
+		{"webhooks-approve_redeliver", letterAgainKind, letterAt(sampleLetter)},
+		{"webhooks-approve_dismiss", letterDropKind, letterAt(sampleLetter)},
+	} {
+		at = c.step
+		f.code(t, c.step+" "+c.command, f.run(second, integrationCommand+c.command, c.target, nil), 500, "internal_error")
+	}
+	f.s.fault = nil
+	if len(f.s.integ.redeliver) != 1 || len(f.s.integ.dismiss) != 1 || f.s.integ.subscription(sampleSubscription).resume == nil {
+		t.Errorf("approval faults closed requests")
 	}
 }
 
@@ -97,7 +111,7 @@ func TestIntegrationSeed(t *testing.T) {
 	c := s.integ
 	if len(c.entries) != 10 || strings.Join(c.publishers, ",") != samplePublisher || len(c.plugins) != 1 || strings.Join(c.plugins[0].versions, ",") != "1.0.0,1.1.0,1.2.0" ||
 		c.workspace != SampleWorkspace || len(c.subscriptions) != 2 || fmt.Sprint(c.subscriptions[0].letters) != "[delivery-3]" || len(c.types) != 2 ||
-		fmt.Sprint(c.redeliver) != "map[delivery-3:{sample-admin Sample data}]" || len(c.dismiss) != 0 || s.signer.keys != nil {
+		fmt.Sprint(c.redeliver) != "map[delivery-3:{letter-request-1 sample-admin Sample data}]" || len(c.dismiss) != 0 || s.signer.keys != nil {
 		t.Fatalf("seed store %+v", c)
 	}
 	if err := s.seedIntegrations(s.clock()); !errors.Is(err, events.ErrConflict) {
@@ -374,8 +388,10 @@ func TestIntegrationCommandSet(t *testing.T) {
 	}
 	sort.Strings(ids)
 	if strings.Join(ids, " ") != "integrations.letter_approve_dismiss integrations.letter_approve_redeliver integrations.letter_request_dismiss integrations.letter_request_redeliver "+
-		"integrations.plugin_approve integrations.plugin_disable integrations.plugin_propose integrations.plugin_stop integrations.plugin_withdraw integrations.subscription_approve "+
-		"integrations.subscription_approve_resume integrations.subscription_pause integrations.subscription_propose integrations.subscription_request_resume integrations.subscription_revoke" {
+		"integrations.letter_withdraw_dismiss integrations.letter_withdraw_redeliver integrations.plugin_approve integrations.plugin_disable integrations.plugin_propose "+
+		"integrations.plugin_stop integrations.plugin_withdraw integrations.redelivery_reapprove integrations.subscription_approve integrations.subscription_approve_resume "+
+		"integrations.subscription_pause integrations.subscription_propose integrations.subscription_request_resume integrations.subscription_revoke "+
+		"integrations.subscription_withdraw integrations.subscription_withdraw_resume" {
 		t.Errorf("commands %v", ids)
 	}
 }
@@ -438,7 +454,8 @@ func TestIntegrationActorsAndEffectsAreConfined(t *testing.T) {
 				if name == "system" && !(receiverName(fn) == "outboxReader" && (fn.Name.Name == "Read" || fn.Name.Name == "Bounds")) {
 					t.Errorf("%s %s uses the outbox actor", src.name, fn.Name.Name)
 				}
-				if restricted[name] && fn.Name.Name != "seedIntegrations" && !(name == "Publish" && fn.Name.Name == "publishTrust") {
+				if restricted[name] && fn.Name.Name != "seedIntegrations" && !(name == "Publish" && fn.Name.Name == "publishTrust") &&
+					!(name == "Dispatch" && fn.Name.Name == "dispatchDeliveries") {
 					owner, _ := sel.X.(*ast.SelectorExpr)
 					if name != "Report" || owner == nil || owner.Sel.Name != "installer" && !(owner.Sel.Name == "recovery" && fn.Name.Name == "seedRecovery") &&
 						!(owner.Sel.Name == "retention" && fn.Name.Name == "seedRetention") {

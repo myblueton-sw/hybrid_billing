@@ -567,7 +567,7 @@ test("the modules view renders licenses, withheld versions and a license-blocked
   });
   const html = (l: "en" | "ko" | "ar", q = p) =>
     renderToStaticMarkup(createElement(ModulesView, { l, page: q, api: {} as never, me, selection: { proposal: "", subscription: "", delivery: "" }, canCommand: true, onDone: () => undefined,
-      onNotice: () => undefined, onReload: async () => null, onSignedOut: () => undefined }));
+      onNotice: () => undefined, onReload: async () => null, onSignedOut: () => undefined, onLostAccess: () => undefined }));
   const text = (l: "en" | "ko" | "ar", q = p) => html(l, q).replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/\s+/g, " ");
   const en = text("en");
   const raw = html("en");
@@ -581,7 +581,7 @@ test("the modules view renders licenses, withheld versions and a license-blocked
   assert.ok(en.includes("The version's license is not on this installation's list of permitted plugin licenses."));
   assert.ok(en.includes("Unverified version, destination or permission. It cannot be activated."));
   assert.ok(!/>\s*Approve\s*</.test(renderToStaticMarkup(createElement(ModulesView, { l: "en", page: p, api: {} as never, me, selection: { proposal: "", subscription: "", delivery: "" }, canCommand: true,
-    onDone: () => undefined, onNotice: () => undefined, onReload: async () => null, onSignedOut: () => undefined }))));
+    onDone: () => undefined, onNotice: () => undefined, onReload: async () => null, onSignedOut: () => undefined, onLostAccess: () => undefined }))));
   for (const l of ["ko", "ar"] as const) assert.ok(text(l).includes(k.licensesTitle(l, "default")));
   const empty = text("en", page({ modules: { licenses: { permitted: [], source: "start_flag" } } }));
   assert.ok(empty.includes("Permitted plugin licenses (set when the server started)") && empty.includes("No plugin license is permitted on this installation"));
@@ -619,4 +619,152 @@ test("the modules view renders licenses, withheld versions and a license-blocked
   assert.ok(new Set(["propose", "enable", "approve"].map((c) => k.keptLicenseNext("en", c))).size === 3);
   const unknown = text("en", page({ modules: { licenses: null } }));
   assert.ok(unknown.includes("The list of permitted plugin licenses is unknown"));
+});
+
+const allRights = { administer_api_clients: true, administer_modules: true, approve_modules: true, stop_modules: true, administer_channels: true, approve_channels: true, stop_channels: true, reprocess_events: true };
+
+test("a refusal after the right is gone reads as no_right, never as gone, and only for right-checked commands", async () => {
+  const { commandRight, authorOnly } = await import("./live-model");
+  const lost = integrationsOf({ ...page(), rights: { ...allRights, approve_modules: false } } as unknown as Record<string, unknown>);
+  lost.modules = page().modules;
+  assert.equal(deniedOutcome("integrations.plugin_approve", "plugin-proposal-9", true, lost), "no_right");
+  assert.equal(deniedOutcome("integrations.plugin_withdraw", "plugin-proposal-9", false, lost), "gone");
+  const unknown = page();
+  assert.equal(unknown.rights, null);
+  assert.equal(deniedOutcome("integrations.plugin_approve", "plugin-proposal-9", false, unknown), "gone");
+  assert.equal(commandRight["integrations.redelivery_reapprove"], "reprocess_events");
+  assert.equal(commandRight["integrations.subscription_revoke"], "stop_channels");
+  assert.ok(authorOnly("integrations.letter_withdraw_dismiss") && !authorOnly("integrations.letter_approve_dismiss"));
+});
+
+test("withheld areas, own pending items and applicability", async () => {
+  const { withheld, ownPendingFor, subscriptionApplies, letterApplies, installApplies, heldRights, markLost, lostRight, pruneLost, forgetLost } = await import("./live-rights");
+  const p = integrationsOf({
+    revision: "r1", now: "", state: "configured", rights: { stop_modules: true, reprocess_events: true },
+    clients: { state: "not_permitted" }, modules: { state: "configured" }, channels: { state: "configured" }, events: { state: "configured" },
+    own_pending: [
+      { kind: "plugin_proposal", id: "9", target: "plugin-proposal-9", object: "p", state: "pending" },
+      { kind: "resume_request", id: "resume-request-1", target: "webhook-resume-request:resume-request-1", object: "s1", state: "pending" },
+      { kind: "dismiss_request", id: "letter-request-2", target: "webhook-letter-request:letter-request-2", object: "d1", state: "pending" },
+      { kind: "dismiss_request", id: "x", target: "bad target", object: "d1", state: "pending" },
+    ],
+  });
+  assert.equal(withheld(p, "clients"), true);
+  assert.equal(withheld(p, "modules"), false);
+  assert.deepEqual(heldRights(p), ["stop_modules", "reprocess_events"]);
+  assert.deepEqual(ownPendingFor(p, "modules").map((x) => x.id), ["9"]);
+  assert.deepEqual(ownPendingFor(p, "channels").map((x) => x.id), ["resume-request-1"]);
+  assert.deepEqual(ownPendingFor(p, "events").map((x) => x.id), ["letter-request-2"]);
+  assert.deepEqual(ownPendingFor(p, "clients"), []);
+  const s = page({ channels: { subscriptions: [sub("s1", "active", other, ["a"])] } }).channels.subscriptions?.[0];
+  assert.ok(s && subscriptionApplies(s, "pause") && subscriptionApplies(s, "revoke") && !subscriptionApplies(s, "approve") && !subscriptionApplies(s, "approve_resume"));
+  const d = page({ events: { deliveries: [letter("d1", { redeliver_request: { by: other } })] } }).events.deliveries?.[0];
+  assert.ok(d && letterApplies(d, "approve_redeliver") && !letterApplies(d, "request_redeliver") && letterApplies(d, "request_dismiss") && !letterApplies(d, "approve_dismiss") && !letterApplies(d, "reapprove"));
+  assert.ok(installApplies({ state: "stopped" } as never, "disable") && !installApplies({ state: "stopped" } as never, "stop"));
+  forgetLost();
+  markLost("integrations.plugin_stop", "plugin:p", "stop_modules");
+  assert.equal(lostRight("integrations.plugin_stop", "plugin:p"), "stop_modules");
+  pruneLost(integrationsOf({ rights: { stop_modules: false } }));
+  assert.equal(lostRight("integrations.plugin_stop", "plugin:p"), "stop_modules");
+  pruneLost(p);
+  assert.equal(lostRight("integrations.plugin_stop", "plugin:p"), "");
+});
+
+test("rights copy in EN, KO and AR", async () => {
+  const { r, rightLabel, rightList } = await import("./rights-copy");
+  const { blockerLines } = await import("./LiveCommand");
+  assert.equal(rightList("en", ["reprocess_events", "stop_modules", "stop_channels"]), "module stop; subscription and channel stop; event reprocessing");
+  assert.equal(rightList("en", ["administer_api_clients", "stop_modules"]), "API client administration; module stop");
+  assert.equal(rightList("ar", ["stop_modules", "stop_channels", "reprocess_events"]), "إيقاف الوحدات، إيقاف الاشتراكات والقنوات، إعادة معالجة الأحداث");
+  assert.equal(rightList("ko", ["stop_modules", "stop_channels", "reprocess_events"]), "모듈 중지, 구독·채널 중지, 이벤트 재처리");
+  assert.equal(r.noRight("en", "approve_modules"), "Needs the module approval right. You don't hold it.");
+  assert.equal(r.noRight("en", "administer_api_clients"), "Needs the API client administration right. You don't hold it.");
+  assert.equal(r.noRight("ko", "approve_modules"), "모듈 승인 권한이 필요합니다. 현재 이 권한이 없습니다.");
+  assert.equal(r.noLongerHeld("en", "reprocess_events"), "You no longer hold the event reprocessing right. Nothing was changed.");
+  assert.equal(r.withdrawName("en", r.pendingKind("en", "plugin_proposal"), "9"), "Withdraw plugin change proposal 9");
+  assert.equal(r.held("ar"), "محتجَز");
+  assert.notEqual(r.held("ar"), r.pendingTag("ar"));
+  assert.ok(r.heldStatus("ar").startsWith("محتجَز:") && r.heldStatus("en").includes("event reprocessing right"));
+  assert.ok(r.againImpact("ar").includes("المُرسِل غير متصل"));
+  assert.equal(r.pendingTag("ko"), "승인 대기");
+  assert.equal(r.forTarget("ar"), "الهدف");
+  assert.equal(r.closedAutomatically("ko"), "자동 종료");
+  assert.equal(r.loadFailed("en"), "The integrations could not be loaded.");
+  assert.equal(blockerLines("en", "no_right", "plugin_approve", "Approve")[0].text, "Needs the module approval right. You don't hold it.");
+  assert.equal(blockerLines("en", "no_right", "approve_redeliver", "Approve redelivery").length, 1);
+  assert.equal(blockerLines("en", "requester_lost_right", "approve", "Approve")[0].text, "The person who started this no longer holds the right, so it can't be approved.");
+  assert.equal(r.closedLost("en", "Proposal 8"), "Proposal 8: Not approved. It was closed because the person who started it no longer holds the right.");
+  for (const l of locales) {
+    for (const id of ["administer_api_clients", "administer_modules", "approve_modules", "stop_modules", "administer_channels", "approve_channels", "stop_channels", "reprocess_events"] as const) {
+      assert.ok(rightLabel(l, id).length > 0 && !rightLabel(l, id).includes("_"), l + id);
+    }
+    for (const text of [r.closedLost(l, "x"), r.noLongerHeld(l, "stop_modules"), r.withheld(l, "clients"), r.rightsUnknown(l), r.starterLost(l), r.heldStatus(l)]) {
+      assert.ok(text.length > 0);
+      assert.ok(!/confidential|secret|protected|기밀|비밀|سري/i.test(text), text);
+    }
+    assert.ok(!r.closedLost(l, "x").includes(r.lastActionLost(l).split(".")[1] ?? "###"), l);
+  }
+  assert.ok(!r.closedLost("en", "x").includes("Nothing was changed"));
+  assert.notEqual(r.rightsUnknown("en"), r.rightsNoneLead("en") + " " + r.rightsNoneRest("en"));
+});
+
+test("an operator without approval and administration rights sees reasons instead of buttons", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { ModulesView } = await import("./LiveModules");
+  const { ChannelsView } = await import("./LiveChannels");
+  const p = page({
+    modules: {
+      installations: [{ plugin: "p", version: "1.0.0", state: "enabled", can_stop: true, stop_blocked: "", can_disable: true, disable_blocked: "" }],
+      proposals: [proposal(10, "upgrade", "pending", other, { version: "1.1.0" }, { can_approve: false, approve_blocked: "no_right", can_withdraw: false, withdraw_blocked: "not_proposer" })],
+      actions: { propose: { allowed: false, blocked: "no_right" } },
+    },
+    channels: {
+      subscriptions: [sub("s1", "active", other, ["a"], { actions: { approve: avail("no_right"), pause: avail(), request_resume: avail("no_right"), approve_resume: avail("no_right"), revoke: avail() } })],
+      actions: { propose: { allowed: false, blocked: "no_right" } },
+    },
+  });
+  const shared = { l: "en" as const, page: p, api: {} as never, me, selection: { proposal: "", subscription: "", delivery: "" }, canCommand: true, onDone: () => undefined,
+    onNotice: () => undefined, onReload: async () => null, onSignedOut: () => undefined, onLostAccess: () => undefined };
+  const modules = renderToStaticMarkup(createElement(ModulesView, shared)).replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/\s+/g, " ");
+  assert.ok(modules.includes("Approve: Needs the module approval right. You don't hold it."), modules);
+  assert.ok(modules.includes("Propose a change: Needs the module administration right. You don't hold it."));
+  assert.ok(!modules.includes("You proposed this"));
+  assert.ok(/>\s*Stop\s*</.test(renderToStaticMarkup(createElement(ModulesView, shared))));
+  const channels = renderToStaticMarkup(createElement(ChannelsView, { ...shared, section: "configured" })).replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/\s+/g, " ");
+  assert.ok(!channels.includes("Approve: Needs"), channels);
+  assert.ok(!channels.includes("Approve resume: Needs"));
+  assert.ok(channels.includes("Needs the subscription and channel administration right. You don't hold it."), channels);
+  assert.ok(!channels.includes("Propose a subscription: Needs"), "the label repeats under its own heading");
+  const readOnly = renderToStaticMarkup(createElement(ChannelsView, { ...shared, canCommand: false, page: page(), section: "configured" }));
+  assert.ok(!readOnly.includes("p02-propose-sub"), "an empty propose heading was rendered");
+});
+
+test("a closure is credited to nobody and the trigger only appears inside the found-when line", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { ModulesView } = await import("./LiveModules");
+  const { ChannelsView } = await import("./LiveChannels");
+  const p = page({
+    modules: { proposals: [proposal(11, "remove", "closed", other, {}, { closing_reason: "requester_lost_right", closed_request: "req-77", closure_trigger: "u9", closure_trigger_login: "nine@example.invalid", closed_by: "" })] },
+    channels: { subscriptions: [sub("s1", "revoked", other, ["a"], { reason: "requester_lost_right", history: [{ action: "proposal_closed", actor: "u9", actor_login: "nine@example.invalid", reason: "requester_lost_right", request: "req-78" }] })] },
+  });
+  const shared = { l: "en" as const, page: p, api: {} as never, me, selection: { proposal: "", subscription: "", delivery: "" }, canCommand: true, onDone: () => undefined,
+    onNotice: () => undefined, onReload: async () => null, onSignedOut: () => undefined, onLostAccess: () => undefined };
+  const modules = renderToStaticMarkup(createElement(ModulesView, shared));
+  assert.ok(modules.replace(/<[^>]+>/g, "").includes("Found when nine@example.invalid tried to approve (request req-77)."), modules);
+  assert.ok(modules.includes('<bdi dir="ltr" class="live-mono">req-77</bdi>') && modules.includes('<bdi dir="ltr" class="live-mono">nine@example.invalid</bdi>'));
+  assert.ok(!modules.includes("Closed by") && !modules.includes("Approved by ⁨nine"));
+  const channels = renderToStaticMarkup(createElement(ChannelsView, { ...shared, section: "configured" }));
+  assert.ok(channels.includes("Closed automatically") && /req-78<\/bdi>/.test(channels), channels);
+});
+
+test("lost-right marks are cleared when the signed-in user changes", async () => {
+  const { markLost, lostRight } = await import("./live-rights");
+  setScope("w1", "u1", "s1");
+  markLost("integrations.plugin_stop", "plugin:p", "stop_modules");
+  setScope("w1", "u1", "s1");
+  assert.equal(lostRight("integrations.plugin_stop", "plugin:p"), "stop_modules");
+  setScope("w1", "u2", "s1");
+  assert.equal(lostRight("integrations.plugin_stop", "plugin:p"), "");
 });

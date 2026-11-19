@@ -110,10 +110,40 @@ type integrationHandler struct {
 	kind string
 }
 
+func (h integrationHandler) author(target string) (string, bool) {
+	s := h.s
+	switch h.kind {
+	case pluginWithdrawKind:
+		if e := s.pluginEntryOf(target); e != nil {
+			return e.view.Proposer, true
+		}
+	case subWithdrawKind:
+		if e := s.subscriptionEntryOf(target); e != nil {
+			return e.proposer, true
+		}
+	case resumeWithdrawKind, redeliverWithdrawKind, dismissWithdrawKind:
+		prefix := letterRequestTarget
+		if h.kind == resumeWithdrawKind {
+			prefix = resumeRequestTarget
+		}
+		if rec := s.integ.record(target, prefix); rec != nil && rec.kind == requestKindOf(h.kind) {
+			return rec.author, true
+		}
+	}
+	return "", false
+}
+
 func (h integrationHandler) found(target string) bool {
 	s := h.s
 	switch {
-	case h.kind == pluginApproveKind, h.kind == pluginWithdrawKind:
+	case authorKinds[h.kind]:
+		_, ok := h.author(target)
+		return ok
+	case h.kind == reapproveKind:
+		id, ok := strings.CutPrefix(target, redeliveryTarget)
+		_, held := s.integ.held[id]
+		return ok && held
+	case h.kind == pluginApproveKind:
 		return s.pluginEntryOf(target) != nil
 	case strings.HasPrefix(h.kind, "plugin_"):
 		return s.pluginOf(target) != nil
@@ -129,7 +159,8 @@ func (h integrationHandler) Resolve(workspace, target string) (commands.Target, 
 	if workspace != h.s.bootWorkspace || !h.found(target) {
 		return commands.Target{}, commands.NotFound
 	}
-	return commands.Target{Revision: h.s.Revision()}, commands.Found
+	author, _ := h.author(target)
+	return commands.Target{Revision: h.s.Revision(), AuthorID: author}, commands.Found
 }
 
 type integrationResult struct {
@@ -147,6 +178,21 @@ func (s *Server) pluginApproveCommand(ctx commands.Context, reader plugins.Actor
 	if e.view.State != plugins.ProposalPending {
 		return integrationResult{}, refuse(commands.InvalidStage)
 	}
+	gone, err := s.starterCheck(e.view.Proposer, gate.AdministerModules)
+	switch {
+	case err != nil:
+		return integrationResult{}, err
+	case gone:
+		var view plugins.ProposalView
+		if err := s.pluginCall("close", func() (err error) {
+			view, err = s.plugins.Close(e.view.Number, plugins.ReasonRequesterLostRight)
+			return
+		}); err != nil {
+			return integrationResult{}, mapIntegration(err)
+		}
+		e.view, e.closedBy, e.closing, e.reason, e.request, e.trigger = view, "", "", blockedLostRight, ctx.Request, reader.ID
+		return closedResult(ctx.Target), nil
+	}
 	if err := s.pluginApprove(e, reader, ctx.Rationale); err != nil {
 		return integrationResult{}, mapIntegration(err)
 	}
@@ -155,6 +201,9 @@ func (s *Server) pluginApproveCommand(ctx commands.Context, reader plugins.Actor
 
 func (s *Server) pluginWithdrawCommand(ctx commands.Context, reader plugins.Actor) (integrationResult, error) {
 	e := s.pluginEntryOf(ctx.Target)
+	if e.view.State != plugins.ProposalPending || e.view.Proposer != ctx.User {
+		return integrationResult{}, refuse(commands.InvalidStage)
+	}
 	if err := s.pluginWithdraw(e, reader, ctx.Rationale); err != nil {
 		return integrationResult{}, mapIntegration(err)
 	}
@@ -286,6 +335,34 @@ func (s *Server) subscriptionProposeCommand(ctx commands.Context, reader webhook
 	return subscriptionResult(v), nil
 }
 
+func resuming(v webhooks.SubscriptionView) bool {
+	return v.Resumer != "" && pausedOrSuspended(v.State)
+}
+
+func (s *Server) closeSubscriptionWork(e *subscriptionEntry, kind string, ctx commands.Context, by string) (integrationResult, error) {
+	var err error
+	var view webhooks.SubscriptionView
+	action := "proposal_closed"
+	if kind == subApproveKind {
+		err = s.webhookCall("close", func() (err error) {
+			view, err = s.webhooks.CloseSubscription(s.bootWorkspace, e.id, webhooks.ReasonRequesterLostRight)
+			return
+		})
+	} else {
+		action = "resume_closed"
+		err = s.webhookCall("close_resume", func() (err error) {
+			view, err = s.webhooks.CloseResume(s.bootWorkspace, e.id, webhooks.ReasonRequesterLostRight)
+			return
+		})
+	}
+	if err != nil {
+		return integrationResult{}, mapIntegration(err)
+	}
+	e.history = append(e.history, actionRecord{action: action, actor: by, reason: blockedLostRight, request: ctx.Request})
+	e.settle(view)
+	return closedResult(ctx.Target), nil
+}
+
 func (s *Server) subscriptionCommand(kind string, ctx commands.Context, reader webhooks.Actor) (integrationResult, error) {
 	e := s.subscriptionEntryOf(ctx.Target)
 	current, err := s.subscriptionOf(e.id)
@@ -299,60 +376,190 @@ func (s *Server) subscriptionCommand(kind string, ctx commands.Context, reader w
 	}
 	w := s.webhooks
 	steps := map[string]step{
-		subApproveKind: {current.State != webhooks.SubscriptionProposed, "approve", w.ApproveSubscription},
-		subPauseKind:   {false, "pause", w.PauseSubscription},
-		subRequestKind: {current.Resumer != "", "request_resume", w.RequestResume},
-		subResumeKind:  {false, "approve_resume", w.ApproveResume},
-		subRevokeKind:  {current.State == webhooks.SubscriptionRevoked, "revoke", w.RevokeSubscription},
+		subApproveKind:  {current.State != webhooks.SubscriptionProposed, "approve", w.ApproveSubscription},
+		subPauseKind:    {false, "pause", w.PauseSubscription},
+		subRequestKind:  {current.Resumer != "", "request_resume", w.RequestResume},
+		subResumeKind:   {!resuming(current), "approve_resume", w.ApproveResume},
+		subRevokeKind:   {current.State == webhooks.SubscriptionRevoked, "revoke", w.RevokeSubscription},
+		subWithdrawKind: {current.State != webhooks.SubscriptionProposed || current.Proposer != ctx.User, "withdraw", w.WithdrawSubscription},
 	}
 	st := steps[kind]
 	if st.silent {
 		return integrationResult{}, refuse(commands.InvalidStage)
 	}
+	if kind == subApproveKind || kind == subResumeKind {
+		starter := current.Proposer
+		if kind == subResumeKind {
+			starter = current.Resumer
+		}
+		gone, err := s.starterCheck(starter, gate.AdministerChannels)
+		if err != nil {
+			return integrationResult{}, err
+		}
+		if gone {
+			return s.closeSubscriptionWork(e, kind, ctx, reader.ID)
+		}
+	}
 	v, err := s.subscriptionStep(e, st.action, reader, ctx.Rationale, st.call)
 	if err != nil {
 		return integrationResult{}, mapIntegration(err)
 	}
+	if kind == subRequestKind {
+		r := s.integ.newRequest(requestResume, reader.ID, e.id, e.id)
+		r.rationale = ctx.Rationale
+		e.resume = &r
+	}
 	return subscriptionResult(v), nil
+}
+
+func (s *Server) resumeWithdrawCommand(ctx commands.Context, reader webhooks.Actor) (integrationResult, error) {
+	rec := s.integ.record(ctx.Target, resumeRequestTarget)
+	e := s.integ.subscription(rec.object)
+	if e == nil || e.resume == nil || e.resume.id != rec.id || e.resume.by != ctx.User {
+		return integrationResult{}, refuse(commands.InvalidStage)
+	}
+	v, err := s.subscriptionStep(e, "withdraw_resume", reader, ctx.Rationale, s.webhooks.WithdrawResume)
+	if err != nil {
+		return integrationResult{}, mapIntegration(err)
+	}
+	e.resume = nil
+	return integrationResult{state: "withdrawn", fields: map[string]string{"request": rec.id, "subscription": v.Subscription.ID, "target": ctx.Target}}, nil
+}
+
+func (s *Server) letterWithdrawCommand(kind string, ctx commands.Context, reader webhooks.Actor) (integrationResult, error) {
+	rec := s.integ.record(ctx.Target, letterRequestTarget)
+	requests, dismiss := s.integ.redeliver, kind == dismissWithdrawKind
+	if dismiss {
+		requests = s.integ.dismiss
+	}
+	live, pending := requests[rec.object]
+	e := s.integ.letter(rec.object)
+	if !pending || live.id != rec.id || live.by != ctx.User || e == nil {
+		return integrationResult{}, refuse(commands.InvalidStage)
+	}
+	err := s.webhookCall("withdraw_request", func() error { return s.webhooks.WithdrawRequest(s.bootWorkspace, e.id, rec.object, dismiss, reader) })
+	if err != nil {
+		return integrationResult{}, mapIntegration(err)
+	}
+	delete(requests, rec.object)
+	return integrationResult{state: "withdrawn", fields: map[string]string{"request": rec.id, "delivery": rec.object, "target": ctx.Target}}, nil
 }
 
 func (s *Server) letterCommand(kind string, ctx commands.Context, reader webhooks.Actor) (integrationResult, error) {
 	e, letter := s.letterEntryOf(ctx.Target), letterOf(ctx.Target)
 	ws, w := s.bootWorkspace, s.webhooks
 	requests := s.integ.redeliver
-	if kind == letterDismissKind || kind == letterDropKind {
+	dismiss := kind == letterDismissKind || kind == letterDropKind
+	if dismiss {
 		requests = s.integ.dismiss
 	}
 	fields := map[string]string{"delivery": letter, "target": ctx.Target}
 	var err error
 	state := "requested"
+	pending, waiting := requests[letter]
 	switch kind {
 	case letterRedeliverKind, letterDismissKind:
-		if _, pending := requests[letter]; pending {
+		if waiting {
 			return integrationResult{}, refuse(commands.InvalidStage)
 		}
 		call := w.RequestRedeliver
-		if kind == letterDismissKind {
-			call = w.RequestDismiss
+		kindOf := requestRedeliver
+		if dismiss {
+			call, kindOf = w.RequestDismiss, requestDismiss
 		}
 		if err = s.webhookCall(strings.TrimPrefix(kind, "letter_"), func() error { return call(ws, e.id, letter, reader) }); err == nil {
-			requests[letter] = letterRequest{by: reader.ID, rationale: ctx.Rationale}
+			r := s.integ.newRequest(kindOf, reader.ID, letter, e.id)
+			r.rationale = ctx.Rationale
+			requests[letter] = r
+			fields["request"] = r.id
 		}
-	case letterAgainKind:
-		var fresh webhooks.DeliveryView
-		err = s.webhookCall("approve_redeliver", func() (err error) { fresh, err = w.ApproveRedeliver(ws, e.id, letter, reader); return })
-		state, fields["redelivery"] = fresh.State, fresh.ID
 	default:
-		err = s.webhookCall("approve_dismiss", func() error { return w.ApproveDismiss(ws, e.id, letter, reader) })
-		state = "dismissed"
+		if !waiting {
+			return integrationResult{}, refuse(commands.InvalidStage)
+		}
+		gone, failed := s.starterCheck(pending.by, gate.ReprocessEvents)
+		if failed != nil {
+			return integrationResult{}, failed
+		}
+		if gone {
+			if closing := s.webhookCall("close_request", func() error {
+				return w.CloseRequest(ws, e.id, letter, dismiss, webhooks.ReasonRequesterLostRight)
+			}); closing != nil {
+				return integrationResult{}, mapIntegration(closing)
+			}
+			delete(requests, letter)
+			action := "redeliver_request_closed"
+			if dismiss {
+				action = "dismiss_request_closed"
+			}
+			e.history = append(e.history, actionRecord{action: action, actor: reader.ID, reason: blockedLostRight, request: ctx.Request})
+			return closedResult(ctx.Target), nil
+		}
+		if kind == letterAgainKind {
+			var fresh webhooks.DeliveryView
+			err = s.webhookCall("approve_redeliver", func() (err error) { fresh, err = w.ApproveRedeliver(ws, e.id, letter, reader); return })
+			state, fields["redelivery"] = fresh.State, fresh.ID
+		} else {
+			err = s.webhookCall("approve_dismiss", func() error { return w.ApproveDismiss(ws, e.id, letter, reader) })
+			state = "dismissed"
+		}
+		if err == nil {
+			s.integ.dropLetter(e, letter)
+		}
 	}
 	if err != nil {
 		return integrationResult{}, mapIntegration(err)
 	}
-	if kind == letterAgainKind || kind == letterDropKind {
-		s.integ.dropLetter(e, letter)
-	}
 	return integrationResult{state: state, fields: fields}, nil
+}
+
+func (s *Server) reapproveCommand(ctx commands.Context, reader webhooks.Actor) (integrationResult, error) {
+	id := strings.TrimPrefix(ctx.Target, redeliveryTarget)
+	sub := s.integ.held[id]
+	var list []webhooks.DeliveryView
+	err := s.webhookCall("held", func() (err error) {
+		list, err = s.allDeliveries(sub, reader)
+		return
+	})
+	if err != nil {
+		return integrationResult{}, mapIntegration(err)
+	}
+	var held *webhooks.DeliveryView
+	for index := range list {
+		if list[index].ID == id && list[index].Hold != "" {
+			held = &list[index]
+		}
+	}
+	if held == nil {
+		delete(s.integ.held, id)
+		return integrationResult{}, refuse(commands.InvalidStage)
+	}
+	gone, err := s.starterCheck(held.Requester, gate.ReprocessEvents)
+	if err != nil {
+		return integrationResult{}, err
+	}
+	if gone {
+		if err := s.webhookCall("close_redelivery", func() (err error) {
+			_, err = s.webhooks.CloseRedelivery(s.bootWorkspace, sub, id, webhooks.ReasonRequesterLostRight)
+			return
+		}); err != nil {
+			return integrationResult{}, mapIntegration(err)
+		}
+		delete(s.integ.held, id)
+		if e := s.integ.subscription(sub); e != nil {
+			e.history = append(e.history, actionRecord{action: "redelivery_closed", actor: reader.ID, reason: blockedLostRight, request: ctx.Request})
+		}
+		return closedResult(ctx.Target), nil
+	}
+	var fresh webhooks.DeliveryView
+	if err := s.webhookCall("reapprove", func() (err error) {
+		fresh, err = s.webhooks.ReapproveRedelivery(s.bootWorkspace, sub, id, reader)
+		return
+	}); err != nil {
+		return integrationResult{}, mapIntegration(err)
+	}
+	delete(s.integ.held, id)
+	return integrationResult{state: fresh.State, fields: map[string]string{"redelivery": id, "target": ctx.Target}}, nil
 }
 
 func (h integrationHandler) Apply(ctx commands.Context) (commands.Outcome, error) {
@@ -375,6 +582,12 @@ func (h integrationHandler) Apply(ctx commands.Context) (commands.Outcome, error
 		result, err = s.pluginRuntimeCommand(ctx, reader, h.kind == pluginStopKind)
 	case h.kind == subProposeKind:
 		result, err = s.subscriptionProposeCommand(ctx, hook)
+	case h.kind == resumeWithdrawKind:
+		result, err = s.resumeWithdrawCommand(ctx, hook)
+	case h.kind == redeliverWithdrawKind, h.kind == dismissWithdrawKind:
+		result, err = s.letterWithdrawCommand(h.kind, ctx, hook)
+	case h.kind == reapproveKind:
+		result, err = s.reapproveCommand(ctx, hook)
 	case strings.HasPrefix(h.kind, "subscription_"):
 		result, err = s.subscriptionCommand(h.kind, ctx, hook)
 	default:
@@ -387,31 +600,33 @@ func (h integrationHandler) Apply(ctx commands.Context) (commands.Outcome, error
 }
 
 func (s *Server) integrationDefinitions() []commands.Definition {
-	define := func(permission commands.Permission, kind string, f ...commands.Field) commands.Definition {
-		return commands.Definition{ID: integrationCommand + kind, Permission: permission, Mutating: true, Rationale: true, Fields: f,
-			Handler: integrationHandler{s: s, kind: kind}}
+	define := func(kind string, f ...commands.Field) commands.Definition {
+		return commands.Definition{ID: integrationCommand + kind, Permission: commands.Permission{Action: rightOf(kind), Kind: gate.InstallationKind},
+			Author: authorKinds[kind], Mutating: true, Rationale: true, Fields: f, Handler: integrationHandler{s: s, kind: kind}}
 	}
-	pluginPermission := commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}
-	subscriptionPermission := commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}
-	letterPermission := commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}
 	kinds := []string{plugins.ChangeInstall, plugins.ChangeUpgrade, plugins.ChangeRollback, plugins.ChangeEnable, plugins.ChangeRemove}
 	return []commands.Definition{
-		define(pluginPermission, pluginApproveKind),
-		define(pluginPermission, pluginWithdrawKind),
-		define(pluginPermission, pluginProposeKind, commands.Field{Name: "kind", Type: commands.Enum, Required: true, Values: kinds},
+		define(pluginApproveKind),
+		define(pluginWithdrawKind),
+		define(pluginProposeKind, commands.Field{Name: "kind", Type: commands.Enum, Required: true, Values: kinds},
 			commands.Field{Name: "version", Type: commands.Text, Required: false}),
-		define(pluginPermission, pluginStopKind),
-		define(pluginPermission, pluginDisableKind),
-		define(subscriptionPermission, subProposeKind, commands.Field{Name: "destination", Type: commands.Text, Required: true},
+		define(pluginStopKind),
+		define(pluginDisableKind),
+		define(subProposeKind, commands.Field{Name: "destination", Type: commands.Text, Required: true},
 			commands.Field{Name: "types", Type: commands.Text, Required: true}),
-		define(subscriptionPermission, subApproveKind),
-		define(subscriptionPermission, subPauseKind),
-		define(subscriptionPermission, subRequestKind),
-		define(subscriptionPermission, subResumeKind),
-		define(subscriptionPermission, subRevokeKind),
-		define(letterPermission, letterRedeliverKind),
-		define(letterPermission, letterAgainKind),
-		define(letterPermission, letterDismissKind),
-		define(letterPermission, letterDropKind),
+		define(subApproveKind),
+		define(subPauseKind),
+		define(subRequestKind),
+		define(subResumeKind),
+		define(subRevokeKind),
+		define(subWithdrawKind),
+		define(resumeWithdrawKind),
+		define(letterRedeliverKind),
+		define(letterAgainKind),
+		define(letterDismissKind),
+		define(letterDropKind),
+		define(redeliverWithdrawKind),
+		define(dismissWithdrawKind),
+		define(reapproveKind),
 	}
 }

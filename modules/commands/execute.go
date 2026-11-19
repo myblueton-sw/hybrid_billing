@@ -321,9 +321,12 @@ func (r *Registry) run(call Call, request string, entry *Record, flight *flight,
 		Resource: gate.Resource{WorkspaceID: workspace, CustomerID: target.CustomerID, LegalEntityID: target.LegalEntityID, ContractID: target.ContractID,
 			Month: target.Month, HasMonth: target.HasMonth}}
 	var decision gate.Decision
-	if definition.Approval {
+	switch {
+	case definition.Approval:
 		decision = r.gate.CheckApproval(call.Answer, target.AuthorID, permitted)
-	} else {
+	case definition.Author:
+		decision = r.gate.CheckAuthor(call.Answer, call.Client, target.AuthorID, permitted)
+	default:
 		decision = r.gate.Decide(call.Answer, call.Client, permitted)
 	}
 	refusal := r.mapped(decision, request)
@@ -357,9 +360,12 @@ func (r *Registry) run(call Call, request string, entry *Record, flight *flight,
 			return failure(RevisionConflict, request)
 		}
 	}
-	if definition.Approval {
+	switch {
+	case definition.Approval:
 		decision = r.gate.RecheckApproval(decision.Stamp, target.AuthorID, permitted)
-	} else {
+	case definition.Author:
+		decision = r.gate.RecheckAuthor(decision.Stamp, call.Client, target.AuthorID, permitted)
+	default:
 		decision = r.gate.Recheck(decision.Stamp, call.Client, permitted)
 	}
 	if refusal := r.mapped(decision, request); refusal != nil {

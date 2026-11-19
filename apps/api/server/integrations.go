@@ -182,6 +182,10 @@ type pluginProposalRow struct {
 	ClosedBy         string           `json:"closed_by"`
 	ClosedByLogin    string           `json:"closed_by_login"`
 	ClosingRationale string           `json:"closing_rationale"`
+	ClosingReason    string           `json:"closing_reason"`
+	ClosedRequest    string           `json:"closed_request"`
+	ClosureTrigger   string           `json:"closure_trigger"`
+	TriggerLogin     string           `json:"closure_trigger_login"`
 	Summary          pluginSummaryRow `json:"summary"`
 	CanApprove       bool             `json:"can_approve"`
 	ApproveBlocked   string           `json:"approve_blocked"`
@@ -195,13 +199,14 @@ type licensesRow struct {
 }
 
 type modulesSection struct {
-	State         string              `json:"state"`
-	Licenses      licensesRow         `json:"licenses"`
-	Workspace     *pluginWorkspaceRow `json:"workspace"`
-	Publishers    []publisherRow      `json:"publishers"`
-	Plugins       []pluginVersionRow  `json:"plugins"`
-	Installations []pluginInstallRow  `json:"installations"`
-	Proposals     []pluginProposalRow `json:"proposals"`
+	State         string                  `json:"state"`
+	Licenses      licensesRow             `json:"licenses"`
+	Workspace     *pluginWorkspaceRow     `json:"workspace"`
+	Publishers    []publisherRow          `json:"publishers"`
+	Plugins       []pluginVersionRow      `json:"plugins"`
+	Installations []pluginInstallRow      `json:"installations"`
+	Proposals     []pluginProposalRow     `json:"proposals"`
+	Actions       map[string]availability `json:"actions"`
 }
 
 type destinationRow struct {
@@ -231,6 +236,8 @@ type subscriptionHistoryRow struct {
 	Actor      string `json:"actor"`
 	ActorLogin string `json:"actor_login"`
 	Rationale  string `json:"rationale"`
+	Reason     string `json:"reason"`
+	Request    string `json:"request"`
 }
 
 type subscriptionRow struct {
@@ -253,16 +260,18 @@ type subscriptionRow struct {
 	Resumer       string                   `json:"resumer"`
 	ResumerLogin  string                   `json:"resumer_login"`
 	History       []subscriptionHistoryRow `json:"history"`
+	ResumeRequest *requestRow              `json:"resume_request"`
 	Keys          []subscriptionKeyRow     `json:"keys"`
 	Signer        string                   `json:"signer"`
 	Actions       map[string]availability  `json:"actions"`
 }
 
 type channelsSection struct {
-	State         string            `json:"state"`
-	Destinations  []destinationRow  `json:"destinations"`
-	Subscribers   []string          `json:"subscribers"`
-	Subscriptions []subscriptionRow `json:"subscriptions"`
+	State         string                  `json:"state"`
+	Destinations  []destinationRow        `json:"destinations"`
+	Subscribers   []string                `json:"subscribers"`
+	Subscriptions []subscriptionRow       `json:"subscriptions"`
+	Actions       map[string]availability `json:"actions"`
 }
 
 type typeRow struct {
@@ -277,6 +286,8 @@ type typeRow struct {
 }
 
 type requestRow struct {
+	ID        string `json:"id"`
+	Target    string `json:"target"`
 	By        string `json:"by"`
 	ByLogin   string `json:"by_login"`
 	Rationale string `json:"rationale"`
@@ -294,6 +305,11 @@ type deliveryRow struct {
 	Reason         string                  `json:"reason"`
 	Attempts       int                     `json:"attempts"`
 	OutcomeUnknown bool                    `json:"outcome_unknown"`
+	Hold           string                  `json:"hold"`
+	Requester      string                  `json:"requester"`
+	RequesterLogin string                  `json:"requester_login"`
+	Approver       string                  `json:"approver"`
+	ApproverLogin  string                  `json:"approver_login"`
 	Redeliver      *requestRow             `json:"redeliver_request"`
 	Dismiss        *requestRow             `json:"dismiss_request"`
 	Actions        map[string]availability `json:"actions"`
@@ -313,13 +329,15 @@ type eventsSection struct {
 }
 
 type integrationsPage struct {
-	Revision string          `json:"revision"`
-	Now      string          `json:"now"`
-	State    string          `json:"state"`
-	Clients  clientsSection  `json:"clients"`
-	Modules  modulesSection  `json:"modules"`
-	Channels channelsSection `json:"channels"`
-	Events   eventsSection   `json:"events"`
+	Revision   string          `json:"revision"`
+	Now        string          `json:"now"`
+	State      string          `json:"state"`
+	Rights     map[string]bool `json:"rights"`
+	OwnPending []ownPendingRow `json:"own_pending"`
+	Clients    any             `json:"clients"`
+	Modules    any             `json:"modules"`
+	Channels   any             `json:"channels"`
+	Events     any             `json:"events"`
 }
 
 func configured(present bool) string {
@@ -417,7 +435,7 @@ func (s *Server) installationOf(plugin string) (plugins.InstallationView, error)
 	return v, err
 }
 
-func (s *Server) installRowOf(v plugins.InstallationView) pluginInstallRow {
+func (s *Server) installRowOf(v plugins.InstallationView, reader *viewer) pluginInstallRow {
 	row := pluginInstallRow{Plugin: v.Plugin, Version: v.Version, State: v.State, Reason: v.Reason, Revision: v.Revision, Endpoints: []endpointRow{},
 		Tokens: notIssued, Runtime: notConnected}
 	for _, e := range v.Endpoints {
@@ -433,6 +451,7 @@ func (s *Server) installRowOf(v plugins.InstallationView) pluginInstallRow {
 	if v.State != plugins.StateEnabled && v.State != plugins.StateStopped {
 		row.DisBlock = plugins.ReasonNotAllowedState
 	}
+	row.StopBlock, row.DisBlock = reader.blocked(pluginStopKind, row.StopBlock), reader.blocked(pluginDisableKind, row.DisBlock)
 	row.CanStop, row.CanDisable = row.StopBlock == "", row.DisBlock == ""
 	return row
 }
@@ -454,16 +473,25 @@ func recheckReason(err error) (string, error) {
 	return "", err
 }
 
-func (s *Server) pluginBlockers(v plugins.ProposalView, reader string) (string, string, error) {
-	if v.State != plugins.ProposalPending {
-		return plugins.ReasonNotPending, plugins.ReasonNotPending, nil
-	}
+func (s *Server) pluginBlockers(v plugins.ProposalView, reader *viewer) (string, string, error) {
+	pending := v.State == plugins.ProposalPending
 	withdraw := ""
-	if v.Proposer != reader {
+	switch {
+	case !pending:
+		withdraw = plugins.ReasonNotPending
+	case v.Proposer != reader.id:
 		withdraw = plugins.ReasonNotProposer
 	}
-	if v.Proposer == reader {
-		return ownProposal, withdraw, nil
+	approve := ""
+	switch {
+	case !pending:
+		approve = plugins.ReasonNotPending
+	case v.Proposer == reader.id:
+		approve = ownProposal
+	}
+	approve = reader.approval(pluginApproveKind, v.Proposer, pending, approve)
+	if approve != "" {
+		return approve, withdraw, nil
 	}
 	approve, err := recheckReason(s.pluginCall("recheck", func() error { return s.plugins.Recheck(v.Number) }))
 	return approve, withdraw, err
@@ -479,21 +507,23 @@ func pluginSummary(c plugins.Change) pluginSummaryRow {
 	return row
 }
 
-func (s *Server) pluginProposalOf(e *pluginEntry, reader string) (pluginProposalRow, error) {
+func (s *Server) pluginProposalOf(e *pluginEntry, reader *viewer) (pluginProposalRow, error) {
 	v := e.view
 	row := pluginProposalRow{Number: v.Number, Target: pluginProposalTarget + strconv.FormatUint(v.Number, 10), Kind: v.Change.Kind, State: v.State,
 		Created: stamp(e.created), Proposer: v.Proposer, ProposerLogin: s.loginOf(v.Proposer), Approver: v.Approver, ApproverLogin: s.loginOf(v.Approver),
-		Rationale: e.rationale, ClosedBy: e.closedBy, ClosedByLogin: s.loginOf(e.closedBy), ClosingRationale: e.closing, Summary: pluginSummary(v.Change)}
+		Rationale: e.rationale, ClosedBy: e.closedBy, ClosedByLogin: s.loginOf(e.closedBy), ClosingRationale: e.closing, ClosingReason: e.reason,
+		ClosedRequest: e.request, ClosureTrigger: e.trigger, TriggerLogin: s.loginOf(e.trigger), Summary: pluginSummary(v.Change)}
 	var err error
 	row.ApproveBlocked, row.WithdrawBlocked, err = s.pluginBlockers(v, reader)
 	row.CanApprove, row.CanWithdraw = row.ApproveBlocked == "", row.WithdrawBlocked == ""
 	return row, err
 }
 
-func (s *Server) modulesOf(reader string) (modulesSection, error) {
+func (s *Server) modulesOf(reader *viewer) (modulesSection, error) {
 	c := s.integ
 	out := modulesSection{State: configured(len(c.publishers) > 0 || len(c.plugins) > 0 || c.workspace != ""), Publishers: []publisherRow{},
-		Plugins: []pluginVersionRow{}, Installations: []pluginInstallRow{}, Proposals: []pluginProposalRow{}, Licenses: licensesRow{Permitted: []string{}, Source: s.cfg.Plugins.source()}}
+		Plugins: []pluginVersionRow{}, Installations: []pluginInstallRow{}, Proposals: []pluginProposalRow{}, Licenses: licensesRow{Permitted: []string{}, Source: s.cfg.Plugins.source()},
+		Actions: map[string]availability{"propose": allow(reader.blocked(pluginProposeKind, ""))}}
 	errs := []error{s.pluginCall("licenses", func() error { out.Licenses.Permitted = s.plugins.Licenses(); return nil })}
 	if c.workspace != "" {
 		var w plugins.Workspace
@@ -516,7 +546,7 @@ func (s *Server) modulesOf(reader string) (modulesSection, error) {
 		if errors.Is(err, plugins.ErrNotFound) {
 			continue
 		}
-		out.Installations, errs = append(out.Installations, s.installRowOf(v)), append(errs, err)
+		out.Installations, errs = append(out.Installations, s.installRowOf(v, reader)), append(errs, err)
 	}
 	for index := len(c.entries) - 1; index >= 0 && len(out.Proposals) < installShown; index-- {
 		row, err := s.pluginProposalOf(c.entries[index], reader)
@@ -548,14 +578,17 @@ func pausedOrSuspended(state string) bool {
 	return state == webhooks.SubscriptionPaused || state == webhooks.SubscriptionSuspended
 }
 
-func (s *Server) subscriptionActions(v webhooks.SubscriptionView, reader string) map[string]availability {
-	approve, pause, request, resume, revoke := "", "", "", "", ""
+func (s *Server) subscriptionActions(v webhooks.SubscriptionView, reader *viewer) map[string]availability {
+	approve, pause, request, resume, revoke, withdraw, withdrawResume := "", "", "", "", "", "", ""
+	proposed := v.State == webhooks.SubscriptionProposed
 	switch {
-	case v.State != webhooks.SubscriptionProposed:
+	case !proposed:
 		approve = plugins.ReasonNotPending
-	case v.Proposer == reader:
+	case v.Proposer == reader.id:
 		approve = ownProposal
-	default:
+	}
+	approve = reader.approval(subApproveKind, v.Proposer, proposed, approve)
+	if approve == "" {
 		approve = s.admits(v)
 	}
 	if v.State != webhooks.SubscriptionActive {
@@ -568,18 +601,33 @@ func (s *Server) subscriptionActions(v webhooks.SubscriptionView, reader string)
 		request = alreadyRequested
 	}
 	switch {
-	case v.Resumer == "" || !pausedOrSuspended(v.State):
+	case !resuming(v):
 		resume = webhooks.ReasonNotPending
-	case v.Resumer == reader:
+	case v.Resumer == reader.id:
 		resume = ownRequest
-	default:
+	}
+	resume = reader.approval(subResumeKind, v.Resumer, resuming(v), resume)
+	if resume == "" {
 		resume = s.admits(v)
 	}
 	if v.State == webhooks.SubscriptionRevoked {
 		revoke = webhooks.ReasonNotPending
 	}
-	return map[string]availability{"approve": allow(approve), "pause": allow(pause), "request_resume": allow(request), "approve_resume": allow(resume),
-		"revoke": allow(revoke)}
+	switch {
+	case !proposed:
+		withdraw = webhooks.ReasonNotPending
+	case v.Proposer != reader.id:
+		withdraw = webhooks.ReasonNotRequester
+	}
+	switch {
+	case !resuming(v):
+		withdrawResume = webhooks.ReasonNotPending
+	case v.Resumer != reader.id:
+		withdrawResume = webhooks.ReasonNotRequester
+	}
+	return map[string]availability{"approve": allow(approve), "pause": allow(reader.blocked(subPauseKind, pause)),
+		"request_resume": allow(reader.blocked(subRequestKind, request)), "approve_resume": allow(resume), "revoke": allow(reader.blocked(subRevokeKind, revoke)),
+		"withdraw": allow(withdraw), "withdraw_resume": allow(withdrawResume)}
 }
 
 func (s *Server) subscriptionOf(id string) (webhooks.SubscriptionView, error) {
@@ -588,12 +636,16 @@ func (s *Server) subscriptionOf(id string) (webhooks.SubscriptionView, error) {
 	return v, err
 }
 
-func (s *Server) subscriptionRowOf(e *subscriptionEntry, v webhooks.SubscriptionView, head uint64, reader string) (subscriptionRow, error) {
+func (s *Server) subscriptionRowOf(e *subscriptionEntry, v webhooks.SubscriptionView, head uint64, reader *viewer) (subscriptionRow, error) {
 	sub := v.Subscription
 	row := subscriptionRow{ID: sub.ID, Target: subscriptionTarget + sub.ID, Subscriber: sub.Subscriber, Destination: sub.Destination, Types: append([]string{}, sub.Types...),
 		State: v.State, Reason: v.Reason, Cursor: v.Cursor, Gaps: []gapRow{}, Created: stamp(e.created), Rationale: e.rationale, Proposer: v.Proposer,
 		ProposerLogin: s.loginOf(v.Proposer), Approver: v.Approver, ApproverLogin: s.loginOf(v.Approver), Resumer: v.Resumer, ResumerLogin: s.loginOf(v.Resumer),
 		History: []subscriptionHistoryRow{}, Keys: []subscriptionKeyRow{}, Signer: notConnected, Actions: s.subscriptionActions(v, reader)}
+	if e.resume != nil && v.Resumer != "" {
+		row.ResumeRequest = &requestRow{ID: e.resume.id, Target: resumeRequestTarget + e.resume.id, By: e.resume.by, ByLogin: s.loginOf(e.resume.by),
+			Rationale: e.resume.rationale}
+	}
 	if head > v.Cursor {
 		row.Lag = head - v.Cursor
 	}
@@ -601,11 +653,12 @@ func (s *Server) subscriptionRowOf(e *subscriptionEntry, v webhooks.Subscription
 		row.Gaps = append(row.Gaps, gapRow{After: g.After, To: g.To})
 	}
 	for _, h := range e.history {
-		row.History = append(row.History, subscriptionHistoryRow{Action: h.action, Actor: h.actor, ActorLogin: s.loginOf(h.actor), Rationale: h.rationale})
+		row.History = append(row.History, subscriptionHistoryRow{Action: h.action, Actor: h.actor, ActorLogin: s.loginOf(h.actor), Rationale: h.rationale,
+			Reason: h.reason, Request: h.request})
 	}
 	var keys []webhooks.KeyView
 	err := s.webhookCall("keys", func() (err error) {
-		keys, err = s.webhooks.Keys(s.bootWorkspace, sub.ID, webhooks.Actor{ID: reader, Kind: webhooks.KindHuman})
+		keys, err = s.webhooks.Keys(s.bootWorkspace, sub.ID, webhooks.Actor{ID: reader.id, Kind: webhooks.KindHuman})
 		return
 	})
 	for _, k := range keys {
@@ -619,13 +672,26 @@ func (s *Server) requestOf(r letterRequest, found bool) *requestRow {
 	if !found {
 		return nil
 	}
-	return &requestRow{By: r.by, ByLogin: s.loginOf(r.by), Rationale: r.rationale}
+	return &requestRow{ID: r.id, Target: letterRequestTarget + r.id, By: r.by, ByLogin: s.loginOf(r.by), Rationale: r.rationale}
 }
 
-func letterActions(d webhooks.DeliveryView, state string, redeliver, dismiss *requestRow, reader string) map[string]availability {
+func letterActions(d webhooks.DeliveryView, state string, redeliver, dismiss *requestRow, reader *viewer) map[string]availability {
 	if d.Kind != webhooks.KindDead {
-		return map[string]availability{"request_redeliver": allow(notDead), "approve_redeliver": allow(notDead), "request_dismiss": allow(notDead),
-			"approve_dismiss": allow(notDead)}
+		out := map[string]availability{}
+		for _, key := range []string{"request_redeliver", "approve_redeliver", "request_dismiss", "approve_dismiss", "withdraw_redeliver", "withdraw_dismiss"} {
+			out[key] = allow(notDead)
+		}
+		if d.Hold != "" {
+			again := ""
+			switch {
+			case d.Requester == reader.id || d.Approver == reader.id:
+				again = ownRequest
+			case state == webhooks.SubscriptionRevoked:
+				again = webhooks.ReasonRevoked
+			}
+			out["reapprove"] = allow(reader.approval(reapproveKind, d.Requester, true, again))
+		}
+		return out
 	}
 	request := func(r *requestRow) string {
 		if r != nil {
@@ -633,27 +699,37 @@ func letterActions(d webhooks.DeliveryView, state string, redeliver, dismiss *re
 		}
 		return ""
 	}
-	approve := func(r *requestRow) string {
+	approve := func(kind string, r *requestRow) string {
+		switch {
+		case r == nil:
+			return reader.blocked(kind, notRequested)
+		case r.By == reader.id:
+			return reader.approval(kind, r.By, true, ownRequest)
+		}
+		return reader.approval(kind, r.By, true, "")
+	}
+	withdraw := func(r *requestRow) string {
 		switch {
 		case r == nil:
 			return notRequested
-		case r.By == reader:
-			return ownRequest
+		case r.By != reader.id:
+			return webhooks.ReasonNotRequester
 		}
 		return ""
 	}
-	again := approve(redeliver)
+	again := approve(letterAgainKind, redeliver)
 	if again == "" && state == webhooks.SubscriptionRevoked {
 		again = webhooks.ReasonRevoked
 	}
-	return map[string]availability{"request_redeliver": allow(request(redeliver)), "approve_redeliver": allow(again), "request_dismiss": allow(request(dismiss)),
-		"approve_dismiss": allow(approve(dismiss))}
+	return map[string]availability{"request_redeliver": allow(reader.blocked(letterRedeliverKind, request(redeliver))), "approve_redeliver": allow(again),
+		"request_dismiss": allow(reader.blocked(letterDismissKind, request(dismiss))), "approve_dismiss": allow(approve(letterDropKind, dismiss)),
+		"withdraw_redeliver": allow(withdraw(redeliver)), "withdraw_dismiss": allow(withdraw(dismiss))}
 }
 
-func (s *Server) deliveriesOf(id, state, reader string) ([]deliveryRow, error) {
+func (s *Server) deliveriesOf(id, state string, reader *viewer) ([]deliveryRow, error) {
 	var list []webhooks.DeliveryView
 	err := s.webhookCall("deliveries", func() (err error) {
-		list, err = s.webhooks.Deliveries(s.bootWorkspace, id, 0, shownDeliveries, webhooks.Actor{ID: reader, Kind: webhooks.KindHuman})
+		list, err = s.webhooks.Deliveries(s.bootWorkspace, id, 0, shownDeliveries, webhooks.Actor{ID: reader.id, Kind: webhooks.KindHuman})
 		return
 	})
 	out := []deliveryRow{}
@@ -665,17 +741,22 @@ func (s *Server) deliveriesOf(id, state, reader string) ([]deliveryRow, error) {
 			r, found = s.integ.dismiss[d.ID]
 			dismiss = s.requestOf(r, found)
 		}
-		out = append(out, deliveryRow{ID: d.ID, Target: letterTarget + d.ID, Subscription: d.Subscription, Sequence: d.Sequence, Source: d.Source, EventID: d.EventID,
-			Kind: d.Kind, State: d.State, Reason: d.Reason, Attempts: d.Attempts, OutcomeUnknown: d.OutcomeUnknown, Redeliver: redeliver, Dismiss: dismiss,
+		target := letterTarget + d.ID
+		if d.Hold != "" {
+			target = redeliveryTarget + d.ID
+		}
+		out = append(out, deliveryRow{ID: d.ID, Target: target, Subscription: d.Subscription, Sequence: d.Sequence, Source: d.Source, EventID: d.EventID,
+			Kind: d.Kind, State: d.State, Reason: d.Reason, Attempts: d.Attempts, OutcomeUnknown: d.OutcomeUnknown, Hold: d.Hold, Requester: d.Requester,
+			RequesterLogin: s.loginOf(d.Requester), Approver: d.Approver, ApproverLogin: s.loginOf(d.Approver), Redeliver: redeliver, Dismiss: dismiss,
 			Actions: letterActions(d, state, redeliver, dismiss, reader)})
 	}
 	return out, err
 }
 
-func (s *Server) channelsAndEvents(reader string) (channelsSection, eventsSection, error) {
+func (s *Server) channelsAndEvents(reader *viewer) (channelsSection, eventsSection, error) {
 	c := s.integ
 	channels := channelsSection{State: configured(len(c.subscriptions) > 0), Destinations: []destinationRow{}, Subscribers: []string{sampleSubscriber},
-		Subscriptions: []subscriptionRow{}}
+		Subscriptions: []subscriptionRow{}, Actions: map[string]availability{"propose": allow(reader.blocked(subProposeKind, ""))}}
 	feed := eventsSection{State: configured(len(c.types) > 0), Types: []typeRow{}, Deliveries: []deliveryRow{}, Dispatcher: notConnected}
 	for _, d := range webhookDestinations {
 		channels.Destinations = append(channels.Destinations, destinationRow{ID: d.id, State: d.state, Source: allowlistSource})
@@ -701,32 +782,43 @@ func (s *Server) channelsAndEvents(reader string) (channelsSection, eventsSectio
 	return channels, feed, errors.Join(errs...)
 }
 
-func (s *Server) integrationsPage(verifier identity.Verifier, reader string, now time.Time) (integrationsPage, error) {
+func (s *Server) integrationsPage(verifier identity.Verifier, reader *viewer, now time.Time) (integrationsPage, error) {
 	if s.faulty("integrations-read") {
 		return integrationsPage{}, errStandIn
 	}
-	page := integrationsPage{Revision: s.Revision(), Now: stamp(now), State: stateConfigured}
-	var errs [3]error
-	page.Clients, errs[0] = s.clientsOf(verifier, now)
-	page.Modules, errs[1] = s.modulesOf(reader)
-	page.Channels, page.Events, errs[2] = s.channelsAndEvents(reader)
-	return page, errors.Join(errs[:]...)
+	page := integrationsPage{Revision: s.Revision(), Now: stamp(now), State: stateConfigured, Rights: reader.rightsRow(), OwnPending: s.ownPending(reader.id),
+		Clients: withheld{State: stateNotPermitted}, Modules: withheld{State: stateNotPermitted}, Channels: withheld{State: stateNotPermitted},
+		Events: withheld{State: stateNotPermitted}}
+	errs := []error{}
+	if reader.has(gate.AdministerAPIClients) {
+		clients, err := s.clientsOf(verifier, now)
+		page.Clients, errs = clients, append(errs, err)
+	}
+	if reader.any(moduleRights) {
+		modules, err := s.modulesOf(reader)
+		page.Modules, errs = modules, append(errs, err)
+	}
+	if reader.any(channelRights) {
+		channels, feed, err := s.channelsAndEvents(reader)
+		page.Channels, page.Events, errs = channels, feed, append(errs, err)
+	}
+	return page, errors.Join(errs...)
 }
 
 func (s *Server) readIntegrations(w http.ResponseWriter, r *http.Request) {
 	request := r.Header.Get("X-Request-Id")
 	s.domain.RLock()
 	defer s.domain.RUnlock()
-	found, answer, ok := s.admitted(w, r)
+	found, answer, reader, ok := s.admitIntegrations(w, r)
 	if !ok {
 		return
 	}
-	now := s.clock()
+	now := reader.now
 	if answer.Workspace() != s.bootWorkspace {
 		writeJSON(w, http.StatusOK, request, installationEmpty{Revision: s.Revision(), Now: stamp(now), State: stateNotConfigured})
 		return
 	}
-	page, err := s.integrationsPage(found.verifier, answer.User(), now)
+	page, err := s.integrationsPage(found.verifier, reader, now)
 	if err != nil {
 		failCode(w, commands.DependencyUnavailable, request)
 		return

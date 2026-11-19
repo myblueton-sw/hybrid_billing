@@ -81,7 +81,7 @@ var errorRules = map[Code]errorRule{
 var handlerCodes = map[Code]bool{
 	UnsupportedCapability: true, InvalidStage: true, RevisionConflict: true, PrerequisiteFailed: true,
 	DependencyUnavailable: true, PermissionDenied: true, InvalidRequest: true, SelfApprovalDenied: true,
-	AuthorityEpochConflict: true, ApprovalStale: true, EvidenceStale: true, IndependentApprovalRequired: true,
+	AuthorityEpochConflict: true, ApprovalStale: true, EvidenceStale: true, IndependentApprovalRequired: true, AuthorityUnavailable: true,
 }
 
 var declarable = map[Code]bool{SelfApprovalDenied: true, AuthorityEpochConflict: true, ApprovalStale: true, EvidenceStale: true, IndependentApprovalRequired: true}
@@ -193,6 +193,7 @@ type Definition struct {
 	ID         string
 	Permission Permission
 	Approval   bool
+	Author     bool
 	Mutating   bool
 	Rationale  bool
 	Fields     []Field
@@ -311,6 +312,7 @@ type Entry struct {
 	ID         string
 	Permission Permission
 	Approval   bool
+	Author     bool
 	Mutating   bool
 	Rationale  bool
 	Fields     []Field

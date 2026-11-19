@@ -11,7 +11,7 @@ import (
 func setupInstallation(t testing.TB, source bool) fixture {
 	t.Helper()
 	now := start
-	catalog := Catalog{Kinds: []string{InstallationKind, "usage_statement"}, Fields: map[string]FieldClass{"quantity": General}}
+	catalog := Catalog{AuthorClient: "app", Kinds: []string{InstallationKind, "usage_statement"}, Fields: map[string]FieldClass{"quantity": General}}
 	var r *Registry
 	var err error
 	if source {

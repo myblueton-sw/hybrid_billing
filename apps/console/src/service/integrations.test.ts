@@ -82,7 +82,7 @@ test("the integrations read parses every section and keeps unknowns visible", as
   const d = got.events.deliveries?.[0];
   assert.equal(d?.attempts, 0);
   assert.equal(d?.outcome_unknown, null);
-  assert.deepEqual(d?.redeliver_request, { by: "u1", by_login: "", rationale: "r" });
+  assert.deepEqual(d?.redeliver_request, { id: "", target: "", by: "u1", by_login: "", rationale: "r" });
   assert.equal(d?.dismiss_request, null);
   assert.deepEqual(d?.actions.approve_redeliver, { allowed: false, blocked: "missing" });
 });
@@ -182,4 +182,45 @@ test("license fields fail closed", () => {
   const page = integrationsOf({ modules: { licenses: { permitted: ["Apache-2.0"], source: "default" }, plugins: [{ plugin: "p", version: "1.0.0", license: "Apache-2.0", license_state: "permitted" }, { plugin: "p", version: "1.1.0", license: 7 }] } });
   assert.deepEqual(page.modules.licenses, { permitted: ["Apache-2.0"], source: "default" });
   assert.deepEqual(page.modules.plugins!.map((v) => [v.license, v.license_state]), [["Apache-2.0", "permitted"], ["", "unknown"]]);
+});
+
+test("rights, own pending items and withheld areas are read fail closed", () => {
+  const got = integrationsOf({
+    revision: "r1", now: "", state: "configured",
+    rights: { administer_modules: true, stop_modules: "yes", unknown_right: true },
+    own_pending: [{ kind: "resume_request", id: "resume-request-1", target: "webhook-resume-request:resume-request-1", object: "s1", state: "pending" }, { kind: "other", id: "x" }, "bad"],
+    clients: { state: "not_permitted" }, modules: { state: "configured", actions: { propose: { allowed: false, blocked: "no_right" } } },
+  });
+  assert.deepEqual(got.rights, {
+    administer_api_clients: false, administer_modules: true, approve_modules: false, stop_modules: false,
+    administer_channels: false, approve_channels: false, stop_channels: false, reprocess_events: false,
+  });
+  assert.equal(Object.keys(got.rights ?? {}).includes("unknown_right"), false);
+  assert.deepEqual(got.own_pending, [{ kind: "resume_request", id: "resume-request-1", target: "webhook-resume-request:resume-request-1", object: "s1", state: "pending" }]);
+  assert.equal(got.clients.state, "not_permitted");
+  assert.equal(got.clients.clients, null);
+  assert.deepEqual(got.modules.actions.propose, { allowed: false, blocked: "no_right" });
+  assert.deepEqual(got.channels.actions.propose, { allowed: false, blocked: "missing" });
+  const none = integrationsOf({ revision: "r1", now: "", state: "configured" });
+  assert.equal(none.rights, null);
+  assert.equal(none.own_pending, null);
+  assert.equal(integrationsOf({ rights: [true], own_pending: {} }).rights, null);
+});
+
+test("held redeliveries and request identities are parsed", () => {
+  const got = integrationsOf({
+    events: { deliveries: [{ id: "d9", target: "webhook-redelivery:d9", kind: "redelivery", hold: "approver_lost_right", requester: "a", approver: "b",
+      actions: { reapprove: { allowed: true, blocked: "" } } }] },
+    channels: { subscriptions: [{ id: "s1", resume_request: { id: "resume-request-2", target: "webhook-resume-request:resume-request-2", by: "a" },
+      history: [{ action: "proposal_closed", actor: "b", reason: "requester_lost_right", request: "req-1" }] }] },
+  });
+  const d = got.events.deliveries?.[0];
+  assert.equal(d?.hold, "approver_lost_right");
+  assert.equal(d?.requester, "a");
+  assert.equal(d?.approver, "b");
+  assert.deepEqual(d?.actions.reapprove, { allowed: true, blocked: "" });
+  assert.deepEqual(d?.actions.withdraw_redeliver, { allowed: false, blocked: "missing" });
+  const s = got.channels.subscriptions?.[0];
+  assert.deepEqual(s?.resume_request, { id: "resume-request-2", target: "webhook-resume-request:resume-request-2", by: "a", by_login: "", rationale: "" });
+  assert.deepEqual(s?.history?.[0], { action: "proposal_closed", actor: "b", actor_login: "", rationale: "", reason: "requester_lost_right", request: "req-1" });
 });

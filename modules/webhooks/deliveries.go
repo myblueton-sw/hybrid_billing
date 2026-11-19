@@ -35,6 +35,9 @@ type delivery struct {
 	reason    string
 	version   string
 	held      bool
+	hold      string
+	requester string
+	approver  string
 }
 
 func (r *Registry) backoff(d *delivery) time.Duration {
@@ -155,9 +158,12 @@ func (r *Registry) Dispatch(workspace string, limit int, actor Actor) ([]Lease, 
 			visited = index + 1
 			continue
 		}
-		if s.open == nil && len(s.queue) > 0 {
-			s.open, s.queue = s.queue[0], s.queue[1:]
-			sp.deliveries[s.open.id] = s.open
+		if s.open == nil {
+			if index := firstFree(s.queue); index >= 0 {
+				s.open = s.queue[index]
+				s.queue = append(s.queue[:index:index], s.queue[index+1:]...)
+				sp.deliveries[s.open.id] = s.open
+			}
 		}
 		if s.open == nil && s.view.Cursor < head {
 			if len(reads) >= r.limits.Work {
@@ -420,7 +426,8 @@ func state(d *delivery) string {
 
 func view(d *delivery) DeliveryView {
 	return DeliveryView{ID: d.id, Subscription: d.sub.view.Subscription.ID, Sequence: d.event.Sequence, Source: d.event.Event.Source, EventID: d.event.Event.ID,
-		Kind: d.kind, State: state(d), Reason: d.reason, Attempts: d.attempts, OutcomeUnknown: d.kind == KindCancelled && d.confirmed}
+		Kind: d.kind, State: state(d), Reason: d.reason, Attempts: d.attempts, OutcomeUnknown: d.kind == KindCancelled && d.confirmed, Hold: d.hold,
+		Requester: d.requester, Approver: d.approver}
 }
 
 func (r *Registry) listed(workspace, id string, actor Actor) (*space, *subscription, error) {
@@ -505,9 +512,11 @@ func (r *Registry) ApproveRedeliver(workspace, id, letterID string, actor Actor)
 	old := s.dead[index]
 	delete(r.workspaces[workspace].deliveries, old.id)
 	s.dead = append(s.dead[:index:index], s.dead[index+1:]...)
+	requester := s.redeliver[letterID]
 	delete(s.redeliver, letterID)
 	delete(s.dismiss, letterID)
-	fresh := &delivery{id: r.next("delivery"), sub: s, event: old.event, kind: KindRedelivery, phase: phaseDue, opened: r.now, due: r.now}
+	fresh := &delivery{id: r.next("delivery"), sub: s, event: old.event, kind: KindRedelivery, phase: phaseDue, opened: r.now, due: r.now,
+		requester: requester, approver: actor.ID}
 	s.queue = append(s.queue, fresh)
 	return view(fresh), nil
 }

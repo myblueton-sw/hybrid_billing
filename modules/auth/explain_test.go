@@ -17,18 +17,33 @@ func requestFor(action Action, workspace string) Request {
 	return Request{Action: action, Kind: InstallationKind, Resource: Resource{WorkspaceID: workspace}}
 }
 
-func TestInstallationActionsAreExactlyTheSix(t *testing.T) {
-	five := map[Action]bool{AdministerInstallation: true, TrustPropose: true, TrustValidate: true, TrustApprove: true, TrustActivate: true, RevokeAccessInBulk: true}
+func TestInstallationActionsAreExactlyTheFourteen(t *testing.T) {
+	named := map[Action]bool{"administer_installation": true, "trust_propose": true, "trust_validate": true, "trust_approve": true, "trust_activate": true,
+		"revoke_access_in_bulk": true, "administer_api_clients": true, "administer_modules": true, "approve_modules": true, "stop_modules": true,
+		"administer_channels": true, "approve_channels": true, "stop_channels": true, "reprocess_events": true}
 	for action := range actions {
-		if InstallationAction(action) != five[action] {
+		if InstallationAction(action) != named[action] {
 			t.Errorf("%s: %v", action, InstallationAction(action))
 		}
 	}
-	if InstallationAction("trust_unknown") || len(five) != 6 {
+	for action := range named {
+		if _, known := actions[action]; !known {
+			t.Errorf("%s is not in the catalogue", action)
+		}
+	}
+	if InstallationAction("trust_unknown") || InstallationAction("administer_integrations") || len(named) != 14 {
 		t.Error("an unknown action is an installation action")
 	}
+	rights := IntegrationRights()
+	if len(rights) != 8 || rights[0] != AdministerAPIClients || rights[7] != ReprocessEvents {
+		t.Errorf("integration rights %v", rights)
+	}
+	rights[0] = View
+	if IntegrationRights()[0] != AdministerAPIClients {
+		t.Error("the integration rights list is shared")
+	}
 	f := setupInstallation(t, true)
-	for _, right := range append(trustRights, RevokeAccessInBulk) {
+	for _, right := range append(append(trustRights, RevokeAccessInBulk), IntegrationRights()...) {
 		if !f.Describes(right, InstallationKind, nil) || f.Describes(right, "usage_statement", nil) || f.Describes(right, InstallationKind, []string{"quantity"}) {
 			t.Errorf("%s description", right)
 		}

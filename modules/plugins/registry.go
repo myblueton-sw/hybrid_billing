@@ -271,6 +271,25 @@ func (r *Registry) Withdraw(number uint64, actor Actor) (ProposalView, error) {
 	return copyProposal(p.view), nil
 }
 
+func (r *Registry) Close(number uint64, reason string) (ProposalView, error) {
+	r.enter()
+	defer r.leave()
+	p := r.proposals[number]
+	switch {
+	case p == nil:
+		return ProposalView{}, ErrNotFound
+	case reason != ReasonRequesterLostRight:
+		return ProposalView{}, ErrInvalid
+	case p.view.State != ProposalPending:
+		return ProposalView{}, refuse(ReasonNotPending)
+	}
+	delete(r.proposals, number)
+	s := r.scopes[p.scope]
+	s.pending = drop(s.pending, number)
+	p.view.State = ProposalClosed
+	return copyProposal(p.view), nil
+}
+
 func (r *Registry) Proposal(number uint64) (ProposalView, error) {
 	r.enter()
 	defer r.leave()

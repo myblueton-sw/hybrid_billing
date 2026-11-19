@@ -373,7 +373,7 @@ These codes carry no fields, so the read's blockers explain them.
   - Proposing endpoints from the console; this needs certificate evidence intake.
   - Marks (vulnerable, compromise, revocation, confirm, clear), publisher key retirement, runtime changes and verification workspaces.
   - Without marks, a compromised publisher or key is contained only by a single administrator stopping or disabling each installation, and nothing blocks a later re-enable proposal from being approved.
-- **Permissions.** Separate gate actions for API, module and channel administration, stop and reprocess, as P02 requires. Until then every command uses `AdministerInstallation`.
+- **Permissions.** Separate gate actions for API, module and channel administration, stop and reprocess, as P02 requires. Until then every command uses `AdministerInstallation`. Resolved by [HYB-310](../HYB-310/plan.md), except a verification right (HYB-310 R1).
 - **Destinations, permits and clients.**
   - `modules/trust` destinations with address and redirect checks; the sample allowlist is a stand-in.
   - Real subscriber permissions; the permits are a stand-in.
@@ -447,4 +447,3 @@ These codes carry no fields, so the read's blockers explain them.
 - Identical subscription content that is `proposed` or `active` is refused with `invalid_stage` for anyone, except the original proposer while it is still `proposed`, who gets the existing subscription back.
 - The string-literal AST rule covers `integrations.go`, `integrationcmds.go` and `integrationdeps.go`; the KindSystem/KindAssistant check matches the `plugins`, `webhooks` and `events` package qualifiers only.
 - The manifest digest is shown as an accepted public integrity value.
-

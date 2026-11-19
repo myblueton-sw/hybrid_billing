@@ -171,7 +171,7 @@ func RelationshipLimits() relationships.Limits {
 }
 
 func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
-	c := gate.Catalog{Kinds: append([]string{gate.InstallationKind, ReaderKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General}}
+	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General}}
 	for name, class := range fields {
 		c.Fields[name] = class
 	}

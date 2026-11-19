@@ -47,10 +47,29 @@
   margin-block: 0 8px;
   max-inline-size: 68ch;
 }
-.p02-live .p02-permission {
+.p02-live .p02-rights {
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--hb-ink);
   margin-block: 0 24px;
+  max-inline-size: 68ch;
+}
+.p02-live .p02-rights strong {
+  font-weight: 600;
+}
+.p02-live .p02-area-withheld {
+  font-size: 16px;
+  color: var(--hb-ink);
+  max-inline-size: 68ch;
+  padding-block: 16px;
+  border-block: 1px solid var(--border-row);
+  margin-block: 0 32px;
+}
+.p02-live .p02-own {
+  margin-block-start: 8px;
+}
+.p02-live .p02-lost-access {
+  font-size: 16px;
+  color: var(--hb-ink);
   max-inline-size: 68ch;
 }
 .p02-live #p02-notice,

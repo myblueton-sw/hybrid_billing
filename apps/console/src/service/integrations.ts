@@ -1,3 +1,19 @@
+export const rightIds = [
+  "administer_api_clients",
+  "administer_modules",
+  "approve_modules",
+  "stop_modules",
+  "administer_channels",
+  "approve_channels",
+  "stop_channels",
+  "reprocess_events",
+] as const;
+export type RightId = (typeof rightIds)[number];
+export type Rights = Record<RightId, boolean>;
+export const pendingKinds = ["plugin_proposal", "subscription_proposal", "resume_request", "redeliver_request", "dismiss_request"] as const;
+export type PendingKind = (typeof pendingKinds)[number];
+export type OwnPending = { kind: PendingKind; id: string; target: string; object: string; state: string };
+
 export type Mark = { by: string; by_login: string; reason: string; confirmed_by: string; confirmed_by_login: string };
 export type MarkValue = Mark | null | "unknown";
 export type Avail = { allowed: boolean; blocked: string };
@@ -82,6 +98,10 @@ export type PluginProposal = {
   closed_by: string;
   closed_by_login: string;
   closing_rationale: string;
+  closing_reason: string;
+  closed_request: string;
+  closure_trigger: string;
+  closure_trigger_login: string;
   summary: PluginSummary;
   can_approve: boolean;
   approve_blocked: string;
@@ -96,13 +116,14 @@ export type ModulesSection = {
   plugins: PluginVersion[] | null;
   installations: PluginInstall[] | null;
   proposals: PluginProposal[] | null;
+  actions: { propose: Avail };
 };
 
 export type Destination = { id: string; state: string; source: string };
 export type SubscriptionKey = { version: string; not_before: string; not_after: string; state: string; proposer: string; proposer_login: string; approver: string; approver_login: string };
 export type Gap = { after: number | null; to: number | null };
-export type HistoryEntry = { action: string; actor: string; actor_login: string; rationale: string };
-export const subscriptionActions = ["approve", "pause", "request_resume", "approve_resume", "revoke"] as const;
+export type HistoryEntry = { action: string; actor: string; actor_login: string; rationale: string; reason: string; request: string };
+export const subscriptionActions = ["approve", "pause", "request_resume", "approve_resume", "revoke", "withdraw", "withdraw_resume"] as const;
 export type SubscriptionAction = (typeof subscriptionActions)[number];
 export type Subscription = {
   id: string;
@@ -124,16 +145,23 @@ export type Subscription = {
   resumer: string;
   resumer_login: string;
   history: HistoryEntry[] | null;
+  resume_request: RequestValue;
   keys: SubscriptionKey[] | null;
   signer: string;
   actions: Record<SubscriptionAction, Avail>;
 };
-export type ChannelsSection = { state: string; destinations: Destination[] | null; subscribers: string[] | null; subscriptions: Subscription[] | null };
+export type ChannelsSection = {
+  state: string;
+  destinations: Destination[] | null;
+  subscribers: string[] | null;
+  subscriptions: Subscription[] | null;
+  actions: { propose: Avail };
+};
 
 export type EventType = { name: string; schema_version: string; fields: string[] | null; state: string; proposer: string; proposer_login: string; approver: string; approver_login: string };
-export type LetterRequest = { by: string; by_login: string; rationale: string };
+export type LetterRequest = { id: string; target: string; by: string; by_login: string; rationale: string };
 export type RequestValue = LetterRequest | null | "unknown";
-export const letterActions = ["request_redeliver", "approve_redeliver", "request_dismiss", "approve_dismiss"] as const;
+export const letterActions = ["request_redeliver", "approve_redeliver", "request_dismiss", "approve_dismiss", "withdraw_redeliver", "withdraw_dismiss", "reapprove"] as const;
 export type LetterAction = (typeof letterActions)[number];
 export type Delivery = {
   id: string;
@@ -147,6 +175,11 @@ export type Delivery = {
   reason: string;
   attempts: number | null;
   outcome_unknown: boolean | null;
+  hold: string;
+  requester: string;
+  requester_login: string;
+  approver: string;
+  approver_login: string;
   redeliver_request: RequestValue;
   dismiss_request: RequestValue;
   actions: Record<LetterAction, Avail>;
@@ -163,6 +196,8 @@ export type IntegrationsPage = {
   revision: string;
   now: string;
   state: string;
+  rights: Rights | null;
+  own_pending: OwnPending[] | null;
   clients: ClientsSection;
   modules: ModulesSection;
   channels: ChannelsSection;
@@ -209,7 +244,7 @@ export function markOf(v: unknown): MarkValue {
 export function requestOf(v: unknown): RequestValue {
   if (v === null) return null;
   if (!isRow(v)) return "unknown";
-  return { by: str(v.by), by_login: str(v.by_login), rationale: str(v.rationale) };
+  return { id: str(v.id), target: str(v.target), by: str(v.by), by_login: str(v.by_login), rationale: str(v.rationale) };
 }
 
 export function storageOf(v: unknown): Storage {
@@ -333,6 +368,10 @@ export function pluginProposalOf(r: Raw): PluginProposal {
     closed_by: str(r.closed_by),
     closed_by_login: str(r.closed_by_login),
     closing_rationale: str(r.closing_rationale),
+    closing_reason: str(r.closing_reason),
+    closed_request: str(r.closed_request),
+    closure_trigger: str(r.closure_trigger),
+    closure_trigger_login: str(r.closure_trigger_login),
     summary: summaryOf(r.summary),
     can_approve: approve.allowed,
     approve_blocked: approve.blocked,
@@ -357,6 +396,7 @@ export function modulesOf(v: unknown): ModulesSection {
     plugins: rows(r.plugins, versionOf),
     installations: rows(r.installations, installOf),
     proposals: rows(r.proposals, pluginProposalOf),
+    actions: actionsOf(r.actions, ["propose"] as const),
   };
 }
 
@@ -380,7 +420,15 @@ export function subscriptionOf(r: Raw): Subscription {
     approver_login: str(r.approver_login),
     resumer: str(r.resumer),
     resumer_login: str(r.resumer_login),
-    history: rows(r.history, (h) => ({ action: str(h.action), actor: str(h.actor), actor_login: str(h.actor_login), rationale: str(h.rationale) })),
+    history: rows(r.history, (h) => ({
+      action: str(h.action),
+      actor: str(h.actor),
+      actor_login: str(h.actor_login),
+      rationale: str(h.rationale),
+      reason: str(h.reason),
+      request: str(h.request),
+    })),
+    resume_request: requestOf(r.resume_request),
     keys: rows(r.keys, (k) => ({
       version: str(k.version),
       not_before: str(k.not_before),
@@ -403,6 +451,7 @@ export function channelsOf(v: unknown): ChannelsSection {
     destinations: rows(r.destinations, (d) => ({ id: str(d.id), state: str(d.state), source: str(d.source) })),
     subscribers: strs(r.subscribers),
     subscriptions: rows(r.subscriptions, subscriptionOf),
+    actions: actionsOf(r.actions, ["propose"] as const),
   };
 }
 
@@ -419,6 +468,11 @@ export function deliveryOf(r: Raw): Delivery {
     reason: str(r.reason),
     attempts: count(r.attempts),
     outcome_unknown: flag(r.outcome_unknown),
+    hold: str(r.hold),
+    requester: str(r.requester),
+    requester_login: str(r.requester_login),
+    approver: str(r.approver),
+    approver_login: str(r.approver_login),
     redeliver_request: requestOf(r.redeliver_request),
     dismiss_request: requestOf(r.dismiss_request),
     actions: actionsOf(r.actions, letterActions),
@@ -446,11 +500,23 @@ export function eventsOf(v: unknown): EventsSection {
   };
 }
 
+export function rightsOf(v: unknown): Rights | null {
+  if (!isRow(v)) return null;
+  return Object.fromEntries(rightIds.map((id) => [id, v[id] === true])) as Rights;
+}
+
+export function ownPendingOf(v: unknown): OwnPending[] | null {
+  const list = rows(v, (r) => ({ kind: str(r.kind) as PendingKind, id: str(r.id), target: str(r.target), object: str(r.object), state: str(r.state) }));
+  return list === null ? null : list.filter((p) => (pendingKinds as readonly string[]).includes(p.kind));
+}
+
 export function integrationsOf(body: Raw): IntegrationsPage {
   return {
     revision: str(body.revision),
     now: str(body.now),
     state: str(body.state),
+    rights: rightsOf(body.rights),
+    own_pending: ownPendingOf(body.own_pending),
     clients: clientsOf(body.clients),
     modules: modulesOf(body.modules),
     channels: channelsOf(body.channels),

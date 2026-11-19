@@ -68,7 +68,7 @@ var proposalStores = []proposalStore{
 			}
 		}
 	}},
-	{"integration_proposals", "integrations", false, func(s *Server, visit func(string)) {
+	{"integration_proposals", "integrations", true, func(s *Server, visit func(string)) {
 		for _, e := range s.integ.entries {
 			if e.view.State == plugins.ProposalPending {
 				visit(e.view.Proposer)
@@ -77,6 +77,9 @@ var proposalStores = []proposalStore{
 		for _, e := range s.integ.subscriptions {
 			if v, err := s.subscriptionOf(e.id); err == nil && v.State == webhooks.SubscriptionProposed {
 				visit(e.proposer)
+			}
+			if e.resume != nil {
+				visit(e.resume.by)
 			}
 		}
 		for _, requests := range []map[string]letterRequest{s.integ.redeliver, s.integ.dismiss} {

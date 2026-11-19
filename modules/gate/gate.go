@@ -191,6 +191,21 @@ func (g *Gate) RecheckApproval(stamp Stamp, author string, request Request) Deci
 	})
 }
 
+func (g *Gate) CheckAuthor(answer identity.Answer, client, author string, request Request) Decision {
+	return g.run(answer, client, "", request, func(principal auth.Principal) auth.Decision {
+		return g.permissions.CheckAuthor(principal, author, request)
+	})
+}
+
+func (g *Gate) RecheckAuthor(stamp Stamp, client, author string, request Request) Decision {
+	if g.ready() && !stamp.issued {
+		return refusal(PermissionDenied, ReasonStamp, "")
+	}
+	return g.run(stamp.answer, client, "", request, func(principal auth.Principal) auth.Decision {
+		return g.permissions.RecheckAuthor(stamp.permission, principal, author, request)
+	})
+}
+
 func (g *Gate) AddSupportSession(session SupportSession, approver identity.Answer) error {
 	if !g.ready() {
 		return ErrUnavailable

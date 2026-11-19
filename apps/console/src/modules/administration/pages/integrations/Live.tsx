@@ -13,6 +13,9 @@ import { ClientsView } from "./LiveClients";
 import { ModulesView } from "./LiveModules";
 import { ChannelsView } from "./LiveChannels";
 import { EventsView } from "./LiveEvents";
+import { OwnPendingList } from "./LivePending";
+import { forgetLost, heldRights, pruneLost, withheld } from "./live-rights";
+import { r, rightList } from "./rights-copy";
 import "../../../../shared/domain-screen-ui/work/screen.css";
 import "../../../identity/pages/users/live.css";
 import "./live.css";
@@ -28,7 +31,7 @@ type Props = {
 function failureText(l: Locale, e: unknown): string {
   if (e instanceof AdminError) {
     if (e.failure === "limited") return sc.limited(l, retryPhrase(l, e.retryAfter || 60));
-    if (e.failure === "busy" || e.failure === "unavailable") return sc.unavailable(l);
+    if (e.failure === "busy" || e.failure === "unavailable") return r.notResponding(l);
   }
   return "";
 }
@@ -44,6 +47,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
   const [loadError, setLoadError] = useState<unknown>(null);
   const [denied, setDenied] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
+  const [lostAccess, setLostAccess] = useState(false);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
@@ -59,6 +63,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
       const got = await api.integrations();
       if (n !== seq.current) return null;
       pruneRefusals(got, session.user);
+      pruneLost(got);
       setPage(got);
       setStatus("ready");
       setLoadError(null);
@@ -91,7 +96,8 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
     return (
       <div className="p02-live">
         <section className="live-unavailable" aria-labelledby="p02-denied">
-          <h2 id="p02-denied">{k.deniedTitle(l)}</h2>
+          <h2 id="p02-denied" tabIndex={-1} ref={(h) => { if (h && lostAccess) h.focus(); }}>{k.deniedTitle(l)}</h2>
+          {lostAccess && <p className="p02-lost-access" role="status">{r.lastActionLost(l)}</p>}
           <p>{k.denied(l)}</p>
         </section>
       </div>
@@ -102,7 +108,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
       <div className="p02-live">
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
-          <button type="button" className="live-secondary" onClick={() => { forget(); onSignOut(); }}>{k.signInAgain(l)}</button>
+          <button type="button" className="live-secondary" onClick={() => { forget(); forgetLost(); onSignOut(); }}>{k.signInAgain(l)}</button>
         </div>
       </div>
     );
@@ -111,13 +117,16 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
   const configured = page?.state === "configured";
   const shared: Shared | null = page && configured
     ? {
-        l, page, api, me: session.user, selection, canCommand: commandsAllowed(page),
+        l, page, api, me: session.user, selection, canCommand: commandsAllowed(page) && status !== "error",
         onDone: (text: string) => { showNotice(text); void load(); },
         onNotice: showNotice,
         onReload: load,
         onSignedOut: () => setSignedOut(true),
+        onLostAccess: () => setLostAccess(true),
       }
     : null;
+  const hidden = shared ? withheld(shared.page, view) : false;
+  const held = page ? heldRights(page) : [];
   const sectionKey = view === "clients" ? "" : sections[view as keyof typeof sections];
   const sectionState = shared && sectionKey ? shared.page[sectionKey].state : "configured";
   const gone = shared ? vanished(shared.page, view) : [];
@@ -134,11 +143,19 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
         <button type="button" className="live-secondary p02-reload" onClick={() => void load()}>{k.reload(l)}</button>
       </div>
       <p className="live-note-rule p02-statement"><strong>{k.statementLead(l)}</strong> {k.statement(l)}</p>
-      <p className="p02-permission">{k.permission(l)}</p>
+      {page && configured && (
+        page.rights === null ? (
+          <p className="p02-rights" id="p02-rights" data-rights="unknown">{r.rightsUnknown(l)}</p>
+        ) : held.length === 0 ? (
+          <p className="p02-rights" id="p02-rights" data-rights="none"><strong>{r.rightsNoneLead(l)}</strong> {r.rightsNoneRest(l)}</p>
+        ) : (
+          <p className="p02-rights" id="p02-rights" data-rights={held.join(" ")}><strong>{r.rightsLead(l)}</strong> {rightList(l, held)}.</p>
+        )
+      )}
       {notice && <div id="p02-notice" className="service-status" tabIndex={-1} role="status"><p>{notice}</p></div>}
       {status === "error" && (
         <div className="live-error p02-failure" role="alert">
-          <h2>{sc.failed(l)}</h2>
+          <h2>{r.loadFailed(l)}</h2>
           {failure && <p>{failure}</p>}
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>
@@ -151,12 +168,18 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
       {page && !configured && page.state !== "not_configured" && (
         <section className="live-note-rule p02-empty-site"><p>{k.stateUnknown(l, page.state)}</p></section>
       )}
-      {shared && (
+      {shared && hidden && (
+        <div className="p02-withheld-area" data-state="not_permitted">
+          <p className="p02-area-withheld">{r.withheld(l, view)}</p>
+          <OwnPendingList {...shared} view={view} />
+        </div>
+      )}
+      {shared && !hidden && (
         <>
           <p className="live-note-rule p02-lead">
             {view === "modules" ? k.modulesLead(l) : view === "channels" ? k.channelsLead(l) : view === "events" ? k.eventsLead(l) : k.clientsLead(l)}
           </p>
-          {!shared.canCommand && <p className="live-note-rule p02-readonly" role="status">{k.readOnly(l)}</p>}
+          {!shared.canCommand && <p className="live-note-rule p02-readonly" role="status">{status === "error" ? r.readOnlyAfterFailure(l) : k.readOnly(l)}</p>}
           {gone.length > 0 && (
             <div className="p02-vanished" role="status">
               {gone.map((g) => (

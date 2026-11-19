@@ -54,7 +54,7 @@ func TestIntegrationPluginApproveAndWithdraw(t *testing.T) {
 	f.unchanged(t, "approve applied again", f.run(root, "integrations.plugin_approve", pluginProposalAt(8), nil), "invalid_stage")
 	f.unchanged(t, "approve applied by another", f.run(second, "integrations.plugin_approve", pluginProposalAt(8), nil), "invalid_stage")
 	f.unchanged(t, "self approval", f.run(root, "integrations.plugin_approve", pluginProposalAt(9), nil), "prerequisite_failed")
-	f.unchanged(t, "not proposer", f.run(second, "integrations.plugin_withdraw", pluginProposalAt(9), nil), "prerequisite_failed")
+	f.code(t, "not proposer", f.run(second, "integrations.plugin_withdraw", pluginProposalAt(9), nil), 403, "permission_denied")
 	f.ok(t, "withdraw", f.run(root, "integrations.plugin_withdraw", pluginProposalAt(9), nil), "withdrawn", "map[proposal:9 target:plugin-proposal-9]")
 	gone := pluginProposal(t, f.integrations(second), 9)
 	if s := fmt.Sprint(gone["state"], " ", gone["closed_by"], " ", blockedAs(gone)); s != "withdrawn sample-admin false not_pending false not_pending" {
@@ -368,10 +368,10 @@ func TestIntegrationLetterRequests(t *testing.T) {
 	f.unchanged(t, "takeover redelivery request", f.run(second, "integrations.letter_request_redeliver", letter, nil), "invalid_stage")
 	f.unchanged(t, "self redelivery", f.run(root, "integrations.letter_approve_redeliver", letter, nil), "prerequisite_failed")
 	f.unchanged(t, "dismiss without a request", f.run(root, "integrations.letter_approve_dismiss", letter, nil), "invalid_stage")
-	f.ok(t, "request dismiss", f.run(second, "integrations.letter_request_dismiss", letter, nil), "requested", "map[delivery:delivery-3 target:webhook-letter:delivery-3]")
+	f.ok(t, "request dismiss", f.run(second, "integrations.letter_request_dismiss", letter, nil), "requested", "map[delivery:delivery-3 request:letter-request-2 target:webhook-letter:delivery-3]")
 	f.unchanged(t, "takeover dismiss", f.run(root, "integrations.letter_request_dismiss", letter, nil), "invalid_stage")
 	f.unchanged(t, "self dismiss", f.run(second, "integrations.letter_approve_dismiss", letter, nil), "prerequisite_failed")
-	if s := fmt.Sprint(f.s.integ.redeliver[sampleLetter], f.s.integ.dismiss[sampleLetter]); s != "{sample-admin Sample data} {sample-admin-2 sample reason}" {
+	if s := fmt.Sprint(f.s.integ.redeliver[sampleLetter], f.s.integ.dismiss[sampleLetter]); s != "{letter-request-1 sample-admin Sample data} {letter-request-2 sample-admin-2 sample reason}" {
 		t.Errorf("requests %s", s)
 	}
 	row := deliveryRowFor(t, f.integrations(root), sampleLetter)
@@ -526,7 +526,7 @@ func TestIntegrationModulesStateFromAnyPart(t *testing.T) {
 	} {
 		saved := *f.s.integ
 		set()
-		out, _ := f.s.modulesOf(SampleAdmin)
+		out, _ := f.s.modulesOf(fullViewer(f.s, SampleAdmin))
 		if out.State != stateConfigured {
 			t.Errorf("%s state %s", name, out.State)
 		}

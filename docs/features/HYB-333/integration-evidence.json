@@ -1,0 +1,118 @@
+{
+  "ticket": "HYB-333",
+  "machine": "mac_mini",
+  "integration_base": "69405050fdbf031a4ce4e4187a1bb2b4cfc5e6ba",
+  "original_head": "87d1a1ec4d881dc3a6d0c528047b0c943393c325",
+  "source_files": [
+    {
+      "path": "apps/api/server/directory.go",
+      "sha256": "e621a60a0fe5b9b5c32b50f2b0a497e4e227388ce484147584d8f1cb3968dc60"
+    },
+    {
+      "path": "apps/api/server/openapi.go",
+      "sha256": "2ca65d6943f1895f3547e29214f8803244ea87c4d1c034c322147545962faedd"
+    },
+    {
+      "path": "apps/api/server/services.go",
+      "sha256": "8313ec2b2458bd1581c06266cc9cbd739f2c20ca2b279dc941c84061ce736175"
+    },
+    {
+      "path": "apps/api/server/services_pickup_test.go",
+      "sha256": "786850267c4722f7d88a574b177527462de96923e057784dd8a6465438fad7c8"
+    },
+    {
+      "path": "apps/api/server/users.go",
+      "sha256": "e0f4d18b0e5eb13ab63671d235351df43ba36712eb1b4b8f54371a953719517c"
+    },
+    {
+      "path": "apps/console/package.json",
+      "sha256": "c36d81f729d17f15d9b1ef775f4462f4b8f25b6d51e5396f4ab3d6400f9fa8f9"
+    },
+    {
+      "path": "apps/console/src/app/App.tsx",
+      "sha256": "218c60a7b472fc52e74620a81f2ce4cc80a5165ba5c54088535453c0c479ddf0"
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/Held.tsx",
+      "sha256": "0338d768ff6bbbfb7d7a6f47519b5151e3d1c87c2be6f7ae64883d14210301bb"
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/Live.tsx",
+      "sha256": "2c1e9e440e863b8ff6c98a347ce8c15ba1d5a3496186d7906aea9b75781992ff"
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/held-render.test.tsx",
+      "sha256": "dd35a6274ad02dc830e776379828b912e35f2f33b19375d3d7ff00ad3fc37861"
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/issue-attempts.test.ts",
+      "sha256": "d82990cd54147b1670f6b303cac94e98e5ab83b770889a8da9c08e65fe79c923"
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/issue-attempts.ts",
+      "sha256": "0f3283e3c0c59ab531ecac89d0815dfce58c9a86ba0860f15720f5b0a6d86038"
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/live-copy.ts",
+      "sha256": "56679e3cd22f6c0eb065d6b3dde5e452880e17c0f105d59d41c776d73b9c822d"
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/live-model.test.ts",
+      "sha256": "581dda582e5f045af9155a78bdd0f621184e5133657790c8535335fb0e43660c"
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/live-model.ts",
+      "sha256": "5adc6245a4a7bef6a9420d9594af04edc41cf5b29bfa9971bbbefa025f86a929"
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/users/live.css",
+      "sha256": "4ffe26aeb9992da6aeefb1073045034e71d9efa7b4a54cd5b5c673a3a9ff1194"
+    },
+    {
+      "path": "apps/console/src/service/Service.tsx",
+      "sha256": "516a5934b4a2fdf9ac808755f2bd65669c822da6af93d615641c2d4714b61675"
+    },
+    {
+      "path": "apps/console/src/service/admin.test.ts",
+      "sha256": "bf9db11ed192586a928ff4df68111f6ce7d1db5b9647d4d307f378395c163a8a"
+    },
+    {
+      "path": "apps/console/src/service/admin.ts",
+      "sha256": "0256a5492d86d4bc99df7230640f391ec9489df33fe774e55818bcfe04de2c43"
+    },
+    {
+      "path": "apps/console/src/shared/unload-intent.test.ts",
+      "sha256": "9e10d2fe355ba079fd65f1ad4abf38fb8d3c4b328b250425a5a0a3d35555acdf"
+    },
+    {
+      "path": "apps/console/src/shared/unload-intent.ts",
+      "sha256": "4be6246806c52867b582c617e531cb3de23a693f3adfa382b7f24b23607412ba"
+    },
+    {
+      "path": "apps/console/tools/service-accounts-qa.mjs",
+      "sha256": "fb2110887ce1c73be43e1941fec2c52d5ce92b831e9fc380e5f6771d8894bab0"
+    },
+    {
+      "path": "modules/identity/boundary.go",
+      "sha256": "289c07fc0dc5de299cc689ec67c12b9e6e6cf47264111fa2511601cb12315d63"
+    },
+    {
+      "path": "modules/identity/peek_test.go",
+      "sha256": "1a29baca1f267198a3654b5adb24b0a7408cba411000bf16cd1f95263ceac9c2"
+    }
+  ],
+  "browser_runs": [
+    {
+      "path": "/private/tmp/hb-combined-qa/333/m04-all-1795082669053823000/browser.log",
+      "sha256": "83fc14425bb0b5ac8831f73e9325c4205823751868d69847fa48276402c351fa",
+      "pass": 118,
+      "fail": 0
+    },
+    {
+      "path": "/private/tmp/hb-combined-qa/333/p02-S-1795082695986487000/browser.log",
+      "sha256": "b2505230c4715d7ecdf1fbb51b540d8b3ad926c1c2854f9d07d88eb4756094b7",
+      "pass": 125,
+      "fail": 0
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 )
 
@@ -49,10 +50,47 @@ func selfPaths() map[string]any {
 		"403": selfError(CodeCSRF, commands.NextNone, false),
 		"500": selfError(string(commands.InternalError), commands.NextNone, false),
 		"503": selfError(string(commands.AuthorityUnavailable), commands.NextRetry, true)}}
-	return map[string]any{"/me": map[string]any{"get": read}, "/me/sessions/end": map[string]any{"post": end}}
+	return map[string]any{"/me": map[string]any{"get": read}, "/me/sessions/end": map[string]any{"post": end}, "/me/access-history": map[string]any{"get": historyOperation()}}
 }
 
-var selfNext = map[string]commands.NextAction{CodeCSRF: commands.NextNone, CodeReauthentication: NextReauthenticate,
+func historyOperation() map[string]any {
+	str := map[string]any{"type": "string"}
+	optional := map[string]any{"type": []string{"string", "null"}}
+	enum := func(values ...string) map[string]any { return map[string]any{"type": "string", "enum": values} }
+	query := func(name string, schema map[string]any) map[string]any {
+		return map[string]any{"name": name, "in": "query", "required": false, "schema": schema}
+	}
+	event := map[string]any{"type": "object", "properties": map[string]any{"at": str,
+		"kind": enum(accesshistory.KindSignedIn, accesshistory.KindSignInRefused, accesshistory.KindSignInRefusedMore, accesshistory.KindPasswordConfirmed,
+			accesshistory.KindPasswordFailed, accesshistory.KindSignedOut, accesshistory.KindSessionEnded, accesshistory.KindPasswordChanged),
+		"reason": str, "workspace": optional, "count": map[string]any{"type": "integer"},
+		"session": map[string]any{"type": []string{"object", "null"}, "properties": map[string]any{"handle": str, "current": map[string]any{"type": "boolean"},
+			"active": map[string]any{"type": "boolean"}}},
+		"device": map[string]any{"type": []string{"object", "null"}, "properties": map[string]any{"browser": enum(accesshistory.Browsers...),
+			"os": enum(accesshistory.Systems...)}}}}
+	note := map[string]any{"type": "object", "properties": map[string]any{"kind": enum("unclean_stop", "dropped", "damaged", "recovered_tail", "early_deletion",
+		"deletion_overdue", "purge_deferred", "held", "future_file"), "from": optional, "to": optional,
+		"count": map[string]any{"type": []string{"integer", "null"}, "minimum": 1}}}
+	page := map[string]any{"type": "object", "properties": map[string]any{"events": map[string]any{"type": "array", "maxItems": accesshistory.MaxPage, "items": event},
+		"next": optional, "retention_days": map[string]any{"type": "integer"}, "retention_source": enum(SourceDefault, SourceStartFlag), "period_since": optional,
+		"effective_days": map[string]any{"type": "integer"}, "available_from": optional,
+		"recording": map[string]any{"type": "object", "properties": map[string]any{"state": enum("recording", "stopped"), "since": optional,
+			"reason": map[string]any{"type": []string{"string", "null"}, "enum": []any{"write_failed", "full", "full_held", nil}}}},
+		"notes": map[string]any{"type": "array", "items": note}, "now": str}}
+	return map[string]any{"operationId": "me.access_history.read",
+		"parameters": []any{query("limit", map[string]any{"type": "integer", "minimum": 1, "maximum": accesshistory.MaxPage, "default": accesshistory.DefaultPage}),
+			query("before", map[string]any{"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}), query("from", map[string]any{"type": "string", "format": "date-time"}),
+			query("to", map[string]any{"type": "string", "format": "date-time"})},
+		"responses": map[string]any{"200": map[string]any{"description": "the caller's own access history in the session's workspace, newest first",
+			"content": map[string]any{"application/json": map[string]any{"schema": page}}},
+			"401": selfError(string(commands.Unauthenticated), commands.NextAnswer, false),
+			"403": selfError(CodeCSRF, commands.NextNone, false),
+			"422": selfError(string(commands.InvalidRequest), commands.NextCorrect, false),
+			"500": selfError(string(commands.InternalError), commands.NextNone, false),
+			"503": selfError(string(commands.AuthorityUnavailable), commands.NextRetry, true, string(commands.DependencyUnavailable))}}
+}
+
+var selfNext = map[string]commands.NextAction{CodeCSRF: commands.NextNone, CodeReauthentication: NextReauthenticate, string(commands.DependencyUnavailable): commands.NextRetry,
 	string(commands.InvalidRequest): commands.NextCorrect, string(commands.PrerequisiteFailed): commands.NextCorrect}
 
 func selfError(code string, next commands.NextAction, retry bool, also ...string) map[string]any {

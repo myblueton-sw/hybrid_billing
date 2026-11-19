@@ -101,7 +101,7 @@ func (h *hold) covers(a *artifact) bool {
 		return true
 	}
 	for _, tenant := range a.view.Tenants {
-		if contains(h.view.Tenants, tenant) && (len(h.view.Classes) == 0 || contains(h.view.Classes, a.view.Class)) {
+		if h.view.Covers(tenant, a.view.Class) {
 			return true
 		}
 	}

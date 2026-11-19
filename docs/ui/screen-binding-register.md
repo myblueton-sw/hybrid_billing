@@ -198,12 +198,12 @@ Tracking: [HYB-295](https://linear.app/hybrid-billing/issue/HYB-295). [HB-257](.
 - **Verification.** [HB-268](../features/HB-268/verification.md), [HB-269](../features/HB-269/verification.md).
 
 **M05 My security**
-- **Tickets.** HB-270 API (#190), HB-271 screen (#191), HYB-293 (#210).
+- **Tickets.** HB-270 API (#190), HB-271 screen (#191), HYB-293 (#210), HYB-307 session-end manifest, and HYB-306 recent access history (implementation candidate; combined verification pending).
 - **Field map.** [M05 fields](screen-binding-fields/identity.md#m05-my-security).
-- **Reads.** `GET /api/v1/me` (`boundary.go:35`, `admin.ts:938`, `identity/pages/my-security/Live.tsx:268`).
+- **Reads.** `GET /api/v1/me` and `GET /api/v1/me/access-history`. History is scoped on the server to the authenticated user, incarnation and workspace; refused sign-ins carry no workspace. `service/access-history.ts` parses it, `AdminClient.accessHistory` requests it, and `my-security/AccessHistory.tsx` renders it after the sessions region.
 - **Commands.** `POST /api/v1/me/password` (`boundary.go:48`, `admin.ts:957`, `my-security/Live.tsx:89`) and `POST /api/v1/me/sessions/end` (`boundary.go:49`, `admin.ts:960`, `my-security/Live.tsx:172`). Neither is on the command path; password changes write a log line, not a journal record (`HB-270/plan.md:158`). Module: identity, passwords.
 - **States.** Read-only account view; password change with shared lockout and honest unconfirmed outcomes; own sessions with end one, end all others and sign out here; recovery and notification views marked unavailable ([HB-271](../features/HB-271/verification.md)).
-- **Not connected / residual.** MFA, recovery, linking of other sign-in methods, profile changes and notification preferences. The M05 preview copy still says "reauthentication" (HYB-293 residual). Open: HYB-306 recent access history (Todo), HYB-307 end other sessions against a fixed session manifest (implemented on branch `feat/HYB-307-m05-end-other-sessions`, not merged), HYB-304 (Todo).
+- **Not connected / residual.** MFA, recovery, linking of other sign-in methods, profile changes and notification preferences. The M05 preview copy still says "reauthentication" (HYB-293 residual). HYB-306 adds persistent own-access history, period filters, bounded cursor pages, device families, and retention/recording/deletion notes; see [implementation status](../features/HYB-306/implementation.md). HYB-307 is in the current baseline. HYB-304 remains open. Combined verification and owner acceptance are pending.
 - **Verification.** [HB-270](../features/HB-270/verification.md), [HB-271](../features/HB-271/verification.md), [HYB-293](../features/HYB-293/verification.md).
 
 ### Organizations and contracts (O01–O03)

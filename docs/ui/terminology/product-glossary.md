@@ -365,6 +365,19 @@ M01 can fix everyone who matches the current filters into one revocation list on
 | settings: max matching, retained people, scan budgets | 필터 전체 회수당 인원 / 메모리에 보관하는 회수 목록 인원 / 검색 페이지당 확인 인원 / 집계당 확인 인원 | People per filter-wide revocation / People kept in revocation lists in memory / People examined per search page / People examined per count | الأشخاص لكل إبطال حسب التصفية / الأشخاص المحفوظون في قوائم الإبطال في الذاكرة / الأشخاص المفحوصون لكل صفحة بحث / الأشخاص المفحوصون لكل عدّ | Changeable installation defaults (start flags). The retained-people hint says "lists waiting to run", never "pending". AR uses «القوائم بانتظار التنفيذ» for lists waiting to run in the setting name, the hint and the pending-limit refusal (R-C4); «قيد الانتظار» stays for pending work. |
 
 
+## Personal access history (HYB-306)
+
+Candidate labels from the stable plan and M05 implementation; combined technical-writing and native-language review remain pending.
+
+| Concept | Korean candidate | English candidate | Arabic candidate | Meaning and exclusions |
+| --- | --- | --- | --- | --- |
+| recent-access-history | 최근 접근 기록 | Recent access history | سجل الوصول الأخير | Own recorded sign-in, password-confirmation and session events. Not an administrator audit of other people. |
+| history-recording-stopped | 접근 기록 저장 중지 | Access event recording stopped | توقّف تسجيل أحداث الوصول | Later events may be missing. Never shown as zero events or a successful empty period. |
+| history-deletion-deferred | 서버 시각 확인까지 삭제 보류 | Deletion paused until server time is confirmed | أُوقِف الحذف مؤقتًا حتى يُؤكَّد وقت الخادم | Old events remain hidden; this does not assert physical deletion. |
+| history-held | 법적 보류 때문에 보관 | Kept because of a legal hold | محفوظ بسبب حجز قانوني | Own older retained events are not displayed; backup expiry is a separate boundary. |
+| access-history-period | 최근 접근 기간 | Access history period | فترة سجل الوصول | Server-time period filter over the caller’s retained workspace events; not a retention-setting change. |
+| access-history-note | 접근 기록 안내 | Access history notice | تنبيه سجل الوصول | Recording, loss, hold or deletion fact. Unknown counts remain unknown; a notice is not a confirmed event total. |
+
 ## Credential pickup and unknown outcomes (HYB-333)
 
 Candidate copy from the stable HYB-333 plan and implemented M04 messages. Semantic and regional review is deferred to the combined review; no native-language approval is claimed.

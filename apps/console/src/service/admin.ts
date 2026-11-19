@@ -1,3 +1,4 @@
+import { accessHistoryOf, HistoryParseError, type AccessHistoryPage, type AccessHistoryQuery } from "./access-history";
 import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsPage } from "./contracts";
 import { installationOf, type InstallationPage } from "./installation";
 import { integrationsOf, type IntegrationsPage } from "./integrations";
@@ -282,6 +283,7 @@ export type ServicesPage = {
 };
 export type Secret = { secret: string; credential: string };
 export type { SelfSession, SelfEnd, SelfEndRow, SelfItem, SelfRef } from "./self-end";
+export type { AccessHistoryPage, AccessHistoryQuery, HistoryEvent, HistoryNote } from "./access-history";
 export type SelfPage = {
   user_id: string;
   login: string;
@@ -1029,6 +1031,19 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
         authenticated_at: String(body.authenticated_at ?? ""),
         now: String(body.now ?? ""),
       };
+    },
+    async accessHistory(query: AccessHistoryQuery, request: string): Promise<AccessHistoryPage> {
+      const q = new URLSearchParams();
+      if (query.from) q.set("from", query.from);
+      if (query.before) q.set("before", query.before);
+      const tail = q.toString();
+      const body = await send("/me/access-history" + (tail ? "?" + tail : ""), { method: "GET" }, request);
+      try {
+        return accessHistoryOf(body);
+      } catch (err) {
+        if (err instanceof HistoryParseError) throw new AdminError("invalid");
+        throw err;
+      }
     },
     async changePassword(current: string, next: string): Promise<void> {
       await send("/me/password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ current, new: next }) }, attempt().request);

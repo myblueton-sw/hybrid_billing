@@ -135,7 +135,10 @@ func (s *Server) pickupLive(p pickup) (time.Time, bool) {
 		return time.Time{}, false
 	}
 	answer, idle, err := s.identity.Boundary().Peek(p.session, found.workspace)
-	if err != nil || !s.fresh(answer, found) {
+	if err != nil {
+		return time.Time{}, false
+	}
+	if fresh, _ := s.freshness(answer, found); !fresh {
 		return time.Time{}, false
 	}
 	decision := s.gate.Decide(gate.Answer(answer), ConsoleClient, gate.Request{Action: gate.AdministerInstallation, Kind: gate.InstallationKind,

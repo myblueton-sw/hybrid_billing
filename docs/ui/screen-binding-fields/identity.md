@@ -687,7 +687,25 @@ Read: `GET /api/v1/me` (`boundary.go:35`), client and parser `admin.ts:978-998`,
 | Recent session ends | Per-session result and cleanup details (C1–C8 by group, outside-scope rows always shown) | `sessions[].result`, `sessions[].items[]` | `self-end.ts:47` | `my-security/EndOthers.tsx:157-189, 266-286` |
 | Recent session ends | Checked at, still in progress, could not check, Check again | `now` of each poll; client 2 s polling for at most 30 s | `admin.ts:978-998` | `my-security/EndOthers.tsx:290-297`, `Live.tsx:258-291` |
 
-**Parsed but not displayed on M05:** none found beyond `identities[].method`.
+### HYB-306 recent access history
+
+Implementation candidate; combined verification is pending. The new read is `GET /api/v1/me/access-history`, handled by `apps/api/server/accesshistory.go`: `readHistory` and `parseHistoryQuery`. It takes identity from `self`, never a caller-supplied user ID.
+
+| Area | Field or behavior | Producer | Consumer |
+| --- | --- | --- | --- |
+| History rows | `events[].at`, `kind`, `reason`, `workspace`, `session`, `device`, `count` | `modules/accesshistory`: `Read`; server `historyEvent` mapping | `service/access-history.ts`: `eventOf`; `AccessHistory.tsx`: `Row`; `history-copy.ts` |
+| Period | `from`, fixed current workspace; server also accepts `to` | `parseHistoryQuery`; per-user/per-workspace record sequences | `history-model.ts`: `fromFor`; period control |
+| Paging | `before`, `next`; two own-sequence positions, default 50, max 100 | `encodeCursor`, `decodeCursor`, `accesshistory.Read` | `AdminClient.accessHistory`, Show more with append and retry |
+| Retention | `retention_days`, `retention_source`, `period_since`, `effective_days` | durable retention state and installation start settings | `accessHistoryOf`; retention and size-limit statements |
+| Coverage | `available_from`, `now` | oldest visible own record and server clock | coverage statement, period gap, loaded time |
+| Recording | `recording.state`, `since`, `reason` | history writer status | stopped-recording note; never represented as an empty successful history |
+| Loss, holds and deletion | `notes[].kind`, `from`, `to`, `count` | history storage, purge and persisted hold markers; attributable own counts only | `history-model.ts`: `noteLines`; ordered note region |
+| Scope revocation | clear rows and cursor on unauthenticated answer; remount by user/workspace/session | authenticated self read and API error | `AccessHistory.tsx`; key in `my-security/Live.tsx` |
+| Storage | append-only day files, retention and person state in installation data directory | `modules/accesshistory`; `Server.openHistory`, `Server.Close` | survives server restart within the plan's incarnation and storage limits |
+
+No network address, raw User-Agent, login name, email or bearer secret is stored or displayed by this feature. Device values are fixed browser/OS families. Old held records stay hidden; backup deletion is not claimed.
+
+**Parsed but not displayed on M05:** `identities[].method`, history `period_since`, and `recording.reason` (the recording state and start time drive the visible notice).
 
 ## Unknowns and mismatches
 

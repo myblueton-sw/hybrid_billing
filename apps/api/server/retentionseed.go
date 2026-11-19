@@ -246,7 +246,9 @@ func (s *Server) retentionPlaceHold(h retention.Hold, by retention.Actor, worksp
 	if err := s.retentionCall("place_hold", func() (err error) { view, err = s.retention.PlaceHold(h, by); return }); err != nil {
 		return retention.HoldView{}, err
 	}
-	s.ret.holds = append(s.ret.holds, &retentionHold{id: h.ID, workspace: workspace, created: s.clock(), rationale: rationale})
+	created := s.clock()
+	s.ret.holds = append(s.ret.holds, &retentionHold{id: h.ID, workspace: workspace, created: created, rationale: rationale})
+	s.holdPlaced.Store(h.ID, created)
 	return view, nil
 }
 

@@ -1,0 +1,348 @@
+{
+  "ticket": "HYB-306",
+  "machine": "mac_mini",
+  "base": "73745d608ad9b469d99380e0380a05ed973f0634",
+  "source_fingerprint": "785ab9698838b0471141047e32397421abd49c2e20f7ae881125cc45774d9567",
+  "source_files": [
+    {
+      "path": "apps/api/cmd/hb-api/main.go",
+      "sha256": "68b2e60e2b9fdadd09ef36338cec0d0d5738e87acc888da9089a9cab571f3e82",
+      "lines": 198
+    },
+    {
+      "path": "apps/api/server/accesshistory.go",
+      "sha256": "33771abf7109e6019007fe160b001496583597f84d8ce943b0ddea18dcfd1876",
+      "lines": 300
+    },
+    {
+      "path": "apps/api/server/accesshistory_coverage_test.go",
+      "sha256": "160476014f4804d1a904d1ba4734a67a4ffe926b6119919664986625b5583bc3",
+      "lines": 263
+    },
+    {
+      "path": "apps/api/server/accesshistory_test.go",
+      "sha256": "7e0915cc17dfe55336aa97281eef957323d701c48905bc35fd9e466d5339fe5d",
+      "lines": 410
+    },
+    {
+      "path": "apps/api/server/admin.go",
+      "sha256": "8c607651c186d703a6841cb4e3315f7f25968604f2f2fbabbab5ee9e9ec27013",
+      "lines": 498
+    },
+    {
+      "path": "apps/api/server/boundary.go",
+      "sha256": "b26ac4098c4144a7033d6d0b3707c0dcca225c2d6c41eec404fc0da468b0b0ef",
+      "lines": 132
+    },
+    {
+      "path": "apps/api/server/bulkcleanup.go",
+      "sha256": "091dceb8b82e44f4388f154ac0b6bd64013cc27b0773f17069548a77944ebace",
+      "lines": 215
+    },
+    {
+      "path": "apps/api/server/commands.go",
+      "sha256": "33a7c2a37ace4414e88e36ccbefffeb1bb0df9373dcc641c84de4c129a973c4a",
+      "lines": 259
+    },
+    {
+      "path": "apps/api/server/ledger.go",
+      "sha256": "62157be172815b319c014883cb7fa1bbe863a03589f838785d8e116946e486bf",
+      "lines": 233
+    },
+    {
+      "path": "apps/api/server/openapiself.go",
+      "sha256": "efb9f92c2f84384accde4005ad113d67c16f61d9d6d96ff44f63a03a10a84c59",
+      "lines": 105
+    },
+    {
+      "path": "apps/api/server/periods.go",
+      "sha256": "be23d8931edaed9c7add8b5ca4cedfbcd194a9dad4eaba25dbc29242ac15d62d",
+      "lines": 255
+    },
+    {
+      "path": "apps/api/server/reauth.go",
+      "sha256": "348acc0daaa045b572002f8868ba17b509de0723563c8c3b5aa243552c517627",
+      "lines": 92
+    },
+    {
+      "path": "apps/api/server/retentionseed.go",
+      "sha256": "0e5f11dc800ea961f7a2a9d7c1bc0ff8649ed7cfaa4adece8a82303695d0d015",
+      "lines": 431
+    },
+    {
+      "path": "apps/api/server/seed.go",
+      "sha256": "21df84743cf1354a66bc17f535ad639c3419742480a4d94b4dc7c4a97a2f7be1",
+      "lines": 293
+    },
+    {
+      "path": "apps/api/server/self.go",
+      "sha256": "93c664a94afad3ad29def4069c8a00099692e66d00ce47ffc47747abdb344129",
+      "lines": 251
+    },
+    {
+      "path": "apps/api/server/selfend.go",
+      "sha256": "46800c04e8548680de1cbc1a0f3f8d6380c86c5e7f1df88b8aa51c58d4341eb6",
+      "lines": 415
+    },
+    {
+      "path": "apps/api/server/selfend_window_test.go",
+      "sha256": "71bcc0bf88c9a7a9c6d838fdfcbb5aad4b59b4469e7a5747d5bb3cb3ebbc6a10",
+      "lines": 606
+    },
+    {
+      "path": "apps/api/server/server.go",
+      "sha256": "aab86cf2ef13f583115216dfc38ada562de429c03011c0f999b461df9b7b3871",
+      "lines": 395
+    },
+    {
+      "path": "apps/api/server/session.go",
+      "sha256": "5a607786251de8c99dff0811d52f194aaf519e6d81ef7170d5b14a45b700bad7",
+      "lines": 257
+    },
+    {
+      "path": "apps/api/server/sessionending.go",
+      "sha256": "dee85879419cae5efc81e23b847e92f043235f96b40daae9ed42ce6eeed3ed92",
+      "lines": 99
+    },
+    {
+      "path": "apps/api/server/sessionending_test.go",
+      "sha256": "456853f49ea8d84a2ddb86643e47480f2858bf13cebdcc83da13b8ff47c697aa",
+      "lines": 152
+    },
+    {
+      "path": "apps/api/server/settings.go",
+      "sha256": "593015a7154b80749675fd13637143ad44bae45296eb17e48fa9439da3d8c1c5",
+      "lines": 222
+    },
+    {
+      "path": "apps/api/server/signin.go",
+      "sha256": "ac74e451eeff745ba3402361147acb5f3f747555188b68d2b53c7e64638311e0",
+      "lines": 525
+    },
+    {
+      "path": "apps/api/server/trust.go",
+      "sha256": "c088744a70273fe4dcbf50dad5494a44d764760fa3531ba8d13d0360cd6d781e",
+      "lines": 358
+    },
+    {
+      "path": "apps/api/server/users.go",
+      "sha256": "1de0a16dca26ace71e6b7b7c9eeaf3327008150e8c7497e5555c45002626283f",
+      "lines": 343
+    },
+    {
+      "path": "apps/api/server/world_test.go",
+      "sha256": "f7837877bd82ac6dbcbca54e6372f94c56c64c79e238e471fff958d375b22f98",
+      "lines": 209
+    },
+    {
+      "path": "apps/console/package.json",
+      "sha256": "cf9d590efc221b4fa554b7657217265fe8891649088edda0370426a7d0a3b086",
+      "lines": 39
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/AccessHistory.tsx",
+      "sha256": "db8bd5ebbfa11698418cce3789d7424022b6977427f17bc33bb040a97cbd8d1f",
+      "lines": 248
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/Live.tsx",
+      "sha256": "135cb3e091c3aa3f715f08dfd472acccca1d2cca087005ad3cde6e69d1105846",
+      "lines": 515
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/history-copy.ts",
+      "sha256": "6110fe725b9d0f773752857f9526e8b86c4789d299235e688056cefad16c1849",
+      "lines": 256
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/history-model.test.ts",
+      "sha256": "b29251b27771e105271e98be851cba32251c20044542daba8dc2b10375986425",
+      "lines": 60
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/history-model.ts",
+      "sha256": "e2b42c397932fce78dfc43d78398effad19adb3d951b286a9b45120a6ac62c48",
+      "lines": 84
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/history-render.test.tsx",
+      "sha256": "5d3cc193094f7a76df6935d41477392e0526f5d6a367aca08e7885ce15532162",
+      "lines": 24
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/history.css",
+      "sha256": "4b705474d167f02283e806a0fccc3966804387674a84f7e9c1519490393f36f7",
+      "lines": 249
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/live-copy.ts",
+      "sha256": "c2b3f81d2999d0bf58bcaa466fb9b6c57e2f82df90c29ec75ff3cbd2c73902e0",
+      "lines": 195
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/live-model.test.ts",
+      "sha256": "c52a44b8b141bab77472cce7911ae31415a8af539b6ff38b12fbf716ce065e71",
+      "lines": 173
+    },
+    {
+      "path": "apps/console/src/service/access-history.ts",
+      "sha256": "e31fed3d3662d87c9af70932c8df766e145f15be84c391577adaf2a78af3467e",
+      "lines": 135
+    },
+    {
+      "path": "apps/console/src/service/admin.test.ts",
+      "sha256": "f252eb1e857d2206a4aad7b8c9aef494828677f3f08b7d225626d7ec36497c7f",
+      "lines": 551
+    },
+    {
+      "path": "apps/console/src/service/admin.ts",
+      "sha256": "a1cd86655c86afcc120109c67a39208a3966b1ebfa4fb78fdb33fff1c19b46a1",
+      "lines": 1178
+    },
+    {
+      "path": "modules/accesshistory/attribution.go",
+      "sha256": "f959c65807a6a0f93f4a9a1a28a3b433bfe8021c1ebcb2c5695bf09e05ef3d59",
+      "lines": 130
+    },
+    {
+      "path": "modules/accesshistory/coverage_test.go",
+      "sha256": "e005fd18abab3c85da941524ae9a917f7abb31672cbd7279c33f96cf1e8f3488",
+      "lines": 153
+    },
+    {
+      "path": "modules/accesshistory/device.go",
+      "sha256": "d4eb79d044c7bc4555c92996b22e120b727731cde44f8457ddf8339b67162b39",
+      "lines": 54
+    },
+    {
+      "path": "modules/accesshistory/faults_test.go",
+      "sha256": "a5ac11c23a4e96514bf71a7547a73d565707fd7780d167e1e190762df6bf648e",
+      "lines": 439
+    },
+    {
+      "path": "modules/accesshistory/fs_unix.go",
+      "sha256": "44b2d5fb3fc44f9f0d0883c5fb573fd8b7159138e574bbcdfa542c68a822ca51",
+      "lines": 64
+    },
+    {
+      "path": "modules/accesshistory/fs_windows.go",
+      "sha256": "79a1a7f70dae5bdd0ef1bc997348a29e2e570526fc4c206cad549c72a392c124",
+      "lines": 72
+    },
+    {
+      "path": "modules/accesshistory/history_test.go",
+      "sha256": "9e0f4201b0fb984b014103a90251e1aec9250d21836ce87a317b9a7a112d320c",
+      "lines": 209
+    },
+    {
+      "path": "modules/accesshistory/maintenance.go",
+      "sha256": "6f11243ca316a9bcc00f5ebc16a8c2c88acf00357b0338fc56c104057bb64820",
+      "lines": 67
+    },
+    {
+      "path": "modules/accesshistory/open.go",
+      "sha256": "5e53c4a10ce9094c280556360dd539ecce6296d4983b8c7d39272429a9a80976",
+      "lines": 386
+    },
+    {
+      "path": "modules/accesshistory/people.go",
+      "sha256": "42a7ec2b87c09322a8527efc3293f08c081b3dbb5573b69bf4304e64ffdf425e",
+      "lines": 234
+    },
+    {
+      "path": "modules/accesshistory/purge.go",
+      "sha256": "b19f411f797d325ad6a51e7bb8e112412328a61ddb8c19b0fba2f03e975f9e16",
+      "lines": 459
+    },
+    {
+      "path": "modules/accesshistory/query.go",
+      "sha256": "f12c034d816f9934d1291b1b9e2ba03d6de1d58e4c7eaa9c751d461429c5474d",
+      "lines": 161
+    },
+    {
+      "path": "modules/accesshistory/record.go",
+      "sha256": "e7589892a9a2ecdcfdd8ffa953fdddeddaf8c57e89cd58e2c9f24a45cce9ce4d",
+      "lines": 239
+    },
+    {
+      "path": "modules/accesshistory/review_regression_test.go",
+      "sha256": "b338c9a2e8fdb6912e157f91b31ecfee801f17edc0dffbffa5afdb6044ff577f",
+      "lines": 408
+    },
+    {
+      "path": "modules/accesshistory/scan.go",
+      "sha256": "a873ff914dd9ef2f72e5449e96934a61f7508a23603312e28bc3fd43a4876ac7",
+      "lines": 288
+    },
+    {
+      "path": "modules/accesshistory/types.go",
+      "sha256": "f0ff8973e7315f66835f996684f708fd551eeb1f984cffe563a757dd11d3ec71",
+      "lines": 245
+    },
+    {
+      "path": "modules/accesshistory/writer.go",
+      "sha256": "81e8679b14fb73d70d92d403880e10d6205a8f77c9dc124f3c16edef7f663fd0",
+      "lines": 492
+    },
+    {
+      "path": "modules/retention/changes.go",
+      "sha256": "5a1018afea5f9d9808bf4ae18e1fa38487635e8fc554bc32220f2bfc19a9240b",
+      "lines": 195
+    },
+    {
+      "path": "modules/retention/exports.go",
+      "sha256": "44b516e6660f604f066a7e3fbcb11b453fed23f776783dcbef0d596fdf2ada88",
+      "lines": 71
+    },
+    {
+      "path": "modules/retention/hold_snapshot_test.go",
+      "sha256": "f96c71515f442f5b6fc57a7fda7ed6475769e631c60e715de2a7d1a42de9c793",
+      "lines": 28
+    }
+  ],
+  "browser_runs": [
+    {
+      "path": "/private/tmp/hb-combined-qa/306/render-1795059243781052000/browser.log",
+      "sha256": "b2a5435127cb83f8b89d74b2065f28c908a43eb79e8a1f6438a6af42c164ff43",
+      "pass": 50,
+      "fail": 0,
+      "exception": false
+    },
+    {
+      "path": "/private/tmp/hb-combined-qa/306/render-1795059658747674000/browser.log",
+      "sha256": "77e93974daddb47032a957418a3af382a72661e3a7a4e12395153a2a89b2d0a2",
+      "pass": 49,
+      "fail": 0,
+      "exception": true
+    },
+    {
+      "path": "/private/tmp/hb-combined-qa/306/render-1795062054746311000/browser.log",
+      "sha256": "bc7e3466c7d8cc9e533e7eeb88bba3526ca080ee0ba1b6eee7f9ac74dd92c83d",
+      "pass": 78,
+      "fail": 0,
+      "exception": false
+    },
+    {
+      "path": "/private/tmp/hb-combined-qa/306/render-1795064655424189000/browser.log",
+      "sha256": "bc7e3466c7d8cc9e533e7eeb88bba3526ca080ee0ba1b6eee7f9ac74dd92c83d",
+      "pass": 78,
+      "fail": 0,
+      "exception": false
+    },
+    {
+      "path": "/private/tmp/hb-combined-qa/306/render-1795064871928232000/browser.log",
+      "sha256": "bc7e3466c7d8cc9e533e7eeb88bba3526ca080ee0ba1b6eee7f9ac74dd92c83d",
+      "pass": 78,
+      "fail": 0,
+      "exception": false
+    },
+    {
+      "path": "/private/tmp/hb-combined-qa/306/render-1795065734808095000/browser.log",
+      "sha256": "58404c41abc8a81454aa956de62d99e74bf976134e4a46567aed67609f664a34",
+      "pass": 86,
+      "fail": 0,
+      "exception": false
+    }
+  ],
+  "artifact_boundary": "Local synthetic artifacts under /private/tmp; temporary retention only, not native-language or owner approval."
+}

@@ -1,6 +1,9 @@
 package retention
 
-import "time"
+import (
+	"sort"
+	"time"
+)
 
 type Standing struct {
 	Access     string
@@ -46,4 +49,23 @@ func (r *Registry) Standing(id string) (Standing, error) {
 		v.Stores[store] = result
 	}
 	return v, nil
+}
+
+func (h Hold) Covers(tenant, class string) bool {
+	return contains(h.Tenants, tenant) && (len(h.Classes) == 0 || contains(h.Classes, class))
+}
+
+func (r *Registry) HoldsCovering(class string) []HoldView {
+	r.enter()
+	defer r.leave()
+	out := []HoldView{}
+	for _, h := range r.holds {
+		if len(h.view.Tenants) > 0 && (len(h.view.Classes) == 0 || contains(h.view.Classes, class)) {
+			snapshot := h.view
+			snapshot.Artifacts, snapshot.Tenants, snapshot.Classes = copyStrings(h.view.Artifacts), copyStrings(h.view.Tenants), copyStrings(h.view.Classes)
+			out = append(out, HoldView{Hold: snapshot, Placer: h.placer, Released: h.released})
+		}
+	}
+	sort.Slice(out, func(a, b int) bool { return out[a].Hold.ID < out[b].Hold.ID })
+	return out
 }

@@ -64,6 +64,8 @@ func (f world) ready() world {
 }
 
 func (f world) advance(d time.Duration) {
+	f.s.time.mu.Lock()
+	defer f.s.time.mu.Unlock()
 	f.mu.Lock()
 	*f.now = f.now.Add(d)
 	f.mu.Unlock()

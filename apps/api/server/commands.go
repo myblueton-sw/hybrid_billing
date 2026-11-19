@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
@@ -137,20 +138,18 @@ func (s *Server) stale(found session) bool { return found.trustEpoch < s.current
 
 func (s *Server) access(found session) (identity.Answer, commands.Code) {
 	if s.sessions.isDenied(found.verifier) {
-		s.sessions.drop(found.verifier)
+		s.dropSession(found.verifier, "")
 		return identity.Answer{}, commands.Unauthenticated
 	}
 	if s.stale(found) {
-		_ = s.identity.Boundary().EndSession(found.verifier)
-		s.sessions.drop(found.verifier)
+		s.closeSession(found.verifier, accesshistory.CauseTrustChange)
 		return identity.Answer{}, commands.Unauthenticated
 	}
 	answer, err := s.identity.Boundary().Access(found.verifier, found.workspace)
 	switch {
 	case err == nil:
-		if !s.fresh(answer, found) {
-			_ = s.identity.Boundary().EndSession(found.verifier)
-			s.sessions.drop(found.verifier)
+		if fresh, reason := s.freshness(answer, found); !fresh {
+			s.closeSession(found.verifier, policyCause(reason))
 			return answer, commands.Unauthenticated
 		}
 		if s.accessHook != nil {
@@ -165,7 +164,7 @@ func (s *Server) access(found session) (identity.Answer, commands.Code) {
 	case errors.Is(err, identity.ErrInvalid):
 		return answer, commands.InternalError
 	}
-	s.sessions.drop(found.verifier)
+	s.dropSession(found.verifier, identityCause(identity.ReasonOf(err)))
 	return answer, commands.Unauthenticated
 }
 
@@ -224,7 +223,7 @@ func (s *Server) execute(command string, call commands.Call, caller identity.Ver
 	}
 	found, ok := s.sessions.get(caller)
 	if !ok || s.stale(found) {
-		s.endOne(caller)
+		s.endOne(caller, accesshistory.CauseAccessChanged)
 		return boundaryResult(commands.Unauthenticated, call.Request)
 	}
 	if len(s.stranded) > 0 && s.mutating[command] {
@@ -249,9 +248,12 @@ func (s *Server) execute(command string, call commands.Call, caller identity.Ver
 	return result
 }
 
-func (s *Server) fresh(answer identity.Answer, found session) bool {
+func (s *Server) freshness(answer identity.Answer, found session) (bool, string) {
 	_, err := s.policy.Evaluate(authpolicy.Principal{User: answer.User(), Workspace: answer.Workspace(), Role: string(answer.Role()), Kind: authpolicy.KindHuman},
 		authpolicy.Authentication{Method: authpolicy.MethodPassword, At: found.authenticated}, "")
 	var refusal authpolicy.Refusal
-	return err == nil || (errors.As(err, &refusal) && refusal.Reason == authpolicy.ReasonNoPolicy)
+	if err == nil || (errors.As(err, &refusal) && refusal.Reason == authpolicy.ReasonNoPolicy) {
+		return true, ""
+	}
+	return false, refusal.Reason
 }

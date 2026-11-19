@@ -177,7 +177,6 @@ export const m = {
   lastConfirmed: (l: Locale) => t(l, "Password last confirmed", "마지막 비밀번호 확인 시각", "آخر تأكيد لكلمة المرور"),
   noMaxAge: (l: Locale) => t(l, "No workspace limit", "업무 공간 제한 없음", "لا يوجد حد لمساحة العمل"),
   youSignedIn: (l: Locale) => t(l, "You signed in at", "로그인 시각", "سجّلت الدخول في"),
-  historyNote: (l: Locale) => t(l, "recent access history is not available.", "최근 접근 기록은 볼 수 없습니다.", "سجل الوصول الأخير غير متاح."),
   recoveryTitle: (l: Locale) => t(l, "Two-step verification and recovery", "2단계 인증과 계정 복구", "التحقق بخطوتين واستعادة الحساب"),
   recoveryBody: (l: Locale) =>
     t(

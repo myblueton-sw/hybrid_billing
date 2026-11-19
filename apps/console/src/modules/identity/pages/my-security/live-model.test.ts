@@ -125,3 +125,49 @@ test("render review round 2: truthful overflow copy, outcome titles and the coun
   }
   assert.equal(stateSentence("ko", op({ state: "cleanup_running" })), e.running("ko"));
 });
+
+test("history: period from uses the server now, notes keep the spec order, null counts never print a number", async () => {
+  const { fromFor, noteLines, historyState, coverageGap, showSizeLimit } = await import("./history-model");
+  const { hc, deviceLabel, eventLabel } = await import("./history-copy");
+  assert.equal(fromFor("all", "2026-11-19T10:00:00Z"), undefined);
+  assert.equal(fromFor("day", "2026-11-19T10:00:00Z"), "2026-11-18T10:00:00Z");
+  assert.equal(fromFor("week", ""), undefined);
+  const base = {
+    events: [], next: null, retention_days: 90, retention_source: "default" as const, period_since: null, effective_days: 90, available_from: null,
+    recording: { state: "stopped" as const, since: "2026-11-19T09:00:00Z", reason: "write_failed" }, now: "2026-11-19T10:00:00Z",
+    notes: [
+      { kind: "unclean_stop" as const, from: "2026-11-18T00:00:00Z", to: "2026-11-18T01:00:00Z", count: null },
+      { kind: "dropped" as const, from: "2026-11-18T00:00:00Z", to: "2026-11-18T01:00:00Z", count: null },
+      { kind: "held" as const, from: null, to: null, count: 2 },
+      { kind: "purge_deferred" as const, from: null, to: null, count: null },
+      { kind: "damaged" as const, from: null, to: null, count: 0 },
+    ],
+  };
+  const lines = noteLines("en", base, () => "T");
+  assert.deepEqual(lines.map((n) => n.key.split("-")[0]), ["recording", "purge_deferred", "held", "dropped", "unclean_stop"]);
+  assert.deepEqual(lines.map((n) => n.strong), [true, true, false, false, false]);
+  assert.equal(lines[3].text, "Some events between T and T may be missing.");
+  assert.ok(!/\d/.test(lines[3].text));
+  assert.equal(historyState(base, false), "none-kept");
+  assert.equal(historyState({ ...base, available_from: "x" }, false), "empty");
+  assert.equal(historyState(base, true), "failed");
+  assert.equal(historyState(null, false), "loading");
+  assert.equal(coverageGap("2026-11-01T00:00:00Z", "2026-11-05T00:00:00Z"), true);
+  assert.equal(coverageGap(undefined, "2026-11-05T00:00:00Z"), false);
+  assert.equal(showSizeLimit({ ...base, effective_days: 40 }), true);
+  assert.equal(showSizeLimit(base), false);
+  const ev = { at: "x", kind: "signed_in" as const, reason: "", workspace: "w", session: null, count: 0 };
+  assert.equal(deviceLabel("en", { ...ev, device: { browser: "chrome", os: "macos" } }), "Chrome on macOS");
+  assert.equal(deviceLabel("en", { ...ev, device: { browser: "unknown", os: "unknown" } }), "Unknown device");
+  assert.equal(deviceLabel("en", { ...ev, device: { browser: "unknown", os: "linux" } }), "Unknown browser on Linux");
+  assert.equal(deviceLabel("en", { ...ev, device: { browser: "firefox", os: "unknown" } }), "Firefox on an unknown system");
+  assert.equal(deviceLabel("en", { ...ev, device: { browser: "other", os: "other" } }), "Other browser on other system");
+  assert.equal(deviceLabel("en", { ...ev, device: null }), "");
+  const more = { ...ev, kind: "sign_in_refused_more" as const, workspace: null, device: null };
+  for (const [n, want] of [[1, "تسجيل دخول مرفوض آخر"], [2, "تسجيلا دخول مرفوضان آخران"], [3, "3 تسجيلات دخول مرفوضة أخرى"], [11, "11 تسجيل دخول مرفوضًا آخر"], [100, "100 تسجيل دخول مرفوض آخر"]] as const) {
+    assert.equal(eventLabel("ar", { ...more, count: n }), want);
+  }
+  assert.equal(eventLabel("en", { ...more, count: 1 }), "1 more refused sign-in");
+  assert.equal(hc.retentionLead("en", 90, true), "Kept for 90 days. (set for this installation)");
+  assert.equal(hc.retentionLead("ar", 2, false), "يُحتفَظ به لمدة يومين.");
+});

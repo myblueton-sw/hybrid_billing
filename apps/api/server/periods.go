@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/decisionledger"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
@@ -216,7 +217,7 @@ func (s *Server) sweepRoles() bool {
 		}
 		changed = true
 		if login, known := s.dir.loginOf(e.User); known {
-			s.endSessions(login)
+			s.endSessions(login, accesshistory.CauseRolePeriod)
 		}
 		s.dir.dropPickups(func(p pickup) bool { return p.target == e.User })
 		s.roleEnds++

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
@@ -111,19 +112,12 @@ func (s *Server) readSelf(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, request, page)
 }
 
-func (s *Server) endOne(v identity.Verifier) {
-	err := s.endModule(v)
-	s.sessions.drop(v)
-	s.settleEnded(v, err)
-	s.dir.dropPickups(func(p pickup) bool { return p.session == v })
-}
-
 func (s *Server) endOthers(found session) int {
 	n := 0
 	own, _ := s.ownSessions(found)
 	for _, other := range own {
 		if other.verifier != found.verifier {
-			s.endOne(other.verifier)
+			s.endOne(other.verifier, accesshistory.CausePasswordChanged)
 			n++
 		}
 	}
@@ -172,7 +166,7 @@ func (s *Server) changePassword(w http.ResponseWriter, r *http.Request) {
 	}
 	if ok && !s.reserveAttempt(found) {
 		ok = false
-		s.endOne(found.verifier)
+		s.endOne(found.verifier, accesshistory.CauseAttemptLimit)
 		s.counter++
 		failCode(w, commands.Unauthenticated, request)
 	}
@@ -219,7 +213,7 @@ func (s *Server) changePassword(w http.ResponseWriter, r *http.Request) {
 	case result != passwords.ResultOK:
 		if s.failures[found.verifier] >= selfAttempts {
 			delete(s.failures, found.verifier)
-			s.endOne(found.verifier)
+			s.endOne(found.verifier, accesshistory.CauseAttemptLimit)
 			s.counter++
 			failCode(w, commands.Unauthenticated, request)
 			return
@@ -248,6 +242,7 @@ func (s *Server) changePassword(w http.ResponseWriter, r *http.Request) {
 	s.limit.refund()
 	s.dir.dropLink(found.login)
 	s.dir.generations[found.login]++
+	s.recordSession(accesshistory.KindPasswordChanged, "", found)
 	n := s.endOthers(found)
 	s.counter++
 	s.cfg.Log.Info("password_changed", "user", answer.User(), "sessions_ended", n)

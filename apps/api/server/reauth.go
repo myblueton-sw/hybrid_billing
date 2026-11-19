@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
 )
@@ -22,10 +23,11 @@ func (s *Server) reauthenticate(w http.ResponseWriter, r *http.Request) {
 	}
 	if ok && !s.reserveAttempt(found) {
 		ok = false
-		s.endOne(found.verifier)
+		failCode(w, commands.Unauthenticated, request)
+		s.recordSession(accesshistory.KindPasswordFailed, accesshistory.ReasonAttemptLimit, found)
+		s.endOne(found.verifier, accesshistory.CauseAttemptLimit)
 		s.counter++
 		s.cfg.Log.Info("reauthentication_failed", "user", answer.User(), "result", "ended")
-		failCode(w, commands.Unauthenticated, request)
 	}
 	generation := s.dir.generations[found.login]
 	s.domain.Unlock()
@@ -60,12 +62,14 @@ func (s *Server) commitReauth(w http.ResponseWriter, found session, result strin
 	if result != passwords.ResultOK {
 		if s.failures[found.verifier] >= selfAttempts {
 			delete(s.failures, found.verifier)
-			s.endOne(found.verifier)
-			s.counter++
 			failCode(w, commands.Unauthenticated, request)
+			s.recordSession(accesshistory.KindPasswordFailed, accesshistory.ReasonAttemptLimit, found)
+			s.endOne(found.verifier, accesshistory.CauseAttemptLimit)
+			s.counter++
 			return "ended"
 		}
 		fail(w, http.StatusUnprocessableEntity, CodeWrongPassword, request)
+		s.recordSession(accesshistory.KindPasswordFailed, accesshistory.ReasonWrongPass, found)
 		return "wrong"
 	}
 	if _, code := s.access(found); code != "" {
@@ -83,5 +87,6 @@ func (s *Server) commitReauth(w http.ResponseWriter, found session, result strin
 	delete(s.failures, found.verifier)
 	headers(w, request)
 	w.WriteHeader(http.StatusNoContent)
+	s.recordSession(accesshistory.KindPasswordConfirmed, "", found)
 	return ""
 }

@@ -529,3 +529,49 @@ test("session end answers are parsed field by field into a closed shape", () => 
   assert.deepEqual([empty.kind, empty.state, empty.count, empty.sessions, empty.not_included], ["others", "cleanup_running", 0, [], []]);
   assert.deepEqual(selfSessionOf({ handle: 5, current: "yes" }), { handle: "", current: false, signed_in: "", ends: "" });
 });
+
+const historyBody = (change: Record<string, unknown> = {}) => ({
+  events: [
+    { at: "2026-11-19T10:00:00Z", kind: "signed_in", reason: "", workspace: "w", session: { handle: "0123456789abcdef", current: true, active: true }, device: { browser: "chrome", os: "macos" }, count: 0 },
+    { at: "2026-11-19T09:00:00Z", kind: "sign_in_refused", reason: "wrong_password", workspace: null, session: null, device: { browser: "unknown", os: "unknown" }, count: 0 },
+  ],
+  next: "MS0w",
+  retention_days: 90,
+  retention_source: "default",
+  period_since: "2026-11-01T00:00:00Z",
+  effective_days: 90,
+  available_from: "2026-11-02T00:00:00Z",
+  recording: { state: "recording", since: null, reason: null },
+  notes: [{ kind: "dropped", from: "2026-11-18T00:00:00Z", to: "2026-11-18T01:00:00Z", count: null }, { kind: "held", from: null, to: null, count: 0 }],
+  now: "2026-11-19T10:00:01Z",
+  ...change,
+});
+
+test("access history read parses the page, sends only from and before, and drops count 0 notes", async () => {
+  const { f, calls } = fake(200, historyBody());
+  const got = await adminClient("t", f).accessHistory({ from: "2026-11-12T10:00:01Z", before: "MS0w" }, "req-1");
+  assert.equal(calls[0].url, "/api/v1/me/access-history?from=2026-11-12T10%3A00%3A01Z&before=MS0w");
+  assert.equal((calls[0].init.headers as Record<string, string>)["X-Request-Id"], "req-1");
+  assert.equal(got.events.length, 2);
+  assert.equal(got.events[1].session, null);
+  assert.equal(got.events[0].device?.browser, "chrome");
+  assert.equal(got.next, "MS0w");
+  assert.deepEqual(got.notes.map((n) => [n.kind, n.count]), [["dropped", null]]);
+  const plain = fake(200, historyBody());
+  await adminClient("t", plain.f).accessHistory({}, "req-2");
+  assert.equal(plain.calls[0].url, "/api/v1/me/access-history");
+});
+
+test("access history read fails on an unknown kind, reason, note or device instead of dropping it", async () => {
+  const bad = [
+    historyBody({ events: [{ at: "x", kind: "teleported", reason: "", workspace: null, session: null, device: null, count: 0 }] }),
+    historyBody({ events: [{ at: "x", kind: "session_ended", reason: "magic", workspace: "w", session: null, device: null, count: 0 }] }),
+    historyBody({ notes: [{ kind: "rumour", from: null, to: null, count: null }] }),
+    historyBody({ events: [{ at: "x", kind: "signed_in", reason: "", workspace: "w", session: null, device: { browser: "mosaic", os: "macos" }, count: 0 }] }),
+    historyBody({ retention_days: "90" }),
+  ];
+  for (const body of bad) {
+    await assert.rejects(adminClient("t", fake(200, body).f).accessHistory({}, "r"), (err: unknown) => err instanceof AdminError && err.failure === "invalid");
+  }
+  await assert.rejects(adminClient("t", fake(401, { code: "unauthenticated" }).f).accessHistory({}, "r"), (err: unknown) => err instanceof AdminError && err.failure === "unauthenticated");
+});

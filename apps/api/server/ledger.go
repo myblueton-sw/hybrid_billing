@@ -77,10 +77,15 @@ func (s *Server) Close() error {
 			close(s.stop)
 		}
 	})
-	if s.ledger == nil {
-		return nil
+	s.workers.Wait()
+	var errs []error
+	if s.history != nil {
+		errs = append(errs, s.history.Close())
 	}
-	return s.ledger.Close()
+	if s.ledger != nil {
+		errs = append(errs, s.ledger.Close())
+	}
+	return errors.Join(errs...)
 }
 
 func protectedGrant(g gate.GrantView) bool {

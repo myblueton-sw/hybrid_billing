@@ -1,3 +1,6 @@
+import { currentScope } from "./live-model";
+import { refusalDetail, type RefusalDetail as Refusal } from "../../../../service/refusal";
+import { RefusalDetail } from "../../../../service/RefusalDetail";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError } from "../../../../service/admin";
@@ -38,7 +41,10 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
   const [loadError, setLoadError] = useState<unknown>(null);
   const [denied, setDenied] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
+  const [terminalDetail, setTerminalDetail] = useState<Refusal | undefined>();
+  const [, setTick] = useState(0);
   const [notice, setNotice] = useState("");
+  const [noticeDetail, setNoticeDetail] = useState<Refusal | undefined>();
   const [busy, setBusy] = useState(false);
   const seq = useRef(0);
   const scrolled = useRef(false);
@@ -46,25 +52,26 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
   const selected = /^[1-9][0-9]*$/.test(asked) && page?.proposals.some((p) => String(p.number) === asked) ? asked : "";
 
   const load = useCallback(async (): Promise<boolean> => {
+    const startedScope = currentScope();
     const n = ++seq.current;
     setBusy(true);
     try {
       const got = await api.installation();
-      if (n !== seq.current) return false;
+      if (n !== seq.current || startedScope !== currentScope()) return false;
       pruneRefusals(got, session.user);
       setPage(got);
       setStatus("ready");
       setLoadError(null);
       return true;
     } catch (e) {
-      if (n !== seq.current) return false;
+      if (n !== seq.current || startedScope !== currentScope()) return false;
       if (e instanceof AdminError && e.failure === "denied") setDenied(true);
       if (e instanceof AdminError && e.failure === "unauthenticated") setSignedOut(true);
       setLoadError(e);
       setStatus("error");
       return false;
     } finally {
-      if (n === seq.current) setBusy(false);
+      if (n === seq.current && startedScope === currentScope()) setBusy(false);
     }
   }, [api, session.user]);
 
@@ -75,7 +82,8 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
     document.getElementById("p01-proposal-" + selected)?.scrollIntoView({ block: "center" });
   }, [selected]);
 
-  const showNotice = (text: string) => {
+  const showNotice = (text: string, detail?: Refusal) => {
+    setNoticeDetail(detail);
     setNotice(text);
     requestAnimationFrame(() => document.getElementById("p01-notice")?.focus());
   };
@@ -86,6 +94,7 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
         <section className="live-unavailable" aria-labelledby="p01-denied">
           <h2 id="p01-denied">{k.deniedTitle(l)}</h2>
           <p>{k.denied(l)}</p>
+          <RefusalDetail locale={l} detail={terminalDetail ?? refusalDetail(loadError)} />
         </section>
       </div>
     );
@@ -95,6 +104,7 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
       <div className="p01-live">
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
+          <RefusalDetail locale={l} detail={terminalDetail ?? refusalDetail(loadError)} />
           <button type="button" className="live-secondary" onClick={() => { forget(); onSignOut(); }}>{k.signInAgain(l)}</button>
         </div>
       </div>
@@ -107,9 +117,10 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
         l, page, api, me: session.user, selected,
         onDone: (text: string) => { showNotice(text); void load(); },
         onNotice: showNotice,
+        onAttempt: () => { setNotice(""); setNoticeDetail(undefined); setTick((n) => n + 1); },
         onReload: load,
-        onDenied: () => setDenied(true),
-        onSignedOut: () => setSignedOut(true),
+        onDenied: (detail?: Refusal) => { setTerminalDetail(detail); setDenied(true); },
+        onSignedOut: (detail?: Refusal) => { setTerminalDetail(detail); setSignedOut(true); },
       }
     : null;
 
@@ -127,11 +138,12 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
         <button type="button" className="live-secondary p01-reload" onClick={() => void load()}>{k.reload(l)}</button>
       </div>
       <p className="live-note-rule p01-statement"><strong>{k.statementLead(l)}</strong> {k.statement(l)}</p>
-      {notice && <div id="p01-notice" className="service-status" tabIndex={-1} role="status"><p>{notice}</p></div>}
+      {notice && <div id="p01-notice" className="service-status" tabIndex={-1} role="status"><p>{notice}</p><RefusalDetail locale={l} detail={noticeDetail} /></div>}
       {status === "error" && (
         <div className="live-error p01-failure" role="alert">
           <h2>{failureText(l, loadError).title}</h2>
           {failureText(l, loadError).body && <p>{failureText(l, loadError).body}</p>}
+          <RefusalDetail locale={l} detail={refusalDetail(loadError)} />
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>
       )}

@@ -1,3 +1,4 @@
+import { refusedDetail } from "./live-model";
 import type { Locale } from "../../../../shared/types";
 import type { PolicyRow } from "../../../../service/retention";
 import { k } from "./live-copy";
@@ -83,6 +84,7 @@ function PolicyBody({ r, ...shared }: Shared & { r: PolicyRow }) {
   const blockers: Blocker[] = [];
   const refused = target ? refusedNow("retention.propose_policy", target) : "";
   const kept = refused ? k.kept(l, keptKey("retention.propose_policy", refused)) : "";
+  const keptDetail = kept ? refusedDetail("retention.propose_policy", target) : undefined;
   const current = selection.cls !== "" && selection.cls === r.class;
   const p = r.policy;
   const cls = k.className(l, r.class);
@@ -131,7 +133,7 @@ function PolicyBody({ r, ...shared }: Shared & { r: PolicyRow }) {
         <tr className="p04-follow">
           <td colSpan={9}>
             <RowNote
-              kept={kept} blockers={blockers} focus={focusNote}
+              kept={kept} l={l} detail={keptDetail} blockers={blockers} focus={focusNote}
               extra={!open && focusNote > 0 && (already || blockedText) ? <p><Rich text={already ? k.alreadyPolicy(l, already.number, already.own) : blockedText} /></p> : undefined}
             />
             {open && usable && (

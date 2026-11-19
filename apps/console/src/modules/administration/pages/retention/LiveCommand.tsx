@@ -1,3 +1,6 @@
+import { currentScope } from "./live-model";
+import { refusalDetail, type RefusalDetail as Refusal } from "../../../../service/refusal";
+import { RefusalDetail } from "../../../../service/RefusalDetail";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, type AdminClient } from "../../../../service/admin";
@@ -21,10 +24,11 @@ export type Shared = {
   workspace: string;
   selection: Selection;
   canCommand: boolean;
+  onAttempt?: () => void;
   onDone: (text: Announce) => void;
-  onNotice: (text: string) => void;
+  onNotice: (text: string, detail?: Refusal) => void;
   onReload: () => Promise<RetentionPage | null>;
-  onSignedOut: () => void;
+  onSignedOut: (detail?: Refusal) => void;
 };
 
 export type Draft = Record<string, string>;
@@ -94,6 +98,7 @@ export function CommandForm(props: FormProps) {
   const [busy, setBusy] = useState(false);
   const [again, setAgain] = useState(false);
   const [message, setMessage] = useState<{ text: string; alert: boolean } | null>(null);
+  const [detail, setDetail] = useState<Refusal | undefined>();
   const confirmTitle = useRef<HTMLHeadingElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const staleRef = useRef<HTMLDivElement>(null);
@@ -118,6 +123,7 @@ export function CommandForm(props: FormProps) {
     if (key === "rationale") setReasonError("");
     else setFieldErrors((e) => without(e, key));
     setMessage(null);
+    setDetail(undefined);
   };
 
   const reasonText = (v: string) => {
@@ -127,6 +133,7 @@ export function CommandForm(props: FormProps) {
 
   const review = (e: FormEvent) => {
     e.preventDefault();
+    setDetail(undefined);
     const found = reasonText(rationale);
     const errors = fields ? fields.check(draft) : {};
     setReasonError(found);
@@ -141,23 +148,30 @@ export function CommandForm(props: FormProps) {
     sending.current = true;
     setBusy(true);
     setMessage(null);
+    setDetail(undefined);
     const reason = rationale.trim();
     const hadPending = !!pendingNow(command, target);
+    const startedScope = currentScope();
     const tried = pendingFor(command, target, { ...values, rationale: reason }, page.revision, attempt, snapshotOf(page, command), ctx);
+    props.onAttempt?.();
     const body = without(frozenValues(tried) ?? {}, "rationale");
     hooks?.send?.(body);
     try {
       const out = await api.command(command, target, tried.expected, reason, body, { request: tried.request, key: tried.key });
+      if (startedScope !== currentScope()) return;
       settle(command, target, "ok");
       clearDraft(command, target);
       hooks?.settled?.("ok", "");
       onDone(done(out.fields, out.state, tried.snapshot));
       onClose("done");
     } catch (err) {
+      if (startedScope !== currentScope()) return;
+      const detail = refusalDetail(err);
+      setDetail(detail);
       const failure = err instanceof AdminError ? err.failure : "failed";
       const fieldNames = err instanceof AdminError ? err.fields : [];
       const reaction: Reaction = react(failure, fieldNames);
-      settle(command, target, reaction, failure);
+      settle(command, target, reaction, failure, detail);
       hooks?.settled?.(reaction, failure);
       setStep(reaction === "conflict" ? "confirm" : "edit");
       if (reaction === "field") {
@@ -166,6 +180,7 @@ export function CommandForm(props: FormProps) {
         if (how === "impact") {
           setMessage({ text: k.impactNotSent(l), alert: true });
           await onReload();
+          if (startedScope !== currentScope()) return;
         } else if (how === "built") setMessage({ text: k.builtBug(l), alert: true });
         else if (how === "reason") {
           setReasonError(reasonProblem(rationale) === "long" ? k.form.rationaleLong(l) : k.form.checkReason(l));
@@ -181,20 +196,23 @@ export function CommandForm(props: FormProps) {
         setSummaryKey((n) => n + 1);
       } else if (reaction === "hint") {
         await onReload();
+        if (startedScope !== currentScope()) return;
         onClose("refused");
       } else if (reaction === "conflict") {
         const got = await onReload();
+        if (startedScope !== currentScope()) return;
         if (got && !stillAllowed(got, command, target)) onClose("refused");
         else setMessage({ text: k.conflictAgain(l), alert: false });
       } else if (reaction === "denied") {
         const got = await onReload();
+        if (startedScope !== currentScope()) return;
         if (!got) setMessage({ text: k.gone(l, goneKind(command, target)), alert: true });
         else {
           const outcome = deniedOutcome(command, target, hadPending, got);
-          onNotice(outcome === "applied_proposal" ? k.vanishedProposal(l) : k.gone(l, goneKind(command, target)));
+          onNotice(outcome === "applied_proposal" ? k.vanishedProposal(l) : k.gone(l, goneKind(command, target)), detail);
           onClose("done");
         }
-      } else if (reaction === "signin") onSignedOut();
+      } else if (reaction === "signin") onSignedOut(detail);
       else if (reaction === "wait") setMessage({ text: sc.limited(l, retryPhrase(l, err instanceof AdminError ? err.retryAfter || 60 : 60)), alert: true });
       else if (reaction === "retry") setMessage({ text: k.pendingAttempt(l), alert: true });
       else if (reaction === "renew") {
@@ -203,15 +221,18 @@ export function CommandForm(props: FormProps) {
       } else if (reaction === "partial") {
         const text = k.partial(l, err instanceof AdminError ? err.operation : "");
         const got = await onReload();
+        if (startedScope !== currentScope()) return;
         if (got && !stillAllowed(got, command, target)) {
-          onNotice(text);
+          onNotice(text, detail);
           onClose("done");
         } else setMessage({ text, alert: true });
       } else if (reaction === "reauth") setMessage({ text: sc.reauthText(l, failure), alert: true });
       else setMessage({ text: sc.failed(l), alert: true });
     } finally {
-      sending.current = false;
-      setBusy(false);
+      if (startedScope === currentScope()) {
+        sending.current = false;
+        setBusy(false);
+      }
     }
   };
 
@@ -224,6 +245,7 @@ export function CommandForm(props: FormProps) {
     drop(command, target);
     setAgain(true);
     setMessage(null);
+    setDetail(undefined);
     setStep("edit");
   };
 
@@ -255,8 +277,10 @@ export function CommandForm(props: FormProps) {
       {message && (
         <div ref={messageRef} tabIndex={-1} className={message.alert ? "live-error" : "live-note-rule"} role={message.alert ? "alert" : "status"}>
           <p><Rich text={message.text} /></p>
+          <RefusalDetail locale={l} detail={detail} />
         </div>
       )}
+      {!message && <RefusalDetail locale={l} detail={detail} />}
       {step === "edit" ? (
         <form className="p04-form" noValidate onSubmit={review} aria-busy={busy || undefined}>
           {problems.length > 0 && <Summary locale={l} title={sc.check(l)} problems={problems} focusKey={summaryKey} />}
@@ -298,7 +322,7 @@ export function CommandForm(props: FormProps) {
 
 export type Blocker = { label: string; text: string };
 
-export function RowNote({ kept, blockers, focus, extra, state }: { kept: string; blockers: Blocker[]; focus: number; extra?: ReactNode; state?: string }) {
+export function RowNote({ kept, blockers, focus, l, detail, extra, state }: { kept: string; blockers: Blocker[]; focus: number; l?: Locale; detail?: Refusal; extra?: ReactNode; state?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => { if (focus) ref.current?.focus(); }, [focus]);
   const seen = new Set<string>();
@@ -311,6 +335,7 @@ export function RowNote({ kept, blockers, focus, extra, state }: { kept: string;
   return (
     <div className="p04-row-note" ref={ref} tabIndex={-1} role={focus ? "status" : undefined}>
       {kept && <p className="live-note-rule">{kept}</p>}
+      {kept && l && <RefusalDetail locale={l} detail={detail} />}
       {state && <p className="p04-state-note">{state}</p>}
       {list.length > 0 && (
         <ul className="p04-blocked">

@@ -1,3 +1,4 @@
+import { refusedDetail } from "./live-model";
 import { useEffect, useState, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { RecoveryProposal } from "../../../../service/recovery";
@@ -69,6 +70,7 @@ function Row({ p, ...shared }: Shared & { p: RecoveryProposal }) {
     if (landed) setApplied(true);
   }, [stale, target, landed]);
   const kept = !target ? "" : refusedNow("recovery.approve", target) ? k.kept(l, "recovery.approve") : refusedNow("recovery.withdraw", target) ? k.kept(l, "recovery.withdraw") : "";
+  const keptDetail = kept ? refusedDetail(refusedNow("recovery.approve", target) ? "recovery.approve" : "recovery.withdraw", target) : undefined;
   const blockers: Blocker[] = [];
   if (pendingRow && !target) blockers.push(line("", k.narrow(l, "no_command")));
   if (pendingRow && target && !approveUsable) {
@@ -122,7 +124,7 @@ function Row({ p, ...shared }: Shared & { p: RecoveryProposal }) {
         )}
         {pendingRow && (
           <>
-            <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+            <RowNote kept={kept} l={l} detail={keptDetail} blockers={blockers} focus={focusNote} />
             {(approveUsable || withdrawUsable) && !open && (
               <div className="live-buttons">
                 {approveUsable && (

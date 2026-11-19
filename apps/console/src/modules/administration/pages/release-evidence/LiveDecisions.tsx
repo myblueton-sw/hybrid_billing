@@ -1,3 +1,4 @@
+import { refusedDetail } from "./live-model";
 import { useEffect, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { EvidencePage, Proposal } from "../../../../service/release-evidence";
@@ -133,6 +134,7 @@ function Row({ p, ...shared }: Shared & { p: Proposal }) {
   const refusedApprove = target ? refusedNow("release_evidence.approve", target) : "";
   const refusedWithdraw = target ? refusedNow("release_evidence.withdraw", target) : "";
   const kept = refusedApprove ? k.kept(l, keptKey("release_evidence.approve", refusedApprove)) : refusedWithdraw ? k.kept(l, keptKey("release_evidence.withdraw", refusedWithdraw)) : "";
+  const keptDetail = kept ? refusedDetail(refusedApprove ? "release_evidence.approve" : "release_evidence.withdraw", target) : undefined;
   const earlier = refusedApprove === "earlier" || refusedWithdraw === "earlier";
   const blockers: Blocker[] = [];
   let state = "";
@@ -163,7 +165,7 @@ function Row({ p, ...shared }: Shared & { p: Proposal }) {
       <div className="p05-body">
         <p className="p05-summary"><SummaryText l={l} page={page} p={p} /></p>
         {pendingRow && <p className="p05-small">{k.reasonLabel(l)}: <Free l={l} value={p.rationale} empty={k.noReason(l)} /></p>}
-        {!pendingRow && <RowNote kept={kept} blockers={[]} focus={focusNote} />}
+        {!pendingRow && <RowNote kept={kept} l={l} detail={keptDetail} blockers={[]} focus={focusNote} />}
         {!pendingRow && !unexpected && (
           p.state === "store_retired" ? <p className="p05-small">{k.storeRetiredRow(l)}</p> : (
             <>
@@ -177,7 +179,7 @@ function Row({ p, ...shared }: Shared & { p: Proposal }) {
         {pendingRow && !retire && <p className="p05-small">{k.readOnlyKind(l)}</p>}
         {pendingRow && retire && (
           <div className="p05-act">
-            <RowNote kept={kept} blockers={blockers} focus={focusNote} state={state} pending={(approvePending || withdrawPending) && !open ? f.pendingAttempt(l) : ""} />
+            <RowNote kept={kept} l={l} detail={keptDetail} blockers={blockers} focus={focusNote} state={state} pending={(approvePending || withdrawPending) && !open ? f.pendingAttempt(l) : ""} />
             {(canApprove || canWithdraw) && !open && (
               <div className="live-buttons">
                 {canApprove && <button type="button" className="live-secondary" aria-expanded={false} data-opener={mark("release_evidence.approve")} onClick={() => toggle("release_evidence.approve")}>{k.approve(l)}</button>}

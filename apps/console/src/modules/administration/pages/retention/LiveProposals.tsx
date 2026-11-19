@@ -1,3 +1,4 @@
+import { refusedDetail } from "./live-model";
 import { useEffect, useState, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { Proposal, RetentionPage } from "../../../../service/retention";
@@ -130,6 +131,7 @@ function Row({ p, ...shared }: Shared & { p: Proposal }) {
   const refusedApprove = target ? refusedNow("retention.approve", target) : "";
   const refusedWithdraw = target ? refusedNow("retention.withdraw", target) : "";
   const kept = refusedApprove ? k.kept(l, keptKey("retention.approve", refusedApprove)) : refusedWithdraw ? k.kept(l, keptKey("retention.withdraw", refusedWithdraw)) : "";
+  const keptDetail = kept ? refusedDetail(refusedApprove ? "retention.approve" : "retention.withdraw", target) : undefined;
   const blockers: Blocker[] = [];
   let state = "";
   if (!plan && pendingRow && !target) blockers.push(line("", k.narrow(l, "no_command")));
@@ -201,7 +203,7 @@ function Row({ p, ...shared }: Shared & { p: Proposal }) {
         )}
         {pendingRow && !plan && (
           <>
-            <RowNote kept={kept} blockers={blockers} focus={focusNote} state={state} />
+            <RowNote kept={kept} l={l} detail={keptDetail} blockers={blockers} focus={focusNote} state={state} />
             {(approveUsable || withdrawUsable) && !open && (
               <div className="live-buttons">
                 {approveUsable && (

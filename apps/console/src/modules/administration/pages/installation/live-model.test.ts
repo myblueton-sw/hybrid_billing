@@ -1,3 +1,8 @@
+import { currentScope } from "./live-model";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import type { AdminClient } from "../../../../service/admin";
+import { refusedDetail } from "./live-model";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { installationOf, proposalOf, type InstallationPage } from "../../../../service/installation";
@@ -321,4 +326,82 @@ test("a step-up refusal or cancellation keeps the attempt and the form", () => {
     assert.equal(react(f, []), "reauth");
     assert.equal(keepsAttempt(react(f, [])), true);
   }
+});
+
+
+test("retained refusal metadata follows command, target, session and pruning", () => {
+  forget();
+  setScope("w", "u", "s");
+  const approve = { code: "invalid_stage", request: "server-approve" };
+  const withdraw = { code: "prerequisite_failed", request: "server-withdraw" };
+  settle("installation.approve", "missing-target", "hint", approve);
+  settle("installation.withdraw", "missing-target", "hint", withdraw);
+  assert.deepEqual(refusedDetail("installation.approve", "missing-target"), approve);
+  assert.deepEqual(refusedDetail("installation.withdraw", "missing-target"), withdraw);
+  assert.equal(refusedDetail("installation.approve", "other-target"), undefined);
+  settle("installation.approve", "missing-target", "ok");
+  assert.equal(refusedDetail("installation.approve", "missing-target"), undefined);
+  assert.deepEqual(refusedDetail("installation.withdraw", "missing-target"), withdraw);
+  setScope("w", "u", "next-session");
+  assert.equal(refusedDetail("installation.withdraw", "missing-target"), undefined);
+  settle("installation.approve", "missing-target", "hint", approve);
+  pruneRefusals(page(), "u");
+  assert.equal(refusedDetail("installation.approve", "missing-target"), undefined);
+  settle("installation.approve", "missing-target", "hint", approve);
+  settle("installation.approve", "missing-target", "hint");
+  assert.equal(refusedDetail("installation.approve", "missing-target"), undefined);
+  forget();
+});
+
+
+test("grouped retained note displays the matching server receipt in every locale", async () => {
+  const nodeModule = await import("node:module");
+  const assets = /\.(css|svg)(\?.*)?$/;
+  if (typeof nodeModule.registerHooks === "function") nodeModule.registerHooks({ load: (url, context, next) => assets.test(url) ? { format: "module", source: "export default ''", shortCircuit: true } : next(url, context) });
+  else nodeModule.register("data:text/javascript," + encodeURIComponent(`export async function load(url, context, next) { return ${assets}.test(url) ? { format: "module", source: "export default ''", shortCircuit: true } : next(url, context); }`));
+  const { Proposals } = await import("./LiveProposals");
+  forget();
+  setScope("w", "u", "s");
+  settle("installation.approve", "installation-proposal-1", "hint", { code: "invalid_stage", request: "server-approve" });
+  settle("installation.withdraw", "installation-proposal-1", "hint", { code: "prerequisite_failed", request: "server-withdraw" });
+  const p = page({ proposals: [plan(1, "pending", "u")] });
+  for (const l of locales) {
+    const h = renderToStaticMarkup(createElement(Proposals, {
+      l, page: p, api: {} as AdminClient, me: "u", selected: "", onDenied: () => {}, onReload: async () => true,
+      onDone: () => {}, onNotice: () => {}, onSignedOut: () => {},
+    }));
+    assert.ok(h.includes("server-approve"), l);
+    assert.ok(!h.includes("server-withdraw"), l);
+    assert.ok(h.includes('<bdi dir="ltr">invalid_stage</bdi>'), l);
+  }
+  forget();
+});
+
+
+test("scope generation rejects responses from replaced and forgotten sessions", () => {
+  forget();
+  setScope("w", "u", "s");
+  const started = currentScope();
+  setScope("w", "u", "s");
+  assert.equal(currentScope(), started);
+  setScope("w", "u", "next");
+  assert.notEqual(currentScope(), started);
+  setScope("w", "u", "s");
+  assert.notEqual(currentScope(), started);
+  const restored = currentScope();
+  forget();
+  setScope("w", "u", "s");
+  assert.notEqual(currentScope(), restored);
+  forget();
+});
+
+
+test("a new attempt clears the prior retained refusal receipt", () => {
+  forget();
+  setScope("w", "u", "s");
+  settle("installation.approve", "t", "hint", { code: "invalid_stage", request: "old-server-id" });
+  pendingFor("installation.approve", "t", { rationale: "retry" }, "r", () => ({ request: "next-client-id", key: "next-key" }));
+  assert.equal(refusedDetail("installation.approve", "t"), undefined);
+  assert.ok(!refusedNow("installation.approve", "t"));
+  forget();
 });

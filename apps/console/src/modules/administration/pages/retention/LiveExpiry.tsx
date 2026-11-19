@@ -1,3 +1,4 @@
+import { refusedDetail } from "./live-model";
 import type { Locale } from "../../../../shared/types";
 import { standingKeys, type ArtifactRow, type ClassGroup, type Counts } from "../../../../service/retention";
 import { counted, plurals } from "./live-codes";
@@ -38,6 +39,7 @@ function ItemBody({ a, group, ...shared }: Shared & { a: ArtifactRow; group: Cla
   const usable = canCommand && !!target && (a.holdable || !!pending);
   const refused = target ? refusedNow("retention.place_hold", target) : "";
   const kept = refused ? k.kept(l, keptKey("retention.place_hold", refused)) : "";
+  const keptDetail = kept ? refusedDetail("retention.place_hold", target) : undefined;
   const current = selection.artifact !== "" && selection.artifact === a.id;
   const n = runNumber(a.run);
   const blocked = !target
@@ -95,7 +97,7 @@ function ItemBody({ a, group, ...shared }: Shared & { a: ArtifactRow; group: Cla
       {(open || kept || focusNote > 0) && (
         <tr className="p04-follow">
           <td colSpan={7}>
-            <RowNote kept={kept} blockers={[]} focus={focusNote} extra={!open && focusNote > 0 && blocked ? <p><Rich text={blocked} /></p> : undefined} />
+            <RowNote kept={kept} l={l} detail={keptDetail} blockers={[]} focus={focusNote} extra={!open && focusNote > 0 && blocked ? <p><Rich text={blocked} /></p> : undefined} />
             {open && usable && (
               <HoldCommand {...shared} target={target} tenant={false} base={itemContext(a, group.class)} heading={k.holdHeading(l, a.id)} onClose={close} />
             )}

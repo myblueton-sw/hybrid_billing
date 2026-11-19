@@ -1,3 +1,6 @@
+import { currentScope } from "./live-model";
+import { refusalDetail, type RefusalDetail as Refusal } from "../../../../service/refusal";
+import { RefusalDetail } from "../../../../service/RefusalDetail";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError } from "../../../../service/admin";
@@ -45,7 +48,9 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
   const [loadError, setLoadError] = useState<unknown>(null);
   const [denied, setDenied] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
+  const [terminalDetail, setTerminalDetail] = useState<Refusal | undefined>();
   const [notice, setNotice] = useState("");
+  const [noticeDetail, setNoticeDetail] = useState<Refusal | undefined>();
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
   const seq = useRef(0);
@@ -54,25 +59,26 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
   const selectedId = selection.proposal ? "p03-proposal-" + selection.proposal : selection.installation && prefixes[view] ? rowId(prefixes[view], selection.installation) : "";
 
   const load = useCallback(async (): Promise<RecoveryPage | null> => {
+    const startedScope = currentScope();
     const n = ++seq.current;
     setBusy(true);
     try {
       const got = await api.recovery();
-      if (n !== seq.current) return null;
+      if (n !== seq.current || startedScope !== currentScope()) return null;
       pruneRefusals(got);
       setPage(got);
       setStatus("ready");
       setLoadError(null);
       return got;
     } catch (e) {
-      if (n !== seq.current) return null;
+      if (n !== seq.current || startedScope !== currentScope()) return null;
       if (e instanceof AdminError && e.failure === "denied") setDenied(true);
       if (e instanceof AdminError && e.failure === "unauthenticated") setSignedOut(true);
       setLoadError(e);
       setStatus("error");
       return null;
     } finally {
-      if (n === seq.current) setBusy(false);
+      if (n === seq.current && startedScope === currentScope()) setBusy(false);
     }
   }, [api]);
 
@@ -83,7 +89,8 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
     document.getElementById(selectedId)?.scrollIntoView({ block: "center" });
   }, [selectedId]);
 
-  const showNotice = (text: string) => {
+  const showNotice = (text: string, detail?: Refusal) => {
+    setNoticeDetail(detail);
     setNotice(text);
     requestAnimationFrame(() => document.getElementById("p03-notice")?.focus());
   };
@@ -94,8 +101,9 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
       void load();
       return;
     }
+    const startedScope = currentScope();
     const got = await load();
-    showNotice(text(got));
+    if (startedScope === currentScope()) showNotice(text(got));
   };
 
   if (denied) {
@@ -104,6 +112,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
         <section className="live-unavailable" aria-labelledby="p03-denied">
           <h2 id="p03-denied">{k.deniedTitle(l)}</h2>
           <p>{k.denied(l)}</p>
+          <RefusalDetail locale={l} detail={terminalDetail ?? refusalDetail(loadError)} />
         </section>
       </div>
     );
@@ -113,6 +122,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
       <div className="p03-live">
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
+          <RefusalDetail locale={l} detail={terminalDetail ?? refusalDetail(loadError)} />
           <button type="button" className="live-secondary" onClick={() => { forget(); onSignOut(); }}>{k.signInAgain(l)}</button>
         </div>
       </div>
@@ -125,8 +135,9 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
         l, page, api, me: session.user, selection, canCommand: commandsAllowed(page),
         onDone: (text) => { void announce(text); },
         onNotice: showNotice,
+        onAttempt: () => { setNotice(""); setNoticeDetail(undefined); setTick((n) => n + 1); },
         onReload: load,
-        onSignedOut: () => setSignedOut(true),
+        onSignedOut: (detail?: Refusal) => { setTerminalDetail(detail); setSignedOut(true); },
       }
     : null;
   const sectionState = !shared ? "" : view === "reconciliation" ? shared.page.reconciliation.state : view === "migration" ? shared.page.migration.state
@@ -148,11 +159,12 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
       </div>
       <p className="live-note-rule p03-statement"><strong>{k.statementLead(l)}</strong> {k.statement(l)}</p>
       <p className="p03-permission">{k.permission(l)}</p>
-      {notice && <div id="p03-notice" className="service-status" tabIndex={-1} role="status"><p><Rich text={notice} /></p></div>}
+      {notice && <div id="p03-notice" className="service-status" tabIndex={-1} role="status"><p><Rich text={notice} /></p><RefusalDetail locale={l} detail={noticeDetail} /></div>}
       {status === "error" && (
         <div className="live-error p03-failure" role="alert">
           <h2>{sc.failed(l)}</h2>
           {failure && <p>{failure}</p>}
+          <RefusalDetail locale={l} detail={refusalDetail(loadError)} />
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>
       )}

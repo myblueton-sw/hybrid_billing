@@ -1,3 +1,4 @@
+import { refusedDetail } from "./live-model";
 import { holdCountKeys, type HoldRow } from "../../../../service/retention";
 import type { Locale } from "../../../../shared/types";
 import { plurals } from "./live-codes";
@@ -78,6 +79,7 @@ function Hold({ h, ...shared }: Shared & { h: HoldRow }) {
   const already = pendingReleaseFor(page, h);
   const refused = target ? refusedNow("retention.propose_release", target) : "";
   const kept = refused ? k.kept(l, keptKey("retention.propose_release", refused)) : "";
+  const keptDetail = kept ? refusedDetail("retention.propose_release", target) : undefined;
   const blockers: Blocker[] = [];
   let state = "";
   if (!target) blockers.push(line("", k.narrow(l, "no_command")));
@@ -120,7 +122,7 @@ function Hold({ h, ...shared }: Shared & { h: HoldRow }) {
       </div>
       <div className="p04-actions">
         <RowNote
-          kept={kept} blockers={blockers} focus={focusNote} state={state}
+          kept={kept} l={l} detail={keptDetail} blockers={blockers} focus={focusNote} state={state}
           extra={already ? <p><a className="p04-link" href={href(l, "holds", { proposal: already.number })}><span><Rich text={k.alreadyRelease(l, already.number, already.own)} /></span></a></p> : undefined}
         />
         {usable && !open && !already && (
@@ -161,9 +163,10 @@ function Tenant(shared: Shared) {
   const usable = canCommand && !!target;
   const refused = target ? refusedNow("retention.place_hold", target) : "";
   const kept = refused ? k.kept(l, keptKey("retention.place_hold", refused)) : "";
+  const keptDetail = kept ? refusedDetail("retention.place_hold", target) : undefined;
   return (
     <div className="p04-tenant">
-      <RowNote kept={kept} blockers={target ? [] : [line("", k.narrow(l, "no_command"))]} focus={focusNote} />
+      <RowNote kept={kept} l={l} detail={keptDetail} blockers={target ? [] : [line("", k.narrow(l, "no_command"))]} focus={focusNote} />
       {usable && !open && (
         <>
           <button type="button" className="live-secondary p04-opener" aria-expanded={false} data-opener={mark("tenant")} onClick={() => toggle("tenant")}>{k.placeWorkspaceHold(l)}</button>

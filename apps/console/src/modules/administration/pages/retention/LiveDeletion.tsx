@@ -1,3 +1,4 @@
+import { refusedDetail } from "./live-model";
 import type { Locale } from "../../../../shared/types";
 import { runOutcomeKeys, type RetentionPage, type RunRow } from "../../../../service/retention";
 import { counted, plurals } from "./live-codes";
@@ -118,6 +119,7 @@ function Run({ r, ...shared }: Shared & { r: RunRow }) {
   const usable = canCommand && !!target && (r.can_stop || !!pending);
   const refused = target ? refusedNow("retention.stop_run", target) : "";
   const kept = refused ? k.kept(l, keptKey("retention.stop_run", refused)) : "";
+  const keptDetail = kept ? refusedDetail("retention.stop_run", target) : undefined;
   const blockers: Blocker[] = [];
   let state = "";
   if (!target) blockers.push(line("", k.narrow(l, "no_command")));
@@ -152,7 +154,7 @@ function Run({ r, ...shared }: Shared & { r: RunRow }) {
       <h4>{k.outcomeCounts(l)}</h4>
       <Strip l={l} counts={r.counts} keys={runOutcomeKeys} label={k.runOutcome} cls="p04-strip-8" />
       <div className="p04-actions">
-        <RowNote kept={kept} blockers={blockers} focus={focusNote} state={state} />
+        <RowNote kept={kept} l={l} detail={keptDetail} blockers={blockers} focus={focusNote} state={state} />
         {usable && !open && (
           <div className="live-buttons">
             <button type="button" className="live-secondary p04-opener" aria-expanded={false} data-opener={mark("stop")} onClick={() => toggle("stop")}>{k.stopRun(l)}</button>

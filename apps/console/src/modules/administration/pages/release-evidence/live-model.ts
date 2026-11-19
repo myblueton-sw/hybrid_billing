@@ -1,3 +1,4 @@
+import { Refusals, type RefusalDetail } from "../../../../service/refusal";
 import type { Budget, Candidate, CountOf, EvidencePage, PathRow, Problem, ProfileRow, Proposal, RequirementRow, TargetRow, TestRow } from "../../../../service/release-evidence";
 import { failingVerdicts, has, verdictWords } from "./live-codes";
 
@@ -424,13 +425,19 @@ export function fieldReaction(command: CommandKey, fields: string[]): FieldReact
 export type Pending = { key: string; request: string; expected: string; values: string; snapshot: string[]; context: Record<string, string> };
 const pending = new Map<string, Pending>();
 const drafts = new Map<string, Record<string, string>>();
-const refusals = new Map<string, string>();
+const refusals = new Refusals<string>();
 const earlier = new Set<string>();
 let scope = "";
+let generation = 0;
+
+export function currentScope(): number {
+  return generation;
+}
 let seen = false;
 let revoked = false;
 
 function clearAll(): void {
+  generation += 1;
   pending.clear();
   drafts.clear();
   refusals.clear();
@@ -505,6 +512,7 @@ export function pendingFor(
   const frozen = JSON.stringify(values);
   const kept = pending.get(id);
   if (kept && kept.values === frozen) return kept;
+  refusals.delete(id);
   const tried = fresh();
   const next = { key: tried.key, request: tried.request, expected, values: frozen, snapshot: [...snapshot], context: { ...context } };
   pending.set(id, next);
@@ -544,7 +552,7 @@ export function cancelled(command: string, target: string): void {
   earlier.delete(slot(command, target));
 }
 
-export function settle(command: string, target: string, reaction: Reaction | "ok", failure = "", had = false): void {
+export function settle(command: string, target: string, reaction: Reaction | "ok", failure = "", had = false, detail?: RefusalDetail): void {
   const id = slot(command, target);
   if (reaction === "ok") {
     pending.delete(id);
@@ -555,8 +563,12 @@ export function settle(command: string, target: string, reaction: Reaction | "ok
   if (keepsAttempt(reaction)) return;
   pending.delete(id);
   if (had) earlier.add(id);
-  if (reaction === "hint") refusals.set(id, had ? "earlier" : failure === "refused" ? "refused" : "stage");
+  if (reaction === "hint") refusals.set(id, had ? "earlier" : failure === "refused" ? "refused" : "stage", detail);
   else refusals.delete(id);
+}
+
+export function refusedDetail(command: string, target: string): RefusalDetail | undefined {
+  return refusals.detail(slot(command, target));
 }
 
 export function refusedNow(command: string, target: string): string {

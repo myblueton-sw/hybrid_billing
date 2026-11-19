@@ -1,3 +1,7 @@
+import { currentScope } from "./live-model";
+import { refusedDetail } from "./live-model";
+import { refusalDetail, type RefusalDetail as Refusal } from "../../../../service/refusal";
+import { RefusalDetail } from "../../../../service/RefusalDetail";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, type AdminClient } from "../../../../service/admin";
@@ -17,11 +21,12 @@ export type Shared = {
   api: AdminClient;
   me: string;
   selected: string;
+  onAttempt?: () => void;
   onDone: (text: string) => void;
-  onNotice: (text: string) => void;
+  onNotice: (text: string, detail?: Refusal) => void;
   onReload: () => Promise<boolean>;
-  onDenied: () => void;
-  onSignedOut: () => void;
+  onDenied: (detail?: Refusal) => void;
+  onSignedOut: (detail?: Refusal) => void;
 };
 
 type FormProps = Shared & {
@@ -46,6 +51,7 @@ export function CommandForm(props: FormProps) {
   const [step, setStep] = useState<"edit" | "confirm">("edit");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; alert: boolean } | null>(null);
+  const [detail, setDetail] = useState<Refusal | undefined>();
   const confirmTitle = useRef<HTMLHeadingElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const pending = pendingNow(command, target);
@@ -59,10 +65,12 @@ export function CommandForm(props: FormProps) {
     discard(command, target, { ...values, rationale: v });
     setError("");
     setMessage(null);
+    setDetail(undefined);
   };
 
   const review = (e: FormEvent) => {
     e.preventDefault();
+    setDetail(undefined);
     const found = !rationale.trim() ? k.form.rationaleMissing(l) : reasonTooLong(rationale) ? k.form.rationaleLong(l) : "";
     setError(found);
     if (found) { setSummaryKey((n) => n + 1); return; }
@@ -73,34 +81,46 @@ export function CommandForm(props: FormProps) {
     if (busy) return;
     setBusy(true);
     setMessage(null);
+    setDetail(undefined);
+    const startedScope = currentScope();
     const tried = pendingFor(command, target, { ...values, rationale }, page.revision, attempt);
+    props.onAttempt?.();
     try {
       const out = await api.command(command, target, tried.expected, rationale, values, { request: tried.request, key: tried.key });
+      if (startedScope !== currentScope()) return;
       settle(command, target, "ok");
       clearDraft(command, target);
       onDone(done(out.fields, out.state));
       onClose("done");
     } catch (err) {
+      if (startedScope !== currentScope()) return;
+      const detail = refusalDetail(err);
+      setDetail(detail);
       const failure = err instanceof AdminError ? err.failure : "failed";
       const fields = err instanceof AdminError ? err.fields : [];
       const reaction: Reaction = react(failure, fields);
-      settle(command, target, reaction);
+      settle(command, target, reaction, detail);
       setStep(reaction === "conflict" ? "confirm" : "edit");
       if (reaction === "field" && planChangedField(fields)) {
         setMessage({ text: k.planChanged(l), alert: false });
         await onReload();
+        if (startedScope !== currentScope()) return;
       } else if (reaction === "field" || reaction === "reason") {
         setError(reasonTooLong(rationale) ? k.form.rationaleLong(l) : k.form.checkReason(l));
         setSummaryKey((n) => n + 1);
       } else if (reaction === "hint") {
         await onReload();
+        if (startedScope !== currentScope()) return;
         onClose("refused");
       } else if (reaction === "conflict") {
         setMessage({ text: k.conflictAgain(l), alert: false });
         await onReload();
+        if (startedScope !== currentScope()) return;
       } else if (reaction === "denied") {
-        if (await onReload()) { onNotice(gone); onClose("done"); }
-      } else if (reaction === "signin") onSignedOut();
+        const got = await onReload();
+        if (startedScope !== currentScope()) return;
+        if (got) { onNotice(gone, detail); onClose("done"); }
+      } else if (reaction === "signin") onSignedOut(detail);
       else if (reaction === "wait") setMessage({ text: sc.limited(l, retryPhrase(l, err instanceof AdminError ? err.retryAfter || 60 : 60)), alert: true });
       else if (reaction === "retry") setMessage({ text: k.pendingAttempt(l), alert: true });
       else if (reaction === "renew") setMessage({ text: k.renew(l), alert: true });
@@ -108,7 +128,7 @@ export function CommandForm(props: FormProps) {
       else if (reaction === "reauth") setMessage({ text: sc.reauthText(l, failure), alert: true });
       else setMessage({ text: sc.failed(l), alert: true });
     } finally {
-      setBusy(false);
+      if (startedScope === currentScope()) setBusy(false);
     }
   };
 
@@ -120,8 +140,10 @@ export function CommandForm(props: FormProps) {
       {message && (
         <div ref={messageRef} tabIndex={-1} className={message.alert ? "live-error" : "live-note-rule"} role={message.alert ? "alert" : "status"}>
           <p>{message.text}</p>
+          <RefusalDetail locale={l} detail={detail} />
         </div>
       )}
+      {!message && <RefusalDetail locale={l} detail={detail} />}
       {step === "edit" ? (
         <form className="p01-form" noValidate onSubmit={review} aria-busy={busy || undefined}>
           {problems.length > 0 && <Summary locale={l} title={sc.check(l)} problems={problems} focusKey={summaryKey} />}
@@ -254,7 +276,7 @@ function Row({ p, ...shared }: Shared & { p: InstallProposal }) {
           <>
             {(kept || blockers.length > 0) && (
               <div className="p01-row-note" ref={note} tabIndex={-1} role="status">
-                {kept && <p className="live-note-rule">{kept}</p>}
+                {kept && <><p className="live-note-rule">{kept}</p><RefusalDetail locale={l} detail={refusedDetail(refusedNow("installation.approve", target) ? "installation.approve" : "installation.withdraw", target)} /></>}
                 {blockers.length > 0 && <ul className="p01-blocked">{blockers.map((b) => <li key={b}>{b}</li>)}</ul>}
               </div>
             )}
@@ -342,7 +364,7 @@ export function Propose(shared: Shared) {
     <section className="p01-propose" aria-label={k.propose(l)}>
       {(refused || !usable || state.stale) && (
         <div className="p01-row-note" ref={note} tabIndex={-1} role="status">
-          {refused && <p className="live-note-rule">{k.keptPropose(l)}</p>}
+          {refused && <><p className="live-note-rule">{k.keptPropose(l)}</p><RefusalDetail locale={l} detail={refusedDetail("installation.propose_plan", planTarget)} /></>}
           {!usable && <p className="p01-blocker">{k.proposeBlocked(l, state.blocker, p.version)}</p>}
           {usable && state.stale && <p className="p01-blocker">{k.staleOwn(l)}</p>}
         </div>

@@ -1,3 +1,6 @@
+import { currentScope } from "./live-model";
+import type { AdminClient } from "../../../../service/admin";
+import { refusedDetail } from "./live-model";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createElement } from "react";
@@ -512,4 +515,83 @@ test("storage results state that AI source bodies are not collected and Assistan
   assert.match(texts[2], /محادثات المساعد فئة بيانات مستقلة/);
   assert.match(texts[2], /غير متصلين/);
   assert.equal(new Set(texts).size, 3);
+});
+
+
+test("retained refusal metadata follows command, target, session and pruning", () => {
+  forget();
+  setScope("w", "u", "s");
+  const approve = { code: "invalid_stage", request: "server-approve" };
+  const withdraw = { code: "prerequisite_failed", request: "server-withdraw" };
+  settle("retention.approve", "missing-target", "hint", "stage", approve);
+  settle("retention.withdraw", "missing-target", "hint", "stage", withdraw);
+  assert.deepEqual(refusedDetail("retention.approve", "missing-target"), approve);
+  assert.deepEqual(refusedDetail("retention.withdraw", "missing-target"), withdraw);
+  assert.equal(refusedDetail("retention.approve", "other-target"), undefined);
+  settle("retention.approve", "missing-target", "ok");
+  assert.equal(refusedDetail("retention.approve", "missing-target"), undefined);
+  assert.deepEqual(refusedDetail("retention.withdraw", "missing-target"), withdraw);
+  setScope("w", "u", "next-session");
+  assert.equal(refusedDetail("retention.withdraw", "missing-target"), undefined);
+  settle("retention.approve", "missing-target", "hint", "stage", approve);
+  pruneRefusals(page());
+  assert.equal(refusedDetail("retention.approve", "missing-target"), undefined);
+  settle("retention.approve", "missing-target", "hint", "stage", approve);
+  settle("retention.approve", "missing-target", "hint", "stage");
+  assert.equal(refusedDetail("retention.approve", "missing-target"), undefined);
+  forget();
+});
+
+
+test("grouped retained note displays the matching server receipt in every locale", async () => {
+  const nodeModule = await import("node:module");
+  const assets = /\.(css|svg)(\?.*)?$/;
+  if (typeof nodeModule.registerHooks === "function") nodeModule.registerHooks({ load: (url, context, next) => assets.test(url) ? { format: "module", source: "export default ''", shortCircuit: true } : next(url, context) });
+  else nodeModule.register("data:text/javascript," + encodeURIComponent(`export async function load(url, context, next) { return ${assets}.test(url) ? { format: "module", source: "export default ''", shortCircuit: true } : next(url, context); }`));
+  const { Proposals } = await import("./LiveProposals");
+  forget();
+  setScope("w", "u", "s");
+  settle("retention.approve", "retention-proposal-7", "hint", "stage", { code: "invalid_stage", request: "server-approve" });
+  settle("retention.withdraw", "retention-proposal-7", "hint", "stage", { code: "prerequisite_failed", request: "server-withdraw" });
+  const p = page();
+  p.proposals.rows = [prop({})];
+  for (const l of locales) {
+    const h = renderToStaticMarkup(createElement(Proposals, {
+      l, page: p, api: {} as AdminClient, me: "u", canCommand: true, selection: selectionOf(new URLSearchParams(), p, "proposals"), onReload: async () => null, workspace: "sample-workspace", kind: "policy",
+      onDone: () => {}, onNotice: () => {}, onSignedOut: () => {},
+    }));
+    assert.ok(h.includes("server-approve"), l);
+    assert.ok(!h.includes("server-withdraw"), l);
+    assert.ok(h.includes('<bdi dir="ltr">invalid_stage</bdi>'), l);
+  }
+  forget();
+});
+
+
+test("scope generation rejects responses from replaced and forgotten sessions", () => {
+  forget();
+  setScope("w", "u", "s");
+  const started = currentScope();
+  setScope("w", "u", "s");
+  assert.equal(currentScope(), started);
+  setScope("w", "u", "next");
+  assert.notEqual(currentScope(), started);
+  setScope("w", "u", "s");
+  assert.notEqual(currentScope(), started);
+  const restored = currentScope();
+  forget();
+  setScope("w", "u", "s");
+  assert.notEqual(currentScope(), restored);
+  forget();
+});
+
+
+test("a new attempt clears the prior retained refusal receipt", () => {
+  forget();
+  setScope("w", "u", "s");
+  settle("retention.approve", "t", "hint", "stage", { code: "invalid_stage", request: "old-server-id" });
+  pendingFor("retention.approve", "t", { rationale: "retry" }, "r", () => ({ request: "next-client-id", key: "next-key" }));
+  assert.equal(refusedDetail("retention.approve", "t"), undefined);
+  assert.ok(!refusedNow("retention.approve", "t"));
+  forget();
 });

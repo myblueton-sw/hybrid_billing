@@ -1,3 +1,4 @@
+import { refusedDetail } from "./live-model";
 import type { Locale } from "../../../../shared/types";
 import type { IsolationRow } from "../../../../service/recovery";
 import { k } from "./live-copy";
@@ -104,10 +105,11 @@ function Actions({ r, ...shared }: Shared & { r: IsolationRow }) {
   if (!target) blockers.push(line("", k.narrow(l, "no_command")));
   if (target && !usable && !r.can_lock && blockerPolicy(r.lock_blocked, "lock") === "explain") blockers.push(line(k.lock(l), k.blocker(l, r.lock_blocked)));
   const kept = target && refusedNow("recovery.lock", target) ? k.kept(l, "recovery.lock") : "";
+  const keptDetail = kept ? refusedDetail("recovery.lock", target) : undefined;
   const b = pending ? basisFrom(pending.context) : basisOf(page, r.installation);
   return (
     <div className="p03-actions">
-      <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+      <RowNote kept={kept} l={l} detail={keptDetail} blockers={blockers} focus={focusNote} />
       {usable && !open && (
         <div className="live-buttons">
           <button type="button" className="live-secondary" aria-expanded={false} data-opener={mark("lock")} onClick={() => toggle("lock")}>{k.lock(l)}</button>

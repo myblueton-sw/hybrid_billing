@@ -1,3 +1,6 @@
+import { currentScope } from "./live-model";
+import { refusalDetail, type RefusalDetail as Refusal } from "../../../../service/refusal";
+import { RefusalDetail } from "../../../../service/RefusalDetail";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError } from "../../../../service/admin";
@@ -54,7 +57,9 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   const [loadError, setLoadError] = useState<unknown>(null);
   const [denied, setDenied] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
+  const [terminalDetail, setTerminalDetail] = useState<Refusal | undefined>();
   const [notice, setNotice] = useState("");
+  const [noticeDetail, setNoticeDetail] = useState<Refusal | undefined>();
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
   const seq = useRef(0);
@@ -63,25 +68,26 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   const selectedId = selectedOf(view, selection);
 
   const load = useCallback(async (): Promise<RetentionPage | null> => {
+    const startedScope = currentScope();
     const n = ++seq.current;
     setBusy(true);
     try {
       const got = await api.retention();
-      if (n !== seq.current) return null;
+      if (n !== seq.current || startedScope !== currentScope()) return null;
       pruneRefusals(got);
       setPage(got);
       setStatus("ready");
       setLoadError(null);
       return got;
     } catch (e) {
-      if (n !== seq.current) return null;
+      if (n !== seq.current || startedScope !== currentScope()) return null;
       if (e instanceof AdminError && e.failure === "denied") setDenied(true);
       if (e instanceof AdminError && e.failure === "unauthenticated") setSignedOut(true);
       setLoadError(e);
       setStatus("error");
       return null;
     } finally {
-      if (n === seq.current) setBusy(false);
+      if (n === seq.current && startedScope === currentScope()) setBusy(false);
     }
   }, [api]);
 
@@ -92,7 +98,8 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
     document.getElementById(selectedId)?.scrollIntoView({ block: "center" });
   }, [selectedId]);
 
-  const showNotice = (text: string) => {
+  const showNotice = (text: string, detail?: Refusal) => {
+    setNoticeDetail(detail);
     setNotice(text);
     requestAnimationFrame(() => document.getElementById("p04-notice")?.focus());
   };
@@ -103,8 +110,9 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
       void load();
       return;
     }
+    const startedScope = currentScope();
     const got = await load();
-    showNotice(text(got));
+    if (startedScope === currentScope()) showNotice(text(got));
   };
 
   if (denied) {
@@ -113,6 +121,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
         <section className="live-unavailable" aria-labelledby="p04-denied">
           <h2 id="p04-denied">{k.deniedTitle(l)}</h2>
           <p>{k.denied(l)}</p>
+          <RefusalDetail locale={l} detail={terminalDetail ?? refusalDetail(loadError)} />
         </section>
       </div>
     );
@@ -122,6 +131,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
       <div className="p04-live">
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
+          <RefusalDetail locale={l} detail={terminalDetail ?? refusalDetail(loadError)} />
           <button type="button" className="live-secondary" onClick={() => { forget(); onSignOut(); }}>{k.signInAgain(l)}</button>
         </div>
       </div>
@@ -134,8 +144,9 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
         l, page, api, me: session.user, workspace: session.workspace, selection, canCommand: commandsAllowed(page),
         onDone: (text) => { void announce(text); },
         onNotice: showNotice,
+        onAttempt: () => { setNotice(""); setNoticeDetail(undefined); setTick((n) => n + 1); },
         onReload: load,
-        onSignedOut: () => setSignedOut(true),
+        onSignedOut: (detail?: Refusal) => { setTerminalDetail(detail); setSignedOut(true); },
       }
     : null;
   const gone = shared ? vanished(shared.page, view) : [];
@@ -154,11 +165,12 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
       <p className="live-note-rule p04-statement"><strong>{k.statementLead(l)}</strong> {k.statement(l)}</p>
       <p className="p04-note">{k.valuesNote(l)}</p>
       <p className="p04-note p04-permission">{k.permission(l)}</p>
-      {notice && <div id="p04-notice" className="service-status" tabIndex={-1} role="status"><p><Rich text={notice} /></p></div>}
+      {notice && <div id="p04-notice" className="service-status" tabIndex={-1} role="status"><p><Rich text={notice} /></p><RefusalDetail locale={l} detail={noticeDetail} /></div>}
       {status === "error" && (
         <div className="live-error p04-failure" role="alert">
           <h2>{sc.failed(l)}</h2>
           {failure && <p>{failure}</p>}
+          <RefusalDetail locale={l} detail={refusalDetail(loadError)} />
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>
       )}

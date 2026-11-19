@@ -1,3 +1,4 @@
+import { refusedDetail } from "./live-model";
 import type { Locale } from "../../../../shared/types";
 import type { ResumeRow } from "../../../../service/recovery";
 import { k } from "./live-copy";
@@ -41,13 +42,14 @@ function Propose({ r, ...shared }: Shared & { r: ResumeRow }) {
     } else blockers.push(line(k.proposeUnlock(l), k.blocker(l, r.unlock_blocked)));
   } else if (!usable && canCommand && r.can_propose_unlock && narrow) blockers.push(line(k.proposeUnlock(l), k.narrow(l, narrow)));
   const kept = target && refusedNow("recovery.propose_unlock", target) ? k.kept(l, "recovery.propose_unlock") : "";
+  const keptDetail = kept ? refusedDetail("recovery.propose_unlock", target) : undefined;
   const b = pending ? basisFrom(pending.context) : basisOf(page, r.installation);
   const frozen = frozenValues(pending);
   const values = { lost: frozen ? frozen.lost ?? "" : r.lost_digest };
   return (
     <div className="p03-actions">
       <RowNote
-        kept={kept} blockers={blockers} focus={focusNote}
+        kept={kept} l={l} detail={keptDetail} blockers={blockers} focus={focusNote}
         extra={link ? <p className="p03-goto"><a className="p03-link" href={href(l, "resume", { proposal: link })}>{k.goToProposal(l, link)}</a></p> : null}
       />
       {usable && !open && (

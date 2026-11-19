@@ -1,3 +1,4 @@
+import { refusedDetail } from "./live-model";
 import { useId } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { Candidate, EvidencePage, ProfileRow, ProfileStatus, RunRow } from "../../../../service/release-evidence";
@@ -265,6 +266,7 @@ function Profile({ p, ...shared }: Shared & { p: ProfileRow }) {
   const already = p.retire !== null ? pendingRetire(page, "perf_gate", p.retire) : null;
   const refused = target ? refusedNow(command, target) : "";
   const kept = refused ? k.kept(l, keptKey(command, refused)) : "";
+  const keptDetail = kept ? refusedDetail(command, target) : undefined;
   const retiredRow = p.retired === true;
   const blockers: Blocker[] = [];
   let state = "";
@@ -306,7 +308,7 @@ function Profile({ p, ...shared }: Shared & { p: ProfileRow }) {
       </div>
       <Runs l={l} p={p} />
       <div className="p05-actions">
-        <RowNote kept={kept} blockers={blockers} focus={focusNote} state={state} pending={pending && !open ? f.pendingAttempt(l) : ""} />
+        <RowNote kept={kept} l={l} detail={keptDetail} blockers={blockers} focus={focusNote} state={state} pending={pending && !open ? f.pendingAttempt(l) : ""} />
         {already && !open && <p className="p05-act-line"><PendingLink l={l} already={already} /></p>}
         {gate.usable && !open && !already && (
           <button type="button" className="live-secondary p05-opener" aria-expanded={false} data-opener={mark("retire")} onClick={() => toggle("retire")}>{k.proposeRetirement(l)}</button>

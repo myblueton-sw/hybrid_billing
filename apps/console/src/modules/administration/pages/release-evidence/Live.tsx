@@ -1,3 +1,6 @@
+import { currentScope } from "./live-model";
+import { refusalDetail, type RefusalDetail as Refusal } from "../../../../service/refusal";
+import { RefusalDetail } from "../../../../service/RefusalDetail";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt } from "../../../../service/admin";
@@ -28,17 +31,17 @@ type Props = {
   onSignOut: () => void;
 };
 
-type Failure = { error: unknown; request: string };
+type Failure = { error: unknown };
 
-function failureLines(l: Locale, e: unknown): { text: string; code: string; next: string } {
+function failureLines(l: Locale, e: unknown): { text: string; next: string } {
   if (e instanceof AdminError) {
     if (e.failure === "limited") {
       const when = retryPhrase(l, e.retryAfter || 60);
-      return { text: k.failedBusy(l), code: e.code || e.failure, next: k.nextWait(l, when) };
+      return { text: k.failedBusy(l), next: k.nextWait(l, when) };
     }
-    return { text: e.failure === "busy" || e.failure === "unavailable" ? k.failedBusy(l) : "", code: e.code || e.failure, next: k.nextTry(l) };
+    return { text: e.failure === "busy" || e.failure === "unavailable" ? k.failedBusy(l) : "", next: k.nextTry(l) };
   }
-  return { text: "", code: "unavailable", next: k.nextTry(l) };
+  return { text: "", next: k.nextTry(l) };
 }
 
 function selectedId(view: string, s: Selection): string {
@@ -86,7 +89,9 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   const [failure, setFailure] = useState<Failure | null>(null);
   const [access, setAccess] = useState<"ok" | "denied" | "revoked">("ok");
   const [signedOut, setSignedOut] = useState(false);
+  const [terminalDetail, setTerminalDetail] = useState<Refusal | undefined>();
   const [notice, setNotice] = useState("");
+  const [noticeDetail, setNoticeDetail] = useState<Refusal | undefined>();
   const [announce, setAnnounce] = useState("");
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
@@ -102,12 +107,13 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   const lastMode = useRef(mode);
 
   const load = useCallback(async (): Promise<EvidencePage | null> => {
+    const startedScope = currentScope();
     const n = ++seq.current;
     const request = attempt().request;
     setBusy(true);
     try {
       const got = await api.releaseEvidence(request);
-      if (n !== seq.current) return null;
+      if (n !== seq.current || startedScope !== currentScope()) return null;
       readSucceeded();
       pruneRefusals(got);
       setPage(got);
@@ -116,20 +122,21 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       setFailure(null);
       return got;
     } catch (e) {
-      if (n !== seq.current) return null;
+      if (n !== seq.current || startedScope !== currentScope()) return null;
+      setFailure({ error: e });
       if (e instanceof AdminError && e.failure === "denied") {
         const kind = readDenied();
         if (kind === "revoked") setPage(null);
         setAccess(kind);
+        setBusy(false);
         setStatus("error");
         return null;
       }
       if (e instanceof AdminError && e.failure === "unauthenticated") setSignedOut(true);
-      setFailure({ error: e, request });
       setStatus("error");
       return null;
     } finally {
-      if (n === seq.current) setBusy(false);
+      if (n === seq.current && startedScope === currentScope()) setBusy(false);
     }
   }, [api]);
 
@@ -163,7 +170,8 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
     if (!active || active === document.body || !active.isConnected) document.getElementById("p05-detail-title")?.focus();
   }, [mode, detailKey]);
 
-  const showNotice = (text: string) => {
+  const showNotice = (text: string, detail?: Refusal) => {
+    setNoticeDetail(detail);
     setNotice(text);
     requestAnimationFrame(() => document.getElementById("p05-notice")?.focus());
   };
@@ -174,8 +182,9 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       void load();
       return;
     }
+    const startedScope = currentScope();
     const got = await load();
-    showNotice(text(got));
+    if (startedScope === currentScope()) showNotice(text(got));
   };
 
   const scopeBar = (
@@ -206,6 +215,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
         <section className="live-unavailable p05-revoked" aria-labelledby="p05-revoked">
           <h2 id="p05-revoked">{k.revokedTitle(l)}</h2>
           <p>{k.revoked(l)}</p>
+          <RefusalDetail locale={l} detail={refusalDetail(failure?.error)} />
         </section>
       </div>
     );
@@ -217,6 +227,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
         <section className="live-unavailable" aria-labelledby="p05-denied">
           <h2 id="p05-denied">{k.deniedTitle(l)}</h2>
           <p>{k.denied(l)}</p>
+          <RefusalDetail locale={l} detail={refusalDetail(failure?.error)} />
         </section>
       </div>
     );
@@ -226,6 +237,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       <div className="p05-live" ref={root}>
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
+          <RefusalDetail locale={l} detail={terminalDetail ?? refusalDetail(failure?.error)} />
           <button type="button" className="live-secondary" onClick={() => { forget(); onSignOut(); }}>{k.signInAgain(l)}</button>
         </div>
       </div>
@@ -238,8 +250,9 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
         l, page, api, me: session.user, selection, canCommand: commandsAllowed(page) && status !== "error", mode,
         onDone: (text) => { void done(text); },
         onNotice: showNotice,
+        onAttempt: () => { setNotice(""); setNoticeDetail(undefined); setTick((n) => n + 1); },
         onReload: load,
-        onSignedOut: () => setSignedOut(true),
+        onSignedOut: (detail?: Refusal) => { setTerminalDetail(detail); setSignedOut(true); },
       }
     : null;
   const gone = shared ? vanished(shared.page, view) : [];
@@ -263,13 +276,14 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
         </div>
       )}
       <p className="visually-hidden" role="status">{announce}</p>
-      {notice && <div id="p05-notice" className="p05-notice" tabIndex={-1} role="status"><p>{notice}</p></div>}
+      {notice && <div id="p05-notice" className="p05-notice" tabIndex={-1} role="status"><p>{notice}</p><RefusalDetail locale={l} detail={noticeDetail} /></div>}
       {status === "error" && failure && lines && (
         <div className="live-error p05-failure" role="alert">
           <h2>{k.failedTitle(l)}</h2>
           {lines.text && <p>{lines.text}</p>}
           <p>{k.failedSpec(l)}</p>
-          <ErrorDetail l={l} code={lines.code} request={failure.request} next={lines.next} />
+          <RefusalDetail locale={l} detail={refusalDetail(failure.error)} />
+          <ErrorDetail l={l} next={lines.next} />
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>
       )}

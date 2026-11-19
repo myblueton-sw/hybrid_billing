@@ -1,3 +1,4 @@
+import { refusedDetail } from "./live-model";
 import type { Locale } from "../../../../shared/types";
 import type { Candidate, EvidencePage, Problem, RequirementRow, TestRow } from "../../../../service/release-evidence";
 import { blockerText, f, k } from "./live-copy";
@@ -273,6 +274,7 @@ function RequirementBody({ r, reduced, ...shared }: Shared & { r: RequirementRow
   const already = r.retire !== null ? pendingRetire(page, "release_trace", r.retire) : null;
   const refused = target ? refusedNow(command, target) : "";
   const kept = refused ? k.kept(l, keptKey(command, refused)) : "";
+  const keptDetail = kept ? refusedDetail(command, target) : undefined;
   const retiredRow = r.retired === true;
   const blockers: Blocker[] = [];
   let state = "";
@@ -319,7 +321,7 @@ function RequirementBody({ r, reduced, ...shared }: Shared & { r: RequirementRow
       </tr>
       <tr className="p05-follow">
         <td colSpan={cols}>
-          <RowNote kept={kept} blockers={blockers} focus={focusNote} state={state} pending={pending && !open ? f.pendingAttempt(l) : ""} />
+          <RowNote kept={kept} l={l} detail={keptDetail} blockers={blockers} focus={focusNote} state={state} pending={pending && !open ? f.pendingAttempt(l) : ""} />
           {already && !open && <p className="p05-act-line"><PendingLink l={l} already={already} /></p>}
           {gate.usable && !open && !already && (
             <button type="button" className="live-secondary p05-opener" aria-expanded={false} data-opener={mark("retire")} onClick={() => toggle("retire")}>{k.proposeRetirement(l)}</button>

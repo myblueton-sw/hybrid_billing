@@ -10,6 +10,8 @@ import {
 import { Code, Known, ListOr, MarkText, Num, Prose, Who, fsi, ltr, stamp } from "./live-format";
 import { CommandForm, RowNote, blockerLines, plain, useOpen, type Blocker, type Shared } from "./LiveCommand";
 import { LicenseLine, Marked, Proposals, keptLicenseText } from "./LiveProposals";
+import { installApplies, lostAny, lostRight } from "./live-rights";
+import { r } from "./rights-copy";
 
 function Registry({ l, page }: Shared) {
   const w = page.modules.workspace;
@@ -95,11 +97,13 @@ function RuntimeActions({ i, ...shared }: Shared & { i: PluginInstall }) {
   const target = pluginTarget(i.plugin);
   const stopUsable = shared.canCommand && !!target && (i.can_stop || !!pendingNow("integrations.plugin_stop", target));
   const disableUsable = shared.canCommand && !!target && (i.can_disable || !!pendingNow("integrations.plugin_disable", target));
-  const kept = target && (refusedNow("integrations.plugin_stop", target) || refusedNow("integrations.plugin_disable", target)) ? k.kept(l, "plugin") : "";
+  const lost = target ? lostAny(["integrations.plugin_stop", "integrations.plugin_disable"], target) : "";
+  const kept = !target ? "" : lost ? r.noLongerHeld(l, lost) : refusedNow("integrations.plugin_stop", target) || refusedNow("integrations.plugin_disable", target) ? k.kept(l, "plugin") : "";
+  const shows = (code: string, action: "stop" | "disable") => blockerPolicy(code) === "explain" && (code !== "no_right" || installApplies(i, action));
   const blockers: Blocker[] = [];
   if (!target) blockers.push(plain(k.noCommand(l)));
-  if (target && !stopUsable && !i.can_stop && blockerPolicy(i.stop_blocked) === "explain") blockers.push(...blockerLines(l, i.stop_blocked, "stop", k.stop(l)));
-  if (target && !disableUsable && !i.can_disable && blockerPolicy(i.disable_blocked) === "explain") blockers.push(...blockerLines(l, i.disable_blocked, "disable", k.disable(l)));
+  if (target && !stopUsable && !i.can_stop && shows(i.stop_blocked, "stop")) blockers.push(...blockerLines(l, i.stop_blocked, "stop", k.stop(l)));
+  if (target && !disableUsable && !i.can_disable && shows(i.disable_blocked, "disable")) blockers.push(...blockerLines(l, i.disable_blocked, "disable", k.disable(l)));
   return (
     <>
       <RowNote kept={kept} blockers={blockers} focus={focusNote} />
@@ -164,7 +168,8 @@ function Propose({ plugin, ...shared }: Shared & { plugin: string }) {
   const { l, page, me } = shared;
   const { open, toggle, close, focusNote, mark } = useOpen<"propose">();
   const target = pluginTarget(plugin);
-  const offer = proposeOffer(page, me, plugin);
+  const noRight = page.modules.actions.propose.blocked === "no_right";
+  const offer = noRight ? { options: [], blocker: null, withheld: [] } : proposeOffer(page, me, plugin);
   const kept = target ? pendingNow("integrations.plugin_propose", target) : undefined;
   const [choice, setChoice] = useState<Change | null>(() => initialChange(plugin));
   const frozen = frozenValues(kept);
@@ -177,7 +182,8 @@ function Propose({ plugin, ...shared }: Shared & { plugin: string }) {
   const refused = target ? refusedNow("integrations.plugin_propose", target) : false;
   const tried = refused ? refusedValues("integrations.plugin_propose", target) : {};
   const refusedFor = refused ? refusedLicense(page, plugin, tried.kind ?? "", tried.version ?? "") : "";
-  const keptText = !refused ? "" : refusedFor ? <Marked text={keptLicenseText(l, page, plugin, refusedFor, tried.kind === "enable" ? "enable" : "propose")} /> : k.kept(l, "propose_plugin");
+  const lost = target ? lostRight("integrations.plugin_propose", target) : "";
+  const keptText = lost ? r.noLongerHeld(l, lost) : !refused ? "" : refusedFor ? <Marked text={keptLicenseText(l, page, plugin, refusedFor, tried.kind === "enable" ? "enable" : "propose")} /> : k.kept(l, "propose_plugin");
   const id = "p02-propose-" + plugin.replace(/[^A-Za-z0-9-]/g, "");
   const enableVersion = install && (install.state === "installed" || install.state === "stopped") ? install.version : "";
   const noteText = (v: PluginVersion) =>
@@ -197,7 +203,11 @@ function Propose({ plugin, ...shared }: Shared & { plugin: string }) {
 
   return (
     <section className="p02-propose" aria-label={k.proposeChange(l, plugin)}>
-      <RowNote kept={keptText} blockers={!usable && blockerText ? [plain(blockerText)] : []} focus={focusNote} />
+      <RowNote
+        kept={keptText}
+        blockers={noRight ? blockerLines(l, "no_right", "propose_plugin", r.proposeChange(l)) : !usable && blockerText ? [plain(blockerText)] : []}
+        focus={focusNote}
+      />
       {!(open && usable) && notes}
       {usable && !open && (
         <div className="live-buttons">

@@ -110,6 +110,7 @@ func (s *Server) Start() error {
 			step{"installation-grants", func() (bool, error) { return true, s.seedInstallationGrants(now) }},
 			step{"trust-grants", func() (bool, error) { return true, s.seedTrustGrants(now) }},
 			step{"bulk-grants", func() (bool, error) { return true, s.seedBulkGrants(now) }},
+			step{"integration-grants", func() (bool, error) { return true, s.seedIntegrationGrants(now) }},
 			step{"integrations", func() (bool, error) { return true, s.seedIntegrations(now) }},
 			step{"recovery", func() (bool, error) { return true, s.seedRecovery(now) }},
 			step{"retention", func() (bool, error) { return true, s.seedRetention(now) }},

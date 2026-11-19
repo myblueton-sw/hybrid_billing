@@ -100,6 +100,7 @@ export const proposalStateWords: Words = {
   pending: ["Pending", "승인 대기", "بانتظار الاعتماد"],
   applied: ["Applied", "적용됨", "مطبّق"],
   withdrawn: ["Withdrawn", "철회됨", "مسحوب"],
+  closed: ["Closed", "종료됨", "مُغلق"],
 };
 
 export const destinationWords: Words = {
@@ -131,6 +132,8 @@ export const subscriptionReasonWords: Words = {
   dependency_unavailable: ["A required check was unavailable", "필수 확인을 사용할 수 없었음", "تعذّر إجراء فحص مطلوب"],
   key_unpublished: ["No published signing key", "게시된 서명 키 없음", "لا يوجد مفتاح توقيع منشور"],
   key_mismatch: ["Signing key mismatch", "서명 키 불일치", "عدم تطابق مفتاح التوقيع"],
+  withdrawn: ["Withdrawn by the proposer", "제안자가 철회함", "سحبه صاحب الاقتراح"],
+  requester_lost_right: ["The person who started it no longer holds the right", "시작한 사람에게 더 이상 권한이 없음", "لم يعد من بدأه يملك الصلاحية"],
 };
 
 export const keyStateWords: Words = {
@@ -145,6 +148,13 @@ export const historyWords: Words = {
   request_resume: ["Resume requested", "재개 요청", "طُلب الاستئناف"],
   approve_resume: ["Resume approved", "재개 승인", "اعتُمد الاستئناف"],
   revoke: ["Revoked", "회수", "أُلغي"],
+  withdraw: ["Withdrawn", "철회", "سُحب"],
+  withdraw_resume: ["Resume request withdrawn", "재개 요청 철회", "سُحب طلب الاستئناف"],
+  proposal_closed: ["Closed", "종료", "أُغلق"],
+  resume_closed: ["Resume request closed", "재개 요청 종료", "أُغلق طلب الاستئناف"],
+  redeliver_request_closed: ["Redelivery request closed", "재발송 요청 종료", "أُغلق طلب إعادة التسليم"],
+  dismiss_request_closed: ["Dismissal request closed", "정리 요청 종료", "أُغلق طلب الإزالة"],
+  redelivery_closed: ["Redelivery closed", "재발송 종료", "أُغلقت إعادة التسليم"],
 };
 
 export const eventStateWords: Words = {
@@ -177,6 +187,7 @@ export const deliveryReasonWords: Words = {
   destination_inactive: subscriptionReasonWords.destination_inactive,
   destination_revoked: subscriptionReasonWords.destination_revoked,
   dependency_unavailable: subscriptionReasonWords.dependency_unavailable,
+  requester_lost_right: ["Requester no longer holds the right", "요청자에게 더 이상 권한이 없음", "لم يعد مقدّم الطلب يملك الصلاحية"],
 };
 
 export const resultWords: Words = {

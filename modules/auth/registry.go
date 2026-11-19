@@ -32,6 +32,7 @@ type Registry struct {
 	chainJoined           map[string][2]uint64
 	actorJoined           map[string]uint64
 	installationWorkspace string
+	authorClient          string
 }
 
 func (r *Registry) SetInstallationWorkspace(id string) error {
@@ -96,11 +97,11 @@ func (r *Registry) subjectsGeneration() uint64 {
 }
 
 func NewRegistry(installationID string, catalog Catalog, clock func() time.Time) (*Registry, error) {
-	if !validID(installationID) || clock == nil || len(catalog.Kinds) == 0 {
+	if !validID(installationID) || clock == nil || len(catalog.Kinds) == 0 || (catalog.AuthorClient != "" && !validID(catalog.AuthorClient)) {
 		return nil, ErrInvalid
 	}
 	r := &Registry{
-		installation: installationID, clock: clock, available: true, generation: 1,
+		authorClient: catalog.AuthorClient, installation: installationID, clock: clock, available: true, generation: 1,
 		kinds: make(map[string]struct{}), fields: make(map[string]FieldClass),
 		subjects: make(map[string]versioned[Subject]), clients: make(map[string]versioned[Client]),
 		grants: make(map[string]versioned[Grant]), delegations: make(map[string]versioned[Delegation]),

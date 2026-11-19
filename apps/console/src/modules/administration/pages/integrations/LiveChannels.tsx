@@ -8,9 +8,23 @@ import {
 } from "./live-model";
 import { Code, Known, ListOr, Num, Prose, Who, fsi, href, ltr, stamp } from "./live-format";
 import { CommandForm, RowNote, blockerLines, plain, useOpen, type Blocker, type Shared } from "./LiveCommand";
+import { resumeRequestTarget } from "./live-model";
+import { lostAny, lostRight, subscriptionApplies } from "./live-rights";
+import { r } from "./rights-copy";
+import { Marked } from "./LiveProposals";
 
 const commandOf = (a: SubscriptionAction) => ("integrations.subscription_" + a) as CommandKey;
-const order: SubscriptionAction[] = ["approve", "approve_resume", "pause", "request_resume", "revoke"];
+const order: SubscriptionAction[] = ["approve", "approve_resume", "pause", "request_resume", "revoke", "withdraw", "withdraw_resume"];
+
+function SubState({ l, s }: { l: Locale; s: Subscription }) {
+  if (s.state === "revoked" && s.reason === "requester_lost_right") return <>{r.closedState(l)}</>;
+  if (s.state === "revoked" && s.reason === "withdrawn") return <>{r.withdrawnState(l)}</>;
+  return <Code l={l} value={s.state} say={k.subscriptionState} />;
+}
+
+function actionLabel(l: Locale, a: SubscriptionAction): string {
+  return a === "withdraw" ? r.withdrawSubscription(l) : a === "withdraw_resume" ? r.withdrawResume(l) : k.subAction(l, a);
+}
 
 function Destinations({ l, page }: Shared) {
   return (
@@ -55,8 +69,10 @@ function Fold({ l, s }: { l: Locale; s: Subscription }) {
                 {list.map((h, i) => (
                   <tr key={i}>
                     <td className="p02-first"><Code l={l} value={h.action} say={k.history} /></td>
-                    <td data-label={k.colBy(l)}><Who l={l} login={h.actor_login} id={h.actor} /></td>
-                    <td data-label={k.colReason(l)}><Prose l={l} value={h.rationale} empty={k.noReason(l)} /></td>
+                    <td data-label={k.colBy(l)}>{h.reason === "requester_lost_right" ? r.closedAutomatically(l) : <Who l={l} login={h.actor_login} id={h.actor} />}</td>
+                    <td data-label={k.colReason(l)}>
+                      {h.reason === "requester_lost_right" ? <Marked text={r.closedFound(l, h.actor_login || h.actor || k.unknown(l), h.request || k.unknown(l))} /> : <Prose l={l} value={h.rationale} empty={k.noReason(l)} />}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -108,7 +124,7 @@ function SubFacts({ l, s }: { l: Locale; s: Subscription }) {
       <div><dt>{k.subscriberIs(l)}</dt><dd><Known l={l} value={s.subscriber} /></dd></div>
       <div><dt>{k.destinationIs(l)}</dt><dd><Known l={l} value={s.destination} /></dd></div>
       <div><dt>{k.eventTypes(l)}</dt><dd><Types l={l} types={s.types} /></dd></div>
-      <div><dt>{k.colState(l)}</dt><dd><Code l={l} value={s.state} say={k.subscriptionState} /></dd></div>
+      <div><dt>{k.colState(l)}</dt><dd><SubState l={l} s={s} /></dd></div>
       <div><dt>{k.factProposerReason(l)}</dt><dd><Prose l={l} value={s.rationale} empty={k.noReason(l)} /></dd></div>
     </>
   );
@@ -118,11 +134,19 @@ function SubRow({ s, ...shared }: Shared & { s: Subscription }) {
   const { l, selection } = shared;
   const { open, toggle, close, focusNote, mark } = useOpen<SubscriptionAction>();
   const target = subscriptionTarget(s);
-  const usable = (a: SubscriptionAction) => shared.canCommand && !!target && (s.actions[a].allowed || !!pendingNow(commandOf(a), target));
-  const kept = target && subscriptionActions.some((a) => refusedNow(commandOf(a), target)) ? k.kept(l, "subscription") : "";
+  const resumeRequest = s.resume_request !== null && s.resume_request !== "unknown" ? resumeRequestTarget(s.resume_request) : "";
+  const targetOf = (a: SubscriptionAction) => (a === "withdraw_resume" ? resumeRequest : target);
+  const usable = (a: SubscriptionAction) => shared.canCommand && !!targetOf(a) && (s.actions[a].allowed || !!pendingNow(commandOf(a), targetOf(a)));
+  const lost = target ? lostAny(subscriptionActions.map(commandOf), target) || (resumeRequest ? lostRight("integrations.subscription_withdraw_resume", resumeRequest) : "") : "";
+  const kept = !target ? "" : lost ? r.noLongerHeld(l, lost) : subscriptionActions.some((a) => refusedNow(commandOf(a), targetOf(a))) ? k.kept(l, "subscription") : "";
+  const explains = (a: SubscriptionAction) => {
+    const code = s.actions[a].blocked;
+    if (a === "withdraw" || a === "withdraw_resume") return false;
+    return blockerPolicy(code) === "explain" && (code !== "no_right" && code !== "requester_lost_right" || subscriptionApplies(s, a));
+  };
   const blockers: Blocker[] = [];
   if (!target) blockers.push(plain(k.noCommand(l)));
-  else for (const a of order) if (!usable(a) && !s.actions[a].allowed && blockerPolicy(s.actions[a].blocked) === "explain") blockers.push(...blockerLines(l, s.actions[a].blocked, a, k.subAction(l, a)));
+  else for (const a of order) if (!usable(a) && !s.actions[a].allowed && explains(a)) blockers.push(...blockerLines(l, s.actions[a].blocked, a, k.subAction(l, a)));
   const shown = open ? [] : order.filter(usable);
   const current = selection.subscription !== "" && selection.subscription === s.id;
   const people = [
@@ -135,7 +159,7 @@ function SubRow({ s, ...shared }: Shared & { s: Subscription }) {
       <div className="p02-meta">
         <p className="p02-strong"><Known l={l} value={s.id} /></p>
         <p>
-          <span className="p02-tag"><Code l={l} value={s.state} say={k.subscriptionState} /></span>
+          <span className="p02-tag"><SubState l={l} s={s} /></span>
           {s.reason && <span className="live-sub p02-small"><Code l={l} value={s.reason} say={k.subscriptionReason} /></span>}
         </p>
         <p className="p02-small">{k.subscriberIs(l)} <Known l={l} value={s.subscriber} /></p>
@@ -172,19 +196,20 @@ function SubRow({ s, ...shared }: Shared & { s: Subscription }) {
                 key={a} type="button" className={a === "approve" || a === "approve_resume" ? "live-primary" : "live-secondary"} aria-expanded={open === a}
                 data-opener={mark(a)} onClick={() => toggle(a)}
               >
-                {k.subAction(l, a)}
+                {actionLabel(l, a)}
               </button>
             ))}
           </div>
         )}
-        {open && target && (
+        {open && targetOf(open) && (
           <CommandForm
-            key={open} {...shared} command={commandOf(open)} target={target} values={{}}
-            title={k.subConfirm(l, open)}
+            key={open} {...shared} command={commandOf(open)} target={targetOf(open)} values={{}}
+            title={open === "withdraw" || open === "withdraw_resume" ? r.confirmWithdraw(l) : k.subConfirm(l, open)}
             facts={<SubFacts l={l} s={s} />}
-            impact={k.subImpact(l, open)}
-            verb={k.subVerb(l, open, s.id)}
-            done={(fields, state) => k.subDone(l, fields.subscription || s.id, k.result(l, state))}
+            impact={open === "withdraw" || open === "withdraw_resume" ? r.withdrawImpact(l) : k.subImpact(l, open)}
+            verb={open === "withdraw" || open === "withdraw_resume" ? actionLabel(l, open) : k.subVerb(l, open, s.id)}
+            done={(fields, state) => (open === "withdraw" || open === "withdraw_resume" ? r.withdrawnDone(l, actionLabel(l, open), s.id) : k.subDone(l, fields.subscription || s.id, k.result(l, state)))}
+            object={r.subscriptionObject(l, s.id)}
             onClose={close}
           />
         )}
@@ -201,9 +226,11 @@ function initialChoice(): { destination: string; types: string[] } {
 function ProposeSub(shared: Shared) {
   const { l, page, me } = shared;
   const { open, toggle, close, focusNote, mark } = useOpen<"propose">();
+  const noRight = page.channels.actions.propose.blocked === "no_right";
   const blocked = subscribeBlocker(page);
   const kept = pendingNow("integrations.subscription_propose", webhooksTarget);
-  const usable = shared.canCommand && (blocked === null || !!kept);
+  const usable = !noRight && shared.canCommand && (blocked === null || !!kept);
+  const lost = lostRight("integrations.subscription_propose", webhooksTarget);
   const [choice, setChoice] = useState(initialChoice);
   const refused = refusedNow("integrations.subscription_propose", webhooksTarget);
   const destinations = (page.channels.destinations ?? []).filter((d) => validTarget(d.id));
@@ -221,10 +248,15 @@ function ProposeSub(shared: Shared) {
     keepDraft("integrations.subscription_propose", webhooksTarget, { destination: next.destination, types: normalTypes(next.types).join(",") });
   };
 
+  if (!usable && !noRight && !refused && !lost && !blocked) return null;
   return (
     <section className="p02-section p02-propose-sub" aria-labelledby="p02-propose-sub-title">
       <h3 id="p02-propose-sub-title">{k.proposeSubTitle(l)}</h3>
-      <RowNote kept={refused ? k.kept(l, "propose_subscription") : ""} blockers={!usable && blocked ? [plain(k.subBlocker(l, blocked))] : []} focus={focusNote} />
+      <RowNote
+        kept={lost ? r.noLongerHeld(l, lost) : refused ? k.kept(l, "propose_subscription") : ""}
+        blockers={noRight ? blockerLines(l, "no_right", "propose_subscription") : !usable && blocked ? [plain(k.subBlocker(l, blocked))] : []}
+        focus={focusNote}
+      />
       {usable && !open && (
         <div className="live-buttons">
           <button type="button" className="live-secondary" aria-expanded={open === "propose"} data-opener={mark("propose")} onClick={() => toggle("propose")}>{k.proposeSubTitle(l)}</button>

@@ -98,6 +98,9 @@ func (r *Registry) OpenAPI(title, version string) ([]byte, error) {
 		if len(entry.Permission.Fields) > 0 {
 			permission["fields"] = entry.Permission.Fields
 		}
+		if entry.Author {
+			permission["author_only"], permission["right_not_required"] = true, true
+		}
 		paths["/commands/"+entry.ID] = object{"post": object{
 			"operationId": entry.ID, "x-permission": permission, "x-supported": entry.Supported, "x-mutating": entry.Mutating,
 			"requestBody": object{"required": true, "content": object{"application/json": object{"schema": object{

@@ -39,6 +39,7 @@ const (
 	ProposalPending   = "pending"
 	ProposalApplied   = "applied"
 	ProposalWithdrawn = "withdrawn"
+	ProposalClosed    = "closed"
 
 	StateInstalled = "installed"
 	StateEnabled   = "enabled"
@@ -95,6 +96,7 @@ const (
 	ReasonTimeout             = "timeout"
 	ReasonOperator            = "operator"
 	ReasonLicenseNotPermitted = "license_not_permitted"
+	ReasonRequesterLostRight  = "requester_lost_right"
 )
 
 type Refusal struct {

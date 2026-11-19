@@ -164,6 +164,23 @@ func (h *Installation) ApplyRecorded(operator Operator, workspace string, rec Re
 	return nil
 }
 
+func (h *Installation) Member(operator Operator, workspace, userID string) (MemberInfo, bool, error) {
+	r, ok := h.open()
+	if !ok {
+		return MemberInfo{}, false, ErrUnavailable
+	}
+	defer r.mu.Unlock()
+	if !operator.valid() || !validID(workspace) || !validID(userID) {
+		return MemberInfo{}, false, ErrInvalid
+	}
+	found := r.member(workspace, userID)
+	if found == nil || r.users[userID] == nil {
+		return MemberInfo{}, false, nil
+	}
+	return MemberInfo{User: userID, Role: found.role, State: found.state, Version: found.version, UserState: r.users[userID].state, From: found.from,
+		Until: found.until, SuspendedFor: found.suspendedFor, Effective: effective(found, r.clock())}, true, nil
+}
+
 func (h *Installation) Members(operator Operator, workspace string) ([]MemberInfo, error) {
 	r, ok := h.open()
 	if !ok {

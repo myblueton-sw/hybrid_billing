@@ -85,6 +85,11 @@ const (
 	ReasonSubscribeRefused    = "subscribe_refused"
 	ReasonPermissionRevoked   = "permission_revoked"
 	ReasonSubscriptionRevoked = "subscription_revoked"
+	ReasonWithdrawn           = "withdrawn"
+	ReasonRequesterLostRight  = "requester_lost_right"
+	ReasonApproverLostRight   = "approver_lost_right"
+	ReasonNotRequester        = "not_requester"
+	ReasonNotHeld             = "not_held"
 	ReasonDependency          = "dependency_unavailable"
 	ReasonGap                 = "gap"
 	ReasonBacklog             = "backlog"
@@ -234,4 +239,7 @@ type DeliveryView struct {
 	Reason         string
 	Attempts       int
 	OutcomeUnknown bool
+	Hold           string
+	Requester      string
+	Approver       string
 }

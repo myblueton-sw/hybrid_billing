@@ -5,8 +5,10 @@ import type { IntegrationsPage } from "../../../../service/integrations";
 import { Summary, type Problems } from "../../../../service/Service";
 import { c as sc, retryPhrase } from "../../../../service/copy";
 import { k } from "./live-copy";
+import { r } from "./rights-copy";
+import { actionRight, markLost } from "./live-rights";
 import {
-  clearDraft, deniedOutcome, discard, draftOf, fieldReaction, frozenValues, groupOf, keepDraft, pendingFor, pendingNow, react, reasonProblem, settle, snapshotOf, utf8Bytes,
+  clearDraft, commandRight, deniedOutcome, discard, draftOf, fieldReaction, frozenValues, groupOf, keepDraft, pendingFor, pendingNow, react, reasonProblem, settle, snapshotOf, utf8Bytes,
   type CommandKey, type Reaction, type Selection,
 } from "./live-model";
 
@@ -21,6 +23,7 @@ export type Shared = {
   onNotice: (text: string) => void;
   onReload: () => Promise<IntegrationsPage | null>;
   onSignedOut: () => void;
+  onLostAccess: () => void;
 };
 
 export type ChoiceField = "destination" | "types";
@@ -40,6 +43,7 @@ type FormProps = Shared & {
   fieldIds?: Partial<Record<ChoiceField, string>>;
   context?: Record<string, string>;
   untitled?: boolean;
+  object?: string;
 };
 
 export function formId(command: CommandKey, target: string): string {
@@ -47,7 +51,7 @@ export function formId(command: CommandKey, target: string): string {
 }
 
 export function CommandForm(props: FormProps) {
-  const { l, page, api, command, target, values, title, facts, impact, verb, done, onClose, onDone, onNotice, onReload, onSignedOut } = props;
+  const { l, page, api, command, target, values, title, facts, impact, verb, done, onClose, onDone, onNotice, onReload, onSignedOut, onLostAccess } = props;
   const id = formId(command, target);
   const [rationale, setRationale] = useState(() => frozenValues(pendingNow(command, target))?.rationale ?? draftOf(command, target).rationale ?? "");
   const [reasonError, setReasonError] = useState("");
@@ -102,7 +106,8 @@ export function CommandForm(props: FormProps) {
       const out = await api.command(command, target, tried.expected, reason, values, { request: tried.request, key: tried.key });
       settle(command, target, "ok");
       clearDraft(command, target);
-      onDone(done(out.fields, out.state, tried.snapshot));
+      const closed = out.state === "closed" && out.fields.reason === "requester_lost_right";
+      onDone(closed ? r.closedLost(l, props.object ?? "") : done(out.fields, out.state, tried.snapshot));
       onClose("done");
     } catch (err) {
       const failure = err instanceof AdminError ? err.failure : "failed";
@@ -141,9 +146,16 @@ export function CommandForm(props: FormProps) {
         await onReload();
       } else if (reaction === "denied") {
         const got = await onReload();
-        if (!got) setMessage({ text: k.gone(l, groupOf(command)), alert: true });
-        else {
+        if (!got) {
+          setMessage({ text: k.gone(l, groupOf(command)), alert: true });
+          onLostAccess();
+        } else {
           const outcome = deniedOutcome(command, target, hadPending, got);
+          if (outcome === "no_right") {
+            markLost(command, target, commandRight[command]);
+            onClose("refused");
+            return;
+          }
           const event = tried.context.event ?? "";
           onNotice(
             outcome === "applied_letter"
@@ -237,6 +249,8 @@ export function RowNote({ kept, blockers, focus }: { kept: ReactNode; blockers: 
 }
 
 export function blockerLines(l: Locale, code: string, action: string, label = ""): Blocker[] {
+  if (code === "no_right" && actionRight[action]) return [{ label, text: r.noRight(l, actionRight[action]) }];
+  if (code === "requester_lost_right") return [{ label, text: r.starterLost(l) }];
   const extra = k.blockerExtra(l, code);
   const main = { label, text: k.blocker(l, code, action) };
   return extra ? [main, { label, text: extra }] : [main];

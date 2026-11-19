@@ -94,7 +94,7 @@ func run(args []string, stop <-chan os.Signal) error {
 func accessFlags(fs *flag.FlagSet) (*server.AccessSettings, func()) {
 	access := server.DefaultAccessSettings()
 	byFlag := map[string]server.AccessSetting{}
-	for _, setting := range append(append(server.AccessSettingList(), server.IdentitySettingList()...), server.UserSettingList()...) {
+	for _, setting := range append(append(append(server.AccessSettingList(), server.IdentitySettingList()...), server.UserSettingList()...), server.HistorySettingList()...) {
 		byFlag[setting.Flag] = setting
 		numberFlag(fs, setting.Flag, setting.Name, setting.Unit, setting.Min, setting.Max, setting.Default, server.SettingNote(setting.Name), func(n int) { setting.Set(&access, n) })
 	}
@@ -105,6 +105,17 @@ func accessFlags(fs *flag.FlagSet) (*server.AccessSettings, func()) {
 		access.ClockBase = raw
 		return nil
 	})
+	fs.Func("accept-access-history-shortening", "one-time: apply a shorter access_history_days; the value must equal the new access_history_days", func(raw string) error {
+		n, ok := settingNumber(raw)
+		if !ok || n < 1 {
+			return errors.New("accept-access-history-shortening must be a whole number of days")
+		}
+		access.AcceptShortening = n
+		return nil
+	})
+	fs.StringVar(&access.AcceptHistoryClock, "accept-access-history-clock", "", "one-time: accept the server time logged when access history deletion was deferred after a clock jump (RFC 3339)")
+	fs.StringVar(&access.ReleaseMarker, "release-access-history-marker", "", "one-time: release one held access history marker from an earlier run, with release-access-history-reason")
+	fs.StringVar(&access.ReleaseReason, "release-access-history-reason", "", "one-time: the reason recorded for release-access-history-marker")
 	fs.BoolVar(&access.AcceptNewLedger, "accept-new-decision-ledger", false, "one-time: keep the isolated decision ledger under a new name and start a new one")
 	fs.BoolVar(&access.AcceptTrustReset, "accept-trust-reset", false, "one-time, with accept-new-decision-ledger: the replaced ledger has no carryable trust record; the installation default sign-in rules become active")
 	fs.StringVar(&access.CarryTrustFrom, "carry-trust-from", "", "one-time, with accept-new-decision-ledger: carry the latest trust record of the replaced ledger with this genesis ledger ID")

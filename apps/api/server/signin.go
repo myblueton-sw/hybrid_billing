@@ -15,6 +15,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
@@ -225,20 +226,48 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	}
 	if result != passwords.ResultOK {
 		failCode(w, commands.Unauthenticated, request)
+		reason := accesshistory.ReasonWrongPass
+		if result == passwords.ResultLocked {
+			reason = accesshistory.ReasonLocked
+		}
+		s.recordRefused(s.historyUser(login), reason, r)
 		return
 	}
-	cookie, answer, csrf, ok := s.signIn(login, workspace, r.TLS != nil, generation)
-	if !ok && s.sessions.overflowed(login) {
+	got := s.signInOutcome(login, workspace, r.TLS != nil, generation)
+	if !got.ok && s.sessions.overflowed(login) {
 		failCode(w, commands.DependencyUnavailable, request)
 		return
 	}
-	if !ok {
+	if !got.ok {
 		failCode(w, commands.Unauthenticated, request)
+		s.recordRefused(s.historyUser(login), got.refusal, r)
 		return
 	}
 	s.limit.refund()
-	http.SetCookie(w, cookie)
-	writeJSON(w, http.StatusOK, request, loginBody{User: answer.User(), Workspace: answer.Workspace(), Role: string(answer.Role()), Login: login, CSRF: csrf})
+	http.SetCookie(w, got.cookie)
+	writeJSON(w, http.StatusOK, request, loginBody{User: got.answer.User(), Workspace: got.answer.Workspace(), Role: string(got.answer.Role()), Login: login, CSRF: got.csrf})
+	s.recordSignedIn(got.answer.User(), got.answer.Workspace(), got.verifier, r)
+}
+
+type signInResult struct {
+	cookie   *http.Cookie
+	answer   identity.Answer
+	csrf     string
+	verifier identity.Verifier
+	refusal  string
+	ok       bool
+}
+
+func (s *Server) historyUser(login string) string {
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	user, _ := s.dir.userOf(login)
+	return user
+}
+
+func (s *Server) signIn(login, workspace string, secure bool, generation uint64) (*http.Cookie, identity.Answer, string, bool) {
+	got := s.signInOutcome(login, workspace, secure, generation)
+	return got.cookie, got.answer, got.csrf, got.ok
 }
 
 func validWorkspace(id string) bool {
@@ -254,11 +283,11 @@ func validWorkspace(id string) bool {
 	return true
 }
 
-func (s *Server) signIn(login, workspace string, secure bool, generation uint64) (*http.Cookie, identity.Answer, string, bool) {
+func (s *Server) signInOutcome(login, workspace string, secure bool, generation uint64) signInResult {
 	s.domain.Lock()
 	defer s.domain.Unlock()
 	if s.dir.generations[login] != generation {
-		return nil, identity.Answer{}, "", false
+		return signInResult{refusal: accesshistory.ReasonCredentials}
 	}
 	if s.sweepRoles() {
 		s.counter++
@@ -267,7 +296,7 @@ func (s *Server) signIn(login, workspace string, secure bool, generation uint64)
 	s.sessions.prune(now.Add(-sessionAbsolute))
 	cookie, csrf, v, err := s.openSession(LoginTriple(login), workspace, secure)
 	if err != nil {
-		return nil, identity.Answer{}, "", false
+		return signInResult{refusal: accesshistory.ReasonSessionFail}
 	}
 	accepted := workspace == s.bootWorkspace && !s.held() && s.acceptPending(login, v, now)
 	answer, err := s.identity.Boundary().Access(v, workspace)
@@ -280,15 +309,14 @@ func (s *Server) signIn(login, workspace string, secure bool, generation uint64)
 		}
 	}
 	if err != nil {
-		_ = s.identity.Boundary().EndSession(v)
-		s.sessions.drop(v)
+		s.rollbackOpened(v, true)
 		if accepted {
 			s.counter++
 		}
-		return nil, identity.Answer{}, "", false
+		return signInResult{refusal: accesshistory.ReasonAccess}
 	}
 	s.counter++
-	return cookie, answer, csrf, true
+	return signInResult{cookie: cookie, answer: answer, csrf: csrf, verifier: v, ok: true}
 }
 
 func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
@@ -301,9 +329,7 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		s.domain.Lock()
-		_ = s.identity.Boundary().EndSession(found.verifier)
-		s.sessions.drop(found.verifier)
-		s.dir.dropPickups(func(p pickup) bool { return p.session == found.verifier })
+		s.logoutSession(found)
 		s.counter++
 		s.domain.Unlock()
 	}
@@ -418,6 +444,11 @@ func (s *Server) setPassword(ctx context.Context, body map[string]string) string
 	if link.Purpose == passwords.PurposeReset && !s.resettable(login) {
 		return CodeLinkInvalid
 	}
+	if user, known := s.dir.userOf(login); known && link.Purpose != passwords.PurposeReset && !s.sampleIdentity(user) {
+		if s.incarnation(user) != nil {
+			return string(commands.DependencyUnavailable)
+		}
+	}
 	if _, err := s.passwords.Commit(token, record); err != nil {
 		return CodeLinkInvalid
 	}
@@ -425,12 +456,12 @@ func (s *Server) setPassword(ctx context.Context, body map[string]string) string
 	s.dir.dropLink(login)
 	if link.Purpose == passwords.PurposeReset {
 		s.dir.generations[login]++
-		s.endSessions(login)
+		s.endSessions(login, accesshistory.CausePasswordReset)
 		return ""
 	}
 	if v, err := s.probe(login); err == nil {
 		s.acceptPending(login, v, s.clock())
-		_ = s.identity.Boundary().EndSession(v)
+		s.endProbe(v)
 	}
 	return ""
 }
@@ -440,7 +471,7 @@ func (s *Server) resettable(login string) bool {
 	if err != nil {
 		return false
 	}
-	defer s.identity.Boundary().EndSession(v)
+	defer s.endProbe(v)
 	answer, err := s.identity.Boundary().Access(v, s.bootWorkspace)
 	return err != nil || answer.Role() != identity.Administrator
 }
@@ -468,6 +499,9 @@ func (s *Server) activate(ctx context.Context, body map[string]string) string {
 		return CodeLinkInvalid
 	}
 	if s.held() {
+		return string(commands.DependencyUnavailable)
+	}
+	if s.incarnation(s.bootUser) != nil {
 		return string(commands.DependencyUnavailable)
 	}
 	if err := s.identity.Boundary().Bootstrap(s.boot.verifier, s.bootUser, LoginTriple(login), email); err != nil {

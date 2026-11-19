@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 )
@@ -323,12 +324,12 @@ func TestOtherSessionEndersChangeTheGeneration(t *testing.T) {
 		},
 		"administrator suspension": func(f world, a, b actor) {
 			f.s.domain.Lock()
-			f.s.endSessions(MemberLogin)
+			f.s.endSessions(MemberLogin, accesshistory.CauseAdministrator)
 			f.s.domain.Unlock()
 		},
 		"end one": func(f world, a, b actor) {
 			f.s.domain.Lock()
-			f.s.endOne(verifierOfActor(b))
+			f.s.endOne(verifierOfActor(b), accesshistory.CauseAccessChanged)
 			f.s.domain.Unlock()
 		},
 	}

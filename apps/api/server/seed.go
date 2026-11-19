@@ -122,7 +122,7 @@ func (s *Server) Start() error {
 		steps = append(steps, s.seed...)
 	}
 	s.startedAt = now
-	steps = append(steps, step{"decision-ledger", s.openLedger}, step{"trust-replay", s.replayTrust}, step{"role-sweep", func() (bool, error) { return s.sweepRoles(), nil }})
+	steps = append(steps, step{"decision-ledger", s.openLedger}, step{"access-history", s.openHistory}, step{"trust-replay", s.replayTrust}, step{"role-sweep", func() (bool, error) { return s.sweepRoles(), nil }})
 	for _, st := range steps {
 		if err := s.Change(st.name, st.run); err != nil {
 			return err
@@ -157,8 +157,8 @@ func run(steps ...func() error) error {
 func (s *Server) seedAdmin(user, login, invitation string, now time.Time) error {
 	ws, b := s.Workspace(), s.identity.Boundary()
 	first, second, invite := verifierOf(random(tokenBytes)), verifierOf(random(tokenBytes)), verifierOf(random(tokenBytes))
-	defer b.EndSession(first)
-	defer b.EndSession(second)
+	defer s.endProbe(first)
+	defer s.endProbe(second)
 	return run(
 		func() error {
 			return s.identity.Installation().CreateUser(identity.Operator{Reference: "seed", Reason: "sample data"}, user, LoginTriple(login), login)
@@ -176,7 +176,7 @@ func (s *Server) seedAdmin(user, login, invitation string, now time.Time) error 
 func (s *Server) seedMember(now time.Time) error {
 	b := s.identity.Boundary()
 	admin := verifierOf(random(tokenBytes))
-	defer b.EndSession(admin)
+	defer s.endProbe(admin)
 	return run(
 		func() error {
 			return s.identity.Installation().CreateUser(identity.Operator{Reference: "seed", Reason: "sample data"}, SampleMember, LoginTriple(MemberLogin), MemberLogin)

@@ -167,8 +167,7 @@ func (s *Server) cleanPerson(side cleanupSide, user string, denyAt time.Time) {
 		if !ok || found.created.After(denyAt) {
 			continue
 		}
-		_ = s.identity.Boundary().EndSession(v)
-		s.sessions.drop(v)
+		s.cleanSession(v)
 		s.dir.dropPickupRefs(side.bySession[v])
 	}
 	s.dir.dropPickupRefs(side.byTarget[user])
@@ -200,10 +199,17 @@ func (s *Server) runWorker() {
 	if s.manual {
 		return
 	}
-	go every(cleanupEvery, s.stop, s.wake, func() { s.drainCleanup() })
-	go every(sweepEvery, s.stop, nil, func() {
-		s.domain.Lock()
-		s.sweepRoles()
-		s.domain.Unlock()
-	})
+	s.workers.Add(2)
+	go func() {
+		defer s.workers.Done()
+		every(cleanupEvery, s.stop, s.wake, func() { s.drainCleanup() })
+	}()
+	go func() {
+		defer s.workers.Done()
+		every(sweepEvery, s.stop, nil, func() {
+			s.domain.Lock()
+			s.sweepRoles()
+			s.domain.Unlock()
+		})
+	}()
 }

@@ -1,0 +1,249 @@
+[data-security-screen="M05"] .live-users > .mysec-hist {
+  grid-column: 1 / -1;
+  min-inline-size: 0;
+}
+
+[data-security-screen="M05"] .mysec-hist {
+  container-type: inline-size;
+  container-name: m05hist;
+  border-block-start: 1px solid var(--border-row);
+  padding-block-start: 24px;
+  min-inline-size: 0;
+}
+
+[data-security-screen="M05"] .mysec-hist-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+}
+
+[data-security-screen="M05"] .mysec-hist-head h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+[data-security-screen="M05"] .mysec-hist-head h2:focus:not(:focus-visible),
+[data-security-screen="M05"] .mysec-hist-failed:focus:not(:focus-visible),
+[data-security-screen="M05"] .mysec-hist-more-failed:focus:not(:focus-visible),
+[data-security-screen="M05"] .mysec-hist-end:focus:not(:focus-visible) {
+  outline: none;
+}
+
+[data-security-screen="M05"] .mysec-hist-policy {
+  margin-block-start: 12px;
+  max-inline-size: 72ch;
+  font-size: 14px;
+  color: var(--hb-ink);
+}
+
+[data-security-screen="M05"] .mysec-hist-policy p {
+  margin: 0;
+}
+
+[data-security-screen="M05"] .mysec-hist-policy p + p {
+  margin-block-start: 8px;
+}
+
+[data-security-screen="M05"] .mysec-hist-policy .mysec-hist-lead {
+  font-size: 16px;
+}
+
+[data-security-screen="M05"] .mysec-hist-strong {
+  font-weight: 600;
+}
+
+[data-security-screen="M05"] .mysec-hist-muted {
+  color: var(--text-muted);
+}
+
+[data-security-screen="M05"] .mysec-hist-notes {
+  margin-block-start: 16px;
+  max-inline-size: 80ch;
+  font-size: 14px;
+}
+
+[data-security-screen="M05"] .mysec-hist-notes ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+[data-security-screen="M05"] .mysec-hist-notes li + li {
+  margin-block-start: 8px;
+}
+
+[data-security-screen="M05"] .mysec-hist-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 32px;
+  margin-block-start: 24px;
+}
+
+[data-security-screen="M05"] .mysec-hist-period label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-block-end: 4px;
+}
+
+[data-security-screen="M05"] .mysec-hist-period select {
+  min-block-size: 44px;
+  inline-size: auto;
+  min-inline-size: 14rem;
+  max-inline-size: 20rem;
+  border: 1px solid var(--border-control);
+  border-radius: 0;
+  font-size: 16px;
+}
+
+[data-security-screen="M05"] .mysec-hist-period .live-meta {
+  margin: 4px 0 0;
+}
+
+[data-security-screen="M05"] .mysec-hist-scope {
+  max-inline-size: 56ch;
+  font-size: 14px;
+}
+
+[data-security-screen="M05"] .mysec-hist-scope p {
+  margin: 0;
+}
+
+[data-security-screen="M05"] .mysec-hist-loading {
+  margin-block-start: 16px;
+}
+
+[data-security-screen="M05"] .mysec-hist-table {
+  margin-block-start: 16px;
+}
+
+[data-security-screen="M05"] .mysec-hist-table table {
+  inline-size: 100%;
+  table-layout: fixed;
+}
+
+[data-security-screen="M05"] .mysec-hist-c1,
+[data-security-screen="M05"] .mysec-hist-c3,
+[data-security-screen="M05"] .mysec-hist-c4 {
+  inline-size: 20%;
+}
+
+[data-security-screen="M05"] .mysec-hist-c2 {
+  inline-size: 40%;
+}
+
+[data-security-screen="M05"] .mysec-hist-table th {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+[data-security-screen="M05"] .mysec-hist-table tbody tr {
+  min-block-size: 56px;
+  border-block-end: 1px solid var(--border-row);
+  vertical-align: top;
+}
+
+[data-security-screen="M05"] .mysec-hist-table td {
+  font-size: 14px;
+  vertical-align: top;
+}
+
+[data-security-screen="M05"] .mysec-hist-time {
+  font-variant-numeric: tabular-nums;
+}
+
+[data-security-screen="M05"] .mysec-nw {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+[data-security-screen="M05"] .mysec-hist-label {
+  display: block;
+  font-size: 16px;
+}
+
+[data-security-screen="M05"] .mysec-hist-reason,
+[data-security-screen="M05"] .mysec-hist-state {
+  display: block;
+  font-size: 14px;
+}
+
+[data-security-screen="M05"] .mysec-hist-session .live-mono {
+  display: block;
+  font-size: 14px;
+}
+
+[data-security-screen="M05"] .mysec-hist-table + .mysec-hist-more,
+[data-security-screen="M05"] .live-empty + .mysec-hist-more {
+  margin-block-start: 16px;
+}
+
+[data-security-screen="M05"] .mysec-hist-more-btn {
+  min-block-size: 44px;
+}
+
+[data-security-screen="M05"] .mysec-hist-failed,
+[data-security-screen="M05"] .mysec-hist-more-failed {
+  margin-block-start: 16px;
+  max-inline-size: 80ch;
+}
+
+[data-security-screen="M05"] .mysec-hist-end {
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+
+[lang="ko"] [data-security-screen="M05"] .mysec-hist h2,
+[lang="ko"] [data-security-screen="M05"] .mysec-hist label,
+[lang="ko"] [data-security-screen="M05"] .mysec-hist-policy,
+[lang="ko"] [data-security-screen="M05"] .mysec-hist-notes,
+[lang="ko"] [data-security-screen="M05"] .mysec-hist-label,
+[lang="ko"] [data-security-screen="M05"] .mysec-hist-reason {
+  word-break: keep-all;
+}
+
+@media (max-width: 767px) {
+  [data-security-screen="M05"] .mysec-hist-period,
+  [data-security-screen="M05"] .mysec-hist-period select,
+  [data-security-screen="M05"] .mysec-hist-more-btn {
+    inline-size: 100%;
+    max-inline-size: none;
+  }
+}
+
+@container m05hist (max-width: 599px) {
+  [data-security-screen="M05"] .mysec-hist-table thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  [data-security-screen="M05"] .mysec-hist-table table,
+  [data-security-screen="M05"] .mysec-hist-table tbody,
+  [data-security-screen="M05"] .mysec-hist-table tr,
+  [data-security-screen="M05"] .mysec-hist-table td {
+    display: block;
+  }
+  [data-security-screen="M05"] .mysec-hist-table colgroup {
+    display: none;
+  }
+  [data-security-screen="M05"] .mysec-hist-table tr {
+    padding-block: 12px;
+    padding-inline: 12px;
+    border-block-end: 1px solid var(--border-row);
+  }
+  [data-security-screen="M05"] .mysec-hist-table td {
+    padding: 2px 0;
+    border: 0;
+    block-size: auto;
+  }
+  [data-security-screen="M05"] .mysec-hist-table td[data-label]::before {
+    content: attr(data-label) ": ";
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+}

@@ -187,6 +187,17 @@ func (s *sessions) below(workspace string, epoch uint64) []identity.Verifier {
 	return out
 }
 
+func (s *sessions) take(v identity.Verifier) (session, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	found := s.byID[v]
+	if found == nil || !s.remove(v) {
+		return session{}, false
+	}
+	s.changed(found.login)
+	return *found, true
+}
+
 func (s *sessions) drop(v identity.Verifier) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -216,16 +227,13 @@ func (s *Server) openSession(triple identity.Triple, workspace string, secure bo
 		err = s.identity.Boundary().OpenSession(triple, v, sessionIdle, sessionAbsolute)
 	}
 	for tries := 0; errors.Is(err, identity.ErrLimit) && tries < maxEvictions; tries++ {
-		old, ok := s.sessions.oldest(triple.Subject, v)
-		if !ok {
+		if !s.evictOldest(triple.Subject, v) {
 			break
 		}
-		_ = s.identity.Boundary().EndSession(old)
-		s.sessions.drop(old)
 		err = s.identity.Boundary().OpenSession(triple, v, sessionIdle, sessionAbsolute)
 	}
 	if err != nil {
-		s.sessions.drop(v)
+		s.rollbackOpened(v, false)
 		return nil, "", v, err
 	}
 	return &http.Cookie{Name: CookieName, Value: encode(raw), Path: CookiePath, HttpOnly: true, SameSite: http.SameSiteStrictMode, Secure: secure,

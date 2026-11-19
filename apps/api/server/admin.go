@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/decisionledger"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
@@ -234,6 +235,9 @@ func createUser(s *Server, c *change) (string, map[string]string, error) {
 		return "", nil, commands.Fail(commands.DependencyUnavailable)
 	}
 	user := "user-" + hex.EncodeToString(random(8))
+	if s.incarnation(user) != nil {
+		return "", nil, commands.Fail(commands.DependencyUnavailable)
+	}
 	if err := s.identity.Installation().CreateUser(operator(c), user, LoginTriple(login), email); err != nil {
 		return "", nil, mapIdentity(err)
 	}
@@ -324,7 +328,7 @@ func departUser(s *Server, c *change) (string, map[string]string, error) {
 		s.dir.dropInvite(c.login)
 		s.dir.dropLink(c.login)
 		s.dir.dropHolder(c.ctx.Target)
-		s.endSessions(c.login)
+		s.endSessions(c.login, accesshistory.CauseAdministrator)
 	}
 	s.dir.depart(c.ctx.Target)
 	s.dir.dropPickups(func(p pickup) bool { return p.target == c.ctx.Target })

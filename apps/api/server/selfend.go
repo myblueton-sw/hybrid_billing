@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 )
@@ -192,16 +193,6 @@ func invalidFields(w http.ResponseWriter, request string, fields ...string) {
 	writeJSON(w, rule.status, request, body)
 }
 
-func (s *Server) endModule(v identity.Verifier) error {
-	if s.faulty("self-end-unavailable") {
-		return identity.ErrUnavailable
-	}
-	if s.faulty("self-end-unexpected") {
-		return errSelfEndUnexpected
-	}
-	return s.identity.Boundary().EndSession(v)
-}
-
 func settleOf(err error) (string, string) {
 	switch {
 	case err == nil:
@@ -311,7 +302,7 @@ func (s *Server) endSelfSessions(w http.ResponseWriter, r *http.Request) {
 		s.selfEndHook()
 	}
 	before := s.sessions.generation(found.login)
-	result := s.sessions.endManifest(found.login, found.verifier, handles, kind == kindOthers)
+	result := s.takeManifest(found, handles, kind == kindOthers)
 	if !result.ok {
 		failCode(w, commands.Unauthenticated, request)
 		return
@@ -337,8 +328,9 @@ func (s *Server) denyManifest(found session, kind, listed, digest string, result
 	op := &selfEnd{id: "session-end-" + strconv.FormatUint(s.selfSeq, 10), kind: kind, blockedAt: now, before: result.before, listed: listed, after: result.after,
 		digest: digest, notIncluded: []selfRef{}}
 	for _, ended := range result.ended {
+		s.recordEnded(ended, accesshistory.CauseByYou)
 		v := ended.verifier
-		state, reason := settleOf(s.endModule(v))
+		state, reason := settleOf(s.retryModuleEnd(v))
 		row := selfEndRow{Handle: handleOf(v), SignedIn: stamp(ended.created), Result: resultEnded, Items: endedItems(state, reason)}
 		op.rows = append(op.rows, row)
 		s.dir.dropPickups(func(p pickup) bool { return p.session == v })
@@ -390,7 +382,7 @@ func (s *Server) drainSelfEnds() int {
 		}
 		worked++
 		retry.attempts++
-		state, reason := settleOf(s.endModule(v))
+		state, reason := settleOf(s.retryModuleEnd(v))
 		if state == itemPending {
 			if retry.attempts >= selfEndAttempts {
 				state, reason = itemFailed, "retry_budget_spent"
@@ -418,6 +410,6 @@ func (s *Server) settleEnded(v identity.Verifier, err error) {
 
 func (s *Server) settleDenied(login string) {
 	for _, v := range s.sessions.deniedOf(login) {
-		s.settleEnded(v, s.endModule(v))
+		s.settleEnded(v, s.retryModuleEnd(v))
 	}
 }

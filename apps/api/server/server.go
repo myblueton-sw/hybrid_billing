@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/bulkrevoke"
@@ -116,6 +117,9 @@ type Server struct {
 	ev              *evidenceStore
 	changes         *accesschange.Registry
 	ledger          *decisionledger.Ledger
+	history         *accesshistory.History
+	holdPlaced      sync.Map
+	workers         sync.WaitGroup
 	startedAt       time.Time
 	limit           *limiter
 	slots           chan struct{}

@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/decisionledger"
@@ -323,7 +324,7 @@ func (s *Server) activateTrust(a trustchange.Approval, base trustchange.Base, at
 func (s *Server) sweep(workspace string, epoch uint64) trustProgress {
 	ended := s.sessions.below(workspace, epoch)
 	for _, v := range ended {
-		s.endOne(v)
+		s.endOne(v, accesshistory.CauseTrustChange)
 	}
 	return trustProgress{ended: len(ended), remaining: len(s.sessions.below(workspace, epoch))}
 }

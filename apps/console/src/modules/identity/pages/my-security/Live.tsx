@@ -14,6 +14,7 @@ import { m } from "./live-copy";
 import { canChange, changeOutcome, checkChange, heldTags, others, running } from "./live-model";
 import { e, whenSeconds } from "./end-copy";
 import { EndDialog, EndsRegion, stateSentence, type Check, type EndResult, type EndTarget } from "./EndOthers";
+import AccessHistory from "./AccessHistory";
 import "../users/live.css";
 
 type Mode = { kind: "list" } | { kind: "password" };
@@ -220,6 +221,7 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
   const [announce, setAnnounce] = useState("");
   const [focusTo, setFocusTo] = useState("");
   const [formKey, setFormKey] = useState(0);
+  const [historyKey, setHistoryKey] = useState(0);
   const pending = useRef(false);
   useEffect(() => {
     if (!focusTo) return;
@@ -244,6 +246,7 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
         setPage(got);
         setStatus("ready");
         setError(null);
+        setHistoryKey((k) => k + 1);
         after?.(got);
       },
       (err) => {
@@ -465,7 +468,6 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
         [m.youSignedIn(l), when(l, page.signed_in_at)],
         [m.lastConfirmed(l), when(l, page.authenticated_at)],
       ]} />
-      {prelaunch(m.historyNote(l))}
     </section>
   );
   return (
@@ -492,6 +494,7 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
         </div>
       )}
       {page && wide && <aside className="live-panel" aria-label={m.limitsTitle(l)}>{limits}</aside>}
+      {page && <AccessHistory key={`${page.user_id}:${page.workspace}:${page.signed_in_at}`} l={l} api={api} self={page} reloadKey={historyKey} say={say} onSignedOut={() => setSignedOut((s) => s || "plain")} />}
       {dialog}
     </div>
   );

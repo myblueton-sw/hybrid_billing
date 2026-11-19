@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, attempt, sequence, type AdminClient, type Attempt, type CommandId, type CredentialRow, type ServiceRow, type ServicesPage } from "../../../../service/admin";
+import { AdminError, attempt, sequence, type AdminClient, type CommandId, type CredentialRow, type ServiceRow, type ServicesPage } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
@@ -10,7 +10,7 @@ import { w } from "../users/live-copy";
 import { failureText } from "../users/live-model";
 import { when } from "../authentication/live-model";
 import { v } from "./live-copy";
-import { credentials, credentialState, initialService, keepsHold, issueBlock, liveCount, prefix, serviceState, split, validName, wholeDays } from "./live-model";
+import { attemptState, credentials, credentialState, initialService, keepsHold, issueBlock, liveCount, panelShown, pinIssue, prefix, serviceState, split, validName, wholeDays } from "./live-model";
 import { flushSync } from "react-dom";
 import "../users/live.css";
 
@@ -56,17 +56,17 @@ function useCommand(api: AdminClient, revision: string, onReload: () => void, ho
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [focusKey, setFocusKey] = useState(0);
-  const tried = useRef<Attempt>(attempt());
-  const held = useRef("");
+  const [track] = useState(() => attemptState(attempt));
   const [holding, setHolding] = useState(false);
-  useEffect(() => { if (!held.current) tried.current = attempt(); }, [revision]);
-  const renew = () => { held.current = ""; setHolding(false); tried.current = attempt(); };
+  useEffect(() => track.revised(), [track, revision]);
+  const renew = () => { track.renew(); setHolding(false); };
   const run = async (id: CommandId, target: string, reason: string, values: Record<string, string>) => {
     setBusy(true);
     setError(null);
+    const sent = track.send(revision);
     try {
-      const done = await api.command(id, target, held.current || revision, reason, values, tried.current);
-      held.current = "";
+      const done = await api.command(id, target, sent.expected, reason, values, sent.attempt);
+      track.succeeded();
       setHolding(false);
       return done;
     } catch (err) {
@@ -75,20 +75,21 @@ function useCommand(api: AdminClient, revision: string, onReload: () => void, ho
         setFocusKey((k) => k + 1);
         return null;
       }
-      const unknown = err instanceof AdminError && keepsHold(err.failure, held.current !== "");
+      const unknown = err instanceof AdminError && keepsHold(err.failure, track.held() !== "");
       if (holdUnknown && unknown) {
-        held.current = held.current || revision;
+        track.keep(revision);
         setHolding(true);
       } else renew();
       if (settles(err) || unknown) onReload();
       setFocusKey((k) => k + 1);
       return null;
     } finally {
+      track.idle();
       setBusy(false);
     }
   };
   const hold = (err: AdminError) => {
-    held.current = held.current || revision;
+    track.keep(revision);
     setHolding(true);
     setError(err);
     setFocusKey((k) => k + 1);
@@ -617,11 +618,11 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
     } else if (mode.kind === "revoke") {
       const target = mode;
       panel = <RevokeStep key={target.id} l={l} api={api} page={page} id={target.id} service={target.service} initial={target.reason} onReload={load}
-        onCancel={() => { setMode({ kind: "form" }); setFocusTo(`[data-credential="${target.id}"]`); }}
+        onCancel={() => { setMode({ kind: "form" }); setOpen(false); setFocusTo(`[data-credential="${target.id}"]`); }}
         onDone={(message) => { setUnstored((u) => u.filter((x) => x !== target.id)); finished(message, { kind: "form" }, "#svc-cred-title"); }} />;
       backTo = `[data-credential="${target.id}"]`;
     } else if (wide || mode.kind === "form") {
-      panel = <IssueForm key={current.id + formKey} l={l} api={api} page={page} s={current} stepping={!wide} onReload={load} onAccounts={() => onView("accounts")} onPin={() => setChosen(current.id)}
+      panel = <IssueForm key={current.id + formKey} l={l} api={api} page={page} s={current} stepping={!wide} onReload={load} onAccounts={() => onView("accounts")} onPin={() => { const pin = pinIssue(current.id); setChosen(pin.chosen); setOpen(pin.open); }}
         onIssued={(ref, credential, until) => { setNotice(""); setUnstored((u) => (u.includes(credential) ? u : [...u, credential])); load(); setMode({ kind: "reveal", ref, service: current.id, credential, until }); }} />;
       backTo = ".svc-issue-open";
     }
@@ -695,7 +696,7 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
         <>
           <div className="service-field">
             <label htmlFor="svc-select">{v.colService(l)}</label>
-            <select id="svc-select" className="live-select live-mono" value={current.id} onChange={(e) => { setChosen(e.target.value); setMode({ kind: "form" }); setNotice(""); }}>
+            <select id="svc-select" className="live-select live-mono" value={current.id} onChange={(e) => { setChosen(e.target.value); setMode({ kind: "form" }); setOpen(false); setNotice(""); }}>
               {page.services.map((s) => <option key={s.id} value={s.id}>{s.state === "active" ? s.id : `${s.id} (${serviceState(l, s.state)})`}</option>)}
             </select>
           </div>
@@ -710,7 +711,7 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
       )}
     </section>
   );
-  const showPanel = panel !== null && (wide || stepping);
+  const showPanel = panel !== null && panelShown(wide, mode.kind === "form", open);
   return (
     <div className="live-users" data-live={credentialsView ? "credentials" : "accounts"} data-wide={wide ? "true" : "false"}>
       <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>

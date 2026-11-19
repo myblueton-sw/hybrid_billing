@@ -1,5 +1,5 @@
 import type { Locale } from "../../../../shared/types";
-import type { CredentialRow, ServiceRow, ServicesPage } from "../../../../service/admin";
+import type { Attempt, CredentialRow, ServiceRow, ServicesPage } from "../../../../service/admin";
 import { when } from "../authentication/live-model";
 import { v } from "./live-copy";
 
@@ -56,4 +56,36 @@ export function keepsHold(failure: string, holding: boolean): boolean {
   if (failure === "busy" || failure === "unavailable") return true;
   if (failure === "partial") return !holding;
   return holding && (failure === "limited" || failure === "unauthenticated");
+}
+
+export function panelShown(wide: boolean, form: boolean, open: boolean): boolean {
+  return wide || !form || open;
+}
+
+export function pinIssue(service: string): { chosen: string; open: boolean } {
+  return { chosen: service, open: true };
+}
+
+export function attemptState(fresh: () => Attempt) {
+  let tried = fresh();
+  let held = "";
+  let sending = false;
+  let spent = false;
+  return {
+    held: () => held,
+    revised() {
+      if (held || sending) return;
+      tried = fresh();
+      spent = false;
+    },
+    send(revision: string): { attempt: Attempt; expected: string } {
+      if (!held && spent) { tried = fresh(); spent = false; }
+      sending = true;
+      return { attempt: tried, expected: held || revision };
+    },
+    succeeded() { held = ""; spent = true; },
+    keep(revision: string) { held = held || revision; },
+    renew() { held = ""; tried = fresh(); spent = false; },
+    idle() { sending = false; },
+  };
 }

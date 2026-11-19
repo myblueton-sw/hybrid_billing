@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { CredentialRow, ServiceRow, ServicesPage } from "../../../../service/admin";
-import { credentials, credentialState, initialService, keepsHold, issueBlock, liveCount, serviceState, split, validName, wholeDays } from "./live-model";
+import { attemptState, credentials, credentialState, initialService, keepsHold, issueBlock, liveCount, panelShown, pinIssue, serviceState, split, validName, wholeDays } from "./live-model";
 import { v } from "./live-copy";
 
 const cred = (change: Partial<CredentialRow>): CredentialRow => ({ id: "cred-1", not_before: "2026-11-16T00:00:00Z", not_after: "2026-12-16T00:00:00Z", state: "active", usable: true, ...change });
@@ -70,4 +70,51 @@ test("an unknown issue outcome holds the attempt and only a definitive answer re
     assert.equal(keepsHold(f, true), false, f);
     assert.equal(keepsHold(f, false), false, f);
   }
+});
+
+test("a submitted issue stays on screen when the layout narrows", () => {
+  const pinned = pinIssue("svc-a");
+  assert.equal(pinned.chosen, "svc-a");
+  for (const wide of [true, false]) assert.equal(panelShown(wide, true, pinned.open), true, String(wide));
+  assert.equal(panelShown(false, true, false), false);
+  assert.equal(panelShown(false, false, false), true);
+});
+
+const counter = () => {
+  let n = 0;
+  return () => { n += 1; return { request: `r${n}`, key: `k${n}` }; };
+};
+
+test("a reload while an issue is in flight keeps its attempt for the retry", () => {
+  const t = attemptState(counter());
+  const first = t.send("rev-1");
+  t.revised();
+  t.keep("rev-1");
+  t.idle();
+  t.revised();
+  const retry = t.send("rev-2");
+  assert.deepEqual(retry.attempt, first.attempt);
+  assert.equal(retry.expected, "rev-1");
+});
+
+test("an attempt is renewed by a reload when idle, after a success and on renew", () => {
+  const t = attemptState(counter());
+  const a = t.send("rev-1").attempt;
+  t.idle();
+  t.revised();
+  const b = t.send("rev-1").attempt;
+  assert.notDeepEqual(b, a);
+  t.succeeded();
+  t.idle();
+  const c = t.send("rev-2").attempt;
+  assert.notDeepEqual(c, b);
+  t.succeeded();
+  t.keep("rev-2");
+  t.idle();
+  assert.deepEqual(t.send("rev-3"), { attempt: c, expected: "rev-2" });
+  t.renew();
+  t.idle();
+  const d = t.send("rev-3");
+  assert.notDeepEqual(d.attempt, c);
+  assert.equal(d.expected, "rev-3");
 });

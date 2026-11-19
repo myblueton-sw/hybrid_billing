@@ -375,7 +375,15 @@
       "pass": 125,
       "fail": 0,
       "exception": false
+    },
+    {
+      "path": "/private/tmp/hb-combined-qa/310/S-1795067346185480000/browser.log",
+      "sha256": "b2505230c4715d7ecdf1fbb51b540d8b3ad926c1c2854f9d07d88eb4756094b7",
+      "pass": 125,
+      "fail": 0,
+      "exception": false
     }
   ],
-  "artifact_boundary": "Local synthetic artifacts under /private/tmp; temporary retention only, not native-language or owner approval."
+  "artifact_boundary": "Local synthetic artifacts under /private/tmp; temporary retention only, not native-language or owner approval.",
+  "integration_base": "73745d608ad9b469d99380e0380a05ed973f0634"
 }

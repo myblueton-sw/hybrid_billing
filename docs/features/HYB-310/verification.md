@@ -338,3 +338,8 @@ This section supersedes the earlier pending-review statements for the resumed ca
 Runtime: macOS arm64, Go 1.25.7, Node 26.7.0, installed Chromium headless build 1243. Raw browser artifacts are local synthetic evidence under `/private/tmp/hb-combined-qa/310/`; their hashes and candidate source hashes are recorded in `verification-evidence.json`. Temporary artifact retention is not guaranteed. The reusable earlier runner remains in the owner's external QA-runner directory; its repository packaging is not part of this ticket.
 
 KO/AR native-language approval, assistive-technology testing, actual Linux/Windows execution and owner acceptance remain unverified. The requested Claude CLI review was unavailable because of the reported usage limit; no successful CLI review is claimed. These are pre-launch verification results, not production readiness. PR integration and merge read-back are separate stages.
+
+
+### PR-base refresh
+
+The reviewed commit was rebased onto `origin/main` `73745d6` without conflicts. `git diff b807c36 HEAD -- '*.go'` was empty: the Go source tested above did not change. The current-main console suite passed 809 tests, the final build passed, and fresh P02 S re-check passed all 125 assertions. The earlier E/F backend and action checks remain recorded without claiming they were rerun after this UI-baseline refresh.

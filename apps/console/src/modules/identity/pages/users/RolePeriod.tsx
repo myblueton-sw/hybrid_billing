@@ -124,16 +124,16 @@ export function Settings({ l, settings }: { l: Locale; settings: SettingRow[] })
     <details className="m01-settings">
       <summary>{p.settings(l)}</summary>
       <div className="security-table-scroll">
-        <table>
-          <thead><tr>{cols.map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
-          <tbody>
+        <table role="table">
+          <thead role="rowgroup"><tr role="row">{cols.map((h) => <th key={h} scope="col" role="columnheader">{h}</th>)}</tr></thead>
+          <tbody role="rowgroup">
             {settings.map((s) => (
-              <tr key={s.name}>
-                <td data-label={cols[0]}>{b.settingName(l, s.name)}{m.settingHint(l, s.name) && <span className="live-sub m01-line m01-setting-hint">{m.settingHint(l, s.name)}</span>}</td>
-                <td data-label={cols[1]} className="m01-num"><bdi dir="ltr">{s.value}</bdi> {s.unit}</td>
-                <td data-label={cols[2]} className="m01-num"><bdi dir="ltr">{s.default}</bdi></td>
-                <td data-label={cols[3]} className="m01-num"><bdi dir="ltr">{s.min}–{s.max}</bdi></td>
-                <td data-label={cols[4]}>{b.source(l, s.source)}</td>
+              <tr key={s.name} role="row">
+                <td role="cell" data-label={cols[0]}>{b.settingName(l, s.name)}{m.settingHint(l, s.name) && <span className="live-sub m01-line m01-setting-hint">{m.settingHint(l, s.name)}</span>}</td>
+                <td role="cell" data-label={cols[1]} className="m01-num"><bdi dir="ltr">{s.value}</bdi> {s.unit}</td>
+                <td role="cell" data-label={cols[2]} className="m01-num"><bdi dir="ltr">{s.default}</bdi></td>
+                <td role="cell" data-label={cols[3]} className="m01-num"><bdi dir="ltr">{s.min}–{s.max}</bdi></td>
+                <td role="cell" data-label={cols[4]}>{b.source(l, s.source)}</td>
               </tr>
             ))}
           </tbody>

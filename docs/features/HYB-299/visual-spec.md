@@ -501,6 +501,8 @@ details.m01-settings  summary [TW "Installation settings"] (§7.6)
 - **Stacked at 390,** with labelled cells.
 - **The open row:** `--surface-hover` + `.m01-tag` [TW "Open"].
 
+**HYB-332 amendment (2026-11-19):** "stacked at 390" is implemented as a container rule. When the jobs list container (`div.m01-jobs-list`) is below 600px, which includes the list column of the split layout with a job open (about 435px at 1440), the table stacks into labelled blocks like `.m01-settings`. With a job open, the split rules still hide every cell except the Job cell and show its compact lines. Stacked rows keep a 12px inline inset so text stays inside the open-row fill. In the stacked form `thead` is visually hidden, each row is a block with a row separator, and every cell after the Job cell starts with its column label ("{label}: ", 14px muted). Headers of the jobs and settings tables set `overflow-wrap: normal` (overriding the inherited `anywhere`), so a header word is not split. `span.m01-opener` is a block, so its box holds the 44px opener button. Stacked cells here and in the stacked `.m01-settings` table take their content height (`block-size: auto`), overriding the global 44px table-cell row height, so long setting names and job lines are not cut.
+
 ### 7.3 Job detail (executed)
 
 ```

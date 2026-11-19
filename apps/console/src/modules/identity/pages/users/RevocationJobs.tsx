@@ -177,7 +177,7 @@ function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, out
   );
 }
 
-function JobTable({ l, jobs, open, onOpen, days }: { l: Locale; jobs: BulkJob[]; open: string; onOpen: (id: string) => void; days: number }) {
+export function JobTable({ l, jobs, open, onOpen, days }: { l: Locale; jobs: BulkJob[]; open: string; onOpen: (id: string) => void; days: number }) {
   const strong = (j: BulkJob) => ["unconfirmed", "not_started", "waiting", "partial"].includes(jobWords(j));
   const people = (j: BulkJob) =>
     j.state === "draft" ? <>{b.notCounted(l)}{j.staged > 0 && <span className="live-sub m01-line">{b.sentSoFar(l, j.staged)}</span>}</>
@@ -187,12 +187,12 @@ function JobTable({ l, jobs, open, onOpen, days }: { l: Locale; jobs: BulkJob[];
       : j.state === "draft" && j.selection === "filter" && j.fixed_at ? <At l={l} template={m.fixedWhen(l)} iso={j.fixed_at} zone={false} /> : "—";
   return (
     <div className="security-table-scroll">
-      <table className="m01-jobs-table">
-        <thead><tr><th scope="col">{b.colJob(l)}</th><th scope="col">{b.colState(l)}</th><th scope="col">{b.countWords(l, "targets")}</th><th scope="col">{b.colWhen(l)}</th></tr></thead>
-        <tbody>
+      <table className="m01-jobs-table" role="table">
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">{b.colJob(l)}</th><th scope="col" role="columnheader">{b.colState(l)}</th><th scope="col" role="columnheader">{b.countWords(l, "targets")}</th><th scope="col" role="columnheader">{b.colWhen(l)}</th></tr></thead>
+        <tbody role="rowgroup">
           {jobs.map((j) => (
-            <tr key={j.id} className={j.id === open ? "live-selected" : undefined}>
-              <td data-label={b.colJob(l)}>
+            <tr key={j.id} role="row" className={j.id === open ? "live-selected" : undefined}>
+              <td role="cell" data-label={b.colJob(l)}>
                 <span className="m01-opener">
                   <button type="button" className="m01-open" data-job={j.id} aria-current={j.id === open ? "true" : undefined} onClick={() => onOpen(j.id)}>{b.bulkN(l, number(j.id))}</button>
                   {j.id === open && <span className="m01-tag" aria-hidden="true">{b.open(l)}</span>}
@@ -203,9 +203,9 @@ function JobTable({ l, jobs, open, onOpen, days }: { l: Locale; jobs: BulkJob[];
                 <span className={"live-sub m01-compact" + (strong(j) ? " m01-strong" : "")}>{b.words(l, jobWords(j))}</span>
                 <span className="live-sub m01-compact">{people(j)}</span>
               </td>
-              <td data-label={b.colState(l)} className={strong(j) ? "m01-strong" : undefined}>{b.words(l, jobWords(j))}</td>
-              <td data-label={b.countWords(l, "targets")}>{people(j)}</td>
-              <td data-label={b.colWhen(l)}>{when(j)}</td>
+              <td role="cell" data-label={b.colState(l)} className={strong(j) ? "m01-strong" : undefined}>{b.words(l, jobWords(j))}</td>
+              <td role="cell" data-label={b.countWords(l, "targets")}>{people(j)}</td>
+              <td role="cell" data-label={b.colWhen(l)}>{when(j)}</td>
             </tr>
           ))}
         </tbody>

@@ -166,9 +166,6 @@ func decodeEnd(r io.Reader) (endBody, string, error) {
 		if body.Selection == nil || !strings.HasPrefix(*body.Selection, "session-selection-") || !isHex(strings.TrimPrefix(*body.Selection, "session-selection-"), 32) || body.Digest == nil || !isHex(*body.Digest, 64) || body.Count == nil || *body.Count < 1 || *body.Count > maxSessions || body.Session != "" || body.Generation != nil || body.Handles != nil {
 			return body, "selection", errShape
 		}
-		if _, exists := values["session"]; exists {
-			return body, "session", errShape
-		}
 		return body, "", nil
 	}
 	if values["digest"] != nil || values["count"] != nil {
@@ -257,14 +254,6 @@ func (op *selfEnd) view(replay bool) selfEndView {
 		v.State = stateComplete
 	}
 	return v
-}
-
-func (s *Server) selfEndViews(user string) []selfEndView {
-	out := []selfEndView{}
-	for _, op := range s.selfEnds[user] {
-		out = append(out, op.view(false))
-	}
-	return out
 }
 
 func (s *Server) remember(user string, op *selfEnd) {

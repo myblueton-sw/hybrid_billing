@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "be16c48965f25090d6d9f5134a3de12f74795175",
+  "scope": "quiesced_create_authority_clock_boundaries",
+  "production_unchanged": true,
+  "checks": {
+    "initial": "FAIL compile referenced nonexistent declaration.Service field; corrected test only",
+    "scoped": "PASS1.540s",
+    "focused": "PASS1.813s separate native profile",
+    "full_server_short": "ok  \tgithub.com/myblueton-sw/hybrid_billing/apps/api/server\t199.241s\tcoverage: 99.8% of statements",
+    "coverage": {
+      "matching_production_sources": 107,
+      "weighted_statements": 11779,
+      "uncovered": 28,
+      "previous_uncovered": 29,
+      "newly_covered_blocks": [
+        {
+          "location": "github.com/myblueton-sw/hybrid_billing/apps/api/server/services.go:270.16,272.3",
+          "weighted_statements": 1,
+          "also_hit_by_focused_contract": true
+        }
+      ],
+      "newly_covered_weighted_statements": 1,
+      "no_profile_union": true
+    },
+    "race": "PASS5groups17.250s",
+    "vet": "PASS server",
+    "portable_compilation": "PASS Linux/Windows amd64; no foreign execution",
+    "mutations": "2 assertion-killed; exact restoration/private cache removed",
+    "docs": "two status checks plus manual metadata/local links PASS; limited scope",
+    "required100": "NOT_MET",
+    "all_packages_frontend_browser": "NOT_RERUN historical source-bound evidence unchanged"
+  },
+  "independent_source_review": "/root/hyb310_review PASS genuine collection/quiescence/capture/observer/adopted time/proposed-vs-committed revision; no test execution",
+  "limits": [
+    "Quiesced direct Apply, not live HTTP or command-ledger/history writes",
+    "Owned synchronized clock/independent elapsed/fresh fixture each cutoff; no global override/map edits",
+    "Final timed create admission precedes untimed writes; counts select inputs, not per-query benchmarks",
+    "No guessed cutoff stage/profile union/individual necessity of all redundant fences",
+    "No product changes/coverage waiver; merge/read-back and parent M03/M02 pending"
+  ],
+  "source_files": [
+    {
+      "path": "apps/api/server/service_create_clock_fixture_test.go",
+      "sha256": "bea16141f5102ef73168197ac25c6cbf28d899bb4d0a1d51edc8f057e16c70af",
+      "bytes": 5530
+    },
+    {
+      "path": "apps/api/server/service_create_clock_test.go",
+      "sha256": "f22b74b21ecb34fce5b2c7273aab8da430b6e7e8bb9a034de154f79809559d0c",
+      "bytes": 1670
+    },
+    {
+      "path": "apps/api/server/service_detail_clock_fixture_test.go",
+      "sha256": "4c3936122d595e293255c9f3af416de9491780d0287a47fe74796667fdf20c9d",
+      "bytes": 4645
+    },
+    {
+      "path": "apps/api/server/services.go",
+      "sha256": "699e5867439a9c44eb4d0bef1ebb06a4ddd180cbbbf72043ff7f8ee9b56c43a3",
+      "bytes": 12586
+    },
+    {
+      "path": "apps/api/server/server.go",
+      "sha256": "4b51eed55298f047cbfcfc19b6b8e9865eb7e61a16c0e4ad374f08ecff502f81",
+      "bytes": 14634
+    },
+    {
+      "path": "apps/api/server/directory.go",
+      "sha256": "174f771cbdfe66f52749b06f46b1881269737b2be9bb5b802bf283845bba9cc1",
+      "bytes": 4939
+    },
+    {
+      "path": "apps/api/server/servicedelivery.go",
+      "sha256": "bf61f07bd773aa034ab8dec24508b2ca02551357c95328fcabb124315f7f8202",
+      "bytes": 1173
+    },
+    {
+      "path": "modules/identity/workspace.go",
+      "sha256": "9ab1a720c11723ebccdc1c45f70eab21e9f23ed31f7e8573544db2d07d491101",
+      "bytes": 14479
+    },
+    {
+      "path": "docs/features/HYB-304/m04-create-clock-contracts.md",
+      "sha256": "8c02970711379f3e7a673e5f184e4b7db66e3e09c095956ea5f9d64ab9eb5fe7",
+      "bytes": 5681
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "50da0916b8539f0a30841277b547927c60b1a872ae57195c0cf89df7a91215d3",
+      "bytes": 43703
+    },
+    {
+      "path": "docs/features/HYB-304/m04-completion.md",
+      "sha256": "69799cde601d13aa95a02d09af2d4d80bdfc2833789f12afb6c60a47cad00ee0",
+      "bytes": 19043
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "491a2c7bf19bf992648835713c207a258ed668bdf7100c0c7ed5b43b1f6ec8c3",
+      "bytes": 60366
+    },
+    {
+      "path": "docs/features/HYB-304/m04-coverage-residuals.md",
+      "sha256": "d2d5506bcf0f61ebdcfabf9ed3989a425b1d9a3ab848a82da3ad35b71ac1d0e8",
+      "bytes": 4769
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-create-clock-coverage-summary.json",
+      "sha256": "443f194198a7a2f61b755a9ad30036d729e5c86f5d4e134acbbe678fe5a29c3e",
+      "bytes": 411
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-evidence.py",
+      "sha256": "d4a9c24c67229f15adb675a664b441b4a60a56a564ed7798e266c4be115872f0",
+      "bytes": 8325
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-first.log",
+      "sha256": "0fa4e7e5820118213bf75cb74876b153abffb7abc86075689d9c8971b18caa45",
+      "bytes": 80
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-focused.cover",
+      "sha256": "e2e644ea5b440a35a682a1ee959cf09926a02b2a76ef06c8bd2dcee1cc7ff0dd",
+      "bytes": 684312
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-focused.log",
+      "sha256": "59ddbd36d887a284b948eb1f8cbc0c6f94e8092dff360ce0343592b0d249b2de",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-linux-amd64.test",
+      "sha256": "e1da05980fee13fed3d45689f38d9139dd614f69fd793cbbfdc1d560845b5f47",
+      "bytes": 28273612
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-linux-format.log",
+      "sha256": "9292a5a41b46aee5e7db533ba2e0819b54876dc1c1aa17d1d30b889d85137cac",
+      "bytes": 208
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-mutant-committed-direct-revision.log",
+      "sha256": "285272ee3d877b6f06f208680d20699a4cb0a2a3f99627ef5bb844a9b436b75f",
+      "bytes": 269
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-mutant-ignored-final-identity-refusal.log",
+      "sha256": "1a103e2d2fb6a5a9a2c59674c0f2c8a00d33a793254aabfe0e274df89478733a",
+      "bytes": 525
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-mutants.json",
+      "sha256": "afec18e953dc715dcfa079e3a8a7ef706f0387abbd5b80b4040872d40665a9f5",
+      "bytes": 951
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-mutants.log",
+      "sha256": "624196955994f515273111c8e83182827030005179c17e96662a0cdade071d04",
+      "bytes": 71
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-mutants.py",
+      "sha256": "48715584928a7957a9a482ed7d0aacb4743584e4c84022e955eadcf047c1fc7d",
+      "bytes": 2330
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-okf.log",
+      "sha256": "8e166b9e674a153f11ad04092c28b1aa8318539fa7d2cc8b8c771a915fb239c0",
+      "bytes": 376
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-race.log",
+      "sha256": "d6b10754d1b5663c747a4661dcc25ff015d65c6267ad3f40984d6de25904868b",
+      "bytes": 68
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-scoped.log",
+      "sha256": "fcb465b77b5f70a8c0d4fb31ea5bda417d15ffc13ba3c12b17a4e267b1fdbede",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-server.cover",
+      "sha256": "14a995f543ad0edda60c629fcd5e8fcf0278964bcd378aaa28f3f17c210ba710",
+      "bytes": 684312
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-server.log",
+      "sha256": "9f949fe7513ff9c59369e0ae13ee47dab7ace73f81cf76e670c820433e0ec207",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-source-binding.json",
+      "sha256": "c2c0bbca206999c9aad480b7c99147c6470605e2f0a04e9e51aa27292da3de47",
+      "bytes": 14629
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-source-checks.log",
+      "sha256": "258e68700eac646e5ef1cdc4280bbbffe1307c63e2829c91f1b80e89f643ea18",
+      "bytes": 195
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-windows-amd64.test.exe",
+      "sha256": "25f607bd518f382269459371f6fa2fc40ae5cc92501d8d2aa351053737330615",
+      "bytes": 28616704
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-windows-format.log",
+      "sha256": "85f27c0dd388c6aab1107198d4aa63018681f99cd335b1626a5777c82f69560e",
+      "bytes": 106
+    },
+    {
+      "path": "/private/tmp/hb304-create-clock-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "independent_evidence_review": "/root/hyb310_copy_render PASS13source/24artifact/107production bindings, one focused-proven native unit, logs/restores, initial fixture compile failure and20residual blocks/28units; reachability UNVERIFIED, handoff100 criterion unchanged; no tests/services or feature/merge approval"
+}

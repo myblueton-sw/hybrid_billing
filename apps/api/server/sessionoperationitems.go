@@ -17,10 +17,6 @@ func (s *Server) readSessionOperationItems(w http.ResponseWriter, r *http.Reques
 	if !ok {
 		return
 	}
-	if found.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) {
-		failCode(w, commands.Unauthenticated, request)
-		return
-	}
 	record := s.sessionOperations[r.PathValue("operation")]
 	if record == nil || record.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) {
 		failCode(w, commands.UnsupportedCommand, request)

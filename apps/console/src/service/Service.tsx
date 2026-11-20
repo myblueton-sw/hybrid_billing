@@ -6,6 +6,7 @@ import { c, retryPhrase } from "./copy";
 import { fragmentToken, serviceClient, ServiceError, type LinkInfo, type ServiceClient, type Session } from "./api";
 import { ServiceContext } from "./context";
 import { adminClient } from "./admin";
+import { ServiceAccountRecoveryProvider } from "../modules/identity/pages/service-accounts/recovery-context";
 import { Reauthenticate } from "./Reauthenticate";
 import { stepUpGate } from "./reauth-model";
 import { leaveDeliberately, stayAgain, watchRestore } from "../shared/unload-intent";
@@ -412,10 +413,10 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
     const opener = active instanceof HTMLElement && active !== document.body ? active : lastFocus.current;
     setPrompt({ opener, n: ++promptSequence.current });
   }), []);
-  const matchesSession = (expected: Session) => {
+  const matchesSession = useCallback((expected: Pick<Session, "user" | "workspace" | "csrf">) => {
     const current = sessionRef.current;
     return !!current && current.csrf === expected.csrf && current.user === expected.user && current.workspace === expected.workspace;
-  };
+  }, []);
   const stepUp = useCallback(async () => {
     if (!session || !matchesSession(session)) return false;
     const approved = await gate.request();
@@ -471,6 +472,7 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
     const signOut = () => { setLocale(shown); void signOutIn(shown); };
     return (
       <ServiceContext.Provider value={{ session, signOut, stepUp, client: authenticatedClient }}>
+        <ServiceAccountRecoveryProvider client={authenticatedClient!} session={session} isCurrentSession={matchesSession}>
         <SessionStrip locale={shown} session={session} onSignOut={signOut} />
         {app}
         {prompt && (
@@ -480,6 +482,7 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
             onSignedOut={() => { if (!matchesSession(session) || promptRef.current !== prompt) return;retireAuthentication(session); }}
           />
         )}
+        </ServiceAccountRecoveryProvider>
       </ServiceContext.Provider>
     );
   }

@@ -1,0 +1,466 @@
+{
+  "type": "VerificationEvidence",
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "base_commit": "b0c4a67620a1c01bf9330f9be8c24d10946eff61",
+  "recorded_at": "2026-11-20T11:22:37.629681+00:00",
+  "scope": "Session-owned M04 recovery, exact credential observations and pending-only original-session collection; remaining lists/forms are incomplete",
+  "sources": [
+    {
+      "path": "apps/console/package.json",
+      "sha256": "37de9f8b077953b699304decde0087fa1c52155fd42e8c82320d0953b1726172",
+      "bytes": 6530
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/Live.tsx",
+      "sha256": "8162411faa23cae4be3f5d81b16ce74d696fdba30ce75e72414f2be89e53a58d",
+      "bytes": 57700
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/issue-attempts.test.ts",
+      "sha256": "0a418c04fdf9833eb5a2165b508fe6a9f40a5a98a52344ec36f919cede062004",
+      "bytes": 13201
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/issue-attempts.ts",
+      "sha256": "a8115c04d5b68b84b7c646cf46f9ffd12946ecb21862abb3823dfb03f6e852e1",
+      "bytes": 10768
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/live-copy.ts",
+      "sha256": "3840e7190074b5f02883a360e03c04ca66fc1154450a0c6c7657706ae0067f94",
+      "bytes": 34997
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/recovery-context.tsx",
+      "sha256": "4ef5caa92c332265754d586eacda1e3a55460c4333116bb1642a93490c26713a",
+      "bytes": 2890
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/recovery-store.test.ts",
+      "sha256": "413b44198c8a0ee89932001f3aecd6ebf5c399a49c021a75aabc32a74d344ecd",
+      "bytes": 11169
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/secret-collection.ts",
+      "sha256": "ac9c3e0da15045c562689872ef2ba19509e85cbca8465ad681c4ff7c0275b10c",
+      "bytes": 3810
+    },
+    {
+      "path": "apps/console/src/service/Service.tsx",
+      "sha256": "23d67604956d4dcb9c2a0c62fce64593cf0cde2219f92a46d96a159315d4cfb7",
+      "bytes": 24614
+    },
+    {
+      "path": "apps/console/tools/recovery-fixture.tsx",
+      "sha256": "1bd1463cbca49c2c5088a14b5c80c8441195361a3f2af9ec082c19950e006db3",
+      "bytes": 6562
+    },
+    {
+      "path": "apps/console/tools/recovery-qa.mjs",
+      "sha256": "f22e66977f44030da76fea3dae3cf8514861c3fb4c9221d2e4ed9bd81f6d2efb",
+      "bytes": 10498
+    },
+    {
+      "path": "apps/console/tsconfig.recovery-qa.json",
+      "sha256": "5378f7cdaf418a0ffc3a8d92a6f8d9ff8c4b796cff0031ccf59e9933308c3cf4",
+      "bytes": 96
+    },
+    {
+      "path": "docs/features/HYB-304/m04-recovery.md",
+      "sha256": "5b43a0ec4a825644c51a1a6f5c532e83618fc23122042f2740e8581201b7a03c",
+      "bytes": 14586
+    },
+    {
+      "path": "docs/ui/screen-binding-fields/identity.md",
+      "sha256": "723f8877f61e9f332c148c5f91e02f962dc27da3837f1297b22e2e3bc7ca4f86",
+      "bytes": 94011
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "a2f0ccd792861ae945e2c5e7445ad56a10c3b7704d758b4fda53c62a8389d69d",
+      "bytes": 58417
+    },
+    {
+      "path": "docs/ui/terminology/product-glossary.md",
+      "sha256": "70d5cfcf9bbe50398750a2b585a4c6248924bfb39cb45f1b04ff14ee00d3ef0f",
+      "bytes": 105702
+    }
+  ],
+  "executions": {
+    "complete_console": {
+      "command": "HB_SERVICE_QUERY_SAMPLES=<private existing HTTP samples> npm --prefix apps/console test",
+      "status": "PASS",
+      "tests": 988,
+      "scope": "Complete registered Console list after source restoration, including captured real HTTP samples; not live backend/UI integration"
+    },
+    "product_build": {
+      "command": "npm --prefix apps/console run build",
+      "status": "PASS",
+      "scope": "TypeScript noEmit and Vite build; existing chunk-size advisory remains"
+    },
+    "fixture_types": {
+      "command": "npm --prefix apps/console run typecheck:recovery",
+      "status": "PASS"
+    },
+    "browser": {
+      "command": "npm --prefix apps/console run qa:recovery -- --playwright-module <installed module> --chromium <installed executable>",
+      "status": "PASS",
+      "results": [
+        {
+          "name": "same-scope locale and view remount retain recovery",
+          "status": "PASS"
+        },
+        {
+          "name": "user change retires old scope",
+          "status": "PASS"
+        },
+        {
+          "name": "workspace change retires old scope",
+          "status": "PASS"
+        },
+        {
+          "name": "csrf change retires old scope",
+          "status": "PASS"
+        },
+        {
+          "name": "client change retires old scope",
+          "status": "PASS"
+        },
+        {
+          "name": "Reveal StrictMode uses one pending GET",
+          "status": "PASS"
+        },
+        {
+          "name": "hidden mount does not consume",
+          "status": "PASS"
+        },
+        {
+          "name": "hidden deferred boundary does not consume",
+          "status": "PASS"
+        },
+        {
+          "name": "pagehide invalidates observer before pending response",
+          "status": "PASS"
+        },
+        {
+          "name": "scope loss drops pending secret",
+          "status": "PASS"
+        },
+        {
+          "name": "authenticated owner unmount disposes while view is absent",
+          "status": "PASS"
+        },
+        {
+          "name": "authentication loss while view absent retires scope",
+          "status": "PASS"
+        },
+        {
+          "name": "authentication loss before subscription retires scope",
+          "status": "PASS"
+        },
+        {
+          "name": "unknown collection remount requires explicit retry",
+          "status": "PASS"
+        },
+        {
+          "name": "revocation unknown storage keeps its meaning",
+          "status": "PASS"
+        },
+        {
+          "name": "revocation shown-secret declaration keeps its meaning",
+          "status": "PASS"
+        }
+      ],
+      "page_errors": [],
+      "runtime": {
+        "node": "v26.7.0",
+        "browser": "153.0.8010.12",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "playwright": "1.58.2"
+      },
+      "scope": "Actual React StrictMode provider/Reveal, synthetic transport. Product Vite config/env files disabled and preview sign-in forced null; not full M04 acceptance"
+    },
+    "mutations": {
+      "command": "python3 /private/tmp/hb304-recovery-mutations.py",
+      "status": "PASS",
+      "report": {
+        "results": [
+          {
+            "name": "frozen_retry",
+            "kind": "node",
+            "semantic_kill": true,
+            "assertion": "unknown issuance retry supplies immutable original values"
+          },
+          {
+            "name": "nonterminal_reference",
+            "kind": "node",
+            "semantic_kill": true,
+            "assertion": "incomplete pages and not-open observations preserve the issued reference"
+          },
+          {
+            "name": "response_scope",
+            "kind": "node",
+            "semantic_kill": true,
+            "assertion": "late or revoked collection cannot publish secret"
+          },
+          {
+            "name": "deferred_visibility",
+            "kind": "node",
+            "semantic_kill": true,
+            "assertion": "hidden initial or deferred dispatch never consumes"
+          },
+          {
+            "name": "exact_reference",
+            "kind": "node",
+            "semantic_kill": true,
+            "assertion": "collection requires the exact retained reference"
+          },
+          {
+            "name": "pending_single_flight",
+            "kind": "node",
+            "semantic_kill": true,
+            "assertion": "two observers share one pending consume"
+          },
+          {
+            "name": "issuance_scope",
+            "kind": "node",
+            "semantic_kill": true,
+            "assertion": "authoritative scope loss fences captured stores"
+          },
+          {
+            "name": "layout_scope",
+            "kind": "browser",
+            "semantic_kill": true,
+            "assertion": "client change"
+          },
+          {
+            "name": "pagehide_observer",
+            "kind": "browser",
+            "semantic_kill": true,
+            "assertion": "pagehide invalidates observer"
+          }
+        ],
+        "restored_sha256": {
+          "apps/console/src/modules/identity/pages/service-accounts/issue-attempts.ts": "a8115c04d5b68b84b7c646cf46f9ffd12946ecb21862abb3823dfb03f6e852e1",
+          "apps/console/src/modules/identity/pages/service-accounts/secret-collection.ts": "ac9c3e0da15045c562689872ef2ba19509e85cbca8465ad681c4ff7c0275b10c",
+          "apps/console/src/modules/identity/pages/service-accounts/recovery-context.tsx": "4ef5caa92c332265754d586eacda1e3a55460c4333116bb1642a93490c26713a",
+          "apps/console/src/modules/identity/pages/service-accounts/Live.tsx": "8162411faa23cae4be3f5d81b16ce74d696fdba30ce75e72414f2be89e53a58d"
+        },
+        "tsx_cache_disabled": true,
+        "private_vite_cache_removed": true
+      },
+      "restored_model_tests": 22,
+      "scope": "7 Node and2 actual browser semantic kills;4 source files restored byte/SHA. TSX cache disabled; private Vite mutation cache removed. Restored model and focused client/pagehide browser cases pass. No Go/cache claim"
+    },
+    "docs": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/docs_format",
+      "status": "PASS",
+      "tests": 2
+    }
+  },
+  "fail_before": [
+    {
+      "artifact": "hb304-recovery-before.log",
+      "kind": "SEMANTIC_FAIL",
+      "meaning": "Legacy population reconciliation drops absent/not-open issued reference: bounded-migration invariant, not released full M04 behavior"
+    },
+    {
+      "artifact": "hb304-recovery-hidden-before.log",
+      "kind": "SEMANTIC_FAIL",
+      "meaning": "Actual React hidden mount consumed1 GET vs expected0"
+    },
+    {
+      "artifact": "hb304-recovery-hidden-release-before.log",
+      "kind": "SEMANTIC_FAIL",
+      "meaning": "Initial/deferred hidden dispatch and explicit-release late-success tests fail before corrections"
+    }
+  ],
+  "earlier_tool_failures": {
+    "hb304-recovery-types-first.log": "Synthetic test callbacks had implicit parameter types; corrected",
+    "hb304-recovery-fixture-types.log": "Fixture config omitted existing env.d.ts globals; corrected include",
+    "hb304-recovery-browser-first.log": "Fixture replaced remembered prior with null after view unmount; corrected, not product fix",
+    "hb304-recovery-browser-final.log": "Auth fixture required mounted view; corrected to retained provider/client"
+  },
+  "reviews": {
+    "design": "PASS: separate read-only hyb310_review corrected design",
+    "source": "PASS: separate read-only hyb310_review source, focused fixes and final source/evidence read-back, including revocation-intent and isolated fixture configuration",
+    "fixture": "PASS: separate read-only hyb310_review with explicit isolation limitations; later test runner config isolation changes no scenario or product logic",
+    "technical_writing": "PASS: separate read-only hyb310_copy_render final copy/context/documents/evidence read-back; native/rendered review remains pending",
+    "execution_owner": "root; reviewers executed no tests/services/mutations"
+  },
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-recovery-before.log",
+      "sha256": "338bd19d8b1fbc9162fa34bbf534faa9892fb03e6b1aba7f9b8a3a0721a43a3b",
+      "bytes": 2126
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-hidden-before.log",
+      "sha256": "eca3c0bfa67ceea200e569bacdf8801da3704871339b6c5edf9af1a0bf7e8323",
+      "bytes": 816
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-hidden-release-before.log",
+      "sha256": "e21844568ab41f858c37bde11d8834dabd3d0a4cc1a922fcfc4924c294683cce",
+      "bytes": 2225
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-types-first.log",
+      "sha256": "c319f99563084b404c51d79ba73b8f3f2587442cc35b76580bc1d081bae66bb1",
+      "bytes": 471
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-fixture-types.log",
+      "sha256": "b568dde4d80361a3dfac6b2248b865c45db45f72437d7562c113ad6a9a9b7b95",
+      "bytes": 349
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-browser-first.log",
+      "sha256": "2e19f517950434c0dd16bd2524ddb595621d55844da1d7a6fda0f815fb0b36ec",
+      "bytes": 1660
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-browser-final.log",
+      "sha256": "5eaaf7ca0dd5687bf5a815a87a5e1c510785a1a85e34224d98106a1aa093f62d",
+      "bytes": 2632
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-browser-isolated.log",
+      "sha256": "bb1d068b33f5bc4bebf730eb1baa2c296bfc53748ecc9fd287688db6ece07548",
+      "bytes": 2030
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-restored-console.log",
+      "sha256": "99de8a77afdc7ddbe18953eefb66489142c0ecb511f730c7c2d384d37c7cc11b",
+      "bytes": 98960
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-restored-build.log",
+      "sha256": "d50f76860d88db2ab4a2eb75a02c41a8454b5e6a336259d721a919d0514362c0",
+      "bytes": 38499
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-restored-fixture-types.log",
+      "sha256": "ac08ae758459b8122cb182516a1a798871bc756e16301fb133dab2c9f5317981",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-docs-final-format.log",
+      "sha256": "7853f69ef61bb99cd0cfd8c7e0819bb5e9ac6d51a9e0457af8ea63e873cd5630",
+      "bytes": 100
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations.py",
+      "sha256": "a1d7e3667e6622610b7e34fb15d02b48a68008cdfac127c881f858e28aa4edc3",
+      "bytes": 4460
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-browser-deps/package-lock.json",
+      "sha256": "a2bda8070d68d7a34e788589b47f25f9fffd38cfbb1751f80e14a0e857656c4b",
+      "bytes": 1611
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/baseline-client.log",
+      "sha256": "ccb90b74517440b112fc6b32e95e70e8778d7ee7603df07f82e927e19d424f78",
+      "bytes": 492
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/baseline-pagehide.log",
+      "sha256": "9e946d41050949ebbe0890b3013a224ef1eb23c6d173166f1bbc3e01cdae9a24",
+      "bytes": 514
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/baseline.log",
+      "sha256": "e8786f6b919b18795de56b8709cc1796f615ba2111a84606a896e5f77318ac65",
+      "bytes": 2211
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/deferred_visibility.log",
+      "sha256": "ff563ad17363f79df1d11aa4ced525fb81f687750ee89d1ea3c277305470129f",
+      "bytes": 2904
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/exact_reference.log",
+      "sha256": "2244897cbd4c6461a17e4189f6698239bb9cf001fad24f0d9b4fe0d0f803ab49",
+      "bytes": 2909
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/frozen_retry.log",
+      "sha256": "1edbeb5e37ab4f6ff186a9ee4753f4fca0298f68f481fc891472586d72bcfcb1",
+      "bytes": 3403
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/issuance_scope.log",
+      "sha256": "59c9d90e3c92945bd00cf62d62638634354e53843e3f2d89634107addfa757cf",
+      "bytes": 3007
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/layout_scope.log",
+      "sha256": "ebfc7f23d9e6fbad507f6d3de0162f15425c99636e62a58a3fc6d86c8dafcf73",
+      "bytes": 568
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/nonterminal_reference.log",
+      "sha256": "18feaced76ce45bf97f0b6834ae8360acdf0cedc9d1082971a3422f2bcdba428",
+      "bytes": 3797
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/pagehide_observer.log",
+      "sha256": "8faa42f6be3abff4102c7def938348ee281a66beac69a8d353f8878817521d87",
+      "bytes": 583
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/pending_single_flight.log",
+      "sha256": "9c60f21424db7c620c83b834b7a6e3f8cda1aa8a04ba8c78070535ab33ff635a",
+      "bytes": 3180
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/report.json",
+      "sha256": "34207f022c45cc7e059aeb30f29bb0392ccea48f107705b6dd7795bec4361e9b",
+      "bytes": 2204
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/response_scope.log",
+      "sha256": "8018cff4ebd43ebbeff794c59bbde7ff2a5642d91839ed54699f2ca353f2732f",
+      "bytes": 2919
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/restored-client.log",
+      "sha256": "ccb90b74517440b112fc6b32e95e70e8778d7ee7603df07f82e927e19d424f78",
+      "bytes": 492
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/restored-pagehide.log",
+      "sha256": "9e946d41050949ebbe0890b3013a224ef1eb23c6d173166f1bbc3e01cdae9a24",
+      "bytes": 514
+    },
+    {
+      "path": "/private/tmp/hb304-recovery-mutations/restored.log",
+      "sha256": "e0a1f42c53ce10ae81b27b4c96a71ddb8495d95ed8265094efce135795618b91",
+      "bytes": 2211
+    }
+  ],
+  "artifact_retention": "Private temporary synthetic evidence may disappear on reboot. Git retains maintained tests and summaries/digests, not raw logs/screenshots.",
+  "limitations": [
+    "Fixture supplies synthetic authoritative predicate; actual ServiceRoot.sessionRef coupling is source-reviewed, not mounted in fixture",
+    "Scope-loss secret absence combines scope retirement and Reveal removal, not independent stale-observer proof",
+    "Visibility/pagehide controlled simulations, not native BFCache",
+    "No complete M04 page/forms, native AT/practitioner/locale/Claude/owner FIX acceptance",
+    "No Go source change/full Go run/new server coverage; prior97.2% target remains unresolved",
+    "Only macOS arm64 runtime verified for this frontend increment"
+  ],
+  "remaining": [
+    "Independent bounded page/filter/history state and canonical selection",
+    "Complete create/declare forms and immutable full command fingerprint",
+    "Full M04 EN/KO/AR4width actual app verification and re-review",
+    "Server coverage reconciliation, final M04 PR/authorized merge/read-back",
+    "Parent HYB-304 M03/M02 and remaining planning work"
+  ],
+  "not_claimed": [
+    "Full M04 or parent completion",
+    "Feature merge",
+    "Deployment/payment/messages/real-account or customer-data use"
+  ]
+}

@@ -1,0 +1,806 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "b338d1147ba18d51ef217af1f8d90e00fc1e03ec",
+  "status": "issuance_draft_checkpoint_not_merge_ready",
+  "checks": {
+    "console_tests": 1003,
+    "http_samples": 13,
+    "mounted_scenarios": 14,
+    "read_captures": 60,
+    "authentication_captures": 64,
+    "actual_password_confirmations": 12,
+    "isolated_provider_scenarios": 18,
+    "semantic_mutants_killed": 3,
+    "build_and_typechecks": "PASS",
+    "go_rerun": false,
+    "latest_server_coverage": "98.8%",
+    "required_server_coverage": "100% NOT_MET"
+  },
+  "boundaries": [
+    "Prerequisite metadata overrides are synthetic; password confirmation and sign-out/sign-in are actual app/backend",
+    "Provider unload dispatch is controlled simulation, not native BFCache",
+    "ActionForm local unsubmitted rationale remains open",
+    "Independent source/render reviews do not certify full M04 or owner acceptance"
+  ],
+  "source_files": [
+    {
+      "path": "apps/console/package.json",
+      "sha256": "5e5df4d0b0a279daeb8006507b552679ea9a1af7a24f8f69295e75885e769c16",
+      "bytes": 6842
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/AccountActions.tsx",
+      "sha256": "c1e30ee1461e4c0e20f03811fcefadd26e450d698e2b29890ea471bc4e330137",
+      "bytes": 11033
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/Live.tsx",
+      "sha256": "909e25fce45e1e4d412c35b7ff8c96ce497ccae56859dd6e3be845ddcefce1ec",
+      "bytes": 32279
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/issue-draft.test.ts",
+      "sha256": "d37dbfdbb8ddb7bcced9c8345a96cdadf7cceeb90927cfaeab84e6dadde79f9f",
+      "bytes": 3755
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/issue-draft.ts",
+      "sha256": "d286add7d80afa53c850fbd4890c4254b29176ec5558411888a4ddef604d5ee1",
+      "bytes": 2106
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/query-copy.ts",
+      "sha256": "6434a8a7c1be4af4ab279c9ba1efc4bd9cc0c1f56ed44c4d78fa6fbac46aabdd",
+      "bytes": 13733
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/recovery-context.tsx",
+      "sha256": "210c2e866930f8b70ab3b41519d690aa44aa5765ddfc1dd10092ff1b8a01a15f",
+      "bytes": 4166
+    },
+    {
+      "path": "apps/console/tools/m04-auth-matrix.mjs",
+      "sha256": "13e012034476daf67fe5deeba11c714745672b5ddafec142e08fcf0514260038",
+      "bytes": 13889
+    },
+    {
+      "path": "apps/console/tools/m04-errors-qa.mjs",
+      "sha256": "83361587eec1ef1f92729d6903cf7be6722fa8e237e8f8cef6169d1af32e3705",
+      "bytes": 34560
+    },
+    {
+      "path": "apps/console/tools/recovery-fixture.tsx",
+      "sha256": "60e29f1ee8d5b77cb964c9e5aa53cd50e0c4cee06ff49f6589b3e07f0a417c29",
+      "bytes": 7207
+    },
+    {
+      "path": "apps/console/tools/recovery-qa.mjs",
+      "sha256": "1b8a460d7230713a6c85ed3553de830ef74b0df06e94299167eb2b40e82e1b74",
+      "bytes": 12926
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "66437565f1d7474e8cd73b3c69f12dd20f7000d2be6f576bd1e624dd67e75909",
+      "bytes": 29885
+    },
+    {
+      "path": "docs/features/HYB-304/m04-issue-draft.md",
+      "sha256": "900d49e5916183930b4e1a41fd90e042c33c03118842a86d47de156ccd5be44e",
+      "bytes": 5471
+    },
+    {
+      "path": "docs/ui/screen-binding-fields/identity.md",
+      "sha256": "82b38d5b2ce4fc15dd70cc2a37f9437b08179801a76d015d004fb31ed23aae03",
+      "bytes": 96970
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "a064e58bcb9e64b48d242213af29a9232627ae5b85222049ea78c22a6ba78d5f",
+      "bytes": 59139
+    },
+    {
+      "path": "docs/ui/terminology/product-glossary.md",
+      "sha256": "bdc3ff88f9a337299e9177a267eeb213a3500a8bc81617e62ff39284c85faffd",
+      "bytes": 111369
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-auth-draft-before.log",
+      "sha256": "5a3f13dbe78ec5e6ab9e922d896dcbc5562849d2029497b9a22cf0090697d8ae",
+      "bytes": 1340
+    },
+    {
+      "path": "/private/tmp/hb304-auth-draft-before/report.json",
+      "sha256": "328689fa062c04678b6bccac43350ff55e13d9adc48efe067e34b2dd6e4a7b2e",
+      "bytes": 43360
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-final-build.log",
+      "sha256": "02cce1efe8fba3483a20d66c86e9ca8d9de9b6360ac0c59d1e4693a98f0b2c22",
+      "bytes": 38499
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-console.log",
+      "sha256": "06cb8113b68618cbf626d4e70f8e2d29a41a2ebaef2edc164254d3ceb553697c",
+      "bytes": 100701
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current.log",
+      "sha256": "23a0e07298d11c5dc65b2a9092a12e1c32c7d5ed8e37a991441a041c6cb1c344",
+      "bytes": 1761
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/report.json",
+      "sha256": "ba75ebf981ad6e42183dede79cb693bd25a221cf30452b08ac4ba7a28f7077a1",
+      "bytes": 84851
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-recovery-current.log",
+      "sha256": "e475c46e1787faa9866dd66c50a1d5ad29697dda84fc10aa95571084a46056c1",
+      "bytes": 2206
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-recovery-typecheck-current.log",
+      "sha256": "ac08ae758459b8122cb182516a1a798871bc756e16301fb133dab2c9f5317981",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-mutants.json",
+      "sha256": "973eef4a802f4e9b7c1f15ba6c6bb49071b63958203defd590789c6069ac9ca9",
+      "bytes": 1098
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-restored.log",
+      "sha256": "5854025c83090b580ba63a06a29ad7d7abf94505e3cc792576f6f0afb4cb1131",
+      "bytes": 603
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-build-integrity.log",
+      "sha256": "5e4d39bb17e28d888ff2de746695b7625d77cdf389b06d912503a13925f94470",
+      "bytes": 205
+    },
+    {
+      "path": "/private/tmp/issue-draft-target-overwrite.log",
+      "sha256": "cd2b282be2806db69d212c7e54eb34b36a962157ddbc086fff5cc7df2ab8517b",
+      "bytes": 1435
+    },
+    {
+      "path": "/private/tmp/issue-draft-stale-clear.log",
+      "sha256": "225eab08ec26a6a5aef1c108848ea5e0d944a3694d77754623fe7f00df7ede7d",
+      "bytes": 1583
+    },
+    {
+      "path": "/private/tmp/issue-draft-scope-bypass.log",
+      "sha256": "f60736acbfcc35665e235b66d86d7da5e0a706fca39688e5bee4dbb6bf4ec163",
+      "bytes": 1750
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1024-password-dialog.png",
+      "sha256": "993ba9ed61115aff9ae0dd99a48b3fc68ddefbf2d03e5be4e8df6066efdb9bc4",
+      "bytes": 238825
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1024-prerequisite_failed.png",
+      "sha256": "7e38b3f30ddcf465ed56674d30e64ce4334f915f9af089a7cb6f5f849057d6dc",
+      "bytes": 276834
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1024-reauthentication-required.png",
+      "sha256": "5d9014cd07ff3c05e94772c0bc3af5110a8d72b34b22a8ac6658aec75f096ae6",
+      "bytes": 272644
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1024-refreshed-draft.png",
+      "sha256": "f4faab317bfb1d18167206945eff19663e9c8b097b1bb999932b45bd11c38c26",
+      "bytes": 259562
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1024-unavailable.png",
+      "sha256": "6dffe829507561f7c038c1515c0ea917d90bfa4be7e4635b532ca1afd5a64bb7",
+      "bytes": 273906
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1280-password-dialog.png",
+      "sha256": "4cf5b0db937568c6834c2526ac8232d0395558dc17797cee306ea921f014e83b",
+      "bytes": 241869
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1280-prerequisite_failed.png",
+      "sha256": "13724de4d18f6b3a98d29801e9da24919bc26e3ccaaf1d490c1f7c4522d046e3",
+      "bytes": 297634
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1280-reauthentication-required.png",
+      "sha256": "b6e2515ec6479f17a773250177da76d32db5ddfa7b3e4655c27b0cd45ea38345",
+      "bytes": 292346
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1280-refreshed-draft.png",
+      "sha256": "b2c1582e08266b80295bd49bc9af5baae3e52b057dc168470fead728953724f3",
+      "bytes": 276753
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1280-unavailable.png",
+      "sha256": "e8bca2b0460a898b48d30de23fdb6d35d318c4a86788de715de103552e947622",
+      "bytes": 294898
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1440-password-dialog.png",
+      "sha256": "7e9b4dfaa2fdfbfe777e6e1235ba33cde3946f4a53f6e563b39cc28fa8878b44",
+      "bytes": 247553
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1440-prerequisite_failed.png",
+      "sha256": "f7cd2f005e923f1cc0101dfb211b52103615674a4717d69f91e41b41fa3be925",
+      "bytes": 300857
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1440-reauthentication-required.png",
+      "sha256": "1a8e3c4f92c952b917c824fb87c72ce02c1053866c44bd2ba494d2b21825703a",
+      "bytes": 298417
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1440-refreshed-draft.png",
+      "sha256": "05246af87362c6d1b7826f08e92437a3cbdec05895cf5aaf26962ab650c19211",
+      "bytes": 282150
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-1440-unavailable.png",
+      "sha256": "88712a1b3034cee85153ed7f0fac5b5a11d3e0787df3b3ce6e7f108da3d01dd1",
+      "bytes": 298321
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-390-other-account-draft.png",
+      "sha256": "f64d62a9829ac60207ef4ef0ef5e924888c88c33bbc0ec8aab81d998dc4ae6d6",
+      "bytes": 235530
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-390-password-dialog.png",
+      "sha256": "1acec4f93384da5d0b95a86fbc4b90d63786df74152a77359a1560c03e41b61f",
+      "bytes": 217568
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-390-prerequisite_failed.png",
+      "sha256": "f0e37e13056f7343069a9017b037d8591d344c1dc40a2b31830339c1105f3c0c",
+      "bytes": 244099
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-390-reauthentication-required.png",
+      "sha256": "53a3a4aeaa1845c8fe5bee7cdedb677e0cc649d37f2dae6e081586de297f7efa",
+      "bytes": 241368
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-390-refreshed-draft.png",
+      "sha256": "a5eb151c9147919de44cc233eb6077ce6620a0e3d6f3cdc0a8fda89c043e8f21",
+      "bytes": 227319
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ar-390-unavailable.png",
+      "sha256": "c8325bde0596164e70e22f8ba725d32962131bb0535bafe43f8c3003419b7811",
+      "bytes": 243707
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1024-password-dialog.png",
+      "sha256": "f293e14c6c6eede406a4d7d0fe9ebd17540142b27e2a2532c3b9276ec28d1cc2",
+      "bytes": 238514
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1024-prerequisite_failed.png",
+      "sha256": "aad689db2c689bd26838e3f0bae9a84adfd500cd095066acf7573ad3bba48bd8",
+      "bytes": 284414
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1024-reauthentication-required.png",
+      "sha256": "47791ba5ba706115ddbb39b292044347b89515b95735808ff941db2d016bba1f",
+      "bytes": 277435
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1024-refreshed-draft.png",
+      "sha256": "a6cf34b9b7639169421f902262c24474b728dbdb1b8896785ed450d74fcf8a1a",
+      "bytes": 259891
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1024-unavailable.png",
+      "sha256": "6b1c2d7f06303e6057e5191329c814a7ca2d526daaaeeb5e10470405101b0532",
+      "bytes": 277740
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1280-password-dialog.png",
+      "sha256": "986fe7e8a8e1452c94639d1067b0f4f2d2bf9f6db2286d8b8ea69f93fa0849a1",
+      "bytes": 241507
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1280-prerequisite_failed.png",
+      "sha256": "5855de957af2f06a9c094e9982eb506c5a39a4531d4da6d009c55865873344f9",
+      "bytes": 308191
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1280-reauthentication-required.png",
+      "sha256": "b5a40309c8dabbebaee9bbccf9154c9cf89feed870f6c840311124c44169937e",
+      "bytes": 301058
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1280-refreshed-draft.png",
+      "sha256": "d528f31d30f7377c9ff18f571bb3db0632af7ffc229a13aa7c388617613044bb",
+      "bytes": 285878
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1280-unavailable.png",
+      "sha256": "d3225d1432f0d3353d5811179bcce3959da0dee4f375564baa2175a1f6bbd3ad",
+      "bytes": 304044
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1440-password-dialog.png",
+      "sha256": "9a623b08f156509c005642a5ee106f8a88c0b2ad1f9a09e44f4123e6570ddcc8",
+      "bytes": 246656
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1440-prerequisite_failed.png",
+      "sha256": "78ad2146b93256fc1716bfa344b39ec20c896dd00a357a12ccfabf1f09ef16be",
+      "bytes": 309837
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1440-reauthentication-required.png",
+      "sha256": "0528714d5438fdf73739552ec9d6f5182d889c1017ff7a2fa883025a94f29163",
+      "bytes": 306936
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1440-refreshed-draft.png",
+      "sha256": "ff997a5256a3fcc025331395aa3bf43cf34994afa6731fca4e0502f4c6144579",
+      "bytes": 288904
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-1440-unavailable.png",
+      "sha256": "7d1a0bc373a4b8bfe672630e739ca65433ee635ba6abd6a78ca3e0b534b86cde",
+      "bytes": 305359
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-390-new-session-empty-draft.png",
+      "sha256": "00474b23a4187af305708b3034830da8bb9ae755ef6613ac1db86c50da0266ae",
+      "bytes": 223836
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-390-other-account-draft.png",
+      "sha256": "f32fb12b55fd470af7c6ca7248a6d4ff9a12dbc1495acbb68de3a1db295e3c2a",
+      "bytes": 239612
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-390-password-dialog.png",
+      "sha256": "ddd62b4c9335f6f72123ffb553f90a310a509125b4d16738e762340a84f49f1a",
+      "bytes": 216539
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-390-prerequisite_failed.png",
+      "sha256": "e716ff967f8e6d3c4bd23581139281ab21fde29f4ff234a3fccec17aa6d8ab60",
+      "bytes": 252801
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-390-reauthentication-required.png",
+      "sha256": "d6c36ea6c8842dab30344f6b7740bbf010be4e3da1adf2170eabac4b18fe52fe",
+      "bytes": 246340
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-390-refreshed-draft.png",
+      "sha256": "71beac69cd7acdfb1539a5904d4275cc6a179c16d22f1392f1063a885b5ca7ed",
+      "bytes": 231996
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/en-390-unavailable.png",
+      "sha256": "19261a52f77a4c0fc3bd46959c2806955626de7a9bc57edcd521cf42b1b4af34",
+      "bytes": 247797
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1024-password-dialog.png",
+      "sha256": "fe46c046673e7b6867d3adf4d728af0266c84512a239e3b37b3cc57cda9ffe5c",
+      "bytes": 227545
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1024-prerequisite_failed.png",
+      "sha256": "c3decc6fff443cfb6d7e3a345d389075a33506b0352d0d0bfa487db644c9c1d9",
+      "bytes": 273511
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1024-reauthentication-required.png",
+      "sha256": "3393b6a6920fba9e29b0eda3d0d58e5c8ae7bd16bbad045afee3802a9a8d7cfa",
+      "bytes": 266886
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1024-refreshed-draft.png",
+      "sha256": "86e2245b05b91384ae10cbfb8c860c0d2234d89b66ae0e0d8348eae6c71f1873",
+      "bytes": 250269
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1024-unavailable.png",
+      "sha256": "4498418cd224f2b152a02be26cd535943bb3691d7ad7c47051b01993eb5c79a2",
+      "bytes": 268684
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1280-password-dialog.png",
+      "sha256": "36294da8efa4c2d6ab0d35ce0eac180959d5c7eb74881ecb8079beaa029a3fec",
+      "bytes": 232573
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1280-prerequisite_failed.png",
+      "sha256": "4abf2acbe178df950e569b8eb3aad15baadec49b1dfa324fae706ee1f400d5c8",
+      "bytes": 291153
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1280-reauthentication-required.png",
+      "sha256": "ffc64ec76881616ea27e752ef32dc1758859a368f776df51899580073196ef39",
+      "bytes": 284653
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1280-refreshed-draft.png",
+      "sha256": "553982e3289ce0d70c25194be9cb08d012a2626e586a649825492f21795fa768",
+      "bytes": 267004
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1280-unavailable.png",
+      "sha256": "d058a8e93eb8d7458e58990e60e0a19078eb5c6d0f8b3c443a51f1e5ac1daa10",
+      "bytes": 286349
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1440-password-dialog.png",
+      "sha256": "34a9849e8a7aa34925b52f4483ff4695582a323a8dc7ca91c946adaf356e0ec5",
+      "bytes": 236857
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1440-prerequisite_failed.png",
+      "sha256": "85f4b6f5cba8c2bcb334e7c97f689c7a53dfb087cdb23250d2f4449d94b65d5e",
+      "bytes": 298547
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1440-reauthentication-required.png",
+      "sha256": "fe4f72f073fb684ba701d187d594e43c5c9e051a56d3bb3e9aaaece8e02b5ad5",
+      "bytes": 289433
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1440-refreshed-draft.png",
+      "sha256": "f7676503190892cf093115193de00f5eebef50635974fe417fc95cb755dc726d",
+      "bytes": 270737
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-1440-unavailable.png",
+      "sha256": "d579849d6ebf686b44cd3bb96d1c123caa1216881ed409b260e0a4fe449935ef",
+      "bytes": 290631
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-390-other-account-draft.png",
+      "sha256": "96bba3cf45b5e1afb9518869c869ba7a8ffcc584d19dd2164aa3ac80acbc0d7a",
+      "bytes": 229505
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-390-password-dialog.png",
+      "sha256": "3afdf6a662bb430b18bfbf5321dd56c790559ee764fb2f37328444e6e92f47e0",
+      "bytes": 206748
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-390-prerequisite_failed.png",
+      "sha256": "ac16642a8a9b3e5067cdf0249542185482363f6fd4e30c807ac6d67ba394e2eb",
+      "bytes": 246040
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-390-reauthentication-required.png",
+      "sha256": "ca293fdcadba4bfa35a84220be4cf3cd604bcfcf6d2fb88cc2e1853547a3ccb8",
+      "bytes": 238707
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-390-refreshed-draft.png",
+      "sha256": "fa5db34e8dd020cf71d95eabf001402f854006d96f11f4724a9c8d7212f0a6fe",
+      "bytes": 222843
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/authentication/ko-390-unavailable.png",
+      "sha256": "ffa0f1a861b32c1b09ce066efde971106e4abbc3b13d7ccb484ff2125798dbfa",
+      "bytes": 240188
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1024-credential-hold.png",
+      "sha256": "b1879190a05a497ce45eb4cdb8b4efbfe9ddf19f6280f504775b69a0ebc6388e",
+      "bytes": 282151
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1024-denied.png",
+      "sha256": "f338bb6d5141c1af4136ae9296e9485b755a1980704557dee9462c7174cfbf5e",
+      "bytes": 119576
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1024-empty.png",
+      "sha256": "d35957e6c9acd4e2a8769d7f38675499cc4df3494c25885f37afe5c75a2532e3",
+      "bytes": 131007
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1024-loading.png",
+      "sha256": "24a79d0b52b56cc977bf08efda5d2590d16fb5352d8022919e5886a9a9002890",
+      "bytes": 99321
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1024-unavailable.png",
+      "sha256": "b660fd6e781863ab79f60f76b2bf2d2f986d43318c837288f73705efeb9448d1",
+      "bytes": 119485
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1280-credential-hold.png",
+      "sha256": "127dffc3c081b53fbbfbeebaf83d18bd03e1deeed8d430f157301a64e178d464",
+      "bytes": 298103
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1280-denied.png",
+      "sha256": "81b50cb30d5aca5b08012fdc0161b7576f29036af0af8fcfe219ca3c00f4307a",
+      "bytes": 134780
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1280-empty.png",
+      "sha256": "4ab901a6cd3d51153860dd8b946e68b0c8be1855c73607af1f0f85eb72e3c0d7",
+      "bytes": 147190
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1280-loading.png",
+      "sha256": "28a80c241ba70c3c5136503ef312c6155ee14e6a941911baedf5ae1a7c29274e",
+      "bytes": 114116
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1280-unavailable.png",
+      "sha256": "e75ab12709da6d74f512d13a705bee00bce740d382847e2ae5d61971ff1d2e5e",
+      "bytes": 134675
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1440-credential-hold.png",
+      "sha256": "4957aee0ff0f6a9044e7dc3da6e054f708dae747333156c29626f60680561766",
+      "bytes": 304027
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1440-denied.png",
+      "sha256": "c7c52f1d511c3cde8f8d5f12d15599c65511e08f4f2de1c110326dcd853a1b76",
+      "bytes": 137150
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1440-empty.png",
+      "sha256": "cf268fad8fef3e30bd97c2b99a19d8f534ecf60593ef179320e53bab3ee13d02",
+      "bytes": 149216
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1440-loading.png",
+      "sha256": "7aac6963f9aa9998f41480cebd8d4425e8f55636284ccd75acfffb414beb7701",
+      "bytes": 116459
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-1440-unavailable.png",
+      "sha256": "89f4c83b832b30782d3aebb6f55cefe4733f012ac1d507d864217110b4a49ea6",
+      "bytes": 137023
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-390-credential-hold.png",
+      "sha256": "24b563689ed2d08656c6780fc51210579f69ae009c30e6a104798f8bf7ea200e",
+      "bytes": 250930
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-390-denied.png",
+      "sha256": "5e2412d1864169728137cab9ea659f733212a3b098f5a6593c9e9208bdb06ebe",
+      "bytes": 105069
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-390-empty.png",
+      "sha256": "2f01cab7e3e8a68bc101bfaac40bc3f4ca9f06046574d14cbbac2acdeed0a02c",
+      "bytes": 109131
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-390-loading.png",
+      "sha256": "e46fa2467e014362eb7e526fd17cf97cb73ba7c2a3cedd75f63d7b0f1beacd32",
+      "bytes": 86025
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ar-390-unavailable.png",
+      "sha256": "c59268317b556a9c6fa87cbba404f95e02eece9525779060dfdc4a16c7fb7e7b",
+      "bytes": 104659
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1024-credential-hold.png",
+      "sha256": "d8919681316462060dd4e9c0beb395b3f0ec9372910449270069541e72c0dd65",
+      "bytes": 286261
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1024-denied.png",
+      "sha256": "7e62b19b7cbc0a73f30ba86cbdd9303139ac17f9bed2abca2915428309a6b20c",
+      "bytes": 122997
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1024-empty.png",
+      "sha256": "a8fb462a9409267be5d4dc486045e4f6f44042c87a0f748b3f5e2ab672fe1a38",
+      "bytes": 133789
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1024-loading.png",
+      "sha256": "7cb6995f31fcf8ec225343cae0e24aad424fa324b92900f55bfc343e966ff2f3",
+      "bytes": 102333
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1024-unavailable.png",
+      "sha256": "1caa3c2f8978da071467dd7b782bca772c613448c7a94be26fe2d674cff61de8",
+      "bytes": 123534
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1280-credential-hold.png",
+      "sha256": "e7270703407e1788aabcdb305b5c51878037bda8b41ebcbc88246fa408cef977",
+      "bytes": 313388
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1280-denied.png",
+      "sha256": "8f57a1939d9c28c6ef398adf0de27704ff003e5d30bb9b2f1a7b5ce5f91fe949",
+      "bytes": 144263
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1280-empty.png",
+      "sha256": "d3154f9c513b67af5df2feab745d73d82cf4fcb8c4d803e94fdecbed4447aef2",
+      "bytes": 155498
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1280-loading.png",
+      "sha256": "24b00dbd978b842e91c474f9fcf1298ebb51eee19b3ecc76132fbdde9e99c9d9",
+      "bytes": 123029
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1280-unavailable.png",
+      "sha256": "8f2de5d659aa5a9831c7734056be57ec3cb742e1fd956888903f4daa1b27ddb0",
+      "bytes": 144813
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1440-credential-hold.png",
+      "sha256": "5bf3a710c8001e976b2011dbe0e02cdf3c3e1c68f1323a968ca5ebe3a72359d7",
+      "bytes": 314833
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1440-denied.png",
+      "sha256": "bd9938479b6f691298a0ea70c85307df7c36d295cf024c02f7816cbf3c81a127",
+      "bytes": 145463
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1440-empty.png",
+      "sha256": "0b45b25a19aff73ee816a359cf82cd0fe4c229760da35c3568c9aa6660eaf9d6",
+      "bytes": 156259
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1440-loading.png",
+      "sha256": "4c2bacf907800e94667eae6df284f6481d3fb37234e32ac03e03d590bcc2fedf",
+      "bytes": 124440
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-1440-unavailable.png",
+      "sha256": "d8e20dd0c56906d5542264c99bcfcca3acfc77bb76e346d379e985597333147e",
+      "bytes": 146009
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-390-credential-hold.png",
+      "sha256": "d92dae37d2f4bf7523782594ac02c50f72c73f5d4d4cf79fb1cfc91091da4775",
+      "bytes": 256984
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-390-denied.png",
+      "sha256": "0069f155fc01258910b8c445f2befab98840cfd7dd0d7e2e9a364445bf57367b",
+      "bytes": 108104
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-390-empty.png",
+      "sha256": "c89cdd81ddb359d483810f5732062e4226b302b65010957ffd945bed6c3c5faa",
+      "bytes": 111935
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-390-loading.png",
+      "sha256": "49a404cdef98e6d97231fee3b51f2d4aed9dc5ff46ae3e173fbcb727af30aee2",
+      "bytes": 88297
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/en-390-unavailable.png",
+      "sha256": "62bb716fcfd974a47f9e46264f576cd933bfb4277048dc094dcecba501cc6966",
+      "bytes": 108463
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1024-credential-hold.png",
+      "sha256": "e0dc28796c2756b4f4ecae23e5f8f0c879e815fd9d768f70f7e9cfaf751f8f45",
+      "bytes": 270458
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1024-denied.png",
+      "sha256": "f50c18dc757a658884499bf8a02182606a79b57fd50abb896722c17f8853cc1e",
+      "bytes": 120789
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1024-empty.png",
+      "sha256": "63b243b8d1b1cb1cab118f07d6f228c4d467a713a0a28511692c2f5972c21e28",
+      "bytes": 127404
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1024-loading.png",
+      "sha256": "c549d5cf65c0f4778deae3d826e2d06cc4a89127ebedfc14d5ee34cd71123ff4",
+      "bytes": 98936
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1024-unavailable.png",
+      "sha256": "9e5ac80fb361c6ce864d52980028a5e476e22feb4a3fe5a2d7d1cc3e9989a96d",
+      "bytes": 120402
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1280-credential-hold.png",
+      "sha256": "25d4cb6607b71e22ffe6fbc7b239f65c7c3def1149e8890cc47ebae325953a3a",
+      "bytes": 285882
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1280-denied.png",
+      "sha256": "6739720bc1b6229a62de61adb1b364c5072b4e0975be0993528f5ccfb76acf6c",
+      "bytes": 133667
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1280-empty.png",
+      "sha256": "ede656cc96e9b9b4078765221ae194107ac8ee71ffdc1a154f3bf01b07d2df04",
+      "bytes": 140380
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1280-loading.png",
+      "sha256": "37a6c8f0f14afc6e3dc4895636a77dc76fb191ffdcd92e29b69e75118b7acabb",
+      "bytes": 111354
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1280-unavailable.png",
+      "sha256": "c06e09dfb725428edfb7e391f0aeabfd87a984a02ba5ebeff46fd4905c21d556",
+      "bytes": 133299
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1440-credential-hold.png",
+      "sha256": "8ea22651b7b9bb2effa965b640b5d5294ecb89c0aadb0b5fa7b670a085ea2fae",
+      "bytes": 291031
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1440-denied.png",
+      "sha256": "e0bdff7a9d3ad4bc8bb4430366377fc5f1dca932f62836e8b92f155ff5ad017c",
+      "bytes": 135661
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1440-empty.png",
+      "sha256": "23c967f10609cae51a258eea5bedb84aea0939f72cbd762e96eee6bd89e99a0f",
+      "bytes": 142650
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1440-loading.png",
+      "sha256": "cb249e0856ce7b5bda80c7f42738d30a442ab52c663811c14beb0ff7eb3cf084",
+      "bytes": 113396
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-1440-unavailable.png",
+      "sha256": "140ed9858a8382bb70071329cea858545664d2e7293b37941e326d83c803e015",
+      "bytes": 135250
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-390-credential-hold.png",
+      "sha256": "ebcd9c96a6fcdba6c72a2554ef7a2624896d79d9c592e82973bd96a250678d5a",
+      "bytes": 242489
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-390-denied.png",
+      "sha256": "a332268387acf8d5469d67af9b4cbe4ae71f1b10eada9fe0c16df449e3dd0b25",
+      "bytes": 107201
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-390-empty.png",
+      "sha256": "2c52e0a998856ccfef5fc32f8b527d03736f81753dc10d5150b04f12c715f84b",
+      "bytes": 108291
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-390-loading.png",
+      "sha256": "efbc571c318fe93b0804ce01ec441725c765bb91038a19bc7d5c2fb7fe3dc69a",
+      "bytes": 86955
+    },
+    {
+      "path": "/private/tmp/hb304-issue-draft-current/states/ko-390-unavailable.png",
+      "sha256": "884b26daf68f99491df9035373edba259c66e6cf536416bea33931e5afe21b17",
+      "bytes": 106822
+    },
+    {
+      "path": "/private/tmp/hb304/apps/console/dist/build-manifest.json",
+      "sha256": "226f92d1a7d88c79c7b9e7864e9719c48dfa0712e550bbde3d3bb8c4d13736fe",
+      "bytes": 72910
+    }
+  ]
+}

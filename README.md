@@ -30,6 +30,8 @@ The [native account hierarchy workflow](docs/ops/installation/native-account-hie
 
 The [common-ingestion omission audit](docs/reviews/HB-30-focus-completeness/findings.md) records the original gaps. Its [remediation](docs/reviews/HB-30-focus-completeness/resolution.md) and [connection runbook](docs/ops/installation/common-focus-connections.md) add independent source/window identity, expected account/calendar coverage, pinned consumed-field semantics, guarded quarantine/replacement and scheduler fairness. These remain bounded installation workflows; full provider conformance, live connectors and installation production readiness require separate evidence.
 
+The local API candidate supports an explicit nonsecret [service audience/scope catalog](docs/ops/installation/service-catalog.md) loaded at startup. This declaration metadata does not grant permissions or certify service-request authentication.
+
 ## Planned capabilities
 
 - Collect and validate provider evidence with explicit coverage, source authority, immutable revisions, and reconciliation.

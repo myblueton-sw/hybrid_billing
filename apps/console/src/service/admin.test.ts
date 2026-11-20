@@ -1,4 +1,5 @@
-import { accessFixture, requestFixture, revocationFixture, credentialFixture, serviceFixture, servicesFixture, orgFixture } from "./read-fixtures";
+import { credentialRowOf } from "./admin";
+import { accessFixture, requestFixture, revocationFixture, credentialFixture, orgFixture } from "./read-fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AdminError, adminClient, attempt, failureOf, ledgerOf, outcomeOf, planOf, reauthenticate, sequence, usersQueryString } from "./admin";
@@ -212,23 +213,15 @@ test("a replayed resend and a changed payload are told apart", async () => {
     (e: unknown) => e instanceof AdminError && e.failure === "stale");
 });
 
-test("the services read preserves complete producer rows", async () => {
-  const page = { ...servicesFixture, services: [serviceFixture, { ...serviceFixture, id: "svc-b", credentials: [] }] };
-  const { f, calls } = fake(200, page);
-  assert.deepEqual(await adminClient("t", f).services(), page);
-  assert.equal(calls[0].url, "/api/v1/identity/services");
-  await assert.rejects(adminClient("t", fake(200, {}).f).services(), (e: AdminError) => e.failure === "invalid");
-});
-
-test("the services read keeps optional pickup states without copying secrets", async () => {
+test("P02 credential metadata keeps optional pickup states without copying secrets", () => {
   const at = "2026-11-21T00:00:00Z";
   const rows = [
     { ...credentialFixture, id: "c-open", secret_pickup: "open", secret_pickup_until: at, secret: "hbsk_x", secret_ref: "ref" },
     { ...credentialFixture, id: "c-never", secret_pickup: "never_collected" },
     { ...credentialFixture, id: "c-got", secret_pickup: "collected" }, credentialFixture,
   ];
-  const got = await adminClient("t", fake(200, { ...servicesFixture, services: [{ ...serviceFixture, credentials: rows }] }).f).services();
-  const [open, never, collected, absent] = got.services[0].credentials;
+  const got = rows.map(credentialRowOf);
+  const [open, never, collected, absent] = got;
   assert.deepEqual(open, { ...credentialFixture, id: "c-open", secret_pickup: "open", secret_pickup_until: at });
   assert.equal(never.secret_pickup, "never_collected");
   assert.equal(collected.secret_pickup, "collected");

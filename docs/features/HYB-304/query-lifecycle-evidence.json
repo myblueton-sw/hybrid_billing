@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "5cbf06d313420d18af381eeca3fbd61c20ce1cfd",
+  "scope": "query_lifetime_and_boundary_tests_only",
+  "production_unchanged": true,
+  "checks": {
+    "top_level_test_groups": 14,
+    "final_full_server_short": "PASS",
+    "statement_coverage_percent": "99.1",
+    "required_package_coverage": "100 NOT_MET",
+    "uncovered_weighted_statements": 101,
+    "servicequery_uncovered_weighted_statements": 19,
+    "targeted_race": "PASS",
+    "vet": "PASS",
+    "semantic_mutants_assertion_killed": 4,
+    "exact_production_restore": true,
+    "private_mutation_cache_removed": true,
+    "cross_compile": [
+      "linux/amd64 ELF64 x86-64",
+      "windows/amd64 PE32+ x86-64"
+    ],
+    "foreign_runtime_execution": "UNVERIFIED",
+    "console_rerun": "NOT_RUN unchanged source; prior1016-test/render checkpoint retained"
+  },
+  "independent_source_review": "/root/hyb310_review PASS after exact403 and pre-expiry collection assertion corrections; read-only, no tests executed",
+  "boundaries": [
+    "HTTP expiry/demotion/collection uses actual module operations",
+    "Public-module ordering/publication and mid-page expiry are staged component interleavings, not complete HTTP scheduling claims",
+    "Boundary cursor copies use actual server signer; no attacker-forgeability claim",
+    "Delivery generation scalar exhaustion and local encoder-overflow fixtures are not natural population/lifecycle claims",
+    "Initial invalid scan budgets and promoted-member authorization failures were setup errors",
+    "No Graphify or per-query benchmark restarted; package100% and full feature gates remain open"
+  ],
+  "source_files": [
+    {
+      "path": "apps/api/server/servicequery_dependency_edges_test.go",
+      "sha256": "aa18356cb7bfda00d427978245b896da38a55c63ee1aa95c2246221564bfb5bd",
+      "bytes": 2969
+    },
+    {
+      "path": "apps/api/server/servicequery_interleaving_edges_test.go",
+      "sha256": "2b48f9c968724777ce235437cf4549afe9641fd060064fde76171157fc8d9464",
+      "bytes": 5293
+    },
+    {
+      "path": "apps/api/server/servicequery_lifetime_edges_test.go",
+      "sha256": "02cc466b897923231031ecb873937de62535dd55b55d961950cbb2ab5378760b",
+      "bytes": 4594
+    },
+    {
+      "path": "apps/api/server/servicequery_publication_edges_test.go",
+      "sha256": "06c9dd2c2264b580ae4bc09e8b15ee94d1cc2c0a49141f82c0682e2408baa2ad",
+      "bytes": 3191
+    },
+    {
+      "path": "apps/api/server/servicequery_saturation_edges_test.go",
+      "sha256": "afeaa20a5e15144a858912328d38770e6396e8f4e9979c5c54cc2e31d4c36b3a",
+      "bytes": 6180
+    },
+    {
+      "path": "apps/api/server/servicequery_accounts.go",
+      "sha256": "4af07295b7148ca5f8545c2661d4fc80cf4152f17a35323082d4ff869c465916",
+      "bytes": 7920
+    },
+    {
+      "path": "apps/api/server/servicequery_audience.go",
+      "sha256": "adc6119d0550eb358af2b14a12b898d17777bb23a465bbb47694cf65d5c27cf1",
+      "bytes": 997
+    },
+    {
+      "path": "apps/api/server/servicequery_choices.go",
+      "sha256": "b922025c69c2b739f856d8134d0439324e69500f74b32f15f2ffddd4e3af984d",
+      "bytes": 8932
+    },
+    {
+      "path": "apps/api/server/servicequery_credentials.go",
+      "sha256": "d86a15751f30ee0c588dfc82338872f10151ffb5cce0fa2ba50ee2e7823419ee",
+      "bytes": 5049
+    },
+    {
+      "path": "apps/api/server/servicequery_cursor.go",
+      "sha256": "25e10f4232c39b26af73437486ff080ee36c041abee6ac53a976279d36ff4688",
+      "bytes": 8937
+    },
+    {
+      "path": "apps/api/server/servicequery_detail.go",
+      "sha256": "dbf1a22186ae215cd13f8da3eaaa5caf72cb692fe41d5cdbe6f3c6ef692340e7",
+      "bytes": 12151
+    },
+    {
+      "path": "apps/api/server/servicequery_history.go",
+      "sha256": "26f07b188df4c51d4276c676851ee20b23048d0804c467436187657959fb642f",
+      "bytes": 2170
+    },
+    {
+      "path": "docs/features/HYB-304/m04-query-lifecycle.md",
+      "sha256": "99678e862fd090108d115decb850a652e362edffd444ee84cb3bdaf1deda7f35",
+      "bytes": 7727
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "52ce71ee4b4437d1dd047cb1602797b4726fb7b544cbcfe85a5748e4443f6409",
+      "bytes": 33190
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "e7608f31dc81289c0eddb8e9e0c51da8faefedcde06a72a7937454163689a22f",
+      "bytes": 59802
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-query-lifetime-initial.log",
+      "sha256": "e2ccd877ae6dc6355319dda19411c211a82cdfd940926e20bf0b0940783561a1",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-query-saturation-initial.log",
+      "sha256": "d7760062e82b09501241801892f59c613bd2a48191ff5eeba9e2d0637d430f58",
+      "bytes": 255
+    },
+    {
+      "path": "/private/tmp/hb304-query-interleaving-initial.log",
+      "sha256": "4defe47a7783ec932281823ee3efa6a45533296c037b39e9cdc9b538293532b5",
+      "bytes": 1085
+    },
+    {
+      "path": "/private/tmp/hb304-query-boundaries-corrected.log",
+      "sha256": "708db967b2e6cd68e65a9e3e482bdaf2f7b84a931cb25751fdbe925ec6014d4f",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-query-publication-initial.log",
+      "sha256": "122c397fa124be591a1bc0210a3bcfadaac2d8793689483716488008b994e1e8",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-query-dependency-initial.log",
+      "sha256": "5ef7e58271c99c20bb9955b3a582ec08bb80b2a09315c2e9be9151396cf19a4f",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-query-review-corrections.log",
+      "sha256": "6c1a8da723c320599e243118d8e893d44413ea237b1915dd9420bf393d7fdce2",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-server.log",
+      "sha256": "f4f6a6e20b9443dc9123a1e0991236070f24dc68103f21ff5fcc53ab11306f86",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-server.cover",
+      "sha256": "279072471268474af2d4f05d3d5f5b8ef88e56a0ca3d6d15da87c0e376a9371c",
+      "bytes": 686031
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-race.log",
+      "sha256": "50fa6028c484f4cda4ce5b90f0bc41c3f15015df43a1ed7c34390bff2271709a",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-query-edge-test-names.json",
+      "sha256": "aad9ea36006dfef882587ec4e267ea87da44d91afb663b038956b4815b4d5f40",
+      "bytes": 1054
+    },
+    {
+      "path": "/private/tmp/hb304-query-edge-mutants.json",
+      "sha256": "ec907c6a085cae149e695252c908186b2623c18643e8be28451373d23e69794f",
+      "bytes": 1728
+    },
+    {
+      "path": "/private/tmp/hb304-query-edge-mutants.log",
+      "sha256": "8d9ebc55bb6cc2391e5bbf521b5de56847875c6ed45b7a17e7ebb7ea8b6fa8aa",
+      "bytes": 101
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-final-race.log",
+      "sha256": "bc3b3dddd9749dc6e42bbb9690744c5c455fc0c4bf3d98ae9c4d6bfe3e6450b0",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-final-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-final-server.log",
+      "sha256": "20fcb7313d0513ddc34a74c937bd021624e98439fc6ae2e42a51fa2b92797938",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-final-server.cover",
+      "sha256": "279072471268474af2d4f05d3d5f5b8ef88e56a0ca3d6d15da87c0e376a9371c",
+      "bytes": 686031
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-final-coverage-summary.json",
+      "sha256": "7c0813b9eaeabede6c508d4a5ca93de0f1007d427fd8ef172ce9f06868a5f280",
+      "bytes": 2552
+    },
+    {
+      "path": "/private/tmp/hb304-query-edge-mutant-publication-basis.log",
+      "sha256": "146d4eb66be7d05348ee7e043930a96f712b8f8371e78beced875bf58cbc2018",
+      "bytes": 246
+    },
+    {
+      "path": "/private/tmp/hb304-query-edge-mutant-matched-overflow.log",
+      "sha256": "a8973f2901463e20466261f45405f47e98b674bff8d9e77e8b7fe27f126885fe",
+      "bytes": 1483
+    },
+    {
+      "path": "/private/tmp/hb304-query-edge-mutant-collected-selection.log",
+      "sha256": "a3f142a8a316a80a09894248c9eb7fe395c362f8741c81626333c5dde2aafdfc",
+      "bytes": 467
+    },
+    {
+      "path": "/private/tmp/hb304-query-edge-mutant-canonical-history.log",
+      "sha256": "353ef8445c8f19f427d8c46d24a6f0565882cb1a464165dde9ff4dd3137edf38",
+      "bytes": 360
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-linux-format.log",
+      "sha256": "91738029fd7af26ed96746a47b96396fa0320ee7714af9aa1c8622d308320cdb",
+      "bytes": 207
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-linux-amd64.test",
+      "sha256": "3eeec51f213cc624515b9b9671a8da77c598f778f372c8ec0c9754d4863de160",
+      "bytes": 27985939
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-windows-format.log",
+      "sha256": "40b21769c1bcd259e0b6cba9ff720e9ba9b07e6f32130b2667aeccb0bda3fb05",
+      "bytes": 105
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-windows-amd64.test.exe",
+      "sha256": "148d0758d69501efc970479f93cba9a2f4fbd3c283df93aa0f8fd750a0be9c37",
+      "bytes": 28324864
+    }
+  ],
+  "independent_evidence_review": "/root/hyb310_copy_render PASS; all15 source and29 artifact hashes/sizes verified; read-only, no tests or mutations executed"
+}

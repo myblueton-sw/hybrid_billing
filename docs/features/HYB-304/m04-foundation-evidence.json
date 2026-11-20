@@ -1,0 +1,138 @@
+{
+  "type": "VerificationEvidence",
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "base_commit": "b9d5b793806706fb3cf2dd877ce8ca89fff0ff25",
+  "scope": "M04 identity query foundation; no HTTP/UI/metadata producer completion or partial-feature merge",
+  "sources": [
+    {
+      "path": "modules/identity/registry.go",
+      "sha256": "38847743fc564a6118cb08276e5a240f171e75187ea216d83e0c6f70787386fe",
+      "bytes": 11112
+    },
+    {
+      "path": "modules/identity/workspace.go",
+      "sha256": "202cf901e3acc75e472abf93c6c893ada525a74a8aa34bd7c9e2ea5eb0d6ab71",
+      "bytes": 14513
+    },
+    {
+      "path": "modules/identity/workspace_test.go",
+      "sha256": "9367965fed5e6eeb75e8655a5079c2719c353e80855006e42bf06e67db8e7278",
+      "bytes": 44484
+    },
+    {
+      "path": "modules/identity/servicequery.go",
+      "sha256": "560022447f4329d685bd979d9a8e8d789fe2263728a86dc0d2066021b50b0b98",
+      "bytes": 2693
+    },
+    {
+      "path": "modules/identity/servicequery_test.go",
+      "sha256": "c29b4f0edc6a30fd1f13ce62d14688f99af14dbfd6e9c5abcf0983dd3da5a9cb",
+      "bytes": 9210
+    }
+  ],
+  "artifacts": [
+    {
+      "local_evidence": "hb304-m04-foundation-before.log",
+      "sha256": "9eb9cc9558958efe88a6787c9f96fa361f49e89bf931d50ea5cd9dfb8bcd7f35",
+      "bytes": 1519
+    },
+    {
+      "local_evidence": "hb304-m04-foundation-after.log",
+      "sha256": "da5998bac9b76baa81fc5dffae35f1bb360e5f67a9c66049bdcca027f90bd762",
+      "bytes": 68
+    },
+    {
+      "local_evidence": "hb304-m04-identity-regression.log",
+      "sha256": "89ceac074a687300f94a6bdb0f59471a5195a1973c9f3d405aed8f9e2947cae6",
+      "bytes": 1293
+    },
+    {
+      "local_evidence": "hb304-m04-identity-final.log",
+      "sha256": "9c2653ed377492d955770d413adc8beb37cea14f0232e82d75bba560ee1a90f5",
+      "bytes": 98
+    },
+    {
+      "local_evidence": "hb304-m04-identity-final-coverage.out",
+      "sha256": "160ae90b3d9caa55b3abde6c25b616cb718d8aae1720bfe11600b2f82c5831bd",
+      "bytes": 64935
+    },
+    {
+      "local_evidence": "hb304-m04-identity-race.log",
+      "sha256": "2c6cb9256b2f2eb233031dcb8fd5cc0f3d7bdc985b21ce522b4f89b38dda62ff",
+      "bytes": 68
+    },
+    {
+      "local_evidence": "hb304-m04-go-regression.log",
+      "sha256": "cfb23f0c06c9f601f0c48bc70432a9a314de131fab84e64e3c36ef3ffb3c2cc9",
+      "bytes": 5123
+    },
+    {
+      "local_evidence": "hb304-m04-vet-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_evidence": "hb304-m04-vet-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_evidence": "hb304-m04-mutations/report.json",
+      "sha256": "c40308fbb1b7958853bb8210a71f2d71de0e720ffeace7004e6bfb59be828d8e",
+      "bytes": 1293
+    },
+    {
+      "local_evidence": "hb304-m04-mutations/baseline.log",
+      "sha256": "639fd8e329f7880d1a40237cd782e2683fd81a8c36cbebceaca66dd75d916461",
+      "bytes": 68
+    },
+    {
+      "local_evidence": "hb304-m04-mutations/service_insertion.log",
+      "sha256": "d4f3932c2bb513fb1b03d936055bf650aaa1014489ebbe4e7b79a7b4de724a57",
+      "bytes": 257
+    },
+    {
+      "local_evidence": "hb304-m04-mutations/credential_pruning.log",
+      "sha256": "a19862e6f6b9679111a4557062a8aac3ee769afdb50beeb845a8582f1be62393",
+      "bytes": 619
+    },
+    {
+      "local_evidence": "hb304-m04-mutations/service_authority.log",
+      "sha256": "ea155624b997e642e0f129df3f96af11d08c5c85c2f7b42ffab264b0ac4b3ccf",
+      "bytes": 634
+    },
+    {
+      "local_evidence": "hb304-m04-mutations/credential_page_bound.log",
+      "sha256": "8692dc792659bc1d4fb56acd7fa41538b669c71e520f05b8ecc366bceec723ad",
+      "bytes": 1914
+    },
+    {
+      "local_evidence": "hb304-m04-mutations/future_capacity.log",
+      "sha256": "eb9173823c68770f43f61a33622861567685604e454c6c9a6b3b3d668f94aafd",
+      "bytes": 267
+    },
+    {
+      "local_evidence": "hb304-m04-mutations/restored.log",
+      "sha256": "0ed4532badf3eb0c907d7c204131183344d47ef19974ec3196afb167e4511178",
+      "bytes": 68
+    }
+  ],
+  "results": {
+    "new_api_before": "FAIL: API/index methods absent at compilation; not semantic fail-before evidence",
+    "initial_full_identity": "FAIL: old serial-reuse fixture bypassed new index using direct map deletion; fixed fixture removal retains all original assertions",
+    "final_full_identity": "PASS0.577s;99.0% statements, not branch coverage",
+    "race": "PASS1.392s for7 new tests",
+    "full_go_regression": "PASS go test -short ./...;74 package output lines;server178.044s CLI4.286s identity0.875s",
+    "vet": "PASS host and static Linux/Windows arm64; no other-OS runtime claim",
+    "mutations": "5/5 intended semantic assertion kills; private cache removed; exact source restoration and focused suite PASS"
+  },
+  "review": "Independent read-only reviewer /root/hyb310_review returned design, actual-change and final evidence/restoration PASS. All5 source and17 artifact hashes/sizes match; reviewer inspected7 tests and5 intended semantic mutation kills. Cache deletion was reported by the runner, not independently observed by the reviewer. Reviewer executed no tests, mutations, services, edits or merges. No partial-feature merge/fullM04 approval.",
+  "remaining": [
+    "Full M04 organization/purpose/audience/scope producer and reviewed validation",
+    "Bounded account/credential/owner/organization/catalog/reminder HTTP reads and UI",
+    "Revision fence covering credential mutations; ID primitives are not snapshot cursors",
+    "OpenAPI/field maps/glossary plus rendered multilingual verification before complete M04 merge",
+    "Parent M03/M02 and subsequent original goal remain open"
+  ]
+}

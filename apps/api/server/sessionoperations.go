@@ -61,10 +61,6 @@ func (s *Server) readSessionOperation(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if found.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) {
-		failCode(w, commands.Unauthenticated, request)
-		return
-	}
 	record := s.sessionOperations[r.PathValue("operation")]
 	if record == nil || record.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) || record.state != "accepted" && record.caller != found.handle {
 		failCode(w, commands.UnsupportedCommand, request)
@@ -96,10 +92,6 @@ func (s *Server) listSessionOperations(w http.ResponseWriter, r *http.Request) {
 	defer s.domain.RUnlock()
 	found, answer, ok := s.self(w, r)
 	if !ok {
-		return
-	}
-	if found.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) {
-		failCode(w, commands.Unauthenticated, request)
 		return
 	}
 	if len(r.URL.RawQuery) > 8192 {

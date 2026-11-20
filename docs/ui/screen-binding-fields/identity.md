@@ -516,98 +516,55 @@ Read: `GET /api/v1/identity/access` (`boundary.go:32`), client and parser `admin
 
 ## M04 Service accounts
 
-Read: `GET /api/v1/identity/services` (`boundary.go:34`), client and parser `admin.ts:916-930`, called at `service-accounts/Live.tsx:551` for the accounts and credentials views (`:556`). Server shape `servicesPage` (`services.go:47-53`) with `serviceRow` (`services.go:30-39`), `credentialRow` (`services.go:22-28`) and `serviceLimits` (`services.go:41-45`). HYB-333 normalizes credential pickup metadata with `credentialRowOf` in `service/admin.ts`; the broader service row remains a cast. Secret pickup: `GET /api/v1/identity/links/{ref}` (`boundary.go:30`), `admin.ts:931-937`, server answer `secret`, `credential` (`users.go:221-222`).
+**HYB-304 connected integration candidate, not merge-ready.** The actual M04 entry now uses independent bounded account/credential/pending pages, canonical details, bounded metadata pickers, complete declaration forms and session-owned immutable command recovery. The obsolete population client/parser/types have been removed; P02 credential metadata parsing remains separate. Actual authenticated creation, versioned declaration editing, issuance, one-time collection acknowledgement and revocation passed. Known/off-filter selection and a subsequent sixty-variant read-state/credential-hold matrix were rendered in EN/KO/AR at four widths. Eighteen mounted interaction scenarios now include stale reads, real cursor conflict, immutable replay, keyboard/focus and issuance authentication recovery; sixty-four additional authentication captures distinguish actual password confirmation from injected prerequisite metadata. Remaining full journey/state parity, coverage reconciliation and final integration remain open. See [interaction checkpoint](../../features/HYB-304/m04-consumer.md#interaction-and-read-error-checkpoint-after-ced673a).
 
-### Views and page states
+The tables below replace obsolete service/population line anchors with the current producer, client and integration boundary. Current code symbols are used because recovery refactoring changed line positions. See [query contract](../../features/HYB-304/m04-queries.md), [strict client](../../features/HYB-304/m04-console.md), [recovery design/status](../../features/HYB-304/m04-recovery.md), [declaration producer](../../features/HYB-304/m04-declarations.md) and [operator settings](../../ops/installation/service-catalog.md#declaration-commands-and-limits).
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Usage view | Not available in pre-launch, go to accounts | fixed copy | none | `service-accounts/Live.tsx:569` |
-| Transfer view | Not available in pre-launch, go to accounts | fixed copy | none | `service-accounts/Live.tsx:570` |
-| Both views | Denied | services read refused `permission_denied` | `admin.ts:755` | `service-accounts/Live.tsx:571-573` |
-| Both views | Load failed, Try again or Sign in again | failed services read; body from `describeFor("create")` (`service-accounts/Live.tsx:26-53`) | `admin.ts:776-783` | `service-accounts/Live.tsx:574-582, 649, 687` |
-| Both views | Loading | derived: no page yet | none | `service-accounts/Live.tsx:648, 686` |
-| Both views | Loaded at | `now` (`services.go:52`) | `admin.ts:928` | `service-accounts/Live.tsx:640, 661` |
-| Both views | Done notice | derived: command copy | none | `service-accounts/Live.tsx:548, 647, 668` |
+### Current producers and connected page/form binding
 
-### Accounts view
-
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Header | Count of limit | derived: number of `services[]`; limit `limits.services` (`services.go:44`) | `admin.ts:921, 926` | `service-accounts/Live.tsx:639` |
-| Accounts | No services | derived: no non-retired service (`service-accounts/live-model.ts:18-20`) | `admin.ts:921` | `service-accounts/Live.tsx:650` |
-| Accounts table | Column headings | fixed copy | none | `service-accounts/Live.tsx:458-463` |
-| Accounts table | Service ID | `services[].id` (`services.go:31`) | `admin.ts:921` | `service-accounts/Live.tsx:467` |
-| Accounts table | Owner, created by | `owner_login` else `owner`; `creator_login` else `creator` (`services.go:34-37`) | `admin.ts:921` | `service-accounts/Live.tsx:468` |
-| Accounts table | Status | `state` (`services.go:32`) via `serviceState` (`service-accounts/live-model.ts:30-32`) | `admin.ts:921` | `service-accounts/Live.tsx:469` |
-| Accounts table | Suspended note or active credentials of limit | `state`; count of `credentials[].state = "active"` (`service-accounts/live-model.ts:22-24`); `limits.credentials_per_service` (`services.go:43`) | `admin.ts:921, 925` | `service-accounts/Live.tsx:470` |
-| Accounts table | Manage | derived | none | `service-accounts/Live.tsx:471-473` |
-| Accounts | Retired disclosure | derived: `state = "retired"` | `admin.ts:921` | `service-accounts/Live.tsx:652-654` |
-| Create form | Name with `svc-` prefix, ID preview | typed `name`; preview derived (`service-accounts/live-model.ts:6-10`) | none | `service-accounts/Live.tsx:154-164` |
-| Create form | Owner choice, no owners | `owners[].user_id`, `login` (`services.go:50`) | `admin.ts:922` | `service-accounts/Live.tsx:165-176` |
-| Create form | Credentials after creation | fixed copy | none | `service-accounts/Live.tsx:177` |
-| Create form | Command | `service.create` with `name`, `owner` | `admin.ts:871` | `service-accounts/Live.tsx:133` |
-| Create form | Name taken, owner refused | `invalid_request` with `fields` `name`, `owner` | `admin.ts:754, 778` | `service-accounts/Live.tsx:136-144` |
-| Create form | Limit reached | `prerequisite_failed` → `refused`; limit `limits.services` | `admin.ts:752, 926` | `service-accounts/Live.tsx:31, 153` |
-| Create form | New service opened | derived: `svc-` + typed name; the command result is not read | none | `service-accounts/Live.tsx:134, 605` |
-| Detail | Heading | `id` | `admin.ts:921` | `service-accounts/Live.tsx:195` |
-| Detail | Status, owner, creator, credentials of limit | `state`, `owner_login`/`owner`, `creator_login`/`creator`, active credential count, `limits.credentials_per_service` | `admin.ts:921, 925` | `service-accounts/Live.tsx:196-201` |
-| Detail | Suspend, reinstate, retire buttons; retired note | derived from `state` | `admin.ts:921` | `service-accounts/Live.tsx:191, 202-206` |
-| State step | Service, status, owner | `id`, `state`, `owner_login`/`owner` | `admin.ts:921` | `service-accounts/Live.tsx:239, 242` |
-| State step | Command | `service.suspend`, `service.reinstate`, `service.retire` | `admin.ts:871` | `service-accounts/Live.tsx:234` |
-| State step | Partial retire | `internal_error` with `operation_id` → `partial` | `admin.ts:759, 781` | `service-accounts/Live.tsx:43, 241` |
-
-### Credentials view
-
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Credentials | No services | derived: no service to choose (`service-accounts/live-model.ts:50-53`) | `admin.ts:921` | `service-accounts/Live.tsx:688-693` |
-| Credentials | Service choice with state | `services[].id`, `state` | `admin.ts:921` | `service-accounts/Live.tsx:696-701` |
-| Credentials | Pre-launch note: credentials cannot authenticate | fixed copy | none | `service-accounts/Live.tsx:702` |
-| Credentials | Active of limit | derived active count; `limits.credentials_per_service` | `admin.ts:925` | `service-accounts/Live.tsx:703` |
-| Credentials | None for this service | derived: no active credential (`service-accounts/live-model.ts:26-28`) | `admin.ts:921` | `service-accounts/Live.tsx:704` |
-| Credentials table | Column headings | fixed copy | none | `service-accounts/Live.tsx:488-492` |
-| Credentials table | Credential ID | `credentials[].id` (`services.go:23`) | `admin.ts:921` | `service-accounts/Live.tsx:498` |
-| Credentials table | Valid from, until | `not_before`, `not_after` (`services.go:24-25`) | `admin.ts:921` | `service-accounts/Live.tsx:499` |
-| Credentials table | Status: active, on hold, revoke required, revoked, expired | `state`, `usable` (`services.go:26-27`) and service retired via `credentialState` (`service-accounts/live-model.ts:34-40`) | `admin.ts:921` | `service-accounts/Live.tsx:495, 500` |
-| Credentials table | Revoke | derived | none | `service-accounts/Live.tsx:501-503` |
-| Credentials | Ended disclosure | derived: non-active credentials | `admin.ts:921` | `service-accounts/Live.tsx:706-708` |
-| Unstored reminder | Credential and its service, Revoke, Dismiss | derived: credentials issued in this browser session whose secret was not acknowledged (`service-accounts/Live.tsx:108, 536-537, 625`); service looked up in `services[].credentials` | `admin.ts:921` | `service-accounts/Live.tsx:669-685` |
-| Unstored reminder | Leave-page warning | derived: reminder list not empty | none | `service-accounts/Live.tsx:562-567` |
-| Issue form | Blocked: retired, suspended, limit | derived `issueBlock` from `state` and active count against `limits.credentials_per_service` (`service-accounts/live-model.ts:44-48`); or server `refused` | `admin.ts:752, 921, 925` | `service-accounts/Live.tsx:265, 296-302` |
-| Issue form | Valid for days, ends on | typed `days`; maximum `limits.credential_days` (`services.go:42`); end derived from `now` | `admin.ts:924, 928` | `service-accounts/Live.tsx:258, 267, 307-317` |
-| Issue form | Command | `service.issue_credential` with `days` | `admin.ts:871` | `service-accounts/Live.tsx:278` |
-| Issue form | Held retry after a lost or unclear answer | `dependency_unavailable`, unavailable or `partial` keep the expected revision and attempt (`service-accounts/live-model.ts:55-59`) | `admin.ts:759-760, 829` | `service-accounts/Live.tsx:78-82, 320` |
-| Issue form | Issued: credential and secret reference | result `fields.credential`, `fields.secret_ref` (`services.go:367`); malformed values are held as unavailable | `admin.ts:742` | `service-accounts/Live.tsx:280-286` |
-| Reveal | Issued notice, service, credential, valid until | `credential` from the result; `not_after` of that credential after reload, else the derived end | `admin.ts:742, 921` | `service-accounts/Live.tsx:382-384, 613` |
-| Reveal | Loading | derived while the pickup read runs | none | `service-accounts/Live.tsx:342, 387` |
-| Reveal | Secret, shown once | pickup `secret` (`users.go:222`), checked against `^hbsk_` and the credential ID | `admin.ts:933-936` | `service-accounts/Live.tsx:343-346, 388-396` |
-| Reveal | Pre-launch note, acknowledgement | fixed copy; local checkbox | none | `service-accounts/Live.tsx:397-401, 371-379` |
-| Reveal | Show secret again | first pickup failure `unavailable` | `admin.ts:780, 829` | `service-accounts/Live.tsx:348, 404-409` |
-| Reveal | Secret gone | other pickup failure, credential mismatch, no reference, or page hidden | `admin.ts:935` | `service-accounts/Live.tsx:344, 348, 356, 366-370, 410` |
-| Reveal | Done, Not stored, Revoke | derived from reveal state | none | `service-accounts/Live.tsx:411-415` |
-| Revoke step | Credential, service, status | credential ID; row looked up in `services[].credentials` for `credentialState` | `admin.ts:921` | `service-accounts/Live.tsx:428, 439, 442` |
-| Revoke step | Command | `service.revoke_credential` | `admin.ts:871` | `service-accounts/Live.tsx:434` |
-| Revoke step | Already revoked | `invalid_stage` → `stage` | `admin.ts:753` | `service-accounts/Live.tsx:33-35, 441` |
-
-### HYB-333 pickup and unknown-outcome bindings
-
-Implementation candidate; test, render and copy verification remain pending for the combined review.
-
-| Area | Field or behavior | Producer | Consumer |
+| Field or behavior | Actual producer | Strict client | Current integration boundary |
 | --- | --- | --- | --- |
-| Credential status | `secret_pickup`: open, collected, never_collected; inactive rows omit it | `apps/api/server/services.go`: `openPickups`, `pickupStates` | `service/admin.ts`: `credentialRowOf`; `service-accounts/live-model.ts`: `pickupLabel`; `Live.tsx`: credential table |
-| Pickup timing | `secret_pickup_until`, estimated from pickup, session idle and absolute ends | `services.go`: `pickupLive`; side-effect-free `identity.Boundary.Peek` | `pickupLabel`, credential status sub-line |
-| Retry window | `limits.replay_seconds` | `services.go`: command registry configuration | `issue-attempts.ts`: `submit`; `live-model.ts`: `outsideWindow` |
-| Issue reminders | sending, unknown, issued, lapsed; immutable original request and values | page-memory `issue-attempts.ts` store, scoped to user and service | `Live.tsx`: `AttemptsRegion`, held issue form, Show secret and Revoke |
-| Never-collected reminders | active credentials with `secret_pickup = never_collected` | services read; `live-model.ts`: `neverCollected` | `Live.tsx`: `NeverRegion`; revoke reason prefilled |
-| Leave and sign-out | accidental unload guarded; deliberate sign-out clears entries and marks | `shared/unload-intent.ts`; `Service.tsx` | issue store, Reveal and App unload guards |
-| Create retry | held request preserves body and attempt; definitive refusal renews only after idle | `live-model.ts`: `attemptState`, `settleFailure` | `Live.tsx`: `CreateForm`, `HeldBlock` |
-| Revoke focus | invoking control, then current view heading | `live-model.ts`: `returnFocus`; mode `from` | `Live.tsx`: cancel and narrow Back |
+| Canonical account ID, state, version, responsible owner/creator and labels | `servicequery_accounts.go:serviceAccountView`; bounded `GET /identity/services` | `service-query-read.ts:accountPageOf`; `serviceQueryClient.serviceAccounts` | `AccountWorkspace`, `AccountTable` and `AccountDetailView`; independent `svc_a_` query/selection, no first-row fallback or embedded population |
+| Purpose, owning organization, exact catalog version and selected audience/scope pairs | `servicedeclaration.go`; `serviceDeclarationView` | `declarationOf` inside account/detail/history parsing | `DeclarationForm` supplies every required field; current owner is read-only during declaration updates |
+| Recorded/missing/unavailable declaration and organization label availability | `serviceDeclarationView`; known `readServiceAccount` | `declarationOf`, `accountDetailOf` | `DeclarationForm`, `AccountDetailView` and picker exact-ID reads preserve explicit missing/unavailable/current catalog distinctions |
+| Credential aggregates and earliest unexpired expiry | Bounded nested account scan at fixed `reference_at`; known detail explicitly not_evaluated | `summaryOf`; decimal strings and exact sum invariant | Account list exposes reference aggregates; canonical issue controls use observed `eligibility.live_credentials` and decimal limit, never loaded row counts. Recent use remains unavailable |
+| Exact admission count and configured account limit | `serviceAdmission`; list/details independently of filters, including retired accounts | `admissionOf`; `AccountPage`/`AccountDetail` | `AccountWorkspace` displays exact recorded/limit separately from filtered exact/lower-bound count |
+| Independent credential rows and service/credential IDs, validity, fixed state, current_state, usable metadata | `servicequery_credentials.go`; bounded `GET /identity/service-credentials` | `credentialOf`; `serviceCredentials` | `CredentialWorkspace` and `CredentialTable` use `svc_c_` query/known selection; explicit issuance target remains separate. `CredentialStatus` keeps lifecycle separate from service state and active-but-unusable hold/revoke guidance; `CredentialPeriod` shows both validity endpoints. Usable is not request authentication or an effective grant |
+| Active delivery observation, estimated pickup end | `serviceCredentialView`; `servicedelivery.go`; `pickupLive` with side-effect-free session peek | Optional secret_pickup/secret_pickup_until; canonical `serviceCredential` | `RecoveryRegion` observes exact locally recorded credentials; `PendingCollection` owns its independent bounded workspace page and live pickup annotations |
+| Current issue/reinstate/declare/suspend/retire/revoke prerequisites | `currentServiceEligibility`, `currentCredentialEligibility` in `servicequery_detail.go` | `accountDetailOf`, `credentialDetailOf`; contradictory flags rejected | `AccountDetailView`, `IssueControl`, `KnownRevoke` and `ActionForm` use canonical current detail; explicit reauthentication refreshes without submitting; unsupported MFA and unavailable authentication evidence have distinct explanations and passive Reload |
+| Bounded owners, organizations, audiences and scopes with full restrictions | `servicequery_choices.go` and exact known-ID handlers | `serviceOwners`, `serviceOrganizations`, `serviceAudiences`, `serviceScopes` and canonical detail methods | `Picker` uses one bounded page and an independent exact known-ID read, including the new metadata-only `serviceAudience` route. `ScopeDefinition` displays complete structured declared restrictions |
+| Retained declaration versions or not_recorded/version_unavailable | `queryServiceDeclarations` | `serviceDeclarations`; `declarationPageOf` | `DeclarationHistory` pages retained versions and names unavailable versions; current definitions never reconstruct historical catalog restrictions |
+| Search/filter/cursor/reference/count certainty/settings | `servicequery_model.go`, `servicequery_cursor.go`, actual settings/CLI catalog | Strict page parsers; exact search_input correlation separate from normalized query.q | `navigation`, `QueryFilters`, `useScopedRead` and bounded cursor-only trails preserve other view parameters. Explicit First clears an expired/source-conflicting cursor; Reload preserves it. Read errors use M04 read-specific explanations and sanitized server diagnostics, with prior rows hidden |
+| Effective command value/rationale/body byte limits | `queryServiceLimits` exposes decimal `command_value_bytes`, effective min(256, configured rationale), and existing1048576-byte body limit | `limitsOf` requires exact/bounded metadata | `admitsDeclaration` and `admitsCommand` check UTF8 and actual serialized JSON escaping before retaining/sending a draft |
+| Create and update declaration | `serviceDefinitions`, `service.create` and `service.declare`; purpose/organization/catalog_version/scopes required, plus expected declaration_version for update | Existing command envelope and CommandId union | `DeclarationForm`, `declarationFields` and `commandIntents`; complete frozen envelope/identity and original revision survive refresh/locale/view changes |
+| Issue, suspend/reinstate/retire, revoke commands and partial/unknown outcomes | Existing command registry; identity/step-up/hold/reference checks remain authoritative | `AdminClient.command`, scoped issue store | `IssueControl` and direct original-issue recovery use stored values/window; `ActionForm` matches frozen command and target before any current-target callback. The server remains authoritative |
+| Usage history, credential request authentication and owner transfer | No connected producer/adapter in this increment | None | Usage/transfer views remain explicitly unavailable; metadata must not fabricate these capabilities |
 
-No secret, pickup reference, request key or rationale is added to reminder DOM attributes or browser storage. Pickup references remain in page memory for one-time reveal.
+### Implemented recovery binding
 
-**Parsed but not displayed on M04:** service `version`.
+| Area | Source and invariant | Current consumer |
+| --- | --- | --- |
+| Session owner | `ServiceRoot` synchronously updates sessionRef and supplies stable matchesSession; `ServiceAccountRecoveryProvider` owns the committed client/session layout token and effect-created store | Context-only wrapper around authenticated service children; no DOM addition. `LiveServices` gates until a matching live store exists |
+| Navigation and scope | Same client/user/workspace/CSRF retains the store across locale/view remounts; layout cleanup invalidates/disposes replacement scope before passive cleanup | `RecoveredServices`, `IssueControl`, `RecoveryRegion` and `commandIntents` use the scoped stores; no module-global issues/afterView singleton |
+| Local required/byte/integer errors and keyboard recovery | Existing current metadata limits, naming/whole-day rules and reference preflight remain authoritative | `form-validation`, `DeclarationForm`, `ActionForm` and `IssueControl` identify actual fields, preserve rejected values and link/focus summary targets. Owner/organization fieldsets exist during loading/failure; selects have separate IDs. Canonical credential used/limit and recorded-account/limit are isolated LTR in all locales, separate from filtered matching count. [Scoped actual validation](../../features/HYB-304/m04-form-errors.md) |
+| Command error/outcome meaning | Existing command/issuance error, retained generic hadUnknown and existing issuance refusal.retry; ErrorDiagnostics sanitizes code/request | `CommandFailure` keeps possible original completion distinct from latest refused retry, gives target/context-specific first refusal and separate confirmation copy. `IntentNotice` owns one phase heading; no raw message, global access-loss or save/user implication. [Verification and unchanged F2 boundary](../../features/HYB-304/m04-command-errors.md) |
+| Unsent state/revocation rationale | `action-draft.ts:actionDrafts` retains one exact immutable action/target/reason; same-lease canonical refresh/view remount preserves, replacement/auth loss disposes | `ActionForm` rechecks current first-submit bounds/eligibility, keeps refused drafts and original unknown intents separate, never silently replaces another target/action. Explicit discard clears only captured identity; Cancel closes while preserving. [Actual verification](../../features/HYB-304/m04-action-draft.md) |
+| Unsent issuance draft | `issue-draft.ts:issueDrafts` retains exactly one immutable target/days/reason under the current authenticated lease; byte bounds and identity-safe clearing | `IssueControl` restores across canonical refresh/locale/view, offers explicit other-target keep/discard and rechecks current first-submit eligibility. Provider disposes on scope/auth loss and guards unload; state/revocation rationale uses its separate action draft |
+| Issuance retry | `issue-attempts.ts:submit` supplies the original copied frozen days/rationale and original revision/attempt to Exec | IssueControl and direct original retry send those supplied values, not mutable caller values; held unknown/lapsed behavior remains |
+| Exact reconciliation | `AdminClient.serviceCredential` against the current expected workspace; scoped read sequence plus exact service/credential ID | `RecoveryRegion` observes locally recorded issued entries. Page absence, stale/mismatched/failed reads and never_collected/not-open alone retain the reference |
+| Authoritative terminal result | Current revoked/expired or returned-once observation of the retained issued entry | Retires only that matching entry. Returned-once adds a canonical service+credential unstored marker; acknowledged markers are not recreated by repeated reads |
+| Opening Reveal | `issue-attempts.ts:open` copies the exact retained ref/credential without consuming it | Reveal retains canonical identity; its initial browser-clock expiry is explicitly estimated until a matching canonical credential read supplies actual not_after. Updating that metadata does not retrigger collection; opening alone does not assert returned or stored |
+| One-time transport | `secret-collection.ts` shares one pending-only promise for exact service/credential/ref; current scope and visible document checked before intent and immediately before dispatch | `Reveal` calls scoped collect through the original AdminClient.secret. StrictMode replay attaches to the same pending operation; unsent hidden requests are not unknown deliveries |
+| Successful or unknown collection | Valid matching response retires issued reference and adds an unstored marker; failed/malformed/mismatched response retains unknown reference without automatic retry | Current visible observer may display the secret once; explicit user retry is required after unknown collection. No resolved secret is retained in store state |
+| Hidden/unmounted observer | Observer generation and scope/visibility checked before display; pagehide invalidates generation and clears the display | A pending response cannot repopulate a hidden/BFCache-restored view. Actual native BFCache remains unverified; fixture pagehide is controlled simulation |
+| Secret display and storage acknowledgement | Validated secret and exact credential match; secret exists only in the current Reveal component's displayed state | Existing shown-once help, local storage checkbox and Done; no clipboard/log/browser-storage integration added |
+| Revocation meaning | Only the shown-secret action explicitly declares not-stored; other reveal states do not establish storage | Unknown-storage Revoke opens with empty rationale; shown I-did-not-store action retains the explicit user's reason |
+| Unstored reminder | Scope-owned canonical Marker {service, credential}, independent of loaded rows | Reminder display/revoke uses the recorded service, with no current-selection/page fallback; Dismiss is local and is not server proof of storage |
+| Cleanup and unload | Store activate/dispose, actual auth-loss subscription, deliberate leave, scoped pending cancellation | Accidental unload guarded while necessary; session/client replacement, authenticated unmount and explicit release fence late callbacks and clean subscriptions |
+
+Recovery status copy distinguishes recorded-not-returned/currently-not-open from permanent deletion. Generic failed/hidden observations do not assert returned or stored; confirmed-return text requires an observed matching validated response. KO/AR copy remains candidate/source-reviewed rather than native/practitioner approved. No secret, pickup reference, request key or rationale is added to reminder DOM attributes or browser storage.
+
+Isolated actual React StrictMode/Chromium fixtures exercise this recovery lifecycle with synthetic transport and simulated visibility/pagehide. They are not complete M04 rendered journeys, native BFCache, native assistive-technology or owner FIX acceptance. The actual issuance authentication matrix adds twelve real password confirmations across EN/KO/AR at1440/1280/1024/390 and actual sign-out/new sign-in, as recorded in [issuance draft verification](../../features/HYB-304/m04-issue-draft.md). The isolated provider suite now has twenty scenarios, including action-only retention and scope cleanup. Full state/form parity, coverage reconciliation, final review and authorized merge of draft PR251 remain pending.
 
 ## M05 My security
 

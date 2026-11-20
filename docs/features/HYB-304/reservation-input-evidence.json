@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "fd4e0f69c2e360d539eb5a23dc6cbd15df1ffd3f",
+  "scope": "malformed_reservation_input_preserves_genuine_recovery",
+  "production_unchanged": true,
+  "checks": {
+    "scoped": "PASS0.802s",
+    "full_server_short": "PASS198.269s native99.7%",
+    "coverage": {
+      "matching_production_sources": 107,
+      "weighted_statements": 11779,
+      "uncovered": 35,
+      "previous_uncovered": 36,
+      "newly_covered_blocks": [
+        {
+          "location": "github.com/myblueton-sw/hybrid_billing/apps/api/server/sessionrecords.go:92.59,94.3",
+          "weighted_statements": 1,
+          "also_hit_by_focused_contract": true
+        }
+      ],
+      "no_profile_union": true
+    },
+    "focused_profile": "PASS separate native scoped contract; no union",
+    "race": "PASS8groups3.333s",
+    "vet": "PASS server",
+    "portable_compilation": "PASS Linux/Windows amd64; no foreign execution",
+    "mutations": "two assertion-killed, exact restores, private cache removed",
+    "required100": "NOT_MET",
+    "docs": "two status checks PASS; manual metadata/local links checked; no general semantic certification",
+    "all_packages_frontend_browser": "NOT_RERUN historical source-bound evidence unchanged"
+  },
+  "independent_source_review": "/root/hyb310_review PASS actual source; no test execution",
+  "limits": [
+    "Malformed helper inputs, not ordinary HTTP charge production",
+    "Normal domain lock, unlocked-session helper; no sessionsLocked claim",
+    "No live ledger/map/configuration edits or product changes",
+    "No proof of all valid-charge addition overflow or undercharge panic",
+    "No coverage exclusions/waiver; merge and parent M03/M02 pending"
+  ],
+  "source_files": [
+    {
+      "path": "apps/api/server/session_reservation_input_test.go",
+      "sha256": "f204c329d0f74c7c7098078988a7ad8e89ce3fff6af8b7962322f1db4edf7d3d",
+      "bytes": 3044
+    },
+    {
+      "path": "apps/api/server/sessionrecords.go",
+      "sha256": "b67db643ee4e20797c52a88a80503721e6a5b33fbfddebb19caa914cb6395389",
+      "bytes": 4516
+    },
+    {
+      "path": "apps/api/server/session_record_lifecycle_test.go",
+      "sha256": "ecb120463a88f5f1a64ae6a61749706f5611c093e81a2b36c707b73ed2fd20a6",
+      "bytes": 4916
+    },
+    {
+      "path": "docs/features/HYB-304/m04-reservation-input-contracts.md",
+      "sha256": "fb6a6e4d20459e53d61df4dd02f5c0c1737c579509e14f39e769fe3eeb8fa42b",
+      "bytes": 3781
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "1179db6cdac80ed962110bfbd35e01293e25ab824bb07fa52b0273b83926dbad",
+      "bytes": 41636
+    },
+    {
+      "path": "docs/features/HYB-304/m04-completion.md",
+      "sha256": "9e6360c475bcbf68065f706d0657ae9fa5601914965aad3bfdb4946f6d67c7c9",
+      "bytes": 17000
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "b85fcd33c039f3ccef9db3a73ae42504c194bdf12c643d98a0f2f4d6517a5a4f",
+      "bytes": 60376
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-reservation-input-coverage-summary.json",
+      "sha256": "a57579e29571fea219f52942b8beaa6fd5b3dc9980d3e1f50d53f84b0c82c301",
+      "bytes": 373
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-focused.cover",
+      "sha256": "98379445e8acf6c466d65052126a8ca24a746cf1459945de07fdfdef7c090bb9",
+      "bytes": 684312
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-focused.log",
+      "sha256": "ff0e06e11d14bdab474e33fc0ccfc78e78caae7e3e0ea77a9ad2be2b9dfd4566",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-linux-amd64.test",
+      "sha256": "c75156353877c5c3d4fbac9a6000c15f81559130fee6432466c12ad1fb97106b",
+      "bytes": 28203883
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-linux-format.log",
+      "sha256": "13296e21bb743c3a3bb80b9ae91c0ff67f8f8c759d51a5565aef84cf6612c551",
+      "bytes": 213
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-mutant-negative-charge.log",
+      "sha256": "2e03f2ee4de36a7c574a530e90e257aabd7d09dd2211368588f02595446ec341",
+      "bytes": 256
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-mutant-upper-charge.log",
+      "sha256": "8639e2899844e9a5e4c535e16f3d5f2bd0cdc7450aea3c267fda8324c6e9225e",
+      "bytes": 256
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-mutants.json",
+      "sha256": "bd19853fdf00cb6e943e31254dbd8e351f846b4cb338a5cf859cee006ebda68b",
+      "bytes": 863
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-mutants.log",
+      "sha256": "8d4edc3939abaa86adf4dc13962d8ea1fb187ab8a1d772b3f3e3b6eea168e801",
+      "bytes": 43
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-mutants.py",
+      "sha256": "ffdbf3d2d4dc18238d3db9bb20d620116a56c73427bcea7957efdd13c362a3e0",
+      "bytes": 1800
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-okf.log",
+      "sha256": "8e166b9e674a153f11ad04092c28b1aa8318539fa7d2cc8b8c771a915fb239c0",
+      "bytes": 376
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-race-test-names.json",
+      "sha256": "e3bd449caeff284e29dbc4e5e86a48f70093286a49a4094e99b8a97c4702ef66",
+      "bytes": 546
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-race.log",
+      "sha256": "7f4b1dc499d36cbadb64fc389378c805ff544a8003fa91ace0b9ffd6c24c3047",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-scoped.log",
+      "sha256": "7821ba1967357d923dae1447a7ee3d4945215ee986e7cd4ad9343145dba604cb",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-server.cover",
+      "sha256": "0d4d4048a3b812b71e235365d6f85f09a3f6f43a98949d498cd5f48f0f75981d",
+      "bytes": 684312
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-server.log",
+      "sha256": "538334c3bf92baed97a0d7baebcb2d5d7620fe2a8e8521f9048b9aacd3b03d7f",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-source-binding.json",
+      "sha256": "c2c0bbca206999c9aad480b7c99147c6470605e2f0a04e9e51aa27292da3de47",
+      "bytes": 14629
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-source-checks.log",
+      "sha256": "a40023dfc21aac6fff5eefc8818227b02ed4abcc7945616f6efb6d9ac1219f2f",
+      "bytes": 132
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-windows-amd64.test.exe",
+      "sha256": "06a233b86f9248c7b63407776f5c6563ca0f9333eb197d7edb71b1cb51e5b22e",
+      "bytes": 28547072
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-windows-format.log",
+      "sha256": "dcbc5f102e2489b6935a19b2c94cfa9c5f081169f2a239840808c007db8e9ed4",
+      "bytes": 111
+    },
+    {
+      "path": "/private/tmp/hb304-reservation-input-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "independent_evidence_review": "/root/hyb310_copy_render PASS7source/23artifact/107production bindings, one native guard unit, logs/restores and limited scope; no tests/services; root applied suggested completion wording"
+}

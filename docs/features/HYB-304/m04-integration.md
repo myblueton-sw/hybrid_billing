@@ -1,0 +1,60 @@
+---
+type: ImplementationPlan
+title: HYB-304 M04 authoritative metadata and bounded account queries
+description: Defines the ordered M04 producer and query work after the merged M05 increment without substituting existing owner fields for missing planning metadata.
+status: draft
+sources:
+  - resource: ./plan.md
+  - resource: ../../ui/screens/M04/spec.md
+  - resource: ../HYB-333/plan.md
+  - resource: ../HYB-333/verification.md
+  - resource: ../../planning/v1.16/retention-access.md
+---
+
+# Baseline and ownership
+
+M05 merged through PR247, main b9d5b793806706fb3cf2dd877ce8ca89fff0ff25. Root owns PM/planning, all implementation and integration on machine mac_mini, ticket HYB-304, branch feat/HYB-304-identity-list-paging. The branch was fast-forwarded to that verified main before this increment. Existing separate read-only source/security reviewer reviews important designs and actual changes; separate TW/render review precedes final M04 integration. Root is sole writer. This increment does not close M03/M02 or the parent.
+
+# Actual evidence and requirements
+
+The authorized local companion M04 spec requires organization, responsible owner, scope, expiry and state filters; account/purpose/audience/scope/credential expiry columns; canonical selection; independent account/credential views; fixed revision/cursor and bounded browser populations. Its sections Field contract, List/filter/detail and Large data are the source, not an inferred match to the current seeds. Retention/access planning distinguishes service-account responsibility from human approval.
+
+Current identity ServiceInfo stores only ID/state/epoch/creator/owner. The server servicesPage downloads all service accounts, every credential per account and all eligible owners. ServiceUsers is outwardly paged but scans/sorts all registry users each call; Credentials, live credential admission and pruning scan every service's credentials. findService also downloads all service pages for a known ID. Organization/purpose/audience/scope have no authoritative service-account producer. The organizations module has workspace-bound Party records, including legal entities/internal units; their existence alone does not assign service ownership. Gate grants cannot substitute for declared client scope or audience. Existing credential pickup and uncertain-command semantics remain mandatory.
+
+# Ordered execution
+
+1. Implement the reviewed identity query foundation below. It is a prerequisite, not an M04 acceptance or separately mergeable full feature.
+2. Define and independently review authoritative declared organization/purpose/audience/scope metadata, creation/update validation and legacy unavailable semantics against actual organization/gate contracts. Bind a verified organization reference in the same workspace; never derive it from creator/owner. Client scope declarations must not grant human approval or silently become effective permissions. Existing missing metadata is explicitly unavailable and can be filtered as such. No guessed universal audience/scope policy is installed.
+3. Implement authenticated strict account, per-account credential and owner query contracts with independent cursors/count certainty, configurable page/scan/lifetime limits and canonical known-ID resolution. Account summaries contain no full credential/owner arrays. Query and command authorization remains server-side; filter mismatch does not make a known permitted target disappear. Cursor signatures bind normalized query/list/actor/workspace/reference/revision and reject expiry, source change or process-key mismatch. Fixed reference time alone cannot prove time-dependent live authority remains valid: every read rechecks it.
+4. Connect M04 list/details/create/issue/revoke/held reminders to independent bounded reads. Preserve HYB-333 attempt store, same-key replay, pickup truth, non-disclosure and unload behavior. Store only current pages and bounded navigation trails; retain canonical selection across labels/pages and scope-safe late response guards. Filters, clear/apply/chips/history and effective settings are required.
+5. Reconcile field maps/register/glossary/OpenAPI, fail-before regressions, property/lifecycle oracles, targeted decision mutations, scoped race and regression checks, then actual EN/KO/AR at1440/1280/1024/390 with normal/empty/pending/failure/authority/retry/unknown cases. Obtain source/security and TW/render re-review before PR and authorized merge. Parent remains open.
+
+# Identity query foundation for independent design review
+
+Maintain one sorted service-ID index per workspace and one sorted credential-ID index per service under the existing Registry mutex. putUser is the sole user-map writer and updates service membership on insertion/replacement; credential insertion/removal use dedicated helpers that update their owner index. Suspended/retired services remain recorded; no index deletion falsely implies active state. Retention removes credential entries from both map/index, preserving EndedCredentialsKept and the existing end-time/ID tie-breaker. Live admission counts only the requested service's retained credentials using the same expiry/revocation rule. This index is bounded metadata per existing record, not a duplicate secret store.
+
+Existing ServiceUsers preserves its signature, canonical ascending ID order, authority/error rules and page limit. It obtains at most one page by binary search over the workspace index, without registry-wide population copies or sorts. Existing Credentials preserves the full per-service legacy return/order for compatibility, but traverses only that service's index; HTTP consumer migration is step3/4, not claimed here. Add ServiceUser(actor,workspace,id) as direct authoritative known-ID metadata resolution and CredentialPage(actor,workspace,service,after,limit) as a bounded ID-ordered primitive. Both authorize current administrator and workspace before metadata disclosure; secret/verifier/serial remain private. New methods are consumed in the upcoming server query work; do not claim their existence alone is wiring.
+
+Allowed foundation writes: modules/identity/{registry.go,workspace.go,workspace_test.go,new servicequery.go,new servicequery_test.go}; narrowly scoped server findService only after module review and fail-before authorization evidence. No org/gate/auth policy or HTTP response shape changes in this foundation. Files stay under1500 physical lines; no explanatory source comments. Tests exercise actual public lifecycle plus an independently sorted map oracle, per-workspace isolation, deep pages/ties, retention/admission/time boundaries, direct lookup authority and paging validation. Missing new methods initially fail compilation; label that as new API absence, not a semantic old-behavior failure. Meaningful existing-behavior regressions use semantic fail-before evidence where applicable. Mutations use private disposable GOCACHE and byte/SHA restoration. No Graphify measurements or new benchmarks.
+
+# Remaining design gates
+
+Metadata policy and organization mapping are not yet approved. External OAuth audience/scope enforcement, service credential authentication and credential rotation are not certified by a declared metadata field or this query increment; preserve the separate planning/ticket obligations. No prototype, static spec, green module test or foundation commit establishes complete M04 or UI-04 compliance.
+
+Independent read-only reviewer `/root/hyb310_review` passed the identity-foundation design before implementation. It required preserving future-starting unrevoked credential capacity, index replacement/pruning and serial reuse semantics, and explicitly warned that upcoming HTTP cursors need a revision changed by credential mutations. No metadata/HTTP approval is inferred. The first full module run exposed the existing serial-reuse fixture directly deleting the credential map; its removal step now uses the same map/index helper, preserving every existing old-answer refusal assertion. This is fixture migration, not a claim that product pruning failed.
+
+# Identity foundation implementation checkpoint
+
+The seven new module tests use an independently sorted stored-map oracle and verify recorded lifecycle states, absent/deep page boundaries, direct metadata copies, current authority/workspace rejection, credential retention/admission/exact expiry/future validity and concurrent readers. Existing new-method baseline is an absent-API compile failure, not a semantic regression claim. Full-short identity passed0.577s with99.0% statements; scoped race passed1.392s. Native host vet and Linux/Windows arm64 vet passed; cross builds are static checks, not other-OS executions. Independent actual-change reviewer returned PASS for index writers/pruning, scope, secrecy and compatibility. Full Go regression and targeted restored-cache decision mutation evidence are recorded in the subsequent verification manifest when terminal results exist.
+
+No HTTP response, browser M04 behavior or service metadata policy has changed yet. Existing whole-population services/owners/credentials HTTP consumers remain an explicit next implementation dependency. Known-ID module lookup and ID pages are primitives without cursor snapshot guarantees; credential mutations do not currently advance Subjects.Generation, so that counter alone cannot be reused as the later credential cursor fence.
+
+# Foundation verification and remaining producers
+
+`go test -short ./...` passed across74 package output lines; server178.044s, CLI4.286s and identity0.875s. Five private-cache mutants were killed by their intended semantic assertions: missing service insertion, stale credential pruning membership, missing administrator admission, unbounded credential projection and future-credential capacity undercount. All source bytes/SHA were restored; the restored focused suite passed and the disposable cache was removed. See [foundation evidence](./m04-foundation-evidence.json). Source review is independent inspection; executions are root-run. The module profile is99.0% statements, not complete branch coverage; defensive removeSorted nonmember handling remains unexercised.
+
+The next read migration must include the global never-collected-secret reminder, service selectors and known credential/owner detail; paging only the account table would lose HYB-333 reminders or make command eligibility page-dependent. `NeverRegion`, `serviceOf`, revoke lookup and both owner/service selects currently derive from complete arrays. Members similarly skips removed entries while filling a page; upcoming owner queries must bound scanned positions, not assume the old filled-page API already bounds server work.
+
+The independent metadata investigation confirmed that auth.Client has only ID/state, while Terms/Scope belong to grants; P02 exposes only ConsoleClient and explicitly disconnected OAuth clients. Existing grant/catalog data cannot populate audience or declared scope. Party lookup is workspace-exact but does not establish active workspace/party/parent eligibility. A real trusted, versioned audience/scope catalog plus complete declaration validation and bounded pickers is required. The next design will use explicit installation configuration with an empty catalog until actual recipients/scopes are configured; it will not invent a universal audience, effective grants or legacy values. Concrete scope representation, organization eligibility, atomic creation/update and absent-declaration execution behavior require independent design review before code. This is implementation design work within the existing authorization, not an owner approval or an inferred existing policy.
+
+Independent final evidence/restoration review returned PASS: all5 source and17 artifact hashes/sizes match, mutation logs show5 intended semantic kills and the restored focused run passed. Reviewer inspected records only; cache deletion is a runner observation, not a separate reviewer execution. This checkpoint has no approval for partial-feature merge or full M04 completion.

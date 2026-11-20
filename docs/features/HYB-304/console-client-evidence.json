@@ -1,0 +1,311 @@
+{
+  "type": "VerificationEvidence",
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "base_commit": "ae5851ececaaa5a4c043f15b12bc12ef69b2544d",
+  "recorded_at": "2026-11-20T10:31:11.367120+00:00",
+  "scope": "Strict M04 read factory/decoder plus exact Unicode request correlation. Actual screen/recovery/forms not yet ported.",
+  "sources": [
+    {
+      "path": "apps/api/server/servicequery_consumer_test.go",
+      "sha256": "0d5d11e0260f50479dd83c09e281eda626fc00a63ac9e2739b6bf8d9ea8e6385",
+      "bytes": 3761
+    },
+    {
+      "path": "apps/api/server/servicequery_cursor.go",
+      "sha256": "58920ec74e2c607e147eb395f1a4d326bac9c9f655aa3e178d8eb14fb5391cc7",
+      "bytes": 8976
+    },
+    {
+      "path": "apps/api/server/servicequery_model.go",
+      "sha256": "f8a2338a1cbe5ccb0da110fc86f86099f27759334097a3281f07195768380530",
+      "bytes": 4756
+    },
+    {
+      "path": "apps/api/server/servicequery_openapi.go",
+      "sha256": "1877e1e64945c0e1216342b0a555b6664197ed14945287f269cb39813278ceaa",
+      "bytes": 16622
+    },
+    {
+      "path": "apps/console/package.json",
+      "sha256": "9c3e28d1a7bbd752c620fb9e01b7cf338b0b12470878d395fba558971acb7d74",
+      "bytes": 6343
+    },
+    {
+      "path": "apps/console/src/service/admin.ts",
+      "sha256": "b5e0a94efe5a2ba083ec83906ef28449bfb253066a71351a0c320c1921ca82da",
+      "bytes": 51769
+    },
+    {
+      "path": "apps/console/src/service/service-query-fixtures.ts",
+      "sha256": "ad76512a846dded79cdaf9c5b5dd4c999ae3ca003e3ef56c484f8d96237e1a44",
+      "bytes": 3930
+    },
+    {
+      "path": "apps/console/src/service/service-query-read.ts",
+      "sha256": "b05ed43c89c4704d95c11a414cbe35970a229dad2c3c5902d2e63c5ad8db3c11",
+      "bytes": 14213
+    },
+    {
+      "path": "apps/console/src/service/service-query-types.ts",
+      "sha256": "8b5b7897a30fe0af76fa7c7e0a12f9bdca135665e6575d1d45373eccaf649960",
+      "bytes": 5240
+    },
+    {
+      "path": "apps/console/src/service/service-query-wire.test.ts",
+      "sha256": "8c9cda1065f9db44041eef41c9822cecb1f8c499b573d57f9fcd74dc123997ba",
+      "bytes": 3118
+    },
+    {
+      "path": "apps/console/src/service/service-query.test.ts",
+      "sha256": "50786e39b3e26a7913502bac12ba947c2d0842362d84b40cfb63593fdb684a90",
+      "bytes": 12467
+    },
+    {
+      "path": "apps/console/src/service/service-query.ts",
+      "sha256": "9485f6a697722b1261c16ee1ac53cb3a43d216dcafed0ed2d8fb72750113041f",
+      "bytes": 7223
+    },
+    {
+      "path": "docs/features/HYB-304/m04-console.md",
+      "sha256": "a00482b3ac1d9ba06db4840436127a099ce05626e138cc52a6d8af0ce3e81cd0",
+      "bytes": 9459
+    }
+  ],
+  "executions": [
+    {
+      "command": "HB_SERVICE_QUERY_SAMPLES=<private temporary folder> go test ./apps/api/server -run ^TestServiceQuery -count=1",
+      "status": "PASS",
+      "seconds": 3.924,
+      "scope": "Actual bounded-query tests after search_input integration; subsequent test-only byte-expansion fixture also passed0.748s"
+    },
+    {
+      "command": "HB_SERVICE_QUERY_SAMPLES=<same folder> npm test",
+      "status": "PASS",
+      "tests": 977,
+      "scope": "Latest complete Console test list including all12 actual HTTP samples,7 Unicode cases and equivalent-normalized continuation"
+    },
+    {
+      "command": "npm run build",
+      "status": "PASS",
+      "scope": "TypeScript noEmit and actual Vite production build; existing large-chunk advisory remains"
+    },
+    {
+      "command": "python3 /private/tmp/hb304-console-client-mutations.py",
+      "status": "PASS",
+      "semantic_kills": 3,
+      "scope": "Pre-expansion source snapshot only; exact2file bytes/SHA restored, baseline/restored11tests pass, TSX cache disabled. Later normalized-query bound correction changes current parser SHA, so the earlier restoration SHA is not claimed current."
+    }
+  ],
+  "mutation_report": {
+    "results": [
+      {
+        "name": "request_echo",
+        "semantic_kill": true,
+        "assertion": "M04 response verification captures requested scope before a late reply"
+      },
+      {
+        "name": "field_bound",
+        "semantic_kill": true,
+        "assertion": "restrictions reject mixed unions and preserve literal named all"
+      },
+      {
+        "name": "revoke_stepup",
+        "semantic_kill": true,
+        "assertion": "current command flags cannot contradict observed prerequisites"
+      }
+    ],
+    "restored_sha256": {
+      "src/service/service-query.ts": "9485f6a697722b1261c16ee1ac53cb3a43d216dcafed0ed2d8fb72750113041f",
+      "src/service/service-query-read.ts": "88bbacb36deb317ffd37e40f62e476e01f2f1226071b077578e20fff8ef5ccdf"
+    },
+    "tsx_cache_disabled": true
+  },
+  "fail_before": [
+    {
+      "path": "hb304-console-query-before.log",
+      "kind": "ABSENT_NEW_METHOD",
+      "meaning": "New methods absent; TypeError is not a preexisting semantic behavior claim"
+    },
+    {
+      "path": "hb304-console-query-types.log",
+      "kind": "TYPECHECK_FAIL",
+      "meaning": "New generic initially erased declaration history availability; fixed"
+    },
+    {
+      "path": "hb304-console-query-edges.log",
+      "kind": "FIXTURE_FAIL",
+      "meaning": "Fixture expected dependency_unavailable to map unavailable; existing shared transport maps busy, fixture corrected"
+    },
+    {
+      "path": "hb304-console-wire-unicode-before.log",
+      "kind": "SEMANTIC_FAIL",
+      "meaning": "Actual Go Unicode search echo refused by JavaScript lowercasing assumption"
+    },
+    {
+      "path": "hb304-console-preconditions-before.log",
+      "kind": "SEMANTIC_FAIL",
+      "meaning": "Parser accepted contradictory current command affordances"
+    },
+    {
+      "path": "hb304-console-expanded-before.log",
+      "kind": "SEMANTIC_FAIL",
+      "meaning": "Actual64-input-byte search expands to96normalized bytes; old parser bound incorrectly refused"
+    }
+  ],
+  "reviews": {
+    "design": "PASS: independent read-only hyb310_review strict-client slice and search_input correlation contract",
+    "source": "PASS: independent read-only hyb310_review stable final2 source inspection;12 source hashes matched; prior findings resolved; no execution or full M04 approval",
+    "technical_writing": "PASS: independent read-only hyb310_copy_render source/artifact/evidence inspection and final scoped plan read-back; no execution or UI acceptance",
+    "executions": "root only; no reviewer test/service/mutation execution claimed"
+  },
+  "designer": {
+    "actual_invocation": "Corrected Claude CLI ui-designer readiness invocation",
+    "status": "UNVERIFIED",
+    "observed": "api_error: weekly limit resets Nov24 at7am Asia/Seoul",
+    "not_claimed": "No current renders supplied, no design/visual acceptance result. Earlier malformed CLI argument invocation was not a designer execution."
+  },
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-console-query-before.log",
+      "sha256": "47ba7ca5a0411362e52f664a9fdcb75bc2d48edea969b36d7125ee94f28ea9e1",
+      "bytes": 5627
+    },
+    {
+      "path": "/private/tmp/hb304-console-query-first.log",
+      "sha256": "31421a0f42edfbef1fe50a5b1520aa2f717614ce69dcb2707300c14ed276a67e",
+      "bytes": 696
+    },
+    {
+      "path": "/private/tmp/hb304-console-query-types.log",
+      "sha256": "8821a82da2d441c54f5a3f7a90e9f35bc7786be2b441ca137d306e8554cee476",
+      "bytes": 337
+    },
+    {
+      "path": "/private/tmp/hb304-console-query-types-fixed.log",
+      "sha256": "d48f1a41dbe54457906c5003fa315d7f9ee6f40a5d6423f98516a51a986864de",
+      "bytes": 59
+    },
+    {
+      "path": "/private/tmp/hb304-console-query-edges.log",
+      "sha256": "fccf7073048229a6fa621eb464e2979046276e3f0d811ecefa0605ad2bcac988",
+      "bytes": 2244
+    },
+    {
+      "path": "/private/tmp/hb304-console-wire-producer.log",
+      "sha256": "e08a24d764c46665e332f4274e21d7a205b2b57e047633551aac93e02d487e31",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-console-wire-consumer.log",
+      "sha256": "fa9dba6020feea6f221ef26971a13c8713c546f94fc83e071ace384258870ff8",
+      "bytes": 187
+    },
+    {
+      "path": "/private/tmp/hb304-console-wire-unicode-before.log",
+      "sha256": "ce0294834ad156c73b329c619988d6561f3906c2a0be1ccd8a1b89cfcc65abf7",
+      "bytes": 900
+    },
+    {
+      "path": "/private/tmp/hb304-console-preconditions-before.log",
+      "sha256": "89c740074ead841ab4f910633bd2cf116915f018442219d3f301651f84bd1c7d",
+      "bytes": 1646
+    },
+    {
+      "path": "/private/tmp/hb304-console-query-unicode-final.log",
+      "sha256": "28b6f75e3c03dbedbd864731057c2edcf55ed7b2eae03434bcccdd87739efdc0",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-console-expanded-producer.log",
+      "sha256": "5eababa5ae640f475e7b7b76d66f940cbfae798f264d44fd8b102603797dec08",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-console-expanded-before.log",
+      "sha256": "7cbd78fa05d059fc4b6ef14de47896f76c221d856de24baa377023004506797a",
+      "bytes": 895
+    },
+    {
+      "path": "/private/tmp/hb304-console-client-final2-tests.log",
+      "sha256": "403d76264df6165052aeffb9039584c7a2191c5b6bb4904c5dd71b1cdef47632",
+      "bytes": 97900
+    },
+    {
+      "path": "/private/tmp/hb304-console-client-final2-build.log",
+      "sha256": "17062b15b8f003f08558d1ed7dab140de5c2479329d1bd3cad8c3358c99bd297",
+      "bytes": 38499
+    },
+    {
+      "path": "/private/tmp/hb304-m04-designer-readiness.json",
+      "sha256": "bcec4c9867d5cb461fdf81f16fab56c77415cef2abad001a905f2945485398c9",
+      "bytes": 1398
+    },
+    {
+      "path": "/private/tmp/hb304-console-wire/m04-wire.json",
+      "sha256": "549630cb06dc8af62078c5d646e44b49465faa6fb53adf7608eadd9344b70e33",
+      "bytes": 33327
+    },
+    {
+      "path": "/private/tmp/hb304-console-client-source.json",
+      "sha256": "8277b00339c97c8ee46a43709610e7d8e53afb82108733f2e6739c78313ea05b",
+      "bytes": 1773
+    },
+    {
+      "path": "/private/tmp/hb304-console-client-pre-expansion-source.json",
+      "sha256": "a4f7daa39d4ca5ffed6c387296c249f100c9bda7efcb84d9d6fb0ce7bc00d79a",
+      "bytes": 1773
+    },
+    {
+      "path": "/private/tmp/hb304-console-client-mutations.py",
+      "sha256": "635510e3fa6b32b4c5501eb7308fee9267cc0b9607f4a5d5d82c6e33ce17d21c",
+      "bytes": 2054
+    },
+    {
+      "path": "/private/tmp/hb304-console-client-mutations/field_bound.log",
+      "sha256": "02600027bc27655ab2c26dabd8af95b7ebaeb536edaec5268ba60a4c8318e743",
+      "bytes": 1639
+    },
+    {
+      "path": "/private/tmp/hb304-console-client-mutations/request_echo.log",
+      "sha256": "c64df736864ecf0acad1c27dd44b43211291bc422ce9610b1335e0368178402e",
+      "bytes": 1649
+    },
+    {
+      "path": "/private/tmp/hb304-console-client-mutations/report.json",
+      "sha256": "ebaf90ee837705df66a3fcca747a61b18911fd812da4e50cfc6b83b38807f998",
+      "bytes": 769
+    },
+    {
+      "path": "/private/tmp/hb304-console-client-mutations/revoke_stepup.log",
+      "sha256": "62fe1f515b1ebdb9593cfa8df2c22ebedc2d9d61a39bd000159fcc0a58ab6dc3",
+      "bytes": 1638
+    },
+    {
+      "path": "/private/tmp/hb304-console-client-mutations/baseline.log",
+      "sha256": "d8361b0f4d374cd18ec6cc773b3fee22a91fb16bc405d928afad092bd8bcc70a",
+      "bytes": 1033
+    },
+    {
+      "path": "/private/tmp/hb304-console-client-mutations/restored.log",
+      "sha256": "7bc4d0e6ddb9fcd9221b6b20577ba55a01a4b8123ecb6d351a95b133f39343de",
+      "bytes": 1032
+    }
+  ],
+  "artifact_retention": "Temporary nonsecret synthetic artifacts owned by root; may disappear on reboot. Git stores summaries/digests only.",
+  "remaining": [
+    "Actual LiveServices bounded consumer migration",
+    "Session/client-scoped recovery and exact known-credential reconciliation",
+    "Full immutable command fingerprint/form/picker integration",
+    "Server coverage reconciliation; checkpoint97.2% remains below target",
+    "Required visual designer work, EN/KO/AR4width rendered verification and source/TW re-review",
+    "Full M04 PR/authorized merge/read-back; parent M03/M02 afterward"
+  ],
+  "not_claimed": [
+    "Complete M04 or parent HYB-304",
+    "Full Go regression on this latest client delta (prior backend checkpoint has its own complete run)",
+    "UI compatibility, native AT or owner FIX",
+    "Deployment",
+    "Feature merge or ticket completion"
+  ]
+}

@@ -1,0 +1,492 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "8704f59870caba5aa79552bf180636a1b11e6a86",
+  "status": "connected_checkpoint_not_merge_ready",
+  "environment": {
+    "host": "macOS arm64",
+    "node": "26.7.0",
+    "go": "1.25.7 darwin/arm64",
+    "browser": "Google Chrome for Testing153.0.8010.12",
+    "playwright": "1.58.2"
+  },
+  "checks": {
+    "console": {
+      "status": "PASS",
+      "tests": 996,
+      "actual_http_shapes": 13,
+      "raw": "/private/tmp/hb304-consumer-console-restored.log"
+    },
+    "go_short": {
+      "status": "PASS",
+      "packages": 75,
+      "server_coverage_percent": "97.4",
+      "required_server_coverage_percent": "100",
+      "coverage_requirement_met": false,
+      "raw": "/private/tmp/hb304-consumer-go-full.log"
+    },
+    "product_build": "PASS",
+    "recovery_browser": {
+      "status": "PASS",
+      "scenarios": 16,
+      "boundary": "isolated actual React/provider/Reveal; synthetic transport and visibility/pagehide"
+    },
+    "focused_after_mutation_restore": {
+      "status": "PASS",
+      "tests": 23
+    },
+    "semantic_mutations": {
+      "status": "PASS",
+      "killed": 4,
+      "restoration": "exact original bytes and SHA; TSX_DISABLE_CACHE=1 for Node mutants; disposable private Vite caches for the mounted expiry mutant; original source and normal build restored"
+    },
+    "portable_connected_browser": {
+      "status": "PASS",
+      "journey": [
+        "authenticated creation with six required fields",
+        "owner-preserving declaration version1-to2",
+        "one-day issuance",
+        "canonical expiry replaces simulated one-day browser wall-clock estimate",
+        "original-session one-time collection and acknowledgement",
+        "canonical credential revocation"
+      ],
+      "known_selection_variants": 12,
+      "locales": [
+        "en",
+        "ko",
+        "ar"
+      ],
+      "widths": [
+        1440,
+        1280,
+        1024,
+        390
+      ],
+      "waits": "current locale, expected1280 breakpoint, local fonts and two animation frames",
+      "page_errors": 0,
+      "document_overflow": false
+    },
+    "docs": {
+      "status": "PASS",
+      "tests": 2,
+      "root_override": "actual staged /private/tmp/hb304 tree"
+    }
+  },
+  "review": {
+    "source": {
+      "reviewer": "/root/hyb310_review",
+      "status": "PASS",
+      "scope": "approved prerequisites, connected consumer corrections, frozen recovery/window, old-client removal and issuance result-shape; source only, not merge approval; matching canonical Reveal expiry update without recollection"
+    },
+    "terminology": {
+      "reviewer": "/root/hyb310_copy_render",
+      "status": "PASS",
+      "scope": "source terminology and representative known-selection EN1440/KO390/AR390 renders; final glossary owner definition corrected; no native/Claude/owner acceptance"
+    }
+  },
+  "pending": [
+    "Mounted stale-query/session/wrong-target and original-replay failure matrix",
+    "Actual cursor expiry/source-conflict restart journeys",
+    "Keyboard/focus, computed-border and expanded form/error render checks",
+    "Migration of population-dependent historical browser regressions to actual new entry",
+    "Required server100% coverage reconciliation",
+    "Final source/TW/QA evidence and PR/authorized merge/remote main read-back",
+    "Claude visual leadership remains unavailable under recorded quota; native/AT/owner FIX unverified",
+    "HYB-304 M03/M02 after this increment; full planning goal remains active"
+  ],
+  "sources": [
+    {
+      "path": "apps/api/server/boundary.go",
+      "sha256": "92b024756f095345d4e64b757b95fd92d9932b2b02d48f211795a42382f392b5",
+      "bytes": 6703
+    },
+    {
+      "path": "apps/api/server/servicequery_consumer_test.go",
+      "sha256": "115d34333a0b4908bd0d0e3cc946da3a1e4953bcad66450d8e870b9c4ad28c2f",
+      "bytes": 3823
+    },
+    {
+      "path": "apps/api/server/servicequery_detail.go",
+      "sha256": "3b6e56fb89003691bcb7c25ed52fbd01f781633d76131e9d150d3f073f9b12c0",
+      "bytes": 12274
+    },
+    {
+      "path": "apps/api/server/servicequery_openapi.go",
+      "sha256": "ff0c487d1d4c9f61da17dfca4f6a3bd9f26b6dc86674d6520743e90a953d5999",
+      "bytes": 17122
+    },
+    {
+      "path": "apps/api/server/servicequery_openapi_test.go",
+      "sha256": "a157faa29943b52be8835f646ce3369526a78de47a49d5893ff070673d0e8a88",
+      "bytes": 2021
+    },
+    {
+      "path": "apps/api/server/services.go",
+      "sha256": "699e5867439a9c44eb4d0bef1ebb06a4ddd180cbbbf72043ff7f8ee9b56c43a3",
+      "bytes": 12586
+    },
+    {
+      "path": "apps/console/package.json",
+      "sha256": "9683d085d133db97925c09222e94164d6e8a0bcefa18e0809e97e4727b9eee7d",
+      "bytes": 6654
+    },
+    {
+      "path": "apps/console/src/app/screen-groups/identity.tsx",
+      "sha256": "9208b747e0a9575b357da1c500ff9b09b0ba8ff6decbc6b072278fd81515ed6e",
+      "bytes": 7141
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/Live.tsx",
+      "sha256": "61657ebc1c3e3e6dea848fe0bf94a49ddcde35a83cc9a9f321e4fa97c6b88b7e",
+      "bytes": 30972
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/issue-attempts.test.ts",
+      "sha256": "3bf68eb90262f7b11d8e459e85b37a9ee2b394ae793e422652243bc4d92e1f2f",
+      "bytes": 14090
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/issue-attempts.ts",
+      "sha256": "c536545220cba9dd2484d8e769770ba8f2767d0a41bfa1f196a43629f96b042d",
+      "bytes": 10910
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/live-model.test.ts",
+      "sha256": "43ff44546bd74a86cd92834317e1fe81d42fca2ea7bb152619a61b3b6959003e",
+      "bytes": 9244
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/live-model.ts",
+      "sha256": "a3be0b94be9c494d4db522f5a7d389b9bc45b9729be0c010ad15be2c7137c826",
+      "bytes": 5093
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/recovery-context.tsx",
+      "sha256": "62a1c2ea4e31d939bb2de60b16ba212eef0fc3cbb6760afa723b614c7141c3bd",
+      "bytes": 3739
+    },
+    {
+      "path": "apps/console/src/service/account-read.ts",
+      "sha256": "a92afedd5690aa3f78572dd74a68f00bc5cbfd23003b54850089679ccc72e16b",
+      "bytes": 1705
+    },
+    {
+      "path": "apps/console/src/service/admin.test.ts",
+      "sha256": "9e4c6a2398eac0a9a64ddfa1def518f4bc258e2a54a7212bbc58ad7786496eea",
+      "bytes": 43252
+    },
+    {
+      "path": "apps/console/src/service/admin.ts",
+      "sha256": "acb73e5d48a1dd46785b3312c9edb8a797a874a781e7834356c8ca11450c4d72",
+      "bytes": 51074
+    },
+    {
+      "path": "apps/console/src/service/read-fixtures.ts",
+      "sha256": "7677829d0f8f009c9449b252c9df7022320d6086aacb055dab8a47fff6c436cf",
+      "bytes": 3341
+    },
+    {
+      "path": "apps/console/src/service/service-query-fixtures.ts",
+      "sha256": "0fefc674fc58429588e76506b26d46776c21789a2a8cb92c4749bbfce7edba5e",
+      "bytes": 4002
+    },
+    {
+      "path": "apps/console/src/service/service-query-read.ts",
+      "sha256": "afba7e0d328dbc66358c42452ed8f887748c6a7e93cd95f61283a90641bd3347",
+      "bytes": 14643
+    },
+    {
+      "path": "apps/console/src/service/service-query-types.ts",
+      "sha256": "7480e2dbed4d7984d414b76d6d9eec83b83f38fc93074af3fd84a8fca44c3f7b",
+      "bytes": 5406
+    },
+    {
+      "path": "apps/console/src/service/service-query-wire.test.ts",
+      "sha256": "7e07f306822ecc8fc58a4d522d821336c142e533f3efdbc6d7fd911890c14043",
+      "bytes": 3223
+    },
+    {
+      "path": "apps/console/src/service/service-query.test.ts",
+      "sha256": "e6cb03ee2e5a5cc2b40162942e7481aa0b7cd2dd155f6a5efc62917db2431776",
+      "bytes": 13731
+    },
+    {
+      "path": "apps/console/src/service/service-query.ts",
+      "sha256": "96cf29750930d561bf252b7a555bf7ad4e09571b46956ee9a82a56d91d05984e",
+      "bytes": 7370
+    },
+    {
+      "path": "apps/console/src/service/strict-read.test.ts",
+      "sha256": "541a437db40bfed8e24e474edeeab089896711caef957dba03e0c0389e752504",
+      "bytes": 6950
+    },
+    {
+      "path": "docs/ops/installation/service-catalog.md",
+      "sha256": "d4c35444477170572daeba59edb6d3125f3d867f2f9e08d7821f4869cd9ac986",
+      "bytes": 14092
+    },
+    {
+      "path": "docs/ui/screen-binding-fields/identity.md",
+      "sha256": "6ecd7b64866f97f61e40854409b5628aea186165cf4a05fb7a72c595f57863e8",
+      "bytes": 95417
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "5d7cb709cb46b9600a1dadb600d788aa2efb3bf4b71ca0bfc5f993546a7fd52b",
+      "bytes": 58568
+    },
+    {
+      "path": "docs/ui/terminology/product-glossary.md",
+      "sha256": "3da983973479220f4aff3e45efc615a40167706b489687e8f075157fd2005dee",
+      "bytes": 109250
+    },
+    {
+      "path": "apps/api/server/servicequery_audience.go",
+      "sha256": "adc6119d0550eb358af2b14a12b898d17777bb23a465bbb47694cf65d5c27cf1",
+      "bytes": 997
+    },
+    {
+      "path": "apps/api/server/servicequery_consumer_detail_test.go",
+      "sha256": "7803bd522c56e821b1ea74deb1a4b84b86c182ee9a6a9eb3023823552ff936e2",
+      "bytes": 4263
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/AccountActions.tsx",
+      "sha256": "c4e504d611f3bb51523939bb35a56f3c89288e99f05d141769b168889418d142",
+      "bytes": 9160
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/AccountDetail.tsx",
+      "sha256": "fa825d56e074e957cf80f01ceccc23e6898c748a39724c5abb56839bee3244ad",
+      "bytes": 7102
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/DeclarationForm.tsx",
+      "sha256": "10f77aa60d383c981b0a045657c8b53242d8b54fe04f9a7ee571ba299a42f8fa",
+      "bytes": 14962
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/QueryFilters.tsx",
+      "sha256": "5855cb4d8e3d2933c84a99a2e9679bb65ebce63cf423f78125016023a76f7539",
+      "bytes": 4833
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/Reveal.tsx",
+      "sha256": "56da27ac29cabda28b661ed7deb35b00c85fa8fa5c0e53261de2105f644676e2",
+      "bytes": 7031
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/command-intents.ts",
+      "sha256": "3d684857b1e170894211e6ee09ff6c1123a3e860243fc169f33bd15889ee3834",
+      "bytes": 8775
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/command-ui.tsx",
+      "sha256": "2b1cec548dd8c4b47b1a6c65768b7639deb03526853df4359176907da368ff0f",
+      "bytes": 6377
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/consumer-model.test.ts",
+      "sha256": "038bfcb95bbc880f5989ea2044da3b4bcfd6dd4497b91a4f30a030311522a4f2",
+      "bytes": 9273
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/query-copy.ts",
+      "sha256": "dff338d08f979b21903c043dcc88f9c549f08d78bfea1eab18add5557907f4fc",
+      "bytes": 11316
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/query-model.ts",
+      "sha256": "fa806deefeb77be8196b34ea3fce3bc00796a4e17df83dfd4b3e57e7b73e99a8",
+      "bytes": 4275
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/query-ui.tsx",
+      "sha256": "4143b94d093b67e2a243bd7bbf34b9b11b6072ffe1a57b3bef212a037b5d84ea",
+      "bytes": 6224
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/scoped-read.ts",
+      "sha256": "5338be855eb3a220e9db04bc7571515261f214e4022d8fc78409f6f222c64fe9",
+      "bytes": 1815
+    },
+    {
+      "path": "apps/console/tools/m04-consumer-qa.mjs",
+      "sha256": "7f767d812fe80b9bfe2075547f1f4abb32cab011b3637b81b6f7d98f64141dfd",
+      "bytes": 11001
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "64838d95843da109522619cd002aa3d204528e06c35db1bbe18f23850ea9b97d",
+      "bytes": 21821
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-consumer-contract-before.log",
+      "sha256": "dabbdd6ab89fe1f911d05c7bc3d850c2e687fc0d85a08e6ed9987c6e594fa177",
+      "bytes": 650
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-cursor-before.log",
+      "sha256": "34ff86e38088ca63b4fb92ef147d1ccb26d5128419b79bffee7d7fb495ddc4c3",
+      "bytes": 1746
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-issued-shape-before.log",
+      "sha256": "c8f327451d5441555359b6afff21710d654191f99a652be9081aa1fca6aa51c2",
+      "bytes": 2158
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-api-current.log",
+      "sha256": "fd85a161e697d82d7d1c53f0ff4499a61ae1e6a506418ca77f00be9793a102b0",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-console-restored.log",
+      "sha256": "cb930ceb9e152cf4508b2d744e5ffc62041205b7a31b46ad61f5baddd8e0d987",
+      "bytes": 99806
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-build-expiry.log",
+      "sha256": "63ad86866261c5c3244732b2b100542df7ead5d7b98e00b15bf25aee4e644fa3",
+      "bytes": 38499
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-go-full.log",
+      "sha256": "22ca3cf1879cefc1b62aaede3dd47052a44726b8be6426ea7caf056e678277c8",
+      "bytes": 7631
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-go.cover",
+      "sha256": "9964bd5dc7dfda92a271d08dfdf7943b07fd42a1fb4b51a223802361c6297d94",
+      "bytes": 2925090
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-recovery-expiry.log",
+      "sha256": "b0e7aadef0c3144b8df4430bcac0c350d393d587e7c18ea5fcc99abd9f0ade40",
+      "bytes": 1944
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-restored-final.log",
+      "sha256": "815f3619a9fbbaa502dd0c120e9c5567c47cae49d45c9f4d4ba3b07d6aac659d",
+      "bytes": 2254
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-portable-expiry.log",
+      "sha256": "5bf6fff4a96c8819b9f43bd12c505b24c6dd1fad0dbb3cd84f3a9deff5294079",
+      "bytes": 1203
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-docs-current.log",
+      "sha256": "28c4556cb6cad1243f84b4f82c2ae3cd1ea0c357885d12e13c8b02af5b803dd0",
+      "bytes": 100
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-mutants.py",
+      "sha256": "28e19a75433e8b5f2992dbac48be553c09f0e485678556c093b21b42d6d49115",
+      "bytes": 1767
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-mutations/report.json",
+      "sha256": "3636dd5ad4112d24f8f53f796fbf83db467c40b2d09e35864d2901800bb0bc3c",
+      "bytes": 455
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-mutations/immutable-fields.log",
+      "sha256": "d7d1e48ad7467d552303901c8a4f96a738abf9da5d64ae9dcf5b6be9030918ff",
+      "bytes": 3300
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-mutations/stale-completion.log",
+      "sha256": "6ae9fd25dfb4d665e6f5b06cc02988cfbebd91dfbb27a9345f8ee5e11ae3be92",
+      "bytes": 1995
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-mutations/original-issue-window.log",
+      "sha256": "ceb87c0a38fef9f4a97cd1155bce3948568dd1f3f1506e199cb948c29f861298",
+      "bytes": 2489
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/en-1440-known-account.png",
+      "sha256": "b97a98a96976e30bba9a02b7ee1522ba560078b727b518aac123934fb3cfd531",
+      "bytes": 347547
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/en-1280-known-account.png",
+      "sha256": "3099edf9fd8cdfcdef7a29ed74c1c66b365eb96eaff0a1de009a31c7e5f036e2",
+      "bytes": 341123
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/en-1024-known-account.png",
+      "sha256": "56af4edd818b89773a5c002e9ce58fcab2ffcce41e65e32b76d78515899e4550",
+      "bytes": 267635
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/en-390-known-account.png",
+      "sha256": "ee4bc8c7f9e068b52ee0b242c3f145de3097406f59562deba4cbdaf5d0bbe465",
+      "bytes": 243872
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/ko-1440-known-account.png",
+      "sha256": "a7b99a0326fff879d58ce9fa97de7d624ff6931ec415a355e6323b0a536d7af0",
+      "bytes": 301146
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/ko-1280-known-account.png",
+      "sha256": "158bf4323d5eeecd3bd2816c97a1ec6f29ab91b9448fc7bb18ea8289dc1af4b1",
+      "bytes": 294739
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/ko-1024-known-account.png",
+      "sha256": "fd3ee58424467d3dfab584a1b8da7e894cb1ea238718f599a3bd90aea22116f1",
+      "bytes": 239627
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/ko-390-known-account.png",
+      "sha256": "f6868094a6fd06b7ed2ba62d4fa42c781b159959d735dadf1d6c9e1060b01867",
+      "bytes": 218033
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/ar-1440-known-account.png",
+      "sha256": "311471eea9f827c017eb5836abac2eca52767e216471fe2340b737a7c227c9d2",
+      "bytes": 319578
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/ar-1280-known-account.png",
+      "sha256": "77e5de93bbe09aa434d1188dd86b9a030716156bedb0d69f6b324aa680f3fc98",
+      "bytes": 310182
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/ar-1024-known-account.png",
+      "sha256": "2f8afe54cb05538e5c92f9ff38ce81bcb7e585af4e9bbabcea392a9bb75a4c7d",
+      "bytes": 246295
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-renders/ar-390-known-account.png",
+      "sha256": "b87491d0243aad45bb8e9428cbea9d766d945438ab74017146ffc884aaf462bb",
+      "bytes": 226536
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-mutant.py",
+      "sha256": "f8d8bf70f46a4a2262dac30b74a042b205ed13611010f3fb48f7798b2abe4aff",
+      "bytes": 2443
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-mutant.log",
+      "sha256": "f455259ae473d15df5e7e71937915a71fd4966fc2b8d8b3fa3157913d1e5f15a",
+      "bytes": 216
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-mutant-report.json",
+      "sha256": "ac508349e84fca438d73fcdaf445b40b6f3d6406ccc3ec7e0f8a52b7b9350cc1",
+      "bytes": 149
+    },
+    {
+      "path": "/private/tmp/hb304-consumer-expiry-restored-build.log",
+      "sha256": "6cd5f69f072024630652ffc32b52a219594da80ff8490eff15b3f1d4f00962a1",
+      "bytes": 38430
+    }
+  ]
+}

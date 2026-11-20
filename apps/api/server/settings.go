@@ -51,6 +51,15 @@ type AccessSettings struct {
 	AcceptHistoryClock      string
 	ReleaseMarker           string
 	ReleaseReason           string
+
+	ServicePurposeBytes        int
+	ServiceDeclarationScopes   int
+	ServiceDeclarationVersions int
+
+	ServiceQueryPage      int
+	ServiceQueryScan      int
+	ServiceQuerySeconds   int
+	CredentialWarningDays int
 }
 
 type AccessSetting struct {
@@ -113,9 +122,19 @@ func UserSettingList() []AccessSetting { return append([]AccessSetting(nil), use
 
 func HistorySettingList() []AccessSetting { return append([]AccessSetting(nil), historySettings...) }
 
-func allSettings() []AccessSetting {
-	return append(append(append(append(AccessSettingList(), identitySettings...), userSettings...), historySettings...), append(sessionQuerySettings, sessionSelectionSettings...)...)
+func settingGroups() [][]AccessSetting {
+	return [][]AccessSetting{accessSettings, identitySettings, userSettings, historySettings, sessionQuerySettings, sessionSelectionSettings, serviceDeclarationSettings, serviceQuerySettings}
 }
+
+func allSettings() []AccessSetting {
+	out := []AccessSetting{}
+	for _, group := range settingGroups() {
+		out = append(out, group...)
+	}
+	return out
+}
+
+func AllAccessSettingList() []AccessSetting { return allSettings() }
 
 func DefaultAccessSettings() AccessSettings {
 	s := AccessSettings{Given: map[string]bool{}}
@@ -136,7 +155,7 @@ func numbersZero(s AccessSettings, list []AccessSetting) bool {
 
 func (s AccessSettings) withDefaults() AccessSettings {
 	out := DefaultAccessSettings()
-	for _, group := range [][]AccessSetting{accessSettings, identitySettings, userSettings, historySettings, sessionQuerySettings, sessionSelectionSettings} {
+	for _, group := range settingGroups() {
 		if !numbersZero(s, group) {
 			for _, a := range group {
 				a.Set(&out, a.Value(s))

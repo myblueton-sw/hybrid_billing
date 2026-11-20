@@ -1,0 +1,276 @@
+{
+  "type": "VerificationEvidence",
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "base_commit": "8cd72a96d0cf7640fa1e1b871b7cc23f1464d6a3",
+  "scope": "M04 actual eligibility and complete service-Terms prerequisites plus immutable trusted audience/scope catalog; no CLI/store/HTTP/UI integration or partial feature merge",
+  "sources": [
+    {
+      "path": "modules/auth/registry.go",
+      "sha256": "e045d275b8e20cfb5d59f64ac562fe7f779924fd2a3bbaf75c50ba39ddb814ea",
+      "bytes": 15672
+    },
+    {
+      "path": "modules/auth/serviceterms_test.go",
+      "sha256": "da5ed42fe6d30249d4ed9d1c21d669ec808f3c6ae8af20fcf1bed0061f193e5a",
+      "bytes": 3998
+    },
+    {
+      "path": "modules/gate/gate.go",
+      "sha256": "0faeca2ed2035ff106e0bcc10a0690cc12925305ef8c09f61ee5045cd4da1bc0",
+      "bytes": 10376
+    },
+    {
+      "path": "modules/gate/serviceterms_test.go",
+      "sha256": "117c9c4220adcbd76b593abc178880566c04d1f4b8765f44fdd5d67ffe2b3d63",
+      "bytes": 1076
+    },
+    {
+      "path": "modules/organizations/registry.go",
+      "sha256": "f2795907dea01e7de52e5073e67862f7b9b4d83eb8cf1bd49a4728ae97dfa599",
+      "bytes": 10161
+    },
+    {
+      "path": "modules/organizations/partyquery.go",
+      "sha256": "a3a6764910c637e3964a1197749683f317e73a1fba3de219be7c9af42bea29b7",
+      "bytes": 1474
+    },
+    {
+      "path": "modules/organizations/partyquery_test.go",
+      "sha256": "ad63b3b0769e02f24bb92d44f2d361bd776d6cb80c328d43d046d2fb93b441b8",
+      "bytes": 7078
+    },
+    {
+      "path": "modules/servicecatalog/catalog.go",
+      "sha256": "1fd0b5fa98f2797f35c13650407bae9e338b719719e7cbd21871fd908b7d229c",
+      "bytes": 8118
+    },
+    {
+      "path": "modules/servicecatalog/catalog_test.go",
+      "sha256": "b8880825fa38aada9e7248df4ecf1a79a367508bb0a056872331b5aae654e956",
+      "bytes": 11653
+    },
+    {
+      "path": "modules/servicecatalog/decode.go",
+      "sha256": "faf570d2fb95f2d20e837fc49144c6df6c7440fa04ca7e0fd2fc8bda98c1ad9e",
+      "bytes": 2283
+    },
+    {
+      "path": "modules/servicecatalog/decode_test.go",
+      "sha256": "9c824b83f467900835f0b79760735da2d4981fe197c24630256a91d825c96cb5",
+      "bytes": 5802
+    },
+    {
+      "path": "modules/servicecatalog/pages.go",
+      "sha256": "fb9f6e8484fd2801634776f847f764891131581ccdc6f524f1f206e36dc8259f",
+      "bytes": 1473
+    },
+    {
+      "path": "modules/servicecatalog/wire.go",
+      "sha256": "7b50ca93ab86c05f2b1e534f54bf36ecc30de48895641454b480033d4c7f3117",
+      "bytes": 2759
+    }
+  ],
+  "artifacts": [
+    {
+      "local_evidence": "hb304-declaration-terms-before.log",
+      "sha256": "f47d12a81e1c6ac4575a78eb1ad39a871dd5dfaab3b3f2c2677932e2e911d076",
+      "bytes": 1736
+    },
+    {
+      "local_evidence": "hb304-declaration-org-before.log",
+      "sha256": "f2b4bf314ffa2846d268b08f0c1fa19f96e83c78e58dd944adadff8fd4a602a5",
+      "bytes": 1547
+    },
+    {
+      "local_evidence": "hb304-catalog-before.log",
+      "sha256": "4fd02ef45e8f738e620ffc4ab8470adc16059fa295803692885625178f2484cb",
+      "bytes": 951
+    },
+    {
+      "local_evidence": "hb304-catalog-case-before.log",
+      "sha256": "b72788dfc03620536c28814bd8781d99c1d21324d210b3a49dfa374e0450c8d7",
+      "bytes": 642
+    },
+    {
+      "local_evidence": "hb304-catalog-zero-before.log",
+      "sha256": "7e027965be15d93cedf2e7abaee6566c04a653f57a3d12b1065d46c8e3698f4c",
+      "bytes": 242
+    },
+    {
+      "local_evidence": "hb304-catalog-union-unicode-before.log",
+      "sha256": "0b1e9e9d9b9f6aa53f4a35b4e34db71111176ae2e2450d3e73788d1f82234b3b",
+      "bytes": 411
+    },
+    {
+      "local_evidence": "hb304-declaration-all-final.log",
+      "sha256": "3d50fe345fb12d5719421697ef9e62daa97aa9ee8dde9a8ec470da6b3e753e7b",
+      "bytes": 604
+    },
+    {
+      "local_evidence": "hb304-declaration-integrated.log",
+      "sha256": "450cad7cfd26c06e7216953d9802ad099bf249fd33eeed70ed4c0711f02a3806",
+      "bytes": 395
+    },
+    {
+      "local_evidence": "hb304-declarations-final.log",
+      "sha256": "3c0af0cb72a7863090f663fb3d659dc9e203f427531a531a95e0a61aa3a528e5",
+      "bytes": 395
+    },
+    {
+      "local_evidence": "hb304-declarations-final-race.log",
+      "sha256": "bf5ce166d5801f3937a9281e01b4341df0abd0182cb6acac261dfb35ac5940d0",
+      "bytes": 275
+    },
+    {
+      "local_evidence": "hb304-declarations-final-coverage.out",
+      "sha256": "580bdd8e6b334eeb8167868970269df30290f89ed15f33ca238c306b056bba22",
+      "bytes": 82569
+    },
+    {
+      "local_evidence": "hb304-declarations-final-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_evidence": "hb304-declarations-final-vet-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_evidence": "hb304-declarations-final-vet-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_evidence": "hb304-declaration-server-regression.log",
+      "sha256": "f350a6a0795bb528f54dda182460c6e606278c9ceff9bbd56d1bb704a5ea0f87",
+      "bytes": 67
+    },
+    {
+      "local_evidence": "hb304-declaration-prereq-mutations/report.json",
+      "sha256": "28d073ba2c718710bf4d9e0807698fe259560f35a819bc22919531f9183337b7",
+      "bytes": 1533
+    },
+    {
+      "local_evidence": "hb304-declaration-prereq-mutations/baseline.log",
+      "sha256": "4a5f2e716dfba9a857c9585f67e79426245f88f27ffa76b5a42768822a8b3c01",
+      "bytes": 201
+    },
+    {
+      "local_evidence": "hb304-declaration-prereq-mutations/human_restriction.log",
+      "sha256": "e9329167e38d394301e126a2ce5f903afc9ffc87fb24f7ac39411d5a9c1b28c1",
+      "bytes": 238
+    },
+    {
+      "local_evidence": "hb304-declaration-prereq-mutations/installation_restriction.log",
+      "sha256": "cc40e04ae7baeb3c46bf867f246d4e710c54d5d54810793fee715b9c753a853b",
+      "bytes": 273
+    },
+    {
+      "local_evidence": "hb304-declaration-prereq-mutations/full_scope_syntax.log",
+      "sha256": "e2d9eba307b66361df8f9ecf25525dd3efac4249d324a52ef0e997f90e739d41",
+      "bytes": 1845
+    },
+    {
+      "local_evidence": "hb304-declaration-prereq-mutations/workspace_eligibility.log",
+      "sha256": "3fd0ad0c7d4170e298ff59842472badb4d715b5ca8ee81797e4b001f0811910c",
+      "bytes": 221
+    },
+    {
+      "local_evidence": "hb304-declaration-prereq-mutations/parent_eligibility.log",
+      "sha256": "50e012df84a5f9385c54a3053a166d529fcad7047124b4170e8c969bc20b87e3",
+      "bytes": 244
+    },
+    {
+      "local_evidence": "hb304-declaration-prereq-mutations/party_index_insert.log",
+      "sha256": "8395aa763e70f6df6bf039dc71d21abe24ed29797912f2bbbe4a2fca7303a159",
+      "bytes": 442
+    },
+    {
+      "local_evidence": "hb304-declaration-prereq-mutations/party_page_bound.log",
+      "sha256": "9902896ba40a75931292c74de6b250e65ae11694abebf3a6908644978750dbb7",
+      "bytes": 27824
+    },
+    {
+      "local_evidence": "hb304-declaration-prereq-mutations/restored.log",
+      "sha256": "45efa7bd69c9320779ae9b624367228f6b51dfc3771233b5c99434f9b57ce2eb",
+      "bytes": 201
+    },
+    {
+      "local_evidence": "hb304-catalog-mutations/report.json",
+      "sha256": "88f5926d9a51da18f54fd7df367559d03170843b0fa3b987665c0123f9ecb79d",
+      "bytes": 1566
+    },
+    {
+      "local_evidence": "hb304-catalog-mutations/baseline.log",
+      "sha256": "61e87647d311527a46e856eefa2e74b3b492130b4118970d9b4b00480b8f0924",
+      "bytes": 74
+    },
+    {
+      "local_evidence": "hb304-catalog-mutations/exact_key_case.log",
+      "sha256": "2e04ad1302fec93c0d64a4888a03d3775b40be2613e5ccb353b7fe2a14a1cc97",
+      "bytes": 642
+    },
+    {
+      "local_evidence": "hb304-catalog-mutations/exact_union_members.log",
+      "sha256": "9075a9da7cd7e7885f073179259458070ae01eea6f665b020769239de73985b7",
+      "bytes": 249
+    },
+    {
+      "local_evidence": "hb304-catalog-mutations/lossless_unicode.log",
+      "sha256": "689a11fdd6fb6e422220c5a438d9e7928ed3dd5a1a6aeaa655b77e8bb15f7a93",
+      "bytes": 246
+    },
+    {
+      "local_evidence": "hb304-catalog-mutations/selector_fingerprint.log",
+      "sha256": "2f4cf508e1e7bbfa3f9af78f038c0952b9fd967cd36b9631cfcc5dcc24ee94be",
+      "bytes": 332
+    },
+    {
+      "local_evidence": "hb304-catalog-mutations/copied_scope_output.log",
+      "sha256": "bd559edcb203055906e41f0503e133b94a999bfdbc415a44aa59810cf1e20c62",
+      "bytes": 206
+    },
+    {
+      "local_evidence": "hb304-catalog-mutations/catalog_page_bound.log",
+      "sha256": "d3ab22f2e0ed29cf6cae7ac9a24bb979d6834b42a30dc4cd9b989944e0bd4125",
+      "bytes": 355
+    },
+    {
+      "local_evidence": "hb304-catalog-mutations/scope_workspace_binding.log",
+      "sha256": "43ef1995eab037c69adc8fd1de6e7464d03d3584bc1df37af227e906f4cf8bcf",
+      "bytes": 247
+    },
+    {
+      "local_evidence": "hb304-catalog-mutations/restored.log",
+      "sha256": "8b0beb85a149beff4e4aebab3ea76d4db2bd43ed8573c2131dbcaad66315bd2d",
+      "bytes": 74
+    }
+  ],
+  "results": {
+    "initial_new_apis": "FAIL from missing methods at compilation, not old semantic regression",
+    "semantic_fail_before": [
+      "JSON case aliases accepted",
+      "zero-value catalog reported configured empty",
+      "mixed selector/period presence was discarded",
+      "malformed Unicode changed recipient identity",
+      "integrated module suite detected forbidden direct internal auth import"
+    ],
+    "final_modules": "PASS servicecatalog0.579s91.7%,auth0.338s97.6%,gate1.165s97.3%,organizations0.791s96.8% statements",
+    "final_full_affected_race": "PASS servicecatalog2.276s auth3.174s gate3.773s organizations3.174s",
+    "dependent_server": "PASS focused organization/target/filtered paging regression2.053s; not whole server suite",
+    "vet": "PASS native macOS arm64 and static Linux/Windows arm64 for all4 modules; no other-OS runtime claim",
+    "mutations": "14/14 intended semantic kills in2 isolated-cache runs; source byte/SHA restoration and both restored suites PASS; runner observed cache removal",
+    "tests": "20 new test functions, with additional subcases; statement coverage is not complete branch coverage"
+  },
+  "review": "Independent read-only reviewer /root/hyb310_review returned prerequisite design/source PASS, catalog design PASS, initial catalog source FAIL on2 strict-decoder findings, corrected source PASS and final boundary/evidence PASS. All13 source and35 artifact hashes/sizes match;14 intended semantic failures/restored hashes and both restored suites inspected. Reviewer executed no tests, services, mutations, writes or merges. Vet/cache removal are root/runner observations. No partial-feature merge/full M04 approval.",
+  "remaining": [
+    "Portable CLI catalog configuration loading and startup validation",
+    "Actual business-reference and current eligibility checks at declaration acceptance",
+    "Versioned declaration store and atomic service.create/service.declare/credential-issuance integration",
+    "Bounded authenticated catalog/organization/account/credential/owner/reminder reads and signed cursor fencing",
+    "M04 UI, OpenAPI/field maps/glossary, multilingual four-width rendered verification and complete increment merge",
+    "Parent M03/M02 and remaining original development goal"
+  ]
+}

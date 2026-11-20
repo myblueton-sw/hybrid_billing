@@ -32,6 +32,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/relationships"
 	"github.com/myblueton-sw/hybrid_billing/modules/releasetrace"
 	"github.com/myblueton-sw/hybrid_billing/modules/retention"
+	"github.com/myblueton-sw/hybrid_billing/modules/servicecatalog"
 	"github.com/myblueton-sw/hybrid_billing/modules/trustchange"
 	"github.com/myblueton-sw/hybrid_billing/modules/webhooks"
 )
@@ -57,21 +58,22 @@ var (
 var DefaultOrigins = []string{"http://127.0.0.1:5173", "http://localhost:5173", "http://127.0.0.1:4173", "http://localhost:4173"}
 
 type Config struct {
-	Origins   []string
-	Data      string
-	Seed      string
-	Clock     func() time.Time
-	Elapsed   func() time.Duration
-	Log       *slog.Logger
-	Kinds     []string
-	Fields    map[string]gate.FieldClass
-	Identity  identity.Limits
-	Commands  commands.Limits
-	Passwords passwords.Params
-	Readers   map[string]string
-	Access    AccessSettings
-	Org       OrgSettings
-	Plugins   PluginSettings
+	Origins        []string
+	Data           string
+	Seed           string
+	Clock          func() time.Time
+	Elapsed        func() time.Duration
+	Log            *slog.Logger
+	Kinds          []string
+	Fields         map[string]gate.FieldClass
+	Identity       identity.Limits
+	Commands       commands.Limits
+	Passwords      passwords.Params
+	Readers        map[string]string
+	Access         AccessSettings
+	Org            OrgSettings
+	Plugins        PluginSettings
+	ServiceCatalog []byte
 }
 
 type Server struct {
@@ -84,6 +86,7 @@ type Server struct {
 	admin           *gate.Administration
 	commands        *commands.Registry
 	policy          *authpolicy.Registry
+	serviceCatalog  *servicecatalog.Catalog
 	domain          sync.RWMutex
 	counter         uint64
 	mutating        map[string]bool
@@ -164,6 +167,9 @@ type Server struct {
 	sessionOperationVersions map[sessionOwner]uint64
 	sessionOtherOperations   map[sessionOwner]*sessionRecord
 	sessionOperationSequence uint64
+
+	serviceDeclarations map[serviceDeclarationKey][]serviceDeclaration
+	serviceQueryKey     []byte
 }
 
 func IdentityLimits() identity.Limits {
@@ -228,6 +234,8 @@ func New(cfg Config) (*Server, error) {
 		contracts: newContractStore(), install: newInstallStore(), integ: newIntegrationStore(), signer: newSeedSigner(), rec: newRecoveryStore(),
 		ret: newRetentionStore(), ev: newEvidenceStore(), progress: map[string]trustProgress{}, random: rand.Reader, memberLedger: map[string]string{},
 		replayNotes: map[string]string{}, awaiting: map[string]awaitingReplay{}, stop: make(chan struct{}), wake: make(chan struct{}, 1)}
+	s.serviceDeclarations = map[serviceDeclarationKey][]serviceDeclaration{}
+	s.serviceQueryKey = random(32)
 	s.time = newServerClock(cfg.Clock, cfg.Elapsed, cfg.Log)
 	s.clock = s.time.now
 	for _, origin := range cfg.Origins {
@@ -271,6 +279,12 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) {
 			s.gate, s.admin, err = gate.New(s.identity, Catalog(cfg.Kinds, cfg.Fields))
 			return
+		},
+		func() error {
+			input := cfg.ServiceCatalog
+			cfg.ServiceCatalog = nil
+			s.cfg.ServiceCatalog = nil
+			return s.configureServiceCatalog(input)
 		},
 		func() (err error) {
 			_, err = s.admin.PutClient(gate.Client{ID: ConsoleClient, State: gate.Active}, 0)

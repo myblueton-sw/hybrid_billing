@@ -21,7 +21,7 @@ func setupWith(t testing.TB, change func(*Config)) world {
 	t.Helper()
 	now := start
 	mu := &sync.Mutex{}
-	cfg := Config{Data: t.TempDir() + "/data", Seed: SeedSample, Passwords: fastPasswords(), Identity: IdentityLimits(), Clock: func() time.Time {
+	cfg := Config{ServiceCatalog: testServiceCatalog(), Data: t.TempDir() + "/data", Seed: SeedSample, Passwords: fastPasswords(), Identity: IdentityLimits(), Clock: func() time.Time {
 		mu.Lock()
 		defer mu.Unlock()
 		return now

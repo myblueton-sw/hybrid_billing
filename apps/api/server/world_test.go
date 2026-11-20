@@ -33,7 +33,7 @@ func setup(t testing.TB, seed string) world {
 	t.Helper()
 	now := start
 	mu := &sync.Mutex{}
-	s, err := New(Config{Data: t.TempDir() + "/data", Seed: seed, Fields: map[string]gate.FieldClass{"state": gate.General}, Passwords: fastPasswords(), Clock: func() time.Time {
+	s, err := New(Config{ServiceCatalog: testServiceCatalog(), Data: t.TempDir() + "/data", Seed: seed, Fields: map[string]gate.FieldClass{"state": gate.General}, Passwords: fastPasswords(), Clock: func() time.Time {
 		mu.Lock()
 		defer mu.Unlock()
 		return now

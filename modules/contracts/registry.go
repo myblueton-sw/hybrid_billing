@@ -25,30 +25,32 @@ type gathered struct {
 }
 
 type contract struct {
-	sequence uint64
-	events   []held
-	evidence []gathered
-	log      []Record
-	writes   map[string]int
-	state    SettlementState
-	entered  uint64
-	batch    uint64
+	sequence  uint64
+	events    []held
+	evidence  []gathered
+	log       []Record
+	writes    map[string]int
+	state     SettlementState
+	entered   uint64
+	positions []positionPoint
+	batch     uint64
 }
 
 type Registry struct {
-	mu        sync.Mutex
-	built     bool
-	limits    Limits
-	clock     func() time.Time
-	contracts map[key]*contract
-	perSpace  map[string]int
+	mu            sync.Mutex
+	built         bool
+	limits        Limits
+	clock         func() time.Time
+	contracts     map[key]*contract
+	perSpace      map[string]int
+	queryVersions map[string]uint64
 }
 
 func NewRegistry(limits Limits, clock func() time.Time) (*Registry, error) {
 	if !limits.valid() || clock == nil {
 		return nil, ErrInvalid
 	}
-	return &Registry{built: true, limits: limits, clock: clock, contracts: map[key]*contract{}, perSpace: map[string]int{}}, nil
+	return &Registry{built: true, limits: limits, clock: clock, contracts: map[key]*contract{}, perSpace: map[string]int{}, queryVersions: map[string]uint64{}}, nil
 }
 
 func (c *contract) holding(at uint64) []Event {
@@ -212,6 +214,7 @@ func (r *Registry) Amend(workspace, id string, expected uint64, write string, wi
 	if !r.room(found, stopping(withdrawals, events)) {
 		return Outcome{}, ErrLimit
 	}
+	positions := indexPositions(after)
 	if found == nil {
 		if r.perSpace[workspace] >= r.limits.Contracts {
 			return Outcome{}, ErrLimit
@@ -234,7 +237,8 @@ func (r *Registry) Amend(workspace, id string, expected uint64, write string, wi
 		result = PendingFinal
 	}
 	found.batch = next
-	return found.commit(record, result, now), nil
+	found.positions = positions
+	return r.commit(workspace, found, record, result, now), nil
 }
 
 func (found *contract) gap(write string) *gathered {
@@ -281,7 +285,7 @@ func (r *Registry) RecordEvidence(workspace, id string, expected uint64, write s
 	kept := evidence
 	kept.Resolves = append([]string(nil), evidence.Resolves...)
 	found.evidence = append(found.evidence, gathered{sequence: next, write: write, evidence: kept})
-	return found.commit(record, found.state, now), nil
+	return r.commit(workspace, found, record, found.state, now), nil
 }
 
 func (found *contract) open() bool {
@@ -329,7 +333,7 @@ func (r *Registry) Settle(workspace, id string, expected uint64, write string, a
 	if !r.room(found, false) {
 		return Outcome{}, ErrLimit
 	}
-	return found.commit(record, Settled, now), nil
+	return r.commit(workspace, found, record, Settled, now), nil
 }
 
 func (r *Registry) Reopen(workspace, id string, expected uint64, write string, reason ReopenReason) (Outcome, error) {
@@ -356,7 +360,7 @@ func (r *Registry) Reopen(workspace, id string, expected uint64, write string, r
 		return Outcome{}, ErrLimit
 	}
 	found.entered = found.sequence + 1
-	return found.commit(record, PendingFinal, now), nil
+	return r.commit(workspace, found, record, PendingFinal, now), nil
 }
 
 func (r *Registry) at(workspace, id string, at uint64) (*contract, error) {

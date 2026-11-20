@@ -299,16 +299,16 @@ func (s *Server) collect(w http.ResponseWriter, r *http.Request) {
 	ref := r.PathValue("ref")
 	p, exists := s.dir.pickups[ref]
 	if exists && !s.clock().Before(p.expires) {
-		delete(s.dir.pickups, ref)
+		s.dir.dropPickup(ref)
 		exists = false
 	}
 	if !exists || p.session != found.verifier {
 		failCode(w, commands.PermissionDenied, request)
 		return
 	}
-	delete(s.dir.pickups, ref)
+	s.dir.dropPickup(ref)
 	if p.secret != "" {
-		s.dir.collected[p.credential] = delivery{service: p.target, collected: true}
+		s.dir.putDelivery(p.credential, delivery{service: p.target, collected: true})
 		writeJSON(w, http.StatusOK, request, map[string]string{"secret": p.secret, "credential": p.credential})
 		return
 	}

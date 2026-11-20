@@ -1,0 +1,1298 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "ed63b97a2465a7b33a34db691c4ed450aa7290a0",
+  "status": "form_error_checkpoint_not_merge_ready",
+  "checks": {
+    "console_tests": 1016,
+    "actual_http_samples": 13,
+    "renderer_cases_after_restore": 7,
+    "semantic_mutants_killed": 2,
+    "parent_renderer_regression": "FAIL as expected against ed63b97",
+    "mounted_scenarios": 18,
+    "form_captures": 41,
+    "read_captures": 60,
+    "authentication_captures": 64,
+    "command_error_captures": 24,
+    "current_normal_journey_checks": 5,
+    "known_selection_captures": 12,
+    "provider_scenarios": 20,
+    "admission_ratio_geometry_checks": 12,
+    "product_build_and_typechecks": "PASS"
+  },
+  "build": {
+    "revision": "f2df55941f08768cedec2aec304ef8bb4837e2482c49e2fc68ff28d9ebdcd6ff",
+    "source_input_files": 683,
+    "artifact_files": 439,
+    "current_sources_match_build": true,
+    "all_build_file_hashes_match": true
+  },
+  "reviews": {
+    "source": "/root/hyb310_review PASS after stable-target, scopes-focus and canonical-status corrections; did not execute tests",
+    "terminology_and_render": "/root/hyb310_copy_render initially FAIL for actual Arabic ratio reversal; corrected fresh AR390 issue/rejected-edit and AR1440/390 recorded/limit captures PASS; prior bounded 14-capture review otherwise PASS"
+  },
+  "boundaries": [
+    "Owner request held then503 injected; stable target and actual Reload recovery separately asserted",
+    "Actual missing-purpose association and actual Arabic numeric geometry fail-before preserved",
+    "Parent regression and two renderer mutants restored exact source bytes/SHA with TSX cache disabled",
+    "Scope-focus candidate failure is not the original baseline; partial runs are not full passes",
+    "Current final build includes pending-target test and corrected LTR ratio; final browser and Console runs use current production source",
+    "Provider20 ran before final admission-ratio display-only change; provider lifecycle source unchanged; visibility/pagehide/unload controlled simulation, not native BFCache/AT",
+    "Complete M04 parity, package100% and final feature review remain open; no owner/Claude/native/FIX approval"
+  ],
+  "source_files": [
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/AccountActions.tsx",
+      "sha256": "0c63590ad36f045a0a82892efba92d4368efc34058bc270b7f3a6d9c9c0ca698",
+      "bytes": 14322
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/DeclarationForm.tsx",
+      "sha256": "85c52b3a97f9b5356c0d74a47adf7f9443d6ecadc248d6de582baeaaea1a0fe8",
+      "bytes": 18637
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/command-ui-render.test.tsx",
+      "sha256": "3fd5093b708e19e16d3ae59a1767eeb9f6ed0c415259b96545ff50bc7eea1a16",
+      "bytes": 9253
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/form-validation.tsx",
+      "sha256": "a4a6242abf87109b1acf14b1c5c6efb6dee2f3c63cf7486e6edbf6ae64ebd901",
+      "bytes": 5254
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/query-ui.tsx",
+      "sha256": "37314dba59d60a23a1309c6ba00516dfcbf773e57ce624a956eb5cc31f8de2be",
+      "bytes": 7641
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/Live.tsx",
+      "sha256": "12673840b7589cf203d507572704cd85205ec743d5f1e8de7521bb76c43cf0ba",
+      "bytes": 32333
+    },
+    {
+      "path": "apps/console/tools/m04-errors-qa.mjs",
+      "sha256": "be928d0ce8d3ac945cbd0654fcceca2d5d3f5d38bad7e0f220ab5a7a0445c1fe",
+      "bytes": 48661
+    },
+    {
+      "path": "apps/console/tools/m04-form-qa.mjs",
+      "sha256": "9104a3923fe8b52af590b70f955fd7c44de6a461aab8176d47409af9f679a413",
+      "bytes": 14191
+    },
+    {
+      "path": "apps/console/tools/m04-state-matrix.mjs",
+      "sha256": "eb83c7172aa6a321a076246f362366401f9179cdbe353e919e66fe3210366229",
+      "bytes": 7433
+    },
+    {
+      "path": "apps/console/tools/m04-consumer-qa.mjs",
+      "sha256": "7f767d812fe80b9bfe2075547f1f4abb32cab011b3637b81b6f7d98f64141dfd",
+      "bytes": 11001
+    },
+    {
+      "path": "docs/features/HYB-304/m04-form-errors.md",
+      "sha256": "b52fb6e4cea43322d6367cc348cd5c54af33192b7a7cdbcdc0d17587574ddc77",
+      "bytes": 7569
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "a710dcf6d08d9d94ab18ad12531b7a4279761e2226355c4d0da0eb01b0142974",
+      "bytes": 32377
+    },
+    {
+      "path": "docs/ui/screen-binding-fields/identity.md",
+      "sha256": "8f9b4733ddd5d93966258a28c813532827ed38ad772ea3184788629925fd6a8a",
+      "bytes": 98683
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "0cd06ceaedb2ab5efc0aa75df413263f42008ea2d916f91baccb640171ea018f",
+      "bytes": 59761
+    },
+    {
+      "path": "docs/ui/terminology/product-glossary.md",
+      "sha256": "0d387ab8f8746efb2119220ce9f42a27980e43ea55afa7a62f0546cf0668372a",
+      "bytes": 113924
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-form-errors-before.log",
+      "sha256": "0396ff4da13b5462f18ad3905f796d54d8dec6af2c7b8769b1f32c3bcb79bd1f",
+      "bytes": 78
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-before/report.json",
+      "sha256": "52144bfb8394bae65c4f4cbde56ba271d3b6b75eb6f77a53e303bf40e8f4b75b",
+      "bytes": 343
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-current.log",
+      "sha256": "b97205e693a911931b352cc357086ed492fec3a17565ff2c296e5bdaff911114",
+      "bytes": 90
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-current/report.json",
+      "sha256": "5b0c2679fd36e2c1ade9076c2a3bd8220a9f9d671c80ba17bd6b5779a4b7c4c6",
+      "bytes": 357
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-verified.log",
+      "sha256": "404b246488252416fc47353fb231b957187b688d82c41221043644aa1338e1b3",
+      "bytes": 2079
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-verified/report.json",
+      "sha256": "8271a4faf9075b48f61917974d4d64478e6be11268bec1b7ebe26fb2967330c9",
+      "bytes": 115367
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-complete.log",
+      "sha256": "404b246488252416fc47353fb231b957187b688d82c41221043644aa1338e1b3",
+      "bytes": 2079
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-complete/report.json",
+      "sha256": "6db5b115e8e559f46e9d15c3affc07b046cad4e4bf2d2cb9ecb670f6963304fe",
+      "bytes": 115383
+    },
+    {
+      "path": "/private/tmp/hb304-ratio-before.log",
+      "sha256": "41d59175a5000c7ba298f64ae878335b5670daa03832a00a902fc97942e1c790",
+      "bytes": 61
+    },
+    {
+      "path": "/private/tmp/hb304-ratio-before/report.json",
+      "sha256": "e0a8fae5480f55a6402910aa3a43472f0d470aa4d457e97890c2dce107abf48f",
+      "bytes": 323
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-final.log",
+      "sha256": "404b246488252416fc47353fb231b957187b688d82c41221043644aa1338e1b3",
+      "bytes": 2079
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-final/report.json",
+      "sha256": "6db5b115e8e559f46e9d15c3affc07b046cad4e4bf2d2cb9ecb670f6963304fe",
+      "bytes": 115383
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-console-final.log",
+      "sha256": "6997edd61dd941485d2ce1d4de0a71ac0f1f94353bfa90c71a6d17a81749ed27",
+      "bytes": 102111
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-build-ratio.log",
+      "sha256": "f56405a59c4e8f48503d4ecce85bf0f97e0ee40445e1b60ceb762bface65846e",
+      "bytes": 38499
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-build-integrity.log",
+      "sha256": "8f624fd514c5b43c6b10f97f35a544a7a419f9af1304c383a2ef924a8ed92952",
+      "bytes": 196
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-recovery-typecheck-final.log",
+      "sha256": "ac08ae758459b8122cb182516a1a798871bc756e16301fb133dab2c9f5317981",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-recovery.log",
+      "sha256": "db26b5d974fa16f42876a1a2ea63ef6fc655b7ee7027444eaf03dd29bc0f6f5a",
+      "bytes": 2464
+    },
+    {
+      "path": "/private/tmp/hb304-form-target-unit.log",
+      "sha256": "be8cd8e5323ca235a5c9656276a3a817a832c7864acca4b6d5bb183dcafea886",
+      "bytes": 821
+    },
+    {
+      "path": "/private/tmp/hb304-form-target-parent-before.log",
+      "sha256": "b6441c135b2219c2f114510a8dba008aa73a7fba92c003f93698394229bdd9f7",
+      "bytes": 1537
+    },
+    {
+      "path": "/private/tmp/hb304-form-target-mutants.json",
+      "sha256": "5df71c407b1cec7fd0d81c2f313594dd9280391d949c9de0033257f2a506db62",
+      "bytes": 1076
+    },
+    {
+      "path": "/private/tmp/form-picker-target-removed.log",
+      "sha256": "c44eb9b551f9609b5af0a3eaa46a789277dbed8a6edf27d1077f71ac909a1ba6",
+      "bytes": 1536
+    },
+    {
+      "path": "/private/tmp/form-picker-error-link-removed.log",
+      "sha256": "c7964ff98ad2eb6885e13461d2a32ccf3643780c93f0eeeb6a05dfae27abc62a",
+      "bytes": 1537
+    },
+    {
+      "path": "/private/tmp/hb304-form-target-restored.log",
+      "sha256": "d024cebafb7d72d6fb974bd5cd34a8fd991ca012c151d66e31d7a89d5ad0dd4f",
+      "bytes": 815
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-journey.log",
+      "sha256": "5bf6fff4a96c8819b9f43bd12c505b24c6dd1fad0dbb3cd84f3a9deff5294079",
+      "bytes": 1203
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios.log",
+      "sha256": "404b246488252416fc47353fb231b957187b688d82c41221043644aa1338e1b3",
+      "bytes": 2079
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/report.json",
+      "sha256": "9c81c32fb3a08c14d7c31adf9b9b484cb009c72c249d914cbf5f66a34eca1834",
+      "bytes": 117681
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-console-all-ratios.log",
+      "sha256": "c2fcf96a6db21ca93ae94f826d17fe1ec1ec457683a75129cb87efd753d195be",
+      "bytes": 102071
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-build-all-ratios.log",
+      "sha256": "6d851b6a147e5444be64b061b594edc077a98641688026638810d558882f4847",
+      "bytes": 38499
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-build-all-ratios-integrity.log",
+      "sha256": "4ca241a7357e017ab42d5cded133c43b8dc758cf4f9113dfe9d697fb99bbabfe",
+      "bytes": 196
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey.log",
+      "sha256": "5bf6fff4a96c8819b9f43bd12c505b24c6dd1fad0dbb3cd84f3a9deff5294079",
+      "bytes": 1203
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/action-drafts/ar-390-incompatible.png",
+      "sha256": "df9a8c0f6508e5e7a225b6d5c0107da0f072dc6416bef9868841eac20f7bb392",
+      "bytes": 80729
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/action-drafts/en-390-incompatible.png",
+      "sha256": "44410ab55f89a9d314290487b531104344edbc11ec391c63294283b9c6c6b73b",
+      "bytes": 81827
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/action-drafts/ko-390-incompatible.png",
+      "sha256": "0e13066aa139cbb655917982b4c9c9b7efcb9b2ca343a86befb221b18f0cf15a",
+      "bytes": 79514
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1024-password-dialog.png",
+      "sha256": "2333d5bb9d9f1fc6b5dc41ae5c5d8601bf6e4e204fcb8d4ec35173ae0f50ff6e",
+      "bytes": 227449
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1024-prerequisite_failed.png",
+      "sha256": "c637b482076dd4e73f45b0ee3deff650856159ea3192105a5bc361f53749ada3",
+      "bytes": 266676
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1024-reauthentication-required.png",
+      "sha256": "a52ca844eafdc8496e048cbba779cbf4321d66c4266ec0472644973d0882e3f1",
+      "bytes": 261728
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1024-refreshed-draft.png",
+      "sha256": "a535a3b362e0030e582752ffd0c552915cb826b993e8551e5e3f7f4ed440ba73",
+      "bytes": 246969
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1024-unavailable.png",
+      "sha256": "1f3f23818d9db823d890399a36fefd89597ae20372f1b5a7e4834406d59ec91a",
+      "bytes": 262866
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1280-password-dialog.png",
+      "sha256": "49c646783c6cf919a4c8897891a0e558178b651c6ff93f97e8920b455ce8591a",
+      "bytes": 232587
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1280-prerequisite_failed.png",
+      "sha256": "2149e81bf68702d4b204f6ee0758d5a08f8d24f898331d198de135e21db833a5",
+      "bytes": 284153
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1280-reauthentication-required.png",
+      "sha256": "a1015b217ea3b6d76cdfb3151638de4e92c5223a8207b62dcdffb8192e7062ba",
+      "bytes": 283417
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1280-refreshed-draft.png",
+      "sha256": "6dbfda0cd4ec96dafce71ae883d596298746c199ccedcbbbba6f8260e6d4129d",
+      "bytes": 266347
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1280-unavailable.png",
+      "sha256": "40ad388c69ec5e2c368038f91004b837f1a78be6c40266fdced23e129adaecbf",
+      "bytes": 283112
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1440-password-dialog.png",
+      "sha256": "ce62fe191c34cb257bbbbfcceb88fa181274c948e9454eddb4bb673c05298644",
+      "bytes": 237071
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1440-prerequisite_failed.png",
+      "sha256": "902f2422a5ed7b7a7a0bbc7f31ccacdbf3991b3a5769ae8661c2c24e4f680b4d",
+      "bytes": 292613
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1440-reauthentication-required.png",
+      "sha256": "76a2f39efe294e2b76734ff905827c44fc97e50f232f20380ca3331288e5b0ce",
+      "bytes": 288203
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1440-refreshed-draft.png",
+      "sha256": "63d867c5ff7cbe6764d93fcbb3dd7a94ebb0d3599bb7401ff91834e2d42cabd4",
+      "bytes": 272332
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-1440-unavailable.png",
+      "sha256": "c824477a294a4bfec00d4cff86853f99abc2a11cc446c75bacc793d6e43b5a75",
+      "bytes": 290768
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-390-other-account-draft.png",
+      "sha256": "308288c3883a7bd9c7f68d3f9314d642c0e8cbafb18d127570054520de5cbdad",
+      "bytes": 225887
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-390-password-dialog.png",
+      "sha256": "000948ec9981335e1cd919bccd87710b5dbc5aea1760a196afbfa7b2647f75cd",
+      "bytes": 208502
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-390-prerequisite_failed.png",
+      "sha256": "a5c1956c6b640f7449aefa0ea6d00c40ae7671b095dbc6b8387fb5634f154ef2",
+      "bytes": 234720
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-390-reauthentication-required.png",
+      "sha256": "721ebd9dcd88dbfa2a7c91114143a5a009091473d897555339c8ae7611f4e35b",
+      "bytes": 232196
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-390-refreshed-draft.png",
+      "sha256": "d73a994c8e7ce211230e8de219c8742569b91f5ae14ac9b14cce0911f887c5c9",
+      "bytes": 216787
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ar-390-unavailable.png",
+      "sha256": "768941be5c9ddc6f41740425552423d22750f040027b64a2a97ebe6fb07d2f49",
+      "bytes": 233680
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1024-password-dialog.png",
+      "sha256": "5171da4c653ff218b57be0d1c5e3771093ee708a86bd677319efbe37d0d3e93b",
+      "bytes": 227603
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1024-prerequisite_failed.png",
+      "sha256": "d5d263d1a3823e20492f9ae31bf1a6c74b75a4b1233df278a3cc1a07d61cb429",
+      "bytes": 273768
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1024-reauthentication-required.png",
+      "sha256": "224cc6853e4677778b897d686b836f7096f4f5b9d4c34e09113297656084a4c8",
+      "bytes": 267003
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1024-refreshed-draft.png",
+      "sha256": "2afeb3671302bf102d4625c4f076591a74c14e9b6e91c6b25ecb19fea4c84344",
+      "bytes": 250783
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1024-unavailable.png",
+      "sha256": "d924d7713a97249d358230f1603421ae0f58b30e2997e287c68a514fcadf45d0",
+      "bytes": 269063
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1280-password-dialog.png",
+      "sha256": "027f918b30b16371581918ba5f710b5ecc4b3ed430c0b2603ba7e19ed1bca54b",
+      "bytes": 232752
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1280-prerequisite_failed.png",
+      "sha256": "af3f6d711cd71e80fcb9653095e12f3a18aa85badc9f5a15e00c5bbd058d7599",
+      "bytes": 298892
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1280-reauthentication-required.png",
+      "sha256": "330e63505cc8fdd7ed89eb495f04d1e250ccba7b91794d711d8293264c486055",
+      "bytes": 292711
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1280-refreshed-draft.png",
+      "sha256": "b6d5ec7860800257c159fdea86bdd8a07fc075715bbd6ab3fe7f33431e983200",
+      "bytes": 274662
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1280-unavailable.png",
+      "sha256": "0253be6ba8ea2d4dc9930332aee5811bc34cdd34d86a18e102ae92f2d94c01f8",
+      "bytes": 293309
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1440-password-dialog.png",
+      "sha256": "c0dc0325f74e89a88d6dc508dcba7656ea67ce6501cb2d50081586e6c68dc976",
+      "bytes": 234148
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1440-prerequisite_failed.png",
+      "sha256": "80e76e6ac47b9c6e2999f8089c93b82a496b8e379bd37551a5de42075e24c72d",
+      "bytes": 299230
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1440-reauthentication-required.png",
+      "sha256": "9163537e8ba5e616a43976a5431c0d2d867e45594b22a0dc38d1332514bdf356",
+      "bytes": 294787
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1440-refreshed-draft.png",
+      "sha256": "2e82c0ceba087c63cae8a7802f1b8b05c878ece4ae0ea1519e202c5462be35d3",
+      "bytes": 278679
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-1440-unavailable.png",
+      "sha256": "d46c15a2822b28f9ec4fa75f136b25960e14051ec4cfc2b8313246dc6452356b",
+      "bytes": 292919
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-390-new-session-empty-draft.png",
+      "sha256": "b1daa4244b88064abb97f1414fa932518fa4ff6c0e2d1782f5a377de6bce4070",
+      "bytes": 213373
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-390-other-account-draft.png",
+      "sha256": "b80659364cf3982123477fb9f82c96eb15d0b449c0839ddb92adbe6ace2f0dee",
+      "bytes": 225605
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-390-password-dialog.png",
+      "sha256": "22735ab158e7d755988942872d1c29cc12135b3146a863e6427b761407328d43",
+      "bytes": 206028
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-390-prerequisite_failed.png",
+      "sha256": "234d5c8100773814358b8ae21512135864f91139f3d057e41e878422968ed755",
+      "bytes": 243009
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-390-reauthentication-required.png",
+      "sha256": "b174a3040ac3a8f9655cb351d505ba0baec7f3d790087619a0d85ea0062fcc1e",
+      "bytes": 236657
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-390-refreshed-draft.png",
+      "sha256": "1db77b5c3e2d5305dc1da720ec580ebf2a973c05a3ac2153bc433eb32f88fb45",
+      "bytes": 221654
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/en-390-unavailable.png",
+      "sha256": "58c659305034a8e745d7e749e7812ce711553f388542f5ba5a0232528a9cfd18",
+      "bytes": 237609
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1024-password-dialog.png",
+      "sha256": "cf9c302768212a4329a0929ff0d88f72c7314d7744ef3a456601670c997db3b8",
+      "bytes": 217335
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1024-prerequisite_failed.png",
+      "sha256": "3c177016b6c244277bc063784b473e2f9e69def23a8606f454b57bb981eddf8d",
+      "bytes": 266345
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1024-reauthentication-required.png",
+      "sha256": "1bc19a2e7c8123c0a1f38b7b0777aaaf73b00cf071e7ff34ca66380ab6dd2a56",
+      "bytes": 256969
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1024-refreshed-draft.png",
+      "sha256": "9f2cee8ef3dea599792fa4077cac57bb2445ca77a94a51feb4b5b67817206a9b",
+      "bytes": 240836
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1024-unavailable.png",
+      "sha256": "64a4cc2d6aa2af277681194e8f6360d2e17c2edb921b5eaf90e3c595dc5f974e",
+      "bytes": 259051
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1280-password-dialog.png",
+      "sha256": "a86d6575cdc93dd0698d9f68f2f3e6175ec8878124ac1b16a4f3e063ab7545aa",
+      "bytes": 221770
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1280-prerequisite_failed.png",
+      "sha256": "bf6974de1d8e9ab1cd4ea879f7db8540ca9fd6102e444c99981acfeb242a3c85",
+      "bytes": 282839
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1280-reauthentication-required.png",
+      "sha256": "fc0476181d12e2845fb96825f8bf5dd7b38b0239aba27c270b568f12cbc374d0",
+      "bytes": 274485
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1280-refreshed-draft.png",
+      "sha256": "6b2918abba3556ab9a3305e96c791886a8914a9b6dfcd1692e9fafcd0432424a",
+      "bytes": 255606
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1280-unavailable.png",
+      "sha256": "c9f3399fb1968ad898c8f07b28bdc9a6c0ad2dd6c1d8edaa35788d2ae93c2fe9",
+      "bytes": 274921
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1440-password-dialog.png",
+      "sha256": "7b25d1a97ac5d6510cd537d14b961ecf899fa78ef7711000cad9d812d6197518",
+      "bytes": 226372
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1440-prerequisite_failed.png",
+      "sha256": "238bcac95e35c8af165552560e7067b0f254ecff54b43bdcfe066f691296e950",
+      "bytes": 287514
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1440-reauthentication-required.png",
+      "sha256": "9a51ba695fbff56bebc33401f3cbe25513ea8d08afaed41c0b4f3dcdd6e679b3",
+      "bytes": 279620
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1440-refreshed-draft.png",
+      "sha256": "7c9c5cab01660b5553d938648db416ef3cf70f6c5d766dbd86cd60c1fb10aa8a",
+      "bytes": 261815
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-1440-unavailable.png",
+      "sha256": "83efaf98944394a75e95b43aa87f1d3c2f6a6557a86f43d83d548a754a3befe4",
+      "bytes": 282254
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-390-other-account-draft.png",
+      "sha256": "fd45679cbb73ece132198c827c05da291b4b7dcd0643b2c947cde488a6175a90",
+      "bytes": 214466
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-390-password-dialog.png",
+      "sha256": "a6df23c60290f1e59332a84ec17534d35b11e0105ee56a9367dd9c099bb71d86",
+      "bytes": 196307
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-390-prerequisite_failed.png",
+      "sha256": "a408010410947e620c705998c91cd3ba3748b351247b5e6c6de4ba6e5a601915",
+      "bytes": 235117
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-390-reauthentication-required.png",
+      "sha256": "17bd1d443c57ec7c1922ef07a88617a8d8c0ea01e99bf63b95e1b50f77a2196b",
+      "bytes": 228280
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-390-refreshed-draft.png",
+      "sha256": "55a2eab387d487ac87b2e6512838e6f253308bfb828d71205f37c6b2bdd9381b",
+      "bytes": 211567
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/authentication/ko-390-unavailable.png",
+      "sha256": "34e854f4ea6dd5d41aedf559c4053378f8ca8d5f4bd067b7b24c80d195fba334",
+      "bytes": 229478
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ar-1024-refused.png",
+      "sha256": "e287784bc19e66d4123b8e10bb4fd961f4223a2ef97eae9d417a48367fae824e",
+      "bytes": 236745
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ar-1024-unknown.png",
+      "sha256": "dec5cb1a57b298d46d3f894374f9c42b90089b4fa1d318189d132bc78e529abb",
+      "bytes": 233416
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ar-1280-refused.png",
+      "sha256": "e8698967689bebb66d6fb45db8166fb1bc9371d9d0070f1ad68d71cd5cae9ca5",
+      "bytes": 255781
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ar-1280-unknown.png",
+      "sha256": "0bfbed2f71ec9a712622ea6aa448810e2b9244ff43aeab734a1244d54a87a09b",
+      "bytes": 252048
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ar-1440-refused.png",
+      "sha256": "943d7138bad168f71409dd108c0f63dc8b335e0c9db6fe8b413e2e31b8228b99",
+      "bytes": 261709
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ar-1440-unknown.png",
+      "sha256": "1262303accbdc9a12363e303fa193bedf8350673135b63da8802a82dc06e5291",
+      "bytes": 257923
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ar-390-refused.png",
+      "sha256": "e3f9c5cfaaf81769a248d484cd9b2115854b5128ed7349fdd9f77621d9a310c8",
+      "bytes": 208873
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ar-390-unknown.png",
+      "sha256": "a7643d6df110773dff8c1cdd5ab72d937020ae2f63314a2e2b1a50d585e042db",
+      "bytes": 203607
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/en-1024-refused.png",
+      "sha256": "46f5deff4dfc63560fd27164f05c1742baaea69f1f5c6f9a58df12c4b262851d",
+      "bytes": 249189
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/en-1024-unknown.png",
+      "sha256": "66b0db6f4107b1dc2da7afe19b3a183ec028c946dc1e94161e170c71604bf7c8",
+      "bytes": 244794
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/en-1280-refused.png",
+      "sha256": "415b9b851b747d714ccdc3e3cdb21f45523e5c1b5ffceeda16426b63aef73c0a",
+      "bytes": 273528
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/en-1280-unknown.png",
+      "sha256": "a90195bea2ba1106ca0aa422d99f962b9ee522451bb502985d5e02e2d4172df3",
+      "bytes": 268904
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/en-1440-refused.png",
+      "sha256": "6c829de568010e5cd9c21e2ab7ec6b47cb2b33156bfa86481bf2c627b3f919a0",
+      "bytes": 278597
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/en-1440-unknown.png",
+      "sha256": "d44299c2551f4ed7f53eee6781a4bedde1d85e0f7e6d242ca359ea5923552fe0",
+      "bytes": 273769
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/en-390-refused.png",
+      "sha256": "c19d1c72f7d17c44364b5d1d397aa5603aec4802bcf94b695690b1f6fdef1156",
+      "bytes": 217678
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/en-390-unknown.png",
+      "sha256": "9a822fb8b44b54acc659dc700eceb9d8245478d0abae4b3662f572f66abc5c43",
+      "bytes": 213084
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ko-1024-refused.png",
+      "sha256": "a674c9a1186a12bc396ff4052ca5197deaa7f09c8dfac2c238f7ca94083fc8f5",
+      "bytes": 235599
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ko-1024-unknown.png",
+      "sha256": "d8b0a0203fcc34a7ec62f4fccfb4fe38bdaaa42d29beb8e45946a100b1b03b2e",
+      "bytes": 234700
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ko-1280-refused.png",
+      "sha256": "00f37ef71175fbf562c828ebaa5e0e3a64a65be50b861268c1e601b902ec2629",
+      "bytes": 251358
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ko-1280-unknown.png",
+      "sha256": "7ca56918849b90099f528a428f7c515757e2d29312b771537160509a3954854b",
+      "bytes": 250685
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ko-1440-refused.png",
+      "sha256": "1a2e694b05b4dc665d5dc49ed80397363290133bb7885694401878f0ef70a511",
+      "bytes": 256800
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ko-1440-unknown.png",
+      "sha256": "ea479d79643d715c7b1656854f81d6bdce2e89a71c9f1de30f633f4edabb114b",
+      "bytes": 256173
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ko-390-refused.png",
+      "sha256": "824a12e731d31df64dfa0bfcc2e9ab07dcab1a6215ad42166ba64c4ca7f02161",
+      "bytes": 206938
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/command-errors/ko-390-unknown.png",
+      "sha256": "664ed1855799e0bcdd156e4539094f823e67d65c5a246254af46a5df8d1d29ad",
+      "bytes": 205384
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-1024-create-errors.png",
+      "sha256": "fd75908dd9043385ce65cde96b06cabeed44bf9371a8fad8b69531f65c3d5acd",
+      "bytes": 255554
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-1024-issue-errors.png",
+      "sha256": "cd37edbc8274188210b94c7bea099a80e22e5433744d357737a22b28de1576db",
+      "bytes": 222634
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-1024-state-errors.png",
+      "sha256": "8ed98ffb44e2e3839fe507b54b2fa696b66f4d8d96f0324d606e35dd3d9d48bc",
+      "bytes": 100008
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-1280-create-errors.png",
+      "sha256": "1aad86f19bb7914c3c198d68dfd2e031fdd1b5ca3a584b86f13c4084ff139203",
+      "bytes": 344722
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-1280-issue-errors.png",
+      "sha256": "6f9100a73e18a8f0a34ffa7209c21a81ca9ef601ef6c61564f2ed09e87d38ea3",
+      "bytes": 241810
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-1280-state-errors.png",
+      "sha256": "f0075c052571b035bfa7ed54f4a6bfa84cb64c3766d8d387881d9fa5eaa0d3f1",
+      "bytes": 176310
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-1440-create-errors.png",
+      "sha256": "85b2db291220feeb0ff934ffc55a612fc4624879c29ce79f87cbf379e1c6cc4f",
+      "bytes": 347911
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-1440-issue-errors.png",
+      "sha256": "c4d9dfdb1eb5b2c16255e149ecbe30c767c538f7bc3bb0e492bfd046f4212e76",
+      "bytes": 248036
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-1440-state-errors.png",
+      "sha256": "d0f2ccb1d8fa0d654292010327aa50d23d81322765347502a8820649cdfa6ffd",
+      "bytes": 177695
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-390-create-errors.png",
+      "sha256": "f66ed8e42ad6b104b3b4d8dda495fec45f9fe041d148b7f198349dffc1897ac8",
+      "bytes": 230330
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-390-issue-errors.png",
+      "sha256": "6bdaacc9817e71330b13b8e6b8279a423bf3f9480fdda1342d32d6854514ae49",
+      "bytes": 191134
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-390-rejected-edit.png",
+      "sha256": "ffe7d3a5bf6c2cec05c09e60e2239752148d3bcc86d4ea4471f2a41eba40f25f",
+      "bytes": 190898
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ar-390-state-errors.png",
+      "sha256": "2f20a75c3a0b2e878f1b9a5421c68ee1c50b32c2701124bd529102e558a6c237",
+      "bytes": 85001
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-1024-create-errors.png",
+      "sha256": "769d84c99e4f083efe258b85db97a549e7a987539bc0d52ccf2dc213b90aa00e",
+      "bytes": 275610
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-1024-issue-errors.png",
+      "sha256": "25786a5ecfd096199444ea0b1f9678d1eeef155539d3218f3a20906c15957af6",
+      "bytes": 228414
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-1024-state-errors.png",
+      "sha256": "4639f3cfc00fd63d76649397e5699f5234bf3012cd6a8b0c6328664b0540fd83",
+      "bytes": 109615
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-1280-create-errors.png",
+      "sha256": "6f0b8e1e3e80a6dc7b1bbc89da0eab9bddf95d954ff950ae8611b04591a9ce08",
+      "bytes": 387226
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-1280-issue-errors.png",
+      "sha256": "1c27b04a1d4cfa8cfa13eda70616460e51806f0874f7f4d3785a5ed1d01a980a",
+      "bytes": 252789
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-1280-state-errors.png",
+      "sha256": "0db3b529f72c27b406d17faec2071197f0be57db2cf4e11c3fec7dc5e92532c0",
+      "bytes": 193547
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-1440-create-errors.png",
+      "sha256": "74d0a9c83b2152d2312c30a6a7415cfc0dff0207fd26b5bad124af5cdbcb6eb0",
+      "bytes": 377831
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-1440-failed-picker.png",
+      "sha256": "b7c879cca49e7695133c09b9ddacba4790daf02ea4b18f9f0ee226bf406af6e6",
+      "bytes": 380865
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-1440-issue-errors.png",
+      "sha256": "08ea0d0f6d6b2e81b27fa9d24e7eb86b625bc0d463a5fba96beb45fe444d8b03",
+      "bytes": 257844
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-1440-pending-picker.png",
+      "sha256": "8048d3ea6625507a7a0208ab5711c3ea9f313f9aec6e84a2531266d77fae0631",
+      "bytes": 355927
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-1440-state-errors.png",
+      "sha256": "b1039531dd192b1af728e170dc34a2bdadfa5424819aa64058fb9bdb0e77b5e4",
+      "bytes": 195001
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-390-create-errors.png",
+      "sha256": "2a3ec881a2f83921ae03f4619b80c6063649dacb700945fa8219f104fd15fcb3",
+      "bytes": 245910
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-390-issue-errors.png",
+      "sha256": "1244c7ea3bdc5e5edead00d2d378f6d74727d3709f5ba9376a7bc9cdec0d667a",
+      "bytes": 196665
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-390-rejected-edit.png",
+      "sha256": "d490ca1f1542b1d88b5bce87d818ed1903fa71861a055063972dbb96c9e8c7d3",
+      "bytes": 194394
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/en-390-state-errors.png",
+      "sha256": "c988750385d4af81ac47897a0cc07bbddb41638fa2de0f29b2d63e24594cc16b",
+      "bytes": 91709
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-1024-create-errors.png",
+      "sha256": "261f486e9399cbdd153bbde16b63f0dc336757ffacdda381a6fbfdd2048cff55",
+      "bytes": 259946
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-1024-issue-errors.png",
+      "sha256": "a4b1b154d21e020c66ee8cfdebce3c09b03c10c80a55ccf7ce1ac5cd9f1d4c42",
+      "bytes": 216245
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-1024-state-errors.png",
+      "sha256": "23cd34e214cec835331c708ebe8688f762bb2edb730d85e5b0b1e158bf83a095",
+      "bytes": 104226
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-1280-create-errors.png",
+      "sha256": "7e8d3c369c26c99be383416718dc7939afad7460b4f4ecedc86539cfcc34c8f7",
+      "bytes": 345940
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-1280-issue-errors.png",
+      "sha256": "ccb4bc8dc9f934970d55502784ff81f46e31fb9bf4bc0aedf5507a87cb1d8bdf",
+      "bytes": 231762
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-1280-state-errors.png",
+      "sha256": "5c4fe674d69d762716dbc9890dedbc149d06e7c21957b18bb9ecf70abfc76df7",
+      "bytes": 173346
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-1440-create-errors.png",
+      "sha256": "ad92cea98e6576cff8175c24be680dc68cb58beb649fc4a190ac5f0a3f5734a7",
+      "bytes": 338498
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-1440-issue-errors.png",
+      "sha256": "459fcf8204eeaa1b1999f901e5950a2a5d1beb6716879e22f28abbe260e470c6",
+      "bytes": 237570
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-1440-state-errors.png",
+      "sha256": "f7f67b50bcea9533688d07df5ded3b3d2ebc03d6682509248ae9892611f0ab62",
+      "bytes": 173921
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-390-create-errors.png",
+      "sha256": "28a18b4b26d7141acb4dae17da8c0dd6460337cb5354c4a462b482cb64e7dc5b",
+      "bytes": 232701
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-390-issue-errors.png",
+      "sha256": "562ca926f55b1136b2ab5b1210d595dbc811d7794ddb99c312403be1dbdfe9b3",
+      "bytes": 186809
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-390-rejected-edit.png",
+      "sha256": "4553ff8c0fe3689c30e091723f5616cf0ca75f5971291726dfe51724aa47d1d0",
+      "bytes": 184500
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/forms/ko-390-state-errors.png",
+      "sha256": "6ea68aa4742370d3be0c5c173c2734d10f8734653aeab7b8b75d3997cd73165d",
+      "bytes": 89347
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1024-credential-hold.png",
+      "sha256": "f5b0928582ab3950aff6bccbd03cd5061fcf4c0c98411b3402a1cfe7a21171e1",
+      "bytes": 267889
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1024-denied.png",
+      "sha256": "af196c52dcad8089816d4927fb6ab85f8d8c0b3eedf55335cb7e18b7d10f47d9",
+      "bytes": 119478
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1024-empty.png",
+      "sha256": "c8f0044ef5fde30ebe36ede4c06e678085d4346f38c95864af97816cb96b2a91",
+      "bytes": 130820
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1024-loading.png",
+      "sha256": "d8df05f97e72de241ea3c269dd1e6cfef00a52b46c708d80fcd94e9edad10995",
+      "bytes": 99223
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1024-unavailable.png",
+      "sha256": "bcddc6264bc61b9b5b6c2a7d915e203072f57abff267a149dcacc63d9e2d4d5a",
+      "bytes": 119387
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1280-credential-hold.png",
+      "sha256": "f22a91c7f9309197dc9bd351d330b47b1ba900886baba7145ff7d8cd5d116bb0",
+      "bytes": 287441
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1280-denied.png",
+      "sha256": "873604b7117aa360dbae8c88d6bef1e34ca7c47241eaadacfa056c3e612e541a",
+      "bytes": 134717
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1280-empty.png",
+      "sha256": "2414a1f55d47c7d3fec45f09d3137f92fadf12a2027e5c5b5899be0e0844e21d",
+      "bytes": 146967
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1280-loading.png",
+      "sha256": "655af09d3d49621845e4e7440adf9aeb5811d75cab8400234b99992ee76b21ed",
+      "bytes": 114053
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1280-unavailable.png",
+      "sha256": "3b0db7a81fc0b5d6ed6b53d6d5aad9b6b3edf54641e05a3417dd33bc3174b1f9",
+      "bytes": 134612
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1440-credential-hold.png",
+      "sha256": "ffb9643179fa7aacba6f51e0471fd88795da35a3db10eb9bb1b3b5d113b93e93",
+      "bytes": 292232
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1440-denied.png",
+      "sha256": "fe10a0cf434b22e8e2d09a713cc8fda06aef36af65b33cd7de2b6c3cf775e20a",
+      "bytes": 137052
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1440-empty.png",
+      "sha256": "22d6463cd1fe5dfff9c7a09bb76767532e1f319996d59599cfd8a62276ced8f3",
+      "bytes": 149283
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1440-loading.png",
+      "sha256": "b2b95e44e4a4b8fc87ad378d3eb35a431ffaefe0a71a760fb175328efa235639",
+      "bytes": 116362
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-1440-unavailable.png",
+      "sha256": "96bc578a3f987cf46e866a5f59b3afe8119f90ca863c89abe13f279de5b2b4e6",
+      "bytes": 136924
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-390-credential-hold.png",
+      "sha256": "33f0040a78e424b80de04fc0e4d10050dcccdd5cb8324ac9bb807adff252efad",
+      "bytes": 234942
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-390-denied.png",
+      "sha256": "e303319314eae5ce34e0ae6aed8ca572f664bf1497bcf791f17794e610945c0b",
+      "bytes": 104904
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-390-empty.png",
+      "sha256": "24de1e09a21a5ce74a740d9cea8390fc86cc891c7aaad9e61080c59948e7448c",
+      "bytes": 109531
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-390-loading.png",
+      "sha256": "562783d2efd3854f721f53025cb8e2a192faafee2421571f385e2c50e9d8d91d",
+      "bytes": 85864
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ar-390-unavailable.png",
+      "sha256": "94187f500aa631649333f00f2cedb0266ce1d26c6a8913fcec1643294a36bbec",
+      "bytes": 104498
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1024-credential-hold.png",
+      "sha256": "31234fea526f30452fcd116e2c1920db9696fa0cd3d29e71967323c48c3d676f",
+      "bytes": 276059
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1024-denied.png",
+      "sha256": "27b72bab01b76a39df617e49864aedee98cd340d4321bc16fa0e081cbc6623e7",
+      "bytes": 121769
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1024-empty.png",
+      "sha256": "f30a12bd8576cef180d0f5ed4ee03e5447454a8cfcf1a98c164ff02b4fd8f03d",
+      "bytes": 132454
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1024-loading.png",
+      "sha256": "d12f35c4d958760991ff2a1aa548b8ec262040cfbe32e10af13286a76d5d4011",
+      "bytes": 101114
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1024-unavailable.png",
+      "sha256": "859013cb11b743ffd038db75696cb5d4949e11f74e002534883e103903aa51df",
+      "bytes": 122300
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1280-credential-hold.png",
+      "sha256": "d3971970dae55b1201f08951065b369c0c93bedc43c2f3ada44e56bc248058bc",
+      "bytes": 300796
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1280-denied.png",
+      "sha256": "1cfbe1cabca41e58ea09f807373ea82312b3d191d3af2bee49722dbcdd593951",
+      "bytes": 143034
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1280-empty.png",
+      "sha256": "19f8ff25ffdc8dc9e49ce7d76ed97d56b357bdfb5ff9acab3362d8331150be15",
+      "bytes": 154096
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1280-loading.png",
+      "sha256": "17ac8555dd5f8d5969b771d5835b958dcf8c853d9d1817351385e18f462abb1c",
+      "bytes": 121805
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1280-unavailable.png",
+      "sha256": "2304e0a3d7ac877f38f06243d28d2abb6d8ac456875ab622166f0f2019a1274c",
+      "bytes": 143562
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1440-credential-hold.png",
+      "sha256": "347e1d69a2e643a0fa8f90e543d31bcb23ef32564737fb0abc9b9fef3bf5fbcd",
+      "bytes": 303797
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1440-denied.png",
+      "sha256": "7735c2bf3d622621cd6f0635ad2357c9b3cbd700eb707f7ff9a561cc6c79d980",
+      "bytes": 144252
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1440-empty.png",
+      "sha256": "69bebc261ff06cf505b39e9acc9aa0a21fa571e5e748071039ee488ce6c11222",
+      "bytes": 154702
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1440-loading.png",
+      "sha256": "86e02a01fc8b63ae24351c15b6154279a02ad044a745faec7a9310e31802b880",
+      "bytes": 123193
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-1440-unavailable.png",
+      "sha256": "1cfecee107e0625f716a93c81896bbe33b3ccdd1aa0d3999ba61f510d410eee7",
+      "bytes": 144820
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-390-credential-hold.png",
+      "sha256": "6ba3e8f1a2e41c5da45e48274ab1baded11579d39a409018aa08ecd1ee59f3bb",
+      "bytes": 244182
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-390-denied.png",
+      "sha256": "8a34e788d5dc54f9b959aee135a9e6c1f401a746e1868ff6e625f585bcd3d072",
+      "bytes": 107692
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-390-empty.png",
+      "sha256": "76fe523770e626d1695b6c311a860b2099df6958837e96f43dc7abb14458eeb4",
+      "bytes": 111165
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-390-loading.png",
+      "sha256": "9024ff55703668f1051a84eedc123a1a0b228678d90a5661740ecf29b764a22e",
+      "bytes": 87898
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/en-390-unavailable.png",
+      "sha256": "71933bfa86c2f5141f0bd579b7240ec4587f3f717ad4513e8efdcf5da91bdf7c",
+      "bytes": 108056
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1024-credential-hold.png",
+      "sha256": "dacd9a436bfa5309d0d111f3b9fabf45b904853b61015c118e578633deeb2e4a",
+      "bytes": 256155
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1024-denied.png",
+      "sha256": "f53ebccbc0f6e6a122fd9ae940b335d8abd55c3991f08a769e05495877a91c2a",
+      "bytes": 120896
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1024-empty.png",
+      "sha256": "48c5ac23576c4cf88f4d3ae6611b292016d7d589292b7d987d3472972d7624f4",
+      "bytes": 127161
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1024-loading.png",
+      "sha256": "a0e4eb50f0f1c2dfc36584a1e38ffc1e114757e927258cfbab1f0ec444a07cf6",
+      "bytes": 99041
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1024-unavailable.png",
+      "sha256": "d00a680346d5bab295d081989f8d79e2e75fd549d5ee5e5bf843012b9340537e",
+      "bytes": 120509
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1280-credential-hold.png",
+      "sha256": "bb3c48f01179ba1c101ca232e7eee4bc1d7f7e1f74351a1647fc334092a61392",
+      "bytes": 272978
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1280-denied.png",
+      "sha256": "f0df499d4d66d3df5467cbf586b3185e3dda1abed009bed9f20323d62c96aec3",
+      "bytes": 133578
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1280-empty.png",
+      "sha256": "bf4f902372de5ddb92cbc1648da7eb1c562e26e73f6ce293c7cfee143e7220ca",
+      "bytes": 140162
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1280-loading.png",
+      "sha256": "8c4a8298861d0e368d121d4b317716cd1a4dc5ec131f061ad190406e288766c1",
+      "bytes": 111272
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1280-unavailable.png",
+      "sha256": "ca30a5a86a10d9aabd45bef9469e85f5545139df898c31b3c4cdccc0ce063269",
+      "bytes": 133210
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1440-credential-hold.png",
+      "sha256": "b604a4718cd103ddc63dedd1f5dfac6407780b48a395b5f71ddfc7abab916455",
+      "bytes": 279293
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1440-denied.png",
+      "sha256": "7be09818ef5716e65ca634f4300ad1fb51d88871289a20b68f59e7ecdb396e07",
+      "bytes": 135701
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1440-empty.png",
+      "sha256": "2b047db22e1f75af37f2fce8c53c9118860a757ada5047f3fb3df92b987286b5",
+      "bytes": 141748
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1440-loading.png",
+      "sha256": "11bc90dd05f85bd61aa32ed374bede52b2d059d58e8e237e2952f793303a54d3",
+      "bytes": 113446
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-1440-unavailable.png",
+      "sha256": "cf6502ec2d8d39b63a05dbf1b34159607724b4b1539d39fc3d2317d12fe1209e",
+      "bytes": 135306
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-390-credential-hold.png",
+      "sha256": "3aedb207bf878ae7e5b405bfbb17846cc0a1f0085872f88868c5b9c18896bcfd",
+      "bytes": 227302
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-390-denied.png",
+      "sha256": "fe69e2f9fd215324338775d2a12f52417634464d9f750d069555d0b312d88868",
+      "bytes": 106263
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-390-empty.png",
+      "sha256": "5cad7e30af1fbaa5266d107b2e264ed8bafe4d470e97551398263eec938df00f",
+      "bytes": 107500
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-390-loading.png",
+      "sha256": "f11c0c9d74d6a2891181c186d9f9221fc50c14ef841c26e976233eb80785c409",
+      "bytes": 85977
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios/states/ko-390-unavailable.png",
+      "sha256": "db5b08907fe2e4f7d3197485f60816de76e3d4dc27d8269944f3fc5e74347b3e",
+      "bytes": 105884
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/ar-1024-known-account.png",
+      "sha256": "b53106ce6bb33373c5d315c3ac625a171269b9cf8105d0cd87b0897017c3503b",
+      "bytes": 245067
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/ar-1280-known-account.png",
+      "sha256": "5079d4f64586fe4f34b39cb23485c7cd6ddf9f5ee4be7e222888ef18e55876fa",
+      "bytes": 307983
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/ar-1440-known-account.png",
+      "sha256": "8113890f36b4776c34a63b1e85701f975c4caeea86edaa1cccdc8dc6b7c06499",
+      "bytes": 316745
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/ar-390-known-account.png",
+      "sha256": "f5c322002bf405061e031ca27f2be01f4f68b5eeaa4a38503d91c42209f9ed4e",
+      "bytes": 225536
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/en-1024-known-account.png",
+      "sha256": "ddea95f6dce895e54c21759cd7049c442a9ef4b450ab11ef87b20897420d9681",
+      "bytes": 267276
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/en-1280-known-account.png",
+      "sha256": "2d3ce95937b542a15f201ca73cd0aa309849f12f5c2d581e9ff7aaa93da69dca",
+      "bytes": 341086
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/en-1440-known-account.png",
+      "sha256": "69dda22583be08d2af0de96dcb58bb75f3baa57725d567c093bc6aefbde8a849",
+      "bytes": 346854
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/en-390-known-account.png",
+      "sha256": "0650fb013c91f89529d93e484e8630970ddf98416625b7ef1f758b3b68b6bf64",
+      "bytes": 243454
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/ko-1024-known-account.png",
+      "sha256": "a8121676b42726688626e8075a39bf5055b18a8856e22d4aab3f6842ff7816d8",
+      "bytes": 241119
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/ko-1280-known-account.png",
+      "sha256": "e85892f5da6bb9be4a033fab022d042df0229fb2a0f8ae98e4164bfef07ccdfc",
+      "bytes": 295755
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/ko-1440-known-account.png",
+      "sha256": "858fdfa96d21cdc2a611262069e69472b3a959de1d030a83117d3cf987f7b730",
+      "bytes": 302210
+    },
+    {
+      "path": "/private/tmp/hb304-form-errors-all-ratios-journey/ko-390-known-account.png",
+      "sha256": "14ae2726db776bfee7d52b008ecffbbf6daf00e485f9cf4d64fb60ea49e236ad",
+      "bytes": 219440
+    },
+    {
+      "path": "/private/tmp/hb304/apps/console/dist/build-manifest.json",
+      "sha256": "a3103aed01e88fa94bd44001c4f23ff1424c3b2b2a56e1f610444eef3b884515",
+      "bytes": 72910
+    }
+  ]
+}

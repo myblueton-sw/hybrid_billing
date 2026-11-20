@@ -83,7 +83,7 @@ func TestExplainInstallationHasOnlyGovernanceCallers(t *testing.T) {
 			t.Errorf("ExplainInstallation called from %+v", c)
 		}
 	}
-	if len(files) != 3 || !files["gate.go"] || !files["trustevidence.go"] || !files["inputauthorityfacts.go"] {
+	if len(files) != 3 || !files["gate.go"] || !files["trustevidence.go"] || !files["grantauthorityfacts.go"] {
 		t.Errorf("callers %v", files)
 	}
 	for _, m03 := range []string{"access.go", "accessrequests.go", "ledger.go", "integrations.go", "revocations.go"} {
@@ -158,10 +158,10 @@ func TestM03UsesTheInstallationKindPredicate(t *testing.T) {
 }
 
 func inputAuthorityExplanation(c callSite) bool {
-	return c.file == "inputauthorityfacts.go" && c.function == "Check" && c.receiver == "a.s.admin" && c.method == "ExplainInstallation"
+	return c.file == "grantauthorityfacts.go" && c.function == "Check" && c.receiver == "a.s.admin" && c.method == "ExplainInstallation"
 }
 func TestInputAuthorityExplanationExceptionIsExact(t *testing.T) {
-	good := callSite{file: "inputauthorityfacts.go", function: "Check", receiver: "a.s.admin", method: "ExplainInstallation"}
+	good := callSite{file: "grantauthorityfacts.go", function: "Check", receiver: "a.s.admin", method: "ExplainInstallation"}
 	if !inputAuthorityExplanation(good) {
 		t.Fatal("exact site refused")
 	}

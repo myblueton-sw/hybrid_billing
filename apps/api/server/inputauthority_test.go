@@ -226,3 +226,11 @@ func TestInputAuthorityLookupComparesCompleteGrant(t *testing.T) {
 		})
 	}
 }
+
+func inputAuthorityGrant(id string, spec inputauthority.Spec) gate.Grant {
+	grant, _ := (&serverGrantAuthority{domain: inputGrantAuthority}).grant(id, spec)
+	return grant
+}
+func sameInputAuthorityGrant(g gate.GrantView, id string, spec inputauthority.Spec) bool {
+	return (&serverGrantAuthority{domain: inputGrantAuthority}).sameGrant(g, id, spec)
+}

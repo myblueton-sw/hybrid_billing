@@ -6,7 +6,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 )
 
-func (a *serverInputAuthority) Check(workspace, actor string) (string, error) {
+func (a *serverGrantAuthority) Check(workspace, actor string) (string, error) {
 	s := a.s
 	if err := a.caller(workspace, s.answer.User()); err != nil {
 		return "", err
@@ -34,11 +34,14 @@ func (a *serverInputAuthority) Check(workspace, actor string) (string, error) {
 	}{facts.person(actor), s.admin.Generation()}), nil
 }
 
-func (a *serverInputAuthority) Current(spec inputauthority.Spec) (string, error) {
+func (a *serverGrantAuthority) Current(spec inputauthority.Spec) (string, error) {
 	if err := a.caller(spec.Workspace, a.s.answer.User()); err != nil {
 		return "", err
 	}
 	s := a.s
+	if _, err := a.domain.terms(spec.Workspace, spec.Capability); err != nil {
+		return "", err
+	}
 	if spec.Workspace != s.bootWorkspace {
 		return "", inputauthority.ErrDenied
 	}
@@ -87,11 +90,11 @@ func (a *serverInputAuthority) Current(spec inputauthority.Spec) (string, error)
 	}{facts.person(spec.Recipient), generation, grant.Version, spec.CeilingID, ceiling}), nil
 }
 
-func (a *serverInputAuthority) Lookup(id string) (inputauthority.Effect, error) {
+func (a *serverGrantAuthority) Lookup(id string) (inputauthority.Effect, error) {
 	if err := a.caller(a.s.bootWorkspace, a.s.answer.User()); err != nil {
 		return inputauthority.Effect{}, err
 	}
-	if a.s.faulty("input-authority-lookup") {
+	if a.s.faulty(a.domain.faultPrefix() + "lookup") {
 		return inputauthority.Effect{}, gate.ErrUnavailable
 	}
 	spec, known := a.bindings[id]
@@ -102,13 +105,13 @@ func (a *serverInputAuthority) Lookup(id string) (inputauthority.Effect, error) 
 	if !found {
 		return inputauthority.Effect{}, nil
 	}
-	if !sameInputAuthorityGrant(grant, id, spec) {
+	if !a.sameGrant(grant, id, spec) {
 		return inputauthority.Effect{}, inputauthority.ErrConflict
 	}
 	return inputauthority.Effect{Found: true, Spec: spec, Status: inputGrantStatus(grant, a.s.clock())}, nil
 }
 
-func (a *serverInputAuthority) Apply(id string, spec inputauthority.Spec) error {
+func (a *serverGrantAuthority) Apply(id string, spec inputauthority.Spec) error {
 	if err := a.caller(spec.Workspace, a.s.answer.User()); err != nil {
 		return err
 	}
@@ -116,13 +119,17 @@ func (a *serverInputAuthority) Apply(id string, spec inputauthority.Spec) error 
 	if !ok || pinned != spec {
 		return inputauthority.ErrConflict
 	}
-	if a.s.faulty("input-authority-before-grant") {
+	if a.s.faulty(a.domain.faultPrefix() + "before-grant") {
 		return gate.ErrUnavailable
 	}
-	if err := a.s.admin.AddGrant(inputAuthorityGrant(id, spec)); err != nil {
+	grant, err := a.grant(id, spec)
+	if err != nil {
 		return err
 	}
-	if a.s.faulty("input-authority-after-grant") {
+	if err := a.s.admin.AddGrant(grant); err != nil {
+		return err
+	}
+	if a.s.faulty(a.domain.faultPrefix() + "after-grant") {
 		return gate.ErrUnavailable
 	}
 	return nil

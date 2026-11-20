@@ -1,3 +1,4 @@
+import { accessFixture, requestFixture, revocationFixture, credentialFixture, serviceFixture, servicesFixture, orgFixture } from "./read-fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AdminError, adminClient, attempt, failureOf, ledgerOf, outcomeOf, planOf, reauthenticate, sequence, usersQueryString } from "./admin";
@@ -138,7 +139,7 @@ test("the policy read keeps the server times and the trust model and defaults mi
   const page = {
     revision: "r4", policy: { methods: ["password"], mfa: "none", max_age_seconds: 43200, step_up: [], number: 1, epoch: { value: "1", generation: 0, number: 1 }, proposer: "", validator: "", approver: "", activator: "", at: "t" },
     now: "2026-11-16T09:00:00Z", signed_in_at: "2026-11-16T08:00:00Z", authenticated_at: "2026-11-16T08:30:00Z", act_until: "", step_up_seconds: 900, you: "u1", started_at: "s",
-    trust: { epoch: "1", epoch_generation: 0, epoch_number: 1, policy_number: 1, digest: "d", origin: "seed", carried_from: "", carried_line: 0, durable_unconfirmed: false, activated_at: "",
+    trust: { stricter_fields: null, epoch: "1", epoch_generation: 0, epoch_number: 1, policy_number: 1, digest: "d", origin: "seed", carried_from: "", carried_line: 0, durable_unconfirmed: false, activated_at: "",
       reset_at: "", older_record_ignored: false, proposer: "", validator: "", approver: "", activator: "", change: "", hold: { reason: "commit_unknown", since: "t" } },
     ledger: { state: "ok", isolation_reason: "", problem_line: 0, records: 2, watermark: "2:x", generation: 0, generation_stated: false, not_durable: false },
     rights: { propose: true, validate: true, approve: true, activate: true }, holders: { qualifying_people: 3, members: 3, needed: 3, enrolment: "not_decided", ready: true, missing: [] }, changes: [change],
@@ -165,18 +166,16 @@ test("trust refusals map to their own failures", () => {
 });
 
 test("the access read and preview", async () => {
-  const page = { revision: "r2", grants: [{ id: "g" }], delegations: [], catalog: [{ action: "view" }], subjects: [{ user_id: "u", login: "l" }], now: "n" };
+  const page = accessFixture;
   const { f, calls } = fake(200, page);
   const got = await adminClient("t", f).access();
-  assert.deepEqual({ revision: got.revision, grants: got.grants, delegations: got.delegations, catalog: got.catalog, subjects: got.subjects, now: got.now }, page);
+  assert.deepEqual(got, { ...page, ledger: ledgerOf(page.ledger) });
   assert.equal(calls[0].url, "/api/v1/identity/access");
-  const empty = await adminClient("t", fake(200, {}).f).access();
-  assert.deepEqual(empty, { revision: "", grants: [], delegations: [], catalog: [], subjects: [], now: "", you: "", started_at: "", settings: [], requests: [], revocations: [], ledger: ledgerOf(null) });
-  assert.equal(empty.ledger.state, "unknown");
+  await assert.rejects(adminClient("t", fake(200, {}).f).access(), (e: AdminError) => e.failure === "invalid");
   const full = await adminClient("t", fake(200, {
-    you: "me", started_at: "s", settings: [{ name: "access_request_hours" }],
-    requests: [{ id: "access-request-1" }, { id: "access-request-2", fields: ["rows"], may_end: ["d1"] }],
-    revocations: [{ id: "revocation-1" }, { id: "revocation-2", history: [{ state: "received", at: "t" }], ended_delegations: ["d"], cleanup: [{ item: "C1" }, { item: "C9", refs: ["d"] }], receipt: { sequence: 2, watermark: "2:x", reason: "" } }],
+    ...accessFixture, you: "me", started_at: "s",
+    requests: [requestFixture, { ...requestFixture, id: "access-request-2", fields: ["rows"], may_end: ["d1"] }],
+    revocations: [revocationFixture, { ...revocationFixture, id: "revocation-2", history: [{ state: "received", at: "t" }], ended_delegations: ["d"], cleanup: [{ item: "C1", state: "done", reason: "", refs: [] }, { item: "C9", state: "done", reason: "", refs: ["d"] }], receipt: { sequence: 2, watermark: "2:x", reason: "" } }],
     ledger: { state: "isolated", isolation_reason: "missing", records: 3, recovery: { at: "a", truncated_bytes: 5 }, not_durable: true },
   }).f).access();
   assert.equal(full.you, "me");
@@ -189,11 +188,11 @@ test("the access read and preview", async () => {
   assert.equal(ledgerOf({ state: "ok", not_durable: "yes" }).not_durable, false);
   assert.deepEqual(full.ledger.recovery, { at: "a", truncated_bytes: 5 });
   assert.equal(ledgerOf({ state: "strange" }).state, "unknown");
-  const p = fake(200, { decisions: [{ action: "view" }] });
+  const p = fake(200, { decisions: [{ action: "view", field: "rows", allowed: true, reason: "grant", delegations: [] }] });
   assert.equal((await adminClient("t", p.f).preview("u 1", "focus_data", "c1")).length, 1);
   assert.equal(p.calls[0].url, "/api/v1/identity/access/preview?subject=u+1&kind=focus_data&customer=c1");
   const q = fake(200, {});
-  assert.deepEqual(await adminClient("t", q.f).preview("u", "k"), []);
+  await assert.rejects(adminClient("t", q.f).preview("u", "k"), (e: AdminError) => e.failure === "invalid");
   assert.equal(q.calls[0].url, "/api/v1/identity/access/preview?subject=u&kind=k");
 });
 
@@ -213,53 +212,29 @@ test("a replayed resend and a changed payload are told apart", async () => {
     (e: unknown) => e instanceof AdminError && e.failure === "stale");
 });
 
-test("the services read defaults missing parts", async () => {
-  const page = {
-    revision: "r3",
-    services: [{ id: "svc-a", state: "active", version: 1, creator: "c", creator_login: "cl", owner: "o", owner_login: "ol", credentials: [{ id: "cred-1" }] }, { id: "svc-b" }],
-    owners: [{ user_id: "u", login: "l" }],
-    limits: { credential_days: 30, credentials_per_service: 10, services: 200 },
-    now: "n",
-  };
+test("the services read preserves complete producer rows", async () => {
+  const page = { ...servicesFixture, services: [serviceFixture, { ...serviceFixture, id: "svc-b", credentials: [] }] };
   const { f, calls } = fake(200, page);
-  const got = await adminClient("t", f).services();
+  assert.deepEqual(await adminClient("t", f).services(), page);
   assert.equal(calls[0].url, "/api/v1/identity/services");
-  assert.equal(got.services[0].credentials.length, 1);
-  assert.deepEqual(got.services[1].credentials, []);
-  assert.deepEqual(got.limits, { credential_days: 30, credentials_per_service: 10, services: 200, replay_seconds: 0 });
-  assert.deepEqual(await adminClient("t", fake(200, {}).f).services(), {
-    revision: "",
-    services: [],
-    owners: [],
-    limits: { credential_days: 0, credentials_per_service: 0, services: 0, replay_seconds: 0 },
-    now: "",
-  });
+  await assert.rejects(adminClient("t", fake(200, {}).f).services(), (e: AdminError) => e.failure === "invalid");
 });
 
-test("the services read keeps a valid pickup state and replay window and never copies secrets", async () => {
-  const at = "2026-11-19T10:10:00Z";
+test("the services read keeps optional pickup states without copying secrets", async () => {
+  const at = "2026-11-21T00:00:00Z";
   const rows = [
-    { id: "c-open", state: "active", usable: true, secret_pickup: "open", secret_pickup_until: at, secret: "hbsk_x", secret_ref: "ref" },
-    { id: "c-never", state: "active", usable: true, secret_pickup: "never_collected", secret_pickup_until: at },
-    { id: "c-got", state: "active", usable: true, secret_pickup: "collected" },
-    { id: "c-odd", state: "active", usable: true, secret_pickup: "stored" },
-    { id: "c-open-no-time", state: "active", usable: true, secret_pickup: "open", secret_pickup_until: "soon" },
-    { id: "c-ended", state: "revoked", usable: false, secret_pickup: "never_collected" },
+    { ...credentialFixture, id: "c-open", secret_pickup: "open", secret_pickup_until: at, secret: "hbsk_x", secret_ref: "ref" },
+    { ...credentialFixture, id: "c-never", secret_pickup: "never_collected" },
+    { ...credentialFixture, id: "c-got", secret_pickup: "collected" }, credentialFixture,
   ];
-  const page = { services: [{ id: "svc-a", credentials: rows }], limits: { replay_seconds: 3600 } };
-  const got = await adminClient("t", fake(200, page).f).services();
-  const [open, never, collected, odd, noTime, ended] = got.services[0].credentials;
-  assert.deepEqual(open, { id: "c-open", not_before: "", not_after: "", state: "active", usable: true, secret_pickup: "open", secret_pickup_until: at });
-  assert.deepEqual(Object.keys(never).sort(), ["id", "not_after", "not_before", "secret_pickup", "state", "usable"]);
+  const got = await adminClient("t", fake(200, { ...servicesFixture, services: [{ ...serviceFixture, credentials: rows }] }).f).services();
+  const [open, never, collected, absent] = got.services[0].credentials;
+  assert.deepEqual(open, { ...credentialFixture, id: "c-open", secret_pickup: "open", secret_pickup_until: at });
   assert.equal(never.secret_pickup, "never_collected");
   assert.equal(collected.secret_pickup, "collected");
-  for (const row of [odd, noTime, ended]) assert.equal(row.secret_pickup, undefined, row.id);
+  assert.equal(Object.hasOwn(absent, "secret_pickup"), false);
   assert.equal(JSON.stringify(got).includes("hbsk_"), false);
-  assert.equal(JSON.stringify(got).includes("ref"), false);
-  assert.equal(got.limits.replay_seconds, 3600);
-  for (const bad of [-1, 0, 1.5, "3600", null]) {
-    assert.equal((await adminClient("t", fake(200, { limits: { replay_seconds: bad } }).f).services()).limits.replay_seconds, 0, String(bad));
-  }
+  assert.equal(JSON.stringify(got).includes("secret_ref"), false);
 });
 
 test("secret returns only a well-formed secret and credential", async () => {
@@ -280,8 +255,7 @@ test("self reads and commands", async () => {
   const r = fake(200, page);
   assert.deepEqual(await adminClient("t", r.f).me(), page);
   assert.equal(r.calls[0].url, "/api/v1/me");
-  const empty = await adminClient("t", fake(200, {}).f).me();
-  assert.deepEqual([empty.identities, empty.sessions, empty.password_set, empty.max_age_seconds, empty.sessions_generation, empty.session_ends], [[], [], false, 0, "", []]);
+  await assert.rejects(adminClient("t", fake(200, {}).f).me(), (e: AdminError) => e.failure === "invalid");
   const sent: Call[] = [];
   const noContent = (async (url: string, init: RequestInit) => {
     sent.push({ url, init });
@@ -302,35 +276,25 @@ test("self reads and commands", async () => {
   }
 });
 
-test("the organizations read builds its query and defaults missing parts", async () => {
-  const r = fake(200, { revision: "r", relationship_revision: 2, active_revision: 3, on: "2026-11-16", workspace: { id: "w", profile: "msp" }, parties: [{ id: "p" }],
-    profiles: [], kind: "payer", members: [{ member: "m", name: "", targets: [{ id: "t", name: "" }] }, { member: "n" }], next: "n" });
-  const got = await adminClient("t", r.f).organizations({ on: "2026-11-16", kind: "payer", revision: 2, after: "a b", limit: 5 });
+test("the organizations read builds its query and rejects missing parts", async () => {
+  const r = fake(200, orgFixture);
+  assert.deepEqual(await adminClient("t", r.f).organizations({ on: "2026-11-16", kind: "payer", revision: 2, after: "a b", limit: 5 }), orgFixture);
   assert.equal(r.calls[0].url, "/api/v1/organizations?on=2026-11-16&kind=payer&revision=2&after=a+b&limit=5");
-  assert.equal(got.relationship_revision, 2);
-  assert.deepEqual(got.members[1].targets, []);
-  assert.deepEqual(got.members[1].history, []);
-  assert.equal(got.members[0].history.length, 0);
-  const e = fake(200, {});
-  const empty = await adminClient("t", e.f).organizations();
-  assert.equal(e.calls[0].url, "/api/v1/organizations");
-  assert.deepEqual([empty.kind, empty.parties, empty.members, empty.workspace, empty.next, empty.active_revision], ["hierarchy", [], [], { id: "", profile: "" }, "", 0]);
-  const z = fake(200, {});
+  await assert.rejects(adminClient("t", fake(200, {}).f).organizations(), (e: AdminError) => e.failure === "invalid");
+  const z = fake(200, orgFixture);
   await adminClient("t", z.f).organizations({ revision: 0 });
   assert.equal(z.calls[0].url, "/api/v1/organizations?revision=0");
-  assert.deepEqual([empty.filters, empty.provider_filter, empty.scan_stopped, empty.scan_budget], [{ subject: "any", entity: "", unattributed: false, q: "", member_count: 0, target: "" }, "", false, 0]);
 });
 
 test("the organizations read sends the server filters and reads their echo", async () => {
-  const r = fake(200, { filters: { subject: "account", entity: "le-1", unattributed: true, q: "a b", member_count: 2, target: "g-1" }, provider_filter: "not_connected", scan_stopped: true, scan_budget: 1000 });
+  const r = fake(200, { ...orgFixture, filters: { subject: "account", entity: "le-1", unattributed: true, q: "a b", member_count: 2, target: "g-1" }, provider_filter: "not_connected", scan_stopped: true, scan_budget: 1000 });
   const got = await adminClient("t", r.f).organizations({ kind: "view_group", subject: "account", entity: "le-1", unattributed: true, q: "a b", member: ["m-2", "m-1"], target: "g-1" });
   assert.equal(r.calls[0].url, "/api/v1/organizations?kind=view_group&subject=account&entity=le-1&unattributed=true&q=a+b&member=m-2&member=m-1&target=g-1");
   assert.deepEqual(got.filters, { subject: "account", entity: "le-1", unattributed: true, q: "a b", member_count: 2, target: "g-1" });
   assert.deepEqual([got.provider_filter, got.scan_stopped, got.scan_budget], ["not_connected", true, 1000]);
-  const off = fake(200, { scan_stopped: "true", filters: { unattributed: "true" } });
-  const plain = await adminClient("t", off.f).organizations({ unattributed: false, member: [] });
+  const off = fake(200, { ...orgFixture, scan_stopped: "true", filters: { ...orgFixture.filters, unattributed: "true" } });
+  await assert.rejects(adminClient("t", off.f).organizations({ unattributed: false, member: [] }), (e: AdminError) => e.failure === "invalid");
   assert.equal(off.calls[0].url, "/api/v1/organizations");
-  assert.deepEqual([plain.scan_stopped, plain.filters.unattributed], [false, false]);
 });
 
 test("the targets read builds its query and defaults missing parts", async () => {

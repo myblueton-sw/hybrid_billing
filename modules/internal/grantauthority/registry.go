@@ -15,6 +15,7 @@ type entry struct {
 type Registry struct {
 	mu           sync.Mutex
 	built        bool
+	mode         Mode
 	version      string
 	grantPrefix  string
 	capabilities map[string]bool
@@ -31,6 +32,9 @@ func NewRegistry(domain Domain, limits Limits, authority Authority, targets Targ
 	if limits.Capacity < 1 || limits.Capacity > 10000 || limits.Lifetime <= 0 || limits.MaxGrantValidity <= 0 || missing(authority) || missing(targets) || missing(effects) || clock == nil {
 		return nil, ErrInvalid
 	}
+	if domain.Mode != CeilingMode && domain.Mode != DirectHumanMode {
+		return nil, ErrInvalid
+	}
 	if !validID(domain.Version) || !validID(domain.GrantPrefix) || len(domain.GrantPrefix) > 64 || len(domain.Capabilities) < 1 || len(domain.Capabilities) > 32 {
 		return nil, ErrInvalid
 	}
@@ -41,7 +45,7 @@ func NewRegistry(domain Domain, limits Limits, authority Authority, targets Targ
 		}
 		capabilities[c] = true
 	}
-	return &Registry{built: true, version: domain.Version, grantPrefix: domain.GrantPrefix, capabilities: capabilities, limits: limits, authority: authority, targets: targets, effects: effects, clock: clock, records: make(map[[2]string]*entry)}, nil
+	return &Registry{built: true, mode: domain.Mode, version: domain.Version, grantPrefix: domain.GrantPrefix, capabilities: capabilities, limits: limits, authority: authority, targets: targets, effects: effects, clock: clock, records: make(map[[2]string]*entry)}, nil
 }
 
 func (r *Registry) instant() (time.Time, error) {
@@ -85,7 +89,7 @@ func (r *Registry) Propose(p Proposal) (Record, error) {
 	if !validID(p.ID) || !validID(p.Proposer) || !validText(p.Rationale, 1024) || !r.validSpec(p.Spec, r.limits.MaxGrantValidity) {
 		return Record{}, ErrInvalid
 	}
-	if p.Spec.Kind == Human && p.Spec.Recipient == p.Proposer {
+	if humanGrant(p.Spec.Kind) && p.Spec.Recipient == p.Proposer {
 		return Record{}, ErrDenied
 	}
 	r.mu.Lock()
@@ -185,7 +189,7 @@ func (r *Registry) Approve(i Intent) (Record, error) {
 		return Record{}, ErrNotFound
 	}
 	p := q.record.Proposal
-	if i.Actor == p.Proposer || (p.Spec.Kind == Human && i.Actor == p.Spec.Recipient) {
+	if i.Actor == p.Proposer || (humanGrant(p.Spec.Kind) && i.Actor == p.Spec.Recipient) {
 		return Record{}, ErrDenied
 	}
 	if q.record.Digest != i.Digest {
@@ -284,7 +288,7 @@ func (r *Registry) finish(i Intent, withdraw bool) (Record, error) {
 		return Record{}, ErrNotFound
 	}
 	p := q.record.Proposal
-	if (withdraw && i.Actor != p.Proposer) || (!withdraw && (i.Actor == p.Proposer || p.Spec.Kind == Human && i.Actor == p.Spec.Recipient)) {
+	if (withdraw && i.Actor != p.Proposer) || (!withdraw && (i.Actor == p.Proposer || humanGrant(p.Spec.Kind) && i.Actor == p.Spec.Recipient)) {
 		return Record{}, ErrDenied
 	}
 	if i.Digest != q.record.Digest || q.record.State != Pending {

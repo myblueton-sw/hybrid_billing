@@ -94,3 +94,28 @@ func TestDomainVersionSeparatesDecisionAndEffectIdentity(t *testing.T) {
 		t.Fatal("foreign effect reused")
 	}
 }
+
+func TestClosedModesAndImmutableSelection(t *testing.T) {
+	port := &domainPort{effects: map[string]Effect{}}
+	domain := Domain{Mode: Mode(2), Version: "direct-v1", GrantPrefix: "direct-", Capabilities: []string{"inspect"}}
+	if _, err := domainRegistry(domain, port); !errors.Is(err, ErrInvalid) {
+		t.Fatal("unknown mode", err)
+	}
+	domain.Mode = DirectHumanMode
+	r, err := domainRegistry(domain, port)
+	if err != nil {
+		t.Fatal(err)
+	}
+	domain.Mode = CeilingMode
+	p := domainProposal()
+	p.Spec.Kind = DirectHuman
+	p.Spec.Recipient = "carol"
+	if _, err := r.Propose(p); err != nil {
+		t.Fatal("caller changed mode", err)
+	}
+	p.ID = "legacy"
+	p.Spec.Kind = Console
+	if _, err := r.Propose(p); !errors.Is(err, ErrInvalid) {
+		t.Fatal("mixed mode", err)
+	}
+}

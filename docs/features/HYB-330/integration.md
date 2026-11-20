@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: HYB-330 consolidated diagnostic verification
 description: Records reconciliation of both published HYB-330 candidates with merged HYB-327 and verification of the resulting frontend.
-status: draft
+status: stable
 sources:
   - resource: ./implementation.md
   - resource: ./integration-evidence.json
@@ -40,7 +40,7 @@ The initial candidate's ten killed mutations and 310 browser checks are recorded
 
 Reviewer `/root/hyb310_review`: independent consolidated-source PASS, no actionable integration blocker. Inspected working source and relevant differences against a459c55 and c323abb, including shared stores, deep copies, exact grouped targets, reset behavior, monotonic read guards, synchronous command guards, terminal/notice association, cancellation provenance and preserved HYB-327 parsers. Reviewed adapted tests and clean whitespace/unresolved paths; did not execute suites or builds. Root-run checks remain separately attributed.
 
-Rendered terminology review is pending at document preparation.
+Reviewer `/root/hyb310_copy_render`: bounded consolidated TW/render PASS, no blocker. Inspected grouped-channels EN1440/KO390, grouped-events AR390, P04-open AR390 and cancellation KO390. Checked Action request references wording, canonical request targets, retained-row attribution, form references/cancellation provenance, neutral available-width layout and narrow RTL presentation. Read the root-run 404-PASS log including Plex readiness and independently matched all52 source hashes; did not execute the browser suite. Candidate-specific verification provenance remains distinct. Native-language/practitioner and full assistive-technology acceptance are not inferred.
 
 # Limits and integration boundary
 

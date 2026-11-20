@@ -863,5 +863,18 @@
     "result": "PASS",
     "read_only": true,
     "executed_suites": false
+  },
+  "independent_render_review": {
+    "reviewer": "/root/hyb310_copy_render",
+    "result": "PASS",
+    "read_only": true,
+    "executed_browser_suite": false,
+    "inspected": [
+      "grouped-channels EN1440/KO390",
+      "grouped-events AR390",
+      "P04-open AR390",
+      "cancellation KO390"
+    ],
+    "source_hashes_matched": 52
   }
 }

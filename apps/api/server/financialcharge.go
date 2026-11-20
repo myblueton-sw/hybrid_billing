@@ -101,19 +101,8 @@ func (s *Server) decideFinancialCharge(ctx commands.Context, kind string) (appro
 	if err != nil || v.Digest != ctx.Fields["digest"] || v.State != approvals.StatePending {
 		return approvals.RequestView{}, commands.Fail(commands.EvidenceStale)
 	}
-	subject, err := s.financialSubjectLocked(ctx.Workspace, ctx.Target, b.Candidate, b.CandidateDigest)
-	if err != nil {
-		return approvals.RequestView{}, financialChargeEvidenceError(err)
-	}
-	if !reflect.DeepEqual(subject, b.Subject) {
-		return approvals.RequestView{}, commands.Fail(commands.EvidenceStale)
-	}
-	policy, err := s.currentOwnedFinancialPolicyLocked(ctx.Workspace)
-	if err != nil {
-		return approvals.RequestView{}, financialChargeEvidenceError(err)
-	}
-	if policy.Revision != b.Policy || policy.Approvals != 1 {
-		return approvals.RequestView{}, commands.Fail(commands.EvidenceStale)
+	if err := s.checkFinancialChargeEvidence(ctx.Workspace, ctx.Target, b); err != nil {
+		return approvals.RequestView{}, err
 	}
 	v, err = s.approvals.Decide(ctx.Workspace, ctx.Target, approvals.Decision{Verdict: kind, Reason: ctx.Fields["reason"]}, approvals.Actor{ID: ctx.User, Kind: approvals.KindHuman})
 	if err != nil {
@@ -137,4 +126,22 @@ func financialChargeReview(v approvals.RequestView, b financialChargeBinding) ma
 		fields[kind+"_digest"] = digest
 	}
 	return fields
+}
+
+func (s *Server) checkFinancialChargeEvidence(workspace, target string, b financialChargeBinding) error {
+	subject, err := s.financialSubjectLocked(workspace, target, b.Candidate, b.CandidateDigest)
+	if err != nil {
+		return financialChargeEvidenceError(err)
+	}
+	if !reflect.DeepEqual(subject, b.Subject) {
+		return commands.Fail(commands.EvidenceStale)
+	}
+	policy, err := s.currentOwnedFinancialPolicyLocked(workspace)
+	if err != nil {
+		return financialChargeEvidenceError(err)
+	}
+	if policy.Revision != b.Policy || policy.Approvals != 1 {
+		return commands.Fail(commands.EvidenceStale)
+	}
+	return nil
 }

@@ -177,7 +177,7 @@ func (s *Server) enterHold(reason string) {
 }
 
 func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
-	if command == "financial_charge.review" || command == "financial_request_permission.inspect" {
+	if command == "financial_charge.review" || command == "financial_charge.prepare" || command == "financial_request_permission.inspect" {
 		return true
 	}
 	if command == "financial_permission.inspect" || command == "financial_authority.inspect" || command == "financial_policy.current" || command == "financial_policy.inspect" || command == "pricing_policy.prepare" || command == "pricing_policy.inspect" || command == "pricing_authority.inspect" || command == "input_authority.inspect" || command == "input.inspect" {

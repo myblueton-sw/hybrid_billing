@@ -33,6 +33,9 @@ func (h financialChargeCommand) Apply(ctx commands.Context) (commands.Outcome, e
 	if ctx.User != s.answer.User() || ctx.Workspace != s.answer.Workspace() {
 		return commands.Outcome{}, commands.Fail(commands.PermissionDenied)
 	}
+	if h.kind == "prepare" {
+		return s.prepareFinancialCharge(ctx)
+	}
 	if h.kind == "review" {
 		v, b, err := s.financialChargeRecord(ctx.Workspace, ctx.Target)
 		if err != nil {
@@ -56,11 +59,11 @@ func (h financialChargeCommand) Apply(ctx commands.Context) (commands.Outcome, e
 
 func (s *Server) financialChargeDefinitions() []commands.Definition {
 	out := []commands.Definition{}
-	for _, kind := range []string{"request", "review", "approve", "reject"} {
+	for _, kind := range []string{"request", "review", "prepare", "approve", "reject"} {
 		permission := commands.Permission{Action: gate.RequestApproval, Kind: "charge_approval"}
 		var fields []commands.Field
 		approval := kind == "approve" || kind == "reject"
-		if kind == "review" {
+		if kind == "review" || kind == "prepare" {
 			permission = commands.Permission{Action: gate.View, Kind: approvalKind, Fields: []string{approvalField}}
 		}
 		if kind == "request" {
@@ -68,12 +71,14 @@ func (s *Server) financialChargeDefinitions() []commands.Definition {
 		}
 		if approval {
 			permission.Action = gate.Approve
+		}
+		if approval || kind == "prepare" {
 			fields = []commands.Field{{Name: "digest", Type: commands.Text, Required: true}}
 		}
 		if kind == "reject" {
 			fields = append(fields, commands.Field{Name: "reason", Type: commands.Text, Required: true})
 		}
-		out = append(out, commands.Definition{ID: "financial_charge." + kind, Permission: permission, Approval: approval, Mutating: kind != "review", Rationale: kind != "review", Fields: fields, Refusals: []commands.Code{commands.EvidenceStale}, Handler: financialChargeCommand{s: s, kind: kind}})
+		out = append(out, commands.Definition{ID: "financial_charge." + kind, Permission: permission, Approval: approval, Mutating: kind != "review" && kind != "prepare", Rationale: kind != "review" && kind != "prepare", Fields: fields, Refusals: []commands.Code{commands.EvidenceStale}, Handler: financialChargeCommand{s: s, kind: kind}})
 	}
 	return out
 }
@@ -96,7 +101,7 @@ func (s *Server) financialChargeBoundary(command string, call *commands.Call) co
 	switch command {
 	case "financial_charge.request":
 		action = gate.RequestApproval
-	case "financial_charge.review":
+	case "financial_charge.review", "financial_charge.prepare":
 		action = gate.View
 	case "financial_charge.approve", "financial_charge.reject":
 		action = gate.Approve

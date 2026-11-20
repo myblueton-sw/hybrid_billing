@@ -11,6 +11,7 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 
 | Concept ID / canonical alias | Preferred KO | Preferred EN | AR candidate | Definition and forbidden implications | Current scope |
 | --- | --- | --- | --- | --- | --- |
+| input-confirmation-permission-requests / input_authority_proposals | 입력 데이터 권한 요청 | Input data permission requests | طلبات صلاحية بيانات الإدخال | Pending proposals and unresolved applications for separate console/human permissions to confirm synthetic input data or inspect its cost-protected evidence. The impact count is not data approval, financial approval, cancellation or proof of effective permission. | M01 bulk impact; independent AI TW/domain wording review PASS; rendered verification PASS; native-language acceptance pending |
 | infrastructure-composition / CostPool, B01 | 인프라 원가 구성 | Infrastructure cost composition | مكوّنات تكلفة البنية التحتية | Period-specific asset, lease/depreciation, license, power and facility cost composition and inclusion review. Not B03 allocation, sales pricing or a complete infrastructure ledger inferred from VMware rows. | B01 menu/title; AI TW design and scoped six-variant rendered review PASS; native-language acceptance pending |
 | billed-cost / BilledCost | 청구 비용 | Billed cost | التكلفة المفوترة | Collected billed source cost, not customer sales, cash payment or approved internal allocation. Preserve FOCUS alias in mapped fields/help. | U01/S04/B01 |
 | effective-cost / EffectiveCost | 실효 비용 | Effective cost | التكلفة الفعلية | Source cost with applicable amortization/discount treatment. Not merely discounted price, cash paid or financial approval. | U01/S04/B01 |
@@ -435,3 +436,48 @@ These candidates follow the actual B09 contract and module/service mapping. Inde
 ## HYB-337 shared access capability terms
 
 M03 and P02 identify the read capability as Approval review records / 승인 검토 기록 / سجلات مراجعة الاعتمادات. Its evidence field is Approval request and decision evidence / 승인 요청·결정 근거 / أدلة طلبات الاعتماد والقرارات. The request phrase means viewing recorded requests and decisions, not granting approval authority, validating source prerequisites or checking current financial eligibility. Independent AI technical-writing review passed these scoped distinctions; native-language acceptance remains pending. See [the composed plan](../../features/HYB-337/plan.md) and [verification](../../features/HYB-337/verification.md).
+
+## Input confirmation permission request evidence
+
+HYB-225 adds the M01 bulk-impact label for input_authority_proposals. Regional pages read on 2026-11-20: [Microsoft Korean access-request approval](https://learn.microsoft.com/ko-kr/entra/id-governance/entitlement-management-request-approve) and [Microsoft Arabic access-request management](https://support.microsoft.com/ar-sa/sharepoint/sharepoint-sharing-and-permissions/set-up-and-manage-access-requests). They support distinguishing a permission request from the approval decision and assigned access level. They do not prescribe the product-specific compound or certify Arabic UAE/Saudi practitioner usage. The Entra ar-sa counterpart rendered English and was not used as Arabic wording evidence.
+
+Independent refusal_review performed the scoped AI TW/domain review against BulkPrepare and bulk-copy source, recommending explicit Korean data wording. Pending counts include unresolved grant applications; the existing recheck sentence describes current governance evaluation and does not promise cancellation or successful execution. Source research and AI review do not constitute human native-language acceptance. No layout, action or financial semantics changed.
+
+
+M03 and P02 also display confirm_input as **Confirm input data / 입력 데이터 확인 / تأكيد بيانات الإدخال**, and synthetic_input_evidence as **Synthetic input evidence / 합성 입력 데이터 근거 / أدلة بيانات الإدخال الاصطناعية**. The synthetic qualifier remains visible; neither label implies financial approval or production evidence. Independent AI TW/domain re-review passed. These are display labels only: the generic grant-request capability phrase/catalog is not expanded. Real sample-session browser checks passed for all three affected screens in EN/KO/AR at 1440, 1024 and 390 pixels; human native-language acceptance remains pending.
+
+
+## Separate input confirmation and evidence inspection
+
+HYB-225 now requires an explicit confirm or inspect capability in synthetic authority proposals. M01 uses the broader **Input data permission requests / 입력 데이터 권한 요청 / طلبات صلاحية بيانات الإدخال** because the impact count covers both. M03 labels input_review_evidence as **Input comparison and reconciliation evidence / 입력 데이터 비교·대사 근거 / أدلة مقارنة بيانات الإدخال ومطابقتها**. The existing View cost action stays separate from Confirm input data. Independent AI TW/domain review accepted these candidates; actual Claude visual review passed nine scoped captures. Neither capability is added to generic grant offerings. Native-language acceptance remains pending.
+
+The service field current_eligibility describes freshly checked synthetic input-evidence publication status only. It is not current financial authority, approved pricing, ERP readiness or downstream execution permission. Historical decision receipts remain explicitly historical after evidence changes.
+
+## S06 synthetic input review
+
+The authenticated S06 screen uses **Synthetic input review / 합성 입력 데이터 확인 / مراجعة بيانات الإدخال الاصطناعية**. The qualifier is mandatory: the screen publishes synthetic input eligibility internally and does not approve billing amounts or production use. **Confirm and publish / 확인·공개 / تأكيد ونشر** is explained at the point of decision; Korean 공개 does not mean public disclosure. **Reject input / 입력 거절 / رفض الإدخال** records rejection without publishing eligibility or deleting source data.
+
+Use the existing **Workspace / 업무 공간 / مساحة العمل** label. Arabic revision labels use نسخة to distinguish document/scope versions from review activity. Period ID remains an opaque identifier; UTC timestamps, currency codes and exact amounts are directionally isolated, while free-text decision reasons retain automatic natural-language direction. Current evidence and eligibility are separate from recorded decisions. Unknown request outcomes and later refusals remain distinct; a fresh read neither cancels nor proves failure of an earlier request. Independent AI domain/TW review passed these candidates. Human native-language acceptance remains pending.
+
+## Synthetic pricing permission provisioning
+
+HYB-225 uses the following domain-reviewed display candidates in M01 impact and M03/P02 grants. They identify permissions for synthetic sample calculations; this increment does not expose pricing-policy execution or approve calculated amounts. Independent AI domain/TW review and scoped actual Claude render review passed. Human native-language acceptance remains pending.
+
+| Concept / canonical alias | Preferred EN | Preferred KO | AR candidate | Definition and forbidden implication |
+| --- | --- | --- | --- | --- |
+| propose_pricing_policy | Propose pricing policy | 가격 정책 제안 | اقتراح سياسة التسعير | Propose terms for independent review; no effective-policy or financial approval implied. |
+| approve_pricing_policy | Approve pricing policy | 가격 정책 승인 | اعتماد سياسة التسعير | Approve a policy proposal under separate authority; distinct from approval of billing amounts. |
+| revoke_pricing_policy | Revoke pricing policy | 가격 정책 철회 | إلغاء سياسة التسعير | Stop future use while preserving history; do not imply deletion. |
+| use_pricing_policy | Use pricing policy | 가격 정책 적용 | تطبيق سياسة التسعير | Select and apply approved terms; not permission to issue or approve a bill. |
+| synthetic_pricing_policy | Synthetic pricing policy | 합성 시험용 가격 정책 | سياسة تسعير اصطناعية | Synthetic test policy, not a production commercial policy. |
+| pricing_policy_evidence | Pricing policy evidence | 가격 정책 근거 | أدلة سياسة التسعير | Cost-protected policy evidence; permission to inspect does not approve the policy. |
+| pricing_authority_proposals | Pricing policy permission requests | 가격 정책 권한 요청 | طلبات صلاحية سياسة التسعير | Pending/unresolved authority proposals for console ceilings and human grants; count is not a policy or amount approval. |
+
+Policy revocation and grant revocation are intentionally separate: the former stops use of a policy; the latter withdraws a person's permission. Korean 철회 versus 회수 and Arabic إلغاء versus إبطال preserve this difference. English Revoke is shared but names the distinct object. Use is translated as applying selected terms (적용 / تطبيق), never financial approval. M03 presents the evidence field; P02 preserves its existing action/kind/scope presentation.
+
+Regional wording evidence read on 2026-11-20: [Microsoft Korean policy configuration](https://learn.microsoft.com/ko-kr/azure/api-management/set-edit-policies) uses policy configuration/application vocabulary; [Microsoft Arabic API Management concepts](https://learn.microsoft.com/ar-sa/azure/api-management/api-management-key-concepts) uses policy terminology and distinguishes management configuration from gateway behavior. These support general IT vocabulary only, not an official translation of this product's pricing compounds. The Arabic policy-overview page appeared in search but direct retrieval failed, so it supplies no claimed inspected-page evidence. Existing access-request evidence above remains applicable to permission requests. No regional consensus or native approval is claimed.
+
+
+## Synthetic pricing policy proposal impact
+
+HYB-225 adds a distinct M01 impact category: `pricing_policy_proposals` → **Pricing policy proposals** / **가격 정책 제안** / **مقترحات سياسة التسعير**. This counts pending policy terms proposed by the selected users. It excludes approved/revoked policies and remains separate from permission requests for console ceilings and human grants. The recheck statement means the proposer’s current authority is checked at approval; it does not mean automatic cancellation or approval of billing amounts. Independent AI domain/TW review accepted these display candidates; native-language and owner acceptance remain pending.

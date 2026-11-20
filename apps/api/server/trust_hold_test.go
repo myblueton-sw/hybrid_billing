@@ -15,20 +15,20 @@ import (
 
 var holdAllowed = []string{"access.reject_request", "access.request_revoke", "access.revoke_delegation", "access.withdraw_request", "bulk_revocation.add_matching", "bulk_revocation.add_targets",
 	"bulk_revocation.discard", "bulk_revocation.execute", "bulk_revocation.prepare", "identity.depart_user",
-	"identity.remove_membership", "identity.revoke_invitation", "identity.suspend_membership", "identity.suspend_user", "installation.withdraw",
+	"identity.remove_membership", "identity.revoke_invitation", "identity.suspend_membership", "identity.suspend_user", "input.reject", "input_authority.reject", "input_authority.withdraw", "installation.withdraw",
 	"integrations.letter_withdraw_dismiss", "integrations.letter_withdraw_redeliver", "integrations.plugin_disable", "integrations.plugin_stop", "integrations.plugin_withdraw",
 	"integrations.subscription_pause", "integrations.subscription_revoke", "integrations.subscription_withdraw", "integrations.subscription_withdraw_resume",
-	"recovery.lock", "recovery.withdraw", "relationship.discard", "release_evidence.withdraw", "retention.place_hold", "retention.stop_run", "retention.withdraw",
+	"pricing_authority.reject", "pricing_authority.withdraw", "pricing_policy.revoke", "recovery.lock", "recovery.withdraw", "relationship.discard", "release_evidence.withdraw", "retention.place_hold", "retention.stop_run", "retention.withdraw",
 	"service.retire", "service.revoke_credential", "service.suspend", "view_group.discard_draft"}
 
 var holdConditional = []string{"access.approve_request", "identity.change_role", "identity.set_role_period"}
 
 var holdRefused = []string{"access.request_grant", "contract.end", "contract.evidence", "contract.renew", "contract.reopen", "contract.resume", "contract.settle",
 	"contract.suspend", "contract.withdraw", "identity.create_user", "identity.invite", "identity.issue_reset_link", "identity.issue_set_link",
-	"identity.reinstate_membership", "identity.reinstate_user", "installation.approve", "installation.propose_plan", "integrations.letter_approve_dismiss",
+	"identity.reinstate_membership", "identity.reinstate_user", "input.confirm_publish", "input_authority.approve", "input_authority.propose_console", "input_authority.propose_human", "installation.approve", "installation.propose_plan", "integrations.letter_approve_dismiss",
 	"integrations.letter_approve_redeliver", "integrations.letter_request_dismiss", "integrations.letter_request_redeliver", "integrations.plugin_approve",
 	"integrations.plugin_propose", "integrations.redelivery_reapprove", "integrations.subscription_approve", "integrations.subscription_approve_resume",
-	"integrations.subscription_propose", "integrations.subscription_request_resume", "recovery.approve", "recovery.propose_unlock", "relationship.activate", "relationship.propose",
+	"integrations.subscription_propose", "integrations.subscription_request_resume", "pricing_authority.approve", "pricing_authority.propose_console", "pricing_authority.propose_human", "pricing_policy.approve", "pricing_policy.capture", "pricing_policy.propose", "recovery.approve", "recovery.propose_unlock", "relationship.activate", "relationship.propose",
 	"release_evidence.approve", "release_evidence.retire_profile", "release_evidence.retire_requirement", "retention.approve", "retention.propose_policy",
 	"retention.propose_release", "service.create", "service.issue_credential", "service.reinstate", "trust.activate", "trust.approve", "trust.cancel", "trust.propose", "trust.reject", "trust.validate",
 	"view_group.draft", "view_group.edit", "view_group.propose"}
@@ -36,7 +36,10 @@ var holdRefused = []string{"access.request_grant", "contract.end", "contract.evi
 func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	registered := []string{}
-	for id := range f.s.mutating {
+	for id, mutating := range f.s.mutating {
+		if !mutating {
+			continue
+		}
 		registered = append(registered, id)
 		if _, ok := holdTable[id]; !ok {
 			t.Errorf("registered command %s has no hold row", id)
@@ -64,7 +67,7 @@ func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 			t.Errorf("%s rows\n%v\nwant\n%v", key, got, want)
 		}
 	}
-	if len(registered) != 88 || len(holdTable) != 88 {
+	if len(registered) != 104 || len(holdTable) != 104 {
 		t.Errorf("registered %d rows %d", len(registered), len(holdTable))
 	}
 	data, err := os.ReadFile("boundary.go")

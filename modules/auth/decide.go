@@ -82,6 +82,9 @@ func (r *Registry) single(subjectID string, action Action, kind string, resource
 	if r.direct(subjectID, "", action, kind, resource, field, now) {
 		return nil, true
 	}
+	if directHuman(action) {
+		return nil, false
+	}
 	ids := make([]string, 0)
 	for id, delegation := range r.delegations {
 		if delegation.value.DelegateID == subjectID {
@@ -213,6 +216,9 @@ func (r *Registry) decide(principal Principal, request Request, now time.Time) D
 	}
 	if humanOnly(request.Action) {
 		return denied(PermissionDenied, ReasonApprovalRequired, principal)
+	}
+	if directHuman(request.Action) && !r.activeHuman(principal.SubjectID) {
+		return denied(PermissionDenied, ReasonPrincipal, principal)
 	}
 	allowed := Decision{Allowed: true, Code: Allowed, Reason: ReasonAllowed, ActorID: principal.SubjectID, ClientID: principal.ClientID, SessionID: principal.SessionID}
 	if principal.SessionID != "" {

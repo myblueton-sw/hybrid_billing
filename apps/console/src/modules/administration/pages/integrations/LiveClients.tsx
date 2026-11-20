@@ -27,7 +27,7 @@ function Grants({ l, grants }: { l: Locale; grants: ClientGrant[] }) {
     <div className="live-table">
       <table className="p02-table">
         <colgroup>
-          <col className="p02-c16" /><col className="p02-c12" /><col className="p02-c14" /><col className="p02-c18" /><col className="p02-c16" /><col className="p02-c16" /><col className="p02-c8" />
+          <col className="p02-c16" /><col className="p02-c12" /><col className="p02-c14" /><col className="p02-c16" /><col className="p02-c15" /><col className="p02-c15" /><col className="p02-c12" />
         </colgroup>
         <thead>
           <tr>
@@ -38,7 +38,7 @@ function Grants({ l, grants }: { l: Locale; grants: ClientGrant[] }) {
         <tbody>
           {grants.map((g, i) => (
             <tr key={g.id || i}>
-              <td className="p02-first"><Known l={l} value={g.id} /></td>
+              <td className="p02-first p02-wrap"><Known l={l} value={g.id} /></td>
               <td data-label={k.colAction(l)}><Code l={l} value={g.action} say={(x, v) => actionLabel(x, v) ?? k.unknownCode(x, v)} /></td>
               <td data-label={k.colDataKind(l)}><Code l={l} value={g.kind} say={(x, v) => kindLabel(x, v) ?? k.unknownCode(x, v)} /></td>
               <td data-label={k.colScope(l)}><Scope l={l} s={g.scope} /></td>

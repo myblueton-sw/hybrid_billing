@@ -453,6 +453,10 @@ func (s *Server) registerUsers() error {
 	definitions = append(append(append(definitions, s.contractDefinitions()...), s.installationDefinitions()...), s.integrationDefinitions()...)
 	definitions = append(append(definitions, s.recoveryDefinitions()...), s.retentionDefinitions()...)
 	definitions = append(append(append(definitions, s.evidenceDefinitions()...), s.bulkDefinitions()...), s.draftDefinitions()...)
+	definitions = append(definitions, s.inputAuthorityDefinitions()...)
+	definitions = append(definitions, s.pricingAuthorityDefinitions()...)
+	definitions = append(definitions, s.inputReviewDefinitions()...)
+	definitions = append(definitions, s.pricingPolicyDefinitions()...)
 	for _, d := range definitions {
 		if err := s.Register(d); err != nil {
 			return err

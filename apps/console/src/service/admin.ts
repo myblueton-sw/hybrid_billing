@@ -671,6 +671,9 @@ export class AdminError extends Error {
 }
 
 export type CommandId =
+  | "input.inspect"
+  | "input.confirm_publish"
+  | "input.reject"
   | "identity.create_user"
   | "identity.invite"
   | "identity.issue_set_link"

@@ -71,19 +71,32 @@ type candidateOriginRow struct {
 }
 
 type candidateProvenance struct {
-	Source          candidateSource      `json:"source_manifest"`
-	Lifecycle       candidateLifecycle   `json:"recorded_lifecycle"`
-	Run             string               `json:"normalization_run"`
-	Provider        string               `json:"provider"`
-	SourceVersion   string               `json:"source_version"`
-	Target          string               `json:"target"`
-	MappingRevision uint64               `json:"mapping_revision"`
-	Manifest        uint64               `json:"manifest_reference"`
-	Profile         string               `json:"profile"`
-	ProfileRevision string               `json:"profile_revision"`
-	MappingDigest   string               `json:"mapping_digest"`
-	TargetDigest    string               `json:"target_digest"`
-	Rows            []candidateOriginRow `json:"rows"`
+	InputEligibility *candidateRecordedInput `json:"recorded_input,omitempty"`
+	Source           candidateSource         `json:"source_manifest"`
+	Lifecycle        candidateLifecycle      `json:"recorded_lifecycle"`
+	Run              string                  `json:"normalization_run"`
+	Provider         string                  `json:"provider"`
+	SourceVersion    string                  `json:"source_version"`
+	Target           string                  `json:"target"`
+	MappingRevision  uint64                  `json:"mapping_revision"`
+	Manifest         uint64                  `json:"manifest_reference"`
+	Profile          string                  `json:"profile"`
+	ProfileRevision  string                  `json:"profile_revision"`
+	MappingDigest    string                  `json:"mapping_digest"`
+	TargetDigest     string                  `json:"target_digest"`
+	Rows             []candidateOriginRow    `json:"rows"`
+}
+
+type candidateRecordedInput struct {
+	Review           string `json:"review"`
+	Digest           string `json:"digest"`
+	ScopeRevision    uint64 `json:"scope_revision"`
+	SourceRun        string `json:"source_run"`
+	Document         string `json:"document"`
+	DocumentRevision int    `json:"document_revision"`
+	DocumentDigest   string `json:"document_digest"`
+	ConfirmedBy      string `json:"confirmed_by"`
+	ConfirmedAt      string `json:"confirmed_at"`
 }
 
 type candidateDetail struct {
@@ -109,7 +122,7 @@ type candidateResponse struct {
 
 func summarizeCandidate(v chargeCandidate, workspace, id string) (candidateSummary, error) {
 	in, result := v.Envelope.Input, v.Envelope.Result
-	if v.Envelope.Schema != "hb_charge_candidate_v4" || in.SourceMode != "synthetic" || in.Workspace != workspace || in.ID != id {
+	if v.Envelope.Schema != candidateSchema(in) || !validCandidateInput(in) || in.SourceMode != "synthetic" || in.Workspace != workspace || in.ID != id {
 		return candidateSummary{}, errCandidateInvalid
 	}
 	return candidateSummary{ID: in.ID, Digest: v.Digest, Customer: in.Customer, Entity: in.Entity, From: in.From, To: in.To, Total: result.Total, Currency: result.Currency,
@@ -162,6 +175,9 @@ func detailCandidate(v chargeCandidate, summary candidateSummary) candidateDetai
 	origin := v.Envelope.Input.Normalized
 	out.Provenance = candidateProvenance{Source: origin.Source, Lifecycle: origin.Lifecycle, Run: origin.Run, Provider: origin.Mapping.Provider, SourceVersion: origin.Mapping.SourceVersion, Target: origin.Mapping.Target,
 		MappingRevision: origin.MappingRevision, Manifest: origin.Manifest, Profile: origin.Profile, ProfileRevision: origin.ProfileRevision, MappingDigest: origin.MappingDigest, TargetDigest: origin.TargetDigest, Rows: []candidateOriginRow{}}
+	if input := origin.InputEligibility; input != nil {
+		out.Provenance.InputEligibility = &candidateRecordedInput{Review: input.Review.ID, Digest: input.Review.Evidence.Digest, ScopeRevision: input.Publication.Revision, SourceRun: input.SourceRun, Document: input.Document, DocumentRevision: input.DocumentRevision, DocumentDigest: input.DocumentDigest, ConfirmedBy: input.Review.Decision.Actor, ConfirmedAt: stamp(input.Review.Decision.At)}
+	}
 	for _, row := range origin.Rows {
 		out.Provenance.Rows = append(out.Provenance.Rows, candidateOriginRow{string(row.Key.Kind), row.Key.Document, row.Key.Key, row.Chunk, row.Position, row.Digest, row.Line})
 	}
@@ -243,7 +259,7 @@ func candidateReadPath(detail bool) map[string]any {
 	return map[string]any{"get": map[string]any{"operationId": operation, "x-action": string(gate.ViewCost), "x-field": candidateField, "parameters": parameters, "x-session": true, "x-csrf": true,
 		"x-scope": "whole authenticated workspace", "x-query": "all query parameters refused", "x-complete-list-bound": 1000,
 		"responses": map[string]any{
-			"200": map[string]any{"description": "Complete sorted candidate summaries, or one allowlisted detail. Exact decimal strings; synthetic rating totals, unverified approval readiness, no commands. Detail provenance.recorded_lifecycle contains contract, journal_sequence, from, to_exclusive and active segments with contract_revision. This is coverage recorded at capture, not current lifecycle, settlement, ownership or financial eligibility. No raw source cells or complete internal envelope."},
+			"200": map[string]any{"description": "Complete sorted candidate summaries, or one allowlisted detail. Exact decimal strings; synthetic rating totals, unverified approval readiness. The commands=unconnected marker describes downstream financial actions, not the separate pricing_policy.capture command. Optional provenance.recorded_input contains historical review/digest/scope_revision, source_run, document identity/revision/digest and confirmation actor/time; it does not assert current input eligibility. Detail provenance.recorded_lifecycle contains contract, journal_sequence, from, to_exclusive and active segments with contract_revision. Detail provenance.source_manifest contains the recorded source subject, manifest, content and attribution digests, source amount/currency fields, admission observations and per-row identity/artifact/digest/amount/currency. Both describe evidence recorded at capture, not current source or lifecycle validity, settlement, ownership or financial eligibility. No raw source cells or complete internal envelope."},
 			"401": readCodes(readError(commands.Unauthenticated), string(commands.Unauthenticated)),
 			"403": readCodes(readError(commands.PermissionDenied), CodeCSRF, string(commands.PermissionDenied)),
 			"404": readCodes(readError(commands.UnsupportedCommand), string(commands.UnsupportedCommand)),

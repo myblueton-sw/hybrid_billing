@@ -182,6 +182,11 @@
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
+.p02-live .p02-grants td .p02-tag {
+  display: inline-block;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
 .p02-status {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

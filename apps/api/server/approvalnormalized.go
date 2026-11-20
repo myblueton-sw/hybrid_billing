@@ -12,6 +12,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/intake"
 	"github.com/myblueton-sw/hybrid_billing/modules/normalize"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
+	"github.com/myblueton-sw/hybrid_billing/modules/pricingpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/rating"
 	"github.com/myblueton-sw/hybrid_billing/packages/primitives/decimal"
 )
@@ -56,28 +57,34 @@ type normalizedRowOrigin struct {
 }
 
 type normalizedOrigin struct {
-	Source          candidateSource
-	Lifecycle       candidateLifecycle
-	Binding         normalizedBinding
-	Run             string
-	Mapping         normalize.MappingKey
-	MappingRevision uint64
-	Manifest        uint64
-	Profile         string
-	ProfileRevision string
-	WindowFrom      string
-	WindowTo        string
-	TargetDigest    string
-	MappingDigest   string
-	Contract        organizations.ContractRevision
-	BillingProfile  organizations.BillingProfile
-	Document        organizations.DocumentKey
-	Rows            []normalizedRowOrigin
+	CaptureAuthor    string                    `json:",omitempty"`
+	InputEligibility *candidateInputProvenance `json:",omitempty"`
+	Pricing          *pricingpolicy.Record
+	Source           candidateSource
+	Lifecycle        candidateLifecycle
+	Binding          normalizedBinding
+	Run              string
+	Mapping          normalize.MappingKey
+	MappingRevision  uint64
+	Manifest         uint64
+	Profile          string
+	ProfileRevision  string
+	WindowFrom       string
+	WindowTo         string
+	TargetDigest     string
+	MappingDigest    string
+	Contract         organizations.ContractRevision
+	BillingProfile   organizations.BillingProfile
+	Document         organizations.DocumentKey
+	Rows             []normalizedRowOrigin
 }
 
 type normalizedCharges struct {
+	captureBindings map[[2]string][]byte
+	pricingPolicies *pricingpolicy.Registry
 	intake          *intake.Registry
 	sourceProfile   decimal.Profile
+	profileSpec     decimal.ProfileSpec
 	sourceChunk     int
 	sources         map[[2]string]*sourceAssembly
 	sourceArtifacts map[[2]string][2]string
@@ -90,9 +97,13 @@ type normalizedCharges struct {
 	candidates      chargeCandidates
 }
 
-func newNormalizedCharges(orgs *organizations.Registry, lifecycles *contracts.Registry, domain *sync.RWMutex, limits normalize.Limits, profile decimal.Profile, target normalize.Target, clock func() time.Time) (*normalizedCharges, error) {
+func newNormalizedCharges(orgs *organizations.Registry, lifecycles *contracts.Registry, domain *sync.RWMutex, limits normalize.Limits, spec decimal.ProfileSpec, target normalize.Target, clock func() time.Time) (*normalizedCharges, error) {
 	if orgs == nil || lifecycles == nil || domain == nil {
 		return nil, errCandidateInvalid
+	}
+	profile, err := decimal.NewProfile(spec)
+	if err != nil {
+		return nil, err
 	}
 	normal, err := normalize.NewRegistry(limits, profile, clock)
 	if err != nil {
@@ -110,7 +121,7 @@ func newNormalizedCharges(orgs *organizations.Registry, lifecycles *contracts.Re
 	if err != nil {
 		return nil, err
 	}
-	return &normalizedCharges{normal: normal, orgs: orgs, lifecycles: lifecycles, domain: domain, target: target, page: page, intake: inputs, sourceProfile: profile, sourceChunk: limits.ChunkRows, sources: make(map[[2]string]*sourceAssembly), sourceArtifacts: make(map[[2]string][2]string)}, nil
+	return &normalizedCharges{normal: normal, orgs: orgs, lifecycles: lifecycles, domain: domain, target: target, page: page, intake: inputs, sourceProfile: profile, profileSpec: spec, sourceChunk: limits.ChunkRows, sources: make(map[[2]string]*sourceAssembly), sourceArtifacts: make(map[[2]string][2]string)}, nil
 }
 
 func normalizedDigest(value any) (string, error) {
@@ -233,6 +244,14 @@ func (p *normalizedCharges) capture(workspace, runID, candidateID string, b norm
 }
 
 func (p *normalizedCharges) captureLocked(workspace, runID, candidateID string, b normalizedBinding) (chargeCandidate, error) {
+	return p.captureBoundLocked(workspace, runID, candidateID, b, nil)
+}
+
+func (p *normalizedCharges) captureBoundLocked(workspace, runID, candidateID string, b normalizedBinding, pricing *pricingpolicy.Record) (chargeCandidate, error) {
+	return p.captureEvidenceLocked(workspace, runID, candidateID, b, pricing, nil, "")
+}
+
+func (p *normalizedCharges) captureEvidenceLocked(workspace, runID, candidateID string, b normalizedBinding, pricing *pricingpolicy.Record, eligibility *candidateInputProvenance, author string) (chargeCandidate, error) {
 	cost, classes, err := p.fields(b)
 	if err != nil {
 		return chargeCandidate{}, err
@@ -268,7 +287,7 @@ func (p *normalizedCharges) captureLocked(workspace, runID, candidateID string, 
 	if err != nil {
 		return chargeCandidate{}, err
 	}
-	origin := normalizedOrigin{Source: source, Lifecycle: lifecycle, Binding: b, Run: runID, Mapping: run.Spec.Mapping, MappingRevision: run.Spec.Revision, Manifest: run.Spec.Input.Manifest,
+	origin := normalizedOrigin{CaptureAuthor: author, InputEligibility: eligibility, Pricing: pricing, Source: source, Lifecycle: lifecycle, Binding: b, Run: runID, Mapping: run.Spec.Mapping, MappingRevision: run.Spec.Revision, Manifest: run.Spec.Input.Manifest,
 		Profile: run.ProfileID, ProfileRevision: run.ProfileRevision, WindowFrom: run.Spec.Window.From.UTC().Format(time.RFC3339Nano), WindowTo: run.Spec.Window.To.UTC().Format(time.RFC3339Nano), Contract: contract, BillingProfile: profile, Document: document}
 	origin.TargetDigest, err = normalizedDigest(p.target)
 	if err != nil {

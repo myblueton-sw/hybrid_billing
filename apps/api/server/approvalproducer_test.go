@@ -210,7 +210,7 @@ func TestChargeCandidateDigestContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if made.Envelope.Schema != "hb_charge_candidate_v4" {
+	if made.Envelope.Schema != "hb_charge_candidate_v5" {
 		t.Fatal("digest schema changed")
 	}
 	encoded, err := json.Marshal(made.Envelope)

@@ -10,7 +10,6 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/normalize"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/rating"
-	"github.com/myblueton-sw/hybrid_billing/packages/primitives/decimal"
 )
 
 func normalizedFixture(t *testing.T, transform bool, alter func([]normalize.Row)) (*normalizedCharges, normalizedBinding) {
@@ -34,10 +33,6 @@ func normalizedFixtureResult(t *testing.T, transform bool, alter func([]normaliz
 func normalizedFixtureSetup(t *testing.T, transform bool, alter func([]normalize.Row)) (*normalizedCharges, normalizedBinding, sourcePacket) {
 	t.Helper()
 	input := candidateFixture()
-	profile, err := decimal.NewProfile(input.Profile)
-	if err != nil {
-		t.Fatal(err)
-	}
 	target := normalize.Target{ID: "target", CostCurrency: "currency", PeriodStart: "start", PeriodEnd: "end", Fields: []normalize.Field{
 		{Name: "billed", Kind: normalize.Cost, Cost: normalize.Billed, Format: true, Billing: true},
 		{Name: "effective", Kind: normalize.Cost, Cost: normalize.Effective, Format: true, Billing: true},
@@ -52,7 +47,7 @@ func normalizedFixtureSetup(t *testing.T, transform bool, alter func([]normalize
 		t.Fatal(err)
 	}
 	life := lifecycleTestRegistry(t, []contracts.Event{{ID: "start", Kind: contracts.Start, From: contractDay(2026, 10, 1), Revision: 1}})
-	p, err := newNormalizedCharges(orgs, life, &sync.RWMutex{}, limits, profile, target, func() time.Time { return time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC) })
+	p, err := newNormalizedCharges(orgs, life, &sync.RWMutex{}, limits, input.Profile, target, func() time.Time { return time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC) })
 	if err != nil {
 		t.Fatal(err)
 	}

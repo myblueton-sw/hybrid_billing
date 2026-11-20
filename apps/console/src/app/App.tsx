@@ -26,6 +26,8 @@ import Connections from "../modules/onboarding/pages/connections/Screen";
 import RetainedConnections from "../modules/onboarding/pages/retained-connections/Screen";
 import EvidenceScreen from "../modules/sources/pages/evidence/Screen";
 import SourceData from "../modules/sources/pages/source-data/Screen";
+import InputReview from "../modules/sources/pages/input-review/Screen";
+import { useService } from "../service/context";
 import Reconciliation from "../modules/sources/pages/reconciliation/Screen";
 import LiveImports from "../modules/sources/pages/live-imports/Screen";
 import CandidateWorkbench from "../planning/CandidateWorkbench";
@@ -62,6 +64,7 @@ import "../planning/planning.css";
 import { guardUnload } from "../shared/unload-intent";
 const personas = ["all", "OP", "AM", "PR", "BL", "AP", "CP", "AU", "CU", "IA"];
 export default function App() {
+  const serviceSession = useService();
   const [mobile, setMobile] = useState(() => window.innerWidth < 768);
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
@@ -124,6 +127,7 @@ export default function App() {
     screen?.id === "S03" &&
     audience === "admin" &&
     params.get("service") === "local";
+  const liveInputReview = screen?.id === "S06" && !!serviceSession;
   const liveReconciliation =
     screen?.id === "S06" &&
     audience === "admin" &&
@@ -184,6 +188,7 @@ export default function App() {
     liveCollectedSource ||
     liveOverview ||
     liveImports ||
+    liveInputReview ||
     liveReconciliation ||
     liveSourceData ||
     liveEvidence ||
@@ -1282,6 +1287,8 @@ export default function App() {
                       onState={onState}
                       objectId={route.objectId}
                     />
+                  ) : liveInputReview ? (
+                    <InputReview locale={l} objectId={route.objectId} onDirty={setDirty} />
                   ) : liveReconciliation ? (
                     <Reconciliation
                       locale={l}

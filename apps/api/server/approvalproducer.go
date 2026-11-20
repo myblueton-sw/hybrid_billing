@@ -76,7 +76,14 @@ func candidateText(v reflect.Value, remaining *int) bool {
 		}
 		*remaining -= v.Len()
 		return true
+	case reflect.Pointer:
+		if !v.IsNil() {
+			return candidateText(v.Elem(), remaining)
+		}
 	case reflect.Struct:
+		if v.Type() == reflect.TypeOf(time.Time{}) {
+			return true
+		}
 		for i := 0; i < v.NumField(); i++ {
 			if !candidateText(v.Field(i), remaining) {
 				return false
@@ -151,7 +158,7 @@ func decodeCandidate(record chargeRecord) (chargeCandidate, error) {
 }
 
 func (s *chargeCandidates) capture(in chargeInput) (chargeCandidate, error) {
-	if !candidateForm(in) {
+	if !candidateForm(in) || !validCandidateInput(in) {
 		return chargeCandidate{}, errCandidateInvalid
 	}
 	encoded, err := json.Marshal(in)
@@ -189,7 +196,11 @@ func (s *chargeCandidates) capture(in chargeInput) (chargeCandidate, error) {
 	if err != nil {
 		return chargeCandidate{}, err
 	}
-	envelope, err := json.Marshal(chargeEnvelope{Schema: "hb_charge_candidate_v4", Input: copied, Result: result})
+	if copied.Normalized.Pricing != nil && (!result.NoRuleHeld || len(result.Excluded) != 0) {
+		return chargeCandidate{}, errCandidateInvalid
+	}
+	schema := candidateSchema(copied)
+	envelope, err := json.Marshal(chargeEnvelope{Schema: schema, Input: copied, Result: result})
 	if err != nil {
 		return chargeCandidate{}, err
 	}
@@ -220,4 +231,14 @@ func (s *chargeCandidates) read(workspace, id string) (chargeCandidate, error) {
 		return chargeCandidate{}, errCandidateMissing
 	}
 	return decodeCandidate(record)
+}
+
+func candidateSchema(in chargeInput) string {
+	if in.Normalized.CaptureAuthor != "" {
+		return "hb_charge_candidate_v7"
+	}
+	if in.Normalized.InputEligibility != nil {
+		return "hb_charge_candidate_v6"
+	}
+	return "hb_charge_candidate_v5"
 }

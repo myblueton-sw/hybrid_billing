@@ -224,7 +224,7 @@ func (s *Server) ownedServices(targets map[string]bool) int {
 	}
 }
 
-func (s *Server) impact(targets []bulkrevoke.Target, r roster, now time.Time) bulkrevoke.Impact {
+func (s *Server) impact(targets []bulkrevoke.Target, r roster, now time.Time) (bulkrevoke.Impact, error) {
 	out := bulkrevoke.Impact{ComputedAt: now, People: len(targets)}
 	side := s.sideIndex()
 	leaving := map[string]bool{}
@@ -264,5 +264,17 @@ func (s *Server) impact(targets []bulkrevoke.Target, r roster, now time.Time) bu
 		}
 		out.Pending = append(out.Pending, bulkrevoke.PendingStore{Store: store.name, Count: count, Rechecked: store.rechecked})
 	}
-	return out
+
+	for _, store := range fallibleProposalStores {
+		tally, err := store.tally(s)
+		if err != nil {
+			return bulkrevoke.Impact{}, err
+		}
+		count := 0
+		for _, target := range targets {
+			count += tally[target.User]
+		}
+		out.Pending = append(out.Pending, bulkrevoke.PendingStore{Store: store.name, Count: count, Rechecked: store.rechecked})
+	}
+	return out, nil
 }

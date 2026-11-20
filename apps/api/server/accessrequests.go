@@ -12,6 +12,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
+	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
 )
 
 const noneFact = "none"
@@ -81,6 +82,9 @@ func (f accessFacts) covered(user string, c accesschange.Change) bool {
 }
 
 func (f accessFacts) ceilingFor(c accesschange.Change) (gate.GrantView, bool) {
+	if pricingGrantTerms(gate.Action(c.Action), c.ResourceKind, c.Fields) {
+		return gate.GrantView{}, false
+	}
 	var found gate.GrantView
 	for _, g := range f.grants {
 		if g.ClientID == ConsoleClient && g.Active && !gate.InstallationAction(g.Terms.Action) && g.Terms.Scope.WorkspaceID == f.s.bootWorkspace && fullScope(g.Terms) &&
@@ -285,7 +289,7 @@ func (h requestCommand) requestRevoke(ctx commands.Context, f accessFacts, actor
 func (f accessFacts) standing(v accesschange.View, approver string) accesschange.Standing {
 	allowed := f.eligible(approver)
 	if v.Change.Kind == accesschange.ChangeAdd {
-		allowed = allowed && f.covered(approver, v.Change) && f.covered(v.Proposer, v.Change)
+		allowed = allowed && !pricingGrantTerms(gate.Action(v.Change.Action), v.Change.ResourceKind, v.Change.Fields) && f.covered(approver, v.Change) && f.covered(v.Proposer, v.Change)
 	} else if g, ok := f.s.grantView(v.Change.Grant); ok && protectedGrant(g) {
 		allowed = false
 	}
@@ -293,6 +297,9 @@ func (f accessFacts) standing(v accesschange.View, approver string) accesschange
 }
 
 func (s *Server) applyAdd(v accesschange.View, now time.Time) (string, error) {
+	if pricingGrantTerms(gate.Action(v.Change.Action), v.Change.ResourceKind, v.Change.Fields) {
+		return "", commands.Fail(commands.PrerequisiteFailed)
+	}
 	customer := gate.All()
 	if v.Change.Customer != "all" {
 		customer = gate.One(v.Change.Customer)
@@ -434,4 +441,20 @@ func (s *Server) requestDefinitions(permission commands.Permission) []commands.D
 		{ID: "access.reject_request", Permission: permission, Mutating: true, Rationale: true, Handler: requestCommand{s: s, kind: "reject"}},
 		{ID: "access.withdraw_request", Permission: permission, Mutating: true, Rationale: true, Handler: requestCommand{s: s, kind: "withdraw"}},
 	}
+}
+
+func pricingGrantTerms(action gate.Action, kind string, fields []string) bool {
+	switch action {
+	case gate.ProposePricingPolicy, gate.ApprovePricingPolicy, gate.RevokePricingPolicy, gate.UsePricingPolicy:
+		return true
+	}
+	if kind == pricingauthority.ResourceKind {
+		return true
+	}
+	for _, field := range fields {
+		if field == pricingauthority.EvidenceField {
+			return true
+		}
+	}
+	return false
 }

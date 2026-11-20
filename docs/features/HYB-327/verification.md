@@ -27,7 +27,7 @@ Malformed reads use the existing `AdminError("invalid")` path. No backend API, b
 
 # Verification
 
-- PASS: full console `npm test`, 872 tests. After the final M02 separator correction, the focused `binding-gaps.test.tsx` suite passed all 13 tests.
+- PASS: full console `npm test`, 872 tests. The final full suite also passed after installing dependencies locally and applying the M02 separator correction; focused `binding-gaps.test.tsx` passed all 13 tests.
 - PASS: `npm run build` (TypeScript and Vite). Existing native-config compatibility and large-chunk warnings remain.
 - PASS: independent focused `admin.test.ts`, `strict-read.test.ts`, `binding-gaps.test.tsx`: 58 tests. Parser implementer additionally ran the original 848-test suite before integration.
 - PASS: actual seeded service routes M02/P02/P05 in EN/KO/AR at 1440/390 pixels. Verify named/unknown stricter fields, P02 contradictory section states, P05 zero/nonzero/unknown counters, wrapping and geometry. Final run also checks computed neutral border colors. Exact totals are in the evidence JSON.
@@ -38,7 +38,7 @@ Malformed reads use the existing `AdminError("invalid")` path. No backend API, b
 
 Host: macOS; Node v25.9.0; Chromium 153.0.8010.12. Browser runner: the existing temporary Playwright installation and explicit Chromium binary, not a new product dependency. Synthetic API seed ran locally on port 8820; Vite on 8830. Screenshots/scripts/logs are local generated evidence under `/private/tmp/hyb327-qa` and `/private/tmp/hyb327-*.log`, outside Git. No customer data or credentials are committed.
 
-Early test failures were a missing parser integration and an over-specific bdi assertion; both were corrected. Browser harness retries corrected seed activation, duplicated text selectors and a route-handler teardown race; those failed attempts are not counted as passes.
+Early test failures were a missing parser integration and an over-specific bdi assertion; both were corrected. An initial dependency symlink prevented Vite from serving canonical fonts. Replaced it with `npm ci`, waited for `document.fonts.ready`, asserted zero errored font faces, and recaptured all 24 images; earlier typography evidence is superseded. The independent reviewer re-inspected 12 final images (KO/AR mobile for all four changed screens, M02 EN/AR desktop, P02 EN desktop and P05 AR desktop) and returned PASS. The final scoped browser runs passed again. Unrelated landing-page finance-reader requests to port 8806 were unavailable; no scoped-route or font failures were observed. Browser harness retries corrected seed activation, duplicated text selectors and a route-handler teardown race; those failed attempts are not counted as passes.
 
 # Limits and handoff
 

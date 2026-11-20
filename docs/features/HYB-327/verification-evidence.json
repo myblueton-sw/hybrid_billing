@@ -30,7 +30,10 @@
     "bulk_unknown_assertions": 12,
     "invalid_reload_retry_assertions": 9,
     "screenshots": 24,
-    "unexpected_page_errors": 0
+    "unexpected_page_errors": 0,
+    "font_ready_assertions": 24,
+    "errored_font_faces": 0,
+    "initial_symlink_font_failure": "Corrected by npm ci; all images recaptured and browser scenarios rerun"
   },
   "review": {
     "design": "PASS",

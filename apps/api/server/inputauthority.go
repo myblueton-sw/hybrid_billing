@@ -73,7 +73,7 @@ func (a *serverInputAuthority) approveLocked(i inputauthority.Intent) (inputauth
 	}
 	record, err := a.registry.Approve(i)
 	if err != nil {
-		return inputauthority.Record{}, err
+		return record, err
 	}
 	if record.State == inputauthority.Applied && record.Proposal.Spec.Kind == inputauthority.Console {
 		id := record.Decision.GrantID

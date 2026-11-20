@@ -76,6 +76,7 @@ type Config struct {
 }
 
 type Server struct {
+	inputAuthority  *serverInputAuthority
 	cfg             Config
 	clock           func() time.Time
 	time            *serverClock
@@ -302,6 +303,13 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) { s.bulk, err = bulkrevoke.New(cfg.Access.bulkLimits(), s.clock); return },
 		func() (err error) {
 			s.jobs, err = jobs.NewRegistry(cleanupLimits(cfg.Access.BulkMaxMatching), s.clock)
+			return
+		},
+
+		func() (err error) {
+			if cfg.Seed == SeedSample {
+				s.inputAuthority, err = newServerInputAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000})
+			}
 			return
 		},
 		s.registerUsers,

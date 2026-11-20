@@ -126,3 +126,11 @@ test("grant capabilities preserve identity across reorder and refuse removed or 
   assert.deepEqual(grantCapabilities({ ...current, catalog: [{ ...cost, action: "issue" }, focus] }), [focus]);
   assert.equal(capabilityKey({ ...focus, fields: ["b", "a"] }), capabilityKey({ ...focus, fields: ["a", "b"] }));
 });
+
+test("synthetic input confirmation is labeled without enabling generic requests", () => {
+  for (const l of ["en", "ko", "ar"] as const) {
+    assert.ok(!accessText(l, "confirm_input", []).includes("confirm_input"));
+    assert.ok(!scopeText(l, "synthetic_input_evidence", "").includes("synthetic_input_evidence"));
+    assert.equal(accessPhrase(l, "confirm_input", "synthetic_input_evidence", []), null);
+  }
+});

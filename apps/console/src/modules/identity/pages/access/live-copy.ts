@@ -221,6 +221,7 @@ export const a = {
 
 const actions: Record<string, [string, string, string]> = {
   view: ["View", "조회", "عرض"],
+  confirm_input: ["Confirm input data", "입력 데이터 확인", "تأكيد بيانات الإدخال"],
   view_cost: ["View cost", "원가 조회", "عرض التكلفة"],
   change_customer_policy: ["Change customer policy", "고객 정책 변경", "تغيير سياسة العميل"],
   change_selling_policy: ["Change selling policy", "판매 정책 변경", "تغيير سياسة البيع"],
@@ -231,6 +232,7 @@ const actions: Record<string, [string, string, string]> = {
 };
 const kinds: Record<string, [string, string, string]> = {
   focus_data: ["Collected FOCUS data", "수집된 FOCUS 데이터", "بيانات FOCUS المجمّعة"],
+  synthetic_input_evidence: ["Synthetic input evidence", "합성 입력 데이터 근거", "أدلة بيانات الإدخال الاصطناعية"],
   charge_candidate: ["Charge calculation candidates", "과금 계산 후보", "نتائج احتساب الرسوم المبدئية"],
 };
 const fields: Record<string, [string, string, string]> = {

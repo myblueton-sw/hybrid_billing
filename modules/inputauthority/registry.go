@@ -1,6 +1,7 @@
 package inputauthority
 
 import (
+	"sort"
 	"sync"
 	"time"
 )
@@ -213,7 +214,7 @@ func (r *Registry) Approve(i Intent) (Record, error) {
 		}
 		if !at.Before(q.record.ExpiresAt) {
 			q.record.State = Expired
-			return Record{}, ErrConflict
+			return clone(q.record), ErrConflict
 		}
 	}
 	if at.Before(p.Spec.NotBefore) {
@@ -226,6 +227,7 @@ func (r *Registry) Approve(i Intent) (Record, error) {
 	if !current || !at.Before(p.Spec.NotAfter) {
 		if !retry {
 			q.record.State = Superseded
+			return clone(q.record), ErrConflict
 		}
 		return Record{}, ErrConflict
 	}
@@ -281,7 +283,7 @@ func (r *Registry) finish(i Intent, withdraw bool) (Record, error) {
 	}
 	if !at.Before(q.record.ExpiresAt) {
 		q.record.State = Expired
-		return Record{}, ErrConflict
+		return clone(q.record), ErrConflict
 	}
 	state := Rejected
 	if withdraw {
@@ -294,3 +296,22 @@ func (r *Registry) finish(i Intent, withdraw bool) (Record, error) {
 
 func (r *Registry) Reject(i Intent) (Record, error)   { return r.finish(i, false) }
 func (r *Registry) Withdraw(i Intent) (Record, error) { return r.finish(i, true) }
+
+func (r *Registry) Records(workspace string) ([]Record, error) {
+	if r == nil || !r.built || !validID(workspace) {
+		return nil, ErrInvalid
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, err := r.instant(); err != nil {
+		return nil, err
+	}
+	out := []Record{}
+	for key, q := range r.records {
+		if key[0] == workspace {
+			out = append(out, r.shown(q))
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Proposal.ID < out[j].Proposal.ID })
+	return out, nil
+}

@@ -29,3 +29,14 @@ test("the preparer sees the people on the list", () => {
   const html = renderToStaticMarkup(<PreviewBody l="en" api={api} prepared={{ detail, targets: { total: 1, next: "", rows: [{ user_id: "u1", login: "ann@example.invalid", role: "member", role_until: "", user_state: "active", membership_state: "active", installation_administrator: false }] } }} onMore={() => {}} />);
   assert.ok(html.includes("ann@example.invalid") && html.includes(b.toRevokeN("en", 1)) && !html.includes(b.ownerOnlyPeople("en")));
 });
+
+
+test("input confirmation permission impact has a localized label, count and recheck meaning", () => {
+  const labels = { en: "Input confirmation permission requests", ko: "입력 데이터 확인 권한 요청", ar: "طلبات صلاحية تأكيد بيانات الإدخال" };
+  const withInput = { ...detail, impact: { ...detail.impact, pending: [{ store: "input_authority_proposals", count: 2, rechecked: true }] } };
+  for (const l of ["en", "ko", "ar"] as Locale[]) {
+    const html = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: withInput, targets: null }} onMore={() => {}} />);
+    assert.ok(html.includes(`<dt>${labels[l]}</dt><dd><span class="m01-line">2</span><span class="m01-line">${b.rechecked(l)}</span></dd>`), l);
+    assert.ok(!html.includes("input_authority_proposals"), l);
+  }
+});

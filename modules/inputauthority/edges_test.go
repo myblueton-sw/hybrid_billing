@@ -224,3 +224,53 @@ func TestFutureGrantWaitsForExactValidityStart(t *testing.T) {
 		t.Fatal("grant start boundary refused", err)
 	}
 }
+
+func TestChangedRefusalReturnsRecordOnlyOnce(t *testing.T) {
+	for _, cause := range []string{Expired, Superseded} {
+		t.Run(cause, func(t *testing.T) {
+			w := setup(t)
+			r := propose(t, w, Console)
+			if cause == Expired {
+				w.now = r.ExpiresAt
+			} else {
+				w.target = "changed"
+			}
+			changed, err := w.registry.Approve(intent(r))
+			if !errors.Is(err, ErrConflict) || changed.Proposal.ID != "p1" || changed.State != cause {
+				t.Fatal("changed refusal missing receipt", err)
+			}
+			unchanged, err := w.registry.Approve(intent(r))
+			if !errors.Is(err, ErrConflict) || unchanged.Proposal.ID != "" {
+				t.Fatal("unchanged refusal returned change receipt", err)
+			}
+		})
+	}
+}
+
+func TestRecordsAreSortedDetachedBoundedAndFallible(t *testing.T) {
+	w := setup(t)
+	for _, id := range []string{"z", "a", "m"} {
+		p := w.proposal(Console)
+		p.ID = id
+		if _, err := w.registry.Propose(p); err != nil {
+			t.Fatal(err)
+		}
+	}
+	records, err := w.registry.Records("w1")
+	if err != nil || len(records) != 3 || records[0].Proposal.ID != "a" || records[2].Proposal.ID != "z" {
+		t.Fatal("unordered records", err)
+	}
+	records[0].Proposal.Proposer = "changed"
+	again, err := w.registry.Records("w1")
+	if err != nil || again[0].Proposal.Proposer != "alice" {
+		t.Fatal("record alias", err)
+	}
+	foreign, err := w.registry.Records("w2")
+	if err != nil || len(foreign) != 0 {
+		t.Fatal("foreign records exposed", err)
+	}
+	w.now = time.Time{}
+	if records, err := w.registry.Records("w1"); !errors.Is(err, ErrInvalid) || records != nil {
+		t.Fatal("enumeration failure masqueraded as records", err)
+	}
+}

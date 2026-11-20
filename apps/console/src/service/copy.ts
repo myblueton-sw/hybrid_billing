@@ -109,7 +109,7 @@ export const c = {
       "لم تُؤكَّد كلمة المرور، لذا لم يكتمل هذا الطلب. أعد المحاولة للمتابعة.",
     ),
   ended: (l: Locale) =>
-    t(l, "Your session has ended. Sign in again.", "세션이 종료되었습니다. 다시 로그인해 주세요.", "انتهت جلستك. سجّل الدخول مرة أخرى."),
+    t(l, "Sign in again.", "다시 로그인해 주세요.", "سجّل الدخول مرة أخرى."),
   show: (l: Locale) => t(l, "Show", "표시", "إظهار"),
   hide: (l: Locale) => t(l, "Hide", "숨기기", "إخفاء"),
   showName: (l: Locale, field: string) => t(l, `Show ${field}`, `${field} 표시`, `إظهار ${field}`),

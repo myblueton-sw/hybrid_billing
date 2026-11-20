@@ -151,7 +151,7 @@ func TestPostRoutesAreClassified(t *testing.T) {
 			t.Errorf("route %s classified %v", path, step)
 		}
 	}
-	if len(found) != 8 || len(postRoutes) != 8 {
+	if len(found) != 9 || len(postRoutes) != 9 {
 		t.Errorf("routes %d listed %d", len(found), len(postRoutes))
 	}
 	f := setup(t, SeedSample).ready()
@@ -162,7 +162,7 @@ func TestPostRoutesAreClassified(t *testing.T) {
 	before := f.s.counter
 	got := f.selfPost(a, "sessions/end", `{"session":"others"}`)
 	refused(t, "sessions/end", got)
-	if got.body["request_id"] != got.header.Get("X-Request-Id") || got.body["request_id"] == "" || f.s.counter != before || len(f.me(a).body["sessions"].([]any)) != 2 {
+	if got.body["request_id"] != got.header.Get("X-Request-Id") || got.body["request_id"] == "" || f.s.counter != before || len(f.testSessionSnapshot(a)["sessions"].([]any)) != 2 {
 		t.Errorf("sessions/end refusal %+v", got)
 	}
 	if f.reauth(a, pw).status != 204 {

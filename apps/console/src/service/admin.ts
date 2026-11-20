@@ -1,3 +1,5 @@
+import type { SessionRow } from "./session-query";
+import { sessionQueryClient } from "./session-query";
 import { grantsOf, delegationsOf, catalogOf, subjectsOf, settingsOf as accessSettingsOf, requestsOf, revocationsOf, previewsOf } from "./access-read";
 import { credentialOf, servicesPageOf, selfPageOf } from "./account-read";
 import { organizationsPageOf } from "./organization-read";
@@ -297,9 +299,10 @@ export type SelfPage = {
   identities: { method: string; login: string }[];
   password_set: boolean;
   installation_administrator: boolean;
-  sessions: SelfSession[];
+  current_session: SessionRow;
+  recorded_session_count: number;
+  accepted_operation_count: number;
   sessions_generation: string;
-  session_ends: SelfEnd[];
   idle_minutes: number;
   max_age_seconds: number;
   signed_in_at: string;
@@ -891,6 +894,13 @@ export async function reauthenticate(csrf: string, password: string, f: Fetch = 
 }
 
 export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), stepUp?: StepUp) {
+  let authenticationLost = false;
+  const authenticationListeners = new Set<() => void>();
+  const signalAuthenticationLoss = () => {
+    if (authenticationLost) return;
+    authenticationLost = true;
+    for (const listener of authenticationListeners) listener();
+  };
   async function exchange(path: string, init: RequestInit, request: string): Promise<{ r: Response; body: Record<string, unknown> }> {
     let r: Response;
     try {
@@ -903,6 +913,7 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     } catch {
       throw new AdminError("unavailable");
     }
+    if (r.status === 401) signalAuthenticationLoss();
     let body: Record<string, unknown> = {};
     try {
       const parsed: unknown = await r.json();
@@ -910,15 +921,20 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     } catch {
       body = {};
     }
+    if (!r.ok && failureOf(r.status, body).failure === "unauthenticated") signalAuthenticationLoss();
     return { r, body };
   }
   async function send(path: string, init: RequestInit, request: string): Promise<Record<string, unknown>> {
+    if (authenticationLost) throw new AdminError("unauthenticated");
     let { r, body } = await exchange(path, init, request);
+    if (r.status === 401) throw failureOf(r.status, body);
     if (!r.ok && init.method === "POST" && body.code === "reauthentication_required" && stepUp) {
+      if (authenticationLost) throw new AdminError("unauthenticated");
       if (!(await stepUp())) {
         const challenge = failureOf(r.status, body);
         throw new AdminError("reauth_cancelled", [], 0, "", challenge.code, challenge.request);
       }
+      if (authenticationLost) throw new AdminError("unauthenticated");
       ({ r, body } = await exchange(path, init, request));
     }
     if (r.ok) return body;
@@ -930,6 +946,12 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     throw failed;
   }
   return {
+    subscribeAuthenticationLoss(listener: () => void) {
+      authenticationListeners.add(listener);
+      if (authenticationLost) listener();
+      return () => { authenticationListeners.delete(listener); };
+    },
+    ...sessionQueryClient(send, () => attempt().request, validatedRead),
     async users(query: UsersQuery = {}): Promise<UsersPage> {
       const body = await send("/identity/users?" + usersQueryString(query), { method: "GET" }, attempt().request);
       const methods = (body.auth_methods ?? {}) as Record<string, unknown>;

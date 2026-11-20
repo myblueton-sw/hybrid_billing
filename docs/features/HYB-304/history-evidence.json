@@ -1,0 +1,297 @@
+{
+  "type": "VerificationEvidence",
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "base_commit": "114dc62f77cd67e8db73f74a6ab99eaca2c8246c",
+  "scope": "Focused bounded inherited-history correction; incomplete M05 and parent",
+  "source_binding": "Sources identify the snapshot committed with this manifest. Earlier UI evidence remains frozen at114dc62.",
+  "sources": [
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/AccessHistory.tsx",
+      "sha256": "d97fa8a768f867e0614d2a0a3cf74504fd605dcd9cc1ef841f6305d3ba642e1f",
+      "bytes": 12476
+    },
+    {
+      "path": "apps/console/tools/my-security-history-qa.mjs",
+      "sha256": "c4edbac664d839c2149f5fa7cf04e070793e4aebdb6d2ac179912bb46764df5f",
+      "bytes": 10138
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/scoped-read.ts",
+      "sha256": "63b652674de037b453c672640a557c1befafe88ae72ded5adbbb65513809ce0f",
+      "bytes": 791
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/history-copy.ts",
+      "sha256": "6110fe725b9d0f773752857f9526e8b86c4789d299235e688056cefad16c1849",
+      "bytes": 19121
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/query-copy.ts",
+      "sha256": "3d0027ef7a25e5e3dfcb82b7bfbca6db098ddd0de94f53426d4936a400cebcf2",
+      "bytes": 10865
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-history-before/run-rxY852/report.json",
+      "sha256": "d2a1baef01bc70cdd23c85e47301562f72d97c21d40dd1f55415ea83fe918d00",
+      "bytes": 594
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/report.json",
+      "sha256": "1a622823e24f01e29d928e6df847900b29a5a37e8f695c98fd7f372b171d57d8",
+      "bytes": 4978
+    },
+    {
+      "path": "/private/tmp/hb304-history-before.log",
+      "sha256": "259ae663e0d2b147aadd146ee8ff0061ddc5c276b85c03261ebf4852f09342d1",
+      "bytes": 882
+    },
+    {
+      "path": "/private/tmp/hb304-history-final.log",
+      "sha256": "69b29265550505ab22eb6800966ca3f2af78f2d842ca46fad972c2f3f7e19701",
+      "bytes": 880
+    },
+    {
+      "path": "/private/tmp/hb304-history-typecheck.log",
+      "sha256": "d48f1a41dbe54457906c5003fa315d7f9ee6f40a5d6423f98516a51a986864de",
+      "bytes": 59
+    },
+    {
+      "path": "/private/tmp/hb304-history-tests.log",
+      "sha256": "767b92ec6aa5d5bc22041bc90f5c48cf135333a88ef92ff5f113f4de9dc26244",
+      "bytes": 94740
+    },
+    {
+      "path": "/private/tmp/hb304-history-build.log",
+      "sha256": "7d7377d78279169847988d053a7344925382fafbff5d1b1a041564ef37452a43",
+      "bytes": 38499
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp.log",
+      "sha256": "d6c6f1bec451ac500a4fe02a7cc7b9a939a15422fc78c99e0c080d2ffa2ff1c9",
+      "bytes": 41
+    },
+    {
+      "path": "/private/tmp/hb304-ui-history-matrix.mjs",
+      "sha256": "adeac4e72da9e7ead138da37cc83722d654ee411e47db57df33c35dab888b184",
+      "bytes": 6103
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/ko-1024.png",
+      "sha256": "98e9282e4e4593bb716ad27a2ea6c8729e3c41fb494c74960b15dafda7226193",
+      "bytes": 76517
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/ko-1280.png",
+      "sha256": "770369e0677e5ab6f75e5b83f4c2f935f4cb9126a0c965b4e33b3011e39505be",
+      "bytes": 78129
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/en-390.png",
+      "sha256": "b6d6ed1f53310a5857a4b5ecaa5fa1e6907d1bd3c9ca52b28d7ec7fd792f3691",
+      "bytes": 71249
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/ko-1440.png",
+      "sha256": "5571be18c4afc19f0aff45851c9da5292650b0ff092e6ce913a2b2ff7d056f09",
+      "bytes": 80334
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/en-1280.png",
+      "sha256": "439f73b1a9ed2f25b3cffbb03e55b8cf8e0b60163116aabac6c4cead4f96dd95",
+      "bytes": 79121
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/ko-390.png",
+      "sha256": "e1e833681b43cc8c400254e70004cce8d4acd6b3d0830bc1c677db354b4ad3e5",
+      "bytes": 71040
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/ar-1440.png",
+      "sha256": "3375e0011107dc7b40d8554a4cec13bbebbc55e85c7e05c651d5f07f9af4573b",
+      "bytes": 74667
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/ar-390.png",
+      "sha256": "4c23b3c71cbb81ed2ed5bc11129f2f2fd1720b8b9df1656b87c037d694c5a0f0",
+      "bytes": 64846
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/ar-1280.png",
+      "sha256": "3818b40eb8976d7e6d82d99459c6d584d9e86101371be69f508da7580e3be3a8",
+      "bytes": 72900
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/en-1440.png",
+      "sha256": "8094073d067601bf55700a2cddc6cdbdcf4b8684598a55a127c5c5da1f85c6b0",
+      "bytes": 81321
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/ar-1024.png",
+      "sha256": "8c17c52c00fc3e0a1b2ac88491c5da53ca88aae42a928f1b8837e857bfa06ab8",
+      "bytes": 70828
+    },
+    {
+      "path": "/private/tmp/hb304-history-final/run-D0cgox/en-1024.png",
+      "sha256": "d87841be5b2e8add0e6a74911506aacc16c992372dc93651c395ec08ee907f3f",
+      "bytes": 78523
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-en-1440.png",
+      "sha256": "2dade13dffea30c8665dd0d2c62ff15e622e72fee5717794a70b376e80fdc1da",
+      "bytes": 846783
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-ar-1280.png",
+      "sha256": "f0185146e2aef4f4344f3a59be1ac0b09de34e27fad60cca4d862ea36c265317",
+      "bytes": 984296
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-ar-1024.png",
+      "sha256": "fbb624f45ea683886a90f6129936ceef3a5388e6c11e8e36f003325f53e665dd",
+      "bytes": 818842
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-ar-1440.png",
+      "sha256": "df722fcfc00e1438ffd20dcc6d094030984689e07528d105a41211e43c77e353",
+      "bytes": 848204
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-en-390.png",
+      "sha256": "703101b780c26e2d5d8d2f400ac6b4f6a9a0791954368a5209f07e83fcc511fd",
+      "bytes": 970134
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/report.json",
+      "sha256": "f69beebc55fb806865ebf930600d24f36d0ba61fb8750d40d0a4752f6e50dcde",
+      "bytes": 13632
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-en-1024.png",
+      "sha256": "87f2772a5d60fcd97a23a2ccc3530c245c525498b2ae833cfb6e871cde742b20",
+      "bytes": 849110
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-en-1280.png",
+      "sha256": "40871e7239c97c64aa2ec41b34e41919d5ac5332385ed104e714d6a965bf842f",
+      "bytes": 1030738
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-ar-1440.png",
+      "sha256": "a5355554cf3b42fbe3b2ca85a7e86e9e7af477560eaee42125659d0361bf49e6",
+      "bytes": 899793
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-en-1280.png",
+      "sha256": "f66528b87c3978c8bb77ccc4e040762224cddf758662519a12770c40988d8508",
+      "bytes": 1087212
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-en-1024.png",
+      "sha256": "2978a44543bbb86de44e362344f0b5d3efe11f5bf53be5c3f1b1a8c642453a84",
+      "bytes": 831476
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-ar-390.png",
+      "sha256": "99ed68fa86d86ab377a7a66ab51300853ee70991ed9b87d6cae55058110993a3",
+      "bytes": 961980
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-en-1440.png",
+      "sha256": "2194b86180c10f0e37b8b24a20d0126a3e8566b6b37ddd1bd1c3671e1cb8b28c",
+      "bytes": 906413
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-ko-390.png",
+      "sha256": "cabc8676a182d262ce75e5ef4e6d0e640f969b3d1db78e9450aef422ab8efb02",
+      "bytes": 899802
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-ar-1024.png",
+      "sha256": "bd2ec8f657e2ba89675fb96973d05c072ec9b596745eafbd2c31bd87c2bd3d4e",
+      "bytes": 805995
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-ar-1280.png",
+      "sha256": "3baec94b37552dd6125a2c5f46ace4b7a6ced4dfd55cdeb089deffeeefed6f5f",
+      "bytes": 1030893
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-ko-1024.png",
+      "sha256": "b0c9a21858b8e6bc6834966093d7c99945cc6dd3a744f6811115e92800fc9e8a",
+      "bytes": 793025
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-ko-1280.png",
+      "sha256": "a6546e31b27b548bb4bf127da094e6661439cd23fc1500e8ee4c7a4eedfb2cea",
+      "bytes": 971143
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-en-390.png",
+      "sha256": "580d58b014f615372a09d0e456bba9913db403d26a9608696f8a9a39517ac818",
+      "bytes": 987530
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-ko-1440.png",
+      "sha256": "b03e56bee4ddffe74aa7010c99006ceda137047bd2a58ce300b4f68980967586",
+      "bytes": 851335
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-ko-1440.png",
+      "sha256": "d0a655b1f01ac50c6eb721eef4c1b807b142dc747b440093a362c2563ec7d24f",
+      "bytes": 808687
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-ko-390.png",
+      "sha256": "7cb2cf710a36369aa8d6dfb7d12466725584435f43c3368cab337864387000e4",
+      "bytes": 872275
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/selection-ko-1280.png",
+      "sha256": "42d9b26f0a1918442b02f18eac2f0b80e9a27dcc0df62ea81fbd08064b7b1e4d",
+      "bytes": 934069
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-ko-1024.png",
+      "sha256": "6f65d2a9e344f70c41c35292546973efd06d90eb6144e9045f39085e4497671f",
+      "bytes": 801974
+    },
+    {
+      "path": "/private/tmp/hb304-history-fullapp/sessions-ar-390.png",
+      "sha256": "d5be63af121d5c230db6924ddba624127351c602c23c6efb95f24977cbf19753",
+      "bytes": 935791
+    }
+  ],
+  "results": {
+    "before": "FAIL: older page replaces prior rows",
+    "component_browser": {
+      "passed": 61,
+      "failed": 0
+    },
+    "console_tests": {
+      "passed": 942,
+      "failed": 0
+    },
+    "typescript_build": "PASS; existing bundle-size warning",
+    "actual_app_matrix": {
+      "passed": 181,
+      "failed": 0,
+      "exceptions": 0
+    }
+  },
+  "review": {
+    "source": "Separate read-only hyb310_review focused PASS, report hashes verified; no reviewer test execution",
+    "terminology": "Separate read-only hyb310_copy_render focused PASS, final3hashes verified; isolated screenshots not full-app visual certification"
+  },
+  "remaining": [
+    "confirmed-set exclusion tag",
+    "effective query/preparation limits and expiry disclosure",
+    "advanced M05 scenarios",
+    "critical coverage/mutation evidence",
+    "final integrated review and authorized PR merge",
+    "remaining M04/M03/M02",
+    "native/Claude/full AT/owner acceptance"
+  ]
+}

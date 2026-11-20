@@ -4,6 +4,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
+	"strconv"
 )
 
 func (s *Server) retryModuleEnd(v identity.Verifier) error {
@@ -73,11 +74,9 @@ func (s *Server) logoutSession(found session) {
 	s.dir.dropPickups(func(p pickup) bool { return p.session == found.verifier })
 }
 
-func (s *Server) takeManifest(found session, handles []string, others bool) manifestResult {
-	return s.sessions.endManifest(found.login, found.verifier, handles, others)
+func (s *Server) cleanSession(v identity.Verifier) {
+	s.closeSession(v, accesshistory.CauseBulkRevocation)
 }
-
-func (s *Server) cleanSession(v identity.Verifier) { s.closeSession(v, accesshistory.CauseBulkRevocation) }
 
 func identityCause(reason identity.Reason) string {
 	switch reason {
@@ -96,4 +95,61 @@ func policyCause(reason string) string {
 		return ""
 	}
 	return accesshistory.CauseAccessChanged
+}
+
+func (s *Server) takeSessionRecord(found session, record *sessionRecord, begin func(int) bool) (manifestResult, bool) {
+	store := s.sessions
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	own := store.byID[found.verifier]
+	if own == nil || own.owner != record.owner || own.handle != record.caller {
+		return manifestResult{}, false
+	}
+	index := store.owners[record.owner]
+	if index == nil {
+		return manifestResult{}, false
+	}
+	matches := func(row *session) bool {
+		position, known := record.positions[row.handle]
+		return known && record.targets[position].verifier == row.verifier
+	}
+	held := 0
+	if record.op.kind == kindOthers {
+		for _, row := range index.rows {
+			if row.verifier != found.verifier && !matches(row) {
+				held++
+			}
+		}
+	}
+	if !begin(2*len(record.targets) + held) {
+		return manifestResult{}, true
+	}
+	out := manifestResult{ok: true, before: store.token[found.login], scopeBefore: strconv.FormatUint(index.version, 10), ended: make([]session, 0, len(record.targets)), gone: []string{}, notIncluded: make([]session, 0, held)}
+	for _, row := range index.rows {
+		if row.verifier == found.verifier {
+			continue
+		}
+		if matches(row) {
+			out.ended = append(out.ended, *row)
+		} else if record.op.kind == kindOthers {
+			out.notIncluded = append(out.notIncluded, *row)
+		}
+	}
+	for _, target := range record.targets {
+		current := index.handles[target.Row.Handle]
+		if current == nil || current.verifier != target.verifier {
+			out.gone = append(out.gone, target.Row.Handle)
+		}
+	}
+	for _, row := range out.ended {
+		store.remove(row.verifier)
+	}
+	if len(out.ended) > 0 {
+		store.changed(found.login)
+	}
+	out.after = store.token[found.login]
+	if current := store.owners[record.owner]; current != nil {
+		out.scopeAfter = strconv.FormatUint(current.version, 10)
+	}
+	return out, true
 }

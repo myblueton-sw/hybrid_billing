@@ -15,6 +15,8 @@ type snapshot struct {
 
 type manifestResult struct {
 	ok          bool
+	scopeBefore string
+	scopeAfter  string
 	ended       []session
 	gone        []string
 	notIncluded []session
@@ -51,50 +53,6 @@ func (s *sessions) generation(login string) uint64 {
 	return s.gen[login]
 }
 
-func (s *sessions) endManifest(login string, caller identity.Verifier, confirmed []string, others bool) manifestResult {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	out := manifestResult{before: s.token[login]}
-	if own := s.byID[caller]; own == nil || own.login != login {
-		return out
-	}
-	out.ok = true
-	want := map[string]bool{}
-	for _, h := range confirmed {
-		want[h] = true
-	}
-	present := map[string]bool{}
-	for v, found := range s.byID {
-		if found.login != login || v == caller {
-			continue
-		}
-		h := handleOf(v)
-		switch {
-		case want[h]:
-			present[h] = true
-			out.ended = append(out.ended, *found)
-		case others:
-			out.notIncluded = append(out.notIncluded, *found)
-		}
-	}
-	for _, found := range out.ended {
-		s.remove(found.verifier)
-	}
-	if len(out.ended) > 0 {
-		s.changed(login)
-	}
-	for _, h := range confirmed {
-		if !present[h] {
-			out.gone = append(out.gone, h)
-		}
-	}
-	sort.Strings(out.gone)
-	ordered(out.ended)
-	ordered(out.notIncluded)
-	out.after = s.token[login]
-	return out
-}
-
 func (s *sessions) deny(v identity.Verifier, login string, at time.Time) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -106,6 +64,11 @@ func (s *sessions) deny(v identity.Verifier, login string, at time.Time) bool {
 		return false
 	}
 	s.denied[v] = denial{login: login, at: at}
+	if found := s.byID[v]; found != nil {
+		if index := s.owners[found.owner]; index != nil {
+			s.indexChanged(index)
+		}
+	}
 	return true
 }
 
@@ -120,6 +83,11 @@ func (s *sessions) release(v identity.Verifier) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.denied, v)
+	if found := s.byID[v]; found != nil {
+		if index := s.owners[found.owner]; index != nil {
+			s.indexChanged(index)
+		}
+	}
 }
 
 func (s *sessions) deniedOf(login string) []identity.Verifier {
@@ -164,4 +132,10 @@ func (s *sessions) present(v identity.Verifier) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.byID[v] != nil
+}
+
+func (s *sessions) generationToken(login string) string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.token[login]
 }

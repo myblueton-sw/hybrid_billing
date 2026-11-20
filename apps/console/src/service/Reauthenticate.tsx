@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { Locale } from "../shared/types";
 import { reauthenticate } from "./admin";
 import { c } from "./copy";
@@ -14,16 +14,24 @@ export function Reauthenticate({ locale: l, login, csrf, opener, onDone, onSigne
   const dialog = useRef<HTMLDialogElement>(null);
   const field = useRef<HTMLInputElement>(null);
   const busy = useRef(false);
-  const finish = useRef(settleOnce(onDone));
+  const scope = useMemo(() => ({ csrf, active:true }), [csrf]);
+  const currentScope = useRef(scope);
+  currentScope.current = scope;
+  const valid = () => scope.active && currentScope.current === scope;
+  const finish = useMemo(() => settleOnce(onDone), [scope]);
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<Problem>("");
   const [message, setMessage] = useState<Message>("");
   const [status, setStatus] = useState("");
   const clear = () => { if (field.current) field.current.value = ""; };
+  useLayoutEffect(() => {
+    scope.active = true;busy.current = false;setPending(false);setProblem("");setMessage("");setStatus("");clear();
+    return () => { scope.active = false;clear(); };
+  }, [scope]);
   const restore = () => {
     let tries = 0;
     const go = () => {
-      if (!opener || !opener.isConnected) return;
+      if (!valid() || !opener || !opener.isConnected) return;
       if (opener.matches(":disabled") && tries++ < 60) {
         requestAnimationFrame(go);
         return;
@@ -33,10 +41,11 @@ export function Reauthenticate({ locale: l, login, csrf, opener, onDone, onSigne
     go();
   };
   const close = (ok: boolean) => {
+    if (!valid()) return;
     clear();
     dialog.current?.close();
     restore();
-    finish.current(ok);
+    finish(ok);
   };
   useEffect(() => {
     const d = dialog.current;
@@ -66,8 +75,10 @@ export function Reauthenticate({ locale: l, login, csrf, opener, onDone, onSigne
     const typing = document.activeElement === field.current;
     try {
       await reauthenticate(csrf, password);
+      if (!valid()) return;
       close(true);
     } catch (err) {
+      if (!valid()) return;
       const outcome = outcomeOf(err);
       if (outcome.kind === "wrong") {
         setProblem("wrong");
@@ -75,12 +86,13 @@ export function Reauthenticate({ locale: l, login, csrf, opener, onDone, onSigne
       } else if (outcome.kind === "signed-out") {
         clear();
         dialog.current?.close();
-        finish.current(false);
         onSignedOut();
+        finish(false);
       } else {
         setMessage(outcome.kind === "changed" ? "changed" : "failed");
       }
     } finally {
+      if (!valid()) return;
       clear();
       busy.current = false;
       setPending(false);

@@ -18,11 +18,7 @@ import (
 
 func (f world) othersBody(a actor) string {
 	f.t.Helper()
-	page := f.me(a)
-	if page.status != 200 {
-		f.t.Fatalf("me %+v", page)
-	}
-	return othersOf(page.body, nil)
+	return othersOf(f.testSessionSnapshot(a), nil)
 }
 
 func othersOf(page map[string]any, skip map[string]bool) string {
@@ -189,7 +185,7 @@ func TestSelfEndHoldReportsNewcomersAndGone(t *testing.T) {
 	if fmt.Sprint(cleanup["done"], cleanup["already_ended"], cleanup["failed"], cleanup["pending"]) != "1 0 0 0" {
 		t.Errorf("cleanup %v", cleanup)
 	}
-	ends := f.me(a).body["session_ends"].([]any)
+	ends := f.operationRead(a, "?limit=100").body["rows"].([]any)
 	if len(ends) != 1 || ends[0].(map[string]any)["operation"] != got.body["operation"] {
 		t.Errorf("read ends %v", ends)
 	}
@@ -341,7 +337,7 @@ func TestSessionListOrder(t *testing.T) {
 	sort.Strings(same)
 	want := []string{handleOfActor(a), handleOfActor(d), same[0], same[1]}
 	got := []string{}
-	for _, row := range f.me(a).body["sessions"].([]any) {
+	for _, row := range f.testSessionSnapshot(a)["sessions"].([]any) {
 		got = append(got, row.(map[string]any)["handle"].(string))
 	}
 	if fmt.Sprint(got) != fmt.Sprint(want) {
@@ -372,7 +368,7 @@ func TestOpenAPISelfPaths(t *testing.T) {
 	}
 	read := self["/me"].(map[string]any)["get"].(map[string]any)
 	want := map[string]map[string]string{
-		"post": {"401": "unauthenticated|[unauthenticated]|obtain_new_access_answer", "403": "reauthentication_required|[csrf_refused reauthentication_required]|reauthenticate",
+		"post": {"404": "unsupported_command|[unsupported_command]|none", "409": "revision_conflict|[revision_conflict]|inspect_current_state", "429": "rate_limited|[rate_limited]|retry_later", "401": "unauthenticated|[unauthenticated]|obtain_new_access_answer", "403": "reauthentication_required|[csrf_refused reauthentication_required]|reauthenticate",
 			"413": "body_too_large|[body_too_large]|none", "422": "invalid_request|[invalid_request prerequisite_failed]|correct_request",
 			"500": "internal_error|[internal_error]|none", "503": "authority_unavailable|[authority_unavailable]|retry_later"},
 		"get": {"401": "unauthenticated|[unauthenticated]|obtain_new_access_answer", "403": "csrf_refused|[csrf_refused]|none",
@@ -416,7 +412,7 @@ func TestOpenAPISelfPaths(t *testing.T) {
 		}
 	}
 	props := read["responses"].(map[string]any)["200"].(map[string]any)["content"].(map[string]any)["application/json"].(map[string]any)["schema"].(map[string]any)["properties"].(map[string]any)
-	if props["sessions_generation"] == nil || props["session_ends"] == nil {
+	if props["sessions_generation"] == nil || props["current_session"] == nil || props["recorded_session_count"] == nil || props["accepted_operation_count"] == nil || props["sessions"] != nil || props["session_ends"] != nil {
 		t.Errorf("read %v", props)
 	}
 	schema := selfEndSchema()["properties"].(map[string]any)

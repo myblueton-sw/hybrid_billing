@@ -158,6 +158,9 @@ func (s *Server) access(found session) (identity.Answer, commands.Code) {
 		if s.sessions.isDenied(found.verifier) || !s.sessions.present(found.verifier) {
 			return identity.Answer{}, commands.Unauthenticated
 		}
+		if _, idle, peekErr := s.identity.Boundary().Peek(found.verifier, found.workspace); peekErr == nil {
+			s.sessions.touch(found.verifier, idle)
+		}
 		return answer, ""
 	case errors.Is(err, identity.ErrUnavailable):
 		return answer, commands.AuthorityUnavailable

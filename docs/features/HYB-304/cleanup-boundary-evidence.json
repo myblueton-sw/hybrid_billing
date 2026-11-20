@@ -1,0 +1,296 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "b3295903465e5a437f22df6fcf75922a03c7a101",
+  "scope": "cleanup_admission_and_isolated_entropy_contracts",
+  "production_unchanged": true,
+  "checks": {
+    "new_groups": 5,
+    "scoped": "PASS5groups1.231s; finalfour0.767s",
+    "race": "PASS14groups7.073s",
+    "full_server_short": "ok  \tgithub.com/myblueton-sw/hybrid_billing/apps/api/server\t191.852s\tcoverage: 99.6% of statements",
+    "coverage": {
+      "matching_production_sources": 107,
+      "matching_block_ranges_and_weights": 7889,
+      "native_parent": {
+        "weighted_statements": 11783,
+        "uncovered": 45,
+        "calculated_percent": 99.61809386404141
+      },
+      "native_isolated_child": {
+        "weighted_statements": 11783,
+        "uncovered": 9947,
+        "calculated_percent": 15.581770347110243
+      },
+      "explicit_combined_set_union": {
+        "weighted_statements": 11783,
+        "uncovered": 45,
+        "calculated_percent": 99.61809386404141
+      },
+      "extra_units_from_child": 0,
+      "parent_is_not_replaced": true
+    },
+    "required100": "NOT_MET",
+    "vet": "PASS server package",
+    "semantic_mutants": "four assertion-killed, exact restore/private cache removal",
+    "ui_build_allpackages_foreigncompile": "NOT_RERUN unchanged product source; separately attributed checkpoints retained"
+  },
+  "independent_source_review": "/root/hyb310_review PASS four corrected contracts and isolated child actual source; no tests/services/mutations executed",
+  "boundaries": [
+    "Initial callback lookup-after-removal and expected cancelled queued delivery were fixture mistakes, preserved in logs; actual queued redelivery remains held with revoked reapproval blocked",
+    "Global admission clock jump also expires peers; only stored presence/no selection effects checked before subsequent caller401",
+    "Stale callback is helper idempotence, not observed async scheduling",
+    "Pickup replacement is directory-component input, not a real credential reissue or deadline extension permission",
+    "Exact child process requires exit0 and static success; genuine auth and unrelated record precede full fixture closure; Reader restored before assertions",
+    "Selection-reference entropy collision differs from computational truncated-SHA handle collisions",
+    "Native parent/child profiles preserved; explicit matched-block/source union adds zero units and never replaces parent measurement",
+    "No registry-map rewrite, production dependency seam, coverage exclusion or waiver",
+    "No Graphify benchmark, deployment, native/AT/BFCache/Claude/FIX acceptance; package100 and actualmerge/readback remain open"
+  ],
+  "source_files": [
+    {
+      "path": "apps/api/server/session_cleanup_boundary_test.go",
+      "sha256": "c1bcb3e7d7504c895e39bc1b5d01388f8b8f4dadbd3115e82ceef4d598a4c0d2",
+      "bytes": 3412
+    },
+    {
+      "path": "apps/api/server/delivery_cleanup_boundary_test.go",
+      "sha256": "117d68e775a35e3ca7870a56473f215c1e9b42593cb8fdcb3b2efe26e5ae5e75",
+      "bytes": 3314
+    },
+    {
+      "path": "apps/api/server/session_entropy_collision_test.go",
+      "sha256": "986825b54c311ed0fb6952a861f79559597c0197dd109c98dbd6d17bd017c04e",
+      "bytes": 2852
+    },
+    {
+      "path": "apps/api/server/selfend.go",
+      "sha256": "bf47ab8ebbc90de89bc76202455b8b59d9405eb3482e572ffb8bb581137f9eb7",
+      "bytes": 13758
+    },
+    {
+      "path": "apps/api/server/sessionselection.go",
+      "sha256": "8874a61ac8554fed056af9542597487918b6e1faf67bde969b2482ebfd8b2380",
+      "bytes": 7661
+    },
+    {
+      "path": "apps/api/server/servicedelivery.go",
+      "sha256": "bf61f07bd773aa034ab8dec24508b2ca02551357c95328fcabb124315f7f8202",
+      "bytes": 1173
+    },
+    {
+      "path": "apps/api/server/integrations.go",
+      "sha256": "5f2e8b3ea3fb9ee240ccc805ef26a3f42e9b51fa54c1a212927f633ec0ded833",
+      "bytes": 32607
+    },
+    {
+      "path": "apps/api/server/sessionrecords.go",
+      "sha256": "b67db643ee4e20797c52a88a80503721e6a5b33fbfddebb19caa914cb6395389",
+      "bytes": 4516
+    },
+    {
+      "path": "apps/api/server/commands.go",
+      "sha256": "8091f911637d308b4e8c9c5bc98db2d55a6dc618fc5a545e8b0f9e480d7b08fd",
+      "bytes": 7408
+    },
+    {
+      "path": "apps/api/server/sessionquery.go",
+      "sha256": "acfe363569daba7873c09df82de6241b0b3e96da882491d94e45dc038bd2f0f3",
+      "bytes": 8915
+    },
+    {
+      "path": "apps/api/server/ledger.go",
+      "sha256": "62157be172815b319c014883cb7fa1bbe863a03589f838785d8e116946e486bf",
+      "bytes": 8675
+    },
+    {
+      "path": "modules/webhooks/subscriptions.go",
+      "sha256": "cfe8e93ac4698a036bb6053b148dec6d147d8c6e365783bf858f4c368ced3cbd",
+      "bytes": 11110
+    },
+    {
+      "path": "modules/webhooks/deliveries.go",
+      "sha256": "bf2518fa8e38279dd5e452fb9bdb0d6f9ae28017ffa84671cf435ecf75cca020",
+      "bytes": 16494
+    },
+    {
+      "path": "docs/features/HYB-304/m04-cleanup-boundary-contracts.md",
+      "sha256": "c39e161370015918814f4269d3bd049b309045bdc916eef7db811ecad1bccdec",
+      "bytes": 7460
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "b48d98cbf310f7566e31b43611cebeec01d77ec6848e8c771d495b7261fe75cc",
+      "bytes": 38868
+    },
+    {
+      "path": "docs/features/HYB-304/m04-completion.md",
+      "sha256": "3beb4d6e60dc030fd3d366050f105dd5d67fce371ad43fe9691e63ef970e45a2",
+      "bytes": 16417
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "fabfc104ea619c1ae24671ac659706ffd6c1f1494557211a5afa30e75a850faf",
+      "bytes": 60374
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-cleanup-scoped.log",
+      "sha256": "80932b9dcefdeae5f52bda40ea0ca1e6ad8e7b2d75dde5265fe2b124673de55b",
+      "bytes": 436
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-diagnostic.log",
+      "sha256": "ae047bec2b70a36be4de1af490ed0b4f84bcf1480256840c8c30568911c81523",
+      "bytes": 334
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-corrected.log",
+      "sha256": "405b7b166f4c2da2d1fa321288c4f1e2c2267016a24253f60da6286a48f72e60",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-final-scoped.log",
+      "sha256": "740245252fb1089b2b04e287689f21f9ba04dd497d68ad45646a52ab8bbdf845",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-extended.log",
+      "sha256": "569b5619b7fc8657cc5e86a9a7fa66f67b8132a5225209dea716b0f99cf5e617",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-race.log",
+      "sha256": "6c9386ed6f2be126fe8ddbae57805053e7dc4c29f85822d11988aef60e91636f",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-server.log",
+      "sha256": "fe95a9937012efee609264d1d15d6df8987fe1c6a15720ea771b7ebbcd50e44a",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-mutants.log",
+      "sha256": "fc2fe9c6a811d326e55fa467616560f3599a9fc668eae2a8e197029f2ea8cb70",
+      "bytes": 68
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-mutants.json",
+      "sha256": "a7d64f9c6821ac1922444ea3b19a14a7862cd765f548e196f1955b39b50dafe0",
+      "bytes": 1304
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-mutant-retry-identity.log",
+      "sha256": "91a571f5a9cfdc3c7f211c281dde79eca52cee5d8e21b873d489f538f3e6ce79",
+      "bytes": 252
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-mutant-selection-expiry.log",
+      "sha256": "0caec993f70cb96faa77e31d96877f2b590188af2ab0463b4352302bcecece73",
+      "bytes": 278
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-mutant-revoked-action.log",
+      "sha256": "863ff02b1a19383fd8aa6392df439763500157526189b350e539a0c920df7be1",
+      "bytes": 326
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-collision-mutant.log",
+      "sha256": "903b63f81f4f7928059a2de630b34bf62988800172ffc11f9db388642b51efbd",
+      "bytes": 27
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-collision-mutant.json",
+      "sha256": "c126da4c77e94cf9d000afa736faf77d956bbec834a0b5443a0abfe073dfb385",
+      "bytes": 229
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-mutant-reference-collision.log",
+      "sha256": "3f4400f55e337bedb52362d36d78fe0227bd5d9471a85846ea2c4216f83c3a3a",
+      "bytes": 240
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-collision-probe.log",
+      "sha256": "07ff0f22e65ec5b906da268bf17171b4fb61bbb87a2e2ed5dedb1db1cd3eed24",
+      "bytes": 96
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-collision-parent-probe.cover",
+      "sha256": "1f16536c846302afbd057409b851a4c8efc7d857c9b02f18627184641da09290",
+      "bytes": 684766
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-collision-child-probe.cover",
+      "sha256": "34565d453c71718fda61b50ea1ecc028caf3ba1c8e4f6ae46325a72447d4fc50",
+      "bytes": 684766
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-server.cover",
+      "sha256": "113dcf06416fb6d1dd63ede0fca274f83048d7943f6cd3cc039cd2bd3098380d",
+      "bytes": 684766
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-collision-child-full.cover",
+      "sha256": "34565d453c71718fda61b50ea1ecc028caf3ba1c8e4f6ae46325a72447d4fc50",
+      "bytes": 684766
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-combined.cover",
+      "sha256": "01f42231cf69907e6e427f72a184e56a81a54dac705f031a6011e9e6afafeae5",
+      "bytes": 684766
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-coverage-summary.json",
+      "sha256": "968201b5d45c5c49857e456228668816ae55bf9263f72b427066b612ccf294a4",
+      "bytes": 551
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-coverage-source-binding.json",
+      "sha256": "e87cdc46d127131510fa5619a68f4709b7457086c49547dbe8f91c5f88d0407e",
+      "bytes": 14629
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-test-names.json",
+      "sha256": "ca3425acd57802bce422b6c74fc3d50635775b1e711db855ca10e70ba78cc532",
+      "bytes": 380
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-race-test-names.json",
+      "sha256": "592d916bd80c802464e44421b186421ade836a539ccd451996b1040353d078e3",
+      "bytes": 969
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-source-checks.log",
+      "sha256": "0aa27432364bf3f4850ff2904afe6f602c2d2f7705c65c505f2d64354badd8a4",
+      "bytes": 243
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-okf.log",
+      "sha256": "3ac748c7fc6dedd062d3f2967c58ff2fad5c801ee3613b7807a1bb2e5b228e09",
+      "bytes": 100
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-coverage.py",
+      "sha256": "0b22a39b9764343967a9090c2c334e49863e46fb672220ea68d5af9a548273c8",
+      "bytes": 1491
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-mutants.py",
+      "sha256": "5a956927eca0f9262e7f2a457b8d9031075802af290dce6c3277cfca16792d4d",
+      "bytes": 2283
+    },
+    {
+      "path": "/private/tmp/hb304-cleanup-collision-mutant.py",
+      "sha256": "ae5fd19db1da8d128a6d7b3bb521cab7843cc26062d9a2363a6a0917ee7cb0c6",
+      "bytes": 1606
+    }
+  ],
+  "independent_evidence_review": "/root/hyb310_copy_render PASS17source/31artifact/107production bindings, independently recomputed7889-block profiles/zero-unit union, logs and boundaries; read-only no tests/services execution"
+}

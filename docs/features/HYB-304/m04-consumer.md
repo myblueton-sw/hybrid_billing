@@ -103,3 +103,6 @@ The fresh full server short suite passed with98.1% statement coverage, below the
 
 
 The subsequent [boundary verification](m04-boundaries.md) adds eleven cursor/counter/catalog/authentication-lifetime tests without changing production source. The fresh full server short suite passed at98.4%; targeted race, vet and Linux/Windows test-binary compilation passed. Required100% package coverage remains unmet, and compilation is not cross-platform execution. The prior interaction evidence remains bound to its own checkpoint.
+
+
+[Session boundary verification](m05-boundaries.md) subsequently pins M05 query, frozen preview, strict body and quota contracts and removes an uncalled population helper plus redundant validation. The fresh server short result is98.8%, still below the required100%; no Console-source change or new Console execution is claimed by that server-only record.

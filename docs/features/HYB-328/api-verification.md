@@ -24,6 +24,7 @@ Registration returns its actual outcome, including invalid, unverifiable, scope_
 - CLI invalid binding test: PASS, 0.326 seconds. Independent reviewer ran the CLI test suite successfully in 3.029 seconds.
 - Independent final change review: PASS. Reviewer reran focused license API race tests successfully in 2.519 seconds.
 - Initial member test was invalid because it omitted password setup and received 401 before reaching authorization. The fixture was corrected; the final test authenticates the member and verifies 403. No failed run is counted as PASS.
+- Broader initial `go test ./apps/api/server ./apps/api/cmd/hb-api`: server package INCOMPLETE/FAIL from the default 10-minute timeout in `TestScaleFilterListsOverHTTP` (9m52s in that test); stack was in identity membership reinstatement. The CLI package passed in 5.213 seconds. This unchanged scale test was not diagnosed as a regression or rerun with a larger timeout; no full-server-suite PASS is claimed. Final scoped API race checks above passed after fixes.
 - `go vet ./apps/api/server ./apps/api/cmd/hb-api`: PASS.
 - Final independent evidence review: PASS; reviewer viewed the integrated S04 screenshot with 1121 rows and separate currencies, and checked recorded 401/403 boundaries. Redirect/sign-in journeys remain root-executed evidence.
 - Go 1.26.4 on macOS arm64. No production grants, deployment, issuer provisioning or real external time service was exercised.

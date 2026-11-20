@@ -84,6 +84,17 @@ func inputReviewFields(record inputreview.Record) map[string]string {
 func (h inputReviewCommand) inspect(record inputreview.Record) (commands.Outcome, error) {
 	r := h.s.inputReviews
 	fields := inputReviewFields(record)
+	fields["confirmation_permission"] = "denied"
+	permission := h.s.gate.Decide(h.s.answer, ConsoleClient, gate.Request{Action: gate.ConfirmInput, Kind: inputauthority.ResourceKind, Resource: gate.Resource{WorkspaceID: record.Evidence.Scope.Workspace}})
+	if permission.Allowed {
+		fields["confirmation_permission"] = "allowed"
+	} else if permission.Code == gate.AuthorityUnavailable {
+		fields["confirmation_permission"] = "unavailable"
+	}
+	fields["confirmation_hold"] = "clear"
+	if h.s.hold != nil {
+		fields["confirmation_hold"] = "blocked"
+	}
 	publication, err := r.registry.Current(record.Evidence.Scope)
 	if err != nil && !errors.Is(err, inputreview.ErrNotFound) {
 		return commands.Outcome{}, inputReviewError(err)

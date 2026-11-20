@@ -36,7 +36,7 @@ func TestInputReviewHTTPHoldStepUpAndReadFailures(t *testing.T) {
 	f.s.enterHold("synthetic-test")
 	f.s.domain.Unlock()
 	f.code(t, "held confirm", decideInput(f, member, "confirm_publish", record.Evidence.Digest, "0"), 503, string(commands.DependencyUnavailable))
-	if got := inspectInput(f, member, sampleInputReview); got.status != 200 {
+	if got := inspectInput(f, member, sampleInputReview); got.status != 200 || field(got, "confirmation_hold") != "blocked" {
 		t.Fatal("held inspection", got.raw)
 	}
 	f.ok(t, "held rejection", decideInput(f, member, "reject", record.Evidence.Digest, "0"), inputreview.Rejected, "")

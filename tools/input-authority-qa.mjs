@@ -64,7 +64,7 @@ try {
   if(!response.ok)throw new Error('Inspection failed');return response.json();
  });}
  const inspected=await inspect();assert.equal(inspected.fields.document_total,'15.0000');assert.equal(inspected.fields.current_eligibility,'not_eligible');
- const revision=await root.evaluate(async()=>{const {serviceClient}=await import('/src/service/api.ts');const {adminClient}=await import('/src/service/admin.ts');const session=await serviceClient().current();return (await adminClient(session.csrf).access()).revision;});
+ const revision=inspected.result_revision;assert.equal(typeof revision,'string');assert.ok(revision);assert.equal(inspected.fields.confirmation_permission,'allowed');assert.equal(inspected.fields.confirmation_hold,'clear');
  const confirmed=await command(member,'input.confirm_publish','sample-input-review',{digest:inspected.fields.digest,scope_revision:inspected.fields.scope_revision},revision);
  assert.equal(confirmed.fields.recorded_state,'eligible');assert.equal(confirmed.fields.recorded_scope_revision,'1');
  const current=await inspect();assert.equal(current.fields.current_eligibility,'eligible');

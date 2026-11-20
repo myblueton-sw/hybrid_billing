@@ -43,7 +43,7 @@ func TestInputReviewHTTPLiveSeparatePermissions(t *testing.T) {
 	member, _, _ = provisionInputCapability(t, f, inputauthority.Inspect)
 	before := f.s.counter
 	inspected := inspectInput(f, member, sampleInputReview)
-	if inspected.status != 200 || field(inspected, "document_total") != "15.0000" || field(inspected, "current_evidence") != "matched" || field(inspected, "current_eligibility") != "not_eligible" || field(inspected, "scope_revision") != "0" || f.s.counter != before {
+	if inspected.status != 200 || field(inspected, "document_total") != "15.0000" || field(inspected, "current_evidence") != "matched" || field(inspected, "current_eligibility") != "not_eligible" || field(inspected, "scope_revision") != "0" || field(inspected, "confirmation_permission") != "denied" || field(inspected, "confirmation_hold") != "clear" || inspected.body["result_revision"] != f.s.Revision() || f.s.counter != before {
 		t.Fatal("inspection", inspected.raw)
 	}
 	if !reflect.DeepEqual(record, inputRecord(t, f)) {
@@ -51,7 +51,8 @@ func TestInputReviewHTTPLiveSeparatePermissions(t *testing.T) {
 	}
 	f.code(t, "inspection is not confirmation", decideInput(f, member, "confirm_publish", record.Evidence.Digest, "0"), 403, string(commands.PermissionDenied))
 	member, _, _ = provisionInputCapability(t, f, inputauthority.Confirm)
-	confirmed := decideInput(f, member, "confirm_publish", field(inspected, "digest"), field(inspected, "scope_revision"))
+	inspected = inspectInput(f, member, sampleInputReview)
+	confirmed := f.runWith(member, inspected.body["result_revision"].(string), "input.confirm_publish", sampleInputReview, map[string]string{"digest": field(inspected, "digest"), "scope_revision": field(inspected, "scope_revision")})
 	f.ok(t, "confirmed", confirmed, inputreview.Eligible, "")
 	if field(confirmed, "recorded_scope_revision") != "1" || field(confirmed, "receipt") != "historical_decision" {
 		t.Fatal(confirmed.raw)
@@ -61,7 +62,7 @@ func TestInputReviewHTTPLiveSeparatePermissions(t *testing.T) {
 		t.Fatal(publication, err)
 	}
 	current := inspectInput(f, member, sampleInputReview)
-	if current.status != 200 || field(current, "current_eligibility") != "eligible" {
+	if current.status != 200 || field(current, "current_eligibility") != "eligible" || field(current, "confirmation_permission") != "allowed" {
 		t.Fatal(current.raw)
 	}
 	repeat := decideInput(f, member, "confirm_publish", record.Evidence.Digest, "0")
@@ -138,4 +139,7 @@ func TestInputReviewHTTPHistoricalReplayAndFreshMappingCheck(t *testing.T) {
 	}
 	f.code(t, "revoked cached replay", f.call("input.confirm_publish", string(body), member.cookie, member.csrf), 403, string(commands.PermissionDenied))
 	f.code(t, "revoked fresh attempt", decideInput(f, member, "confirm_publish", record.Evidence.Digest, "0"), 403, string(commands.PermissionDenied))
+	if got := inspectInput(f, member, sampleInputReview); got.status != 200 || field(got, "confirmation_permission") != "denied" {
+		t.Fatal("revoked confirmation hint", got.raw)
+	}
 }

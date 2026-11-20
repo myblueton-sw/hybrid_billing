@@ -26,10 +26,7 @@ func sessionObject(reader io.Reader, allowed ...string) (map[string]json.RawMess
 		if err != nil {
 			return nil, errShape
 		}
-		name, ok := token.(string)
-		if !ok {
-			return nil, errShape
-		}
+		name := token.(string)
 		known := false
 		for _, value := range allowed {
 			known = known || value == name

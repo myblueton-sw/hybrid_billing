@@ -1,12 +1,10 @@
 package server
 
 import (
-	"errors"
 	"net/http"
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
-	"github.com/myblueton-sw/hybrid_billing/modules/servicecatalog"
 )
 
 func (s *Server) readServiceAudience(w http.ResponseWriter, r *http.Request) {
@@ -19,11 +17,7 @@ func (s *Server) readServiceAudience(w http.ResponseWriter, r *http.Request) {
 	}
 	audience, err := s.serviceCatalog.Audience(s.bootWorkspace, id)
 	if err != nil {
-		if errors.Is(err, servicecatalog.ErrUnavailable) {
-			serviceQueryFailure(w, r, err)
-		} else {
-			failCode(w, commands.PermissionDenied, r.Header.Get("X-Request-Id"))
-		}
+		failCode(w, commands.PermissionDenied, r.Header.Get("X-Request-Id"))
 		return
 	}
 	row := serviceAudienceRow{ID: audience.ID, Resource: audience.Resource, ScopeCount: audience.ScopeCount}

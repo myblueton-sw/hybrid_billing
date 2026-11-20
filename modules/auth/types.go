@@ -23,6 +23,7 @@ const (
 	ChangeCustomerPolicy   Action = "change_customer_policy"
 	ChangeSellingPolicy    Action = "change_selling_policy"
 	RequestApproval        Action = "request_approval"
+	ConfirmInput           Action = "confirm_input"
 	Approve                Action = "approve"
 	Issue                  Action = "issue"
 	Download               Action = "download"
@@ -55,7 +56,7 @@ var actions = map[Action]struct{}{
 	Approve: {}, Issue: {}, Download: {}, Deliver: {}, ApproveSupportSession: {}, AdministerInstallation: {},
 	TrustPropose: {}, TrustValidate: {}, TrustApprove: {}, TrustActivate: {}, RevokeAccessInBulk: {},
 	AdministerAPIClients: {}, AdministerModules: {}, ApproveModules: {}, StopModules: {}, AdministerChannels: {}, ApproveChannels: {}, StopChannels: {},
-	ReprocessEvents: {},
+	ReprocessEvents: {}, ConfirmInput: {},
 }
 
 func fieldAction(action Action) bool {
@@ -63,6 +64,8 @@ func fieldAction(action Action) bool {
 }
 
 func humanOnly(action Action) bool { return action == Approve || action == ApproveSupportSession }
+
+func directHuman(action Action) bool { return action == ConfirmInput }
 
 func InstallationAction(action Action) bool {
 	switch action {

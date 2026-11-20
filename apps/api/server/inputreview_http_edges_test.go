@@ -186,3 +186,38 @@ func TestInputReviewHTTPCatalogAndInspectionDoNotPublish(t *testing.T) {
 		}
 	}
 }
+
+func TestInputReviewHTTPFreshReadRecoveryHasOneTerminalDecision(t *testing.T) {
+	for _, first := range []string{"confirm_publish", "reject"} {
+		t.Run(first, func(t *testing.T) {
+			f := setup(t, SeedSample).ready()
+			f.setPassword(MemberLogin, pw)
+			member, _, _ := provisionInputCapability(t, f, inputauthority.Confirm)
+			member, _, _ = provisionInputCapability(t, f, inputauthority.Inspect)
+			original := inspectInput(f, member, sampleInputReview)
+			fresh := inspectInput(f, member, sampleInputReview)
+			if original.status != 200 || fresh.status != 200 || field(fresh, "recorded_state") != inputreview.Awaiting {
+				t.Fatal("recovery inspection", original.status, fresh.status)
+			}
+			other := "reject"
+			if first == other {
+				other = "confirm_publish"
+			}
+			values := map[string]string{"digest": field(fresh, "digest"), "scope_revision": field(fresh, "scope_revision")}
+			winner := f.runWith(member, fresh.body["result_revision"].(string), "input."+first, sampleInputReview, values)
+			if winner.status != 200 {
+				t.Fatal("first arrival failed", winner.status)
+			}
+			late := f.runWith(member, original.body["result_revision"].(string), "input."+other, sampleInputReview, values)
+			f.code(t, "delayed opposite request", late, 409, string(commands.RevisionConflict))
+			record := inputRecord(t, f)
+			if record.Decision == nil || first == "confirm_publish" && record.State != inputreview.Eligible || first == "reject" && record.State != inputreview.Rejected {
+				t.Fatal("terminal decision replaced")
+			}
+			publication, err := f.s.inputReviews.registry.Current(record.Evidence.Scope)
+			if first == "confirm_publish" && (err != nil || publication.Revision != 1) || first == "reject" && !errors.Is(err, inputreview.ErrNotFound) {
+				t.Fatal("publication count changed", publication.Revision, err)
+			}
+		})
+	}
+}

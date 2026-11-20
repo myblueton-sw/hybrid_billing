@@ -235,18 +235,21 @@ const actions: Record<string, [string, string, string]> = {
   deliver: ["Deliver", "전달", "تسليم"],
 };
 const kinds: Record<string, [string, string, string]> = {
+  approval_review: ["Approval review records", "승인 검토 기록", "سجلات مراجعة الاعتمادات"],
  synthetic_pricing_policy: ["Synthetic pricing policy", "합성 시험용 가격 정책", "سياسة تسعير اصطناعية"],
   focus_data: ["Collected FOCUS data", "수집된 FOCUS 데이터", "بيانات FOCUS المجمّعة"],
   synthetic_input_evidence: ["Synthetic input evidence", "합성 입력 데이터 근거", "أدلة بيانات الإدخال الاصطناعية"],
   charge_candidate: ["Charge calculation candidates", "과금 계산 후보", "نتائج احتساب الرسوم المبدئية"],
 };
 const fields: Record<string, [string, string, string]> = {
+  approval_evidence: ["Approval request and decision evidence", "승인 요청·결정 근거", "أدلة طلبات الاعتماد والقرارات"],
  pricing_policy_evidence: ["Pricing policy evidence", "가격 정책 근거", "أدلة سياسة التسعير"],
  input_review_evidence: ["Input comparison and reconciliation evidence", "입력 데이터 비교·대사 근거", "أدلة مقارنة بيانات الإدخال ومطابقتها"],
   rows: ["Rows", "행", "الصفوف"],
   charge_evidence: ["Source costs and calculation evidence", "원천 비용·계산 근거", "تكاليف المصدر وأدلة الاحتساب"],
 };
 const phrases: Record<string, [string, string, string]> = {
+  "view|approval_review|approval_evidence": ["view approval request and decision records", "승인 요청·결정 기록 조회", "عرض سجلات طلبات الاعتماد والقرارات"],
   "view_cost|charge_candidate|charge_evidence": ["view source costs and evidence for charge calculation candidates", "과금 계산 후보의 원천 비용·계산 근거 조회", "عرض تكاليف المصدر وأدلة نتائج احتساب الرسوم المبدئية"],
   "view|focus_data|rows": ["view rows of collected FOCUS data", "수집된 FOCUS 데이터 행 조회", "عرض صفوف بيانات FOCUS المجمّعة"],
 };

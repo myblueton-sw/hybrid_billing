@@ -88,7 +88,7 @@ func TestAccessReadShape(t *testing.T) {
 			t.Error("installation grant listed")
 		}
 	}
-	if strings.Join(ids, ",") != "candidate-console,candidate-sample-admin,candidate-sample-admin-2,candidate-sample-admin-3,reader-console,reader-sample-admin,reader-sample-admin-2" {
+	if strings.Join(ids, ",") != "approval-console,approval-sample-admin,approval-sample-admin-2,approval-sample-admin-3,candidate-console,candidate-sample-admin,candidate-sample-admin-2,candidate-sample-admin-3,reader-console,reader-sample-admin,reader-sample-admin-2" {
 		t.Errorf("grants %v", ids)
 	}
 	first := got.body["grants"].([]any)[1].(map[string]any)
@@ -96,7 +96,7 @@ func TestAccessReadShape(t *testing.T) {
 		t.Errorf("grant row %+v", first)
 	}
 	catalog := got.body["catalog"].([]any)
-	if len(catalog) != 2 || catalog[0].(map[string]any)["kind"] != candidateKind || catalog[1].(map[string]any)["kind"] != ReaderKind || catalog[1].(map[string]any)["until"] != stamp(start.Add(readerValidity)) {
+	if len(catalog) != 3 || catalog[0].(map[string]any)["kind"] != approvalKind || catalog[1].(map[string]any)["kind"] != candidateKind || catalog[2].(map[string]any)["kind"] != ReaderKind || catalog[0].(map[string]any)["until"] != stamp(start.Add(readerValidity)) || catalog[1].(map[string]any)["until"] != stamp(start.Add(readerValidity)) || catalog[2].(map[string]any)["until"] != stamp(start.Add(readerValidity)) {
 		t.Errorf("catalog %+v", catalog)
 	}
 	subjects := fmt.Sprint(got.body["subjects"])

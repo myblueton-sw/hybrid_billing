@@ -300,3 +300,21 @@ P01–P05 `error:diagnostics` now displays confirmed error code and server reque
 ## HYB-327 field-map follow-up
 
 Identity/organization response validation and M01/M02/P02/P05 field bindings are reconciled in [HYB-327 verification](../features/HYB-327/verification.md). P01 retains a validated count summary and explicitly documented detail/override limitations. This follow-up does not certify all original screen specifications or carry forward owner acceptance.
+
+## Phase 6 B09 read binding (HYB-337, in review)
+
+[HYB-337 plan](../features/HYB-337/plan.md) and [verification](../features/HYB-337/verification.md) bind the existing read-only synthetic contract at `GET /api/approval-review` to the Go service. This is a read increment; it does not complete B09 approval workflows or phase 6.
+
+| Field or behavior | Actual producer and boundary |
+| --- | --- |
+| Request ID, stage, target, author, digests and amount | `modules/approvals.RequestOf`; service index registers workspace, request/target IDs and explicit synthetic gross basis. Unsupported or inconsistent records fail unavailable before filtering. |
+| Approval kind | `charge_approval` → `billing_result`; `erp_final_approval` → `final_erp_amount`. No inferred adjustment, policy or recognition records. |
+| Candidate amount | Exact module decimal string and currency, explicitly synthetic gross basis. Before, difference, ERP values, entity, customer and period remain null when not supplied. |
+| Recorded decision and actor | One final module approve/reject decision only. Current execution authority is not inferred from historical approval; deadlines remain null. Withdrawn or multi/partial-decision requests cannot be represented and fail unavailable. |
+| Validation, dependencies, completeness, authority and ERP applicability | Unknown; producer prerequisites are unconnected. Pending module requests are blocked in the service projection. No unknown is replaced with zero or not-applicable. |
+| Read actor and access | Current authenticated session and workspace-wide gate View grant for approval_review/approval_evidence. Synthetic grants cover three sample administrators and the console client; no member/default seed-none read grant is inferred. |
+| Filters and paging | Pending, own decisions and history; request kind/search; 25 rows sorted by ID. HMAC cursor binds session, workspace, permissions, selection, installation revision and projected snapshot. |
+| Recognition and delegation | Explicit unconnected state; an empty request index never asserts completed reconciliation. |
+| Commands | `read_only=true`, `commands=unconnected`; no approve/reject/issue/deliver/post endpoint added. |
+
+The reviewed EN/KO/AR layout is retained. Synthetic/read-only notices remain visible. HYB-225 still owns cross-stage and producer integration prerequisites. B09 financial acceptance references AUD-AR-01/06/07, AUD-QA-01 and ERPC-01–08 remain unestablished at system level; the read binding is not their acceptance evidence.

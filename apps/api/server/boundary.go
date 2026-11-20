@@ -18,6 +18,7 @@ func (s *Server) requestID() string {
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/approval-review", s.readApprovals)
 	mux.HandleFunc("GET /api/v1/health", s.health)
 	mux.HandleFunc("GET /api/v1/openapi.json", s.openapi)
 	mux.HandleFunc("GET /api/v1/session", s.current)

@@ -58,7 +58,7 @@ try {
  const inspectProposal=await command(root,'pricing_authority.propose_console','ui-inspect-console',inspectTimes);
  const inspectCeiling=await command(second,'pricing_authority.approve','ui-inspect-console',{digest:inspectProposal.fields.digest});
  const inspectHuman=await command(root,'pricing_authority.propose_human','ui-inspect-human',{...inspectTimes,recipient,ceiling:inspectCeiling.fields.grant});
- await command(second,'pricing_authority.approve','ui-inspect-human',{digest:inspectHuman.fields.digest});
+ const inspectApplied=await command(second,'pricing_authority.approve','ui-inspect-human',{digest:inspectHuman.fields.digest});
  for (const capability of ['propose','revoke','use']) {
   const fields={...times,capability};
   const proposed=await command(root,'pricing_authority.propose_console','ui-console-'+capability,fields);
@@ -90,6 +90,9 @@ try {
   assert.equal(await root.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   const direction=await row.evaluate(e=>getComputedStyle(e).direction);assert.equal(direction,lang==='ar'?'rtl':'ltr');
   await row.screenshot({path:`${out}/m01-policy-row-${lang}-${width}.png`});
+  await row.scrollIntoViewIfNeeded();await root.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  assert.equal(await row.evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),true);
+  await root.screenshot({path:`${out}/m01-policy-context-${lang}-${width}.png`});
   await root.screenshot({fullPage:true,path:`${out}/m01-policy-${lang}-${width}.png`});
   evidence.cases.push({route:'policy-impact',lang,width,policyCount:1,permissionRequestCount:0,direction,overflow:false});
  }
@@ -115,12 +118,22 @@ try {
    });assert.deepEqual(cellChecks,{grant:true,badge:true,singleLine:true});
   }
   await root.screenshot({fullPage:true,path:`${out}/${route}-${lang}-${width}.png`});
+  const inspectionRow=route==='access'?root.locator('tr').filter({has:root.locator(`[data-grant="${inspectApplied.fields.grant}"]`)}):root.locator('.p02-grants tr').filter({hasText:inspectCeiling.fields.grant});
+  assert.equal(await inspectionRow.count(),1);await inspectionRow.scrollIntoViewIfNeeded();
+  const inspectionText=await inspectionRow.innerText();
+  assert.ok(inspectionText.includes(label));
+  assert.ok(inspectionText.includes({en:'View cost',ko:'원가 조회',ar:'عرض التكلفة'}[lang]));
+  if(route==='access')assert.ok(inspectionText.includes({en:'Pricing policy evidence',ko:'가격 정책 근거',ar:'أدلة سياسة التسعير'}[lang]));
+  await root.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  assert.equal(await inspectionRow.evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),true);
+  await inspectionRow.screenshot({path:`${out}/${route}-pricing-cost-${lang}-${width}.png`});
+  await root.screenshot({path:`${out}/${route}-pricing-cost-context-${lang}-${width}.png`});
   const text=await root.locator('body').innerText();
   assert.ok(!text.includes('synthetic_pricing_policy'));
   const actions={en:['Propose pricing policy','Approve pricing policy','Revoke pricing policy','Use pricing policy','Pricing policy evidence'],ko:['가격 정책 제안','가격 정책 승인','가격 정책 철회','가격 정책 적용','가격 정책 근거'],ar:['اقتراح سياسة التسعير','اعتماد سياسة التسعير','إلغاء سياسة التسعير','تطبيق سياسة التسعير','أدلة سياسة التسعير']}[lang];
   const displayed=route==='integrations'?[...actions.slice(0,4),{en:'View cost',ko:'원가 조회',ar:'عرض التكلفة'}[lang]]:actions;
   for(const action of displayed)assert.ok(text.includes(action));
-  evidence.cases.push({route,lang,width,localized:true,overflow:false,cellChecks});
+  evidence.cases.push({route,lang,width,localized:true,overflow:false,inspectionRowVisible:true,cellChecks});
  }
  if(args.capture==='true'){
   const checker=await login('admin3@example.invalid');

@@ -122,7 +122,9 @@ export function Reauthenticate({
       <p>
         {state === "reauthentication_required"
           ? t(l, "reviewAgain")
-          : t(l, "blocked")}
+          : state === "prerequisite_failed"
+            ? t(l, "authenticationPrerequisite")
+            : t(l, "authenticationUnavailable")}
       </p>
       {error != null && <FailureBox l={l} error={error} focusKey={0} />}
       {state === "reauthentication_required" && (
@@ -133,6 +135,11 @@ export function Reauthenticate({
           onClick={run}
         >
           {t(l, "reauth")}
+        </button>
+      )}
+      {state !== "reauthentication_required" && (
+        <button type="button" className="live-secondary" onClick={refresh}>
+          {w.reload(l)}
         </button>
       )}
     </div>

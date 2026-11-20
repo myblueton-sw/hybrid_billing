@@ -26,7 +26,7 @@ import {
   useIntents,
   usePresent,
 } from "./command-ui";
-import { Facts, Picker, ReadBoundary, bdi } from "./query-ui";
+import { Facts, Picker, ReadBoundary, bdi, usePanelHeading } from "./query-ui";
 import { useScopedRead } from "./scoped-read";
 import type { Recovery } from "./recovery-context";
 import { validName } from "./live-model";
@@ -162,6 +162,7 @@ export function DeclarationForm({
 }) {
   useIntents(recovery);
   const present = usePresent();
+  const heading = usePanelHeading(detail?.row.id ?? "create");
   const kind = detail ? "declare" : "create";
   const saved = recovery.commands.draft(kind),
     entry = recovery.commands.get(kind);
@@ -313,7 +314,9 @@ export function DeclarationForm({
     scopeLimit = settingValue(metadata.settings, "service_declaration_scopes");
   return (
     <form className="live-step" noValidate onSubmit={submit}>
-      <h2 tabIndex={-1}>{detail ? t(l, "edit") : v.createTitle(l)}</h2>
+      <h2 tabIndex={-1} ref={heading}>
+        {detail ? t(l, "edit") : v.createTitle(l)}
+      </h2>
       <p>{t(l, "metadata")}</p>
       <IntentNotice l={l} recovery={recovery} kind={kind} />
       {problem && (

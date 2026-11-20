@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from "react";
+import { useCallback, useId, useState, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import type {
   PageQuery,
@@ -7,12 +7,34 @@ import type {
 import { FailureBox } from "../users/Live";
 import { w } from "../users/live-copy";
 import { v } from "./live-copy";
+import { AdminError } from "../../../../service/admin";
+import { ErrorDiagnostics } from "../../../../service/CommandDiagnostics";
 import { qcopy as t } from "./query-copy";
 import { cursorTrail, queryKey } from "./query-model";
 import { readIdentity, useScopedRead, type ReadState } from "./scoped-read";
 import type { Recovery } from "./recovery-context";
 
+export function usePanelHeading(target: string) {
+  return useCallback(
+    (heading: HTMLHeadingElement | null) => {
+      heading?.focus();
+    },
+    [target],
+  );
+}
+
 export const bdi = (id: string) => <bdi dir="ltr">{id}</bdi>;
+function describeRead(l: Locale, error: unknown) {
+  if (error instanceof AdminError && error.failure === "denied")
+    return { title: v.loadFailed(l), body: t(l, "readDenied") };
+  const changed =
+    error instanceof AdminError &&
+    (error.code === "revision_conflict" || error.code === "invalid_request");
+  return {
+    title: v.loadFailed(l),
+    body: t(l, changed ? "readQueryChanged" : "readUnavailable"),
+  };
+}
 export function Facts({ items }: { items: [string, ReactNode][] }) {
   return (
     <dl className="live-facts">
@@ -42,7 +64,13 @@ export function ReadBoundary<T>({
   if (read.state === "error")
     return (
       <>
-        <FailureBox l={l} error={read.error} focusKey={0} />
+        <FailureBox
+          l={l}
+          error={read.error}
+          focusKey={0}
+          describe={describeRead}
+        />
+        <ErrorDiagnostics l={l} error={read.error} />
         <button type="button" className="live-secondary" onClick={reload}>
           {w.reload(l)}
         </button>

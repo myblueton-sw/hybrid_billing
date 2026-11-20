@@ -4,7 +4,13 @@ import type { AdminClient } from "../../../../service/admin";
 import type { AccountDetail as Detail } from "../../../../service/service-query-types";
 import type { Recovery } from "./recovery-context";
 import { useScopedRead } from "./scoped-read";
-import { Facts, PageInfo, ReadBoundary, bdi } from "./query-ui";
+import {
+  Facts,
+  PageInfo,
+  ReadBoundary,
+  bdi,
+  usePanelHeading,
+} from "./query-ui";
 import { qcopy as t } from "./query-copy";
 import { v } from "./live-copy";
 import { ScopeDefinition } from "./DeclarationForm";
@@ -147,12 +153,15 @@ export function AccountDetailView({
   onAction: (action: AccountAction) => void;
   onCredentials: () => void;
 }) {
+  const heading = usePanelHeading(detail.row.id);
   const row = detail.row,
     declaration = row.declaration,
     eligible = detail.eligibility;
   return (
     <section className="live-step">
-      <h2 tabIndex={-1}>{bdi(row.id)}</h2>
+      <h2 tabIndex={-1} ref={heading}>
+        {bdi(row.id)}
+      </h2>
       {outside && <p>{t(l, "pinned")}</p>}
       <Facts
         items={[

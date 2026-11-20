@@ -10,7 +10,7 @@ import { w } from "../users/live-copy";
 import { c } from "../../../../service/copy";
 import { v } from "./live-copy";
 import { qcopy as t } from "./query-copy";
-import { Facts, bdi } from "./query-ui";
+import { Facts, bdi, usePanelHeading } from "./query-ui";
 import {
   BoundedReason,
   IntentNotice,
@@ -46,6 +46,7 @@ export function ActionForm({
 }) {
   useIntents(recovery);
   const present = usePresent();
+  const heading = usePanelHeading(detail.row.id);
   const kind = action === "revoke" ? "revoke" : "state",
     entry = recovery.commands.get(kind);
   const [reason, setReason] = useState(initial),
@@ -121,7 +122,9 @@ export function ActionForm({
     return <IntentNotice l={l} recovery={recovery} kind={kind} />;
   return (
     <form className="live-step" onSubmit={submit} noValidate>
-      <h2 tabIndex={-1}>{title}</h2>
+      <h2 tabIndex={-1} ref={heading}>
+        {title}
+      </h2>
       <p className="live-mono">{bdi(entry?.draft.target ?? detail.row.id)}</p>
       <IntentNotice l={l} recovery={recovery} kind={kind} />
       <Reauthenticate
@@ -187,6 +190,7 @@ export function IssueControl({
   const { issues } = recovery;
   useSyncExternalStore(issues.subscribe, issues.version);
   const present = usePresent();
+  const heading = usePanelHeading(detail.row.id);
   const entry = issues.get(user, detail.row.id),
     refusal = issues.refusal(user, detail.row.id);
   const [days, setDays] = useState(String(detail.limits.credential_days)),
@@ -226,13 +230,13 @@ export function IssueControl({
   };
   return (
     <form className="live-step" onSubmit={submit} noValidate>
-      <h2 id="svc-issue-title" tabIndex={-1}>
+      <h2 id="svc-issue-title" tabIndex={-1} ref={heading}>
         {v.issueTitle(l)}
       </h2>
       <p className="live-mono">{bdi(detail.row.id)}</p>
       <Facts
         items={[
-          [t(l, "state"), detail.eligibility.state],
+          [t(l, "state"), t(l, detail.eligibility.state)],
           [
             v.credentialsFact(l),
             detail.eligibility.live_credentials +
@@ -279,7 +283,9 @@ export function IssueControl({
             ? t(l, "unknown")
             : entry.phase === "issued"
               ? v.attemptIssued(l, entry.issued!.credential, entry.service)
-              : entry.phase}
+              : entry.phase === "sending"
+                ? v.sendingLead(l)
+                : v.lapsedTitle(l)}
         </p>
       )}
       {(entry?.error || refusal) && <p role="alert">{t(l, "blocked")}</p>}

@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -35,6 +36,7 @@ import { AccountDetailView } from "./AccountDetail";
 import { ActionForm, IssueControl, type AccountAction } from "./AccountActions";
 import { Reauthenticate, RetainedCommands } from "./command-ui";
 import { Reveal } from "./Reveal";
+import { CredentialPeriod, CredentialStatus } from "./CredentialStatus";
 import "../users/live.css";
 export { Reveal } from "./Reveal";
 
@@ -254,6 +256,11 @@ function AccountWorkspace({
     action?: AccountAction;
   } | null>(null);
   const [create, setCreate] = useState(false);
+  const [restore, setRestore] = useState<{
+    id: string;
+    query: string;
+    create: boolean;
+  } | null>(null);
   const read = useScopedRead(
     recovery,
     readIdentity("accounts", JSON.stringify(query), generation),
@@ -261,6 +268,10 @@ function AccountWorkspace({
     nav.valid,
   );
   const selected = nav.valid ? nav.selected : "";
+  useLayoutEffect(() => {
+    setMode(null);
+    setCreate(false);
+  }, [selected]);
   const detail = useScopedRead(
     recovery,
     readIdentity("account", workspace, selected, generation),
@@ -268,6 +279,20 @@ function AccountWorkspace({
     nav.valid && !!selected,
   );
   const key = queryKey(query);
+  useLayoutEffect(() => {
+    if (!restore || selected || create) return;
+    const screen = document.querySelector('[data-security-screen="M04"]');
+    const target = restore.create
+      ? screen?.querySelector<HTMLButtonElement>("[data-svc-create]")
+      : restore.query === key
+        ? [
+            ...(screen?.querySelectorAll<HTMLButtonElement>("[data-service]") ??
+              []),
+          ].find((button) => button.dataset.service === restore.id)
+        : null;
+    (target ?? document.getElementById("svc-list-title"))?.focus();
+    setRestore(null);
+  }, [restore, selected, create, key]);
   const select = (id: string) => {
     setCreate(false);
     setMode({ target: id, kind: "detail" });
@@ -375,6 +400,7 @@ function AccountWorkspace({
           <button
             className="live-primary"
             type="button"
+            data-svc-create
             onClick={() => setCreate(true)}
           >
             {v.createTitle(l)}
@@ -444,6 +470,7 @@ function AccountWorkspace({
               className="live-secondary"
               type="button"
               onClick={() => {
+                setRestore({ id: selected, query: key, create });
                 setCreate(false);
                 onParams({ svc_a_selected: null }, true);
               }}
@@ -503,6 +530,7 @@ function AccountTable({
                 <button
                   type="button"
                   className="live-secondary"
+                  data-service={row.id}
                   aria-pressed={selected === row.id}
                   onClick={() => select(row.id)}
                 >
@@ -589,6 +617,7 @@ function CredentialWorkspace({
         query={query}
         onParams={onParams}
       />
+      <p>{t(l, "noGrant")}</p>
       <ReadBoundary
         l={l}
         read={read.result}
@@ -637,8 +666,8 @@ function CredentialWorkspace({
               <Facts
                 items={[
                   [v.colService(l), bdi(detail.row.service)],
-                  [t(l, "state"), filterValue(l, detail.row.current_state)],
-                  [v.colValid(l), bdi(detail.row.not_after)],
+                  [t(l, "state"), <CredentialStatus l={l} row={detail.row} />],
+                  [v.colValid(l), <CredentialPeriod l={l} row={detail.row} />],
                   [t(l, "observed"), bdi(detail.observed_at)],
                 ]}
               />
@@ -734,7 +763,7 @@ function CredentialTable({
               <td>{bdi(row.id)}</td>
               <td>{bdi(row.service)}</td>
               <td>
-                {filterValue(l, row.current_state)}
+                <CredentialStatus l={l} row={row} />
                 {row.secret_pickup && (
                   <p>
                     {row.secret_pickup === "open" ? (
@@ -749,7 +778,9 @@ function CredentialTable({
                   </p>
                 )}
               </td>
-              <td>{bdi(row.not_after)}</td>
+              <td>
+                <CredentialPeriod l={l} row={row} />
+              </td>
               <td>
                 <button
                   type="button"
@@ -958,7 +989,9 @@ function RecoveryRegion({
                 ? t(l, "unknown")
                 : entry.phase === "issued"
                   ? v.attemptIssued(l, entry.issued!.credential, entry.service)
-                  : entry.phase}
+                  : entry.phase === "sending"
+                    ? v.sendingLead(l)
+                    : v.lapsedTitle(l)}
             </p>
             <div className="live-buttons">
               {entry.phase === "unknown" && (

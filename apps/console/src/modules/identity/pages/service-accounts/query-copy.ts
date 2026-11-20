@@ -56,6 +56,21 @@ const terms = {
   edit: ["Edit declaration", "선언 수정", "تعديل الإقرار"],
   missing: ["Not recorded", "기록 없음", "غير مسجّل"],
   unavailable: ["Unavailable", "조회 불가", "غير متاح"],
+  readUnavailable: [
+    "The current data could not be verified. Reload to try again.",
+    "현재 데이터를 확인할 수 없습니다. 다시 불러온 후 재시도하세요.",
+    "تعذّر التحقق من البيانات الحالية. أعد التحميل للمحاولة مجدداً.",
+  ],
+  readDenied: [
+    "This data is unavailable with the current access and context.",
+    "현재 접근 권한과 조회 맥락에서는 이 데이터를 확인할 수 없습니다.",
+    "هذه البيانات غير متاحة ضمن صلاحيات الوصول والسياق الحاليين.",
+  ],
+  readQueryChanged: [
+    "This query or continuation is no longer valid. Start from the first page or reset the filters.",
+    "이 조회 조건 또는 이어보기 정보는 더 이상 유효하지 않습니다. 첫 페이지부터 조회하거나 필터를 초기화하세요.",
+    "لم يعد هذا الاستعلام أو مرجع المتابعة صالحاً. ابدأ من الصفحة الأولى أو أعد تعيين عوامل التصفية.",
+  ],
   versionUnavailable: [
     "Version unavailable",
     "버전 조회 불가",
@@ -131,6 +146,16 @@ const terms = {
     "Reauthenticate, refresh and review this draft before submitting.",
     "다시 인증한 후 새로 조회하고 초안을 검토하여 제출하세요.",
     "أعد المصادقة ثم حدّث البيانات وراجع هذه المسودة قبل الإرسال.",
+  ],
+  authenticationPrerequisite: [
+    "The authentication policy requires multi-factor authentication, which this service does not support. Confirming your password cannot satisfy this requirement.",
+    "인증 정책에 따라 다중 요소 인증이 필요하지만 이 서비스에서는 지원하지 않습니다. 비밀번호 재확인만으로는 이 요건을 충족할 수 없습니다.",
+    "تتطلب سياسة المصادقة مصادقة متعددة العوامل لا تدعمها هذه الخدمة. لا يكفي تأكيد كلمة المرور لاستيفاء هذا المتطلب.",
+  ],
+  authenticationUnavailable: [
+    "Current authentication requirements could not be verified. Reload this view before trying again.",
+    "현재 인증 요건을 확인할 수 없습니다. 이 보기를 새로 조회한 후 다시 시도하세요.",
+    "تعذّر التحقق من متطلبات المصادقة الحالية. أعد تحميل هذا العرض قبل المحاولة مجدداً.",
   ],
   blocked: [
     "This action is currently unavailable. Review the current eligibility and execution state.",

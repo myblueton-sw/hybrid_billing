@@ -1,0 +1,800 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "ced673adee0d5d545d19f637b1448450bc447c57",
+  "status": "interaction_checkpoint_not_merge_ready",
+  "environment": {
+    "host": "macOS arm64",
+    "node": "26.7.0",
+    "go": "1.25.7 darwin/arm64",
+    "browser": "Google Chrome for Testing153.0.8010.12",
+    "playwright": "1.58.2"
+  },
+  "checks": {
+    "console": {
+      "status": "PASS",
+      "tests": 998,
+      "actual_http_shapes": 13,
+      "raw": "/private/tmp/hb304-interaction-console-restored.log"
+    },
+    "product_typecheck_build": {
+      "status": "PASS",
+      "raw": "/private/tmp/hb304-read-denial-build.log",
+      "advisory": "Existing large bundled chunk warning remains"
+    },
+    "mounted_interactions": {
+      "status": "PASS",
+      "scenarios": 13,
+      "raw": "/private/tmp/hb304-errors-neutral-read-after/report.json",
+      "states": 60,
+      "locales": [
+        "en",
+        "ko",
+        "ar"
+      ],
+      "widths": [
+        1440,
+        1280,
+        1024,
+        390
+      ],
+      "boundary": "Actual owned synthetic API/app; held/aborted responses and 503/403 matrix responses are deliberate transport simulations. Missing-ID403, source-conflict409 and suspended metadata use actual backend decisions."
+    },
+    "isolated_recovery": {
+      "status": "PASS",
+      "scenarios": 16,
+      "raw": "/private/tmp/hb304-interaction-recovery-restored.log",
+      "boundary": "Actual React provider/Reveal; synthetic transport and simulated visibility/pagehide, not native BFCache"
+    },
+    "go_short": {
+      "status": "PASS",
+      "scope": "apps/api/server package only",
+      "server_coverage_percent": "98.1",
+      "required_server_coverage_percent": "100",
+      "target": "NOT_MET",
+      "raw": "/private/tmp/hb304-interaction-server.log"
+    },
+    "go_race": {
+      "status": "PASS",
+      "scope": "Nine new top-level service-query edge/oracle tests",
+      "raw": "/private/tmp/hb304-interaction-race.log"
+    },
+    "historical_nonshort_nonscale": {
+      "status": "PASS",
+      "server_coverage_percent": "97.4",
+      "scope": "Before the new edge/oracle tests; excludes TestScaleUsersRead and TestScaleFilterListsOverHTTP; not current full-suite coverage or a Graphify restart",
+      "raw": "/private/tmp/hb304-server-full-nonscale.log"
+    },
+    "fail_before": {
+      "status": "PASS",
+      "actual_bugs": [
+        "keyboard opening focus",
+        "conditional heading attachment after retained draft/intent discard",
+        "stale local action mode after canonical selection change",
+        "suspended credential presentation",
+        "raw Korean in-flight issue phase",
+        "conflated authentication recovery",
+        "inherited user/write read-error copy",
+        "global permission-loss implication from uniform missing-ID refusal"
+      ],
+      "boundary": "Already-correct newly covered server paths passed unchanged. Initial test fixture/expectation errors are not claimed as product failures."
+    },
+    "protocol_mutant": {
+      "status": "PASS",
+      "mutation": "Accept service filter outside credentials area",
+      "killed": true,
+      "original_source_restored": true,
+      "private_cache_deleted": true,
+      "raw": "/private/tmp/hb304-protocol-mutant.json"
+    }
+  },
+  "review": {
+    "source": {
+      "reviewer": "/root/hyb310_review",
+      "status": "PASS",
+      "scope": "Focus/mode corrections, credential lifecycle metadata, localization/authentication recovery, new QA/server tests, then neutral read-denial correction",
+      "tests_executed_by_reviewer": false
+    },
+    "terminology_render": {
+      "reviewer": "/root/hyb310_copy_render",
+      "status": "PASS",
+      "scope": "Representative EN1440/KO390/AR390 hold/error captures; subsequent neutral KO390/AR390 denial renders and source wording",
+      "tests_executed_by_reviewer": false
+    },
+    "resolved_findings": [
+      "Conditional heading callback attachment",
+      "Read errors inherited users write/invitation copy",
+      "Uniform missing/foreign403 incorrectly implied global permission loss"
+    ],
+    "boundary": "Scoped independent AI reviews, not native/practitioner/Claude/owner acceptance or feature merge readiness"
+  },
+  "pending": [
+    "Required package100% server coverage and full coverage reconciliation",
+    "Remaining complete M04 journey/error/form parity and actual auth-notice matrix",
+    "Claude CLI visual leadership unavailable under recorded weekly quota",
+    "Native/practitioner language, assistive-technology and native BFCache verification",
+    "Final feature reviews, PR, authorized merge and remote/main read-back",
+    "Parent HYB-304 M03/M02 and later planning sequence"
+  ],
+  "artifact_retention": "Root-owned local temporary artifacts; not committed and not promised permanent or reboot-persistent. No activation/password, returned secret, pickup reference or command envelope body is included.",
+  "sources": [
+    {
+      "path": "apps/api/server/boundary.go",
+      "sha256": "92b024756f095345d4e64b757b95fd92d9932b2b02d48f211795a42382f392b5",
+      "bytes": 6703
+    },
+    {
+      "path": "apps/api/server/servicequery_audience.go",
+      "sha256": "adc6119d0550eb358af2b14a12b898d17777bb23a465bbb47694cf65d5c27cf1",
+      "bytes": 997
+    },
+    {
+      "path": "apps/api/server/servicequery_authority_edges_test.go",
+      "sha256": "2a59a11cab22d063e8b3c56539db8bff74b456933f53446edc18533d4c043d3b",
+      "bytes": 4832
+    },
+    {
+      "path": "apps/api/server/servicequery_consumer_detail_test.go",
+      "sha256": "7803bd522c56e821b1ea74deb1a4b84b86c182ee9a6a9eb3023823552ff936e2",
+      "bytes": 4263
+    },
+    {
+      "path": "apps/api/server/servicequery_consumer_test.go",
+      "sha256": "115d34333a0b4908bd0d0e3cc946da3a1e4953bcad66450d8e870b9c4ad28c2f",
+      "bytes": 3823
+    },
+    {
+      "path": "apps/api/server/servicequery_detail.go",
+      "sha256": "3b6e56fb89003691bcb7c25ed52fbd01f781633d76131e9d150d3f073f9b12c0",
+      "bytes": 12274
+    },
+    {
+      "path": "apps/api/server/servicequery_filter_oracle_test.go",
+      "sha256": "e6b5c9eb0432aae61aa1d54f1f43cb1c7fdec828ea0954215cea37d2102bb7a0",
+      "bytes": 5504
+    },
+    {
+      "path": "apps/api/server/servicequery_model.go",
+      "sha256": "f8a2338a1cbe5ccb0da110fc86f86099f27759334097a3281f07195768380530",
+      "bytes": 4756
+    },
+    {
+      "path": "apps/api/server/servicequery_openapi.go",
+      "sha256": "ff0c487d1d4c9f61da17dfca4f6a3bd9f26b6dc86674d6520743e90a953d5999",
+      "bytes": 17122
+    },
+    {
+      "path": "apps/api/server/servicequery_openapi_test.go",
+      "sha256": "a157faa29943b52be8835f646ce3369526a78de47a49d5893ff070673d0e8a88",
+      "bytes": 2021
+    },
+    {
+      "path": "apps/api/server/servicequery_protocol_edges_test.go",
+      "sha256": "7c510143c4174328c09900da2543bae2ae59bbfef2651a995cba396ec69aa97b",
+      "bytes": 7435
+    },
+    {
+      "path": "apps/api/server/services.go",
+      "sha256": "699e5867439a9c44eb4d0bef1ebb06a4ddd180cbbbf72043ff7f8ee9b56c43a3",
+      "bytes": 12586
+    },
+    {
+      "path": "apps/console/package.json",
+      "sha256": "98cf1ce8bb439686df52810c9de34e0669a3ebed9dfc03d3978dc42e3dd44b70",
+      "bytes": 6778
+    },
+    {
+      "path": "apps/console/src/app/screen-groups/identity.tsx",
+      "sha256": "9208b747e0a9575b357da1c500ff9b09b0ba8ff6decbc6b072278fd81515ed6e",
+      "bytes": 7141
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/AccountActions.tsx",
+      "sha256": "23f5266dfcfaae0f9ba6c1a746397f087dd018351f95c83e6e2fcd46c6c632cc",
+      "bytes": 9411
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/AccountDetail.tsx",
+      "sha256": "0d5abdce4f4f7f5247b313526544dfc93523df5b9b17f18c010ed7466d4856e3",
+      "bytes": 7210
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/CredentialStatus.tsx",
+      "sha256": "5408f990c0cf355d2cecb20fc38ee0508e7b8130cd19449ac55beb02370974e2",
+      "bytes": 953
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/DeclarationForm.tsx",
+      "sha256": "8ef99c02bf4a6a02c57bafff715809bea1e5b702fae4c0c62ac934161743d6ba",
+      "bytes": 15072
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/Live.tsx",
+      "sha256": "308d412faf836ef5dc118766d9d4f2cc5622d7eb1f02c13d5a60108506a00a1a",
+      "bytes": 32203
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/QueryFilters.tsx",
+      "sha256": "5855cb4d8e3d2933c84a99a2e9679bb65ebce63cf423f78125016023a76f7539",
+      "bytes": 4833
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/Reveal.tsx",
+      "sha256": "56da27ac29cabda28b661ed7deb35b00c85fa8fa5c0e53261de2105f644676e2",
+      "bytes": 7031
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/command-intents.ts",
+      "sha256": "3d684857b1e170894211e6ee09ff6c1123a3e860243fc169f33bd15889ee3834",
+      "bytes": 8775
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/command-ui-render.test.tsx",
+      "sha256": "778a5c1e0d7b4e1a0ad65d922db669add3c4788c407d2fc6537eb0d1c8b3011c",
+      "bytes": 3781
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/command-ui.tsx",
+      "sha256": "ac313656c3f8afb2d43af7b73cb730b06f946504908393cd683594bce9015c42",
+      "bytes": 6667
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/consumer-model.test.ts",
+      "sha256": "038bfcb95bbc880f5989ea2044da3b4bcfd6dd4497b91a4f30a030311522a4f2",
+      "bytes": 9273
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/issue-attempts.test.ts",
+      "sha256": "3bf68eb90262f7b11d8e459e85b37a9ee2b394ae793e422652243bc4d92e1f2f",
+      "bytes": 14090
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/issue-attempts.ts",
+      "sha256": "c536545220cba9dd2484d8e769770ba8f2767d0a41bfa1f196a43629f96b042d",
+      "bytes": 10910
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/live-model.test.ts",
+      "sha256": "43ff44546bd74a86cd92834317e1fe81d42fca2ea7bb152619a61b3b6959003e",
+      "bytes": 9244
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/live-model.ts",
+      "sha256": "a3be0b94be9c494d4db522f5a7d389b9bc45b9729be0c010ad15be2c7137c826",
+      "bytes": 5093
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/query-copy.ts",
+      "sha256": "b2777fa85dc16e1e5927dc651c877eea9c3b97122207ae45e663d6711ef0fb2a",
+      "bytes": 13432
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/query-model.ts",
+      "sha256": "fa806deefeb77be8196b34ea3fce3bc00796a4e17df83dfd4b3e57e7b73e99a8",
+      "bytes": 4275
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/query-ui.tsx",
+      "sha256": "f96078abd3f4ea01a6c911028096da568ef5e229ab8b9cdf4c45845301d97c81",
+      "bytes": 7089
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/recovery-context.tsx",
+      "sha256": "62a1c2ea4e31d939bb2de60b16ba212eef0fc3cbb6760afa723b614c7141c3bd",
+      "bytes": 3739
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/scoped-read.ts",
+      "sha256": "5338be855eb3a220e9db04bc7571515261f214e4022d8fc78409f6f222c64fe9",
+      "bytes": 1815
+    },
+    {
+      "path": "apps/console/src/service/account-read.ts",
+      "sha256": "a92afedd5690aa3f78572dd74a68f00bc5cbfd23003b54850089679ccc72e16b",
+      "bytes": 1705
+    },
+    {
+      "path": "apps/console/src/service/admin.test.ts",
+      "sha256": "9e4c6a2398eac0a9a64ddfa1def518f4bc258e2a54a7212bbc58ad7786496eea",
+      "bytes": 43252
+    },
+    {
+      "path": "apps/console/src/service/admin.ts",
+      "sha256": "acb73e5d48a1dd46785b3312c9edb8a797a874a781e7834356c8ca11450c4d72",
+      "bytes": 51074
+    },
+    {
+      "path": "apps/console/src/service/read-fixtures.ts",
+      "sha256": "7677829d0f8f009c9449b252c9df7022320d6086aacb055dab8a47fff6c436cf",
+      "bytes": 3341
+    },
+    {
+      "path": "apps/console/src/service/service-query-fixtures.ts",
+      "sha256": "0fefc674fc58429588e76506b26d46776c21789a2a8cb92c4749bbfce7edba5e",
+      "bytes": 4002
+    },
+    {
+      "path": "apps/console/src/service/service-query-read.ts",
+      "sha256": "afba7e0d328dbc66358c42452ed8f887748c6a7e93cd95f61283a90641bd3347",
+      "bytes": 14643
+    },
+    {
+      "path": "apps/console/src/service/service-query-types.ts",
+      "sha256": "7480e2dbed4d7984d414b76d6d9eec83b83f38fc93074af3fd84a8fca44c3f7b",
+      "bytes": 5406
+    },
+    {
+      "path": "apps/console/src/service/service-query-wire.test.ts",
+      "sha256": "7e07f306822ecc8fc58a4d522d821336c142e533f3efdbc6d7fd911890c14043",
+      "bytes": 3223
+    },
+    {
+      "path": "apps/console/src/service/service-query.test.ts",
+      "sha256": "e6cb03ee2e5a5cc2b40162942e7481aa0b7cd2dd155f6a5efc62917db2431776",
+      "bytes": 13731
+    },
+    {
+      "path": "apps/console/src/service/service-query.ts",
+      "sha256": "96cf29750930d561bf252b7a555bf7ad4e09571b46956ee9a82a56d91d05984e",
+      "bytes": 7370
+    },
+    {
+      "path": "apps/console/src/service/strict-read.test.ts",
+      "sha256": "541a437db40bfed8e24e474edeeab089896711caef957dba03e0c0389e752504",
+      "bytes": 6950
+    },
+    {
+      "path": "apps/console/tools/m04-consumer-qa.mjs",
+      "sha256": "7f767d812fe80b9bfe2075547f1f4abb32cab011b3637b81b6f7d98f64141dfd",
+      "bytes": 11001
+    },
+    {
+      "path": "apps/console/tools/m04-errors-qa.mjs",
+      "sha256": "80a165b18d5475e9c2dc96f3e0c8517f858db72112359afe167fd753bbe16405",
+      "bytes": 32749
+    },
+    {
+      "path": "apps/console/tools/m04-state-matrix.mjs",
+      "sha256": "e4341660885b5b5e816e8fbf26b60f40d409f31f2f15994cccc9d97ac36f06ec",
+      "bytes": 6288
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "72365183acd848a43b3fb08f8d466eeed582ea569e05b19b918adf5e1396f491",
+      "bytes": 28326
+    },
+    {
+      "path": "docs/ops/installation/service-catalog.md",
+      "sha256": "d4c35444477170572daeba59edb6d3125f3d867f2f9e08d7821f4869cd9ac986",
+      "bytes": 14092
+    },
+    {
+      "path": "docs/ui/screen-binding-fields/identity.md",
+      "sha256": "f7584ae5d1d961e4f2ecc0d2e6830e240f06e5599b919d4e28da8ce1e25a8b02",
+      "bytes": 96088
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "ed48a850ed1d14ceccddfd6d10fa5ca45f7c79cfa73350c7c8d753087c88193d",
+      "bytes": 58824
+    },
+    {
+      "path": "docs/ui/terminology/product-glossary.md",
+      "sha256": "a1acd03ddcc0915cf71b3d14dd5f1991e30ce5d8c054aa8d7460991a63e422e9",
+      "bytes": 110546
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-errors-before.log",
+      "sha256": "006b0a14aca06964efdd05fb21179be816c35ac2b0a1dfb9951ae2f5022ba771",
+      "bytes": 388
+    },
+    {
+      "path": "/private/tmp/hb304-errors-conditional-before.log",
+      "sha256": "76c3e14f3d5ff94f50530013502028f460f325bb7fd273659bc74ca8292f4a4b",
+      "bytes": 302
+    },
+    {
+      "path": "/private/tmp/hb304-errors-navigation-after.log",
+      "sha256": "f668fb6cfa4326f9a011bb5139ac1e5091d3cd939d507948a42c64bbd911856f",
+      "bytes": 547
+    },
+    {
+      "path": "/private/tmp/hb304-errors-hold-before.log",
+      "sha256": "9508d66c4faef4ceae93ad9bd59e6920ea9b7860c0cda1b510abd7e53ef1ac62",
+      "bytes": 753
+    },
+    {
+      "path": "/private/tmp/hb304-errors-hold-after.log",
+      "sha256": "e5ff6b78e623b7e13e895ac21fd8ebfacd7ba1fb5671885f58ac081c8d6ca863",
+      "bytes": 627
+    },
+    {
+      "path": "/private/tmp/hb304-errors-issue-locale-before-fixed.log",
+      "sha256": "4bcc778d3947855fdffa6c2a5010f91dc74ae0fd062fce7693c75ffc539b7fef",
+      "bytes": 992
+    },
+    {
+      "path": "/private/tmp/hb304-reauth-states-before.log",
+      "sha256": "4133363d334b1a781c74cc6df8ccf64393fb8239ac3b607cc3b8d2f3914ea0a6",
+      "bytes": 1336
+    },
+    {
+      "path": "/private/tmp/hb304-read-errors-before.log",
+      "sha256": "9cbfb31890dcbcf6eca85b594a4dbe48a37e58fecc55c744e90259d827395dde",
+      "bytes": 1163
+    },
+    {
+      "path": "/private/tmp/hb304-read-denial-before.log",
+      "sha256": "288d417990dfc66fcc46d9dc3a5db9f929637127da377c9dacaf55b6339e3ef6",
+      "bytes": 1161
+    },
+    {
+      "path": "/private/tmp/hb304-read-denial-after.log",
+      "sha256": "3be87a2972b333965fa5d0768270da7e6a749f7d49f9d91519c2be2c300bbc6a",
+      "bytes": 336
+    },
+    {
+      "path": "/private/tmp/hb304-read-denial-build.log",
+      "sha256": "e022706477daf46ec8ef29ec56785d0f4d9759fb8c48c92739fb94d7216facdb",
+      "bytes": 38499
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after.log",
+      "sha256": "92c700e54232e9c4153cd3aae04c7ff8e9c3aa25cf16e7e42361b1b13a3d0cd2",
+      "bytes": 1260
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/report.json",
+      "sha256": "96d8742a8fb380d6a8f5d81788b08ffe5652a47c0d6d2adbe8ae4771328abb25",
+      "bytes": 43110
+    },
+    {
+      "path": "/private/tmp/hb304-interaction-console-restored.log",
+      "sha256": "e0e8ed3f1825b7a58d074bc2d01128cba51d5237f9193c5d3465cfc2094b95ed",
+      "bytes": 100132
+    },
+    {
+      "path": "/private/tmp/hb304-interaction-recovery-restored.log",
+      "sha256": "b0e7aadef0c3144b8df4430bcac0c350d393d587e7c18ea5fcc99abd9f0ade40",
+      "bytes": 1944
+    },
+    {
+      "path": "/private/tmp/hb304-interaction-server.log",
+      "sha256": "5af459a52d0ecc047255a0cc4fed11553aec227d357e0d053831900700f8b53c",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-interaction-server.cover",
+      "sha256": "26c20a9ae751da77d9a98971537465fb9df293669ae1f99450f630f9623883d6",
+      "bytes": 687017
+    },
+    {
+      "path": "/private/tmp/hb304-interaction-race.log",
+      "sha256": "eabea1dda2e78f0ca89f1a630eeeb6e38e3ff811a975f228e80858847c9a3789",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-protocol-mutant.json",
+      "sha256": "4481ac1643442fede281d9de11de0cc4515f9afbfa2df273f95eb450a03c2fda",
+      "bytes": 179
+    },
+    {
+      "path": "/private/tmp/hb304-protocol-mutant.log",
+      "sha256": "26127e77249cab8a81a4a430c2c06cb2a9d6f897824594f217676458ffdd76aa",
+      "bytes": 2672
+    },
+    {
+      "path": "/private/tmp/hb304-server-full-nonscale.log",
+      "sha256": "b2d4bdd5e0ff86cdcae234345c5579aaa4552b8714a348866a43fcae54da6bf2",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-server-full-nonscale.cover",
+      "sha256": "6c7c9b066dcf755e0cb6060aa5fb5c8aa1fc54a66c2cbf0097b4fa19ca070725",
+      "bytes": 687017
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1024-credential-hold.png",
+      "sha256": "c76508ebac6de1114b2463fc4f601590d8bdacd802dabc56c6bb127348b9347b",
+      "bytes": 279230
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1024-denied.png",
+      "sha256": "3874a3746b232fa69440168dcf3513afdbea5412af5a314f318b2a151a94dfae",
+      "bytes": 117707
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1024-empty.png",
+      "sha256": "1a07566536513fdd3711f67b7f106f286f2ba3c7411215bbf77a1465481b97c0",
+      "bytes": 129876
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1024-loading.png",
+      "sha256": "4f8e0c9ef13980737ba7c961259e8e64a2a2cecc8c762897b97604899d09865e",
+      "bytes": 97456
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1024-unavailable.png",
+      "sha256": "05dc4c0f3598f02678bcc7922671ad61ba0f1d7e2c2950cc00f9ce4a163399fe",
+      "bytes": 117618
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1280-credential-hold.png",
+      "sha256": "e1b82b2d04e75b3bbc3fcfa1e01e69148bd83fac87a00ed4e590fb8717c77061",
+      "bytes": 299614
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1280-denied.png",
+      "sha256": "b26ffe56ce15f40049b8f448b828a446254c327a5f163ffd5b8e66bd5df84e6a",
+      "bytes": 132969
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1280-empty.png",
+      "sha256": "af448c41c12cb253767bf00ba0cfceaabddf8de4020958dbe8c94cf7da656737",
+      "bytes": 145846
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1280-loading.png",
+      "sha256": "e38128b82c5af048a234292cff9cd4033b9f92e42d0ac417c22c896263c64ab2",
+      "bytes": 112246
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1280-unavailable.png",
+      "sha256": "c1a0f1587d0d32b47d0cf973084d67135a656bf35b273a7d032f6139119638fc",
+      "bytes": 132894
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1440-credential-hold.png",
+      "sha256": "21179b91c03e91222c93918994ab4e7f1259f3a251a77fde52959c9587a76833",
+      "bytes": 304410
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1440-denied.png",
+      "sha256": "3bfe4254e87bb0ed462cb3d26e320b7e1ba18868fbbed18893daf5017a7fe9dd",
+      "bytes": 135083
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1440-empty.png",
+      "sha256": "77559f2e9484b6599bcd1012ca1f3ad865299f434a15f90e4e3d8c63d81ff496",
+      "bytes": 148064
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1440-loading.png",
+      "sha256": "01065635985c142476360c0a775009fab3fbb0a69b1bf0b5146addf080b534af",
+      "bytes": 114405
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-1440-unavailable.png",
+      "sha256": "3aa9330527b0fda2c08e0bb49836b23eabc69d37a8ff37ff1606faff3daf98bd",
+      "bytes": 134965
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-390-credential-hold.png",
+      "sha256": "8c104278fc6794244c8e5f7b06360f70a06f74ac91a278257d24cd829c07878c",
+      "bytes": 251657
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-390-denied.png",
+      "sha256": "aeb71afdd5f37e433e4f1b22e841eb88524517351c767136327ab72233990d20",
+      "bytes": 105389
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-390-empty.png",
+      "sha256": "b4d11db051b97eb50db980758458ce9c6801afaba371d586aaef76086edf384e",
+      "bytes": 110659
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-390-loading.png",
+      "sha256": "137c40692d522b4b5aee55bf0578410b3e6365cd498644dc6443ee2e60506898",
+      "bytes": 86351
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ar-390-unavailable.png",
+      "sha256": "6c3876deffbec1da64d2f41ac162521322c4989db37d7e0ab96351fd60caca30",
+      "bytes": 104982
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1024-credential-hold.png",
+      "sha256": "34411ca748a6b2da73fcb67d57d49c7481e7b7a41e2cf767fcc69e00e15fccee",
+      "bytes": 290647
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1024-denied.png",
+      "sha256": "38930b0d1490c1403aa54818ba747af52e3e8e7b8b87dec54a4feae8dae45838",
+      "bytes": 124906
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1024-empty.png",
+      "sha256": "5e15ba3f201d021b0029b72bc00701a4d64411b869111a5646b1a42b022fb4f7",
+      "bytes": 136634
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1024-loading.png",
+      "sha256": "45a8a19be622be89ad1fb35e5a7568249a7fc3052acf7a7c8ba7d005706ea9a5",
+      "bytes": 104245
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1024-unavailable.png",
+      "sha256": "0a63e8b94ff51ffb9dd70d0c2867a5b667db06f6cb7eff9f55f0d4bf18cd3057",
+      "bytes": 125434
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1280-credential-hold.png",
+      "sha256": "efc62f5c94b1bb94b9ffcfa5684145c9867118917cf5b2667389d05aa3d7f34f",
+      "bytes": 318535
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1280-denied.png",
+      "sha256": "2e894a40b21f536a005c8568e0ffc6a2eb40bb44221a52bb34109794b28ea90d",
+      "bytes": 146241
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1280-empty.png",
+      "sha256": "187f741c499ce40b829a8eb9622e0de4f8c3ead21a076ca08a6a31e73c8f4863",
+      "bytes": 158153
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1280-loading.png",
+      "sha256": "2db5bf78e038782083896773d1e1ae936bdc678bface7dfa6a30a1a5dcb63411",
+      "bytes": 124999
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1280-unavailable.png",
+      "sha256": "afa0a1cda1c1e931f3c75f19193695cd3843bbf5abd738ccf03fe24ae9ae0105",
+      "bytes": 146778
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1440-credential-hold.png",
+      "sha256": "9344e1988b0753696bf82ad9beca3cc2ee725fb1f5186d50ad05ccf89ba0346f",
+      "bytes": 320324
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1440-denied.png",
+      "sha256": "458568e86f1f38c89b88eeee162959e82324d5a072100df4bf440610094ee22a",
+      "bytes": 147376
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1440-empty.png",
+      "sha256": "69026882020655d4f158ceefd2c9c47eadf250d762a5f5b6724db75fdbc491bd",
+      "bytes": 160635
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1440-loading.png",
+      "sha256": "bebc47342b9ad1bc396001b3c69a4b1774e67ba2c87472f6c699a86c87a3a789",
+      "bytes": 126461
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-1440-unavailable.png",
+      "sha256": "9510bccf9243021a5567c675d80a24412c19af99acfa7f6f3bef117543c8c85b",
+      "bytes": 147927
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-390-credential-hold.png",
+      "sha256": "942fbfe257aa22a98d313f9d33b28ee9003581e79e0b1e1026cbd915e17e81c7",
+      "bytes": 259270
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-390-denied.png",
+      "sha256": "d76ff656ac43355ca0d4897ccae573402ab721b6aed22edcb0a94bf99b694360",
+      "bytes": 108413
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-390-empty.png",
+      "sha256": "01093c113d0945d781fc290379bf4427443b5f17bbdc865814d6f1ed372d00d5",
+      "bytes": 113283
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-390-loading.png",
+      "sha256": "7a4855a372dc069362b8868bcd25adae292940bf40a9f99ec7e9738bf2360181",
+      "bytes": 88609
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/en-390-unavailable.png",
+      "sha256": "7fc3550a032833884beb786a257b017b9fe37930c71cf633a05f56da81c978d8",
+      "bytes": 108769
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1024-credential-hold.png",
+      "sha256": "97a0233297c56a20de9a3f237329203d06af90e6d21546f73a6f0135eb711e53",
+      "bytes": 273280
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1024-denied.png",
+      "sha256": "7eab85746c1ec510af9a360d339c23829dabe6884fd0dac82cdc3f3658b5f11f",
+      "bytes": 121785
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1024-empty.png",
+      "sha256": "60876b5886855169b09e8bdef72fcd8b77bba6fb0cc6e7eb5843e0dc501950d2",
+      "bytes": 128713
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1024-loading.png",
+      "sha256": "8eb6a580cbd9b35cd3b33e4f03d17b05658879d91971c9adfbe5f2871efcc3cd",
+      "bytes": 99897
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1024-unavailable.png",
+      "sha256": "158f2e0d1e92a584d8d2bcab893949e74a33aca761f1f9a74bdb341c8561ecc3",
+      "bytes": 121396
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1280-credential-hold.png",
+      "sha256": "6c277263a6ef499334a12153b199ec10aa6b210375d67318dc646771554dc45d",
+      "bytes": 290596
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1280-denied.png",
+      "sha256": "4fc1a5fc1e3d00a00b85bd798e3b657a32ec21dc0883123873297458d6d020db",
+      "bytes": 134450
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1280-empty.png",
+      "sha256": "2d2abc6db5798a7125aee8d1a0aa7ba14f83c4eb98c42511f6bbd4f8fe7e7799",
+      "bytes": 141955
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1280-loading.png",
+      "sha256": "aa6f2fb3f468cd04af72f6e20c3bc89b46555519685657bea396e6e155aaa88a",
+      "bytes": 112191
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1280-unavailable.png",
+      "sha256": "c902ae6d5d9839d4312252d19337440e7df04f52ed04bd6f3e43aeefa5cef9d8",
+      "bytes": 134085
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1440-credential-hold.png",
+      "sha256": "cfe9baea732359f3ae3b15497d7d7f8420862fbaa9cd8c116c5fa527b4c6fa9f",
+      "bytes": 294484
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1440-denied.png",
+      "sha256": "df677615efa214efd45d5f60883edf849224a1d6f927eb04bee2974cdfc9b7c5",
+      "bytes": 136654
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1440-empty.png",
+      "sha256": "bb818c2025473f43fb9278b804a6d2306f36d2204b7c0ef2375052dfc6bdc066",
+      "bytes": 144411
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1440-loading.png",
+      "sha256": "83059103d558048f7a4a38a48483cde1a98554a24cb030c67280723b475100be",
+      "bytes": 114407
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-1440-unavailable.png",
+      "sha256": "6e3dd7b60b9bf7b17c5c88ed8fcf8224342097c72820d9c5ec36a8a1406861b8",
+      "bytes": 136246
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-390-credential-hold.png",
+      "sha256": "ffab20af821e76ca11535aa9f5c85489800e4de291499a6cf702fb9e2e1c7fee",
+      "bytes": 243657
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-390-denied.png",
+      "sha256": "d2f8e4b223e689a96781e5133795e495695f7575b5fea3e9ef6a26a203a0a6df",
+      "bytes": 107027
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-390-empty.png",
+      "sha256": "ea97c544cee4f31073fdd8e2abf84ad1cb5015172b2cea5df155bc93dd302184",
+      "bytes": 108818
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-390-loading.png",
+      "sha256": "5012f7086e6a010554c4177ac473957aa120a53476723bca26b80bba2abc1d3b",
+      "bytes": 86769
+    },
+    {
+      "path": "/private/tmp/hb304-errors-neutral-read-after/states/ko-390-unavailable.png",
+      "sha256": "9e37a44d5da17cf63b597118a972361f45d24d1054cb77b8a1f978c0d25db019",
+      "bytes": 106648
+    }
+  ]
+}

@@ -66,7 +66,34 @@ try {
   const requested=await command(root,'pricing_authority.propose_human','ui-human-'+capability,{...fields,recipient,ceiling:approved.fields.grant});
   await command(second,'pricing_authority.approve','ui-human-'+capability,{digest:requested.fields.digest});
  }
- evidence.provisioning={capabilities:['propose','approve','revoke','use','inspect'],distinctGovernors:true,policyExecution:false};
+ const policySpec=JSON.stringify({Mode:'synthetic',Scope:{Workspace:'sample-workspace',Customer:'sample-le-north',Entity:'sample-le-seller',Contract:'sample-contract-01',BillingProfile:'sample-profile-north'},From:'2026-10-01T00:00:00Z',To:'2026-11-01T00:00:00Z',Profile:{ID:'synthetic-charge',Revision:'1',InputIntegerDigits:12,InputScale:4,ResultIntegerDigits:14,ResultScale:4,IntermediateDigits:60},Limits:{Rules:20,Tiers:20,Discounts:20,Lines:1000,Intermediate:60},Policy:{ID:'ui-pricing-policy',Version:'1',Currency:'USD',CostBasis:'billed',Quantum:'0.01',Mode:'half_even',Path:'resale',Eligible:['csp_usage'],Rules:[{ID:'ui-pass',Level:'default',Type:'pass_through'}]}});
+ const policyPrepared=await member.evaluate(async spec=>{
+  const {serviceClient}=await import('/src/service/api.ts');const {adminClient,attempt}=await import('/src/service/admin.ts');const session=await serviceClient().current();return adminClient(session.csrf).command('pricing_policy.prepare','ui-policy-pending','','',{spec},{request:attempt().request,key:''});
+ },policySpec);
+ assert.ok(policyPrepared.revision);
+ const policyProposal=await command(member,'pricing_policy.propose','ui-policy-pending',{spec:policySpec,...Object.fromEntries(['contract_revision','billing_revision','target_fingerprint','preparation_digest'].map(key=>[key,policyPrepared.fields[key]]))},policyPrepared.revision);
+ assert.equal(policyProposal.fields.recorded_state,'pending');
+ const policyStaged=await command(root,'bulk_revocation.add_targets','bulk-revocations',{users:recipient});
+ const policyImpact=await command(root,'bulk_revocation.prepare',policyStaged.fields.draft,{effect:'suspend_membership'});
+ const policyJob=policyImpact.fields.bulk;assert.ok(policyJob);
+ for(const lang of ['en','ko','ar'])for(const width of [1440,1024,390]){
+  await root.setViewportSize({width,height:1000});await root.goto('about:blank');
+  await root.goto(`${url}/?service=api&lang=${lang}#/users?lang=${lang}&view=revocation`);
+  await root.locator(`[data-job="${policyJob}"]`).click();
+  const label={en:'Pricing policy proposals',ko:'가격 정책 제안',ar:'مقترحات سياسة التسعير'}[lang];
+  const row=root.locator('.m01-impact .m01-sum > div').filter({has:root.getByText(label,{exact:true})});
+  await row.waitFor();await root.evaluate(()=>document.fonts.ready);await row.scrollIntoViewIfNeeded();
+  assert.equal(await row.locator('dd .m01-line').first().innerText(),'1');
+  const permissionLabel={en:'Pricing policy permission requests',ko:'가격 정책 권한 요청',ar:'طلبات صلاحية سياسة التسعير'}[lang];
+  const permissionRow=root.locator('.m01-impact .m01-sum > div').filter({has:root.getByText(permissionLabel,{exact:true})});
+  assert.equal(await permissionRow.locator('dd .m01-line').first().innerText(),'0');
+  assert.equal(await root.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  const direction=await row.evaluate(e=>getComputedStyle(e).direction);assert.equal(direction,lang==='ar'?'rtl':'ltr');
+  await row.screenshot({path:`${out}/m01-policy-row-${lang}-${width}.png`});
+  await root.screenshot({fullPage:true,path:`${out}/m01-policy-${lang}-${width}.png`});
+  evidence.cases.push({route:'policy-impact',lang,width,policyCount:1,permissionRequestCount:0,direction,overflow:false});
+ }
+ evidence.provisioning={capabilities:['propose','approve','revoke','use','inspect'],distinctGovernors:true,policyPreparation:true,policyProposal:true,policyApproval:false};
  for(const lang of ['en','ko','ar'])for(const width of [1440,1024,390])for(const route of ['access','integrations']){
   await root.setViewportSize({width,height:1000});await root.goto('about:blank');
   await root.goto(`${url}/?service=api&lang=${lang}#/${route}?lang=${lang}&view=${route==='access'?'grants':'clients'}`);

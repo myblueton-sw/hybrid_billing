@@ -121,6 +121,13 @@ func compile(s Spec) error {
 	}
 	return nil
 }
+
+func ValidateSpec(s Spec) error {
+	if !form(s) {
+		return ErrInvalid
+	}
+	return compile(s)
+}
 func clone(in Record) Record {
 	out := in
 	out.Proposal.Spec.From = in.Proposal.Spec.From.UTC()

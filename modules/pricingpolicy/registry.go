@@ -2,6 +2,7 @@ package pricingpolicy
 
 import (
 	"reflect"
+	"sort"
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/rating"
@@ -189,6 +190,22 @@ func (r *Registry) Record(workspace, id string) (Record, error) {
 		return Record{}, ErrNotFound
 	}
 	return clone(record), nil
+}
+
+func (r *Registry) Records(workspace string) ([]Record, error) {
+	if !validID(workspace) {
+		return nil, ErrInvalid
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	out := []Record{}
+	for key, record := range r.records {
+		if key[0] == workspace {
+			out = append(out, clone(record))
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Proposal.ID < out[j].Proposal.ID })
+	return out, nil
 }
 func (r *Registry) Resolve(scope Scope, id, want, actor string, from, to time.Time) (Record, error) {
 	if !validScope(scope) || !validID(id) || !validDigest(want) || !validID(actor) || !interval(from, to) {

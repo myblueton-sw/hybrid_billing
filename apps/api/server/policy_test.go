@@ -198,8 +198,10 @@ func TestSecondHolderTrustBoundaryIsPinned(t *testing.T) {
 	doc := map[string]any{}
 	_ = json.Unmarshal(f.mustOpenAPI(), &doc)
 	raw, _ := json.Marshal(doc)
+	paths := doc["paths"].(map[string]any)
+	_, legacyApproval := paths["/commands/policy.approve"]
 	if !strings.Contains(string(raw), `"required":["expected_epoch","expected_policy","max_age_minutes","step_up_minutes"]`) || !strings.Contains(string(raw), "trust.activate") ||
-		strings.Contains(string(raw), "policy.approve") {
+		legacyApproval {
 		t.Error("openapi")
 	}
 }

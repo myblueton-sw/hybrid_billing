@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "70d3781c7f206829ed882abbc3c7ee98e4eae3dd",
+  "scope": "service_reference_and_authentication_authority_contracts",
+  "production_unchanged": true,
+  "checks": {
+    "new_groups": 6,
+    "scoped": "PASS1.208s; initial4groups1.090s",
+    "race": "PASS14groups7.320s",
+    "full_server_short": "ok  \tgithub.com/myblueton-sw/hybrid_billing/apps/api/server\t186.417s\tcoverage: 99.6% of statements",
+    "server_coverage": {
+      "weighted_statements": 11783,
+      "uncovered": 51,
+      "calculated_percent": 99.5671730459136,
+      "go_display": "99.6%"
+    },
+    "required100": "NOT_MET",
+    "vet": "PASS server package",
+    "semantic_mutants": "two assertion-killed; exact restoration/private cache removed",
+    "ui_build_allpackages_foreigncompile": "NOT_RERUN unchanged production; preceding scoped snapshots retained"
+  },
+  "independent_source_review": "/root/hyb310_review PASS actual two test files and plan, no independent tests/mutations executed",
+  "boundaries": [
+    "Implicit customer/seller tests use real healthy create/issue before public party suspension; declared organization independently active",
+    "Missing organization revision99 is controlled public-module lifecycle drift, not ordinary HTTP command provenance",
+    "Sellerless2027 terms/year10000date/foreign configured terms/malformedorganization are explicitly helper inputs",
+    "Actual full one-row service batches/expired caller exercise retained P02 helper; no removed M04 population client restored",
+    "Pickup policy installed before actual password signin/issue; age-only staleness excludes epoch/identity/pickup expiry; fresh observer never sees open",
+    "No production edits, registry-map rewrite, new dependency interface, coverage exclusion or waiver",
+    "Earlier manifests remain historical; no new browser/native/foreign runtime/Claude/FIX/Graphify/deployment claim",
+    "Package100 and authorized merge/readback remain pending; bounded M04 aggregate already PASS"
+  ],
+  "source_files": [
+    {
+      "path": "apps/api/server/service_reference_contracts_test.go",
+      "sha256": "ae92a64fc289b03a757cca0f086efb89a29fe62d443bcaca319c640fed120ea0",
+      "bytes": 6084
+    },
+    {
+      "path": "apps/api/server/service_authority_contracts_test.go",
+      "sha256": "604f3c371ae1dd7855b8c07f8cd78667d894401ea1de053129dc97c4d81d58f5",
+      "bytes": 2768
+    },
+    {
+      "path": "apps/api/server/servicedeclaration.go",
+      "sha256": "d40422444222bff0b4d525caf008721cfcae5620ba5884ede3a833cc5bfd3598",
+      "bytes": 10192
+    },
+    {
+      "path": "apps/api/server/services.go",
+      "sha256": "699e5867439a9c44eb4d0bef1ebb06a4ddd180cbbbf72043ff7f8ee9b56c43a3",
+      "bytes": 12586
+    },
+    {
+      "path": "apps/api/server/servicequery_credentials.go",
+      "sha256": "d86a15751f30ee0c588dfc82338872f10151ffb5cce0fa2ba50ee2e7823419ee",
+      "bytes": 5049
+    },
+    {
+      "path": "apps/api/server/commands.go",
+      "sha256": "8091f911637d308b4e8c9c5bc98db2d55a6dc618fc5a545e8b0f9e480d7b08fd",
+      "bytes": 7408
+    },
+    {
+      "path": "apps/api/server/contractseed.go",
+      "sha256": "32c9842d20f176c4f79b70319164a4354405d1d80eeb7261793f6e48744ff494",
+      "bytes": 6479
+    },
+    {
+      "path": "apps/api/server/servicedeclaration_fixture_test.go",
+      "sha256": "a247ef50a71387d58bc3d91cb6c2eef49704c35272f17df20b778a000540d895",
+      "bytes": 1058
+    },
+    {
+      "path": "apps/api/server/servicedeclaration_eligibility_test.go",
+      "sha256": "9e377fafe29d1c5201bcce84924d111d2da72fb8066c30cd050c8b8a3622c062",
+      "bytes": 7067
+    },
+    {
+      "path": "apps/api/server/world_test.go",
+      "sha256": "f4af583baa429cbf942a76a2cbf333ab9e2d4f31ba0dc1b250fecf68133ed38f",
+      "bytes": 5910
+    },
+    {
+      "path": "modules/contracts/query.go",
+      "sha256": "ce1bf2ef1595336046a711356c6c01d7628d5463e598a979a199ea6fcbccc75c",
+      "bytes": 1617
+    },
+    {
+      "path": "modules/servicecatalog/catalog.go",
+      "sha256": "1fd0b5fa98f2797f35c13650407bae9e338b719719e7cbd21871fd908b7d229c",
+      "bytes": 8118
+    },
+    {
+      "path": "modules/authpolicy/common.go",
+      "sha256": "ecc4e737da59c7f2ef1a0745ba4e952b07df8d2e7c2fefd8c1010dc5f16e50d5",
+      "bytes": 2568
+    },
+    {
+      "path": "docs/features/HYB-304/m04-service-reference-contracts.md",
+      "sha256": "2ccea93224ac768a540bd882b058bd3cc827daa4df5553a28eeb4eb6884b7787",
+      "bytes": 4922
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "67585b73ddf11221a8e2d18c85caebb33c7d4cd0db4c500b078efa03231d0826",
+      "bytes": 37961
+    },
+    {
+      "path": "docs/features/HYB-304/m04-completion.md",
+      "sha256": "5a7823f2e811e08f0a77e9e093af6dab552a8beadef8f2323ad2bfce89844408",
+      "bytes": 16412
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "cf87befbcf8a6921eb54968e536135d8aa6556577f5fcea26e29135c074a8e0d",
+      "bytes": 60369
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-reference-first.log",
+      "sha256": "8d076f706b6e8985fb57f7d07d8c7453720752c8fa491e7e532c0afe3c70e91a",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-reference-scoped.log",
+      "sha256": "ebbb09fcc1a0515091500a6561478f5a273961d267915b243fb41523464a47e9",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-reference-race.log",
+      "sha256": "376869af587c3b5417cb45391d5230259024031788f554c0735c803e1e8578b2",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-reference-server.log",
+      "sha256": "0747cb0e2eaaa59a4404a5248b2fff58b781fa664bb344e8736d9002cb637128",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-reference-server.cover",
+      "sha256": "17f5e90e69da66d8d23fbea88e005ac3a21593fb9d1e844e4a48cea667e1cdfa",
+      "bytes": 684766
+    },
+    {
+      "path": "/private/tmp/hb304-reference-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-reference-mutants.log",
+      "sha256": "76b4b6b10eeaddfe49cb10e6b6f6bcef0b9a308f88acda3eb5e51ad9f14d05a6",
+      "bytes": 49
+    },
+    {
+      "path": "/private/tmp/hb304-reference-mutants.json",
+      "sha256": "ee8d6065e388a87ab1ae89dbd039681d04b342ff591e237a6dd9283e525a6427",
+      "bytes": 900
+    },
+    {
+      "path": "/private/tmp/hb304-reference-mutant-implicit-customer.log",
+      "sha256": "40e4aa1d348f45740600ea9d5815e008e823965fd7619a004fb5f90d8e6e8396",
+      "bytes": 418
+    },
+    {
+      "path": "/private/tmp/hb304-reference-mutant-pickup-freshness.log",
+      "sha256": "1dacbe1eb31a850391b26a9932102f8c677e8c61416741e4caa9983edea8d5f5",
+      "bytes": 263
+    },
+    {
+      "path": "/private/tmp/hb304-reference-test-names.json",
+      "sha256": "9a3726b728fb14b1d374f7b55cab829b2aa42a3153fc600211b0c1dc9768b16a",
+      "bytes": 457
+    },
+    {
+      "path": "/private/tmp/hb304-reference-race-test-names.json",
+      "sha256": "83856ace0b170114e26e3906ea652d87626668c2e479367276690cd53cd7d877",
+      "bytes": 993
+    },
+    {
+      "path": "/private/tmp/hb304-reference-coverage-summary.json",
+      "sha256": "3784ba63f3d6b7163360e25721b0ee1059d26e083403a1a5e6646ba3367c358c",
+      "bytes": 121
+    },
+    {
+      "path": "/private/tmp/hb304-reference-source-checks.log",
+      "sha256": "da1993338aa78267835b8e5ee89872d3a4299646e24874a32c0ac56534065e93",
+      "bytes": 156
+    },
+    {
+      "path": "/private/tmp/hb304-reference-okf.log",
+      "sha256": "ad1dabaf6fd44b97c2ba48c91cc833bc69a88c2e8baf813908fc24f5d1465527",
+      "bytes": 100
+    }
+  ],
+  "independent_evidence_review": "/root/hyb310_copy_render PASS17source/15artifact bindings, terminal profile/log/mutation/restoration and narrative boundaries; read-only no tests/services executed"
+}

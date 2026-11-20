@@ -199,10 +199,7 @@ func (s *chargeCandidates) capture(in chargeInput) (chargeCandidate, error) {
 	if copied.Normalized.Pricing != nil && (!result.NoRuleHeld || len(result.Excluded) != 0) {
 		return chargeCandidate{}, errCandidateInvalid
 	}
-	schema := "hb_charge_candidate_v5"
-	if copied.Normalized.InputEligibility != nil {
-		schema = "hb_charge_candidate_v6"
-	}
+	schema := candidateSchema(copied)
 	envelope, err := json.Marshal(chargeEnvelope{Schema: schema, Input: copied, Result: result})
 	if err != nil {
 		return chargeCandidate{}, err
@@ -234,4 +231,14 @@ func (s *chargeCandidates) read(workspace, id string) (chargeCandidate, error) {
 		return chargeCandidate{}, errCandidateMissing
 	}
 	return decodeCandidate(record)
+}
+
+func candidateSchema(in chargeInput) string {
+	if in.Normalized.CaptureAuthor != "" {
+		return "hb_charge_candidate_v7"
+	}
+	if in.Normalized.InputEligibility != nil {
+		return "hb_charge_candidate_v6"
+	}
+	return "hb_charge_candidate_v5"
 }

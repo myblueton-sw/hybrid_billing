@@ -57,6 +57,7 @@ type normalizedRowOrigin struct {
 }
 
 type normalizedOrigin struct {
+	CaptureAuthor    string                    `json:",omitempty"`
 	InputEligibility *candidateInputProvenance `json:",omitempty"`
 	Pricing          *pricingpolicy.Record
 	Source           candidateSource
@@ -247,10 +248,10 @@ func (p *normalizedCharges) captureLocked(workspace, runID, candidateID string, 
 }
 
 func (p *normalizedCharges) captureBoundLocked(workspace, runID, candidateID string, b normalizedBinding, pricing *pricingpolicy.Record) (chargeCandidate, error) {
-	return p.captureEvidenceLocked(workspace, runID, candidateID, b, pricing, nil)
+	return p.captureEvidenceLocked(workspace, runID, candidateID, b, pricing, nil, "")
 }
 
-func (p *normalizedCharges) captureEvidenceLocked(workspace, runID, candidateID string, b normalizedBinding, pricing *pricingpolicy.Record, eligibility *candidateInputProvenance) (chargeCandidate, error) {
+func (p *normalizedCharges) captureEvidenceLocked(workspace, runID, candidateID string, b normalizedBinding, pricing *pricingpolicy.Record, eligibility *candidateInputProvenance, author string) (chargeCandidate, error) {
 	cost, classes, err := p.fields(b)
 	if err != nil {
 		return chargeCandidate{}, err
@@ -286,7 +287,7 @@ func (p *normalizedCharges) captureEvidenceLocked(workspace, runID, candidateID 
 	if err != nil {
 		return chargeCandidate{}, err
 	}
-	origin := normalizedOrigin{InputEligibility: eligibility, Pricing: pricing, Source: source, Lifecycle: lifecycle, Binding: b, Run: runID, Mapping: run.Spec.Mapping, MappingRevision: run.Spec.Revision, Manifest: run.Spec.Input.Manifest,
+	origin := normalizedOrigin{CaptureAuthor: author, InputEligibility: eligibility, Pricing: pricing, Source: source, Lifecycle: lifecycle, Binding: b, Run: runID, Mapping: run.Spec.Mapping, MappingRevision: run.Spec.Revision, Manifest: run.Spec.Input.Manifest,
 		Profile: run.ProfileID, ProfileRevision: run.ProfileRevision, WindowFrom: run.Spec.Window.From.UTC().Format(time.RFC3339Nano), WindowTo: run.Spec.Window.To.UTC().Format(time.RFC3339Nano), Contract: contract, BillingProfile: profile, Document: document}
 	origin.TargetDigest, err = normalizedDigest(p.target)
 	if err != nil {

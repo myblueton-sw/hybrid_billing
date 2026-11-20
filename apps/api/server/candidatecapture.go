@@ -79,6 +79,9 @@ func (p *normalizedCharges) captureBinding(workspace, id string) (candidateCaptu
 
 func validCandidateInput(in chargeInput) bool {
 	p := in.Normalized.InputEligibility
+	if author := in.Normalized.CaptureAuthor; author != "" && (!validRequestID(author) || p == nil) {
+		return false
+	}
 	if p == nil {
 		return true
 	}
@@ -154,7 +157,7 @@ func (h pricingPolicyCommand) capture(ctx commands.Context) (commands.Outcome, e
 	if err != nil {
 		return commands.Outcome{}, err
 	}
-	candidate, err := p.captureGovernedInputLocked(p.pricingPolicies, owned.Scope, ctx.Fields["policy"], ctx.Fields["policy_digest"], ctx.User, owned.SourceRun, ctx.Target, owned.Binding, input)
+	candidate, err := p.captureGovernedInputLocked(p.pricingPolicies, owned.Scope, ctx.Fields["policy"], ctx.Fields["policy_digest"], ctx.User, owned.SourceRun, ctx.Target, owned.Binding, input, ctx.User)
 	if err != nil {
 		return commands.Outcome{}, pricingPolicyError(err)
 	}

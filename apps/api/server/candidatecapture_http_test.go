@@ -43,7 +43,7 @@ func TestCandidateCaptureHTTPVerifiedInputAndPolicy(t *testing.T) {
 		t.Fatal("capture receipt", got.raw)
 	}
 	candidate, err := f.s.chargeProducer.candidates.read(SampleWorkspace, "verified-candidate")
-	if err != nil || candidate.Envelope.Schema != "hb_charge_candidate_v6" || candidate.Envelope.Result.Total != "15" || candidate.Envelope.Result.Currency != "USD" {
+	if err != nil || candidate.Envelope.Schema != "hb_charge_candidate_v7" || candidate.Envelope.Input.Normalized.CaptureAuthor != SampleMember || candidate.Envelope.Result.Total != "15" || candidate.Envelope.Result.Currency != "USD" {
 		t.Fatal("exact calculation", candidate, err)
 	}
 	input := candidate.Envelope.Input.Normalized.InputEligibility

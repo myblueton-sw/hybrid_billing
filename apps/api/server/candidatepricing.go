@@ -114,10 +114,10 @@ func (p *normalizedCharges) captureGoverned(policies *pricingpolicy.Registry, sc
 	return p.captureGovernedLocked(policies, scope, policyID, digest, actor, runID, candidateID, b)
 }
 func (p *normalizedCharges) captureGovernedLocked(policies *pricingpolicy.Registry, scope pricingpolicy.Scope, policyID, digest, actor, runID, candidateID string, b normalizedBinding) (chargeCandidate, error) {
-	return p.captureGovernedInputLocked(policies, scope, policyID, digest, actor, runID, candidateID, b, nil)
+	return p.captureGovernedInputLocked(policies, scope, policyID, digest, actor, runID, candidateID, b, nil, "")
 }
 
-func (p *normalizedCharges) captureGovernedInputLocked(policies *pricingpolicy.Registry, scope pricingpolicy.Scope, policyID, digest, actor, runID, candidateID string, b normalizedBinding, eligibility *candidateInputProvenance) (chargeCandidate, error) {
+func (p *normalizedCharges) captureGovernedInputLocked(policies *pricingpolicy.Registry, scope pricingpolicy.Scope, policyID, digest, actor, runID, candidateID string, b normalizedBinding, eligibility *candidateInputProvenance, author string) (chargeCandidate, error) {
 	if policies == nil || policies != p.pricingPolicies || !reflect.ValueOf(b.Policy).IsZero() || !reflect.ValueOf(b.Profile).IsZero() || !reflect.ValueOf(b.Limits).IsZero() || b.Contract != scope.Contract || b.BillingProfile != scope.BillingProfile {
 		return chargeCandidate{}, errCandidateInvalid
 	}
@@ -136,5 +136,5 @@ func (p *normalizedCharges) captureGovernedInputLocked(policies *pricingpolicy.R
 	b.Policy = approved.Proposal.Spec.Policy
 	b.Profile = approved.Proposal.Spec.Profile
 	b.Limits = approved.Proposal.Spec.Limits
-	return p.captureEvidenceLocked(scope.Workspace, runID, candidateID, b, &approved, eligibility)
+	return p.captureEvidenceLocked(scope.Workspace, runID, candidateID, b, &approved, eligibility, author)
 }

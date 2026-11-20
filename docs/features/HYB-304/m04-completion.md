@@ -76,3 +76,7 @@ This bounded aggregate PASS is not overall readiness. Required server100% remain
 # Latest reservation input checkpoint
 
 [Malformed reservation input verification](m04-reservation-input-contracts.md) preserves genuine recovery and exact accounting across signed boundary inputs. Full server short passed198.269s, native99.7%,11,779 weighted statements/35 uncovered. Eight race groups, vet and Linux/Windows compilation passed. Independent actual-source review passed; two guard mutations were assertion-killed with exact restoration. This test-only increment preserves bounded aggregate PASS; the separate required100% gate remains unmet. Merge/read-back remains pending.
+
+# Latest command dependency checkpoint
+
+[Command dependency verification](m04-command-dependency-contracts.md) preserves genuine populated service resources across two execution dependency refusals and one staged public-module insertion conflict. Three semantic mutations were assertion-killed/restored; independent actual-source review passed. Full server short passed195.198s at native99.7%,11,779 weighted statements/30 uncovered; five race groups, vet and Linux/Windows compilation passed. Bounded aggregate review remains PASS; required100%, authorized merge/read-back and parent M03/M02 remain open.

@@ -169,3 +169,7 @@ The [action draft record](m04-action-draft.md) resolves the separate reproduced 
 # Malformed reservation charge preservation
 
 [Reservation input verification](m04-reservation-input-contracts.md) proves invalid signed charges cannot evict genuine accepted operations or corrupt independently recomputed accounting. Both guard mutations failed the intended assertion and were restored. Scoped/native server tests, eight race groups, vet and Linux/Windows compilation passed. Latest native server coverage is99.7%,11,779 weighted statements/35 uncovered; one new guard unit is also hit in a separate focused profile. No production or frontend changed. Required100%, authorized merge/read-back and parent M03/M02 remain open.
+
+# Execution-time dependency refusal and staged create conflict
+
+[Command dependency verification](m04-command-dependency-contracts.md) preserves genuine populated service resources across two execution dependency refusals and one staged public-module insertion conflict. Three semantic mutations were assertion-killed/restored; independent actual-source review passed. Full server short passed195.198s at native99.7%,11,779 weighted statements/30 uncovered; five race groups, vet and Linux/Windows compilation passed. Bounded aggregate review remains PASS; required100%, authorized merge/read-back and parent M03/M02 remain open.

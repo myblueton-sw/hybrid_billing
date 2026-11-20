@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { licenseNotices } from "./license-notices";
 import { proxyFor } from "./proxy-config";
 const root = fileURLToPath(new URL(".", import.meta.url));
 const foundation = resolve(root, "../../packages/design-system");
@@ -30,6 +31,7 @@ const inputs = [
   resolve(root, "index.html"),
   resolve(root, "vite.config.ts"),
   resolve(root, "proxy-config.ts"),
+  resolve(root, "license-notices.ts"),
 ].sort();
 const revision = hash(
   inputs
@@ -40,15 +42,6 @@ const revision = hash(
     .join("\n"),
 );
 const proxy = proxyFor(process.env.HB_GATED === "1");
-const licensePackages = [
-  "react",
-  "react-dom",
-  "scheduler",
-  "@fontsource/ibm-plex-sans",
-  "@fontsource/ibm-plex-sans-kr",
-  "@fontsource/ibm-plex-sans-arabic",
-  "@fontsource/ibm-plex-mono",
-];
 export default defineConfig({
   base: "./",
   define: { __SOURCE_REVISION__: JSON.stringify(revision) },
@@ -61,20 +54,9 @@ export default defineConfig({
     assetsInlineLimit: 0,
   },
   plugins: [
+    licenseNotices(root),
     {
       name: "provenance-and-notices",
-      generateBundle() {
-        for (const name of licensePackages) {
-          this.emitFile({
-            type: "asset",
-            fileName: `licenses/${name.replaceAll("/", "-")}.txt`,
-            source: readFileSync(
-              resolve(root, "node_modules", name, "LICENSE"),
-              "utf8",
-            ),
-          });
-        }
-      },
       closeBundle() {
         const output = resolve(root, "dist");
         writeFileSync(

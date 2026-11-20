@@ -1,0 +1,98 @@
+{
+  "notices": [
+    {
+      "name": "react",
+      "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+      "development": true,
+      "built": true
+    },
+    {
+      "name": "react-dom",
+      "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+      "development": true,
+      "built": true
+    },
+    {
+      "name": "scheduler",
+      "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+      "development": true,
+      "built": true
+    },
+    {
+      "name": "@fontsource/ibm-plex-sans",
+      "sha256": "d0283623ef57e722fd0eb688a8041589670c608ab780cd3612d06ba6f153d3fd",
+      "development": true,
+      "built": true
+    },
+    {
+      "name": "@fontsource/ibm-plex-sans-kr",
+      "sha256": "ac79862d95040358b197a7326fb0f94cbe1104fbdd3a65c735e29a7cfd3eabcb",
+      "development": true,
+      "built": true
+    },
+    {
+      "name": "@fontsource/ibm-plex-sans-arabic",
+      "sha256": "1c32ddc3fc6efd167cdcbe475195287f2dc26ed1a4c92fbe31c87ceaffe44f98",
+      "development": true,
+      "built": true
+    },
+    {
+      "name": "@fontsource/ibm-plex-mono",
+      "sha256": "23b0a9d0c6d3f140a0b77e483c5cfa6bba574325ef5cb189ed9f2fec4884533f",
+      "development": true,
+      "built": true
+    }
+  ],
+  "screens": [
+    {
+      "locale": "ko",
+      "width": 1440,
+      "links": 7,
+      "popup": true,
+      "empty_search": true,
+      "overflow": false
+    },
+    {
+      "locale": "ko",
+      "width": 390,
+      "links": 7,
+      "popup": true,
+      "empty_search": true,
+      "overflow": false
+    },
+    {
+      "locale": "en",
+      "width": 1440,
+      "links": 7,
+      "popup": true,
+      "empty_search": true,
+      "overflow": false
+    },
+    {
+      "locale": "en",
+      "width": 390,
+      "links": 7,
+      "popup": true,
+      "empty_search": true,
+      "overflow": false
+    },
+    {
+      "locale": "ar",
+      "width": 1440,
+      "links": 7,
+      "popup": true,
+      "empty_search": true,
+      "overflow": false
+    },
+    {
+      "locale": "ar",
+      "width": 390,
+      "links": 7,
+      "popup": true,
+      "empty_search": true,
+      "overflow": false
+    }
+  ],
+  "errors": [],
+  "browser": "153.0.8010.12"
+}

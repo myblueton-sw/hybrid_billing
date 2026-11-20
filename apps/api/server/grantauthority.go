@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
+	"github.com/myblueton-sw/hybrid_billing/modules/financialrequestauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
@@ -22,7 +23,7 @@ type serverGrantAuthority struct {
 }
 
 func newServerGrantAuthority(s *Server, limits inputauthority.Limits, domain grantAuthorityDomain) (*serverGrantAuthority, error) {
-	if s == nil || s.cfg.Seed != SeedSample || (domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain) {
+	if s == nil || s.cfg.Seed != SeedSample || (domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain && domain != financialRequestDomain) {
 		return nil, inputauthority.ErrInvalid
 	}
 	a := &serverGrantAuthority{s: s, domain: domain, bindings: make(map[string]inputauthority.Spec), ceilings: make(map[string]inputauthority.Spec)}
@@ -34,6 +35,8 @@ func newServerGrantAuthority(s *Server, limits inputauthority.Limits, domain gra
 		a.registry, err = pricingauthority.NewRegistry(limits, a, a, a, s.clock)
 	case financialPermissionDomain:
 		a.registry, err = financialpermission.NewRegistry(limits, a, a, a, s.clock)
+	case financialRequestDomain:
+		a.registry, err = financialrequestauthority.NewRegistry(limits, a, a, a, s.clock)
 	}
 	if err != nil {
 		return nil, err
@@ -120,6 +123,9 @@ func (a *serverGrantAuthority) recordLocked(workspace, id string) (inputauthorit
 }
 
 func (a *serverGrantAuthority) grant(id string, spec inputauthority.Spec) (gate.Grant, error) {
+	if a.domain == financialRequestDomain && !a.financialRequestShape(spec) {
+		return gate.Grant{}, inputauthority.ErrInvalid
+	}
 	if a.domain == financialPermissionDomain && (a.s == nil || spec.Workspace != a.s.bootWorkspace || spec.Kind != financialpermission.DirectHuman || spec.CeilingID != "") {
 		return gate.Grant{}, inputauthority.ErrInvalid
 	}

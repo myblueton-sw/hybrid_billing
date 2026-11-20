@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
+	"github.com/myblueton-sw/hybrid_billing/modules/financialrequestauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
@@ -13,9 +14,13 @@ const (
 	inputGrantAuthority       grantAuthorityDomain = 1
 	pricingGrantAuthority     grantAuthorityDomain = 2
 	financialPermissionDomain grantAuthorityDomain = 3
+	financialRequestDomain    grantAuthorityDomain = 4
 )
 
 func (d grantAuthorityDomain) grantPrefix() string {
+	if d == financialRequestDomain {
+		return "financial-request-"
+	}
 	if d == financialPermissionDomain {
 		return "financial-permission-"
 	}
@@ -28,6 +33,9 @@ func (d grantAuthorityDomain) grantPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) faultPrefix() string {
+	if d == financialRequestDomain {
+		return "financial-request-"
+	}
 	if d == financialPermissionDomain {
 		return "financial-permission-"
 	}
@@ -40,6 +48,12 @@ func (d grantAuthorityDomain) faultPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) terms(workspace, capability string) (gate.Terms, error) {
+	if d == financialRequestDomain {
+		if capability != financialrequestauthority.Request {
+			return gate.Terms{}, inputauthority.ErrInvalid
+		}
+		return gate.Terms{Action: gate.RequestApproval, Kind: financialrequestauthority.ResourceKind, Scope: gate.Scope{WorkspaceID: workspace, Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}, Period: gate.AnyPeriod()}, nil
+	}
 	if d == financialPermissionDomain {
 		if capability != financialpermission.Approve {
 			return gate.Terms{}, inputauthority.ErrInvalid
@@ -92,6 +106,8 @@ func (s *Server) grantAuthority(domain grantAuthorityDomain) *serverGrantAuthori
 		return s.pricingAuthority
 	case financialPermissionDomain:
 		return s.financialPermission
+	case financialRequestDomain:
+		return s.financialRequestPermission
 	}
 	return nil
 }

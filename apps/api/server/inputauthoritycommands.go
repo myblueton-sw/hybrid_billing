@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
+	"github.com/myblueton-sw/hybrid_billing/modules/financialrequestauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
@@ -59,6 +60,17 @@ func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, er
 	if a == nil {
 		return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
 	}
+	if h.domain == financialRequestDomain {
+		if h.s.cfg.Commands.Fields < 20 || h.s.cfg.Commands.Value < 1024 {
+			return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
+		}
+		if err := a.caller(ctx.Workspace, ctx.User); err != nil {
+			return commands.Outcome{}, inputAuthorityError(err)
+		}
+		if _, err := a.Check(ctx.Workspace, ctx.User); err != nil {
+			return commands.Outcome{}, inputAuthorityError(err)
+		}
+	}
 	var record inputauthority.Record
 	var err error
 	switch h.kind {
@@ -69,6 +81,9 @@ func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, er
 			return commands.Outcome{}, commands.Fail(commands.InvalidRequest, "not_before", "not_after")
 		}
 		spec := inputauthority.Spec{Capability: ctx.Fields["capability"], Workspace: ctx.Workspace, Kind: inputauthority.Console, Recipient: ConsoleClient, NotBefore: before, NotAfter: after}
+		if h.domain == financialRequestDomain {
+			spec.Capability = financialrequestauthority.Request
+		}
 		if h.kind == "propose_human" {
 			spec.Kind = inputauthority.Human
 			spec.Recipient = ctx.Fields["recipient"]
@@ -97,6 +112,9 @@ func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, er
 		return commands.Outcome{}, inputAuthorityError(err)
 	}
 	out := commands.Outcome{Fields: inputAuthorityFields(record)}
+	if h.domain == financialRequestDomain {
+		out.Fields["receipt"] = "historical_decision"
+	}
 	if h.kind != "inspect" {
 		out.ResultRevision = h.s.Next()
 		out.BusinessState = record.State
@@ -117,11 +135,16 @@ func (s *Server) grantAuthorityDefinitions(domain grantAuthorityDomain) []comman
 		prefix = "input_authority"
 	case pricingGrantAuthority:
 		prefix = "pricing_authority"
+	case financialRequestDomain:
+		prefix = "financial_request_permission"
 	default:
 		return nil
 	}
 	permission := commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}
 	times := []commands.Field{{Name: "capability", Type: commands.ID, Required: true}, {Name: "not_before", Type: commands.Text, Required: true}, {Name: "not_after", Type: commands.Text, Required: true}}
+	if domain == financialRequestDomain {
+		times = times[1:]
+	}
 	human := append(append([]commands.Field{}, times...), commands.Field{Name: "recipient", Type: commands.ID, Required: true}, commands.Field{Name: "ceiling", Type: commands.ID, Required: true})
 	digest := []commands.Field{{Name: "digest", Type: commands.Text, Required: true}}
 	definitions := []commands.Definition{}

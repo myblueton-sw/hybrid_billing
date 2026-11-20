@@ -16,21 +16,25 @@ type financialPermissionCommand struct {
 }
 
 func (s *Server) financialPermissionBoundary(command string, call commands.Call) commands.Code {
+	var a *serverGrantAuthority
 	switch command {
 	case "financial_permission.propose", "financial_permission.approve", "financial_permission.reject", "financial_permission.withdraw", "financial_permission.inspect":
+		a = s.financialPermission
+	case "financial_request_permission.propose_console", "financial_request_permission.propose_human", "financial_request_permission.approve", "financial_request_permission.reject", "financial_request_permission.withdraw", "financial_request_permission.inspect":
+		a = s.financialRequestPermission
 	default:
 		return ""
 	}
-	if s.financialPermission == nil {
+	if a == nil {
 		return ""
 	}
-	if err := s.financialPermission.caller(call.Answer.Workspace(), call.Answer.User()); err != nil {
+	if err := a.caller(call.Answer.Workspace(), call.Answer.User()); err != nil {
 		if errors.Is(err, gate.ErrUnavailable) {
 			return commands.DependencyUnavailable
 		}
 		return commands.PermissionDenied
 	}
-	if _, err := s.financialPermission.Check(call.Answer.Workspace(), call.Answer.User()); err != nil {
+	if _, err := a.Check(call.Answer.Workspace(), call.Answer.User()); err != nil {
 		if errors.Is(err, gate.ErrUnavailable) {
 			return commands.DependencyUnavailable
 		}

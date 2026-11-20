@@ -79,9 +79,10 @@ type Config struct {
 }
 
 type Server struct {
-	financialPolicies    map[string]financialPolicyBinding
-	financialAuthorities map[string]financialAuthorityBinding
-	financialPermission  *serverGrantAuthority
+	financialPolicies          map[string]financialPolicyBinding
+	financialAuthorities       map[string]financialAuthorityBinding
+	financialPermission        *serverGrantAuthority
+	financialRequestPermission *serverGrantAuthority
 
 	approvals        *approvals.Registry
 	approvalIndex    []approvalIndex
@@ -328,6 +329,9 @@ func New(cfg Config) (*Server, error) {
 				}
 				if err == nil {
 					s.financialPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, financialPermissionDomain)
+				}
+				if err == nil {
+					s.financialRequestPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, financialRequestDomain)
 				}
 				if err == nil {
 					s.inputReviews, err = newCandidateInputReviews(s.chargeProducer, serverInputReviewAuthority{s: s}, s.clock)

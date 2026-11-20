@@ -253,6 +253,7 @@ const fields: Record<string, [string, string, string]> = {
 const phrases: Record<string, [string, string, string]> = {
   "view|approval_review|approval_evidence": ["view approval request and decision records", "승인 요청·결정 기록 조회", "عرض سجلات طلبات الاعتماد والقرارات"],
   "approve|charge_approval|": ["approve charges", "청구 승인", "اعتماد الرسوم"],
+  "request_approval|charge_approval|": ["request approval for charges", "청구 승인 요청", "طلب اعتماد الرسوم"],
   "view_cost|charge_candidate|charge_evidence": ["view source costs and evidence for charge calculation candidates", "과금 계산 후보의 원천 비용·계산 근거 조회", "عرض تكاليف المصدر وأدلة نتائج احتساب الرسوم المبدئية"],
   "view|focus_data|rows": ["view rows of collected FOCUS data", "수집된 FOCUS 데이터 행 조회", "عرض صفوف بيانات FOCUS المجمّعة"],
 };

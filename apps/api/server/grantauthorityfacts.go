@@ -7,7 +7,7 @@ import (
 )
 
 func (a *serverGrantAuthority) Check(workspace, actor string) (string, error) {
-	if a.domain == financialPermissionDomain {
+	if a.domain == financialPermissionDomain || a.domain == financialRequestDomain {
 		return a.financialCheck(workspace, actor)
 	}
 	return a.s.governor(workspace, actor)

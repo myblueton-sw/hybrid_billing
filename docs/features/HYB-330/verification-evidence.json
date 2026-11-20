@@ -1,0 +1,378 @@
+{
+  "ticket": "HYB-330",
+  "machine": "mac_mini",
+  "baseline": "653adfe8bb8e1804aaeeea10accc4920fbf14e62",
+  "source_files": [
+    {
+      "path": "apps/console/package.json",
+      "sha256": "84cf1e322e6411639284a381269c3fc8aa634b4b641339c5ef150a2b40d516a0"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/installation/Live.tsx",
+      "sha256": "4902f0100348be32afb3f893781ad4710750656303f563b686de776de857a768"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/installation/LiveProposals.tsx",
+      "sha256": "b8c0e76f9a08cc694987867c6aae5a260e5dc247a8b6a5ca248c95300e891743"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/installation/live-model.ts",
+      "sha256": "086a8ecbfb1dc04640dd1603e2504914faa97a354149be89f900c6b5a3adce88"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/integrations/Live.tsx",
+      "sha256": "c280873c612651acba1e113296f0ab6259477259dde9c470ad9a80c3ff50975d"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/integrations/LiveChannels.tsx",
+      "sha256": "b40712afff2b0cc6524b84a5aeeb7e88419b6b491019e3fca4530144c96e583a"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/integrations/LiveCommand.tsx",
+      "sha256": "572387eb0322a3ed19d2499d23ff72391512543fe0e9b5794d07d6c31daf624d"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/integrations/LiveEvents.tsx",
+      "sha256": "da9fdedd3d60c725c8bf6a0968094be2801a9dc57877c965bd9c658870087637"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/integrations/LiveModules.tsx",
+      "sha256": "f4d65ff91ee5be1e11b61190ea482e930a19665f0c3672df1d745f5759bd3040"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/integrations/LivePending.tsx",
+      "sha256": "282bb7aac950b181ce3b4f87e6a9b6881e5be570c8baac918d03c71e150fb03e"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/integrations/LiveProposals.tsx",
+      "sha256": "facdccedac2e816862da1708656f184d81459455d14dc257a43e024d01ffca84"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/integrations/live-model.ts",
+      "sha256": "a3bad828d2ac6a60fe306415da001e2eff48d57796675b6f9a659c2cedd1b0c8"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/integrations/live-rights.ts",
+      "sha256": "8270a63296daaa05d670349a3c22bee0b26a26e5b31a6ebd2304d9377858d0c8"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/recovery/Live.tsx",
+      "sha256": "7c9b13ce099d111836b9a99246d29110c9e6f679c17fc546666fbde9595dfc01"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/recovery/LiveCommand.tsx",
+      "sha256": "3e8ed59297f9943bff317d69bf7c8e59f3fc6bf36315cacbc47017a46a55302c"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/recovery/LiveIsolation.tsx",
+      "sha256": "3372b87512d501b9abf6c6db0517bd3b351a8359725fbdf933fbaf530507b8e5"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/recovery/LiveProposals.tsx",
+      "sha256": "a1d5e3a5f11dba05a000905a3e0c49db8d3171b426bad723fdec0169890cd038"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/recovery/LiveResume.tsx",
+      "sha256": "6551b667b4afe9a8c16d933d4dfdc77557f5c6ac07f036c3115913825ede038d"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/recovery/live-model.ts",
+      "sha256": "38f9a16e184e978260d71f2efcfaff33cab1e73207a74c65996cb9c46856fb9c"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/release-evidence/Live.tsx",
+      "sha256": "f08d16f84f64d3293b36ac8cda3253f1bf24e0097a04d67dc49dfd342ba06262"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/release-evidence/LiveCommand.tsx",
+      "sha256": "b94ad75a12d8f59011ed3709af7efb18769fb432759dc59212d582a9a2f3910a"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/release-evidence/LiveDecisions.tsx",
+      "sha256": "84141a330bca9d94676022530a4e43ea6e11e5685c9019cd3ebe2e5200b05d9e"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/release-evidence/LiveLoad.tsx",
+      "sha256": "3d33cfc79e12df080c7833fa9c1a22c40e0cb45f340337397757d2d2fa8b58b6"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/release-evidence/LiveRequirements.tsx",
+      "sha256": "0794b50e216ab46b21e33fbb784f46027cdb469479c87d8bda43b8cf4f1642b9"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/release-evidence/live-model.ts",
+      "sha256": "53ef0c3e9bbdc8215ad8f8162e6c5e111fb348c00825cca0c6b345177c04c606"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/retention/Live.tsx",
+      "sha256": "eb6fc32cc287f9d59dd2d1ba2c9207221133dfb9501eb347e479a3eeb9a9b093"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/retention/LiveCommand.tsx",
+      "sha256": "acc94c7941255db166423e9e906b3037f072ae1fbb9b8e13bfe97de9f746dc27"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/retention/LiveDeletion.tsx",
+      "sha256": "3436eea0aa26c632b4dd89bba65a04886400e754360cd2d45d2af53410fac903"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/retention/LiveExpiry.tsx",
+      "sha256": "d4deb6401f18bba4f9183e4953f6f73f159cb37e68d6de7c95e70f44b3c7c884"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/retention/LiveHolds.tsx",
+      "sha256": "37328756801aa5aa21a32b3e8adafa1cbd58fc6b6d7df6897c6b5835089e1e9d"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/retention/LivePolicies.tsx",
+      "sha256": "139525137870a2fd71fe6d1e8544ef81c167014f73a73c74675f0993e429faff"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/retention/LiveProposals.tsx",
+      "sha256": "b2a11e838c442884930fc910583d17150b117218c1961226d981d5eb64fdd046"
+    },
+    {
+      "path": "apps/console/src/modules/administration/pages/retention/live-model.ts",
+      "sha256": "3def73967d0056f09943a42ff86e7f9770c120afdea4fd8cfbb7d75a27d1e9e3"
+    },
+    {
+      "path": "apps/console/src/service/CommandDiagnostics.tsx",
+      "sha256": "47af30fbc020b9a2d57a8ce0130e8b37c49e61904e54ec578288dad2009edef6"
+    },
+    {
+      "path": "apps/console/src/service/admin.test.ts",
+      "sha256": "78823595afa7151c582557ed13e88eae992a39cb88fe4376365fb2bfb8e69890"
+    },
+    {
+      "path": "apps/console/src/service/admin.ts",
+      "sha256": "7407c5bdb9397d5594416d569d881c6f5c7ef612e45bcf0e921883a744691103"
+    },
+    {
+      "path": "apps/console/src/service/command-diagnostics-render.test.tsx",
+      "sha256": "5c48d44062ee0014d8e74e9aa426d38d378f562b0c2f380bba1c17a4b0ccf462"
+    },
+    {
+      "path": "apps/console/src/service/command-diagnostics.css",
+      "sha256": "b92c1cb586ab66b5fa15073b7f8d3603a7764e0d921c0d3764d7cb1fb4b15671"
+    },
+    {
+      "path": "apps/console/src/service/command-diagnostics.test.ts",
+      "sha256": "6a90b75c94361af0ccaa979bbfc48a5f59f55dbb6d552afe4bc6cc906e940d6c"
+    },
+    {
+      "path": "apps/console/src/service/command-diagnostics.ts",
+      "sha256": "ca5ced33529e6b32a98ad4466c2e4afcb4fa9c9525b59886d8310bb2afd286f7"
+    },
+    {
+      "path": "apps/console/src/service/diagnostic-copy.ts",
+      "sha256": "f89783261654d05ead307fcdd8caf75c8551c8d7155c4873c858791cf9d4bc6f"
+    },
+    {
+      "path": "apps/console/src/service/refusal-diagnostics.test.ts",
+      "sha256": "fb8abd6fec09ead24e812a39d703b0c81014db81ecb48661284e4640f62350ec"
+    },
+    {
+      "path": "apps/console/tools/command-diagnostics-qa.mjs",
+      "sha256": "238042a825b37f19a25e7fe4d144025c5040368e2ebfc755db985359bf3bc059"
+    },
+    {
+      "path": "docs/features/HYB-330/implementation.md",
+      "sha256": "6b623aedac7827b11728e2ef712687e8830ae482de76b95add5ac1a9cbc142be"
+    },
+    {
+      "path": "docs/features/HYB-330/plan.md",
+      "sha256": "381f0106eddbf6d90efc9aceb47d5ffc9e287429866991f4b431ad02ec0b03f4"
+    },
+    {
+      "path": "docs/features/HYB-330/verification.md",
+      "sha256": "a3aaf6c7208ad7c1fa37016f261b24ed90b7ff1986c1756df4816088188b917a"
+    },
+    {
+      "path": "docs/features/HYB-330/visual-spec.md",
+      "sha256": "58b41f24077d0dd89f4d63440edc7eaa56717de1cf86f6f2db71d257eb73097c"
+    },
+    {
+      "path": "docs/ui/screen-binding-fields/operations.md",
+      "sha256": "e7729ce4f77fc18b6c8242f021c88dbe15d2de480ed9f7a2efe5e24ef0a105ee"
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "13f3d2cd5c523d4d2f29ee02b34a67055502e733ec82b615cbdf371dc125ec19"
+    },
+    {
+      "path": "docs/ui/terminology/product-glossary.md",
+      "sha256": "b101df265f650b4694a858f319bd14eb515152bbe9f7373db4a7d883e9a343a4"
+    }
+  ],
+  "local_artifacts": {
+    "root": "local temporary directory; raw logs/screenshots not committed and not guaranteed after cleanup",
+    "files": [
+      {
+        "file": "hb330-before-admin.log",
+        "sha256": "486521552d72958e65fb929d3e7d11d5db362299c4a0c8c78353ae3135621bdf",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb330-before-model.log",
+        "sha256": "0a014dee6b47dd33bf89f4af9e7e9e2d5efcb693acdfef8176f053d36e1d3764",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb330-tests.log",
+        "sha256": "0f74815c04169cd22c2e0772ea04e5ec5b0fffb4cdffe24bc18e070adeb99aa9",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb330-build.log",
+        "sha256": "4f70f6181066b84a24c0abd8983633bdb5a1ac93d6b8b7b093bddb1b85d9d536",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb330-style.log",
+        "sha256": "a29332748d7cd76eea55f61e3ac5ffd25ac85bf5cf835baa431013c015eaae86",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb330-mutations.log",
+        "sha256": "a0359436e359287101e53523f1495dcefe11869c466afbbad934c91036ae48f4",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330-before/baseline-1795136543384256000/browser.log",
+        "sha256": "9c41f20a1858916fc7f763670cecee0a85dc21a8c870e77f9549f713830c0810",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330-before/baseline-open-1795137440230058000/browser.log",
+        "sha256": "833bd66f6be70f0f72a83404dc544624ac6eea8551a98675f97460d667762f8a",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330-before/baseline-open-1795137514971490000/browser.log",
+        "sha256": "968ea948f82f13e15286ee6e6a8b65780b22e2196fec7bb9e0cb762dacaca1ff",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330/before-followup-1795136776995586000/browser.log",
+        "sha256": "c0fecee49ec8aa05ee206360fb4dcd6795d13bacc0a80b4a23163b78b97c4edc",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330/before-lifetime-1795137231775118000/browser.log",
+        "sha256": "6bae8a911b4f934191ac996e4cc5b9cb2592c386ebf67b84655fa7b5f68152db",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330/p04-before-1795137568425056000/browser.log",
+        "sha256": "1b29145a3052944f02d33517da23cc8ba7083a17bdb33834ad4a144eb2b31069",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330/p04-before-1795137648002084000/browser.log",
+        "sha256": "bde6b6c50bb4fffd7a68fdf940c33bf48eddb599dfa86c29ce71f3590c4ce16d",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330/p04-before-1795137712594474000/browser.log",
+        "sha256": "bde6b6c50bb4fffd7a68fdf940c33bf48eddb599dfa86c29ce71f3590c4ce16d",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330/p04-before-1795137744440097000/browser.log",
+        "sha256": "1450c2c78706489aa2d7aeb1e3b7ca1028e1545c321b373ae3babd595f68e213",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330/p04-before-1795137795529526000/browser.log",
+        "sha256": "63863312da726391369bf21dd893a18977771ed3b03cf16dc7b9c5ae6589e052",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330/final-1795137875844532000/browser.log",
+        "sha256": "248863db16c3580bbe2ba5fc22ad11c111ba95b336cc69ea530cfdb341469faf",
+        "raw_artifact_committed": false
+      },
+      {
+        "file": "hb-combined-qa/330/final-forms-1795137516199943000/browser.log",
+        "sha256": "498416442146f63f40c4b476b7b13109c44c9b8abefb4186bed54b48b6af73b5",
+        "raw_artifact_committed": false
+      }
+    ]
+  },
+  "frontend_revision": "cf4af031d59d7f232b214a0e4ca3ec907b3a8f1ede145245708b52e3b0378f9d",
+  "verification": {
+    "console_tests": {
+      "passed": 863,
+      "failed": 0
+    },
+    "browser": {
+      "passed": 310,
+      "failed": 0,
+      "runner": "apps/console/tools/command-diagnostics-qa.mjs",
+      "local_run": "hb-combined-qa/330/final-1795137875844532000/browser.log"
+    },
+    "mutants": [
+      {
+        "mutant": "scope",
+        "killed": true,
+        "log": "hb330-mutant-scope.log"
+      },
+      {
+        "mutant": "order",
+        "killed": true,
+        "log": "hb330-mutant-order.log"
+      },
+      {
+        "mutant": "response",
+        "killed": true,
+        "log": "hb330-mutant-response.log"
+      },
+      {
+        "mutant": "rate",
+        "killed": true,
+        "log": "hb330-mutant-rate.log"
+      },
+      {
+        "mutant": "cancel",
+        "killed": true,
+        "log": "hb330-mutant-cancel.log"
+      },
+      {
+        "mutant": "marker-installation",
+        "killed": true,
+        "log": "hb330-mutant-marker-installation.log"
+      },
+      {
+        "mutant": "marker-integrations",
+        "killed": true,
+        "log": "hb330-mutant-marker-integrations.log"
+      },
+      {
+        "mutant": "marker-recovery",
+        "killed": true,
+        "log": "hb330-mutant-marker-recovery.log"
+      },
+      {
+        "mutant": "marker-retention",
+        "killed": true,
+        "log": "hb330-mutant-marker-retention.log"
+      },
+      {
+        "mutant": "marker-release-evidence",
+        "killed": true,
+        "log": "hb330-mutant-marker-release-evidence.log"
+      }
+    ],
+    "source_restore": "Byte-for-byte SHA-checked after every mutant",
+    "documentation_tests": 2,
+    "build": "PASS",
+    "design_foundations": "PASS:8",
+    "remote_ci": "UNCONFIGURED, not PASS"
+  },
+  "reviews": {
+    "source": "PASS independent /root/hyb310_review",
+    "render_tw": "PASS independent /root/hyb310_copy_render",
+    "claude_ui_designer": "UNVERIFIED: actual weekly quota limit, reset Nov24 Asia/Seoul",
+    "native_assistive_owner": "UNVERIFIED"
+  }
+}

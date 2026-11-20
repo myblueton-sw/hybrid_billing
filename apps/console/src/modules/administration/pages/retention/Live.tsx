@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { DiagnosticDetails } from "../../../../service/CommandDiagnostics";
+import type { CommandDiagnostic } from "../../../../service/command-diagnostics";
+import { currentScope } from "./live-model";
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
+import "../../../../service/command-diagnostics.css";
+import { CommandDiagnostics, ErrorDiagnostics, useCommandDiagnostics } from "../../../../service/CommandDiagnostics";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
@@ -30,7 +36,7 @@ type Props = {
 function failureText(l: Locale, e: unknown): string {
   if (e instanceof AdminError) {
     if (e.failure === "limited") return sc.limited(l, retryPhrase(l, e.retryAfter || 60));
-    if (e.failure === "busy" || e.failure === "unavailable") return sc.unavailable(l);
+    if (e.failure === "busy" || e.failure === "unavailable") return diagnosticCopy.unavailable(l);
   }
   return "";
 }
@@ -46,7 +52,8 @@ function selectedOf(view: string, s: ReturnType<typeof selectionOf>): string {
 }
 
 export default function LiveRetention({ locale: l, view: rawView, params, session, onSignOut }: Props) {
-  const api = useAdminClient();
+  const source = useAdminClient();
+  const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]), () => { setNotice(""); setNoticeDetail(null); setTerminalDetail(null); });
   setScope(session.workspace, session.user, session.csrf);
   const view = viewOf(rawView);
   const [page, setPage] = useState<RetentionPage | null>(null);
@@ -55,6 +62,8 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   const [denied, setDenied] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [notice, setNotice] = useState("");
+  const [noticeDetail, setNoticeDetail] = useState<CommandDiagnostic | null>(null);
+  const [terminalDetail, setTerminalDetail] = useState<CommandDiagnostic | null>(null);
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
   const seq = useRef(0);
@@ -64,35 +73,37 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
 
   const load = useCallback(async (): Promise<RetentionPage | null> => {
     const n = ++seq.current;
+    const generation = currentScope();
     setBusy(true);
     try {
       const got = await api.retention();
-      if (n !== seq.current) return null;
+      if (n !== seq.current || generation !== currentScope()) return null;
       pruneRefusals(got);
       setPage(got);
       setStatus("ready");
       setLoadError(null);
       return got;
     } catch (e) {
-      if (n !== seq.current) return null;
+      if (n !== seq.current || generation !== currentScope()) return null;
       if (e instanceof AdminError && e.failure === "denied") setDenied(true);
       if (e instanceof AdminError && e.failure === "unauthenticated") setSignedOut(true);
       setLoadError(e);
       setStatus("error");
       return null;
     } finally {
-      if (n === seq.current) setBusy(false);
+      if (n === seq.current && generation === currentScope()) setBusy(false);
     }
   }, [api]);
 
-  useEffect(() => { void load(); }, [load]);
+  useLayoutEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
   useEffect(() => {
     if (!selectedId || scrolled.current === selectedId) return;
     scrolled.current = selectedId;
     document.getElementById(selectedId)?.scrollIntoView({ block: "center" });
   }, [selectedId]);
 
-  const showNotice = (text: string) => {
+  const showNotice = (text: string, reference?: CommandDiagnostic) => {
+    setNoticeDetail(reference ?? null);
     setNotice(text);
     requestAnimationFrame(() => document.getElementById("p04-notice")?.focus());
   };
@@ -110,6 +121,8 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   if (denied) {
     return (
       <div className="p04-live">
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
+        {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <section className="live-unavailable" aria-labelledby="p04-denied">
           <h2 id="p04-denied">{k.deniedTitle(l)}</h2>
           <p>{k.denied(l)}</p>
@@ -120,6 +133,8 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   if (signedOut) {
     return (
       <div className="p04-live">
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
+        {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
           <button type="button" className="live-secondary" onClick={() => { forget(); onSignOut(); }}>{k.signInAgain(l)}</button>
@@ -135,7 +150,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
         onDone: (text) => { void announce(text); },
         onNotice: showNotice,
         onReload: load,
-        onSignedOut: () => setSignedOut(true),
+        onSignedOut: (reference?: CommandDiagnostic) => { setTerminalDetail(reference ?? null); setSignedOut(true); },
       }
     : null;
   const gone = shared ? vanished(shared.page, view) : [];
@@ -143,6 +158,8 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
 
   return (
     <div className="p04-live" data-live={view} aria-busy={busy || undefined}>
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
+      {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
       <div className="p04-scope">
         <dl className="p04-scope-facts">
           <div><dt>{k.workspace(l)}</dt><dd>{page ? <Known l={l} value={session.workspace} /> : "—"}</dd></div>
@@ -154,10 +171,10 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
       <p className="live-note-rule p04-statement"><strong>{k.statementLead(l)}</strong> {k.statement(l)}</p>
       <p className="p04-note">{k.valuesNote(l)}</p>
       <p className="p04-note p04-permission">{k.permission(l)}</p>
-      {notice && <div id="p04-notice" className="service-status" tabIndex={-1} role="status"><p><Rich text={notice} /></p></div>}
+      {notice && <div id="p04-notice" className="service-status" tabIndex={-1} role="status"><p><Rich text={notice} /></p>{noticeDetail && <DiagnosticDetails l={l} detail={noticeDetail} />}</div>}
       {status === "error" && (
         <div className="live-error p04-failure" role="alert">
-          <h2>{sc.failed(l)}</h2>
+          <h2>{diagnosticCopy.load(l, "retention")}</h2>
           {failure && <p>{failure}</p>}
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>

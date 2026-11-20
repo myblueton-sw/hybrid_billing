@@ -8,7 +8,7 @@ import { r } from "./rights-copy";
 
 function Item({ p, ...shared }: Shared & { p: OwnPending }) {
   const { l } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<"withdraw">();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"withdraw">();
   const command = pendingCommand[p.kind];
   const kind = r.pendingKind(l, p.kind);
   const usable = shared.canCommand;
@@ -21,7 +21,7 @@ function Item({ p, ...shared }: Shared & { p: OwnPending }) {
       </div>
       <div className="p02-body">
         <p>{r.forTarget(l)} {ltr(p.object || p.target)}</p>
-        <RowNote kept={kept} blockers={[]} focus={focusNote} />
+        <RowNote l={l} diagnostics={diagnostics(p.target)} kept={kept} blockers={[]} focus={focusNote} />
         {usable && !open && (
           <div className="live-buttons">
             <button

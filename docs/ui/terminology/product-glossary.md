@@ -389,6 +389,18 @@ Candidate copy from the stable HYB-333 plan and implemented M04 messages. Semant
 | credential-secret-pickup-state / `never_collected` | 비밀 값 수령 안 됨 | Secret never collected | لم تُستلَم القيمة السرية | Pickup ended without the server returning the secret. Credential remains active until separately revoked or expired. |
 | issue-outcome-unknown | 발급 결과 확인 안 됨 | Issue outcome unknown | نتيجة الإصدار غير معروفة | Request may have committed. Same-request retry retains its original identity; never call it failed or definitely issued. |
 
+
+## Diagnostic request identity (HYB-330)
+
+| Concept | Korean candidate | English candidate | Arabic candidate | Meaning and exclusions |
+| --- | --- | --- | --- | --- |
+| server-error-code | 서버 오류 코드 | Server error code | رمز خطأ الخادم | Actual bounded response code, never a local failure category or a guessed HTTP-status mapping. |
+| server-request-id | 서버 요청 ID | Server request ID | معرّف طلب الخادم | Validated `request_id` returned in the error JSON. Does not prove that an action completed. |
+| client-request-id | 클라이언트 요청 ID | Client request ID | معرّف طلب العميل | Identifier attached to the browser's original attempt, separately labelled even when the response is missing. |
+| diagnostic-action-id | 작업 ID | Action ID | معرّف الإجراء | Canonical command identifier used to distinguish retained references for multiple actions on the same target. Does not grant permission. |
+
+Microsoft's [English notification-reference guidance](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/troubleshoot-password-based-sso#essential-notification-items) and [Korean version](https://learn.microsoft.com/ko-kr/entra/identity/enterprise-apps/troubleshoot-password-based-sso#중요-알림-항목), inspected 2026-11-20, explicitly distinguish a browser-made client request ID from other notification identifiers. Adopt that distinction; reject their decorative error-colour example and identity data collection, which are outside this product scope. The Arabic `ar-sa` page returned an English body at inspection and is not evidence of Arabic label approval. Arabic candidates reuse the P05 diagnostic concepts and remain pending native/practitioner review; model TW/render review is recorded separately.
+
 ## HYB-327 field-binding review
 
 - **API clients / API 클라이언트 / عملاء API** identifies authentication/integration clients, not billable business customers. Denied and unconfigured states retain the API qualifier even without a section heading.

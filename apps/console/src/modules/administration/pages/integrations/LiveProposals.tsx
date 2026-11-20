@@ -88,7 +88,7 @@ type Decision = "integrations.plugin_approve" | "integrations.plugin_withdraw";
 
 function Row({ p, ...shared }: Shared & { p: PluginProposal }) {
   const { l, selection, canCommand, page } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<Decision>();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<Decision>();
   const target = proposalTarget(p);
   const pendingRow = p.state === "pending";
   const n = numberText(l, p);
@@ -144,7 +144,7 @@ function Row({ p, ...shared }: Shared & { p: PluginProposal }) {
         )}
         {pendingRow && (
           <>
-            <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+            <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} />
             {(approveUsable || withdrawUsable) && !open && (
               <div className="live-buttons">
                 {approveUsable && (!open || open === "integrations.plugin_approve") && (

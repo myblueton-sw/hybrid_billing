@@ -32,7 +32,7 @@ export function DecisionSub({ l, decision, needed }: { l: Locale; decision: stri
 
 function ItemBody({ a, group, ...shared }: Shared & { a: ArtifactRow; group: ClassGroup }) {
   const { l, selection, canCommand } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<"hold">();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"hold">();
   const target = artifactTarget(a);
   const pending = target ? pendingNow("retention.place_hold", target) : undefined;
   const usable = canCommand && !!target && (a.holdable || !!pending);
@@ -95,7 +95,7 @@ function ItemBody({ a, group, ...shared }: Shared & { a: ArtifactRow; group: Cla
       {(open || kept || focusNote > 0) && (
         <tr className="p04-follow">
           <td colSpan={7}>
-            <RowNote kept={kept} blockers={[]} focus={focusNote} extra={!open && focusNote > 0 && blocked ? <p><Rich text={blocked} /></p> : undefined} />
+            <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={[]} focus={focusNote} extra={!open && focusNote > 0 && blocked ? <p><Rich text={blocked} /></p> : undefined} />
             {open && usable && (
               <HoldCommand {...shared} target={target} tenant={false} base={itemContext(a, group.class)} heading={k.holdHeading(l, a.id)} onClose={close} />
             )}

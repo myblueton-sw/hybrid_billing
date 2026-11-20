@@ -110,7 +110,7 @@ function Items({ l, r, page }: { l: Locale; r: RunRow; page: RetentionPage }) {
 
 function Run({ r, ...shared }: Shared & { r: RunRow }) {
   const { l, page, selection, canCommand } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<"stop">();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"stop">();
   const n = runNumber(r.run);
   const label = r.run && n ? r.run.label : "";
   const target = runTarget(r);
@@ -152,7 +152,7 @@ function Run({ r, ...shared }: Shared & { r: RunRow }) {
       <h4>{k.outcomeCounts(l)}</h4>
       <Strip l={l} counts={r.counts} keys={runOutcomeKeys} label={k.runOutcome} cls="p04-strip-8" />
       <div className="p04-actions">
-        <RowNote kept={kept} blockers={blockers} focus={focusNote} state={state} />
+        <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} state={state} />
         {usable && !open && (
           <div className="live-buttons">
             <button type="button" className="live-secondary p04-opener" aria-expanded={false} data-opener={mark("stop")} onClick={() => toggle("stop")}>{k.stopRun(l)}</button>

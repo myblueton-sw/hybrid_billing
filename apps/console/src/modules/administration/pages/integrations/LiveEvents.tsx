@@ -5,7 +5,7 @@ import { actor, blockerPolicy, deliveriesShown, letterTarget, pendingNow, refuse
 import { Code, Known, ListOr, Num, Prose, Who, href, ltr } from "./live-format";
 import { CommandForm, RowNote, blockerLines, plain, useOpen, type Blocker, type Shared } from "./LiveCommand";
 import { letterRequestTarget, redeliveryTarget } from "./live-model";
-import { letterApplies, lostAny, lostRight } from "./live-rights";
+import { letterApplies, lostFor, lostRight } from "./live-rights";
 import { r } from "./rights-copy";
 
 const commandOf = (a: LetterAction) => ("integrations.letter_" + a) as CommandKey;
@@ -85,12 +85,12 @@ function EventCell({ l, d }: { l: Locale; d: Delivery }) {
 
 function Letter({ d, ...shared }: Shared & { d: Delivery }) {
   const { l } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<LetterAction>();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<LetterAction>();
   const target = letterTarget(d);
   const requestTarget = (v: RequestValue) => (v !== null && v !== "unknown" ? letterRequestTarget(v) : "");
   const targetOf = (a: LetterAction) => (a === "withdraw_redeliver" ? requestTarget(d.redeliver_request) : a === "withdraw_dismiss" ? requestTarget(d.dismiss_request) : target);
   const usable = (a: LetterAction) => shared.canCommand && !!targetOf(a) && (d.actions[a].allowed || !!pendingNow(commandOf(a), targetOf(a)));
-  const lost = target ? lostAny(letterActions.filter((a) => a !== "reapprove").map(commandOf), target) || lostAny(["integrations.letter_withdraw_redeliver", "integrations.letter_withdraw_dismiss"], targetOf("withdraw_redeliver") || targetOf("withdraw_dismiss")) : "";
+  const lost = target ? lostFor(letterActions.filter((action) => action !== "reapprove").map((action) => [commandOf(action), targetOf(action)])) : "";
   const kept = !target ? "" : lost ? r.noLongerHeld(l, lost) : letterActions.some((a) => a !== "reapprove" && refusedNow(commandOf(a), targetOf(a))) ? k.kept(l, "letter") : "";
   const explains = (a: LetterAction) => {
     const code = d.actions[a].blocked;
@@ -108,7 +108,7 @@ function Letter({ d, ...shared }: Shared & { d: Delivery }) {
       {d.redeliver_request === null && d.dismiss_request === null && <p className="p02-small">{k.noRequests(l)}</p>}
       <RequestLine l={l} r={d.redeliver_request} lead={k.redeliverRequested} />
       <RequestLine l={l} r={d.dismiss_request} lead={k.dismissRequested} />
-      <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+      <RowNote l={l} diagnostics={diagnostics(letterActions.filter((action) => action !== "reapprove").map((action) => [commandOf(action), targetOf(action)]))} kept={kept} blockers={blockers} focus={focusNote} />
       {shown.length > 0 && (
         <div className="live-buttons">
           {shown.map((a) => (
@@ -145,7 +145,7 @@ function Letter({ d, ...shared }: Shared & { d: Delivery }) {
 
 function Held({ d, ...shared }: Shared & { d: Delivery }) {
   const { l } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<"reapprove">();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"reapprove">();
   const target = redeliveryTarget(d);
   const allowed = d.actions.reapprove.allowed;
   const usable = shared.canCommand && !!target && (allowed || !!pendingNow("integrations.redelivery_reapprove", target));
@@ -165,7 +165,7 @@ function Held({ d, ...shared }: Shared & { d: Delivery }) {
       <p className="p02-small">{r.requestedBy(l, actor(d.requester_login, d.requester) || k.unknown(l))}</p>
       <p className="p02-small">{k.approvedBy(l, actor(d.approver_login, d.approver) || k.unknown(l))}</p>
       <p className="p02-held-status">{r.heldStatus(l)}</p>
-      <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+      <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} />
       {usable && !open && (
         <div className="live-buttons">
           <button type="button" className="live-primary" aria-expanded={false} data-opener={mark("reapprove")} onClick={() => toggle("reapprove")}>{r.againButton(l)}</button>

@@ -292,6 +292,11 @@ Tracking: [HYB-295](https://linear.app/hybrid-billing/issue/HYB-295). [HB-257](.
 - **Tickets.** No binding ticket; `HB-257/plan.md:168` says P07 is not yet ticketed. Linear HYB-130 "[P07] Implement 라이선스·배포 고지 (/licenses)" (In Review) is a preview implementation ticket, not a service binding.
 - **Residual.** Distribution-notice evidence (HB-40) is deferred to P07 by HYB-315.
 
+
+## HYB-330 diagnostic binding
+
+P01–P05 `error:diagnostics` now displays confirmed error code and server request ID, separately labelled client request/target identity, field-location and existing next-step guidance. Refused row references live with their exact scoped marker; each open form keeps its own failure references. Unknown values remain unavailable. The API contract, rights and retry rules are unchanged. Grouped request actions use their canonical request target; terminal notices retain their own references. See [field map](screen-binding-fields/operations.md#administration-error-diagnostics-hyb-330) and [integration verification](../features/HYB-330/integration.md). No owner FIX is inferred.
+
 ## HYB-327 field-map follow-up
 
 Identity/organization response validation and M01/M02/P02/P05 field bindings are reconciled in [HYB-327 verification](../features/HYB-327/verification.md). P01 retains a validated count summary and explicitly documented detail/override limitations. This follow-up does not certify all original screen specifications or carry forward owner acceptance.

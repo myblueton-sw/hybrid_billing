@@ -265,7 +265,7 @@ export function blockingUntested(r: RequirementRow | undefined, candidate: Candi
 
 function RequirementBody({ r, reduced, ...shared }: Shared & { r: RequirementRow; reduced: boolean }) {
   const { l, page, selection, canCommand, mode } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<"retire">(requirementTarget(r));
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"retire">(requirementTarget(r));
   const target = requirementTarget(r);
   const n = target ? target.slice("trace-requirement-".length) : "";
   const pending = target ? pendingNow(command, target) : undefined;
@@ -319,7 +319,7 @@ function RequirementBody({ r, reduced, ...shared }: Shared & { r: RequirementRow
       </tr>
       <tr className="p05-follow">
         <td colSpan={cols}>
-          <RowNote kept={kept} blockers={blockers} focus={focusNote} state={state} pending={pending && !open ? f.pendingAttempt(l) : ""} />
+          <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} state={state} pending={pending && !open ? f.pendingAttempt(l) : ""} />
           {already && !open && <p className="p05-act-line"><PendingLink l={l} already={already} /></p>}
           {gate.usable && !open && !already && (
             <button type="button" className="live-secondary p05-opener" aria-expanded={false} data-opener={mark("retire")} onClick={() => toggle("retire")}>{k.proposeRetirement(l)}</button>

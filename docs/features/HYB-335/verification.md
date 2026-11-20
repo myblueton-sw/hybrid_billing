@@ -2,7 +2,7 @@
 type: VerificationRecord
 title: Local preview autofill verification
 description: Records development-only credential injection and sign-in behavior checks.
-status: draft
+status: stable
 ---
 
 # Behavior
@@ -13,7 +13,7 @@ The control fills the existing fields, clears earlier form errors and focuses Si
 
 Build and preview commands define the configuration as null regardless of environment. Development credential injection requires an explicitly resolved loopback listening host; non-loopback `--host` overrides fail startup. The browser also requires an exact loopback hostname. This helper is not a deployment or authentication feature.
 
-# Executed evidence
+# Original candidate evidence
 
 - PASS: console typecheck and production build.
 - PASS: all 874 console tests; separate reviewer independently ran both configuration-boundary tests.
@@ -25,6 +25,10 @@ Build and preview commands define the configuration as null regardless of enviro
 
 Execution: macOS, Node v25.9.0, Chromium 153.0.8010.12, locally installed locked dependencies. Scripts, logs and six screenshots remain generated local evidence under `/private/tmp/hyb335-qa` and `/private/tmp/hyb335-*.log`. No credential values are in this record. Native-language, assistive-technology and Windows/Linux operation are unverified; no owner screen acceptance was submitted.
 
-# Handoff
+# Original handoff
 
 [HYB-335](https://linear.app/myblueton/issue/HYB-335), owner Seung Woo Park, machine mac_mini. Independent branch from main d7b6a3d; PR review handoff only. No merge or deployment was performed. The user's loopback API and Vite preview remain running for inspection; machine work claim is released at handoff.
+
+# Consolidated verification
+
+The counts above belong to original candidate3e08f7f before main f3ddf81 integration. See [integration verification](integration.md) for current913-test/62-browser evidence and final independent review. The earlier no-merge handoff does not revoke the owner’s subsequent explicit merge authorization.

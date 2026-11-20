@@ -180,6 +180,9 @@ func TestProposalStoresCoverEveryProposingNamespace(t *testing.T) {
 	for _, store := range proposalStores {
 		known[store.prefix] = true
 	}
+	for _, store := range fallibleProposalStores {
+		known[store.prefix] = true
+	}
 	exempt := map[string]string{"contract": "lifecycle events, no proposer awaiting approval", "bulk_revocation": "drafts change no access", "view_group": "its proposals are relationship plans, counted under relationship"}
 	for id := range f.s.mutating {
 		namespace, verb, _ := strings.Cut(id, ".")

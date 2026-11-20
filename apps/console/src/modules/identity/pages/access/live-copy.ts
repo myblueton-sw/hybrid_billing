@@ -42,9 +42,9 @@ export const a = {
   noGrants: (l: Locale) =>
     t(
       l,
-      "No one has been granted access yet. Use Grant access to give a person access.",
-      "아직 권한을 부여받은 사용자가 없습니다. '권한 부여'로 사용자에게 권한을 주세요.",
-      "لم تُمنح أي صلاحية لأي شخص بعد. استخدم «منح الصلاحية» لمنح شخص صلاحية.",
+      "No one has been granted access yet. Use Request access to propose access for a person.",
+      "아직 권한을 부여받은 사용자가 없습니다. '권한 추가 요청'으로 사용자의 권한을 요청하세요.",
+      "لم تُمنح أي صلاحية لأي شخص بعد. استخدم «طلب صلاحية» لاقتراح منح صلاحية لشخص.",
     ),
   ceilingTitle: (l: Locale) => t(l, "Console ceiling", "콘솔 권한 상한", "الحد الأقصى لصلاحيات وحدة التحكم"),
   ceilingLead: (l: Locale) =>
@@ -78,8 +78,9 @@ export const a = {
       "لا يوجد شخص آخر يمكن منحه صلاحية. أضف عضوًا أولًا من «المستخدمون والوصول».",
     ),
   access: (l: Locale) => t(l, "Access", "권한", "الصلاحية"),
-  onlyPair: (l: Locale) =>
-    t(l, "The only access the console can grant in pre-launch.", "출시 전 서비스에서 콘솔이 부여할 수 있는 유일한 권한입니다.", "الصلاحية الوحيدة التي يمكن لوحدة التحكم منحها في خدمة ما قبل الإطلاق."),
+  accessGone: (l: Locale) => t(l, "The access you chose can no longer be granted. Choose access again.", "선택한 권한을 더 이상 부여할 수 없습니다. 권한을 다시 선택하세요.", "لم يعد بالإمكان منح الصلاحية التي اخترتها. اختر الصلاحية مجددًا."),
+  chooseDurationHint: (l: Locale) => t(l, "The maximum depends on the access you choose.", "최대 기간은 선택한 권한에 따라 다릅니다.", "يعتمد الحد الأقصى للمدة على الصلاحية المختارة."),
+  chooseAccess: (l: Locale) => t(l, "Choose access", "권한 선택", "اختر الصلاحية"),
   customer: (l: Locale) => t(l, "Customer", "고객", "العميل"),
   focusAll: (l: Locale) =>
     t(l, "Collected FOCUS data can't be limited to one customer.", "수집된 FOCUS 데이터는 특정 고객으로 제한할 수 없습니다.", "لا يمكن قصر بيانات FOCUS المجمّعة على عميل واحد."),
@@ -219,7 +220,12 @@ export const a = {
 };
 
 const actions: Record<string, [string, string, string]> = {
+ propose_pricing_policy: ["Propose pricing policy", "가격 정책 제안", "اقتراح سياسة التسعير"],
+ approve_pricing_policy: ["Approve pricing policy", "가격 정책 승인", "اعتماد سياسة التسعير"],
+ revoke_pricing_policy: ["Revoke pricing policy", "가격 정책 철회", "إلغاء سياسة التسعير"],
+ use_pricing_policy: ["Use pricing policy", "가격 정책 적용", "تطبيق سياسة التسعير"],
   view: ["View", "조회", "عرض"],
+  confirm_input: ["Confirm input data", "입력 데이터 확인", "تأكيد بيانات الإدخال"],
   view_cost: ["View cost", "원가 조회", "عرض التكلفة"],
   change_customer_policy: ["Change customer policy", "고객 정책 변경", "تغيير سياسة العميل"],
   change_selling_policy: ["Change selling policy", "판매 정책 변경", "تغيير سياسة البيع"],
@@ -228,9 +234,20 @@ const actions: Record<string, [string, string, string]> = {
   download: ["Download", "다운로드", "تنزيل"],
   deliver: ["Deliver", "전달", "تسليم"],
 };
-const kinds: Record<string, [string, string, string]> = { focus_data: ["Collected FOCUS data", "수집된 FOCUS 데이터", "بيانات FOCUS المجمّعة"] };
-const fields: Record<string, [string, string, string]> = { rows: ["Rows", "행", "الصفوف"] };
+const kinds: Record<string, [string, string, string]> = {
+ synthetic_pricing_policy: ["Synthetic pricing policy", "합성 시험용 가격 정책", "سياسة تسعير اصطناعية"],
+  focus_data: ["Collected FOCUS data", "수집된 FOCUS 데이터", "بيانات FOCUS المجمّعة"],
+  synthetic_input_evidence: ["Synthetic input evidence", "합성 입력 데이터 근거", "أدلة بيانات الإدخال الاصطناعية"],
+  charge_candidate: ["Charge calculation candidates", "과금 계산 후보", "نتائج احتساب الرسوم المبدئية"],
+};
+const fields: Record<string, [string, string, string]> = {
+ pricing_policy_evidence: ["Pricing policy evidence", "가격 정책 근거", "أدلة سياسة التسعير"],
+ input_review_evidence: ["Input comparison and reconciliation evidence", "입력 데이터 비교·대사 근거", "أدلة مقارنة بيانات الإدخال ومطابقتها"],
+  rows: ["Rows", "행", "الصفوف"],
+  charge_evidence: ["Source costs and calculation evidence", "원천 비용·계산 근거", "تكاليف المصدر وأدلة الاحتساب"],
+};
 const phrases: Record<string, [string, string, string]> = {
+  "view_cost|charge_candidate|charge_evidence": ["view source costs and evidence for charge calculation candidates", "과금 계산 후보의 원천 비용·계산 근거 조회", "عرض تكاليف المصدر وأدلة نتائج احتساب الرسوم المبدئية"],
   "view|focus_data|rows": ["view rows of collected FOCUS data", "수집된 FOCUS 데이터 행 조회", "عرض صفوف بيانات FOCUS المجمّعة"],
 };
 

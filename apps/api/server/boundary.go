@@ -41,6 +41,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/organizations/view-group-drafts", s.listDrafts)
 	mux.HandleFunc("GET /api/v1/organizations/view-group-drafts/{id}/members", s.listDraftMembers)
 	mux.HandleFunc("GET /api/v1/contracts", s.listContracts)
+	mux.HandleFunc("GET /api/v1/charge-candidates", s.readChargeCandidates)
+	mux.HandleFunc("GET /api/v1/charge-candidates/{id}", s.readChargeCandidates)
 	mux.HandleFunc("GET /api/v1/contracts/{id}", s.readContract)
 	mux.HandleFunc("GET /api/v1/installation", s.readInstallation)
 	mux.HandleFunc("GET /api/v1/integrations", s.readIntegrations)

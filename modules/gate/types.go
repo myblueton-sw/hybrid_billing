@@ -37,6 +37,11 @@ const (
 	ChangeCustomerPolicy   = auth.ChangeCustomerPolicy
 	ChangeSellingPolicy    = auth.ChangeSellingPolicy
 	RequestApproval        = auth.RequestApproval
+	ConfirmInput           = auth.ConfirmInput
+	ProposePricingPolicy   = auth.ProposePricingPolicy
+	ApprovePricingPolicy   = auth.ApprovePricingPolicy
+	RevokePricingPolicy    = auth.RevokePricingPolicy
+	UsePricingPolicy       = auth.UsePricingPolicy
 	Approve                = auth.Approve
 	Issue                  = auth.Issue
 	Download               = auth.Download

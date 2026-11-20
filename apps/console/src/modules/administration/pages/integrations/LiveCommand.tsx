@@ -1,5 +1,5 @@
 import { RowDiagnostics, DiagnosticDetails, useCurrentCommand, useFailureDiagnostic } from "../../../../service/CommandDiagnostics";
-import { diagnosticOf, type RowDiagnostic } from "../../../../service/command-diagnostics";
+import { diagnosticOf, type RowDiagnostic, type CommandDiagnostic } from "../../../../service/command-diagnostics";
 import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
@@ -9,9 +9,9 @@ import { Summary, type Problems } from "../../../../service/Service";
 import { c as sc, retryPhrase } from "../../../../service/copy";
 import { k } from "./live-copy";
 import { r } from "./rights-copy";
-import { actionRight, lostDiagnostics, markLost } from "./live-rights";
+import { actionRight, markLost } from "./live-rights";
 import {
-  refusalDiagnostics, clearDraft, commandRight, deniedOutcome, discard, draftOf, fieldReaction, frozenValues, groupOf, keepDraft, pendingFor, pendingNow, react, reasonProblem, settle, snapshotOf, utf8Bytes,
+  feedbackDiagnostics, commandKeys, clearDraft, commandRight, deniedOutcome, discard, draftOf, fieldReaction, frozenValues, groupOf, keepDraft, pendingFor, pendingNow, react, reasonProblem, settle, snapshotOf, utf8Bytes,
   type CommandKey, type Reaction, type Selection,
 } from "./live-model";
 
@@ -23,10 +23,10 @@ export type Shared = {
   selection: Selection;
   canCommand: boolean;
   onDone: (text: string) => void;
-  onNotice: (text: string) => void;
+  onNotice: (text: string, diagnostic?: CommandDiagnostic) => void;
   onReload: () => Promise<IntegrationsPage | null>;
-  onSignedOut: () => void;
-  onLostAccess: () => void;
+  onSignedOut: (diagnostic?: CommandDiagnostic) => void;
+  onLostAccess: (diagnostic?: CommandDiagnostic) => void;
 };
 
 export type ChoiceField = "destination" | "types";
@@ -164,7 +164,7 @@ export function CommandForm(props: FormProps) {
         if (!current()) return;
         if (!got) {
           setMessage({ text: k.gone(l, groupOf(command)), alert: true });
-          onLostAccess();
+          onLostAccess(reference.detail);
         } else {
           const outcome = deniedOutcome(command, target, hadPending, got);
           if (outcome === "no_right") {
@@ -177,10 +177,11 @@ export function CommandForm(props: FormProps) {
             outcome === "applied_letter"
               ? k.vanishedLetter(l) + (command === "integrations.letter_approve_redeliver" ? " " + k.vanishedHint(l, event) : "")
               : outcome === "applied_proposal" ? k.vanishedProposal(l) : k.gone(l, groupOf(command)),
+            reference.detail,
           );
           onClose("done");
         }
-      } else if (reaction === "signin") onSignedOut();
+      } else if (reaction === "signin") onSignedOut(reference.detail);
       else if (reaction === "wait") setMessage({ text: sc.limited(l, retryPhrase(l, err instanceof AdminError ? err.retryAfter || 60 : 60)), alert: true });
       else if (reaction === "retry") setMessage({ text: k.pendingAttempt(l), alert: true });
       else if (reaction === "renew") setMessage({ text: k.renew(l), alert: true });
@@ -276,7 +277,7 @@ export function blockerLines(l: Locale, code: string, action: string, label = ""
 export const plain = (text: string): Blocker => ({ label: "", text });
 
 export function useOpen<T extends string>() {
-  const diagnostics = (target: string) => [...new Map([...refusalDiagnostics(target), ...lostDiagnostics(target)].map((entry) => [entry.command, entry])).values()];
+  const diagnostics = (target: string | Array<[CommandKey, string]>) => feedbackDiagnostics(typeof target === "string" ? commandKeys.map((command) => [command, target]) : target);
   const [open, setOpen] = useState<T | null>(null);
   const last = useRef<T | null>(null);
   const [focusNote, setFocusNote] = useState(0);

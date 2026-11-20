@@ -1,5 +1,5 @@
 import { RowDiagnostics, DiagnosticDetails, useCurrentCommand, useFailureDiagnostic } from "../../../../service/CommandDiagnostics";
-import { diagnosticOf, type RowDiagnostic } from "../../../../service/command-diagnostics";
+import { diagnosticOf, type RowDiagnostic, type CommandDiagnostic } from "../../../../service/command-diagnostics";
 import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
@@ -21,10 +21,10 @@ export type Shared = {
   me: string;
   selected: string;
   onDone: (text: string) => void;
-  onNotice: (text: string) => void;
+  onNotice: (text: string, diagnostic?: CommandDiagnostic) => void;
   onReload: () => Promise<boolean>;
   onDenied: () => void;
-  onSignedOut: () => void;
+  onSignedOut: (diagnostic?: CommandDiagnostic) => void;
 };
 
 type FormProps = Shared & {
@@ -115,8 +115,8 @@ export function CommandForm(props: FormProps) {
       } else if (reaction === "denied") {
         const reloaded = await onReload();
         if (!current()) return;
-        if (reloaded) { onNotice(gone); onClose("done"); }
-      } else if (reaction === "signin") onSignedOut();
+        if (reloaded) { onNotice(gone, reference.detail); onClose("done"); }
+      } else if (reaction === "signin") onSignedOut(reference.detail);
       else if (reaction === "wait") setMessage({ text: sc.limited(l, retryPhrase(l, err instanceof AdminError ? err.retryAfter || 60 : 60)), alert: true });
       else if (reaction === "retry") setMessage({ text: k.pendingAttempt(l), alert: true });
       else if (reaction === "renew") setMessage({ text: k.renew(l), alert: true });

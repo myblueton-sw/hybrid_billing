@@ -5,7 +5,7 @@ import { actor, blockerPolicy, deliveriesShown, letterTarget, pendingNow, refuse
 import { Code, Known, ListOr, Num, Prose, Who, href, ltr } from "./live-format";
 import { CommandForm, RowNote, blockerLines, plain, useOpen, type Blocker, type Shared } from "./LiveCommand";
 import { letterRequestTarget, redeliveryTarget } from "./live-model";
-import { letterApplies, lostAny, lostRight } from "./live-rights";
+import { letterApplies, lostFor, lostRight } from "./live-rights";
 import { r } from "./rights-copy";
 
 const commandOf = (a: LetterAction) => ("integrations.letter_" + a) as CommandKey;
@@ -90,7 +90,7 @@ function Letter({ d, ...shared }: Shared & { d: Delivery }) {
   const requestTarget = (v: RequestValue) => (v !== null && v !== "unknown" ? letterRequestTarget(v) : "");
   const targetOf = (a: LetterAction) => (a === "withdraw_redeliver" ? requestTarget(d.redeliver_request) : a === "withdraw_dismiss" ? requestTarget(d.dismiss_request) : target);
   const usable = (a: LetterAction) => shared.canCommand && !!targetOf(a) && (d.actions[a].allowed || !!pendingNow(commandOf(a), targetOf(a)));
-  const lost = target ? lostAny(letterActions.filter((a) => a !== "reapprove").map(commandOf), target) || lostAny(["integrations.letter_withdraw_redeliver", "integrations.letter_withdraw_dismiss"], targetOf("withdraw_redeliver") || targetOf("withdraw_dismiss")) : "";
+  const lost = target ? lostFor(letterActions.filter((action) => action !== "reapprove").map((action) => [commandOf(action), targetOf(action)])) : "";
   const kept = !target ? "" : lost ? r.noLongerHeld(l, lost) : letterActions.some((a) => a !== "reapprove" && refusedNow(commandOf(a), targetOf(a))) ? k.kept(l, "letter") : "";
   const explains = (a: LetterAction) => {
     const code = d.actions[a].blocked;
@@ -108,7 +108,7 @@ function Letter({ d, ...shared }: Shared & { d: Delivery }) {
       {d.redeliver_request === null && d.dismiss_request === null && <p className="p02-small">{k.noRequests(l)}</p>}
       <RequestLine l={l} r={d.redeliver_request} lead={k.redeliverRequested} />
       <RequestLine l={l} r={d.dismiss_request} lead={k.dismissRequested} />
-      <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} />
+      <RowNote l={l} diagnostics={diagnostics(letterActions.filter((action) => action !== "reapprove").map((action) => [commandOf(action), targetOf(action)]))} kept={kept} blockers={blockers} focus={focusNote} />
       {shown.length > 0 && (
         <div className="live-buttons">
           {shown.map((a) => (

@@ -1,6 +1,9 @@
+import { DiagnosticDetails } from "../../../../service/CommandDiagnostics";
+import type { CommandDiagnostic } from "../../../../service/command-diagnostics";
+import { currentScope } from "./live-model";
 import "../../../../service/command-diagnostics.css";
 import { CommandDiagnostics, ErrorDiagnostics, useCommandDiagnostics } from "../../../../service/CommandDiagnostics";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
@@ -81,7 +84,7 @@ function CandidateLine({ l, page }: { l: Locale; page: EvidencePage }) {
 
 export default function LiveReleaseEvidence({ locale: l, view: rawView, params, session, onSignOut }: Props) {
   const source = useAdminClient();
-  const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]));
+  const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]), () => { setNotice(""); setNoticeDetail(null); setTerminalDetail(null); });
   setScope(session.workspace, session.user, session.csrf);
   const view = viewOf(rawView);
   const [page, setPage] = useState<EvidencePage | null>(null);
@@ -90,6 +93,8 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   const [access, setAccess] = useState<"ok" | "denied" | "revoked">("ok");
   const [signedOut, setSignedOut] = useState(false);
   const [notice, setNotice] = useState("");
+  const [noticeDetail, setNoticeDetail] = useState<CommandDiagnostic | null>(null);
+  const [terminalDetail, setTerminalDetail] = useState<CommandDiagnostic | null>(null);
   const [announce, setAnnounce] = useState("");
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
@@ -106,11 +111,12 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
 
   const load = useCallback(async (): Promise<EvidencePage | null> => {
     const n = ++seq.current;
+    const generation = currentScope();
     const request = attempt().request;
     setBusy(true);
     try {
       const got = await api.releaseEvidence(request);
-      if (n !== seq.current) return null;
+      if (n !== seq.current || generation !== currentScope()) return null;
       readSucceeded();
       pruneRefusals(got);
       setPage(got);
@@ -119,7 +125,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       setFailure(null);
       return got;
     } catch (e) {
-      if (n !== seq.current) return null;
+      if (n !== seq.current || generation !== currentScope()) return null;
       if (e instanceof AdminError && e.failure === "denied") {
         setFailure({ error: e, request });
         const kind = readDenied();
@@ -133,11 +139,11 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       setStatus("error");
       return null;
     } finally {
-      if (n === seq.current) setBusy(false);
+      if (n === seq.current && generation === currentScope()) setBusy(false);
     }
   }, [api]);
 
-  useEffect(() => { void load(); }, [load]);
+  useLayoutEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
   useEffect(() => {
     if (!selected || scrolled.current === selected) return;
     scrolled.current = selected;
@@ -167,7 +173,8 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
     if (!active || active === document.body || !active.isConnected) document.getElementById("p05-detail-title")?.focus();
   }, [mode, detailKey]);
 
-  const showNotice = (text: string) => {
+  const showNotice = (text: string, reference?: CommandDiagnostic) => {
+    setNoticeDetail(reference ?? null);
     setNotice(text);
     requestAnimationFrame(() => document.getElementById("p05-notice")?.focus());
   };
@@ -206,7 +213,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   if (access === "revoked" || (access === "denied" && revokedNow())) {
     return (
       <div className="p05-live" ref={root} aria-busy={busy || undefined}>
-        <CommandDiagnostics l={l} detail={detail} />
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
         {failure && <ErrorDiagnostics l={l} error={failure.error} />}
         {scopeBar}
         <section className="live-unavailable p05-revoked" aria-labelledby="p05-revoked">
@@ -219,7 +226,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   if (access === "denied") {
     return (
       <div className="p05-live" ref={root} aria-busy={busy || undefined}>
-        <CommandDiagnostics l={l} detail={detail} />
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
         {failure && <ErrorDiagnostics l={l} error={failure.error} />}
         {scopeBar}
         <section className="live-unavailable" aria-labelledby="p05-denied">
@@ -232,7 +239,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   if (signedOut) {
     return (
       <div className="p05-live" ref={root}>
-        <CommandDiagnostics l={l} detail={detail} />
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
         {failure && <ErrorDiagnostics l={l} error={failure.error} />}
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
@@ -249,7 +256,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
         onDone: (text) => { void done(text); },
         onNotice: showNotice,
         onReload: load,
-        onSignedOut: () => setSignedOut(true),
+        onSignedOut: (reference?: CommandDiagnostic) => { setTerminalDetail(reference ?? null); setSignedOut(true); },
       }
     : null;
   const gone = shared ? vanished(shared.page, view) : [];
@@ -258,7 +265,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
 
   return (
     <div className="p05-live" data-live={view} data-mode={mode} ref={root} aria-busy={busy || undefined}>
-        <CommandDiagnostics l={l} detail={detail} />
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
       {scopeBar}
       {page && configured && (
         <div className="p05-frame">
@@ -274,7 +281,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
         </div>
       )}
       <p className="visually-hidden" role="status">{announce}</p>
-      {notice && <div id="p05-notice" className="p05-notice" tabIndex={-1} role="status"><p>{notice}</p></div>}
+      {notice && <div id="p05-notice" className="p05-notice" tabIndex={-1} role="status"><p>{notice}</p>{noticeDetail && <DiagnosticDetails l={l} detail={noticeDetail} />}</div>}
       {status === "error" && failure && lines && (
         <div className="live-error p05-failure" role="alert">
           <h2>{k.failedTitle(l)}</h2>

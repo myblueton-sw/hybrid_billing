@@ -1,3 +1,6 @@
+import { currentScope } from "./live-model";
+import { refusalDiagnostics } from "./live-model";
+import type { RowDiagnostic } from "../../../../service/command-diagnostics";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -9,7 +12,7 @@ import { sample } from "../../../../service/release-evidence.sample";
 import {
   approveUsable, blockerPolicy, buildsOf, cancelled, deniedOutcome, differences, draftOf, duplicateIn, fieldReaction, forget, frozenTargetOk, goneKind, hadEarlier, keepDraft, keepsAttempt,
   keptKey, modeOf, pairOf, pendingFor, pendingNow, pendingRetire, profileRetire, profileTarget, proposalTarget, pruneRefusals, react, readDenied, readSucceeded, refusedNow, renew,
-  replacementOptions, replacementProblem, requirementRetire, requirementTarget, retireValues, revokedNow, selectionOf, setScope, settle, snapshotOf, splitWidth, stateSentence, textProblem,
+  replacementOptions, replacementProblem, requirementRetire, requirementTarget, retireValues, revokedNow, selectionOf, setScope, settle as settleRecorded, snapshotOf, splitWidth, stateSentence, textProblem,
   utf8Bytes, vanished, rowId, closedProposal, verdictLine, viewOf, withdrawUsable,
 } from "./live-model";
 import { blockerText, f, k } from "./live-copy";
@@ -698,3 +701,85 @@ test("state fields outside the known set and odd intake or planning targets read
   const empty = text(html(ArtifactsView, page((s) => { s.artifacts.results.rows[0].latest_outcome = ""; })));
   assert.ok(empty.includes("Unknown") && !empty.includes(`${unexpected} (test.outcome)`));
 });
+
+
+test("retained refusal metadata follows command, target, session and pruning", () => {
+  forget();
+  setScope("w", "u", "s");
+  const approve = { code: "invalid_stage", request: "server-approve" };
+  const withdraw = { code: "prerequisite_failed", request: "server-withdraw" };
+  settle("release_evidence.approve", "missing-target", "hint", "stage", false, approve);
+  settle("release_evidence.withdraw", "missing-target", "hint", "stage", false, withdraw);
+  assert.deepEqual(refusedDetail("release_evidence.approve", "missing-target"), approve);
+  assert.deepEqual(refusedDetail("release_evidence.withdraw", "missing-target"), withdraw);
+  assert.equal(refusedDetail("release_evidence.approve", "other-target"), undefined);
+  settle("release_evidence.approve", "missing-target", "ok");
+  assert.equal(refusedDetail("release_evidence.approve", "missing-target"), undefined);
+  assert.deepEqual(refusedDetail("release_evidence.withdraw", "missing-target"), withdraw);
+  setScope("w", "u", "next-session");
+  assert.equal(refusedDetail("release_evidence.withdraw", "missing-target"), undefined);
+  settle("release_evidence.approve", "missing-target", "hint", "stage", false, approve);
+  pruneRefusals(page());
+  assert.equal(refusedDetail("release_evidence.approve", "missing-target"), undefined);
+  settle("release_evidence.approve", "missing-target", "hint", "stage", false, approve);
+  settle("release_evidence.approve", "missing-target", "hint", "stage", false);
+  assert.equal(refusedDetail("release_evidence.approve", "missing-target"), undefined);
+  forget();
+});
+
+
+test("closed proposal keeps the matching server receipt in every locale", () => {
+  forget();
+  setScope("w", "u", "s");
+  settle("release_evidence.approve", "perf-proposal-8", "hint", "stage", false, { code: "invalid_stage", request: "server-approve" });
+  settle("release_evidence.withdraw", "perf-proposal-8", "hint", "refused", false, { code: "prerequisite_failed", request: "server-withdraw" });
+  pruneRefusals(page());
+  for (const l of locales) {
+    const h = html(DecisionsView, page(), { l });
+    assert.ok(h.includes("server-approve"), l);
+    assert.ok(h.includes("server-withdraw") && h.includes("release_evidence.withdraw"), l);
+    assert.match(h, /<bdi[^>]*dir="ltr"[^>]*>invalid_stage<\/bdi>/, l);
+  }
+  forget();
+});
+
+
+test("scope generation rejects responses from replaced and forgotten sessions", () => {
+  forget();
+  setScope("w", "u", "s");
+  const started = currentScope();
+  setScope("w", "u", "s");
+  assert.equal(currentScope(), started);
+  setScope("w", "u", "next");
+  assert.notEqual(currentScope(), started);
+  setScope("w", "u", "s");
+  assert.notEqual(currentScope(), started);
+  const restored = currentScope();
+  forget();
+  setScope("w", "u", "s");
+  assert.notEqual(currentScope(), restored);
+  forget();
+});
+
+
+test("a new attempt clears the prior retained refusal receipt", () => {
+  forget();
+  setScope("w", "u", "s");
+  settle("release_evidence.approve", "t", "hint", "stage", false, { code: "invalid_stage", request: "old-server-id" });
+  pendingFor("release_evidence.approve", "t", { rationale: "retry" }, "r", () => ({ request: "next-client-id", key: "next-key" }));
+  assert.equal(refusedDetail("release_evidence.approve", "t"), undefined);
+  assert.ok(!refusedNow("release_evidence.approve", "t"));
+  forget();
+});
+
+type Receipt = { code: string; request: string };
+function reference(command: string, target: string, detail?: Receipt): RowDiagnostic | undefined {
+  return detail && { command, detail: { ...detail, target, client: "", cancelled: false } };
+}
+function refusedDetail(command: string, target: string): Receipt | undefined {
+  const entry = refusalDiagnostics(target).find((v) => v.command === command);
+  return entry && { code: entry.detail.code, request: entry.detail.request };
+}
+function settle(command: string, target: string, reaction: Parameters<typeof settleRecorded>[2], failure = "", had = false, detail?: Receipt) {
+  settleRecorded(command, target, reaction, failure, had, reference(command, target, detail));
+}

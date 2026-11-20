@@ -1,5 +1,5 @@
 import { RowDiagnostics, DiagnosticDetails, useCurrentCommand, useFailureDiagnostic } from "../../../../service/CommandDiagnostics";
-import { diagnosticOf, type RowDiagnostic } from "../../../../service/command-diagnostics";
+import { diagnosticOf, type RowDiagnostic, type CommandDiagnostic } from "../../../../service/command-diagnostics";
 import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
@@ -25,9 +25,9 @@ export type Shared = {
   selection: Selection;
   canCommand: boolean;
   onDone: (text: Announce) => void;
-  onNotice: (text: string) => void;
+  onNotice: (text: string, diagnostic?: CommandDiagnostic) => void;
   onReload: () => Promise<RetentionPage | null>;
-  onSignedOut: () => void;
+  onSignedOut: (diagnostic?: CommandDiagnostic) => void;
 };
 
 export type Draft = Record<string, string>;
@@ -206,10 +206,10 @@ export function CommandForm(props: FormProps) {
         if (!got) setMessage({ text: k.gone(l, goneKind(command, target)), alert: true });
         else {
           const outcome = deniedOutcome(command, target, hadPending, got);
-          onNotice(outcome === "applied_proposal" ? k.vanishedProposal(l) : k.gone(l, goneKind(command, target)));
+          onNotice(outcome === "applied_proposal" ? k.vanishedProposal(l) : k.gone(l, goneKind(command, target)), reference.detail);
           onClose("done");
         }
-      } else if (reaction === "signin") onSignedOut();
+      } else if (reaction === "signin") onSignedOut(reference.detail);
       else if (reaction === "wait") setMessage({ text: sc.limited(l, retryPhrase(l, err instanceof AdminError ? err.retryAfter || 60 : 60)), alert: true });
       else if (reaction === "retry") setMessage({ text: k.pendingAttempt(l), alert: true });
       else if (reaction === "renew") {
@@ -222,7 +222,7 @@ export function CommandForm(props: FormProps) {
         const got = await onReload();
         if (!current()) return;
         if (got && !stillAllowed(got, command, target)) {
-          onNotice(text);
+          onNotice(text, reference.detail);
           onClose("done");
         } else setMessage({ text, alert: true });
       } else if (reaction === "reauth") setMessage({ text: sc.reauthText(l, failure), alert: true });

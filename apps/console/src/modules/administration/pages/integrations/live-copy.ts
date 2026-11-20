@@ -22,6 +22,7 @@ function letterAction(l: Locale, a: string): string {
 }
 
 export const k = {
+  reviewBeforeRetry: (l: Locale) => t(l, "Review the current state before trying again.", "다시 시도하기 전에 현재 상태를 확인하세요.", "راجع الحالة الحالية قبل المحاولة مرة أخرى."),
   deniedTitle: (l: Locale) => t(l, "Integrations are not available to you", "연동 화면을 볼 수 없습니다", "التكاملات غير متاحة لك"),
   denied: (l: Locale) =>
     t(l, "You do not have permission to manage integrations in this installation.", "이 설치에서 연동을 관리할 권한이 없습니다.", "ليست لديك صلاحية إدارة التكاملات في هذا التثبيت."),

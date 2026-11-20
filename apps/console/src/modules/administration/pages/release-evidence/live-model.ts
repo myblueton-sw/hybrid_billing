@@ -1,3 +1,4 @@
+import { Refusals } from "../../../../service/refusal";
 import type { RowDiagnostic } from "../../../../service/command-diagnostics";
 import type { Budget, Candidate, CountOf, EvidencePage, PathRow, Problem, ProfileRow, Proposal, RequirementRow, TargetRow, TestRow } from "../../../../service/release-evidence";
 import { failingVerdicts, has, verdictWords } from "./live-codes";
@@ -425,9 +426,12 @@ export function fieldReaction(command: CommandKey, fields: string[]): FieldReact
 export type Pending = { key: string; request: string; expected: string; values: string; snapshot: string[]; context: Record<string, string> };
 const pending = new Map<string, Pending>();
 const drafts = new Map<string, Record<string, string>>();
-const refusals = new Map<string, { state: string; diagnostic?: RowDiagnostic }>();
+const refusals = new Refusals<string>();
 const earlier = new Set<string>();
 let scope = "";
+let scopeGeneration = 0;
+
+export function currentScope(): number { return scopeGeneration; }
 let seen = false;
 let revoked = false;
 
@@ -441,6 +445,7 @@ function clearAll(): void {
 export function setScope(workspace: string, user: string, session: string): void {
   const next = workspace + "\u0000" + user + "\u0000" + session;
   if (next !== scope) {
+    scopeGeneration++;
     clearAll();
     seen = false;
     revoked = false;
@@ -449,6 +454,7 @@ export function setScope(workspace: string, user: string, session: string): void
 }
 
 export function forget(): void {
+  scopeGeneration++;
   clearAll();
   seen = false;
   revoked = false;
@@ -506,6 +512,7 @@ export function pendingFor(
   const frozen = JSON.stringify(values);
   const kept = pending.get(id);
   if (kept && kept.values === frozen) return kept;
+  refusals.delete(id);
   const tried = fresh();
   const next = { key: tried.key, request: tried.request, expected, values: frozen, snapshot: [...snapshot], context: { ...context } };
   pending.set(id, next);
@@ -556,12 +563,12 @@ export function settle(command: string, target: string, reaction: Reaction | "ok
   if (keepsAttempt(reaction)) return;
   pending.delete(id);
   if (had) earlier.add(id);
-  if (reaction === "hint") refusals.set(id, { state: had ? "earlier" : failure === "refused" ? "refused" : "stage", diagnostic });
+  if (reaction === "hint") refusals.set(id, had ? "earlier" : failure === "refused" ? "refused" : "stage", diagnostic);
   else refusals.delete(id);
 }
 
 export function refusedNow(command: string, target: string): string {
-  return refusals.get(slot(command, target))?.state ?? "";
+  return refusals.get(slot(command, target)) ?? "";
 }
 
 export function keptKey(command: CommandKey, kind: string): string {
@@ -625,7 +632,7 @@ export function pruneRefusals(page: EvidencePage): void {
       refusals.delete(id);
       continue;
     }
-    if (refusals.get(id)?.state === "earlier" || closedProposal(page, at.command, at.target)) continue;
+    if (refusals.get(id) === "earlier" || closedProposal(page, at.command, at.target)) continue;
     if (!stillAllowed(page, at.command, at.target)) refusals.delete(id);
   }
   for (const id of [...earlier]) {
@@ -683,7 +690,7 @@ export function retiredAfter(page: EvidencePage | null, p: Proposal): boolean {
 
 export function refusalDiagnostics(target: string): RowDiagnostic[] {
   return commandKeys.flatMap((command) => {
-    const entry = refusals.get(slot(command, target))?.diagnostic;
+    const entry = refusals.detail(slot(command, target));
     return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
   });
 }

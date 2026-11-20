@@ -73,7 +73,49 @@ async function retentionFailures(lang) {
   await layout(".p04-form-wrap", "p04-open", lang);
   await page.unroute(pattern);
 }
+async function setupResume() {
+  const statuses = await page.evaluate(async () => {
+    const csrf = (await (await fetch("/api/v1/session", { headers: { "X-HB-Client": "console" } })).json()).csrf_token;
+    const results = [];
+    for (const command of ["integrations.subscription_pause", "integrations.subscription_request_resume"]) {
+      const revision = (await (await fetch("/api/v1/integrations", { headers: { "X-CSRF-Token": csrf } })).json()).revision;
+      const id = "qa-group-" + crypto.randomUUID();
+      const result = await fetch("/api/v1/commands/" + command, { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf, "X-Request-Id": id }, body: JSON.stringify({ request_id: id, target_id: "webhook-subscription:sample-erp-invoices", idempotency_key: id, expected_revision: revision, rationale: "synthetic grouped diagnostics setup", body: {} }) });
+      results.push(result.status);
+    }
+    return results;
+  });
+  check("synthetic resume-request setup is actually applied", statuses.every((status) => status === 200));
+}
+async function groupedRequests(lang) {
+  for (const [view, action, prefix] of [["channels", "withdraw_resume", "webhook-resume-request:"], ["events", "withdraw_redeliver", "webhook-letter-request:"]]) {
+    await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/integrations?lang=${lang}&view=${view}`);
+    await settled(".p02-live");
+    const command = view === "channels" ? "integrations.subscription_withdraw_resume" : "integrations.letter_withdraw_redeliver";
+    const pattern = "**/api/v1/commands/" + command;
+    let actual = "";
+    await page.route(pattern, (route) => {
+      actual = route.request().postDataJSON().target_id;
+      return route.fulfill({ status: 422, contentType: "application/json", body: JSON.stringify({ code: "prerequisite_failed", request_id: "grouped-" + view }) });
+    });
+    await page.locator(`[data-opener$="|${action}"]`).first().click();
+    await page.locator(".p02-form textarea").fill("synthetic grouped-target refusal");
+    await page.locator(".p02-form button[type=submit]").click(); await page.locator(".p02-confirm .live-primary").click();
+    await page.locator(".p02-form-wrap").waitFor({ state: "hidden" });
+    const notes = (await page.locator(".p02-row-note").allTextContents()).join(" ");
+    check(`${lang} ${view} uses canonical request target`, actual.startsWith(prefix));
+    check(`${lang} ${view} grouped row retains the matching request reference`, notes.includes("grouped-" + view) && notes.includes(actual) && notes.includes(command));
+    await layout(".p02-row-note:has(.command-diagnostics-row)", "grouped-" + view, lang);
+    await page.unroute(pattern);
+  }
+}
 async function layout(selector, tag, lang) {
+  const fonts = await page.locator(selector).first().evaluate(async (element, locale) => {
+    await document.fonts.ready;
+    const family = getComputedStyle(element).fontFamily.split(",")[0];
+    return { errors: [...document.fonts].filter((face) => face.status === "error").length, plex: /Plex/.test(family), loaded: document.fonts.check("16px " + family, locale === "ar" ? "العربية" : locale === "ko" ? "한글" : "Billing") };
+  }, lang);
+  check(`${tag} ${lang} local Plex fonts are ready`, fonts.errors === 0 && fonts.plex && fonts.loaded);
   for (const width of [1440, 1280, 1024, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     const state = await page.locator(selector).first().evaluate((e) => {
@@ -106,7 +148,8 @@ try {
   await page.locator("#signin-workspace").fill("sample-workspace"); await page.locator("#signin-email").fill("admin@example.invalid");
   await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click();
   await page.locator(".service-session").waitFor();
-  for (const lang of args["only-refusal"] || args["only-open"] || args["only-retention"] ? ["en"] : ["en", "ko", "ar"]) {
+  if (args["only-grouped"]) { await setupResume(); await groupedRequests("en"); }
+  for (const lang of args["only-grouped"] ? [] : args["only-refusal"] || args["only-open"] || args["only-retention"] ? ["en"] : ["en", "ko", "ar"]) {
     await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/integrations?lang=${lang}&view=modules`);
     await settled(".p02-live");
     if (args["only-retention"]) { await retentionFailures(lang); break; }
@@ -173,7 +216,9 @@ try {
     check(`${lang} old-view completion cannot disclose diagnostics`, await diagnostic().count() === 0);
     await page.unroute(issue);
   }
-  if (!args["only-refusal"] && !args["only-open"] && !args["only-retention"]) {
+  if (!args["only-refusal"] && !args["only-open"] && !args["only-retention"] && !args["only-grouped"]) {
+    await setupResume();
+    for (const lang of ["en", "ko", "ar"]) await groupedRequests(lang);
     for (const lang of ["en", "ko", "ar"]) await retentionFailures(lang);
     const screens = [["installation", "p01"], ["integrations", "p02"], ["recovery", "p03"], ["retention", "p04"], ["release-evidence", "p05"]];
     for (const [path, id] of screens) {

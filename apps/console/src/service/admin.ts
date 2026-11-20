@@ -846,7 +846,7 @@ export type StepUp = () => Promise<boolean>;
 
 export function failureOf(status: number, body: Record<string, unknown>): AdminError {
   const valid = body && typeof body === "object" && !Array.isArray(body) ? body : {};
-  const code = typeof valid.code === "string" && /^[a-z][a-z0-9_]{0,95}$/.test(valid.code) ? valid.code : "";
+  const code = typeof valid.code === "string" && /^[a-z][a-z0-9_]{0,127}$/.test(valid.code) ? valid.code : "";
   const request = typeof valid.request_id === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(valid.request_id) ? valid.request_id : "";
   body = valid;
   const fields = Array.isArray(body.fields) ? body.fields.map(String) : [];

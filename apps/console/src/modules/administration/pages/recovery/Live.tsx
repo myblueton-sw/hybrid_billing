@@ -1,7 +1,10 @@
+import { DiagnosticDetails } from "../../../../service/CommandDiagnostics";
+import type { CommandDiagnostic } from "../../../../service/command-diagnostics";
+import { currentScope } from "./live-model";
 import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import "../../../../service/command-diagnostics.css";
 import { CommandDiagnostics, ErrorDiagnostics, useCommandDiagnostics } from "../../../../service/CommandDiagnostics";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
@@ -41,7 +44,7 @@ const prefixes: Record<string, string> = { sets: "set", isolation: "iso", reconc
 
 export default function LiveRecovery({ locale: l, view: rawView, params, session, onSignOut }: Props) {
   const source = useAdminClient();
-  const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]));
+  const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]), () => { setNotice(""); setNoticeDetail(null); setTerminalDetail(null); });
   setScope(session.workspace, session.user, session.csrf);
   const view = viewOf(rawView);
   const [page, setPage] = useState<RecoveryPage | null>(null);
@@ -50,6 +53,8 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
   const [denied, setDenied] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [notice, setNotice] = useState("");
+  const [noticeDetail, setNoticeDetail] = useState<CommandDiagnostic | null>(null);
+  const [terminalDetail, setTerminalDetail] = useState<CommandDiagnostic | null>(null);
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
   const seq = useRef(0);
@@ -59,35 +64,37 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
 
   const load = useCallback(async (): Promise<RecoveryPage | null> => {
     const n = ++seq.current;
+    const generation = currentScope();
     setBusy(true);
     try {
       const got = await api.recovery();
-      if (n !== seq.current) return null;
+      if (n !== seq.current || generation !== currentScope()) return null;
       pruneRefusals(got);
       setPage(got);
       setStatus("ready");
       setLoadError(null);
       return got;
     } catch (e) {
-      if (n !== seq.current) return null;
+      if (n !== seq.current || generation !== currentScope()) return null;
       if (e instanceof AdminError && e.failure === "denied") setDenied(true);
       if (e instanceof AdminError && e.failure === "unauthenticated") setSignedOut(true);
       setLoadError(e);
       setStatus("error");
       return null;
     } finally {
-      if (n === seq.current) setBusy(false);
+      if (n === seq.current && generation === currentScope()) setBusy(false);
     }
   }, [api]);
 
-  useEffect(() => { void load(); }, [load]);
+  useLayoutEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
   useEffect(() => {
     if (!selectedId || scrolled.current === selectedId) return;
     scrolled.current = selectedId;
     document.getElementById(selectedId)?.scrollIntoView({ block: "center" });
   }, [selectedId]);
 
-  const showNotice = (text: string) => {
+  const showNotice = (text: string, reference?: CommandDiagnostic) => {
+    setNoticeDetail(reference ?? null);
     setNotice(text);
     requestAnimationFrame(() => document.getElementById("p03-notice")?.focus());
   };
@@ -105,7 +112,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
   if (denied) {
     return (
       <div className="p03-live">
-        <CommandDiagnostics l={l} detail={detail} />
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
         {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <section className="live-unavailable" aria-labelledby="p03-denied">
           <h2 id="p03-denied">{k.deniedTitle(l)}</h2>
@@ -117,7 +124,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
   if (signedOut) {
     return (
       <div className="p03-live">
-        <CommandDiagnostics l={l} detail={detail} />
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
         {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
@@ -134,7 +141,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
         onDone: (text) => { void announce(text); },
         onNotice: showNotice,
         onReload: load,
-        onSignedOut: () => setSignedOut(true),
+        onSignedOut: (reference?: CommandDiagnostic) => { setTerminalDetail(reference ?? null); setSignedOut(true); },
       }
     : null;
   const sectionState = !shared ? "" : view === "reconciliation" ? shared.page.reconciliation.state : view === "migration" ? shared.page.migration.state
@@ -146,7 +153,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
 
   return (
     <div className="p03-live" data-live={view} aria-busy={busy || undefined}>
-        <CommandDiagnostics l={l} detail={detail} />
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
       {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
       <div className="p03-scope">
         <dl className="p03-scope-facts">
@@ -158,7 +165,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
       </div>
       <p className="live-note-rule p03-statement"><strong>{k.statementLead(l)}</strong> {k.statement(l)}</p>
       <p className="p03-permission">{k.permission(l)}</p>
-      {notice && <div id="p03-notice" className="service-status" tabIndex={-1} role="status"><p><Rich text={notice} /></p></div>}
+      {notice && <div id="p03-notice" className="service-status" tabIndex={-1} role="status"><p><Rich text={notice} /></p>{noticeDetail && <DiagnosticDetails l={l} detail={noticeDetail} />}</div>}
       {status === "error" && (
         <div className="live-error p03-failure" role="alert">
           <h2>{diagnosticCopy.load(l, "recovery")}</h2>

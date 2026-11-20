@@ -1,3 +1,4 @@
+import { refusalDetail } from "./refusal";
 import { AdminError, type AdminClient } from "./admin";
 
 export type RowDiagnostic = { command: string; detail: CommandDiagnostic };
@@ -9,9 +10,10 @@ function token(v: string): string {
 }
 
 export function diagnosticOf(error: unknown, target = "", client = ""): CommandDiagnostic {
+  const response = refusalDetail(error);
   return {
-    code: error instanceof AdminError && /^[a-z][a-z0-9_]{0,95}$/.test(error.code) ? error.code : "",
-    request: error instanceof AdminError ? token(error.request) : "",
+    code: response?.code ?? "",
+    request: response?.request ?? "",
     client: token(client),
     target: token(target),
     cancelled: error instanceof AdminError && error.failure === "reauth_cancelled",

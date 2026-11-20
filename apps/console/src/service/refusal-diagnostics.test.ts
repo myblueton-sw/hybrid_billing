@@ -32,3 +32,15 @@ for (const v of variants) {
     v.model.forget();
   });
 }
+
+test("retained diagnostic snapshots clone the nested reference on input and output", async () => {
+  const { Refusals } = await import("./refusal");
+  const store = new Refusals<string>();
+  const entry: RowDiagnostic = { command: "integrations.plugin_stop", detail: { code: "invalid_stage", request: "original", client: "client", target: "plugin:sample", cancelled: false } };
+  store.set("one", "hint", entry);
+  entry.detail.request = "changed";
+  assert.equal(store.detail("one")?.detail.request, "original");
+  const got = store.detail("one")!;
+  got.detail.request = "mutated";
+  assert.equal(store.detail("one")?.detail.request, "original");
+});

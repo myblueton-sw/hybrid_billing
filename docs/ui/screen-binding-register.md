@@ -295,7 +295,7 @@ Tracking: [HYB-295](https://linear.app/hybrid-billing/issue/HYB-295). [HB-257](.
 
 ## HYB-330 diagnostic binding
 
-P01–P05 `error:diagnostics` now displays confirmed error code and server request ID, separately labelled client request/target identity, field-location and existing next-step guidance. Refused row references live with their exact scoped marker; each open form keeps its own failure references. Unknown values remain unavailable. The API contract, rights and retry rules are unchanged. See [field map](screen-binding-fields/operations.md#administration-error-diagnostics-hyb-330) and [verification](../features/HYB-330/verification.md). No owner FIX is inferred.
+P01–P05 `error:diagnostics` now displays confirmed error code and server request ID, separately labelled client request/target identity, field-location and existing next-step guidance. Refused row references live with their exact scoped marker; each open form keeps its own failure references. Unknown values remain unavailable. The API contract, rights and retry rules are unchanged. Grouped request actions use their canonical request target; terminal notices retain their own references. See [field map](screen-binding-fields/operations.md#administration-error-diagnostics-hyb-330) and [integration verification](../features/HYB-330/integration.md). No owner FIX is inferred.
 
 ## HYB-327 field-map follow-up
 

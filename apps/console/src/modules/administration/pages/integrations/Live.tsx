@@ -1,6 +1,9 @@
+import { DiagnosticDetails } from "../../../../service/CommandDiagnostics";
+import type { CommandDiagnostic } from "../../../../service/command-diagnostics";
+import { currentScope } from "./live-model";
 import "../../../../service/command-diagnostics.css";
 import { CommandDiagnostics, ErrorDiagnostics, useCommandDiagnostics } from "../../../../service/CommandDiagnostics";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
@@ -42,7 +45,7 @@ const sections = { modules: "modules", channels: "channels", events: "events" } 
 
 export default function LiveIntegrations({ locale: l, view: rawView, params, session, onSignOut }: Props) {
   const source = useAdminClient();
-  const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]));
+  const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]), () => { setNotice(""); setNoticeDetail(null); setTerminalDetail(null); });
   setScope(session.workspace, session.user, session.csrf);
   const view = viewOf(rawView);
   const [page, setPage] = useState<IntegrationsPage | null>(null);
@@ -52,6 +55,8 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
   const [signedOut, setSignedOut] = useState(false);
   const [lostAccess, setLostAccess] = useState(false);
   const [notice, setNotice] = useState("");
+  const [noticeDetail, setNoticeDetail] = useState<CommandDiagnostic | null>(null);
+  const [terminalDetail, setTerminalDetail] = useState<CommandDiagnostic | null>(null);
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
   const seq = useRef(0);
@@ -61,10 +66,11 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
 
   const load = useCallback(async (): Promise<IntegrationsPage | null> => {
     const n = ++seq.current;
+    const generation = currentScope();
     setBusy(true);
     try {
       const got = await api.integrations();
-      if (n !== seq.current) return null;
+      if (n !== seq.current || generation !== currentScope()) return null;
       pruneRefusals(got, session.user);
       pruneLost(got);
       setPage(got);
@@ -72,25 +78,26 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
       setLoadError(null);
       return got;
     } catch (e) {
-      if (n !== seq.current) return null;
+      if (n !== seq.current || generation !== currentScope()) return null;
       if (e instanceof AdminError && e.failure === "denied") setDenied(true);
       if (e instanceof AdminError && e.failure === "unauthenticated") setSignedOut(true);
       setLoadError(e);
       setStatus("error");
       return null;
     } finally {
-      if (n === seq.current) setBusy(false);
+      if (n === seq.current && generation === currentScope()) setBusy(false);
     }
   }, [api, session.user]);
 
-  useEffect(() => { void load(); }, [load]);
+  useLayoutEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
   useEffect(() => {
     if (!selectedId || scrolled.current) return;
     scrolled.current = true;
     document.getElementById(selectedId)?.scrollIntoView({ block: "center" });
   }, [selectedId]);
 
-  const showNotice = (text: string) => {
+  const showNotice = (text: string, reference?: CommandDiagnostic) => {
+    setNoticeDetail(reference ?? null);
     setNotice(text);
     requestAnimationFrame(() => document.getElementById("p02-notice")?.focus());
   };
@@ -98,7 +105,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
   if (denied) {
     return (
       <div className="p02-live">
-        <CommandDiagnostics l={l} detail={detail} />
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
         {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <section className="live-unavailable" aria-labelledby="p02-denied">
           <h2 id="p02-denied" tabIndex={-1} ref={(h) => { if (h && lostAccess) h.focus(); }}>{k.deniedTitle(l)}</h2>
@@ -111,7 +118,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
   if (signedOut) {
     return (
       <div className="p02-live">
-        <CommandDiagnostics l={l} detail={detail} />
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
         {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
@@ -128,8 +135,8 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
         onDone: (text: string) => { showNotice(text); void load(); },
         onNotice: showNotice,
         onReload: load,
-        onSignedOut: () => setSignedOut(true),
-        onLostAccess: () => setLostAccess(true),
+        onSignedOut: (reference?: CommandDiagnostic) => { setTerminalDetail(reference ?? null); setSignedOut(true); },
+        onLostAccess: (reference?: CommandDiagnostic) => { setTerminalDetail(reference ?? null); setLostAccess(true); },
       }
     : null;
   const hidden = shared ? withheld(shared.page, view) : false;
@@ -141,7 +148,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
 
   return (
     <div className="p02-live" data-live={view} aria-busy={busy || undefined}>
-        <CommandDiagnostics l={l} detail={detail} />
+        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
       {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
       <div className="p02-scope">
         <dl className="p02-scope-facts">
@@ -161,7 +168,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
           <p className="p02-rights" id="p02-rights" data-rights={held.join(" ")}><strong>{r.rightsLead(l)}</strong> {rightList(l, held)}.</p>
         )
       )}
-      {notice && <div id="p02-notice" className="service-status" tabIndex={-1} role="status"><p>{notice}</p></div>}
+      {notice && <div id="p02-notice" className="service-status" tabIndex={-1} role="status"><p>{notice}</p>{noticeDetail && <DiagnosticDetails l={l} detail={noticeDetail} />}</div>}
       {status === "error" && (
         <div className="live-error p02-failure" role="alert">
           <h2>{r.loadFailed(l)}</h2>

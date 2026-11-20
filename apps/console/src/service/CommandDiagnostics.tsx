@@ -5,7 +5,7 @@ import type { AdminClient } from "./admin";
 import { diagnosticOf, observeCommands, type CommandDiagnostic, type RowDiagnostic } from "./command-diagnostics";
 
 const text = {
-  title: { en: "Latest action request", ko: "최근 작업 요청", ar: "طلب الإجراء الأخير" },
+  title: { en: "Action request references", ko: "작업 요청 참조 정보", ar: "مراجع طلب الإجراء" },
   code: { en: "Server error code", ko: "서버 오류 코드", ar: "رمز خطأ الخادم" },
   request: { en: "Server request ID", ko: "서버 요청 ID", ar: "معرّف طلب الخادم" },
   client: { en: "Client request ID", ko: "클라이언트 요청 ID", ar: "معرّف طلب العميل" },
@@ -44,7 +44,9 @@ export function CommandDiagnostics({ l, detail }: { l: Locale; detail: CommandDi
   );
 }
 
-export function useCommandDiagnostics(api: AdminClient, scope: string) {
+export function useCommandDiagnostics(api: AdminClient, scope: string, onStart?: () => void) {
+  const begin = useRef(onStart);
+  begin.current = onStart;
   const current = useRef<object | null>(null);
   const [record, setRecord] = useState<{ token: object; detail: CommandDiagnostic | null } | null>(null);
   const token = useMemo(() => ({ active: true }), [api, scope]);
@@ -53,7 +55,7 @@ export function useCommandDiagnostics(api: AdminClient, scope: string) {
     token.active = true;
     return () => { token.active = false; };
   }, [token]);
-  const client = useMemo(() => observeCommands(api, (detail) => setRecord({ token, detail }), () => token.active && current.current === token), [api, token]);
+  const client = useMemo(() => observeCommands(api, (detail) => { if (detail === null) begin.current?.(); setRecord({ token, detail }); }, () => token.active && current.current === token), [api, token]);
   return { api: client, detail: record?.token === token ? record.detail : null };
 }
 

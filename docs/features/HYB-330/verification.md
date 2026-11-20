@@ -1,14 +1,18 @@
 ---
 type: VerificationRecord
 title: HYB-330 administration diagnostic verification
-description: Records fail-first evidence, independent review fixes and final local verification for P01–P05 diagnostic references.
+description: Records fail-first evidence, independent review fixes and initial-candidate local verification for P01–P05 diagnostic references.
 status: stable
 sources:
-  - resource: ./plan.md
-  - resource: ./implementation.md
-  - resource: ./visual-spec.md
+  - resource: https://github.com/myblueton-sw/hybrid_billing/blob/f42d05c766168c9214b5c696b3b39d6166660e2f/docs/features/HYB-330/plan.md
+  - resource: https://github.com/myblueton-sw/hybrid_billing/blob/f42d05c766168c9214b5c696b3b39d6166660e2f/docs/features/HYB-330/implementation.md
+  - resource: https://github.com/myblueton-sw/hybrid_billing/blob/f42d05c766168c9214b5c696b3b39d6166660e2f/docs/features/HYB-330/visual-spec.md
   - resource: ./verification-evidence.json
 ---
+
+# Candidate provenance
+
+This record describes candidate `f42d05c766168c9214b5c696b3b39d6166660e2f` before consolidation. Counts, source hashes and reviews below apply to that candidate only. See [consolidated integration verification](integration.md) for the current source and final checks.
 
 # Planning cross-check
 
@@ -27,7 +31,7 @@ P02 spec lines98–102 require stable error code, request identity, field locati
 
 New component/model imports were unavailable on the original baseline; import failure is not counted as a semantic regression test. Initial QA harness attempts with unstable form selectors or incomplete required fields timed out; those attempts are not product failures or successful verification. Corrected selectors and valid form input produced the explicit assertion failures above before product corrections.
 
-# Final verification
+# Initial-candidate verification
 
 - `npm test`:863 passed, zero failures; includes malformed/scalar JSON, metadata provenance, independent attempts, scoped markers, command/target binding and marker reset semantics.
 - `npm run build`: PASS, including TypeScript; existing large-bundle warning remains.

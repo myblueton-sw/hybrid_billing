@@ -1,3 +1,4 @@
+import { Refusals } from "../../../../service/refusal";
 import type { RowDiagnostic } from "../../../../service/command-diagnostics";
 import type { Owner, ArtifactRow, ClassGroup, HoldRow, ImpactNow, Person, PolicyRow, PolicyView, Proposal, RetentionPage, RunRef, RunRow, StoreRow } from "../../../../service/retention";
 import { classes } from "./live-codes";
@@ -409,13 +410,17 @@ export function fieldReaction(command: CommandKey, fields: string[]): FieldReact
 export type Pending = { key: string; request: string; expected: string; values: string; snapshot: string[]; context: Record<string, string>; stale: boolean };
 const pending = new Map<string, Pending>();
 const drafts = new Map<string, Record<string, string>>();
-const refusals = new Map<string, { state: string; diagnostic?: RowDiagnostic }>();
+const refusals = new Refusals<string>();
 
 let scope = "";
+let scopeGeneration = 0;
+
+export function currentScope(): number { return scopeGeneration; }
 
 export function setScope(workspace: string, user: string, session: string): void {
   const next = workspace + "\u0000" + user + "\u0000" + session;
   if (next !== scope) {
+    scopeGeneration++;
     pending.clear();
     drafts.clear();
     refusals.clear();
@@ -424,6 +429,7 @@ export function setScope(workspace: string, user: string, session: string): void
 }
 
 export function forget(): void {
+  scopeGeneration++;
   pending.clear();
   drafts.clear();
   refusals.clear();
@@ -468,6 +474,7 @@ export function pendingFor(
   const frozen = JSON.stringify(values);
   const kept = pending.get(id);
   if (kept && kept.values === frozen && !kept.stale) return kept;
+  refusals.delete(id);
   const tried = fresh();
   const next = { key: tried.key, request: tried.request, expected, values: frozen, snapshot: [...snapshot], context: { ...context }, stale: false };
   pending.set(id, next);
@@ -505,12 +512,12 @@ export function settle(command: string, target: string, reaction: Reaction | "ok
     return;
   }
   pending.delete(slot(command, target));
-  if (reaction === "hint") refusals.set(slot(command, target), { state: failure === "refused" ? "refused" : "stage", diagnostic });
+  if (reaction === "hint") refusals.set(slot(command, target), failure === "refused" ? "refused" : "stage", diagnostic);
   else refusals.delete(slot(command, target));
 }
 
 export function refusedNow(command: string, target: string): string {
-  return refusals.get(slot(command, target))?.state ?? "";
+  return refusals.get(slot(command, target)) ?? "";
 }
 
 export function keptKey(command: CommandKey, kind: string): string {
@@ -650,7 +657,7 @@ export function holdValues(d: Record<string, string>, tenant: boolean): Record<s
 
 export function refusalDiagnostics(target: string): RowDiagnostic[] {
   return commandKeys.flatMap((command) => {
-    const entry = refusals.get(slot(command, target))?.diagnostic;
+    const entry = refusals.detail(slot(command, target));
     return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
   });
 }

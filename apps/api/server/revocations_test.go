@@ -133,6 +133,7 @@ func TestReadDuringRevocations(t *testing.T) {
 
 func TestGrantChangesHaveFixedCallSites(t *testing.T) {
 	allowed := map[string]bool{
+		"inputauthorityfacts.go Apply AddGrant":             true,
 		"candidateseed.go seedChargeCandidates AddGrant":    true,
 		"accessrequests.go applyAdd AddGrant":               true,
 		"revocations.go grantEffects RevokeGrant":           true,

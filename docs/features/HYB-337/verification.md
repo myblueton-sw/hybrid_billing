@@ -120,3 +120,10 @@ The next dependency update incorporates the separately reviewed recorded-lifecyc
 The separately reviewed lifecycle dependency was integrated without console/proxy source changes relative to the rendered 11cfd10 build. Independent refusal_review confirmed separate approval/candidate registries, gates and seed steps. Focused composed race checks passed 59.639 seconds (/private/tmp/hyb337-lifecycle-composed-focused.log). All 74 packages passed short-mode race regression, server 630.288 seconds, exit 0 (/private/tmp/hyb337-lifecycle-composed-short.log), with an exact go list package-set match. The source snapshot at run start was b1a7078; the subsequent rebase onto parent 19a37a6 added only documented date-test/evidence/plan changes, with no production difference. The extra date cases were separately verified in the parent.
 
 Short mode skips or reduces long timing/scale/property workloads. The earlier full 11cfd10 baseline remains distinct; neither run certifies the later uncommitted intake-source work in HYB-225. Financial commands and approval readiness remain unconnected. No merge or owner acceptance is claimed.
+
+
+## Intake source dependency composition
+
+Parent source increment 64a3de3 is incorporated in composed snapshot bc79ec2. Relative to the earlier composed head 30ec33d, changed files belong exclusively to the parent source assembly, candidate fixtures/provenance and HYB-225 records. Console/proxy source is unchanged, so prior rendered evidence remains scoped to those unchanged screens. No candidate-to-approval link or new financial command is introduced.
+
+Root ran focused composed race checks covering ApprovalRead, ApprovalSeed, CandidateRead, SourceAssembly, SeedReplay, SourceRules and grant/counter test names: PASS 9.655 seconds, /private/tmp/hyb337-source-composed-focused.log. A fresh all-package short-mode race suite on bc79ec2 is running in /private/tmp/hyb337-source-composed-short.log. The parent full race on 64a3de3 is also running separately. Neither pending run is a pass, and earlier full/short results do not certify the new intake implementation.

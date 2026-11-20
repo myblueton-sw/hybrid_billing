@@ -49,14 +49,13 @@ const files = (dir: string): string[] =>
     return statSync(path).isDirectory() ? files(path) : [path];
   });
 
-test("only the sign-out and session-ended paths of Service.tsx leave deliberately, and a new session clears it (L1, L2)", () => {
+test("only explicit sign-out leaves deliberately, and a new session clears it (L1, L2)", () => {
   const root = join(import.meta.dirname, "..");
   const callers = files(root)
     .filter((p) => /\.(ts|tsx)$/.test(p) && !/\.test\.tsx?$/.test(p) && !p.endsWith("unload-intent.ts"))
     .flatMap((p) => (readFileSync(p, "utf8").match(/leaveDeliberately\(/g) ?? []).map(() => p.slice(root.length + 1)));
-  assert.deepEqual(callers, ["service/Service.tsx", "service/Service.tsx"]);
+  assert.deepEqual(callers, ["service/Service.tsx"]);
   const source = readFileSync(join(root, "service", "Service.tsx"), "utf8");
   assert.match(source, /logout\(session\)[^\n]*\n\s*leaveDeliberately\(\);\n\s*location\.assign\(serviceUrl\("signin", l, "signed-out"\)\)/);
-  assert.match(source, /onSignedOut=\{\(\) => \{[^}]*leaveDeliberately\(\); location\.assign\(serviceUrl\("signin", shown, "ended"\)\)/);
   assert.match(source, /if \(session\) stayAgain\(\);/);
 });

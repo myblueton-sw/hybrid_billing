@@ -41,10 +41,12 @@ export default function SessionSelection({ l, api, handle, store, onClose, onSig
   const busyRef = useRef(false);
   const readKey = useMemo(() => ({ api,handle,store }),[api,handle,store]);
   const guard = useScopedRead(readKey);
+  const snapshot = useSyncExternalStore(store.subscribe,store.get,store.get);
+  const refused = !snapshot.intent && snapshot.error !== null;
   const [preparedData,setPreparedData] = useState<ScopedValue<Selection> | null>(null);
   const [previewData,setPreviewData] = useState<ScopedValue<SelectionPreview> | null>(null);
-  const prepared = preparedData?.scope === guard.token ? preparedData.value : null;
-  const preview = previewData?.scope === guard.token ? previewData.value : null;
+  const prepared = !refused && preparedData?.scope === guard.token ? preparedData.value : null;
+  const preview = !refused && previewData?.scope === guard.token ? previewData.value : null;
   const setPrepared = (value: Selection | null) => setPreparedData(value ? { scope:guard.token,value } : null);
   const setPreview = (value: SelectionPreview | null) => setPreviewData(value ? { scope:guard.token,value } : null);
   const [after,setAfter] = useState("");
@@ -53,7 +55,11 @@ export default function SessionSelection({ l, api, handle, store, onClose, onSig
   const [failure,setFailure] = useState<unknown>(null);
   const failed = failure !== null;
   const [confirmed,setConfirmed] = useState(false);
-  const snapshot = useSyncExternalStore(store.subscribe,store.get,store.get);
+  useEffect(() => {
+    if (!refused) return;
+    setPrepared(null);setPreview(null);setAfter("");setTrail([]);setConfirmed(false);
+  },[refused,snapshot.error]);
+  useEffect(() => { if (preview || failed || refused) heading.current?.focus(); },[preview,failed,refused]);
   const kind = handle ? "one" : "others";
   const error = (cause: unknown) => {
     if (cause instanceof AdminError && cause.failure === "unauthenticated") onSignedOut();
@@ -82,6 +88,7 @@ export default function SessionSelection({ l, api, handle, store, onClose, onSig
     const valid = guard.begin();
     if (!store.get().intent && store.get().error !== null) store.update({ ...store.get(),error:null,version:store.get().version+1 });
     busyRef.current = true; setBusy(true); setFailure(null); setConfirmed(false);
+    if (!resume) { setPrepared(null);setPreview(null);setAfter("");setTrail([]); }
     let next: Selection | null = null;
     try {
       if (!resume && handle) {
@@ -106,7 +113,7 @@ export default function SessionSelection({ l, api, handle, store, onClose, onSig
   useEffect(() => {
     if (prepared && snapshot.intent?.fingerprint.selection === prepared.selection && snapshot.intent.state === "accepted") onClose();
   },[prepared,snapshot.intent]);
-  const ready = !!prepared && prepared.state === "sealed" && prepared.count !== null && prepared.count > 0 && !!preview && !busy && !failed && !intentLocked(snapshot);
+  const ready = !!prepared && prepared.state === "sealed" && prepared.count !== null && prepared.count > 0 && !!preview && !busy && !failed && snapshot.error === null && !intentLocked(snapshot);
   const submit = () => {
     if (!ready || !confirmed || !prepared || prepared.count === null) return;
     void submitSelected(store,api,{ selection:prepared.selection,digest:prepared.digest,count:prepared.count },prepared.kind);

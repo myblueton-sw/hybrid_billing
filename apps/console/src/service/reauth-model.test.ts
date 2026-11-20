@@ -116,3 +116,17 @@ test("useAdminClient returns the same client across re-renders and a new one whe
   assert.notEqual(seen[3], seen[2]);
   assert.equal(clientFor("tok-x", stepUp), clientFor("tok-x", stepUp));
 });
+
+
+test("the authenticated root's client is shared with route consumers", () => {
+  const provided=clientFor("provided-root-client",undefined);let seen:AdminClient|undefined;
+  function Probe(){seen=useAdminClient();return null;}
+  renderToStaticMarkup(React.createElement(ServiceContext.Provider,{value:{session:{user:"u",workspace:"w",role:"member",csrf:"different-fallback",login:"sample@example.invalid"},signOut:()=>{},client:provided}},React.createElement(Probe)));
+  assert.equal(seen,provided);
+});
+
+test("authentication loss asks for sign-in without claiming server session termination", () => {
+  assert.equal(c.ended("en"), "Sign in again.");
+  assert.equal(c.ended("ko"), "다시 로그인해 주세요.");
+  assert.equal(c.ended("ar"), "سجّل الدخول مرة أخرى.");
+});

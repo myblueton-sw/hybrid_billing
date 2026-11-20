@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo } from "react";
 import { adminClient, type AdminClient, type StepUp } from "./admin";
 import type { Session } from "./api";
 
-export type ServiceSession = { session: Session; signOut: () => void; stepUp?: StepUp };
+export type ServiceSession = { session: Session; signOut: () => void; stepUp?: StepUp; client?: AdminClient };
 
 export const ServiceContext = createContext<ServiceSession | null>(null);
 
@@ -22,6 +22,7 @@ export function clientFor(csrf: string, stepUp: StepUp | undefined): AdminClient
 }
 
 export function useAdminClient(): AdminClient {
-  const [csrf, stepUp] = clientKey(useContext(ServiceContext));
-  return useMemo(() => clientFor(csrf, stepUp), [csrf, stepUp]);
+  const service = useContext(ServiceContext);
+  const [csrf, stepUp] = clientKey(service);
+  return useMemo(() => service?.client ?? clientFor(csrf, stepUp), [service?.client, csrf, stepUp]);
 }

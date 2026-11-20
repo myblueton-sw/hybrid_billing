@@ -556,3 +556,51 @@ test("rate limit and cancelled step-up preserve the response diagnostic identity
     .command("integrations.plugin_stop", "plugin:sample", "r1", "synthetic reason", {}, { request: "client-330", key: "key-330" }),
     (e: AdminError & { request: string }) => e.failure === "reauth_cancelled" && e.code === "reauthentication_required" && e.request === "step-330");
 });
+
+
+test("raw401 retires authentication once and never starts step-up, even with a misleading body", async () => {
+  const net=fake(401,{code:"reauthentication_required"});let asked=0,notified=0;
+  const api=adminClient("synthetic",net.f,async()=>{asked++;return true;});
+  const unsubscribe=api.subscribeAuthenticationLoss(()=>{notified++;});
+  await assert.rejects(api.endSelectedSessions({selection:"s",digest:"d",count:1}),AdminError);
+  assert.equal(asked,0);assert.equal(net.calls.length,1);assert.equal(notified,1);
+  await assert.rejects(api.me(),AdminError);assert.equal(notified,1);assert.equal(net.calls.length,1);unsubscribe();
+  let late=0;api.subscribeAuthenticationLoss(()=>{late++;})();assert.equal(late,1);
+});
+
+test("raw401 is observed before its response body resolves", {timeout:1000}, async () => {
+  let release!: (value:unknown)=>void;let observed=false;
+  const body=new Promise<unknown>(done=>{release=done;});
+  const net=(async()=>({status:401,ok:false,headers:new Headers(),json:()=>body})) as unknown as typeof fetch;
+  const api=adminClient("synthetic",net);api.subscribeAuthenticationLoss(()=>{observed=true;});
+  const pending=api.me();await new Promise<void>(done=>setImmediate(done));const beforeBody=observed;
+  release({code:"unauthenticated"});await assert.rejects(pending,AdminError);assert.equal(beforeBody,true);
+});
+
+test("authentication observers can detach without changing transport failure", async () => {
+  const net=fake(401,{});const api=adminClient("synthetic",net.f);let notified=0;
+  const unsubscribe=api.subscribeAuthenticationLoss(()=>{notified++;});unsubscribe();
+  await assert.rejects(api.me(),AdminError);assert.equal(notified,0);
+});
+
+test("authentication retirement before a step-up retry prevents another mutation POST", async () => {
+  let posts=0;
+  const net=(async(path:string)=>{
+    if(path.endsWith("/me/sessions/end")){posts++;return new Response(JSON.stringify({code:"reauthentication_required"}),{status:403});}
+    return new Response(JSON.stringify({code:"unauthenticated"}),{status:401});
+  }) as unknown as typeof fetch;
+  let api:ReturnType<typeof adminClient>;
+  api=adminClient("synthetic",net,async()=>{await assert.rejects(api.me(),AdminError);return true;});
+  let failure:unknown;
+  try{await api.endSelectedSessions({selection:"s",digest:"d",count:1});}catch(error){failure=error;}
+  assert.equal(posts,1);
+  assert.ok(failure instanceof AdminError&&failure.failure==="unauthenticated"&&failure.code===""&&failure.request==="");
+  await assert.rejects(api.me(),error=>error instanceof AdminError&&error.failure==="unauthenticated"&&error.code==="");
+});
+
+test("a refused CSRF context retires authentication without treating permission denial as sign-out", async () => {
+  for(const [code,expected] of [["csrf_refused",1],["permission_denied",0]] as const){
+    const net=fake(403,{code});const api=adminClient("synthetic",net.f);let observed=0;
+    api.subscribeAuthenticationLoss(()=>{observed++;});await assert.rejects(api.me(),AdminError);assert.equal(observed,expected);
+  }
+});

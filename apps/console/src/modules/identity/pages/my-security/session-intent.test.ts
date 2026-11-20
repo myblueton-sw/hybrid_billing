@@ -72,3 +72,17 @@ test("authenticated client identity is stable across view/locale consumers and c
   assert.equal(intentStore(clientFor("synthetic-session-a",challenge),"scope"),store);
   assert.notEqual(clientFor("synthetic-session-b",challenge),a);
 });
+
+test("authentication loss during recovery or replay preserves the isolated uncertain request", async () => {
+  let unauthorized=false;
+  const rejected=()=>new AdminError("unauthenticated",[],0,"","unauthenticated");
+  const sent:unknown[]=[];
+  const api=apiOf({endSelectedSessions:async value=>{sent.push(value);if(unauthorized)throw rejected();throw new Error("lost response");},previewSessionSelection:async()=>{throw rejected();}});
+  const store=intentStore(api,"retired-auth-scope")!;
+  await submitSelected(store,api,fingerprint,"others");unauthorized=true;
+  await recoverSelected(store,api);
+  assert.equal(store.get().intent?.state,"unavailable");assert.equal(intentLocked(store.get()),true);assert.deepEqual(store.get().intent?.fingerprint,fingerprint);
+  await replaySelected(store,api);
+  assert.equal(store.get().intent?.state,"unavailable");assert.equal(intentLocked(store.get()),true);assert.deepEqual(store.get().intent?.fingerprint,fingerprint);assert.deepEqual(sent,[fingerprint,fingerprint]);
+  assert.equal(intentStore(apiOf({}),"new-auth-scope")?.get().intent,null);
+});

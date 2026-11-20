@@ -712,3 +712,9 @@ No network address, raw User-Agent, login name, email or bearer secret is stored
 ## HYB-327 reconciliation
 
 The preceding gap inventory records the original mapping review. HYB-327 validates O01 and identity response rows at the read boundary. M02 now displays the fields affected by the restored/default comparison, distinguishing an explicit empty list from unavailable data. M01 selection is already bound by the filter-selection follow-up; API-key and pending-job impact now require explicit server states. See [verification](../../features/HYB-327/verification.md) for executed checks and limitations. Unrelated unread result fields remain outside this change.
+
+## HYB-304 M05 advanced confirmation and authority follow-up
+
+`SessionSelection.tsx` hides a definitively refused initial confirmation synchronously and resets its reference/preview/checkbox for explicit review. A missing submitted reference remains an unknown outcome with the same fingerprint locked in `session-intent`; it is never converted to an empty successful result. Building completion/refusal focuses the stable dialog heading. `admin.ts` and the shared root remove sensitive reads on actual401 or semantic authentication loss; stale prior-session prompts cannot retire a successor session or authorize a retry. See the [L01 shared boundary mapping](./sign-in.md#hyb-304-authenticated-boundary-follow-up).
+
+Large actual result pages and later-arrival exclusion pages were traversed independently with exact counts and no duplicate handles. Pending/failed cleanup render variants use explicitly intercepted responses over a real accepted operation; those images do not claim a real backend cleanup failure. Current verification and retained limitations are in [advanced evidence](../../features/HYB-304/advanced-evidence.json). Parent M04/M03/M02 and owner acceptance remain open.

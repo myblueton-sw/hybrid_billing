@@ -93,6 +93,7 @@ export const b = {
   store: (l: Locale, s: string) =>
     ({ trust_changes: t(l, "Sign-in rule changes (M02)", "로그인 규칙 변경(M02)", "تغييرات قواعد تسجيل الدخول (M02)"), access_requests: t(l, "Access change requests (M03)", "접근 변경 요청(M03)", "طلبات تغيير الوصول (M03)"),
       pricing_authority_proposals: t(l, "Pricing policy permission requests", "가격 정책 권한 요청", "طلبات صلاحية سياسة التسعير"),
+      financial_charge_requests: t(l, "Charge approval requests", "청구 승인 요청", "طلبات اعتماد الرسوم"),
       financial_request_permission_proposals: t(l, "Charge approval submission permission proposals", "청구 승인 요청 제출 권한 제안", "مقترحات صلاحية تقديم طلب اعتماد الرسوم"),
       financial_permission_proposals: t(l, "Charge approval permission requests", "청구 승인 권한 요청", "طلبات صلاحية اعتماد الرسوم"),
       financial_authority_proposals: t(l, "Charge approval limit proposals", "청구 승인 한도 제안", "مقترحات حدود اعتماد الرسوم"),
@@ -102,6 +103,7 @@ export const b = {
       retention_proposals: t(l, "Retention proposals", "보존 제안", "مقترحات الاحتفاظ"), recovery_proposals: t(l, "Recovery proposals", "복구 제안", "مقترحات الاسترداد"),
       installation_proposals: t(l, "Installation proposals", "설치 제안", "مقترحات التثبيت"), integration_proposals: t(l, "Integration proposals", "연동 제안", "مقترحات التكامل"),
       relationship_plans: t(l, "Relationship plans", "관계 계획", "خطط العلاقات"), release_evidence_proposals: t(l, "Release evidence proposals", "릴리스 근거 제안", "مقترحات أدلة الإصدار") } as Record<string, string>)[s] ?? s,
+  chargeRequesterNotRechecked: (l: Locale) => t(l, "The requester’s permission to submit is not rechecked at decision time.", "결정 시 요청자의 제출 권한을 다시 확인하지 않습니다.", "لا يُعاد التحقق من صلاحية مقدّم الطلب للتقديم عند اتخاذ القرار."),
   rechecked: (l: Locale) => t(l, "Rechecked when approved", "승인 시 다시 확인됨", "يُعاد التحقق منه عند الموافقة"),
   notRechecked: (l: Locale) => t(l, "Not confirmed to be rechecked when approved", "승인 시 재확인 여부 미확인", "لم يتأكد أنه يُعاد التحقق منه عند الموافقة"),
   pendingJobs: (l: Locale) => t(l, "Pending jobs", "대기 작업", "المهام قيد الانتظار"),

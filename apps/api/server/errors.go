@@ -88,6 +88,7 @@ var moduleRules = map[commands.Code]struct {
 	commands.UnsupportedCommand:    {http.StatusNotFound, false, commands.NextNone},
 	commands.DependencyUnavailable: {http.StatusServiceUnavailable, true, commands.NextRetry},
 	commands.PermissionDenied:      {http.StatusForbidden, false, commands.NextNone},
+	commands.SelfApprovalDenied:    {http.StatusForbidden, false, commands.NextNone},
 }
 
 func failCode(w http.ResponseWriter, code commands.Code, request string) {

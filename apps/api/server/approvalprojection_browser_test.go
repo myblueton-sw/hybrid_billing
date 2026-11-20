@@ -13,6 +13,15 @@ import (
 )
 
 func TestApprovalProjectionRenderedBrowser(t *testing.T) {
+	runApprovalProjectionBrowser(t, "approval-projection-qa.mjs")
+}
+
+func TestFinancialDecisionCoreBrowser(t *testing.T) {
+	runApprovalProjectionBrowser(t, "financial-decision-core-qa.mjs")
+}
+
+func runApprovalProjectionBrowser(t *testing.T, runner string) {
+	t.Helper()
 	output := os.Getenv("HB_PROJECTION_QA_OUTPUT")
 	if output == "" {
 		t.Skip("explicit isolated browser configuration required")
@@ -42,7 +51,7 @@ func TestApprovalProjectionRenderedBrowser(t *testing.T) {
 	server.Start()
 	defer server.Close()
 	reader := f.as(AdminLogin)
-	script, err := filepath.Abs("../../../tools/approval-projection-qa.mjs")
+	script, err := filepath.Abs(filepath.Join("../../../tools", runner))
 	f.must(err)
 	cmd := exec.Command("node", script, "--url", frontend, "--api", server.URL, "--output", output, "--playwright-module", os.Getenv("HB_PROJECTION_QA_PLAYWRIGHT"), "--chromium", os.Getenv("HB_PROJECTION_QA_CHROMIUM"))
 	cmd.Env = append(os.Environ(), "HB_PROJECTION_QA_COOKIE="+reader.cookie.Name+"="+reader.cookie.Value)

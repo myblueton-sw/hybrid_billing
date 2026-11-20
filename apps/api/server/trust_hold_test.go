@@ -30,7 +30,7 @@ var holdRefused = []string{"access.request_grant", "contract.end", "contract.evi
 	"integrations.plugin_propose", "integrations.redelivery_reapprove", "integrations.subscription_approve", "integrations.subscription_approve_resume",
 	"integrations.subscription_propose", "integrations.subscription_request_resume", "recovery.approve", "recovery.propose_unlock", "relationship.activate", "relationship.propose",
 	"release_evidence.approve", "release_evidence.retire_profile", "release_evidence.retire_requirement", "retention.approve", "retention.propose_policy",
-	"retention.propose_release", "service.create", "service.issue_credential", "service.reinstate", "trust.activate", "trust.approve", "trust.cancel", "trust.propose", "trust.reject", "trust.validate",
+	"retention.propose_release", "service.create", "service.declare", "service.issue_credential", "service.reinstate", "trust.activate", "trust.approve", "trust.cancel", "trust.propose", "trust.reject", "trust.validate",
 	"view_group.draft", "view_group.edit", "view_group.propose"}
 
 func TestHoldTableIsExplicitAndComplete(t *testing.T) {
@@ -64,7 +64,7 @@ func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 			t.Errorf("%s rows\n%v\nwant\n%v", key, got, want)
 		}
 	}
-	if len(registered) != 88 || len(holdTable) != 88 {
+	if len(registered) != 89 || len(holdTable) != 89 {
 		t.Errorf("registered %d rows %d", len(registered), len(holdTable))
 	}
 	data, err := os.ReadFile("boundary.go")

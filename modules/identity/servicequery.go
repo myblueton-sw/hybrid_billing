@@ -95,3 +95,18 @@ func (h *Workspace) CredentialPage(actor Verifier, workspace, serviceID, after s
 	start := beyond(ids, after)
 	return r.credentialInfos(ids[start : start+min(limit, len(ids)-start)]), nil
 }
+
+func (h *Workspace) ServiceCount(actor Verifier, workspace string) (int, error) {
+	r, ok := h.open()
+	if !ok {
+		return 0, ErrUnavailable
+	}
+	defer r.mu.Unlock()
+	if !validID(workspace) {
+		return 0, ErrInvalid
+	}
+	if _, err := r.administrator(actor, workspace, r.clock()); err != nil {
+		return 0, err
+	}
+	return len(r.serviceIndex[workspace]), nil
+}

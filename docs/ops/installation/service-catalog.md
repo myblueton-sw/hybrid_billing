@@ -12,7 +12,7 @@ sources:
 
 This HYB-304 candidate adds startup configuration for the bounded local verification API. It is not production installation certification or completed M04 integration. Run commands from the repository root with the project's supported Go toolchain. Use a disposable local data directory for verification; do not replace a protected running installation or its configuration as part of this procedure.
 
-The catalog records explicitly configured recipient identifiers and named service restrictions. It creates no permission grant or OAuth client, does not authenticate service requests, and does not prove a recipient connection works. Service declaration commands, current business-reference checks and M04 picker/field bindings are subsequent integration work. Existing service creation and credential issuance do not yet require these records in this checkpoint.
+The catalog records explicitly configured recipient identifiers and named service restrictions. It creates no permission grant or OAuth client, does not authenticate service requests, and does not prove a recipient connection works. The candidate API now requires a complete current declaration for new service creation and for first execution of each credential issue or reactivation. The dedicated bounded M04 reads and Console picker/form bindings remain pending; the existing Console create form does not yet submit the required metadata and is not a completed integration.
 
 # File and startup
 
@@ -61,6 +61,28 @@ Audience/scope identifiers are at most128 ASCII bytes using letters, digits, `.`
 Unknown fields, duplicate JSON keys, case aliases, nulls, malformed UTF8 and unpaired Unicode surrogate escapes are rejected. Explicit valid Unicode pairs and replacement characters retain their supplied identity. Construction also enforces10000 audience/100000 scope technical count bounds and the1MiB normalized representation limit; encoded expansion can exceed that limit even when a programmatic input's strings are smaller.
 
 The complete normalized workspace/recipient/restriction content determines the catalog fingerprint. Reordering entries/field sets does not change meaning; modifying a scope, selector or exclusive period does. Catalog counts describe configured metadata, not effective permissions. Raw internal ID continuation positions are not public authenticated cursors.
+
+# Declaration commands and limits
+
+`service.create` requires string-valued `name`, `owner`, `purpose`, `organization`, `catalog_version` and `scopes`. `service.declare` targets an existing service and replaces the complete declaration using `purpose`, `organization`, `catalog_version`, `scopes` and canonical unsigned decimal `declaration_version`; use `0` only when no declaration exists. Both use the existing administrator session, CSRF, step-up, rationale, expected global revision and idempotency key. The catalog version is the exact current lowercase SHA256 fingerprint, not a user-selected label. The response exposes `declaration_version`, without echoing purpose or restrictions.
+
+`scopes` is a JSON array encoded as one string field, for example `[{"audience":"usage-api","scope":"read-usage"}]`. Entries have exactly these two canonical IDs; unknown/duplicate members, duplicate pairs, null, empty arrays and trailing input are refused. Each selected entry must exist in the current workspace's configured catalog. Scope selection records restrictions; it does not authorize service requests or create an effective grant.
+
+Purpose is nonempty trimmed decoded text within the configured UTF8 byte limit. Controls and directional overrides/isolates are refused; ordinary Korean and Arabic text is supported. The existing outer command JSON decoder can replace malformed raw Unicode with U+FFFD before this validation. This decoded-text contract differs from the catalog file's strict raw Unicode rejection.
+
+The responsible owner must be an active human with an effective membership in the same workspace. The owning organization must be currently eligible, including an internal unit's legal-entity parent. Named customer/legal-entity selectors must resolve to eligible legal entities. Named contracts must be active at the command acceptance date with a recorded current revision and eligible customer/seller; an explicit customer selector must match. These checks run on create, declaration update, reactivation and every new issue execution. They neither contact a recipient nor infer an undocumented issuer mapping.
+
+| Startup flag | Default | Allowed range | Meaning |
+| --- | --- | --- | --- |
+| `--service-declaration-purpose-bytes` | 512 | 1–2048 | Decoded purpose UTF8 bytes |
+| `--service-declaration-scopes` | 16 | 1–64 | Selected audience/scope pairs |
+| `--service-declaration-versions` | 5 | 1–20 | Retained declaration versions per service |
+
+The existing command field byte cap also applies to the serialized scope array. Retention keeps a bounded suffix; missing/pruned versions are unavailable. The service-account admission/key cap is200, including retired records. Existing services without declarations cannot issue new credentials or reactivate until explicitly completed through `service.declare`. Suspended services may repair declarations; retired services cannot. Suspension, revocation and retirement remain available as reductions. Current dependency failure refuses new effects without partially creating an account or declaration.
+
+An already accepted command can replay with its original request fingerprint after a business reference becomes ineligible, retaining the existing current-caller, step-up and trust checks. Replay does not repeat identity/declaration/credential effects, and accepted secret pickup remains available through its existing rules. A declaration change never rewrites a held unknown-outcome issue request. Trust hold refuses a new declaration change because it can expand the recorded scope.
+
+Declarations currently share the prelaunch identity/command process lifecycle and reset on restart. This is not durable service-account persistence. The configured catalog remains immutable while running; no runtime catalog-edit endpoint is added.
 
 # Verification and failure handling
 

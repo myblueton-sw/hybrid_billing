@@ -246,3 +246,26 @@ func TestServiceQueryIndexWriterHandlesReplacement(t *testing.T) {
 	f.r.mu.Unlock()
 	assertServiceQueryIndexes(t, f.r)
 }
+
+func TestServiceCountUsesRecordedWorkspaceScopeAndCurrentAuthority(t *testing.T) {
+	f := setup(t)
+	f.member("ann", Member)
+	f.seed("w2", "adm2")
+	admin, other := f.login("root"), f.login("adm2")
+	f.must(f.w.CreateServiceUser(admin, "w1", "one", "root"))
+	f.must(f.w.CreateServiceUser(admin, "w1", "two", "root"))
+	f.must(f.w.RetireServiceUser(admin, "w1", "one", 1))
+	f.must(f.w.CreateServiceUser(other, "w2", "foreign", "adm2"))
+	if count, err := f.w.ServiceCount(admin, "w1"); err != nil || count != 2 {
+		t.Fatal("recorded count lost retired rows or crossed workspaces", count, err)
+	}
+	if count, err := f.w.ServiceCount(other, "w2"); err != nil || count != 1 {
+		t.Fatal("foreign own count", count, err)
+	}
+	f.refusal("member count", second(f.w.ServiceCount(f.login("ann"), "w1")), ReasonNotAdministrator)
+	f.must(f.b.EndSession(admin))
+	f.refusal("ended count caller", second(f.w.ServiceCount(admin, "w1")), ReasonSession)
+	f.want("invalid count workspace", second(f.w.ServiceCount(other, "")), ErrInvalid)
+	var absent *Workspace
+	f.want("unavailable count", second(absent.ServiceCount(other, "w2")), ErrUnavailable)
+}

@@ -188,6 +188,7 @@ Tracking: [HYB-295](https://linear.app/hybrid-billing/issue/HYB-295). [HB-257](.
 - **Verification.** [HB-266](../features/HB-266/verification.md), [HB-267](../features/HB-267/verification.md), [HYB-298](../features/HYB-298/verification.md).
 
 **M04 Service accounts**
+- **HYB-304 candidate boundary.** Required create metadata and the new `service.declare` command are implemented in the API. Current Console create fields are incomplete against this contract; bounded metadata reads, declaration read-back and form bindings remain pending. New issuance/reactivation requires current declaration/owner/reference eligibility; reductions and accepted command replay retain their existing paths. See the [field-map candidate notice](screen-binding-fields/identity.md#m04-service-accounts). This is not full M04 merge readiness or owner acceptance.
 - **Tickets.** HB-268 API (#188), HB-269 screen (#189), HYB-293 (#210), HYB-316 retry persistence, and HYB-333 unknown-outcome and secret-pickup tracking (implementation candidate; combined verification pending).
 - **Field map.** [M04 fields](screen-binding-fields/identity.md#m04-service-accounts).
 - **Reads.** `GET /api/v1/identity/services` (`boundary.go:34`, `admin.ts:916`, `identity/pages/service-accounts/Live.tsx:551`); `GET /api/v1/identity/links/{ref}` one-time secret pickup (`boundary.go:30`, `admin.ts:931`, `service-accounts/Live.tsx:342`).

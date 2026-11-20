@@ -249,19 +249,14 @@ type serviceCommand struct {
 }
 
 func (s *Server) findService(id string) (identity.ServiceInfo, bool, error) {
-	list, err := s.serviceUsers(s.caller)
+	if s.faulty("services") {
+		return identity.ServiceInfo{}, false, identity.ErrUnavailable
+	}
+	found, err := s.identity.Workspace().ServiceUser(s.caller, s.bootWorkspace, id)
 	if err != nil && !errors.Is(err, identity.ErrUnavailable) {
 		return identity.ServiceInfo{}, false, nil
 	}
-	if err != nil {
-		return identity.ServiceInfo{}, false, err
-	}
-	for _, svc := range list {
-		if svc.ID == id {
-			return svc, true, nil
-		}
-	}
-	return identity.ServiceInfo{}, false, nil
+	return found, err == nil, err
 }
 
 func (s *Server) findCredential(id string) (bool, error) {
@@ -314,7 +309,9 @@ func (h serviceCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 	var err error
 	switch h.kind {
 	case "create":
-		state, err = h.create(ctx)
+		state, fields, err = h.create(ctx, now)
+	case "declare":
+		state, fields, err = h.declare(ctx, now)
 	case "revoke_credential":
 		state, err = h.revoke(ctx)
 	default:
@@ -334,38 +331,48 @@ func (h serviceCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 	return commands.Outcome{ResultRevision: s.Next(), BusinessState: state, Fields: fields}, nil
 }
 
-func (h serviceCommand) create(ctx commands.Context) (string, error) {
+func (h serviceCommand) create(ctx commands.Context, now time.Time) (string, map[string]string, error) {
 	s := h.s
 	name := ctx.Fields["name"]
 	if !validServiceName(name) {
-		return "", commands.Fail(commands.InvalidRequest, "name")
-	}
-	owners, err := s.grantees(s.caller)
-	if err != nil {
-		return "", err
-	}
-	existing, err := s.serviceUsers(s.caller)
-	if err != nil {
-		return "", err
-	}
-	if len(existing) >= maxServices {
-		return "", commands.Fail(commands.PrerequisiteFailed)
+		return "", nil, commands.Fail(commands.InvalidRequest, "name")
 	}
 	owner := ctx.Fields["owner"]
-	known := false
-	for _, row := range owners {
-		known = known || row.UserID == owner
+	eligible, err := s.eligibleServiceOwner(owner)
+	if err != nil {
+		return "", nil, err
 	}
-	if !known {
-		return "", commands.Fail(commands.InvalidRequest, "owner")
+	if !eligible {
+		return "", nil, commands.Fail(commands.InvalidRequest, "owner")
 	}
-	if err := s.identity.Workspace().CreateServiceUser(s.caller, s.bootWorkspace, servicePrefix+name, owner); err != nil {
+	if s.faulty("services") {
+		return "", nil, identity.ErrUnavailable
+	}
+	count, err := s.identity.Workspace().ServiceCount(s.caller, s.bootWorkspace)
+	if err != nil {
+		return "", nil, err
+	}
+	if count >= maxServices {
+		return "", nil, commands.Fail(commands.PrerequisiteFailed)
+	}
+	id := servicePrefix + name
+	if _, exists, err := s.findService(id); err != nil {
+		return "", nil, err
+	} else if exists {
+		return "", nil, commands.Fail(commands.InvalidRequest, "name")
+	}
+	prepared, err := s.prepareServiceDeclaration(id, ctx.Fields, 0, now)
+	if err != nil {
+		return "", nil, err
+	}
+	if err := s.identity.Workspace().CreateServiceUser(s.caller, s.bootWorkspace, id, owner); err != nil {
 		if errors.Is(err, identity.ErrConflict) {
 			err = commands.Fail(commands.InvalidRequest, "name")
 		}
-		return "", err
+		return "", nil, err
 	}
-	return "service_created", nil
+	s.serviceDeclarations[prepared.key] = prepared.history
+	return "service_created", map[string]string{"declaration_version": "1"}, nil
 }
 
 func (h serviceCommand) step(ctx commands.Context, svc identity.ServiceInfo, now time.Time) (string, map[string]string, error) {
@@ -379,6 +386,9 @@ func (h serviceCommand) step(ctx commands.Context, svc identity.ServiceInfo, now
 		s.dir.dropPickups(func(p pickup) bool { return p.target == svc.ID })
 		return "service_suspended", nil, nil
 	case "reinstate":
+		if err := s.requireServiceDeclaration(svc, now); err != nil {
+			return "", nil, err
+		}
 		return "service_active", nil, ws.ReinstateServiceUser(s.caller, s.bootWorkspace, svc.ID, svc.Epoch)
 	case "retire":
 		if err := ws.RetireServiceUser(s.caller, s.bootWorkspace, svc.ID, svc.Epoch); err != nil {
@@ -409,6 +419,9 @@ func (h serviceCommand) issue(ctx commands.Context, svc identity.ServiceInfo, no
 	days, ok := minutes(ctx.Fields["days"], 1, int(s.cfg.Identity.CredentialValidity/(24*time.Hour)))
 	if !ok {
 		return "", nil, commands.Fail(commands.InvalidRequest, "days")
+	}
+	if err := s.requireServiceDeclaration(svc, now); err != nil {
+		return "", nil, err
 	}
 	creds, err := s.credentials(s.caller, svc.ID)
 	if err != nil {
@@ -453,7 +466,8 @@ func (s *Server) serviceDefinitions() []commands.Definition {
 		return commands.Definition{ID: id, Permission: permission, Mutating: true, Rationale: true, Fields: fields, Handler: serviceCommand{s: s, kind: kind}}
 	}
 	return []commands.Definition{
-		define("service.create", "create", []commands.Field{{Name: "name", Type: commands.Text, Required: true}, {Name: "owner", Type: commands.ID, Required: true}}),
+		define("service.create", "create", append([]commands.Field{{Name: "name", Type: commands.Text, Required: true}, {Name: "owner", Type: commands.ID, Required: true}}, declarationFields()...)),
+		define("service.declare", "declare", append(declarationFields(), commands.Field{Name: "declaration_version", Type: commands.Integer, Required: true})),
 		define("service.suspend", "suspend", nil),
 		define("service.reinstate", "reinstate", nil),
 		define("service.retire", "retire", nil),

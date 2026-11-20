@@ -705,6 +705,7 @@ export type CommandId =
   | "access.withdraw_request"
   | "access.revoke_delegation"
   | "service.create"
+  | "service.declare"
   | "service.suspend"
   | "service.reinstate"
   | "service.retire"

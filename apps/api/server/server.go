@@ -167,6 +167,8 @@ type Server struct {
 	sessionOperationVersions map[sessionOwner]uint64
 	sessionOtherOperations   map[sessionOwner]*sessionRecord
 	sessionOperationSequence uint64
+
+	serviceDeclarations map[serviceDeclarationKey][]serviceDeclaration
 }
 
 func IdentityLimits() identity.Limits {
@@ -231,6 +233,7 @@ func New(cfg Config) (*Server, error) {
 		contracts: newContractStore(), install: newInstallStore(), integ: newIntegrationStore(), signer: newSeedSigner(), rec: newRecoveryStore(),
 		ret: newRetentionStore(), ev: newEvidenceStore(), progress: map[string]trustProgress{}, random: rand.Reader, memberLedger: map[string]string{},
 		replayNotes: map[string]string{}, awaiting: map[string]awaitingReplay{}, stop: make(chan struct{}), wake: make(chan struct{}, 1)}
+	s.serviceDeclarations = map[serviceDeclarationKey][]serviceDeclaration{}
 	s.time = newServerClock(cfg.Clock, cfg.Elapsed, cfg.Log)
 	s.clock = s.time.now
 	for _, origin := range cfg.Origins {

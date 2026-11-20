@@ -1,0 +1,135 @@
+{
+  "ticket": "HYB-335",
+  "machine": "mac_mini",
+  "base": "f3ddf8178222c2d535f4cae4e268f18b4f27eea7",
+  "original_candidate": "3e08f7f7e529a324cdd48f599d7a6aaedff7a288",
+  "source_files": [
+    {
+      "path": "apps/console/local-preview-config.test.ts",
+      "sha256": "8509c3c10d604d8ccd08665eee4d39ed22dcb0340f3f9d2fac012a996a50817b"
+    },
+    {
+      "path": "apps/console/local-preview-config.ts",
+      "sha256": "405a8f4402717264cb48f73078761b428e59684d1482c435565aaba06c69c56a"
+    },
+    {
+      "path": "apps/console/package.json",
+      "sha256": "a2dff41759244f31d25b9c43bf7caa92519a316dd9cb573eced5bcfbf1ecf0ee"
+    },
+    {
+      "path": "apps/console/src/env.d.ts",
+      "sha256": "53290ce7941e349ff4c5d7f36f56bc98c926cbade56a230c1e690945fd5bb5ce"
+    },
+    {
+      "path": "apps/console/src/service/Service.tsx",
+      "sha256": "972cdd28153020ae90e41888114cf83cac944e3117ae572188f261d38b247a80"
+    },
+    {
+      "path": "apps/console/src/service/copy.ts",
+      "sha256": "b7326a2c69f575e6435bc740481cf89afefbe8761e396be8b2d3b687ae5709c6"
+    },
+    {
+      "path": "apps/console/src/service/local-preview.ts",
+      "sha256": "13ae7979fda501508b14e8449ede547cb4a392a39fa582f4a4ce45aae8651670"
+    },
+    {
+      "path": "apps/console/tsconfig.json",
+      "sha256": "cf97bc092ad679a647a95146d280e631995c383004a7c25ad403cd58841d347f"
+    },
+    {
+      "path": "apps/console/vite.config.ts",
+      "sha256": "70971f7b1a220417576624e92271b72e9885898a9fb798ba6acd2c186fa88f02"
+    }
+  ],
+  "local_artifacts": [
+    {
+      "path": "/private/tmp/hb335-consolidated-tests.log",
+      "sha256": "282d86e6c7ba993457ccecd81711d6cd9300cc9d319a63a9b435c2028230f5d2"
+    },
+    {
+      "path": "/private/tmp/hb335-consolidated-build.log",
+      "sha256": "805835d53be2f232d37c9691d3b807f9ecf9f5da1edfbbd183206673c85da394"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-browser-final.log",
+      "sha256": "9e88aca33d707a82288051fa27a37d9e047c4882fa6a8e5f8c165fd88528c3d7"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-ar-1024.png",
+      "sha256": "589f1361d965281b036f40d498e1710c4f0b04441073677ab70a4606dd0e9a0f"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-ar-1280.png",
+      "sha256": "9ca841d505ac5f8284d10a824e8755782c31b6ede528bb93cdad58e8215cdeeb"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-ar-1440.png",
+      "sha256": "576a01dab75d5e4c4ba51173e3938908b90f8b5453ce11f88c0e10471294cf93"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-ar-390.png",
+      "sha256": "57ba88f34851d1e3eb037a1436bc0c21e99241e622c17ce219ec19acaa573b94"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-en-1024.png",
+      "sha256": "c5aef87f0fddeccc44b21b5682e63300a177be0d12ec83c032cec108abcaf6d6"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-en-1280.png",
+      "sha256": "a470e4eb6ff768340e94d2fdc01d78ab650f2739909b4f5400334a0280da4e30"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-en-1440.png",
+      "sha256": "0fb1639221c8851bd4ddebd6565b87facc0b011d6d4e3735cdf6590692faed93"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-en-390.png",
+      "sha256": "61426307c094ba2ee6254f46a88ef11ef2c4a3fef79539c20e7b2ea65ade26dd"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-ko-1024.png",
+      "sha256": "1489c63d284f5992a580a0ed18ec7ea780b4d9cd8bd732b9d79b76f8792b900c"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-ko-1280.png",
+      "sha256": "6725a1e5b813da8cc0c228765fe33e464ef45859bb7f6c066807262f6bcf01b8"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-ko-1440.png",
+      "sha256": "b9e3dddd979ea764b7682773c2cd0479f9bc66aeaa7a096b5bcd58bac321d3ce"
+    },
+    {
+      "path": "/private/tmp/hb335-integration-qa-1795140545424/signin-ko-390.png",
+      "sha256": "153692018c7fbb7fc63d785bb678edebc17303384280cc416e87af6fe6741f5f"
+    }
+  ],
+  "raw_artifact_committed": false,
+  "checks": {
+    "console": {
+      "passed": 913,
+      "failed": 0
+    },
+    "browser": {
+      "passed": 62,
+      "failed": 0
+    },
+    "build": "PASS",
+    "production_sentinel_absence": "PASS",
+    "nonloopback_start_rejected": "PASS"
+  },
+  "independent_source_review": {
+    "reviewer": "/root/hyb310_review",
+    "result": "PASS",
+    "bounded_config_tests_executed": 2
+  },
+  "independent_render_review": {
+    "reviewer": "/root/hyb310_copy_render",
+    "result": "PASS",
+    "inspected": [
+      "signin-en-1440.png",
+      "signin-ko-390.png",
+      "signin-ar-390.png"
+    ],
+    "executed_suites": false
+  }
+}

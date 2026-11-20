@@ -4,6 +4,7 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { proxyFor } from "./proxy-config";
+import { previewLogin, requireLocalPreviewHost } from "./local-preview-config.ts";
 const root = fileURLToPath(new URL(".", import.meta.url));
 const foundation = resolve(root, "../../packages/design-system");
 const hash = (data: string | Buffer) =>
@@ -30,6 +31,7 @@ const inputs = [
   resolve(root, "index.html"),
   resolve(root, "vite.config.ts"),
   resolve(root, "proxy-config.ts"),
+  resolve(root, "local-preview-config.ts"),
 ].sort();
 const revision = hash(
   inputs
@@ -49,9 +51,11 @@ const licensePackages = [
   "@fontsource/ibm-plex-sans-arabic",
   "@fontsource/ibm-plex-mono",
 ];
-export default defineConfig({
+export default defineConfig(({ command, isPreview }) => {
+  const login = previewLogin(command, isPreview, process.env);
+  return {
   base: "./",
-  define: { __SOURCE_REVISION__: JSON.stringify(revision) },
+  define: { __SOURCE_REVISION__: JSON.stringify(revision), __LOCAL_PREVIEW_LOGIN__: JSON.stringify(login) },
   preview: { host: "127.0.0.1", proxy },
   server: { proxy, host: "127.0.0.1", fs: { allow: [resolve(root, "../..")] } },
   build: {
@@ -61,6 +65,7 @@ export default defineConfig({
     assetsInlineLimit: 0,
   },
   plugins: [
+    { name: "local-preview-boundary", configResolved(config) { requireLocalPreviewHost(config.server.host, login); } },
     {
       name: "provenance-and-notices",
       generateBundle() {
@@ -98,4 +103,5 @@ export default defineConfig({
       },
     },
   ],
+  };
 });

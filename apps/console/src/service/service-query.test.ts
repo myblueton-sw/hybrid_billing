@@ -125,3 +125,16 @@ test("current command flags cannot contradict observed prerequisites", async () 
   const repair = { ...accountDetail, eligibility: { ...accountDetail.eligibility, state: "ineligible", can_issue: false } };
   assert.equal((await client(repair).serviceAccount("svc-import", "home")).eligibility.can_declare, true);
 });
+
+
+test("known audience resolves current configured metadata without a search walk", async () => {
+ const body = { workspace: "home", row: serviceAudience, catalog_version: "a".repeat(64), revision: "7", observed_at: queryTime };
+ assert.deepEqual(await client(body, (path) => assert.equal(path, "/api/v1/identity/service-audiences/import?workspace=home")).serviceAudience("import", "home"), body);
+ for (const patch of [{ workspace: "foreign" }, { row: { ...serviceAudience, id: "other" } }, { catalog_version: "not-a-version" }]) await assert.rejects(client({ ...body, ...patch }).serviceAudience("import", "home"), invalid);
+});
+
+test("effective command byte metadata is required, exact and bounded", async () => {
+ const limits = { ...serviceLimits, command_value_bytes: "9007199254740993" };
+ assert.equal((await accounts({ ...servicePage([serviceAccount]), limits })).limits.command_value_bytes, "9007199254740993");
+ for (const patch of [{ command_value_bytes: undefined }, { command_value_bytes: 9007199254740993 }, { command_value_bytes: "0" }, { rationale_bytes: 257 }, { rationale_bytes: 0 }, { body_bytes: 0 }, { body_bytes: 1048577 }]) await assert.rejects(accounts({ ...servicePage([serviceAccount]), limits: { ...limits, ...patch } }), invalid);
+});

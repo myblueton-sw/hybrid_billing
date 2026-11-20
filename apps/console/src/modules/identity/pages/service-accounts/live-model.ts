@@ -1,5 +1,5 @@
 import type { Locale } from "../../../../shared/types";
-import { AdminError, type Attempt, type CredentialRow, type ServiceRow, type ServicesPage } from "../../../../service/admin";
+import { AdminError, type Attempt, type CredentialRow } from "../../../../service/admin";
 import { when } from "../authentication/live-model";
 import { v } from "./live-copy";
 
@@ -15,19 +15,7 @@ export function wholeDays(raw: string, max: number): number | null {
   return n <= max ? n : null;
 }
 
-export function split(page: ServicesPage): { current: ServiceRow[]; retired: ServiceRow[] } {
-  return { current: page.services.filter((s) => s.state !== "retired"), retired: page.services.filter((s) => s.state === "retired") };
-}
-
-export function liveCount(s: ServiceRow): number {
-  return s.credentials.filter((c) => c.state === "active").length;
-}
-
-export function credentials(s: ServiceRow): { current: CredentialRow[]; ended: CredentialRow[] } {
-  return { current: s.credentials.filter((c) => c.state === "active"), ended: s.credentials.filter((c) => c.state !== "active") };
-}
-
-export function serviceState(l: Locale, state: ServiceRow["state"]): string {
+export function serviceState(l: Locale, state: "active" | "suspended" | "retired"): string {
   return state === "suspended" ? v.stSuspended(l) : state === "retired" ? v.stRetired(l) : v.stActive(l);
 }
 
@@ -40,17 +28,6 @@ export function credentialState(l: Locale, c: CredentialRow, retired = false): [
 }
 
 export type Block = "" | "suspended" | "retired" | "limit";
-
-export function issueBlock(s: ServiceRow, limit: number): Block {
-  if (s.state === "retired") return "retired";
-  if (s.state === "suspended") return "suspended";
-  return liveCount(s) >= limit ? "limit" : "";
-}
-
-export function initialService(page: ServicesPage, wanted: string): string {
-  if (page.services.some((s) => s.id === wanted)) return wanted;
-  return (page.services.find((s) => s.state === "active") ?? page.services.find((s) => s.state !== "retired") ?? page.services[0])?.id ?? "";
-}
 
 export function keepsHold(failure: string, holding: boolean): boolean {
   if (failure === "busy" || failure === "unavailable") return true;
@@ -154,18 +131,6 @@ export function pickupLabel(l: Locale, c: CredentialRow): { text: string; time: 
   if (c.secret_pickup === "never_collected") return { text: v.pickupNever(l), time: "", never: true };
   if (c.secret_pickup === "open" && c.secret_pickup_until) return { text: v.pickupOpen(l), time: when(l, c.secret_pickup_until), never: false };
   return null;
-}
-
-export function neverCollected(page: ServicesPage): { service: string; credential: CredentialRow }[] {
-  const out: { service: string; credential: CredentialRow }[] = [];
-  for (const s of page.services) {
-    for (const c of s.credentials) if (c.state === "active" && c.secret_pickup === "never_collected") out.push({ service: s.id, credential: c });
-  }
-  return out.sort((a, b) => (a.service === b.service ? (a.credential.id < b.credential.id ? -1 : 1) : a.service < b.service ? -1 : 1));
-}
-
-export function takenByMe(page: ServicesPage, name: string, user: string): boolean {
-  return page.services.some((s) => s.id === prefix + name && s.creator === user);
 }
 
 export function formVisible(o: { view: string; mode: string; current: string; service: string; wide: boolean; open: boolean; visibility: string }): boolean {

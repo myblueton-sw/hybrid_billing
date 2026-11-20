@@ -12,6 +12,7 @@ export type Entry = {
   days: string;
   reason: string;
   expected: string;
+  replay: number;
   phase: Phase;
   retry: boolean;
   firstSentMono: number;
@@ -157,13 +158,13 @@ export function issueAttempts(fresh: () => Attempt, clocks: Clocks, target?: Tar
       const list = of(user);
       let e = list.get(service);
       if (e && e.phase !== "unknown") return { kind: "refused" };
-      if (e && outsideWindow(elapsed(e), window)) {
+      if (e && outsideWindow(elapsed(e), e.replay)) {
         e.phase = "lapsed";
         changed();
         return { kind: "lapsed" };
       }
       if (!e) {
-        e = { service, track: attemptState(fresh), days: values.days, reason: values.reason, expected: revision, phase: "sending", retry: false,
+        e = { service, track: attemptState(fresh), days: values.days, reason: values.reason, expected: revision, replay: window, phase: "sending", retry: false,
           firstSentMono: clocks.mono(), firstSentWall: clocks.wall(), error: null, issuedAfter: 0 };
         list.set(service, e);
       } else e.retry = true;
@@ -184,7 +185,7 @@ export function issueAttempts(fresh: () => Attempt, clocks: Clocks, target?: Tar
       if (outcome) {
         const credential = outcome.fields.credential ?? "";
         const ref = outcome.fields.secret_ref ?? "";
-        if (credentialPattern.test(credential) && refPattern.test(ref)) {
+        if (outcome.status === "completed" && outcome.state === "credential_issued" && outcome.job_id === "" && credentialPattern.test(credential) && refPattern.test(ref)) {
           entry.track.succeeded();
           const until = new Date(clocks.wall() + Number(entry.days) * 86400000).toISOString();
           entry.issued = { ref, credential, until };
@@ -196,7 +197,7 @@ export function issueAttempts(fresh: () => Attempt, clocks: Clocks, target?: Tar
         }
         failure = new AdminError("unavailable");
       }
-      const next = nextPhase(entry.retry, failure, outsideWindow(elapsed(entry), window, true));
+      const next = nextPhase(entry.retry, failure, outsideWindow(elapsed(entry), entry.replay, true));
       if (next === "remove") {
         list.delete(service);
         refuse(user, service, { error: failure, retry: entry.retry });

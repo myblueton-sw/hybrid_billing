@@ -12,7 +12,7 @@ func TestServiceQueryOpenAPIDescribesBoundedReadsAndCurrentDetails(t *testing.T)
 		t.Fatal(err)
 	}
 	reads := doc["x-reads"].(map[string]any)
-	for _, path := range []string{"/identity/services", "/identity/services/{id}", "/identity/services/{id}/declarations", "/identity/service-credentials", "/identity/service-credentials/{id}", "/identity/service-owners", "/identity/service-owners/{id}", "/identity/service-organizations", "/identity/service-organizations/{id}", "/identity/service-audiences", "/identity/service-audiences/{id}/scopes", "/identity/service-audiences/{id}/scopes/{scope}"} {
+	for _, path := range []string{"/identity/services", "/identity/services/{id}", "/identity/services/{id}/declarations", "/identity/service-credentials", "/identity/service-credentials/{id}", "/identity/service-owners", "/identity/service-owners/{id}", "/identity/service-organizations", "/identity/service-organizations/{id}", "/identity/service-audiences", "/identity/service-audiences/{id}", "/identity/service-audiences/{id}/scopes", "/identity/service-audiences/{id}/scopes/{scope}"} {
 		entry, ok := reads[path].(map[string]any)
 		if !ok {
 			t.Fatal("actual read missing from API contract", path)

@@ -1,20 +1,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, adminClient, policyPageOf } from "./admin";
-import { accessFixture, credentialFixture, grantFixture, orgFixture, requestFixture, revocationFixture, serviceFixture, servicesFixture, selfFixture } from "./read-fixtures";
+import { AdminError, adminClient, policyPageOf, credentialRowOf } from "./admin";
+import { accessFixture, credentialFixture, grantFixture, orgFixture, requestFixture, revocationFixture, selfFixture } from "./read-fixtures";
 
 function client(body: unknown) {
   return adminClient("t", (async () => new Response(JSON.stringify(body), { status: 200 })) as typeof fetch);
 }
 const invalid = (error: unknown) => error instanceof AdminError && error.failure === "invalid";
 const access = (body: unknown) => client(body).access();
-const services = (body: unknown) => client(body).services();
 const me = (body: unknown) => client(body).me();
 const organizations = (body: unknown) => client(body).organizations();
 
 for (const [name, fixture, read, fields] of [
   ["access", accessFixture, access, ["grants", "delegations", "catalog", "subjects", "settings", "requests", "revocations"]],
-  ["services", servicesFixture, services, ["services", "owners"]],
   ["self", selfFixture, me, ["identities"]],
   ["organizations", orgFixture, organizations, ["parties", "profiles", "members"]],
 ] as const) {
@@ -64,24 +62,8 @@ test("preview never infers an allowed decision", async () => {
   }
 });
 
-test("service credentials reject unsafe permissions, versions and supplied pickup metadata", async () => {
-  for (const patch of [{ state: "future" }, { usable: "true" }, { secret_pickup: null }, { secret_pickup: "stored" },
-    { secret_pickup: "open" }, { secret_pickup: "open", secret_pickup_until: "soon" }, { secret_pickup_until: "2026-11-21T00:00:00Z" },
-    { state: "expired", secret_pickup: "collected" }]) {
-    await assert.rejects(services({ ...servicesFixture, services: [{ ...serviceFixture, credentials: [{ ...credentialFixture, ...patch }] }] }), invalid);
-  }
-  for (const patch of [{ state: "future" }, { version: Number.MAX_SAFE_INTEGER + 1 }, { credentials: null }]) {
-    await assert.rejects(services({ ...servicesFixture, services: [{ ...serviceFixture, ...patch }] }), invalid);
-  }
-  assert.equal((await services({ ...servicesFixture, limits: { ...servicesFixture.limits, credential_days: 0 } })).limits.credential_days, 0);
-  for (const field of ["credentials_per_service", "services", "replay_seconds"]) {
-    await assert.rejects(services({ ...servicesFixture, limits: { ...servicesFixture.limits, [field]: 0 } }), invalid);
-  }
-  for (const field of Object.keys(servicesFixture.limits)) {
-    for (const bad of [undefined, null, -1, 1.5, "3600", Number.MAX_SAFE_INTEGER + 1]) {
-      await assert.rejects(services({ ...servicesFixture, limits: { ...servicesFixture.limits, [field]: bad } }), invalid);
-    }
-  }
+test("P02 credential metadata rejects unsafe supplied pickup facts", () => {
+ for (const patch of [{ state: "future" }, { usable: "true" }, { secret_pickup: null }, { secret_pickup: "stored" }, { secret_pickup: "open" }, { secret_pickup: "open", secret_pickup_until: "soon" }, { secret_pickup_until: "2026-11-21T00:00:00Z" }, { state: "expired", secret_pickup: "collected" }]) assert.throws(() => credentialRowOf({ ...credentialFixture, ...patch }), invalid);
 });
 
 test("self identity and session facts reject coercion while empty identities remain empty", async () => {

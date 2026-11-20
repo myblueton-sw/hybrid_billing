@@ -1,6 +1,6 @@
 export const queryTime = "2026-11-20T01:00:00.000000001Z";
 export const serviceQueryEcho = { workspace: "home", q: "", organization: "", owner: "", audience: "", scope: "", expiry: "all", state: "all", declaration: "all", service: "", collection: "", version: "", limit: 2 };
-export const serviceLimits = { credential_days: 90, credentials_per_service: "9007199254740993", services: 200, replay_seconds: 300 };
+export const serviceLimits = { command_value_bytes: "8192", rationale_bytes: 256, body_bytes: 1048576, credential_days: 90, credentials_per_service: "9007199254740993", services: 200, replay_seconds: 300 };
 export const serviceAdmission = { recorded: "8", limit: "200", certainty: "exact" };
 export const serviceDeclaration = { state: "recorded", recorded_at: queryTime, version: "1", purpose: "Scheduled imports", organization: "unit", organization_name: "", organization_name_state: "unavailable", catalog_version: "a".repeat(64), scopes: [{ audience: "import", scope: "read" }] };
 export const serviceAccount = { id: "svc-import", state: "active", version: "9007199254740993", owner: "owner", owner_login: "responsible", creator: "creator", creator_login: "creator", declaration: serviceDeclaration,

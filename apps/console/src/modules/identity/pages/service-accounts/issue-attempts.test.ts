@@ -267,3 +267,23 @@ test("users are isolated", async () => {
   assert.equal(store.discard("b", "svc-a"), false);
   assert.equal(store.get("a", "svc-a")?.phase, "unknown");
 });
+
+
+test("the original issuance replay window survives metadata refresh", async () => {
+ const { now, clocks: c } = clocks();
+ const store = issueAttempts(counter(), c);
+ const s = scripted([fail("busy"), ok()]);
+ await store.submit("u", "svc-a", values, "rev-1", 10, s.exec);
+ now.mono += 9000;
+ assert.deepEqual(await store.submit("u", "svc-a", values, "rev-new", 3600, s.exec), { kind: "lapsed" });
+ assert.equal(s.sent.length, 1);
+});
+
+test("issuance accepts only a completed credential-issued result", async () => {
+  for (const patch of [{ status: "accepted" }, { state: "other" }, { job_id: "pending-job" }]) {
+    const store = issueAttempts(counter(), clocks().clocks);
+    const result = await store.submit("u", "svc-a", values, "rev-1", 300, async () => ({ ...ok(), ...patch }));
+    assert.equal(result.kind, "unknown");
+    assert.equal(store.open("u", "svc-a"), null);
+  }
+});

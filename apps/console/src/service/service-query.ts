@@ -1,5 +1,5 @@
 import { type Parser } from "./strict-read";
-import { accountDetailOf, accountPageOf, audienceOf, credentialDetailOf, credentialOf, declarationPageOf, detailOf, identifier, organizationDetailOf, organizationOf, ownerOf, pageOf, requireRead, scopeDetailOf, scopeOf } from "./service-query-read";
+import { accountDetailOf, accountPageOf, audienceDetailOf, audienceOf, credentialDetailOf, credentialOf, declarationPageOf, detailOf, identifier, organizationDetailOf, organizationOf, ownerOf, pageOf, requireRead, scopeDetailOf, scopeOf } from "./service-query-read";
 import type { AccountQuery, CredentialQuery, DeclarationQuery, PageQuery, ServiceDetail, ServicePage } from "./service-query-types";
 
 type Send = (path: string, init: RequestInit, request: string) => Promise<Record<string, unknown>>;
@@ -71,6 +71,7 @@ export function serviceQueryClient(send: Send, request: () => string, validate: 
     serviceOrganizations: (query: PageQuery) => list("organizations", "/identity/service-organizations", query, pageOf(organizationOf, "organization_id_asc"), (p) => ordered(p.rows, (r) => r.id)),
     serviceOrganization: (id: string, workspace: string) => detail("/identity/service-organizations/", id, workspace, organizationDetailOf),
     serviceAudiences: (query: PageQuery) => list("audiences", "/identity/service-audiences", query, pageOf(audienceOf, "audience_id_asc"), (p) => ordered(p.rows, (r) => r.id)),
+    serviceAudience: (id: string, workspace: string) => detail("/identity/service-audiences/", id, workspace, audienceDetailOf),
     serviceScopes(audience: string, query: PageQuery) {
       const target = validate(() => identifier(audience));
       const workspace = query.workspace;

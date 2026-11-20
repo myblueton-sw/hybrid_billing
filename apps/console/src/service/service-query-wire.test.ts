@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { adminClient } from "./admin";
 import type { PageQuery } from "./service-query-types";
 
-test("M04 Console consumes all12 actual HTTP producer samples", { skip: !process.env.HB_SERVICE_QUERY_SAMPLES }, async () => {
+test("M04 Console consumes all13 actual HTTP producer samples", { skip: !process.env.HB_SERVICE_QUERY_SAMPLES }, async () => {
   const data = JSON.parse(await readFile(join(process.env.HB_SERVICE_QUERY_SAMPLES!, "m04-wire.json"), "utf8")) as {
     ids: { workspace: string; service: string; credential: string; owner: string; organization: string; audience: string; scope: string };
     samples: Record<string, { path: string; body: unknown }>;
@@ -24,11 +24,12 @@ test("M04 Console consumes all12 actual HTTP producer samples", { skip: !process
     organizations: (api: ReturnType<typeof adminClient>) => api.serviceOrganizations(query),
     organization: (api: ReturnType<typeof adminClient>) => api.serviceOrganization(ids.organization, ids.workspace),
     audiences: (api: ReturnType<typeof adminClient>) => api.serviceAudiences(query),
+    audience: (api: ReturnType<typeof adminClient>) => api.serviceAudience(ids.audience, ids.workspace),
     scopes: (api: ReturnType<typeof adminClient>) => api.serviceScopes(ids.audience, query),
     scope: (api: ReturnType<typeof adminClient>) => api.serviceScope(ids.audience, ids.scope, ids.workspace),
     history: (api: ReturnType<typeof adminClient>) => api.serviceDeclarations(ids.service, query),
   };
-  assert.equal(Object.keys(data.samples).length, 12);
+  assert.equal(Object.keys(data.samples).length, 13);
   for (const [name, invoke] of Object.entries(methods)) {
     const sample = data.samples[name];
     let calls = 0;

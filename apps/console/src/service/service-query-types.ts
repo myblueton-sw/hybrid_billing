@@ -7,7 +7,7 @@ export type AccountQuery = PageQuery & { organization?: string; owner?: string; 
 export type CredentialQuery = PageQuery & { service?: string; state?: "all" | CredentialState; collection?: "all" | "uncollected" };
 export type DeclarationQuery = Omit<PageQuery, "q"> & { version?: string };
 export type QueryEcho = { workspace: string; q: string; organization: string; owner: string; audience: string; scope: string; expiry: string; state: string; declaration: string; service: string; collection: string; version: string; limit: number };
-export type ServiceLimits = { credential_days: number; credentials_per_service: string; services: number; replay_seconds: number };
+export type ServiceLimits = { command_value_bytes: string; rationale_bytes: number; body_bytes: number; credential_days: number; credentials_per_service: string; services: number; replay_seconds: number };
 export type ServiceAdmission = { recorded: string; limit: string; certainty: "exact" };
 export type ScopeRef = { audience: string; scope: string };
 export type ServiceDeclaration = { state: "recorded" | "missing" | "unavailable"; recorded_at: string; version: string; purpose: string; organization: string; organization_name: string; organization_name_state: "available" | "unavailable"; catalog_version: string; scopes: ScopeRef[] };
@@ -33,3 +33,5 @@ export type AccountDetail = ServiceDetail<ServiceAccount> & { eligibility: Servi
 export type CredentialDetail = ServiceDetail<ServiceCredential> & { eligibility: CredentialEligibility; limits: ServiceLimits };
 export type OrganizationDetail = ServiceDetail<ServiceOrganization> & { eligibility: "eligible" | "ineligible" | "unavailable" };
 export type ScopeDetail = ServiceDetail<ServiceScope> & { eligibility: "eligible" | "ineligible" | "unavailable"; catalog_version: string };
+
+export type AudienceDetail = ServiceDetail<ServiceAudience> & { catalog_version: string };

@@ -197,7 +197,7 @@ func (s *Server) currentServiceEligibility(actor identity.Verifier, user string,
 }
 
 func (s *Server) queryServiceLimits() serviceLimits {
-	return serviceLimits{CredentialDays: int(s.cfg.Identity.CredentialValidity / (24 * time.Hour)), CredentialsPerService: strconv.Itoa(s.cfg.Identity.CredentialsPerServiceUser), Services: maxServices, ReplaySeconds: int(s.cfg.Commands.Replay / time.Second)}
+	return serviceLimits{CommandValueBytes: strconv.Itoa(s.cfg.Commands.Value), RationaleBytes: min(maxRationale, s.cfg.Commands.Rationale), BodyBytes: maxBodyBytes, CredentialDays: int(s.cfg.Identity.CredentialValidity / (24 * time.Hour)), CredentialsPerService: strconv.Itoa(s.cfg.Identity.CredentialsPerServiceUser), Services: maxServices, ReplaySeconds: int(s.cfg.Commands.Replay / time.Second)}
 }
 
 func (s *Server) readServiceAccount(w http.ResponseWriter, r *http.Request) {

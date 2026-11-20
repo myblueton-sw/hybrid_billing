@@ -1,6 +1,5 @@
-import type { CredentialRow, ServiceRow, ServicesPage, SelfPage } from "./admin";
+import type { CredentialRow, SelfPage } from "./admin";
 import { sessionRowOf } from "./session-query";
-import { subjectsOf } from "./access-read";
 import { array, boolean, choice, integer, optional, positive, ReadParseError, shape, text } from "./strict-read";
 
 const credential = shape<CredentialRow>({ id: text, not_before: text, not_after: text, state: choice("active", "expired", "revoked"), usable: boolean,
@@ -14,11 +13,6 @@ export function credentialOf(value: unknown): CredentialRow {
   if (secret_pickup !== undefined && base.state !== "active") throw new ReadParseError();
   return { ...base, ...(secret_pickup === undefined ? {} : { secret_pickup }), ...(secret_pickup_until === undefined ? {} : { secret_pickup_until }) };
 }
-export const servicesPageOf = shape<ServicesPage>({ revision: text, now: text, owners: subjectsOf,
-  services: array(shape<ServiceRow>({ id: text, state: choice("active", "suspended", "retired"), version: integer, creator: text, creator_login: text,
-    owner: text, owner_login: text, credentials: array(credentialOf) })),
-  limits: shape({ credential_days: integer, credentials_per_service: positive, services: positive, replay_seconds: positive }),
-});
 export const selfPageOf = shape<SelfPage>({ user_id: text, login: text, email: text, workspace: text, role: text,
   identities: array(shape({ method: text, login: text })), password_set: boolean, installation_administrator: boolean,
   current_session: sessionRowOf, recorded_session_count: integer, accepted_operation_count: integer, sessions_generation: text, idle_minutes: integer, max_age_seconds: integer,

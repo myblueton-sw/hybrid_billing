@@ -42,6 +42,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/identity/service-credentials", s.queryServiceCredentials)
 	mux.HandleFunc("GET /api/v1/identity/service-owners", s.queryServiceOwners)
 	mux.HandleFunc("GET /api/v1/identity/service-organizations", s.queryServiceOrganizations)
+	mux.HandleFunc("GET /api/v1/identity/service-audiences/{id}", s.readServiceAudience)
 	mux.HandleFunc("GET /api/v1/identity/service-audiences", s.queryServiceAudiences)
 	mux.HandleFunc("GET /api/v1/identity/service-audiences/{id}/scopes", s.queryServiceScopes)
 	mux.HandleFunc("GET /api/v1/me", s.readSelf)

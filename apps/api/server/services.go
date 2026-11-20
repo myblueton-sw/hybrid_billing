@@ -32,6 +32,9 @@ type credentialRow struct {
 }
 
 type serviceLimits struct {
+	CommandValueBytes     string `json:"command_value_bytes"`
+	RationaleBytes        int    `json:"rationale_bytes"`
+	BodyBytes             int    `json:"body_bytes"`
 	CredentialDays        int    `json:"credential_days"`
 	CredentialsPerService string `json:"credentials_per_service"`
 	Services              int    `json:"services"`

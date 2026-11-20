@@ -33,6 +33,7 @@ func TestServiceQueryConsumerWireSamples(t *testing.T) {
 		"organizations": "/identity/service-organizations",
 		"organization":  "/identity/service-organizations/" + ids["organization"],
 		"audiences":     "/identity/service-audiences",
+		"audience":      "/identity/service-audiences/" + audience,
 		"scopes":        "/identity/service-audiences/" + audience + "/scopes",
 		"scope":         "/identity/service-audiences/" + audience + "/scopes/" + scope,
 		"history":       "/identity/services/" + service + "/declarations",

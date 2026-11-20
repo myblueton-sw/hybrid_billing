@@ -1,5 +1,5 @@
 import { array, boolean, choice, integer, optional, positive, record, ReadParseError, shape, text, type Parser } from "./strict-read";
-import type { AccountDetail, AccountPage, CredentialDetail, CredentialSummary, DeclarationPage, OrganizationDetail, ScopeDetail, ServiceAccount, ServiceAdmission, ServiceAudience, ServiceCredential, ServiceDeclaration, ServiceDetail, ServiceEligibility, ServiceLimits, ServiceOrganization, ServiceOwner, ServicePage, ServicePeriod, ServiceRestriction, ServiceScope, ServiceSelector, QueryEcho } from "./service-query-types";
+import type { AccountDetail, AccountPage, AudienceDetail, CredentialDetail, CredentialSummary, DeclarationPage, OrganizationDetail, ScopeDetail, ServiceAccount, ServiceAdmission, ServiceAudience, ServiceCredential, ServiceDeclaration, ServiceDetail, ServiceEligibility, ServiceLimits, ServiceOrganization, ServiceOwner, ServicePage, ServicePeriod, ServiceRestriction, ServiceScope, ServiceSelector, QueryEcho } from "./service-query-types";
 
 export function requireRead(condition: unknown): asserts condition {
   if (!condition) throw new ReadParseError();
@@ -42,7 +42,7 @@ const stepUp = choice("ready", "reauthentication_required", "prerequisite_failed
 const execution = choice("ready", "trust_hold", "dependency_unavailable");
 const eligible = choice("eligible", "ineligible", "unavailable");
 export const admissionOf = closed<ServiceAdmission>({ recorded: decimal, limit: decimal, certainty: choice("exact") });
-export const limitsOf = closed<ServiceLimits>({ credential_days: integer, credentials_per_service: decimal, services: positive, replay_seconds: positive });
+export const limitsOf = closed<ServiceLimits>({ command_value_bytes: (v) => { const n = decimal(v); requireRead(BigInt(n) > 0n); return n; }, rationale_bytes: (v) => { const n = positive(v); requireRead(n <= 256); return n; }, body_bytes: (v) => { const n = positive(v); requireRead(n === 1048576); return n; }, credential_days: integer, credentials_per_service: decimal, services: positive, replay_seconds: positive });
 const scopeRef = closed({ audience: identifier, scope: identifier });
 const declaration = closed<ServiceDeclaration>({ state: choice("recorded", "missing", "unavailable"), recorded_at: emptyOr(timestamp), version: emptyOr(decimal), purpose: text, organization: emptyOr(identifier), organization_name: text, organization_name_state: nameState, catalog_version: emptyOr(digest), scopes: bounded(scopeRef, 64) });
 export const declarationOf: Parser<ServiceDeclaration> = (v) => {
@@ -177,3 +177,5 @@ export const credentialDetailOf: Parser<CredentialDetail> = (v) => {
 };
 export const organizationDetailOf: Parser<OrganizationDetail> = (v) => ({ ...detailOf(organizationOf)(v), eligibility: eligible(record(v).eligibility) });
 export const scopeDetailOf: Parser<ScopeDetail> = (v) => ({ ...detailOf(scopeOf)(v), eligibility: eligible(record(v).eligibility), catalog_version: digest(record(v).catalog_version) });
+
+export const audienceDetailOf: Parser<AudienceDetail> = (v) => ({ ...detailOf(audienceOf)(v), catalog_version: digest(record(v).catalog_version) });

@@ -388,7 +388,7 @@ Candidate copy from the stable HYB-333 plan and implemented M04 messages. Semant
 | Concept | Korean candidate | English candidate | Arabic candidate | Meaning and excluded implications |
 | --- | --- | --- | --- | --- |
 | credential-secret-pickup-state / `open` | 비밀 값 미수령 · 수령 가능 | Secret not collected yet · pickup open | لم تُستلَم القيمة السرية بعد · الاستلام متاح | Pickup is still available to the issuing session at this read; its end is estimated and can become earlier. |
-| credential-secret-pickup-state / `collected` | 비밀 값 반환됨 | Secret returned once | أُعيدت القيمة السرية مرة واحدة | Server returned the secret once. Does not prove delivery to the person or storage. This state adds no status sub-line. |
+| credential-secret-pickup-state / `collected` | 비밀 값 반환됨 | Secret returned once | أُعيدت القيمة السرية مرة واحدة | Server returned the secret once. Does not prove delivery to the person or storage. HYB-304 current metadata tables may label returned once explicitly; this never proves storage. |
 | credential-secret-pickup-state / `never_collected` | 비밀값 반환 안 됨 | Secret not returned | لم تُعَد القيمة السرية | Recorded as not returned and currently not open to the original issuing session. This observation alone does not prove irreversible reference deletion; temporary authority loss may recover. Credential remains active until separately revoked or expired. HYB-304 semantic correction; proposed locale copy is not native/practitioner acceptance. |
 | issue-outcome-unknown | 발급 결과 확인 안 됨 | Issue outcome unknown | نتيجة الإصدار غير معروفة | Request may have committed. Same-request retry retains its original identity; never call it failed or definitely issued. |
 
@@ -411,3 +411,25 @@ Microsoft's [English notification-reference guidance](https://learn.microsoft.co
 - **Rules tightened by the restored/default comparison** names only the reported comparison fields; it does not certify stronger authentication overall. Unknown and explicit empty lists remain distinct.
 
 Separate AI technical-writing review identified the API qualifier and build-term corrections. Native-language acceptance remains unverified. Executed screen checks are recorded in [HYB-327 verification](../../features/HYB-327/verification.md).
+
+
+## Bounded service-account management (HYB-304)
+
+These candidate terms follow the actual declaration, bounded-query and command-recovery contracts. Separate AI TW source review and representative known-selection EN/KO/AR render review passed. Native/practitioner terminology acceptance, expanded form/error rendering and owner FIX remain unverified; no regional-language approval is inferred from translation.
+
+| Concept | Korean candidate | English candidate | Arabic candidate | Meaning and exclusions |
+| --- | --- | --- | --- | --- |
+| service-purpose | 목적 | Purpose | الغرض | Required declared processing purpose, bounded by actual configured UTF8 bytes. Not observed usage. |
+| service-owning-organization | 소유 조직 | Owning organization | المؤسسة المالكة | Canonical eligible business organization reference. Distinct from the human responsible owner. |
+| service-responsible-owner | 관리 책임자 | Responsible owner | المسؤول | Designated human responsible for the service account. Current eligibility is checked separately; declaration editing does not transfer ownership. |
+| service-audience | 대상 서비스 | Audience | الخدمة المستهدفة | Configured audience/resource metadata. Neither a connection check nor access authority. |
+| service-declared-scopes | 선언된 범위 | Declared scopes | النطاقات المُعلَنة | Exact audience/scope pairs in the declaration; not effective permissions or human approval authority. |
+| service-declared-restrictions | 선언된 제한 조건 | Declared restrictions | القيود المُعلَنة | Complete action/kind/fields/customer/legal-entity/contract/period definition. A literal ID all differs from a wildcard; period end is excluded. |
+| service-current-declaration | 현재 선언 | Current declaration | الإقرار الحالي | Canonical current recorded version; missing, unavailable and pruned historical versions remain distinct. |
+| service-declaration-history | 선언 이력 | Declaration history | سجل الإقرارات | Bounded retained versions with original catalog fingerprints. Current definitions do not reconstruct old restrictions. |
+| service-command-unknown | 명령 결과 확인 안 됨 | Command outcome unknown | نتيجة الأمر غير معروفة | Original request may have committed. Retry retains complete original fields, target, rationale, revision and request/key; discard does not undo it. |
+| service-match-lower-bound | 일치 항목 수, 최소 | Matching count, at least | عدد النتائج المطابقة، على الأقل | Cumulative matching lower bound at a fixed list reference; separate from exact recorded-account admission and current-page length. |
+
+Current command rationale help and counters use the actual effective rationale byte limit rather than a fixed256-byte UI assumption. Pickup end timestamps remain isolated LTR. An exact zero on an unfiltered first configured-audience page explains an empty catalog; a filtered empty page does not imply absent configuration.
+
+The M04 Reveal label Estimated validity end / 예상 유효 기간 종료 / نهاية الصلاحية التقديرية identifies the provisional browser-clock estimate only. A matching current credential observation replaces it with the actual validity end; a metadata failure cannot turn the estimate into a verified timestamp. This distinction neither grants pickup rights nor proves secret storage.

@@ -60,7 +60,7 @@ func serviceCredentialSchema() map[string]any {
 }
 
 func serviceLimitsSchema() map[string]any {
-	return serviceObject(map[string]any{"credential_days": map[string]any{"type": "integer"}, "credentials_per_service": serviceCountSchema(), "services": map[string]any{"type": "integer"}, "replay_seconds": map[string]any{"type": "integer", "x-meaning": "how long an idempotency key replays its stored outcome"}}, "credential_days", "credentials_per_service", "services", "replay_seconds")
+	return serviceObject(map[string]any{"command_value_bytes": serviceCountSchema(), "rationale_bytes": map[string]any{"type": "integer", "minimum": 1, "maximum": 256}, "body_bytes": map[string]any{"type": "integer", "const": 1048576}, "credential_days": map[string]any{"type": "integer"}, "credentials_per_service": serviceCountSchema(), "services": map[string]any{"type": "integer"}, "replay_seconds": map[string]any{"type": "integer", "x-meaning": "how long an idempotency key replays its stored outcome"}}, "credential_days", "credentials_per_service", "services", "replay_seconds", "command_value_bytes", "rationale_bytes", "body_bytes")
 }
 
 func serviceAdmissionSchema() map[string]any {
@@ -135,6 +135,7 @@ func (s *Server) serviceQueryReadPaths() map[string]any {
 		{"/identity/service-credentials/{id}", "credential_detail", serviceObject(map[string]any{"row": serviceCredentialSchema(), "eligibility": serviceCredentialEligibilitySchema(), "revision": str, "observed_at": str, "limits": serviceLimitsSchema()}, "row", "eligibility", "revision", "observed_at", "limits")},
 		{"/identity/service-owners/{id}", "owner_detail", serviceObject(map[string]any{"row": owner, "revision": str, "observed_at": str}, "row", "revision", "observed_at")},
 		{"/identity/service-organizations/{id}", "organization_detail", serviceObject(map[string]any{"row": organization, "eligibility": str, "revision": str, "observed_at": str}, "row", "eligibility", "revision", "observed_at")},
+		{"/identity/service-audiences/{id}", "audience_detail", serviceObject(map[string]any{"row": audience, "catalog_version": str, "revision": str, "observed_at": str}, "row", "catalog_version", "revision", "observed_at")},
 		{"/identity/service-audiences/{id}/scopes/{scope}", "scope_detail", serviceObject(map[string]any{"row": scope, "eligibility": str, "catalog_version": str, "revision": str, "observed_at": str}, "row", "eligibility", "catalog_version", "revision", "observed_at")},
 	}
 	for _, entry := range details {
@@ -144,7 +145,7 @@ func (s *Server) serviceQueryReadPaths() map[string]any {
 		if entry.area == "scope_detail" {
 			parameters = append(parameters, map[string]any{"name": "scope", "in": "path", "required": true, "schema": str})
 		}
-		out[entry.path] = map[string]any{"get": map[string]any{"operationId": "identity.services." + entry.area, "x-admission": "current_installation_administrator", "parameters": parameters, "x-known-id-independent-of-list": true, "x-current-eligibility": true, "x-unknown-or-foreign": "uniform permission_denied without row/count metadata", "responses": serviceReadResponses(entry.schema, false)}}
+		out[entry.path] = map[string]any{"get": map[string]any{"operationId": "identity.services." + entry.area, "x-admission": "current_installation_administrator", "parameters": parameters, "x-known-id-independent-of-list": true, "x-current-eligibility": entry.area != "audience_detail", "x-unknown-or-foreign": "uniform permission_denied without row/count metadata", "responses": serviceReadResponses(entry.schema, false)}}
 	}
 	return out
 }

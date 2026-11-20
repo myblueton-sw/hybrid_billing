@@ -7,6 +7,7 @@ import Recovery from "../../modules/administration/pages/recovery/Screen";
 import Retention from "../../modules/administration/pages/retention/Screen";
 import ReleaseEvidence from "../../modules/administration/pages/release-evidence/Screen";
 import Demo from "../../modules/administration/pages/demo/Screen";
+import LiveLicenses from "../../modules/administration/pages/licenses/Live";
 import Licenses from "../../modules/administration/pages/licenses/Screen";
 import Portal from "../../modules/customer-portal/pages/workspace/Screen";
 import LiveInstallation from "../../modules/administration/pages/installation/Live";
@@ -18,7 +19,7 @@ import { useService } from "../../service/context";
 import "../../shared/domain-screen-ui/operations/screen.css";
 export default function Operations(p: Props) {
   const service = useService();
-  const live = !!service && (p.screenId === "P01" || p.screenId === "P02" || p.screenId === "P03" || p.screenId === "P04" || p.screenId === "P05");
+  const live = !!service && (p.screenId === "P01" || p.screenId === "P02" || p.screenId === "P03" || p.screenId === "P04" || p.screenId === "P05" || p.screenId === "P07");
   const context = JSON.stringify([
     p.screenId,
     p.view,
@@ -48,6 +49,7 @@ export default function Operations(p: Props) {
       ],
     );
   }, [p.screenId, p.view, p.onState, live]);
+  if (live && service && p.screenId === "P07") return <div className="ops-screen" data-screen-id="P07" data-source-state="live" dir={p.locale === "ar" ? "rtl" : "ltr"} lang={p.locale}><LiveLicenses {...p} key={JSON.stringify([service.session.workspace,service.session.user,service.session.csrf])} onSignOut={service.signOut}/></div>;
   if (live && service && p.screenId === "P02")
     return (
       <div className="work-domain remaining-security" data-screen-id="P02" data-source-state="live" dir={p.locale === "ar" ? "rtl" : "ltr"} lang={p.locale} key={`P02:${p.locale}`}>

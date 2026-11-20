@@ -670,6 +670,10 @@ export class AdminError extends Error {
 }
 
 export type CommandId =
+  | "licenses.initialize"
+  | "licenses.select_mode"
+  | "licenses.register"
+  | "licenses.activate"
   | "identity.create_user"
   | "identity.invite"
   | "identity.issue_set_link"

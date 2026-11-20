@@ -396,3 +396,15 @@ Candidate copy from the stable HYB-333 plan and implemented M04 messages. Semant
 - **Rules tightened by the restored/default comparison** names only the reported comparison fields; it does not certify stronger authentication overall. Unknown and explicit empty lists remain distinct.
 
 Separate AI technical-writing review identified the API qualifier and build-term corrections. Native-language acceptance remains unverified. Executed screen checks are recorded in [HYB-327 verification](../../features/HYB-327/verification.md).
+
+## P07 installation entitlements (HYB-328)
+
+| Concept | Korean | English | Arabic | Contract and excluded implications |
+| --- | --- | --- | --- | --- |
+| installation-entitlement-status | 설치 권리 상태 | Installation entitlement status | حالة استحقاق التثبيت | Current server-reported installation rights, separate from plugin license identifiers, support coverage and open-source notices. |
+| usage-mode | 사용 모드 | Usage mode | وضع الاستخدام | Intended-use declaration. Saving evaluation or commercial mode grants no rights. The unsaved Noncommercial option differs from Noncommercial use declared status. |
+| evaluation-terms-reference | 제출할 평가 조건 참조 | Submitted evaluation terms reference | مرجع شروط التقييم المقدَّم | Exact issuer reference accompanying the submitted grant, not the terms text or proof that a person read it. Explicit consent is required separately. |
+| license-unverified | 현재 검증 불가 | Currently unverifiable | يتعذّر التحقق حاليًا | Current rights cannot be verified. Neither expired nor valid is inferred; last verified evidence is separately labelled. |
+| license-request-outcome | 요청 처리 결과 | Request outcome | نتيجة الطلب | Recorded command result, not current entitlement validity. Unknown results retain the request ID and block new submissions in the current in-memory session. |
+
+Regional usage was inspected on 2026-11-20: Microsoft Learn's Visual Studio license guidance in [English](https://learn.microsoft.com/en-us/visualstudio/ide/how-to-unlock-visual-studio?view=visualstudio) and [Korean](https://learn.microsoft.com/ko-kr/visualstudio/ide/how-to-unlock-visual-studio?view=visualstudio) distinguishes a trial, a license and an expired license. The [Arabic Windows IoT terms](https://learn.microsoft.com/en-us/windows/iot/iot-enterprise/eula/license_ar-sa_arabic_saudi_arabia.pdf), introduction and installation/use-rights section, distinguish licensing, conditions and rights. These support regional terminology only; their commercial conditions and access-blocking behavior do not apply here. The Arabic Visual Studio page could not be retrieved and is not evidence. Exact P07 reference/status labels above are product-specific candidates grounded in the producer contract, not standardized translations. Independent AI TW review covers semantic distinctions; native-language and legal acceptance remain pending. See [P07 verification](../../features/HYB-328/p07-live-verification.md).

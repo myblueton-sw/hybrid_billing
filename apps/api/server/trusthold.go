@@ -124,14 +124,15 @@ var holdTable = map[string]holdRule{
 }
 
 var holdRoutes = map[string]holdRule{
-	"/api/v1/commands/{command}": {holdPerCommand, "each command follows the command table"},
-	"/api/v1/me/sessions/end":    {holdAllow, "ends sessions"},
-	"/api/v1/me/password":        {holdAllow, "changes the caller's own password"},
-	"/api/v1/me/reauthenticate":  {holdAllow, "password confirmation for the allowed step-up commands"},
-	"/api/v1/auth/login":         {holdNoInvitations, "signs in to existing memberships only, so administrators can read and reduce"},
-	"/api/v1/auth/logout":        {holdAllow, "ends a session"},
-	"/api/v1/auth/link":          {holdAllow, "reads a link without using it"},
-	"/api/v1/auth/redeem":        {holdResetLinkOnly, "a reset link only rotates an existing credential; a set link or activation adds an account"},
+	"/api/v1/me/sessions/selections": {holdAllow, "prepares a read-only own-session snapshot without changing authority"},
+	"/api/v1/commands/{command}":     {holdPerCommand, "each command follows the command table"},
+	"/api/v1/me/sessions/end":        {holdAllow, "ends sessions"},
+	"/api/v1/me/password":            {holdAllow, "changes the caller's own password"},
+	"/api/v1/me/reauthenticate":      {holdAllow, "password confirmation for the allowed step-up commands"},
+	"/api/v1/auth/login":             {holdNoInvitations, "signs in to existing memberships only, so administrators can read and reduce"},
+	"/api/v1/auth/logout":            {holdAllow, "ends a session"},
+	"/api/v1/auth/link":              {holdAllow, "reads a link without using it"},
+	"/api/v1/auth/redeem":            {holdResetLinkOnly, "a reset link only rotates an existing credential; a set link or activation adds an account"},
 }
 
 func (s *Server) held() bool { return s.hold != nil }

@@ -156,7 +156,13 @@ type Server struct {
 	selfEndHook     func()
 	accessHook      func(identity.Verifier)
 
-	sessionCursorKey []byte
+	sessionCursorKey         []byte
+	sessionRecords           map[string]*sessionRecord
+	sessionOperations        map[string]*sessionRecord
+	sessionRecordUnits       int
+	sessionOperationRecords  map[sessionOwner][]*sessionRecord
+	sessionOperationVersions map[sessionOwner]uint64
+	sessionOperationSequence uint64
 }
 
 func IdentityLimits() identity.Limits {
@@ -216,7 +222,7 @@ func New(cfg Config) (*Server, error) {
 	if len(cfg.Origins) > maxOrigins || cfg.Data == "" || (cfg.Seed != SeedSample && cfg.Seed != SeedNone) {
 		return nil, ErrConfig
 	}
-	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), sessionCursorKey: random(32), origins: map[string]bool{}, hosts: map[string]bool{},
+	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), sessionCursorKey: random(32), sessionRecords: map[string]*sessionRecord{}, sessionOperations: map[string]*sessionRecord{}, sessionOperationRecords: map[sessionOwner][]*sessionRecord{}, sessionOperationVersions: map[sessionOwner]uint64{}, origins: map[string]bool{}, hosts: map[string]bool{},
 		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}, selfEnds: map[string][]*selfEnd{}, retries: map[identity.Verifier]*selfRetry{}, plans: newPlanStore(), drafts: newDraftStore(), relLimits: RelationshipLimits(),
 		contracts: newContractStore(), install: newInstallStore(), integ: newIntegrationStore(), signer: newSeedSigner(), rec: newRecoveryStore(),
 		ret: newRetentionStore(), ev: newEvidenceStore(), progress: map[string]trustProgress{}, random: rand.Reader, memberLedger: map[string]string{},

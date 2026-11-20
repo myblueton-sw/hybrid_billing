@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -9,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -84,7 +82,12 @@ type selfEndView struct {
 }
 
 type selfEnd struct {
+	endedCount  int
+	goneCount   int
+	cleanup     selfCounts
 	id          string
+	record      *sessionRecord
+	sequence    uint64
 	kind        string
 	blockedAt   time.Time
 	before      string
@@ -105,6 +108,9 @@ type selfRetry struct {
 
 type endBody struct {
 	Session    string    `json:"session"`
+	Selection  *string   `json:"selection"`
+	Digest     *string   `json:"digest"`
+	Count      *int      `json:"count"`
 	Generation *string   `json:"generation"`
 	Handles    *[]string `json:"handles"`
 }
@@ -144,18 +150,29 @@ func isHex(v string, n int) bool {
 }
 
 func decodeEnd(r io.Reader) (endBody, string, error) {
-	raw, err := io.ReadAll(r)
+	values, err := sessionObject(r, "session", "generation", "handles", "selection", "digest", "count")
 	if err != nil {
 		return endBody{}, "", err
 	}
-	d := json.NewDecoder(bytes.NewReader(raw))
-	d.DisallowUnknownFields()
+	raw, _ := json.Marshal(values)
 	var body endBody
-	if err := d.Decode(&body); err != nil {
+	if json.Unmarshal(raw, &body) != nil {
 		return body, "", errShape
 	}
-	if _, err := d.Token(); err != io.EOF {
-		return body, "", errShape
+	if _, selected := values["selection"]; selected {
+		if len(values) != 3 {
+			return body, "selection", errShape
+		}
+		if body.Selection == nil || !strings.HasPrefix(*body.Selection, "session-selection-") || !isHex(strings.TrimPrefix(*body.Selection, "session-selection-"), 32) || body.Digest == nil || !isHex(*body.Digest, 64) || body.Count == nil || *body.Count < 1 || *body.Count > maxSessions || body.Session != "" || body.Generation != nil || body.Handles != nil {
+			return body, "selection", errShape
+		}
+		if _, exists := values["session"]; exists {
+			return body, "session", errShape
+		}
+		return body, "", nil
+	}
+	if values["digest"] != nil || values["count"] != nil {
+		return body, "selection", errShape
 	}
 	if body.Session == kindOthers {
 		if body.Generation == nil || !isHex(*body.Generation, 32) {
@@ -172,6 +189,9 @@ func decodeEnd(r io.Reader) (endBody, string, error) {
 			seen[h] = true
 		}
 		return body, "", nil
+	}
+	if len(values) != 1 {
+		return body, "session", errShape
 	}
 	if body.Generation != nil || body.Handles != nil {
 		return body, "session", errShape
@@ -249,10 +269,19 @@ func (s *Server) selfEndViews(user string) []selfEndView {
 
 func (s *Server) remember(user string, op *selfEnd) {
 	list := append([]*selfEnd{op}, s.selfEnds[user]...)
+	var dropped []*selfEnd
 	if len(list) > selfEndsKept {
+		dropped = append(dropped, list[selfEndsKept:]...)
+		clear(list[selfEndsKept:])
 		list = list[:selfEndsKept]
 	}
 	s.selfEnds[user] = list
+	for _, old := range dropped {
+		if old.record != nil && old.record.retries == 0 {
+			s.forgetSessionRecord(old.record)
+		}
+	}
+
 }
 
 func (s *Server) endSelfSessions(w http.ResponseWriter, r *http.Request) {
@@ -272,6 +301,10 @@ func (s *Server) endSelfSessions(w http.ResponseWriter, r *http.Request) {
 		invalidFields(w, request, field)
 		return
 	}
+	if body.Selection != nil {
+		s.acceptSessionSelection(w, r, found, answer, body)
+		return
+	}
 	current := handleOf(found.verifier)
 	kind, listed, handles := kindOne, "", []string{body.Session}
 	if body.Session == kindOthers {
@@ -285,81 +318,92 @@ func (s *Server) endSelfSessions(w http.ResponseWriter, r *http.Request) {
 	}
 	digest := endDigest(kind, listed, handles)
 	if latest := s.selfEnds[answer.User()]; len(latest) > 0 && latest[0].digest == digest {
+		if latest[0].record == nil || !s.ownsSessionRecord(latest[0].record, found) {
+			failCode(w, commands.UnsupportedCommand, request)
+			return
+		}
 		writeJSON(w, http.StatusAccepted, request, latest[0].view(true))
 		return
 	}
 	if kind == kindOne {
 		known := false
-		for _, other := range s.sessions.snapshot(found.login).sessions {
-			known = known || (other.verifier != found.verifier && handleOf(other.verifier) == body.Session)
-		}
+		other, present := s.sessions.indexedSession(found.owner, body.Session)
+		known = present && other.verifier != found.verifier
 		if !known {
 			invalidFields(w, request, "session")
 			return
 		}
 	}
-	if s.selfEndHook != nil {
-		s.selfEndHook()
-	}
-	before := s.sessions.generation(found.login)
-	result := s.takeManifest(found, handles, kind == kindOthers)
-	if !result.ok {
-		failCode(w, commands.Unauthenticated, request)
+	record := s.legacySessionRecord(found, kind, listed, digest, handles)
+	if record == nil {
+		s.selectionLimit(w, request)
 		return
 	}
-	op := s.denyManifest(found, kind, listed, digest, result)
-	s.remember(answer.User(), op)
-	view := op.view(false)
-	if len(result.ended) > 0 {
-		s.counter++
+	_, status := s.applySessionRecord(found, record, kind)
+	if status != http.StatusAccepted {
+		s.forgetSessionRecord(record)
+		if status == http.StatusUnauthorized {
+			failCode(w, commands.Unauthenticated, request)
+		} else {
+			s.selectionLimit(w, request)
+		}
+		return
 	}
-	s.cfg.Log.Info("sessions_ended", "user", answer.User(), "operation", op.id, "ended", view.Count, "already_gone", len(result.gone),
-		"not_included", len(result.notIncluded), "generation_changed", view.GenerationChanged, "before", before, "after", s.sessions.generation(found.login))
-	select {
-	case s.wake <- struct{}{}:
-	default:
-	}
+	view := record.op.view(false)
+	s.cfg.Log.Info("sessions_ended", "user", answer.User(), "operation", record.op.id, "ended", view.Count, "not_included", len(view.NotIncluded))
 	writeJSON(w, http.StatusAccepted, request, view)
 }
 
-func (s *Server) denyManifest(found session, kind, listed, digest string, result manifestResult) *selfEnd {
-	now := s.clock()
-	s.selfSeq++
-	op := &selfEnd{id: "session-end-" + strconv.FormatUint(s.selfSeq, 10), kind: kind, blockedAt: now, before: result.before, listed: listed, after: result.after,
-		digest: digest, notIncluded: []selfRef{}}
+func (s *Server) populateSessionEnd(op *selfEnd, found session, result manifestResult) {
+	op.record.resultPositions = map[string]int{}
+	op.record.heldPositions = map[string]int{}
+	now := op.blockedAt
 	for _, ended := range result.ended {
+		op.endedCount++
 		s.recordEnded(ended, accesshistory.CauseByYou)
 		v := ended.verifier
 		state, reason := settleOf(s.retryModuleEnd(v))
 		row := selfEndRow{Handle: handleOf(v), SignedIn: stamp(ended.created), Result: resultEnded, Items: endedItems(state, reason)}
+		op.record.resultPositions[row.Handle] = len(op.rows)
 		op.rows = append(op.rows, row)
 		s.dir.dropPickups(func(p pickup) bool { return p.session == v })
 		delete(s.failures, v)
 		if state == itemDone || state == itemCleared {
+			op.countCleanup(state, 1)
 			continue
 		}
 		if !s.sessions.deny(v, found.login, now) {
 			op.rows[len(op.rows)-1].Items[2] = selfItem{Item: "C3", State: itemFailed, Reason: "denied_set_full"}
+			op.countCleanup(itemFailed, 1)
 			continue
 		}
+		op.countCleanup(state, 1)
 		retry := &selfRetry{op: op, row: len(op.rows) - 1, attempts: 1, next: now.Add(selfEndBackoff[0]), final: state == itemFailed}
 		s.retries[v] = retry
+		op.record.retries++
 	}
 	for _, h := range result.gone {
+		op.goneCount++
+		op.record.resultPositions[h] = len(op.rows)
 		op.rows = append(op.rows, selfEndRow{Handle: h, Result: resultGone, Items: []selfItem{}})
 	}
 	for _, other := range result.notIncluded {
+		op.record.heldPositions[handleOf(other.verifier)] = len(op.notIncluded)
 		op.notIncluded = append(op.notIncluded, selfRef{Handle: handleOf(other.verifier), SignedIn: stamp(other.created)})
 	}
-	return op
 }
 
 func (s *Server) settle(v identity.Verifier, retry *selfRetry, state, reason string) {
 	item := &retry.op.rows[retry.row].Items[2]
+	retry.op.countCleanup(item.State, -1)
+	retry.op.countCleanup(state, 1)
 	item.State, item.Reason = state, reason
+	if record := retry.op.record; record != nil && record.indexed {
+		s.operationChanged(record.owner)
+	}
 	if state == itemDone || state == itemCleared {
 		s.sessions.release(v)
-		delete(s.retries, v)
+		s.releaseSessionRetry(v, retry)
 		return
 	}
 	if state == itemFailed {
@@ -369,6 +413,7 @@ func (s *Server) settle(v identity.Verifier, retry *selfRetry, state, reason str
 
 func (s *Server) drainSelfEnds() int {
 	now := s.clock()
+	s.expireSessionRecords(now)
 	worked := 0
 	keys := make([]identity.Verifier, 0, len(s.retries))
 	for v := range s.retries {
@@ -393,7 +438,9 @@ func (s *Server) drainSelfEnds() int {
 		s.settle(v, retry, state, reason)
 	}
 	for _, v := range s.sessions.sweep(now) {
-		delete(s.retries, v)
+		if retry := s.retries[v]; retry != nil {
+			s.releaseSessionRetry(v, retry)
+		}
 	}
 	return worked
 }
@@ -411,5 +458,23 @@ func (s *Server) settleEnded(v identity.Verifier, err error) {
 func (s *Server) settleDenied(login string) {
 	for _, v := range s.sessions.deniedOf(login) {
 		s.settleEnded(v, s.retryModuleEnd(v))
+	}
+}
+
+func (s *Server) releaseSessionRetry(v identity.Verifier, retry *selfRetry) {
+	if s.retries[v] != retry {
+		return
+	}
+	delete(s.retries, v)
+	if record := retry.op.record; record != nil {
+		record.retries--
+		s.reconcileSessionRecord(record)
+		retained := false
+		for _, op := range s.selfEnds[record.owner.User] {
+			retained = retained || op == record.op
+		}
+		if record.retries == 0 && !retained {
+			s.forgetSessionRecord(record)
+		}
 	}
 }

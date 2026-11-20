@@ -1,0 +1,398 @@
+{
+  "type": "VerificationEvidence",
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "base_commit": "79856aed4cfbe823d5fe1e4c24754e761598a9ac",
+  "scope": "Frozen selection/operation server and typed API/model checkpoint; no rendered UI or complete M05 claim",
+  "runtime": {
+    "os": "macOS",
+    "arch": "arm64",
+    "go": "1.25.7",
+    "node": "26.7.0",
+    "npm": "11.19.0"
+  },
+  "full_suite_preceded_equal_time_tie_correction": true,
+  "supplemental_after_tie": {
+    "scoped_server_seconds": 18.721,
+    "scoped_race_seconds": 7.535,
+    "console_tests": 921,
+    "console_failures": 0
+  },
+  "full_before_tie": {
+    "server_seconds": 163.09,
+    "server_statement_coverage": 98.3,
+    "cli_seconds": 6.77,
+    "cli_statement_coverage": 89.8
+  },
+  "mutation_note": "Initial5/6killed; strengthened page-size assertion killed the surviving query-binding mutation in a separate one-mutant rerun. Both caches removed and bytes/SHA restored. Mutations preceded the later reviewed equal-time tie correction.",
+  "artifact_storage": "Local temporary synthetic evidence; not guaranteed durable. Logs/profiles excluded from Git.",
+  "sources_current_checkpoint": [
+    {
+      "path": "apps/api/cmd/hb-api/main.go",
+      "bytes": 7639,
+      "sha256": "87639bd73564f6d2472a0ef4f70a73e95690586f13a58022ac2d1582008d76ae"
+    },
+    {
+      "path": "apps/api/server/boundary.go",
+      "bytes": 5646,
+      "sha256": "62a2a550dc8fc35e6ca3e41226d1e8003ffb84911fadc433660985d2bca14a22"
+    },
+    {
+      "path": "apps/api/server/openapiself.go",
+      "bytes": 10409,
+      "sha256": "b88baae81a6df01b4e58a16847515c291daaf1270feb90f2b8cab955a5684644"
+    },
+    {
+      "path": "apps/api/server/openapisessionselection.go",
+      "bytes": 9221,
+      "sha256": "625927be1972e24281c43aed0301a42e6c785cc1c37c91eb289da0aabe9e0654"
+    },
+    {
+      "path": "apps/api/server/selfend.go",
+      "bytes": 14013,
+      "sha256": "432cd47808ba4be4d01686ab6c9232d30d468427b1ee545ced20b8c676b93b4c"
+    },
+    {
+      "path": "apps/api/server/selfend_test.go",
+      "bytes": 16279,
+      "sha256": "bb79b8bae2f9e891808eddc609d79114cdeaa414eda1cea65990e61e81c2fb88"
+    },
+    {
+      "path": "apps/api/server/server.go",
+      "bytes": 13956,
+      "sha256": "6a29de1ed206f40a2496a6eb9c964b313855e08dae6bcdddf4b30b62e013c2ea"
+    },
+    {
+      "path": "apps/api/server/sessionaccept.go",
+      "bytes": 6133,
+      "sha256": "63dcd21017cc0e39f14dc82dd02bd37a0d2baad0672aaa5694eb41dca33ffc55"
+    },
+    {
+      "path": "apps/api/server/sessionend.go",
+      "bytes": 2797,
+      "sha256": "fc22fee55a88a28abc2c4ce855b01d6952f86f2cc8b314c08ef1f1ff5b0575b5"
+    },
+    {
+      "path": "apps/api/server/sessionending.go",
+      "bytes": 4433,
+      "sha256": "a24418d0af60d88db14c00de6454e694e02298a94935ffa433dc0a7ec1643859"
+    },
+    {
+      "path": "apps/api/server/sessionjson.go",
+      "bytes": 1145,
+      "sha256": "26768de5278a09d97c654333dcf83f620fad1c7bc35d0152650704894beaf147"
+    },
+    {
+      "path": "apps/api/server/sessionoperation_counts_test.go",
+      "bytes": 3245,
+      "sha256": "a2024ae937da95ae75f739644824b96333a3ad81b35e138464435d60db2c61f6"
+    },
+    {
+      "path": "apps/api/server/sessionoperation_cursor_test.go",
+      "bytes": 3743,
+      "sha256": "728443292577c3f2e6f0d046dd084e3bfa736dbe07189ab34c630284ee65e5f7"
+    },
+    {
+      "path": "apps/api/server/sessionoperation_test.go",
+      "bytes": 3052,
+      "sha256": "a8d025f3f5bb258c43984f48e04d292908467d8114fa7682d731da3f802e4cd7"
+    },
+    {
+      "path": "apps/api/server/sessionoperationitems.go",
+      "bytes": 3155,
+      "sha256": "b6dd982294ef55a276d4f42e85642a33eb4960daeab3f582d79cbe2f36bee993"
+    },
+    {
+      "path": "apps/api/server/sessionoperations.go",
+      "bytes": 4709,
+      "sha256": "f549c4d7e09df0e35459718b64c48159ccb1cdf0d86c40e65b13b90cca7266ab"
+    },
+    {
+      "path": "apps/api/server/sessionpreview.go",
+      "bytes": 3166,
+      "sha256": "6bb9370b1c67b8789ec1705aba9e9da2f9f70505579701d701891169f3bc308b"
+    },
+    {
+      "path": "apps/api/server/sessionrecords.go",
+      "bytes": 3867,
+      "sha256": "7d9cff002b356db1f68a4c3a7af6e159cb2c4b69f67df1fe90bf6368802c2774"
+    },
+    {
+      "path": "apps/api/server/sessionselection.go",
+      "bytes": 6621,
+      "sha256": "3d3164e8f95cc4053ea8bab7eeab459cd588ac3d096451b599fc2255b867e0e2"
+    },
+    {
+      "path": "apps/api/server/sessionselection_build_test.go",
+      "bytes": 5166,
+      "sha256": "aebe8c2f77cb41d96cf7c285b0298be797ef0f097af94b94934b1a4792f69286"
+    },
+    {
+      "path": "apps/api/server/sessionselection_cleanup_test.go",
+      "bytes": 2348,
+      "sha256": "fd1d62bec2a57db333b23097ad5901503a0b4e13c640307452bb00f07917ada8"
+    },
+    {
+      "path": "apps/api/server/sessionselection_limits_test.go",
+      "bytes": 1923,
+      "sha256": "5e5689ea4b48bca3362741623d01e7e0a608230307bd685e0976bd4156ae6b34"
+    },
+    {
+      "path": "apps/api/server/sessionselection_openapi_test.go",
+      "bytes": 3480,
+      "sha256": "f7b6fb95b0d9671c2e988cedb2073e1b4364cc65274cfa07205a2be0c2f969ca"
+    },
+    {
+      "path": "apps/api/server/sessionselection_pages_test.go",
+      "bytes": 3582,
+      "sha256": "8d7ba2ae06a60feb378e27eaa4d074353bd71b26a75caeb9e2098ea614de0709"
+    },
+    {
+      "path": "apps/api/server/sessionselection_pressure_test.go",
+      "bytes": 1643,
+      "sha256": "1b5aa67a6cb2af5b325ed7f426e83f66f2179f07fd950d5839199ddadfb0587f"
+    },
+    {
+      "path": "apps/api/server/sessionselection_review_test.go",
+      "bytes": 3951,
+      "sha256": "e7512f9b15785bec27226dd847d1592f36e5a132ceb9e313adc73e4bb372aaff"
+    },
+    {
+      "path": "apps/api/server/sessionselection_test.go",
+      "bytes": 2802,
+      "sha256": "ee1410bd7ad549cae84b28e3c6280cad8d696dece4483f90ea9f73437fce6d84"
+    },
+    {
+      "path": "apps/api/server/settings.go",
+      "bytes": 10869,
+      "sha256": "fcef7c955e70940f5ff0f1744c1ebbda8a10c418ff2db1fbfb4fc37ed69b55ba"
+    },
+    {
+      "path": "apps/api/server/stepup.go",
+      "bytes": 3935,
+      "sha256": "181c50b55a8f192471788d497e828a322d83772f15711443110d2a47733f261a"
+    },
+    {
+      "path": "apps/api/server/stepup_test.go",
+      "bytes": 20586,
+      "sha256": "3f462fecc4d3925a7bea0575b11bcab6a04cc90d2aa5a795b796ceeb82c3e0e1"
+    },
+    {
+      "path": "apps/api/server/trust_hold_test.go",
+      "bytes": 10274,
+      "sha256": "53c41a0938563d55109a095b81364a1816f693be4a6ddbf2444f04ffe391824a"
+    },
+    {
+      "path": "apps/api/server/trusthold.go",
+      "bytes": 9779,
+      "sha256": "fcdf5be8f66465f797b64da99111d33e9903239b624b9f7a4d253186374b79d2"
+    },
+    {
+      "path": "apps/console/package.json",
+      "bytes": 6139,
+      "sha256": "71a8c91de862a609e96c6bdfaae0db8885d25dc7ae6a9a6c68d538451e113a62"
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/session-query-model.test.ts",
+      "bytes": 2352,
+      "sha256": "3c2eb2dffe80409d220d9b26232d8f61873914ac105ed85ed40d7653a7aaa553"
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/session-query-model.ts",
+      "bytes": 2913,
+      "sha256": "dd06e7e0e62205ce5d5d1d75fbd7c704c7c129d9c3c6c5df2f8e70170f8787a8"
+    },
+    {
+      "path": "apps/console/src/service/admin.ts",
+      "bytes": 50610,
+      "sha256": "172dfb4d2a3e4a25d18beab7f3b123145d2d0ad20a9cc37a5b7dc0d0ca458563"
+    },
+    {
+      "path": "apps/console/src/service/session-query.test.ts",
+      "bytes": 3592,
+      "sha256": "942785f7294cf038a61ca73239dac35b58e7e60ac66ada26e322c9c286adcb22"
+    },
+    {
+      "path": "apps/console/src/service/session-query.ts",
+      "bytes": 8747,
+      "sha256": "d6696844d97910ff06adc9d33a093930f5f4758b840ed7edeac68a3b9384d1b9"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-selection-before.log",
+      "bytes": 216,
+      "sha256": "c44f8de9764f7725fd2f80c013720f97d13c4ae7b007baca0cb3d3620bb641de"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-preview-before.log",
+      "bytes": 204,
+      "sha256": "05484a1afd51cb8d99c1bb5488ca30856281b45630b9d0e175fe87ea60bdd32e"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-end-before.log",
+      "bytes": 229,
+      "sha256": "2eeac9d8acf9415aabd48659fffe9e72ae99b36f44a99c8420b9c9b71c5668a8"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-review-before.log",
+      "bytes": 598,
+      "sha256": "af25965846df4946853390ed47d154dc3a1ee8844a840dd961e9c37ab5d75e5a"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-fence-before.log",
+      "bytes": 257,
+      "sha256": "5a9f7656f6565815afbf32794bd358b7cfdc15b2421c309ed48e0047312ebf10"
+    },
+    {
+      "path": "/private/tmp/hb304-summary-before.log",
+      "bytes": 249,
+      "sha256": "185e6745359912ccf1c91160b9190ea2d057e56104b63f06f9e1c1ef0dbb5615"
+    },
+    {
+      "path": "/private/tmp/hb304-openapi-exclusive-before.log",
+      "bytes": 710,
+      "sha256": "bf38add94294dcc4a1db6f6ce5ab5b4ea7171638fa738d59541011065b630666"
+    },
+    {
+      "path": "/private/tmp/hb304-openapi-exclusive-after.log",
+      "bytes": 67,
+      "sha256": "22371b996a4035ca5f4b718cc93d15b8a19169ab336dc10752fa1c694e9f7439"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-full.log",
+      "bytes": 1043,
+      "sha256": "be8ee96c52d4288e8d80ced345bed36f720706c7dbf743f568b6a934dbf8341b"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-full-corrected.log",
+      "bytes": 915,
+      "sha256": "3b7373a817333873629fbde6e65de0554791739c1301e4ade525901b332e3c6f"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-final-regression.log",
+      "bytes": 200,
+      "sha256": "192fc44601818ec64aac62151e812832859cca284e31ecd7bb8495500259872d"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-final-race.log",
+      "bytes": 67,
+      "sha256": "ef3af8a3224210be25903d91c4f7caee7143f96871019a82f8e60c121e58c02e"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-checkpoint-final.log",
+      "bytes": 98,
+      "sha256": "c37f7c036eb9a0071090550ab5613fc22921088eee3dfaa36c6eec146a13074a"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-tie-race.log",
+      "bytes": 67,
+      "sha256": "948ccc05692f9ee007a9ccf42057336a2ce9c5f822e8f77d17a3215994bdfd94"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-extra-boundaries.log",
+      "bytes": 211,
+      "sha256": "72a769f97c6f57f98e606780315e7b58926411ea0c9ddead228e640387b8e723"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-extra-boundaries-corrected.log",
+      "bytes": 248,
+      "sha256": "535e34af31f48a0213fe5f1d531c475f3d046a1485a81bc111467138e41ad809"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-pressure-after.log",
+      "bytes": 67,
+      "sha256": "1be00ae529d06decefb46ac0e390ece26d75122139746039f11af897ff156db7"
+    },
+    {
+      "path": "/private/tmp/hb304-policy-after.log",
+      "bytes": 67,
+      "sha256": "e63130a09b111a79d09f35bb6996fee310f92bcbd06de5c0fee303f78760e8ab"
+    },
+    {
+      "path": "/private/tmp/hb304-prepare-stepup.log",
+      "bytes": 67,
+      "sha256": "23441923926442ab9bacf9b72785ebc274ce41ad9e45b3031080c2b0e79eb98b"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-vet.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-linux-vet.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-windows-vet.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/hb304-client-before.log",
+      "bytes": 3152,
+      "sha256": "29d3bfdfd4a0de6309a6eb141e55c50ec6b0cf302b05983ffc8fabd40500dbcd"
+    },
+    {
+      "path": "/private/tmp/hb304-client-after.log",
+      "bytes": 472,
+      "sha256": "3e0cab9491a403d02e72c3a08e7d27cba33b7641eed4eabb918776f848a2f514"
+    },
+    {
+      "path": "/private/tmp/hb304-client-types.log",
+      "bytes": 59,
+      "sha256": "d48f1a41dbe54457906c5003fa315d7f9ee6f40a5d6423f98516a51a986864de"
+    },
+    {
+      "path": "/private/tmp/hb304-ui-model-before.log",
+      "bytes": 1791,
+      "sha256": "18d92f711e148adc0fd8ef063ec5f1d5cdccfcf22e488dde90e48d176c3b88ff"
+    },
+    {
+      "path": "/private/tmp/hb304-ui-model-after.log",
+      "bytes": 417,
+      "sha256": "2466cd4fbef288dc807374bb840e76b306b2e4ee1739bb4841ded890329c146c"
+    },
+    {
+      "path": "/private/tmp/hb304-ui-model-controls.log",
+      "bytes": 519,
+      "sha256": "edcc1b3ec1cb3b79f748b5e17dea3b3716c3d98b7d8760e6f2ea474989827db0"
+    },
+    {
+      "path": "/private/tmp/hb304-ui-model-types.log",
+      "bytes": 59,
+      "sha256": "d48f1a41dbe54457906c5003fa315d7f9ee6f40a5d6423f98516a51a986864de"
+    },
+    {
+      "path": "/private/tmp/hb304-console-checkpoint-921.log",
+      "bytes": 92736,
+      "sha256": "8c51622211e17c73b0ba8677426e97b03d4949d04be1b445997c921b27138c2b"
+    },
+    {
+      "path": "/private/tmp/hb304-ui-design-result.txt",
+      "bytes": 66,
+      "sha256": "c7db1c3e2e31d37800630eeb1fdf52cc150d4d3186265d140c494995f0774909"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-mutations.json",
+      "bytes": 2025,
+      "sha256": "ba9a422a255e980c027ec7f6bbed096f05a5e370e9086badf92bc664ef7348af"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-mutations-recheck.json",
+      "bytes": 405,
+      "sha256": "5afa616f61b4886f0a6f02a046fbc4cfd95119dd4537462c02e5249f5c69f33e"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-coverage.out",
+      "bytes": 623258,
+      "sha256": "55a61e0f8e2a71384eafe27ca1e9fcd35d2657a34dd8eb8f0291c731d7832df5"
+    },
+    {
+      "path": "/private/tmp/hb304-selection-extra-coverage.out",
+      "bytes": 617804,
+      "sha256": "993eab3df8f65d7f7fc7f7f6e5828b79a5d98fda308c864fcc9d4413d9031a3a"
+    }
+  ]
+}

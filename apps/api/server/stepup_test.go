@@ -151,7 +151,7 @@ func TestPostRoutesAreClassified(t *testing.T) {
 			t.Errorf("route %s classified %v", path, step)
 		}
 	}
-	if len(found) != 8 || len(postRoutes) != 8 {
+	if len(found) != 9 || len(postRoutes) != 9 {
 		t.Errorf("routes %d listed %d", len(found), len(postRoutes))
 	}
 	f := setup(t, SeedSample).ready()

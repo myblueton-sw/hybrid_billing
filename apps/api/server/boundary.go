@@ -36,6 +36,9 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/me", s.readSelf)
 	mux.HandleFunc("GET /api/v1/me/sessions", s.querySessions)
 	mux.HandleFunc("GET /api/v1/me/sessions/{handle}", s.readSessionDetail)
+	mux.HandleFunc("GET /api/v1/me/sessions/operations", s.listSessionOperations)
+	mux.HandleFunc("GET /api/v1/me/sessions/operations/{operation}", s.readSessionOperation)
+	mux.HandleFunc("GET /api/v1/me/sessions/operations/{operation}/items", s.readSessionOperationItems)
 	mux.HandleFunc("GET /api/v1/me/access-history", s.readHistory)
 	mux.HandleFunc("GET /api/v1/organizations", s.listOrganizations)
 	mux.HandleFunc("GET /api/v1/organizations/plans", s.listPlans)
@@ -51,6 +54,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/release-evidence", s.readEvidence)
 	mux.HandleFunc("POST /api/v1/me/password", s.changePassword)
 	mux.HandleFunc("POST /api/v1/me/sessions/end", s.endSelfSessions)
+	mux.HandleFunc("POST /api/v1/me/sessions/selections", s.prepareSessionSelection)
+	mux.HandleFunc("GET /api/v1/me/sessions/selections/{reference}", s.previewSessionSelection)
 	mux.HandleFunc("POST /api/v1/me/reauthenticate", s.reauthenticate)
 	for path, raw := range s.cfg.Readers {
 		target, _ := readerTarget(raw)

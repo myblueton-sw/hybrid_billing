@@ -12,12 +12,12 @@ func selfEndSchema() map[string]any {
 	str := map[string]any{"type": "string"}
 	item := map[string]any{"type": "object", "properties": map[string]any{"item": str, "state": map[string]any{"type": "string",
 		"enum": []string{itemDone, itemPending, itemFailed, itemCleared, itemOutside, itemNotApply}}, "reason": str}}
-	row := map[string]any{"type": "object", "properties": map[string]any{"handle": str, "signed_in": str,
+	row := map[string]any{"type": "object", "additionalProperties": false, "required": []string{"handle", "signed_in", "result", "items"}, "properties": map[string]any{"handle": str, "signed_in": str,
 		"result": map[string]any{"type": "string", "enum": []string{resultEnded, resultGone}}, "items": map[string]any{"type": "array", "items": item}}}
-	ref := map[string]any{"type": "object", "properties": map[string]any{"handle": str, "signed_in": str}}
+	ref := map[string]any{"type": "object", "additionalProperties": false, "required": []string{"handle", "signed_in"}, "properties": map[string]any{"handle": str, "signed_in": str}}
 	counts := map[string]any{"type": "object", "properties": map[string]any{"done": map[string]any{"type": "integer"}, "already_ended": map[string]any{"type": "integer"},
 		"failed": map[string]any{"type": "integer"}, "pending": map[string]any{"type": "integer"}}}
-	return map[string]any{"type": "object", "properties": map[string]any{"operation": str, "kind": map[string]any{"type": "string", "enum": []string{kindOthers, kindOne}},
+	return map[string]any{"type": "object", "additionalProperties": false, "required": []string{"operation", "kind", "count", "state", "blocked_at", "list_generation", "current_generation", "generation_changed", "digest", "cleanup", "sessions", "not_included", "replay"}, "properties": map[string]any{"operation": str, "kind": map[string]any{"type": "string", "enum": []string{kindOthers, kindOne}},
 		"count": map[string]any{"type": "integer"}, "state": map[string]any{"type": "string", "enum": []string{stateRunning, stateComplete, stateIncomplete}},
 		"blocked_at": str, "list_generation": str, "current_generation": str, "generation_changed": map[string]any{"type": "boolean"}, "digest": str,
 		"cleanup": counts, "sessions": map[string]any{"type": "array", "items": row}, "not_included": map[string]any{"type": "array", "items": ref},
@@ -32,11 +32,16 @@ func selfPaths() map[string]any {
 		map[string]any{"type": "object", "additionalProperties": false, "required": []string{"session", "generation", "handles"}, "properties": map[string]any{
 			"session": map[string]any{"type": "string", "enum": []string{kindOthers}}, "generation": hexOf(32),
 			"handles": map[string]any{"type": "array", "minItems": 1, "maxItems": selfEndHandles, "uniqueItems": true, "items": hexOf(16)}}},
-		map[string]any{"type": "object", "additionalProperties": false, "required": []string{"session"}, "properties": map[string]any{"session": hexOf(16)}}}}
+		map[string]any{"type": "object", "additionalProperties": false, "required": []string{"session"}, "properties": map[string]any{"session": hexOf(16)}},
+		map[string]any{"type": "object", "additionalProperties": false, "required": []string{"selection", "digest", "count"}, "properties": map[string]any{
+			"selection": map[string]any{"type": "string", "maxLength": 64}, "digest": hexOf(64), "count": map[string]any{"type": "integer", "minimum": 1, "maximum": 10000}}}}}
 	end := map[string]any{"operationId": "me.sessions.end", "x-step-up": true,
 		"requestBody": map[string]any{"required": true, "content": map[string]any{"application/json": map[string]any{"schema": body}}},
 		"responses": map[string]any{"202": map[string]any{"description": "access blocked for the confirmed sessions that were still present; cleanup follows",
-			"content": map[string]any{"application/json": map[string]any{"schema": selfEndSchema()}}},
+			"content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"oneOf": []any{selfEndSchema(), sessionOperationSummarySchema()}}}}},
+			"404": selfError(string(commands.UnsupportedCommand), commands.NextNone, false),
+			"409": selfError(string(commands.RevisionConflict), commands.NextInspect, false),
+			"429": selfError(string(commands.RateLimited), commands.NextRetry, true),
 			"401": selfError(string(commands.Unauthenticated), commands.NextAnswer, false),
 			"403": selfError(CodeReauthentication, NextReauthenticate, false, CodeCSRF),
 			"413": selfError(CodeBodyTooLarge, commands.NextNone, false),
@@ -50,7 +55,12 @@ func selfPaths() map[string]any {
 		"403": selfError(CodeCSRF, commands.NextNone, false),
 		"500": selfError(string(commands.InternalError), commands.NextNone, false),
 		"503": selfError(string(commands.AuthorityUnavailable), commands.NextRetry, true)}}
-	return map[string]any{"/me/sessions": map[string]any{"get": sessionQueryOperation()}, "/me/sessions/{handle}": map[string]any{"get": sessionDetailOperation()}, "/me": map[string]any{"get": read}, "/me/sessions/end": map[string]any{"post": end}, "/me/access-history": map[string]any{"get": historyOperation()}}
+	return map[string]any{"/me/sessions/selections": map[string]any{"post": sessionSelectionPrepareOperation()},
+		"/me/sessions/selections/{reference}":       map[string]any{"get": sessionSelectionPreviewOperation()},
+		"/me/sessions/operations":                   map[string]any{"get": sessionOperationReadContract("list")},
+		"/me/sessions/operations/{operation}":       map[string]any{"get": sessionOperationReadContract("summary")},
+		"/me/sessions/operations/{operation}/items": map[string]any{"get": sessionOperationReadContract("items")},
+		"/me/sessions":                              map[string]any{"get": sessionQueryOperation()}, "/me/sessions/{handle}": map[string]any{"get": sessionDetailOperation()}, "/me": map[string]any{"get": read}, "/me/sessions/end": map[string]any{"post": end}, "/me/access-history": map[string]any{"get": historyOperation()}}
 }
 
 func historyOperation() map[string]any {

@@ -372,7 +372,7 @@ func TestOpenAPISelfPaths(t *testing.T) {
 	}
 	read := self["/me"].(map[string]any)["get"].(map[string]any)
 	want := map[string]map[string]string{
-		"post": {"401": "unauthenticated|[unauthenticated]|obtain_new_access_answer", "403": "reauthentication_required|[csrf_refused reauthentication_required]|reauthenticate",
+		"post": {"404": "unsupported_command|[unsupported_command]|none", "409": "revision_conflict|[revision_conflict]|inspect_current_state", "429": "rate_limited|[rate_limited]|retry_later", "401": "unauthenticated|[unauthenticated]|obtain_new_access_answer", "403": "reauthentication_required|[csrf_refused reauthentication_required]|reauthenticate",
 			"413": "body_too_large|[body_too_large]|none", "422": "invalid_request|[invalid_request prerequisite_failed]|correct_request",
 			"500": "internal_error|[internal_error]|none", "503": "authority_unavailable|[authority_unavailable]|retry_later"},
 		"get": {"401": "unauthenticated|[unauthenticated]|obtain_new_access_answer", "403": "csrf_refused|[csrf_refused]|none",

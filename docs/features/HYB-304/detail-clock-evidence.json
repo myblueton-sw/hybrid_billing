@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "9e44b127707e5e9311f56500554686175f3fc062",
+  "scope": "quiesced_detail_authority_clock_boundaries",
+  "production_unchanged": true,
+  "checks": {
+    "groups": 2,
+    "initial": "PASS7.257s before mutex/capture tightening",
+    "final_scoped": "PASS6.848s",
+    "focused_instrumented": "PASS7.127s two sweeps only",
+    "race": "PASS9groups17.037s",
+    "full_server_short": "PASS197.790s native99.7%",
+    "coverage": {
+      "matching_production_sources": 107,
+      "native_server_result": "ok  \tgithub.com/myblueton-sw/hybrid_billing/apps/api/server\t197.790s\tcoverage: 99.7% of statements",
+      "native_full_server": {
+        "weighted_statements": 11779,
+        "uncovered": 36,
+        "calculated_percent": 99.69437133882333
+      },
+      "native_focused_only": {
+        "weighted_statements": 11779,
+        "uncovered": 9310,
+        "calculated_percent": 20.961032345699973
+      },
+      "prior_native_full_server": {
+        "weighted_statements": 11779,
+        "uncovered": 40,
+        "calculated_percent": 99.66041259869259
+      },
+      "newly_covered_blocks": [
+        {
+          "location": "github.com/myblueton-sw/hybrid_billing/apps/api/server/servicequery_detail.go:217.16,220.3",
+          "function": "func (s *Server) readServiceAccount(w http.ResponseWriter, r *http.Request)",
+          "weighted_statements": 2,
+          "also_hit_by_focused_sweeps": true
+        },
+        {
+          "location": "github.com/myblueton-sw/hybrid_billing/apps/api/server/servicequery_detail.go:247.16,250.3",
+          "function": "func (s *Server) readServiceCredential(w http.ResponseWriter, r *http.Request)",
+          "weighted_statements": 2,
+          "also_hit_by_focused_sweeps": true
+        }
+      ],
+      "newly_covered_weighted_statements": 4,
+      "focused_proven_new_weighted_statements": 4,
+      "no_profile_union": true
+    },
+    "required100": "NOT_MET",
+    "vet": "PASS server package",
+    "portable_compilation": "PASS Linux/Windows amd64 server tests; no foreign execution",
+    "mutations": "two assertion-killed; exact restores and removed private cache",
+    "all_packages_frontend_browser": "NOT_RERUN prior75package/Console/browser checkpoints retain their boundaries"
+  },
+  "independent_source_review": "/root/hyb310_review PASS native ownership, immediate capture, independent elapsed, snapshots and oracle; no tests/services/mutations executed",
+  "limits": [
+    "Instance-owned clocks only; native nonparallel execution needs no process-global override or child isolation",
+    "Fresh fixture per cutoff; genuine setup/controls then full Close before arming; adopted offsets never reset",
+    "Only these two handlers have the source-proven final timed check and no later configured-clock observation",
+    "Observed handler jump captured before decode/observer work; exact401/403/503 codes and one failure object required",
+    "Fresh post-step observer uses supported session producer at stable time; auth maintenance/closed-history offers separated from business state",
+    "Stored service/declaration/credential/pickup identity/deadline compared; current expiry annotations may differ legitimately",
+    "Native focused/full/previous profiles have matching production blocks and weights; actual four new units proven without guessed cutoff-stage mapping",
+    "Clock counts select input boundaries; no per-query benchmark/metrics or live-history/operational scheduling certification",
+    "Publication-fence mutation removes the whole final fence; no claim each redundant check independently necessary",
+    "No production edits, registry-map rewrite, new interface, stack inspection, profile union, coverage waiver, deployment, native/AT/BFCache/Claude/FIX acceptance; merge pending"
+  ],
+  "source_files": [
+    {
+      "path": "apps/api/server/service_detail_clock_fixture_test.go",
+      "sha256": "4c3936122d595e293255c9f3af416de9491780d0287a47fe74796667fdf20c9d",
+      "bytes": 4645
+    },
+    {
+      "path": "apps/api/server/service_detail_clock_test.go",
+      "sha256": "dd331bf7ed9286658334ef7c20afb5c34e914b700edffa5ed3782d0ce88be5ad",
+      "bytes": 1898
+    },
+    {
+      "path": "apps/api/server/servicequery_detail.go",
+      "sha256": "dbf1a22186ae215cd13f8da3eaaa5caf72cb692fe41d5cdbe6f3c6ef692340e7",
+      "bytes": 12151
+    },
+    {
+      "path": "apps/api/server/servicequery_cursor.go",
+      "sha256": "cfa531394f681fe326ce0a377d03dde75253d1e4c1d1a3ef79c8a16e064c640d",
+      "bytes": 8831
+    },
+    {
+      "path": "apps/api/server/servicequery_accounts.go",
+      "sha256": "4af07295b7148ca5f8545c2661d4fc80cf4152f17a35323082d4ff869c465916",
+      "bytes": 7920
+    },
+    {
+      "path": "apps/api/server/services.go",
+      "sha256": "699e5867439a9c44eb4d0bef1ebb06a4ddd180cbbbf72043ff7f8ee9b56c43a3",
+      "bytes": 12586
+    },
+    {
+      "path": "apps/api/server/commands.go",
+      "sha256": "8091f911637d308b4e8c9c5bc98db2d55a6dc618fc5a545e8b0f9e480d7b08fd",
+      "bytes": 7408
+    },
+    {
+      "path": "apps/api/server/clock.go",
+      "sha256": "f0ccb91e2a861e8c2055010ea91de678a8b3fe2579ace1b68d00639f39c09d90",
+      "bytes": 2508
+    },
+    {
+      "path": "apps/api/server/ledger.go",
+      "sha256": "62157be172815b319c014883cb7fa1bbe863a03589f838785d8e116946e486bf",
+      "bytes": 8675
+    },
+    {
+      "path": "apps/api/server/server.go",
+      "sha256": "4b51eed55298f047cbfcfc19b6b8e9865eb7e61a16c0e4ad374f08ecff502f81",
+      "bytes": 14634
+    },
+    {
+      "path": "apps/api/server/users_edges_test.go",
+      "sha256": "b81039a54186ccdfef4ad15aed6b68e45f9c2ccb0bb296e296281a33ed093bde",
+      "bytes": 15481
+    },
+    {
+      "path": "modules/identity/querybasis.go",
+      "sha256": "80fcfb877082c4af31d77584e25d57a1a297e7df5c96782946afbf9a46ef98d1",
+      "bytes": 2201
+    },
+    {
+      "path": "modules/identity/boundary.go",
+      "sha256": "6fcabd89f8f9a29ad4dc3a18ff707e81551a21b3da71a903de3ada29f4130d2a",
+      "bytes": 8346
+    },
+    {
+      "path": "modules/gate/gate.go",
+      "sha256": "0faeca2ed2035ff106e0bcc10a0690cc12925305ef8c09f61ee5045cd4da1bc0",
+      "bytes": 10376
+    },
+    {
+      "path": "docs/features/HYB-304/m04-detail-clock-contracts.md",
+      "sha256": "39d3d402b60bae0169f02ab7fd701528d83a043d8aa47d337084589e7554811b",
+      "bytes": 5651
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "681c236d8fa8626935526f66078f55c2961d2db0bb5613428d3ede78cd4dfd52",
+      "bytes": 40994
+    },
+    {
+      "path": "docs/features/HYB-304/m04-completion.md",
+      "sha256": "6e81aef9cf862010bf17b21549985d3e0affceaa589a1985c0231ef38b38a741",
+      "bytes": 16409
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "b9136412f502070d2e77aa44218e28889d9f8cb875eefb9aebd21dbaf0b26e32",
+      "bytes": 60366
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-detail-clock-first.log",
+      "sha256": "64cb327a5677415bca6089d12efa2b91affcbc1ba7a9b17eedd76968887e6791",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-scoped.log",
+      "sha256": "4bfc6f73acac887ec0d8ee733ef4fae00b5cf4dc9bb5a3023bd8f0e94a6e1ad1",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-focused.log",
+      "sha256": "5f2739cb872cf913ad4b897af491372bec32b0d53e04ce444c6553fc7b13b873",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-focused.cover",
+      "sha256": "4dc46833c2916288fe1d2863d379f1eb8ea8b90b3f4fb2f30198858ae9678255",
+      "bytes": 684312
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-server.log",
+      "sha256": "07a1d1a728e0607dd06488f9c8857374f6b2fdd593d88c543ccc84256e0bbd13",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-server.cover",
+      "sha256": "cf4d136f8d0e7a978c7292be0e797d9b22f77defdd8c9ae83adcdb1b3859d502",
+      "bytes": 684312
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-race.log",
+      "sha256": "09747a001998e5882043d85480b50c5516bc7d84c5951df668c8f1c4028fb879",
+      "bytes": 68
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-race-test-names.json",
+      "sha256": "3fa054891f42734eda0f6a2593d6f0bb3cababa6593d70d3aeebff2d811080b2",
+      "bytes": 612
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-linux-format.log",
+      "sha256": "f3916934bd96d54e144ee42a8d9c6f94219bbdc8e82f830e68ebee6698aa9281",
+      "bytes": 208
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-windows-format.log",
+      "sha256": "6da281cc25838e2126fc86675e852332c9f468d317e1de0f73f66a7a6614d0c3",
+      "bytes": 106
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-linux-amd64.test",
+      "sha256": "9200c063bf97dfc79c9b210c61dbfce8cf7d7546f193bff08780b7d3ac4fe634",
+      "bytes": 28194696
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-windows-amd64.test.exe",
+      "sha256": "c5472164a615638d55611ae0735c07a51b35d2c943df1fa5c45b4c61bcc47691",
+      "bytes": 28535808
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-mutants.log",
+      "sha256": "013322e7bd1b05b0f458798243edfeb4645dd29654816fc66599a09619f4e6a9",
+      "bytes": 54
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-mutants.json",
+      "sha256": "36b729567b67f996c5255e5db15659ea5e4be0742d038c4d578953efdb5f105c",
+      "bytes": 896
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-mutants.py",
+      "sha256": "b8ed32c018f06a077c299f6a652b484c17be6f51c1d5534ea72fe0f11a60172e",
+      "bytes": 2380
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-mutant-publication-fence.log",
+      "sha256": "767d14e4f6a8eb578c6d8f9f51eb88b410fa0f82385b12f1cc2a612cda499582",
+      "bytes": 1183
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-mutant-trailing-failure-data.log",
+      "sha256": "cafab548a4d88b01aa5ab78ce5776abcdf35ccb690e7a633a825edef8983bebb",
+      "bytes": 1006
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-source-binding.json",
+      "sha256": "c2c0bbca206999c9aad480b7c99147c6470605e2f0a04e9e51aa27292da3de47",
+      "bytes": 14629
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-source-checks.log",
+      "sha256": "e17f165860c35299442f7452def35eecea1d3bf35854a749dddadb8aebdcf420",
+      "bytes": 183
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-coverage.py",
+      "sha256": "0f97d9fdb5380321cd4478ffc0b3a09b30e70c6f0617b6a4a256714fa179ed4c",
+      "bytes": 2111
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-coverage-summary.json",
+      "sha256": "a3c8c650d63a6f4926f6b3e5837e97dca2c30fb1f3bff4aac93297be26e70dbd",
+      "bytes": 1314
+    },
+    {
+      "path": "/private/tmp/hb304-detail-clock-okf.log",
+      "sha256": "38774a04a044e176365763115b317faa5fc8f87afbbaaf78ee3036c484111cf2",
+      "bytes": 100
+    }
+  ],
+  "independent_evidence_review": "/root/hyb310_copy_render PASS18source/25artifact/107production bindings, independently compared native profiles/two blocks/four units and execution boundaries; read-only no tests/services"
+}

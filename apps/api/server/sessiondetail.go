@@ -44,5 +44,5 @@ func (s *Server) readSessionDetail(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, request, struct {
 		Session   queriedSession `json:"session"`
 		Reference string         `json:"reference_at"`
-	}{s.sessionView(target, found.verifier), s.clock().UTC().Format(time.RFC3339Nano)})
+	}{s.taggedSessionView(target, found.verifier), s.clock().UTC().Format(time.RFC3339Nano)})
 }

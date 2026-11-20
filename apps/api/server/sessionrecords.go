@@ -18,6 +18,8 @@ type sessionRecord struct {
 	kind            string
 	legacy          bool
 	indexed         bool
+	olderOthers     *sessionRecord
+	newerOthers     *sessionRecord
 	resultPositions map[string]int
 	heldPositions   map[string]int
 	owner           sessionOwner
@@ -39,6 +41,10 @@ type sessionRecord struct {
 }
 
 func (s *Server) forgetSessionRecord(record *sessionRecord) {
+	s.forgetSessionRecordWithLockState(record, false)
+}
+
+func (s *Server) forgetSessionRecordWithLockState(record *sessionRecord, sessionsLocked bool) {
 	if record.op != nil && (record.state != "accepted" || record.retries > 0) {
 		return
 	}
@@ -49,7 +55,7 @@ func (s *Server) forgetSessionRecord(record *sessionRecord) {
 	s.sessionRecordUnits -= record.units
 	if record.op != nil {
 		delete(s.sessionOperations, record.op.id)
-		s.removeSessionOperationIndex(record)
+		s.removeSessionOperationIndex(record, sessionsLocked)
 		rows := s.selfEnds[record.owner.User]
 		kept := rows[:0]
 		for _, op := range rows {
@@ -75,6 +81,14 @@ func (s *Server) expireSessionRecords(now time.Time) {
 }
 
 func (s *Server) reserveSessionRecord(record *sessionRecord, units int) bool {
+	return s.reserveSessionRecordWithLockState(record, units, false)
+}
+
+func (s *Server) reserveSessionRecordWhileSessionsLocked(record *sessionRecord, units int) bool {
+	return s.reserveSessionRecordWithLockState(record, units, true)
+}
+
+func (s *Server) reserveSessionRecordWithLockState(record *sessionRecord, units int, sessionsLocked bool) bool {
 	if units < 0 || units > s.cfg.Access.SessionRecordBudget {
 		return false
 	}
@@ -101,7 +115,7 @@ func (s *Server) reserveSessionRecord(record *sessionRecord, units int) bool {
 			if s.sessionRecordUnits+units <= s.cfg.Access.SessionRecordBudget {
 				break
 			}
-			s.forgetSessionRecord(candidate)
+			s.forgetSessionRecordWithLockState(candidate, sessionsLocked)
 		}
 	}
 	s.sessionRecordUnits += units

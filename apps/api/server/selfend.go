@@ -399,7 +399,7 @@ func (s *Server) settle(v identity.Verifier, retry *selfRetry, state, reason str
 	retry.op.countCleanup(state, 1)
 	item.State, item.Reason = state, reason
 	if record := retry.op.record; record != nil && record.indexed {
-		s.operationChanged(record.owner)
+		s.operationChanged(record.owner, false)
 	}
 	if state == itemDone || state == itemCleared {
 		s.sessions.release(v)

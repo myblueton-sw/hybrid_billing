@@ -108,7 +108,7 @@ func (s *Server) readSelf(w http.ResponseWriter, r *http.Request) {
 	if current, err := s.policy.Policy(answer.Workspace()); err == nil {
 		page.MaxAge = int64(current.Revision.MaxAge / time.Second)
 	}
-	page.CurrentSession = s.sessionView(found, found.verifier)
+	page.CurrentSession = s.taggedSessionView(found, found.verifier)
 	page.RecordedSessions = s.sessions.indexState(found.owner, now, 0).Count
 	page.AcceptedOperations = len(s.sessionOperationRecords[found.owner])
 	page.Generation = s.sessions.generationToken(found.login)

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { adminClient, AdminError } from "./admin";
 
-const session = { handle: "0123456789abcdef", current: false, signed_in: "2026-11-20T00:00:00Z", ends: "2026-11-20T12:00:00Z", state: "active", can_end: true };
+const session = { handle: "0123456789abcdef", current: false, signed_in: "2026-11-20T00:00:00Z", ends: "2026-11-20T12:00:00Z", state: "active", can_end: true, not_included_operation: "" };
 const query = { session: "other", workspace: "w", since: "", until: "", q: "", limit: 2 };
 const page = { rows: [session], next: "cursor", query, reference_at: "2026-11-20T01:00:00Z", generation: "1", order: "current_then_signed_in_desc_handle_asc", count: { value: 1, certainty: "lower_bound" }, scan_stopped: true, settings: [] };
 const selection = { kind: "others", selection: "selection-a", state: "building", reference_at: "now", expires_at: "later", generation: "1", observed: 2, count: null, digest: "", after: "resume", settings: [] };
@@ -20,7 +20,7 @@ test("session query preserves lower-bound counts and sends only requested bounde
     assert.deepEqual([...url.searchParams], [["session", "other"], ["limit", "2"]]);
   }).sessionQuery({ session: "other", limit: 2 });
   assert.deepEqual(got, page);
-  for (const patch of [{ rows: null }, { rows: [session, {}] }, { scan_stopped: "true" }, { count: { value: 0, certainty: "unknown" } }, { rows: [{ ...session, can_end: "true" }] }]) {
+  for (const patch of [{ rows: null }, { rows: [session, {}] }, { scan_stopped: "true" }, { count: { value: 0, certainty: "unknown" } }, { rows: [{ ...session, can_end: "true" }] }, { rows: [{ ...session, not_included_operation: null }] }, { rows: [{ ...session, not_included_operation: undefined }] }]) {
     await assert.rejects(client({ ...page, ...patch }).sessionQuery({}), invalid);
   }
 });

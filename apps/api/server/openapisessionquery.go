@@ -3,10 +3,10 @@ package server
 import "github.com/myblueton-sw/hybrid_billing/modules/commands"
 
 func sessionQueryRowSchema() map[string]any {
-	return map[string]any{"type": "object", "additionalProperties": false, "required": []string{"handle", "current", "signed_in", "ends", "state", "can_end"}, "properties": map[string]any{
+	return map[string]any{"type": "object", "additionalProperties": false, "required": []string{"handle", "current", "signed_in", "ends", "state", "can_end", "not_included_operation"}, "properties": map[string]any{
 		"handle": map[string]any{"type": "string", "pattern": "^[0-9a-f]{16}$"}, "current": map[string]any{"type": "boolean"},
 		"signed_in": map[string]any{"type": "string", "format": "date-time"}, "ends": map[string]any{"type": "string", "format": "date-time"},
-		"state": map[string]any{"type": "string", "enum": []string{"active", "blocked", "expired", "revoked", "unavailable"}}, "can_end": map[string]any{"type": "boolean"},
+		"state": map[string]any{"type": "string", "enum": []string{"active", "blocked", "expired", "revoked", "unavailable"}}, "can_end": map[string]any{"type": "boolean"}, "not_included_operation": map[string]any{"type": "string", "description": "Retained accepted others-operation reference proving confirmed-set exclusion, or empty; no temporal or current-active assertion."},
 	}, "x-search-fields": []string{"handle", "signed_in", "ends"}}
 }
 

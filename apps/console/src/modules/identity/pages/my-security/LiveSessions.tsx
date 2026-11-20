@@ -12,7 +12,7 @@ import { sq } from "./query-copy";
 import { parseSessionLink, sessionLink, sessionRequest, type SessionFilters } from "./session-query-model";
 import { intentStore, intentLocked } from "./session-intent";
 import SessionSelection, { IntentRecovery, sessionStateLabel } from "./SessionSelection";
-import SessionOperations, { summarySentence } from "./SessionOperations";
+import SessionOperations, { summarySentence, ReferencedOperation } from "./SessionOperations";
 import AccessHistory from "./AccessHistory";
 import { SessionSettings } from "./SessionSettings";
 import "./session-query.css";
@@ -21,11 +21,15 @@ export function SessionTimeHint({ l }: { l: Locale }) {
   return <p id="mysec-time-hint" className="live-meta">{sq.timeHint(l)} {sq.example(l)} <bdi dir="ltr">2026-11-20T09:00:00+09:00</bdi></p>;
 }
 
-function SessionRows({ l,rows,locked,onEnd }: { l: Locale; rows: SessionRow[]; locked: boolean; onEnd: (handle: string) => void }) {
+export function SessionRows({ l,rows,locked,onEnd,onOperation }: { l: Locale; rows: SessionRow[]; locked: boolean; onEnd: (handle: string) => void; onOperation: (reference: string) => void }) {
   return <div className="security-table-scroll live-table"><table><thead><tr><th scope="col">{m.colSession(l)}</th><th scope="col">{m.colSignedIn(l)}</th><th scope="col">{m.colEnds(l)}</th><th scope="col">{sq.state(l)}</th><th scope="col">{m.colActions(l)}</th></tr></thead>
     <tbody>{rows.map(row => <tr key={row.handle}><td><strong>{row.current ? m.thisSession(l) : m.otherSession(l)}</strong><span className="live-mono live-sub"><bdi dir="ltr">{row.handle}</bdi></span></td>
-      <td data-label={m.colSignedIn(l)}><bdi dir="ltr">{whenSeconds(l,row.signed_in)}</bdi></td><td data-label={m.colEnds(l)}><bdi dir="ltr">{whenSeconds(l,row.ends)}</bdi></td><td data-label={sq.state(l)}>{sessionStateLabel(l,row.state)}</td>
+      <td data-label={m.colSignedIn(l)}><bdi dir="ltr">{whenSeconds(l,row.signed_in)}</bdi></td><td data-label={m.colEnds(l)}><bdi dir="ltr">{whenSeconds(l,row.ends)}</bdi></td><td data-label={sq.state(l)}>{sessionStateLabel(l,row.state)}<ExclusionTag l={l} reference={row.not_included_operation} onOperation={onOperation} /></td>
       <td data-label={m.colActions(l)}>{row.current ? m.thisSession(l) : <button type="button" className="live-secondary" disabled={locked || !row.can_end} onClick={() => onEnd(row.handle)}>{m.end(l)}</button>}</td></tr>)}</tbody></table></div>;
+}
+
+export function ExclusionTag({ l, reference, onOperation }: { l: Locale; reference: string; onOperation: (reference: string) => void }) {
+  return reference ? <span className="live-sub mysec-exclusion-tag">{sq.notIncluded(l)} <button type="button" className="live-secondary" onClick={() => onOperation(reference)}>{sq.viewOperation(l)}</button></span> : null;
 }
 
 export default function LiveSessions({ l,api,self,params,onParams,onRefresh,onSignOut,onSignedOut }: {
@@ -56,6 +60,9 @@ function ScopedSessions({ l,api,self,params,onParams,onRefresh,onSignOut,onSigne
   const [formError,setFormError] = useState(false);
   const [target,setTarget] = useState<{ handle?: string } | null>(null);
   const [notice,setNotice] = useState("");
+  const [operationData,setOperationData] = useState<{ scope: typeof store; reference: string } | null>(null);
+  const operation = operationData?.scope === store ? operationData.reference : "";
+  const viewOperation = (reference: string) => setOperationData({ scope:store,reference });
   const serial = useRef(0);
   const parents = useRef(new Map<string,string>());
   const invoker = useRef<HTMLElement | null>(null);
@@ -105,7 +112,7 @@ function ScopedSessions({ l,api,self,params,onParams,onRefresh,onSignOut,onSigne
           <div className="live-tools"><button type="button" className="live-secondary mysec-end-others" disabled={locked} onClick={() => open()}>{e.entry(l)}</button><button type="button" className="live-secondary" onClick={() => { setRefresh(value => value+1);onRefresh(); }}>{w.reload(l)}</button></div></div>
         <p>{sq.fullScope(l)}</p><IntentRecovery l={l} api={api} store={store} />
         {notice && <p role="status">{notice}</p>}
-        <div className="mysec-current"><h3>{m.thisSession(l)}</h3><bdi dir="ltr" className="live-mono">{current.handle}</bdi><p><bdi dir="ltr">{whenSeconds(l,current.signed_in)}</bdi>{" · "+sessionStateLabel(l,current.state)}</p><button type="button" className="live-secondary" onClick={onSignOut}>{m.signOut(l)}</button></div>
+        <div className="mysec-current"><h3>{m.thisSession(l)}</h3><bdi dir="ltr" className="live-mono">{current.handle}</bdi><p><bdi dir="ltr">{whenSeconds(l,current.signed_in)}</bdi>{" · "+sessionStateLabel(l,current.state)}</p><ExclusionTag l={l} reference={current.not_included_operation} onOperation={viewOperation} /><button type="button" className="live-secondary" onClick={onSignOut}>{m.signOut(l)}</button></div>
         <form className="mysec-query-form" onSubmit={apply} noValidate aria-labelledby="mysec-filters-title">
           <h3 id="mysec-filters-title">{sq.filters(l)}</h3>
           {(formError || navigation.bad) && <p id="mysec-filter-error" role="alert">{sq.invalid(l)}</p>}
@@ -124,11 +131,12 @@ function ScopedSessions({ l,api,self,params,onParams,onRefresh,onSignOut,onSigne
         {page && <><div className="mysec-page-meta"><p>{sq.count(l,page.count.value,page.count.certainty === "exact")}</p><p className="live-meta">{sq.shown(l,page.rows.length)} · {e.listTime(l,whenSeconds(l,page.reference_at))}</p></div>
           {page.scan_stopped && <p role="status">{sq.stopped(l)}</p>}
           <SessionSettings l={l} settings={page.settings} />
-          <SessionRows l={l} rows={page.rows} locked={locked} onEnd={open} />{page.rows.length === 0 && <p>{sq.empty(l)}</p>}
+          <SessionRows l={l} rows={page.rows} locked={locked} onEnd={open} onOperation={viewOperation} />{page.rows.length === 0 && <p>{sq.empty(l)}</p>}
           <div className="live-buttons"><button type="button" className="live-secondary" disabled={!navigation.after || !parents.current.has(navigation.after)} onClick={() => navigate(navigation.filters,parents.current.get(navigation.after) ?? "")}>{sq.previous(l)}</button>
             <button type="button" className="live-secondary" disabled={!navigation.after} onClick={() => navigate(navigation.filters)}>{sq.first(l)}</button>
             <button type="button" className="live-secondary" disabled={!page.next} onClick={() => { parents.current.set(page.next,navigation.after);if (parents.current.size > 32) parents.current.delete(parents.current.keys().next().value!);navigate(navigation.filters,page.next); }}>{sq.next(l)}</button></div></>}
       </section>
+      {operation && <ReferencedOperation l={l} api={api} reference={operation} onEnd={open} locked={locked} onSignedOut={onSignedOut} />}
       <SessionOperations l={l} api={api} refreshKey={refresh} onEnd={open} locked={locked} onSignedOut={onSignedOut} />
       <AccessHistory key={scopeKey(self)} l={l} api={api} self={self} reloadKey={refresh} say={setNotice} onSignedOut={onSignedOut} />
     </div>

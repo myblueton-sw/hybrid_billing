@@ -68,13 +68,13 @@ function OperationRows({ l,api,op,generation,view,onEnd,locked,onSignedOut }: {
   </div>;
 }
 
-function OperationCard({ l,api,op,generation,onEnd,locked,onSignedOut }: {
-  l: Locale; api: AdminClient; op: SessionOperation; generation: string; onEnd: (handle: string) => void; locked: boolean; onSignedOut: () => void;
+function OperationCard({ l,api,op,generation,onEnd,locked,onSignedOut,idPrefix = "mysec-op" }: {
+  l: Locale; api: AdminClient; op: SessionOperation; generation: string; onEnd: (handle: string) => void; locked: boolean; onSignedOut: () => void; idPrefix?: string;
 }) {
   const [open,setOpen] = useState(false);
   const [view,setView] = useState<"results" | "not_included">("results");
-  return <li><section className="mysec-op" aria-labelledby={"mysec-op-"+op.operation}>
-    <h4 id={"mysec-op-"+op.operation} tabIndex={-1}>{op.kind === "one" ? e.opOne(l) : e.opOthers(l)}</h4>
+  return <li><section className="mysec-op" aria-labelledby={idPrefix+"-"+op.operation}>
+    <h4 id={idPrefix+"-"+op.operation} tabIndex={-1}>{op.kind === "one" ? e.opOne(l) : e.opOthers(l)}</h4>
     <p className="live-meta"><bdi dir="ltr">{op.operation}</bdi>{op.blocked_at ? " · "+whenSeconds(l,op.blocked_at) : ""}</p><p>{summarySentence(l,op)}</p>
     <p>{sq.recorded(l,op.recorded_count)}</p>{op.ended_count !== null && <p>{sq.access(l,op.ended_count)} · {sq.gone(l,op.gone_count!)}</p>}
     {op.cleanup && <p>{e.equation(l,op.ended_count!,op.cleanup.done,op.cleanup.already_ended,op.cleanup.pending,op.cleanup.failed)}</p>}
@@ -124,5 +124,30 @@ export default function SessionOperations({ l,api,refreshKey,onEnd,locked,onSign
     {stopped && page && <p role="status">{e.stillRunning(l,whenSeconds(l,page.reference_at))}</p>}
     {page && <><ol className="mysec-ops">{page.rows.map(op => <OperationCard key={op.operation} l={l} api={api} op={op} generation={page.generation} onEnd={onEnd} locked={locked} onSignedOut={onSignedOut} />)}</ol>
       <div className="live-buttons"><button type="button" className="live-secondary" disabled={busy || trail.length === 0} onClick={() => load(trail[trail.length-1],trail.slice(0,-1))}>{sq.previous(l)}</button><button type="button" className="live-secondary" disabled={busy || !page.next} onClick={() => load(page.next,[...trail,after].slice(-32))}>{sq.next(l)}</button></div></>}
+  </section>;
+}
+
+export function ReferencedOperation({ l,api,reference,onEnd,locked,onSignedOut }: {
+  l: Locale; api: AdminClient; reference: string; onEnd: (handle: string) => void; locked: boolean; onSignedOut: () => void;
+}) {
+  const [reload,setReload] = useState(0);
+  const key = useMemo(() => ({ api,reference,reload }),[api,reference,reload]);
+  const guard = useScopedRead(key);
+  const [data,setData] = useState<ScopedValue<{ op?: SessionOperation; failed?: boolean }> | null>(null);
+  const value = data?.scope === guard.token ? data.value : null;
+  const title = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    const valid = guard.begin();
+    api.sessionOperation(reference).then(op => {
+      if (!valid()) return;
+      if (op.operation !== reference || op.kind !== "others" || op.state === "unconfirmed") throw new AdminError("invalid");
+      setData({ scope:guard.token,value:{ op } });
+    }).catch(error => { if (!valid()) return;setData({ scope:guard.token,value:{ failed:true } });if (error instanceof AdminError && error.failure === "unauthenticated") onSignedOut(); });
+  },[guard]);
+  useEffect(() => { if (value) title.current?.focus(); },[value]);
+  return <section className="mysec-referenced-operation" aria-labelledby="mysec-referenced-title"><h3 id="mysec-referenced-title" tabIndex={-1} ref={title}>{sq.viewOperation(l)}</h3>
+    {!value && <p role="status">{e.reading(l)}</p>}{value?.failed && <p role="alert">{sq.operationUnavailable(l)}</p>}
+    <button type="button" className="live-secondary" disabled={!value} onClick={() => setReload(n => n+1)}>{e.checkAgain(l)}</button>
+    {value?.op && <ol className="mysec-ops"><OperationCard idPrefix="mysec-referenced-op" l={l} api={api} op={value.op} generation={JSON.stringify([value.op.state,value.op.cleanup])} onEnd={onEnd} locked={locked} onSignedOut={onSignedOut} /></ol>}
   </section>;
 }

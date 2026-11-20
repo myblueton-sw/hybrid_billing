@@ -9,7 +9,7 @@ type DisplayPage = SelfPage & { sessions: SelfSession[]; session_ends: SelfEnd[]
 const page = (change: Partial<DisplayPage>): DisplayPage => ({
   user_id: "u", login: "l", email: "e", workspace: "w", role: "member", identities: [], password_set: true, installation_administrator: false,
   sessions: [{ handle: "a", current: true, signed_in: "1", ends: "2" }, { handle: "b", current: false, signed_in: "0", ends: "1" }],
-  current_session: { handle:"a",current:true,signed_in:"1",ends:"2",state:"active",can_end:false }, recorded_session_count:2, accepted_operation_count:0,
+  current_session: { handle:"a",current:true,signed_in:"1",ends:"2",state:"active",can_end: false, not_included_operation: "" }, recorded_session_count:2, accepted_operation_count:0,
   sessions_generation: "g", session_ends: [], idle_minutes: 30, max_age_seconds: 0, signed_in_at: "1", authenticated_at: "1", now: "1", ...change,
 });
 

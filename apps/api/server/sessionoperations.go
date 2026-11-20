@@ -10,9 +10,14 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 )
 
-func (s *Server) operationChanged(owner sessionOwner) {
+func (s *Server) operationChanged(owner sessionOwner, sessionsLocked bool) {
 	s.sessionOperationSequence++
 	s.sessionOperationVersions[owner] = s.sessionOperationSequence
+	if sessionsLocked {
+		s.sessions.operationChangedLocked(owner)
+	} else {
+		s.sessions.operationChanged(owner)
+	}
 }
 
 func (s *Server) publishSessionOperation(record *sessionRecord) {
@@ -21,10 +26,11 @@ func (s *Server) publishSessionOperation(record *sessionRecord) {
 	}
 	record.indexed = true
 	s.sessionOperationRecords[record.owner] = append([]*sessionRecord{record}, s.sessionOperationRecords[record.owner]...)
-	s.operationChanged(record.owner)
+	s.publishOtherSessionOperation(record)
+	s.operationChanged(record.owner, false)
 }
 
-func (s *Server) removeSessionOperationIndex(record *sessionRecord) {
+func (s *Server) removeSessionOperationIndex(record *sessionRecord, sessionsLocked bool) {
 	if !record.indexed {
 		return
 	}
@@ -37,7 +43,8 @@ func (s *Server) removeSessionOperationIndex(record *sessionRecord) {
 	}
 	clear(list[len(kept):])
 	record.indexed = false
-	s.operationChanged(record.owner)
+	s.forgetOtherSessionOperation(record)
+	s.operationChanged(record.owner, sessionsLocked)
 	if len(kept) == 0 {
 		delete(s.sessionOperationRecords, record.owner)
 		delete(s.sessionOperationVersions, record.owner)

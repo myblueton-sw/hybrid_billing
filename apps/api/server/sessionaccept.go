@@ -66,7 +66,7 @@ func (s *Server) applySessionRecord(found session, record *sessionRecord, kind s
 			rejected = http.StatusConflict
 			return false
 		}
-		if !s.reserveSessionRecord(record, units) {
+		if !s.reserveSessionRecordWhileSessionsLocked(record, units) {
 			return false
 		}
 		record.state = "applying"

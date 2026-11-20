@@ -14,11 +14,12 @@ type sessionOwner struct {
 	Epoch     uint64
 }
 type sessionIndex struct {
-	rows    []*session
-	idle    []*session
-	auth    []*session
-	handles map[string]*session
-	version uint64
+	rows       []*session
+	idle       []*session
+	auth       []*session
+	handles    map[string]*session
+	version    uint64
+	operations uint64
 }
 
 func sessionCompare(a, b *session, kind string) int {
@@ -121,9 +122,10 @@ func (s *sessions) touch(v identity.Verifier, idle time.Time) {
 }
 
 type sessionIndexState struct {
-	Version  uint64
-	Count    int
-	Deadline time.Time
+	Version    uint64
+	Operations uint64
+	Count      int
+	Deadline   time.Time
 }
 
 func (s *sessions) indexState(key sessionOwner, now time.Time, maxAge time.Duration) sessionIndexState {
@@ -133,7 +135,7 @@ func (s *sessions) indexState(key sessionOwner, now time.Time, maxAge time.Durat
 	if index == nil {
 		return sessionIndexState{}
 	}
-	out := sessionIndexState{Version: index.version, Count: len(index.rows)}
+	out := sessionIndexState{Version: index.version, Operations: index.operations, Count: len(index.rows)}
 	at := sort.Search(len(index.idle), func(i int) bool { return index.idle[i].idleUntil.After(now) })
 	if at < len(index.idle) {
 		out.Deadline = index.idle[at].idleUntil
@@ -175,4 +177,16 @@ func (s *sessions) indexed(key sessionOwner, version uint64, after string, limit
 		out = append(out, *found)
 	}
 	return out, end < len(index.rows), true
+}
+
+func (s *sessions) operationChanged(key sessionOwner) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.operationChangedLocked(key)
+}
+
+func (s *sessions) operationChangedLocked(key sessionOwner) {
+	if index := s.owners[key]; index != nil {
+		index.operations++
+	}
 }

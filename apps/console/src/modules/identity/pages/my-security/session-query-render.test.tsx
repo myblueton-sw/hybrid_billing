@@ -13,7 +13,7 @@ const { summarySentence, CleanupGroups } = await import("./SessionOperations");
 const unknown = { state:"unconfirmed",ended_count:null,cleanup:null } as SessionOperation;
 for (const l of ["en","ko","ar"] as const) {
   test(`${l} preview rows retain inactive states and directional session references`, () => {
-    const html=renderToStaticMarkup(<SelectionRows l={l} rows={[{handle:"abcdef0123456789",current:false,signed_in:"2026-11-20T00:00:00Z",ends:"2026-11-20T12:00:00Z",state:"unavailable",can_end:false}]} />);
+    const html=renderToStaticMarkup(<SelectionRows l={l} rows={[{handle:"abcdef0123456789",current:false,signed_in:"2026-11-20T00:00:00Z",ends:"2026-11-20T12:00:00Z",state:"unavailable",can_end: false, not_included_operation: ""}]} />);
     assert.ok(html.includes('dir="ltr"'));assert.ok(html.includes(sq.unavailable(l)));assert.ok(html.includes("abcdef0123456789"));
     assert.equal((html.match(/<tr>/g)??[]).length,2);
   });
@@ -71,4 +71,13 @@ for (const l of ["en","ko","ar"] as const) test(`${l} preparation names all six 
   assert.equal((html.match(/<dd>/g)??[]).length,6);
   assert.equal(html.split(limitCopy.unavailable(l)).length-1,6);
   assert.ok(!html.includes('<strong>') && !html.includes(limitCopy.source(l)));
+});
+
+const { ExclusionTag } = await import("./LiveSessions");
+for (const l of ["en","ko","ar"] as const) test(`${l} session exclusion tag requires an explicit operation reference`, () => {
+  const absent=renderToStaticMarkup(<ExclusionTag l={l} reference="" onOperation={()=>{}} />);
+  assert.equal(absent,"");
+  const present=renderToStaticMarkup(<ExclusionTag l={l} reference="session-end-recorded" onOperation={()=>{}} />);
+  assert.ok(present.includes(sq.notIncluded(l)) && present.includes(sq.viewOperation(l)));
+  assert.ok(!present.includes('started after') && !present.includes('still active'));
 });

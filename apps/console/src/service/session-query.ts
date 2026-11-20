@@ -3,7 +3,7 @@ import type { SelfEndRow, SelfRef, SelfSession } from "./self-end";
 import { settingsOf } from "./access-read";
 import { array, boolean, choice, integer, optional, ReadParseError, shape, text, type Parser } from "./strict-read";
 
-export type SessionRow = SelfSession & { state: "active" | "blocked" | "expired" | "revoked" | "unavailable"; can_end: boolean };
+export type SessionRow = SelfSession & { state: "active" | "blocked" | "expired" | "revoked" | "unavailable"; can_end: boolean; not_included_operation: string };
 export type SessionQuery = { session?: "all" | "current" | "other"; workspace?: string; since?: string; until?: string; q?: string; limit?: number; after?: string };
 export type SessionPage = { rows: SessionRow[]; next: string; query: Required<Omit<SessionQuery, "after">>; reference_at: string; generation: string;
   order: "current_then_signed_in_desc_handle_asc"; count: { value: number; certainty: "exact" | "lower_bound" }; scan_stopped: boolean; settings: AccessSetting[] };
@@ -25,7 +25,7 @@ const bounded = <T>(parse: Parser<T>, max = 100): Parser<T[]> => (value) => {
   return array(parse)(value);
 };
 export const sessionRowOf = shape<SessionRow>({ handle: text, current: boolean, signed_in: text, ends: text,
-  state: choice("active", "blocked", "expired", "revoked", "unavailable"), can_end: boolean });
+  state: choice("active", "blocked", "expired", "revoked", "unavailable"), can_end: boolean, not_included_operation: text });
 const sessionPage = shape<SessionPage>({ rows: bounded(sessionRowOf), next: text, query: shape({ session: choice("all", "current", "other"), workspace: text, since: text, until: text, q: text, limit: integer }),
   reference_at: text, generation: text, order: choice("current_then_signed_in_desc_handle_asc"), count: shape({ value: integer, certainty: choice("exact", "lower_bound") }), scan_stopped: boolean, settings: settingsOf });
 const selection = shape<Selection>({ kind: choice("one", "others"), selection: text, operation: optional(text), state: choice("building", "sealed", "applying", "accepted"), reference_at: text, expires_at: text,

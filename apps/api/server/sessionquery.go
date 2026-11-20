@@ -30,8 +30,9 @@ type sessionQuery struct {
 
 type queriedSession struct {
 	selfSession
-	State  string `json:"state"`
-	CanEnd bool   `json:"can_end"`
+	State                string `json:"state"`
+	CanEnd               bool   `json:"can_end"`
+	NotIncludedOperation string `json:"not_included_operation"`
 }
 
 type sessionCount struct {
@@ -215,10 +216,10 @@ func (s *Server) querySessions(w http.ResponseWriter, r *http.Request) {
 	}
 	index, expires := s.sessionBasis(found, answer)
 	now := s.clock()
-	cursor := sessionCursor{Owner: found.owner, Caller: found.handle, Query: query.digest(), Version: index.Version, Revision: s.Revision(), Reference: now, Expires: expires}
+	cursor := sessionCursor{Owner: found.owner, Caller: found.handle, Query: query.digest(), Version: index.Version, Operations: index.Operations, Revision: s.Revision(), Reference: now, Expires: expires}
 	if after != "" {
 		prior, valid := s.openSessionCursor(after)
-		if !valid || prior.Owner != cursor.Owner || prior.Caller != cursor.Caller || prior.Query != cursor.Query || prior.Version != cursor.Version || prior.Revision != cursor.Revision || !now.Before(prior.Expires) || prior.Reference.After(now) || prior.Matched < 0 || prior.Matched > maxSessions {
+		if !valid || prior.Owner != cursor.Owner || prior.Caller != cursor.Caller || prior.Query != cursor.Query || prior.Version != cursor.Version || prior.Operations != cursor.Operations || prior.Revision != cursor.Revision || !now.Before(prior.Expires) || prior.Reference.After(now) || prior.Matched < 0 || prior.Matched > maxSessions {
 			failRead(w, commands.RevisionConflict, request, "after")
 			return
 		}
@@ -228,7 +229,7 @@ func (s *Server) querySessions(w http.ResponseWriter, r *http.Request) {
 	if !cursor.Pinned {
 		cursor.Pinned = true
 		if query.Session != "other" && query.matches(found, found.verifier) {
-			page.Rows = append(page.Rows, s.sessionView(found, found.verifier))
+			page.Rows = append(page.Rows, s.taggedSessionView(found, found.verifier))
 			cursor.Matched++
 		}
 	}
@@ -247,7 +248,7 @@ func (s *Server) querySessions(w http.ResponseWriter, r *http.Request) {
 			if candidate.verifier == found.verifier || !query.matches(candidate, found.verifier) {
 				continue
 			}
-			page.Rows = append(page.Rows, s.sessionView(candidate, found.verifier))
+			page.Rows = append(page.Rows, s.taggedSessionView(candidate, found.verifier))
 			cursor.Matched++
 		}
 	}

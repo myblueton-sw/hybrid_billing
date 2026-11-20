@@ -12,16 +12,17 @@ import (
 )
 
 type sessionCursor struct {
-	Owner     sessionOwner `json:"owner"`
-	Caller    string       `json:"caller"`
-	Query     string       `json:"query"`
-	Version   uint64       `json:"version"`
-	Revision  string       `json:"revision"`
-	Reference time.Time    `json:"reference"`
-	Expires   time.Time    `json:"expires"`
-	After     string       `json:"after"`
-	Pinned    bool         `json:"pinned"`
-	Matched   int          `json:"matched"`
+	Owner      sessionOwner `json:"owner"`
+	Caller     string       `json:"caller"`
+	Query      string       `json:"query"`
+	Operations uint64       `json:"operations"`
+	Version    uint64       `json:"version"`
+	Revision   string       `json:"revision"`
+	Reference  time.Time    `json:"reference"`
+	Expires    time.Time    `json:"expires"`
+	After      string       `json:"after"`
+	Pinned     bool         `json:"pinned"`
+	Matched    int          `json:"matched"`
 }
 
 func (s *Server) sealSessionCursor(cursor sessionCursor) string {

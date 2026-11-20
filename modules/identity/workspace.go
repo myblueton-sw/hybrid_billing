@@ -382,32 +382,6 @@ func (h *Workspace) RetireServiceUser(actor Verifier, workspace, serviceID strin
 	}, Departed)
 }
 
-func (h *Workspace) ServiceUsers(actor Verifier, workspace, after string, limit int) ([]ServiceInfo, error) {
-	r, ok := h.open()
-	if !ok {
-		return nil, ErrUnavailable
-	}
-	defer r.mu.Unlock()
-	if !validID(workspace) || !r.pageable(after, limit) {
-		return nil, ErrInvalid
-	}
-	if _, err := r.administrator(actor, workspace, r.clock()); err != nil {
-		return nil, err
-	}
-	ids := []string{}
-	for id, found := range r.users {
-		if found.kind == Service && found.workspace == workspace {
-			ids = append(ids, id)
-		}
-	}
-	list := []ServiceInfo{}
-	for _, id := range page(ids, after, limit) {
-		found := r.users[id]
-		list = append(list, ServiceInfo{ID: id, State: found.state, Epoch: found.epoch, Creator: found.creator, Owner: found.owner})
-	}
-	return list, nil
-}
-
 func (h *Workspace) AddCredential(actor Verifier, workspace, serviceID, credentialID string, verifier Verifier, validity Validity) error {
 	r, ok := h.open()
 	if !ok {
@@ -429,8 +403,9 @@ func (h *Workspace) AddCredential(actor Verifier, workspace, serviceID, credenti
 		return ErrConflict
 	}
 	held := 0
-	for _, existing := range r.credentials {
-		if existing.user == serviceID && !existing.revoked && now.Before(existing.validity.NotAfter) {
+	for _, id := range r.credentialIndex[serviceID] {
+		existing := r.credentials[id]
+		if !existing.revoked && now.Before(existing.validity.NotAfter) {
 			held++
 		}
 	}
@@ -440,15 +415,16 @@ func (h *Workspace) AddCredential(actor Verifier, workspace, serviceID, credenti
 	if !bump(&r.serial) {
 		return ErrConflict
 	}
-	r.credentials[credentialID] = &credential{serial: r.serial, user: serviceID, verifier: verifier, validity: validity}
+	r.putCredential(credentialID, &credential{serial: r.serial, user: serviceID, verifier: verifier, validity: validity})
 	r.pruneCredentials(serviceID, now)
 	return nil
 }
 
 func (r *Registry) pruneCredentials(serviceID string, now time.Time) {
 	ended := []string{}
-	for id, found := range r.credentials {
-		if found.user == serviceID && (found.revoked || !now.Before(found.validity.NotAfter)) {
+	for _, id := range r.credentialIndex[serviceID] {
+		found := r.credentials[id]
+		if found.revoked || !now.Before(found.validity.NotAfter) {
 			ended = append(ended, id)
 		}
 	}
@@ -463,7 +439,7 @@ func (r *Registry) pruneCredentials(serviceID string, now time.Time) {
 		return ended[a] < ended[b]
 	})
 	for _, id := range ended[EndedCredentialsKept:] {
-		delete(r.credentials, id)
+		r.removeCredential(id)
 	}
 }
 
@@ -519,17 +495,5 @@ func (h *Workspace) Credentials(actor Verifier, workspace, serviceID string) ([]
 	if _, err := r.service(actor, workspace, serviceID); err != nil {
 		return nil, err
 	}
-	ids := []string{}
-	for id, found := range r.credentials {
-		if found.user == serviceID {
-			ids = append(ids, id)
-		}
-	}
-	sort.Strings(ids)
-	list := make([]CredentialInfo, 0, len(ids))
-	for _, id := range ids {
-		found := r.credentials[id]
-		list = append(list, CredentialInfo{ID: id, Validity: found.validity, Revoked: found.revoked})
-	}
-	return list, nil
+	return r.credentialInfos(r.credentialIndex[serviceID]), nil
 }

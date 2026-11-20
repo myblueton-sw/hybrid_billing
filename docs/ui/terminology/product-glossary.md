@@ -11,7 +11,7 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 
 | Concept ID / canonical alias | Preferred KO | Preferred EN | AR candidate | Definition and forbidden implications | Current scope |
 | --- | --- | --- | --- | --- | --- |
-| input-confirmation-permission-requests / input_authority_proposals | 입력 데이터 확인 권한 요청 | Input confirmation permission requests | طلبات صلاحية تأكيد بيانات الإدخال | Pending proposals and unresolved applications for console/human permission to confirm synthetic input data. The impact count is not data approval, financial approval, cancellation or proof of effective permission. | M01 bulk impact; independent AI TW/domain wording review PASS; rendered verification PASS; native-language acceptance pending |
+| input-confirmation-permission-requests / input_authority_proposals | 입력 데이터 권한 요청 | Input data permission requests | طلبات صلاحية بيانات الإدخال | Pending proposals and unresolved applications for separate console/human permissions to confirm synthetic input data or inspect its cost-protected evidence. The impact count is not data approval, financial approval, cancellation or proof of effective permission. | M01 bulk impact; independent AI TW/domain wording review PASS; rendered verification PASS; native-language acceptance pending |
 | infrastructure-composition / CostPool, B01 | 인프라 원가 구성 | Infrastructure cost composition | مكوّنات تكلفة البنية التحتية | Period-specific asset, lease/depreciation, license, power and facility cost composition and inclusion review. Not B03 allocation, sales pricing or a complete infrastructure ledger inferred from VMware rows. | B01 menu/title; AI TW design and scoped six-variant rendered review PASS; native-language acceptance pending |
 | billed-cost / BilledCost | 청구 비용 | Billed cost | التكلفة المفوترة | Collected billed source cost, not customer sales, cash payment or approved internal allocation. Preserve FOCUS alias in mapped fields/help. | U01/S04/B01 |
 | effective-cost / EffectiveCost | 실효 비용 | Effective cost | التكلفة الفعلية | Source cost with applicable amortization/discount treatment. Not merely discounted price, cash paid or financial approval. | U01/S04/B01 |
@@ -430,3 +430,10 @@ Independent refusal_review performed the scoped AI TW/domain review against Bulk
 
 
 M03 and P02 also display confirm_input as **Confirm input data / 입력 데이터 확인 / تأكيد بيانات الإدخال**, and synthetic_input_evidence as **Synthetic input evidence / 합성 입력 데이터 근거 / أدلة بيانات الإدخال الاصطناعية**. The synthetic qualifier remains visible; neither label implies financial approval or production evidence. Independent AI TW/domain re-review passed. These are display labels only: the generic grant-request capability phrase/catalog is not expanded. Real sample-session browser checks passed for all three affected screens in EN/KO/AR at 1440, 1024 and 390 pixels; human native-language acceptance remains pending.
+
+
+## Separate input confirmation and evidence inspection
+
+HYB-225 now requires an explicit confirm or inspect capability in synthetic authority proposals. M01 uses the broader **Input data permission requests / 입력 데이터 권한 요청 / طلبات صلاحية بيانات الإدخال** because the impact count covers both. M03 labels input_review_evidence as **Input comparison and reconciliation evidence / 입력 데이터 비교·대사 근거 / أدلة مقارنة بيانات الإدخال ومطابقتها**. The existing View cost action stays separate from Confirm input data. Independent AI TW/domain review accepted these candidates; actual Claude visual review passed nine scoped captures. Neither capability is added to generic grant offerings. Native-language acceptance remains pending.
+
+The service field current_eligibility describes freshly checked synthetic input-evidence publication status only. It is not current financial authority, approved pricing, ERP readiness or downstream execution permission. Historical decision receipts remain explicitly historical after evidence changes.

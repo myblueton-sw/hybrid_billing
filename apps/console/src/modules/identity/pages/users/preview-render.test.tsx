@@ -32,7 +32,7 @@ test("the preparer sees the people on the list", () => {
 
 
 test("input confirmation permission impact has a localized label, count and recheck meaning", () => {
-  const labels = { en: "Input confirmation permission requests", ko: "입력 데이터 확인 권한 요청", ar: "طلبات صلاحية تأكيد بيانات الإدخال" };
+  const labels = { en: "Input data permission requests", ko: "입력 데이터 권한 요청", ar: "طلبات صلاحية بيانات الإدخال" };
   const withInput = { ...detail, impact: { ...detail.impact, pending: [{ store: "input_authority_proposals", count: 2, rechecked: true }] } };
   for (const l of ["en", "ko", "ar"] as Locale[]) {
     const html = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: withInput, targets: null }} onMore={() => {}} />);

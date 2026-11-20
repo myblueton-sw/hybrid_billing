@@ -68,7 +68,7 @@ func (w *world) proposal(kind string) Proposal {
 		recipient = "carol"
 		ceiling = "approved-console-grant"
 	}
-	return Proposal{ID: "p1", Spec: Spec{Workspace: "w1", Kind: kind, Recipient: recipient, CeilingID: ceiling, NotBefore: w.now, NotAfter: w.now.Add(12 * time.Hour)}, Proposer: "alice", Rationale: "Synthetic reviewed authority"}
+	return Proposal{ID: "p1", Spec: Spec{Capability: Confirm, Workspace: "w1", Kind: kind, Recipient: recipient, CeilingID: ceiling, NotBefore: w.now, NotAfter: w.now.Add(12 * time.Hour)}, Proposer: "alice", Rationale: "Synthetic reviewed authority"}
 }
 func propose(t testing.TB, w *world, kind string) Record {
 	t.Helper()

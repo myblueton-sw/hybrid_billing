@@ -39,7 +39,7 @@ func inputAuthorityProposal(f world, id, kind, ceiling string) inputauthority.Pr
 	if kind == inputauthority.Human {
 		recipient = SampleMember
 	}
-	return inputauthority.Proposal{ID: id, Spec: inputauthority.Spec{Workspace: SampleWorkspace, Kind: kind, Recipient: recipient, CeilingID: ceiling, NotBefore: f.s.clock(), NotAfter: f.s.clock().Add(12 * time.Hour)}, Proposer: SampleAdmin, Rationale: "Synthetic authority proposal"}
+	return inputauthority.Proposal{ID: id, Spec: inputauthority.Spec{Capability: inputauthority.Confirm, Workspace: SampleWorkspace, Kind: kind, Recipient: recipient, CeilingID: ceiling, NotBefore: f.s.clock(), NotAfter: f.s.clock().Add(12 * time.Hour)}, Proposer: SampleAdmin, Rationale: "Synthetic authority proposal"}
 }
 
 func inputAuthorityIntent(r inputauthority.Record) inputauthority.Intent {

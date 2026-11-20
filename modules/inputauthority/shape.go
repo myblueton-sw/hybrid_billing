@@ -55,7 +55,7 @@ func normalizeSpec(s Spec) Spec {
 	return s
 }
 func validSpec(s Spec, maximum time.Duration) bool {
-	return validID(s.Workspace) && validID(s.Recipient) && validTime(s.NotBefore) && validTime(s.NotAfter) && s.NotBefore.Before(s.NotAfter) && !s.NotAfter.After(s.NotBefore.Add(maximum)) &&
+	return (s.Capability == Confirm || s.Capability == Inspect) && validID(s.Workspace) && validID(s.Recipient) && validTime(s.NotBefore) && validTime(s.NotAfter) && s.NotBefore.Before(s.NotAfter) && !s.NotAfter.After(s.NotBefore.Add(maximum)) &&
 		((s.Kind == Console && s.CeilingID == "") || (s.Kind == Human && validID(s.CeilingID)))
 }
 

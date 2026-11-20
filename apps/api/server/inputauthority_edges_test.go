@@ -10,7 +10,7 @@ import (
 )
 
 func TestInputAuthorityCompleteGrantEquality(t *testing.T) {
-	spec := inputauthority.Spec{Workspace: "w1", Kind: inputauthority.Human, Recipient: "member", CeilingID: "ceiling", NotBefore: start, NotAfter: start.Add(time.Hour)}
+	spec := inputauthority.Spec{Capability: inputauthority.Confirm, Workspace: "w1", Kind: inputauthority.Human, Recipient: "member", CeilingID: "ceiling", NotBefore: start, NotAfter: start.Add(time.Hour)}
 	base := gate.GrantView{Grant: inputAuthorityGrant("grant", spec), Version: 1}
 	if !sameInputAuthorityGrant(base, "grant", spec) {
 		t.Fatal("exact grant differs")

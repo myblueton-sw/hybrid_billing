@@ -15,21 +15,24 @@ var (
 )
 
 const (
-	Console      = "console_ceiling"
-	Human        = "human_grant"
-	Pending      = "pending"
-	Applying     = "applying"
-	Unknown      = "decision_unknown"
-	Applied      = "applied"
-	Rejected     = "rejected"
-	Withdrawn    = "withdrawn"
-	Expired      = "expired"
-	Superseded   = "superseded"
-	ActiveGrant  = "active"
-	RevokedGrant = "revoked"
-	ExpiredGrant = "expired"
-	Action       = "confirm_input"
-	ResourceKind = "synthetic_input_evidence"
+	Console       = "console_ceiling"
+	Human         = "human_grant"
+	Pending       = "pending"
+	Applying      = "applying"
+	Unknown       = "decision_unknown"
+	Applied       = "applied"
+	Rejected      = "rejected"
+	Withdrawn     = "withdrawn"
+	Expired       = "expired"
+	Superseded    = "superseded"
+	ActiveGrant   = "active"
+	RevokedGrant  = "revoked"
+	ExpiredGrant  = "expired"
+	Action        = "confirm_input"
+	Confirm       = "confirm"
+	Inspect       = "inspect"
+	EvidenceField = "input_review_evidence"
+	ResourceKind  = "synthetic_input_evidence"
 )
 
 type Limits struct {
@@ -39,12 +42,13 @@ type Limits struct {
 }
 
 type Spec struct {
-	Workspace string
-	Kind      string
-	Recipient string
-	CeilingID string
-	NotBefore time.Time
-	NotAfter  time.Time
+	Capability string
+	Workspace  string
+	Kind       string
+	Recipient  string
+	CeilingID  string
+	NotBefore  time.Time
+	NotAfter   time.Time
 }
 
 type Proposal struct {

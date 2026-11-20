@@ -21,14 +21,14 @@ async function login(email){
  await page.goto(url+'/?service=api&lang=en');await page.locator('#signin-workspace').fill('sample-workspace');await page.locator('#signin-email').fill(email);await page.locator('#signin-password').fill(password);await page.locator('form button[type=submit]').click();await page.locator('.service-session').waitFor();
  return page;
 }
-async function command(page,id,target,values){return page.evaluate(async ({id,target,values})=>{
- const {serviceClient}=await import('/src/service/api.ts');const {adminClient,attempt}=await import('/src/service/admin.ts');const session=await serviceClient().current();const client=adminClient(session.csrf);const access=await client.access();return client.command(id,target,access.revision,'Synthetic UI verification',values,attempt());
- },{id,target,values});}
+async function command(page,id,target,values,revision){return page.evaluate(async ({id,target,values,revision})=>{
+ const {serviceClient}=await import('/src/service/api.ts');const {adminClient,attempt}=await import('/src/service/admin.ts');const session=await serviceClient().current();const client=adminClient(session.csrf);const expected=revision||(await client.access()).revision;return client.command(id,target,expected,'Synthetic UI verification',values,attempt());
+ },{id,target,values,revision});}
 let root;
 try {
  root=await login('admin@example.invalid');const second=await login('admin2@example.invalid');
  const person=await second.evaluate(async()=>{const {serviceClient}=await import('/src/service/api.ts');return (await serviceClient().current()).user;});
- const times={not_before:new Date().toISOString(),not_after:new Date(Date.now()+3600000).toISOString()};
+ const times={capability:'confirm',not_before:new Date().toISOString(),not_after:new Date(Date.now()+3600000).toISOString()};
  const proposals=[];for(let i=0;i<2;i++)proposals.push(await command(second,'input_authority.propose_console','ui-pending-'+i,times));
  const staged=await command(root,'bulk_revocation.add_targets','bulk-revocations',{users:person});
  const prepared=await command(root,'bulk_revocation.prepare',staged.fields?.draft||staged.draft,{effect:'suspend_membership'});
@@ -39,7 +39,7 @@ try {
   await root.goto("about:blank");
   await root.goto(`${url}/?service=api&lang=${lang}#/users?lang=${lang}&view=revocation`);
   await root.locator(`[data-job="${job}"]`).click();
-  const label={en:'Input confirmation permission requests',ko:'입력 데이터 확인 권한 요청',ar:'طلبات صلاحية تأكيد بيانات الإدخال'}[lang];
+  const label={en:'Input data permission requests',ko:'입력 데이터 권한 요청',ar:'طلبات صلاحية بيانات الإدخال'}[lang];
   const row=root.locator('.m01-impact .m01-sum > div').filter({has:root.getByText(label,{exact:true})});
   await row.waitFor();await root.evaluate(()=>document.fonts.ready);await row.scrollIntoViewIfNeeded();
   assert.equal(await row.locator('dd .m01-line').first().innerText(),'2');
@@ -53,6 +53,23 @@ try {
  const ceiling=await command(root,'input_authority.approve','ui-pending-0',{digest:proposals[0].fields.digest});
  const human=await command(root,'input_authority.propose_human','ui-human',{...times,recipient,ceiling:ceiling.fields.grant});
  await command(second,'input_authority.approve','ui-human',{digest:human.fields.digest});
+ const inspectTimes={...times,capability:'inspect'};
+ const inspectProposal=await command(root,'input_authority.propose_console','ui-inspect-console',inspectTimes);
+ const inspectCeiling=await command(second,'input_authority.approve','ui-inspect-console',{digest:inspectProposal.fields.digest});
+ const inspectHuman=await command(root,'input_authority.propose_human','ui-inspect-human',{...inspectTimes,recipient,ceiling:inspectCeiling.fields.grant});
+ await command(second,'input_authority.approve','ui-inspect-human',{digest:inspectHuman.fields.digest});
+ async function inspect(){return member.evaluate(async()=>{
+  const {serviceClient}=await import('/src/service/api.ts');const session=await serviceClient().current();
+  const response=await fetch('/api/v1/commands/input.inspect',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf},body:JSON.stringify({request_id:crypto.randomUUID(),target_id:'sample-input-review',body:{}})});
+  if(!response.ok)throw new Error('Inspection failed');return response.json();
+ });}
+ const inspected=await inspect();assert.equal(inspected.fields.document_total,'15.0000');assert.equal(inspected.fields.current_eligibility,'not_eligible');
+ const revision=await root.evaluate(async()=>{const {serviceClient}=await import('/src/service/api.ts');const {adminClient}=await import('/src/service/admin.ts');const session=await serviceClient().current();return (await adminClient(session.csrf).access()).revision;});
+ const confirmed=await command(member,'input.confirm_publish','sample-input-review',{digest:inspected.fields.digest,scope_revision:inspected.fields.scope_revision},revision);
+ assert.equal(confirmed.fields.recorded_state,'eligible');assert.equal(confirmed.fields.recorded_scope_revision,'1');
+ const current=await inspect();assert.equal(current.fields.current_eligibility,'eligible');
+ evidence.inputReview={inspected:true,documentTotal:'15.0000',confirmed:true,scopeRevision:'1',currentSyntheticEligibility:'eligible'};
+
  for(const lang of ['en','ko','ar'])for(const width of [1440,1024,390])for(const route of ['access','integrations']){
   await root.setViewportSize({width,height:1000});await root.goto('about:blank');
   await root.goto(`${url}/?service=api&lang=${lang}#/${route}?lang=${lang}&view=${route==='access'?'grants':'clients'}`);

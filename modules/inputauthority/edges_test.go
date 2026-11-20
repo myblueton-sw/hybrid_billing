@@ -274,3 +274,41 @@ func TestRecordsAreSortedDetachedBoundedAndFallible(t *testing.T) {
 		t.Fatal("enumeration failure masqueraded as records", err)
 	}
 }
+
+func TestCapabilityIsClosedAndBoundToProposalAndEffect(t *testing.T) {
+	for _, capability := range []string{"", "approve", "view", "CONFIRM"} {
+		w := setup(t)
+		p := w.proposal(Console)
+		p.Spec.Capability = capability
+		if _, err := w.registry.Propose(p); !errors.Is(err, ErrInvalid) {
+			t.Fatal("invalid capability accepted", capability, err)
+		}
+	}
+	w := setup(t)
+	p := w.proposal(Console)
+	first, err := w.registry.Propose(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.Spec.Capability = Inspect
+	if _, err := w.registry.Propose(p); !errors.Is(err, ErrConflict) {
+		t.Fatal("same proposal changed capability", err)
+	}
+	p.ID = "inspection"
+	second, err := w.registry.Propose(p)
+	if err != nil || second.Digest == first.Digest {
+		t.Fatal("capability not bound", err)
+	}
+	w.applyErr = ErrUnknown
+	if _, err := w.registry.Approve(intent(second)); !errors.Is(err, ErrUnknown) {
+		t.Fatal(err)
+	}
+	id := "input-grant-" + second.Digest
+	effect := w.effects[id]
+	effect.Spec.Capability = Confirm
+	w.effects[id] = effect
+	w.applyErr = nil
+	if _, err := w.registry.Approve(intent(second)); !errors.Is(err, ErrUnknown) {
+		t.Fatal("other capability reconciled", err)
+	}
+}

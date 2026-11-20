@@ -12,7 +12,7 @@ import (
 )
 
 func authorityTimes(f world) map[string]string {
-	return map[string]string{"not_before": f.s.clock().Format(time.RFC3339Nano), "not_after": f.s.clock().Add(12 * time.Hour).Format(time.RFC3339Nano)}
+	return map[string]string{"capability": inputauthority.Confirm, "not_before": f.s.clock().Format(time.RFC3339Nano), "not_after": f.s.clock().Add(12 * time.Hour).Format(time.RFC3339Nano)}
 }
 func authorityApprove(f world, a actor, id string, proposal reply) reply {
 	return f.run(a, "input_authority.approve", id, map[string]string{"digest": field(proposal, "digest")})

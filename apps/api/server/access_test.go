@@ -11,6 +11,7 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
+	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 )
 
 func (f world) accessRead(a actor, path string) reply {
@@ -253,28 +254,37 @@ func TestAccessPreview(t *testing.T) {
 		t.Errorf("before %+v", view)
 	}
 	costRows := 0
+	costFields := map[any]int{}
 	for _, d := range decisions {
 		row := d.(map[string]any)
 		if row["action"] == "view_cost" {
 			costRows++
-			if row["field"] != candidateField || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant) {
+			costFields[row["field"]]++
+			if (row["field"] != candidateField && row["field"] != inputauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant) {
 				t.Errorf("unexpected cost preview %+v", row)
 			}
 		}
 	}
-	if costRows != 1 {
-		t.Errorf("cost preview rows = %d, want 1", costRows)
+	if costRows != 2 || len(costFields) != 2 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 {
+		t.Errorf("cost preview rows = %d, want 2", costRows)
 	}
 	f.grantVia(root, f.as(Admin2Login), SampleMember, nil)
 	after := f.accessRead(root, "/preview?subject="+SampleMember+"&kind="+ReaderKind+"&customer=c1")
 	if pick(after, ReaderField)["allowed"] != true || pick(after, "state")["allowed"] != false {
 		t.Errorf("after %s", after.raw)
 	}
+	costFields = map[any]int{}
 	for _, d := range after.body["decisions"].([]any) {
 		row := d.(map[string]any)
-		if row["action"] == "view_cost" && (row["field"] != candidateField || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant)) {
+		if row["action"] == "view_cost" {
+			costFields[row["field"]]++
+		}
+		if row["action"] == "view_cost" && ((row["field"] != candidateField && row["field"] != inputauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant)) {
 			t.Errorf("ordinary reader grant changed cost access %+v", row)
 		}
+	}
+	if len(costFields) != 2 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 {
+		t.Fatal("cost field set changed after ordinary grant", costFields)
 	}
 	for _, q := range []string{"?subject=nobody&kind=" + ReaderKind, "?subject=" + SampleMember + "&kind=" + gate.InstallationKind, "?subject=" + SampleMember + "&kind=" + ReaderKind + "&customer=a%20b"} {
 		f.code(t, q, f.accessRead(root, "/preview"+q), 422, string(commands.InvalidRequest))

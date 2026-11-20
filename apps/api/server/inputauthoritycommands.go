@@ -42,7 +42,7 @@ func inputAuthorityError(err error) error {
 
 func inputAuthorityFields(record inputauthority.Record) map[string]string {
 	p := record.Proposal
-	fields := map[string]string{"proposal": p.ID, "digest": record.Digest, "state": record.State, "mode": "synthetic", "kind": p.Spec.Kind, "recipient": p.Spec.Recipient, "ceiling": p.Spec.CeilingID, "proposer": p.Proposer, "not_before": p.Spec.NotBefore.Format(time.RFC3339Nano), "not_after": p.Spec.NotAfter.Format(time.RFC3339Nano), "proposed_at": record.ProposedAt.Format(time.RFC3339Nano), "expires_at": record.ExpiresAt.Format(time.RFC3339Nano), "rationale": p.Rationale}
+	fields := map[string]string{"capability": p.Spec.Capability, "proposal": p.ID, "digest": record.Digest, "state": record.State, "mode": "synthetic", "kind": p.Spec.Kind, "recipient": p.Spec.Recipient, "ceiling": p.Spec.CeilingID, "proposer": p.Proposer, "not_before": p.Spec.NotBefore.Format(time.RFC3339Nano), "not_after": p.Spec.NotAfter.Format(time.RFC3339Nano), "proposed_at": record.ProposedAt.Format(time.RFC3339Nano), "expires_at": record.ExpiresAt.Format(time.RFC3339Nano), "rationale": p.Rationale}
 	if d := record.Decision; d != nil {
 		fields["decided_at"] = d.At.Format(time.RFC3339Nano)
 		fields["decided_by"] = d.Actor
@@ -67,7 +67,7 @@ func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, er
 		if e1 != nil || e2 != nil {
 			return commands.Outcome{}, commands.Fail(commands.InvalidRequest, "not_before", "not_after")
 		}
-		spec := inputauthority.Spec{Workspace: ctx.Workspace, Kind: inputauthority.Console, Recipient: ConsoleClient, NotBefore: before, NotAfter: after}
+		spec := inputauthority.Spec{Capability: ctx.Fields["capability"], Workspace: ctx.Workspace, Kind: inputauthority.Console, Recipient: ConsoleClient, NotBefore: before, NotAfter: after}
 		if h.kind == "propose_human" {
 			spec.Kind = inputauthority.Human
 			spec.Recipient = ctx.Fields["recipient"]
@@ -105,7 +105,7 @@ func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, er
 
 func (s *Server) inputAuthorityDefinitions() []commands.Definition {
 	permission := commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}
-	times := []commands.Field{{Name: "not_before", Type: commands.Text, Required: true}, {Name: "not_after", Type: commands.Text, Required: true}}
+	times := []commands.Field{{Name: "capability", Type: commands.ID, Required: true}, {Name: "not_before", Type: commands.Text, Required: true}, {Name: "not_after", Type: commands.Text, Required: true}}
 	human := append(append([]commands.Field{}, times...), commands.Field{Name: "recipient", Type: commands.ID, Required: true}, commands.Field{Name: "ceiling", Type: commands.ID, Required: true})
 	digest := []commands.Field{{Name: "digest", Type: commands.Text, Required: true}}
 	definitions := []commands.Definition{}

@@ -92,7 +92,7 @@ export const b = {
   pendingWork: (l: Locale) => t(l, "Pending work", "대기 중인 작업", "الأعمال قيد الانتظار"),
   store: (l: Locale, s: string) =>
     ({ trust_changes: t(l, "Sign-in rule changes (M02)", "로그인 규칙 변경(M02)", "تغييرات قواعد تسجيل الدخول (M02)"), access_requests: t(l, "Access change requests (M03)", "접근 변경 요청(M03)", "طلبات تغيير الوصول (M03)"),
-      input_authority_proposals: t(l, "Input confirmation permission requests", "입력 데이터 확인 권한 요청", "طلبات صلاحية تأكيد بيانات الإدخال"),
+      input_authority_proposals: t(l, "Input data permission requests", "입력 데이터 권한 요청", "طلبات صلاحية بيانات الإدخال"),
       retention_proposals: t(l, "Retention proposals", "보존 제안", "مقترحات الاحتفاظ"), recovery_proposals: t(l, "Recovery proposals", "복구 제안", "مقترحات الاسترداد"),
       installation_proposals: t(l, "Installation proposals", "설치 제안", "مقترحات التثبيت"), integration_proposals: t(l, "Integration proposals", "연동 제안", "مقترحات التكامل"),
       relationship_plans: t(l, "Relationship plans", "관계 계획", "خطط العلاقات"), release_evidence_proposals: t(l, "Release evidence proposals", "릴리스 근거 제안", "مقترحات أدلة الإصدار") } as Record<string, string>)[s] ?? s,

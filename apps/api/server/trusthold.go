@@ -33,6 +33,8 @@ const (
 )
 
 var holdTable = map[string]holdRule{
+	"input.confirm_publish":                     {holdRefuse, reasonIncrease},
+	"input.reject":                              {holdAllow, reasonPending},
 	"input_authority.propose_console":           {holdRefuse, reasonIncrease},
 	"input_authority.propose_human":             {holdRefuse, reasonIncrease},
 	"input_authority.approve":                   {holdRefuse, reasonIncrease},
@@ -149,7 +151,7 @@ func (s *Server) enterHold(reason string) {
 }
 
 func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
-	if command == "input_authority.inspect" {
+	if command == "input_authority.inspect" || command == "input.inspect" {
 		return true
 	}
 	rule, known := holdTable[command]

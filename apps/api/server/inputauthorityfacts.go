@@ -65,7 +65,7 @@ func (a *serverInputAuthority) Current(spec inputauthority.Spec) (string, error)
 		return "", inputauthority.ErrDenied
 	}
 	ceiling, ok := a.ceilings[spec.CeilingID]
-	if !ok || ceiling.Kind != inputauthority.Console || ceiling.Recipient != ConsoleClient || ceiling.Workspace != spec.Workspace {
+	if !ok || ceiling.Kind != inputauthority.Console || ceiling.Recipient != ConsoleClient || ceiling.Workspace != spec.Workspace || ceiling.Capability != spec.Capability {
 		return "", inputauthority.ErrDenied
 	}
 	effect, err := a.Lookup(spec.CeilingID)

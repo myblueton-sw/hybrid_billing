@@ -77,6 +77,7 @@ type Config struct {
 
 type Server struct {
 	inputAuthority  *serverInputAuthority
+	inputReviews    *candidateInputReviews
 	cfg             Config
 	clock           func() time.Time
 	time            *serverClock
@@ -178,7 +179,7 @@ func RelationshipLimits() relationships.Limits {
 }
 
 func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
-	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, inputauthority.ResourceKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General, candidateField: gate.Cost}}
+	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, inputauthority.ResourceKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General, candidateField: gate.Cost, inputauthority.EvidenceField: gate.Cost}}
 	for name, class := range fields {
 		c.Fields[name] = class
 	}
@@ -309,6 +310,9 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) {
 			if cfg.Seed == SeedSample {
 				s.inputAuthority, err = newServerInputAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000})
+				if err == nil {
+					s.inputReviews, err = newCandidateInputReviews(s.chargeProducer, serverInputReviewAuthority{s: s}, s.clock)
+				}
 			}
 			return
 		},

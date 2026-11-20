@@ -132,5 +132,7 @@ test("synthetic input confirmation is labeled without enabling generic requests"
     assert.ok(!accessText(l, "confirm_input", []).includes("confirm_input"));
     assert.ok(!scopeText(l, "synthetic_input_evidence", "").includes("synthetic_input_evidence"));
     assert.equal(accessPhrase(l, "confirm_input", "synthetic_input_evidence", []), null);
+ assert.equal(accessPhrase(l, "view_cost", "synthetic_input_evidence", ["input_review_evidence"]), null);
+ assert.ok(!accessText(l, "view_cost", ["input_review_evidence"]).includes("input_review_evidence"));
   }
 });

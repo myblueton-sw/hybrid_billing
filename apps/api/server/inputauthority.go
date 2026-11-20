@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"slices"
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
@@ -108,7 +109,12 @@ func inputAuthorityTerms(workspace string) gate.Terms {
 	return gate.Terms{Action: gate.ConfirmInput, Kind: inputauthority.ResourceKind, Scope: gate.Scope{WorkspaceID: workspace, Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}, Period: gate.AnyPeriod()}
 }
 func inputAuthorityGrant(id string, spec inputauthority.Spec) gate.Grant {
-	grant := gate.Grant{ID: id, Terms: inputAuthorityTerms(spec.Workspace), Validity: gate.Validity{NotBefore: spec.NotBefore, NotAfter: spec.NotAfter}}
+	terms := inputAuthorityTerms(spec.Workspace)
+	if spec.Capability == inputauthority.Inspect {
+		terms.Action = gate.ViewCost
+		terms.Fields = []string{inputauthority.EvidenceField}
+	}
+	grant := gate.Grant{ID: id, Terms: terms, Validity: gate.Validity{NotBefore: spec.NotBefore, NotAfter: spec.NotAfter}}
 	if spec.Kind == inputauthority.Console {
 		grant.ClientID = spec.Recipient
 	} else {
@@ -119,7 +125,7 @@ func inputAuthorityGrant(id string, spec inputauthority.Spec) gate.Grant {
 
 func sameInputAuthorityGrant(g gate.GrantView, id string, spec inputauthority.Spec) bool {
 	expected := inputAuthorityGrant(id, spec)
-	return g.ID == expected.ID && g.SubjectID == expected.SubjectID && g.ClientID == expected.ClientID && g.Terms.Action == expected.Terms.Action && g.Terms.Kind == expected.Terms.Kind && g.Terms.Scope.WorkspaceID == spec.Workspace && fullScope(g.Terms) && len(g.Terms.Fields) == 0 && g.Validity.NotBefore.Equal(spec.NotBefore) && g.Validity.NotAfter.Equal(spec.NotAfter)
+	return g.ID == expected.ID && g.SubjectID == expected.SubjectID && g.ClientID == expected.ClientID && g.Terms.Action == expected.Terms.Action && g.Terms.Kind == expected.Terms.Kind && g.Terms.Scope.WorkspaceID == spec.Workspace && fullScope(g.Terms) && slices.Equal(g.Terms.Fields, expected.Terms.Fields) && g.Validity.NotBefore.Equal(spec.NotBefore) && g.Validity.NotAfter.Equal(spec.NotAfter)
 }
 
 func inputGrantStatus(g gate.GrantView, now time.Time) string {

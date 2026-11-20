@@ -1,0 +1,421 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "668e84c4c62fbab84add95072ebb42187b01b68d",
+  "scope": "finite_m04_closure_group_actions_forms_only",
+  "production_unchanged": true,
+  "checks": {
+    "actual_app_scenarios": 3,
+    "actual_app_result": "PASS",
+    "captures": 29,
+    "declaration_errors": 12,
+    "revoke_errors": 12,
+    "reauthentication_states": 2,
+    "lifecycle_states": 3,
+    "page_errors": 0,
+    "locales": [
+      "en",
+      "ko",
+      "ar"
+    ],
+    "widths": [
+      1440,
+      1280,
+      1024,
+      390
+    ],
+    "real_password_confirmation_status": 204,
+    "automatic_command_posts_before_explicit_submission": 0,
+    "explicit_accepted_commands": [
+      "revoke_credential",
+      "suspend",
+      "reinstate",
+      "retire"
+    ],
+    "new_mutation_or_console_suite": "NOT_RUN tooling-only; prior independent production evidence preserved",
+    "required_server_coverage": "100 NOT_MET; prior99.1% unchanged"
+  },
+  "build": {
+    "revision": "f2df55941f08768cedec2aec304ef8bb4837e2482c49e2fc68ff28d9ebdcd6ff",
+    "current_product_inputs": 683,
+    "actual_artifacts_verified": 439
+  },
+  "independent_source_review": "/root/hyb310_review PASS for corrected actual runner and fixture; read-only, no execution",
+  "initial_failures": [
+    "Missing required current-session client header; failed replacement left second attempt unchanged",
+    "Guessed synthetic owner identifier omitted its hyphen",
+    "Assumed global Reload control while revoke form hides workspace; orphaned waiter caused missing fourth report",
+    "Attempted correctly disabled stale Revoke entry rather than canonical Reauthenticate",
+    "Redundant wait assumed h2 instead of actual h3; actual confirmation had already succeeded"
+  ],
+  "boundaries": [
+    "Simulated wall-only sixteen-minute one-shot advance with independent real monotonic elapsed time; not an endurance test",
+    "Actual canonical-detail reauthentication and form remount; no claim of continuously mounted stale form refresh",
+    "Password and activation redaction stays in process; screenshot capture excludes secret/password controls",
+    "Loopback-only fixture is outside product routes and Git; byte-identical durable source copied outside repository",
+    "Only action/form closure group complete; navigation/URL/declaration/final integration groups remain open",
+    "No owner FIX, native/practitioner, complete AT/BFCache or Claude visual-lead certification",
+    "No deployment, feature completion, PR readying or merge claimed"
+  ],
+  "fixture_source": {
+    "path": "/private/tmp/hb304-m04-completion-runtime.go",
+    "sha256": "baa3b3a4c32a4f788e96b2cbbb1b7c1491b08cc7fcd4ebbe5a562ea63544aa47",
+    "bytes": 35888
+  },
+  "durable_fixture_source": {
+    "path": "/Users/home/project/hybrid_billing-qa-runners/HYB-304/m04-completion-runtime.go",
+    "sha256": "baa3b3a4c32a4f788e96b2cbbb1b7c1491b08cc7fcd4ebbe5a562ea63544aa47",
+    "bytes": 35888
+  },
+  "source_files": [
+    {
+      "path": "apps/console/tools/m04-completion-qa.mjs",
+      "sha256": "bce9be26029764f74778e34c832cb49df5e972c08f09521aaac54b45c7fcce7a",
+      "bytes": 8910
+    },
+    {
+      "path": "apps/console/tools/m04-completion-actions.mjs",
+      "sha256": "b2e953c454331cd5d4792eeca6ec34b48dd3435cb710e6751d0a52dbd324937f",
+      "bytes": 11601
+    },
+    {
+      "path": "docs/features/HYB-304/m04-completion.md",
+      "sha256": "ec717b2c4d6cd08475d5efebd5012f3e30e82665da97e1726c5a6694d86e52f8",
+      "bytes": 8757
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "e2fbef81011ab249471e88ba04ad346a29f751145b350749385b497d338c2834",
+      "bytes": 34166
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "d074baaaa96a7b3eeab46bb991ffc56fd4d97732b0a7f0f569632a7271bb2d45",
+      "bytes": 60045
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/AccountActions.tsx",
+      "sha256": "0c63590ad36f045a0a82892efba92d4368efc34058bc270b7f3a6d9c9c0ca698",
+      "bytes": 14322
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/action-draft.ts",
+      "sha256": "9e970598101e9985983f6f319b1eccffdb9736b8d76102a3874218acc6b6e290",
+      "bytes": 2462
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/recovery-context.tsx",
+      "sha256": "15b524a4dc9c9137a7326a3d8de5e25648c819cc92ea4063f7a9bb0ed4c07f8a",
+      "bytes": 4607
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/Live.tsx",
+      "sha256": "12673840b7589cf203d507572704cd85205ec743d5f1e8de7521bb76c43cf0ba",
+      "bytes": 32333
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/DeclarationForm.tsx",
+      "sha256": "85c52b3a97f9b5356c0d74a47adf7f9443d6ecadc248d6de582baeaaea1a0fe8",
+      "bytes": 18637
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/form-validation.tsx",
+      "sha256": "a4a6242abf87109b1acf14b1c5c6efb6dee2f3c63cf7486e6edbf6ae64ebd901",
+      "bytes": 5254
+    },
+    {
+      "path": "apps/console/src/service/admin.ts",
+      "sha256": "acb73e5d48a1dd46785b3312c9edb8a797a874a781e7834356c8ca11450c4d72",
+      "bytes": 51074
+    },
+    {
+      "path": "apps/console/src/service/Reauthenticate.tsx",
+      "sha256": "66fff3c284b09fcf46dc4fb02a6fe314dab5ce047eed7b6dd623fa7af406f29a",
+      "bytes": 5896
+    },
+    {
+      "path": "apps/console/src/service/api.ts",
+      "sha256": "a9275a4161bc495e92911a37ef8ec8a9c0d713a01247b6911d255784caa5cec6",
+      "bytes": 4503
+    },
+    {
+      "path": "apps/api/server/clock.go",
+      "sha256": "f0ccb91e2a861e8c2055010ea91de678a8b3fe2579ace1b68d00639f39c09d90",
+      "bytes": 2508
+    },
+    {
+      "path": "apps/api/server/stepup.go",
+      "sha256": "181c50b55a8f192471788d497e828a322d83772f15711443110d2a47733f261a",
+      "bytes": 3935
+    },
+    {
+      "path": "apps/api/server/servicequery_detail.go",
+      "sha256": "dbf1a22186ae215cd13f8da3eaaa5caf72cb692fe41d5cdbe6f3c6ef692340e7",
+      "bytes": 12151
+    },
+    {
+      "path": "apps/api/server/services.go",
+      "sha256": "699e5867439a9c44eb4d0bef1ebb06a4ddd180cbbbf72043ff7f8ee9b56c43a3",
+      "bytes": 12586
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh.log",
+      "sha256": "752403c6654537c947e61d062ee0469b19cfebe029d41f2ffbe98497b7831644",
+      "bytes": 271
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/report.json",
+      "sha256": "3c66ead142e6a3c3d568f4cebbc6cf39c8cbe46dab3bc6a649f29f9de071ae58",
+      "bytes": 10824
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ar-1024-declaration-errors.png",
+      "sha256": "86d43ae11c8aa0db3011c1fcb8a17290aad4d9c3ac7dd959540868b554c213a9",
+      "bytes": 242738
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ar-1024-revoke-errors.png",
+      "sha256": "8aa95003317209af112c6b608171cdbe522f512daca6c8ce4f3410d865f32b32",
+      "bytes": 127234
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ar-1280-declaration-errors.png",
+      "sha256": "97f0d5d7477a1d443b2f8e9afb0ef0aa8efc6b58a55a350d5796cfa39e22621b",
+      "bytes": 311772
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ar-1280-revoke-errors.png",
+      "sha256": "2a03bed07fa37794a1154d715b4f19ad6811e6d054c1c7c2cb37d9525c41bfea",
+      "bytes": 141838
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ar-1440-declaration-errors.png",
+      "sha256": "f29ed66e8eec4fb0914b57d8d0b918292ffcbbc03d0e60023fa10d1b19c3f781",
+      "bytes": 316950
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ar-1440-revoke-errors.png",
+      "sha256": "daa2d87da1a2a593cb9ef757e23a012dda776f8d187bf3abe39b020572c7c0e7",
+      "bytes": 143696
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ar-390-declaration-errors.png",
+      "sha256": "e153e42a1e29f13305eeea64a2bc351cbb29e8a81a526bb601148c610bf19005",
+      "bytes": 219836
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ar-390-revoke-errors.png",
+      "sha256": "5172399eab8a51fa68b8f354250cbbda80657b1a683d5022265167f1e832d9ab",
+      "bytes": 111318
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-1024-declaration-errors.png",
+      "sha256": "c168c0aca22e2ed4925a80c97ee3418a4e70aab3ab86f681080ec222ae7d2773",
+      "bytes": 264532
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-1024-revoke-errors.png",
+      "sha256": "6b2e5d31b461e389053bb8bb40a77a363f8d70f91ec491af6343c3382ec7ac96",
+      "bytes": 133569
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-1280-declaration-errors.png",
+      "sha256": "5c91f89f49a3cb65d3e82a66f0ee585b656a8172a8162e7db5af8056ad2ad506",
+      "bytes": 347060
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-1280-revoke-errors.png",
+      "sha256": "a58774c7525ca6ef0f2e2dd5e9c588058af9af9c5ca3a0ec735f217ad63b510e",
+      "bytes": 156197
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-1440-actual-reinstate.png",
+      "sha256": "5585023f825cbcfd74b314b0386ebb2625559a776d1679a6108ae0b09a210218",
+      "bytes": 316442
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-1440-actual-retire.png",
+      "sha256": "0af49dc8fff189d8c71f86252f254dddd8c1781209ed93eb6dd906e9e57d16b8",
+      "bytes": 316739
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-1440-actual-suspend.png",
+      "sha256": "879dfe9d301b9dd9a508c9c1f4082d4d173ecd6e4c3709c14c6dd7d90a04a076",
+      "bytes": 316936
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-1440-declaration-errors.png",
+      "sha256": "2c4805e7fa280892c9f18d575cc7a002978167b24d5f73c56d4944b8c5169c44",
+      "bytes": 346951
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-1440-revoke-actual-confirmed.png",
+      "sha256": "34c28eaaff4700e3f21947d309d4790ddbd56bff3a1cdb8893dca162ff889d0d",
+      "bytes": 151145
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-1440-revoke-actual-stale.png",
+      "sha256": "b5dbdb44b4f39c545bc7a8795f63c00a04d3ac6ed99581fd96d992a35c54cb64",
+      "bytes": 317410
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-1440-revoke-errors.png",
+      "sha256": "7d878eca1ba3cc57a1ec610fcf10a2891192cd63d15a97c2fdc743723d2a07bc",
+      "bytes": 154981
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-390-declaration-errors.png",
+      "sha256": "b00f0588eedce2fe6cfdb805814824c70a9e93b782328fa58a2095f2af1f051e",
+      "bytes": 234574
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/en-390-revoke-errors.png",
+      "sha256": "6ad1f027cbd415a466f6b66e2e8cc555a77901730c6a0543154a4b8febc63ee4",
+      "bytes": 114806
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ko-1024-declaration-errors.png",
+      "sha256": "b6918fd001e25419b20156453086e0841b6fb24ddef8307f1279a1bc83286549",
+      "bytes": 244854
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ko-1024-revoke-errors.png",
+      "sha256": "f60b2764d5f605fc54a545cbfa00ec39b52847bd374d216391c65aa27453553e",
+      "bytes": 132590
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ko-1280-declaration-errors.png",
+      "sha256": "cd846eca5300705fa15c513ddfd1aa21d931cf6b6d312ed10ab511e849ab2936",
+      "bytes": 310190
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ko-1280-revoke-errors.png",
+      "sha256": "169d227de24d90601cfe7950d4c6b8fc2a76141dc7044b1e9f2d2bef4065840c",
+      "bytes": 145316
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ko-1440-declaration-errors.png",
+      "sha256": "9a533b545dd6399e1478d3352cbed9bfeaa3245d1d4d351886cee3760783487c",
+      "bytes": 312678
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ko-1440-revoke-errors.png",
+      "sha256": "6a028faa00e58c18542fa678b59f1ff0964453cad268671e27b6ce1d907afddd",
+      "bytes": 147279
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ko-390-declaration-errors.png",
+      "sha256": "25a88a5570ae566689f3b2c455e36301d7483b846d3678e8b3e7120f61f72c95",
+      "bytes": 220139
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-seventh/ko-390-revoke-errors.png",
+      "sha256": "d6665a211864ace44fdfdd0c6c51783807491ed090e20a576c8dd69fa3353f78",
+      "bytes": 115729
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-first.log",
+      "sha256": "a75055aaabbbd656c02859cf2780508d6a283172690105e94b5913bb63a6aef1",
+      "bytes": 68
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-first/report.json",
+      "sha256": "51996a6acd7564748c31a4020bc6de7251064f1d5d9a6d2db4950c9c5d7f698d",
+      "bytes": 53
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-second.log",
+      "sha256": "a75055aaabbbd656c02859cf2780508d6a283172690105e94b5913bb63a6aef1",
+      "bytes": 68
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-second/report.json",
+      "sha256": "51996a6acd7564748c31a4020bc6de7251064f1d5d9a6d2db4950c9c5d7f698d",
+      "bytes": 53
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-third.log",
+      "sha256": "cf9a81daf4888c25edd8ca0136f08ce150d8482817a285292e1a15a60654588c",
+      "bytes": 914
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-third/report.json",
+      "sha256": "51996a6acd7564748c31a4020bc6de7251064f1d5d9a6d2db4950c9c5d7f698d",
+      "bytes": 53
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-fourth.log",
+      "sha256": "0210280bbbd0b8354327f0ad7013e2df859c20aa9ddd5c1b603cb75c4ee3815a",
+      "bytes": 677
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-fifth.log",
+      "sha256": "00005706459b5b793f4930a3f4cb37fe09cd13acab61724c359ffce665d3d6f3",
+      "bytes": 1025
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-fifth/report.json",
+      "sha256": "2a868e74dfb7dd78b4a23bb70c4093461523d1f39c3059c52fd9b2976f2348cf",
+      "bytes": 10085
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-sixth.log",
+      "sha256": "2576f46700691c77203fdba6c56e568be201cc75d33258b13ac15a6243f54fab",
+      "bytes": 145
+    },
+    {
+      "path": "/private/tmp/hb304-completion-actions-sixth/report.json",
+      "sha256": "9c53430d11e8a233fcc3455d8496826ac42012c01294e7368e16915afda273d2",
+      "bytes": 9382
+    },
+    {
+      "path": "/private/tmp/hb304-completion-runtime-first.log",
+      "sha256": "4e4651891a5631f2a95513da7d4bb68a0508d8e730c5022f13b4ab127ee3e37e",
+      "bytes": 152
+    },
+    {
+      "path": "/private/tmp/hb304-completion-runtime-second.log",
+      "sha256": "bb4b352070ca862de529f60b6e5dee094e8963cab9f15a9ad57f711b7ef179ee",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-completion-runtime-third.log",
+      "sha256": "fa0cfbee4939300146e5c19b1cab509ba0810558aeef7c26397ecf7fba6bf848",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-completion-runtime-fourth.log",
+      "sha256": "442d3989ef16dbcd3058d2f9ea0253475b2f62feddd77717415c1c1651de9ce4",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-completion-runtime-fifth.log",
+      "sha256": "429390af97b7dcd4ab1341e3063708bdce717a9899fce296225d189886c4dba5",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-completion-build-integrity.log",
+      "sha256": "f181473854699718a69486d739d3c94a15bbf382fab0ad694b6c0d4585bbdc4e",
+      "bytes": 65
+    },
+    {
+      "path": "/private/tmp/hb304-completion-build-binding.mjs",
+      "sha256": "6c077f6e4bb96a5c5d6b22d86a944b65285f31d49077dbc48919844683f77301",
+      "bytes": 1592
+    },
+    {
+      "path": "/private/tmp/hb304-completion-build-binding.log",
+      "sha256": "79c76b1beeea85508871b5abdab3bcabc9e31e47b7e106178c7ad0090352e753",
+      "bytes": 186
+    },
+    {
+      "path": "/private/tmp/hb304-completion-build-binding.json",
+      "sha256": "41c22c28f79cb7b85f6a466c94be8c4e37ca3c6a5400b208aa0b670fc46ac0ea",
+      "bytes": 110109
+    }
+  ],
+  "independent_evidence_render_review": "/root/hyb310_copy_render PASS after status-sentence correction;18 source,51 artifact,2 fixture bindings plus683 current product inputs and439 artifacts verified; representative EN1440/KO390/AR390 error, confirmed-rationale and retired renders inspected; read-only, no execution"
+}

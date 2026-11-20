@@ -99,7 +99,7 @@ export default function Screen({
           ? "unconnected"
           : "loading",
     review = JSON.stringify({
-      phase: "approval-read-unbound",
+      phase: "approval-read",
       variant: `${view}:${phase}:${data?.source_mode ?? "unbound"}`,
       requestKey: key,
       view,

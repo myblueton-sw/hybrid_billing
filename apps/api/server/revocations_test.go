@@ -139,6 +139,7 @@ func TestGrantChangesHaveFixedCallSites(t *testing.T) {
 		"revocations.go delegationEffects RevokeDelegation": true,
 		"ledger.go replayOne RevokeGrant":                   true,
 		"ledger.go replayOne RevokeDelegation":              true,
+		"approvalseed.go seedApprovals AddGrant":            true,
 		"seed.go seedReaderGrants AddGrant":                 true,
 		"seed.go grantInstallation AddGrant":                true,
 		"seed.go grantTrust AddGrant":                       true,

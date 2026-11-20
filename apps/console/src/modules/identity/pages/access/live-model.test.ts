@@ -126,3 +126,22 @@ test("grant capabilities preserve identity across reorder and refuse removed or 
   assert.deepEqual(grantCapabilities({ ...current, catalog: [{ ...cost, action: "issue" }, focus] }), [focus]);
   assert.equal(capabilityKey({ ...focus, fields: ["b", "a"] }), capabilityKey({ ...focus, fields: ["a", "b"] }));
 });
+
+
+test("approval review is a distinct read capability alongside FOCUS and candidate costs", async () => {
+  const { capabilityKey, grantCapabilities, selectedCapability } = await import("./live-model");
+  const approval = { action: "view", kind: "approval_review", fields: ["approval_evidence"], until: "2026-12-16T00:00:00Z" };
+  const focus = { ...approval, kind: "focus_data", fields: ["rows"] };
+  const cost = { ...approval, action: "view_cost", kind: "charge_candidate", fields: ["charge_evidence"] };
+  const page = { now: "2026-11-16T00:00:00Z", catalog: [approval, cost, focus] };
+  assert.equal(grantCapabilities(page).length, 3);
+  for (const capability of page.catalog) assert.equal(selectedCapability(page, capabilityKey(capability)), capability);
+  for (const l of ["en", "ko", "ar"] as const) {
+    assert.ok(!accessText(l, "view", ["approval_evidence"]).includes("approval_evidence"));
+    assert.ok(!scopeText(l, "approval_review", "").includes("approval_review"));
+    assert.ok(accessPhrase(l, "view", "approval_review", ["approval_evidence"]));
+    assert.equal(accessPhrase(l, "request_approval", "approval_review", ["approval_evidence"]), null);
+    assert.equal(accessPhrase(l, "view_cost", "approval_review", ["approval_evidence"]), null);
+    assert.equal(accessPhrase(l, "view", "approval_review", ["charge_evidence"]), null);
+  }
+});

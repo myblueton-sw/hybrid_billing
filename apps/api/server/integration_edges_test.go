@@ -454,7 +454,9 @@ func TestIntegrationActorsAndEffectsAreConfined(t *testing.T) {
 				if name == "system" && !(receiverName(fn) == "outboxReader" && (fn.Name.Name == "Read" || fn.Name.Name == "Bounds")) {
 					t.Errorf("%s %s uses the outbox actor", src.name, fn.Name.Name)
 				}
-				if restricted[name] && fn.Name.Name != "seedIntegrations" && !(name == "Publish" && fn.Name.Name == "publishTrust") &&
+				owner, _ := sel.X.(*ast.SelectorExpr)
+				approvalSeed := src.name == "approvalseed.go" && fn.Name.Name == "seedApprovals" && name == "Confirm" && owner != nil && owner.Sel.Name == "approvals"
+				if restricted[name] && !approvalSeed && fn.Name.Name != "seedIntegrations" && !(name == "Publish" && fn.Name.Name == "publishTrust") &&
 					!(name == "Dispatch" && fn.Name.Name == "dispatchDeliveries") {
 					owner, _ := sel.X.(*ast.SelectorExpr)
 					if name != "Report" || owner == nil || owner.Sel.Name != "installer" && !(owner.Sel.Name == "recovery" && fn.Name.Name == "seedRecovery") &&

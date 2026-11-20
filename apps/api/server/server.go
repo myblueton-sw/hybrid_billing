@@ -14,6 +14,7 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
 	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
+	"github.com/myblueton-sw/hybrid_billing/modules/approvals"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/bulkrevoke"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
@@ -75,6 +76,9 @@ type Config struct {
 }
 
 type Server struct {
+	approvals       *approvals.Registry
+	approvalIndex   []approvalIndex
+	approvalKey     []byte
 	cfg             Config
 	clock           func() time.Time
 	time            *serverClock
@@ -176,7 +180,7 @@ func RelationshipLimits() relationships.Limits {
 }
 
 func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
-	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General, candidateField: gate.Cost}}
+	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, approvalKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General, candidateField: gate.Cost, approvalField: gate.General}}
 	for name, class := range fields {
 		c.Fields[name] = class
 	}
@@ -303,6 +307,7 @@ func New(cfg Config) (*Server, error) {
 			s.jobs, err = jobs.NewRegistry(cleanupLimits(cfg.Access.BulkMaxMatching), s.clock)
 			return
 		},
+		s.initApprovals,
 		s.registerUsers,
 	}
 	for _, build := range steps {

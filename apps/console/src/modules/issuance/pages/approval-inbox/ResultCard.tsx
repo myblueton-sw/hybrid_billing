@@ -2,6 +2,7 @@ import type { Locale } from "../../../../shared/types";
 import type { ApprovalRecord, Data } from "./contract";
 import {
   t,
+  blockerText,
   kindLabel,
   statusLabel,
   basisLabel,
@@ -506,7 +507,7 @@ export default function ResultCard({
           <ul className="b09-blockers">
             {r.evidence.blockers.map((b) => (
               <li key={b.code}>
-                <bdi dir="auto">{b.text}</bdi>
+                <bdi dir="auto">{blockerText(l, b.code, b.text)}</bdi>
               </li>
             ))}
           </ul>

@@ -419,3 +419,19 @@ M03 access management and P02 integration grants now include the synthetic candi
 | charge_evidence | Source costs and calculation evidence | 원천 비용·계산 근거 | تكاليف المصدر وأدلة الاحتساب | Cost-protected source inputs and recorded calculation provenance; access requires ViewCost and does not approve the calculation. |
 
 On 2026-11-20, [AWS Korean billing guidance](https://docs.aws.amazon.com/ko_kr/awsaccountbilling/latest/aboutv2/billing-what-is.html) was inspected for its distinction between costs, calculated charges and invoices; [AWS Arabic cloud financial management](https://aws.amazon.com/ar/aws-cost-management/) was inspected for cost, usage, charge and invoice vocabulary. Neither source establishes a standard translation for this product's candidate record. Independent AI TW re-review replaced the ambiguous Arabic candidate/filter wording with provisional calculation results; contextual review remains required; no regional consensus or native approval is claimed. No permission or financial semantics change with language.
+
+## Approval read evidence (HYB-337)
+
+| Concept | Korean | English | Arabic | Meaning and exclusions |
+| --- | --- | --- | --- | --- |
+| approval-review-capability | 승인 검토 · 조회 전용 | Approval review · read only | مراجعة الاعتمادات · للقراءة فقط | Read-only inspection capability, not a claim of connection, freshness, approval or execution. |
+| approval-request-count | 전체 건수 | Exact request count | العدد الدقيق للطلبات | Exact number of matching requests, not an amount total across currencies or bases. |
+| approval-target-period | 기간 | Period | الفترة | The producer's target period if supplied. Does not infer billing, attribution or posting period when unknown. |
+| approval-producer-prerequisites | 원천 검증과 단계별 선행 조건이 연결되지 않았습니다. | Source validation and stage prerequisites are not connected. | التحقق من المصدر والمتطلبات المسبقة للمراحل غير مربوطين. | Known producer_unbound blocker. Does not relabel unrelated failure codes or assert that required checks passed. |
+
+These candidates follow the actual B09 contract and module/service mapping. Independent AI technical-writing review passed; no human practitioner or native-language acceptance is claimed. Existing financial-domain terminology and the screen specification remain authoritative. Visual reviews and their inspected scope are recorded in [HYB-337 verification](../../features/HYB-337/verification.md).
+
+
+## HYB-337 shared access capability terms
+
+M03 and P02 identify the read capability as Approval review records / 승인 검토 기록 / سجلات مراجعة الاعتمادات. Its evidence field is Approval request and decision evidence / 승인 요청·결정 근거 / أدلة طلبات الاعتماد والقرارات. The request phrase means viewing recorded requests and decisions, not granting approval authority, validating source prerequisites or checking current financial eligibility. Independent AI technical-writing review passed these scoped distinctions; native-language acceptance remains pending. See [the composed plan](../../features/HYB-337/plan.md) and [verification](../../features/HYB-337/verification.md).

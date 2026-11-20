@@ -1,0 +1,49 @@
+{
+  "ticket": "HYB-327",
+  "base": "653adfe",
+  "machine": "mac_mini",
+  "console_full_tests": {
+    "passed": 872,
+    "failed": 0
+  },
+  "final_separator_scoped_tests": {
+    "passed": 13,
+    "failed": 0
+  },
+  "independent_focused_tests": {
+    "passed": 58,
+    "failed": 0
+  },
+  "build": "PASS",
+  "browser": {
+    "engine": "Chromium 153.0.8010.12",
+    "locales": [
+      "en",
+      "ko",
+      "ar"
+    ],
+    "widths": [
+      1440,
+      390
+    ],
+    "field_state_geometry_border_assertions": 90,
+    "bulk_unknown_assertions": 12,
+    "invalid_reload_retry_assertions": 9,
+    "screenshots": 24,
+    "unexpected_page_errors": 0
+  },
+  "review": {
+    "design": "PASS",
+    "code": "PASS",
+    "M02_P02_P05_visual": "PASS",
+    "M01_visual": "PASS for visible API-key scope; pending-jobs value verified by DOM assertions"
+  },
+  "unverified": [
+    "timed session polling browser scenario",
+    "native language acceptance",
+    "assistive technology",
+    "Windows/Linux operation",
+    "original absent P01 companion details"
+  ],
+  "merge": "not performed"
+}

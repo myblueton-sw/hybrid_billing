@@ -53,9 +53,10 @@ function Grants({ l, grants }: { l: Locale; grants: ClientGrant[] }) {
   );
 }
 
-export function ClientsView({ l, page }: Shared) {
+export function ClientsView({ l, page }: Pick<Shared, "l" | "page">) {
   const c = page.clients;
   const clients = c.clients;
+  if (c.state !== "configured") return <p className="live-empty">{c.state === "not_permitted" ? k.clientsDenied(l) : c.state === "not_configured" ? k.clientsUnconfigured(l) : k.unknown(l)}</p>;
   return (
     <>
       <section className="p02-clients" aria-labelledby="p02-clients-title">

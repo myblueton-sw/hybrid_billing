@@ -387,3 +387,9 @@ Found while writing this map; no code was changed.
 - **P02 Clients view ignores `clients.state`.** The server sets it (`integrations.go:64`); the parser keeps it (`integrations.ts:228`), but the view check covers only Modules, Channels and Events (`integrations/Live.tsx:121-122`).
 
 Every other field the parsers read has a matching JSON tag on the server. Nullable server fields (`*string`, `*uint64`, `*int64` and pointer rows) are read as `null` by the parsers, and pointer persons with a null `login` read as an empty string (`retention.ts:181`) or `null` (`release-evidence.ts:196`).
+
+## HYB-327 reconciliation
+
+The original gap inventory above is historical evidence. P02 clients now checks section state before rendering any child clients, grants or service users; unknown, unconfigured and denied sections cannot disclose contradictory child rows. P05 displays the server failure count for the selected build after active-budget approval. Budget approval is currently not connected; the displayed counter includes an explicit qualification. Zero establishes neither approval nor a run nor a passing verdict; unavailable counts remain unknown.
+
+P01 intentionally retains the current plan summary: installed history and backup collections are represented by counts, with invalid/missing collections shown as unknown. This is not detailed history or backup browsing. The server currently constructs `site.config_overrides` as an explicit empty array (`apps/api/server/installation.go`, installation page producer), so no editable or detail override UI is claimed. Adding nonempty overrides requires a separately reviewed producer/display contract; this ticket does not invent one. Full original P01 companion specs are absent under the owner's restoration waiver, so original detailed-scope acceptance is unverified. See [verification](../../features/HYB-327/verification.md).

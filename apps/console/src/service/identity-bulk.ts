@@ -51,6 +51,8 @@ export type Impact = {
   bulk_right_holders: number;
   sessions: number;
   pickups: number;
+  api_keys: string;
+  pending_jobs: string;
   pending: PendingStore[];
   service_users: number;
   anchors_after: number;
@@ -119,7 +121,7 @@ export function detailOf(body: Record<string, unknown>): BulkDetail {
     impact: {
       computed_at: str(i.computed_at), people: num(i.people), administrators: num(i.administrators), members: num(i.members),
       installation_administrators: num(i.installation_administrators), trust_right_holders: num(i.trust_right_holders), bulk_right_holders: num(i.bulk_right_holders),
-      sessions: num(i.sessions), pickups: num(i.pickups), service_users: num(i.service_users), anchors_after: num(i.anchors_after), other_workspaces: str(i.other_workspaces),
+      sessions: num(i.sessions), pickups: num(i.pickups), api_keys: str(i.api_keys), pending_jobs: str(i.pending_jobs), service_users: num(i.service_users), anchors_after: num(i.anchors_after), other_workspaces: str(i.other_workspaces),
       pending: list(i.pending).map((p) => ({ store: str(obj(p).store), count: num(obj(p).count), rechecked: obj(p).rechecked === true })),
     },
   };

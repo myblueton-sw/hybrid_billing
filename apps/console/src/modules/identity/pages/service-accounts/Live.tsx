@@ -749,7 +749,7 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
     const seq = issues.readStarted();
     api.services().then(
       (got) => { issues.reconcile(user, got, seq); if (order.current.latest(n)) { setPage(got); setStatus("ready"); setError(null); } },
-      (e) => { if (order.current.latest(n)) { setError(e); setStatus("error"); } },
+      (e) => { if (order.current.latest(n)) { if (e instanceof AdminError && e.failure === "invalid") setPage(null); setError(e); setStatus("error"); } },
     );
   }, [api, user]);
   useEffect(() => { if (view === "accounts" || view === "credentials") load(); }, [load, view]);

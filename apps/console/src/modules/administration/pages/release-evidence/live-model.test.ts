@@ -339,7 +339,7 @@ test("unknown, zero, not evaluated, not connected and not measured stay apart", 
 test("load: readiness run and failures, budget people and the planning targets", () => {
   const t = text(html(LoadView, page()));
   assert.ok(t.includes("No run at this build"));
-  assert.ok(t.includes(k.failuresNC("en")));
+  assert.ok(t.includes(k.failuresSinceApproval("en")));
   assert.ok(!/\b0 failures\b/i.test(t) && !t.includes("Run #0"));
   assert.ok(t.includes("Registration approved by admin2@example.invalid"));
   assert.ok(t.includes("Budget approval Not connected") && !t.includes("Budget approval: Not connected Not connected"));

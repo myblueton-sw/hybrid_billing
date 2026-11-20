@@ -291,3 +291,7 @@ Tracking: [HYB-295](https://linear.app/hybrid-billing/issue/HYB-295). [HB-257](.
 - **Service mode.** As P06; P07 renders the preview component `administration/pages/licenses/Screen.tsx` (`operations.tsx:94-95`), which makes no API call. `boundary.go` registers no licence route.
 - **Tickets.** No binding ticket; `HB-257/plan.md:168` says P07 is not yet ticketed. Linear HYB-130 "[P07] Implement 라이선스·배포 고지 (/licenses)" (In Review) is a preview implementation ticket, not a service binding.
 - **Residual.** Distribution-notice evidence (HB-40) is deferred to P07 by HYB-315.
+
+## HYB-327 field-map follow-up
+
+Identity/organization response validation and M01/M02/P02/P05 field bindings are reconciled in [HYB-327 verification](../features/HYB-327/verification.md). P01 retains a validated count summary and explicitly documented detail/override limitations. This follow-up does not certify all original screen specifications or carry forward owner acceptance.

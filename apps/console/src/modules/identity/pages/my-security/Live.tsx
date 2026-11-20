@@ -252,6 +252,7 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
       (err) => {
         if (!order.current.latest(n)) return;
         if (err instanceof AdminError && err.failure === "unauthenticated") setSignedOut((s) => s || "plain");
+        if (err instanceof AdminError && err.failure === "invalid") setPage(null);
         setError(err);
         setStatus("error");
       },
@@ -277,6 +278,7 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
       (err) => {
         if (!order.current.latest(n)) return;
         if (err instanceof AdminError && err.failure === "unauthenticated") { setSignedOut((s) => s || "plain"); return; }
+        if (err instanceof AdminError && err.failure === "invalid") { setPage(null); setError(err); setStatus("error"); }
         setDeadline(0);
         setCheck((c0) => ({ at: c0.at, mode: "failed" }));
       },

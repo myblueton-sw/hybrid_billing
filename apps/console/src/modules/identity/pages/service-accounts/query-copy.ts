@@ -197,6 +197,11 @@ const terms = {
     "다른 계정의 선언 초안이 보존되어 있습니다.",
     "توجد مسودة إقرار محفوظة لحساب آخر.",
   ],
+  otherIssueDraft: [
+    "A credential issuance draft for another service account is retained.",
+    "다른 서비스 계정의 자격 증명 발급 초안이 보존되어 있습니다.",
+    "توجد مسودة محفوظة لإصدار بيانات اعتماد لحساب خدمة آخر.",
+  ],
   done: ["Command completed", "명령 완료", "اكتمل الأمر"],
   issueTarget: [
     "Account for credential issuance",

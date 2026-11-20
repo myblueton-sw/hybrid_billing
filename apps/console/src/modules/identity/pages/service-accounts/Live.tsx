@@ -714,6 +714,7 @@ function CredentialWorkspace({
                 refresh();
               }}
               show={() => show(issue)}
+              onIssue={(target) => onParams({ svc_c_issue: target }, true)}
             />
           )}
         </ReadBoundary>

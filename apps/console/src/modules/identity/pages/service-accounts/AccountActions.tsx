@@ -10,6 +10,7 @@ import { w } from "../users/live-copy";
 import { c } from "../../../../service/copy";
 import { v } from "./live-copy";
 import { qcopy as t } from "./query-copy";
+import { admitsIssueDraft } from "./issue-draft";
 import { Facts, bdi, usePanelHeading } from "./query-ui";
 import {
   BoundedReason,
@@ -178,6 +179,7 @@ export function IssueControl({
   user,
   refresh,
   show,
+  onIssue,
 }: {
   l: Locale;
   api: AdminClient;
@@ -186,34 +188,61 @@ export function IssueControl({
   user: string;
   refresh: () => void;
   show: () => void;
+  onIssue: (target: string) => void;
 }) {
-  const { issues } = recovery;
+  const { issues, issueDrafts: drafts } = recovery;
   useSyncExternalStore(issues.subscribe, issues.version);
+  useSyncExternalStore(drafts.subscribe, drafts.version);
   const present = usePresent();
   const heading = usePanelHeading(detail.row.id);
   const entry = issues.get(user, detail.row.id),
     refusal = issues.refusal(user, detail.row.id);
-  const [days, setDays] = useState(String(detail.limits.credential_days)),
-    [reason, setReason] = useState(""),
-    [problem, setProblem] = useState("");
+  const saved = drafts.get();
+  const draft = saved ?? {
+    target: detail.row.id,
+    days: String(detail.limits.credential_days),
+    reason: "",
+  };
+  const [problem, setProblem] = useState("");
   const locked = !!entry;
+  const update = (patch: Partial<Pick<typeof draft, "days" | "reason">>) => {
+    if (
+      !present.current ||
+      !issues.current() ||
+      issues.get(user, detail.row.id)
+    )
+      return;
+    if (drafts.save({ ...draft, ...patch }, detail.limits)) setProblem("");
+    else setProblem(t(l, "bounds"));
+  };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (!present.current || !issues.current()) return;
     if (entry && entry.phase !== "unknown") return;
     if (
       !entry &&
-      (!detail.eligibility.can_issue ||
-        !wholeDays(days, detail.limits.credential_days) ||
-        reasonProblem(l, reason) ||
-        utf8Length(reason) > detail.limits.rationale_bytes)
+      (draft.target !== detail.row.id ||
+        !admitsIssueDraft(draft, detail.limits))
     ) {
-      setProblem(reasonProblem(l, reason) || t(l, "required"));
+      setProblem(t(l, "bounds"));
+      return;
+    }
+    if (
+      !entry &&
+      (!detail.eligibility.can_issue ||
+        !wholeDays(draft.days, detail.limits.credential_days) ||
+        reasonProblem(l, draft.reason))
+    ) {
+      setProblem(reasonProblem(l, draft.reason) || t(l, "required"));
       return;
     }
     await issues.submit(
       user,
       detail.row.id,
-      { days: entry?.days ?? days, reason: entry?.reason ?? reason },
+      {
+        days: entry?.days ?? draft.days,
+        reason: entry?.reason ?? draft.reason,
+      },
       detail.revision,
       detail.limits.replay_seconds,
       (tried, expected, frozen) =>
@@ -226,8 +255,39 @@ export function IssueControl({
           tried,
         ),
     );
+    if (saved?.target === detail.row.id && issues.get(user, detail.row.id))
+      drafts.clear(saved);
     if (present.current && issues.current()) refresh();
   };
+  if (!entry && saved && saved.target !== detail.row.id)
+    return (
+      <section className="live-step">
+        <h2 tabIndex={-1} ref={heading}>
+          {v.issueTitle(l)}
+        </h2>
+        <p>{t(l, "otherIssueDraft")}</p>
+        <p>{bdi(saved.target)}</p>
+        {issues.get(user, saved.target) && <p>{t(l, "discardNote")}</p>}
+        <div className="live-buttons">
+          <button
+            type="button"
+            className="live-secondary"
+            onClick={() => {
+              if (drafts.get() === saved) onIssue(saved.target);
+            }}
+          >
+            {t(l, "keepDraft")}
+          </button>
+          <button
+            type="button"
+            className="live-secondary"
+            onClick={() => drafts.clear(saved)}
+          >
+            {t(l, "discardDraft")}
+          </button>
+        </div>
+      </section>
+    );
   return (
     <form className="live-step" onSubmit={submit} noValidate>
       <h2 id="svc-issue-title" tabIndex={-1} ref={heading}>
@@ -258,9 +318,9 @@ export function IssueControl({
           <input
             id="svc-days"
             inputMode="numeric"
-            value={entry?.days ?? days}
+            value={entry?.days ?? draft.days}
             onChange={(e) => {
-              if (e.target.value.length <= 3) setDays(e.target.value);
+              if (e.target.value.length <= 3) update({ days: e.target.value });
             }}
           />
         </label>
@@ -268,12 +328,8 @@ export function IssueControl({
         <BoundedReason
           l={l}
           limit={detail.limits.rationale_bytes}
-          value={entry?.reason ?? reason}
-          onChange={(value) => {
-            if (utf8Length(value) <= detail.limits.rationale_bytes)
-              setReason(value);
-            else setProblem(t(l, "bounds"));
-          }}
+          value={entry?.reason ?? draft.reason}
+          onChange={(value) => update({ reason: value })}
           error=""
         />
       </fieldset>

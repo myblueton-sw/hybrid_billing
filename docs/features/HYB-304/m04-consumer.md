@@ -106,3 +106,8 @@ The subsequent [boundary verification](m04-boundaries.md) adds eleven cursor/cou
 
 
 [Session boundary verification](m05-boundaries.md) subsequently pins M05 query, frozen preview, strict body and quota contracts and removes an uncalled population helper plus redundant validation. The fresh server short result is98.8%, still below the required100%; no Console-source change or new Console execution is claimed by that server-only record.
+
+
+# Issuance draft authentication checkpoint
+
+The [issuance draft record](m04-issue-draft.md) documents an actual password-confirmation/canonical-refresh failure and the lease-scoped correction. Current validation passed1003 Console tests, fourteen mounted interaction scenarios with sixty read-state and sixty-four authentication captures, and eighteen isolated recovery scenarios. The actual twelve password confirmations retain unsent issuance values; replacement authentication clears them. Unknown original replay preserves another target's unsent draft. The separate ActionForm rationale remount risk remains open, alongside full M04 parity, required package coverage and final reviews. Draft PR251 remains open; no merge or owner acceptance is claimed.

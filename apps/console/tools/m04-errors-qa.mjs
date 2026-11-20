@@ -3,6 +3,7 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 import { stateMatrix } from "./m04-state-matrix.mjs";
+import { authMatrix } from "./m04-auth-matrix.mjs";
 const args = Object.fromEntries(
   process.argv
     .slice(2)
@@ -37,6 +38,7 @@ const page = await context.newPage();
 const results = [],
   errors = [];
 let variants = [];
+let authVariants = [];
 page.on("pageerror", (error) => errors.push(error.message));
 page.on("dialog", (dialog) => dialog.accept());
 const accountPath = (url) =>
@@ -802,6 +804,14 @@ try {
         release();
       }
       await completed;
+      await navigate("credentials", { svc_c_service: b, svc_c_issue: b });
+      const otherDraft = page
+        .locator("form")
+        .filter({ has: page.locator("#svc-issue-title") });
+      await otherDraft.locator("#svc-days").fill("1");
+      await otherDraft
+        .locator("#live-reason")
+        .fill("Synthetic unrelated unsubmitted issuance draft");
       await navigate("accounts", { svc_a_selected: service });
       await page
         .getByRole("button", { name: "Suspend service account", exact: true })
@@ -863,6 +873,27 @@ try {
         "original issuance envelope changed",
       );
       assert.equal(collections, 0);
+      await navigate("credentials", { svc_c_service: b, svc_c_issue: b });
+      await otherDraft.locator("#live-reason").waitFor();
+      assert.equal(await otherDraft.locator("#svc-days").inputValue(), "1");
+      assert.equal(
+        await otherDraft.locator("#live-reason").inputValue(),
+        "Synthetic unrelated unsubmitted issuance draft",
+        "original retry cleared another account's draft",
+      );
+      await navigate("credentials", {
+        svc_c_issue: "svc-" + prefix + "-unknown",
+      });
+      await page
+        .getByRole("button", { name: "Discard previous draft", exact: true })
+        .click();
+      await page.locator("#svc-days").waitFor();
+      await page
+        .locator(".live-attempts li")
+        .filter({ hasText: service })
+        .getByRole("button", { name: "Show secret", exact: true })
+        .waitFor();
+      assert.equal(collections, 0);
       await page.unroute(
         "**/api/v1/commands/service.issue_credential",
         handler,
@@ -914,6 +945,22 @@ try {
       assert.equal(variants.length, 60);
     },
   );
+  await scenario(
+    "EN KO AR authentication recovery preserves unsubmitted issuance at four widths",
+    async () => {
+      authVariants = await authMatrix({
+        page,
+        navigate,
+        output: output + "/authentication",
+        service: "svc-" + prefix + "-unknown",
+        password,
+        otherService: b,
+        login,
+        workspace,
+      });
+      assert.equal(authVariants.length, 64);
+    },
+  );
   assert.deepEqual(errors, []);
 } catch (error) {
   console.log(
@@ -921,7 +968,9 @@ try {
   );
   process.exitCode = 1;
   if (
-    !(await page.locator("#svc-secret, #signin-password, #link-new").count())
+    !(await page
+      .locator("#svc-secret, #signin-password, #link-new, #reauth-password")
+      .count())
   ) {
     await mkdir(output, { recursive: true });
     await page.screenshot({ path: output + "/failure.png", fullPage: true });
@@ -930,7 +979,7 @@ try {
   await mkdir(output, { recursive: true });
   await writeFile(
     output + "/report.json",
-    JSON.stringify({ results, errors, variants }, null, 2),
+    JSON.stringify({ results, errors, variants, authVariants }, null, 2),
   );
   await browser.close();
 }

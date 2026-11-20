@@ -11,6 +11,7 @@ import { attempt, type AdminClient } from "../../../../service/admin";
 import type { Session } from "../../../../service/api";
 import { commandIntents, type CommandIntents } from "./command-intents";
 import { issueAttempts, type IssueAttempts } from "./issue-attempts";
+import { issueDrafts, type IssueDrafts } from "./issue-draft";
 
 export type RecoverySession = Readonly<
   Pick<Session, "user" | "workspace" | "csrf">
@@ -18,6 +19,7 @@ export type RecoverySession = Readonly<
 export type Recovery = {
   issues: IssueAttempts;
   commands: CommandIntents;
+  issueDrafts: IssueDrafts;
   afterView: { focus: string; view: string };
 };
 type Token = {
@@ -26,6 +28,7 @@ type Token = {
   session: RecoverySession;
   store?: IssueAttempts;
   commands?: CommandIntents;
+  drafts?: IssueDrafts;
 };
 type Lease = { token: Token; value: Recovery };
 const Context = createContext<Recovery | null>(null);
@@ -57,6 +60,7 @@ export function ServiceAccountRecoveryProvider({
       token.valid = false;
       token.store?.dispose();
       token.commands?.dispose();
+      token.drafts?.dispose();
       if (tokenRef.current === token) tokenRef.current = null;
     };
   }, [client, user, workspace, csrf, isCurrentSession]);
@@ -84,27 +88,37 @@ export function ServiceAccountRecoveryProvider({
       () => store.current(),
     );
     token.commands = commands;
+    const drafts = issueDrafts(() => store.current());
+    token.drafts = drafts;
     const warn = (event: BeforeUnloadEvent) => {
-      if (commands.guarded()) event.preventDefault();
+      if (commands.guarded() || drafts.guarded()) event.preventDefault();
     };
     window.addEventListener("beforeunload", warn);
     const unsubscribe = client.subscribeAuthenticationLoss(() => {
       token.valid = false;
       store.dispose();
       commands.dispose();
+      drafts.dispose();
       setLease((prior) => (prior?.value.issues === store ? null : prior));
     });
     if (store.activate())
       setLease({
         token,
-        value: { issues: store, commands, afterView: { focus: "", view: "" } },
+        value: {
+          issues: store,
+          commands,
+          issueDrafts: drafts,
+          afterView: { focus: "", view: "" },
+        },
       });
     return () => {
       unsubscribe();
       window.removeEventListener("beforeunload", warn);
       store.dispose();
       commands.dispose();
+      drafts.dispose();
       if (token.store === store) token.store = undefined;
+      if (token.drafts === drafts) token.drafts = undefined;
     };
   }, [client, user, workspace, csrf, isCurrentSession]);
   const current =

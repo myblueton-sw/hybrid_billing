@@ -4,6 +4,7 @@ import { adminClient, type AdminClient, type Outcome } from "../src/service/admi
 import type { Locale } from "../src/shared/types";
 import { Reveal } from "../src/modules/identity/pages/service-accounts/Live";
 import { ServiceAccountRecoveryProvider, useServiceAccountRecovery, type Recovery, type RecoverySession } from "../src/modules/identity/pages/service-accounts/recovery-context";
+import { serviceLimits } from "../src/service/service-query-fixtures";
 
 const service = "svc-test";
 const credential = "cred-0123456789abcdef";
@@ -62,7 +63,10 @@ const root = createRoot(document.getElementById("root")!);
 root.render(<StrictMode><Fixture /></StrictMode>);
 
 const control = {
-  snapshot: () => ({ ready: !!current?.issues.current(), id: current ? id(current.issues) : null, calls, phase: current?.issues.get(active.user, service)?.phase ?? "", markers: current?.issues.marks(active.user) ?? [], priorDisposed: prior?.issues.disposed() ?? null, gapSafe: authoritativeGapSafe, layoutGapSafe, lastRevoke }),
+  snapshot: () => ({ ready: !!current?.issues.current(), id: current ? id(current.issues) : null, calls, phase: current?.issues.get(active.user, service)?.phase ?? "", markers: current?.issues.marks(active.user) ?? [], priorDisposed: prior?.issues.disposed() ?? null, gapSafe: authoritativeGapSafe, layoutGapSafe, lastRevoke, draft: current?.issueDrafts.get() ?? null, priorDraft: prior?.issueDrafts.get() ?? null, priorDraftGuard: prior?.issueDrafts.guarded() ?? false }),
+  saveDraft: () => current?.issueDrafts.save({ target: service, days: "1", reason: "Synthetic issuance draft" }, serviceLimits) ?? false,
+  savePriorDraft: () => prior?.issueDrafts.save({ target: service, days: "2", reason: "Obsolete issuance draft" }, serviceLimits) ?? false,
+  unloadGuarded: () => { const event = new Event("beforeunload", { cancelable: true }); window.dispatchEvent(event); return event.defaultPrevented; },
   async issue() {
     if (!current) throw new Error("fixture not ready");
     await current.issues.submit(active.user, service, { days: "1", reason: "Synthetic recovery check" }, "rev-1", 300, async () => outcome);

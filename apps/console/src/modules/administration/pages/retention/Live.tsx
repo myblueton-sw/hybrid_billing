@@ -62,6 +62,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   const [denied, setDenied] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [notice, setNotice] = useState("");
+  const [readComplete, setReadComplete] = useState(false);
   const [noticeDetail, setNoticeDetail] = useState<CommandDiagnostic | null>(null);
   const [terminalDetail, setTerminalDetail] = useState<CommandDiagnostic | null>(null);
   const [busy, setBusy] = useState(false);
@@ -71,8 +72,9 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   const selection = selectionOf(params, page, view);
   const selectedId = selectedOf(view, selection);
 
-  const load = useCallback(async (): Promise<RetentionPage | null> => {
+  const load = useCallback(async (userRefresh = false): Promise<RetentionPage | null> => {
     const n = ++seq.current;
+    setReadComplete(false);
     const generation = currentScope();
     setBusy(true);
     try {
@@ -81,6 +83,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
       pruneRefusals(got);
       setPage(got);
       setStatus("ready");
+      setReadComplete(userRefresh);
       setLoadError(null);
       return got;
     } catch (e) {
@@ -94,6 +97,11 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
       if (n === seq.current && generation === currentScope()) setBusy(false);
     }
   }, [api]);
+
+  const refresh = (fromError = false) => {
+    if (fromError) document.querySelector<HTMLButtonElement>(".p04-reload")?.focus();
+    void load(true);
+  };
 
   useLayoutEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
   useEffect(() => {
@@ -158,6 +166,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
 
   return (
     <div className="p04-live" data-live={view} aria-busy={busy || undefined}>
+      <p className="visually-hidden p04-read-status" role="status" aria-live="polite">{readComplete ? sc.dataReloaded(l) : ""}</p>
         <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
       {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
       <div className="p04-scope">
@@ -166,7 +175,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
           <div><dt>{k.revision(l)}</dt><dd>{page ? <Known l={l} value={page.revision} /> : "—"}</dd></div>
           <div><dt>{k.now(l)}</dt><dd>{page ? <Stamp l={l} at={page.now} /> : "—"}</dd></div>
         </dl>
-        <button type="button" className="live-secondary p04-reload" onClick={() => void load()}>{k.reload(l)}</button>
+        <button type="button" className="live-secondary p04-reload" onClick={() => refresh()}>{k.reload(l)}</button>
       </div>
       <p className="live-note-rule p04-statement"><strong>{k.statementLead(l)}</strong> {k.statement(l)}</p>
       <p className="p04-note">{k.valuesNote(l)}</p>
@@ -176,7 +185,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
         <div className="live-error p04-failure" role="alert">
           <h2>{diagnosticCopy.load(l, "retention")}</h2>
           {failure && <p>{failure}</p>}
-          <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
+          <button type="button" className="live-secondary" onClick={() => refresh(true)}>{sc.tryAgain(l)}</button>
         </div>
       )}
       {gone.length > 0 && (

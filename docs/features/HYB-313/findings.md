@@ -17,11 +17,12 @@ Audit remains in progress; no whole-ticket accessibility PASS, owner acceptance 
 | Initial activation test assumed adjacent password fields | Source has a keyboard-accessible show/hide control between fields; first test did not submit matching fields | Test tabs to the actual target field rather than assuming one Tab | Keyboard activation and sign-in completed in subsequent isolated run; this was a test defect, not a product defect |
 | Initial M01 readiness selector assumed data-screen-id everywhere | Identity screens use data-security-screen; actual M01 had loaded | Runner recognizes both actual screen markers | Initial 144 captures completed; later response/font safeguards still apply |
 
-Further scoped evidence is recorded in [Control paint and enlarged-layout verification](presentation-verification.md) and [User-list retry focus and refresh announcements](read-recovery.md). These records extend the historical collections above; they do not turn the baseline into whole-ticket acceptance.
+Further scoped evidence is recorded in [Control paint and enlarged-layout verification](presentation-verification.md), [User-list retry focus and refresh announcements](read-recovery.md) and [Administration read-recovery accessibility](admin-read-recovery.md). These records extend the historical collections above; they do not turn the baseline into whole-ticket acceptance.
 
 | Additional finding | Correction | Recheck |
 | --- | --- | --- |
 | M01 unavailable-read Retry removes its focused control and successful recovery has no live completion message | Focus existing stable Reload before Retry starts; announce only the latest successful user-triggered read using established localized copy | Six EN/KO/AR desktop/mobile keyboard cases, repeated failure, new announcement transitions, later user focus movement and separate response-order/filter-supersession checks pass; scoped independent source and actual visual review recorded in read-recovery.md |
+| P01–P05 Retry disappears on successful read, leaving BODY focused and no read-completion status | Transfer focus to existing reload control and publish a dedicated localized status only after latest/current-scope success | Thirty locale/width journeys, five ordering/terminal cases and five actual actor-replacement cases pass; scoped source/TW and sixty-render Claude review recorded in admin-read-recovery.md |
 
 # Remaining verification
 

@@ -1,5 +1,5 @@
 import type { Session } from "../../../../service/api";
-export type LicenseResult = { outcome: string; request: string; operation: string; unknown: boolean; refusal?: boolean; access?: "denied" | "signedOut" };
+export type LicenseResult = { outcome: string; request: string; operation: string; unknown: boolean; proposal?: string; refusal?: boolean; access?: "denied" | "signedOut" };
 type Snapshot = { pending: boolean; result: LicenseResult | null; settled: number };
 export function createLicenseSession() {
  let snapshot: Snapshot = {pending:false,result:null,settled:0};

@@ -25,3 +25,15 @@
 .ops-screen .p07-live .p07-form p { margin:0; }
 .ops-screen .p07-live .p07-form .ops-actions { margin-block-start:0; }
 .p07-errors:focus { outline:2px solid var(--hb-ink); outline-offset:2px; }
+.p07-trust { margin-block-start:48px; padding-block-start:32px; border-block-start:1px solid var(--hb-line-row); }
+.p07-trust-panel { margin-block-start:24px; }
+.p07-lookup { display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; margin-block:24px; }
+.p07-lookup .service-field { display:grid; gap:8px; inline-size:min(100%,28rem); }
+.p07-trust bdi { overflow-wrap:anywhere; word-break:break-word; }
+.ops-screen .p07-live .p07-trust p { margin-block:0 16px; }
+.ops-screen .p07-live .p07-trust .p07-form p { margin:0; }
+.ops-screen .p07-live .p07-trust input:not([type=radio]):not([type=checkbox]) { min-inline-size:0; inline-size:100%; }
+.ops-screen .p07-live .p07-form.ops-review { border-block-start:0; padding-block-start:0; }
+
+.ops-screen .p07-live .p07-lookup .service-field { margin:0; }
+.p07-trust .p07-facts + .p07-facts { border-block-start:0; }

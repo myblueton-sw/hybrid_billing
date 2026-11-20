@@ -2,8 +2,9 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Locale } from "../../../../shared/types";
 import { licenseSignedFields, signedEnvelopeOf, type LicenseMode, type LicensePage, type SignedEnvelope } from "../../../../service/licenses";
 import { k, label } from "./live-copy";
-export type LicenseCommand = "licenses.initialize" | "licenses.select_mode" | "licenses.register" | "licenses.activate";
-export type SubmitLicense = (command: LicenseCommand, fields: Record<string, string>, rationale: string) => Promise<void>;
+import type { TrustCommand } from "../../../../service/license-trust";
+export type LicenseCommand = TrustCommand | "licenses.initialize" | "licenses.select_mode" | "licenses.register" | "licenses.activate";
+export type SubmitLicense = (command: LicenseCommand, fields: Record<string, string>, rationale: string, scope?: {target:string;revision:string}) => Promise<void>;
 export default function LiveForm({ l, page, offline, busy, submit }: { l: Locale; page: LicensePage; offline: boolean; busy: boolean; submit: SubmitLicense }) {
  const [mode,setMode] = useState<LicenseMode | "">("");
  const [rationale,setRationale] = useState("");

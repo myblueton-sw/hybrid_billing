@@ -68,6 +68,15 @@ const words = {
 export type CopyKey = keyof typeof words;
 export const k = (l: Locale, key: CopyKey) => t(l, words[key]);
 const states: Record<string, Words> = {
+ pending:["변경 요청 기록됨 · 승인 대기","Change request recorded; awaiting approval","سُجّل طلب التغيير؛ بانتظار الموافقة"],
+ applied:["검토한 변경 적용됨","Reviewed change applied","تم تطبيق التغيير المراجَع"],
+ withdrawn:["변경 요청 철회됨","Change request withdrawn","تم سحب طلب التغيير"],
+ not_pending:["승인 대기 중인 요청이 아닙니다. 다시 조회하세요.","The request is no longer pending. Read it again.","لم يعد الطلب معلّقًا. اقرأه مجددًا."],
+ private_key:["개인키 형식은 허용되지 않습니다. 공개키 파일을 확인하세요.","Private-key input is not accepted. Check the public-key file.","لا يُقبل إدخال مفتاح خاص. تحقق من ملف المفتاح العام."],
+ no_proof:["키 보유 증명을 검증할 수 없습니다.","Possession proof could not be verified.","تعذر التحقق من إثبات حيازة المفتاح."],
+ compromised:["이미 유출 처리된 키입니다.","The key is already marked compromised.","المفتاح مسجّل كمخترق بالفعل."],
+ retired:["이미 폐기 처리된 키입니다.","The key is already retired.","تم إيقاف المفتاح بالفعل."],
+ retire_past:["폐기 시각이 검증된 현재 시각보다 이전입니다.","The retirement time precedes authoritative current time.","وقت إيقاف المفتاح يسبق الوقت المرجعي الحالي."],
  direct: ["직접 계약", "Direct agreement", "اتفاقية مباشرة"], marketplace: ["Marketplace", "Marketplace", "السوق"],
  installations: ["설치 수", "Installations", "التثبيتات"], seats: ["사용자 수", "Seats", "المستخدمون"], tenants: ["테넌트 수", "Tenants", "المستأجرون"], documents: ["문서 수", "Documents", "المستندات"],
  invalid: ["서명 데이터 형식이 잘못되었습니다. 발급자에게 수정된 파일을 요청하세요.", "Invalid signed data. Request a corrected file from the issuer.", "بيانات التوقيع غير صالحة. اطلب ملفًا مصححًا من جهة الإصدار."],

@@ -671,6 +671,11 @@ export class AdminError extends Error {
 }
 
 export type CommandId =
+  | "licenses.propose_key"
+  | "licenses.propose_retirement"
+  | "licenses.propose_compromise"
+  | "licenses.approve_key_change"
+  | "licenses.withdraw_key_change"
   | "licenses.initialize"
   | "licenses.select_mode"
   | "licenses.register"

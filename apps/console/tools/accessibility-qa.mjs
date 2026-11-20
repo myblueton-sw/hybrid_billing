@@ -8,7 +8,7 @@ const { chromium } = createRequire(import.meta.url)(args["playwright-module"] ||
 const base = args.url || "http://127.0.0.1:8835", output = resolve(args.output || "qa-output/accessibility");
 const browser = await chromium.launch({ headless: true, ...(args.chromium ? { executablePath: args.chromium } : {}) });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), page = await context.newPage();
-const evidence = { checks: [], renders: [], errors: [] }, password = randomBytes(24).toString("base64url");
+const evidence = { outcome: "running", checks: [], renders: [], errors: [] }, password = randomBytes(24).toString("base64url");
 page.on("pageerror", (e) => evidence.errors.push(e.message));
 if (args.api) await page.route("**/api/v1/**", async (route) => {
   const u = new URL(route.request().url());
@@ -145,8 +145,10 @@ try {
   assert.ok(!commands.some((p) => p.endsWith("bulk_revocation.execute")));
   evidence.checks.push("M01 keyboard search, selection, membership preview, modal containment, Escape focus return and discard; no execute request");
   assert.deepEqual(evidence.errors, []);
+  evidence.outcome = "passed";
   console.log(JSON.stringify({ completedChecks: evidence.checks.length, captures: evidence.renders.length, errors: evidence.errors }));
 } catch (error) {
+  evidence.outcome = "failed"; evidence.failure = { kind: error.name };
   await page.screenshot({ path: resolve(output, "failure.png"), fullPage: true });
   throw error;
 } finally {

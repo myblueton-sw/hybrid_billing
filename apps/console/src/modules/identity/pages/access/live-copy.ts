@@ -50,9 +50,9 @@ export const a = {
   ceilingLead: (l: Locale) =>
     t(
       l,
-      "The console itself can use only these permissions. Grants to people can't go beyond them or run past their end date. They are set by the installation and can't be changed here.",
-      "콘솔 자체가 쓸 수 있는 권한은 이것뿐입니다. 사용자에게 주는 권한은 이 범위와 종료일을 넘을 수 없습니다. 설치 시 정해지며 이 화면에서 바꿀 수 없습니다.",
-      "لا تستطيع وحدة التحكم نفسها استخدام إلا هذه الصلاحيات، ولا يمكن أن تتجاوزها صلاحيات الأشخاص أو تمتد بعد تاريخ انتهائها. يحددها التثبيت ولا يمكن تغييرها هنا.",
+      "The console itself can use only these permissions. Access requested through this screen cannot exceed this scope or end date. Console permissions are set by the installation and cannot be changed here.",
+      "콘솔 자체가 쓸 수 있는 권한입니다. 이 화면에서 요청하는 권한은 이 범위와 종료일을 넘을 수 없습니다. 콘솔 권한은 설치 환경에서 정하며 여기에서 바꿀 수 없습니다.",
+      "هذه هي الصلاحيات التي تستطيع وحدة التحكم استخدامها. لا يمكن أن تتجاوز الصلاحيات المطلوبة عبر هذه الشاشة هذا النطاق أو تاريخ الانتهاء. يحدد التثبيت صلاحيات وحدة التحكم ولا يمكن تغييرها هنا.",
     ),
   colCustomer: (l: Locale) => t(l, "Customer", "고객", "العميل"),
   allCustomers: (l: Locale) => t(l, "All customers", "모든 고객", "جميع العملاء"),
@@ -140,9 +140,9 @@ export const a = {
   previewNote: (l: Locale) =>
     t(
       l,
-      "It checks only this person's grants and delegations. A real request also needs the console's own permission and a current sign-in by this person.",
-      "이 사용자의 권한 부여와 위임만 확인합니다. 실제 요청에는 콘솔 자체의 권한과 이 사용자의 유효한 로그인도 필요합니다.",
-      "تتحقق من صلاحيات هذا الشخص وتفويضاته فقط. يتطلب الطلب الفعلي أيضًا صلاحية وحدة التحكم نفسها وتسجيل دخول ساريًا لهذا الشخص.",
+      "It checks this person's grants and delegations for the console operations shown here. Those operations also need the console's own permission and a current sign-in. This preview does not determine whether the person can approve charges.",
+      "여기에 표시된 콘솔 작업에 대한 사용자의 권한 부여와 위임을 확인합니다. 실제 작업에는 콘솔 권한과 유효한 로그인도 필요합니다. 이 미리 보기로 청구 승인 가능 여부를 판단할 수는 없습니다.",
+      "تتحقق من صلاحيات هذا الشخص وتفويضاته لعمليات وحدة التحكم المعروضة هنا. تتطلب هذه العمليات أيضًا صلاحية وحدة التحكم وتسجيل دخول ساريًا. لا تحدد هذه المعاينة ما إذا كان الشخص يستطيع اعتماد الرسوم.",
     ),
   effectFor: (l: Locale, login: string) => t(l, `Effect for ${login}`, `${login}님의 효력`, `الأثر على ${login}`),
   noCustomer: (l: Locale) => t(l, "No customer", "고객 지정 없음", "دون عميل"),
@@ -220,6 +220,7 @@ export const a = {
 };
 
 const actions: Record<string, [string, string, string]> = {
+ approve: ["Approve", "승인", "اعتماد"],
  propose_pricing_policy: ["Propose pricing policy", "가격 정책 제안", "اقتراح سياسة التسعير"],
  approve_pricing_policy: ["Approve pricing policy", "가격 정책 승인", "اعتماد سياسة التسعير"],
  revoke_pricing_policy: ["Revoke pricing policy", "가격 정책 철회", "إلغاء سياسة التسعير"],
@@ -235,6 +236,7 @@ const actions: Record<string, [string, string, string]> = {
   deliver: ["Deliver", "전달", "تسليم"],
 };
 const kinds: Record<string, [string, string, string]> = {
+  charge_approval: ["Charge approval", "청구 승인", "اعتماد الرسوم"],
   approval_review: ["Approval review records", "승인 검토 기록", "سجلات مراجعة الاعتمادات"],
  synthetic_pricing_policy: ["Synthetic pricing policy", "합성 시험용 가격 정책", "سياسة تسعير اصطناعية"],
   focus_data: ["Collected FOCUS data", "수집된 FOCUS 데이터", "بيانات FOCUS المجمّعة"],
@@ -250,6 +252,7 @@ const fields: Record<string, [string, string, string]> = {
 };
 const phrases: Record<string, [string, string, string]> = {
   "view|approval_review|approval_evidence": ["view approval request and decision records", "승인 요청·결정 기록 조회", "عرض سجلات طلبات الاعتماد والقرارات"],
+  "approve|charge_approval|": ["approve charges", "청구 승인", "اعتماد الرسوم"],
   "view_cost|charge_candidate|charge_evidence": ["view source costs and evidence for charge calculation candidates", "과금 계산 후보의 원천 비용·계산 근거 조회", "عرض تكاليف المصدر وأدلة نتائج احتساب الرسوم المبدئية"],
   "view|focus_data|rows": ["view rows of collected FOCUS data", "수집된 FOCUS 데이터 행 조회", "عرض صفوف بيانات FOCUS المجمّعة"],
 };

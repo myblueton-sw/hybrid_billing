@@ -7,6 +7,9 @@ import (
 )
 
 func (a *serverGrantAuthority) Check(workspace, actor string) (string, error) {
+	if a.domain == financialPermissionDomain {
+		return a.financialCheck(workspace, actor)
+	}
 	return a.s.governor(workspace, actor)
 }
 
@@ -47,6 +50,9 @@ func (a *serverGrantAuthority) Current(spec inputauthority.Spec) (string, error)
 	}
 	if spec.Workspace != s.bootWorkspace {
 		return "", inputauthority.ErrDenied
+	}
+	if a.domain == financialPermissionDomain {
+		return a.financialCurrent(spec)
 	}
 	generation := s.admin.Generation()
 	if spec.Kind == inputauthority.Console {

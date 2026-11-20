@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
@@ -9,11 +10,15 @@ import (
 type grantAuthorityDomain uint8
 
 const (
-	inputGrantAuthority   grantAuthorityDomain = 1
-	pricingGrantAuthority grantAuthorityDomain = 2
+	inputGrantAuthority       grantAuthorityDomain = 1
+	pricingGrantAuthority     grantAuthorityDomain = 2
+	financialPermissionDomain grantAuthorityDomain = 3
 )
 
 func (d grantAuthorityDomain) grantPrefix() string {
+	if d == financialPermissionDomain {
+		return "financial-permission-"
+	}
 	if d == pricingGrantAuthority {
 		return "pricing-grant-"
 	}
@@ -23,6 +28,9 @@ func (d grantAuthorityDomain) grantPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) faultPrefix() string {
+	if d == financialPermissionDomain {
+		return "financial-permission-"
+	}
 	if d == pricingGrantAuthority {
 		return "pricing-authority-"
 	}
@@ -32,6 +40,12 @@ func (d grantAuthorityDomain) faultPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) terms(workspace, capability string) (gate.Terms, error) {
+	if d == financialPermissionDomain {
+		if capability != financialpermission.Approve {
+			return gate.Terms{}, inputauthority.ErrInvalid
+		}
+		return gate.Terms{Action: gate.Approve, Kind: financialpermission.ResourceKind, Scope: gate.Scope{WorkspaceID: workspace, Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}, Period: gate.AnyPeriod()}, nil
+	}
 	if d == pricingGrantAuthority {
 		return pricingAuthorityTerms(workspace, capability)
 	}
@@ -76,6 +90,8 @@ func (s *Server) grantAuthority(domain grantAuthorityDomain) *serverGrantAuthori
 		return s.inputAuthority
 	case pricingGrantAuthority:
 		return s.pricingAuthority
+	case financialPermissionDomain:
+		return s.financialPermission
 	}
 	return nil
 }

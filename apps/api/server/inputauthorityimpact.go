@@ -14,7 +14,7 @@ type fallibleProposalStore struct {
 	tally     func(*Server) (map[string]int, error)
 }
 
-var fallibleProposalStores = []fallibleProposalStore{{name: "financial_authority_proposals", prefix: "financial_authority", rechecked: true, tally: financialAuthorityTally}, {name: "financial_policy_proposals", prefix: "financial_policy", rechecked: true, tally: financialPolicyTally}, {name: "input_authority_proposals", prefix: "input_authority", rechecked: true, tally: inputAuthorityTally}, {name: "pricing_authority_proposals", prefix: "pricing_authority", rechecked: true, tally: pricingAuthorityTally}, {name: "pricing_policy_proposals", prefix: "pricing_policy", rechecked: true, tally: pricingPolicyTally}}
+var fallibleProposalStores = []fallibleProposalStore{{name: "financial_permission_proposals", prefix: "financial_permission", rechecked: true, tally: financialPermissionTally}, {name: "financial_authority_proposals", prefix: "financial_authority", rechecked: true, tally: financialAuthorityTally}, {name: "financial_policy_proposals", prefix: "financial_policy", rechecked: true, tally: financialPolicyTally}, {name: "input_authority_proposals", prefix: "input_authority", rechecked: true, tally: inputAuthorityTally}, {name: "pricing_authority_proposals", prefix: "pricing_authority", rechecked: true, tally: pricingAuthorityTally}, {name: "pricing_policy_proposals", prefix: "pricing_policy", rechecked: true, tally: pricingPolicyTally}}
 
 func pricingPolicyTally(s *Server) (map[string]int, error) {
 	out := map[string]int{}
@@ -101,4 +101,8 @@ func financialAuthorityTally(s *Server) (map[string]int, error) {
 		}
 	}
 	return out, nil
+}
+
+func financialPermissionTally(s *Server) (map[string]int, error) {
+	return grantAuthorityTally(s, financialPermissionDomain)
 }

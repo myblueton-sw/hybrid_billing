@@ -30,7 +30,7 @@ B09 uses the request's confirmed historical policy revision. Superseded previous
 
 # Remaining W-23 integration
 
-Direct-human gate.Approve permission grants, original-author v7 candidate subjects, fresh governed prerequisite validation, actual human financial decisions and later ERP/issue/delivery/recognition integration remain separate planned work under HYB-340/HYB-225. This increment creates no new governance form or owner screen acceptance. Existing local service state is not upgraded or deployed by this contract.
+Original-author v7 candidate subjects, fresh governed prerequisite validation, RequestApproval provisioning, actual human financial decisions and later ERP/issue/delivery/recognition integration remain separate planned work under HYB-340/HYB-225. This increment creates no new governance form or owner screen acceptance. Existing local service state is not upgraded or deployed by this contract.
 
 # Governed amount-authority extension
 
@@ -42,4 +42,14 @@ The immutable bounded binding preserves proposal, confirmation and revocation re
 
 M01 financial_authority_proposals counts only pending proposals, separately from financial_policy_proposals and pricing/input permissions. Missing or corrupt service bindings make impact calculation unavailable. The category is Charge approval limit proposals / 청구 승인 한도 제안 / مقترحات حدود اعتماد الرسوم.
 
-This extension makes no AddGrant call. Module amount authority alone is not financial approval permission. A separately governed direct-human Approve grant and a narrowly authenticated decision transport remain required, followed by candidate/prerequisite integration. Existing M03 cannot provision that human-only grant through a console ceiling; that restriction remains unchanged.
+The amount-authority extension makes no AddGrant call. Module amount authority alone is not financial approval permission. The separately governed permission extension below supplies direct-human grants; narrowly authenticated decision transport and candidate/prerequisite integration remain required. Existing M03 cannot provision that human-only grant through a console ceiling; that restriction remains unchanged.
+
+# Direct-human permission extension
+
+financial_permission.propose/approve/reject/withdraw/inspect use a service-owned proposal ID. Propose accepts recipient and explicit RFC3339Nano not_before/not_after only. The fixed capability is approve, the resource kind is charge_approval, and the grant covers the complete installation workspace with no field restriction, no client and no console ceiling. Its maximum validity is24 hours; a pending proposal expires after1 hour. The bounded registry holds1000 proposals. No default grant is installed.
+
+Every command, including same-key replay and inspection, requires current authenticated installation and module-governor membership. The closed command family is checked under the existing domain lock before command receipt replay. Unsupported unseeded mode retains the command registry's501 response. Proposal/approval separately recheck the stored proposer and current target; the canonical module-admin set participates in freshness. Proposer and independent approver cannot be the recipient. The recipient must be an active human with effective membership before a new effect. The engine binds actor, rationale and digest before attempting the effect.
+
+Unknown outcomes retain the exact intended grant identity. Before/after-effect faults and lookup failures cannot cause blind recreation. An exact existing revoked or expired grant may resolve uncertainty as historical evidence; it does not restore authority. Replies explicitly mark receipt=historical_decision and recorded_grant_status is historical. Current gate permission, current module amount limits and current candidate prerequisites remain separate checks. Output preflight requires20 fields and1024 bytes per value before mutation.
+
+M01 counts pending, applying and unknown financial_permission_proposals separately as Charge approval permission requests / 청구 승인 권한 요청 / طلبات صلاحية اعتماد الرسوم. Tally failure makes bulk impact unavailable. Hold refuses propose/approve but permits inspect/reject/withdraw; mutations retain step-up. Generic M03 additions refuse the dedicated kind at catalog, request, retained approval and final application. Independently authorized M03 revocation remains available for the actual subject grant. M03 labels the grant in all three languages and explicitly excludes charge-approval eligibility from its console-operation preview.

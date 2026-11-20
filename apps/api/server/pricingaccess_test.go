@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
+	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
 	"strings"
@@ -21,6 +22,7 @@ func TestPricingAccessRejectsGenericGrantBypass(t *testing.T) {
 		cases = append(cases, gate.Terms{Action: action, Kind: ReaderKind, Scope: scope, Period: gate.AnyPeriod()})
 	}
 	cases = append(cases, gate.Terms{Action: gate.View, Kind: pricingauthority.ResourceKind, Fields: []string{ReaderField}, Scope: scope, Period: gate.AnyPeriod()}, gate.Terms{Action: gate.ViewCost, Kind: ReaderKind, Fields: []string{pricingauthority.EvidenceField}, Scope: scope, Period: gate.AnyPeriod()})
+	cases = append(cases, gate.Terms{Action: gate.View, Kind: financialpermission.ResourceKind, Fields: []string{ReaderField}, Scope: scope, Period: gate.AnyPeriod()})
 	for n, terms := range cases {
 		t.Run(fmt.Sprint(n), func(t *testing.T) {
 			before := len(f.s.admin.Grants())
@@ -35,7 +37,7 @@ func TestPricingAccessRejectsGenericGrantBypass(t *testing.T) {
 				}
 			}
 			for _, row := range f.s.ceiling() {
-				if pricingGrantTerms(gate.Action(row.Action), row.Kind, row.Fields) {
+				if governedGrantTerms(gate.Action(row.Action), row.Kind, row.Fields) {
 					t.Fatal("dedicated pricing exposed as generic ceiling")
 				}
 			}

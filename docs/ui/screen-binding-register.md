@@ -117,7 +117,7 @@ Tracking: [HYB-295](https://linear.app/hybrid-billing/issue/HYB-295). [HB-257](.
 | P04 | yes | HB-288 (#204), HB-289 (#205) | HYB-293 (#210), HYB-298 (#212, refactor only), HYB-312 (#222), HYB-325 (#223) | pending |
 | P05 | yes | HYB-290 (#209), HYB-315 (#211) | none found | pending |
 | P06 | **no** | none | none | pending |
-| P07 | **no** | none | none | pending |
+| P07 | yes on HYB-328 branch; external producers pending | HYB-328 (#242, open) | see current P07 entry below | pending |
 
 ### Common to every bound screen
 
@@ -287,10 +287,11 @@ Tracking: [HYB-295](https://linear.app/hybrid-billing/issue/HYB-295). [HB-257](.
 - **Tickets.** No binding ticket; `HB-257/plan.md:168` says P06 is not yet ticketed. Linear HYB-129 "[P06] Implement 데모·시나리오 (/demo)" (In Review) is a preview implementation ticket, not a service binding.
 - **Residual.** The HB-23 SR-03 row for P06 (line 38 of this file) stays open.
 
-**P07 Licences and distribution notices: not bound**
-- **Service mode.** As P06; P07 renders the preview component `administration/pages/licenses/Screen.tsx` (`operations.tsx:94-95`), which makes no API call. `boundary.go` registers no licence route.
-- **Tickets.** No binding ticket; `HB-257/plan.md:168` says P07 is not yet ticketed. Linear HYB-130 "[P07] Implement 라이선스·배포 고지 (/licenses)" (In Review) is a preview implementation ticket, not a service binding.
-- **Residual.** Distribution-notice evidence (HB-40) is deferred to P07 by HYB-315.
+**P07 Licences and distribution notices: bound on HYB-328 branch, external producers pending**
+- **Service mode.** `apps/console/src/app/screen-groups/operations.tsx` routes authenticated P07 to `administration/pages/licenses/Live.tsx`. `boundary.go` registers status, known-key and known-proposal reads. This supersedes the historical unbound audit entry for this branch; PR #242 remains open and the user's existing API runtime has not been replaced.
+- **Tickets.** [HYB-328](https://linear.app/myblueton/issue/HYB-328), [PR #242](https://github.com/myblueton-sw/hybrid_billing/pull/242). HYB-130 remains the earlier preview implementation, not proof of service acceptance. See the [P07 field map](screen-binding-fields/operations.md#p07-licensing-and-notices-hyb-328).
+- **States and actions.** Explicit configuration, status, uncertainty and read-failure states; initialization, mode declaration, signed registration and evaluation acceptance; dual-controlled key proposals, approval and proposer withdrawal. Shared session pending/unknown locks, stale-read rejection and explicit confirmations protect all nine licensing commands. Notices remain independently accessible.
+- **Evidence and residuals.** [Live verification](../features/HYB-328/p07-live-verification.md), [key workflow verification](../features/HYB-328/p07-key-verification.md) and [original artifact verification](../features/HYB-328/notice-manifest-verification.md). Seven frontend originals have version/digest metadata; plugin-original sources are unavailable. External time authority, legal issuer provenance and support/Marketplace producers remain pending. Owner FIX, production connection and full-document-reload uncertainty persistence are not claimed.
 
 
 ## HYB-330 diagnostic binding

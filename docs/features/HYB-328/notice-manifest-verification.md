@@ -9,7 +9,7 @@ status: draft
 
 The seven existing frontend notice files now have `licenses/manifest.json`, schema 1, scope `frontend-notice-set`. Each entry carries package name, installed version checked against package-lock.json, package-relative `source_file` (`LICENSE`), output-root-relative public `path`, byte length and SHA-256. Assets and metadata derive from one capture. Missing identity/version evidence, mismatched installed package identity/version, missing original files and zero-byte originals fail generation rather than omit a package. Development serves JSON as application/json with nosniff and GET/HEAD handling; original text remains byte-identical.
 
-This is neither a complete SBOM nor a plugin inventory. Matching installed metadata to lock versions does not verify the installed files against registry tarball integrity. Hashes describe emitted originals, not legal clearance or issuer provenance. No filesystem paths or registry URLs are published.
+This is neither a complete SBOM nor a plugin inventory. Matching installed metadata to lock versions does not verify the installed files against registry tarball integrity. Hashes describe emitted originals, not legal clearance or issuer provenance. No absolute filesystem paths or registry URLs are published.
 
 # Verification
 

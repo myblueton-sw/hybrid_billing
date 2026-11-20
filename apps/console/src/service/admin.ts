@@ -1,3 +1,4 @@
+import type { SessionRow } from "./session-query";
 import { sessionQueryClient } from "./session-query";
 import { grantsOf, delegationsOf, catalogOf, subjectsOf, settingsOf as accessSettingsOf, requestsOf, revocationsOf, previewsOf } from "./access-read";
 import { credentialOf, servicesPageOf, selfPageOf } from "./account-read";
@@ -298,9 +299,10 @@ export type SelfPage = {
   identities: { method: string; login: string }[];
   password_set: boolean;
   installation_administrator: boolean;
-  sessions: SelfSession[];
+  current_session: SessionRow;
+  recorded_session_count: number;
+  accepted_operation_count: number;
   sessions_generation: string;
-  session_ends: SelfEnd[];
   idle_minutes: number;
   max_age_seconds: number;
   signed_in_at: string;

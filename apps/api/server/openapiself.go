@@ -49,8 +49,7 @@ func selfPaths() map[string]any {
 			"500": selfError(string(commands.InternalError), commands.NextNone, false),
 			"503": selfError(string(commands.AuthorityUnavailable), commands.NextRetry, true)}}
 	read := map[string]any{"operationId": "me.read", "responses": map[string]any{"200": map[string]any{"description": "the caller's own account and sessions",
-		"content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"type": "object", "properties": map[string]any{
-			"sessions_generation": hexOf(32), "session_ends": map[string]any{"type": "array", "maxItems": selfEndsKept, "items": selfEndSchema()}}}}}},
+		"content": map[string]any{"application/json": map[string]any{"schema": selfAccountSchema()}}},
 		"401": selfError(string(commands.Unauthenticated), commands.NextAnswer, false),
 		"403": selfError(CodeCSRF, commands.NextNone, false),
 		"500": selfError(string(commands.InternalError), commands.NextNone, false),

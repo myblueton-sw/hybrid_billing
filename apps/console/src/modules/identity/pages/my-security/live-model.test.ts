@@ -1,13 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, type SelfEnd, type SelfPage } from "../../../../service/admin";
+import { AdminError, type SelfEnd, type SelfPage, type SelfSession } from "../../../../service/admin";
 import { selfEndOf } from "../../../../service/self-end";
 import { canChange, changeOutcome, checkChange, goneCount, groupOf, heldShown, heldTags, openByDefault, others, presentHandles, rowOutcome, running, submitOutcome } from "./live-model";
 import { e, stateSentence } from "./end-copy";
 
-const page = (change: Partial<SelfPage>): SelfPage => ({
+type DisplayPage = SelfPage & { sessions: SelfSession[]; session_ends: SelfEnd[] };
+const page = (change: Partial<DisplayPage>): DisplayPage => ({
   user_id: "u", login: "l", email: "e", workspace: "w", role: "member", identities: [], password_set: true, installation_administrator: false,
   sessions: [{ handle: "a", current: true, signed_in: "1", ends: "2" }, { handle: "b", current: false, signed_in: "0", ends: "1" }],
+  current_session: { handle:"a",current:true,signed_in:"1",ends:"2",state:"active",can_end:false }, recorded_session_count:2, accepted_operation_count:0,
   sessions_generation: "g", session_ends: [], idle_minutes: 30, max_age_seconds: 0, signed_in_at: "1", authenticated_at: "1", now: "1", ...change,
 });
 

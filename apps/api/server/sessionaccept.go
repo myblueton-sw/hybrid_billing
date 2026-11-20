@@ -128,7 +128,7 @@ func (s *Server) acceptSessionSelection(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	s.expireSessionRecords(now)
-	_, status := s.applySessionRecord(found, record, kindOthers)
+	_, status := s.applySessionRecord(found, record, record.kind)
 	switch status {
 	case http.StatusUnauthorized:
 		failCode(w, commands.Unauthenticated, request)
@@ -152,7 +152,7 @@ func (s *Server) legacySessionRecord(found session, kind, listed, digest string,
 		s.forgetSessionRecord(record)
 		return nil
 	}
-	record.legacy, record.state, record.generation, record.digest = true, "sealed", listed, digest
+	record.legacy, record.state, record.generation, record.digest, record.kind = true, "sealed", listed, digest, kind
 	for _, handle := range handles {
 		target := frozenSession{Row: queriedSession{selfSession: selfSession{Handle: handle}, State: "unavailable"}}
 		if current, known := s.sessions.indexedSession(found.owner, handle); known {

@@ -162,7 +162,7 @@ func TestPostRoutesAreClassified(t *testing.T) {
 	before := f.s.counter
 	got := f.selfPost(a, "sessions/end", `{"session":"others"}`)
 	refused(t, "sessions/end", got)
-	if got.body["request_id"] != got.header.Get("X-Request-Id") || got.body["request_id"] == "" || f.s.counter != before || len(f.me(a).body["sessions"].([]any)) != 2 {
+	if got.body["request_id"] != got.header.Get("X-Request-Id") || got.body["request_id"] == "" || f.s.counter != before || len(f.testSessionSnapshot(a)["sessions"].([]any)) != 2 {
 		t.Errorf("sessions/end refusal %+v", got)
 	}
 	if f.reauth(a, pw).status != 204 {

@@ -5,7 +5,7 @@ import { adminClient, AdminError } from "./admin";
 const session = { handle: "0123456789abcdef", current: false, signed_in: "2026-11-20T00:00:00Z", ends: "2026-11-20T12:00:00Z", state: "active", can_end: true };
 const query = { session: "other", workspace: "w", since: "", until: "", q: "", limit: 2 };
 const page = { rows: [session], next: "cursor", query, reference_at: "2026-11-20T01:00:00Z", generation: "1", order: "current_then_signed_in_desc_handle_asc", count: { value: 1, certainty: "lower_bound" }, scan_stopped: true, settings: [] };
-const selection = { selection: "selection-a", state: "building", reference_at: "now", expires_at: "later", generation: "1", observed: 2, count: null, digest: "", after: "resume", settings: [] };
+const selection = { kind: "others", selection: "selection-a", state: "building", reference_at: "now", expires_at: "later", generation: "1", observed: 2, count: null, digest: "", after: "resume", settings: [] };
 const summary = { operation: "session-end-1", selection: "selection-a", kind: "others", state: "unconfirmed", recorded_count: 2, ended_count: null, gone_count: null,
   not_included_count: null, blocked_at: null, list_generation: "1", current_generation: null, generation_changed: null, digest: "digest", cleanup: null, replay: false };
 function client(body: unknown, inspect?: (path: string, init?: RequestInit) => void) {
@@ -45,4 +45,14 @@ test("selected termination sends only immutable reference fingerprint and count"
     assert.equal(path, "/api/v1/me/sessions/end");
     assert.deepEqual(JSON.parse(String(init?.body)), { selection: "selection-a", digest: "digest", count: 2 });
   }).endSelectedSessions({ selection: "selection-a", digest: "digest", count: 2 });
+});
+
+test("account read consumes bounded current-session metadata without population arrays", async () => {
+  const { selfFixture } = await import("./read-fixtures");
+  const bounded = { ...selfFixture, recorded_session_count: 151, accepted_operation_count: 5 };
+  const got = await client(bounded).me();
+  assert.deepEqual(got, bounded);
+  assert.equal(Object.hasOwn(got, "sessions"), false);
+  assert.equal(Object.hasOwn(got, "session_ends"), false);
+  for (const patch of [{ current_session: null }, { current_session: { ...bounded.current_session, can_end: "false" } }, { recorded_session_count: "151" }, { accepted_operation_count: -1 }]) await assert.rejects(client({ ...bounded, ...patch }).me(), invalid);
 });

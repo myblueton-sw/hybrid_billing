@@ -133,3 +133,9 @@ func (s *sessions) present(v identity.Verifier) bool {
 	defer s.mu.Unlock()
 	return s.byID[v] != nil
 }
+
+func (s *sessions) generationToken(login string) string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.token[login]
+}

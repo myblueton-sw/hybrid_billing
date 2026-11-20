@@ -35,3 +35,16 @@ test("session search accepts hexadecimal identifiers and rejects actual Unicode 
     assert.equal(parseSessionLink(new URLSearchParams({ sq: value })).bad, true);
   }
 });
+
+test("timestamp filters validate calendar, zone and nanosecond order without rounding", () => {
+  for (const raw of ["2026-02-29T00:00:00Z","2026-11-20T24:00:00Z","2026-11-20T00:00:60Z","2026-11-20T00:00:00","2026-11-20T00:00:00.1234567891Z","2026-11-20T00:00:00+24:00","not-a-date"]) assert.equal(parseSessionLink(new URLSearchParams({ ssince:raw })).bad,true,raw);
+  assert.equal(parseSessionLink(new URLSearchParams({ ssince:"2024-02-29T00:00:00.123456789+09:00" })).bad,false);
+  assert.equal(parseSessionLink(new URLSearchParams({ ssince:"2026-11-20T00:00:00.000000002Z",suntil:"2026-11-20T00:00:00.000000001Z" })).bad,true);
+  assert.equal(parseSessionLink(new URLSearchParams({ ssince:"2026-11-20T09:00:00.000000001+09:00",suntil:"2026-11-20T00:00:00.000000002Z" })).bad,false);
+});
+
+test("equal instants and whitespace-only searches fail before a session query", () => {
+  assert.equal(parseSessionLink(new URLSearchParams({ ssince:"2026-11-20T09:00:00.000000001+09:00",suntil:"2026-11-20T00:00:00.000000001Z" })).bad,true);
+  assert.equal(parseSessionLink(new URLSearchParams({ sq:"   " })).bad,true);
+  assert.equal(parseSessionLink(new URLSearchParams({ sq:" abc " })).filters.q,"abc");
+});

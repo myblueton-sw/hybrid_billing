@@ -77,7 +77,7 @@ func (m *modelWorld) endOthers(step int, login string) {
 	if !ok {
 		return
 	}
-	page := m.f.me(a).body
+	page := m.f.testSessionSnapshot(a)
 	listed := []string{}
 	for h := range m.live[login] {
 		if h != current {

@@ -611,81 +611,74 @@ No secret, pickup reference, request key or rationale is added to reminder DOM a
 
 ## M05 My security
 
-Read: `GET /api/v1/me` (`boundary.go:35`), client and parser `admin.ts:978-998`, called at `my-security/Live.tsx` `load` and `poll` for every view except recovery and notifications. Server shape `selfPage` (`self.go:34-51`) with `selfSession` (`self.go:22-27`), `selfIdentity` (`self.go:29-32`) and, since HYB-307, `sessions_generation` (`self.go:42`, an opaque per-login token) and `session_ends` (`self.go:43`, `selfEndView` at `selfend.go:68-83`). Sessions are normalised field by field (`selfSessionOf`, `service/self-end.ts`); `identities` is still cast without per-field normalisation. Calls outside the command path: `POST /api/v1/me/password` (`boundary.go:48`) and `POST /api/v1/me/sessions/end` (`boundary.go:49`, handler `selfend.go:267`; client `endOthers` and `endOne`, `admin.ts:1003-1011`; answer parsed by `selfEndOf`, `service/self-end.ts:47`).
+HYB-304 candidate read: bounded `GET /api/v1/me`, requested by `AdminClient.me` and strictly parsed by `account-read.ts:selfPageOf`. `self.go:readSelf` exposes account/policy metadata, a separately available `current_session`, canonical recorded-session/accepted-operation counts and the opaque legacy generation token; it does not emit session populations or expanded operation arrays. Identity fields are strictly parsed. Dedicated query, selection and operation consumers are mapped below. Password changes use `AdminClient.changePassword`; selected termination uses `sessionQueryClient.endSelectedSessions`. Both legacy request variants remain API-compatible but are not used by the new screen.
 
 ### Views and page states
 
 | View/area | Displayed field, column or state | Source | Parser | Rendered at |
 | --- | --- | --- | --- | --- |
-| Recovery view | Not available in pre-launch, forgot-password guidance, go to account | fixed copy | none | `my-security/Live.tsx:296` |
-| Notifications view | Not available in pre-launch, go to sessions | fixed copy | none | `my-security/Live.tsx:297` |
-| All views | Signed out or locked out | `me` read `unauthenticated`, or a password change or end-session answer that signs the person out | `admin.ts:757` | `my-security/Live.tsx:272, 285-295` |
-| All views | Loading | derived: no page yet | none | `my-security/Live.tsx:313` |
-| All views | Load failed, Try again | any other failed `me` read | `admin.ts:776-783` | `my-security/Live.tsx:314-320` |
-| All views | Loaded at | `now` (`self.go:48`) | `admin.ts:954` | `my-security/Live.tsx:303` |
+| Recovery view | Not available in pre-launch, forgot-password guidance, go to account | fixed copy | none | `my-security/Live.tsx` |
+| Notifications view | Not available in pre-launch, go to sessions | fixed copy | none | `my-security/Live.tsx` |
+| All views | Signed out or locked out | `me` read `unauthenticated`, or a password change or end-session answer that signs the person out | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| All views | Loading | derived: no page yet | none | `my-security/Live.tsx` |
+| All views | Load failed, Try again | any other failed `me` read | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| All views | Loaded at | `now` (`self.go:48`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
 
 ### Account view
 
 | View/area | Displayed field, column or state | Source | Parser | Rendered at |
 | --- | --- | --- | --- | --- |
-| Account | Sign-in email | `login` (`self.go:36`) | `admin.ts:942` | `my-security/Live.tsx:335` |
-| Account | Contact email or not recorded | `email` (`self.go:37`) | `admin.ts:943` | `my-security/Live.tsx:336` |
-| Account | User ID | `user_id` (`self.go:35`) | `admin.ts:941` | `my-security/Live.tsx:337` |
-| Account | Password set or not | `password_set` (`self.go:41`) | `admin.ts:947` | `my-security/Live.tsx:338` |
-| Account | Profile changes not available note | fixed copy | none | `my-security/Live.tsx:340` |
-| Access | Workspace | `workspace` (`self.go:38`) | `admin.ts:944` | `my-security/Live.tsx:459` |
-| Access | Role | `role` (`self.go:39`) via `roleName` (`users/live-model.ts:14-16`) | `admin.ts:945` | `my-security/Live.tsx:460` |
-| Access | Installation administrator | `installation_administrator` (`self.go:42`) | `admin.ts:948` | `my-security/Live.tsx:461` |
-| Access | Role note | fixed copy | none | `my-security/Live.tsx:463` |
+| Account | Sign-in email | `login` (`self.go:36`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Account | Contact email or not recorded | `email` (`self.go:37`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Account | User ID | `user_id` (`self.go:35`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Account | Password set or not | `password_set` (`self.go:41`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Account | Profile changes not available note | fixed copy | none | `my-security/Live.tsx` |
+| Access | Workspace | `workspace` (`self.go:38`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Access | Role | `role` (`self.go:39`) via `roleName` (`users/live-model.ts:14-16`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Access | Installation administrator | `installation_administrator` (`self.go:42`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Access | Role note | fixed copy | none | `my-security/Live.tsx` |
 
 ### Sign-in methods view and password change
 
 | View/area | Displayed field, column or state | Source | Parser | Rendered at |
 | --- | --- | --- | --- | --- |
-| Methods table | Column headings | fixed copy | none | `my-security/Live.tsx:372-376` |
-| Methods table | Method | fixed copy `m.password`; `identities[].method` (`self.go:30`, always `local-password` at `self.go:103`) is used only as a row key | `admin.ts:946` | `my-security/Live.tsx:379-380` |
-| Methods table | Signs in as | `identities[].login` (`self.go:31`) | `admin.ts:946` | `my-security/Live.tsx:381` |
-| Methods table | Status | `password_set` | `admin.ts:947` | `my-security/Live.tsx:382` |
-| Methods | Linking other methods not available note | fixed copy | none | `my-security/Live.tsx:388` |
-| Password form | No password to change | `password_set` false (`my-security/live-model.ts:12-14`) | `admin.ts:947` | `my-security/Live.tsx:114` |
-| Password form | Current, new, confirm | typed; sent as `current`, `new` | none | `my-security/Live.tsx:133-136`, call `:89` |
-| Password form | Local checks: missing, rule, same, mismatch | derived (`my-security/live-model.ts:6-10`; `passwordProblem` with `login`) | `admin.ts:942` | `my-security/Live.tsx:73-81, 131` |
-| Password form | Wrong current password | `current_password_wrong` → `wrong` | `admin.ts:763` | `my-security/Live.tsx:97-100` |
-| Password form | New password refused by the rule | `password_form` → `form` | `admin.ts:765` | `my-security/Live.tsx:101-103` |
-| Password form | Locked, limited, conflict, busy, result unknown | `password_locked`, `rate_limited`, `revision_conflict`, `dependency_unavailable`, other (`my-security/live-model.ts:22-38`) | `admin.ts:751, 758, 760, 764` | `my-security/Live.tsx:104-107, 132` |
-| Password form | Changed | successful answer | `admin.ts:957-959` | `my-security/Live.tsx:115-125` |
+| Methods table | Column headings | fixed copy | none | `my-security/Live.tsx` |
+| Methods table | Method | fixed copy `m.password`; `identities[].method` (`self.go:selfIdentity`, always `local-password` at `self.go:readSelf`) is used only as a row key | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Methods table | Signs in as | `identities[].login` (`self.go:31`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Methods table | Status | `password_set` | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Methods | Linking other methods not available note | fixed copy | none | `my-security/Live.tsx` |
+| Password form | No password to change | `password_set` false (`my-security/live-model.ts:12-14`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Password form | Current, new, confirm | typed; sent as `current`, `new` | none | `my-security/Live.tsx`, call `:89` |
+| Password form | Local checks: missing, rule, same, mismatch | derived (`my-security/live-model.ts:6-10`; `passwordProblem` with `login`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Password form | Wrong current password | `current_password_wrong` → `wrong` | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Password form | New password refused by the rule | `password_form` → `form` | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Password form | Locked, limited, conflict, busy, result unknown | `password_locked`, `rate_limited`, `revision_conflict`, `dependency_unavailable`, other (`my-security/live-model.ts:22-38`) | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
+| Password form | Changed | successful answer | `account-read.ts:selfPageOf` | `my-security/Live.tsx` |
 
 ### Sessions view
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Header | Session count | derived: number of `sessions[]` | `admin.ts:949` | `my-security/Live.tsx:428` |
-| Sessions | Stale-list note with idle minutes | `idle_minutes` (`self.go:44`) | `admin.ts:950` | `my-security/Live.tsx:434` |
-| Sessions table | Column headings | fixed copy | none | `my-security/Live.tsx:204-209` |
-| Sessions table | This or other session, reference | `sessions[].current`, `handle` (`self.go:23-24`) | `admin.ts:949` | `my-security/Live.tsx:213-214` |
-| Sessions table | Signed in | `sessions[].signed_in` (`self.go:25`) | `admin.ts:949` | `my-security/Live.tsx:215` |
-| Sessions table | Ends | `sessions[].ends` (`self.go:26`) | `admin.ts:949` | `my-security/Live.tsx:216` |
-| Sessions | No other sessions | derived | none | `my-security/Live.tsx:436` |
-| Limits | Idle limit | `idle_minutes` | `admin.ts:950` | `my-security/Live.tsx:413` |
-| Limits | Longest session | fixed copy `m.longestValue`, not from the read | none | `my-security/Live.tsx:414` |
-| Limits | Maximum sign-in age | `max_age_seconds` (`self.go:45`); none when zero | `admin.ts:951` | `my-security/Live.tsx:415` |
-| Limits | You signed in, last confirmed | `signed_in_at`, `authenticated_at` (`self.go:46-47`) | `admin.ts:952-953` | `my-security/Live.tsx:416-417` |
-| Limits | Recent access history not available note | fixed copy | none | `my-security/Live.tsx:419` |
-| Header | End other sessions (entry) | derived: at least one session with `current` false (`my-security/live-model.ts` `others`) | `admin.ts:990` | `my-security/Live.tsx:478` |
-| Sessions table | Sign out here, or End (opens the single-session dialog) | derived from `current` | `admin.ts:990` | `my-security/Live.tsx:176-186` |
-| Sessions table | Started after your list tag | `session_ends[newest others].not_included[].handle` still in `sessions[]` (`live-model.ts` `heldTags`) | `self-end.ts:47` | `my-security/Live.tsx:177` |
-| Sessions | List changed notice (after a 422) | `invalid_request` → `changed` (others) or `gone` (one) (`live-model.ts` `submitOutcome`) | `admin.ts` `failureOf` | `my-security/Live.tsx:479` |
-| End dialog | Fresh list, its time with seconds, this session's reference | a second `GET /me`: `sessions[]` with `current` false, `now`, the current `handle` | `admin.ts:978-998` | `my-security/EndOthers.tsx:41, 113-140` |
-| End dialog | Call (others) | `POST /api/v1/me/sessions/end` with `session` `others`, `generation` = the read's `sessions_generation`, `handles` = the listed rows | `admin.ts:1003-1007` | `my-security/EndOthers.tsx:70` |
-| End dialog | Call (one) | the same route with `session` = handle | `admin.ts:1008-1011` | `my-security/EndOthers.tsx:70` |
-| End dialog | Limited, step-up refused or cancelled, MFA rule, result unknown, Reload and close | `rate_limited`, `reauthentication_required`, `prerequisite_failed`, other (`live-model.ts` `submitOutcome`) | `admin.ts` `failureOf` | `my-security/EndOthers.tsx:72-80, 142-152` |
-| Recent session ends | Operation heading, blocked time, cleanup word, reference, replay line | `session_ends[].kind`, `blocked_at`, `state`, `count`, `operation`, `replay` (`selfend.go:68-83`) | `self-end.ts:47` | `my-security/EndOthers.tsx:208-221` |
-| Recent session ends | State sentence | `state`, `count`, `cleanup.failed` | `self-end.ts:47` | `my-security/EndOthers.tsx:221` |
-| Recent session ends | Access blocked line; Cleanup line, counts and sentence | `blocked_at`, `count`; `cleanup.done`, `already_ended`, `pending`, `failed` | `self-end.ts:47` | `my-security/EndOthers.tsx:222-243` |
-| Recent session ends | Started after your list block with End actions | `not_included[]` (kind `others` only), presence in `sessions[]` | `self-end.ts:47` | `my-security/EndOthers.tsx:246-263` |
-| Recent session ends | Changed with nothing to list; already gone count | `generation_changed`; `sessions[].result` = `already_gone` | `self-end.ts:47` | `my-security/EndOthers.tsx:264-265` |
-| Recent session ends | Per-session result and cleanup details (C1–C8 by group, outside-scope rows always shown) | `sessions[].result`, `sessions[].items[]` | `self-end.ts:47` | `my-security/EndOthers.tsx:157-189, 266-286` |
-| Recent session ends | Checked at, still in progress, could not check, Check again | `now` of each poll; client 2 s polling for at most 30 s | `admin.ts:978-998` | `my-security/EndOthers.tsx:290-297`, `Live.tsx:258-291` |
+HYB-304 is an in-progress replacement of the former full-population account read. Current candidate bindings follow; this table does not declare M05 complete or owner-accepted. Historical HYB-307 bindings remain in Git at commit 5fbd7791127d7b369a03a5f11baaf33a0d3ddc1e.
+
+| View/area | Displayed field, column or state | Producer | Parser and rendered consumer |
+| --- | --- | --- | --- |
+| Current session | Independent reference, login time and state | `/me.current_session`; `self.go:readSelf` and canonical session index | `account-read.ts:selfPageOf`; `LiveSessions.tsx:ScopedSessions` |
+| Sessions table | Current/other, handle, signed-in/expiry time, state, permitted End action | `GET /me/sessions.rows[]` and known-ID `/me/sessions/{handle}`; current canonical owner/epoch/workspace only | `session-query.ts:sessionPageOf/sessionRowOf`; `LiveSessions.tsx:SessionRows`; `SessionSelection.tsx` rechecks the known target |
+| Filters | Current/other/all, search, from/before timestamps and page size | Strict server query allowlist; canonical normalized query; 1–100 rows | `session-query-model.ts`; `LiveSessions.tsx` form, applied filters and URL/history |
+| Count and paging | Exact/lower-bound recorded count, this-page row count, scan stop, reference time, previous/next/first | `count`, `scan_stopped`, `reference_at`, signed caller/query/generation-bound cursor | `session-query.ts`; bounded page state and at most 32 prior continuation links in `LiveSessions.tsx` |
+| Empty/error | No matching rows on this page; invalid query; changed/expired cursor; read failure | Explicit response/count basis, never page-length inference of the full population | `LiveSessions.tsx`; `query-copy.ts` |
+| Limits | Idle, longest session, max sign-in age, signed-in and authenticated times | Account/policy metadata; longest session remains documented fixed copy | `account-read.ts`; `LiveSessions.tsx` limits panel |
+| End entry | All other recorded sessions in current workspace, independent of displayed filters/page | Explicit preparation kind `others`, not browser handles | `SessionSelection.tsx`; `query-copy.ts:fullScope` |
+| One-session entry | One currently eligible own known handle | Dedicated known-ID admission then exclusive `{session:handle}` preparation | `session-query.ts:sessionDetail/prepareSessionSelection`; `SessionSelection.tsx` |
+| Preparation/preview | Kind, reference time, building progress vs sealed exact count/digest, immutable bounded rows | `POST /me/sessions/selections`, `GET /me/sessions/selections/{reference}` | `selectionOf`; `SessionSelection.tsx`; no full target array in browser |
+| Submission | Exact selection reference/digest/count for either kind | `POST /me/sessions/end`; same canonical caller, admission and step-up at effects | `sessionQueryClient.endSelectedSessions`; `session-intent.ts` |
+| Uncertain result | New actions locked; same-reference read-back/replay, retained-result unavailable | Original selection/operation identity, nullable unconfirmed outcomes | `session-intent.ts`, `IntentRecovery`; in-memory client/scope retention, not document-reload durability |
+| Result summaries | Recorded/ended/gone/not-included counts, access vs cleanup state | Dedicated bounded operation list and known-ID summary; constant-work server counters | `sessionOperationOf`; `SessionOperations.tsx`; unknown is never zero/completed |
+| Result rows | Ended vs already-gone and eight fixed cleanup items | `/me/sessions/operations/{operation}/items?view=results`; bounded rows | `SessionOperations.tsx:OperationRows/ResultRow`; per-item categories and already-cleared distinctions grouped by done/pending/failed/not-applicable/outside-scope |
+| Not included | Separate bounded confirmed-set exclusion rows and known-ID End action | Same item route with `view=not_included`; never added to the confirmed set | `SessionOperations.tsx`; fresh one-session preparation before effects |
+| Cleanup refresh | Manual check, 2-second polling of displayed first-page running operations for at most 30 seconds | Owner operation version and current summary; no whole-population poll | `SessionOperations.tsx`; explicit stopped/error state |
+| Scope/lifecycle | Hide prior-scope data synchronously, discard late read responses, preserve only scoped submitted intent | Canonical account admission and current API/read token | `scoped-read.ts`; tagged records in `Live`, `LiveSessions`, selection and operation readers; guarded parent callbacks |
+
+**Remaining original behavior before M05 integration:** restore an explicit cross-page session-row confirmed-set exclusion tag without loading all not-included rows; surface relevant effective preparation/query limits and expiry. These are tracked in [the integration plan](../../features/HYB-304/session-ui-integration.md), not removed from the acceptance scope. Inherited history browser accumulation must also be bounded. Final failure/cleanup/building/large-result browser variants, source/coverage/mutation checks and owner review remain distinct pending work.
 
 ### HYB-306 recent access history
 
@@ -700,12 +693,12 @@ Implementation candidate; combined verification is pending. The new read is `GET
 | Coverage | `available_from`, `now` | oldest visible own record and server clock | coverage statement, period gap, loaded time |
 | Recording | `recording.state`, `since`, `reason` | history writer status | stopped-recording note; never represented as an empty successful history |
 | Loss, holds and deletion | `notes[].kind`, `from`, `to`, `count` | history storage, purge and persisted hold markers; attributable own counts only | `history-model.ts`: `noteLines`; ordered note region |
-| Scope revocation | clear rows and cursor on unauthenticated answer; remount by user/workspace/session | authenticated self read and API error | `AccessHistory.tsx`; key in `my-security/Live.tsx` |
+| Scope revocation | clear rows and cursor on unauthenticated answer; remount by user/workspace/session | authenticated self read and API error | `AccessHistory.tsx`; key in `my-security/LiveSessions.tsx` |
 | Storage | append-only day files, retention and person state in installation data directory | `modules/accesshistory`; `Server.openHistory`, `Server.Close` | survives server restart within the plan's incarnation and storage limits |
 
 No network address, raw User-Agent, login name, email or bearer secret is stored or displayed by this feature. Device values are fixed browser/OS families. Old held records stay hidden; backup deletion is not claimed.
 
-**Parsed but not displayed on M05:** `identities[].method`, history `period_since`, and `recording.reason` (the recording state and start time drive the visible notice).
+**Parsed but not displayed on M05:** `/me.recorded_session_count`, `/me.accepted_operation_count`, opaque legacy `sessions_generation`, `identities[].method`, history `period_since`, and `recording.reason` (the recording state and start time drive the visible notice).
 
 ## Unknowns and mismatches
 

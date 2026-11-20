@@ -22,11 +22,11 @@ func sessionOperationSummarySchema() map[string]any {
 
 func sessionSelectionSchema(preview bool) map[string]any {
 	text := map[string]any{"type": "string"}
-	properties := map[string]any{"selection": text, "operation": text, "state": map[string]any{"type": "string", "enum": []string{"building", "sealed", "applying", "accepted"}},
+	properties := map[string]any{"kind": map[string]any{"type": "string", "enum": []string{kindOne, kindOthers}}, "selection": text, "operation": text, "state": map[string]any{"type": "string", "enum": []string{"building", "sealed", "applying", "accepted"}},
 		"reference_at": text, "expires_at": text, "generation": text, "observed": map[string]any{"type": "integer", "minimum": 0},
 		"count": map[string]any{"type": []string{"integer", "null"}, "minimum": 0}, "digest": text, "after": text,
 		"settings": map[string]any{"type": "array", "maxItems": 6, "items": map[string]any{"type": "object"}}}
-	required := []string{"selection", "state", "reference_at", "expires_at", "generation", "observed", "count", "digest", "after", "settings"}
+	required := []string{"kind", "selection", "state", "reference_at", "expires_at", "generation", "observed", "count", "digest", "after", "settings"}
 	if preview {
 		properties["rows"] = map[string]any{"type": "array", "maxItems": 100, "items": sessionQueryRowSchema()}
 		properties["next"] = text
@@ -48,11 +48,12 @@ func sessionSelectionResponses(schema map[string]any) map[string]any {
 func sessionSelectionPrepareOperation() map[string]any {
 	body := map[string]any{"oneOf": []any{
 		map[string]any{"type": "object", "additionalProperties": false, "maxProperties": 0},
+		map[string]any{"type": "object", "additionalProperties": false, "required": []string{"session"}, "properties": map[string]any{"session": map[string]any{"type": "string", "pattern": "^[0-9a-f]{16}$"}}},
 		map[string]any{"type": "object", "additionalProperties": false, "required": []string{"selection", "after"}, "properties": map[string]any{
 			"selection": map[string]any{"type": "string", "minLength": 1, "maxLength": 64}, "after": map[string]any{"type": "string", "minLength": 1, "maxLength": 4096}}}}}
 	return map[string]any{"operationId": "me.sessions.selection.prepare", "x-max-body-bytes": 8192,
 		"x-admission":    "Current canonical owner, epoch, workspace and original caller; CSRF required. No query parameters. Duplicate/unknown JSON keys and null scalars are rejected.",
-		"x-continuation": "Signed process-local resumable scan. Source revision, eligibility transition or expiry invalidates unfinished preparation. Duplicate continuation does not append twice. Global quota covers building, sealed, accepted, result, held and retry references; capacity is reserved before effects.",
+		"x-continuation": "Empty object prepares all other recorded sessions; a session handle freezes exactly one noncurrent own session immediately under the same limits, with kind one. Kind and target participate in reuse/digest/application; no inferred target reconstruction. Signed process-local resumable scan for kind others. Source revision, eligibility transition or expiry invalidates unfinished preparation. Duplicate continuation does not append twice. Global quota covers building, sealed, accepted, result, held and retry references; capacity is reserved before effects.",
 		"requestBody":    map[string]any{"required": true, "content": map[string]any{"application/json": map[string]any{"schema": body}}},
 		"responses":      sessionSelectionResponses(sessionSelectionSchema(false))}
 }

@@ -15,6 +15,7 @@ type frozenSession struct {
 
 type sessionRecord struct {
 	ref             string
+	kind            string
 	legacy          bool
 	indexed         bool
 	resultPositions map[string]int
@@ -116,7 +117,7 @@ func (s *Server) newSessionRecord(found session, at, expires time.Time, version 
 	if s.sessionRecords[ref] != nil || !s.reserveSessionRecord(nil, 1) {
 		return nil
 	}
-	record := &sessionRecord{ref: ref, owner: found.owner, caller: found.handle, at: at, expires: expires, version: version, revision: revision, state: "building", positions: map[string]int{}, units: 1}
+	record := &sessionRecord{ref: ref, owner: found.owner, caller: found.handle, at: at, expires: expires, version: version, revision: revision, state: "building", kind: kindOthers, positions: map[string]int{}, units: 1}
 	s.sessionRecords[ref] = record
 	return record
 }

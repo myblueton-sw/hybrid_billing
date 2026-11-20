@@ -30,11 +30,7 @@ func (f world) drainSelf() int {
 
 func (f world) lastEnd(a actor) map[string]any {
 	f.t.Helper()
-	ends := f.me(a).body["session_ends"].([]any)
-	if len(ends) == 0 {
-		f.t.Fatal("no session ends")
-	}
-	return ends[0].(map[string]any)
+	return f.testLatestLegacyOperation(a)
 }
 
 func TestSelfEndStaleCookiePerPath(t *testing.T) {
@@ -338,7 +334,7 @@ func TestOtherSessionEndersChangeTheGeneration(t *testing.T) {
 			f := memberWorld(t)
 			a := f.signedIn(MemberLogin, pw)
 			b := f.signedIn(MemberLogin, pw)
-			listed := f.me(a).body
+			listed := f.testSessionSnapshot(a)
 			before := f.s.sessions.generation(MemberLogin)
 			run(f, a, b)
 			if f.s.sessions.generation(MemberLogin) == before {
@@ -401,7 +397,7 @@ func TestSelfEndKeepsFiveOperations(t *testing.T) {
 		f.as(MemberLogin)
 		f.selfPost(a, "sessions/end", f.othersBody(a))
 	}
-	ends := f.me(a).body["session_ends"].([]any)
+	ends := f.operationRead(a, "?limit=100").body["rows"].([]any)
 	if len(ends) != selfEndsKept || ends[0].(map[string]any)["operation"] != fmt.Sprintf("session-end-%d", selfEndsKept+1) {
 		t.Errorf("kept %d first %v", len(ends), ends[0])
 	}
@@ -583,7 +579,7 @@ func TestEndedSessionsCarryAllEightCleanupItems(t *testing.T) {
 	f.failModuleEnds("self-end-unavailable")
 	f.as(MemberLogin)
 	f.s.fault = nil
-	end := f.selfPost(a, "sessions/end", othersOf(f.me(a).body, nil))
+	end := f.selfPost(a, "sessions/end", othersOf(f.testSessionSnapshot(a), nil))
 	listed := map[string]bool{}
 	for _, row := range end.body["sessions"].([]any) {
 		m := row.(map[string]any)

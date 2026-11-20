@@ -10,6 +10,10 @@ sources:
   - resource: ./selection-server-evidence.json
 ---
 
+# Frozen checkpoint
+
+This record and selection-server-evidence.json describe commit 5fbd7791127d7b369a03a5f11baaf33a0d3ddc1e. Source hashes are verified against that checkpoint, not later working-tree changes. Subsequent bounded /me and UI integration is recorded separately.
+
 # Implemented behavior
 
 On top of foundation 79856aed, M05 now has server-owned resumable selection preparation, immutable bounded preview, reference/digest/count acceptance and same-reference replay. The actual canonical owner/epoch/workspace/caller scope controls selection reads and changes. Accepted operation recovery permits another current session of the same canonical owner; unconfirmed intent remains caller-bound with null outcomes. Result/not-included arrays have dedicated bounded pages. Summary counts are updated with construction/cleanup transitions and never traverse retained results at read time.

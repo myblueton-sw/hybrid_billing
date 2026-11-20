@@ -394,5 +394,7 @@
       "bytes": 617804,
       "sha256": "993eab3df8f65d7f7fc7f7f6e5828b79a5d98fda308c864fcc9d4413d9031a3a"
     }
-  ]
+  ],
+  "checkpoint_commit": "5fbd7791127d7b369a03a5f11baaf33a0d3ddc1e",
+  "source_binding": "Source hashes identify the immutable checkpoint commit, not later working-tree source."
 }

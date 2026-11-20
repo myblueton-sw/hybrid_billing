@@ -12,7 +12,7 @@ sources:
 
 This HYB-304 candidate adds startup configuration for the bounded local verification API. It is not production installation certification or completed M04 integration. Run commands from the repository root with the project's supported Go toolchain. Use a disposable local data directory for verification; do not replace a protected running installation or its configuration as part of this procedure.
 
-The catalog records explicitly configured recipient identifiers and named service restrictions. It creates no permission grant or OAuth client, does not authenticate service requests, and does not prove a recipient connection works. The candidate API now requires a complete current declaration for new service creation and for first execution of each credential issue or reactivation. The dedicated bounded M04 reads and Console picker/form bindings remain pending; the existing Console create form does not yet submit the required metadata and is not a completed integration.
+The catalog records explicitly configured recipient identifiers and named service restrictions. It creates no permission grant or OAuth client, does not authenticate service requests, and does not prove a recipient connection works. The candidate API now requires a complete current declaration for new service creation and for first execution of each credential issue or reactivation. The candidate now exposes dedicated bounded M04 reads and canonical selection details. Console picker/form binding remains pending; the existing Console create form does not yet submit the required metadata and is not a completed integration.
 
 # File and startup
 
@@ -89,3 +89,22 @@ Declarations currently share the prelaunch identity/command process lifecycle an
 A successful `/api/v1/health` response confirms that the local API started; it does not confirm a recipient connection, grant, business-object eligibility or service-request authentication. The constructor tests separately verify an exact configured scope against the actual gate vocabulary, no grant creation, immutable input handling and raw-byte removal. Synthetic CLI tests verify configured/empty/omitted startup, health, file replacement and shutdown.
 
 On a generic catalog/startup error, inspect the local file against this schema and actual registered vocabulary. Correct the input before starting again. Do not paste raw configuration or credentials into logs/tickets. Prior server/data remains untouched by a failed constructor; after a later listener or initialization error, use the normal startup diagnostics rather than inferring the catalog was the cause. Current verification is macOS arm64 plus static Linux/Windows arm64 checks; other-OS runtime behavior remains unverified.
+
+# Bounded administration reads
+
+The candidate replaces the embedded account/credential/owner population at `GET /api/v1/identity/services` with account summary pages. `GET /identity/service-credentials`, `/identity/service-owners`, `/identity/service-organizations` and `/identity/service-audiences` under the same `/api/v1` prefix are independent bounded lists. Audience scopes and retained declaration versions have separate paged subpaths. Canonical account/credential/owner/organization/scope details do not depend on membership in the displayed page. See the [complete query contract](../../features/HYB-304/m04-queries.md) and running `/api/v1/openapi.json` read catalog for exact paths, fields and admission.
+
+Every data read requires the current installation administrator, session and CSRF header in the authenticated canonical boot workspace. No role-name assumption, selected ID or continuation grants access. Counts use decimal strings and state exact/lower_bound certainty; a scan-stopped empty page is not proof of no matching records. `admission` separately reports exact recorded account usage, including retired records, so filtered count never controls creation capacity.
+
+| Startup flag | Default | Range | Meaning |
+| --- | --- | --- | --- |
+| `--service-query-page-size` | 50 | 1–100 | Output rows per page |
+| `--service-query-scan` | 1000 | 100–10000 | Conservative charged work units per request |
+| `--service-query-lifetime-seconds` | 300 | 30–3600 | Fixed continuation lifetime in seconds |
+| `--credential-warning-days` | 14 | 1–90 | Query threshold for expiring credentials; no credential-lifetime change |
+
+A large account can require multiple requests before its credential aggregate is complete. Continue with the exact returned query and opaque `next`; keep the original reference time and count certainty. A changed/expired/mismatched continuation returns409 and requires an explicit fresh query. Current command and known-detail eligibility are recomputed; reference-time list membership is not current permission or execution certification. A source change while projecting a known detail also returns409 without a mixed-source row.
+
+Recorded uncollected credentials have an independent workspace query, even when the account table is filtered differently. Collection membership means active at the signed reference and not recorded as returned. Open/never pickup availability is a live observation for the original issuing session, without a pickup reference or secret in metadata. A not-returned/currently-not-open annotation alone does not certify irreversible deletion; temporary original-issuer authority loss can later change availability. Another administrator seeing open is not given collection rights. Returned once never proves safe storage. Preserve held same-request recovery; changing filters or metadata does not rewrite an unknown-outcome issue attempt.
+
+This is a backend working candidate. The existing Console requires the new contracts and remains pending; no full M04, rendered or production-installation certification follows from these reads.

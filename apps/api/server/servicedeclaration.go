@@ -109,11 +109,11 @@ func validCatalogVersion(value string) bool {
 	return true
 }
 
-func (s *Server) eligibleServiceOwner(owner string) (bool, error) {
+func (s *Server) eligibleServiceOwner(actor identity.Verifier, owner string) (bool, error) {
 	if s.faulty("roster") {
 		return false, identity.ErrUnavailable
 	}
-	rows, err := s.identity.Workspace().People(s.caller, s.bootWorkspace, []string{owner})
+	rows, err := s.identity.Workspace().People(actor, s.bootWorkspace, []string{owner})
 	if err != nil {
 		return false, err
 	}
@@ -149,18 +149,14 @@ func (s *Server) checkServiceTerms(terms gate.Terms, now time.Time) error {
 	if s.contracts.get(s.bootWorkspace, id) == nil {
 		return commands.Fail(commands.InvalidRequest, "scopes")
 	}
-	sequence, err := s.lifecycles.Sequence(s.bootWorkspace, id)
-	if err != nil {
-		return commands.Fail(commands.DependencyUnavailable)
-	}
-	position, err := s.lifecycles.StateOn(s.bootWorkspace, id, sequence, contractToday(now))
+	position, _, err := s.lifecycles.CurrentPosition(s.bootWorkspace, id, contractToday(now))
 	if err != nil {
 		return commands.Fail(commands.DependencyUnavailable)
 	}
 	if position.State != contracts.Active {
 		return commands.Fail(commands.InvalidRequest, "scopes")
 	}
-	revision, err := s.orgs.ContractRevision(s.bootWorkspace, id, position.Revision)
+	revision, err := s.orgs.ContractParties(s.bootWorkspace, id, position.Revision)
 	if err != nil {
 		return commands.Fail(commands.DependencyUnavailable)
 	}
@@ -254,7 +250,7 @@ func (s *Server) prepareServiceDeclaration(service string, fields map[string]str
 }
 
 func (s *Server) requireServiceDeclaration(svc identity.ServiceInfo, now time.Time) error {
-	eligible, err := s.eligibleServiceOwner(svc.Owner)
+	eligible, err := s.eligibleServiceOwner(s.caller, svc.Owner)
 	if err != nil {
 		return mapIdentity(err)
 	}
@@ -288,7 +284,7 @@ func (h serviceCommand) declare(ctx commands.Context, now time.Time) (string, ma
 	if !found || svc.State == identity.Departed {
 		return "", nil, commands.Fail(commands.InvalidStage)
 	}
-	eligible, err := s.eligibleServiceOwner(svc.Owner)
+	eligible, err := s.eligibleServiceOwner(s.caller, svc.Owner)
 	if err != nil {
 		return "", nil, err
 	}

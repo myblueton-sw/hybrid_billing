@@ -14,6 +14,7 @@ func (r *Registry) putParty(key scoped, record versioned[Party]) {
 		r.partyIndex[key.workspace] = ids
 	}
 	r.parties[key] = record
+	r.queryChanged(key.workspace)
 }
 
 func (r *Registry) EligibleParty(workspaceID, id string) (Party, uint64, error) {

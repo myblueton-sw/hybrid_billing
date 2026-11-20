@@ -131,7 +131,7 @@ func (h *Workspace) Accept(workspace, invitationID string, verifier, actor Verif
 	}
 	found.state = invitationAccepted
 	r.putMembership(workspace, acting.user, &membership{role: found.role, state: MembershipActive, version: version, joined: joined + 1, from: now, until: found.roleUntil})
-	r.generation++
+	r.subjectChanged()
 	return nil
 }
 
@@ -169,7 +169,7 @@ func (r *Registry) transition(actor Verifier, workspace, target string, expected
 		return nil
 	}
 	*found = next
-	r.generation++
+	r.subjectChanged()
 	return nil
 }
 
@@ -300,7 +300,7 @@ func (h *Workspace) CreateServiceUser(actor Verifier, workspace, serviceID, owne
 		return ErrConflict
 	}
 	r.putUser(serviceID, &user{kind: Service, state: Active, epoch: 1, workspace: workspace, creator: acting.user, owner: owner})
-	r.generation++
+	r.subjectChanged()
 	return nil
 }
 
@@ -333,7 +333,7 @@ func (r *Registry) serviceState(actor Verifier, workspace, serviceID string, exp
 		return ErrConflict
 	}
 	found.state, found.operatorBlock = to, false
-	r.generation++
+	r.subjectChanged()
 	return nil
 }
 
@@ -402,13 +402,7 @@ func (h *Workspace) AddCredential(actor Verifier, workspace, serviceID, credenti
 	if r.credentials[credentialID] != nil {
 		return ErrConflict
 	}
-	held := 0
-	for _, id := range r.credentialIndex[serviceID] {
-		existing := r.credentials[id]
-		if !existing.revoked && now.Before(existing.validity.NotAfter) {
-			held++
-		}
-	}
+	held := r.liveCredentialCount(serviceID, now)
 	if held >= r.limits.CredentialsPerServiceUser {
 		return ErrLimit
 	}
@@ -462,7 +456,9 @@ func (h *Workspace) RevokeCredential(actor Verifier, workspace, credentialID str
 	if found.revoked {
 		return refused(ReasonState)
 	}
+	r.unindexCredentialExpiry(credentialID, found)
 	found.revoked = true
+	r.credentialChanged(found.user)
 	r.pruneCredentials(found.user, r.clock())
 	return nil
 }

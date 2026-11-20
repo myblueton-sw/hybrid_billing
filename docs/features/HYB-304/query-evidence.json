@@ -1,0 +1,607 @@
+{
+  "type": "VerificationEvidence",
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "base_commit": "7abd8a56e399c01132c20f6787ec108ef7e3b084",
+  "recorded_at": "2026-11-20T10:12:47.133824+00:00",
+  "scope": "Bounded M04 backend queries checkpoint; Console remains unported, not merge-ready",
+  "sources": [
+    {
+      "path": "apps/api/cmd/hb-api/main.go",
+      "sha256": "5743493a991df7634f943cba06d3894df6e2a6730455bc95ae6d3e1a42a157ef",
+      "bytes": 7686
+    },
+    {
+      "path": "apps/api/cmd/hb-api/servicequery_test.go",
+      "sha256": "8db3eb2cdffbe51f5da57b75cd9cdea2159ab0eb39498f48fed8a85cd7795681",
+      "bytes": 2044
+    },
+    {
+      "path": "apps/api/server/admin.go",
+      "sha256": "19b318fae59ce925f3e5ba113a36a969f97edabc4a466c7640f76a3d40c26128",
+      "bytes": 18084
+    },
+    {
+      "path": "apps/api/server/boundary.go",
+      "sha256": "4672145d7c740032105e7e691ddc96d50cc86df4e96c0b0a5d8c63eed4d61f4e",
+      "bytes": 6617
+    },
+    {
+      "path": "apps/api/server/directory.go",
+      "sha256": "174f771cbdfe66f52749b06f46b1881269737b2be9bb5b802bf283845bba9cc1",
+      "bytes": 4939
+    },
+    {
+      "path": "apps/api/server/openapi.go",
+      "sha256": "9f21cfa0d14ba6de4cae67bad66fdb1ce8be611e0ee02542cdd2f4e7e882de7f",
+      "bytes": 8098
+    },
+    {
+      "path": "apps/api/server/server.go",
+      "sha256": "4b51eed55298f047cbfcfc19b6b8e9865eb7e61a16c0e4ad374f08ecff502f81",
+      "bytes": 14634
+    },
+    {
+      "path": "apps/api/server/servicedeclaration.go",
+      "sha256": "d40422444222bff0b4d525caf008721cfcae5620ba5884ede3a833cc5bfd3598",
+      "bytes": 10192
+    },
+    {
+      "path": "apps/api/server/servicedelivery.go",
+      "sha256": "bf61f07bd773aa034ab8dec24508b2ca02551357c95328fcabb124315f7f8202",
+      "bytes": 1173
+    },
+    {
+      "path": "apps/api/server/servicedelivery_test.go",
+      "sha256": "0f489d54ce015960e94711eec4e89c070fc19d5d59297f4cf8a6f52b4db70df4",
+      "bytes": 3199
+    },
+    {
+      "path": "apps/api/server/servicequery_accounts.go",
+      "sha256": "4af07295b7148ca5f8545c2661d4fc80cf4152f17a35323082d4ff869c465916",
+      "bytes": 7920
+    },
+    {
+      "path": "apps/api/server/servicequery_accounts_test.go",
+      "sha256": "a6b976b61622c756b2ca13e0d9578d51cd6b82687b830bd78181dce25d484d61",
+      "bytes": 6747
+    },
+    {
+      "path": "apps/api/server/servicequery_boundary_test.go",
+      "sha256": "1c6afec0e4649e968ab1767e0549ee62fa9270000b2726fd313ee14e9f1f9146",
+      "bytes": 1288
+    },
+    {
+      "path": "apps/api/server/servicequery_choices.go",
+      "sha256": "487c9e6152463c365d2da40dc1eb4262c2203ba07aa52c8cf356020bb222f057",
+      "bytes": 9014
+    },
+    {
+      "path": "apps/api/server/servicequery_choices_test.go",
+      "sha256": "9d41c816d7a0250cc74fc76054b308b3c475ea013c45a1ca330c980fe52c79bb",
+      "bytes": 6839
+    },
+    {
+      "path": "apps/api/server/servicequery_credential_controls_test.go",
+      "sha256": "aa264eaf65a1c9e89d6180b8c0bf745c99c4c4949d8b4470e9e97cdc12ef636a",
+      "bytes": 1538
+    },
+    {
+      "path": "apps/api/server/servicequery_credentials.go",
+      "sha256": "d86a15751f30ee0c588dfc82338872f10151ffb5cce0fa2ba50ee2e7823419ee",
+      "bytes": 5049
+    },
+    {
+      "path": "apps/api/server/servicequery_credentials_test.go",
+      "sha256": "a4906bdc1963fa612bca99cf960e2a70d79080e86f75666403aa34eb1988cb96",
+      "bytes": 4357
+    },
+    {
+      "path": "apps/api/server/servicequery_cursor.go",
+      "sha256": "e8e327cbfa6472f561d17d1dabec0e01a24b437ddf93ce5c9441bf4f8cbf99ae",
+      "bytes": 8894
+    },
+    {
+      "path": "apps/api/server/servicequery_detail.go",
+      "sha256": "fa3b42c1bb8bd2a953a4e2adfbe3ed6354d4d9dd04db3f9cd5d76e5598acb1a8",
+      "bytes": 12133
+    },
+    {
+      "path": "apps/api/server/servicequery_detail_test.go",
+      "sha256": "c8ffc7dc5620e6a892dbb8b34ddfa576e23d3fa487352a31b2ca249c60c3e704",
+      "bytes": 3888
+    },
+    {
+      "path": "apps/api/server/servicequery_fixture_test.go",
+      "sha256": "a735abb8876e72485470ec2c58f1968a1cb8be071e03077f09525f32435bd3d4",
+      "bytes": 2052
+    },
+    {
+      "path": "apps/api/server/servicequery_history.go",
+      "sha256": "26f07b188df4c51d4276c676851ee20b23048d0804c467436187657959fb642f",
+      "bytes": 2170
+    },
+    {
+      "path": "apps/api/server/servicequery_history_test.go",
+      "sha256": "0e1f0237bacb3f2653e6121d07a76927c3882b3099f8437572e716fbfb2acbff",
+      "bytes": 5690
+    },
+    {
+      "path": "apps/api/server/servicequery_model.go",
+      "sha256": "4a420eb88299b2720572e476e99afba64d7d21ab952d9d1c8542c03bded6f277",
+      "bytes": 4700
+    },
+    {
+      "path": "apps/api/server/servicequery_openapi.go",
+      "sha256": "a27abf094e639d607c098288cb3bc59099110e68c943e9d8722fb5bc1db95c85",
+      "bytes": 16415
+    },
+    {
+      "path": "apps/api/server/servicequery_openapi_test.go",
+      "sha256": "b05fa46699e550d74c82df8bf90835bcfe2956abf19f09960e14f4d0f9da1b80",
+      "bytes": 1985
+    },
+    {
+      "path": "apps/api/server/servicequery_wire_test.go",
+      "sha256": "8de47269e14706993e35c2b7e6884e33b5e1313cc4d230f46e73073dc482fb4e",
+      "bytes": 3107
+    },
+    {
+      "path": "apps/api/server/servicequerysettings.go",
+      "sha256": "ae862bf63447a9997fb5303e84a626e97a69c04ceab47d1c8e396c58b50010ff",
+      "bytes": 757
+    },
+    {
+      "path": "apps/api/server/services.go",
+      "sha256": "007b73534c0b34714e7e222c6edd47e361df5c774d5c31b602f1fe230e90635f",
+      "bytes": 12422
+    },
+    {
+      "path": "apps/api/server/services_test.go",
+      "sha256": "d91b451c50d6fb9a5116f9399d0c91b0c3f019418dac5a1a75a079ca223414a1",
+      "bytes": 21980
+    },
+    {
+      "path": "apps/api/server/settings.go",
+      "sha256": "80e0d4b99542d93d96a342025d698a023d7c48dd5fc6cedf8e8872e552f37331",
+      "bytes": 11195
+    },
+    {
+      "path": "apps/api/server/users.go",
+      "sha256": "0467858e9ad82b02abc7ec36f3b311b01c5967d2e792a8ae29269092d0e24e6a",
+      "bytes": 11364
+    },
+    {
+      "path": "docs/features/HYB-304/m04-queries.md",
+      "sha256": "0594cfde3528bb6faf73f1fba9756110966be3a399a8da43182832fc178fa2da",
+      "bytes": 31417
+    },
+    {
+      "path": "docs/ops/installation/service-catalog.md",
+      "sha256": "6cc16eea339c4fee34094455ce2552b2a8a0cf9066f03cb9c0594d934893fa55",
+      "bytes": 13696
+    },
+    {
+      "path": "docs/ui/screen-binding-fields/identity.md",
+      "sha256": "3d5e140df08744f4a5192f5d00a4939aba837dcabf0fe82d2bbb96869de90864",
+      "bytes": 96771
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "e77c30eec60b18859ace252fdc854f4f9e097376198967382e07a203a61245da",
+      "bytes": 58369
+    },
+    {
+      "path": "modules/contracts/query.go",
+      "sha256": "ce1bf2ef1595336046a711356c6c01d7628d5463e598a979a199ea6fcbccc75c",
+      "bytes": 1617
+    },
+    {
+      "path": "modules/contracts/query_test.go",
+      "sha256": "4d32d7388c2992c889ad05ad1337cf8bbfc086eae463b566c2cf933c1751aa03",
+      "bytes": 5470
+    },
+    {
+      "path": "modules/contracts/registry.go",
+      "sha256": "7b83939a445b27e548681d5a90019334bc53934856e243d124476d4dc2c97a8e",
+      "bytes": 12064
+    },
+    {
+      "path": "modules/identity/boundary.go",
+      "sha256": "6fcabd89f8f9a29ad4dc3a18ff707e81551a21b3da71a903de3ada29f4130d2a",
+      "bytes": 8346
+    },
+    {
+      "path": "modules/identity/bulk.go",
+      "sha256": "d0e56d01c7c2a8b4566e080f732cc21d56b834d80a3bb9a9bbd17559c7c6b384",
+      "bytes": 2061
+    },
+    {
+      "path": "modules/identity/installation.go",
+      "sha256": "f2d92bdf15540f33bdf7d0c8c646696474f938605337af8af685f437e3352d46",
+      "bytes": 4637
+    },
+    {
+      "path": "modules/identity/periods.go",
+      "sha256": "38772b9c6be5b102791bb2a154274e155f9ebde96b7d12b4bee988c15cd38bff",
+      "bytes": 6226
+    },
+    {
+      "path": "modules/identity/querybasis.go",
+      "sha256": "80fcfb877082c4af31d77584e25d57a1a297e7df5c96782946afbf9a46ef98d1",
+      "bytes": 2201
+    },
+    {
+      "path": "modules/identity/querybasis_test.go",
+      "sha256": "67f798c4630cc5f33d19c99b9801f00c239dc038fae1998e7647452be9c7770c",
+      "bytes": 7363
+    },
+    {
+      "path": "modules/identity/registry.go",
+      "sha256": "4100f26f297aad734eb54fa7c1cb898628bddc3f2eb36fe1264025d3ae7cfcde",
+      "bytes": 11362
+    },
+    {
+      "path": "modules/identity/servicecontrols.go",
+      "sha256": "57cde91a4c8607f24c58085c0dfbb556b00638bf12fdfe570d334cf99df0b897",
+      "bytes": 2213
+    },
+    {
+      "path": "modules/identity/servicecontrols_test.go",
+      "sha256": "71dad8f75e66e5f6efa39395cbdb666437a773904b101b21c9297fcf23363540",
+      "bytes": 5332
+    },
+    {
+      "path": "modules/identity/servicequery.go",
+      "sha256": "4685e4b04cdc49a017c6ad99df45d9d09b1b7da74ef5b314c2f3e3602c38d772",
+      "bytes": 3186
+    },
+    {
+      "path": "modules/identity/workspace.go",
+      "sha256": "9ab1a720c11723ebccdc1c45f70eab21e9f23ed31f7e8573544db2d07d491101",
+      "bytes": 14479
+    },
+    {
+      "path": "modules/organizations/partyquery.go",
+      "sha256": "b98f2e699b09c92966ed78eca1c09c24b0fb03e94cfa1288ba2a92ce5cc98059",
+      "bytes": 1505
+    },
+    {
+      "path": "modules/organizations/query.go",
+      "sha256": "0c2cce72f5097bf7ce6a352558b9c5d2aae0b1491fc17e92f4e810b315ccead9",
+      "bytes": 1173
+    },
+    {
+      "path": "modules/organizations/query_test.go",
+      "sha256": "9b24f7fd25b99f27df070eba626a0c02d5b845c2173fb8bea05e38971c3fc74a",
+      "bytes": 4338
+    },
+    {
+      "path": "modules/organizations/registry.go",
+      "sha256": "a4e827e9ec702cc750945fbac1772056d064e3f6e14c333b20385db5d6fe96f1",
+      "bytes": 10393
+    }
+  ],
+  "executions": [
+    {
+      "command": "go test -short ./... -coverprofile=/private/tmp/hb304-query-final.cover",
+      "status": "PASS",
+      "packages": 75,
+      "coverage": {
+        "apps/api/server": "97.2%",
+        "modules/identity": "99.0%",
+        "modules/contracts": "97.4%",
+        "modules/organizations": "97.0%"
+      },
+      "coverage_acceptance": "UNVERIFIED: server100% target remains unmet; no waiver/no-regression claim"
+    },
+    {
+      "command": "go test -race ./apps/api/server ./modules/identity ./modules/contracts ./modules/organizations -run <changed query/control/delivery tests> -count=1",
+      "status": "PASS",
+      "scope": "Focused test pattern, not whole-suite race"
+    },
+    {
+      "command": "go vet ./...",
+      "status": "PASS",
+      "target": "native macOS arm64"
+    },
+    {
+      "command": "GOOS=linux GOARCH=arm64 go vet ./...",
+      "status": "PASS",
+      "target": "static only"
+    },
+    {
+      "command": "GOOS=windows GOARCH=arm64 go vet ./...",
+      "status": "PASS",
+      "target": "static only"
+    },
+    {
+      "command": "python3 /private/tmp/hb304-query-mutations.py",
+      "status": "PASS",
+      "semantic_kills": 9,
+      "restored": {
+        "apps/api/server/servicequery_accounts.go": "4af07295b7148ca5f8545c2661d4fc80cf4152f17a35323082d4ff869c465916",
+        "apps/api/server/servicequery_choices.go": "487c9e6152463c365d2da40dc1eb4262c2203ba07aa52c8cf356020bb222f057",
+        "apps/api/server/servicequery_cursor.go": "e8e327cbfa6472f561d17d1dabec0e01a24b437ddf93ce5c9441bf4f8cbf99ae",
+        "apps/api/server/servicequery_detail.go": "fa3b42c1bb8bd2a953a4e2adfbe3ed6354d4d9dd04db3f9cd5d76e5598acb1a8",
+        "modules/identity/querybasis.go": "80fcfb877082c4af31d77584e25d57a1a297e7df5c96782946afbf9a46ef98d1",
+        "modules/identity/servicecontrols.go": "57cde91a4c8607f24c58085c0dfbb556b00638bf12fdfe570d334cf99df0b897",
+        "modules/identity/workspace.go": "9ab1a720c11723ebccdc1c45f70eab21e9f23ed31f7e8573544db2d07d491101"
+      },
+      "private_cache_removed": true
+    },
+    {
+      "command": "jsonschema4.25.1 Draft202012Validator against actual HTTP restrictions and11 variants",
+      "status": "PASS",
+      "cases": 12,
+      "scope": "Schema shape only; not configured vocabulary, business eligibility or period ordering"
+    }
+  ],
+  "earlier_runs": [
+    {
+      "artifact": "hb304-query-full-short-coverage.log",
+      "status": "INTERRUPTED",
+      "reason": "Old limits fixture assertion mixed numeric and decimal-string types; no whole-suite PASS"
+    },
+    {
+      "artifact": "hb304-query-full-current.log",
+      "status": "PASS",
+      "scope": "Prior snapshot before final wire/credential-affordance corrections; source list in full-current-source.json"
+    },
+    {
+      "artifacts": [
+        "contract-before",
+        "identity-before",
+        "org-before",
+        "controls-before",
+        "delivery-before"
+      ],
+      "status": "EXPECTED_COMPILE_FAILURE",
+      "scope": "New APIs absent, not semantic old-behavior failures"
+    },
+    {
+      "artifacts": [
+        "account-before",
+        "detail-findings-before",
+        "revoke-controls-before",
+        "wire-before"
+      ],
+      "status": "EXPECTED_FAIL_BEFORE",
+      "scope": "Real HTTP contract assertions before corrections"
+    },
+    {
+      "artifact": "scope-heavy.log",
+      "status": "FAIL",
+      "reason": "Fixture retained obsolete wildcard expectation after adding named references; corrected separately"
+    }
+  ],
+  "reviews": {
+    "design_source": "PASS: separate read-only hyb310_review inspections, including corrected wire/control findings",
+    "technical_writing": "PASS: separate read-only hyb310_copy_render inspection before final evidence addition",
+    "execution_owner": "root; reviewers executed no tests/mutations/services"
+  },
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-query-final-short.log",
+      "sha256": "e90a54f31ed0292acb93288a6ffa476127bc4b340923563e83b0efe42b15ee9f",
+      "bytes": 7633
+    },
+    {
+      "path": "/private/tmp/hb304-query-final-race.log",
+      "sha256": "ddc72c4158ef70e97da31518ef81bb796f5f4ab047f5536fe7cf2b6a3e8dd74a",
+      "bytes": 277
+    },
+    {
+      "path": "/private/tmp/hb304-query-final-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-query-final-vet-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-query-final-vet-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-query-docs-format.log",
+      "sha256": "09816f046222b15bda0945c825f757616d732cb97d71a5c11189e6a0bf71bc64",
+      "bytes": 100
+    },
+    {
+      "path": "/private/tmp/hb304-query-account-before.log",
+      "sha256": "a58ec6885e508b18822d2d9ddbc8de79cf2c928267ff0f1e908c3da77ea9aeb6",
+      "bytes": 251
+    },
+    {
+      "path": "/private/tmp/hb304-query-account-after.log",
+      "sha256": "7af2c6c927879321125caef01794babe45398cb06e38c846102fd18f8dd0f5de",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-query-detail-findings-before.log",
+      "sha256": "3a7e72f1de15f6c2ddb121a36079bb871d7decaa9956e9d9ea1de7912d215525",
+      "bytes": 1479
+    },
+    {
+      "path": "/private/tmp/hb304-query-detail-findings-fixed.log",
+      "sha256": "c6db4ae759e2b9e15670eeb682ecdbc7ac5c282d933c5e3d3bd671dae39df00d",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-query-revoke-controls-before.log",
+      "sha256": "f98c5e190e74d630a32984ea44cc139c722a8be822084a5a1463f72928273451",
+      "bytes": 1497
+    },
+    {
+      "path": "/private/tmp/hb304-query-wire-before.log",
+      "sha256": "322a43ef6836f9f4ec8f3309c91e940d7e11be48ca9dab52bcd7e66c12683c0e",
+      "bytes": 288
+    },
+    {
+      "path": "/private/tmp/hb304-query-wire-controls-fixed.log",
+      "sha256": "5b035bf7241f07b71530c3d2a31eab1c54ee00b871a699d21bed5e7e34a37145",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-query-scope-heavy.log",
+      "sha256": "f81dd3032c44ce404d3dd531efe9b26c416f2b0a4bb8c359a304a514f72616f3",
+      "bytes": 247
+    },
+    {
+      "path": "/private/tmp/hb304-query-scope-heavy-corrected.log",
+      "sha256": "93fc64013553300d5ca0c0cae43db3d67c260fca4605a8874a5d250b5cfd5ed9",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-query-cli.log",
+      "sha256": "3edc2646692cbd2fc2d040b1769914e8f393c61cc7b6df0ac184ddaf73bfe5ad",
+      "bytes": 71
+    },
+    {
+      "path": "/private/tmp/hb304-query-contract-before.log",
+      "sha256": "96c5e96fbc48c36bc43e48e2cbe944b171971e4eb5c5bfc0de469c0bf7ea9064",
+      "bytes": 1474
+    },
+    {
+      "path": "/private/tmp/hb304-query-identity-before.log",
+      "sha256": "c9785ae1703d71cd88d8be260c12870c1ffa31f4e5f66a0353a02ff24077cae6",
+      "bytes": 1593
+    },
+    {
+      "path": "/private/tmp/hb304-query-org-before.log",
+      "sha256": "f0c815f571c7e4879c3553570231b17b0d59222892d05cbae72e84de82607e75",
+      "bytes": 1515
+    },
+    {
+      "path": "/private/tmp/hb304-query-controls-before.log",
+      "sha256": "ee15500e2aeee1561bb0c80b151cc0c05735a90fbc3c71c01864d800f7a2b1b7",
+      "bytes": 1503
+    },
+    {
+      "path": "/private/tmp/hb304-query-delivery-before.log",
+      "sha256": "c7ce3c022525f8430f666df70e9a4b076724f569210c339431a685c9d30c1c50",
+      "bytes": 1541
+    },
+    {
+      "path": "/private/tmp/hb304-query-full-short-coverage.log",
+      "sha256": "4117297cdf2e6d9dafae5015c11997eeef151581fce7a484d4a115839705b25e",
+      "bytes": 101
+    },
+    {
+      "path": "/private/tmp/hb304-query-full-current.log",
+      "sha256": "88094fb3ea9b6039c115058f12a2a587e74bf20b2d6f9584be19d7cfdc8408df",
+      "bytes": 7609
+    },
+    {
+      "path": "/private/tmp/hb304-query-final.cover",
+      "sha256": "05ab523ac523841640329eee500a51114d134ad1c5e713171b4761ead14c8e5b",
+      "bytes": 2924324
+    },
+    {
+      "path": "/private/tmp/hb304-query-full-current-source.json",
+      "sha256": "2aff4a6eec1e93166ef353161a78af21fb85009528a7472b676a51369d6b96f2",
+      "bytes": 19059
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations.py",
+      "sha256": "10990831d0ce384c1c73e9fe10442bed2d76753688eb319fb2556fb7d91a42c9",
+      "bytes": 4652
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/account_reference.log",
+      "sha256": "11b863e3cd69d2e28e95d848262b50bf4d90d98c7b1464794964c0fac12c8fcd",
+      "bytes": 268
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/baseline.log",
+      "sha256": "c334db0d49836bab4a878502bf8d66293fcec20ab115cc777fb69612805492b5",
+      "bytes": 135
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/caller_binding.log",
+      "sha256": "7af38469279fb214630cc7775b5a5575e57c01737d71c168531ea16d21524654",
+      "bytes": 2656
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/detail_changed_source.log",
+      "sha256": "f72e8f45434d1efae766750dc85752093d9e3671ab101676d0a8377970193013",
+      "bytes": 268
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/future_capacity.log",
+      "sha256": "c7a3e298b54b2a22bff8bc857648f6e011388b7066cbcc60fdbb16cbfe6a26f0",
+      "bytes": 257
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/partial_aggregate.log",
+      "sha256": "67460afd676164fa390098f2869acc8b10518a630174791ad007166fc45414b5",
+      "bytes": 365
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/report.json",
+      "sha256": "20171305f8e09d9fde5526b4213643159558dfc4ac042e5e75fc47fc979279d6",
+      "bytes": 3213
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/restored.log",
+      "sha256": "b4735ba6ea590c6b7dea4581e174864c20cd6002f39bb5c3ea167b454cb160f4",
+      "bytes": 135
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/revoke_expiry_index.log",
+      "sha256": "58c2334c600c1be317982faa897161ad45280834dcbdbe56a6137d9b53e6e8a3",
+      "bytes": 257
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/revoke_precondition.log",
+      "sha256": "c830961861c82471847e4f4275f6eefe78befd40cbfd6aaae1da9944aefbd11c",
+      "bytes": 387
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/scope_work_budget.log",
+      "sha256": "2c29f39ac24965c4855b33577116c87426cd3884984052399afd5d538b2e1216",
+      "bytes": 253
+    },
+    {
+      "path": "/private/tmp/hb304-query-mutations/sticky_subject_exhaustion.log",
+      "sha256": "587aa30c265d052653c0746bf05ba86f8e973d7ff2e1a7847b6e5dba62a215bc",
+      "bytes": 251
+    },
+    {
+      "path": "/private/tmp/hb304-query-schema-check/report.json",
+      "sha256": "3753450ba24700f552e93e9b767431a0c4eb6df4b7ff40f74f5cd1ea227ce0f7",
+      "bytes": 1349
+    },
+    {
+      "path": "/private/tmp/hb304-query-schema-check/restrictions-payload.json",
+      "sha256": "15008b2cef7238abdf7406b572021246aa4c35654cb2a37d6583d3548b3433a0",
+      "bytes": 165
+    },
+    {
+      "path": "/private/tmp/hb304-query-schema-check/restrictions-schema.json",
+      "sha256": "e717d00b7219a4673afcffdae8d53a1d8df86bb32b580523b8af708ab04abb40",
+      "bytes": 2236
+    }
+  ],
+  "artifact_retention": "Private temporary nonsecret synthetic evidence; local artifacts may disappear on reboot. Git retains digests, not raw logs.",
+  "remaining": [
+    "Coverage reconciliation against required targets",
+    "Strict Console client and bounded navigation/selection migration",
+    "Complete create/declare forms and authoritative metadata pickers",
+    "EN/KO/AR at1440/1280/1024/390 actual rendered journeys and source/TW re-review",
+    "Final M04 PR, authorized merge and remote read-back",
+    "Parent HYB-304 M03/M02"
+  ],
+  "not_claimed": [
+    "Full M04 completion",
+    "Console compatibility",
+    "Rendered/native AT/owner FIX acceptance",
+    "Deployment",
+    "Service-request credential authentication/effective grants",
+    "Merge or ticket completion"
+  ]
+}

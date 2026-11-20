@@ -38,7 +38,7 @@ func (h *Workspace) SuspendMemberships(actor Verifier, workspace string, targets
 		found.state, found.suspendedFor = MembershipSuspended, reason
 		found.version++
 	}
-	r.generation++
+	r.subjectChanged()
 	return nil
 }
 
@@ -78,6 +78,6 @@ func (h *Installation) SuspendUsers(operator Operator, targets []Target) error {
 		found.epoch++
 		r.drop(t.User)
 	}
-	r.generation++
+	r.subjectChanged()
 	return nil
 }

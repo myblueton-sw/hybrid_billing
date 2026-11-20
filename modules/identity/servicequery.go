@@ -17,6 +17,8 @@ func (r *Registry) putCredential(id string, found *credential) {
 		r.removeCredential(id)
 	}
 	r.credentials[id] = found
+	r.indexCredentialExpiry(id, found)
+	r.credentialChanged(found.user)
 	r.credentialIndex[found.user] = insertSorted(r.credentialIndex[found.user], id)
 }
 
@@ -29,6 +31,8 @@ func (r *Registry) removeCredential(id string) {
 	if len(r.credentialIndex[found.user]) == 0 {
 		delete(r.credentialIndex, found.user)
 	}
+	r.unindexCredentialExpiry(id, found)
+	r.credentialChanged(found.user)
 	delete(r.credentials, id)
 }
 

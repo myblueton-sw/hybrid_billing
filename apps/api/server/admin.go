@@ -205,7 +205,7 @@ func (s *Server) issueLink(c *change, login, user, purpose string) (map[string]s
 	}
 	s.dir.dropPickups(func(p pickup) bool { return p.target == user })
 	ref := encode(random(16))
-	s.dir.pickups[ref] = pickup{url: s.cfg.Origins[0] + "/activate#" + token, session: s.caller, target: user, expires: c.now.Add(pickupValidity)}
+	s.dir.putPickup(ref, pickup{url: s.cfg.Origins[0] + "/activate#" + token, session: s.caller, target: user, expires: c.now.Add(pickupValidity)})
 	return map[string]string{"link_ref": ref}, nil
 }
 

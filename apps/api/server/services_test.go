@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net/http"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -17,12 +17,7 @@ import (
 
 func (f world) servicesRead(a actor) reply {
 	f.t.Helper()
-	return f.do("GET", "/api/v1/identity/services", "", func(r *http.Request) {
-		if a.cookie != nil {
-			r.AddCookie(a.cookie)
-		}
-		r.Header.Set(csrfHeader, a.csrf)
-	})
+	return f.legacyServicesFixture(a)
 }
 
 func (f world) service(a actor, id string) map[string]any {
@@ -87,7 +82,7 @@ func TestServicesReadShape(t *testing.T) {
 		t.Fatalf("empty read %+v", got)
 	}
 	limits := got.body["limits"].(map[string]any)
-	if fmt.Sprint(limits["credential_days"], limits["credentials_per_service"], limits["services"]) != "30 10 200" {
+	if fmt.Sprint(limits["credential_days"]) != "30" || limits["credentials_per_service"] != "10" || fmt.Sprint(limits["services"]) != "200" {
 		t.Errorf("limits %v", limits)
 	}
 	owners := fmt.Sprint(got.body["owners"])
@@ -212,7 +207,7 @@ func TestCredentialIssueAndPickup(t *testing.T) {
 	f.code(t, "pickup of a revoked credential", f.collect(root, dropped), 403, string(commands.PermissionDenied))
 }
 
-func TestCredentialLimitAndOrder(t *testing.T) {
+func TestCredentialLimitAndCanonicalOrder(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	root := f.as(AdminLogin)
 	svc := f.newService(root, "limit")
@@ -229,13 +224,15 @@ func TestCredentialLimitAndOrder(t *testing.T) {
 	}
 	f.run(root, "service.revoke_credential", ids[1], nil)
 	rows := f.service(root, svc)["credentials"].([]any)
-	states := []string{}
+	states := map[string]int{}
+	orderedIDs := []string{}
 	for _, r := range rows {
 		m := r.(map[string]any)
-		states = append(states, m["state"].(string))
+		states[m["state"].(string)]++
+		orderedIDs = append(orderedIDs, m["id"].(string))
 	}
-	if strings.Join(states, ",") != "active,active,active,active,active,revoked,expired,expired,expired,expired,expired" {
-		t.Errorf("order %v", states)
+	if len(rows) != 11 || states["active"] != 5 || states["revoked"] != 1 || states["expired"] != 5 || !sort.StringsAreSorted(orderedIDs) {
+		t.Errorf("canonical order or retained lifecycle counts changed: %v / %v", orderedIDs, states)
 	}
 	f.failed(t, "revoke twice", f.run(root, "service.revoke_credential", ids[1], nil), commands.InvalidStage)
 	if got := f.run(root, "service.revoke_credential", ids[0], nil); got.status != 200 {

@@ -322,8 +322,11 @@ func (r *Registry) serviceUsers(workspace string) bool {
 }
 
 func (r *Registry) strands(workspace, target string, after *membership, now time.Time) bool {
+	if !r.activeAdministrator(workspace, target, now) || after != nil && after.role == Administrator && effective(after, now) && r.activeHuman(target) {
+		return false
+	}
 	before := r.administrators(workspace, now)
-	if before == 0 || after != nil && after.role == Administrator && effective(after, now) && r.activeHuman(target) {
+	if before == 0 {
 		return false
 	}
 	remaining := before

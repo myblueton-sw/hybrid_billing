@@ -132,7 +132,7 @@ function SubFacts({ l, s }: { l: Locale; s: Subscription }) {
 
 function SubRow({ s, ...shared }: Shared & { s: Subscription }) {
   const { l, selection } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<SubscriptionAction>();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<SubscriptionAction>();
   const target = subscriptionTarget(s);
   const resumeRequest = s.resume_request !== null && s.resume_request !== "unknown" ? resumeRequestTarget(s.resume_request) : "";
   const targetOf = (a: SubscriptionAction) => (a === "withdraw_resume" ? resumeRequest : target);
@@ -188,7 +188,7 @@ function SubRow({ s, ...shared }: Shared & { s: Subscription }) {
         <p className="p02-small">{k.reason(l)}: <Prose l={l} value={s.rationale} empty={k.noReason(l)} /></p>
         {s.id && <p className="p02-small"><a className="p02-link" href={href(l, "events", { subscription: s.id })}>{k.deliveriesLink(l)}</a></p>}
         <Fold l={l} s={s} />
-        <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+        <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} />
         {shown.length > 0 && (
           <div className="live-buttons">
             {shown.map((a) => (
@@ -225,7 +225,7 @@ function initialChoice(): { destination: string; types: string[] } {
 
 function ProposeSub(shared: Shared) {
   const { l, page, me } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<"propose">();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"propose">();
   const noRight = page.channels.actions.propose.blocked === "no_right";
   const blocked = subscribeBlocker(page);
   const kept = pendingNow("integrations.subscription_propose", webhooksTarget);
@@ -252,7 +252,7 @@ function ProposeSub(shared: Shared) {
   return (
     <section className="p02-section p02-propose-sub" aria-labelledby="p02-propose-sub-title">
       <h3 id="p02-propose-sub-title">{k.proposeSubTitle(l)}</h3>
-      <RowNote
+      <RowNote l={l} diagnostics={diagnostics(webhooksTarget)}
         kept={lost ? r.noLongerHeld(l, lost) : refused ? k.kept(l, "propose_subscription") : ""}
         blockers={noRight ? blockerLines(l, "no_right", "propose_subscription") : !usable && blocked ? [plain(k.subBlocker(l, blocked))] : []}
         focus={focusNote}

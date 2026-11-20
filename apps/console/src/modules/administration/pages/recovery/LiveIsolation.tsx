@@ -96,7 +96,7 @@ export function LockImpact({ l, b }: { l: Locale; b: Basis }) {
 
 function Actions({ r, ...shared }: Shared & { r: IsolationRow }) {
   const { l, page, canCommand } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<"lock">();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"lock">();
   const target = installTarget(r.installation);
   const pending = target ? pendingNow("recovery.lock", target) : undefined;
   const usable = canCommand && !!target && (r.can_lock || !!pending);
@@ -107,7 +107,7 @@ function Actions({ r, ...shared }: Shared & { r: IsolationRow }) {
   const b = pending ? basisFrom(pending.context) : basisOf(page, r.installation);
   return (
     <div className="p03-actions">
-      <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+      <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} />
       {usable && !open && (
         <div className="live-buttons">
           <button type="button" className="live-secondary" aria-expanded={false} data-opener={mark("lock")} onClick={() => toggle("lock")}>{k.lock(l)}</button>

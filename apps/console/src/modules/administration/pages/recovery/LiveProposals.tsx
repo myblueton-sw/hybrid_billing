@@ -49,7 +49,7 @@ type Decision = "recovery.approve" | "recovery.withdraw";
 
 function Row({ p, ...shared }: Shared & { p: RecoveryProposal }) {
   const { l, page, selection, canCommand } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<Decision>();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<Decision>();
   const target = proposalTarget(p);
   const pendingRow = p.state === "pending";
   const n = numberText(l, p);
@@ -122,7 +122,7 @@ function Row({ p, ...shared }: Shared & { p: RecoveryProposal }) {
         )}
         {pendingRow && (
           <>
-            <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+            <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} />
             {(approveUsable || withdrawUsable) && !open && (
               <div className="live-buttons">
                 {approveUsable && (

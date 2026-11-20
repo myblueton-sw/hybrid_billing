@@ -1,3 +1,5 @@
+import { RowDiagnostics, DiagnosticDetails, useCurrentCommand, useFailureDiagnostic } from "../../../../service/CommandDiagnostics";
+import { diagnosticOf, type RowDiagnostic } from "../../../../service/command-diagnostics";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, type AdminClient } from "../../../../service/admin";
@@ -6,7 +8,7 @@ import { c as sc, retryPhrase } from "../../../../service/copy";
 import { f, k } from "./live-copy";
 import { Free, ltr } from "./live-format";
 import {
-  cancelled, clearDraft, safeId, deniedOutcome, discard, draftOf, fieldReaction, frozenValues, goneKind, hadEarlier, keepDraft, pendingFor, pendingNow, react, reasonProblem, renew, settle, snapshotOf,
+  cancelled, refusalDiagnostics, clearDraft, safeId, deniedOutcome, discard, draftOf, fieldReaction, frozenValues, goneKind, hadEarlier, keepDraft, pendingFor, pendingNow, react, reasonProblem, renew, settle, snapshotOf,
   stillAllowed, utf8Bytes, type CommandKey, type FieldReaction, type Mode, type Reaction, type Selection,
 } from "./live-model";
 
@@ -71,7 +73,7 @@ type FormProps = Shared & {
   onClose: (how?: "done" | "refused") => void;
 };
 
-type Message = { text: string; alert: boolean; code?: string; request?: string; next?: string };
+type Message = { text: string; alert: boolean; code?: string; request?: string; client?: string; cancelled?: boolean; next?: string };
 
 export function formId(command: CommandKey, target: string): string {
   return "p05-" + command.slice("release_evidence.".length) + "-" + safeId(target);
@@ -89,19 +91,15 @@ function initial(command: CommandKey, target: string, keys: string[]): Draft {
   return out;
 }
 
-export function ErrorDetail({ l, code, request, next }: { l: Locale; code?: string; request?: string; next?: string }) {
-  if (!code && !request && !next) return null;
-  return (
-    <dl className="p05-error-detail">
-      {code && <div><dt>{k.errorCode(l)}</dt><dd>{ltr(code)}</dd></div>}
-      {request && <div><dt>{k.requestId(l)}</dt><dd>{ltr(request, true)}</dd></div>}
-      {next && <div><dt>{k.nextStep(l)}</dt><dd>{next}</dd></div>}
-    </dl>
-  );
+export function ErrorDetail({ l, code = "", request = "", client = "", cancelled = false, next }: { l: Locale; code?: string; request?: string; client?: string; cancelled?: boolean; next?: string }) {
+  if (!code && !request && !client && !next) return null;
+  return <><DiagnosticDetails l={l} detail={{ code, request, client, target: "", cancelled }} />{next && <p>{next}</p>}</>;
 }
 
 export function CommandForm(props: FormProps) {
   const { l, page, api, command, target, fields, heading, title, facts, impact, onField, done, onClose, onDone, onNotice, onReload, onSignedOut } = props;
+  const current = useCurrentCommand(command, target);
+  const { diagnostic, setDiagnostic } = useFailureDiagnostic(current);
   const id = formId(command, target);
   const [draft, setDraft] = useState<Draft>(() => initial(command, target, fields?.keys ?? []));
   const [reasonError, setReasonError] = useState("");
@@ -133,6 +131,7 @@ export function CommandForm(props: FormProps) {
     if (key === "rationale") setReasonError("");
     else setFieldErrors((e) => without(e, key));
     setMessage(null);
+    setDiagnostic(null);
   };
 
   const reasonText = (v: string) => {
@@ -155,6 +154,7 @@ export function CommandForm(props: FormProps) {
     sending.current = true;
     setBusy(true);
     setMessage(null);
+    setDiagnostic(null);
     const reason = rationale.trim();
     const had = hadEarlier(command, target);
     const hadPending = !!pendingNow(command, target);
@@ -162,17 +162,21 @@ export function CommandForm(props: FormProps) {
     const body = without(frozenValues(tried) ?? {}, "rationale");
     try {
       const out = await api.command(command, target, tried.expected, reason, body, { request: tried.request, key: tried.key });
+      if (!current()) return;
       settle(command, target, "ok");
       clearDraft(command, target);
       onDone(done(out.fields, out.state, tried.snapshot));
       onClose("done");
     } catch (err) {
+      if (!current()) return;
+      const reference = { command, detail: diagnosticOf(err, target, tried.request) };
+      setDiagnostic(reference.detail);
       const e = err instanceof AdminError ? err : null;
       const failure = e ? e.failure : "failed";
       const fieldNames = e ? e.fields : [];
       const reaction: Reaction = react(failure, fieldNames);
-      const detail = { code: e?.code || failure, request: tried.request };
-      settle(command, target, reaction, failure, had);
+      const detail = { code: e?.code ?? "", request: e?.request ?? "", client: tried.request, cancelled: failure === "reauth_cancelled" };
+      settle(command, target, reaction, failure, had, reference);
       setStep(reaction === "conflict" || reaction === "reauth" || reaction === "retry" || reaction === "wait" ? "confirm" : "edit");
       if (reaction === "field") {
         const how = fieldReaction(command, fieldNames);
@@ -185,6 +189,7 @@ export function CommandForm(props: FormProps) {
           setFieldErrors({ replacement: f.replacementGone(l) });
           setSummaryKey((n) => n + 1);
           await onReload();
+          if (!current()) return;
         } else {
           setFieldErrors({ reason: fields?.check(draft).reason || f.checkRetireReason(l) });
           setSummaryKey((n) => n + 1);
@@ -194,13 +199,16 @@ export function CommandForm(props: FormProps) {
         setSummaryKey((n) => n + 1);
       } else if (reaction === "hint") {
         await onReload();
+        if (!current()) return;
         onClose("refused");
       } else if (reaction === "conflict") {
         const got = await onReload();
+        if (!current()) return;
         if (got && !stillAllowed(got, command, target)) onClose("refused");
         else setMessage({ text: f.conflictAgain(l), alert: false });
       } else if (reaction === "denied") {
         const got = await onReload();
+        if (!current()) return;
         if (got) {
           const outcome = deniedOutcome(command, target, hadPending, got);
           onNotice(outcome === "applied_proposal" ? k.vanishedProposal(l) : k.gone(l, goneKind(command)));
@@ -218,6 +226,7 @@ export function CommandForm(props: FormProps) {
       } else if (reaction === "partial") {
         const text = f.partial(l, e ? "\u2066" + e.operation + "\u2069" : "");
         const got = await onReload();
+        if (!current()) return;
         if (got && !stillAllowed(got, command, target)) {
           onNotice(text);
           onClose("done");
@@ -225,8 +234,8 @@ export function CommandForm(props: FormProps) {
       } else if (reaction === "reauth") setMessage({ text: failure === "reauth_cancelled" ? f.reauthCancelled(l) : sc.reauthText(l, failure), alert: true, ...detail, next: k.nextTry(l) });
       else setMessage({ text: f.failed(l), alert: true, ...detail, next: k.nextTry(l) });
     } finally {
-      sending.current = false;
-      setBusy(false);
+      if (current()) sending.current = false;
+      if (current()) setBusy(false);
     }
   };
 
@@ -238,6 +247,7 @@ export function CommandForm(props: FormProps) {
   const startAgain = () => {
     setRenewing(false);
     setMessage(null);
+    setDiagnostic(null);
     setStep("edit");
   };
 
@@ -249,12 +259,13 @@ export function CommandForm(props: FormProps) {
 
   return (
     <div className="p05-form-wrap">
+      {diagnostic && <DiagnosticDetails l={l} detail={diagnostic} />}
       {step === "edit" && <h3 className="p05-form-title">{heading}</h3>}
       {pending && !message && <p className="p05-pending" role="status">{f.pendingAttempt(l)}</p>}
       {message && (
         <div ref={messageRef} tabIndex={-1} className={message.alert ? "live-error p05-message" : "p05-message p05-quiet-note"} role={message.alert ? "alert" : "status"}>
           <p>{message.text}</p>
-          <ErrorDetail l={l} code={message.code} request={message.request} next={message.next} />
+          {message.next && <p>{message.next}</p>}
           {renewing && <div className="live-buttons"><button type="button" className="live-secondary" onClick={startAgain}>{f.startAgain(l)}</button></div>}
         </div>
       )}
@@ -297,7 +308,7 @@ export function CommandForm(props: FormProps) {
 
 export type Blocker = { label: string; text: string };
 
-export function RowNote({ kept, blockers, focus, extra, state, pending }: { kept: string; blockers: Blocker[]; focus: number; extra?: ReactNode; state?: string; pending?: string }) {
+export function RowNote({ l, diagnostics = [], kept, blockers, focus, extra, state, pending }: { l: Locale; diagnostics?: RowDiagnostic[]; kept: string; blockers: Blocker[]; focus: number; extra?: ReactNode; state?: string; pending?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => { if (focus) ref.current?.focus(); }, [focus]);
   const seen = new Set<string>();
@@ -311,7 +322,7 @@ export function RowNote({ kept, blockers, focus, extra, state, pending }: { kept
   return (
     <div className="p05-row-note" ref={ref} tabIndex={-1} role={focus ? "status" : undefined}>
       {pending && <p className="p05-pending">{pending}</p>}
-      {kept && <p className="p05-kept">{kept}</p>}
+      {kept && <><p className="p05-kept">{kept}</p><RowDiagnostics l={l} entries={diagnostics} /></>}
       {state && <p className="p05-state-note">{state}</p>}
       {list.length > 0 && (
         <ul className="p05-blocked">
@@ -326,6 +337,7 @@ export function RowNote({ kept, blockers, focus, extra, state, pending }: { kept
 export const line = (label: string, text: string): Blocker => ({ label, text });
 
 export function useOpen<T extends string>(note = "") {
+  const diagnostics = refusalDiagnostics;
   const [open, setOpen] = useState<T | null>(null);
   const last = useRef<T | null>(null);
   const [focusNote, setFocusNote] = useState(0);
@@ -354,5 +366,5 @@ export function useOpen<T extends string>(note = "") {
       }));
     }
   };
-  return { open, toggle, close, focusNote, mark };
+  return { open, toggle, close, focusNote, mark, diagnostics };
 }

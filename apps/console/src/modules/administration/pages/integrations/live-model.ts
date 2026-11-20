@@ -1,3 +1,4 @@
+import type { RowDiagnostic } from "../../../../service/command-diagnostics";
 import { forgetLost } from "./live-rights";
 import type { Delivery, IntegrationsPage, PluginInstall, PluginProposal, PluginVersion, RightId, Subscription } from "../../../../service/integrations";
 
@@ -526,7 +527,7 @@ export function reasonProblem(v: string): "" | "missing" | "long" {
 export type Pending = { key: string; request: string; expected: string; values: string; snapshot: string[]; context: Record<string, string> };
 const pending = new Map<string, Pending>();
 const drafts = new Map<string, Record<string, string>>();
-const refusals = new Map<string, string>();
+const refusals = new Map<string, { values: string; diagnostic?: RowDiagnostic }>();
 
 let scope = "";
 
@@ -601,11 +602,11 @@ export function drop(command: string, target: string): void {
   pending.delete(slot(command, target));
 }
 
-export function settle(command: string, target: string, reaction: Reaction | "ok"): void {
+export function settle(command: string, target: string, reaction: Reaction | "ok", diagnostic?: RowDiagnostic): void {
   if (reaction !== "ok" && keepsAttempt(reaction)) return;
   const values = pending.get(slot(command, target))?.values ?? "";
   pending.delete(slot(command, target));
-  if (reaction === "hint") refusals.set(slot(command, target), values);
+  if (reaction === "hint") refusals.set(slot(command, target), { values, diagnostic });
   else refusals.delete(slot(command, target));
 }
 
@@ -615,7 +616,7 @@ export function refusedNow(command: string, target: string): boolean {
 
 export function refusedValues(command: string, target: string): Record<string, string> {
   try {
-    const v = JSON.parse(refusals.get(slot(command, target)) ?? "") as unknown;
+    const v = JSON.parse(refusals.get(slot(command, target))?.values ?? "") as unknown;
     return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, string>) : {};
   } catch {
     return {};
@@ -680,4 +681,11 @@ export function deniedOutcome(command: CommandKey, target: string, hadPending: b
   if (command === "integrations.letter_approve_redeliver" || command === "integrations.letter_approve_dismiss") return "applied_letter";
   if (groupOf(command) === "proposal") return "applied_proposal";
   return "gone";
+}
+
+export function refusalDiagnostics(target: string): RowDiagnostic[] {
+  return commandKeys.flatMap((command) => {
+    const entry = refusals.get(slot(command, target))?.diagnostic;
+    return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
+  });
 }

@@ -93,7 +93,7 @@ type Runtime = "integrations.plugin_stop" | "integrations.plugin_disable";
 
 function RuntimeActions({ i, ...shared }: Shared & { i: PluginInstall }) {
   const { l } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<Runtime>();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<Runtime>();
   const target = pluginTarget(i.plugin);
   const stopUsable = shared.canCommand && !!target && (i.can_stop || !!pendingNow("integrations.plugin_stop", target));
   const disableUsable = shared.canCommand && !!target && (i.can_disable || !!pendingNow("integrations.plugin_disable", target));
@@ -106,7 +106,7 @@ function RuntimeActions({ i, ...shared }: Shared & { i: PluginInstall }) {
   if (target && !disableUsable && !i.can_disable && shows(i.disable_blocked, "disable")) blockers.push(...blockerLines(l, i.disable_blocked, "disable", k.disable(l)));
   return (
     <>
-      <RowNote kept={kept} blockers={blockers} focus={focusNote} />
+      <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} />
       {(stopUsable || disableUsable) && !open && (
         <div className="live-buttons">
           {stopUsable && (!open || open === "integrations.plugin_stop") && <button type="button" className="live-secondary" aria-expanded={open === "integrations.plugin_stop"} data-opener={mark("integrations.plugin_stop")} onClick={() => toggle("integrations.plugin_stop")}>{k.stop(l)}</button>}
@@ -166,7 +166,7 @@ function initialChange(plugin: string): Change | null {
 
 function Propose({ plugin, ...shared }: Shared & { plugin: string }) {
   const { l, page, me } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<"propose">();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"propose">();
   const target = pluginTarget(plugin);
   const noRight = page.modules.actions.propose.blocked === "no_right";
   const offer = noRight ? { options: [], blocker: null, withheld: [] } : proposeOffer(page, me, plugin);
@@ -203,7 +203,7 @@ function Propose({ plugin, ...shared }: Shared & { plugin: string }) {
 
   return (
     <section className="p02-propose" aria-label={k.proposeChange(l, plugin)}>
-      <RowNote
+      <RowNote l={l} diagnostics={diagnostics(target)}
         kept={keptText}
         blockers={noRight ? blockerLines(l, "no_right", "propose_plugin", r.proposeChange(l)) : !usable && blockerText ? [plain(blockerText)] : []}
         focus={focusNote}

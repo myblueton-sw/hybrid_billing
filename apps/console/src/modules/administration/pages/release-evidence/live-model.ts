@@ -1,3 +1,4 @@
+import type { RowDiagnostic } from "../../../../service/command-diagnostics";
 import type { Budget, Candidate, CountOf, EvidencePage, PathRow, Problem, ProfileRow, Proposal, RequirementRow, TargetRow, TestRow } from "../../../../service/release-evidence";
 import { failingVerdicts, has, verdictWords } from "./live-codes";
 
@@ -424,7 +425,7 @@ export function fieldReaction(command: CommandKey, fields: string[]): FieldReact
 export type Pending = { key: string; request: string; expected: string; values: string; snapshot: string[]; context: Record<string, string> };
 const pending = new Map<string, Pending>();
 const drafts = new Map<string, Record<string, string>>();
-const refusals = new Map<string, string>();
+const refusals = new Map<string, { state: string; diagnostic?: RowDiagnostic }>();
 const earlier = new Set<string>();
 let scope = "";
 let seen = false;
@@ -544,7 +545,7 @@ export function cancelled(command: string, target: string): void {
   earlier.delete(slot(command, target));
 }
 
-export function settle(command: string, target: string, reaction: Reaction | "ok", failure = "", had = false): void {
+export function settle(command: string, target: string, reaction: Reaction | "ok", failure = "", had = false, diagnostic?: RowDiagnostic): void {
   const id = slot(command, target);
   if (reaction === "ok") {
     pending.delete(id);
@@ -555,12 +556,12 @@ export function settle(command: string, target: string, reaction: Reaction | "ok
   if (keepsAttempt(reaction)) return;
   pending.delete(id);
   if (had) earlier.add(id);
-  if (reaction === "hint") refusals.set(id, had ? "earlier" : failure === "refused" ? "refused" : "stage");
+  if (reaction === "hint") refusals.set(id, { state: had ? "earlier" : failure === "refused" ? "refused" : "stage", diagnostic });
   else refusals.delete(id);
 }
 
 export function refusedNow(command: string, target: string): string {
-  return refusals.get(slot(command, target)) ?? "";
+  return refusals.get(slot(command, target))?.state ?? "";
 }
 
 export function keptKey(command: CommandKey, kind: string): string {
@@ -624,7 +625,7 @@ export function pruneRefusals(page: EvidencePage): void {
       refusals.delete(id);
       continue;
     }
-    if (refusals.get(id) === "earlier" || closedProposal(page, at.command, at.target)) continue;
+    if (refusals.get(id)?.state === "earlier" || closedProposal(page, at.command, at.target)) continue;
     if (!stillAllowed(page, at.command, at.target)) refusals.delete(id);
   }
   for (const id of [...earlier]) {
@@ -678,4 +679,11 @@ export function retiredAfter(page: EvidencePage | null, p: Proposal): boolean {
   }
   const id = typeof p.summary.profile === "string" ? p.summary.profile : "";
   return id ? profileById(page, id)?.retired === true : false;
+}
+
+export function refusalDiagnostics(target: string): RowDiagnostic[] {
+  return commandKeys.flatMap((command) => {
+    const entry = refusals.get(slot(command, target))?.diagnostic;
+    return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
+  });
 }

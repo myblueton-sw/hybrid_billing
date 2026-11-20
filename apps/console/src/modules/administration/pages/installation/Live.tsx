@@ -1,3 +1,6 @@
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
+import "../../../../service/command-diagnostics.css";
+import { CommandDiagnostics, ErrorDiagnostics, useCommandDiagnostics } from "../../../../service/CommandDiagnostics";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError } from "../../../../service/admin";
@@ -23,14 +26,15 @@ type Props = {
 
 function failureText(l: Locale, e: unknown): { title: string; body: string } {
   if (e instanceof AdminError) {
-    if (e.failure === "limited") return { title: sc.failed(l), body: sc.limited(l, retryPhrase(l, e.retryAfter || 60)) };
-    if (e.failure === "busy" || e.failure === "unavailable") return { title: sc.failed(l), body: sc.unavailable(l) };
+    if (e.failure === "limited") return { title: diagnosticCopy.load(l, "installation"), body: sc.limited(l, retryPhrase(l, e.retryAfter || 60)) };
+    if (e.failure === "busy" || e.failure === "unavailable") return { title: diagnosticCopy.load(l, "installation"), body: diagnosticCopy.unavailable(l) };
   }
-  return { title: sc.failed(l), body: "" };
+  return { title: diagnosticCopy.load(l, "installation"), body: "" };
 }
 
 export default function LiveInstallation({ locale: l, view: rawView, params, session, onSignOut }: Props) {
-  const api = useAdminClient();
+  const source = useAdminClient();
+  const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]));
   setScope(session.workspace, session.user, session.csrf);
   const view = viewOf(rawView);
   const [page, setPage] = useState<InstallationPage | null>(null);
@@ -83,6 +87,8 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
   if (denied) {
     return (
       <div className="p01-live">
+        <CommandDiagnostics l={l} detail={detail} />
+        {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <section className="live-unavailable" aria-labelledby="p01-denied">
           <h2 id="p01-denied">{k.deniedTitle(l)}</h2>
           <p>{k.denied(l)}</p>
@@ -93,6 +99,8 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
   if (signedOut) {
     return (
       <div className="p01-live">
+        <CommandDiagnostics l={l} detail={detail} />
+        {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
           <button type="button" className="live-secondary" onClick={() => { forget(); onSignOut(); }}>{k.signInAgain(l)}</button>
@@ -115,6 +123,8 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
 
   return (
     <div className="p01-live" data-live={view} aria-busy={busy || undefined}>
+        <CommandDiagnostics l={l} detail={detail} />
+      {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
       <div className="p01-scope">
         <dl className="p01-scope-facts">
           <div>

@@ -1,0 +1,3 @@
+.command-diagnostics-details dd { min-inline-size: 0; }
+.command-diagnostics-details bdi { overflow-wrap: anywhere; white-space: normal; }
+.command-diagnostics-row bdi { overflow-wrap: anywhere; white-space: normal; }

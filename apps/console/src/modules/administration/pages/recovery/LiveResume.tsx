@@ -25,7 +25,7 @@ function ProposeFacts({ l, b }: { l: Locale; b: Basis }) {
 
 function Propose({ r, ...shared }: Shared & { r: ResumeRow }) {
   const { l, page, canCommand } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<"propose">();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"propose">();
   const target = installTarget(r.installation);
   const pending = target ? pendingNow("recovery.propose_unlock", target) : undefined;
   const narrow = proposeNarrow(r);
@@ -46,7 +46,7 @@ function Propose({ r, ...shared }: Shared & { r: ResumeRow }) {
   const values = { lost: frozen ? frozen.lost ?? "" : r.lost_digest };
   return (
     <div className="p03-actions">
-      <RowNote
+      <RowNote l={l} diagnostics={diagnostics(target)}
         kept={kept} blockers={blockers} focus={focusNote}
         extra={link ? <p className="p03-goto"><a className="p03-link" href={href(l, "resume", { proposal: link })}>{k.goToProposal(l, link)}</a></p> : null}
       />

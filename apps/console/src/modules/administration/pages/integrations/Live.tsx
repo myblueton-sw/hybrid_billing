@@ -1,3 +1,5 @@
+import "../../../../service/command-diagnostics.css";
+import { CommandDiagnostics, ErrorDiagnostics, useCommandDiagnostics } from "../../../../service/CommandDiagnostics";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError } from "../../../../service/admin";
@@ -39,7 +41,8 @@ function failureText(l: Locale, e: unknown): string {
 const sections = { modules: "modules", channels: "channels", events: "events" } as const;
 
 export default function LiveIntegrations({ locale: l, view: rawView, params, session, onSignOut }: Props) {
-  const api = useAdminClient();
+  const source = useAdminClient();
+  const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]));
   setScope(session.workspace, session.user, session.csrf);
   const view = viewOf(rawView);
   const [page, setPage] = useState<IntegrationsPage | null>(null);
@@ -95,6 +98,8 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
   if (denied) {
     return (
       <div className="p02-live">
+        <CommandDiagnostics l={l} detail={detail} />
+        {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <section className="live-unavailable" aria-labelledby="p02-denied">
           <h2 id="p02-denied" tabIndex={-1} ref={(h) => { if (h && lostAccess) h.focus(); }}>{k.deniedTitle(l)}</h2>
           {lostAccess && <p className="p02-lost-access" role="status">{r.lastActionLost(l)}</p>}
@@ -106,6 +111,8 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
   if (signedOut) {
     return (
       <div className="p02-live">
+        <CommandDiagnostics l={l} detail={detail} />
+        {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
           <button type="button" className="live-secondary" onClick={() => { forget(); forgetLost(); onSignOut(); }}>{k.signInAgain(l)}</button>
@@ -134,6 +141,8 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
 
   return (
     <div className="p02-live" data-live={view} aria-busy={busy || undefined}>
+        <CommandDiagnostics l={l} detail={detail} />
+      {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
       <div className="p02-scope">
         <dl className="p02-scope-facts">
           <div><dt>{k.workspace(l)}</dt><dd>{page ? <Known l={l} value={session.workspace} /> : "—"}</dd></div>

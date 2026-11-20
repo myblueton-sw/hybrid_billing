@@ -1,3 +1,4 @@
+import type { RowDiagnostic } from "../../../../service/command-diagnostics";
 import type { Delivery, IntegrationsPage, OwnPending, PendingKind, PluginInstall, PluginProposal, RightId, Subscription } from "../../../../service/integrations";
 import { rightIds } from "../../../../service/integrations";
 import type { CommandKey } from "./live-model";
@@ -84,18 +85,18 @@ export function letterApplies(d: Delivery, action: string): boolean {
   return action.startsWith("request_") ? request === null : request !== null && request !== "unknown";
 }
 
-const lost = new Map<string, RightId>();
+const lost = new Map<string, { right: RightId; diagnostic?: RowDiagnostic }>();
 
 function slot(command: string, target: string): string {
   return command + "\u0000" + target;
 }
 
-export function markLost(command: CommandKey, target: string, right: RightId): void {
-  lost.set(slot(command, target), right);
+export function markLost(command: CommandKey, target: string, right: RightId, diagnostic?: RowDiagnostic): void {
+  lost.set(slot(command, target), { right, diagnostic });
 }
 
 export function lostRight(command: CommandKey, target: string): RightId | "" {
-  return lost.get(slot(command, target)) ?? "";
+  return lost.get(slot(command, target))?.right ?? "";
 }
 
 export function lostAny(commands: CommandKey[], target: string): RightId | "" {
@@ -107,9 +108,16 @@ export function lostAny(commands: CommandKey[], target: string): RightId | "" {
 }
 
 export function pruneLost(page: IntegrationsPage): void {
-  for (const [id, right] of [...lost]) if (page.rights !== null && page.rights[right]) lost.delete(id);
+  for (const [id, right] of [...lost]) if (page.rights !== null && page.rights[right.right]) lost.delete(id);
 }
 
 export function forgetLost(): void {
   lost.clear();
+}
+
+export function lostDiagnostics(target: string): RowDiagnostic[] {
+  return [...lost.entries()].flatMap(([key, value]) => {
+    const entry = value.diagnostic;
+    return entry && entry.detail.target === target && key === slot(entry.command, target) ? [entry] : [];
+  });
 }

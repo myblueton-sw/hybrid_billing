@@ -259,7 +259,7 @@ function Profile({ p, ...shared }: Shared & { p: ProfileRow }) {
   const { l, page, selection, canCommand } = shared;
   const target = profileTarget(p);
   const titleId = useId();
-  const { open, toggle, close, focusNote, mark } = useOpen<"retire">(target);
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"retire">(target);
   const pending = target ? pendingNow(command, target) : undefined;
   const gate = profileRetire(p, canCommand, !!pending);
   const already = p.retire !== null ? pendingRetire(page, "perf_gate", p.retire) : null;
@@ -306,7 +306,7 @@ function Profile({ p, ...shared }: Shared & { p: ProfileRow }) {
       </div>
       <Runs l={l} p={p} />
       <div className="p05-actions">
-        <RowNote kept={kept} blockers={blockers} focus={focusNote} state={state} pending={pending && !open ? f.pendingAttempt(l) : ""} />
+        <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} state={state} pending={pending && !open ? f.pendingAttempt(l) : ""} />
         {already && !open && <p className="p05-act-line"><PendingLink l={l} already={already} /></p>}
         {gate.usable && !open && !already && (
           <button type="button" className="live-secondary p05-opener" aria-expanded={false} data-opener={mark("retire")} onClick={() => toggle("retire")}>{k.proposeRetirement(l)}</button>

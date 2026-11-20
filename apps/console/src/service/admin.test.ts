@@ -575,3 +575,20 @@ test("access history read fails on an unknown kind, reason, note or device inste
   }
   await assert.rejects(adminClient("t", fake(401, { code: "unauthenticated" }).f).accessHistory({}, "r"), (err: unknown) => err instanceof AdminError && err.failure === "unauthenticated");
 });
+
+test("diagnostic metadata retains only confirmed response tokens", () => {
+  const error = failureOf(422, { code: "prerequisite_failed", request_id: "server-330" });
+  assert.equal((error as AdminError & { request: string }).request, "server-330");
+  for (const value of [null, 7, {}, "line\nbreak", "x".repeat(257)]) {
+    assert.equal((failureOf(422, { code: value, request_id: value }) as AdminError & { request: string }).request, "");
+    assert.equal(failureOf(422, { code: value }).code, "");
+  }
+});
+
+test("rate limit and cancelled step-up preserve the response diagnostic identity", async () => {
+  await assert.rejects(adminClient("t", fake(429, { code: "rate_limited", request_id: "limited-330" }, { "Retry-After": "3" }).f).integrations(),
+    (e: AdminError & { request: string }) => e.code === "rate_limited" && e.request === "limited-330" && e.retryAfter === 3);
+  await assert.rejects(adminClient("t", fake(403, { code: "reauthentication_required", request_id: "step-330" }).f, async () => false)
+    .command("integrations.plugin_stop", "plugin:sample", "r1", "synthetic reason", {}, { request: "client-330", key: "key-330" }),
+    (e: AdminError & { request: string }) => e.failure === "reauth_cancelled" && e.code === "reauthentication_required" && e.request === "step-330");
+});

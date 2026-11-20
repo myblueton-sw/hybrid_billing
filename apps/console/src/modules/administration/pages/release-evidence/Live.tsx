@@ -1,3 +1,5 @@
+import "../../../../service/command-diagnostics.css";
+import { CommandDiagnostics, ErrorDiagnostics, useCommandDiagnostics } from "../../../../service/CommandDiagnostics";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt } from "../../../../service/admin";
@@ -34,11 +36,11 @@ function failureLines(l: Locale, e: unknown): { text: string; code: string; next
   if (e instanceof AdminError) {
     if (e.failure === "limited") {
       const when = retryPhrase(l, e.retryAfter || 60);
-      return { text: k.failedBusy(l), code: e.code || e.failure, next: k.nextWait(l, when) };
+      return { text: k.failedBusy(l), code: e.code, next: k.nextWait(l, when) };
     }
-    return { text: e.failure === "busy" || e.failure === "unavailable" ? k.failedBusy(l) : "", code: e.code || e.failure, next: k.nextTry(l) };
+    return { text: e.failure === "busy" || e.failure === "unavailable" ? k.failedBusy(l) : "", code: e.code, next: k.nextTry(l) };
   }
-  return { text: "", code: "unavailable", next: k.nextTry(l) };
+  return { text: "", code: "", next: k.nextTry(l) };
 }
 
 function selectedId(view: string, s: Selection): string {
@@ -78,7 +80,8 @@ function CandidateLine({ l, page }: { l: Locale; page: EvidencePage }) {
 }
 
 export default function LiveReleaseEvidence({ locale: l, view: rawView, params, session, onSignOut }: Props) {
-  const api = useAdminClient();
+  const source = useAdminClient();
+  const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]));
   setScope(session.workspace, session.user, session.csrf);
   const view = viewOf(rawView);
   const [page, setPage] = useState<EvidencePage | null>(null);
@@ -118,6 +121,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
     } catch (e) {
       if (n !== seq.current) return null;
       if (e instanceof AdminError && e.failure === "denied") {
+        setFailure({ error: e, request });
         const kind = readDenied();
         if (kind === "revoked") setPage(null);
         setAccess(kind);
@@ -202,6 +206,8 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   if (access === "revoked" || (access === "denied" && revokedNow())) {
     return (
       <div className="p05-live" ref={root} aria-busy={busy || undefined}>
+        <CommandDiagnostics l={l} detail={detail} />
+        {failure && <ErrorDiagnostics l={l} error={failure.error} />}
         {scopeBar}
         <section className="live-unavailable p05-revoked" aria-labelledby="p05-revoked">
           <h2 id="p05-revoked">{k.revokedTitle(l)}</h2>
@@ -213,6 +219,8 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   if (access === "denied") {
     return (
       <div className="p05-live" ref={root} aria-busy={busy || undefined}>
+        <CommandDiagnostics l={l} detail={detail} />
+        {failure && <ErrorDiagnostics l={l} error={failure.error} />}
         {scopeBar}
         <section className="live-unavailable" aria-labelledby="p05-denied">
           <h2 id="p05-denied">{k.deniedTitle(l)}</h2>
@@ -224,6 +232,8 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   if (signedOut) {
     return (
       <div className="p05-live" ref={root}>
+        <CommandDiagnostics l={l} detail={detail} />
+        {failure && <ErrorDiagnostics l={l} error={failure.error} />}
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
           <button type="button" className="live-secondary" onClick={() => { forget(); onSignOut(); }}>{k.signInAgain(l)}</button>
@@ -248,6 +258,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
 
   return (
     <div className="p05-live" data-live={view} data-mode={mode} ref={root} aria-busy={busy || undefined}>
+        <CommandDiagnostics l={l} detail={detail} />
       {scopeBar}
       {page && configured && (
         <div className="p05-frame">
@@ -269,7 +280,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
           <h2>{k.failedTitle(l)}</h2>
           {lines.text && <p>{lines.text}</p>}
           <p>{k.failedSpec(l)}</p>
-          <ErrorDetail l={l} code={lines.code} request={failure.request} next={lines.next} />
+          <ErrorDetail l={l} code={lines.code} request={failure.error instanceof AdminError ? failure.error.request : ""} client={failure.request} next={lines.next} />
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>
       )}

@@ -1,3 +1,6 @@
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
+import "../../../../service/command-diagnostics.css";
+import { CommandDiagnostics, ErrorDiagnostics, useCommandDiagnostics } from "../../../../service/CommandDiagnostics";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError } from "../../../../service/admin";
@@ -30,7 +33,7 @@ type Props = {
 function failureText(l: Locale, e: unknown): string {
   if (e instanceof AdminError) {
     if (e.failure === "limited") return sc.limited(l, retryPhrase(l, e.retryAfter || 60));
-    if (e.failure === "busy" || e.failure === "unavailable") return sc.unavailable(l);
+    if (e.failure === "busy" || e.failure === "unavailable") return diagnosticCopy.unavailable(l);
   }
   return "";
 }
@@ -46,7 +49,8 @@ function selectedOf(view: string, s: ReturnType<typeof selectionOf>): string {
 }
 
 export default function LiveRetention({ locale: l, view: rawView, params, session, onSignOut }: Props) {
-  const api = useAdminClient();
+  const source = useAdminClient();
+  const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]));
   setScope(session.workspace, session.user, session.csrf);
   const view = viewOf(rawView);
   const [page, setPage] = useState<RetentionPage | null>(null);
@@ -110,6 +114,8 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   if (denied) {
     return (
       <div className="p04-live">
+        <CommandDiagnostics l={l} detail={detail} />
+        {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <section className="live-unavailable" aria-labelledby="p04-denied">
           <h2 id="p04-denied">{k.deniedTitle(l)}</h2>
           <p>{k.denied(l)}</p>
@@ -120,6 +126,8 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   if (signedOut) {
     return (
       <div className="p04-live">
+        <CommandDiagnostics l={l} detail={detail} />
+        {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
         <div className="live-error" role="alert">
           <h2>{k.sessionEnded(l)}</h2>
           <button type="button" className="live-secondary" onClick={() => { forget(); onSignOut(); }}>{k.signInAgain(l)}</button>
@@ -143,6 +151,8 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
 
   return (
     <div className="p04-live" data-live={view} aria-busy={busy || undefined}>
+        <CommandDiagnostics l={l} detail={detail} />
+      {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
       <div className="p04-scope">
         <dl className="p04-scope-facts">
           <div><dt>{k.workspace(l)}</dt><dd>{page ? <Known l={l} value={session.workspace} /> : "—"}</dd></div>
@@ -157,7 +167,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
       {notice && <div id="p04-notice" className="service-status" tabIndex={-1} role="status"><p><Rich text={notice} /></p></div>}
       {status === "error" && (
         <div className="live-error p04-failure" role="alert">
-          <h2>{sc.failed(l)}</h2>
+          <h2>{diagnosticCopy.load(l, "retention")}</h2>
           {failure && <p>{failure}</p>}
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>

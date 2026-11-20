@@ -111,3 +111,8 @@ The subsequent [boundary verification](m04-boundaries.md) adds eleven cursor/cou
 # Issuance draft authentication checkpoint
 
 The [issuance draft record](m04-issue-draft.md) documents an actual password-confirmation/canonical-refresh failure and the lease-scoped correction. Current validation passed1003 Console tests, fourteen mounted interaction scenarios with sixty read-state and sixty-four authentication captures, and eighteen isolated recovery scenarios. The actual twelve password confirmations retain unsent issuance values; replacement authentication clears them. Unknown original replay preserves another target's unsent draft. The separate ActionForm rationale remount risk remains open, alongside full M04 parity, required package coverage and final reviews. Draft PR251 remains open; no merge or owner acceptance is claimed.
+
+
+# State and revocation rationale checkpoint
+
+The [action draft record](m04-action-draft.md) resolves the separate reproduced ActionForm local-rationale loss with one bounded lease-owned action/target/reason draft. Actual state refresh/remount and real revision-refusal checks preserve editable values; revocation uses its own prerequisite Reload under explicitly injected unavailable eligibility. The complete runner passed sixteen scenarios plus the existing sixty read-state and sixty-four issuance-authentication captures. Console1008 tests, twenty isolated provider scenarios, three restored semantic mutations and final product build passed. Generic command-error copy and broader feature gates remain open; draft PR251 has not merged.

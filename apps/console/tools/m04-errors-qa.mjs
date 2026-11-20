@@ -122,7 +122,10 @@ async function scenario(name, run) {
   }
 }
 async function row(id) {
-  await page.locator("table tbody tr").filter({ hasText: id }).waitFor();
+  await page
+    .locator("table tbody tr")
+    .filter({ has: page.getByText(id, { exact: true }) })
+    .waitFor();
 }
 async function nextPage() {
   const pending = page.waitForResponse(
@@ -162,6 +165,157 @@ try {
   const a = await create(prefix + "-a"),
     b = await create(prefix + "-b");
   let retainedCredentialB;
+  await scenario(
+    "unsent state rationale survives canonical refresh and view remount",
+    async () => {
+      await navigate("accounts", { svc_a_selected: b });
+      await page
+        .getByRole("button", { name: "Suspend service account", exact: true })
+        .click();
+      const form = page.locator("form").filter({
+        has: page.getByRole("heading", {
+          name: "Suspend service account",
+          exact: true,
+        }),
+      });
+      const reason =
+        "Synthetic unsent state rationale retained across canonical refresh";
+      await form.locator("#live-reason").fill(reason);
+      const refreshed = page.waitForResponse(
+        (response) =>
+          new URL(response.url()).pathname ===
+            "/api/v1/identity/services/" + b && response.status() === 200,
+      );
+      await page
+        .locator('section[aria-labelledby="svc-list-title"] > .live-toolbar')
+        .getByRole("button", { name: "Reload", exact: true })
+        .click();
+      await refreshed;
+      await form.locator("#live-reason").waitFor();
+      assert.equal(
+        await form.locator("#live-reason").inputValue(),
+        reason,
+        "canonical refresh discarded the unsent state rationale",
+      );
+      await navigate("credentials");
+      await navigate("accounts", { svc_a_selected: b });
+      await page
+        .getByRole("button", { name: "Suspend service account", exact: true })
+        .click();
+      await form.locator("#live-reason").waitFor();
+      assert.equal(
+        await form.locator("#live-reason").inputValue(),
+        reason,
+        "view remount discarded the unsent state rationale",
+      );
+      const writer = await context.newPage();
+      try {
+        await writer.goto(base + "?service=api&lang=en");
+        await writer.locator(".service-session").waitFor();
+        await create(prefix + "-revision-conflict", writer);
+      } finally {
+        await writer.close();
+      }
+      const refused = page.waitForResponse(
+        (response) =>
+          new URL(response.url()).pathname ===
+            "/api/v1/commands/service.suspend" && response.status() === 409,
+      );
+      await form.locator("button[type=submit]").click();
+      await refused;
+      await form
+        .getByRole("heading", { name: "Command refused", exact: true })
+        .waitFor();
+      assert.equal(await form.locator("#live-reason").inputValue(), reason);
+      await form
+        .getByRole("button", { name: "Discard retained intent", exact: true })
+        .click();
+      assert.equal(
+        await form.locator("#live-reason").inputValue(),
+        reason,
+        "definitive refusal erased the unsent rationale",
+      );
+      assert.equal(await form.locator("#live-reason").isEditable(), true);
+      await form.getByRole("button", { name: "Cancel", exact: true }).click();
+      await page
+        .getByRole("button", { name: "Retire service account", exact: true })
+        .click();
+      await page
+        .getByText(
+          "An unsent change is retained. Reopen its original target and action to continue, or discard the draft. Cancel closes this form and keeps the draft.",
+          { exact: true },
+        )
+        .waitFor();
+      assert.equal(await page.locator("#live-reason").count(), 0);
+      await mkdir(output + "/action-drafts", { recursive: true });
+      for (const [locale, title, notice] of [
+        [
+          "en",
+          "Retire service account",
+          "An unsent change is retained. Reopen its original target and action to continue, or discard the draft. Cancel closes this form and keeps the draft.",
+        ],
+        [
+          "ko",
+          "서비스 계정 사용 종료",
+          "아직 제출하지 않은 변경 초안이 보존되어 있습니다. 원래 대상과 작업을 다시 열어 계속하거나 초안을 버리세요. 취소하면 이 양식만 닫히고 초안은 유지됩니다.",
+        ],
+        [
+          "ar",
+          "إيقاف حساب الخدمة نهائيًا",
+          "توجد مسودة محفوظة لتغيير لم يُرسل بعد. أعد فتح الهدف والإجراء الأصليين للمتابعة، أو تجاهل المسودة. يؤدي الإلغاء إلى إغلاق هذا النموذج مع الاحتفاظ بالمسودة.",
+        ],
+      ]) {
+        await page.setViewportSize({ width: 390, height: 1000 });
+        if (locale !== "en") {
+          await navigate("accounts", { svc_a_selected: b }, page, locale);
+          await page.getByRole("button", { name: title, exact: true }).click();
+        }
+        await page.getByText(notice, { exact: true }).waitFor();
+        await page.evaluate(() => document.fonts.ready);
+        assert.equal(
+          await page
+            .locator('[data-security-screen="M04"]')
+            .getAttribute("dir"),
+          locale === "ar" ? "rtl" : "ltr",
+        );
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+          true,
+        );
+        assert.equal(
+          await page
+            .locator("#svc-secret,#reauth-password,#signin-password")
+            .count(),
+          0,
+        );
+        await page.screenshot({
+          path: output + "/action-drafts/" + locale + "-390-incompatible.png",
+          fullPage: true,
+        });
+      }
+      await page.setViewportSize({ width: 1440, height: 1000 });
+      await navigate("accounts", { svc_a_selected: b });
+      await page
+        .getByRole("button", { name: "Retire service account", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Discard previous draft", exact: true })
+        .click();
+      const retired = page.locator("form").filter({
+        has: page.getByRole("heading", {
+          name: "Retire service account",
+          exact: true,
+        }),
+      });
+      await retired.locator("#live-reason").waitFor();
+      assert.equal(await retired.locator("#live-reason").inputValue(), "");
+      await retired
+        .getByRole("button", { name: "Cancel", exact: true })
+        .click();
+    },
+  );
   await scenario(
     "late old query cannot replace a newer bounded page",
     async () => {
@@ -479,6 +633,82 @@ try {
         handler,
       );
       page.off("request", count);
+    },
+  );
+  await scenario(
+    "unsent revocation rationale survives canonical refresh without declaring storage",
+    async () => {
+      await navigate("credentials", {
+        svc_c_service: b,
+        svc_c_selected: retainedCredentialB,
+      });
+      await page
+        .getByRole("heading", { name: retainedCredentialB, exact: true })
+        .waitFor();
+      let unavailable = true;
+      const detailPath =
+        "/api/v1/identity/service-credentials/" + retainedCredentialB;
+      const handler = async (route) => {
+        const response = await route.fetch();
+        if (response.status() !== 200 || !unavailable)
+          return route.fulfill({ response });
+        const body = await response.json();
+        body.eligibility.step_up_state = "unavailable";
+        body.eligibility.can_revoke = false;
+        return route.fulfill({ response, json: body });
+      };
+      await page.route("**" + detailPath + "?*", handler);
+      await page
+        .locator("section.live-step")
+        .filter({
+          has: page.getByRole("heading", {
+            name: retainedCredentialB,
+            exact: true,
+          }),
+        })
+        .getByRole("button", { name: "Revoke", exact: true })
+        .click();
+      const form = page.locator("form").filter({
+        has: page.getByRole("heading", {
+          name: "Revoke credential",
+          exact: true,
+        }),
+      });
+      await form.locator("#live-reason").waitFor();
+      assert.equal(await form.locator("#live-reason").inputValue(), "");
+      const reason = "Synthetic unsubmitted revocation rationale";
+      await form.locator("#live-reason").fill(reason);
+      const refreshed = page.waitForResponse(
+        (response) =>
+          new URL(response.url()).pathname ===
+            "/api/v1/identity/service-credentials/" + retainedCredentialB &&
+          response.status() === 200,
+      );
+      unavailable = false;
+      await Promise.all([
+        refreshed,
+        form.getByRole("button", { name: "Reload", exact: true }).click(),
+      ]);
+      await page.unroute("**" + detailPath + "?*", handler);
+      await form.locator("#live-reason").waitFor();
+      assert.equal(await form.locator("#live-reason").inputValue(), reason);
+      await form.getByRole("button", { name: "Cancel", exact: true }).click();
+      await navigate("accounts", { svc_a_selected: b });
+      await page
+        .getByRole("button", { name: "Suspend service account", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Discard previous draft", exact: true })
+        .click();
+      const state = page.locator("form").filter({
+        has: page.getByRole("heading", {
+          name: "Suspend service account",
+          exact: true,
+        }),
+      });
+      await state.locator("#live-reason").waitFor();
+      assert.equal(await state.locator("#live-reason").inputValue(), "");
+      await state.getByRole("button", { name: "Cancel", exact: true }).click();
     },
   );
   await scenario(

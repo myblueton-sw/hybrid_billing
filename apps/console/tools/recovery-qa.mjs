@@ -37,6 +37,39 @@ async function scenario(name, action) {
 }
 try {
   browser = await chromium.launch({ headless: true, ...(args.chromium ? { executablePath: args.chromium } : {}) });
+  await scenario("unsubmitted action draft survives same-lease locale and view remount", async (page) => {
+    assert.equal(await page.evaluate(() => window.hbRecovery.saveAction()), true);
+    assert.equal(await page.evaluate(() => window.hbRecovery.unloadGuarded()), true);
+    const id = await page.evaluate(() => window.hbRecovery.snapshot().id);
+    await page.evaluate(() => { window.hbRecovery.locale("ko"); window.hbRecovery.unmountView(); });
+    await page.waitForFunction(() => !window.hbRecovery.snapshot().ready);
+    await page.evaluate(() => window.hbRecovery.mountView());
+    await page.waitForFunction((id) => window.hbRecovery.snapshot().ready && window.hbRecovery.snapshot().id === id, id);
+    const value = await page.evaluate(() => window.hbRecovery.snapshot().actionDraft);
+    assert.deepEqual(value, { action: "suspend", target: "svc-test", reason: "Synthetic action draft" });
+  });
+  await scenario("unsubmitted action draft cannot cross any replacement lease or authentication loss", async (page) => {
+    for (const field of ["user", "workspace", "csrf", "client"]) {
+      assert.equal(await page.evaluate(() => window.hbRecovery.saveAction()), true);
+      const id = await page.evaluate(() => window.hbRecovery.snapshot().id);
+      await page.evaluate((field) => window.hbRecovery.switchScope(field), field);
+      await page.waitForFunction((id) => window.hbRecovery.snapshot().ready && window.hbRecovery.snapshot().id !== id, id);
+      const value = await page.evaluate(() => window.hbRecovery.snapshot());
+      assert.equal(value.actionDraft, null);
+      assert.equal(value.priorActionDraft, null);
+      assert.equal(value.priorActionGuard, false);
+      assert.equal(await page.evaluate(() => window.hbRecovery.savePriorAction()), false);
+      assert.equal(await page.evaluate(() => window.hbRecovery.unloadGuarded()), false);
+    }
+    assert.equal(await page.evaluate(() => window.hbRecovery.saveAction()), true);
+    await page.evaluate(() => window.hbRecovery.rejectAuthentication());
+    await page.waitForFunction(() => !window.hbRecovery.snapshot().ready);
+    const value = await page.evaluate(() => window.hbRecovery.snapshot());
+    assert.equal(value.priorActionDraft, null);
+    assert.equal(value.priorActionGuard, false);
+    assert.equal(await page.evaluate(() => window.hbRecovery.savePriorAction()), false);
+    assert.equal(await page.evaluate(() => window.hbRecovery.unloadGuarded()), false);
+  });
   await scenario("unsubmitted issuance draft survives same-lease locale and view remount", async (page) => {
     assert.equal(await page.evaluate(() => window.hbRecovery.saveDraft()), true);
     assert.equal(await page.evaluate(() => window.hbRecovery.unloadGuarded()), true);

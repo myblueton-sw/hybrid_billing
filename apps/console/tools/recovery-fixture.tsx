@@ -63,7 +63,9 @@ const root = createRoot(document.getElementById("root")!);
 root.render(<StrictMode><Fixture /></StrictMode>);
 
 const control = {
-  snapshot: () => ({ ready: !!current?.issues.current(), id: current ? id(current.issues) : null, calls, phase: current?.issues.get(active.user, service)?.phase ?? "", markers: current?.issues.marks(active.user) ?? [], priorDisposed: prior?.issues.disposed() ?? null, gapSafe: authoritativeGapSafe, layoutGapSafe, lastRevoke, draft: current?.issueDrafts.get() ?? null, priorDraft: prior?.issueDrafts.get() ?? null, priorDraftGuard: prior?.issueDrafts.guarded() ?? false }),
+  snapshot: () => ({ ready: !!current?.issues.current(), id: current ? id(current.issues) : null, calls, phase: current?.issues.get(active.user, service)?.phase ?? "", markers: current?.issues.marks(active.user) ?? [], priorDisposed: prior?.issues.disposed() ?? null, gapSafe: authoritativeGapSafe, layoutGapSafe, lastRevoke, draft: current?.issueDrafts.get() ?? null, priorDraft: prior?.issueDrafts.get() ?? null, priorDraftGuard: prior?.issueDrafts.guarded() ?? false, actionDraft: current?.actionDrafts.get() ?? null, priorActionDraft: prior?.actionDrafts.get() ?? null, priorActionGuard: prior?.actionDrafts.guarded() ?? false }),
+  saveAction: () => current?.actionDrafts.save({ action: "suspend", target: service, reason: "Synthetic action draft" }, serviceLimits) ?? false,
+  savePriorAction: () => prior?.actionDrafts.save({ action: "retire", target: service, reason: "Obsolete action draft" }, serviceLimits) ?? false,
   saveDraft: () => current?.issueDrafts.save({ target: service, days: "1", reason: "Synthetic issuance draft" }, serviceLimits) ?? false,
   savePriorDraft: () => prior?.issueDrafts.save({ target: service, days: "2", reason: "Obsolete issuance draft" }, serviceLimits) ?? false,
   unloadGuarded: () => { const event = new Event("beforeunload", { cancelable: true }); window.dispatchEvent(event); return event.defaultPrevented; },

@@ -1,6 +1,6 @@
 import { useState, useSyncExternalStore, type FormEvent } from "react";
 import type { Locale } from "../../../../shared/types";
-import type { AdminClient, CommandId } from "../../../../service/admin";
+import type { AdminClient } from "../../../../service/admin";
 import type {
   AccountDetail,
   CredentialDetail,
@@ -10,6 +10,11 @@ import { w } from "../users/live-copy";
 import { c } from "../../../../service/copy";
 import { v } from "./live-copy";
 import { qcopy as t } from "./query-copy";
+import {
+  actionCommand,
+  admitsActionDraft,
+  type DraftAction,
+} from "./action-draft";
 import { admitsIssueDraft } from "./issue-draft";
 import { Facts, bdi, usePanelHeading } from "./query-ui";
 import {
@@ -21,9 +26,16 @@ import {
 } from "./command-ui";
 import type { Recovery } from "./recovery-context";
 import { wholeDays } from "./live-model";
-import { utf8Length } from "../../../../service/helpers";
 
 export type AccountAction = "suspend" | "reinstate" | "retire";
+const actionTitle = (l: Locale, action: DraftAction) =>
+  action === "suspend"
+    ? v.suspendTitle(l)
+    : action === "reinstate"
+      ? v.reinstateTitle(l)
+      : action === "retire"
+        ? v.retireTitle(l)
+        : v.revokeTitle(l);
 export function ActionForm({
   l,
   api,
@@ -50,16 +62,14 @@ export function ActionForm({
   const heading = usePanelHeading(detail.row.id);
   const kind = action === "revoke" ? "revoke" : "state",
     entry = recovery.commands.get(kind);
-  const [reason, setReason] = useState(initial),
-    [problem, setProblem] = useState("");
-  const title =
-    action === "suspend"
-      ? v.suspendTitle(l)
-      : action === "reinstate"
-        ? v.reinstateTitle(l)
-        : action === "retire"
-          ? v.retireTitle(l)
-          : v.revokeTitle(l);
+  const drafts = recovery.actionDrafts;
+  useSyncExternalStore(drafts.subscribe, drafts.version);
+  const saved = drafts.get();
+  const draft = saved ?? { action, target: detail.row.id, reason: initial };
+  const matches = draft.target === detail.row.id && draft.action === action;
+  const reason = matches ? draft.reason : initial;
+  const [problem, setProblem] = useState("");
+  const title = actionTitle(l, action);
   const allowed =
     "can_revoke" in detail.eligibility
       ? detail.eligibility.can_revoke
@@ -72,12 +82,14 @@ export function ActionForm({
         ];
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (!present.current || !recovery.issues.current()) return;
     if (entry && entry.phase !== "unknown") return;
     if (
       !entry &&
-      (!allowed ||
-        reasonProblem(l, reason) ||
-        utf8Length(reason) > detail.limits.rationale_bytes)
+      (!matches ||
+        !admitsActionDraft(draft, detail.limits) ||
+        !allowed ||
+        reasonProblem(l, reason))
     ) {
       setProblem(reasonProblem(l, reason) || t(l, "blocked"));
       return;
@@ -87,9 +99,7 @@ export function ActionForm({
       entry
         ? undefined
         : {
-            command: (action === "revoke"
-              ? "service.revoke_credential"
-              : "service." + action) as CommandId,
+            command: actionCommand(action),
             target: detail.row.id,
             reason,
             fields: {},
@@ -107,6 +117,17 @@ export function ActionForm({
           tried,
         ),
     );
+    const retained = recovery.commands.get(kind);
+    if (
+      saved &&
+      matches &&
+      retained &&
+      retained.phase !== "refused" &&
+      retained.draft.command === actionCommand(action) &&
+      retained.draft.target === saved.target &&
+      retained.draft.reason === saved.reason
+    )
+      drafts.clear(saved);
     if (done && present.current && recovery.issues.current()) {
       recovery.commands.discard(kind);
       onDone();
@@ -121,6 +142,33 @@ export function ActionForm({
           : "service." + action))
   )
     return <IntentNotice l={l} recovery={recovery} kind={kind} />;
+  if (!entry && saved && !matches)
+    return (
+      <section className="live-step">
+        <h2 tabIndex={-1} ref={heading}>
+          {title}
+        </h2>
+        <p>{t(l, "otherActionDraft")}</p>
+        <Facts
+          items={[
+            [t(l, "action"), actionTitle(l, saved.action)],
+            [t(l, "target"), bdi(saved.target)],
+          ]}
+        />
+        <div className="live-buttons">
+          <button
+            type="button"
+            className="live-secondary"
+            onClick={() => drafts.clear(saved)}
+          >
+            {t(l, "discardDraft")}
+          </button>
+          <button type="button" className="live-secondary" onClick={onClose}>
+            {w.cancel(l)}
+          </button>
+        </div>
+      </section>
+    );
   return (
     <form className="live-step" onSubmit={submit} noValidate>
       <h2 tabIndex={-1} ref={heading}>
@@ -148,8 +196,19 @@ export function ActionForm({
           limit={detail.limits.rationale_bytes}
           value={entry?.draft.reason ?? reason}
           onChange={(value) => {
-            if (utf8Length(value) <= detail.limits.rationale_bytes)
-              setReason(value);
+            if (
+              !present.current ||
+              !recovery.issues.current() ||
+              recovery.commands.get(kind)
+            )
+              return;
+            if (
+              drafts.save(
+                { action, target: detail.row.id, reason: value },
+                detail.limits,
+              )
+            )
+              setProblem("");
             else setProblem(t(l, "bounds"));
           }}
           error={problem}

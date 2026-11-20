@@ -197,6 +197,11 @@ const terms = {
     "다른 계정의 선언 초안이 보존되어 있습니다.",
     "توجد مسودة إقرار محفوظة لحساب آخر.",
   ],
+  otherActionDraft: [
+    "An unsent change is retained. Reopen its original target and action to continue, or discard the draft. Cancel closes this form and keeps the draft.",
+    "아직 제출하지 않은 변경 초안이 보존되어 있습니다. 원래 대상과 작업을 다시 열어 계속하거나 초안을 버리세요. 취소하면 이 양식만 닫히고 초안은 유지됩니다.",
+    "توجد مسودة محفوظة لتغيير لم يُرسل بعد. أعد فتح الهدف والإجراء الأصليين للمتابعة، أو تجاهل المسودة. يؤدي الإلغاء إلى إغلاق هذا النموذج مع الاحتفاظ بالمسودة.",
+  ],
   otherIssueDraft: [
     "A credential issuance draft for another service account is retained.",
     "다른 서비스 계정의 자격 증명 발급 초안이 보존되어 있습니다.",

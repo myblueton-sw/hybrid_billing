@@ -177,3 +177,7 @@ The [action draft record](m04-action-draft.md) resolves the separate reproduced 
 # Activation with incomplete integration rollback
 
 [Activation rollback verification](m04-activation-rollback-contracts.md) uses actual HTTP redemption/password sign-in and exact public grant/rights observations. Eight Console grants and four subject grants remain open; channels/events stay withheld. Token reuse preserves the single registered user. Two business-state mutants were assertion-killed/restored; independent source review passed. Full server short passed193.884s at native99.8%,11,779 weighted statements/29 uncovered; four race groups, vet and Linux/Windows compilation passed. Required100%, authorized merge/read-back and parent M03/M02 remain open; bounded aggregate review remains PASS.
+
+# Create authority at quiesced clock boundaries
+
+[Create-clock verification](m04-create-clock-contracts.md) uses fresh synchronized-clock fixtures, genuine original-session collection and a supported observer at adopted time. Expired direct creation leaves no new business resources; healthy creation returns the proposed revision while committed revision stays unchanged. Two semantic mutants were assertion-killed/restored; independent actual-source review passed. Full server short passed199.241s at native99.8%,11,779 weighted statements/28 uncovered; five race groups, vet and Linux/Windows compilation passed. Required100%, authorized merge/read-back and parent M03/M02 remain open; bounded aggregate review remains PASS.

@@ -12,6 +12,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/intake"
 	"github.com/myblueton-sw/hybrid_billing/modules/normalize"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
+	"github.com/myblueton-sw/hybrid_billing/modules/pricingpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/rating"
 	"github.com/myblueton-sw/hybrid_billing/packages/primitives/decimal"
 )
@@ -56,6 +57,7 @@ type normalizedRowOrigin struct {
 }
 
 type normalizedOrigin struct {
+	Pricing         *pricingpolicy.Record
 	Source          candidateSource
 	Lifecycle       candidateLifecycle
 	Binding         normalizedBinding
@@ -76,6 +78,7 @@ type normalizedOrigin struct {
 }
 
 type normalizedCharges struct {
+	pricingPolicies *pricingpolicy.Registry
 	intake          *intake.Registry
 	sourceProfile   decimal.Profile
 	profileSpec     decimal.ProfileSpec
@@ -238,6 +241,10 @@ func (p *normalizedCharges) capture(workspace, runID, candidateID string, b norm
 }
 
 func (p *normalizedCharges) captureLocked(workspace, runID, candidateID string, b normalizedBinding) (chargeCandidate, error) {
+	return p.captureBoundLocked(workspace, runID, candidateID, b, nil)
+}
+
+func (p *normalizedCharges) captureBoundLocked(workspace, runID, candidateID string, b normalizedBinding, pricing *pricingpolicy.Record) (chargeCandidate, error) {
 	cost, classes, err := p.fields(b)
 	if err != nil {
 		return chargeCandidate{}, err
@@ -273,7 +280,7 @@ func (p *normalizedCharges) captureLocked(workspace, runID, candidateID string, 
 	if err != nil {
 		return chargeCandidate{}, err
 	}
-	origin := normalizedOrigin{Source: source, Lifecycle: lifecycle, Binding: b, Run: runID, Mapping: run.Spec.Mapping, MappingRevision: run.Spec.Revision, Manifest: run.Spec.Input.Manifest,
+	origin := normalizedOrigin{Pricing: pricing, Source: source, Lifecycle: lifecycle, Binding: b, Run: runID, Mapping: run.Spec.Mapping, MappingRevision: run.Spec.Revision, Manifest: run.Spec.Input.Manifest,
 		Profile: run.ProfileID, ProfileRevision: run.ProfileRevision, WindowFrom: run.Spec.Window.From.UTC().Format(time.RFC3339Nano), WindowTo: run.Spec.Window.To.UTC().Format(time.RFC3339Nano), Contract: contract, BillingProfile: profile, Document: document}
 	origin.TargetDigest, err = normalizedDigest(p.target)
 	if err != nil {

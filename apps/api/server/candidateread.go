@@ -109,7 +109,7 @@ type candidateResponse struct {
 
 func summarizeCandidate(v chargeCandidate, workspace, id string) (candidateSummary, error) {
 	in, result := v.Envelope.Input, v.Envelope.Result
-	if v.Envelope.Schema != "hb_charge_candidate_v4" || in.SourceMode != "synthetic" || in.Workspace != workspace || in.ID != id {
+	if v.Envelope.Schema != "hb_charge_candidate_v5" || in.SourceMode != "synthetic" || in.Workspace != workspace || in.ID != id {
 		return candidateSummary{}, errCandidateInvalid
 	}
 	return candidateSummary{ID: in.ID, Digest: v.Digest, Customer: in.Customer, Entity: in.Entity, From: in.From, To: in.To, Total: result.Total, Currency: result.Currency,

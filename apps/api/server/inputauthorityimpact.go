@@ -14,7 +14,7 @@ type fallibleProposalStore struct {
 	tally     func(*Server) (map[string]int, error)
 }
 
-var fallibleProposalStores = []fallibleProposalStore{{name: "financial_policy_proposals", prefix: "financial_policy", rechecked: true, tally: financialPolicyTally}, {name: "input_authority_proposals", prefix: "input_authority", rechecked: true, tally: inputAuthorityTally}, {name: "pricing_authority_proposals", prefix: "pricing_authority", rechecked: true, tally: pricingAuthorityTally}, {name: "pricing_policy_proposals", prefix: "pricing_policy", rechecked: true, tally: pricingPolicyTally}}
+var fallibleProposalStores = []fallibleProposalStore{{name: "financial_authority_proposals", prefix: "financial_authority", rechecked: true, tally: financialAuthorityTally}, {name: "financial_policy_proposals", prefix: "financial_policy", rechecked: true, tally: financialPolicyTally}, {name: "input_authority_proposals", prefix: "input_authority", rechecked: true, tally: inputAuthorityTally}, {name: "pricing_authority_proposals", prefix: "pricing_authority", rechecked: true, tally: pricingAuthorityTally}, {name: "pricing_policy_proposals", prefix: "pricing_policy", rechecked: true, tally: pricingPolicyTally}}
 
 func pricingPolicyTally(s *Server) (map[string]int, error) {
 	out := map[string]int{}
@@ -78,6 +78,26 @@ func financialPolicyTally(s *Server) (map[string]int, error) {
 		}
 		if record.State == approvals.StatePending {
 			out[record.Proposer]++
+		}
+	}
+	return out, nil
+}
+
+func financialAuthorityTally(s *Server) (map[string]int, error) {
+	out := map[string]int{}
+	if s.cfg.Seed != SeedSample {
+		return out, nil
+	}
+	if s.approvals == nil || s.financialAuthorities == nil || s.faulty("financial-authority-impact") {
+		return nil, gate.ErrUnavailable
+	}
+	for id := range s.financialAuthorities {
+		record, err := s.financialAuthorityRecord(s.bootWorkspace, id)
+		if err != nil {
+			return nil, err
+		}
+		if record.proposal.State == approvals.StatePending {
+			out[record.proposal.Proposer]++
 		}
 	}
 	return out, nil

@@ -78,7 +78,8 @@ type Config struct {
 }
 
 type Server struct {
-	financialPolicies map[string]financialPolicyBinding
+	financialPolicies    map[string]financialPolicyBinding
+	financialAuthorities map[string]financialAuthorityBinding
 
 	approvals        *approvals.Registry
 	approvalIndex    []approvalIndex

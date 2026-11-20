@@ -30,4 +30,16 @@ B09 uses the request's confirmed historical policy revision. Superseded previous
 
 # Remaining W-23 integration
 
-Financial authority grants, original-author v7 candidate subjects, fresh governed prerequisite validation, actual human financial decisions and later ERP/issue/delivery/recognition integration remain separate planned work under HYB-340/HYB-225. This increment creates no new governance form or owner screen acceptance. Existing local service state is not upgraded or deployed by this contract.
+Direct-human gate.Approve permission grants, original-author v7 candidate subjects, fresh governed prerequisite validation, actual human financial decisions and later ERP/issue/delivery/recognition integration remain separate planned work under HYB-340/HYB-225. This increment creates no new governance form or owner screen acceptance. Existing local service state is not upgraded or deployed by this contract.
+
+# Governed amount-authority extension
+
+financial_authority.propose/confirm/inspect/revoke operate on a service-owned proposal ID. Propose requires explicit recipient, currency, canonical exact nonnegative limit, from and to. The derived authority ID is financial-limit-{proposal}; module validation bounds it to128 bytes. Stage is fixed to charge_approval. Both dates are required, validated in2000–2099, and include the complete UTC start/end days. The amount is a maximum absolute amount in the stated currency, without conversion or inferred production defaults.
+
+Propose and confirm require current installation/module governors; proposer and confirmer must differ from each other and the recipient. Recipient must be a currently active human with effective workspace membership. Confirmation rechecks these facts even on a fresh-key historical retry. Inspect and revoke require a current governor. Revoke names the one service-bound module authority and preserves actor, reason and time; it is allowed under hold, unlike propose/confirm. All mutations retain the ordinary session, CSRF, expected-revision, idempotency and step-up envelope.
+
+The immutable bounded binding preserves proposal, confirmation and revocation reasons. All output bounds are checked before effects:23 fields,128 bytes per field and capacity for configured rationale. Pure PrepareAuthority canonicalization creates no records and advances no clock. AuthorityAt returns the module's effective clamped time with its authority snapshot. Receipts derive module_amount_authority from that time and expose authority_as_of, so time rollback cannot falsely reactivate an expired limit. Revocation takes precedence over date status; historical confirmation cannot restore a revoked limit.
+
+M01 financial_authority_proposals counts only pending proposals, separately from financial_policy_proposals and pricing/input permissions. Missing or corrupt service bindings make impact calculation unavailable. The category is Charge approval limit proposals / 청구 승인 한도 제안 / مقترحات حدود اعتماد الرسوم.
+
+This extension makes no AddGrant call. Module amount authority alone is not financial approval permission. A separately governed direct-human Approve grant and a narrowly authenticated decision transport remain required, followed by candidate/prerequisite integration. Existing M03 cannot provision that human-only grant through a console ceiling; that restriction remains unchanged.

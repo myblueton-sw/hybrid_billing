@@ -70,3 +70,13 @@ test("charge approval policy proposal impact has a localized label, count and re
     assert.ok(!html.includes("financial_policy_proposals"), l);
   }
 });
+
+test("charge approval limit proposal impact has a localized label, count and recheck meaning", () => {
+  const labels = { en: "Charge approval limit proposals", ko: "청구 승인 한도 제안", ar: "مقترحات حدود اعتماد الرسوم" };
+  const withInput = { ...detail, impact: { ...detail.impact, pending: [{ store: "financial_authority_proposals", count: 2, rechecked: true }] } };
+  for (const l of ["en", "ko", "ar"] as Locale[]) {
+    const html = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: withInput, targets: null }} onMore={() => {}} />);
+    assert.ok(html.includes(`<dt>${labels[l]}</dt><dd><span class="m01-line">2</span><span class="m01-line">${b.rechecked(l)}</span></dd>`), l);
+    assert.ok(!html.includes("financial_authority_proposals"), l);
+  }
+});

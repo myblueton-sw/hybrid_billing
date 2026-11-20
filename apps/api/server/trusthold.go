@@ -33,6 +33,9 @@ const (
 )
 
 var holdTable = map[string]holdRule{
+	"financial_authority.propose":               {holdRefuse, reasonChange},
+	"financial_authority.confirm":               {holdRefuse, reasonChange},
+	"financial_authority.revoke":                {holdAllow, reasonReduce},
 	"financial_policy.propose":                  {holdRefuse, reasonChange},
 	"financial_policy.confirm":                  {holdRefuse, reasonChange},
 	"pricing_policy.capture":                    {holdRefuse, reasonChange},
@@ -162,7 +165,7 @@ func (s *Server) enterHold(reason string) {
 }
 
 func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
-	if command == "financial_policy.current" || command == "financial_policy.inspect" || command == "pricing_policy.prepare" || command == "pricing_policy.inspect" || command == "pricing_authority.inspect" || command == "input_authority.inspect" || command == "input.inspect" {
+	if command == "financial_authority.inspect" || command == "financial_policy.current" || command == "financial_policy.inspect" || command == "pricing_policy.prepare" || command == "pricing_policy.inspect" || command == "pricing_authority.inspect" || command == "input_authority.inspect" || command == "input.inspect" {
 		return true
 	}
 	rule, known := holdTable[command]

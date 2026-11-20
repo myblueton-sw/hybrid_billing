@@ -8,6 +8,7 @@ import { e, whenSeconds } from "./end-copy";
 import { sq } from "./query-copy";
 import { intentLocked, submitSelected, recoverSelected, replaySelected, type IntentStore } from "./session-intent";
 import { useScopedRead, type ScopedValue } from "./scoped-read";
+import { PreparationExpiry, SessionSettings } from "./SessionSettings";
 import "./end.css";
 
 export const sessionStateLabel = (l: Locale,state: SessionRow["state"]) => ({ active:sq.active,blocked:sq.blocked,expired:sq.ended,revoked:sq.revoked,unavailable:sq.unavailable })[state](l);
@@ -115,6 +116,7 @@ export default function SessionSelection({ l, api, handle, store, onClose, onSig
     <p className="mysec-end-scope">{e.scope(l)}</p><p className="mysec-end-note">{handle ? m.endOneImpact(l) : sq.fullScope(l)}</p>
     {busy && <p role="status">{e.reading(l)}</p>}
     {failed && <div className="service-summary" role="alert"><p>{failure instanceof AdminError && failure.code === "revision_conflict" ? sq.expired(l) : failure instanceof AdminError && failure.failure === "limited" ? sq.capacity(l) : sq.readFailed(l)}</p><button type="button" className="live-secondary" disabled={busy} onClick={() => prepared?.state === "sealed" ? void readPreview(prepared,after,trail) : void prepare(prepared ?? undefined)}>{!prepared && failure instanceof AdminError && ["revision_conflict","unsupported_command"].includes(failure.code) ? sq.fresh(l) : c.tryAgain(l)}</button></div>}
+    {prepared && <><PreparationExpiry l={l} at={prepared.expires_at} /><SessionSettings l={l} settings={prepared.settings} scope="preparation" /></>}
     {prepared?.state === "building" && <div role="status"><p>{sq.preparing(l,prepared.observed)}</p><button type="button" className="live-secondary" disabled={busy} onClick={() => void prepare(prepared)}>{sq.continue(l)}</button></div>}
     {prepared && prepared.count !== null && <><h3>{sq.recorded(l,prepared.count)}</h3><p className="live-meta">{e.listTime(l,whenSeconds(l,prepared.reference_at))}</p><p>{sq.frozen(l)}</p>
       {preview && <><SelectionRows l={l} rows={preview.rows} /><p className="live-meta">{sq.shown(l,preview.rows.length)}</p>

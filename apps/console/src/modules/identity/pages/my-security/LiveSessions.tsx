@@ -14,9 +14,10 @@ import { intentStore, intentLocked } from "./session-intent";
 import SessionSelection, { IntentRecovery, sessionStateLabel } from "./SessionSelection";
 import SessionOperations, { summarySentence } from "./SessionOperations";
 import AccessHistory from "./AccessHistory";
+import { SessionSettings } from "./SessionSettings";
 import "./session-query.css";
 
-export function SessionTimeHint({ l,error = false }: { l: Locale; error?: boolean }) {
+export function SessionTimeHint({ l }: { l: Locale }) {
   return <p id="mysec-time-hint" className="live-meta">{sq.timeHint(l)} {sq.example(l)} <bdi dir="ltr">2026-11-20T09:00:00+09:00</bdi></p>;
 }
 
@@ -122,6 +123,7 @@ function ScopedSessions({ l,api,self,params,onParams,onRefresh,onSignOut,onSigne
         {failure !== null && <section className="live-error" role="alert"><h3>{m.loadFailed(l)}</h3><p>{failure instanceof AdminError && failure.code === "revision_conflict" ? sq.expired(l) : failure instanceof AdminError && failure.code === "invalid_request" ? sq.invalid(l) : m.loadRetry(l)}</p><button type="button" className="live-secondary" onClick={() => { navigate(navigation.filters);setRefresh(value => value+1); }}>{sq.first(l)}</button></section>}
         {page && <><div className="mysec-page-meta"><p>{sq.count(l,page.count.value,page.count.certainty === "exact")}</p><p className="live-meta">{sq.shown(l,page.rows.length)} · {e.listTime(l,whenSeconds(l,page.reference_at))}</p></div>
           {page.scan_stopped && <p role="status">{sq.stopped(l)}</p>}
+          <SessionSettings l={l} settings={page.settings} />
           <SessionRows l={l} rows={page.rows} locked={locked} onEnd={open} />{page.rows.length === 0 && <p>{sq.empty(l)}</p>}
           <div className="live-buttons"><button type="button" className="live-secondary" disabled={!navigation.after || !parents.current.has(navigation.after)} onClick={() => navigate(navigation.filters,parents.current.get(navigation.after) ?? "")}>{sq.previous(l)}</button>
             <button type="button" className="live-secondary" disabled={!navigation.after} onClick={() => navigate(navigation.filters)}>{sq.first(l)}</button>

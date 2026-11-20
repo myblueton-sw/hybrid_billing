@@ -39,3 +39,36 @@ for (const l of ["en","ko","ar"] as const) test(`${l} exact ISO timezone example
   assert.ok(html.includes('<bdi dir="ltr">2026-11-20T09:00:00+09:00</bdi>'));
   assert.equal((html.match(/2026-11-20T09:00:00/g) ?? []).length,1);
 });
+
+const { SessionSettings, PreparationExpiry, limitCopy } = await import("./SessionSettings");
+for (const l of ["en","ko","ar"] as const) {
+  test(`${l} limits distinguish effective configured value, default, range and unknown source`, () => {
+    const html=renderToStaticMarkup(<SessionSettings l={l} settings={[{name:"session_query_page_size",value:7,unit:"rows",default:50,min:1,max:100,source:"start_flag"},{name:"session_query_scan",value:200,unit:"sessions",default:1000,min:100,max:10000,source:"future_source"}]} />);
+    assert.ok(html.includes('<strong><bdi dir="ltr">7</bdi></strong>'));
+    assert.ok(html.includes('<bdi dir="ltr">50</bdi>'));
+    assert.ok(html.includes('<bdi dir="ltr">1–100</bdi>'));
+    assert.ok(html.includes(limitCopy.configured(l)) && html.includes(limitCopy.unknownSource(l)));
+    assert.ok(!html.includes(limitCopy.source(l)+" "+limitCopy.sourceDefault(l)+"</span>"));
+    assert.ok(!html.includes('<input') && !html.includes('<button'));
+    assert.equal((html.match(/<dd>/g)??[]).length,3);
+    assert.ok(html.includes(limitCopy.unavailable(l)));
+  });
+  test(`${l} absent effective settings never synthesize defaults or raw unknown keys`, () => {
+    const html=renderToStaticMarkup(<SessionSettings l={l} settings={[{name:"private_unknown_key",value:999,unit:"",default:50,min:1,max:100,source:"default"}]} />);
+    assert.ok(html.includes(limitCopy.unavailable(l)));
+    assert.ok(!html.includes('999') && !html.includes('private_unknown_key'));
+  });
+  test(`${l} preparation expiry preserves exact server nanoseconds and isolated offset`, () => {
+    const at="2026-11-20T09:00:00.123456789+09:00";
+    const html=renderToStaticMarkup(<PreparationExpiry l={l} at={at} />);
+    assert.ok(html.includes('<bdi dir="ltr">'+at+'</bdi>'));
+    assert.ok(html.includes(limitCopy.expiryNote(l)));
+  });
+}
+
+for (const l of ["en","ko","ar"] as const) test(`${l} preparation names all six limits even when their values are missing`, () => {
+  const html=renderToStaticMarkup(<SessionSettings l={l} settings={[]} scope="preparation" />);
+  assert.equal((html.match(/<dd>/g)??[]).length,6);
+  assert.equal(html.split(limitCopy.unavailable(l)).length-1,6);
+  assert.ok(!html.includes('<strong>') && !html.includes(limitCopy.source(l)));
+});

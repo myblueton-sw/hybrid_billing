@@ -1,0 +1,275 @@
+{
+  "type": "VerificationEvidence",
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "base_commit": "e503a70f1f94c8d2fd5191f64b39b61790ecd383",
+  "scope": "Effective session query/preparation limits and exact expiry consumer; incomplete M05/parent",
+  "source_binding": "This manifest identifies the snapshot committed with it; historical UI/history records retain their original bindings.",
+  "sources": [
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/SessionSettings.tsx",
+      "sha256": "0be746c7e0878ec0e3b98480a41fddec0dcd7995f7e2ba385bf10294a6f88932",
+      "bytes": 5520
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/LiveSessions.tsx",
+      "sha256": "b5d5ca40c1ee3886e9db3c1830e8e0fed254753a864e19fc17374bb9f2270a70",
+      "bytes": 14377
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/SessionSelection.tsx",
+      "sha256": "0f89f940bf951c5f0ac616e0b7a32f35de23ced30e37be304afc6eda4726b15e",
+      "bytes": 10832
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/session-query-render.test.tsx",
+      "sha256": "b44459dd792f36b50932d1e6f84e55854e2400411a763f20c6d126f56a2c4367",
+      "bytes": 5402
+    },
+    {
+      "path": "apps/console/src/service/session-query.ts",
+      "sha256": "f6892ef0c7050b9e72035f47662a902a36414f376f4fd17807fb83c2f3fd60e6",
+      "bytes": 8824
+    },
+    {
+      "path": "apps/api/server/settings.go",
+      "sha256": "fcef7c955e70940f5ff0f1744c1ebbda8a10c418ff2db1fbfb4fc37ed69b55ba",
+      "bytes": 10869
+    },
+    {
+      "path": "apps/api/server/sessionselection.go",
+      "sha256": "533e940b91513282889d56187a0ec4e0d9e5e34b8e0feac43a70f54cc3db9336",
+      "bytes": 7809
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-limits-before.log",
+      "sha256": "4844dfb856af9bb42510671d252bdf4949d5f3618383f28d71b3d32640d2b94a",
+      "bytes": 183
+    },
+    {
+      "path": "/private/tmp/hb304-limits-tests.log",
+      "sha256": "20477fb19e66cf54fa78d99a573516fcf824472f314b9edf72b541ac2c909997",
+      "bytes": 95875
+    },
+    {
+      "path": "/private/tmp/hb304-limits-build.log",
+      "sha256": "aefe9b04882cf9532f2111cda96b01a151e5d3b5b4042d536ec04bc7203ceb5b",
+      "bytes": 38499
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current.log",
+      "sha256": "915c10abfc7b13ad61e4c68b687548f6ec1c13f20d44af8e4efe99dbcd7b83ef",
+      "bytes": 41
+    },
+    {
+      "path": "/private/tmp/hb304-ui-limits-current-matrix.mjs",
+      "sha256": "cafcd34a04db8ef8a51fada4b30cd04906623b4956725805da49fbf621ab12b5",
+      "bytes": 11210
+    },
+    {
+      "path": "/private/tmp/hb304-browser-fixture.go",
+      "sha256": "25faa40d8d55bfcaca57b86dc5000982a8fb35d4f957784c066c304cf0b1f083",
+      "bytes": 2135
+    },
+    {
+      "path": "/private/tmp/hb304-browser-fixture-corrected.log",
+      "sha256": "030aae303b59ef7e49aa1657c1e858233927b5a2488948dd404bd2140fa5e2dc",
+      "bytes": 92
+    },
+    {
+      "path": "/private/tmp/hb304-limits-reactivation.log",
+      "sha256": "0ad65fbbb07412cde3858bfc45ca2ec626f9b6e9e156ed92aa3b252bf5c57756",
+      "bytes": 34
+    },
+    {
+      "path": "/private/tmp/hb304-limits-before/report.json",
+      "sha256": "8dc3a640eea61a6ff917ef782d652980f66ff5039cd470e4c730c22333a2fde5",
+      "bytes": 788
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-en-1440.png",
+      "sha256": "e0accf6825c9ae813d48019e8da1fefba1b38a4a41d3e705845da704d3e9d11f",
+      "bytes": 853941
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-ar-1280.png",
+      "sha256": "7b3dff4459ba04dff5e6c4ffeaad5c9f570922536bd71a726c59a7be40f23e42",
+      "bytes": 988707
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-ar-1024.png",
+      "sha256": "8a760cbf1f366dd0ab17d943509871cb084bc9529751be6f8366e0a0439e4508",
+      "bytes": 839938
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-ar-1440.png",
+      "sha256": "a3233707fcccd6c284fdc72ad63653109b9b03037ce3a69a09bf211963d8dc57",
+      "bytes": 865911
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-en-390.png",
+      "sha256": "075396523ea7ec64910bc77d221751ff4795abd78dbc43f6a434f1ce1aa85aa7",
+      "bytes": 990629
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/report.json",
+      "sha256": "2b95e8e90188d7a6fd40289e41e92f06926955c6f4fcf2f241dabc8c7e77b6e4",
+      "bytes": 26649
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-en-1024.png",
+      "sha256": "50dc50dbe273d6373e605be0c7b16a94c860673f88c69643a2c9837b1492df89",
+      "bytes": 862985
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-en-1280.png",
+      "sha256": "5778221e8e01b792bad5650826154e40e770e9359e4a05203b8ada6fbe88ff80",
+      "bytes": 1025456
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/missing-selection-en-390.png",
+      "sha256": "c1641eb57f4f48f91d051afe70e0ba0f82e0231ea50104e5c725c0a9210be8cf",
+      "bytes": 1036153
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-ar-1440.png",
+      "sha256": "f8967e92a914f14c8d78b9fe9602e6a911fb91df8cc74e9cbe93a1a98497ef84",
+      "bytes": 952230
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/missing-query-en-390.png",
+      "sha256": "03be334479a75a690f29d04a0c96ee1883a61f076e6e18d37ce9cfbf336502c7",
+      "bytes": 1005981
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-en-1280.png",
+      "sha256": "8c14dbf29cdb87e8d50b4037826c2c41d1d5ad75ea000cc42a398acc1af97de2",
+      "bytes": 1112367
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-en-1024.png",
+      "sha256": "ba9429a91f38f045c291b2b439ff70ce9e633e036605b758271c4206a9c25d85",
+      "bytes": 818715
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-ar-390.png",
+      "sha256": "4d71cb97667810f963fd08a02e1a8c082e0de63d877c5d77e6eed551799b766b",
+      "bytes": 965163
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-en-1440.png",
+      "sha256": "b404ca1ca270107f220241a3d9edd3650dd683b9c73d2c79e967fdc64642acf2",
+      "bytes": 943956
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-ko-390.png",
+      "sha256": "ac52a181d027fec72634df8bc77a18122eb12c155edfab1091631536d4ae710e",
+      "bytes": 882112
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-ar-1024.png",
+      "sha256": "fdf11326ff7380d4238847c40ae92677ada2432f922783d94079c0c786be4bfd",
+      "bytes": 794497
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-ar-1280.png",
+      "sha256": "20449822463725adf0b261aa4e5d5e3601f5dea24ea2d1ad5db628f30027b71f",
+      "bytes": 1070533
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-ko-1024.png",
+      "sha256": "11c01041160e56fdfe1a5568d109583bb969afe4580b45be1caa73eeda79aa67",
+      "bytes": 783407
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/missing-selection-ar-390.png",
+      "sha256": "edba9ee6b59487da8891dce4a359ce1b8e71cedb41c60727bbc8a3b847d27f0f",
+      "bytes": 1012062
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-ko-1280.png",
+      "sha256": "2179aa40c38f82f9bc20f3ecf60a345fcbbdc86699b26d5ebc9aeb4919a6624d",
+      "bytes": 984150
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/missing-query-ar-390.png",
+      "sha256": "b91ac60a9c7dbacffaac4373e2f32fa412af1d9feb90a88402af68f5ae01cf4b",
+      "bytes": 973999
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-en-390.png",
+      "sha256": "e52e55028a7b490d89d991e47ab19268cffdf2c3b2efbb3b5482baecc5878219",
+      "bytes": 979649
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/missing-query-ko-390.png",
+      "sha256": "a99e217264e0d1437562bd29bb586f3b676cf1346e989c0364c0e735202c7a04",
+      "bytes": 891924
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/missing-selection-ko-390.png",
+      "sha256": "a7c57953c467c5db726eea241e08da00ca4873d400a0bafe186af3b6ed1d9667",
+      "bytes": 930557
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-ko-1440.png",
+      "sha256": "1533853b92676d416ef8cc716ade8734f8c025b4638a2478b3705968ecfa182b",
+      "bytes": 877744
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-ko-1440.png",
+      "sha256": "74f9ffc79bb55c4e37c4acb3e0483d3d8c577ee3697fa3c9a7bf24d883e9059b",
+      "bytes": 805107
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-ko-390.png",
+      "sha256": "709d76b8fb3b0edb9dac89c43c110bf06c606bf33c2f9561f12149701b047d4d",
+      "bytes": 884033
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/selection-ko-1280.png",
+      "sha256": "d747246cc9adfd43f1186a678ce29f12f27446d55623627fa41e1734c385b9ad",
+      "bytes": 914675
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-ko-1024.png",
+      "sha256": "39cd49e0f1431a6013f962ca2b63765a6a8fd9922b3c0bb30d4a1d2554522b0c",
+      "bytes": 820784
+    },
+    {
+      "path": "/private/tmp/hb304-limits-current/sessions-ar-390.png",
+      "sha256": "c9bf831127ea34039a672a8481fb5d29d7508768fed396be208685676fbb8438",
+      "bytes": 972050
+    }
+  ],
+  "results": {
+    "before": "FAIL missing effective query disclosure",
+    "console_tests": {
+      "passed": 954,
+      "failed": 0
+    },
+    "typescript_build": "PASS; existing bundle-size warning",
+    "actual_app_matrix": {
+      "passed": 328,
+      "failed": 0,
+      "page_exceptions": 0,
+      "normal_cases": 12,
+      "missing_unknown_intercept_cases": 3
+    }
+  },
+  "fixture_provenance": "Prior helper directly configured2/100 withoutGiven metadata. CorrectedGiven for two settings, gracefully restarted own fixture, reused only synthetic data and reactivated sample identity. Current328 is authoritative; prior217/265/313 do not validate source attribution. ProductionCLI/server code unchanged.",
+  "review": {
+    "source": "Separate read-only hyb310_review PASS including explicit3/6 missing-row correction; no reviewer execution",
+    "terminology": "Separate read-only hyb310_copy_render re-review PASS after missing-row and fixture metadata fixes; inspected current EN1440/KO390/AR390 plus missing variants and328report; no reviewer test execution"
+  },
+  "remaining": [
+    "cross-page confirmed-set exclusion producer/tag",
+    "advanced M05 variants",
+    "critical coverage/mutations",
+    "final integrated review and authorized PR merge",
+    "remaining M04/M03/M02",
+    "native/Claude/full AT/owner acceptance"
+  ]
+}

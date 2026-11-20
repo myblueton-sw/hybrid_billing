@@ -678,7 +678,7 @@ HYB-304 is an in-progress replacement of the former full-population account read
 | Cleanup refresh | Manual check, 2-second polling of displayed first-page running operations for at most 30 seconds | Owner operation version and current summary; no whole-population poll | `SessionOperations.tsx`; explicit stopped/error state |
 | Scope/lifecycle | Hide prior-scope data synchronously, discard late read responses, preserve only scoped submitted intent | Canonical account admission and current API/read token | `scoped-read.ts`; tagged records in `Live`, `LiveSessions`, selection and operation readers; guarded parent callbacks |
 
-**Remaining original behavior before M05 integration:** restore an explicit cross-page session-row confirmed-set exclusion tag without loading all not-included rows; surface relevant effective preparation/query limits and expiry. These are tracked in [the integration plan](../../features/HYB-304/session-ui-integration.md), not removed from the acceptance scope. Inherited history browser accumulation must also be bounded. Final failure/cleanup/building/large-result browser variants, source/coverage/mutation checks and owner review remain distinct pending work.
+**Remaining original behavior before M05 integration:** restore an explicit cross-page session-row confirmed-set exclusion tag without loading all not-included rows; surface relevant effective preparation/query limits and expiry. These are tracked in [the integration plan](../../features/HYB-304/session-ui-integration.md), not removed from the acceptance scope. Inherited history now retains one page and at most 32 continuation parents; see the focused [history follow-up](../../features/HYB-304/ui-progress.md#bounded-inherited-history-follow-up). Final failure/cleanup/building/large-result browser variants, source/coverage/mutation checks and owner review remain distinct pending work.
 
 ### HYB-306 recent access history
 
@@ -686,14 +686,14 @@ Implementation candidate; combined verification is pending. The new read is `GET
 
 | Area | Field or behavior | Producer | Consumer |
 | --- | --- | --- | --- |
-| History rows | `events[].at`, `kind`, `reason`, `workspace`, `session`, `device`, `count` | `modules/accesshistory`: `Read`; server `historyEvent` mapping | `service/access-history.ts`: `eventOf`; `AccessHistory.tsx`: `Row`; `history-copy.ts` |
+| History rows | `events[].at`, `kind`, `reason`, `workspace`, `session`, `device`, `count` | `modules/accesshistory`: `Read`; server `historyEvent` mapping | `service/access-history.ts`: `eventOf`; `AccessHistory.tsx`: `HistoryRow`; `history-copy.ts` |
 | Period | `from`, fixed current workspace; server also accepts `to` | `parseHistoryQuery`; per-user/per-workspace record sequences | `history-model.ts`: `fromFor`; period control |
-| Paging | `before`, `next`; two own-sequence positions, default 50, max 100 | `encodeCursor`, `decodeCursor`, `accesshistory.Read` | `AdminClient.accessHistory`, Show more with append and retry |
+| Paging | `before`, `next`; two own-sequence positions, default 50, max 100 | `encodeCursor`, `decodeCursor`, `accesshistory.Read` | `AdminClient.accessHistory`; `AccessHistory.tsx`: one response page, first/previous/next, max32 parent cursors, identical-direction retry and fixed `from` while paging |
 | Retention | `retention_days`, `retention_source`, `period_since`, `effective_days` | durable retention state and installation start settings | `accessHistoryOf`; retention and size-limit statements |
 | Coverage | `available_from`, `now` | oldest visible own record and server clock | coverage statement, period gap, loaded time |
 | Recording | `recording.state`, `since`, `reason` | history writer status | stopped-recording note; never represented as an empty successful history |
 | Loss, holds and deletion | `notes[].kind`, `from`, `to`, `count` | history storage, purge and persisted hold markers; attributable own counts only | `history-model.ts`: `noteLines`; ordered note region |
-| Scope revocation | clear rows and cursor on unauthenticated answer; remount by user/workspace/session | authenticated self read and API error | `AccessHistory.tsx`; key in `my-security/LiveSessions.tsx` |
+| Scope revocation | clear rows and cursor on unauthenticated answer; remount by user/workspace/session | authenticated self read and API error | `AccessHistory.tsx`: canonical/client keyed content and layout-invalidated read token; outer key in `my-security/LiveSessions.tsx` |
 | Storage | append-only day files, retention and person state in installation data directory | `modules/accesshistory`; `Server.openHistory`, `Server.Close` | survives server restart within the plan's incarnation and storage limits |
 
 No network address, raw User-Agent, login name, email or bearer secret is stored or displayed by this feature. Device values are fixed browser/OS families. Old held records stay hidden; backup deletion is not claimed.

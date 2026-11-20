@@ -93,6 +93,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   const [access, setAccess] = useState<"ok" | "denied" | "revoked">("ok");
   const [signedOut, setSignedOut] = useState(false);
   const [notice, setNotice] = useState("");
+  const [readComplete, setReadComplete] = useState(false);
   const [noticeDetail, setNoticeDetail] = useState<CommandDiagnostic | null>(null);
   const [terminalDetail, setTerminalDetail] = useState<CommandDiagnostic | null>(null);
   const [announce, setAnnounce] = useState("");
@@ -109,8 +110,9 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   const lastDetail = useRef("");
   const lastMode = useRef(mode);
 
-  const load = useCallback(async (): Promise<EvidencePage | null> => {
+  const load = useCallback(async (userRefresh = false): Promise<EvidencePage | null> => {
     const n = ++seq.current;
+    setReadComplete(false);
     const generation = currentScope();
     const request = attempt().request;
     setBusy(true);
@@ -122,6 +124,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       setPage(got);
       setAccess("ok");
       setStatus("ready");
+      setReadComplete(userRefresh);
       setFailure(null);
       return got;
     } catch (e) {
@@ -142,6 +145,11 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       if (n === seq.current && generation === currentScope()) setBusy(false);
     }
   }, [api]);
+
+  const refresh = (fromError = false) => {
+    if (fromError) document.querySelector<HTMLButtonElement>(".p05-reload")?.focus();
+    void load(true);
+  };
 
   useLayoutEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
   useEffect(() => {
@@ -206,7 +214,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
           </>
         )}
       </dl>
-      <button type="button" className="live-secondary p05-reload" onClick={() => void load()}>{k.reload(l)}</button>
+      <button type="button" className="live-secondary p05-reload" onClick={() => refresh()}>{k.reload(l)}</button>
     </div>
   );
 
@@ -265,6 +273,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
 
   return (
     <div className="p05-live" data-live={view} data-mode={mode} ref={root} aria-busy={busy || undefined}>
+      <p className="visually-hidden p05-read-status" role="status" aria-live="polite">{readComplete ? sc.dataReloaded(l) : ""}</p>
         <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
       {scopeBar}
       {page && configured && (
@@ -288,7 +297,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
           {lines.text && <p>{lines.text}</p>}
           <p>{k.failedSpec(l)}</p>
           <ErrorDetail l={l} code={lines.code} request={failure.error instanceof AdminError ? failure.error.request : ""} client={failure.request} next={lines.next} />
-          <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
+          <button type="button" className="live-secondary" onClick={() => refresh(true)}>{sc.tryAgain(l)}</button>
         </div>
       )}
       {gone.length > 0 && !step && (

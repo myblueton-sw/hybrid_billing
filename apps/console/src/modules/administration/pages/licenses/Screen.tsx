@@ -9,7 +9,7 @@ const reason: Words = [
 export default function Licenses(p: Props) {
   const l = p.locale;
   return (
-    <div className="ops-grid">
+    <div className="ops-grid ops-fluid">
       <div>
         {p.view === "offline" ? (
           <Draft

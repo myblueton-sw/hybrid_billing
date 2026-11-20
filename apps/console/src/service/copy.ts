@@ -1,6 +1,7 @@
 import type { Locale } from "../shared/types";
 import { text as t } from "../shared/copy";
 export const c = {
+  dataReloaded: (l: Locale) => t(l, "Data reloaded.", "데이터를 다시 불러왔습니다.", "أُعيد تحميل البيانات."),
   fillLocalSample: (l: Locale) => t(l, "Fill local sample sign-in details", "로컬 샘플 로그인 정보 입력", "تعبئة بيانات الدخول التجريبية المحلية"),
   notice: (l: Locale) =>
     t(

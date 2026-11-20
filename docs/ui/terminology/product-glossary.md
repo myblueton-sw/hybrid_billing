@@ -11,6 +11,7 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 
 | Concept ID / canonical alias | Preferred KO | Preferred EN | AR candidate | Definition and forbidden implications | Current scope |
 | --- | --- | --- | --- | --- | --- |
+| read-recovery / explicit refresh | 데이터를 다시 불러왔습니다. | Data reloaded. | أُعيد تحميل البيانات. | Successful latest authorized read in the current session scope. Does not assert server mutation, guaranteed freshness or operation completion. | P01–P05; HYB-313 AI design/TW review, rendered verification tracked in feature evidence; native-language acceptance pending |
 | infrastructure-composition / CostPool, B01 | 인프라 원가 구성 | Infrastructure cost composition | مكوّنات تكلفة البنية التحتية | Period-specific asset, lease/depreciation, license, power and facility cost composition and inclusion review. Not B03 allocation, sales pricing or a complete infrastructure ledger inferred from VMware rows. | B01 menu/title; AI TW design and scoped six-variant rendered review PASS; native-language acceptance pending |
 | billed-cost / BilledCost | 청구 비용 | Billed cost | التكلفة المفوترة | Collected billed source cost, not customer sales, cash payment or approved internal allocation. Preserve FOCUS alias in mapped fields/help. | U01/S04/B01 |
 | effective-cost / EffectiveCost | 실효 비용 | Effective cost | التكلفة الفعلية | Source cost with applicable amortization/discount treatment. Not merely discounted price, cash paid or financial approval. | U01/S04/B01 |

@@ -64,6 +64,9 @@ func (s *Server) seedChargeCandidates(now time.Time) error {
 	if _, err := p.captureLocked(ws, run, "sample-charge-01", binding); err != nil {
 		return err
 	}
+	if err := p.retainCaptureBindingLocked(ws, run, binding); err != nil {
+		return err
+	}
 	terms := gate.Terms{Action: gate.ViewCost, Kind: candidateKind, Fields: []string{candidateField}, Period: gate.AnyPeriod(), Scope: gate.Scope{WorkspaceID: ws, Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}}
 	validity := gate.Validity{NotBefore: now, NotAfter: now.Add(readerValidity)}
 	grants := []gate.Grant{{ID: "candidate-console", ClientID: ConsoleClient, Terms: terms, Validity: validity}}

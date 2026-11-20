@@ -126,9 +126,16 @@ func (h pricingPolicyCommand) Apply(ctx commands.Context) (commands.Outcome, err
 			return commands.Outcome{}, pricingPolicyError(err)
 		}
 	} else {
-		if err := authority.Check(pricingpolicy.Scope{Workspace: ctx.Workspace}, ctx.User, "pricing_policy."+h.kind); err != nil {
+		action := "pricing_policy." + h.kind
+		if h.kind == "capture" {
+			action = pricingpolicy.UseAction
+		}
+		if err := authority.Check(pricingpolicy.Scope{Workspace: ctx.Workspace}, ctx.User, action); err != nil {
 			return commands.Outcome{}, pricingPolicyError(err)
 		}
+	}
+	if h.kind == "capture" {
+		return h.capture(ctx)
 	}
 	if h.kind == "prepare" || h.kind == "propose" {
 		spec, target, digest, err := h.prepare(ctx)
@@ -184,9 +191,12 @@ func (h pricingPolicyCommand) Apply(ctx commands.Context) (commands.Outcome, err
 
 func (s *Server) pricingPolicyDefinitions() []commands.Definition {
 	var out []commands.Definition
-	for _, kind := range []string{"prepare", "propose", "approve", "revoke", "inspect"} {
-		mutation := kind == "propose" || kind == "approve" || kind == "revoke"
+	for _, kind := range []string{"prepare", "propose", "approve", "revoke", "inspect", "capture"} {
+		mutation := kind == "propose" || kind == "approve" || kind == "revoke" || kind == "capture"
 		permission := commands.Permission{Action: pricingPolicyAction("pricing_policy." + kind), Kind: pricingauthority.ResourceKind}
+		if kind == "capture" {
+			permission.Action = gate.UsePricingPolicy
+		}
 		if !mutation {
 			permission.Action, permission.Fields = gate.ViewCost, []string{pricingauthority.EvidenceField}
 		}
@@ -201,6 +211,13 @@ func (s *Server) pricingPolicyDefinitions() []commands.Definition {
 			}
 		case "approve", "revoke":
 			fields = []commands.Field{{Name: "digest", Type: commands.Text, Required: true}}
+		case "capture":
+			for _, name := range []string{"binding", "input_review", "policy"} {
+				fields = append(fields, commands.Field{Name: name, Type: commands.ID, Required: true})
+			}
+			for _, name := range []string{"input_digest", "scope_revision", "policy_digest"} {
+				fields = append(fields, commands.Field{Name: name, Type: commands.Text, Required: true})
+			}
 		}
 		refusals := []commands.Code{commands.EvidenceStale}
 		if kind == "approve" {

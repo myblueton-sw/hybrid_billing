@@ -122,6 +122,36 @@ try {
   for(const action of displayed)assert.ok(text.includes(action));
   evidence.cases.push({route,lang,width,localized:true,overflow:false,cellChecks});
  }
+ if(args.capture==='true'){
+  const checker=await login('admin3@example.invalid');
+  const checkerID=await checker.evaluate(async()=>{const {serviceClient}=await import('/src/service/api.ts');return (await serviceClient().current()).user;});
+  assert.notEqual(checkerID,recipient);
+  const requested=await command(root,'pricing_authority.propose_human','ui-policy-checker',{...times,recipient:checkerID,ceiling:ceiling.fields.grant});
+  await command(second,'pricing_authority.approve','ui-policy-checker',{digest:requested.fields.digest});
+  for(const capability of ['confirm','inspect']){
+   const fields={...times,capability};
+   const proposed=await command(root,'input_authority.propose_console','ui-input-console-'+capability,fields);
+   const approved=await command(second,'input_authority.approve','ui-input-console-'+capability,{digest:proposed.fields.digest});
+   const requested=await command(root,'input_authority.propose_human','ui-input-human-'+capability,{...fields,recipient,ceiling:approved.fields.grant});
+   await command(second,'input_authority.approve','ui-input-human-'+capability,{digest:requested.fields.digest});
+  }
+  const inspect=await member.evaluate(async()=>{
+   const {serviceClient}=await import('/src/service/api.ts');const {adminClient,attempt}=await import('/src/service/admin.ts');const session=await serviceClient().current();return adminClient(session.csrf).command('input.inspect','sample-input-review','','',{},{request:attempt().request,key:''});
+  });
+  assert.equal(inspect.fields.current_evidence,'matched');assert.equal(inspect.fields.current_eligibility,'not_eligible');
+  const confirmed=await command(member,'input.confirm_publish','sample-input-review',{digest:inspect.fields.digest,scope_revision:inspect.fields.scope_revision},inspect.revision);
+  assert.equal(confirmed.fields.recorded_state,'eligible');
+  const approved=await command(checker,'pricing_policy.approve','ui-policy-pending',{digest:policyProposal.fields.digest},confirmed.revision);
+  assert.equal(approved.fields.recorded_state,'approved');
+  evidence.provisioning.policyApproval=true;
+  const captured=await command(member,'pricing_policy.capture','ui-verified-candidate',{binding:'sample-charge-binding',input_review:'sample-input-review',input_digest:inspect.fields.digest,scope_revision:confirmed.fields.recorded_scope_revision,policy:'ui-policy-pending',policy_digest:policyProposal.fields.digest},approved.revision);
+  assert.equal(captured.fields.receipt,'historical_capture');assert.equal(captured.fields.candidate,'ui-verified-candidate');
+  const read=await root.evaluate(async()=>{const {serviceClient}=await import('/src/service/api.ts');const {adminClient}=await import('/src/service/admin.ts');const session=await serviceClient().current();return adminClient(session.csrf).read('/charge-candidates/ui-verified-candidate');});
+  assert.equal(read.record.rating_total,'15');assert.equal(read.record.currency,'USD');assert.equal(read.record.digest,captured.fields.digest);assert.equal(read.approval_readiness,'unverified');
+  const input=read.record.provenance.recorded_input;
+  assert.equal(input.review,'sample-input-review');assert.equal(input.digest,inspect.fields.digest);assert.equal(String(input.scope_revision),confirmed.fields.recorded_scope_revision);assert.equal(input.source_run,'sample-normalized-charge');assert.equal(input.confirmed_by,recipient);
+  evidence.capture={passed:true,sourceRun:input.source_run,review:input.review,scopeRevision:input.scope_revision,candidate:captured.fields.candidate,digest:captured.fields.digest,total:'15',currency:'USD',pricingApproverDiffers:true,financialAmountApproval:false,screenshotsPhase:'before-policy-approval'};
+ }
  assert.deepEqual(evidence.errors,[]);evidence.outcome='passed';
 }catch(e){evidence.outcome='failed';evidence.failure={kind:e.name};if(root)await root.screenshot({fullPage:true,path:out+'/failure.png'});throw new Error('Pricing authority QA failed: '+e.name);}
 finally{await writeFile(out+'/evidence.json',JSON.stringify(evidence,null,2));await browser.close();}

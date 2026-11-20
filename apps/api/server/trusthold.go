@@ -33,6 +33,7 @@ const (
 )
 
 var holdTable = map[string]holdRule{
+	"pricing_policy.capture":                    {holdRefuse, reasonChange},
 	"pricing_policy.propose":                    {holdRefuse, reasonChange},
 	"pricing_policy.approve":                    {holdRefuse, reasonChange},
 	"pricing_policy.revoke":                     {holdAllow, reasonReduce},

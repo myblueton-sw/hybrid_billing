@@ -158,7 +158,7 @@ func decodeCandidate(record chargeRecord) (chargeCandidate, error) {
 }
 
 func (s *chargeCandidates) capture(in chargeInput) (chargeCandidate, error) {
-	if !candidateForm(in) {
+	if !candidateForm(in) || !validCandidateInput(in) {
 		return chargeCandidate{}, errCandidateInvalid
 	}
 	encoded, err := json.Marshal(in)
@@ -199,7 +199,11 @@ func (s *chargeCandidates) capture(in chargeInput) (chargeCandidate, error) {
 	if copied.Normalized.Pricing != nil && (!result.NoRuleHeld || len(result.Excluded) != 0) {
 		return chargeCandidate{}, errCandidateInvalid
 	}
-	envelope, err := json.Marshal(chargeEnvelope{Schema: "hb_charge_candidate_v5", Input: copied, Result: result})
+	schema := "hb_charge_candidate_v5"
+	if copied.Normalized.InputEligibility != nil {
+		schema = "hb_charge_candidate_v6"
+	}
+	envelope, err := json.Marshal(chargeEnvelope{Schema: schema, Input: copied, Result: result})
 	if err != nil {
 		return chargeCandidate{}, err
 	}

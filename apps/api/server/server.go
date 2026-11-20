@@ -319,6 +319,9 @@ func New(cfg Config) (*Server, error) {
 				if err == nil {
 					s.inputReviews, err = newCandidateInputReviews(s.chargeProducer, serverInputReviewAuthority{s: s}, s.clock)
 				}
+				if err == nil {
+					_, err = s.chargeProducer.newPricingPolicies(serverPricingPolicyAuthority{s: s}, s.clock)
+				}
 			}
 			return
 		},

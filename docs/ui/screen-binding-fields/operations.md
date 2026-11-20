@@ -388,6 +388,19 @@ Found while writing this map; no code was changed.
 
 Every other field the parsers read has a matching JSON tag on the server. Nullable server fields (`*string`, `*uint64`, `*int64` and pointer rows) are read as `null` by the parsers, and pointer persons with a null `login` read as an empty string (`retention.ts:181`) or `null` (`release-evidence.ts:196`).
 
+
+## Administration error diagnostics (HYB-330)
+
+| Screen scope | Field or reference | Producer and parser | Consumer and lifecycle |
+| --- | --- | --- | --- |
+| P01–P05 refused commands and failed reads | Server `code`, `request_id` | `server/errors.go`; `service/admin.ts:failureOf` validates response tokens and preserves them through rate limits and cancelled step-up challenges | `service/CommandDiagnostics.tsx:DiagnosticDetails`; absent or malformed values are unavailable, never inferred from a local failure name |
+| P01–P05 attempted commands | Client request ID and canonical target ID | The submitted `Attempt.request` and command target, separately labelled from confirmed response identity | Each form error, scoped refusal marker and supplementary latest-action region; no rationale, request values, key or stack is retained |
+| P01–P05 retained row refusals | Action ID plus matching target and diagnostics | Existing `live-model.ts:refusals` record; P02 lost-right record when applicable | `refusalDiagnostics(target)` and `RowDiagnostics`; follows the exact refusal marker through reload/remount, pruning, success and scope reset |
+| P01–P05 open forms | Form-local failure diagnostics, including server field refusals | Sanitized actual error and original attempt | Form error region independent of another form or the latest-action banner; cleared when that form error is cleared |
+| P01/P03/P04 load failures | Load-specific heading and service availability text | `service/diagnostic-copy.ts` | Existing read-error flow; does not describe an authenticated data-load failure as a sign-in failure |
+
+This adds diagnostic binding only. It does not change command permissions, producer data, financial semantics or retry eligibility.
+
 ## HYB-327 reconciliation
 
 The original gap inventory above is historical evidence. P02 clients now checks section state before rendering any child clients, grants or service users; unknown, unconfigured and denied sections cannot disclose contradictory child rows. P05 displays the server failure count for the selected build after active-budget approval. Budget approval is currently not connected; the displayed counter includes an explicit qualification. Zero establishes neither approval nor a run nor a passing verdict; unavailable counts remain unknown.

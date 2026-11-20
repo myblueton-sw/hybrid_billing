@@ -1,4 +1,6 @@
-import { forgetLost } from "./live-rights";
+import { Refusals } from "../../../../service/refusal";
+import type { RowDiagnostic } from "../../../../service/command-diagnostics";
+import { forgetLost, lostDiagnostics } from "./live-rights";
 import type { Delivery, IntegrationsPage, PluginInstall, PluginProposal, PluginVersion, RightId, Subscription } from "../../../../service/integrations";
 
 export const views = ["clients", "modules", "channels", "events"];
@@ -526,13 +528,17 @@ export function reasonProblem(v: string): "" | "missing" | "long" {
 export type Pending = { key: string; request: string; expected: string; values: string; snapshot: string[]; context: Record<string, string> };
 const pending = new Map<string, Pending>();
 const drafts = new Map<string, Record<string, string>>();
-const refusals = new Map<string, string>();
+const refusals = new Refusals<string>();
 
 let scope = "";
+let scopeGeneration = 0;
+
+export function currentScope(): number { return scopeGeneration; }
 
 export function setScope(workspace: string, user: string, session: string): void {
   const next = workspace + "\u0000" + user + "\u0000" + session;
   if (next !== scope) {
+    scopeGeneration++;
     forgetLost();
     pending.clear();
     drafts.clear();
@@ -542,6 +548,7 @@ export function setScope(workspace: string, user: string, session: string): void
 }
 
 export function forget(): void {
+  scopeGeneration++;
   pending.clear();
   drafts.clear();
   refusals.clear();
@@ -576,6 +583,7 @@ export function pendingFor(
   const frozen = JSON.stringify(values);
   const kept = pending.get(id);
   if (kept && kept.values === frozen) return kept;
+  refusals.delete(id);
   const tried = fresh();
   const next = { key: tried.key, request: tried.request, expected, values: frozen, snapshot: [...snapshot], context: { ...context } };
   pending.set(id, next);
@@ -601,11 +609,11 @@ export function drop(command: string, target: string): void {
   pending.delete(slot(command, target));
 }
 
-export function settle(command: string, target: string, reaction: Reaction | "ok"): void {
+export function settle(command: string, target: string, reaction: Reaction | "ok", diagnostic?: RowDiagnostic): void {
   if (reaction !== "ok" && keepsAttempt(reaction)) return;
   const values = pending.get(slot(command, target))?.values ?? "";
   pending.delete(slot(command, target));
-  if (reaction === "hint") refusals.set(slot(command, target), values);
+  if (reaction === "hint") refusals.set(slot(command, target), values, diagnostic);
   else refusals.delete(slot(command, target));
 }
 
@@ -680,4 +688,19 @@ export function deniedOutcome(command: CommandKey, target: string, hadPending: b
   if (command === "integrations.letter_approve_redeliver" || command === "integrations.letter_approve_dismiss") return "applied_letter";
   if (groupOf(command) === "proposal") return "applied_proposal";
   return "gone";
+}
+
+export function refusalDiagnostics(target: string): RowDiagnostic[] {
+  return commandKeys.flatMap((command) => {
+    const entry = refusals.detail(slot(command, target));
+    return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
+  });
+}
+
+export function feedbackDiagnostics(choices: Array<[CommandKey, string]>): RowDiagnostic[] {
+  return choices.flatMap(([command, target]) => {
+    const denied = lostDiagnostics(target).find((entry) => entry.command === command);
+    const entry = denied ?? refusals.detail(slot(command, target));
+    return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
+  });
 }

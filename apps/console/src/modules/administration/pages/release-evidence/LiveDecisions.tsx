@@ -116,7 +116,7 @@ function StateTag({ l, p }: { l: Locale; p: Proposal }) {
 function Row({ p, ...shared }: Shared & { p: Proposal }) {
   const { l, page, selection, canCommand } = shared;
   const target = proposalTarget(p);
-  const { open, toggle, close, focusNote, mark } = useOpen<Decision>(target);
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<Decision>(target);
   const pendingRow = p.state === "pending";
   const retire = p.kind === "retire";
   const n = p.number === null ? k.unknown(l) : String(p.number);
@@ -163,7 +163,7 @@ function Row({ p, ...shared }: Shared & { p: Proposal }) {
       <div className="p05-body">
         <p className="p05-summary"><SummaryText l={l} page={page} p={p} /></p>
         {pendingRow && <p className="p05-small">{k.reasonLabel(l)}: <Free l={l} value={p.rationale} empty={k.noReason(l)} /></p>}
-        {!pendingRow && <RowNote kept={kept} blockers={[]} focus={focusNote} />}
+        {!pendingRow && <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={[]} focus={focusNote} />}
         {!pendingRow && !unexpected && (
           p.state === "store_retired" ? <p className="p05-small">{k.storeRetiredRow(l)}</p> : (
             <>
@@ -177,7 +177,7 @@ function Row({ p, ...shared }: Shared & { p: Proposal }) {
         {pendingRow && !retire && <p className="p05-small">{k.readOnlyKind(l)}</p>}
         {pendingRow && retire && (
           <div className="p05-act">
-            <RowNote kept={kept} blockers={blockers} focus={focusNote} state={state} pending={(approvePending || withdrawPending) && !open ? f.pendingAttempt(l) : ""} />
+            <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} state={state} pending={(approvePending || withdrawPending) && !open ? f.pendingAttempt(l) : ""} />
             {(canApprove || canWithdraw) && !open && (
               <div className="live-buttons">
                 {canApprove && <button type="button" className="live-secondary" aria-expanded={false} data-opener={mark("release_evidence.approve")} onClick={() => toggle("release_evidence.approve")}>{k.approve(l)}</button>}

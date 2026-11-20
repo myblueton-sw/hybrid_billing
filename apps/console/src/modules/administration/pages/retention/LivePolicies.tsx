@@ -75,7 +75,7 @@ function ProposeImpact({ l, c, d, cls }: { l: Locale; c: Current; d: Draft; cls:
 
 function PolicyBody({ r, ...shared }: Shared & { r: PolicyRow }) {
   const { l, page, selection, canCommand } = shared;
-  const { open, toggle, close, focusNote, mark } = useOpen<"propose">();
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"propose">();
   const target = classTarget(r);
   const pending = target ? pendingNow("retention.propose_policy", target) : undefined;
   const usable = canCommand && !!target && (r.can_propose || !!pending);
@@ -130,7 +130,7 @@ function PolicyBody({ r, ...shared }: Shared & { r: PolicyRow }) {
       {(open || kept || blockers.length > 0 || focusNote > 0) && (
         <tr className="p04-follow">
           <td colSpan={9}>
-            <RowNote
+            <RowNote l={l} diagnostics={diagnostics(target)}
               kept={kept} blockers={blockers} focus={focusNote}
               extra={!open && focusNote > 0 && (already || blockedText) ? <p><Rich text={already ? k.alreadyPolicy(l, already.number, already.own) : blockedText} /></p> : undefined}
             />

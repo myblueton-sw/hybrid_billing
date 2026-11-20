@@ -1,3 +1,6 @@
+import { RowDiagnostics, DiagnosticDetails, useCurrentCommand, useFailureDiagnostic } from "../../../../service/CommandDiagnostics";
+import { diagnosticOf, type RowDiagnostic, type CommandDiagnostic } from "../../../../service/command-diagnostics";
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, type AdminClient } from "../../../../service/admin";
@@ -7,7 +10,7 @@ import { c as sc, retryPhrase } from "../../../../service/copy";
 import { k } from "./live-copy";
 import { Free, Rich } from "./live-format";
 import {
-  clearDraft, deniedOutcome, discard, draftOf, drop, fieldReaction, frozenValues, goneKind, keepDraft, pendingFor, pendingNow, react, reasonProblem, settle, snapshotOf, stillAllowed,
+  refusalDiagnostics, clearDraft, deniedOutcome, discard, draftOf, drop, fieldReaction, frozenValues, goneKind, keepDraft, pendingFor, pendingNow, react, reasonProblem, settle, snapshotOf, stillAllowed,
   utf8Bytes, type CommandKey, type FieldReaction, type Reaction, type Selection,
 } from "./live-model";
 
@@ -22,9 +25,9 @@ export type Shared = {
   selection: Selection;
   canCommand: boolean;
   onDone: (text: Announce) => void;
-  onNotice: (text: string) => void;
+  onNotice: (text: string, diagnostic?: CommandDiagnostic) => void;
   onReload: () => Promise<RetentionPage | null>;
-  onSignedOut: () => void;
+  onSignedOut: (diagnostic?: CommandDiagnostic) => void;
 };
 
 export type Draft = Record<string, string>;
@@ -85,6 +88,8 @@ function initial(command: CommandKey, target: string, keys: string[], defaults: 
 
 export function CommandForm(props: FormProps) {
   const { l, page, api, command, target, fields, heading, title, verb, facts, impact, warn, editNote, stale, hooks, done, onClose, onDone, onNotice, onReload, onSignedOut } = props;
+  const current = useCurrentCommand(command, target);
+  const { diagnostic, setDiagnostic } = useFailureDiagnostic(current);
   const id = formId(command, target);
   const [draft, setDraft] = useState<Draft>(() => initial(command, target, fields?.keys ?? [], fields?.defaults));
   const [reasonError, setReasonError] = useState("");
@@ -118,6 +123,7 @@ export function CommandForm(props: FormProps) {
     if (key === "rationale") setReasonError("");
     else setFieldErrors((e) => without(e, key));
     setMessage(null);
+    setDiagnostic(null);
   };
 
   const reasonText = (v: string) => {
@@ -141,6 +147,7 @@ export function CommandForm(props: FormProps) {
     sending.current = true;
     setBusy(true);
     setMessage(null);
+    setDiagnostic(null);
     const reason = rationale.trim();
     const hadPending = !!pendingNow(command, target);
     const tried = pendingFor(command, target, { ...values, rationale: reason }, page.revision, attempt, snapshotOf(page, command), ctx);
@@ -148,16 +155,20 @@ export function CommandForm(props: FormProps) {
     hooks?.send?.(body);
     try {
       const out = await api.command(command, target, tried.expected, reason, body, { request: tried.request, key: tried.key });
+      if (!current()) return;
       settle(command, target, "ok");
       clearDraft(command, target);
       hooks?.settled?.("ok", "");
       onDone(done(out.fields, out.state, tried.snapshot));
       onClose("done");
     } catch (err) {
+      if (!current()) return;
+      const reference = { command, detail: diagnosticOf(err, target, tried.request) };
+      setDiagnostic(reference.detail);
       const failure = err instanceof AdminError ? err.failure : "failed";
       const fieldNames = err instanceof AdminError ? err.fields : [];
       const reaction: Reaction = react(failure, fieldNames);
-      settle(command, target, reaction, failure);
+      settle(command, target, reaction, failure, reference);
       hooks?.settled?.(reaction, failure);
       setStep(reaction === "conflict" ? "confirm" : "edit");
       if (reaction === "field") {
@@ -166,6 +177,7 @@ export function CommandForm(props: FormProps) {
         if (how === "impact") {
           setMessage({ text: k.impactNotSent(l), alert: true });
           await onReload();
+          if (!current()) return;
         } else if (how === "built") setMessage({ text: k.builtBug(l), alert: true });
         else if (how === "reason") {
           setReasonError(reasonProblem(rationale) === "long" ? k.form.rationaleLong(l) : k.form.checkReason(l));
@@ -181,37 +193,43 @@ export function CommandForm(props: FormProps) {
         setSummaryKey((n) => n + 1);
       } else if (reaction === "hint") {
         await onReload();
+        if (!current()) return;
         onClose("refused");
       } else if (reaction === "conflict") {
         const got = await onReload();
+        if (!current()) return;
         if (got && !stillAllowed(got, command, target)) onClose("refused");
         else setMessage({ text: k.conflictAgain(l), alert: false });
       } else if (reaction === "denied") {
         const got = await onReload();
+        if (!current()) return;
         if (!got) setMessage({ text: k.gone(l, goneKind(command, target)), alert: true });
         else {
           const outcome = deniedOutcome(command, target, hadPending, got);
-          onNotice(outcome === "applied_proposal" ? k.vanishedProposal(l) : k.gone(l, goneKind(command, target)));
+          onNotice(outcome === "applied_proposal" ? k.vanishedProposal(l) : k.gone(l, goneKind(command, target)), reference.detail);
           onClose("done");
         }
-      } else if (reaction === "signin") onSignedOut();
+      } else if (reaction === "signin") onSignedOut(reference.detail);
       else if (reaction === "wait") setMessage({ text: sc.limited(l, retryPhrase(l, err instanceof AdminError ? err.retryAfter || 60 : 60)), alert: true });
       else if (reaction === "retry") setMessage({ text: k.pendingAttempt(l), alert: true });
       else if (reaction === "renew") {
-        if (pendingNow(command, target)?.stale) await onReload();
-        else setMessage({ text: k.renew(l), alert: true });
+        if (pendingNow(command, target)?.stale) {
+          await onReload();
+          if (!current()) return;
+        } else setMessage({ text: k.renew(l), alert: true });
       } else if (reaction === "partial") {
         const text = k.partial(l, err instanceof AdminError ? err.operation : "");
         const got = await onReload();
+        if (!current()) return;
         if (got && !stillAllowed(got, command, target)) {
-          onNotice(text);
+          onNotice(text, reference.detail);
           onClose("done");
         } else setMessage({ text, alert: true });
       } else if (reaction === "reauth") setMessage({ text: sc.reauthText(l, failure), alert: true });
-      else setMessage({ text: sc.failed(l), alert: true });
+      else setMessage({ text: diagnosticCopy.unconfirmed(l), alert: true });
     } finally {
-      sending.current = false;
-      setBusy(false);
+      if (current()) sending.current = false;
+      if (current()) setBusy(false);
     }
   };
 
@@ -224,6 +242,7 @@ export function CommandForm(props: FormProps) {
     drop(command, target);
     setAgain(true);
     setMessage(null);
+    setDiagnostic(null);
     setStep("edit");
   };
 
@@ -236,6 +255,7 @@ export function CommandForm(props: FormProps) {
   if (pending?.stale && frozen) {
     return (
       <div className="p04-form-wrap">
+        {diagnostic && <DiagnosticDetails l={l} detail={diagnostic} />}
         <div className="live-note-rule p04-stale" role="status" tabIndex={-1} ref={staleRef}>
           <p>{k.pendingAttempt(l)}</p>
           {stale?.(frozen)}
@@ -250,6 +270,7 @@ export function CommandForm(props: FormProps) {
 
   return (
     <div className="p04-form-wrap">
+      {diagnostic && <DiagnosticDetails l={l} detail={diagnostic} />}
       {step === "edit" && <h4 className="p04-form-title"><Rich text={heading} /></h4>}
       {pending && step === "edit" && !message && <p className="live-note-rule" role="status">{k.pendingAttempt(l)}</p>}
       {message && (
@@ -298,7 +319,7 @@ export function CommandForm(props: FormProps) {
 
 export type Blocker = { label: string; text: string };
 
-export function RowNote({ kept, blockers, focus, extra, state }: { kept: string; blockers: Blocker[]; focus: number; extra?: ReactNode; state?: string }) {
+export function RowNote({ l, diagnostics = [], kept, blockers, focus, extra, state }: { l: Locale; diagnostics?: RowDiagnostic[]; kept: string; blockers: Blocker[]; focus: number; extra?: ReactNode; state?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => { if (focus) ref.current?.focus(); }, [focus]);
   const seen = new Set<string>();
@@ -310,7 +331,7 @@ export function RowNote({ kept, blockers, focus, extra, state }: { kept: string;
   });
   return (
     <div className="p04-row-note" ref={ref} tabIndex={-1} role={focus ? "status" : undefined}>
-      {kept && <p className="live-note-rule">{kept}</p>}
+      {kept && <><p className="live-note-rule">{kept}</p><RowDiagnostics l={l} entries={diagnostics} /></>}
       {state && <p className="p04-state-note">{state}</p>}
       {list.length > 0 && (
         <ul className="p04-blocked">
@@ -325,6 +346,7 @@ export function RowNote({ kept, blockers, focus, extra, state }: { kept: string;
 export const line = (label: string, text: string): Blocker => ({ label, text });
 
 export function useOpen<T extends string>(note = "") {
+  const diagnostics = refusalDiagnostics;
   const [open, setOpen] = useState<T | null>(null);
   const last = useRef<T | null>(null);
   const [focusNote, setFocusNote] = useState(0);
@@ -354,7 +376,7 @@ export function useOpen<T extends string>(note = "") {
       }));
     }
   };
-  return { open, toggle, close, focusNote, mark };
+  return { open, toggle, close, focusNote, mark, diagnostics };
 }
 
 export type { Problems };

@@ -1,0 +1,157 @@
+{
+  "type": "VerificationEvidence",
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "base_commit": "a1a9a100b1ca16736f8e60563bec8d036faddb03",
+  "scope": "Real portable CLI catalog file loading and actual gate-bound server startup integration; no service-account declaration store/command enforcement or full M04 acceptance",
+  "sources": [
+    {
+      "path": "apps/api/server/server.go",
+      "sha256": "20471a2ef7edb88b1c9317e5a0d87c1e52ebeed5ffea7ba9e2725bf44168eb8a",
+      "bytes": 14431
+    },
+    {
+      "path": "apps/api/server/servicecatalog.go",
+      "sha256": "985a3e6e3602e8a5da7245aa18c2f34f26ca734e02947c1fe04be1f7c93e5889",
+      "bytes": 424
+    },
+    {
+      "path": "apps/api/server/servicecatalog_test.go",
+      "sha256": "37739bbf8b9c0efa003601b4a95f72bcf9fe0a11c09419cdd8fb5c11c3df6d24",
+      "bytes": 3799
+    },
+    {
+      "path": "apps/api/cmd/hb-api/main.go",
+      "sha256": "864f2c47e868dd7158e25e22e78fc2ac7516df158b79e70ec8dcf3f8ce9bab4c",
+      "bytes": 7895
+    },
+    {
+      "path": "apps/api/cmd/hb-api/servicecatalog.go",
+      "sha256": "3737ba5cb8df6b7820819e28159d4de6e929eb8fd347ea41f826b40e42e66346",
+      "bytes": 1284
+    },
+    {
+      "path": "apps/api/cmd/hb-api/servicecatalog_test.go",
+      "sha256": "8d70c9f919f77f20ec20d57a85abf98a37203deddda07a7544368c6ae78f65d6",
+      "bytes": 6693
+    }
+  ],
+  "artifacts": [
+    {
+      "local_evidence": "hb304-catalog-startup-before.log",
+      "sha256": "f674a2c9f3cffdad9857f4eaa22471400cf6b00c87dd1cbfd372c7d894de6874",
+      "bytes": 1456
+    },
+    {
+      "local_evidence": "hb304-catalog-cli-before.log",
+      "sha256": "de474bf0e39e06cc494995ba2f6985f8ed35ae666e50be79dc7f141b60ab7e6c",
+      "bytes": 11700
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-after.log",
+      "sha256": "dd89ee77ea26bfa1c3160575afbc4c981d0368e5e56ebb2177db5a5a971343fb",
+      "bytes": 138
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-boundaries.log",
+      "sha256": "0e2781d447d0d695d06726009a02f082737e5ef38e97485df5861857d6dfa0ae",
+      "bytes": 138
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-go-regression.log",
+      "sha256": "2921a7d1b453e5b48945391313599207be545361cd05b93609382c041dfa8bbf",
+      "bytes": 5327
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-race.log",
+      "sha256": "f47ff99bc7f01f9b51623d8cddc8b076ae9a7309d03de1278650abf486ccdc43",
+      "bytes": 138
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-final-race.log",
+      "sha256": "de7828a1450f0a45b510afe4d8d45bc2e7edac9d456696ff1824a9f7c1c7cb0a",
+      "bytes": 138
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-vet-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-vet-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-flag-final.log",
+      "sha256": "05eba0616c629a9706b03e6b2f5d33e05c6fff3102c5a372f8ef1264b6f1d339",
+      "bytes": 71
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-mutations/report.json",
+      "sha256": "888205842a0fa059eeefb606adb14384f3d17a978fb75318f6cb6206dbe7e765",
+      "bytes": 1738
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-mutations/baseline.log",
+      "sha256": "88f73c4f053af8412c091c7f962cc4682ef8e68f475a40a1667ac68eecf75475",
+      "bytes": 138
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-mutations/nil_empty_boundary.log",
+      "sha256": "890ecca033d47def6e7e2b1d61b493c2a7c2ae1eea55a8cd62e6c7353684f6e8",
+      "bytes": 368
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-mutations/actual_config_validation.log",
+      "sha256": "2325548886b59924f8b0d7f98c36f31d9e1bea90a736be61c9959f746edd0fdb",
+      "bytes": 367
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-mutations/raw_config_retention.log",
+      "sha256": "b3133b65021c6291e7f2b323dbb87befdd4ddae6a2f66b93faf23c3a7e2e8c3e",
+      "bytes": 235
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-mutations/duplicate_flag.log",
+      "sha256": "71a2c084350fc69766e4de28f2278ee36722840338250822e742095a6df7d305",
+      "bytes": 246
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-mutations/cli_constructor_binding.log",
+      "sha256": "39cdb19ef84073ff9ae6b013df68751335eef07927fffbde1afe99542510b89e",
+      "bytes": 2803
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-mutations/layered_byte_admission.log",
+      "sha256": "dd8970b343f9825685ae2c166fed508414d06f868195502cbb535d39ef34af39",
+      "bytes": 251
+    },
+    {
+      "local_evidence": "hb304-catalog-startup-mutations/restored.log",
+      "sha256": "1af8aa37bd5a105344cb5c5df455cb3b1d40d0954d1dacc65d441c1b1decd970",
+      "bytes": 138
+    }
+  ],
+  "results": {
+    "fail_before": "CLI configured/explicit-empty start FAIL unknownflag before wiring; omitted start passed. Constructor baseline FAIL from absent API/field compilation, not semantic regression.",
+    "whole_go_regression": "PASS go test -short ./...;75 package output lines including reused cached unaffected results;server171.178s CLI7.004s. Production source is unchanged by later test-premise strengthening.",
+    "startup_race_final": "PASS server5.321s CLI5.107s after restoring source and strengthening duplicate fixture to2 actually readable files.",
+    "vet": "PASS native macOS arm64 and static Linux/Windows arm64 server/CLI; no other-OS runtime claim.",
+    "tests": "7 new test functions with configured/empty/omitted actual CLI health/shutdown, caller/file noninterference, exact gate lookup/no grants/raw-byte removal, malformed config, occupied/free listener phase ordering, size/nonregular/missing paths and no duplicate-path echo.",
+    "mutations": "6/6 intended semantic kills; source byte/SHA restored, restored current-target suite PASS, disposable cache removed. Layered byte-admission mutant changes3 related guards together, not3 independent necessities."
+  },
+  "review": "Independent read-only design/source/final evidence-restoration review /root/hyb310_review PASS; TW source/guide clarification read-back /root/hyb310_copy_render PASS. Both matched6 source+20 artifact hashes/sizes. Source reviewer verified6 intended semantic mutant logs/restored current hashes. Reviewers executed no tests/services/mutations/edits. Vet/cache removal are root/runner observations. No store/command/HTTP/UI or full M04 approval.",
+  "remaining": [
+    "Versioned canonical service-account declaration store and strict selection parsing",
+    "Current organization/customer/legal-entity/contract eligibility at atomic command acceptance",
+    "service.create/service.declare/credential issuance integration preserving uncertain replay/pickup safety",
+    "Bounded authenticated reads, signed cursor fences, M04 UI/OpenAPI/field maps/glossary and rendered EN/KO/AR/four-width verification",
+    "Complete M04 increment PR/authorized merge; parent M03/M02 and original development goal remain open"
+  ]
+}

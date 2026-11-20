@@ -33,6 +33,8 @@ func run(args []string, stop <-chan os.Signal) error {
 	listen := fs.String("listen", "127.0.0.1:8820", "loopback address")
 	data := fs.String("data", ".hb-api", "data directory")
 	seed := fs.String("seed", server.SeedSample, "sample or none")
+	var catalogFile catalogFileFlag
+	fs.Var(&catalogFile, "service-catalog", "optional nonsecret service audience/scope catalog file; at most 1 MiB; supplied once")
 	var list, readers origins
 	fs.Var(&list, "console-origin", "allowed console origin")
 	fs.Var(&readers, "reader", "reader path=http://127.0.0.1:port, repeatable; replaces the defaults")
@@ -60,7 +62,11 @@ func run(args []string, stop <-chan os.Signal) error {
 			routes[path] = target
 		}
 	}
-	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log, Readers: routes, Access: *access, Org: *org, Plugins: *licenses})
+	catalog, err := catalogFile.load()
+	if err != nil {
+		return err
+	}
+	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log, Readers: routes, Access: *access, Org: *org, Plugins: *licenses, ServiceCatalog: catalog})
 	if err != nil {
 		return err
 	}

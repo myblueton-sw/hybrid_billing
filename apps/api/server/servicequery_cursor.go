@@ -151,6 +151,7 @@ type serviceWalk struct {
 	s            *Server
 	actor        identity.Verifier
 	query        serviceQuery
+	searchInput  string
 	cursor       serviceCursor
 	scanned      int
 	stopped      bool
@@ -201,7 +202,7 @@ func (s *Server) beginServiceQuery(w http.ResponseWriter, r *http.Request, area,
 		}
 		cursor = prior
 	}
-	return &serviceWalk{s: s, actor: found.verifier, query: query, cursor: cursor}, true
+	return &serviceWalk{s: s, actor: found.verifier, query: query, searchInput: values.Get("q"), cursor: cursor}, true
 }
 
 func (walk *serviceWalk) reserve(units int) bool {
@@ -256,7 +257,7 @@ func writeServiceQueryPage[T any](w http.ResponseWriter, r *http.Request, walk *
 		}
 		certainty = "lower_bound"
 	}
-	page := serviceQueryPage[T]{Availability: walk.availability, Rows: rows, Query: walk.query, Next: next, Reference: walk.cursor.Reference.UTC().Format(time.RFC3339Nano), Observed: s.clock().UTC().Format(time.RFC3339Nano), Revision: s.Revision(), Order: order,
+	page := serviceQueryPage[T]{Availability: walk.availability, Rows: rows, SearchInput: walk.searchInput, Query: walk.query, Next: next, Reference: walk.cursor.Reference.UTC().Format(time.RFC3339Nano), Observed: s.clock().UTC().Format(time.RFC3339Nano), Revision: s.Revision(), Order: order,
 		Count: serviceQueryCount{Value: strconv.FormatUint(walk.cursor.Matched, 10), Certainty: certainty}, Scanned: walk.scanned, ScanStopped: more && (walk.remaining() == 0 || walk.stopped),
 		Settings: append(s.rowsOf(serviceQuerySettings), s.rowsOf(serviceDeclarationSettings)...), Limits: s.queryServiceLimits(), CatalogVersion: s.serviceCatalog.Version()}
 	if walk.cursor.Area == "accounts" {

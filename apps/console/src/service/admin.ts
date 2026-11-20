@@ -1,5 +1,6 @@
 import type { SessionRow } from "./session-query";
 import { sessionQueryClient } from "./session-query";
+import { serviceQueryClient } from "./service-query";
 import { grantsOf, delegationsOf, catalogOf, subjectsOf, settingsOf as accessSettingsOf, requestsOf, revocationsOf, previewsOf } from "./access-read";
 import { credentialOf, servicesPageOf, selfPageOf } from "./account-read";
 import { organizationsPageOf } from "./organization-read";
@@ -953,6 +954,7 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
       return () => { authenticationListeners.delete(listener); };
     },
     ...sessionQueryClient(send, () => attempt().request, validatedRead),
+    ...serviceQueryClient(send, () => attempt().request, validatedRead),
     async users(query: UsersQuery = {}): Promise<UsersPage> {
       const body = await send("/identity/users?" + usersQueryString(query), { method: "GET" }, attempt().request);
       const methods = (body.auth_methods ?? {}) as Record<string, unknown>;

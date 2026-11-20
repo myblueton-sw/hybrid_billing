@@ -161,6 +161,7 @@ type serviceQueryPage[T any] struct {
 	Admission      *serviceAdmission `json:"admission,omitempty"`
 	Availability   string            `json:"availability,omitempty"`
 	Rows           []T               `json:"rows"`
+	SearchInput    string            `json:"search_input"`
 	Query          serviceQuery      `json:"query"`
 	Next           string            `json:"next"`
 	Reference      string            `json:"reference_at"`

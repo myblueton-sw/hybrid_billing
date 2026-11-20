@@ -94,7 +94,7 @@ func (s *Server) approvalRows(ws string) ([]approvalRow, error) {
 		if err != nil {
 			return nil, err
 		}
-		p, err := s.approvals.PolicyOf(ws, v.Subject.Stage)
+		p, err := s.approvals.PolicyAt(ws, v.Subject.Stage, v.Policy)
 		if err != nil || p.Revision != v.Policy || p.Approvals != 1 || v.Subject.Target != index.Target || index.Basis != "gross" || len(v.Subject.Entries) != 0 || len(v.Decisions) > 1 {
 			return nil, errApprovalProjection
 		}
@@ -109,28 +109,34 @@ func (s *Server) approvalRows(ws string) ([]approvalRow, error) {
 		}
 		row := approvalRow{ID: index.ID, Kind: kind, Status: v.State, Target: approvalTarget{ID: index.Target, Label: index.Target}, Author: approvalPerson(v.Subject.Author), Updated: v.Written.UTC().Format(time.RFC3339Nano), Amounts: []approvalAmount{{Currency: v.Subject.Currency, Basis: index.Basis, Candidate: approvalString(v.Subject.Amount)}}, ERP: approvalERP{Applicability: "unknown"}, Evidence: approvalEvidence{Input: approvalString(v.Subject.Digests["input"]), Result: approvalString(v.Subject.Digests["result"]), Revision: approvalString(v.Digest), Dependencies: "unknown", Completeness: "unknown", Validation: "unknown", Blockers: []approvalBlocker{{Code: "producer_unbound", Text: "Source validation and stage prerequisites are not connected."}}}, Authority: approvalAuthority{Separation: "unknown", Limit: "unknown"}}
 		switch v.State {
-		case approvals.StatePending, approvals.StateSuperseded:
+		case approvals.StatePending:
 			if len(v.Decisions) != 0 {
 				return nil, errApprovalProjection
 			}
-			if v.State == approvals.StatePending {
-				row.Status = "blocked"
-			} else {
-				row.Updated = v.Ended.UTC().Format(time.RFC3339Nano)
-			}
+			row.Status = "blocked"
+		case approvals.StateSuperseded:
+			row.Updated = v.Ended.UTC().Format(time.RFC3339Nano)
 		case approvals.StateApproved, approvals.StateRejected:
 			if len(v.Decisions) != 1 {
 				return nil, errApprovalProjection
 			}
+		default:
+			return nil, errApprovalProjection
+		}
+		if len(v.Decisions) == 1 {
 			d := v.Decisions[0]
-			if len(d.Decision.Exclude) != 0 || d.Actor == v.Subject.Author || d.Actor == v.Requester || (v.State == approvals.StateApproved && d.Decision.Verdict != approvals.VerdictApprove) || (v.State == approvals.StateRejected && d.Decision.Verdict != approvals.VerdictReject) {
+			expected := approvals.VerdictApprove
+			if v.State == approvals.StateRejected {
+				expected = approvals.VerdictReject
+			}
+			if len(d.Decision.Exclude) != 0 || d.Actor == v.Subject.Author || d.Actor == v.Requester || d.Decision.Verdict != expected {
 				return nil, errApprovalProjection
 			}
 			row.Approver = approvalPerson(d.Actor)
 			row.Decided = approvalString(d.At.UTC().Format(time.RFC3339Nano))
-			row.Updated = *row.Decided
-		default:
-			return nil, errApprovalProjection
+			if v.State != approvals.StateSuperseded {
+				row.Updated = *row.Decided
+			}
 		}
 		rows = append(rows, row)
 	}

@@ -158,10 +158,10 @@ func TestM03UsesTheInstallationKindPredicate(t *testing.T) {
 }
 
 func inputAuthorityExplanation(c callSite) bool {
-	return c.file == "grantauthorityfacts.go" && c.function == "Check" && c.receiver == "a.s.admin" && c.method == "ExplainInstallation"
+	return c.file == "grantauthorityfacts.go" && c.function == "governor" && c.receiver == "s.admin" && c.method == "ExplainInstallation"
 }
 func TestInputAuthorityExplanationExceptionIsExact(t *testing.T) {
-	good := callSite{file: "grantauthorityfacts.go", function: "Check", receiver: "a.s.admin", method: "ExplainInstallation"}
+	good := callSite{file: "grantauthorityfacts.go", function: "governor", receiver: "s.admin", method: "ExplainInstallation"}
 	if !inputAuthorityExplanation(good) {
 		t.Fatal("exact site refused")
 	}

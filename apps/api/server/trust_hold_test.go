@@ -24,7 +24,7 @@ var holdAllowed = []string{"access.reject_request", "access.request_revoke", "ac
 var holdConditional = []string{"access.approve_request", "identity.change_role", "identity.set_role_period"}
 
 var holdRefused = []string{"access.request_grant", "contract.end", "contract.evidence", "contract.renew", "contract.reopen", "contract.resume", "contract.settle",
-	"contract.suspend", "contract.withdraw", "identity.create_user", "identity.invite", "identity.issue_reset_link", "identity.issue_set_link",
+	"contract.suspend", "contract.withdraw", "financial_policy.confirm", "financial_policy.propose", "identity.create_user", "identity.invite", "identity.issue_reset_link", "identity.issue_set_link",
 	"identity.reinstate_membership", "identity.reinstate_user", "input.confirm_publish", "input_authority.approve", "input_authority.propose_console", "input_authority.propose_human", "installation.approve", "installation.propose_plan", "integrations.letter_approve_dismiss",
 	"integrations.letter_approve_redeliver", "integrations.letter_request_dismiss", "integrations.letter_request_redeliver", "integrations.plugin_approve",
 	"integrations.plugin_propose", "integrations.redelivery_reapprove", "integrations.subscription_approve", "integrations.subscription_approve_resume",
@@ -67,7 +67,7 @@ func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 			t.Errorf("%s rows\n%v\nwant\n%v", key, got, want)
 		}
 	}
-	if len(registered) != 104 || len(holdTable) != 104 {
+	if len(registered) != 106 || len(holdTable) != 106 {
 		t.Errorf("registered %d rows %d", len(registered), len(holdTable))
 	}
 	data, err := os.ReadFile("boundary.go")

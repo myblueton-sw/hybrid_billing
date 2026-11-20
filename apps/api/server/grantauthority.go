@@ -45,11 +45,15 @@ func inputAuthorityFingerprint(value any) string {
 }
 
 func (a *serverGrantAuthority) caller(workspace, actor string) error {
-	if workspace != a.s.bootWorkspace || actor == "" || actor != a.s.answer.User() || a.s.answer.Workspace() != workspace {
+	return a.s.governorCaller(workspace, actor)
+}
+
+func (s *Server) governorCaller(workspace, actor string) error {
+	if workspace != s.bootWorkspace || actor == "" || actor != s.answer.User() || s.answer.Workspace() != workspace {
 		return inputauthority.ErrDenied
 	}
 	request := gate.Request{Action: gate.AdministerInstallation, Kind: gate.InstallationKind, Resource: gate.Resource{WorkspaceID: workspace}}
-	decision := a.s.gate.Decide(a.s.answer, ConsoleClient, request)
+	decision := s.gate.Decide(s.answer, ConsoleClient, request)
 	if !decision.Allowed {
 		if decision.Code == gate.AuthorityUnavailable {
 			return gate.ErrUnavailable

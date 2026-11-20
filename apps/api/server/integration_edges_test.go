@@ -506,7 +506,7 @@ func TestIntegrationActorsAndEffectsAreConfined(t *testing.T) {
 				}
 				owner, _ := sel.X.(*ast.SelectorExpr)
 				approvalSeed := src.name == "approvalseed.go" && fn.Name.Name == "seedApprovals" && name == "Confirm" && owner != nil && owner.Sel.Name == "approvals"
-				if restricted[name] && !approvalSeed && !sourceInputCapabilityConstant(src.name, fn, sel) && !sourceInputConfirmation(src.name, fn, sel) && !sourceIntakePublication(src.name, fn, sel) && fn.Name.Name != "seedIntegrations" && !(name == "Publish" && fn.Name.Name == "publishTrust") &&
+				if restricted[name] && !approvalSeed && !sourceFinancialConfirmation(src.name, fn, sel) && !sourceInputCapabilityConstant(src.name, fn, sel) && !sourceInputConfirmation(src.name, fn, sel) && !sourceIntakePublication(src.name, fn, sel) && fn.Name.Name != "seedIntegrations" && !(name == "Publish" && fn.Name.Name == "publishTrust") &&
 					!(name == "Dispatch" && fn.Name.Name == "dispatchDeliveries") {
 					owner, _ := sel.X.(*ast.SelectorExpr)
 					if name != "Report" || owner == nil || owner.Sel.Name != "installer" && !(owner.Sel.Name == "recovery" && fn.Name.Name == "seedRecovery") &&

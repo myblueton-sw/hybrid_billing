@@ -7,8 +7,11 @@ import (
 )
 
 func (a *serverGrantAuthority) Check(workspace, actor string) (string, error) {
-	s := a.s
-	if err := a.caller(workspace, s.answer.User()); err != nil {
+	return a.s.governor(workspace, actor)
+}
+
+func (s *Server) governor(workspace, actor string) (string, error) {
+	if err := s.governorCaller(workspace, s.answer.User()); err != nil {
 		return "", err
 	}
 	facts, err := s.accessFacts(s.caller)
@@ -21,7 +24,7 @@ func (a *serverGrantAuthority) Check(workspace, actor string) (string, error) {
 		return "", inputauthority.ErrDenied
 	}
 	request := gate.Request{Action: gate.AdministerInstallation, Kind: gate.InstallationKind, Resource: gate.Resource{WorkspaceID: workspace}}
-	decision := a.s.admin.ExplainInstallation(actor, ConsoleClient, request, facts.now)
+	decision := s.admin.ExplainInstallation(actor, ConsoleClient, request, facts.now)
 	if !decision.Allowed {
 		if decision.Code == gate.AuthorityUnavailable {
 			return "", gate.ErrUnavailable

@@ -93,6 +93,7 @@ export const b = {
   store: (l: Locale, s: string) =>
     ({ trust_changes: t(l, "Sign-in rule changes (M02)", "로그인 규칙 변경(M02)", "تغييرات قواعد تسجيل الدخول (M02)"), access_requests: t(l, "Access change requests (M03)", "접근 변경 요청(M03)", "طلبات تغيير الوصول (M03)"),
       pricing_authority_proposals: t(l, "Pricing policy permission requests", "가격 정책 권한 요청", "طلبات صلاحية سياسة التسعير"),
+      financial_policy_proposals: t(l, "Charge approval policy proposals", "청구 승인 정책 제안", "مقترحات سياسة اعتماد الرسوم"),
       pricing_policy_proposals: t(l, "Pricing policy proposals", "가격 정책 제안", "مقترحات سياسة التسعير"),
       input_authority_proposals: t(l, "Input data permission requests", "입력 데이터 권한 요청", "طلبات صلاحية بيانات الإدخال"),
       retention_proposals: t(l, "Retention proposals", "보존 제안", "مقترحات الاحتفاظ"), recovery_proposals: t(l, "Recovery proposals", "복구 제안", "مقترحات الاسترداد"),

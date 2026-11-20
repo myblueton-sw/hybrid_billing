@@ -316,6 +316,9 @@ func (s *Server) signInOutcome(login, workspace string, secure bool, generation 
 		}
 		return signInResult{refusal: accesshistory.ReasonAccess}
 	}
+	if _, idle, peekErr := s.identity.Boundary().Peek(v, workspace); peekErr == nil {
+		s.sessions.touch(v, idle)
+	}
 	s.counter++
 	return signInResult{cookie: cookie, answer: answer, csrf: csrf, verifier: v, ok: true}
 }

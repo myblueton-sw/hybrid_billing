@@ -34,6 +34,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/identity/access/preview", s.previewAccess)
 	mux.HandleFunc("GET /api/v1/identity/services", s.listServices)
 	mux.HandleFunc("GET /api/v1/me", s.readSelf)
+	mux.HandleFunc("GET /api/v1/me/sessions", s.querySessions)
+	mux.HandleFunc("GET /api/v1/me/sessions/{handle}", s.readSessionDetail)
 	mux.HandleFunc("GET /api/v1/me/access-history", s.readHistory)
 	mux.HandleFunc("GET /api/v1/organizations", s.listOrganizations)
 	mux.HandleFunc("GET /api/v1/organizations/plans", s.listPlans)

@@ -106,6 +106,11 @@ func (s *sessions) deny(v identity.Verifier, login string, at time.Time) bool {
 		return false
 	}
 	s.denied[v] = denial{login: login, at: at}
+	if found := s.byID[v]; found != nil {
+		if index := s.owners[found.owner]; index != nil {
+			s.indexChanged(index)
+		}
+	}
 	return true
 }
 
@@ -120,6 +125,11 @@ func (s *sessions) release(v identity.Verifier) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.denied, v)
+	if found := s.byID[v]; found != nil {
+		if index := s.owners[found.owner]; index != nil {
+			s.indexChanged(index)
+		}
+	}
 }
 
 func (s *sessions) deniedOf(login string) []identity.Verifier {

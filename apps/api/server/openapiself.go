@@ -50,7 +50,7 @@ func selfPaths() map[string]any {
 		"403": selfError(CodeCSRF, commands.NextNone, false),
 		"500": selfError(string(commands.InternalError), commands.NextNone, false),
 		"503": selfError(string(commands.AuthorityUnavailable), commands.NextRetry, true)}}
-	return map[string]any{"/me": map[string]any{"get": read}, "/me/sessions/end": map[string]any{"post": end}, "/me/access-history": map[string]any{"get": historyOperation()}}
+	return map[string]any{"/me/sessions": map[string]any{"get": sessionQueryOperation()}, "/me/sessions/{handle}": map[string]any{"get": sessionDetailOperation()}, "/me": map[string]any{"get": read}, "/me/sessions/end": map[string]any{"post": end}, "/me/access-history": map[string]any{"get": historyOperation()}}
 }
 
 func historyOperation() map[string]any {

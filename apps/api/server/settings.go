@@ -37,6 +37,9 @@ type AccessSettings struct {
 	BulkKept            int
 	UserFilterScan      int
 	UserCountScan       int
+	SessionQueryPage    int
+	SessionQueryScan    int
+	SessionQuerySeconds int
 	ClockBase           string
 	HistoryDays         int
 	HistoryMaxMiB       int
@@ -108,7 +111,7 @@ func UserSettingList() []AccessSetting { return append([]AccessSetting(nil), use
 func HistorySettingList() []AccessSetting { return append([]AccessSetting(nil), historySettings...) }
 
 func allSettings() []AccessSetting {
-	return append(append(append(AccessSettingList(), identitySettings...), userSettings...), historySettings...)
+	return append(append(append(append(AccessSettingList(), identitySettings...), userSettings...), historySettings...), sessionQuerySettings...)
 }
 
 func DefaultAccessSettings() AccessSettings {
@@ -130,7 +133,7 @@ func numbersZero(s AccessSettings, list []AccessSetting) bool {
 
 func (s AccessSettings) withDefaults() AccessSettings {
 	out := DefaultAccessSettings()
-	for _, group := range [][]AccessSetting{accessSettings, identitySettings, userSettings, historySettings} {
+	for _, group := range [][]AccessSetting{accessSettings, identitySettings, userSettings, historySettings, sessionQuerySettings} {
 		if !numbersZero(s, group) {
 			for _, a := range group {
 				a.Set(&out, a.Value(s))
@@ -219,4 +222,14 @@ func (s *Server) rowsOf(list []AccessSetting) []settingRow {
 		out = append(out, settingRow{Name: a.Name, Value: a.Value(s.cfg.Access), Unit: a.Unit, Default: a.Default, Min: a.Min, Max: a.Max, Source: source})
 	}
 	return out
+}
+
+var sessionQuerySettings = []AccessSetting{
+	{"session_query_page_size", "session-query-page-size", "rows", 50, 1, 100, func(s *AccessSettings) *int { return &s.SessionQueryPage }},
+	{"session_query_scan", "session-query-scan", "sessions", 1000, 100, 10000, func(s *AccessSettings) *int { return &s.SessionQueryScan }},
+	{"session_query_lifetime_seconds", "session-query-lifetime-seconds", "seconds", 300, 30, 3600, func(s *AccessSettings) *int { return &s.SessionQuerySeconds }},
+}
+
+func SessionQuerySettingList() []AccessSetting {
+	return append([]AccessSetting(nil), sessionQuerySettings...)
 }

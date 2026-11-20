@@ -56,7 +56,7 @@ Each increment includes API/OpenAPI/read parser, models/UI, affected binding reg
 
 # First increment contract, revision after independent review
 
-Independent reviewer `/root/hyb310_review` accepted the full scope inventory but returned implementation-readiness FAIL. Three findings: fingerprint-only reconstruction cannot preserve the confirmed set; login/registry presence alone cannot prove current canonical eligibility; paging only sessions leaves operation rows and page-derived eligibility unbounded/incorrect. The following contract replaces the undecided alternatives; source implementation still waits for re-review.
+Independent reviewer `/root/hyb310_review` accepted the full scope inventory but returned implementation-readiness FAIL. Three findings: fingerprint-only reconstruction cannot preserve the confirmed set; login/registry presence alone cannot prove current canonical eligibility; paging only sessions leaves operation rows and page-derived eligibility unbounded/incorrect. The following contract replaces the undecided alternatives and passed revised independent design review before source implementation. The current server foundation and remaining work are recorded in [query progress](query-server-progress.md).
 
 ## Identity, rows and cursor
 

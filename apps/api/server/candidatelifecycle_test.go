@@ -100,6 +100,8 @@ func TestCandidateLifecycleDateBounds(t *testing.T) {
 		{"0000-12-31", "0001-01-01", false},
 		{"2026-10-02", "2026-10-01", false},
 		{"2026-1-01", "2026-01-02", false},
+		{"2026-01-01", "invalid", false},
+		{"0001-01-01", "0000-12-31", false},
 	} {
 		b := normalizedBinding{Contract: "contract", ContractRevision: 1, From: tc.from, To: tc.to}
 		if _, err := p.lifecycleCoverage("workspace", b); (err == nil) != tc.want {

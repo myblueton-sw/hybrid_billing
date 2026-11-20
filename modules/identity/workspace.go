@@ -43,8 +43,9 @@ func (h *Workspace) InviteUntil(actor Verifier, workspace, invitationID string, 
 		return ErrConflict
 	}
 	pending := 0
-	for _, existing := range r.invitations {
-		if existing.workspace == workspace && r.countable(existing, now) {
+	for id := range r.pendingInvitations[workspace] {
+		existing := r.invitations[id]
+		if r.countable(existing, now) {
 			pending++
 		}
 	}
@@ -56,6 +57,10 @@ func (h *Workspace) InviteUntil(actor Verifier, workspace, invitationID string, 
 	}
 	r.invitations[invitationID] = &invitation{workspace: workspace, role: role, roleUntil: roleUntil, verifier: verifier, validity: validity, inviter: found.user,
 		inviterEpoch: found.epoch, inviterVersion: r.member(workspace, found.user).version, invitee: invitee}
+	if r.pendingInvitations[workspace] == nil {
+		r.pendingInvitations[workspace] = map[string]struct{}{}
+	}
+	r.pendingInvitations[workspace][invitationID] = struct{}{}
 	return nil
 }
 
@@ -79,6 +84,7 @@ func (h *Workspace) RevokeInvitation(actor Verifier, workspace, invitationID str
 		return refused(ReasonState)
 	}
 	found.state = invitationRevoked
+	delete(r.pendingInvitations[workspace], invitationID)
 	return nil
 }
 
@@ -119,6 +125,7 @@ func (h *Workspace) Accept(workspace, invitationID string, verifier, actor Verif
 		found.attempts++
 		if found.attempts >= r.limits.Attempts {
 			found.state = invitationLocked
+			delete(r.pendingInvitations[workspace], invitationID)
 		}
 		return refused(ReasonVerifier)
 	}
@@ -130,6 +137,7 @@ func (h *Workspace) Accept(workspace, invitationID string, verifier, actor Verif
 		return ErrConflict
 	}
 	found.state = invitationAccepted
+	delete(r.pendingInvitations[workspace], invitationID)
 	r.putMembership(workspace, acting.user, &membership{role: found.role, state: MembershipActive, version: version, joined: joined + 1, from: now, until: found.roleUntil})
 	r.generation++
 	return nil

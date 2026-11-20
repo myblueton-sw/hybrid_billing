@@ -31,6 +31,7 @@ type chargeSource struct {
 }
 
 type chargeInput struct {
+	SourceMode string
 	Normalized normalizedOrigin
 	Workspace  string
 	ID         string
@@ -92,6 +93,9 @@ func candidateText(v reflect.Value, remaining *int) bool {
 }
 
 func candidateForm(in chargeInput) bool {
+	if in.SourceMode != "synthetic" {
+		return false
+	}
 	for _, id := range []string{in.Workspace, in.ID, in.Customer, in.Entity, in.Profile.ID, in.Profile.Revision} {
 		if !validRequestID(id) {
 			return false

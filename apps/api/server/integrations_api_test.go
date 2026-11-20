@@ -99,7 +99,7 @@ func TestIntegrationsReadShape(t *testing.T) {
 	if s := fmt.Sprint(clients["state"], " ", clients["manage_on"], " ", clients["oauth_clients"], " ", clients["service_users"]); s != "configured M04 not_connected []" {
 		t.Errorf("clients %s", s)
 	}
-	if s := fmt.Sprint(clients["clients"]); s != "[map[grants:[map[action:view id:reader-console kind:focus_data not_after:2026-12-16T09:00:00Z not_before:2026-11-16T09:00:00Z "+
+	if s := fmt.Sprint(clients["clients"]); s != "[map[grants:[map[action:view_cost id:candidate-console kind:charge_candidate not_after:2026-12-16T09:00:00Z not_before:2026-11-16T09:00:00Z scope:map[contract:all customer:all legal_entity:all period:any] state:active] map[action:view id:reader-console kind:focus_data not_after:2026-12-16T09:00:00Z not_before:2026-11-16T09:00:00Z "+
 		"scope:map[contract:all customer:all legal_entity:all period:any] state:active]] id:console kind:first_party_console state:active]]" {
 		t.Errorf("console %s", s)
 	}

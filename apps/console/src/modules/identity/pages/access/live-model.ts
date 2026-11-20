@@ -1,7 +1,7 @@
 import type { Locale } from "../../../../shared/types";
-import type { AccessDelegation, AccessGrant, AccessPage, Preview } from "../../../../service/admin";
+import type { AccessDelegation, AccessGrant, AccessPage, Ceiling, Preview } from "../../../../service/admin";
 import { when } from "../authentication/live-model";
-import { a, actionLabel, fieldLabel, kindLabel } from "./live-copy";
+import { a, accessPhrase, actionLabel, fieldLabel, kindLabel } from "./live-copy";
 
 const rank = (g: AccessGrant) => (g.state === "active" && g.effective ? 0 : g.state === "pending" ? 1 : 2);
 
@@ -80,4 +80,22 @@ export function reasonText(l: Locale, d: Preview): string {
       return a.whyUnavailable(l);
   }
   return `${a.whyOther(l)} ${d.reason})`;
+}
+
+
+export const capabilityKey = (row: Ceiling) => JSON.stringify([row.action, row.kind, [...row.fields].sort()]);
+
+export function grantCapabilities(page: Pick<AccessPage, "catalog" | "now">): Ceiling[] {
+  const unique = new Map<string, Ceiling>();
+  for (const row of page.catalog) {
+    if (maxDays(row.until, page.now) < 1 || accessPhrase("en", row.action, row.kind, row.fields) === null) continue;
+    const key = capabilityKey(row);
+    const previous = unique.get(key);
+    if (!previous || Date.parse(row.until) > Date.parse(previous.until)) unique.set(key, row);
+  }
+  return [...unique.values()];
+}
+
+export function selectedCapability(page: Pick<AccessPage, "catalog" | "now">, key: string): Ceiling | undefined {
+  return grantCapabilities(page).find((row) => capabilityKey(row) === key);
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -26,7 +27,11 @@ func normalizedFixture(t *testing.T, transform bool, alter func([]normalize.Row)
 		{Name: "quantity", Kind: normalize.Quantity}, {Name: "service", Kind: normalize.Text},
 	}}
 	limits := normalize.Limits{Targets: 2, Fields: 10, Mappings: 10, Revisions: 10, Runs: 10, Chunks: 10, ChunkRows: 10, Rows: 100, Cells: 10, Text: 128, Findings: 100, Unused: 10, Page: 1}
-	p, err := newNormalizedCharges("installation", limits, profile, target, func() time.Time { return time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC) })
+	orgs, err := organizations.NewRegistry("installation")
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, err := newNormalizedCharges(orgs, &sync.RWMutex{}, limits, profile, target, func() time.Time { return time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC) })
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +80,7 @@ func normalizedFixture(t *testing.T, transform bool, alter func([]normalize.Row)
 	check(err)
 	_, _, err = p.normal.Close("workspace", "normalized")
 	check(err)
-	b := normalizedBinding{ID: "synthetic-binding", Version: "1", Provider: "provider", SourceVersion: "source-v1", Scope: "scope", Period: "october", MappingRevision: 1, Contract: "contract", ContractRevision: 1, BillingProfile: "billing", BillingRevision: 1,
+	b := normalizedBinding{SourceMode: "synthetic", ID: "synthetic-binding", Version: "1", Provider: "provider", SourceVersion: "source-v1", Scope: "scope", Period: "october", MappingRevision: 1, Contract: "contract", ContractRevision: 1, BillingProfile: "billing", BillingRevision: 1,
 		From: "2026-10-01", To: "2026-10-31", Class: "class", Classes: []normalizedClass{{Source: "compute", Class: rating.CSPUsage}}, Quantity: "quantity", Service: "service", Profile: input.Profile, Limits: input.Limits, Policy: input.Policy}
 	return p, b
 }

@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/bulkrevoke"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
@@ -94,6 +94,7 @@ type Server struct {
 	seed            []step
 	passwords       *passwords.Registry
 	orgs            *organizations.Registry
+	chargeProducer  *normalizedCharges
 	rels            *relationships.Registry
 	plans           *planStore
 	drafts          *draftStore
@@ -175,7 +176,7 @@ func RelationshipLimits() relationships.Limits {
 }
 
 func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
-	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General}}
+	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General, candidateField: gate.Cost}}
 	for name, class := range fields {
 		c.Fields[name] = class
 	}
@@ -271,6 +272,7 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) { s.policy, err = authpolicy.NewRegistry(s.clock); return },
 		func() (err error) { s.passwords, err = passwords.New(s.clock, cfg.Passwords); return },
 		func() (err error) { s.orgs, err = organizations.NewRegistry(Installation); return },
+		func() (err error) { s.chargeProducer, err = s.newChargeProducer(); return },
 		func() (err error) { s.rels, err = relationships.NewRegistry(s.relLimits, s.clock); return },
 		func() (err error) {
 			s.lifecycleLimits = ContractLimits()

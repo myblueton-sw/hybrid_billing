@@ -20,6 +20,7 @@ type normalizedClass struct {
 }
 
 type normalizedBinding struct {
+	SourceMode       string
 	SourceVersion    string
 	ID               string
 	Version          string
@@ -71,7 +72,7 @@ type normalizedOrigin struct {
 }
 
 type normalizedCharges struct {
-	domain     sync.Mutex
+	domain     *sync.RWMutex
 	normal     *normalize.Registry
 	orgs       *organizations.Registry
 	target     normalize.Target
@@ -79,7 +80,10 @@ type normalizedCharges struct {
 	candidates chargeCandidates
 }
 
-func newNormalizedCharges(installation string, limits normalize.Limits, profile decimal.Profile, target normalize.Target, clock func() time.Time) (*normalizedCharges, error) {
+func newNormalizedCharges(orgs *organizations.Registry, domain *sync.RWMutex, limits normalize.Limits, profile decimal.Profile, target normalize.Target, clock func() time.Time) (*normalizedCharges, error) {
+	if orgs == nil || domain == nil {
+		return nil, errCandidateInvalid
+	}
 	normal, err := normalize.NewRegistry(limits, profile, clock)
 	if err != nil {
 		return nil, err
@@ -87,16 +91,12 @@ func newNormalizedCharges(installation string, limits normalize.Limits, profile 
 	if err := normal.DeclareTarget(target); err != nil {
 		return nil, err
 	}
-	orgs, err := organizations.NewRegistry(installation)
-	if err != nil {
-		return nil, err
-	}
 	target.Fields = append([]normalize.Field(nil), target.Fields...)
 	page := limits.Page
 	if page > 100 {
 		page = 100
 	}
-	return &normalizedCharges{normal: normal, orgs: orgs, target: target, page: page}, nil
+	return &normalizedCharges{normal: normal, orgs: orgs, domain: domain, target: target, page: page}, nil
 }
 
 func normalizedDigest(value any) (string, error) {
@@ -164,7 +164,7 @@ func (p *normalizedCharges) attribution(workspace string, b normalizedBinding) (
 }
 
 func (p *normalizedCharges) fields(b normalizedBinding) (string, map[string]rating.Class, error) {
-	if !validRequestID(b.ID) || !validRequestID(b.Version) || len(b.Classes) == 0 || len(b.Classes) > 1000 {
+	if b.SourceMode != "synthetic" || !validRequestID(b.ID) || !validRequestID(b.Version) || len(b.Classes) == 0 || len(b.Classes) > 1000 {
 		return "", nil, errCandidateInvalid
 	}
 	fields := make(map[string]normalize.Field)
@@ -215,6 +215,10 @@ func (p *normalizedCharges) fields(b normalizedBinding) (string, map[string]rati
 func (p *normalizedCharges) capture(workspace, runID, candidateID string, b normalizedBinding) (chargeCandidate, error) {
 	p.domain.Lock()
 	defer p.domain.Unlock()
+	return p.captureLocked(workspace, runID, candidateID, b)
+}
+
+func (p *normalizedCharges) captureLocked(workspace, runID, candidateID string, b normalizedBinding) (chargeCandidate, error) {
 	cost, classes, err := p.fields(b)
 	if err != nil {
 		return chargeCandidate{}, err
@@ -252,7 +256,7 @@ func (p *normalizedCharges) capture(workspace, runID, candidateID string, b norm
 	if err != nil {
 		return chargeCandidate{}, err
 	}
-	input := chargeInput{Workspace: workspace, ID: candidateID, Customer: contract.CustomerID, Entity: document.IssuerLegalEntityID, From: b.From, To: b.To, Profile: b.Profile, Limits: b.Limits, Policy: b.Policy}
+	input := chargeInput{SourceMode: b.SourceMode, Workspace: workspace, ID: candidateID, Customer: contract.CustomerID, Entity: document.IssuerLegalEntityID, From: b.From, To: b.To, Profile: b.Profile, Limits: b.Limits, Policy: b.Policy}
 	seen := make(map[normalize.RowKey]bool)
 	for after := 0; after < run.Spec.Rows; {
 		page, err := p.normal.Rows(workspace, runID, after, p.page)

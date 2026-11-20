@@ -408,3 +408,14 @@ Microsoft's [English notification-reference guidance](https://learn.microsoft.co
 - **Rules tightened by the restored/default comparison** names only the reported comparison fields; it does not certify stronger authentication overall. Unknown and explicit empty lists remain distinct.
 
 Separate AI technical-writing review identified the API qualifier and build-term corrections. Native-language acceptance remains unverified. Executed screen checks are recorded in [HYB-327 verification](../../features/HYB-327/verification.md).
+
+## HYB-225 candidate access terminology
+
+M03 access management and P02 integration grants now include the synthetic candidate cost-read capability. The independent AI TW review accepted the distinction below as provisional product copy; scoped rendered review passed, while human native-language acceptance remains pending. Retain the existing View cost / 원가 조회 / عرض التكلفة action labels.
+
+| Canonical key | EN | KO | AR candidate | Meaning guard |
+| --- | --- | --- | --- | --- |
+| charge_candidate | Charge calculation candidates | 과금 계산 후보 | نتائج احتساب الرسوم المبدئية | Immutable computed rating records awaiting further eligibility and approval integration; not approved invoices, issuance authority or verified source ownership. |
+| charge_evidence | Source costs and calculation evidence | 원천 비용·계산 근거 | تكاليف المصدر وأدلة الاحتساب | Cost-protected source inputs and recorded calculation provenance; access requires ViewCost and does not approve the calculation. |
+
+On 2026-11-20, [AWS Korean billing guidance](https://docs.aws.amazon.com/ko_kr/awsaccountbilling/latest/aboutv2/billing-what-is.html) was inspected for its distinction between costs, calculated charges and invoices; [AWS Arabic cloud financial management](https://aws.amazon.com/ar/aws-cost-management/) was inspected for cost, usage, charge and invoice vocabulary. Neither source establishes a standard translation for this product's candidate record. Independent AI TW re-review replaced the ambiguous Arabic candidate/filter wording with provisional calculation results; contextual review remains required; no regional consensus or native approval is claimed. No permission or financial semantics change with language.

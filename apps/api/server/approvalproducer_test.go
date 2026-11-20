@@ -16,7 +16,7 @@ import (
 )
 
 func candidateFixture() chargeInput {
-	return chargeInput{Workspace: "workspace", ID: "run", Customer: "customer", Entity: "entity", From: "2026-10-01", To: "2026-10-31",
+	return chargeInput{SourceMode: "synthetic", Workspace: "workspace", ID: "run", Customer: "customer", Entity: "entity", From: "2026-10-01", To: "2026-10-31",
 		Sources: []chargeSource{{ID: "source", Revision: "v1", Digest: strings.Repeat("a", 64)}},
 		Profile: decimal.ProfileSpec{ID: "synthetic", Revision: "1", InputIntegerDigits: 12, InputScale: 4, ResultIntegerDigits: 14, ResultScale: 4, IntermediateDigits: 60},
 		Limits:  rating.Limits{Rules: 8, Tiers: 4, Discounts: 3, Lines: 50, Intermediate: 60},

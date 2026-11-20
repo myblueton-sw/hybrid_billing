@@ -94,3 +94,35 @@ test("counts and day hints read with counted nouns", () => {
   assert.match(a.daysHint("ko", 29, "d"), /^1~29일\./);
   assert.equal(a.effectFor("ar", "x"), "الأثر على x");
 });
+
+
+test("candidate cost access has localized scope and an exact request phrase", () => {
+  for (const l of ["en", "ko", "ar"] as const) {
+    const text = accessText(l, "view_cost", ["charge_evidence"]);
+    assert.ok(!text.includes("charge_evidence"));
+    assert.ok(!scopeText(l, "charge_candidate", "").includes("charge_candidate"));
+    assert.ok(accessPhrase(l, "view_cost", "charge_candidate", ["charge_evidence"]));
+    assert.equal(accessPhrase(l, "view", "charge_candidate", ["charge_evidence"]), null);
+    assert.equal(accessPhrase(l, "view_cost", "charge_candidate", ["charge_evidence", "rows"]), null);
+  }
+});
+
+
+test("grant capabilities preserve identity across reorder and refuse removed or expired selection", async () => {
+  const { capabilityKey, grantCapabilities, selectedCapability } = await import("./live-model");
+  const focus = { action: "view", kind: "focus_data", fields: ["rows"], until: "2026-12-16T00:00:00Z" };
+  const cost = { action: "view_cost", kind: "charge_candidate", fields: ["charge_evidence"], until: "2026-12-01T00:00:00Z" };
+  const current = { now: "2026-11-16T00:00:00Z", catalog: [cost, focus] };
+  assert.equal(selectedCapability(current, ""), undefined);
+  assert.equal(selectedCapability(current, capabilityKey(focus)), focus);
+  assert.equal(selectedCapability({ ...current, catalog: [focus, cost] }, capabilityKey(focus)), focus);
+  assert.equal(selectedCapability({ ...current, catalog: [cost] }, capabilityKey(focus)), undefined);
+  const later = { ...cost, until: "2026-12-10T00:00:00Z" };
+  assert.deepEqual(grantCapabilities({ ...current, catalog: [cost, later, focus] }), [later, focus]);
+  assert.deepEqual(grantCapabilities({ ...current, catalog: [later, cost, focus] }), [later, focus]);
+  const expired = { ...cost, until: current.now };
+  assert.deepEqual(grantCapabilities({ ...current, catalog: [expired, focus] }), [focus]);
+  assert.equal(selectedCapability({ ...current, catalog: [expired, focus] }, capabilityKey(cost)), undefined);
+  assert.deepEqual(grantCapabilities({ ...current, catalog: [{ ...cost, action: "issue" }, focus] }), [focus]);
+  assert.equal(capabilityKey({ ...focus, fields: ["b", "a"] }), capabilityKey({ ...focus, fields: ["a", "b"] }));
+});

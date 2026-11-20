@@ -1,3 +1,4 @@
+import { measurePresentation } from "./presentation-measure.mjs";
 import { createRequire } from "node:module";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
@@ -54,8 +55,13 @@ async function capture(id, lang, width, mode) {
   });
   const file = `${id}-${lang}-${width}.png`;
   await page.mouse.move(0, 0); await page.screenshot({ path: resolve(output, file), fullPage: true });
-  evidence.renders.push({ id, lang, width, mode, file, fontEvidence, ...findings });
+  evidence.renders.push({ id, lang, width, mode, file, fontEvidence, ...findings, ...(args.presentation ? { presentation: await measurePresentation(page) } : {}) });
   console.log(JSON.stringify({ id, lang, width, overflow: findings.horizontalOverflow, contrastCandidates: findings.contrast.length }));
+  if (args.zoom && width === 640 && !id.endsWith("-zoom200")) {
+    await page.evaluate(() => document.documentElement.style.zoom = "2");
+    await capture(id + "-zoom200", lang, width, mode + ":CSS-zoom-not-native-browser-zoom");
+    await page.evaluate(() => document.documentElement.style.zoom = "1");
+  }
 }
 try {
   const lines = (await readFile(args.activation, "utf8")).trim().split("\n");
@@ -71,7 +77,12 @@ try {
   const activation = new URL(lines.find((line) => line.startsWith("admin@example.invalid ")).split(" ")[1]);
   await page.goto(`${base}/activate?lang=en${activation.hash}`);
   await page.locator("#link-new").waitFor();
-  if (!args.journeys) for (const width of [1440, 640, 320]) { await page.setViewportSize({ width, height: 1000 }); await capture("L02", "en", width, "live-password-set"); }
+  if (!args.journeys) for (const lang of ["en", "ko", "ar"]) for (const width of [1440, 640, 320]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto(`${base}/activate?lang=${lang}${activation.hash}`); await page.locator("#link-new").waitFor();
+    await capture("L02", lang, width, "live-password-set");
+  }
+  await page.goto(`${base}/activate?lang=en${activation.hash}`); await page.locator("#link-new").waitFor();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await tabTo("#link-new"); await page.keyboard.type(password); await tabTo("#link-confirm"); await page.keyboard.type(password);
   await tabTo("form button[type=submit]"); await page.keyboard.press("Enter"); await page.locator("a.service-button-link").waitFor();

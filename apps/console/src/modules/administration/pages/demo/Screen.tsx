@@ -58,7 +58,7 @@ export default function Demo(p: Props) {
           ])}
         </p>
       </div>
-      <div className="ops-grid">
+      <div className="ops-grid ops-fluid">
         <div>
           <Panel
             title={t(l, [

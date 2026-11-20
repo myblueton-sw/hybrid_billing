@@ -1,3 +1,4 @@
+import { measurePresentation } from "./presentation-measure.mjs";
 import { createRequire } from "node:module";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
@@ -40,7 +41,7 @@ async function capture(page, lang, size, state) {
   assert.deepEqual(visual.failedFonts, []);
   assert.ok(visual.loadedFonts.includes(lang === "ko" ? "IBM Plex Sans KR" : lang === "ar" ? "IBM Plex Sans Arabic" : "IBM Plex Sans"));
   assert.ok(visual.borders.every(e => e.left >= -1 && e.right <= size + 1));
-  evidence.visual ||= []; evidence.visual.push({lang, width: size, state, ...visual});
+  evidence.visual ||= []; evidence.visual.push({lang, width: size, state, ...visual, ...(args.presentation ? { presentation: await measurePresentation(page) } : {})});
   await page.screenshot({path: resolve(output, `M02-${state}-${lang}-${size}.png`)});
 }
 let reviewer;

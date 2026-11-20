@@ -1,3 +1,4 @@
+import { measurePresentation } from "./presentation-measure.mjs";
 import { createRequire } from "node:module";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
@@ -42,6 +43,7 @@ async function captureState(page, state) {
       await tabTo(page, '.service-summary a[href="#live-reason"]'); await page.keyboard.press("Enter"); await page.locator("#live-reason:focus").waitFor();
     }
     await page.evaluate(() => document.fonts.ready);
+    const presentation = args.presentation ? await measurePresentation(page) : undefined;
     await page.evaluate(() => { scrollTo(0, 0); return new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))); });
     const layout = await page.evaluate(() => ({
       overflow: document.documentElement.scrollWidth > innerWidth,
@@ -54,7 +56,7 @@ async function captureState(page, state) {
     }));
     assert.equal(layout.overflow, false); assert.deepEqual(layout.failedFonts, []);
     assert.ok(layout.fonts.includes(locale === "ko" ? "IBM Plex Sans KR" : locale === "ar" ? "IBM Plex Sans Arabic" : "IBM Plex Sans"));
-    evidence.visual.push({ state, width: size, ...layout });
+    evidence.visual.push({ state, width: size, ...layout, ...(presentation ? { presentation } : {}) });
     await page.screenshot({ path: resolve(output, `${state}-${size}.png`), fullPage: true });
     if (size === 1440) {
       await page.evaluate(() => scrollTo(0, 0));

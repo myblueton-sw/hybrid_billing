@@ -88,7 +88,7 @@ Independent corrective source/TW review by refusal_review passed. The reviewer i
 | Focused approval/candidate/access/integration/source/seed/replay race checks | PASS, 21.719 seconds, /private/tmp/hyb337-composed-focused-3.log |
 | Full frontend suite | 916 PASS, /private/tmp/hyb337-composed-console.log |
 | Console build | PASS, existing bundle warning, /private/tmp/hyb337-composed-build.log |
-| Full race suite | RUNNING on production/test snapshot committed as 11cfd10, /private/tmp/hyb337-composed-race-full.log; not yet accepted |
+| Full race suite | PASS, all 74 packages on snapshot 11cfd10; server 1480.851 seconds, /private/tmp/hyb337-composed-race-full.log |
 | Three-capability rendered matrix | PASS, 18 route cases plus selected forms, /private/tmp/hyb337-composed-renders/evidence.json |
 | Three exact request payloads and pending locks | PASS, /private/tmp/hyb337-composed-interactions/evidence.json; injected 503 before backend writes |
 | Reorder/removal/expiry/ceiling/error-link states | PASS, controlled response fixtures, /private/tmp/hyb337-composed-state/evidence.json |
@@ -104,6 +104,13 @@ The Claude review did not inspect all captures, computed CSS or browser behavior
 During local rebase conflict resolution, an overbroad conflict-marker expression briefly truncated four files. Formatting rejected the result. Root reconstructed those files directly from the three Git revisions with bounded markers before running the focused checks above. No malformed tree was pushed or treated as verified; the final ticket commit is assembled from the corrected composition.
 
 
-After that full-run binary was compiled, only the grant-separation test was strengthened to acquire the domain lock for revocation and assert candidate detail as well as list reads. Production source is unchanged. Its focused rerun passed separately in 2.359 seconds; the full original run remains pending. Draft [PR249](https://github.com/myblueton-sw/hybrid_billing/pull/249) is based on HYB-225; no merge or completed ticket is claimed.
+After that full-run binary was compiled, only the grant-separation test was strengthened to acquire the domain lock for revocation and assert candidate detail as well as list reads. Production source is unchanged. Its focused rerun passed separately in 2.359 seconds; the full original run subsequently passed all 74 packages. Draft [PR249](https://github.com/myblueton-sw/hybrid_billing/pull/249) is based on HYB-225; no merge or completed ticket is claimed.
 
-Independent final corrective review by refusal_review inspected the test diff, verification record and focused log and returned narrow PASS. It executed no tests and inspected no images in that review. Full regression remains pending.
+Independent final corrective review by refusal_review inspected the test diff, verification record and focused log and returned narrow PASS. It executed no tests and inspected no images in that review. The full snapshot 11cfd10 regression subsequently passed all 74 packages.
+
+
+# Full composition baseline and next dependency update
+
+The completed full race log contains exactly the same 74 package names as go list ./..., each PASS, and the test processes are terminal. The server result is 1480.851 seconds. This baseline covers production snapshot 11cfd10, with the later test-only strengthening verified separately. It does not certify new parent HYB-225 lifecycle code 8995695.
+
+The next dependency update incorporates the separately reviewed recorded-lifecycle check into candidate capture. Approval records, gates and financial unknowns remain separate; no candidate-to-approval binding is introduced. Verify unchanged combined seed/counters, candidate and B09 exact values, user/client grant isolation and relevant package regression after rebasing. Existing rendered evidence covers unchanged screens; no new visual composition is intended.

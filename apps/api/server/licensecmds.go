@@ -44,6 +44,9 @@ func (h licenseHandler) Apply(ctx commands.Context) (commands.Outcome, error) {
 	if err := s.humanActor(ctx.User); err != nil {
 		return commands.Outcome{}, err
 	}
+	if s.licenseFailed {
+		return commands.Outcome{}, licensemode.ErrStorage
+	}
 	actor := licensemode.Actor{ID: ctx.User, Kind: licensemode.KindHuman}
 	var err error
 	state := ""
@@ -54,6 +57,9 @@ func (h licenseHandler) Apply(ctx commands.Context) (commands.Outcome, error) {
 			break
 		}
 		s.license, err = licensemode.CreateDurable(s.licenseDir(), s.cfg.License.Installation, licenseProduct, actor, s.licenseConfig(), s.clock)
+		if err != nil {
+			s.licenseFailed = true
+		}
 		state = "initialized"
 	default:
 		if s.license == nil {

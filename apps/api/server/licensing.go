@@ -109,6 +109,10 @@ func (s *Server) readLicense(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, request, page)
 		return
 	}
+	if s.licenseFailed {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
 	page.Installation, page.Product, page.State = s.cfg.License.Installation, licenseProduct, "uninitialized"
 	page.TimeAuthority = "not_connected"
 	if s.cfg.License.Authority != nil {

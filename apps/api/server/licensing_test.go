@@ -320,3 +320,17 @@ func TestLicenseFullServerRestartPreservesIdentityAndMode(t *testing.T) {
 		t.Fatal("failed open leaked ownership")
 	}
 }
+
+func TestLicenseUncertainInitializationNeverReportsUninitialized(t *testing.T) {
+	f := licenseWorld(t, nil)
+	root := f.as(AdminLogin)
+	if err := os.Mkdir(f.s.licenseDir(), 0700); err != nil {
+		t.Fatal(err)
+	}
+	got := f.run(root, "licenses.initialize", licenseTarget, nil)
+	f.code(t, "initialize unknown", got, 500, "internal_error")
+	f.code(t, "read after initialization failure", f.licenseRead(root), 503, "dependency_unavailable")
+	if !f.s.licenseFailed {
+		t.Fatal("initialization failure was not retained")
+	}
+}

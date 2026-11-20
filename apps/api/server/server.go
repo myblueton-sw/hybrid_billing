@@ -79,6 +79,7 @@ type Config struct {
 type Server struct {
 	cfg             Config
 	license         *licensemode.Durable
+	licenseFailed   bool
 	clock           func() time.Time
 	time            *serverClock
 	log             *slog.Logger

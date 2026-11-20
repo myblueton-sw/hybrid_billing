@@ -33,6 +33,15 @@ const (
 )
 
 var holdTable = map[string]holdRule{
+	"licenses.initialize":                       {holdRefuse, reasonChange},
+	"licenses.select_mode":                      {holdRefuse, reasonChange},
+	"licenses.register":                         {holdRefuse, reasonChange},
+	"licenses.activate":                         {holdRefuse, reasonChange},
+	"licenses.propose_key":                      {holdRefuse, reasonChange},
+	"licenses.propose_retirement":               {holdRefuse, reasonChange},
+	"licenses.propose_compromise":               {holdRefuse, reasonChange},
+	"licenses.approve_key_change":               {holdRefuse, reasonChange},
+	"licenses.withdraw_key_change":              {holdAllow, reasonPending},
 	"identity.suspend_user":                     {holdAllow, reasonReduce},
 	"identity.suspend_membership":               {holdAllow, reasonReduce},
 	"identity.depart_user":                      {holdAllow, reasonReduce},

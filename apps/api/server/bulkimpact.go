@@ -8,6 +8,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/installer"
+	"github.com/myblueton-sw/hybrid_billing/modules/licensemode"
 	"github.com/myblueton-sw/hybrid_billing/modules/plugins"
 	"github.com/myblueton-sw/hybrid_billing/modules/recovery"
 	"github.com/myblueton-sw/hybrid_billing/modules/retention"
@@ -101,6 +102,25 @@ var proposalStores = []proposalStore{
 				visit(e.proposer)
 			}
 		}
+	}},
+}
+
+type fallibleProposalStore struct {
+	name      string
+	prefix    string
+	rechecked bool
+	proposers func(*Server) ([]string, error)
+}
+
+var fallibleProposalStores = []fallibleProposalStore{
+	{"license_key_changes", "licenses", false, func(s *Server) ([]string, error) {
+		if s.licenseFailed {
+			return nil, licensemode.ErrStorage
+		}
+		if s.license == nil {
+			return nil, nil
+		}
+		return s.license.PendingProposers()
 	}},
 }
 
@@ -224,7 +244,7 @@ func (s *Server) ownedServices(targets map[string]bool) int {
 	}
 }
 
-func (s *Server) impact(targets []bulkrevoke.Target, r roster, now time.Time) bulkrevoke.Impact {
+func (s *Server) impact(targets []bulkrevoke.Target, r roster, now time.Time) (bulkrevoke.Impact, error) {
 	out := bulkrevoke.Impact{ComputedAt: now, People: len(targets)}
 	side := s.sideIndex()
 	leaving := map[string]bool{}
@@ -264,5 +284,18 @@ func (s *Server) impact(targets []bulkrevoke.Target, r roster, now time.Time) bu
 		}
 		out.Pending = append(out.Pending, bulkrevoke.PendingStore{Store: store.name, Count: count, Rechecked: store.rechecked})
 	}
-	return out
+	for _, store := range fallibleProposalStores {
+		proposers, err := store.proposers(s)
+		if err != nil {
+			return bulkrevoke.Impact{}, err
+		}
+		count := 0
+		for _, user := range proposers {
+			if leaving[user] {
+				count++
+			}
+		}
+		out.Pending = append(out.Pending, bulkrevoke.PendingStore{Store: store.name, Count: count, Rechecked: store.rechecked})
+	}
+	return out, nil
 }

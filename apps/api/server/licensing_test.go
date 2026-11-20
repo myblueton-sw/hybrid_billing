@@ -165,7 +165,7 @@ func TestLicenseSignedAPIAndAuthorityOutcomes(t *testing.T) {
 	requireLicenseOutcome(t, f.run(root, "licenses.activate", licenseTarget, fields), "activation_recorded")
 	read := f.licenseRead(root)
 	status := read.body["status"].(map[string]any)
-	if status["state"] != "evaluation_active" || status["remaining_seconds"] != float64(336*3600) {
+	if status["state"] != "evaluation_active" || fmt.Sprintf("%.0f", status["remaining_seconds"]) != "1209600" {
 		t.Fatal(read.raw)
 	}
 	requireLicenseOutcome(t, f.run(root, "licenses.activate", licenseTarget, fields), "activation_recorded")

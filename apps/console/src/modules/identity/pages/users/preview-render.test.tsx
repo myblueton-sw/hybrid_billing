@@ -29,3 +29,16 @@ test("the preparer sees the people on the list", () => {
   const html = renderToStaticMarkup(<PreviewBody l="en" api={api} prepared={{ detail, targets: { total: 1, next: "", rows: [{ user_id: "u1", login: "ann@example.invalid", role: "member", role_until: "", user_state: "active", membership_state: "active", installation_administrator: false }] } }} onMore={() => {}} />);
   assert.ok(html.includes("ann@example.invalid") && html.includes(b.toRevokeN("en", 1)) && !html.includes(b.ownerOnlyPeople("en")));
 });
+
+
+test("license key proposals render localized counts without implying proposer reauthorization", () => {
+  const labels = { en: "License key change proposals", ko: "라이선스 키 변경 제안", ar: "مقترحات تغيير مفاتيح الترخيص" };
+  const scoped = { ...detail, impact: { ...detail.impact, pending: [{ store: "license_key_changes", count: 3, rechecked: false }] } };
+  for (const l of ["en", "ko", "ar"] as Locale[]) {
+    const html = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: scoped, targets: null }} onMore={() => {}} />);
+    assert.ok(html.includes(labels[l]), l);
+    assert.ok(html.includes('class="m01-line">3</span>'), l);
+    assert.ok(html.includes(b.notRechecked(l)), l);
+    assert.ok(!html.includes("license_key_changes"), l);
+  }
+});

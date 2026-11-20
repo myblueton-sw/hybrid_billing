@@ -50,7 +50,11 @@ func prepareBulk(s *Server, ctx commands.Context, user string) (commands.Outcome
 	if s.strandsAnchors(r.members, leaving, now) {
 		return commands.Outcome{}, commands.Fail(commands.PrerequisiteFailed)
 	}
-	v, _, err := s.bulk.Prepare(ctx.Workspace, user, ctx.Target, effect, s.Revision(), targets, exclusions, s.impact(targets, r, now))
+	impact, err := s.impact(targets, r, now)
+	if err != nil {
+		return commands.Outcome{}, err
+	}
+	v, _, err := s.bulk.Prepare(ctx.Workspace, user, ctx.Target, effect, s.Revision(), targets, exclusions, impact)
 	if errors.Is(err, bulkrevoke.ErrEmpty) && draft.Selection == bulkrevoke.Filter {
 		return commands.Outcome{}, commands.Fail(commands.InvalidStage)
 	}

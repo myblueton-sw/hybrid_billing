@@ -124,6 +124,17 @@ func (d *Durable) Withdraw(number uint64, actor Actor) (ProposalView, error) {
 func (d *Durable) Proposal(number uint64) (ProposalView, error) {
 	return durableCall(d, func(r *Registry) (ProposalView, error) { return r.Proposal(number) })
 }
+func (d *Durable) PendingProposers() ([]string, error) {
+	return durableCall(d, func(r *Registry) ([]string, error) {
+		r.enter()
+		defer r.leave()
+		out := make([]string, 0, len(r.pending))
+		for _, number := range r.pending {
+			out = append(out, r.proposals[number].view.Proposer)
+		}
+		return out, nil
+	})
+}
 func (d *Durable) Key(id string) (KeyView, error) {
 	return durableCall(d, func(r *Registry) (KeyView, error) { return r.Key(id) })
 }

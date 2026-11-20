@@ -39,6 +39,6 @@ Actual browser verification starts from the old 8832 link, confirms redirect to 
 
 # Remaining boundary
 
-The CLI currently supplies no real time authority; nil remains unavailable rather than using server time. Issuer trust/key administration is not exposed and no key or grant is auto-seeded. Synthetic key provisioning exists only inside tests. Production authority/provider selection, issuer management and live P07 remain pending. Generic command receipts and identity sessions retain the existing API lifecycle; domain grant/document replay is durable, but generic receipt persistence across restart is not claimed. Existing local state cannot defend against an operator replacing the entire store with an older copy.
+The CLI currently supplies no real time authority; nil remains unavailable rather than using server time. No key or grant is auto-seeded. The subsequent [verification-key API increment](key-api-verification.md) exposes dual-controlled public-key administration. Production authority/provider selection, issuer provenance and live P07 remain pending. Generic command receipts and identity sessions retain the existing API lifecycle; domain grant/document replay is durable, but generic receipt persistence across restart is not claimed. Existing local state cannot defend against an operator replacing the entire store with an older copy.
 
 Owner Seung Woo Park; root writer; independent read-only review; machine mac_mini. Continue PR #242; no merge, deployment or ticket completion is implied.

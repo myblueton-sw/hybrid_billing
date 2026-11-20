@@ -12,17 +12,24 @@ type fallibleProposalStore struct {
 	tally     func(*Server) (map[string]int, error)
 }
 
-var fallibleProposalStores = []fallibleProposalStore{{name: "input_authority_proposals", prefix: "input_authority", rechecked: true, tally: inputAuthorityTally}}
+var fallibleProposalStores = []fallibleProposalStore{{name: "input_authority_proposals", prefix: "input_authority", rechecked: true, tally: inputAuthorityTally}, {name: "pricing_authority_proposals", prefix: "pricing_authority", rechecked: true, tally: pricingAuthorityTally}}
 
 func inputAuthorityTally(s *Server) (map[string]int, error) {
+	return grantAuthorityTally(s, inputGrantAuthority)
+}
+func pricingAuthorityTally(s *Server) (map[string]int, error) {
+	return grantAuthorityTally(s, pricingGrantAuthority)
+}
+func grantAuthorityTally(s *Server, domain grantAuthorityDomain) (map[string]int, error) {
+	a := s.grantAuthority(domain)
 	out := map[string]int{}
-	if s.inputAuthority == nil {
+	if a == nil {
 		return out, nil
 	}
-	if s.faulty("input-authority-impact") {
+	if s.faulty(domain.faultPrefix() + "impact") {
 		return nil, gate.ErrUnavailable
 	}
-	records, err := s.inputAuthority.registry.Records(s.bootWorkspace)
+	records, err := a.registry.Records(s.bootWorkspace)
 	if err != nil {
 		return nil, err
 	}

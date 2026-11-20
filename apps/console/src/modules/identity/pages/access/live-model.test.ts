@@ -136,3 +136,16 @@ test("synthetic input confirmation is labeled without enabling generic requests"
  assert.ok(!accessText(l, "view_cost", ["input_review_evidence"]).includes("input_review_evidence"));
   }
 });
+
+
+test("pricing grant labels remain separate from generic grant offers", () => {
+ for (const l of ["en", "ko", "ar"] as const) {
+  for (const action of ["propose_pricing_policy", "approve_pricing_policy", "revoke_pricing_policy", "use_pricing_policy"]) {
+   assert.ok(!accessText(l, action, []).includes(action));
+   assert.equal(accessPhrase(l, action, "synthetic_pricing_policy", []), null);
+  }
+  assert.ok(!scopeText(l, "synthetic_pricing_policy", "").includes("synthetic_pricing_policy"));
+  assert.ok(!accessText(l, "view_cost", ["pricing_policy_evidence"]).includes("pricing_policy_evidence"));
+  assert.equal(accessPhrase(l, "view_cost", "synthetic_pricing_policy", ["pricing_policy_evidence"]), null);
+ }
+});

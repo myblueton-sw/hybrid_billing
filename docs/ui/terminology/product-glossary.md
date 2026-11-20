@@ -443,3 +443,21 @@ The service field current_eligibility describes freshly checked synthetic input-
 The authenticated S06 screen uses **Synthetic input review / 합성 입력 데이터 확인 / مراجعة بيانات الإدخال الاصطناعية**. The qualifier is mandatory: the screen publishes synthetic input eligibility internally and does not approve billing amounts or production use. **Confirm and publish / 확인·공개 / تأكيد ونشر** is explained at the point of decision; Korean 공개 does not mean public disclosure. **Reject input / 입력 거절 / رفض الإدخال** records rejection without publishing eligibility or deleting source data.
 
 Use the existing **Workspace / 업무 공간 / مساحة العمل** label. Arabic revision labels use نسخة to distinguish document/scope versions from review activity. Period ID remains an opaque identifier; UTC timestamps, currency codes and exact amounts are directionally isolated, while free-text decision reasons retain automatic natural-language direction. Current evidence and eligibility are separate from recorded decisions. Unknown request outcomes and later refusals remain distinct; a fresh read neither cancels nor proves failure of an earlier request. Independent AI domain/TW review passed these candidates. Human native-language acceptance remains pending.
+
+## Synthetic pricing permission provisioning
+
+HYB-225 uses the following domain-reviewed display candidates in M01 impact and M03/P02 grants. They identify permissions for synthetic sample calculations; this increment does not expose pricing-policy execution or approve calculated amounts. Independent AI domain/TW review and scoped actual Claude render review passed. Human native-language acceptance remains pending.
+
+| Concept / canonical alias | Preferred EN | Preferred KO | AR candidate | Definition and forbidden implication |
+| --- | --- | --- | --- | --- |
+| propose_pricing_policy | Propose pricing policy | 가격 정책 제안 | اقتراح سياسة التسعير | Propose terms for independent review; no effective-policy or financial approval implied. |
+| approve_pricing_policy | Approve pricing policy | 가격 정책 승인 | اعتماد سياسة التسعير | Approve a policy proposal under separate authority; distinct from approval of billing amounts. |
+| revoke_pricing_policy | Revoke pricing policy | 가격 정책 철회 | إلغاء سياسة التسعير | Stop future use while preserving history; do not imply deletion. |
+| use_pricing_policy | Use pricing policy | 가격 정책 적용 | تطبيق سياسة التسعير | Select and apply approved terms; not permission to issue or approve a bill. |
+| synthetic_pricing_policy | Synthetic pricing policy | 합성 시험용 가격 정책 | سياسة تسعير اصطناعية | Synthetic test policy, not a production commercial policy. |
+| pricing_policy_evidence | Pricing policy evidence | 가격 정책 근거 | أدلة سياسة التسعير | Cost-protected policy evidence; permission to inspect does not approve the policy. |
+| pricing_authority_proposals | Pricing policy permission requests | 가격 정책 권한 요청 | طلبات صلاحية سياسة التسعير | Pending/unresolved authority proposals for console ceilings and human grants; count is not a policy or amount approval. |
+
+Policy revocation and grant revocation are intentionally separate: the former stops use of a policy; the latter withdraws a person's permission. Korean 철회 versus 회수 and Arabic إلغاء versus إبطال preserve this difference. English Revoke is shared but names the distinct object. Use is translated as applying selected terms (적용 / تطبيق), never financial approval. M03 presents the evidence field; P02 preserves its existing action/kind/scope presentation.
+
+Regional wording evidence read on 2026-11-20: [Microsoft Korean policy configuration](https://learn.microsoft.com/ko-kr/azure/api-management/set-edit-policies) uses policy configuration/application vocabulary; [Microsoft Arabic API Management concepts](https://learn.microsoft.com/ar-sa/azure/api-management/api-management-key-concepts) uses policy terminology and distinguishes management configuration from gateway behavior. These support general IT vocabulary only, not an official translation of this product's pricing compounds. The Arabic policy-overview page appeared in search but direct retrieval failed, so it supplies no claimed inspected-page evidence. Existing access-request evidence above remains applicable to permission requests. No regional consensus or native approval is claimed.

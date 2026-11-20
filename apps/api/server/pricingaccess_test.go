@@ -12,10 +12,7 @@ import (
 )
 
 func TestPricingAccessRejectsGenericGrantBypass(t *testing.T) {
-	f := setupWith(t, func(c *Config) {
-		c.Kinds = []string{pricingauthority.ResourceKind}
-		c.Fields = map[string]gate.FieldClass{pricingauthority.EvidenceField: gate.Cost}
-	})
+	f := setup(t, SeedSample).ready()
 	f.setPassword(MemberLogin, pw)
 	root, second := f.as(AdminLogin), f.as(Admin2Login)
 	scope := gate.Scope{WorkspaceID: SampleWorkspace, Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}

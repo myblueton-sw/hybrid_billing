@@ -220,6 +220,10 @@ export const a = {
 };
 
 const actions: Record<string, [string, string, string]> = {
+ propose_pricing_policy: ["Propose pricing policy", "가격 정책 제안", "اقتراح سياسة التسعير"],
+ approve_pricing_policy: ["Approve pricing policy", "가격 정책 승인", "اعتماد سياسة التسعير"],
+ revoke_pricing_policy: ["Revoke pricing policy", "가격 정책 철회", "إلغاء سياسة التسعير"],
+ use_pricing_policy: ["Use pricing policy", "가격 정책 적용", "تطبيق سياسة التسعير"],
   view: ["View", "조회", "عرض"],
   confirm_input: ["Confirm input data", "입력 데이터 확인", "تأكيد بيانات الإدخال"],
   view_cost: ["View cost", "원가 조회", "عرض التكلفة"],
@@ -231,11 +235,13 @@ const actions: Record<string, [string, string, string]> = {
   deliver: ["Deliver", "전달", "تسليم"],
 };
 const kinds: Record<string, [string, string, string]> = {
+ synthetic_pricing_policy: ["Synthetic pricing policy", "합성 시험용 가격 정책", "سياسة تسعير اصطناعية"],
   focus_data: ["Collected FOCUS data", "수집된 FOCUS 데이터", "بيانات FOCUS المجمّعة"],
   synthetic_input_evidence: ["Synthetic input evidence", "합성 입력 데이터 근거", "أدلة بيانات الإدخال الاصطناعية"],
   charge_candidate: ["Charge calculation candidates", "과금 계산 후보", "نتائج احتساب الرسوم المبدئية"],
 };
 const fields: Record<string, [string, string, string]> = {
+ pricing_policy_evidence: ["Pricing policy evidence", "가격 정책 근거", "أدلة سياسة التسعير"],
  input_review_evidence: ["Input comparison and reconciliation evidence", "입력 데이터 비교·대사 근거", "أدلة مقارنة بيانات الإدخال ومطابقتها"],
   rows: ["Rows", "행", "الصفوف"],
   charge_evidence: ["Source costs and calculation evidence", "원천 비용·계산 근거", "تكاليف المصدر وأدلة الاحتساب"],

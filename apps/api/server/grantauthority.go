@@ -9,6 +9,7 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
 )
 
 type serverGrantAuthority struct {
@@ -20,12 +21,17 @@ type serverGrantAuthority struct {
 }
 
 func newServerGrantAuthority(s *Server, limits inputauthority.Limits, domain grantAuthorityDomain) (*serverGrantAuthority, error) {
-	if s == nil || s.cfg.Seed != SeedSample || domain != inputGrantAuthority {
+	if s == nil || s.cfg.Seed != SeedSample || (domain != inputGrantAuthority && domain != pricingGrantAuthority) {
 		return nil, inputauthority.ErrInvalid
 	}
 	a := &serverGrantAuthority{s: s, domain: domain, bindings: make(map[string]inputauthority.Spec), ceilings: make(map[string]inputauthority.Spec)}
 	var err error
-	a.registry, err = inputauthority.NewRegistry(limits, a, a, a, s.clock)
+	switch domain {
+	case inputGrantAuthority:
+		a.registry, err = inputauthority.NewRegistry(limits, a, a, a, s.clock)
+	case pricingGrantAuthority:
+		a.registry, err = pricingauthority.NewRegistry(limits, a, a, a, s.clock)
+	}
 	if err != nil {
 		return nil, err
 	}

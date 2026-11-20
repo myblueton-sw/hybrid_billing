@@ -11,8 +11,9 @@ import (
 )
 
 type inputAuthorityCommand struct {
-	s    *Server
-	kind string
+	s      *Server
+	kind   string
+	domain grantAuthorityDomain
 }
 
 func (h inputAuthorityCommand) Resolve(workspace, target string) (commands.Target, commands.Resolution) {
@@ -54,7 +55,7 @@ func inputAuthorityFields(record inputauthority.Record) map[string]string {
 }
 
 func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
-	a := h.s.inputAuthority
+	a := h.s.grantAuthority(h.domain)
 	if a == nil {
 		return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
 	}
@@ -104,6 +105,21 @@ func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, er
 }
 
 func (s *Server) inputAuthorityDefinitions() []commands.Definition {
+	return s.grantAuthorityDefinitions(inputGrantAuthority)
+}
+func (s *Server) pricingAuthorityDefinitions() []commands.Definition {
+	return s.grantAuthorityDefinitions(pricingGrantAuthority)
+}
+func (s *Server) grantAuthorityDefinitions(domain grantAuthorityDomain) []commands.Definition {
+	prefix := ""
+	switch domain {
+	case inputGrantAuthority:
+		prefix = "input_authority"
+	case pricingGrantAuthority:
+		prefix = "pricing_authority"
+	default:
+		return nil
+	}
 	permission := commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}
 	times := []commands.Field{{Name: "capability", Type: commands.ID, Required: true}, {Name: "not_before", Type: commands.Text, Required: true}, {Name: "not_after", Type: commands.Text, Required: true}}
 	human := append(append([]commands.Field{}, times...), commands.Field{Name: "recipient", Type: commands.ID, Required: true}, commands.Field{Name: "ceiling", Type: commands.ID, Required: true})
@@ -120,7 +136,7 @@ func (s *Server) inputAuthorityDefinitions() []commands.Definition {
 		default:
 			fields = digest
 		}
-		definitions = append(definitions, commands.Definition{ID: "input_authority." + kind, Permission: permission, Mutating: kind != "inspect", Rationale: kind != "inspect", Fields: fields, Handler: inputAuthorityCommand{s: s, kind: kind}})
+		definitions = append(definitions, commands.Definition{ID: prefix + "." + kind, Permission: permission, Mutating: kind != "inspect", Rationale: kind != "inspect", Fields: fields, Handler: inputAuthorityCommand{s: s, kind: kind, domain: domain}})
 	}
 	return definitions
 }

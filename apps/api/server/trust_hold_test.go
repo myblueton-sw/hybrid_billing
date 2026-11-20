@@ -18,7 +18,7 @@ var holdAllowed = []string{"access.reject_request", "access.request_revoke", "ac
 	"identity.remove_membership", "identity.revoke_invitation", "identity.suspend_membership", "identity.suspend_user", "input.reject", "input_authority.reject", "input_authority.withdraw", "installation.withdraw",
 	"integrations.letter_withdraw_dismiss", "integrations.letter_withdraw_redeliver", "integrations.plugin_disable", "integrations.plugin_stop", "integrations.plugin_withdraw",
 	"integrations.subscription_pause", "integrations.subscription_revoke", "integrations.subscription_withdraw", "integrations.subscription_withdraw_resume",
-	"recovery.lock", "recovery.withdraw", "relationship.discard", "release_evidence.withdraw", "retention.place_hold", "retention.stop_run", "retention.withdraw",
+	"pricing_authority.reject", "pricing_authority.withdraw", "recovery.lock", "recovery.withdraw", "relationship.discard", "release_evidence.withdraw", "retention.place_hold", "retention.stop_run", "retention.withdraw",
 	"service.retire", "service.revoke_credential", "service.suspend", "view_group.discard_draft"}
 
 var holdConditional = []string{"access.approve_request", "identity.change_role", "identity.set_role_period"}
@@ -28,7 +28,7 @@ var holdRefused = []string{"access.request_grant", "contract.end", "contract.evi
 	"identity.reinstate_membership", "identity.reinstate_user", "input.confirm_publish", "input_authority.approve", "input_authority.propose_console", "input_authority.propose_human", "installation.approve", "installation.propose_plan", "integrations.letter_approve_dismiss",
 	"integrations.letter_approve_redeliver", "integrations.letter_request_dismiss", "integrations.letter_request_redeliver", "integrations.plugin_approve",
 	"integrations.plugin_propose", "integrations.redelivery_reapprove", "integrations.subscription_approve", "integrations.subscription_approve_resume",
-	"integrations.subscription_propose", "integrations.subscription_request_resume", "recovery.approve", "recovery.propose_unlock", "relationship.activate", "relationship.propose",
+	"integrations.subscription_propose", "integrations.subscription_request_resume", "pricing_authority.approve", "pricing_authority.propose_console", "pricing_authority.propose_human", "recovery.approve", "recovery.propose_unlock", "relationship.activate", "relationship.propose",
 	"release_evidence.approve", "release_evidence.retire_profile", "release_evidence.retire_requirement", "retention.approve", "retention.propose_policy",
 	"retention.propose_release", "service.create", "service.issue_credential", "service.reinstate", "trust.activate", "trust.approve", "trust.cancel", "trust.propose", "trust.reject", "trust.validate",
 	"view_group.draft", "view_group.edit", "view_group.propose"}
@@ -67,7 +67,7 @@ func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 			t.Errorf("%s rows\n%v\nwant\n%v", key, got, want)
 		}
 	}
-	if len(registered) != 95 || len(holdTable) != 95 {
+	if len(registered) != 100 || len(holdTable) != 100 {
 		t.Errorf("registered %d rows %d", len(registered), len(holdTable))
 	}
 	data, err := os.ReadFile("boundary.go")

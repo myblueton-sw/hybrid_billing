@@ -40,3 +40,13 @@ test("input confirmation permission impact has a localized label, count and rech
     assert.ok(!html.includes("input_authority_proposals"), l);
   }
 });
+
+test("pricing policy permission impact has a localized label, count and recheck meaning", () => {
+  const labels = { en: "Pricing policy permission requests", ko: "가격 정책 권한 요청", ar: "طلبات صلاحية سياسة التسعير" };
+  const withInput = { ...detail, impact: { ...detail.impact, pending: [{ store: "pricing_authority_proposals", count: 2, rechecked: true }] } };
+  for (const l of ["en", "ko", "ar"] as Locale[]) {
+    const html = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: withInput, targets: null }} onMore={() => {}} />);
+    assert.ok(html.includes(`<dt>${labels[l]}</dt><dd><span class="m01-line">2</span><span class="m01-line">${b.rechecked(l)}</span></dd>`), l);
+    assert.ok(!html.includes("pricing_authority_proposals"), l);
+  }
+});

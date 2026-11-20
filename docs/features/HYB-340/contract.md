@@ -30,7 +30,7 @@ B09 uses the request's confirmed historical policy revision. Superseded previous
 
 # Remaining W-23 integration
 
-Original-author v7 candidate subjects, fresh governed prerequisite validation, RequestApproval provisioning, actual human financial decisions and later ERP/issue/delivery/recognition integration remain separate planned work under HYB-340/HYB-225. This increment creates no new governance form or owner screen acceptance. Existing local service state is not upgraded or deployed by this contract.
+Authenticated candidate-backed requests, repeated prerequisite validation at decision/effect boundaries, RequestApproval provisioning, actual human financial decisions and later ERP/issue/delivery/recognition integration remain separate planned work under HYB-340/HYB-225. This increment creates no new governance form or owner screen acceptance. Existing local service state is not upgraded or deployed by this contract.
 
 # Governed amount-authority extension
 
@@ -57,3 +57,11 @@ M01 counts pending, applying and unknown financial_permission_proposals separate
 # Current pricing evidence prerequisite
 
 The internal pricingpolicy.CheckEvidence read validates a retained approved policy's exact scope/digest, requested interval, current target and monotonic clock. It returns a defensive record without granting UsePricingPolicy or any financial permission. The existing Resolve path shares these checks but retains mandatory actor and UseAction authorization first; capture still uses Resolve. No HTTP evidence route is added. The future financial-subject adapter must authorize its actual caller independently. This prerequisite creates no financial subject, request or decision and does not establish external input/source freshness by itself.
+
+# Candidate-backed subject preparation
+
+The internal financialSubjectLocked helper now derives an aggregate StageCharge subject from one retained v7 candidate. It verifies raw envelope SHA256, the separately retained input bytes, requested candidate digest/workspace, original CaptureAuthor and complete governed provenance. It rechecks current approved pricing evidence and current input publication/reconciliation, rebuilds the full normalized input from current source/mapping/target/attribution/lifecycle/rows without storing a candidate, and rerates through the existing exact composition boundary. Any input/result mismatch, held/excluded line or unsupported module numeric precision refuses. No rounding to fit the approval profile is permitted.
+
+The current financial policy must match an exact confirmed service-owned proposal and binding; demonstration policy alone is insufficient. Required digests are selected exactly: versioned hb_financial_evidence_v1 input, rule, mapping and attribution hashes; result is the verified full v7 candidate envelope digest. Required fx or erp_draft refuses until actual producers exist. Amount/currency come from the verified result, Author from immutable CaptureAuthor, and Entries is empty. Returned digest maps are defensive. Pure PrepareSubject validates module shape/precision without creating a request or reading its clock.
+
+The hb_financial_target_v1 identity binds workspace/customer/entity/contract/billing profile/provider/account/period/from/to and excludes candidate/request IDs, currency and producer revisions. Replacement candidates within this scope share a target. A different billing profile, provider/account or period is a different target: no cross-scope obligation deduplication is claimed. This internal preparation neither authenticates nor authorizes callers. Future HTTP request/decision transport must authorize the actual session before lookup, recheck all external evidence under the domain lock and only then call the approval module. RequestApproval provisioning and actual financial commands remain unimplemented.

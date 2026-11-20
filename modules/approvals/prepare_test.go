@@ -2,9 +2,36 @@ package approvals
 
 import (
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 )
+
+func TestPrepareSubjectIsPureExactAndDefensive(t *testing.T) {
+	r, _ := setup(t, 1)
+	before, calls := r.now, 0
+	r.clock = func() time.Time { calls++; return before }
+	count := len(r.workspaces["ws"].requests)
+	for _, amount := range []string{"0", "-15", "15", "1234.56789012"} {
+		input := subject("prepare", "target", amount)
+		got, err := r.PrepareSubject(input)
+		if err != nil || !reflect.DeepEqual(got, input) {
+			t.Fatal(got, err)
+		}
+		got.Digests["result"] = "changed"
+		if input.Digests["result"] == "changed" {
+			t.Fatal("aliased digests")
+		}
+	}
+	for _, amount := range []string{"1.123456789", "NaN", "1e3", "999999999999999999999999999999"} {
+		if _, err := r.PrepareSubject(subject("invalid", "target", amount)); !errors.Is(err, ErrInvalid) {
+			t.Fatal(amount, err)
+		}
+	}
+	if calls != 0 || r.now != before || len(r.workspaces["ws"].requests) != count {
+		t.Fatal("preparation mutated registry")
+	}
+}
 
 func TestPrepareAuthorityIsPureAndExact(t *testing.T) {
 	r, _ := setup(t, 1)

@@ -184,15 +184,7 @@ func (s *chargeCandidates) capture(in chargeInput) (chargeCandidate, error) {
 	if len(s.records) >= 1000 {
 		return chargeCandidate{}, errCandidateLimit
 	}
-	profile, err := decimal.NewProfile(copied.Profile)
-	if err != nil {
-		return chargeCandidate{}, err
-	}
-	compiled, err := rating.Compile(profile, copied.Limits, copied.Policy)
-	if err != nil {
-		return chargeCandidate{}, err
-	}
-	result, err := compiled.Rate(copied.Lines)
+	result, err := rateCandidateInput(copied)
 	if err != nil {
 		return chargeCandidate{}, err
 	}
@@ -218,6 +210,18 @@ func (s *chargeCandidates) capture(in chargeInput) (chargeCandidate, error) {
 	}
 	s.records[key] = record
 	return out, nil
+}
+
+func rateCandidateInput(in chargeInput) (rating.Result, error) {
+	profile, err := decimal.NewProfile(in.Profile)
+	if err != nil {
+		return rating.Result{}, err
+	}
+	compiled, err := rating.Compile(profile, in.Limits, in.Policy)
+	if err != nil {
+		return rating.Result{}, err
+	}
+	return compiled.Rate(in.Lines)
 }
 
 func (s *chargeCandidates) read(workspace, id string) (chargeCandidate, error) {

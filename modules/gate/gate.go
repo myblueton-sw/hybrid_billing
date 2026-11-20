@@ -85,6 +85,10 @@ func (g *Gate) Admit(answer Answer) Admission {
 	}
 }
 
+func (g *Gate) DescribesServiceTerms(terms Terms) bool {
+	return g.ready() && g.permissions.DescribesServiceTerms(terms)
+}
+
 func (g *Gate) Describes(action Action, kind string, fields []string) bool {
 	return g.ready() && g.permissions.Describes(action, kind, fields)
 }

@@ -20,6 +20,7 @@ type Registry struct {
 	installation string
 	workspaces   map[string]versioned[Workspace]
 	parties      map[scoped]versioned[Party]
+	partyIndex   map[string][]string
 	profiles     map[scoped]versioned[BillingProfile]
 	contracts    map[scoped][]ContractRevision
 }
@@ -32,6 +33,7 @@ func NewRegistry(installationID string) (*Registry, error) {
 		installation: installationID,
 		workspaces:   make(map[string]versioned[Workspace]),
 		parties:      make(map[scoped]versioned[Party]),
+		partyIndex:   make(map[string][]string),
 		profiles:     make(map[scoped]versioned[BillingProfile]),
 		contracts:    make(map[scoped][]ContractRevision),
 	}, nil
@@ -117,7 +119,7 @@ func (r *Registry) PutParty(party Party, expected uint64) (uint64, error) {
 			if err != nil {
 				return 0, err
 			}
-			r.parties[key] = versioned[Party]{party, version}
+			r.putParty(key, versioned[Party]{party, version})
 			return version, nil
 		}
 	}
@@ -147,7 +149,7 @@ func (r *Registry) PutParty(party Party, expected uint64) (uint64, error) {
 	if old.version != 0 && (old.value.Kind != party.Kind || old.value.ParentID != party.ParentID) {
 		return 0, ErrInvalid
 	}
-	r.parties[key] = versioned[Party]{party, version}
+	r.putParty(key, versioned[Party]{party, version})
 	return version, nil
 }
 

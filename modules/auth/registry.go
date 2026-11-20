@@ -212,6 +212,15 @@ func (r *Registry) validTerms(terms Terms) bool {
 	return r.validFields(terms.Action, terms.Fields)
 }
 
+func (r *Registry) DescribesServiceTerms(terms Terms) bool {
+	if r == nil {
+		return false
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.available && !humanOnly(terms.Action) && !InstallationAction(terms.Action) && r.validTerms(terms)
+}
+
 func (r *Registry) Describes(action Action, kind string, fields []string) bool {
 	if r == nil {
 		return false

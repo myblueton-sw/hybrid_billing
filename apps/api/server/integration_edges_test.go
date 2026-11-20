@@ -428,6 +428,56 @@ func receiverName(fn *ast.FuncDecl) string {
 	return ""
 }
 
+func sourceIntakePublication(filename string, fn *ast.FuncDecl, sel *ast.SelectorExpr) bool {
+	if filename != "candidatesourceflow.go" || fn.Name.Name != "assembleSourceLocked" || sel.Sel.Name != "Publish" || fn.Recv == nil || len(fn.Recv.List) != 1 || len(fn.Recv.List[0].Names) != 1 {
+		return false
+	}
+	pointer, ok := fn.Recv.List[0].Type.(*ast.StarExpr)
+	if !ok {
+		return false
+	}
+	typeName, ok := pointer.X.(*ast.Ident)
+	if !ok || typeName.Name != "normalizedCharges" {
+		return false
+	}
+	owner, ok := sel.X.(*ast.SelectorExpr)
+	if !ok || owner.Sel.Name != "intake" {
+		return false
+	}
+	base, ok := owner.X.(*ast.Ident)
+	return ok && base.Name == fn.Recv.List[0].Names[0].Name
+}
+
+func TestSourceIntakePublicationExceptionIsExact(t *testing.T) {
+	for _, tc := range []struct {
+		name, file, receiver, function, expression string
+		want                                       bool
+	}{
+		{"actual", "candidatesourceflow.go", "p *normalizedCharges", "assembleSourceLocked", "p.intake.Publish", true},
+		{"renamed", "candidatesourceflow.go", "producer *normalizedCharges", "assembleSourceLocked", "producer.intake.Publish", true},
+		{"file", "other.go", "p *normalizedCharges", "assembleSourceLocked", "p.intake.Publish", false},
+		{"function", "candidatesourceflow.go", "p *normalizedCharges", "other", "p.intake.Publish", false},
+		{"type", "candidatesourceflow.go", "p *Server", "assembleSourceLocked", "p.intake.Publish", false},
+		{"value", "candidatesourceflow.go", "p normalizedCharges", "assembleSourceLocked", "p.intake.Publish", false},
+		{"identifier", "candidatesourceflow.go", "p *normalizedCharges", "assembleSourceLocked", "other.intake.Publish", false},
+		{"registry", "candidatesourceflow.go", "p *normalizedCharges", "assembleSourceLocked", "p.events.Publish", false},
+		{"deeper", "candidatesourceflow.go", "p *normalizedCharges", "assembleSourceLocked", "p.other.intake.Publish", false},
+		{"method", "candidatesourceflow.go", "p *normalizedCharges", "assembleSourceLocked", "p.intake.Confirm", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			file, err := parser.ParseFile(token.NewFileSet(), tc.file, "package server; func ("+tc.receiver+") "+tc.function+"() { _ = "+tc.expression+" }", 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			fn := file.Decls[0].(*ast.FuncDecl)
+			sel := fn.Body.List[0].(*ast.AssignStmt).Rhs[0].(*ast.SelectorExpr)
+			if got := sourceIntakePublication(tc.file, fn, sel); got != tc.want {
+				t.Fatal("restricted selector exception", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestIntegrationActorsAndEffectsAreConfined(t *testing.T) {
 	restricted := map[string]bool{"Dispatch": true, "Confirm": true, "Redirect": true, "IssueToken": true, "CheckToken": true, "CheckEndpoint": true, "CheckEgress": true,
 		"ProposeKey": true, "ApproveKey": true, "RetireKey": true, "Publish": true, "Report": true}
@@ -456,7 +506,7 @@ func TestIntegrationActorsAndEffectsAreConfined(t *testing.T) {
 				}
 				owner, _ := sel.X.(*ast.SelectorExpr)
 				approvalSeed := src.name == "approvalseed.go" && fn.Name.Name == "seedApprovals" && name == "Confirm" && owner != nil && owner.Sel.Name == "approvals"
-				if restricted[name] && !approvalSeed && fn.Name.Name != "seedIntegrations" && !(name == "Publish" && fn.Name.Name == "publishTrust") &&
+				if restricted[name] && !approvalSeed && !sourceIntakePublication(src.name, fn, sel) && fn.Name.Name != "seedIntegrations" && !(name == "Publish" && fn.Name.Name == "publishTrust") &&
 					!(name == "Dispatch" && fn.Name.Name == "dispatchDeliveries") {
 					owner, _ := sel.X.(*ast.SelectorExpr)
 					if name != "Report" || owner == nil || owner.Sel.Name != "installer" && !(owner.Sel.Name == "recovery" && fn.Name.Name == "seedRecovery") &&

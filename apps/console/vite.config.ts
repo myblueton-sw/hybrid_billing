@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { licenseNotices } from "./license-notices";
 import { proxyFor } from "./proxy-config";
 import { previewLogin, requireLocalPreviewHost } from "./local-preview-config.ts";
 const root = fileURLToPath(new URL(".", import.meta.url));
@@ -31,6 +32,7 @@ const inputs = [
   resolve(root, "index.html"),
   resolve(root, "vite.config.ts"),
   resolve(root, "proxy-config.ts"),
+  resolve(root, "license-notices.ts"),
   resolve(root, "local-preview-config.ts"),
 ].sort();
 const revision = hash(
@@ -42,15 +44,6 @@ const revision = hash(
     .join("\n"),
 );
 const proxy = proxyFor(process.env.HB_GATED === "1");
-const licensePackages = [
-  "react",
-  "react-dom",
-  "scheduler",
-  "@fontsource/ibm-plex-sans",
-  "@fontsource/ibm-plex-sans-kr",
-  "@fontsource/ibm-plex-sans-arabic",
-  "@fontsource/ibm-plex-mono",
-];
 export default defineConfig(({ command, isPreview }) => {
   const login = previewLogin(command, isPreview, process.env);
   return {
@@ -65,21 +58,10 @@ export default defineConfig(({ command, isPreview }) => {
     assetsInlineLimit: 0,
   },
   plugins: [
+    licenseNotices(root),
     { name: "local-preview-boundary", configResolved(config) { requireLocalPreviewHost(config.server.host, login); } },
     {
       name: "provenance-and-notices",
-      generateBundle() {
-        for (const name of licensePackages) {
-          this.emitFile({
-            type: "asset",
-            fileName: `licenses/${name.replaceAll("/", "-")}.txt`,
-            source: readFileSync(
-              resolve(root, "node_modules", name, "LICENSE"),
-              "utf8",
-            ),
-          });
-        }
-      },
       closeBundle() {
         const output = resolve(root, "dist");
         writeFileSync(

@@ -452,3 +452,9 @@ func TestMatchingSettingFlags(t *testing.T) {
 		}
 	}
 }
+
+func TestLicenseInstallationFlagRejectsInvalidBinding(t *testing.T) {
+	if err := run([]string{"-license-installation", "bad/path"}, nil); !errors.Is(err, server.ErrConfig) {
+		t.Fatalf("invalid binding: %v", err)
+	}
+}

@@ -38,7 +38,7 @@ func (s *Server) Document() ([]byte, error) {
 		}
 	}
 	doc["x-reads"] = map[string]any{"/identity/users": usersReadPath(), "/identity/users/count": usersCountPath(), "/identity/bulk-revocations": bulkReadsPath(),
-		"/identity/services": servicesReadPath(), "/integrations": integrationsReadPath()}
+		"/identity/services": servicesReadPath(), "/integrations": integrationsReadPath(), "/licenses": licensesReadPath(), "/licenses/keys/{key}": licenseTrustReadPath("key"), "/licenses/key-changes/{number}": licenseTrustReadPath("number")}
 	doc["x-self"] = selfPaths()
 	return json.MarshalIndent(doc, "", "  ")
 }
@@ -160,4 +160,12 @@ func servicesReadPath() map[string]any {
 		"services": map[string]any{"type": "integer"}, "replay_seconds": map[string]any{"type": "integer", "x-meaning": "how long a command's idempotency key replays its stored outcome"}}}
 	return map[string]any{"get": map[string]any{"operationId": "identity.services", "x-credential": credential, "x-limits": limits,
 		"x-never": "the secret and its pickup reference are never part of this read"}}
+}
+
+func licensesReadPath() map[string]any {
+	return map[string]any{"get": map[string]any{"operationId": "licenses.read", "x-admission": []string{string(gate.AdministerInstallation)}, "x-state": []string{"not_configured", "uninitialized", "configured"}, "x-time-authority": "configured indicates an injected provider, not successful verification; status.reason reports uncertainty", "responses": map[string]any{"200": map[string]any{"description": "revision, observed_at, state; configured installation/product and time_authority; status only after durable read commit"}, "401": readError(commands.Unauthenticated), "403": readCodes(readError(commands.PermissionDenied), CodeCSRF, string(commands.PermissionDenied)), "422": readError(commands.InvalidRequest), "503": readCodes(readError(commands.DependencyUnavailable), string(commands.AuthorityUnavailable), string(commands.DependencyUnavailable))}}}
+}
+
+func licenseTrustReadPath(parameter string) map[string]any {
+	return map[string]any{"get": map[string]any{"operationId": "licenses.trust." + parameter, "x-admission": []string{string(gate.AdministerInstallation)}, "parameters": []any{map[string]any{"name": parameter, "in": "path", "required": true, "schema": map[string]any{"type": "string"}}}, "x-number": "canonical positive uint64 string; no leading zero", "x-boundary": "known-ID lookup only; fingerprint is SHA-256 of decoded Ed25519 public key; proof of possession does not establish legal issuer authority", "responses": map[string]any{"200": map[string]any{"description": "state not_configured/uninitialized/not_found, or configured with revision and explicit record; no private key or raw proof"}, "401": readError(commands.Unauthenticated), "403": readCodes(readError(commands.PermissionDenied), CodeCSRF, string(commands.PermissionDenied)), "422": readError(commands.InvalidRequest), "503": readCodes(readError(commands.DependencyUnavailable), string(commands.AuthorityUnavailable), string(commands.DependencyUnavailable))}}}
 }

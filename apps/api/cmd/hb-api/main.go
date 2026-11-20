@@ -32,6 +32,7 @@ func run(args []string, stop <-chan os.Signal) error {
 	fs := flag.NewFlagSet("hb-api", flag.ContinueOnError)
 	listen := fs.String("listen", "127.0.0.1:8820", "loopback address")
 	data := fs.String("data", ".hb-api", "data directory")
+	licenseInstallation := fs.String("license-installation", "", "stable product installation identifier; initialization requires an authenticated administrator; no time authority is configured by this flag")
 	seed := fs.String("seed", server.SeedSample, "sample or none")
 	var list, readers origins
 	fs.Var(&list, "console-origin", "allowed console origin")
@@ -60,7 +61,7 @@ func run(args []string, stop <-chan os.Signal) error {
 			routes[path] = target
 		}
 	}
-	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log, Readers: routes, Access: *access, Org: *org, Plugins: *licenses})
+	s, err := server.New(server.Config{Origins: list, Data: *data, Seed: *seed, Log: log, Readers: routes, Access: *access, Org: *org, Plugins: *licenses, License: server.LicenseSettings{Installation: *licenseInstallation}})
 	if err != nil {
 		return err
 	}

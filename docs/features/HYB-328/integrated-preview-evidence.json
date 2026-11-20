@@ -1,0 +1,61 @@
+{
+  "row_count": 1121,
+  "authorized_rows": 1121,
+  "providers": [
+    "AWS",
+    "Alibaba Cloud",
+    "Google Cloud",
+    "Microsoft",
+    "Oracle",
+    "VMware"
+  ],
+  "provenance": {
+    "official-public": 1000,
+    "official-public-subset": 115,
+    "synthetic-contract-fixture": 6
+  },
+  "amounts": [
+    {
+      "currency": "CNY",
+      "rows": 2,
+      "billed_cost": {
+        "coefficient": "11000000000000000000",
+        "present": 2,
+        "missing": 0
+      },
+      "effective_cost": {
+        "coefficient": "11000000000000000000",
+        "present": 2,
+        "missing": 0
+      }
+    },
+    {
+      "currency": "USD",
+      "rows": 1119,
+      "billed_cost": {
+        "coefficient": "27378752728990000000",
+        "present": 1119,
+        "missing": 0
+      },
+      "effective_cost": {
+        "coefficient": "18726514185860000000",
+        "present": 1119,
+        "missing": 0
+      }
+    }
+  ],
+  "periods": [
+    "2024-03",
+    "2024-09",
+    "2024-10"
+  ],
+  "financial_authority": false,
+  "unauthenticated": 401,
+  "direct_reader": 403,
+  "errors": [],
+  "browser": "153.0.8010.12",
+  "routes": [
+    "home",
+    "source-data"
+  ]
+}

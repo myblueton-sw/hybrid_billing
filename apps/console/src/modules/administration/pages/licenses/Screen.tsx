@@ -108,9 +108,9 @@ export default function Licenses(p: Props) {
         >
           <p>
             {t(l, [
-              "유효·예정·유예·만료·검증실패는 각각 다른 상태입니다. 권리 만료에 따른 신규 운영 제한과 보관 중인 문서·감사·반출 접근은 별도 계약으로 다룹니다.",
-              "Valid, scheduled, grace, expired and verification failed are distinct states. New-operation restrictions and access to retained documents, audit and exports have separate contracts.",
-              "الساري والمجدول وفترة السماح والمنتهي وفشل التحقق حالات منفصلة. تخضع قيود العمليات الجديدة والوصول إلى المستندات المحفوظة والتدقيق والتصدير لعقود مستقلة.",
+              "만료와 검증 불가는 다른 상태입니다. 만료 경고는 작업을 차단하지 않으며, 기존 권한에 따른 문서·감사·반출 접근을 유지합니다. 계속 사용할 수 있어도 상업적 사용 권리가 연장되는 것은 아닙니다.",
+              "Expiry and inability to verify are distinct states. Expiry warnings do not block workflows or access to documents, audit and exports under existing permissions. Continued technical access does not extend commercial-use rights.",
+              "انتهاء الصلاحية وتعذّر التحقق حالتان مختلفتان. لا تمنع تحذيرات انتهاء الصلاحية سير العمل أو الوصول إلى المستندات والتدقيق والتصدير ضمن الصلاحيات القائمة. استمرار الوصول التقني لا يمدّد حقوق الاستخدام التجاري.",
             ])}
           </p>
         </Panel>

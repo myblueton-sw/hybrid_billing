@@ -173,3 +173,7 @@ The [action draft record](m04-action-draft.md) resolves the separate reproduced 
 # Execution-time dependency refusal and staged create conflict
 
 [Command dependency verification](m04-command-dependency-contracts.md) preserves genuine populated service resources across two execution dependency refusals and one staged public-module insertion conflict. Three semantic mutations were assertion-killed/restored; independent actual-source review passed. Full server short passed195.198s at native99.7%,11,779 weighted statements/30 uncovered; five race groups, vet and Linux/Windows compilation passed. Bounded aggregate review remains PASS; required100%, authorized merge/read-back and parent M03/M02 remain open.
+
+# Activation with incomplete integration rollback
+
+[Activation rollback verification](m04-activation-rollback-contracts.md) uses actual HTTP redemption/password sign-in and exact public grant/rights observations. Eight Console grants and four subject grants remain open; channels/events stay withheld. Token reuse preserves the single registered user. Two business-state mutants were assertion-killed/restored; independent source review passed. Full server short passed193.884s at native99.8%,11,779 weighted statements/29 uncovered; four race groups, vet and Linux/Windows compilation passed. Required100%, authorized merge/read-back and parent M03/M02 remain open; bounded aggregate review remains PASS.

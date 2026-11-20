@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "a564e41ee701365f6278389e2283de118d87da4c",
+  "scope": "actual_http_activation_with_incomplete_integration_grant_rollback",
+  "production_unchanged": true,
+  "checks": {
+    "initial": "PASS1.024s",
+    "focused": "PASS0.566s separate native profile",
+    "full_server_short": "ok  \tgithub.com/myblueton-sw/hybrid_billing/apps/api/server\t193.884s\tcoverage: 99.8% of statements",
+    "coverage": {
+      "matching_production_sources": 107,
+      "weighted_statements": 11779,
+      "uncovered": 29,
+      "previous_uncovered": 30,
+      "newly_covered_blocks": [
+        {
+          "location": "github.com/myblueton-sw/hybrid_billing/apps/api/server/signin.go:525.109,527.3",
+          "weighted_statements": 1,
+          "also_hit_by_focused_contract": true
+        }
+      ],
+      "newly_covered_weighted_statements": 1,
+      "no_profile_union": true
+    },
+    "race": "PASS4groups4.873s",
+    "vet": "PASS server",
+    "portable_compilation": "PASS Linux/Windows amd64; no foreign execution",
+    "mutations": "2 business-state assertions killed; exact restoration/private cache removed",
+    "docs": "two status checks plus manual metadata/local links PASS; limited scope",
+    "required100": "NOT_MET",
+    "all_packages_frontend_browser": "NOT_RERUN historical source-bound evidence unchanged"
+  },
+  "independent_source_review": "/root/hyb310_review PASS actual HTTP/grants/rights/token/sign-in/cleanup contract; no test execution",
+  "limits": [
+    "Rollback failure intentionally leaves four subject grants; no claim of atomic rollback",
+    "Business-state mutants do not prove necessity of log-only errRollback branch",
+    "Actual HTTP password sign-in used; no direct-open session substituted",
+    "No product changes/private map fabrication/new hooks/coverage waiver",
+    "Merge/read-back and parent M03/M02 remain pending"
+  ],
+  "source_files": [
+    {
+      "path": "apps/api/server/integration_activation_rollback_test.go",
+      "sha256": "930e69a9b86c88a8dee335fdf4f5b70badc3f3f37ad0ae03d7f46ddc4d31e7f8",
+      "bytes": 4515
+    },
+    {
+      "path": "apps/api/server/integrationrights.go",
+      "sha256": "76cbf68ccb88329ac6003cf823717ce5486860fb78a2d0e449ebaf7451fece8d",
+      "bytes": 12279
+    },
+    {
+      "path": "apps/api/server/signin.go",
+      "sha256": "9c36cb49b888cbba62ad60def7474b42e87e5810a77e5c5fc5e89dd8c416f62b",
+      "bytes": 15175
+    },
+    {
+      "path": "modules/auth/types.go",
+      "sha256": "eaeb0426c98a0ee7b830825d530b9219af6d85be6bfe2ba9d7327388ecd477e0",
+      "bytes": 8894
+    },
+    {
+      "path": "docs/features/HYB-304/m04-activation-rollback-contracts.md",
+      "sha256": "4ee1af2748ca98e20a1b07c70232763ef4780386e6c987b19626e00d56873c8c",
+      "bytes": 3793
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "5f3bfd0ded952c6645af32520668943e42c5b481ca70b5c26a3685b1d2be1af7",
+      "bytes": 42974
+    },
+    {
+      "path": "docs/features/HYB-304/m04-completion.md",
+      "sha256": "77e6f3d87cad1d9c1fd9da551f93edb06129c1a12b3ffa4a968c70573bb7c9e1",
+      "bytes": 18314
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "442522ce87fb28aff8385a46dbf1d584a76a77a2c04f810d72368c74822fd2af",
+      "bytes": 60380
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-activation-rollback-coverage-summary.json",
+      "sha256": "d7e77e0d4e5f6df197e1f6d4e1d874bb4bb5d4f30a902b27656354f7cb8c9728",
+      "bytes": 410
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-evidence.py",
+      "sha256": "9f7d2717c1be14579d86c9f0ade8208a7d1a9cf4c48fd906ad733e91e1588bbe",
+      "bytes": 7874
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-first.log",
+      "sha256": "e431ff5bede6ad127fc825c8c8b6c0b4c2339aebd5f9299bf0860c39c6d228b0",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-focused.cover",
+      "sha256": "8aa72fc496d8cc9f1bf896adb433d5a89ea83cf06c598e944d574a4b8f9aaa0d",
+      "bytes": 684312
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-focused.log",
+      "sha256": "dcb9208f7a820b6c61be9efb3ba4ef28732842f588354c01198b720f033a60dd",
+      "bytes": 96
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-linux-amd64.test",
+      "sha256": "d7a6351c5e26ea062a69a5a922049b47a10094d5008ff73c8eb75b5934d0938e",
+      "bytes": 28248294
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-linux-format.log",
+      "sha256": "2a40000ce7ab52bc82e3f28063921f19b510baa2856430e002685b97d3c2b9e7",
+      "bytes": 215
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-mutant-bootstrap-remains-live.log",
+      "sha256": "fad35f0410ee42cb8070e656a23149a7d5f4f173c668861f3454a89249ec9405",
+      "bytes": 283
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-mutant-rollback-ignores-fault.log",
+      "sha256": "afa8cdf69b5b84d3e97838c5cf1aa03546f57c36bb3edc9c1b5d8f6bd9b91d7c",
+      "bytes": 277
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-mutants.json",
+      "sha256": "3dc7e9ef6651a051b45ccb594de0e00c9d288c9aab30b64b792178992ec9d4e3",
+      "bytes": 936
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-mutants.log",
+      "sha256": "6503cdf155c0a672042fb6522966581e66776d9a0ab1606aa9efadb2e20673a8",
+      "bytes": 60
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-mutants.py",
+      "sha256": "32ca7bd566729603d59386ce25542bf2a1a11354010b9626dbb6b073f161b641",
+      "bytes": 2038
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-okf.log",
+      "sha256": "2285ed41ada5055b456cfa30e57894e4315e014e5b8abf9f51f90bc05ec53756",
+      "bytes": 376
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-race.log",
+      "sha256": "231feae289d9fc11d31b6be5f2661f54d1b4229d20aa8b21ff38ba3960d37d3b",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-server.cover",
+      "sha256": "ebf4d96ea92fbe014c5fdc5197dd1ae080105a7d17ee1caf52a53643290e7289",
+      "bytes": 684312
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-server.log",
+      "sha256": "212d382413cdc316d63e38ca28328c775fb6e85af058302ff22d17a10614cb2a",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-source-binding.json",
+      "sha256": "c2c0bbca206999c9aad480b7c99147c6470605e2f0a04e9e51aa27292da3de47",
+      "bytes": 14629
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-source-checks.log",
+      "sha256": "9feef2f9a85153d750e05d6a1f0741b8a14e228c89a6b499b6ec2e579e88c6ec",
+      "bytes": 139
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-windows-amd64.test.exe",
+      "sha256": "033693f068cfe9501bf9938c7763f30a87b37360e605236ccedb1c06f8dc1c57",
+      "bytes": 28590592
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-windows-format.log",
+      "sha256": "205d142bedd99e034a140e6ba8b1fa36e928e30f9ededeafb69fdd10ff94edd0",
+      "bytes": 113
+    },
+    {
+      "path": "/private/tmp/hb304-activation-rollback-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "independent_evidence_review": "/root/hyb310_copy_render PASS8source/23artifact/107production bindings, one native focused-proven logging unit, business-state mutant restores and HTTP/rights evidence limits; no tests/services; no feature/merge approval"
+}

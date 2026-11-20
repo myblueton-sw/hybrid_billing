@@ -3,6 +3,8 @@ import { createRequire } from "node:module";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import { actionCompletion } from "./m04-completion-actions.mjs";
+import { navigationCompletion } from "./m04-completion-navigation.mjs";
+import { declarationCompletion } from "./m04-completion-declarations.mjs";
 
 const args = Object.fromEntries(
   process.argv
@@ -16,6 +18,10 @@ const args = Object.fromEntries(
 assert.ok(
   args.url && args.activation,
   "Provide owned sample --url and --activation",
+);
+const group = args.group || "actions";
+assert.ok(
+  ["actions", "navigation", "declaration", "remaining"].includes(group),
 );
 const base = args.url.replace(/\/?$/, "/");
 assert.ok(["127.0.0.1", "localhost", "[::1]"].includes(new URL(base).hostname));
@@ -57,6 +63,34 @@ async function read(path) {
   });
   assert.equal(response.status(), 200, "actual canonical read failed: " + path);
   return response.json();
+}
+async function command(id, target, body) {
+  const request = requestId();
+  const revision = (await read("/identity/services?limit=1")).revision;
+  const response = await context.request.post(base + "api/v1/commands/" + id, {
+    headers: {
+      "X-CSRF-Token": csrf,
+      "X-Request-Id": request,
+      Origin: new URL(base).origin,
+    },
+    data: {
+      request_id: request,
+      target_id: target,
+      idempotency_key: requestId(),
+      expected_revision: revision,
+      rationale: "Synthetic bounded navigation fixture setup",
+      body,
+    },
+  });
+  assert.equal(
+    response.status(),
+    200,
+    "Accepted synthetic setup command: " + id,
+  );
+  const result = await response.json();
+  if (result.fields?.secret_ref) redactions.add(result.fields.secret_ref);
+  assert.equal(result.status, "completed");
+  return result;
 }
 async function navigate(view, extra = {}, locale = "en") {
   await page.evaluate(
@@ -220,12 +254,15 @@ try {
   await page.locator("#signin-password").fill(password);
   await page.locator("form button[type=submit]").click();
   await page.locator(".service-session").waitFor();
+  for (const cookie of await context.cookies(base))
+    redactions.add(cookie.value);
   const sessionResponse = await context.request.get(base + "api/v1/session", {
     headers: { "X-HB-Client": "console" },
   });
   assert.equal(sessionResponse.status(), 200, "Actual current session read");
   const currentSession = await sessionResponse.json();
   csrf = currentSession.csrf_token;
+  redactions.add(csrf);
   owner ||= currentSession.user;
   assert.equal(currentSession.workspace, workspace);
   assert.ok(csrf);
@@ -234,7 +271,7 @@ try {
   );
   const service = await create("primary");
   const credential = await issue(service);
-  await actionCompletion({
+  const helpers = {
     page,
     context,
     base,
@@ -245,7 +282,37 @@ try {
     read,
     capture,
     scenario,
-  });
+    command,
+    workspace,
+  };
+  if (group === "actions") await actionCompletion(helpers);
+  else {
+    for (let i = 1; i < 27; i++) {
+      const result = await command("service.issue_credential", service, {
+        days: "1",
+      });
+      assert.equal(result.business_state, "credential_issued");
+    }
+    const initial = await read("/identity/services/" + service);
+    for (let version = 1; version < 11; version++) {
+      const result = await command("service.declare", service, {
+        purpose: "Synthetic retained declaration " + (version + 1),
+        organization: initial.row.declaration.organization,
+        catalog_version: initial.catalog_version,
+        scopes: JSON.stringify(initial.row.declaration.scopes),
+        declaration_version: String(version),
+      });
+      assert.equal(result.business_state, "service_declared");
+      assert.equal(result.fields.declaration_version, String(version + 1));
+    }
+    const populated = await read(
+      "/identity/service-credentials?service=" + service + "&limit=100",
+    );
+    assert.equal(populated.count.value, "27");
+    assert.equal(populated.rows.length, 27);
+    if (group !== "declaration") await navigationCompletion(helpers);
+    if (group !== "navigation") await declarationCompletion(helpers);
+  }
   assert.deepEqual(errors, []);
 } catch (error) {
   console.log("FAIL " + safe(error.message));

@@ -17,7 +17,7 @@ func assertServiceQueryFailurePayload(t testing.TB, got reply, status int, code 
 	if got.status != status || got.body["code"] != string(code) {
 		t.Fatal("query refusal classification", got.status, got.body["code"])
 	}
-	for _, key := range []string{"row", "rows", "count", "admission", "query", "next", "settings", "limits", "reference_at", "observed_at", "catalog_version", "availability", "revision", "order", "scanned", "scan_stopped", "search_input", "eligibility", "workspace"} {
+	for _, key := range []string{"row", "rows", "count", "admission", "query", "next", "settings", "limits", "reference_at", "observed_at", "catalog_version", "availability", "revision", "order", "scanned", "work_units", "scan_stopped", "search_input", "eligibility", "workspace"} {
 		if _, found := got.body[key]; found {
 			t.Fatal("query refusal published partial metadata", key)
 		}

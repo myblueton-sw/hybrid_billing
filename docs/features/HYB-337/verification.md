@@ -81,18 +81,18 @@ Root stopped this branch's unchanged full race run after noninvasive sampling id
 
 This branch now includes HYB-225 and the independently reviewed HYB-338/HYB-339 dependencies. Both read registries and seed steps remain separate. The combined seed baseline is 23. Candidate data retains Cost/ViewCost; approval records retain General/View. Four explicit user/client revocation combinations deny only the removed capability. Both endpoints retain separate seed-none tests, and no candidate-to-approval binding or financial command was added.
 
-Independent corrective source/TW review by refusal_review passed. The reviewer inspected source, not executed tests; suggested detail-endpoint and lock-ownership test strengthening remains a follow-up. Three M03 capabilities have localized labels and exact read phrases, also consumed by P02. Human native-language acceptance remains unverified.
+Independent corrective source/TW review by refusal_review passed. The reviewer inspected source, not executed tests; the suggested detail-endpoint and lock-ownership test strengthening was subsequently implemented and its focused race check passed in 2.359 seconds (/private/tmp/hyb337-composed-separation-final.log). Three M03 capabilities have localized labels and exact read phrases, also consumed by P02. Human native-language acceptance remains unverified.
 
 | Composed check | Actual outcome |
 | --- | --- |
 | Focused approval/candidate/access/integration/source/seed/replay race checks | PASS, 21.719 seconds, /private/tmp/hyb337-composed-focused-3.log |
 | Full frontend suite | 916 PASS, /private/tmp/hyb337-composed-console.log |
 | Console build | PASS, existing bundle warning, /private/tmp/hyb337-composed-build.log |
-| Full race suite | RUNNING, /private/tmp/hyb337-composed-race-full.log; not yet accepted |
+| Full race suite | RUNNING on production/test snapshot committed as 11cfd10, /private/tmp/hyb337-composed-race-full.log; not yet accepted |
 | Three-capability rendered matrix | PASS, 18 route cases plus selected forms, /private/tmp/hyb337-composed-renders/evidence.json |
-| Three exact request payloads and pending locks | PASS, /private/tmp/hyb337-composed-interactions/evidence.json; injected503 before backend writes |
+| Three exact request payloads and pending locks | PASS, /private/tmp/hyb337-composed-interactions/evidence.json; injected 503 before backend writes |
 | Reorder/removal/expiry/ceiling/error-link states | PASS, controlled response fixtures, /private/tmp/hyb337-composed-state/evidence.json |
-| Composed B09 rendered matrix | PASS, nine route cases and36 images, /private/tmp/hyb337-composed-b09-renders/evidence.json |
+| Composed B09 rendered matrix | PASS, nine route cases and 36 images, /private/tmp/hyb337-composed-b09-renders/evidence.json |
 | Actual Claude M03/P02 visual re-review | Scoped PASS on six named images, /private/tmp/hyb337-composed-visual-review.txt |
 | Actual Claude B09 composed re-review | Scoped PASS on five named images, /private/tmp/hyb337-composed-b09-visual-review.txt |
 
@@ -102,3 +102,8 @@ The initial composed focused run failed on the inherited 22-step expectation; th
 The Claude review did not inspect all captures, computed CSS or browser behavior. Its Arabic mobile P02 screenshot began partway through the approval card; that specific card wording is outside the six-image visual PASS. Automated body-label assertions cover localized availability, not that cropped card's visual placement. Root inspected the Arabic mobile selected approval form and the composed Arabic desktop B09 blocker capture. Current unknown prerequisite/read-only semantics remain visible. No native-language, assistive-technology or owner acceptance is claimed.
 
 During local rebase conflict resolution, an overbroad conflict-marker expression briefly truncated four files. Formatting rejected the result. Root reconstructed those files directly from the three Git revisions with bounded markers before running the focused checks above. No malformed tree was pushed or treated as verified; the final ticket commit is assembled from the corrected composition.
+
+
+After that full-run binary was compiled, only the grant-separation test was strengthened to acquire the domain lock for revocation and assert candidate detail as well as list reads. Production source is unchanged. Its focused rerun passed separately in 2.359 seconds; the full original run remains pending. Draft [PR249](https://github.com/myblueton-sw/hybrid_billing/pull/249) is based on HYB-225; no merge or completed ticket is claimed.
+
+Independent final corrective review by refusal_review inspected the test diff, verification record and focused log and returned narrow PASS. It executed no tests and inspected no images in that review. Full regression remains pending.

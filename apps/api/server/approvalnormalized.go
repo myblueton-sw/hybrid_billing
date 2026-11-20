@@ -78,6 +78,7 @@ type normalizedOrigin struct {
 type normalizedCharges struct {
 	intake          *intake.Registry
 	sourceProfile   decimal.Profile
+	profileSpec     decimal.ProfileSpec
 	sourceChunk     int
 	sources         map[[2]string]*sourceAssembly
 	sourceArtifacts map[[2]string][2]string
@@ -90,9 +91,13 @@ type normalizedCharges struct {
 	candidates      chargeCandidates
 }
 
-func newNormalizedCharges(orgs *organizations.Registry, lifecycles *contracts.Registry, domain *sync.RWMutex, limits normalize.Limits, profile decimal.Profile, target normalize.Target, clock func() time.Time) (*normalizedCharges, error) {
+func newNormalizedCharges(orgs *organizations.Registry, lifecycles *contracts.Registry, domain *sync.RWMutex, limits normalize.Limits, spec decimal.ProfileSpec, target normalize.Target, clock func() time.Time) (*normalizedCharges, error) {
 	if orgs == nil || lifecycles == nil || domain == nil {
 		return nil, errCandidateInvalid
+	}
+	profile, err := decimal.NewProfile(spec)
+	if err != nil {
+		return nil, err
 	}
 	normal, err := normalize.NewRegistry(limits, profile, clock)
 	if err != nil {
@@ -110,7 +115,7 @@ func newNormalizedCharges(orgs *organizations.Registry, lifecycles *contracts.Re
 	if err != nil {
 		return nil, err
 	}
-	return &normalizedCharges{normal: normal, orgs: orgs, lifecycles: lifecycles, domain: domain, target: target, page: page, intake: inputs, sourceProfile: profile, sourceChunk: limits.ChunkRows, sources: make(map[[2]string]*sourceAssembly), sourceArtifacts: make(map[[2]string][2]string)}, nil
+	return &normalizedCharges{normal: normal, orgs: orgs, lifecycles: lifecycles, domain: domain, target: target, page: page, intake: inputs, sourceProfile: profile, profileSpec: spec, sourceChunk: limits.ChunkRows, sources: make(map[[2]string]*sourceAssembly), sourceArtifacts: make(map[[2]string][2]string)}, nil
 }
 
 func normalizedDigest(value any) (string, error) {

@@ -18,10 +18,6 @@ func candidateProfile() decimal.ProfileSpec {
 }
 
 func (s *Server) newChargeProducer() (*normalizedCharges, error) {
-	profile, err := decimal.NewProfile(candidateProfile())
-	if err != nil {
-		return nil, err
-	}
 	target := normalize.Target{ID: "synthetic-charge-target", CostCurrency: "currency", PeriodStart: "start", PeriodEnd: "end", Fields: []normalize.Field{
 		{Name: "billed", Kind: normalize.Cost, Cost: normalize.Billed, Format: true, Billing: true},
 		{Name: "currency", Kind: normalize.Currency, Format: true, Billing: true},
@@ -29,7 +25,7 @@ func (s *Server) newChargeProducer() (*normalizedCharges, error) {
 		{Name: "class", Kind: normalize.Text, Format: true}, {Name: "service", Kind: normalize.Text, Format: true},
 	}}
 	limits := normalize.Limits{Targets: 10, Fields: 20, Mappings: 20, Revisions: 20, Runs: 1000, Chunks: 100, ChunkRows: 1000, Rows: 100000, Cells: 20, Text: 128, Findings: 1000, Unused: 20, Page: 100}
-	return newNormalizedCharges(s.orgs, s.lifecycles, &s.domain, limits, profile, target, s.clock)
+	return newNormalizedCharges(s.orgs, s.lifecycles, &s.domain, limits, candidateProfile(), target, s.clock)
 }
 
 func (s *Server) seedChargeCandidates(now time.Time) error {

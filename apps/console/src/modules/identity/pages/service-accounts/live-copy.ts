@@ -141,17 +141,17 @@ export const v = {
   ackError: (l: Locale) =>
     t(l, "Confirm that you stored the secret, or revoke this credential.", "비밀값을 보관했는지 확인하거나 이 자격 증명을 폐기하세요.", "أكّد أنك حفظت القيمة السرية، أو أبطِل بيانات الاعتماد هذه."),
   pickupOpen: (l: Locale) => t(l, "Secret not collected yet · pickup open, estimated to end", "비밀값 미수령 · 수령 가능, 예상 종료", "لم يُستلَم السر بعد · الاستلام متاح، ويُقدَّر انتهاؤه في"),
-  pickupNever: (l: Locale) => t(l, "Secret never collected", "비밀값 수령 안 됨", "لم يُستلَم السر"),
-  neverTitle: (l: Locale) => t(l, "Credentials whose secret was never collected", "비밀값이 수령되지 않은 자격 증명", "بيانات اعتماد لم يُستلَم سرّها"),
+  pickupNever: (l: Locale) => t(l, "Secret not returned", "비밀값 반환 안 됨", "لم تُعَد القيمة السرية"),
+  neverTitle: (l: Locale) => t(l, "Secrets not returned", "비밀값 반환 안 됨", "قيم سرية لم تُعَد"),
   neverLead: (l: Locale) =>
     t(
       l,
-      "No one received the secret of these credentials, and it can't be shown any more. Revoke each one, and issue a new credential if you need one.",
-      "이 자격 증명의 비밀값은 아무도 받지 않았고 더 이상 표시할 수 없습니다. 각각 폐기하고, 필요하면 새로 발급하세요.",
-      "لم يستلم أحد سرّ بيانات الاعتماد هذه، ولم يعد بالإمكان عرضه. أبطِل كلًّا منها، وأصدر بيانات اعتماد جديدة عند الحاجة.",
+      "These secrets are recorded as not returned. Pickup is currently unavailable. If you retained a pickup reference, check your access before retrying.",
+      "이 비밀값은 반환되지 않은 것으로 기록되어 있습니다. 현재 수령할 수 없습니다. 수령 참조가 남아 있다면 접근 권한을 확인한 뒤 다시 시도하세요.",
+      "هذه القيم السرية مسجّلة على أنها لم تُعَد. الاستلام غير متاح حاليًا. إذا احتفظت بمرجع الاستلام، فتحقّق من صلاحية وصولك قبل إعادة المحاولة.",
     ),
   neverMore: (l: Locale, n: number) => counted(l, n, { en: ["{n} more", "{n} more"], ko: "{n}개 더 보기", ar: ["{n} أخرى", "واحدة أخرى", "اثنتان أخريان", "{n} أخرى", "{n} أخرى", "{n} أخرى"] }),
-  revokeNeverReason: (l: Locale) => t(l, "Secret never collected", "비밀값 수령 안 됨", "لم يُستلَم السر"),
+  revokeNeverReason: (l: Locale) => t(l, "Secret not returned", "비밀값 반환 안 됨", "لم تُعَد القيمة السرية"),
   revokeNotShownReason: (l: Locale) => t(l, "Secret not shown at issue", "발급 시 비밀값 미표시", "لم يُعرض السر عند الإصدار"),
   attemptsTitle: (l: Locale) => t(l, "Credential issues to check", "확인이 필요한 자격 증명 발급", "عمليات إصدار بيانات اعتماد تحتاج إلى تحقق"),
   attemptsDiscardNote: (l: Locale) =>
@@ -253,16 +253,17 @@ export const v = {
   secretGone: (l: Locale) =>
     t(
       l,
-      "The secret can no longer be shown. Revoke this credential and issue a new one.",
-      "비밀값을 더 이상 표시할 수 없습니다. 이 자격 증명을 폐기하고 새로 발급하세요.",
-      "لم يعد بالإمكان عرض القيمة السرية. أبطِل بيانات الاعتماد هذه وأصدر غيرها.",
+      "The secret is not displayed. This does not confirm whether it was returned or stored.",
+      "비밀값이 표시되지 않습니다. 반환 또는 보관 여부는 확인되지 않았습니다.",
+      "القيمة السرية غير معروضة. هذا لا يؤكّد ما إذا كانت قد أُعيدت أو حُفظت.",
     ),
+  secretReturned: (l: Locale) => t(l, "The server returned this secret once. It cannot be shown again. If it wasn’t stored, revoke this credential.", "서버가 이 비밀값을 한 번 반환했습니다. 다시 표시할 수 없습니다. 보관하지 않았다면 이 자격 증명을 폐기하세요.", "أعاد الخادم هذه القيمة السرية مرة واحدة. لا يمكن عرضها مجددًا. إذا لم تُحفظ، فأبطِل بيانات الاعتماد هذه."),
   secretRetry: (l: Locale) =>
     t(
       l,
-      "The secret couldn't be loaded. Try once more; if it was already delivered, it can't be shown again and you should revoke this credential.",
-      "비밀값을 불러오지 못했습니다. 한 번 더 시도하세요. 이미 전달된 경우 다시 표시할 수 없으니 이 자격 증명을 폐기하세요.",
-      "تعذّر تحميل القيمة السرية. حاول مرة أخرى؛ وإن كانت قد سُلّمت فلا يمكن عرضها مجددًا وعليك إبطال بيانات الاعتماد هذه.",
+      "We couldn’t confirm whether the secret was returned. Check your access before retrying. A secret already returned once cannot be shown again.",
+      "비밀값이 반환되었는지 확인하지 못했습니다. 접근 권한을 확인한 뒤 다시 시도하세요. 이미 한 번 반환된 비밀값은 다시 표시할 수 없습니다.",
+      "تعذّر تأكيد ما إذا كانت القيمة السرية قد أُعيدت. تحقّق من صلاحية وصولك قبل إعادة المحاولة. لا يمكن عرض قيمة سرية أُعيدت مرة واحدة مجددًا.",
     ),
   unstoredTitle: (l: Locale) => t(l, "Secrets not confirmed as stored", "보관이 확인되지 않은 비밀값", "قيم سرية لم يُؤكَّد حفظها"),
   unstoredLead: (l: Locale) =>

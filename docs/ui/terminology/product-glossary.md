@@ -389,7 +389,7 @@ Candidate copy from the stable HYB-333 plan and implemented M04 messages. Semant
 | --- | --- | --- | --- | --- |
 | credential-secret-pickup-state / `open` | 비밀 값 미수령 · 수령 가능 | Secret not collected yet · pickup open | لم تُستلَم القيمة السرية بعد · الاستلام متاح | Pickup is still available to the issuing session at this read; its end is estimated and can become earlier. |
 | credential-secret-pickup-state / `collected` | 비밀 값 반환됨 | Secret returned once | أُعيدت القيمة السرية مرة واحدة | Server returned the secret once. Does not prove delivery to the person or storage. This state adds no status sub-line. |
-| credential-secret-pickup-state / `never_collected` | 비밀 값 수령 안 됨 | Secret never collected | لم تُستلَم القيمة السرية | Pickup ended without the server returning the secret. Credential remains active until separately revoked or expired. |
+| credential-secret-pickup-state / `never_collected` | 비밀값 반환 안 됨 | Secret not returned | لم تُعَد القيمة السرية | Recorded as not returned and currently not open to the original issuing session. This observation alone does not prove irreversible reference deletion; temporary authority loss may recover. Credential remains active until separately revoked or expired. HYB-304 semantic correction; proposed locale copy is not native/practitioner acceptance. |
 | issue-outcome-unknown | 발급 결과 확인 안 됨 | Issue outcome unknown | نتيجة الإصدار غير معروفة | Request may have committed. Same-request retry retains its original identity; never call it failed or definitely issued. |
 
 

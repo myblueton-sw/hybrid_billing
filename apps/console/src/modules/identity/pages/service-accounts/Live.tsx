@@ -12,7 +12,8 @@ import { failureText } from "../users/live-model";
 import { when } from "../authentication/live-model";
 import { v } from "./live-copy";
 import { attemptState, credentials, credentialState, formVisible, initialService, keepsHold, issueBlock, liveCount, neverCollected, outsideWindow, panelShown, pickupLabel, pinIssue, prefix, returnFocus, serviceState, settleFailure, split, takenByMe, validName, wholeDays } from "./live-model";
-import { issueAttempts, type Entry } from "./issue-attempts";
+import { type IssueAttempts, type Entry } from "./issue-attempts";
+import { useServiceAccountRecovery, type Recovery } from "./recovery-context";
 import { guardUnload } from "../../../../shared/unload-intent";
 import { HeldBlock } from "./Held";
 import { flushSync } from "react-dom";
@@ -111,11 +112,7 @@ function useCommand(api: AdminClient, revision: string, onReload: () => void, wi
   return { busy, error, focusKey, setFocusKey, renew, run, setError, phase, retried, discard, request: track.request };
 }
 
-export const issues = issueAttempts(attempt, { mono: () => performance.now(), wall: () => Date.now() }, typeof window === "undefined" ? undefined : window);
-
-const afterView = { focus: "", view: "" };
-
-function useIssues() {
+function useIssues(issues: IssueAttempts) {
   return useSyncExternalStore(issues.subscribe, issues.version);
 }
 
@@ -318,10 +315,10 @@ function StateStep({ l, api, page, s, action, onDone, onCancel, onReload }: {
   );
 }
 
-function IssueForm({ l, api, page, s, user, stepping, onReload, onAccounts, onPin, onShowSecret }: {
-  l: Locale; api: AdminClient; page: ServicesPage; s: ServiceRow; user: string; stepping: boolean; onReload: () => void; onAccounts: () => void; onPin: () => void; onShowSecret: () => void;
+function IssueForm({ l, api, page, s, user, issues, stepping, onReload, onAccounts, onPin, onShowSecret }: {
+  l: Locale; api: AdminClient; page: ServicesPage; s: ServiceRow; user: string; issues: IssueAttempts; stepping: boolean; onReload: () => void; onAccounts: () => void; onPin: () => void; onShowSecret: () => void;
 }) {
-  useIssues();
+  useIssues(issues);
   const max = page.limits.credential_days;
   const entry = issues.get(user, s.id);
   const refusal = issues.refusal(user, s.id);
@@ -347,7 +344,7 @@ function IssueForm({ l, api, page, s, user, stepping, onReload, onAccounts, onPi
   const send = async (values: { days: string; reason: string }) => {
     onPin();
     const sent = await issues.submit(user, s.id, values, page.revision, page.limits.replay_seconds,
-      (tried, expected) => api.command("service.issue_credential", s.id, expected, values.reason, { days: values.days }, tried));
+      (tried, expected, frozen) => api.command("service.issue_credential", s.id, expected, frozen.reason, { days: frozen.days }, tried));
     if (sent.kind === "removed") setFocusKey((k) => k + 1);
     if (sent.kind !== "issued" && sent.kind !== "refused") onReload();
   };
@@ -438,35 +435,38 @@ function IssueForm({ l, api, page, s, user, stepping, onReload, onAccounts, onPi
   );
 }
 
-function Reveal({ l, api, service, refId, credential, until, onDone, onRevoke, onLeave }: {
-  l: Locale; api: AdminClient; service: string; refId: string; credential: string; until: string;
-  onDone: () => void; onRevoke: () => void; onLeave: () => void;
+export function Reveal({ l, api, issues, user, service, refId, credential, until, onDone, onRevoke, onLeave }: {
+  l: Locale; api: AdminClient; issues: IssueAttempts; user: string; service: string; refId: string; credential: string; until: string;
+  onDone: () => void; onRevoke: (notStored: boolean) => void; onLeave: () => void;
 }) {
   const [secret, setSecret] = useState("");
+  const [returned, setReturned] = useState(false);
   const [state, setState] = useState<"loading" | "shown" | "retry" | "gone">("loading");
   const [ack, setAck] = useState(false);
   const [problem, setProblem] = useState("");
   const [focusKey, setFocusKey] = useState(0);
   const retried = useRef(false);
-  const asked = useRef(false);
+  const observer = useRef(0);
   const heading = useRef<HTMLHeadingElement>(null);
-  const fetchSecret = useCallback(() => {
+  const fetchSecret = useCallback((retry = false) => {
+    if (!issues.current() || document.visibilityState !== "visible") { observer.current++; setState("gone"); return; }
+    const generation = ++observer.current;
     setState("loading");
-    api.secret(refId).then(
+    const visible = () => observer.current === generation && issues.current() && document.visibilityState === "visible";
+    issues.collect(user, service, { credential, ref: refId }, (reference) => api.secret(reference), retry).then(
       (got) => {
-        if (got.credential !== credential) { setState("gone"); return; }
+        if (!visible()) return;
         setSecret(got.secret);
+        setReturned(true);
         setState("shown");
       },
-      (e) => setState(e instanceof AdminError && e.failure === "unavailable" && !retried.current ? "retry" : "gone"),
-
+      () => { if (visible()) setState("retry"); },
     );
-  }, [api, refId, credential]);
+  }, [api, issues, user, service, refId, credential]);
   useEffect(() => {
-    if (asked.current) return;
-    asked.current = true;
     if (refId) fetchSecret();
     else setState("gone");
+    return () => { observer.current++; };
   }, [fetchSecret, refId]);
   useEffect(() => heading.current?.focus(), []);
   useEffect(() => { if (retried.current && state === "shown") heading.current?.focus(); }, [state]);
@@ -477,7 +477,7 @@ function Reveal({ l, api, service, refId, credential, until, onDone, onRevoke, o
     return () => removeEventListener("beforeunload", warn);
   }, [state]);
   useEffect(() => {
-    const drop = () => flushSync(() => { setSecret(""); setState("gone"); });
+    const drop = () => { observer.current++; flushSync(() => { setSecret(""); setState("gone"); }); };
     addEventListener("pagehide", drop);
     return () => removeEventListener("pagehide", drop);
   }, []);
@@ -517,14 +517,14 @@ function Reveal({ l, api, service, refId, credential, until, onDone, onRevoke, o
       {state === "retry" && (
         <div className="service-summary" role="alert">
           <p>{v.secretRetry(l)}</p>
-          <button type="button" className="live-secondary" onClick={() => { retried.current = true; fetchSecret(); }}>{v.showSecret(l)}</button>
+          <button type="button" className="live-secondary" onClick={() => { retried.current = true; fetchSecret(true); }}>{v.showSecret(l)}</button>
         </div>
       )}
-      {state === "gone" && <p className="live-impact">{v.secretGone(l)}</p>}
+      {state === "gone" && <p className="live-impact">{returned ? v.secretReturned(l) : v.secretGone(l)}</p>}
       <div className="live-buttons">
         {state === "shown" ? <button type="button" className="live-primary" onClick={finish}>{v.done(l)}</button>
           : <button type="button" className="live-secondary" onClick={onLeave}>{v.close(l)}</button>}
-        <button type="button" className={state === "gone" ? "live-primary" : "live-secondary"} onClick={() => { setSecret(""); onRevoke(); }}>{state === "gone" ? v.revokeTitle(l) : v.notStored(l)}</button>
+        <button type="button" className={state === "gone" ? "live-primary" : "live-secondary"} onClick={() => { setSecret(""); onRevoke(state === "shown"); }}>{state === "shown" ? v.notStored(l) : v.revokeTitle(l)}</button>
       </div>
     </section>
   );
@@ -709,10 +709,17 @@ function NeverRegion({ l, rows, onRevoke }: { l: Locale; rows: { service: string
   );
 }
 
-export default function LiveServices({ locale: l, view, session, onSignOut, onView }: {
-  locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void;
-}) {
-  useIssues();
+type LiveProps = { locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void };
+
+export default function LiveServices(props: LiveProps) {
+  const recovery = useServiceAccountRecovery();
+  if (!recovery) return <p role="status" className="live-meta">{v.loading(props.locale)}</p>;
+  return <RecoveredServices {...props} recovery={recovery} />;
+}
+
+function RecoveredServices({ locale: l, view, session, onSignOut, onView, recovery }: LiveProps & { recovery: Recovery }) {
+  const { issues, afterView } = recovery;
+  useIssues(issues);
   const user = session.user;
   const api = useAdminClient();
   const wide = useWide();
@@ -747,11 +754,14 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
   const load = useCallback(() => {
     const n = order.current.next();
     const seq = issues.readStarted();
+    for (const entry of issues.list(user)) if (entry.phase === "issued" && entry.issued) {
+      void api.serviceCredential(entry.issued.credential, session.workspace).then((got) => { if (issues.current()) issues.observe(user, got.row, seq); }, () => {});
+    }
     api.services().then(
-      (got) => { issues.reconcile(user, got, seq); if (order.current.latest(n)) { setPage(got); setStatus("ready"); setError(null); } },
-      (e) => { if (order.current.latest(n)) { if (e instanceof AdminError && e.failure === "invalid") setPage(null); setError(e); setStatus("error"); } },
+      (got) => { if (issues.current() && order.current.latest(n)) { setPage(got); setStatus("ready"); setError(null); } },
+      (e) => { if (issues.current() && order.current.latest(n)) { if (e instanceof AdminError && e.failure === "invalid") setPage(null); setError(e); setStatus("error"); } },
     );
-  }, [api, user]);
+  }, [api, user, session.workspace, issues]);
   useEffect(() => { if (view === "accounts" || view === "credentials") load(); }, [load, view]);
   const viewRef = useRef(view);
   useEffect(() => {
@@ -765,9 +775,8 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
   const currentId = page ? initialService(page, chosen) : "";
   const visibleFor = (service: string) => formVisible({ view, mode: mode.kind, current: currentId, service, wide, open, visibility: typeof document === "undefined" ? "hidden" : document.visibilityState });
   const showSecret = (service: string) => {
-    const got = issues.consume(user, service);
+    const got = issues.open(user, service);
     if (!got) return;
-    issues.mark(user, got.credential);
     setNotice("");
     setChosen(service);
     load();
@@ -840,11 +849,11 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
   if (page && credentialsView && current) {
     if (mode.kind === "reveal") {
       const shown = mode;
-      panel = <Reveal key={shown.ref} l={l} api={api} service={shown.service} refId={shown.ref} credential={shown.credential}
+      panel = <Reveal key={shown.ref} l={l} api={api} issues={issues} user={user} service={shown.service} refId={shown.ref} credential={shown.credential}
         until={find(shown.service)?.credentials.find((x) => x.id === shown.credential)?.not_after ?? shown.until}
         onLeave={() => { setMode({ kind: "form" }); setOpen(false); load(); setFocusTo("#svc-cred-title"); }}
         onDone={() => { issues.unmark(user, shown.credential); setMode({ kind: "form" }); setOpen(false); setFormKey((k) => k + 1); load(); setFocusTo("#svc-cred-title"); }}
-        onRevoke={() => revoke(shown.credential, shown.service, v.revokeUnstoredReason(l), `[data-credential="${shown.credential}"]`)} />;
+        onRevoke={(notStored) => revoke(shown.credential, shown.service, notStored ? v.revokeUnstoredReason(l) : "", `[data-credential="${shown.credential}"]`)} />;
     } else if (mode.kind === "revoke") {
       const target = mode;
       panel = <RevokeStep key={target.id} l={l} api={api} page={page} id={target.id} service={target.service} initial={target.reason} onReload={load}
@@ -852,7 +861,7 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
         onDone={(message) => { issues.unmark(user, target.id); issues.revoked(user, target.id); finished(message, { kind: "form" }, "#svc-cred-title"); }} />;
       backTo = target.from;
     } else if (wide || mode.kind === "form") {
-      panel = <IssueForm key={current.id + formKey} l={l} api={api} page={page} s={current} user={user} stepping={!wide} onReload={load} onAccounts={() => onView("accounts")}
+      panel = <IssueForm key={current.id + formKey} l={l} api={api} page={page} s={current} user={user} issues={issues} stepping={!wide} onReload={load} onAccounts={() => onView("accounts")}
         onPin={() => { const pin = pinIssue(current.id); setChosen(pin.chosen); setOpen(pin.open); }} onShowSecret={() => showSecret(current.id)} />;
       backTo = ".svc-issue-open";
     }
@@ -863,8 +872,7 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
   const selected = mode.kind === "detail" || mode.kind === "step" ? mode.id : mode.kind === "revoke" ? mode.id : "";
   const never = page ? neverCollected(page) : [];
   const neverIds = new Set(never.map((r) => r.credential.id));
-  const unstoredShown = unstored.filter((id) => !neverIds.has(id));
-  const serviceOf = (id: string) => page?.services.find((x) => x.credentials.some((y) => y.id === id))?.id ?? "";
+  const unstoredShown = unstored.filter((mark) => !neverIds.has(mark.credential));
   const list = !credentialsView ? (
     <section aria-labelledby="svc-list-title">
       <div className="live-toolbar">
@@ -915,11 +923,11 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
           <h3>{v.unstoredTitle(l)}</h3>
           <p>{v.unstoredLead(l)}</p>
           <ul className="live-unstored-list">
-            {unstoredShown.map((id) => (
+            {unstoredShown.map(({ credential: id, service }) => (
               <li key={id}>
-                <span><span className="live-mono">{ltr(id)}</span> · <span className="live-mono">{ltr(serviceOf(id))}</span></span>
+                <span><span className="live-mono">{ltr(id)}</span> · <span className="live-mono">{ltr(service)}</span></span>
                 <span className="live-row-buttons">
-                  <button type="button" className="live-secondary" data-unstored-revoke={id} onClick={() => revoke(id, serviceOf(id) || current?.id || "", v.revokeUnstoredReason(l), `[data-unstored-revoke="${id}"]`)}>{v.revoke(l)}<span className="visually-hidden"> {id}</span></button>
+                  <button type="button" className="live-secondary" data-unstored-revoke={id} onClick={() => revoke(id, service, v.revokeUnstoredReason(l), `[data-unstored-revoke="${id}"]`)}>{v.revoke(l)}<span className="visually-hidden"> {id}</span></button>
                   <button type="button" className="live-secondary" onClick={() => issues.unmark(user, id)}>{v.dismiss(l)}<span className="visually-hidden"> {id}</span></button>
                 </span>
               </li>

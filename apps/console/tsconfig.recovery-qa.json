@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["tools/recovery-fixture.tsx", "src/env.d.ts"]
+}

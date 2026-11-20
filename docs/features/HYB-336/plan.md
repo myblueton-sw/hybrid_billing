@@ -2,12 +2,12 @@
 type: OperationsPlan
 title: Reload pinned FOCUS samples for local preview
 description: Recreates an isolated query-only sample environment and verifies the authenticated console path.
-status: draft
+status: stable
 ---
 
-# Scope and authority
+# Original scope and authority
 
-[HYB-336](https://linear.app/myblueton/issue/HYB-336), owner Seung Woo Park, machine mac_mini. The owner explicitly requested reloading the previous FOCUS dataset. Existing dataset, credential configuration, Python environment, HB containers and HB volumes were absent; reader/storage ports were closed. Root owns execution/evidence; separate reviewer checks source lineage, scoped reads and provisioning sequence. Existing missing-companion waiver applies.
+[HYB-336](https://linear.app/myblueton/issue/HYB-336), owner Seung Woo Park, machine mac_mini. The owner explicitly requested reloading the previous FOCUS dataset. At original planning, the executor reported dataset, credential configuration, Python environment, HB containers and HB volumes absent and reader/storage ports closed. Root owns execution/evidence; separate reviewer checks source lineage, scoped reads and provisioning sequence. Required local companion rules were available for the current integration.
 
 # Plan
 
@@ -20,3 +20,7 @@ Connect loopback readers 8806/8810 through the existing Go session gate and shar
 # Independent review constraints
 
 Separate reviewer PASS: initialize an empty installation, activate monthly lifecycle, then describe/register/collect/confirm/publish each actual billing-month partition. Do not first ingest a legacy snapshot or repeatedly register the full pack. Expected authorized counts: north-a 1112, north-b 9, company-north 1121, foreign 2. Preserve all source occurrences and provenance. Runtime journal was checked absent before creation. Synthetic received-time policies use hot 30/total 365/grace 0/backup 30 days and reject-before 2020-01-01; these are preview scenario settings, not legal retention guidance. No lifecycle deletion/retirement or destructive fixtures run.
+
+# Current integration scope
+
+Merge the original operational evidence with current main without changing application code or resetting the installation. Preserve the reported original data checks separately from current read-only observations. A successful Git merge does not complete runtime recovery or certify current data availability; see [integration recheck](integration.md). The owner’s standing authorization covers reviewed Git merges.

@@ -768,3 +768,35 @@ test("lost-right marks are cleared when the signed-in user changes", async () =>
   setScope("w1", "u2", "s1");
   assert.equal(lostRight("integrations.plugin_stop", "plugin:p"), "");
 });
+
+
+test("retained diagnostics bind every grouped action to its exact target and permission-loss marker", async () => {
+  const { feedbackDiagnostics } = await import("./live-model");
+  const { markLost, pruneLost, lostFor } = await import("./live-rights");
+  forget(); setScope("ws", me, "s");
+  const stop: [CommandKey, string] = ["integrations.plugin_stop", "plugin:p"];
+  const disable: [CommandKey, string] = ["integrations.plugin_disable", "plugin:p"];
+  const reference = ([command, target]: [CommandKey, string], code: string, request: string) => ({ command, detail: { code, request, target, client: "", cancelled: false } });
+  const ids = (choices: Array<[CommandKey, string]>) => feedbackDiagnostics(choices).map((v) => v.detail.request);
+  settle(...stop, "hint", reference(stop, "invalid_stage", "stop-response"));
+  settle(...disable, "hint", reference(disable, "prerequisite_failed", "disable-response"));
+  assert.deepEqual(ids([stop, disable]), ["stop-response", "disable-response"]);
+  settle(...stop, "ok");
+  assert.deepEqual(ids([stop, disable]), ["disable-response"]);
+  markLost(...stop, "stop_modules", reference(stop, "permission_denied", "denied-response"));
+  assert.deepEqual(ids([stop, disable]), ["denied-response", "disable-response"]);
+  assert.equal(lostFor([stop]), "stop_modules");
+  pruneLost({ ...page(), rights: { stop_modules: true } } as IntegrationsPage);
+  assert.deepEqual(ids([stop, disable]), ["disable-response"]);
+  assert.deepEqual(ids([[stop[0], "plugin:another"]]), []);
+  pruneRefusals(page({ modules: { plugins: [], installations: [] } }), me);
+  assert.deepEqual(ids([disable]), []);
+  const resume: [CommandKey, string] = ["integrations.subscription_withdraw_resume", "webhook-resume-request:request-1"];
+  const dismiss: [CommandKey, string] = ["integrations.letter_withdraw_dismiss", "webhook-letter-request:request-2"];
+  settle(...resume, "hint", reference(resume, "invalid_stage", "resume-response"));
+  markLost(...dismiss, "reprocess_events", reference(dismiss, "permission_denied", "dismiss-response"));
+  assert.deepEqual(ids([resume, dismiss]), ["resume-response", "dismiss-response"]);
+  assert.equal(lostFor([[dismiss[0], "webhook-letter-request:wrong"], dismiss]), "reprocess_events");
+  setScope("ws", me, "new-session");
+  assert.deepEqual(ids([stop, disable, resume, dismiss]), []);
+});

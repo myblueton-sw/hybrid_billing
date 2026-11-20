@@ -9,6 +9,7 @@ import { Reauthenticate } from "./Reauthenticate";
 import { stepUpGate } from "./reauth-model";
 import { leaveDeliberately, stayAgain, watchRestore } from "../shared/unload-intent";
 import "./service.css";
+import { localPreviewLogin } from "./local-preview";
 import { afterSignIn, emailValid, localeOf, loginValid, passwordProblem, serviceUrl, shellLocale } from "./helpers";
 export { serviceMode } from "./helpers";
 
@@ -158,6 +159,17 @@ export function SignIn({ locale: l, client, status, onSession, notice }: {
 }) {
   const [workspace, setWorkspace] = useState(""), [email, setEmail] = useState(""), [password, setPassword] = useState("");
   const [problems, setProblems] = useState<Problems>([]), [message, setMessage] = useState(""), [busy, setBusy] = useState(false), [tick, setTick] = useState(0);
+  const loginButton = useRef<HTMLButtonElement>(null);
+  const preview = localPreviewLogin(typeof location === "undefined" ? "" : location.hostname, typeof __LOCAL_PREVIEW_LOGIN__ === "undefined" ? null : __LOCAL_PREVIEW_LOGIN__);
+  const fillPreview = () => {
+    if (!preview || busy) return;
+    setWorkspace(preview.workspace);
+    setEmail(preview.email);
+    setPassword(preview.password);
+    setProblems([]);
+    setMessage("");
+    loginButton.current?.focus();
+  };
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (busy) return;
@@ -191,11 +203,12 @@ export function SignIn({ locale: l, client, status, onSession, notice }: {
         {(problems.length > 0 || message) && (
           <Summary locale={l} title={message || c.check(l)} problems={problems} focusKey={tick} />
         )}
+        {preview && <button type="button" className="service-secondary" disabled={busy} onClick={fillPreview}>{c.fillLocalSample(l)}</button>}
         <form noValidate onSubmit={submit} aria-busy={busy}>
           <TextField locale={l} id="signin-workspace" label={c.workspace(l)} value={workspace} onChange={setWorkspace} autoComplete="off" error={error("signin-workspace")} />
           <TextField locale={l} id="signin-email" label={c.email(l)} value={email} onChange={setEmail} type="email" autoComplete="username" error={error("signin-email")} />
           <PasswordField locale={l} id="signin-password" label={c.password(l)} value={password} onChange={setPassword} autoComplete="current-password" error={error("signin-password")} />
-          <button className="primary service-submit" type="submit" aria-disabled={busy}>
+          <button ref={loginButton} className="primary service-submit" type="submit" aria-disabled={busy}>
             {busy ? c.signingIn(l) : c.signIn(l)}
           </button>
         </form>

@@ -109,7 +109,7 @@ type Decision = "retention.approve" | "retention.withdraw";
 function Row({ p, ...shared }: Shared & { p: Proposal }) {
   const { l, page, selection, canCommand } = shared;
   const target = proposalTarget(p);
-  const { open, toggle, close, focusNote, mark } = useOpen<Decision>(target);
+  const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<Decision>(target);
   const pendingRow = p.state === "pending";
   const plan = p.kind === "plan";
   const n = p.number === null ? k.unknown(l) : String(p.number);
@@ -178,7 +178,7 @@ function Row({ p, ...shared }: Shared & { p: Proposal }) {
           <p className="p04-small"><a className="p04-link" href={href(l, "holds", { hold: p.release.hold })}>{ltr(p.release.hold)}</a></p>
         )}
         {!pendingRow && (
-          <RowNote
+          <RowNote l={l} diagnostics={diagnostics(target)}
             kept="" blockers={[]} focus={focusNote}
             extra={
               <>
@@ -201,7 +201,7 @@ function Row({ p, ...shared }: Shared & { p: Proposal }) {
         )}
         {pendingRow && !plan && (
           <>
-            <RowNote kept={kept} blockers={blockers} focus={focusNote} state={state} />
+            <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} state={state} />
             {(approveUsable || withdrawUsable) && !open && (
               <div className="live-buttons">
                 {approveUsable && (

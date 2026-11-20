@@ -1,0 +1,143 @@
+{
+  "base": "653adfe",
+  "machine": "mac_mini",
+  "host": "macOS-27.2.1-arm64-arm-64bit",
+  "node": "v25.9.0",
+  "browser": "Chromium 153.0.8010.12",
+  "screenshots": [
+    {
+      "file": "p01-ar-1440.png",
+      "sha256": "7a2c214a29dd59561dbe339b533cc32abb5d37432e4c2b19ed304ec7a9903076"
+    },
+    {
+      "file": "p01-ar-390.png",
+      "sha256": "aeb5b65d5950b54d5dd38388c1fa1ff14ef43563f4e3135ed90db94444a51ed3"
+    },
+    {
+      "file": "p01-en-1440.png",
+      "sha256": "8d494f623c681f73de16feef44a71f916bad5b1466452400b2d7eb9e36f6eedd"
+    },
+    {
+      "file": "p01-en-390.png",
+      "sha256": "c74965b67abf722614ea04766b8760ab1662eb00b808f31e6fc02b2fce895682"
+    },
+    {
+      "file": "p01-ko-1440.png",
+      "sha256": "c4fdf98211c1a17e89d3f589b38492bab3ea7761a0598caa06b815e2db6a47bb"
+    },
+    {
+      "file": "p01-ko-390.png",
+      "sha256": "d0b7e83a49cca1460dcb687a8b1035f077fcb4d3f2c93878672549d20f0fc0b1"
+    },
+    {
+      "file": "p02-ar-1440.png",
+      "sha256": "c2a793a419f3cfd768c5056ef3237f9bde68b01435bc659b9872a870a49e5998"
+    },
+    {
+      "file": "p02-ar-390.png",
+      "sha256": "fca67f03feb7c0d25a2c86aada9dad0088a745f6ca1c07be23aefd3a13cb1730"
+    },
+    {
+      "file": "p02-en-1440.png",
+      "sha256": "9a648a5eb21dbbe9e90cd0c996468b3d085c0e32b125d61cd1acf4548f835677"
+    },
+    {
+      "file": "p02-en-390.png",
+      "sha256": "4448366aa3cadb63505f9288033fff49e6ca7b2d898ba6c7ad24b7d01ab7b83a"
+    },
+    {
+      "file": "p02-ko-1440.png",
+      "sha256": "b363ba96975e1fd4587af3c73d35b41993ba40c577727850ba4deac2491dde94"
+    },
+    {
+      "file": "p02-ko-390.png",
+      "sha256": "4c87cea117460685ef8092b6a6d8eb4cc6915b065caaf61237922640dd3ba3a6"
+    },
+    {
+      "file": "p03-ar-1440.png",
+      "sha256": "8f558d118826c2af3a4832a98d5ae88490a60e3054bf9a2c5d367bb4844915e8"
+    },
+    {
+      "file": "p03-ar-390.png",
+      "sha256": "6cd6d97ae7521d8a6bc7e002ea22fe9d2b181f855b417541e6180f1ab2438da2"
+    },
+    {
+      "file": "p03-en-1440.png",
+      "sha256": "abdaf4b7e3f15a6565d89a0d24ef9d99909fb19f9c9b693343e5f45807da566b"
+    },
+    {
+      "file": "p03-en-390.png",
+      "sha256": "819f71741bb97b5b8feb5ae56a955305ef924ae96664a449a084916653a7e8e0"
+    },
+    {
+      "file": "p03-ko-1440.png",
+      "sha256": "0fd70d53a306d833ada95a14b083212320fedf119745d32c4a689ac2e5b587c2"
+    },
+    {
+      "file": "p03-ko-390.png",
+      "sha256": "2921776b4e6df4f5b1119d95528d92e1233c15eabebced5e5aeb0b6df1e1a9e0"
+    },
+    {
+      "file": "p04-ar-1440.png",
+      "sha256": "b1b5cf1618e732725c737b39076a879bc8924216af29e0cda5d4e96d5a93a2e2"
+    },
+    {
+      "file": "p04-ar-390.png",
+      "sha256": "8b060cfd73ea035d49187abbd995bac6fcfc044885bfb5e7c596d0fe664ba658"
+    },
+    {
+      "file": "p04-en-1440.png",
+      "sha256": "2f10569c6379b1c33705d5e6f37711f07925eaee34422d22604ff0fc82a870b2"
+    },
+    {
+      "file": "p04-en-390.png",
+      "sha256": "100d0e7da40a9d2b8f8a7e090fdccda89a2256a0b88757524a08a56d476a55aa"
+    },
+    {
+      "file": "p04-ko-1440.png",
+      "sha256": "0b92a200398ce1091d56c2ad5d4ac6148f330eda7ea6188347b506de5cdbfdc4"
+    },
+    {
+      "file": "p04-ko-390.png",
+      "sha256": "72ef45bb4a2626a9144a93a121a07d96f90a90363ec249620ab359ce1d59817d"
+    },
+    {
+      "file": "p05-ar-1440.png",
+      "sha256": "645c1fb60c7e1520ccfe833e91515404efc745c708005a07f51266044f9d4e92"
+    },
+    {
+      "file": "p05-ar-390.png",
+      "sha256": "38f6f9429fdc56fa55eae61ce9cef4fe26734b4feee9ab74f648bd4f2c74f53b"
+    },
+    {
+      "file": "p05-en-1440.png",
+      "sha256": "88b320d05f7cf29e1fa81f54007662fffc713101dedf526e3dd36277659201be"
+    },
+    {
+      "file": "p05-en-390.png",
+      "sha256": "b760e2af2732e2f57d547d132f070927fe86023f809ceb408000f0558520bd47"
+    },
+    {
+      "file": "p05-ko-1440.png",
+      "sha256": "23f0aa305182fc3e27f77c572b900128320f398366dc52c37b847aac5f50e870"
+    },
+    {
+      "file": "p05-ko-390.png",
+      "sha256": "3cbd989dbbac18e62d7baf44b7e3b111b221e0a946969fc9e5e0b8369a16e363"
+    }
+  ],
+  "browser_checks": {
+    "p02_injected_response_interactions": 48,
+    "other_platform_injected_retained_state": 72,
+    "additional_scenarios": [
+      "late previous-session completion ignored",
+      "terminal command denial identity retained separately from reload denial"
+    ]
+  },
+  "unit_tests": {
+    "console": 870,
+    "independent_scoped": 184
+  },
+  "raw_artifact_directory": "/private/tmp/hyb330-qa",
+  "artifact_durability": "temporary; hashes retained here"
+}

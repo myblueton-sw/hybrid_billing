@@ -664,6 +664,7 @@ export class AdminError extends Error {
     readonly retryAfter = 0,
     readonly operation = "",
     readonly code = "",
+    readonly request = "",
   ) {
     super(failure);
   }
@@ -844,12 +845,15 @@ const codes: Record<string, AdminFailure> = {
 export type StepUp = () => Promise<boolean>;
 
 export function failureOf(status: number, body: Record<string, unknown>): AdminError {
-  const code = String(body.code ?? "");
+  const valid = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+  const code = typeof valid.code === "string" && /^[a-z][a-z0-9_]{0,127}$/.test(valid.code) ? valid.code : "";
+  const request = typeof valid.request_id === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(valid.request_id) ? valid.request_id : "";
+  body = valid;
   const fields = Array.isArray(body.fields) ? body.fields.map(String) : [];
   const operation = typeof body.operation_id === "string" ? body.operation_id : "";
   const failure = codes[code] ?? (status === 401 ? "unauthenticated" : status === 429 ? "limited" : "unavailable");
-  if (failure === "partial" && !operation) return new AdminError("unavailable", [], 0, "", code);
-  return new AdminError(failure, fields, 0, operation, code);
+  if (failure === "partial" && !operation) return new AdminError("unavailable", [], 0, "", code, request);
+  return new AdminError(failure, fields, 0, operation, code, request);
 }
 
 function random(): string {
@@ -878,7 +882,8 @@ export async function reauthenticate(csrf: string, password: string, f: Fetch = 
   if (r.ok) return;
   let body: Record<string, unknown> = {};
   try {
-    body = await r.json();
+    const parsed: unknown = await r.json();
+    body = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
   } catch {
     body = {};
   }
@@ -900,7 +905,8 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     }
     let body: Record<string, unknown> = {};
     try {
-      body = await r.json();
+      const parsed: unknown = await r.json();
+      body = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
     } catch {
       body = {};
     }
@@ -909,14 +915,17 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
   async function send(path: string, init: RequestInit, request: string): Promise<Record<string, unknown>> {
     let { r, body } = await exchange(path, init, request);
     if (!r.ok && init.method === "POST" && body.code === "reauthentication_required" && stepUp) {
-      if (!(await stepUp())) throw new AdminError("reauth_cancelled", [], 0, "", "reauthentication_required");
+      if (!(await stepUp())) {
+        const challenge = failureOf(r.status, body);
+        throw new AdminError("reauth_cancelled", [], 0, "", challenge.code, challenge.request);
+      }
       ({ r, body } = await exchange(path, init, request));
     }
     if (r.ok) return body;
     const failed = failureOf(r.status, body);
     const retry = Number(r.headers.get("Retry-After") ?? "0");
     if (failed.failure === "limited" && Number.isFinite(retry) && retry > 0) {
-      throw new AdminError("limited", [], retry);
+      throw new AdminError("limited", failed.fields, retry, failed.operation, failed.code, failed.request);
     }
     throw failed;
   }

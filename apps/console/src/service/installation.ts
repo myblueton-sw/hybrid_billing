@@ -101,7 +101,8 @@ const flag = (v: unknown): boolean | null => (typeof v === "boolean" ? v : null)
 const isRow = (x: unknown): x is Raw => !!x && typeof x === "object" && !Array.isArray(x);
 const rows = <T,>(v: unknown, f: (r: Raw) => T): T[] => (Array.isArray(v) ? v.filter(isRow).map(f) : []);
 const maybeRows = <T,>(v: unknown, f: (r: Raw) => T): T[] | null => (Array.isArray(v) ? rows(v, f) : null);
-const count = (v: unknown): number | null => (Array.isArray(v) ? v.length : null);
+const historyCount = (v: unknown): number | null => Array.isArray(v) && v.every((r) => isRow(r) && ["kind", "from", "to", "run", "backup"].every((k) => typeof r[k] === "string") && Array.isArray(r.runs) && r.runs.every((x: unknown) => typeof x === "string")) ? v.length : null;
+const backupCount = (v: unknown): number | null => Array.isArray(v) && v.every((x) => typeof x === "string") ? v.length : null;
 
 const itemOf = (r: Raw): InstallItem => ({ kind: str(r.kind), target: str(r.target), action: str(r.action), conflict: str(r.conflict) });
 
@@ -130,8 +131,8 @@ function installedOf(v: unknown): InstallInstalled {
     version: str(r.version),
     services: maybeRows(r.services, (s) => ({ name: str(s.name), ports: strs(s.ports) })),
     volumes: maybeRows(r.volumes, (s) => ({ host: str(s.host), logical: str(s.logical), data: flag(s.data), detached: s.detached === true })),
-    history: count(r.history),
-    backups: count(r.backups),
+    history: historyCount(r.history),
+    backups: backupCount(r.backups),
   };
 }
 

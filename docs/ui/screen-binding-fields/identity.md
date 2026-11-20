@@ -193,9 +193,9 @@ Reads: `GET /api/v1/identity/bulk-revocations` (`boundary.go:26`), `/{id}` (`:27
 | Preview | People and roles | `impact.people`, `administrators`, `members` (`bulkread.go:77-79`) | `identity-bulk.ts:111` | `users/BulkPrepare.tsx:69` |
 | Preview | Rights | `impact.installation_administrators`, `trust_right_holders`, `bulk_right_holders` (`bulkread.go:80-82`) | `identity-bulk.ts:112` | `users/BulkPrepare.tsx:71` |
 | Preview | Sessions, pickups | `impact.sessions`, `pickups` (`bulkread.go:83-84`) | `identity-bulk.ts:113` | `users/BulkPrepare.tsx:73` |
-| Preview | API keys: not applicable | fixed copy `b.noKeys`; the server's `impact.api_keys` (`bulkread.go:85`) is not read | none | `users/BulkPrepare.tsx:73` |
+| Preview | API keys: not applicable | `impact.api_keys`: explicit `not_applicable` uses `b.noKeys`; absent/unrecognized is unknown | `identity-bulk.ts` `detailOf` | `users/BulkPrepare.tsx:73` |
 | Preview | Pending work per store, rechecked or not | `impact.pending[].store`, `count`, `rechecked` (`bulkread.go:70-72, 86`) | `identity-bulk.ts:114` | `users/BulkPrepare.tsx:75-76` |
-| Preview | Pending jobs: not applicable | fixed copy `b.noJobs`; the server's `impact.pending_jobs` (`bulkread.go:87`) is not read | none | `users/BulkPrepare.tsx:77` |
+| Preview | Pending jobs: not applicable | `impact.pending_jobs`: explicit `not_applicable` uses `b.noJobs`; absent/unrecognized is unknown | `identity-bulk.ts` `detailOf` | `users/BulkPrepare.tsx:77` |
 | Preview | Service users kept | `impact.service_users` (`bulkread.go:88`) | `identity-bulk.ts:113` | `users/BulkPrepare.tsx:79` |
 | Preview | Administrators left afterwards | `impact.anchors_after` (`bulkread.go:89`) | `identity-bulk.ts:113` | `users/BulkPrepare.tsx:81` |
 | Preview | Other workspaces | `impact.other_workspaces` (`bulkread.go:90`) | `identity-bulk.ts:113` | `users/BulkPrepare.tsx:82` |
@@ -712,3 +712,7 @@ No network address, raw User-Agent, login name, email or bearer secret is stored
 - **Unknown.** None of the rows above is marked unknown.
 - **Server fields that no console parser reads:** `trust.stricter_fields` (`policy.go:69`, not in `policyPageOf`, `admin.ts:568-573`); `impact.api_keys` and `impact.pending_jobs` (`bulkread.go:85, 87`, not in `detailOf`; the preview shows fixed "not applicable" copy instead, `users/BulkPrepare.tsx:73, 77`); `revocations[].target_version` (`revocations.go:35`, not in the `Revocation` type, `admin.ts:167-190`, although the spread at `admin.ts:900-901` keeps it at run time); trust command result `fields.reason` and `fields.your_session_ended` (`trust.go:314, 320`), `fields.change_revision` (`trust.go:143`); set-role-period result `fields.role_until` (`periods.go:130`); bulk result `fields.digest`, `fields.targets` and `fields.count` (`bulk.go:40, 105`, `bulkstage.go:86`).
 - **Parser type wider than the read.** `access`, `services` and `me` cast their row arrays without checking each field (`admin.ts:891-894, 921`, and `identities` in `me`), unlike `userRowOf`, `trustChangeOf` and the bulk parsers. A missing field arrives as `undefined` rather than an empty string or zero.
+
+## HYB-327 reconciliation
+
+The preceding gap inventory records the original mapping review. HYB-327 validates O01 and identity response rows at the read boundary. M02 now displays the fields affected by the restored/default comparison, distinguishing an explicit empty list from unavailable data. M01 selection is already bound by the filter-selection follow-up; API-key and pending-job impact now require explicit server states. See [verification](../../features/HYB-327/verification.md) for executed checks and limitations. Unrelated unread result fields remain outside this change.

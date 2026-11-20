@@ -388,3 +388,11 @@ Candidate copy from the stable HYB-333 plan and implemented M04 messages. Semant
 | credential-secret-pickup-state / `collected` | 비밀 값 반환됨 | Secret returned once | أُعيدت القيمة السرية مرة واحدة | Server returned the secret once. Does not prove delivery to the person or storage. This state adds no status sub-line. |
 | credential-secret-pickup-state / `never_collected` | 비밀 값 수령 안 됨 | Secret never collected | لم تُستلَم القيمة السرية | Pickup ended without the server returning the secret. Credential remains active until separately revoked or expired. |
 | issue-outcome-unknown | 발급 결과 확인 안 됨 | Issue outcome unknown | نتيجة الإصدار غير معروفة | Request may have committed. Same-request retry retains its original identity; never call it failed or definitely issued. |
+
+## HYB-327 field-binding review
+
+- **API clients / API 클라이언트 / عملاء API** identifies authentication/integration clients, not billable business customers. Denied and unconfigured states retain the API qualifier even without a section heading.
+- **Failures for this build since budget approval** describes the server counter. The adjacent qualification states that budget approval is not connected and zero proves neither approval nor a passing run. Arabic uses the existing build term `البنية`.
+- **Rules tightened by the restored/default comparison** names only the reported comparison fields; it does not certify stronger authentication overall. Unknown and explicit empty lists remain distinct.
+
+Separate AI technical-writing review identified the API qualifier and build-term corrections. Native-language acceptance remains unverified. Executed screen checks are recorded in [HYB-327 verification](../../features/HYB-327/verification.md).

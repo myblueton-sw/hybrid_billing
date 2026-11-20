@@ -409,6 +409,9 @@ export const ty = {
     ),
   afterUnclearTitle: (l: Locale) => t(l, "Result not confirmed", "결과 확인 안 됨", "لم تُؤكَّد النتيجة"),
   reload: (l: Locale) => t(l, "Reload", "다시 불러오기", "إعادة التحميل"),
+  stricterFields: (l: Locale) => t(l, "Rules tightened by the restored/default comparison", "복원값·기본값 비교로 강화된 규칙", "القواعد المشدّدة بمقارنة القيم المستعادة والافتراضية"),
+  fieldsUnknown: (l: Locale) => t(l, "Unknown", "알 수 없음", "غير معروف"),
+  noStricterFields: (l: Locale) => t(l, "None", "없음", "لا شيء"),
   olderIgnored: (l: Locale) =>
     t(
       l,

@@ -87,6 +87,7 @@ export const b = {
   sessions: (l: Locale) => t(l, "Open console sessions", "열린 콘솔 세션", "جلسات وحدة التحكم المفتوحة"),
   pickups: (l: Locale) => t(l, "Unused one-time secret links", "아직 사용하지 않은 일회용 비밀 링크", "روابط أسرار لمرة واحدة لم تُستخدم بعد"),
   apiKeys: (l: Locale) => t(l, "API keys", "API 키", "مفاتيح الواجهة البرمجية"),
+  impactUnknown: (l: Locale) => t(l, "Unknown", "알 수 없음", "غير معروف"),
   noKeys: (l: Locale) => t(l, "Not applicable: people hold no API keys", "해당 없음: 사람은 API 키를 갖지 않습니다", "لا ينطبق: لا يحمل الأشخاص مفاتيح واجهة برمجية"),
   pendingWork: (l: Locale) => t(l, "Pending work", "대기 중인 작업", "الأعمال قيد الانتظار"),
   store: (l: Locale, s: string) =>

@@ -252,6 +252,7 @@ export default function ResultCard({
         </button>
       </header>
       <KindBoundary locale={l} kind={r.kind} />
+      {r.evidence.blockers.some((b) => b.code === "current_checks_unverified") && <p data-b09-current-check>{blockerText(l, "current_checks_unverified", "")}</p>}
       <dl className="b09-facts">
         {[
           [t(l, "Request reference", "요청 참조", "مرجع الطلب"), r.id],
@@ -268,6 +269,7 @@ export default function ResultCard({
             ),
             r.author ? `${r.author.label} (${r.author.id})` : null,
           ],
+          [t(l, "Requester in source record", "요청자 (원천 기록)", "مقدّم الطلب في سجل المصدر"), r.requester ? `${r.requester.label} (${r.requester.id})` : null],
           [
             t(
               l,
@@ -280,6 +282,7 @@ export default function ResultCard({
           [t(l, "Decision time", "결정 시각", "وقت القرار"), r.decided_at],
           [t(l, "Deadline", "기한", "الموعد النهائي"), r.deadline],
           [t(l, "Updated at", "갱신 시각", "وقت التحديث"), r.updated_at],
+          [t(l, "Recorded policy revision", "기록된 정책 버전", "نسخة السياسة المسجّلة"), r.policy_revision === undefined ? null : String(r.policy_revision)],
         ].map(([label, value]) => (
           <div key={label}>
             <dt>{label}</dt>
@@ -503,9 +506,9 @@ export default function ResultCard({
             </dd>
           </div>
         </dl>
-        {r.evidence.blockers.length > 0 && (
+        {r.evidence.blockers.some((b) => b.code !== "current_checks_unverified") && (
           <ul className="b09-blockers">
-            {r.evidence.blockers.map((b) => (
+            {r.evidence.blockers.filter((b) => b.code !== "current_checks_unverified").map((b) => (
               <li key={b.code}>
                 <bdi dir="auto">{blockerText(l, b.code, b.text)}</bdi>
               </li>

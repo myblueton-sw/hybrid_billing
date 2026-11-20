@@ -17,7 +17,7 @@ export type View = (typeof views)[number];
 export type Principal = { id: string; label: string };
 export type ApprovalAmount = {
   currency: string;
-  basis: "net" | "tax" | "gross" | "expense";
+  basis: "net" | "tax" | "gross" | "expense" | "rated_candidate_total";
   base: string | null;
   candidate: string | null;
   difference: string | null;
@@ -36,6 +36,8 @@ export type ApprovalRecord = {
     period: string | null;
   };
   author: Principal | null;
+  requester?: Principal;
+  policy_revision?: number;
   approver: Principal | null;
   updated_at: string;
   deadline: string | null;

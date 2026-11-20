@@ -228,9 +228,9 @@ export default function Screen({
         <p>
           {t(
             l,
-            "Read request targets, amounts and source evidence separately from executing decisions. This screen cannot approve, reject, hand off, delegate or post. Isolated synthetic examples are always labelled.",
-            "요청 대상·금액·원천 근거의 조회와 업무 결정 실행을 구분합니다. 이 화면은 승인·반려·인계·위임·전기를 실행하지 않습니다. 합성 검토 예시는 항상 별도로 표시합니다.",
-            "تُفصل قراءة أهداف الطلبات ومبالغها وأدلة المصدر عن تنفيذ القرارات. لا تنفّذ هذه الشاشة الاعتماد أو الرفض أو الإحالة أو التفويض أو الترحيل. تُميّز الأمثلة التجريبية دائماً.",
+            "Read request targets, amounts and source evidence separately from executing decisions. This screen cannot approve, reject, hand off, delegate or post. Synthetic environment records are always labelled.",
+            "요청 대상·금액·원천 근거의 조회와 업무 결정 실행을 구분합니다. 이 화면은 승인·반려·인계·위임·전기를 실행하지 않습니다. 합성 환경의 기록은 항상 별도로 표시합니다.",
+            "تُفصل قراءة أهداف الطلبات ومبالغها وأدلة المصدر عن تنفيذ القرارات. لا تنفّذ هذه الشاشة الاعتماد أو الرفض أو الإحالة أو التفويض أو الترحيل. تُميّز سجلات البيئة الاصطناعية دائماً.",
           )}
         </p>
       </details>

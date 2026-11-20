@@ -318,3 +318,12 @@ Identity/organization response validation and M01/M02/P02/P05 field bindings are
 | Commands | `read_only=true`, `commands=unconnected`; no approve/reject/issue/deliver/post endpoint added. |
 
 The reviewed EN/KO/AR layout is retained. Synthetic/read-only notices remain visible. HYB-225 still owns cross-stage and producer integration prerequisites. B09 financial acceptance references AUD-AR-01/06/07, AUD-QA-01 and ERPC-01–08 remain unestablished at system level; the read binding is not their acceptance evidence.
+
+
+## B09 candidate-backed historical records (HYB-340, in review)
+
+[Projection plan](../features/HYB-340/approval-projection-plan.md) and [verification](../features/HYB-340/approval-projection-verification.md) extend the HYB-337 baseline with actual service-owned synthetic StageCharge requests. This supersedes the baseline's unconnected-producer/pending-blocked description only for those governed records; legacy demonstration records retain that boundary.
+
+The read projects the bounded union of the legacy index and validated immutable financial bindings directly, with a combined 1000-entry cap and no duplicate retained index. Candidate amounts use rated_candidate_total; sample gross observations remain separate. Requester and historical policy revision accompany the original author and request digest. Service Pending remains pending; approved/rejected/superseded are historical module states. Current prerequisites, authority, expiry and ERP applicability are not inferred. Snapshot/paging/session permissions remain enforced.
+
+B09 details expose the separate actor facts and recorded policy revision in existing facts rows. Synthetic environment records are labeled as nonproduction; the current-check warning is distinct from failed-validation blockers. The screen remains read-only and its actions unconnected, although financial_charge HTTP commands exist. A current decision-preparation contract and approval/rejection UI remain outstanding. No owner FIX or full W-23 acceptance is asserted.

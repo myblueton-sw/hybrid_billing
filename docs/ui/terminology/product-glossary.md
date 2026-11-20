@@ -483,3 +483,17 @@ Regional wording evidence read on 2026-11-20: [Microsoft Korean policy configura
 ## Synthetic pricing policy proposal impact
 
 HYB-225 adds a distinct M01 impact category: `pricing_policy_proposals` → **Pricing policy proposals** / **가격 정책 제안** / **مقترحات سياسة التسعير**. This counts pending policy terms proposed by the selected users. It excludes approved/revoked policies and remains separate from permission requests for console ceilings and human grants. The recheck statement means the proposer’s current authority is checked at approval; it does not mean automatic cancellation or approval of billing amounts. Independent AI domain/TW review accepted these display candidates; native-language and owner acceptance remain pending.
+
+
+## B09 governed synthetic charge records
+
+HYB-340 distinguishes recorded calculation evidence from current financial eligibility. Independent AI terminology review accepted these candidates; native-language and owner acceptance remain pending.
+
+| Concept | EN | KO | AR candidate | Meaning |
+| --- | --- | --- | --- | --- |
+| rated_candidate_total | Rated candidate total | 과금 계산 후보 합계 | إجمالي نتيجة احتساب الرسوم المبدئية | Exact rated result, not inferred tax-inclusive gross, final invoice or payment. |
+| requester | Requester in source record | 요청자 (원천 기록) | مقدّم الطلب في سجل المصدر | Person who submitted the approval request, separate from original calculation author and decision actor. |
+| policy_revision | Recorded policy revision | 기록된 정책 버전 | نسخة السياسة المسجّلة | Policy revision bound to the recorded request, not an assertion of current policy applicability. |
+| synthetic row | Synthetic record | 합성 기록 | سجل اصطناعي | Actual record in a synthetic environment, not production billing. |
+
+For current_checks_unverified, use: **Current prerequisites and permission were not rechecked for this historical read.** / **이 이력 조회에서는 현재 선행 조건과 권한을 다시 확인하지 않았습니다.** / **لم تُعَد مراجعة المتطلبات المسبقة والصلاحية الحالية عند عرض هذا السجل التاريخي.** This is an unchecked condition, not a failed validation or permission grant. Keep the neutral warning separate from failed-validation blockers.

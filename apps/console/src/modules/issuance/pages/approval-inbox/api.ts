@@ -91,6 +91,8 @@ function principal(v: unknown) {
   );
 }
 function record(r: ApprovalRecord) {
+  const hasProvenance = !!r && Object.hasOwn(r, "requester") && Object.hasOwn(r, "policy_revision");
+  if (hasProvenance && (!principal(r.requester) || !Number.isSafeInteger(r.policy_revision) || Number(r.policy_revision) < 1)) return false;
   if (
     !exact(r, [
       "id",
@@ -106,6 +108,7 @@ function record(r: ApprovalRecord) {
       "erp",
       "evidence",
       "authority",
+      ...(hasProvenance ? ["requester", "policy_revision"] : []),
     ]) ||
     !id(r.id) ||
     !kinds.includes(r.kind) ||
@@ -149,7 +152,7 @@ function record(r: ApprovalRecord) {
           "erp",
         ]) &&
         /^[A-Z]{3}$/.test(a.currency) &&
-        ["net", "tax", "gross", "expense"].includes(a.basis) &&
+        ["net", "tax", "gross", "expense", "rated_candidate_total"].includes(a.basis) &&
         [a.base, a.candidate, a.difference, a.erp].every(
           (v) => v === null || validDecimal(v),
         ) &&

@@ -126,7 +126,7 @@ export default function Inbox({
                     </span>
                     <span className="b09-meta">{statusLabel(l, r.status)}</span>
                     <span className="b09-meta">
-                      {t(l, "Synthetic example", "합성 예시", "مثال تجريبي")}
+                      {t(l, "Synthetic record", "합성 기록", "سجل اصطناعي")}
                       {selected?.id === r.id && (
                         <> · {t(l, "Selected", "선택됨", "محدد")}</>
                       )}

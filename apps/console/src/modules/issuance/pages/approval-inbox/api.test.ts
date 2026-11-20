@@ -442,3 +442,28 @@ test("abort and invalid queries cannot silently produce loaded data", async () =
   );
   assert.equal(calls, 0);
 });
+
+
+test("accepts paired historical requester/policy and rated candidate totals while retaining old records", () => {
+  const d = fixture();
+  assert.equal(valid(d, q()), true);
+  d.records[0].requester = { id: "different-requester", label: "Different requester" };
+  d.records[0].policy_revision = 2;
+  d.records[0].amounts[0].basis = "rated_candidate_total";
+  assert.equal(valid(d, q()), true);
+  for (const fields of [
+    { requester: d.records[0].requester },
+    { policy_revision: 2 },
+    { requester: null, policy_revision: 2 },
+    { requester: d.records[0].requester, policy_revision: null },
+    { requester: d.records[0].requester, policy_revision: 0 },
+    { requester: d.records[0].requester, policy_revision: Number.MAX_SAFE_INTEGER + 1 },
+  ]) {
+    const bad = fixture();
+    Object.assign(bad.records[0], fields);
+    assert.equal(valid(bad, q()), false, JSON.stringify(fields));
+  }
+  const bad = fixture();
+  Object.assign(bad.records[0].amounts[0], { basis: "invented_total" });
+  assert.equal(valid(bad, q()), false);
+});

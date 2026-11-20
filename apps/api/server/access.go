@@ -145,7 +145,7 @@ func fullScope(t gate.Terms) bool {
 func (s *Server) ceiling() []ceilingRow {
 	out := []ceilingRow{}
 	for _, g := range s.admin.Grants() {
-		if g.ClientID == ConsoleClient && g.Active && !gate.InstallationAction(g.Terms.Action) && g.Terms.Scope.WorkspaceID == s.bootWorkspace && fullScope(g.Terms) {
+		if g.ClientID == ConsoleClient && g.Active && !gate.InstallationAction(g.Terms.Action) && !pricingGrantTerms(g.Terms.Action, g.Terms.Kind, g.Terms.Fields) && g.Terms.Scope.WorkspaceID == s.bootWorkspace && fullScope(g.Terms) {
 			out = append(out, ceilingRow{Action: string(g.Terms.Action), Kind: g.Terms.Kind, Fields: append([]string{}, g.Terms.Fields...), Until: stamp(g.Validity.NotAfter)})
 		}
 	}

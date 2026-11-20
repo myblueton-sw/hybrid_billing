@@ -30,7 +30,7 @@ func TestCandidateReadActualSeed(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	defer f.s.Close()
 	root := f.as(AdminLogin)
-	if f.s.chargeProducer.orgs != f.s.orgs || f.s.chargeProducer.domain != &f.s.domain {
+	if f.s.chargeProducer.orgs != f.s.orgs || f.s.chargeProducer.lifecycles != f.s.lifecycles || f.s.chargeProducer.domain != &f.s.domain {
 		t.Fatal("shadow organizations or lock")
 	}
 	before := len(f.s.chargeProducer.candidates.records)
@@ -47,6 +47,15 @@ func TestCandidateReadActualSeed(t *testing.T) {
 		t.Fatal(detail.raw)
 	}
 	record := detail.body["record"].(map[string]any)
+	lifecycle := record["provenance"].(map[string]any)["recorded_lifecycle"].(map[string]any)
+	segments := lifecycle["segments"].([]any)
+	if lifecycle["contract"] != "sample-contract-01" || fmt.Sprint(lifecycle["journal_sequence"]) != "1" || lifecycle["from"] != "2026-10-01" || lifecycle["to_exclusive"] != "2026-11-01" || len(segments) != 1 {
+		t.Fatal("lifecycle HTTP shape", lifecycle)
+	}
+	segment := segments[0].(map[string]any)
+	if segment["state"] != "active" || fmt.Sprint(segment["contract_revision"]) != "2" || segment["from"] != "2026-10-01" || segment["to_exclusive"] != "2026-11-01" {
+		t.Fatal("lifecycle HTTP segment", segment)
+	}
 	if len(record["input_lines"].([]any)) != 2 || len(record["charges"].([]any)) != 2 || len(record["provenance"].(map[string]any)["rows"].([]any)) != 2 {
 		t.Fatal("incomplete details", detail.raw)
 	}

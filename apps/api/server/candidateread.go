@@ -71,6 +71,7 @@ type candidateOriginRow struct {
 }
 
 type candidateProvenance struct {
+	Lifecycle       candidateLifecycle   `json:"recorded_lifecycle"`
 	Run             string               `json:"normalization_run"`
 	Provider        string               `json:"provider"`
 	SourceVersion   string               `json:"source_version"`
@@ -107,7 +108,7 @@ type candidateResponse struct {
 
 func summarizeCandidate(v chargeCandidate, workspace, id string) (candidateSummary, error) {
 	in, result := v.Envelope.Input, v.Envelope.Result
-	if v.Envelope.Schema != "hb_charge_candidate_v2" || in.SourceMode != "synthetic" || in.Workspace != workspace || in.ID != id {
+	if v.Envelope.Schema != "hb_charge_candidate_v3" || in.SourceMode != "synthetic" || in.Workspace != workspace || in.ID != id {
 		return candidateSummary{}, errCandidateInvalid
 	}
 	return candidateSummary{ID: in.ID, Digest: v.Digest, Customer: in.Customer, Entity: in.Entity, From: in.From, To: in.To, Total: result.Total, Currency: result.Currency,
@@ -158,7 +159,7 @@ func detailCandidate(v chargeCandidate, summary candidateSummary) candidateDetai
 		out.Traces = append(out.Traces, row)
 	}
 	origin := v.Envelope.Input.Normalized
-	out.Provenance = candidateProvenance{Run: origin.Run, Provider: origin.Mapping.Provider, SourceVersion: origin.Mapping.SourceVersion, Target: origin.Mapping.Target,
+	out.Provenance = candidateProvenance{Lifecycle: origin.Lifecycle, Run: origin.Run, Provider: origin.Mapping.Provider, SourceVersion: origin.Mapping.SourceVersion, Target: origin.Mapping.Target,
 		MappingRevision: origin.MappingRevision, Manifest: origin.Manifest, Profile: origin.Profile, ProfileRevision: origin.ProfileRevision, MappingDigest: origin.MappingDigest, TargetDigest: origin.TargetDigest, Rows: []candidateOriginRow{}}
 	for _, row := range origin.Rows {
 		out.Provenance.Rows = append(out.Provenance.Rows, candidateOriginRow{string(row.Key.Kind), row.Key.Document, row.Key.Key, row.Chunk, row.Position, row.Digest, row.Line})
@@ -241,7 +242,7 @@ func candidateReadPath(detail bool) map[string]any {
 	return map[string]any{"get": map[string]any{"operationId": operation, "x-action": string(gate.ViewCost), "x-field": candidateField, "parameters": parameters, "x-session": true, "x-csrf": true,
 		"x-scope": "whole authenticated workspace", "x-query": "all query parameters refused", "x-complete-list-bound": 1000,
 		"responses": map[string]any{
-			"200": map[string]any{"description": "Complete sorted candidate summaries, or one allowlisted detail. Exact decimal strings; synthetic rating totals, unverified approval readiness, no commands. No raw source cells or complete internal envelope."},
+			"200": map[string]any{"description": "Complete sorted candidate summaries, or one allowlisted detail. Exact decimal strings; synthetic rating totals, unverified approval readiness, no commands. Detail provenance.recorded_lifecycle contains contract, journal_sequence, from, to_exclusive and active segments with contract_revision. This is coverage recorded at capture, not current lifecycle, settlement, ownership or financial eligibility. No raw source cells or complete internal envelope."},
 			"401": readCodes(readError(commands.Unauthenticated), string(commands.Unauthenticated)),
 			"403": readCodes(readError(commands.PermissionDenied), CodeCSRF, string(commands.PermissionDenied)),
 			"404": readCodes(readError(commands.UnsupportedCommand), string(commands.UnsupportedCommand)),

@@ -28,7 +28,7 @@ func (s *Server) newChargeProducer() (*normalizedCharges, error) {
 		{Name: "class", Kind: normalize.Text, Format: true}, {Name: "service", Kind: normalize.Text, Format: true},
 	}}
 	limits := normalize.Limits{Targets: 10, Fields: 20, Mappings: 20, Revisions: 20, Runs: 1000, Chunks: 100, ChunkRows: 1000, Rows: 100000, Cells: 20, Text: 128, Findings: 1000, Unused: 20, Page: 100}
-	return newNormalizedCharges(s.orgs, &s.domain, limits, profile, target, s.clock)
+	return newNormalizedCharges(s.orgs, s.lifecycles, &s.domain, limits, profile, target, s.clock)
 }
 
 func (s *Server) seedChargeCandidates(now time.Time) error {

@@ -8,6 +8,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
 	"github.com/myblueton-sw/hybrid_billing/modules/normalize"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/rating"
@@ -54,6 +55,7 @@ type normalizedRowOrigin struct {
 }
 
 type normalizedOrigin struct {
+	Lifecycle       candidateLifecycle
 	Binding         normalizedBinding
 	Run             string
 	Mapping         normalize.MappingKey
@@ -72,6 +74,7 @@ type normalizedOrigin struct {
 }
 
 type normalizedCharges struct {
+	lifecycles *contracts.Registry
 	domain     *sync.RWMutex
 	normal     *normalize.Registry
 	orgs       *organizations.Registry
@@ -80,8 +83,8 @@ type normalizedCharges struct {
 	candidates chargeCandidates
 }
 
-func newNormalizedCharges(orgs *organizations.Registry, domain *sync.RWMutex, limits normalize.Limits, profile decimal.Profile, target normalize.Target, clock func() time.Time) (*normalizedCharges, error) {
-	if orgs == nil || domain == nil {
+func newNormalizedCharges(orgs *organizations.Registry, lifecycles *contracts.Registry, domain *sync.RWMutex, limits normalize.Limits, profile decimal.Profile, target normalize.Target, clock func() time.Time) (*normalizedCharges, error) {
+	if orgs == nil || lifecycles == nil || domain == nil {
 		return nil, errCandidateInvalid
 	}
 	normal, err := normalize.NewRegistry(limits, profile, clock)
@@ -96,7 +99,7 @@ func newNormalizedCharges(orgs *organizations.Registry, domain *sync.RWMutex, li
 	if page > 100 {
 		page = 100
 	}
-	return &normalizedCharges{normal: normal, orgs: orgs, domain: domain, target: target, page: page}, nil
+	return &normalizedCharges{normal: normal, orgs: orgs, lifecycles: lifecycles, domain: domain, target: target, page: page}, nil
 }
 
 func normalizedDigest(value any) (string, error) {
@@ -246,7 +249,11 @@ func (p *normalizedCharges) captureLocked(workspace, runID, candidateID string, 
 	if err != nil {
 		return chargeCandidate{}, err
 	}
-	origin := normalizedOrigin{Binding: b, Run: runID, Mapping: run.Spec.Mapping, MappingRevision: run.Spec.Revision, Manifest: run.Spec.Input.Manifest,
+	lifecycle, err := p.lifecycleCoverage(workspace, b)
+	if err != nil {
+		return chargeCandidate{}, err
+	}
+	origin := normalizedOrigin{Lifecycle: lifecycle, Binding: b, Run: runID, Mapping: run.Spec.Mapping, MappingRevision: run.Spec.Revision, Manifest: run.Spec.Input.Manifest,
 		Profile: run.ProfileID, ProfileRevision: run.ProfileRevision, WindowFrom: run.Spec.Window.From.UTC().Format(time.RFC3339Nano), WindowTo: run.Spec.Window.To.UTC().Format(time.RFC3339Nano), Contract: contract, BillingProfile: profile, Document: document}
 	origin.TargetDigest, err = normalizedDigest(p.target)
 	if err != nil {

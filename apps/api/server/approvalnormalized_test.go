@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
 	"github.com/myblueton-sw/hybrid_billing/modules/normalize"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/rating"
@@ -31,7 +32,8 @@ func normalizedFixture(t *testing.T, transform bool, alter func([]normalize.Row)
 	if err != nil {
 		t.Fatal(err)
 	}
-	p, err := newNormalizedCharges(orgs, &sync.RWMutex{}, limits, profile, target, func() time.Time { return time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC) })
+	life := lifecycleTestRegistry(t, []contracts.Event{{ID: "start", Kind: contracts.Start, From: contractDay(2026, 10, 1), Revision: 1}})
+	p, err := newNormalizedCharges(orgs, life, &sync.RWMutex{}, limits, profile, target, func() time.Time { return time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC) })
 	if err != nil {
 		t.Fatal(err)
 	}

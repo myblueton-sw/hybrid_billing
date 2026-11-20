@@ -272,13 +272,13 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) { s.policy, err = authpolicy.NewRegistry(s.clock); return },
 		func() (err error) { s.passwords, err = passwords.New(s.clock, cfg.Passwords); return },
 		func() (err error) { s.orgs, err = organizations.NewRegistry(Installation); return },
-		func() (err error) { s.chargeProducer, err = s.newChargeProducer(); return },
 		func() (err error) { s.rels, err = relationships.NewRegistry(s.relLimits, s.clock); return },
 		func() (err error) {
 			s.lifecycleLimits = ContractLimits()
 			s.lifecycles, err = contracts.NewRegistry(s.lifecycleLimits, s.clock)
 			return
 		},
+		func() (err error) { s.chargeProducer, err = s.newChargeProducer(); return },
 		func() (err error) {
 			s.installer, err = installer.NewRegistry(installer.Config{Random: rand.Reader}, InstallerLimits(), s.clock)
 			return

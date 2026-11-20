@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
+	"github.com/myblueton-sw/hybrid_billing/modules/intake"
 	"github.com/myblueton-sw/hybrid_billing/modules/normalize"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/rating"
@@ -13,6 +14,24 @@ import (
 )
 
 func normalizedFixture(t *testing.T, transform bool, alter func([]normalize.Row)) (*normalizedCharges, normalizedBinding) {
+	t.Helper()
+	p, b, err := normalizedFixtureResult(t, transform, alter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return p, b
+}
+
+func normalizedFixtureResult(t *testing.T, transform bool, alter func([]normalize.Row)) (*normalizedCharges, normalizedBinding, error) {
+	t.Helper()
+	p, b, packet := normalizedFixtureSetup(t, transform, alter)
+	p.domain.Lock()
+	defer p.domain.Unlock()
+	_, err := p.assembleSourceLocked(packet)
+	return p, b, err
+}
+
+func normalizedFixtureSetup(t *testing.T, transform bool, alter func([]normalize.Row)) (*normalizedCharges, normalizedBinding, sourcePacket) {
 	t.Helper()
 	input := candidateFixture()
 	profile, err := decimal.NewProfile(input.Profile)
@@ -75,16 +94,18 @@ func normalizedFixture(t *testing.T, transform bool, alter func([]normalize.Row)
 	if alter != nil {
 		alter(rows)
 	}
-	_, err = p.normal.Open(normalize.RunSpec{WorkspaceID: "workspace", ID: "normalized", Mapping: key, Revision: 1, Input: normalize.Input{Scope: "scope", Period: "october", Manifest: 1}, Chunks: 1, Rows: 2,
-		Window: &normalize.Window{From: time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC), To: time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)}, Expected: map[string]map[string]string{"billed": {"USD": billed}, "effective": {"USD": "2"}}})
-	check(err)
-	_, err = p.normal.Check("workspace", "normalized", 1, rows)
-	check(err)
-	_, _, err = p.normal.Close("workspace", "normalized")
-	check(err)
 	b := normalizedBinding{SourceMode: "synthetic", ID: "synthetic-binding", Version: "1", Provider: "provider", SourceVersion: "source-v1", Scope: "scope", Period: "october", MappingRevision: 1, Contract: "contract", ContractRevision: 1, BillingProfile: "billing", BillingRevision: 1,
 		From: "2026-10-01", To: "2026-10-31", Class: "class", Classes: []normalizedClass{{Source: "compute", Class: rating.CSPUsage}}, Quantity: "quantity", Service: "service", Profile: input.Profile, Limits: input.Limits, Policy: input.Policy}
-	return p, b
+	packet := normalizedTestPacket(normalize.RunSpec{WorkspaceID: "workspace", ID: "normalized", Mapping: key, Revision: 1, Input: normalize.Input{Scope: "scope", Period: "october"}, Window: &normalize.Window{From: time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC), To: time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)}, Expected: map[string]map[string]string{"billed": {"USD": billed}, "effective": {"USD": "2"}}}, rows, 1, "first")
+	return p, b, packet
+}
+
+func normalizedTestPacket(spec normalize.RunSpec, rows []normalize.Row, revision uint64, suffix string) sourcePacket {
+	spec.Input.Manifest, spec.Rows, spec.Chunks = 0, 0, 0
+	return sourcePacket{Mode: "synthetic", CostField: "billed", CurrencyField: "currency", Run: spec, Artifacts: []sourceArtifact{
+		{ID: "source-a-" + suffix, Document: "doc-a", Revision: revision, Kind: intake.LocatorKeys, Sums: map[string]string{"USD": "2"}, Rows: rows[:1]},
+		{ID: "source-b-" + suffix, Document: "doc-b", Revision: revision, Kind: intake.LocatorKeys, Sums: map[string]string{"USD": "3"}, Rows: rows[1:]},
+	}}
 }
 
 func TestNormalizedChargesUseActualProducer(t *testing.T) {
@@ -161,7 +182,10 @@ func TestNormalizedChargesRejectMissingAndForeign(t *testing.T) {
 		"mixed currency":   func(rows []normalize.Row) { rows[0].Cells["currency"] = normalize.Cell{Text: "EUR"} },
 	} {
 		t.Run(name, func(t *testing.T) {
-			p, b := normalizedFixture(t, false, change)
+			p, b, sourceErr := normalizedFixtureResult(t, false, change)
+			if name == "mixed currency" && sourceErr == nil || name != "mixed currency" && sourceErr != nil {
+				t.Fatal("unexpected source assembly result", sourceErr)
+			}
 			if _, err := p.capture("workspace", "normalized", "candidate", b); err == nil {
 				t.Fatal("incomplete rows accepted")
 			}
@@ -177,7 +201,10 @@ func TestNormalizedChargesRejectMissingAndForeign(t *testing.T) {
 }
 
 func TestNormalizedChargesRejectUnselectedInvalidText(t *testing.T) {
-	p, b := normalizedFixture(t, false, func(rows []normalize.Row) { rows[0].Cells["note"] = normalize.Cell{Text: string([]byte{255})} })
+	p, b, sourceErr := normalizedFixtureResult(t, false, func(rows []normalize.Row) { rows[0].Cells["note"] = normalize.Cell{Text: string([]byte{255})} })
+	if sourceErr == nil {
+		t.Fatal("invalid source UTF8 accepted")
+	}
 	if _, err := p.capture("workspace", "normalized", "candidate", b); err == nil {
 		t.Fatal("invalid unselected text was hashed")
 	}
@@ -322,13 +349,7 @@ func TestNormalizedChargesMappingIdentity(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err := p.normal.Open(spec); err != nil {
-			t.Fatal(err)
-		}
-		if _, err := p.normal.Check("workspace", spec.ID, 1, raw); err != nil {
-			t.Fatal(err)
-		}
-		if _, _, err := p.normal.Close("workspace", spec.ID); err != nil {
+		if _, err := p.assembleSourceLocked(normalizedTestPacket(spec, raw, 2, "second")); err != nil {
 			t.Fatal(err)
 		}
 		p.domain.Unlock()

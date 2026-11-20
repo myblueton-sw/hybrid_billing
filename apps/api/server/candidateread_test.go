@@ -47,6 +47,42 @@ func TestCandidateReadActualSeed(t *testing.T) {
 		t.Fatal(detail.raw)
 	}
 	record := detail.body["record"].(map[string]any)
+	provenance := record["provenance"].(map[string]any)
+	source := provenance["source_manifest"].(map[string]any)
+	if source["workspace"] != SampleWorkspace || source["scope"] != "sample-acct-01" || source["period"] != "2026-10" || source["source_version"] != "synthetic-source-v1" || source["source_cost_field"] != "billed" || source["source_currency_field"] != "currency" || fmt.Sprint(source["manifest"]) != "1" || source["manifest"] != provenance["manifest_reference"] || source["provider"] != provenance["provider"] {
+		t.Fatal("source HTTP binding", source)
+	}
+	for _, field := range []string{"content_digest", "attribution_digest"} {
+		if value, ok := source[field].(string); !ok || len(value) != 64 {
+			t.Fatal("missing source digest", field, source)
+		}
+	}
+	admission := source["recorded_admission"].(map[string]any)
+	if admission["difference"] != "same" || fmt.Sprint(admission["latest_manifest"]) != "1" {
+		t.Fatal("source admission", admission)
+	}
+	for _, field := range []string{"staged_artifacts", "behind_revisions", "same_bytes", "blockers"} {
+		if fmt.Sprint(admission[field]) != "0" {
+			t.Fatal("source admission observation", field, admission)
+		}
+	}
+	sourceRows := source["rows"].([]any)
+	if len(sourceRows) != 2 {
+		t.Fatal("source row coverage", sourceRows)
+	}
+	amounts := map[string]string{"sample-line-a": "10.25", "sample-line-b": "4.75"}
+	for _, value := range sourceRows {
+		row := value.(map[string]any)
+		key, _ := row["key"].(string)
+		amount, ok := amounts[key]
+		if !ok || row["source_amount"] != amount || row["source_currency"] != "USD" || row["artifact"] != "sample-charge-source" || row["document"] != "" {
+			t.Fatal("source row binding", row)
+		}
+		if digest, ok := row["digest"].(string); !ok || len(digest) != 64 {
+			t.Fatal("source row digest", row)
+		}
+		delete(amounts, key)
+	}
 	lifecycle := record["provenance"].(map[string]any)["recorded_lifecycle"].(map[string]any)
 	segments := lifecycle["segments"].([]any)
 	if lifecycle["contract"] != "sample-contract-01" || fmt.Sprint(lifecycle["journal_sequence"]) != "1" || lifecycle["from"] != "2026-10-01" || lifecycle["to_exclusive"] != "2026-11-01" || len(segments) != 1 {

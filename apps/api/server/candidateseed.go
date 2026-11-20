@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
+	"github.com/myblueton-sw/hybrid_billing/modules/intake"
 	"github.com/myblueton-sw/hybrid_billing/modules/normalize"
 	"github.com/myblueton-sw/hybrid_billing/modules/rating"
 	"github.com/myblueton-sw/hybrid_billing/packages/primitives/decimal"
@@ -49,10 +50,6 @@ func (s *Server) seedChargeCandidates(now time.Time) error {
 	from := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
 	run := "sample-normalized-charge"
-	if _, err := p.normal.Open(normalize.RunSpec{WorkspaceID: ws, ID: run, Mapping: key, Revision: 1, Input: normalize.Input{Scope: "sample-acct-01", Period: "2026-10", Manifest: 1}, Chunks: 1, Rows: 2,
-		Window: &normalize.Window{From: from, To: to}, Expected: map[string]map[string]string{"billed": {"USD": "15"}}}); err != nil {
-		return err
-	}
 	var rows []normalize.Row
 	for i, amount := range []string{"10.25", "4.75"} {
 		id := []string{"sample-line-a", "sample-line-b"}[i]
@@ -60,10 +57,7 @@ func (s *Server) seedChargeCandidates(now time.Time) error {
 			"billed": {Text: amount}, "currency": {Text: "USD"}, "start": {Text: from.Format(time.RFC3339)}, "end": {Text: to.Format(time.RFC3339)}, "class": {Text: "compute"}, "service": {Text: "virtual-machine"},
 		}})
 	}
-	if _, err := p.normal.Check(ws, run, 1, rows); err != nil {
-		return err
-	}
-	if _, _, err := p.normal.Close(ws, run); err != nil {
+	if _, err := p.assembleSourceLocked(sourcePacket{Mode: "synthetic", CostField: "billed", CurrencyField: "currency", Run: normalize.RunSpec{WorkspaceID: ws, ID: run, Mapping: key, Revision: 1, Input: normalize.Input{Scope: "sample-acct-01", Period: "2026-10"}, Window: &normalize.Window{From: from, To: to}, Expected: map[string]map[string]string{"billed": {"USD": "15"}}}, Artifacts: []sourceArtifact{{ID: "sample-charge-source", Document: "sample-charge-document", Revision: 1, Kind: intake.EventKeys, Sums: map[string]string{"USD": "15"}, Rows: rows}}}); err != nil {
 		return err
 	}
 	binding := normalizedBinding{SourceMode: "synthetic", ID: "sample-charge-binding", Version: "1", Provider: key.Provider, SourceVersion: key.SourceVersion, Scope: "sample-acct-01", Period: "2026-10", MappingRevision: 1,

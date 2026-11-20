@@ -9,6 +9,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
+	"github.com/myblueton-sw/hybrid_billing/modules/intake"
 	"github.com/myblueton-sw/hybrid_billing/modules/normalize"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/rating"
@@ -55,6 +56,7 @@ type normalizedRowOrigin struct {
 }
 
 type normalizedOrigin struct {
+	Source          candidateSource
 	Lifecycle       candidateLifecycle
 	Binding         normalizedBinding
 	Run             string
@@ -74,13 +76,18 @@ type normalizedOrigin struct {
 }
 
 type normalizedCharges struct {
-	lifecycles *contracts.Registry
-	domain     *sync.RWMutex
-	normal     *normalize.Registry
-	orgs       *organizations.Registry
-	target     normalize.Target
-	page       int
-	candidates chargeCandidates
+	intake          *intake.Registry
+	sourceProfile   decimal.Profile
+	sourceChunk     int
+	sources         map[[2]string]*sourceAssembly
+	sourceArtifacts map[[2]string][2]string
+	lifecycles      *contracts.Registry
+	domain          *sync.RWMutex
+	normal          *normalize.Registry
+	orgs            *organizations.Registry
+	target          normalize.Target
+	page            int
+	candidates      chargeCandidates
 }
 
 func newNormalizedCharges(orgs *organizations.Registry, lifecycles *contracts.Registry, domain *sync.RWMutex, limits normalize.Limits, profile decimal.Profile, target normalize.Target, clock func() time.Time) (*normalizedCharges, error) {
@@ -99,7 +106,11 @@ func newNormalizedCharges(orgs *organizations.Registry, lifecycles *contracts.Re
 	if page > 100 {
 		page = 100
 	}
-	return &normalizedCharges{normal: normal, orgs: orgs, lifecycles: lifecycles, domain: domain, target: target, page: page}, nil
+	inputs, err := intake.NewRegistry(intake.Limits{MaxSize: candidateBytes, MaxRatio: 1, Chunks: limits.Chunks, ChunkRecords: limits.ChunkRows, Artifacts: 1000, Records: limits.Rows, Manifests: 1000, Page: page, Listed: 1000}, profile, clock)
+	if err != nil {
+		return nil, err
+	}
+	return &normalizedCharges{normal: normal, orgs: orgs, lifecycles: lifecycles, domain: domain, target: target, page: page, intake: inputs, sourceProfile: profile, sourceChunk: limits.ChunkRows, sources: make(map[[2]string]*sourceAssembly), sourceArtifacts: make(map[[2]string][2]string)}, nil
 }
 
 func normalizedDigest(value any) (string, error) {
@@ -253,7 +264,11 @@ func (p *normalizedCharges) captureLocked(workspace, runID, candidateID string, 
 	if err != nil {
 		return chargeCandidate{}, err
 	}
-	origin := normalizedOrigin{Lifecycle: lifecycle, Binding: b, Run: runID, Mapping: run.Spec.Mapping, MappingRevision: run.Spec.Revision, Manifest: run.Spec.Input.Manifest,
+	source, err := p.sourceForRun(workspace, runID, run.Spec)
+	if err != nil {
+		return chargeCandidate{}, err
+	}
+	origin := normalizedOrigin{Source: source, Lifecycle: lifecycle, Binding: b, Run: runID, Mapping: run.Spec.Mapping, MappingRevision: run.Spec.Revision, Manifest: run.Spec.Input.Manifest,
 		Profile: run.ProfileID, ProfileRevision: run.ProfileRevision, WindowFrom: run.Spec.Window.From.UTC().Format(time.RFC3339Nano), WindowTo: run.Spec.Window.To.UTC().Format(time.RFC3339Nano), Contract: contract, BillingProfile: profile, Document: document}
 	origin.TargetDigest, err = normalizedDigest(p.target)
 	if err != nil {
@@ -325,4 +340,12 @@ func (p *normalizedCharges) captureLocked(workspace, runID, candidateID string, 
 	}
 	input.Sources = []chargeSource{{ID: runID, Revision: b.Version, Digest: provenance}}
 	return p.candidates.capture(input)
+}
+
+func (p *normalizedCharges) sourceAmount(text string) (string, error) {
+	value, err := decimal.Parse(p.sourceProfile, text)
+	if err != nil {
+		return "", err
+	}
+	return value.String(), nil
 }

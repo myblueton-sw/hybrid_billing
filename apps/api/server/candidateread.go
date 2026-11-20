@@ -71,6 +71,7 @@ type candidateOriginRow struct {
 }
 
 type candidateProvenance struct {
+	Source          candidateSource      `json:"source_manifest"`
 	Lifecycle       candidateLifecycle   `json:"recorded_lifecycle"`
 	Run             string               `json:"normalization_run"`
 	Provider        string               `json:"provider"`
@@ -108,7 +109,7 @@ type candidateResponse struct {
 
 func summarizeCandidate(v chargeCandidate, workspace, id string) (candidateSummary, error) {
 	in, result := v.Envelope.Input, v.Envelope.Result
-	if v.Envelope.Schema != "hb_charge_candidate_v3" || in.SourceMode != "synthetic" || in.Workspace != workspace || in.ID != id {
+	if v.Envelope.Schema != "hb_charge_candidate_v4" || in.SourceMode != "synthetic" || in.Workspace != workspace || in.ID != id {
 		return candidateSummary{}, errCandidateInvalid
 	}
 	return candidateSummary{ID: in.ID, Digest: v.Digest, Customer: in.Customer, Entity: in.Entity, From: in.From, To: in.To, Total: result.Total, Currency: result.Currency,
@@ -159,7 +160,7 @@ func detailCandidate(v chargeCandidate, summary candidateSummary) candidateDetai
 		out.Traces = append(out.Traces, row)
 	}
 	origin := v.Envelope.Input.Normalized
-	out.Provenance = candidateProvenance{Lifecycle: origin.Lifecycle, Run: origin.Run, Provider: origin.Mapping.Provider, SourceVersion: origin.Mapping.SourceVersion, Target: origin.Mapping.Target,
+	out.Provenance = candidateProvenance{Source: origin.Source, Lifecycle: origin.Lifecycle, Run: origin.Run, Provider: origin.Mapping.Provider, SourceVersion: origin.Mapping.SourceVersion, Target: origin.Mapping.Target,
 		MappingRevision: origin.MappingRevision, Manifest: origin.Manifest, Profile: origin.Profile, ProfileRevision: origin.ProfileRevision, MappingDigest: origin.MappingDigest, TargetDigest: origin.TargetDigest, Rows: []candidateOriginRow{}}
 	for _, row := range origin.Rows {
 		out.Provenance.Rows = append(out.Provenance.Rows, candidateOriginRow{string(row.Key.Kind), row.Key.Document, row.Key.Key, row.Chunk, row.Position, row.Digest, row.Line})

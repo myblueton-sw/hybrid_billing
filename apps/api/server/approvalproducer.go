@@ -189,7 +189,7 @@ func (s *chargeCandidates) capture(in chargeInput) (chargeCandidate, error) {
 	if err != nil {
 		return chargeCandidate{}, err
 	}
-	envelope, err := json.Marshal(chargeEnvelope{Schema: "hb_charge_candidate_v3", Input: copied, Result: result})
+	envelope, err := json.Marshal(chargeEnvelope{Schema: "hb_charge_candidate_v4", Input: copied, Result: result})
 	if err != nil {
 		return chargeCandidate{}, err
 	}

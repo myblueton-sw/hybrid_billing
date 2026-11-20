@@ -78,11 +78,11 @@ export function PreviewBody({ l, api, prepared, onMore, days = 14 }: { l: Locale
           <h4>{b.rights(l)}</h4>
           <Sum rows={[[b.installationAdmins(l), i.installation_administrators], [b.trustHolders(l), i.trust_right_holders], [b.bulkHolders(l), i.bulk_right_holders]]} />
           <h4>{b.sessionsKeys(l)}</h4>
-          <Sum rows={[[b.sessions(l), i.sessions], [b.pickups(l), i.pickups], [b.apiKeys(l), b.noKeys(l)]]} />
+          <Sum rows={[[b.sessions(l), i.sessions], [b.pickups(l), i.pickups], [b.apiKeys(l), i.api_keys === "not_applicable" ? b.noKeys(l) : b.impactUnknown(l)]]} />
           <h4>{b.pendingWork(l)}</h4>
           <Sum rows={[...i.pending.map((s): [string, React.ReactNode, boolean] => [b.store(l, s.store),
             <><span className="m01-line">{s.count}</span><span className={"m01-line" + (s.rechecked ? "" : " live-strong")}>{s.rechecked ? b.rechecked(l) : b.notRechecked(l)}</span></>, false]),
-          [b.pendingJobs(l), b.noJobs(l)]]} />
+          [b.pendingJobs(l), i.pending_jobs === "not_applicable" ? b.noJobs(l) : b.impactUnknown(l)]]} />
           <h4>{b.serviceUsers(l)}</h4>
           <Sum rows={[[b.serviceUsers(l), <><span className="m01-line">{i.service_users}</span><span className="m01-line">{b.serviceKeep(l)}</span></>]]} />
           <h4>{b.afterwards(l)}</h4>

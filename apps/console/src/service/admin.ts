@@ -1,3 +1,7 @@
+import { grantsOf, delegationsOf, catalogOf, subjectsOf, settingsOf as accessSettingsOf, requestsOf, revocationsOf, previewsOf } from "./access-read";
+import { credentialOf, servicesPageOf, selfPageOf } from "./account-read";
+import { organizationsPageOf } from "./organization-read";
+import { ReadParseError, text as readText } from "./strict-read";
 import { accessHistoryOf, HistoryParseError, type AccessHistoryPage, type AccessHistoryQuery } from "./access-history";
 import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsPage } from "./contracts";
 import { installationOf, type InstallationPage } from "./installation";
@@ -5,7 +9,7 @@ import { integrationsOf, type IntegrationsPage } from "./integrations";
 import { recoveryOf, type RecoveryPage } from "./recovery";
 import { evidenceOf, type EvidencePage } from "./release-evidence";
 import { retentionOf, type RetentionPage } from "./retention";
-import { selfEndOf, selfSessionOf, type SelfEnd, type SelfSession } from "./self-end";
+import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
 
 export type RolePeriod = "open" | "bounded" | "ends_soon" | "ended";
 
@@ -461,6 +465,7 @@ export type TrustRow = {
   activated_at: string;
   reset_at: string;
   older_record_ignored: boolean;
+  stricter_fields: string[] | null;
   proposer: string;
   validator: string;
   approver: string;
@@ -614,6 +619,7 @@ export function policyPageOf(body: Record<string, unknown>): PolicyPage {
       epoch: str(t.epoch), epoch_generation: num(t.epoch_generation), epoch_number: num(t.epoch_number), policy_number: num(t.policy_number), digest: str(t.digest),
       origin: (origins.includes(str(t.origin)) ? str(t.origin) : "") as TrustRow["origin"], carried_from: str(t.carried_from), carried_line: num(t.carried_line),
       durable_unconfirmed: t.durable_unconfirmed === true, activated_at: str(t.activated_at), reset_at: str(t.reset_at), older_record_ignored: t.older_record_ignored === true, proposer: str(t.proposer), validator: str(t.validator),
+      stricter_fields: Array.isArray(t.stricter_fields) && t.stricter_fields.every((value): value is string => typeof value === "string") ? t.stricter_fields : null,
       approver: str(t.approver), activator: str(t.activator), change: str(t.change), hold: hold && { reason: str(hold.reason), since: str(hold.since) },
     },
     ledger: {
@@ -784,21 +790,17 @@ export function ledgerOf(v: unknown): LedgerStatus {
   };
 }
 
-const pickups: SecretPickup[] = ["open", "collected", "never_collected"];
-
 export function credentialRowOf(raw: unknown): CredentialRow {
-  const c = (raw ?? {}) as Record<string, unknown>;
-  const row: CredentialRow = {
-    id: String(c.id ?? ""),
-    not_before: String(c.not_before ?? ""),
-    not_after: String(c.not_after ?? ""),
-    state: String(c.state ?? "") as CredentialRow["state"],
-    usable: c.usable === true,
-  };
-  const pickup = pickups.find((p) => p === c.secret_pickup);
-  const until = typeof c.secret_pickup_until === "string" && !Number.isNaN(Date.parse(c.secret_pickup_until)) ? c.secret_pickup_until : "";
-  if (row.state !== "active" || !pickup || (pickup === "open" && !until)) return row;
-  return pickup === "open" ? { ...row, secret_pickup: pickup, secret_pickup_until: until } : { ...row, secret_pickup: pickup };
+  return validatedRead(() => credentialOf(raw));
+}
+
+function validatedRead<T>(parse: () => T): T {
+  try {
+    return parse();
+  } catch (error) {
+    if (error instanceof ReadParseError) throw new AdminError("invalid");
+    throw error;
+  }
 }
 
 export function outcomeOf(body: Record<string, unknown>): Outcome {
@@ -969,49 +971,22 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async access(): Promise<AccessPage> {
       const body = await send("/identity/access", { method: "GET" }, attempt().request);
-      const list = <T,>(v: unknown) => (Array.isArray(v) ? (v as T[]) : []);
-      return {
-        revision: String(body.revision ?? ""),
-        grants: list<AccessGrant>(body.grants),
-        delegations: list<AccessDelegation>(body.delegations),
-        catalog: list<Ceiling>(body.catalog),
-        subjects: list<{ user_id: string; login: string }>(body.subjects),
-        now: String(body.now ?? ""),
-        you: String(body.you ?? ""),
-        started_at: String(body.started_at ?? ""),
-        settings: list<AccessSetting>(body.settings),
-        requests: list<AccessRequest>(body.requests).map((q) => ({ ...q, fields: Array.isArray(q.fields) ? q.fields : [], may_end: Array.isArray(q.may_end) ? q.may_end : [] })),
-        revocations: list<Revocation>(body.revocations).map((v) => ({
-          ...v,
-          history: Array.isArray(v.history) ? v.history : [],
-          ended_delegations: Array.isArray(v.ended_delegations) ? v.ended_delegations : [],
-          cleanup: Array.isArray(v.cleanup) ? v.cleanup.map((c) => ({ ...c, refs: Array.isArray(c.refs) ? c.refs : [] })) : [],
-          receipt: v.receipt ?? { sequence: 0, watermark: "", reason: "" },
-        })),
-        ledger: ledgerOf(body.ledger),
-      };
+      return validatedRead(() => ({
+        revision: readText(body.revision), grants: grantsOf(body.grants), delegations: delegationsOf(body.delegations),
+        catalog: catalogOf(body.catalog), subjects: subjectsOf(body.subjects), now: readText(body.now), you: readText(body.you),
+        started_at: readText(body.started_at), settings: accessSettingsOf(body.settings), requests: requestsOf(body.requests),
+        revocations: revocationsOf(body.revocations), ledger: ledgerOf(body.ledger),
+      }));
     },
     async preview(subject: string, kind: string, customer = ""): Promise<Preview[]> {
       const q = new URLSearchParams({ subject, kind });
       if (customer) q.set("customer", customer);
       const body = await send("/identity/access/preview?" + q.toString(), { method: "GET" }, attempt().request);
-      return Array.isArray(body.decisions) ? (body.decisions as Preview[]) : [];
+      return validatedRead(() => previewsOf(body.decisions));
     },
     async services(): Promise<ServicesPage> {
       const body = await send("/identity/services", { method: "GET" }, attempt().request);
-      const limits = (body.limits ?? {}) as Record<string, unknown>;
-      return {
-        revision: String(body.revision ?? ""),
-        services: Array.isArray(body.services) ? (body.services as ServiceRow[]).map((s) => ({ ...s, credentials: Array.isArray(s.credentials) ? s.credentials.map(credentialRowOf) : [] })) : [],
-        owners: Array.isArray(body.owners) ? (body.owners as { user_id: string; login: string }[]) : [],
-        limits: {
-          credential_days: Number(limits.credential_days ?? 0),
-          credentials_per_service: Number(limits.credentials_per_service ?? 0),
-          services: Number(limits.services ?? 0),
-          replay_seconds: Number.isInteger(limits.replay_seconds) && Number(limits.replay_seconds) > 0 ? Number(limits.replay_seconds) : 0,
-        },
-        now: String(body.now ?? ""),
-      };
+      return validatedRead(() => servicesPageOf(body));
     },
     async secret(ref: string): Promise<Secret> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);
@@ -1022,24 +997,7 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async me(): Promise<SelfPage> {
       const body = await send("/me", { method: "GET" }, attempt().request);
-      return {
-        user_id: String(body.user_id ?? ""),
-        login: String(body.login ?? ""),
-        email: String(body.email ?? ""),
-        workspace: String(body.workspace ?? ""),
-        role: String(body.role ?? ""),
-        identities: Array.isArray(body.identities) ? (body.identities as { method: string; login: string }[]) : [],
-        password_set: body.password_set === true,
-        installation_administrator: body.installation_administrator === true,
-        sessions: Array.isArray(body.sessions) ? body.sessions.map(selfSessionOf) : [],
-        sessions_generation: String(body.sessions_generation ?? ""),
-        session_ends: Array.isArray(body.session_ends) ? body.session_ends.map(selfEndOf) : [],
-        idle_minutes: Number(body.idle_minutes ?? 0),
-        max_age_seconds: Number(body.max_age_seconds ?? 0),
-        signed_in_at: String(body.signed_in_at ?? ""),
-        authenticated_at: String(body.authenticated_at ?? ""),
-        now: String(body.now ?? ""),
-      };
+      return validatedRead(() => selfPageOf(body));
     },
     async accessHistory(query: AccessHistoryQuery, request: string): Promise<AccessHistoryPage> {
       const q = new URLSearchParams();
@@ -1081,28 +1039,7 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
       if (query.target) q.set("target", query.target);
       const qs = q.toString();
       const body = await send("/organizations" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request);
-      const list = <T,>(v: unknown) => (Array.isArray(v) ? (v as T[]) : []);
-      const ws = (body.workspace ?? {}) as Record<string, unknown>;
-      const echo = (body.filters ?? {}) as Record<string, unknown>;
-      return {
-        revision: String(body.revision ?? ""),
-        relationship_revision: Number(body.relationship_revision ?? 0),
-        active_revision: Number(body.active_revision ?? 0),
-        on: String(body.on ?? ""),
-        workspace: { id: String(ws.id ?? ""), profile: String(ws.profile ?? "") },
-        parties: list<OrgParty>(body.parties),
-        profiles: list<OrgProfile>(body.profiles),
-        kind: String(body.kind ?? "hierarchy") as RelationKind,
-        members: list<OrgMember>(body.members).map((m) => ({ ...m, targets: Array.isArray(m.targets) ? m.targets : [], history: Array.isArray(m.history) ? m.history : [] })),
-        next: String(body.next ?? ""),
-        filters: {
-          subject: String(echo.subject ?? "any"), entity: String(echo.entity ?? ""), unattributed: echo.unattributed === true, q: String(echo.q ?? ""),
-          member_count: Number(echo.member_count ?? 0), target: String(echo.target ?? ""),
-        },
-        provider_filter: String(body.provider_filter ?? ""),
-        scan_stopped: body.scan_stopped === true,
-        scan_budget: Number(body.scan_budget ?? 0),
-      };
+      return validatedRead(() => organizationsPageOf(body));
     },
     async targets(query: TargetsQuery): Promise<TargetsPage> {
       const q = new URLSearchParams({ kind: query.kind });

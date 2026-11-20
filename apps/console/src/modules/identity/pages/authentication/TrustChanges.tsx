@@ -85,6 +85,7 @@ export function CurrentRules({ l, page, onReload, loading }: { l: Locale; page: 
             {fact(ty.version(l), <bdi dir="ltr" className="live-mono m02-epoch">{currentVersion(page)}</bdi>)}
             {fact(ty.policyRevision(l), cur ? String(tr.policy_number) : <span className="live-quiet">{ty.notRecorded(l)}</span>)}
             {fact(ty.origin(l), ty.originWord(l, tr.origin))}
+            {fact(ty.stricterFields(l), tr.stricter_fields == null ? ty.fieldsUnknown(l) : tr.stricter_fields.length === 0 ? ty.noStricterFields(l) : tr.stricter_fields.map((field, index) => <span className="live-sub" key={index}>{index > 0 && <br />}{field === "methods" ? p.methods(l) : field === "mfa" ? p.mfa(l) : field === "max_age" ? p.maxAge(l) : field === "step_up" ? p.stepUp(l) : ltr(field)}</span>))}
             {fact(ty.activatedAt(l), tr.activated_at ? when(l, tr.activated_at) : <span className="live-quiet">{ty.notRecorded(l)}</span>)}
             {fact(ty.proposedBy(l), <Person l={l} id={tr.proposer} />)}
             {fact(ty.validatedBy(l), <Person l={l} id={tr.validator} />)}

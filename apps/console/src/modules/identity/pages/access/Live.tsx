@@ -382,7 +382,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
     setStatus("loading");
     api.access().then(
       (got) => { if (order.current.latest(n)) { setPage(got); setStatus("ready"); setError(null); } },
-      (e) => { if (order.current.latest(n)) { setError(e); setStatus("error"); } },
+      (e) => { if (order.current.latest(n)) { if (e instanceof AdminError && e.failure === "invalid") setPage(null); setError(e); setStatus("error"); } },
     );
   }, [api]);
   useEffect(() => { if (view === "grants" || view === "effects") load(); }, [load, view]);

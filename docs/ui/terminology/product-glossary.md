@@ -400,3 +400,11 @@ Candidate copy from the stable HYB-333 plan and implemented M04 messages. Semant
 | diagnostic-action-id | 작업 ID | Action ID | معرّف الإجراء | Canonical command identifier used to distinguish retained references for multiple actions on the same target. Does not grant permission. |
 
 Microsoft's [English notification-reference guidance](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/troubleshoot-password-based-sso#essential-notification-items) and [Korean version](https://learn.microsoft.com/ko-kr/entra/identity/enterprise-apps/troubleshoot-password-based-sso#중요-알림-항목), inspected 2026-11-20, explicitly distinguish a browser-made client request ID from other notification identifiers. Adopt that distinction; reject their decorative error-colour example and identity data collection, which are outside this product scope. The Arabic `ar-sa` page returned an English body at inspection and is not evidence of Arabic label approval. Arabic candidates reuse the P05 diagnostic concepts and remain pending native/practitioner review; model TW/render review is recorded separately.
+
+## HYB-327 field-binding review
+
+- **API clients / API 클라이언트 / عملاء API** identifies authentication/integration clients, not billable business customers. Denied and unconfigured states retain the API qualifier even without a section heading.
+- **Failures for this build since budget approval** describes the server counter. The adjacent qualification states that budget approval is not connected and zero proves neither approval nor a passing run. Arabic uses the existing build term `البنية`.
+- **Rules tightened by the restored/default comparison** names only the reported comparison fields; it does not certify stronger authentication overall. Unknown and explicit empty lists remain distinct.
+
+Separate AI technical-writing review identified the API qualifier and build-term corrections. Native-language acceptance remains unverified. Executed screen checks are recorded in [HYB-327 verification](../../features/HYB-327/verification.md).

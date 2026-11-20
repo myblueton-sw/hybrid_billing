@@ -40,6 +40,8 @@ export const k = {
   statementLead: (l: Locale) => t(l, "Records decisions only.", "결정만 기록합니다.", "تسجيل القرارات فقط."),
   statement: (l: Locale) =>
     t(l, "Nothing is dispatched, sent, signed or issued from this screen in this build.", "이 빌드에서는 이 화면에서 아무것도 발송·전송·서명·발급하지 않습니다.", "لا يُرسَل أي شيء ولا يُوزَّع ولا يُوقَّع ولا يُصدَر من هذه الشاشة في هذا الإصدار."),
+  clientsDenied: (l: Locale) => t(l, "You do not have permission to view API clients.", "API 클라이언트를 조회할 권한이 없습니다.", "ليس لديك إذن لعرض عملاء API."),
+  clientsUnconfigured: (l: Locale) => t(l, "API clients are not configured in this workspace.", "이 업무 공간에는 API 클라이언트가 설정되어 있지 않습니다.", "عملاء API غير مُعدّين في مساحة العمل هذه."),
   notConfigured: (l: Locale) => t(l, "Integrations are not configured in this workspace", "이 업무 공간에는 연동이 설정되어 있지 않습니다", "التكاملات غير مُعدّة في مساحة العمل هذه"),
   stateUnknown: (l: Locale, code: string) =>
     t(l, `The integrations read returned an unknown state (${iso(code)}).`, `연동 조회가 알 수 없는 상태(${iso(code)})를 반환했습니다.`, `أعادت قراءة التكاملات حالة غير معروفة (${iso(code)}).`),

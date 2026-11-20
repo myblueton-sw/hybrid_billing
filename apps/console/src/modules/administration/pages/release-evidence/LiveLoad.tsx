@@ -35,7 +35,8 @@ function StatusLines({ l, list, retired }: { l: Locale; list: ProfileStatus[] | 
               {!retired && (
                 <>
                   {" · "}{p.status === "not_run" || p.run === 0 ? k.noRunAtBuild(l) : p.run === null ? <Absent>{k.unknown(l)}</Absent> : k.runN(l, String(p.run))}
-                  <span className="p05-line p05-small p05-muted">{k.failuresNC(l)}</span>
+                  <span className="p05-line p05-small p05-muted">{k.failuresSinceApproval(l)}: <Num l={l} n={p.failures} /></span>
+                  <span className="p05-line p05-small p05-muted">{k.failureCounterScope(l)}</span>
                 </>
               )}
             </li>
@@ -46,7 +47,7 @@ function StatusLines({ l, list, retired }: { l: Locale; list: ProfileStatus[] | 
   );
 }
 
-function Readiness({ l, page }: { l: Locale; page: EvidencePage }) {
+export function Readiness({ l, page }: { l: Locale; page: EvidencePage }) {
   const r = page.load.readiness;
   const c = page.candidate;
   if (!r) return <section className="p05-readiness"><h3>{k.readinessHead(l)}</h3><p>{c === null ? k.notEvaluatedLong(l) : k.unknown(l)}</p></section>;

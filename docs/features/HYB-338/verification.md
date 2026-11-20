@@ -20,8 +20,12 @@ Root is the sole writer in /private/tmp/hyb338 on fix/HYB-338-membership-guard. 
 - Isolated guard benchmark: PASS, identical 100/10,000/100,000-member fixtures, 10 iterations repeated three times per original/optimized path. At 100,000 members the original path measured 6.69–14.69 ms per call and optimized path 258–317 ns per call, with zero allocations. This low-iteration exploratory measurement is neither an SLO nor end-to-end API throughput; concurrent work and the host affect timings. Log: /private/tmp/hyb338-guard-bench.log.
 - go vet ./modules/identity and git diff --check: PASS.
 
-The original, unchanged TestScaleFilterListsOverHTTP is running with race detection and its full 100,000-person population. /private/tmp/hyb338-api-scale.log is not a passing result until the process completes. Full consumer branch tests, remote PR, authorized merge and read-back remain outstanding. No fixture population was reduced and no existing assertion was skipped to speed verification.
+The original, unchanged TestScaleFilterListsOverHTTP was started with race detection and its full 100,000-person population, then interrupted after the combined dependency run below passed. /private/tmp/hyb338-api-scale.log is not a passing result. Full consumer branch tests, final PR checks, authorized merge and read-back remain outstanding. No fixture population was reduced and no existing assertion was skipped to speed verification.
 
 # Environment and limits
 
 Execution used macOS arm64 and Go 1.26.4. No Windows/Linux execution, real account data, deployment or owner approval is claimed. The optimization targets the sampled reinstatement scan; other expensive fixture or service paths may remain. The exact runtime sample and standalone guard benchmark do not establish that all pre-launch scale requirements are met.
+
+## Combined API scale result
+
+The unchanged 100,000-person API scale test passed 108.744 seconds on the dependent HYB-339 branch, which contains this guard correction plus the separately reviewed pending-invitation index. Full identity race also passed there (48.924 seconds). The HYB-338-only run was interrupted after the combined result, while still in fixture population scanning terminal invitation history; it is not a passing standalone API result. Draft PR: https://github.com/myblueton-sw/hybrid_billing/pull/246. Both dependencies remain unmerged and consumer-branch full regressions remain required.

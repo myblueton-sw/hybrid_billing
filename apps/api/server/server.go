@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/bulkrevoke"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
@@ -24,6 +24,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/installer"
 	"github.com/myblueton-sw/hybrid_billing/modules/jobs"
+	"github.com/myblueton-sw/hybrid_billing/modules/licensemode"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
 	"github.com/myblueton-sw/hybrid_billing/modules/perfgate"
@@ -72,10 +73,12 @@ type Config struct {
 	Access    AccessSettings
 	Org       OrgSettings
 	Plugins   PluginSettings
+	License   LicenseSettings
 }
 
 type Server struct {
 	cfg             Config
+	license         *licensemode.Durable
 	clock           func() time.Time
 	time            *serverClock
 	log             *slog.Logger
@@ -205,6 +208,9 @@ func cutScheme(origin string) (string, bool) {
 }
 
 func New(cfg Config) (*Server, error) {
+	if cfg.License.Installation != "" && !validRequestID(cfg.License.Installation) || cfg.License.Installation == "" && cfg.License.Authority != nil {
+		return nil, ErrConfig
+	}
 	if cfg.Log == nil {
 		cfg.Log = slog.New(slog.DiscardHandler)
 	}

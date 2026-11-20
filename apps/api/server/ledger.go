@@ -79,6 +79,11 @@ func (s *Server) Close() error {
 	})
 	s.workers.Wait()
 	var errs []error
+	s.domain.Lock()
+	if s.license != nil {
+		errs = append(errs, s.license.Close())
+	}
+	s.domain.Unlock()
 	if s.history != nil {
 		errs = append(errs, s.history.Close())
 	}

@@ -142,6 +142,9 @@ func (s *Server) Start() error {
 		}
 	}
 	s.log.Info("activation links written", "file", link)
+	if err := s.openLicense(); err != nil {
+		return err
+	}
 	s.runWorker()
 	return nil
 }

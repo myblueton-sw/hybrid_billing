@@ -1,4 +1,4 @@
-package inputauthority
+package grantauthority
 
 import (
 	"crypto/sha256"
@@ -54,8 +54,8 @@ func normalizeSpec(s Spec) Spec {
 	s.NotAfter = canonical(s.NotAfter)
 	return s
 }
-func validSpec(s Spec, maximum time.Duration) bool {
-	return (s.Capability == Confirm || s.Capability == Inspect) && validID(s.Workspace) && validID(s.Recipient) && validTime(s.NotBefore) && validTime(s.NotAfter) && s.NotBefore.Before(s.NotAfter) && !s.NotAfter.After(s.NotBefore.Add(maximum)) &&
+func (r *Registry) validSpec(s Spec, maximum time.Duration) bool {
+	return r.capabilities[s.Capability] && validID(s.Workspace) && validID(s.Recipient) && validTime(s.NotBefore) && validTime(s.NotAfter) && s.NotBefore.Before(s.NotAfter) && !s.NotAfter.After(s.NotBefore.Add(maximum)) &&
 		((s.Kind == Console && s.CeilingID == "") || (s.Kind == Human && validID(s.CeilingID)))
 }
 

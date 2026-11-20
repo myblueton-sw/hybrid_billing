@@ -45,16 +45,16 @@ func TestProposalBoundsAndRequiredPorts(t *testing.T) {
 	}
 	w := setup(t)
 	var nilPort *world
-	if _, err := NewRegistry(w.registry.limits, nilPort, w, w, func() time.Time { return w.now }); !errors.Is(err, ErrInvalid) {
+	if _, err := NewRegistry(Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 20}, nilPort, w, w, func() time.Time { return w.now }); !errors.Is(err, ErrInvalid) {
 		t.Fatal("typed nil authority accepted")
 	}
-	if _, err := NewRegistry(w.registry.limits, w, nil, w, func() time.Time { return w.now }); !errors.Is(err, ErrInvalid) {
+	if _, err := NewRegistry(Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 20}, w, nil, w, func() time.Time { return w.now }); !errors.Is(err, ErrInvalid) {
 		t.Fatal("nil targets accepted")
 	}
-	if _, err := NewRegistry(w.registry.limits, w, w, nil, func() time.Time { return w.now }); !errors.Is(err, ErrInvalid) {
+	if _, err := NewRegistry(Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 20}, w, w, nil, func() time.Time { return w.now }); !errors.Is(err, ErrInvalid) {
 		t.Fatal("nil effects accepted")
 	}
-	if _, err := NewRegistry(w.registry.limits, w, w, w, nil); !errors.Is(err, ErrInvalid) {
+	if _, err := NewRegistry(Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 20}, w, w, w, nil); !errors.Is(err, ErrInvalid) {
 		t.Fatal("nil clock accepted")
 	}
 	for _, limits := range []Limits{{}, {Lifetime: time.Hour, MaxGrantValidity: time.Hour, Capacity: 10001}, {Lifetime: -1, MaxGrantValidity: time.Hour, Capacity: 1}} {
@@ -79,7 +79,7 @@ func TestBoundedFactsCapacityAndUnknownRetention(t *testing.T) {
 		})
 	}
 	w := setup(t)
-	w.registry.limits.Capacity = 1
+	resetLimits(t, w, Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1})
 	r := propose(t, w, Human)
 	w.create = false
 	w.applyErr = ErrUnknown
@@ -163,7 +163,7 @@ func TestUnknownAbsentEffectNeverRestartsAfterExpiry(t *testing.T) {
 
 func TestMaximumValidityDoesNotAcceptDurationOverflow(t *testing.T) {
 	w := setup(t)
-	w.registry.limits.MaxGrantValidity = time.Duration(1<<63 - 1)
+	resetLimits(t, w, Limits{Lifetime: time.Hour, MaxGrantValidity: time.Duration(1<<63 - 1), Capacity: 20})
 	p := w.proposal(Console)
 	p.Spec.NotAfter = time.Date(9000, 1, 1, 0, 0, 0, 0, time.UTC)
 	if _, err := w.registry.Propose(p); !errors.Is(err, ErrInvalid) {
@@ -311,4 +311,13 @@ func TestCapabilityIsClosedAndBoundToProposalAndEffect(t *testing.T) {
 	if _, err := w.registry.Approve(intent(second)); !errors.Is(err, ErrUnknown) {
 		t.Fatal("other capability reconciled", err)
 	}
+}
+
+func resetLimits(t *testing.T, w *world, limits Limits) {
+	t.Helper()
+	r, err := NewRegistry(limits, w, w, w, func() time.Time { return w.now })
+	if err != nil {
+		t.Fatal(err)
+	}
+	w.registry = r
 }

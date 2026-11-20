@@ -31,17 +31,18 @@ type chargeSource struct {
 }
 
 type chargeInput struct {
-	Workspace string
-	ID        string
-	Customer  string
-	Entity    string
-	From      string
-	To        string
-	Sources   []chargeSource
-	Profile   decimal.ProfileSpec
-	Limits    rating.Limits
-	Policy    rating.Policy
-	Lines     []rating.Line
+	Normalized normalizedOrigin
+	Workspace  string
+	ID         string
+	Customer   string
+	Entity     string
+	From       string
+	To         string
+	Sources    []chargeSource
+	Profile    decimal.ProfileSpec
+	Limits     rating.Limits
+	Policy     rating.Policy
+	Lines      []rating.Line
 }
 
 type chargeEnvelope struct {
@@ -184,7 +185,7 @@ func (s *chargeCandidates) capture(in chargeInput) (chargeCandidate, error) {
 	if err != nil {
 		return chargeCandidate{}, err
 	}
-	envelope, err := json.Marshal(chargeEnvelope{Schema: "hb_charge_candidate_v1", Input: copied, Result: result})
+	envelope, err := json.Marshal(chargeEnvelope{Schema: "hb_charge_candidate_v2", Input: copied, Result: result})
 	if err != nil {
 		return chargeCandidate{}, err
 	}

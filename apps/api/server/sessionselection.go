@@ -71,10 +71,6 @@ func (s *Server) prepareSessionSelection(w http.ResponseWriter, r *http.Request)
 	if !ok {
 		return
 	}
-	if found.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) {
-		failCode(w, commands.Unauthenticated, request)
-		return
-	}
 	if r.URL.RawQuery != "" {
 		invalidFields(w, request, "query")
 		return

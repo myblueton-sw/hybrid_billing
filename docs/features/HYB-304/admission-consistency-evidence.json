@@ -1,0 +1,413 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "c7c559bdc973e8cb89a96bd241cb9918bcfea4ba",
+  "scope": "canonical_caller_admission_consistency",
+  "checks": {
+    "corrected_baseline": "FAIL four intended captured-value cases; ordinary controls PASS",
+    "after": "PASS seven groups1.450s",
+    "semantic_mutants": "two assertion-killed, exact restoration; private cache removed",
+    "race": "PASS19 groups4.390s",
+    "full_short": "PASS75 packages; server199.068s",
+    "server_weighted_statements": 11783,
+    "server_uncovered": 79,
+    "server_coverage": "99.3%",
+    "required100": "NOT_MET",
+    "vet": "PASS all packages",
+    "portable_compilation": "PASS linux/windows amd64; no runtime execution",
+    "actual_browser": "PASS3 scenarios29 captures; no page errors",
+    "console_suite": "NOT_RERUN previous1016 snapshot retained"
+  },
+  "build": {
+    "revision": "f2df55941f08768cedec2aec304ef8bb4837e2482c49e2fc68ff28d9ebdcd6ff",
+    "inputs": 683,
+    "verified_artifacts": 439
+  },
+  "independent_source_review": "/root/hyb310_review PASS design and actual nine production/three test files; no test execution by reviewer",
+  "limits": [
+    "Component-local captured values, not registry corruption or an HTTP exploit",
+    "One existing guarantee centralized; no target/record/cursor/other-session or M04 boot restriction removed",
+    "No new session termination on mismatch",
+    "Expiry component transitions are staged; supported fault HTTP refusals are separate",
+    "Owned loopback runtime stopped before hashes; activation secrets excluded",
+    "Previous manifests retain historical source bindings",
+    "Package100 and final aggregate M04 review remain open; no feature approval/merge yet",
+    "No Graphify benchmark, deployment, native/AT/BFCache/Claude/FIX certification"
+  ],
+  "fixture_source": {
+    "path": "/private/tmp/hb304-m04-completion-runtime.go",
+    "sha256": "baa3b3a4c32a4f788e96b2cbbb1b7c1491b08cc7fcd4ebbe5a562ea63544aa47",
+    "bytes": 35888
+  },
+  "durable_fixture_source": {
+    "path": "/Users/home/project/hybrid_billing-qa-runners/HYB-304/m04-completion-runtime.go",
+    "sha256": "baa3b3a4c32a4f788e96b2cbbb1b7c1491b08cc7fcd4ebbe5a562ea63544aa47",
+    "bytes": 35888
+  },
+  "source_files": [
+    {
+      "path": "apps/api/server/commands.go",
+      "sha256": "8091f911637d308b4e8c9c5bc98db2d55a6dc618fc5a545e8b0f9e480d7b08fd",
+      "bytes": 7408
+    },
+    {
+      "path": "apps/api/server/self.go",
+      "sha256": "db79037268b5162a2fb560d8b8e53b5fc853cc1f8d213c572c528da3a0c5fc9b",
+      "bytes": 7670
+    },
+    {
+      "path": "apps/api/server/servicequery_cursor.go",
+      "sha256": "cfa531394f681fe326ce0a377d03dde75253d1e4c1d1a3ef79c8a16e064c640d",
+      "bytes": 8831
+    },
+    {
+      "path": "apps/api/server/servicequery_transition_refusal_test.go",
+      "sha256": "6e6810356879b268dabb74f0320c5ce8169a144c2f7c5de8e831f47ce1bdf44d",
+      "bytes": 3218
+    },
+    {
+      "path": "apps/api/server/session_admission_consistency_test.go",
+      "sha256": "209f173ad2ce14c69d3a1f45e3f4fcad9a2aa05825a3b385dac970ea3241c622",
+      "bytes": 4568
+    },
+    {
+      "path": "apps/api/server/session_installer_contract_test.go",
+      "sha256": "c67475b94bcaa73dd0f36e418307f1d0967486abbe69ce8ef0193e8e3bb5e025",
+      "bytes": 2794
+    },
+    {
+      "path": "apps/api/server/sessiondetail.go",
+      "sha256": "8a9bd90a3a944a76b0f26beb320bd6f521d7067297b184668b36769b7c828672",
+      "bytes": 1160
+    },
+    {
+      "path": "apps/api/server/sessionoperationitems.go",
+      "sha256": "0d5e39411afbf2ce1b3b91cdba53ea18865d66d2cdc0af4044ad51796929adb8",
+      "bytes": 3007
+    },
+    {
+      "path": "apps/api/server/sessionoperations.go",
+      "sha256": "527d53bfe9bd8dca01b40fa2e28e3d5cca060bb071e09f0beaf1db158e3ab2ed",
+      "bytes": 4671
+    },
+    {
+      "path": "apps/api/server/sessionpreview.go",
+      "sha256": "cf329434ce8c347372667aee5a9bcd650889780c34577bb417c16c701040c90c",
+      "bytes": 3013
+    },
+    {
+      "path": "apps/api/server/sessionquery.go",
+      "sha256": "acfe363569daba7873c09df82de6241b0b3e96da882491d94e45dc038bd2f0f3",
+      "bytes": 8915
+    },
+    {
+      "path": "apps/api/server/sessionselection.go",
+      "sha256": "8874a61ac8554fed056af9542597487918b6e1faf67bde969b2482ebfd8b2380",
+      "bytes": 7661
+    },
+    {
+      "path": "docs/features/HYB-304/m04-admission-consistency.md",
+      "sha256": "78dacfc0b68c8e8d475327ee7366749d31589d494fc85ca822d010f127143bd8",
+      "bytes": 7629
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "227965bef40b9d92dfbac4a1acc668a9d98c1b434e4766cbc32cfd6c579a129e",
+      "bytes": 36084
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "f96367911bcd11ec57e14ae1f1250fbbcd9affddc5020864c398aa90f3c5a2b0",
+      "bytes": 60307
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-admission-before.log",
+      "sha256": "09aea7686b7fc1c8f2e1dcc9bf9dc5d6d5636e4677eca65c992871797c8e63c9",
+      "bytes": 1237
+    },
+    {
+      "path": "/private/tmp/hb304-admission-before-corrected.log",
+      "sha256": "0279d84fb167d1138c3822063b5cde0871bbb328e05728883bfe5e1ef859fc41",
+      "bytes": 1070
+    },
+    {
+      "path": "/private/tmp/hb304-admission-after.log",
+      "sha256": "46a12e417e0460a508a705d7cbc85b7b7bc49e06a6e75e8785a21ed95a6ed278",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-admission-scoped.log",
+      "sha256": "9e3e4bc065734835df101e15fd8f987bd910994da47311ee536616303732f414",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-admission-race.log",
+      "sha256": "8ad4a2acca6e39c59f3242e1717aa42083f97dd04e131970ad4419104ae92269",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-admission-all-short.log",
+      "sha256": "9b0521a028875182313d7f68f48b716b3d29eb1833c655fc77a42a8e27f7bac9",
+      "bytes": 7492
+    },
+    {
+      "path": "/private/tmp/hb304-admission-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-admission-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-admission-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-admission-linux-format.log",
+      "sha256": "297a560a27a7ba974e426a52d03511e5d6de728a113f95c7987362c7049a93ff",
+      "bytes": 205
+    },
+    {
+      "path": "/private/tmp/hb304-admission-windows-format.log",
+      "sha256": "b545839d741c34caa81f7f8f294ccd34f855a19c1e1bab4775ac7de4ef5bdb3e",
+      "bytes": 103
+    },
+    {
+      "path": "/private/tmp/hb304-admission-mutant-disabled.log",
+      "sha256": "22a4055dc94c46c2e6d4699fae40457fb04e8205a08babba9a26bbc5ee52a5a2",
+      "bytes": 1070
+    },
+    {
+      "path": "/private/tmp/hb304-admission-mutant-drop.log",
+      "sha256": "222a9d27d0ba0aa95017ca60a16419f84b1f225e81738902d15978aaec53ea9d",
+      "bytes": 1058
+    },
+    {
+      "path": "/private/tmp/hb304-admission-mutants.log",
+      "sha256": "b77cd847cec94478ddbf13d28d1ddb87d26326a99c17d9b2601ceba68b7ddb79",
+      "bytes": 28
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui-runtime.log",
+      "sha256": "0fc5b58ca6e11e8ec9e1db1391c541f2341e1cfcf5265f1c089b2577f2683994",
+      "bytes": 153
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui.log",
+      "sha256": "752403c6654537c947e61d062ee0469b19cfebe029d41f2ffbe98497b7831644",
+      "bytes": 271
+    },
+    {
+      "path": "/private/tmp/hb304-admission-build-binding.log",
+      "sha256": "79c76b1beeea85508871b5abdab3bcabc9e31e47b7e106178c7ad0090352e753",
+      "bytes": 186
+    },
+    {
+      "path": "/private/tmp/hb304-admission-source-checks.log",
+      "sha256": "aa2d941b9180def7a574b033b61baad51a7c1240427751bd1d9531d00c5b8274",
+      "bytes": 581
+    },
+    {
+      "path": "/private/tmp/hb304-admission-okf.log",
+      "sha256": "188b408a64f26e077a165fd3c2a5fea6cd582f1b68fe093f3813ad511d79d3ac",
+      "bytes": 100
+    },
+    {
+      "path": "/private/tmp/hb304-admission-all-short.cover",
+      "sha256": "e55a0dd896ae3ff678e03c8a4b42fdfe23b9c782bdc74e9612dd32807fd389ef",
+      "bytes": 2922839
+    },
+    {
+      "path": "/private/tmp/hb304-admission-mutants.json",
+      "sha256": "cb0553ff91b99f965250524f267ed227a5c822147bfe2e0c7359242635ccad59",
+      "bytes": 767
+    },
+    {
+      "path": "/private/tmp/hb304-admission-test-names.json",
+      "sha256": "ddfad87989ff818f28a3ff8cbb11caa414bab96bf83abb72436266bc35e99ba2",
+      "bytes": 523
+    },
+    {
+      "path": "/private/tmp/hb304-admission-race-test-names.json",
+      "sha256": "968e4c4b3d26e694c186bc1de17edd7163e7b63ad7434b3afb6ef7497840fbea",
+      "bytes": 1104
+    },
+    {
+      "path": "/private/tmp/hb304-admission-build-binding.mjs",
+      "sha256": "479b2c0c3242450d5622e3cb6050661705282f813bd0b615115b45886c5d119b",
+      "bytes": 1591
+    },
+    {
+      "path": "/private/tmp/hb304-admission-build-binding.json",
+      "sha256": "41c22c28f79cb7b85f6a466c94be8c4e37ca3c6a5400b208aa0b670fc46ac0ea",
+      "bytes": 110109
+    },
+    {
+      "path": "/private/tmp/hb304-admission-linux-amd64.test",
+      "sha256": "527cacf746e79a89b143e80a5648b8109394cdf0adf7cacd17b652fc7fb72bf0",
+      "bytes": 28020723
+    },
+    {
+      "path": "/private/tmp/hb304-admission-windows-amd64.test.exe",
+      "sha256": "8e086d1d3e0adfe0b7bcd385b949b2f233d97c4349f5fcefe3811d4a51efaade",
+      "bytes": 28361216
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/report.json",
+      "sha256": "3c66ead142e6a3c3d568f4cebbc6cf39c8cbe46dab3bc6a649f29f9de071ae58",
+      "bytes": 10824
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ar-1024-declaration-errors.png",
+      "sha256": "c4670ad383f42fff14ea860fdae1fa356f2d1511c92e0720055c337d6d666a83",
+      "bytes": 244407
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ar-1024-revoke-errors.png",
+      "sha256": "4249106dc46121488278a7b7dc41b2e6f49928e1500bc09f7c6430ead6db5580",
+      "bytes": 125909
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ar-1280-declaration-errors.png",
+      "sha256": "f571700f310dca92d264e8dbf387a2aadb730c78fe2c9bd52fbd919a3bd45552",
+      "bytes": 313084
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ar-1280-revoke-errors.png",
+      "sha256": "029cdb2f2fe10a783c07a025d0a1a05f2134a02c88b843135a2f2b1f2649beef",
+      "bytes": 141121
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ar-1440-declaration-errors.png",
+      "sha256": "3dc7def2119a84fd61a17372f83eab140bf93ab3861350e172bbfebb550a4101",
+      "bytes": 317385
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ar-1440-revoke-errors.png",
+      "sha256": "439039c9694276c8d0702f77c6b209dfb3cd101c93ce50569a6d2cbd24a54fa4",
+      "bytes": 143442
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ar-390-declaration-errors.png",
+      "sha256": "35e91282cf7daba044d27bd1b4030742530708ae4ffa565a4ddb3a1c7a8372c7",
+      "bytes": 220535
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ar-390-revoke-errors.png",
+      "sha256": "17e99ce0c2c109e85be9304e778f8c4225fc7bf195b02640ecd17418790409e8",
+      "bytes": 111509
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-1024-declaration-errors.png",
+      "sha256": "45ecf434d348392f3a2555052760c43a4cb7d522128e15544e05541637bc2155",
+      "bytes": 264065
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-1024-revoke-errors.png",
+      "sha256": "d54b09de223004264a57d5452284000b1187216c29e92af2bda1ee74d3253860",
+      "bytes": 132490
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-1280-declaration-errors.png",
+      "sha256": "babb1db59e9a6519acf825f44afb4210f3e4ebcda41c59d803968144bb11e2c6",
+      "bytes": 346386
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-1280-revoke-errors.png",
+      "sha256": "499ee6df3ef608f7f8a72cd44b6c476401663e9d0630c6ee5d17adda3139a749",
+      "bytes": 155128
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-1440-actual-reinstate.png",
+      "sha256": "fa17dd94370995b81a45292ee59fb964a5a54ac561abbb17a3f06e61d2ac7a91",
+      "bytes": 316483
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-1440-actual-retire.png",
+      "sha256": "ea9b63bf315a52ed8bf1b54540b6f7b66d5c2167c2b40c060f343b2fc60146be",
+      "bytes": 317430
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-1440-actual-suspend.png",
+      "sha256": "93daf772eef46d83f631ed7b7d03dd529d5d342b0c4457137f3656d0dab6426f",
+      "bytes": 318566
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-1440-declaration-errors.png",
+      "sha256": "63169f0f6a08737003bc0fc3e818ad15372f5215c07886b5d96dce5cb8f9cb83",
+      "bytes": 348492
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-1440-revoke-actual-confirmed.png",
+      "sha256": "c63093bf94d94d3f3fc6d6143ae649d7ea2bfbec49ef6e2d34c5d75fb38e0aee",
+      "bytes": 150533
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-1440-revoke-actual-stale.png",
+      "sha256": "4455e2b5eb179cfc920251cf1e10a967f380ae09734d7656576043694bcb42b5",
+      "bytes": 316494
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-1440-revoke-errors.png",
+      "sha256": "7e39b5c4c39b7109de7778e81891a9475586d6b627f2a3dfd6f9d00aa74d8e15",
+      "bytes": 153840
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-390-declaration-errors.png",
+      "sha256": "3bc4efb460de2eb0cb5eaa0060aa3a0951c5ea069a9b2fb72344236bd2a99641",
+      "bytes": 236020
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/en-390-revoke-errors.png",
+      "sha256": "627d2950fa575594286331c9c8c80625b9237bcdd5f7d03e8db3d30ef7d2234e",
+      "bytes": 114480
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ko-1024-declaration-errors.png",
+      "sha256": "710fc976ed002ebcfd9a15f59c1ed8d6b884622733bd9f7895b358c7b74fdb31",
+      "bytes": 245084
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ko-1024-revoke-errors.png",
+      "sha256": "2b55f3b375c181a75edb10d0187335f14d48efd56225f52445cc100e1acd7598",
+      "bytes": 131628
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ko-1280-declaration-errors.png",
+      "sha256": "ecf1d3320e5d8fcc28ab052317a19afac6c8a4663ea5ef3408f744abfdb32fba",
+      "bytes": 310505
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ko-1280-revoke-errors.png",
+      "sha256": "5be691f2a5038af02d5bbfabdbe5a49a349775173a9c73648ead78ad63b8090d",
+      "bytes": 144086
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ko-1440-declaration-errors.png",
+      "sha256": "9a2f5fe77830e2879e314d078b24988fab970e19f1ca2e7aa4cd2e8b39544c9a",
+      "bytes": 311453
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ko-1440-revoke-errors.png",
+      "sha256": "7fec6131c4a379d31f14f01e9c229db7731fbabfd07d1c056920dac54964748e",
+      "bytes": 146297
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ko-390-declaration-errors.png",
+      "sha256": "4d05df3188a6182cac41caf254ff17ab65d0f58c7b23ff9e933fdbaa5bcf267f",
+      "bytes": 221030
+    },
+    {
+      "path": "/private/tmp/hb304-admission-ui/ko-390-revoke-errors.png",
+      "sha256": "ab9a7fae9a9234323fc77a88611e95bd0c9bfdb7b0734eee3953a72e2f6444d1",
+      "bytes": 115681
+    }
+  ],
+  "independent_evidence_review": "/root/hyb310_copy_render PASS all15sources/57artifacts/twofixturebindings,683inputs/439artifacts, observed logs and scope wording; read-only, no tests/services executed"
+}

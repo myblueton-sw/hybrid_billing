@@ -162,7 +162,7 @@ func (s *Server) beginServiceQuery(w http.ResponseWriter, r *http.Request, area,
 	if !ok {
 		return nil, false
 	}
-	if answer.Workspace() != s.bootWorkspace || found.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) || found.handle == "" {
+	if answer.Workspace() != s.bootWorkspace {
 		failCode(w, commands.Unauthenticated, request)
 		return nil, false
 	}

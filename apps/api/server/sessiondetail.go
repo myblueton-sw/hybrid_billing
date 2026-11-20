@@ -22,7 +22,7 @@ func (s *Server) readSessionDetail(w http.ResponseWriter, r *http.Request) {
 	request := r.Header.Get("X-Request-Id")
 	s.domain.RLock()
 	defer s.domain.RUnlock()
-	found, answer, ok := s.self(w, r)
+	found, _, ok := s.self(w, r)
 	if !ok {
 		return
 	}
@@ -30,10 +30,6 @@ func (s *Server) readSessionDetail(w http.ResponseWriter, r *http.Request) {
 	values, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil || len(values) > 0 || !isHex(handle, 16) {
 		invalidFields(w, request, "session")
-		return
-	}
-	if found.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) {
-		failCode(w, commands.Unauthenticated, request)
 		return
 	}
 	target, known := s.sessions.indexedSession(found.owner, handle)

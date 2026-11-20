@@ -8,7 +8,20 @@ import type {
   ServiceSelector,
   ServiceRestriction,
 } from "../../../../service/service-query-types";
-import { reasonProblem } from "../users/Live";
+import { utf8Length } from "../../../../service/helpers";
+import {
+  FieldMessage,
+  ValidationSummary,
+  fieldAttributes,
+  fieldBytes,
+  rationaleError,
+  requiredField,
+  requiredScopes,
+  requestBounds,
+  scopeCount,
+  useFormValidation,
+  type FieldErrors,
+} from "./form-validation";
 import { w } from "../users/live-copy";
 import { c } from "../../../../service/copy";
 import { v } from "./live-copy";
@@ -181,8 +194,9 @@ export function DeclarationForm({
   };
   const draft = saved ?? initial;
   const locked = !!entry;
-  const [problem, setProblem] = useState(""),
-    [busy, setBusy] = useState(false),
+  const validation = useFormValidation();
+  const { errors, setProblem } = validation;
+  const [busy, setBusy] = useState(false),
     [audience, setAudience] = useState(""),
     [scope, setScope] = useState("");
   const wrongTarget = !!saved && saved.target !== initial.target;
@@ -197,7 +211,19 @@ export function DeclarationForm({
       )
     )
       setProblem(t(l, "bounds"));
-    else setProblem("");
+    else
+      validation.clear(
+        ...(
+          [
+            "name",
+            "owner",
+            "purpose",
+            "organization",
+            "scopes",
+            "reason",
+          ] as const
+        ).filter((field) => field in patch),
+      );
   };
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -205,23 +231,52 @@ export function DeclarationForm({
     if (entry) {
       if (entry.phase !== "unknown") return;
     } else {
-      const reason = reasonProblem(l, draft.reason);
+      const purposeLimit = settingValue(
+        metadata.settings,
+        "service_declaration_purpose_bytes",
+      );
+      const scopeLimit = settingValue(
+        metadata.settings,
+        "service_declaration_scopes",
+      );
+      const fields: FieldErrors = {};
+      if (!detail && !validName(draft.name)) fields.name = v.errName(l);
+      if (!detail && !draft.owner) fields.owner = requiredField(l);
+      if (!draft.purpose.trim()) fields.purpose = requiredField(l);
+      else if (purposeLimit && utf8Length(draft.purpose) > purposeLimit)
+        fields.purpose = fieldBytes(l, purposeLimit);
+      if (!draft.organization) fields.organization = requiredField(l);
+      if (!draft.scopes.length) fields.scopes = requiredScopes(l);
+      else if (scopeLimit && draft.scopes.length > scopeLimit)
+        fields.scopes = scopeCount(l, scopeLimit);
+      const reason = rationaleError(
+        l,
+        draft.reason,
+        metadata.limits.rationale_bytes,
+      );
+      if (reason) fields.reason = reason;
+      if (Object.keys(fields).length) {
+        validation.fail(fields);
+        return;
+      }
+      if (!purposeLimit || !scopeLimit) {
+        validation.fail({}, t(l, "unavailable"));
+        return;
+      }
+      if (!admitsDeclaration(draft, metadata.limits, metadata.settings)) {
+        validation.fail({}, requestBounds(l));
+        return;
+      }
       if (
-        (!detail && !validName(draft.name)) ||
-        !draft.owner ||
-        !draft.purpose.trim() ||
-        !draft.organization ||
-        !draft.scopes.length ||
-        reason ||
-        !admitsDeclaration(draft, metadata.limits, metadata.settings) ||
         draft.catalog !== metadata.catalog_version ||
         (detail &&
           (draft.version !== (detail.row.declaration.version || "0") ||
             !detail.eligibility.can_declare))
       ) {
-        setProblem(reason || t(l, "required"));
+        validation.fail({}, t(l, "required"));
         return;
       }
+      validation.reset();
       setBusy(true);
       setProblem("");
       try {
@@ -242,11 +297,34 @@ export function DeclarationForm({
               d.catalog_version !== draft.catalog,
           )
         ) {
-          setProblem(t(l, "required"));
+          const referenceErrors: FieldErrors = {};
+          if (!owner.row.eligible_at_reference && !detail)
+            referenceErrors.owner = t(l, "ineligible");
+          if (organization.eligibility !== "eligible")
+            referenceErrors.organization = t(l, organization.eligibility);
+          if (
+            definitions.some(
+              (d) =>
+                d.eligibility !== "eligible" ||
+                d.catalog_version !== draft.catalog,
+            )
+          )
+            referenceErrors.scopes = t(
+              l,
+              definitions.some((d) => d.eligibility === "unavailable")
+                ? "unavailable"
+                : definitions.some((d) => d.eligibility === "ineligible")
+                  ? "ineligible"
+                  : "required",
+            );
+          validation.fail(
+            referenceErrors,
+            !owner.row.eligible_at_reference && detail ? t(l, "blocked") : "",
+          );
           return;
         }
       } catch {
-        if (present.current) setProblem(t(l, "unavailable"));
+        if (present.current) validation.fail({}, t(l, "unavailable"));
         return;
       } finally {
         if (present.current) setBusy(false);
@@ -298,7 +376,10 @@ export function DeclarationForm({
           <button
             type="button"
             className="live-secondary"
-            onClick={() => recovery.commands.discardDraft(kind)}
+            onClick={() => {
+              recovery.commands.discardDraft(kind);
+              validation.reset();
+            }}
           >
             {t(l, "discardDraft")}
           </button>
@@ -319,11 +400,7 @@ export function DeclarationForm({
       </h2>
       <p>{t(l, "metadata")}</p>
       <IntentNotice l={l} recovery={recovery} kind={kind} />
-      {problem && (
-        <p role="alert" className="service-field-error">
-          {problem}
-        </p>
-      )}
+      <ValidationSummary l={l} validation={validation} />
       {detail && (
         <Reauthenticate
           l={l}
@@ -336,17 +413,22 @@ export function DeclarationForm({
         className="live-sections"
       >
         {!detail && (
-          <label>
-            {v.name(l)}
+          <div className="service-field">
+            <label htmlFor="svc-name">{v.name(l)}</label>
             <span className="live-unit live-prefixed" dir="ltr">
               <span>svc-</span>
               <input
+                {...fieldAttributes("name", errors.name, "svc-name-hint")}
                 value={draft.name}
                 onChange={(e) => edit({ name: e.target.value })}
                 autoComplete="off"
               />
             </span>
-          </label>
+            <span className="service-hint" id="svc-name-hint">
+              {v.nameHint(l)}
+            </span>
+            <FieldMessage field="name" error={errors.name} />
+          </div>
         )}
         {detail ? (
           <Facts
@@ -360,6 +442,8 @@ export function DeclarationForm({
             l={l}
             recovery={recovery}
             name={t(l, "owner")}
+            field="owner"
+            error={errors.owner}
             scope={workspace}
             value={draft.owner}
             load={(q) => api.serviceOwners(q)}
@@ -370,8 +454,9 @@ export function DeclarationForm({
         )}
         <div className="service-field">
           <label htmlFor="svc-purpose">{t(l, "purpose")}</label>
+          <FieldMessage field="purpose" error={errors.purpose} />
           <textarea
-            id="svc-purpose"
+            {...fieldAttributes("purpose", errors.purpose)}
             rows={3}
             value={draft.purpose}
             onChange={(e) => edit({ purpose: e.target.value })}
@@ -381,6 +466,8 @@ export function DeclarationForm({
           l={l}
           recovery={recovery}
           name={t(l, "organization")}
+          field="organization"
+          error={errors.organization}
           scope={workspace}
           value={draft.organization}
           load={(q) => api.serviceOrganizations(q)}
@@ -392,73 +479,81 @@ export function DeclarationForm({
           }
           onChange={(organization) => edit({ organization })}
         />
-        <Picker
-          l={l}
-          recovery={recovery}
-          name={t(l, "audience")}
-          emptyCatalog
-          scope={workspace}
-          value={audience}
-          load={(q) => api.serviceAudiences(q)}
-          resolve={(id) => api.serviceAudience(id, workspace)}
-          label={(r) => r.id + " · " + r.resource}
-          onChange={(id) => {
-            setAudience(id);
-            setScope("");
-          }}
-        />
-        {audience && (
+        <section
+          className="live-sections"
+          {...fieldAttributes("scopes", errors.scopes)}
+          tabIndex={-1}
+          aria-label={t(l, "scopes")}
+        >
+          <FieldMessage field="scopes" error={errors.scopes} />
           <Picker
-            key={audience}
             l={l}
             recovery={recovery}
-            name={t(l, "scopes")}
-            scope={workspace + "\n" + audience}
-            value={scope}
-            load={(q) => api.serviceScopes(audience, q)}
-            resolve={(id) => api.serviceScope(audience, id, workspace)}
-            label={(r) => r.id}
-            onChange={setScope}
+            name={t(l, "audience")}
+            emptyCatalog
+            scope={workspace}
+            value={audience}
+            load={(q) => api.serviceAudiences(q)}
+            resolve={(id) => api.serviceAudience(id, workspace)}
+            label={(r) => r.id + " · " + r.resource}
+            onChange={(id) => {
+              setAudience(id);
+              setScope("");
+            }}
           />
-        )}
-        <button
-          type="button"
-          className="live-secondary"
-          disabled={!audience || !scope}
-          onClick={() => {
-            if (
-              !draft.scopes.some(
-                (s) => s.audience === audience && s.scope === scope,
+          {audience && (
+            <Picker
+              key={audience}
+              l={l}
+              recovery={recovery}
+              name={t(l, "scopes")}
+              scope={workspace + "\n" + audience}
+              value={scope}
+              load={(q) => api.serviceScopes(audience, q)}
+              resolve={(id) => api.serviceScope(audience, id, workspace)}
+              label={(r) => r.id}
+              onChange={setScope}
+            />
+          )}
+          <button
+            type="button"
+            className="live-secondary"
+            disabled={!audience || !scope}
+            onClick={() => {
+              if (
+                !draft.scopes.some(
+                  (s) => s.audience === audience && s.scope === scope,
+                )
               )
-            )
-              edit({ scopes: [...draft.scopes, { audience, scope }] });
-          }}
-        >
-          {t(l, "add")}
-        </button>
-        <ul>
-          {draft.scopes.map((ref) => (
-            <li key={JSON.stringify([ref.audience, ref.scope])}>
-              <ScopeDefinition
-                l={l}
-                api={api}
-                recovery={recovery}
-                workspace={workspace}
-                refId={ref}
-                catalog={draft.catalog}
-              />
-              <button
-                type="button"
-                className="live-secondary"
-                onClick={() =>
-                  edit({ scopes: draft.scopes.filter((s) => s !== ref) })
-                }
-              >
-                {t(l, "remove")} {bdi(ref.scope)}
-              </button>
-            </li>
-          ))}
-        </ul>
+                edit({ scopes: [...draft.scopes, { audience, scope }] });
+            }}
+          >
+            {t(l, "add")}
+          </button>
+          <ul>
+            {draft.scopes.map((ref) => (
+              <li key={JSON.stringify([ref.audience, ref.scope])}>
+                <ScopeDefinition
+                  l={l}
+                  api={api}
+                  recovery={recovery}
+                  workspace={workspace}
+                  refId={ref}
+                  catalog={draft.catalog}
+                />
+                <button
+                  type="button"
+                  className="live-secondary"
+                  onClick={() =>
+                    edit({ scopes: draft.scopes.filter((s) => s !== ref) })
+                  }
+                >
+                  {t(l, "remove")} {bdi(ref.scope)}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
         <Facts
           items={[
             [t(l, "catalog"), bdi(draft.catalog)],
@@ -479,7 +574,7 @@ export function DeclarationForm({
           limit={metadata.limits.rationale_bytes}
           value={draft.reason}
           onChange={(reason) => edit({ reason })}
-          error=""
+          error={errors.reason ?? ""}
         />
       </fieldset>
       <div className="live-buttons">
@@ -504,7 +599,10 @@ export function DeclarationForm({
           <button
             type="button"
             className="live-secondary"
-            onClick={() => recovery.commands.discardDraft(kind)}
+            onClick={() => {
+              recovery.commands.discardDraft(kind);
+              validation.reset();
+            }}
           >
             {t(l, "discardDraft")}
           </button>

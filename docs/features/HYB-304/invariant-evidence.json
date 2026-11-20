@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "ed63b97a2465a7b33a34db691c4ed450aa7290a0",
+  "status": "narrow_invariant_cleanup_not_package_gate",
+  "approved_removals": [
+    "More && Scanned==0 under positive bounded MemberPositions arithmetic",
+    "json.Marshal error for fixed scalar-only serviceBasis",
+    "held credential-revocation denial contradicting explicit holdAllow"
+  ],
+  "checks": {
+    "strengthened_held_case_before": "PASS",
+    "full_server_short": "PASS",
+    "statement_coverage_percent": "98.8",
+    "required_package_coverage": "100 NOT_MET",
+    "uncovered_weighted_statements": 140,
+    "servicequery_uncovered_weighted_statements": 58,
+    "targeted_race": "PASS existing test with six subcases including actual held reduction",
+    "vet": "PASS",
+    "cross_compile": [
+      "linux/amd64 ELF64 x86-64",
+      "windows/amd64 PE32+ x86-64"
+    ],
+    "foreign_runtime_execution": "UNVERIFIED"
+  },
+  "review": "/root/hyb310_review independent design and actual-source PASS; no tests executed by reviewer",
+  "boundaries": [
+    "No tenant/authentication/overflow/source-change/fallible cursor-encoding guards removed",
+    "Strengthened correct held-reduction test passed before cleanup; no fabricated product fail-before",
+    "Required package100% still unmet; no waiver or artificial private-map corruption",
+    "UI behavior verification is separate from server coverage",
+    "Other reviewed constructor-only arms require separate narrowing/refactor; valid lifecycle branches remain"
+  ],
+  "source_files": [
+    {
+      "path": "apps/api/server/servicequery_choices.go",
+      "sha256": "b922025c69c2b739f856d8134d0439324e69500f74b32f15f2ffddd4e3af984d",
+      "bytes": 8932
+    },
+    {
+      "path": "apps/api/server/servicequery_cursor.go",
+      "sha256": "25e10f4232c39b26af73437486ff080ee36c041abee6ac53a976279d36ff4688",
+      "bytes": 8937
+    },
+    {
+      "path": "apps/api/server/servicequery_detail.go",
+      "sha256": "dbf1a22186ae215cd13f8da3eaaa5caf72cb692fe41d5cdbe6f3c6ef692340e7",
+      "bytes": 12151
+    },
+    {
+      "path": "apps/api/server/servicequery_credential_controls_test.go",
+      "sha256": "f66f4e622731054fe9e5dc826663ae0203f952d9c3d49cc9cd87172dc5409ae6",
+      "bytes": 2196
+    },
+    {
+      "path": "apps/api/server/trusthold.go",
+      "sha256": "a00ed14c37322c0a143fb302b060bedb25b127f260df693947a927c7dbd18e64",
+      "bytes": 9853
+    },
+    {
+      "path": "modules/identity/querybasis.go",
+      "sha256": "80fcfb877082c4af31d77584e25d57a1a297e7df5c96782946afbf9a46ef98d1",
+      "bytes": 2201
+    },
+    {
+      "path": "docs/features/HYB-304/m04-invariant-cleanup.md",
+      "sha256": "8f364c5c196e465951c6c223abc9b394b3f7aa7e21d0809bc2cbd3a10237b05e",
+      "bytes": 4623
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-invariant-held-before.log",
+      "sha256": "a3ab4face7146605d9d26c987490cef32d7051b68a5623b4e7daac6161b3fabc",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-invariant-server.log",
+      "sha256": "82ae66610ef7108e43684e1c7ec63babb2f8dd558130e5eacc0f84e601b8e014",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-invariant-server.cover",
+      "sha256": "39f8059fc821f10adeace08d6b3818d23d0e18604b834114f366425f971be573",
+      "bytes": 686031
+    },
+    {
+      "path": "/private/tmp/hb304-invariant-race.log",
+      "sha256": "1659fa0e8a06b61f2af8d64b7afb1be381e3006f7f7d2298f6a83ae16f067bff",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-invariant-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-invariant-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-invariant-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-invariant-linux-amd64.test",
+      "sha256": "74d6b8f71260da9e11307c974a13481b225db57e3a2472f51e730918d26c6cc5",
+      "bytes": 27894618
+    },
+    {
+      "path": "/private/tmp/hb304-invariant-windows-amd64.test.exe",
+      "sha256": "41f32f95ec2d817eae1c0d27de96a65c12fc09caeaf5cbeff867ad0d1c80f5dc",
+      "bytes": 28234752
+    },
+    {
+      "path": "/private/tmp/hb304-invariant-coverage-summary.json",
+      "sha256": "2b76a1c3ba854d16b8501e16a1cb5002337cff41b6b1476c99552a9446546491",
+      "bytes": 443
+    },
+    {
+      "path": "/private/tmp/hb304-session-boundaries-server.cover",
+      "sha256": "875cc853ec3389b94df7bccf78e46901309cb13179a3f00670368d40a3cee1fa",
+      "bytes": 686601
+    }
+  ]
+}

@@ -37,6 +37,18 @@ func TestServiceQueryKnownCredentialAffordanceUsesCurrentRevokePreconditions(t *
 			if !ok || eligibility["can_revoke"] != expected {
 				t.Fatal("credential affordance omitted real current preconditions", scenario)
 			}
+			if scenario == "held" {
+				if eligibility["execution_state"] != "ready" {
+					t.Fatal("trust hold incorrectly blocks a credential reduction")
+				}
+				if reduced := f.run(root, "service.revoke_credential", id, nil); reduced.status != 200 {
+					t.Fatal("projected held revocation did not execute", reduced.status)
+				}
+				observed := f.serviceQuery(root, "/api/v1/identity/service-credentials/"+id)
+				if observed.status != 200 || observed.body["row"].(map[string]any)["state"] != "revoked" || observed.body["eligibility"].(map[string]any)["can_revoke"] != false {
+					t.Fatal("held revocation canonical result did not match execution")
+				}
+			}
 			if scenario == "reauthentication" && eligibility["step_up_state"] != "reauthentication_required" {
 				t.Fatal("credential reauthentication state missing")
 			}

@@ -140,10 +140,7 @@ func (s *Server) serviceBasis(actor identity.Verifier, area string) (string, err
 		}
 		basis.Delivery = s.dir.deliveryVersion
 	}
-	body, err := json.Marshal(basis)
-	if err != nil {
-		return "", err
-	}
+	body, _ := json.Marshal(basis)
 	return hex.EncodeToString(s.serviceMAC("service-source-v1", body)), nil
 }
 

@@ -2,6 +2,7 @@ import { createRequire } from "node:module";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
+import { formsMatrix } from "./m04-form-qa.mjs";
 import { stateMatrix } from "./m04-state-matrix.mjs";
 import { commandMatrix } from "./m04-command-matrix.mjs";
 import { authMatrix } from "./m04-auth-matrix.mjs";
@@ -41,6 +42,7 @@ const results = [],
 let variants = [];
 let authVariants = [];
 const commandVariants = [];
+let formVariants = [];
 page.on("pageerror", (error) => errors.push(error.message));
 page.on("dialog", (dialog) => dialog.accept());
 const accountPath = (url) =>
@@ -167,6 +169,18 @@ try {
   const a = await create(prefix + "-a"),
     b = await create(prefix + "-b");
   let retainedCredentialB;
+  await scenario(
+    "M04 invalid form fields link errors and keep command submission blocked",
+    async () => {
+      formVariants = await formsMatrix({
+        page,
+        navigate,
+        output: output + "/forms",
+        service: a,
+        otherService: b,
+      });
+    },
+  );
   await scenario(
     "unsent state rationale survives canonical refresh and view remount",
     async () => {
@@ -1347,7 +1361,14 @@ try {
   await writeFile(
     output + "/report.json",
     JSON.stringify(
-      { results, errors, variants, authVariants, commandVariants },
+      {
+        results,
+        errors,
+        variants,
+        authVariants,
+        commandVariants,
+        formVariants,
+      },
       null,
       2,
     ),

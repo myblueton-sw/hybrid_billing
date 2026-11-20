@@ -10,6 +10,8 @@ import { v } from "./live-copy";
 import { AdminError } from "../../../../service/admin";
 import { ErrorDiagnostics } from "../../../../service/CommandDiagnostics";
 import { qcopy as t } from "./query-copy";
+import { FieldMessage, fieldAttributes } from "./form-validation";
+import type { FormField } from "./form-validation";
 import { cursorTrail, queryKey } from "./query-model";
 import { readIdentity, useScopedRead, type ReadState } from "./scoped-read";
 import type { Recovery } from "./recovery-context";
@@ -142,6 +144,8 @@ export function Picker<T extends { id: string }>({
   resolve,
   label,
   onChange,
+  field,
+  error,
 }: {
   l: Locale;
   recovery: Recovery;
@@ -154,9 +158,16 @@ export function Picker<T extends { id: string }>({
   resolve: (id: string) => Promise<{ row: T }>;
   label: (row: T) => string;
   onChange: (id: string) => void;
+  field?: FormField;
+  error?: string;
 }) {
-  const fieldId = useId(),
+  const generatedId = useId(),
     searchId = useId();
+  const attributes = field
+    ? fieldAttributes(field, error)
+    : { id: generatedId };
+  const fieldId = attributes.id;
+  const controlId = field ? fieldId + "-select" : fieldId;
   const [q, setQ] = useState(""),
     [applied, setApplied] = useState(""),
     [after, setAfter] = useState("");
@@ -184,8 +195,14 @@ export function Picker<T extends { id: string }>({
       : value + " · " + t(l, "unavailable");
   const key = queryKey(query);
   return (
-    <fieldset className="live-sections" disabled={locked}>
+    <fieldset
+      className="live-sections"
+      disabled={locked}
+      {...(field ? attributes : {})}
+      tabIndex={field ? -1 : undefined}
+    >
       <legend>{name}</legend>
+      {field && <FieldMessage field={field} error={error} />}
       <div className="service-field">
         <label htmlFor={searchId}>{t(l, "search")}</label>
         <input
@@ -225,9 +242,10 @@ export function Picker<T extends { id: string }>({
               !query.after &&
               page.count.certainty === "exact" &&
               page.count.value === "0" && <p>{t(l, "emptyCatalog")}</p>}
-            <label htmlFor={fieldId}>{name}</label>
+            <label htmlFor={controlId}>{name}</label>
             <select
-              id={fieldId}
+              {...attributes}
+              id={controlId}
               className="live-select"
               value={value}
               onChange={(e) => onChange(e.target.value)}

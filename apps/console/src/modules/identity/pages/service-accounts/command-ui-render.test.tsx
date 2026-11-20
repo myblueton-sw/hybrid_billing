@@ -23,7 +23,7 @@ else
       ),
   );
 const { Reauthenticate } = await import("./command-ui");
-const { ReadBoundary } = await import("./query-ui");
+const { ReadBoundary, Picker } = await import("./query-ui");
 
 test("M04 read failures describe reads and service accounts while retaining safe server references", () => {
   for (const l of ["en", "ko", "ar"] as const) {
@@ -219,4 +219,67 @@ test("password confirmation cancellation differs from unverified transport witho
     );
     assert.ok(!unavailable.includes("was cancelled"));
   }
+});
+
+test("required picker errors retain a unique focusable target while the select is still loading", async () => {
+  const { issueAttempts } = await import("./issue-attempts");
+  const { commandIntents } = await import("./command-intents");
+  const { issueDrafts } = await import("./issue-draft");
+  const { actionDrafts } = await import("./action-draft");
+  const { requiredField, fieldIds } = await import("./form-validation");
+  const fresh = () => ({ request: "qa-request", key: "qa-key" });
+  const clocks = { mono: () => 0, wall: () => 0 };
+  const recovery = {
+    issues: issueAttempts(fresh, clocks),
+    commands: commandIntents(fresh, clocks, () => true),
+    issueDrafts: issueDrafts(() => true),
+    actionDrafts: actionDrafts(() => true),
+    afterView: { focus: "", view: "" },
+  };
+  let reads = 0;
+  for (const l of ["en", "ko", "ar"] as const) {
+    for (const field of ["owner", "organization"] as const) {
+      const html = renderToStaticMarkup(
+        <Picker
+          l={l}
+          recovery={recovery}
+          name={t(l, field)}
+          field={field}
+          error={requiredField(l)}
+          scope="home"
+          value=""
+          load={async () => {
+            reads++;
+            throw Error("Unexpected render transport");
+          }}
+          resolve={async () => {
+            reads++;
+            throw Error("Unexpected render transport");
+          }}
+          label={(row) => row.id}
+          onChange={() => {}}
+        />,
+      );
+      const group = html.match(/<fieldset[^>]*>/)?.[0] ?? "";
+      assert.ok(
+        group.includes('id="' + fieldIds[field] + '"'),
+        "pending picker lost its summary target",
+      );
+      assert.ok(
+        group.includes('tabindex="-1"') &&
+          group.includes('aria-invalid="true"'),
+      );
+      assert.ok(
+        group.includes('aria-describedby="' + fieldIds[field] + '-error"'),
+        "pending picker lost its error association",
+      );
+      assert.equal(
+        html.match(new RegExp('id="' + fieldIds[field] + '"', "g"))?.length,
+        1,
+      );
+      assert.ok(html.includes('id="' + fieldIds[field] + '-error"'));
+      assert.ok(!html.includes('id="' + fieldIds[field] + '-select"'));
+    }
+  }
+  assert.equal(reads, 0);
 });

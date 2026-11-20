@@ -1,11 +1,19 @@
-import { useState, useSyncExternalStore, type FormEvent } from "react";
+import { useSyncExternalStore, type FormEvent } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { AdminClient } from "../../../../service/admin";
 import type {
   AccountDetail,
   CredentialDetail,
 } from "../../../../service/service-query-types";
-import { reasonProblem } from "../users/Live";
+import {
+  FieldMessage,
+  ValidationSummary,
+  fieldAttributes,
+  rationaleError,
+  requestBounds,
+  useFormValidation,
+  type FieldErrors,
+} from "./form-validation";
 import { w } from "../users/live-copy";
 import { c } from "../../../../service/copy";
 import { v } from "./live-copy";
@@ -69,7 +77,8 @@ export function ActionForm({
   const draft = saved ?? { action, target: detail.row.id, reason: initial };
   const matches = draft.target === detail.row.id && draft.action === action;
   const reason = matches ? draft.reason : initial;
-  const [problem, setProblem] = useState("");
+  const validation = useFormValidation();
+  const { errors, setProblem } = validation;
   const title = actionTitle(l, action);
   const allowed =
     "can_revoke" in detail.eligibility
@@ -85,15 +94,25 @@ export function ActionForm({
     event.preventDefault();
     if (!present.current || !recovery.issues.current()) return;
     if (entry && entry.phase !== "unknown") return;
-    if (
-      !entry &&
-      (!matches ||
-        !admitsActionDraft(draft, detail.limits) ||
-        !allowed ||
-        reasonProblem(l, reason))
-    ) {
-      setProblem(reasonProblem(l, reason) || t(l, "blocked"));
-      return;
+    if (!entry) {
+      const reasonError = rationaleError(
+        l,
+        reason,
+        detail.limits.rationale_bytes,
+      );
+      if (reasonError) {
+        validation.fail({ reason: reasonError });
+        return;
+      }
+      if (!matches || !allowed) {
+        validation.fail({}, t(l, "blocked"));
+        return;
+      }
+      if (!admitsActionDraft(draft, detail.limits)) {
+        validation.fail({}, requestBounds(l));
+        return;
+      }
+      validation.reset();
     }
     const done = await recovery.commands.submit(
       kind,
@@ -160,7 +179,9 @@ export function ActionForm({
           <button
             type="button"
             className="live-secondary"
-            onClick={() => drafts.clear(saved)}
+            onClick={() => {
+              if (drafts.clear(saved)) validation.reset();
+            }}
           >
             {t(l, "discardDraft")}
           </button>
@@ -177,6 +198,7 @@ export function ActionForm({
       </h2>
       <p className="live-mono">{bdi(entry?.draft.target ?? detail.row.id)}</p>
       <IntentNotice l={l} recovery={recovery} kind={kind} />
+      <ValidationSummary l={l} validation={validation} />
       <Reauthenticate
         l={l}
         state={detail.eligibility.step_up_state}
@@ -209,10 +231,10 @@ export function ActionForm({
                 detail.limits,
               )
             )
-              setProblem("");
+              validation.clear("reason");
             else setProblem(t(l, "bounds"));
           }}
-          error={problem}
+          error={errors.reason ?? ""}
         />
       </fieldset>
       <div className="live-buttons">
@@ -263,7 +285,8 @@ export function IssueControl({
     days: String(detail.limits.credential_days),
     reason: "",
   };
-  const [problem, setProblem] = useState("");
+  const validation = useFormValidation();
+  const { errors, setProblem } = validation;
   const locked = !!entry;
   const update = (patch: Partial<Pick<typeof draft, "days" | "reason">>) => {
     if (
@@ -272,29 +295,39 @@ export function IssueControl({
       issues.get(user, detail.row.id)
     )
       return;
-    if (drafts.save({ ...draft, ...patch }, detail.limits)) setProblem("");
+    if (drafts.save({ ...draft, ...patch }, detail.limits))
+      validation.clear(
+        ...(["days", "reason"] as const).filter((field) => field in patch),
+      );
     else setProblem(t(l, "bounds"));
   };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!present.current || !issues.current()) return;
     if (entry && entry.phase !== "unknown") return;
-    if (
-      !entry &&
-      (draft.target !== detail.row.id ||
-        !admitsIssueDraft(draft, detail.limits))
-    ) {
-      setProblem(t(l, "bounds"));
-      return;
-    }
-    if (
-      !entry &&
-      (!detail.eligibility.can_issue ||
-        !wholeDays(draft.days, detail.limits.credential_days) ||
-        reasonProblem(l, draft.reason))
-    ) {
-      setProblem(reasonProblem(l, draft.reason) || t(l, "required"));
-      return;
+    if (!entry) {
+      const fields: FieldErrors = {};
+      if (!wholeDays(draft.days, detail.limits.credential_days))
+        fields.days = v.errDays(l, detail.limits.credential_days);
+      const reason = rationaleError(
+        l,
+        draft.reason,
+        detail.limits.rationale_bytes,
+      );
+      if (reason) fields.reason = reason;
+      if (Object.keys(fields).length) {
+        validation.fail(fields);
+        return;
+      }
+      if (draft.target !== detail.row.id || !detail.eligibility.can_issue) {
+        validation.fail({}, t(l, "blocked"));
+        return;
+      }
+      if (!admitsIssueDraft(draft, detail.limits)) {
+        validation.fail({}, requestBounds(l));
+        return;
+      }
+      validation.reset();
     }
     await issues.submit(
       user,
@@ -341,7 +374,9 @@ export function IssueControl({
           <button
             type="button"
             className="live-secondary"
-            onClick={() => drafts.clear(saved)}
+            onClick={() => {
+              if (drafts.clear(saved)) validation.reset();
+            }}
           >
             {t(l, "discardDraft")}
           </button>
@@ -359,9 +394,11 @@ export function IssueControl({
           [t(l, "state"), t(l, detail.eligibility.state)],
           [
             v.credentialsFact(l),
-            detail.eligibility.live_credentials +
-              " / " +
-              detail.eligibility.credential_limit,
+            bdi(
+              detail.eligibility.live_credentials +
+                " / " +
+                detail.eligibility.credential_limit,
+            ),
           ],
         ]}
       />
@@ -371,12 +408,12 @@ export function IssueControl({
         refresh={refresh}
       />
       {!entry && !detail.eligibility.can_issue && <p>{t(l, "blocked")}</p>}
-      {problem && <p role="alert">{problem}</p>}
+      <ValidationSummary l={l} validation={validation} />
       <fieldset disabled={locked}>
         <label>
           {v.validFor(l)}
           <input
-            id="svc-days"
+            {...fieldAttributes("days", errors.days, "svc-days-hint")}
             inputMode="numeric"
             value={entry?.days ?? draft.days}
             onChange={(e) => {
@@ -384,13 +421,14 @@ export function IssueControl({
             }}
           />
         </label>
-        <p>{v.daysHint(l, detail.limits.credential_days)}</p>
+        <FieldMessage field="days" error={errors.days} />
+        <p id="svc-days-hint">{v.daysHint(l, detail.limits.credential_days)}</p>
         <BoundedReason
           l={l}
           limit={detail.limits.rationale_bytes}
           value={entry?.reason ?? draft.reason}
           onChange={(value) => update({ reason: value })}
-          error=""
+          error={errors.reason ?? ""}
         />
       </fieldset>
       {entry && (

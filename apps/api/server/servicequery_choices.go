@@ -84,9 +84,6 @@ func (walk *serviceWalk) owners() ([]serviceOwnerRow, bool, error) {
 		walk.scanned += batch.Scanned
 		walk.cursor.After = batch.After
 		more = batch.More
-		if more && batch.Scanned == 0 {
-			return nil, false, errServiceViewChanged
-		}
 		for _, person := range batch.Rows {
 			row := ownerChoice(s, person, walk.cursor.Reference)
 			if !row.Eligible || !walk.query.textMatches(row.ID, row.Login) {

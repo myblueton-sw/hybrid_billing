@@ -137,10 +137,6 @@ func (s *Server) currentCredentialEligibility(actor identity.Verifier, user, id 
 	if !allowed {
 		execution = "dependency_unavailable"
 	}
-	if s.held() && holdTable["service.revoke_credential"].rule != holdAllow {
-		allowed = false
-		execution = "trust_hold"
-	}
 	return serviceCredentialEligibility{CanRevoke: ready && allowed && !info.Revoked, StepUpState: state, ExecutionState: execution}
 }
 

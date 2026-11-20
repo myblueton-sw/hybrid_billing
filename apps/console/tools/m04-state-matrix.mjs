@@ -49,6 +49,26 @@ export async function stateMatrix({
           });
         }
       }
+      const ratios = [];
+      for (const value of screen.querySelectorAll(".live-facts dd")) {
+        if (!value.getClientRects().length) continue;
+        const walk = document.createTreeWalker(value, NodeFilter.SHOW_TEXT);
+        let text;
+        while ((text = walk.nextNode())) {
+          if (!/^\d+ \/ \d+$/.test(text.textContent)) continue;
+          const first = document.createRange(),
+            second = document.createRange();
+          first.setStart(text, 0);
+          first.setEnd(text, 1);
+          const index = text.textContent.indexOf("/") + 2;
+          second.setStart(text, index);
+          second.setEnd(text, index + 1);
+          ratios.push({
+            firstLeft: first.getBoundingClientRect().left,
+            secondLeft: second.getBoundingClientRect().left,
+          });
+        }
+      }
       const bounds = screen.getBoundingClientRect();
       return {
         locale: screen.lang,
@@ -58,6 +78,7 @@ export async function stateMatrix({
         parentWidth: screen.parentElement.getBoundingClientRect().width,
         font: getComputedStyle(screen).fontFamily,
         borders,
+        ratios,
       };
     });
     assert.equal(actual.locale, locale);
@@ -71,6 +92,15 @@ export async function stateMatrix({
       `screen does not use available width ${locale}/${width}/${state}`,
     );
     assert.ok(actual.font.includes("IBM Plex"), "intended font family missing");
+    if (state === "empty")
+      assert.ok(
+        actual.ratios.length > 0,
+        "recorded/limit admission ratio missing",
+      );
+    assert.ok(
+      actual.ratios.every((ratio) => ratio.firstLeft < ratio.secondLeft),
+      "a displayed count/limit ratio reverses its reading order",
+    );
     assert.ok(
       actual.borders.every((border) => border.neutral),
       `decorative colored border ${locale}/${width}/${state}`,

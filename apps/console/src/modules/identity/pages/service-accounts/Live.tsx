@@ -435,7 +435,9 @@ function AccountWorkspace({
                   items={[
                     [
                       t(l, "admission"),
-                      page.admission.recorded + " / " + page.admission.limit,
+                      bdi(
+                        page.admission.recorded + " / " + page.admission.limit,
+                      ),
                     ],
                   ]}
                 />

@@ -8,7 +8,7 @@ import {
 import type { Locale } from "../../../../shared/types";
 import type { AdminClient } from "../../../../service/admin";
 import { useService } from "../../../../service/context";
-import { FailureBox } from "../users/Live";
+import { CommandFailure } from "./command-failure";
 import { c } from "../../../../service/copy";
 import { w } from "../users/live-copy";
 import { qcopy as t } from "./query-copy";
@@ -52,7 +52,7 @@ export function IntentNotice({
             : entry.phase === "lapsed"
               ? vLapsed(l)
               : entry.phase === "refused"
-                ? t(l, "refused")
+                ? t(l, entry.hadUnknown ? "unknown" : "refused")
                 : w.saving(l)}
       </h3>
       <p>{t(l, "held")}</p>
@@ -65,7 +65,12 @@ export function IntentNotice({
         ]}
       />
       {entry.error != null && (
-        <FailureBox l={l} error={entry.error} focusKey={0} />
+        <CommandFailure
+          l={l}
+          error={entry.error}
+          variant="inline"
+          outcome={entry.hadUnknown ? "unknown" : "refused"}
+        />
       )}
       {entry.phase !== "sending" && (
         <>
@@ -126,7 +131,9 @@ export function Reauthenticate({
             ? t(l, "authenticationPrerequisite")
             : t(l, "authenticationUnavailable")}
       </p>
-      {error != null && <FailureBox l={l} error={error} focusKey={0} />}
+      {error != null && (
+        <CommandFailure l={l} error={error} outcome="confirmation" />
+      )}
       {state === "reauthentication_required" && (
         <button
           type="button"

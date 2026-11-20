@@ -116,3 +116,8 @@ The [issuance draft record](m04-issue-draft.md) documents an actual password-con
 # State and revocation rationale checkpoint
 
 The [action draft record](m04-action-draft.md) resolves the separate reproduced ActionForm local-rationale loss with one bounded lease-owned action/target/reason draft. Actual state refresh/remount and real revision-refusal checks preserve editable values; revocation uses its own prerequisite Reload under explicitly injected unavailable eligibility. The complete runner passed sixteen scenarios plus the existing sixty read-state and sixty-four issuance-authentication captures. Console1008 tests, twenty isolated provider scenarios, three restored semantic mutations and final product build passed. Generic command-error copy and broader feature gates remain open; draft PR251 has not merged.
+
+
+# Command error and original outcome checkpoint
+
+[Command error verification](m04-command-errors.md) replaces unrelated user-save failure copy with M04 failure meaning and safe references. Generic intent history remains uncertain after refused replay; standalone issuance uses existing refusal retry metadata. Actual phases/retry execution are preserved. Current verification passed1015 Console cases, seventeen mounted scenarios, twenty-four command-error captures in addition to sixty read/sixty-four authentication captures, twenty isolated recovery scenarios and three restored semantic mutants. Independent producer/history review preserves the documented issuance F2 execution contract and its delayed-original limitation; remaining field/form parity, required package100% and final reviews remain open. Draft PR251 is not merged.

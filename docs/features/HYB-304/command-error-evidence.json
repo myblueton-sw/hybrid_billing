@@ -1,0 +1,982 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "3cf95a02c4bc7253d373d32c24741aba2aadd1bd",
+  "status": "command_error_checkpoint_not_merge_ready",
+  "checks": {
+    "console_tests": 1015,
+    "actual_http_samples": 13,
+    "new_history_cases": 3,
+    "new_render_cases": 4,
+    "restored_targeted_cases": 9,
+    "semantic_mutants_killed": 3,
+    "mounted_scenarios": 17,
+    "read_captures": 60,
+    "authentication_captures": 64,
+    "command_error_captures": 24,
+    "isolated_provider_scenarios": 20,
+    "product_build_and_typechecks": "PASS",
+    "go_rerun": false,
+    "latest_server_coverage": "98.8%",
+    "required_package_coverage": "100% NOT_MET"
+  },
+  "build": {
+    "revision": "aa6266474a0441a7ca8e99e04ee345219c470c41e921682ef351842872159574",
+    "source_input_files": 682,
+    "artifact_files": 439,
+    "current_sources_match_build": true,
+    "all_build_file_hashes_match": true
+  },
+  "review": {
+    "source": "/root/hyb310_review PASS scoped current sticky-history/presentation, no execution; scoped F2 producer/history review completed and preserves documented execution/limitations",
+    "terminology_and_static_render": "/root/hyb310_copy_render PASS candidates and representative EN1440/KO390/AR390 refused/unknown captures; no execution/native approval"
+  },
+  "boundaries": [
+    "Actual first409 after another authenticated tab advances revision",
+    "Actual accepted original response deliberately aborted; byte-identical replay409 injected, original remains uncertain",
+    "Mounted authenticated app canonical state read-back is not itself a command-completion receipt",
+    "Initial expanded selector/duplicate-heading and later unauthenticated-context direct readback defects are partial runner failures, not full passes",
+    "Provider visibility/unload simulated, not native BFCache",
+    "Actual phases/replay admission and existing issuance F2 execution unchanged after scoped producer/history review; documented delayed-original limitation and other full-feature gates remain"
+  ],
+  "source_files": [
+    {
+      "path": "apps/console/package.json",
+      "sha256": "b6fed82c295a6b0dc1c1f02f637fad7fdddcf84759f1e9a8d6b2c88257b4b0c0",
+      "bytes": 6975
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/AccountActions.tsx",
+      "sha256": "1c56b6e00fcf3a8850c820727588bd69c000abbb4a446aed55cea3273f2b26aa",
+      "bytes": 13098
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/command-failure.tsx",
+      "sha256": "bdbe409641ced3b889ead22a1e153e1fd36d0211d55660fbf4af05ad6c907e71",
+      "bytes": 5410
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/command-intents.ts",
+      "sha256": "2c935848f12be779ee40c2a299a67a6391fd65aeffcf31a7bc87c035e5bbfc68",
+      "bytes": 8925
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/command-outcome.test.ts",
+      "sha256": "3310d9d5631a526b68c7d86b178e4c88e4f8fb16411cc155a7e6eac50fdf9667",
+      "bytes": 3435
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/command-ui-render.test.tsx",
+      "sha256": "dd59edff7f685f0833e0125e5a6a0acf013ee2e63548dde0d4ecc6178c253ab9",
+      "bytes": 6994
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/service-accounts/command-ui.tsx",
+      "sha256": "f1b7c2f5add1953b9b723f12d1ccde47984f260734037c950756f1cb0beea6d7",
+      "bytes": 6845
+    },
+    {
+      "path": "apps/console/tools/m04-command-matrix.mjs",
+      "sha256": "d2ed823024f4b6e5e3180bb2c80aa7f8c6f6481eba38ac3a92ab808d24219724",
+      "bytes": 3871
+    },
+    {
+      "path": "apps/console/tools/m04-errors-qa.mjs",
+      "sha256": "99a23fabb222e5a73f45ae5aed82d3401f9a91949f0cdd09e8af0e7b534dd364",
+      "bytes": 48230
+    },
+    {
+      "path": "docs/features/HYB-304/m04-command-errors.md",
+      "sha256": "6cfb48f5d05b24a8355441cc52d885b080fdd0780d99bd0eda63c237817db750",
+      "bytes": 9978
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "b61785e4b8601d589dae1ae4c856fd0e56ed2f965a698a90edc2cb2b1085b12a",
+      "bytes": 31467
+    },
+    {
+      "path": "docs/ui/screen-binding-fields/identity.md",
+      "sha256": "57931456d142731be212d9488beccf058cdc9096ee793e85c940316e0502ebaa",
+      "bytes": 98079
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "30aff831b40e1b0759eaf17eedee87819ae251d7b909d5848b41e49ee993f9ff",
+      "bytes": 59606
+    },
+    {
+      "path": "docs/ui/terminology/product-glossary.md",
+      "sha256": "df536c6cefac5e21bad00794491e0342f1a2d645d365117d09733befe8ba0095",
+      "bytes": 113000
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-command-error-before.log",
+      "sha256": "9da48c193631253c8490d8b17fa940cbd7c0153418fa7cb3b748d5037a507b74",
+      "bytes": 78
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-before/report.json",
+      "sha256": "2aa0479f847ddc1ae6f6dba6c21bed8b934cbdf720d1cdddcc0b543bdcf212f6",
+      "bytes": 291
+    },
+    {
+      "path": "/private/tmp/hb304-command-history-before.log",
+      "sha256": "671d8a9b31331ceb5495228a192c6da1d1db5ccc319eb2e4e6f5d75152696748",
+      "bytes": 2678
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-console-current.log",
+      "sha256": "043e6f2d7c9ba73eca7b6f839041a28f1f3f448c9ad10675018ae4b87562c43e",
+      "bytes": 101987
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-typecheck.log",
+      "sha256": "d48f1a41dbe54457906c5003fa315d7f9ee6f40a5d6423f98516a51a986864de",
+      "bytes": 59
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-build-current.log",
+      "sha256": "0add4b208b71fdbb2cdb07cb250a4dda53fa29823d1eaddf8a655c692561511e",
+      "bytes": 38499
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-build-integrity.log",
+      "sha256": "4d0811fa59b0c3169ff959e4c8b3c8d1bc1f35e6f7d622e1999097cae97ed04a",
+      "bytes": 196
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-recovery.log",
+      "sha256": "db26b5d974fa16f42876a1a2ea63ef6fc655b7ee7027444eaf03dd29bc0f6f5a",
+      "bytes": 2464
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-recovery-typecheck.log",
+      "sha256": "ac08ae758459b8122cb182516a1a798871bc756e16301fb133dab2c9f5317981",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete.log",
+      "sha256": "4637fc7355e7f72f97da93b640d9f1d3d503e4df123ccf4c0c230a61b73cabbf",
+      "bytes": 2002
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/report.json",
+      "sha256": "ceb52bd92a4e89ae6416a6890b125c4044f7ae68ab534eab7ac487479b36dae5",
+      "bytes": 95433
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-current.log",
+      "sha256": "9cb10c0318eebd9cbedff059b98be6e07447d34522b286b83dc94df0061b2826",
+      "bytes": 681
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-current/report.json",
+      "sha256": "c8e4ff5f4a0e2975bdd7bb08f03134731734ddb615984f10feca81515254d442",
+      "bytes": 932
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-verified.log",
+      "sha256": "f1558f7389727f4a5fce64db178ff76947ad5de36a790308d6a6c98f6902a3f0",
+      "bytes": 129
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-verified/report.json",
+      "sha256": "b3577338a5254501e353b9ac3ff54365b614c8a3983253d8cf9b8e7eaa90a0cb",
+      "bytes": 10598
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-unit.log",
+      "sha256": "64c5e368334c94b88a6e0aab56b8c2007aa7cc17813800ac8f62a3bcf428376e",
+      "bytes": 1006
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-mutants.json",
+      "sha256": "a50d39b0cbc81d59bb9fc635df524edb584e2bfddd8a9b693e85883f5d92139e",
+      "bytes": 1085
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-restored.log",
+      "sha256": "aadf006f32e7399677a5ae31d99960cc14fefe3e279f3d0751702e75439b3148",
+      "bytes": 999
+    },
+    {
+      "path": "/private/tmp/command-history-forgotten.log",
+      "sha256": "780c30e880cdec2ceab5a0f0a0d163b358ea73fb758bb63da765ff6e18cee3dc",
+      "bytes": 2577
+    },
+    {
+      "path": "/private/tmp/command-uncertainty-ignored.log",
+      "sha256": "df03c2beabeacd3eee8964b86ad737c899a8b6525045a9c1706b78f2f5256c0e",
+      "bytes": 1718
+    },
+    {
+      "path": "/private/tmp/command-diagnostics-removed.log",
+      "sha256": "6c1282fa36213b38e8a787ef678219ac8543cb2aed85654f5cd60a001a23016e",
+      "bytes": 3654
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/action-drafts/ar-390-incompatible.png",
+      "sha256": "e94a9dd21e9350d8ebfb333a3f6a57e6bd7a662996b2b64db7f10c37ad26f9ea",
+      "bytes": 80704
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/action-drafts/en-390-incompatible.png",
+      "sha256": "31ce8c1d5883cc2bb2cf4b5fdb11d2baffb69bf843c8873370d1588f9505cde0",
+      "bytes": 81670
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/action-drafts/ko-390-incompatible.png",
+      "sha256": "d99717672dfa80b8a767b0d534170c0ba38742b05c5f99536ec7997c9c8387cf",
+      "bytes": 79387
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1024-password-dialog.png",
+      "sha256": "deaa95136259fffaa33d0c5585bdd4ae7e6f8d9a268a9141627be97ad74b3ad5",
+      "bytes": 228756
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1024-prerequisite_failed.png",
+      "sha256": "5bc407b527a647ea784aab622480c066ca895c6035f977c01a6ea60f62c9a6c9",
+      "bytes": 266487
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1024-reauthentication-required.png",
+      "sha256": "bec6d0534d37de8fd40c1eefe10492769eca7cff6db1ea3d9e85ba1b12bfe8ad",
+      "bytes": 262427
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1024-refreshed-draft.png",
+      "sha256": "df28b080c4379cce4c26e8297bc5fd4f768aa1d1eee18884b08c4c74df5a8964",
+      "bytes": 246983
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1024-unavailable.png",
+      "sha256": "433659dcc23d0374160363fd97ba3cd7c42509cccf05118372dc8e0faf6319d2",
+      "bytes": 263454
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1280-password-dialog.png",
+      "sha256": "dc1c69c1c5e3856e84d3139bf966c5ed310af541689950bd7725e2d512ef11da",
+      "bytes": 233901
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1280-prerequisite_failed.png",
+      "sha256": "83c6569c279d9334bb8f173ae9fd16c8dd3f68a14a5aecb92bf910d2d25a3fd0",
+      "bytes": 287210
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1280-reauthentication-required.png",
+      "sha256": "21638287e7582ac47318969b21a4ae45dea1d4e82838716c3234550919e3304f",
+      "bytes": 284130
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1280-refreshed-draft.png",
+      "sha256": "fdf7b987981e1e5b70f1464ab21734008ffb8067ae5152df9c759da1a2624830",
+      "bytes": 266920
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1280-unavailable.png",
+      "sha256": "c96d7a64baced7e8a71dc873b9ab02f443398eaa92206d8a045479da5a065c19",
+      "bytes": 284970
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1440-password-dialog.png",
+      "sha256": "acd381378b0bcb75183c39577753c0745ad81a2eb006de3c6c7ad4c22965937a",
+      "bytes": 237582
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1440-prerequisite_failed.png",
+      "sha256": "4411a134ca44c10e73218100a936f7273b71f1f58a37f083ee62e6adcaa7153f",
+      "bytes": 291283
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1440-reauthentication-required.png",
+      "sha256": "1fdef597708d7e07cff5a035d6f1c2937eff550fe05448e5086b8f445d443aff",
+      "bytes": 288071
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1440-refreshed-draft.png",
+      "sha256": "16744bbfc744c2e25bfd0694cf5211f6157005d349059fc5a3f81d67d603ac3d",
+      "bytes": 272444
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-1440-unavailable.png",
+      "sha256": "a20b2c7fc8354ad8b34edbca7ec85aba93211199e41205563b22b6069317094b",
+      "bytes": 288291
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-390-other-account-draft.png",
+      "sha256": "b691c47ddfba952d1f4ec5ba675b289d636d1a7151f790593fc785214802208b",
+      "bytes": 226797
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-390-password-dialog.png",
+      "sha256": "6823ed9a4010f1943147018bf316247e838a501c9b8da3ad50dff9d92e46cbfd",
+      "bytes": 209322
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-390-prerequisite_failed.png",
+      "sha256": "6d549066ca7c6fc2073c5f6d1701ca3e33a49abb676a7b1e864ffbf3c9b33c58",
+      "bytes": 237382
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-390-reauthentication-required.png",
+      "sha256": "d51d818d71dae3215765077043d391b43871a06daf37bb0b36ae26b1cf3a3f6c",
+      "bytes": 233111
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-390-refreshed-draft.png",
+      "sha256": "674844ddbc1916a442194d794b3dd18885b5dcc4a78698893693a2a9e1d8cd22",
+      "bytes": 218692
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ar-390-unavailable.png",
+      "sha256": "9e11e18a48fa58db1c2d93909735e7ea6f69623ba52eb206bef99e78130b1a52",
+      "bytes": 234648
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1024-password-dialog.png",
+      "sha256": "7f9db8cb976ec96fd110d71b5115748b9c86b3b9fe32f8382a502db525276a03",
+      "bytes": 231219
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1024-prerequisite_failed.png",
+      "sha256": "d186ecba357a45cde7a2132762de3f4d327987a18a9f722f790fdc5f67178773",
+      "bytes": 276808
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1024-reauthentication-required.png",
+      "sha256": "d3b246ec7943ed4a05492714f61b6f1cddfc585f368270e14584c65f141aa10b",
+      "bytes": 270393
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1024-refreshed-draft.png",
+      "sha256": "a15fb69a9208a0e8f0d0cadaba09b31a0defebf40fdac4c4a165678a7fb79c3d",
+      "bytes": 252756
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1024-unavailable.png",
+      "sha256": "67254397a676a60b24b2fda956b63ae31aa5deb4c4b8a60fb0ff0e7cbe62b91b",
+      "bytes": 271093
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1280-password-dialog.png",
+      "sha256": "21d453adc4c4d791922aef43f0ca92a11db17d16dee5e7804fff395de0c659a5",
+      "bytes": 235547
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1280-prerequisite_failed.png",
+      "sha256": "b280e32cc4d6e8a0f187e7d43d52483873cca490af85e838d7e078ba8320c7cd",
+      "bytes": 302848
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1280-reauthentication-required.png",
+      "sha256": "3fadf71246880ec9583899ffd48c992fd3f03c80deab04c676c5b6809ef03794",
+      "bytes": 295346
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1280-refreshed-draft.png",
+      "sha256": "d5f4af495afc927eccaa88ca794462dbadf2e598989e620b2c87a5e3c807daba",
+      "bytes": 278095
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1280-unavailable.png",
+      "sha256": "593c9fd7c3f3fd6e4b57021788a3ab736cd0d918eed0b5b7e9a58a885870cf78",
+      "bytes": 296771
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1440-password-dialog.png",
+      "sha256": "c207b43096e1a0aefad89b37508f891b1b7467e4d36ec0e81d74637e1fec4fb9",
+      "bytes": 239326
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1440-prerequisite_failed.png",
+      "sha256": "5d553d166ac9296aad08d404920441f595b9caf00ecae60dde3b835f4c587fb6",
+      "bytes": 302352
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1440-reauthentication-required.png",
+      "sha256": "a25dbd497643887cd699e67bc7f252c97547016eb0ec13c6eddafd16fb612445",
+      "bytes": 299658
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1440-refreshed-draft.png",
+      "sha256": "326002cc54e895aa9c78a1c93d5a5ece32a1d38c75c360566920c3cb8da14904",
+      "bytes": 282229
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-1440-unavailable.png",
+      "sha256": "b4bb46ee3db05fccedffad23f6525a7d15508c2da1488888fc0218ad8a55603b",
+      "bytes": 296568
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-390-new-session-empty-draft.png",
+      "sha256": "7e351eb0cab525630abcd648847683610cc12ac73b65acb43c3ea63e84c8919d",
+      "bytes": 217302
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-390-other-account-draft.png",
+      "sha256": "5e1cb87399bb0d357a66b96ab3385c0eaad0ded7b5b7986179489deef1ec7615",
+      "bytes": 228758
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-390-password-dialog.png",
+      "sha256": "523394e01ac1b729f238f411ca89983c9fb72fd7010db0f911a58aed306f013c",
+      "bytes": 207325
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-390-prerequisite_failed.png",
+      "sha256": "14d0dbab21ac9aa72443085976145f5517934b748815333130d5c89d9c724eed",
+      "bytes": 243682
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-390-reauthentication-required.png",
+      "sha256": "ad5df2e5c629e2936379d00af4a29b1b95ee4fe6752022d566296bc00d201e0d",
+      "bytes": 237326
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-390-refreshed-draft.png",
+      "sha256": "494ff673971854067cc6fa566836820f90dd568d0f92f2b5f7886021a16d5570",
+      "bytes": 220280
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/en-390-unavailable.png",
+      "sha256": "742111bc249d3d3f90d60949b6e58d908cba80992922f62083a21a08b30f7d4e",
+      "bytes": 239318
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1024-password-dialog.png",
+      "sha256": "3747603083d97e43aec656a7da41314716b12ffdc58dfd4829088d4aeff403a4",
+      "bytes": 217853
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1024-prerequisite_failed.png",
+      "sha256": "532b6932f2d873a831cd23c6eb1e50368e027e1abc76bcc47045babf78e9813f",
+      "bytes": 264833
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1024-reauthentication-required.png",
+      "sha256": "3182af089772f7c0a8ce75dca8a4dbda8e17db4c430f9b2ba1d0da1f81005f6f",
+      "bytes": 257016
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1024-refreshed-draft.png",
+      "sha256": "ec0e574a9768b8610e0dc7f14a376da01090884113a2346b517bdd59857eb293",
+      "bytes": 239002
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1024-unavailable.png",
+      "sha256": "893ebcd3fe99698b913543d1d3fb565dd5158822115353d1c31366bee9ad87e3",
+      "bytes": 259700
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1280-password-dialog.png",
+      "sha256": "afe38f1c1e4e184bb04cd69e579ecde26c9df1c0aeab76ae8a40d278ee1262ae",
+      "bytes": 222264
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1280-prerequisite_failed.png",
+      "sha256": "182496fecdb050536bb56abb331c18f58475083e84cd5ccc4f359dee872bb6f3",
+      "bytes": 282179
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1280-reauthentication-required.png",
+      "sha256": "6e69f8d674a76796ca42c815375b085d51dc03ccda8a7c6d4b963b1e27a83656",
+      "bytes": 274500
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1280-refreshed-draft.png",
+      "sha256": "cc0677785ace61052f77800517e188ca92707e12b700ca5d972c7ab0e432dfcc",
+      "bytes": 255731
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1280-unavailable.png",
+      "sha256": "6b3b6d85a865953894c26be4aa12a3719e9a767fade587f2f6c408b376530a1c",
+      "bytes": 275079
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1440-password-dialog.png",
+      "sha256": "99725402bae02d3fddc3de8c5a91f6714729101691ea53ea25f8de9cc23cda82",
+      "bytes": 226125
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1440-prerequisite_failed.png",
+      "sha256": "a91843a0796ec077d4f77b4a110c0044c38cb42b885362ae9baa80657aa99d5e",
+      "bytes": 289207
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1440-reauthentication-required.png",
+      "sha256": "b4e997232a438acca8f17585d5d0f0946f395107c23ed910603ac634121d2023",
+      "bytes": 278965
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1440-refreshed-draft.png",
+      "sha256": "2a94dd4188f382e4149c20c969b899eb4d2a01e1bbfe00daf730689a19f2f144",
+      "bytes": 260705
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-1440-unavailable.png",
+      "sha256": "d90f96d3193efe5c4a1656e00fb7d28e0f4ad75c527686c51170f586c9368234",
+      "bytes": 282158
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-390-other-account-draft.png",
+      "sha256": "bba71ea3bde6f4ea6ec8ede4bf7fe94fbd38162c98f04cc24349a33b65f17b47",
+      "bytes": 217781
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-390-password-dialog.png",
+      "sha256": "90f58088f8b8638471acc3ad573ae357f3ce5b13a874c73204c408ac29384490",
+      "bytes": 196380
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-390-prerequisite_failed.png",
+      "sha256": "7dd2eb09f20b1b98a2dde44322014e25e2c57d5489887fc87f73f8e1a3a69d0a",
+      "bytes": 234429
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-390-reauthentication-required.png",
+      "sha256": "fd8b9e58c4f30179e79274476875dff9046c86acd2435167f2bd3f07f357f0b0",
+      "bytes": 228392
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-390-refreshed-draft.png",
+      "sha256": "f18872dc73d7864a7593f3f267e66a63c97697465b01527f01636217110e81aa",
+      "bytes": 211398
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/authentication/ko-390-unavailable.png",
+      "sha256": "37cd4dba1c5879804c1fc2ff5b3f5df21a30c572f413ea5ffa44be59fb153c34",
+      "bytes": 229189
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ar-1024-refused.png",
+      "sha256": "8f0aacab9c9bd40128943c823f182895bd6358e543af06a251d08cf5d58aa68f",
+      "bytes": 236161
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ar-1024-unknown.png",
+      "sha256": "bacb243f43fcd1d5456eb23243f2bad93e889c38a660dcb4c4bf25f790d04ba3",
+      "bytes": 235910
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ar-1280-refused.png",
+      "sha256": "13192c99381c8a1b5c97671b2c940669ebcae86c98ecd6ce5fd88e544849340e",
+      "bytes": 254844
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ar-1280-unknown.png",
+      "sha256": "845e2995deb346cdb5f15eb4d411d31a4dc3bde30fc01ea78e60ca0b3a79e1e0",
+      "bytes": 254534
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ar-1440-refused.png",
+      "sha256": "185c24c574ea355ee61566608044c54d50edcfb6ef14cdfd121ac6ff0de416e6",
+      "bytes": 260778
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ar-1440-unknown.png",
+      "sha256": "48e071e150c38a29d73785d5a5cee88e4b132ae6adbe11bdd3d5ab38ae077ae4",
+      "bytes": 260513
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ar-390-refused.png",
+      "sha256": "ce464e4e6f778e3503dbe6423189f18ec6e61f7ce6a1f3f7ef79bb3ef981f810",
+      "bytes": 207780
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ar-390-unknown.png",
+      "sha256": "973719efd1e1867340394acd7f57295119244ba313984abc59bfdc2ad38cf68c",
+      "bytes": 205946
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/en-1024-refused.png",
+      "sha256": "80f83eaa3ee37f61557abaa6f68e83af20113a58496103e6503c34dcbd72ef62",
+      "bytes": 249493
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/en-1024-unknown.png",
+      "sha256": "df3a59d844808a59d4b09043b6a19dc9c79337d2be8bff8a4c27e98f7208c00d",
+      "bytes": 251157
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/en-1280-refused.png",
+      "sha256": "faa72ee82576ebdb3411756dfae92bfce96e6bdbe3097192a8fbbbb27a9319f9",
+      "bytes": 273364
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/en-1280-unknown.png",
+      "sha256": "709dae58b185fa35c310c7f8c811862ceca6161592b7398e1aebb7c6c3419c45",
+      "bytes": 275542
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/en-1440-refused.png",
+      "sha256": "eb84d196d7d573022cd20b6823bf0c3a54b401641129cfa72bb8d294d87dc5c7",
+      "bytes": 278271
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/en-1440-unknown.png",
+      "sha256": "01338940d3c34e77c56c964e0adc98a1f189b3ff2411fd8d6a45186e24ae9911",
+      "bytes": 280652
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/en-390-refused.png",
+      "sha256": "0cbfc32c68be927f407ef73ef2db5f18d93e664c5e52e1b8b00deb5bbe05ebf4",
+      "bytes": 217766
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/en-390-unknown.png",
+      "sha256": "e86b193742a8a241fc43ba2e2125a1cbfdc1a0517d7cf6e9d1cd29ec51345973",
+      "bytes": 218716
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ko-1024-refused.png",
+      "sha256": "1ea834c933886295f0414ca5913789693ed8f0108513f0ff15fb5bb04fc3bfd5",
+      "bytes": 236471
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ko-1024-unknown.png",
+      "sha256": "4c84c8877d9bf286e8a887b97ad3d2a3939b37c792ed01b30d55fb95876dd63b",
+      "bytes": 237731
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ko-1280-refused.png",
+      "sha256": "f499239b019b515f9bb98d53c5d4bd90d4d2fef4c06dc15f09c2521e2984f8a4",
+      "bytes": 252153
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ko-1280-unknown.png",
+      "sha256": "e3c5e63433968159914c5d1d01795030db97a3cc9685d4bf19ad5519772237a1",
+      "bytes": 253678
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ko-1440-refused.png",
+      "sha256": "0a7c10afa434174bf536513edf8f0412acfa43c7de994edd4370c602dd15837c",
+      "bytes": 257784
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ko-1440-unknown.png",
+      "sha256": "b422f0409650777f75d6c9ea04239678eb446e76d58c298e3c666e48cb1209f4",
+      "bytes": 259392
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ko-390-refused.png",
+      "sha256": "19c2f0711fe449c97b825aa6af3bb29ac3526b76ccbe3655ea3f3a8dfe92015e",
+      "bytes": 207663
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/command-errors/ko-390-unknown.png",
+      "sha256": "416ec01b1dfeb507518a9668ceabd0402cf69d78776d9aed99d28e14dfb09e42",
+      "bytes": 208842
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1024-credential-hold.png",
+      "sha256": "2db51bff3358febc142ade23e81a48130fd7a3658df79b6c1613f9a394f099b4",
+      "bytes": 269372
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1024-denied.png",
+      "sha256": "8256ce22a00781f15dc904a7d7b87514845d2f9421d73786eb3ecfc392b5fff7",
+      "bytes": 118925
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1024-empty.png",
+      "sha256": "d5e1d23909c7ecc88fbe1615ed36a1647252902a0124e90a0a159cd376cf4acd",
+      "bytes": 130108
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1024-loading.png",
+      "sha256": "4f3cab3e0ec7d41ecfa87b865702b52b0b70103467dde9cc0517986e0fa27fda",
+      "bytes": 98687
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1024-unavailable.png",
+      "sha256": "18086a7c2b8372f68e2c49c64297ab9d617ce9dbe784b1dab1051275d77b7262",
+      "bytes": 118836
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1280-credential-hold.png",
+      "sha256": "c0acde12db7405607cc7ee805be78722555c53a3b4decbf4443708e41aa28384",
+      "bytes": 290031
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1280-denied.png",
+      "sha256": "382e42f410975c5b321455353bf26c8a72479fba724b0c44006a0ab1a5495525",
+      "bytes": 134105
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1280-empty.png",
+      "sha256": "ca267654aad3fd078417657f7e83692e0de6edecd8c5d0e1a3c060f4273a0c9e",
+      "bytes": 145539
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1280-loading.png",
+      "sha256": "9563c3d922a33102d87a5877cb83727be76fba20dbf64591551b4cfb2225ae20",
+      "bytes": 113446
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1280-unavailable.png",
+      "sha256": "549ee38ae8cf2d20cd86f5d2813c3b577db18640fd27890716d43ee759fdca55",
+      "bytes": 134026
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1440-credential-hold.png",
+      "sha256": "1a97a1c972290219812208dff89df15ec31bd2f18c6897ffe09209379a0dd530",
+      "bytes": 294069
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1440-denied.png",
+      "sha256": "cc6fefb8ed31270f77debf133619c30de653de37ed6bf3bc62b1359c1d05c535",
+      "bytes": 136357
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1440-empty.png",
+      "sha256": "281bf8f5367b1a6b54c4e3b43c4b3f084b4b7342bd107c46795063b2aa0a66be",
+      "bytes": 148634
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1440-loading.png",
+      "sha256": "59d2b27311cdebdb408b4847975e7f8e01e761a51d010b1f86ee6a15d6af8acb",
+      "bytes": 115704
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-1440-unavailable.png",
+      "sha256": "2b41d63ae7ce2f3573ec0e72523ba66bbb2d0ea29ea226cf50ea2aa27d72b6e7",
+      "bytes": 136233
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-390-credential-hold.png",
+      "sha256": "67ae2b76105ecbbb318a0664e0f186153988decc2573430c46bb2fd8e813235d",
+      "bytes": 240026
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-390-denied.png",
+      "sha256": "b408cfabe05e4c109823be7a8efded0ad8316eb3823b679e45bfa0d1c80aaa11",
+      "bytes": 104655
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-390-empty.png",
+      "sha256": "d26019c9bd311d63ea7961e80917982ea1feed18f4f0b7793b552132d802d9d0",
+      "bytes": 110748
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-390-loading.png",
+      "sha256": "2c89717591aeaa16f1b923603f8d0c514b1e7867da8205b0ed6c539472ea6fc4",
+      "bytes": 85629
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ar-390-unavailable.png",
+      "sha256": "f23841761099ef022bb25e569f62e554cb2398a00608bdf20078353b35bceb6d",
+      "bytes": 104274
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1024-credential-hold.png",
+      "sha256": "b6e905fb6739a696a12cf23081fe8e57f49ac7b188a9591d5416feeee1906e27",
+      "bytes": 279970
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1024-denied.png",
+      "sha256": "e5fa8430e4c5998e1f69508560acc433f06821d67c3f1e726722009aed698242",
+      "bytes": 123745
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1024-empty.png",
+      "sha256": "31e0ff5a987549ed696dd961e571599dbc08eb0d4f6b87782d632bd60ac56ef6",
+      "bytes": 134691
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1024-loading.png",
+      "sha256": "13a0920f668d9556feb2d634177626d94201740ec902964af6f127aa3387fc43",
+      "bytes": 103085
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1024-unavailable.png",
+      "sha256": "8b5236487fb357cfac7974d7c9e5c87f8c168992a37cbe920db8a63f952d6f6a",
+      "bytes": 124271
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1280-credential-hold.png",
+      "sha256": "65d88a970bc9354e45f10716328f01d6f931e0821f34792be817e914edf7f0e9",
+      "bytes": 304808
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1280-denied.png",
+      "sha256": "c082cb25eed9601d09632722635629dbaecff21e80f2fbce7363bb3980a893da",
+      "bytes": 145050
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1280-empty.png",
+      "sha256": "1191a154f3465874801bb2b2591f725a13b85fbd191b7438272f0313d1344114",
+      "bytes": 156899
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1280-loading.png",
+      "sha256": "284ae3308021223ca36e395014a84cf97cc5b1b05b14623ba93c4c1c2dc1739a",
+      "bytes": 123804
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1280-unavailable.png",
+      "sha256": "15b6cfc967ce7e3a10e9a6c11bef0f09d105a81fd417e8fce7e908e87c2b3af3",
+      "bytes": 145586
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1440-credential-hold.png",
+      "sha256": "c636c82f9127f1e0b55012105649ffbdc659b9d1ea4d7d90c5284f6ee34f996f",
+      "bytes": 308035
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1440-denied.png",
+      "sha256": "c66b5b8e4d0c4b7d6c3fba8932e36c61a4b7294fa54b7702f78a7e29b933096c",
+      "bytes": 146192
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1440-empty.png",
+      "sha256": "6eb58e189e8f3ee3efc731e08b688f7698b223bf5144f31dbfcb84af946b2607",
+      "bytes": 158299
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1440-loading.png",
+      "sha256": "fb6e4d57cb1f3ddb87fdc2af06731036892a864a7b80ed54a04542448d5abfba",
+      "bytes": 125211
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-1440-unavailable.png",
+      "sha256": "a9475ab9dd36666b219dd1a76a4a50cb260ee1b24050343d1f98d18881998bc8",
+      "bytes": 146741
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-390-credential-hold.png",
+      "sha256": "b28ba5762917c191e8a1eda37ec647ee02dd9f9d8398a3eba034113dc9feac49",
+      "bytes": 247251
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-390-denied.png",
+      "sha256": "4fbef607d0eb37a57c4f91181d1edebdc95a76000d6e19c348352d0ca25dc13f",
+      "bytes": 107908
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-390-empty.png",
+      "sha256": "28670236a4f17ab4973dc1ce04191d1ba6f48e021ef0171e470681e945f37888",
+      "bytes": 111742
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-390-loading.png",
+      "sha256": "d584e6cb5f73bb9f9bcda610343c55b33a6dd35213b7a174afacf0754e6203aa",
+      "bytes": 88107
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/en-390-unavailable.png",
+      "sha256": "3ebe3cb65c5755ba7ed72aeadaa6c3a5024bb96513015f1550995e420c20efe9",
+      "bytes": 108264
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1024-credential-hold.png",
+      "sha256": "e6ba9126f795931b1fd7912df13765903f78177513620ee8c16f006062689f5f",
+      "bytes": 262811
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1024-denied.png",
+      "sha256": "0691d3d8bb1dca1fd46342de71ab2f08856e4c00759dabf5118177796f48b158",
+      "bytes": 120787
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1024-empty.png",
+      "sha256": "f64133233564e9ad737b7514ccd3a44842b6ca9a8b899a7d9092f3f11e251977",
+      "bytes": 127777
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1024-loading.png",
+      "sha256": "4517381f15e91229463bc08d0c5521c78efbf3df7c47e78d84d2ff828eac5e80",
+      "bytes": 98934
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1024-unavailable.png",
+      "sha256": "dcc9ded8c3bfb1d4482d9a6a5a4322a457e9cb39f14f6720a4447851afb91226",
+      "bytes": 120400
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1280-credential-hold.png",
+      "sha256": "a342fc8dc7679ddee25d054c9b56fd5b3307c46da04a4eab2539afb750c1e01d",
+      "bytes": 277783
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1280-denied.png",
+      "sha256": "9cf742635fc2e27b457126ce63c36aead597d4125777ee438d55bbab2fd42865",
+      "bytes": 133449
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1280-empty.png",
+      "sha256": "6b1e7b888082ffade0283506d45ce486999aa9ae3b1936c217394d96ab874c8a",
+      "bytes": 140037
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1280-loading.png",
+      "sha256": "3dc1de8dbaec7ff6a3ea1bd4cba755caf02de9363f6cd5fcf004b7c304cb2ced",
+      "bytes": 111129
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1280-unavailable.png",
+      "sha256": "353faf8156c4fd18765cfa851dfd8c9f100fe7ad33a3471ea30044d0f94ccd29",
+      "bytes": 133081
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1440-credential-hold.png",
+      "sha256": "bf05ffd49e2a5cd6f9b5389ae9426da45e59c1589600f50017a38083783469e8",
+      "bytes": 282851
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1440-denied.png",
+      "sha256": "1f2836e092be0eb6bd0fae14b7c78865d7535606371a7058ca204c56b3e37418",
+      "bytes": 135521
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1440-empty.png",
+      "sha256": "4974bfe862843e96c841a5cab91a7f808d4425ced3d4adc9547001d08419f480",
+      "bytes": 142286
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1440-loading.png",
+      "sha256": "8e274b50ff0c1c6c5b24ca78d8797e2d0c5aed4dea4aeca07d85fcb10400e7fc",
+      "bytes": 113265
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-1440-unavailable.png",
+      "sha256": "f7d37d5524ee2cd1f687a39e44eb659f97e0849ed118770a117e942b64a3c964",
+      "bytes": 135119
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-390-credential-hold.png",
+      "sha256": "2c469ea16244329ffae2c2ebd2827fde003c3567460f948befde842f933e4b1b",
+      "bytes": 231218
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-390-denied.png",
+      "sha256": "4db257541b4e968f43aaa5824adadec31a20423d9889af788412a93bba79b50a",
+      "bytes": 106574
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-390-empty.png",
+      "sha256": "d1c44e243e90cf1c5f25cf6c8481ab21dbd2b7c8470e8fc0553bda7599bf1743",
+      "bytes": 108303
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-390-loading.png",
+      "sha256": "7ccda93f3d4334859b323c4c587fa4e39aea0cf805b13ef9af73eeaf57e573f1",
+      "bytes": 86302
+    },
+    {
+      "path": "/private/tmp/hb304-command-error-complete/states/ko-390-unavailable.png",
+      "sha256": "e5736d8e0d2dc6516f7a5f988281828cf789f753f3e8da9c22736c42a9aff8ce",
+      "bytes": 106204
+    },
+    {
+      "path": "/private/tmp/hb304/apps/console/dist/build-manifest.json",
+      "sha256": "c7b60246ce0ed3a52624cc4c71eecc9b19b454016ed638ce39d3f14a5082c620",
+      "bytes": 72910
+    }
+  ]
+}

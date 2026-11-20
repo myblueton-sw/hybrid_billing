@@ -27,6 +27,7 @@ export type Intent = {
   readonly attempt: Readonly<Attempt>;
   readonly first: { mono: number; wall: number };
   phase: "sending" | "unknown" | "lapsed" | "done" | "refused";
+  hadUnknown: boolean;
   error?: unknown;
   outcome?: Outcome;
 };
@@ -268,6 +269,7 @@ export function commandIntents(
           attempt: tried,
           first: { mono: clocks.mono(), wall: clocks.wall() },
           phase: "sending",
+          hadUnknown: false,
         };
         intents.set(kind, entry);
       }
@@ -294,6 +296,8 @@ export function commandIntents(
         outsideWindow(elapsed(entry), entry.draft.replay, true),
       );
       entry.phase = next === "remove" ? "refused" : next;
+      if (entry.phase === "unknown" || entry.phase === "lapsed")
+        entry.hadUnknown = true;
       changed();
       return undefined;
     },

@@ -15,6 +15,7 @@ import {
   admitsActionDraft,
   type DraftAction,
 } from "./action-draft";
+import { CommandFailure } from "./command-failure";
 import { admitsIssueDraft } from "./issue-draft";
 import { Facts, bdi, usePanelHeading } from "./query-ui";
 import {
@@ -403,7 +404,19 @@ export function IssueControl({
                 : v.lapsedTitle(l)}
         </p>
       )}
-      {(entry?.error || refusal) && <p role="alert">{t(l, "blocked")}</p>}
+      {(entry?.error != null || refusal != null) && (
+        <CommandFailure
+          l={l}
+          error={entry?.error ?? refusal?.error}
+          outcome={
+            entry?.phase === "unknown" ||
+            entry?.phase === "lapsed" ||
+            refusal?.retry
+              ? "unknown"
+              : "refused"
+          }
+        />
+      )}
       <div className="live-buttons">
         <button
           className="live-primary"

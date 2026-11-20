@@ -3,6 +3,7 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 import { stateMatrix } from "./m04-state-matrix.mjs";
+import { commandMatrix } from "./m04-command-matrix.mjs";
 import { authMatrix } from "./m04-auth-matrix.mjs";
 const args = Object.fromEntries(
   process.argv
@@ -39,6 +40,7 @@ const results = [],
   errors = [];
 let variants = [];
 let authVariants = [];
+const commandVariants = [];
 page.on("pageerror", (error) => errors.push(error.message));
 page.on("dialog", (dialog) => dialog.accept());
 const accountPath = (url) =>
@@ -225,7 +227,42 @@ try {
       await refused;
       await form
         .getByRole("heading", { name: "Command refused", exact: true })
+        .first()
         .waitFor();
+      assert.equal(
+        await form
+          .getByRole("heading", { name: "Command refused", exact: true })
+          .count(),
+        1,
+        "M04 refusal heading must appear once",
+      );
+      assert.equal(
+        await form
+          .getByRole("heading", {
+            name: "Could not save this change",
+            exact: true,
+          })
+          .count(),
+        0,
+      );
+      assert.equal(
+        await form.getByText("revision_conflict", { exact: true }).count(),
+        1,
+        "safe canonical refusal code is missing",
+      );
+      commandVariants.push(
+        ...(await commandMatrix({
+          page,
+          navigate,
+          output: output + "/command-errors",
+          outcome: "refused",
+        })),
+      );
+      await navigate("accounts", { svc_a_selected: b });
+      await page
+        .getByRole("button", { name: "Suspend service account", exact: true })
+        .click();
+      await form.locator("#live-reason").waitFor();
       assert.equal(await form.locator("#live-reason").inputValue(), reason);
       await form
         .getByRole("button", { name: "Discard retained intent", exact: true })
@@ -314,6 +351,106 @@ try {
       await retired
         .getByRole("button", { name: "Cancel", exact: true })
         .click();
+    },
+  );
+  await scenario(
+    "a refused replay cannot erase the uncertainty of an accepted original command",
+    async () => {
+      const service = await create(prefix + "-uncertain");
+      await page
+        .getByRole("button", { name: "Suspend service account", exact: true })
+        .click();
+      const form = page.locator("form").filter({
+        has: page.getByRole("heading", {
+          name: "Suspend service account",
+          exact: true,
+        }),
+      });
+      await form
+        .locator("#live-reason")
+        .fill("Synthetic uncertain original command");
+      const bodies = [];
+      const handler = async (route) => {
+        bodies.push(route.request().postData());
+        if (bodies.length === 1) {
+          const response = await route.fetch();
+          assert.equal(response.status(), 200);
+          return route.abort("failed");
+        }
+        return route.fulfill({
+          status: 409,
+          contentType: "application/json",
+          body: JSON.stringify({
+            code: "revision_conflict",
+            request_id: "qa-uncertain-replay",
+            message: "PRIVATE_UNRENDERED_MESSAGE",
+          }),
+        });
+      };
+      await page.route("**/api/v1/commands/service.suspend", handler);
+      try {
+        await form.locator("button[type=submit]").click();
+        await form
+          .getByRole("heading", {
+            name: "Command outcome unknown",
+            exact: true,
+          })
+          .first()
+          .waitFor();
+        const refused = page.waitForResponse(
+          (response) =>
+            new URL(response.url()).pathname ===
+              "/api/v1/commands/service.suspend" && response.status() === 409,
+        );
+        await Promise.all([
+          refused,
+          form.locator("button[type=submit]").click(),
+        ]);
+        await form.getByText("qa-uncertain-replay", { exact: true }).waitFor();
+        assert.equal(
+          await form
+            .getByRole("heading", {
+              name: "Command outcome unknown",
+              exact: true,
+            })
+            .count(),
+          1,
+        );
+        assert.equal(
+          await form
+            .getByRole("heading", { name: "Command refused", exact: true })
+            .count(),
+          0,
+        );
+        assert.equal(
+          await form.locator("button[type=submit]").isDisabled(),
+          true,
+        );
+        assert.equal(bodies.length, 2);
+        assert.ok(Buffer.from(bodies[0]).equals(Buffer.from(bodies[1])));
+        commandVariants.push(
+          ...(await commandMatrix({
+            page,
+            navigate,
+            output: output + "/command-errors",
+            outcome: "unknown",
+          })),
+        );
+        await navigate("credentials");
+        await page
+          .getByRole("button", { name: "Discard retained intent", exact: true })
+          .click();
+        const current = page.waitForResponse(
+          (response) =>
+            new URL(response.url()).pathname ===
+              "/api/v1/identity/services/" + service &&
+            response.status() === 200,
+        );
+        await navigate("accounts", { svc_a_selected: service });
+        assert.equal((await (await current).json()).row.state, "suspended");
+      } finally {
+        await page.unroute("**/api/v1/commands/service.suspend", handler);
+      }
     },
   );
   await scenario(
@@ -1209,7 +1346,11 @@ try {
   await mkdir(output, { recursive: true });
   await writeFile(
     output + "/report.json",
-    JSON.stringify({ results, errors, variants, authVariants }, null, 2),
+    JSON.stringify(
+      { results, errors, variants, authVariants, commandVariants },
+      null,
+      2,
+    ),
   );
   await browser.close();
 }

@@ -232,3 +232,24 @@ func resultLineAmounts(line erpledger.Line, scale int) erpledger.Amounts {
 	}
 	return erpledger.Amounts{Net: documentFixed(n, scale), Tax: documentFixed(t, scale), Quantity: documentFixed(q, scale)}
 }
+
+func (a *financialERP) buildResultBasis(workspace, id, raw string) (financialERPResultBasis, error) {
+	p, err := parseResultPacket(raw)
+	if err != nil {
+		return financialERPResultBasis{}, err
+	}
+	document, preparation, documentDigest, err := a.resultHistoricalPreparation(workspace, p)
+	if err != nil {
+		return financialERPResultBasis{}, err
+	}
+	comparison, total, err := compareResult(p, document, preparation)
+	if err != nil {
+		return financialERPResultBasis{}, err
+	}
+	packetDigest, err := normalizedDigest(p)
+	if err != nil {
+		return financialERPResultBasis{}, err
+	}
+	b := financialERPResultBasis{Workspace: workspace, ID: id, SourceDigest: resultSourceDigest(raw), PacketDigest: packetDigest, DocumentDigest: documentDigest, Packet: p, Preparation: preparation, Document: document, Comparison: comparison, Total: total}
+	return b, nil
+}

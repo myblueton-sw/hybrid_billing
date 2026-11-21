@@ -1,0 +1,60 @@
+---
+type: ImplementationPlan
+title: Result evidence readiness and complete B09 workflow
+description: Draft protected context and actual result review workflow after public command integration.
+status: draft
+---
+
+# Ownership and boundary
+
+HYB-341, machine:mac_mini. Root owns implementation and integration; separate financial/security and terminology reviewers are read-only. Actual Claude CLI ui-designer owns visual guidance and rendered re-review. This draft is not execution approval or completed screen evidence. Existing B09 document/preparation workflow supplies the owned preparation reference; result evidence must remain independently supplied rather than generated from prepared amounts.
+
+# Protected prerequisites
+
+Add dedicated result Cost reads for context and per-result advice before the interactive flow. Context targets an owned preparation and exact receipt, returns immutable identity, expected line IDs/product/unit associations and allowed packet schema, but never presents derived values as reported ERP amounts. It must not require unrelated document Cost permission. Historical preparation context remains visible after current eligibility changes; eligibility is a distinct bounded state. Bound all outputs and page large row collections without partial silent omission.
+
+Advice inspects current actual human/console permissions independently for propose/confirm/revoke/apply and reports allowed/denied/unavailable separately from ready/blocked/inapplicable/unchecked. Confirmation needs a different actor and current original proposer rights; application needs current charge/document/ERP facts, exact highest-confirmed result, matching comparison and immutable operation ownership. Unknown recovery keeps the original applying actor. Revoke remains available under hold/stale producer. Advice is read-only, never an authorization token or receipt creator; every mutation rechecks facts. No external ERP posting or financial approval is implied.
+
+# User journey
+
+Within the existing full-width B09 review surface, select an owned preparation and load result history using its fixed receipt. Show immutable reported result, comparison findings, confirmation history and application outcome separately. A packet form requires source reference, external document revision and independently supplied reported rows/amounts/products/units. Expose exact line identities without auto-filling reported results from preparation. Validate malformed versus well-formed mismatched evidence separately. Mismatches can be proposed/confirmed as evidence but cannot be applied.
+
+Every mutation has an explicit review step showing action, target identity/digest, rationale and effect boundary. Unknown outcome preserves its attempt record and displays inspect-first recovery guidance. Reusing the same request can return cached unknown or fail current pre-replay checks while preserving the prior unknown attempt; recovery creates a new command request/key against the same result/digest/actor after current inspection/advice. No automatic retry or optimistic success. Late responses and changing preparation/session must not overwrite a newer scope or expose another preparation's evidence. Failed refresh clears obsolete current-readiness claims while retaining explicitly historical attempt references.
+
+Keep all result controls and permission provisioning discoverable within their actual existing screen contracts; dedicated result rights do not arise from document preparation rights. If provisioning belongs to the existing permission management surface, design the concrete navigation and consumer linkage rather than treating an API as an operator workflow.
+
+# Design and QA acceptance
+
+Read existing B09/M03/P02 designs and source contracts before selecting the exact composition. Use actual current renders and official reference evidence for Claude design guidance. Preserve full viewport width, local fonts, canonical IDs, neutral separators and visible focus. Distinguish technical identifiers using bidi isolation without making them the sole user labels. Technical-writing review covers EN/KO/AR and the glossary; language never changes currency/jurisdiction semantics.
+
+Test actual server-backed two-actor proposal/confirmation/application, Cost denial, mismatch retention, empty/failed history, output bounds, stale cursors, rights loss, changed current producers, hold, step-up, interrupted writes, inspection and owned recovery. Verify slow old reads, duplicate submissions, same-key unknown, scope/session changes and immutable historical receipts. Render desktop/tablet/mobile in EN/KO/AR, inspect focus and failure announcements, and iterate independent code/TW/Claude findings. No synthetic fixture or owner-review control may create owner FIX.
+
+# Remaining original work
+
+Replacement revisions, StageERPFinal, issuance/delivery, production policies/persistence and full original planning acceptance remain distinct obligations. This workflow does not substitute for those requirements or authorize external ERP, merge or deployment.
+
+# Closed discovery and wire contract
+
+Use result_evidence.preparations, a dedicated result Cost read, for discovery. Target is the verified current workspace ID, never an arbitrary document/charge ID; optional after/snapshot fields follow documentPage's paired cursor and exact service-revision check. Enumerate only successfully recorded service-owned preparations, validate their immutable document association and return at most ten sorted rows. Row fields are preparation, preparation_digest, document, document_digest, connection, customer, period, currency and preparation_actor. Top-level fields are mode, workspace, current_eligibility=unchecked, snapshot and next plus row_00..row_09. This permits a result-only inspector to enter B09 without document Cost rights; no current charge approval is required to discover historical owned preparation evidence.
+
+result_evidence.context targets the selected preparation, requires digest=recorded preparation receipt and optional after/snapshot. Top-level fields: mode, preparation, preparation_digest, document, document_digest, connection, customer, period, currency, profile, schema, permissions, proposal_readiness, current_eligibility, snapshot, next. schema is the explicit synthetic result packet contract identifier. permissions contains only propose as an allowed/denied/unavailable state with a bounded command code. proposal_readiness is unchecked without proposal permission; otherwise blocked under hold, unavailable for unavailable immutable producers, and ready when the same historical association used by proposal can be resolved. It does not certify a packet not yet supplied or current financial eligibility. Each paged reference row contains line, expected_product and expected_unit; these are labelled preparation reference facts. Reported net/tax/quantity/product/unit remain blank user inputs. No derived packet with reported amounts is returned.
+
+result_evidence.advice targets result ID and requires its exact proposal digest. Fields: mode, result, digest, revision, permissions, readiness, application_state, applying_actor, application_receipt, current_eligibility=advisory_only. permissions contains confirm/revoke/apply; readiness contains confirm/revoke/apply/recover. Reuse the bounded advice state/code schema: permission allowed/denied/unavailable; readiness ready/blocked/inapplicable/unchecked/unavailable. Permission denial/unavailability takes precedence and yields unchecked readiness. Then reject inapplicable action/state, then evaluate hold, current actor/ownership, immutable evidence and current producers; dependency/authority failures are unavailable, explicit stale/prerequisite denials blocked. Do not collapse unavailable into denied or ready.
+
+Confirmation is applicable only to pending evidence, needs a different confirmer and current proposer subject rights, checks version uniqueness and monotonic clock, and permits historical mismatches or stale financial producers. Revocation is applicable to pending/confirmed evidence even under hold/stale producers, requiring current revoke permission and valid decision clock. Fresh apply is applicable only when confirmed, matched and no owned application exists; it checks currentResult and preflight observations including absence of unowned external documents or unexpected links. Recovery is applicable only to receipt-empty owned applications and the original applying actor, checks currentResult plus exact owned intent and read-only DocumentOf/ResultOf observations, and refuses newer watermark or conflicting ledger facts. Recorded receipts make apply/recover inapplicable, never an invitation to use a fresh key. Advice must not invoke Document, Link, applyResultLocked or create a receipt.
+
+# Frozen attempts and recovery scope
+
+The frontend may enable recovery only after matching result inspection and advice responses at the same current service revision, same preparation/result/digest, unknown application state and applying actor equal to the actual session actor. Permission/readiness must both allow the intended action. Mutations retain their own fresh server checks, so advisory readiness is never authoritative.
+
+An attempt freezes actual session identity, workspace, preparation receipt, result ID/digest, action, rationale, command body, request ID, idempotency key and expected revision. A synchronous dispatch guard precedes the first await. Session-owned attempt state lives above selection/locale/navigation components; changing those views never rewrites a pending intent. Late responses update only their matching attempt, not another selection. Failed refresh removes current eligibility claims but keeps explicitly historical receipts and unknown operation references.
+
+A same-key retry may return cached unknown OR fail the current pre-replay permission/evidence boundary. Such refusal does not erase the prior unknown attempt or operation reference. Fresh-key recovery never replaces the original unknown attempt. In-memory client attempts do not survive browser reload; do not silently persist credentials or packets in browser storage. After reload/new login, reconstruct recoverable unknown ownership from protected server history/inspection/advice and explain that the old HTTP operation reference may no longer be locally available.
+
+# Provisioning navigation
+
+B09 offers a permission-management link to M03 (access, grants view) for operators who need result rights; navigation grants no authority. M03 hosts the explicit result-authority proposal/decision controls for installation governors, with P02 (integrations, clients view) providing the console-ceiling inspection link back to the matching M03 workflow. The five result capabilities remain independent. Console proposals require two distinct current governors; human proposals additionally exclude the recipient from proposal/approval and require a matching owned active console ceiling and capability/validity containment. Ordinary result operators see their consumer permission state and navigation, never bypass controls. Link back to B09 by the server-validated preparation/result context without placing source JSON, amounts, credentials or rationale in URLs. Exact composition is subject to Claude design and TW review before UI implementation.
+
+# Independent correction status
+
+refusal_review identified discovery isolation, unspecified wire/readiness rules, recovery applicability, same-key retry semantics, session attempt ownership and provisioning navigation gaps. Root specified these contracts here before implementation. Corrective independent review conditionally passed all six gaps; root removed the contradictory same-key wording. Implementation must preflight all 26 context fields, fail closed on corrupt discovery associations, keep advice read-only and render result-only discovery independently of approval-list access. UI composition and implementation acceptance remain pending.

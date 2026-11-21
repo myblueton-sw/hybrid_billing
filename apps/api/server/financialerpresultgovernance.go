@@ -91,23 +91,10 @@ func (a *financialERP) proposeResultLocked(workspace, id, actor, reason, raw str
 	if a.server.held() {
 		return fail(commands.Fail(commands.PrerequisiteFailed))
 	}
-	p, err := parseResultPacket(raw)
+	b, err := a.buildResultBasis(workspace, id, raw)
 	if err != nil {
 		return fail(err)
 	}
-	document, preparation, documentDigest, err := a.resultHistoricalPreparation(workspace, p)
-	if err != nil {
-		return fail(err)
-	}
-	comparison, total, err := compareResult(p, document, preparation)
-	if err != nil {
-		return fail(err)
-	}
-	packetDigest, err := normalizedDigest(p)
-	if err != nil {
-		return fail(err)
-	}
-	b := financialERPResultBasis{Workspace: workspace, ID: id, SourceDigest: resultSourceDigest(raw), PacketDigest: packetDigest, DocumentDigest: documentDigest, Packet: p, Preparation: preparation, Document: document, Comparison: comparison, Total: total}
 	body, err := resultBasisBytes(b)
 	if err != nil {
 		return fail(err)

@@ -250,6 +250,9 @@ func (s *Server) execute(command string, call commands.Call, caller identity.Ver
 	if code := s.documentBoundary(command, call); code != "" {
 		return boundaryResult(code, call.Request)
 	}
+	if code := s.resultBoundary(command, call); code != "" {
+		return boundaryResult(code, call.Request)
+	}
 	result := s.commands.Execute(call)
 	if changed(s.mutating[command], result) {
 		s.counter++

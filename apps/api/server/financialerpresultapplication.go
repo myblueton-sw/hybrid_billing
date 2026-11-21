@@ -242,14 +242,18 @@ func (a *financialERP) applyResultLocked(workspace, id, digest, actor string) (f
 	if err != nil || !resultSnapshotMatches(snapshot, b, app, true) {
 		return fail(errFinancialERPResultUncertain)
 	}
-	receipt, err := normalizedDigest(struct {
-		Schema, Digest, Actor string
-		Result                erpledger.ResultView
-	}{"hb_erp_result_application_v1", digest, actor, snapshot})
+	receipt, err := resultApplicationDigest(digest, actor, snapshot)
 	if err != nil || app.receipt != "" && app.receipt != receipt {
 		return fail(errFinancialERPResultUncertain)
 	}
 	app.receipt = receipt
 	a.resultApplications[key] = app
 	return a.resultView(r, b), nil
+}
+
+func resultApplicationDigest(digest, actor string, snapshot erpledger.ResultView) (string, error) {
+	return normalizedDigest(struct {
+		Schema, Digest, Actor string
+		Result                erpledger.ResultView
+	}{"hb_erp_result_application_v1", digest, actor, snapshot})
 }

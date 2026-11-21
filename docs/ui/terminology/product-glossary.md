@@ -534,3 +534,14 @@ HYB-341 introduces a separate result-evidence permission namespace. Existing doc
 | result_authority_proposals | ERP result evidence permission proposals | ERP 결과 근거 권한 제안 | مقترحات صلاحيات أدلة نتائج ERP |
 
 M01 counts pending/unresolved permission proposals, excluding completed grants. Its shared recheck note refers to the proposer's authority at grant approval. M03 and P02 show explicit action/kind labels for already provisioned rights; these labels are not generic grant offers. Source terminology and initial M01 rendered review passed independent AI technical-writing review. Independent AI technical-writing review also passed eight representative actual M03/P02 grant-row/context captures under HYB-341; P02 shows the action and kind, not a separate Cost-field label. Native-language and owner acceptance remain pending. These compounds reuse the document-evidence and access-governance vocabulary above; no external vendor uses of the complete compounds are claimed.
+
+## Result evidence pending and unresolved impact
+
+HYB-341 M01 distinguishes pending result evidence proposals counted by the original proposer from unknown internal applications counted by the applying actor. These are separate work categories, not a deduplicated total. Revoked or superseded evidence does not erase unresolved application ownership. A count does not imply automatic cancellation or external ERP execution.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| result_evidence_proposals | ERP result evidence proposals | ERP 결과 근거 제안 | مقترحات أدلة نتائج ERP |
+| result_applications_unknown | ERP result evidence applications with unknown outcome | ERP 결과 근거 내부 반영 결과 미확정 | عمليات تطبيق أدلة نتائج ERP داخلياً ذات نتيجة غير مؤكدة |
+
+The proposal note describes current proposer permission checks at evidence confirmation. The unknown-application note describes current applying-actor permission and evidence checks at recovery while preserving the possibility of earlier effects. False-recheck displays explicitly withhold assurance and retain that uncertainty. Separate read-only AI technical-writing review selected EN/KO/AR wording against the actual contract; native-language and owner acceptance are unverified. Existing layout and neutral separators remain unchanged. Rendered acceptance is recorded separately, not inferred from this glossary.

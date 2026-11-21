@@ -12,6 +12,10 @@ import (
 )
 
 type financialERPLedger interface {
+	ResultOf(string, string) (erpledger.ResultView, error)
+	DocumentOf(string, string, string) (erpledger.DocumentView, error)
+	Document(string, erpledger.Document, erpledger.Actor) (erpledger.DocumentView, error)
+	Link(string, erpledger.Link, erpledger.Actor) (erpledger.DocumentView, error)
 	ConnectionOf(string, string) (erpledger.ConnectionView, error)
 	MappingOf(string, string, string, string) (erpledger.MappingView, error)
 	SurveyOf(string, string, string, string) (erpledger.SurveyView, error)
@@ -35,19 +39,25 @@ type financialERPOwnership struct {
 }
 
 type financialERP struct {
-	server       *Server
-	ledger       financialERPLedger
-	documents    map[[2]string]financialDocumentRecord
-	owners       map[[2]string]financialERPOwnership
-	documentTime time.Time
-	afterPrepare func() error
+	server             *Server
+	ledger             financialERPLedger
+	documents          map[[2]string]financialDocumentRecord
+	owners             map[[2]string]financialERPOwnership
+	results            map[[2]string]financialERPResultRecord
+	resultApplications map[[2]string]financialERPResultApplication
+	resultExternals    map[[3]string]string
+	resultPreparations map[[2]string]string
+	resultTime         time.Time
+	afterResultWrite   func(string) error
+	documentTime       time.Time
+	afterPrepare       func() error
 }
 
 func newFinancialERP(s *Server, ledger financialERPLedger) (*financialERP, error) {
 	if s == nil || s.cfg.Seed != SeedSample || ledger == nil || reflect.ValueOf(ledger).Kind() == reflect.Pointer && reflect.ValueOf(ledger).IsNil() {
 		return nil, commands.Fail(commands.UnsupportedCapability)
 	}
-	return &financialERP{server: s, ledger: ledger, documents: map[[2]string]financialDocumentRecord{}, owners: map[[2]string]financialERPOwnership{}}, nil
+	return &financialERP{server: s, ledger: ledger, documents: map[[2]string]financialDocumentRecord{}, owners: map[[2]string]financialERPOwnership{}, results: map[[2]string]financialERPResultRecord{}, resultApplications: map[[2]string]financialERPResultApplication{}, resultExternals: map[[3]string]string{}, resultPreparations: map[[2]string]string{}}, nil
 }
 
 func (a *financialERP) validateDocumentLocked(b financialDocumentBasis) (financialDocumentRecord, error) {

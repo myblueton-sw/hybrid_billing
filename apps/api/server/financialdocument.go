@@ -69,45 +69,18 @@ func documentSubmission(b financialDocumentBasis, c chargeCandidate, subject app
 			return bad()
 		}
 	}
-	in, result := c.Envelope.Input, c.Envelope.Result
+	in := c.Envelope.Input
 	origin := in.Normalized
 	conn := b.Connection.Connection
 	if b.Mode != "synthetic" || b.Profile != "synthetic_individual_net_v1" || b.Path != erpledger.PathDirect || b.Workspace != in.Workspace || b.Candidate != in.ID || b.CandidateDigest != c.Digest || b.Request != subject.ID || subject.Digests["result"] != c.Digest || b.Document != origin.Document || b.Document.WorkspaceID != b.Workspace || b.Document.Path != organizations.ExternalInvoice || b.Document.Currency != subject.Currency || conn.Currency != subject.Currency || conn.Entity != b.Document.IssuerLegalEntityID || conn.Scale < 0 || conn.Scale > 4 || b.Connection.At.IsZero() {
 		return bad()
 	}
-	from, e1 := time.Parse(time.DateOnly, in.From)
-	to, e2 := time.Parse(time.DateOnly, in.To)
-	if e1 != nil || e2 != nil || from.Day() != 1 || !to.AddDate(0, 0, 1).Equal(from.AddDate(0, 1, 0)) || origin.Binding.Period != from.Format("2006-01") {
+	if b.Survey.Survey.Connection != conn.ID || b.Survey.Survey.Customer != in.Customer || b.Survey.Survey.Period != origin.Binding.Period || b.Survey.Survey.Outcome != erpledger.SurveyComplete || b.Survey.At.IsZero() || len(in.Lines) != len(b.Lines) {
 		return bad()
 	}
-	if b.Survey.Survey.Connection != conn.ID || b.Survey.Survey.Customer != in.Customer || b.Survey.Survey.Period != origin.Binding.Period || b.Survey.Survey.Outcome != erpledger.SurveyComplete || b.Survey.At.IsZero() {
+	charges, sources, err := documentCandidateShape(c, subject, b.Connection)
+	if err != nil {
 		return bad()
-	}
-	n := len(in.Lines)
-	if n != len(b.Lines) || n != len(result.Charges) || n != len(origin.Rows) || len(result.Excluded) != 0 || result.Total != subject.Amount || result.Currency != subject.Currency {
-		return bad()
-	}
-	input := map[string]bool{}
-	rows := map[string]normalize.RowKey{}
-	charges := map[string]rating.Charge{}
-	sources := map[string]bool{}
-	for _, line := range in.Lines {
-		if !validRequestID(line.ID) || input[line.ID] || line.Currency != subject.Currency {
-			return bad()
-		}
-		input[line.ID] = true
-	}
-	for _, row := range origin.Rows {
-		if !input[row.Line] || rows[row.Line].Kind != "" || !validRequestID(row.Key.Key) || row.Key.Kind != normalize.EventKeys && row.Key.Kind != normalize.LocatorKeys || row.Key.Kind == normalize.EventKeys && row.Key.Document != "" || row.Key.Kind == normalize.LocatorKeys && !validRequestID(row.Key.Document) {
-			return bad()
-		}
-		rows[row.Line] = row.Key
-	}
-	for _, charge := range result.Charges {
-		if charge.Kind != rating.Rated || !input[charge.Line] || charges[charge.Line].Line != "" {
-			return bad()
-		}
-		charges[charge.Line] = charge
 	}
 	profile, err := decimal.NewProfile(candidateProfile())
 	if err != nil {
@@ -140,14 +113,8 @@ func documentSubmission(b financialDocumentBasis, c chargeCandidate, subject app
 		if e1 != nil || e2 != nil || e3 != nil {
 			return bad()
 		}
-		source, err := normalizedDigest(struct {
-			Schema, Workspace, Target string
-			Row                       normalize.RowKey
-		}{"hb_erp_economic_source_v1", b.Workspace, subject.Target, rows[line.Line]})
-		if err != nil || sources[source] {
-			return bad()
-		}
-		seen[line.Line], sources[source] = true, true
+		source := sources[line.Line]
+		seen[line.Line] = true
 		sub.Lines = append(sub.Lines, erpledger.Line{ID: "line-" + source, Source: "source-" + source, Product: line.Product, TaxCode: line.TaxCode, Quantity: line.Quantity, Net: charge.Amount, Tax: line.Tax})
 	}
 	if net.String() != subject.Amount || b.ExpectedNet != net.String() || b.ExpectedTax != tax.String() {
@@ -180,4 +147,70 @@ func documentFixed(value decimal.Decimal, scale int) string {
 		return whole
 	}
 	return whole + "." + fraction + strings.Repeat("0", scale-len(fraction))
+}
+
+func documentCandidateShape(c chargeCandidate, subject approvals.Subject, connection erpledger.ConnectionView) (map[string]rating.Charge, map[string]string, error) {
+	bad := func() (map[string]rating.Charge, map[string]string, error) { return nil, nil, errCandidateInvalid }
+	in, result := c.Envelope.Input, c.Envelope.Result
+	origin, conn := in.Normalized, connection.Connection
+	if subject.Digests["result"] != c.Digest || origin.Document.WorkspaceID != in.Workspace || origin.Document.Path != organizations.ExternalInvoice || origin.Document.Currency != subject.Currency || conn.Currency != subject.Currency || conn.Entity != origin.Document.IssuerLegalEntityID || conn.Scale < 0 || conn.Scale > 4 || connection.At.IsZero() {
+		return bad()
+	}
+	from, e1 := time.Parse(time.DateOnly, in.From)
+	to, e2 := time.Parse(time.DateOnly, in.To)
+	if e1 != nil || e2 != nil || from.Day() != 1 || !to.AddDate(0, 0, 1).Equal(from.AddDate(0, 1, 0)) || origin.Binding.Period != from.Format("2006-01") {
+		return bad()
+	}
+	n := len(in.Lines)
+	if n < 1 || n > financialDocumentLimit || n != len(result.Charges) || n != len(origin.Rows) || len(result.Excluded) != 0 || result.Total != subject.Amount || result.Currency != subject.Currency {
+		return bad()
+	}
+	input := map[string]bool{}
+	rows := map[string]normalize.RowKey{}
+	charges := map[string]rating.Charge{}
+	sources := map[string]string{}
+	seen := map[string]bool{}
+	for _, line := range in.Lines {
+		if !validRequestID(line.ID) || input[line.ID] || line.Currency != subject.Currency {
+			return bad()
+		}
+		input[line.ID] = true
+	}
+	for _, row := range origin.Rows {
+		if !input[row.Line] || rows[row.Line].Kind != "" || !validRequestID(row.Key.Key) || row.Key.Kind != normalize.EventKeys && row.Key.Kind != normalize.LocatorKeys || row.Key.Kind == normalize.EventKeys && row.Key.Document != "" || row.Key.Kind == normalize.LocatorKeys && !validRequestID(row.Key.Document) {
+			return bad()
+		}
+		rows[row.Line] = row.Key
+		source, err := normalizedDigest(struct {
+			Schema, Workspace, Target string
+			Row                       normalize.RowKey
+		}{"hb_erp_economic_source_v1", in.Workspace, subject.Target, row.Key})
+		if err != nil || seen[source] {
+			return bad()
+		}
+		seen[source], sources[row.Line] = true, source
+	}
+	profile, err := decimal.NewProfile(candidateProfile())
+	if err != nil {
+		return bad()
+	}
+	total, _ := decimal.Parse(profile, "0")
+	for _, charge := range result.Charges {
+		if charge.Kind != rating.Rated || !input[charge.Line] || charges[charge.Line].Line != "" {
+			return bad()
+		}
+		amount, err := documentNumber(profile, charge.Amount, conn.Scale, true)
+		if err != nil {
+			return bad()
+		}
+		total, err = decimal.Add(profile, total, amount)
+		if err != nil {
+			return bad()
+		}
+		charges[charge.Line] = charge
+	}
+	if total.String() != subject.Amount {
+		return bad()
+	}
+	return charges, sources, nil
 }

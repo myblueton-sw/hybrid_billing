@@ -24,7 +24,7 @@ func documentCommandAction(command string) gate.Action {
 		return gate.RevokeDocumentEvidence
 	case "erp_preparation.prepare":
 		return gate.PrepareERPRecord
-	case "document_evidence.inspect", "erp_preparation.inspect", "document_evidence.history":
+	case "document_evidence.inspect", "erp_preparation.inspect", "document_evidence.history", "document_evidence.advice", "document_evidence.context":
 		return gate.ViewCost
 	}
 	return ""
@@ -82,6 +82,20 @@ func (h documentCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 	}
 	if err := a.boundedDocumentFields(nil); err != nil {
 		return commands.Outcome{}, err
+	}
+	if h.command == "document_evidence.context" {
+		fields, err := a.documentContextLocked(ctx)
+		if err != nil {
+			return commands.Outcome{}, err
+		}
+		return commands.Outcome{Fields: fields}, nil
+	}
+	if h.command == "document_evidence.advice" {
+		fields, err := a.documentAdviceLocked(ctx)
+		if err != nil {
+			return commands.Outcome{}, err
+		}
+		return commands.Outcome{Fields: fields}, nil
 	}
 	if h.command == "document_evidence.history" {
 		fields, err := a.documentHistoryLocked(ctx)
@@ -144,7 +158,7 @@ func (h documentCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 
 func (s *Server) documentDefinitions() []commands.Definition {
 	var out []commands.Definition
-	for _, id := range []string{"document_evidence.propose", "document_evidence.confirm", "document_evidence.revoke", "document_evidence.inspect", "erp_preparation.prepare", "erp_preparation.inspect", "document_evidence.history"} {
+	for _, id := range []string{"document_evidence.propose", "document_evidence.confirm", "document_evidence.revoke", "document_evidence.inspect", "erp_preparation.prepare", "erp_preparation.inspect", "document_evidence.history", "document_evidence.advice", "document_evidence.context"} {
 		action := documentCommandAction(id)
 		permission := commands.Permission{Action: action, Kind: documentauthority.ResourceKind}
 		mutation := action != gate.ViewCost
@@ -159,6 +173,9 @@ func (s *Server) documentDefinitions() []commands.Definition {
 		}
 		if id == "document_evidence.history" {
 			fields = append(fields, commands.Field{Name: "kind", Type: commands.Text, Required: true}, commands.Field{Name: "after", Type: commands.ID}, commands.Field{Name: "snapshot", Type: commands.ID})
+		}
+		if id == "document_evidence.context" {
+			fields = append(fields, commands.Field{Name: "after", Type: commands.ID}, commands.Field{Name: "snapshot", Type: commands.ID})
 		}
 		if id == "erp_preparation.prepare" {
 			fields = append(fields, commands.Field{Name: "document", Type: commands.ID, Required: true})

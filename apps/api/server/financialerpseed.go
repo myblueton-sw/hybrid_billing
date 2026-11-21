@@ -7,6 +7,10 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/packages/primitives/decimal"
 )
 
+const syntheticDocumentConnection = "synthetic-document-erp"
+const syntheticDocumentProduct = "document-product"
+const syntheticDocumentTax = "document-tax"
+
 func (s *Server) seedDocumentERP() error {
 	c, err := s.chargeProducer.candidates.read(s.Workspace(), "sample-charge-01")
 	if err != nil {
@@ -21,12 +25,12 @@ func (s *Server) seedDocumentERP() error {
 		return err
 	}
 	actor := erpledger.Actor{ID: "synthetic-document-author", Kind: erpledger.KindHuman}
-	connection := "synthetic-document-erp"
+	connection := syntheticDocumentConnection
 	_, err = r.Connect(s.Workspace(), erpledger.Connection{ID: connection, Entity: c.Envelope.Input.Normalized.Document.IssuerLegalEntityID, System: "synthetic-erp", Transport: erpledger.TransportAPI, Capabilities: []string{erpledger.CommandPrepare, erpledger.CommandMapping}, Currency: "USD", Scale: 2, Interval: time.Hour, Owner: actor.ID}, actor)
 	if err != nil {
 		return err
 	}
-	for _, mapping := range []erpledger.Mapping{{Connection: connection, Kind: "customer", Platform: c.Envelope.Input.Customer, External: "synthetic-customer"}, {Connection: connection, Kind: "product", Platform: "document-product", External: "synthetic-product"}, {Connection: connection, Kind: "tax", Platform: "document-tax", External: "synthetic-tax"}} {
+	for _, mapping := range []erpledger.Mapping{{Connection: connection, Kind: "customer", Platform: c.Envelope.Input.Customer, External: "synthetic-customer"}, {Connection: connection, Kind: "product", Platform: syntheticDocumentProduct, External: "synthetic-product"}, {Connection: connection, Kind: "tax", Platform: syntheticDocumentTax, External: "synthetic-tax"}} {
 		if _, err = r.Map(s.Workspace(), mapping, actor); err != nil {
 			return err
 		}

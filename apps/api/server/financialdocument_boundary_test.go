@@ -114,7 +114,7 @@ func TestFinancialDocumentPublicImpactAndCatalogue(t *testing.T) {
 	if !found {
 		t.Fatal("pending document omitted")
 	}
-	for _, id := range []string{"document_evidence.propose", "document_evidence.confirm", "document_evidence.revoke", "document_evidence.inspect", "erp_preparation.prepare", "erp_preparation.inspect", "document_evidence.history"} {
+	for _, id := range []string{"document_evidence.propose", "document_evidence.confirm", "document_evidence.revoke", "document_evidence.inspect", "erp_preparation.prepare", "erp_preparation.inspect", "document_evidence.history", "document_evidence.context", "document_evidence.advice"} {
 		found = false
 		for _, d := range f.s.commands.Catalogue() {
 			if d.ID == id {
@@ -146,10 +146,10 @@ func TestFinancialDocumentPublicSeedNone(t *testing.T) {
 	if code := f.s.documentBoundary("document_evidence.propose", commands.Call{}); code != commands.UnsupportedCapability {
 		t.Fatal(code)
 	}
-	for _, command := range []string{"document_evidence.propose", "document_evidence.confirm", "document_evidence.revoke", "document_evidence.inspect", "erp_preparation.prepare", "erp_preparation.inspect", "document_evidence.history"} {
+	for _, command := range []string{"document_evidence.propose", "document_evidence.confirm", "document_evidence.revoke", "document_evidence.inspect", "erp_preparation.prepare", "erp_preparation.inspect", "document_evidence.history", "document_evidence.context", "document_evidence.advice"} {
 		if documentCommandAction(command) == gate.ViewCost {
 			fields := map[string]string{}
-			if command == "document_evidence.inspect" || command == "document_evidence.history" {
+			if command != "erp_preparation.inspect" {
 				fields["digest"] = "none"
 				if command == "document_evidence.history" {
 					fields["kind"] = "documents"

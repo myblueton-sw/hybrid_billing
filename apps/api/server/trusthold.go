@@ -186,7 +186,7 @@ func (s *Server) enterHold(reason string) {
 }
 
 func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
-	if command == "document_evidence.inspect" || command == "erp_preparation.inspect" || command == "document_evidence.history" {
+	if command == "document_evidence.inspect" || command == "erp_preparation.inspect" || command == "document_evidence.history" || command == "document_evidence.advice" || command == "document_evidence.context" {
 		return true
 	}
 	if command == "financial_charge.review" || command == "financial_charge.prepare" || command == "financial_request_permission.inspect" || command == "document_authority.inspect" {

@@ -24,7 +24,7 @@ func documentCommandAction(command string) gate.Action {
 		return gate.RevokeDocumentEvidence
 	case "erp_preparation.prepare":
 		return gate.PrepareERPRecord
-	case "document_evidence.inspect", "erp_preparation.inspect":
+	case "document_evidence.inspect", "erp_preparation.inspect", "document_evidence.history":
 		return gate.ViewCost
 	}
 	return ""
@@ -83,6 +83,13 @@ func (h documentCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 	if err := a.boundedDocumentFields(nil); err != nil {
 		return commands.Outcome{}, err
 	}
+	if h.command == "document_evidence.history" {
+		fields, err := a.documentHistoryLocked(ctx)
+		if err != nil {
+			return commands.Outcome{}, err
+		}
+		return commands.Outcome{Fields: fields}, nil
+	}
 	if h.command == "erp_preparation.inspect" {
 		fields, err := a.inspectPreparationLocked(ctx.Workspace, ctx.Target, ctx.User)
 		if err != nil {
@@ -137,7 +144,7 @@ func (h documentCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 
 func (s *Server) documentDefinitions() []commands.Definition {
 	var out []commands.Definition
-	for _, id := range []string{"document_evidence.propose", "document_evidence.confirm", "document_evidence.revoke", "document_evidence.inspect", "erp_preparation.prepare", "erp_preparation.inspect"} {
+	for _, id := range []string{"document_evidence.propose", "document_evidence.confirm", "document_evidence.revoke", "document_evidence.inspect", "erp_preparation.prepare", "erp_preparation.inspect", "document_evidence.history"} {
 		action := documentCommandAction(id)
 		permission := commands.Permission{Action: action, Kind: documentauthority.ResourceKind}
 		mutation := action != gate.ViewCost
@@ -149,6 +156,9 @@ func (s *Server) documentDefinitions() []commands.Definition {
 			fields = []commands.Field{{Name: "packet", Type: commands.Text, Required: true}}
 		} else if id != "erp_preparation.inspect" {
 			fields = []commands.Field{{Name: "digest", Type: commands.Text, Required: true}}
+		}
+		if id == "document_evidence.history" {
+			fields = append(fields, commands.Field{Name: "kind", Type: commands.Text, Required: true}, commands.Field{Name: "after", Type: commands.ID}, commands.Field{Name: "snapshot", Type: commands.ID})
 		}
 		if id == "erp_preparation.prepare" {
 			fields = append(fields, commands.Field{Name: "document", Type: commands.ID, Required: true})

@@ -1,13 +1,14 @@
 package server
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"reflect"
+	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/erpledger"
+	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 )
 
 type financialERPLedger interface {
@@ -22,6 +23,7 @@ type financialERPLedger interface {
 type financialDocumentRecord struct {
 	raw    []byte
 	digest string
+	review financialDocumentReview
 }
 type financialERPOwnership struct {
 	basis, actor, receipt string
@@ -35,6 +37,7 @@ type financialERP struct {
 	ledger       financialERPLedger
 	documents    map[[2]string]financialDocumentRecord
 	owners       map[[2]string]financialERPOwnership
+	documentTime time.Time
 	afterPrepare func() error
 }
 
@@ -45,47 +48,36 @@ func newFinancialERP(s *Server, ledger financialERPLedger) (*financialERP, error
 	return &financialERP{server: s, ledger: ledger, documents: map[[2]string]financialDocumentRecord{}, owners: map[[2]string]financialERPOwnership{}}, nil
 }
 
-func (a *financialERP) retainDocumentLocked(b financialDocumentBasis) (string, error) {
+func (a *financialERP) validateDocumentLocked(b financialDocumentBasis) (financialDocumentRecord, error) {
 	if a.server.chargeProducer == nil {
-		return "", commands.Fail(commands.UnsupportedCapability)
+		return financialDocumentRecord{}, commands.Fail(commands.UnsupportedCapability)
 	}
 	raw, err := documentBytes(b)
 	if err != nil {
-		return "", err
+		return financialDocumentRecord{}, err
 	}
 	if b.Workspace != a.server.bootWorkspace {
-		return "", errCandidateInvalid
+		return financialDocumentRecord{}, errCandidateInvalid
 	}
 	v, binding, err := a.server.financialChargeRecord(b.Workspace, b.Request)
 	if err != nil || v.Digest != b.RequestDigest || binding.Candidate != b.Candidate || binding.CandidateDigest != b.CandidateDigest {
-		return "", errCandidateConflict
+		return financialDocumentRecord{}, errCandidateConflict
 	}
 	c, err := a.server.chargeProducer.candidates.financialCandidate(b.Workspace, b.Candidate)
 	if err != nil {
-		return "", err
+		return financialDocumentRecord{}, err
 	}
 	if _, _, err = documentSubmission(b, c, binding.Subject, b.ID); err != nil {
-		return "", err
+		return financialDocumentRecord{}, err
 	}
 	if err = a.currentDocumentERP(b); err != nil {
-		return "", err
+		return financialDocumentRecord{}, err
 	}
 	digest, err := normalizedDigest(b)
 	if err != nil {
-		return "", err
+		return financialDocumentRecord{}, err
 	}
-	key := [2]string{b.Workspace, b.ID}
-	if old, ok := a.documents[key]; ok {
-		if !bytes.Equal(old.raw, raw) {
-			return "", errCandidateConflict
-		}
-		return old.digest, nil
-	}
-	if len(a.documents) >= financialDocumentLimit {
-		return "", errCandidateLimit
-	}
-	a.documents[key] = financialDocumentRecord{raw: append([]byte(nil), raw...), digest: digest}
-	return digest, nil
+	return financialDocumentRecord{raw: append([]byte(nil), raw...), digest: digest}, nil
 }
 
 func (a *financialERP) document(workspace, id, digest string) (financialDocumentBasis, error) {
@@ -138,9 +130,18 @@ func (a *financialERP) prepareLocked(workspace, id, digest, key, consumer string
 	if !validRequestID(key) {
 		return fail(commands.InvalidRequest)
 	}
-	b, err := a.document(workspace, id, digest)
+	if err := a.documentPermission(workspace, consumer, gate.PrepareERPRecord); err != nil {
+		return erpledger.SubmissionView{}, err
+	}
+	record, b, err := a.governedDocument(workspace, id, digest)
 	if err != nil {
 		return fail(commands.EvidenceStale)
+	}
+	if record.review.State != "confirmed" {
+		return fail(commands.PrerequisiteFailed)
+	}
+	if _, err := a.documentNow(); err != nil {
+		return erpledger.SubmissionView{}, err
 	}
 	subject, err := a.server.currentFinancialChargeLocked(workspace, b.Request, b.RequestDigest, consumer)
 	if err != nil {

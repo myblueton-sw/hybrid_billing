@@ -16,6 +16,7 @@ type documentWorld struct {
 	a        *financialERP
 	ledger   *erpledger.Registry
 	consumer actor
+	actors   map[string]actor
 	basis    financialDocumentBasis
 	digest   string
 }
@@ -55,11 +56,30 @@ func explicitDocumentWorld(t *testing.T) documentWorld {
 	}
 	a, err := newFinancialERP(f.s, ledger)
 	f.must(err)
-	f.s.domain.Lock()
-	digest, err := a.retainDocumentLocked(b)
-	f.s.domain.Unlock()
-	f.must(err)
-	return documentWorld{f: f, a: a, ledger: ledger, consumer: f.as(Admin2Login), basis: b, digest: digest}
+	for _, capability := range []string{"propose", "prepare", "inspect"} {
+		documentGrantTo(t, f, capability, SampleAdmin2)
+	}
+	for _, capability := range []string{"confirm", "revoke", "inspect"} {
+		documentGrantTo(t, f, capability, SampleAdmin3)
+	}
+	for _, login := range []string{AdminLogin, Admin2Login, Admin3Login} {
+		for _, v := range f.s.sessions.byLogin(login) {
+			f.s.endProbe(v)
+		}
+	}
+	actors := map[string]actor{AdminLogin: f.as(AdminLogin), Admin2Login: f.as(Admin2Login), Admin3Login: f.as(Admin3Login)}
+	var proposed financialDocumentView
+	f.must(inputAuthorityAs(f, actors[Admin2Login], func() error {
+		var e error
+		proposed, e = a.proposeDocumentLocked(b, SampleAdmin2, "Explicit synthetic document packet")
+		return e
+	}))
+	f.must(inputAuthorityAs(f, actors[Admin3Login], func() error {
+		_, e := a.decideDocumentLocked(SampleWorkspace, b.ID, proposed.Review.Digest, SampleAdmin3, "Independent document evidence confirmation", false)
+		return e
+	}))
+	digest := proposed.Review.Digest
+	return documentWorld{f: f, a: a, ledger: ledger, consumer: actors[Admin2Login], actors: actors, basis: b, digest: digest}
 }
 
 func (w documentWorld) prepare(key string) (erpledger.SubmissionView, error) {
@@ -129,4 +149,28 @@ func TestFinancialERPRecoversOwnedInterruptedPreparation(t *testing.T) {
 	if _, err = w.prepare("interrupted"); err == nil {
 		t.Fatal("history bypassed revoked authority")
 	}
+}
+
+func documentGrantTo(t *testing.T, f world, capability, recipient string) {
+	t.Helper()
+	govs := []string{}
+	for _, candidate := range []struct{ id, login string }{{SampleAdmin, AdminLogin}, {SampleAdmin2, Admin2Login}, {SampleAdmin3, Admin3Login}} {
+		if candidate.id != recipient {
+			govs = append(govs, candidate.login)
+		}
+	}
+	first, second := f.as(govs[0]), f.as(govs[1])
+	defer f.s.endProbe(first.verifier(f))
+	defer f.s.endProbe(second.verifier(f))
+	id := "document-" + capability + "-" + recipient
+	fields := documentPermissionTimes(f)
+	fields["capability"] = capability
+	p := f.run(first, "document_authority.propose_console", id+"-console", fields)
+	f.ok(t, "document ceiling proposal", p, "pending", "")
+	ceiling := documentPermissionApprove(f, second, id+"-console", p)
+	f.ok(t, "document ceiling", ceiling, "applied", "")
+	fields["recipient"], fields["ceiling"] = recipient, field(ceiling, "grant")
+	p = f.run(first, "document_authority.propose_human", id+"-human", fields)
+	f.ok(t, "document human proposal", p, "pending", "")
+	f.ok(t, "document human grant", documentPermissionApprove(f, second, id+"-human", p), "applied", "")
 }

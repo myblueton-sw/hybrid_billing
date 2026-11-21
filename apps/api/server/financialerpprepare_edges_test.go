@@ -21,7 +21,10 @@ func TestFinancialERPRefusesMissingDependencies(t *testing.T) {
 	}
 	w := explicitDocumentWorld(t)
 	w.f.s.chargeProducer = nil
-	if _, err := w.a.retainDocumentLocked(w.basis); err == nil {
+	if err := inputAuthorityAs(w.f, w.consumer, func() error {
+		_, e := w.a.proposeDocumentLocked(w.basis, SampleAdmin2, "Explicit synthetic document packet")
+		return e
+	}); err == nil {
 		t.Fatal("missing producer accepted")
 	}
 	if len(w.a.owners) != 0 {

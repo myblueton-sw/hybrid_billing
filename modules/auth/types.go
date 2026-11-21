@@ -18,6 +18,10 @@ var (
 type Action string
 
 const (
+	ProposeERPResult        Action = "propose_erp_result"
+	ConfirmERPResult        Action = "confirm_erp_result"
+	RevokeERPResult         Action = "revoke_erp_result"
+	ApplyERPResult          Action = "apply_erp_result"
 	ProposeDocumentEvidence Action = "propose_document_evidence"
 	ConfirmDocumentEvidence Action = "confirm_document_evidence"
 	RevokeDocumentEvidence  Action = "revoke_document_evidence"
@@ -63,6 +67,7 @@ func IntegrationRights() []Action {
 const InstallationKind = "installation"
 
 var actions = map[Action]struct{}{
+	ProposeERPResult: {}, ConfirmERPResult: {}, RevokeERPResult: {}, ApplyERPResult: {},
 	ProposeDocumentEvidence: {}, ConfirmDocumentEvidence: {}, RevokeDocumentEvidence: {}, PrepareERPRecord: {},
 	View: {}, ViewCost: {}, ChangeCustomerPolicy: {}, ChangeSellingPolicy: {}, RequestApproval: {},
 	Approve: {}, Issue: {}, Download: {}, Deliver: {}, ApproveSupportSession: {}, AdministerInstallation: {},
@@ -80,7 +85,7 @@ func humanOnly(action Action) bool { return action == Approve || action == Appro
 
 func directHuman(action Action) bool {
 	switch action {
-	case ProposeDocumentEvidence, ConfirmDocumentEvidence, RevokeDocumentEvidence, PrepareERPRecord, ConfirmInput, ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy:
+	case ProposeERPResult, ConfirmERPResult, RevokeERPResult, ApplyERPResult, ProposeDocumentEvidence, ConfirmDocumentEvidence, RevokeDocumentEvidence, PrepareERPRecord, ConfirmInput, ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy:
 		return true
 	}
 	return false

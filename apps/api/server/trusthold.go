@@ -40,6 +40,11 @@ var holdTable = map[string]holdRule{
 	"financial_charge.request":                     {holdRefuse, reasonIncrease},
 	"financial_charge.approve":                     {holdRefuse, reasonIncrease},
 	"financial_charge.reject":                      {holdAllow, reasonReduce},
+	"result_authority.propose_console":             {holdRefuse, reasonChange},
+	"result_authority.propose_human":               {holdRefuse, reasonChange},
+	"result_authority.approve":                     {holdRefuse, reasonChange},
+	"result_authority.reject":                      {holdAllow, reasonPending},
+	"result_authority.withdraw":                    {holdAllow, reasonPending},
 	"document_authority.propose_console":           {holdRefuse, reasonChange},
 	"document_authority.propose_human":             {holdRefuse, reasonChange},
 	"document_authority.approve":                   {holdRefuse, reasonChange},
@@ -189,7 +194,7 @@ func (s *Server) holdAllows(command string, call commands.Call, caller identity.
 	if command == "document_evidence.inspect" || command == "erp_preparation.inspect" || command == "document_evidence.history" || command == "document_evidence.advice" || command == "document_evidence.context" {
 		return true
 	}
-	if command == "financial_charge.review" || command == "financial_charge.prepare" || command == "financial_request_permission.inspect" || command == "document_authority.inspect" {
+	if command == "financial_charge.review" || command == "financial_charge.prepare" || command == "financial_request_permission.inspect" || command == "document_authority.inspect" || command == "result_authority.inspect" {
 		return true
 	}
 	if command == "financial_permission.inspect" || command == "financial_authority.inspect" || command == "financial_policy.current" || command == "financial_policy.inspect" || command == "pricing_policy.prepare" || command == "pricing_policy.inspect" || command == "pricing_authority.inspect" || command == "input_authority.inspect" || command == "input.inspect" {

@@ -220,6 +220,10 @@ export const a = {
 };
 
 const actions: Record<string, [string, string, string]> = {
+ propose_erp_result: ["Propose ERP result evidence", "ERP 결과 근거 제안", "اقتراح أدلة نتائج ERP"],
+ confirm_erp_result: ["Confirm ERP result evidence", "ERP 결과 근거 확인", "تأكيد أدلة نتائج ERP"],
+ revoke_erp_result: ["Revoke ERP result evidence", "ERP 결과 근거 철회", "إلغاء أدلة نتائج ERP"],
+ apply_erp_result: ["Apply ERP result evidence internally", "ERP 결과 근거 내부 반영", "تطبيق أدلة نتائج ERP داخلياً"],
  propose_document_evidence: ["Propose document evidence", "문서 근거 제안", "اقتراح أدلة المستند"],
  confirm_document_evidence: ["Confirm document evidence", "문서 근거 확인", "تأكيد أدلة المستند"],
  revoke_document_evidence: ["Revoke document evidence", "문서 근거 철회", "إلغاء أدلة المستند"],
@@ -240,6 +244,7 @@ const actions: Record<string, [string, string, string]> = {
   deliver: ["Deliver", "전달", "تسليم"],
 };
 const kinds: Record<string, [string, string, string]> = {
+ synthetic_erp_result_evidence: ["Synthetic ERP result evidence", "합성 ERP 결과 근거", "أدلة نتائج ERP اصطناعية"],
  synthetic_document_evidence: ["Synthetic document evidence", "합성 문서 근거", "أدلة مستند اصطناعية"],
   charge_approval: ["Charge approval", "청구 승인", "اعتماد الرسوم"],
   approval_review: ["Approval review records", "승인 검토 기록", "سجلات مراجعة الاعتمادات"],
@@ -249,6 +254,7 @@ const kinds: Record<string, [string, string, string]> = {
   charge_candidate: ["Charge calculation candidates", "과금 계산 후보", "نتائج احتساب الرسوم المبدئية"],
 };
 const fields: Record<string, [string, string, string]> = {
+ erp_result_evidence: ["ERP result evidence", "ERP 결과 근거", "أدلة نتائج ERP"],
  document_evidence: ["Document evidence", "문서 근거", "أدلة المستند"],
   approval_evidence: ["Approval request and decision evidence", "승인 요청·결정 근거", "أدلة طلبات الاعتماد والقرارات"],
  pricing_policy_evidence: ["Pricing policy evidence", "가격 정책 근거", "أدلة سياسة التسعير"],

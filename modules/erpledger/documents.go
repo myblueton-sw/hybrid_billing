@@ -235,6 +235,11 @@ func (r *Registry) Reconcile(workspace, key string) (Reconciliation, error) {
 	if err != nil {
 		return Reconciliation{}, err
 	}
+	return reconciliation(s, sub), nil
+}
+
+func reconciliation(s *space, sub *submission) Reconciliation {
+	key := sub.view.Submission.Key
 	scale := sub.conn.view.Connection.Scale
 	out := Reconciliation{Key: key, Matched: true}
 	for _, l := range sub.view.Submission.Lines {
@@ -264,5 +269,5 @@ func (r *Registry) Reconcile(workspace, key string) (Reconciliation, error) {
 		}
 		out.Documents = append(out.Documents, DocumentTotals{Connection: d.view.Document.Connection, External: d.view.Document.External, Total: d.view.Total, Attributed: attributed.show(d.conn.view.Connection.Scale)})
 	}
-	return out, nil
+	return out
 }

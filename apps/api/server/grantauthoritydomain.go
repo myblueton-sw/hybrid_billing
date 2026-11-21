@@ -7,11 +7,13 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/resultauthority"
 )
 
 type grantAuthorityDomain uint8
 
 const (
+	resultGrantAuthority      grantAuthorityDomain = 6
 	documentGrantAuthority    grantAuthorityDomain = 5
 	inputGrantAuthority       grantAuthorityDomain = 1
 	pricingGrantAuthority     grantAuthorityDomain = 2
@@ -20,6 +22,9 @@ const (
 )
 
 func (d grantAuthorityDomain) grantPrefix() string {
+	if d == resultGrantAuthority {
+		return "result-grant-"
+	}
 	if d == documentGrantAuthority {
 		return "document-grant-"
 	}
@@ -38,6 +43,9 @@ func (d grantAuthorityDomain) grantPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) faultPrefix() string {
+	if d == resultGrantAuthority {
+		return "result-authority-"
+	}
 	if d == documentGrantAuthority {
 		return "document-authority-"
 	}
@@ -56,6 +64,9 @@ func (d grantAuthorityDomain) faultPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) terms(workspace, capability string) (gate.Terms, error) {
+	if d == resultGrantAuthority {
+		return resultAuthorityTerms(workspace, capability)
+	}
 	if d == documentGrantAuthority {
 		return documentAuthorityTerms(workspace, capability)
 	}
@@ -111,6 +122,8 @@ func pricingAuthorityTerms(workspace, capability string) (gate.Terms, error) {
 }
 func (s *Server) grantAuthority(domain grantAuthorityDomain) *serverGrantAuthority {
 	switch domain {
+	case resultGrantAuthority:
+		return s.resultAuthority
 	case documentGrantAuthority:
 		return s.documentAuthority
 	case inputGrantAuthority:
@@ -139,6 +152,26 @@ func documentAuthorityTerms(workspace, capability string) (gate.Terms, error) {
 	case documentauthority.Inspect:
 		terms.Action = gate.ViewCost
 		terms.Fields = []string{documentauthority.EvidenceField}
+	default:
+		return gate.Terms{}, inputauthority.ErrInvalid
+	}
+	return terms, nil
+}
+
+func resultAuthorityTerms(workspace, capability string) (gate.Terms, error) {
+	terms := gate.Terms{Kind: resultauthority.ResourceKind, Scope: gate.Scope{WorkspaceID: workspace, Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}, Period: gate.AnyPeriod()}
+	switch capability {
+	case resultauthority.Propose:
+		terms.Action = gate.ProposeERPResult
+	case resultauthority.Confirm:
+		terms.Action = gate.ConfirmERPResult
+	case resultauthority.Revoke:
+		terms.Action = gate.RevokeERPResult
+	case resultauthority.Apply:
+		terms.Action = gate.ApplyERPResult
+	case resultauthority.Inspect:
+		terms.Action = gate.ViewCost
+		terms.Fields = []string{resultauthority.EvidenceField}
 	default:
 		return gate.Terms{}, inputauthority.ErrInvalid
 	}

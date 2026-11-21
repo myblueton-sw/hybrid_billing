@@ -13,6 +13,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/resultauthority"
 )
 
 type serverGrantAuthority struct {
@@ -24,12 +25,14 @@ type serverGrantAuthority struct {
 }
 
 func newServerGrantAuthority(s *Server, limits inputauthority.Limits, domain grantAuthorityDomain) (*serverGrantAuthority, error) {
-	if s == nil || s.cfg.Seed != SeedSample || (domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain && domain != financialRequestDomain && domain != documentGrantAuthority) {
+	if s == nil || s.cfg.Seed != SeedSample || (domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain && domain != financialRequestDomain && domain != documentGrantAuthority && domain != resultGrantAuthority) {
 		return nil, inputauthority.ErrInvalid
 	}
 	a := &serverGrantAuthority{s: s, domain: domain, bindings: make(map[string]inputauthority.Spec), ceilings: make(map[string]inputauthority.Spec)}
 	var err error
 	switch domain {
+	case resultGrantAuthority:
+		a.registry, err = resultauthority.NewRegistry(limits, a, a, a, s.clock)
 	case documentGrantAuthority:
 		a.registry, err = documentauthority.NewRegistry(limits, a, a, a, s.clock)
 	case inputGrantAuthority:
@@ -126,6 +129,9 @@ func (a *serverGrantAuthority) recordLocked(workspace, id string) (inputauthorit
 }
 
 func (a *serverGrantAuthority) grant(id string, spec inputauthority.Spec) (gate.Grant, error) {
+	if a.domain == resultGrantAuthority && !a.resultShape(spec) {
+		return gate.Grant{}, inputauthority.ErrInvalid
+	}
 	if a.domain == documentGrantAuthority && !a.documentShape(spec) {
 		return gate.Grant{}, inputauthority.ErrInvalid
 	}

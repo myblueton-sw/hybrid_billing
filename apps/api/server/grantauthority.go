@@ -7,6 +7,9 @@ import (
 	"slices"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/documentauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
+	"github.com/myblueton-sw/hybrid_billing/modules/financialrequestauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
@@ -21,16 +24,22 @@ type serverGrantAuthority struct {
 }
 
 func newServerGrantAuthority(s *Server, limits inputauthority.Limits, domain grantAuthorityDomain) (*serverGrantAuthority, error) {
-	if s == nil || s.cfg.Seed != SeedSample || (domain != inputGrantAuthority && domain != pricingGrantAuthority) {
+	if s == nil || s.cfg.Seed != SeedSample || (domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain && domain != financialRequestDomain && domain != documentGrantAuthority) {
 		return nil, inputauthority.ErrInvalid
 	}
 	a := &serverGrantAuthority{s: s, domain: domain, bindings: make(map[string]inputauthority.Spec), ceilings: make(map[string]inputauthority.Spec)}
 	var err error
 	switch domain {
+	case documentGrantAuthority:
+		a.registry, err = documentauthority.NewRegistry(limits, a, a, a, s.clock)
 	case inputGrantAuthority:
 		a.registry, err = inputauthority.NewRegistry(limits, a, a, a, s.clock)
 	case pricingGrantAuthority:
 		a.registry, err = pricingauthority.NewRegistry(limits, a, a, a, s.clock)
+	case financialPermissionDomain:
+		a.registry, err = financialpermission.NewRegistry(limits, a, a, a, s.clock)
+	case financialRequestDomain:
+		a.registry, err = financialrequestauthority.NewRegistry(limits, a, a, a, s.clock)
 	}
 	if err != nil {
 		return nil, err
@@ -45,11 +54,15 @@ func inputAuthorityFingerprint(value any) string {
 }
 
 func (a *serverGrantAuthority) caller(workspace, actor string) error {
-	if workspace != a.s.bootWorkspace || actor == "" || actor != a.s.answer.User() || a.s.answer.Workspace() != workspace {
+	return a.s.governorCaller(workspace, actor)
+}
+
+func (s *Server) governorCaller(workspace, actor string) error {
+	if workspace != s.bootWorkspace || actor == "" || actor != s.answer.User() || s.answer.Workspace() != workspace {
 		return inputauthority.ErrDenied
 	}
 	request := gate.Request{Action: gate.AdministerInstallation, Kind: gate.InstallationKind, Resource: gate.Resource{WorkspaceID: workspace}}
-	decision := a.s.gate.Decide(a.s.answer, ConsoleClient, request)
+	decision := s.gate.Decide(s.answer, ConsoleClient, request)
 	if !decision.Allowed {
 		if decision.Code == gate.AuthorityUnavailable {
 			return gate.ErrUnavailable
@@ -113,6 +126,15 @@ func (a *serverGrantAuthority) recordLocked(workspace, id string) (inputauthorit
 }
 
 func (a *serverGrantAuthority) grant(id string, spec inputauthority.Spec) (gate.Grant, error) {
+	if a.domain == documentGrantAuthority && !a.documentShape(spec) {
+		return gate.Grant{}, inputauthority.ErrInvalid
+	}
+	if a.domain == financialRequestDomain && !a.financialRequestShape(spec) {
+		return gate.Grant{}, inputauthority.ErrInvalid
+	}
+	if a.domain == financialPermissionDomain && (a.s == nil || spec.Workspace != a.s.bootWorkspace || spec.Kind != financialpermission.DirectHuman || spec.CeilingID != "") {
+		return gate.Grant{}, inputauthority.ErrInvalid
+	}
 	terms, err := a.domain.terms(spec.Workspace, spec.Capability)
 	if err != nil {
 		return gate.Grant{}, err
@@ -122,6 +144,11 @@ func (a *serverGrantAuthority) grant(id string, spec inputauthority.Spec) (gate.
 	case inputauthority.Console:
 		grant.ClientID = spec.Recipient
 	case inputauthority.Human:
+		grant.SubjectID = spec.Recipient
+	case financialpermission.DirectHuman:
+		if a.domain != financialPermissionDomain {
+			return gate.Grant{}, inputauthority.ErrInvalid
+		}
 		grant.SubjectID = spec.Recipient
 	default:
 		return gate.Grant{}, inputauthority.ErrInvalid

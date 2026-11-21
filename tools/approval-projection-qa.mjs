@@ -1,0 +1,73 @@
+import {createRequire} from 'node:module';
+import {mkdir,writeFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const args=Object.fromEntries(process.argv.slice(2).flatMap((v,i,a)=>v.startsWith('--')?[[v.slice(2),a[i+1]]]:[]));
+const {chromium}=createRequire(import.meta.url)(args['playwright-module']);
+const cookie=process.env.HB_PROJECTION_QA_COOKIE;
+delete process.env.HB_PROJECTION_QA_COOKIE;
+assert.ok(cookie&&args.url&&args.api&&args.output&&args.chromium);
+await mkdir(args.output,{recursive:true});
+const browser=await chromium.launch({headless:true,executablePath:args.chromium});
+const context=await browser.newContext({viewport:{width:1440,height:1000}});
+const split=cookie.indexOf('=');
+await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),url:args.url,httpOnly:true,sameSite:'Strict'}]);
+const page=await context.newPage();
+const evidence={cases:[],errors:[]};
+page.on('pageerror',e=>evidence.errors.push(e.message));
+await page.route('**/api/**',async route=>{const u=new URL(route.request().url());const response=await route.fetch({url:args.api+u.pathname+u.search});await route.fulfill({response});});
+const labels={en:{basis:'Rated candidate total',requester:'Requester in source record',policy:'Recorded policy revision'},ko:{basis:'과금 계산 후보 합계',requester:'요청자 (원천 기록)',policy:'기록된 정책 버전'},ar:{basis:'إجمالي نتيجة احتساب الرسوم المبدئية',requester:'مقدّم الطلب في سجل المصدر',policy:'نسخة السياسة المسجّلة'}};
+async function render(lang,width,id,state) {
+ await page.setViewportSize({width,height:1000});
+ await page.goto('about:blank');
+ const read=page.waitForResponse(r=>r.url().includes('/api/approval-review?')&&r.status()===200);
+ await page.goto(`${args.url}/?service=api&lang=${lang}#/approvals?lang=${lang}&view=history&approval-q=${id}`);
+ const row=page.locator(`[data-b09-record="${id}"]:visible`);
+ await row.waitFor();
+ const payload=await (await read).json();assert.equal(payload.records.find(r=>r.id===id)?.status,state);
+ await row.focus();await page.keyboard.press('Enter');
+ await page.locator('[data-b09-detail-heading]:visible').waitFor();
+ assert.equal(await page.locator('[data-b09-detail-heading]:visible').evaluate(e=>e===document.activeElement),true);
+ await page.evaluate(()=>document.fonts.ready);
+ const detail=page.locator('.b09-result');
+ const facts=page.locator('.b09-facts:visible').first();
+ assert.ok((await facts.innerText()).includes(labels[lang].requester));
+ assert.ok((await facts.innerText()).includes(labels[lang].policy));
+ assert.ok((await facts.innerText()).includes('sample-member'));
+ assert.ok((await facts.innerText()).includes('sample-admin-3'));
+ await page.locator('[data-b09-current-check]:visible').waitFor();
+ const prefix=`${state}-${lang}-${width}`;
+ await page.screenshot({path:`${args.output}/detail-${prefix}.png`});
+ await facts.screenshot({path:`${args.output}/facts-${prefix}.png`});
+ await page.locator('.b09-amounts:visible').first().scrollIntoViewIfNeeded();
+ assert.ok((await page.locator('.b09-amounts:visible').first().innerText()).includes(labels[lang].basis));
+ assert.ok((await page.locator('.b09-amounts:visible').first().innerText()).includes('USD 15'));
+ await page.screenshot({path:`${args.output}/amounts-${prefix}.png`});
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
+ assert.equal(overflow,false);
+ const borders=await page.locator('[data-b09-current-check]:visible').evaluate(e=>{const c=getComputedStyle(e);return{direction:c.direction,borders:[c.borderTopWidth,c.borderRightWidth,c.borderBottomWidth,c.borderLeftWidth],outline:c.outlineStyle};});
+ assert.deepEqual(borders.borders,['0px','0px','0px','0px']);
+ assert.equal(borders.direction,lang==='ar'?'rtl':'ltr');
+ await page.keyboard.press('Escape');
+ await page.locator('[data-b09-detail-heading]:visible').waitFor({state:'detached'});
+ evidence.cases.push({lang,width,state,exactAmount:true,distinctActors:true,detailFocus:true,escapeCloses:true,overflow,borders});
+}
+try {
+ for(const lang of ['en','ko','ar'])for(const width of [1440,1024,390])await render(lang,width,'qa-current','pending');
+ const decision=await page.evaluate(async()=>{
+  const {serviceClient}=await import('/src/service/api.ts');const {adminClient,attempt}=await import('/src/service/admin.ts');
+  const session=await serviceClient().current();const client=adminClient(session.csrf);
+  const response=await fetch('/api/approval-review?view=history&q=qa-current');const data=await response.json();
+  const record=data.records.find(r=>r.id==='qa-current');
+  if(record?.status!=='pending')throw new Error('Expected pending source');
+  const result=await client.command('financial_charge.approve','qa-current',(await client.access()).revision,'Synthetic browser setup decision',{digest:record.evidence.revision},attempt());
+  return result.fields?.recorded_state;
+ });
+ assert.equal(decision,'approved');
+ for(const lang of ['en','ko','ar'])for(const width of [1440,1024,390])await render(lang,width,'qa-current','approved');
+ await render('en',1440,'qa-superseded','superseded');
+ await render('ar',390,'qa-rejected','rejected');
+ assert.deepEqual(evidence.errors,[]);
+ evidence.journey={actualServiceBoundRequests:true,apiSetupApproval:true,screenDecisionActions:false,recordedAmount:'USD 15',originalAuthor:'sample-member',requester:'sample-admin-3'};
+ evidence.outcome='passed';
+}catch(e){evidence.outcome='failed';evidence.failure={kind:e.name,detail:e.message.split('\n')[0].slice(0,300)};await page.screenshot({path:args.output+'/failure.png'});throw new Error('Projection QA failed: '+e.name);}
+finally{await writeFile(args.output+'/evidence.json',JSON.stringify(evidence,null,2));await browser.close();}

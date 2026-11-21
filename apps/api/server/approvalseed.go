@@ -28,6 +28,9 @@ func (s *Server) initApprovals() error {
 		return err
 	}
 	s.approvalKey = random(32)
+	s.financialCharges = make(map[string]financialChargeBinding)
+	s.financialPolicies = make(map[string]financialPolicyBinding)
+	s.financialAuthorities = make(map[string]financialAuthorityBinding)
 	s.approvals, err = approvals.NewRegistry(profile, approvals.Limits{Workspaces: 100, Admins: 4, Proposals: 100, Authorities: 100, Requests: approvalCap, Items: 100, Executions: 1000}, s.clock)
 	return err
 }

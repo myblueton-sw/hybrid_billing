@@ -94,24 +94,34 @@ func validCandidateInput(in chargeInput) bool {
 }
 
 func (s *Server) eligibleCaptureInput(ctx commands.Context, owned candidateCaptureBinding, policy pricingpolicy.Record) (*candidateInputProvenance, error) {
-	r := s.inputReviews
-	if r == nil || r.producer != s.chargeProducer {
+	if s.inputReviews == nil || s.inputReviews.producer != s.chargeProducer {
 		return nil, commands.Fail(commands.UnsupportedCapability)
 	}
 	revision, err := strconv.ParseUint(ctx.Fields["scope_revision"], 10, 32)
 	if err != nil || revision == 0 || strconv.FormatUint(revision, 10) != ctx.Fields["scope_revision"] {
 		return nil, commands.Fail(commands.InvalidRequest, "scope_revision")
 	}
-	record, err := r.registry.Record(ctx.Workspace, ctx.Fields["input_review"])
+	return s.currentCaptureInputLocked(ctx.Workspace, ctx.Fields["input_review"], ctx.Fields["input_digest"], revision, owned, policy)
+}
+
+func (s *Server) currentCaptureInputLocked(workspace, review, digest string, revision uint64, owned candidateCaptureBinding, policy pricingpolicy.Record) (*candidateInputProvenance, error) {
+	r := s.inputReviews
+	if r == nil || r.producer != s.chargeProducer {
+		return nil, commands.Fail(commands.UnsupportedCapability)
+	}
+	if revision == 0 || revision > inputreview.MaxRevision {
+		return nil, commands.Fail(commands.InvalidRequest)
+	}
+	record, err := r.registry.Record(workspace, review)
 	if err != nil {
 		return nil, inputReviewError(err)
 	}
 	b := owned.Binding
-	scope := inputreview.Scope{Workspace: ctx.Workspace, Provider: b.Provider, Account: b.Scope, Period: b.Period}
+	scope := inputreview.Scope{Workspace: workspace, Provider: b.Provider, Account: b.Scope, Period: b.Period}
 	if record.State != inputreview.Eligible || record.Decision == nil || record.Evidence.Verdict != inputreview.Match {
 		return nil, commands.Fail(commands.PrerequisiteFailed)
 	}
-	if record.Evidence.Scope != scope || record.Evidence.Digest != ctx.Fields["input_digest"] || record.Decision.Digest != record.Evidence.Digest || record.Decision.ScopeRevision != revision {
+	if record.Evidence.Scope != scope || record.Evidence.Digest != digest || record.Decision.Digest != record.Evidence.Digest || record.Decision.ScopeRevision != revision {
 		return nil, commands.Fail(commands.EvidenceStale)
 	}
 	publication, err := r.registry.Current(scope)
@@ -121,14 +131,14 @@ func (s *Server) eligibleCaptureInput(ctx commands.Context, owned candidateCaptu
 	if publication.Record != record.ID || publication.Digest != record.Evidence.Digest || publication.Revision != revision {
 		return nil, commands.Fail(commands.EvidenceStale)
 	}
-	fresh, _, err := r.currentEvidenceLocked(ctx.Workspace, record.Evidence.Run)
+	fresh, _, err := r.currentEvidenceLocked(workspace, record.Evidence.Run)
 	if err != nil {
 		return nil, inputReviewError(err)
 	}
 	if !reflect.DeepEqual(fresh, record.Evidence) {
 		return nil, commands.Fail(commands.EvidenceStale)
 	}
-	held := r.bindings[[2]string{ctx.Workspace, record.Evidence.Run}]
+	held := r.bindings[[2]string{workspace, record.Evidence.Run}]
 	if held == nil || held.SourceRun != owned.SourceRun || held.Document.Scope != scope || held.Document.Basis != normalize.Billed || policy.Proposal.Spec.Policy.CostBasis != rating.Billed || held.Document.Currency != policy.Proposal.Spec.Policy.Currency {
 		return nil, commands.Fail(commands.PrerequisiteFailed)
 	}

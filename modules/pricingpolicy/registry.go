@@ -216,22 +216,5 @@ func (r *Registry) Resolve(scope Scope, id, want, actor string, from, to time.Ti
 	if err := r.authority.Check(scope, actor, UseAction); err != nil {
 		return Record{}, err
 	}
-	record, ok := r.records[[2]string{scope.Workspace, id}]
-	if !ok {
-		return Record{}, ErrNotFound
-	}
-	p := record.Proposal
-	if record.Digest != want || p.Spec.Scope != scope {
-		return Record{}, ErrConflict
-	}
-	if record.State != Approved || from.Before(p.Spec.From) || to.After(p.Spec.To) {
-		return Record{}, ErrRejected
-	}
-	if err := r.current(p); err != nil {
-		return Record{}, err
-	}
-	if _, err := r.now(); err != nil {
-		return Record{}, err
-	}
-	return clone(record), nil
+	return r.evidenceLocked(scope, id, want, from, to)
 }

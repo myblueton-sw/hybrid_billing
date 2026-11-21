@@ -66,11 +66,11 @@ func TestApprovalReadHistoricalAndUnsupportedProjection(t *testing.T) {
 	}
 }
 
-func TestApprovalReadPartialAndPolicyMismatch(t *testing.T) {
+func TestApprovalReadHistoricalPolicyAndPartial(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	approvalAdminister(t, f.s, approvals.Proposal{ID: "two-approvals", Kind: approvals.ProposePolicy, Policy: approvals.Policy{Stage: approvals.StageCharge, Revision: 2, Approvals: 2, Required: []string{"input", "result"}, Validity: time.Hour}})
-	if _, err := f.s.approvalRows(SampleWorkspace); err == nil {
-		t.Fatal("policy mismatch accepted")
+	if rows, err := f.s.approvalRows(SampleWorkspace); err != nil || rows[0].Status != "superseded" || rows[0].Approver != nil {
+		t.Fatal("historical pending policy lost", rows, err)
 	}
 	v, err := f.s.approvals.RequestOf(SampleWorkspace, "sample-approval-001")
 	if err != nil {
@@ -176,11 +176,11 @@ func TestApprovalReadEmptyInstallationHTTP(t *testing.T) {
 	}
 }
 
-func TestApprovalReadSameCountPolicyRevisionMismatch(t *testing.T) {
+func TestApprovalReadSameCountPolicyReplacementHistory(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	approvalAdminister(t, f.s, approvals.Proposal{ID: "new-single-policy", Kind: approvals.ProposePolicy, Policy: approvals.Policy{Stage: approvals.StageCharge, Revision: 2, Approvals: 1, Required: []string{"input", "result"}, Validity: time.Hour}})
-	if _, err := f.s.approvalRows(SampleWorkspace); err == nil {
-		t.Fatal("policy revision mismatch accepted with unchanged approval count")
+	if rows, err := f.s.approvalRows(SampleWorkspace); err != nil || rows[0].Status != "superseded" || rows[0].Approver != nil {
+		t.Fatal("same-count policy history lost", rows, err)
 	}
 }
 
@@ -247,8 +247,8 @@ func TestApprovalReadSupersededDecisionAndSeedReplay(t *testing.T) {
 	if _, err = f.s.approvals.Request(SampleWorkspace, v.Subject, approvalHuman(SampleAdmin)); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = f.s.approvalRows(SampleWorkspace); err == nil {
-		t.Fatal("superseded historical decision silently flattened")
+	if rows, err := f.s.approvalRows(SampleWorkspace); err != nil || rows[0].Status != "superseded" || rows[0].Approver == nil || rows[0].Approver.ID != SampleAdmin3 || rows[0].Decided == nil {
+		t.Fatal("superseded historical decision lost", rows, err)
 	}
 	before := len(f.s.approvalIndex)
 	if err = f.s.seedApprovals(f.s.clock()); err == nil {

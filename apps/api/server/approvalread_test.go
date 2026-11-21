@@ -27,7 +27,7 @@ func TestApprovalReadModuleAndPages(t *testing.T) {
 		t.Fatalf("first: %v", first)
 	}
 	rows := first.body["records"].([]any)
-	if len(rows) != 25 || fmt.Sprint(first.body["total"]) != "29" || first.body["commands"] != "unconnected" {
+	if len(rows) != 25 || fmt.Sprint(first.body["total"]) != "29" || first.body["commands"] != "financial_charge_v1" {
 		t.Fatalf("page: %v", first.body)
 	}
 	row := rows[0].(map[string]any)

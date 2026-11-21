@@ -82,7 +82,7 @@ func (f accessFacts) covered(user string, c accesschange.Change) bool {
 }
 
 func (f accessFacts) ceilingFor(c accesschange.Change) (gate.GrantView, bool) {
-	if pricingGrantTerms(gate.Action(c.Action), c.ResourceKind, c.Fields) {
+	if governedGrantTerms(gate.Action(c.Action), c.ResourceKind, c.Fields) {
 		return gate.GrantView{}, false
 	}
 	var found gate.GrantView
@@ -289,7 +289,7 @@ func (h requestCommand) requestRevoke(ctx commands.Context, f accessFacts, actor
 func (f accessFacts) standing(v accesschange.View, approver string) accesschange.Standing {
 	allowed := f.eligible(approver)
 	if v.Change.Kind == accesschange.ChangeAdd {
-		allowed = allowed && !pricingGrantTerms(gate.Action(v.Change.Action), v.Change.ResourceKind, v.Change.Fields) && f.covered(approver, v.Change) && f.covered(v.Proposer, v.Change)
+		allowed = allowed && !governedGrantTerms(gate.Action(v.Change.Action), v.Change.ResourceKind, v.Change.Fields) && f.covered(approver, v.Change) && f.covered(v.Proposer, v.Change)
 	} else if g, ok := f.s.grantView(v.Change.Grant); ok && protectedGrant(g) {
 		allowed = false
 	}
@@ -297,7 +297,7 @@ func (f accessFacts) standing(v accesschange.View, approver string) accesschange
 }
 
 func (s *Server) applyAdd(v accesschange.View, now time.Time) (string, error) {
-	if pricingGrantTerms(gate.Action(v.Change.Action), v.Change.ResourceKind, v.Change.Fields) {
+	if governedGrantTerms(gate.Action(v.Change.Action), v.Change.ResourceKind, v.Change.Fields) {
 		return "", commands.Fail(commands.PrerequisiteFailed)
 	}
 	customer := gate.All()

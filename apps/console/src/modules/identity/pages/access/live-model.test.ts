@@ -167,3 +167,14 @@ test("pricing grant labels remain separate from generic grant offers", () => {
   assert.equal(accessPhrase(l, "view_cost", "synthetic_pricing_policy", ["pricing_policy_evidence"]), null);
  }
 });
+
+
+test("document authority uses explicit localized action and evidence labels", () => {
+ for (const l of ["en", "ko", "ar"] as const) {
+  for (const action of ["propose_document_evidence", "confirm_document_evidence", "revoke_document_evidence", "prepare_erp_record"]) {
+   assert.ok(!accessText(l, action, []).includes(action));
+  }
+  assert.ok(!accessText(l, "view_cost", ["document_evidence"]).includes("document_evidence"));
+  assert.equal(accessPhrase(l, "view_cost", "synthetic_document_evidence", ["document_evidence"]), null);
+ }
+});

@@ -455,3 +455,103 @@
     grid-column: 1 / -1;
   }
 }
+.b09-screen .b09-decision,
+.b09-screen .b09-decision-result {
+  min-width: 0;
+  width: 100%;
+}
+.b09-screen .b09-decision-result {
+  padding: 20px;
+  border: 1px solid var(--border-section);
+}
+.b09-screen .b09-decision button,
+.b09-screen .b09-decision-result button {
+  display: inline-flex;
+  width: auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 14px;
+  border: 1px solid var(--border-control);
+}
+.b09-screen .b09-decision .b09-money {
+  font-size: 20px;
+  font-weight: 600;
+}
+.b09-screen .b09-decision-actions {
+  list-style: none;
+  padding: 0;
+  margin-block: 20px;
+}
+.b09-screen .b09-decision-actions > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px;
+  padding-block: 14px;
+  border-block-end: 1px solid var(--border-row);
+}
+.b09-screen .b09-decision-actions p {
+  font-size: 14px;
+  margin-block: 8px 0;
+}
+.b09-screen .b09-decision-form {
+  margin-block-start: 24px;
+}
+.b09-screen .b09-decision-form label {
+  margin-block-start: 18px;
+}
+.b09-screen .b09-decision-form select {
+  max-inline-size: 40ch;
+}
+.b09-screen .b09-decision-form textarea {
+  font: inherit;
+  width: 100%;
+  max-inline-size: 72ch;
+  min-width: 0;
+  padding: 10px;
+  resize: vertical;
+  border: 1px solid var(--border-control);
+  border-radius: 0;
+  color: var(--text-body);
+  background: var(--surface-page);
+}
+.b09-screen textarea:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+.b09-screen .b09-confirm { font-weight: 600; }
+.b09-screen .b09-recorded-heading { margin-block-start: 28px; }
+.b09-screen .b09-decision-result p,
+.b09-screen .b09-decision > p { max-inline-size: 75ch; }
+@media (min-width: 768px) and (max-width: 1250px) {
+  .b09-desktop-detail { border-block-start: 0; padding-block-start: 0; }
+}
+@media (max-width: 767px) {
+  .b09-screen .b09-decision-actions > li { grid-template-columns: minmax(0, 1fr); }
+  .b09-screen .b09-decision button,
+  .b09-screen .b09-decision-result button { width: 100%; }
+}
+
+.b09-screen .b09-confirm-summary {
+  margin-block-start: 20px;
+  padding-block: 4px;
+  border-block: 1px solid var(--border-section);
+  max-inline-size: 72ch;
+}
+.b09-screen .b09-decision-form label + .b09-meta { margin-block-start: 8px; }
+.b09-screen .b09-decision-result .b09-money {
+  font-size: 20px;
+  font-weight: 600;
+  margin-block-end: 14px;
+}
+.b09-screen .b09-refresh-failure {
+  border: 1px solid var(--border-section);
+  padding: 12px 16px;
+}
+.b09-screen .b09-result > .b09-decision {
+  margin-block-end: 24px;
+  padding-block-end: 20px;
+  border-block-end: 1px solid var(--border-section);
+}
+.b09-screen .b09-confirm-summary > div:last-child { border-block-end: 0; }

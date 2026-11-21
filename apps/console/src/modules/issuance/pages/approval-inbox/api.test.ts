@@ -467,3 +467,14 @@ test("accepts paired historical requester/policy and rated candidate totals whil
   Object.assign(bad.records[0].amounts[0], { basis: "invented_total" });
   assert.equal(valid(bad, q()), false);
 });
+
+test("accepts only the explicit governed financial decision capability alongside legacy read-only payloads", () => {
+  const d = fixture();
+  d.commands = "financial_charge_v1";
+  assert.equal(valid(d, q()), true);
+  for (const capability of ["financial_charge", "financial_charge_v2", "all", true]) {
+    const bad = { ...d };
+    Object.assign(bad, { commands: capability });
+    assert.equal(valid(bad, q()), false);
+  }
+});

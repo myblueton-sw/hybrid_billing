@@ -20,7 +20,15 @@ func TestFinancialDecisionCoreBrowser(t *testing.T) {
 	runApprovalProjectionBrowser(t, "financial-decision-core-qa.mjs")
 }
 
-func runApprovalProjectionBrowser(t *testing.T, runner string) {
+func TestFinancialDecisionScreenBrowser(t *testing.T) {
+	runApprovalProjectionBrowser(t, "financial-decision-screen-qa.mjs")
+}
+
+func TestFinancialDecisionRejectionScreenBrowser(t *testing.T) {
+	runApprovalProjectionBrowser(t, "financial-decision-screen-qa.mjs", "--flow", "reject")
+}
+
+func runApprovalProjectionBrowser(t *testing.T, runner string, extra ...string) {
 	t.Helper()
 	output := os.Getenv("HB_PROJECTION_QA_OUTPUT")
 	if output == "" {
@@ -39,6 +47,8 @@ func runApprovalProjectionBrowser(t *testing.T, runner string) {
 			f.ok(t, "reject", f.run(decider, "financial_charge.reject", id, map[string]string{"digest": field(p, "digest"), "reason": "other"}), approvals.StateRejected, "")
 		}
 	}
+	f.setPassword(AdminLogin, pw)
+	reader := f.signedIn(AdminLogin, pw)
 	f.s.domain.Lock()
 	f.s.origins[frontend] = true
 	f.s.domain.Unlock()
@@ -50,11 +60,11 @@ func runApprovalProjectionBrowser(t *testing.T, runner string) {
 	server.Listener = listener
 	server.Start()
 	defer server.Close()
-	reader := f.as(AdminLogin)
 	script, err := filepath.Abs(filepath.Join("../../../tools", runner))
 	f.must(err)
 	cmd := exec.Command("node", script, "--url", frontend, "--api", server.URL, "--output", output, "--playwright-module", os.Getenv("HB_PROJECTION_QA_PLAYWRIGHT"), "--chromium", os.Getenv("HB_PROJECTION_QA_CHROMIUM"))
-	cmd.Env = append(os.Environ(), "HB_PROJECTION_QA_COOKIE="+reader.cookie.Name+"="+reader.cookie.Value)
+	cmd.Args = append(cmd.Args, extra...)
+	cmd.Env = append(os.Environ(), "HB_PROJECTION_QA_COOKIE="+reader.cookie.Name+"="+reader.cookie.Value, "HB_PROJECTION_QA_PASSWORD="+pw)
 	if err := cmd.Run(); err != nil {
 		t.Fatal("isolated browser assertions failed; inspect non-sensitive evidence", err)
 	}

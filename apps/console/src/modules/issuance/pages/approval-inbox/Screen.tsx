@@ -1,3 +1,6 @@
+import { useDecision } from "./use-decision";
+import { DecisionResult } from "./DecisionPanel";
+import { dc } from "./decision-copy";
 import { useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import {
@@ -70,7 +73,6 @@ export default function Screen({
       data && selection?.key === key
         ? data.records.find((r) => r.id === selection.id)
         : undefined;
-  useEffect(() => onDirty(false), [onDirty]);
   useEffect(() => {
     const c = new AbortController(),
       n = ++seq.current;
@@ -97,8 +99,11 @@ export default function Screen({
         ? "loaded"
         : current?.result?.kind === "unconnected"
           ? "unconnected"
-          : "loading",
-    review = JSON.stringify({
+          : "loading";
+  const decision = useDecision(data, selected, JSON.stringify([key, data?.snapshot, data?.permission_revision]), phase === "loading" || phase === "error", () => reload(false));
+  const decisionBusy = !!decision.state.action || Object.values(decision.state.entries).some(e => e.phase === "pending" || e.phase === "unknown");
+  useEffect(() => onDirty(decisionBusy), [decisionBusy, onDirty]);
+  const review = JSON.stringify({
       phase: "approval-read",
       variant: `${view}:${phase}:${data?.source_mode ?? "unbound"}`,
       requestKey: key,
@@ -113,6 +118,7 @@ export default function Screen({
       error: current?.error ?? null,
       requestId: current?.requestId ?? null,
       attempts,
+      decision: { checking: decision.state.checking, action: decision.state.action, error: decision.state.error, prepared: !!decision.state.preparation, entries: Object.values(decision.state.entries).map(e => [e.submission.target, e.phase, e.error]) },
     });
   useEffect(() => onState(review, items), [review, onState]);
   useEffect(() => {
@@ -121,11 +127,11 @@ export default function Screen({
       status.current?.focus();
     }
   }, [phase, data]);
-  function go(next: URLSearchParams) {
+  function go(next: URLSearchParams, focus = true) {
     setState({ key: "pending" });
     setSelection(null);
     setAttempts((n) => n + 1);
-    focusStatus.current = true;
+    focusStatus.current = focus;
     if (requestKey(next, view) === key) {
       setState({ key });
       setRetry((n) => n + 1);
@@ -144,7 +150,9 @@ export default function Screen({
       next.delete(k);
     go(next);
   }
-  function refresh() {
+  function refresh() { reload(true); }
+  function reload(focus: boolean) {
+    decision.store?.invalidatePreparation();
     const next = new URLSearchParams(params);
     for (const k of [
       "approval-cursor",
@@ -152,7 +160,7 @@ export default function Screen({
       "approval-permission_revision",
     ])
       next.delete(k);
-    go(next);
+    go(next, focus);
   }
   function page(cursor: string | null) {
     if (!data) return;
@@ -214,7 +222,7 @@ export default function Screen({
             d.open = false;
             d.querySelector("summary")?.focus();
             e.preventDefault();
-          } else if (selected) {
+          } else if (selected && decision.state.entries[selected.id]?.phase !== "pending") {
             setSelection(null);
             e.preventDefault();
           }
@@ -226,12 +234,7 @@ export default function Screen({
           {t(l, "About this screen", "이 화면 안내", "حول هذه الشاشة")}
         </summary>
         <p>
-          {t(
-            l,
-            "Read request targets, amounts and source evidence separately from executing decisions. This screen cannot approve, reject, hand off, delegate or post. Synthetic environment records are always labelled.",
-            "요청 대상·금액·원천 근거의 조회와 업무 결정 실행을 구분합니다. 이 화면은 승인·반려·인계·위임·전기를 실행하지 않습니다. 합성 환경의 기록은 항상 별도로 표시합니다.",
-            "تُفصل قراءة أهداف الطلبات ومبالغها وأدلة المصدر عن تنفيذ القرارات. لا تنفّذ هذه الشاشة الاعتماد أو الرفض أو الإحالة أو التفويض أو الترحيل. تُميّز سجلات البيئة الاصطناعية دائماً.",
-          )}
+          {dc(l,"help")}
         </p>
       </details>
       {phase !== "unconnected" && view !== "delegation" && (
@@ -317,12 +320,7 @@ export default function Screen({
                   "요청 근거 조회 불가",
                   "أدلة الطلبات غير متاحة",
                 )
-              : t(
-                  l,
-                  "Read-only request evidence",
-                  "조회 전용 요청 근거",
-                  "أدلة طلبات للقراءة فقط",
-                )}
+              : dc(l,"evidence")}
         {data && (
           <>
             {" "}
@@ -332,6 +330,7 @@ export default function Screen({
           </>
         )}
       </p>
+      {Object.values(decision.state.entries).filter(e => e.submission.target !== selected?.id && e.phase !== "refused").map(entry => <DecisionResult key={entry.submission.attempt.key} locale={l} entry={entry} retry={() => void decision.store?.retry(entry.submission.target)} refresh={refresh} reauthenticate={decision.reauthenticate} refreshFailed={phase === "error"} />)}
       {phase === "loading" ? (
         <p>
           {t(
@@ -442,6 +441,8 @@ export default function Screen({
       ) : data ? (
         <Inbox
           locale={l}
+          decision={decision}
+          refresh={refresh}
           data={data}
           selected={selected}
           select={(id) => setSelection(id ? { key, id } : null)}

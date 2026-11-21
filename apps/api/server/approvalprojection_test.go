@@ -111,3 +111,19 @@ func TestApprovalProjectionSnapshotChangesWithActualMutations(t *testing.T) {
 		t.Fatal("decision did not change snapshot")
 	}
 }
+
+func TestApprovalDecisionCapabilityIsExplicitAndBounded(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	if got := f.s.approvalCommandCapability(); got != "financial_charge_v1" {
+		t.Fatal(got)
+	}
+	f.s.cfg.Commands.Fields = 23
+	if got := f.s.approvalCommandCapability(); got != "unconnected" {
+		t.Fatal(got)
+	}
+	f.s.cfg.Commands.Fields = 64
+	f.s.cfg.Seed = SeedNone
+	if got := f.s.approvalCommandCapability(); got != "unconnected" {
+		t.Fatal(got)
+	}
+}

@@ -1,3 +1,7 @@
+import DecisionPanel from "./DecisionPanel";
+import type { DecisionBinding } from "./use-decision";
+import { dc } from "./decision-copy";
+import { serviceDecisionRecord } from "./decision-api";
 import type { Locale } from "../../../../shared/types";
 import type { ApprovalRecord, Data } from "./contract";
 import {
@@ -116,11 +120,17 @@ export default function ResultCard({
   record: r,
   data: d,
   close,
+  decision,
+  refresh,
+  surface,
 }: {
   locale: Locale;
   record: ApprovalRecord;
   data: Data;
   close: () => void;
+  decision: DecisionBinding;
+  refresh: () => void;
+  surface: "desktop" | "mobile";
 }) {
   const sourceStates = [
     [
@@ -231,6 +241,7 @@ export default function ResultCard({
       onKeyDown={(e) => {
         if (
           e.key === "Escape" &&
+          decision.state.entries[r.id]?.phase !== "pending" &&
           !(e.target as HTMLElement).closest("details[open]")
         ) {
           e.preventDefault();
@@ -247,12 +258,14 @@ export default function ResultCard({
           <p>{kindLabel(l, r.kind)}</p>
           <p className="b09-meta">{statusLabel(l, r.status)}</p>
         </div>
-        <button onClick={close}>
+        <button disabled={decision.state.entries[r.id]?.phase === "pending"} onClick={close}>
           {t(l, "Close details", "상세 닫기", "إغلاق التفاصيل")}
         </button>
       </header>
       <KindBoundary locale={l} kind={r.kind} />
       {r.evidence.blockers.some((b) => b.code === "current_checks_unverified") && <p data-b09-current-check>{blockerText(l, "current_checks_unverified", "")}</p>}
+      <DecisionPanel locale={l} record={r} binding={decision} surface={surface} refresh={refresh} />
+      {decision.capability && serviceDecisionRecord(r) && <h3 className="b09-recorded-heading">{dc(l,"facts")}</h3>}
       <dl className="b09-facts">
         {[
           [t(l, "Request reference", "요청 참조", "مرجع الطلب"), r.id],
@@ -553,12 +566,7 @@ export default function ResultCard({
         </dl>
       </details>
       <p className="b09-readonly">
-        {t(
-          l,
-          "This screen only reads request evidence. Approve, reject, handoff, delegation and posting are not executable here. A recorded approval does not confirm issuance, delivery or current validity.",
-          "이 화면은 요청 근거를 조회만 합니다. 승인·반려·인계·위임·전기는 실행하지 않습니다. 승인 기록은 발행·전달·현재 유효성의 확인이 아닙니다.",
-          "تقرأ هذه الشاشة أدلة الطلبات فقط. لا تُنفّذ هنا الموافقة أو الرفض أو الإحالة أو التفويض أو الترحيل. سجل الاعتماد لا يؤكد الإصدار أو التسليم أو الصلاحية الحالية.",
-        )}
+        {decision.capability && serviceDecisionRecord(r) ? dc(l,"boundary") : dc(l,"readonlyRecord")}
       </p>
     </section>
   );

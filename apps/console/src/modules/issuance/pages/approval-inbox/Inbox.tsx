@@ -1,3 +1,4 @@
+import type { DecisionBinding } from "./use-decision";
 import { useEffect, useRef } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { ApprovalRecord, Data } from "./contract";
@@ -9,7 +10,11 @@ export default function Inbox({
   selected,
   select,
   page,
+  decision,
+  refresh,
 }: {
+  decision: DecisionBinding;
+  refresh: () => void;
   locale: Locale;
   data: Data;
   selected: ApprovalRecord | undefined;
@@ -136,6 +141,9 @@ export default function Inbox({
                     <div className="b09-mobile-detail">
                       <ResultCard
                         locale={l}
+                        decision={decision}
+                        refresh={refresh}
+                        surface="mobile"
                         data={d}
                         record={r}
                         close={() => select(null)}
@@ -150,6 +158,9 @@ export default function Inbox({
             {selected ? (
               <ResultCard
                 locale={l}
+                decision={decision}
+                refresh={refresh}
+                surface="desktop"
                 data={d}
                 record={selected}
                 close={() => select(null)}

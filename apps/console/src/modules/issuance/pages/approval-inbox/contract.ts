@@ -67,7 +67,7 @@ export type Data = {
   schema: 1;
   numeric_format: "decimal-strings-read-v1";
   read_only: true;
-  commands: "unconnected";
+  commands: "unconnected" | "financial_charge_v1";
   source_mode: "synthetic" | "live";
   auth_scope: string;
   snapshot: string;

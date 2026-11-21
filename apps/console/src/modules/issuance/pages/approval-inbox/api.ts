@@ -286,7 +286,7 @@ export function valid(d: Data, q: URLSearchParams): boolean {
       d.schema !== 1 ||
       d.numeric_format !== "decimal-strings-read-v1" ||
       d.read_only !== true ||
-      d.commands !== "unconnected" ||
+      !["unconnected", "financial_charge_v1"].includes(d.commands) ||
       d.source_mode !== "synthetic" ||
       !hash(d.auth_scope) ||
       !hash(d.snapshot) ||

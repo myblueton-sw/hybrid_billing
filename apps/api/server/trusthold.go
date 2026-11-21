@@ -36,6 +36,11 @@ var holdTable = map[string]holdRule{
 	"financial_charge.request":                     {holdRefuse, reasonIncrease},
 	"financial_charge.approve":                     {holdRefuse, reasonIncrease},
 	"financial_charge.reject":                      {holdAllow, reasonReduce},
+	"document_authority.propose_console":           {holdRefuse, reasonChange},
+	"document_authority.propose_human":             {holdRefuse, reasonChange},
+	"document_authority.approve":                   {holdRefuse, reasonChange},
+	"document_authority.reject":                    {holdAllow, reasonPending},
+	"document_authority.withdraw":                  {holdAllow, reasonPending},
 	"financial_request_permission.propose_console": {holdRefuse, reasonChange},
 	"financial_request_permission.propose_human":   {holdRefuse, reasonChange},
 	"financial_request_permission.approve":         {holdRefuse, reasonChange},
@@ -177,7 +182,7 @@ func (s *Server) enterHold(reason string) {
 }
 
 func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
-	if command == "financial_charge.review" || command == "financial_charge.prepare" || command == "financial_request_permission.inspect" {
+	if command == "financial_charge.review" || command == "financial_charge.prepare" || command == "financial_request_permission.inspect" || command == "document_authority.inspect" {
 		return true
 	}
 	if command == "financial_permission.inspect" || command == "financial_authority.inspect" || command == "financial_policy.current" || command == "financial_policy.inspect" || command == "pricing_policy.prepare" || command == "pricing_policy.inspect" || command == "pricing_authority.inspect" || command == "input_authority.inspect" || command == "input.inspect" {

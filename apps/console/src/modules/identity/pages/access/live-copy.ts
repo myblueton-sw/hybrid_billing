@@ -220,6 +220,10 @@ export const a = {
 };
 
 const actions: Record<string, [string, string, string]> = {
+ propose_document_evidence: ["Propose document evidence", "문서 근거 제안", "اقتراح أدلة المستند"],
+ confirm_document_evidence: ["Confirm document evidence", "문서 근거 확인", "تأكيد أدلة المستند"],
+ revoke_document_evidence: ["Revoke document evidence", "문서 근거 철회", "إلغاء أدلة المستند"],
+ prepare_erp_record: ["Prepare internal ERP record", "내부 ERP 기록 준비", "إعداد سجل ERP داخلي"],
  approve: ["Approve", "승인", "اعتماد"],
  propose_pricing_policy: ["Propose pricing policy", "가격 정책 제안", "اقتراح سياسة التسعير"],
  approve_pricing_policy: ["Approve pricing policy", "가격 정책 승인", "اعتماد سياسة التسعير"],
@@ -236,6 +240,7 @@ const actions: Record<string, [string, string, string]> = {
   deliver: ["Deliver", "전달", "تسليم"],
 };
 const kinds: Record<string, [string, string, string]> = {
+ synthetic_document_evidence: ["Synthetic document evidence", "합성 문서 근거", "أدلة مستند اصطناعية"],
   charge_approval: ["Charge approval", "청구 승인", "اعتماد الرسوم"],
   approval_review: ["Approval review records", "승인 검토 기록", "سجلات مراجعة الاعتمادات"],
  synthetic_pricing_policy: ["Synthetic pricing policy", "합성 시험용 가격 정책", "سياسة تسعير اصطناعية"],
@@ -244,6 +249,7 @@ const kinds: Record<string, [string, string, string]> = {
   charge_candidate: ["Charge calculation candidates", "과금 계산 후보", "نتائج احتساب الرسوم المبدئية"],
 };
 const fields: Record<string, [string, string, string]> = {
+ document_evidence: ["Document evidence", "문서 근거", "أدلة المستند"],
   approval_evidence: ["Approval request and decision evidence", "승인 요청·결정 근거", "أدلة طلبات الاعتماد والقرارات"],
  pricing_policy_evidence: ["Pricing policy evidence", "가격 정책 근거", "أدلة سياسة التسعير"],
  input_review_evidence: ["Input comparison and reconciliation evidence", "입력 데이터 비교·대사 근거", "أدلة مقارنة بيانات الإدخال ومطابقتها"],

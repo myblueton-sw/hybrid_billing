@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/myblueton-sw/hybrid_billing/modules/documentauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
 	"github.com/myblueton-sw/hybrid_billing/modules/financialrequestauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
@@ -11,6 +12,7 @@ import (
 type grantAuthorityDomain uint8
 
 const (
+	documentGrantAuthority    grantAuthorityDomain = 5
 	inputGrantAuthority       grantAuthorityDomain = 1
 	pricingGrantAuthority     grantAuthorityDomain = 2
 	financialPermissionDomain grantAuthorityDomain = 3
@@ -18,6 +20,9 @@ const (
 )
 
 func (d grantAuthorityDomain) grantPrefix() string {
+	if d == documentGrantAuthority {
+		return "document-grant-"
+	}
 	if d == financialRequestDomain {
 		return "financial-request-"
 	}
@@ -33,6 +38,9 @@ func (d grantAuthorityDomain) grantPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) faultPrefix() string {
+	if d == documentGrantAuthority {
+		return "document-authority-"
+	}
 	if d == financialRequestDomain {
 		return "financial-request-"
 	}
@@ -48,6 +56,9 @@ func (d grantAuthorityDomain) faultPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) terms(workspace, capability string) (gate.Terms, error) {
+	if d == documentGrantAuthority {
+		return documentAuthorityTerms(workspace, capability)
+	}
 	if d == financialRequestDomain {
 		if capability != financialrequestauthority.Request {
 			return gate.Terms{}, inputauthority.ErrInvalid
@@ -100,6 +111,8 @@ func pricingAuthorityTerms(workspace, capability string) (gate.Terms, error) {
 }
 func (s *Server) grantAuthority(domain grantAuthorityDomain) *serverGrantAuthority {
 	switch domain {
+	case documentGrantAuthority:
+		return s.documentAuthority
 	case inputGrantAuthority:
 		return s.inputAuthority
 	case pricingGrantAuthority:
@@ -110,4 +123,24 @@ func (s *Server) grantAuthority(domain grantAuthorityDomain) *serverGrantAuthori
 		return s.financialRequestPermission
 	}
 	return nil
+}
+
+func documentAuthorityTerms(workspace, capability string) (gate.Terms, error) {
+	terms := gate.Terms{Kind: documentauthority.ResourceKind, Scope: gate.Scope{WorkspaceID: workspace, Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}, Period: gate.AnyPeriod()}
+	switch capability {
+	case documentauthority.Propose:
+		terms.Action = gate.ProposeDocumentEvidence
+	case documentauthority.Confirm:
+		terms.Action = gate.ConfirmDocumentEvidence
+	case documentauthority.Revoke:
+		terms.Action = gate.RevokeDocumentEvidence
+	case documentauthority.Prepare:
+		terms.Action = gate.PrepareERPRecord
+	case documentauthority.Inspect:
+		terms.Action = gate.ViewCost
+		terms.Fields = []string{documentauthority.EvidenceField}
+	default:
+		return gate.Terms{}, inputauthority.ErrInvalid
+	}
+	return terms, nil
 }

@@ -500,3 +500,20 @@ HYB-340 distinguishes recorded calculation evidence from current financial eligi
 | synthetic row | Synthetic record | 합성 기록 | سجل اصطناعي | Actual record in a synthetic environment, not production billing. |
 
 For current_checks_unverified, use: **Current prerequisites and permission were not rechecked for this historical read.** / **이 이력 조회에서는 현재 선행 조건과 권한을 다시 확인하지 않았습니다.** / **لم تُعَد مراجعة المتطلبات المسبقة والصلاحية الحالية عند عرض هذا السجل التاريخي.** This is an unchecked condition, not a failed validation or permission grant. Keep the neutral warning separate from failed-validation blockers.
+
+
+## Synthetic document evidence and preparation permission
+
+HYB-340 separates grant-governor approval from actual document evidence confirmation. Confirming evidence does not approve invoice gross or establish tax policy. Revoking evidence stops future use, whereas revoking a grant removes a user's permission. Preparing an ERP record is internal preparation, not external submission, posting or issuance.
+
+| Identifier | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| propose_document_evidence | Propose document evidence | 문서 근거 제안 | اقتراح أدلة المستند |
+| confirm_document_evidence | Confirm document evidence | 문서 근거 확인 | تأكيد أدلة المستند |
+| revoke_document_evidence | Revoke document evidence | 문서 근거 철회 | إلغاء أدلة المستند |
+| prepare_erp_record | Prepare internal ERP record | 내부 ERP 기록 준비 | إعداد سجل ERP داخلي |
+| synthetic_document_evidence | Synthetic document evidence | 합성 문서 근거 | أدلة مستند اصطناعية |
+| document_evidence | Document evidence | 문서 근거 | أدلة المستند |
+| document_authority_proposals | Document evidence and ERP preparation permission proposals | 문서 근거·ERP 준비 권한 제안 | مقترحات صلاحيات أدلة المستند وإعداد ERP |
+
+M01 counts permission proposals across all five capabilities, not document packets. M03/P02 show actual human grants and console ceilings. The evidence field is protected as Cost; its name is not translated as document cost. Independent AI technical-writing review selected these terms from the actual contract and existing confirmation/revocation vocabulary; native-language and owner acceptance remain unverified.

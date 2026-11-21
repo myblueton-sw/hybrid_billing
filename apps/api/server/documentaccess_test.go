@@ -12,10 +12,7 @@ import (
 )
 
 func TestDocumentAccessRejectsGenericGrantBypass(t *testing.T) {
-	f := setupWith(t, func(c *Config) {
-		c.Kinds = []string{documentauthority.ResourceKind}
-		c.Fields = map[string]gate.FieldClass{documentauthority.EvidenceField: gate.Cost}
-	})
+	f := setup(t, SeedSample).ready()
 	for _, g := range f.s.admin.Grants() {
 		if documentGrantTerms(g.Terms.Action, g.Terms.Kind, g.Terms.Fields) {
 			t.Fatal("default document authority")

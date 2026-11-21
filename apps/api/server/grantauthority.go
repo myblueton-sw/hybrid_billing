@@ -7,6 +7,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/documentauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
 	"github.com/myblueton-sw/hybrid_billing/modules/financialrequestauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
@@ -23,12 +24,14 @@ type serverGrantAuthority struct {
 }
 
 func newServerGrantAuthority(s *Server, limits inputauthority.Limits, domain grantAuthorityDomain) (*serverGrantAuthority, error) {
-	if s == nil || s.cfg.Seed != SeedSample || (domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain && domain != financialRequestDomain) {
+	if s == nil || s.cfg.Seed != SeedSample || (domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain && domain != financialRequestDomain && domain != documentGrantAuthority) {
 		return nil, inputauthority.ErrInvalid
 	}
 	a := &serverGrantAuthority{s: s, domain: domain, bindings: make(map[string]inputauthority.Spec), ceilings: make(map[string]inputauthority.Spec)}
 	var err error
 	switch domain {
+	case documentGrantAuthority:
+		a.registry, err = documentauthority.NewRegistry(limits, a, a, a, s.clock)
 	case inputGrantAuthority:
 		a.registry, err = inputauthority.NewRegistry(limits, a, a, a, s.clock)
 	case pricingGrantAuthority:
@@ -123,6 +126,9 @@ func (a *serverGrantAuthority) recordLocked(workspace, id string) (inputauthorit
 }
 
 func (a *serverGrantAuthority) grant(id string, spec inputauthority.Spec) (gate.Grant, error) {
+	if a.domain == documentGrantAuthority && !a.documentShape(spec) {
+		return gate.Grant{}, inputauthority.ErrInvalid
+	}
 	if a.domain == financialRequestDomain && !a.financialRequestShape(spec) {
 		return gate.Grant{}, inputauthority.ErrInvalid
 	}

@@ -35,7 +35,17 @@ func TestDocumentActualTypeScriptClient(t *testing.T) {
 	if err = cmd.Run(); err != nil {
 		t.Fatal("actual client failed; inspect non-sensitive evidence", err)
 	}
-	actual, err := w.a.ledger.SubmissionOf(SampleWorkspace, "client-preparation")
+	if len(w.a.owners) != 1 {
+		t.Fatal("expected one owned preparation")
+	}
+	var preparationKey string
+	for key := range w.a.owners {
+		if key[0] != SampleWorkspace {
+			t.Fatal("foreign preparation ownership")
+		}
+		preparationKey = key[1]
+	}
+	actual, err := w.a.ledger.SubmissionOf(SampleWorkspace, preparationKey)
 	f.must(err)
 	if actual.Total.Net != "15.00" || actual.Total.Tax != "1.00" || actual.Total.Quantity != "5.00" || len(actual.Commands) != 0 || len(w.a.owners) != 1 {
 		t.Fatal("unexpected client effects")

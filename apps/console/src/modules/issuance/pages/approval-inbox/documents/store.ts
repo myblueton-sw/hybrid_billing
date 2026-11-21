@@ -9,6 +9,9 @@ export type Query<T> = Readonly<{ phase: "idle" | "loading" | "ready" | "failed"
 type History = Readonly<{ revision: string; rows: readonly HistoryRow[] }>;
 type Detail = Awaited<ReturnType<DocumentGateway["document"]>>;
 export type DocumentAttempt = Readonly<{ scope: RequestIdentity; intent: Intent; phase: "pending" | "unknown" | "refused" | "recorded"; receipt?: Receipt; error?: string; operation?: string }>;
+export function preparationSettled(entries: readonly DocumentAttempt[], entry: DocumentAttempt): boolean {
+ return entries.some(e => e.phase === "recorded" && e.intent.action === "prepare" && entry.intent.action === "prepare" && e.intent.target === entry.intent.target && e.intent.fields.document === entry.intent.fields.document && e.intent.fields.digest === entry.intent.fields.digest);
+}
 export type DocumentState = Readonly<{
  selection: string; scope?: RequestIdentity; context: Query<FormContext>; documents: Query<History>; preparations: Query<History>;
  document: Query<Detail>; preparation: Query<PreparationInspection>; draft?: PacketDraft; review?: Intent;
@@ -79,7 +82,7 @@ export class DocumentStore {
   });
  }
  private settled(entry: DocumentAttempt) {
-  return this.state.entries.some(e => e.phase === "recorded" && e.intent.action === "prepare" && entry.intent.action === "prepare" && e.intent.target === entry.intent.target && e.intent.fields.document === entry.intent.fields.document && e.intent.fields.digest === entry.intent.fields.digest);
+  return preparationSettled(this.state.entries, entry);
  }
  private unresolved(document: string) {
   return this.state.entries.some(e => (e.phase === "pending" || e.phase === "unknown" && !this.settled(e)) && (e.intent.target === document || e.intent.fields.document === document));

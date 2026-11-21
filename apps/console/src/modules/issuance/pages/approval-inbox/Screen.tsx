@@ -1,3 +1,6 @@
+import { useDocuments } from "./documents/use-documents";
+import { Failure } from "./documents/Fields";
+import { Attempts } from "./documents/Review";
 import { useDecision } from "./use-decision";
 import { DecisionResult } from "./DecisionPanel";
 import { dc } from "./decision-copy";
@@ -30,6 +33,21 @@ const items = [
   "B09:data:delegation-boundary",
   "B09:data:recognition-boundary",
   "B09:state:async-unconnected",
+  "B09:documents:scope",
+  "B09:documents:history",
+  "B09:documents:inspection",
+  "B09:documents:permission-readiness",
+  "B09:documents:explicit-fields",
+  "B09:documents:validation-review",
+  "B09:documents:governed-actions",
+  "B09:documents:propose",
+  "B09:documents:confirm",
+  "B09:documents:revoke",
+  "B09:documents:prepare",
+  "B09:documents:attempt-results",
+  "B09:documents:identical-retry",
+  "B09:documents:owned-recovery",
+  "B09:documents:reauthentication",
 ];
 const requestKey = (p: URLSearchParams, view: View) =>
   JSON.stringify([
@@ -101,8 +119,10 @@ export default function Screen({
           ? "unconnected"
           : "loading";
   const decision = useDecision(data, selected, JSON.stringify([key, data?.snapshot, data?.permission_revision]), phase === "loading" || phase === "error", () => reload(false));
+  const documents = useDocuments(data, selected, JSON.stringify([key, data?.snapshot, data?.permission_revision]), phase === "loading" || phase === "error");
+  const documentBusy = !!documents.state.draft || !!documents.state.review || documents.unresolved;
   const decisionBusy = !!decision.state.action || Object.values(decision.state.entries).some(e => e.phase === "pending" || e.phase === "unknown");
-  useEffect(() => onDirty(decisionBusy), [decisionBusy, onDirty]);
+  useEffect(() => onDirty(decisionBusy || documentBusy), [decisionBusy, documentBusy, onDirty]);
   const review = JSON.stringify({
       phase: "approval-read",
       variant: `${view}:${phase}:${data?.source_mode ?? "unbound"}`,
@@ -118,6 +138,7 @@ export default function Screen({
       error: current?.error ?? null,
       requestId: current?.requestId ?? null,
       attempts,
+      documents: { enabled: documents.enabled, context: documents.state.context.phase, history: [documents.state.documents.phase,documents.state.preparations.phase], detail: [documents.state.document.phase,documents.state.preparation.phase], review: documents.state.review?.action, error: documents.state.error, entries: documents.state.entries.map(e => [e.intent.target,e.phase,e.error]) },
       decision: { checking: decision.state.checking, action: decision.state.action, error: decision.state.error, prepared: !!decision.state.preparation, entries: Object.values(decision.state.entries).map(e => [e.submission.target, e.phase, e.error]) },
     });
   useEffect(() => onState(review, items), [review, onState]);
@@ -153,6 +174,7 @@ export default function Screen({
   function refresh() { reload(true); }
   function reload(focus: boolean) {
     decision.store?.invalidatePreparation();
+    documents.store?.invalidate();
     const next = new URLSearchParams(params);
     for (const k of [
       "approval-cursor",
@@ -330,6 +352,8 @@ export default function Screen({
           </>
         )}
       </p>
+      <Failure locale={l} code={documents.error} />
+      <Attempts locale={l} binding={documents} />
       {Object.values(decision.state.entries).filter(e => e.submission.target !== selected?.id && e.phase !== "refused").map(entry => <DecisionResult key={entry.submission.attempt.key} locale={l} entry={entry} retry={() => void decision.store?.retry(entry.submission.target)} refresh={refresh} reauthenticate={decision.reauthenticate} refreshFailed={phase === "error"} />)}
       {phase === "loading" ? (
         <p>
@@ -441,7 +465,7 @@ export default function Screen({
       ) : data ? (
         <Inbox
           locale={l}
-          decision={decision}
+          decision={decision} documents={documents}
           refresh={refresh}
           data={data}
           selected={selected}

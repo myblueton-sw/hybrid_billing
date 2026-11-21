@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DocumentStore } from "./store";
+import { DocumentStore, preparationSettled } from "./store";
 import type { DocumentGateway } from "./gateway";
 import { DocumentError, type FormContext, type RequestIdentity } from "./contract";
 import type { Intent, Receipt } from "./transport";
@@ -75,7 +75,7 @@ test("fresh HTTP recovery preserves owned preparation key and original unknown e
  await ready(store); store.reviewAction("prepare", "Prepare exact owned document"); await store.submit();
  await ready(store); await store.inspectPreparation(calls[0].target); store.reviewAction("prepare", "Inspect and recover same owned key", true); await store.submit();
  assert.equal(calls.length, 2); assert.equal(calls[0].target, calls[1].target); assert.deepEqual(calls[0].fields, calls[1].fields); assert.notEqual(calls[0].attempt.key, calls[1].attempt.key);
- assert.equal(store.snapshot().entries[0].phase, "unknown"); assert.equal(store.snapshot().entries[1].phase, "recorded"); await store.retry(calls[0].attempt.key); assert.equal(calls.length, 2);
+ assert.equal(store.snapshot().entries[0].phase, "unknown"); assert.equal(store.snapshot().entries[1].phase, "recorded"); assert.equal(preparationSettled(store.snapshot().entries,store.snapshot().entries[0]),true); await store.retry(calls[0].attempt.key); assert.equal(calls.length, 2);
  await ready(store); store.reviewAction("revoke", "Revoke after recovery"); assert.equal(store.snapshot().review?.action, "revoke");
 });
 

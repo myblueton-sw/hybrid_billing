@@ -1,3 +1,5 @@
+import DocumentPanel from "./documents/Panel";
+import type { DocumentBinding } from "./documents/use-documents";
 import DecisionPanel from "./DecisionPanel";
 import type { DecisionBinding } from "./use-decision";
 import { dc } from "./decision-copy";
@@ -121,6 +123,7 @@ export default function ResultCard({
   data: d,
   close,
   decision,
+  documents,
   refresh,
   surface,
 }: {
@@ -129,6 +132,7 @@ export default function ResultCard({
   data: Data;
   close: () => void;
   decision: DecisionBinding;
+  documents: DocumentBinding;
   refresh: () => void;
   surface: "desktop" | "mobile";
 }) {
@@ -265,6 +269,7 @@ export default function ResultCard({
       <KindBoundary locale={l} kind={r.kind} />
       {r.evidence.blockers.some((b) => b.code === "current_checks_unverified") && <p data-b09-current-check>{blockerText(l, "current_checks_unverified", "")}</p>}
       <DecisionPanel locale={l} record={r} binding={decision} surface={surface} refresh={refresh} />
+      <DocumentPanel locale={l} binding={documents} surface={surface} />
       {decision.capability && serviceDecisionRecord(r) && <h3 className="b09-recorded-heading">{dc(l,"facts")}</h3>}
       <dl className="b09-facts">
         {[

@@ -92,9 +92,9 @@ export const basisLabel = (l: Locale, b: string) =>
 export const environment = (l: Locale) =>
   t(
     l,
-    "Approval review · read only",
-    "승인 검토 · 조회 전용",
-    "مراجعة الاعتمادات · للقراءة فقط",
+    "Approval review",
+    "승인 검토",
+    "مراجعة الاعتمادات",
   );
 export const reviewContext = {
   profile: "approval-read-v1",

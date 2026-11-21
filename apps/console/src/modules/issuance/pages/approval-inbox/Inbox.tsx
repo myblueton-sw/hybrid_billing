@@ -1,3 +1,4 @@
+import type { DocumentBinding } from "./documents/use-documents";
 import type { DecisionBinding } from "./use-decision";
 import { useEffect, useRef } from "react";
 import type { Locale } from "../../../../shared/types";
@@ -11,9 +12,11 @@ export default function Inbox({
   select,
   page,
   decision,
+  documents,
   refresh,
 }: {
   decision: DecisionBinding;
+  documents: DocumentBinding;
   refresh: () => void;
   locale: Locale;
   data: Data;
@@ -141,7 +144,7 @@ export default function Inbox({
                     <div className="b09-mobile-detail">
                       <ResultCard
                         locale={l}
-                        decision={decision}
+                        decision={decision} documents={documents}
                         refresh={refresh}
                         surface="mobile"
                         data={d}
@@ -158,7 +161,7 @@ export default function Inbox({
             {selected ? (
               <ResultCard
                 locale={l}
-                decision={decision}
+                decision={decision} documents={documents}
                 refresh={refresh}
                 surface="desktop"
                 data={d}

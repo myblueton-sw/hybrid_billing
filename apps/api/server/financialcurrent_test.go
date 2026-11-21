@@ -25,6 +25,11 @@ func approvedCharge(t *testing.T) (world, actor, string) {
 	p := chargeRequest(f, requester, "current-charge", digest)
 	f.ok(t, "request", p, approvals.StatePending, "")
 	f.ok(t, "approve", f.run(decider, "financial_charge.approve", "current-charge", map[string]string{"digest": field(p, "digest")}), approvals.StateApproved, "")
+	for _, login := range []string{AdminLogin, Admin2Login, Admin3Login} {
+		for _, v := range f.s.sessions.byLogin(login) {
+			f.s.endProbe(v)
+		}
+	}
 	return f, f.as(Admin2Login), field(p, "digest")
 }
 
@@ -88,7 +93,7 @@ func TestCurrentFinancialChargeRefusesChangedAuthorityAndBindings(t *testing.T) 
 			_, err := currentCharge(f, a, workspace, "current-charge", digest, consumer)
 			var failure *commands.Failure
 			if !errors.As(err, &failure) {
-				t.Fatal("expected closed refusal", err)
+				t.Fatalf("expected command refusal, got %T: %v", err, err)
 			}
 			expected := map[string]commands.Code{"gate-revoked": commands.PermissionDenied, "gate-and-producer": commands.PermissionDenied, "limit-revoked": commands.PrerequisiteFailed, "wrong-consumer": commands.PermissionDenied, "foreign": commands.PermissionDenied, "digest": commands.EvidenceStale, "binding": commands.EvidenceStale, "policy": commands.PrerequisiteFailed, "producer": commands.UnsupportedCapability}[mode]
 			if failure.Code != expected {

@@ -33,6 +33,10 @@ const (
 )
 
 var holdTable = map[string]holdRule{
+	"document_evidence.propose":                    {holdRefuse, reasonChange},
+	"document_evidence.confirm":                    {holdRefuse, reasonChange},
+	"document_evidence.revoke":                     {holdAllow, reasonReduce},
+	"erp_preparation.prepare":                      {holdRefuse, reasonChange},
 	"financial_charge.request":                     {holdRefuse, reasonIncrease},
 	"financial_charge.approve":                     {holdRefuse, reasonIncrease},
 	"financial_charge.reject":                      {holdAllow, reasonReduce},
@@ -182,6 +186,9 @@ func (s *Server) enterHold(reason string) {
 }
 
 func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
+	if command == "document_evidence.inspect" || command == "erp_preparation.inspect" {
+		return true
+	}
 	if command == "financial_charge.review" || command == "financial_charge.prepare" || command == "financial_request_permission.inspect" || command == "document_authority.inspect" {
 		return true
 	}

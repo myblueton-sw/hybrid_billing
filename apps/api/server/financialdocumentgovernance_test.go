@@ -137,7 +137,9 @@ func TestFinancialDocumentRevocationPreservesUncertainERPHistory(t *testing.T) {
 	w := explicitDocumentWorld(t)
 	w.a.afterPrepare = func() error { return errors.New("synthetic interrupted receipt") }
 	_, err := w.prepare("uncertain-revoked")
-	documentFailure(t, err, commands.DependencyUnavailable)
+	if !errors.Is(err, errFinancialERPUncertain) {
+		t.Fatal(err)
+	}
 	actual, err := w.ledger.SubmissionOf(SampleWorkspace, "uncertain-revoked")
 	w.f.must(err)
 	w.f.s.domain.Lock()
@@ -242,7 +244,9 @@ func TestFinancialDocumentUnknownPreparationRequiresCurrentDedicatedGrant(t *tes
 	w := explicitDocumentWorld(t)
 	w.a.afterPrepare = func() error { return errors.New("synthetic interruption") }
 	_, err := w.prepare("permission-recovery")
-	documentFailure(t, err, commands.DependencyUnavailable)
+	if !errors.Is(err, errFinancialERPUncertain) {
+		t.Fatal(err)
+	}
 	actual, err := w.ledger.SubmissionOf(SampleWorkspace, "permission-recovery")
 	w.f.must(err)
 	for _, g := range w.f.s.admin.Grants() {

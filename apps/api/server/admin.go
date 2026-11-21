@@ -461,6 +461,7 @@ func (s *Server) registerUsers() error {
 	definitions = append(definitions, s.financialAuthorityDefinitions()...)
 	definitions = append(definitions, s.financialPermissionDefinitions()...)
 	definitions = append(definitions, s.financialChargeDefinitions()...)
+	definitions = append(definitions, s.documentDefinitions()...)
 	definitions = append(definitions, s.grantAuthorityDefinitions(financialRequestDomain)...)
 	definitions = append(definitions, s.grantAuthorityDefinitions(documentGrantAuthority)...)
 	for _, d := range definitions {

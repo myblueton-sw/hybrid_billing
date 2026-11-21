@@ -20,6 +20,8 @@ type financialERPLedger interface {
 	Prepare(string, erpledger.Submission, erpledger.Actor) (erpledger.SubmissionView, error)
 }
 
+var errFinancialERPUncertain = errors.New("ERP preparation outcome remains unresolved")
+
 type financialDocumentRecord struct {
 	raw    []byte
 	digest string
@@ -168,6 +170,9 @@ func (a *financialERP) prepareLocked(workspace, id, digest, key, consumer string
 	}
 	actual, lookup := a.ledger.SubmissionOf(workspace, key)
 	if lookup != nil && !errors.Is(lookup, erpledger.ErrNotFound) {
+		if owned {
+			return erpledger.SubmissionView{}, errFinancialERPUncertain
+		}
 		return fail(commands.DependencyUnavailable)
 	}
 	if !owned && lookup == nil {
@@ -177,7 +182,7 @@ func (a *financialERP) prepareLocked(workspace, id, digest, key, consumer string
 		return a.reconcile(ownerKey, old, actual)
 	}
 	if owned && old.receipt != "" {
-		return fail(commands.DependencyUnavailable)
+		return erpledger.SubmissionView{}, errFinancialERPUncertain
 	}
 	actor := erpledger.Actor{ID: consumer, Kind: erpledger.KindHuman}
 	checked, err := a.ledger.CheckPreparation(workspace, sub, actor)
@@ -186,6 +191,10 @@ func (a *financialERP) prepareLocked(workspace, id, digest, key, consumer string
 	}
 	if checked.Total != total {
 		return fail(commands.EvidenceStale)
+	}
+	prospective := financialERPOwnership{basis: digest, actor: consumer, submission: sub, total: total, mappings: append([]string(nil), checked.Mappings...)}
+	if err := a.admitPublicPreparation(key, prospective); err != nil {
+		return erpledger.SubmissionView{}, err
 	}
 	if !owned {
 		if len(a.owners) >= financialDocumentLimit {
@@ -198,21 +207,25 @@ func (a *financialERP) prepareLocked(workspace, id, digest, key, consumer string
 	}
 	actual, err = a.ledger.Prepare(workspace, sub, actor)
 	if err != nil {
-		return erpledger.SubmissionView{}, err
+		return erpledger.SubmissionView{}, errFinancialERPUncertain
 	}
 	if a.afterPrepare != nil {
 		if err = a.afterPrepare(); err != nil {
-			return fail(commands.DependencyUnavailable)
+			return erpledger.SubmissionView{}, errFinancialERPUncertain
 		}
 	}
 	return a.reconcile(ownerKey, old, actual)
 }
 
 func (a *financialERP) reconcile(key [2]string, owner financialERPOwnership, v erpledger.SubmissionView) (erpledger.SubmissionView, error) {
-	if !reflect.DeepEqual(owner.submission, v.Submission) || owner.actor != v.Author || owner.total != v.Total || !reflect.DeepEqual(owner.mappings, v.Mappings) || v.State != erpledger.StatePrepared || v.Digest == "" || owner.receipt != "" && owner.receipt != v.Digest || len(v.Commands) != 0 || v.External != "" || v.Diverged {
-		return erpledger.SubmissionView{}, commands.Fail(commands.EvidenceStale)
+	if !matchingPreparation(owner, v) {
+		return erpledger.SubmissionView{}, errFinancialERPUncertain
 	}
 	owner.receipt = v.Digest
 	a.owners[key] = owner
 	return v, nil
+}
+
+func matchingPreparation(owner financialERPOwnership, v erpledger.SubmissionView) bool {
+	return reflect.DeepEqual(owner.submission, v.Submission) && owner.actor == v.Author && owner.total == v.Total && reflect.DeepEqual(owner.mappings, v.Mappings) && v.State == erpledger.StatePrepared && len(v.Digest) == 64 && (owner.receipt == "" || owner.receipt == v.Digest) && len(v.Commands) == 0 && v.External == "" && !v.Diverged
 }

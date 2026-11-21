@@ -113,6 +113,7 @@ type Server struct {
 	passwords        *passwords.Registry
 	orgs             *organizations.Registry
 	chargeProducer   *normalizedCharges
+	documentERP      *financialERP
 	rels             *relationships.Registry
 	plans            *planStore
 	drafts           *draftStore

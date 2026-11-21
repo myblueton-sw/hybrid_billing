@@ -18,6 +18,13 @@ var (
 type Action string
 
 const (
+	ProposeDocumentEvidence Action = "propose_document_evidence"
+	ConfirmDocumentEvidence Action = "confirm_document_evidence"
+	RevokeDocumentEvidence  Action = "revoke_document_evidence"
+	PrepareERPRecord        Action = "prepare_erp_record"
+)
+
+const (
 	View                   Action = "view"
 	ViewCost               Action = "view_cost"
 	ChangeCustomerPolicy   Action = "change_customer_policy"
@@ -56,6 +63,7 @@ func IntegrationRights() []Action {
 const InstallationKind = "installation"
 
 var actions = map[Action]struct{}{
+	ProposeDocumentEvidence: {}, ConfirmDocumentEvidence: {}, RevokeDocumentEvidence: {}, PrepareERPRecord: {},
 	View: {}, ViewCost: {}, ChangeCustomerPolicy: {}, ChangeSellingPolicy: {}, RequestApproval: {},
 	Approve: {}, Issue: {}, Download: {}, Deliver: {}, ApproveSupportSession: {}, AdministerInstallation: {},
 	TrustPropose: {}, TrustValidate: {}, TrustApprove: {}, TrustActivate: {}, RevokeAccessInBulk: {},
@@ -72,7 +80,7 @@ func humanOnly(action Action) bool { return action == Approve || action == Appro
 
 func directHuman(action Action) bool {
 	switch action {
-	case ConfirmInput, ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy:
+	case ProposeDocumentEvidence, ConfirmDocumentEvidence, RevokeDocumentEvidence, PrepareERPRecord, ConfirmInput, ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy:
 		return true
 	}
 	return false

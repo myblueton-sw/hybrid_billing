@@ -29,6 +29,11 @@ type (
 )
 
 const (
+	ProposeDocumentEvidence = auth.ProposeDocumentEvidence
+	ConfirmDocumentEvidence = auth.ConfirmDocumentEvidence
+	RevokeDocumentEvidence  = auth.RevokeDocumentEvidence
+	PrepareERPRecord        = auth.PrepareERPRecord
+
 	General = auth.General
 	Cost    = auth.Cost
 

@@ -5,12 +5,12 @@ import (
 	"testing"
 )
 
-func pricingActions() []Action {
-	return []Action{ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy}
+func directGovernanceActions() []Action {
+	return []Action{ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy, ProposeDocumentEvidence, ConfirmDocumentEvidence, RevokeDocumentEvidence, PrepareERPRecord}
 }
 
-func TestPricingAuthorityDirectHumanIntersectionAndIsolation(t *testing.T) {
-	for _, action := range pricingActions() {
+func TestDirectGovernanceAuthorityDirectHumanIntersectionAndIsolation(t *testing.T) {
+	for _, action := range directGovernanceActions() {
 		t.Run(string(action), func(t *testing.T) {
 			f := setup(t)
 			req := ask(action, "")
@@ -27,7 +27,7 @@ func TestPricingAuthorityDirectHumanIntersectionAndIsolation(t *testing.T) {
 			if f.Decide(Principal{Installation: "synthetic-installation", ClientID: "app"}, req).Allowed {
 				t.Fatal("client-only execution")
 			}
-			for _, other := range append(pricingActions(), ConfirmInput, Issue) {
+			for _, other := range append(directGovernanceActions(), ConfirmInput, Issue) {
 				if other != action {
 					f.expect("different capability", viaApp("alice"), ask(other, ""), false, ReasonNoGrant)
 				}
@@ -35,7 +35,7 @@ func TestPricingAuthorityDirectHumanIntersectionAndIsolation(t *testing.T) {
 			f.expect("financial approval unchanged", viaApp("alice"), ask(Approve, ""), false, ReasonApprovalRequired)
 			for _, parent := range []string{"", "parent"} {
 				if err := f.AddDelegation(Delegation{ID: "d", DelegatorID: "alice", DelegateID: "bob", ParentID: parent, Terms: terms(action, All()), Validity: always, AllowRedelegation: true}); !errors.Is(err, ErrInvalid) {
-					t.Fatal("delegated pricing accepted", err)
+					t.Fatal("delegated governance accepted", err)
 				}
 			}
 			f.grant("support", "dave", terms(ApproveSupportSession, One("c1")))
@@ -49,8 +49,8 @@ func TestPricingAuthorityDirectHumanIntersectionAndIsolation(t *testing.T) {
 	}
 }
 
-func TestPricingAuthorityCurrentFactsAndScope(t *testing.T) {
-	for _, action := range pricingActions() {
+func TestDirectGovernanceAuthorityCurrentFactsAndScope(t *testing.T) {
+	for _, action := range directGovernanceActions() {
 		t.Run(string(action), func(t *testing.T) {
 			changes := map[string]func(sourced){
 				"user revoked": func(f sourced) {

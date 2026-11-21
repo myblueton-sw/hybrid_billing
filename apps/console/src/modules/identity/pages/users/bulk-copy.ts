@@ -92,6 +92,7 @@ export const b = {
   pendingWork: (l: Locale) => t(l, "Pending work", "대기 중인 작업", "الأعمال قيد الانتظار"),
   store: (l: Locale, s: string) =>
     ({ trust_changes: t(l, "Sign-in rule changes (M02)", "로그인 규칙 변경(M02)", "تغييرات قواعد تسجيل الدخول (M02)"), access_requests: t(l, "Access change requests (M03)", "접근 변경 요청(M03)", "طلبات تغيير الوصول (M03)"),
+      result_authority_proposals: t(l, "ERP result evidence permission proposals", "ERP 결과 근거 권한 제안", "مقترحات صلاحيات أدلة نتائج ERP"),
       document_authority_proposals: t(l, "Document evidence and ERP preparation permission proposals", "문서 근거·ERP 준비 권한 제안", "مقترحات صلاحيات أدلة المستند وإعداد ERP"),
       document_evidence_proposals: t(l, "Document evidence proposals", "문서 근거 제안", "مقترحات أدلة المستند"),
       pricing_authority_proposals: t(l, "Pricing policy permission requests", "가격 정책 권한 요청", "طلبات صلاحية سياسة التسعير"),

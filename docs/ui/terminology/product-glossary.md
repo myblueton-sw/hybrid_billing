@@ -518,3 +518,19 @@ HYB-340 separates grant-governor approval from actual document evidence confirma
 | document_evidence_proposals | Document evidence proposals | 문서 근거 제안 | مقترحات أدلة المستند |
 
 M01 distinguishes permission proposals across all five capabilities from pending document-evidence packets counted by their original proposer. The document count excludes confirmed and revoked packets and all permission proposals. Confirmation rechecks the original proposer's current proposal authority; a count does not imply automatic cancellation, financial approval or ERP preparation. The document row says "The proposer’s permission is rechecked when the document evidence is confirmed." Its false/unknown fallback does not assert this safeguard. M03/P02 show actual human grants and console ceilings. The evidence field is protected as Cost; its name is not translated as document cost. Independent AI technical-writing review selected these terms from the actual contract and existing confirmation/revocation vocabulary; native-language and owner acceptance remain unverified.
+
+## Synthetic ERP result evidence permission
+
+HYB-341 introduces a separate result-evidence permission namespace. Existing document preparation permissions do not grant result recording or confirmation. Apply names internal ledger evidence ingestion, never external ERP submission/posting, financial approval, issuance or delivery. Provisioned rights alone do not establish an implemented result-consumer workflow.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| propose_erp_result | Propose ERP result evidence | ERP 결과 근거 제안 | اقتراح أدلة نتائج ERP |
+| confirm_erp_result | Confirm ERP result evidence | ERP 결과 근거 확인 | تأكيد أدلة نتائج ERP |
+| revoke_erp_result | Revoke ERP result evidence | ERP 결과 근거 철회 | إلغاء أدلة نتائج ERP |
+| apply_erp_result | Apply ERP result evidence internally | ERP 결과 근거 내부 반영 | تطبيق أدلة نتائج ERP داخلياً |
+| synthetic_erp_result_evidence | Synthetic ERP result evidence | 합성 ERP 결과 근거 | أدلة نتائج ERP اصطناعية |
+| erp_result_evidence | ERP result evidence | ERP 결과 근거 | أدلة نتائج ERP |
+| result_authority_proposals | ERP result evidence permission proposals | ERP 결과 근거 권한 제안 | مقترحات صلاحيات أدلة نتائج ERP |
+
+M01 counts pending/unresolved permission proposals, excluding completed grants. Its shared recheck note refers to the proposer's authority at grant approval. M03 and P02 show explicit action/kind labels for already provisioned rights; these labels are not generic grant offers. Source terminology and initial M01 rendered review passed independent AI technical-writing review. Independent AI technical-writing review also passed eight representative actual M03/P02 grant-row/context captures under HYB-341; P02 shows the action and kind, not a separate Cost-field label. Native-language and owner acceptance remain pending. These compounds reuse the document-evidence and access-governance vocabulary above; no external vendor uses of the complete compounds are claimed.

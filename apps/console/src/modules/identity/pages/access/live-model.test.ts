@@ -178,3 +178,13 @@ test("document authority uses explicit localized action and evidence labels", ()
   assert.equal(accessPhrase(l, "view_cost", "synthetic_document_evidence", ["document_evidence"]), null);
  }
 });
+
+test("ERP result authority uses explicit localized action and evidence labels", () => {
+ for (const l of ["en", "ko", "ar"] as const) {
+  for (const action of ["propose_erp_result", "confirm_erp_result", "revoke_erp_result", "apply_erp_result"]) {
+   assert.ok(!accessText(l, action, []).includes(action));
+  }
+  assert.ok(!accessText(l, "view_cost", ["erp_result_evidence"]).includes("erp_result_evidence"));
+  assert.equal(accessPhrase(l, "view_cost", "synthetic_erp_result_evidence", ["erp_result_evidence"]), null);
+ }
+});

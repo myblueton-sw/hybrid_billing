@@ -18,6 +18,8 @@ type financialPermissionCommand struct {
 func (s *Server) financialPermissionBoundary(command string, call commands.Call) commands.Code {
 	var a *serverGrantAuthority
 	switch command {
+	case "result_authority.propose_console", "result_authority.propose_human", "result_authority.approve", "result_authority.reject", "result_authority.withdraw", "result_authority.inspect":
+		a = s.resultAuthority
 	case "document_authority.propose_console", "document_authority.propose_human", "document_authority.approve", "document_authority.reject", "document_authority.withdraw", "document_authority.inspect":
 		a = s.documentAuthority
 	case "financial_permission.propose", "financial_permission.approve", "financial_permission.reject", "financial_permission.withdraw", "financial_permission.inspect":

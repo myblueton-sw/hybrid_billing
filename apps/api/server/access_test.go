@@ -14,6 +14,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/resultauthority"
 )
 
 func (f world) accessRead(a actor, path string) reply {
@@ -262,13 +263,13 @@ func TestAccessPreview(t *testing.T) {
 		if row["action"] == "view_cost" {
 			costRows++
 			costFields[row["field"]]++
-			if (row["field"] != candidateField && row["field"] != inputauthority.EvidenceField && row["field"] != pricingauthority.EvidenceField && row["field"] != documentauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant) {
+			if (row["field"] != candidateField && row["field"] != inputauthority.EvidenceField && row["field"] != pricingauthority.EvidenceField && row["field"] != documentauthority.EvidenceField && row["field"] != resultauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant) {
 				t.Errorf("unexpected cost preview %+v", row)
 			}
 		}
 	}
-	if costRows != 4 || len(costFields) != 4 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 || costFields[pricingauthority.EvidenceField] != 1 || costFields[documentauthority.EvidenceField] != 1 {
-		t.Errorf("cost preview rows = %d, want 4", costRows)
+	if costRows != 5 || len(costFields) != 5 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 || costFields[pricingauthority.EvidenceField] != 1 || costFields[documentauthority.EvidenceField] != 1 || costFields[resultauthority.EvidenceField] != 1 {
+		t.Errorf("cost preview rows = %d, want 5", costRows)
 	}
 	f.grantVia(root, f.as(Admin2Login), SampleMember, nil)
 	after := f.accessRead(root, "/preview?subject="+SampleMember+"&kind="+ReaderKind+"&customer=c1")
@@ -281,11 +282,11 @@ func TestAccessPreview(t *testing.T) {
 		if row["action"] == "view_cost" {
 			costFields[row["field"]]++
 		}
-		if row["action"] == "view_cost" && ((row["field"] != candidateField && row["field"] != inputauthority.EvidenceField && row["field"] != pricingauthority.EvidenceField && row["field"] != documentauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant)) {
+		if row["action"] == "view_cost" && ((row["field"] != candidateField && row["field"] != inputauthority.EvidenceField && row["field"] != pricingauthority.EvidenceField && row["field"] != documentauthority.EvidenceField && row["field"] != resultauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant)) {
 			t.Errorf("ordinary reader grant changed cost access %+v", row)
 		}
 	}
-	if len(costFields) != 4 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 || costFields[pricingauthority.EvidenceField] != 1 || costFields[documentauthority.EvidenceField] != 1 {
+	if len(costFields) != 5 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 || costFields[pricingauthority.EvidenceField] != 1 || costFields[documentauthority.EvidenceField] != 1 || costFields[resultauthority.EvidenceField] != 1 {
 		t.Fatal("cost field set changed after ordinary grant", costFields)
 	}
 	for _, q := range []string{"?subject=nobody&kind=" + ReaderKind, "?subject=" + SampleMember + "&kind=" + gate.InstallationKind, "?subject=" + SampleMember + "&kind=" + ReaderKind + "&customer=a%20b"} {

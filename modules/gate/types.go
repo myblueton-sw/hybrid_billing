@@ -29,6 +29,10 @@ type (
 )
 
 const (
+	ProposeERPResult        = auth.ProposeERPResult
+	ConfirmERPResult        = auth.ConfirmERPResult
+	RevokeERPResult         = auth.RevokeERPResult
+	ApplyERPResult          = auth.ApplyERPResult
 	ProposeDocumentEvidence = auth.ProposeDocumentEvidence
 	ConfirmDocumentEvidence = auth.ConfirmDocumentEvidence
 	RevokeDocumentEvidence  = auth.RevokeDocumentEvidence

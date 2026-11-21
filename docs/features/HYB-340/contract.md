@@ -127,3 +127,11 @@ Auth/gate InspectApprovalAuthority returns explanatory facts only, preserving di
 # ERP preparation evidence reads
 
 Erpledger MappingOf and SurveyOf provide validated workspace-scoped current value copies for exact preparation evidence comparison. Malformed keys refuse; valid missing/foreign keys are not found. Reads change no records, counts or revisions, while normal module clock bookkeeping remains possible. They provide no caller authorization, external capability verification or preparation effect. See [the planned document adapter](erp-preparation-plan.md) and [read verification](erp-evidence-verification.md).
+
+# Internal synthetic ERP preparation
+
+The private financialERP adapter retains bounded immutable document basis bytes and digests, verifies exact current owned charge approval and ERP evidence, then calls real erpledger.Prepare. Its explicit synthetic_individual_net_v1 profile supports only positive individually attributable rated lines with complete source/charge/document coverage. Document quantity/unit and tax are explicitly supplied fixture evidence; rated approval is not approval of document gross or tax. Lossless fixed-scale totals, complete organization attribution and stable original-source identities prevent implicit rounding, cross-binding and duplicate live preparation through a new key.
+
+CheckPreparation shares fresh module validation without creating submission/source coverage or reserving capacity. First service ownership rejects every pre-existing module record. Only retained matching ownership may reconcile an interrupted Prepare using the complete actual submission, actor, totals, mappings, state and digest. Current consumer, approval, producer and ERP evidence checks precede recovery. Unknown results retain their pending ownership. No external command, issuance, financial revision or approval consumption occurs.
+
+This is internal synthetic assembly exercised by service tests. Ordinary Server runtime construction, public preparation authority, document evidence governance and UI integration remain incomplete. See [plan](erp-preparation-plan.md) and [verification](erp-preparation-verification.md).

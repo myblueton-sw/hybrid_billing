@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/draftauthority"
@@ -14,7 +15,9 @@ type issuanceDraftCommand struct {
 }
 
 func (s *Server) issuanceDraftBoundary(command string, call commands.Call) commands.Code {
-	if command != "issuance_draft.list" && command != "issuance_draft.inspect" && command != "issuance_draft.context" {
+	kind := strings.TrimPrefix(command, "issuance_draft.")
+	capability := draftCommandCapability(kind)
+	if command != "issuance_draft."+kind || kind != "list" && kind != "inspect" && kind != "context" && capability == "" {
 		return ""
 	}
 	if s.cfg.Seed != SeedSample || s.financialIssuance == nil {
@@ -30,6 +33,20 @@ func (s *Server) issuanceDraftBoundary(command string, call commands.Call) comma
 		}
 		return commands.DependencyUnavailable
 	}
+
+	if capability != "" {
+		fields := map[string]string{}
+		for _, field := range call.Fields {
+			fields[field.Name] = field.Value
+		}
+		if err := s.financialIssuance.draftMutationIdentity(call.Answer.Workspace(), call.Answer.User(), kind, call.Target, fields); err != nil {
+			var failure *commands.Failure
+			if errors.As(err, &failure) {
+				return failure.Code
+			}
+			return commands.DependencyUnavailable
+		}
+	}
 	return ""
 }
 
@@ -44,6 +61,9 @@ func (h issuanceDraftCommand) Apply(ctx commands.Context) (commands.Outcome, err
 	a := h.s.financialIssuance
 	if h.s.cfg.Seed != SeedSample || a == nil {
 		return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
+	}
+	if draftCommandCapability(h.kind) != "" {
+		return a.applyDraftMutation(h.kind, ctx)
 	}
 	var fields map[string]string
 	var err error
@@ -76,6 +96,25 @@ func (s *Server) issuanceDraftDefinitions() []commands.Definition {
 			fields = append(fields, commands.Field{Name: "digest", Type: commands.Text, Required: true})
 		}
 		out = append(out, commands.Definition{ID: "issuance_draft." + kind, Permission: commands.Permission{Action: gate.ViewCost, Kind: draftauthority.ResourceKind, Fields: []string{draftauthority.EvidenceField}}, Fields: fields, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceDraftCommand{s: s, kind: kind}})
+	}
+
+	for _, kind := range []string{"submit", "prepare_approval", "approve"} {
+		names := []string{"digest"}
+		if kind == "submit" {
+			names = []string{"configuration", "configuration_digest", "final_request", "final_digest", "language"}
+		}
+		if kind == "prepare_approval" {
+			names = []string{"draft", "draft_digest", "binding", "binding_digest"}
+		}
+		fields := make([]commands.Field, 0, len(names))
+		for _, name := range names {
+			fields = append(fields, commands.Field{Name: name, Type: commands.Text, Required: true})
+		}
+		action := gate.ApproveIssuanceDraft
+		if kind == "submit" {
+			action = gate.SubmitIssuanceDraft
+		}
+		out = append(out, commands.Definition{ID: "issuance_draft." + kind, Permission: commands.Permission{Action: action, Kind: draftauthority.ResourceKind}, Mutating: true, Rationale: true, Fields: fields, Refusals: []commands.Code{commands.EvidenceStale, commands.SelfApprovalDenied}, Handler: issuanceDraftCommand{s: s, kind: kind}})
 	}
 	return out
 }

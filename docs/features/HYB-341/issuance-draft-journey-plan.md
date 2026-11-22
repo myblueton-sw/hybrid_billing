@@ -58,7 +58,7 @@ Required boundary evidence: before-cache grant loss, wrong actor recovery, curre
 | --- | --- | --- | --- | --- |
 | Setup ownership is not yet connected to public user actions | B09 prerequisite path | Blocking for full user journey | Private setup methods and existing integration plan | Investigate existing screen ownership; pending |
 | Proposed visual composition has no changed-render verification | B09 draft states, EN/KO/AR | Blocking for UI implementation acceptance | Actual CLI proposal received; no changed render exists | Proposal received; rendered review pending, see visual-design evidence below |
-| Public boundary remains incomplete | Context/list/inspection and three mutations | Blocking for connected user journey | Corrective executable design accepted; public context/list/inspect implemented and independently reviewed | Implement three mutations and pre-effect output/uncertainty handling; see [public contract](issuance-draft-public-contract-plan.md) |
+| Connected screen workflow remains incomplete | Context/list/inspection and three mutations | Blocking for connected user journey | Six public commands implemented; backend source/test review passed | Connect B09 and prerequisite setup, then verify rendered journeys; see [public contract](issuance-draft-public-contract-plan.md) |
 
 No issuance, numbering, rendering/download, delivery, payment, generic reporting expansion, deployment or production persistence is included in this increment. Those remain distinct product requirements where the original plan requires them; excluding them here does not complete the overall goal.
 
@@ -88,3 +88,8 @@ The [executable public contract](issuance-draft-public-contract-plan.md) passed 
 # Current context checkpoint
 
 The selected-final context API now separates frozen final amounts from current source eligibility, caller permissions, applicable configuration/binding choices and action readiness. Actual Inspect-only callers can see missing setup without receiving Submit rights. Current facts never settle retained unknown operations; saved review ownership and explicit fact-recheck requirements are reported separately. Held/expired source behavior, service binding identities, scoped cursors and current authority checks have executable HTTP coverage. Independent source/test review accepted this boundary after the future-binding applicability correction described in the public contract. Three mutation wrappers and their output/effect semantics, prerequisite setup UI and B09 rendered acceptance remain pending.
+
+
+# Public mutation checkpoint
+
+The configured-only submit, save-review and approve commands now reuse the existing session/CSRF/step-up/hold/revision/idempotency envelope. Current operation plus Inspect rights and pinned business identity are checked before cached disclosure. Response admission covers every projected line page and possible receipt/review state before effects. Invocation-local tracking distinguishes actual retained changes and module attempts from unchanged prior uncertainty. Exact historical business replay preserves current caller rights without reopening expired financial source eligibility. Backend implementation and independent source/test review are complete for these commands; integrated regression evidence is recorded in the public contract. The prerequisite setup and rendered B09 journey remain incomplete.

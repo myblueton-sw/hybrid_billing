@@ -59,17 +59,8 @@ func (a *financialIssuance) inspectDraftFields(workspace, actor, id, after, snap
 	}
 	f["snapshot"], f["next_line"] = digest, ""
 	end := min(start+10, len(lines))
-	for i := start; i < end; i++ {
-		line := lines[i]
-		f[fmt.Sprintf("line_%02d", i-start)], err = draftJSON(struct {
-			Index  string `json:"index"`
-			Text   string `json:"text"`
-			Amount string `json:"amount"`
-			Tax    bool   `json:"tax"`
-		}{strconv.Itoa(i), line.Text, line.Amount, line.Tax})
-		if err != nil {
-			return nil, err
-		}
+	if err := draftLineFields(f, lines, start); err != nil {
+		return nil, err
 	}
 	if end < len(lines) {
 		f["next_line"] = strconv.Itoa(end - 1)

@@ -82,6 +82,10 @@ func (a *financialIssuance) draftModule(p financialDraftRecord) (issuance.DraftV
 	return v, true, nil
 }
 func (a *financialIssuance) submitDraft(workspace, actor string, spec financialDraftSpec) (financialDraftRecord, error) {
+	return a.submitDraftTracked(workspace, actor, spec, nil, nil)
+}
+
+func (a *financialIssuance) submitDraftTracked(workspace, actor string, spec financialDraftSpec, effect *financialDraftEffect, admit func(financialDraftRecord) error) (financialDraftRecord, error) {
 	p, err := a.currentDraftOrigin(workspace, actor, draftauthority.Submit, spec)
 	if err != nil {
 		return financialDraftRecord{}, err
@@ -130,6 +134,11 @@ func (a *financialIssuance) submitDraft(workspace, actor string, spec financialD
 	if err := a.draftScopeIntegrity(p, exists); err != nil {
 		return financialDraftRecord{}, err
 	}
+	if admit != nil {
+		if err := admit(p); err != nil {
+			return financialDraftRecord{}, err
+		}
+	}
 	if exists && p.State == "submitted" {
 		owned, err := a.ownedDraft(workspace, spec.ID, p.Digest)
 		if err != nil {
@@ -149,7 +158,7 @@ func (a *financialIssuance) submitDraft(workspace, actor string, spec financialD
 			return financialDraftRecord{}, commands.Fail(commands.EvidenceStale)
 		}
 		p.State = "submitted"
-		a.drafts[spec.ID] = copyFinancialDraft(p)
+		a.storeDraft(p, effect, true)
 		return copyFinancialDraft(p), nil
 	}
 	if p.Module.Digest != "" || p.State == "submitted" {
@@ -159,19 +168,25 @@ func (a *financialIssuance) submitDraft(workspace, actor string, spec financialD
 		return financialDraftRecord{}, commands.Fail(commands.DependencyUnavailable)
 	}
 	p.State = "submission_unknown"
-	a.drafts[spec.ID] = copyFinancialDraft(p)
-	a.draftScopes[target] = spec.ID
+	a.storeDraft(p, effect, false)
+	if a.draftScopes[target] != spec.ID {
+		a.draftScopes[target] = spec.ID
+		if effect != nil {
+			effect.retainedChanged = true
+		}
+	}
 	if a.server.faulty("issuance-draft-after-intent") {
 		return financialDraftRecord{}, commands.Fail(commands.DependencyUnavailable)
 	}
+	effect.attempt()
 	v, err = a.documents.Submit(workspace, draft, issuance.Actor{ID: actor, Kind: issuance.KindHuman})
 	if err != nil {
 		p.State = "submission_refused"
-		a.drafts[spec.ID] = copyFinancialDraft(p)
+		a.storeDraft(p, effect, false)
 		return financialDraftRecord{}, err
 	}
 	p.Module = copyModuleDraftView(v)
-	a.drafts[spec.ID] = copyFinancialDraft(p)
+	a.storeDraft(p, effect, true)
 	if !unapprovedDraftMatches(p, v) {
 		return financialDraftRecord{}, commands.Fail(commands.EvidenceStale)
 	}
@@ -179,7 +194,7 @@ func (a *financialIssuance) submitDraft(workspace, actor string, spec financialD
 		return financialDraftRecord{}, commands.Fail(commands.DependencyUnavailable)
 	}
 	p.State = "submitted"
-	a.drafts[spec.ID] = copyFinancialDraft(p)
+	a.storeDraft(p, effect, true)
 	if a.server.faulty("issuance-draft-after-submission-publication") {
 		return financialDraftRecord{}, commands.Fail(commands.DependencyUnavailable)
 	}

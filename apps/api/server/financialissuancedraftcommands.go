@@ -14,7 +14,7 @@ type issuanceDraftCommand struct {
 }
 
 func (s *Server) issuanceDraftBoundary(command string, call commands.Call) commands.Code {
-	if command != "issuance_draft.list" && command != "issuance_draft.inspect" {
+	if command != "issuance_draft.list" && command != "issuance_draft.inspect" && command != "issuance_draft.context" {
 		return ""
 	}
 	if s.cfg.Seed != SeedSample || s.financialIssuance == nil {
@@ -48,6 +48,8 @@ func (h issuanceDraftCommand) Apply(ctx commands.Context) (commands.Outcome, err
 	var fields map[string]string
 	var err error
 	switch h.kind {
+	case "context":
+		fields, err = a.contextDraftFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields["digest"], ctx.Fields["after_binding"], ctx.Fields["snapshot"])
 	case "list":
 		fields, err = a.listDraftFields(ctx.Workspace, ctx.User, ctx.Fields["after"], ctx.Fields["snapshot"])
 	case "inspect":
@@ -63,12 +65,17 @@ func (h issuanceDraftCommand) Apply(ctx commands.Context) (commands.Outcome, err
 
 func (s *Server) issuanceDraftDefinitions() []commands.Definition {
 	var out []commands.Definition
-	for _, kind := range []string{"list", "inspect"} {
+	for _, kind := range []string{"list", "inspect", "context"} {
 		after := "after"
 		if kind == "inspect" {
 			after = "after_line"
 		}
-		out = append(out, commands.Definition{ID: "issuance_draft." + kind, Permission: commands.Permission{Action: gate.ViewCost, Kind: draftauthority.ResourceKind, Fields: []string{draftauthority.EvidenceField}}, Fields: []commands.Field{{Name: after, Type: commands.Text}, {Name: "snapshot", Type: commands.Text}}, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceDraftCommand{s: s, kind: kind}})
+		fields := []commands.Field{{Name: after, Type: commands.Text}, {Name: "snapshot", Type: commands.Text}}
+		if kind == "context" {
+			fields[0].Name = "after_binding"
+			fields = append(fields, commands.Field{Name: "digest", Type: commands.Text, Required: true})
+		}
+		out = append(out, commands.Definition{ID: "issuance_draft." + kind, Permission: commands.Permission{Action: gate.ViewCost, Kind: draftauthority.ResourceKind, Fields: []string{draftauthority.EvidenceField}}, Fields: fields, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceDraftCommand{s: s, kind: kind}})
 	}
 	return out
 }

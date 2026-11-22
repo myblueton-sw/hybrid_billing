@@ -58,7 +58,7 @@ Required boundary evidence: before-cache grant loss, wrong actor recovery, curre
 | --- | --- | --- | --- | --- |
 | Setup ownership is not yet connected to public user actions | B09 prerequisite path | Blocking for full user journey | Private setup methods and existing integration plan | Investigate existing screen ownership; pending |
 | Proposed visual composition has no changed-render verification | B09 draft states, EN/KO/AR | Blocking for UI implementation acceptance | Actual CLI proposal received; no changed render exists | Proposal received; rendered review pending, see visual-design evidence below |
-| Public boundary remains incomplete | Context/list/inspection and three mutations | Blocking for connected user journey | Corrective executable design accepted; public list/inspect implemented and independently reviewed | Implement current context and three mutations; see [public contract](issuance-draft-public-contract-plan.md) |
+| Public boundary remains incomplete | Context/list/inspection and three mutations | Blocking for connected user journey | Corrective executable design accepted; public context/list/inspect implemented and independently reviewed | Implement three mutations and pre-effect output/uncertainty handling; see [public contract](issuance-draft-public-contract-plan.md) |
 
 No issuance, numbering, rendering/download, delivery, payment, generic reporting expansion, deployment or production persistence is included in this increment. Those remain distinct product requirements where the original plan requires them; excluding them here does not complete the overall goal.
 
@@ -83,3 +83,8 @@ The private application-backed draft correction is now implemented and independe
 # Public read integration checkpoint
 
 The [executable public contract](issuance-draft-public-contract-plan.md) passed independent corrective backend design review. Public draft list/inspection are implemented, including retained unresolved work, frozen review recovery arguments, held/expired historical disclosure under current Inspect rights and complete bounded pagination. Root verified actual 11-draft and 12-line HTTP traversal and corrective state-integrity cases; final relevant race PASS100.900s. Current context, three public mutations and their pre-effect output/uncertainty boundaries remain pending, followed by B09 composition and actual rendered/terminology review. No connected screen acceptance follows from the read API result.
+
+
+# Current context checkpoint
+
+The selected-final context API now separates frozen final amounts from current source eligibility, caller permissions, applicable configuration/binding choices and action readiness. Actual Inspect-only callers can see missing setup without receiving Submit rights. Current facts never settle retained unknown operations; saved review ownership and explicit fact-recheck requirements are reported separately. Held/expired source behavior, service binding identities, scoped cursors and current authority checks have executable HTTP coverage. Independent source/test review accepted this boundary after the future-binding applicability correction described in the public contract. Three mutation wrappers and their output/effect semantics, prerequisite setup UI and B09 rendered acceptance remain pending.

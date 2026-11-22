@@ -212,7 +212,7 @@ func (s *Server) enterHold(reason string) {
 }
 
 func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
-	if command == "issuance_draft.list" || command == "issuance_draft.inspect" {
+	if command == "issuance_draft.list" || command == "issuance_draft.inspect" || command == "issuance_draft.context" {
 		return true
 	}
 	if command == "result_authority.history" || command == "result_authority.context" {

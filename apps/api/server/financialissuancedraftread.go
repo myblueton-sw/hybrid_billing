@@ -65,6 +65,10 @@ func (a *financialIssuance) retainedDraft(workspace, id string) (financialDraftO
 }
 
 func (a *financialIssuance) observeDraft(p financialDraftObservation) financialDraftObservation {
+	if a.documents == nil {
+		p.Module = "unavailable"
+		return p
+	}
 	actual, found, err := a.draftModule(p.Draft)
 	if err != nil {
 		p.Module = "unavailable"

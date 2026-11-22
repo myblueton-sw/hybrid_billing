@@ -38,7 +38,11 @@ func resultGrantTo(t *testing.T, f world, capability, recipient string) {
 
 func resultWorld(t *testing.T) (documentWorld, financialERPResultPacket) {
 	t.Helper()
-	w := explicitDocumentWorld(t)
+	return resultWorldFromDocument(t, explicitDocumentWorld(t))
+}
+
+func resultWorldFromDocument(t *testing.T, w documentWorld) (documentWorld, financialERPResultPacket) {
+	t.Helper()
 	sub, err := w.prepare("result-preparation")
 	w.f.must(err)
 	for _, entry := range []struct{ capability, recipient string }{{"propose", SampleAdmin2}, {"apply", SampleAdmin2}, {"inspect", SampleAdmin2}, {"confirm", SampleAdmin3}, {"revoke", SampleAdmin3}, {"inspect", SampleAdmin3}} {

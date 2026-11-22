@@ -23,7 +23,15 @@ type documentWorld struct {
 
 func explicitDocumentWorld(t *testing.T) documentWorld {
 	t.Helper()
+	return explicitDocumentWorldWithRequired(t, "")
+}
+
+func explicitDocumentWorldWithRequired(t *testing.T, required string) documentWorld {
+	t.Helper()
 	f, requester, decider, _ := chargeWorld(t)
+	if required != "" {
+		subjectPolicy(t, f, "document-charge-policy", "3", required)
+	}
 	original, err := f.s.chargeProducer.candidates.financialCandidate(SampleWorkspace, "subject-candidate")
 	f.must(err)
 	origin := original.Envelope.Input.Normalized

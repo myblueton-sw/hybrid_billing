@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/approvals"
+	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/erpledger"
 	"github.com/myblueton-sw/hybrid_billing/modules/normalize"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
@@ -213,4 +214,24 @@ func documentCandidateShape(c chargeCandidate, subject approvals.Subject, connec
 		return bad()
 	}
 	return charges, sources, nil
+}
+
+func financialFinalGross(total erpledger.Amounts, scale int) (string, error) {
+	if scale < 0 || scale > 4 || len(total.Net) > 64 || len(total.Tax) > 64 {
+		return "", commands.Fail(commands.PrerequisiteFailed)
+	}
+	profile, err := decimal.NewProfile(candidateProfile())
+	if err != nil {
+		return "", err
+	}
+	net, e1 := decimal.Parse(profile, total.Net)
+	tax, e2 := decimal.Parse(profile, total.Tax)
+	if e1 != nil || e2 != nil || net.Sign() < 0 || tax.Sign() < 0 || net.Scale() > scale || tax.Scale() > scale || documentFixed(net, scale) != total.Net || documentFixed(tax, scale) != total.Tax {
+		return "", commands.Fail(commands.PrerequisiteFailed)
+	}
+	gross, err := decimal.Add(profile, net, tax)
+	if err != nil {
+		return "", commands.Fail(commands.PrerequisiteFailed)
+	}
+	return gross.String(), nil
 }

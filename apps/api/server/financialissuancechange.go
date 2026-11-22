@@ -211,6 +211,10 @@ func (a *financialIssuance) currentChange(p financialChangeRecord, actor, capabi
 	if !reflect.DeepEqual(profile, p.Profile) {
 		return protected.View{}, commands.Fail(commands.EvidenceStale)
 	}
+	return a.changeStanding(p)
+}
+
+func (a *financialIssuance) changeStanding(p financialChangeRecord) (protected.View, error) {
 	rules, err := a.channelRules(p.Workspace)
 	if err != nil {
 		return protected.View{}, err

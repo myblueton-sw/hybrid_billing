@@ -11,6 +11,7 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/documentauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/draftauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
@@ -263,13 +264,13 @@ func TestAccessPreview(t *testing.T) {
 		if row["action"] == "view_cost" {
 			costRows++
 			costFields[row["field"]]++
-			if (row["field"] != candidateField && row["field"] != inputauthority.EvidenceField && row["field"] != pricingauthority.EvidenceField && row["field"] != documentauthority.EvidenceField && row["field"] != resultauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant) {
+			if (row["field"] != candidateField && row["field"] != inputauthority.EvidenceField && row["field"] != pricingauthority.EvidenceField && row["field"] != documentauthority.EvidenceField && row["field"] != resultauthority.EvidenceField && row["field"] != draftauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant) {
 				t.Errorf("unexpected cost preview %+v", row)
 			}
 		}
 	}
-	if costRows != 5 || len(costFields) != 5 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 || costFields[pricingauthority.EvidenceField] != 1 || costFields[documentauthority.EvidenceField] != 1 || costFields[resultauthority.EvidenceField] != 1 {
-		t.Errorf("cost preview rows = %d, want 5", costRows)
+	if costRows != 6 || len(costFields) != 6 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 || costFields[pricingauthority.EvidenceField] != 1 || costFields[documentauthority.EvidenceField] != 1 || costFields[resultauthority.EvidenceField] != 1 || costFields[draftauthority.EvidenceField] != 1 {
+		t.Errorf("cost preview rows = %d, want 6", costRows)
 	}
 	f.grantVia(root, f.as(Admin2Login), SampleMember, nil)
 	after := f.accessRead(root, "/preview?subject="+SampleMember+"&kind="+ReaderKind+"&customer=c1")
@@ -282,11 +283,11 @@ func TestAccessPreview(t *testing.T) {
 		if row["action"] == "view_cost" {
 			costFields[row["field"]]++
 		}
-		if row["action"] == "view_cost" && ((row["field"] != candidateField && row["field"] != inputauthority.EvidenceField && row["field"] != pricingauthority.EvidenceField && row["field"] != documentauthority.EvidenceField && row["field"] != resultauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant)) {
+		if row["action"] == "view_cost" && ((row["field"] != candidateField && row["field"] != inputauthority.EvidenceField && row["field"] != pricingauthority.EvidenceField && row["field"] != documentauthority.EvidenceField && row["field"] != resultauthority.EvidenceField && row["field"] != draftauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant)) {
 			t.Errorf("ordinary reader grant changed cost access %+v", row)
 		}
 	}
-	if len(costFields) != 5 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 || costFields[pricingauthority.EvidenceField] != 1 || costFields[documentauthority.EvidenceField] != 1 || costFields[resultauthority.EvidenceField] != 1 {
+	if len(costFields) != 6 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 || costFields[pricingauthority.EvidenceField] != 1 || costFields[documentauthority.EvidenceField] != 1 || costFields[resultauthority.EvidenceField] != 1 || costFields[draftauthority.EvidenceField] != 1 {
 		t.Fatal("cost field set changed after ordinary grant", costFields)
 	}
 	for _, q := range []string{"?subject=nobody&kind=" + ReaderKind, "?subject=" + SampleMember + "&kind=" + gate.InstallationKind, "?subject=" + SampleMember + "&kind=" + ReaderKind + "&customer=a%20b"} {

@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/myblueton-sw/hybrid_billing/modules/documentauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/draftauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
 	"github.com/myblueton-sw/hybrid_billing/modules/financialrequestauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
@@ -15,6 +16,7 @@ import (
 type grantAuthorityDomain uint8
 
 const (
+	draftGrantAuthority       grantAuthorityDomain = 11
 	protectedGrantAuthority   grantAuthorityDomain = 10
 	termGrantAuthority        grantAuthorityDomain = 9
 	erpFinalPermissionDomain  grantAuthorityDomain = 7
@@ -28,6 +30,9 @@ const (
 )
 
 func (d grantAuthorityDomain) grantPrefix() string {
+	if d == draftGrantAuthority {
+		return "issuance-draft-grant-"
+	}
 	if d == protectedGrantAuthority {
 		return "issuance-protected-grant-"
 	}
@@ -61,6 +66,9 @@ func (d grantAuthorityDomain) grantPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) faultPrefix() string {
+	if d == draftGrantAuthority {
+		return "issuance-draft-authority-"
+	}
 	if d == protectedGrantAuthority {
 		return "issuance-protected-authority-"
 	}
@@ -94,6 +102,9 @@ func (d grantAuthorityDomain) faultPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) terms(workspace, capability string) (gate.Terms, error) {
+	if d == draftGrantAuthority {
+		return draftAuthorityTerms(workspace, capability)
+	}
 	if d == protectedGrantAuthority {
 		return protectedAuthorityTerms(workspace, capability)
 	}
@@ -168,6 +179,8 @@ func pricingAuthorityTerms(workspace, capability string) (gate.Terms, error) {
 }
 func (s *Server) grantAuthority(domain grantAuthorityDomain) *serverGrantAuthority {
 	switch domain {
+	case draftGrantAuthority:
+		return s.draftAuthority
 	case protectedGrantAuthority:
 		return s.protectedAuthority
 	case termGrantAuthority:
@@ -262,6 +275,22 @@ func protectedAuthorityTerms(workspace, capability string) (gate.Terms, error) {
 		terms.Action = gate.VerifyIssuanceProtectedChange
 	case protectedauthority.ApproveChange:
 		terms.Action = gate.ApproveIssuanceProtectedChange
+	default:
+		return gate.Terms{}, inputauthority.ErrInvalid
+	}
+	return terms, nil
+}
+
+func draftAuthorityTerms(workspace, capability string) (gate.Terms, error) {
+	terms := gate.Terms{Kind: draftauthority.ResourceKind, Scope: gate.Scope{WorkspaceID: workspace, Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}, Period: gate.AnyPeriod()}
+	switch capability {
+	case draftauthority.Submit:
+		terms.Action = gate.SubmitIssuanceDraft
+	case draftauthority.Approve:
+		terms.Action = gate.ApproveIssuanceDraft
+	case draftauthority.Inspect:
+		terms.Action = gate.ViewCost
+		terms.Fields = []string{draftauthority.EvidenceField}
 	default:
 		return gate.Terms{}, inputauthority.ErrInvalid
 	}

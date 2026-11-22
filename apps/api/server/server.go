@@ -21,6 +21,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
 	"github.com/myblueton-sw/hybrid_billing/modules/decisionledger"
 	"github.com/myblueton-sw/hybrid_billing/modules/documentauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/draftauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/events"
 	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
@@ -83,6 +84,7 @@ type Config struct {
 }
 
 type Server struct {
+	draftAuthority             *serverGrantAuthority
 	protectedAuthority         *serverGrantAuthority
 	termAuthority              *serverGrantAuthority
 	financialFinals            map[string]financialFinalBinding
@@ -207,13 +209,14 @@ func RelationshipLimits() relationships.Limits {
 }
 
 func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
-	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, approvalKind, inputauthority.ResourceKind, pricingauthority.ResourceKind, financialpermission.ResourceKind, financialpermission.ERPFinalResourceKind, documentauthority.ResourceKind, resultauthority.ResourceKind, termsauthority.ResourceKind, protectedauthority.ResourceKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General, candidateField: gate.Cost, approvalField: gate.General, inputauthority.EvidenceField: gate.Cost, pricingauthority.EvidenceField: gate.Cost}}
+	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, approvalKind, inputauthority.ResourceKind, pricingauthority.ResourceKind, financialpermission.ResourceKind, financialpermission.ERPFinalResourceKind, documentauthority.ResourceKind, resultauthority.ResourceKind, termsauthority.ResourceKind, protectedauthority.ResourceKind, draftauthority.ResourceKind}, kinds...), Fields: map[string]gate.FieldClass{draftauthority.EvidenceField: gate.Cost, ReaderField: gate.General, candidateField: gate.Cost, approvalField: gate.General, inputauthority.EvidenceField: gate.Cost, pricingauthority.EvidenceField: gate.Cost}}
 	for name, class := range fields {
 		c.Fields[name] = class
 	}
 	c.Fields[pricingauthority.EvidenceField] = gate.Cost
 	c.Fields[documentauthority.EvidenceField] = gate.Cost
 	c.Fields[resultauthority.EvidenceField] = gate.Cost
+	c.Fields[draftauthority.EvidenceField] = gate.Cost
 	return c
 }
 
@@ -368,6 +371,9 @@ func New(cfg Config) (*Server, error) {
 				}
 				if err == nil {
 					s.protectedAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, protectedGrantAuthority)
+				}
+				if err == nil {
+					s.draftAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, draftGrantAuthority)
 				}
 				if err == nil {
 					s.inputReviews, err = newCandidateInputReviews(s.chargeProducer, serverInputReviewAuthority{s: s}, s.clock)

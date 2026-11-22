@@ -11,34 +11,11 @@ func (a *financialIssuance) protectedProfile(workspace, id, digest, actor, capab
 	if err := a.protectedCaller(workspace, actor, capability); err != nil {
 		return financialIssuanceProfile{}, err
 	}
-	p, ok := a.profiles[id]
-	if !ok || p.Spec.ID != id || p.Source.Basis.Workspace != workspace || p.Digest != digest || p.State != "confirmed" || p.Confirmer == "" {
-		return financialIssuanceProfile{}, commands.Fail(commands.EvidenceStale)
-	}
-	if err := a.profileReservation(workspace, p); err != nil {
-		return financialIssuanceProfile{}, err
-	}
-	immutable := copyIssuanceProfile(p)
-	immutable.Digest = ""
-	immutable.State = ""
-	immutable.Confirmer = ""
-	expected, err := financialEvidenceDigest("issuance_profile", immutable)
-	if err != nil || expected != p.Digest || a.scopes[p.Source.Basis.Subject.Target] != id {
-		return financialIssuanceProfile{}, commands.Fail(commands.EvidenceStale)
-	}
-	for _, governor := range []string{p.Proposer, p.Confirmer} {
-		if err := a.server.issuanceProfileGovernorStanding(workspace, governor); err != nil {
-			return financialIssuanceProfile{}, err
-		}
-	}
-	source, err := a.server.financialIssuanceSourceLocked(workspace, p.Source.Basis.FinalRequest, p.Source.Basis.FinalDigest, actor)
+	p, err := a.ownedConfirmedProfile(workspace, id, digest)
 	if err != nil {
 		return financialIssuanceProfile{}, err
 	}
-	if !reflect.DeepEqual(source, p.Source) {
-		return financialIssuanceProfile{}, commands.Fail(commands.EvidenceStale)
-	}
-	return a.profileReadback(workspace, p)
+	return a.profileCurrentFinancialSource(workspace, actor, p)
 }
 
 func (a *financialIssuance) changeSubject(p financialIssuanceProfile, field string) (financialChannelSubject, error) {

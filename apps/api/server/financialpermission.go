@@ -48,5 +48,5 @@ func (a *serverGrantAuthority) financialCurrent(spec inputauthority.Spec) (strin
 }
 
 func governedGrantTerms(action gate.Action, kind string, fields []string) bool {
-	return protectedGrantTerms(action, kind, fields) || termGrantTerms(action, kind, fields) || kind == financialpermission.ERPFinalResourceKind || kind == financialpermission.ResourceKind || pricingGrantTerms(action, kind, fields) || documentGrantTerms(action, kind, fields) || resultGrantTerms(action, kind, fields)
+	return draftGrantTerms(action, kind, fields) || protectedGrantTerms(action, kind, fields) || termGrantTerms(action, kind, fields) || kind == financialpermission.ERPFinalResourceKind || kind == financialpermission.ResourceKind || pricingGrantTerms(action, kind, fields) || documentGrantTerms(action, kind, fields) || resultGrantTerms(action, kind, fields)
 }

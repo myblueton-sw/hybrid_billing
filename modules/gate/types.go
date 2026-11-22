@@ -29,6 +29,8 @@ type (
 )
 
 const (
+	SubmitIssuanceDraft            = auth.SubmitIssuanceDraft
+	ApproveIssuanceDraft           = auth.ApproveIssuanceDraft
 	RegisterIssuanceChannel        = auth.RegisterIssuanceChannel
 	AdmitIssuanceChannel           = auth.AdmitIssuanceChannel
 	RequestIssuanceProtectedChange = auth.RequestIssuanceProtectedChange

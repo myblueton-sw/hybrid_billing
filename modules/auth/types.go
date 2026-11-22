@@ -18,6 +18,8 @@ var (
 type Action string
 
 const (
+	SubmitIssuanceDraft            Action = "submit_issuance_draft"
+	ApproveIssuanceDraft           Action = "approve_issuance_draft"
 	RegisterIssuanceChannel        Action = "register_issuance_channel"
 	AdmitIssuanceChannel           Action = "admit_issuance_channel"
 	RequestIssuanceProtectedChange Action = "request_issuance_protected_change"
@@ -76,6 +78,7 @@ func IntegrationRights() []Action {
 const InstallationKind = "installation"
 
 var actions = map[Action]struct{}{
+	SubmitIssuanceDraft: {}, ApproveIssuanceDraft: {},
 	RegisterIssuanceChannel:        {},
 	AdmitIssuanceChannel:           {},
 	RequestIssuanceProtectedChange: {},
@@ -105,7 +108,7 @@ func humanOnly(action Action) bool { return action == Approve || action == Appro
 
 func directHuman(action Action) bool {
 	switch action {
-	case RegisterIssuanceChannel, AdmitIssuanceChannel, RequestIssuanceProtectedChange, VerifyIssuanceProtectedChange, ApproveIssuanceProtectedChange, RecordIssuanceTerm, ApproveIssuanceTerm, BindIssuanceTerm, ApproveIssuanceTermBinding, ProposeERPResult, ConfirmERPResult, RevokeERPResult, ApplyERPResult, ProposeDocumentEvidence, ConfirmDocumentEvidence, RevokeDocumentEvidence, PrepareERPRecord, ConfirmInput, ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy:
+	case SubmitIssuanceDraft, ApproveIssuanceDraft, RegisterIssuanceChannel, AdmitIssuanceChannel, RequestIssuanceProtectedChange, VerifyIssuanceProtectedChange, ApproveIssuanceProtectedChange, RecordIssuanceTerm, ApproveIssuanceTerm, BindIssuanceTerm, ApproveIssuanceTermBinding, ProposeERPResult, ConfirmERPResult, RevokeERPResult, ApplyERPResult, ProposeDocumentEvidence, ConfirmDocumentEvidence, RevokeDocumentEvidence, PrepareERPRecord, ConfirmInput, ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy:
 		return true
 	}
 	return false

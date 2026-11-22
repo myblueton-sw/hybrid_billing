@@ -24,13 +24,27 @@ func TestResultActualScreenBrowser(t *testing.T) {
 	for _, locale := range []string{"en", "ko", "ar"} {
 		for _, width := range []int{1440, 1024, 390} {
 			t.Run(locale+"-"+strconv.Itoa(width), func(t *testing.T) {
-				resultActualScreenBrowser(t, filepath.Join(output, locale+"-"+strconv.Itoa(width)), locale, width)
+				resultActualScreenBrowser(t, filepath.Join(output, locale+"-"+strconv.Itoa(width)), locale, width, false)
 			})
 		}
 	}
 }
 
-func resultActualScreenBrowser(t *testing.T, output, locale string, width int) {
+func TestResultReplacementScreenBrowser(t *testing.T) {
+	output := os.Getenv("HB_RESULT_REPLACEMENT_QA_OUTPUT")
+	if output == "" {
+		t.Skip("explicit isolated replacement browser configuration required")
+	}
+	for _, locale := range []string{"en", "ko", "ar"} {
+		for _, width := range []int{1440, 1024, 390} {
+			t.Run(locale+"-"+strconv.Itoa(width), func(t *testing.T) {
+				resultActualScreenBrowser(t, filepath.Join(output, locale+"-"+strconv.Itoa(width)), locale, width, true)
+			})
+		}
+	}
+}
+
+func resultActualScreenBrowser(t *testing.T, output, locale string, width int, replacement bool) {
 	frontend := os.Getenv("HB_PROJECTION_QA_URL")
 	u, err := url.Parse(frontend)
 	if err != nil || u.Scheme != "http" || u.Hostname() != "127.0.0.1" || u.Port() == "" {
@@ -39,6 +53,15 @@ func resultActualScreenBrowser(t *testing.T, output, locale string, width int) {
 	w, packet := resultWorld(t)
 	f := w.f
 	f.s.documentERP = w.a
+	if replacement {
+		previous := confirmResult(t, w, proposeResult(t, w, packet, "prior-recorded-result"))
+		_, err := applyResult(w, previous)
+		f.must(err)
+		packet.Revision = 2
+		for i := range packet.Rows {
+			packet.Rows[i].ID = "replacement-" + packet.Rows[i].ID
+		}
+	}
 	f.advance(time.Minute)
 	interrupted := false
 	w.a.afterResultWrite = func(string) error {
@@ -64,10 +87,17 @@ func resultActualScreenBrowser(t *testing.T, output, locale string, width int) {
 	f.must(err)
 	cmd := exec.Command("node", script, "--url", frontend, "--api", server.URL, "--output", output, "--playwright-module", os.Getenv("HB_PROJECTION_QA_PLAYWRIGHT"), "--chromium", os.Getenv("HB_PROJECTION_QA_CHROMIUM"))
 	cmd.Env = append(os.Environ(), "HB_RESULT_BROWSER_LOCALE="+locale, "HB_RESULT_BROWSER_WIDTH="+strconv.Itoa(width), "HB_RESULT_BROWSER_PACKET="+string(raw), "HB_RESULT_BROWSER_PROPOSER="+proposer.cookie.Name+"="+proposer.cookie.Value, "HB_RESULT_BROWSER_CONFIRMER="+confirmer.cookie.Name+"="+confirmer.cookie.Value)
+	if replacement {
+		cmd.Env = append(cmd.Env, "HB_RESULT_BROWSER_REPLACEMENT=prior-recorded-result")
+	}
 	if err = cmd.Run(); err != nil {
 		t.Fatal("actual result browser failed; inspect isolated evidence", err)
 	}
-	if !interrupted || len(w.a.results) != 1 || len(w.a.resultApplications) != 1 {
+	expected := 1
+	if replacement {
+		expected = 2
+	}
+	if !interrupted || len(w.a.results) != expected || len(w.a.resultApplications) != expected {
 		t.Fatal("unexpected result effects")
 	}
 	for key, result := range w.a.results {
@@ -78,7 +108,18 @@ func resultActualScreenBrowser(t *testing.T, output, locale string, width int) {
 	}
 	snapshot, err := w.a.ledger.ResultOf(SampleWorkspace, packet.Preparation)
 	f.must(err)
-	if !snapshot.Reconciliation.Matched || len(snapshot.Documents) != 1 || len(snapshot.Documents[0].Links) != 2 || snapshot.Documents[0].Total != (erpledger.Amounts{Net: "15.00", Tax: "1.00", Quantity: "5.00"}) || snapshot.Submission.State != erpledger.StatePrepared || len(snapshot.Submission.Commands) != 0 {
+	if !snapshot.Reconciliation.Matched || len(snapshot.Documents) != 1 || len(snapshot.Documents[0].Links) != 2*expected || snapshot.Documents[0].Total != (erpledger.Amounts{Net: "15.00", Tax: "1.00", Quantity: "5.00"}) || snapshot.Submission.State != erpledger.StatePrepared || len(snapshot.Submission.Commands) != 0 {
 		t.Fatal("unexpected external command or document count")
 	}
+	if replacement {
+		if snapshot.Documents[0].Document.Revision != 2 {
+			t.Fatal("replacement revision lost")
+		}
+		for i, link := range snapshot.Documents[0].Links {
+			if link.Stale != (i < 2) {
+				t.Fatal("replacement stale history lost")
+			}
+		}
+	}
+
 }

@@ -71,3 +71,10 @@
 .b09-result-inspection label { font-size: .875rem; font-weight: 600; }
 .b09-results li > button { display: inline-block; text-align: start; max-inline-size: 100%; margin-block-end: .5rem; }
 .b09-result-form label small { font-weight: 400; font-size: .8125rem; }
+
+.b09-result-position { margin-block: 0 1.5rem; }
+.b09-result-position strong { font-weight: 600; margin-inline-end: .5ch; }
+.b09-result-blocked { margin-block-start: .75rem; }
+.b09-result-inspection details { margin-block: 1rem 0; }
+.b09-result-inspection details dl { margin-block-start: .5rem; }
+.b09-result-effect { font-weight: 600; font-size: 1.125rem; }

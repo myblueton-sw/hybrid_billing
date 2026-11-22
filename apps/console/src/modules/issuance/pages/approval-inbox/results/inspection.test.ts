@@ -21,5 +21,8 @@ test("actual server synthetic result replies pass discovery context history insp
   for(const key of ["confirmation_by","confirmation_reason","confirmation_at"])delete fixture.inspection.fields[key];
   await assert.rejects(inspectWithAdvice(read,list.rows[0],history.rows[0],fixture.preparations.fields.workspace));fixture.inspection.fields=original;
  }
+ const originalContext=fixture.advice.fields.application_context;
+ fixture.advice.fields.application_context=JSON.stringify({kind:"replacement",position:"not_started",predecessor:"previous-result",predecessor_digest:"c".repeat(64),predecessor_revision:1,predecessor_receipt:"d".repeat(64),current_result:"previous-result",current_state:"recorded"});
+ await assert.rejects(inspectWithAdvice(read,list.rows[0],history.rows[0],fixture.preparations.fields.workspace));fixture.advice.fields.application_context=originalContext;
  fixture.advice.result_revision="r999";fixture.advice.fields.revision="r999";await assert.rejects(inspectWithAdvice(read,list.rows[0],history.rows[0],fixture.preparations.fields.workspace));
 });

@@ -13,6 +13,8 @@ import (
 
 type financialERPLedger interface {
 	ResultOf(string, string) (erpledger.ResultView, error)
+	ReplaceResult(string, string, erpledger.ResultView, erpledger.Document, []erpledger.Link, erpledger.Actor) (erpledger.ResultView, error)
+	CheckResultReplacement(string, string, erpledger.ResultView, erpledger.Document, []erpledger.Link, erpledger.Actor) error
 	DocumentOf(string, string, string) (erpledger.DocumentView, error)
 	Document(string, erpledger.Document, erpledger.Actor) (erpledger.DocumentView, error)
 	Link(string, erpledger.Link, erpledger.Actor) (erpledger.DocumentView, error)

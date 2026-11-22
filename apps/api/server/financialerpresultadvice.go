@@ -17,6 +17,13 @@ func (a *financialERP) resultApplicationObservation(b financialERPResultBasis, r
 	if owned != recover || owned && (app.actor != actor || app.receipt != "") {
 		return commands.Fail(commands.EvidenceStale)
 	}
+	if owned && app.predecessor != "" {
+		return a.replacementObservation(b, app)
+	}
+	if !owned && (a.resultExternals[[3]string{b.Workspace, b.Packet.Connection, b.Packet.External}] != "" || a.resultPreparations[[2]string{b.Workspace, b.Packet.Preparation}] != "") {
+		_, err := a.replacementIntent(b, actor, r.review.Digest)
+		return err
+	}
 	if !owned {
 		if a.resultExternals[[3]string{b.Workspace, b.Packet.Connection, b.Packet.External}] != "" || a.resultPreparations[[2]string{b.Workspace, b.Packet.Preparation}] != "" {
 			return commands.Fail(commands.EvidenceStale)
@@ -130,6 +137,11 @@ func (a *financialERP) resultAdviceLocked(ctx commands.Context) (map[string]stri
 		actor = app.actor
 	}
 	fields := map[string]string{"mode": "synthetic", "result": ctx.Target, "digest": r.review.Digest, "revision": ctx.Resolved, "permissions": string(p), "readiness": string(ready), "application_state": view.ApplicationState, "applying_actor": actor, "application_receipt": view.ApplicationReceipt, "current_eligibility": "advisory_only"}
+	context, err := a.resultApplicationContext(b)
+	if err != nil {
+		return nil, err
+	}
+	fields["application_context"] = context
 	if err = a.boundedResultFields(fields); err != nil {
 		return nil, err
 	}

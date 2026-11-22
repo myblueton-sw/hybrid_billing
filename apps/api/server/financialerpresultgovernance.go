@@ -219,5 +219,8 @@ func (a *financialERP) inspectResultLocked(workspace, id, digest, actor string) 
 	if err != nil {
 		return financialERPResultView{}, err
 	}
+	if _, _, err := a.resultApplicationOwner(b, r.review.Digest); err != nil {
+		return financialERPResultView{}, err
+	}
 	return a.resultView(r, b), nil
 }

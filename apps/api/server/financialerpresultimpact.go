@@ -11,7 +11,7 @@ func resultEvidenceCounts(s *Server) (map[string]int, map[string]int, error) {
 	if a == nil || s.faulty("result-evidence-impact") {
 		return nil, nil, gate.ErrUnavailable
 	}
-	if len(a.results) > financialDocumentLimit || len(a.resultApplications) > financialDocumentLimit || len(a.resultExternals) != len(a.resultApplications) || len(a.resultPreparations) != len(a.resultApplications) {
+	if len(a.results) > financialDocumentLimit || len(a.resultApplications) > financialDocumentLimit || a.validateResultChains() != nil {
 		return nil, nil, gate.ErrUnavailable
 	}
 	for key, record := range a.results {

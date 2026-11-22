@@ -31,6 +31,11 @@ func resultReceipt(v financialERPResultView) map[string]string {
 
 func (a *financialERP) resultFields(v financialERPResultView) (map[string]string, error) {
 	f := resultReceipt(v)
+	context, err := a.resultApplicationContext(v.Basis)
+	if err != nil {
+		return nil, err
+	}
+	f["application_context"] = context
 	f["receipt"], f["current_eligibility"], f["source"] = "historical_evidence", "unchecked", v.Source
 	f["source_digest"], f["packet_digest"], f["document_digest"] = v.Basis.SourceDigest, v.Basis.PacketDigest, v.Basis.DocumentDigest
 	f["proposed_by"], f["proposal_reason"], f["proposed_at"] = v.Review.Proposer, v.Review.Reason, v.Review.At.Format(time.RFC3339Nano)
@@ -58,22 +63,23 @@ func (a *financialERP) resultFields(v financialERPResultView) (map[string]string
 func (a *financialERP) admitPublicResult(b financialERPResultBasis, source string) error {
 	event := financialDocumentDecision{Actor: strings.Repeat("a", 128), Reason: strings.Repeat("r", 2000), At: time.Date(9999, 12, 31, 23, 59, 59, 999999999, time.UTC)}
 	v := financialERPResultView{Basis: b, Source: source, ApplicationState: "not_started", ApplicationReceipt: strings.Repeat("d", 64), Review: financialDocumentReview{Digest: strings.Repeat("d", 64), Proposer: event.Actor, Reason: event.Reason, At: event.At, State: "confirmed", Confirmation: event, Revocation: event}}
-	_, err := a.resultFields(v)
-	return err
+	f, err := a.resultFields(v)
+	if err != nil {
+		return err
+	}
+	f["application_context"] = maximumResultApplicationContext()
+	return a.boundedResultFields(f)
 }
 
 func (a *financialERP) resultApplicationOwner(b financialERPResultBasis, digest string) (financialERPResultApplication, bool, error) {
 	app, ok := a.resultApplications[[2]string{b.Workspace, b.ID}]
-	external, preparation := [3]string{b.Workspace, b.Packet.Connection, b.Packet.External}, [2]string{b.Workspace, b.Packet.Preparation}
+	if err := a.validateResultChains(); err != nil {
+		return app, ok, err
+	}
 	if !ok {
-		if a.resultExternals[external] == b.ID || a.resultPreparations[preparation] == b.ID {
-			return app, false, commands.Fail(commands.EvidenceStale)
-		}
 		return app, false, nil
 	}
-	copy := app
-	copy.receipt = ""
-	if !validRequestID(app.actor) || !reflect.DeepEqual(copy, resultIntent(b, app.actor, digest)) || app.receipt != "" && !validPlanHash(app.receipt) || a.resultExternals[external] != b.ID || a.resultPreparations[preparation] != b.ID {
+	if app.digest != digest {
 		return app, true, commands.Fail(commands.EvidenceStale)
 	}
 	return app, true, nil
@@ -84,7 +90,7 @@ func (a *financialERP) checkResultReceipt(b financialERPResultBasis, app financi
 	if err != nil {
 		return commands.Fail(commands.DependencyUnavailable)
 	}
-	if !resultSnapshotMatches(snapshot, b, app, true) {
+	if a.resultExternals[[3]string{b.Workspace, b.Packet.Connection, b.Packet.External}] != b.ID || a.resultPreparations[[2]string{b.Workspace, b.Packet.Preparation}] != b.ID || app.after == nil || !reflect.DeepEqual(snapshot, *app.after) {
 		return commands.Fail(commands.EvidenceStale)
 	}
 	receipt, err := resultApplicationDigest(app.digest, app.actor, snapshot)

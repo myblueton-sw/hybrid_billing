@@ -13,9 +13,13 @@ func (r *Registry) ResultOf(workspace, key string) (ResultView, error) {
 	if err != nil {
 		return ResultView{}, err
 	}
+	return resultView(s, sub), nil
+}
+
+func resultView(s *space, sub *submission) ResultView {
 	out := ResultView{Submission: sub.copy(), Reconciliation: reconciliation(s, sub)}
 	for _, total := range out.Reconciliation.Documents {
 		out.Documents = append(out.Documents, s.documents[externalKey(total.Connection, total.External)].copy())
 	}
-	return out, nil
+	return out
 }

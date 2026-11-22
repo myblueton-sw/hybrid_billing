@@ -545,3 +545,17 @@ HYB-341 M01 distinguishes pending result evidence proposals counted by the origi
 | result_applications_unknown | ERP result evidence applications with unknown outcome | ERP 결과 근거 내부 반영 결과 미확정 | عمليات تطبيق أدلة نتائج ERP داخلياً ذات نتيجة غير مؤكدة |
 
 The proposal note describes current proposer permission checks at evidence confirmation. The unknown-application note describes current applying-actor permission and evidence checks at recovery while preserving the possibility of earlier effects. False-recheck displays explicitly withhold assurance and retain that uncertainty. Separate read-only AI technical-writing review selected EN/KO/AR wording against the actual contract; native-language and owner acceptance are unverified. Existing layout and neutral separators remain unchanged. Rendered acceptance is recorded separately, not inferred from this glossary.
+
+## Owned ERP result replacement
+
+HYB-341 B09 distinguishes the reported result, its internal application and retained application history. A reserved latest application with an unknown outcome is not proof of current ledger application. A historical ancestor with an unresolved successor is not proof that replacement completed. Prospective targets describe the currently observed head; only an owned operation has a retained predecessor. Unknown-predecessor recovery requires the original actor and current permissions/evidence and may remain unavailable. These terms do not authorize ERP transmission, posting or final financial approval.
+
+| Concept | EN | KO | AR |
+| --- | --- | --- | --- |
+| Initial operation | Initial internal application | 최초 내부 반영 | التطبيق الداخلي الأول |
+| Replacement operation | Internal replacement | 내부 대체 반영 | الاستبدال الداخلي |
+| Prospective predecessor | Proposed replacement target | 대체 예정 대상 | الهدف المقترح للاستبدال |
+| Historical application | Historical record | 이전 처리 기록 | سجل سابق |
+| Internal receipt evidence | Internal processing record hash | 내부 처리 기록 해시 | بصمة سجل المعالجة الداخلية |
+
+Do not translate internal processing receipt as a payment receipt (영수증). Do not label an unknown reserved head as a completed application, and do not promise that retrying will recover a watermark-stranded predecessor. Independent technical-writing review inspected these strings in source and bounded actual EN/KO/AR renders; native-language/practitioner and owner acceptance remain unverified. See [replacement screen verification](../../features/HYB-341/result-replacement-screen-verification.md).

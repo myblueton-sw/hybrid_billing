@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/erpledger"
@@ -16,6 +17,9 @@ type financialERPResultApplication struct {
 	actor, digest, receipt string
 	document               erpledger.Document
 	links                  []erpledger.Link
+	predecessor            string
+	before, after          *erpledger.ResultView
+	reservedAt             time.Time
 }
 
 func resultIntent(b financialERPResultBasis, actor, digest string) financialERPResultApplication {
@@ -139,11 +143,28 @@ func (a *financialERP) applyResultLocked(workspace, id, digest, actor string) (f
 		return fail(err)
 	}
 	key, external, preparation := [2]string{workspace, id}, [3]string{workspace, b.Packet.Connection, b.Packet.External}, [2]string{workspace, b.Packet.Preparation}
+	if err := a.validateResultChains(); err != nil {
+		return fail(err)
+	}
 	intent := resultIntent(b, actor, digest)
 	app, owned := a.resultApplications[key]
+	if owned && app.predecessor != "" {
+		return a.applyReplacement(b, r, app, actor)
+	}
+	if !owned && (a.resultExternals[external] != "" || a.resultPreparations[preparation] != "") {
+		app, err = a.replacementIntent(b, actor, digest)
+		if err != nil {
+			return fail(err)
+		}
+		a.resultApplications[key] = app
+		a.resultTime = app.reservedAt
+		a.resultExternals[external], a.resultPreparations[preparation] = id, id
+		return a.applyReplacement(b, r, app, actor)
+	}
 	if owned {
 		previous := app
 		previous.receipt = ""
+		previous.after = nil
 		if !reflect.DeepEqual(previous, intent) || a.resultExternals[external] != id || a.resultPreparations[preparation] != id {
 			return fail(commands.Fail(commands.EvidenceStale))
 		}
@@ -240,6 +261,10 @@ func (a *financialERP) applyResultLocked(workspace, id, digest, actor string) (f
 		return fail(errFinancialERPResultUncertain)
 	}
 	app.receipt = receipt
+	app.after = cloneResultSnapshot(snapshot)
+	if _, err := resultRetainedSize(app); err != nil {
+		return fail(errFinancialERPResultUncertain)
+	}
 	a.resultApplications[key] = app
 	return a.resultView(r, b), nil
 }

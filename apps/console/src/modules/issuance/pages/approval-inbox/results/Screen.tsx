@@ -7,7 +7,7 @@ import { t } from "../copy";
 import { useResults } from "./use-results";
 import type { ReadState } from "./read-store";
 import "./screen.css";
-const items = ["B09:results:discovery", "B09:results:reference-context", "B09:results:history", "B09:results:permission-readiness", "B09:results:async-scope", "B09:results:proposal-fields", "B09:results:proposal-review", "B09:results:attempt-history", "B09:results:inspection", "B09:results:action-review", "B09:results:owned-recovery"];
+const items = ["B09:results:discovery", "B09:results:reference-context", "B09:results:history", "B09:results:permission-readiness", "B09:results:async-scope", "B09:results:proposal-fields", "B09:results:proposal-review", "B09:results:attempt-history", "B09:results:inspection", "B09:results:action-review", "B09:results:owned-recovery", "B09:results:replacement-context", "B09:results:retained-history"];
 const stateLabel = (l: Locale, value: string) => ({
  allowed: t(l,"Allowed","허용","مسموح"), denied: t(l,"Denied","거절","مرفوض"), unavailable: t(l,"Unavailable","확인 불가","غير متاح"),
  ready: t(l,"Ready","가능","جاهز"), blocked: t(l,"Blocked","차단","محجوب"), unchecked: t(l,"Not checked","미확인","لم يُفحص"), inapplicable: t(l,"Not applicable","해당 없음","غير منطبق"),

@@ -23,11 +23,19 @@ type financialChannelRecord struct {
 }
 
 func channelDigest(p financialChannelRecord) (string, error) {
+	if err := channelOrigin(p); err != nil {
+		return "", err
+	}
+	domain := "issuance_channel"
+	if p.Spec.Selector.Configuration != nil {
+		domain = "issuance_configuration_channel_v1"
+	}
 	p.Admitter, p.Admission, p.Digest, p.State = "", "", "", ""
 	p.Module = protected.ChannelView{}
-	return financialEvidenceDigest("issuance_channel", p)
+	return financialEvidenceDigest(domain, p)
 }
 func copyChannelRecord(p financialChannelRecord) financialChannelRecord {
+	p.Spec.Selector = copyChannelSelector(p.Spec.Selector)
 	p.Subject = copyChannelSubject(p.Subject)
 	return p
 }
@@ -45,7 +53,7 @@ func validChannelSpec(p financialChannelSpec) bool {
 }
 func (a *financialIssuance) currentChannel(p financialChannelRecord) error {
 	digest, err := channelDigest(p)
-	if err != nil || digest != p.Digest || !validChannelSpec(p.Spec) || p.Spec.Selector != p.Subject.Selector || p.Registrar == "" {
+	if err != nil || digest != p.Digest || !validChannelSpec(p.Spec) || !reflect.DeepEqual(p.Spec.Selector, p.Subject.Selector) || p.Registrar == "" {
 		return commands.Fail(commands.EvidenceStale)
 	}
 	rules, err := a.channelRules(p.Workspace)

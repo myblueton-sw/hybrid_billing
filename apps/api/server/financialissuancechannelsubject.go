@@ -10,6 +10,7 @@ import (
 )
 
 type financialChannelSelector struct {
+	Configuration                                                  *financialConfigurationReference `json:"configuration,omitempty"`
 	Kind, Contract, BillingProfile, Reservation, ReservationDigest string
 	Revision                                                       uint64
 }
@@ -20,6 +21,7 @@ type financialChannelParty struct {
 }
 
 type financialChannelSubject struct {
+	Configuration    *financialIssuanceConfiguration `json:"configuration,omitempty"`
 	Selector         financialChannelSelector
 	Subject          string
 	Workspace        organizations.Workspace
@@ -33,6 +35,11 @@ type financialChannelSubject struct {
 }
 
 func copyChannelSubject(p financialChannelSubject) financialChannelSubject {
+	p.Selector = copyChannelSelector(p.Selector)
+	if p.Configuration != nil {
+		c := copyConfiguration(*p.Configuration)
+		p.Configuration = &c
+	}
 	p.Parties = slices.Clone(p.Parties)
 	p.Contract.Components = slices.Clone(p.Contract.Components)
 	p.ReservationSpec.Languages = slices.Clone(p.ReservationSpec.Languages)
@@ -68,6 +75,16 @@ func (a *financialIssuance) channelSubject(workspace string, sel financialChanne
 	}
 	if workspace != a.server.bootWorkspace {
 		return financialChannelSubject{}, commands.Fail(commands.PermissionDenied)
+	}
+	if !validChannelSelectorOrigin(sel) {
+		return bad()
+	}
+	if sel.Kind == "configuration_kind" {
+		c, err := a.ownedConfirmedConfiguration(workspace, sel.Configuration.ID, sel.Configuration.Digest)
+		if err != nil {
+			return financialChannelSubject{}, err
+		}
+		return configuredChannelSubject(sel, c), nil
 	}
 	p := financialChannelSubject{Selector: sel}
 	var err error

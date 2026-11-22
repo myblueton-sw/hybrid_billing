@@ -17,6 +17,7 @@ type financialIssuanceProfileSpec struct {
 }
 
 type financialIssuanceProfile struct {
+	ReservationDigest                          string
 	Spec                                       financialIssuanceProfileSpec
 	Source                                     financialIssuanceSourceView
 	Kind                                       issuance.Kind
@@ -74,6 +75,9 @@ func (a *financialIssuance) profileCaller(workspace, actor string) error {
 }
 
 func (a *financialIssuance) currentProfileSource(workspace string, p financialIssuanceProfile, actor string) error {
+	if err := a.profileReservation(workspace, p); err != nil {
+		return err
+	}
 	immutable := copyIssuanceProfile(p)
 	immutable.Digest = ""
 	immutable.State = ""
@@ -113,7 +117,14 @@ func (a *financialIssuance) proposeProfile(workspace, request, digest, actor, re
 	if err != nil {
 		return financialIssuanceProfile{}, err
 	}
-	p := financialIssuanceProfile{Spec: spec, Source: source, Kind: kind, Proposer: actor, Reason: reason}
+	reservation, ok := a.kindReservations[spec.ID]
+	if !ok || reservation.State != "confirmed" || !reflect.DeepEqual(reservation.Spec, spec) || !reflect.DeepEqual(reservation.Kind, kind) {
+		return financialIssuanceProfile{}, commands.Fail(commands.EvidenceStale)
+	}
+	if err := a.currentKindReservation(workspace, reservation); err != nil {
+		return financialIssuanceProfile{}, err
+	}
+	p := financialIssuanceProfile{ReservationDigest: reservation.Digest, Spec: spec, Source: source, Kind: kind, Proposer: actor, Reason: reason}
 	p.Digest, err = financialEvidenceDigest("issuance_profile", p)
 	if err != nil {
 		return financialIssuanceProfile{}, err
@@ -140,6 +151,8 @@ func (a *financialIssuance) proposeProfile(workspace, request, digest, actor, re
 			return financialIssuanceProfile{}, commands.Fail(commands.DependencyUnavailable)
 		}
 		p.State = "registration_unknown"
+		reservation.ProfileID, reservation.ProfileDigest = p.Spec.ID, p.Digest
+		a.kindReservations[spec.ID] = copyKindReservation(reservation)
 		a.profiles[spec.ID] = copyIssuanceProfile(p)
 		a.scopes[source.Basis.Subject.Target] = spec.ID
 	}

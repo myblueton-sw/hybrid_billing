@@ -31,6 +31,12 @@ func explicitDocumentWorldWithRequired(t *testing.T, required string) documentWo
 	f, requester, decider, _ := chargeWorld(t)
 	if required != "" {
 		subjectPolicy(t, f, "document-charge-policy", "3", required)
+		for _, login := range []string{AdminLogin, Admin2Login, Admin3Login} {
+			for _, v := range f.s.sessions.byLogin(login) {
+				f.s.endProbe(v)
+			}
+		}
+		requester, decider = f.as(Admin3Login), f.as(AdminLogin)
 	}
 	original, err := f.s.chargeProducer.candidates.financialCandidate(SampleWorkspace, "subject-candidate")
 	f.must(err)

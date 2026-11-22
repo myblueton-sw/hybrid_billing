@@ -147,6 +147,9 @@ func (a *financialIssuance) termProfile(workspace, id, digest, actor, capability
 	if !ok || p.Spec.ID != id || p.Source.Basis.Workspace != workspace || p.Digest != digest || p.State != "confirmed" || p.Confirmer == "" {
 		return financialIssuanceProfile{}, commands.Fail(commands.EvidenceStale)
 	}
+	if err := a.profileReservation(workspace, p); err != nil {
+		return financialIssuanceProfile{}, err
+	}
 	immutable := copyIssuanceProfile(p)
 	immutable.Digest = ""
 	immutable.State = ""

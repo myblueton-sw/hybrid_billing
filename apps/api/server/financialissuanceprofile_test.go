@@ -7,7 +7,6 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
-	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/issuance"
 	"github.com/myblueton-sw/hybrid_billing/modules/protected"
 	"github.com/myblueton-sw/hybrid_billing/modules/receivables"
@@ -18,6 +17,15 @@ func issuanceSpec() financialIssuanceProfileSpec {
 }
 
 func proposeIssuanceProfile(f world, who actor, digest string, spec financialIssuanceProfileSpec) (financialIssuanceProfile, error) {
+	if _, ok := f.s.financialIssuance.kindReservations[spec.ID]; !ok {
+		r, err := proposeKindReservationForTest(f, f.as(AdminLogin), spec)
+		if err != nil {
+			return financialIssuanceProfile{}, err
+		}
+		if _, err := confirmKindReservationForTest(f, f.as(Admin3Login), r); err != nil {
+			return financialIssuanceProfile{}, err
+		}
+	}
 	var p financialIssuanceProfile
 	err := inputAuthorityAs(f, who, func() error {
 		var err error
@@ -109,6 +117,11 @@ func TestFinancialIssuanceProfileRegistrationRecovery(t *testing.T) {
 				_, err = proposeIssuanceProfile(f, second, digest, issuanceSpec())
 				documentFailure(t, err, commands.EvidenceStale)
 			}
+			reserved, err := proposeKindReservationForTest(f, first, issuanceSpec())
+			f.must(err)
+			if point == "before-register" && reserved.ProfileID != "" || point != "before-register" && reserved.ProfileID != "profile-1" {
+				t.Fatal("wrong consumption at interruption")
+			}
 			p, err := proposeIssuanceProfile(f, first, digest, issuanceSpec())
 			f.must(err)
 			if p.State != "proposed" || len(a.profiles) != 1 || len(a.scopes) != 1 {
@@ -148,6 +161,8 @@ func TestFinancialIssuanceProfileConfirmationRecovery(t *testing.T) {
 				_, wrongErr := confirmIssuanceProfile(f, f.as(Admin2Login), p)
 				documentFailure(t, wrongErr, commands.PermissionDenied)
 			}
+			_, err = proposeKindReservationForTest(f, first, issuanceSpec())
+			f.must(err)
 			confirmed, err := confirmIssuanceProfile(f, second, p)
 			f.must(err)
 			if confirmed.State != "confirmed" || confirmed.Digest != p.Digest {
@@ -199,9 +214,7 @@ func TestFinancialIssuanceProfileChangedSourceRetainsLock(t *testing.T) {
 			}
 			_, err = confirmIssuanceProfile(f, second, p)
 			if mode == "proposer" {
-				if !errors.Is(err, inputauthority.ErrDenied) {
-					t.Fatalf("wrong revoked governor refusal: %v", err)
-				}
+				documentFailure(t, err, commands.PermissionDenied)
 			} else {
 				documentFailure(t, err, commands.EvidenceStale)
 			}

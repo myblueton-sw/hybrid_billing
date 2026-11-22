@@ -44,6 +44,12 @@ func TestResultEvidenceImpactRenderedBrowser(t *testing.T) {
 	f.ok(t, "second charge policy impact", otherCharge, "pending", "")
 	finalLimit := f.run(w.actors[Admin2Login], "erp_final_authority.propose", "final-limit-impact", financialAuthorityFields(f))
 	f.ok(t, "final amount limit impact", finalLimit, "pending", "")
+	decisionPermission := f.run(w.actors[Admin2Login], "erp_final_permission.propose", "final-decision-impact", financialPermissionFields(f))
+	f.ok(t, "pending final decision permission", decisionPermission, "pending", "")
+	for _, id := range []string{"final-request-impact-one", "final-request-impact-two"} {
+		requestPermission := f.run(w.actors[Admin2Login], "erp_final_request_permission.propose_console", id, requestPermissionTimes(f))
+		f.ok(t, "pending final request permission", requestPermission, "pending", "")
+	}
 	beforeGrants := len(f.s.admin.Grants())
 	f.setPassword(AdminLogin, pw)
 	reader := f.signedIn(AdminLogin, pw)

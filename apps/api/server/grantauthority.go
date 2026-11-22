@@ -26,12 +26,16 @@ type serverGrantAuthority struct {
 }
 
 func newServerGrantAuthority(s *Server, limits inputauthority.Limits, domain grantAuthorityDomain) (*serverGrantAuthority, error) {
-	if s == nil || s.cfg.Seed != SeedSample || (domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain && domain != financialRequestDomain && domain != documentGrantAuthority && domain != resultGrantAuthority) {
+	if s == nil || s.cfg.Seed != SeedSample || (domain != erpFinalPermissionDomain && domain != erpFinalRequestDomain && domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain && domain != financialRequestDomain && domain != documentGrantAuthority && domain != resultGrantAuthority) {
 		return nil, inputauthority.ErrInvalid
 	}
 	a := &serverGrantAuthority{s: s, domain: domain, limits: limits, bindings: make(map[string]inputauthority.Spec), ceilings: make(map[string]inputauthority.Spec)}
 	var err error
 	switch domain {
+	case erpFinalPermissionDomain:
+		a.registry, err = financialpermission.NewERPFinalRegistry(limits, a, a, a, s.clock)
+	case erpFinalRequestDomain:
+		a.registry, err = financialrequestauthority.NewERPFinalRegistry(limits, a, a, a, s.clock)
 	case resultGrantAuthority:
 		a.registry, err = resultauthority.NewRegistry(limits, a, a, a, s.clock)
 	case documentGrantAuthority:
@@ -136,10 +140,10 @@ func (a *serverGrantAuthority) grant(id string, spec inputauthority.Spec) (gate.
 	if a.domain == documentGrantAuthority && !a.documentShape(spec) {
 		return gate.Grant{}, inputauthority.ErrInvalid
 	}
-	if a.domain == financialRequestDomain && !a.financialRequestShape(spec) {
+	if (a.domain == financialRequestDomain || a.domain == erpFinalRequestDomain) && !a.financialRequestShape(spec) {
 		return gate.Grant{}, inputauthority.ErrInvalid
 	}
-	if a.domain == financialPermissionDomain && (a.s == nil || spec.Workspace != a.s.bootWorkspace || spec.Kind != financialpermission.DirectHuman || spec.CeilingID != "") {
+	if (a.domain == financialPermissionDomain || a.domain == erpFinalPermissionDomain) && (a.s == nil || spec.Workspace != a.s.bootWorkspace || spec.Kind != financialpermission.DirectHuman || spec.CeilingID != "") {
 		return gate.Grant{}, inputauthority.ErrInvalid
 	}
 	terms, err := a.domain.terms(spec.Workspace, spec.Capability)
@@ -153,7 +157,7 @@ func (a *serverGrantAuthority) grant(id string, spec inputauthority.Spec) (gate.
 	case inputauthority.Human:
 		grant.SubjectID = spec.Recipient
 	case financialpermission.DirectHuman:
-		if a.domain != financialPermissionDomain {
+		if a.domain != financialPermissionDomain && a.domain != erpFinalPermissionDomain {
 			return gate.Grant{}, inputauthority.ErrInvalid
 		}
 		grant.SubjectID = spec.Recipient

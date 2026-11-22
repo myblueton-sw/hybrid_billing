@@ -246,6 +246,7 @@ const actions: Record<string, [string, string, string]> = {
 const kinds: Record<string, [string, string, string]> = {
  synthetic_erp_result_evidence: ["Synthetic ERP result evidence", "합성 ERP 결과 근거", "أدلة نتائج ERP اصطناعية"],
  synthetic_document_evidence: ["Synthetic document evidence", "합성 문서 근거", "أدلة مستند اصطناعية"],
+  erp_final_approval: ["ERP final-amount approval", "ERP 최종 금액 승인", "اعتماد المبلغ النهائي في ERP"],
   charge_approval: ["Charge approval", "청구 승인", "اعتماد الرسوم"],
   approval_review: ["Approval review records", "승인 검토 기록", "سجلات مراجعة الاعتمادات"],
  synthetic_pricing_policy: ["Synthetic pricing policy", "합성 시험용 가격 정책", "سياسة تسعير اصطناعية"],
@@ -264,6 +265,8 @@ const fields: Record<string, [string, string, string]> = {
 };
 const phrases: Record<string, [string, string, string]> = {
   "view|approval_review|approval_evidence": ["view approval request and decision records", "승인 요청·결정 기록 조회", "عرض سجلات طلبات الاعتماد والقرارات"],
+  "approve|erp_final_approval|": ["Approve ERP final amounts", "ERP 최종 금액 승인", "اعتماد المبلغ النهائي في ERP"],
+  "request_approval|erp_final_approval|": ["Request approval for ERP final amounts", "ERP 최종 금액 승인 요청", "طلب اعتماد المبلغ النهائي في ERP"],
   "approve|charge_approval|": ["approve charges", "청구 승인", "اعتماد الرسوم"],
   "request_approval|charge_approval|": ["request approval for charges", "청구 승인 요청", "طلب اعتماد الرسوم"],
   "view_cost|charge_candidate|charge_evidence": ["view source costs and evidence for charge calculation candidates", "과금 계산 후보의 원천 비용·계산 근거 조회", "عرض تكاليف المصدر وأدلة نتائج احتساب الرسوم المبدئية"],

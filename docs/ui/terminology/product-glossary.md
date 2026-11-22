@@ -579,3 +579,17 @@ HYB-341 M01 counts pending service-owned StageERPFinal amount-authority proposal
 | erp_final_authority_proposals | ERP final-amount approval limit proposals | ERP 최종 금액 승인 한도 제안 | مقترحات حدود اعتماد المبلغ النهائي في ERP |
 
 Independent read-only source/domain technical-writing review passed these exact labels and subsequently passed wording in three actual EN1440/KO390/AR390 row crops. Native-language and owner acceptance remain unverified. The separate Claude CLI review covered those rows and two context captures; see the [ERP-final plan](../../features/HYB-341/erp-final-approval-plan.md) for bounded evidence.
+
+## ERP final-amount action permissions
+
+HYB-341 distinguishes approval-action permission from submission permission. The former is a direct human grant; the latter requires an independently governed console ceiling and human subgrant. Permission grants authorize the named actor action only. They do not supply amount authority, satisfy current evidence/policy checks, record a final decision, or authorize ERP transmission/posting. M01 counts pending/unresolved proposals; M03/P02 display provisioned action/resource labels.
+
+| Concept | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| erp_final_permission_proposals | ERP final-amount approval permission proposals | ERP 최종 금액 승인 권한 제안 | مقترحات صلاحية اعتماد المبلغ النهائي في ERP |
+| erp_final_request_permission_proposals | ERP final-amount approval submission permission proposals | ERP 최종 금액 승인 요청 제출 권한 제안 | مقترحات صلاحية تقديم طلب اعتماد المبلغ النهائي في ERP |
+| erp_final_approval | ERP final-amount approval | ERP 최종 금액 승인 | اعتماد المبلغ النهائي في ERP |
+| approve | Approve ERP final amounts | ERP 최종 금액 승인 | اعتماد المبلغ النهائي في ERP |
+| request_approval | Request approval for ERP final amounts | ERP 최종 금액 승인 요청 | طلب اعتماد المبلغ النهائي في ERP |
+
+Independent source/domain technical-writing review passed these exact labels, then inspected six actual M01 crops and six M03/P02 crops with bounded rendered PASS. M03/P02 render action and kind separately. Native-language and owner acceptance remain unverified; see the [ERP-final plan](../../features/HYB-341/erp-final-approval-plan.md) for exact capture and test scope.

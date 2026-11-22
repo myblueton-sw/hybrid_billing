@@ -89,6 +89,8 @@ type Server struct {
 	documentAuthority          *serverGrantAuthority
 	resultAuthority            *serverGrantAuthority
 	financialPermission        *serverGrantAuthority
+	erpFinalPermission         *serverGrantAuthority
+	erpFinalRequestPermission  *serverGrantAuthority
 	financialRequestPermission *serverGrantAuthority
 
 	approvals        *approvals.Registry
@@ -199,7 +201,7 @@ func RelationshipLimits() relationships.Limits {
 }
 
 func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
-	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, approvalKind, inputauthority.ResourceKind, pricingauthority.ResourceKind, financialpermission.ResourceKind, documentauthority.ResourceKind, resultauthority.ResourceKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General, candidateField: gate.Cost, approvalField: gate.General, inputauthority.EvidenceField: gate.Cost, pricingauthority.EvidenceField: gate.Cost}}
+	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, approvalKind, inputauthority.ResourceKind, pricingauthority.ResourceKind, financialpermission.ResourceKind, financialpermission.ERPFinalResourceKind, documentauthority.ResourceKind, resultauthority.ResourceKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General, candidateField: gate.Cost, approvalField: gate.General, inputauthority.EvidenceField: gate.Cost, pricingauthority.EvidenceField: gate.Cost}}
 	for name, class := range fields {
 		c.Fields[name] = class
 	}
@@ -342,6 +344,12 @@ func New(cfg Config) (*Server, error) {
 				}
 				if err == nil {
 					s.financialRequestPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, financialRequestDomain)
+				}
+				if err == nil {
+					s.erpFinalPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, erpFinalPermissionDomain)
+				}
+				if err == nil {
+					s.erpFinalRequestPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, erpFinalRequestDomain)
 				}
 				if err == nil {
 					s.documentAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, documentGrantAuthority)

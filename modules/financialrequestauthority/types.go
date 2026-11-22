@@ -12,21 +12,22 @@ var (
 )
 
 const (
-	Console      = "console_ceiling"
-	Human        = "human_grant"
-	Pending      = "pending"
-	Applying     = "applying"
-	Unknown      = "decision_unknown"
-	Applied      = "applied"
-	Rejected     = "rejected"
-	Withdrawn    = "withdrawn"
-	Expired      = "expired"
-	Superseded   = "superseded"
-	ActiveGrant  = "active"
-	RevokedGrant = "revoked"
-	ExpiredGrant = "expired"
-	Request      = "request"
-	ResourceKind = "charge_approval"
+	Console              = "console_ceiling"
+	Human                = "human_grant"
+	Pending              = "pending"
+	Applying             = "applying"
+	Unknown              = "decision_unknown"
+	Applied              = "applied"
+	Rejected             = "rejected"
+	Withdrawn            = "withdrawn"
+	Expired              = "expired"
+	Superseded           = "superseded"
+	ActiveGrant          = "active"
+	RevokedGrant         = "revoked"
+	ExpiredGrant         = "expired"
+	Request              = "request"
+	ResourceKind         = "charge_approval"
+	ERPFinalResourceKind = "erp_final_approval"
 )
 
 type Limits = grantauthority.Limits

@@ -13,6 +13,8 @@ import (
 type grantAuthorityDomain uint8
 
 const (
+	erpFinalPermissionDomain  grantAuthorityDomain = 7
+	erpFinalRequestDomain     grantAuthorityDomain = 8
 	resultGrantAuthority      grantAuthorityDomain = 6
 	documentGrantAuthority    grantAuthorityDomain = 5
 	inputGrantAuthority       grantAuthorityDomain = 1
@@ -22,6 +24,12 @@ const (
 )
 
 func (d grantAuthorityDomain) grantPrefix() string {
+	if d == erpFinalPermissionDomain {
+		return "erp-final-permission-"
+	}
+	if d == erpFinalRequestDomain {
+		return "erp-final-request-"
+	}
 	if d == resultGrantAuthority {
 		return "result-grant-"
 	}
@@ -43,6 +51,12 @@ func (d grantAuthorityDomain) grantPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) faultPrefix() string {
+	if d == erpFinalPermissionDomain {
+		return "erp-final-permission-"
+	}
+	if d == erpFinalRequestDomain {
+		return "erp-final-request-"
+	}
 	if d == resultGrantAuthority {
 		return "result-authority-"
 	}
@@ -64,6 +78,16 @@ func (d grantAuthorityDomain) faultPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) terms(workspace, capability string) (gate.Terms, error) {
+	if d == erpFinalPermissionDomain || d == erpFinalRequestDomain {
+		action, expected := gate.Approve, financialpermission.Approve
+		if d == erpFinalRequestDomain {
+			action, expected = gate.RequestApproval, financialrequestauthority.Request
+		}
+		if capability != expected {
+			return gate.Terms{}, inputauthority.ErrInvalid
+		}
+		return gate.Terms{Action: action, Kind: financialpermission.ERPFinalResourceKind, Scope: gate.Scope{WorkspaceID: workspace, Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}, Period: gate.AnyPeriod()}, nil
+	}
 	if d == resultGrantAuthority {
 		return resultAuthorityTerms(workspace, capability)
 	}
@@ -122,6 +146,10 @@ func pricingAuthorityTerms(workspace, capability string) (gate.Terms, error) {
 }
 func (s *Server) grantAuthority(domain grantAuthorityDomain) *serverGrantAuthority {
 	switch domain {
+	case erpFinalPermissionDomain:
+		return s.erpFinalPermission
+	case erpFinalRequestDomain:
+		return s.erpFinalRequestPermission
 	case resultGrantAuthority:
 		return s.resultAuthority
 	case documentGrantAuthority:

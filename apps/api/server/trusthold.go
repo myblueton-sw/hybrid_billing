@@ -59,6 +59,15 @@ var holdTable = map[string]holdRule{
 	"financial_request_permission.approve":         {holdRefuse, reasonChange},
 	"financial_request_permission.reject":          {holdAllow, reasonPending},
 	"financial_request_permission.withdraw":        {holdAllow, reasonPending},
+	"erp_final_permission.propose":                 {holdRefuse, reasonChange},
+	"erp_final_permission.approve":                 {holdRefuse, reasonChange},
+	"erp_final_permission.reject":                  {holdAllow, reasonPending},
+	"erp_final_permission.withdraw":                {holdAllow, reasonPending},
+	"erp_final_request_permission.propose_console": {holdRefuse, reasonChange},
+	"erp_final_request_permission.propose_human":   {holdRefuse, reasonChange},
+	"erp_final_request_permission.approve":         {holdRefuse, reasonChange},
+	"erp_final_request_permission.reject":          {holdAllow, reasonPending},
+	"erp_final_request_permission.withdraw":        {holdAllow, reasonPending},
 	"financial_permission.propose":                 {holdRefuse, reasonChange},
 	"financial_permission.approve":                 {holdRefuse, reasonChange},
 	"financial_permission.reject":                  {holdAllow, reasonPending},
@@ -212,7 +221,7 @@ func (s *Server) holdAllows(command string, call commands.Call, caller identity.
 	if command == "financial_charge.review" || command == "financial_charge.prepare" || command == "financial_request_permission.inspect" || command == "document_authority.inspect" || command == "result_authority.inspect" {
 		return true
 	}
-	if command == "erp_final_authority.inspect" || command == "erp_final_policy.inspect" || command == "erp_final_policy.current" || command == "financial_permission.inspect" || command == "financial_authority.inspect" || command == "financial_policy.current" || command == "financial_policy.inspect" || command == "pricing_policy.prepare" || command == "pricing_policy.inspect" || command == "pricing_authority.inspect" || command == "input_authority.inspect" || command == "input.inspect" {
+	if command == "erp_final_permission.inspect" || command == "erp_final_request_permission.inspect" || command == "erp_final_authority.inspect" || command == "erp_final_policy.inspect" || command == "erp_final_policy.current" || command == "financial_permission.inspect" || command == "financial_authority.inspect" || command == "financial_policy.current" || command == "financial_policy.inspect" || command == "pricing_policy.prepare" || command == "pricing_policy.inspect" || command == "pricing_authority.inspect" || command == "input_authority.inspect" || command == "input.inspect" {
 		return true
 	}
 	rule, known := holdTable[command]

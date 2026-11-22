@@ -102,6 +102,8 @@ export const b = {
       financial_request_permission_proposals: t(l, "Charge approval submission permission proposals", "청구 승인 요청 제출 권한 제안", "مقترحات صلاحية تقديم طلب اعتماد الرسوم"),
       financial_permission_proposals: t(l, "Charge approval permission requests", "청구 승인 권한 요청", "طلبات صلاحية اعتماد الرسوم"),
       financial_authority_proposals: t(l, "Charge approval limit proposals", "청구 승인 한도 제안", "مقترحات حدود اعتماد الرسوم"),
+      erp_final_permission_proposals: t(l, "ERP final-amount approval permission proposals", "ERP 최종 금액 승인 권한 제안", "مقترحات صلاحية اعتماد المبلغ النهائي في ERP"),
+      erp_final_request_permission_proposals: t(l, "ERP final-amount approval submission permission proposals", "ERP 최종 금액 승인 요청 제출 권한 제안", "مقترحات صلاحية تقديم طلب اعتماد المبلغ النهائي في ERP"),
       erp_final_authority_proposals: t(l, "ERP final-amount approval limit proposals", "ERP 최종 금액 승인 한도 제안", "مقترحات حدود اعتماد المبلغ النهائي في ERP"),
       erp_final_policy_proposals: t(l, "ERP final-amount approval policy proposals", "ERP 최종 금액 승인 정책 제안", "مقترحات سياسة اعتماد المبلغ النهائي في ERP"),
       financial_policy_proposals: t(l, "Charge approval policy proposals", "청구 승인 정책 제안", "مقترحات سياسة اعتماد الرسوم"),

@@ -107,3 +107,19 @@ test("charge approval limit proposal impact has a localized label, count and rec
     assert.ok(!html.includes("financial_authority_proposals"), l);
   }
 });
+
+test("final approval and submission permission proposal counts remain distinct in every locale", () => {
+  const rows = [
+    { store: "erp_final_permission_proposals", count: 1, rechecked: true },
+    { store: "erp_final_request_permission_proposals", count: 2, rechecked: true },
+  ];
+  for (const l of ["en", "ko", "ar"] as Locale[]) {
+    const withPermissions = { ...detail, impact: { ...detail.impact, pending: rows } };
+    const html = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: withPermissions, targets: null }} onMore={() => {}} />);
+    for (const row of rows) {
+      assert.notEqual(b.store(l, row.store), row.store);
+      assert.ok(html.includes(`<dt>${b.store(l, row.store)}</dt><dd><span class="m01-line">${row.count}</span><span class="m01-line">${b.rechecked(l)}</span></dd>`), l);
+      assert.ok(!html.includes(row.store), l);
+    }
+  }
+});

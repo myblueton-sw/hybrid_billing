@@ -60,7 +60,7 @@ func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, er
 	if a == nil {
 		return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
 	}
-	if h.domain == financialRequestDomain || h.domain == documentGrantAuthority || h.domain == resultGrantAuthority {
+	if (h.domain == financialRequestDomain || h.domain == erpFinalRequestDomain) || h.domain == documentGrantAuthority || h.domain == resultGrantAuthority {
 		if h.s.cfg.Commands.Fields < 20 || h.s.cfg.Commands.Value < 1024 {
 			return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
 		}
@@ -81,7 +81,7 @@ func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, er
 			return commands.Outcome{}, commands.Fail(commands.InvalidRequest, "not_before", "not_after")
 		}
 		spec := inputauthority.Spec{Capability: ctx.Fields["capability"], Workspace: ctx.Workspace, Kind: inputauthority.Console, Recipient: ConsoleClient, NotBefore: before, NotAfter: after}
-		if h.domain == financialRequestDomain {
+		if h.domain == financialRequestDomain || h.domain == erpFinalRequestDomain {
 			spec.Capability = financialrequestauthority.Request
 		}
 		if h.kind == "propose_human" {
@@ -112,7 +112,7 @@ func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, er
 		return commands.Outcome{}, inputAuthorityError(err)
 	}
 	out := commands.Outcome{Fields: inputAuthorityFields(record)}
-	if h.domain == financialRequestDomain || h.domain == documentGrantAuthority || h.domain == resultGrantAuthority {
+	if (h.domain == financialRequestDomain || h.domain == erpFinalRequestDomain) || h.domain == documentGrantAuthority || h.domain == resultGrantAuthority {
 		out.Fields["receipt"] = "historical_decision"
 	}
 	if h.kind != "inspect" {
@@ -139,6 +139,8 @@ func (s *Server) grantAuthorityDefinitions(domain grantAuthorityDomain) []comman
 		prefix = "input_authority"
 	case pricingGrantAuthority:
 		prefix = "pricing_authority"
+	case erpFinalRequestDomain:
+		prefix = "erp_final_request_permission"
 	case financialRequestDomain:
 		prefix = "financial_request_permission"
 	default:
@@ -146,7 +148,7 @@ func (s *Server) grantAuthorityDefinitions(domain grantAuthorityDomain) []comman
 	}
 	permission := commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}
 	times := []commands.Field{{Name: "capability", Type: commands.ID, Required: true}, {Name: "not_before", Type: commands.Text, Required: true}, {Name: "not_after", Type: commands.Text, Required: true}}
-	if domain == financialRequestDomain {
+	if domain == financialRequestDomain || domain == erpFinalRequestDomain {
 		times = times[1:]
 	}
 	human := append(append([]commands.Field{}, times...), commands.Field{Name: "recipient", Type: commands.ID, Required: true}, commands.Field{Name: "ceiling", Type: commands.ID, Required: true})

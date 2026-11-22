@@ -118,5 +118,5 @@ func newFinancialIssuance(s *Server) (*financialIssuance, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &financialIssuance{kindReservations: map[string]financialKindReservation{}, termIntents: map[string]financialTermRecord{}, termScopes: map[string]string{}, bindingIntents: map[string]financialTermBinding{}, server: s, fields: fields, terms: terms, documents: documents, profiles: map[string]financialIssuanceProfile{}, scopes: map[string]string{}}, nil
+	return &financialIssuance{channels: map[string]financialChannelRecord{}, kindReservations: map[string]financialKindReservation{}, termIntents: map[string]financialTermRecord{}, termScopes: map[string]string{}, bindingIntents: map[string]financialTermBinding{}, server: s, fields: fields, terms: terms, documents: documents, profiles: map[string]financialIssuanceProfile{}, scopes: map[string]string{}}, nil
 }

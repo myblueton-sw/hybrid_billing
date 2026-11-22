@@ -10,6 +10,7 @@ import (
 const financialIssuanceLimit = 100
 
 type financialIssuance struct {
+	channels         map[string]financialChannelRecord
 	kindReservations map[string]financialKindReservation
 	protectedRules   *financialProtectedRules
 	termIntents      map[string]financialTermRecord

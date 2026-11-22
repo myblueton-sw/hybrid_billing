@@ -559,3 +559,13 @@ HYB-341 B09 distinguishes the reported result, its internal application and reta
 | Internal receipt evidence | Internal processing record hash | 내부 처리 기록 해시 | بصمة سجل المعالجة الداخلية |
 
 Do not translate internal processing receipt as a payment receipt (영수증). Do not label an unknown reserved head as a completed application, and do not promise that retrying will recover a watermark-stranded predecessor. Independent technical-writing review inspected these strings in source and bounded actual EN/KO/AR renders; native-language/practitioner and owner acceptance remain unverified. See [replacement screen verification](../../features/HYB-341/result-replacement-screen-verification.md).
+
+## ERP final-amount approval policy impact
+
+HYB-341 M01 counts pending service-owned StageERPFinal approval-policy proposals by original proposer, separately from charge approval policies. Confirmation rechecks the proposer’s current governance authority. Confirming a policy neither approves a particular amount nor grants request/decision rights, consumes an approval, or transmits/posts to ERP.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| erp_final_policy_proposals | ERP final-amount approval policy proposals | ERP 최종 금액 승인 정책 제안 | مقترحات سياسة اعتماد المبلغ النهائي في ERP |
+
+Independent read-only AI technical-writing review passed these source/domain labels and subsequently inspected six actual final/charge row crops in EN1440, KO390 and AR390. The wording and bounded rendered context passed; native-language and owner acceptance remain unverified. See the [ERP-final implementation plan](../../features/HYB-341/erp-final-approval-plan.md) for the exact verification boundary.

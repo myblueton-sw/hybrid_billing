@@ -8,7 +8,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"testing"
+
+	"github.com/myblueton-sw/hybrid_billing/modules/approvals"
 )
 
 func TestResultEvidenceImpactRenderedBrowser(t *testing.T) {
@@ -29,6 +32,16 @@ func TestResultEvidenceImpactRenderedBrowser(t *testing.T) {
 	w.a.afterResultWrite = func(string) error { return errors.New("interrupted") }
 	f.code(t, "unknown result", f.run(w.actors[Admin2Login], "erp_result.apply", "public-result", map[string]string{"digest": digest}), 500, "internal_error")
 	w.a.afterResultWrite = nil
+	for prefix, stage := range map[string]string{"financial_policy": approvals.StageCharge, "erp_final_policy": approvals.StageERPFinal} {
+		policy, err := f.s.approvals.PolicyOf(SampleWorkspace, stage)
+		f.must(err)
+		proposal := f.run(w.actors[Admin2Login], prefix+".propose", prefix+"-impact", financialFields(strconv.Itoa(policy.Revision+1)))
+		f.ok(t, "pending policy impact", proposal, "pending", "")
+	}
+	chargePolicy, err := f.s.approvals.PolicyOf(SampleWorkspace, approvals.StageCharge)
+	f.must(err)
+	otherCharge := f.run(w.actors[Admin2Login], "financial_policy.propose", "second-charge-impact", financialFields(strconv.Itoa(chargePolicy.Revision+1)))
+	f.ok(t, "second charge policy impact", otherCharge, "pending", "")
 	beforeGrants := len(f.s.admin.Grants())
 	f.setPassword(AdminLogin, pw)
 	reader := f.signedIn(AdminLogin, pw)

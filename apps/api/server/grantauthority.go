@@ -18,6 +18,7 @@ import (
 
 type serverGrantAuthority struct {
 	domain   grantAuthorityDomain
+	limits   inputauthority.Limits
 	s        *Server
 	registry *inputauthority.Registry
 	bindings map[string]inputauthority.Spec
@@ -28,7 +29,7 @@ func newServerGrantAuthority(s *Server, limits inputauthority.Limits, domain gra
 	if s == nil || s.cfg.Seed != SeedSample || (domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain && domain != financialRequestDomain && domain != documentGrantAuthority && domain != resultGrantAuthority) {
 		return nil, inputauthority.ErrInvalid
 	}
-	a := &serverGrantAuthority{s: s, domain: domain, bindings: make(map[string]inputauthority.Spec), ceilings: make(map[string]inputauthority.Spec)}
+	a := &serverGrantAuthority{s: s, domain: domain, limits: limits, bindings: make(map[string]inputauthority.Spec), ceilings: make(map[string]inputauthority.Spec)}
 	var err error
 	switch domain {
 	case resultGrantAuthority:

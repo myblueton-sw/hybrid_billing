@@ -195,6 +195,9 @@ func (s *Server) enterHold(reason string) {
 }
 
 func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
+	if command == "result_authority.history" || command == "result_authority.context" {
+		return true
+	}
 	if command == "result_evidence.advice" || command == "result_evidence.preparations" || command == "result_evidence.context" || command == "result_evidence.inspect" || command == "result_evidence.history" || command == "erp_result.inspect" {
 		return true
 	}

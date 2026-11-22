@@ -7,7 +7,11 @@ import (
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/approvals"
+	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
+	"github.com/myblueton-sw/hybrid_billing/modules/issuance"
+	"github.com/myblueton-sw/hybrid_billing/modules/protected"
+	"github.com/myblueton-sw/hybrid_billing/modules/receivables"
 	"github.com/myblueton-sw/hybrid_billing/packages/primitives/decimal"
 )
 
@@ -35,6 +39,12 @@ func (s *Server) initApprovals() error {
 	s.financialAuthorities = make(map[string]financialAuthorityBinding)
 	s.erpFinalAuthorities = make(map[string]financialAuthorityBinding)
 	s.approvals, err = approvals.NewRegistry(profile, approvals.Limits{Workspaces: 100, Admins: 4, Proposals: 100, Authorities: 100, Requests: approvalCap, Items: 100, Executions: 1000}, s.clock)
+	if err != nil {
+		return err
+	}
+	if s.cfg.Seed == SeedSample {
+		s.financialIssuance, err = newFinancialIssuance(s)
+	}
 	return err
 }
 
@@ -86,4 +96,27 @@ func (s *Server) seedApprovals(now time.Time) error {
 		s.approvalIndex = append(s.approvalIndex, approvalIndex{Workspace: ws, ID: id, Target: subject.Target, Basis: "gross"})
 	}
 	return nil
+}
+
+func newFinancialIssuance(s *Server) (*financialIssuance, error) {
+	if s == nil || s.cfg.Seed != SeedSample {
+		return nil, commands.Fail(commands.UnsupportedCapability)
+	}
+	fields, err := protected.NewRegistry(protected.Limits{Workspaces: 1, Channels: 100, Changes: 100}, s.clock)
+	if err != nil {
+		return nil, err
+	}
+	profile, err := decimal.NewProfile(candidateProfile())
+	if err != nil {
+		return nil, err
+	}
+	terms, err := receivables.NewRegistry(profile, receivables.Limits{Workspaces: 1, Terms: 100, Bindings: 100, Receivables: 100, Allocations: 100, Extensions: 100, Holds: 100, NetDays: 365, Freshness: 24 * time.Hour}, s.clock, time.LoadLocation)
+	if err != nil {
+		return nil, err
+	}
+	documents, err := issuance.NewRegistry(issuance.Config{Fields: fields, Terms: terms, Details: unavailableIssuanceContent{}, Renderer: unavailableIssuanceContent{}, Zones: time.LoadLocation}, issuance.Limits{Workspaces: 1, Kinds: 100, Drafts: 100, Documents: 100, Numbers: 100, Attempts: 10, Downloads: 100, Lease: time.Minute}, s.clock)
+	if err != nil {
+		return nil, err
+	}
+	return &financialIssuance{server: s, fields: fields, terms: terms, documents: documents, profiles: map[string]financialIssuanceProfile{}, scopes: map[string]string{}}, nil
 }

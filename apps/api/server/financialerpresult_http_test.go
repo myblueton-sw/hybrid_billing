@@ -75,9 +75,9 @@ func TestFinancialERPResultPublicProjectionBounds(t *testing.T) {
 	}
 }
 
-func publicResult(t *testing.T) (documentWorld, financialERPResultPacket, string) {
+func publicResult(t *testing.T, beforeFinance ...func(world)) (documentWorld, financialERPResultPacket, string) {
 	t.Helper()
-	w, p := resultWorld(t)
+	w, p := resultWorld(t, beforeFinance...)
 	w.f.s.documentERP = w.a
 	raw, err := json.Marshal(p)
 	w.f.must(err)

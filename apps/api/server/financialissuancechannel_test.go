@@ -15,14 +15,25 @@ import (
 )
 
 func grantChannelCapability(f world, capability, recipient string) {
-	root, second := f.as(AdminLogin), f.as(Admin2Login)
+	grantChannelCapabilityAt(f, "", capability, recipient)
+}
+func grantChannelCapabilityAt(f world, prefix, capability, recipient string) {
+	governors := []string{}
+	for _, u := range []struct{ id, login string }{{SampleAdmin, AdminLogin}, {SampleAdmin2, Admin2Login}, {SampleAdmin3, Admin3Login}} {
+		if u.id != recipient {
+			governors = append(governors, u.login)
+		}
+	}
+	root, second := f.as(governors[0]), f.as(governors[1])
+	defer f.s.endProbe(root.verifier(f))
+	defer f.s.endProbe(second.verifier(f))
 	spec := protectedPermissionSpec(f, capability)
-	p, err := protectedPermissionProposal(f, root, inputauthority.Proposal{ID: capability + "-ceiling", Spec: spec, Rationale: "Explicit synthetic channel ceiling"})
+	p, err := protectedPermissionProposal(f, root, inputauthority.Proposal{ID: prefix + capability + "-ceiling", Spec: spec, Rationale: "Explicit synthetic channel ceiling"})
 	f.must(err)
 	c, err := protectedPermissionDecision(f, second, p)
 	f.must(err)
 	spec.Kind, spec.Recipient, spec.CeilingID = inputauthority.Human, recipient, c.Decision.GrantID
-	p, err = protectedPermissionProposal(f, root, inputauthority.Proposal{ID: capability + "-human", Spec: spec, Rationale: "Explicit synthetic channel operator"})
+	p, err = protectedPermissionProposal(f, root, inputauthority.Proposal{ID: prefix + capability + "-human", Spec: spec, Rationale: "Explicit synthetic channel operator"})
 	f.must(err)
 	_, err = protectedPermissionDecision(f, second, p)
 	f.must(err)
@@ -33,8 +44,15 @@ func channelWorld(t *testing.T) (world, actor, actor, financialChannelSpec) {
 	f.setPassword(MemberLogin, pw)
 	return configuredChannelWorld(f)
 }
-func configuredChannelWorld(f world) (world, actor, actor, financialChannelSpec) {
-	rules, err := proposeRulesAs(f, f.as(AdminLogin), "channel-rules", issuanceRules())
+func configuredChannelWorld(f world, explicitRules ...protected.Rules) (world, actor, actor, financialChannelSpec) {
+	configured := issuanceRules()
+	if len(explicitRules) > 1 {
+		f.t.Fatal("multiple rule configurations")
+	}
+	if len(explicitRules) == 1 {
+		configured = explicitRules[0]
+	}
+	rules, err := proposeRulesAs(f, f.as(AdminLogin), "channel-rules", configured)
 	f.must(err)
 	_, err = confirmRulesAs(f, f.as(Admin2Login), rules)
 	f.must(err)

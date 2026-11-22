@@ -9,9 +9,9 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 )
 
-func finalHTTPWorld(t *testing.T) (documentWorld, string) {
+func finalHTTPWorld(t *testing.T, beforeFinance ...func(world)) (documentWorld, string) {
 	t.Helper()
-	w, _, digest := publicResult(t)
+	w, _, digest := publicResult(t, beforeFinance...)
 	f := w.f
 	f.ok(t, "apply result", f.run(w.actors[Admin2Login], "erp_result.apply", "public-result", map[string]string{"digest": digest}), "recorded", "")
 	p := f.run(w.actors[AdminLogin], "erp_final_policy.propose", "http-final-policy", financialFields("2"))

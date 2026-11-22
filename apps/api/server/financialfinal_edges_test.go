@@ -9,9 +9,9 @@ import (
 	"testing"
 )
 
-func finalCommandWorld(t *testing.T) (world, actor, actor, string) {
+func finalCommandWorld(t *testing.T, beforeFinance ...func(world)) (world, actor, actor, string) {
 	t.Helper()
-	w, digest := finalHTTPWorld(t)
+	w, digest := finalHTTPWorld(t, beforeFinance...)
 	f := w.f
 	provisionFinalHTTPRights(t, w)
 	fields := financialAuthorityFields(f)

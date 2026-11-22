@@ -21,14 +21,14 @@ type documentWorld struct {
 	digest   string
 }
 
-func explicitDocumentWorld(t *testing.T) documentWorld {
+func explicitDocumentWorld(t *testing.T, beforeFinance ...func(world)) documentWorld {
 	t.Helper()
-	return explicitDocumentWorldWithRequired(t, "")
+	return explicitDocumentWorldWithRequired(t, "", beforeFinance...)
 }
 
-func explicitDocumentWorldWithRequired(t *testing.T, required string) documentWorld {
+func explicitDocumentWorldWithRequired(t *testing.T, required string, beforeFinance ...func(world)) documentWorld {
 	t.Helper()
-	f, requester, decider, _ := chargeWorld(t)
+	f, requester, decider, _ := chargeWorld(t, beforeFinance...)
 	if required != "" {
 		subjectPolicy(t, f, "document-charge-policy", "3", required)
 		for _, login := range []string{AdminLogin, Admin2Login, Admin3Login} {

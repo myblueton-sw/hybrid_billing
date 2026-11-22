@@ -8,9 +8,9 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 )
 
-func issuanceSourceWorld(t *testing.T) (world, actor, actor, string) {
+func issuanceSourceWorld(t *testing.T, beforeFinance ...func(world)) (world, actor, actor, string) {
 	t.Helper()
-	f, requester, decider, result := finalCommandWorld(t)
+	f, requester, decider, result := finalCommandWorld(t, beforeFinance...)
 	p := finalRequest(f, requester, "issuance-final", result)
 	f.ok(t, "request final", p, approvals.StatePending, "")
 	digest := field(p, "digest")

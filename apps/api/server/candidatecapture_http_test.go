@@ -18,9 +18,9 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/reconcile"
 )
 
-func captureHTTPWorld(t *testing.T, confirm bool) (world, actor, actor, map[string]string) {
+func captureHTTPWorld(t *testing.T, confirm bool, beforeFinance ...func(world)) (world, actor, actor, map[string]string) {
 	t.Helper()
-	f, maker, checker, spec, _ := policyHTTPWorld(t)
+	f, maker, checker, spec, _ := policyHTTPWorld(t, beforeFinance...)
 	provisionPricingCapability(t, f, "use", SampleMember)
 	provisionInputCapability(t, f, inputauthority.Confirm)
 	p := policyRead(f, maker, "prepare", "capture-policy", map[string]string{"spec": spec})

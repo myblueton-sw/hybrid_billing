@@ -36,9 +36,9 @@ func resultGrantTo(t *testing.T, f world, capability, recipient string) {
 	f.ok(t, "result human grant", resultPermissionApprove(f, second, id+"-human", p), "applied", "")
 }
 
-func resultWorld(t *testing.T) (documentWorld, financialERPResultPacket) {
+func resultWorld(t *testing.T, beforeFinance ...func(world)) (documentWorld, financialERPResultPacket) {
 	t.Helper()
-	return resultWorldFromDocument(t, explicitDocumentWorld(t))
+	return resultWorldFromDocument(t, explicitDocumentWorld(t, beforeFinance...))
 }
 
 func resultWorldFromDocument(t *testing.T, w documentWorld) (documentWorld, financialERPResultPacket) {

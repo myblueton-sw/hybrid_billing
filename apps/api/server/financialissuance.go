@@ -10,6 +10,8 @@ import (
 const financialIssuanceLimit = 100
 
 type financialIssuance struct {
+	drafts           map[string]financialDraftRecord
+	draftScopes      map[string]string
 	changes          map[string]financialChangeRecord
 	changeOrders     map[string][]string
 	channels         map[string]financialChannelRecord

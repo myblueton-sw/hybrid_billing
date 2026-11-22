@@ -10,6 +10,7 @@ import (
 const financialIssuanceLimit = 100
 
 type financialIssuance struct {
+	protectedRules *financialProtectedRules
 	termIntents    map[string]financialTermRecord
 	termScopes     map[string]string
 	bindingIntents map[string]financialTermBinding

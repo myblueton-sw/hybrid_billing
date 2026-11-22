@@ -7,6 +7,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/protectedauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/resultauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/termsauthority"
 )
@@ -14,6 +15,7 @@ import (
 type grantAuthorityDomain uint8
 
 const (
+	protectedGrantAuthority   grantAuthorityDomain = 10
 	termGrantAuthority        grantAuthorityDomain = 9
 	erpFinalPermissionDomain  grantAuthorityDomain = 7
 	erpFinalRequestDomain     grantAuthorityDomain = 8
@@ -26,6 +28,9 @@ const (
 )
 
 func (d grantAuthorityDomain) grantPrefix() string {
+	if d == protectedGrantAuthority {
+		return "issuance-protected-grant-"
+	}
 	if d == termGrantAuthority {
 		return "issuance-term-grant-"
 	}
@@ -56,6 +61,9 @@ func (d grantAuthorityDomain) grantPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) faultPrefix() string {
+	if d == protectedGrantAuthority {
+		return "issuance-protected-authority-"
+	}
 	if d == termGrantAuthority {
 		return "issuance-term-authority-"
 	}
@@ -86,6 +94,9 @@ func (d grantAuthorityDomain) faultPrefix() string {
 	return ""
 }
 func (d grantAuthorityDomain) terms(workspace, capability string) (gate.Terms, error) {
+	if d == protectedGrantAuthority {
+		return protectedAuthorityTerms(workspace, capability)
+	}
 	if d == termGrantAuthority {
 		return termAuthorityTerms(workspace, capability)
 	}
@@ -157,6 +168,8 @@ func pricingAuthorityTerms(workspace, capability string) (gate.Terms, error) {
 }
 func (s *Server) grantAuthority(domain grantAuthorityDomain) *serverGrantAuthority {
 	switch domain {
+	case protectedGrantAuthority:
+		return s.protectedAuthority
 	case termGrantAuthority:
 		return s.termAuthority
 	case erpFinalPermissionDomain:
@@ -230,6 +243,25 @@ func termAuthorityTerms(workspace, capability string) (gate.Terms, error) {
 		terms.Action = gate.BindIssuanceTerm
 	case termsauthority.ApproveBinding:
 		terms.Action = gate.ApproveIssuanceTermBinding
+	default:
+		return gate.Terms{}, inputauthority.ErrInvalid
+	}
+	return terms, nil
+}
+
+func protectedAuthorityTerms(workspace, capability string) (gate.Terms, error) {
+	terms := gate.Terms{Kind: protectedauthority.ResourceKind, Scope: gate.Scope{WorkspaceID: workspace, Customer: gate.All(), LegalEntity: gate.All(), Contract: gate.All()}, Period: gate.AnyPeriod()}
+	switch capability {
+	case protectedauthority.RegisterChannel:
+		terms.Action = gate.RegisterIssuanceChannel
+	case protectedauthority.AdmitChannel:
+		terms.Action = gate.AdmitIssuanceChannel
+	case protectedauthority.RequestChange:
+		terms.Action = gate.RequestIssuanceProtectedChange
+	case protectedauthority.VerifyChange:
+		terms.Action = gate.VerifyIssuanceProtectedChange
+	case protectedauthority.ApproveChange:
+		terms.Action = gate.ApproveIssuanceProtectedChange
 	default:
 		return gate.Terms{}, inputauthority.ErrInvalid
 	}

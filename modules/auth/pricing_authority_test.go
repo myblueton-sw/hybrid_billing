@@ -6,7 +6,7 @@ import (
 )
 
 func directGovernanceActions() []Action {
-	return []Action{RecordIssuanceTerm, ApproveIssuanceTerm, BindIssuanceTerm, ApproveIssuanceTermBinding, ProposeERPResult, ConfirmERPResult, RevokeERPResult, ApplyERPResult, ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy, ProposeDocumentEvidence, ConfirmDocumentEvidence, RevokeDocumentEvidence, PrepareERPRecord}
+	return []Action{RegisterIssuanceChannel, AdmitIssuanceChannel, RequestIssuanceProtectedChange, VerifyIssuanceProtectedChange, ApproveIssuanceProtectedChange, RecordIssuanceTerm, ApproveIssuanceTerm, BindIssuanceTerm, ApproveIssuanceTermBinding, ProposeERPResult, ConfirmERPResult, RevokeERPResult, ApplyERPResult, ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy, ProposeDocumentEvidence, ConfirmDocumentEvidence, RevokeDocumentEvidence, PrepareERPRecord}
 }
 
 func TestDirectGovernanceAuthorityDirectHumanIntersectionAndIsolation(t *testing.T) {

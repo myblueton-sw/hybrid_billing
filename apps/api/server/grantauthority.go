@@ -13,6 +13,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/protectedauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/resultauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/termsauthority"
 )
@@ -27,12 +28,14 @@ type serverGrantAuthority struct {
 }
 
 func newServerGrantAuthority(s *Server, limits inputauthority.Limits, domain grantAuthorityDomain) (*serverGrantAuthority, error) {
-	if s == nil || s.cfg.Seed != SeedSample || (domain != termGrantAuthority && domain != erpFinalPermissionDomain && domain != erpFinalRequestDomain && domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain && domain != financialRequestDomain && domain != documentGrantAuthority && domain != resultGrantAuthority) {
+	if s == nil || s.cfg.Seed != SeedSample || (domain != protectedGrantAuthority && domain != termGrantAuthority && domain != erpFinalPermissionDomain && domain != erpFinalRequestDomain && domain != inputGrantAuthority && domain != pricingGrantAuthority && domain != financialPermissionDomain && domain != financialRequestDomain && domain != documentGrantAuthority && domain != resultGrantAuthority) {
 		return nil, inputauthority.ErrInvalid
 	}
 	a := &serverGrantAuthority{s: s, domain: domain, limits: limits, bindings: make(map[string]inputauthority.Spec), ceilings: make(map[string]inputauthority.Spec)}
 	var err error
 	switch domain {
+	case protectedGrantAuthority:
+		a.registry, err = protectedauthority.NewRegistry(limits, a, a, a, s.clock)
 	case termGrantAuthority:
 		a.registry, err = termsauthority.NewRegistry(limits, a, a, a, s.clock)
 	case erpFinalPermissionDomain:
@@ -137,6 +140,9 @@ func (a *serverGrantAuthority) recordLocked(workspace, id string) (inputauthorit
 }
 
 func (a *serverGrantAuthority) grant(id string, spec inputauthority.Spec) (gate.Grant, error) {
+	if a.domain == protectedGrantAuthority && !a.protectedShape(spec) {
+		return gate.Grant{}, inputauthority.ErrInvalid
+	}
 	if a.domain == termGrantAuthority && !a.termShape(spec) {
 		return gate.Grant{}, inputauthority.ErrInvalid
 	}

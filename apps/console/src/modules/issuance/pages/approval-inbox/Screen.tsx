@@ -1,3 +1,4 @@
+import ResultScreen from "./results/Screen";
 import { useDocuments } from "./documents/use-documents";
 import { Failure } from "./documents/Fields";
 import { Attempts } from "./documents/Review";
@@ -58,7 +59,7 @@ const requestKey = (p: URLSearchParams, view: View) =>
       )
       .sort(),
   ]);
-export default function Screen({
+function ApprovalScreen({
   locale: l,
   params,
   view: rawView,
@@ -475,4 +476,8 @@ export default function Screen({
       ) : null}
     </div>
   );
+}
+
+export default function Screen(props: Parameters<typeof ApprovalScreen>[0]) {
+ return props.view === "results" ? <ResultScreen locale={props.locale} onState={props.onState} onDirty={props.onDirty} /> : <ApprovalScreen {...props} />;
 }

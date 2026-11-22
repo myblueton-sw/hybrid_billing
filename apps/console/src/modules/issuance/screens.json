@@ -31,6 +31,10 @@
       {
         "key": "recognition",
         "labelKo": "인식 주기·대사"
+      },
+      {
+        "key": "results",
+        "labelKo": "ERP 결과 근거"
       }
     ],
     "scopeKeys": [

@@ -36,6 +36,7 @@ export const kinds: Kind[] = [
 ];
 export const tabLabel = (l: Locale, k: string) =>
   ({
+    results: t(l, "ERP result evidence", "ERP 결과 근거", "أدلة نتائج ERP"),
     pending: t(l, "Pending approvals", "승인 대기", "طلبات الاعتماد المعلّقة"),
     decisions: t(l, "My decisions", "내 결정", "قراراتي"),
     delegation: t(
@@ -51,7 +52,7 @@ export const tabLabel = (l: Locale, k: string) =>
       "인식 주기·대사",
       "دورية الإثبات والمطابقة",
     ),
-  })[k as "pending" | "decisions" | "delegation" | "history" | "recognition"];
+  })[k as "pending" | "decisions" | "delegation" | "history" | "recognition" | "results"];
 export const statusLabel = (l: Locale, k: ApprovalRecord["status"]) =>
   ({
     pending: t(l, "Pending in source", "원천 기록: 대기", "المصدر: معلّق"),

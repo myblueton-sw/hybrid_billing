@@ -104,6 +104,16 @@ func (a *financialIssuance) submitDraft(workspace, actor string, spec financialD
 			return financialDraftRecord{}, commands.Fail(commands.EvidenceStale)
 		}
 	}
+	if exists && p.State == "submitted" {
+		owned, err := a.ownedDraft(workspace, spec.ID, p.Digest)
+		if err != nil {
+			return financialDraftRecord{}, err
+		}
+		if _, err := a.draftPhaseReadback(owned); err != nil {
+			return financialDraftRecord{}, err
+		}
+		return copyFinancialDraft(p), nil
+	}
 	v, found, err := a.draftModule(p)
 	if err != nil {
 		return financialDraftRecord{}, err

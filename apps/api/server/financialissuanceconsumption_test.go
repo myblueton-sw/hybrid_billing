@@ -10,9 +10,16 @@ import (
 	"time"
 )
 
-func referenceConsumptionWorld(t *testing.T) (world, actor, actor, actor, financialIssuanceProfile, financialChangeSpec) {
+func referenceConsumptionWorld(t *testing.T, ages ...time.Duration) (world, actor, actor, actor, financialIssuanceProfile, financialChangeSpec) {
 	t.Helper()
-	f, requester, verifier, approver, spec := protectedChangeWorld(t, 24*time.Hour, 1)
+	age := 24 * time.Hour
+	if len(ages) > 1 {
+		t.Fatal("multiple fixture ages")
+	}
+	if len(ages) == 1 {
+		age = ages[0]
+	}
+	f, requester, verifier, approver, spec := protectedChangeWorld(t, age, 1)
 	a := f.s.financialIssuance
 	for _, entry := range []struct{ field, kind string }{{protected.FieldPaymentAccount, "entity"}, {protected.FieldDocumentRecipient, "customer"}, {protected.FieldDocumentTemplate, "kind"}} {
 		spec.ID = "consume-" + entry.kind

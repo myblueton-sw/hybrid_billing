@@ -35,16 +35,16 @@ func (a *financialIssuance) prepareDraftApproval(workspace, actor, reviewID, dra
 	if has && last.State != "refused" || len(a.draftReviews) >= financialIssuanceLimit || len(a.draftReviewOrders[draftID]) >= financialIssuanceLimit {
 		return financialDraftReviewResult{}, commands.Fail(commands.PrerequisiteFailed)
 	}
-	profile, err := a.liveDraftApproval(p, actor)
+	origin, err := a.liveDraftApproval(p, actor)
 	if err != nil {
 		return financialDraftReviewResult{}, err
 	}
 	at := a.server.clock().UTC().Round(0)
-	refs, err := a.draftReferences(profile, at)
+	refs, err := a.draftOriginReferences(origin, at)
 	if err != nil {
 		return financialDraftReviewResult{}, err
 	}
-	coverage, err := a.draftCoverage(profile, bindingID, bindingDigest, at)
+	coverage, err := a.draftOriginCoverage(origin, bindingID, bindingDigest, at)
 	if err != nil {
 		return financialDraftReviewResult{}, err
 	}
@@ -104,16 +104,16 @@ func (a *financialIssuance) approveDraft(workspace, actor, reviewID, reviewDiges
 		a.draftReviews[r.ID] = copyDraftReview(r)
 		return draftReviewResult(r), nil
 	}
-	profile, err := a.liveDraftApproval(p, actor)
+	origin, err := a.liveDraftApproval(p, actor)
 	if err != nil {
 		return financialDraftReviewResult{}, err
 	}
 	now := a.server.clock().UTC().Round(0)
-	refs, err := a.draftReferences(profile, now)
+	refs, err := a.draftOriginReferences(origin, now)
 	if err != nil {
 		return financialDraftReviewResult{}, err
 	}
-	coverage, err := a.draftCoverage(profile, r.BindingID, r.BindingDigest, now)
+	coverage, err := a.draftOriginCoverage(origin, r.BindingID, r.BindingDigest, now)
 	if err != nil {
 		return financialDraftReviewResult{}, err
 	}

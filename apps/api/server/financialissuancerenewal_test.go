@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
 	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
+	"strings"
 	"testing"
 	"time"
 )
 
-func renewInvoiceAuthorities(t *testing.T, f world) {
+func renewInvoiceAuthorities(t *testing.T, f world, suffix ...string) {
 	t.Helper()
 	authorities := []*serverGrantAuthority{f.s.pricingAuthority, f.s.inputAuthority, f.s.financialRequestPermission, f.s.financialPermission, f.s.documentAuthority, f.s.resultAuthority, f.s.erpFinalRequestPermission, f.s.erpFinalPermission, f.s.protectedAuthority, f.s.termAuthority, f.s.draftAuthority}
 	for domain, a := range authorities {
@@ -39,7 +40,7 @@ func renewInvoiceAuthorities(t *testing.T, f world) {
 				var proposed, approved inputauthority.Record
 				f.must(inputAuthorityAs(f, first, func() error {
 					var err error
-					proposed, err = a.proposeLocked(inputauthority.Proposal{ID: fmt.Sprintf("invoice-renew-%d-%d", domain, index), Spec: spec, Proposer: f.s.answer.User(), Rationale: "Renew existing invoice workflow standing after expiry"})
+					proposed, err = a.proposeLocked(inputauthority.Proposal{ID: fmt.Sprintf("invoice-renew-%d-%d", domain, index) + strings.Join(suffix, "-"), Spec: spec, Proposer: f.s.answer.User(), Rationale: "Renew existing invoice workflow standing after expiry"})
 					return err
 				}))
 				f.must(inputAuthorityAs(f, second, func() error {

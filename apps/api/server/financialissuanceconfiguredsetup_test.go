@@ -26,7 +26,14 @@ type configuredSetupWorld struct {
 
 func configuredSetup(t *testing.T) configuredSetupWorld {
 	t.Helper()
-	f, registrar, admitter, spec := configurationChannelWorld(t)
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	return configuredSetupIn(t, f)
+}
+
+func configuredSetupIn(t *testing.T, existing world) configuredSetupWorld {
+	t.Helper()
+	f, registrar, admitter, spec := configurationChannelWorldIn(t, existing)
 	channels := map[string]financialChannelRecord{}
 	for _, sel := range []financialChannelSelector{spec.Selector, {Kind: "customer", Contract: "sample-contract-01", Revision: 2}, {Kind: "entity", BillingProfile: "sample-profile-north"}} {
 		s := spec

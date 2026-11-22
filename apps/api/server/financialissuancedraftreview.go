@@ -46,13 +46,11 @@ func approvedDraftMatches(p financialDraftRecord, r financialDraftReview, v issu
 func (a *financialIssuance) ownedDraft(workspace, id, digest string) (financialDraftRecord, error) {
 	p, ok := a.drafts[id]
 	expected, err := draftIntentDigest(p)
-	if !ok || p.Workspace != workspace || p.Spec.ID != id || p.Digest != digest || err != nil || expected != digest || p.State != "submitted" || !unapprovedDraftMatches(p, p.Module) || a.draftScopes[p.Profile.Source.Basis.Subject.Target] != id || !validRequestID(p.Submitter) || !validRequestID(p.FinalRequester) {
+	if !ok || p.Workspace != workspace || p.Spec.ID != id || p.Digest != digest || err != nil || expected != digest || p.State != "submitted" || !unapprovedDraftMatches(p, p.Module) || !validRequestID(p.Submitter) || !validRequestID(p.FinalRequester) {
 		return financialDraftRecord{}, commands.Fail(commands.EvidenceStale)
 	}
-	for other, v := range a.drafts {
-		if other != id && v.Workspace == workspace && v.Profile.Source.Basis.Subject.Target == p.Profile.Source.Basis.Subject.Target {
-			return financialDraftRecord{}, commands.Fail(commands.EvidenceStale)
-		}
+	if err := a.draftScopeIntegrity(p, true); err != nil {
+		return financialDraftRecord{}, err
 	}
 	return copyFinancialDraft(p), nil
 }
@@ -115,25 +113,29 @@ func (a *financialIssuance) draftPhaseReadback(p financialDraftRecord) (issuance
 	}
 	return v, nil
 }
-func (a *financialIssuance) liveDraftApproval(p financialDraftRecord, actor string) (financialIssuanceProfile, error) {
-	profile, err := a.draftProfile(p.Workspace, p.Spec.Profile, p.Spec.ProfileDigest, actor, draftauthority.Approve)
+func (a *financialIssuance) liveDraftApproval(p financialDraftRecord, actor string) (financialDraftRecord, error) {
+	source, err := draftOriginSource(p)
 	if err != nil {
-		return financialIssuanceProfile{}, err
+		return financialDraftRecord{}, err
 	}
-	if !reflect.DeepEqual(profile, p.Profile) {
-		return financialIssuanceProfile{}, commands.Fail(commands.EvidenceStale)
+	current, err := a.currentDraftOrigin(p.Workspace, actor, draftauthority.Approve, p.Spec)
+	if err != nil {
+		return financialDraftRecord{}, err
+	}
+	if !reflect.DeepEqual(current.Profile, p.Profile) || !reflect.DeepEqual(current.Application, p.Application) {
+		return financialDraftRecord{}, commands.Fail(commands.EvidenceStale)
 	}
 	if err := a.draftActor(p.Workspace, p.Submitter, draftauthority.Submit); err != nil {
-		return financialIssuanceProfile{}, err
+		return financialDraftRecord{}, err
 	}
-	identities := append([]string{p.Submitter, p.FinalRequester, p.Profile.Source.Basis.Subject.Author}, p.Profile.Source.Basis.Contributors...)
+	identities := append([]string{p.Submitter, p.FinalRequester, source.Basis.Subject.Author}, source.Basis.Contributors...)
 	for _, id := range identities {
 		if !validRequestID(id) {
-			return financialIssuanceProfile{}, commands.Fail(commands.EvidenceStale)
+			return financialDraftRecord{}, commands.Fail(commands.EvidenceStale)
 		}
 		if id == actor {
-			return financialIssuanceProfile{}, commands.Fail(commands.SelfApprovalDenied)
+			return financialDraftRecord{}, commands.Fail(commands.SelfApprovalDenied)
 		}
 	}
-	return profile, nil
+	return copyFinancialDraft(p), nil
 }

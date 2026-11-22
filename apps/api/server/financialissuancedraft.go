@@ -9,11 +9,15 @@ import (
 	"slices"
 )
 
-type financialDraftSpec struct{ ID, Profile, ProfileDigest, Language string }
+type financialDraftSpec struct {
+	ID, Profile, ProfileDigest, Language string
+	Application                          *financialDraftApplicationRequest `json:"application,omitempty"`
+}
 type financialDraftRecord struct {
 	Workspace, Submitter, FinalRequester, Digest, State string
 	Spec                                                financialDraftSpec
 	Profile                                             financialIssuanceProfile
+	Application                                         *financialIssuanceApplication `json:"application,omitempty"`
 	Draft                                               issuance.Draft
 	Module                                              issuance.DraftView
 }
@@ -37,14 +41,29 @@ func copyModuleDraftView(v issuance.DraftView) issuance.DraftView {
 }
 func copyFinancialDraft(p financialDraftRecord) financialDraftRecord {
 	p.Profile = copyIssuanceProfile(p.Profile)
+	if p.Spec.Application != nil {
+		v := *p.Spec.Application
+		p.Spec.Application = &v
+	}
+	if p.Application != nil {
+		v := copyIssuanceApplication(*p.Application)
+		p.Application = &v
+	}
 	p.Draft = copyModuleDraft(p.Draft)
 	p.Module = copyModuleDraftView(p.Module)
 	return p
 }
 func draftIntentDigest(p financialDraftRecord) (string, error) {
+	if _, err := draftOriginSource(p); err != nil {
+		return "", err
+	}
+	domain := "issuance_draft_intent"
+	if p.Application != nil {
+		domain = "issuance_application_draft_v1"
+	}
 	p.Digest, p.State = "", ""
 	p.Module = issuance.DraftView{}
-	return financialEvidenceDigest("issuance_draft_intent", p)
+	return financialEvidenceDigest(domain, p)
 }
 func unapprovedDraftMatches(p financialDraftRecord, v issuance.DraftView) bool {
 	return reflect.DeepEqual(v.Draft, p.Draft) && v.Revision == 1 && v.Digest != "" && v.Submitter == p.Submitter && v.Approver == "" && len(v.References) == 0 && v.Coverage == nil && v.Number == "" && !v.At.IsZero()
@@ -63,31 +82,40 @@ func (a *financialIssuance) draftModule(p financialDraftRecord) (issuance.DraftV
 	return v, true, nil
 }
 func (a *financialIssuance) submitDraft(workspace, actor string, spec financialDraftSpec) (financialDraftRecord, error) {
-	profile, err := a.draftProfile(workspace, spec.Profile, spec.ProfileDigest, actor, draftauthority.Submit)
+	p, err := a.currentDraftOrigin(workspace, actor, draftauthority.Submit, spec)
 	if err != nil {
 		return financialDraftRecord{}, err
 	}
-	draft, err := issuanceDraftFromSource(profile, spec.ID, spec.Language)
+	source, err := draftOriginSource(p)
 	if err != nil {
 		return financialDraftRecord{}, err
 	}
-	final, _, err := a.server.financialFinalRecord(workspace, profile.Source.Basis.FinalRequest)
+	var draft issuance.Draft
+	if p.Application != nil {
+		draft, err = issuanceDraftFromApplication(*p.Application, spec.ID, spec.Language)
+	} else {
+		draft, err = issuanceDraftFromSource(p.Profile, spec.ID, spec.Language)
+	}
 	if err != nil {
 		return financialDraftRecord{}, err
 	}
-	if final.Digest != profile.Source.Basis.FinalDigest || final.Requester == "" {
+	final, _, err := a.server.financialFinalRecord(workspace, source.Basis.FinalRequest)
+	if err != nil {
+		return financialDraftRecord{}, err
+	}
+	if final.Digest != source.Basis.FinalDigest || final.Requester == "" {
 		return financialDraftRecord{}, commands.Fail(commands.EvidenceStale)
 	}
-	p := financialDraftRecord{Workspace: workspace, Submitter: actor, FinalRequester: final.Requester, Spec: spec, Profile: profile, Draft: draft}
+	p.Submitter, p.FinalRequester, p.Draft = actor, final.Requester, draft
 	p.Digest, err = draftIntentDigest(p)
 	if err != nil {
 		return financialDraftRecord{}, err
 	}
-	target := profile.Source.Basis.Subject.Target
+	target := source.Basis.Subject.Target
 	old, exists := a.drafts[spec.ID]
 	if exists {
 		actualDigest, e := draftIntentDigest(old)
-		if e != nil || actualDigest != old.Digest || old.Digest != p.Digest || old.Spec != spec || old.Submitter != actor || old.Workspace != workspace || a.draftScopes[target] != spec.ID {
+		if e != nil || actualDigest != old.Digest || old.Digest != p.Digest || !reflect.DeepEqual(old.Spec, spec) || old.Submitter != actor || old.Workspace != workspace || a.draftScopes[target] != spec.ID {
 			return financialDraftRecord{}, commands.Fail(commands.EvidenceStale)
 		}
 		if old.State != "submitted" && old.State != "submission_unknown" && old.State != "submission_refused" {
@@ -99,10 +127,8 @@ func (a *financialIssuance) submitDraft(workspace, actor string, spec financialD
 			return financialDraftRecord{}, commands.Fail(commands.PrerequisiteFailed)
 		}
 	}
-	for id, owned := range a.drafts {
-		if owned.Workspace == workspace && owned.Profile.Source.Basis.Subject.Target == target && id != spec.ID {
-			return financialDraftRecord{}, commands.Fail(commands.EvidenceStale)
-		}
+	if err := a.draftScopeIntegrity(p, exists); err != nil {
+		return financialDraftRecord{}, err
 	}
 	if exists && p.State == "submitted" {
 		owned, err := a.ownedDraft(workspace, spec.ID, p.Digest)

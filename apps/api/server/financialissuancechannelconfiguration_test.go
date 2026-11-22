@@ -18,6 +18,11 @@ func configurationChannelWorld(t *testing.T) (world, actor, actor, financialChan
 	t.Helper()
 	f := setup(t, SeedSample).ready()
 	f.setPassword(MemberLogin, pw)
+	return configurationChannelWorldIn(t, f)
+}
+
+func configurationChannelWorldIn(t *testing.T, f world) (world, actor, actor, financialChannelSpec) {
+	t.Helper()
 	p, err := proposeConfigurationAs(f, f.as(AdminLogin), configurationSpec())
 	f.must(err)
 	c, err := confirmConfigurationAs(f, f.as(Admin3Login), p)

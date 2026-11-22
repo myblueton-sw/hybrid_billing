@@ -134,7 +134,7 @@ func (a *financialIssuance) configurationScope(workspace string, spec financialC
 	return p, nil
 }
 
-func (a *financialIssuance) currentConfiguration(workspace string, p financialIssuanceConfiguration) error {
+func (a *financialIssuance) configurationIntegrity(workspace string, p financialIssuanceConfiguration) error {
 	bad := func() error { return commands.Fail(commands.EvidenceStale) }
 	if p.Schema != "hb_issuance_configuration_v1" || p.Workspace != workspace || p.Proposer == "" || !documentReason(p.Reason) {
 		return bad()
@@ -175,6 +175,13 @@ func (a *financialIssuance) currentConfiguration(workspace string, p financialIs
 	}
 	if !reflect.DeepEqual(scope, p.Scope) {
 		return bad()
+	}
+	return nil
+}
+
+func (a *financialIssuance) currentConfiguration(workspace string, p financialIssuanceConfiguration) error {
+	if err := a.configurationIntegrity(workspace, p); err != nil {
+		return err
 	}
 	for _, actor := range []string{p.Proposer, p.Confirmer} {
 		if actor != "" {

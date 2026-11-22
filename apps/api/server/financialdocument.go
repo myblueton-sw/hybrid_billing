@@ -239,12 +239,15 @@ func financialFinalGross(total erpledger.Amounts, scale int) (string, error) {
 }
 
 func issuanceDraftFromSource(p financialIssuanceProfile, id, language string) (issuance.Draft, error) {
+	return issuanceDraftFromEvidence(p.Kind, p.Spec.Mode, p.Spec.Profile, p.Source.Basis, id, language)
+}
+
+func issuanceDraftFromEvidence(kind issuance.Kind, mode, sourceProfile string, source financialIssuanceSource, id, language string) (issuance.Draft, error) {
 	fail := func() (issuance.Draft, error) { return issuance.Draft{}, commands.Fail(commands.PrerequisiteFailed) }
-	source := p.Source.Basis
-	if p.Spec.Mode != "erp_issuance" || p.Spec.Profile != "synthetic_erp_document_v1" || p.Kind.Class != issuance.ClassERP || p.Kind.Credit || p.Kind.Statutory || !slices.Contains(p.Kind.Languages, language) || !validRequestID(id) || len(id) > 128 || source.Scale < 0 || source.Scale > 4 || len(source.Rows) == 0 || len(source.Rows) > 100 {
+	if mode != "erp_issuance" || sourceProfile != "synthetic_erp_document_v1" || kind.Class != issuance.ClassERP || kind.Credit || kind.Statutory || !slices.Contains(kind.Languages, language) || !validRequestID(id) || len(id) > 128 || source.Scale < 0 || source.Scale > 4 || len(source.Rows) == 0 || len(source.Rows) > 100 {
 		return fail()
 	}
-	for _, subject := range []string{p.Kind.ID, source.Customer, source.Document.IssuerLegalEntityID} {
+	for _, subject := range []string{kind.ID, source.Customer, source.Document.IssuerLegalEntityID} {
 		if !validRequestID(subject) || len(subject) > 100 {
 			return fail()
 		}
@@ -268,7 +271,7 @@ func issuanceDraftFromSource(p financialIssuanceProfile, id, language string) (i
 	net, tax := zero, zero
 	rows := slices.Clone(source.Rows)
 	slices.SortFunc(rows, func(a, b financialERPResultRow) int { return strings.Compare(a.ID, b.ID) })
-	d := issuance.Draft{ID: id, Kind: p.Kind.ID, Customer: source.Customer, Entity: source.Document.IssuerLegalEntityID, Contract: source.Contract.ContractID, Currency: source.Subject.Currency, Scale: source.Scale, Language: language}
+	d := issuance.Draft{ID: id, Kind: kind.ID, Customer: source.Customer, Entity: source.Document.IssuerLegalEntityID, Contract: source.Contract.ContractID, Currency: source.Subject.Currency, Scale: source.Scale, Language: language}
 	previous := ""
 	for _, row := range rows {
 		if !validRequestID(row.ID) || row.ID == previous {

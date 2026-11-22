@@ -11,8 +11,9 @@ import (
 	"time"
 )
 
-func finalizeInvoiceInWorld(t *testing.T, f world, prefix, period, candidateID, candidateDigest string) (string, string) {
+func finalizeInvoiceInWorld(t *testing.T, f world, prefix, period, candidateID, candidateDigest string, declaredRows ...invoiceRowOracle) (string, string) {
 	requester, decider := f.as(Admin3Login), f.as(AdminLogin)
+	defer closeInvoiceActors(f, requester, decider)
 	chargeID := prefix + "-charge"
 	requested := f.runWith(requester, f.s.Revision(), "financial_charge.request", chargeID, map[string]string{"candidate": candidateID, "digest": candidateDigest})
 	f.ok(t, "second charge request", requested, approvals.StatePending, "")
@@ -35,11 +36,14 @@ func finalizeInvoiceInWorld(t *testing.T, f world, prefix, period, candidateID, 
 	survey, err := ledger.Survey(SampleWorkspace, erpledger.Survey{Connection: conn.Connection.ID, Customer: candidate.Envelope.Input.Customer, Period: period, Outcome: erpledger.SurveyComplete, Evidence: prefix + "-survey"}, erpledger.Actor{ID: "synthetic-document-author", Kind: erpledger.KindHuman})
 	f.must(err)
 	basis := financialDocumentBasis{ID: prefix + "-document", Mode: "synthetic", Profile: "synthetic_individual_net_v1", Evidence: prefix + "-document-evidence", Workspace: SampleWorkspace, Request: chargeID, RequestDigest: field(requested, "digest"), Candidate: candidateID, CandidateDigest: candidateDigest, Path: erpledger.PathDirect, Document: candidate.Envelope.Input.Normalized.Document, Connection: conn, Mappings: mappings, Survey: survey, ExpectedNet: "15", ExpectedTax: "1"}
-	oracle := map[string]struct{ net, tax, quantity string }{}
-	erpOracle := map[string]struct{ net, tax, quantity string }{}
+	oracle := map[string]invoiceRowOracle{}
+	erpOracle := map[string]invoiceRowOracle{}
 	charge, err := f.s.approvals.RequestOf(SampleWorkspace, chargeID)
 	f.must(err)
-	declared := map[string]struct{ net, tax, quantity string }{prefix + "-line-0": {"10.25", "0.25", "2"}, prefix + "-line-1": {"4.75", "0.75", "3"}}
+	declared := map[string]invoiceRowOracle{}
+	for i, row := range invoiceRows(declaredRows) {
+		declared[prefix+"-line-"+strconv.Itoa(i)] = row
+	}
 	for _, origin := range candidate.Envelope.Input.Normalized.Rows {
 		expected, ok := declared[origin.Key.Key]
 		if !ok || origin.Line == "" {
@@ -53,7 +57,7 @@ func finalizeInvoiceInWorld(t *testing.T, f world, prefix, period, candidateID, 
 		f.must(err)
 		erpOracle["line-"+source] = expected
 	}
-	if len(oracle) != 2 {
+	if len(oracle) != len(declared) {
 		t.Fatal("missing source-line oracle")
 	}
 	for _, c := range candidate.Envelope.Result.Charges {
@@ -63,8 +67,9 @@ func finalizeInvoiceInWorld(t *testing.T, f world, prefix, period, candidateID, 
 		}
 		basis.Lines = append(basis.Lines, financialDocumentLine{Line: c.Line, Rule: c.Rule, Kind: c.Kind, Product: "document-product", Quantity: expected.quantity, Unit: "document-unit", TaxCode: "document-tax", Tax: expected.tax, Evidence: prefix + "-line-evidence-" + c.Line})
 	}
-	w := documentWorld{f: f, a: a, ledger: ledger, basis: basis, actors: map[string]actor{AdminLogin: f.as(AdminLogin), Admin2Login: f.as(Admin2Login), Admin3Login: f.as(Admin3Login)}}
+	w := documentWorld{f: f, a: a, ledger: ledger, basis: basis, actors: map[string]actor{AdminLogin: decider, Admin2Login: f.as(Admin2Login), Admin3Login: requester}}
 	w.consumer = w.actors[Admin2Login]
+	defer closeInvoiceActors(f, w.consumer)
 	proposed, err := documentAs(w, Admin2Login, func(actor string) (financialDocumentView, error) {
 		return a.proposeDocumentLocked(basis, actor, "Second invoice document evidence")
 	})

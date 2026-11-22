@@ -58,7 +58,7 @@ Required boundary evidence: before-cache grant loss, wrong actor recovery, curre
 | --- | --- | --- | --- | --- |
 | Setup ownership is not yet connected to public user actions | B09 prerequisite path | Blocking for full user journey | Private setup methods and existing integration plan | Investigate existing screen ownership; pending |
 | Proposed visual composition has no changed-render verification | B09 draft states, EN/KO/AR | Blocking for UI implementation acceptance | Actual CLI proposal received; no changed render exists | Proposal received; rendered review pending, see visual-design evidence below |
-| Public disclosure/recovery contract needs reviewed corrections | Context/list/inspection and three mutations | Blocking for public implementation | Independent review completed with blocking corrections | Refine contract and reusable configuration, see findings below |
+| Public boundary remains incomplete | Context/list/inspection and three mutations | Blocking for connected user journey | Corrective executable design accepted; public list/inspect implemented and independently reviewed | Implement current context and three mutations; see [public contract](issuance-draft-public-contract-plan.md) |
 
 No issuance, numbering, rendering/download, delivery, payment, generic reporting expansion, deployment or production persistence is included in this increment. Those remain distinct product requirements where the original plan requires them; excluding them here does not complete the overall goal.
 
@@ -79,3 +79,7 @@ Outstanding design findings include source-scale money display, meaningful gover
 # Reusable configuration correction evidence
 
 The private application-backed draft correction is now implemented and independently reviewed. Root's actual two-invoice test passed: one configuration, three mature channels/changes and one approved binding precede A; after A is independently approved and its financial approval expires, B is independently approved from new November evidence with exactly the same setup. A history and setup counts remain unchanged. This closes the monthly reconfiguration concern for the private initial-revision path. It does not resolve public disclosure/recovery contracts, setup discovery or rendered user acceptance above. Public context must select the applicable reusable configuration and exact current final evidence, rather than exposing the legacy source-bound profile mechanism.
+
+# Public read integration checkpoint
+
+The [executable public contract](issuance-draft-public-contract-plan.md) passed independent corrective backend design review. Public draft list/inspection are implemented, including retained unresolved work, frozen review recovery arguments, held/expired historical disclosure under current Inspect rights and complete bounded pagination. Root verified actual 11-draft and 12-line HTTP traversal and corrective state-integrity cases; final relevant race PASS100.900s. Current context, three public mutations and their pre-effect output/uncertainty boundaries remain pending, followed by B09 composition and actual rendered/terminology review. No connected screen acceptance follows from the read API result.

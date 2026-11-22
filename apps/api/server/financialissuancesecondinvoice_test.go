@@ -14,7 +14,24 @@ import (
 	"time"
 )
 
-func captureInvoiceInWorld(t *testing.T, f world, maker, checker actor, prefix, period string, from, to time.Time) (string, string) {
+type invoiceRowOracle struct{ net, tax, quantity string }
+
+func closeInvoiceActors(f world, actors ...actor) {
+	for _, who := range actors {
+		if session, ok := f.s.sessions.get(who.verifier(f)); ok {
+			f.s.logoutSession(session)
+		}
+	}
+}
+
+func invoiceRows(rows []invoiceRowOracle) []invoiceRowOracle {
+	if len(rows) == 0 {
+		return []invoiceRowOracle{{"10.25", "0.25", "2"}, {"4.75", "0.75", "3"}}
+	}
+	return rows
+}
+
+func captureInvoiceInWorld(t *testing.T, f world, maker, checker actor, prefix, period string, from, to time.Time, declared ...invoiceRowOracle) (string, string) {
 	t.Helper()
 	p := f.s.chargeProducer
 	contract, err := f.s.orgs.ContractRevision(SampleWorkspace, "sample-contract-01", 2)
@@ -22,9 +39,9 @@ func captureInvoiceInWorld(t *testing.T, f world, maker, checker actor, prefix, 
 	key := normalize.MappingKey{Provider: contract.ProviderRef, SourceVersion: "synthetic-source-v1", Target: p.target.ID}
 	run := prefix + "-run"
 	rows := []normalize.Row{}
-	for i, amount := range []string{"10.25", "4.75"} {
+	for i, entry := range invoiceRows(declared) {
 		rows = append(rows, normalize.Row{Key: normalize.RowKey{Kind: normalize.EventKeys, Key: prefix + "-line-" + strconv.Itoa(i)}, Cells: map[string]normalize.Cell{
-			"billed": {Text: amount}, "currency": {Text: "USD"}, "start": {Text: from.Format(time.RFC3339)}, "end": {Text: to.Format(time.RFC3339)}, "class": {Text: "compute"}, "service": {Text: "virtual-machine"},
+			"billed": {Text: entry.net}, "currency": {Text: "USD"}, "start": {Text: from.Format(time.RFC3339)}, "end": {Text: to.Format(time.RFC3339)}, "class": {Text: "compute"}, "service": {Text: "virtual-machine"},
 		}})
 	}
 	scope := inputreview.Scope{Workspace: SampleWorkspace, Provider: contract.ProviderRef, Account: "sample-acct-01", Period: period}

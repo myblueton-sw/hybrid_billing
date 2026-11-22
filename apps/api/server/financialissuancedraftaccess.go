@@ -73,6 +73,14 @@ func (a *financialIssuance) draftActor(workspace, actor, capability string) erro
 }
 
 func (a *financialIssuance) draftCaller(workspace, actor, capability string) error {
+	return a.draftCallerMode(workspace, actor, capability, true)
+}
+
+func (a *financialIssuance) draftReadCaller(workspace, actor string) error {
+	return a.draftCallerMode(workspace, actor, draftauthority.Inspect, false)
+}
+
+func (a *financialIssuance) draftCallerMode(workspace, actor, capability string, mutation bool) error {
 	if a == nil || a.server == nil || a.server.cfg.Seed != SeedSample {
 		return commands.Fail(commands.UnsupportedCapability)
 	}
@@ -102,7 +110,7 @@ func (a *financialIssuance) draftCaller(workspace, actor, capability string) err
 	if !decision.Allowed || len(decision.Delegations) != 0 {
 		return commands.Fail(commands.PermissionDenied)
 	}
-	if s.held() {
+	if mutation && s.held() {
 		return commands.Fail(commands.PrerequisiteFailed)
 	}
 	return a.draftOwnedPermission(workspace, actor, capability)

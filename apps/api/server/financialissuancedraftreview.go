@@ -73,6 +73,9 @@ func (a *financialIssuance) draftReviewChain(p financialDraftRecord) (financialD
 		if r.State != "prepared" && r.State != "approval_unknown" && r.State != "approved" && r.State != "refused" {
 			return fail()
 		}
+		if r.State == "refused" && r.Refusal != issuance.ReasonReferenceChanged && r.Refusal != issuance.ReasonCoverageMismatch || r.State != "refused" && r.Refusal != "" {
+			return fail()
+		}
 		if i < len(ids)-1 && r.State != "refused" {
 			return fail()
 		}

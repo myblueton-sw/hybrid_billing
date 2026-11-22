@@ -94,7 +94,14 @@ func resultSnapshotMatches(v erpledger.ResultView, b financialERPResultBasis, ap
 }
 
 func (a *financialERP) currentResult(b financialERPResultBasis, r financialERPResultRecord, actor string) error {
-	if r.review.State != "confirmed" || len(b.Comparison) != 0 || a.server.held() {
+	if a.server.held() {
+		return commands.Fail(commands.PrerequisiteFailed)
+	}
+	return a.currentResultEvidence(b, r, actor)
+}
+
+func (a *financialERP) currentResultEvidence(b financialERPResultBasis, r financialERPResultRecord, actor string) error {
+	if r.review.State != "confirmed" || len(b.Comparison) != 0 {
 		return commands.Fail(commands.PrerequisiteFailed)
 	}
 	_, watermark, err := a.resultWatermark(b)
@@ -116,7 +123,7 @@ func (a *financialERP) currentResult(b financialERPResultBasis, r financialERPRe
 	if err != nil || document.review.State != "confirmed" || !reflect.DeepEqual(basis, b.Document) {
 		return commands.Fail(commands.EvidenceStale)
 	}
-	if _, err = a.currentDocumentLocked(b.Document, actor); err != nil {
+	if _, err = a.currentDocumentEvidenceLocked(b.Document, actor); err != nil {
 		return err
 	}
 	historical, preparation, digest, err := a.resultHistoricalPreparation(b.Workspace, b.Packet)

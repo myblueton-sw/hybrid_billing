@@ -17,7 +17,7 @@ export type View = (typeof views)[number];
 export type Principal = { id: string; label: string };
 export type ApprovalAmount = {
   currency: string;
-  basis: "net" | "tax" | "gross" | "expense" | "rated_candidate_total";
+  basis: "net" | "tax" | "gross" | "expense" | "rated_candidate_total" | "synthetic_reported_net_plus_tax_v1";
   base: string | null;
   candidate: string | null;
   difference: string | null;
@@ -67,7 +67,7 @@ export type Data = {
   schema: 1;
   numeric_format: "decimal-strings-read-v1";
   read_only: true;
-  commands: "unconnected" | "financial_charge_v1";
+  commands: "unconnected" | "financial_charge_v1" | "financial_approval_v2";
   source_mode: "synthetic" | "live";
   auth_scope: string;
   snapshot: string;

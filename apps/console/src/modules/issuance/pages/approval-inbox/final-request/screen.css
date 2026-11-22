@@ -1,0 +1,24 @@
+.b09-final-request,.b09-final-attempts{margin-block-start:40px;padding-block-start:24px;border-block-start:1px solid var(--border-section);inline-size:100%;min-inline-size:0}
+.b09-final-request h4,.b09-final-outcome h4{font-size:18px;font-weight:600}
+.b09-final-request>p,.b09-final-outcome>p{max-inline-size:68ch}
+.b09-final-request label{display:grid;gap:8px;margin-block:16px}
+.b09-final-request input{inline-size:min(100%,24rem)}
+.b09-final-request textarea{inline-size:min(100%,48rem);resize:vertical}
+.b09-final-summary{margin-block:24px;min-inline-size:0}
+.b09-final-summary dl{display:block}
+.b09-final-summary dl>div{display:grid;grid-template-columns:minmax(12rem,16rem) minmax(0,1fr);gap:16px;padding-block:12px;border-block-end:1px solid var(--border-row)}
+.b09-final-summary dt{font-size:14px;font-weight:400;text-align:start}
+.b09-final-summary dd{margin:0;min-inline-size:0;text-align:start;overflow-wrap:anywhere}
+.b09-final-summary ul{margin:0;padding-inline-start:20px}
+.b09-final-summary .b09-final-prose{white-space:pre-wrap}
+.b09-final-summary details{margin-block-start:24px}
+.b09-final-actions{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:8px;margin-block:16px}
+.b09-final-actions button{min-inline-size:10rem;min-block-size:40px}
+.b09-final-outcome{padding-block:24px;border-block-end:1px solid var(--border-row)}
+@media(max-width:700px){.b09-final-summary dl>div{grid-template-columns:minmax(0,1fr);gap:4px}.b09-final-actions{flex-direction:column}.b09-final-actions button{inline-size:100%;min-block-size:44px}}
+.b09-final-actions button.primary,.b09-final-actions button.primary:hover:not(:disabled),.b09-final-actions button.primary:disabled{border-color:var(--border-control)}
+
+.b09-results .b09-final-summary dl>div:last-child{border-block-end:1px solid var(--border-row)}
+.b09-final-summary ul{list-style:none;padding-inline-start:0;display:grid;gap:4px}
+.b09-results .b09-final-summary li{border:0;padding:0}
+.b09-final-summary>.b09-money-scroll .b09-money{font-size:22px;font-weight:600}

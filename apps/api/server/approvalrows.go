@@ -79,7 +79,7 @@ func approvalString(s string) *string {
 func approvalPerson(id string) *approvalPrincipal { return &approvalPrincipal{ID: id, Label: id} }
 
 func (s *Server) approvalRows(ws string) ([]approvalRow, error) {
-	if s.faulty("approvals") || len(s.approvalIndex) > approvalCap || len(s.financialCharges) > approvalCap || len(s.approvalIndex)+len(s.financialCharges) > approvalCap {
+	if s.faulty("approvals") || len(s.approvalIndex) > approvalCap || len(s.financialCharges) > approvalCap || s.financialApprovalCount() > approvalCap {
 		return nil, errApprovalProjection
 	}
 	rows := []approvalRow{}
@@ -120,13 +120,36 @@ func (s *Server) approvalRows(ws string) ([]approvalRow, error) {
 		}
 		rows = append(rows, row)
 	}
+	for id, binding := range s.financialFinals {
+		if binding.Workspace != ws {
+			continue
+		}
+		if seen[id] {
+			return nil, errApprovalProjection
+		}
+		seen[id] = true
+		v, b, err := s.financialFinalRecord(ws, id)
+		if err != nil {
+			return nil, err
+		}
+		for _, decision := range v.Decisions {
+			if financialFinalContributorCheck(b.Candidate, b.Requester, decision.Actor) != nil {
+				return nil, errApprovalProjection
+			}
+		}
+		row, err := s.projectApprovalRow(ws, approvalIndex{Workspace: ws, ID: id, Target: v.Subject.Target, Basis: financialFinalAmountProfile}, v, true)
+		if err != nil {
+			return nil, err
+		}
+		rows = append(rows, row)
+	}
 	sort.Slice(rows, func(i, j int) bool { return rows[i].ID < rows[j].ID })
 	return rows, nil
 }
 
 func (s *Server) projectApprovalRow(ws string, index approvalIndex, v approvals.RequestView, governed bool) (approvalRow, error) {
 	p, err := s.approvals.PolicyAt(ws, v.Subject.Stage, v.Policy)
-	if err != nil || p.Revision != v.Policy || p.Approvals != 1 || v.Subject.Target != index.Target || (!governed && index.Basis != "gross") || (governed && (index.Basis != "rated_candidate_total" || v.Subject.Stage != approvals.StageCharge)) || len(v.Subject.Entries) != 0 || len(v.Decisions) > 1 {
+	if err != nil || p.Revision != v.Policy || p.Approvals != 1 || v.Subject.Target != index.Target || (!governed && index.Basis != "gross") || (governed && !((index.Basis == "rated_candidate_total" && v.Subject.Stage == approvals.StageCharge) || (index.Basis == financialFinalAmountProfile && v.Subject.Stage == approvals.StageERPFinal))) || len(v.Subject.Entries) != 0 || len(v.Decisions) > 1 {
 		return approvalRow{}, errApprovalProjection
 	}
 	kind := ""
@@ -175,4 +198,8 @@ func (s *Server) projectApprovalRow(ws string, index approvalIndex, v approvals.
 		}
 	}
 	return row, nil
+}
+
+func (s *Server) financialApprovalCount() int {
+	return len(s.approvalIndex) + len(s.financialCharges) + len(s.financialFinals)
 }

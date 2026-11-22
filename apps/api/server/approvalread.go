@@ -155,8 +155,8 @@ func (s *Server) readApprovals(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) approvalCommandCapability() string {
-	if s.cfg.Seed == SeedSample && s.approvals != nil && s.financialCharges != nil && s.cfg.Commands.Fields >= 24 && s.cfg.Commands.Value >= 1024 {
-		return "financial_charge_v1"
+	if s.cfg.Seed == SeedSample && s.approvals != nil && s.financialCharges != nil && s.financialFinals != nil && s.cfg.Commands.Fields >= 24 && s.cfg.Commands.Value >= 1024 {
+		return "financial_approval_v2"
 	}
 	return "unconnected"
 }

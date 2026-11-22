@@ -81,6 +81,7 @@ type Config struct {
 }
 
 type Server struct {
+	financialFinals            map[string]financialFinalBinding
 	financialCharges           map[string]financialChargeBinding
 	financialPolicies          map[string]financialPolicyBinding
 	erpFinalPolicies           map[string]financialPolicyBinding

@@ -15,7 +15,8 @@ export function DecisionResult({ locale: l, entry, retry, refresh, refreshFailed
  return <section ref={resultRoot} className="b09-decision-result" data-b09-decision-result={entry.phase} aria-busy={entry.phase === "pending"}>
   <h3 tabIndex={-1} data-b09-decision-focus>{dc(l,entry.phase)}</h3>
   <p><bdi dir="ltr">{s.target}</bdi> · {dc(l,s.action)}</p>
-  <Money locale={l} value={s.amount} currency={s.currency} label={basisLabel(l,"rated_candidate_total")} />
+  <p className="b09-meta">{basisLabel(l,s.amount_basis)}</p>
+  <Money locale={l} value={s.amount} currency={s.currency} label={basisLabel(l,s.amount_basis)} />
   {entry.phase === "unknown" && <><p>{dc(l,"unknownHelp")}</p><p>{dc(l,"reloadLimit")}</p></>}
   {entry.error && <p role="alert">{entry.phase === "unknown" ? dc(l,entry.error === "reauthentication_required" ? "unknownReauth" : "unknownRefusal") : decisionMessage(l,entry.error)}</p>}
   {entry.phase === "recorded" && refreshFailed && <p role="alert" className="b09-refresh-failure">{dc(l,"refreshFailed")}</p>}
@@ -31,7 +32,7 @@ export function DecisionResult({ locale: l, entry, retry, refresh, refreshFailed
 export default function DecisionPanel({locale:l,record:r,binding, surface,refresh}:{locale:Locale;record:ApprovalRecord;binding:DecisionBinding;surface:"desktop"|"mobile";refresh:()=>void}) {
  const root=useRef<HTMLElement>(null);
  const {store,state}=binding;
- const selected=state.record?.id===r.id && state.record.evidence.revision===r.evidence.revision;
+ const selected=state.record?.id===r.id && state.record.kind===r.kind && state.record.amounts[0]?.basis===r.amounts[0]?.basis && state.record.evidence.revision===r.evidence.revision;
  const p=selected ? state.preparation : undefined;
  const action=selected ? state.action : undefined;
  const error=binding.error ?? (selected ? state.error : undefined);

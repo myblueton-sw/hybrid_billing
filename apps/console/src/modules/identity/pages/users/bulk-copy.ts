@@ -98,6 +98,7 @@ export const b = {
       document_authority_proposals: t(l, "Document evidence and ERP preparation permission proposals", "문서 근거·ERP 준비 권한 제안", "مقترحات صلاحيات أدلة المستند وإعداد ERP"),
       document_evidence_proposals: t(l, "Document evidence proposals", "문서 근거 제안", "مقترحات أدلة المستند"),
       pricing_authority_proposals: t(l, "Pricing policy permission requests", "가격 정책 권한 요청", "طلبات صلاحية سياسة التسعير"),
+      erp_final_requests: t(l, "ERP final-amount approval requests", "ERP 최종 금액 승인 요청", "طلبات اعتماد المبلغ النهائي في ERP"),
       financial_charge_requests: t(l, "Charge approval requests", "청구 승인 요청", "طلبات اعتماد الرسوم"),
       financial_request_permission_proposals: t(l, "Charge approval submission permission proposals", "청구 승인 요청 제출 권한 제안", "مقترحات صلاحية تقديم طلب اعتماد الرسوم"),
       financial_permission_proposals: t(l, "Charge approval permission requests", "청구 승인 권한 요청", "طلبات صلاحية اعتماد الرسوم"),

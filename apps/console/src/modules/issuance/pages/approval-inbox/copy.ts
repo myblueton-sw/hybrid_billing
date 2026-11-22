@@ -88,8 +88,9 @@ export const basisLabel = (l: Locale, b: string) =>
     tax: t(l, "Tax", "세금", "الضريبة"),
     gross: t(l, "Gross amount", "총액", "المبلغ الإجمالي"),
     rated_candidate_total: t(l, "Rated candidate total", "과금 계산 후보 합계", "إجمالي نتيجة احتساب الرسوم المبدئية"),
+    synthetic_reported_net_plus_tax_v1: t(l, "Reported gross (net + tax)", "보고된 총액 (순액 + 세금)", "الإجمالي المبلّغ عنه (الصافي + الضريبة)"),
     expense: t(l, "Expense basis", "비용 인식 기준", "أساس المصروفات"),
-  })[b as "net" | "tax" | "gross" | "expense" | "rated_candidate_total"] ?? b;
+  })[b as "net" | "tax" | "gross" | "expense" | "rated_candidate_total" | "synthetic_reported_net_plus_tax_v1"] ?? b;
 export const environment = (l: Locale) =>
   t(
     l,

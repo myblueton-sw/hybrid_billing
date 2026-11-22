@@ -29,6 +29,7 @@ func (s *Server) initApprovals() error {
 	}
 	s.approvalKey = random(32)
 	s.financialCharges = make(map[string]financialChargeBinding)
+	s.financialFinals = make(map[string]financialFinalBinding)
 	s.financialPolicies = make(map[string]financialPolicyBinding)
 	s.erpFinalPolicies = make(map[string]financialPolicyBinding)
 	s.financialAuthorities = make(map[string]financialAuthorityBinding)

@@ -34,7 +34,7 @@ export class DecisionStore {
     this.update({ entries: Object.freeze(Object.assign(Object.create(null), this.state.entries, { [target]: Object.freeze(entry) })) });
   }
   select(scope: string, record?: ApprovalRecord) {
-    const selection = JSON.stringify([scope, record?.id, record?.evidence.revision]);
+    const selection = JSON.stringify([scope, record?.kind, record?.amounts[0]?.basis, record?.id, record?.evidence.revision]);
     if (selection === this.state.selection) return;
     this.generation++;
     this.update({ selection, record: record ? frozenRecord(record) : undefined, checking: false, preparation: undefined, error: undefined, action: undefined, rationale: "", reason: "" });

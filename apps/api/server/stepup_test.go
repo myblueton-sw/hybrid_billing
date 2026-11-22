@@ -90,7 +90,7 @@ func TestEveryRegisteredMutatingCommandRequiresStepUp(t *testing.T) {
 	if len(ids) != mutating || len(ids) < 63 || len(exempt) != 0 {
 		t.Fatalf("registry %d catalogue %d exempt %d", len(ids), mutating, len(exempt))
 	}
-	for _, family := range []string{"access", "contract", "erp_final_authority", "erp_final_policy", "erp_final_permission", "erp_final_request_permission", "financial_authority", "financial_charge", "financial_permission", "financial_policy", "financial_request_permission", "identity", "input_authority", "pricing_authority", "pricing_policy", "installation", "integrations", "trust", "recovery", "relationship", "retention", "service"} {
+	for _, family := range []string{"access", "contract", "erp_final_authority", "erp_final_policy", "erp_final_permission", "erp_final_request_permission", "financial_authority", "erp_final", "financial_charge", "financial_permission", "financial_policy", "financial_request_permission", "identity", "input_authority", "pricing_authority", "pricing_policy", "installation", "integrations", "trust", "recovery", "relationship", "retention", "service"} {
 		if families[family] == 0 {
 			t.Errorf("family %s has no mutating command", family)
 		}

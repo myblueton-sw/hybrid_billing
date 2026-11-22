@@ -138,3 +138,36 @@ test("valid request IDs cannot collide with object prototype members", async () 
   store.choose("approve");store.edit("Checked","");await store.submit();assert.equal(store.snapshot().entries[id].phase,"recorded");
  }
 });
+
+test("final decisions freeze their family and reject charge preparations and receipts", async () => {
+ const r=record();r.kind="final_erp_amount";r.amounts[0].basis="synthetic_reported_net_plus_tax_v1";r.amounts[0].candidate="16";
+ const finalFields={...fields(),amount:"16",amount_basis:"synthetic_reported_net_plus_tax_v1"};
+ const p=preparationOf(finalFields,r);
+ assert.equal(p.family,"erp_final");
+ assert.throws(()=>preparationOf(fields(),r),DecisionError);
+ assert.throws(()=>preparationOf(finalFields,record()),DecisionError);
+ const s=submissionOf(p,"approve","Checked reported gross","",{request:"attempt-one",key:"key-one"});
+ assert.equal(s.family,"erp_final");assert.equal(s.amount_basis,"synthetic_reported_net_plus_tax_v1");assert.equal(Object.isFrozen(s),true);
+ const urls:string[]=[];
+ const response={...success(),fields:{...success().fields,stage:"erp_final_approval"}};
+ const fetcher:typeof fetch=async(input)=>{
+  if(String(input).endsWith("/session"))return json({...session,csrf_token:session.csrf});
+  urls.push(String(input));return json(response);
+ };
+ assert.equal((await decisionClient(session,fetcher).submit(s)).state,"approved");
+ assert.deepEqual(urls,["/api/v1/commands/erp_final.approve"]);
+ await assert.rejects(decisionClient(session,server(()=>json(success()))).submit(s),(e:DecisionError)=>e.code==="invalid_receipt"&&e.effect==="unknown");
+ await assert.rejects(decisionClient(session,server(()=>json(response))).submit(submission()),(e:DecisionError)=>e.code==="invalid_receipt"&&e.effect==="unknown");
+ await assert.rejects(decisionClient(session,fetcher).submit({...s,family:"financial_charge"}),(e:DecisionError)=>e.code==="invalid_decision"&&e.effect==="none");
+});
+
+test("unknown final retry cannot switch family after selecting a charge row",async()=>{
+ const r=record();r.kind="final_erp_amount";r.amounts[0].basis="synthetic_reported_net_plus_tax_v1";r.amounts[0].candidate="16";
+ const p=preparationOf({...fields(),amount:"16",amount_basis:"synthetic_reported_net_plus_tax_v1"},r);
+ const families:string[]=[];
+ const store=new DecisionStore({prepare:async()=>p,submit:async s=>{families.push(s.family);throw new DecisionError("service_unavailable","unknown");}});
+ store.select("final",r);await store.check();store.choose("approve");store.edit("Checked gross","");await store.submit();
+ store.select("charge",record());await store.retry("request-one");
+ assert.deepEqual(families,["erp_final","erp_final"]);
+ assert.equal(store.snapshot().entries["request-one"].submission.amount,"16");
+});

@@ -59,7 +59,7 @@ func (s *Server) financialFinalSubjectLocked(workspace, request, resultID, resul
 	if err := a.checkResultReceipt(basis, app); err != nil {
 		return financialFinalCandidate{}, err
 	}
-	if err := a.currentResult(basis, record, actor); err != nil {
+	if err := a.currentResultEvidence(basis, record, actor); err != nil {
 		return financialFinalCandidate{}, err
 	}
 	upstream, err := s.currentFinancialChargeLocked(workspace, basis.Document.Request, basis.Document.RequestDigest, actor)

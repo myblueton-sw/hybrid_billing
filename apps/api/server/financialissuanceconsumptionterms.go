@@ -19,15 +19,14 @@ func (a *financialIssuance) ownedBindingForConsumption(workspace, id, digest str
 	}
 	term, ok := a.termIntents[p.Spec.Term]
 	termDigest, err := termIntentDigest(term)
-	if !ok || term.Spec.ID != p.Spec.Term || term.State != "approved" || term.Author == "" || term.Approver == "" || term.Author == term.Approver || err != nil || termDigest != term.Digest || term.Digest != p.Spec.TermDigest || !reflect.DeepEqual(term, p.Term) || a.termScopes[term.Profile.Source.Basis.Subject.Target] != term.Spec.ID {
+	if !ok || term.Spec.ID != p.Spec.Term || term.State != "approved" || term.Author == "" || term.Approver == "" || term.Author == term.Approver || err != nil || termDigest != term.Digest || term.Digest != p.Spec.TermDigest || !reflect.DeepEqual(term, p.Term) {
 		return fail()
 	}
-	profile, err := a.ownedConfirmedProfile(workspace, term.Spec.Profile, term.Spec.ProfileDigest)
-	if err != nil {
+	if err := a.termScopeOwned(term); err != nil {
 		return financialTermBinding{}, err
 	}
-	if !reflect.DeepEqual(profile, term.Profile) {
-		return fail()
+	if err := a.retainedSetupOrigin(workspace, term.Spec.Profile, term.Spec.ProfileDigest, term.Spec.Configuration, term.Profile, term.Configuration); err != nil {
+		return financialTermBinding{}, err
 	}
 	for _, right := range []struct{ actor, capability string }{{term.Author, termsauthority.RecordTerm}, {term.Approver, termsauthority.ApproveTerm}, {p.Author, termsauthority.BindTerm}, {p.Approver, termsauthority.ApproveBinding}} {
 		if err := a.termActor(workspace, right.actor, right.capability); err != nil {
@@ -51,10 +50,20 @@ func (a *financialIssuance) draftCoverage(current financialIssuanceProfile, id, 
 	}
 	old := p.Term.Profile.Source.Basis
 	source := current.Source.Basis
-	if !reflect.DeepEqual(old.Contract, source.Contract) || old.Customer != source.Customer || current.Spec.Zone != p.Binding.Zone || at.IsZero() {
+	if p.Term.Configuration != nil || !reflect.DeepEqual(old.Contract, source.Contract) || old.Customer != source.Customer || current.Spec.Zone != p.Binding.Zone || at.IsZero() {
 		return fail()
 	}
-	coverage, err := a.terms.Cover(workspace, source.Contract.ContractID, at)
+	return a.bindingCoverage(workspace, p, at)
+}
+
+func (a *financialIssuance) bindingCoverage(workspace string, p financialTermBinding, at time.Time) (receivables.Coverage, error) {
+	fail := func() (receivables.Coverage, error) {
+		return receivables.Coverage{}, commands.Fail(commands.EvidenceStale)
+	}
+	if at.IsZero() {
+		return fail()
+	}
+	coverage, err := a.terms.Cover(workspace, p.Binding.Contract, at)
 	if err != nil {
 		return receivables.Coverage{}, err
 	}

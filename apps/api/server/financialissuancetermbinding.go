@@ -26,7 +26,15 @@ func copyFinancialBinding(p financialTermBinding) financialTermBinding {
 	return p
 }
 func bindingIntentDigest(p financialTermBinding) (string, error) {
-	return financialEvidenceDigest("issuance_term_binding", struct {
+	expected, err := termIntentDigest(p.Term)
+	if err != nil || expected != p.Term.Digest || p.Spec.Term != p.Term.Spec.ID || p.Spec.TermDigest != p.Term.Digest {
+		return "", commands.Fail(commands.EvidenceStale)
+	}
+	domain := "issuance_term_binding"
+	if p.Term.Configuration != nil {
+		domain = "issuance_configuration_binding_v1"
+	}
+	return financialEvidenceDigest(domain, struct {
 		Spec    financialTermBindingSpec
 		Term    financialTermRecord
 		Binding receivables.Binding
@@ -92,7 +100,11 @@ func (a *financialIssuance) bindTerm(workspace, actor string, spec financialTerm
 	if !ok || term.Digest != spec.TermDigest || term.State != "approved" {
 		return financialTermBinding{}, commands.Fail(commands.PrerequisiteFailed)
 	}
-	if spec.Zone != term.Profile.Spec.Zone {
+	contract, zone, err := termContractAndZone(term)
+	if err != nil {
+		return financialTermBinding{}, err
+	}
+	if spec.Zone != zone {
 		return financialTermBinding{}, commands.Fail(commands.InvalidRequest)
 	}
 	if err := a.currentTerm(workspace, term, actor, termsauthority.BindTerm); err != nil {
@@ -105,7 +117,7 @@ func (a *financialIssuance) bindTerm(workspace, actor string, spec financialTerm
 	if err != nil {
 		return financialTermBinding{}, err
 	}
-	p := financialTermBinding{Spec: spec, Term: copyFinancialTerm(term), Binding: receivables.Binding{ID: "issued-binding-" + id, Contract: term.Profile.Source.Basis.Contract.ContractID, Term: term.Term.ID, Revision: term.Term.Revision, Zone: spec.Zone, From: spec.From, To: spec.To, Reason: spec.Reason}, Author: actor}
+	p := financialTermBinding{Spec: spec, Term: copyFinancialTerm(term), Binding: receivables.Binding{ID: "issued-binding-" + id, Contract: contract, Term: term.Term.ID, Revision: term.Term.Revision, Zone: spec.Zone, From: spec.From, To: spec.To, Reason: spec.Reason}, Author: actor}
 	p.Digest, err = bindingIntentDigest(p)
 	if err != nil {
 		return financialTermBinding{}, err

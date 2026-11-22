@@ -10,7 +10,10 @@ import (
 )
 
 func (a *financialIssuance) requestProtectedChange(workspace, actor string, spec financialChangeSpec) (financialChangeRecord, error) {
-	profile, err := a.protectedProfile(workspace, spec.Profile, spec.ProfileDigest, actor, protectedauthority.RequestChange)
+	if err := a.protectedCaller(workspace, actor, protectedauthority.RequestChange); err != nil {
+		return financialChangeRecord{}, err
+	}
+	profile, configured, err := a.freshSetupOrigin(workspace, spec.Profile, spec.ProfileDigest, actor, spec.Configuration)
 	if err != nil {
 		return financialChangeRecord{}, err
 	}
@@ -18,7 +21,7 @@ func (a *financialIssuance) requestProtectedChange(workspace, actor string, spec
 		return financialChangeRecord{}, commands.Fail(commands.InvalidRequest)
 	}
 	spec.Effective = spec.Effective.UTC().Round(0)
-	subject, err := a.changeSubject(profile, spec.Field)
+	subject, err := a.setupChangeSubject(profile, configured, spec.Field)
 	if err != nil {
 		return financialChangeRecord{}, err
 	}
@@ -118,7 +121,7 @@ func (a *financialIssuance) requestProtectedChange(workspace, actor string, spec
 	if _, err := a.fields.Of(workspace, spec.ID); !errors.Is(err, protected.ErrNotFound) {
 		return financialChangeRecord{}, commands.Fail(commands.EvidenceStale)
 	}
-	p := financialChangeRecord{Workspace: workspace, Requester: actor, RulesDigest: rules.Digest, Spec: spec, Profile: profile, Channel: copyChannelRecord(channel), Before: before}
+	p := financialChangeRecord{Workspace: workspace, Requester: actor, RulesDigest: rules.Digest, Spec: spec, Profile: profile, Configuration: configured, Channel: copyChannelRecord(channel), Before: before}
 	p.Digest, err = changeDigest(p)
 	if err != nil {
 		return financialChangeRecord{}, err

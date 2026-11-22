@@ -12,6 +12,7 @@ import (
 )
 
 type financialChangeSpec struct {
+	Configuration                                                                 *financialConfigurationReference `json:"configuration,omitempty"`
 	ID, Profile, ProfileDigest, Field, Channel, ChannelDigest, Provenance, Reason string
 	After                                                                         protected.Ref
 	Instruction                                                                   protected.Instruction
@@ -24,6 +25,7 @@ type financialChangeDecision struct {
 	Approval protected.Approval
 }
 type financialChangeRecord struct {
+	Configuration                                    *financialIssuanceConfiguration `json:"configuration,omitempty"`
 	Workspace, Requester, RulesDigest, Digest, Phase string
 	Spec                                             financialChangeSpec
 	Profile                                          financialIssuanceProfile
@@ -43,6 +45,8 @@ func copyProtectedView(v protected.View) protected.View {
 	return v
 }
 func copyChange(p financialChangeRecord) financialChangeRecord {
+	p.Spec.Configuration = copyConfigurationReference(p.Spec.Configuration)
+	p.Configuration = copyConfigurationSnapshot(p.Configuration)
 	p.Profile = copyIssuanceProfile(p.Profile)
 	p.Channel = copyChannelRecord(p.Channel)
 	p.Module = copyProtectedView(p.Module)
@@ -54,11 +58,18 @@ func copyChange(p financialChangeRecord) financialChangeRecord {
 	return p
 }
 func changeDigest(p financialChangeRecord) (string, error) {
+	if err := setupOriginShape(p.Spec.Profile, p.Spec.ProfileDigest, p.Spec.Configuration, p.Profile, p.Configuration); err != nil {
+		return "", err
+	}
+	domain := "issuance_protected_change"
+	if p.Configuration != nil {
+		domain = "issuance_configuration_change_v1"
+	}
 	p.Digest, p.Phase = "", ""
 	p.Module = protected.View{}
 	p.Verification = nil
 	p.Decisions = nil
-	return financialEvidenceDigest("issuance_protected_change", p)
+	return financialEvidenceDigest(domain, p)
 }
 func (p financialChangeRecord) change() protected.Change {
 	return protected.Change{ID: p.Spec.ID, Subject: p.Channel.Subject.Subject, Field: p.Spec.Field, After: p.Spec.After, Provenance: p.Spec.Provenance, Instruction: p.Spec.Instruction, Effective: p.Spec.Effective}
@@ -66,7 +77,7 @@ func (p financialChangeRecord) change() protected.Change {
 func issuanceChangeScope(subject, field string) string { return subject + "/" + field }
 func validChangeSpec(s financialChangeSpec) bool {
 	i := s.Instruction
-	if !validRequestID(s.ID) || !validRequestID(s.Profile) || !validPlanHash(s.ProfileDigest) || !validRequestID(s.Channel) || !validPlanHash(s.ChannelDigest) || !validRequestID(s.After.ID) || !validPlanHash(s.After.Fingerprint) || !documentReason(s.Reason) || s.Effective.IsZero() || !validRequestID(i.Evidence) {
+	if !validRequestID(s.ID) || !validSetupReference(s.Profile, s.ProfileDigest, s.Configuration) || !validRequestID(s.Channel) || !validPlanHash(s.ChannelDigest) || !validRequestID(s.After.ID) || !validPlanHash(s.After.Fingerprint) || !documentReason(s.Reason) || s.Effective.IsZero() || !validRequestID(i.Evidence) {
 		return false
 	}
 	if s.Provenance != protected.ProvenanceStaff && s.Provenance != protected.ProvenanceDocument && s.Provenance != protected.ProvenancePortal {
@@ -204,11 +215,14 @@ func (a *financialIssuance) currentChange(p financialChangeRecord, actor, capabi
 	if err != nil || digest != p.Digest {
 		return protected.View{}, commands.Fail(commands.EvidenceStale)
 	}
-	profile, err := a.protectedProfile(p.Workspace, p.Spec.Profile, p.Spec.ProfileDigest, actor, capability)
+	if err := a.protectedCaller(p.Workspace, actor, capability); err != nil {
+		return protected.View{}, err
+	}
+	profile, configured, err := a.freshSetupOrigin(p.Workspace, p.Spec.Profile, p.Spec.ProfileDigest, actor, p.Spec.Configuration)
 	if err != nil {
 		return protected.View{}, err
 	}
-	if !reflect.DeepEqual(profile, p.Profile) {
+	if !reflect.DeepEqual(profile, p.Profile) || !reflect.DeepEqual(configured, p.Configuration) {
 		return protected.View{}, commands.Fail(commands.EvidenceStale)
 	}
 	return a.changeStanding(p)

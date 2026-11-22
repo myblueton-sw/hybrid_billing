@@ -17,12 +17,8 @@ func (a *financialIssuance) ownedChangeForConsumption(workspace, id string) (fin
 	if !ok || p.Workspace != workspace || p.Spec.ID != id || err != nil || digest != p.Digest || p.Phase != "recorded" {
 		return fail()
 	}
-	profile, err := a.ownedConfirmedProfile(workspace, p.Spec.Profile, p.Spec.ProfileDigest)
-	if err != nil {
+	if err := a.retainedSetupOrigin(workspace, p.Spec.Profile, p.Spec.ProfileDigest, p.Spec.Configuration, p.Profile, p.Configuration); err != nil {
 		return financialChangeRecord{}, protected.View{}, err
-	}
-	if !reflect.DeepEqual(profile, p.Profile) {
-		return fail()
 	}
 	v, err := a.changeStanding(p)
 	if err != nil {
@@ -73,7 +69,7 @@ func (a *financialIssuance) draftReferences(current financialIssuanceProfile, at
 		if err != nil {
 			return nil, err
 		}
-		if p.Spec.Field != field || !reflect.DeepEqual(p.Channel.Subject, subject) || v.Change.Subject != subject.Subject || resolved.Ref != p.Spec.After || !resolved.Effective.Equal(p.Spec.Effective) || resolved.Effective.After(at) {
+		if p.Configuration != nil || p.Spec.Field != field || !reflect.DeepEqual(p.Channel.Subject, subject) || v.Change.Subject != subject.Subject || resolved.Ref != p.Spec.After || !resolved.Effective.Equal(p.Spec.Effective) || resolved.Effective.After(at) {
 			return nil, commands.Fail(commands.EvidenceStale)
 		}
 		out = append(out, issuance.Reference{Field: field, Subject: subject.Subject, Change: resolved.Change, Ref: resolved.Ref, Effective: resolved.Effective.UTC()})

@@ -2,7 +2,6 @@ package server
 
 import (
 	"errors"
-	"reflect"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/receivables"
@@ -10,10 +9,12 @@ import (
 )
 
 type financialTermSpec struct {
+	Configuration                            *financialConfigurationReference `json:"configuration,omitempty"`
 	ID, Profile, ProfileDigest, Mode, Reason string
 	Revision, NetDays                        int
 }
 type financialTermRecord struct {
+	Configuration                   *financialIssuanceConfiguration `json:"configuration,omitempty"`
 	Spec                            financialTermSpec
 	Profile                         financialIssuanceProfile
 	Term                            receivables.Term
@@ -22,10 +23,18 @@ type financialTermRecord struct {
 }
 
 func copyFinancialTerm(p financialTermRecord) financialTermRecord {
+	p.Spec.Configuration = copyConfigurationReference(p.Spec.Configuration)
+	p.Configuration = copyConfigurationSnapshot(p.Configuration)
 	p.Profile = copyIssuanceProfile(p.Profile)
 	return p
 }
 func termIntentDigest(p financialTermRecord) (string, error) {
+	if err := setupOriginShape(p.Spec.Profile, p.Spec.ProfileDigest, p.Spec.Configuration, p.Profile, p.Configuration); err != nil {
+		return "", err
+	}
+	if p.Configuration != nil {
+		return configuredTermDigest(p)
+	}
 	return financialEvidenceDigest("issuance_term_intent", struct {
 		Spec    financialTermSpec
 		Profile financialIssuanceProfile
@@ -35,15 +44,14 @@ func termIntentDigest(p financialTermRecord) (string, error) {
 }
 func (a *financialIssuance) currentTerm(workspace string, p financialTermRecord, actor, capability string) error {
 	digest, err := termIntentDigest(p)
-	if err != nil || digest != p.Digest || a.termScopes[p.Profile.Source.Basis.Subject.Target] != p.Spec.ID {
+	if err != nil || digest != p.Digest {
 		return commands.Fail(commands.EvidenceStale)
 	}
-	profile, err := a.termProfile(workspace, p.Spec.Profile, p.Spec.ProfileDigest, actor, capability)
-	if err != nil {
+	if err := a.termScopeOwned(p); err != nil {
 		return err
 	}
-	if !reflect.DeepEqual(profile, p.Profile) {
-		return commands.Fail(commands.EvidenceStale)
+	if err := a.currentTermOrigin(workspace, p, actor, capability); err != nil {
+		return err
 	}
 	if err := a.termActor(workspace, p.Author, termsauthority.RecordTerm); err != nil {
 		return err
@@ -75,7 +83,7 @@ func (a *financialIssuance) recordTerm(workspace, actor string, spec financialTe
 	if !validRequestID(spec.ID) || spec.Mode != receivables.ModeCalendar || spec.Revision < 1 || spec.Revision > 1000000 || spec.NetDays < 0 || spec.NetDays > 365 || !documentReason(spec.Reason) {
 		return financialTermRecord{}, commands.Fail(commands.InvalidRequest)
 	}
-	profile, err := a.termProfile(workspace, spec.Profile, spec.ProfileDigest, actor, termsauthority.RecordTerm)
+	profile, configured, err := a.freshSetupOrigin(workspace, spec.Profile, spec.ProfileDigest, actor, spec.Configuration)
 	if err != nil {
 		return financialTermRecord{}, err
 	}
@@ -83,8 +91,12 @@ func (a *financialIssuance) recordTerm(workspace, actor string, spec financialTe
 	if err != nil {
 		return financialTermRecord{}, err
 	}
-	p := financialTermRecord{Spec: spec, Profile: profile, Term: receivables.Term{ID: "issued-term-" + id, Revision: spec.Revision, NetDays: spec.NetDays, Mode: spec.Mode}, Author: actor}
+	p := financialTermRecord{Spec: spec, Profile: profile, Configuration: configured, Term: receivables.Term{ID: "issued-term-" + id, Revision: spec.Revision, NetDays: spec.NetDays, Mode: spec.Mode}, Author: actor}
 	p.Digest, err = termIntentDigest(p)
+	if err != nil {
+		return financialTermRecord{}, err
+	}
+	scope, err := termScopeKey(p)
 	if err != nil {
 		return financialTermRecord{}, err
 	}
@@ -100,8 +112,19 @@ func (a *financialIssuance) recordTerm(workspace, actor string, spec financialTe
 		}
 		p = old
 	} else {
-		if len(a.termIntents) >= financialIssuanceLimit || a.termScopes[profile.Source.Basis.Subject.Target] != "" {
+		if len(a.termIntents) >= financialIssuanceLimit || a.termScopes[scope] != "" {
 			return financialTermRecord{}, commands.Fail(commands.PrerequisiteFailed)
+		}
+		for _, ownedID := range a.termScopes {
+			if ownedID == spec.ID {
+				return financialTermRecord{}, commands.Fail(commands.EvidenceStale)
+			}
+		}
+		for ownedID, other := range a.termIntents {
+			otherScope, e := termScopeKey(other)
+			if e != nil || ownedID != other.Spec.ID || otherScope == scope {
+				return financialTermRecord{}, commands.Fail(commands.EvidenceStale)
+			}
 		}
 		if _, err := a.terms.Term(workspace, p.Term.ID, p.Term.Revision); !errors.Is(err, receivables.ErrNotFound) {
 			return financialTermRecord{}, commands.Fail(commands.EvidenceStale)
@@ -111,7 +134,7 @@ func (a *financialIssuance) recordTerm(workspace, actor string, spec financialTe
 		}
 		p.State = "registration_unknown"
 		a.termIntents[spec.ID] = copyFinancialTerm(p)
-		a.termScopes[profile.Source.Basis.Subject.Target] = spec.ID
+		a.termScopes[scope] = spec.ID
 	}
 	v, err := a.terms.RecordTerm(workspace, p.Term, actor)
 	if err != nil {

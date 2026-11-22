@@ -25,6 +25,7 @@ await page.route('**/api/**',async route=>{
 const labels={"en": "ERP result evidence applications with unknown outcome", "ko": "ERP 결과 근거 내부 반영 결과 미확정", "ar": "عمليات تطبيق أدلة نتائج ERP داخلياً ذات نتيجة غير مؤكدة"};
 const permissions={"en": "ERP result evidence proposals", "ko": "ERP 결과 근거 제안", "ar": "مقترحات أدلة نتائج ERP"};
 const finalPolicies={en:'ERP final-amount approval policy proposals',ko:'ERP 최종 금액 승인 정책 제안',ar:'مقترحات سياسة اعتماد المبلغ النهائي في ERP'};
+const finalLimits={en:'ERP final-amount approval limit proposals',ko:'ERP 최종 금액 승인 한도 제안',ar:'مقترحات حدود اعتماد المبلغ النهائي في ERP'};
 const chargePolicies={en:'Charge approval policy proposals',ko:'청구 승인 정책 제안',ar:'مقترحات سياسة اعتماد الرسوم'};
 const notes={"en": "Recovery rechecks the applying actor’s permission and current evidence. Earlier effects remain possible.", "ko": "복구 시 반영 수행자의 권한과 현재 근거를 다시 확인합니다. 이전 처리는 이미 반영되었을 수 있습니다.", "ar": "تُراجع عند الاستعادة صلاحية منفّذ التطبيق والأدلة الحالية. قد تكون آثار المحاولة السابقة قد وقعت."};
 const unknownNotes={"en": "Recovery checks are unconfirmed. Earlier effects remain possible.", "ko": "복구 시 재확인 여부는 확인되지 않았습니다. 이전 처리는 이미 반영되었을 수 있습니다.", "ar": "لم تتأكد إعادة التحقق عند الاستعادة. قد تكون آثار المحاولة السابقة قد وقعت."};
@@ -41,13 +42,13 @@ try {
   assert.equal(await permission.locator('dd .m01-line').first().innerText(),'1');
   assert.ok((await row.innerText()).includes((reported?notes:unknownNotes)[lang]));
   assert.ok(!(await page.locator('.m01-impact').innerText()).includes('result_applications_unknown'));
-  for(const names of [finalPolicies,chargePolicies]){
+  for(const names of [finalPolicies,chargePolicies,finalLimits]){
    const policy=page.locator('.m01-impact .m01-sum > div').filter({has:page.getByText(names[lang],{exact:true})});
-   const expectedCount=names===finalPolicies?1:2;
+   const expectedCount=names===chargePolicies?2:1;
    assert.equal(await policy.locator('dd .m01-line').first().innerText(),String(expectedCount));
    const bounds=await policy.evaluate(e=>({overflow:[...e.querySelectorAll('dt,dd')].some(n=>n.scrollWidth>n.clientWidth+1),direction:getComputedStyle(e).direction,borderColor:getComputedStyle(e).borderColor,borderStyle:getComputedStyle(e).borderStyle}));
    assert.equal(bounds.overflow,false);assert.equal(bounds.direction,lang==='ar'?'rtl':'ltr');
-   const stage=names===finalPolicies?'final':'charge';
+   const stage=names===finalPolicies?'final':names===chargePolicies?'charge':'final-limit';
    await policy.screenshot({path:`${args.output}/policy-${stage}-${reported}-${lang}-${width}.png`});
    evidence.policyCases.push({lang,width,stage,rechecked:reported,count:expectedCount,label:names[lang],...bounds});
   }

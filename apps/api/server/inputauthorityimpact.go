@@ -14,7 +14,7 @@ type fallibleProposalStore struct {
 	tally     func(*Server) (map[string]int, error)
 }
 
-var fallibleProposalStores = []fallibleProposalStore{{name: "erp_final_policy_proposals", prefix: "erp_final_policy", rechecked: true, tally: erpFinalPolicyTally}, {name: "result_evidence_proposals", prefix: "result_evidence", rechecked: true, tally: resultEvidenceTally}, {name: "result_applications_unknown", prefix: "erp_result", rechecked: true, tally: resultApplicationTally}, {name: "result_authority_proposals", prefix: "result_authority", rechecked: true, tally: resultAuthorityTally}, {name: "document_evidence_proposals", prefix: "document_evidence", rechecked: true, tally: documentEvidenceTally}, {name: "document_authority_proposals", prefix: "document_authority", rechecked: true, tally: documentAuthorityTally}, {name: "financial_charge_requests", prefix: "financial_charge", rechecked: false, tally: financialChargeTally}, {name: "financial_request_permission_proposals", prefix: "financial_request_permission", rechecked: true, tally: financialRequestPermissionTally}, {name: "financial_permission_proposals", prefix: "financial_permission", rechecked: true, tally: financialPermissionTally}, {name: "financial_authority_proposals", prefix: "financial_authority", rechecked: true, tally: financialAuthorityTally}, {name: "financial_policy_proposals", prefix: "financial_policy", rechecked: true, tally: financialPolicyTally}, {name: "input_authority_proposals", prefix: "input_authority", rechecked: true, tally: inputAuthorityTally}, {name: "pricing_authority_proposals", prefix: "pricing_authority", rechecked: true, tally: pricingAuthorityTally}, {name: "pricing_policy_proposals", prefix: "pricing_policy", rechecked: true, tally: pricingPolicyTally}}
+var fallibleProposalStores = []fallibleProposalStore{{name: "erp_final_authority_proposals", prefix: "erp_final_authority", rechecked: true, tally: erpFinalAuthorityTally}, {name: "erp_final_policy_proposals", prefix: "erp_final_policy", rechecked: true, tally: erpFinalPolicyTally}, {name: "result_evidence_proposals", prefix: "result_evidence", rechecked: true, tally: resultEvidenceTally}, {name: "result_applications_unknown", prefix: "erp_result", rechecked: true, tally: resultApplicationTally}, {name: "result_authority_proposals", prefix: "result_authority", rechecked: true, tally: resultAuthorityTally}, {name: "document_evidence_proposals", prefix: "document_evidence", rechecked: true, tally: documentEvidenceTally}, {name: "document_authority_proposals", prefix: "document_authority", rechecked: true, tally: documentAuthorityTally}, {name: "financial_charge_requests", prefix: "financial_charge", rechecked: false, tally: financialChargeTally}, {name: "financial_request_permission_proposals", prefix: "financial_request_permission", rechecked: true, tally: financialRequestPermissionTally}, {name: "financial_permission_proposals", prefix: "financial_permission", rechecked: true, tally: financialPermissionTally}, {name: "financial_authority_proposals", prefix: "financial_authority", rechecked: true, tally: financialAuthorityTally}, {name: "financial_policy_proposals", prefix: "financial_policy", rechecked: true, tally: financialPolicyTally}, {name: "input_authority_proposals", prefix: "input_authority", rechecked: true, tally: inputAuthorityTally}, {name: "pricing_authority_proposals", prefix: "pricing_authority", rechecked: true, tally: pricingAuthorityTally}, {name: "pricing_policy_proposals", prefix: "pricing_policy", rechecked: true, tally: pricingPolicyTally}}
 
 func pricingPolicyTally(s *Server) (map[string]int, error) {
 	out := map[string]int{}
@@ -98,6 +98,26 @@ func financialPolicyTally(s *Server) (map[string]int, error) {
 		}
 		if record.State == approvals.StatePending {
 			out[record.Proposer]++
+		}
+	}
+	return out, nil
+}
+
+func erpFinalAuthorityTally(s *Server) (map[string]int, error) {
+	out := map[string]int{}
+	if s.cfg.Seed != SeedSample {
+		return out, nil
+	}
+	if s.approvals == nil || s.erpFinalAuthorities == nil || s.faulty("erp-final-authority-impact") {
+		return nil, gate.ErrUnavailable
+	}
+	for id := range s.erpFinalAuthorities {
+		record, err := s.financialAuthorityRecordForStage(s.bootWorkspace, id, erpFinalPolicyStage)
+		if err != nil {
+			return nil, err
+		}
+		if record.proposal.State == approvals.StatePending {
+			out[record.proposal.Proposer]++
 		}
 	}
 	return out, nil

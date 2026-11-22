@@ -42,6 +42,8 @@ func TestResultEvidenceImpactRenderedBrowser(t *testing.T) {
 	f.must(err)
 	otherCharge := f.run(w.actors[Admin2Login], "financial_policy.propose", "second-charge-impact", financialFields(strconv.Itoa(chargePolicy.Revision+1)))
 	f.ok(t, "second charge policy impact", otherCharge, "pending", "")
+	finalLimit := f.run(w.actors[Admin2Login], "erp_final_authority.propose", "final-limit-impact", financialAuthorityFields(f))
+	f.ok(t, "final amount limit impact", finalLimit, "pending", "")
 	beforeGrants := len(f.s.admin.Grants())
 	f.setPassword(AdminLogin, pw)
 	reader := f.signedIn(AdminLogin, pw)

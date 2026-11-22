@@ -85,6 +85,7 @@ type Server struct {
 	financialPolicies          map[string]financialPolicyBinding
 	erpFinalPolicies           map[string]financialPolicyBinding
 	financialAuthorities       map[string]financialAuthorityBinding
+	erpFinalAuthorities        map[string]financialAuthorityBinding
 	documentAuthority          *serverGrantAuthority
 	resultAuthority            *serverGrantAuthority
 	financialPermission        *serverGrantAuthority

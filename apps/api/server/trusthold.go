@@ -66,6 +66,9 @@ var holdTable = map[string]holdRule{
 	"financial_authority.propose":                  {holdRefuse, reasonChange},
 	"financial_authority.confirm":                  {holdRefuse, reasonChange},
 	"financial_authority.revoke":                   {holdAllow, reasonReduce},
+	"erp_final_authority.propose":                  {holdRefuse, reasonChange},
+	"erp_final_authority.confirm":                  {holdRefuse, reasonChange},
+	"erp_final_authority.revoke":                   {holdAllow, reasonReduce},
 	"erp_final_policy.propose":                     {holdRefuse, reasonChange},
 	"erp_final_policy.confirm":                     {holdRefuse, reasonChange},
 	"financial_policy.propose":                     {holdRefuse, reasonChange},
@@ -209,7 +212,7 @@ func (s *Server) holdAllows(command string, call commands.Call, caller identity.
 	if command == "financial_charge.review" || command == "financial_charge.prepare" || command == "financial_request_permission.inspect" || command == "document_authority.inspect" || command == "result_authority.inspect" {
 		return true
 	}
-	if command == "erp_final_policy.inspect" || command == "erp_final_policy.current" || command == "financial_permission.inspect" || command == "financial_authority.inspect" || command == "financial_policy.current" || command == "financial_policy.inspect" || command == "pricing_policy.prepare" || command == "pricing_policy.inspect" || command == "pricing_authority.inspect" || command == "input_authority.inspect" || command == "input.inspect" {
+	if command == "erp_final_authority.inspect" || command == "erp_final_policy.inspect" || command == "erp_final_policy.current" || command == "financial_permission.inspect" || command == "financial_authority.inspect" || command == "financial_policy.current" || command == "financial_policy.inspect" || command == "pricing_policy.prepare" || command == "pricing_policy.inspect" || command == "pricing_authority.inspect" || command == "input_authority.inspect" || command == "input.inspect" {
 		return true
 	}
 	rule, known := holdTable[command]

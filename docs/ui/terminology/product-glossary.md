@@ -569,3 +569,13 @@ HYB-341 M01 counts pending service-owned StageERPFinal approval-policy proposals
 | erp_final_policy_proposals | ERP final-amount approval policy proposals | ERP 최종 금액 승인 정책 제안 | مقترحات سياسة اعتماد المبلغ النهائي في ERP |
 
 Independent read-only AI technical-writing review passed these source/domain labels and subsequently inspected six actual final/charge row crops in EN1440, KO390 and AR390. The wording and bounded rendered context passed; native-language and owner acceptance remain unverified. See the [ERP-final implementation plan](../../features/HYB-341/erp-final-approval-plan.md) for the exact verification boundary.
+
+## ERP final-amount approval limit impact
+
+HYB-341 M01 counts pending service-owned StageERPFinal amount-authority proposals binding a human recipient, currency, exact maximum absolute amount and inclusive UTC dates. Confirmation rechecks original proposer governance authority and recipient eligibility. These are distinct from policy proposals and request/decision gate permissions; confirmation does not approve a particular final amount or transmit/post to ERP.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| erp_final_authority_proposals | ERP final-amount approval limit proposals | ERP 최종 금액 승인 한도 제안 | مقترحات حدود اعتماد المبلغ النهائي في ERP |
+
+Independent read-only source/domain technical-writing review passed these exact labels and subsequently passed wording in three actual EN1440/KO390/AR390 row crops. Native-language and owner acceptance remain unverified. The separate Claude CLI review covered those rows and two context captures; see the [ERP-final plan](../../features/HYB-341/erp-final-approval-plan.md) for bounded evidence.

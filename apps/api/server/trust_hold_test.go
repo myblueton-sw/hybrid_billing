@@ -14,7 +14,7 @@ import (
 )
 
 var holdAllowed = []string{"access.reject_request", "access.request_revoke", "access.revoke_delegation", "access.withdraw_request", "bulk_revocation.add_matching", "bulk_revocation.add_targets",
-	"bulk_revocation.discard", "bulk_revocation.execute", "bulk_revocation.prepare", "document_authority.reject", "document_authority.withdraw", "document_evidence.revoke", "financial_authority.revoke", "financial_charge.reject", "financial_permission.reject", "financial_permission.withdraw", "financial_request_permission.reject", "financial_request_permission.withdraw", "identity.depart_user",
+	"bulk_revocation.discard", "bulk_revocation.execute", "bulk_revocation.prepare", "document_authority.reject", "document_authority.withdraw", "document_evidence.revoke", "erp_final_authority.revoke", "financial_authority.revoke", "financial_charge.reject", "financial_permission.reject", "financial_permission.withdraw", "financial_request_permission.reject", "financial_request_permission.withdraw", "identity.depart_user",
 	"identity.remove_membership", "identity.revoke_invitation", "identity.suspend_membership", "identity.suspend_user", "input.reject", "input_authority.reject", "input_authority.withdraw", "installation.withdraw",
 	"integrations.letter_withdraw_dismiss", "integrations.letter_withdraw_redeliver", "integrations.plugin_disable", "integrations.plugin_stop", "integrations.plugin_withdraw",
 	"integrations.subscription_pause", "integrations.subscription_revoke", "integrations.subscription_withdraw", "integrations.subscription_withdraw_resume",
@@ -24,7 +24,7 @@ var holdAllowed = []string{"access.reject_request", "access.request_revoke", "ac
 var holdConditional = []string{"access.approve_request", "identity.change_role", "identity.set_role_period"}
 
 var holdRefused = []string{"access.request_grant", "contract.end", "contract.evidence", "contract.renew", "contract.reopen", "contract.resume", "contract.settle",
-	"contract.suspend", "contract.withdraw", "document_authority.approve", "document_authority.propose_console", "document_authority.propose_human", "document_evidence.confirm", "document_evidence.propose", "erp_final_policy.confirm", "erp_final_policy.propose", "erp_preparation.prepare", "erp_result.apply", "financial_authority.confirm", "financial_authority.propose", "financial_charge.approve", "financial_charge.request", "financial_permission.approve", "financial_permission.propose", "financial_policy.confirm", "financial_policy.propose", "financial_request_permission.approve", "financial_request_permission.propose_console", "financial_request_permission.propose_human", "identity.create_user", "identity.invite", "identity.issue_reset_link", "identity.issue_set_link",
+	"contract.suspend", "contract.withdraw", "document_authority.approve", "document_authority.propose_console", "document_authority.propose_human", "document_evidence.confirm", "document_evidence.propose", "erp_final_authority.confirm", "erp_final_authority.propose", "erp_final_policy.confirm", "erp_final_policy.propose", "erp_preparation.prepare", "erp_result.apply", "financial_authority.confirm", "financial_authority.propose", "financial_charge.approve", "financial_charge.request", "financial_permission.approve", "financial_permission.propose", "financial_policy.confirm", "financial_policy.propose", "financial_request_permission.approve", "financial_request_permission.propose_console", "financial_request_permission.propose_human", "identity.create_user", "identity.invite", "identity.issue_reset_link", "identity.issue_set_link",
 	"identity.reinstate_membership", "identity.reinstate_user", "input.confirm_publish", "input_authority.approve", "input_authority.propose_console", "input_authority.propose_human", "installation.approve", "installation.propose_plan", "integrations.letter_approve_dismiss",
 	"integrations.letter_approve_redeliver", "integrations.letter_request_dismiss", "integrations.letter_request_redeliver", "integrations.plugin_approve",
 	"integrations.plugin_propose", "integrations.redelivery_reapprove", "integrations.subscription_approve", "integrations.subscription_approve_resume",
@@ -67,7 +67,7 @@ func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 			t.Errorf("%s rows\n%v\nwant\n%v", key, got, want)
 		}
 	}
-	if len(registered) != 141 || len(holdTable) != 141 {
+	if len(registered) != 144 || len(holdTable) != 144 {
 		t.Errorf("registered %d rows %d", len(registered), len(holdTable))
 	}
 	data, err := os.ReadFile("boundary.go")

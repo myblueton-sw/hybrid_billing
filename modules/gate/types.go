@@ -29,14 +29,18 @@ type (
 )
 
 const (
-	ProposeERPResult        = auth.ProposeERPResult
-	ConfirmERPResult        = auth.ConfirmERPResult
-	RevokeERPResult         = auth.RevokeERPResult
-	ApplyERPResult          = auth.ApplyERPResult
-	ProposeDocumentEvidence = auth.ProposeDocumentEvidence
-	ConfirmDocumentEvidence = auth.ConfirmDocumentEvidence
-	RevokeDocumentEvidence  = auth.RevokeDocumentEvidence
-	PrepareERPRecord        = auth.PrepareERPRecord
+	RecordIssuanceTerm         = auth.RecordIssuanceTerm
+	ApproveIssuanceTerm        = auth.ApproveIssuanceTerm
+	BindIssuanceTerm           = auth.BindIssuanceTerm
+	ApproveIssuanceTermBinding = auth.ApproveIssuanceTermBinding
+	ProposeERPResult           = auth.ProposeERPResult
+	ConfirmERPResult           = auth.ConfirmERPResult
+	RevokeERPResult            = auth.RevokeERPResult
+	ApplyERPResult             = auth.ApplyERPResult
+	ProposeDocumentEvidence    = auth.ProposeDocumentEvidence
+	ConfirmDocumentEvidence    = auth.ConfirmDocumentEvidence
+	RevokeDocumentEvidence     = auth.RevokeDocumentEvidence
+	PrepareERPRecord           = auth.PrepareERPRecord
 
 	General = auth.General
 	Cost    = auth.Cost

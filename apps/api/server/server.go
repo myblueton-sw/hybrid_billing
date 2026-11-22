@@ -38,6 +38,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/releasetrace"
 	"github.com/myblueton-sw/hybrid_billing/modules/resultauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/retention"
+	"github.com/myblueton-sw/hybrid_billing/modules/termsauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/trustchange"
 	"github.com/myblueton-sw/hybrid_billing/modules/webhooks"
 )
@@ -81,6 +82,7 @@ type Config struct {
 }
 
 type Server struct {
+	termAuthority              *serverGrantAuthority
 	financialFinals            map[string]financialFinalBinding
 	financialIssuance          *financialIssuance
 	financialCharges           map[string]financialChargeBinding
@@ -203,7 +205,7 @@ func RelationshipLimits() relationships.Limits {
 }
 
 func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
-	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, approvalKind, inputauthority.ResourceKind, pricingauthority.ResourceKind, financialpermission.ResourceKind, financialpermission.ERPFinalResourceKind, documentauthority.ResourceKind, resultauthority.ResourceKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General, candidateField: gate.Cost, approvalField: gate.General, inputauthority.EvidenceField: gate.Cost, pricingauthority.EvidenceField: gate.Cost}}
+	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, approvalKind, inputauthority.ResourceKind, pricingauthority.ResourceKind, financialpermission.ResourceKind, financialpermission.ERPFinalResourceKind, documentauthority.ResourceKind, resultauthority.ResourceKind, termsauthority.ResourceKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General, candidateField: gate.Cost, approvalField: gate.General, inputauthority.EvidenceField: gate.Cost, pricingauthority.EvidenceField: gate.Cost}}
 	for name, class := range fields {
 		c.Fields[name] = class
 	}
@@ -358,6 +360,9 @@ func New(cfg Config) (*Server, error) {
 				}
 				if err == nil {
 					s.resultAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, resultGrantAuthority)
+				}
+				if err == nil {
+					s.termAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, termGrantAuthority)
 				}
 				if err == nil {
 					s.inputReviews, err = newCandidateInputReviews(s.chargeProducer, serverInputReviewAuthority{s: s}, s.clock)

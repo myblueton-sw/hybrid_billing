@@ -18,14 +18,18 @@ var (
 type Action string
 
 const (
-	ProposeERPResult        Action = "propose_erp_result"
-	ConfirmERPResult        Action = "confirm_erp_result"
-	RevokeERPResult         Action = "revoke_erp_result"
-	ApplyERPResult          Action = "apply_erp_result"
-	ProposeDocumentEvidence Action = "propose_document_evidence"
-	ConfirmDocumentEvidence Action = "confirm_document_evidence"
-	RevokeDocumentEvidence  Action = "revoke_document_evidence"
-	PrepareERPRecord        Action = "prepare_erp_record"
+	RecordIssuanceTerm         Action = "record_issuance_term"
+	ApproveIssuanceTerm        Action = "approve_issuance_term"
+	BindIssuanceTerm           Action = "bind_issuance_term"
+	ApproveIssuanceTermBinding Action = "approve_issuance_term_binding"
+	ProposeERPResult           Action = "propose_erp_result"
+	ConfirmERPResult           Action = "confirm_erp_result"
+	RevokeERPResult            Action = "revoke_erp_result"
+	ApplyERPResult             Action = "apply_erp_result"
+	ProposeDocumentEvidence    Action = "propose_document_evidence"
+	ConfirmDocumentEvidence    Action = "confirm_document_evidence"
+	RevokeDocumentEvidence     Action = "revoke_document_evidence"
+	PrepareERPRecord           Action = "prepare_erp_record"
 )
 
 const (
@@ -67,6 +71,11 @@ func IntegrationRights() []Action {
 const InstallationKind = "installation"
 
 var actions = map[Action]struct{}{
+	RecordIssuanceTerm:         {},
+	ApproveIssuanceTerm:        {},
+	BindIssuanceTerm:           {},
+	ApproveIssuanceTermBinding: {},
+
 	ProposeERPResult: {}, ConfirmERPResult: {}, RevokeERPResult: {}, ApplyERPResult: {},
 	ProposeDocumentEvidence: {}, ConfirmDocumentEvidence: {}, RevokeDocumentEvidence: {}, PrepareERPRecord: {},
 	View: {}, ViewCost: {}, ChangeCustomerPolicy: {}, ChangeSellingPolicy: {}, RequestApproval: {},
@@ -85,7 +94,7 @@ func humanOnly(action Action) bool { return action == Approve || action == Appro
 
 func directHuman(action Action) bool {
 	switch action {
-	case ProposeERPResult, ConfirmERPResult, RevokeERPResult, ApplyERPResult, ProposeDocumentEvidence, ConfirmDocumentEvidence, RevokeDocumentEvidence, PrepareERPRecord, ConfirmInput, ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy:
+	case RecordIssuanceTerm, ApproveIssuanceTerm, BindIssuanceTerm, ApproveIssuanceTermBinding, ProposeERPResult, ConfirmERPResult, RevokeERPResult, ApplyERPResult, ProposeDocumentEvidence, ConfirmDocumentEvidence, RevokeDocumentEvidence, PrepareERPRecord, ConfirmInput, ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy:
 		return true
 	}
 	return false

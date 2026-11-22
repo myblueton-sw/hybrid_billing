@@ -23,7 +23,7 @@ func resultCommandAction(command string) gate.Action {
 		return gate.RevokeERPResult
 	case "erp_result.apply":
 		return gate.ApplyERPResult
-	case "result_evidence.inspect", "result_evidence.history", "erp_result.inspect":
+	case "result_evidence.inspect", "result_evidence.history", "erp_result.inspect", "result_evidence.preparations", "result_evidence.context", "result_evidence.advice":
 		return gate.ViewCost
 	}
 	return ""
@@ -116,6 +116,26 @@ func (h resultCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 	if err := a.boundedResultFields(nil); err != nil {
 		return commands.Outcome{}, err
 	}
+	if h.command == "result_evidence.preparations" || h.command == "result_evidence.context" {
+		var fields map[string]string
+		var err error
+		if h.command == "result_evidence.preparations" {
+			fields, err = a.resultPreparationDiscovery(ctx)
+		} else {
+			fields, err = a.resultContextLocked(ctx)
+		}
+		if err != nil {
+			return commands.Outcome{}, err
+		}
+		return commands.Outcome{Fields: fields}, nil
+	}
+	if h.command == "result_evidence.advice" {
+		fields, err := a.resultAdviceLocked(ctx)
+		if err != nil {
+			return commands.Outcome{}, err
+		}
+		return commands.Outcome{Fields: fields}, nil
+	}
 	if h.command == "result_evidence.history" {
 		fields, err := a.resultHistoryLocked(ctx)
 		if err != nil {
@@ -170,7 +190,7 @@ func (h resultCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 
 func (s *Server) resultDefinitions() []commands.Definition {
 	var out []commands.Definition
-	for _, id := range []string{"result_evidence.propose", "result_evidence.confirm", "result_evidence.revoke", "result_evidence.inspect", "result_evidence.history", "erp_result.apply", "erp_result.inspect"} {
+	for _, id := range []string{"result_evidence.propose", "result_evidence.confirm", "result_evidence.revoke", "result_evidence.inspect", "result_evidence.history", "erp_result.apply", "erp_result.inspect", "result_evidence.preparations", "result_evidence.context", "result_evidence.advice"} {
 		action := resultCommandAction(id)
 		mutation := action != gate.ViewCost
 		permission := commands.Permission{Action: action, Kind: resultauthority.ResourceKind}
@@ -181,7 +201,10 @@ func (s *Server) resultDefinitions() []commands.Definition {
 		if id == "result_evidence.propose" {
 			fields = []commands.Field{{Name: "packet", Type: commands.Text, Required: true}}
 		}
-		if id == "result_evidence.history" {
+		if id == "result_evidence.preparations" {
+			fields = nil
+		}
+		if id == "result_evidence.history" || id == "result_evidence.preparations" || id == "result_evidence.context" {
 			fields = append(fields, commands.Field{Name: "after", Type: commands.ID}, commands.Field{Name: "snapshot", Type: commands.ID})
 		}
 		refusals := []commands.Code{commands.EvidenceStale}

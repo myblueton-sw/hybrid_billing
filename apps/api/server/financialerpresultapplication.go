@@ -154,15 +154,8 @@ func (a *financialERP) applyResultLocked(workspace, id, digest, actor string) (f
 		if len(a.resultApplications) >= financialDocumentLimit || len(a.resultExternals) >= financialDocumentLimit || len(a.resultPreparations) >= financialDocumentLimit {
 			return fail(commands.Fail(commands.PrerequisiteFailed))
 		}
-		prospective := struct {
-			Basis         financialERPResultBasis
-			Document      erpledger.Document
-			Links         []erpledger.Link
-			Actor, Digest string
-		}{b, intent.document, intent.links, actor, digest}
-		raw, err := json.Marshal(prospective)
-		if err != nil || len(raw) > financialDocumentBytes/2 {
-			return fail(commands.Fail(commands.PrerequisiteFailed))
+		if err := resultApplicationAdmission(b, intent); err != nil {
+			return fail(err)
 		}
 	}
 	view, lookup := a.ledger.DocumentOf(workspace, b.Packet.Connection, b.Packet.External)
@@ -256,4 +249,18 @@ func resultApplicationDigest(digest, actor string, snapshot erpledger.ResultView
 		Schema, Digest, Actor string
 		Result                erpledger.ResultView
 	}{"hb_erp_result_application_v1", digest, actor, snapshot})
+}
+
+func resultApplicationAdmission(b financialERPResultBasis, intent financialERPResultApplication) error {
+	prospective := struct {
+		Basis         financialERPResultBasis
+		Document      erpledger.Document
+		Links         []erpledger.Link
+		Actor, Digest string
+	}{b, intent.document, intent.links, intent.actor, intent.digest}
+	raw, err := json.Marshal(prospective)
+	if err != nil || len(raw) > financialDocumentBytes/2 {
+		return commands.Fail(commands.PrerequisiteFailed)
+	}
+	return nil
 }

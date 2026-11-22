@@ -405,9 +405,16 @@ func (r *Registry) Numbers(workspace, id string) ([]NumberView, error) {
 	return out, nil
 }
 
-func (r *Registry) take(s *space, v *series, draft string, actor Actor, now time.Time) (*NumberView, error) {
+func (r *Registry) numberCapacity(s *space, v *series) error {
 	if v.view.Next > ceiling(v.view.Series.Width) || s.numbers >= r.limits.Numbers {
-		return nil, ErrLimit
+		return ErrLimit
+	}
+	return nil
+}
+
+func (r *Registry) take(s *space, v *series, draft string, actor Actor, now time.Time) (*NumberView, error) {
+	if err := r.numberCapacity(s, v); err != nil {
+		return nil, err
 	}
 	s.numbers++
 	n := &NumberView{Number: format(v.view.Series, v.view.Next), Value: v.view.Next, Draft: draft, State: NumberReserved, Actor: actor.ID, At: now, Taker: actor.ID, Taken: now}

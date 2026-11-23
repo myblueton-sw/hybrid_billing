@@ -55,11 +55,33 @@ Options 1, 2 and 6 can be combined with any of the others. Options 3 to 5 are al
 
 # Recommendation
 
-Decide the question in two parts. For the steps of one setup record (verify, decide, accept, approve, apply), keep the present rule and add option 2, because there the people are still working together and a visible cause is what is missing. For the use of completed setup by later invoices, the present rule makes each later invoice depend on at least five distinct people per protected change, plus those of the payment terms, being granted again within a day; root assumes, without evidence from the planning documents, that this is not intended; option 3 with revocation kept distinct from expiry is the candidate to examine. This is root's reading and not a decision, and it was not checked against the planning requirements for separation of duties.
+Decide the question in two parts. For the steps of one setup record (verify, decide, accept, approve, apply), keep the present rule and add option 2, because there the people are still working together and a visible cause is what is missing. For the use of completed setup by later invoices, the present rule makes each later invoice depend on at least five distinct people per protected change, plus those of the payment terms, being granted again within a day; the planning text read does not require this, as the cross-check below records; option 3 with revocation kept distinct from expiry is the candidate to examine. This is root's reading and not a decision.
+
+# Planning cross-check
+
+Read on 2026-11-24 from `docs/planning/v1.16` in the authorized local workspace; several of these planning files are not yet in the published repository. Quotations are translated from the Korean planning text.
+
+| Planning statement | Where | Bearing on this question |
+| --- | --- | --- |
+| Changes to a payment account, document recipient, tax identifier or template "require separate verification, approval and a validity period"; the references before and after, the verifier and approver, and the evidence of confirmation through an existing registered channel are preserved; "the control itself is mandatory even though the responsible people and the specific periods are undetermined" | `detailed-requirements.md`, QA-01 | Requires separation, preserved evidence and a validity period. Does not say that the verifier or approver must still hold a permission when the change is later used |
+| Acceptance: such a change is "reflected in documents only on the effective date after confirmation through the existing channel and separate approval" | `detailed-requirements.md`, AUD-QA-01 | The condition for use is the completed confirmation and approval and the effective date |
+| Re-approval is required when the input, policy, exchange rate, attribution or ERP draft changes | `requirements.md`, HB-23, requirement | Concerns changes to what was approved |
+| "Long-running work checks the permission and the target hash again"; the approval subject binds the "eligible approver" | `requirements.md`, HB-23, implementation direction (a proposal, not the requirement) | Concerns the person performing the work, and eligibility when approving; no later time is stated |
+| Acceptance: external execution is blocked on "withdrawal" right after approval | `requirements.md`, HB-23, acceptance | Ambiguous between withdrawing the approval and withdrawing a permission; the nearest statement to a contrary reading |
+| "The current permission is checked again at job start, chunk boundaries, external submission and download resume"; a change of permission version invalidates waiting jobs and caches | `requirements.md`, HB-03 | Concerns the person performing the work and work still waiting, not completed approvals |
+| Queued work started by a person rechecks the current permission; whether processing that was already approved continues is decided per command; the actor recorded in approval history is unchanged | `retention-access.md` | States that continuing after a permission change is a per-command decision |
+
+Reading: the planning requires a recheck of the person acting now and of the thing that was approved, and leaves to each command whether already approved processing continues after a permission change. No statement was found that requires the people who performed earlier steps to hold their permissions at the time of a later step or of a later invoice. The rule as built therefore goes beyond the planning text. It is not contradicted by it either, so whether to keep it remains a decision.
+
+Two numbers that drive the consequences are fixed in code and are not in the planning text, which leaves the periods undetermined: the maximum grant validity of 24 hours (`apps/api/server/server.go`, one literal per permission domain) and the minimum channel age of 24 hours (`modules/protected/types.go:25`). The owner's instruction of 2026-11-17 on open values was that provisional values ship as installation defaults that can be changed without a code change. By that instruction the maximum grant validity, at least, is a candidate to become an installation setting with bounds; this is option 5 in a form the owner asked for in general terms in another context, and it still needs its own design and review because it lengthens high-trust permissions.
+
+Not searched: the source chapters cited by QA-01 (B1500) and the HB-257 baseline outside `docs/planning/v1.16`.
+
+Review of this section (role-based AI reviewer separate from the writer, by reading, 2026-11-24): PASS; the reviewer found no contradicting statement in the six planning files it searched and supplied four further statements, which are included above.
 
 # Not checked
 
-- The planning requirements (HB-257, docs/planning/v1.16) for what later use must recheck; the rule may be required as built.
+- The source chapters behind QA-01 and the HB-257 baseline; the planning documents under `docs/planning/v1.16` were read and are summarised above.
 - Whether a public operation to revoke an issuance grant exists.
 - Which people the financial source read rechecks at submission.
 - A time-based test of the draft review after grants lapse; the finance fixtures of that test also depend on time-limited grants.

@@ -231,3 +231,9 @@ After B1 turned out to be a server default and not a parser fault, root read the
 | H5 (P01, P02, P03) | empty strings shown as "Direct", "no verifier", "no series", "None" | not traced | not settled |
 
 So of this pattern only B1 was a present defect, and it is fixed. A6 is a hardening of the direction of a default and is the one worth doing next, because it concerns how a person's access state is shown. E4 and F4 need no change.
+
+## M01 finding A6, states only (2026-11-24)
+
+An account state or membership state that the console does not recognise is no longer read as "Active". The membership parser has an explicit unknown value; the account label, the membership label and the role cells of the list say "Unknown state"; no account action is offered for an unrecognised account state and no membership action for an unrecognised membership state, each with a sentence saying why. The identity module sends only the known states today, so this changes nothing for a well-formed response. Roles are unchanged: an unrecognised role is still read as "member" by the parser.
+
+Checks: `tsc` clean; console tests 1346, pass 1343, fail 0, skipped 3, with a new test for the labels and offers and a parser assertion. No rendered check. Copy and state review, ui-designer role (AI, by reading): FAIL with one finding (the note for an unknown membership state was grouped under sign-in), corrected with its other suggestions; corrective re-review PASS, with one more spot found (the wide role cell lacked the label), added afterwards and not reviewed again. The reviewer judged that offering no action for an unknown account state is the right default.

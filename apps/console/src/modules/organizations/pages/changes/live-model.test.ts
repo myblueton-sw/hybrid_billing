@@ -4,7 +4,7 @@ import type { OrgMember, OrgParty, PlanRow } from "../../../../service/admin";
 import { planOf } from "../../../../service/admin";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
-import { currentView, draftLoad, groupRefusal, planTitle } from "./live-model";
+import { arrival, currentView, draftLoad, groupRefusal, planTitle } from "./live-model";
 import { adopted, afterConflict, baseBlocks, baseField, baseStale, canonicalRevision, conflictShown, fill, formStep, handoffHref, memberMode, prefilled, readHandoff, type Carried } from "./live-model";
 import { canActivate, showOpenCount, actionsFor, allMemberChoices, held, impactDone, impactOf, impactUnread, keepsAttempt, lead, membersKept, nameOf, react, refusal, blocked, closing, currentOn, findPlan, memberChoices, minFrom, needsTarget, partition, steps, targetChoices } from "./live-model";
 
@@ -307,4 +307,14 @@ test("an editor of the plan's draft is blocked with its own reason", () => {
   assert.equal(blocked(p), "own_draft");
   assert.equal(refusal(p), "own_draft");
   assert.equal(blocked(planOf({ state: "sealed", blocked: "own_proposal", impact: { money: "computed", publication: "computed", erp: "computed" } })), "own");
+});
+
+test("an arrival is announced only when the loaded plan is in that state", () => {
+  const p = (over: Record<string, unknown>): PlanRow => planOf({ id: "p", state: "sealed", ...over });
+  assert.deepEqual(arrival("sealed", p({})), { what: "sealed", revision: 0 });
+  assert.deepEqual(arrival("activated:9", p({ state: "activated", activated_revision: 4 })), { what: "activated", revision: 4 });
+  assert.deepEqual(arrival("open", undefined), { what: "open", revision: 0 });
+  for (const [text, plan] of [["activated:9", p({})], ["activated:9", p({ state: "activated" })], ["discarded", p({})], ["sealed", undefined], ["rejected", p({ state: "discarded" })], ["sealed:x", p({})], ["", p({})]] as const) {
+    assert.equal(arrival(text, plan), null, text);
+  }
 });

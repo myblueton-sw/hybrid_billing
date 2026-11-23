@@ -13,7 +13,7 @@ import { o } from "../../../organizations/pages/organizations/live-copy";
 import { todayUTC, validDay } from "../../../organizations/pages/organizations/live-model";
 import { c } from "./live-copy";
 import {
-  actionsFor, adopted, afterConflict, allMemberChoices, baseBlocks, baseField, baseStale, blocked, canActivate, closing, currentOn, currentView, fill, findPlan, formStep, memberMode, held, impactDone, impactOf, impactUnread, keepsAttempt, kinds, lead, membersKept, minFrom,
+  actionsFor, adopted, afterConflict, allMemberChoices, baseBlocks, baseField, baseStale, blocked, canActivate, closing, currentOn, currentView, fill, findPlan, arrival, formStep, memberMode, held, impactDone, impactOf, impactUnread, keepsAttempt, kinds, lead, membersKept, minFrom,
   nameOf, needsTarget, partition, prefilled, react, readHandoff, refusal, showOpenCount, steps, targetChoices, type Action, type Blocked, type Choice, type Command, type Carried, type Reaction,
   draftLoad, groupRefusal, planTitle, type DraftLoad,
 } from "./live-model";
@@ -489,10 +489,10 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     greeted.current = true;
     onParams({ done: null });
     if (!page) return;
-    const m = /^(sealed|rejected|discarded|open|activated:(\d+))$/.exec(arrived);
-    if (!m) return;
-    const what = arrived.split(":")[0];
-    if (what !== "open") say(what === "rejected" ? c.aRejected(l) : what === "activated" ? c.aActivated(l, m[2]) : what === "discarded" ? c.aDiscarded(l) : c.aSealed(l));
+    const got = arrival(arrived, findPlan(page.plans, selectedId));
+    if (!got) return;
+    const what = got.what;
+    if (what !== "open") say(what === "rejected" ? c.aRejected(l) : what === "activated" ? c.aActivated(l, String(got.revision)) : what === "discarded" ? c.aDiscarded(l) : c.aSealed(l));
     setFocusTo("#o02-plan-title");
   }, [arrived, page, status]);
   useEffect(() => {

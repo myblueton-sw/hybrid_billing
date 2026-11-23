@@ -123,6 +123,18 @@ export function minFrom(today: string, from: string): boolean {
   return from >= today;
 }
 
+export type Arrival = { what: "sealed" | "rejected" | "discarded" | "activated" | "open"; revision: number };
+
+export function arrival(arrived: string, plan: PlanRow | undefined): Arrival | null {
+  const m = /^(sealed|rejected|discarded|open|activated)(:\d+)?$/.exec(arrived);
+  if (!m) return null;
+  const what = m[1] as Arrival["what"];
+  if (what === "open") return { what, revision: 0 };
+  if (!plan || plan.state !== what) return null;
+  if (what === "activated" && !(plan.activated_revision > 0)) return null;
+  return { what, revision: what === "activated" ? plan.activated_revision : 0 };
+}
+
 export function findPlan(plans: PlanRow[], id: string): PlanRow | undefined {
   return id ? plans.find((p) => p.id === id) : undefined;
 }

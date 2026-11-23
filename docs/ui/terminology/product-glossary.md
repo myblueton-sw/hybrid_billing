@@ -603,3 +603,35 @@ HYB-341 distinguishes approval-action permission from submission permission. The
 | request_approval | Request approval for ERP final amounts | ERP 최종 금액 승인 요청 | طلب اعتماد المبلغ النهائي في ERP |
 
 Independent source/domain technical-writing review passed these exact labels, then inspected six actual M01 crops and six M03/P02 crops with bounded rendered PASS. M03/P02 render action and kind separately. Native-language and owner acceptance remain unverified; see the [ERP-final plan](../../features/HYB-341/erp-final-approval-plan.md) for exact capture and test scope.
+
+## Issuance permission areas and capabilities (M03)
+
+HYB-341. Labels of the three issuance permission areas on M03 and of the capabilities provisioned in them. Source: `apps/console/src/modules/identity/pages/access/result-authority/areas.ts`. HYB-346 reuses the capability labels for the existing M03 and P02 grant rows.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| issuance_protected_authority area | Protected issuance settings permissions | 보호된 발행 설정 권한 | صلاحيات إعدادات الإصدار المحمية |
+| issuance_term_authority area | Payment terms permissions | 납부 조건 권한 | صلاحيات شروط الدفع |
+| issuance_draft_authority area | Issuance draft permissions | 발행 초안 권한 | صلاحيات مسودات الإصدار |
+| protected `register_channel` | Register verification channel | 검증 채널 등록 | تسجيل قناة التحقق |
+| protected `admit_channel` | Accept verification channel | 검증 채널 수락 | قبول قناة التحقق |
+| protected `request_change` | Request protected settings change | 보호된 설정 변경 요청 | طلب تغيير الإعدادات المحمية |
+| protected `verify_change` | Verify protected settings change | 보호된 설정 변경 검증 | التحقق من تغيير الإعدادات المحمية |
+| protected `approve_change` | Approve protected settings change | 보호된 설정 변경 승인 | اعتماد تغيير الإعدادات المحمية |
+| protected `inspect` | Inspect protected settings evidence | 보호된 설정 근거 조회 | عرض أدلة الإعدادات المحمية |
+| term `record` | Record payment terms | 납부 조건 기록 | تسجيل شروط الدفع |
+| term `approve` | Approve payment terms | 납부 조건 승인 | اعتماد شروط الدفع |
+| term `bind` | Apply payment terms to a contract | 계약에 납부 조건 적용 | تطبيق شروط الدفع على عقد |
+| term `approve_binding` | Approve applying payment terms to a contract | 계약에 납부 조건 적용 승인 | اعتماد تطبيق شروط الدفع على عقد |
+| term `inspect` | Inspect payment terms evidence | 납부 조건 근거 조회 | عرض أدلة شروط الدفع |
+| draft `submit` | Submit issuance draft for approval | 발행 초안 승인 요청 | إرسال مسودة الإصدار للاعتماد |
+| draft `approve` | Approve issuance draft | 발행 초안 승인 | اعتماد مسودة الإصدار |
+| draft `inspect` | Inspect issuance draft evidence | 발행 초안 근거 조회 | عرض أدلة مسودة الإصدار |
+| verification channel | Verification channel | 검증 채널 | قناة التحقق |
+
+- "Accept" for the admit step is not an approval; it is kept apart from 승인 / اعتماد so one panel does not use one verb for four different acts.
+- Submitting a draft creates work awaiting approval and issues nothing.
+- "Apply to a contract" is the internal bind and is not a contract amendment.
+- A verification channel is distinct from the webhook subscriptions and notification channels named elsewhere in this glossary.
+- Open: 납부 조건 is used here, in the M01 labels, the drafts approval inbox and the planning fields, while the contracts, review-and-issue and credit case screens use 지급 조건; the contracts screen words "verification" as 확인 where these labels use 검증. Both need one terminology decision.
+- Review boundary: role-based technical-writing review only. Native-language and owner acceptance of the Korean and Arabic labels are pending.

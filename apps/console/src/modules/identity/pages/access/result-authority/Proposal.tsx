@@ -1,4 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from "react";
+import {capabilityLabel,type AuthorityArea} from "./areas";
 import type {Session} from "../../../../../service/api";
 import type {Locale} from "../../../../../shared/types";
 import {attempt} from "../../../../../service/admin";
@@ -10,8 +11,8 @@ import {ProposalError,reviewProposal,type ProposalContext,type ProposalDraft,typ
 import {t,label} from "./copy";
 const blank:ProposalDraft={recipient:"",ceiling:"",notBefore:"",notAfter:"",rationale:""};
 const fieldLabel=(l:Locale,field:string)=>({recipient:t(l,"Recipient","대상 사용자","المستفيد"),ceiling:t(l,"Console permission ceiling","콘솔 권한 상한","سقف صلاحيات وحدة التحكم"),not_before:t(l,"Starts (UTC)","시작 (UTC)","البداية (UTC)"),not_after:t(l,"Ends (UTC)","종료 (UTC)","النهاية (UTC)"),rationale:t(l,"Rationale","사유","المبرر"),context:t(l,"Current options","현재 선택 항목","الخيارات الحالية")}[field]??field);
-type Shared={locale:Locale;session:Session;busy:boolean;onSend:(review:ProposalReview)=>void;onCancel:()=>void;onDraft:(draft:string)=>void};
-function Fields({locale:l,session,busy,onSend,onCancel,onDraft,read,kind,capability,onReview}:{read:Read;kind:ProposalKind;capability:Capability;onReview:(reviewing:boolean)=>void}&Shared){
+type Shared={area:AuthorityArea;locale:Locale;session:Session;busy:boolean;onSend:(review:ProposalReview)=>void;onCancel:()=>void;onDraft:(draft:string)=>void};
+function Fields({locale:l,session,busy,onSend,onCancel,onDraft,area,read,kind,capability,onReview}:{read:Read;kind:ProposalKind;capability:Capability;onReview:(reviewing:boolean)=>void}&Shared){
  const [context,setContext]=useState<ProposalContext>(),[draft,setDraft]=useState<ProposalDraft>(blank),[review,setReview]=useState<ProposalReview>(),[error,setError]=useState(""),[problems,setProblems]=useState<readonly string[]>([]),[loading,setLoading]=useState(false);
  const epoch=useRef(0),alive=useRef(true),heading=useRef<HTMLHeadingElement>(null),summary=useRef<HTMLDivElement>(null),changeFocus=useRef(false);
  const cursorsRef=useRef<{ceilings?:Cursor;recipients?:Cursor}>({});
@@ -19,7 +20,7 @@ function Fields({locale:l,session,busy,onSend,onCancel,onDraft,read,kind,capabil
   if(next&&Object.values(draft).some(Boolean)&&!window.confirm(t(l,"Discard the unsent proposal inputs before changing options?","선택 항목을 바꾸기 전에 전송하지 않은 제안 입력을 버리시겠습니까?","هل تريد تجاهل مدخلات المقترح غير المرسل قبل تغيير الخيارات؟")))return;
   const cursors=next?{...cursorsRef.current,...next}:{};cursorsRef.current=cursors;
   const current=++epoch.current;setContext(undefined);setReview(undefined);setDraft(blank);setProblems([]);setError("");setLoading(true);
-  try{const value=await proposalContext(read,session.workspace,session.user,kind,capability,cursors);if(alive.current&&current===epoch.current)setContext(value);}
+  try{const value=await proposalContext(read,session.workspace,session.user,kind,capability,cursors,area.domain);if(alive.current&&current===epoch.current)setContext(value);}
   catch(e){if(alive.current&&current===epoch.current)setError(e instanceof AuthorityError?e.code:"service_unavailable");}
   finally{if(alive.current&&current===epoch.current)setLoading(false);}
  };
@@ -36,12 +37,12 @@ function Fields({locale:l,session,busy,onSend,onCancel,onDraft,read,kind,capabil
  const selectedRecipient=context.recipients?.rows.find(row=>"user" in row&&row.user===draft.recipient);
  const selectedCeiling=context.ceilings.rows.find(row=>"ceiling" in row&&row.ceiling===draft.ceiling);
  if(review)return <section className="authority-proposal-review"><h3 tabIndex={-1} ref={heading}>{t(l,"Review permission proposal","권한 제안 검토","مراجعة مقترح الصلاحية")}</h3><dl className="authority-facts">
-  <dt>{t(l,"Permission type","권한 유형","نوع الصلاحية")}</dt><dd>{label(l,kind)}</dd><dt>{t(l,"Capability","허용 작업","الإجراء المسموح")}</dt><dd>{label(l,capability)}</dd>
+  <dt>{t(l,"Permission type","권한 유형","نوع الصلاحية")}</dt><dd>{label(l,kind)}</dd><dt>{t(l,"Capability","허용 작업","الإجراء المسموح")}</dt><dd>{capabilityLabel(l,area,capability)}</dd>
   <dt>{t(l,"Recipient","대상","المستفيد")}</dt><dd>{kind==="console_ceiling"?t(l,"Console client","콘솔 클라이언트","عميل وحدة التحكم"):selectedRecipient&&"login" in selectedRecipient?selectedRecipient.login:""}<small><bdi dir="ltr">{kind==="console_ceiling"?"console":draft.recipient}</bdi></small></dd><dt>{t(l,"Scope","범위","النطاق")}</dt><dd>{t(l,"Whole workspace","전체 업무 공간","مساحة العمل كاملة")}</dd>
   <dt>{fieldLabel(l,"not_before")}</dt><dd><bdi dir="ltr">{draft.notBefore}</bdi></dd><dt>{fieldLabel(l,"not_after")}</dt><dd><bdi dir="ltr">{draft.notAfter}</bdi></dd>
   {kind==="human_grant"&&<><dt>{fieldLabel(l,"ceiling")}</dt><dd><bdi dir="ltr">{draft.ceiling}</bdi>{selectedCeiling&&"not_before" in selectedCeiling&&<><small>{fieldLabel(l,"not_before")}: <bdi dir="ltr">{selectedCeiling.not_before}</bdi></small><small>{fieldLabel(l,"not_after")}: <bdi dir="ltr">{selectedCeiling.not_after}</bdi></small></>}</dd></>}<dt>{fieldLabel(l,"rationale")}</dt><dd>{draft.rationale}</dd>
  <dt>{t(l,"Proposal lifetime in seconds","제안 유효기간 (초)","مدة صلاحية المقترح بالثواني")}</dt><dd>{context.ceilings.policy.proposal_lifetime_seconds}</dd><dt>{t(l,"Observed (UTC)","조회 시각 (UTC)","وقت القراءة (UTC)")}</dt><dd><bdi dir="ltr">{context.ceilings.at}</bdi></dd></dl><p>{t(l,"Sending creates a proposal. Another eligible governor must approve it before permission is granted. Current conditions are checked at submission.","전송하면 제안이 생성됩니다. 권한 부여 전 다른 적격 관리자의 승인이 필요합니다. 현재 조건은 제출 시 확인합니다.","ينشئ الإرسال مقترحًا. يجب أن يعتمده مسؤول آخر مؤهل قبل منح الصلاحية. تُفحص الشروط الحالية عند الإرسال.")}</p><div className="authority-actions"><button className="authority-primary" disabled={busy} onClick={()=>onSend(review)}>{t(l,"Send proposal","제안 전송","إرسال المقترح")}</button><button disabled={busy} onClick={change}>{t(l,"Change","수정","تعديل")}</button><button disabled={busy} onClick={onCancel}>{t(l,"Cancel","취소","إلغاء")}</button></div></section>;
- return <form className="authority-proposal-form" onSubmit={e=>{e.preventDefault();try{const a=attempt();setReview(reviewProposal(context,draft,`result-authority-${a.request}`,a));setProblems([]);}catch(e){setProblems(e instanceof ProposalError?e.fields:["context"]);}}}>
+ return <form className="authority-proposal-form" onSubmit={e=>{e.preventDefault();try{const a=attempt();setReview(reviewProposal(context,draft,`${area.item}-${a.request}`,a,area.domain));setProblems([]);}catch(e){setProblems(e instanceof ProposalError?e.fields:["context"]);}}}>
   {!!problems.length&&<div role="alert" tabIndex={-1} ref={summary}><h4>{t(l,"Check the proposal","제안 내용을 확인하세요","تحقق من المقترح")}</h4><ul>{problems.map(field=><li key={field}><a href={`#authority-${field}`} onClick={e=>{e.preventDefault();document.getElementById(`authority-${field}`)?.focus();}}>{fieldLabel(l,field)}</a></li>)}</ul></div>}
   <div id="authority-context" tabIndex={-1}><p>{t(l,"Observed (UTC)","조회 시각 (UTC)","وقت القراءة (UTC)")}: <bdi dir="ltr">{context.ceilings.at}</bdi></p><p>{t(l,"Maximum validity in seconds","최대 유효기간 (초)","أقصى مدة صلاحية بالثواني")}: <bdi>{context.ceilings.policy.max_grant_validity_seconds}</bdi>. {t(l,"Proposal lifetime in seconds","제안 유효기간 (초)","مدة صلاحية المقترح بالثواني")}: <bdi>{context.ceilings.policy.proposal_lifetime_seconds}</bdi>.</p></div>
   {kind==="human_grant"&&<>
@@ -60,18 +61,18 @@ function Fields({locale:l,session,busy,onSend,onCancel,onDraft,read,kind,capabil
  </form>;
 }
 export default function Proposal(props:Shared){
- const {locale:l,session,onDraft}=props,read=useMemo(()=>readTransport(session),[session.user,session.workspace,session.csrf]);
+ const {locale:l,session,onDraft,area}=props,read=useMemo(()=>readTransport(session,undefined,area.domain),[session.user,session.workspace,session.csrf,area]);
  const [reviewing,setReviewing]=useState(false);
  const [kind,setKind]=useState<ProposalKind|"">(""),[selected,setSelected]=useState<Capability|"">(""),[policy,setPolicy]=useState<Policy>(),[error,setError]=useState(""),[retry,setRetry]=useState(0);
  const heading=useRef<HTMLHeadingElement>(null);
  useEffect(()=>{heading.current?.focus();},[]);
- useEffect(()=>{let alive=true;setPolicy(undefined);setError("");contextPage(read,session.workspace,session.user,"ceilings","propose").then(value=>{if(alive)setPolicy(value.policy);},e=>{if(alive)setError(e instanceof AuthorityError?e.code:"service_unavailable");});return()=>{alive=false;};},[read,retry]);
+ useEffect(()=>{let alive=true;setPolicy(undefined);setError("");contextPage(read,session.workspace,session.user,"ceilings",area.domain.capabilities[0],undefined,area.domain).then(value=>{if(alive)setPolicy(value.policy);},e=>{if(alive)setError(e instanceof AuthorityError?e.code:"service_unavailable");});return()=>{alive=false;};},[read,retry]);
  useEffect(()=>{if(!kind||!selected)onDraft(JSON.stringify({kind,selected,policy,error}));},[kind,selected,policy,error,onDraft]);
  const changeScope=()=>!(kind&&selected)||window.confirm(t(l,"Discard the unsent proposal inputs before changing options?","선택 항목을 바꾸기 전에 전송하지 않은 제안 입력을 버리시겠습니까?","هل تريد تجاهل مدخلات المقترح غير المرسل قبل تغيير الخيارات؟"));
  return <section className="authority-proposal"><header className="authority-entry-heading"><h3 tabIndex={-1} ref={heading}>{t(l,"New permission proposal","새 권한 제안","مقترح صلاحية جديد")}</h3><button disabled={props.busy} onClick={props.onCancel}>{t(l,"Close proposal entry","제안 입력 닫기","إغلاق إدخال المقترح")}</button></header>
   {error?<div role="alert"><p>{t(l,"Permission policy could not be loaded.","권한 정책을 불러오지 못했습니다.","تعذر تحميل سياسة الصلاحيات.")}</p><details><summary>{t(l,"Technical reference","기술 참조","المرجع التقني")}</summary>{error}</details><button onClick={()=>setRetry(v=>v+1)}>{t(l,"Try again","다시 시도","إعادة المحاولة")}</button></div>:!policy?<p role="status">{t(l,"Loading permission policy…","권한 정책을 불러오는 중…","جارٍ تحميل سياسة الصلاحيات…")}</p>:<>
   <div className="authority-scope-choices" hidden={reviewing}><fieldset><legend>{t(l,"Permission type","권한 유형","نوع الصلاحية")}</legend>{(["console_ceiling","human_grant"] as const).map(value=><label className="authority-choice" key={value}><input type="radio" name="authority-kind" checked={kind===value} onChange={()=>{if(!changeScope())return;setKind(value);setSelected("");}}/>{label(l,value)}</label>)}</fieldset>
-  <fieldset className="authority-capabilities"><legend>{t(l,"Capability","허용 작업","الإجراء المسموح")}</legend>{policy.capabilities.map(value=><label className="authority-choice" key={value}><input type="radio" name="authority-capability" checked={selected===value} onChange={()=>{if(changeScope())setSelected(value);}} disabled={!kind}/>{label(l,value)}</label>)}</fieldset>
+  <fieldset className="authority-capabilities"><legend>{t(l,"Capability","허용 작업","الإجراء المسموح")}</legend>{policy.capabilities.map(value=><label className="authority-choice" key={value}><input type="radio" name="authority-capability" checked={selected===value} onChange={()=>{if(changeScope())setSelected(value);}} disabled={!kind}/>{capabilityLabel(l,area,value)}</label>)}</fieldset>
   </div>
   {kind&&selected&&<Fields onReview={setReviewing} key={`${kind}:${selected}`} {...props} kind={kind} capability={selected} read={read}/>}
   </>}

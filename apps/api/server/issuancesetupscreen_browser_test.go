@@ -73,7 +73,19 @@ func TestIssuanceSetupActualScreenBrowser(t *testing.T) {
 			t.Fatalf("actual issuance setup browser failed in phase %s; inspect isolated evidence: %v\n%s", phase, err, raw)
 		}
 	}
+	interrupted := false
+	f.s.fault = func(at string) bool {
+		if at == "issuance-channel-after-admit" && !interrupted {
+			interrupted = true
+			return true
+		}
+		return false
+	}
 	browse("setup", map[string]string{"FIRST": AdminLogin, "SECOND": Admin2Login, "THIRD": Admin3Login, "MEMBER": MemberLogin})
+	f.s.fault = nil
+	if !interrupted {
+		t.Fatal("the channel acceptance was never interrupted")
+	}
 	rules := a.protectedRules
 	if rules == nil || rules.State != "confirmed" || rules.Proposer != SampleAdmin || rules.Confirmer != SampleAdmin2 {
 		t.Fatal("rules were not proposed and confirmed by the two browser sessions")

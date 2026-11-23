@@ -86,7 +86,16 @@ try{
  await first.locator('.o03-part-table tbody button').click();await first.locator('#o03-accept-statement').waitFor();
  await first.locator('#o03-accept-statement').fill('Synthetic statement: I checked the channel against the signed form.');
  const acceptReason=first.locator('#o03-accept-reason');if(await acceptReason.count())await acceptReason.fill('Synthetic reason for accepting the channel');
- await send(first,'Accept verification channel');await first.locator('.o03-part-table tbody button').waitFor({state:'detached'});await idle(first);await shot(first,'channel-accepted');done('channel accepted by a separate person with a statement');
+ await send(first,'Accept verification channel');
+ const retry=first.locator('section.o03-results').getByRole('button',{name:'Retry exact request',exact:true});await retry.waitFor();await idle(first);await shot(first,'channel-accept-unknown');
+ assert.ok(evidence.refusals.some(r=>r.who==='first'&&r.path.endsWith('issuance_setup.admit_channel')&&r.status===500&&r.code==='internal_error'),'the acceptance was not interrupted');
+ assert.equal(await first.evaluate(()=>{const e=new Event('beforeunload',{cancelable:true});window.dispatchEvent(e);return e.defaultPrevented;}),true,'leaving is not guarded while the outcome is unknown');
+ const interrupted=()=>evidence.refusals.filter(r=>r.who==='first'&&r.path.endsWith('issuance_setup.admit_channel')&&r.status===500).length;
+ await retry.click();for(let i=0;i<100&&interrupted()<2;i++)await first.waitForTimeout(100);await idle(first);
+ assert.equal(interrupted(),2,'the exact retry did not return the stored outcome');await retry.waitFor();assert.ok((await first.locator('section.o03-results').first().innerText()).includes('Outcome unknown'));done('retrying the exact request returns the same stored outcome');
+ await first.locator('section.o03-results').getByRole('button',{name:'Recover recorded attempt',exact:true}).click();await retry.waitFor({state:'detached'});await idle(first);
+ assert.ok((await first.locator('.o03-part-table').innerText()).includes('Accepted'));assert.equal(await first.evaluate(()=>{const e=new Event('beforeunload',{cancelable:true});window.dispatchEvent(e);return e.defaultPrevented;}),false,'leaving is still guarded after recovery');done('an acceptance with an unknown outcome completed by recovering the recorded attempt');
+ await idle(first);await shot(first,'channel-accepted');done('channel accepted by a separate person with a statement');
 
  stage='term-record';await terms(third);
  await button(third,'Record payment terms').click();await third.locator('#o03-term-days').fill('45');await third.locator('#o03-term-reason').fill('Synthetic reason agreed with the customer');
@@ -100,7 +109,7 @@ try{
  await member.waitForResponse(r=>new URL(r.url()).pathname==='/api/v1/contracts').catch(()=>{});await member.waitForTimeout(1500);await shot(member,'member-without-administration');
  assert.equal(await member.locator('#o03-channel-steps').count(),0);assert.ok(evidence.refusals.some(r=>r.who==='member'&&r.path==='/api/v1/contracts'&&r.status===403));done('a member without installation administration cannot open the contract screen');
 
- assert.deepEqual(evidence.refusals.filter(r=>r.who!=='member'),[]);
+ assert.deepEqual(evidence.refusals.filter(r=>r.who!=='member').map(r=>[r.who,r.path.split('.').at(-1),r.status]),[['first','admit_channel',500],['first','admit_channel',500]]);
  }
  assert.deepEqual(evidence.errors,[]);
 

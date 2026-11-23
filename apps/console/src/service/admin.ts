@@ -16,7 +16,7 @@ import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
 export type RolePeriod = "open" | "bounded" | "ends_soon" | "ended";
 
 export type Membership = {
-  role: "administrator" | "member";
+  role: "administrator" | "member" | "unknown";
   state: "active" | "suspended" | "unknown";
   version: number;
   role_from: string;
@@ -102,7 +102,7 @@ export function membershipOf(v: unknown): Membership | null {
   const suspended = String(m.suspended_for ?? "");
   const ledger = String(m.ledger ?? "");
   return {
-    role: m.role === "administrator" ? "administrator" : "member",
+    role: m.role === "administrator" ? "administrator" : m.role === "member" ? "member" : "unknown",
     state: m.state === "suspended" ? "suspended" : m.state === "active" ? "active" : "unknown",
     version: Number(m.version ?? 0),
     role_from: String(m.role_from ?? ""),

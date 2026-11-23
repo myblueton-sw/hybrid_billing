@@ -79,6 +79,7 @@ test("reads page with a cursor", async () => {
   assert.deepEqual(full.users[0].revocation, { bulk: "bulk-revocation-1", state: "deny_confirmed" });
   assert.deepEqual([full.users[1].membership?.role_period, full.users[1].membership?.suspended_for, full.users[1].membership?.ledger, full.users[1].revocation], ["open", "", "", null]);
   assert.equal(full.users[1].membership?.state, "unknown");
+  assert.equal(full.users[1].membership?.role, "unknown");
   assert.deepEqual([full.can_bulk_revoke, full.clock.wall_lead, full.clock.clock_base.recorded, full.clock.recovery], [true, { wall_time: "a", server_time: "b" }, true, { stranded: true, records: [3] }]);
 });
 

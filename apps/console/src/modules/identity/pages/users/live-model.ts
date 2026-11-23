@@ -13,7 +13,7 @@ export function when(l: Locale, iso: string): string {
 }
 
 export function roleName(l: Locale, role: string): string {
-  return role === "administrator" ? w.administrator(l) : role === "member" ? w.member(l) : w.noMembership(l);
+  return role === "administrator" ? w.administrator(l) : role === "member" ? w.member(l) : role === "" ? w.noMembership(l) : w.unknownRole(l);
 }
 
 export function accountName(l: Locale, state: string): string {
@@ -40,10 +40,12 @@ export function offers(l: Locale, u: UserRow, self: string): Offer {
   const ended = m?.role_period === "ended" || m?.suspended_for === "role_period_ended";
   if (!m) out.membership = u.invitation_expires || u.state !== "active" ? [] : ["invite"];
   else if (m.state === "unknown") { out.membership = []; out.notes.push(w.unknownStateReason(l)); }
+  else if (m.role === "unknown") { out.membership = []; out.notes.push(w.unknownRoleReason(l)); }
   else if (ended) out.membership = ["set_role_period", "remove_membership"];
   else if (m.state === "active") out.membership = promotable ? ["change_role", "set_role_period", "suspend_membership", "remove_membership"] : ["set_role_period", "suspend_membership", "remove_membership"];
   else out.membership = ["reinstate_membership", "set_role_period", "remove_membership"];
-  if (!u.password_set) out.sign = u.login ? ["issue_set_link"] : [];
+  if (m?.role === "unknown") { if (!out.notes.includes(w.unknownRoleReason(l))) out.notes.push(w.unknownRoleReason(l)); }
+  else if (!u.password_set) out.sign = u.login ? ["issue_set_link"] : [];
   else if (m?.role === "administrator") out.notes.push(w.adminResetReason(l));
   else if (u.state !== "active") out.notes.push(w.suspendedResetReason(l));
   else out.sign = ["issue_reset_link"];

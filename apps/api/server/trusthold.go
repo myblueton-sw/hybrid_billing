@@ -255,7 +255,7 @@ func (s *Server) holdAllows(command string, call commands.Call, caller identity.
 	if command == "issuance_setup.terms" || command == "issuance_setup.attestations" || command == "issuance_setup.references" || command == "issuance_setup.protected" || command == "issuance_setup.protected_channels" || command == "issuance_setup.protected_changes" || command == "issuance_setup.action" || command == "issuance_setup.options" || command == "issuance_setup.configurations" || command == "issuance_setup.context" || command == "issuance_draft.list" || command == "issuance_draft.inspect" || command == "issuance_draft.context" {
 		return true
 	}
-	if command == "result_authority.history" || command == "result_authority.context" {
+	if command == "result_authority.history" || command == "result_authority.context" || command == "issuance_protected_authority.history" || command == "issuance_protected_authority.context" || command == "issuance_term_authority.history" || command == "issuance_term_authority.context" || command == "issuance_draft_authority.history" || command == "issuance_draft_authority.context" {
 		return true
 	}
 	if command == "result_evidence.advice" || command == "result_evidence.preparations" || command == "result_evidence.context" || command == "result_evidence.inspect" || command == "result_evidence.history" || command == "erp_result.inspect" {

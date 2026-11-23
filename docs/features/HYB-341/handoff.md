@@ -31,7 +31,7 @@ Work resumed from main c8aebd6 on this machine and merged the following through 
 
 Separate issues, by owner instruction that anything outside the checklist gets its own ticket: HYB-343 (two server tests failing on main, fixed in PR 256, which also added pending issuance settings to M01 bulk revocation impact), HYB-342 (unkeyed digest hypothesis, open), HYB-344 (remaining M01 impact gaps, open), HYB-345 (release, discard and withdrawal operations for protected setup records, open), HYB-346 (labels for issuance grants on existing M03 and P02 rows, open).
 
-Not done for items 1 to 5: no screen is wired to any of these reads or commands, and that composition needs scoped ui-designer and terminology review; the owner has verified no screen. The console client for the provisioning namespaces and the M03 screen plan (`issuance-authority-screen-plan.md`, not yet in the tree) were in review when this section was last updated and are not merged by it.
+Screens for items 1 to 5: the three issuance permission areas are on M03 (PR 274, 276, 277; [screen plan](issuance-authority-screen-plan.md)) as a candidate the owner has not reviewed. No screen is wired to the reads or commands of items 1 to 4 yet; their composition, items and ten delivery slices are in [the O03 screens plan](issuance-setup-screens-plan.md).
 
 What the journey test established: from a sample installation with no issuance grant, confirmed rules, an admitted channel, an approved term and binding and a scheduled payment-account change are reachable with every capability granted through the public provisioning commands. After the 24-hour channel age all grants have expired, and a change request stays refused until the channel's registrar and admitter are provisioned again as well as the requester, verifier and approver. The contract and its confirmed configuration are still created by package-internal helpers in that test.
 
@@ -39,10 +39,10 @@ Owner-visible residuals are recorded in the evidence and protected writes contra
 
 # Next executable scope
 
-1. Merge the domain-aware provisioning console client after its source review, then the M03 screen plan after its design and terminology review, then implement the three M03 permission areas.
-2. O03 documents and payment-terms composition for items 1 to 4, led by the ui-designer role, then owner screen verification.
-3. Extend the journey to B09 readiness and a second applicable invoice reusing unchanged setup, including the draft capabilities through real commands. Configuration replacement, release operations and durable production recovery remain explicit separate scopes.
-4. HYB-346 labels once the capability terms of the screen plan are reviewed.
+1. Implement the O03 slices of [the screens plan](issuance-setup-screens-plan.md) in order, each with its render check, ui-designer render review and technical-writing review; slices 7 to 10 also take an independent source review. Then owner screen verification.
+2. Extend the journey to B09 readiness and a second applicable invoice reusing unchanged setup, including the draft capabilities through real commands. Configuration replacement, release operations and durable production recovery remain explicit separate scopes.
+3. Owner review of the M03 permission areas and the changed permission-area navigation.
+4. Separate issues: HYB-344 (M01 impact gaps; item 2 read and confirmed, not started), HYB-345, HYB-346, HYB-347, and the owner decisions of HYB-342.
 
 # Discovery evidence and traps
 

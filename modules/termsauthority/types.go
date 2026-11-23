@@ -29,6 +29,8 @@ const (
 	ApproveTerm    = "approve"
 	BindTerm       = "bind"
 	ApproveBinding = "approve_binding"
+	Inspect        = "inspect"
+	EvidenceField  = "issuance_terms"
 	ResourceKind   = "synthetic_issuance_terms"
 )
 

@@ -256,6 +256,9 @@ func termAuthorityTerms(workspace, capability string) (gate.Terms, error) {
 		terms.Action = gate.BindIssuanceTerm
 	case termsauthority.ApproveBinding:
 		terms.Action = gate.ApproveIssuanceTermBinding
+	case termsauthority.Inspect:
+		terms.Action = gate.ViewCost
+		terms.Fields = []string{termsauthority.EvidenceField}
 	default:
 		return gate.Terms{}, inputauthority.ErrInvalid
 	}
@@ -275,6 +278,9 @@ func protectedAuthorityTerms(workspace, capability string) (gate.Terms, error) {
 		terms.Action = gate.VerifyIssuanceProtectedChange
 	case protectedauthority.ApproveChange:
 		terms.Action = gate.ApproveIssuanceProtectedChange
+	case protectedauthority.Inspect:
+		terms.Action = gate.ViewCost
+		terms.Fields = []string{protectedauthority.EvidenceField}
 	default:
 		return gate.Terms{}, inputauthority.ErrInvalid
 	}

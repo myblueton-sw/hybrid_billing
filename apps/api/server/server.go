@@ -217,6 +217,8 @@ func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
 	c.Fields[documentauthority.EvidenceField] = gate.Cost
 	c.Fields[resultauthority.EvidenceField] = gate.Cost
 	c.Fields[draftauthority.EvidenceField] = gate.Cost
+	c.Fields[termsauthority.EvidenceField] = gate.Cost
+	c.Fields[protectedauthority.EvidenceField] = gate.Cost
 	return c
 }
 

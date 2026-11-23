@@ -36,7 +36,7 @@ func TestProtectedAuthorityActualHumanAndConsole(t *testing.T) {
 	expected := []struct {
 		capability string
 		action     gate.Action
-	}{{"register_channel", gate.RegisterIssuanceChannel}, {"admit_channel", gate.AdmitIssuanceChannel}, {"request_change", gate.RequestIssuanceProtectedChange}, {"verify_change", gate.VerifyIssuanceProtectedChange}, {"approve_change", gate.ApproveIssuanceProtectedChange}}
+	}{{"register_channel", gate.RegisterIssuanceChannel}, {"admit_channel", gate.AdmitIssuanceChannel}, {"request_change", gate.RequestIssuanceProtectedChange}, {"verify_change", gate.VerifyIssuanceProtectedChange}, {"approve_change", gate.ApproveIssuanceProtectedChange}, {"inspect", gate.ViewCost}}
 	for _, want := range expected {
 		t.Run(want.capability, func(t *testing.T) {
 			f := setup(t, SeedSample).ready()
@@ -58,10 +58,17 @@ func TestProtectedAuthorityActualHumanAndConsole(t *testing.T) {
 			f.must(err)
 			terms, err := protectedAuthorityTerms(SampleWorkspace, want.capability)
 			f.must(err)
-			if terms.Action != want.action || terms.Kind != "synthetic_issuance_protected" || len(terms.Fields) != 0 {
+			if terms.Action != want.action || terms.Kind != "synthetic_issuance_protected" {
 				t.Fatal("incorrect fixed mapping")
 			}
-			req := gate.Request{Action: want.action, Kind: "synthetic_issuance_protected", Resource: gate.Resource{WorkspaceID: SampleWorkspace}}
+			if want.capability == "inspect" {
+				if len(terms.Fields) != 1 || terms.Fields[0] != "issuance_protected" {
+					t.Fatal("wrong evidence field")
+				}
+			} else if len(terms.Fields) != 0 {
+				t.Fatal("mutation has fields")
+			}
+			req := gate.Request{Fields: terms.Fields, Action: want.action, Kind: "synthetic_issuance_protected", Resource: gate.Resource{WorkspaceID: SampleWorkspace}}
 			check := func(allowed bool) {
 				t.Helper()
 				f.must(inputAuthorityAs(f, member, func() error {
@@ -89,6 +96,10 @@ func TestProtectedAuthorityActualHumanAndConsole(t *testing.T) {
 					if other.action != want.action {
 						bad := req
 						bad.Action = other.action
+						bad.Fields = nil
+						if other.capability == "inspect" {
+							bad.Fields = []string{"issuance_protected"}
+						}
 						if f.s.gate.Decide(f.s.answer, ConsoleClient, bad).Allowed {
 							t.Fatal("cross capability authority")
 						}
@@ -141,7 +152,7 @@ func TestProtectedAuthorityUnknownEffectRecovery(t *testing.T) {
 func TestProtectedAuthorityClosedFormsAndNonSample(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	root := f.as(AdminLogin)
-	for _, capability := range []string{"", "inspect", "issue", "confirm", "apply", "approve_issuance_term", "register_issuance_channel"} {
+	for _, capability := range []string{"", "inspect_all", "issue", "confirm", "apply", "approve_issuance_term", "register_issuance_channel"} {
 		_, err := protectedPermissionProposal(f, root, inputauthority.Proposal{ID: "invalid", Spec: protectedPermissionSpec(f, capability), Rationale: "Rejected unknown capability"})
 		if !errors.Is(err, inputauthority.ErrInvalid) {
 			t.Fatalf("unknown capability %s: %v", capability, err)

@@ -6,5 +6,5 @@ import (
 )
 
 func NewRegistry(limits Limits, authority Authority, targets Targets, effects Effects, clock func() time.Time) (*Registry, error) {
-	return grantauthority.NewRegistry(grantauthority.Domain{Version: "synthetic-issuance-protected-authority-v1", GrantPrefix: "issuance-protected-grant-", Capabilities: []string{RegisterChannel, AdmitChannel, RequestChange, VerifyChange, ApproveChange}}, limits, authority, targets, effects, clock)
+	return grantauthority.NewRegistry(grantauthority.Domain{Version: "synthetic-issuance-protected-authority-v1", GrantPrefix: "issuance-protected-grant-", Capabilities: []string{RegisterChannel, AdmitChannel, RequestChange, VerifyChange, ApproveChange, Inspect}}, limits, authority, targets, effects, clock)
 }

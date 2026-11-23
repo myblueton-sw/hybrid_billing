@@ -30,6 +30,8 @@ const (
 	RequestChange   = "request_change"
 	VerifyChange    = "verify_change"
 	ApproveChange   = "approve_change"
+	Inspect         = "inspect"
+	EvidenceField   = "issuance_protected"
 	ResourceKind    = "synthetic_issuance_protected"
 )
 

@@ -36,7 +36,7 @@ func TestTermAuthorityActualHumanAndConsole(t *testing.T) {
 	expected := []struct {
 		capability string
 		action     gate.Action
-	}{{"record", gate.RecordIssuanceTerm}, {"approve", gate.ApproveIssuanceTerm}, {"bind", gate.BindIssuanceTerm}, {"approve_binding", gate.ApproveIssuanceTermBinding}}
+	}{{"record", gate.RecordIssuanceTerm}, {"approve", gate.ApproveIssuanceTerm}, {"bind", gate.BindIssuanceTerm}, {"approve_binding", gate.ApproveIssuanceTermBinding}, {"inspect", gate.ViewCost}}
 	for _, want := range expected {
 		t.Run(want.capability, func(t *testing.T) {
 			f := setup(t, SeedSample).ready()
@@ -58,10 +58,17 @@ func TestTermAuthorityActualHumanAndConsole(t *testing.T) {
 			f.must(err)
 			terms, err := termAuthorityTerms(SampleWorkspace, want.capability)
 			f.must(err)
-			if terms.Action != want.action || terms.Kind != "synthetic_issuance_terms" || len(terms.Fields) != 0 {
+			if terms.Action != want.action || terms.Kind != "synthetic_issuance_terms" {
 				t.Fatal("incorrect fixed mapping")
 			}
-			req := gate.Request{Action: want.action, Kind: "synthetic_issuance_terms", Resource: gate.Resource{WorkspaceID: SampleWorkspace}}
+			if want.capability == "inspect" {
+				if len(terms.Fields) != 1 || terms.Fields[0] != "issuance_terms" {
+					t.Fatal("wrong evidence field")
+				}
+			} else if len(terms.Fields) != 0 {
+				t.Fatal("mutation has fields")
+			}
+			req := gate.Request{Fields: terms.Fields, Action: want.action, Kind: "synthetic_issuance_terms", Resource: gate.Resource{WorkspaceID: SampleWorkspace}}
 			check := func(allowed bool) {
 				t.Helper()
 				f.must(inputAuthorityAs(f, member, func() error {
@@ -89,6 +96,10 @@ func TestTermAuthorityActualHumanAndConsole(t *testing.T) {
 					if other.action != want.action {
 						bad := req
 						bad.Action = other.action
+						bad.Fields = nil
+						if other.capability == "inspect" {
+							bad.Fields = []string{"issuance_terms"}
+						}
 						if f.s.gate.Decide(f.s.answer, ConsoleClient, bad).Allowed {
 							t.Fatal("cross capability authority")
 						}
@@ -141,7 +152,7 @@ func TestTermAuthorityUnknownEffectRecovery(t *testing.T) {
 func TestTermAuthorityClosedFormsAndNonSample(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	root := f.as(AdminLogin)
-	for _, capability := range []string{"", "inspect", "issue", "confirm", "apply", "approve_issuance_term"} {
+	for _, capability := range []string{"", "inspect_all", "issue", "confirm", "apply", "approve_issuance_term"} {
 		_, err := termPermissionProposal(f, root, inputauthority.Proposal{ID: "invalid", Spec: termPermissionSpec(f, capability), Rationale: "Rejected unknown capability"})
 		if !errors.Is(err, inputauthority.ErrInvalid) {
 			t.Fatalf("unknown capability %s: %v", capability, err)

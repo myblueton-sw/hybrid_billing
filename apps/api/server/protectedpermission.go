@@ -14,6 +14,11 @@ func protectedGrantTerms(action gate.Action, kind string, fields []string) bool 
 	if kind == protectedauthority.ResourceKind {
 		return true
 	}
+	for _, field := range fields {
+		if field == protectedauthority.EvidenceField {
+			return true
+		}
+	}
 	return false
 }
 

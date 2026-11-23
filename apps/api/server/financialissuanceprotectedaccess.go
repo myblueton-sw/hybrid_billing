@@ -62,7 +62,7 @@ func (a *financialIssuance) protectedActor(workspace, actor, capability string) 
 	if !found || info.Kind != identity.Human || info.State != identity.Active {
 		return commands.Fail(commands.PermissionDenied)
 	}
-	decision := a.server.admin.Explain(actor, gate.Request{Action: terms.Action, Kind: protectedauthority.ResourceKind, Resource: gate.Resource{WorkspaceID: workspace}})
+	decision := a.server.admin.Explain(actor, gate.Request{Fields: terms.Fields, Action: terms.Action, Kind: protectedauthority.ResourceKind, Resource: gate.Resource{WorkspaceID: workspace}})
 	if decision.Code == gate.AuthorityUnavailable {
 		return commands.Fail(commands.AuthorityUnavailable)
 	}
@@ -73,6 +73,14 @@ func (a *financialIssuance) protectedActor(workspace, actor, capability string) 
 }
 
 func (a *financialIssuance) protectedCaller(workspace, actor, capability string) error {
+	return a.protectedCallerMode(workspace, actor, capability, true)
+}
+
+func (a *financialIssuance) protectedReadCaller(workspace, actor string) error {
+	return a.protectedCallerMode(workspace, actor, protectedauthority.Inspect, false)
+}
+
+func (a *financialIssuance) protectedCallerMode(workspace, actor, capability string, mutation bool) error {
 	if a == nil || a.server == nil || a.server.cfg.Seed != SeedSample {
 		return commands.Fail(commands.UnsupportedCapability)
 	}
@@ -95,14 +103,14 @@ func (a *financialIssuance) protectedCaller(workspace, actor, capability string)
 	if err != nil {
 		return commands.Fail(commands.InvalidRequest)
 	}
-	decision := s.gate.Decide(actual, ConsoleClient, gate.Request{Action: terms.Action, Kind: protectedauthority.ResourceKind, Resource: gate.Resource{WorkspaceID: workspace}})
+	decision := s.gate.Decide(actual, ConsoleClient, gate.Request{Fields: terms.Fields, Action: terms.Action, Kind: protectedauthority.ResourceKind, Resource: gate.Resource{WorkspaceID: workspace}})
 	if decision.Code == gate.AuthorityUnavailable {
 		return commands.Fail(commands.AuthorityUnavailable)
 	}
 	if !decision.Allowed || len(decision.Delegations) != 0 {
 		return commands.Fail(commands.PermissionDenied)
 	}
-	if s.held() {
+	if mutation && s.held() {
 		return commands.Fail(commands.PrerequisiteFailed)
 	}
 	return a.protectedOwnedPermission(workspace, actor, capability)

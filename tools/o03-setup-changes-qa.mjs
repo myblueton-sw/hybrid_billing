@@ -52,7 +52,7 @@ await page.route('**/api/**',async route=>{
   const all=(mode==='paged'?many:byField[field]).map(r=>({...r,field})),at=all.findIndex(r=>r.change===after),rows=after?all.slice(at+1):all.slice(0,10);
   return done({schema:'hb_issuance_protected_change_page_v1',contract:contract.id,configuration:'configuration-a',digest:hash,current_eligibility:'unchecked',field,snapshot:hash,count:String(all.length),next:!after&&all.length>10?rows.at(-1).change:'',other_provenance:'0',unowned_module:'0',...Object.fromEntries(rows.map((r,i)=>[`row_${String(i).padStart(2,'0')}`,JSON.stringify(r)]))});
  }
- if(['issuance_setup.context','issuance_setup.options'].includes(command))return route.fulfill({status:403,json:{code:'permission_denied',request_id:body.request_id}});
+ if(['issuance_setup.context','issuance_setup.options','issuance_setup.protected_channels'].includes(command))return route.fulfill({status:403,json:{code:'permission_denied',request_id:body.request_id}});
  evidence.unexpected.push(command);return route.fulfill({status:403,json:{code:'permission_denied',request_id:body?.request_id}});
 });
 const open=async(lang,width)=>{await page.setViewportSize({width,height:1000});await page.goto('about:blank');await page.goto(`${args.url}/?service=api&lang=${lang}#/contracts?view=documents&contract=${contract.id}&on=${on}&part=changes&lang=${lang}`);await page.locator('.o03-scope-bar').waitFor();};

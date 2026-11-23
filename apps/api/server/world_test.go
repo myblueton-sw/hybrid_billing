@@ -31,9 +31,14 @@ type world struct {
 
 func setup(t testing.TB, seed string) world {
 	t.Helper()
+	return setupWithFields(t, seed, map[string]gate.FieldClass{"state": gate.General})
+}
+
+func setupWithFields(t testing.TB, seed string, fields map[string]gate.FieldClass) world {
+	t.Helper()
 	now := start
 	mu := &sync.Mutex{}
-	s, err := New(Config{Data: t.TempDir() + "/data", Seed: seed, Fields: map[string]gate.FieldClass{"state": gate.General}, Passwords: fastPasswords(), Clock: func() time.Time {
+	s, err := New(Config{Data: t.TempDir() + "/data", Seed: seed, Fields: fields, Passwords: fastPasswords(), Clock: func() time.Time {
 		mu.Lock()
 		defer mu.Unlock()
 		return now
@@ -55,7 +60,7 @@ func (f world) ready() world {
 	if err := f.s.Start(); err != nil {
 		f.t.Fatal(err)
 	}
-	if f.s.cfg.Seed == SeedSample && f.s.counter != 21 {
+	if f.s.cfg.Seed == SeedSample && f.s.counter != 23 {
 		f.t.Fatalf("sample seed steps %d", f.s.counter)
 	}
 	f.s.counter = map[string]uint64{SeedSample: 2, SeedNone: 1}[f.s.cfg.Seed]

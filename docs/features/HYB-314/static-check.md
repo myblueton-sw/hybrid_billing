@@ -320,3 +320,11 @@ Confirmed by reading the server: `bulk_revocation.discard` is refused with a sta
 Checks: `tsc` clean; console tests pass. No new test and no rendered check. Copy and state review, ui-designer role (AI, by reading): FAIL with one finding (the text reached only the live region, so a sighted user saw the same as after a real discard), corrected; corrective re-review PASS; its three further suggestions (announce once through the live region, clear the note when a bulk run starts, follow a language switch) were adopted afterwards and not reviewed again.
 
 Still open from A7: a failed read of the pending fixed list on load is silent; an absent match count is read as 0.
+
+## O03 follow-up: contract actions while a held detail is stale (2026-11-24)
+
+While the detail of a contract is held from an earlier load because its reload failed, the contract action buttons, the withdraw button of each event row, and the review and send buttons of an open command form are disabled and described by the stale alert, as on P01, P03 and P04. The form also refuses to review or send in that state. A successful reload enables them again.
+
+Not covered: the writes of the setup sections inside the detail (documents, payment terms, issuance setup) are not gated by this change.
+
+Checks: `tsc` clean; console tests 1349, pass 1346, fail 0, skipped 3. No new test, no rendered check, no copy change and no review; the pattern is the one reviewed for P01.

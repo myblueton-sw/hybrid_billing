@@ -21,7 +21,10 @@ export type Shared = {
   onReload: () => Promise<void>;
   onDenied: () => void;
   onSignedOut: () => void;
+  stale?: boolean;
 };
+
+export const staleNote = "o03-detail-stale";
 
 const fieldIds: Record<string, string> = {
   from: "o03-f-from",
@@ -56,7 +59,7 @@ export function ActionBar({ keys, title, ...shared }: Shared & { keys: ContractA
       <div className="live-buttons">
         {keys.filter(usable).map((key) => (
           <button
-            key={key} type="button" className="live-secondary" aria-expanded={open === key}
+            key={key} type="button" className="live-secondary" aria-expanded={open === key} disabled={shared.stale} aria-describedby={shared.stale ? staleNote : undefined}
             onClick={(e) => { opener.current = e.currentTarget; setOpen(open === key ? null : key); }}
           >
             {k.command(l, key)}
@@ -153,6 +156,7 @@ export function CommandForm({ commandKey: key, event, onClose, ...shared }: Shar
 
   const review = (e: FormEvent) => {
     e.preventDefault();
+    if (shared.stale) return;
     const found = validate();
     setErrors(found);
     if (Object.keys(found).length) { setSummaryKey((n) => n + 1); return; }
@@ -161,7 +165,7 @@ export function CommandForm({ commandKey: key, event, onClose, ...shared }: Shar
 
 
   const send = async () => {
-    if (busy) return;
+    if (busy || shared.stale) return;
     setBusy(true);
     setMessage(null);
     const sent = body();
@@ -327,7 +331,7 @@ export function CommandForm({ commandKey: key, event, onClose, ...shared }: Shar
               aria-describedby={described("rationale", "o03-f-rationale-hint")} onChange={(e) => set("rationale", e.target.value)} />
           </div>
           <div className="live-buttons">
-            <button type="submit" className="live-secondary">{k.form.review(l)}</button>
+            <button type="submit" className="live-secondary" disabled={shared.stale} aria-describedby={shared.stale ? staleNote : undefined}>{k.form.review(l)}</button>
             <button type="button" className="service-button-link" onClick={() => onClose()}>{k.form.cancel(l)}</button>
           </div>
         </form>
@@ -350,7 +354,7 @@ export function CommandForm({ commandKey: key, event, onClose, ...shared }: Shar
           )}
           {key === "contract.settle" && <p className="live-impact">{k.form.settleImpact(l)}</p>}
           <div className="live-buttons">
-            <button type="button" className="live-primary" disabled={busy} onClick={() => void send()}>{busy ? k.form.sending(l) : k.confirmVerb(l, k.command(l, key))}</button>
+            <button type="button" className="live-primary" disabled={busy || shared.stale} aria-describedby={shared.stale ? staleNote : undefined} onClick={() => void send()}>{busy ? k.form.sending(l) : k.confirmVerb(l, k.command(l, key))}</button>
             <button type="button" className="live-secondary" disabled={busy} onClick={() => setStep("edit")}>{k.form.backToEdit(l)}</button>
           </div>
         </div>

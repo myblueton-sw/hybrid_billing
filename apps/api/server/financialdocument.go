@@ -3,11 +3,14 @@ package server
 import (
 	"encoding/json"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/approvals"
+	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/erpledger"
+	"github.com/myblueton-sw/hybrid_billing/modules/issuance"
 	"github.com/myblueton-sw/hybrid_billing/modules/normalize"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/rating"
@@ -213,4 +216,93 @@ func documentCandidateShape(c chargeCandidate, subject approvals.Subject, connec
 		return bad()
 	}
 	return charges, sources, nil
+}
+
+func financialFinalGross(total erpledger.Amounts, scale int) (string, error) {
+	if scale < 0 || scale > 4 || len(total.Net) > 64 || len(total.Tax) > 64 {
+		return "", commands.Fail(commands.PrerequisiteFailed)
+	}
+	profile, err := decimal.NewProfile(candidateProfile())
+	if err != nil {
+		return "", err
+	}
+	net, e1 := decimal.Parse(profile, total.Net)
+	tax, e2 := decimal.Parse(profile, total.Tax)
+	if e1 != nil || e2 != nil || net.Sign() < 0 || tax.Sign() < 0 || net.Scale() > scale || tax.Scale() > scale || documentFixed(net, scale) != total.Net || documentFixed(tax, scale) != total.Tax {
+		return "", commands.Fail(commands.PrerequisiteFailed)
+	}
+	gross, err := decimal.Add(profile, net, tax)
+	if err != nil {
+		return "", commands.Fail(commands.PrerequisiteFailed)
+	}
+	return gross.String(), nil
+}
+
+func issuanceDraftFromSource(p financialIssuanceProfile, id, language string) (issuance.Draft, error) {
+	return issuanceDraftFromEvidence(p.Kind, p.Spec.Mode, p.Spec.Profile, p.Source.Basis, id, language)
+}
+
+func issuanceDraftFromEvidence(kind issuance.Kind, mode, sourceProfile string, source financialIssuanceSource, id, language string) (issuance.Draft, error) {
+	fail := func() (issuance.Draft, error) { return issuance.Draft{}, commands.Fail(commands.PrerequisiteFailed) }
+	if mode != "erp_issuance" || sourceProfile != "synthetic_erp_document_v1" || kind.Class != issuance.ClassERP || kind.Credit || kind.Statutory || !slices.Contains(kind.Languages, language) || !validRequestID(id) || len(id) > 128 || source.Scale < 0 || source.Scale > 4 || len(source.Rows) == 0 || len(source.Rows) > 100 {
+		return fail()
+	}
+	for _, subject := range []string{kind.ID, source.Customer, source.Document.IssuerLegalEntityID} {
+		if !validRequestID(subject) || len(subject) > 100 {
+			return fail()
+		}
+	}
+	if !validRequestID(source.Contract.ContractID) || len(source.Contract.ContractID) > 128 || len(source.Subject.Currency) != 3 {
+		return fail()
+	}
+	for _, c := range source.Subject.Currency {
+		if c < 'A' || c > 'Z' {
+			return fail()
+		}
+	}
+	profile, err := decimal.NewProfile(candidateProfile())
+	if err != nil {
+		return issuance.Draft{}, err
+	}
+	zero, err := decimal.Parse(profile, "0")
+	if err != nil {
+		return issuance.Draft{}, err
+	}
+	net, tax := zero, zero
+	rows := slices.Clone(source.Rows)
+	slices.SortFunc(rows, func(a, b financialERPResultRow) int { return strings.Compare(a.ID, b.ID) })
+	d := issuance.Draft{ID: id, Kind: kind.ID, Customer: source.Customer, Entity: source.Document.IssuerLegalEntityID, Contract: source.Contract.ContractID, Currency: source.Subject.Currency, Scale: source.Scale, Language: language}
+	previous := ""
+	for _, row := range rows {
+		if !validRequestID(row.ID) || row.ID == previous {
+			return fail()
+		}
+		previous = row.ID
+		for _, component := range []struct {
+			text, amount string
+			tax          bool
+		}{{"net", row.Net, false}, {"tax", row.Tax, true}} {
+			value, err := documentNumber(profile, component.amount, source.Scale, false)
+			if err != nil || len(strings.ReplaceAll(value.String(), ".", "")) > 30 {
+				return fail()
+			}
+			if component.tax {
+				tax, err = decimal.Add(profile, tax, value)
+			} else {
+				net, err = decimal.Add(profile, net, value)
+			}
+			if err != nil {
+				return fail()
+			}
+			if value.Sign() > 0 {
+				d.Lines = append(d.Lines, issuance.Line{Text: "Row " + row.ID + " / " + component.text, Amount: value.String(), Tax: component.tax})
+			}
+		}
+	}
+	gross, err := decimal.Add(profile, net, tax)
+	if err != nil || gross.Sign() <= 0 || len(strings.ReplaceAll(gross.String(), ".", "")) > 30 || len(d.Lines) == 0 || len(d.Lines) > 200 || documentFixed(net, source.Scale) != source.Net || documentFixed(tax, source.Scale) != source.Tax || gross.String() != source.Subject.Amount {
+		return fail()
+	}
+	d.Total = gross.String()
+	return d, nil
 }

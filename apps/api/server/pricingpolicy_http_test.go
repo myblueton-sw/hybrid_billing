@@ -45,10 +45,16 @@ func policyProposalFields(prepared reply, spec string) map[string]string {
 	return fields
 }
 
-func policyHTTPWorld(t *testing.T) (world, actor, actor, string, string) {
+func policyHTTPWorld(t *testing.T, beforeFinance ...func(world)) (world, actor, actor, string, string) {
 	t.Helper()
 	f := setup(t, SeedSample).ready()
 	f.setPassword(MemberLogin, pw)
+	if len(beforeFinance) > 1 {
+		t.Fatal("multiple financial setup callbacks")
+	}
+	if len(beforeFinance) == 1 && beforeFinance[0] != nil {
+		beforeFinance[0](f)
+	}
 	provisionPricingCapability(t, f, "inspect", SampleMember)
 	_, proposerGrant := provisionPricingCapability(t, f, "propose", SampleMember)
 	provisionPricingCapability(t, f, "approve", SampleAdmin3)

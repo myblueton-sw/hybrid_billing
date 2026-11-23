@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useService } from "../../../../../service/context";
 import type { ApprovalRecord, Data } from "../contract";
-import { serviceDecisionRecord } from "../decision-api";
+import { decisionFamily } from "../decision-api";
 import { DocumentError } from "./contract";
 import { preparationSettled, sessionDocumentStore, type DocumentState, type DocumentStore } from "./store";
 const empty: DocumentState = Object.freeze<DocumentState>({ selection: "", context: { phase: "idle" }, documents: { phase: "idle" }, preparations: { phase: "idle" }, document: { phase: "idle" }, preparation: { phase: "idle" }, invalidFields: [], entries: [] });
@@ -11,8 +11,8 @@ export function useDocuments(data: Data | undefined, record: ApprovalRecord | un
  const sessionKey = session ? JSON.stringify([session.user, session.workspace, session.csrf]) : "";
  const [binding, setBinding] = useState<{ key: string; store?: DocumentStore; error?: string }>();
  const [rationale, setRationale] = useState("");
- const capability = data?.commands === "financial_charge_v1" && data.actor.id === session?.user;
- const identity = capability && session && record && serviceDecisionRecord(record) ? { request: record.id, digest: record.evidence.revision!, workspace: session.workspace } : undefined;
+ const capability = (data?.commands === "financial_charge_v1" || data?.commands === "financial_approval_v2") && data.actor.id === session?.user;
+ const identity = capability && session && record && decisionFamily(record) === "financial_charge" ? { request: record.id, digest: record.evidence.revision!, workspace: session.workspace } : undefined;
  const identityKey = JSON.stringify(identity);
  useEffect(() => {
   if (!session) { setBinding(undefined); return; }

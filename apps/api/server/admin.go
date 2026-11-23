@@ -461,9 +461,17 @@ func (s *Server) registerUsers() error {
 	definitions = append(definitions, s.financialAuthorityDefinitions()...)
 	definitions = append(definitions, s.financialPermissionDefinitions()...)
 	definitions = append(definitions, s.financialChargeDefinitions()...)
+	definitions = append(definitions, s.financialFinalDefinitions()...)
+	definitions = append(definitions, s.issuanceDraftDefinitions()...)
+	definitions = append(definitions, s.issuanceSetupDefinitions()...)
+	definitions = append(definitions, s.issuanceSetupMutationDefinitions()...)
 	definitions = append(definitions, s.documentDefinitions()...)
+	definitions = append(definitions, s.resultDefinitions()...)
 	definitions = append(definitions, s.grantAuthorityDefinitions(financialRequestDomain)...)
+	definitions = append(definitions, s.grantAuthorityDefinitions(erpFinalRequestDomain)...)
 	definitions = append(definitions, s.grantAuthorityDefinitions(documentGrantAuthority)...)
+	definitions = append(definitions, s.grantAuthorityDefinitions(resultGrantAuthority)...)
+	definitions = append(definitions, s.resultAuthorityReadDefinitions()...)
 	for _, d := range definitions {
 		if err := s.Register(d); err != nil {
 			return err

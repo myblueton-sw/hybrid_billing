@@ -8,7 +8,7 @@ import (
 )
 
 func sourceFinancialConfirmation(filename string, fn *ast.FuncDecl, sel *ast.SelectorExpr) bool {
-	if filename != "financialpolicy.go" || fn.Name.Name != "confirmFinancialPolicy" || sel.Sel.Name != "Confirm" || fn.Recv == nil || len(fn.Recv.List) != 1 || len(fn.Recv.List[0].Names) != 1 {
+	if filename != "financialpolicy.go" || fn.Name.Name != "confirmFinancialPolicyForStage" || sel.Sel.Name != "Confirm" || fn.Recv == nil || len(fn.Recv.List) != 1 || len(fn.Recv.List[0].Names) != 1 {
 		return false
 	}
 	pointer, ok := fn.Recv.List[0].Type.(*ast.StarExpr)
@@ -36,15 +36,16 @@ func TestFinancialConfirmationExceptionIsExact(t *testing.T) {
 		file, receiver, function, expression string
 		want                                 bool
 	}{
-		{"financialpolicy.go", "h *Server", "confirmFinancialPolicy", "h.approvals.Confirm", true},
-		{"financialpolicy.go", "handler *Server", "confirmFinancialPolicy", "handler.approvals.Confirm", true},
-		{"other.go", "h *Server", "confirmFinancialPolicy", "h.approvals.Confirm", false},
+		{"financialpolicy.go", "h *Server", "confirmFinancialPolicyForStage", "h.approvals.Confirm", true},
+		{"financialpolicy.go", "handler *Server", "confirmFinancialPolicyForStage", "handler.approvals.Confirm", true},
+		{"financialpolicy.go", "h *Server", "confirmFinancialPolicy", "h.approvals.Confirm", false},
+		{"other.go", "h *Server", "confirmFinancialPolicyForStage", "h.approvals.Confirm", false},
 		{"financialpolicy.go", "h *Server", "Apply", "h.approvals.Confirm", false},
-		{"financialpolicy.go", "h Server", "confirmFinancialPolicy", "h.approvals.Confirm", false},
-		{"financialpolicy.go", "h *Other", "confirmFinancialPolicy", "h.approvals.Confirm", false},
-		{"financialpolicy.go", "h *Server", "confirmFinancialPolicy", "other.approvals.Confirm", false},
-		{"financialpolicy.go", "h *Server", "confirmFinancialPolicy", "h.webhooks.Confirm", false},
-		{"financialpolicy.go", "h *Server", "confirmFinancialPolicy", "h.approvals.Publish", false},
+		{"financialpolicy.go", "h Server", "confirmFinancialPolicyForStage", "h.approvals.Confirm", false},
+		{"financialpolicy.go", "h *Other", "confirmFinancialPolicyForStage", "h.approvals.Confirm", false},
+		{"financialpolicy.go", "h *Server", "confirmFinancialPolicyForStage", "other.approvals.Confirm", false},
+		{"financialpolicy.go", "h *Server", "confirmFinancialPolicyForStage", "h.webhooks.Confirm", false},
+		{"financialpolicy.go", "h *Server", "confirmFinancialPolicyForStage", "h.approvals.Publish", false},
 	} {
 		file, err := parser.ParseFile(token.NewFileSet(), tc.file, "package server; func ("+tc.receiver+") "+tc.function+"(){ _ = "+tc.expression+" }", 0)
 		if err != nil {

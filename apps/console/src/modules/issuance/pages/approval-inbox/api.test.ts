@@ -478,3 +478,12 @@ test("accepts only the explicit governed financial decision capability alongside
     assert.equal(valid(bad, q()), false);
   }
 });
+
+test("accepts v2 final gross rows but refuses a cross-stage amount basis",()=>{
+ const d=fixture();d.commands="financial_approval_v2";
+ const r=d.records[0];r.kind="final_erp_amount";r.erp.applicability="unknown";
+ r.amounts[0].basis="synthetic_reported_net_plus_tax_v1";
+ assert.equal(valid(d,q()),true);
+ r.kind="billing_result";
+ assert.equal(valid(d,q()),false);
+});

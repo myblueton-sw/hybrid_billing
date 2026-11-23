@@ -19,9 +19,9 @@ func subjectPolicy(t *testing.T, f world, id, revision, required string) {
 	f.ok(t, "policy confirmation", f.run(f.as(Admin2Login), "financial_policy.confirm", id, map[string]string{"digest": field(p, "digest")}), approvals.StateConfirmed, "")
 }
 
-func subjectWorld(t *testing.T) (world, actor, actor, map[string]string, string) {
+func subjectWorld(t *testing.T, beforeFinance ...func(world)) (world, actor, actor, map[string]string, string) {
 	t.Helper()
-	f, maker, checker, fields := captureHTTPWorld(t, true)
+	f, maker, checker, fields := captureHTTPWorld(t, true, beforeFinance...)
 	got := policyMutate(f, maker, "capture", "subject-candidate", fields)
 	f.ok(t, "capture", got, "captured", "")
 	subjectPolicy(t, f, "subject-policy", "2", "attribution,input,mapping,result,rule")

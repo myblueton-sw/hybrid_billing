@@ -36,6 +36,8 @@ export const kinds: Kind[] = [
 ];
 export const tabLabel = (l: Locale, k: string) =>
   ({
+    drafts: t(l, "Issuance drafts", "발행 초안", "مسودات الإصدار"),
+    results: t(l, "ERP result evidence", "ERP 결과 근거", "أدلة نتائج ERP"),
     pending: t(l, "Pending approvals", "승인 대기", "طلبات الاعتماد المعلّقة"),
     decisions: t(l, "My decisions", "내 결정", "قراراتي"),
     delegation: t(
@@ -51,7 +53,7 @@ export const tabLabel = (l: Locale, k: string) =>
       "인식 주기·대사",
       "دورية الإثبات والمطابقة",
     ),
-  })[k as "pending" | "decisions" | "delegation" | "history" | "recognition"];
+  })[k as "pending" | "decisions" | "delegation" | "history" | "recognition" | "results" | "drafts"];
 export const statusLabel = (l: Locale, k: ApprovalRecord["status"]) =>
   ({
     pending: t(l, "Pending in source", "원천 기록: 대기", "المصدر: معلّق"),
@@ -87,8 +89,9 @@ export const basisLabel = (l: Locale, b: string) =>
     tax: t(l, "Tax", "세금", "الضريبة"),
     gross: t(l, "Gross amount", "총액", "المبلغ الإجمالي"),
     rated_candidate_total: t(l, "Rated candidate total", "과금 계산 후보 합계", "إجمالي نتيجة احتساب الرسوم المبدئية"),
+    synthetic_reported_net_plus_tax_v1: t(l, "Reported gross (net + tax)", "보고된 총액 (순액 + 세금)", "الإجمالي المبلّغ عنه (الصافي + الضريبة)"),
     expense: t(l, "Expense basis", "비용 인식 기준", "أساس المصروفات"),
-  })[b as "net" | "tax" | "gross" | "expense" | "rated_candidate_total"] ?? b;
+  })[b as "net" | "tax" | "gross" | "expense" | "rated_candidate_total" | "synthetic_reported_net_plus_tax_v1"] ?? b;
 export const environment = (l: Locale) =>
   t(
     l,

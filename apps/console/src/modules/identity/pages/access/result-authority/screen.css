@@ -1,0 +1,47 @@
+.result-authority{width:100%;min-width:0;color:var(--text-primary,#202124)}
+.result-authority header p,.result-authority section>p{max-width:68ch;line-height:1.65}
+.authority-layout{display:grid;grid-template-columns:minmax(0,1fr) clamp(400px,38%,560px);gap:2rem;margin-block:1.5rem}
+.authority-list,.authority-detail{min-width:0}
+.authority-detail{border-inline-start:1px solid #d5d7da;padding-inline-start:1.5rem}
+.authority-list ul,.authority-attempts{list-style:none;padding:0;margin:0}
+.authority-list li,.authority-attempts li{border-block-end:1px solid #d5d7da;padding-block:1rem}
+.authority-list li button{display:block;text-align:start;width:100%;background:transparent;border:0;padding:.5rem;white-space:normal}
+.authority-list li button[aria-pressed=true]{background:#f0f1f2}
+.authority-list li span,.authority-list li small{display:block;margin-block-start:.5rem}
+.result-authority bdi,.result-authority dd{overflow-wrap:anywhere}
+.authority-facts{display:grid;grid-template-columns:minmax(100px,1fr) minmax(0,2fr);gap:.8rem 1rem}
+.authority-facts dt{font-weight:600}.authority-facts dd{margin:0}
+.authority-actions{display:flex;flex-wrap:wrap;gap:.75rem;margin-block:1rem}
+.result-authority button{min-height:44px;padding:.65rem 1rem;font:inherit;cursor:pointer}
+.result-authority button:disabled{cursor:default;opacity:.55}
+.result-authority :is(button,input,a):focus-visible{outline:3px solid currentColor;outline-offset:3px}
+.result-authority input{display:block;width:100%;box-sizing:border-box;min-height:44px;font:inherit;margin-block:.5rem;padding:.6rem}
+.result-authority h4{margin-block:1.5rem .75rem}.result-authority details{margin-block:.75rem}.authority-back{display:none}
+@media(max-width:1023px){.authority-layout{display:block}.authority-detail{padding:0;border:0}.authority-back{display:inline-block;margin-block-end:1rem}.result-authority[data-authority-pane=list] .authority-detail{display:none}.result-authority[data-authority-pane=detail] .authority-list{display:none}.authority-facts{grid-template-columns:1fr;gap:.35rem}.authority-facts dd{margin-block-end:.8rem}}
+
+.result-authority .authority-choice{display:flex;align-items:flex-start;gap:.75rem;min-width:0;line-height:1.6;margin-block:.75rem}
+.result-authority .authority-choice input{width:1.15rem;min-height:1.15rem;height:1.15rem;flex:0 0 auto;margin-block:.25rem 0}
+.authority-choice span{min-width:0}.authority-choice small{display:block;line-height:1.7;margin-block-start:.4rem}
+.result-authority fieldset{border:1px solid #d5d7da;margin-block:1.5rem;padding:1rem;min-width:0}
+.authority-proposal-form>input{max-width:36rem}.authority-proposal-form>p{max-width:68ch}
+.authority-proposal-review{max-width:none}.authority-proposal-review .authority-facts{grid-template-columns:minmax(150px,24%) minmax(0,1fr)}
+@media(max-width:1023px){.authority-proposal-review .authority-facts{grid-template-columns:1fr}}
+
+.result-authority .authority-choice{flex-direction:row;min-height:44px;gap:.75rem;font-size:1rem;font-weight:400;color:var(--hb-ink,#202124)}
+.result-authority .authority-choice:has(input:checked){font-weight:600}
+.authority-entry-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-block:1.5rem}
+.result-authority .authority-entry-heading h3{font-size:1.25rem;font-weight:600;margin:0}
+.authority-scope-choices{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,2fr);gap:1.5rem}
+.authority-scope-choices[hidden]{display:none}
+.authority-capabilities{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:.5rem 1rem}
+.authority-facts small{display:block;font-size:.875rem;margin-block-start:.4rem}
+.result-authority .authority-primary{background:#202a35;color:#fff;border:1px solid #202a35;font-weight:600}
+.authority-proposal bdi:not(:has(*)){unicode-bidi:isolate}
+#authority-time-help bdi,.authority-choice small bdi{white-space:nowrap}
+@media(max-width:1023px){.authority-scope-choices{display:block}.authority-entry-heading{align-items:flex-start;flex-wrap:wrap}}
+.remaining-security .result-authority .authority-primary:hover:not(:disabled){background:#2f3b48;border-color:#2f3b48;color:#fff}
+.remaining-security .result-authority .authority-entry-heading h3{font-size:1.25rem;line-height:1.4}
+.remaining-security .result-authority .authority-proposal-review h3{font-size:1.125rem;line-height:1.4;margin-block:1rem 1.5rem}
+.authority-scope-choices{align-items:start}
+.authority-proposal-form fieldset{max-width:48rem}
+.authority-choice small{font-weight:400;color:var(--hb-muted,#5b6470)}

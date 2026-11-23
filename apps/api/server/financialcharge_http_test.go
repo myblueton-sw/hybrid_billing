@@ -31,9 +31,9 @@ func chargeDecisionGrant(t *testing.T, f world, recipient, id string) string {
 	return field(c, "grant")
 }
 
-func chargeWorld(t *testing.T) (world, actor, actor, string) {
+func chargeWorld(t *testing.T, beforeFinance ...func(world)) (world, actor, actor, string) {
 	t.Helper()
-	f, _, _, _, digest := subjectWorld(t)
+	f, _, _, _, digest := subjectWorld(t, beforeFinance...)
 	approvalAdminister(t, f.s, approvals.Proposal{ID: "charge-governor", Kind: approvals.ProposeAddAdmin, Admin: SampleAdmin3})
 	ceiling := provisionRequestCeiling(t, f)
 	chargeRequestGrant(t, f, SampleAdmin3, "requester", field(ceiling, "grant"))

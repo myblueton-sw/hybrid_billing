@@ -11,7 +11,7 @@ import (
 func TestGrantAuthorityDomainIsClosed(t *testing.T) {
 	f, _, root, _ := inputAuthoritySetup(t)
 	limits := inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 20}
-	for _, domain := range []grantAuthorityDomain{0, 6, 255} {
+	for _, domain := range []grantAuthorityDomain{0, 12, 255} {
 		if _, err := newServerGrantAuthority(f.s, limits, domain); !errors.Is(err, inputauthority.ErrInvalid) {
 			t.Fatal("unknown domain constructed", err)
 		}

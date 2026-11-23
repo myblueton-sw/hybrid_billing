@@ -81,6 +81,10 @@ func (a *financialERP) currentDocumentLocked(b financialDocumentBasis, actor str
 	if a.server.held() {
 		return financialDocumentRecord{}, commands.Fail(commands.PrerequisiteFailed)
 	}
+	return a.currentDocumentEvidenceLocked(b, actor)
+}
+
+func (a *financialERP) currentDocumentEvidenceLocked(b financialDocumentBasis, actor string) (financialDocumentRecord, error) {
 	if _, err := a.server.currentFinancialChargeLocked(b.Workspace, b.Request, b.RequestDigest, actor); err != nil {
 		return financialDocumentRecord{}, err
 	}

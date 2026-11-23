@@ -17,7 +17,7 @@ const copy = {
  rationaleHint: ["Required. Up to 2,000 UTF-8 bytes; the server also validates the limit.", "필수 입력입니다. UTF-8 기준 최대 2,000바이트이며 서버에서도 한도를 확인합니다.", "مطلوب. بحد أقصى 2000 بايت بترميز UTF-8؛ يتحقق الخادم أيضاً من الحد."],
  reason: ["Rejection reason", "반려 이유", "سبب الرفض"], chooseReason: ["Select a reason", "이유 선택", "اختر سبباً"],
  cancel: ["Cancel", "취소", "إلغاء"],
- boundary: ["This records a financial decision only. It does not issue, deliver, post, pay or confirm an ERP amount.", "재무 결정만 기록합니다. 발행·전달·전기·결제·ERP 금액 확정은 실행하지 않습니다.", "يُسجّل هذا قراراً مالياً فقط. ولا ينفّذ الإصدار أو التسليم أو الترحيل أو الدفع أو تأكيد مبلغ ERP."],
+ boundary: ["This records a financial decision only. It does not issue, deliver, post, pay or change amounts in an external ERP.", "재무 결정만 기록합니다. 발행·전달·전기·결제나 외부 ERP 금액 변경은 실행하지 않습니다.", "يُسجّل قرارًا ماليًا فقط. ولا ينفّذ الإصدار أو التسليم أو الترحيل أو الدفع أو تغيير المبالغ في نظام ERP خارجي."],
  pending: ["Recording the decision…", "결정 기록 중…", "جارٍ تسجيل القرار…"],
  unknown: ["Outcome unknown", "처리 결과 미확인", "نتيجة العملية غير معروفة"],
  unknownHelp: ["The decision may have been recorded. Retrying uses the same submission; it does not create a new attempt.", "결정이 기록되었을 수 있습니다. 다시 시도하면 새 시도를 만들지 않고 동일한 제출을 재전송합니다.", "ربما سُجّل القرار. تُعيد المحاولة إرسال الطلب نفسه ولا تُنشئ محاولة جديدة."],

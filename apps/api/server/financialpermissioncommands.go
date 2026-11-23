@@ -11,13 +11,20 @@ import (
 )
 
 type financialPermissionCommand struct {
-	s    *Server
-	kind string
+	s     *Server
+	kind  string
+	stage financialPolicyStage
 }
 
 func (s *Server) financialPermissionBoundary(command string, call commands.Call) commands.Code {
 	var a *serverGrantAuthority
 	switch command {
+	case "erp_final_permission.propose", "erp_final_permission.approve", "erp_final_permission.reject", "erp_final_permission.withdraw", "erp_final_permission.inspect":
+		a = s.erpFinalPermission
+	case "erp_final_request_permission.propose_console", "erp_final_request_permission.propose_human", "erp_final_request_permission.approve", "erp_final_request_permission.reject", "erp_final_request_permission.withdraw", "erp_final_request_permission.inspect":
+		a = s.erpFinalRequestPermission
+	case "result_authority.propose_console", "result_authority.propose_human", "result_authority.approve", "result_authority.reject", "result_authority.withdraw", "result_authority.inspect", "result_authority.history", "result_authority.context":
+		a = s.resultAuthority
 	case "document_authority.propose_console", "document_authority.propose_human", "document_authority.approve", "document_authority.reject", "document_authority.withdraw", "document_authority.inspect":
 		a = s.documentAuthority
 	case "financial_permission.propose", "financial_permission.approve", "financial_permission.reject", "financial_permission.withdraw", "financial_permission.inspect":
@@ -46,13 +53,19 @@ func (s *Server) financialPermissionBoundary(command string, call commands.Call)
 }
 
 func (h financialPermissionCommand) Resolve(workspace, target string) (commands.Target, commands.Resolution) {
+	if _, _, err := h.s.financialPermissionStage(h.stage); err != nil {
+		return commands.Target{}, commands.Unavailable
+	}
 	if workspace != h.s.bootWorkspace || !validRequestID(target) {
 		return commands.Target{}, commands.NotFound
 	}
 	return commands.Target{Revision: h.s.Revision()}, commands.Found
 }
 func (h financialPermissionCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
-	a := h.s.financialPermission
+	a, _, stageErr := h.s.financialPermissionStage(h.stage)
+	if stageErr != nil {
+		return commands.Outcome{}, stageErr
+	}
 	if a == nil || h.s.cfg.Commands.Fields < 20 || h.s.cfg.Commands.Value < 1024 {
 		return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
 	}
@@ -104,17 +117,31 @@ func (h financialPermissionCommand) Apply(ctx commands.Context) (commands.Outcom
 }
 func (s *Server) financialPermissionDefinitions() []commands.Definition {
 	var out []commands.Definition
-	for _, kind := range []string{"propose", "approve", "reject", "withdraw", "inspect"} {
-		var fields []commands.Field
-		if kind == "propose" {
-			fields = append(fields, commands.Field{Name: "recipient", Type: commands.ID, Required: true})
-			for _, name := range []string{"not_before", "not_after"} {
-				fields = append(fields, commands.Field{Name: name, Type: commands.Text, Required: true})
+	for _, stage := range []financialPolicyStage{chargePolicyStage, erpFinalPolicyStage} {
+		_, prefix, _ := s.financialPermissionStage(stage)
+		for _, kind := range []string{"propose", "approve", "reject", "withdraw", "inspect"} {
+			var fields []commands.Field
+			if kind == "propose" {
+				fields = append(fields, commands.Field{Name: "recipient", Type: commands.ID, Required: true})
+				for _, name := range []string{"not_before", "not_after"} {
+					fields = append(fields, commands.Field{Name: name, Type: commands.Text, Required: true})
+				}
+			} else if kind != "inspect" {
+				fields = []commands.Field{{Name: "digest", Type: commands.Text, Required: true}}
 			}
-		} else if kind != "inspect" {
-			fields = []commands.Field{{Name: "digest", Type: commands.Text, Required: true}}
+			out = append(out, commands.Definition{ID: prefix + "." + kind, Permission: commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}, Mutating: kind != "inspect", Rationale: kind != "inspect", Fields: fields, Handler: financialPermissionCommand{s: s, kind: kind, stage: stage}})
 		}
-		out = append(out, commands.Definition{ID: "financial_permission." + kind, Permission: commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}, Mutating: kind != "inspect", Rationale: kind != "inspect", Fields: fields, Handler: financialPermissionCommand{s: s, kind: kind}})
 	}
 	return out
+}
+
+func (s *Server) financialPermissionStage(stage financialPolicyStage) (*serverGrantAuthority, string, error) {
+	switch stage {
+	case chargePolicyStage:
+		return s.financialPermission, "financial_permission", nil
+	case erpFinalPolicyStage:
+		return s.erpFinalPermission, "erp_final_permission", nil
+	default:
+		return nil, "", commands.Fail(commands.UnsupportedCapability)
+	}
 }

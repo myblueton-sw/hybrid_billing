@@ -71,6 +71,33 @@ test("charge approval policy proposal impact has a localized label, count and re
   }
 });
 
+test("ERP final policy impact remains distinct from charge policy in every locale", () => {
+  const labels = { en: "ERP final-amount approval policy proposals", ko: "ERP 최종 금액 승인 정책 제안", ar: "مقترحات سياسة اعتماد المبلغ النهائي في ERP" };
+  const withPolicies = { ...detail, impact: { ...detail.impact, pending: [
+    { store: "erp_final_policy_proposals", count: 1, rechecked: true },
+    { store: "financial_policy_proposals", count: 2, rechecked: true },
+  ] } };
+  for (const l of ["en", "ko", "ar"] as Locale[]) {
+    const html = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: withPolicies, targets: null }} onMore={() => {}} />);
+    assert.ok(html.includes(`<dt>${labels[l]}</dt><dd><span class="m01-line">1</span><span class="m01-line">${b.rechecked(l)}</span></dd>`), l);
+    assert.ok(html.includes(`<dt>${b.store(l, "financial_policy_proposals")}</dt><dd><span class="m01-line">2</span>`), l);
+    assert.ok(!html.includes("erp_final_policy_proposals"), l);
+  }
+});
+test("ERP final limit impact remains distinct from charge policy in every locale", () => {
+  const labels = { en: "ERP final-amount approval limit proposals", ko: "ERP 최종 금액 승인 한도 제안", ar: "مقترحات حدود اعتماد المبلغ النهائي في ERP" };
+  const withPolicies = { ...detail, impact: { ...detail.impact, pending: [
+    { store: "erp_final_authority_proposals", count: 1, rechecked: true },
+    { store: "financial_authority_proposals", count: 2, rechecked: true },
+  ] } };
+  for (const l of ["en", "ko", "ar"] as Locale[]) {
+    const html = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: withPolicies, targets: null }} onMore={() => {}} />);
+    assert.ok(html.includes(`<dt>${labels[l]}</dt><dd><span class="m01-line">1</span><span class="m01-line">${b.rechecked(l)}</span></dd>`), l);
+    assert.ok(html.includes(`<dt>${b.store(l, "financial_authority_proposals")}</dt><dd><span class="m01-line">2</span>`), l);
+    assert.ok(!html.includes("erp_final_authority_proposals"), l);
+  }
+});
+
 test("charge approval limit proposal impact has a localized label, count and recheck meaning", () => {
   const labels = { en: "Charge approval limit proposals", ko: "청구 승인 한도 제안", ar: "مقترحات حدود اعتماد الرسوم" };
   const withInput = { ...detail, impact: { ...detail.impact, pending: [{ store: "financial_authority_proposals", count: 2, rechecked: true }] } };
@@ -78,5 +105,21 @@ test("charge approval limit proposal impact has a localized label, count and rec
     const html = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: withInput, targets: null }} onMore={() => {}} />);
     assert.ok(html.includes(`<dt>${labels[l]}</dt><dd><span class="m01-line">2</span><span class="m01-line">${b.rechecked(l)}</span></dd>`), l);
     assert.ok(!html.includes("financial_authority_proposals"), l);
+  }
+});
+
+test("final approval and submission permission proposal counts remain distinct in every locale", () => {
+  const rows = [
+    { store: "erp_final_permission_proposals", count: 1, rechecked: true },
+    { store: "erp_final_request_permission_proposals", count: 2, rechecked: true },
+  ];
+  for (const l of ["en", "ko", "ar"] as Locale[]) {
+    const withPermissions = { ...detail, impact: { ...detail.impact, pending: rows } };
+    const html = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: withPermissions, targets: null }} onMore={() => {}} />);
+    for (const row of rows) {
+      assert.notEqual(b.store(l, row.store), row.store);
+      assert.ok(html.includes(`<dt>${b.store(l, row.store)}</dt><dd><span class="m01-line">${row.count}</span><span class="m01-line">${b.rechecked(l)}</span></dd>`), l);
+      assert.ok(!html.includes(row.store), l);
+    }
   }
 });

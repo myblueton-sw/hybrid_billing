@@ -11,6 +11,9 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 
 | Concept ID / canonical alias | Preferred KO | Preferred EN | AR candidate | Definition and forbidden implications | Current scope |
 | --- | --- | --- | --- | --- | --- |
+| retained-issuance-settings / O03 documents | 발행 설정 이력 | Recorded issuance settings | إعدادات الإصدار المسجلة | Historical proposal/confirmation evidence, including unknown outcomes; not current issuance eligibility or an editable confirmed configuration. | HYB-341 Claude source TW review PASS; owner screen/native-language acceptance pending |
+| issuance-confirmation-attempt / O03 confirmer | 확인 시도자 | Confirmation attempted by | مَن حاول التأكيد | The actor of an unresolved confirmation attempt. Use Confirmed by only when retained confirmation publication completed; module observation alone is insufficient. | HYB-341 Claude source TW corrective review PASS; owner screen/native-language acceptance pending |
+| synthetic-issuance-preset / synthetic_erp_sample_v1 | 합성 ERP 샘플 | Synthetic ERP sample | نموذج ERP اصطناعي | An explicit sample adapter option. Region and synthetic tax references do not establish statutory tax applicability or real issuance readiness. | HYB-341 Claude source TW review PASS; owner screen/native-language acceptance pending |
 | decision-condition-check / B09 | 결정 조건 확인 | Check decision conditions | التحقق من شروط القرار | Explicit current observation for the selected financial request; not a decision, reservation or future authorization. | HYB-340 AI TW source review PASS; native-language acceptance pending |
 | unknown-decision-outcome / B09 | 처리 결과 미확인 | Outcome unknown | نتيجة العملية غير معروفة | A submission may have recorded a decision; only the identical submission can be retried. A retry refusal does not establish failure of its earlier effect. | HYB-340 AI TW source review PASS; native-language acceptance pending |
 | identical-decision-retry / B09 | 동일한 제출 다시 시도 | Retry the same submission | إعادة محاولة الإرسال نفسه | Resend the frozen action, target, evidence, rationale, reason and attempt identity; never create a fresh decision attempt automatically. | HYB-340 AI TW source review PASS; native-language acceptance pending |
@@ -521,3 +524,78 @@ HYB-340 separates grant-governor approval from actual document evidence confirma
 | document_evidence_proposals | Document evidence proposals | 문서 근거 제안 | مقترحات أدلة المستند |
 
 M01 distinguishes permission proposals across all five capabilities from pending document-evidence packets counted by their original proposer. The document count excludes confirmed and revoked packets and all permission proposals. Confirmation rechecks the original proposer's current proposal authority; a count does not imply automatic cancellation, financial approval or ERP preparation. The document row says "The proposer’s permission is rechecked when the document evidence is confirmed." Its false/unknown fallback does not assert this safeguard. M03/P02 show actual human grants and console ceilings. The evidence field is protected as Cost; its name is not translated as document cost. Independent AI technical-writing review selected these terms from the actual contract and existing confirmation/revocation vocabulary; native-language and owner acceptance remain unverified.
+
+## Synthetic ERP result evidence permission
+
+HYB-341 introduces a separate result-evidence permission namespace. Existing document preparation permissions do not grant result recording or confirmation. Apply names internal ledger evidence ingestion, never external ERP submission/posting, financial approval, issuance or delivery. Provisioned rights alone do not establish an implemented result-consumer workflow.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| propose_erp_result | Propose ERP result evidence | ERP 결과 근거 제안 | اقتراح أدلة نتائج ERP |
+| confirm_erp_result | Confirm ERP result evidence | ERP 결과 근거 확인 | تأكيد أدلة نتائج ERP |
+| revoke_erp_result | Revoke ERP result evidence | ERP 결과 근거 철회 | إلغاء أدلة نتائج ERP |
+| apply_erp_result | Apply ERP result evidence internally | ERP 결과 근거 내부 반영 | تطبيق أدلة نتائج ERP داخلياً |
+| synthetic_erp_result_evidence | Synthetic ERP result evidence | 합성 ERP 결과 근거 | أدلة نتائج ERP اصطناعية |
+| erp_result_evidence | ERP result evidence | ERP 결과 근거 | أدلة نتائج ERP |
+| result_authority_proposals | ERP result evidence permission proposals | ERP 결과 근거 권한 제안 | مقترحات صلاحيات أدلة نتائج ERP |
+
+M01 counts pending/unresolved permission proposals, excluding completed grants. Its shared recheck note refers to the proposer's authority at grant approval. M03 and P02 show explicit action/kind labels for already provisioned rights; these labels are not generic grant offers. Source terminology and initial M01 rendered review passed independent AI technical-writing review. Independent AI technical-writing review also passed eight representative actual M03/P02 grant-row/context captures under HYB-341; P02 shows the action and kind, not a separate Cost-field label. Native-language and owner acceptance remain pending. These compounds reuse the document-evidence and access-governance vocabulary above; no external vendor uses of the complete compounds are claimed.
+
+## Result evidence pending and unresolved impact
+
+HYB-341 M01 distinguishes pending result evidence proposals counted by the original proposer from unknown internal applications counted by the applying actor. These are separate work categories, not a deduplicated total. Revoked or superseded evidence does not erase unresolved application ownership. A count does not imply automatic cancellation or external ERP execution.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| result_evidence_proposals | ERP result evidence proposals | ERP 결과 근거 제안 | مقترحات أدلة نتائج ERP |
+| result_applications_unknown | ERP result evidence applications with unknown outcome | ERP 결과 근거 내부 반영 결과 미확정 | عمليات تطبيق أدلة نتائج ERP داخلياً ذات نتيجة غير مؤكدة |
+
+The proposal note describes current proposer permission checks at evidence confirmation. The unknown-application note describes current applying-actor permission and evidence checks at recovery while preserving the possibility of earlier effects. False-recheck displays explicitly withhold assurance and retain that uncertainty. Separate read-only AI technical-writing review selected EN/KO/AR wording against the actual contract; native-language and owner acceptance are unverified. Existing layout and neutral separators remain unchanged. Rendered acceptance is recorded separately, not inferred from this glossary.
+
+## Owned ERP result replacement
+
+HYB-341 B09 distinguishes the reported result, its internal application and retained application history. A reserved latest application with an unknown outcome is not proof of current ledger application. A historical ancestor with an unresolved successor is not proof that replacement completed. Prospective targets describe the currently observed head; only an owned operation has a retained predecessor. Unknown-predecessor recovery requires the original actor and current permissions/evidence and may remain unavailable. These terms do not authorize ERP transmission, posting or final financial approval.
+
+| Concept | EN | KO | AR |
+| --- | --- | --- | --- |
+| Initial operation | Initial internal application | 최초 내부 반영 | التطبيق الداخلي الأول |
+| Replacement operation | Internal replacement | 내부 대체 반영 | الاستبدال الداخلي |
+| Prospective predecessor | Proposed replacement target | 대체 예정 대상 | الهدف المقترح للاستبدال |
+| Historical application | Historical record | 이전 처리 기록 | سجل سابق |
+| Internal receipt evidence | Internal processing record hash | 내부 처리 기록 해시 | بصمة سجل المعالجة الداخلية |
+
+Do not translate internal processing receipt as a payment receipt (영수증). Do not label an unknown reserved head as a completed application, and do not promise that retrying will recover a watermark-stranded predecessor. Independent technical-writing review inspected these strings in source and bounded actual EN/KO/AR renders; native-language/practitioner and owner acceptance remain unverified. See [replacement screen verification](../../features/HYB-341/result-replacement-screen-verification.md).
+
+## ERP final-amount approval policy impact
+
+HYB-341 M01 counts pending service-owned StageERPFinal approval-policy proposals by original proposer, separately from charge approval policies. Confirmation rechecks the proposer’s current governance authority. Confirming a policy neither approves a particular amount nor grants request/decision rights, consumes an approval, or transmits/posts to ERP.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| erp_final_policy_proposals | ERP final-amount approval policy proposals | ERP 최종 금액 승인 정책 제안 | مقترحات سياسة اعتماد المبلغ النهائي في ERP |
+
+Independent read-only AI technical-writing review passed these source/domain labels and subsequently inspected six actual final/charge row crops in EN1440, KO390 and AR390. The wording and bounded rendered context passed; native-language and owner acceptance remain unverified. See the [ERP-final implementation plan](../../features/HYB-341/erp-final-approval-plan.md) for the exact verification boundary.
+
+## ERP final-amount approval limit impact
+
+HYB-341 M01 counts pending service-owned StageERPFinal amount-authority proposals binding a human recipient, currency, exact maximum absolute amount and inclusive UTC dates. Confirmation rechecks original proposer governance authority and recipient eligibility. These are distinct from policy proposals and request/decision gate permissions; confirmation does not approve a particular final amount or transmit/post to ERP.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| erp_final_authority_proposals | ERP final-amount approval limit proposals | ERP 최종 금액 승인 한도 제안 | مقترحات حدود اعتماد المبلغ النهائي في ERP |
+
+Independent read-only source/domain technical-writing review passed these exact labels and subsequently passed wording in three actual EN1440/KO390/AR390 row crops. Native-language and owner acceptance remain unverified. The separate Claude CLI review covered those rows and two context captures; see the [ERP-final plan](../../features/HYB-341/erp-final-approval-plan.md) for bounded evidence.
+
+## ERP final-amount action permissions
+
+HYB-341 distinguishes approval-action permission from submission permission. The former is a direct human grant; the latter requires an independently governed console ceiling and human subgrant. Permission grants authorize the named actor action only. They do not supply amount authority, satisfy current evidence/policy checks, record a final decision, or authorize ERP transmission/posting. M01 counts pending/unresolved proposals; M03/P02 display provisioned action/resource labels.
+
+| Concept | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| erp_final_permission_proposals | ERP final-amount approval permission proposals | ERP 최종 금액 승인 권한 제안 | مقترحات صلاحية اعتماد المبلغ النهائي في ERP |
+| erp_final_request_permission_proposals | ERP final-amount approval submission permission proposals | ERP 최종 금액 승인 요청 제출 권한 제안 | مقترحات صلاحية تقديم طلب اعتماد المبلغ النهائي في ERP |
+| erp_final_approval | ERP final-amount approval | ERP 최종 금액 승인 | اعتماد المبلغ النهائي في ERP |
+| approve | Approve ERP final amounts | ERP 최종 금액 승인 | اعتماد المبلغ النهائي في ERP |
+| request_approval | Request approval for ERP final amounts | ERP 최종 금액 승인 요청 | طلب اعتماد المبلغ النهائي في ERP |
+
+Independent source/domain technical-writing review passed these exact labels, then inspected six actual M01 crops and six M03/P02 crops with bounded rendered PASS. M03/P02 render action and kind separately. Native-language and owner acceptance remain unverified; see the [ERP-final plan](../../features/HYB-341/erp-final-approval-plan.md) for exact capture and test scope.

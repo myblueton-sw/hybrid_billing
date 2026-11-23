@@ -79,11 +79,12 @@ func TestExplainInstallationHasOnlyGovernanceCallers(t *testing.T) {
 		case c.file == "gate.go" && c.function == "ExplainInstallation" && c.receiver == "a.permissions":
 		case c.file == "trustevidence.go" && c.receiver == "s.admin":
 		case inputAuthorityExplanation(c):
+		case issuanceProfileExplanation(c):
 		default:
 			t.Errorf("ExplainInstallation called from %+v", c)
 		}
 	}
-	if len(files) != 3 || !files["gate.go"] || !files["trustevidence.go"] || !files["grantauthorityfacts.go"] {
+	if len(files) != 4 || !files["financialissuancetermaccess.go"] || !files["gate.go"] || !files["trustevidence.go"] || !files["grantauthorityfacts.go"] {
 		t.Errorf("callers %v", files)
 	}
 	for _, m03 := range []string{"access.go", "accessrequests.go", "ledger.go", "integrations.go", "revocations.go"} {
@@ -178,6 +179,32 @@ func TestInputAuthorityExplanationExceptionIsExact(t *testing.T) {
 			bad.method = "Explain"
 		}
 		if inputAuthorityExplanation(bad) {
+			t.Fatalf("broad %s exception", field)
+		}
+	}
+}
+
+func issuanceProfileExplanation(c callSite) bool {
+	return c.file == "financialissuancetermaccess.go" && c.function == "issuanceProfileGovernorStanding" && c.receiver == "s.admin" && c.method == "ExplainInstallation"
+}
+func TestIssuanceProfileExplanationExceptionIsExact(t *testing.T) {
+	good := callSite{file: "financialissuancetermaccess.go", function: "issuanceProfileGovernorStanding", receiver: "s.admin", method: "ExplainInstallation"}
+	if !issuanceProfileExplanation(good) {
+		t.Fatal("exact standing site refused")
+	}
+	for _, field := range []string{"file", "function", "receiver", "method"} {
+		bad := good
+		switch field {
+		case "file":
+			bad.file = "accessrequests.go"
+		case "function":
+			bad.function = "termCaller"
+		case "receiver":
+			bad.receiver = "other.admin"
+		case "method":
+			bad.method = "Explain"
+		}
+		if issuanceProfileExplanation(bad) {
 			t.Fatalf("broad %s exception", field)
 		}
 	}

@@ -27,8 +27,8 @@ export function useDecision(data: Data | undefined, record: ApprovalRecord | und
   const active = binding?.key === sessionKey ? binding : undefined;
   const store = active?.store;
   const state = useSyncExternalStore(store?.subscribe ?? idleSubscribe, store?.snapshot ?? idleSnapshot, idleSnapshot);
-  const capability = data?.commands === "financial_charge_v1" && data.actor.id === session?.user;
-  useEffect(() => { store?.select(scope, capability && record && serviceDecisionRecord(record) ? record : undefined); }, [store, scope, capability, record?.id, record?.evidence.revision]);
+  const capability = (data?.commands === "financial_approval_v2" || (data?.commands === "financial_charge_v1" && record?.kind === "billing_result")) && data.actor.id === session?.user;
+  useEffect(() => { store?.select(scope, capability && record && serviceDecisionRecord(record) ? record : undefined); }, [store, scope, capability, record?.kind, record?.amounts[0]?.basis, record?.id, record?.evidence.revision]);
   useEffect(() => { if (refreshing) store?.invalidatePreparation(); }, [store, refreshing]);
   useEffect(() => {
     const newSuccess = Object.values(state.entries).filter(e => e.phase === "recorded" && !refreshed.current.has(e.submission.attempt.key));

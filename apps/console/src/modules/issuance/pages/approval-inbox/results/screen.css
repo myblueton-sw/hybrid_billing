@@ -1,0 +1,80 @@
+.b09-results { container-type: inline-size; inline-size: 100%; }
+.b09-results p { max-inline-size: 72ch; }
+.b09-results-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem; margin-block-start: 2rem; }
+.b09-results-layout > section { min-inline-size: 0; }
+.b09-results ul { list-style: none; padding: 0; }
+.b09-results li { border-block-start: 1px solid var(--border-section); padding-block: 1rem; }
+.b09-results bdi { font-family: var(--hb-font-mono); overflow-wrap: anywhere; }
+.b09-results button { min-block-size: 2.75rem; white-space: normal; }
+.b09-results nav { display: flex; flex-wrap: wrap; gap: .75rem; }
+.b09-results dl > div { display: grid; grid-template-columns: minmax(8rem, 1fr) minmax(0, 2fr); gap: 1rem; padding-block: .75rem; border-block-end: 1px solid var(--border-section); }
+.b09-results dd { margin: 0; min-inline-size: 0; }
+.b09-results-detail > section { margin-block-start: 2rem; border-block-start: 1px solid var(--border-section); }
+.b09-results-table { overflow-x: auto; }
+.b09-results table { inline-size: 100%; border-collapse: collapse; table-layout: fixed; }
+.b09-results th, .b09-results td { padding: .75rem; text-align: start; overflow-wrap: anywhere; border-block-end: 1px solid var(--border-section); }
+.b09-results :focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+.b09-results-back { display: none; }
+@container (min-width: 1024px) { .b09-results-layout { grid-template-columns: 22rem minmax(0, 1fr); } .b09-results-list { padding-inline-end: 2rem; border-inline-end: 1px solid var(--border-section); } }
+@container (max-width: 639px) { .b09-results[data-selected="true"] .b09-results-list, .b09-results[data-selected="false"] .b09-results-detail { display: none; } .b09-results-back { display: inline-block; } .b09-results dl > div { grid-template-columns: minmax(0, 1fr); gap: .25rem; } }
+
+.b09-results-detail > section { padding-block-start: 1rem; }
+.b09-results-detail h4 { margin-block: 0 .75rem; font-size: 1rem; }
+.b09-results-detail > h3 { font-size: 1.125rem; font-weight: 600; }
+.b09-results-back { margin-block-end: 1rem; }
+.b09-results dd small { display: block; font-size: .8125rem; }
+.b09-results tbody th { background: none; }
+.b09-results-reference-blocks { display: none; }
+@container (max-width: 639px) { .b09-results-table { display: none; } .b09-results-reference-blocks { display: block; } .b09-results-reference-blocks dl > div { grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr); gap: .25rem 1rem; } }
+
+.b09-result-form label { display: grid; gap: .5rem; margin-block: 1rem; max-inline-size: 32rem; }
+.b09-result-form section { border-block-start: 1px solid var(--border-section); margin-block-start: 1.5rem; padding-block-start: 1rem; }
+.b09-result-row-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: 1rem; }
+.b09-result-form input, .b09-result-form textarea { inline-size: 100%; min-inline-size: 0; }
+.b09-result-review pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.b09-result-attempts article { border-block-start: 1px solid var(--border-section); padding-block: 1rem; }
+
+.b09-results dl > div:last-child { border-block-end: 0; }
+.b09-results tbody th, .b09-results tbody td { font-size: inherit; border-block-end: 1px solid var(--border-section); }
+@container (max-width: 639px) { .b09-results-reference-blocks dl > div { grid-template-columns: 9.5rem minmax(0, 1fr); } .b09-results-reference-blocks dl:not(:last-child) { border-block-end: 1px solid var(--border-section); } }
+
+.b09-result-inspection textarea { display: block; inline-size: 100%; margin-block: .5rem 1rem; }
+.b09-result-action-buttons { display: flex; flex-wrap: wrap; gap: .75rem; }
+.b09-result-inspection dd { white-space: pre-wrap; }
+
+.b09-results bdi { white-space: normal; word-break: break-word; }
+.b09-results th, .b09-results td { white-space: normal; min-inline-size: 0; }
+.b09-result-form h4 { overflow-wrap: anywhere; }
+
+.b09-result-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-block-start: 1.5rem; }
+.b09-result-review details { margin-block: 1.5rem 0; }
+.b09-result-attempts { margin-block-start: 2rem; }
+.b09-result-attempts article { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: .25rem 1.5rem; padding-block: .75rem; }
+.b09-result-attempts article > * { margin-block: .25rem; min-inline-size: 0; }
+.b09-result-attempts article > h4 { grid-row: span 2; }
+.b09-result-inspection > h4:not(:first-child) { border-block-start: 1px solid var(--border-section); margin-block-start: 2rem; padding-block-start: 1rem; }
+.b09-result-inspection h5, .b09-result-review h5 { font-size: 1rem; font-weight: 600; margin-block: 1.5rem .5rem; }
+.b09-results bdi.b09-prose { font-family: inherit; }
+.b09-result-entry-toggle { margin-block-end: 1.5rem; }
+.b09-results .b09-results-table tbody tr > * { color: inherit; border-block-end: 1px solid var(--border-section); }
+.b09-results-table thead th:first-child { inline-size: 45%; }
+.b09-result-form label { font-size: .875rem; font-weight: 600; }
+.b09-result-row-inputs label { margin-block: 0; }
+@container (max-width: 639px) { .b09-result-attempts article { grid-template-columns: minmax(0, 1fr); } }
+
+.b09-result-row-inputs { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+.b09-result-row-identity, .b09-result-row-amounts { display: grid; grid-template-columns: repeat(3, minmax(0, 14rem)); gap: 1rem; }
+@container (max-width: 639px) { .b09-result-row-identity { grid-template-columns: minmax(0, 1fr); } .b09-result-row-amounts { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.b09-result-attempts article > button { justify-self: start; }
+.b09-result-action-review { border-block-start: 1px solid var(--border-section); margin-block-start: 2rem; padding-block-start: 1rem; }
+.b09-result-inspection label { font-size: .875rem; font-weight: 600; }
+.b09-results li > button { display: inline-block; text-align: start; max-inline-size: 100%; margin-block-end: .5rem; }
+.b09-result-form label small { font-weight: 400; font-size: .8125rem; }
+
+.b09-result-position { margin-block: 0 1.5rem; }
+.b09-result-position strong { font-weight: 600; margin-inline-end: .5ch; }
+.b09-result-blocked { margin-block-start: .75rem; }
+.b09-result-inspection details { margin-block: 1rem 0; }
+.b09-result-inspection details dl { margin-block-start: .5rem; }
+.b09-result-effect { font-weight: 600; font-size: 1.125rem; }

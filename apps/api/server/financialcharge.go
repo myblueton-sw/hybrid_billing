@@ -59,7 +59,7 @@ func financialChargeReceipt(v approvals.RequestView) map[string]string {
 
 func (s *Server) requestFinancialCharge(ctx commands.Context) (approvals.RequestView, error) {
 	old, exists := s.financialCharges[ctx.Target]
-	if !exists && len(s.financialCharges) >= approvalCap {
+	if !exists && s.financialApprovalCount() >= approvalCap {
 		return approvals.RequestView{}, commands.Fail(commands.PrerequisiteFailed)
 	}
 	if exists && (old.Workspace != ctx.Workspace || old.Requester != ctx.User || old.Candidate != ctx.Fields["candidate"] || old.CandidateDigest != ctx.Fields["digest"]) {

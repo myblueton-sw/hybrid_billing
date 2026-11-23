@@ -12,21 +12,22 @@ var (
 )
 
 const (
-	DirectHuman  = grantauthority.DirectHuman
-	Pending      = "pending"
-	Applying     = "applying"
-	Unknown      = "decision_unknown"
-	Applied      = "applied"
-	Rejected     = "rejected"
-	Withdrawn    = "withdrawn"
-	Expired      = "expired"
-	Superseded   = "superseded"
-	ActiveGrant  = "active"
-	RevokedGrant = "revoked"
-	ExpiredGrant = "expired"
-	Action       = "approve"
-	Approve      = "approve"
-	ResourceKind = "charge_approval"
+	DirectHuman          = grantauthority.DirectHuman
+	Pending              = "pending"
+	Applying             = "applying"
+	Unknown              = "decision_unknown"
+	Applied              = "applied"
+	Rejected             = "rejected"
+	Withdrawn            = "withdrawn"
+	Expired              = "expired"
+	Superseded           = "superseded"
+	ActiveGrant          = "active"
+	RevokedGrant         = "revoked"
+	ExpiredGrant         = "expired"
+	Action               = "approve"
+	Approve              = "approve"
+	ResourceKind         = "charge_approval"
+	ERPFinalResourceKind = "erp_final_approval"
 )
 
 type Limits = grantauthority.Limits

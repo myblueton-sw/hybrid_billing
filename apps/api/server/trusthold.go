@@ -33,13 +33,30 @@ const (
 )
 
 var holdTable = map[string]holdRule{
+	"issuance_setup.propose_configuration":         {holdRefuse, reasonChange},
+	"issuance_setup.confirm_configuration":         {holdRefuse, reasonChange},
+	"issuance_draft.submit":                        {holdRefuse, reasonChange},
+	"issuance_draft.prepare_approval":              {holdRefuse, reasonChange},
+	"issuance_draft.approve":                       {holdRefuse, reasonChange},
+	"result_evidence.propose":                      {holdRefuse, reasonChange},
+	"result_evidence.confirm":                      {holdRefuse, reasonChange},
+	"result_evidence.revoke":                       {holdAllow, reasonReduce},
+	"erp_result.apply":                             {holdRefuse, reasonChange},
 	"document_evidence.propose":                    {holdRefuse, reasonChange},
 	"document_evidence.confirm":                    {holdRefuse, reasonChange},
 	"document_evidence.revoke":                     {holdAllow, reasonReduce},
 	"erp_preparation.prepare":                      {holdRefuse, reasonChange},
+	"erp_final.request":                            {holdRefuse, reasonIncrease},
+	"erp_final.approve":                            {holdRefuse, reasonIncrease},
+	"erp_final.reject":                             {holdAllow, reasonReduce},
 	"financial_charge.request":                     {holdRefuse, reasonIncrease},
 	"financial_charge.approve":                     {holdRefuse, reasonIncrease},
 	"financial_charge.reject":                      {holdAllow, reasonReduce},
+	"result_authority.propose_console":             {holdRefuse, reasonChange},
+	"result_authority.propose_human":               {holdRefuse, reasonChange},
+	"result_authority.approve":                     {holdRefuse, reasonChange},
+	"result_authority.reject":                      {holdAllow, reasonPending},
+	"result_authority.withdraw":                    {holdAllow, reasonPending},
 	"document_authority.propose_console":           {holdRefuse, reasonChange},
 	"document_authority.propose_human":             {holdRefuse, reasonChange},
 	"document_authority.approve":                   {holdRefuse, reasonChange},
@@ -50,6 +67,15 @@ var holdTable = map[string]holdRule{
 	"financial_request_permission.approve":         {holdRefuse, reasonChange},
 	"financial_request_permission.reject":          {holdAllow, reasonPending},
 	"financial_request_permission.withdraw":        {holdAllow, reasonPending},
+	"erp_final_permission.propose":                 {holdRefuse, reasonChange},
+	"erp_final_permission.approve":                 {holdRefuse, reasonChange},
+	"erp_final_permission.reject":                  {holdAllow, reasonPending},
+	"erp_final_permission.withdraw":                {holdAllow, reasonPending},
+	"erp_final_request_permission.propose_console": {holdRefuse, reasonChange},
+	"erp_final_request_permission.propose_human":   {holdRefuse, reasonChange},
+	"erp_final_request_permission.approve":         {holdRefuse, reasonChange},
+	"erp_final_request_permission.reject":          {holdAllow, reasonPending},
+	"erp_final_request_permission.withdraw":        {holdAllow, reasonPending},
 	"financial_permission.propose":                 {holdRefuse, reasonChange},
 	"financial_permission.approve":                 {holdRefuse, reasonChange},
 	"financial_permission.reject":                  {holdAllow, reasonPending},
@@ -57,6 +83,11 @@ var holdTable = map[string]holdRule{
 	"financial_authority.propose":                  {holdRefuse, reasonChange},
 	"financial_authority.confirm":                  {holdRefuse, reasonChange},
 	"financial_authority.revoke":                   {holdAllow, reasonReduce},
+	"erp_final_authority.propose":                  {holdRefuse, reasonChange},
+	"erp_final_authority.confirm":                  {holdRefuse, reasonChange},
+	"erp_final_authority.revoke":                   {holdAllow, reasonReduce},
+	"erp_final_policy.propose":                     {holdRefuse, reasonChange},
+	"erp_final_policy.confirm":                     {holdRefuse, reasonChange},
 	"financial_policy.propose":                     {holdRefuse, reasonChange},
 	"financial_policy.confirm":                     {holdRefuse, reasonChange},
 	"pricing_policy.capture":                       {holdRefuse, reasonChange},
@@ -187,13 +218,22 @@ func (s *Server) enterHold(reason string) {
 }
 
 func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
+	if command == "issuance_setup.action" || command == "issuance_setup.options" || command == "issuance_setup.configurations" || command == "issuance_setup.context" || command == "issuance_draft.list" || command == "issuance_draft.inspect" || command == "issuance_draft.context" {
+		return true
+	}
+	if command == "result_authority.history" || command == "result_authority.context" {
+		return true
+	}
+	if command == "result_evidence.advice" || command == "result_evidence.preparations" || command == "result_evidence.context" || command == "result_evidence.inspect" || command == "result_evidence.history" || command == "erp_result.inspect" {
+		return true
+	}
 	if command == "document_evidence.inspect" || command == "erp_preparation.inspect" || command == "document_evidence.history" || command == "document_evidence.advice" || command == "document_evidence.context" {
 		return true
 	}
-	if command == "financial_charge.review" || command == "financial_charge.prepare" || command == "financial_request_permission.inspect" || command == "document_authority.inspect" {
+	if command == "erp_final.preview" || command == "erp_final.review" || command == "erp_final.prepare" || command == "financial_charge.review" || command == "financial_charge.prepare" || command == "financial_request_permission.inspect" || command == "document_authority.inspect" || command == "result_authority.inspect" {
 		return true
 	}
-	if command == "financial_permission.inspect" || command == "financial_authority.inspect" || command == "financial_policy.current" || command == "financial_policy.inspect" || command == "pricing_policy.prepare" || command == "pricing_policy.inspect" || command == "pricing_authority.inspect" || command == "input_authority.inspect" || command == "input.inspect" {
+	if command == "erp_final_permission.inspect" || command == "erp_final_request_permission.inspect" || command == "erp_final_authority.inspect" || command == "erp_final_policy.inspect" || command == "erp_final_policy.current" || command == "financial_permission.inspect" || command == "financial_authority.inspect" || command == "financial_policy.current" || command == "financial_policy.inspect" || command == "pricing_policy.prepare" || command == "pricing_policy.inspect" || command == "pricing_authority.inspect" || command == "input_authority.inspect" || command == "input.inspect" {
 		return true
 	}
 	rule, known := holdTable[command]

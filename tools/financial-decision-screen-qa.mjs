@@ -2,6 +2,8 @@ import {createRequire} from 'node:module';
 import {mkdir,writeFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const args=Object.fromEntries(process.argv.slice(2).flatMap((v,i,a)=>v.startsWith('--')?[[v.slice(2),a[i+1]]]:[]));
+const family=args.family??'financial_charge';
+assert.ok(['financial_charge','erp_final'].includes(family));
 const {chromium}=createRequire(import.meta.url)(args['playwright-module']);
 const cookie=process.env.HB_PROJECTION_QA_COOKIE,password=process.env.HB_PROJECTION_QA_PASSWORD;
 delete process.env.HB_PROJECTION_QA_COOKIE;delete process.env.HB_PROJECTION_QA_PASSWORD;
@@ -12,14 +14,16 @@ const context=await browser.newContext({viewport:{width:1440,height:1000}});
 const split=cookie.indexOf('=');
 await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),url:args.url,httpOnly:true,sameSite:'Strict'}]);
 const page=await context.newPage();
-const evidence={cases:[],errors:[],simulation:[]};
+const evidence={family,cases:[],errors:[],simulation:[]};
 page.on('pageerror',e=>evidence.errors.push(e.message));
 page.on('dialog',dialog=>dialog.accept());
+let capabilityMode='normal';
 let mutationMode='normal',mutationBodies=[],releaseMutation,prepareMode='normal',releasePrepare,refreshFails=false;
 await page.route('**/api/**',async route=>{
  const u=new URL(route.request().url());
+ if(capabilityMode==='legacy'&&u.pathname==='/api/approval-review'){const response=await route.fetch({url:args.api+u.pathname+u.search});const body=await response.json();body.commands='financial_charge_v1';await route.fulfill({status:response.status(),json:body});return;}
  if(refreshFails&&u.pathname==='/api/approval-review'){await route.fulfill({status:503,json:{code:'dependency_unavailable'}});return;}
- if(u.pathname.endsWith('/financial_charge.approve')||u.pathname.endsWith('/financial_charge.reject')){
+ if(u.pathname.endsWith(`/${family}.approve`)||u.pathname.endsWith(`/${family}.reject`)){
   mutationBodies.push(route.request().postData());
   if(mutationMode==='reauth-refusal'||mutationMode==='permission-refusal'){
    const b=route.request().postDataJSON();await route.fulfill({status:403,json:{code:mutationMode==='reauth-refusal'?'reauthentication_required':'permission_denied',request_id:b.request_id,retry:false,next_action:'none'}});return;
@@ -29,7 +33,7 @@ await page.route('**/api/**',async route=>{
   await route.fulfill({response});return;
  }
  const response=await route.fetch({url:args.api+u.pathname+u.search});
- if(u.pathname.endsWith('/financial_charge.prepare')){
+ if(u.pathname.endsWith(`/${family}.prepare`)){
   if(prepareMode==='hold')await new Promise(resolve=>releasePrepare=resolve);
   if(prepareMode==='denied'||prepareMode==='service-hold'||prepareMode==='reauth'){
    const body=await response.json();body.fields.approve=prepareMode==='reauth'?'reauthentication_required':prepareMode==='denied'?'permission_denied':'hold_active';body.fields.reject=prepareMode==='reauth'?'reauthentication_required':prepareMode==='denied'?'permission_denied':'eligible';await route.fulfill({status:200,json:body});return;
@@ -40,6 +44,12 @@ await page.route('**/api/**',async route=>{
 const visible=s=>page.locator(s+':visible');
 async function focusIs(selector){await page.waitForFunction(s=>[...document.querySelectorAll(s)].some(e=>e.getClientRects().length&&e===document.activeElement),selector);}
 async function capture(state,lang,width,selector='[data-b09-decision]'){
+ if(family==='erp_final' && ['checked','confirm-reject','recorded','rejection-recorded','unknown'].includes(state)){
+  const labels={en:'Reported gross (net + tax)',ko:'보고된 총액 (순액 + 세금)',ar:'الإجمالي المبلّغ عنه (الصافي + الضريبة)'};
+  const content=await visible(selector).first().innerText();
+  assert.ok(content.includes(labels[lang]));assert.ok(content.includes('USD 16'));
+  assert.equal(await visible('[data-document-panel]').count(),0);
+ }
  const element=visible(selector).first();await element.scrollIntoViewIfNeeded();await element.screenshot({path:`${args.output}/${state}-${lang}-${width}.png`});
  const check=await element.evaluate(root=>{
   const allowed=new Set();const probe=document.createElement('span');root.append(probe);
@@ -58,6 +68,16 @@ async function select(lang,width){
  await visible('[data-b09-decision]').waitFor();
 }
 try{
+ if(family==='erp_final'){
+  await page.goto(`${args.url}/?service=api&lang=en#/approvals?lang=en&view=history&approval-q=sample-approval-002`);
+  await visible('[data-b09-record="sample-approval-002"]').click();await visible('[data-b09-detail-heading]').waitFor();
+  assert.equal(await visible('[data-b09-decision]').count(),0);assert.equal(await visible('[data-document-panel]').count(),0);
+  capabilityMode='legacy';
+  await page.goto(`${args.url}/?service=api&lang=en#/approvals?lang=en&view=history&approval-q=qa-current`);
+  await visible('[data-b09-record="qa-current"]').click();await visible('[data-b09-detail-heading]').waitFor();
+  assert.equal(await visible('[data-b09-decision]').count(),0);assert.equal(await visible('[data-document-panel]').count(),0);
+  capabilityMode='normal';await page.goto('about:blank');evidence.simulation.push('legacy capability response hides final controls; actual unbound seed has no controls');
+ }
  await page.goto(`${args.url}/?service=api&lang=en#/approvals?lang=en&view=history&approval-q=qa-current`);
  await select('en',1440);await capture('unchecked','en',1440);
  prepareMode='hold';await visible('[data-b09-check]').click();await page.waitForFunction(()=>document.querySelector('[data-b09-decision="checking"]'));

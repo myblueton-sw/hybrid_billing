@@ -21,6 +21,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
 	"github.com/myblueton-sw/hybrid_billing/modules/decisionledger"
 	"github.com/myblueton-sw/hybrid_billing/modules/documentauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/draftauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/events"
 	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
@@ -33,10 +34,13 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/perfgate"
 	"github.com/myblueton-sw/hybrid_billing/modules/plugins"
 	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/protectedauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/recovery"
 	"github.com/myblueton-sw/hybrid_billing/modules/relationships"
 	"github.com/myblueton-sw/hybrid_billing/modules/releasetrace"
+	"github.com/myblueton-sw/hybrid_billing/modules/resultauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/retention"
+	"github.com/myblueton-sw/hybrid_billing/modules/termsauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/trustchange"
 	"github.com/myblueton-sw/hybrid_billing/modules/webhooks"
 )
@@ -80,11 +84,21 @@ type Config struct {
 }
 
 type Server struct {
+	draftAuthority             *serverGrantAuthority
+	protectedAuthority         *serverGrantAuthority
+	termAuthority              *serverGrantAuthority
+	financialFinals            map[string]financialFinalBinding
+	financialIssuance          *financialIssuance
 	financialCharges           map[string]financialChargeBinding
 	financialPolicies          map[string]financialPolicyBinding
+	erpFinalPolicies           map[string]financialPolicyBinding
 	financialAuthorities       map[string]financialAuthorityBinding
+	erpFinalAuthorities        map[string]financialAuthorityBinding
 	documentAuthority          *serverGrantAuthority
+	resultAuthority            *serverGrantAuthority
 	financialPermission        *serverGrantAuthority
+	erpFinalPermission         *serverGrantAuthority
+	erpFinalRequestPermission  *serverGrantAuthority
 	financialRequestPermission *serverGrantAuthority
 
 	approvals        *approvals.Registry
@@ -204,12 +218,16 @@ func RelationshipLimits() relationships.Limits {
 }
 
 func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
-	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, approvalKind, inputauthority.ResourceKind, pricingauthority.ResourceKind, financialpermission.ResourceKind, documentauthority.ResourceKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General, candidateField: gate.Cost, approvalField: gate.General, inputauthority.EvidenceField: gate.Cost, pricingauthority.EvidenceField: gate.Cost}}
+	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, approvalKind, inputauthority.ResourceKind, pricingauthority.ResourceKind, financialpermission.ResourceKind, financialpermission.ERPFinalResourceKind, documentauthority.ResourceKind, resultauthority.ResourceKind, termsauthority.ResourceKind, protectedauthority.ResourceKind, draftauthority.ResourceKind}, kinds...), Fields: map[string]gate.FieldClass{draftauthority.EvidenceField: gate.Cost, ReaderField: gate.General, candidateField: gate.Cost, approvalField: gate.General, inputauthority.EvidenceField: gate.Cost, pricingauthority.EvidenceField: gate.Cost}}
 	for name, class := range fields {
 		c.Fields[name] = class
 	}
 	c.Fields[pricingauthority.EvidenceField] = gate.Cost
 	c.Fields[documentauthority.EvidenceField] = gate.Cost
+	c.Fields[resultauthority.EvidenceField] = gate.Cost
+	c.Fields[draftauthority.EvidenceField] = gate.Cost
+	c.Fields[termsauthority.EvidenceField] = gate.Cost
+	c.Fields[protectedauthority.EvidenceField] = gate.Cost
 	return c
 }
 
@@ -348,7 +366,25 @@ func New(cfg Config) (*Server, error) {
 					s.financialRequestPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, financialRequestDomain)
 				}
 				if err == nil {
+					s.erpFinalPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, erpFinalPermissionDomain)
+				}
+				if err == nil {
+					s.erpFinalRequestPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, erpFinalRequestDomain)
+				}
+				if err == nil {
 					s.documentAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, documentGrantAuthority)
+				}
+				if err == nil {
+					s.resultAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, resultGrantAuthority)
+				}
+				if err == nil {
+					s.termAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, termGrantAuthority)
+				}
+				if err == nil {
+					s.protectedAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, protectedGrantAuthority)
+				}
+				if err == nil {
+					s.draftAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, draftGrantAuthority)
 				}
 				if err == nil {
 					s.inputReviews, err = newCandidateInputReviews(s.chargeProducer, serverInputReviewAuthority{s: s}, s.clock)

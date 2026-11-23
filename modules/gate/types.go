@@ -29,10 +29,25 @@ type (
 )
 
 const (
-	ProposeDocumentEvidence = auth.ProposeDocumentEvidence
-	ConfirmDocumentEvidence = auth.ConfirmDocumentEvidence
-	RevokeDocumentEvidence  = auth.RevokeDocumentEvidence
-	PrepareERPRecord        = auth.PrepareERPRecord
+	SubmitIssuanceDraft            = auth.SubmitIssuanceDraft
+	ApproveIssuanceDraft           = auth.ApproveIssuanceDraft
+	RegisterIssuanceChannel        = auth.RegisterIssuanceChannel
+	AdmitIssuanceChannel           = auth.AdmitIssuanceChannel
+	RequestIssuanceProtectedChange = auth.RequestIssuanceProtectedChange
+	VerifyIssuanceProtectedChange  = auth.VerifyIssuanceProtectedChange
+	ApproveIssuanceProtectedChange = auth.ApproveIssuanceProtectedChange
+	RecordIssuanceTerm             = auth.RecordIssuanceTerm
+	ApproveIssuanceTerm            = auth.ApproveIssuanceTerm
+	BindIssuanceTerm               = auth.BindIssuanceTerm
+	ApproveIssuanceTermBinding     = auth.ApproveIssuanceTermBinding
+	ProposeERPResult               = auth.ProposeERPResult
+	ConfirmERPResult               = auth.ConfirmERPResult
+	RevokeERPResult                = auth.RevokeERPResult
+	ApplyERPResult                 = auth.ApplyERPResult
+	ProposeDocumentEvidence        = auth.ProposeDocumentEvidence
+	ConfirmDocumentEvidence        = auth.ConfirmDocumentEvidence
+	RevokeDocumentEvidence         = auth.RevokeDocumentEvidence
+	PrepareERPRecord               = auth.PrepareERPRecord
 
 	General = auth.General
 	Cost    = auth.Cost

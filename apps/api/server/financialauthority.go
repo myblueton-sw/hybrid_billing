@@ -36,8 +36,12 @@ func (s *Server) financialRecipient(actor string) error {
 	return nil
 }
 
-func (s *Server) financialAuthorityBounds(ctx commands.Context, mutation bool) error {
-	if s.cfg.Seed != SeedSample || s.approvals == nil || s.financialAuthorities == nil || s.cfg.Commands.Fields < 23 || s.cfg.Commands.Value < 128 || s.cfg.Commands.Value < s.cfg.Commands.Rationale {
+func (s *Server) financialAuthorityBoundsForStage(ctx commands.Context, mutation bool, stage financialPolicyStage) error {
+	domain, err := s.financialAuthorityDomain(stage)
+	if err != nil {
+		return err
+	}
+	if s.cfg.Seed != SeedSample || s.approvals == nil || domain.bindings == nil || s.cfg.Commands.Fields < 23 || s.cfg.Commands.Value < 128 || s.cfg.Commands.Value < s.cfg.Commands.Rationale {
 		return commands.Fail(commands.UnsupportedCapability)
 	}
 	if mutation && (strings.TrimSpace(ctx.Rationale) == "" || len(ctx.Rationale) > s.cfg.Commands.Rationale) {
@@ -46,8 +50,12 @@ func (s *Server) financialAuthorityBounds(ctx commands.Context, mutation bool) e
 	return nil
 }
 
-func (s *Server) financialAuthoritySpec(ctx commands.Context) (approvals.Authority, error) {
-	a := approvals.Authority{ID: "financial-limit-" + ctx.Target, Approver: ctx.Fields["recipient"], Stage: approvals.StageCharge, Currency: ctx.Fields["currency"], Limit: ctx.Fields["limit"], From: ctx.Fields["from"], To: ctx.Fields["to"]}
+func (s *Server) financialAuthoritySpecForStage(ctx commands.Context, stage financialPolicyStage) (approvals.Authority, error) {
+	domain, err := s.financialAuthorityDomain(stage)
+	if err != nil {
+		return approvals.Authority{}, err
+	}
+	a := approvals.Authority{ID: domain.idPrefix + ctx.Target, Approver: ctx.Fields["recipient"], Stage: domain.stage, Currency: ctx.Fields["currency"], Limit: ctx.Fields["limit"], From: ctx.Fields["from"], To: ctx.Fields["to"]}
 	if a.To == "" {
 		return a, approvals.ErrInvalid
 	}
@@ -61,9 +69,13 @@ func (s *Server) financialAuthoritySpec(ctx commands.Context) (approvals.Authori
 	return a, nil
 }
 
-func (s *Server) financialAuthorityRecord(workspace, id string) (financialAuthorityRecord, error) {
+func (s *Server) financialAuthorityRecordForStage(workspace, id string, stage financialPolicyStage) (financialAuthorityRecord, error) {
 	out := financialAuthorityRecord{}
-	binding, ok := s.financialAuthorities[id]
+	domain, err := s.financialAuthorityDomain(stage)
+	if err != nil {
+		return out, err
+	}
+	binding, ok := domain.bindings[id]
 	if !ok {
 		return out, approvals.ErrNotFound
 	}
@@ -72,7 +84,7 @@ func (s *Server) financialAuthorityRecord(workspace, id string) (financialAuthor
 		return out, err
 	}
 	out.proposal, out.binding = record, binding
-	if record.Proposal.Kind != approvals.ProposeGrant || record.Proposal.Authority.Stage != approvals.StageCharge || record.Proposal.Authority.ID != "financial-limit-"+id || record.Digest != binding.Digest || record.Proposer != binding.Proposer ||
+	if record.Proposal.Kind != approvals.ProposeGrant || record.Proposal.Authority.Stage != domain.stage || record.Proposal.Authority.ID != domain.idPrefix+id || record.Digest != binding.Digest || record.Proposer != binding.Proposer ||
 		record.State != approvals.StatePending && record.State != approvals.StateConfirmed || (record.State == approvals.StateConfirmed) != (binding.ConfirmationReason != "") {
 		return out, approvals.ErrConflict
 	}
@@ -94,9 +106,13 @@ func (s *Server) financialAuthorityRecord(workspace, id string) (financialAuthor
 	return out, nil
 }
 
-func (s *Server) proposeFinancialAuthority(ctx commands.Context) (financialAuthorityRecord, error) {
+func (s *Server) proposeFinancialAuthorityForStage(ctx commands.Context, stage financialPolicyStage) (financialAuthorityRecord, error) {
 	out := financialAuthorityRecord{}
-	if err := s.financialAuthorityBounds(ctx, true); err != nil {
+	domain, err := s.financialAuthorityDomain(stage)
+	if err != nil {
+		return out, err
+	}
+	if err := s.financialAuthorityBoundsForStage(ctx, true, stage); err != nil {
 		return out, err
 	}
 	if err := s.governorCaller(ctx.Workspace, ctx.User); err != nil {
@@ -105,7 +121,7 @@ func (s *Server) proposeFinancialAuthority(ctx commands.Context) (financialAutho
 	if err := s.financialGovernor(ctx.Workspace, ctx.User); err != nil {
 		return out, err
 	}
-	authority, err := s.financialAuthoritySpec(ctx)
+	authority, err := s.financialAuthoritySpecForStage(ctx, stage)
 	if err != nil {
 		return out, err
 	}
@@ -115,8 +131,8 @@ func (s *Server) proposeFinancialAuthority(ctx commands.Context) (financialAutho
 	if err := s.financialRecipient(authority.Approver); err != nil {
 		return out, err
 	}
-	if _, exists := s.financialAuthorities[ctx.Target]; exists {
-		out, err = s.financialAuthorityRecord(ctx.Workspace, ctx.Target)
+	if _, exists := domain.bindings[ctx.Target]; exists {
+		out, err = s.financialAuthorityRecordForStage(ctx.Workspace, ctx.Target, stage)
 		if err != nil {
 			return out, err
 		}
@@ -137,7 +153,7 @@ func (s *Server) proposeFinancialAuthority(ctx commands.Context) (financialAutho
 		}
 		return out, err
 	}
-	if len(s.financialAuthorities) >= 100 {
+	if len(domain.bindings) >= 100 {
 		return out, approvals.ErrLimit
 	}
 	proposal, err := s.approvals.Propose(ctx.Workspace, approvals.Proposal{ID: ctx.Target, Kind: approvals.ProposeGrant, Authority: authority}, approvals.Actor{ID: ctx.User, Kind: approvals.KindHuman})
@@ -145,13 +161,17 @@ func (s *Server) proposeFinancialAuthority(ctx commands.Context) (financialAutho
 		return out, err
 	}
 	binding := financialAuthorityBinding{financialPolicyBinding: financialPolicyBinding{Digest: proposal.Digest, Proposer: proposal.Proposer, ProposalReason: ctx.Rationale}}
-	s.financialAuthorities[ctx.Target] = binding
+	domain.bindings[ctx.Target] = binding
 	return financialAuthorityRecord{proposal: proposal, binding: binding}, nil
 }
 
-func (s *Server) confirmFinancialAuthority(ctx commands.Context) (financialAuthorityRecord, error) {
+func (s *Server) confirmFinancialAuthorityForStage(ctx commands.Context, stage financialPolicyStage) (financialAuthorityRecord, error) {
 	out := financialAuthorityRecord{}
-	if err := s.financialAuthorityBounds(ctx, true); err != nil {
+	domain, err := s.financialAuthorityDomain(stage)
+	if err != nil {
+		return out, err
+	}
+	if err := s.financialAuthorityBoundsForStage(ctx, true, stage); err != nil {
 		return out, err
 	}
 	if err := s.governorCaller(ctx.Workspace, ctx.User); err != nil {
@@ -160,7 +180,7 @@ func (s *Server) confirmFinancialAuthority(ctx commands.Context) (financialAutho
 	if err := s.financialGovernor(ctx.Workspace, ctx.User); err != nil {
 		return out, err
 	}
-	out, err := s.financialAuthorityRecord(ctx.Workspace, ctx.Target)
+	out, err = s.financialAuthorityRecordForStage(ctx.Workspace, ctx.Target, stage)
 	if err != nil {
 		return out, err
 	}
@@ -186,13 +206,17 @@ func (s *Server) confirmFinancialAuthority(ctx commands.Context) (financialAutho
 		out.asOf = record.Confirmed
 		out.authority = &approvals.AuthorityView{Authority: record.Proposal.Authority, Proposer: record.Proposer, Confirmer: record.Confirmer, Granted: record.Confirmed}
 	}
-	s.financialAuthorities[ctx.Target] = out.binding
+	domain.bindings[ctx.Target] = out.binding
 	return out, nil
 }
 
-func (s *Server) revokeFinancialAuthority(ctx commands.Context) (financialAuthorityRecord, error) {
+func (s *Server) revokeFinancialAuthorityForStage(ctx commands.Context, stage financialPolicyStage) (financialAuthorityRecord, error) {
 	out := financialAuthorityRecord{}
-	if err := s.financialAuthorityBounds(ctx, true); err != nil {
+	domain, err := s.financialAuthorityDomain(stage)
+	if err != nil {
+		return out, err
+	}
+	if err := s.financialAuthorityBoundsForStage(ctx, true, stage); err != nil {
 		return out, err
 	}
 	if err := s.governorCaller(ctx.Workspace, ctx.User); err != nil {
@@ -201,7 +225,7 @@ func (s *Server) revokeFinancialAuthority(ctx commands.Context) (financialAuthor
 	if err := s.financialGovernor(ctx.Workspace, ctx.User); err != nil {
 		return out, err
 	}
-	out, err := s.financialAuthorityRecord(ctx.Workspace, ctx.Target)
+	out, err = s.financialAuthorityRecordForStage(ctx.Workspace, ctx.Target, stage)
 	if err != nil {
 		return out, err
 	}
@@ -220,7 +244,7 @@ func (s *Server) revokeFinancialAuthority(ctx commands.Context) (financialAuthor
 		out.asOf = authority.Revoked
 	}
 	out.binding.RevocationReason = ctx.Rationale
-	s.financialAuthorities[ctx.Target] = out.binding
+	domain.bindings[ctx.Target] = out.binding
 	return out, nil
 }
 

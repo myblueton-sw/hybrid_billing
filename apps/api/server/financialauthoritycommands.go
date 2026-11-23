@@ -8,11 +8,15 @@ import (
 )
 
 type financialAuthorityCommand struct {
-	s    *Server
-	kind string
+	s     *Server
+	kind  string
+	stage financialPolicyStage
 }
 
 func (h financialAuthorityCommand) Resolve(workspace, target string) (commands.Target, commands.Resolution) {
+	if _, err := h.s.financialAuthorityDomain(h.stage); err != nil {
+		return commands.Target{}, commands.Unavailable
+	}
 	if workspace != h.s.bootWorkspace || !validRequestID(target) {
 		return commands.Target{}, commands.NotFound
 	}
@@ -35,7 +39,7 @@ func financialAuthorityReceipt(record financialAuthorityRecord) map[string]strin
 
 func (h financialAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 	mutation := h.kind != "inspect"
-	if err := h.s.financialAuthorityBounds(ctx, mutation); err != nil {
+	if err := h.s.financialAuthorityBoundsForStage(ctx, mutation, h.stage); err != nil {
 		return commands.Outcome{}, financialPolicyError(err)
 	}
 	if err := h.s.governorCaller(ctx.Workspace, ctx.User); err != nil {
@@ -48,13 +52,13 @@ func (h financialAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome
 	var err error
 	switch h.kind {
 	case "propose":
-		record, err = h.s.proposeFinancialAuthority(ctx)
+		record, err = h.s.proposeFinancialAuthorityForStage(ctx, h.stage)
 	case "confirm":
-		record, err = h.s.confirmFinancialAuthority(ctx)
+		record, err = h.s.confirmFinancialAuthorityForStage(ctx, h.stage)
 	case "revoke":
-		record, err = h.s.revokeFinancialAuthority(ctx)
+		record, err = h.s.revokeFinancialAuthorityForStage(ctx, h.stage)
 	case "inspect":
-		record, err = h.s.financialAuthorityRecord(ctx.Workspace, ctx.Target)
+		record, err = h.s.financialAuthorityRecordForStage(ctx.Workspace, ctx.Target, h.stage)
 	default:
 		return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
 	}
@@ -73,18 +77,21 @@ func (h financialAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome
 
 func (s *Server) financialAuthorityDefinitions() []commands.Definition {
 	var out []commands.Definition
-	for _, kind := range []string{"propose", "confirm", "inspect", "revoke"} {
-		var fields []commands.Field
-		switch kind {
-		case "propose":
-			for _, name := range []string{"recipient", "currency", "limit", "from", "to"} {
-				fields = append(fields, commands.Field{Name: name, Type: commands.Text, Required: true})
+	for _, stage := range []financialPolicyStage{chargePolicyStage, erpFinalPolicyStage} {
+		domain, _ := s.financialAuthorityDomain(stage)
+		for _, kind := range []string{"propose", "confirm", "inspect", "revoke"} {
+			var fields []commands.Field
+			switch kind {
+			case "propose":
+				for _, name := range []string{"recipient", "currency", "limit", "from", "to"} {
+					fields = append(fields, commands.Field{Name: name, Type: commands.Text, Required: true})
+				}
+			case "confirm", "revoke":
+				fields = []commands.Field{{Name: "digest", Type: commands.Text, Required: true}}
 			}
-		case "confirm", "revoke":
-			fields = []commands.Field{{Name: "digest", Type: commands.Text, Required: true}}
+			mutation := kind != "inspect"
+			out = append(out, commands.Definition{ID: domain.prefix + "." + kind, Permission: commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}, Mutating: mutation, Rationale: mutation, Fields: fields, Refusals: []commands.Code{commands.EvidenceStale, commands.SelfApprovalDenied}, Handler: financialAuthorityCommand{s: s, kind: kind, stage: stage}})
 		}
-		mutation := kind != "inspect"
-		out = append(out, commands.Definition{ID: "financial_authority." + kind, Permission: commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}, Mutating: mutation, Rationale: mutation, Fields: fields, Refusals: []commands.Code{commands.EvidenceStale, commands.SelfApprovalDenied}, Handler: financialAuthorityCommand{s: s, kind: kind}})
 	}
 	return out
 }

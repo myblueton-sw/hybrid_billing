@@ -21,9 +21,23 @@ type documentWorld struct {
 	digest   string
 }
 
-func explicitDocumentWorld(t *testing.T) documentWorld {
+func explicitDocumentWorld(t *testing.T, beforeFinance ...func(world)) documentWorld {
 	t.Helper()
-	f, requester, decider, _ := chargeWorld(t)
+	return explicitDocumentWorldWithRequired(t, "", beforeFinance...)
+}
+
+func explicitDocumentWorldWithRequired(t *testing.T, required string, beforeFinance ...func(world)) documentWorld {
+	t.Helper()
+	f, requester, decider, _ := chargeWorld(t, beforeFinance...)
+	if required != "" {
+		subjectPolicy(t, f, "document-charge-policy", "3", required)
+		for _, login := range []string{AdminLogin, Admin2Login, Admin3Login} {
+			for _, v := range f.s.sessions.byLogin(login) {
+				f.s.endProbe(v)
+			}
+		}
+		requester, decider = f.as(Admin3Login), f.as(AdminLogin)
+	}
 	original, err := f.s.chargeProducer.candidates.financialCandidate(SampleWorkspace, "subject-candidate")
 	f.must(err)
 	origin := original.Envelope.Input.Normalized

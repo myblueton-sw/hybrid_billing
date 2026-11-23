@@ -53,30 +53,6 @@ func financialEvidenceDigest(kind string, value any) (string, error) {
 	}{"hb_financial_evidence_v1", kind, value})
 }
 
-func (s *Server) currentOwnedFinancialPolicyLocked(workspace string) (approvals.Policy, error) {
-	policy, err := s.approvals.PolicyOf(workspace, approvals.StageCharge)
-	if err != nil {
-		return approvals.Policy{}, err
-	}
-	found := false
-	for id := range s.financialPolicies {
-		record, _, err := s.financialPolicyRecord(workspace, id)
-		if err != nil {
-			return approvals.Policy{}, err
-		}
-		if record.State == approvals.StateConfirmed && record.Proposal.Policy.Revision == policy.Revision {
-			if found || !reflect.DeepEqual(record.Proposal.Policy, policy) {
-				return approvals.Policy{}, approvals.ErrConflict
-			}
-			found = true
-		}
-	}
-	if !found {
-		return approvals.Policy{}, commands.Fail(commands.PrerequisiteFailed)
-	}
-	return policy, nil
-}
-
 func (s *Server) financialSubjectLocked(workspace, request, candidateID, digest string) (approvals.Subject, error) {
 	if s.cfg.Seed != SeedSample || s.chargeProducer == nil || s.approvals == nil {
 		return approvals.Subject{}, commands.Fail(commands.UnsupportedCapability)

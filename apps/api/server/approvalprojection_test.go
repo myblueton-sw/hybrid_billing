@@ -114,7 +114,7 @@ func TestApprovalProjectionSnapshotChangesWithActualMutations(t *testing.T) {
 
 func TestApprovalDecisionCapabilityIsExplicitAndBounded(t *testing.T) {
 	f := setup(t, SeedSample).ready()
-	if got := f.s.approvalCommandCapability(); got != "financial_charge_v1" {
+	if got := f.s.approvalCommandCapability(); got != "financial_approval_v2" {
 		t.Fatal(got)
 	}
 	f.s.cfg.Commands.Fields = 23

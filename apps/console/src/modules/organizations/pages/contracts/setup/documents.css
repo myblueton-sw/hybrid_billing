@@ -1,0 +1,35 @@
+.o03-documents { display: grid; gap: 32px; min-inline-size: 0; container-type: inline-size; }
+.o03-documents section { min-inline-size: 0; }
+.o03-documents p { max-inline-size: 72ch; }
+.o03-docs-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-block-end: 16px; }
+.o03-docs-heading h3 { margin: 0; }
+.o03-docs-scope { display: grid; gap: 24px; }
+.o03-documents button { min-block-size: 44px; }
+.o03-documents .live-mono, .o03-documents bdi { overflow-wrap: anywhere; }
+.o03-docs-table { inline-size: 100%; table-layout: fixed; }
+.o03-docs-table th, .o03-docs-table td { vertical-align: top; overflow-wrap: anywhere; }
+.o03-docs-table th:nth-child(1) { inline-size: 20%; }
+.o03-docs-table th:nth-child(2) { inline-size: 22%; }
+.o03-docs-table th:nth-child(3) { inline-size: 24%; }
+.o03-docs-table th:nth-child(4) { inline-size: 20%; }
+.o03-docs-table th:nth-child(5) { inline-size: 14%; }
+.o03-docs-pages { display: flex; flex-wrap: wrap; gap: 16px; margin-block-start: 16px; }
+.o03-documents summary { cursor: pointer; min-block-size: 44px; display: list-item; padding-block: 10px; }
+@container (min-width: 56rem) { .o03-docs-scope { grid-template-columns: minmax(18rem, 1fr) minmax(18rem, 1fr); } }
+@container (max-width: 55.999rem) {
+ .o03-docs-table thead { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+ .o03-docs-table, .o03-docs-table tbody, .o03-docs-table tr, .o03-docs-table td { display: block; inline-size: 100%; }
+ .o03-docs-table td::before { content: attr(data-label); display: block; font-weight: 600; margin-block-end: 4px; }
+ .o03-docs-table tr { margin-block-end: 24px; }
+}
+
+.o03-setup-form { display: grid; gap: 16px; max-inline-size: 40rem; margin-block-start: 16px; }
+.o03-setup-form fieldset { display: grid; gap: 16px; border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+.o03-setup-form legend { font-weight: 600; margin-block-end: 12px; }
+.o03-setup-form label { display: grid; gap: 8px; }
+.o03-setup-form .o03-setup-choice { display: flex; align-items: center; gap: 12px; min-block-size: 44px; }
+.o03-setup-form select, .o03-setup-form textarea { font: inherit; color: inherit; background: var(--surface, white); border: 1px solid var(--border-control); border-radius: 0; padding: 12px; inline-size: 100%; min-block-size: 44px; }
+.o03-setup-form textarea { min-block-size: 100px; resize: vertical; }
+.o03-setup-form button { justify-self: start; }
+.o03-setup-review { margin-block-start: 24px; }
+.o03-setup-outcome { padding-block: 16px; border-block-start: 1px solid var(--border-row); }

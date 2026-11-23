@@ -33,8 +33,17 @@ func (s *Server) financialGovernor(workspace, actor string) error {
 	return nil
 }
 
-func financialPolicySpec(fields map[string]string) (approvals.Policy, error) {
-	p := approvals.Policy{Stage: approvals.StageCharge}
+func financialPolicySpecForStage(fields map[string]string, stage financialPolicyStage) (approvals.Policy, error) {
+	name := ""
+	switch stage {
+	case chargePolicyStage:
+		name = approvals.StageCharge
+	case erpFinalPolicyStage:
+		name = approvals.StageERPFinal
+	default:
+		return approvals.Policy{}, approvals.ErrInvalid
+	}
+	p := approvals.Policy{Stage: name}
 	values := make([]int, 3)
 	for index, name := range []string{"policy_revision", "approvals", "validity_hours"} {
 		n, err := strconv.Atoi(fields[name])
@@ -60,8 +69,12 @@ func financialPolicySpec(fields map[string]string) (approvals.Policy, error) {
 	return p, nil
 }
 
-func (s *Server) financialPolicyRecord(workspace, id string) (approvals.ProposalView, financialPolicyBinding, error) {
-	binding, ok := s.financialPolicies[id]
+func (s *Server) financialPolicyRecordForStage(workspace, id string, stage financialPolicyStage) (approvals.ProposalView, financialPolicyBinding, error) {
+	domain, err := s.financialPolicyDomain(stage)
+	if err != nil {
+		return approvals.ProposalView{}, financialPolicyBinding{}, err
+	}
+	binding, ok := domain.bindings[id]
 	if !ok {
 		return approvals.ProposalView{}, binding, approvals.ErrNotFound
 	}
@@ -69,15 +82,19 @@ func (s *Server) financialPolicyRecord(workspace, id string) (approvals.Proposal
 	if err != nil {
 		return record, binding, err
 	}
-	if record.Digest != binding.Digest || record.Proposer != binding.Proposer || record.Proposal.Kind != approvals.ProposePolicy || record.Proposal.Policy.Stage != approvals.StageCharge ||
+	if record.Digest != binding.Digest || record.Proposer != binding.Proposer || record.Proposal.Kind != approvals.ProposePolicy || record.Proposal.Policy.Stage != domain.stage ||
 		record.State != approvals.StatePending && record.State != approvals.StateConfirmed || (record.State == approvals.StateConfirmed) != (binding.ConfirmationReason != "") {
 		return record, binding, approvals.ErrConflict
 	}
 	return record, binding, nil
 }
 
-func (s *Server) proposeFinancialPolicy(ctx commands.Context) (approvals.ProposalView, financialPolicyBinding, error) {
-	if err := s.financialPolicyBounds(ctx, true); err != nil {
+func (s *Server) proposeFinancialPolicyForStage(ctx commands.Context, stage financialPolicyStage) (approvals.ProposalView, financialPolicyBinding, error) {
+	domain, err := s.financialPolicyDomain(stage)
+	if err != nil {
+		return approvals.ProposalView{}, financialPolicyBinding{}, err
+	}
+	if err := s.financialPolicyBoundsForStage(ctx, true, stage); err != nil {
 		return approvals.ProposalView{}, financialPolicyBinding{}, err
 	}
 	if err := s.governorCaller(ctx.Workspace, ctx.User); err != nil {
@@ -86,13 +103,13 @@ func (s *Server) proposeFinancialPolicy(ctx commands.Context) (approvals.Proposa
 	if err := s.financialGovernor(ctx.Workspace, ctx.User); err != nil {
 		return approvals.ProposalView{}, financialPolicyBinding{}, err
 	}
-	policy, err := financialPolicySpec(ctx.Fields)
+	policy, err := financialPolicySpecForStage(ctx.Fields, stage)
 	if err != nil {
 		return approvals.ProposalView{}, financialPolicyBinding{}, err
 	}
 	proposal := approvals.Proposal{ID: ctx.Target, Kind: approvals.ProposePolicy, Policy: policy}
-	if _, exists := s.financialPolicies[ctx.Target]; exists {
-		record, binding, err := s.financialPolicyRecord(ctx.Workspace, ctx.Target)
+	if _, exists := domain.bindings[ctx.Target]; exists {
+		record, binding, err := s.financialPolicyRecordForStage(ctx.Workspace, ctx.Target, stage)
 		if err != nil {
 			return record, binding, err
 		}
@@ -107,10 +124,10 @@ func (s *Server) proposeFinancialPolicy(ctx commands.Context) (approvals.Proposa
 		}
 		return approvals.ProposalView{}, financialPolicyBinding{}, err
 	}
-	if len(s.financialPolicies) >= 100 {
+	if len(domain.bindings) >= 100 {
 		return approvals.ProposalView{}, financialPolicyBinding{}, approvals.ErrLimit
 	}
-	current, err := s.approvals.PolicyOf(ctx.Workspace, approvals.StageCharge)
+	current, err := s.approvals.PolicyOf(ctx.Workspace, domain.stage)
 	if err != nil {
 		return approvals.ProposalView{}, financialPolicyBinding{}, err
 	}
@@ -122,12 +139,16 @@ func (s *Server) proposeFinancialPolicy(ctx commands.Context) (approvals.Proposa
 		return record, financialPolicyBinding{}, err
 	}
 	binding := financialPolicyBinding{Digest: record.Digest, Proposer: record.Proposer, ProposalReason: ctx.Rationale}
-	s.financialPolicies[ctx.Target] = binding
+	domain.bindings[ctx.Target] = binding
 	return record, binding, nil
 }
 
-func (s *Server) confirmFinancialPolicy(ctx commands.Context) (approvals.ProposalView, financialPolicyBinding, error) {
-	if err := s.financialPolicyBounds(ctx, true); err != nil {
+func (s *Server) confirmFinancialPolicyForStage(ctx commands.Context, stage financialPolicyStage) (approvals.ProposalView, financialPolicyBinding, error) {
+	domain, err := s.financialPolicyDomain(stage)
+	if err != nil {
+		return approvals.ProposalView{}, financialPolicyBinding{}, err
+	}
+	if err := s.financialPolicyBoundsForStage(ctx, true, stage); err != nil {
 		return approvals.ProposalView{}, financialPolicyBinding{}, err
 	}
 	if err := s.governorCaller(ctx.Workspace, ctx.User); err != nil {
@@ -136,7 +157,7 @@ func (s *Server) confirmFinancialPolicy(ctx commands.Context) (approvals.Proposa
 	if err := s.financialGovernor(ctx.Workspace, ctx.User); err != nil {
 		return approvals.ProposalView{}, financialPolicyBinding{}, err
 	}
-	record, binding, err := s.financialPolicyRecord(ctx.Workspace, ctx.Target)
+	record, binding, err := s.financialPolicyRecordForStage(ctx.Workspace, ctx.Target, stage)
 	if err != nil {
 		return record, binding, err
 	}
@@ -154,6 +175,6 @@ func (s *Server) confirmFinancialPolicy(ctx commands.Context) (approvals.Proposa
 		return record, binding, err
 	}
 	binding.ConfirmationReason = ctx.Rationale
-	s.financialPolicies[ctx.Target] = binding
+	domain.bindings[ctx.Target] = binding
 	return record, binding, nil
 }

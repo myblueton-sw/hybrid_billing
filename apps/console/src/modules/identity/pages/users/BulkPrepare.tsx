@@ -201,7 +201,7 @@ export function ConfirmDialog({ l, api, prepared, revision, defaultReason, onClo
 export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revision, reload, onBack, onJobs, onExecuted, onDeselect, say, fixed = null, days = 14, onPrepared, onDiscarded }: {
   l: Locale; api: AdminClient; ids: string[]; names: Record<string, string>; admins: string[]; rows: UserRow[]; serverTime: string; revision: string; reload: () => Promise<string>;
   onBack: () => void; onJobs: () => void; onExecuted: (id: string, targets: string[]) => void; onDeselect: (id: string) => void; say: (text: string) => void;
-  fixed?: Fixed | null; days?: number; onPrepared?: () => void; onDiscarded?: () => void;
+  fixed?: Fixed | null; days?: number; onPrepared?: () => void; onDiscarded?: (closed: boolean) => void;
 }) {
   const bulk = bulkClient(api);
   const [effect, setEffect] = useState<"suspend_membership" | "suspend_user">("suspend_membership");
@@ -292,9 +292,12 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
       await api.command("bulk_revocation.discard", id, await reload(), reason || b.discardReason(l), {}, attempt());
     } catch (e) {
       if (!(e instanceof AdminError && e.failure === "stage")) { setTrouble("discard"); return; }
+      setTrouble("");
+      onDiscarded?.(true);
+      return;
     }
     setTrouble("");
-    onDiscarded?.();
+    onDiscarded?.(false);
   };
   const sending = state.kind === "sending";
   const proceed = async () => {

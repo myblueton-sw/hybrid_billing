@@ -525,6 +525,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   const [selected, setSelected] = useState("");
   const [mode, setMode] = useState<Mode>({ kind: "none" });
   const [notice, setNotice] = useState("");
+  const [closedNote, setClosedNote] = useState(false);
   const [announce, setAnnounce] = useState("");
   const [focusTo, setFocusTo] = useState("");
   const [picked, setPicked] = useState<Selection>(() => (kept.user === session.user ? kept.selection : new Set()));
@@ -606,7 +607,8 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
     }, () => undefined);
     return () => { live = false; };
   }, [canBulk, api, session.user]);
-  useEffect(() => { setMode((m) => ({ kind: m.kind === "none" ? "none" : "detail" })); setNotice(""); setActionResult(null); setBulk(false); setBandOpen(false); }, [view]);
+  useEffect(() => { if (fixed || bulk) setClosedNote(false); }, [fixed, bulk]);
+  useEffect(() => { setMode((m) => ({ kind: m.kind === "none" ? "none" : "detail" })); setNotice(""); setClosedNote(false); setActionResult(null); setBulk(false); setBandOpen(false); }, [view]);
   const users = data?.users ?? [];
   const applied = appliedKeys(filters).length;
   useEffect(() => {
@@ -705,12 +707,15 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   const fixedNow = selectable ? fixed : null;
   const reloadRevision = async () => (await load(true)) || dataRef.current?.revision || "";
   const gone = (text: string) => { setFixed(null); setFixError(null); setFocusTo(".m01-match-open"); say(text); };
+  const closedNow = () => { setFixed(null); setFixError(null); setFocusTo(".m01-match-open"); setClosedNote(true); say(m.alreadyClosed(l)); };
   const discardFixed = async () => {
     if (!fixedNow) return;
     try {
       await api.command("bulk_revocation.discard", fixedNow.draft, await reloadRevision(), b.discardReason(l), {}, attempt());
     } catch (e) {
       if (!(e instanceof AdminError && e.failure === "stage")) { setFixError(e); return; }
+      closedNow();
+      return;
     }
     gone(m.discarded(l));
   };
@@ -740,7 +745,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
         <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
         <Conditions l={l} data={data} />
         <BulkFlow l={l} api={api} ids={ids} names={names.current} admins={admins} rows={users} serverTime={ctx.clock.server_time} revision={data.revision}
-          fixed={fixedNow} days={days} onPrepared={() => setFixed(null)} onDiscarded={() => { setBulk(false); gone(m.discarded(l)); }}
+          fixed={fixedNow} days={days} onPrepared={() => setFixed(null)} onDiscarded={(closed) => { setBulk(false); if (closed) closedNow(); else gone(m.discarded(l)); }}
           onJobs={() => { setBulk(false); onView("revocation"); }} reload={reloadRevision}
           onBack={() => { setBulk(false); setFocusTo(".m01-prepare"); }} say={say}
           onDeselect={(id) => setPicked(without(picked, [id]))}
@@ -784,6 +789,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
       {scope}
       {data && <Conditions l={l} data={data} />}
       {!stepping && badLink && <p className="service-status m01-badlink" role="status">{fc.badLink(l)}</p>}
+      {!stepping && closedNote && <p className="service-status m01-closed-note">{m.alreadyClosed(l)}</p>}
       {!stepping && filterViews.includes(view) && (
         <FilterBand l={l} view={view} wide={wide} open={bandOpen} filters={filters} days={days} auth={data?.auth_methods ?? { connected: [], not_connected: [] }} onToggle={() => setBandOpen((o) => !o)}
           onChange={(next) => apply(next)} onRemove={removeChip} onClearAll={clearAll} />

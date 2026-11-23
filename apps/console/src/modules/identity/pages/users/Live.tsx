@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, attempt, sequence, type AdminClient, type Attempt, type ClockState, type CommandId, type SettingRow, type UserRow, type UsersPage } from "../../../../service/admin";
+import { AdminError, attempt, pickupGone, sequence, type AdminClient, type Attempt, type ClockState, type CommandId, type SettingRow, type UserRow, type UsersPage } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
@@ -264,7 +264,7 @@ function Pickup({ l, api, login, purpose, refId, expires, notice, onDone }: {
     setState("loading");
     api.collect(refId).then(
       (u) => { setUrl(u); setState("shown"); },
-      (e) => setState(e instanceof AdminError && e.failure === "unavailable" ? "retry" : "gone"),
+      (e) => setState(pickupGone(e) ? "gone" : "retry"),
     );
   }, [api, refId]);
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, attempt, sequence, type AdminClient, type CommandId, type CredentialRow, type ServiceRow, type ServicesPage } from "../../../../service/admin";
+import { AdminError, attempt, pickupGone, sequence, type AdminClient, type CommandId, type CredentialRow, type ServiceRow, type ServicesPage } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
@@ -458,7 +458,7 @@ function Reveal({ l, api, service, refId, credential, until, onDone, onRevoke, o
         setSecret(got.secret);
         setState("shown");
       },
-      (e) => setState(e instanceof AdminError && e.failure === "unavailable" && !retried.current ? "retry" : "gone"),
+      (e) => setState(pickupGone(e) ? "gone" : "retry"),
 
     );
   }, [api, refId, credential]);

@@ -80,3 +80,13 @@ Inferred or unverified: byte-exact offline reproducibility; that organization sc
 # Limits
 
 This is an assessment, not a fix and not a penetration test. No remediation is implemented or scheduled by it; the ticket stays open for the owner's decisions.
+
+# Addendum of 2026-11-24
+
+Root wrote a second assessment of the same question on 2026-11-24 without first finding this one, and it was merged as `digest-oracle-assessment.md` (PR 297). It is removed in favour of this document, which is the more complete of the two; its history stays in Git. The second reading and its own independent review reached the same conclusions as above. What it adds:
+
+- The page snapshot of the channel and change pages covers the complete retained records on the page and the reading actor, not only the returned rows, so it is a joint oracle that reduces to the rules rationale only when the page is empty (`financialissuancesetupprotected.go`, the page structs and the snapshot digest).
+- The change digest also covers the whole nested channel record, the reference in force before and the instruction's channel and sender, so a change is harder to search than a channel until the channel digest has been solved (`financialissuancechange.go`, `financialissuancechangewrites.go`).
+- The organisation scope records hashed into the configuration, channel and change digests are not returned by the setup reads that review examined (context, configurations, protected, statements, references); whether another read returns them was not checked.
+- A further option, between a and c: an undisclosed random value retained with each record and included in its digest. It closes offline confirmation for new records without an installation key; existing records keep their digests or are migrated; like option a it does not address the fingerprint.
+- `financialEvidenceDigest` has about forty call sites, which supports this document's point that a keyed variant would need its own function for setup records.

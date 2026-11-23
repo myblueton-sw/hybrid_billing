@@ -18,7 +18,7 @@ type issuanceSetupContextCommand struct {
 
 func (s *Server) issuanceSetupBoundary(command string, call commands.Call) commands.Code {
 	kind := strings.TrimPrefix(command, "issuance_setup.")
-	if command != "issuance_setup.context" && command != "issuance_setup.configurations" && command != "issuance_setup.options" && !(command == "issuance_setup."+kind && setupMutation(kind)) {
+	if command != "issuance_setup.context" && command != "issuance_setup.configurations" && command != "issuance_setup.options" && command != "issuance_setup.action" && !(command == "issuance_setup."+kind && setupMutation(kind)) {
 		return ""
 	}
 	if s.cfg.Seed != SeedSample || s.financialIssuance == nil {
@@ -68,6 +68,8 @@ func (h issuanceSetupContextCommand) Apply(ctx commands.Context) (commands.Outco
 	var err error
 	if h.kind == "configurations" {
 		fields, err = h.s.financialIssuance.setupConfigurationFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields["after"], ctx.Fields["snapshot"])
+	} else if h.kind == "action" {
+		fields, err = h.s.financialIssuance.setupActionFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields)
 	} else if h.kind == "options" {
 		fields, err = h.s.financialIssuance.setupOptionFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields["on"], ctx.Fields["scope_digest"])
 	} else {
@@ -82,6 +84,7 @@ func (h issuanceSetupContextCommand) Apply(ctx commands.Context) (commands.Outco
 func (s *Server) issuanceSetupDefinitions() []commands.Definition {
 	permission := commands.Permission{Action: gate.ViewCost, Kind: protectedauthority.ResourceKind, Fields: []string{protectedauthority.EvidenceField}}
 	return []commands.Definition{
+		{ID: "issuance_setup.action", Permission: permission, Fields: []commands.Field{{Name: "operation", Type: commands.Text, Required: true}, {Name: "configuration", Type: commands.Text, Required: true}, {Name: "on", Type: commands.Text}, {Name: "scope_digest", Type: commands.Text}, {Name: "digest", Type: commands.Text}}, Handler: issuanceSetupContextCommand{s: s, kind: "action"}},
 		{ID: "issuance_setup.options", Permission: permission, Fields: []commands.Field{{Name: "on", Type: commands.Text, Required: true}, {Name: "scope_digest", Type: commands.Text, Required: true}}, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "options"}},
 		{ID: "issuance_setup.context", Permission: permission, Fields: []commands.Field{{Name: "on", Type: commands.Text, Required: true}}, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "context"}},
 		{ID: "issuance_setup.configurations", Permission: permission, Fields: []commands.Field{{Name: "after", Type: commands.Text}, {Name: "snapshot", Type: commands.Text}}, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "configurations"}},

@@ -41,7 +41,7 @@ await page.route('**/api/**',async route=>{
   else{world.rules={...world.rules,rules_state:'confirmed',rules_observation:'active',rules_confirmer:'governor',rules_confirmed_at:now};state='confirmed';}
   return route.fulfill({json:{request_id:body.request_id,status:'completed',operation_id:`operation-${world.revision}`,target_id:body.target_id,result_revision:`r${world.revision}`,business_state:state,replay:false,as_of:now,fields:{schema:'hb_issuance_protected_rules_receipt_v1',contract:contract.id,configuration:'configuration-a',current_eligibility:'unchecked',rules:a.rules,rules_digest:hash,state}}});
  }
- if(['issuance_setup.context','issuance_setup.options'].includes(command))return route.fulfill({status:403,json:{code:'permission_denied',request_id:body.request_id}});
+ if(['issuance_setup.context','issuance_setup.options','issuance_setup.protected_channels'].includes(command))return route.fulfill({status:403,json:{code:'permission_denied',request_id:body.request_id}});
  evidence.unexpected.push(command);return route.fulfill({status:403,json:{code:'permission_denied',request_id:body?.request_id}});
 });
 const open=async(lang,width,part='rules')=>{await page.setViewportSize({width,height:1000});await page.goto('about:blank');await page.goto(`${args.url}/?service=api&lang=${lang}#/contracts?view=documents&contract=${contract.id}&on=${on}&part=${part}&lang=${lang}`);await page.locator(part==='rules'?'#o03-rule-steps':'.o03-parts').waitFor();};

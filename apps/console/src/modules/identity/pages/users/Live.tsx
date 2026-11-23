@@ -352,8 +352,8 @@ function Detail({ l, user, self, notice, onAction, serverTime, onJob }: {
       ) : (
         <>
           {group(w.account(l), offer.account)}
-          {group(w.membershipTitle(l), offer.membership, offer.notes.filter((n) => n === w.promotionReason(l) || n === w.unknownStateReason(l)))}
-          {group(w.sign(l), offer.sign, offer.notes.filter((n) => n !== w.promotionReason(l) && n !== w.unknownStateReason(l)))}
+          {group(w.membershipTitle(l), offer.membership, offer.notes.filter((n) => n === w.promotionReason(l) || n === w.unknownStateReason(l) || n === w.unknownRoleReason(l)))}
+          {group(w.sign(l), offer.sign, offer.notes.filter((n) => n !== w.promotionReason(l) && n !== w.unknownStateReason(l) && n !== w.unknownRoleReason(l)))}
         </>
       )}
     </section>

@@ -420,3 +420,11 @@ Read at main 9677e48; nothing executed; no independent review of this section. T
 - The one case where a completed command did not do what its verb says is handled: when the person who started a request has lost the right, the approval completes with the state "closed" and the reason `requester_lost_right` (`integrationheld.go:127`; four call sites, for a module proposal, a subscription, a dead letter and a repeated redelivery). The shared command form reads that state before choosing the text and says "…: Not approved. It was closed because the person who started it no longer holds the right." (`integrations/LiveCommand.tsx:117`), and each of the four forms passes the object that sentence names.
 
 With this, H2 is refuted on both screens it named.
+
+## M01 finding A6, roles (2026-11-24)
+
+An unrecognised membership role is no longer read as "member". The parser has an explicit unknown value; the role is labelled "Unknown role" wherever it is shown, including a role string that did not pass through the membership parser; and for such a person the detail offers no membership action and no set-link or reset-link action, with one sentence saying why. Account actions stay. The identity module sends only "administrator" and "member" today, so a well-formed response is unaffected. With this both halves of A6 are done.
+
+Checks: `tsc` clean; console tests pass with a new test for the label and the offers and a parser assertion. No rendered check. Copy and state review, ui-designer role (AI, by reading): PASS as a candidate, no blocking finding; its suggestion for other role strings was adopted afterwards and not reviewed again.
+
+Left open from that review: in the bulk selection, the list of administrators shown after a server refusal filters on the administrator role, so a person with an unknown role is not listed there as someone to deselect. Nothing false is stated.

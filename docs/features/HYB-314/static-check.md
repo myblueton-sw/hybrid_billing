@@ -305,3 +305,10 @@ Read at main 4a17b1d; nothing executed; no independent review of this section.
 | an unrecognised change state reads "draft" (`admin.ts`, `trustStates`) | the eight states of the trust change module (`modules/trustchange/types.go:11-18`) are the eight the console lists | not a present defect. The direction is the same as A6: a state added later would be shown as a draft. The actions offered come from the server's `can` flags and not from the state, so the exposure is to the label and the emphasis only |
 
 B2 is therefore not a present defect. A possible hardening, not done: read an unrecognised change state as its own unknown value, as was done for the account and membership states on M01.
+
+## O01 finding E5 and O03 finding G4 (2026-11-24)
+
+- E5, hardening: the server always returns the new draft's identifier from the create command (`groupdraftcmds.go:189`), so the "saved" announcement with an empty identifier does not occur with a well-formed response. With a malformed one the console would have sent the create command again for the next batch of members, making a second draft, and then announced "saved". It now stops after a completed create without an identifier, reloads the drafts and shows the text for a recorded request whose draft could not be read again.
+- G4, not a defect: the O03 done notice states the result state that the command returned ("Final settlement: …", with "Unknown (x)" for a word it does not know); it does not claim a state of its own. The command layer returns a completed result only with a business state.
+
+Checks: `tsc` clean; console tests pass. No new test, no rendered check, no new copy and no review.

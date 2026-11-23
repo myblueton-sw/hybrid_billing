@@ -453,6 +453,16 @@ export function useDraftEditor({ api, l, list, onDirty, say, focus }: {
           else values.name = name.trim();
           const out = await api.command("view_group.draft", "view-group-drafts", rev, reason, values, attempt());
           id = out.fields.draft ?? "";
+          if (!id) {
+            setProgress(null);
+            await list.reload();
+            reset({ kind: "unread", id: "" });
+            setReason("");
+            flushSync(() => onDirty?.(false));
+            say(o.draftUnread(l));
+            focus("#o01-draft-title");
+            return;
+          }
         } else {
           await api.command("view_group.edit", id, rev, reason, { add: batches[i].join("\n") }, attempt());
         }

@@ -20,6 +20,7 @@ type financialIssuance struct {
 	changeOrders        map[string][]string
 	channels            map[string]financialChannelRecord
 	kindReservations    map[string]financialKindReservation
+	attestations        map[string]financialAttestation
 	protectedRules      *financialProtectedRules
 	termIntents         map[string]financialTermRecord
 	termScopes          map[string]string

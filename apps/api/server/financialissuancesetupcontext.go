@@ -19,7 +19,8 @@ type issuanceSetupContextCommand struct {
 
 func (s *Server) issuanceSetupBoundary(command string, call commands.Call) commands.Code {
 	kind := strings.TrimPrefix(command, "issuance_setup.")
-	if command != "issuance_setup.context" && command != "issuance_setup.configurations" && command != "issuance_setup.options" && command != "issuance_setup.action" && !(command == "issuance_setup."+kind && setupProtectedRead(kind)) && !(command == "issuance_setup."+kind && setupMutation(kind)) {
+	step, _, attestation := setupAttestationCommand(kind)
+	if command != "issuance_setup.context" && command != "issuance_setup.configurations" && command != "issuance_setup.options" && command != "issuance_setup.action" && !(command == "issuance_setup."+kind && setupProtectedRead(kind)) && !(command == "issuance_setup."+kind && setupMutation(kind)) && !(command == "issuance_setup."+kind && attestation) {
 		return ""
 	}
 	if s.cfg.Seed != SeedSample || s.financialIssuance == nil {
@@ -27,6 +28,16 @@ func (s *Server) issuanceSetupBoundary(command string, call commands.Call) comma
 	}
 	if call.Client != ConsoleClient {
 		return commands.PermissionDenied
+	}
+	if attestation {
+		if err := s.financialIssuance.protectedCaller(call.Answer.Workspace(), call.Answer.User(), step.Capability); err != nil {
+			var failure *commands.Failure
+			if errors.As(err, &failure) {
+				return failure.Code
+			}
+			return commands.DependencyUnavailable
+		}
+		return ""
 	}
 	if err := s.financialIssuance.protectedReadCaller(call.Answer.Workspace(), call.Answer.User()); err != nil {
 		var failure *commands.Failure
@@ -65,9 +76,16 @@ func (h issuanceSetupContextCommand) Apply(ctx commands.Context) (commands.Outco
 	if setupMutation(h.kind) {
 		return h.s.financialIssuance.applySetupMutation(h.kind, ctx)
 	}
+	if _, _, attestation := setupAttestationCommand(h.kind); attestation {
+		return h.s.financialIssuance.applySetupAttestation(h.kind, ctx)
+	}
 	var fields map[string]string
 	var err error
-	if setupProtectedRead(h.kind) {
+	if h.kind == "attestations" {
+		fields, err = h.s.financialIssuance.setupAttestationFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields)
+	} else if h.kind == "references" {
+		fields, err = h.s.financialIssuance.setupReferenceFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields)
+	} else if setupProtectedRead(h.kind) {
 		fields, err = h.s.financialIssuance.setupProtectedFields(ctx.Workspace, ctx.User, ctx.Target, h.kind, ctx.Fields)
 	} else if h.kind == "configurations" {
 		fields, err = h.s.financialIssuance.setupConfigurationFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields["after"], ctx.Fields["snapshot"])
@@ -89,6 +107,8 @@ func (s *Server) issuanceSetupDefinitions() []commands.Definition {
 	scope := []commands.Field{{Name: "configuration", Type: commands.Text, Required: true}, {Name: "digest", Type: commands.Text, Required: true}}
 	page := []commands.Field{{Name: "after", Type: commands.Text}, {Name: "snapshot", Type: commands.Text}}
 	return []commands.Definition{
+		{ID: "issuance_setup.attestations", Permission: permission, Fields: slices.Concat(scope, page), Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "attestations"}},
+		{ID: "issuance_setup.references", Permission: permission, Fields: scope, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "references"}},
 		{ID: "issuance_setup.protected", Permission: permission, Fields: scope, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "protected"}},
 		{ID: "issuance_setup.protected_channels", Permission: permission, Fields: slices.Concat(scope, page), Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "protected_channels"}},
 		{ID: "issuance_setup.protected_changes", Permission: permission, Fields: slices.Concat(scope, []commands.Field{{Name: "field", Type: commands.Text, Required: true}}, page), Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "protected_changes"}},
@@ -160,5 +180,5 @@ func (a *financialIssuance) setupContextFields(workspace, actor, id, rawDate str
 }
 
 func setupProtectedRead(kind string) bool {
-	return kind == "protected" || kind == "protected_channels" || kind == "protected_changes"
+	return kind == "protected" || kind == "protected_channels" || kind == "protected_changes" || kind == "attestations" || kind == "references"
 }

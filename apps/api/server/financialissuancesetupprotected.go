@@ -35,12 +35,17 @@ func (a *financialIssuance) protectedSetupConfiguration(workspace, actor, contra
 		return none, err
 	}
 	id, digest, after, snapshot := input["configuration"], input["digest"], input["after"], input["snapshot"]
-	if !validRequestID(contract) || !validRequestID(id) || !validPlanHash(digest) || kind == "protected" && (after != "" || snapshot != "") || after != "" && !validRequestID(after) || (kind == "protected_changes") != protectedSetupField(input["field"]) || kind != "protected_changes" && input["field"] != "" {
+	if !validRequestID(contract) || !validRequestID(id) || !validPlanHash(digest) || (kind == "protected" || kind == "references") && (after != "" || snapshot != "") || after != "" && !validRequestID(after) || (kind == "protected_changes") != protectedSetupField(input["field"]) || kind != "protected_changes" && input["field"] != "" {
 		return none, commands.Fail(commands.InvalidRequest)
 	}
 	if err := draftCursor(after, snapshot); err != nil {
 		return none, err
 	}
+	return a.confirmedSetupConfiguration(workspace, contract, id, digest)
+}
+
+func (a *financialIssuance) confirmedSetupConfiguration(workspace, contract, id, digest string) (financialIssuanceConfiguration, error) {
+	none := financialIssuanceConfiguration{}
 	if err := a.configurationHistoryIndex(); err != nil {
 		return none, err
 	}

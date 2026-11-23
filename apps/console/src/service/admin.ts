@@ -851,6 +851,10 @@ const codes: Record<string, AdminFailure> = {
 
 export type StepUp = () => Promise<boolean>;
 
+export function pickupGone(error: unknown): boolean {
+  return error instanceof AdminError && error.failure === "denied";
+}
+
 export function failureOf(status: number, body: Record<string, unknown>): AdminError {
   const valid = body && typeof body === "object" && !Array.isArray(body) ? body : {};
   const code = typeof valid.code === "string" && /^[a-z][a-z0-9_]{0,127}$/.test(valid.code) ? valid.code : "";

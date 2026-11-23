@@ -1,7 +1,7 @@
 import { accessFixture, requestFixture, revocationFixture, credentialFixture, serviceFixture, servicesFixture, orgFixture } from "./read-fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, adminClient, attempt, failureOf, ledgerOf, outcomeOf, planOf, reauthenticate, sequence, usersQueryString } from "./admin";
+import { AdminError, adminClient, attempt, failureOf, pickupGone, ledgerOf, outcomeOf, planOf, reauthenticate, sequence, usersQueryString } from "./admin";
 import { selfEndOf, selfSessionOf } from "./self-end";
 
 type Call = { url: string; init: RequestInit };
@@ -608,4 +608,9 @@ test("a refused CSRF context retires authentication without treating permission 
     const net=fake(403,{code});const api=adminClient("synthetic",net.f);let observed=0;
     api.subscribeAuthenticationLoss(()=>{observed++;});await assert.rejects(api.me(),AdminError);assert.equal(observed,expected);
   }
+});
+
+test("a pickup is gone only when the service refuses it", () => {
+  assert.equal(pickupGone(failureOf(403, { code: "permission_denied" })), true);
+  for (const e of [failureOf(429, {}), failureOf(503, {}), failureOf(401, {}), failureOf(403, { code: "reauthentication_required" }), new AdminError("unavailable"), new Error("x")]) assert.equal(pickupGone(e), false);
 });

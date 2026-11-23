@@ -260,8 +260,8 @@ export const v = {
   secretRetry: (l: Locale) =>
     t(
       l,
-      "The secret couldn't be loaded. Try once more; if it was already delivered, it can't be shown again and you should revoke this credential.",
-      "비밀값을 불러오지 못했습니다. 한 번 더 시도하세요. 이미 전달된 경우 다시 표시할 수 없으니 이 자격 증명을 폐기하세요.",
+      "The secret couldn't be loaded. Try again; if it was already delivered, it can't be shown again and you should revoke this credential.",
+      "비밀값을 불러오지 못했습니다. 다시 시도하세요. 이미 전달된 경우 다시 표시할 수 없으니 이 자격 증명을 폐기하세요.",
       "تعذّر تحميل القيمة السرية. حاول مرة أخرى؛ وإن كانت قد سُلّمت فلا يمكن عرضها مجددًا وعليك إبطال بيانات الاعتماد هذه.",
     ),
   unstoredTitle: (l: Locale) => t(l, "Secrets not confirmed as stored", "보관이 확인되지 않은 비밀값", "قيم سرية لم يُؤكَّد حفظها"),

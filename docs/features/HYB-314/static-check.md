@@ -267,3 +267,9 @@ A referenced operation whose result is not confirmed is no longer reported as "T
 Not changed: a failed read and a missing operation still share the "unavailable" text. The console's failure kinds do not tell a network failure from a missing record on this read (both arrive as "unavailable"), so they cannot be told apart without a change to the service client.
 
 Checks: `tsc` clean; console tests 1347, pass 1344, fail 0, skipped 3. No new test and no rendered check. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its recommendation to announce the unconfirmed state as a status and not an alert was adopted afterwards.
+
+## M01 and M04 finding A5 (2026-11-24)
+
+The one-time pickup of a sign-in link (M01) or a credential secret (M04) is reported as gone only when the service refuses it, which is the server's answer for a pickup that was consumed, expired or belongs to another session (`users.go`, `collect`). Any other failure (the service not answering, an internal error, a lost response) leaves the retry in place instead of telling the administrator to issue a new link or revoke the credential. If the pickup was in fact consumed, the retry is refused and the gone text follows. The M04 rule that allowed a single retry is removed for the same reason.
+
+Checks: `tsc` clean; console tests pass with one new test for the rule. No rendered check. Independent change review (independent-reviewer role, AI, by reading): PASS, no blocking finding. Adopted afterwards: the M04 retry text says "Try again" in English and Korean, since the single-retry limit is gone (the Arabic already said so). It confirmed that a caller who lost installation administration is also told the pickup is gone, as before this change, and that a consumed secret whose body was malformed now takes one more click before the gone text.

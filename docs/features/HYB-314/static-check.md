@@ -396,3 +396,16 @@ Read at main f5ea521; nothing executed; no independent review of this section.
 - A failed read of the pending fixed list when the screen opens (`users/Live.tsx`, the `bulkClient(api).list` effect): the failure is silent, and its effect is that an existing fixed list of the caller is not shown. Nothing unsafe follows from it. If the person then tries to fix a new list, the server refuses because a draft is already open (`modules/bulkrevoke/registry.go`, `ErrOpenDraft`), and the screen says so and points to Revocation jobs ("The list was not fixed. … you may already have an open list. Check Revocation jobs and the filters."). The existing list stays reachable on Revocation jobs. A visible note at the moment of the failed read would be an improvement, not the correction of a wrong statement; left for the owner's screen review.
 
 With these, every part of A7 is either corrected (excluded people, discard after a stage error) or settled as not a present defect.
+
+## Finding H5, traced against the server (2026-11-24)
+
+Read at main a9951b0; nothing executed; no independent review of this section. In each of the four places the empty string is the server's own way of stating the absence, so the label says what the record says.
+
+| Screen | Label for an empty value | What empty means on the server | Result |
+| --- | --- | --- | --- |
+| P01 connection report | "Direct" for an empty route | a diagnosis carries `Via` only when it went through a proxy; a proxy diagnosis without it is rejected (`modules/installer/diagnostics.go:62`) | accurate |
+| P03 isolation | "no verifier" | the installation's verifier is set only by a verifier change (`recoveryseed.go:153`); empty until then | accurate |
+| P03 reconciliation | "no series" | a target is valid either with a series and a number above zero or with neither (`modules/recovery/calls.go:85`) | accurate |
+| P02 modules | "None" for an empty reason | the reason is the one the module state carries, empty when the state has none (`integrations.go:439`) | accurate |
+
+The console parsers read an absent field as an empty string, so a malformed response would show the same labels; that is the same malformed-only case as E4, F4 and B2. H5 is not a present defect.

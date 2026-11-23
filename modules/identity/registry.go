@@ -97,27 +97,28 @@ type credential struct {
 }
 
 type Registry struct {
-	mu             sync.Mutex
-	built          bool
-	installation   string
-	instance       [16]byte
-	limits         Limits
-	clock          func() time.Time
-	users          map[string]*user
-	identities     map[Triple]*identityRecord
-	boot           bootstrap
-	invitations    map[string]*invitation
-	memberships    map[string]map[string]*membership
-	sessions       map[Verifier]*session
-	serials        map[uint64]*session
-	byUser         map[string]map[Verifier]struct{}
-	serial         uint64
-	credentials    map[string]*credential
-	generation     uint64
-	userIndex      []string
-	memberIndex    map[string][]string
-	usersVersion   uint64
-	membersVersion map[string]uint64
+	mu                 sync.Mutex
+	built              bool
+	installation       string
+	instance           [16]byte
+	limits             Limits
+	clock              func() time.Time
+	users              map[string]*user
+	identities         map[Triple]*identityRecord
+	boot               bootstrap
+	invitations        map[string]*invitation
+	pendingInvitations map[string]map[string]struct{}
+	memberships        map[string]map[string]*membership
+	sessions           map[Verifier]*session
+	serials            map[uint64]*session
+	byUser             map[string]map[Verifier]struct{}
+	serial             uint64
+	credentials        map[string]*credential
+	generation         uint64
+	userIndex          []string
+	memberIndex        map[string][]string
+	usersVersion       uint64
+	membersVersion     map[string]uint64
 }
 
 type Installation struct{ r *Registry }
@@ -133,7 +134,7 @@ func New(installation string, limits Limits, clock func() time.Time) (*Registry,
 		return nil, ErrInvalid
 	}
 	r := &Registry{built: true, installation: installation, limits: limits, clock: clock,
-		users: map[string]*user{}, identities: map[Triple]*identityRecord{}, invitations: map[string]*invitation{},
+		users: map[string]*user{}, identities: map[Triple]*identityRecord{}, invitations: map[string]*invitation{}, pendingInvitations: map[string]map[string]struct{}{},
 		memberships: map[string]map[string]*membership{}, sessions: map[Verifier]*session{}, serials: map[uint64]*session{},
 		byUser: map[string]map[Verifier]struct{}{}, credentials: map[string]*credential{},
 		memberIndex: map[string][]string{}, membersVersion: map[string]uint64{}}

@@ -312,3 +312,11 @@ B2 is therefore not a present defect. A possible hardening, not done: read an un
 - G4, not a defect: the O03 done notice states the result state that the command returned ("Final settlement: …", with "Unknown (x)" for a word it does not know); it does not claim a state of its own. The command layer returns a completed result only with a business state.
 
 Checks: `tsc` clean; console tests pass. No new test, no rendered check, no new copy and no review.
+
+## M01 finding A7, discard after a stage error (2026-11-24)
+
+Confirmed by reading the server: `bulk_revocation.discard` is refused with a stage error when the list is no longer a draft or a prepared list, that is when it was already discarded, expired or run (`modules/bulkrevoke/registry.go`, `Discard`). The console treated that refusal as a discard and announced "The fixed list was discarded. Nothing was revoked.", which is false for a list that was run. It now shows, visibly on the page and once to the live region: "There was nothing to discard: this list was already discarded, expired or run. If it was run, the result is on Revocation jobs." The note is cleared on a view change, when a new fixed list exists and when a bulk run starts.
+
+Checks: `tsc` clean; console tests pass. No new test and no rendered check. Copy and state review, ui-designer role (AI, by reading): FAIL with one finding (the text reached only the live region, so a sighted user saw the same as after a real discard), corrected; corrective re-review PASS; its three further suggestions (announce once through the live region, clear the note when a bulk run starts, follow a language switch) were adopted afterwards and not reviewed again.
+
+Still open from A7: a failed read of the pending fixed list on load is silent; an absent match count is read as 0.

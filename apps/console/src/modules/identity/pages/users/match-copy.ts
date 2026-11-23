@@ -79,6 +79,10 @@ export const m = {
   blockedFilter: (l: Locale, example: string) =>
     t(l, `This list would leave no administrator who can manage access. Narrow the filters, for example ${example}.`, `이 목록으로는 접근을 관리할 관리자가 남지 않습니다. 필터를 좁히세요. 예: ${example}`,
       `لن يبقى بهذه القائمة أي مسؤول يمكنه إدارة الوصول. ضيّق عوامل التصفية، مثل: ${example}`),
+  alreadyClosed: (l: Locale) =>
+    t(l, "There was nothing to discard: this list was already discarded, expired or run. If it was run, the result is on Revocation jobs.",
+      "이 목록은 이미 버려졌거나 만료되었거나 실행되어 버릴 것이 없었습니다. 실행된 경우 결과는 '회수 작업'에 있습니다.",
+      "لم يكن هناك ما يُتجاهَل: هذه القائمة سبق تجاهلها أو انتهت صلاحيتها أو نُفّذت. إن كانت قد نُفّذت فالنتيجة في «مهام الإبطال»."),
   listClosed: (l: Locale) =>
     t(l, "This list can no longer be prepared: it expired, or nobody in it can be revoked now. Discard it and select again.",
       "이 목록은 더 이상 준비할 수 없습니다. 만료되었거나 지금 회수할 수 있는 사람이 없습니다. 버리고 다시 선택하세요.",

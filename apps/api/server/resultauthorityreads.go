@@ -15,8 +15,9 @@ import (
 const resultAuthorityProjectionLimit = 1000
 
 type resultAuthorityRead struct {
-	s    *Server
-	kind string
+	s      *Server
+	kind   string
+	domain grantAuthorityDomain
 }
 type resultAuthorityRow struct {
 	ID     string
@@ -30,7 +31,7 @@ func (h resultAuthorityRead) Resolve(workspace, target string) (commands.Target,
 	return commands.Target{Revision: h.s.Revision()}, commands.Found
 }
 func (a *serverGrantAuthority) resultPolicy() map[string]any {
-	return map[string]any{"capabilities": []string{"propose", "confirm", "revoke", "apply", "inspect"}, "proposal_lifetime_seconds": strconv.FormatInt(int64(a.limits.Lifetime/time.Second), 10), "max_grant_validity_seconds": strconv.FormatInt(int64(a.limits.MaxGrantValidity/time.Second), 10)}
+	return map[string]any{"capabilities": a.domain.readCapabilities(), "proposal_lifetime_seconds": strconv.FormatInt(int64(a.limits.Lifetime/time.Second), 10), "max_grant_validity_seconds": strconv.FormatInt(int64(a.limits.MaxGrantValidity/time.Second), 10)}
 }
 func (a *serverGrantAuthority) resultRecords(workspace string) ([]inputauthority.Record, error) {
 	records, err := a.registry.Records(workspace)
@@ -45,7 +46,7 @@ func (a *serverGrantAuthority) resultRecords(workspace string) ([]inputauthority
 	}
 	for _, r := range records {
 		key := a.domain.grantPrefix() + r.Digest
-		if !validPlanHash(r.Digest) || !a.resultShape(r.Proposal.Spec) || a.bindings[key] != r.Proposal.Spec {
+		if !validPlanHash(r.Digest) || !a.readShape(r.Proposal.Spec) || a.bindings[key] != r.Proposal.Spec {
 			return nil, commands.Fail(commands.EvidenceStale)
 		}
 	}
@@ -69,7 +70,7 @@ func (a *serverGrantAuthority) resultRecords(workspace string) ([]inputauthority
 	return records, nil
 }
 func (h resultAuthorityRead) Apply(ctx commands.Context) (commands.Outcome, error) {
-	a := h.s.resultAuthority
+	a := h.s.grantAuthority(h.domain)
 	if a == nil {
 		return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
 	}
@@ -104,7 +105,7 @@ func (h resultAuthorityRead) Apply(ctx commands.Context) (commands.Outcome, erro
 		}
 	} else {
 		capability, collection := ctx.Fields["capability"], ctx.Fields["collection"]
-		if _, e := resultAuthorityTerms(ctx.Workspace, capability); e != nil {
+		if _, e := a.domain.terms(ctx.Workspace, capability); e != nil || !a.domain.readCapability(capability) {
 			return commands.Outcome{}, commands.Fail(commands.InvalidRequest, "capability")
 		}
 		headers["capability"], headers["collection"] = capability, collection
@@ -128,7 +129,7 @@ func (h resultAuthorityRead) Apply(ctx commands.Context) (commands.Outcome, erro
 		Headers         map[string]string
 		Policy          map[string]any
 		Rows            []resultAuthorityRow
-	}{"synthetic-erp-result-authority-v1", h.kind, headers, a.resultPolicy(), rows})
+	}{a.domain.readVersion(), h.kind, headers, a.resultPolicy(), rows})
 	after, expected := ctx.Fields["after"], ctx.Fields["snapshot"]
 	start := 0
 	if after != "" || expected != "" {
@@ -165,12 +166,19 @@ func (h resultAuthorityRead) Apply(ctx commands.Context) (commands.Outcome, erro
 }
 func (s *Server) resultAuthorityReadDefinitions() []commands.Definition {
 	out := []commands.Definition{}
+	for _, domain := range []grantAuthorityDomain{resultGrantAuthority, protectedGrantAuthority, termGrantAuthority, draftGrantAuthority} {
+		out = append(out, s.grantAuthorityReadDefinitions(domain)...)
+	}
+	return out
+}
+func (s *Server) grantAuthorityReadDefinitions(domain grantAuthorityDomain) []commands.Definition {
+	out := []commands.Definition{}
 	for _, kind := range []string{"history", "context"} {
 		fields := []commands.Field{{Name: "after", Type: commands.ID}, {Name: "snapshot", Type: commands.Text}}
 		if kind == "context" {
 			fields = append(fields, commands.Field{Name: "collection", Type: commands.ID, Required: true}, commands.Field{Name: "capability", Type: commands.ID, Required: true})
 		}
-		out = append(out, commands.Definition{ID: "result_authority." + kind, Permission: commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}, Fields: fields, Refusals: []commands.Code{commands.EvidenceStale}, Handler: resultAuthorityRead{s: s, kind: kind}})
+		out = append(out, commands.Definition{ID: domain.readNamespace() + "." + kind, Permission: commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}, Fields: fields, Refusals: []commands.Code{commands.EvidenceStale}, Handler: resultAuthorityRead{s: s, kind: kind, domain: domain}})
 	}
 	return out
 }

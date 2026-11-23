@@ -55,7 +55,7 @@ func (a *serverGrantAuthority) resultCeilings(workspace, capability string) ([]r
 	rows := []resultAuthorityRow{}
 	for key, spec := range a.ceilings {
 		record, ok := owned[key]
-		if !ok || key != a.domain.grantPrefix()+record.Digest || record.Proposal.Spec != spec || !a.resultShape(spec) || spec.Kind != inputauthority.Console {
+		if !ok || key != a.domain.grantPrefix()+record.Digest || record.Proposal.Spec != spec || !a.readShape(spec) || spec.Kind != inputauthority.Console {
 			return nil, commands.Fail(commands.EvidenceStale)
 		}
 		effect, err := a.Lookup(key)

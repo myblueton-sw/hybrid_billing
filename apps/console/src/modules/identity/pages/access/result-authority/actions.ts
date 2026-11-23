@@ -1,5 +1,5 @@
 import type {Attempt} from "../../../../../service/admin";
-import {AuthorityError,frozen,id,instant,revision} from "./contract";
+import {AuthorityError,frozen,id,instant,resultDomain,revision,type AuthorityDomain} from "./contract";
 import type {Inspection} from "./inspection";
 import {freezeIntent,type Intent} from "./mutations";
 export type ReviewAction="approve"|"reject"|"withdraw"|"recover";
@@ -13,9 +13,9 @@ export function reviewActions(detail:Inspection,actor:string):readonly ReviewAct
  if(row.kind==="human_grant"&&actor===row.recipient)return frozen([]);
  return frozen(["approve","reject"]);
 }
-export function reviewDecision(detail:Inspection,actor:string,action:ReviewAction,rationale:string,attempt:Attempt):ActionReview{
- if(!revision(detail.revision)||instant(detail.at)===undefined||!reviewActions(detail,actor).includes(action))throw new AuthorityError("decision_review_unavailable");
+export function reviewDecision(detail:Inspection,actor:string,action:ReviewAction,rationale:string,attempt:Attempt,d:AuthorityDomain=resultDomain):ActionReview{
+ if(detail.namespace!==d.namespace||!revision(detail.revision)||instant(detail.at)===undefined||!reviewActions(detail,actor).includes(action))throw new AuthorityError("decision_review_unavailable");
  if(action==="recover"&&rationale!==detail.decision?.rationale)throw new AuthorityError("decision_review_unavailable");
- const intent=freezeIntent({action:action==="recover"?"approve":action,target:detail.row.proposal,fields:{digest:detail.row.digest},rationale,revision:detail.revision,attempt});
+ const intent=freezeIntent({action:action==="recover"?"approve":action,target:detail.row.proposal,fields:{digest:detail.row.digest},rationale,revision:detail.revision,attempt},d);
  return frozen({action,detail:structuredClone(detail),intent});
 }

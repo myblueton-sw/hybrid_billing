@@ -1,12 +1,12 @@
 import type {Session} from "../../../../../service/api";
-import {AuthorityError,frozen} from "./contract";
+import {AuthorityError,frozen,resultDomain,type AuthorityDomain} from "./contract";
 import {reviewDecision,type ActionReview} from "./actions";
 import {freezeIntent,mutationTransport,type Intent,type Receipt} from "./mutations";
 export type AuthorityAttempt=Readonly<{intent:Intent;phase:"pending"|"unknown"|"refused"|"recorded";receipt?:Receipt;error?:string;operation?:string}>;
 export class AuthorityAttempts{
  private entries:readonly AuthorityAttempt[]=frozen([]);
  private listeners=new Set<()=>void>();
- constructor(private readonly send:(intent:Intent)=>Promise<Receipt>,private readonly actor:string){}
+ constructor(private readonly send:(intent:Intent)=>Promise<Receipt>,private readonly actor:string,private readonly domain:AuthorityDomain=resultDomain){}
  snapshot=()=>this.entries;
  subscribe=(listener:()=>void)=>{this.listeners.add(listener);return()=>{this.listeners.delete(listener);};};
  private update(entry:AuthorityAttempt){this.entries=frozen([...this.entries.filter(e=>e.intent.attempt.key!==entry.intent.attempt.key),entry]);for(const listener of this.listeners)listener();}
@@ -16,9 +16,9 @@ export class AuthorityAttempts{
   if(this.entries.length>=100)throw new AuthorityError("attempt_capacity");
   if(this.entries.some(e=>e.intent.attempt.key===intent.attempt.key||this.unresolved(e)&&(e.intent.target===intent.target||intent.action.startsWith("propose_")&&e.intent.action.startsWith("propose_"))&&!(recover&&e.phase==="unknown"&&e.intent.action==="approve"&&e.intent.target===intent.target&&e.intent.fields.digest===intent.fields.digest&&e.intent.rationale===intent.rationale)))throw new AuthorityError("unresolved_authority_attempt");
  }
- propose(input:Intent){const intent=freezeIntent(input);if(!intent.action.startsWith("propose_"))throw new AuthorityError("invalid_authority_request");this.admit(intent);return this.run({intent,phase:"pending"});}
+ propose(input:Intent){const intent=freezeIntent(input,this.domain);if(!intent.action.startsWith("propose_"))throw new AuthorityError("invalid_authority_request");this.admit(intent);return this.run({intent,phase:"pending"});}
  decide(input:ActionReview){
-  const reviewed=reviewDecision(input.detail,this.actor,input.action,input.intent.rationale,input.intent.attempt);
+  const reviewed=reviewDecision(input.detail,this.actor,input.action,input.intent.rationale,input.intent.attempt,this.domain);
   if(JSON.stringify(reviewed.intent)!==JSON.stringify(input.intent))throw new AuthorityError("invalid_authority_request");
   this.admit(reviewed.intent,input.action==="recover");return this.run({intent:reviewed.intent,phase:"pending"});
  }
@@ -34,8 +34,8 @@ export class AuthorityAttempts{
  }
 }
 const stores=new Map<string,AuthorityAttempts>();
-export function sessionAuthorityAttempts(session:Session){
- const key=JSON.stringify([session.user,session.workspace,session.csrf]);const found=stores.get(key);if(found)return found;
- if(stores.size>=16)throw new AuthorityError("session_capacity");
- const store=new AuthorityAttempts(mutationTransport(session),session.user);stores.set(key,store);return store;
+export function sessionAuthorityAttempts(session:Session,d:AuthorityDomain=resultDomain){
+ const key=JSON.stringify([session.user,session.workspace,session.csrf,d.namespace]);const found=stores.get(key);if(found)return found;
+ if(stores.size>=64)throw new AuthorityError("session_capacity");
+ const store=new AuthorityAttempts(mutationTransport(session,undefined,d),session.user,d);stores.set(key,store);return store;
 }

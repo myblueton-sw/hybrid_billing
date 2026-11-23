@@ -1,4 +1,4 @@
-import { AuthorityError,bytes,capability,ceilingOf,digest,fail,frozen,historyOf,id,instant,policyOf,recipientOf,revision,type Capability,type Envelope,type Read,type Recipient,type Ceiling } from "./contract";
+import { AuthorityError,bytes,capability,ceilingOf,digest,fail,frozen,historyOf,id,instant,policyOf,recipientOf,resultDomain,revision,type AuthorityDomain,type Capability,type Envelope,type Read,type Recipient,type Ceiling } from "./contract";
 export type Cursor=Readonly<{after:string;snapshot:string}>;
 function rowsOf(envelope:Envelope,workspace:string,actor:string,fixed:readonly string[],cursor?:Cursor){
  const f=envelope.fields;
@@ -16,20 +16,20 @@ function ordered<T>(rows:readonly T[],key:(row:T)=>string,next:string,cursor?:Cu
 }
 const base=["mode","workspace","actor","current_eligibility","snapshot","next"];
 const fields=(cursor?:Cursor):Record<string,string>=>cursor?{after:cursor.after,snapshot:cursor.snapshot}:{};
-export async function historyPage(read:Read,workspace:string,actor:string,cursor?:Cursor){
- const e=await read("result_authority.history",workspace,fields(cursor));
- const rows=rowsOf(e,workspace,actor,base,cursor).map(historyOf);
+export async function historyPage(read:Read,workspace:string,actor:string,cursor?:Cursor,d:AuthorityDomain=resultDomain){
+ const e=await read(`${d.namespace}.history`,workspace,fields(cursor));
+ const rows=rowsOf(e,workspace,actor,base,cursor).map(value=>historyOf(value,d));
  ordered(rows,row=>row.proposal,e.fields.next,cursor);
  return frozen({revision:e.revision,at:e.at,snapshot:e.fields.snapshot,next:e.fields.next,rows});
 }
-export async function contextPage(read:Read,workspace:string,actor:string,collection:"recipients"|"ceilings",selected:Capability,cursor?:Cursor){
- if(!capability(selected))throw new AuthorityError("invalid_authority_request");
- const e=await read("result_authority.context",workspace,{collection,capability:selected,...fields(cursor)});
+export async function contextPage(read:Read,workspace:string,actor:string,collection:"recipients"|"ceilings",selected:Capability,cursor?:Cursor,d:AuthorityDomain=resultDomain){
+ if(!capability(selected,d))throw new AuthorityError("invalid_authority_request");
+ const e=await read(`${d.namespace}.context`,workspace,{collection,capability:selected,...fields(cursor)});
  if(e.fields.collection!==collection||e.fields.capability!==selected)return fail();
- const raw=rowsOf(e,workspace,actor,[...base,"collection","capability","policy"],cursor),policy=policyOf(e.fields.policy);
- const rows: readonly (Recipient|Ceiling)[]=collection==="recipients"?raw.map(value=>recipientOf(value,actor)):raw.map(value=>ceilingOf(value,selected));
+ const raw=rowsOf(e,workspace,actor,[...base,"collection","capability","policy"],cursor),policy=policyOf(e.fields.policy,d);
+ const rows: readonly (Recipient|Ceiling)[]=collection==="recipients"?raw.map(value=>recipientOf(value,actor)):raw.map(value=>ceilingOf(value,selected,d));
  ordered(rows,row=>"user" in row?row.user:row.ceiling,e.fields.next,cursor);
- return frozen({revision:e.revision,at:e.at,snapshot:e.fields.snapshot,next:e.fields.next,collection,capability:selected,policy,rows});
+ return frozen({namespace:d.namespace,revision:e.revision,at:e.at,snapshot:e.fields.snapshot,next:e.fields.next,collection,capability:selected,policy,rows});
 }
 export type HistoryPage=Awaited<ReturnType<typeof historyPage>>;
 export type ContextPage=Awaited<ReturnType<typeof contextPage>>;

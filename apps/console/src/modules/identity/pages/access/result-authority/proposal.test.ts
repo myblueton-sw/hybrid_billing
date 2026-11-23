@@ -4,7 +4,7 @@ import {capabilities,type Ceiling} from "./contract";
 import {reviewProposal,ProposalError,type ProposalContext,type ProposalDraft} from "./proposal-model";
 const hash="a".repeat(64),at="2026-11-22T09:00:00.000000001Z";
 const ceiling:Ceiling={ceiling:`result-grant-${hash}`,capability:"apply",not_before:at,not_after:"2026-11-22T12:00:00.000000001Z"};
-const page={revision:"r1",at,snapshot:hash,next:"",capability:"apply" as const,policy:{capabilities,proposal_lifetime_seconds:"3600",max_grant_validity_seconds:"86400"}};
+const page={namespace:"result_authority",revision:"r1",at,snapshot:hash,next:"",capability:"apply" as const,policy:{capabilities,proposal_lifetime_seconds:"3600",max_grant_validity_seconds:"86400"}};
 const context:ProposalContext={kind:"human_grant",capability:"apply",ceilings:{...page,collection:"ceilings",rows:[ceiling]},recipients:{...page,collection:"recipients",rows:[{user:"member",login:"synthetic"}]}};
 const draft:ProposalDraft={recipient:"member",ceiling:ceiling.ceiling,notBefore:at,notAfter:ceiling.not_after,rationale:"Reviewed synthetic permission"},attempt={request:"request",key:"key"};
 test("proposal review binds selected current options and lossless validity into frozen intent",()=>{

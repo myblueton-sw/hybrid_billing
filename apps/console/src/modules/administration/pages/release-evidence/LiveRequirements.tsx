@@ -248,12 +248,12 @@ function RetireFacts({ l, page, ctx, draft }: { l: Locale; page: EvidencePage; c
   );
 }
 
-export function RetireImpact({ l, label, replacement, blockingUntested, approve = false }: { l: Locale; label: string; replacement: string; blockingUntested: boolean; approve?: boolean }) {
+export function RetireImpact({ l, label, replacement, blockingUntested, approve = false, unknown = false }: { l: Locale; label: string; replacement: string; blockingUntested: boolean; approve?: boolean; unknown?: boolean }) {
   return (
     <>
       <p className="p05-weight"><Template text={approve ? f.approvePermanent(l) : f.permanent(l)} slots={{ label: <Label value={label} /> }} /></p>
       {replacement ? <p><Template text={f.withReplacement(l)} slots={{ replacement: <Label value={replacement} /> }} /></p> : <p>{f.withoutReplacement(l)}</p>}
-      {blockingUntested && <p className="p05-weight">{f.blockingNote(l)}</p>}
+      {unknown ? <p className="p05-weight">{f.blockingUnknown(l)}</p> : blockingUntested && <p className="p05-weight">{f.blockingNote(l)}</p>}
     </>
   );
 }

@@ -460,3 +460,20 @@ One confirmed finding, low, corrected in the same change:
 Checks: `tsc` clean; console tests 1350, pass 1347, fail 0, skipped 3. Rendered: `tools/o03-setup-channels-qa.mjs` (63 cases), `o03-setup-channels-writes-qa.mjs` (36) and `o03-setup-changes-writes-qa.mjs` (27) run against a console built from this change, exit code 0 each, no unexpected read. They do not stage a pending reference read, so the corrected state itself is not asserted. No review of the one-line correction.
 
 Not settled by the reviewer: whether the server refuses a request, acceptance, verification or decision on a row governed by other rules, which the console offers (a refusal would be shown with its code); whether the term offers match the server's preconditions (the same). Not read: `StepResults.tsx`, `step-store.ts`, `write-store.ts`, `mutation.ts`, `editor.ts`, `part-store.ts`, the issuance write handlers of the server, and the P02 to P05 models and four P05 files named earlier.
+
+## Second static check, P screens (2026-11-24)
+
+Two independent reviewers (independent-reviewer role, AI, separate from root and from each other) read the remaining unopened files with the same five checks and the server side read before a default was reported. Nothing was executed.
+
+- P01 to P04 models and formatters (`installation`, `integrations`, `recovery`, `retention`: `live-model.ts` and `live-format.tsx` of each, eight files): no confirmed finding. Every list of states, kinds and blockers the reviewer compared matches the server's constants exactly today. Two suspected findings, both about lists capped at 50 rows (P01 preview basis and propose offer; P02 deliveries per subscription).
+- P05 (`release-evidence/LiveMatrix.tsx`, `LiveRequirements.tsx`, `LiveDecisions.tsx`, `LiveRetireForm.tsx`, `live-model.ts`, `live-format.tsx`): four confirmed findings and one suspected, all of them arising only when a server list holds more than the 50 rows it sends. No unsafe default was found: an active path, a proven customer state, a ready gate and a proof count above zero render as "unexpected value" in this build. Success texts depend on the returned state, and offered actions follow the server's permission and blocker values.
+
+Corrected in this change, because it bears on an approval: when a retirement is being approved and its requirement is not among the loaded rows, the impact no longer omits the blocking warning as if the requirement were known not to block. It says that the requirement is not listed in this read, so it is unknown whether retiring it removes a blocking check from the gate. Corrective review by the reviewer who found it (AI, by reading): PASS, no blocking finding, wording consistent with the neighbouring texts in three languages.
+
+Moved to HYB-352, not changed here: the capped-list cases (P05 build comparison, P05 test cases of a path detail, P05 decision counts, the P05 pending-retirement link, the P01 preview basis and propose offer, the P02 deliveries). Each needs more rows than the sample installation holds, and the remedy may change public reads.
+
+Malformed-response-only observations with an unsafe direction, not changed: on the four P screens a proposal in a state other than "pending" is grouped as closed; an unrecognised P01 observation state omits the sentence that it blocks approvals; unreadable P03 reconciliation rows read as "none"; a P04 proposal of an unrecognised kind appears in no view.
+
+Checks for the correction: `tsc` clean; console tests 1350, pass 1347, fail 0, skipped 3. No new test and no rendered check.
+
+With this, every file the first review reported as unopened has been read, except the shared O03 step store files (`StepResults.tsx`, `step-store.ts`, `write-store.ts`, `mutation.ts`, `editor.ts`, `part-store.ts`), the copy and code tables beyond search, style sheets and tests.

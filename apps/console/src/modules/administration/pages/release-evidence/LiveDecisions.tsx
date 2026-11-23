@@ -104,7 +104,7 @@ function ApproveFacts({ l, page, p, ctx }: { l: Locale; page: EvidencePage; p: P
 
 function ApproveImpact({ l, page, ctx }: { l: Locale; page: EvidencePage; ctx: Record<string, string> }) {
   if (ctx.module === "perf_gate") return <ProfileImpact l={l} status={ctx.known === "1" && ctx.status_set === "1" ? ctx.status ?? "" : null} candidate={page.candidate} missing={ctx.known !== "1"} approve />;
-  return <RetireImpact l={l} label={ctx.label ?? ""} replacement={ctx.replacement ?? ""} blockingUntested={ctx.untested === "1"} approve />;
+  return <RetireImpact l={l} label={ctx.label ?? ""} replacement={ctx.replacement ?? ""} blockingUntested={ctx.untested === "1"} unknown={ctx.known !== "1"} approve />;
 }
 
 function StateTag({ l, p }: { l: Locale; p: Proposal }) {

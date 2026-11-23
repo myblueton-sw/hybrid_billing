@@ -6,6 +6,7 @@ import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { Summary, type Problems } from "../../../../service/Service";
 import { c as sc, retryPhrase } from "../../../../service/copy";
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import { FailureBox, Reason, reasonProblem, useWide } from "../../../identity/pages/users/Live";
 import { w } from "../../../identity/pages/users/live-copy";
 import { o } from "../../../organizations/pages/organizations/live-copy";
@@ -1030,6 +1031,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     <div className={"o02-live" + (single ? " o02-single" : "")} data-live={view}>
       <p className="visually-hidden" id="o02-announce" role="status" aria-live="polite">{announce}</p>
       {scope}
+      {status === "error" && page && <div className="live-error o02-kept" role="alert"><p>{c.loadFailed(l)} {diagnosticCopy.kept(l)}</p><button type="button" className="live-secondary" onClick={() => void reload()}>{o.tryAgain(l)}</button></div>}
       {noticeBox}
       {failureBox}
       {heading}

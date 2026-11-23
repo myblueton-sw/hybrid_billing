@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, type OrgParty } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
@@ -24,11 +25,12 @@ type Props = {
 };
 
 export function failureText(l: Locale, e: unknown): { title: string; body: string } {
+  const title = diagnosticCopy.load(l, "contracts");
   if (e instanceof AdminError) {
-    if (e.failure === "limited") return { title: sc.failed(l), body: sc.limited(l, retryPhrase(l, e.retryAfter || 60)) };
-    if (e.failure === "busy" || e.failure === "unavailable") return { title: sc.failed(l), body: sc.unavailable(l) };
+    if (e.failure === "limited") return { title, body: sc.limited(l, retryPhrase(l, e.retryAfter || 60)) };
+    if (e.failure === "busy" || e.failure === "unavailable") return { title, body: diagnosticCopy.unavailable(l) };
   }
-  return { title: sc.failed(l), body: "" };
+  return { title, body: "" };
 }
 
 export default function LiveContracts({ locale: l, view, params, session, onSignOut, onParams }: Props) {
@@ -179,6 +181,7 @@ export default function LiveContracts({ locale: l, view, params, session, onSign
         <div className="live-error o03-failure" role="alert">
           <h2>{failureText(l, loadError).title}</h2>
           {failureText(l, loadError).body && <p>{failureText(l, loadError).body}</p>}
+          {page && <p>{diagnosticCopy.kept(l)}</p>}
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>
       )}
@@ -199,6 +202,8 @@ export default function LiveContracts({ locale: l, view, params, session, onSign
                 <button type="button" className="live-secondary" onClick={() => void loadDetail()}>{sc.tryAgain(l)}</button>
               </div>
             ) : detail && detail.contract.id === selectedId ? (
+              <>
+              {detailError != null && <div className="live-error o03-detail-kept" role="alert"><h2>{failureText(l, detailError).title}</h2><p>{diagnosticCopy.kept(l)}</p><button type="button" className="live-secondary" onClick={() => void loadDetail()}>{sc.tryAgain(l)}</button></div>}
               <Detail
                 key={selectedId}
                 l={l} view={view} detail={detail} parties={parties} api={api} session={session} params={params} period={period}
@@ -206,6 +211,7 @@ export default function LiveContracts({ locale: l, view, params, session, onSign
                 onDone={(text) => { setNotice(text); void reloadAll(); requestAnimationFrame(() => document.getElementById("o03-notice")?.focus()); }}
                 onDenied={() => setDenied(true)} onSignedOut={() => setSignedOut(true)}
               />
+              </>
             ) : (
               <p className="live-meta" role="status">{k.loading(l)}</p>
             )}

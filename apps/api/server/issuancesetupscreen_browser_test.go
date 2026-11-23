@@ -117,7 +117,7 @@ func TestIssuanceSetupActualScreenBrowser(t *testing.T) {
 	f.ok(t, "unused statement", attestRun(f, f.as(Admin3Login), "attest_channel_registration", c, map[string]string{"attestation": "screen-unused-statement", "target": "screen-unused-channel", "statement": "Synthetic statement that no step will use."}), "recorded", "")
 	f.must(f.s.Bind(listener.Addr()))
 	browse("changes", map[string]string{"FIRST": AdminLogin, "SECOND": Admin2Login, "THIRD": Admin3Login, "REQUESTER": requester, "VERIFIER": verifier}, "--effective", f.s.clock().Add(2*time.Hour).UTC().Format("2006-01-02T15:04"))
-	if len(a.changes) != 2 || len(a.bindingIntents) != 1 || len(a.attestations) != 7 {
+	if len(a.changes) != 3 || len(a.bindingIntents) != 1 || len(a.attestations) != 9 {
 		t.Fatalf("unexpected records: changes %d bindings %d statements %d", len(a.changes), len(a.bindingIntents), len(a.attestations))
 	}
 	states := map[string]int{}
@@ -128,8 +128,17 @@ func TestIssuanceSetupActualScreenBrowser(t *testing.T) {
 		}
 		states[v.State]++
 	}
-	if states[protected.StateRejected] != 1 || states[protected.StateScheduled] != 1 {
-		t.Fatalf("expected one rejected and one approved change: %v", states)
+	if states[protected.StateRejected] != 2 || states[protected.StateScheduled] != 1 {
+		t.Fatalf("expected two rejected and one approved change: %v", states)
+	}
+	ended := map[string]int{}
+	for _, change := range a.changes {
+		if change.Module.State == protected.StateRejected {
+			ended[change.Module.EndedBy+" "+change.Module.Verification.Verification.Outcome]++
+		}
+	}
+	if ended["screen-verifier "+protected.OutcomeDenied] != 1 || ended[SampleAdmin2+" "+protected.OutcomeConfirmed] != 1 {
+		t.Fatalf("expected one change ended by the verifier's denial and one by the approver's rejection: %v", ended)
 	}
 	unused := a.attestations["screen-unused-statement"]
 	if attestationState(unused) != "withdrawn" || unused.Actor != SampleAdmin3 {

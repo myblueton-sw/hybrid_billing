@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"net"
 	"net/http/httptest"
 	"net/url"
@@ -8,7 +9,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/identity"
+	"github.com/myblueton-sw/hybrid_billing/modules/protected"
+
+	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
 	"github.com/myblueton-sw/hybrid_billing/modules/protectedauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/termsauthority"
 )
@@ -27,6 +33,7 @@ func TestIssuanceSetupActualScreenBrowser(t *testing.T) {
 	f.setPassword(MemberLogin, pw)
 	j := confirmJourneyConfiguration(t, f)
 	c := j.configuration
+	requester, verifier := activateScreenAdministrator(f, "screen-requester"), activateScreenAdministrator(f, "screen-verifier")
 	for _, right := range []struct{ namespace, capability, recipient string }{
 		{"issuance_protected_authority", protectedauthority.Inspect, SampleAdmin3},
 		{"issuance_protected_authority", protectedauthority.RegisterChannel, SampleAdmin3},
@@ -53,15 +60,20 @@ func TestIssuanceSetupActualScreenBrowser(t *testing.T) {
 	defer server.Close()
 	script, err := filepath.Abs("../../../tools/o03-setup-live-qa.mjs")
 	f.must(err)
-	cmd := exec.Command("node", script, "--url", frontend, "--api", server.URL, "--output", output, "--playwright-module", os.Getenv("HB_PROJECTION_QA_PLAYWRIGHT"), "--chromium", os.Getenv("HB_PROJECTION_QA_CHROMIUM"), "--contract", c.Spec.Contract, "--on", "2026-11-16")
-	cmd.Env = os.Environ()
-	for name, login := range map[string]string{"FIRST": AdminLogin, "SECOND": Admin2Login, "THIRD": Admin3Login, "MEMBER": MemberLogin} {
-		who := f.as(login)
-		cmd.Env = append(cmd.Env, "HB_ISSUANCE_SETUP_BROWSER_"+name+"="+who.cookie.Name+"="+who.cookie.Value)
+	browse := func(phase string, people map[string]string, extra ...string) {
+		t.Helper()
+		arguments := append([]string{script, "--phase", phase, "--url", frontend, "--api", server.URL, "--output", filepath.Join(output, phase), "--playwright-module", os.Getenv("HB_PROJECTION_QA_PLAYWRIGHT"), "--chromium", os.Getenv("HB_PROJECTION_QA_CHROMIUM"), "--contract", c.Spec.Contract, "--on", "2026-11-16"}, extra...)
+		cmd := exec.Command("node", arguments...)
+		cmd.Env = os.Environ()
+		for name, login := range people {
+			who := f.as(login)
+			cmd.Env = append(cmd.Env, "HB_ISSUANCE_SETUP_BROWSER_"+name+"="+who.cookie.Name+"="+who.cookie.Value)
+		}
+		if raw, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("actual issuance setup browser failed in phase %s; inspect isolated evidence: %v\n%s", phase, err, raw)
+		}
 	}
-	if raw, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("actual issuance setup browser failed; inspect isolated evidence: %v\n%s", err, raw)
-	}
+	browse("setup", map[string]string{"FIRST": AdminLogin, "SECOND": Admin2Login, "THIRD": Admin3Login, "MEMBER": MemberLogin})
 	rules := a.protectedRules
 	if rules == nil || rules.State != "confirmed" || rules.Proposer != SampleAdmin || rules.Confirmer != SampleAdmin2 {
 		t.Fatal("rules were not proposed and confirmed by the two browser sessions")
@@ -79,4 +91,57 @@ func TestIssuanceSetupActualScreenBrowser(t *testing.T) {
 			t.Fatal("the term was not recorded and approved by the two browser sessions")
 		}
 	}
+
+	f.advance(24 * time.Hour)
+	f.must(f.s.Bind(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 8820}))
+	for _, right := range []struct{ namespace, capability, recipient string }{
+		{"issuance_protected_authority", protectedauthority.Inspect, "screen-requester"},
+		{"issuance_protected_authority", protectedauthority.Inspect, "screen-verifier"},
+		{"issuance_protected_authority", protectedauthority.Inspect, SampleAdmin2},
+		{"issuance_protected_authority", protectedauthority.Inspect, SampleAdmin3},
+		{"issuance_protected_authority", protectedauthority.Inspect, SampleAdmin},
+		{"issuance_protected_authority", protectedauthority.RegisterChannel, SampleAdmin3},
+		{"issuance_protected_authority", protectedauthority.AdmitChannel, SampleAdmin},
+		{"issuance_protected_authority", protectedauthority.RequestChange, "screen-requester"},
+		{"issuance_protected_authority", protectedauthority.VerifyChange, "screen-verifier"},
+		{"issuance_protected_authority", protectedauthority.ApproveChange, SampleAdmin2},
+		{"issuance_term_authority", termsauthority.Inspect, SampleAdmin3},
+		{"issuance_term_authority", termsauthority.Inspect, SampleAdmin},
+		{"issuance_term_authority", termsauthority.RecordTerm, SampleAdmin3},
+		{"issuance_term_authority", termsauthority.ApproveTerm, SampleAdmin},
+		{"issuance_term_authority", termsauthority.BindTerm, SampleAdmin3},
+		{"issuance_term_authority", termsauthority.ApproveBinding, SampleAdmin},
+	} {
+		j.grant(t, f, right.namespace, right.capability, right.recipient)
+	}
+	f.must(f.s.Bind(listener.Addr()))
+	browse("changes", map[string]string{"FIRST": AdminLogin, "SECOND": Admin2Login, "THIRD": Admin3Login, "REQUESTER": requester, "VERIFIER": verifier}, "--effective", f.s.clock().Add(2*time.Hour).UTC().Format("2006-01-02T15:04"))
+	if len(a.changes) != 1 || len(a.bindingIntents) != 1 || len(a.attestations) != 4 {
+		t.Fatalf("unexpected records: changes %d bindings %d statements %d", len(a.changes), len(a.bindingIntents), len(a.attestations))
+	}
+	for _, change := range a.changes {
+		v := change.Module
+		if v.State != protected.StateScheduled || v.Requester != "screen-requester" || v.Verification.Verifier != "screen-verifier" || change.Spec.Field != protected.FieldPaymentAccount {
+			t.Fatalf("the change was not requested, verified and approved by the browser sessions: %+v", v)
+		}
+	}
+	for _, binding := range a.bindingIntents {
+		if binding.State != "approved" {
+			t.Fatal("applying the terms was not approved: " + binding.State)
+		}
+	}
+}
+
+func activateScreenAdministrator(f world, id string) string {
+	login := id + "@example.invalid"
+	newPopulation(f).member(id, login, identity.Administrator)
+	f.must(f.s.grantInstallation(id, f.s.clock()))
+	token, err := f.s.recordLink(login, passwords.PurposeSet, f.s.clock())
+	f.must(err)
+	body, err := json.Marshal(map[string]string{"token": token, "password": pw})
+	f.must(err)
+	if reply := f.auth("redeem", string(body), f.pre()); reply.status != 204 {
+		f.t.Fatalf("administrator activation: status %d", reply.status)
+	}
+	return login
 }

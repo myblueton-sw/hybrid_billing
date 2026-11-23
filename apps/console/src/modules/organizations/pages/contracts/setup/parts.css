@@ -16,3 +16,19 @@
  .o03-parts a { display: grid; inline-size: 100%; box-sizing: border-box; white-space: normal; padding: 10px 12px; }
  .o03-parts li + li a { border-block-start: 1px solid var(--border-row, #d5d7da); }
 }
+.o03-part-counts { margin-block: 0; }
+.o03-part-table { inline-size: 100%; table-layout: fixed; }
+.o03-part-table th, .o03-part-table td { vertical-align: top; overflow-wrap: anywhere; }
+.o03-part-table th:nth-child(1) { inline-size: 22%; }
+.o03-part-table th:nth-child(2) { inline-size: 26%; }
+.o03-part-table th:nth-child(3) { inline-size: 32%; }
+.o03-part-table th:nth-child(4) { inline-size: 20%; }
+.o03-part-line { display: block; margin-block-end: 8px; }
+.o03-part-line > .live-sub { display: block; }
+@container (max-width: 43.999rem) {
+ .o03-part-table thead { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+ .o03-part-table, .o03-part-table tbody, .o03-part-table tr, .o03-part-table td { display: block; inline-size: 100%; }
+ .o03-part-table td { block-size: auto; padding-block: 8px; }
+ .o03-part-table td::before { content: attr(data-label); display: block; font-weight: 600; margin-block-end: 4px; }
+ .o03-part-table tr { margin-block-end: 24px; padding-block-start: 16px; border-block-start: 1px solid var(--border-row, #d5d7da); }
+}

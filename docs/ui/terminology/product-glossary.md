@@ -671,4 +671,22 @@ Labels of the protected settings rules part, from `setup/rules-copy.ts`:
 
 "Recorded state" is what the service retained and may be an unknown outcome; "Observed now" is what is held at the time of the read; neither states that issuance is possible. The recorded states reuse the issuance settings labels (proposed, confirmed, proposal outcome unknown, confirmation outcome unknown).
 
+Labels of the verification channels part, from `setup/channels-copy.ts`:
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| state `registration_unknown` | Registration outcome unknown | 등록 처리 결과 미확인 | نتيجة التسجيل غير معروفة |
+| state `registered` | Registered, awaiting acceptance | 등록됨, 수락 대기 | مسجَّلة، بانتظار القبول |
+| state `admission_unknown` | Acceptance outcome unknown | 수락 처리 결과 미확인 | نتيجة القبول غير معروفة |
+| state `admitted` | Accepted | 수락됨 | مقبولة |
+| observation `absent` | No channel observed | 관찰된 채널 없음 | لا توجد قناة مرصودة |
+| observation `retired` | Retired | 사용 종료됨 | أُوقف استخدامها |
+| pinned admitter | Accepting person pinned, not yet observed | 지정된 수락자, 아직 관찰되지 않음 | المعيَّن للقبول، لم يُرصد بعد |
+| `request_not_before` | Earliest change request | 가장 이른 변경 요청 시각 | أبكر وقت لطلب تغيير |
+| rules `other` | Recorded under rules other than the current rules | 현재 규칙이 아닌 규칙에서 기록됨 | مسجلة وفق قواعد غير القواعد الحالية |
+| subject kinds | Customer, Issuing entity, Document kind | 고객, 발행 법인, 문서 종류 | العميل، الجهة المصدرة، نوع المستند |
+| channel kinds | Email, Phone, Portal, Postal mail | 이메일, 전화, 포털, 우편 | البريد الإلكتروني، الهاتف، البوابة، البريد العادي |
+
+"Accepted" is the admission step of a channel (수락, قبول) and never means valid or approved. The earliest change request time is shown only when the read states it and does not state that the user may request a change through the channel.
+
 A statement (진술, إفادة) is its author's accountable claim and is never labelled evidence, proof or verification. "Selected" states which confirmed settings the user chose as scope; it does not state that issuance is possible. Role-based AI review only; native-language and owner acceptance remain unverified.

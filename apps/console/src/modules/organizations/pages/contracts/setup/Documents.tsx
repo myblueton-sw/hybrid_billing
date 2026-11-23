@@ -10,6 +10,7 @@ import { text, type SetupWord } from "./copy";
 import { Writes } from "./Writes";
 import { PartFrame, PartNav } from "./Parts";
 import { Rules } from "./Rules";
+import { Channels } from "./Channels";
 import { partText } from "./part-copy";
 import { scopeEligible, sessionScopeStore, type SetupPart, type SetupScope } from "./scope";
 import "./documents.css";
@@ -33,7 +34,7 @@ export function Documents({ l, session, contract, on, parties, part, onPart, onS
  useEffect(() => { if (part === "settings" && toSettings.current) { toSettings.current = false; historyHeading.current?.focus(); } }, [part]);
  if (part !== "settings") return <div className="o03-documents">
   <PartNav l={l} part={part} onPart={onPart} />
-  <PartFrame l={l} part={part} onPart={next => { toSettings.current = next === "settings"; onPart(next); }} scope={scope} loading={state.history.loading || !page && !state.history.error} feedback={!scope && state.history.error ? <ReadFeedback l={l} state={state.history} /> : null}>{chosen => part === "rules" ? <Rules key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} /> : null}</PartFrame>
+  <PartFrame l={l} part={part} onPart={next => { toSettings.current = next === "settings"; onPart(next); }} scope={scope} loading={state.history.loading || !page && !state.history.error} feedback={!scope && state.history.error ? <ReadFeedback l={l} state={state.history} /> : null}>{chosen => part === "rules" ? <Rules key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} /> : part === "channels" ? <Channels key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} /> : null}</PartFrame>
  </div>;
  return <div className="o03-documents">
   <PartNav l={l} part={part} onPart={onPart} />

@@ -80,6 +80,9 @@ func (a *financialIssuance) setupMutationIdentity(workspace, actor, kind, target
 		if err != nil {
 			return err
 		}
+		if !exists && !setupSampleOption(spec) {
+			return commands.Fail(commands.UnsupportedCapability)
+		}
 		if exists && (!reflect.DeepEqual(spec, old.Spec) || !reflect.DeepEqual(setup, old.Setup) || reason != old.Reason) {
 			return commands.Fail(commands.EvidenceStale)
 		}

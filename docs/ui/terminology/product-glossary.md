@@ -522,17 +522,9 @@ HYB-340 separates grant-governor approval from actual document evidence confirma
 | document_evidence | Document evidence | 문서 근거 | أدلة المستند |
 | document_authority_proposals | Document evidence and ERP preparation permission proposals | 문서 근거·ERP 준비 권한 제안 | مقترحات صلاحيات أدلة المستند وإعداد ERP |
 | document_evidence_proposals | Document evidence proposals | 문서 근거 제안 | مقترحات أدلة المستند |
-| issuance_setup_proposals | Issuance settings proposals | 발행 설정 제안 | مقترحات إعدادات الإصدار |
 | issuance_protected_authority_proposals | Protected issuance settings permission proposals | 보호된 발행 설정 권한 제안 | مقترحات صلاحيات إعدادات الإصدار المحمية |
 | issuance_term_authority_proposals | Payment terms permission proposals | 납부 조건 권한 제안 | مقترحات صلاحيات شروط الدفع |
 | issuance_draft_authority_proposals | Issuance draft permission proposals | 발행 초안 권한 제안 | مقترحات صلاحيات مسودات الإصدار |
-| issuance_draft_submissions | Issuance drafts awaiting approval | 승인 대기 중인 발행 초안 | مسودات الإصدار بانتظار الموافقة |
-| issuance_protected_steps | Protected issuance settings steps awaiting another person | 다른 사람의 처리를 기다리는 보호된 발행 설정 단계 | خطوات إعدادات الإصدار المحمية بانتظار شخص آخر |
-| issuance_term_steps | Payment terms steps awaiting approval | 승인 대기 중인 납부 조건 단계 | خطوات شروط الدفع بانتظار الموافقة |
-
-The `issuance_draft_submissions` row of M01 counts, for the person who submitted them, issuance drafts whose submission is recorded or has an unknown outcome and that have no approved review; a refused submission is not counted. A new review and a new approval attempt recheck that the submitter still holds the submission permission; recovering an approval the module already recorded does not. The row uses the general recheck note. A reviewer whose prepared review is the last one has no row of their own (HYB-344).
-
-The `issuance_protected_steps` row of M01 counts, for the person who started each, a protected settings rules proposal not yet confirmed, a verification channel not yet accepted or whose acceptance has an unknown outcome, and a protected settings change requested or verified but not decided. A step whose own first request has an unknown outcome is counted too, although it waits for the same person's retry rather than for someone else. The next step rechecks that person's standing, so the row uses the note "Rechecked when the next step is sent". The `issuance_term_steps` row counts payment terms and their applications to a contract that are recorded but not approved, or whose recording or approval has an unknown outcome, for the person who recorded them; approval rechecks that person's permission. A change is counted by its recorded state, and ordinary reads do not write the lapse of its validity back, so a lapsed change can remain counted. Statements not yet used by a step and the people who must perform the next step have no row (HYB-344).
 
 M01 distinguishes permission proposals across all five capabilities from pending document-evidence packets counted by their original proposer. The document count excludes confirmed and revoked packets and all permission proposals. Confirmation rechecks the original proposer's current proposal authority; a count does not imply automatic cancellation, financial approval or ERP preparation. The document row says "The proposer’s permission is rechecked when the document evidence is confirmed." Its false/unknown fallback does not assert this safeguard. M03/P02 show actual human grants and console ceilings. The evidence field is protected as Cost; its name is not translated as document cost. Independent AI technical-writing review selected these terms from the actual contract and existing confirmation/revocation vocabulary; native-language and owner acceptance remain unverified.
 
@@ -666,6 +658,23 @@ Once an issuance permission is granted it appears in the existing grant and ceil
 | issuance_protected | Protected issuance settings evidence | 보호된 발행 설정 근거 | أدلة إعدادات الإصدار المحمية |
 | issuance_terms | Payment terms evidence | 납부 조건 근거 | أدلة شروط الدفع |
 | issuance_draft | Issuance draft evidence | 발행 초안 근거 | أدلة مسودة الإصدار |
+
+## Issuance pending work on M01 (HYB-343, HYB-344)
+
+M01 lists these rows under pending work when a person is about to lose access. Each count is the number of open items that person started; it does not cancel them. The note beside a count says whether that person is checked again at the next step. If so, the item fails once their access is removed.
+
+| Identifier | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| issuance_setup_proposals | Issuance settings proposals | 발행 설정 제안 | مقترحات إعدادات الإصدار |
+| issuance_draft_submissions | Issuance drafts awaiting approval | 승인 대기 중인 발행 초안 | مسودات الإصدار بانتظار الموافقة |
+| issuance_protected_steps | Protected issuance settings steps awaiting another person | 다른 사람의 처리를 기다리는 보호된 발행 설정 단계 | خطوات إعدادات الإصدار المحمية بانتظار شخص آخر |
+| issuance_term_steps | Payment terms steps awaiting approval | 승인 대기 중인 납부 조건 단계 | خطوات شروط الدفع بانتظار الموافقة |
+
+The `issuance_setup_proposals` row counts issuance settings a person proposed that are not yet confirmed, including a proposal or a confirmation whose outcome is unknown. Confirmation rechecks that the proposer is still an installation administrator, so the row uses its own note: "The proposer’s installation administrator status is rechecked when the issuance settings are confirmed." / "발행 설정 확인 시 제안자의 설치 관리자 자격을 다시 확인합니다." / "تُعاد مراجعة صفة مقدّم المقترح كمسؤول تثبيت عند تأكيد إعدادات الإصدار." It replaces the general note "Rechecked when approved", because issuance settings are confirmed, not approved.
+
+The `issuance_draft_submissions` row of M01 counts, for the person who submitted them, issuance drafts whose submission is recorded or has an unknown outcome and that have no approved review; a refused submission is not counted. A new review and a new approval attempt recheck that the submitter still holds the submission permission; recovering an approval the module already recorded does not. The row uses the general recheck note. A reviewer whose prepared review is the last one has no row of their own (HYB-344).
+
+The `issuance_protected_steps` row of M01 counts, for the person who started each, a protected settings rules proposal not yet confirmed, a verification channel not yet accepted or whose acceptance has an unknown outcome, and a protected settings change requested or verified but not decided. A step whose own first request has an unknown outcome is counted too, although it waits for the same person's retry rather than for someone else. The next step rechecks that person's standing, so the row uses the note "Rechecked when the next step is sent". The `issuance_term_steps` row counts payment terms and their applications to a contract that are recorded but not approved, or whose recording or approval has an unknown outcome, for the person who recorded them; approval rechecks that person's permission. A change is counted by its recorded state, and ordinary reads do not write the lapse of its validity back, so a lapsed change can remain counted. Statements not yet used by a step and the people who must perform the next step have no row (HYB-344).
 
 ## Issuance setup sections on O03
 

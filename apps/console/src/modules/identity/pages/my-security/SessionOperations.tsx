@@ -134,20 +134,20 @@ export function ReferencedOperation({ l,api,reference,onEnd,locked,onSignedOut }
   const [reload,setReload] = useState(0);
   const key = useMemo(() => ({ api,reference,reload }),[api,reference,reload]);
   const guard = useScopedRead(key);
-  const [data,setData] = useState<ScopedValue<{ op?: SessionOperation; failed?: boolean }> | null>(null);
+  const [data,setData] = useState<ScopedValue<{ op?: SessionOperation; failed?: "unavailable" | "unconfirmed" }> | null>(null);
   const value = data?.scope === guard.token ? data.value : null;
   const title = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     const valid = guard.begin();
     api.sessionOperation(reference).then(op => {
       if (!valid()) return;
-      if (op.operation !== reference || op.kind !== "others" || op.state === "unconfirmed") throw new AdminError("invalid");
-      setData({ scope:guard.token,value:{ op } });
-    }).catch(error => { if (!valid()) return;setData({ scope:guard.token,value:{ failed:true } });if (error instanceof AdminError && error.failure === "unauthenticated") onSignedOut(); });
+      if (op.operation !== reference || op.kind !== "others") throw new AdminError("invalid");
+      setData({ scope:guard.token,value:op.state === "unconfirmed" ? { failed:"unconfirmed" } : { op } });
+    }).catch(error => { if (!valid()) return;setData({ scope:guard.token,value:{ failed:"unavailable" } });if (error instanceof AdminError && error.failure === "unauthenticated") onSignedOut(); });
   },[guard]);
   useEffect(() => { if (value) title.current?.focus(); },[value]);
   return <section className="mysec-referenced-operation" aria-labelledby="mysec-referenced-title"><h3 id="mysec-referenced-title" tabIndex={-1} ref={title}>{sq.viewOperation(l)}</h3>
-    {!value && <p role="status">{e.reading(l)}</p>}{value?.failed && <p role="alert">{sq.operationUnavailable(l)}</p>}
+    {!value && <p role="status">{e.reading(l)}</p>}{value?.failed && <p role={value.failed === "unconfirmed" ? "status" : "alert"}>{value.failed === "unconfirmed" ? sq.operationUnconfirmed(l) : sq.operationUnavailable(l)}</p>}
     <button type="button" className="live-secondary" disabled={!value} onClick={() => setReload(n => n+1)}>{e.checkAgain(l)}</button>
     {value?.op && <ol className="mysec-ops"><OperationCard idPrefix="mysec-referenced-op" l={l} api={api} op={value.op} generation={JSON.stringify([value.op.state,value.op.cleanup])} onEnd={onEnd} locked={locked} onSignedOut={onSignedOut} /></ol>}
   </section>;

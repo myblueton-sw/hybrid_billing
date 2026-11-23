@@ -104,7 +104,7 @@ func TestFinancialSetupAttestationShapeAndText(t *testing.T) {
 		"blank statement":         {"statement": " \n\t"},
 		"oversized statement":     {"statement": strings.Repeat("a", 2001)},
 		"oversized locator":       {"locator": strings.Repeat("a", 513)},
-		"replacement character":   {"statement": "Altered � text"},
+		"replacement character":   {"statement": "Altered \uFFFD text"},
 		"carriage return":         {"statement": "Line one\r\nline two"},
 		"control character":       {"locator": "Binder\x00"},
 		"escaped beyond the row":  {"statement": strings.Repeat("<", 2000)},

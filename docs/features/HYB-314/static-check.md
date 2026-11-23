@@ -409,3 +409,14 @@ Read at main a9951b0; nothing executed; no independent review of this section. I
 | P02 modules | "None" for an empty reason | the reason is the one the module state carries, empty when the state has none (`integrations.go:439`) | accurate |
 
 The console parsers read an absent field as an empty string, so a malformed response would show the same labels; that is the same malformed-only case as E4, F4 and B2. H5 is not a present defect.
+
+## Finding H2 on P02, traced against the server (2026-11-24)
+
+Read at main 9677e48; nothing executed; no independent review of this section. The P02 part of H2 is refuted.
+
+- Identifiers shown in the success text are always returned: the proposal number (`integrationcmds.go:173`), the subscription identifier (`:260`) and the redelivery identifier (`:562` and the dead-letter approval). The "Unknown" fallback in the text applies only to a malformed response.
+- The approvals show the state the command returned (`k.result(l, state)`), which is accurate.
+- The withdrawals have one result state, "withdrawn" (`:426`, `:445`), so their fixed text is accurate.
+- The one case where a completed command did not do what its verb says is handled: when the person who started a request has lost the right, the approval completes with the state "closed" and the reason `requester_lost_right` (`integrationheld.go:127`; four call sites, for a module proposal, a subscription, a dead letter and a repeated redelivery). The shared command form reads that state before choosing the text and says "…: Not approved. It was closed because the person who started it no longer holds the right." (`integrations/LiveCommand.tsx:117`), and each of the four forms passes the object that sentence names.
+
+With this, H2 is refuted on both screens it named.

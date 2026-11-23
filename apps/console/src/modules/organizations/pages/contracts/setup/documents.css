@@ -22,3 +22,14 @@
  .o03-docs-table td::before { content: attr(data-label); display: block; font-weight: 600; margin-block-end: 4px; }
  .o03-docs-table tr { margin-block-end: 24px; }
 }
+
+.o03-setup-form { display: grid; gap: 16px; max-inline-size: 40rem; margin-block-start: 16px; }
+.o03-setup-form fieldset { display: grid; gap: 16px; border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+.o03-setup-form legend { font-weight: 600; margin-block-end: 12px; }
+.o03-setup-form label { display: grid; gap: 8px; }
+.o03-setup-form .o03-setup-choice { display: flex; align-items: center; gap: 12px; min-block-size: 44px; }
+.o03-setup-form select, .o03-setup-form textarea { font: inherit; color: inherit; background: var(--surface, white); border: 1px solid var(--border-control); border-radius: 0; padding: 12px; inline-size: 100%; min-block-size: 44px; }
+.o03-setup-form textarea { min-block-size: 100px; resize: vertical; }
+.o03-setup-form button { justify-self: start; }
+.o03-setup-review { margin-block-start: 24px; }
+.o03-setup-outcome { padding-block: 16px; border-block-start: 1px solid var(--border-row); }

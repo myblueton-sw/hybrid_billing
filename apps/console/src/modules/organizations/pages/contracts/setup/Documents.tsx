@@ -7,6 +7,7 @@ import { setupReadClient } from "./client";
 import { SetupReadStore, type ReadState } from "./read-store";
 import type { Configuration } from "./history";
 import { text, type SetupWord } from "./copy";
+import { Writes } from "./Writes";
 import "./documents.css";
 
 type Props = { l: Locale; session: Session; contract: string; on: string; parties: OrgParty[]; onSignedOut: () => void };
@@ -46,7 +47,8 @@ export function Documents({ l, session, contract, on, parties, onSignedOut }: Pr
   <section aria-labelledby="o03-docs-options" aria-busy={state.options.loading || undefined}><h3 id="o03-docs-options">{text(l, "sample")}</h3><ReadFeedback l={l} state={state.options} />{state.options.value && <><dl className="live-facts live-facts-grid">
    <Fact label={text(l, "mode")}>{ltr(state.options.value.mode)}</Fact><Fact label={text(l, "documentProfile")}>{ltr(state.options.value.profile)}</Fact>
    <Fact label={text(l, "region")}>{ltr(state.options.value.region)}</Fact><Fact label={text(l, "tax")}>{ltr(state.options.value.tax)}</Fact><Fact label={text(l, "zone")}>{ltr(state.options.value.zone)}</Fact><Fact label={text(l, "languages")}>{ltr(state.options.value.languages.join(", "))}</Fact>
-  </dl><p className="live-sub">{text(l, "presetNote")}</p></>}<p>{text(l, "pending")}</p></section>
+  </dl><p className="live-sub">{text(l, "presetNote")}</p></>}</section>
+  <Writes l={l} session={session} reads={store} />
  </div>;
 }
 function Fact({ label, children }: { label: string; children: ReactNode }) { return <div><dt>{label}</dt><dd>{children}</dd></div>; }

@@ -19,6 +19,7 @@ export class SetupReadStore {
   private update(patch: Partial<SetupReadState>) { this.state = { ...this.state, ...patch }; this.listeners.forEach(listener => listener()); }
   private error(error: unknown) { return error instanceof SetupError ? error.code : "service_unavailable"; }
   dispose() { this.sourceGeneration++; this.historyGeneration++; this.state = empty(); }
+  invalidate() { this.sourceGeneration++; this.historyGeneration++; this.update(empty()); }
   async load() { await Promise.all([this.source(), this.history()]); }
   async source() {
     const generation = ++this.sourceGeneration;

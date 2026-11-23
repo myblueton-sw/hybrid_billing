@@ -30,7 +30,6 @@ const words = {
  total: ["Total recorded settings", "전체 설정 수", "إجمالي الإعدادات المسجلة"], showing: ["Rows on this page", "현재 페이지 행 수", "صفوف هذه الصفحة"],
  details: ["Technical identifiers", "기술 식별자", "المعرّفات التقنية"], legacy: ["Earlier format — inspection only", "이전 형식 — 조회만 가능", "تنسيق سابق — للعرض فقط"],
  presetNote: ["The region and tax reference are sample values. They do not establish legal tax applicability.", "지역과 세금 참조는 샘플 값입니다. 실제 세금 적용 여부를 의미하지 않습니다.", "المنطقة والمرجع الضريبي قيمتان تجريبيتان. لا تثبتان انطباقًا ضريبيًا قانونيًا."],
- pending: ["Proposal and confirmation controls are not connected yet. Issuing also requires protected references and payment terms, which are not set up here.", "설정 제안·확인 기능은 아직 화면에 연결되지 않았습니다. 문서를 발행하려면 보호 참조와 지급 조건도 별도로 설정해야 합니다.", "لم تُربط أدوات الاقتراح والتأكيد بعد. يتطلب الإصدار أيضًا مراجع محمية وشروط دفع لا تُعدّ هنا."],
  denied: ["Issuance setup inspection was refused. Ask an administrator to check inspection rights and the contract association.", "발행 설정 조회가 거절되었습니다. 관리자에게 조회 권한과 계약 연결 확인을 요청하세요.", "رُفض عرض إعداد الإصدار. اطلب من المسؤول مراجعة صلاحيات العرض وارتباط العقد."],
  stale: ["The records changed or their scope could not be verified. Reload to start a new query.", "기록이 변경되었거나 조회 범위를 확인하지 못했습니다. 새로 조회하세요.", "تغيرت السجلات أو تعذر التحقق من نطاقها. أعد التحميل لبدء استعلام جديد."],
  failed: ["Setup could not be loaded. Try again.", "설정을 조회하지 못했습니다. 다시 조회하세요.", "تعذر تحميل الإعداد. أعد المحاولة."],

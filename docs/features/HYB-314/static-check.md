@@ -273,3 +273,9 @@ Checks: `tsc` clean; console tests 1347, pass 1344, fail 0, skipped 3. No new te
 The one-time pickup of a sign-in link (M01) or a credential secret (M04) is reported as gone only when the service refuses it, which is the server's answer for a pickup that was consumed, expired or belongs to another session (`users.go`, `collect`). Any other failure (the service not answering, an internal error, a lost response) leaves the retry in place instead of telling the administrator to issue a new link or revoke the credential. If the pickup was in fact consumed, the retry is refused and the gone text follows. The M04 rule that allowed a single retry is removed for the same reason.
 
 Checks: `tsc` clean; console tests pass with one new test for the rule. No rendered check. Independent change review (independent-reviewer role, AI, by reading): PASS, no blocking finding. Adopted afterwards: the M04 retry text says "Try again" in English and Korean, since the single-retry limit is gone (the Arabic already said so). It confirmed that a caller who lost installation administration is also told the pickup is gone, as before this change, and that a consumed secret whose body was malformed now takes one more click before the gone text.
+
+## O02 finding F2 (2026-11-24)
+
+The announcement on arrival ("Sealed", "Rejected", "Discarded", "Activated. Relationship revision n is now active.") is made only when the plan named in the address is in the loaded page and is in that state. The revision announced for an activation is the plan's own `activated_revision`, not the number in the address. An address typed or edited by hand no longer produces an announcement the page does not support. When the plan is not in the loaded page nothing is announced.
+
+Checks: `tsc` clean; console tests pass with one new test for the rule. No rendered check and no copy change.

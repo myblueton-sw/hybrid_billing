@@ -32,3 +32,19 @@
  .o03-part-table td::before { content: attr(data-label); display: block; font-weight: 600; margin-block-end: 4px; }
  .o03-part-table tr { margin-block-end: 24px; padding-block-start: 16px; border-block-start: 1px solid var(--border-row, #d5d7da); }
 }
+.o03-field-cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); list-style: none; margin: 0; padding: 0; }
+.o03-field-cards > li { display: grid; gap: 12px; align-content: start; padding: 16px; border: 1px solid var(--border-row, #d5d7da); min-inline-size: 0; }
+.o03-field-cards > li[aria-current] { background: #f0f1f2; }
+.o03-field-cards h4, .o03-part-sub h4 { margin: 0; }
+.o03-field-cards dl { margin: 0; }
+.o03-field-cards p { margin: 0; }
+.o03-field-cards button { justify-self: start; }
+.o03-part-sub { display: grid; gap: 16px; margin-block-start: 16px; }
+.o03-part-sub h4:focus-visible { outline: 2px solid var(--focus-ring, #202a35); outline-offset: 2px; }
+.o03-part-table.o03-changes-table th:nth-child(1) { inline-size: 24%; }
+.o03-part-table.o03-changes-table th:nth-child(2) { inline-size: 36%; }
+.o03-part-table.o03-changes-table th:nth-child(3) { inline-size: 20%; }
+.o03-part-table.o03-changes-table th:nth-child(4) { inline-size: 20%; }
+.o03-part-notice { margin: 0 0 8px; }
+.o03-events { margin: 0; padding-inline-start: 20px; display: grid; gap: 8px; }
+.o03-events .live-sub { display: block; }

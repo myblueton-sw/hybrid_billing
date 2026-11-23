@@ -689,4 +689,28 @@ Labels of the verification channels part, from `setup/channels-copy.ts`:
 
 "Accepted" is the admission step of a channel (수락, قبول) and never means valid or approved. The earliest change request time is shown only when the read states it and does not state that the user may request a change through the channel.
 
+Labels of the protected settings changes part, from `setup/changes-copy.ts`:
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| field `document_recipient` | Document recipient | 문서 수신자 | مستلم المستند |
+| field `document_template` | Document template | 문서 템플릿 | قالب المستند |
+| field `payment_account` | Payment account | 결제 계좌 | حساب الدفع |
+| unknown phase label | Step outcome | 단계 처리 결과 | نتيجة الخطوة |
+| phase `request_unknown` | Request outcome unknown | 요청 처리 결과 미확인 | نتيجة الطلب غير معروفة |
+| phase `verification_unknown` | Verification outcome unknown | 검증 처리 결과 미확인 | نتيجة التحقق غير معروفة |
+| phase `decision_unknown` | Decision outcome unknown | 결정 처리 결과 미확인 | نتيجة القرار غير معروفة |
+| state `requested` | Requested | 요청됨 | تم طلبه |
+| state `confirmed` | Verification recorded, awaiting decision | 검증 기록됨, 결정 대기 | سُجِّل التحقق، بانتظار القرار |
+| state `scheduled` | Scheduled | 예정됨 | مجدول |
+| state `rejected` | Rejected | 반려됨 | مرفوض |
+| state `lapsed` | Lapsed | 기한 경과 | انقضت المهلة |
+| observation `absent` | No change observed | 관찰된 변경 없음 | لا يوجد تغيير مرصود |
+| pinned verifier | Verifier pinned, not yet observed | 지정된 검증자, 아직 관찰되지 않음 | المتحقِّق المعيَّن، لم يُرصد بعد |
+| pinned decision actor | Deciding person pinned, not yet observed | 지정된 결정자, 아직 관찰되지 않음 | صاحب القرار المعيَّن، لم يُرصد بعد |
+| `effective` | Takes effect | 적용 시각 | وقت السريان |
+| provenance | Entered by staff, Customer document, Customer portal | 직원 입력, 고객 문서, 고객 포털 | إدخال من الموظف، مستند من العميل، بوابة العميل |
+
+The change state `confirmed` is not shown as "confirmed" or "verified": it means that a verification was recorded and a decision is awaited. A verifier's outcome is shown as what the verifier stated. "Latest scheduled change" is recorded history and does not state that an invoice draft can use the change.
+
 A statement (진술, إفادة) is its author's accountable claim and is never labelled evidence, proof or verification. "Selected" states which confirmed settings the user chose as scope; it does not state that issuance is possible. Role-based AI review only; native-language and owner acceptance remain unverified.

@@ -41,7 +41,7 @@ export default function AuthorityScreen({session,locale:l,proposal="",client="",
   try{const work=attempts.store.propose(review.intent);setEntering(false);setPane("detail");setError("");void store.followMutation(review.intent.target,work);}
   catch(e){setError(e instanceof AuthorityError?e.code:"service_unavailable");}
  };
- if(client&&client!=="console")return <p role="alert">{words(l,area.refusal)}</p>;
+ if(client&&client!=="console")return <section className="authority-refusal"><h2>{words(l,area.title)}</h2><p role="alert">{words(l,area.refusal)}</p></section>;
  return <div className="result-authority" data-authority-pane={pane}>
   <header><h2>{words(l,area.title)}</h2><p>{words(l,area.intro)}</p></header>
   {!entering&&<div className="authority-actions"><button disabled={!store||busy} onClick={()=>{if(!discard())return;setEntering(false);setPane("list");void store?.history();}}>{t(l,"Start new read","새로 조회","بدء قراءة جديدة")}</button><button ref={newButton} disabled={!store||!attempts.store||busy||attempts.entries.some(e=>e.intent.action.startsWith("propose_")&&attempts.store?.unresolved(e))} onClick={()=>{if(!discard())return;store?.clearDetail();setEditing(false);setEntering(true);setError("");}}>{t(l,"New permission proposal","새 권한 제안","مقترح صلاحية جديد")}</button></div>}

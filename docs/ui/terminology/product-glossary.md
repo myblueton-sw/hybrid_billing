@@ -713,4 +713,22 @@ Labels of the protected settings changes part, from `setup/changes-copy.ts`:
 
 The change state `confirmed` is not shown as "confirmed" or "verified": it means that a verification was recorded and a decision is awaited. A verifier's outcome is shown as what the verifier stated. "Latest scheduled change" is recorded history and does not state that an invoice draft can use the change.
 
+Labels of the statements part and of the sample references, from `setup/statements-copy.ts`:
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| purpose `channel_registration` | Channel registration | 채널 등록 | تسجيل القناة |
+| purpose `channel_admission` | Channel acceptance | 채널 수락 | قبول القناة |
+| purpose `change_instruction` | Change instruction | 변경 지시 | تعليمات التغيير |
+| purpose `change_verification` | Change verification | 변경 검증 | التحقق من التغيير |
+| state `unconsumed` | Not used — supports no record | 미사용 — 어떤 기록도 뒷받침하지 않음 | غير مستخدمة — لا تدعم أي سجل |
+| state `consumed` | Used | 사용됨 | مستخدمة |
+| state `withdrawn` | Withdrawn — supports no record | 철회됨 — 어떤 기록도 뒷받침하지 않음 | مسحوبة — لا تدعم أي سجل |
+| `locator` | Where the source is kept | 원본 보관 위치 | مكان حفظ المصدر |
+| sample reference | Sample recipient A | 샘플 수신자 A | مستلم تجريبي A |
+| sample channel | Sample issuing entity channel A | 샘플 발행 법인 채널 A | قناة جهة مصدرة تجريبية A |
+| sample sender | Sample unregistered sender | 샘플 미등록 발신자 | مرسل تجريبي غير مسجل |
+
+Sample labels are built from the use and the letter of the catalog code; the code itself is not shown.
+
 A statement (진술, إفادة) is its author's accountable claim and is never labelled evidence, proof or verification. "Selected" states which confirmed settings the user chose as scope; it does not state that issuance is possible. Role-based AI review only; native-language and owner acceptance remain unverified.

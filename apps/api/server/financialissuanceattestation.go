@@ -54,6 +54,30 @@ func setupAttestationCommand(kind string) (setupAttestationStep, bool, bool) {
 	return setupAttestationStep{}, false, false
 }
 
+func (a *financialIssuance) attestationFor(workspace, id, digest, purpose, target, targetDigest, actor string, use financialAttestationUse) error {
+	p, ok := a.attestations[id]
+	actual, err := attestationDigest(p)
+	if !ok || err != nil || actual != p.Digest || p.Digest != digest || p.ID != id || p.Workspace != workspace || p.Purpose != purpose || p.Target != target || p.TargetDigest != targetDigest || p.Actor != actor || !p.WithdrawnAt.IsZero() || p.Consumed != nil && *p.Consumed != use {
+		return commands.Fail(commands.EvidenceStale)
+	}
+	return nil
+}
+
+func (a *financialIssuance) consumeAttestation(id string, use financialAttestationUse) {
+	p := a.attestations[id]
+	p.Consumed = &use
+	a.attestations[id] = p
+}
+
+func (a *financialIssuance) heldAttestation(workspace, id, digest string, use financialAttestationUse) error {
+	p, ok := a.attestations[id]
+	actual, err := attestationDigest(p)
+	if !ok || err != nil || actual != p.Digest || p.Digest != digest || p.Workspace != workspace || p.Purpose != use.Purpose || p.Target != use.Target || p.Consumed == nil || *p.Consumed != use || !p.WithdrawnAt.IsZero() {
+		return commands.Fail(commands.EvidenceStale)
+	}
+	return nil
+}
+
 func attestationDigest(p financialAttestation) (string, error) {
 	p.Digest, p.WithdrawnAt, p.Consumed = "", time.Time{}, nil
 	return financialEvidenceDigest("issuance_setup_attestation_v1", p)

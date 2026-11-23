@@ -20,7 +20,8 @@ type issuanceSetupContextCommand struct {
 func (s *Server) issuanceSetupBoundary(command string, call commands.Call) commands.Code {
 	kind := strings.TrimPrefix(command, "issuance_setup.")
 	step, _, attestation := setupAttestationCommand(kind)
-	if command != "issuance_setup.context" && command != "issuance_setup.configurations" && command != "issuance_setup.options" && command != "issuance_setup.action" && !(command == "issuance_setup."+kind && setupProtectedRead(kind)) && !(command == "issuance_setup."+kind && setupMutation(kind)) && !(command == "issuance_setup."+kind && attestation) {
+	write, writing := protectedWriteCommand(kind)
+	if command != "issuance_setup.context" && command != "issuance_setup.configurations" && command != "issuance_setup.options" && command != "issuance_setup.action" && !(command == "issuance_setup."+kind && setupProtectedRead(kind)) && !(command == "issuance_setup."+kind && setupMutation(kind)) && !(command == "issuance_setup."+kind && (attestation || writing)) {
 		return ""
 	}
 	if s.cfg.Seed != SeedSample || s.financialIssuance == nil {
@@ -28,6 +29,16 @@ func (s *Server) issuanceSetupBoundary(command string, call commands.Call) comma
 	}
 	if call.Client != ConsoleClient {
 		return commands.PermissionDenied
+	}
+	if writing {
+		if err := s.financialIssuance.protectedWriteCaller(write, call.Answer.Workspace(), call.Answer.User()); err != nil {
+			var failure *commands.Failure
+			if errors.As(protectedWriteError(write, err), &failure) {
+				return failure.Code
+			}
+			return commands.DependencyUnavailable
+		}
+		return ""
 	}
 	if attestation {
 		if err := s.financialIssuance.protectedCaller(call.Answer.Workspace(), call.Answer.User(), step.Capability); err != nil {
@@ -75,6 +86,9 @@ func (h issuanceSetupContextCommand) Apply(ctx commands.Context) (commands.Outco
 	}
 	if setupMutation(h.kind) {
 		return h.s.financialIssuance.applySetupMutation(h.kind, ctx)
+	}
+	if _, writing := protectedWriteCommand(h.kind); writing {
+		return h.s.financialIssuance.applyProtectedWrite(h.kind, ctx)
 	}
 	if _, _, attestation := setupAttestationCommand(h.kind); attestation {
 		return h.s.financialIssuance.applySetupAttestation(h.kind, ctx)

@@ -35,6 +35,13 @@ const (
 var holdTable = map[string]holdRule{
 	"issuance_setup.propose_configuration":         {holdRefuse, reasonChange},
 	"issuance_setup.confirm_configuration":         {holdRefuse, reasonChange},
+	"issuance_setup.propose_protected_rules":       {holdRefuse, reasonChange},
+	"issuance_setup.confirm_protected_rules":       {holdRefuse, reasonChange},
+	"issuance_setup.register_channel":              {holdRefuse, reasonChange},
+	"issuance_setup.admit_channel":                 {holdRefuse, reasonChange},
+	"issuance_setup.request_change":                {holdRefuse, reasonChange},
+	"issuance_setup.verify_change":                 {holdRefuse, reasonChange},
+	"issuance_setup.decide_change":                 {holdRefuse, reasonChange},
 	"issuance_setup.attest_channel_registration":   {holdRefuse, reasonChange},
 	"issuance_setup.withdraw_channel_registration": {holdRefuse, reasonChange},
 	"issuance_setup.attest_channel_admission":      {holdRefuse, reasonChange},

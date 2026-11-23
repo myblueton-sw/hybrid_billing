@@ -10,12 +10,14 @@ import (
 )
 
 type financialChannelSpec struct {
+	Attestation                string `json:",omitempty"`
 	ID, Kind, Evidence, Reason string
 	Ref                        protected.Ref
 	Selector                   financialChannelSelector
 }
 
 type financialChannelRecord struct {
+	AdmissionAttestation                                                  string `json:",omitempty"`
 	Workspace, Registrar, Admitter, Admission, RulesDigest, Digest, State string
 	Spec                                                                  financialChannelSpec
 	Subject                                                               financialChannelSubject
@@ -30,7 +32,7 @@ func channelDigest(p financialChannelRecord) (string, error) {
 	if p.Spec.Selector.Configuration != nil {
 		domain = "issuance_configuration_channel_v1"
 	}
-	p.Admitter, p.Admission, p.Digest, p.State = "", "", "", ""
+	p.Admitter, p.Admission, p.AdmissionAttestation, p.Digest, p.State = "", "", "", "", ""
 	p.Module = protected.ChannelView{}
 	return financialEvidenceDigest(domain, p)
 }
@@ -49,7 +51,7 @@ func (p financialChannelRecord) channel() protected.Channel {
 	return protected.Channel{ID: p.Spec.ID, Subject: p.Subject.Subject, Kind: p.Spec.Kind, Ref: p.Spec.Ref, Evidence: p.Spec.Evidence}
 }
 func validChannelSpec(p financialChannelSpec) bool {
-	return validRequestID(p.ID) && len(p.ID) <= 128 && validRequestID(p.Evidence) && len(p.Evidence) <= 128 && validRequestID(p.Ref.ID) && len(p.Ref.ID) <= 128 && validPlanHash(p.Ref.Fingerprint) && documentReason(p.Reason) && (p.Kind == protected.ChannelEmail || p.Kind == protected.ChannelPhone || p.Kind == protected.ChannelPortal || p.Kind == protected.ChannelPostal)
+	return (p.Attestation == "" || validPlanHash(p.Attestation)) && validRequestID(p.ID) && len(p.ID) <= 128 && validRequestID(p.Evidence) && len(p.Evidence) <= 128 && validRequestID(p.Ref.ID) && len(p.Ref.ID) <= 128 && validPlanHash(p.Ref.Fingerprint) && documentReason(p.Reason) && (p.Kind == protected.ChannelEmail || p.Kind == protected.ChannelPhone || p.Kind == protected.ChannelPortal || p.Kind == protected.ChannelPostal)
 }
 func (a *financialIssuance) currentChannel(p financialChannelRecord) error {
 	digest, err := channelDigest(p)
@@ -68,6 +70,19 @@ func (a *financialIssuance) currentChannel(p financialChannelRecord) error {
 	}
 	if err := a.protectedActor(p.Workspace, p.Registrar, protectedauthority.RegisterChannel); err != nil {
 		return err
+	}
+	if p.Spec.Attestation != "" {
+		if err := a.heldAttestation(p.Workspace, p.Spec.Evidence, p.Spec.Attestation, financialAttestationUse{Purpose: "channel_registration", Target: p.Spec.ID, TargetDigest: p.Digest}); err != nil {
+			return err
+		}
+	}
+	if p.AdmissionAttestation != "" {
+		if p.Admitter == "" {
+			return commands.Fail(commands.EvidenceStale)
+		}
+		if err := a.heldAttestation(p.Workspace, p.Admission, p.AdmissionAttestation, financialAttestationUse{Purpose: "channel_admission", Target: p.Spec.ID, TargetDigest: p.Digest}); err != nil {
+			return err
+		}
 	}
 	if p.Admitter != "" {
 		if p.Admitter == p.Registrar || !validRequestID(p.Admission) || len(p.Admission) > 128 {
@@ -127,6 +142,12 @@ func (a *financialIssuance) registerChannel(workspace, actor string, spec financ
 	if err != nil {
 		return financialChannelRecord{}, err
 	}
+	use := financialAttestationUse{Purpose: "channel_registration", Target: spec.ID, TargetDigest: p.Digest}
+	if spec.Attestation != "" {
+		if err := a.attestationFor(workspace, spec.Evidence, spec.Attestation, use.Purpose, spec.ID, "", actor, use); err != nil {
+			return financialChannelRecord{}, err
+		}
+	}
 	if old, ok := a.channels[spec.ID]; ok {
 		if old.Workspace != workspace || old.Registrar != actor || old.Digest != p.Digest {
 			return financialChannelRecord{}, commands.Fail(commands.EvidenceStale)
@@ -154,6 +175,9 @@ func (a *financialIssuance) registerChannel(workspace, actor string, spec financ
 		}
 		p.State = "registration_unknown"
 		a.channels[spec.ID] = copyChannelRecord(p)
+		if spec.Attestation != "" {
+			a.consumeAttestation(spec.Evidence, use)
+		}
 	}
 	v, err := a.fields.Register(workspace, p.channel(), protected.Actor{ID: actor, Kind: protected.KindHuman})
 	if err != nil {
@@ -176,6 +200,10 @@ func (a *financialIssuance) registerChannel(workspace, actor string, spec financ
 }
 
 func (a *financialIssuance) admitChannel(workspace, id, digest, actor, evidence string) (financialChannelRecord, error) {
+	return a.admitChannelAttested(workspace, id, digest, actor, evidence, "")
+}
+
+func (a *financialIssuance) admitChannelAttested(workspace, id, digest, actor, evidence, attestation string) (financialChannelRecord, error) {
 	if err := a.protectedCaller(workspace, actor, protectedauthority.AdmitChannel); err != nil {
 		return financialChannelRecord{}, err
 	}
@@ -189,8 +217,14 @@ func (a *financialIssuance) admitChannel(workspace, id, digest, actor, evidence 
 	if p.Registrar == actor {
 		return financialChannelRecord{}, commands.Fail(commands.SelfApprovalDenied)
 	}
-	if p.Admitter != "" && (p.Admitter != actor || p.Admission != evidence) {
+	if p.Admitter != "" && (p.Admitter != actor || p.Admission != evidence || p.AdmissionAttestation != attestation) {
 		return financialChannelRecord{}, commands.Fail(commands.PermissionDenied)
+	}
+	use := financialAttestationUse{Purpose: "channel_admission", Target: id, TargetDigest: p.Digest}
+	if attestation != "" {
+		if err := a.attestationFor(workspace, evidence, attestation, use.Purpose, id, p.Digest, actor, use); err != nil {
+			return financialChannelRecord{}, err
+		}
 	}
 	if err := a.currentChannel(p); err != nil {
 		return financialChannelRecord{}, err
@@ -204,8 +238,11 @@ func (a *financialIssuance) admitChannel(workspace, id, digest, actor, evidence 
 	if a.server.faulty("issuance-channel-before-admit") {
 		return financialChannelRecord{}, commands.Fail(commands.DependencyUnavailable)
 	}
-	p.Admitter, p.Admission, p.State = actor, evidence, "admission_unknown"
+	p.Admitter, p.Admission, p.AdmissionAttestation, p.State = actor, evidence, attestation, "admission_unknown"
 	a.channels[id] = copyChannelRecord(p)
+	if attestation != "" {
+		a.consumeAttestation(evidence, use)
+	}
 	v, err := a.fields.Admit(workspace, id, evidence, protected.Actor{ID: actor, Kind: protected.KindHuman})
 	if err != nil {
 		return financialChannelRecord{}, err

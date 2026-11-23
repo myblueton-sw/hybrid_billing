@@ -24,6 +24,12 @@ func TestIssuanceSetupActualScreenBrowser(t *testing.T) {
 	if output == "" {
 		t.Skip("explicit isolated browser configuration required")
 	}
+	for _, lang := range []string{"en", "ko", "ar"} {
+		t.Run(lang, func(t *testing.T) { issuanceSetupActualScreenBrowser(t, filepath.Join(output, lang), lang) })
+	}
+}
+
+func issuanceSetupActualScreenBrowser(t *testing.T, output, lang string) {
 	frontend := os.Getenv("HB_PROJECTION_QA_URL")
 	u, err := url.Parse(frontend)
 	if err != nil || u.Scheme != "http" || u.Hostname() != "127.0.0.1" || u.Port() == "" {
@@ -62,7 +68,7 @@ func TestIssuanceSetupActualScreenBrowser(t *testing.T) {
 	f.must(err)
 	browse := func(phase string, people map[string]string, extra ...string) {
 		t.Helper()
-		arguments := append([]string{script, "--phase", phase, "--url", frontend, "--api", server.URL, "--output", filepath.Join(output, phase), "--playwright-module", os.Getenv("HB_PROJECTION_QA_PLAYWRIGHT"), "--chromium", os.Getenv("HB_PROJECTION_QA_CHROMIUM"), "--contract", c.Spec.Contract, "--on", "2026-11-16"}, extra...)
+		arguments := append([]string{script, "--phase", phase, "--lang", lang, "--url", frontend, "--api", server.URL, "--output", filepath.Join(output, phase), "--playwright-module", os.Getenv("HB_PROJECTION_QA_PLAYWRIGHT"), "--chromium", os.Getenv("HB_PROJECTION_QA_CHROMIUM"), "--contract", c.Spec.Contract, "--on", "2026-11-16"}, extra...)
 		cmd := exec.Command("node", arguments...)
 		cmd.Env = os.Environ()
 		for name, login := range people {

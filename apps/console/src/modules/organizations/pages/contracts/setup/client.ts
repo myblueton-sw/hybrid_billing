@@ -7,6 +7,7 @@ import { bounded, checkSession, responseText } from "../../../../issuance/pages/
 import { SetupError, setupContextOf, setupDate, type SetupContext } from "./context";
 import { configurationsOf } from "./history";
 import { actionRequest, setupActionOf, type ActionRequest } from "./action";
+import { attestationsOf, referencesOf } from "./attestation";
 import { protectedChangesOf, protectedChannelsOf, protectedFields, protectedScope, protectedSummaryOf, type ProtectedField, type ProtectedScope } from "./protected";
 
 const invalid = (): never => { throw new SetupError("invalid_setup_response"); };
@@ -42,7 +43,7 @@ function optionsOf(e: ReadEnvelope, scope: SetupContext): SetupOptions {
 
 export function setupReadClient(session: Session, fetcher: typeof fetch = fetch.bind(globalThis)) {
   const owner = freeze({ ...session });
-  async function read(command: "context" | "options" | "configurations" | "action" | "protected" | "protected_channels" | "protected_changes", target: string, fields: Record<string, string>): Promise<ReadEnvelope> {
+  async function read(command: "context" | "options" | "configurations" | "action" | "protected" | "protected_channels" | "protected_changes" | "attestations" | "references", target: string, fields: Record<string, string>): Promise<ReadEnvelope> {
     const values = freeze({ ...fields });
     try { await checkSession(owner, fetcher); }
     catch (error) { throw new SetupError(error instanceof ResultError ? error.code : "session_unavailable"); }
@@ -78,6 +79,15 @@ export function setupReadClient(session: Session, fetcher: typeof fetch = fetch.
     async context(contract: string, on: string) {
       if (!id(contract) || !setupDate(on)) return invalid();
       return setupContextOf(await read("context", contract, { on }), contract, on);
+    },
+    async attestations(input: ProtectedScope, after = "", snapshot = "") {
+      const scope = protectedScope(input);
+      if ((!!after !== !!snapshot) || after && (!id(after) || !digest(snapshot))) return invalid();
+      return attestationsOf(await read("attestations", scope.contract, { configuration: scope.configuration, digest: scope.digest, ...(after ? { after, snapshot } : {}) }), scope, after, snapshot);
+    },
+    async references(input: ProtectedScope) {
+      const scope = protectedScope(input);
+      return referencesOf(await read("references", scope.contract, { configuration: scope.configuration, digest: scope.digest }), scope);
     },
     async protectedSummary(input: ProtectedScope) {
       const scope = protectedScope(input);

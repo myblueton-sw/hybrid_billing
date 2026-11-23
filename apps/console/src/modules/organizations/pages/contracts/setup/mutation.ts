@@ -11,7 +11,7 @@ import { setupIntent, type SetupIntent } from "./intents";
 const refusals: Record<string, readonly [number, string, boolean]> = {
  permission_denied:[403,"none",false], self_approval_denied:[403,"none",false], unauthenticated:[401,"obtain_new_access_answer",false], csrf_refused:[403,"none",false], reauthentication_required:[403,"reauthenticate",false], evidence_stale:[409,"inspect_current_state",false], revision_conflict:[409,"inspect_current_state",false], invalid_request:[422,"correct_request",false], prerequisite_failed:[422,"correct_request",false], rate_limited:[429,"retry_later",true], unsupported_capability:[501,"none",false], dependency_unavailable:[503,"retry_later",true], authority_unavailable:[503,"retry_later",true],
 };
-function cleanFailure(raw: Record<string, unknown>, status: number, request: string): boolean {
+export function cleanFailure(raw: Record<string, unknown>, status: number, request: string): boolean {
  const rule=typeof raw.code==="string"?refusals[raw.code]:undefined;
  return !!rule&&status===rule[0]&&raw.next_action===rule[1]&&raw.retry===rule[2]&&raw.request_id===request&&raw.operation_id===undefined
   &&Object.keys(raw).every(k=>["code","retry","next_action","request_id","fields","retry_after_ms"].includes(k))

@@ -43,7 +43,7 @@ try{
   if(width===1440){await page.locator('.live-counter').waitFor();assert.equal(await counter(),1);}
   evidence.cases.push({check:'no count while loading',lang,width});
 
-  fault={list:'fail'};await go(lang,width);await page.locator('.live-error').first().waitFor();assert.equal(await counter(),0,'a count is shown after a failed first read');
+  fault={list:'fail'};await go(lang,width);await page.locator('.live-error').first().waitFor();{const told=await page.locator('.live-error').first().innerText();assert.equal(/sign you in|로그인|تسجيل الدخول/.test(told),false,'a load failure is worded as a sign-in failure');if(lang==='en')assert.ok(told.includes('Contracts could not be loaded.'));}assert.equal(await counter(),0,'a count is shown after a failed first read');
   if(lang==='en')assert.equal(/\d+ of \d+ contracts/.test(await page.locator('main').innerText()),false,'a contract count is shown after a failed first read');await shot('list-failed');fault={};
   evidence.cases.push({check:'no count after a failed first read',lang,width});
 
@@ -51,6 +51,14 @@ try{
   assert.equal(await page.locator('.o03-panel .live-note-rule').count(),0,'not available is shown while the detail read is pending');assert.equal(await page.locator('.o03-panel [role=status]').count(),1);await shot('detail-pending');
   fault={detail:'missing'};free();await page.locator('.o03-panel .live-error').waitFor();assert.equal(await page.locator('.o03-panel .live-note-rule').count(),0);await shot('detail-refused');fault={};
   evidence.cases.push({check:'pending detail is not shown as unavailable',lang,width});
+
+  fault={};await go(lang,width);await page.locator('.o03-panel #o03-contract-title, .o03-panel h2, .o03-panel h3').first().waitFor();await page.waitForFunction(()=>!document.querySelector('.o03-panel [role=status].live-meta'));
+  assert.equal(await page.locator('.o03-failure').count(),0);assert.equal(await page.locator('.o03-detail-kept').count(),0);
+  fault={list:'fail',detail:'missing'};await page.locator('.o03-reload').click();await page.locator('.o03-detail-kept').waitFor();await page.locator('.o03-failure').waitFor();
+  assert.equal(await page.locator('.o03-failure p').count()>=1,true);if(lang==='en'){assert.ok((await page.locator('.o03-failure').innerText()).includes('from the last successful load'));assert.ok((await page.locator('.o03-detail-kept').innerText()).includes('Reload before acting on it'));}
+  assert.ok(await page.locator('.o03-parts').count()===1,'the held detail was dropped after the failed refresh');await shot('kept-after-failed-reload');
+  fault={};await page.locator('.o03-detail-kept button').click();await page.locator('.o03-detail-kept').waitFor({state:'detached'});
+  evidence.cases.push({check:'a kept list and detail say they are from the last successful load',lang,width});
 
   fault={context:'fail'};await go(lang,width);await page.locator('#o03-docs-scope').waitFor();await page.waitForFunction(()=>!document.querySelector('[aria-labelledby=o03-docs-scope][aria-busy=true]'));await page.waitForTimeout(200);
   const sample=page.locator('[aria-labelledby=o03-docs-options]');assert.equal(await sample.locator('.live-sub').count(),1,'the sample section does not say why it is empty');assert.equal(await sample.locator('dl').count(),0);if(lang==='en')assert.ok((await sample.innerText()).includes('Not shown because the setup scope could not be loaded'));assert.ok(await page.locator('[aria-labelledby=o03-docs-scope] [role=alert], [aria-labelledby=o03-docs-scope] .live-error').count()>=1,'the scope failure is not shown');await shot('context-failed');fault={};

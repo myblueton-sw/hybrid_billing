@@ -152,3 +152,15 @@ When a reload fails while a page is held, the three screens now say, after the f
 Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3, with the P01 proposals render test extended for the stale state of the openers and of an open form's review button. The send button's gate is not asserted, because the confirm step cannot be reached in a static render. No rendered check: no render check exists for these three screens. Copy and state review, ui-designer role (AI, by reading): FAIL with two findings (an already open P01 form could still send; the sentence said "below" although the facts it refers to are above it), corrected; corrective re-review PASS.
 
 Left open: the header still labels the old time "Now (UTC)" on these screens and on P02 and P05; P03 and P04 unmount an open form when the gate closes, so a message inside it is lost; a disabled opener takes no focus, so its reason is rarely announced; the same finding on M01, M02, M03, O02 and O03 (A3, B3, C2, F1, G2) is not fixed here.
+
+## O02 finding F1 and O03 finding G2 (2026-11-24)
+
+- F1: when a reload of the change plans fails while a page is held, an alert after the header says that the changes could not be loaded, that everything shown is from the last successful load, and to reload before acting on it.
+- G2: on O03 the list failure alert adds the same sentence when a page is held, and a failed refresh of a held detail now shows an alert with that sentence and a retry above the detail.
+- Found in the render and fixed with it: the contract screen worded a load failure with the sign-in failure texts ("We could not sign you in…", "The sign-in service is not responding…"). It now says "Contracts could not be loaded." and uses the general service sentence.
+
+These two screens keep their commands enabled in that state, so the sentence advises a reload instead of declaring the screen read-only.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3; `tools/o03-trust-states-qa.mjs` extended for the kept list and detail and for the wording of the load failure, passing in English, Korean and Arabic at 1440 and 390; the parts render check still passes. O02 has no rendered check. Copy and state review, ui-designer role (AI, from four renders and source): PASS as a candidate, no blocking finding; its suggestion of a title on the detail alert was applied afterwards.
+
+Left open: on O03 the alert can be thousands of pixels above the "Check permission and review" button of a held detail, so disabling that button in this state, as on P01, P03 and P04, is recommended as a follow-up; the header facts and the present-tense labels of a held detail still read as current; the alert button says "Try again" where the sentence and the toolbar say "Reload"; a failed detail with nothing held shows only the plural title; whether the write paths of these screens refuse a stale revision was not traced.

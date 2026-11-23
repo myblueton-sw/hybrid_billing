@@ -1,7 +1,7 @@
 import type {Session} from "../../../../../service/api";
 import {attempt} from "../../../../../service/admin";
 import {strictJSON} from "../../../../../service/strict-json";
-import {AuthorityError,bytes,exact,frozen,id,instant,object,revision,type Envelope} from "./contract";
+import {AuthorityError,bytes,exact,frozen,id,instant,object,resultDomain,revision,type AuthorityDomain,type Envelope} from "./contract";
 export async function responseText(response:Response,maximum=100000):Promise<string>{
  if(!response.body)throw new AuthorityError("invalid_authority_response");
  const reader=response.body.getReader(),decoder=new TextDecoder("utf-8",{fatal:true});let total=0,text="";
@@ -29,10 +29,10 @@ export async function checkSession(owner:Readonly<Session>,fetcher:typeof fetch)
  if(!object(current)||!id(current.user)||!id(current.workspace)||typeof current.csrf_token!=="string"||!current.csrf_token||bytes(current.csrf_token)>4096)throw new AuthorityError("session_unavailable");
  if(current.user!==owner.user||current.workspace!==owner.workspace||current.csrf_token!==owner.csrf)throw new AuthorityError("session_changed");
 }
-export function readTransport(session:Session,fetcher:typeof fetch=fetch.bind(globalThis)){
+export function readTransport(session:Session,fetcher:typeof fetch=fetch.bind(globalThis),d:AuthorityDomain=resultDomain){
  const owner=frozen({...session});
  return async(command:string,target:string,fields:Record<string,string>):Promise<Envelope>=>{
-  if(!["result_authority.history","result_authority.context","result_authority.inspect"].includes(command)||!id(target))throw new AuthorityError("invalid_authority_request");
+  if(!["history","context","inspect"].some(kind=>command===`${d.namespace}.${kind}`)||!id(target))throw new AuthorityError("invalid_authority_request");
   const values=frozen(structuredClone(fieldMap(fields))),tried=attempt();
   await checkSession(owner,fetcher);
   let response:Response,raw:unknown;

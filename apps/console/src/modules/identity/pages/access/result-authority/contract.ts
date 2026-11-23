@@ -12,8 +12,16 @@ export function exact(value:unknown,keys:readonly string[]):asserts value is Rec
 export function frozen<T>(value:T):Readonly<T>{if(value&&typeof value==="object"&&!Object.isFrozen(value)){for(const item of Object.values(value))frozen(item);Object.freeze(value);}return value;}
 export function json(value:unknown):unknown{if(typeof value!=="string")return fail();try{return strictJSON(value,4096);}catch{return fail();}}
 export const capabilities=["propose","confirm","revoke","apply","inspect"] as const;
-export type Capability=typeof capabilities[number];
-export const capability=(v:unknown):v is Capability=>typeof v==="string"&&capabilities.includes(v as Capability);
+export type Capability=string;
+export type AuthorityDomain=Readonly<{namespace:string;grantPrefix:string;capabilities:readonly string[]}>;
+export const resultDomain:AuthorityDomain=frozen({namespace:"result_authority",grantPrefix:"result-grant-",capabilities:[...capabilities]});
+export const issuanceDomains:Readonly<Record<"protected"|"term"|"draft",AuthorityDomain>>=frozen({
+ protected:{namespace:"issuance_protected_authority",grantPrefix:"issuance-protected-grant-",capabilities:["register_channel","admit_channel","request_change","verify_change","approve_change","inspect"]},
+ term:{namespace:"issuance_term_authority",grantPrefix:"issuance-term-grant-",capabilities:["record","approve","bind","approve_binding","inspect"]},
+ draft:{namespace:"issuance_draft_authority",grantPrefix:"issuance-draft-grant-",capabilities:["submit","approve","inspect"]},
+});
+export const capability=(v:unknown,d:AuthorityDomain=resultDomain):v is Capability=>typeof v==="string"&&d.capabilities.includes(v);
+export const grantOf=(d:AuthorityDomain,v:unknown):v is string=>typeof v==="string"&&v.startsWith(d.grantPrefix)&&/^[0-9a-f]{64}$/.test(v.slice(d.grantPrefix.length));
 export const states=["pending","applying","decision_unknown","applied","rejected","withdrawn","expired","superseded"] as const;
 export type RecordedState=typeof states[number];
 export type Policy=Readonly<{capabilities:readonly Capability[];proposal_lifetime_seconds:string;max_grant_validity_seconds:string}>;
@@ -30,14 +38,14 @@ export function instant(value:unknown):bigint|undefined {
  return BigInt(millis)*1000000n+BigInt(fraction.padEnd(9,"0"));
 }
 export function seconds(value:unknown):value is string{return typeof value==="string"&&/^[1-9][0-9]{0,9}$/.test(value)&&BigInt(value)<=9223372036n;}
-export function policyOf(value:unknown):Policy{
+export function policyOf(value:unknown,d:AuthorityDomain=resultDomain):Policy{
  const v=json(value);exact(v,["capabilities","proposal_lifetime_seconds","max_grant_validity_seconds"]);
- if(!Array.isArray(v.capabilities)||JSON.stringify(v.capabilities)!==JSON.stringify(capabilities)||!seconds(v.proposal_lifetime_seconds)||!seconds(v.max_grant_validity_seconds))return fail();
+ if(!Array.isArray(v.capabilities)||JSON.stringify(v.capabilities)!==JSON.stringify(d.capabilities)||!seconds(v.proposal_lifetime_seconds)||!seconds(v.max_grant_validity_seconds))return fail();
  return frozen(v) as Policy;
 }
-export function historyOf(value:string):HistoryRow{
+export function historyOf(value:string,d:AuthorityDomain=resultDomain):HistoryRow{
  const v=json(value);exact(v,["proposal","digest","kind","capability","recipient","state","proposer","proposed_at","expires_at","decision_actor"]);
- if(!id(v.proposal)||!digest(v.digest)||!capability(v.capability)||!id(v.recipient)||!id(v.proposer)||typeof v.kind!=="string"||!["console_ceiling","human_grant"].includes(v.kind)||typeof v.state!=="string"||!states.includes(v.state as RecordedState)||instant(v.proposed_at)===undefined||instant(v.expires_at)===undefined||instant(v.proposed_at)!>=instant(v.expires_at)!||!(v.decision_actor===""||id(v.decision_actor)))return fail();
+ if(!id(v.proposal)||!digest(v.digest)||!capability(v.capability,d)||!id(v.recipient)||!id(v.proposer)||typeof v.kind!=="string"||!["console_ceiling","human_grant"].includes(v.kind)||typeof v.state!=="string"||!states.includes(v.state as RecordedState)||instant(v.proposed_at)===undefined||instant(v.expires_at)===undefined||instant(v.proposed_at)!>=instant(v.expires_at)!||!(v.decision_actor===""||id(v.decision_actor)))return fail();
  if(v.kind==="console_ceiling"&&v.recipient!=="console"||v.kind==="human_grant"&&v.recipient===v.proposer)return fail();
  const decided=["applying","decision_unknown","applied","rejected","withdrawn"].includes(v.state);
  if(decided!==!!v.decision_actor)return fail();
@@ -49,9 +57,9 @@ export function recipientOf(value:string,actor:string):Recipient{
  if(!id(v.user)||v.user===actor||typeof v.login!=="string"||bytes(v.login)>4096||/[\u0000-\u001f\u007f]/.test(v.login))return fail();
  return frozen(v) as Recipient;
 }
-export function ceilingOf(value:string,selected:Capability):Ceiling{
+export function ceilingOf(value:string,selected:Capability,d:AuthorityDomain=resultDomain):Ceiling{
  const v=json(value);exact(v,["ceiling","capability","not_before","not_after"]);
- if(typeof v.ceiling!=="string"||!/^result-grant-[0-9a-f]{64}$/.test(v.ceiling)||v.capability!==selected||instant(v.not_before)===undefined||instant(v.not_after)===undefined||instant(v.not_before)!>=instant(v.not_after)!)return fail();
+ if(!grantOf(d,v.ceiling)||v.capability!==selected||instant(v.not_before)===undefined||instant(v.not_after)===undefined||instant(v.not_before)!>=instant(v.not_after)!)return fail();
  return frozen(v) as Ceiling;
 }
 export function rationaleValid(value:unknown):value is string{return typeof value==="string"&&!!value.trim()&&bytes(value)<=1024&&!/[\u0000-\u001f\u007f]/.test(value)&&[...value].every(c=>c.length!==1||c.charCodeAt(0)<0xd800||c.charCodeAt(0)>0xdfff);}

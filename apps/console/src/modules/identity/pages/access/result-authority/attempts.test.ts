@@ -6,7 +6,7 @@ import {reviewDecision} from "./actions";
 import type {Inspection} from "./inspection";
 import type {Intent,Receipt} from "./mutations";
 const hash="a".repeat(64),at="2026-11-22T09:00:00Z";
-const detail:Inspection={row:{proposal:"proposal",digest:hash,kind:"console_ceiling",capability:"apply",recipient:"console",state:"decision_unknown",proposer:"proposer",proposed_at:at,expires_at:"2026-11-22T10:00:00Z",decision_actor:"reviewer"},ceiling:"",notBefore:at,notAfter:"2026-11-22T12:00:00Z",rationale:"Proposal",revision:"r2",at,decision:{at,actor:"reviewer",rationale:"Original decision",grant:`result-grant-${hash}`,recordedGrantStatus:""}};
+const detail:Inspection={namespace:"result_authority",row:{proposal:"proposal",digest:hash,kind:"console_ceiling",capability:"apply",recipient:"console",state:"decision_unknown",proposer:"proposer",proposed_at:at,expires_at:"2026-11-22T10:00:00Z",decision_actor:"reviewer"},ceiling:"",notBefore:at,notAfter:"2026-11-22T12:00:00Z",rationale:"Proposal",revision:"r2",at,decision:{at,actor:"reviewer",rationale:"Original decision",grant:`result-grant-${hash}`,recordedGrantStatus:""}};
 const intent:Intent={action:"propose_console",target:"proposal",fields:{capability:"apply",not_before:at,not_after:detail.notAfter},rationale:"Proposal",revision:"r1",attempt:{request:"request",key:"key"}};
 const receipt:Receipt={inspection:{...detail,row:{...detail.row,state:"applied"}},operation:"operation",replay:false};
 test("unknown attempts survive clean retry refusal and block replacement proposals",async()=>{

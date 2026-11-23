@@ -4,7 +4,7 @@ import {AuthorityError} from "./contract";
 import {reviewActions,reviewDecision} from "./actions";
 import type {Inspection} from "./inspection";
 const hash="a".repeat(64),at="2026-11-22T09:00:00Z";
-const detail:Inspection={row:{proposal:"proposal",digest:hash,kind:"human_grant",capability:"apply",recipient:"member",state:"pending",proposer:"proposer",proposed_at:at,expires_at:"2026-11-22T10:00:00Z",decision_actor:""},ceiling:`result-grant-${hash}`,notBefore:at,notAfter:"2026-11-22T12:00:00Z",rationale:"Proposal review",revision:"r1",at};
+const detail:Inspection={namespace:"result_authority",row:{proposal:"proposal",digest:hash,kind:"human_grant",capability:"apply",recipient:"member",state:"pending",proposer:"proposer",proposed_at:at,expires_at:"2026-11-22T10:00:00Z",decision_actor:""},ceiling:`result-grant-${hash}`,notBefore:at,notAfter:"2026-11-22T12:00:00Z",rationale:"Proposal review",revision:"r1",at};
 const attempt={request:"request",key:"key"};
 test("historical actor rules expose review controls without asserting current eligibility",()=>{
  assert.deepEqual(reviewActions(detail,"proposer"),["withdraw"]);

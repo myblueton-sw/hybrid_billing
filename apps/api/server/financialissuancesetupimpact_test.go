@@ -94,3 +94,30 @@ func TestIssuanceSetupUncertainProposalsCountInBulkImpact(t *testing.T) {
 		})
 	}
 }
+
+func TestIssuanceSetupConfirmationRechecksSuspendedProposer(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	root := f.as(AdminLogin)
+	p, err := proposeConfigurationAs(f, f.as(Admin2Login), configurationSpec())
+	f.must(err)
+	bulk, digest := f.prepared(t, root, "suspend_membership", SampleAdmin2)
+	if count, rechecked := issuanceSetupPending(t, f, root, bulk); count != 1 || rechecked != true {
+		t.Fatal("impact before execution", count, rechecked)
+	}
+	if got := f.execute(root, bulk, digest); got.status != 202 {
+		t.Fatal(got.raw)
+	}
+	_, err = confirmConfigurationAs(f, f.as(Admin3Login), p)
+	if err == nil || f.s.financialIssuance.configurations[p.Spec.ID].State != "proposed" {
+		t.Fatal("settings of a suspended proposer were confirmed", err)
+	}
+	f.must(inputAuthorityAs(f, f.as(Admin3Login), func() error {
+		if _, standing := f.s.governor(SampleWorkspace, SampleAdmin3); standing != nil {
+			t.Fatal("the confirmer lost governor standing, so the refusal does not show the proposer recheck", standing)
+		}
+		if _, standing := f.s.governor(SampleWorkspace, SampleAdmin2); standing == nil {
+			t.Fatal("the suspended proposer kept governor standing")
+		}
+		return nil
+	}))
+}

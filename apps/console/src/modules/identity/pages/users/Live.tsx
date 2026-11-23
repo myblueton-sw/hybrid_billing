@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, sequence, type AdminClient, type Attempt, type ClockState, type CommandId, type SettingRow, type UserRow, type UsersPage } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
@@ -851,6 +852,17 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
         <aside className="live-panel" aria-label={title}>
           {stepping && (
             <button type="button" className="service-button-link live-back" onClick={close}>{w.back(l)}</button>
+          )}
+          {stepping && status === "error" && failure && (
+            <section className="live-error m01-panel-kept" role="alert">
+              <h2>{w.loadFailed(l)}</h2>
+              <p>{diagnosticCopy.kept(l)}</p>
+              {error instanceof AdminError && error.failure === "unauthenticated" ? (
+                <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
+              ) : (
+                <button type="button" className="live-secondary" onClick={() => void load()}>{c.tryAgain(l)}</button>
+              )}
+            </section>
           )}
           {stranded && panel ? <p className="live-unavailable">{b.recovery(l)}</p> : panel}
         </aside>

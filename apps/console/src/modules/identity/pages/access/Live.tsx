@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, sequence, type AccessGrant, type AccessPage, type AdminClient, type Attempt, type Preview } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
@@ -430,6 +431,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
     <section className="live-error" role="alert">
       <h2>{a.loadFailed(l)}</h2>
       <p>{describeFor("load")(l, error).body}</p>
+      {page && <p>{diagnosticCopy.kept(l)}</p>}
       {error instanceof AdminError && error.failure === "unauthenticated"
         ? <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
         : <button type="button" className="live-secondary" onClick={load}>{c.tryAgain(l)}</button>}
@@ -437,7 +439,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
   );
   if (view === "effects") {
     if (!page) return <div className="live-users">{loadError || <p className="live-empty">{a.loading(l)}</p>}</div>;
-    return <Effects l={l} api={api} page={page} />;
+    return <>{loadError && <div className="live-users">{loadError}</div>}<Effects l={l} api={api} page={page} /></>;
   }
   const self = session.user;
   const grants = page ? people(page) : { current: [], ended: [] };

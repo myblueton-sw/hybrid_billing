@@ -12,7 +12,7 @@ func TestSelfEndRacesSignIns(t *testing.T) {
 		f := memberWorld(t)
 		a := f.signedIn(MemberLogin, pw)
 		listed := []actor{f.signedIn(MemberLogin, pw), f.signedIn(MemberLogin, pw)}
-		page := f.me(a).body
+		page := f.testSessionSnapshot(a)
 		handles := []string{handleOfActor(listed[0]), handleOfActor(listed[1])}
 		var wg sync.WaitGroup
 		newcomers := make([]actor, 4)
@@ -66,7 +66,7 @@ func TestSelfEndRacesLockFreeRemovals(t *testing.T) {
 	for i := 0; i < 8; i++ {
 		pool = append(pool, f.as(MemberLogin))
 	}
-	page := f.me(a).body
+	page := f.testSessionSnapshot(a)
 	var wg sync.WaitGroup
 	for i, b := range pool {
 		wg.Add(1)
@@ -133,7 +133,7 @@ func TestSelfEndRacesOwnSessions(t *testing.T) {
 		f := memberWorld(t)
 		a := f.signedIn(MemberLogin, pw)
 		b := f.signedIn(MemberLogin, pw)
-		pa, pb := f.me(a).body, f.me(b).body
+		pa, pb := f.testSessionSnapshot(a), f.testSessionSnapshot(b)
 		var ra, rb reply
 		var wg sync.WaitGroup
 		wg.Add(2)

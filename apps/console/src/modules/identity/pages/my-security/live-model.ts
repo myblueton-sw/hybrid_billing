@@ -1,6 +1,8 @@
 import type { SelfEnd, SelfEndRow, SelfItem, SelfPage, SelfSession } from "../../../../service/admin";
 import { AdminError } from "../../../../service/admin";
 
+export type SessionDisplay = { sessions: SelfSession[]; session_ends: SelfEnd[] };
+
 export type Check = "" | "missing" | "mismatch" | "same";
 
 export function checkChange(current: string, next: string, confirm: string): Check {
@@ -13,7 +15,7 @@ export function canChange(page: SelfPage): boolean {
   return page.password_set;
 }
 
-export function others(page: SelfPage): SelfSession[] {
+export function others(page: Pick<SessionDisplay, "sessions">): SelfSession[] {
   return page.sessions.filter((s) => !s.current);
 }
 
@@ -62,11 +64,11 @@ export function heldShown(op: SelfEnd): boolean {
   return op.kind === "others" && op.not_included.length > 0;
 }
 
-export function presentHandles(page: SelfPage): Set<string> {
+export function presentHandles(page: Pick<SessionDisplay, "sessions">): Set<string> {
   return new Set(page.sessions.map((s) => s.handle));
 }
 
-export function heldTags(page: SelfPage): Set<string> {
+export function heldTags(page: SessionDisplay): Set<string> {
   const newest = page.session_ends.find((o) => o.kind === "others");
   if (!newest) return new Set();
   const present = presentHandles(page);
@@ -77,7 +79,7 @@ export function openByDefault(op: SelfEnd, newest: boolean, present: Set<string>
   return newest || op.state !== "complete" || (op.kind === "others" && op.not_included.some((s) => present.has(s.handle)));
 }
 
-export function running(page: SelfPage | null): boolean {
+export function running(page: Pick<SessionDisplay, "session_ends"> | null): boolean {
   return !!page && page.session_ends.some((o) => o.state === "cleanup_running");
 }
 

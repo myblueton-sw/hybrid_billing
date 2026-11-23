@@ -74,7 +74,7 @@ func TestSelfReadShape(t *testing.T) {
 	if fmt.Sprint(got.body["identities"]) != fmt.Sprintf("[map[login:%s method:local-password]]", MemberLogin) {
 		t.Errorf("identities %v", got.body["identities"])
 	}
-	rows := got.body["sessions"].([]any)
+	rows := f.testSessionSnapshot(second)["sessions"].([]any)
 	if len(rows) != 2 {
 		t.Fatalf("sessions %v", rows)
 	}
@@ -89,13 +89,13 @@ func TestSelfReadShape(t *testing.T) {
 			t.Error("a token or csrf value leaked")
 		}
 	}
-	if rows := f.me(first).body["sessions"].([]any); rows[0].(map[string]any)["current"] != true || rows[0].(map[string]any)["signed_in"] != stamp(start) {
-		t.Errorf("the current session is not listed first %v", rows)
+	if current := f.me(first).body["current_session"].(map[string]any); current["current"] != true || current["signed_in"] != stamp(start) {
+		t.Errorf("the current session is unavailable %v", current)
 	}
 	if strings.Contains(got.raw, AdminLogin) {
 		t.Error("another person's session leaked")
 	}
-	if a := f.me(admin); a.body["installation_administrator"] != true || a.body["role"] != "administrator" || len(a.body["sessions"].([]any)) != 1 {
+	if a := f.me(admin); a.body["installation_administrator"] != true || a.body["role"] != "administrator" || countOf(a.body["recorded_session_count"]) != 1 {
 		t.Errorf("admin %+v", a.body)
 	}
 	if fmt.Sprint(got.body["max_age_seconds"]) == "0" {
@@ -257,7 +257,7 @@ func TestEndOwnSessions(t *testing.T) {
 	c := f.signedIn(MemberLogin, pw)
 	admin := f.signedIn(AdminLogin, pw)
 	handles := map[bool]string{}
-	for _, row := range f.me(a).body["sessions"].([]any) {
+	for _, row := range f.testSessionSnapshot(a)["sessions"].([]any) {
 		m := row.(map[string]any)
 		if m["current"] == false && handles[false] == "" {
 			handles[false] = m["handle"].(string)
@@ -266,7 +266,7 @@ func TestEndOwnSessions(t *testing.T) {
 			handles[true] = m["handle"].(string)
 		}
 	}
-	adminHandle := f.me(admin).body["sessions"].([]any)[0].(map[string]any)["handle"].(string)
+	adminHandle := f.me(admin).body["current_session"].(map[string]any)["handle"].(string)
 	for name, body := range map[string]string{"current": handles[true], "foreign": adminHandle, "unknown": "0000000000000000", "empty": "", "extra": "x\",\"y\":\"z"} {
 		f.code(t, name, f.selfPost(a, "sessions/end", `{"session":"`+body+`"}`), 422, string(commands.InvalidRequest))
 	}
@@ -278,7 +278,7 @@ func TestEndOwnSessions(t *testing.T) {
 	if got.status != 202 || fmt.Sprint(got.body["count"]) != "1" || got.body["kind"] != "one" || len(got.body["not_included"].([]any)) != 0 {
 		t.Fatalf("end one %+v", got)
 	}
-	if n := len(f.me(a).body["sessions"].([]any)); n != 2 {
+	if n := len(f.testSessionSnapshot(a)["sessions"].([]any)); n != 2 {
 		t.Errorf("after one %d", n)
 	}
 	got = f.selfPost(a, "sessions/end", f.othersBody(a))

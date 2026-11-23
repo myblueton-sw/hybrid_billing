@@ -83,7 +83,7 @@ func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 			t.Errorf("post route %s has no hold row", r.path)
 		}
 	}
-	if len(routes) != len(holdRoutes) || len(holdRoutes) != 8 {
+	if len(routes) != len(holdRoutes) || len(holdRoutes) != 9 {
 		t.Errorf("routes %d rows %d", len(routes), len(holdRoutes))
 	}
 	if f.s.holdAllows("synthetic.unknown", commands.Call{}, identity.Verifier{}) {

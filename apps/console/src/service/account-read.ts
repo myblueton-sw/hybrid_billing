@@ -1,5 +1,5 @@
 import type { CredentialRow, ServiceRow, ServicesPage, SelfPage } from "./admin";
-import type { SelfEnd, SelfSession } from "./self-end";
+import { sessionRowOf } from "./session-query";
 import { subjectsOf } from "./access-read";
 import { array, boolean, choice, integer, optional, positive, ReadParseError, shape, text } from "./strict-read";
 
@@ -19,16 +19,8 @@ export const servicesPageOf = shape<ServicesPage>({ revision: text, now: text, o
     owner: text, owner_login: text, credentials: array(credentialOf) })),
   limits: shape({ credential_days: integer, credentials_per_service: positive, services: positive, replay_seconds: positive }),
 });
-const session = shape<SelfSession>({ handle: text, current: boolean, signed_in: text, ends: text });
-const end = shape<SelfEnd>({ operation: text, kind: choice("others", "one"), count: integer,
-  state: choice("cleanup_running", "complete", "cleanup_incomplete"), blocked_at: text, list_generation: text, current_generation: text,
-  generation_changed: boolean, digest: text, cleanup: shape({ done: integer, already_ended: integer, failed: integer, pending: integer }),
-  sessions: array(shape({ handle: text, signed_in: text, result: choice("ended", "already_gone"), items: array(shape({ item: text,
-    state: choice("done", "pending", "failed", "already_ended", "outside_scope", "not_applicable"), reason: (value) => value === undefined ? "" : text(value) })) })),
-  not_included: array(shape({ handle: text, signed_in: text })), replay: boolean,
-});
 export const selfPageOf = shape<SelfPage>({ user_id: text, login: text, email: text, workspace: text, role: text,
   identities: array(shape({ method: text, login: text })), password_set: boolean, installation_administrator: boolean,
-  sessions: array(session), sessions_generation: text, session_ends: array(end), idle_minutes: integer, max_age_seconds: integer,
+  current_session: sessionRowOf, recorded_session_count: integer, accepted_operation_count: integer, sessions_generation: text, idle_minutes: integer, max_age_seconds: integer,
   signed_in_at: text, authenticated_at: text, now: text,
 });

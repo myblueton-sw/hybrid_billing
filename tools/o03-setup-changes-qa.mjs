@@ -89,8 +89,8 @@ try{
   await page.locator('.o03-field-cards > li').nth(1).locator('button').click();await page.locator('.o03-part-sub .live-empty').waitFor();assert.equal(fields.at(-1),'document_template');
   await page.screenshot({path:`${output}/empty-${lang}-${width}.png`,fullPage:true});evidence.cases.push({check:'fields',lang,width});
   mode='paged';await open(lang,width);await rowsReady(10);
-  await page.locator('.o03-docs-pages button').click();await rowsReady(2);assert.equal(await page.evaluate(()=>document.activeElement?.id),'o03-changes-title');
-  await page.locator('.o03-docs-pages button').click();await rowsReady(10);evidence.cases.push({check:'paging',lang,width});
+  await page.locator('.o03-part-sub:not(.o03-steps) > .o03-docs-pages button').click();await rowsReady(2);assert.equal(await page.evaluate(()=>document.activeElement?.id),'o03-changes-title');
+  await page.locator('.o03-part-sub:not(.o03-steps) > .o03-docs-pages button').click();await rowsReady(10);evidence.cases.push({check:'paging',lang,width});
   for(const name of Object.keys(refusals)){
    mode=name;await open(lang,width);const alert=page.locator('.o03-part-sub .live-error');await alert.waitFor();
    const refusal=await alert.evaluate(el=>{const s=getComputedStyle(el);return {text:el.innerText,widths:[s.borderTopWidth,s.borderBottomWidth,s.borderInlineStartWidth,s.borderInlineEndWidth],color:s.borderTopColor,overflow:document.documentElement.scrollWidth>innerWidth};});

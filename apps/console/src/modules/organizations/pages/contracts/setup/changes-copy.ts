@@ -1,4 +1,5 @@
 import type { Locale } from "../../../../../shared/types";
+import { stepError } from "./step-copy";
 
 const words = {
  purpose: ["Requests to replace a protected sample reference. Each is verified and decided by people other than the requester.", "보호된 샘플 참조를 바꾸려는 요청입니다. 각 요청은 요청자가 아닌 다른 담당자가 검증하고 결정합니다.", "طلبات لاستبدال مرجع تجريبي محمي. يتحقق من كل طلب ويبتّ فيه أشخاص غير مقدّم الطلب."],
@@ -46,8 +47,63 @@ const words = {
  evAttempted: ["Request attempted by", "요청 시도자", "حاول طلبه"],
  decisions: ["Decisions observed", "관찰된 결정 수", "القرارات المرصودة"],
  evEnded: ["Ended", "종료", "انتهى"], evEndedBy: ["Ended by", "종료 처리자", "أنهاه"],
+ action: ["Action", "작업", "الإجراء"],
+ actRequest: ["Request protected settings change", "보호된 설정 변경 요청", "طلب تغيير الإعدادات المحمية"],
+ actVerify: ["Verify protected settings change", "보호된 설정 변경 검증", "التحقق من تغيير الإعدادات المحمية"],
+ actDecide: ["Decide protected settings change", "보호된 설정 변경 결정", "البتّ في تغيير الإعدادات المحمية"],
+ actVerifyShort: ["Verify change", "변경 검증", "التحقق من التغيير"],
+ actDecideShort: ["Decide change", "변경 결정", "البتّ في التغيير"],
+ stepNote: ["Requesting, verifying and approving a change are separate step permissions in permission management. The service refuses one person performing more than one of these steps on the same change.", "변경 요청, 검증, 승인은 권한 관리의 서로 다른 단계 권한입니다. 한 사람이 같은 변경에서 둘 이상의 단계를 수행하면 서비스가 거절합니다.", "طلب التغيير والتحقق منه واعتماده صلاحيات خطوات منفصلة في إدارة الصلاحيات. ترفض الخدمة أن ينفّذ شخص واحد أكثر من خطوة واحدة في التغيير نفسه."],
+ ownRequest: ["You requested this change. The service refuses verification and decision by the requester.", "이 변경은 본인이 요청했습니다. 요청자의 검증과 결정은 서비스가 거절합니다.", "أنت من طلب هذا التغيير. ترفض الخدمة التحقق والقرار من مقدّم الطلب."],
+ ownVerify: ["You recorded the verification of this change. The service refuses a decision by the verifier.", "이 변경의 검증은 본인이 기록했습니다. 검증자의 결정은 서비스가 거절합니다.", "أنت من سجّل التحقق من هذا التغيير. ترفض الخدمة القرار من المتحقِّق."],
+ ownDecision: ["You already recorded a decision on this change.", "이 변경에 대한 결정을 이미 기록했습니다.", "سبق أن سجّلت قراراً في هذا التغيير."],
+ fieldReference: ["New sample value", "새 샘플 값", "القيمة التجريبية الجديدة"],
+ sampleOnly: ["Sample only. It stands for no real account, address or template.", "샘플입니다. 실제 계좌, 주소, 템플릿을 나타내지 않습니다.", "نموذج فقط. لا يمثل حساباً أو عنواناً أو قالباً حقيقياً."],
+ fieldChannel: ["Verification channel", "검증 채널", "قناة التحقق"],
+ channelHint: ["Accepted channels of this setting's subject. The verifier uses the channel chosen here; it cannot be changed later.", "이 설정 대상의 수락된 채널입니다. 검증자는 여기서 선택한 채널을 사용하며, 나중에 바꿀 수 없습니다.", "القنوات المقبولة لموضوع هذا الإعداد. يستخدم المتحقِّق القناة المختارة هنا، ولا يمكن تغييرها لاحقاً."],
+ noChannels: ["No accepted channel of this setting's subject is listed. Register and accept one under Verification channels first.", "이 설정 대상의 수락된 채널이 없습니다. 먼저 검증 채널에서 등록하고 수락하세요.", "لا توجد قناة مقبولة لموضوع هذا الإعداد. سجّل واحدة واقبلها أولاً من قنوات التحقق."],
+ earliest: ["Earliest change request", "가장 이른 변경 요청 시각", "أبكر وقت لطلب تغيير"],
+ notStated: ["not stated", "표시되지 않음", "غير مذكور"],
+ ownChannels: ["Channels you registered or accepted are not listed here: the service refuses your request when one of them is the verification channel.", "본인이 등록하거나 수락한 채널은 이 목록에 없습니다. 그런 채널을 검증 채널로 하면 본인의 요청을 서비스가 거절합니다.", "القنوات التي سجّلتها أو قبلتها غير مدرجة هنا: ترفض الخدمة طلبك إذا كانت إحداها قناة التحقق."],
+ channelUnknown: ["Channel type not loaded. See Verification channels.", "채널 유형을 불러오지 못했습니다. 검증 채널에서 확인하세요.", "تعذر تحميل نوع القناة. راجع قنوات التحقق."],
+ noticeRequest: ["The verification channel and the effective time cannot be changed after the request. A change left with an unknown outcome blocks later requests for this setting and its subject.", "검증 채널과 적용 시각은 요청 후 바꿀 수 없습니다. 처리 결과가 미확인으로 남은 변경은 이 설정과 대상에 대한 이후 요청을 막습니다.", "لا يمكن تغيير قناة التحقق ووقت السريان بعد الطلب. التغيير الذي تبقى نتيجته غير معروفة يمنع الطلبات اللاحقة لهذا الإعداد وموضوعه."],
+ fieldProvenance: ["How the new value reached you", "새 값을 전달받은 방식", "كيف وصلتك القيمة الجديدة"],
+ fieldInstruction: ["How the instruction arrived", "지시가 도착한 방식", "كيف وصلت التعليمات"],
+ in_person_form: ["In person", "대면", "حضورياً"],
+ registered_channel: ["Through a registered channel", "등록된 채널을 통해", "عبر قناة مسجلة"],
+ unregistered_sender: ["By email from a sender that is not a registered channel", "등록된 채널이 아닌 발신자의 이메일로", "بالبريد الإلكتروني من مرسل ليس قناة مسجلة"],
+ fieldInstructionChannel: ["Channel the instruction arrived through", "지시가 도착한 채널", "القناة التي وصلت عبرها التعليمات"],
+ instructionChannelHint: ["It must be a different channel from the verification channel.", "검증 채널과 다른 채널이어야 합니다.", "يجب أن تكون قناة غير قناة التحقق."],
+ fieldEffective: ["Takes effect (UTC)", "적용 시각(UTC)", "وقت السريان (UTC)"],
+ effectiveHint: ["Date and time in UTC, at least one minute from now and within the longest time the rules allow.", "UTC 기준 날짜와 시각입니다. 지금부터 1분 이상 뒤이며, 규칙이 허용하는 최대 기간 안이어야 합니다.", "التاريخ والوقت بتوقيت UTC، بعد دقيقة واحدة على الأقل من الآن وضمن أطول مدة تسمح بها القواعد."],
+ fieldReason: ["Reason for the change", "변경 사유", "سبب التغيير"],
+ fieldOutcome: ["What you found", "확인한 결과", "ما وجدته"],
+ outcome_confirmed: ["I confirmed the instruction through the channel", "채널을 통해 지시를 확인했습니다", "تأكدتُ من التعليمات عبر القناة"],
+ outcome_denied: ["The instruction was denied through the channel", "채널을 통해 지시가 부인되었습니다", "نُفيت التعليمات عبر القناة"],
+ fieldVerdict: ["Decision", "결정", "القرار"],
+ approve: ["Approve", "승인", "اعتماد"], reject: ["Reject", "반려", "رفض"],
+ fieldRejection: ["Reason for rejecting", "반려 사유", "سبب الرفض"],
+ reason_incorrect_details: ["Incorrect details", "내용 오류", "تفاصيل غير صحيحة"], reason_missing_evidence: ["Missing supporting material", "뒷받침 자료 누락", "مواد داعمة ناقصة"], reason_suspected_fraud: ["Suspected fraud", "사기 의심", "اشتباه في احتيال"], reason_other: ["Other", "기타", "أخرى"],
+ noticeDecide: ["A decision cannot be changed. An approval that completes the required approvals schedules the change; a rejection ends it.", "결정은 바꿀 수 없습니다. 필요한 승인 수가 채워지면 변경이 예정되고, 반려하면 변경이 종료됩니다.", "لا يمكن تغيير القرار. الاعتماد الذي يُكمل الاعتمادات المطلوبة يجدول التغيير، والرفض ينهيه."],
+ noticeVerify: ["A denied verification ends the change.", "검증에서 부인되면 변경이 종료됩니다.", "التحقق الذي ينتهي بالنفي ينهي التغيير."],
+ targetChange: ["Change", "변경", "التغيير"],
+ setting: ["Protected setting", "보호된 설정", "الإعداد المحمي"],
+ invalidRequest: ["Choose a sample value, a verification channel, how the value and the instruction arrived, enter a valid effective time, write a statement, and enter a reason.", "샘플 값, 검증 채널, 값과 지시가 전달된 방식을 선택하고, 유효한 적용 시각을 입력한 뒤 진술을 작성하고 사유를 입력하세요.", "اختر قيمة تجريبية وقناة تحقق وطريقة وصول القيمة والتعليمات، وأدخل وقت سريان صالحاً، واكتب إفادة، وأدخل سبباً."],
+ invalidVerify: ["Choose what the verification found and write a statement.", "검증 결과를 선택하고 진술을 작성하세요.", "اختر ما خلص إليه التحقق واكتب إفادة."],
+ invalidDecide: ["Choose a decision, and a reason when rejecting.", "결정을 선택하고, 반려하는 경우 사유를 선택하세요.", "اختر قراراً، وسبباً عند الرفض."],
+ errPermission: ["The step may need the permission that permission management lists as “Request protected settings change”, “Verify protected settings change” or “Approve protected settings change”, or the service refused for a reason it does not disclose.", "이 단계에는 권한 관리의 ‘보호된 설정 변경 요청’, ‘보호된 설정 변경 검증’ 또는 ‘보호된 설정 변경 승인’ 권한이 필요할 수 있으며, 서비스가 밝히지 않는 사유로 거절했을 수도 있습니다.", "قد تتطلب الخطوة الصلاحية المدرجة في إدارة الصلاحيات باسم «طلب تغيير الإعدادات المحمية» أو «التحقق من تغيير الإعدادات المحمية» أو «اعتماد تغيير الإعدادات المحمية»، أو أن الخدمة رفضت لسبب لا تفصح عنه."],
+ errSelf: ["The service keeps the people of a change apart: the requester cannot verify or decide, the verifier cannot decide, and a person who registered or accepted the verification channel cannot request, verify or decide through it.", "서비스는 변경의 담당자를 분리합니다. 요청자는 검증하거나 결정할 수 없고, 검증자는 결정할 수 없으며, 검증 채널을 등록하거나 수락한 사람은 그 채널로 요청, 검증, 결정을 할 수 없습니다.", "تفصل الخدمة بين أشخاص التغيير: لا يتحقق مقدّم الطلب ولا يقرر، ولا يقرر المتحقِّق، ومن سجّل قناة التحقق أو قبلها لا يطلب ولا يتحقق ولا يقرر عبرها."],
+ errStale: ["Possible causes: the change or its channel changed since this screen read it, the statement cannot be used for this step, or the service found its records inconsistent. Reload and review again.", "가능한 원인: 이 화면이 조회한 뒤 변경 또는 채널이 바뀜, 진술을 이 단계에 사용할 수 없음, 서비스가 기록의 불일치를 발견함. 새로 조회한 뒤 다시 검토하세요.", "الأسباب المحتملة: تغير التغيير أو قناته منذ قراءته في هذه الشاشة، أو لا يمكن استخدام الإفادة لهذه الخطوة، أو أن الخدمة وجدت سجلاتها غير متسقة. أعد التحميل ثم راجع من جديد."],
+ errPrerequisite: ["Possible causes: the verification channel was not accepted long enough ago, the effective time is less than one minute ahead or beyond the longest time the rules allow, the deadline of the step is less than one minute away, an earlier change of this setting is unresolved, no confirmed rules exist, or a limit was reached. The service does not say which.", "가능한 원인: 검증 채널이 수락된 뒤 충분한 시간이 지나지 않음, 적용 시각이 1분 이내이거나 규칙이 허용하는 최대 기간을 넘음, 단계의 기한이 1분 이내임, 이 설정의 이전 변경이 해결되지 않음, 확인된 규칙이 없음, 한도 도달. 서비스는 어느 것인지 알려 주지 않습니다.", "الأسباب المحتملة: لم يمضِ وقت كافٍ على قبول قناة التحقق، أو وقت السريان بعد أقل من دقيقة أو يتجاوز أطول مدة تسمح بها القواعد، أو بقي على مهلة الخطوة أقل من دقيقة، أو يوجد تغيير سابق لهذا الإعداد لم يُحسم، أو لا توجد قواعد مؤكدة، أو بُلغ حد. لا تحدد الخدمة أيها."],
+ errShape: ["The service refused the request as written. The sample value or the instruction channel may not be one it accepts for this setting.", "서비스가 작성된 요청을 거절했습니다. 샘플 값이나 지시 채널이 이 설정에 허용되는 항목이 아닐 수 있습니다.", "رفضت الخدمة الطلب كما كُتب. قد لا تكون القيمة التجريبية أو قناة التعليمات مما تقبله لهذا الإعداد."],
  blockingUnknown: ["This change has an unknown outcome. Further requests for this subject and setting are refused until it is resolved.", "이 변경의 처리 결과가 확인되지 않았습니다. 해결될 때까지 같은 대상과 설정에 대한 추가 요청은 거절됩니다.", "نتيجة هذا التغيير غير معروفة. تُرفض الطلبات الأخرى لهذا الموضوع والإعداد إلى أن تُحسم."],
  blockingUnowned: ["An entry exists that this service did not record. Later requests, verifications and decisions for this protected setting are refused.", "이 서비스가 기록하지 않은 항목이 있습니다. 이 보호된 설정에 대한 이후 요청, 검증, 결정은 거절됩니다.", "يوجد إدخال لم تسجله هذه الخدمة. تُرفض الطلبات وعمليات التحقق والقرارات اللاحقة لهذا الإعداد المحمي."],
 } as const;
 export type ChangeWord = keyof typeof words;
 export function changeText(l: Locale, key: ChangeWord): string { return words[key][l === "ko" ? 1 : l === "ar" ? 2 : 0]; }
+
+export function changeError(l: Locale, code: string): string {
+ const key: ChangeWord | "" = code === "permission_denied" ? "errPermission" : code === "self_approval_denied" ? "errSelf" : code === "evidence_stale" || code === "revision_conflict" ? "errStale" : code === "prerequisite_failed" ? "errPrerequisite"
+  : code === "invalid_verify" ? "invalidVerify" : code === "invalid_decide" ? "invalidDecide" : code === "invalid_setup_request" ? "invalidRequest" : code === "invalid_request" ? "errShape" : "";
+ return key ? changeText(l, key) : stepError(l, code);
+}

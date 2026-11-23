@@ -31,7 +31,7 @@ Work resumed from main c8aebd6 on this machine and merged the following through 
 
 Separate issues, by owner instruction that anything outside the checklist gets its own ticket: HYB-343 (two server tests failing on main, fixed in PR 256, which also added pending issuance settings to M01 bulk revocation impact), HYB-342 (unkeyed digest hypothesis, open), HYB-344 (remaining M01 impact gaps, open), HYB-345 (release, discard and withdrawal operations for protected setup records, open), HYB-346 (labels for issuance grants on existing M03 and P02 rows, open).
 
-Screens for items 1 to 5: the three issuance permission areas are on M03 (PR 274, 276, 277; [screen plan](issuance-authority-screen-plan.md)) as a candidate the owner has not reviewed. No screen is wired to the reads or commands of items 1 to 4 yet; their composition, items and ten delivery slices are in [the O03 screens plan](issuance-setup-screens-plan.md).
+Screens for items 1 to 5: the three issuance permission areas are on M03 (PR 274, 276, 277; [screen plan](issuance-authority-screen-plan.md)), and every read and command of items 1 to 4 is on the O03 documents and payment terms views in ten slices (PR 278 to 288; [O03 screens plan](issuance-setup-screens-plan.md), which records each slice's checks, reviews and open notes). All of it is a candidate: checks used intercepted synthetic responses, no flow ran against a real server, no native speaker reviewed the Korean or Arabic copy, and the owner has reviewed no screen.
 
 What the journey test established: from a sample installation with no issuance grant, confirmed rules, an admitted channel, an approved term and binding and a scheduled payment-account change are reachable with every capability granted through the public provisioning commands. After the 24-hour channel age all grants have expired, and a change request stays refused until the channel's registrar and admitter are provisioned again as well as the requester, verifier and approver. The contract and its confirmed configuration are still created by package-internal helpers in that test.
 
@@ -39,9 +39,9 @@ Owner-visible residuals are recorded in the evidence and protected writes contra
 
 # Next executable scope
 
-1. Implement the O03 slices of [the screens plan](issuance-setup-screens-plan.md) in order, each with its render check, ui-designer render review and technical-writing review; slices 7 to 10 also take an independent source review. Then owner screen verification.
-2. Extend the journey to B09 readiness and a second applicable invoice reusing unchanged setup, including the draft capabilities through real commands. Configuration replacement, release operations and durable production recovery remain explicit separate scopes.
-3. Owner review of the M03 permission areas and the changed permission-area navigation.
+1. Owner screen review of the O03 documents and payment terms views and of the M03 permission areas, with the open questions and review notes of [the O03 screens plan](issuance-setup-screens-plan.md).
+2. Run the O03 flows against a real local server: the render checks under `tools/o03-*-qa.mjs` intercept every response.
+3. Extend the journey to B09 readiness and a second applicable invoice reusing unchanged setup, including the draft capabilities through real commands. Configuration replacement, release operations and durable production recovery remain explicit separate scopes.
 4. Separate issues: HYB-344 (M01 impact gaps; item 2 read and confirmed, not started), HYB-345, HYB-346, HYB-347, and the owner decisions of HYB-342.
 
 # Discovery evidence and traps

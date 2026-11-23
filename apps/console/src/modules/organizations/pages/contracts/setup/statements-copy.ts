@@ -29,6 +29,7 @@ const words = {
  hintLocator: ["A place outside this product, for example a folder.", "이 제품 밖의 위치입니다. 예: 폴더.", "مكان خارج هذا المنتج، مثل مجلد."],
  groupStatement: ["Statement you will record", "기록할 진술", "الإفادة التي ستسجّلها"],
  groupReuse: ["Statement you recorded in this session", "이 세션에서 기록한 진술", "الإفادة التي سجّلتها في هذه الجلسة"],
+ keptHint: ["It is sent with this step. To write a different statement, withdraw this one under Statements first.", "이 진술이 이 단계와 함께 전송됩니다. 다른 진술을 쓰려면 먼저 진술 항목에서 이 진술을 철회하세요.", "تُرسل مع هذه الخطوة. لكتابة إفادة أخرى، اسحب هذه أولاً من قسم الإفادات."],
  groupAction: ["Step it is written for", "진술 대상 단계", "الخطوة التي كُتبت لها"],
  twoRequests: ["Two requests are sent. The statement is recorded first and stays on record even if the action is refused. It can be withdrawn only while unused.", "요청을 두 번 전송합니다. 진술을 먼저 기록하며, 단계가 거절되어도 진술은 기록으로 남습니다. 사용되지 않은 동안에만 철회할 수 있습니다.", "يُرسل طلبان. تُسجَّل الإفادة أولاً وتبقى في السجل حتى لو رُفض الإجراء. لا يمكن سحبها إلا ما دامت غير مستخدمة."],
  oneRequest: ["One request is sent. The statement is already on record and was unused when this session recorded it.", "요청을 한 번 전송합니다. 진술은 이미 기록되어 있으며, 이 세션에서 기록할 당시 사용되지 않은 상태였습니다.", "يُرسل طلب واحد. الإفادة مسجلة سلفاً وكانت غير مستخدمة عند تسجيلها في هذه الجلسة."],

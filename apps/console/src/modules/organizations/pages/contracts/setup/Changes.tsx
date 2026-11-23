@@ -12,10 +12,16 @@ import { protectedFields, type ProtectedChange, type ProtectedField } from "./pr
 import { PartFeedback } from "./Rules";
 import { rulesText } from "./rules-copy";
 import type { SetupScope } from "./scope";
+import { decideOffer, verifyOffer } from "./change-flow";
+import { ChangeSteps, type ChangeChoice } from "./ChangeWrites";
+import type { StatementStore } from "./ChannelWrites";
+import type { ProtectedStore } from "./RuleWrites";
 
-type Props = { l: Locale; session: Session; contract: string; scope: SetupScope; onSignedOut: () => void };
+type Props = { l: Locale; session: Session; contract: string; scope: SetupScope; writes: ProtectedStore | undefined; statements: StatementStore | undefined; settled: number; onSignedOut: () => void };
+const idle = () => () => undefined;
 
-export function Changes({ l, session, contract, scope, onSignedOut }: Props) {
+export function Changes({ l, session, contract, scope, writes, statements, settled, onSignedOut }: Props) {
+ const [choice, setChoice] = useState<ChangeChoice>();
  const [field, setField] = useState<ProtectedField>("document_recipient");
  const target = useMemo(() => ({ contract, configuration: scope.configuration, digest: scope.digest }), [contract, scope.configuration, scope.digest]);
  const client = useMemo(() => setupReadClient(session), [session.user, session.workspace, session.csrf]);
@@ -28,10 +34,16 @@ export function Changes({ l, session, contract, scope, onSignedOut }: Props) {
  useEffect(() => { void rows.load(); if (shown.current) { shown.current = false; table.current?.focus(); } return () => rows.dispose(); }, [rows]);
  useEffect(() => { if ([cards.error, state.error].some(v => v === "session_changed" || v === "unauthenticated")) signOut.current(); }, [cards.error, state.error]);
  const reload = () => { heading.current?.focus(); void summary.load(); void rows.load(); };
+ const first = useRef(true), unresolved = () => !!writes?.unresolved() || !!statements?.unresolved(), pending = () => [writes, statements].some(s => s?.snapshot().entries.some(e => e.phase === "pending"));
+ const blockedA = useSyncExternalStore(writes?.subscribe ?? idle, unresolved), blockedB = useSyncExternalStore(statements?.subscribe ?? idle, unresolved), blocked = blockedA || blockedB;
+ const sendingA = useSyncExternalStore(writes?.subscribe ?? idle, pending), sendingB = useSyncExternalStore(statements?.subscribe ?? idle, pending), sending = sendingA || sendingB;
+ useEffect(() => { if (first.current) { first.current = false; return; } reload(); }, [settled]);
+ useEffect(() => { setChoice(undefined); }, [state.value, field]);
+ const choose = (row: ProtectedChange, mode: ChangeChoice["mode"]) => { setChoice({ row, mode }); document.getElementById("o03-change-steps")?.focus(); };
  const turn = (next = false) => { table.current?.focus(); void rows.load(next); };
  const page = state.value;
  return <section className="o03-part" aria-labelledby="o03-part-title" aria-busy={cards.loading || state.loading || undefined}>
-  <div className="o03-docs-heading"><h3 id="o03-part-title" ref={heading} tabIndex={-1}>{partText(l, "changes")}</h3><button type="button" className="live-secondary" disabled={cards.loading || state.loading} onClick={reload}>{text(l, "reload")}</button></div>
+  <div className="o03-docs-heading"><h3 id="o03-part-title" ref={heading} tabIndex={-1}>{partText(l, "changes")}</h3><button type="button" className="live-secondary" disabled={cards.loading || state.loading || sending} onClick={reload}>{text(l, "reload")}</button></div>
   <p>{c(l, "purpose")}</p>
   <PartFeedback l={l} state={cards} />
   {cards.value && <>
@@ -62,14 +74,16 @@ export function Changes({ l, session, contract, scope, onSignedOut }: Props) {
      <div><dt>{c(l, "changes")}</dt><dd>{page.count}</dd></div>
      <div><dt>{c(l, "showing")}</dt><dd>{page.rows.length}</dd></div>
     </dl>
-    {page.rows.length === 0 ? <p className="live-empty">{c(l, "empty")}</p> : <div className="live-table"><table className="o03-part-table o03-changes-table" aria-labelledby="o03-changes-title"><thead><tr>{(["change", "state", "effective", "channel"] as const).map(key => <th key={key} scope="col">{c(l, key)}</th>)}</tr></thead><tbody>{page.rows.map(row => <ChangeRow key={row.change} l={l} row={row} />)}</tbody></table></div>}
-    <div className="o03-docs-pages">{state.after && <button type="button" className="live-secondary" onClick={() => turn()}>{text(l, "first")}</button>}{page.next && <button type="button" className="live-secondary" onClick={() => turn(true)}>{text(l, "next")}</button>}</div>
+    {page.rows.length === 0 ? <p className="live-empty">{c(l, "empty")}</p> : <div className="live-table"><table className="o03-part-table o03-changes-table" aria-labelledby="o03-changes-title"><thead><tr>{(["change", "state", "effective", "channel", "action"] as const).map(key => <th key={key} scope="col">{c(l, key)}</th>)}</tr></thead><tbody>{page.rows.map(row => <ChangeRow key={row.change} l={l} row={row} user={writes && statements ? session.user : ""} blocked={blocked} onChoose={mode => choose(row, mode)} />)}</tbody></table></div>}
+    <div className="o03-docs-pages">{state.after && <button type="button" className="live-secondary" disabled={sending} onClick={() => turn()}>{text(l, "first")}</button>}{page.next && <button type="button" className="live-secondary" disabled={sending} onClick={() => turn(true)}>{text(l, "next")}</button>}</div>
+    {writes && statements && <ChangeSteps l={l} session={session} store={writes} statements={statements} field={field} page={page} choice={choice} onChoiceDone={() => setChoice(undefined)} onSettled={reload} />}
    </>}
   </div>
  </section>;
 }
 
-function ChangeRow({ l, row: r }: { l: Locale; row: ProtectedChange }) {
+function ChangeRow({ l, row: r, user, blocked, onChoose }: { l: Locale; row: ProtectedChange; user: string; blocked: boolean; onChoose: (mode: ChangeChoice["mode"]) => void }) {
+ const verify = user ? verifyOffer(r, user) : "none", decide = user ? decideOffer(r, user) : "none", described = blocked ? "o03-change-blocked" : undefined;
  const layer = (label: ChangeWord, value: React.ReactNode) => <span className="o03-part-line"><span className="live-sub">{c(l, label)}</span>{value}</span>;
  const event = (key: string, label: ChangeWord, actor: string, at: string) => <li key={key}>{c(l, label)}{actor && <>: {ltr(actor)}</>}<span className="live-sub">{at ? <>{c(l, "at")}: {stamp(l, at)}</> : c(l, "noTime")}</span></li>;
  const events = [
@@ -94,5 +108,8 @@ function ChangeRow({ l, row: r }: { l: Locale; row: ProtectedChange }) {
   </td>
   <td data-label={c(l, "effective")}>{stamp(l, r.effective)}</td>
   <td data-label={c(l, "channel")}>{ltr(r.channel)}</td>
+  <td data-label={c(l, "action")}>{verify === "offer" ? <button type="button" className="live-secondary" disabled={blocked} aria-describedby={described} aria-label={c(l, "actVerify") + ": " + r.change} onClick={() => onChoose("verify")}>{c(l, "actVerifyShort")}</button>
+   : decide === "offer" ? <button type="button" className="live-secondary" disabled={blocked} aria-describedby={described} aria-label={c(l, "actDecide") + ": " + r.change} onClick={() => onChoose("decide")}>{c(l, "actDecideShort")}</button>
+   : verify === "own" || decide === "requester" ? c(l, "ownRequest") : decide === "verifier" ? c(l, "ownVerify") : decide === "decided" ? c(l, "ownDecision") : null}</td>
  </tr>;
 }

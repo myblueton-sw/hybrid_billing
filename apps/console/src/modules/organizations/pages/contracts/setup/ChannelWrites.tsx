@@ -4,7 +4,7 @@ import type { Session } from "../../../../../service/api";
 import type { Locale } from "../../../../../shared/types";
 import { ltr } from "../live-format";
 import type { AttestationPurpose, AttestationReceipt } from "./attestation";
-import { admitChannelIntent, channelOffer, channelReferences, recordedStatement, registerChannelIntent, reusableStatement, statementIntent, type StatementStep } from "./channel-flow";
+import { admitChannelIntent, channelOffer, channelReferences, registerChannelIntent, reusableStatement, statementIntent, type StatementStep } from "./channel-flow";
 import { channelError, channelText as c, type ChannelWord } from "./channels-copy";
 import { setupReadClient } from "./client";
 import { text } from "./copy";
@@ -13,6 +13,7 @@ import type { ProtectedChannel, ProtectedPage } from "./protected";
 import type { ProtectedWriteIntent } from "./protected-writes";
 import type { ProtectedStore } from "./RuleWrites";
 import { sampleLabel, statementError, statementText as st } from "./statements-copy";
+import { sendChained, type ChainOutcome } from "./statement-chain";
 import { codeOf } from "./StepResults";
 import { stepText as t } from "./step-copy";
 import type { StepWriteStore } from "./step-store";
@@ -75,21 +76,16 @@ export function ChannelSteps({ l, session, store, statements, page, row, onRowDo
  const send = async () => {
   if (!prepared) return;
   const current = prepared; setPrepared(undefined); setError(""); heading.current?.focus();
-  let attestation = current.reuse?.id ?? "", revision = page.revision;
-  if (current.statement) {
-   try { await statements.submit(current.statement, current.statement.attestation); } catch (e) { setSource("statement"); setError(codeOf(e)); return; }
-   const sent = recordedStatement(statements.snapshot().entries.find(e => e.intent === current.statement));
-   if (!sent) { onSettled(); return; }
-   attestation = sent.attestation; revision = sent.revision;
-  }
-  try { await store.submit(current.build(attestation, revision), current.subject, current.form); } catch (e) { setSource("channel"); setError(codeOf(e)); onSettled(); return; }
+  let outcome: ChainOutcome;
+  try { outcome = await sendChained(statements, store, current, page.revision); } catch (e) { setSource(current.statement && !statements.snapshot().entries.some(v => v.intent === current.statement) ? "statement" : "channel"); setError(codeOf(e)); return; }
+  if (outcome === "statement_unsettled") { onSettled(); return; }
   setForm(""); onRowDone(); onSettled();
  };
  const register = store.draft(registerName), accept = row ? store.draft(acceptName(row.channel)) : {};
  const edit = (name: string, patch: Readonly<Record<string, string>>) => { setError(""); store.edit(name, patch); };
  const busy = [...state.entries, ...claims.entries].some(e => e.phase === "pending"), options = channelReferences(samples.value?.entries ?? [], register.subject ?? "");
  const keptRegister = reuseOf("channel_registration"), keptAccept = row && reuseOf("channel_admission", row.channel, row.digest);
- const kept = (entry: NonNullable<typeof keptRegister>) => <div className="o03-kept"><p>{st(l, "groupReuse")}</p><p className="o03-statement" dir="auto">{entry.intent.statement}</p></div>;
+ const kept = (entry: NonNullable<typeof keptRegister>) => <div className="o03-kept"><p>{st(l, "groupReuse")}</p><p className="o03-statement" dir="auto">{entry.intent.statement}</p><p className="live-sub">{st(l, "keptHint")}</p></div>;
  return <div className="o03-part-sub o03-steps" aria-busy={busy || undefined}>
   <h4 id="o03-channel-steps" ref={heading} tabIndex={-1}>{t(l, "actions")}</h4>
   <p className="live-sub">{c(l, "stepNote")} {t(l, "permissionNote")}</p>

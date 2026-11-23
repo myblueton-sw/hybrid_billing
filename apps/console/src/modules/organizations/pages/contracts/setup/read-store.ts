@@ -5,7 +5,7 @@ import type { ConfigurationPage } from "./history";
 
 export type ReadState<T> = Readonly<{ loading: boolean; value?: T; error?: string }>;
 export type SetupReadState = Readonly<{ historyAfter: string; context: ReadState<SetupContext>; options: ReadState<SetupOptions>; history: ReadState<ConfigurationPage> }>;
-type Client = ReturnType<typeof setupReadClient>;
+type Client = Pick<ReturnType<typeof setupReadClient>, "context" | "options" | "configurations">;
 const empty = (): SetupReadState => ({ historyAfter: "", context: { loading: false }, options: { loading: false }, history: { loading: false } });
 
 export class SetupReadStore {

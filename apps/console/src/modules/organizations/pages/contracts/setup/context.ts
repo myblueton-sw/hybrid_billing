@@ -2,7 +2,7 @@ import { bytes, digest, freeze, id, object, revision, type ReadEnvelope } from "
 import { timestamp } from "../../../../issuance/pages/approval-inbox/documents/contract";
 
 export class SetupError extends Error {
-  constructor(readonly code: string) { super(code); }
+  constructor(readonly code: string, readonly effect: "none" | "unknown" = "none", readonly operation = "") { super(code); }
 }
 
 const invalid = (): never => { throw new SetupError("invalid_setup_response"); };

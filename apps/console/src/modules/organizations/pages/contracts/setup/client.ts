@@ -6,12 +6,13 @@ import { bytes, digest, freeze, id, object, revision, ResultError, type ReadEnve
 import { bounded, checkSession, responseText } from "../../../../issuance/pages/approval-inbox/results/transport";
 import { SetupError, setupContextOf, setupDate, type SetupContext } from "./context";
 import { configurationsOf } from "./history";
+import { actionRequest, setupActionOf, type ActionRequest } from "./action";
 
 const invalid = (): never => { throw new SetupError("invalid_setup_response"); };
 const envelopeKeys = ["request_id", "status", "target_id", "result_revision", "replay", "as_of", "fields"];
 const optionKeys = ["schema", "contract", "on", "scope_digest", "current_eligibility", "option", "applicability", "mode", "profile", "region", "tax", "zone", "languages"];
 
-function fieldMap(raw: unknown): Readonly<Record<string, string>> {
+export function setupFields(raw: unknown): Readonly<Record<string, string>> {
   if (!object(raw) || Object.keys(raw).length > 64
     || Object.entries(raw).some(([key, value]) => !/^[a-z][a-z0-9_]*$/.test(key) || typeof value !== "string" || bytes(value) > 4096)
     || bytes(JSON.stringify(raw)) > 65536) return invalid();
@@ -40,7 +41,7 @@ function optionsOf(e: ReadEnvelope, scope: SetupContext): SetupOptions {
 
 export function setupReadClient(session: Session, fetcher: typeof fetch = fetch.bind(globalThis)) {
   const owner = freeze({ ...session });
-  async function read(command: "context" | "options" | "configurations", target: string, fields: Record<string, string>): Promise<ReadEnvelope> {
+  async function read(command: "context" | "options" | "configurations" | "action", target: string, fields: Record<string, string>): Promise<ReadEnvelope> {
     const values = freeze({ ...fields });
     try { await checkSession(owner, fetcher); }
     catch (error) { throw new SetupError(error instanceof ResultError ? error.code : "session_unavailable"); }
@@ -62,9 +63,13 @@ export function setupReadClient(session: Session, fetcher: typeof fetch = fetch.
     if (response.status !== 200 || Object.keys(raw).length !== envelopeKeys.length || envelopeKeys.some(key => !Object.hasOwn(raw, key))
       || raw.request_id !== tried.request || raw.target_id !== target || raw.status !== "completed" || raw.replay !== false
       || !revision(raw.result_revision) || !timestamp(raw.as_of)) return invalid();
-    return freeze({ revision: raw.result_revision, at: raw.as_of, fields: fieldMap(raw.fields) });
+    return freeze({ revision: raw.result_revision, at: raw.as_of, fields: setupFields(raw.fields) });
   }
   return {
+    async action(input: ActionRequest) {
+      const request = actionRequest(input);
+      return setupActionOf(await read("action", request.contract, { ...request.fields, configuration: request.configuration, operation: request.operation }), request);
+    },
     async configurations(contract: string, after = "", snapshot = "") {
       if (!id(contract) || (!!after !== !!snapshot) || after && (!id(after) || !digest(snapshot))) return invalid();
       return configurationsOf(await read("configurations", contract, after ? { after, snapshot } : {}), contract, after, snapshot);

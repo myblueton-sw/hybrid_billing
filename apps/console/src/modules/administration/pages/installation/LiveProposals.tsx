@@ -118,6 +118,7 @@ export function CommandForm(props: FormProps) {
         const reloaded = await onReload();
         if (!current()) return;
         if (reloaded) { onNotice(gone, reference.detail); onClose("done"); }
+        else setMessage({ text: gone, alert: true });
       } else if (reaction === "signin") onSignedOut(reference.detail);
       else if (reaction === "wait") setMessage({ text: sc.limited(l, retryPhrase(l, err instanceof AdminError ? err.retryAfter || 60 : 60)), alert: true });
       else if (reaction === "retry") setMessage({ text: k.pendingAttempt(l), alert: true });

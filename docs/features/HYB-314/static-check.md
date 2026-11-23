@@ -279,3 +279,9 @@ Checks: `tsc` clean; console tests pass with one new test for the rule. No rende
 The announcement on arrival ("Sealed", "Rejected", "Discarded", "Activated. Relationship revision n is now active.") is made only when the plan named in the address is in the loaded page and is in that state. The revision announced for an activation is the plan's own `activated_revision`, not the number in the address. An address typed or edited by hand no longer produces an announcement the page does not support. When the plan is not in the loaded page nothing is announced.
 
 Checks: `tsc` clean; console tests pass with one new test for the rule. No rendered check and no copy change.
+
+## P01 and P05 finding H4 (2026-11-24)
+
+When a command is denied and the reload that follows fails, the command form on P01 (installation proposals) and P05 (release evidence) now shows the refusal ("This proposal is no longer available." and its variants) as an alert in the form. Before, the form ended with no message. This follows what the retention screen already does (`retention/LiveCommand.tsx`). With a successful reload the behaviour is unchanged.
+
+Checks: `tsc` clean; console tests 1349, pass 1346, fail 0, skipped 3. No new test, no rendered check, no new copy and no review. Not settled: the text says the item is no longer available, which the failed reload could not confirm; the stale-page alert added for P01 in an earlier fix is shown beside it.

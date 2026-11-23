@@ -213,7 +213,7 @@ export function CommandForm(props: FormProps) {
           const outcome = deniedOutcome(command, target, hadPending, got);
           onNotice(outcome === "applied_proposal" ? k.vanishedProposal(l) : k.gone(l, goneKind(command)), reference.detail);
           onClose("done");
-        }
+        } else setMessage({ text: k.gone(l, goneKind(command)), alert: true });
       } else if (reaction === "signin") onSignedOut(reference.detail);
       else if (reaction === "wait") {
         const when = retryPhrase(l, e ? e.retryAfter || 60 : 60);

@@ -164,3 +164,13 @@ These two screens keep their commands enabled in that state, so the sentence adv
 Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3; `tools/o03-trust-states-qa.mjs` extended for the kept list and detail and for the wording of the load failure, passing in English, Korean and Arabic at 1440 and 390; the parts render check still passes. O02 has no rendered check. Copy and state review, ui-designer role (AI, from four renders and source): PASS as a candidate, no blocking finding; its suggestion of a title on the detail alert was applied afterwards.
 
 Left open: on O03 the alert can be thousands of pixels above the "Check permission and review" button of a held detail, so disabling that button in this state, as on P01, P03 and P04, is recommended as a follow-up; the header facts and the present-tense labels of a held detail still read as current; the alert button says "Try again" where the sentence and the toolbar say "Reload"; a failed detail with nothing held shows only the plural title; whether the write paths of these screens refuse a stale revision was not traced.
+
+## M01, M02 and M03 findings A3, B3 and C2 (2026-11-24)
+
+- A3: on M01 below the wide layout, with a detail or action panel open, a failed reload now shows the load failure in the panel with the sentence that what is shown is from the last successful load, and a retry. Before, the error was rendered only in the hidden list.
+- B3: on M02 the same failure is now rendered in the stepped detail as well, and the load failure adds that sentence whenever a page is held.
+- C2: on M03 the effects view shows the load failure above the effects when a reload fails with a page held, with the same sentence.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3. No new test, no rendered check and no further review: the change places an existing alert in three more spots and reuses the sentence reviewed for O02 and O03. These states need a failed reload at a narrow width with a panel open, which no existing render check stages, so how they look is not verified.
+
+Left open: commands on these three screens stay enabled in that state.

@@ -22,7 +22,7 @@ try {
  await page.goto(args.url+'/?service=api&lang=en#/access?lang=en&view=grants');
  await page.locator('#access-capability').waitFor();
  const options=await page.locator('#access-capability option').evaluateAll(es=>es.map(e=>e.value).filter(Boolean));
- assert.equal(options.length,2);
+ assert.equal(options.length,3);
  const recipient=await page.locator('#access-person option').evaluateAll(es=>es.find(e=>e.value)?.value);
  assert.ok(recipient);await page.locator('#access-person').selectOption(recipient);
  await page.locator('#access-capability').focus();await page.keyboard.press('Tab');
@@ -32,7 +32,7 @@ try {
   payloads.push(route.request().postDataJSON());entered();await new Promise(resolve=>release=resolve);
   await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({code:'service_unavailable'})});
  });
- for(const kind of ['focus_data','charge_candidate']) {
+ for(const kind of ['focus_data','charge_candidate','approval_review']) {
   const option=options.find(x=>x.includes(kind));
   await page.locator('#access-capability').selectOption(option);
   await page.locator('#access-days').fill('2');await page.locator('#live-reason').fill('Synthetic capability request check');
@@ -43,13 +43,13 @@ try {
   assert.ok(await page.locator('#access-days').isDisabled());
   assert.ok(await page.locator('.live-step button[type=submit]').isDisabled());
   const sent=payloads.at(-1).body;
-  assert.equal(sent.kind,kind);assert.equal(sent.action,kind==='focus_data'?'view':'view_cost');
-  assert.equal(sent.fields,kind==='focus_data'?'rows':'charge_evidence');assert.equal(sent.days,'2');
+  assert.equal(sent.kind,kind);assert.equal(sent.action,kind==='charge_candidate'?'view_cost':'view');
+  assert.equal(sent.fields,kind==='focus_data'?'rows':kind==='charge_candidate'?'charge_evidence':'approval_evidence');assert.equal(sent.days,'2');
   release();await page.waitForFunction(()=>!document.querySelector('#access-capability').disabled);
   evidence.cases.push({kind,exactPayload:true,pendingSelectionLocked:true});
  }
- assert.equal(payloads.length,2);
- assert.notEqual(payloads[0].idempotency_key,payloads[1].idempotency_key);
+ assert.equal(payloads.length,3);
+ assert.equal(new Set(payloads.map(p=>p.idempotency_key)).size,3);
  evidence.commandTransport='injected 503; no backend mutation';
 
  } else if(args.suite==='state') {
@@ -91,6 +91,8 @@ try {
    await page.evaluate(()=>document.fonts.ready);
    const label={en:'Charge calculation candidates',ko:'과금 계산 후보',ar:'نتائج احتساب الرسوم المبدئية'}[lang];
    assert.ok((await page.locator('body').innerText()).includes(label));
+   const approvalLabel={en:'Approval review records',ko:'승인 검토 기록',ar:'سجلات مراجعة الاعتمادات'}[lang];
+   assert.ok((await page.locator('body').innerText()).includes(approvalLabel));
    await page.locator(target).first().scrollIntoViewIfNeeded();
    await page.screenshot({path:`${args.output}/${route}-${lang}-${width}.png`});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
@@ -99,8 +101,8 @@ try {
     await page.locator('#access-capability').waitFor();
     assert.equal(await page.locator('#access-capability').inputValue(),'');
     const options=await page.locator('#access-capability option').evaluateAll(es=>es.map(e=>({value:e.value,text:e.textContent})));
-    assert.equal(options.length,3);
-    for(const kind of ['focus_data','charge_candidate']) {
+    assert.equal(options.length,4);
+    for(const kind of ['focus_data','charge_candidate','approval_review']) {
      const option=options.find(o=>o.value.includes(kind));assert.ok(option);
      await page.locator('#access-capability').selectOption(option.value);
      await page.locator('#access-capability').focus();
@@ -113,6 +115,6 @@ try {
  }
 
  }
- assert.deepEqual(evidence.errors,[]);assert.equal(evidence.commands.length,args.suite==='interaction'?2:0);evidence.outcome='passed';
+ assert.deepEqual(evidence.errors,[]);assert.equal(evidence.commands.length,args.suite==='interaction'?3:0);evidence.outcome='passed';
 } catch(e) {evidence.outcome='failed';evidence.failure={kind:e.name};await page.screenshot({path:args.output+'/failure.png'});throw new Error('Candidate access QA failed: '+e.name);}
 finally {await writeFile(args.output+'/evidence.json',JSON.stringify(evidence,null,2));await browser.close();}

@@ -91,14 +91,14 @@ export const basisLabel = (l: Locale, b: string) =>
 export const environment = (l: Locale) =>
   t(
     l,
-    "Approval read service unbound",
-    "승인 조회 서비스 미연결",
-    "خدمة قراءة الاعتمادات غير مربوطة",
+    "Approval review · read only",
+    "승인 검토 · 조회 전용",
+    "مراجعة الاعتمادات · للقراءة فقط",
   );
 export const reviewContext = {
-  profile: "approval-read-unbound-v1",
-  mode: "unconnected",
-  scope: "producer-unbound",
+  profile: "approval-read-v1",
+  mode: "read-only",
+  scope: "response-bound",
   period: "not-bound",
   organization: "not-bound",
   currency: "not-bound",
@@ -113,3 +113,11 @@ export const synthetic = (l: Locale) =>
 
 export const sourceUnknown = (l: Locale) =>
   t(l, "Unverified in source", "미확인 (원천 기록)", "غير متحقق منه في المصدر");
+
+export const blockerText = (l: Locale, code: string, text: string) =>
+  code === "producer_unbound"
+    ? t(l,
+        "Source validation and stage prerequisites are not connected.",
+        "원천 검증과 단계별 선행 조건이 연결되지 않았습니다.",
+        "التحقق من المصدر والمتطلبات المسبقة للمراحل غير مربوطين.")
+    : text;

@@ -55,7 +55,7 @@ export default function Inbox({
             )
           ) : (
             <>
-              {t(l, "Exact total", "전체 건수", "الإجمالي الدقيق")}{" "}
+              {t(l, "Exact request count", "전체 건수", "العدد الدقيق للطلبات")}{" "}
               <bdi className="b09-count" dir="ltr">
                 {d.total}
               </bdi>
@@ -120,7 +120,7 @@ export default function Inbox({
                       <bdi dir="auto">{r.target.label}</bdi>
                     </span>
                     <span>{kindLabel(l, r.kind)}</span>
-                    <span>{r.target.period ?? unknown(l)}</span>
+                    <span>{t(l, "Period", "기간", "الفترة")}: {r.target.period ?? unknown(l)}</span>
                     <span className="b09-meta">
                       <bdi dir="ltr">{r.id}</bdi>
                     </span>
@@ -128,7 +128,7 @@ export default function Inbox({
                     <span className="b09-meta">
                       {t(l, "Synthetic example", "합성 예시", "مثال تجريبي")}
                       {selected?.id === r.id && (
-                        <> {t(l, "Selected", "선택됨", "محدد")}</>
+                        <> · {t(l, "Selected", "선택됨", "محدد")}</>
                       )}
                     </span>
                   </button>

@@ -467,7 +467,7 @@ func TestHeldLockFailsStart(t *testing.T) {
 	g := setup(t, SeedSample)
 	g.s.cfg.Data = f.s.cfg.Data
 	err := g.s.Start()
-	if !errors.Is(err, ErrStart) || !strings.Contains(err.Error(), "in use by another process") || g.s.counter != 22 {
+	if !errors.Is(err, ErrStart) || !strings.Contains(err.Error(), "in use by another process") || g.s.counter != 23 {
 		t.Errorf("held lock %v counter %d", err, g.s.counter)
 	}
 	for _, c := range []struct {
@@ -753,16 +753,16 @@ func TestReplayCountsOnlyWhatItCloses(t *testing.T) {
 		present bool
 		replay  string
 	}{
-		"absent grant":         {grant("gone"), nil, 23, false, "absent"},
-		"protected grant":      {grant("reader-console"), nil, 23, true, "protected"},
-		"open grant":           {grant("reader-" + SampleAdmin2), nil, 24, true, "reapplied"},
-		"already closed grant": {grant("reader-" + SampleAdmin2), func(g world) error { return g.s.admin.RevokeGrant("reader-"+SampleAdmin2, 1) }, 24, true, "reapplied"},
-		"absent delegation":    {delegation("del-s"), nil, 23, false, "absent"},
-		"open delegation":      {delegation("del-s"), add, 25, true, "reapplied"},
+		"absent grant":         {grant("gone"), nil, 24, false, "absent"},
+		"protected grant":      {grant("reader-console"), nil, 24, true, "protected"},
+		"open grant":           {grant("reader-" + SampleAdmin2), nil, 25, true, "reapplied"},
+		"already closed grant": {grant("reader-" + SampleAdmin2), func(g world) error { return g.s.admin.RevokeGrant("reader-"+SampleAdmin2, 1) }, 25, true, "reapplied"},
+		"absent delegation":    {delegation("del-s"), nil, 24, false, "absent"},
+		"open delegation":      {delegation("del-s"), add, 26, true, "reapplied"},
 		"already closed delegation": {delegation("del-s"), func(g world) error {
 			add(g)
 			return g.s.admin.RevokeDelegation("del-s", 1)
-		}, 24, true, "reapplied"},
+		}, 25, true, "reapplied"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			g, counter := replayScenario(t, c.record, c.step)

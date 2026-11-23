@@ -259,3 +259,11 @@ Checks: `tsc` clean; console tests 1346, pass 1343, fail 0, skipped 3. No new te
 - D3, not a present defect: the server sends only the `local-password` identity method (`self.go`), so the "Password" label is right today. A second method would need its own label.
 
 Checks: `go build`, `go vet`, the whole `apps/api/server` test package pass; `tsc` clean; console tests pass with one new test for the formatted text. No rendered check. Independent change review (independent-reviewer role, AI, by reading): PASS, no blocking finding; its two suggestions (binding document, a test for the text) were adopted afterwards. It noted that a console built from this change fails the self read against an older server, which follows how the earlier required fields of this read were added, and that the unused `staleNote` copy still states 12 hours.
+
+## M05 finding D4 (2026-11-24)
+
+A referenced operation whose result is not confirmed is no longer reported as "The retained operation is unavailable". It has its own sentence: the result is not confirmed, so it cannot be shown yet; check again. The read's answer is the server's, so this is a stated state and not a failure.
+
+Not changed: a failed read and a missing operation still share the "unavailable" text. The console's failure kinds do not tell a network failure from a missing record on this read (both arrive as "unavailable"), so they cannot be told apart without a change to the service client.
+
+Checks: `tsc` clean; console tests 1347, pass 1344, fail 0, skipped 3. No new test and no rendered check. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its recommendation to announce the unconfirmed state as a status and not an alert was adopted afterwards.

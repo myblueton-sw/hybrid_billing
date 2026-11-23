@@ -519,7 +519,7 @@ export type TrustChange = {
   earlier_run: boolean;
   run_started_at: string;
   validation: TrustValidation | null;
-  impact: TrustImpact;
+  impact: TrustImpact | null;
   activation: TrustActivation | null;
   job: TrustJob | null;
   invalidation: TrustInvalidation | null;
@@ -570,7 +570,7 @@ const trustStates: TrustState[] = ["draft", "validated", "independently_approved
 export function trustChangeOf(v: unknown): TrustChange {
   const r = obj(v);
   const val = r.validation ? obj(r.validation) : null;
-  const imp = obj(r.impact);
+  const imp = r.impact && typeof r.impact === "object" && !Array.isArray(r.impact) ? obj(r.impact) : null;
   const act = r.activation ? obj(r.activation) : null;
   const job = r.job ? obj(r.job) : null;
   const inv = r.invalidation ? obj(r.invalidation) : null;
@@ -586,7 +586,7 @@ export function trustChangeOf(v: unknown): TrustChange {
       result: str(val.result), at: str(val.at), evidence_digest: str(val.evidence_digest), evidence_current: val.evidence_current === true,
       items: list(val.items).map((x) => { const i = obj(x); return { item: str(i.item), result: str(i.result), reason: str(i.reason), detail: str(i.detail) }; }),
     },
-    impact: { members: num(imp.members), sessions: num(imp.sessions), affected_ids: list(imp.affected_ids).map(String), weakens_mfa: imp.weakens_mfa === true, signs_out_everyone: imp.signs_out_everyone !== false },
+    impact: imp && { members: num(imp.members), sessions: num(imp.sessions), affected_ids: list(imp.affected_ids).map(String), weakens_mfa: imp.weakens_mfa === true, signs_out_everyone: imp.signs_out_everyone !== false },
     activation: act && { epoch: epochOf(act.epoch), ledger_sequence: num(act.ledger_sequence), watermark: str(act.watermark), at: str(act.at) },
     job: job && { id: str(job.id), state: str(job.state), reason: str(job.reason) },
     invalidation: inv && {

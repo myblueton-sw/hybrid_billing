@@ -155,6 +155,7 @@ export const ty = {
     t(l, "Activation not confirmed. What is still possible until the restart is listed in the notice above.", "활성화가 확인되지 않았습니다. 재시작 전까지 가능한 작업은 위쪽 안내에 있습니다.", "لم يُؤكَّد التفعيل. الإجراءات التي ما زالت ممكنة حتى إعادة التشغيل مذكورة في الإشعار أعلاه."),
   toBeActivatedBy: (l: Locale) => t(l, "To be activated by", "활성화할 사람", "سيُفعّله"),
   notRecorded: (l: Locale) => t(l, "Not recorded", "기록 없음", "غير مسجَّل"),
+  impactNotComputed: (l: Locale) => t(l, "Not computed. This is not zero.", "계산되지 않았습니다. 0이라는 뜻이 아닙니다.", "لم يُحسب. هذا لا يعني صفرًا."),
   notYet: (l: Locale) => t(l, "Not yet", "아직 없음", "ليس بعد"),
   ledgerLine: (l: Locale, records: string, generation: number) =>
     t(l, `Decision ledger: ${records}, ledger generation ${generation}.`, `결정 원장: 기록 ${records}, 원장 세대 ${generation}.`, `دفتر القرارات: ${records}، جيل الدفتر ${generation}.`),

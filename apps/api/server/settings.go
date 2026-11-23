@@ -14,37 +14,43 @@ const (
 )
 
 type AccessSettings struct {
-	RequestHours        int
-	PendingPerProposer  int
-	PendingPerWorkspace int
-	EndedKept           int
-	RevocationsKept     int
-	EndedShown          int
-	LedgerMaxMiB        int
-	Given               map[string]bool
-	AcceptNewLedger     bool
-	AcceptTrustReset    bool
-	CarryTrustFrom      string
-	TrustGeneration     uint64
-	RolePeriodMaxDays   int
-	ClockSkewHours      int
-	RoleWarningDays     int
-	BulkMaxTargets      int
-	BulkMaxMatching     int
-	BulkRetainedMax     int
-	BulkMinutes         int
-	BulkPending         int
-	BulkKept            int
-	UserFilterScan      int
-	UserCountScan       int
-	ClockBase           string
-	HistoryDays         int
-	HistoryMaxMiB       int
-	HistoryClockGap     int
-	AcceptShortening    int
-	AcceptHistoryClock  string
-	ReleaseMarker       string
-	ReleaseReason       string
+	RequestHours            int
+	PendingPerProposer      int
+	PendingPerWorkspace     int
+	EndedKept               int
+	RevocationsKept         int
+	EndedShown              int
+	LedgerMaxMiB            int
+	Given                   map[string]bool
+	AcceptNewLedger         bool
+	AcceptTrustReset        bool
+	CarryTrustFrom          string
+	TrustGeneration         uint64
+	RolePeriodMaxDays       int
+	ClockSkewHours          int
+	RoleWarningDays         int
+	BulkMaxTargets          int
+	BulkMaxMatching         int
+	BulkRetainedMax         int
+	BulkMinutes             int
+	BulkPending             int
+	BulkKept                int
+	UserFilterScan          int
+	UserCountScan           int
+	SessionQueryPage        int
+	SessionQueryScan        int
+	SessionQuerySeconds     int
+	SessionSelectionPending int
+	SessionSelectionTargets int
+	SessionRecordBudget     int
+	ClockBase               string
+	HistoryDays             int
+	HistoryMaxMiB           int
+	HistoryClockGap         int
+	AcceptShortening        int
+	AcceptHistoryClock      string
+	ReleaseMarker           string
+	ReleaseReason           string
 }
 
 type AccessSetting struct {
@@ -108,7 +114,7 @@ func UserSettingList() []AccessSetting { return append([]AccessSetting(nil), use
 func HistorySettingList() []AccessSetting { return append([]AccessSetting(nil), historySettings...) }
 
 func allSettings() []AccessSetting {
-	return append(append(append(AccessSettingList(), identitySettings...), userSettings...), historySettings...)
+	return append(append(append(append(AccessSettingList(), identitySettings...), userSettings...), historySettings...), append(sessionQuerySettings, sessionSelectionSettings...)...)
 }
 
 func DefaultAccessSettings() AccessSettings {
@@ -130,7 +136,7 @@ func numbersZero(s AccessSettings, list []AccessSetting) bool {
 
 func (s AccessSettings) withDefaults() AccessSettings {
 	out := DefaultAccessSettings()
-	for _, group := range [][]AccessSetting{accessSettings, identitySettings, userSettings, historySettings} {
+	for _, group := range [][]AccessSetting{accessSettings, identitySettings, userSettings, historySettings, sessionQuerySettings, sessionSelectionSettings} {
 		if !numbersZero(s, group) {
 			for _, a := range group {
 				a.Set(&out, a.Value(s))
@@ -154,6 +160,8 @@ func (s AccessSettings) validate() error {
 		}
 	}
 	switch {
+	case s.SessionRecordBudget < 1+3*s.SessionSelectionTargets:
+		return settingError("session_record_references")
 	case s.PendingPerWorkspace < s.PendingPerProposer:
 		return settingError("access_pending_per_workspace")
 	case s.EndedShown > s.EndedKept:
@@ -219,4 +227,24 @@ func (s *Server) rowsOf(list []AccessSetting) []settingRow {
 		out = append(out, settingRow{Name: a.Name, Value: a.Value(s.cfg.Access), Unit: a.Unit, Default: a.Default, Min: a.Min, Max: a.Max, Source: source})
 	}
 	return out
+}
+
+var sessionQuerySettings = []AccessSetting{
+	{"session_query_page_size", "session-query-page-size", "rows", 50, 1, 100, func(s *AccessSettings) *int { return &s.SessionQueryPage }},
+	{"session_query_scan", "session-query-scan", "sessions", 1000, 100, 10000, func(s *AccessSettings) *int { return &s.SessionQueryScan }},
+	{"session_query_lifetime_seconds", "session-query-lifetime-seconds", "seconds", 300, 30, 3600, func(s *AccessSettings) *int { return &s.SessionQuerySeconds }},
+}
+
+func SessionQuerySettingList() []AccessSetting {
+	return append([]AccessSetting(nil), sessionQuerySettings...)
+}
+
+var sessionSelectionSettings = []AccessSetting{
+	{"session_selection_pending", "session-selection-pending", "views per caller", 2, 1, 8, func(s *AccessSettings) *int { return &s.SessionSelectionPending }},
+	{"session_selection_max_targets", "session-selection-max-targets", "targets", 10000, 64, 10000, func(s *AccessSettings) *int { return &s.SessionSelectionTargets }},
+	{"session_record_references", "session-record-references", "references", 50000, 256, 1000000, func(s *AccessSettings) *int { return &s.SessionRecordBudget }},
+}
+
+func SessionSelectionSettingList() []AccessSetting {
+	return append([]AccessSetting(nil), sessionSelectionSettings...)
 }

@@ -32,10 +32,15 @@ type session struct {
 	authenticated time.Time
 	login         string
 	trustEpoch    uint64
+	owner         sessionOwner
+	handle        string
+	idleUntil     time.Time
 }
 
 type sessions struct {
 	mu       sync.Mutex
+	owners   map[sessionOwner]*sessionIndex
+	indexSeq uint64
 	byID     map[identity.Verifier]*session
 	seq      uint64
 	gen      map[string]uint64
@@ -51,7 +56,7 @@ type denial struct {
 }
 
 func newSessions() *sessions {
-	return &sessions{byID: map[identity.Verifier]*session{}, gen: map[string]uint64{}, token: map[string]string{}, count: map[string]int{},
+	return &sessions{owners: map[sessionOwner]*sessionIndex{}, byID: map[identity.Verifier]*session{}, gen: map[string]uint64{}, token: map[string]string{}, count: map[string]int{},
 		denied: map[identity.Verifier]denial{}, overflow: map[string]time.Time{}}
 }
 
@@ -72,6 +77,7 @@ func (s *sessions) remove(v identity.Verifier) bool {
 	if found == nil {
 		return false
 	}
+	s.unindex(found)
 	delete(s.byID, v)
 	s.count[found.login]--
 	return true
@@ -124,8 +130,15 @@ func (s *sessions) put(v identity.Verifier, workspace, login string, now time.Ti
 		return "", ErrStart
 	}
 	csrf := encode(raw)
-	if s.byID[v] == nil {
+	if prior := s.byID[v]; prior == nil {
 		s.count[login]++
+	} else {
+		s.unindex(prior)
+		if prior.login != login {
+			s.count[prior.login]--
+			s.changed(prior.login)
+			s.count[login]++
+		}
 	}
 	s.byID[v] = &session{verifier: v, workspace: workspace, csrf: csrf, created: now, authenticated: now, login: login, trustEpoch: epoch}
 	s.changed(login)
@@ -139,7 +152,15 @@ func (s *sessions) reauthenticated(v identity.Verifier, at time.Time) bool {
 	if found == nil {
 		return false
 	}
+	index := s.owners[found.owner]
+	if index != nil {
+		index.auth = eraseSession(index.auth, found, "auth")
+	}
 	found.authenticated = at
+	if index != nil {
+		index.auth = insertSession(index.auth, found, "auth")
+		s.indexChanged(index)
+	}
 	return true
 }
 
@@ -235,6 +256,27 @@ func (s *Server) openSession(triple identity.Triple, workspace string, secure bo
 	if err != nil {
 		s.rollbackOpened(v, false)
 		return nil, "", v, err
+	}
+	resolved, resolveErr := s.identity.Boundary().Resolve(triple)
+	if resolveErr != nil {
+		s.rollbackOpened(v, true)
+		return nil, "", v, resolveErr
+	}
+	user, known, userErr := s.identity.Installation().User(resolved.User)
+	if userErr != nil || !known {
+		s.rollbackOpened(v, true)
+		if userErr != nil {
+			return nil, "", v, userErr
+		}
+		return nil, "", v, ErrStart
+	}
+	idle := s.clock().Add(sessionIdle)
+	if _, admittedIdle, peekErr := s.identity.Boundary().Peek(v, workspace); peekErr == nil {
+		idle = admittedIdle
+	}
+	if !s.sessions.bind(v, sessionOwner{resolved.User, workspace, user.Epoch}, idle) {
+		s.rollbackOpened(v, true)
+		return nil, "", v, ErrStart
 	}
 	return &http.Cookie{Name: CookieName, Value: encode(raw), Path: CookiePath, HttpOnly: true, SameSite: http.SameSiteStrictMode, Secure: secure,
 		MaxAge: int(sessionAbsolute / time.Second)}, csrf, v, nil

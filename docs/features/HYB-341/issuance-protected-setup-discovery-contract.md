@@ -37,7 +37,7 @@ Three commands are chosen over one command with a section selector so that each 
 
 ## Guard order
 
-1. Sample installation and console client, then `protectedReadCaller`, at the boundary and again in Apply.
+1. Sample installation and console client at the boundary, then `protectedReadCaller` at the boundary and again in Apply.
 2. Request shape: valid contract and configuration IDs, a valid digest, a closed `field` value, and `after` and `snapshot` present together or both absent.
 3. `configurationHistoryIndex`.
 4. Configuration identity. An unknown ID, another workspace or another contract returns PermissionDenied with no existence distinction. For a configuration of the selected contract, a digest that differs from the retained digest returns EvidenceStale. A confirmed configuration recorded without setup context is readable, as it already is in `issuance_setup.configurations`; whether protected writes support such a record is decided with those writes.
@@ -111,7 +111,7 @@ Customer and entity channels carry no configuration reference. They are shared b
 
 A retained channel with the same subject string and different provenance is counted in `channels_other_provenance` and is not a row. Equal subject strings do not prove the same provenance. Module channels returned by `ChannelsOf` for the three subjects that no retained record owns are counted in `channels_unowned_module`; their contents are never returned and they are never adopted.
 
-Each retained channel in scope is validated by its retained digest, selector and subject correspondence and spec shape, then observed with `ChannelOf`.
+Every retained channel on one of the three subjects, including one counted as other provenance, is validated by its retained digest, selector and subject correspondence and spec shape, then observed with `ChannelOf`. A corrupt retained channel of another origin on the same subject therefore refuses the read; it is not silently counted.
 
 | Retained state | Accepted observation |
 | --- | --- |
@@ -182,7 +182,7 @@ Actual command HTTP tests with independently approved human and console Inspect 
 - rules: none with absent module, none with unowned module rules, each retained state before and after its module effect, lookup fault distinct from absence, original proposer and confirmer revoked;
 - channels: all three subject kinds, each retained state at all six interruption boundaries, retired channel, same subject with other provenance, module-only channel, registrar and admitter revoked after capture, a reader who is the channel's registrar receiving the same row with `current_eligibility` `unchecked`, `request_not_before` exactly equal to admission plus channel age and empty in every non-admitted case. The service retains one immutable rules record, so a row with `rules` `other` or an admitted channel under unconfirmed rules cannot be produced by a fixture and is not tested;
 - changes: each field, all nine interruption boundaries, unknown phases left unchanged when the module has progressed and never named as `latest_scheduled`, requested and confirmed changes past their deadlines shown as lapsed with unchanged retained records, scheduled history, a module-only trail before any owned change and after an owned change, a module-withdrawn retained change refused, orphan and duplicate order entries, changed retained state, requester, verifier and approver revoked after capture;
-- paging: eleven or more rows, a second reader's cursor, a snapshot changed by a write and by a lapse, an unknown cursor, row and response overflow, reduced transport budget;
+- paging: eleven or more rows, a second reader's cursor, a snapshot changed by a write and by a lapse, an unknown cursor, reduced transport budget. Row and response overflow are guarded but cannot be reached by a fixture: identifiers are at most 128 bytes, so a row stays near 2 KB and ten rows stay under the response bound;
 - effects: unchanged retained maps, order index, module rules and server revision after every read, including held reads.
 
 Actor separation (self, custodian and same-channel exclusions) and the module's acceptance at exactly `request_not_before` and refusal one nanosecond earlier are write-time behavior. Existing change tests cover them (`TestFinancialProtectedChangeTooYoungNoEffect`, the configured setup fixture's exact 24-hour request) and the public write contract of handoff item 3 must cover them again; this read only reports the instant.
@@ -193,7 +193,7 @@ In-package module tests for `Peek` and `PeekTrail`: detached copies, identical o
 
 # Limits
 
-This contract discloses retained protected setup for the synthetic in-memory boundary only. It does not expose protected writes, evidence capture, payment terms, access provisioning or current action guidance, and it does not establish the unseeded operator journey. The O03 presentation of these reads needs its own scoped design review. No implementation, test run or review result is claimed by this draft.
+This contract discloses retained protected setup for the synthetic in-memory boundary only. It does not expose protected writes, evidence capture, payment terms, access provisioning or current action guidance, and it does not establish the unseeded operator journey. The O03 presentation of these reads needs its own scoped design review.
 
 # Design review
 
@@ -202,4 +202,12 @@ The independent-reviewer agent (read-only, model reported as claude-fable-5-2) r
 Root corrected all six in one pass and adopted the reviewer's non-blocking corrections to the starting facts, the clock assumption, the `request_not_before` conditions, the snapshot binding, the named fault point and the fixture description. The bounded corrective re-review returned RESOLVED for all six findings, judged the removal of the legacy refusal safe, found no new blocking defect and gave an overall design PASS. Its three minor clarifications (retained first-step actors, the reduced test wording and the count naming) are included above and were not sent for another review.
 
 The reviewer executed no tests and did not open the sibling HYB-341 contract documents. Its unverified hypotheses remain open and are not addressed here: unkeyed retained and snapshot digests may let a reader confirm a guessed low-entropy hidden input, which is the same exposure as the existing configuration digest; and whether the test clock can regress. This record is a design review. It is not a source review of the implementation.
+
+# Implementation and verification
+
+Root implemented the contract in `modules/protected/observe.go` (`Peek`, `PeekTrail`), `apps/api/server/financialissuancesetupprotected.go` (guards, observations, paging and the three projections) and the registration points in `financialissuancesetupcontext.go` and `trusthold.go`. A subject longer than the module's 128-byte identifier limit can hold no channel or change, so it is treated as an empty observation without a module call.
+
+The independent-reviewer agent (read-only, model reported as claude-fable-5-2) reviewed the working tree. Conformance, authority and disclosure, nonmutation, correctness and registration passed with no code defect. Tests failed the review: the three `absent` observations, every populated pending-actor field, an unowned trail entry before an owned one, the revoked console ceiling, delegated inspection and the registrar-as-reader row had no assertion. Root added those cases in one pass and adopted the non-blocking suggestions: request shape is checked before configuration identity, a module-withdrawn change is refused explicitly, the lookup fault point precedes `Peek`, and the boundary matches the full command name. The bounded corrective re-review returned PASS for the added tests, the fixture fidelity of the retained-map edits, the code edits and the document's consistency with the code, with no blocking finding. It noted that the delegation test proves that delegation alone cannot read; it cannot isolate the delegation check from the owned-grant check.
+
+Executed on the final working tree: `go vet ./apps/api/... ./modules/...` clean; `go test -race ./modules/protected` PASS; all `TestFinancialSetupProtected` server tests PASS; the full `go test ./apps/api/... ./modules/...` run passed 80 packages and failed `apps/api/server` (449.694 seconds) on exactly two tests, `TestAccessPreview` and `TestProposalStoresCoverEveryProposingNamespace`. Both fail identically on unmodified main at ffcf4bc and are tracked separately; no full-suite PASS is claimed. The reviewer executed no tests.
 

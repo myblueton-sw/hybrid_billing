@@ -428,3 +428,21 @@ An unrecognised membership role is no longer read as "member". The parser has an
 Checks: `tsc` clean; console tests pass with a new test for the label and the offers and a parser assertion. No rendered check. Copy and state review, ui-designer role (AI, by reading): PASS as a candidate, no blocking finding; its suggestion for other role strings was adopted afterwards and not reviewed again.
 
 Left open from that review: in the bulk selection, the list of administrators shown after a server refusal filters on the administrator role, so a person with an unknown role is not listed there as someone to deselect. Nothing false is stated.
+
+# Second static check: files the first review did not open (2026-11-24)
+
+An independent reviewer (independent-reviewer role, AI, separate from root) read fourteen files of M01 to M05 that the first review reported as not opened, with the same five checks and with the server side read before a default or a success text was reported: `users/RolePeriod.tsx`, `Selection.tsx`, `filters.tsx`, `Stamp.tsx`, `RevocationJobs.tsx`, `bulk-model.ts`, `period-model.ts`, `filter-model.ts`; `authentication/trust-model.ts`; `access/Settings.tsx`, `Area.tsx`, `who.tsx`; `service-accounts/Held.tsx`; `my-security/SessionSettings.tsx`. Nothing was executed.
+
+Thirteen files: no finding. `users/RevocationJobs.tsx`: three confirmed findings, each then read by root and corrected in the same change.
+
+| Finding | Before | Now |
+| --- | --- | --- |
+| a refused discard was silent (check 5) | the discard of a draft or prepared list on Revocation jobs had no error handling: a refusal showed nothing and the job stayed | a refusal other than a stage refusal shows the existing "The discard was not confirmed…" text beside the button; a stage refusal (already discarded, expired or run) reloads, and the list shows the real state |
+| "0 people" for a list that was never prepared (check 1) | a discarded or expired draft showed "0 people", although people are first counted at prepare | it shows "Not counted: never prepared"; the prepared time is set only at prepare (`modules/bulkrevoke/manifest.go:111`) |
+| the previous job's detail under a newly opened row (check 2) | when opening a job failed, the earlier job's detail stayed while the new row was marked open; a failed outcome-filter read showed the new filter over the old rows | opening another job clears the earlier detail, a failed open leaves no row marked open, a line says that the job is loading, and the filter changes only after its read succeeded |
+
+Malformed-response-only observations from the same check, not changed: fallback numbers for two settings that the server always lists; an unrecognised role period read as "open" (the unsafe direction, as with A6, and a candidate for the same hardening); an unparsable date shown as "ends in 0 days"; an empty executor or the sequence "0–0" on an executed job; a job or a trust change in an unknown state shown in no group; an unknown setting source read as "default".
+
+Checks: `tsc` clean; console tests 1350, pass 1347, fail 0, skipped 3. No new test and no rendered check. Corrective review by the same reviewer (AI, by reading): PASS for each of the three, no blocking finding. Its suggestion to show a loading line was adopted afterwards and not reviewed again. Left open from it: results of two reads that arrive out of order are applied without checking which is the latest, which predates this change; after a failed filter read only the page-level alert appears, whose retry reloads the list and not the items; the Korean and Arabic wording of the new label had no language review.
+
+Not read by either review: the copy files beyond search, `users/Matching.tsx`, style sheets and tests; the models and formatters of P02 to P05 and, on P05, `LiveMatrix.tsx`, `LiveRequirements.tsx`, `LiveDecisions.tsx` and `LiveRetireForm.tsx`; on O03, `Channels.tsx`, `Changes.tsx` and the four step-write components.

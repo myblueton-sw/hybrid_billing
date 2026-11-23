@@ -187,6 +187,7 @@ export const b = {
   colState: (l: Locale) => t(l, "State", "상태", "الحالة"),
   colWhen: (l: Locale) => t(l, "When", "일시", "الوقت"),
   excludedCount: (l: Locale, n: number) => t(l, `Excluded (not counted): ${n}`, `제외(집계 제외): ${n}`, `مستثنى (غير محسوب): ${n}`),
+  neverCounted: (l: Locale) => t(l, "Not counted: never prepared", "집계 안 함: 준비되지 않음", "لم يُحسب: لم يُحضَّر"),
   notCounted: (l: Locale) => t(l, "Not counted until prepared", "준비 전에는 집계하지 않음", "لا يُحسب قبل التحضير"),
   sentSoFar: (l: Locale, n: number) => t(l, `Sent so far: ${n}`, `지금까지 보낸 인원: ${n}명`, `أُرسل حتى الآن: ${n}`),
   notOwner: (l: Locale) =>

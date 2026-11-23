@@ -21,6 +21,6 @@ export const servicesPageOf = shape<ServicesPage>({ revision: text, now: text, o
 });
 export const selfPageOf = shape<SelfPage>({ user_id: text, login: text, email: text, workspace: text, role: text,
   identities: array(shape({ method: text, login: text })), password_set: boolean, installation_administrator: boolean,
-  current_session: sessionRowOf, recorded_session_count: integer, accepted_operation_count: integer, sessions_generation: text, idle_minutes: integer, max_age_seconds: integer,
+  current_session: sessionRowOf, recorded_session_count: integer, accepted_operation_count: integer, sessions_generation: text, idle_minutes: integer, absolute_minutes: positive, max_age_seconds: integer,
   signed_in_at: text, authenticated_at: text, now: text,
 });

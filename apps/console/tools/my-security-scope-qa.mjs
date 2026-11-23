@@ -55,7 +55,7 @@ try {
     const user = route.request().headers()["x-csrf-token"] === "synthetic-a" ? "a" : "b";
     await route.fulfill({ json: { user_id: user, login: user + "@example.invalid", email: user + "@example.invalid", workspace: "w", role: "member", identities: [], password_set: false, installation_administrator: false,
       current_session: { handle: user.repeat(16), current: true, signed_in: "2026-11-20T00:00:00Z", ends: "2026-11-20T12:00:00Z", state: "active", can_end: false, not_included_operation: "" }, recorded_session_count: 1, accepted_operation_count: 0,
-      sessions_generation: "a".repeat(32), idle_minutes: 30, max_age_seconds: 0, signed_in_at: "2026-11-20T00:00:00Z", authenticated_at: "2026-11-20T00:00:00Z", now: "2026-11-20T01:00:00Z" } });
+      sessions_generation: "a".repeat(32), idle_minutes: 30, absolute_minutes: 720, max_age_seconds: 0, signed_in_at: "2026-11-20T00:00:00Z", authenticated_at: "2026-11-20T00:00:00Z", now: "2026-11-20T01:00:00Z" } });
   });
   await page.goto(url);
   await page.getByText("a@example.invalid", { exact: true }).first().waitFor();

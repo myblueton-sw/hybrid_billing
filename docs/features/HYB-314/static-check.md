@@ -252,3 +252,10 @@ Left open: whether the saved or discarded announcement is still spoken beside th
 On the effect form, when the page lists no kind of data the "Show effect" button is disabled, the start hint is hidden and a sentence beside the button says that no kind of data is listed and to reload the page. Before, the button was enabled once a person was chosen and submitting did nothing. The chosen kind is also derived from the current catalogue, so a kind that is no longer listed is not sent. The server always sends the catalogue (`access.go:190`), so this concerns a malformed response only.
 
 Checks: `tsc` clean; console tests 1346, pass 1343, fail 0, skipped 3. No new test and no rendered check. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its Korean wording was adopted afterwards.
+
+## M05 finding D2, and D3 by reading (2026-11-24)
+
+- D2: the longest session shown on M05 is read from the server. The self account read has a new required field `absolute_minutes`, the server's absolute session lifetime (720 today, a constant, not an installation setting); the console formats it with the same duration formatter as the other limits. For 720 the text is unchanged in the three languages.
+- D3, not a present defect: the server sends only the `local-password` identity method (`self.go`), so the "Password" label is right today. A second method would need its own label.
+
+Checks: `go build`, `go vet`, the whole `apps/api/server` test package pass; `tsc` clean; console tests pass with one new test for the formatted text. No rendered check. Independent change review (independent-reviewer role, AI, by reading): PASS, no blocking finding; its two suggestions (binding document, a test for the text) were adopted afterwards. It noted that a console built from this change fails the self read against an older server, which follows how the earlier required fields of this read were added, and that the unused `staleNote` copy still states 12 hours.

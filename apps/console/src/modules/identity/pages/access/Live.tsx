@@ -271,7 +271,8 @@ function GrantTable({ l, page, rows, self, selected, onRevoke }: {
 function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPage }) {
   const kinds = Array.from(new Set(page.catalog.map((x) => x.kind)));
   const [subject, setSubject] = useState("");
-  const [kind, setKind] = useState(kinds[0] ?? "");
+  const [picked, setKind] = useState(kinds[0] ?? "");
+  const kind = kinds.includes(picked) ? picked : kinds[0] ?? "";
   const [customer, setCustomer] = useState("");
   const [result, setResult] = useState<{ rows: Preview[]; at: string; login: string; customer: string; kind: string } | null>(null);
   const [state, setState] = useState<"start" | "cleared" | "loading" | "error" | "shown">("start");
@@ -325,11 +326,12 @@ function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPa
           <input id="effect-customer" className="live-mono live-customer" dir="ltr" value={customer} aria-describedby="effect-customer-hint" onChange={(e) => change(setCustomer)(e.target.value)} />
           <p className="service-hint live-hint-below" id="effect-customer-hint">{a.customerOptHint(l)}</p>
         </div>
-        <button type="submit" className="live-primary" disabled={!subject || state === "loading"}>{a.showEffect(l)}</button>
+        <button type="submit" className="live-primary" disabled={!subject || !kind || state === "loading"} aria-describedby={kind ? undefined : "effect-no-kind"}>{a.showEffect(l)}</button>
+        {!kind && <p className="live-error" role="alert" id="effect-no-kind">{a.noKind(l)}</p>}
       </form>
       <p className="live-preview-note"><strong>{a.previewLead(l)}</strong> {a.previewNote(l)}</p>
       {subject && unconfirmedFor(page, subject) && <p className="live-strong" data-unconfirmed="true">{v.previewUnconfirmed(l)}</p>}
-      {state === "start" && <p className="live-empty">{a.startHint(l)}</p>}
+      {state === "start" && kind && <p className="live-empty">{a.startHint(l)}</p>}
       {state === "cleared" && <p className="live-empty">{a.cleared(l)}</p>}
       <p className="visually-hidden" role="status" aria-live="polite">{state === "loading" ? a.loading(l) : state === "shown" && result ? a.allowedCount(l, result.rows.filter((r) => r.allowed).length, result.rows.length) : ""}</p>
       {state === "loading" && <p className="live-meta">{a.loading(l)}</p>}

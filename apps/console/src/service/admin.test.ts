@@ -156,7 +156,11 @@ test("the policy read keeps the server times and the trust model and defaults mi
   assert.equal(empty.holders.needed, 3);
   assert.equal(empty.changes[0].state, "draft");
   assert.equal(empty.changes[0].validation, null);
-  assert.equal(empty.changes[0].impact.signs_out_everyone, true);
+  assert.equal(empty.changes[0].impact, null);
+  const computed = await adminClient("tok", fake(200, { changes: [{ state: "proposed", impact: { members: 0, sessions: 0, affected_ids: [], signs_out_everyone: true } }, { state: "proposed", impact: null }, { state: "proposed", impact: [] }] }).f).policy();
+  assert.deepEqual(computed.changes[0].impact, { members: 0, sessions: 0, affected_ids: [], weakens_mfa: false, signs_out_everyone: true });
+  assert.equal(computed.changes[1].impact, null);
+  assert.equal(computed.changes[2].impact, null);
 });
 
 test("trust refusals map to their own failures", () => {

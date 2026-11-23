@@ -98,7 +98,7 @@ type changeRow struct {
 	EarlierRun      bool              `json:"earlier_run"`
 	RunStartedAt    string            `json:"run_started_at"`
 	Validation      *validationRow    `json:"validation"`
-	Impact          trustImpactRow    `json:"impact"`
+	Impact          *trustImpactRow   `json:"impact"`
 	Activation      *activationRow    `json:"activation"`
 	Job             *jobRow           `json:"job"`
 	Invalidation    *invalidationRow  `json:"invalidation"`
@@ -188,7 +188,7 @@ func (c rowContext) row(v trustchange.View) changeRow {
 	row := changeRow{ID: v.ID, Number: v.Number, State: v.State, ChangeRevision: v.Revision, ChangeDigest: v.ChangeDigest, OldEpoch: epochOf(v.OldEpoch),
 		OldPolicy: v.OldPolicy, OldDigest: v.OldDigest, NewDigest: v.NewDigest, Candidate: revisionOf(revisionFor(v.Workspace, v.Candidate)), Proposer: v.Proposer,
 		Validator: v.Validator, Approver: v.Approver, Activator: v.Activator, SupersededBy: v.SupersededBy, EarlierRun: v.EarlierRun,
-		RunStartedAt: stampOrEmpty(v.RunStartedAt), History: []trustHistoryRow{}, Impact: trustImpactRow{AffectedIDs: []string{}, SignsOutEveryone: true}}
+		RunStartedAt: stampOrEmpty(v.RunStartedAt), History: []trustHistoryRow{}}
 	for _, e := range v.History {
 		row.History = append(row.History, trustHistoryRow{State: e.State, By: e.By, At: stamp(e.At), Rationale: e.Rationale})
 	}
@@ -202,7 +202,8 @@ func (c rowContext) row(v trustchange.View) changeRow {
 	open := trustchange.Open(v.State)
 	if open {
 		if f, err := s.trustFacts(c.verifier, v.Workspace, &candidate, c.now); err == nil {
-			row.Impact = c.impact(v, f)
+			impact := c.impact(v, f)
+			row.Impact = &impact
 			current = v.Validation != nil && trustchange.EvidenceDigest(v.ChangeDigest, f.digestFacts(c.base)) == v.Validation.Digest
 		}
 	}

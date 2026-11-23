@@ -135,6 +135,7 @@ export const a = {
   customerOpt: (l: Locale) => t(l, "Customer ID (optional)", "고객 ID(선택)", "معرّف العميل (اختياري)"),
   customerOptHint: (l: Locale) =>
     t(l, "Leave empty to check data that isn't tied to one customer.", "특정 고객에 속하지 않는 데이터를 확인하려면 비워 두세요.", "اتركه فارغًا للتحقق من بيانات غير مرتبطة بعميل واحد."),
+  noKind: (l: Locale) => t(l, "No kind of data is listed, so an effect cannot be shown. Reload the page.", "데이터 종류가 목록에 없어 효력을 확인할 수 없습니다. 페이지를 다시 불러오세요.", "لا يوجد أي نوع بيانات مدرج، لذا لا يمكن عرض الأثر. أعد تحميل الصفحة."),
   showEffect: (l: Locale) => t(l, "Show effect", "효력 확인", "عرض الأثر"),
   previewLead: (l: Locale) => t(l, "This is a preview.", "미리 보기입니다.", "هذه معاينة فقط."),
   previewNote: (l: Locale) =>

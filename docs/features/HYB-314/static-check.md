@@ -246,3 +246,9 @@ Checks: `tsc` clean; console tests 1346, pass 1343, fail 0, skipped 3, with a ne
 Checks: `tsc` clean; console tests 1346, pass 1343, fail 0, skipped 3. No new test and no rendered check: no render check stages a failed read on the O01 draft panel. Copy review, ui-designer role (AI, by reading): PASS as a candidate.
 
 Left open: whether the saved or discarded announcement is still spoken beside the new alert; a draft beyond the 40 pages that the lookup reads is still reported as missing.
+
+## M03 finding C1 (2026-11-24)
+
+On the effect form, when the page lists no kind of data the "Show effect" button is disabled, the start hint is hidden and a sentence beside the button says that no kind of data is listed and to reload the page. Before, the button was enabled once a person was chosen and submitting did nothing. The chosen kind is also derived from the current catalogue, so a kind that is no longer listed is not sent. The server always sends the catalogue (`access.go:190`), so this concerns a malformed response only.
+
+Checks: `tsc` clean; console tests 1346, pass 1343, fail 0, skipped 3. No new test and no rendered check. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its Korean wording was adopted afterwards.

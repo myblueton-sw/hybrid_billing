@@ -379,3 +379,11 @@ The browser tests of `apps/api/server` that start an isolated in-process server 
 The O03 issuance setup journey on a real server therefore still passes in three languages after the O03 changes of this ticket.
 
 The five failures are not caused by this ticket's fixes: the same five fail in the same way with the console and the server built from b950947, the merge before the first fix. Their cause is not established (a product regression from an earlier change, a drifted script, or a requirement of the run that was not met, such as the unset `HB_DOCUMENT_SCREEN_QA_MODE`). They are tracked separately in HYB-350.
+
+## O03 setup sections on a stale detail: no change needed (2026-11-24)
+
+The earlier record left open whether the writes of the setup sections inside a contract detail (documents, payment terms, issuance setup) should also be disabled while the detail is held from an earlier load. Read at main 88543b9: they should not.
+
+The detail passes those sections only the contract identifier, the session and the setup day (`LiveDetail.tsx:58`, `:61`). They do not read the held detail. Each section does its own reads, shows its own failure, and sends its writes against revisions it read itself (the setup context and the protected summary; `setup/Documents.tsx`). A failed reload of the contract detail therefore does not make what these sections show or send stale. Only the detail's own header facts and its contract actions depend on the held detail, and the actions are disabled since the earlier fix.
+
+Nothing was executed for this section and it has no independent review.

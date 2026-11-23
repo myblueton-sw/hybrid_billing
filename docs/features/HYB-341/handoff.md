@@ -17,13 +17,29 @@ Latest feature commit before main integration: 235a424. All 34 setup logic tests
 
 Main integration includes the required PR chain 246, 248, 245, 249, 250 and 252. Unrelated open licensing, accessibility and service-account PRs are excluded. Main's existing HYB-304 session changes are preserved. Manual conflicts were field/test unions and distinct appended document sections, with no intentional authorization override. Ticket checkpoints record final merge/test results.
 
+# Progress since the transfer (2026-11-23, machine:mac_mini)
+
+Work resumed from main c8aebd6 on this machine and merged the following through reviewed pull requests. Each contract document records its own review rounds, executed checks and limits; this list only orients.
+
+| Handoff item | Merged | Documents and code |
+| --- | --- | --- |
+| 1. Protected-setup discovery | PR 253, 254, 255 | [discovery contract](issuance-protected-setup-discovery-contract.md); `modules/protected` `Peek` / `PeekTrail`; reads `issuance_setup.protected`, `protected_channels`, `protected_changes`; console decoders in `setup/protected.ts` |
+| 2. Evidence capture | PR 257, 258, 259, 260 | [evidence contract](issuance-setup-evidence-contract.md); attest and withdraw commands, `issuance_setup.attestations`, `issuance_setup.references`; console client in `setup/attestation.ts` |
+| 3. Public protected writes | PR 261, 262 | [protected writes contract](issuance-protected-writes-contract.md); seven commands in `financialissuanceprotectedwrites.go` consuming attestations |
+
+Separate issues, by owner instruction that anything outside the checklist gets its own ticket: HYB-343 (two server tests failing on main, fixed in PR 256, which also added pending issuance settings to M01 bulk revocation impact), HYB-342 (unkeyed digest hypothesis, open), HYB-344 (remaining M01 impact gaps, open), HYB-345 (release, discard and withdrawal operations for protected setup records, open).
+
+Not done for items 1 to 3: no O03 screen is wired to any of these reads or commands, and that composition needs scoped ui-designer and terminology review; the owner has verified no screen. The console client for the seven protected write commands and the design of item 4 were in review when this section was written and are not merged by it.
+
+Owner-visible residuals are recorded in the evidence and protected writes contracts and await the owner: the reading of independent attestation as each separated actor attesting their own step; retained free-text statements; a change left in an unknown state blocking its subject and field until restart; the irrevocable first protected rules proposal.
+
 # Next executable scope
 
-1. Define and review bounded protected-setup discovery for selected contract plus configuration ID/digest. Reuse current governed Inspect, human/session/console boundaries. Keep retained phases separate from module observations and current action eligibility. Use ten-row pages, scoped snapshots and output-size admission.
-2. Resolve the evidence-capture contract before exposing protected writes. No existing source binds channel/change evidence IDs to owned verified artifacts. Define source, immutable reference/content identity, owner/scope, access/retention and the independent human attestation. An upload, hash or URL is not proof of customer instruction, account ownership or contact control.
-3. Connect protected rules, channel registration/admission and requested/verified/approved references after those boundaries pass review.
-4. Connect O03 payment terms and independently approved applicability bindings. Use explicit net days, exact term revision and effective dates; no invented default calendar or terms.
-5. Complete missing M03 business-right provisioning, then verify a truly unseeded operator journey to B09 readiness and a second applicable invoice reusing unchanged setup. Keep durable production recovery and configuration replacement as explicit remaining scopes.
+1. Merge the console client for the protected write commands after its source review.
+2. Item 4: finish the independent design review of the payment terms contract, then implement the terms read and the four commands by the same wrapping pattern as the protected writes, and their console client.
+3. Item 5: design public provisioning for the missing M03 business rights. Every test since the transfer still creates capability grants with package-internal helpers, so no unseeded operator journey exists yet.
+4. O03 documents and payment-terms composition for items 1 to 4, led by the ui-designer role, then owner screen verification.
+5. Verify the unseeded operator journey to B09 readiness and a second applicable invoice reusing unchanged setup. Configuration replacement, release operations and durable production recovery remain explicit separate scopes.
 
 # Discovery evidence and traps
 

@@ -288,20 +288,22 @@ function sideText(l: Locale, s: Side, none: string, empty: string): ReactNode {
 
 function useMemberFacts(store: Store, selected: string, enabled: boolean, onRefused: () => void) {
   const [facts, setFacts] = useState<{ id: string; key: string; hier: OrgMember | undefined } | null>(null);
+  const [failedKey, setFailedKey] = useState("");
+  const [attempt, setAttempt] = useState(0);
   const key = `${store.epoch}|${selected}`;
   useEffect(() => {
     if (!enabled || !selected) return;
     let live = true;
     store.org({ kind: "hierarchy", member: [selected] })
-      .then((page) => { if (live) setFacts({ id: selected, key, hier: page.members[0] }); })
+      .then((page) => { if (live) { setFailedKey(""); setFacts({ id: selected, key, hier: page.members[0] }); } })
       .catch((err) => {
         if (!live) return;
         if (err instanceof FilterRefused) onRefused();
-        else if (!store.fail(err)) setFacts(null);
+        else { if (!store.fail(err)) setFacts(null); setFailedKey(key); }
       });
     return () => { live = false; };
-  }, [key, enabled]); // eslint-disable-line react-hooks/exhaustive-deps
-  return facts && facts.key === key ? facts : null;
+  }, [key, enabled, attempt]); // eslint-disable-line react-hooks/exhaustive-deps
+  return { facts: facts && facts.key === key ? facts : null, failed: failedKey === key, retry: () => { setFailedKey(""); setAttempt((n) => n + 1); } };
 }
 
 export default function LiveOrganizations({ locale: l, view, params, session, onSignOut, onView, onParams, onDirty }: {
@@ -435,7 +437,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
     const page = await store.org({ kind: rk, member: [historyMember] });
     return { rows: page.members, next: "", stopped: false };
   }, failMember);
-  const facts = useMemberFacts(store, selected, view === "accounts" || view === "groups", () => { setSelected(""); dropLinked({ sel: null }); });
+  const { facts, failed: factsFailed, retry: retryFacts } = useMemberFacts(store, selected, view === "accounts" || view === "groups", () => { setSelected(""); dropLinked({ sel: null }); });
   const primary: Pager<unknown> | null = view === "accounts" ? accounts : view === "groups" ? groupList : null;
   const seen = useRef<{ key: string | null; n: number }>({ key: null, n: 0 });
   useEffect(() => {
@@ -648,7 +650,9 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
     const parentFact: [string, ReactNode] = hier
       ? [o.parentOn(l, day(l, on)), hier.targets.length > 1 ? <strong>{conflictLabel(l, hier.targets.length)}</strong>
         : hier.targets[0] ? <bdi>{label(hier.targets[0].name, hier.targets[0].id)}</bdi> : <strong>{o.unattributed(l)}</strong>]
-      : !hierLoaded ? [o.parentOn(l, day(l, on)), <span className="live-quiet">{pending ? o.loadingMore(l) : o.notLoaded(l)}</span>]
+      : !hierLoaded ? [o.parentOn(l, day(l, on)), factsFailed && pending
+        ? <><span className="live-quiet" role="alert">{o.factsFailed(l)}</span> <button type="button" className="service-button-link" onClick={retryFacts}>{o.tryAgain(l)}</button></>
+        : <span className="live-quiet">{pending ? o.loadingMore(l) : o.notLoaded(l)}</span>]
         : p?.parent ? [o.registryParent(l), <bdi>{label(party(p.parent)?.name ?? "", p.parent)}</bdi>]
           : [o.parentOn(l, day(l, on)), <span className="live-quiet">{o.noHierarchy(l)}</span>];
     const since = hier && hier.targets.length === 1 ? covering(hier.history, on)?.from ?? "" : "";

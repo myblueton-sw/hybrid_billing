@@ -154,6 +154,7 @@ export const b = {
     t(l, "Only the person who prepared this list can see the people on it.", "이 목록의 대상은 준비한 사람만 볼 수 있습니다.", "لا يرى الأشخاص في هذه القائمة إلا من حضّرها."),
   moreExcluded: (l: Locale) => t(l, "Show more excluded people", "제외된 사람 더 보기", "عرض مزيد من المستثنين"),
   showMore: (l: Locale) => t(l, "Show more", "더 보기", "عرض المزيد"),
+  excludedFailed: (l: Locale) => t(l, "The excluded people could not be loaded. The count above still applies.", "제외된 사람을 불러오지 못했습니다. 위의 수는 그대로 유효합니다.", "تعذّر تحميل المستثنين. العدد أعلاه ما زال ساريًا."),
   moreFailed: (l: Locale) => t(l, "More people could not be loaded. The people already shown are unchanged. Try again.", "사람을 더 불러오지 못했습니다. 이미 표시된 사람은 그대로입니다. 다시 시도하세요.", "تعذّر تحميل مزيد من الأشخاص. الأشخاص المعروضون لم يتغيروا. أعد المحاولة."),
   discardFailed: (l: Locale) => t(l, "The discard was not confirmed, so the draft or list may still exist. Try again.", "버리기가 확인되지 않아 초안이나 목록이 남아 있을 수 있습니다. 다시 시도하세요.", "لم يتأكد التجاهل، لذا قد تكون المسودة أو القائمة ما زالت موجودة. أعد المحاولة."),
   notChanged: (l: Locale) => t(l, "Not changed by this revocation", "이 회수로 바뀌지 않는 것", "ما لا يغيّره هذا الإبطال"),

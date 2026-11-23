@@ -285,3 +285,11 @@ Checks: `tsc` clean; console tests pass with one new test for the rule. No rende
 When a command is denied and the reload that follows fails, the command form on P01 (installation proposals) and P05 (release evidence) now shows the refusal ("This proposal is no longer available." and its variants) as an alert in the form. Before, the form ended with no message. This follows what the retention screen already does (`retention/LiveCommand.tsx`). With a successful reload the behaviour is unchanged.
 
 Checks: `tsc` clean; console tests 1349, pass 1346, fail 0, skipped 3. No new test, no rendered check, no new copy and no review. Not settled: the text says the item is no longer available, which the failed reload could not confirm; the stale-page alert added for P01 in an earlier fix is shown beside it.
+
+## M01 finding A7, excluded people (2026-11-24)
+
+In the bulk revocation preview, a failed first read of the excluded people is shown under its heading with a sentence and a "Try again" button. Before, nothing was rendered under "Excluded: n".
+
+Checks: `tsc` clean; console tests 1349, pass 1346, fail 0, skipped 3. No new test and no rendered check. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its wording for the second sentence was adopted afterwards.
+
+The other parts of A7 are not changed and remain suspected: a discard that fails with a stage error is reported as discarded (`users/Live.tsx`, `discardFixed`); a failed read of the pending fixed list on load is silent (`users/Live.tsx`, the `bulkClient(api).list` effect); an absent match count is read as 0 (`match-model.ts`, `fixedOfFields`).

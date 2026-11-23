@@ -466,6 +466,7 @@ func (s *Server) registerUsers() error {
 	definitions = append(definitions, s.issuanceSetupDefinitions()...)
 	definitions = append(definitions, s.issuanceSetupMutationDefinitions()...)
 	definitions = append(definitions, s.protectedWriteDefinitions()...)
+	definitions = append(definitions, s.termSetupDefinitions()...)
 	definitions = append(definitions, s.documentDefinitions()...)
 	definitions = append(definitions, s.resultDefinitions()...)
 	definitions = append(definitions, s.grantAuthorityDefinitions(financialRequestDomain)...)

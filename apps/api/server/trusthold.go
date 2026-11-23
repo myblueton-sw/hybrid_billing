@@ -35,6 +35,10 @@ const (
 var holdTable = map[string]holdRule{
 	"issuance_setup.propose_configuration":         {holdRefuse, reasonChange},
 	"issuance_setup.confirm_configuration":         {holdRefuse, reasonChange},
+	"issuance_setup.record_term":                   {holdRefuse, reasonChange},
+	"issuance_setup.approve_term":                  {holdRefuse, reasonChange},
+	"issuance_setup.bind_term":                     {holdRefuse, reasonChange},
+	"issuance_setup.approve_term_binding":          {holdRefuse, reasonChange},
 	"issuance_setup.propose_protected_rules":       {holdRefuse, reasonChange},
 	"issuance_setup.confirm_protected_rules":       {holdRefuse, reasonChange},
 	"issuance_setup.register_channel":              {holdRefuse, reasonChange},
@@ -233,7 +237,7 @@ func (s *Server) enterHold(reason string) {
 }
 
 func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
-	if command == "issuance_setup.attestations" || command == "issuance_setup.references" || command == "issuance_setup.protected" || command == "issuance_setup.protected_channels" || command == "issuance_setup.protected_changes" || command == "issuance_setup.action" || command == "issuance_setup.options" || command == "issuance_setup.configurations" || command == "issuance_setup.context" || command == "issuance_draft.list" || command == "issuance_draft.inspect" || command == "issuance_draft.context" {
+	if command == "issuance_setup.terms" || command == "issuance_setup.attestations" || command == "issuance_setup.references" || command == "issuance_setup.protected" || command == "issuance_setup.protected_channels" || command == "issuance_setup.protected_changes" || command == "issuance_setup.action" || command == "issuance_setup.options" || command == "issuance_setup.configurations" || command == "issuance_setup.context" || command == "issuance_draft.list" || command == "issuance_draft.inspect" || command == "issuance_draft.context" {
 		return true
 	}
 	if command == "result_authority.history" || command == "result_authority.context" {

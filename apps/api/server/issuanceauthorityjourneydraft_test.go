@@ -27,7 +27,7 @@ func (j *journeySetup) grant(t *testing.T, f world, namespace, capability, recip
 	provisionIssuanceCapability(t, f, namespace, capability, recipient, fmt.Sprintf("journey-draft-%02d-", j.grants))
 }
 
-func completeJourneySetup(t *testing.T, f world, skip string) *journeySetup {
+func confirmJourneyConfiguration(t *testing.T, f world) *journeySetup {
 	t.Helper()
 	j := &journeySetup{logins: map[string]string{"registrar": MemberLogin}}
 	for _, ns := range issuanceAuthorityNamespaces {
@@ -55,6 +55,13 @@ func completeJourneySetup(t *testing.T, f world, skip string) *journeySetup {
 		t.Fatal("retained configuration differs from the public receipt")
 	}
 	j.configuration = c
+	return j
+}
+
+func completeJourneySetup(t *testing.T, f world, skip string) *journeySetup {
+	t.Helper()
+	j := confirmJourneyConfiguration(t, f)
+	c := j.configuration
 	people := map[string]string{"registrar": SampleMember}
 	for _, role := range []string{"admitter", "requester", "verifier", "approver"} {
 		people[role] = "journey-draft-" + role

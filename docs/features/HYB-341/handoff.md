@@ -31,7 +31,9 @@ Work resumed from main c8aebd6 on this machine and merged the following through 
 
 Separate issues, by owner instruction that anything outside the checklist gets its own ticket: HYB-343 (two server tests failing on main, fixed in PR 256, which also added pending issuance settings to M01 bulk revocation impact), HYB-342 (unkeyed digest hypothesis, open), HYB-344 (remaining M01 impact gaps, open), HYB-345 (release, discard and withdrawal operations for protected setup records, open), HYB-346 (labels for issuance grants on existing M03 and P02 rows, open).
 
-Screens for items 1 to 5: the three issuance permission areas are on M03 (PR 274, 276, 277; [screen plan](issuance-authority-screen-plan.md)), and every read and command of items 1 to 4 is on the O03 documents and payment terms views in ten slices (PR 278 to 288; [O03 screens plan](issuance-setup-screens-plan.md), which records each slice's checks, reviews and open notes). All of it is a candidate: checks used intercepted synthetic responses, no flow ran against a real server, no native speaker reviewed the Korean or Arabic copy, and the owner has reviewed no screen.
+Screens for items 1 to 5: the three issuance permission areas are on M03 (PR 274, 276, 277; [screen plan](issuance-authority-screen-plan.md)), and every read and command of items 1 to 4 is on the O03 documents and payment terms views in ten slices (PR 278 to 288; [O03 screens plan](issuance-setup-screens-plan.md), which records each slice's checks, reviews and open notes). All of it is a candidate: the render checks used intercepted synthetic responses, only the flows listed below ran against a real server, no native speaker reviewed the Korean or Arabic copy, and the owner has reviewed no screen.
+
+Real-server run of the O03 screens (`TestIssuanceSetupActualScreenBrowser` with `tools/o03-setup-live-qa.mjs`, 2026-11-24, English at 1440 only): a browser with separate sessions, every request forwarded to an isolated in-process server, proposed and confirmed the protected settings rules, registered and accepted one verification channel with their statements, and recorded and approved payment terms; the test then checks the retained records and their actors. No request of those sessions was refused and no page error occurred. The test is skipped without its browser configuration, so the ordinary suite does not run it. Not run against a real server: protected settings changes (they need the 24-hour channel age), applying terms to the contract, statement withdrawal, recovery and retry of an unknown outcome, Korean and Arabic, the narrower widths. Finding: the contract and organization reads need installation administration, so a step holder without it cannot open these screens; the run used three administrators holding step capabilities, and the gap is HYB-348. The terms view also needs the separate payment terms read permission in addition to the protected settings one.
 
 What the journey tests established (`issuanceauthorityjourney_test.go`, `issuanceauthorityjourneydraft_test.go`):
 
@@ -49,9 +51,9 @@ Owner-visible residuals are recorded in the evidence and protected writes contra
 # Next executable scope
 
 1. Owner screen review of the O03 documents and payment terms views and of the M03 permission areas, with the open questions and review notes of [the O03 screens plan](issuance-setup-screens-plan.md).
-2. Run the O03 flows against a real local server: the render checks under `tools/o03-*-qa.mjs` intercept every response.
+2. Extend the real-server run of the O03 screens to protected settings changes, applying terms, statement withdrawal and recovery; the first run covers rules, one channel and one term.
 3. Configuration replacement, release operations and durable production recovery remain explicit separate scopes.
-4. Separate issues: HYB-344 (M01 impact gaps; item 2 read and confirmed, not started), HYB-345, HYB-346, HYB-347, and the owner decisions of HYB-342.
+4. Separate issues: HYB-344 (M01 impact gaps; item 2 read and confirmed, not started), HYB-345, HYB-346, HYB-347, HYB-348 (step holders without installation administration cannot open the O03 screens), and the owner decisions of HYB-342.
 
 # Discovery evidence and traps
 

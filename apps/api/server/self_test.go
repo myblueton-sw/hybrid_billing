@@ -68,7 +68,7 @@ func TestSelfReadShape(t *testing.T) {
 	got := f.me(second)
 	if got.status != 200 || got.body["user_id"] != SampleMember || got.body["login"] != MemberLogin || got.body["role"] != "member" ||
 		got.body["workspace"] != SampleWorkspace || got.body["password_set"] != true || got.body["installation_administrator"] != false ||
-		fmt.Sprint(got.body["idle_minutes"]) != "30" || got.body["signed_in_at"] != stamp(start.Add(time.Minute)) {
+		fmt.Sprint(got.body["idle_minutes"]) != "30" || fmt.Sprint(got.body["absolute_minutes"]) != "720" || got.body["signed_in_at"] != stamp(start.Add(time.Minute)) {
 		t.Fatalf("read %+v", got)
 	}
 	if fmt.Sprint(got.body["identities"]) != fmt.Sprintf("[map[login:%s method:local-password]]", MemberLogin) {

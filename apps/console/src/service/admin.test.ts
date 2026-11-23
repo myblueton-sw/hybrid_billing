@@ -255,7 +255,7 @@ test("secret returns only a well-formed secret and credential", async () => {
 
 test("self reads and commands", async () => {
   const page = { user_id: "u", login: "l", email: "e", workspace: "w", role: "member", identities: [{ method: "local-password", login: "l" }], password_set: true,
-    installation_administrator: false, current_session: { handle: "h", current: true, signed_in: "a", ends: "b", state: "active", can_end: false, not_included_operation: "" }, recorded_session_count: 1, accepted_operation_count: 0, sessions_generation: "g", idle_minutes: 30,
+    installation_administrator: false, current_session: { handle: "h", current: true, signed_in: "a", ends: "b", state: "active", can_end: false, not_included_operation: "" }, recorded_session_count: 1, accepted_operation_count: 0, sessions_generation: "g", idle_minutes: 30, absolute_minutes: 720,
     max_age_seconds: 3600, signed_in_at: "a", authenticated_at: "c", now: "n" };
   const r = fake(200, page);
   assert.deepEqual(await adminClient("t", r.f).me(), page);

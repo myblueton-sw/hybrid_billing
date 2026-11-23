@@ -304,6 +304,7 @@ export type SelfPage = {
   accepted_operation_count: number;
   sessions_generation: string;
   idle_minutes: number;
+  absolute_minutes: number;
   max_age_seconds: number;
   signed_in_at: string;
   authenticated_at: string;

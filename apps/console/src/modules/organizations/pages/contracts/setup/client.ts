@@ -7,6 +7,7 @@ import { bounded, checkSession, responseText } from "../../../../issuance/pages/
 import { SetupError, setupContextOf, setupDate, type SetupContext } from "./context";
 import { configurationsOf } from "./history";
 import { actionRequest, setupActionOf, type ActionRequest } from "./action";
+import { protectedChangesOf, protectedChannelsOf, protectedFields, protectedScope, protectedSummaryOf, type ProtectedField, type ProtectedScope } from "./protected";
 
 const invalid = (): never => { throw new SetupError("invalid_setup_response"); };
 const envelopeKeys = ["request_id", "status", "target_id", "result_revision", "replay", "as_of", "fields"];
@@ -41,7 +42,7 @@ function optionsOf(e: ReadEnvelope, scope: SetupContext): SetupOptions {
 
 export function setupReadClient(session: Session, fetcher: typeof fetch = fetch.bind(globalThis)) {
   const owner = freeze({ ...session });
-  async function read(command: "context" | "options" | "configurations" | "action", target: string, fields: Record<string, string>): Promise<ReadEnvelope> {
+  async function read(command: "context" | "options" | "configurations" | "action" | "protected" | "protected_channels" | "protected_changes", target: string, fields: Record<string, string>): Promise<ReadEnvelope> {
     const values = freeze({ ...fields });
     try { await checkSession(owner, fetcher); }
     catch (error) { throw new SetupError(error instanceof ResultError ? error.code : "session_unavailable"); }
@@ -77,6 +78,20 @@ export function setupReadClient(session: Session, fetcher: typeof fetch = fetch.
     async context(contract: string, on: string) {
       if (!id(contract) || !setupDate(on)) return invalid();
       return setupContextOf(await read("context", contract, { on }), contract, on);
+    },
+    async protectedSummary(input: ProtectedScope) {
+      const scope = protectedScope(input);
+      return protectedSummaryOf(await read("protected", scope.contract, { configuration: scope.configuration, digest: scope.digest }), scope);
+    },
+    async protectedChannels(input: ProtectedScope, after = "", snapshot = "") {
+      const scope = protectedScope(input);
+      if ((!!after !== !!snapshot) || after && (!id(after) || !digest(snapshot))) return invalid();
+      return protectedChannelsOf(await read("protected_channels", scope.contract, { configuration: scope.configuration, digest: scope.digest, ...(after ? { after, snapshot } : {}) }), scope, after, snapshot);
+    },
+    async protectedChanges(input: ProtectedScope, field: ProtectedField, after = "", snapshot = "") {
+      const scope = protectedScope(input);
+      if (!protectedFields.includes(field) || (!!after !== !!snapshot) || after && (!id(after) || !digest(snapshot))) return invalid();
+      return protectedChangesOf(await read("protected_changes", scope.contract, { configuration: scope.configuration, digest: scope.digest, field, ...(after ? { after, snapshot } : {}) }), scope, field, after, snapshot);
     },
     async options(context: SetupContext) {
       const scope = freeze({ ...context });

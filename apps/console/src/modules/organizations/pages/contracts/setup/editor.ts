@@ -13,7 +13,7 @@ export class SetupEditor {
  private state: EditorState = freeze({draft:{target:attempt().request,preset:false,languages:[],reason:"",selected:""},checking:false,recovery:false});
  private generation=0;
  private listeners=new Set<()=>void>();
- constructor(private readonly session:Session,readonly contract:string,readonly on:string,readonly writes:SetupWriteStore,private readonly reads=setupReadClient(session)){}
+ constructor(private readonly session:Session,readonly contract:string,readonly on:string,readonly writes:SetupWriteStore,private readonly reads:Pick<ReturnType<typeof setupReadClient>,"context"|"options"|"action"|"configurations">=setupReadClient(session)){}
  snapshot=()=>this.state;
  subscribe=(listener:()=>void)=>{this.listeners.add(listener);return()=>{this.listeners.delete(listener);};};
  private update(patch:Partial<EditorState>){this.state=freeze({...this.state,...patch});this.listeners.forEach(listener=>listener());}

@@ -56,7 +56,7 @@ func TestDocumentActualScreenBrowser(t *testing.T) {
 			return nil
 		}
 	}
-	f.s.origins["http://127.0.0.1:8896"] = true
+	f.s.origins[os.Getenv("HB_PROJECTION_QA_URL")] = true
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	f.must(err)
 	f.must(f.s.Bind(listener.Addr()))

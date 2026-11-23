@@ -144,3 +144,11 @@ Left open from that review and this work: a refused contract detail shows the ge
 Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3. No rendered check and no new test: these states need a failed command or read in the bulk revocation and session flows, which no existing render check stages. Copy and state review, ui-designer role (AI, by reading): FAIL with five findings (messages placed far from their buttons, a message that outlived its cause, and three wordings), corrected; the re-review passed all five and found one more message that outlived its cause, corrected afterwards and not reviewed again.
 
 Left open: the new messages use the secondary text style, whose prominence is for the owner's screen review; three of them sit inside a container that is itself an alert; whether "try again" can succeed after a discard whose outcome was unknown was not traced; C1 on M03 is not fixed here.
+
+## P01, P03 and P04 finding H1 (2026-11-24)
+
+When a reload fails while a page is held, the three screens now say, after the failure alert, that everything on the screen including the time is from the last successful load and that the screen is read-only until a reload succeeds. P03 and P04 stop offering commands in that state through their existing command gate. P01 had no gate: its three command openers and the review and send buttons of an open form are disabled and point at the note.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3, with the P01 proposals render test extended for the stale state of the openers and of an open form's review button. The send button's gate is not asserted, because the confirm step cannot be reached in a static render. No rendered check: no render check exists for these three screens. Copy and state review, ui-designer role (AI, by reading): FAIL with two findings (an already open P01 form could still send; the sentence said "below" although the facts it refers to are above it), corrected; corrective re-review PASS.
+
+Left open: the header still labels the old time "Now (UTC)" on these screens and on P02 and P05; P03 and P04 unmount an open form when the gate closes, so a message inside it is lost; a disabled opener takes no focus, so its reason is rarely announced; the same finding on M01, M02, M03, O02 and O03 (A3, B3, C2, F1, G2) is not fixed here.

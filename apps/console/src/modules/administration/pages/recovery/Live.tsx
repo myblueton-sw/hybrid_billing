@@ -137,7 +137,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
   const configured = page?.state === "configured";
   const shared: Shared | null = page && configured
     ? {
-        l, page, api, me: session.user, selection, canCommand: commandsAllowed(page),
+        l, page, api, me: session.user, selection, canCommand: commandsAllowed(page) && status !== "error",
         onDone: (text) => { void announce(text); },
         onNotice: showNotice,
         onReload: load,
@@ -173,6 +173,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>
       )}
+      {status === "error" && page && <p id="p03-stale" className="live-note-rule p03-readonly" role="status">{diagnosticCopy.stale(l)}</p>}
       {gone.length > 0 && (
         <div className="p03-vanished" role="status">
           {gone.map((g) => (
@@ -199,7 +200,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
               {view === "resume" && <> <strong>{k.resumeLeadStrong(l)}</strong></>}
             </p>
           )}
-          {!shared.canCommand && view !== "migration" && <p className="live-note-rule p03-readonly" role="status">{k.readOnly(l)}</p>}
+          {!shared.canCommand && status !== "error" && view !== "migration" && <p className="live-note-rule p03-readonly" role="status">{k.readOnly(l)}</p>}
           {sectionState !== expected && !(view === "reconciliation" && sectionState === "not_configured") ? (
             <p className="live-empty">{sectionState ? <>{k.unknown(l)} ({ltr(sectionState)})</> : k.unknown(l)}</p>
           ) : view === "sets" ? (

@@ -146,7 +146,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   const configured = page?.state === "configured";
   const shared: Shared | null = page && configured
     ? {
-        l, page, api, me: session.user, workspace: session.workspace, selection, canCommand: commandsAllowed(page),
+        l, page, api, me: session.user, workspace: session.workspace, selection, canCommand: commandsAllowed(page) && status !== "error",
         onDone: (text) => { void announce(text); },
         onNotice: showNotice,
         onReload: load,
@@ -179,6 +179,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>
       )}
+      {status === "error" && page && <p id="p04-stale" className="live-note-rule p04-readonly" role="status">{diagnosticCopy.stale(l)}</p>}
       {gone.length > 0 && (
         <div className="p04-vanished" role="status">
           {gone.map((g) => (
@@ -204,7 +205,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
           {view === "holds" && <p className="live-note-rule p04-lead">{k.holdsLeadA(l)} <strong>{k.holdsLeadB(l)}</strong> {k.holdsLeadC(l)}</p>}
           {view === "deletion" && <p className="live-note-rule p04-lead">{k.deletionLead(l)}</p>}
           {view === "decisions" && <p className="live-note-rule p04-lead">{k.decisionsLead(l)}</p>}
-          {!shared.canCommand && view !== "restore" && view !== "decisions" && <p className="live-note-rule p04-readonly" role="status">{k.readOnly(l)}</p>}
+          {!shared.canCommand && status !== "error" && view !== "restore" && view !== "decisions" && <p className="live-note-rule p04-readonly" role="status">{k.readOnly(l)}</p>}
           {view === "policies" ? (
             <PoliciesView {...shared} />
           ) : view === "expiry" ? (

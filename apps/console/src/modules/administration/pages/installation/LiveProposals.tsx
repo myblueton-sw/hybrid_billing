@@ -20,6 +20,7 @@ export type Shared = {
   api: AdminClient;
   me: string;
   selected: string;
+  stale: boolean;
   onDone: (text: string) => void;
   onNotice: (text: string, diagnostic?: CommandDiagnostic) => void;
   onReload: () => Promise<boolean>;
@@ -41,7 +42,8 @@ type FormProps = Shared & {
 };
 
 export function CommandForm(props: FormProps) {
-  const { l, page, api, command, target, values, title, facts, impact, verb, done, gone, onClose, onDone, onNotice, onReload, onSignedOut } = props;
+  const { l, page, api, command, target, values, title, facts, impact, verb, done, gone, stale, onClose, onDone, onNotice, onReload, onSignedOut } = props;
+  const held = stale ? "p01-stale" : undefined;
   const current = useCurrentCommand(command, target);
   const { diagnostic, setDiagnostic } = useFailureDiagnostic(current);
   const id = "p01-" + command.slice(13) + "-" + target.replace(/[^a-z0-9-]/g, "");
@@ -152,7 +154,7 @@ export function CommandForm(props: FormProps) {
             <p className="service-hint" id={id + "-reason-hint"}>{k.form.rationaleHint(l, utf8Bytes(rationale))}</p>
           </div>
           <div className="live-buttons">
-            <button type="submit" className="live-secondary">{k.form.review(l)}</button>
+            <button type="submit" className="live-secondary" disabled={stale} aria-describedby={held}>{k.form.review(l)}</button>
             <button type="button" className="service-button-link" onClick={() => onClose()}>{k.form.cancel(l)}</button>
           </div>
         </form>
@@ -165,7 +167,7 @@ export function CommandForm(props: FormProps) {
           </dl>
           <p className="live-impact">{impact}</p>
           <div className="live-buttons">
-            <button type="button" className="live-primary" disabled={busy} onClick={() => void send()}>{busy ? k.form.sending(l) : verb}</button>
+            <button type="button" className="live-primary" disabled={busy || stale} aria-describedby={held} onClick={() => void send()}>{busy ? k.form.sending(l) : verb}</button>
             <button type="button" className="live-secondary" disabled={busy} onClick={() => setStep("edit")}>{k.form.backToEdit(l)}</button>
           </div>
         </div>
@@ -279,12 +281,12 @@ function Row({ p, ...shared }: Shared & { p: InstallProposal }) {
             {(approveUsable || withdrawUsable) && (
               <div className="live-buttons">
                 {approveUsable && (
-                  <button type="button" className="live-primary" aria-expanded={open === "installation.approve"} onClick={(e) => { opener.current = e.currentTarget; setOpen(open === "installation.approve" ? null : "installation.approve"); }}>
+                  <button type="button" className="live-primary" disabled={shared.stale} aria-describedby={shared.stale ? "p01-stale" : undefined} aria-expanded={open === "installation.approve"} onClick={(e) => { opener.current = e.currentTarget; setOpen(open === "installation.approve" ? null : "installation.approve"); }}>
                     {k.approve(l)}
                   </button>
                 )}
                 {withdrawUsable && (
-                  <button type="button" className="live-secondary" aria-expanded={open === "installation.withdraw"} onClick={(e) => { opener.current = e.currentTarget; setOpen(open === "installation.withdraw" ? null : "installation.withdraw"); }}>
+                  <button type="button" className="live-secondary" disabled={shared.stale} aria-describedby={shared.stale ? "p01-stale" : undefined} aria-expanded={open === "installation.withdraw"} onClick={(e) => { opener.current = e.currentTarget; setOpen(open === "installation.withdraw" ? null : "installation.withdraw"); }}>
                     {k.withdraw(l)}
                   </button>
                 )}
@@ -368,7 +370,7 @@ export function Propose(shared: Shared) {
       )}
       {usable && (
         <div className="live-buttons">
-          <button type="button" className="live-secondary" aria-expanded={open} onClick={(e) => { opener.current = e.currentTarget; setOpen(!open); }}>
+          <button type="button" className="live-secondary" disabled={shared.stale} aria-describedby={shared.stale ? "p01-stale" : undefined} aria-expanded={open} onClick={(e) => { opener.current = e.currentTarget; setOpen(!open); }}>
             {k.propose(l)}
           </button>
         </div>

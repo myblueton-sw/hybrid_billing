@@ -21,7 +21,9 @@ func (s *Server) issuanceSetupBoundary(command string, call commands.Call) comma
 	kind := strings.TrimPrefix(command, "issuance_setup.")
 	step, _, attestation := setupAttestationCommand(kind)
 	write, writing := protectedWriteCommand(kind)
-	if command != "issuance_setup.context" && command != "issuance_setup.configurations" && command != "issuance_setup.options" && command != "issuance_setup.action" && !(command == "issuance_setup."+kind && setupProtectedRead(kind)) && !(command == "issuance_setup."+kind && setupMutation(kind)) && !(command == "issuance_setup."+kind && (attestation || writing)) {
+	term, terming := termWriteCommand(kind)
+	terming = terming || kind == "terms"
+	if command != "issuance_setup.context" && command != "issuance_setup.configurations" && command != "issuance_setup.options" && command != "issuance_setup.action" && !(command == "issuance_setup."+kind && setupProtectedRead(kind)) && !(command == "issuance_setup."+kind && setupMutation(kind)) && !(command == "issuance_setup."+kind && (attestation || writing || terming)) {
 		return ""
 	}
 	if s.cfg.Seed != SeedSample || s.financialIssuance == nil {
@@ -29,6 +31,25 @@ func (s *Server) issuanceSetupBoundary(command string, call commands.Call) comma
 	}
 	if call.Client != ConsoleClient {
 		return commands.PermissionDenied
+	}
+	if terming {
+		var err error
+		if kind == "terms" {
+			err = s.financialIssuance.termReadCaller(call.Answer.Workspace(), call.Answer.User())
+		} else {
+			err = s.financialIssuance.termCaller(call.Answer.Workspace(), call.Answer.User(), term.Capability)
+		}
+		if err != nil {
+			if kind != "terms" {
+				err = termWriteError(term.Self, err)
+			}
+			var failure *commands.Failure
+			if errors.As(err, &failure) {
+				return failure.Code
+			}
+			return commands.DependencyUnavailable
+		}
+		return ""
 	}
 	if writing {
 		if err := s.financialIssuance.protectedWriteCaller(write, call.Answer.Workspace(), call.Answer.User()); err != nil {
@@ -86,6 +107,16 @@ func (h issuanceSetupContextCommand) Apply(ctx commands.Context) (commands.Outco
 	}
 	if setupMutation(h.kind) {
 		return h.s.financialIssuance.applySetupMutation(h.kind, ctx)
+	}
+	if _, terming := termWriteCommand(h.kind); terming {
+		return h.s.financialIssuance.applyTermWrite(h.kind, ctx)
+	}
+	if h.kind == "terms" {
+		fields, err := h.s.financialIssuance.setupTermFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields)
+		if err != nil {
+			return commands.Outcome{}, err
+		}
+		return commands.Outcome{Fields: fields}, nil
 	}
 	if _, writing := protectedWriteCommand(h.kind); writing {
 		return h.s.financialIssuance.applyProtectedWrite(h.kind, ctx)

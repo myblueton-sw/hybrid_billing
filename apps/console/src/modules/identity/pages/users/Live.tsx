@@ -352,8 +352,8 @@ function Detail({ l, user, self, notice, onAction, serverTime, onJob }: {
       ) : (
         <>
           {group(w.account(l), offer.account)}
-          {group(w.membershipTitle(l), offer.membership, offer.notes.filter((n) => n === w.promotionReason(l)))}
-          {group(w.sign(l), offer.sign, offer.notes.filter((n) => n !== w.promotionReason(l)))}
+          {group(w.membershipTitle(l), offer.membership, offer.notes.filter((n) => n === w.promotionReason(l) || n === w.unknownStateReason(l)))}
+          {group(w.sign(l), offer.sign, offer.notes.filter((n) => n !== w.promotionReason(l) && n !== w.unknownStateReason(l)))}
         </>
       )}
     </section>
@@ -374,7 +374,7 @@ function Breakable({ text }: { text: string }) {
 function membershipWord(l: Locale, u: UserRow): string {
   if (!u.membership) return w.noMembership(l);
   if (membershipEnded(u)) return fc.membershipEnded(l);
-  return u.membership.state === "active" ? w.active(l) : w.membershipSuspended(l);
+  return u.membership.state === "active" ? w.active(l) : u.membership.state === "suspended" ? w.membershipSuspended(l) : w.unknownState(l);
 }
 
 function RoleBeside({ l, u }: { l: Locale; u: UserRow }) {
@@ -454,6 +454,7 @@ export function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
                   <Cell label={head[2]} className="m01-l">
                     {roleName(l, u.membership?.role ?? "")}
                     {u.membership?.state === "suspended" && <span className="live-sub">{u.membership.suspended_for === "role_period_ended" ? p.ended(l) : w.membershipSuspended(l)}</span>}
+                    {u.membership?.state === "unknown" && <span className="live-sub">{w.unknownState(l)}</span>}
                     {u.membership?.suspended_for === "bulk_revocation" && <Effect l={l} u={u} />}
                     {u.installation_administrator && <span className="live-sub">{w.installationAdmin(l)}</span>}
                   </Cell>
@@ -462,6 +463,7 @@ export function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
                   <Cell label={head[5]} className="m01-m">
                     {roleName(l, u.membership?.role ?? "")}{u.membership && <span className="live-sub"><PeriodCell l={l} u={u} serverTime={serverTime} /></span>}
                     {u.membership?.state === "suspended" && <span className="live-sub">{w.membershipSuspended(l)}</span>}
+                    {u.membership?.state === "unknown" && <span className="live-sub">{w.unknownState(l)}</span>}
                     {u.membership?.suspended_for === "bulk_revocation" && <Effect l={l} u={u} />}
                     {u.installation_administrator && <span className="live-sub">{w.installationAdmin(l)}</span>}
                   </Cell>

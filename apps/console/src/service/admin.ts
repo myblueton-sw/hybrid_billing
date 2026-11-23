@@ -17,7 +17,7 @@ export type RolePeriod = "open" | "bounded" | "ends_soon" | "ended";
 
 export type Membership = {
   role: "administrator" | "member";
-  state: "active" | "suspended";
+  state: "active" | "suspended" | "unknown";
   version: number;
   role_from: string;
   role_until: string;
@@ -103,7 +103,7 @@ export function membershipOf(v: unknown): Membership | null {
   const ledger = String(m.ledger ?? "");
   return {
     role: m.role === "administrator" ? "administrator" : "member",
-    state: m.state === "suspended" ? "suspended" : "active",
+    state: m.state === "suspended" ? "suspended" : m.state === "active" ? "active" : "unknown",
     version: Number(m.version ?? 0),
     role_from: String(m.role_from ?? ""),
     role_until: String(m.role_until ?? ""),

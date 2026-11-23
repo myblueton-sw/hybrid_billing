@@ -8,6 +8,7 @@ import { actorText, canWithdraw, endPassed, maxPeriod, pendingNow, revisionText,
 import { ActionBar, CommandForm, type Shared } from "./LiveActions";
 import { day, ltr, nameOf, stamp } from "./live-format";
 import { Documents } from "./setup/Documents";
+import { partOf } from "./setup/scope";
 
 type Props = {
   l: Locale;
@@ -52,7 +53,7 @@ export function Detail(p: Props) {
       {c.end && endPassed(c.end, detail.today) && c.settlement === "pending_final" && <p className="live-note o03-pair-note">{k.endedPending(l)}</p>}
       <div className="o03-sections">
         {view === "schedule" ? <Schedule {...p} shared={shared} />
-          : view === "documents" ? <Documents l={l} session={p.session} contract={c.id} on={p.setupOn} parties={p.parties} onSignedOut={p.onSignedOut} />
+          : view === "documents" ? <Documents l={l} session={p.session} contract={c.id} on={p.setupOn} parties={p.parties} part={partOf(p.params.get("part"))} onPart={(part) => p.onParams({ part: part === "settings" ? null : part })} onSignedOut={p.onSignedOut} />
           : view === "products" ? <Products l={l} detail={detail} parties={p.parties} />
             : view === "termination" ? <Termination l={l} detail={detail} shared={shared} />
               : unconnected.includes(view) ? <Unconnected l={l} view={view} />

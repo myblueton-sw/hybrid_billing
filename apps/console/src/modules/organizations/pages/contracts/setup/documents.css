@@ -8,11 +8,12 @@
 .o03-documents .live-mono, .o03-documents bdi { overflow-wrap: anywhere; }
 .o03-docs-table { inline-size: 100%; table-layout: fixed; }
 .o03-docs-table th, .o03-docs-table td { vertical-align: top; overflow-wrap: anywhere; }
-.o03-docs-table th:nth-child(1) { inline-size: 20%; }
-.o03-docs-table th:nth-child(2) { inline-size: 22%; }
-.o03-docs-table th:nth-child(3) { inline-size: 24%; }
-.o03-docs-table th:nth-child(4) { inline-size: 20%; }
+.o03-docs-table th:nth-child(1) { inline-size: 15%; }
+.o03-docs-table th:nth-child(2) { inline-size: 18%; }
+.o03-docs-table th:nth-child(3) { inline-size: 19%; }
+.o03-docs-table th:nth-child(4) { inline-size: 15%; }
 .o03-docs-table th:nth-child(5) { inline-size: 14%; }
+.o03-docs-table th:nth-child(6) { inline-size: 19%; }
 .o03-docs-pages { display: flex; flex-wrap: wrap; gap: 16px; margin-block-start: 16px; }
 .o03-documents summary { cursor: pointer; min-block-size: 44px; display: list-item; padding-block: 10px; }
 @container (min-width: 56rem) { .o03-docs-scope { grid-template-columns: minmax(18rem, 1fr) minmax(18rem, 1fr); } }
@@ -21,6 +22,8 @@
  .o03-docs-table, .o03-docs-table tbody, .o03-docs-table tr, .o03-docs-table td { display: block; inline-size: 100%; }
  .o03-docs-table td::before { content: attr(data-label); display: block; font-weight: 600; margin-block-end: 4px; }
  .o03-docs-table tr { margin-block-end: 24px; }
+ .o03-docs-table td { block-size: auto; padding-block: 8px; }
+ .o03-docs-table td:empty { display: none; }
 }
 
 .o03-setup-form { display: grid; gap: 16px; max-inline-size: 40rem; margin-block-start: 16px; }

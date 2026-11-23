@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -18,7 +19,7 @@ type issuanceSetupContextCommand struct {
 
 func (s *Server) issuanceSetupBoundary(command string, call commands.Call) commands.Code {
 	kind := strings.TrimPrefix(command, "issuance_setup.")
-	if command != "issuance_setup.context" && command != "issuance_setup.configurations" && command != "issuance_setup.options" && command != "issuance_setup.action" && !(command == "issuance_setup."+kind && setupMutation(kind)) {
+	if command != "issuance_setup.context" && command != "issuance_setup.configurations" && command != "issuance_setup.options" && command != "issuance_setup.action" && !(command == "issuance_setup."+kind && setupProtectedRead(kind)) && !(command == "issuance_setup."+kind && setupMutation(kind)) {
 		return ""
 	}
 	if s.cfg.Seed != SeedSample || s.financialIssuance == nil {
@@ -66,7 +67,9 @@ func (h issuanceSetupContextCommand) Apply(ctx commands.Context) (commands.Outco
 	}
 	var fields map[string]string
 	var err error
-	if h.kind == "configurations" {
+	if setupProtectedRead(h.kind) {
+		fields, err = h.s.financialIssuance.setupProtectedFields(ctx.Workspace, ctx.User, ctx.Target, h.kind, ctx.Fields)
+	} else if h.kind == "configurations" {
 		fields, err = h.s.financialIssuance.setupConfigurationFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields["after"], ctx.Fields["snapshot"])
 	} else if h.kind == "action" {
 		fields, err = h.s.financialIssuance.setupActionFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields)
@@ -83,7 +86,12 @@ func (h issuanceSetupContextCommand) Apply(ctx commands.Context) (commands.Outco
 
 func (s *Server) issuanceSetupDefinitions() []commands.Definition {
 	permission := commands.Permission{Action: gate.ViewCost, Kind: protectedauthority.ResourceKind, Fields: []string{protectedauthority.EvidenceField}}
+	scope := []commands.Field{{Name: "configuration", Type: commands.Text, Required: true}, {Name: "digest", Type: commands.Text, Required: true}}
+	page := []commands.Field{{Name: "after", Type: commands.Text}, {Name: "snapshot", Type: commands.Text}}
 	return []commands.Definition{
+		{ID: "issuance_setup.protected", Permission: permission, Fields: scope, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "protected"}},
+		{ID: "issuance_setup.protected_channels", Permission: permission, Fields: slices.Concat(scope, page), Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "protected_channels"}},
+		{ID: "issuance_setup.protected_changes", Permission: permission, Fields: slices.Concat(scope, []commands.Field{{Name: "field", Type: commands.Text, Required: true}}, page), Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "protected_changes"}},
 		{ID: "issuance_setup.action", Permission: permission, Fields: []commands.Field{{Name: "operation", Type: commands.Text, Required: true}, {Name: "configuration", Type: commands.Text, Required: true}, {Name: "on", Type: commands.Text}, {Name: "scope_digest", Type: commands.Text}, {Name: "digest", Type: commands.Text}}, Handler: issuanceSetupContextCommand{s: s, kind: "action"}},
 		{ID: "issuance_setup.options", Permission: permission, Fields: []commands.Field{{Name: "on", Type: commands.Text, Required: true}, {Name: "scope_digest", Type: commands.Text, Required: true}}, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "options"}},
 		{ID: "issuance_setup.context", Permission: permission, Fields: []commands.Field{{Name: "on", Type: commands.Text, Required: true}}, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "context"}},
@@ -149,4 +157,8 @@ func (a *financialIssuance) setupContextFields(workspace, actor, id, rawDate str
 		return nil, err
 	}
 	return fields, nil
+}
+
+func setupProtectedRead(kind string) bool {
+	return kind == "protected" || kind == "protected_channels" || kind == "protected_changes"
 }

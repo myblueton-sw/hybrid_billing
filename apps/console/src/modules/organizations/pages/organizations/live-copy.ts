@@ -299,6 +299,7 @@ export const o = {
   bActivated: (l: Locale) => t(l, "Activated in relationship revision {r}. Change plan {p} adds the members to the group from its effective date.", "관계 리비전 {r}에서 활성화되었습니다. 변경 계획({p})에 따라 적용 시작일부터 구성원이 그룹에 추가됩니다.", "فُعّلت في مراجعة العلاقات {r}. تضيف خطة التغيير {p} الأعضاء إلى المجموعة اعتبارًا من تاريخ سريانها."),
   bPruned: (l: Locale) => t(l, "The member list of this draft is no longer kept.", "이 초안의 구성원 목록은 더 이상 보관하지 않습니다.", "لم تعد قائمة أعضاء هذه المسودة محفوظة."),
   bDiscarded: (l: Locale) => t(l, "This draft was discarded on {d}. Nothing changed.", "이 초안은 {d}에 폐기되었습니다. 바뀐 것은 없습니다.", "تم تجاهل هذه المسودة في {d}. لم يتغيّر شيء."),
+  draftUnread: (l: Locale) => t(l, "The request was recorded, but this draft could not be read again. Go back to the drafts and reload them.", "요청은 기록되었지만 이 초안을 다시 읽지 못했습니다. 초안 목록으로 돌아가 새로 고침하세요.", "سُجّل الطلب، لكن تعذّرت قراءة هذه المسودة مجددًا. عُد إلى المسودات وأعد تحميلها."),
   draftGone: (l: Locale) => t(l, "This draft no longer exists. It may have been removed after it was discarded.", "이 초안은 더 이상 없습니다. 폐기된 뒤 정리되었을 수 있습니다.", "لم تعد هذه المسودة موجودة. ربما أُزيلت بعد تجاهلها."),
   dataChanged: (l: Locale) =>
     t(l, "The data changed before your save. The draft was reloaded; your unsaved changes are kept below.", "저장하기 전에 데이터가 바뀌었습니다. 초안을 다시 불러왔으며 저장하지 않은 변경은 아래에 남아 있습니다.", "تغيّرت البيانات قبل الحفظ. أُعيد تحميل المسودة، وتغييراتك غير المحفوظة باقية أدناه."),

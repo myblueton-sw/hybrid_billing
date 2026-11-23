@@ -220,7 +220,7 @@ export function DraftsSection({ l, list, lang, current, onOpen, onNew }: {
   );
 }
 
-type Target = { kind: "new" } | { kind: "draft"; draft: GroupDraft } | { kind: "gone"; id: string };
+type Target = { kind: "new" } | { kind: "draft"; draft: GroupDraft } | { kind: "gone"; id: string } | { kind: "unread"; id: string };
 type Errors = Partial<Record<"name" | "group" | "members" | "ids" | "reason", string>>;
 type Partial2 = { done: number; total: number; rest: number; reason: string; kind: "new" | "edit"; draftId: string };
 const fieldIds: Record<keyof Errors, string> = { name: "o01-draft-name", group: "o01-group-new", members: "o01-draft-members", ids: "o01-draft-ids", reason: "live-reason" };
@@ -422,11 +422,13 @@ export function useDraftEditor({ api, l, list, onDirty, say, focus }: {
   };
 
   const finish = async (id: string, text: string, mine: number) => {
-    const found = await list.find(id).catch(() => null);
+    let found: GroupDraft | null = null;
+    let unread = false;
+    try { found = (await list.find(id)) ?? null; } catch { unread = true; }
     await list.reload();
     if (!sameView(mine, generation.current)) { say(text); return; }
     if (found) reset({ kind: "draft", draft: found });
-    else reset({ kind: "gone", id });
+    else reset(unread ? { kind: "unread", id } : { kind: "gone", id });
     setReason("");
     if (checkedInfo.current) setNotice({ text: checkedInfo.current, alert: false });
     flushSync(() => onDirty?.(false));
@@ -589,7 +591,7 @@ function useSearch<T>(run: Searcher<T>) {
   const go = async (term: string, after = "") => {
     const n = ++seq.current;
     setQ(term);
-    setState((s) => ({ ...s, status: "loading" }));
+    setState((s) => ({ ...s, rows: after ? s.rows : [], next: after ? s.next : "", status: "loading" }));
     try {
       const got = await run(term, after);
       if (n === seq.current) setState((s) => ({ rows: after ? [...s.rows, ...got.rows] : got.rows, next: got.next, status: "ready" }));
@@ -705,6 +707,15 @@ export function DraftPanel({ l, e, list, lang, on, today, base, searchAccounts, 
 }) {
   const groups = useSearch(searchGroups);
   if (!e.target) return null;
+  if (e.target.kind === "unread") {
+    return (
+      <section className="o01-draft" aria-labelledby="o01-draft-title">
+        <h2 id="o01-draft-title" tabIndex={-1}>{o.drafts(l)}</h2>
+        <p className="live-note-rule" role="alert">{o.draftUnread(l)}</p>
+        <div className="live-buttons"><button type="button" className="live-secondary" onClick={() => e.close()}>{o.back(l)}</button></div>
+      </section>
+    );
+  }
   if (e.target.kind === "gone") {
     return (
       <section className="o01-draft" aria-labelledby="o01-draft-title">
@@ -787,6 +798,8 @@ export function DraftPanel({ l, e, list, lang, on, today, base, searchAccounts, 
       ) : (
         <div className="o01-group-pick">
           <SearchForm l={l} id="o01-group-q" labelText={o.searchGroups(l)} value={groups.q} onSearch={groups.search} />
+          {groups.status === "loading" && <p role="status" className="live-meta">{o.loadingMore(l)}</p>}
+          {groups.status === "error" && <p className="live-error" role="alert">{o.failed(l)}</p>}
           {groups.status === "ready" && groups.rows.length === 0 && <p className="live-empty">{o.noResults(l)}</p>}
           <ul className="o01-plain o01-results">{groups.rows.slice(0, 10).map((g) => (
             <li key={g.id}><button type="button" className="live-open" data-group={g.id} onClick={() => { e.setGroup({ id: g.id, label: g.name }); e.touch("#o01-group-existing"); }}><bdi>{label(g.name, g.id)}</bdi> {mono(g.id)}</button></li>

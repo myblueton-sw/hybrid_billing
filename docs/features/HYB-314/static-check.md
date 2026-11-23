@@ -365,3 +365,17 @@ Run against a console built from main 5b5b90a (headless Chromium, synthetic read
 `o03-setup-parts-qa.mjs` and `o03-setup-rules-writes-qa.mjs` counted reads added by later slices as unexpected; each now answers them as denied, as in the earlier update. Their assertions are unchanged. Whether the 13 entries of the M03 script were already there before this ticket was not checked.
 
 Not run: `apps/console/tools/service-accounts-qa.mjs` (M04) needs a running server with a signed-in administrator. M01, M02, O01, O02, P01, P03, P04 and P05 have no rendered run in this record. None of these scripts asserts the states added under this ticket (the M05 unconfirmed operation, the M05 lifetime from the server, the M03 effect form without a kind of data).
+
+## Server-backed browser tests on main (2026-11-24)
+
+The browser tests of `apps/api/server` that start an isolated in-process server were run against a console built from main 8a4c5eb (`go test ./server/ -run 'Browser|GrantScreens'`, loopback preview, headless Chromium). No real account or customer data is involved; this is not an owner acceptance.
+
+| Result | Tests |
+| --- | --- |
+| passed (12) | `TestIssuanceSetupActualScreenBrowser` (en, ko, ar), `TestFinancialDecisionScreenBrowser`, `TestFinancialDecisionRejectionScreenBrowser`, `TestFinancialFinalRequestScreenBrowser`, `TestFinancialFinalDecisionScreenBrowser`, `TestFinancialFinalRejectionScreenBrowser`, `TestDocumentEvidenceImpactRenderedBrowser`, `TestERPFinalPermissionGrantScreens`, `TestResultAuthorityActualScreenBrowser`, `TestResultEvidenceImpactRenderedBrowser`, `TestResultAuthorityImpactRenderedBrowser`, `TestResultReplacementBlockedBrowser` |
+| skipped (1) | `TestFinancialDraftLiveBrowserJourney` (needs its own runner and built console settings) |
+| failed (5) | `TestApprovalProjectionRenderedBrowser`, `TestFinancialDecisionCoreBrowser`, `TestDocumentActualScreenBrowser`, `TestResultActualScreenBrowser`, `TestResultReplacementScreenBrowser` |
+
+The O03 issuance setup journey on a real server therefore still passes in three languages after the O03 changes of this ticket.
+
+The five failures are not caused by this ticket's fixes: the same five fail in the same way with the console and the server built from b950947, the merge before the first fix. Their cause is not established (a product regression from an earlier change, a drifted script, or a requirement of the run that was not met, such as the unset `HB_DOCUMENT_SCREEN_QA_MODE`). They are tracked separately in HYB-350.

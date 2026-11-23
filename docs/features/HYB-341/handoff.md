@@ -25,21 +25,24 @@ Work resumed from main c8aebd6 on this machine and merged the following through 
 | --- | --- | --- |
 | 1. Protected-setup discovery | PR 253, 254, 255 | [discovery contract](issuance-protected-setup-discovery-contract.md); `modules/protected` `Peek` / `PeekTrail`; reads `issuance_setup.protected`, `protected_channels`, `protected_changes`; console decoders in `setup/protected.ts` |
 | 2. Evidence capture | PR 257, 258, 259, 260 | [evidence contract](issuance-setup-evidence-contract.md); attest and withdraw commands, `issuance_setup.attestations`, `issuance_setup.references`; console client in `setup/attestation.ts` |
-| 3. Public protected writes | PR 261, 262 | [protected writes contract](issuance-protected-writes-contract.md); seven commands in `financialissuanceprotectedwrites.go` consuming attestations |
+| 3. Public protected writes | PR 261, 262, 264 | [protected writes contract](issuance-protected-writes-contract.md); seven commands in `financialissuanceprotectedwrites.go` consuming attestations; console client in `setup/protected-writes.ts` |
+| 4. Payment terms | PR 265, 266, 267 | [payment terms contract](issuance-payment-terms-contract.md); read `issuance_setup.terms` and four commands in `financialissuancetermwrites.go`; console client in `setup/terms.ts` |
+| 5. Authority provisioning | PR 268, 269, 270, 271, 272 | [provisioning contract](issuance-authority-provisioning-contract.md) and [reads contract](issuance-authority-reads-contract.md); namespaces `issuance_protected_authority`, `issuance_term_authority`, `issuance_draft_authority` with six commands plus `history` and `context` each; journey test `issuanceauthorityjourney_test.go` |
 
-Separate issues, by owner instruction that anything outside the checklist gets its own ticket: HYB-343 (two server tests failing on main, fixed in PR 256, which also added pending issuance settings to M01 bulk revocation impact), HYB-342 (unkeyed digest hypothesis, open), HYB-344 (remaining M01 impact gaps, open), HYB-345 (release, discard and withdrawal operations for protected setup records, open).
+Separate issues, by owner instruction that anything outside the checklist gets its own ticket: HYB-343 (two server tests failing on main, fixed in PR 256, which also added pending issuance settings to M01 bulk revocation impact), HYB-342 (unkeyed digest hypothesis, open), HYB-344 (remaining M01 impact gaps, open), HYB-345 (release, discard and withdrawal operations for protected setup records, open), HYB-346 (labels for issuance grants on existing M03 and P02 rows, open).
 
-Not done for items 1 to 3: no O03 screen is wired to any of these reads or commands, and that composition needs scoped ui-designer and terminology review; the owner has verified no screen. The console client for the seven protected write commands and the design of item 4 were in review when this section was written and are not merged by it.
+Not done for items 1 to 5: no screen is wired to any of these reads or commands, and that composition needs scoped ui-designer and terminology review; the owner has verified no screen. The console client for the provisioning namespaces and the M03 screen plan (`issuance-authority-screen-plan.md`, not yet in the tree) were in review when this section was last updated and are not merged by it.
 
-Owner-visible residuals are recorded in the evidence and protected writes contracts and await the owner: the reading of independent attestation as each separated actor attesting their own step; retained free-text statements; a change left in an unknown state blocking its subject and field until restart; the irrevocable first protected rules proposal.
+What the journey test established: from a sample installation with no issuance grant, confirmed rules, an admitted channel, an approved term and binding and a scheduled payment-account change are reachable with every capability granted through the public provisioning commands. After the 24-hour channel age all grants have expired, and a change request stays refused until the channel's registrar and admitter are provisioned again as well as the requester, verifier and approver. The contract and its confirmed configuration are still created by package-internal helpers in that test.
+
+Owner-visible residuals are recorded in the evidence and protected writes contracts and await the owner: the reading of independent attestation as each separated actor attesting their own step; retained free-text statements; a change left in an unknown state blocking its subject and field until restart; the irrevocable first protected rules proposal. The payment terms, provisioning and reads contracts add theirs, among them: one irrevocable net-days value per configuration; whether governors may receive step capabilities; whether one person may hold both sides of a separated flow; the 24-hour maximum grant validity; expiry-only console ceilings; and unfiltered, unpruned proposal history.
 
 # Next executable scope
 
-1. Merge the console client for the protected write commands after its source review.
-2. Item 4: finish the independent design review of the payment terms contract, then implement the terms read and the four commands by the same wrapping pattern as the protected writes, and their console client.
-3. Item 5: design public provisioning for the missing M03 business rights. Every test since the transfer still creates capability grants with package-internal helpers, so no unseeded operator journey exists yet.
-4. O03 documents and payment-terms composition for items 1 to 4, led by the ui-designer role, then owner screen verification.
-5. Verify the unseeded operator journey to B09 readiness and a second applicable invoice reusing unchanged setup. Configuration replacement, release operations and durable production recovery remain explicit separate scopes.
+1. Merge the domain-aware provisioning console client after its source review, then the M03 screen plan after its design and terminology review, then implement the three M03 permission areas.
+2. O03 documents and payment-terms composition for items 1 to 4, led by the ui-designer role, then owner screen verification.
+3. Extend the journey to B09 readiness and a second applicable invoice reusing unchanged setup, including the draft capabilities through real commands. Configuration replacement, release operations and durable production recovery remain explicit separate scopes.
+4. HYB-346 labels once the capability terms of the screen plan are reviewed.
 
 # Discovery evidence and traps
 

@@ -368,9 +368,24 @@ test("grouped retained note displays the matching server receipt in every locale
   const p = page({ proposals: [plan(1, "pending", "u")] });
   for (const l of locales) {
     const h = renderToStaticMarkup(createElement(Proposals, {
-      l, page: p, api: {} as AdminClient, me: "u", selected: "", onDenied: () => {}, onReload: async () => true,
+      l, page: p, api: {} as AdminClient, me: "u", selected: "", stale: false, onDenied: () => {}, onReload: async () => true,
       onDone: () => {}, onNotice: () => {}, onSignedOut: () => {},
     }));
+    assert.equal(/<button[^>]*disabled/.test(h), false, l);
+    const kept = renderToStaticMarkup(createElement(Proposals, {
+      l, page: p, api: {} as AdminClient, me: "u", selected: "", stale: true, onDenied: () => {}, onReload: async () => true,
+      onDone: () => {}, onNotice: () => {}, onSignedOut: () => {},
+    }));
+    const buttons = kept.match(/<button[^>]*>/g) ?? [];
+    assert.ok(buttons.length > 0 && buttons.every(b => b.includes("disabled") && b.includes('aria-describedby="p01-stale"')), l + " " + buttons.join(" "));
+    const { CommandForm } = await import("./LiveProposals");
+    const form = renderToStaticMarkup(createElement(CommandForm, {
+      l, page: p, api: {} as AdminClient, me: "u", selected: "", stale: true, onDenied: () => {}, onReload: async () => true,
+      onDone: () => {}, onNotice: () => {}, onSignedOut: () => {}, onClose: () => {},
+      command: "installation.approve", target: "installation-proposal-1", values: {}, title: "t", facts: null, impact: "i", verb: "v", done: () => "", gone: "g",
+    } as Parameters<typeof CommandForm>[0]));
+    const submit = (form.match(/<button[^>]*type="submit"[^>]*>/g) ?? []);
+    assert.ok(submit.length === 1 && submit[0].includes("disabled") && submit[0].includes('aria-describedby="p01-stale"'), l + " " + submit.join(" "));
     assert.ok(h.includes("server-approve"), l);
     assert.ok(h.includes("server-withdraw") && h.includes("installation.withdraw"), l);
     assert.match(h, /<bdi[^>]*dir="ltr"[^>]*>invalid_stage<\/bdi>/, l);

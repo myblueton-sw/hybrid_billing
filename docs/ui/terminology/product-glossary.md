@@ -669,6 +669,8 @@ Labels of the protected settings rules part, from `setup/rules-copy.ts`:
 | observation `active` | In effect | 적용 중 | سارية |
 | unconfirmed values | Proposed rule values — not confirmed | 제안된 규칙 값 — 확인 전 | قيم القواعد المقترحة — غير مؤكدة |
 
+Rule steps (slice 8): "Propose protected settings rules / 보호된 설정 규칙 제안 / اقتراح قواعد الإعدادات المحمية" and "Confirm protected settings rules / 보호된 설정 규칙 확인 / تأكيد قواعد الإعدادات المحمية". Confirm (확인, تأكيد) is used for rules and issuance settings; verify (검증, تحقق) for changes and channels. Units are "Hours / 시간 / ساعات" and "Days / 일 / أيام".
+
 "Recorded state" is what the service retained and may be an unknown outcome; "Observed now" is what is held at the time of the read; neither states that issuance is possible. The recorded states reuse the issuance settings labels (proposed, confirmed, proposal outcome unknown, confirmation outcome unknown).
 
 Labels of the verification channels part, from `setup/channels-copy.ts`:

@@ -71,3 +71,4 @@ export function sessionStepStore<I extends StepIntent, R>(kind: string, session:
   }
   return store;
 }
+export function anyStepDirty(): boolean { return [...stores.values()].some(store => store.dirty()); }

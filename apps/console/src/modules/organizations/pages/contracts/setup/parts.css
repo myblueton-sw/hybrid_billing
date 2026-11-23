@@ -73,3 +73,6 @@
 .o03-steps .o03-setup-form fieldset { gap: 8px; }
 .o03-steps .o03-setup-review dl { margin-block-end: 16px; }
 .o03-steps .o03-setup-outcome .live-sub { display: block; }
+.o03-duration { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.o03-duration .o03-short { max-inline-size: 8rem; }
+.o03-steps .o03-setup-form .o03-duration label.live-check { margin: 0; }

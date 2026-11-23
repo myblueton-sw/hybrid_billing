@@ -13,8 +13,11 @@ import { sessionScopeStore, type SetupScope } from "./scope";
 import type { PaymentTerm, TermBinding } from "./terms";
 import { netDays, termText as c, type TermWord } from "./terms-copy";
 import { termOffers, type TermOffer } from "./term-flow";
-import { TermResults, TermSteps, useTermStore, type TermStore } from "./TermWrites";
+import { TermSteps, termActionOf, type TermStore } from "./TermWrites";
 import { termError } from "./terms-copy";
+import { StepResults, useStepStore } from "./StepResults";
+import { stepError } from "./step-copy";
+import { termWriteClient, type TermWriteIntent, type TermWriteReceipt } from "./terms";
 import "./documents.css";
 
 type Props = { l: Locale; session: Session; contract: string; on: string; onSignedOut: () => void };
@@ -35,8 +38,9 @@ export function PaymentTerms({ l, session, contract, on, onSignedOut }: Props) {
  useEffect(() => { void history.load(); return () => history.dispose(); }, [history]);
  useEffect(() => { scopes.reconcile(found.value, ""); }, [scopes, found.value]);
  useEffect(() => { if (found.error === "session_changed" || found.error === "unauthenticated") signOut.current(); }, [found.error]);
- const writes = useTermStore(session), [settled, setSettled] = useState(0);
- const results = writes ? <TermResults l={l} session={session} store={writes} contract={contract} onSettled={() => setSettled(n => n + 1)} /> : <p role="alert">{termError(l, "session_capacity")}</p>;
+ const writes = useStepStore<TermWriteIntent, TermWriteReceipt>("terms", session, () => termWriteClient(session)), [settled, setSettled] = useState(0);
+ const results = writes ? <StepResults l={l} id="o03-term-results" store={writes} contract={contract} onSettled={() => setSettled(n => n + 1)} explain={code => termError(l, code)} revision={async intent => (await client.terms(intent.scope)).revision}
+  describe={entry => ({ action: c(l, termActionOf[entry.intent.operation]), target: <>{c(l, entry.intent.operation.includes("bind") ? "targetBinding" : "targetTerm")}: {ltr(entry.subject)}</>, state: entry.receipt && <span className="o03-tag">{c(l, entry.receipt.state as TermWord)}</span> })} /> : <p role="alert">{stepError(l, "session_capacity")}</p>;
  if (scope) return <div className="o03-documents"><ScopeBar l={l} scope={scope} /><Terms key={scope.configuration + scope.digest} l={l} session={session} client={client} contract={contract} scope={scope} writes={writes} settled={settled} onSignedOut={onSignedOut} />{results}</div>;
  return <div className="o03-documents"><section className="o03-part" aria-labelledby="o03-part-title">
   <h3 id="o03-part-title">{c(l, "title")}</h3>

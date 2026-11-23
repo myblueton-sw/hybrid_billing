@@ -224,6 +224,17 @@ const actions: Record<string, [string, string, string]> = {
  confirm_erp_result: ["Confirm ERP result evidence", "ERP 결과 근거 확인", "تأكيد أدلة نتائج ERP"],
  revoke_erp_result: ["Revoke ERP result evidence", "ERP 결과 근거 철회", "إلغاء أدلة نتائج ERP"],
  apply_erp_result: ["Apply ERP result evidence internally", "ERP 결과 근거 내부 반영", "تطبيق أدلة نتائج ERP داخلياً"],
+ register_issuance_channel: ["Register verification channel", "검증 채널 등록", "تسجيل قناة التحقق"],
+ admit_issuance_channel: ["Accept verification channel", "검증 채널 수락", "قبول قناة التحقق"],
+ request_issuance_protected_change: ["Request protected settings change", "보호된 설정 변경 요청", "طلب تغيير الإعدادات المحمية"],
+ verify_issuance_protected_change: ["Verify protected settings change", "보호된 설정 변경 검증", "التحقق من تغيير الإعدادات المحمية"],
+ approve_issuance_protected_change: ["Approve protected settings change", "보호된 설정 변경 승인", "اعتماد تغيير الإعدادات المحمية"],
+ record_issuance_term: ["Record payment terms", "납부 조건 기록", "تسجيل شروط الدفع"],
+ approve_issuance_term: ["Approve payment terms", "납부 조건 승인", "اعتماد شروط الدفع"],
+ bind_issuance_term: ["Apply payment terms to a contract", "계약에 납부 조건 적용", "تطبيق شروط الدفع على عقد"],
+ approve_issuance_term_binding: ["Approve applying payment terms to a contract", "계약에 납부 조건 적용 승인", "اعتماد تطبيق شروط الدفع على عقد"],
+ submit_issuance_draft: ["Submit issuance draft for approval", "발행 초안 승인 요청", "إرسال مسودة الإصدار للاعتماد"],
+ approve_issuance_draft: ["Approve issuance draft", "발행 초안 승인", "اعتماد مسودة الإصدار"],
  propose_document_evidence: ["Propose document evidence", "문서 근거 제안", "اقتراح أدلة المستند"],
  confirm_document_evidence: ["Confirm document evidence", "문서 근거 확인", "تأكيد أدلة المستند"],
  revoke_document_evidence: ["Revoke document evidence", "문서 근거 철회", "إلغاء أدلة المستند"],
@@ -245,6 +256,9 @@ const actions: Record<string, [string, string, string]> = {
 };
 const kinds: Record<string, [string, string, string]> = {
  synthetic_erp_result_evidence: ["Synthetic ERP result evidence", "합성 ERP 결과 근거", "أدلة نتائج ERP اصطناعية"],
+ synthetic_issuance_protected: ["Synthetic protected issuance settings", "합성 보호된 발행 설정", "إعدادات إصدار محمية اصطناعية"],
+ synthetic_issuance_terms: ["Synthetic payment terms", "합성 납부 조건", "شروط دفع اصطناعية"],
+ synthetic_issuance_draft: ["Synthetic issuance drafts", "합성 발행 초안", "مسودات إصدار اصطناعية"],
  synthetic_document_evidence: ["Synthetic document evidence", "합성 문서 근거", "أدلة مستند اصطناعية"],
   erp_final_approval: ["ERP final-amount approval", "ERP 최종 금액 승인", "اعتماد المبلغ النهائي في ERP"],
   charge_approval: ["Charge approval", "청구 승인", "اعتماد الرسوم"],
@@ -256,6 +270,9 @@ const kinds: Record<string, [string, string, string]> = {
 };
 const fields: Record<string, [string, string, string]> = {
  erp_result_evidence: ["ERP result evidence", "ERP 결과 근거", "أدلة نتائج ERP"],
+ issuance_protected: ["Protected issuance settings evidence", "보호된 발행 설정 근거", "أدلة إعدادات الإصدار المحمية"],
+ issuance_terms: ["Payment terms evidence", "납부 조건 근거", "أدلة شروط الدفع"],
+ issuance_draft: ["Issuance draft evidence", "발행 초안 근거", "أدلة مسودة الإصدار"],
  document_evidence: ["Document evidence", "문서 근거", "أدلة المستند"],
   approval_evidence: ["Approval request and decision evidence", "승인 요청·결정 근거", "أدلة طلبات الاعتماد والقرارات"],
  pricing_policy_evidence: ["Pricing policy evidence", "가격 정책 근거", "أدلة سياسة التسعير"],

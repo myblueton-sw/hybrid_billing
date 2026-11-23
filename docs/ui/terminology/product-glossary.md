@@ -643,6 +643,30 @@ HYB-341. Labels of the three issuance permission areas on M03 and of the capabil
 - Open: 납부 조건 is used here, in the M01 labels, the drafts approval inbox and the planning fields, while the contracts, review-and-issue and credit case screens use 지급 조건; the contracts screen words "verification" as 확인 where these labels use 검증. Both need one terminology decision.
 - Review boundary: role-based technical-writing review only. Native-language and owner acceptance of the Korean and Arabic labels are pending.
 
+### Issuance grants in the M03 grant rows and P02 ceiling rows
+
+Once an issuance permission is granted it appears in the existing grant and ceiling rows by its action, resource kind and evidence field. The action labels repeat the capability names above. An inspect permission is stored as the `view_cost` action limited to one evidence field. Grant, ceiling and request rows on M03 show it as "View cost · <evidence field>"; P02 shows "View cost" with the resource kind. "View cost" is not an accurate name for reading settings, terms or draft evidence; the label predates these permissions and is left for a terminology decision. No request phrase is defined for these grants, so the generic access request form does not offer them (HYB-346).
+
+| Identifier | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| register_issuance_channel | Register verification channel | 검증 채널 등록 | تسجيل قناة التحقق |
+| admit_issuance_channel | Accept verification channel | 검증 채널 수락 | قبول قناة التحقق |
+| request_issuance_protected_change | Request protected settings change | 보호된 설정 변경 요청 | طلب تغيير الإعدادات المحمية |
+| verify_issuance_protected_change | Verify protected settings change | 보호된 설정 변경 검증 | التحقق من تغيير الإعدادات المحمية |
+| approve_issuance_protected_change | Approve protected settings change | 보호된 설정 변경 승인 | اعتماد تغيير الإعدادات المحمية |
+| record_issuance_term | Record payment terms | 납부 조건 기록 | تسجيل شروط الدفع |
+| approve_issuance_term | Approve payment terms | 납부 조건 승인 | اعتماد شروط الدفع |
+| bind_issuance_term | Apply payment terms to a contract | 계약에 납부 조건 적용 | تطبيق شروط الدفع على عقد |
+| approve_issuance_term_binding | Approve applying payment terms to a contract | 계약에 납부 조건 적용 승인 | اعتماد تطبيق شروط الدفع على عقد |
+| submit_issuance_draft | Submit issuance draft for approval | 발행 초안 승인 요청 | إرسال مسودة الإصدار للاعتماد |
+| approve_issuance_draft | Approve issuance draft | 발행 초안 승인 | اعتماد مسودة الإصدار |
+| synthetic_issuance_protected | Synthetic protected issuance settings | 합성 보호된 발행 설정 | إعدادات إصدار محمية اصطناعية |
+| synthetic_issuance_terms | Synthetic payment terms | 합성 납부 조건 | شروط دفع اصطناعية |
+| synthetic_issuance_draft | Synthetic issuance drafts | 합성 발행 초안 | مسودات إصدار اصطناعية |
+| issuance_protected | Protected issuance settings evidence | 보호된 발행 설정 근거 | أدلة إعدادات الإصدار المحمية |
+| issuance_terms | Payment terms evidence | 납부 조건 근거 | أدلة شروط الدفع |
+| issuance_draft | Issuance draft evidence | 발행 초안 근거 | أدلة مسودة الإصدار |
+
 ## Issuance setup sections on O03
 
 HYB-341. Labels of the second-level navigation of the O03 documents view and of the selection of confirmed issuance settings that scopes protected settings and payment terms. Source: `apps/console/src/modules/organizations/pages/contracts/setup/part-copy.ts`. Composition and the remaining labels of these sections are in [the O03 screens plan](../../features/HYB-341/issuance-setup-screens-plan.md).

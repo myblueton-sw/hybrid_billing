@@ -635,3 +635,22 @@ HYB-341. Labels of the three issuance permission areas on M03 and of the capabil
 - A verification channel is distinct from the webhook subscriptions and notification channels named elsewhere in this glossary.
 - Open: 납부 조건 is used here, in the M01 labels, the drafts approval inbox and the planning fields, while the contracts, review-and-issue and credit case screens use 지급 조건; the contracts screen words "verification" as 확인 where these labels use 검증. Both need one terminology decision.
 - Review boundary: role-based technical-writing review only. Native-language and owner acceptance of the Korean and Arabic labels are pending.
+
+## Issuance setup sections on O03
+
+HYB-341. Labels of the second-level navigation of the O03 documents view and of the selection of confirmed issuance settings that scopes protected settings and payment terms. Source: `apps/console/src/modules/organizations/pages/contracts/setup/part-copy.ts`. Composition and the remaining labels of these sections are in [the O03 screens plan](../../features/HYB-341/issuance-setup-screens-plan.md).
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| navigation label | Issuance setup sections | 발행 설정 하위 메뉴 | أقسام إعداد الإصدار |
+| part `settings` | Issuance settings | 발행 설정 | إعدادات الإصدار |
+| part `rules` | Protected settings rules | 보호된 설정 규칙 | قواعد الإعدادات المحمية |
+| part `channels` | Verification channels | 검증 채널 | قنوات التحقق |
+| part `changes` | Protected settings changes | 보호된 설정 변경 | تغييرات الإعدادات المحمية |
+| part `statements` | Statements | 진술 | الإفادات |
+| scope action | Use these settings | 이 설정 사용 | استخدام هذه الإعدادات |
+| chosen row | Selected | 선택됨 | محددة |
+| scope bar | Selected issuance settings | 선택한 발행 설정 | إعدادات الإصدار المحددة |
+| setup date | Setup date | 설정 기준일 | تاريخ الإعداد |
+
+A statement (진술, إفادة) is its author's accountable claim and is never labelled evidence, proof or verification. "Selected" states which confirmed settings the user chose as scope; it does not state that issuance is possible. Role-based AI review only; native-language and owner acceptance remain unverified.

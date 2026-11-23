@@ -1,0 +1,18 @@
+.o03-parts ul { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; border-block-end: 1px solid var(--border-row, #d5d7da); }
+.o03-parts a { display: inline-grid; align-items: center; min-block-size: 44px; padding-inline: 14px; font-size: 16px; line-height: 1.4; white-space: nowrap; }
+.o03-parts a > span, .o03-parts a::after { grid-area: 1 / 1; }
+.o03-parts a::after { content: attr(data-label); font-weight: 600; visibility: hidden; block-size: 0; overflow: hidden; }
+.o03-parts a[aria-current] { background: #f0f1f2; color: var(--text-primary, #202124); font-weight: 600; text-decoration: none; }
+.o03-parts a:focus-visible, .o03-part a:focus-visible, .o03-docs-use:focus-visible { outline: 2px solid var(--focus-ring, #202a35); outline-offset: 2px; }
+.o03-scope-bar { display: grid; gap: 16px; padding-block-end: 24px; border-block-end: 1px solid var(--border-row, #d5d7da); }
+.o03-scope-bar h3, .o03-part h3 { margin: 0; }
+.o03-scope-bar dl { margin-block-start: 0; }
+.o03-docs-selected { font-weight: 600; }
+.o03-docs-selected:focus-visible { outline: 2px solid var(--focus-ring, #202a35); outline-offset: 2px; }
+.o03-part { display: grid; gap: 16px; }
+.o03-part a { display: inline-flex; align-items: center; min-block-size: 44px; }
+@container (max-width: 39.999rem) {
+ .o03-parts ul { flex-direction: column; gap: 0; }
+ .o03-parts a { display: grid; inline-size: 100%; box-sizing: border-box; white-space: normal; padding: 10px 12px; }
+ .o03-parts li + li a { border-block-start: 1px solid var(--border-row, #d5d7da); }
+}

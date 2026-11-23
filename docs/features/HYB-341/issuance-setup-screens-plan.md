@@ -63,7 +63,7 @@ Reasons: the work spans days and at least five people, each returning for one st
 
 The proposal carried the configuration in the URL. No read returns one configuration by identifier, and the digest must come from the history read, so the selected scope is kept in session memory per contract instead, like the unsent input of the documents view.
 
-- A history row in state `confirmed` that was recorded with setup context gets the action "Use this configuration", with the configuration named in hidden text; the same selection scopes the payment terms view.
+- A history row in state `confirmed` that was recorded with setup context gets the action "Use these settings", with the configuration named in hidden text; the same selection scopes the payment terms view. The merged O03 copy calls these records issuance settings, so the action does too.
 - A row recorded without setup context is not offered. The discovery contract makes it readable, but no contract decides whether the writes support it. This is listed as an open question.
 - When the first history page is the whole history and holds exactly one such row, it is selected automatically.
 - A scope bar above the navigation of parts 2 to 5, and at the top of the payment terms view, shows the setup date, the recorded contract revision and billing profile version, the state, and the identifier and digest under "Details".
@@ -235,7 +235,8 @@ Proposals for the technical-writing review; not final copy. The register, accept
 | Statement withdrawn | Withdrawn | 철회됨 | مسحوبة |
 | Withdraw | Withdraw statement | 진술 철회 | سحب الإفادة |
 | Decide | Decide change | 변경 결정 | البتّ في التغيير |
-| Scope action | Use this configuration | 이 설정 사용 | استخدام هذا الإعداد |
+| Scope action | Use these settings | 이 설정 사용 | استخدام هذه الإعدادات |
+| Scope bar | Selected issuance settings | 선택한 발행 설정 | إعدادات الإصدار المحددة |
 | Recovery | Recover recorded attempt | 기록된 시도 복구 | استعادة المحاولة المسجلة |
 | Sample reference | Sample recipient A | 샘플 수신자 A | مستلم تجريبي A |
 
@@ -267,9 +268,19 @@ For the owner or a data contract; current behavior is as stated above until deci
 
 Not verified at this stage: computed borders of the reused feedback, tag and note classes on these parts; the content width at 1024 px; every label in context. These are checked by render in each slice.
 
+# Slice status
+
+| Slice | Implementation | Checks and review |
+| --- | --- | --- |
+| 1 | Implemented: `setup/scope.ts`, `Parts.tsx`, `parts.css`, `part-copy.ts`, an Action column in the settings history, the `part` parameter in `LiveDetail.tsx`. Items `nav:parts`, `scope:select`, `scope:bar`, `state:no-scope` | Five scope tests; render check `tools/o03-setup-parts-qa.mjs`, 54 cases in English, Korean and Arabic at 1440, 1024 and 390 px with intercepted synthetic reads; ui-designer render and copy review recorded below |
+| 2 to 10 | Not implemented; parts 2 to 5 say that they are not connected in this build | None |
+
+Slice 1 differs from the plan in three ways, each accepted by the render review: the scope action and bar say "issuance settings"; the navigation stacks by a container query at 40 rem of the documents panel, because the panel sits beside the contract list, where the plan gave 640 px; and parts 2 to 5 use the existing not-connected wording until their slices land. The navigation shows no counts yet.
+
 # Review record
 
 - Composition: ui-designer role, 2026-11-24, from source and contracts in the plan worktree at main `7894a33`; a proposal, with ten open questions and four unverified points. They are carried above, merged where they overlap, except its question about sample labels, which the copy proposals answer, and its unverified point about a warning icon, which no part of this plan uses.
 - Root changes to the proposal: scope held in session memory, not in the URL; configurations without setup context not offered; term writes ahead of protected writes; the read-only slices split so that each adds one table; UTC stated for the effective time; the denied sentence names the Inspect permission and M03.
 - Independent design and terminology review, 2026-11-24, role-based AI reviewer separate from the writer, by reading: FAIL with four blocking findings. Corrected here: recovery is a new request with a new key, offered only to the actor of the unknown step and only while the session holds the original input, under the merged label; the statement is not called unused and cannot be withdrawn after an action with an unknown outcome, and an unknown statement request settles before the action; reuse of a statement is limited to this session; the unknown-state and sample labels follow merged copy. Suggestions applied: the further separation refusals, hold and step-up, paging after reload, the refusal causes and the effective-time hint, the receipt of a statement, the wording "may need", observed instead of module wording, the scope action label, the neutral decision action, people shown by identifier, the split of slices 3 and 4, and the label change in slice 6. Not checked by the reviewer: server code, the external pages, renders, native-language acceptance.
 - Corrective re-review of the four findings, same reviewer, 2026-11-24, by reading: PASS, all four resolved, no new blocking contradiction. Its residual notes are applied above, except that the remaining "module" wording in user-facing sentences of the parts is left to the terminology review of each slice.
+- Slice 1 render and copy review, ui-designer role, 2026-11-24, from 17 of 72 renders, the measurements and source: FAIL with three findings (a stacked label over the disclosure line of the history table at 1440 px, a scope note that named the wrong reload and omitted contract and date, focus lost after both new actions). Corrected; corrective re-review from nine regenerated renders: PASS. Not seen by the reviewer: the rendered "Selected" state, the read-error path of parts 2 to 5, the channels, changes and statements renders. Whether the overlap existed before this slice was not determined. Left for a later slice: announcing a selection made by mouse or automatically. Role-based AI review; no native-language or owner acceptance.

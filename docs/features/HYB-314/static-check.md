@@ -346,3 +346,22 @@ The seven existing O03 rendered checks were run against a console built from mai
 Two scripts had fallen behind the screen and are brought up to date in the same change: `o03-setup-changes-qa.mjs` did not know the channel read and `o03-setup-channels-qa.mjs` did not know the reference read, both added to the documents view by later slices. Each now answers that read as denied, as it does for the other reads it does not stage, instead of counting it as unexpected. Their assertions are unchanged.
 
 What this run shows: the O03 fixes of this ticket did not break what these scripts assert. What it does not show: none of the scripts asserts the newly disabled contract actions on a stale detail, and the other screens changed under this ticket (M01, M02, M03, M04, M05, O01, O02, P01, P03, P04, P05) were not run.
+
+## Rendered regression run on M05, M03 and the rest of O03 (2026-11-24)
+
+Run against a console built from main 5b5b90a (headless Chromium, synthetic reads, no server, no owner acceptance). Every script ended with exit code 0 and no page error.
+
+| Script | Screen | Result |
+| --- | --- | --- |
+| `apps/console/tools/my-security-scope-qa.mjs` | M05 | pass |
+| `apps/console/tools/my-security-history-qa.mjs` | M05 | pass, 61 checks |
+| `apps/console/tools/my-security-selection-qa.mjs` | M05 | pass, 28 checks |
+| `tools/issuance-authority-area-qa.mjs` | M03 | 84 cases; 13 entries counted as unexpected, all of them the page's own access read, which this script does not stage |
+| `tools/o03-setup-parts-qa.mjs` | O03 | 54 cases |
+| `tools/o03-setup-rules-qa.mjs` | O03 | 99 cases |
+| `tools/o03-setup-rules-writes-qa.mjs` | O03 | 18 cases |
+| `tools/o03-setup-statements-qa.mjs` | O03 | 72 cases |
+
+`o03-setup-parts-qa.mjs` and `o03-setup-rules-writes-qa.mjs` counted reads added by later slices as unexpected; each now answers them as denied, as in the earlier update. Their assertions are unchanged. Whether the 13 entries of the M03 script were already there before this ticket was not checked.
+
+Not run: `apps/console/tools/service-accounts-qa.mjs` (M04) needs a running server with a signed-in administrator. M01, M02, O01, O02, P01, P03, P04 and P05 have no rendered run in this record. None of these scripts asserts the states added under this ticket (the M05 unconfirmed operation, the M05 lifetime from the server, the M03 effect form without a kind of data).

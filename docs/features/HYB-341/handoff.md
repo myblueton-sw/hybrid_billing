@@ -67,14 +67,14 @@ Owner-visible residuals are recorded in the evidence and protected writes contra
 
 # Decisions waiting for the owner
 
-Four documents were prepared on 2026-11-24. Each records facts read from code, a test where one was added, options, root's reading, an independent review and what was not checked. None of them decides anything.
+Three documents were prepared on 2026-11-24 and one on 2026-11-23 (HYB-342). Each records facts read from code, a test where one was added, options, root's reading, an independent review and what was not checked. None of them decides anything.
 
 | Question | Document | What it found |
 | --- | --- | --- |
 | How a step holder who is not an installation administrator reaches the O03 setup views | [HYB-348 options](../HYB-348/step-holder-screen-access-options.md) | The service already allows every setup read and step to such a person; only the console's path through the contract list stops them. A change needs five distinct people and the sample installation has three who can open the screen |
 | Whether later steps and later invoices keep rechecking the current permission of the people who performed earlier steps | [HYB-349 options](../HYB-349/lapsed-grant-options.md) | Grants last at most 24 hours and a channel must age at least 24 hours, so grants must always be made again; every draft review rechecks everyone involved in setup; the planning text does not require this; both numbers are code literals |
 | How a setup record that can no longer progress is released | [HYB-345 options](../HYB-345/release-options.md) | The module can discard, retire and withdraw but the service uses none; rules can be neither discarded nor revised, and the departure of either of their administrators stops every protected step |
-| Whether returned digests may reveal withheld values | [HYB-342 assessment](../HYB-342/digest-oracle-assessment.md) | Unkeyed digests cover withheld values; low consequence while references are synthetic samples; to be closed before real references exist |
+| Whether returned digests may reveal withheld values | [HYB-342 assessment](../HYB-342/digest-exposure-assessment.md) | Unkeyed digests cover withheld values; low consequence while references are synthetic samples; to be closed before real references exist |
 
 The first three are one question seen from three sides: what happens when the people involved in setup change, lapse or leave. They are better decided together, in this order: HYB-349 first, because it fixes whose standing matters at later steps; then HYB-345, whose options for an absent person depend on that answer; then HYB-348, which is independent of the other two in its first option and can also be taken first if the owner wants the screens usable by separated people soonest. HYB-342 is independent of all three.
 

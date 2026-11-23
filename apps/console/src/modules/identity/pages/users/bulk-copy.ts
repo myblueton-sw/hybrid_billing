@@ -98,6 +98,7 @@ export const b = {
       document_authority_proposals: t(l, "Document evidence and ERP preparation permission proposals", "문서 근거·ERP 준비 권한 제안", "مقترحات صلاحيات أدلة المستند وإعداد ERP"),
       document_evidence_proposals: t(l, "Document evidence proposals", "문서 근거 제안", "مقترحات أدلة المستند"),
       issuance_setup_proposals: t(l, "Issuance settings proposals", "발행 설정 제안", "مقترحات إعدادات الإصدار"),
+      issuance_draft_submissions: t(l, "Issuance drafts awaiting approval", "승인 대기 중인 발행 초안", "مسودات الإصدار بانتظار الموافقة"),
       issuance_protected_authority_proposals: t(l, "Protected issuance settings permission proposals", "보호된 발행 설정 권한 제안", "مقترحات صلاحيات إعدادات الإصدار المحمية"),
       issuance_term_authority_proposals: t(l, "Payment terms permission proposals", "납부 조건 권한 제안", "مقترحات صلاحيات شروط الدفع"),
       issuance_draft_authority_proposals: t(l, "Issuance draft permission proposals", "발행 초안 권한 제안", "مقترحات صلاحيات مسودات الإصدار"),

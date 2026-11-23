@@ -387,3 +387,12 @@ The earlier record left open whether the writes of the setup sections inside a c
 The detail passes those sections only the contract identifier, the session and the setup day (`LiveDetail.tsx:58`, `:61`). They do not read the held detail. Each section does its own reads, shows its own failure, and sends its writes against revisions it read itself (the setup context and the protected summary; `setup/Documents.tsx`). A failed reload of the contract detail therefore does not make what these sections show or send stale. Only the detail's own header facts and its contract actions depend on the held detail, and the actions are disabled since the earlier fix.
 
 Nothing was executed for this section and it has no independent review.
+
+## M01 finding A7, the two remaining parts (2026-11-24)
+
+Read at main f5ea521; nothing executed; no independent review of this section.
+
+- An absent match count read as 0 (`match-model.ts`, `fixedOfFields`): the server always returns `matched` with the fixed list (`bulkstage.go:118`), so the default applies only to a malformed response. Not a present defect.
+- A failed read of the pending fixed list when the screen opens (`users/Live.tsx`, the `bulkClient(api).list` effect): the failure is silent, and its effect is that an existing fixed list of the caller is not shown. Nothing unsafe follows from it. If the person then tries to fix a new list, the server refuses because a draft is already open (`modules/bulkrevoke/registry.go`, `ErrOpenDraft`), and the screen says so and points to Revocation jobs ("The list was not fixed. … you may already have an open list. Check Revocation jobs and the filters."). The existing list stays reachable on Revocation jobs. A visible note at the moment of the failed read would be an improvement, not the correction of a wrong statement; left for the owner's screen review.
+
+With these, every part of A7 is either corrected (excluded people, discard after a stage error) or settled as not a present defect.

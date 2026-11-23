@@ -141,3 +141,7 @@ Owner: screen review of the three areas and the changed navigation as one declar
 - Navigation grouping is revisited only if the areas exceed about seven.
 - The frontend-design skill was not supplied to the design review, and no render existed when it ran.
 - No implementation, render or review result beyond the source-based design review is claimed by this draft.
+
+# History row captions (HYB-347 item 1)
+
+The proposal history row, shared by the ERP result area and the three issuance areas, names each fact: a bold line "Permission proposal" with the recorded state, then "Permission type", "Capability" and "Recipient" with the captions of the detail pane, then the proposal identifier. It replaces a row whose capability and state could be read together as a settings change awaiting approval. Checked on 2026-11-24 with the render checks `tools/issuance-authority-area-qa.mjs` and `tools/result-authority-read-qa.mjs` (both pass; English, Korean and Arabic at the widths those checks use). Render and copy review, ui-designer role (AI, from eight renders and source, not a native speaker): PASS as a candidate, no blocking finding. Left for the owner and the terminology decision: about four rows fit a desktop screen; "Recipient" on a console ceiling row names a client, which reads oddly in Arabic and would need to change in the row and the detail pane together; the identifier line has no caption. Not checked: keyboard order, screen-reader name of the row, long values, many rows. The owner has not reviewed the screen.

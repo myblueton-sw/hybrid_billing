@@ -7,7 +7,7 @@
 .authority-list li,.authority-attempts li{border-block-end:1px solid #d5d7da;padding-block:1rem}
 .authority-list li button{display:block;text-align:start;width:100%;background:transparent;border:0;padding:.5rem;white-space:normal}
 .authority-list li button[aria-pressed=true]{background:#f0f1f2}
-.authority-list li span,.authority-list li small{display:block;margin-block-start:.5rem}
+.authority-list li span,.authority-list li small{display:block;margin-block-start:.25rem}.authority-list li small{margin-block-start:.5rem}
 .result-authority bdi,.result-authority dd{overflow-wrap:anywhere}
 .authority-facts{display:grid;grid-template-columns:minmax(100px,1fr) minmax(0,2fr);gap:.8rem 1rem}
 .authority-facts dt{font-weight:600}.authority-facts dd{margin:0}

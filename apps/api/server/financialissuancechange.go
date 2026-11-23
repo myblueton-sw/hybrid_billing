@@ -12,6 +12,7 @@ import (
 )
 
 type financialChangeSpec struct {
+	Attestation                                                                   string                           `json:",omitempty"`
 	Configuration                                                                 *financialConfigurationReference `json:"configuration,omitempty"`
 	ID, Profile, ProfileDigest, Field, Channel, ChannelDigest, Provenance, Reason string
 	After                                                                         protected.Ref
@@ -19,7 +20,10 @@ type financialChangeSpec struct {
 	Effective                                                                     time.Time
 }
 
-type financialChangeVerification struct{ Actor, Evidence, Outcome string }
+type financialChangeVerification struct {
+	Attestation              string `json:",omitempty"`
+	Actor, Evidence, Outcome string
+}
 type financialChangeDecision struct {
 	Actor    string
 	Approval protected.Approval
@@ -77,7 +81,7 @@ func (p financialChangeRecord) change() protected.Change {
 func issuanceChangeScope(subject, field string) string { return subject + "/" + field }
 func validChangeSpec(s financialChangeSpec) bool {
 	i := s.Instruction
-	if !validRequestID(s.ID) || !validSetupReference(s.Profile, s.ProfileDigest, s.Configuration) || !validRequestID(s.Channel) || !validPlanHash(s.ChannelDigest) || !validRequestID(s.After.ID) || !validPlanHash(s.After.Fingerprint) || !documentReason(s.Reason) || s.Effective.IsZero() || !validRequestID(i.Evidence) {
+	if s.Attestation != "" && !validPlanHash(s.Attestation) || !validRequestID(s.ID) || !validSetupReference(s.Profile, s.ProfileDigest, s.Configuration) || !validRequestID(s.Channel) || !validPlanHash(s.ChannelDigest) || !validRequestID(s.After.ID) || !validPlanHash(s.After.Fingerprint) || !documentReason(s.Reason) || s.Effective.IsZero() || !validRequestID(i.Evidence) {
 		return false
 	}
 	if s.Provenance != protected.ProvenanceStaff && s.Provenance != protected.ProvenanceDocument && s.Provenance != protected.ProvenancePortal {
@@ -245,6 +249,16 @@ func (a *financialIssuance) changeStanding(p financialChangeRecord) (protected.V
 	}
 	if err := a.protectedActor(p.Workspace, p.Requester, protectedauthority.RequestChange); err != nil {
 		return protected.View{}, err
+	}
+	if p.Spec.Attestation != "" {
+		if err := a.heldAttestation(p.Workspace, p.Spec.Instruction.Evidence, p.Spec.Attestation, financialAttestationUse{Purpose: "change_instruction", Target: p.Spec.ID, TargetDigest: p.Digest}); err != nil {
+			return protected.View{}, err
+		}
+	}
+	if p.Verification != nil && p.Verification.Attestation != "" {
+		if err := a.heldAttestation(p.Workspace, p.Verification.Evidence, p.Verification.Attestation, financialAttestationUse{Purpose: "change_verification", Target: p.Spec.ID, TargetDigest: p.Digest}); err != nil {
+			return protected.View{}, err
+		}
 	}
 	if p.Verification != nil {
 		if err := a.protectedActor(p.Workspace, p.Verification.Actor, protectedauthority.VerifyChange); err != nil {

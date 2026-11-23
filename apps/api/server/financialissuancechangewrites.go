@@ -126,12 +126,21 @@ func (a *financialIssuance) requestProtectedChange(workspace, actor string, spec
 	if err != nil {
 		return financialChangeRecord{}, err
 	}
+	use := financialAttestationUse{Purpose: "change_instruction", Target: spec.ID, TargetDigest: p.Digest}
+	if spec.Attestation != "" {
+		if err := a.attestationFor(workspace, spec.Instruction.Evidence, spec.Attestation, use.Purpose, spec.ID, "", actor, use); err != nil {
+			return financialChangeRecord{}, err
+		}
+	}
 	if a.server.faulty("issuance-change-before-request") {
 		return financialChangeRecord{}, commands.Fail(commands.DependencyUnavailable)
 	}
 	p.Phase = "request_unknown"
 	a.changes[spec.ID] = copyChange(p)
 	a.changeOrders[key] = append(a.changeOrders[key], spec.ID)
+	if spec.Attestation != "" {
+		a.consumeAttestation(spec.Instruction.Evidence, use)
+	}
 	return a.writeProtectedRequest(p, rules)
 }
 func (a *financialIssuance) writeProtectedRequest(p financialChangeRecord, rules financialProtectedRules) (financialChangeRecord, error) {
@@ -156,6 +165,10 @@ func (a *financialIssuance) writeProtectedRequest(p financialChangeRecord, rules
 }
 
 func (a *financialIssuance) verifyProtectedChange(workspace, id, digest, actor, evidence, outcome string) (financialChangeRecord, error) {
+	return a.verifyProtectedChangeAttested(workspace, id, digest, actor, evidence, outcome, "")
+}
+
+func (a *financialIssuance) verifyProtectedChangeAttested(workspace, id, digest, actor, evidence, outcome, attestation string) (financialChangeRecord, error) {
 	if err := a.protectedCaller(workspace, actor, protectedauthority.VerifyChange); err != nil {
 		return financialChangeRecord{}, err
 	}
@@ -166,9 +179,15 @@ func (a *financialIssuance) verifyProtectedChange(workspace, id, digest, actor, 
 	if !validRequestID(evidence) || (outcome != protected.OutcomeConfirmed && outcome != protected.OutcomeDenied) {
 		return financialChangeRecord{}, commands.Fail(commands.InvalidRequest)
 	}
-	intent := financialChangeVerification{Actor: actor, Evidence: evidence, Outcome: outcome}
+	intent := financialChangeVerification{Actor: actor, Evidence: evidence, Outcome: outcome, Attestation: attestation}
 	if p.Verification != nil && *p.Verification != intent {
 		return financialChangeRecord{}, commands.Fail(commands.PermissionDenied)
+	}
+	use := financialAttestationUse{Purpose: "change_verification", Target: id, TargetDigest: p.Digest}
+	if attestation != "" {
+		if err := a.attestationFor(workspace, evidence, attestation, use.Purpose, id, p.Digest, actor, use); err != nil {
+			return financialChangeRecord{}, err
+		}
 	}
 	v, err := a.currentChange(p, actor, protectedauthority.VerifyChange)
 	if err != nil {
@@ -195,6 +214,9 @@ func (a *financialIssuance) verifyProtectedChange(workspace, id, digest, actor, 
 	p.Verification = &intent
 	p.Phase = "verification_unknown"
 	a.changes[id] = copyChange(p)
+	if attestation != "" {
+		a.consumeAttestation(evidence, use)
+	}
 	verification := protected.Verification{Channel: p.Spec.Channel, Evidence: evidence, Outcome: outcome, Digest: v.Digest}
 	actual, err := a.fields.Verify(workspace, id, verification, protected.Actor{ID: actor, Kind: protected.KindHuman})
 	if err != nil {

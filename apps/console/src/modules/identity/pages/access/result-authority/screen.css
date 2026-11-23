@@ -14,7 +14,7 @@
 .authority-actions{display:flex;flex-wrap:wrap;gap:.75rem;margin-block:1rem}
 .result-authority button{min-height:44px;padding:.65rem 1rem;font:inherit;cursor:pointer}
 .result-authority button:disabled{cursor:default;opacity:.55}
-.result-authority :is(button,input,a):focus-visible{outline:3px solid currentColor;outline-offset:3px}
+.result-authority :is(button,input,a):focus-visible{outline:3px solid var(--focus-ring,#202a35);outline-offset:3px}
 .result-authority input{display:block;width:100%;box-sizing:border-box;min-height:44px;font:inherit;margin-block:.5rem;padding:.6rem}
 .result-authority h4{margin-block:1.5rem .75rem}.result-authority details{margin-block:.75rem}.authority-back{display:none}
 @media(max-width:1023px){.authority-layout{display:block}.authority-detail{padding:0;border:0}.authority-back{display:inline-block;margin-block-end:1rem}.result-authority[data-authority-pane=list] .authority-detail{display:none}.result-authority[data-authority-pane=detail] .authority-list{display:none}.authority-facts{grid-template-columns:1fr;gap:.35rem}.authority-facts dd{margin-block-end:.8rem}}

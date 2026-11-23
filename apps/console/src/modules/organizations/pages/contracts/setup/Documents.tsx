@@ -15,9 +15,12 @@ import { Changes } from "./Changes";
 import { Statements } from "./Statements";
 import { StepResults, useStepStore } from "./StepResults";
 import { protectedWriteClient, type ProtectedWriteIntent, type ProtectedWriteReceipt } from "./protected-writes";
-import { rulesError, rulesText } from "./rules-copy";
-import { ruleActionOf } from "./RuleWrites";
+import { attestationClient, type AttestationReceipt } from "./attestation";
+import type { StatementStep } from "./channel-flow";
+import { describeProtected, describeStatement, explainProtected, explainStatement } from "./protected-results";
+import { statementText } from "./statements-copy";
 import { stepError } from "./step-copy";
+import type { StepEntry } from "./step-store";
 import { partText } from "./part-copy";
 import { scopeEligible, sessionScopeStore, type SetupPart, type SetupScope } from "./scope";
 import "./documents.css";
@@ -39,13 +42,18 @@ export function Documents({ l, session, contract, on, parties, part, onPart, onS
  const person = (id: string) => <bdi>{nameOf(id, parties)}</bdi>;
  const writes = useStepStore<ProtectedWriteIntent, ProtectedWriteReceipt>("protected", session, () => protectedWriteClient(session)), [settled, setSettled] = useState(0);
  const client = useMemo(() => setupReadClient(session), [session.user, session.workspace, session.csrf]);
- const results = writes ? <StepResults l={l} id="o03-protected-results" store={writes} contract={contract} onSettled={() => setSettled(n => n + 1)} explain={code => rulesError(l, code)} revision={async intent => (await client.protectedSummary(intent.scope)).revision}
-  describe={entry => ({ action: ruleActionOf[entry.intent.operation] ? rulesText(l, ruleActionOf[entry.intent.operation]) : entry.intent.operation, target: <>{rulesText(l, "targetRules")}: {ltr(entry.subject)}</>, state: entry.receipt && ruleActionOf[entry.intent.operation] && <span className="o03-tag">{text(l, entry.receipt.state as SetupWord)}</span> })} /> : <p role="alert">{stepError(l, "session_capacity")}</p>;
+ const claims = useStepStore<StatementStep, AttestationReceipt>("statements", session, () => attestationClient(session));
+ const sentSteps = useSyncExternalStore(writes?.subscribe ?? noStore, () => writes?.snapshot().entries ?? noEntries);
+ const current = async (intent: { scope: Parameters<typeof client.protectedSummary>[0] }) => (await client.protectedSummary(intent.scope)).revision, bump = () => setSettled(n => n + 1);
+ const results = writes && claims ? <>
+  <StepResults l={l} id="o03-protected-results" store={writes} contract={contract} onSettled={bump} explain={(code, entry) => explainProtected(l, code, entry)} revision={current} describe={entry => describeProtected(l, entry)} />
+  <StepResults l={l} id="o03-statement-results" title={statementText(l, "statementResults")} store={claims} contract={contract} onSettled={bump} explain={code => explainStatement(l, code)} revision={current} intro={!sentSteps.some(e => e.intent.scope.contract === contract || e.phase === "pending" || e.phase === "unknown")} describe={entry => describeStatement(l, entry, sentSteps)} />
+ </> : <p role="alert">{stepError(l, "session_capacity")}</p>;
  const toSettings = useRef(false);
  useEffect(() => { if (part === "settings" && toSettings.current) { toSettings.current = false; historyHeading.current?.focus(); } }, [part]);
  if (part !== "settings") return <div className="o03-documents">
   <PartNav l={l} part={part} onPart={onPart} />
-  <PartFrame l={l} part={part} onPart={next => { toSettings.current = next === "settings"; onPart(next); }} scope={scope} loading={state.history.loading || !page && !state.history.error} feedback={!scope && state.history.error ? <ReadFeedback l={l} state={state.history} /> : null}>{chosen => part === "rules" ? <Rules key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} writes={writes} settled={settled} onSignedOut={onSignedOut} /> : part === "channels" ? <Channels key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} /> : part === "changes" ? <Changes key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} /> : <Statements key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} />}</PartFrame>
+  <PartFrame l={l} part={part} onPart={next => { toSettings.current = next === "settings"; onPart(next); }} scope={scope} loading={state.history.loading || !page && !state.history.error} feedback={!scope && state.history.error ? <ReadFeedback l={l} state={state.history} /> : null}>{chosen => part === "rules" ? <Rules key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} writes={writes} settled={settled} onSignedOut={onSignedOut} /> : part === "channels" ? <Channels key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} writes={writes} statements={claims} settled={settled} onSignedOut={onSignedOut} /> : part === "changes" ? <Changes key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} /> : <Statements key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} writes={writes} statements={claims} settled={settled} onSignedOut={onSignedOut} />}</PartFrame>
   {results}
  </div>;
  return <div className="o03-documents">
@@ -79,6 +87,8 @@ export function Documents({ l, session, contract, on, parties, part, onPart, onS
   {results}
  </div>;
 }
+const noStore = () => () => undefined;
+const noEntries: readonly StepEntry<ProtectedWriteIntent, ProtectedWriteReceipt>[] = [];
 function Fact({ label, children }: { label: string; children: ReactNode }) { return <div><dt>{label}</dt><dd>{children}</dd></div>; }
 function ReadFeedback({ l, state }: { l: Locale; state: ReadState<unknown> }) {
  if (state.loading) return <p role="status">{text(l, "loading")}</p>;

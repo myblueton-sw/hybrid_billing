@@ -19,10 +19,11 @@
 .o03-part-counts { margin-block: 0; }
 .o03-part-table { inline-size: 100%; table-layout: fixed; }
 .o03-part-table th, .o03-part-table td { vertical-align: top; overflow-wrap: anywhere; }
-.o03-part-table th:nth-child(1) { inline-size: 22%; }
-.o03-part-table th:nth-child(2) { inline-size: 26%; }
-.o03-part-table th:nth-child(3) { inline-size: 32%; }
-.o03-part-table th:nth-child(4) { inline-size: 20%; }
+.o03-part-table th:nth-child(1) { inline-size: 19%; }
+.o03-part-table th:nth-child(2) { inline-size: 23%; }
+.o03-part-table th:nth-child(3) { inline-size: 27%; }
+.o03-part-table th:nth-child(4) { inline-size: 15%; }
+.o03-part-table th:nth-child(5) { inline-size: 16%; }
 .o03-part-line { display: block; margin-block-end: 8px; }
 .o03-part-line > .live-sub { display: block; }
 @container (max-width: 43.999rem) {
@@ -49,11 +50,12 @@
 .o03-part-notice { margin: 0 0 8px; }
 .o03-events { margin: 0; padding-inline-start: 20px; display: grid; gap: 8px; }
 .o03-events .live-sub { display: block; }
-.o03-part-table.o03-statements-table th:nth-child(1) { inline-size: 44%; }
-.o03-part-table.o03-statements-table th:nth-child(2) { inline-size: 16%; }
-.o03-part-table.o03-statements-table th:nth-child(3) { inline-size: 13%; }
-.o03-part-table.o03-statements-table th:nth-child(4) { inline-size: 14%; }
-.o03-part-table.o03-statements-table th:nth-child(5) { inline-size: 13%; }
+.o03-part-table.o03-statements-table th:nth-child(1) { inline-size: 36%; }
+.o03-part-table.o03-statements-table th:nth-child(2) { inline-size: 14%; }
+.o03-part-table.o03-statements-table th:nth-child(3) { inline-size: 12%; }
+.o03-part-table.o03-statements-table th:nth-child(4) { inline-size: 12%; }
+.o03-part-table.o03-statements-table th:nth-child(5) { inline-size: 12%; }
+.o03-part-table.o03-statements-table th:nth-child(6) { inline-size: 14%; }
 .o03-statement { white-space: pre-wrap; overflow-wrap: anywhere; max-inline-size: 72ch; margin: 0 0 8px; }
 .o03-samples { margin: 0; }
 .o03-samples dt { color: inherit; font-size: inherit; }
@@ -76,3 +78,8 @@
 .o03-duration { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
 .o03-duration .o03-short { max-inline-size: 8rem; }
 .o03-steps .o03-setup-form .o03-duration label.live-check { margin: 0; }
+.o03-steps .o03-setup-form input.o03-wide { font: inherit; color: inherit; background: var(--surface, white); border: 1px solid var(--border-control); border-radius: 0; padding: 12px; min-block-size: 44px; inline-size: 100%; box-sizing: border-box; }
+.o03-kept { padding-block: 8px; border-block: 1px solid var(--border-row, #d5d7da); }
+.o03-kept p { margin: 0 0 8px; }
+.o03-steps .o03-setup-review h6 { margin-block: 16px 4px; }
+.o03-steps .o03-setup-review .o03-statement { margin-block-end: 4px; }

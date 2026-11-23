@@ -208,7 +208,7 @@ Root moved the term writes ahead of the protected writes: they need no statement
 
 # Copy proposals
 
-Proposals for the technical-writing review; not final copy. The register, accept, request, verify, record, approve and apply actions reuse the capability labels of the M03 section of the glossary without change. The decision step has no capability label of its own that fits both verdicts: its row action is the neutral "Decide change" and its two choices use the glossary's approve (승인, اعتماد) and reject (반려, رفض).
+Proposals for the technical-writing review; not final copy. The register, accept, request, verify, record, approve and apply actions reuse the capability labels of the M03 section of the glossary without change. The decision step has no capability label of its own that fits both verdicts: its row action is the neutral "Decide change" and its two choices use the approve (승인, اعتماد) and reject (반려, رفض) wording already merged in the M03 provisioning panel.
 
 | Concept | English | Korean | Arabic |
 | --- | --- | --- | --- |

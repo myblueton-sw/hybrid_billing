@@ -7,6 +7,7 @@ import { k } from "./live-copy";
 import { actorText, canWithdraw, endPassed, maxPeriod, pendingNow, revisionText, spanDays, validDay, type Period } from "./live-model";
 import { ActionBar, CommandForm, type Shared } from "./LiveActions";
 import { day, ltr, nameOf, stamp } from "./live-format";
+import { Documents } from "./setup/Documents";
 
 type Props = {
   l: Locale;
@@ -17,6 +18,7 @@ type Props = {
   session: Session;
   params: URLSearchParams;
   period: Period;
+  setupOn: string;
   onParams: (extra: Record<string, string | null>) => void;
   onReload: () => Promise<void>;
   onDone: (text: string) => void;
@@ -24,7 +26,7 @@ type Props = {
   onSignedOut: () => void;
 };
 
-const unconnected = ["documents", "payment-terms", "recognition"];
+const unconnected = ["payment-terms", "recognition"];
 
 export function Detail(p: Props) {
   const { l, view, detail } = p;
@@ -50,6 +52,7 @@ export function Detail(p: Props) {
       {c.end && endPassed(c.end, detail.today) && c.settlement === "pending_final" && <p className="live-note o03-pair-note">{k.endedPending(l)}</p>}
       <div className="o03-sections">
         {view === "schedule" ? <Schedule {...p} shared={shared} />
+          : view === "documents" ? <Documents l={l} session={p.session} contract={c.id} on={p.setupOn} parties={p.parties} onSignedOut={p.onSignedOut} />
           : view === "products" ? <Products l={l} detail={detail} parties={p.parties} />
             : view === "termination" ? <Termination l={l} detail={detail} shared={shared} />
               : unconnected.includes(view) ? <Unconnected l={l} view={view} />

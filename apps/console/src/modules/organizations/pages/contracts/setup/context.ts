@@ -12,7 +12,7 @@ export function setupDate(value: unknown): value is string {
   return typeof value === "string" && /^(?!0000)\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value + "T00:00:00Z")) && new Date(value + "T00:00:00Z").toISOString().slice(0, 10) === value;
 }
 
-function positiveVersion(value: string): boolean {
+export function positiveVersion(value: string): boolean {
   return /^[1-9][0-9]{0,19}$/.test(value) && BigInt(value) <= 18446744073709551615n;
 }
 

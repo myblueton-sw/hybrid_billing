@@ -198,7 +198,7 @@ export default function LiveContracts({ locale: l, view, params, session, onSign
               <Detail
                 key={selectedId}
                 l={l} view={view} detail={detail} parties={parties} api={api} session={session} params={params} period={period}
-                onParams={onParams} onReload={reloadAll}
+                setupOn={on || page?.on || ""} onParams={onParams} onReload={reloadAll}
                 onDone={(text) => { setNotice(text); void reloadAll(); requestAnimationFrame(() => document.getElementById("o03-notice")?.focus()); }}
                 onDenied={() => setDenied(true)} onSignedOut={() => setSignedOut(true)}
               />

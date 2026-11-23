@@ -5,6 +5,7 @@ import { timestamp } from "../../../../issuance/pages/approval-inbox/documents/c
 import { bytes, digest, freeze, id, object, revision, ResultError, type ReadEnvelope } from "../../../../issuance/pages/approval-inbox/results/contract";
 import { bounded, checkSession, responseText } from "../../../../issuance/pages/approval-inbox/results/transport";
 import { SetupError, setupContextOf, setupDate, type SetupContext } from "./context";
+import { configurationsOf } from "./history";
 
 const invalid = (): never => { throw new SetupError("invalid_setup_response"); };
 const envelopeKeys = ["request_id", "status", "target_id", "result_revision", "replay", "as_of", "fields"];
@@ -39,7 +40,7 @@ function optionsOf(e: ReadEnvelope, scope: SetupContext): SetupOptions {
 
 export function setupReadClient(session: Session, fetcher: typeof fetch = fetch.bind(globalThis)) {
   const owner = freeze({ ...session });
-  async function read(command: "context" | "options", target: string, fields: Record<string, string>): Promise<ReadEnvelope> {
+  async function read(command: "context" | "options" | "configurations", target: string, fields: Record<string, string>): Promise<ReadEnvelope> {
     const values = freeze({ ...fields });
     try { await checkSession(owner, fetcher); }
     catch (error) { throw new SetupError(error instanceof ResultError ? error.code : "session_unavailable"); }
@@ -64,6 +65,10 @@ export function setupReadClient(session: Session, fetcher: typeof fetch = fetch.
     return freeze({ revision: raw.result_revision, at: raw.as_of, fields: fieldMap(raw.fields) });
   }
   return {
+    async configurations(contract: string, after = "", snapshot = "") {
+      if (!id(contract) || (!!after !== !!snapshot) || after && (!id(after) || !digest(snapshot))) return invalid();
+      return configurationsOf(await read("configurations", contract, after ? { after, snapshot } : {}), contract, after, snapshot);
+    },
     async context(contract: string, on: string) {
       if (!id(contract) || !setupDate(on)) return invalid();
       return setupContextOf(await read("context", contract, { on }), contract, on);

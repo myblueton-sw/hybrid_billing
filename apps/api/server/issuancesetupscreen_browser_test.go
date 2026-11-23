@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 	"github.com/myblueton-sw/hybrid_billing/modules/protected"
 
@@ -35,7 +36,11 @@ func issuanceSetupActualScreenBrowser(t *testing.T, output, lang string) {
 	if err != nil || u.Scheme != "http" || u.Hostname() != "127.0.0.1" || u.Port() == "" {
 		t.Fatal("loopback frontend required")
 	}
-	f := setup(t, SeedSample).ready()
+	f := setupWith(t, func(c *Config) {
+		c.Fields = map[string]gate.FieldClass{"state": gate.General}
+		c.Commands = CommandLimits()
+		c.Commands.Burst = 10 * c.Commands.Burst
+	})
 	f.setPassword(MemberLogin, pw)
 	j := confirmJourneyConfiguration(t, f)
 	c := j.configuration

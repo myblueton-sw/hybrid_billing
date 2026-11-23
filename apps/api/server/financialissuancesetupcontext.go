@@ -10,10 +10,13 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/protectedauthority"
 )
 
-type issuanceSetupContextCommand struct{ s *Server }
+type issuanceSetupContextCommand struct {
+	s    *Server
+	kind string
+}
 
 func (s *Server) issuanceSetupBoundary(command string, call commands.Call) commands.Code {
-	if command != "issuance_setup.context" {
+	if command != "issuance_setup.context" && command != "issuance_setup.configurations" {
 		return ""
 	}
 	if s.cfg.Seed != SeedSample || s.financialIssuance == nil {
@@ -43,7 +46,13 @@ func (h issuanceSetupContextCommand) Apply(ctx commands.Context) (commands.Outco
 	if h.s.cfg.Seed != SeedSample || h.s.financialIssuance == nil {
 		return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
 	}
-	fields, err := h.s.financialIssuance.setupContextFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields["on"])
+	var fields map[string]string
+	var err error
+	if h.kind == "configurations" {
+		fields, err = h.s.financialIssuance.setupConfigurationFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields["after"], ctx.Fields["snapshot"])
+	} else {
+		fields, err = h.s.financialIssuance.setupContextFields(ctx.Workspace, ctx.User, ctx.Target, ctx.Fields["on"])
+	}
 	if err != nil {
 		return commands.Outcome{}, err
 	}
@@ -51,7 +60,11 @@ func (h issuanceSetupContextCommand) Apply(ctx commands.Context) (commands.Outco
 }
 
 func (s *Server) issuanceSetupDefinitions() []commands.Definition {
-	return []commands.Definition{{ID: "issuance_setup.context", Permission: commands.Permission{Action: gate.ViewCost, Kind: protectedauthority.ResourceKind, Fields: []string{protectedauthority.EvidenceField}}, Fields: []commands.Field{{Name: "on", Type: commands.Text, Required: true}}, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s}}}
+	permission := commands.Permission{Action: gate.ViewCost, Kind: protectedauthority.ResourceKind, Fields: []string{protectedauthority.EvidenceField}}
+	return []commands.Definition{
+		{ID: "issuance_setup.context", Permission: permission, Fields: []commands.Field{{Name: "on", Type: commands.Text, Required: true}}, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "context"}},
+		{ID: "issuance_setup.configurations", Permission: permission, Fields: []commands.Field{{Name: "after", Type: commands.Text}, {Name: "snapshot", Type: commands.Text}}, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "configurations"}},
+	}
 }
 
 func (a *financialIssuance) setupContextFields(workspace, actor, id, rawDate string) (map[string]string, error) {

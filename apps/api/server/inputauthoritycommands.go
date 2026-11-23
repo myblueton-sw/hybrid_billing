@@ -60,7 +60,7 @@ func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, er
 	if a == nil {
 		return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
 	}
-	if (h.domain == financialRequestDomain || h.domain == erpFinalRequestDomain) || h.domain == documentGrantAuthority || h.domain == resultGrantAuthority {
+	if h.domain.governed() {
 		if h.s.cfg.Commands.Fields < 20 || h.s.cfg.Commands.Value < 1024 {
 			return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
 		}
@@ -112,7 +112,7 @@ func (h inputAuthorityCommand) Apply(ctx commands.Context) (commands.Outcome, er
 		return commands.Outcome{}, inputAuthorityError(err)
 	}
 	out := commands.Outcome{Fields: inputAuthorityFields(record)}
-	if (h.domain == financialRequestDomain || h.domain == erpFinalRequestDomain) || h.domain == documentGrantAuthority || h.domain == resultGrantAuthority {
+	if h.domain.governed() {
 		out.Fields["receipt"] = "historical_decision"
 	}
 	if h.kind != "inspect" {
@@ -131,6 +131,12 @@ func (s *Server) pricingAuthorityDefinitions() []commands.Definition {
 func (s *Server) grantAuthorityDefinitions(domain grantAuthorityDomain) []commands.Definition {
 	prefix := ""
 	switch domain {
+	case protectedGrantAuthority:
+		prefix = "issuance_protected_authority"
+	case termGrantAuthority:
+		prefix = "issuance_term_authority"
+	case draftGrantAuthority:
+		prefix = "issuance_draft_authority"
 	case resultGrantAuthority:
 		prefix = "result_authority"
 	case documentGrantAuthority:

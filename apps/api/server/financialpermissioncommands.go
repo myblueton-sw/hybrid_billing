@@ -25,6 +25,12 @@ func (s *Server) financialPermissionBoundary(command string, call commands.Call)
 		a = s.erpFinalRequestPermission
 	case "result_authority.propose_console", "result_authority.propose_human", "result_authority.approve", "result_authority.reject", "result_authority.withdraw", "result_authority.inspect", "result_authority.history", "result_authority.context":
 		a = s.resultAuthority
+	case "issuance_protected_authority.propose_console", "issuance_protected_authority.propose_human", "issuance_protected_authority.approve", "issuance_protected_authority.reject", "issuance_protected_authority.withdraw", "issuance_protected_authority.inspect":
+		a = s.protectedAuthority
+	case "issuance_term_authority.propose_console", "issuance_term_authority.propose_human", "issuance_term_authority.approve", "issuance_term_authority.reject", "issuance_term_authority.withdraw", "issuance_term_authority.inspect":
+		a = s.termAuthority
+	case "issuance_draft_authority.propose_console", "issuance_draft_authority.propose_human", "issuance_draft_authority.approve", "issuance_draft_authority.reject", "issuance_draft_authority.withdraw", "issuance_draft_authority.inspect":
+		a = s.draftAuthority
 	case "document_authority.propose_console", "document_authority.propose_human", "document_authority.approve", "document_authority.reject", "document_authority.withdraw", "document_authority.inspect":
 		a = s.documentAuthority
 	case "financial_permission.propose", "financial_permission.approve", "financial_permission.reject", "financial_permission.withdraw", "financial_permission.inspect":

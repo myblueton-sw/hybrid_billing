@@ -473,6 +473,9 @@ func (s *Server) registerUsers() error {
 	definitions = append(definitions, s.grantAuthorityDefinitions(erpFinalRequestDomain)...)
 	definitions = append(definitions, s.grantAuthorityDefinitions(documentGrantAuthority)...)
 	definitions = append(definitions, s.grantAuthorityDefinitions(resultGrantAuthority)...)
+	definitions = append(definitions, s.grantAuthorityDefinitions(protectedGrantAuthority)...)
+	definitions = append(definitions, s.grantAuthorityDefinitions(termGrantAuthority)...)
+	definitions = append(definitions, s.grantAuthorityDefinitions(draftGrantAuthority)...)
 	definitions = append(definitions, s.resultAuthorityReadDefinitions()...)
 	for _, d := range definitions {
 		if err := s.Register(d); err != nil {

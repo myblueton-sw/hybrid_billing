@@ -689,6 +689,8 @@ Labels of the verification channels part, from `setup/channels-copy.ts`:
 | subject kinds | Customer, Issuing entity, Document kind | 고객, 발행 법인, 문서 종류 | العميل، الجهة المصدرة، نوع المستند |
 | channel kinds | Email, Phone, Portal, Postal mail | 이메일, 전화, 포털, 우편 | البريد الإلكتروني، الهاتف، البوابة، البريد العادي |
 
+Channel and statement steps (slice 9): the step labels are the M03 capability labels "Register verification channel" and "Accept verification channel"; the row action is the short "Accept channel / 채널 수락 / قبول القناة". Statement steps are "Record statement / 진술 기록 / تسجيل الإفادة" and "Withdraw statement / 진술 철회 / سحب الإفادة". The review groups are "Statement you will record / 기록할 진술 / الإفادة التي ستسجّلها", "Statement you recorded in this session / 이 세션에서 기록한 진술 / الإفادة التي سجّلتها في هذه الجلسة" and "Action it supports / 진술이 뒷받침하는 단계 / الإجراء الذي تدعمه". A statement "supports" an action only in the sense that the action names it; it is never called evidence or proof.
+
 "Accepted" is the admission step of a channel (수락, قبول) and never means valid or approved. The earliest change request time is shown only when the read states it and does not state that the user may request a change through the channel.
 
 Labels of the protected settings changes part, from `setup/changes-copy.ts`:

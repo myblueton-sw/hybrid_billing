@@ -47,7 +47,7 @@ await page.route('**/api/**',async route=>{
 const open=async(lang,width)=>{await page.setViewportSize({width,height:1000});await page.goto('about:blank');await page.goto(`${args.url}/?service=api&lang=${lang}#/contracts?view=documents&contract=${contract.id}&on=${on}&part=channels&lang=${lang}`);await page.locator('.o03-scope-bar').waitFor();};
 const neutral=c=>{const m=c.match(/\d+/g).map(Number);return Math.max(m[0],m[1],m[2])-Math.min(m[0],m[1],m[2])<=16;};
 const banned=/\b(ready|eligible|verified|proven|usable|mature)\b/i;
-const layout=()=>page.locator('.o03-part').evaluate(el=>{const rows=[...el.querySelectorAll('tbody tr')];return {text:el.innerText,rows:rows.length,buttons:[...el.querySelectorAll('button')].map(b=>({text:b.innerText,height:Math.round(b.getBoundingClientRect().height)})),overflow:document.documentElement.scrollWidth>innerWidth,tags:[...el.querySelectorAll('.o03-tag')].map(t=>{const s=getComputedStyle(t);return {color:s.borderTopColor,radius:s.borderRadius,start:s.borderInlineStartWidth,top:s.borderTopWidth};}),cells:rows.slice(0,7).map(tr=>[...tr.children].map(td=>{const r=td.getBoundingClientRect(),inner=Math.max(r.top,...[...td.querySelectorAll('*')].filter(e=>!e.parentElement.closest('details:not([open])')||e.tagName==='SUMMARY').map(e=>e.getBoundingClientRect().bottom));return {top:Math.round(r.top),bottom:Math.round(r.bottom),inner:Math.round(inner),left:Math.round(r.left),right:Math.round(r.right),display:getComputedStyle(td).display};})),width:innerWidth,terms:el.querySelectorAll('dl.o03-part-counts dt').length};});
+const layout=()=>page.locator('.o03-part').evaluate(el=>{const rows=[...el.querySelectorAll('tbody tr')];return {text:el.innerText,rows:rows.length,buttons:[...el.querySelectorAll('.o03-docs-heading button, :scope > .o03-docs-pages button')].map(b=>({text:b.innerText,height:Math.round(b.getBoundingClientRect().height)})),overflow:document.documentElement.scrollWidth>innerWidth,tags:[...el.querySelectorAll('.o03-tag')].map(t=>{const s=getComputedStyle(t);return {color:s.borderTopColor,radius:s.borderRadius,start:s.borderInlineStartWidth,top:s.borderTopWidth};}),cells:rows.slice(0,7).map(tr=>[...tr.children].map(td=>{const r=td.getBoundingClientRect(),inner=Math.max(r.top,...[...td.querySelectorAll('*')].filter(e=>!e.parentElement.closest('details:not([open])')||e.tagName==='SUMMARY').map(e=>e.getBoundingClientRect().bottom));return {top:Math.round(r.top),bottom:Math.round(r.bottom),inner:Math.round(inner),left:Math.round(r.left),right:Math.round(r.right),display:getComputedStyle(td).display};})),width:innerWidth,terms:el.querySelectorAll('dl.o03-part-counts dt').length};});
 try{
  for(const lang of ['en','ko','ar'])for(const width of [1440,1024,390]){
   mode='rows';await open(lang,width);await page.locator('.o03-part tbody tr').nth(6).waitFor();
@@ -66,10 +66,10 @@ try{
   await page.screenshot({path:`${output}/empty-${lang}-${width}.png`,fullPage:true});evidence.cases.push({check:'empty',lang,width});
   mode='paged';await open(lang,width);await page.locator('.o03-part tbody tr').nth(9).waitFor();seen=await layout();
   assert.equal(seen.rows,10);assert.equal(seen.buttons.length,2);
-  await page.locator('.o03-docs-pages button').click();await page.locator('.o03-docs-pages button').first().waitFor();await page.waitForFunction(()=>document.querySelectorAll('.o03-part tbody tr').length===2);
+  await page.locator('.o03-part > .o03-docs-pages button').click();await page.locator('.o03-part > .o03-docs-pages button').first().waitFor();await page.waitForFunction(()=>document.querySelectorAll('.o03-part tbody tr').length===2);
   assert.equal(await page.evaluate(()=>document.activeElement?.id),'o03-part-title');seen=await layout();assert.equal(seen.buttons.length,2);
   await page.screenshot({path:`${output}/page-two-${lang}-${width}.png`,fullPage:true});
-  await page.locator('.o03-docs-pages button').click();await page.waitForFunction(()=>document.querySelectorAll('.o03-part tbody tr').length===10);
+  await page.locator('.o03-part > .o03-docs-pages button').click();await page.waitForFunction(()=>document.querySelectorAll('.o03-part tbody tr').length===10);
   evidence.cases.push({check:'paging',lang,width});
   for(const name of Object.keys(refusals)){
    mode=name;await open(lang,width);const alert=page.locator('.o03-part .live-error');await alert.waitFor();
@@ -77,7 +77,7 @@ try{
    assert.ok(refusal.text.includes(refusals[name][1]));assert.equal(refusal.overflow,false);assert.equal(refusal.radius,'0px');assert.equal(refusal.shadow,'none');assert.equal(refusal.widths[2],'0px');assert.equal(refusal.widths[3],'0px');assert.ok(neutral(refusal.color));
    assert.equal(await page.locator('.o03-part table').count(),0);
    if(name==='denied')await page.screenshot({path:`${output}/${name}-${lang}-${width}.png`,fullPage:true});
-   mode='rows';await page.locator('.o03-part button').click();await page.locator('.o03-part tbody tr').nth(6).waitFor();
+   mode='rows';await page.locator('.o03-docs-heading button').click();await page.locator('.o03-part tbody tr').nth(6).waitFor();
    assert.equal(await page.evaluate(()=>document.activeElement?.id),'o03-part-title');
    evidence.cases.push({check:'refusal',lang,width,mode:name});
   }

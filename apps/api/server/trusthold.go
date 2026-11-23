@@ -35,6 +35,14 @@ const (
 var holdTable = map[string]holdRule{
 	"issuance_setup.propose_configuration":         {holdRefuse, reasonChange},
 	"issuance_setup.confirm_configuration":         {holdRefuse, reasonChange},
+	"issuance_setup.attest_channel_registration":   {holdRefuse, reasonChange},
+	"issuance_setup.withdraw_channel_registration": {holdRefuse, reasonChange},
+	"issuance_setup.attest_channel_admission":      {holdRefuse, reasonChange},
+	"issuance_setup.withdraw_channel_admission":    {holdRefuse, reasonChange},
+	"issuance_setup.attest_change_instruction":     {holdRefuse, reasonChange},
+	"issuance_setup.withdraw_change_instruction":   {holdRefuse, reasonChange},
+	"issuance_setup.attest_change_verification":    {holdRefuse, reasonChange},
+	"issuance_setup.withdraw_change_verification":  {holdRefuse, reasonChange},
 	"issuance_draft.submit":                        {holdRefuse, reasonChange},
 	"issuance_draft.prepare_approval":              {holdRefuse, reasonChange},
 	"issuance_draft.approve":                       {holdRefuse, reasonChange},
@@ -218,7 +226,7 @@ func (s *Server) enterHold(reason string) {
 }
 
 func (s *Server) holdAllows(command string, call commands.Call, caller identity.Verifier) bool {
-	if command == "issuance_setup.protected" || command == "issuance_setup.protected_channels" || command == "issuance_setup.protected_changes" || command == "issuance_setup.action" || command == "issuance_setup.options" || command == "issuance_setup.configurations" || command == "issuance_setup.context" || command == "issuance_draft.list" || command == "issuance_draft.inspect" || command == "issuance_draft.context" {
+	if command == "issuance_setup.attestations" || command == "issuance_setup.references" || command == "issuance_setup.protected" || command == "issuance_setup.protected_channels" || command == "issuance_setup.protected_changes" || command == "issuance_setup.action" || command == "issuance_setup.options" || command == "issuance_setup.configurations" || command == "issuance_setup.context" || command == "issuance_draft.list" || command == "issuance_draft.inspect" || command == "issuance_draft.context" {
 		return true
 	}
 	if command == "result_authority.history" || command == "result_authority.context" {

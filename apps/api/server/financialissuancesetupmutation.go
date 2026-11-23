@@ -2,11 +2,13 @@ package server
 
 import (
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
+	"github.com/myblueton-sw/hybrid_billing/modules/protectedauthority"
 )
 
 func setupMutation(kind string) bool {
@@ -143,6 +145,23 @@ func (s *Server) issuanceSetupMutationDefinitions() []commands.Definition {
 			fields = append(fields, commands.Field{Name: name, Type: commands.Text, Required: true})
 		}
 		out = append(out, commands.Definition{ID: "issuance_setup." + kind, Permission: commands.Permission{Action: gate.AdministerInstallation, Kind: gate.InstallationKind}, Mutating: true, Rationale: true, Fields: fields, Refusals: []commands.Code{commands.EvidenceStale, commands.SelfApprovalDenied}, Handler: issuanceSetupContextCommand{s: s, kind: kind}})
+	}
+	for _, step := range setupAttestationSteps {
+		text := func(name string, required bool) commands.Field {
+			return commands.Field{Name: name, Type: commands.Text, Required: required}
+		}
+		scope := []commands.Field{text("configuration", true), text("digest", true), text("attestation", true)}
+		attest := slices.Concat(scope, []commands.Field{text("target", true), text("statement", true), text("locator", false)})
+		if step.Existing {
+			attest = append(attest, text("target_digest", true))
+		}
+		permission := commands.Permission{Action: step.Action, Kind: protectedauthority.ResourceKind}
+		refusals := []commands.Code{commands.EvidenceStale}
+		if step.Existing {
+			refusals = append(refusals, commands.SelfApprovalDenied)
+		}
+		out = append(out, commands.Definition{ID: "issuance_setup.attest_" + step.Purpose, Permission: permission, Mutating: true, Fields: attest, Refusals: refusals, Handler: issuanceSetupContextCommand{s: s, kind: "attest_" + step.Purpose}})
+		out = append(out, commands.Definition{ID: "issuance_setup.withdraw_" + step.Purpose, Permission: permission, Mutating: true, Fields: scope, Refusals: []commands.Code{commands.EvidenceStale}, Handler: issuanceSetupContextCommand{s: s, kind: "withdraw_" + step.Purpose}})
 	}
 	return out
 }

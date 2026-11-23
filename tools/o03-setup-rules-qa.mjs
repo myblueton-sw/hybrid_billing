@@ -52,7 +52,7 @@ try{
   for(const name of Object.keys(modes)){
    mode=name;await open(lang,width);const part=page.locator('.o03-part');
    await part.locator(modes[name].rules_state==='none'?'.live-empty':'.o03-tag').waitFor();
-   const seen=await part.evaluate(el=>({text:el.innerText,all:el.textContent,tags:[...el.querySelectorAll('.o03-tag')].map(t=>{const s=getComputedStyle(t);return {color:s.borderTopColor,radius:s.borderRadius,start:s.borderInlineStartWidth,top:s.borderTopWidth};}),terms:el.querySelectorAll('dt').length,groups:[...el.querySelectorAll('h4')].map(h=>h.innerText),buttons:el.querySelectorAll('button').length,overflow:document.documentElement.scrollWidth>innerWidth,mono:[...el.querySelectorAll('bdi[dir=ltr]')].length}));
+   const seen=await part.evaluate(el=>({text:el.innerText,all:el.textContent,tags:[...el.querySelectorAll('.o03-tag')].map(t=>{const s=getComputedStyle(t);return {color:s.borderTopColor,radius:s.borderRadius,start:s.borderInlineStartWidth,top:s.borderTopWidth};}),terms:el.querySelectorAll('dt').length,groups:[...el.querySelectorAll('.o03-docs-scope h4')].map(h=>h.innerText),buttons:el.querySelectorAll('.o03-docs-heading button').length,overflow:document.documentElement.scrollWidth>innerWidth,mono:[...el.querySelectorAll('bdi[dir=ltr]')].length}));
    assert.equal(seen.overflow,false,`overflow ${lang} ${width} ${name}`);assert.equal(seen.buttons,1);
    if(lang==='en'){assert.ok(!banned.test(seen.text.replace('Issuance eligibility: not checked','')),`wording ${name}`);assert.ok(seen.text.includes('Issuance eligibility: not checked'));}
    if(modes[name].rules_state==='none'){assert.equal(seen.terms,0);assert.ok(!seen.all.includes('synthetic-rules'));}

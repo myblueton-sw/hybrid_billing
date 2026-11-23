@@ -13,6 +13,11 @@ import { Rules } from "./Rules";
 import { Channels } from "./Channels";
 import { Changes } from "./Changes";
 import { Statements } from "./Statements";
+import { StepResults, useStepStore } from "./StepResults";
+import { protectedWriteClient, type ProtectedWriteIntent, type ProtectedWriteReceipt } from "./protected-writes";
+import { rulesError, rulesText } from "./rules-copy";
+import { ruleActionOf } from "./RuleWrites";
+import { stepError } from "./step-copy";
 import { partText } from "./part-copy";
 import { scopeEligible, sessionScopeStore, type SetupPart, type SetupScope } from "./scope";
 import "./documents.css";
@@ -32,11 +37,16 @@ export function Documents({ l, session, contract, on, parties, part, onPart, onS
  const context = state.context.value, page = state.history.value;
  useEffect(() => { scopes.reconcile(page, state.historyAfter); }, [scopes, page, state.historyAfter]);
  const person = (id: string) => <bdi>{nameOf(id, parties)}</bdi>;
+ const writes = useStepStore<ProtectedWriteIntent, ProtectedWriteReceipt>("protected", session, () => protectedWriteClient(session)), [settled, setSettled] = useState(0);
+ const client = useMemo(() => setupReadClient(session), [session.user, session.workspace, session.csrf]);
+ const results = writes ? <StepResults l={l} id="o03-protected-results" store={writes} contract={contract} onSettled={() => setSettled(n => n + 1)} explain={code => rulesError(l, code)} revision={async intent => (await client.protectedSummary(intent.scope)).revision}
+  describe={entry => ({ action: ruleActionOf[entry.intent.operation] ? rulesText(l, ruleActionOf[entry.intent.operation]) : entry.intent.operation, target: <>{rulesText(l, "targetRules")}: {ltr(entry.subject)}</>, state: entry.receipt && ruleActionOf[entry.intent.operation] && <span className="o03-tag">{text(l, entry.receipt.state as SetupWord)}</span> })} /> : <p role="alert">{stepError(l, "session_capacity")}</p>;
  const toSettings = useRef(false);
  useEffect(() => { if (part === "settings" && toSettings.current) { toSettings.current = false; historyHeading.current?.focus(); } }, [part]);
  if (part !== "settings") return <div className="o03-documents">
   <PartNav l={l} part={part} onPart={onPart} />
-  <PartFrame l={l} part={part} onPart={next => { toSettings.current = next === "settings"; onPart(next); }} scope={scope} loading={state.history.loading || !page && !state.history.error} feedback={!scope && state.history.error ? <ReadFeedback l={l} state={state.history} /> : null}>{chosen => part === "rules" ? <Rules key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} /> : part === "channels" ? <Channels key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} /> : part === "changes" ? <Changes key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} /> : <Statements key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} />}</PartFrame>
+  <PartFrame l={l} part={part} onPart={next => { toSettings.current = next === "settings"; onPart(next); }} scope={scope} loading={state.history.loading || !page && !state.history.error} feedback={!scope && state.history.error ? <ReadFeedback l={l} state={state.history} /> : null}>{chosen => part === "rules" ? <Rules key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} writes={writes} settled={settled} onSignedOut={onSignedOut} /> : part === "channels" ? <Channels key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} /> : part === "changes" ? <Changes key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} /> : <Statements key={chosen.configuration + chosen.digest} l={l} session={session} contract={contract} scope={chosen} onSignedOut={onSignedOut} />}</PartFrame>
+  {results}
  </div>;
  return <div className="o03-documents">
   <PartNav l={l} part={part} onPart={onPart} />
@@ -66,6 +76,7 @@ export function Documents({ l, session, contract, on, parties, part, onPart, onS
    <Fact label={text(l, "region")}>{ltr(state.options.value.region)}</Fact><Fact label={text(l, "tax")}>{ltr(state.options.value.tax)}</Fact><Fact label={text(l, "zone")}>{ltr(state.options.value.zone)}</Fact><Fact label={text(l, "languages")}>{ltr(state.options.value.languages.join(", "))}</Fact>
   </dl><p className="live-sub">{text(l, "presetNote")}</p></>}</section>
   <Writes l={l} session={session} reads={store} />
+  {results}
  </div>;
 }
 function Fact({ label, children }: { label: string; children: ReactNode }) { return <div><dt>{label}</dt><dd>{children}</dd></div>; }

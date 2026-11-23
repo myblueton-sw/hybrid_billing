@@ -327,3 +327,7 @@ Slice 10 offers "Request protected settings change" for the setting whose change
 # State after slice 10
 
 All ten slices are merged. Every read and command of handoff items 1 to 4 is reachable from the O03 documents and payment terms views as a candidate for owner review. Checks ran against intercepted synthetic responses only; no flow was run against a real server, no native speaker reviewed the Korean or Arabic copy, and the owner has reviewed no screen. The open questions above and the review notes of each slice remain open.
+
+# Real-server check of the denied verification sentence
+
+The slice 10 source review left the sentence "A denied verification ends the change." unchecked against module code. On 2026-11-24 the real-server run (`TestIssuanceSetupActualScreenBrowser`) denied a verification through the screen: the service recorded the change as rejected, ended by the verifier, and the changes section offered no decision on it (`modules/protected/changes.go`, verification with a denied outcome). The sentence holds for that path. The sentences about the outcomes of a decision and about a channel custodian deciding remain unchecked against module code.

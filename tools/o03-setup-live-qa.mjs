@@ -25,20 +25,21 @@ const row=p=>p.locator('.o03-changes-table tbody button');
 const changes=async p=>{await documents(p,'changes','.o03-field-cards');await p.locator('.o03-field-cards > li').nth(2).locator('button').click();await p.locator('#o03-change-steps').waitFor();await idle(p);};
 try{
  if(phase==='changes'){
- const requestChange=async(n,reason)=>{
+ const requestChange=async(n,reason,outcome=0)=>{
   stage='change-request-'+n;await changes(requester);
   await button(requester,'Request protected settings change: Payment account').click();await requester.locator('#o03-change-channel').waitFor();
   await steps(requester).locator('input[name=o03-change-reference]').nth(0).check();
   const offered=await requester.locator('#o03-change-channel option').evaluateAll(list=>list.map(o=>o.value).filter(Boolean));assert.equal(offered.length,1,'verification channels offered: '+offered.length);await requester.locator('#o03-change-channel').selectOption(offered[0]);
   await steps(requester).locator('input[name=o03-change-provenance]').nth(0).check();await steps(requester).locator('input[name=o03-change-instruction]').nth(0).check();
   await requester.locator('#o03-change-effective').fill(args.effective);await requester.locator('#o03-change-reason').fill(reason);await requester.locator('#o03-request-statement').fill('Synthetic statement: I received the signed instruction in person.');
-  await send(requester,'Request protected settings change');await requester.waitForFunction(count=>document.querySelectorAll('.o03-changes-table tbody tr').length>=count,n);await idle(requester);await shot(requester,'change-requested-'+n);
+  await send(requester,'Request protected settings change');await requester.waitForFunction(count=>document.querySelectorAll('.o03-changes-table tbody tr').length>=count,n+1);await idle(requester);await shot(requester,'change-requested-'+n);
   assert.equal(await row(requester).count(),0,'the requester is offered a later step');assert.ok((await requester.locator('.o03-changes-table').innerText()).includes('You requested this change'));
   stage='change-verify-'+n;await changes(verifier);assert.equal(await row(verifier).count(),1);
-  await row(verifier).click();await verifier.locator('#o03-verify-statement').waitFor();await steps(verifier).locator('input[name=o03-change-outcome]').nth(0).check();await verifier.locator('#o03-verify-statement').fill('Synthetic statement: I confirmed the instruction through the portal channel.');
+  await row(verifier).click();await verifier.locator('#o03-verify-statement').waitFor();await steps(verifier).locator('input[name=o03-change-outcome]').nth(outcome).check();await verifier.locator('#o03-verify-statement').fill('Synthetic statement: I confirmed the instruction through the portal channel.');
   await send(verifier,'Verify protected settings change');await row(verifier).waitFor({state:'detached'});await idle(verifier);await shot(verifier,'change-verified-'+n);
-  stage='change-decide-'+n;await changes(second);assert.equal(await row(second).count(),1);await row(second).click();await steps(second).locator('input[name=o03-change-verdict]').first().waitFor();
+  stage='change-decide-'+n;await changes(second);if(outcome===1){assert.equal(await row(second).count(),0,'a decision is offered on a change whose verification was denied');return;}assert.equal(await row(second).count(),1);await row(second).click();await steps(second).locator('input[name=o03-change-verdict]').first().waitFor();
  };
+ await requestChange(0,'Synthetic reason: an instruction the entity later denied',1);await shot(second,'change-denied');done('a change whose verification was denied offers no decision');
  await requestChange(1,'Synthetic reason: first instruction for the bank change');
  await steps(second).locator('input[name=o03-change-verdict]').nth(1).check();await steps(second).locator('input[name=o03-change-rejection]').nth(1).check();
  await send(second,'Decide protected settings change');await row(second).waitFor({state:'detached'});await idle(second);await shot(second,'change-rejected');done('a requested and verified change rejected by a third person');

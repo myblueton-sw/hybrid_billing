@@ -237,3 +237,12 @@ So of this pattern only B1 was a present defect, and it is fixed. A6 is a harden
 An account state or membership state that the console does not recognise is no longer read as "Active". The membership parser has an explicit unknown value; the account label, the membership label and the role cells of the list say "Unknown state"; no account action is offered for an unrecognised account state and no membership action for an unrecognised membership state, each with a sentence saying why. The identity module sends only the known states today, so this changes nothing for a well-formed response. Roles are unchanged: an unrecognised role is still read as "member" by the parser.
 
 Checks: `tsc` clean; console tests 1346, pass 1343, fail 0, skipped 3, with a new test for the labels and offers and a parser assertion. No rendered check. Copy and state review, ui-designer role (AI, by reading): FAIL with one finding (the note for an unknown membership state was grouped under sign-in), corrected with its other suggestions; corrective re-review PASS, with one more spot found (the wide role cell lacked the label), added afterwards and not reviewed again. The reviewer judged that offering no action for an unknown account state is the right default.
+
+## O01 findings E2 and E3 (2026-11-24)
+
+- E2: after a successful save or discard, a failed re-read of the draft is no longer shown as "This draft no longer exists". The panel has its own state for it and says that the request was recorded but the draft could not be read again, with the way back to the drafts. A draft that is really missing keeps the earlier text.
+- E3: the existing-group search in the draft panel clears the earlier rows when a new search starts and shows that it is loading or that it failed, so results of an earlier term no longer stay under a new term.
+
+Checks: `tsc` clean; console tests 1346, pass 1343, fail 0, skipped 3. No new test and no rendered check: no render check stages a failed read on the O01 draft panel. Copy review, ui-designer role (AI, by reading): PASS as a candidate.
+
+Left open: whether the saved or discarded announcement is still spoken beside the new alert; a draft beyond the 40 pages that the lookup reads is still reported as missing.

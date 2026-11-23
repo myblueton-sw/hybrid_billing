@@ -69,6 +69,10 @@ func (a *financialIssuance) currentDraftContext(workspace, actor, request, diges
 	if err != nil || c == nil {
 		return
 	}
+	if err := draftContextConstructible(*c, source); err != nil {
+		f["readiness"], f["current_eligibility"] = "source_ineligible", "ineligible"
+		return
+	}
 	languages, err := draftJSON(c.Spec.Languages)
 	if err != nil {
 		f["readiness"] = "unavailable"

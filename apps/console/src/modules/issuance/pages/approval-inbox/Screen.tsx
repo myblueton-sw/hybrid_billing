@@ -1,3 +1,8 @@
+import { CreateDraft } from "./drafts/Create";
+import { DraftOutcomes } from "./drafts/Outcomes";
+import { useDrafts } from "./drafts/use-drafts";
+import { decisionFamily } from "./decision-api";
+import DraftScreen from "./drafts/Screen";
 import ResultScreen from "./results/Screen";
 import { useDocuments } from "./documents/use-documents";
 import { Failure } from "./documents/Fields";
@@ -25,6 +30,7 @@ type State = {
   requestId?: string;
 };
 const items = [
+  "B09:draft:create-entry",
   "B09:scope:request-filter",
   "B09:data:inbox",
   "B09:action:inspect-request",
@@ -121,9 +127,13 @@ function ApprovalScreen({
           : "loading";
   const decision = useDecision(data, selected, JSON.stringify([key, data?.snapshot, data?.permission_revision]), phase === "loading" || phase === "error", () => reload(false));
   const documents = useDocuments(data, selected, JSON.stringify([key, data?.snapshot, data?.permission_revision]), phase === "loading" || phase === "error");
+  const drafts=useDrafts(),[draftEditing,setDraftEditing]=useState(false);
+  const finalSelected=selected?.status==="approved"&&decisionFamily(selected)==="erp_final"?selected:undefined;
+  useEffect(()=>{if(finalSelected?.evidence.revision)void drafts.store?.final(finalSelected.id,finalSelected.evidence.revision);else drafts.store?.clearSelection();},[drafts.store,finalSelected?.id,finalSelected?.evidence.revision,key,data?.snapshot,data?.permission_revision]);
+  function openDraft(id:string){const next=new URLSearchParams(params);next.set("view","drafts");next.set("draft-id",id);location.hash=`#/approvals?${next}`;}
   const documentBusy = !!documents.state.draft || !!documents.state.review || documents.unresolved;
   const decisionBusy = !!decision.state.action || Object.values(decision.state.entries).some(e => e.phase === "pending" || e.phase === "unknown");
-  useEffect(() => onDirty(decisionBusy || documentBusy), [decisionBusy, documentBusy, onDirty]);
+  useEffect(() => onDirty(decisionBusy || documentBusy || draftEditing || drafts.unresolved), [decisionBusy, documentBusy, draftEditing, drafts.unresolved, onDirty]);
   const review = JSON.stringify({
       phase: "approval-read",
       variant: `${view}:${phase}:${data?.source_mode ?? "unbound"}`,
@@ -139,6 +149,7 @@ function ApprovalScreen({
       error: current?.error ?? null,
       requestId: current?.requestId ?? null,
       attempts,
+      drafts: {selected:finalSelected?.id,context: drafts.state.context.loading?"loading":drafts.state.context.error??drafts.state.context.value?.submit_action??"idle",entries:drafts.state.entries.map(e=>[e.intent.target,e.phase,e.error])},
       documents: { enabled: documents.enabled, context: documents.state.context.phase, history: [documents.state.documents.phase,documents.state.preparations.phase], detail: [documents.state.document.phase,documents.state.preparation.phase], review: documents.state.review?.action, error: documents.state.error, entries: documents.state.entries.map(e => [e.intent.target,e.phase,e.error]) },
       decision: { checking: decision.state.checking, action: decision.state.action, error: decision.state.error, prepared: !!decision.state.preparation, entries: Object.values(decision.state.entries).map(e => [e.submission.target, e.phase, e.error]) },
     });
@@ -150,6 +161,7 @@ function ApprovalScreen({
     }
   }, [phase, data]);
   function go(next: URLSearchParams, focus = true) {
+    if(draftEditing&&!window.confirm(t(l,"Discard the unsaved draft form?","저장하지 않은 초안 입력을 버릴까요?","هل تريد تجاهل بيانات المسودة غير المحفوظة؟")))return;
     setState({ key: "pending" });
     setSelection(null);
     setAttempts((n) => n + 1);
@@ -470,14 +482,16 @@ function ApprovalScreen({
           refresh={refresh}
           data={data}
           selected={selected}
-          select={(id) => setSelection(id ? { key, id } : null)}
+          select={(id) => {if(!draftEditing||window.confirm(t(l,"Discard the unsaved draft form?","저장하지 않은 초안 입력을 버릴까요?","هل تريد تجاهل بيانات المسودة غير المحفوظة؟")))setSelection(id ? { key, id } : null);}}
           page={page}
         />
       ) : null}
+      {finalSelected&&<CreateDraft key={finalSelected.id+finalSelected.evidence.revision} locale={l} binding={drafts} request={finalSelected.id} digest={finalSelected.evidence.revision!} onDirty={setDraftEditing} onOpen={openDraft}/>}
+      <DraftOutcomes locale={l} binding={drafts} onInspect={openDraft}/>
     </div>
   );
 }
 
 export default function Screen(props: Parameters<typeof ApprovalScreen>[0]) {
- return props.view === "results" ? <ResultScreen locale={props.locale} onState={props.onState} onDirty={props.onDirty} /> : <ApprovalScreen {...props} />;
+ return props.view === "drafts" ? <DraftScreen locale={props.locale} onState={props.onState} onDirty={props.onDirty} /> : props.view === "results" ? <ResultScreen locale={props.locale} onState={props.onState} onDirty={props.onDirty} /> : <ApprovalScreen {...props} />;
 }

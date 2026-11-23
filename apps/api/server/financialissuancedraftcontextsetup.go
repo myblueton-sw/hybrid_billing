@@ -142,3 +142,17 @@ func (a *financialIssuance) contextRetainedBinding(c financialIssuanceConfigurat
 	_, err := a.bindingReadback(c.Workspace, p)
 	return err
 }
+
+func draftContextConstructible(c financialIssuanceConfiguration, source financialIssuanceSourceView) error {
+	if len(c.Spec.Languages) == 0 {
+		return commands.Fail(commands.PrerequisiteFailed)
+	}
+	p := financialIssuanceApplication{Schema: "hb_issuance_application_v1", Configuration: c, Source: source}
+	var err error
+	p.Digest, err = applicationDigest(p)
+	if err != nil {
+		return err
+	}
+	_, err = issuanceDraftFromApplication(p, "issuance-context-probe", c.Spec.Languages[0])
+	return err
+}

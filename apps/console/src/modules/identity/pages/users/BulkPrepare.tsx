@@ -40,7 +40,10 @@ function Excluded({ l, api, id, total }: { l: Locale; api: AdminClient; id: stri
     setFailed(!page);
     if (page) setRows({ ...page, rows: [...(rows?.rows ?? []), ...page.rows] });
   };
-  useEffect(() => { setRows(null); if (total > 0) void bulkClient(api).excluded(id).then(setRows, () => setRows(null)); }, [id, total]);
+  const [unread, setUnread] = useState(false);
+  const first = () => { setRows(null); setUnread(false); setFailed(false); if (total > 0) void bulkClient(api).excluded(id).then(setRows, () => { setRows(null); setUnread(true); }); };
+  useEffect(first, [id, total]);
+  if (unread) return <div className="live-meta" role="alert"><p>{b.excludedFailed(l)}</p><button type="button" className="live-secondary" onClick={first}>{c.tryAgain(l)}</button></div>;
   if (!rows || rows.rows.length === 0) return null;
   return (
     <>

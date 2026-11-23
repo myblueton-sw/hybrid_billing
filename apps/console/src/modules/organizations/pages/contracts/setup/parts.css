@@ -56,3 +56,9 @@
 .o03-statement { white-space: pre-wrap; overflow-wrap: anywhere; max-inline-size: 72ch; margin: 0 0 8px; }
 .o03-samples { margin: 0; }
 .o03-samples dt { color: inherit; font-size: inherit; }
+.o03-part-table.o03-bindings-table th:nth-child(1) { inline-size: 25%; }
+.o03-part-table.o03-bindings-table th:nth-child(2) { inline-size: 13%; }
+.o03-part-table.o03-bindings-table th:nth-child(3) { inline-size: 21%; }
+.o03-part-table.o03-bindings-table th:nth-child(4) { inline-size: 21%; }
+.o03-part-table.o03-bindings-table th:nth-child(5) { inline-size: 20%; }
+.o03-part-counts dd > .live-sub { display: block; }

@@ -101,7 +101,7 @@ export const k = {
       : v === "products" ? t(l, "Products and rates", "상품·요율", "المنتجات والأسعار")
         : v === "documents" ? t(l, "Documents and payment", "문서·지급", "المستندات والدفع")
           : v === "termination" ? t(l, "Termination and final settlement", "종료·최종 정산", "الإنهاء والتسوية النهائية")
-            : v === "payment-terms" ? t(l, "Payment terms", "지급 조건", "شروط الدفع")
+            : v === "payment-terms" ? t(l, "Payment terms", "납부 조건", "شروط الدفع")
               : v === "recognition" ? t(l, "Recognition", "인식 주기", "الاعتراف")
                 : t(l, "Parties and path", "당사자·경로", "الأطراف والمسار"),
   stateOn: (l: Locale) => t(l, "State on", "상태 기준일", "الحالة في"),
@@ -225,11 +225,9 @@ export const k = {
   unconnectedItems: (l: Locale, v: string) =>
     v === "documents"
       ? [t(l, "ERP order and prepayment references", "ERP 주문·선불 참조", "مراجع أمر ERP والدفع المسبق"), t(l, "Payment and recipient references", "지급·수신자 참조", "مراجع الدفع والمستلم"), t(l, "Document template revision", "문서 템플릿 개정", "مراجعة قالب المستند")]
-      : v === "payment-terms"
-        ? [t(l, "Term revision and days from issue", "조건 개정과 발행일 기준 일수", "مراجعة الشروط والأيام من الإصدار"), t(l, "Calendar policy and timezone", "달력 정책과 시간대", "سياسة التقويم والمنطقة الزمنية"), t(l, "Effective period", "적용 기간", "فترة السريان")]
-        : v === "recognition"
-          ? [t(l, "Billing and recognition cadence", "청구·인식 주기", "إيقاع الفوترة والاعتراف"), t(l, "Legal entity and amount basis", "법인과 금액 기준", "الكيان القانوني وأساس المبلغ"), t(l, "Monthly batches and reconciliation", "월별 배치와 대사", "الدفعات الشهرية والتسوية")]
-          : [t(l, "Rates per component", "구성요소별 요율", "الأسعار لكل مكوّن"), t(l, "Allowances and minimums", "포함량과 최소 금액", "المخصصات والحدود الدنيا")],
+      : v === "recognition"
+        ? [t(l, "Billing and recognition cadence", "청구·인식 주기", "إيقاع الفوترة والاعتراف"), t(l, "Legal entity and amount basis", "법인과 금액 기준", "الكيان القانوني وأساس المبلغ"), t(l, "Monthly batches and reconciliation", "월별 배치와 대사", "الدفعات الشهرية والتسوية")]
+        : [t(l, "Rates per component", "구성요소별 요율", "الأسعار لكل مكوّن"), t(l, "Allowances and minimums", "포함량과 최소 금액", "المخصصات والحدود الدنيا")],
   unconnectedLead: (l: Locale) => t(l, "This will hold:", "연결되면 다음을 담습니다:", "سيحتوي على:"),
   finalFacts: (l: Locale) => t(l, "Final settlement", "최종 정산", "التسوية النهائية"),
   endDay: (l: Locale) => t(l, "End day", "종료일", "يوم الانتهاء"),

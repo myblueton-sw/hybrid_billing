@@ -15,6 +15,7 @@ var (
 )
 
 const (
+	DirectHuman  = "direct_human_grant"
 	Console      = "console_ceiling"
 	Human        = "human_grant"
 	Pending      = "pending"
@@ -93,7 +94,15 @@ type Record struct {
 	Decision   *Decision
 }
 
+type Mode uint8
+
+const (
+	CeilingMode Mode = iota
+	DirectHumanMode
+)
+
 type Domain struct {
+	Mode                 Mode
 	Version, GrantPrefix string
 	Capabilities         []string
 }

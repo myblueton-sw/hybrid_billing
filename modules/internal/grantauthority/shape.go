@@ -54,9 +54,12 @@ func normalizeSpec(s Spec) Spec {
 	s.NotAfter = canonical(s.NotAfter)
 	return s
 }
+func humanGrant(kind string) bool { return kind == Human || kind == DirectHuman }
+
 func (r *Registry) validSpec(s Spec, maximum time.Duration) bool {
+	shape := r.mode == CeilingMode && ((s.Kind == Console && s.CeilingID == "") || (s.Kind == Human && validID(s.CeilingID))) || r.mode == DirectHumanMode && s.Kind == DirectHuman && s.CeilingID == ""
 	return r.capabilities[s.Capability] && validID(s.Workspace) && validID(s.Recipient) && validTime(s.NotBefore) && validTime(s.NotAfter) && s.NotBefore.Before(s.NotAfter) && !s.NotAfter.After(s.NotBefore.Add(maximum)) &&
-		((s.Kind == Console && s.CeilingID == "") || (s.Kind == Human && validID(s.CeilingID)))
+		shape
 }
 
 func validIntent(i Intent) bool {

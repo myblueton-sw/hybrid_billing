@@ -252,69 +252,77 @@ func (p *normalizedCharges) captureBoundLocked(workspace, runID, candidateID str
 }
 
 func (p *normalizedCharges) captureEvidenceLocked(workspace, runID, candidateID string, b normalizedBinding, pricing *pricingpolicy.Record, eligibility *candidateInputProvenance, author string) (chargeCandidate, error) {
-	cost, classes, err := p.fields(b)
+	input, err := p.prepareEvidenceInputLocked(workspace, runID, candidateID, b, pricing, eligibility, author)
 	if err != nil {
 		return chargeCandidate{}, err
 	}
+	return p.candidates.capture(input)
+}
+
+func (p *normalizedCharges) prepareEvidenceInputLocked(workspace, runID, candidateID string, b normalizedBinding, pricing *pricingpolicy.Record, eligibility *candidateInputProvenance, author string) (chargeInput, error) {
+	cost, classes, err := p.fields(b)
+	if err != nil {
+		return chargeInput{}, err
+	}
 	run, err := p.normal.Run(workspace, runID)
 	if err != nil {
-		return chargeCandidate{}, err
+		return chargeInput{}, err
 	}
 	if run.State != normalize.Closed || run.Spec.Rows < 1 || run.Spec.Rows > 1000 || run.Checked != run.Spec.Rows || run.Normal != run.Spec.Rows || run.Errors != 0 || run.Quarantined != 0 || run.Contradiction != 0 ||
 		run.Format == nil || run.Format.Result != normalize.Conformant || run.Billing == nil || run.Billing.Result != normalize.Ready ||
 		run.Spec.Mapping.Provider != b.Provider || run.Spec.Mapping.SourceVersion != b.SourceVersion || run.Spec.Mapping.Target != p.target.ID || run.Spec.Revision != b.MappingRevision ||
 		run.Spec.Input.Scope != b.Scope || run.Spec.Input.Period != b.Period || run.Spec.Input.Manifest == 0 || run.Spec.Window == nil {
-		return chargeCandidate{}, errCandidateInvalid
+		return chargeInput{}, errCandidateInvalid
 	}
 	from, e1 := time.Parse(time.DateOnly, b.From)
 	to, e2 := time.Parse(time.DateOnly, b.To)
 	if e1 != nil || e2 != nil || from.After(to) || to.AddDate(0, 0, 1).Year() > 9999 || !run.Spec.Window.From.Equal(from) || !run.Spec.Window.To.Equal(to.AddDate(0, 0, 1)) {
-		return chargeCandidate{}, errCandidateInvalid
+		return chargeInput{}, errCandidateInvalid
 	}
 	revision, err := p.normal.Revision(run.Spec.Mapping, run.Spec.Revision)
 	if err != nil {
-		return chargeCandidate{}, err
+		return chargeInput{}, err
 	}
 	contract, profile, document, err := p.attribution(workspace, b)
 	if err != nil {
-		return chargeCandidate{}, err
+		return chargeInput{}, err
 	}
 	lifecycle, err := p.lifecycleCoverage(workspace, b)
 	if err != nil {
-		return chargeCandidate{}, err
+		return chargeInput{}, err
 	}
 	source, err := p.sourceForRun(workspace, runID, run.Spec)
 	if err != nil {
-		return chargeCandidate{}, err
+		return chargeInput{}, err
 	}
 	origin := normalizedOrigin{CaptureAuthor: author, InputEligibility: eligibility, Pricing: pricing, Source: source, Lifecycle: lifecycle, Binding: b, Run: runID, Mapping: run.Spec.Mapping, MappingRevision: run.Spec.Revision, Manifest: run.Spec.Input.Manifest,
 		Profile: run.ProfileID, ProfileRevision: run.ProfileRevision, WindowFrom: run.Spec.Window.From.UTC().Format(time.RFC3339Nano), WindowTo: run.Spec.Window.To.UTC().Format(time.RFC3339Nano), Contract: contract, BillingProfile: profile, Document: document}
 	origin.TargetDigest, err = normalizedDigest(p.target)
 	if err != nil {
-		return chargeCandidate{}, err
+		return chargeInput{}, err
 	}
 	origin.MappingDigest, err = normalizedDigest(revision)
 	if err != nil {
-		return chargeCandidate{}, err
+		return chargeInput{}, err
 	}
 	input := chargeInput{SourceMode: b.SourceMode, Workspace: workspace, ID: candidateID, Customer: contract.CustomerID, Entity: document.IssuerLegalEntityID, From: b.From, To: b.To, Profile: b.Profile, Limits: b.Limits, Policy: b.Policy}
 	seen := make(map[normalize.RowKey]bool)
 	for after := 0; after < run.Spec.Rows; {
 		page, err := p.normal.Rows(workspace, runID, after, p.page)
 		if err != nil {
-			return chargeCandidate{}, err
+			return chargeInput{}, err
 		}
 		if page.Format.Result != normalize.Conformant || page.Billing.Result != normalize.Ready || len(page.Rows) == 0 || len(page.Rows) > p.page || after+len(page.Rows) > run.Spec.Rows {
-			return chargeCandidate{}, errCandidateInvalid
+			return chargeInput{}, errCandidateInvalid
 		}
 		for _, row := range page.Rows {
 			if seen[row.Key] || len(row.Lacking) != 0 {
-				return chargeCandidate{}, errCandidateInvalid
+				return chargeInput{}, errCandidateInvalid
 			}
 			seen[row.Key] = true
 			for name, cell := range row.Cells {
 				if !utf8.ValidString(name) || !utf8.ValidString(cell.Text) {
-					return chargeCandidate{}, errCandidateInvalid
+					return chargeInput{}, errCandidateInvalid
 				}
 			}
 			value := func(name string) (string, bool) {
@@ -328,12 +336,12 @@ func (p *normalizedCharges) captureEvidenceLocked(workspace, runID, candidateID 
 			for i, field := range []string{b.Class, cost, p.target.CostCurrency, b.Quantity, b.SKU, b.Service, b.Group} {
 				text, ok := value(field)
 				if !ok {
-					return chargeCandidate{}, errCandidateInvalid
+					return chargeInput{}, errCandidateInvalid
 				}
 				values[i] = text
 			}
 			if classes[values[0]] == "" || values[2] != b.Policy.Currency {
-				return chargeCandidate{}, errCandidateInvalid
+				return chargeInput{}, errCandidateInvalid
 			}
 			identity := struct {
 				Schema, Workspace, Provider, Scope, Period string
@@ -341,11 +349,11 @@ func (p *normalizedCharges) captureEvidenceLocked(workspace, runID, candidateID 
 			}{"hb_normalized_line_v1", workspace, b.Provider, b.Scope, b.Period, row.Key}
 			id, err := normalizedDigest(identity)
 			if err != nil {
-				return chargeCandidate{}, err
+				return chargeInput{}, err
 			}
 			rowDigest, err := normalizedDigest(row)
 			if err != nil {
-				return chargeCandidate{}, err
+				return chargeInput{}, err
 			}
 			input.Lines = append(input.Lines, rating.Line{ID: id, Class: classes[values[0]], Cost: values[1], Currency: values[2], Quantity: values[3], SKU: values[4], Service: values[5], Group: values[6]})
 			origin.Rows = append(origin.Rows, normalizedRowOrigin{Key: row.Key, Chunk: row.Chunk, Position: row.Position, Digest: rowDigest, Line: id})
@@ -355,10 +363,10 @@ func (p *normalizedCharges) captureEvidenceLocked(workspace, runID, candidateID 
 	input.Normalized = origin
 	provenance, err := normalizedDigest(origin)
 	if err != nil {
-		return chargeCandidate{}, err
+		return chargeInput{}, err
 	}
 	input.Sources = []chargeSource{{ID: runID, Revision: b.Version, Digest: provenance}}
-	return p.candidates.capture(input)
+	return input, nil
 }
 
 func (p *normalizedCharges) sourceAmount(text string) (string, error) {

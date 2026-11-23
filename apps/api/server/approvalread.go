@@ -147,9 +147,16 @@ func (s *Server) readApprovals(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	end := min(offset+25, len(filtered))
-	page := approvalPage{Schema: 1, Numeric: "decimal-strings-read-v1", ReadOnly: true, Commands: "unconnected", Source: "synthetic", Scope: scope, Snapshot: snapshot, Permission: permission, Actor: approvalPrincipal{ID: answer.User(), Label: answer.User()}, View: q.Get("view"), Selection: approvalSelection{Kind: q.Get("kind"), Q: q.Get("q")}, Cursor: approvalString(q.Get("cursor")), Observed: stamp(s.clock()), Total: len(filtered), Records: filtered[offset:end]}
+	page := approvalPage{Schema: 1, Numeric: "decimal-strings-read-v1", ReadOnly: true, Commands: s.approvalCommandCapability(), Source: "synthetic", Scope: scope, Snapshot: snapshot, Permission: permission, Actor: approvalPrincipal{ID: answer.User(), Label: answer.User()}, View: q.Get("view"), Selection: approvalSelection{Kind: q.Get("kind"), Q: q.Get("q")}, Cursor: approvalString(q.Get("cursor")), Observed: stamp(s.clock()), Total: len(filtered), Records: filtered[offset:end]}
 	if end < len(filtered) {
 		page.Next = approvalString(s.approvalCursor(end, snapshot))
 	}
 	writeJSON(w, http.StatusOK, request, page)
+}
+
+func (s *Server) approvalCommandCapability() string {
+	if s.cfg.Seed == SeedSample && s.approvals != nil && s.financialCharges != nil && s.cfg.Commands.Fields >= 24 && s.cfg.Commands.Value >= 1024 {
+		return "financial_charge_v1"
+	}
+	return "unconnected"
 }

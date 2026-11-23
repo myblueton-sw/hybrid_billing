@@ -1,3 +1,5 @@
+import type { DocumentBinding } from "./documents/use-documents";
+import type { DecisionBinding } from "./use-decision";
 import { useEffect, useRef } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { ApprovalRecord, Data } from "./contract";
@@ -9,7 +11,13 @@ export default function Inbox({
   selected,
   select,
   page,
+  decision,
+  documents,
+  refresh,
 }: {
+  decision: DecisionBinding;
+  documents: DocumentBinding;
+  refresh: () => void;
   locale: Locale;
   data: Data;
   selected: ApprovalRecord | undefined;
@@ -126,7 +134,7 @@ export default function Inbox({
                     </span>
                     <span className="b09-meta">{statusLabel(l, r.status)}</span>
                     <span className="b09-meta">
-                      {t(l, "Synthetic example", "합성 예시", "مثال تجريبي")}
+                      {t(l, "Synthetic record", "합성 기록", "سجل اصطناعي")}
                       {selected?.id === r.id && (
                         <> · {t(l, "Selected", "선택됨", "محدد")}</>
                       )}
@@ -136,6 +144,9 @@ export default function Inbox({
                     <div className="b09-mobile-detail">
                       <ResultCard
                         locale={l}
+                        decision={decision} documents={documents}
+                        refresh={refresh}
+                        surface="mobile"
                         data={d}
                         record={r}
                         close={() => select(null)}
@@ -150,6 +161,9 @@ export default function Inbox({
             {selected ? (
               <ResultCard
                 locale={l}
+                decision={decision} documents={documents}
+                refresh={refresh}
+                surface="desktop"
                 data={d}
                 record={selected}
                 close={() => select(null)}

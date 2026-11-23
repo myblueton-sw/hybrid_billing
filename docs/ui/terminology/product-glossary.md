@@ -11,6 +11,11 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 
 | Concept ID / canonical alias | Preferred KO | Preferred EN | AR candidate | Definition and forbidden implications | Current scope |
 | --- | --- | --- | --- | --- | --- |
+| decision-condition-check / B09 | 결정 조건 확인 | Check decision conditions | التحقق من شروط القرار | Explicit current observation for the selected financial request; not a decision, reservation or future authorization. | HYB-340 AI TW source review PASS; native-language acceptance pending |
+| unknown-decision-outcome / B09 | 처리 결과 미확인 | Outcome unknown | نتيجة العملية غير معروفة | A submission may have recorded a decision; only the identical submission can be retried. A retry refusal does not establish failure of its earlier effect. | HYB-340 AI TW source review PASS; native-language acceptance pending |
+| identical-decision-retry / B09 | 동일한 제출 다시 시도 | Retry the same submission | إعادة محاولة الإرسال نفسه | Resend the frozen action, target, evidence, rationale, reason and attempt identity; never create a fresh decision attempt automatically. | HYB-340 AI TW source review PASS; native-language acceptance pending |
+| charge-approval-limit-proposals / financial_authority_proposals | 청구 승인 한도 제안 | Charge approval limit proposals | مقترحات حدود اعتماد الرسوم | Pending StageCharge proposals binding a human recipient, currency, exact maximum absolute amount and inclusive UTC dates. Counts proposals, not amounts or effective decision permission. Separate from policy proposals, gate grants, payments and cancellation. | HYB-340 M01; independent AI TW source and rendered context review PASS; native-language acceptance pending |
+| charge-approval-policy-proposals / financial_policy_proposals | 청구 승인 정책 제안 | Charge approval policy proposals | مقترحات سياسة اعتماد الرسوم | Pending StageCharge policy proposals setting approval count, required evidence and validity. Not individual charge requests, pricing policies, permission grants, payments or automatic cancellation. | HYB-340 M01 bulk impact; independent AI TW source and rendered context review PASS; native-language acceptance pending |
 | input-confirmation-permission-requests / input_authority_proposals | 입력 데이터 권한 요청 | Input data permission requests | طلبات صلاحية بيانات الإدخال | Pending proposals and unresolved applications for separate console/human permissions to confirm synthetic input data or inspect its cost-protected evidence. The impact count is not data approval, financial approval, cancellation or proof of effective permission. | M01 bulk impact; independent AI TW/domain wording review PASS; rendered verification PASS; native-language acceptance pending |
 | infrastructure-composition / CostPool, B01 | 인프라 원가 구성 | Infrastructure cost composition | مكوّنات تكلفة البنية التحتية | Period-specific asset, lease/depreciation, license, power and facility cost composition and inclusion review. Not B03 allocation, sales pricing or a complete infrastructure ledger inferred from VMware rows. | B01 menu/title; AI TW design and scoped six-variant rendered review PASS; native-language acceptance pending |
 | billed-cost / BilledCost | 청구 비용 | Billed cost | التكلفة المفوترة | Collected billed source cost, not customer sales, cash payment or approved internal allocation. Preserve FOCUS alias in mapped fields/help. | U01/S04/B01 |
@@ -484,3 +489,35 @@ Regional wording evidence read on 2026-11-20: [Microsoft Korean policy configura
 ## Synthetic pricing policy proposal impact
 
 HYB-225 adds a distinct M01 impact category: `pricing_policy_proposals` → **Pricing policy proposals** / **가격 정책 제안** / **مقترحات سياسة التسعير**. This counts pending policy terms proposed by the selected users. It excludes approved/revoked policies and remains separate from permission requests for console ceilings and human grants. The recheck statement means the proposer’s current authority is checked at approval; it does not mean automatic cancellation or approval of billing amounts. Independent AI domain/TW review accepted these display candidates; native-language and owner acceptance remain pending.
+
+
+## B09 governed synthetic charge records
+
+HYB-340 distinguishes recorded calculation evidence from current financial eligibility. Independent AI terminology review accepted these candidates; native-language and owner acceptance remain pending.
+
+| Concept | EN | KO | AR candidate | Meaning |
+| --- | --- | --- | --- | --- |
+| rated_candidate_total | Rated candidate total | 과금 계산 후보 합계 | إجمالي نتيجة احتساب الرسوم المبدئية | Exact rated result, not inferred tax-inclusive gross, final invoice or payment. |
+| requester | Requester in source record | 요청자 (원천 기록) | مقدّم الطلب في سجل المصدر | Person who submitted the approval request, separate from original calculation author and decision actor. |
+| policy_revision | Recorded policy revision | 기록된 정책 버전 | نسخة السياسة المسجّلة | Policy revision bound to the recorded request, not an assertion of current policy applicability. |
+| synthetic row | Synthetic record | 합성 기록 | سجل اصطناعي | Actual record in a synthetic environment, not production billing. |
+
+For current_checks_unverified, use: **Current prerequisites and permission were not rechecked for this historical read.** / **이 이력 조회에서는 현재 선행 조건과 권한을 다시 확인하지 않았습니다.** / **لم تُعَد مراجعة المتطلبات المسبقة والصلاحية الحالية عند عرض هذا السجل التاريخي.** This is an unchecked condition, not a failed validation or permission grant. Keep the neutral warning separate from failed-validation blockers.
+
+
+## Synthetic document evidence and preparation permission
+
+HYB-340 separates grant-governor approval from actual document evidence confirmation. Confirming evidence does not approve invoice gross or establish tax policy. Revoking evidence stops future use, whereas revoking a grant removes a user's permission. Preparing an ERP record is internal preparation, not external submission, posting or issuance.
+
+| Identifier | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| propose_document_evidence | Propose document evidence | 문서 근거 제안 | اقتراح أدلة المستند |
+| confirm_document_evidence | Confirm document evidence | 문서 근거 확인 | تأكيد أدلة المستند |
+| revoke_document_evidence | Revoke document evidence | 문서 근거 철회 | إلغاء أدلة المستند |
+| prepare_erp_record | Prepare internal ERP record | 내부 ERP 기록 준비 | إعداد سجل ERP داخلي |
+| synthetic_document_evidence | Synthetic document evidence | 합성 문서 근거 | أدلة مستند اصطناعية |
+| document_evidence | Document evidence | 문서 근거 | أدلة المستند |
+| document_authority_proposals | Document evidence and ERP preparation permission proposals | 문서 근거·ERP 준비 권한 제안 | مقترحات صلاحيات أدلة المستند وإعداد ERP |
+| document_evidence_proposals | Document evidence proposals | 문서 근거 제안 | مقترحات أدلة المستند |
+
+M01 distinguishes permission proposals across all five capabilities from pending document-evidence packets counted by their original proposer. The document count excludes confirmed and revoked packets and all permission proposals. Confirmation rechecks the original proposer's current proposal authority; a count does not imply automatic cancellation, financial approval or ERP preparation. The document row says "The proposer’s permission is rechecked when the document evidence is confirmed." Its false/unknown fallback does not assert this safeguard. M03/P02 show actual human grants and console ceilings. The evidence field is protected as Cost; its name is not translated as document cost. Independent AI technical-writing review selected these terms from the actual contract and existing confirmation/revocation vocabulary; native-language and owner acceptance remain unverified.

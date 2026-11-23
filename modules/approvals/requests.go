@@ -212,26 +212,9 @@ func (r *Registry) Decide(workspace, id string, d Decision, actor Actor) (Reques
 		}
 		return viewRequest(req), nil
 	}
-	if actor.Kind != KindHuman {
-		return RequestView{}, refuse(ReasonAINotAllowed)
-	}
-	if req.view.State != StatePending {
-		return RequestView{}, refuse(ReasonNotPending)
-	}
-	if actor.ID == req.view.Subject.Author || actor.ID == req.view.Requester {
-		return RequestView{}, refuse(ReasonSelfApproval)
-	}
-	extra := map[string]string{}
-	for _, x := range d.Exclude {
-		extra[x.Item] = x.Reason
-	}
-	if d.Verdict == VerdictApprove {
-		if !s.covering(actor.ID, req.view.Subject.Stage, req.view.Subject.Currency, req.covered(extra), now) {
-			return RequestView{}, refuse(ReasonNoAuthority)
-		}
-		if len(req.entries) > 0 && req.remaining(extra) == 0 {
-			return RequestView{}, refuse(ReasonNothingLeft)
-		}
+	extra, err := s.checkDecision(req, d, actor, now)
+	if err != nil {
+		return RequestView{}, err
 	}
 	view := DecisionView{Decision: d, Actor: actor.ID, At: now}
 	view.Digest = decisionDigest(workspace, id, view)

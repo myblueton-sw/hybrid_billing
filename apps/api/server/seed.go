@@ -107,6 +107,7 @@ func (s *Server) Start() error {
 			step{"organizations", func() (bool, error) { return true, s.seedOrganizations() }},
 			step{"contracts", func() (bool, error) { return true, s.seedContracts() }},
 			step{"charge-candidates", func() (bool, error) { return true, s.seedChargeCandidates(now) }},
+			step{"synthetic-document-erp", func() (bool, error) { return true, s.seedDocumentERP() }},
 			step{"input-review", func() (bool, error) { return true, s.seedInputReview() }},
 			step{"installation", func() (bool, error) { return true, s.seedInstallation(now) }},
 			step{"installation-grants", func() (bool, error) { return true, s.seedInstallationGrants(now) }},

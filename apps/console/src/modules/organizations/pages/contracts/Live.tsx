@@ -203,10 +203,10 @@ export default function LiveContracts({ locale: l, view, params, session, onSign
               </div>
             ) : detail && detail.contract.id === selectedId ? (
               <>
-              {detailError != null && <div className="live-error o03-detail-kept" role="alert"><h2>{failureText(l, detailError).title}</h2><p>{diagnosticCopy.kept(l)}</p><button type="button" className="live-secondary" onClick={() => void loadDetail()}>{sc.tryAgain(l)}</button></div>}
+              {detailError != null && <div className="live-error o03-detail-kept" role="alert" id="o03-detail-stale"><h2>{failureText(l, detailError).title}</h2><p>{diagnosticCopy.kept(l)}</p><button type="button" className="live-secondary" onClick={() => void loadDetail()}>{sc.tryAgain(l)}</button></div>}
               <Detail
                 key={selectedId}
-                l={l} view={view} detail={detail} parties={parties} api={api} session={session} params={params} period={period}
+                l={l} view={view} detail={detail} stale={detailError != null} parties={parties} api={api} session={session} params={params} period={period}
                 setupOn={on || page?.on || ""} onParams={onParams} onReload={reloadAll}
                 onDone={(text) => { setNotice(text); void reloadAll(); requestAnimationFrame(() => document.getElementById("o03-notice")?.focus()); }}
                 onDenied={() => setDenied(true)} onSignedOut={() => setSignedOut(true)}

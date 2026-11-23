@@ -59,7 +59,26 @@ Owner-visible residuals are recorded in the evidence and protected writes contra
 1. Owner screen review of the O03 documents and payment terms views and of the M03 permission areas, with the open questions and review notes of [the O03 screens plan](issuance-setup-screens-plan.md).
 2. The real-server run of the O03 screens does not yet cover an unknown outcome on steps other than channel acceptance or the narrower widths.
 3. Configuration replacement, release operations and durable production recovery remain explicit separate scopes.
-4. Separate issues: HYB-344 (M01 impact gaps; item 2 read and confirmed, not started), HYB-345, HYB-346, HYB-347, HYB-348 (step holders without installation administration cannot open the O03 screens), HYB-349 (lapsed grants of earlier actors refuse later steps without a distinguishable reason), and the owner decisions of HYB-342.
+4. Separate issues, with their state on 2026-11-24:
+   - HYB-344 (M01 impact gaps): items 2 to 5 merged as candidates (PR 292, 293, 298, 299); item 1, rows for the people who must perform the next step, awaits a design decision.
+   - HYB-346 (labels of issuance grants on M03 and P02): labels merged (PR 294); rendered check and two wording decisions open.
+   - HYB-347 (M03 history row, navigation caption, refusal heading): items 1 to 3 merged as candidates (PR 295, 296); item 4, wording decisions, open.
+   - HYB-342, HYB-345, HYB-348, HYB-349: each has a document of verified facts and options and awaits the owner's decision; see the next section.
+
+# Decisions waiting for the owner
+
+Four documents were prepared on 2026-11-24. Each records facts read from code, a test where one was added, options, root's reading, an independent review and what was not checked. None of them decides anything.
+
+| Question | Document | What it found |
+| --- | --- | --- |
+| How a step holder who is not an installation administrator reaches the O03 setup views | [HYB-348 options](../HYB-348/step-holder-screen-access-options.md) | The service already allows every setup read and step to such a person; only the console's path through the contract list stops them. A change needs five distinct people and the sample installation has three who can open the screen |
+| Whether later steps and later invoices keep rechecking the current permission of the people who performed earlier steps | [HYB-349 options](../HYB-349/lapsed-grant-options.md) | Grants last at most 24 hours and a channel must age at least 24 hours, so grants must always be made again; every draft review rechecks everyone involved in setup; the planning text does not require this; both numbers are code literals |
+| How a setup record that can no longer progress is released | [HYB-345 options](../HYB-345/release-options.md) | The module can discard, retire and withdraw but the service uses none; rules can be neither discarded nor revised, and the departure of either of their administrators stops every protected step |
+| Whether returned digests may reveal withheld values | [HYB-342 assessment](../HYB-342/digest-oracle-assessment.md) | Unkeyed digests cover withheld values; low consequence while references are synthetic samples; to be closed before real references exist |
+
+The first three are one question seen from three sides: what happens when the people involved in setup change, lapse or leave. They are better decided together, in this order: HYB-349 first, because it fixes whose standing matters at later steps; then HYB-345, whose options for an absent person depend on that answer; then HYB-348, which is independent of the other two in its first option and can also be taken first if the owner wants the screens usable by separated people soonest. HYB-342 is independent of all three.
+
+Smaller decisions recorded on their tickets: the M01 rows for people who must perform the next step (HYB-344 item 1); "View cost" as the action name of inspect grants and the Korean wording of synthetic resource kinds (HYB-346); "허용 작업" against "권한", "납부 조건" against "지급 조건" and "확인" against "검증" (HYB-347 item 4).
 
 # Discovery evidence and traps
 

@@ -136,6 +136,6 @@ try{
  evidence.writes=evidence.commands.filter(c=>!/ issuance_setup\.(protected|protected_channels|protected_changes|attestations|references|terms|context|options|history|impact)$/.test(c)&&c.includes('issuance_setup.'));
  evidence.outcome='passed';
 }catch(e){evidence.outcome='failed';evidence.stage=stage;evidence.failure=String(e.message).slice(0,600);let i=0;for(const p of all)await p.screenshot({path:`${args.output}/failure-${i++}.png`,fullPage:true}).catch(()=>{});}
-evidence.commands=[...new Set(evidence.commands)];
+evidence.sent=evidence.commands.reduce((a,c)=>{const w=c.split(' ')[0];a[w]=(a[w]||0)+1;return a;},{});evidence.commands=[...new Set(evidence.commands)];
 await writeFile(args.output+'/evidence.json',JSON.stringify(evidence,null,1));await browser.close();
 if(evidence.outcome!=='passed'){console.error(JSON.stringify({stage:evidence.stage,failure:evidence.failure,refusals:evidence.refusals}));process.exit(1);}

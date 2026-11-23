@@ -43,10 +43,11 @@
 .o03-field-cards button { justify-self: start; }
 .o03-part-sub { display: grid; gap: 16px; margin-block-start: 16px; }
 .o03-part-sub h4:focus-visible { outline: 2px solid var(--focus-ring, #202a35); outline-offset: 2px; }
-.o03-part-table.o03-changes-table th:nth-child(1) { inline-size: 24%; }
-.o03-part-table.o03-changes-table th:nth-child(2) { inline-size: 36%; }
-.o03-part-table.o03-changes-table th:nth-child(3) { inline-size: 20%; }
-.o03-part-table.o03-changes-table th:nth-child(4) { inline-size: 20%; }
+.o03-part-table.o03-changes-table th:nth-child(1) { inline-size: 20%; }
+.o03-part-table.o03-changes-table th:nth-child(2) { inline-size: 30%; }
+.o03-part-table.o03-changes-table th:nth-child(3) { inline-size: 16%; }
+.o03-part-table.o03-changes-table th:nth-child(4) { inline-size: 16%; }
+.o03-part-table.o03-changes-table th:nth-child(5) { inline-size: 18%; }
 .o03-part-notice { margin: 0 0 8px; }
 .o03-events { margin: 0; padding-inline-start: 20px; display: grid; gap: 8px; }
 .o03-events .live-sub { display: block; }
@@ -83,3 +84,6 @@
 .o03-kept p { margin: 0 0 8px; }
 .o03-steps .o03-setup-review h6 { margin-block: 16px 4px; }
 .o03-steps .o03-setup-review .o03-statement { margin-block-end: 4px; }
+.o03-steps .o03-setup-form input.o03-datetime { max-inline-size: 18rem; direction: ltr; }
+.o03-live .live-table .o03-part-table th, .o03-documents .o03-part-table th { overflow-wrap: normal; word-break: normal; hyphens: none; }
+.o03-steps dd > .live-sub { display: block; }

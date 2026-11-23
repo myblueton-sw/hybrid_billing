@@ -715,6 +715,8 @@ Labels of the protected settings changes part, from `setup/changes-copy.ts`:
 | `effective` | Takes effect | 적용 시각 | وقت السريان |
 | provenance | Entered by staff, Customer document, Customer portal | 직원 입력, 고객 문서, 고객 포털 | إدخال من الموظف، مستند من العميل، بوابة العميل |
 
+Change steps (slice 10): "Request protected settings change" and "Verify protected settings change" are the M03 capability labels. The decision step is "Decide protected settings change / 보호된 설정 변경 결정 / البتّ في تغيير الإعدادات المحمية", because it may approve or reject, while the capability is labelled "Approve protected settings change"; its choices are "Approve / 승인 / اعتماد" and "Reject / 반려 / رفض". Verification outcomes read "The instruction was confirmed through the channel" and "The instruction was denied". Rejection reasons: Incorrect details / 내용 오류, Missing supporting material / 뒷받침 자료 누락, Suspected fraud / 사기 의심, Other / 기타. The reason code `missing_evidence` is not shown as "evidence".
+
 The change state `confirmed` is not shown as "confirmed" or "verified": it means that a verification was recorded and a decision is awaited. A verifier's outcome is shown as what the verifier stated. "Latest scheduled change" is recorded history and does not state that an invoice draft can use the change.
 
 Labels of the statements part and of the sample references, from `setup/statements-copy.ts`:

@@ -29,6 +29,10 @@ const (
 	financialRequestDomain    grantAuthorityDomain = 4
 )
 
+func (d grantAuthorityDomain) governed() bool {
+	return d == financialRequestDomain || d == erpFinalRequestDomain || d == documentGrantAuthority || d == resultGrantAuthority || d == protectedGrantAuthority || d == termGrantAuthority || d == draftGrantAuthority
+}
+
 func (d grantAuthorityDomain) grantPrefix() string {
 	if d == draftGrantAuthority {
 		return "issuance-draft-grant-"

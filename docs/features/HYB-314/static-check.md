@@ -174,3 +174,27 @@ Left open: on O03 the alert can be thousands of pixels above the "Check permissi
 Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3. No new test, no rendered check and no further review: the change places an existing alert in three more spots and reuses the sentence reviewed for O02 and O03. These states need a failed reload at a narrow width with a panel open, which no existing render check stages, so how they look is not verified.
 
 Left open: commands on these three screens stay enabled in that state.
+
+# Trace of the suspected "fake success" findings (2026-11-24)
+
+The findings A4, E5, F3, G4 and H2 were suspected because screens show their success text when a command request resolves, without reading the status. Root traced the command layer and the commands named, by reading main at f78d319. Nothing was executed.
+
+Facts:
+
+| Fact | Evidence |
+| --- | --- |
+| A mutating command's result is either accepted, with a job identifier and no business state, or completed, with a valid result revision and a valid business state. Any other outcome is turned into an internal error, which the console receives as a failed request | `modules/commands/execute.go:184` to `:193`, `:421` to `:437` |
+| Four command paths return accepted: approving an access request that revokes, revoking a delegation, executing a bulk revocation, and a trust activation whose outcome is unknown | `apps/api/server/accessrequests.go:347`, `revocations.go:145`, `bulk.go:129`, `trust.go:315` |
+| The console words each of those as received and not as done: approving a revoking request and revoking a delegation say that the revocation was received and that its state is shown in the Revocations section; executing a bulk revocation hands over to the job view; trust activation reads the returned state | `access/request-copy.ts` (`doneApprovedRevoke`, `doneRevokedDeleg`), `access/Requests.tsx:79`, `users/BulkPrepare.tsx:153`, `authentication/TrustAfter.tsx` |
+| Approving an access request that adds returns completed with the state "granted" | `accessrequests.go:345` |
+| On O02, a completed activation always has the state "activated" and a completed discard "discarded" | `relplans.go:405` to `:451` |
+| On P01, a completed command always returns the proposal number and the proposal's state | `installation.go:544` |
+
+Result:
+
+- A4 (M01, M02, M03, M04): refuted. For the commands on these screens a resolved request is a completed command, except the four accepted paths, which the console already words as received.
+- F3: refuted for activate and discard. Not settled for propose, whose returned state is the plan's state and is treated as sealed unless it is "rejected"; the set of plan states at that point was not traced.
+- H2 (P01): refuted for the missing proposal number and for withdraw. For approve the text shows the returned state, which is accurate. The P02 items were not traced.
+- E5 (O01 draft save) and G4 (O03 contract actions): not settled; the fields and states returned by those commands were not traced.
+
+So the pattern is narrower than the static check suggested: it does not hold on M01 to M04, and what remains is three command-specific questions (O02 propose, O01 draft save, O03 contract actions) and the P02 items.

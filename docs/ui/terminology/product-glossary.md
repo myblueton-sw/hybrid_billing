@@ -749,6 +749,8 @@ Labels of the O03 payment terms view, from `setup/terms-copy.ts`. The Korean ter
 | reasons | Initial, Renegotiation, Correction | 최초 적용, 재협상, 정정 | أولي، إعادة تفاوض، تصحيح |
 | origins | These issuance settings, Other issuance settings, Billing profile | 이 발행 설정, 다른 발행 설정, 청구 프로필 | إعدادات الإصدار هذه، إعدادات إصدار أخرى، ملف الفوترة |
 
+Step and result labels of the payment terms view (slice 7): the four step labels reuse the M03 capability labels, with "this contract" for the two application steps (이 계약에 납부 조건 적용, 이 계약에 납부 조건 적용 승인; تطبيق شروط الدفع على هذا العقد, اعتماد تطبيق شروط الدفع على هذا العقد). The check button reads "Review before sending / 전송 전 검토 / المراجعة قبل الإرسال" because no permission is checked before sending. Results read "Refused. This request recorded nothing.", "Outcome unknown…", "Recorded. Current issuance eligibility was not checked." and "Settled by a matching recovery"; the retry and recovery labels are the merged "Retry exact request / 동일 요청 재시도" and "Recover recorded attempt / 기록된 시도 복구".
+
 "Approved" is the approval of the recorded terms or of their application by a second person. The view calculates no due date and states nothing as payable, due or overdue.
 
 A statement (진술, إفادة) is its author's accountable claim and is never labelled evidence, proof or verification. "Selected" states which confirmed settings the user chose as scope; it does not state that issuance is possible. Role-based AI review only; native-language and owner acceptance remain unverified.

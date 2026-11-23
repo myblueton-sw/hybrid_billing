@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Locale } from "../../../../../shared/types";
 import type { Session } from "../../../../../service/api";
 import { day, ltr, stamp } from "../live-format";
@@ -12,6 +12,9 @@ import { rulesText } from "./rules-copy";
 import { sessionScopeStore, type SetupScope } from "./scope";
 import type { PaymentTerm, TermBinding } from "./terms";
 import { netDays, termText as c, type TermWord } from "./terms-copy";
+import { termOffers, type TermOffer } from "./term-flow";
+import { TermResults, TermSteps, useTermStore, type TermStore } from "./TermWrites";
+import { termError } from "./terms-copy";
 import "./documents.css";
 
 type Props = { l: Locale; session: Session; contract: string; on: string; onSignedOut: () => void };
@@ -32,26 +35,32 @@ export function PaymentTerms({ l, session, contract, on, onSignedOut }: Props) {
  useEffect(() => { void history.load(); return () => history.dispose(); }, [history]);
  useEffect(() => { scopes.reconcile(found.value, ""); }, [scopes, found.value]);
  useEffect(() => { if (found.error === "session_changed" || found.error === "unauthenticated") signOut.current(); }, [found.error]);
- if (scope) return <div className="o03-documents"><ScopeBar l={l} scope={scope} /><Terms key={scope.configuration + scope.digest} l={l} client={client} contract={contract} scope={scope} onSignedOut={onSignedOut} /></div>;
+ const writes = useTermStore(session), [settled, setSettled] = useState(0);
+ const results = writes ? <TermResults l={l} session={session} store={writes} contract={contract} onSettled={() => setSettled(n => n + 1)} /> : <p role="alert">{termError(l, "session_capacity")}</p>;
+ if (scope) return <div className="o03-documents"><ScopeBar l={l} scope={scope} /><Terms key={scope.configuration + scope.digest} l={l} session={session} client={client} contract={contract} scope={scope} writes={writes} settled={settled} onSignedOut={onSignedOut} />{results}</div>;
  return <div className="o03-documents"><section className="o03-part" aria-labelledby="o03-part-title">
   <h3 id="o03-part-title">{c(l, "title")}</h3>
   {found.loading || !found.value && !found.error ? <p role="status">{text(l, "loading")}</p> : <>
    {found.error ? <div className="live-error" role="alert"><p>{c(l, "historyDenied")}</p><p className="live-mono">{ltr(found.error)}</p></div> : <p>{c(l, "noScope")}</p>}
    <p><a href={settingsHref()}>{c(l, "toSettings")}</a></p>
   </>}
- </section></div>;
+ </section>{results}</div>;
 }
 
-type TermsProps = { l: Locale; client: ReturnType<typeof setupReadClient>; contract: string; scope: SetupScope; onSignedOut: () => void };
-function Terms({ l, client, contract, scope, onSignedOut }: TermsProps) {
+type TermsProps = { l: Locale; session: Session; client: ReturnType<typeof setupReadClient>; contract: string; scope: SetupScope; writes: TermStore | undefined; settled: number; onSignedOut: () => void };
+function Terms({ l, session, client, contract, scope, writes, settled, onSignedOut }: TermsProps) {
+ const [chosen, setChosen] = useState<TermBinding>();
  const store = useMemo(() => new PageReadStore((after, snapshot) => client.terms({ contract, configuration: scope.configuration, digest: scope.digest }, after, snapshot)), [client, contract, scope.configuration, scope.digest]);
  const state = useSyncExternalStore(store.subscribe, store.getSnapshot), heading = useRef<HTMLHeadingElement>(null);
  const signOut = useRef(onSignedOut); signOut.current = onSignedOut;
  useEffect(() => { void store.load(); return () => store.dispose(); }, [store]);
+ const first = useRef(true), sending = useSyncExternalStore(writes?.subscribe ?? noStore, () => !!writes?.snapshot().entries.some(e => e.phase === "pending")), blocked = useSyncExternalStore(writes?.subscribe ?? noStore, () => !!writes?.unresolved());
+ useEffect(() => { if (first.current) { first.current = false; return; } heading.current?.focus(); void store.load(); }, [settled]);
  useEffect(() => { if (state.error === "session_changed" || state.error === "unauthenticated") signOut.current(); }, [state.error]);
- const page = state.value;
+ const page = state.value, offers = page ? termOffers(page, session.user).bindings : {};
+ useEffect(() => { setChosen(undefined); }, [page]);
  return <section className="o03-part" aria-labelledby="o03-part-title" aria-busy={state.loading || undefined}>
-  <div className="o03-docs-heading"><h3 id="o03-part-title" ref={heading} tabIndex={-1}>{c(l, "part")}</h3><button type="button" className="live-secondary" disabled={state.loading} onClick={() => { heading.current?.focus(); void store.load(); }}>{text(l, "reload")}</button></div>
+  <div className="o03-docs-heading"><h3 id="o03-part-title" ref={heading} tabIndex={-1}>{c(l, "part")}</h3><button type="button" className="live-secondary" disabled={state.loading || sending} onClick={() => { heading.current?.focus(); void store.load(); }}>{text(l, "reload")}</button></div>
   <p>{c(l, "purpose")}</p>
   <p className="live-sub">{c(l, "notComputed")}</p>
   <TermsFeedback l={l} state={state} />
@@ -66,12 +75,15 @@ function Terms({ l, client, contract, scope, onSignedOut }: TermsProps) {
      <div><dt>{c(l, "total")}</dt><dd>{page.count}</dd></div>
      <div><dt>{c(l, "showing")}</dt><dd>{page.rows.length}</dd></div>
     </dl>
-    {page.rows.length === 0 ? <p className="live-empty">{c(l, "empty")}</p> : <div className="live-table"><table className="o03-part-table o03-bindings-table" aria-labelledby="o03-bindings-title"><thead><tr>{(["period", "terms", "state", "people", "basis"] as const).map(key => <th key={key} scope="col">{c(l, key)}</th>)}</tr></thead><tbody>{page.rows.map(row => <BindingRow key={row.binding} l={l} row={row} scope={scope} />)}</tbody></table></div>}
-    <div className="o03-docs-pages">{state.after && <button type="button" className="live-secondary" onClick={() => { heading.current?.focus(); void store.load(); }}>{text(l, "first")}</button>}{page.next && <button type="button" className="live-secondary" onClick={() => { heading.current?.focus(); void store.load(true); }}>{text(l, "next")}</button>}</div>
+    {page.rows.length === 0 ? <p className="live-empty">{c(l, "empty")}</p> : <div className="live-table"><table className="o03-part-table o03-bindings-table" aria-labelledby="o03-bindings-title"><thead><tr>{(["period", "terms", "state", "people", "basis", "action"] as const).map(key => <th key={key} scope="col">{c(l, key)}</th>)}</tr></thead><tbody>{page.rows.map(row => <BindingRow key={row.binding} l={l} row={row} scope={scope} offer={offers[row.binding] ?? "none"} blocked={blocked} onApprove={() => { setChosen(row); document.getElementById("o03-term-steps")?.focus(); }} />)}</tbody></table></div>}
+    <div className="o03-docs-pages">{state.after && <button type="button" className="live-secondary" disabled={sending} onClick={() => { heading.current?.focus(); void store.load(); }}>{text(l, "first")}</button>}{page.next && <button type="button" className="live-secondary" disabled={sending} onClick={() => { heading.current?.focus(); void store.load(true); }}>{text(l, "next")}</button>}</div>
    </div>
+   {writes && <TermSteps l={l} session={session} store={writes} scope={scope} page={page} row={chosen} onRowDone={() => setChosen(undefined)} onSettled={() => { heading.current?.focus(); void store.load(); }} />}
   </>}
  </section>;
 }
+
+const noStore = () => () => undefined;
 
 function TermsFeedback({ l, state }: { l: Locale; state: ReadState<unknown> }) {
  if (state.loading) return <p role="status">{text(l, "loading")}</p>;
@@ -102,7 +114,7 @@ function TermFacts({ l, term: t }: { l: Locale; term: PaymentTerm }) {
  <details><summary>{text(l, "details")}</summary><p className="live-mono">{ltr(t.id)}</p><p className="live-mono">{ltr(t.digest)}</p></details></>;
 }
 
-function BindingRow({ l, row: r, scope }: { l: Locale; row: TermBinding; scope: SetupScope }) {
+function BindingRow({ l, row: r, scope, offer, blocked, onApprove }: { l: Locale; row: TermBinding; scope: SetupScope; offer: TermOffer; blocked: boolean; onApprove: () => void }) {
  const origin = r.origin === "profile" ? c(l, "originProfile") : r.configuration === scope.configuration ? c(l, "originThese") : c(l, "originOther");
  return <tr>
   <td data-label={c(l, "period")}><span className="o03-part-line">{c(l, "from")}: {day(l, r.from)}</span><span className="o03-part-line">{r.to ? <>{c(l, "to")}: {day(l, r.to)}</> : c(l, "noEnd")}</span><details><summary>{text(l, "details")}</summary><p className="live-mono">{ltr(r.binding)}</p><p className="live-mono">{ltr(r.digest)}</p></details></td>
@@ -114,6 +126,7 @@ function BindingRow({ l, row: r, scope }: { l: Locale; row: TermBinding; scope: 
   </td>
   <td data-label={c(l, "people")}>{person(l, "appliedBy", r.author, "appliedAt", r.written_at)}{person(l, "approvedRow", r.approver, "approvedAt", r.approved_at)}</td>
   <td data-label={c(l, "basis")}><span className="o03-part-line">{c(l, "reason")}: {c(l, r.reason as TermWord)}</span><span className="o03-part-line">{c(l, "origin")}: {origin}{r.origin === "configuration" && r.configuration !== scope.configuration && <span className="live-sub">{ltr(r.configuration)}</span>}</span></td>
+  <td data-label={c(l, "action")}>{offer === "offer" ? <button type="button" className="live-secondary" disabled={blocked} aria-describedby={blocked ? "o03-term-blocked" : undefined} aria-label={c(l, "actApproveApply") + ": " + r.binding} onClick={onApprove}>{c(l, "actApproveShort")}</button> : offer === "own" ? c(l, "ownBinding") : null}</td>
  </tr>;
 }
 function Fact({ label, children }: { label: string; children: ReactNode }) { return <div><dt>{label}</dt><dd>{children}</dd></div>; }

@@ -107,6 +107,7 @@ export const o = {
   revisionReset: (l: Locale, r: number) =>
     t(l, `Revision ${r} could not be read. Showing the active revision.`, `리비전 ${r}을(를) 읽을 수 없어 활성 리비전을 표시합니다.`, `تعذرت قراءة المراجعة ${r}. يتم عرض المراجعة النشطة.`),
   notLoaded: (l: Locale) => t(l, "Not loaded yet", "아직 불러오지 않음", "لم يُحمّل بعد"),
+  factsFailed: (l: Locale) => t(l, "Could not be loaded.", "불러오지 못했습니다.", "تعذّر التحميل."),
   notLoadedTitle: (l: Locale) => t(l, "Not placed yet: their relationships are on pages not loaded", "아직 배치하지 않음: 관계가 아직 불러오지 않은 페이지에 있음", "لم توضع بعد: علاقاتها في صفحات لم تُحمّل"),
   conflict: (l: Locale, n: number) => t(l, `Conflicting attribution (${n} targets)`, `귀속 충돌 (대상 ${n}개)`, `إسناد متعارض (${n} أهداف)`),
   conflictTitle: (l: Locale, d: string) => t(l, `Conflicting attribution on ${d}`, `${d} 귀속 충돌`, `إسناد متعارض في ${d}`),

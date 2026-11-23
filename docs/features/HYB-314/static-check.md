@@ -198,3 +198,9 @@ Result:
 - E5 (O01 draft save) and G4 (O03 contract actions): not settled; the fields and states returned by those commands were not traced.
 
 So the pattern is narrower than the static check suggested: it does not hold on M01 to M04, and what remains is three command-specific questions (O02 propose, O01 draft save, O03 contract actions) and the P02 items.
+
+## O01 finding E1 (2026-11-24)
+
+When the read of a member's facts fails, the parent row of the detail no longer stays on "Loading…": it says "Could not be loaded." with a "Try again" link that repeats the read.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3. No new test, no rendered check and no review: one short sentence and the existing "Try again" label; no render check exists for O01 with a failing member read, so how it looks is not verified.

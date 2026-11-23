@@ -9,6 +9,7 @@ import { ActionBar, CommandForm, type Shared } from "./LiveActions";
 import { day, ltr, nameOf, stamp } from "./live-format";
 import { Documents } from "./setup/Documents";
 import { partOf } from "./setup/scope";
+import { PaymentTerms } from "./setup/PaymentTerms";
 
 type Props = {
   l: Locale;
@@ -27,7 +28,7 @@ type Props = {
   onSignedOut: () => void;
 };
 
-const unconnected = ["payment-terms", "recognition"];
+const unconnected = ["recognition"];
 
 export function Detail(p: Props) {
   const { l, view, detail } = p;
@@ -56,6 +57,7 @@ export function Detail(p: Props) {
           : view === "documents" ? <Documents l={l} session={p.session} contract={c.id} on={p.setupOn} parties={p.parties} part={partOf(p.params.get("part"))} onPart={(part) => p.onParams({ part: part === "settings" ? null : part })} onSignedOut={p.onSignedOut} />
           : view === "products" ? <Products l={l} detail={detail} parties={p.parties} />
             : view === "termination" ? <Termination l={l} detail={detail} shared={shared} />
+              : view === "payment-terms" ? <PaymentTerms l={l} session={p.session} contract={c.id} on={p.setupOn} onSignedOut={p.onSignedOut} />
               : unconnected.includes(view) ? <Unconnected l={l} view={view} />
                 : <Parties l={l} detail={detail} parties={p.parties} />}
       </div>

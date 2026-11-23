@@ -731,4 +731,24 @@ Labels of the statements part and of the sample references, from `setup/statemen
 
 Sample labels are built from the use and the letter of the catalog code; the code itself is not shown.
 
+Labels of the O03 payment terms view, from `setup/terms-copy.ts`. The Korean term is 납부 조건 on this view, as on M03, M01 and the draft inbox; the payer labels (지급 주체, 지급자) are a separate concept.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| view | Payment terms | 납부 조건 | شروط الدفع |
+| `net_days` | Net days (calendar): 30 days | 납부 기한 일수(달력일): 30일 | أيام الاستحقاق (تقويمية): 30 يومًا |
+| part | Payment terms of these settings | 이 설정의 납부 조건 | شروط الدفع لهذه الإعدادات |
+| binding author | Applied by | 적용자 | طبّقه |
+| state `registration_unknown` | Recording outcome unknown | 기록 처리 결과 미확인 | نتيجة التسجيل غير معروفة |
+| state `pending` | Recorded, awaiting approval | 기록됨, 승인 대기 | مسجَّلة، بانتظار الاعتماد |
+| state `approval_unknown` | Approval outcome unknown | 승인 처리 결과 미확인 | نتيجة الاعتماد غير معروفة |
+| state `approved` | Approved | 승인됨 | معتمدة |
+| pinned approver | Approver pinned, not yet observed | 지정된 승인자, 아직 관찰되지 않음 | المعتمِد المعيَّن، لم يُرصد بعد |
+| bindings | Payment terms applied to this contract | 이 계약에 적용된 납부 조건 | شروط الدفع المطبَّقة على هذا العقد |
+| open-ended | No end date | 종료일 없음 | بلا تاريخ انتهاء |
+| reasons | Initial, Renegotiation, Correction | 최초 적용, 재협상, 정정 | أولي، إعادة تفاوض، تصحيح |
+| origins | These issuance settings, Other issuance settings, Billing profile | 이 발행 설정, 다른 발행 설정, 청구 프로필 | إعدادات الإصدار هذه، إعدادات إصدار أخرى، ملف الفوترة |
+
+"Approved" is the approval of the recorded terms or of their application by a second person. The view calculates no due date and states nothing as payable, due or overdue.
+
 A statement (진술, إفادة) is its author's accountable claim and is never labelled evidence, proof or verification. "Selected" states which confirmed settings the user chose as scope; it does not state that issuance is possible. Role-based AI review only; native-language and owner acceptance remain unverified.

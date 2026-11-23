@@ -16,7 +16,6 @@ const words = {
  setupDate: ["Setup date", "설정 기준일", "تاريخ الإعداد"],
  noScope: ["Select confirmed issuance settings first. Protected settings and payment terms are recorded for one set of confirmed settings.", "확인 완료된 발행 설정을 먼저 선택하세요. 보호된 설정과 납부 조건은 확인 완료된 설정 하나를 기준으로 기록됩니다.", "حدِّد أولاً إعدادات إصدار مؤكدة. تُسجَّل الإعدادات المحمية وشروط الدفع لمجموعة واحدة من الإعدادات المؤكدة."],
  toSettings: ["Go to issuance settings", "발행 설정으로 이동", "الانتقال إلى إعدادات الإصدار"],
- unconnected: ["This section is not connected in this build.", "이 항목은 이번 빌드에서 연결되지 않았습니다.", "هذا القسم غير متصل في هذا الإصدار."],
 } as const;
 export type PartWord = keyof typeof words;
 export function partText(l: Locale, key: PartWord | SetupPart): string { return words[key][l === "ko" ? 1 : l === "ar" ? 2 : 0]; }

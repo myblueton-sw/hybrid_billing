@@ -28,6 +28,8 @@ test("the installation read parses every part and keeps unknowns visible", async
       { version: "1.1.0", key_version: "k1", upgrade_from: ["1.0.0"], platforms: ["linux/amd64"], services: [{ name: "api", artifact: "api", ports: ["8443/tcp", 1], volumes: ["config"] }], volumes: [{ name: "ledger", data: true }, { name: "config", data: "no" }], artifacts: [{ name: "api", kind: "container_image" }], mark: null },
       null,
       { version: "1.0.0", upgrade_from: "x", mark: { by: "u1", reason: "bad" } },
+      { version: "0.9.0" },
+      { version: "0.8.0", mark: "bad" },
     ],
     preview: { state: "available", kind: "install", version: "1.0.0", hash, services: [{ kind: "service", target: "api", action: "create", conflict: "" }], ports: [], volumes: [], data_effects: [{ volume: "/v", effect: "new" }], permissions: ["run_service", 3], leftovers: [], conflicts: [] },
     upgrade: { state: "not_applicable", reason: "" },
@@ -42,12 +44,15 @@ test("the installation read parses every part and keeps unknowns visible", async
   assert.equal(r.calls[0].init.method, "GET");
   assert.equal(got.state, "configured");
   assert.equal(got.site.id, "sample-site");
-  assert.equal(got.releases.length, 2);
+  assert.equal(got.releases.length, 4);
+  assert.equal(got.releases[2].mark, "unknown");
+  assert.equal(got.releases[3].mark, "unknown");
   assert.deepEqual(got.releases[0].services?.[0].ports, ["8443/tcp"]);
   assert.deepEqual(got.releases[0].volumes?.map((v) => v.data), [true, null]);
   assert.equal(got.releases[1].upgrade_from, null);
   assert.equal(got.releases[1].services, null);
   assert.deepEqual(got.releases[1].mark, { by: "u1", by_login: "", reason: "bad", confirmed_by: "", confirmed_by_login: "" });
+  assert.equal(got.releases[0].mark, null);
   assert.equal(got.preview.hash, hash);
   assert.deepEqual(got.preview.permissions, ["run_service"]);
   assert.equal(got.upgrade.services, null);

@@ -166,6 +166,7 @@ function Installed({ l, page }: { l: Locale; page: InstallationPage }) {
 
 function Mark({ l, r }: { l: Locale; r: InstallRelease }) {
   const m = r.mark;
+  if (m === "unknown") return <>{k.unknown(l)}</>;
   if (!m) return <>{k.none(l)}</>;
   const by = actor(m.by_login, m.by) || k.unknown(l);
   const confirmed = actor(m.confirmed_by_login, m.confirmed_by);

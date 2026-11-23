@@ -204,3 +204,9 @@ So the pattern is narrower than the static check suggested: it does not hold on 
 When the read of a member's facts fails, the parent row of the detail no longer stays on "Loading…": it says "Could not be loaded." with a "Try again" link that repeats the read.
 
 Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3. No new test, no rendered check and no review: one short sentence and the existing "Try again" label; no render check exists for O01 with a failing member read, so how it looks is not verified.
+
+## P01 finding H3 (2026-11-24)
+
+The release mark on P01 is now read as three cases, as P02 already does: an explicit null from the server is "None", a mark object is shown, and an absent or malformed value is "Unknown". Before, an absent or malformed value was shown as "None". The server sends an explicit null when a release has no mark (`apps/api/server/installation.go:139`).
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3, with the installation parser test extended by a release without the field and one with a malformed value. No rendered check and no review: no new copy.

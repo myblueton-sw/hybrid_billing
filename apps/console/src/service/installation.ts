@@ -36,7 +36,7 @@ export type InstallRelease = {
   services: InstallReleaseService[] | null;
   volumes: { name: string; data: boolean | null }[] | null;
   artifacts: { name: string; kind: string }[] | null;
-  mark: InstallMark | null;
+  mark: InstallMark | null | "unknown";
 };
 export type InstallSummary = {
   key_version: string;
@@ -136,8 +136,9 @@ function installedOf(v: unknown): InstallInstalled {
   };
 }
 
-function markOf(v: unknown): InstallMark | null {
-  if (!isRow(v)) return null;
+function markOf(v: unknown): InstallMark | null | "unknown" {
+  if (v === null) return null;
+  if (!isRow(v)) return "unknown";
   return { by: str(v.by), by_login: str(v.by_login), reason: str(v.reason), confirmed_by: str(v.confirmed_by), confirmed_by_login: str(v.confirmed_by_login) };
 }
 

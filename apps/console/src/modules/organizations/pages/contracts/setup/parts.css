@@ -29,6 +29,7 @@
  .o03-part-table thead { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
  .o03-part-table, .o03-part-table tbody, .o03-part-table tr, .o03-part-table td { display: block; inline-size: 100%; }
  .o03-part-table td { block-size: auto; padding-block: 8px; }
+ .o03-part-table td:empty { display: none; }
  .o03-part-table td::before { content: attr(data-label); display: block; font-weight: 600; margin-block-end: 4px; }
  .o03-part-table tr { margin-block-end: 24px; padding-block-start: 16px; border-block-start: 1px solid var(--border-row, #d5d7da); }
 }
@@ -56,9 +57,19 @@
 .o03-statement { white-space: pre-wrap; overflow-wrap: anywhere; max-inline-size: 72ch; margin: 0 0 8px; }
 .o03-samples { margin: 0; }
 .o03-samples dt { color: inherit; font-size: inherit; }
-.o03-part-table.o03-bindings-table th:nth-child(1) { inline-size: 25%; }
-.o03-part-table.o03-bindings-table th:nth-child(2) { inline-size: 13%; }
-.o03-part-table.o03-bindings-table th:nth-child(3) { inline-size: 21%; }
-.o03-part-table.o03-bindings-table th:nth-child(4) { inline-size: 21%; }
-.o03-part-table.o03-bindings-table th:nth-child(5) { inline-size: 20%; }
+.o03-part-table.o03-bindings-table th:nth-child(1) { inline-size: 19%; }
+.o03-part-table.o03-bindings-table th:nth-child(2) { inline-size: 12%; }
+.o03-part-table.o03-bindings-table th:nth-child(3) { inline-size: 18%; }
+.o03-part-table.o03-bindings-table th:nth-child(4) { inline-size: 18%; }
+.o03-part-table.o03-bindings-table th:nth-child(5) { inline-size: 15%; }
+.o03-part-table.o03-bindings-table th:nth-child(6) { inline-size: 18%; }
 .o03-part-counts dd > .live-sub { display: block; }
+.o03-steps h5, .o03-steps h6 { margin: 0; font-size: 16px; }
+.o03-steps .o03-setup-form input.o03-short { font: inherit; color: inherit; background: var(--surface, white); border: 1px solid var(--border-control); border-radius: 0; padding: 12px; min-block-size: 44px; inline-size: 100%; max-inline-size: 14rem; box-sizing: border-box; }
+.o03-steps .o03-setup-form label { display: block; font-weight: 600; }
+.o03-steps .o03-setup-form p { margin: 0; }
+.o03-steps button:focus-visible, .o03-steps input:focus-visible, .o03-steps textarea:focus-visible, .o03-steps h4:focus-visible, .o03-steps h5:focus-visible { outline: 2px solid var(--focus-ring, #202a35); outline-offset: 2px; }
+.o03-steps .o03-setup-form label.live-check { display: flex; font-weight: 400; margin-block: 0; }
+.o03-steps .o03-setup-form fieldset { gap: 8px; }
+.o03-steps .o03-setup-review dl { margin-block-end: 16px; }
+.o03-steps .o03-setup-outcome .live-sub { display: block; }

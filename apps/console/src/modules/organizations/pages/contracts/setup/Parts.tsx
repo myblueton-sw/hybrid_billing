@@ -35,11 +35,13 @@ export function ScopeBar({ l, scope }: { l: Locale; scope: SetupScope }) {
  </section>;
 }
 
-export function PartFrame({ l, part, scope, loading, feedback, onPart }: NavProps & { scope: SetupScope | undefined; loading: boolean; feedback: ReactNode }) {
+export function PartFrame({ l, part, scope, loading, feedback, onPart, children }: NavProps & { scope: SetupScope | undefined; loading: boolean; feedback: ReactNode; children?: (scope: SetupScope) => ReactNode }) {
  if (!scope) return <section className="o03-part" aria-labelledby="o03-part-title">
   <h3 id="o03-part-title">{partText(l, part)}</h3>
   {loading ? <p role="status">{text(l, "loading")}</p> : feedback ? feedback : <><p>{partText(l, "noScope")}</p><p><a href={partHref("settings")} onClick={event => { event.preventDefault(); onPart("settings"); }}>{partText(l, "toSettings")}</a></p></>}
  </section>;
+ const content = children?.(scope);
+ if (content) return <><ScopeBar l={l} scope={scope} />{content}</>;
  return <><ScopeBar l={l} scope={scope} /><section className="o03-part" aria-labelledby="o03-part-title"><h3 id="o03-part-title">{partText(l, part)}</h3><p>{partText(l, "unconnected")}</p></section></>;
 }
 

@@ -653,4 +653,22 @@ HYB-341. Labels of the second-level navigation of the O03 documents view and of 
 | scope bar | Selected issuance settings | 선택한 발행 설정 | إعدادات الإصدار المحددة |
 | setup date | Setup date | 설정 기준일 | تاريخ الإعداد |
 
+Labels of the protected settings rules part, from `setup/rules-copy.ts`:
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| `rules_approvals` | Approvals required for a change | 변경에 필요한 승인 수 | عدد الاعتمادات المطلوبة للتغيير |
+| `rules_validity_seconds` | Time allowed between verification and decision | 검증 후 결정까지 허용 시간 | المدة المسموح بها بين التحقق والقرار |
+| `rules_max_lead_seconds` | Longest time from request to effective time | 요청부터 적용 시각까지 허용되는 최대 기간 | أطول مدة من الطلب إلى وقت السريان |
+| `rules_channel_age_seconds` | Minimum time after channel acceptance before a change request | 채널 수락 후 변경 요청까지 필요한 최소 시간 | أدنى مدة بعد قبول القناة قبل طلب تغيير |
+| retained state | Recorded state | 기록된 상태 | الحالة المسجَّلة |
+| observation | Observed now | 현재 관찰된 상태 | المرصود حالياً |
+| pinned confirmer | Confirmer pinned, not yet observed | 지정된 확인자, 아직 관찰되지 않음 | المؤكِّد المعيَّن، لم يُرصد بعد |
+| observation `absent` | No rules observed | 관찰된 규칙 없음 | لا توجد قواعد مرصودة |
+| observation `pending` | Proposal awaiting confirmation | 확인 대기 중인 제안 | اقتراح بانتظار التأكيد |
+| observation `active` | In effect | 적용 중 | سارية |
+| unconfirmed values | Proposed rule values — not confirmed | 제안된 규칙 값 — 확인 전 | قيم القواعد المقترحة — غير مؤكدة |
+
+"Recorded state" is what the service retained and may be an unknown outcome; "Observed now" is what is held at the time of the read; neither states that issuance is possible. The recorded states reuse the issuance settings labels (proposed, confirmed, proposal outcome unknown, confirmation outcome unknown).
+
 A statement (진술, إفادة) is its author's accountable claim and is never labelled evidence, proof or verification. "Selected" states which confirmed settings the user chose as scope; it does not state that issuance is possible. Role-based AI review only; native-language and owner acceptance remain unverified.

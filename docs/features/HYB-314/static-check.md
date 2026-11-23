@@ -328,3 +328,21 @@ While the detail of a contract is held from an earlier load because its reload f
 Not covered: the writes of the setup sections inside the detail (documents, payment terms, issuance setup) are not gated by this change.
 
 Checks: `tsc` clean; console tests 1349, pass 1346, fail 0, skipped 3. No new test, no rendered check, no copy change and no review; the pattern is the one reviewed for P01.
+
+## Rendered regression run on O03 after the fixes (2026-11-24)
+
+The seven existing O03 rendered checks were run against a console built from main b982afb (headless Chromium, built console with intercepted synthetic reads; no server, no mutation of real data, no owner acceptance). All seven ended with exit code 0 and no page error.
+
+| Script | Cases | Unexpected reads |
+| --- | --- | --- |
+| `tools/o03-trust-states-qa.mjs` | 30 | 0 |
+| `tools/o03-setup-changes-qa.mjs` | 72 | 0 |
+| `tools/o03-setup-changes-writes-qa.mjs` | 27 | 0 |
+| `tools/o03-setup-channels-qa.mjs` | 63 | 0 |
+| `tools/o03-setup-channels-writes-qa.mjs` | 36 | 0 |
+| `tools/o03-payment-terms-qa.mjs` | 99 | 0 |
+| `tools/o03-payment-terms-writes-qa.mjs` | 27 | 0 |
+
+Two scripts had fallen behind the screen and are brought up to date in the same change: `o03-setup-changes-qa.mjs` did not know the channel read and `o03-setup-channels-qa.mjs` did not know the reference read, both added to the documents view by later slices. Each now answers that read as denied, as it does for the other reads it does not stage, instead of counting it as unexpected. Their assertions are unchanged.
+
+What this run shows: the O03 fixes of this ticket did not break what these scripts assert. What it does not show: none of the scripts asserts the newly disabled contract actions on a stale detail, and the other screens changed under this ticket (M01, M02, M03, M04, M05, O01, O02, P01, P03, P04, P05) were not run.

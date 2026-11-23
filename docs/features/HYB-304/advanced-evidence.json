@@ -1,0 +1,480 @@
+{
+  "type": "VerificationEvidence",
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "base_commit": "641a084f676714134b2e414d391c63017a122ae1",
+  "scope": "M05 advanced confirmation, authority retirement, admission and independently bounded result/exclusion consumers; parent M04/M03/M02 remains open",
+  "source_binding": "Sources are committed alongside this manifest. Full-short Go baseline is frozen at641a084; Go production unchanged. Auth mutation/root reports precede only the neutral copy change; final965/build/343 andCSRF3 include that copy correction. Prior checkpoint manifests remain unchanged.",
+  "sources": [
+    {
+      "path": "apps/api/server/sessionoperation_continuation_test.go",
+      "sha256": "d39995de1ea51eee985af586bf4bf4e582bf14baf005f304c7efa08fa847ca30",
+      "bytes": 2199
+    },
+    {
+      "path": "apps/api/server/sessionselection_admission_test.go",
+      "sha256": "2e0dfbd18b5bc7f79f15efe4f10462f212eae26777a505388f400d62a5ca9d82",
+      "bytes": 9989
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/SessionSelection.tsx",
+      "sha256": "bc3a533ac6bd10b6e41a6c44d0fa1a331bf0b8fb4a606508851fda66636f925f",
+      "bytes": 11301
+    },
+    {
+      "path": "apps/console/src/modules/identity/pages/my-security/session-intent.test.ts",
+      "sha256": "8375ab530914d024be949cb95699e9fd2d3c2ce1482fb01e015043b885f7fe1c",
+      "bytes": 5180
+    },
+    {
+      "path": "apps/console/src/service/Reauthenticate.tsx",
+      "sha256": "66fff3c284b09fcf46dc4fb02a6fe314dab5ce047eed7b6dd623fa7af406f29a",
+      "bytes": 5896
+    },
+    {
+      "path": "apps/console/src/service/Service.tsx",
+      "sha256": "d09d47dc81502b9dfeb726c8116d1dc207e335b19587c905876156dbed881e98",
+      "bytes": 24285
+    },
+    {
+      "path": "apps/console/src/service/admin.test.ts",
+      "sha256": "c161f241dbd94a7b0cf3d0e32d4ae4ab15cbadcea259ab0a2ef3ceb9835a71d0",
+      "bytes": 43840
+    },
+    {
+      "path": "apps/console/src/service/admin.ts",
+      "sha256": "cb8f1131d080ca0d43a2cae4506d7fd4b389562b775e6f5e275a412a9bb2ecc4",
+      "bytes": 51620
+    },
+    {
+      "path": "apps/console/src/service/context.ts",
+      "sha256": "598bae925f7f38a6732c358c864b1a7a08defe1f14786c79b8f96c04be7b0138",
+      "bytes": 1174
+    },
+    {
+      "path": "apps/console/src/service/copy.ts",
+      "sha256": "9525a3ffab9d264553883d923a1b0e2113156355442d680ecf188071b00d17d7",
+      "bytes": 18541
+    },
+    {
+      "path": "apps/console/src/service/reauth-model.test.ts",
+      "sha256": "39c037e7ccc1c6df0b30727b7b636821c355692b1091dfd70ccfce439873c9b6",
+      "bytes": 7129
+    },
+    {
+      "path": "apps/console/src/shared/unload-intent.test.ts",
+      "sha256": "8bc8a37dae5b1aac04cffb076ca10ebf587a4c784bb3172a9bfa26976c84325d",
+      "bytes": 2717
+    },
+    {
+      "path": "apps/console/tools/authentication-loss-qa.mjs",
+      "sha256": "575483d73ddcc0ccb4afb885160b5c1a301917e86a91014bf6b47048cd30ea32",
+      "bytes": 17374
+    },
+    {
+      "path": "apps/console/tools/my-security-selection-qa.mjs",
+      "sha256": "b8fcf502f18740aa3b92521e4b6f70eb1b196b45b65b5f5dd05455837d259578",
+      "bytes": 8838
+    }
+  ],
+  "artifacts": [
+    {
+      "local_evidence": "hb304-advanced-neutral-final/report.json",
+      "meaning": "343 checks; actual built app plus explicit missing-setting interceptions",
+      "sha256": "124a186fdc929fe7afc05a8a113a757ebcc2802b217bdd8d9e8b6d7a926255cb",
+      "bytes": 28104
+    },
+    {
+      "local_evidence": "hb304-authority-final-current/report.json",
+      "meaning": "5 actual caller-revocation checks before neutral-copy-only follow-up",
+      "sha256": "e8072c7982cd9f039ad9a88a521ebf27edd43256df401141651e24a039b749f2",
+      "bytes": 481
+    },
+    {
+      "local_evidence": "hb304-csrf-neutral-final/report.json",
+      "meaning": "3 actual stale-CSRF checks, neutral-copy final build",
+      "sha256": "e7f757a05fd06bb38aa7237f13533250663f25abbd264d249ee551fcc96009fe",
+      "bytes": 297
+    },
+    {
+      "local_evidence": "hb304-operation-pages/report.json",
+      "meaning": "partial run: 93 result pages and3 held pages passed; later same-URL harness timeout; do not treat entire run as PASS",
+      "sha256": "6551f95b139987264cb04b790bca5cec36807e4dcec2a0948bff2226872b40e9",
+      "bytes": 7803
+    },
+    {
+      "local_evidence": "hb304-operation-cleanup/report.json",
+      "meaning": "7 checks: read-only retained operation and6 synthetic pending/failed display variants",
+      "sha256": "93d7d75b1c3a7d714fe6cadfee3188b1653397d2061a31e763738d7bf1c536af",
+      "bytes": 731
+    },
+    {
+      "local_evidence": "hb304-advanced-capacity/report.json",
+      "meaning": "16 actual pending-capacity/expiry and injected503 retry checks",
+      "sha256": "0994f921322027eeb55c5bc9ca25c0477de4d0a24f604137ea94d6256ac1c584",
+      "bytes": 1524
+    },
+    {
+      "local_evidence": "hb304-advanced-expiry-final/report.json",
+      "meaning": "9 actual building/expiry and injected definitive409 checks",
+      "sha256": "4dd22f91be5b2ca0bc885b6752d8789ace0ed6ef7c7e7b82e1a6315abdeb800f",
+      "bytes": 886
+    },
+    {
+      "local_evidence": "hb304-refusal-three-language/report.json",
+      "meaning": "12 explicit definitive409 and unchecked review checks",
+      "sha256": "8e1b15db281dc0b1986058d0dd60f9ba6514586b9e2bca07919f13af6e928003",
+      "bytes": 1164
+    },
+    {
+      "local_evidence": "hb304-auth-root-final-current/run-GT9aVK/report.json",
+      "meaning": "17 mounted current-root checks; synthetic transport/callback capture",
+      "sha256": "7efed7fc897fed468da0993b392664bd6e3fb60e93e819ac6ac9c69ff0f602a0",
+      "bytes": 2548
+    },
+    {
+      "local_evidence": "hb304-selection-complete/run-pTbaDe/report.json",
+      "meaning": "28 mounted selection checks; synthetic transport",
+      "sha256": "adf118e6d5dead654a6a024bfbffbed4003dff5cdcddea25acad7746c073da2c",
+      "bytes": 3175
+    },
+    {
+      "local_evidence": "hb304-authority-final-mutations/report.json",
+      "meaning": "9/9 killed; restored auth sources match final source; layered401 guard case removes2 conditions",
+      "sha256": "f8b77f1c9b32ff6e5588d94e0ec7d5175d3cb4bcc650d01b368dbf9466e1db6c",
+      "bytes": 2558
+    },
+    {
+      "local_evidence": "hb304-advanced-api-covered.log",
+      "meaning": "focused Go query/selection/operation PASS8.837s;29.4% focused profile",
+      "sha256": "b0172a633f5f664aa372f0bd434d520a9ec1322cc65bd3ae7f9338969217a787",
+      "bytes": 97
+    },
+    {
+      "local_evidence": "hb304-advanced-api-race.log",
+      "meaning": "10 new Go test race PASS2.888s",
+      "sha256": "ff84a736e656aaa7e50744a2f3e11dbc3090b90ca417dfd134431505b44284f9",
+      "bytes": 67
+    },
+    {
+      "local_evidence": "hb304-advanced-merged-coverage.out",
+      "meaning": "statement-profile union, identical production block verification;98.9%, not branch coverage",
+      "sha256": "5291e2f7bad0b4ef47fc21e67d947401e1ddf92393a4ead77ac5c54b728d126f",
+      "bytes": 621340
+    },
+    {
+      "local_evidence": "hb304-advanced-cover-functions.log",
+      "meaning": "union function statements",
+      "sha256": "7e231fe9e9189bc8750f35e8d2d0a8cc2e8d34c1ccaf032f0b87ff5fa0831b12",
+      "bytes": 112068
+    },
+    {
+      "local_evidence": "hb304-advanced-final-tests.log",
+      "meaning": "965 console tests PASS after neutral-copy correction",
+      "sha256": "896c0479f1bf38f13eae4f9c0e1067f728a66f0a264581676c9f281f9fb78d6e",
+      "bytes": 96873
+    },
+    {
+      "local_evidence": "hb304-advanced-final-build.log",
+      "meaning": "final TypeScript/build PASS; existing bundle warning",
+      "sha256": "451ba14dd4031a1adce5e0966597ad2429df4fdf5cfe711b5b29b6631c327437",
+      "bytes": 38499
+    },
+    {
+      "local_evidence": "hb304-neutral-auth-before.log",
+      "meaning": "new neutral-notice regression FAIL before copy correction",
+      "sha256": "47b2942873f7376038d6de4e3c2ed317ae557400588e5c8eacb776d2532c0936",
+      "bytes": 3326
+    },
+    {
+      "local_evidence": "hb304-expiry-baseline-final/report.json",
+      "meaning": "old-app definitive-refusal actionable-confirmation FAIL",
+      "sha256": "d540ce295a5dcbfd81627b4b6507fcd11b0203c636d1b32b89b0b1ac5a242081",
+      "bytes": 752
+    },
+    {
+      "local_evidence": "hb304-authority-before/report.json",
+      "meaning": "old-app actual401 sensitive-view FAIL",
+      "sha256": "3cec8cff4933ca07ec4278c17f00bd9f92a1a35130e7ea56129d46b0aa754ecb",
+      "bytes": 458
+    },
+    {
+      "local_evidence": "hb304-preparation-focus-before/report.json",
+      "meaning": "old-app building completion focus FAIL",
+      "sha256": "672ad8555d3ad94028d4581c5fafbbed06d843b91e31de64961cc24f7d630075",
+      "bytes": 1302
+    },
+    {
+      "local_evidence": "hb304-retired-challenge-before-corrected/run-mkNtSS/report.json",
+      "meaning": "mounted old credential challenge admission FAIL",
+      "sha256": "fbe15dce99c03df1b32fe05645be7921e9fe3109d8f0492fb6997c2a32147c3c",
+      "bytes": 1542
+    },
+    {
+      "local_evidence": "hb304-sdk-retirement-before.log",
+      "meaning": "retired approval dispatch FAIL",
+      "sha256": "bf2201c830401e811f10f0a7a59bea7473c7592ff87d5cadc74a0e5e23436e62",
+      "bytes": 860
+    },
+    {
+      "local_evidence": "hb304-csrf-retirement-before.log",
+      "meaning": "semantic CSRF notification FAIL",
+      "sha256": "06b892955acc3068bedbd220714020883b7a67722bee321c16d3a71612c9594c",
+      "bytes": 887
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/missing-query-ar-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "9499f68aeed1a78b78609e937247e92c951b770a62a62978e9fc072632d80038",
+      "bytes": 1001307
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/missing-query-en-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "d1ca15083fa3fc4c42895df409bd2a2af5545f5d8dd898934614d51c9ab11d65",
+      "bytes": 1047081
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/missing-query-ko-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "e6a99c3fae5067d462a8bfe0ed4b2a920c79704e2cfebbff7cdacc1a8d4399f2",
+      "bytes": 935748
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/missing-selection-ar-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "b4763802bcda0593c49d0da05e888567f227030f65dcd4a8933490c2a8e0c98f",
+      "bytes": 1038241
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/missing-selection-en-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "32ef68bf8a4937ef75f5b90960cdb181ed3db10faa9a8fb6dab6c02e69fe9c7b",
+      "bytes": 1077772
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/missing-selection-ko-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "c9405096e5724338689859850f5fd0b1d6cda18f7b2bfe0775d1d03435553b77",
+      "bytes": 973927
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-ar-1024.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "691cd243ba817cb12dbbc0a2bd4025ddeca77937b83baee6e4dcdec45f456bd8",
+      "bytes": 833155
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-ar-1280.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "ce97ae55305ea31a92a429363e577c1b1a125ce842b5df7be2cfe3b4887f5fdc",
+      "bytes": 1016134
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-ar-1440.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "4a9c1cb4dba8ae90343ef5e1b86a5e4adf57ca83d3f600bf4e22550b5b2d7673",
+      "bytes": 878894
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-ar-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "57727be07d161fcf9c9311517cade352ac0a1e517c722ecd6598fb13ef203410",
+      "bytes": 988942
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-en-1024.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "f69ba5ece950799effbcf835de59e9687d73a226a9d886895ce8c2135a9af602",
+      "bytes": 857071
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-en-1280.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "cca73025d08031fdf861481a9ce4e580a7a166ddc21e2987b9e1a54bcfc27582",
+      "bytes": 1068050
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-en-1440.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "89187f72c6e60374216f05f1f6069b6267720ef41a64fed20806b1f1a16bf466",
+      "bytes": 876438
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-en-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "d547773e61c136569f7a2ff758eb66a7a224656901c5927e7c6bc2d284420256",
+      "bytes": 1018442
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-ko-1024.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "fe1b295a219f35eae140983d8546833f1fa54d1356de2dd786960c5a1e2f206f",
+      "bytes": 818971
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-ko-1280.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "a1ae9679fdbfe8a236f7cd5146c46d9454132df4bcb4ce848797f21477303234",
+      "bytes": 963330
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-ko-1440.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "bdee36c04ace03576794ad57b045de587f511b7f1c3ef4275e9cc584fb05e000",
+      "bytes": 835855
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/selection-ko-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "edd1386487626ee3c0e8b9b2e1749f9bf926016b3219dba6498fd2ab7804a34f",
+      "bytes": 926942
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-ar-1024.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "8b11ce881de7fd791bd64f811c5f6f7d43f2a4ea46393ca4097fddae81b428f4",
+      "bytes": 879002
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-ar-1280.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "479e98311f1e432736f08b05d72d81128f540bb9415c36838e07b2fefa7e42f0",
+      "bytes": 1097296
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-ar-1440.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "5b5d2cdc399cc71e4e861ba11d1ff9227e4691881c8960c53c728124cf704be7",
+      "bytes": 965155
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-ar-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "b235475d935660b2803f0e342120e97df77b151f843ee7ca03f165e799092b7f",
+      "bytes": 995177
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-en-1024.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "5d4a875c1c3dc74c0236eecbae056a9b1f54113eae955dbcff1fb77c2e6d765c",
+      "bytes": 901895
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-en-1280.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "00f29f36f08789d211ee084af374b9e9519e63e3bd3525afc6862d58bf330874",
+      "bytes": 1155247
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-en-1440.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "3bf500bd91812b9cc0dd0a18fd57fb267634869c141dba196ea439ee3f3c878d",
+      "bytes": 966049
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-en-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "07fb5ab86d05f2b1d6ba53bf8d50dd939652535594c3dce81574fca1de97bf12",
+      "bytes": 1029724
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-ko-1024.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "31b860dbb57f75cc954f88079aaad2ad4a2287177ebde9ab23f0a58a8da4996c",
+      "bytes": 857219
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-ko-1280.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "1773b08f72fa862dcb57ffead2566a878c5ef545b5191e62dd6984c08d04d01b",
+      "bytes": 1032963
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-ko-1440.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "89cf81eaeb635d32ac96f2fb9574b978bdbfcbd98595e2e4b2f9da8159ae3581",
+      "bytes": 909415
+    },
+    {
+      "local_evidence": "hb304-advanced-neutral-final/sessions-ko-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "0e651e72c0d420ece04438748e9be110ca1bf698a44520587e7f7dd96fe7c1b8",
+      "bytes": 928852
+    },
+    {
+      "local_evidence": "hb304-csrf-neutral-final/csrf-refused-ar-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "6fece0b8d25ff14793a16468315a0df913a82a96659d186fe4855bc1757a0537",
+      "bytes": 59751
+    },
+    {
+      "local_evidence": "hb304-authority-final-current/authority-loss-en-1440.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "b25af9e42459acdab151de7623d11aa454b2749303cd7b0f17a13ac4972af6d7",
+      "bytes": 65887
+    },
+    {
+      "local_evidence": "hb304-operation-cleanup/cleanup-failed-ar-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "7411551382bb3095cbcdb799dd611639fa200516334d4c5f4f84374099a0a383",
+      "bytes": 981242
+    },
+    {
+      "local_evidence": "hb304-operation-cleanup/cleanup-failed-en-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "fc2bc91761a6797d07b6e0204c9d7f87640bcc1598684a2aa013bae98d2d818a",
+      "bytes": 1043940
+    },
+    {
+      "local_evidence": "hb304-operation-cleanup/cleanup-failed-ko-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "15b9cbe26167e77d3eced4bc306c1966f1395c34660b2422aef7eabe46610211",
+      "bytes": 934419
+    },
+    {
+      "local_evidence": "hb304-operation-cleanup/cleanup-pending-ar-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "7b04fd6099287f5b7daaa6d36f2b12caf0771aacaba9f5b1f4b76c01fad7b115",
+      "bytes": 973682
+    },
+    {
+      "local_evidence": "hb304-operation-cleanup/cleanup-pending-en-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "010a42ab52ee3eee7cdfbd9e6ed15211a493a67636c6930bd4f110539e8677e9",
+      "bytes": 1039608
+    },
+    {
+      "local_evidence": "hb304-operation-cleanup/cleanup-pending-ko-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "70dda7c367b252eeab29fb4c614196ca515a0995c9100d11412fb1422f5e83f5",
+      "bytes": 930004
+    },
+    {
+      "local_evidence": "hb304-operation-pages/cleanup-pending-en-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "03fa08bd97afe777dd6b0b7fca299bc768d7106012e225d2a30f942c3f64b00d",
+      "bytes": 1042075
+    },
+    {
+      "local_evidence": "hb304-operation-pages/not_included-last-en-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "ae9335ed2f0ab1fc0573bb8fd0c796445d1df53c0d3213ed1b60b161bc71a385",
+      "bytes": 983337
+    },
+    {
+      "local_evidence": "hb304-operation-pages/results-last-en-390.png",
+      "meaning": "Synthetic rendered evidence; scope inherited from its report",
+      "sha256": "222042a34d621a010228098facbf9ed6b15053242b68f5336a00e264e5d1fd0f",
+      "bytes": 983358
+    }
+  ],
+  "limitations": [
+    "Statement coverage is not complete critical-branch coverage; union does not create an independently rerun full suite.",
+    "Pending/failed cleanup displays are intercepted responses over real accepted effects, not actual backend fault injection.",
+    "Mounted root fixtures capture selected public callbacks to exercise stale delivery; they do not certify whole-app layout.",
+    "No native-language, Claude, full assistive-technology, owner acceptance or non-macOS runtime certification.",
+    "Temporary screenshots/logs/runtime data remain outside Git; no credentials or session tokens are included.",
+    "No runtime restart UI journey in this follow-up; existing Go cursor-key tests are separate evidence."
+  ]
+}

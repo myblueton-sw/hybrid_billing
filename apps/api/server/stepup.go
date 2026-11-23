@@ -30,6 +30,7 @@ type postRoute struct {
 var postRoutes = []postRoute{
 	{"/api/v1/commands/{command}", true},
 	{"/api/v1/me/sessions/end", true},
+	{"/api/v1/me/sessions/selections", false},
 	{"/api/v1/me/password", false},
 	{"/api/v1/me/reauthenticate", false},
 	{"/api/v1/auth/login", false},

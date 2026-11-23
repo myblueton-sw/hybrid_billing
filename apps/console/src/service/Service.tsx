@@ -5,6 +5,7 @@ import logo from "../../../../packages/design-system/assets/logo/hb-lockup-color
 import { c, retryPhrase } from "./copy";
 import { fragmentToken, serviceClient, ServiceError, type LinkInfo, type ServiceClient, type Session } from "./api";
 import { ServiceContext } from "./context";
+import { adminClient } from "./admin";
 import { Reauthenticate } from "./Reauthenticate";
 import { stepUpGate } from "./reauth-model";
 import { leaveDeliberately, stayAgain, watchRestore } from "../shared/unload-intent";
@@ -381,7 +382,9 @@ export function SessionStrip({ locale: l, session, onSignOut }: { locale: Locale
 export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: ServiceClient }) {
   const client = useMemo(() => given ?? serviceClient(), [given]);
   const [locale, setLocale] = useState<Locale>(() => localeOf(location.search));
-  const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [session, setSessionState] = useState<Session | null | undefined>(undefined);
+  const sessionRef = useRef<Session | null | undefined>(undefined);
+  const setSession = useCallback((next: Session | null | undefined) => { sessionRef.current = next; setSessionState(next); }, []);
   const [failed, setFailed] = useState(false);
   const [hash, setHash] = useState(location.hash);
   useEffect(() => {
@@ -392,9 +395,12 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
   const params = new URLSearchParams(location.search);
   const activating = location.pathname === "/activate";
   const [token] = useState(() => fragmentToken(location.hash));
-  const [status] = useState(() => params.get("status") ?? "");
+  const [status, setStatus] = useState(() => params.get("status") ?? "");
   const [check, setCheck] = useState(0);
-  const [prompt, setPrompt] = useState<{ opener: HTMLElement | null; n: number } | null>(null);
+  const [prompt, setPromptState] = useState<{ opener: HTMLElement | null; n: number } | null>(null);
+  const promptRef = useRef<typeof prompt>(null);
+  const promptSequence = useRef(0);
+  const setPrompt = useCallback((next: typeof prompt) => { promptRef.current = next;setPromptState(next); }, []);
   const lastFocus = useRef<HTMLElement | null>(null);
   useEffect(() => {
     const seen = (e: FocusEvent) => { if (e.target instanceof HTMLElement && !e.target.closest("dialog.service-reauth")) lastFocus.current = e.target; };
@@ -404,9 +410,27 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
   const gate = useMemo(() => stepUpGate(() => {
     const active = document.activeElement;
     const opener = active instanceof HTMLElement && active !== document.body ? active : lastFocus.current;
-    setPrompt((p) => ({ opener, n: (p?.n ?? 0) + 1 }));
+    setPrompt({ opener, n: ++promptSequence.current });
   }), []);
-  const stepUp = useCallback(() => gate.request(), [gate]);
+  const matchesSession = (expected: Session) => {
+    const current = sessionRef.current;
+    return !!current && current.csrf === expected.csrf && current.user === expected.user && current.workspace === expected.workspace;
+  };
+  const stepUp = useCallback(async () => {
+    if (!session || !matchesSession(session)) return false;
+    const approved = await gate.request();
+    return approved && matchesSession(session);
+  }, [gate, session?.csrf, session?.user, session?.workspace]);
+  const authenticatedClient = useMemo(() => session ? adminClient(session.csrf, undefined, stepUp) : undefined, [session?.csrf, session?.user, session?.workspace, stepUp]);
+  const retireAuthentication = useCallback((expected: Session) => {
+    const current = sessionRef.current;
+    if (!current || current.csrf !== expected.csrf || current.user !== expected.user || current.workspace !== expected.workspace) return;
+    setSession(null);setStatus("ended");setPrompt(null);gate.settle(false);
+  }, [gate, setSession, setPrompt]);
+  useLayoutEffect(() => {
+    if (!session || !authenticatedClient) return;
+    return authenticatedClient.subscribeAuthenticationLoss(() => retireAuthentication(session));
+  }, [authenticatedClient, session, retireAuthentication]);
   useEffect(() => watchRestore(window), []);
   useEffect(() => { if (session) stayAgain(); }, [session]);
   useEffect(() => () => gate.settle(false), [gate]);
@@ -420,10 +444,13 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
   }, []);
   useEffect(() => {
     if (activating) return;
+    const expected = sessionRef.current;
+    let active = true;
     client.current().then(
-      (s) => { setFailed(false); setSession(s); },
-      () => setFailed(true),
+      (s) => { if (!active || sessionRef.current !== expected) return;setFailed(false); setSession(s); },
+      () => { if (active && sessionRef.current === expected) setFailed(true); },
     );
+    return () => { active = false; };
   }, [client, activating, check]);
   const changeLocale = (v: Locale) => {
     const q = new URLSearchParams(location.search);
@@ -443,14 +470,14 @@ export function ServiceRoot({ app, client: given }: { app: ReactNode; client?: S
     const shown = shellLocale(hash, locale);
     const signOut = () => { setLocale(shown); void signOutIn(shown); };
     return (
-      <ServiceContext.Provider value={{ session, signOut, stepUp }}>
+      <ServiceContext.Provider value={{ session, signOut, stepUp, client: authenticatedClient }}>
         <SessionStrip locale={shown} session={session} onSignOut={signOut} />
         {app}
         {prompt && (
           <Reauthenticate
             key={prompt.n} locale={shown} login={session.login} csrf={session.csrf} opener={prompt.opener}
-            onDone={(ok) => { setPrompt(null); gate.settle(ok); }}
-            onSignedOut={() => { setPrompt(null); gate.settle(false); leaveDeliberately(); location.assign(serviceUrl("signin", shown, "ended")); }}
+            onDone={(ok) => { if (!matchesSession(session) || promptRef.current !== prompt) return;setPrompt(null); gate.settle(ok); }}
+            onSignedOut={() => { if (!matchesSession(session) || promptRef.current !== prompt) return;retireAuthentication(session); }}
           />
         )}
       </ServiceContext.Provider>

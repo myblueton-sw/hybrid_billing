@@ -293,3 +293,15 @@ In the bulk revocation preview, a failed first read of the excluded people is sh
 Checks: `tsc` clean; console tests 1349, pass 1346, fail 0, skipped 3. No new test and no rendered check. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its wording for the second sentence was adopted afterwards.
 
 The other parts of A7 are not changed and remain suspected: a discard that fails with a stage error is reported as discarded (`users/Live.tsx`, `discardFixed`); a failed read of the pending fixed list on load is silent (`users/Live.tsx`, the `bulkClient(api).list` effect); an absent match count is read as 0 (`match-model.ts`, `fixedOfFields`).
+
+## M02 finding B2, traced against the server (2026-11-24)
+
+Read at main 4a17b1d; nothing executed; no independent review of this section.
+
+| Console default | What the server sends | Result |
+| --- | --- | --- |
+| approvals needed fall back to 3 (`admin.ts`, `holders.needed`) | `needed` is always set from the server's own required number of people (`policy.go:183`) | applies only to a malformed response |
+| the step-up period falls back to 900 seconds (`authentication/live-model.ts`, `effectiveStep`) | `step_up_seconds` is always set: the server's default, lowered by the active policy when there is one (`policy.go:186-195`) | applies only to a malformed response |
+| an unrecognised change state reads "draft" (`admin.ts`, `trustStates`) | the eight states of the trust change module (`modules/trustchange/types.go:11-18`) are the eight the console lists | not a present defect. The direction is the same as A6: a state added later would be shown as a draft. The actions offered come from the server's `can` flags and not from the state, so the exposure is to the label and the emphasis only |
+
+B2 is therefore not a present defect. A possible hardening, not done: read an unrecognised change state as its own unknown value, as was done for the account and membership states on M01.

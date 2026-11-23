@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
@@ -16,7 +17,8 @@ type issuanceSetupContextCommand struct {
 }
 
 func (s *Server) issuanceSetupBoundary(command string, call commands.Call) commands.Code {
-	if command != "issuance_setup.context" && command != "issuance_setup.configurations" {
+	kind := strings.TrimPrefix(command, "issuance_setup.")
+	if command != "issuance_setup.context" && command != "issuance_setup.configurations" && !(command == "issuance_setup."+kind && setupMutation(kind)) {
 		return ""
 	}
 	if s.cfg.Seed != SeedSample || s.financialIssuance == nil {
@@ -32,6 +34,19 @@ func (s *Server) issuanceSetupBoundary(command string, call commands.Call) comma
 		}
 		return commands.DependencyUnavailable
 	}
+	if setupMutation(kind) {
+		fields := map[string]string{}
+		for _, v := range call.Fields {
+			fields[v.Name] = v.Value
+		}
+		if err := s.financialIssuance.setupMutationIdentity(call.Answer.Workspace(), call.Answer.User(), kind, call.Target, call.Rationale, fields); err != nil {
+			var failure *commands.Failure
+			if errors.As(configurationPublicError(err, nil), &failure) {
+				return failure.Code
+			}
+			return commands.DependencyUnavailable
+		}
+	}
 	return ""
 }
 
@@ -45,6 +60,9 @@ func (h issuanceSetupContextCommand) Resolve(workspace, target string) (commands
 func (h issuanceSetupContextCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 	if h.s.cfg.Seed != SeedSample || h.s.financialIssuance == nil {
 		return commands.Outcome{}, commands.Fail(commands.UnsupportedCapability)
+	}
+	if setupMutation(h.kind) {
+		return h.s.financialIssuance.applySetupMutation(h.kind, ctx)
 	}
 	var fields map[string]string
 	var err error

@@ -93,7 +93,7 @@ func (a *financialIssuance) configurationHistoryIndex() error {
 
 func (a *financialIssuance) observeConfigurationHistory(p financialIssuanceConfiguration) (string, error) {
 	bad := func() (string, error) { return "", commands.Fail(commands.EvidenceStale) }
-	if p.Schema != "hb_issuance_configuration_v1" || !validRequestID(p.Proposer) || !documentReason(p.Reason) || !frozenConfigurationScope(p) {
+	if !validConfigurationSetup(p.Setup) || p.Schema != "hb_issuance_configuration_v1" || !validRequestID(p.Proposer) || !documentReason(p.Reason) || !frozenConfigurationScope(p) {
 		return bad()
 	}
 	kind, err := configurationKind(p.Spec)

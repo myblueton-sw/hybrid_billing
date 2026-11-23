@@ -51,8 +51,15 @@ func (a *financialIssuance) configurationReadback(workspace string, p financialI
 }
 
 func (a *financialIssuance) proposeConfiguration(workspace, actor, reason string, spec financialConfigurationSpec) (financialIssuanceConfiguration, error) {
+	return a.proposeConfigurationTracked(workspace, actor, reason, spec, nil, nil, nil)
+}
+
+func (a *financialIssuance) proposeConfigurationTracked(workspace, actor, reason string, spec financialConfigurationSpec, setup *financialConfigurationSetupContext, effect *financialConfigurationEffect, admit func(financialIssuanceConfiguration) error) (financialIssuanceConfiguration, error) {
 	if err := a.protectedRuleCaller(workspace, actor); err != nil {
 		return financialIssuanceConfiguration{}, err
+	}
+	if !validConfigurationSetup(setup) {
+		return financialIssuanceConfiguration{}, commands.Fail(commands.InvalidRequest)
 	}
 	kind, err := configurationKind(spec)
 	if err != nil || !documentReason(reason) {
@@ -63,7 +70,7 @@ func (a *financialIssuance) proposeConfiguration(workspace, actor, reason string
 	if err != nil {
 		return financialIssuanceConfiguration{}, err
 	}
-	p := financialIssuanceConfiguration{Schema: "hb_issuance_configuration_v1", Workspace: workspace, Spec: spec, Scope: scope, Kind: kind, Proposer: actor, Reason: reason}
+	p := financialIssuanceConfiguration{Schema: "hb_issuance_configuration_v1", Workspace: workspace, Spec: spec, Scope: scope, Kind: kind, Proposer: actor, Reason: reason, Setup: setup}
 	p.Digest, err = configurationDigest(p)
 	if err != nil {
 		return financialIssuanceConfiguration{}, err
@@ -71,6 +78,11 @@ func (a *financialIssuance) proposeConfiguration(workspace, actor, reason string
 	key, err := configurationScopeKey(workspace, spec)
 	if err != nil {
 		return financialIssuanceConfiguration{}, err
+	}
+	if admit != nil {
+		if err := admit(p); err != nil {
+			return financialIssuanceConfiguration{}, err
+		}
 	}
 	if old, ok := a.configurations[spec.ID]; ok {
 		if old.Spec.ID != spec.ID || old.Proposer != actor || old.Digest != p.Digest {
@@ -111,8 +123,9 @@ func (a *financialIssuance) proposeConfiguration(workspace, actor, reason string
 			return financialIssuanceConfiguration{}, commands.Fail(commands.DependencyUnavailable)
 		}
 		p.State = "proposal_unknown"
-		a.configurations[spec.ID] = copyConfiguration(p)
+		a.storeConfiguration(p, effect)
 		a.configurationScopes[key] = spec.ID
+		effect.mark()
 		if a.server.faulty("issuance-configuration-propose-after-intent") {
 			return financialIssuanceConfiguration{}, commands.Fail(commands.DependencyUnavailable)
 		}
@@ -125,12 +138,13 @@ func (a *financialIssuance) proposeConfiguration(workspace, actor, reason string
 			}
 			return financialIssuanceConfiguration{}, commands.Fail(commands.EvidenceStale)
 		}
+		effect.mark()
 		actual, err = a.documents.Define(workspace, kind, issuance.Actor{ID: actor, Kind: issuance.KindHuman})
 		if err != nil {
 			return financialIssuanceConfiguration{}, err
 		}
 		p.Proposed = actual
-		a.configurations[spec.ID] = copyConfiguration(p)
+		a.storeConfiguration(p, effect)
 	} else if err != nil || !configurationProposed(p) || !reflect.DeepEqual(actual, p.Proposed) {
 		if err != nil {
 			return financialIssuanceConfiguration{}, err
@@ -144,7 +158,7 @@ func (a *financialIssuance) proposeConfiguration(workspace, actor, reason string
 		return financialIssuanceConfiguration{}, commands.Fail(commands.DependencyUnavailable)
 	}
 	p.State = "proposed"
-	a.configurations[spec.ID] = copyConfiguration(p)
+	a.storeConfiguration(p, effect)
 	if a.server.faulty("issuance-configuration-propose-after-publication") {
 		return financialIssuanceConfiguration{}, commands.Fail(commands.DependencyUnavailable)
 	}
@@ -152,6 +166,10 @@ func (a *financialIssuance) proposeConfiguration(workspace, actor, reason string
 }
 
 func (a *financialIssuance) confirmConfiguration(workspace, id, digest, actor string) (financialIssuanceConfiguration, error) {
+	return a.confirmConfigurationTracked(workspace, id, digest, actor, nil, nil)
+}
+
+func (a *financialIssuance) confirmConfigurationTracked(workspace, id, digest, actor string, effect *financialConfigurationEffect, admit func(financialIssuanceConfiguration) error) (financialIssuanceConfiguration, error) {
 	if err := a.protectedRuleCaller(workspace, actor); err != nil {
 		return financialIssuanceConfiguration{}, err
 	}
@@ -167,6 +185,11 @@ func (a *financialIssuance) confirmConfiguration(workspace, id, digest, actor st
 	}
 	if err := a.currentConfiguration(workspace, p); err != nil {
 		return financialIssuanceConfiguration{}, err
+	}
+	if admit != nil {
+		if err := admit(p); err != nil {
+			return financialIssuanceConfiguration{}, err
+		}
 	}
 	if p.State == "confirmed" {
 		return a.configurationReadback(workspace, p)
@@ -194,15 +217,16 @@ func (a *financialIssuance) confirmConfiguration(workspace, id, digest, actor st
 			return financialIssuanceConfiguration{}, commands.Fail(commands.DependencyUnavailable)
 		}
 		p.State, p.Confirmer = "confirmation_unknown", actor
-		a.configurations[id] = copyConfiguration(p)
+		a.storeConfiguration(p, effect)
 		if a.server.faulty("issuance-configuration-confirm-after-intent") {
 			return financialIssuanceConfiguration{}, commands.Fail(commands.DependencyUnavailable)
 		}
+		effect.mark()
 		p.Active, err = a.documents.ApproveKind(workspace, p.Kind.ID, issuance.Actor{ID: actor, Kind: issuance.KindHuman})
 		if err != nil {
 			return financialIssuanceConfiguration{}, err
 		}
-		a.configurations[id] = copyConfiguration(p)
+		a.storeConfiguration(p, effect)
 	}
 	if !configurationActive(p) {
 		return financialIssuanceConfiguration{}, commands.Fail(commands.EvidenceStale)
@@ -211,7 +235,7 @@ func (a *financialIssuance) confirmConfiguration(workspace, id, digest, actor st
 		return financialIssuanceConfiguration{}, commands.Fail(commands.DependencyUnavailable)
 	}
 	p.State, p.ActivatedAt = "confirmed", p.Active.At
-	a.configurations[id] = copyConfiguration(p)
+	a.storeConfiguration(p, effect)
 	if a.server.faulty("issuance-configuration-confirm-after-publication") {
 		return financialIssuanceConfiguration{}, commands.Fail(commands.DependencyUnavailable)
 	}

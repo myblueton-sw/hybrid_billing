@@ -33,6 +33,8 @@ const (
 )
 
 var holdTable = map[string]holdRule{
+	"issuance_setup.propose_configuration":         {holdRefuse, reasonChange},
+	"issuance_setup.confirm_configuration":         {holdRefuse, reasonChange},
 	"issuance_draft.submit":                        {holdRefuse, reasonChange},
 	"issuance_draft.prepare_approval":              {holdRefuse, reasonChange},
 	"issuance_draft.approve":                       {holdRefuse, reasonChange},

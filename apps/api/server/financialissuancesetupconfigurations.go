@@ -18,6 +18,9 @@ func configurationHistoryRow(p financialIssuanceConfiguration, observation strin
 		"mode": p.Spec.Mode, "profile": p.Spec.Profile, "region": p.Spec.Region, "tax": p.Spec.Tax, "zone": p.Spec.Zone,
 		"languages": strings.Join(p.Spec.Languages, ","), "proposer": p.Proposer, "confirmer": p.Confirmer,
 	}
+	if p.Setup != nil {
+		row["setup_on"], row["scope_digest"], row["proposal_reason"] = p.Setup.On, p.Setup.ScopeDigest, p.Reason
+	}
 	if !p.Proposed.At.IsZero() {
 		row["proposed_at"] = p.Proposed.At.Format(time.RFC3339Nano)
 	}

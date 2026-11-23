@@ -27,6 +27,10 @@ type financialConfigurationScope struct {
 	Parties          []financialChannelParty
 }
 
+type financialConfigurationSetupContext struct {
+	On, ScopeDigest string
+}
+
 type financialIssuanceConfiguration struct {
 	Schema, Workspace        string
 	Spec                     financialConfigurationSpec
@@ -36,6 +40,7 @@ type financialIssuanceConfiguration struct {
 	State, Confirmer         string
 	Proposed, Active         issuance.KindView
 	ActivatedAt              time.Time
+	Setup                    *financialConfigurationSetupContext `json:"setup,omitempty"`
 }
 
 func configurationKind(spec financialConfigurationSpec) (issuance.Kind, error) {
@@ -65,6 +70,10 @@ func configurationScopeKey(workspace string, spec financialConfigurationSpec) (s
 }
 
 func copyConfiguration(p financialIssuanceConfiguration) financialIssuanceConfiguration {
+	if p.Setup != nil {
+		setup := *p.Setup
+		p.Setup = &setup
+	}
 	p.Spec.Languages = slices.Clone(p.Spec.Languages)
 	p.Kind.Languages = slices.Clone(p.Kind.Languages)
 	p.Scope.Contract.Components = slices.Clone(p.Scope.Contract.Components)
@@ -136,7 +145,7 @@ func (a *financialIssuance) configurationScope(workspace string, spec financialC
 
 func (a *financialIssuance) configurationIntegrity(workspace string, p financialIssuanceConfiguration) error {
 	bad := func() error { return commands.Fail(commands.EvidenceStale) }
-	if p.Schema != "hb_issuance_configuration_v1" || p.Workspace != workspace || p.Proposer == "" || !documentReason(p.Reason) {
+	if !validConfigurationSetup(p.Setup) || p.Schema != "hb_issuance_configuration_v1" || p.Workspace != workspace || p.Proposer == "" || !documentReason(p.Reason) {
 		return bad()
 	}
 	kind, err := configurationKind(p.Spec)

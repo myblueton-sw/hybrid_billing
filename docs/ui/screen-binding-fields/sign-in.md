@@ -70,3 +70,16 @@ This is part of the [screen binding register](../screen-binding-register.md#sign
 | Aside | Self-service recovery not available | fixed copy | none | `Service.tsx:223` |
 
 L03 has no API read or call.
+
+## HYB-304 authenticated boundary follow-up
+
+The tables above retain their original main82c9272 line references. This follow-up maps the current shared authenticated boundary by symbol rather than assigning those old line numbers to the changed source. L02/L03 bindings are unchanged.
+
+| Area | Producer and interpretation | Consumer |
+| --- | --- | --- |
+| L01 ended status | Actual AdminClient HTTP401 before body parsing, or parsed semantic unauthenticated failure such as csrf_refused; ordinary permission_denied remains a permission failure | `Service.tsx`: root-owned `authenticatedClient`, layout subscription and credential-matched retirement clear sensitive app content in place and show the neutral sign-in-again status |
+| Shared authenticated API | One client per root credential tuple; retirement is latched and late subscribers observe it | `context.ts`: provider `client` and `useAdminClient`; `admin.ts`: `subscribeAuthenticationLoss` and `send` guards |
+| Password confirmation | Credential identity plus prompt generation and component request scope | `Service.tsx`: scoped gate/callbacks; `Reauthenticate.tsx`: rejects obsolete after-await/error/focus/close callbacks; a retired approval cannot dispatch a retry |
+| Local refusal diagnostics | A retired client has no new server response/request/operation identifier | `admin.ts`: local unauthenticated error preserves empty diagnostics; actual remote errors retain their actual diagnostics |
+
+M05 confirmation/authentication-loss scenarios and shared-root mounted scenarios are bound in [advanced evidence](../../features/HYB-304/advanced-evidence.json). Root retirement does not certify every authenticated route's layout, native-language review or owner acceptance.

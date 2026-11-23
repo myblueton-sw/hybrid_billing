@@ -83,6 +83,7 @@ function OperationCard({ l,api,op,generation,onEnd,locked,onSignedOut,idPrefix =
     <div className="live-buttons"><button type="button" className="live-secondary" aria-expanded={open && view === "results"} onClick={() => { setView("results");setOpen(current => view !== "results" || !current); }}>{sq.results(l)}</button>
       {op.kind === "others" && op.not_included_count !== null && op.not_included_count > 0 && <button type="button" className="live-secondary" aria-expanded={open && view === "not_included"} onClick={() => { setView("not_included");setOpen(current => view !== "not_included" || !current); }}>{sq.notIncluded(l)}</button>}</div>
     {open && op.state !== "unconfirmed" && <OperationRows l={l} api={api} op={op} generation={generation} view={view} onEnd={onEnd} locked={locked} onSignedOut={onSignedOut} />}
+    {open && op.state === "unconfirmed" && <p role="status">{sq.resultsUnconfirmed(l)}</p>}
   </section></li>;
 }
 

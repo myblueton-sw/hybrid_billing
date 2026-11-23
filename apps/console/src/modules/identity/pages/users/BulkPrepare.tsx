@@ -34,8 +34,10 @@ function Sum({ rows }: { rows: [string, React.ReactNode, boolean?][] }) {
 
 function Excluded({ l, api, id, total }: { l: Locale; api: AdminClient; id: string; total: number }) {
   const [rows, setRows] = useState<Paged<BulkExclusion> | null>(null);
+  const [failed, setFailed] = useState(false);
   const more = async () => {
     const page = await bulkClient(api).excluded(id, rows?.rows.length ?? 0).catch(() => null);
+    setFailed(!page);
     if (page) setRows({ ...page, rows: [...(rows?.rows ?? []), ...page.rows] });
   };
   useEffect(() => { setRows(null); if (total > 0) void bulkClient(api).excluded(id).then(setRows, () => setRows(null)); }, [id, total]);
@@ -45,6 +47,7 @@ function Excluded({ l, api, id, total }: { l: Locale; api: AdminClient; id: stri
       <ul className="m01-people">{rows.rows.map((x) => <li key={x.user_id}><bdi dir="ltr">{x.login || x.user_id}</bdi> · {b.reason(l, x.reason)}</li>)}</ul>
       <p className="live-meta">{b.showing(l, rows.rows.length, rows.total)}</p>
       {rows.next && <button type="button" className="live-secondary" onClick={() => void more()}>{b.moreExcluded(l)}</button>}
+      {failed && <p className="live-meta" role="alert">{b.moreFailed(l)}</p>}
     </>
   );
 }
@@ -52,7 +55,7 @@ function Excluded({ l, api, id, total }: { l: Locale; api: AdminClient; id: stri
 const filterReasons = ["self", "not_found", "no_longer_matches", "no_membership", "already_revoked"];
 const explicitReasons = ["self", "not_found", "no_membership", "already_revoked"];
 
-export function PreviewBody({ l, api, prepared, onMore, days = 14 }: { l: Locale; api: AdminClient; prepared: Prepared; onMore: () => void; days?: number }) {
+export function PreviewBody({ l, api, prepared, onMore, moreFailed = false, days = 14 }: { l: Locale; api: AdminClient; prepared: Prepared; onMore: () => void; moreFailed?: boolean; days?: number }) {
   const { detail, targets } = prepared;
   const i = detail.impact;
   const job = detail.job;
@@ -105,6 +108,7 @@ export function PreviewBody({ l, api, prepared, onMore, days = 14 }: { l: Locale
           </ul>
           <p className="live-meta">{b.showing(l, targets.rows.length, targets.total)}</p>
           {targets.next && <button type="button" className="live-secondary" onClick={onMore}>{b.showMore(l)}</button>}
+          {moreFailed && <p className="live-meta" role="alert">{b.moreFailed(l)}</p>}
         </section>
       ) : <p className="m01-owner-only">{b.ownerOnlyPeople(l)}</p>}
       <section className="m01-outside" aria-labelledby="m01-outside-h">
@@ -213,7 +217,9 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
     const page = await bulk.targets(id, after);
     return { detail, targets: previous ? { ...page, rows: [...previous.rows, ...page.rows] } : page };
   };
+  const [trouble, setTrouble] = useState<"" | "discard" | "more">("");
   const prepareFixed = async (f: Fixed) => {
+    setTrouble("");
     setState({ kind: "sending", sent: 0, waiting: false });
     setTimeout(() => progress.current?.focus(), 0);
     say(m.checking(l, f.matched));
@@ -231,6 +237,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
     }
   };
   const send = async (draft = "", from = 0, startRevision = rev) => {
+    setTrouble("");
     setState({ kind: "sending", sent: 0, waiting: false });
     setTimeout(() => progress.current?.focus(), 0);
     say(b.sending(l, 0, ids.length));
@@ -270,8 +277,10 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
     try {
       await api.command("bulk_revocation.discard", id, await reload(), reason || b.discardReason(l), {}, attempt());
     } catch {
+      setTrouble("discard");
       return;
     }
+    setTrouble("");
     say(b.discarded(l));
     onBack();
   };
@@ -279,8 +288,9 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
     try {
       await api.command("bulk_revocation.discard", id, await reload(), reason || b.discardReason(l), {}, attempt());
     } catch (e) {
-      if (!(e instanceof AdminError && e.failure === "stage")) return;
+      if (!(e instanceof AdminError && e.failure === "stage")) { setTrouble("discard"); return; }
     }
+    setTrouble("");
     onDiscarded?.();
   };
   const sending = state.kind === "sending";
@@ -321,6 +331,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
                 {state.draft && <button type="button" className="live-secondary" onClick={() => void send(state.draft, stagedBatches(ids, state.staged), state.revision)}>{b.resume(l)}</button>}
                 {state.draft && <button type="button" className="live-secondary" onClick={() => void discard(state.draft)}>{b.discardDraft(l)}</button>}
               </div>
+              {trouble === "discard" && <p className="live-meta" role="alert">{b.discardFailed(l)}</p>}
             </div>
           )}
           {fixed && (state.kind === "blocked" || state.kind === "closed") && (
@@ -329,6 +340,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
               <p className="m01-ink">{state.kind === "blocked" ? <Emph l={l} text={m.blockedFilter(l, `${w.workspaceRole(l)}: ${roleName(l, "member")}`)} /> : m.listClosed(l)}</p>
               <p><strong>{b.nothingRevoked(l)}</strong></p>
               <button type="button" className="live-secondary m01-discard-list" onClick={() => void discardFixed(state.draft)}>{m.discardList(l)}</button>
+              {trouble === "discard" && <p className="live-meta" role="alert">{b.discardFailed(l)}</p>}
             </div>
           )}
           {!fixed && state.kind === "blocked" && (
@@ -350,6 +362,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
               </ul>
               <p>{b.previewAgain(l)}</p>
               <button type="button" className="live-secondary" onClick={() => void discard(state.draft)}>{b.discardDraft(l)}</button>
+              {trouble === "discard" && <p className="live-meta" role="alert">{b.discardFailed(l)}</p>}
             </div>
           )}
           <div className="m01-bulk-grid">
@@ -398,13 +411,14 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
           <h2 id="m01-bulk-title" tabIndex={-1} ref={heading}>{b.impactTitle(l)} <span className="live-meta">{b.bulkN(l, number(state.prepared.detail.job.id))}</span></h2>
           <p className="m01-stepline">{b.step2(l)}</p>
           {expired(state.prepared.detail.job, state.prepared.detail.server_time) && <div className="service-summary" role="alert"><p><Emph l={l} text={b.expired(l)} /></p></div>}
-          <PreviewBody l={l} api={api} prepared={state.prepared} days={days} onMore={async () => setState({ kind: "preview", prepared: await load(state.prepared.detail.job.id, state.prepared.targets?.rows.length ?? 0, state.prepared.targets ?? undefined) })} />
+          <PreviewBody l={l} api={api} prepared={state.prepared} days={days} moreFailed={trouble === "more"} onMore={async () => { try { const prepared = await load(state.prepared.detail.job.id, state.prepared.targets?.rows.length ?? 0, state.prepared.targets ?? undefined); setTrouble(""); setState({ kind: "preview", prepared }); } catch { setTrouble("more"); } }} />
           <div className="live-buttons">
             {expired(state.prepared.detail.job, state.prepared.detail.server_time)
-              ? <button type="button" className="live-primary" onClick={() => setState({ kind: "effect" })}>{b.prepareAgain(l)}</button>
+              ? <button type="button" className="live-primary" onClick={() => { setTrouble(""); setState({ kind: "effect" }); }}>{b.prepareAgain(l)}</button>
               : <button type="button" className="live-primary m01-continue" onClick={() => void proceed()}>{b.continue(l)}</button>}
             <button type="button" className="live-secondary" onClick={() => void discard(state.prepared.detail.job.id)}>{b.discard(l)}</button>
           </div>
+          {trouble === "discard" && <p className="live-meta" role="alert">{b.discardFailed(l)}</p>}
           {confirming && (
             <ConfirmDialog l={l} api={api} prepared={state.prepared} revision={rev} defaultReason={reason}
               onClose={() => { setConfirming(false); setTimeout(() => document.querySelector<HTMLElement>(".m01-continue")?.focus(), 0); }}

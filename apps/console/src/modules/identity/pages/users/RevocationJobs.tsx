@@ -89,8 +89,8 @@ function Scope({ l }: { l: Locale }) {
 
 type Opened = { detail: BulkDetail; items: Paged<BulkItem>; targets: Paged<BulkTarget> | null };
 
-function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, outcome, onOutcome, self, days }: {
-  l: Locale; api: AdminClient; opened: Opened; revision: string; wide: boolean; onClose: () => void; onReload: () => void; onMore: () => void;
+function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, moreFailed, outcome, onOutcome, self, days }: {
+  l: Locale; api: AdminClient; opened: Opened; revision: string; wide: boolean; onClose: () => void; onReload: () => void; onMore: () => void; moreFailed: boolean;
   outcome: string; onOutcome: (o: string) => void; self: string; days: number;
 }) {
   const job = opened.detail.job;
@@ -115,7 +115,7 @@ function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, out
       {job.state === "prepared" ? (
         <>
           {job.selection !== "filter" && <BasisFacts l={l} job={job} days={days} />}
-          <PreviewBody l={l} api={api} prepared={{ detail: opened.detail, targets: opened.targets }} onMore={onMore} days={days} />
+          <PreviewBody l={l} api={api} prepared={{ detail: opened.detail, targets: opened.targets }} onMore={onMore} moreFailed={moreFailed} days={days} />
           <div className="live-buttons">
             {owner && <button type="button" className="live-primary m01-continue" onClick={() => setConfirming(true)}>{b.continue(l)}</button>}
             {owner && <button type="button" className="live-secondary" onClick={() => void discard()}>{b.discard(l)}</button>}
@@ -164,6 +164,7 @@ function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, out
             <ol className="m01-items-list">{opened.items.rows.map((item) => <Item key={item.user_id + item.outcome} l={l} item={item} />)}</ol>
             <p className="live-meta">{b.showing(l, opened.items.rows.length, opened.items.total)}</p>
             {opened.items.next && <button type="button" className="live-secondary" onClick={onMore}>{b.morePeople(l)}</button>}
+            {moreFailed && <p className="live-meta" role="alert">{b.moreFailed(l)}</p>}
           </section>
           <details className="m01-expert">
             <summary>{b.technical(l)}</summary>
@@ -237,8 +238,10 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
     }
   };
   useEffect(() => { load(); }, [load]);
+  const [moreFailed, setMoreFailed] = useState(false);
   const openJob = useCallback(async (id: string, filter = outcome) => {
     setOpen(id);
+    setMoreFailed(false);
     try {
       const detail = await bulk.detail(id);
       const items = detail.job.state === "executed" ? await bulk.items(id, 0, 50, filter) : { total: 0, next: "", rows: [] };
@@ -252,13 +255,18 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
   const more = async () => {
     if (!opened) return;
     const id = opened.detail.job.id;
-    if (opened.detail.job.state === "prepared") {
-      if (!opened.targets) return;
-      const t = await bulk.targets(id, opened.targets.rows.length);
-      setOpened({ ...opened, targets: { ...t, rows: [...opened.targets.rows, ...t.rows] } });
-    } else {
-      const i = await bulk.items(id, opened.items.rows.length, 50, outcome);
-      setOpened({ ...opened, items: { ...i, rows: [...opened.items.rows, ...i.rows] } });
+    try {
+      if (opened.detail.job.state === "prepared") {
+        if (!opened.targets) return;
+        const t = await bulk.targets(id, opened.targets.rows.length);
+        setOpened({ ...opened, targets: { ...t, rows: [...opened.targets.rows, ...t.rows] } });
+      } else {
+        const i = await bulk.items(id, opened.items.rows.length, 50, outcome);
+        setOpened({ ...opened, items: { ...i, rows: [...opened.items.rows, ...i.rows] } });
+      }
+      setMoreFailed(false);
+    } catch {
+      setMoreFailed(true);
     }
   };
   if (error instanceof AdminError && error.failure === "unauthenticated") {
@@ -269,9 +277,9 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
   }
   const groupsOf = split(page?.jobs ?? []);
   const days = setting(page?.settings ?? [], "role_period_warning_days", 14);
-  const close = () => { const id = open; setOpen(""); setOpened(null); setTimeout(() => document.querySelector<HTMLElement>(`[data-job="${CSS.escape(id)}"]`)?.focus(), 0); };
+  const close = () => { const id = open; setOpen(""); setOpened(null); setMoreFailed(false); setTimeout(() => document.querySelector<HTMLElement>(`[data-job="${CSS.escape(id)}"]`)?.focus(), 0); };
   const detail = opened && open ? (
-    <Detail l={l} api={api} opened={opened} revision={page?.revision ?? revision} wide={wide} onClose={close} onReload={() => { load(); void openJob(open); }} onMore={() => void more()}
+    <Detail l={l} api={api} opened={opened} revision={page?.revision ?? revision} wide={wide} onClose={close} onReload={() => { load(); void openJob(open); }} onMore={() => void more()} moreFailed={moreFailed}
       outcome={outcome} onOutcome={(o) => { setOutcome(o); void openJob(open, o); }} self={self} days={days} />
   ) : null;
   const stepping = !wide && detail;

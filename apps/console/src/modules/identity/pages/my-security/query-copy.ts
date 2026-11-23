@@ -45,6 +45,7 @@ export const sq = {
   retention: (l: Locale) => t(l,"Recovery is kept only in this signed-in browser page. Reloading the whole page or signing in again does not preserve this pending request.","복구 정보는 현재 로그인한 브라우저 페이지에서만 유지됩니다. 전체 페이지를 새로고침하거나 다시 로그인하면 이 대기 요청이 유지되지 않습니다.","تُحفَظ معلومات الاسترداد في صفحة المتصفح الحالية أثناء تسجيل الدخول فقط. لا يبقى الطلب المعلّق بعد إعادة تحميل الصفحة كاملة أو تسجيل الدخول مجدّدًا."),
   resultUnavailable: (l: Locale) => t(l,"The retained result is unavailable. No outcome is inferred and a new target list remains locked.","보관된 결과를 확인할 수 없습니다. 결과를 추정하지 않으며 새 대상 목록은 계속 잠겨 있습니다.","النتيجة المحفوظة غير متاحة. لا يُفترض أي مآل، وتظل قائمة الأهداف الجديدة مقفلة."),
   results: (l: Locale) => t(l,"Recorded session results","기록된 세션 결과","نتائج الجلسات المسجّلة"),
+  resultsUnconfirmed: (l: Locale) => t(l,"No results can be shown while the result of this operation is not confirmed.","이 작업의 결과가 확인되지 않은 동안에는 결과를 표시할 수 없습니다.","لا يمكن عرض نتائج ما دامت نتيجة هذه العملية لم تُؤكَّد."),
   operationUnavailable: (l: Locale) => t(l,"The retained operation is unavailable. Refresh the session list to check the current recorded state.","보관된 작업을 확인할 수 없습니다. 세션 목록을 새로 조회해 현재 기록된 상태를 확인하세요.","العملية المحفوظة غير متاحة. حدّث قائمة الجلسات للتحقّق من الحالة المسجّلة الحالية."),
   viewOperation: (l: Locale) => t(l,"View confirmed-list operation","확정 목록 작업 보기","عرض عملية القائمة المؤكدة"),
   notIncluded: (l: Locale) => t(l,"Not included in the confirmed list","확정 목록에 포함되지 않음","غير مشمولة في القائمة المؤكدة"),

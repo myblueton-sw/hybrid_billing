@@ -134,3 +134,13 @@ Reported by the reviewers as not opened, so no statement is made about them: on 
 Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3; a new render check with injected read failures, `tools/o03-trust-states-qa.mjs`, passes in English, Korean and Arabic at 1440 and 390 for G1, G3 and G6; the existing parts, rules-writes and payment-terms render checks still pass. G5 has no rendered check. Copy and state review, ui-designer role (AI, from renders and source): FAIL with three findings on G5 and G6 (terms that did not match the view, the reason shown while the history page was unknown, a form line pointing at a hidden sample), corrected with its strings; corrective re-review PASS.
 
 Left open from that review and this work: a refused contract detail shows the general failure text, whose wording speaks of signing in; the failed list shows its alert above the section and nothing in the list column; "Loading contracts…" is used for one contract; while the settings history is loading or failed, the disabled button has no reason of its own; Arabic uses two words for "sample" in two copy files; G2 (a failed detail refresh after a write shows no error) is not fixed here.
+
+## M01 findings A1 and A2, M05 finding D1 (2026-11-24)
+
+- A1: when discarding a draft or list fails, a message beside the discard button says that the discard was not confirmed and that the draft or list may still exist. It is cleared when the person resumes, prepares again or discards successfully.
+- A2: when "Show more" fails for the people of a prepared list, the excluded people or the people of a job, a message beside the button says so and that the people already shown are unchanged. It is cleared when another job is opened or closed.
+- D1: opening the results of an operation whose result is not confirmed shows a sentence saying that no results can be shown until it is confirmed.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3. No rendered check and no new test: these states need a failed command or read in the bulk revocation and session flows, which no existing render check stages. Copy and state review, ui-designer role (AI, by reading): FAIL with five findings (messages placed far from their buttons, a message that outlived its cause, and three wordings), corrected; the re-review passed all five and found one more message that outlived its cause, corrected afterwards and not reviewed again.
+
+Left open: the new messages use the secondary text style, whose prominence is for the owner's screen review; three of them sit inside a container that is itself an alert; whether "try again" can succeed after a discard whose outcome was unknown was not traced; C1 on M03 is not fixed here.

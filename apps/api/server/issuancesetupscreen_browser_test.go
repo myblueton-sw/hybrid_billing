@@ -114,15 +114,30 @@ func TestIssuanceSetupActualScreenBrowser(t *testing.T) {
 	} {
 		j.grant(t, f, right.namespace, right.capability, right.recipient)
 	}
+	f.ok(t, "unused statement", attestRun(f, f.as(Admin3Login), "attest_channel_registration", c, map[string]string{"attestation": "screen-unused-statement", "target": "screen-unused-channel", "statement": "Synthetic statement that no step will use."}), "recorded", "")
 	f.must(f.s.Bind(listener.Addr()))
 	browse("changes", map[string]string{"FIRST": AdminLogin, "SECOND": Admin2Login, "THIRD": Admin3Login, "REQUESTER": requester, "VERIFIER": verifier}, "--effective", f.s.clock().Add(2*time.Hour).UTC().Format("2006-01-02T15:04"))
-	if len(a.changes) != 1 || len(a.bindingIntents) != 1 || len(a.attestations) != 4 {
+	if len(a.changes) != 2 || len(a.bindingIntents) != 1 || len(a.attestations) != 7 {
 		t.Fatalf("unexpected records: changes %d bindings %d statements %d", len(a.changes), len(a.bindingIntents), len(a.attestations))
 	}
+	states := map[string]int{}
 	for _, change := range a.changes {
 		v := change.Module
-		if v.State != protected.StateScheduled || v.Requester != "screen-requester" || v.Verification.Verifier != "screen-verifier" || change.Spec.Field != protected.FieldPaymentAccount {
-			t.Fatalf("the change was not requested, verified and approved by the browser sessions: %+v", v)
+		if v.Requester != "screen-requester" || v.Verification.Verifier != "screen-verifier" || change.Spec.Field != protected.FieldPaymentAccount {
+			t.Fatalf("a change was not requested and verified by the browser sessions: %+v", v)
+		}
+		states[v.State]++
+	}
+	if states[protected.StateRejected] != 1 || states[protected.StateScheduled] != 1 {
+		t.Fatalf("expected one rejected and one approved change: %v", states)
+	}
+	unused := a.attestations["screen-unused-statement"]
+	if attestationState(unused) != "withdrawn" || unused.Actor != SampleAdmin3 {
+		t.Fatal("the unused statement was not withdrawn by its author: " + attestationState(unused))
+	}
+	for id, statement := range a.attestations {
+		if id != "screen-unused-statement" && attestationState(statement) != "consumed" {
+			t.Fatal("a statement recorded through the screen is not used by its step: " + id)
 		}
 	}
 	for _, binding := range a.bindingIntents {

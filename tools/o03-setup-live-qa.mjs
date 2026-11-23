@@ -25,22 +25,31 @@ const row=p=>p.locator('.o03-changes-table tbody button');
 const changes=async p=>{await documents(p,'changes','.o03-field-cards');await p.locator('.o03-field-cards > li').nth(2).locator('button').click();await p.locator('#o03-change-steps').waitFor();await idle(p);};
 try{
  if(phase==='changes'){
- stage='change-request';await changes(requester);
- await button(requester,'Request protected settings change: Payment account').click();await requester.locator('#o03-change-channel').waitFor();
- await steps(requester).locator('input[name=o03-change-reference]').nth(0).check();
- const offered=await requester.locator('#o03-change-channel option').evaluateAll(list=>list.map(o=>o.value).filter(Boolean));assert.equal(offered.length,1,'verification channels offered: '+offered.length);await requester.locator('#o03-change-channel').selectOption(offered[0]);
- await steps(requester).locator('input[name=o03-change-provenance]').nth(0).check();await steps(requester).locator('input[name=o03-change-instruction]').nth(0).check();
- await requester.locator('#o03-change-effective').fill(args.effective);await requester.locator('#o03-change-reason').fill('Synthetic reason: the issuing entity changed bank');await requester.locator('#o03-request-statement').fill('Synthetic statement: I received the signed instruction in person.');
- await send(requester,'Request protected settings change');await requester.locator('.o03-changes-table tbody tr').waitFor();await idle(requester);await shot(requester,'change-requested');
- assert.equal(await row(requester).count(),0,'the requester is offered verification');assert.ok((await requester.locator('.o03-changes-table').innerText()).includes('You requested this change'));done('change requested with a statement');
+ const requestChange=async(n,reason)=>{
+  stage='change-request-'+n;await changes(requester);
+  await button(requester,'Request protected settings change: Payment account').click();await requester.locator('#o03-change-channel').waitFor();
+  await steps(requester).locator('input[name=o03-change-reference]').nth(0).check();
+  const offered=await requester.locator('#o03-change-channel option').evaluateAll(list=>list.map(o=>o.value).filter(Boolean));assert.equal(offered.length,1,'verification channels offered: '+offered.length);await requester.locator('#o03-change-channel').selectOption(offered[0]);
+  await steps(requester).locator('input[name=o03-change-provenance]').nth(0).check();await steps(requester).locator('input[name=o03-change-instruction]').nth(0).check();
+  await requester.locator('#o03-change-effective').fill(args.effective);await requester.locator('#o03-change-reason').fill(reason);await requester.locator('#o03-request-statement').fill('Synthetic statement: I received the signed instruction in person.');
+  await send(requester,'Request protected settings change');await requester.waitForFunction(count=>document.querySelectorAll('.o03-changes-table tbody tr').length>=count,n);await idle(requester);await shot(requester,'change-requested-'+n);
+  assert.equal(await row(requester).count(),0,'the requester is offered a later step');assert.ok((await requester.locator('.o03-changes-table').innerText()).includes('You requested this change'));
+  stage='change-verify-'+n;await changes(verifier);assert.equal(await row(verifier).count(),1);
+  await row(verifier).click();await verifier.locator('#o03-verify-statement').waitFor();await steps(verifier).locator('input[name=o03-change-outcome]').nth(0).check();await verifier.locator('#o03-verify-statement').fill('Synthetic statement: I confirmed the instruction through the portal channel.');
+  await send(verifier,'Verify protected settings change');await row(verifier).waitFor({state:'detached'});await idle(verifier);await shot(verifier,'change-verified-'+n);
+  stage='change-decide-'+n;await changes(second);assert.equal(await row(second).count(),1);await row(second).click();await steps(second).locator('input[name=o03-change-verdict]').first().waitFor();
+ };
+ await requestChange(1,'Synthetic reason: first instruction for the bank change');
+ await steps(second).locator('input[name=o03-change-verdict]').nth(1).check();await steps(second).locator('input[name=o03-change-rejection]').nth(1).check();
+ await send(second,'Decide protected settings change');await row(second).waitFor({state:'detached'});await idle(second);await shot(second,'change-rejected');done('a requested and verified change rejected by a third person');
+ await requestChange(2,'Synthetic reason: the issuing entity changed bank');
+ await steps(second).locator('input[name=o03-change-verdict]').nth(0).check();
+ await send(second,'Decide protected settings change');await row(second).waitFor({state:'detached'});await idle(second);await shot(second,'change-approved');done('a second change for the same setting requested, verified and approved');
 
- stage='change-verify';await changes(verifier);
- await row(verifier).click();await verifier.locator('#o03-verify-statement').waitFor();await steps(verifier).locator('input[name=o03-change-outcome]').nth(0).check();await verifier.locator('#o03-verify-statement').fill('Synthetic statement: I confirmed the instruction through the portal channel.');
- await send(verifier,'Verify protected settings change');await row(verifier).waitFor({state:'detached'});await idle(verifier);await shot(verifier,'change-verified');done('change verified by a separate person with a statement');
-
- stage='change-decide';await changes(second);
- await row(second).click();await steps(second).locator('input[name=o03-change-verdict]').first().waitFor();await steps(second).locator('input[name=o03-change-verdict]').nth(0).check();
- await send(second,'Decide protected settings change');await row(second).waitFor({state:'detached'});await idle(second);await shot(second,'change-decided');done('change approved by a third person');
+ stage='statement-withdraw';await documents(third,'statements','#o03-statement-steps');await third.locator('.o03-statements-table tbody tr').first().waitFor();await idle(third);
+ assert.equal(await third.locator('.o03-statements-table tbody button').count(),1,'withdrawal is offered on other than the one unused statement of this person');
+ await third.locator('.o03-statements-table tbody button').click();await steps(third).locator('.o03-setup-review').waitFor();await steps(third).getByRole('button',{name:'Withdraw statement',exact:true}).click();
+ await third.locator('.o03-statements-table tbody button').waitFor({state:'detached'});await idle(third);await shot(third,'statement-withdrawn');done('an unused statement withdrawn by its author');
 
  stage='term-apply';await terms(third);
  await button(third,'Apply payment terms to this contract').click();await third.locator('#o03-bind-from').fill('2026-01-01');await steps(third).locator('input[name=o03-bind-end]').nth(1).check();await steps(third).locator('input[name=o03-bind-reason]').nth(0).check();

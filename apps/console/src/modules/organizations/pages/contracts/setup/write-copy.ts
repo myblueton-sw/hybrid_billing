@@ -5,6 +5,8 @@ const words={
  preset:["Use the synthetic ERP sample above","위의 합성 ERP 샘플 사용","استخدام عينة ERP الاصطناعية أعلاه"],
  languages:["Document languages — select at least one","문서 언어 · 하나 이상 선택","لغات المستند — اختر لغة واحدة على الأقل"],
  check:["Check permission and review","권한 확인 후 검토","التحقق من الصلاحية والمراجعة"],
+ unlisted:["The settings chosen under “Start from” are not on the loaded page of recorded issuance settings, so permission cannot be checked from here. Use First page or Next page to load the page that lists them, or choose another option.","작업 대상으로 고른 설정이 현재 불러온 발행 설정 이력 페이지에 없어 여기에서 권한 확인과 검토를 진행할 수 없습니다. 첫 페이지 또는 다음 페이지로 해당 설정이 있는 페이지를 불러오거나 작업 대상을 다시 고르세요.","الإعدادات المختارة في «نقطة البدء» ليست ضمن الصفحة المحمّلة من إعدادات الإصدار المسجلة، لذا لا يمكن التحقق من الصلاحية من هنا. استخدم «الصفحة الأولى» أو «الصفحة التالية» لتحميل الصفحة التي تتضمنها، أو اختر خيارًا آخر."],
+ scopeMissing:["Not shown because the setup scope could not be loaded. Reload the setup scope above.","설정 기준을 조회하지 못해 표시하지 않습니다. 위의 설정 기준을 새로 조회하세요.","لا تُعرض لأن نطاق الإعداد تعذر تحميله. أعد تحميل نطاق الإعداد أعلاه."],
  review:["Review the exact request","제출할 요청 검토","مراجعة الطلب المحدد"],
  propose:["Submit proposal","제안 제출","إرسال الاقتراح"],
  confirm:["Confirm settings","설정 확인","تأكيد الإعدادات"],

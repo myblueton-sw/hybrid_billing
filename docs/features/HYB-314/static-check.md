@@ -121,3 +121,16 @@ In the issuance setup files that were read, the read stores drop their value on 
 # Not read
 
 Reported by the reviewers as not opened, so no statement is made about them: on M01, `RolePeriod.tsx`, `Selection.tsx`, `filters.tsx`, `Stamp.tsx`, part of `RevocationJobs.tsx` and the bulk, period and filter models; on M02, the trust model and copy; on M03, `Settings.tsx`, `Area.tsx`, `who.tsx`, the models and most of the result-authority helpers; on M04, `Held.tsx`, the model and part of `Live.tsx`; on M05, `SessionSettings.tsx` and several models; on O03, `Channels.tsx`, `Changes.tsx` and the four step-write components with their flow files; on P02 to P05, the models and formatters and, on P05, `LiveMatrix.tsx`, `LiveRequirements.tsx`, `LiveDecisions.tsx` and `LiveRetireForm.tsx`. Copy files were read by search only. No style sheet and no test was read. Which of the static and live components mounts for each screen was not verified for M02 to M05.
+
+# Fixes
+
+## O03 findings G1, G3, G5 and G6 (2026-11-24)
+
+- G1: the list counter is rendered only once the list has loaded, so no "0 of 0" shows while loading or after a failed first read.
+- G3: "This contract is not available." is not shown while the detail read is pending; the loading status shows instead.
+- G5: when the settings chosen under "Start from" are not on the loaded page of recorded issuance settings, a sentence beside the disabled "Check permission and review" button says so and names the paging buttons. It is shown only when the history page is known.
+- G6: after a failed scope read the sample section keeps its heading and says that it is not shown because the scope could not be loaded.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3; a new render check with injected read failures, `tools/o03-trust-states-qa.mjs`, passes in English, Korean and Arabic at 1440 and 390 for G1, G3 and G6; the existing parts, rules-writes and payment-terms render checks still pass. G5 has no rendered check. Copy and state review, ui-designer role (AI, from renders and source): FAIL with three findings on G5 and G6 (terms that did not match the view, the reason shown while the history page was unknown, a form line pointing at a hidden sample), corrected with its strings; corrective re-review PASS.
+
+Left open from that review and this work: a refused contract detail shows the general failure text, whose wording speaks of signing in; the failed list shows its alert above the section and nothing in the list column; "Loading contracts…" is used for one contract; while the settings history is loading or failed, the disabled button has no reason of its own; Arabic uses two words for "sample" in two copy files; G2 (a failed detail refresh after a write shows no error) is not fixed here.

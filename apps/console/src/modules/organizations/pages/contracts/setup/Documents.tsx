@@ -7,6 +7,7 @@ import { setupReadClient } from "./client";
 import { SetupReadStore, type ReadState } from "./read-store";
 import type { Configuration } from "./history";
 import { text, type SetupWord } from "./copy";
+import { writeText } from "./write-copy";
 import { Writes } from "./Writes";
 import { PartFrame, PartNav } from "./Parts";
 import { Rules } from "./Rules";
@@ -79,7 +80,7 @@ export function Documents({ l, session, contract, on, parties, part, onPart, onS
     <div className="o03-docs-pages">{state.historyAfter && <button type="button" className="live-secondary" onClick={() => reloadHistory()}>{text(l, "first")}</button>}{page.next && <button type="button" className="live-secondary" onClick={() => reloadHistory(true)}>{text(l, "next")}</button>}</div>
    </>}
   </section>
-  <section aria-labelledby="o03-docs-options" aria-busy={state.options.loading || undefined}><h3 id="o03-docs-options">{text(l, "sample")}</h3><ReadFeedback l={l} state={state.options} />{state.options.value && <><dl className="live-facts live-facts-grid">
+  <section aria-labelledby="o03-docs-options" aria-busy={state.options.loading || undefined}><h3 id="o03-docs-options">{text(l, "sample")}</h3>{state.context.error && <p className="live-sub">{writeText(l, "scopeMissing")}</p>}<ReadFeedback l={l} state={state.options} />{state.options.value && <><dl className="live-facts live-facts-grid">
    <Fact label={text(l, "mode")}>{ltr(state.options.value.mode)}</Fact><Fact label={text(l, "documentProfile")}>{ltr(state.options.value.profile)}</Fact>
    <Fact label={text(l, "region")}>{ltr(state.options.value.region)}</Fact><Fact label={text(l, "tax")}>{ltr(state.options.value.tax)}</Fact><Fact label={text(l, "zone")}>{ltr(state.options.value.zone)}</Fact><Fact label={text(l, "languages")}>{ltr(state.options.value.languages.join(", "))}</Fact>
   </dl><p className="live-sub">{text(l, "presetNote")}</p></>}</section>

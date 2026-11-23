@@ -446,3 +446,17 @@ Malformed-response-only observations from the same check, not changed: fallback 
 Checks: `tsc` clean; console tests 1350, pass 1347, fail 0, skipped 3. No new test and no rendered check. Corrective review by the same reviewer (AI, by reading): PASS for each of the three, no blocking finding. Its suggestion to show a loading line was adopted afterwards and not reviewed again. Left open from it: results of two reads that arrive out of order are applied without checking which is the latest, which predates this change; after a failed filter read only the page-level alert appears, whose retry reloads the list and not the items; the Korean and Arabic wording of the new label had no language review.
 
 Not read by either review: the copy files beyond search, `users/Matching.tsx`, style sheets and tests; the models and formatters of P02 to P05 and, on P05, `LiveMatrix.tsx`, `LiveRequirements.tsx`, `LiveDecisions.tsx` and `LiveRetireForm.tsx`; on O03, `Channels.tsx`, `Changes.tsx` and the four step-write components.
+
+## Second static check, O03 setup step files and the M01 matching step (2026-11-24)
+
+The same independent reviewer read twelve more files with the same five checks: on O03 `setup/Channels.tsx`, `Changes.tsx`, `ChannelWrites.tsx`, `ChangeWrites.tsx`, `RuleWrites.tsx`, `TermWrites.tsx`, `Writes.tsx` and the flow files `channel-flow.ts`, `change-flow.ts`, `rules-flow.ts`, `term-flow.ts`; on M01 `users/Matching.tsx`. Nothing was executed.
+
+Eleven files: no finding. Among what was checked and found sound: a failed next page of the channel or change list shows the alert and no rows, never a partial list presented as whole; the O03 setup parsers reject a response with a missing or unknown field, so no console default can stand in for a value there; on M01 a failed count has its own region with a retry and is not shown as zero, "None" needs a complete count of zero, and an incomplete count reads "at least".
+
+One confirmed finding, low, corrected in the same change:
+
+- `setup/ChannelWrites.tsx`, check 2: while the reference read of the channel registration form was still pending, the "Reference" field was empty with no loading line, and "Review" was enabled and answered that the entries were invalid. The field now says that it is loading, and "Review" is disabled until the references are read, as the change request form already did. A failed read was already stated.
+
+Checks: `tsc` clean; console tests 1350, pass 1347, fail 0, skipped 3. Rendered: `tools/o03-setup-channels-qa.mjs` (63 cases), `o03-setup-channels-writes-qa.mjs` (36) and `o03-setup-changes-writes-qa.mjs` (27) run against a console built from this change, exit code 0 each, no unexpected read. They do not stage a pending reference read, so the corrected state itself is not asserted. No review of the one-line correction.
+
+Not settled by the reviewer: whether the server refuses a request, acceptance, verification or decision on a row governed by other rules, which the console offers (a refusal would be shown with its code); whether the term offers match the server's preconditions (the same). Not read: `StepResults.tsx`, `step-store.ts`, `write-store.ts`, `mutation.ts`, `editor.ts`, `part-store.ts`, the issuance write handlers of the server, and the P02 to P05 models and four P05 files named earlier.

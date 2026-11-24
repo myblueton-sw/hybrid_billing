@@ -593,3 +593,19 @@ Not covered: findings E2, E3 and E5 (the draft panel after a failed re-read, the
 
 Rendered runs recorded for this ticket now cover O01, O03, M02, M03, M04, M05 and the P screens. O02 has none and no script; M01 has only what the server-backed suite shows.
 
+## Rendered run on O02 against a real service (2026-11-24)
+
+O02 had no rendered script. `apps/console/tools/organization-changes-qa.mjs` is new and was run against main b26d389 (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards). Result: exit code 0; 94 checks passed, none failed, no page error. One complete run of the final script, after a first run with 85 passing checks that lacked the arrival checks with a plan; the script itself was not reviewed.
+
+What it does: signs in as the sample administrator; loads the four steps of the screen in English, Korean and Arabic at 1440 and 390 and checks that the screen is live, its language and direction, the absence of placeholder text and of a load failure, and that the page is not wider than the viewport.
+
+For finding F2, in the three languages: an address that names a plan that is not loaded together with an arrival (`done=sealed`, `rejected`, `discarded`, `activated:99`) announces nothing and the arrival is removed from the address. The sample has no plan, so for the other cases one plan is added to the answer of the plans read in the browser: as an activated plan with its own revision 7 and `done=activated:99` in the address, the announcement names revision 7 and not 99; an arrival that does not match the plan's state announces nothing; a matching arrival is announced. These three cases therefore show the console's rule on an altered answer, not a plan the service holds.
+
+One screenshot (English, 1440, arrival on a sealed plan) was looked at by the writer: the plan opens with the focus on its title. The added plan carries no impact, which the screen shows as "Activation is held: the impact of this change could not be read"; that is the screen's reading of an incomplete answer, not a finding. Not an owner acceptance.
+
+The note of the O01 run about the navigation column is settled: the column is styled to stay in view while scrolling (`service-shell.css:44-49`), and the full-page capture was taken after the page had scrolled. Not a layout fault.
+
+Not covered: creating, sealing, rejecting, activating or discarding a plan through the service, the draft hand-over from O01, and keyboard order.
+
+Rendered runs recorded for this ticket now cover O01, O02, O03, M02, M03, M04, M05 and the P screens. M01 has only what the server-backed suite shows.
+

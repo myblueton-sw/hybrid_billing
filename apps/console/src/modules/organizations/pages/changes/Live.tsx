@@ -13,15 +13,14 @@ import { o } from "../../../organizations/pages/organizations/live-copy";
 import { todayUTC, validDay } from "../../../organizations/pages/organizations/live-model";
 import { c } from "./live-copy";
 import {
-  actionsFor, adopted, afterConflict, allMemberChoices, baseBlocks, baseField, baseStale, blocked, canActivate, closing, currentOn, currentView, fill, findPlan, arrival, formStep, memberMode, held, impactDone, impactOf, impactUnread, keepsAttempt, kinds, lead, membersKept, minFrom,
+  actionsFor, adopted, afterConflict, baseBlocks, baseField, baseStale, blocked, canActivate, closing, currentOn, currentView, fill, findPlan, arrival, formStep, memberMode, held, impactDone, impactOf, impactUnread, keepsAttempt, kinds, lead, membersKept, minFrom,
   nameOf, needsTarget, partition, prefilled, react, readHandoff, refusal, showOpenCount, steps, targetChoices, type Action, type Blocked, type Choice, type Command, type Carried, type Reaction,
   draftLoad, groupRefusal, planTitle, type DraftLoad,
 } from "./live-model";
+import { Named, Picker, resultPage, unitChoices, usePresent } from "./choices";
 import "../../../identity/pages/users/live.css";
 import "./live.css";
 
-const maxPages = 10;
-const pageSize = 99;
 const tags: Record<Locale, string> = { en: "en-US", ko: "ko-KR", ar: "ar" };
 
 function day(l: Locale, iso: string): string {
@@ -37,34 +36,15 @@ function stamp(l: Locale, iso: string): string {
 
 const ltr = (s: string) => <bdi dir="ltr">{s}</bdi>;
 
-type Choices = { parties: OrgParty[]; byKind: Partial<Record<RelationKind, OrgMember[]>>; complete: boolean };
+type Choices = { parties: OrgParty[]; revision: number };
 
 async function readChoices(api: AdminClient, on: string): Promise<Choices> {
-  const first = await api.organizations({ on, kind: "hierarchy", limit: pageSize });
-  const revision = first.relationship_revision;
-  const byKind: Partial<Record<RelationKind, OrgMember[]>> = {};
-  let complete = true;
-  for (const kind of kinds) {
-    let page = kind === "hierarchy" ? first : null;
-    const members: OrgMember[] = [];
-    let after = "";
-    for (let n = 0; n < maxPages; n++) {
-      try {
-        page = page ?? (await api.organizations({ on, kind, revision, after, limit: pageSize }));
-      } catch (e) {
-        if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) throw e;
-        complete = false;
-        break;
-      }
-      members.push(...page.members);
-      after = page.next;
-      page = null;
-      if (!after) break;
-    }
-    if (after) complete = false;
-    byKind[kind] = members;
-  }
-  return { parties: first.parties, byKind, complete };
+  const first = await api.organizations({ on, kind: "hierarchy", limit: 1 });
+  return { parties: first.parties, revision: first.relationship_revision };
+}
+
+function namedAs(rows: Choice[]): OrgMember[] {
+  return rows.filter((r) => r.name && r.name !== r.id).map((r) => ({ member: r.id, name: r.name, targets: [], history: [] }));
 }
 
 type Notice = { text: string; alert?: boolean } | null;
@@ -116,10 +96,6 @@ const impactWord = (l: Locale, v: string) => {
   const i = impactOf(v);
   return i === "computed" ? c.computedImpact(l) : i === "not_computed" ? c.notComputed(l) : c.unknownImpact(l);
 };
-
-function Named({ id, name }: { id: string; name: string }) {
-  return name === id ? <bdi dir="ltr" className="o02-id-name">{id}</bdi> : <><bdi>{name}</bdi><span className="live-sub live-mono">{ltr(id)}</span></>;
-}
 
 export function Detail({ l, p, page, parties, members, full, titleRef }: {
   l: Locale; p: PlanRow; page: PlansPage; parties: OrgParty[]; members: OrgMember[]; full: boolean; titleRef?: React.Ref<HTMLHeadingElement>;
@@ -199,7 +175,7 @@ export function Detail({ l, p, page, parties, members, full, titleRef }: {
                       {p.members.map((m) => (
                         <tr key={m.member}>
                           <td data-label={c.colMember(l)}><Named id={m.member} name={m.name || named(m.member)} /></td>
-                          <td data-label={c.colChange(l)}>{m.member === p.change.member ? (ld.target ? c.leadTo(l, day(l, ld.from), named(ld.target)) : c.leadNone(l, day(l, ld.from))) : c.none(l)}</td>
+                          <td data-label={c.colChange(l)}>{m.member === p.change.member ? (ld.target ? c.leadTo(l, day(l, ld.from), (ld.target === p.change.target && p.target_name) || named(ld.target)) : c.leadNone(l, day(l, ld.from))) : c.none(l)}</td>
                           <td data-label={c.colRanges(l)}>
                             {m.differs.length === 0 ? c.none(l) : <ul className="o02-ranges">{m.differs.map((r) => <li key={r.from + r.until}>{r.until ? c.rangeClosed(l, day(l, r.from), day(l, r.until)) : c.rangeOpen(l, day(l, r.from))}</li>)}</ul>}
                           </td>
@@ -414,6 +390,17 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const [loadError, setLoadError] = useState<unknown>(null);
   const [choices, setChoices] = useState<Choices | null>(null);
   const [choicesFailed, setChoicesFailed] = useState(false);
+  const [choiceTurn, setChoiceTurn] = useState(0);
+  const [seen, setSeen] = useState<OrgMember[]>([]);
+  const [carried, setCarried] = useState<boolean | null>(null);
+  const remember = (rows: Choice[]) => setSeen((was) => {
+    const fresh = namedAs(rows).filter((m) => !was.some((x) => x.member === m.member));
+    return fresh.length === 0 ? was : [...was, ...fresh].slice(-200);
+  });
+  const refusedRead = (e: unknown) => {
+    if (e instanceof AdminError && e.failure === "denied") { setDenied(true); return true; }
+    return false;
+  };
   const [announce, setAnnounce] = useState("");
   const [focusTo, setFocusTo] = useState("");
   const [stepped, setStepped] = useState(() => !!params.get("plan"));
@@ -424,6 +411,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const [handoff, setHandoff] = useState<Carried | null>(initial && { ...initial, refused: false });
   const [form, setForm] = useState<Form>(initial ? { ...emptyForm, kind: initial.kind, member: initial.member, from: initial.from } : emptyForm);
   const [touched, setTouched] = useState(false);
+  const present = usePresent(api, form.member, form.kind, choices ? choices.revision : null, refusedRead);
   const resolveMember = useRef(!!initial?.member);
   const greetedHandoff = useRef(false);
   const [errors, setErrors] = useState<Errors>({});
@@ -464,6 +452,8 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const loadChoices = useCallback(async () => {
     const n = ++choiceSeq.current;
     setChoicesFailed(false);
+    setChoices(null);
+    setChoiceTurn((t) => t + 1);
     try {
       const got = await readChoices(api, todayUTC(new Date()));
       if (n === choiceSeq.current) setChoices(got);
@@ -507,12 +497,20 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!resolveMember.current) return;
-    const listed = !!choices && allMemberChoices(choices.parties, kinds.map((k) => choices.byKind[k] ?? []), form.kind || undefined).some((m) => m.id === form.member);
-    const mode = memberMode(!!choices || choicesFailed, listed, touched);
+    const unit = !!choices && unitChoices(choices.parties, form.kind, "").some((m) => m.id === form.member);
+    const mode = memberMode(choicesFailed || unit || carried !== null, unit || carried === true, touched);
     if (mode === null) return;
     resolveMember.current = false;
     if (mode === "id") setForm((f) => ({ ...f, memberById: true }));
-  }, [choices, choicesFailed]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [choices, choicesFailed, carried]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!resolveMember.current || !choices) return;
+    let live = true;
+    api.organizations({ kind: "hierarchy", subject: "account", member: [form.member], revision: choices.revision })
+      .then((got) => { if (live) { remember(got.members.map((m) => ({ id: m.member, name: m.name }))); setCarried(got.members.length > 0); } })
+      .catch((e) => { if (!live) return; if (e instanceof AdminError && e.failure === "denied") setDenied(true); setCarried(false); });
+    return () => { live = false; };
+  }, [choices]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!listViews.includes(view)) return;
     setHandoff(null);
@@ -555,7 +553,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
 
   const split = wide && view !== "result";
   const parties = choices?.parties ?? [];
-  const allMembers = choices ? kinds.flatMap((k) => choices.byKind[k] ?? []) : [];
+  const allMembers = seen;
   const { open, closed } = partition(page?.plans ?? []);
   const selected = findPlan(page?.plans ?? [], selectedId);
 
@@ -597,8 +595,8 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   };
 
   const fieldId = (f: keyof Errors): string =>
-    f === "base" ? "o02-use-base" : f === "kind" ? "o02-kind-0" : f === "action" ? "o02-change-0" : f === "member" ? (form.memberById ? "o02-member-id" : "o02-member")
-      : f === "target" ? (form.targetById ? "o02-target-id" : "o02-target") : f === "from" ? "o02-from" : "live-reason";
+    f === "base" ? "o02-use-base" : f === "kind" ? "o02-kind-0" : f === "action" ? "o02-change-0" : f === "member" ? (form.memberById ? "o02-member-id" : choices ? "o02-member" : "o02-member-toggle")
+      : f === "target" ? (form.targetById ? "o02-target-id" : choices || (form.kind !== "contract_pool" && form.kind !== "allocation_pool" && form.kind !== "view_group") ? "o02-target" : "o02-target-toggle") : f === "from" ? "o02-from" : "live-reason";
 
   const validate = (): Errors => {
     const e: Errors = {};
@@ -796,18 +794,26 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const errorText = (f: keyof Errors, id: string) => errors[f] && <p className="service-field-error" id={id + "-error"}><span className="visually-hidden">{sc.errorPrefix(l)} </span>{errors[f]}</p>;
   const described = (f: keyof Errors, id: string, hint?: string) => [hint, errors[f] ? id + "-error" : ""].filter(Boolean).join(" ") || undefined;
 
-  const kindMembers = form.kind ? choices?.byKind[form.kind] ?? [] : [];
-  const memberList: Choice[] = allMemberChoices(parties, kinds.map((k) => choices?.byKind[k] ?? []), form.kind || undefined);
-  const pendingMember = resolveMember.current && !form.memberById && form.member && !memberList.some((m) => m.id === form.member) ? form.member : "";
-  const targetList: Choice[] = form.kind ? targetChoices(form.kind, form.member, parties, kindMembers) : [];
+  const pooled = form.kind === "contract_pool" || form.kind === "allocation_pool" || form.kind === "view_group";
+  const targetList: Choice[] = form.kind && !pooled ? targetChoices(form.kind, form.member, parties, []) : [];
+  const turn = `${choiceTurn}|${choices?.revision ?? ""}`;
+  const searchMembers = async (term: string, after: string) => {
+    const got = await api.organizations({ kind: "hierarchy", subject: "account", q: term || undefined, after: after || undefined, limit: resultPage, revision: choices?.revision });
+    return { rows: got.members.map((m) => ({ id: m.member, name: m.name || m.member })), next: got.next, stopped: got.scan_stopped };
+  };
+  const searchTargets = async (term: string, after: string) => {
+    const got = await api.targets({ kind: form.kind as RelationKind, q: term || undefined, after: after || undefined, limit: resultPage, revision: choices?.revision });
+    return { rows: got.targets.map((t) => ({ id: t.id, name: t.name || t.id })), next: got.next, stopped: got.scan_stopped };
+  };
   const targetHint = form.kind === "hierarchy" ? c.hintHierarchy(l) : form.kind === "payer" ? c.hintPayer(l) : c.hintPool(l);
   const currentTargets = (on: string): ReactNode => {
     if (!form.kind || !form.member) return null;
-    const got = currentOn(form.member, kindMembers, on);
-    const shown = currentView(!!choices || choicesFailed, !!choices?.complete, got);
-    if (shown === "loading") return <span className="live-quiet">{c.loadingChoices(l)}</span>;
+    if (!present.valid) return null;
+    if (present.status === "failed") return <><span className="live-quiet" role="alert">{o.factsFailed(l)}</span> <button type="button" className="service-button-link" onClick={present.retry}>{o.tryAgain(l)}</button></>;
+    const got = present.history === null ? null : currentOn(form.member.trim(), [{ member: form.member.trim(), name: "", targets: [], history: present.history }], on);
+    const shown = currentView(present.status === "ready", got);
+    if (shown === "loading") return <span className="live-quiet">{c.loadingCurrent(l)}</span>;
     if (shown === "none_of_kind") return <span className="live-quiet">{c.noneOfKind(l)}</span>;
-    if (shown === "not_in_listing") return <span className="live-quiet">{c.notInListing(l)}</span>;
     if (shown === "none" || !got) return <span className="live-quiet">{c.none(l)}</span>;
     return <ul className="o02-ranges">{got.map((t) => <li key={t.id}><Named id={t.id} name={t.name} /></li>)}</ul>;
   };
@@ -838,8 +844,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
       <div className="o02-fields">
         {handoff && handoff.base !== null && <BaseFact l={l} base={handoff.base} active={page.active_revision} />}
         {problems.length > 0 && <Summary locale={l} title={sc.check(l)} problems={problems} focusKey={summaryKey} />}
-        {!choices && !choicesFailed && <p className="live-meta o02-choices-loading" role="status">{c.loadingChoices(l)}</p>}
-        {(choicesFailed || (choices && !choices.complete)) && <p className="live-note">{c.incomplete(l)}</p>}
+        {choicesFailed && <p className="live-note" role="alert">{c.choicesFailed(l)} <button type="button" className="service-button-link" onClick={() => void loadChoices()}>{o.tryAgain(l)}</button></p>}
         <fieldset className="live-roles" aria-describedby={errors.kind ? "o02-kind-error" : undefined}>
           <legend>{c.relationship(l)}</legend>
           {errorText("kind", "o02-kind")}
@@ -861,24 +866,30 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
             </label>
           ))}
         </fieldset>
-        <div className="service-field">
-          <label htmlFor={form.memberById ? "o02-member-id" : "o02-member"}>{form.memberById ? c.memberIdLabel(l) : c.member(l)}</label>
-          <p className="service-hint" id="o02-member-hint">{form.memberById ? c.idHint(l) : c.memberHint(l)}</p>
-          {errorText("member", form.memberById ? "o02-member-id" : "o02-member")}
-          {form.memberById
-            ? <input id="o02-member-id" dir="ltr" className="o02-id" value={form.member} aria-invalid={errors.member ? true : undefined} aria-describedby={described("member", "o02-member-id", "o02-member-hint")} onChange={(e) => edit({ member: e.target.value })} />
-            : (
-              <select id="o02-member" className="live-select" value={form.member} aria-invalid={errors.member ? true : undefined} aria-describedby={described("member", "o02-member", "o02-member-hint")} onChange={(e) => edit({ member: e.target.value })}>
-                <option value="">{c.choosePlaceholder(l)}</option>
-                {pendingMember && <option value={pendingMember}>{pendingMember}</option>}
-                {memberList.map((m) => <option key={m.id} value={m.id}>{m.name === m.id ? m.id : `${m.name} (${m.id})`}</option>)}
-              </select>
-            )}
-          <button type="button" className="service-button-link o02-id-toggle" onClick={() => { edit({ memberById: !form.memberById }); setFocusTo(form.memberById ? "#o02-member" : "#o02-member-id"); }}>{form.memberById ? c.pick(l) : c.enterId(l)}</button>
-        </div>
-        {form.action !== "end" && (
+        {form.memberById ? (
           <div className="service-field">
-            <label htmlFor={form.targetById ? "o02-target-id" : "o02-target"}>{form.targetById ? c.targetIdLabel(l) : c.target(l)}</label>
+            <label htmlFor="o02-member-id" id="o02-member-label">{c.memberIdLabel(l)}</label>
+            <p className="service-hint" id="o02-member-hint">{c.idHint(l)}</p>
+            {errorText("member", "o02-member-id")}
+            <input id="o02-member-id" dir="ltr" className="o02-id" value={form.member} aria-invalid={errors.member ? true : undefined} aria-describedby={described("member", "o02-member-id", "o02-member-hint")} onChange={(e) => edit({ member: e.target.value })} />
+            <button type="button" id="o02-member-toggle" className="service-button-link o02-id-toggle" aria-labelledby="o02-member-toggle o02-member-label" onClick={() => { edit({ memberById: !form.memberById }); setFocusTo(form.memberById ? "#o02-member" : "#o02-member-id"); }}>{form.memberById ? c.pick(l) : c.enterId(l)}</button>
+          </div>
+        ) : choices ? (
+          <Picker l={l} id="o02-member" label={c.member(l)} hint={c.memberHint(l)} empty={c.noMember(l)} value={form.member} name={form.member ? nameOf(form.member, parties, seen) : ""} error={errorText("member", "o02-member")} invalid={!!errors.member}
+            turn={turn} lead={(term) => unitChoices(parties, form.kind, term)} search={searchMembers} onError={refusedRead} onChoose={(m) => edit({ member: m.id })} onSeen={remember} onFocus={setFocusTo}>
+            <button type="button" id="o02-member-toggle" className="service-button-link o02-id-toggle" aria-labelledby="o02-member-toggle o02-member-label" onClick={() => { edit({ memberById: !form.memberById }); setFocusTo(form.memberById ? "#o02-member" : "#o02-member-id"); }}>{form.memberById ? c.pick(l) : c.enterId(l)}</button>
+          </Picker>
+        ) : (
+          <div className="service-field">
+            <span className="o02-field-label" id="o02-member-label">{c.member(l)}</span>
+            {form.member && <p className="o02-chosen"><span className="o02-chosen-name"><Named id={form.member} name={form.member} /></span></p>}
+            {!choicesFailed && <p className="live-meta" role="status">{c.loadingChoices(l)}</p>}
+            <button type="button" id="o02-member-toggle" className="service-button-link o02-id-toggle" aria-labelledby="o02-member-toggle o02-member-label" onClick={() => { edit({ memberById: !form.memberById }); setFocusTo(form.memberById ? "#o02-member" : "#o02-member-id"); }}>{form.memberById ? c.pick(l) : c.enterId(l)}</button>
+          </div>
+        )}
+        {form.action !== "end" && (form.targetById || !pooled ? (
+          <div className="service-field">
+            <label htmlFor={form.targetById ? "o02-target-id" : "o02-target"} id="o02-target-label">{form.targetById ? c.targetIdLabel(l) : c.target(l)}</label>
             <p className="service-hint" id="o02-target-hint">{form.targetById ? c.idHint(l) : targetHint}</p>
             {errorText("target", form.targetById ? "o02-target-id" : "o02-target")}
             {form.targetById
@@ -889,9 +900,21 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
                   {targetList.map((m) => <option key={m.id} value={m.id}>{m.name === m.id ? m.id : `${m.name} (${m.id})`}</option>)}
                 </select>
               )}
-            <button type="button" className="service-button-link o02-id-toggle" onClick={() => { edit({ targetById: !form.targetById }); setFocusTo(form.targetById ? "#o02-target" : "#o02-target-id"); }}>{form.targetById ? c.pick(l) : c.enterId(l)}</button>
+            <button type="button" id="o02-target-toggle" className="service-button-link o02-id-toggle" aria-labelledby="o02-target-toggle o02-target-label" onClick={() => { edit({ targetById: !form.targetById }); setFocusTo(form.targetById ? "#o02-target" : "#o02-target-id"); }}>{form.targetById ? c.pick(l) : c.enterId(l)}</button>
           </div>
-        )}
+        ) : !choices ? (
+          <div className="service-field">
+            <span className="o02-field-label" id="o02-target-label">{c.target(l)}</span>
+            {form.target && <p className="o02-chosen"><span className="o02-chosen-name"><Named id={form.target} name={form.target} /></span></p>}
+            {!choicesFailed && <p className="live-meta" role="status">{c.loadingChoices(l)}</p>}
+            <button type="button" id="o02-target-toggle" className="service-button-link o02-id-toggle" aria-labelledby="o02-target-toggle o02-target-label" onClick={() => { edit({ targetById: !form.targetById }); setFocusTo(form.targetById ? "#o02-target" : "#o02-target-id"); }}>{form.targetById ? c.pick(l) : c.enterId(l)}</button>
+          </div>
+        ) : (
+          <Picker key={form.kind} l={l} id="o02-target" label={c.target(l)} hint={targetHint} empty={c.noTarget(l)} value={form.target} name={form.target ? nameOf(form.target, parties, seen) : ""} error={errorText("target", "o02-target")} invalid={!!errors.target}
+            turn={`${turn}|${form.kind}`} exclude={form.member.trim()} search={searchTargets} onError={refusedRead} onChoose={(t) => edit({ target: t.id })} onSeen={remember} onFocus={setFocusTo}>
+            <button type="button" id="o02-target-toggle" className="service-button-link o02-id-toggle" aria-labelledby="o02-target-toggle o02-target-label" onClick={() => { edit({ targetById: !form.targetById }); setFocusTo(form.targetById ? "#o02-target" : "#o02-target-id"); }}>{form.targetById ? c.pick(l) : c.enterId(l)}</button>
+          </Picker>
+        ))}
         <div className="service-field">
           <label htmlFor="o02-from">{c.fromLabel(l)}</label>
           <p className="service-hint" id="o02-from-hint">{c.fromHint(l)}</p>

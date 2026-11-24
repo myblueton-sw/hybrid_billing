@@ -105,6 +105,87 @@ try {
       await page.unroute(read);
     }
   }
+  const sent = [], asked = [];
+  page.on("request", (r) => {
+    const u = new URL(r.url());
+    if (r.method() === "POST" && u.pathname.startsWith("/api/v1/")) sent.push({ path: u.pathname, body: r.postData() ?? "" });
+    if (r.method() === "GET" && (u.pathname === "/api/v1/organizations" || u.pathname === "/api/v1/organizations/targets")) asked.push(u.pathname + u.search);
+  });
+  const resultIds = (field) => page.locator(`button[data-result="${field}"]`).evaluateAll((els) => els.map((e) => e.dataset.id.replace("sample-", "")).join(","));
+  for (const lang of ["en", "ko", "ar"]) {
+    for (const width of [1440, 1024, 390]) {
+      const at = `${lang} ${width} form`;
+      await page.setViewportSize({ width, height: 1000 });
+      asked.length = 0; sent.length = 0;
+      await open(lang, "change");
+      await page.locator('button[data-result="o02-member"]').first().waitFor();
+      check(`${at} opens with a search and never loads whole relationship listings`, (await page.locator("input#o02-member[type=search]").count()) === 1 && (await page.locator("select#o02-member").count()) === 0
+        && asked.length > 0 && asked.every((c) => /[?&]limit=(1|10)(&|$)/.test(c) || c.includes("member=")), asked.join(" "));
+      check(`${at} lists units first and then at most ten members`, (await resultIds("o02-member")).startsWith("unit-north-data,unit-north-ops,unit-south-web,acct-01") && (await page.locator('button[data-result="o02-member"]').count()) <= 13, await resultIds("o02-member"));
+      await page.locator("#o02-kind-0").check();
+      await page.locator('input[name="o02-change"]').first().check();
+      await page.locator("select#o02-target").selectOption("sample-le-south");
+      await page.locator("#o02-from").fill("2027-01-01");
+      await page.locator("#live-reason").fill("rendered check");
+      await page.locator("#o02-member").fill("unit-north-ops");
+      await page.locator("#o02-member").press("Enter");
+      await page.locator('button[data-result="o02-member"][data-id="sample-unit-north-ops"]').click();
+      await page.locator("button#o02-member").click();
+      await page.locator("input#o02-member").waitFor();
+      check(`${at} the form is complete before the Enter check`, (await page.locator(".o02-picker").first().locator(".o02-chosen").innerText()).includes("sample-unit-north-ops") && (await page.locator("select#o02-target").inputValue()) === "sample-le-south" && sent.length === 0);
+      await page.locator("#o02-member").fill("acct-0");
+      await page.locator("#o02-member").press("Enter");
+      await page.waitForFunction(() => { const v = [...document.querySelectorAll('button[data-result="o02-member"]')].map((e) => e.dataset.id); return v.length > 0 && v.every((x) => x.includes("acct-0")); });
+      await page.waitForLoadState("networkidle");
+      check(`${at} Enter in the search field searches and sends nothing`, sent.length === 0 && (await root().locator(".service-error-summary, [role=alert]").count()) === 0 && (await page.evaluate(() => document.activeElement?.id)) === "o02-member" && (await resultIds("o02-member")) === "acct-01,acct-02,acct-03,acct-04,acct-05,acct-06" && asked.some((c) => c.includes("q=acct-0") && c.includes("subject=account")), `${sent.length} ${await resultIds("o02-member")}`);
+      if (args.shots) await page.screenshot({ path: `${args.shots}/o02-form-search-${lang}-${width}.png`, fullPage: true });
+      await page.locator('button[data-result="o02-member"][data-id="sample-acct-01"]').click();
+      await page.locator("button#o02-member").waitFor();
+      const chosen = page.locator(".o02-picker").first().locator(".o02-chosen");
+      check(`${at} the chosen member is shown with its identifier and the search closes`, (await chosen.innerText()).includes("sample-acct-01") && (await chosen.innerText()).includes("Account 01") && (await page.locator('button[data-result="o02-member"]').count()) === 0);
+      const present = page.locator("#o02-current-title").locator("xpath=ancestor::aside[1]");
+      await present.locator("ul.o02-ranges").first().waitFor();
+      check(`${at} the present targets come from one exact read`, (await present.innerText()).includes("North operations") && asked.filter((c) => c.includes("member=sample-acct-01") && c.includes("kind=hierarchy") && !c.includes("subject=")).length === 1);
+      check(`${at} hierarchy targets are still a select of parties`, (await page.locator("select#o02-target option").count()) >= 6);
+      await page.locator('input[name="o02-kind"][value="view_group"]').check();
+      await page.locator('input[name="o02-change"]').first().check();
+      await page.locator('button[data-result="o02-target"]').first().waitFor();
+      check(`${at} view group targets are searched on the server`, (await resultIds("o02-target")) === "view-north,view-south" && asked.some((c) => c.startsWith("/api/v1/organizations/targets?") && c.includes("kind=view_group")), await resultIds("o02-target"));
+      await page.waitForFunction(() => { const a = document.querySelector("#o02-current-title")?.closest("aside"); return !!a && !a.querySelector("ul.o02-ranges") && !!a.querySelector("dd .live-quiet"); });
+      check(`${at} the present targets follow the kind: this account is in no view group`, (await present.locator("ul.o02-ranges").count()) === 0 && (await present.locator("dd .live-quiet").count()) >= 1 && asked.some((c) => c.includes("member=sample-acct-01") && c.includes("kind=view_group")));
+      await page.locator('button[data-result="o02-target"][data-id="sample-view-north"]').click();
+      await page.locator("button#o02-target").waitFor();
+      await contained(`${at} chosen`);
+      const text = await root().innerText();
+      check(`${at} no placeholder text`, !/undefined|NaN|\[object Object\]/.test(text));
+      if (args.shots) await page.screenshot({ path: `${args.shots}/o02-form-chosen-${lang}-${width}.png`, fullPage: true });
+      await page.locator("button#o02-member").click();
+      await page.locator("input#o02-member").waitFor();
+      await page.locator('button[data-result="o02-member"]').first().waitFor();
+      await page.locator("#o02-member-cancel").click();
+      await page.locator("button#o02-member").waitFor();
+      check(`${at} Cancel closes the search and keeps the choice`, (await chosen.innerText()).includes("sample-acct-01") && (await page.locator('button[data-result="o02-member"]').count()) === 0 && (await page.evaluate(() => document.activeElement?.id)) === "o02-member");
+      await page.locator("button#o02-member").click();
+      await page.locator('button[data-result="o02-member"]').first().waitFor();
+      await page.locator('button[data-result="o02-member"]').first().focus();
+      await page.keyboard.press("ArrowDown");
+      check(`${at} arrow keys in the results choose nothing`, (await chosen.innerText()).includes("sample-acct-01") && (await page.locator('button[data-result="o02-member"]').count()) > 0);
+      check(`${at} Change reopens the search and keeps the choice shown`, (await chosen.innerText()).includes("sample-acct-01") && (await page.locator('button[data-result="o02-member"]').count()) > 0, `${await chosen.innerText()} | ${await page.locator('button[data-result="o02-member"]').count()} | ${await page.locator(".o02-picker").first().innerText()}`);
+      let refusedSearch = 0;
+      await page.route((url) => url.pathname === "/api/v1/organizations" && url.searchParams.get("q") === "zz", (route) => { refusedSearch++; return route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ code: "dependency_unavailable", request_id: "o02-search-qa" }) }); });
+      await page.locator("#o02-member").fill("zz");
+      await page.locator(".o02-picker").first().locator(".o02-search button").click();
+      const alert = page.locator(".o02-picker").first().locator('[role="alert"]');
+      await alert.waitFor();
+      check(`${at} a failed search is stated, not shown as no match`, refusedSearch > 0 && (await alert.locator("button").count()) === 1 && (await page.locator('button[data-result="o02-member"]').count()) === 0 && (await chosen.innerText()).includes("sample-acct-01"));
+      if (args.shots) await page.screenshot({ path: `${args.shots}/o02-form-failed-${lang}-${width}.png`, fullPage: true });
+      await page.unrouteAll({ behavior: "wait" });
+      await alert.locator("button").click();
+      await page.locator(".o02-picker").first().locator('p.live-note[role="status"]').waitFor();
+      check(`${at} repeating it answers that nothing matches`, (await page.locator('button[data-result="o02-member"]').count()) === 0 && (await page.locator(".o02-picker").first().locator('[role="alert"]').count()) === 0);
+      check(`${at} nothing was sent while choosing`, sent.length === 0, sent.map((x) => x.path).join(" "));
+    }
+  }
   check("no unexpected JavaScript errors", errors.length === 0, errors.join(" | "));
 } catch (e) {
   check("runner completed without unexpected exception", false, String(e));

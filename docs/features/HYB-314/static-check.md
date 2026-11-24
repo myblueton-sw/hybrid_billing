@@ -649,3 +649,7 @@ One screenshot (English, 1440) was looked at by the writer: the four rows read a
 
 Still covered by unit and render tests only on M01: a refused or failed discard in the matching step, the failed read of excluded people, every command, and the bulk selection.
 
+## The When column of a closed Revocation jobs list: settled by reading (2026-11-24)
+
+The observation of the rendered check is not a defect. The column shows the time until which a prepared list is valid, the time a list was executed, or the time a filter selection was fixed for a draft (`users/RevocationJobs.tsx`, `when` in `JobTable`). The read of a list carries no time at which it was discarded (`service/identity-bulk.ts`, `jobOf`: `prepared_at`, `expires_at`, `executed_at`, `recorded_at`, `fixed_at`), so for a discarded list there is nothing truthful to show and the dash is correct. For an expired list the read does carry `expires_at`; showing "expired at" there would be an addition to the design, not a correction, and is left to the owner's screen review. Read, not run; no review.
+

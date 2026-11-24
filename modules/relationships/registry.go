@@ -255,3 +255,33 @@ func (r *Registry) Union(workspaceID string, number uint64, groups []string, day
 	sort.Strings(union)
 	return union, nil
 }
+
+func (r *Registry) MembersOnAfter(workspaceID string, number uint64, kind Kind, target string, day Day, cursor string, limit, budget int) (MemberScan, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	found, err := r.at(workspaceID, number)
+	if err != nil {
+		return MemberScan{}, err
+	}
+	if !known(kind) || !validID(target) || !day.valid() || (cursor != "" && !validID(cursor)) || limit < 1 || budget < 0 {
+		return MemberScan{}, ErrInvalid
+	}
+	candidates := found.members[key{kind, target}]
+	start := sort.Search(len(candidates), func(i int) bool { return candidates[i] > cursor })
+	out := MemberScan{Members: []string{}, Last: cursor}
+	for i := start; i < len(candidates); i++ {
+		if len(out.Members) == limit || out.Examined == budget {
+			return out, nil
+		}
+		out.Examined++
+		out.Last = candidates[i]
+		for _, entry := range found.timelines[key{kind, out.Last}] {
+			if entry.Target == target && entry.Interval.contains(day) {
+				out.Members = append(out.Members, out.Last)
+				break
+			}
+		}
+	}
+	out.Whole = true
+	return out, nil
+}

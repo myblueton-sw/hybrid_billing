@@ -542,3 +542,9 @@ Not shown by them: the states this ticket added on M01 (a refused or failed disc
 The correction of finding B1 changed what M02 shows when the service did not compute the impact of a trust change, but had no test of the rendered detail. One is added to `authentication/trust-render.test.tsx`, for en, ko and ar: with no computed impact the impact section says that it was not computed, keeps the sentence that everyone is signed out, and shows no count; with a computed impact of zero it shows zero and not that sentence; while an activation is not confirmed there is no impact section. It renders the component to markup and is not a browser run.
 
 Console tests: 1362, pass 1359, fail 0, skipped 3. M02 still has no browser run in this record.
+
+## M01, a render test for unknown states and roles (2026-11-24)
+
+The A6 corrections had tests of the model but none of the rendered table. One is added to `users/table-render.test.tsx`: for a person whose account state, membership state and role the console does not recognise, the Users and Membership tables in en, ko and ar show the labels for an unknown state and an unknown role, and no cell reads as active, member or administrator. It renders the table to markup and is not a browser run.
+
+Console tests: 1363, pass 1360, fail 0, skipped 3.

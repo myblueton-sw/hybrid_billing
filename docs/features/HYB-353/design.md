@@ -161,3 +161,13 @@ When the active authentication policy demands a second factor for an action, the
 Offering the identity action for it, as the finding first suggested, would not help: signing in again does not supply a second factor, and the pre-launch service has none to offer.
 
 Nothing is changed for this item under HYB-353.
+
+# Item 5, a request left unresolved before signing in again (2026-11-24)
+
+Confirmed by reading: when a session ends the console shows the sign-in form on the same page and sets the new session without reloading (`apps/console/src/service/Service.tsx:497`), and a new sign-in has a new CSRF token. The step stores are keyed by person, workspace and that token, so after signing in again a request left pending or unknown was listed nowhere, while the unload prompt still fired for it. It cannot be retried either: its request is bound to the old session.
+
+Corrected for the step store: the results list of a store also shows the unresolved requests of stores of the same kind, person and workspace from an earlier sign-in, read-only, with the action, the target, the contract, the settings, the sent time and this sentence: "Sent before you signed in again. Its outcome is not known here, and it can no longer be retried or recovered from this page. Check the current records. This entry, and the prompt when you leave the page, stay until the page is reloaded." Another person who signs in on the same page does not see them.
+
+Checks: `tsc` clean; console tests 1356, pass 1353, fail 0, skipped 3, with one new store test (listed for the same person and kind, not for another kind or person, and not retryable from the new store). Rendered, against a console built from the change: five O03 write checks, exit code 0 each, and the real-server issuance setup test. None of them ends a session and signs in again, so the listed entry itself has no rendered run. Copy and state review, ui-designer role (AI, by reading): fail with one finding (the line above tells the person to settle the request before leaving, which is impossible here, and the persisting prompt was unexplained), corrected with its wording; re-review pass. No independent change review.
+
+Left open: the settings store has the same keying and is not changed, so an unresolved settings proposal or confirmation of an earlier sign-in is still not listed; a request that was still pending when the session ended and settles afterwards in the old store is not re-rendered; making such a request retryable after signing in again would need the write machinery to carry a request across sessions and is not proposed.

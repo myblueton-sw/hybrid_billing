@@ -42,6 +42,7 @@ const errors={
  evidence_stale:["The contract or settings changed. Check again.","계약 또는 설정이 변경되었습니다. 다시 확인하세요.","تغير العقد أو الإعدادات. أعد التحقق."],
  unresolved_operation:["Resolve the request with an unknown outcome below first.","아래의 결과 미확인 요청을 먼저 해결하세요.","احسم أولًا الطلب ذا النتيجة غير المعروفة أدناه."],
  reauthentication_required:["Verify your identity again, then check again.","본인 확인을 다시 진행한 후 다시 확인하세요.","تحقق من هويتك مجددًا، ثم أعد التحقق."],
+ attempt_capacity:["This page has reached its limit of 100 requests in this session, so it sent nothing. Settle any request with an unknown outcome first, then reload the page to continue.","이 페이지는 이 세션의 요청 한도인 100건에 도달해 아무것도 전송하지 않았습니다. 결과 미확인 요청이 있으면 먼저 해결한 다음, 계속하려면 페이지를 다시 불러오세요.","بلغت هذه الصفحة حدّها البالغ 100 طلب في هذه الجلسة، فلم ترسل شيئًا. احسم أولًا أي طلب نتيجته غير معروفة، ثم أعد تحميل الصفحة للمتابعة."],
  unavailable:["The request could not be completed. Try checking again.","요청을 완료하지 못했습니다. 다시 확인해 주세요.","تعذر إكمال الطلب. حاول التحقق مجددًا."],
 } as const;
 export const needsAuthentication=(code:string)=>code==="reauthentication_required"||code==="authentication_policy_unsatisfied";

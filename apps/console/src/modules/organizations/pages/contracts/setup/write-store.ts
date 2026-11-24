@@ -9,6 +9,7 @@ import { setupMutationClient, type SetupReceipt } from "./mutation";
 
 type Entry = Readonly<{ intent: SetupIntent; phase: "pending" | "unknown" | "refused" | "recorded" | "reconciled"; error?: string; operation?: string; receipt?: SetupReceipt; at: string; noRecord?: true }>;
 export const noRecordBoundMs = 30 * 60 * 1000;
+export const attemptLimit = 100, recoveryHeadroom = 10;
 type Inspection = Readonly<{ request: ActionRequest; action: SetupAction; page?: ConfigurationPage }>;
 export type SetupWriteState = Readonly<{ entries: readonly Entry[]; inspecting: boolean; inspection?: Inspection; error?: string }>;
 const sameFields = (a: Readonly<Record<string,string>>, b: Readonly<Record<string,string>>) => Object.keys(a).length === Object.keys(b).length && Object.entries(a).every(([k,v]) => b[k] === v);
@@ -47,9 +48,9 @@ export class SetupWriteStore {
    if(recovery&&(intent.operation==="propose_configuration"?row.state!=="proposal_unknown"||row.proposer!==intent.actor:row.state!=="confirmation_unknown"||row.confirmer!==intent.actor))throw new SetupError("recovery_unavailable");
   }
  }
- private admit(intent:SetupIntent) {
+ private admit(intent:SetupIntent,recovery=false) {
   if(intent.actor!==this.owner.user||intent.workspace!==this.owner.workspace||intent.sessionCSRF!==this.owner.csrf)throw new SetupError("session_changed");
-  if(this.state.entries.length>=100)throw new SetupError("attempt_capacity");
+  if(this.state.entries.length>=attemptLimit+(recovery?recoveryHeadroom:0))throw new SetupError("attempt_capacity");
   if(this.state.entries.some(e=>e.intent.attempt.key===intent.attempt.key||e.intent.attempt.request===intent.attempt.request))throw new SetupError("duplicate_attempt");
  }
  async submit(input:SetupIntent) {
@@ -58,7 +59,7 @@ export class SetupWriteStore {
   await this.run(intent);
  }
  async recover(input:SetupIntent) {
-  const intent=setupIntent(input);this.admit(intent);this.checked(intent,true);
+  const intent=setupIntent(input);this.admit(intent,true);this.checked(intent,true);
   if(this.state.entries.some(e=>e.phase==="pending"||e.phase==="unknown"&&!sameOperation(e.intent,intent)))throw new SetupError("unresolved_operation");
   const previous=this.state.entries.filter(e=>e.phase==="unknown").map(e=>e.intent.attempt.key);
   await this.run(intent);

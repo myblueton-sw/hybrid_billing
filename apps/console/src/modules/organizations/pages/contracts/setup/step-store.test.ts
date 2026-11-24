@@ -159,3 +159,15 @@ test("an unresolved request of an earlier sign-in of the same person stays visib
  assert.deepEqual(sessionStepStore<StepIntent,string>("kind-e",{...after,user:"someone-else"},send).earlier(),[],"another person does not see it");
  await refuse(next,()=>next.retry("key-e1"),"retry_unavailable");
 });
+test("at the request limit a new request is refused before sending while a recovery is still admitted",async()=>{
+ let mode="refuse",sent=0;
+ const store=new StepWriteStore<StepIntent,string>(owner,async()=>{sent++;if(mode==="refuse")throw new SetupError("prerequisite_failed","none");if(mode==="lose")throw new SetupError("service_unavailable","unknown");return "receipt";});
+ for(let n=0;n<99;n++)await store.submit(intent("f"+n),"term");
+ mode="lose";await store.submit(intent("last"),"term");
+ assert.equal(store.snapshot().entries.length,100);assert.equal(store.snapshot().entries[99].phase,"unknown");
+ const before=sent;
+ await refuse(store,()=>store.submit(intent("over"),"term"),"attempt_capacity");assert.equal(sent,before,"nothing was sent at the limit");
+ mode="ok";await store.recover("key-last",{request:"request-recover",key:"key-recover"},"r2");
+ assert.deepEqual(store.snapshot().entries.slice(-2).map(e=>e.phase),["reconciled","recorded"]);assert.equal(store.unresolved(),false);
+ await refuse(store,()=>store.submit(intent("over"),"term"),"attempt_capacity");
+});

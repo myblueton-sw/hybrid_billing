@@ -189,6 +189,7 @@ export type EventsSection = {
   types: EventType[] | null;
   outbox: { floor: number | null; head: number | null };
   deliveries: Delivery[] | null;
+  deliveries_more: string[] | null;
   dispatcher: string;
 };
 
@@ -496,6 +497,7 @@ export function eventsOf(v: unknown): EventsSection {
     })),
     outbox: { floor: count(o.floor), head: count(o.head) },
     deliveries: rows(r.deliveries, deliveryOf),
+    deliveries_more: strs(r.deliveries_more),
     dispatcher: str(r.dispatcher),
   };
 }

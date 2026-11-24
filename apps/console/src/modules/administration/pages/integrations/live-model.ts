@@ -439,6 +439,12 @@ export function selectionOf(params: URLSearchParams, page: IntegrationsPage | nu
   return out;
 }
 
+export function deliveriesCut(page: IntegrationsPage, subscription: string): "cut" | "complete" | "unknown" {
+  const more = page.events.deliveries_more;
+  if (more === null) return "unknown";
+  return (subscription ? more.includes(subscription) : more.length > 0) ? "cut" : "complete";
+}
+
 export function deliveriesShown(page: IntegrationsPage, subscription: string): Delivery[] | null {
   const all = page.events.deliveries;
   if (all === null) return null;

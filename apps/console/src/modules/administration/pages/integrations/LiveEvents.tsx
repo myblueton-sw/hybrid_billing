@@ -1,7 +1,7 @@
 import type { Locale } from "../../../../shared/types";
 import { letterActions, type Delivery, type LetterAction, type RequestValue } from "../../../../service/integrations";
 import { k } from "./live-copy";
-import { actor, blockerPolicy, deliveriesShown, letterTarget, pendingNow, refusedNow, subscriptionRevoked, waitsForResume, type CommandKey } from "./live-model";
+import { actor, blockerPolicy, deliveriesCut, deliveriesShown, letterTarget, pendingNow, refusedNow, subscriptionRevoked, waitsForResume, type CommandKey } from "./live-model";
 import { Code, Known, ListOr, Num, Prose, Who, href, ltr } from "./live-format";
 import { CommandForm, RowNote, blockerLines, plain, useOpen, type Blocker, type Shared } from "./LiveCommand";
 import { letterRequestTarget, redeliveryTarget } from "./live-model";
@@ -207,6 +207,7 @@ function Deliveries(shared: Shared) {
     <section className="p02-section p02-deliveries" aria-labelledby="p02-deliveries-title">
       <h3 id="p02-deliveries-title">{k.deliveriesTitle(l)}</h3>
       <p className="p02-small live-quiet">{k.deliveriesNote(l)}</p>
+      {list !== null && deliveriesCut(page, selection.subscription) !== "complete" && <p className="p02-small" data-deliveries-cut="true">{deliveriesCut(page, selection.subscription) === "cut" ? k.deliveriesCut(l) : k.deliveriesMaybeCut(l)}</p>}
       {selection.subscription && (
         <p className="p02-filter">
           {k.filterLine(l)} {ltr(selection.subscription)} · <a className="p02-link" href={href(l, "events")}>{k.showAll(l)}</a>

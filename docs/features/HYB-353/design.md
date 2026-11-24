@@ -84,3 +84,13 @@ Independent design review on 2026-11-24 (independent-reviewer role, AI, by readi
 - Not read: `financialissuanceprotectedrules.go` and `financialissuancetermbinding.go`, so fact 8 is read for the wrappers that call them and not for those two files. The implementation must read them before relying on fact 8.
 - Not read: whether any issuance setup handler can itself return `revision_conflict`. If one does, it does so after the lookup, so the conclusion is unchanged.
 - Not verified by execution: everything above rests on reading.
+
+# Server facts pinned by tests (2026-11-24)
+
+`apps/api/server/issuancesetupexactretry_test.go`, run and passing with the whole `apps/api/server` package:
+
+- `TestIssuanceSetupExactRetryOfUnadmittedRequestIsRevisionConflict`: for a channel registration and a change request, a request that was never sent, and one that was refused before any effect, is answered `409 revision_conflict` on its exact retry after the revision moved, twice in a row, without an operation identifier and without any change of state or revision; the same write prepared again from the current revision then succeeds. This executes facts 1, 3 and 5.
+- `TestIssuanceSetupExactRetryOfStoredEffectIsReplayedAfterRevisionMoved`: for the same two writes, a fault after the effect is answered with an internal error carrying an operation identifier, and after the revision moved the exact retry replays that stored answer and is not answered `revision_conflict`. This executes facts 4 and 8 for these two handlers. The existing `TestFinancialProtectedWritesFaultOutcomes` covers the replay for every protected write and every staged fault point.
+- `TestCommandRetentionCoversTheNotRecordedBound`: the default retention is at least twice the thirty-minute bound and the replay window at least the bound, so a change of the defaults that undercuts the rule fails a test.
+
+Not pinned by a test: the settings proposal and confirmation handlers and the term handlers (the property tested belongs to the command layer, which they share, but their fault points were not staged here); fact 9, that the revision only increases; fact 10, the reset on restart.

@@ -217,3 +217,10 @@ type RevisionInfo struct {
 	Plan     string
 	Digest   [32]byte
 }
+
+type MemberScan struct {
+	Members  []string
+	Last     string
+	Examined int
+	Whole    bool
+}

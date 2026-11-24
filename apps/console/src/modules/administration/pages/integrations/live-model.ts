@@ -677,9 +677,12 @@ export function clearDraft(command: string, target: string): void {
 }
 
 export function snapshotOf(page: IntegrationsPage, command: CommandKey): string[] {
-  if (command === "integrations.plugin_propose") return (page.modules.proposals ?? []).flatMap((p) => (p.number === null ? [] : [String(p.number)]));
   if (command === "integrations.subscription_propose") return (page.channels.subscriptions ?? []).map((s) => s.id);
   return [];
+}
+
+export function existingProposal(fields: Record<string, string>): boolean {
+  return fields.existing === "true";
 }
 
 export function duplicateIn(snapshot: string[], id: string): boolean {

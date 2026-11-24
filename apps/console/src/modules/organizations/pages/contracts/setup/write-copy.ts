@@ -17,6 +17,8 @@ const words={
  unknown:["Outcome unknown. Retry this request unchanged.","결과 미확인. 동일한 요청으로 재시도하세요.","النتيجة غير معروفة. أعد محاولة الطلب دون تغيير."],
  refused:["Request refused","요청 거절","رُفض الطلب"],
  recorded:["Recorded. Current issuance eligibility was not checked.","처리 결과가 기록되었습니다. 현재 발행 가능 여부는 확인하지 않았습니다.","سُجلت النتيجة. لم تُفحص أهلية الإصدار الحالية."],
+ noRecordPhase:["The retry was refused.","재시도가 거절되었습니다.","رُفضت إعادة المحاولة."],
+ noRecord:["The service has no record of this request. Records changed after this request was reviewed. Check the current records, then review and send it again if it is still needed.","서비스에 이 요청의 기록이 없습니다. 요청을 검토한 뒤 기록이 변경되었습니다. 현재 기록을 확인한 다음, 필요하면 다시 검토해 전송하세요.","لا يوجد لدى الخدمة سجل لهذا الطلب. تغيّرت السجلات بعد مراجعته. راجع السجلات الحالية، ثم راجع الطلب وأرسله من جديد إذا لزم."],
  reconciled:["Resolved by matching recovery","일치하는 복구 결과로 확인됨","حُسمت باستعادة مطابقة"],
  retry:["Retry exact request","동일 요청 재시도","إعادة محاولة الطلب نفسه"],
  auth:["Verify identity again","본인 확인 다시 하기","التحقق من الهوية مجددًا"],

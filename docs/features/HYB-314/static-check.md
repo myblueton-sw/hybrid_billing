@@ -536,3 +536,9 @@ The whole suite (`go test ./server/ -run 'Browser|GrantScreens'`) was run on mai
 Three of these tests open M01 on a real server: `TestDocumentEvidenceImpactRenderedBrowser`, `TestResultEvidenceImpactRenderedBrowser` and `TestResultAuthorityImpactRenderedBrowser` go to the Revocation jobs view, open a prepared bulk revocation by its row and read its impact rows, in three languages. That path runs through the code this ticket changed in `users/RevocationJobs.tsx` (opening a job, the detail pane, the turn guard for reads that arrive out of order) and through the bulk preview, so those changes did not break opening and reading a prepared job on a real service.
 
 Not shown by them: the states this ticket added on M01 (a refused or failed discard, a list that was never prepared, an unknown account or membership state or role, the failed read of excluded people); the users list and its detail; M02, O01, O02 and the P screens, which still have no rendered run in this record.
+
+## M02, a render test for the impact that was not computed (2026-11-24)
+
+The correction of finding B1 changed what M02 shows when the service did not compute the impact of a trust change, but had no test of the rendered detail. One is added to `authentication/trust-render.test.tsx`, for en, ko and ar: with no computed impact the impact section says that it was not computed, keeps the sentence that everyone is signed out, and shows no count; with a computed impact of zero it shows zero and not that sentence; while an activation is not confirmed there is no impact section. It renders the component to markup and is not a browser run.
+
+Console tests: 1362, pass 1359, fail 0, skipped 3. M02 still has no browser run in this record.

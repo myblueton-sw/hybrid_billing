@@ -78,6 +78,41 @@ try {
     }
   }
 
+  const p05 = {
+    en: { shown: /Waiting for approval \(\d+ shown\)[\s\S]*Closed \(\d+ shown\)/, plain: /Waiting for approval \(\d+\)[\s\S]*Closed \(\d+\)/, older: "Older proposals waiting for approval may not be listed.", limited: "This comparison covers only the requirements listed on this screen, which may not be all of them." },
+    ko: { shown: /승인 대기\(표시된 \d+건\)[\s\S]*종료됨\(표시된 \d+건\)/, plain: /승인 대기\(\d+\)[\s\S]*종료됨\(\d+\)/, older: "이전 승인 대기 제안은 목록에 없을 수 있습니다.", limited: "이 비교는 이 화면에 표시된 요구사항만 대상으로 하며, 전체가 아닐 수 있습니다." },
+    ar: { shown: /بانتظار الاعتماد \(المعروض: \d+\)[\s\S]*مغلقة \(المعروض: \d+\)/, plain: /بانتظار الاعتماد \(\d+\)[\s\S]*مغلقة \(\d+\)/, older: "قد لا تُدرج مقترحات أقدم بانتظار الاعتماد.", limited: "تشمل هذه المقارنة المتطلبات المدرجة في هذه الشاشة فقط، وقد لا تكون جميعها." },
+  };
+  const evidence = async (lang, view) => {
+    await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/release-evidence?lang=${lang}&view=${view}`);
+    await page.locator(view === "decisions" ? ".p05-live #p05-waiting" : ".p05-live #p05-compare-to").waitFor();
+    await page.waitForLoadState("networkidle");
+    return page.locator(".p05-live").innerText();
+  };
+  const cutEvery = (v) => (Array.isArray(v) ? v.map(cutEvery) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, Array.isArray(v.rows) && typeof v.more === "boolean" && k === "more" ? true : Array.isArray(v.rows) && typeof v.more === "boolean" && k === "total" && typeof x === "number" ? v.rows.length + 25 : cutEvery(x)])) : v);
+  for (const lang of ["en", "ko", "ar"]) {
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: 1000 });
+      let text = await evidence(lang, "decisions");
+      check(`${lang} ${width} P05 decisions with complete lists show plain counts and no line about older proposals`, p05[lang].plain.test(text) && !p05[lang].shown.test(text) && !text.includes(p05[lang].older), text.slice(0, 300));
+      text = await evidence(lang, "requirements");
+      check(`${lang} ${width} P05 comparison of a complete list has no note about a limited comparison`, !text.includes(p05[lang].limited));
+      await page.route((url) => at(url.toString(), "release-evidence"), async (route) => {
+        const response = await route.fetch();
+        await route.fulfill({ response, json: cutEvery(await response.json()) });
+      });
+      text = await evidence(lang, "decisions");
+      check(`${lang} ${width} P05 decisions with a cut list mark their counts as shown and say older proposals may be missing`, p05[lang].shown.test(text) && text.includes(p05[lang].older), text.slice(0, 300));
+      await contained(`${lang} ${width} P05 decisions with a cut list`);
+      if (args.shots) await page.screenshot({ path: `${args.shots}/p05-decisions-cut-${lang}-${width}.png`, fullPage: true });
+      text = await evidence(lang, "requirements");
+      check(`${lang} ${width} P05 comparison over a cut list says it covers only the listed requirements`, text.includes(p05[lang].limited));
+      await contained(`${lang} ${width} P05 requirements with a cut list`);
+      if (args.shots) await page.screenshot({ path: `${args.shots}/p05-requirements-cut-${lang}-${width}.png`, fullPage: true });
+      await page.unrouteAll({ behavior: "wait" });
+    }
+  }
+
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(`${base}/?service=api&lang=en&qa=${++navigation}#/installation?lang=en`);
   await page.locator(".p01-live").waitFor();

@@ -477,3 +477,22 @@ Malformed-response-only observations with an unsafe direction, not changed: on t
 Checks for the correction: `tsc` clean; console tests 1350, pass 1347, fail 0, skipped 3. No new test and no rendered check.
 
 With this, every file the first review reported as unopened has been read, except the shared O03 step store files (`StepResults.tsx`, `step-store.ts`, `write-store.ts`, `mutation.ts`, `editor.ts`, `part-store.ts`), the copy and code tables beyond search, style sheets and tests.
+
+## Second static check, shared O03 write machinery (2026-11-24)
+
+An independent reviewer (independent-reviewer role, AI) read the six files that carry every write of the O03 documents view: `setup/StepResults.tsx`, `step-store.ts`, `write-store.ts`, `mutation.ts`, `editor.ts`, `part-store.ts`, with the command layer and the issuance handlers of the server. Nothing was executed. Root then read the first finding in `write-store.ts` and `modules/commands/execute.go` and found it as reported.
+
+Sound: "recorded" is set only from a validated completed response; a retry resends the identical request and a recover uses a new identifier with a freshly read revision and unchanged inputs; handler refusals are never stored, and a stored failure is shown as unknown with its code, never as recorded; a timeout becomes unknown; a new attempt cannot replace an entry; a stale-revision refusal on a first send is stated.
+
+Findings, none corrected here. They concern how an unknown outcome is settled for issuance setup writes, which needs a design and its independent review before a change, so they are tracked in HYB-353:
+
+1. Confirmed: a settings proposal or confirmation whose request never reached the server can block the session. Its retry stays "unknown" whatever the answer, every new write is refused while one is unknown, "recover" finds nothing to recover, and after any other change in the installation the exact retry is answered `revision_conflict` every time.
+2. Confirmed: in the step store a recovery attempt that itself ends unknown leaves only a retry that stays unknown, while the original's recover button always fails.
+3. Confirmed in the console, low: the settings draft is not cleared after a recorded write, so the unload guard stays armed and a second proposal reuses the recorded identifier.
+4. Path confirmed, wording suspected: a step-up that needs a second factor is refused as a failed prerequisite and explained with the domain's prerequisite text, with no identity action offered.
+5. Suspected: after signing in again without a page reload, an unknown entry may be invisible while the unload prompt still fires.
+6. Confirmed in the console, low: attempt entries are never pruned; at 100 a write is refused with a general sentence only.
+
+Reaching the first two needs a lost request followed by another change in the installation, or two failures in a row; neither was observed in the real-server runs of this ticket, whose staged fault is a response lost after the effect, which the recover path settles.
+
+With this section every file the first review reported as unopened has been read. Not read by any review: the copy and code tables beyond search, style sheets, most tests, and on O03 `attestation.ts`, `action.ts`, `client.ts` and `Statements.tsx`.

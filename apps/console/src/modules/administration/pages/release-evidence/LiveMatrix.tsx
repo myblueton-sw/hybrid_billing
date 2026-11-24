@@ -195,7 +195,7 @@ function PathDetail({ l, page, p, mode }: { l: Locale; page: EvidencePage; p: Pa
                   <h4><Label value={x.label} /></h4>
                   {!r ? <p><Template text={k.testCasesMissing(l)} slots={{ label: <Label value={x.label} /> }} /></p>
                     : r.tests === null ? <p><Gap l={l} why={gapOf(c)} /></p>
-                      : <ListOr l={l} items={r.tests.rows} empty={k.noTests(l)}>{(tests) => <TestBlocks l={l} rows={tests} />}</ListOr>}
+                      : <><ListOr l={l} items={r.tests.rows} empty={k.noTests(l)}>{(tests) => <TestBlocks l={l} rows={tests} />}</ListOr><MoreLine l={l} more={r.tests.more} total={r.tests.total} forms={plurals.showing50} /></>}
                 </div>
               );
             })}

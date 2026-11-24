@@ -609,3 +609,17 @@ Not covered: creating, sealing, rejecting, activating or discarding a plan throu
 
 Rendered runs recorded for this ticket now cover O01, O02, O03, M02, M03, M04, M05 and the P screens. M01 has only what the server-backed suite shows.
 
+## Rendered run on M01 against a real service (2026-11-24)
+
+`apps/console/tools/users-qa.mjs` is new and was run against main ba9ac78 (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards). Result: exit code 0; 122 checks passed, none failed, no page error. One run; the script itself was not reviewed.
+
+What it does: signs in as the sample administrator; loads the Users, Invitations, Membership and Revocation views in English, Korean and Arabic at 1440 and 390 and checks that the screen is live, its language and direction, the absence of placeholder text and of a load failure, and that the page is not wider than the viewport. The sample has 4 people.
+
+For finding A6 and the unknown states it changes the answer of the users read in the browser for the two other administrators: one gets a role and the other a membership state that the screen does not know. In the three languages and both widths the Users and Membership lists show "Unknown role" and "Unknown state" for them, and the detail of each says why no membership action is offered. For the unknown role the detail offers the two account actions (suspend, mark as departed) and no membership or sign-in link action, as its sentence says. For the unknown membership state it offers the two account actions and the sign-in link; its sentence, "no action is offered for it here", stands under the membership heading and refers to the membership. Whether a sign-in link should be offered to a person whose membership state is unknown was not decided here; it is recorded as an observation.
+
+One screenshot (English, 1440, detail of the unknown role) was looked at by the writer: labels and sentence as intended. Not an owner acceptance.
+
+Not covered: the other states this ticket added on M01 (a refused or failed discard in the matching step, the failed read of excluded people, the Revocation jobs list that was never prepared), every command, the bulk selection, and keyboard order. Those are covered by unit and render tests only.
+
+Rendered runs recorded for this ticket now cover every screen it touched: M01, M02, M03, M04, M05, O01, O02, O03 and P01 to P05, each to the extent stated in its section. What remains open on this ticket is the owner's screen review.
+

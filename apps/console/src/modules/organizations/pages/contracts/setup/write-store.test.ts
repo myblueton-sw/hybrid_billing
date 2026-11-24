@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SetupWriteStore } from "./write-store";
+import { SetupWriteStore, sessionSetupWriteStore } from "./write-store";
 import { retainedIntent } from "./intents";
 import { SetupError } from "./context";
 import { testAction,testDigest,testIntent,testRow,testSession } from "./write-fixture";
@@ -77,4 +77,16 @@ test("a retry answered by a clean revision conflict settles as not recorded and 
  const first=new SetupWriteStore(testSession,reads,async()=>{throw conflict();},()=>start,()=>0);
  await first.inspect(testAction().request);await first.submit(testIntent());
  assert.deepEqual([first.snapshot().entries[0].phase,first.snapshot().entries[0].noRecord],["refused",undefined],"a first send is an ordinary refusal");
+});
+test("an unresolved settings request of an earlier sign-in is listed by the store of the new session of the same person",async()=>{
+ const before=testSession,after={...before,csrf:"csrf-after"};
+ const lost=async()=>{throw new SetupError("service_unavailable","unknown");};
+ const old=new SetupWriteStore(before,reads,lost),entry=()=>old.snapshot().entries;
+ const next=new SetupWriteStore(after,reads,lost,Date.now,()=>0,entry);
+ await old.inspect(testAction().request);await old.submit(testIntent());
+ assert.equal(old.snapshot().entries[0].phase,"unknown");assert.deepEqual(old.earlier(),[]);
+ assert.deepEqual(next.earlier().map(e=>[e.intent.attempt.key,e.phase]),[["key-1","unknown"]]);assert.deepEqual(next.snapshot().entries,[]);
+ await assert.rejects(next.retry("key-1"),SetupError);
+ const a=sessionSetupWriteStore({...testSession,user:"person-t",csrf:"csrf-1"}),b=sessionSetupWriteStore({...testSession,user:"person-t",csrf:"csrf-2"}),c=sessionSetupWriteStore({...testSession,user:"person-u",csrf:"csrf-3"});
+ assert.deepEqual([a.earlier(),b.earlier(),c.earlier()],[[],[],[]]);assert.notEqual(a,b);
 });

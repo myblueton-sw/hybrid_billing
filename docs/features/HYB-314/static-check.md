@@ -554,3 +554,14 @@ Console tests: 1363, pass 1360, fail 0, skipped 3.
 Added to `users/jobs-render.test.tsx`, for en, ko and ar: a discarded or expired list that was never prepared shows "Not counted: never prepared" and no count of people; the same list after a preparation shows its count; a draft keeps "Not counted until prepared". It renders the table to markup and is not a browser run.
 
 Console tests: 1364, pass 1361, fail 0, skipped 3.
+
+## Rendered run on the P screens against a real service (2026-11-24)
+
+`apps/console/tools/command-diagnostics-qa.mjs` was run against main 1b09c91 (console dev server and the API binary of the same commit, loopback, sample seed, new data directory, synthetic data only, stopped afterwards). The first run stopped after 257 passing checks at a case of the script that was out of date since HYB-304; that is HYB-355 and is not a product defect ([record](../HYB-355/script-session-case.md)). With the corrected script: exit code 0, 409 checks passed, none failed, no page error.
+
+What the run shows for P01 to P05, in English, Korean and Arabic at 1440, 1024 and 390: each screen loads on a real service; a failed, denied or ended read is stated with its actual references and without describing a sign-in failure, with page and token containment and bidirectional rules holding; on P02 and P04, refused and rate-limited commands keep their own references per open form and per row.
+
+What it does not show: the states this ticket and HYB-352 added on the P screens (the denied message without a reload on P01 and P05, the unknown retirement impact on P05, the cut delivery list on P02, the preview basis and the existing-proposal text on P01 and P02). The script does not stage them; they are covered by unit tests only. Not an owner acceptance.
+
+Rendered runs recorded for this ticket now cover O03, M03, M04, M05 and the P screens. M01 beyond what the server-backed suite shows, M02, O01 and O02 have none; no rendered script exists for them.
+

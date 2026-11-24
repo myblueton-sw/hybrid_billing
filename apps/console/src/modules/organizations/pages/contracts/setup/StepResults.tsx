@@ -28,7 +28,7 @@ type Props<I extends ScopedIntent, R> = {
 };
 export function StepResults<I extends ScopedIntent, R>({ l, id, title, intro = true, store, contract, onSettled, describe, explain, revision }: Props<I, R>) {
  const state = useSyncExternalStore(store.subscribe, store.snapshot), service = useService(), heading = useRef<HTMLHeadingElement>(null), [error, setError] = useState(""), [working, setWorking] = useState(false);
- const entries = state.entries.filter(e => e.intent.scope.contract === contract || e.phase === "pending" || e.phase === "unknown").reverse();
+ const entries = state.entries.filter(e => e.intent.scope.contract === contract || e.phase === "pending" || e.phase === "unknown" || e.noRecord).reverse();
  const busy = working || state.entries.some(e => e.phase === "pending"), latest = state.entries.at(-1);
  const settle = async (run: () => Promise<void>) => { if (working) return; setWorking(true); setError(""); heading.current?.focus(); try { await run(); } catch (e) { setError(codeOf(e)); return; } finally { setWorking(false); } onSettled(); };
  const recover = async (key: string, intent: I) => {
@@ -45,8 +45,8 @@ export function StepResults<I extends ScopedIntent, R>({ l, id, title, intro = t
   <div aria-live="polite">{entries.map(entry => { const d = describe(entry); return <article className="o03-setup-outcome" key={entry.intent.attempt.key}>
    <h5>{d.action}</h5>
    <p>{d.target}<span className="live-sub">{s(l, "forContract")}: {ltr(entry.intent.scope.contract)} · {s(l, "settings")}: {ltr(entry.intent.scope.configuration)} · {s(l, "sentAt")}: {stamp(l, entry.at)}</span></p>
-   <p>{s(l, (entry.phase === "unknown" && entry.recovers ? "phase_unknown_retry" : "phase_" + entry.phase) as StepWord)}</p>
-   {entry.error && entry.phase === "refused" && <p>{explain(entry.error, entry)}</p>}
+   <p>{s(l, (entry.noRecord ? "phase_noRecord" : entry.phase === "unknown" && entry.recovers ? "phase_unknown_retry" : "phase_" + entry.phase) as StepWord)}</p>
+   {entry.error && entry.phase === "refused" && <p>{entry.noRecord ? s(l, "noRecord") : explain(entry.error, entry)}</p>}
    {entry.error && (entry.phase === "refused" || entry.phase === "unknown") && <p className="live-mono">{s(l, "code")}: {ltr(entry.error)}</p>}
    {d.note && <p>{d.note}</p>}
    {d.state && <p>{d.stateLabel ?? s(l, "recordedState")}: {d.state}</p>}

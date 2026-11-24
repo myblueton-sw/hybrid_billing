@@ -5,14 +5,18 @@ import { SetupError } from "./context";
 
 export type StepIntent = Readonly<{ operation: string; actor: string; workspace: string; sessionCSRF: string; revision: string; attempt: Readonly<Attempt> }>;
 export type StepPhase = "pending" | "unknown" | "refused" | "recorded" | "reconciled";
-export type StepEntry<I extends StepIntent, R> = Readonly<{ intent: I; subject: string; phase: StepPhase; error?: string; operationId?: string; receipt?: R; recovers?: string; form?: string; at: string }>;
+export type StepEntry<I extends StepIntent, R> = Readonly<{ intent: I; subject: string; phase: StepPhase; error?: string; operationId?: string; receipt?: R; recovers?: string; form?: string; at: string; noRecord?: true }>;
 export type StepState<I extends StepIntent, R> = Readonly<{ entries: readonly StepEntry<I, R>[]; drafts: Readonly<Record<string, Readonly<Record<string, string>>>> }>;
 type Owner = Pick<Session, "user" | "workspace" | "csrf">;
+export const noRecordBoundMs = 30 * 60 * 1000;
 
 export class StepWriteStore<I extends StepIntent, R> {
   private state: StepState<I, R> = freeze({ entries: [], drafts: {} });
   private listeners = new Set<() => void>();
-  constructor(private readonly owner: Readonly<Owner>, private readonly send: (intent: I) => Promise<R>) {}
+  private started = new Map<string, number>();
+  constructor(private readonly owner: Readonly<Owner>, private readonly send: (intent: I) => Promise<R>, private readonly now: () => number = Date.now, private readonly elapsed: () => number = () => performance.now()) {}
+  private within(age: number): boolean { return Number.isFinite(age) && age >= 0 && age < noRecordBoundMs; }
+  private fresh(entry: StepEntry<I, R>): boolean { const began = this.started.get(entry.intent.attempt.key); return began !== undefined && this.within(this.elapsed() - began) && this.within(this.now() - Date.parse(entry.at)); }
   snapshot = () => this.state;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   private update(patch: Partial<StepState<I, R>>) { this.state = freeze({ ...this.state, ...patch }); this.listeners.forEach(listener => listener()); }
@@ -31,7 +35,7 @@ export class StepWriteStore<I extends StepIntent, R> {
   async submit(intent: I, subject: string, form?: string) {
     this.admit(intent);
     if (this.unresolved()) throw new SetupError("unresolved_operation");
-    await this.run({ intent, subject, phase: "pending", form, at: new Date().toISOString() });
+    await this.run({ intent, subject, phase: "pending", form, at: new Date(this.now()).toISOString() });
   }
   async retry(key: string) {
     const entry = this.state.entries.find(e => e.intent.attempt.key === key);
@@ -43,9 +47,10 @@ export class StepWriteStore<I extends StepIntent, R> {
     if (!entry || entry.phase !== "unknown" || entry.recovers || this.state.entries.some(e => e.phase === "pending" || e.phase === "unknown" && e !== entry)) throw new SetupError("recovery_unavailable");
     const intent = freeze({ ...entry.intent, attempt: freeze({ ...attempt }), revision: current }) as I;
     this.admit(intent);
-    await this.run({ intent, subject: entry.subject, phase: "pending", recovers: key, form: entry.form, at: new Date().toISOString() });
+    await this.run({ intent, subject: entry.subject, phase: "pending", recovers: key, form: entry.form, at: new Date(this.now()).toISOString() });
   }
   private async run(entry: StepEntry<I, R>, repeated = false) {
+    if (!repeated) this.started.set(entry.intent.attempt.key, this.elapsed());
     this.put(entry);
     try {
       const receipt = await this.send(entry.intent);
@@ -55,7 +60,8 @@ export class StepWriteStore<I extends StepIntent, R> {
       if (entry.form) this.clear(entry.form);
     } catch (error) {
       const known = error instanceof SetupError;
-      this.put({ ...entry, phase: repeated || !known || error.effect === "unknown" ? "unknown" : "refused", error: known ? error.code : "service_unavailable", operationId: known && error.operation ? error.operation : entry.operationId });
+      const noRecord = repeated && known && error.code === "revision_conflict" && error.effect === "none" && !error.operation && !entry.operationId && this.fresh(entry);
+      this.put({ ...entry, phase: !noRecord && (repeated || !known || error.effect === "unknown") ? "unknown" : "refused", error: known ? error.code : "service_unavailable", operationId: known && error.operation ? error.operation : entry.operationId, ...(noRecord ? { noRecord: true as const } : {}) });
     }
   }
 }

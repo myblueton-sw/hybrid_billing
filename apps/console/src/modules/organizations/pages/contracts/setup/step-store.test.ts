@@ -93,3 +93,57 @@ test("unsent input is kept per form in the session and counts as unsaved until c
  const first=sessionStepStore("terms",owner,()=>async()=>"receipt");
  assert.equal(sessionStepStore("terms",owner,()=>async()=>"other"),first);assert.notEqual(sessionStepStore("protected",owner,()=>async()=>"receipt"),first);assert.notEqual(sessionStepStore("terms",{...owner,csrf:"next"},()=>async()=>"receipt"),first);
 });
+test("a retry answered by a clean revision conflict settles as not recorded only for a fresh attempt that never carried an operation",async()=>{
+ const conflict=()=>new SetupError("revision_conflict","none");
+ const build=(first:()=>SetupError,clock:{t:number})=>{let n=0;return new StepWriteStore<StepIntent,string>(owner,async()=>{n++;throw n===1?first():conflict();},()=>clock.t,()=>clock.t);};
+ const start=Date.parse("2026-11-24T00:00:00Z");
+ let clock={t:start},store=build(()=>new SetupError("service_unavailable","unknown"),clock);
+ await store.submit(intent("a"),"term");assert.equal(store.snapshot().entries[0].phase,"unknown");
+ clock.t=start+29*60*1000;await store.retry("key-a");
+ assert.deepEqual([store.snapshot().entries[0].phase,store.snapshot().entries[0].error,store.snapshot().entries[0].noRecord,store.unresolved()],["refused","revision_conflict",true,false]);
+ await refuse(store,()=>store.retry("key-a"),"retry_unavailable");
+ clock={t:start};store=build(()=>new SetupError("service_unavailable","unknown"),clock);
+ await store.submit(intent("a"),"term");clock.t=start+30*60*1000;await store.retry("key-a");
+ assert.deepEqual([store.snapshot().entries[0].phase,store.snapshot().entries[0].noRecord],["unknown",undefined],"an attempt at the bound stays unknown");
+ clock={t:start};store=build(()=>new SetupError("service_unavailable","unknown"),clock);
+ await store.submit(intent("a"),"term");clock.t=start-1;await store.retry("key-a");
+ assert.equal(store.snapshot().entries[0].phase,"unknown","a clock set back keeps the attempt unknown");
+ clock={t:start};store=build(()=>new SetupError("service_unavailable","unknown","operation-1"),clock);
+ await store.submit(intent("a"),"term");await store.retry("key-a");
+ assert.deepEqual([store.snapshot().entries[0].phase,store.snapshot().entries[0].operationId],["unknown","operation-1"],"an attempt that carried an operation stays unknown");
+ for(const other of [new SetupError("revision_conflict","unknown"),new SetupError("revision_conflict","none","operation-2"),new SetupError("evidence_stale","none"),new SetupError("permission_denied","none"),new SetupError("idempotency_key_expired","unknown")]){
+  let n=0;const s2=new StepWriteStore<StepIntent,string>(owner,async()=>{n++;throw n===1?new SetupError("service_unavailable","unknown"):other;},()=>start,()=>0);
+  await s2.submit(intent("a"),"term");await s2.retry("key-a");assert.equal(s2.snapshot().entries[0].phase,"unknown",other.code+" "+other.effect);assert.equal(s2.snapshot().entries[0].noRecord,undefined);
+ }
+ const firstSend=new StepWriteStore<StepIntent,string>(owner,async()=>{throw conflict();},()=>start,()=>0);
+ await firstSend.submit(intent("a"),"term");assert.deepEqual([firstSend.snapshot().entries[0].phase,firstSend.snapshot().entries[0].noRecord],["refused",undefined],"a first send is an ordinary refusal");
+});
+test("a recovery attempt settled as not recorded makes recovery of the original available again",async()=>{
+ const start=Date.parse("2026-11-24T00:00:00Z");let mode="unknown";const sent:StepIntent[]=[];
+ const store=new StepWriteStore<StepIntent,string>(owner,async i=>{sent.push(i);if(mode==="unknown")throw new SetupError("service_unavailable","unknown");if(mode==="conflict")throw new SetupError("revision_conflict","none");return "receipt";},()=>start,()=>0);
+ await store.submit(intent("a"),"term");
+ await store.recover("key-a",{request:"request-b",key:"key-b"},"r2");
+ assert.deepEqual(store.snapshot().entries.map(e=>[e.intent.attempt.key,e.phase]),[["key-a","unknown"],["key-b","unknown"]]);
+ await refuse(store,()=>store.recover("key-a",{request:"request-c",key:"key-c"},"r3"),"recovery_unavailable");
+ mode="conflict";await store.retry("key-b");
+ assert.deepEqual(store.snapshot().entries.map(e=>[e.intent.attempt.key,e.phase,e.noRecord]),[["key-a","unknown",undefined],["key-b","refused",true]]);
+ mode="ok";await store.recover("key-a",{request:"request-c",key:"key-c"},"r3");
+ assert.deepEqual(store.snapshot().entries.map(e=>[e.intent.attempt.key,e.phase]),[["key-a","reconciled"],["key-b","refused"],["key-c","recorded"]]);
+});
+test("the not-recorded bound counts from the first send on both clocks, and an operation learnt on a later retry keeps the attempt unknown",async()=>{
+ const start=Date.parse("2026-11-24T00:00:00Z"),min=60*1000;
+ const run=async(answers:SetupError[],times:{wall:number;mono:number}[])=>{
+  let n=0;const clock={wall:start,mono:1000};
+  const store=new StepWriteStore<StepIntent,string>(owner,async()=>{throw answers[n++];},()=>clock.wall,()=>clock.mono);
+  await store.submit(intent("a"),"term");
+  for(const at of times){clock.wall=start+at.wall;clock.mono=1000+at.mono;await store.retry("key-a").catch(()=>undefined);}
+  return store.snapshot().entries[0];
+ };
+ const lost=()=>new SetupError("service_unavailable","unknown"),conflict=()=>new SetupError("revision_conflict","none");
+ assert.equal((await run([lost(),new SetupError("permission_denied","none"),conflict()],[{wall:20*min,mono:20*min},{wall:31*min,mono:31*min}])).phase,"unknown","a retry does not restart the bound");
+ assert.equal((await run([lost(),conflict()],[{wall:5*min,mono:31*min}])).phase,"unknown","elapsed time past the bound keeps it unknown although the wall clock was set back");
+ assert.equal((await run([lost(),conflict()],[{wall:31*min,mono:5*min}])).phase,"unknown","wall time past the bound keeps it unknown although the timer stood still");
+ assert.equal((await run([lost(),conflict()],[{wall:5*min,mono:5*min}])).noRecord,true);
+ const learnt=await run([lost(),new SetupError("internal_error","unknown","operation-9"),conflict()],[{wall:min,mono:min},{wall:2*min,mono:2*min}]);
+ assert.deepEqual([learnt.phase,learnt.operationId,learnt.noRecord],["unknown","operation-9",undefined]);
+});

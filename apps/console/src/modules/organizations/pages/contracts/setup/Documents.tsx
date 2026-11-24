@@ -48,7 +48,7 @@ export function Documents({ l, session, contract, on, parties, part, onPart, onS
  const current = async (intent: { scope: Parameters<typeof client.protectedSummary>[0] }) => (await client.protectedSummary(intent.scope)).revision, bump = () => setSettled(n => n + 1);
  const results = writes && claims ? <>
   <StepResults l={l} id="o03-protected-results" store={writes} contract={contract} onSettled={bump} explain={(code, entry) => explainProtected(l, code, entry)} revision={current} describe={entry => describeProtected(l, entry)} />
-  <StepResults l={l} id="o03-statement-results" title={statementText(l, "statementResults")} store={claims} contract={contract} onSettled={bump} explain={code => explainStatement(l, code)} revision={current} intro={!sentSteps.some(e => e.intent.scope.contract === contract || e.phase === "pending" || e.phase === "unknown")} describe={entry => describeStatement(l, entry, sentSteps)} />
+  <StepResults l={l} id="o03-statement-results" title={statementText(l, "statementResults")} store={claims} contract={contract} onSettled={bump} explain={code => explainStatement(l, code)} revision={current} intro={!sentSteps.some(e => e.intent.scope.contract === contract || e.phase === "pending" || e.phase === "unknown" || e.noRecord)} describe={entry => describeStatement(l, entry, sentSteps)} />
  </> : <p role="alert">{stepError(l, "session_capacity")}</p>;
  const toSettings = useRef(false);
  useEffect(() => { if (part === "settings" && toSettings.current) { toSettings.current = false; historyHeading.current?.focus(); } }, [part]);

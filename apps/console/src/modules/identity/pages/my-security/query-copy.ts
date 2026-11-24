@@ -47,6 +47,7 @@ export const sq = {
   results: (l: Locale) => t(l,"Recorded session results","기록된 세션 결과","نتائج الجلسات المسجّلة"),
   resultsUnconfirmed: (l: Locale) => t(l,"No results can be shown while the result of this operation is not confirmed.","이 작업의 결과가 확인되지 않은 동안에는 결과를 표시할 수 없습니다.","لا يمكن عرض نتائج ما دامت نتيجة هذه العملية لم تُؤكَّد."),
   operationUnconfirmed: (l: Locale) => t(l,"The result of this operation is not confirmed, so it cannot be shown yet. Check again.","이 작업의 결과가 아직 확인되지 않아 표시할 수 없습니다. 다시 확인하세요.","لم تُؤكَّد نتيجة هذه العملية بعد، لذا لا يمكن عرضها. تحقّق مجددًا."),
+  operationUnread: (l: Locale) => t(l,"This operation could not be loaded. No outcome is inferred. Check again.","이 작업을 불러오지 못했습니다. 결과를 추정하지 않습니다. 다시 확인하세요.","تعذّر تحميل هذه العملية. لا يُفترض أي مآل. تحقّق مجددًا."),
   operationUnavailable: (l: Locale) => t(l,"The retained operation is unavailable. Refresh the session list to check the current recorded state.","보관된 작업을 확인할 수 없습니다. 세션 목록을 새로 조회해 현재 기록된 상태를 확인하세요.","العملية المحفوظة غير متاحة. حدّث قائمة الجلسات للتحقّق من الحالة المسجّلة الحالية."),
   viewOperation: (l: Locale) => t(l,"View confirmed-list operation","확정 목록 작업 보기","عرض عملية القائمة المؤكدة"),
   notIncluded: (l: Locale) => t(l,"Not included in the confirmed list","확정 목록에 포함되지 않음","غير مشمولة في القائمة المؤكدة"),

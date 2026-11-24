@@ -508,3 +508,13 @@ Checks: `tsc` clean; console tests 1359, pass 1356, fail 0, skipped 3. No new te
 Left open when the unknown role was introduced: after the server refuses a bulk preparation because the selection holds administrators, the screen lists the administrators to deselect, and that list was built from the administrator role only. A person whose role the console does not recognise may be the administrator the server refused for, and was not listed. Such a person is now listed too, labelled "Unknown role" instead of the fixed "Administrator" label, and can be removed from the selection there. The identity module sends only known roles today, so this changes nothing for a well-formed response.
 
 Checks: `tsc` clean; console tests pass with one new test. No rendered check, no new copy and no review; the change is the one the copy and state reviewer suggested for this spot.
+
+## M05 finding D4, the read-failure half (2026-11-24)
+
+The earlier section on D4 said that a failed read and a missing operation could not be told apart without a change to the service client. That was wrong. The server answers a missing or invisible operation with the code `unsupported_command` (`apps/api/server/sessionoperations.go:69-71`), and the console's error keeps the code it received. The same distinction is already used elsewhere in the service client.
+
+Corrected: a referenced operation that is missing, or that is not the one asked for, keeps "The retained operation is unavailable. Refresh the session list to check the current recorded state." Any other failed read (a network failure, the service not answering, a rate limit, a malformed answer) now says "This operation could not be loaded. No outcome is inferred. Check again." With the unconfirmed case corrected earlier, D4 is done.
+
+Checks: `tsc` clean; console tests 1361, pass 1358, fail 0, skipped 3, with one new test of the distinction. Rendered: the three M05 checks (`my-security-scope-qa`, `my-security-history-qa`, `my-security-selection-qa`) run from the change, pass; none stages a failed read of a referenced operation. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its optional wording ("loaded" as elsewhere on this screen) was adopted afterwards.
+
+With this, no finding of the first or second static check is left open on this ticket. What remains is the rendered part for M01, M02, M04, O01, O02 and the P screens, and the owner's screen review.

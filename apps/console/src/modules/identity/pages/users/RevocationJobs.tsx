@@ -248,7 +248,9 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
   useEffect(() => { load(); }, [load]);
   const [moreFailed, setMoreFailed] = useState(false);
   const shown = useRef("");
+  const turn = useRef(0), loadingMore = useRef(-1);
   const openJob = useCallback(async (id: string, filter = outcome): Promise<boolean> => {
+    const mine = ++turn.current;
     setOpen(id);
     setMoreFailed(false);
     if (shown.current !== id) { shown.current = ""; setOpened(null); }
@@ -256,10 +258,12 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
       const detail = await bulk.detail(id);
       const items = detail.job.state === "executed" ? await bulk.items(id, 0, 50, filter) : { total: 0, next: "", rows: [] };
       const targets = detail.job.state === "prepared" && detail.job.preparer === self ? await bulk.targets(id) : null;
+      if (mine !== turn.current) return false;
       shown.current = id;
       setOpened({ detail, items, targets });
       return true;
     } catch (e) {
+      if (mine !== turn.current) return false;
       if (shown.current !== id) setOpen((now) => (now === id ? "" : now));
       setError(e);
       return false;
@@ -267,20 +271,26 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
   }, [api, outcome, self]);
   useEffect(() => { if (initial) void openJob(initial); }, [initial]);
   const more = async () => {
-    if (!opened) return;
+    const mine = turn.current;
+    if (!opened || loadingMore.current === mine) return;
     const id = opened.detail.job.id;
+    loadingMore.current = mine;
     try {
       if (opened.detail.job.state === "prepared") {
         if (!opened.targets) return;
-        const t = await bulk.targets(id, opened.targets.rows.length);
-        setOpened({ ...opened, targets: { ...t, rows: [...opened.targets.rows, ...t.rows] } });
+        const from = opened.targets.rows, t = await bulk.targets(id, from.length);
+        if (mine !== turn.current) return;
+        setOpened({ ...opened, targets: { ...t, rows: [...from, ...t.rows] } });
       } else {
-        const i = await bulk.items(id, opened.items.rows.length, 50, outcome);
-        setOpened({ ...opened, items: { ...i, rows: [...opened.items.rows, ...i.rows] } });
+        const from = opened.items.rows, i = await bulk.items(id, from.length, 50, outcome);
+        if (mine !== turn.current) return;
+        setOpened({ ...opened, items: { ...i, rows: [...from, ...i.rows] } });
       }
       setMoreFailed(false);
     } catch {
-      setMoreFailed(true);
+      if (mine === turn.current) setMoreFailed(true);
+    } finally {
+      if (loadingMore.current === mine) loadingMore.current = -1;
     }
   };
   if (error instanceof AdminError && error.failure === "unauthenticated") {
@@ -291,7 +301,7 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
   }
   const groupsOf = split(page?.jobs ?? []);
   const days = setting(page?.settings ?? [], "role_period_warning_days", 14);
-  const close = () => { const id = open; shown.current = ""; setOpen(""); setOpened(null); setMoreFailed(false); setTimeout(() => document.querySelector<HTMLElement>(`[data-job="${CSS.escape(id)}"]`)?.focus(), 0); };
+  const close = () => { const id = open; turn.current++; shown.current = ""; setOpen(""); setOpened(null); setMoreFailed(false); setTimeout(() => document.querySelector<HTMLElement>(`[data-job="${CSS.escape(id)}"]`)?.focus(), 0); };
   const detail = opened && open ? (
     <Detail l={l} api={api} opened={opened} revision={page?.revision ?? revision} wide={wide} onClose={close} onReload={() => { load(); void openJob(open); }} onMore={() => void more()} moreFailed={moreFailed}
       outcome={outcome} onOutcome={(o) => { void openJob(open, o).then((ok) => { if (ok) setOutcome(o); }); }} self={self} days={days} />

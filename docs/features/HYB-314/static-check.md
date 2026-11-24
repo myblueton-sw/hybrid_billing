@@ -579,3 +579,17 @@ Not covered: validating, approving, activating, rejecting or cancelling a change
 
 Rendered runs recorded for this ticket now cover O03, M02, M03, M04, M05 and the P screens. O01 and O02 have none and no script; M01 has only what the server-backed suite shows.
 
+## Rendered run on O01 against a real service (2026-11-24)
+
+O01 had no rendered script. `apps/console/tools/organizations-qa.mjs` is new and was run against main 2882e69 (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards). Result: exit code 0; 92 checks passed, none failed, no page error. One complete run, after a first run that stopped on the script's own readiness rule (it required more text than the Korean History view has at 390); the script itself was not reviewed.
+
+What it does: signs in as the sample administrator; loads the Tree, Accounts, Groups and History views in English, Korean and Arabic at 1440 and 390 and checks that the screen is live, its language and direction, the absence of placeholder text and of a load failure, and that the page is not wider than the viewport. The sample lists 6 accounts.
+
+For finding E1 it answers the read of a member's facts with 503 in the browser, opens the first account and checks, in the three languages and both widths, that the parent row says "Could not be loaded." as an alert with "Try again"; then it lets the read through, presses "Try again" and checks that the failure is replaced.
+
+One screenshot (English, 1440, failed read) was looked at by the writer: text and place as intended. In that full-page screenshot the navigation column starts lower than the content; whether that is how a full-page capture shows a column that stays in view while scrolling, or a layout fault, was not examined. Not an owner acceptance.
+
+Not covered: findings E2, E3 and E5 (the draft panel after a failed re-read, the existing-group search, creating a draft without an identifier), any command of the screen, paging, and keyboard order.
+
+Rendered runs recorded for this ticket now cover O01, O03, M02, M03, M04, M05 and the P screens. O02 has none and no script; M01 has only what the server-backed suite shows.
+

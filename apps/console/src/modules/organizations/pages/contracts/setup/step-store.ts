@@ -9,6 +9,7 @@ export type StepEntry<I extends StepIntent, R> = Readonly<{ intent: I; subject: 
 export type StepState<I extends StepIntent, R> = Readonly<{ entries: readonly StepEntry<I, R>[]; drafts: Readonly<Record<string, Readonly<Record<string, string>>>> }>;
 type Owner = Pick<Session, "user" | "workspace" | "csrf">;
 export const noRecordBoundMs = 30 * 60 * 1000;
+export const attemptLimit = 100, recoveryHeadroom = 10;
 
 export class StepWriteStore<I extends StepIntent, R> {
   private state: StepState<I, R> = freeze({ entries: [], drafts: {} });
@@ -27,10 +28,10 @@ export class StepWriteStore<I extends StepIntent, R> {
   clear(name: string) { const { [name]: _, ...drafts } = this.state.drafts; this.update({ drafts }); }
   dirty(): boolean { return Object.values(this.state.drafts).some(d => Object.values(d).some(v => v !== "")) || this.unresolved(); }
   unresolved(): boolean { return this.state.entries.some(e => e.phase === "pending" || e.phase === "unknown"); }
-  private admit(intent: I) {
+  private admit(intent: I, recovery = false) {
     if (intent.actor !== this.owner.user || intent.workspace !== this.owner.workspace || intent.sessionCSRF !== this.owner.csrf) throw new SetupError("session_changed");
     if (![intent.attempt?.request, intent.attempt?.key].every(id) || !revision(intent.revision)) throw new SetupError("invalid_setup_request");
-    if (this.state.entries.length >= 100) throw new SetupError("attempt_capacity");
+    if (this.state.entries.length >= attemptLimit + (recovery ? recoveryHeadroom : 0)) throw new SetupError("attempt_capacity");
     if (this.state.entries.some(e => e.intent.attempt.key === intent.attempt.key || e.intent.attempt.request === intent.attempt.request)) throw new SetupError("duplicate_attempt");
   }
   async submit(intent: I, subject: string, form?: string) {
@@ -47,7 +48,7 @@ export class StepWriteStore<I extends StepIntent, R> {
     const entry = this.state.entries.find(e => e.intent.attempt.key === key);
     if (!entry || entry.phase !== "unknown" || entry.recovers || this.state.entries.some(e => e.phase === "pending" || e.phase === "unknown" && e !== entry)) throw new SetupError("recovery_unavailable");
     const intent = freeze({ ...entry.intent, attempt: freeze({ ...attempt }), revision: current }) as I;
-    this.admit(intent);
+    this.admit(intent, true);
     await this.run({ intent, subject: entry.subject, phase: "pending", recovers: key, form: entry.form, at: new Date(this.now()).toISOString() });
   }
   private async run(entry: StepEntry<I, R>, repeated = false) {

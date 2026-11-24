@@ -179,3 +179,20 @@ The settings store lists the same way: an unresolved settings proposal or confir
 Checks: `tsc` clean; console tests 1357, pass 1354, fail 0, skipped 3, with one new store test. No rendered run of the listed entry. Copy review, ui-designer role (AI, by reading): fail with one finding (the control was not named, the next step was missing, and the Arabic verb differed from the form's), corrected with its wording, which was adopted without a further review. No independent change review.
 
 Not checked: whether such a row can sit on a page of the "Start from" list that is not loaded.
+
+# Item 6, the request limit of the page (2026-11-24)
+
+Both stores keep every request of the session and refuse a new one when 100 are kept, before anything is sent. Until now the refusal showed only the general sentence that the request could not be completed.
+
+The entries are not pruned. Whether a recorded statement may be used again is decided from the kept entries (`channel-flow.ts`, `reusableStatement`: a statement is withheld when a kept step used it or a kept withdrawal removed it), so dropping older entries could offer a statement that was already used.
+
+Two changes instead:
+
+- The refusal has its own sentence, the same for every kind of setup write: "This page has reached its limit of 100 requests in this session, so it sent nothing. Settle any request with an unknown outcome first, then reload the page to continue."
+- A recovery is admitted beyond the limit, by a headroom of ten. The copy review of the first wording showed why: a recovery is a new request, so at the limit an attempt with an unknown outcome could be retried but not recovered, while the sentence told the person to settle it first.
+
+Checks: `tsc` clean; console tests 1359, pass 1356, fail 0, skipped 3, with two new tests (every kind of setup write explains the limit with the same sentence; at the limit a new request is refused before sending, a recovery is admitted and settles the unknown entry, and a new request is still refused afterwards). No rendered run. Copy review, ui-designer role (AI, by reading): fail with one finding (the conflict above), corrected by the headroom; re-review pass with a change to the first sentence, adopted without a further review. No independent change review.
+
+Left open: a recovery refused after the headroom is used up shows the same sentence.
+
+With this, every item of the ticket is either implemented (1, 2, 3, 5, 6) or moved (4, to HYB-354). What remains is the owner's decision on setting aside an attempt that the rule cannot settle, and the open observations recorded in the sections above.

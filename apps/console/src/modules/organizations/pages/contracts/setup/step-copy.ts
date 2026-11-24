@@ -33,11 +33,12 @@ const words = {
  settings: ["Issuance settings", "발행 설정", "إعدادات الإصدار"],
  recoverRead: ["Recovery first reads the current state of these settings, which needs the permission to read them. That read was refused or failed. The unchanged retry does not need it.", "복구는 먼저 이 설정의 현재 상태를 조회하며, 조회 권한이 필요합니다. 그 조회가 거절되었거나 실패했습니다. 동일 요청 재시도에는 필요하지 않습니다.", "تقرأ الاستعادة أولاً الحالة الحالية لهذه الإعدادات، وهذا يتطلب صلاحية قراءتها. رُفضت تلك القراءة أو تعذرت. إعادة المحاولة دون تغيير لا تتطلبها."],
  capacity: ["This page holds too many request stores. Reload the page to send requests.", "이 페이지의 요청 저장소가 한도에 도달했습니다. 요청을 전송하려면 페이지를 다시 불러오세요.", "بلغت هذه الصفحة حد مخازن الطلبات. أعد تحميل الصفحة لإرسال الطلبات."],
+ attemptCapacity: ["This page has reached its limit of 100 requests in this session, so it sent nothing. Settle any request with an unknown outcome first, then reload the page to continue.", "이 페이지는 이 세션의 요청 한도인 100건에 도달해 아무것도 전송하지 않았습니다. 결과 미확인 요청이 있으면 먼저 해결한 다음, 계속하려면 페이지를 다시 불러오세요.", "بلغت هذه الصفحة حدّها البالغ 100 طلب في هذه الجلسة، فلم ترسل شيئًا. احسم أولًا أي طلب نتيجته غير معروفة، ثم أعد تحميل الصفحة للمتابعة."],
  recordedState: ["Recorded state", "기록된 상태", "الحالة المسجَّلة"],
 } as const;
 export type StepWord = keyof typeof words;
 export function stepText(l: Locale, key: StepWord): string { return words[key][l === "ko" ? 1 : l === "ar" ? 2 : 0]; }
 export function stepError(l: Locale, code: string): string {
- const key: StepWord = code === "unresolved_operation" || code === "retry_unavailable" || code === "recovery_unavailable" ? "errUnresolved" : code === "reauthentication_required" || code === "authentication_policy_unsatisfied" ? "errAuth" : code === "recovery_read" ? "recoverRead" : code === "session_capacity" ? "capacity" : "errOther";
+ const key: StepWord = code === "unresolved_operation" || code === "retry_unavailable" || code === "recovery_unavailable" ? "errUnresolved" : code === "reauthentication_required" || code === "authentication_policy_unsatisfied" ? "errAuth" : code === "recovery_read" ? "recoverRead" : code === "session_capacity" ? "capacity" : code === "attempt_capacity" ? "attemptCapacity" : "errOther";
  return stepText(l, key);
 }

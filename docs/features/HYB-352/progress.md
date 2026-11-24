@@ -37,7 +37,6 @@ The reviewer's remark stands as part of the decision: marking the count removes 
 Unchanged, from the ticket:
 
 - P05: the pending-retirement link to a proposal outside the newest 50 (suspected).
-- P01: the propose offer and the text after proposing, when the person's own identical plan is waiting outside the 50 listed proposals (confirmed by the change review; see the P01 section below).
 
 Found by the change review in the same two files and not changed here:
 
@@ -82,3 +81,13 @@ Checks: `go build`, `go vet` and the whole `apps/api/server` test package pass; 
 A gap the review accepted and that remains: the function that cuts the list is tested, and the read of the sample is tested to report nothing as cut, but no test fills a real subscription past 50, because that needs a signed delivery round the tests cannot reproduce. A change of the request for one row more than is shown would not be caught by a test.
 
 Not changed: the list still holds only the first 50, so a dead letter beyond them cannot be acted on from this screen; changing the order or paging the list is part of the decision of this ticket.
+
+# P01, a plan that was already proposed (2026-11-24)
+
+Corrected. When a person proposes a plan that the same person already has waiting with the same content, the module answers with the existing proposal. The command result now says so with the field `existing: "true"`, absent for a new proposal, and the console decides from that field alone, no longer from the 50 listed proposals. Its text is: "This plan was already proposed as #n. No new proposal was created, and that proposal keeps its original reason."
+
+Deciding from the served field also removes an older wrong case: when a first attempt had in fact succeeded and its retry replayed after the page reloaded, the console found the new number in the list and called a new proposal a duplicate.
+
+Checks: `go build`, `go vet` and the whole `apps/api/server` test package pass; `tsc` clean; console tests pass. No rendered check. Independent change review (independent-reviewer role, AI, by reading): pass with two conditions, the wording (the first version said that nothing new was recorded, although the command log records the attempt) and the binding document; both corrected, and its suggestion to decide from the served field alone adopted. Not reviewed again.
+
+Not changed: the "Propose" button is still offered when the person's identical plan waits outside the listed proposals; pressing it now gives the accurate text. The same pattern exists on other screens, which decide "already proposed" from their own listed rows and were not changed: P02 (`integrations/LiveModules.tsx:251`, `LiveChannels.tsx:323`), P03 (`recovery/LiveResume.tsx:67`), P04 (`retention/LiveHolds.tsx:146`, `LivePolicies.tsx:154`) and the release evidence screen.

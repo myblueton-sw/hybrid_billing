@@ -388,7 +388,7 @@ export function Propose(shared: Shared) {
           }
           impact={k.form.proposeImpact(l)}
           verb={k.form.proposeVerb(l, sent.version)}
-          done={(fields) => (duplicateOf(page.proposals, fields.proposal ?? "") ? k.duplicate(l, fields.proposal ?? "") : k.proposedDone(l, fields.proposal || k.unknown(l), sent.version))}
+          done={(fields) => (duplicateOf(fields.existing) ? k.duplicate(l, fields.proposal || k.unknown(l)) : k.proposedDone(l, fields.proposal || k.unknown(l), sent.version))}
           gone={k.goneProposal(l)}
           onClose={close}
         />

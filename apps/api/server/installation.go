@@ -509,7 +509,7 @@ func validPlanHash(hash string) bool {
 	return true
 }
 
-func (s *Server) proposePlan(ctx commands.Context, reader installer.Actor) (*installEntry, error) {
+func (s *Server) proposePlan(ctx commands.Context, reader installer.Actor) (*installEntry, bool, error) {
 	version, hash := ctx.Fields["version"], ctx.Fields["hash"]
 	known := false
 	for _, v := range s.install.releases {
@@ -517,13 +517,13 @@ func (s *Server) proposePlan(ctx commands.Context, reader installer.Actor) (*ins
 	}
 	switch {
 	case !known:
-		return nil, refuse(commands.InvalidRequest, "version")
+		return nil, false, refuse(commands.InvalidRequest, "version")
 	case !validPlanHash(hash):
-		return nil, refuse(commands.InvalidRequest, "hash")
+		return nil, false, refuse(commands.InvalidRequest, "hash")
 	}
-	e, err := s.installPropose(installer.Change{Kind: installer.ChangePlan, Acceptance: installer.Acceptance{Site: s.install.site, Version: version, Hash: hash,
+	e, existing, err := s.installProposeOnce(installer.Change{Kind: installer.ChangePlan, Acceptance: installer.Acceptance{Site: s.install.site, Version: version, Hash: hash,
 		Admin: reader.ID}}, reader, ctx.Rationale)
-	return e, mapInstaller(err)
+	return e, existing, mapInstaller(err)
 }
 
 func (h installHandler) Apply(ctx commands.Context) (commands.Outcome, error) {
@@ -534,19 +534,24 @@ func (h installHandler) Apply(ctx commands.Context) (commands.Outcome, error) {
 	reader := installer.Actor{ID: ctx.User, Kind: installer.KindHuman}
 	e := s.installEntry(ctx.Target)
 	var err error
+	existing := false
 	switch h.kind {
 	case installApprove:
 		err = mapInstaller(s.installApprove(e, reader, ctx.Rationale))
 	case installWithdraw:
 		err = mapInstaller(s.installWithdraw(e, reader, ctx.Rationale))
 	default:
-		e, err = s.proposePlan(ctx, reader)
+		e, existing, err = s.proposePlan(ctx, reader)
 	}
 	if err != nil {
 		return commands.Outcome{}, err
 	}
 	number := strconv.FormatUint(e.view.Number, 10)
-	return commands.Outcome{ResultRevision: s.Next(), BusinessState: e.view.State, Fields: map[string]string{"proposal": number, "target": proposalTarget + number}}, nil
+	fields := map[string]string{"proposal": number, "target": proposalTarget + number}
+	if existing {
+		fields["existing"] = "true"
+	}
+	return commands.Outcome{ResultRevision: s.Next(), BusinessState: e.view.State, Fields: fields}, nil
 }
 
 func (s *Server) installationDefinitions() []commands.Definition {

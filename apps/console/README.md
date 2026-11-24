@@ -142,3 +142,5 @@ M02 rendered check: start the API with `--seed sample` and a data directory that
 
 O01 rendered check: the same setup as the M02 check, then `node tools/organizations-qa.mjs` with the same arguments. It sends no command and exits non-zero on any failed check.
 
+O02 rendered check: the same setup as the M02 check, then `node tools/organization-changes-qa.mjs` with the same arguments. It sends no command; when the service holds no plan it adds one to the read's answer in the browser for the arrival checks.
+

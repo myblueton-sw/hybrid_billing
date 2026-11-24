@@ -548,3 +548,9 @@ Console tests: 1362, pass 1359, fail 0, skipped 3. M02 still has no browser run 
 The A6 corrections had tests of the model but none of the rendered table. One is added to `users/table-render.test.tsx`: for a person whose account state, membership state and role the console does not recognise, the Users and Membership tables in en, ko and ar show the labels for an unknown state and an unknown role, and no cell reads as active, member or administrator. It renders the table to markup and is not a browser run.
 
 Console tests: 1363, pass 1360, fail 0, skipped 3.
+
+## M01 Revocation jobs, a render test for a list that was never prepared (2026-11-24)
+
+Added to `users/jobs-render.test.tsx`, for en, ko and ar: a discarded or expired list that was never prepared shows "Not counted: never prepared" and no count of people; the same list after a preparation shows its count; a draft keeps "Not counted until prepared". It renders the table to markup and is not a browser run.
+
+Console tests: 1364, pass 1361, fail 0, skipped 3.

@@ -146,3 +146,5 @@ O02 rendered check: the same setup as the M02 check, then `node tools/organizati
 
 M01 rendered check: the same setup as the M02 check, then `node tools/users-qa.mjs` with the same arguments. It sends no command and changes the users read's answer in the browser for the unknown role and state.
 
+Capped lists rendered check (P02 cut delivery list, P01 existing proposal): the same setup as the M02 check, then `node tools/capped-lists-qa.mjs` with the same arguments. It sends two plan proposals to the sample service.
+

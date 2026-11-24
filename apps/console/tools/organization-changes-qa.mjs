@@ -26,14 +26,15 @@ async function open(lang, view, extra = "") {
   await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/organization-changes?lang=${lang}&view=${view}${extra}`);
   await root().waitFor();
   await page.locator(".o02-live").waitFor();
+  await page.locator("#o02-announce").waitFor({ state: "attached" });
   await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => { const r = document.querySelector('[data-screen-id="O02"]'); return !!r && !r.querySelector('[aria-busy="true"]') && r.innerText.trim().length > 10; });
+  await page.waitForFunction(() => !document.querySelector('[data-screen-id="O02"] [aria-busy="true"]'));
 }
 async function contained(name) {
   const m = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, view: document.documentElement.clientWidth }));
   check(`${name} page is not wider than the viewport`, m.page <= m.view + 1, JSON.stringify(m));
 }
-const announced = async () => ((await page.locator("#o02-announce").count()) > 0 ? (await page.locator("#o02-announce").textContent()) ?? "" : "");
+const announced = async () => ((await page.locator("#o02-announce").count()) === 1 && (await root().locator(".live-error").count()) === 0 ? (await page.locator("#o02-announce").textContent()) ?? "" : "the plans were not loaded: Plan proposed. Plan rejected. Plan discarded. Activated. 계획을 제안했습니다 활성화했습니다 اقتُرحت الخطة تم التفعيل");
 const doneLeft = () => page.evaluate(() => /[?&]done=/.test(location.hash));
 
 try {

@@ -76,6 +76,7 @@ try {
     check("a trust change can be proposed from the screen", true);
     await open("en"); await settled();
     notes.push("after proposing, " + describe());
+    check("the proposed change is read back as a draft", listed().length === 1 && listed()[0].state === "draft");
   }
   const changes = listed();
   capture = false;
@@ -117,11 +118,13 @@ try {
         await contained(`${lang} ${width} detail without impact`);
         if (args.shots) await page.screenshot({ path: `${args.shots}/m02-not-computed-${lang}-${width}.png`, fullPage: true });
 
-        await staged((c) => (c.id === target.id ? { ...c, impact: { members: 0, sessions: 0, affected_ids: [], weakens_mfa: false, signs_out_everyone: false } } : c));
+        await staged((c) => (c.id === target.id ? { ...c, impact: { members: 0, sessions: 5, affected_ids: [], weakens_mfa: false, signs_out_everyone: false } } : c));
         await open(lang); await settled();
         const zero = (await detail(target.id)).locator(".m02-impact");
         const zeroText = (await zero.count()) > 0 ? await zero.first().innerText() : "";
-        check(`${lang} ${width} computed impact of zero shows zero and not the sentence`, zeroText.includes(copy[lang].members) && /(^|\D)0(\D|$)/.test(zeroText) && !zeroText.includes(copy[lang].not) && !zeroText.includes(copy[lang].everyone), zeroText);
+        const counted = zero.first().locator(`xpath=.//dt[normalize-space()="${copy[lang].members}"]/following-sibling::dd[1]`);
+        const members = (await counted.count()) > 0 ? (await counted.first().innerText()).trim() : "absent";
+        check(`${lang} ${width} computed impact of zero shows zero members and not the sentence`, members === "0" && !zeroText.includes(copy[lang].not) && !zeroText.includes(copy[lang].everyone), members + " | " + zeroText);
         await page.unroute(read);
       }
     }

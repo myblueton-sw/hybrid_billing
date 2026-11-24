@@ -25,8 +25,9 @@ const root = () => page.locator('[data-security-screen="M01"]');
 async function open(lang, view) {
   await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/users?lang=${lang}&view=${view}`);
   await root().waitFor();
+  await page.locator(view === "revocation" ? "#m01-jobs-title" : view === "invitations" ? '[data-security-screen="M01"] .live-list, [data-security-screen="M01"] table' : ".live-open[data-user-id]").first().waitFor();
   await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => { const r = document.querySelector('[data-security-screen="M01"]'); return !!r && !r.querySelector('[aria-busy="true"]') && r.innerText.trim().length > 10; });
+  await page.waitForFunction(() => !document.querySelector('[data-security-screen="M01"] [aria-busy="true"]'));
 }
 async function contained(name) {
   const m = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, view: document.documentElement.clientWidth }));
@@ -91,13 +92,15 @@ try {
         let body = page.locator(".live-detail-body"); await body.waitFor();
         let text = await body.innerText();
         check(`${lang} ${width} detail of an unknown role says why no membership action is offered`, text.includes(copy[lang].roleWhy), text);
-        if (lang === "en" && width === 1440) { notes.push(`actions offered for the unknown role: ${(await body.locator("[data-action]").evaluateAll((els) => els.map((e) => e.getAttribute("data-action")))).join(",") || "none"}`); if (args.shots) await page.screenshot({ path: `${args.shots}/m01-unknown-role-detail-en-1440.png`, fullPage: true }); }
+        const offered = async () => (await page.locator(".live-detail-body [data-action]").evaluateAll((els) => els.map((e) => e.getAttribute("data-action")))).join(",");
+        check(`${lang} ${width} an unknown role is offered the two account actions and no membership or sign-in link action`, (await offered()) === "suspend_user,depart_user", await offered());
+        if (lang === "en" && width === 1440 && args.shots) await page.screenshot({ path: `${args.shots}/m01-unknown-role-detail-en-1440.png`, fullPage: true });
         await open(lang, "users");
         await row(b.user_id).click();
         body = page.locator(".live-detail-body"); await body.waitFor();
         text = await body.innerText();
         check(`${lang} ${width} detail of an unknown membership state says why no action is offered`, text.includes(copy[lang].stateWhy), text);
-        if (lang === "en" && width === 1440) notes.push(`actions offered for the unknown membership state: ${(await body.locator("[data-action]").evaluateAll((els) => els.map((e) => e.getAttribute("data-action")))).join(",") || "none"}`);
+        check(`${lang} ${width} an unknown membership state is offered the two account actions and the sign-in link, as observed on 2026-11-24`, (await offered()) === "suspend_user,depart_user,issue_set_link", await offered());
       }
     }
     await page.unrouteAll({ behavior: "wait" });

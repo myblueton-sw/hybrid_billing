@@ -18,7 +18,8 @@ export class SetupWriteStore {
  private generation = 0;
  private listeners = new Set<()=>void>();
  private started = new Map<string,number>();
- constructor(private readonly owner: Readonly<Session>, private readonly reads: Pick<ReturnType<typeof setupReadClient>,"action"|"configurations">, private readonly mutate: ReturnType<typeof setupMutationClient>, private readonly now: () => number = Date.now, private readonly elapsed: () => number = () => performance.now()) {}
+ constructor(private readonly owner: Readonly<Session>, private readonly reads: Pick<ReturnType<typeof setupReadClient>,"action"|"configurations">, private readonly mutate: ReturnType<typeof setupMutationClient>, private readonly now: () => number = Date.now, private readonly elapsed: () => number = () => performance.now(), private readonly siblings: () => readonly Entry[] = () => []) {}
+ earlier():readonly Entry[] {return this.siblings().filter(e=>e.phase==="pending"||e.phase==="unknown");}
  private within(age:number):boolean {return Number.isFinite(age)&&age>=0&&age<noRecordBoundMs;}
  private fresh(entry:Entry):boolean {const began=this.started.get(entry.intent.attempt.key);return began!==undefined&&this.within(this.elapsed()-began)&&this.within(this.now()-Date.parse(entry.at));}
  snapshot = () => this.state;
@@ -88,5 +89,6 @@ export function sessionSetupWriteStore(session:Session):SetupWriteStore {
  const key=JSON.stringify([session.user,session.workspace,session.csrf]),existing=stores.get(key);
  if(existing)return existing;
  if(stores.size>=16)throw new SetupError("session_capacity");
- const owner=freeze({...session}),store=new SetupWriteStore(owner,setupReadClient(owner),setupMutationClient(owner));stores.set(key,store);return store;
+ const others=()=>[...stores.entries()].filter(([k])=>{const [user,workspace,csrf]=JSON.parse(k) as string[];return user===session.user&&workspace===session.workspace&&csrf!==session.csrf;}).flatMap(([,other])=>other.snapshot().entries);
+ const owner=freeze({...session}),store=new SetupWriteStore(owner,setupReadClient(owner),setupMutationClient(owner),Date.now,()=>performance.now(),others);stores.set(key,store);return store;
 }

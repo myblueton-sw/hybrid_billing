@@ -162,6 +162,8 @@ Offering the identity action for it, as the finding first suggested, would not h
 
 Nothing is changed for this item under HYB-353.
 
+Correction (2026-11-24, from the design review of HYB-354): the code path above is as described, but the refusal cannot be reached through the product today. The only policy proposal path builds its candidate without a second-factor requirement and with a step-up rule that does not demand one (`apps/api/server/trust.go:106-120`), so a policy that demands a second factor exists only in tests or in a ledger record written outside the product. A person cannot meet this refusal on O03 or anywhere else at present; item 4 is a preparation for the time a second factor exists, and is tracked as such in HYB-354 (`docs/features/HYB-354/design.md`).
+
 # Item 5, a request left unresolved before signing in again (2026-11-24)
 
 Confirmed by reading: when a session ends the console shows the sign-in form on the same page and sets the new session without reloading (`apps/console/src/service/Service.tsx:497`), and a new sign-in has a new CSRF token. The step stores are keyed by person, workspace and that token, so after signing in again a request left pending or unknown was listed nowhere, while the unload prompt still fired for it. It cannot be retried either: its request is bound to the old session.

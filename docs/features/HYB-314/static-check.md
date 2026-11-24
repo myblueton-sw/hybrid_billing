@@ -565,3 +565,17 @@ What it does not show: the states this ticket and HYB-352 added on the P screens
 
 Rendered runs recorded for this ticket now cover O03, M03, M04, M05 and the P screens. M01 beyond what the server-backed suite shows, M02, O01 and O02 have none; no rendered script exists for them.
 
+## Rendered run on M02 against a real service (2026-11-24)
+
+M02 had no rendered script. `apps/console/tools/authentication-qa.mjs` is new and was run against main ca0be36 (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards). Result: exit code 0; 55 checks passed, none failed, no page error. One run; the script itself was not reviewed.
+
+What it does: signs in as the sample administrator; because the sample has no trust change, proposes one from the screen (sign-in valid for 600 minutes, with a reason) and reads it back as a draft; loads the Policies view in English, Korean and Arabic at 1440 and 390 and checks language, direction, the absence of placeholder text and that the page is not wider than the viewport; opens the five other views in English.
+
+For the correction of finding B1 it changes the answer of the policy read in the browser, for that one change only: with the impact removed, the detail in all three languages and both widths shows the title, the sentence that everyone is signed out and "Not computed. This is not zero.", and no member count; with a computed impact of zero it shows the member count 0 and neither sentence. Unchanged, the service computed the impact of the draft (3 members, 1 open session). So the state "not computed" was shown by altering the answer, not produced by the service; when the service itself leaves the impact out was not established by this run.
+
+One screenshot (Korean, 390, impact not computed) was looked at by the writer: layout and text as intended. Not an owner acceptance.
+
+Not covered: validating, approving, activating, rejecting or cancelling a change (they need further administrators), the hold and unknown-activation states, a failed read, and keyboard order.
+
+Rendered runs recorded for this ticket now cover O03, M02, M03, M04, M05 and the P screens. O01 and O02 have none and no script; M01 has only what the server-backed suite shows.
+

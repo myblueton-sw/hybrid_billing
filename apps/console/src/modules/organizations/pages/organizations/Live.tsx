@@ -1,29 +1,27 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, type AdminClient, type OrgMember, type OrgPage, type OrgParty, type OrgProfile, type OrgQuery, type OrgTargetRow, type RelationKind, type TargetsPage, type TargetsQuery } from "../../../../service/admin";
+import { AdminError, type AdminClient, type OrgMember, type OrgPage, type OrgParty, type OrgProfile, type OrgQuery, type OrgTargetRow, type OrgTreeNode, type OrgTreePage, type OrgTreeQuery, type RelationKind, type TargetsPage, type TargetsQuery } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { useWide } from "../../../identity/pages/users/Live";
 import { w } from "../../../identity/pages/users/live-copy";
 import { o } from "./live-copy";
 import {
-  accountRows, appended, appliedKeys, applies, cleared, clearedAll, countOf, covering, filterParams, FilterRefused, firstPage, joinKinds, label, legacyKind, linkedId, loaded, narrowing,
-  newer, nextFocus, pinnedRead, readFilters, refusal, todayUTC, tree, validDay, type AccountRow, type FilterKey, type Filters, type Paged, type Progress, type Side, type TreeNode,
+  accountRows, appliedKeys, applies, cleared, clearedAll, countOf, covering, filterParams, FilterRefused, joinKinds, label, legacyKind, linkedId, narrowing,
+  newer, nextFocus, pinnedRead, readFilters, refusal, todayUTC, validDay, type AccountRow, type FilterKey, type Filters, type Side,
 } from "./live-model";
 import { countText, FilterBand, FilteredEmpty, MoreBar, SearchForm } from "./filters";
+import { Branch, kindName, parentList, planMember, TreeGroup, unplaced, type TreeContext } from "./tree";
+import { usePages, type Fetched, type Pager } from "./use-pages";
 import { fill, handoffHref } from "../changes/live-model";
 import { DraftPanel, DraftsSection, HeaderCheck, RowCheck, SelectionBar, useDraftEditor, useDraftList } from "./drafts";
 import { allShown, header, toggled } from "./drafts-model";
 import "../../../identity/pages/users/live.css";
 import "./live.css";
 
-const maxPages = 10;
-const pageSize = 99;
 const listPage = 50;
 const searchPage = 10;
 
-type Loaded = { members: OrgMember[]; next: string; complete: boolean; failed: boolean };
-const progressOf = (c: Loaded | undefined): Progress => ({ complete: !!c && c.complete && !c.failed, cursor: c && c.members.length ? c.members[c.members.length - 1].member : "" });
 type Base = { parties: OrgParty[]; profiles: OrgProfile[]; workspace: { id: string; profile: string }; revision: number; active: number };
 
 const tags: Record<Locale, string> = { en: "en-US", ko: "ko-KR", ar: "ar" };
@@ -60,21 +58,6 @@ export function PlanActions({ l, plan, on, today, lang, children }: { l: Locale;
   );
 }
 
-export function planNode(nodes: TreeNode[], id: string): TreeNode | undefined {
-  for (const n of nodes) {
-    if (n.id === id) return n;
-    const found = planNode(n.children, id);
-    if (found) return found;
-  }
-  return undefined;
-}
-
-export const planMember = (n: TreeNode | undefined) => !!n && (n.kind === "internal_unit" || n.kind === "account");
-
-function kindName(l: Locale, kind: string): string {
-  return kind === "legal_entity" ? o.legalEntity(l) : kind === "internal_unit" ? o.internalUnit(l) : kind === "account" ? o.account(l) : o.unknown(l);
-}
-
 function Facts({ items }: { items: [string, ReactNode][] }) {
   return (
     <dl className="live-facts">
@@ -87,7 +70,6 @@ const invalidRead = (err: unknown) => err instanceof AdminError && err.failure =
 
 function useStore(api: AdminClient, on: string, initialPin: number | null, onPin: (revision: number | null) => void) {
   const [base, setBase] = useState<Base | null>(null);
-  const [cache, setCache] = useState<Partial<Record<RelationKind, Loaded>>>({});
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<unknown>(null);
   const [newest, setNewest] = useState(0);
@@ -98,13 +80,10 @@ function useStore(api: AdminClient, on: string, initialPin: number | null, onPin
   const pinned = useRef<number | null>(null);
   const restarted = useRef(false);
   const token = useRef(0);
-  const busy = useRef(new Set<RelationKind>());
   const reset = useCallback((bump = true) => {
     token.current += 1;
     pinned.current = null;
-    busy.current.clear();
     setBase(null);
-    setCache({});
     setNewest(0);
     setInconsistent(false);
     setError(null);
@@ -150,30 +129,6 @@ function useStore(api: AdminClient, on: string, initialPin: number | null, onPin
     }
     return false;
   };
-  const load = useCallback(async (kind: RelationKind, more = false) => {
-    if (busy.current.has(kind)) return;
-    const mine = token.current;
-    busy.current.add(kind);
-    let current: Loaded = more ? (cache[kind] as Loaded) : { members: [], next: "", complete: false, failed: false };
-    try {
-      for (let i = 0; i < maxPages; i++) {
-        const page = await api.organizations({ on, kind, revision: pinned.current ?? undefined, after: current.next || undefined, limit: pageSize });
-        if (mine !== token.current) return;
-        absorb(page);
-        current = { members: [...current.members, ...page.members], next: page.next, complete: !page.next, failed: false };
-        setCache((c) => ({ ...c, [kind]: current }));
-        setStatus("ready");
-        if (!page.next) break;
-      }
-    } catch (err) {
-      if (mine !== token.current) return;
-      if (fail(err)) return;
-      if (current.members.length > 0) setCache((c) => ({ ...c, [kind]: { ...current, failed: true } }));
-      else { setError(err); setStatus("error"); }
-    } finally {
-      if (mine === token.current) busy.current.delete(kind);
-    }
-  }, [api, on, cache, reset]); // eslint-disable-line react-hooks/exhaustive-deps
   const org = useCallback(async (query: OrgQuery): Promise<OrgPage> => {
     const mine = token.current;
     const page = await pinnedRead((revision) => api.organizations({ ...query, on, revision }), pinned.current, invalidRead);
@@ -186,94 +141,30 @@ function useStore(api: AdminClient, on: string, initialPin: number | null, onPin
     if (mine === token.current) { pin(page.relationship_revision, page.active_revision); setStatus("ready"); }
     return page;
   }, [api, on]); // eslint-disable-line react-hooks/exhaustive-deps
+  const tree = useCallback(async (query: OrgTreeQuery, after: string): Promise<OrgTreePage> => {
+    const mine = token.current;
+    const page = await pinnedRead((revision) => api.tree({ ...query, on, revision, after: after || undefined, limit: listPage }), pinned.current, invalidRead);
+    if (mine === token.current) pin(page.relationship_revision, page.active_revision);
+    return page;
+  }, [api, on]); // eslint-disable-line react-hooks/exhaustive-deps
+  const primed = useRef(-1);
+  const prime = useCallback(async (turn: number) => {
+    if (primed.current === turn) return;
+    primed.current = turn;
+    const mine = token.current;
+    try {
+      await org({ kind: "hierarchy", limit: 1 });
+    } catch (err) {
+      if (mine !== token.current || fail(err)) return;
+      setError(err);
+      setStatus("error");
+    }
+  }, [org]); // eslint-disable-line react-hooks/exhaustive-deps
   const fresh = useCallback(() => { restarted.current = false; reset(); onPin(null); }, [reset]); // eslint-disable-line react-hooks/exhaustive-deps
-  return { base, cache, status, error, newest, notice, setNotice, load, reset: fresh, l0, inconsistent, epoch, org, targets, fail };
+  return { base, status, error, newest, notice, setNotice, reset: fresh, l0, inconsistent, epoch, org, targets, tree, prime, fail };
 }
 
 type Store = ReturnType<typeof useStore>;
-type Fetched<T> = { rows: T[]; next: string; stopped: boolean };
-type Pager<T> = Paged<T> & { key: string | null; current: boolean; more: () => void; retry: () => void };
-
-function usePages<T>(key: string | null, fetch: (after: string) => Promise<Fetched<T>>, onError: (err: unknown) => boolean): Pager<T> {
-  const [state, setState] = useState<Paged<T> & { key: string | null }>(() => ({ ...firstPage<T>(), key: null }));
-  const token = useRef(0);
-  const fetchRef = useRef(fetch);
-  fetchRef.current = fetch;
-  const errorRef = useRef(onError);
-  errorRef.current = onError;
-  const run = useCallback(async (owner: string, after: string, prev: Paged<T> | null) => {
-    const mine = ++token.current;
-    try {
-      const page = await fetchRef.current(after);
-      if (mine !== token.current) return;
-      setState({ ...appended(prev ?? firstPage<T>(), page.rows, page.next, page.stopped), key: owner });
-    } catch (err) {
-      if (mine !== token.current) return;
-      if (errorRef.current(err)) return;
-      setState(prev ? { ...prev, status: "moreFailed", key: owner } : { ...firstPage<T>(), status: "error", error: err, key: owner });
-    }
-  }, []);
-  useEffect(() => {
-    token.current += 1;
-    if (key === null) return;
-    setState({ ...firstPage<T>(), key });
-    void run(key, "", null);
-  }, [key, run]);
-  const current = key !== null && state.key === key;
-  const more = () => {
-    if (!current || state.status === "more" || !state.next) return;
-    const prev = { ...state, status: "ready" as const };
-    setState({ ...state, status: "more" });
-    void run(state.key as string, state.next, prev);
-  };
-  const retry = () => {
-    if (key === null) return;
-    setState({ ...firstPage<T>(), key });
-    void run(key, "", null);
-  };
-  const shown: Paged<T> = current ? state : firstPage<T>();
-  return { ...shown, key, current, more, retry };
-}
-
-function Toggle({ l, node, open, onToggle }: { l: Locale; node: TreeNode; open: boolean; onToggle: () => void }) {
-  if (node.children.length === 0) return <span className="o01-toggle-space" aria-hidden="true" />;
-  return (
-    <button type="button" className="o01-toggle" aria-expanded={open} aria-controls={open ? "o01-branch-" + node.id : undefined} aria-label={open ? o.collapse(l, node.name) : o.expand(l, node.name)} onClick={onToggle}>
-      <span aria-hidden="true">{open ? "▼" : "▶"}</span>
-    </button>
-  );
-}
-
-function TreeList({ l, nodes, depth, open, setOpen, selected, onSelect, branchId, label: named = false }: {
-  l: Locale; nodes: TreeNode[]; depth: number; open: Set<string>; setOpen: (id: string) => void; selected: string; onSelect: (n: TreeNode) => void; branchId?: string; label?: boolean;
-}) {
-  return (
-    <ul className={depth === 0 ? "o01-tree" : "o01-branch"} aria-label={depth === 0 && named ? o.treeTitle(l) : undefined} id={branchId}>
-      {nodes.map((n) => (
-        <li key={n.id}>
-          <div className={"o01-row" + (selected === n.id ? " live-selected" : "")} style={{ ["--o01-indent" as string]: `${Math.min(depth, 4) * 24}px` }}>
-            <Toggle l={l} node={n} open={open.has(n.id)} onToggle={() => setOpen(n.id)} />
-            <button type="button" className={"live-open o01-name" + (n.kind === "legal_entity" ? " o01-strong" : "")} data-id={n.id} aria-current={selected === n.id ? "true" : undefined} onClick={() => onSelect(n)}>
-              <bdi>{n.name}</bdi>
-            </button>
-            <span className="o01-kind">{kindName(l, n.kind)}{n.state && n.state !== "active" ? ` · ${o.stateSuspended(l)}` : ""}{n.source === "registry" ? ` · ${o.registryParent(l)}` : ""}</span>
-            <span className="o01-id live-mono">{ltr(n.id)}</span>
-          </div>
-          {n.children.length > 0 && open.has(n.id) && <TreeList l={l} nodes={n.children} depth={depth + 1} open={open} setOpen={setOpen} selected={selected} onSelect={onSelect} branchId={"o01-branch-" + n.id} />}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function all(nodes: TreeNode[], out: string[] = []): string[] {
-  for (const n of nodes) {
-    if (n.children.length) out.push(n.id);
-    all(n.children, out);
-  }
-  return out;
-}
-
 function conflictLabel(l: Locale, n: number): ReactNode {
   const text = o.conflict(l, n);
   const at = text.indexOf("(");
@@ -318,7 +209,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   const initialPin = /^\d+$/.test(params.get("revision") ?? "") ? Number(params.get("revision")) : null;
   const store = useStore(api, on, initialPin, (r) => onParams({ revision: r === null ? null : String(r) }));
   store.l0.current = l;
-  const { base, cache, status, error, newest } = store;
+  const { base, status, error, newest } = store;
   const [filters, setFilters] = useState<Filters>(() => {
     const linked = readFilters(params).filters;
     const legacy = legacyKind(params);
@@ -328,7 +219,9 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   const [selected, setSelected] = useState(() => linkedId(params, "sel").id);
   const [selectedGroup, setSelectedGroup] = useState("");
   const [stepped, setStepped] = useState(false);
-  const [open, setOpenSet] = useState<Set<string>>(new Set());
+  const [collapse, setCollapse] = useState(0);
+  const [treeRow, setTreeRow] = useState<OrgTreeNode | null>(null);
+  const [others, setOthers] = useState<{ turn: string; detached: boolean; unattributed: boolean }>({ turn: "", detached: true, unattributed: true });
   const [bandOpen, setBandOpen] = useState<Set<string>>(new Set());
   const [groupKind, setGroupKind] = useState<RelationKind>("view_group");
   const [historyMember, setHistoryMember] = useState(() => linkedId(params, "member").id);
@@ -342,7 +235,6 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   const editor = useDraftEditor({ api, l, list: draftList, onDirty, say: setAnnounce, focus: setFocusTo });
   useEffect(() => { if (editor.leave && !wide) setStepped(true); }, [editor.leave]); // eslint-disable-line react-hooks/exhaustive-deps
   const removed = useRef(false);
-  const opened = useRef(false);
   const focusHistory = useRef(params.get("from") === "link");
   useEffect(() => {
     const removedKeys: Record<string, string | null> = Object.fromEntries(readFilters(params).invalid.map((k) => [k, null]));
@@ -364,8 +256,8 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
     setPicking(!member);
   }, [linkedId(params, "member").id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (view === "tree" && !cache.hierarchy) void store.load("hierarchy");
-  }, [view, on, cache]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (view === "tree" && !base && status !== "error") void store.prime(store.epoch);
+  }, [view, base, status, store.epoch]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setStepped(false); }, [view]);
   useEffect(() => {
     if (!focusTo) return;
@@ -437,7 +329,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
     const page = await store.org({ kind: rk, member: [historyMember] });
     return { rows: page.members, next: "", stopped: false };
   }, failMember);
-  const { facts, failed: factsFailed, retry: retryFacts } = useMemberFacts(store, selected, view === "accounts" || view === "groups", () => { setSelected(""); dropLinked({ sel: null }); });
+  const { facts, failed: factsFailed, retry: retryFacts } = useMemberFacts(store, selected, view === "tree" || view === "accounts" || view === "groups", () => { setSelected(""); dropLinked({ sel: null }); });
   const primary: Pager<unknown> | null = view === "accounts" ? accounts : view === "groups" ? groupList : null;
   const seen = useRef<{ key: string | null; n: number }>({ key: null, n: 0 });
   useEffect(() => {
@@ -460,21 +352,11 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
     seen.current = { key: primary.key, n };
   }, [primary?.key, primary?.status, primary?.rows.length]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (view === "tree" && cache.hierarchy?.complete && base) setAnnounce(o.announce(l, base.revision, on, cache.hierarchy.members.length));
-  }, [view, cache.hierarchy, base?.revision, on]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
     if (!focusHistory.current || view !== "history" || !timeline.current || timeline.status !== "ready") return;
     focusHistory.current = false;
     if (params.get("from") === "link") onParams({ from: null });
     setFocusTo("#o01-history-title");
   }, [view, timeline.current, timeline.status]); // eslint-disable-line react-hooks/exhaustive-deps
-  const built = useMemo(() => (base && cache.hierarchy ? tree(base.parties, cache.hierarchy.members, progressOf(cache.hierarchy)) : null), [base, cache.hierarchy]);
-  useEffect(() => {
-    if (built && !opened.current) {
-      opened.current = true;
-      setOpenSet(new Set(built.roots.filter((r) => r.kind === "legal_entity").map((r) => r.id)));
-    }
-  }, [built]);
   if (status === "error" && error instanceof AdminError && error.failure === "denied") {
     return <div className="live-users"><section className="live-unavailable" aria-labelledby="o01-denied"><h2 id="o01-denied">{o.deniedTitle(l)}</h2><p>{o.denied(l)}</p></section></div>;
   }
@@ -483,7 +365,6 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
     if (status === "loading") return;
     if (!validDay(draft)) { setDateError(o.badDate(l)); setFocusTo("#o01-on"); return; }
     setDateError("");
-    opened.current = false;
     store.setNotice("");
     if (draft !== on) {
       onParams({ on: draft, revision: null });
@@ -546,7 +427,7 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
           <div><dt>{o.workspace(l)}</dt><dd><span className="live-mono">{ltr(base.workspace.id)}</span> · {base.workspace.profile}</dd></div>
         </dl>
       )}
-      <button type="button" className="live-secondary o01-reload" onClick={() => { opened.current = false; store.setNotice(""); store.reset(); }}>{o.reload(l)}</button>
+      <button type="button" className="live-secondary o01-reload" onClick={() => { store.setNotice(""); store.reset(); }}>{o.reload(l)}</button>
     </form>
   );
   const notices = (
@@ -556,13 +437,13 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
       {store.inconsistent && (
         <div className="o01-newer" role="status">
           <p>{o.inconsistent(l)}</p>
-          <button type="button" className="live-secondary" onClick={() => { opened.current = false; store.reset(); }}>{o.reload(l)}</button>
+          <button type="button" className="live-secondary" onClick={() => { store.reset(); }}>{o.reload(l)}</button>
         </div>
       )}
       {base && newest > base.revision && (
         <div className="o01-newer" role="status">
           <p>{o.newer(l, newest, base.revision)}</p>
-          <button type="button" className="live-secondary" onClick={() => { opened.current = false; store.reset(); setFocusTo("#o01-view-title"); }}>{o.showRevision(l, newest)}</button>
+          <button type="button" className="live-secondary" onClick={() => { store.reset(); setFocusTo("#o01-view-title"); }}>{o.showRevision(l, newest)}</button>
         </div>
       )}
     </>
@@ -608,7 +489,14 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   };
   const filteredEmpty = <FilteredEmpty l={l} date={day(l, on)} onClear={clearAll} />;
   const party = (id: string) => base?.parties.find((p) => p.id === id);
-  const memberOf = (kind: RelationKind, id: string) => cache[kind]?.members.find((m) => m.member === id);
+  const readTree = async (list: string, after: string): Promise<Fetched<OrgTreeNode>> => {
+    if (list === "unattributed") {
+      const page = await store.org({ kind: "hierarchy", unattributed: true, after: after || undefined, limit: listPage });
+      return { rows: page.members.map((m) => unplaced(m, page.parties)), next: page.next, stopped: page.scan_stopped };
+    }
+    const page = await store.tree(list === "roots" ? {} : list === "detached" ? { group: "detached" } : { parent: list.slice(parentList.length) }, after);
+    return { rows: page.nodes, next: page.next, stopped: page.scan_stopped };
+  };
   const today = todayUTC(new Date());
   const lang = params.get("lang") ?? "";
   const planFor = (kind: RelationKind, member: string): PlanTarget | null => (base && status === "ready" ? { kind, member, base: base.revision } : null);
@@ -692,77 +580,35 @@ export default function LiveOrganizations({ locale: l, view, params, session, on
   let detail: ReactNode = null;
   let main: ReactNode = null;
   if (view === "tree") {
-    const hp = progressOf(cache.hierarchy);
-    const hier = memberOf("hierarchy", selected);
-    const node = built ? planNode([...built.roots, ...built.unattributed, ...built.conflicts.map((x) => x.node), ...built.cycles], selected) : undefined;
-    detail = memberDetail(hier, loaded(selected, hp), "", !!hier, planMember(node) && loaded(selected, hp) ? planFor("hierarchy", selected) : null);
-    const complete = !!cache.hierarchy && cache.hierarchy.complete && !cache.hierarchy.failed;
-    const ready = !!cache.hierarchy;
+    const p = party(selected);
+    const row = treeRow && treeRow.id === selected ? treeRow : null;
+    detail = !selected ? null : memberDetail(facts?.hier, !!facts, row ? row.name : "", !p && (facts ? !!facts.hier : row?.kind === "account"), facts && planMember(p?.kind, !!facts.hier) ? planFor("hierarchy", selected) : null, !facts);
+    const turn = `${store.epoch}|${on}`;
+    const context: TreeContext = { l, date: day(l, on), turn, collapse, selected, read: readTree, onError: store.fail, onSelect: (n) => { setTreeRow(n); selectNode(n.id); } };
+    const beside = others.turn !== turn || others.detached || others.unattributed;
+    const group = (name: "detached" | "unattributed") => (shown: boolean) => setOthers((was) => ({ ...(was.turn === turn ? was : { turn, detached: true, unattributed: true }), [name]: shown }));
     main = (
       <section aria-labelledby="o01-view-title">
         <div className="live-toolbar">
           <div className="live-heading">
             <h2 id="o01-view-title" tabIndex={-1}>{o.treeTitle(l)}</h2>
-            {ready && <p className="live-meta">{o.loaded(l, cache.hierarchy?.members.length ?? 0)} · <Dated l={l} iso={on} /></p>}
+            {base && <p className="live-meta">{o.revision(l)} {base.revision} · <Dated l={l} iso={on} /></p>}
           </div>
+          {base && status !== "error" && (
+            <div className="live-tools o01-tree-tools">
+              <button type="button" className="live-secondary" onClick={() => setCollapse((n) => n + 1)}>{o.collapseAll(l)}</button>
+            </div>
+          )}
         </div>
-        {status === "loading" && !ready ? <p role="status" className="live-meta">{o.loading(l, day(l, on))}</p> : pageError}
-        {built && (
+        {!base && status !== "error" ? <p role="status" className="live-meta">{o.loading(l, day(l, on))}</p> : pageError}
+        {base && status !== "error" && (
           <>
-            {(() => {
-              const toggle = (id: string) => setOpenSet((st) => { const n = new Set(st); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-              const sub = (nodes: TreeNode[]) => <TreeList l={l} nodes={nodes} depth={0} open={open} selected={selected} onSelect={(n) => selectNode(n.id)} setOpen={toggle} label={false} />;
-              const everything = [...built.roots, ...built.unattributed, ...built.conflicts.map((x) => x.node), ...built.unloaded, ...built.cycles];
-              if (everything.length === 0) {
-                return <p className="live-empty">{!complete ? o.incomplete(l) : base && base.parties.length === 0 ? o.emptyAll(l) : base && base.revision === 0 ? o.emptyRevision(l) : o.emptyKind(l, o.kind(l, "hierarchy"), base?.revision ?? 0)}</p>;
-              }
-              return (
-                <>
-                  <div className="live-tools o01-tree-tools">
-                    <button type="button" className="live-secondary" onClick={() => setOpenSet(new Set(all(everything)))}>{o.expandAll(l)}</button>
-                    <button type="button" className="live-secondary" onClick={() => setOpenSet(new Set())}>{o.collapseAll(l)}</button>
-                  </div>
-                  {base?.revision === 0 && <p className="live-note" role="status">{o.noRevisionNote(l)}</p>}
-                  {built.roots.length > 0 && <TreeList l={l} nodes={built.roots} depth={0} open={open} selected={selected} onSelect={(n) => selectNode(n.id)} setOpen={toggle} label />}
-                  {built.conflicts.length > 0 && (
-                    <section className="o01-unattributed" aria-labelledby="o01-conflicts">
-                      <h3 id="o01-conflicts">{o.conflictTitle(l, day(l, on))}</h3>
-                      {built.conflicts.map((c) => (
-                        <div key={c.node.id}>
-                          {sub([c.node])}
-                          <p className="live-note">{conflictLabel(l, c.targets.length)}: {c.targets.map((x) => label(x.name, x.id)).join(", ")}</p>
-                        </div>
-                      ))}
-                    </section>
-                  )}
-                  {built.cycles.length > 0 && (
-                    <section className="o01-unattributed" aria-labelledby="o01-cycles">
-                      <h3 id="o01-cycles">{o.cycleTitle(l)}</h3>
-                      {sub(built.cycles)}
-                    </section>
-                  )}
-                  {built.unloaded.length > 0 && (
-                    <section className="o01-unattributed" aria-labelledby="o01-unloaded">
-                      <h3 id="o01-unloaded">{o.notLoadedTitle(l)}</h3>
-                      {sub(built.unloaded)}
-                    </section>
-                  )}
-                  {(built.unattributed.length > 0 || !complete) && (
-                    <section className="o01-unattributed" aria-labelledby="o01-noorg">
-                      <h3 id="o01-noorg">{o.noOrg(l, day(l, on))}</h3>
-                      {built.unattributed.length > 0 && sub(built.unattributed)}
-                      {!complete && <p className="live-note">{o.incomplete(l)}</p>}
-                    </section>
-                  )}
-                </>
-              );
-            })()}
-            {ready && !complete && (
-              <div className="live-note-rule o01-incomplete" role="status">
-                <p>{o.incomplete(l)}</p>
-                <button type="button" className="live-secondary" onClick={() => void store.load("hierarchy", true)}>{cache.hierarchy?.failed ? o.continueLoading(l) : o.loadMore(l)}</button>
-              </div>
-            )}
+            {base.revision === 0 && <p className="live-note" role="status">{o.noRevisionNote(l)}</p>}
+            <Branch c={context} list="roots" depth={0} path={[]} labelled
+              empty={<p className="live-empty">{beside ? o.noRoots(l, day(l, on)) : base.parties.length === 0 ? o.emptyAll(l) : base.revision === 0 ? o.emptyRevision(l) : o.emptyKind(l, o.kind(l, "hierarchy"), base.revision)}</p>}
+              onReady={() => setAnnounce(o.treeAnnounce(l, base.revision, day(l, on)))} />
+            <TreeGroup c={context} list="detached" id="o01-cycles" title={o.detachedTitle(l)} note={o.detachedNote(l)} onShown={group("detached")} />
+            <TreeGroup c={context} list="unattributed" id="o01-noorg" title={o.noOrg(l, day(l, on))} onShown={group("unattributed")} />
           </>
         )}
       </section>

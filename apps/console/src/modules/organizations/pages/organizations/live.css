@@ -806,3 +806,11 @@
 .o01-live :is(.live-meta, h3) time {
   white-space: nowrap;
 }
+.o01-under > .o01-branch-note,
+.o01-under > .o01-more {
+  margin-block: 4px 8px;
+  padding-inline-start: calc(60px + var(--o01-indent, 0px));
+}
+.o01-branch-note {
+  margin-block: 4px 8px;
+}

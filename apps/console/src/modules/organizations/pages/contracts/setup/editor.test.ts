@@ -68,3 +68,18 @@ test("failed post-write refresh cannot erase a recorded result",async()=>{
  broken.invalidate();await broken.load();editor.invalidate();
  assert.equal(broken.getSnapshot().history.error,"service_unavailable");assert.equal(writes.snapshot().entries[0].phase,"recorded");assert.ok(writes.snapshot().entries[0].receipt);
 });
+test("a recorded write clears the draft and gives the next proposal a new identifier, while an unsettled or refused one keeps it",async()=>{
+ let mode="record";
+ const writes=new SetupWriteStore(testSession,reads,async intent=>{if(mode==="refuse")throw new SetupError("prerequisite_failed","none");if(mode==="lose")throw new SetupError("service_unavailable","unknown");return {configuration:testRow(),revision:"r5",operation:"operation-"+intent.attempt.key,replay:false};});
+ const editor=new SetupEditor(testSession,"contract",context.on,writes,reads),filled={preset:true,languages:["en","ko"],reason:"Synthetic setup"};
+ editor.edit(filled);const first=editor.snapshot().draft.target;
+ await editor.check();await editor.submit();
+ assert.equal(writes.snapshot().entries[0].phase,"recorded");
+ const cleared=editor.snapshot().draft;
+ assert.deepEqual([cleared.preset,cleared.languages,cleared.reason,cleared.selected],[false,[],"",""]);assert.notEqual(cleared.target,first);
+ mode="refuse";editor.edit(filled);const second=editor.snapshot().draft;
+ await editor.check();await editor.submit();
+ assert.equal(writes.snapshot().entries[1].phase,"refused");assert.deepEqual(editor.snapshot().draft,second,"a refused write keeps the draft");
+ mode="lose";await editor.check();await editor.submit();
+ assert.equal(writes.snapshot().entries[2].phase,"unknown");assert.deepEqual(editor.snapshot().draft,second,"an unknown outcome keeps the draft");
+});

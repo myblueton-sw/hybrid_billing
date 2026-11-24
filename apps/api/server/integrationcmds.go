@@ -224,11 +224,15 @@ func (s *Server) pluginProposeCommand(ctx commands.Context, reader plugins.Actor
 	case s.integ.workspace == "":
 		return integrationResult{}, refuse(commands.InvalidStage)
 	}
-	e, err := s.pluginPropose(plugins.Change{Kind: kind, Workspace: plugins.Workspace{ID: s.integ.workspace}, Plugin: p.id, Version: version}, reader, ctx.Rationale)
+	e, existing, err := s.pluginProposeOnce(plugins.Change{Kind: kind, Workspace: plugins.Workspace{ID: s.integ.workspace}, Plugin: p.id, Version: version}, reader, ctx.Rationale)
 	if err != nil {
 		return integrationResult{}, mapIntegration(err)
 	}
-	return proposalResult(e), nil
+	result := proposalResult(e)
+	if existing {
+		result.fields["existing"] = "true"
+	}
+	return result, nil
 }
 
 func (s *Server) pluginRuntimeCommand(ctx commands.Context, reader plugins.Actor, stop bool) (integrationResult, error) {

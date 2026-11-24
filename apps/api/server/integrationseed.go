@@ -201,16 +201,22 @@ func (s *Server) eventCall(name string, call func() error) error {
 }
 
 func (s *Server) pluginPropose(c plugins.Change, by plugins.Actor, rationale string) (*pluginEntry, error) {
+	e, _, err := s.pluginProposeOnce(c, by, rationale)
+	return e, err
+}
+
+func (s *Server) pluginProposeOnce(c plugins.Change, by plugins.Actor, rationale string) (*pluginEntry, bool, error) {
 	var view plugins.ProposalView
 	if err := s.pluginCall("propose", func() (err error) { view, err = s.plugins.Propose(c, by); return }); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	e := s.integ.entry(view.Number)
-	if e == nil {
-		e = &pluginEntry{view: view, created: s.clock(), rationale: rationale}
-		s.integ.keep(e)
+	if e != nil {
+		return e, true, nil
 	}
-	return e, nil
+	e = &pluginEntry{view: view, created: s.clock(), rationale: rationale}
+	s.integ.keep(e)
+	return e, false, nil
 }
 
 func (s *Server) pluginApprove(e *pluginEntry, by plugins.Actor, rationale string) error {

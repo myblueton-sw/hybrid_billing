@@ -256,7 +256,7 @@ export const k = {
     ),
   proposeVerb: (l: Locale, change: string, p: string) => t(l, `Propose ${change} for ${iso(p)}`, `${iso(p)}에 ${change} 제안`, `اقتراح ${change} لـ ${iso(p)}`),
   proposedDone: (l: Locale, n: string) => t(l, `Proposal #${n} recorded. Another administrator must approve it.`, `제안 #${n}을(를) 기록했습니다. 다른 관리자가 승인해야 합니다.`, `سُجّل المقترح رقم ${n}. يجب أن يعتمده مسؤول آخر.`),
-  duplicateProposal: (l: Locale, n: string) => t(l, `This was already proposed as #${n}.`, `이미 #${n}(으)로 제안되었습니다.`, `اقتُرح هذا بالفعل برقم ${n}.`),
+  duplicateProposal: (l: Locale, n: string) => t(l, `This was already proposed as #${n}. No new proposal was created, and that proposal keeps its original reason.`, `이미 #${n}(으)로 제안되었습니다. 새 제안은 만들어지지 않았으며, 해당 제안의 기존 사유가 유지됩니다.`, `اقتُرح هذا بالفعل برقم ${n}. لم يُنشأ مقترح جديد، ويبقى سبب ذلك المقترح الأصلي.`),
 
   proposalsTitle: (l: Locale) => t(l, "Plugin proposals", "플러그인 제안", "مقترحات الإضافات"),
   waitingGroup: (l: Locale, n: number) => t(l, `Waiting for approval (${n})`, `승인 대기(${n})`, `بانتظار الاعتماد (${n})`),

@@ -84,7 +84,7 @@ func TestIntegrationPluginPropose(t *testing.T) {
 	f.ok(t, "approve upgrade", f.run(root, "integrations.plugin_approve", pluginProposalAt(8), nil), "applied", "")
 	fields := map[string]string{"kind": "rollback", "version": "1.0.0"}
 	f.ok(t, "propose rollback", f.run(root, "integrations.plugin_propose", samplePluginAt, fields), "pending", "map[proposal:11 target:plugin-proposal-11]")
-	f.ok(t, "duplicate", f.admin(root, "integrations.plugin_propose", samplePluginAt, "again", fields), "pending", "map[proposal:11 target:plugin-proposal-11]")
+	f.ok(t, "duplicate", f.admin(root, "integrations.plugin_propose", samplePluginAt, "again", fields), "pending", "map[existing:true proposal:11 target:plugin-proposal-11]")
 	mine := pluginProposal(t, f.integrations(root), 11)
 	if s := fmt.Sprint(mine["rationale"], " ", mine["summary"].(map[string]any)["version"], " ", blockedAs(mine), " ", len(f.s.integ.entries)); s !=
 		"sample reason 1.0.0 false own_proposal true  11" {

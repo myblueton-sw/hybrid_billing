@@ -106,10 +106,8 @@ export function proposeState(page: InstallationPage, me: string): ProposeState {
 }
 
 export function previewBasis(page: InstallationPage): "" | "pending" | "release" {
-  const v = page.preview.version;
-  if (!v) return "";
-  const newest = ordered(page.proposals).pending.find((x) => x.kind === "plan");
-  return newest && newest.summary.plan_version === v ? "pending" : "release";
+  if (!page.preview.version) return "";
+  return page.preview_basis === "pending_plan" ? "pending" : page.preview_basis === "newest_release" ? "release" : "";
 }
 
 export function latestAcceptance(list: InstallProposal[]): InstallProposal | null {

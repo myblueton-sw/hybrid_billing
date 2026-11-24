@@ -206,6 +206,7 @@ type installationPage struct {
 	Installed    installStateRow         `json:"installed"`
 	Releases     []installReleaseRow     `json:"releases"`
 	Preview      installPreviewRow       `json:"preview"`
+	PreviewBasis string                  `json:"preview_basis"`
 	Upgrade      installPreviewRow       `json:"upgrade"`
 	Rollback     installPreviewRow       `json:"rollback"`
 	Proposals    []installProposalRow    `json:"proposals"`
@@ -354,13 +355,16 @@ func (s *Server) installProposalRow(e *installEntry, reader string) installPropo
 	return row
 }
 
-func (s *Server) planTarget(installed string) string {
+func (s *Server) planTarget(installed string) (string, string) {
 	for index := len(s.install.entries) - 1; index >= 0; index-- {
 		if v := s.install.entries[index].view; v.State == installer.ProposalPending && v.Change.Kind == installer.ChangePlan {
-			return v.Change.Acceptance.Version
+			return v.Change.Acceptance.Version, "pending_plan"
 		}
 	}
-	return s.newestOther(installed)
+	if version := s.newestOther(installed); version != "" {
+		return version, "newest_release"
+	}
+	return "", ""
 }
 
 func (s *Server) newestOther(installed string) string {
@@ -397,7 +401,8 @@ func (s *Server) installationPage(reader string, now time.Time) (installationPag
 	}
 	page.Site = installSiteRow{ID: site.ID, Platform: site.Platform.OS + "/" + site.Platform.Arch, Probe: site.Probe, Overrides: []installOverrideRow{}}
 	probes := []error{}
-	if target := s.planTarget(installed.Version); target != "" {
+	if target, basis := s.planTarget(installed.Version); target != "" {
+		page.PreviewBasis = basis
 		v, err := s.installer.Preview(id, target)
 		page.Preview, probes = previewOf(installer.RunInstall, target, v, err), append(probes, err)
 	}

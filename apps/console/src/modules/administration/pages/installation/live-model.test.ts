@@ -66,9 +66,11 @@ test("propose is offered only for an available, conflict-free, hashed and unacce
 
 test("the previewed version states why it was chosen and the latest acceptance", () => {
   assert.equal(previewBasis(page({ preview: { state: "not_applicable" } })), "");
-  assert.equal(previewBasis(page()), "release");
-  assert.equal(previewBasis(page({ proposals: [plan(4, "pending", "u2")] })), "pending");
-  assert.equal(previewBasis(page({ proposals: [plan(4, "pending", "u2", hash, "1.1.0")] })), "release");
+  assert.equal(previewBasis(page({ preview_basis: "newest_release" })), "release");
+  assert.equal(previewBasis(page({ preview_basis: "pending_plan" })), "pending");
+  assert.equal(previewBasis(page({ preview_basis: "newest_release", proposals: [plan(4, "pending", "u2")] })), "release", "the served basis is used, not a guess from the listed proposals");
+  assert.equal(previewBasis(page({ preview_basis: "pending_plan", proposals: [] })), "pending", "a pending plan outside the listed proposals is still the basis");
+  assert.equal(previewBasis(page()), "", "without a served basis nothing is claimed");
   const list = page({ proposals: [plan(2, "applied", "u2"), plan(6, "applied", "u2", hash, "1.1.0"), plan(7, "pending", "u1")] }).proposals;
   assert.equal(latestAcceptance(list)?.number, 6);
   assert.equal(latestAcceptance([]), null);

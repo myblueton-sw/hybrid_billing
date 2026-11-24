@@ -64,6 +64,11 @@ test("the installation read parses every part and keeps unknowns visible", async
   assert.equal(got.installed.history, 0);
 });
 
+test("the preview basis is read only as one of the two served values", () => {
+  const read = (preview_basis: unknown) => installationOf({ revision: "r1", now: "2026-11-17T09:00:00Z", state: "ready", preview_basis }).preview_basis;
+  assert.deepEqual([read("pending_plan"), read("newest_release"), read("other"), read(undefined), read(1)], ["pending_plan", "newest_release", "", "", ""]);
+});
+
 test("a site that is not configured has empty parts, never zeros", () => {
   const got = installationOf({ revision: "r1", now: "2026-11-17T09:00:00Z", state: "not_configured" });
   assert.equal(got.state, "not_configured");

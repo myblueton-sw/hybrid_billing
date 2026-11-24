@@ -37,7 +37,7 @@ The reviewer's remark stands as part of the decision: marking the count removes 
 Unchanged, from the ticket:
 
 - P05: the pending-retirement link to a proposal outside the newest 50 (suspected).
-- P01: the preview basis and the propose offer decided from the 50 newest proposals (suspected).
+- P01: the propose offer and the text after proposing, when the person's own identical plan is waiting outside the 50 listed proposals (confirmed by the change review; see the P01 section below).
 - P02: deliveries are the first 50 per subscription with no total, so dead letters can be absent from the screen (suspected).
 
 Found by the change review in the same two files and not changed here:
@@ -55,3 +55,17 @@ The change review listed two matrix sentences as derived from the capped list of
 - The intake note says that customer proof intake is not connected, so the count cannot rise in this build. It is shown when every loaded path reports intake as not connected, and it is a statement about the build. An earlier review of this screen found that an active path, a proven customer state and a ready gate cannot occur in this build.
 
 Both would need another look when activation or customer proof intake is connected, because from then on they would describe the paths and not the build. Nothing was executed for this section and it has no independent review.
+
+# P01, the preview basis (2026-11-24)
+
+Confirmed by reading and corrected. The server chooses the previewed version from all proposals, of which up to 128 can be retained (64 waiting and 64 closed, `modules/installer/registry.go:238`, `:274`), and a read lists the 50 newest. The console guessed from those 50 why the version was chosen, so a waiting plan older than 50 newer entries made it say "because it is the newest release not installed" although the waiting plan was the reason.
+
+The server now states the basis: the installation read has the field `preview_basis` with `pending_plan`, `newest_release` or an empty value when nothing is previewed, and the console shows what it is told. Without a served value the console says nothing about the basis and no longer guesses.
+
+This is an added field of a public read. The installation read is not in the OpenAPI document; the screen binding document (`docs/ui/screen-binding-fields/operations.md`) is updated.
+
+Checks: `go build`, `go vet` and the whole `apps/api/server` test package pass, with a test of a waiting plan hidden behind more entries than a read shows; `tsc` clean; console tests pass, with tests of the parser and of the basis. No rendered check. Independent change review (independent-reviewer role, AI, by reading): pass with one condition, the binding document, corrected; its suggested parser test was added. Neither was reviewed again.
+
+Not changed, noted by the review: when the preview is not available the basis sentence is still shown beside the reason for that, as before this change.
+
+Confirmed by the same review and still open: the server does not refuse an identical waiting plan from the same person; it answers with the existing proposal. When that proposal is outside the 50 listed, the console offers "Propose", and after sending it says that the plan was proposed as that proposal, as if a new one had been created, while the reason the person typed is dropped and the stored one kept (`modules/installer/registry.go:224-227`; `installation/LiveProposals.tsx:391`). Telling the person so needs the server to say that the answer is an existing proposal, which is another added field and is left for the decision of this ticket.

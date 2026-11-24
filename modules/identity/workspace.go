@@ -526,7 +526,7 @@ func (h *Workspace) ReplaceCredential(actor Verifier, workspace, oldID, newID st
 func (r *Registry) pruneCredentials(serviceID string, now time.Time) {
 	ended := []string{}
 	for id, found := range r.credentials {
-		if found.user == serviceID && !r.live(found, now) && !r.live(r.credentials[r.replacementOf(id)], now) {
+		if found.user == serviceID && !r.live(found, now) && !r.live(r.credentials[r.replacementOf(id)], now) && !r.live(r.credentials[r.replacedOne(id)], now) {
 			ended = append(ended, id)
 		}
 	}

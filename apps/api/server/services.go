@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net/http"
 	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
@@ -23,13 +25,16 @@ const (
 )
 
 type credentialRow struct {
-	ID        string `json:"id"`
-	NotBefore string `json:"not_before"`
-	NotAfter  string `json:"not_after"`
-	State     string `json:"state"`
-	Usable    bool   `json:"usable"`
-	Pickup    string `json:"secret_pickup,omitempty"`
-	PickupEnd string `json:"secret_pickup_until,omitempty"`
+	ID         string `json:"id"`
+	NotBefore  string `json:"not_before"`
+	NotAfter   string `json:"not_after"`
+	State      string `json:"state"`
+	Usable     bool   `json:"usable"`
+	Pickup     string `json:"secret_pickup,omitempty"`
+	PickupEnd  string `json:"secret_pickup_until,omitempty"`
+	Replaces   string `json:"replaces,omitempty"`
+	ReplacedBy string `json:"replaced_by,omitempty"`
+	Rotation   string `json:"rotation,omitempty"`
 }
 
 type serviceRow struct {
@@ -48,6 +53,41 @@ type serviceLimits struct {
 	CredentialsPerService int `json:"credentials_per_service"`
 	Services              int `json:"services"`
 	ReplaySeconds         int `json:"replay_seconds"`
+	OverlapMinutes        int `json:"credential_overlap_minutes"`
+	OverlapMaxMinutes     int `json:"credential_overlap_max_minutes"`
+	PickupMinutes         int `json:"secret_pickup_minutes"`
+}
+
+const (
+	rotationReplacing = "replacing"
+	rotationEnding    = "ending"
+)
+
+func (s *Server) overlapBounds() (int, int, int) {
+	low := int(pickupValidity / time.Minute)
+	high := s.cfg.Access.CredentialOverlapMax
+	if longest := int(s.cfg.Identity.CredentialValidity / time.Minute); longest < high {
+		high = longest
+	}
+	if high < low {
+		high = low
+	}
+	usual := s.cfg.Access.CredentialOverlap
+	if usual > high {
+		usual = high
+	}
+	if usual < low {
+		usual = low
+	}
+	return low, usual, high
+}
+
+func wholeNumber(raw string, low, high int) (int, bool) {
+	if len(raw) == 0 || len(raw) > 6 || (len(raw) > 1 && raw[0] == '0') || strings.TrimLeft(raw, "0123456789") != "" {
+		return 0, false
+	}
+	n, _ := strconv.Atoi(raw)
+	return n, n >= low && n <= high
 }
 
 type servicesPage struct {
@@ -120,11 +160,22 @@ func (s *Server) credentialRows(actor identity.Verifier, svc identity.ServiceInf
 		return nil, err
 	}
 	orderCredentials(list, now)
+	active := map[string]bool{}
+	for _, c := range list {
+		active[c.ID] = credentialState(c, now) == "active"
+	}
 	out := []credentialRow{}
 	for _, c := range list {
 		state := credentialState(c, now)
-		out = append(out, credentialRow{ID: c.ID, NotBefore: stamp(c.Validity.NotBefore), NotAfter: stamp(c.Validity.NotAfter), State: state,
-			Usable: state == "active" && svc.State == identity.Active})
+		row := credentialRow{ID: c.ID, NotBefore: stamp(c.Validity.NotBefore), NotAfter: stamp(c.Validity.NotAfter), State: state,
+			Usable: state == "active" && svc.State == identity.Active, Replaces: c.Replaces, ReplacedBy: c.ReplacedBy}
+		switch {
+		case active[c.ID] && c.ReplacedBy != "":
+			row.Rotation = rotationEnding
+		case active[c.ID] && active[c.Replaces]:
+			row.Rotation = rotationReplacing
+		}
+		out = append(out, row)
 	}
 	return out, nil
 }
@@ -209,6 +260,7 @@ func (s *Server) listServices(w http.ResponseWriter, r *http.Request) {
 	page := servicesPage{Revision: s.Revision(), Services: []serviceRow{}, Owners: owners, Now: stamp(now),
 		Limits: serviceLimits{CredentialDays: int(s.cfg.Identity.CredentialValidity / (24 * time.Hour)), CredentialsPerService: s.cfg.Identity.CredentialsPerServiceUser, Services: maxServices,
 			ReplaySeconds: int(s.cfg.Commands.Replay / time.Second)}}
+	page.Limits.PickupMinutes, page.Limits.OverlapMinutes, page.Limits.OverlapMaxMinutes = s.overlapBounds()
 	pickups := s.openPickups()
 	for _, svc := range services {
 		if err != nil {
@@ -288,7 +340,7 @@ func (h serviceCommand) Resolve(workspace, target string) (commands.Target, comm
 	}
 	var found bool
 	var err error
-	if h.kind == "revoke_credential" {
+	if h.kind == "revoke_credential" || h.kind == "rotate_credential" {
 		found, err = s.findCredential(target)
 	} else {
 		_, found, err = s.findService(target)
@@ -317,6 +369,8 @@ func (h serviceCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 		state, err = h.create(ctx)
 	case "revoke_credential":
 		state, err = h.revoke(ctx)
+	case "rotate_credential":
+		state, fields, err = h.rotate(ctx, now)
 	default:
 		var svc identity.ServiceInfo
 		svc, _, err = s.findService(ctx.Target)
@@ -437,6 +491,66 @@ func (h serviceCommand) issue(ctx commands.Context, svc identity.ServiceInfo, no
 	return "credential_issued", map[string]string{"credential": id, "secret_ref": ref}, nil
 }
 
+func (h serviceCommand) rotate(ctx commands.Context, now time.Time) (string, map[string]string, error) {
+	s := h.s
+	ws := s.identity.Workspace()
+	if s.faulty("credentials") {
+		return "", nil, identity.ErrUnavailable
+	}
+	owner, old, err := ws.Credential(s.caller, s.bootWorkspace, ctx.Target)
+	if err != nil {
+		return "", nil, err
+	}
+	svc, known, err := s.findService(owner)
+	if err != nil {
+		return "", nil, err
+	}
+	if !known || svc.State == identity.Suspended {
+		return "", nil, commands.Fail(commands.PrerequisiteFailed)
+	}
+	days, ok := minutes(ctx.Fields["days"], 1, int(s.cfg.Identity.CredentialValidity/(24*time.Hour)))
+	if !ok {
+		return "", nil, commands.Fail(commands.InvalidRequest, "days")
+	}
+	low, overlap, high := s.overlapBounds()
+	if raw, given := ctx.Fields["overlap_minutes"]; given {
+		if overlap, ok = wholeNumber(raw, low, high); !ok {
+			return "", nil, commands.Fail(commands.InvalidRequest, "overlap_minutes")
+		}
+	}
+	if credentialState(old, now) != "active" || now.Before(old.Validity.NotBefore) {
+		return "", nil, commands.Fail(commands.InvalidStage)
+	}
+	creds, err := s.credentials(s.caller, owner)
+	if err != nil {
+		return "", nil, err
+	}
+	active := map[string]bool{}
+	for _, c := range creds {
+		if credentialState(c, now) == "active" {
+			active[c.ID] = true
+		}
+	}
+	s.dir.forget(owner, active)
+	if len(active) >= s.cfg.Identity.CredentialsPerServiceUser {
+		return "", nil, commands.Fail(commands.PrerequisiteFailed)
+	}
+	secret := random(tokenBytes)
+	id := "cred-" + hex.EncodeToString(random(8))
+	validity := identity.Validity{NotBefore: now, NotAfter: now.Add(time.Duration(days) * 24 * time.Hour)}
+	end := now.Add(time.Duration(overlap) * time.Minute)
+	if err := ws.ReplaceCredential(s.caller, s.bootWorkspace, ctx.Target, id, verifierOf(secret), validity, end); err != nil {
+		return "", nil, err
+	}
+	if old.Validity.NotAfter.Before(end) {
+		end = old.Validity.NotAfter
+	}
+	ref := encode(random(16))
+	s.dir.pickups[ref] = pickup{secret: secretPrefix + encode(secret), credential: id, session: s.caller, target: owner, expires: now.Add(pickupValidity)}
+	s.dir.collected[id] = delivery{service: owner}
+	return "credential_rotated", map[string]string{"credential": id, "secret_ref": ref, "replaced": ctx.Target, "replaced_until": stamp(end)}, nil
+}
+
 func (h serviceCommand) revoke(ctx commands.Context) (string, error) {
 	s := h.s
 	if err := s.identity.Workspace().RevokeCredential(s.caller, s.bootWorkspace, ctx.Target); err != nil {
@@ -459,5 +573,6 @@ func (s *Server) serviceDefinitions() []commands.Definition {
 		define("service.retire", "retire", nil),
 		define("service.issue_credential", "issue", []commands.Field{{Name: "days", Type: commands.Integer, Required: true}}),
 		define("service.revoke_credential", "revoke_credential", nil),
+		define("service.rotate_credential", "rotate_credential", []commands.Field{{Name: "days", Type: commands.Integer, Required: true}, {Name: "overlap_minutes", Type: commands.Integer}}),
 	}
 }

@@ -140,3 +140,5 @@ M04 held credential issue regression check ([HYB-316 verification](../../docs/fe
 
 M02 rendered check: start the API with `--seed sample` and a data directory that does not exist yet, serve this console with `/api/` proxied to it, then from this directory run `node tools/authentication-qa.mjs --url <console-origin> --activation <data-directory>/activation.txt --playwright-module <installed-module> --chromium <browser-executable>`. It proposes one trust change when none exists, needs a fresh data directory per run and exits non-zero on any failed check.
 
+O01 rendered check: the same setup as the M02 check, then `node tools/organizations-qa.mjs` with the same arguments. It sends no command and exits non-zero on any failed check.
+

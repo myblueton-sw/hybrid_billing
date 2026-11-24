@@ -89,11 +89,13 @@ type session struct {
 }
 
 type credential struct {
-	serial   uint64
-	user     string
-	verifier Verifier
-	validity Validity
-	revoked  bool
+	serial     uint64
+	user       string
+	verifier   Verifier
+	validity   Validity
+	revoked    bool
+	replaces   string
+	replacedBy string
 }
 
 type Registry struct {

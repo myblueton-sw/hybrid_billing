@@ -284,7 +284,9 @@ type ServiceInfo struct {
 const EndedCredentialsKept = 20
 
 type CredentialInfo struct {
-	ID       string
-	Validity Validity
-	Revoked  bool
+	ID         string
+	Validity   Validity
+	Revoked    bool
+	Replaces   string
+	ReplacedBy string
 }

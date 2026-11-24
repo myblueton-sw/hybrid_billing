@@ -269,6 +269,9 @@ export type CredentialRow = {
   usable: boolean;
   secret_pickup?: SecretPickup;
   secret_pickup_until?: string;
+  replaces?: string;
+  replaced_by?: string;
+  rotation?: "replacing" | "ending";
 };
 export type ServiceRow = {
   id: string;
@@ -284,7 +287,10 @@ export type ServicesPage = {
   revision: string;
   services: ServiceRow[];
   owners: { user_id: string; login: string }[];
-  limits: { credential_days: number; credentials_per_service: number; services: number; replay_seconds: number };
+  limits: {
+    credential_days: number; credentials_per_service: number; services: number; replay_seconds: number;
+    credential_overlap_minutes: number; credential_overlap_max_minutes: number; secret_pickup_minutes: number;
+  };
   now: string;
 };
 export type Secret = { secret: string; credential: string };
@@ -714,6 +720,7 @@ export type CommandId =
   | "service.retire"
   | "service.issue_credential"
   | "service.revoke_credential"
+  | "service.rotate_credential"
   | "relationship.propose"
   | "relationship.activate"
   | "relationship.discard"

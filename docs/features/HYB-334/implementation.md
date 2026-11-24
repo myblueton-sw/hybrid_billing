@@ -49,7 +49,35 @@ Independent security change review (independent-reviewer role, AI, by reading, n
 
 Not covered by a test, as the reviewer listed: a refusal of the command under an actual trust hold beyond the table of commands, authentication of both credentials while the account is suspended, and the branch for a credential whose account is not listed.
 
+# Step 3, console (2026-11-25)
+
+- On the M04 Credentials view a live credential of an active account whose end no rotation has fixed offers "Rotate" beside "Revoke". The action is hidden while an attempt is held for the account.
+- The rotation uses the issue form in a rotation mode: validity of the new credential, the time the current credential stays valid (prefilled with the installation default, with its bounds), and the reason. The first submit validates and shows a review; only the second sends. The review names the credential that will end and its end in local time with the same instant in UTC beneath it, and states that the new secret is shown once and must be collected within the pickup time, that the rotation cannot be undone, that the screen does not know where the credential is used and does not check work in progress, and that a suspected exposure calls for revoking.
+- The end shown before confirming is computed in the browser from the last read, while the service counts from the command, so it is labelled "Estimated end" with the note that the exact time is set at confirmation. When the credential already ends sooner the end is exact and labelled "Ends at".
+- After sending, the existing held-attempt handling applies: an unknown outcome keeps the attempt, and "Try again" resends the same request with the attempt's own credential and values; a success leads to the one-time reveal. The held attempt remembers that it is a rotation, so the texts of the attempts region and the announcements say so.
+- Rows: the replaced credential shows "Rotated · ends" with its end and "Replaced by", the new one "Replaces".
+- A refused rotation (`invalid_stage`) says that the credential can no longer be rotated. The suspended and limit states use the issue form's texts and offer "Cancel rotation".
+- The strict parser of the services read accepts the new fields and rejects an empty link, a rotation value on a credential that is not active, `ending` without `replaced_by` and `replacing` without `replaces`.
+- The column widths of the M04 credential table had never applied, because another page's stylesheet set the same selector later; they are now more specific.
+
+## Checks of step 3
+
+`tsc` clean; console tests 1370, pass 1367, fail 0, skipped 3, with new tests of the overlap bounds, the end computation, the UTC text, the rotate condition, the parser and the held attempt's memory of a rotation.
+
+Rendered check `apps/console/tools/credential-rotation-qa.mjs`, against the API and console of this change (dev server, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards): exit code 0, 106 checks passed, none failed, no page error; one run of the final script. It creates a service account, issues a credential and rotates it through the screen: the form with the installation default; an overlap below the pickup time refused before sending; the review's facts and focus in English, Korean and Arabic at 1440, 1024 and 390; nothing sent before the confirmation; one request for the chosen credential with the entered values; the service's answer; the new secret revealed; the rows of both credentials; no second rotation offered on the bounded credential; no credential cell wider than its column. Not covered by it: an unknown outcome and its retry, a refused rotation, the suspended and limit states, and keyboard order beyond the focus checks; the first two are covered by unit tests of the store and the model only.
+
+Screenshots looked at by the writer: the review in English and Arabic at 1440, the Arabic time lines in a crop, the list in Korean at 390 and in English at 1440.
+
+## Review of step 3
+
+Independent change review (independent-reviewer role, AI, by reading, nothing executed): approve with conditions. Two blocking findings, both about statements on the screen that could be false, corrected: a refused rotation showed the sentence about retired accounts; and the end time was presented as exact although it is computed from the last read. Confirmed by reading: the request cannot name another credential or other values than those reviewed, a retry sends the identical request, the parser's rules match what the server sends. Bounded re-review: approve. Its two small remarks are left as they are: the lead says the current credential stays valid "only for the time you set", although one that ends sooner stays valid for less, which the screen states in that case; and the hint says "from now" for a time counted from confirmation, which the estimated-end note states.
+
+Composition and copy review (ui-designer role, AI, by reading the copy and the rendered screenshots): first FAIL with four blocking findings, all corrected: the Arabic UTC text was scrambled; the review and the list showed the same instant as different dates, so both local and UTC time are shown; the sentence about the end not being moved back was ambiguous; the row of a replaced credential showed no end time. Its strings were adopted unchanged. Re-review: FAIL on one new blocking defect, an identifier running over the row buttons at 1440, corrected (the column widths above), with three string corrections adopted. Final re-review: PASS, the overflow closed in the screenshots it opened.
+
+Left as the reviewer marked not blocking: the three buttons of the review wrap two and one at 1440; the Arabic local time line uses the screen's pickup-time form and not the list's sentence form; in the list at 1440 a time and its morning or afternoon marker can break onto separate lines in Korean and Arabic, in the existing validity column as well as in the new sub-line.
+
 # Remaining
 
-- Step 3, console: the M04 action, the form and review step, the rows of both credentials, copy in English, Korean and Arabic with terminology review, unit tests and rendered checks.
-- The owner's screen review. The residuals of the plan are unchanged.
+- The owner's screen review of the rotation on M04. No review above is a screen acceptance.
+- The residuals of the plan are unchanged: nothing detects that a workload still uses the old credential when it ends, nothing checks work in progress, the pickup stays bound to the issuing session, and records live in process memory in the pre-launch service.
+- Not built, as separate tickets under the plan's owner questions: a distinct rotation permission, recording where a credential is used, a prompt for an expiring credential.

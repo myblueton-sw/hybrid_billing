@@ -12,7 +12,9 @@ import { failureText } from "../users/live-model";
 import { when } from "../authentication/live-model";
 import { v } from "./live-copy";
 import { attemptState, credentials, credentialState, formVisible, initialService, keepsHold, issueBlock, liveCount, neverCollected, outsideWindow, panelShown, pickupLabel, pinIssue, prefix, returnFocus, serviceState, settleFailure, split, takenByMe, validName, wholeDays } from "./live-model";
-import { issueAttempts, type Entry } from "./issue-attempts";
+import { canRotate, rotationEnd, utcTime, wholeMinutes } from "./live-model";
+import { r } from "./rotate-copy";
+import { issueAttempts, type Entry, type Rotation } from "./issue-attempts";
 import { guardUnload } from "../../../../shared/unload-intent";
 import { HeldBlock } from "./Held";
 import { flushSync } from "react-dom";
@@ -27,7 +29,7 @@ type Mode =
   | { kind: "reveal"; ref: string; service: string; credential: string; until: string }
   | { kind: "revoke"; id: string; service: string; reason: string; from: string };
 
-function describeFor(kind: Kind, max = 0, retire = false) {
+function describeFor(kind: Kind, max = 0, retire = false, rotated = "") {
   return (l: Locale, e: unknown) => {
     if (e instanceof AdminError) {
       switch (e.failure) {
@@ -35,7 +37,7 @@ function describeFor(kind: Kind, max = 0, retire = false) {
           if (kind === "create") return { title: v.refusedTitle(l), body: v.capReached(l, max) };
           break;
         case "stage":
-          if (kind === "issue") return { title: v.refusedTitle(l), body: v.blockedRetired(l) };
+          if (kind === "issue") return { title: v.refusedTitle(l), body: rotated ? r.gone(l, rotated) : v.blockedRetired(l) };
           return { title: v.refusedTitle(l), body: kind === "revoke" ? v.alreadyRevoked(l) : v.stateChanged(l) };
         case "denied":
           if (kind !== "create") return { title: v.refusedTitle(l), body: v.gone(l) };
@@ -133,6 +135,14 @@ function LockableReason({ l, value, onChange, error, locked, extra }: { l: Local
       <p className="live-counter" aria-live="off">{w.bytes(l, n)}</p>
     </div>
   );
+}
+
+function UtcTime({ l, iso }: { l: Locale; iso: string }) {
+  return <bdi dir="ltr" className="live-nowrap">{utcTime(l, iso).replace(/[\u061c\u200e\u200f]/g, "")}</bdi>;
+}
+
+function Moment({ l, iso }: { l: Locale; iso: string }) {
+  return <><span className="live-to"><PickupTime l={l} iso={iso} /></span><span className="live-to live-sub"><UtcTime l={l} iso={iso} /></span></>;
 }
 
 function Facts({ items }: { items: [string, ReactNode][] }) {
@@ -318,8 +328,9 @@ function StateStep({ l, api, page, s, action, onDone, onCancel, onReload }: {
   );
 }
 
-function IssueForm({ l, api, page, s, user, stepping, onReload, onAccounts, onPin, onShowSecret }: {
+function IssueForm({ l, api, page, s, user, stepping, onReload, onAccounts, onPin, onShowSecret, rotate, onRotate, onCancelRotate }: {
   l: Locale; api: AdminClient; page: ServicesPage; s: ServiceRow; user: string; stepping: boolean; onReload: () => void; onAccounts: () => void; onPin: () => void; onShowSecret: () => void;
+  rotate?: string; onRotate?: (credential: string) => void; onCancelRotate?: () => void;
 }) {
   useIssues();
   const max = page.limits.credential_days;
@@ -332,6 +343,17 @@ function IssueForm({ l, api, page, s, user, stepping, onReload, onAccounts, onPi
   const [blockKey, setBlockKey] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (stepping) heading.current?.focus(); }, [stepping]);
+  const lim = page.limits;
+  const rotation: Rotation | undefined = entry ? entry.rotate : rotate ? { credential: rotate, overlap: "" } : undefined;
+  const target = rotation ? s.credentials.find((x) => x.id === rotation.credential) : undefined;
+  const [overlap, setOverlap] = useState(entry?.rotate?.overlap ?? String(lim.credential_overlap_minutes));
+  const [reviewing, setReviewing] = useState(false);
+  const reviewTitle = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { if (reviewing) reviewTitle.current?.focus(); }, [reviewing]);
+  const shownOverlap = entry?.rotate ? entry.rotate.overlap : overlap;
+  const m = rotation ? wholeMinutes(shownOverlap, lim.secret_pickup_minutes, lim.credential_overlap_max_minutes) : null;
+  const oldEnd = target && m ? rotationEnd(page.now, target.not_after, m) : null;
+  const gone = !!rotation && !entry && s.state === "active" && (!target || !canRotate(s, target, page.now));
   const phase: Held | "issued" = entry?.phase ?? "idle";
   const seen = useRef(phase);
   useEffect(() => {
@@ -344,72 +366,110 @@ function IssueForm({ l, api, page, s, user, stepping, onReload, onAccounts, onPi
   const block = entry ? "" : issueBlock(s, page.limits.credentials_per_service);
   const n = wholeDays(shownDays, max);
   const ends = n ? when(l, new Date(Date.parse(page.now) + n * 86400000).toISOString()) : "";
-  const send = async (values: { days: string; reason: string }) => {
+  const send = async (values: { days: string; reason: string; rotate?: Rotation }) => {
     onPin();
+    setReviewing(false);
+    const turn = values.rotate;
     const sent = await issues.submit(user, s.id, values, page.revision, page.limits.replay_seconds,
-      (tried, expected) => api.command("service.issue_credential", s.id, expected, values.reason, { days: values.days }, tried));
+      (tried, expected) => turn
+        ? api.command("service.rotate_credential", turn.credential, expected, values.reason, { days: values.days, overlap_minutes: turn.overlap }, tried)
+        : api.command("service.issue_credential", s.id, expected, values.reason, { days: values.days }, tried));
     if (sent.kind === "removed") setFocusKey((k) => k + 1);
     if (sent.kind !== "issued" && sent.kind !== "refused") onReload();
   };
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (phase === "sending" || phase === "issued" || phase === "lapsed") return;
-    if (entry && phase === "unknown") return send({ days: entry.days, reason: entry.reason });
+    if (entry && phase === "unknown") return send({ days: entry.days, reason: entry.reason, ...(entry.rotate ? { rotate: entry.rotate } : {}) });
+    if (gone) return;
     const found: Problems = [];
     if (n === null) found.push({ field: "svc-days", message: v.errDays(l, max) });
-    const r = reasonProblem(l, reason);
-    if (r) found.push({ field: "live-reason", message: r });
+    if (rotation && m === null) found.push({ field: "svc-overlap", message: r.errOverlap(l, lim.secret_pickup_minutes, lim.credential_overlap_max_minutes) });
+    const why = reasonProblem(l, reason);
+    if (why) found.push({ field: "live-reason", message: why });
     setProblems(found);
     issues.clearRefusal(user, s.id);
-    if (found.length) { setFocusKey((k) => k + 1); return; }
-    return send({ days: String(n), reason });
+    if (found.length) { setReviewing(false); setFocusKey((k) => k + 1); return; }
+    if (rotation && !reviewing) { setReviewing(true); return; }
+    return send({ days: String(n), reason, ...(rotation ? { rotate: { credential: rotation.credential, overlap: String(m) } } : {}) });
   };
   const startOver = () => {
     if (!entry) return;
-    const kept = { days: entry.days, reason: entry.reason };
+    const kept = { days: entry.days, reason: entry.reason, rotate: entry.rotate };
+    if (kept.rotate) onRotate?.(kept.rotate.credential);
     if (!issues.discard(user, s.id)) return;
     setDays(kept.days);
     setReason(kept.reason);
+    if (kept.rotate) setOverlap(kept.rotate.overlap);
     document.getElementById("svc-days")?.focus();
   };
   const field = (id: string) => problems.find((x) => x.field === id)?.message ?? "";
   const error = refusal?.error ?? null;
   const daysError = field("svc-days") || (error instanceof AdminError && error.failure === "invalid" && error.fields.includes("days") ? v.errDays(l, max) : "");
+  const overlapError = field("svc-overlap") || (error instanceof AdminError && error.failure === "invalid" && error.fields.includes("overlap_minutes")
+    ? r.errOverlap(l, lim.secret_pickup_minutes, lim.credential_overlap_max_minutes) : "");
   const refused = error instanceof AdminError && error.failure === "refused";
-  const describe = refusal?.retry ? () => ({ title: v.refusedTitle(l), body: v.retryRefused(l) }) : describeFor("issue");
+  const describe = refusal?.retry ? () => ({ title: v.refusedTitle(l), body: v.retryRefused(l) }) : describeFor("issue", 0, false, rotation?.credential ?? "");
   const held = locked ? (phase === "issued" ? "svc-issued-lead" : "svc-held-lead") : "";
   const note = phase === "unknown" ? "svc-locked-note" : "";
   const edit = (f: (x: string) => void) => (x: string) => { if (locked) return; issues.clearRefusal(user, s.id); f(x); };
   return (
     <form className="live-step" onSubmit={submit} noValidate>
-      <h2 id="svc-issue-title" tabIndex={-1} ref={heading}>{v.issueTitle(l)}</h2>
+      <h2 id="svc-issue-title" tabIndex={-1} ref={heading}>{rotation ? r.title(l) : v.issueTitle(l)}</h2>
       <p className="live-who live-mono">{ltr(s.id)}</p>
+      {rotation && !reviewing && <p className="live-who">{r.current(l)}: <span className="live-mono">{ltr(rotation.credential)}</span></p>}
       {(block !== "" || refused) && error !== null && <FailureBox l={l} error={error} focusKey={focusKey} describe={describe} />}
-      {block === "retired" ? <p className="live-impact">{v.blockedRetired(l)}</p>
+      {gone && rotation ? (
+        <>
+          <p className="live-impact">{r.gone(l, rotation.credential)}</p>
+          <div className="live-buttons"><button type="button" className="live-secondary" onClick={onCancelRotate}>{r.cancel(l)}</button></div>
+        </>
+      ) : block === "retired" ? <p className="live-impact">{v.blockedRetired(l)}</p>
         : block === "suspended" || (refused && s.state === "suspended") ? (
           <>
             <p className="live-impact">{v.blockedSuspended(l, s.id)}</p>
-            <div className="live-buttons"><button type="button" className="live-secondary" onClick={onAccounts}>{v.goAccounts(l)}</button></div>
+            <div className="live-buttons">
+              <button type="button" className="live-secondary" onClick={onAccounts}>{v.goAccounts(l)}</button>
+              {rotation && !entry && <button type="button" className="live-secondary" onClick={onCancelRotate}>{r.cancel(l)}</button>}
+            </div>
           </>
-        ) : block === "limit" || refused ? <p className="live-impact">{v.blockedLimit(l, s.id, page.limits.credentials_per_service)}</p> : (
+        ) : block === "limit" || refused ? (
           <>
-            {phase === "idle" && <p className="live-impact">{v.issueLead(l)}</p>}
-            <HeldBlock l={l} id="svc" error={entry?.error} request={entry?.track.request()} phase={phase === "issued" ? "idle" : phase} lead={v.heldLead(l)} focusKey={blockKey}
-              lapsed={<p>{v.attemptLapsed(l, s.id).join(" ")}</p>} />
+            <p className="live-impact">{v.blockedLimit(l, s.id, page.limits.credentials_per_service)}</p>
+            {rotation && !entry && <div className="live-buttons"><button type="button" className="live-secondary" onClick={onCancelRotate}>{r.cancel(l)}</button></div>}
+          </>
+        ) : (
+          <>
+            {phase === "idle" && !reviewing && <p className="live-impact">{rotation ? r.lead(l) : v.issueLead(l)}</p>}
+            <HeldBlock l={l} id="svc" error={entry?.error} request={entry?.track.request()} phase={phase === "issued" ? "idle" : phase} lead={rotation ? r.held(l) : v.heldLead(l)} focusKey={blockKey}
+              lapsed={<p>{(rotation ? r.lapsed(l, s.id) : v.attemptLapsed(l, s.id)).join(" ")}</p>} />
             {phase === "issued" && entry?.issued && (
               <div className="live-held">
-                <p id="svc-issued-lead">{v.attemptIssued(l, entry.issued.credential, s.id)}</p>
+                <p id="svc-issued-lead">{rotation ? r.rotated(l, entry.issued.credential, rotation.credential, s.id) : v.attemptIssued(l, entry.issued.credential, s.id)}</p>
                 <div className="live-buttons"><button type="button" className="live-primary" onClick={onShowSecret}>{v.showSecret(l)}</button></div>
               </div>
             )}
-            {(problems.length > 0 || daysError) && <Summary locale={l} title={c.check(l)} focusKey={focusKey} problems={problems.length ? problems : [{ field: "svc-days", message: daysError }]} />}
-            {error !== null && !daysError && <FailureBox l={l} error={error} focusKey={focusKey} describe={describe} />}
+            {(problems.length > 0 || daysError || overlapError) && <Summary locale={l} title={c.check(l)} focusKey={focusKey}
+              problems={problems.length ? problems : daysError ? [{ field: "svc-days", message: daysError }] : [{ field: "svc-overlap", message: overlapError }]} />}
+            {error !== null && !daysError && !overlapError && <FailureBox l={l} error={error} focusKey={focusKey} describe={describe} />}
             {phase === "lapsed" ? (
-              <Facts items={[[v.validFor(l), `${shownDays} ${v.days(l)}`], [w.reason(l), shownReason || "—"]]} />
+              <Facts items={[[rotation ? r.newValidFor(l) : v.validFor(l), `${shownDays} ${v.days(l)}`], ...(rotation ? [[r.overlap(l), `${shownOverlap} ${r.minutes(l)}`] as [string, ReactNode]] : []), [w.reason(l), shownReason || "—"]]} />
+            ) : rotation && reviewing && oldEnd ? (
+              <section className="live-review" aria-labelledby="svc-review-title">
+                <h3 id="svc-review-title" tabIndex={-1} ref={reviewTitle}>{r.reviewTitle(l)}</h3>
+                <Facts items={[[r.willEnd(l), <span className="live-mono">{ltr(rotation.credential)}</span>], [oldEnd.sooner ? r.endsAt(l) : r.endsAbout(l), <><Moment l={l} iso={oldEnd.at} /><span className="live-to live-sub">{oldEnd.sooner ? r.oldEndsSooner(l, when(l, oldEnd.at)) : r.fromConfirm(l)}</span></>],
+                  [r.newValidFor(l), `${shownDays} ${v.days(l)}`], [r.overlap(l), `${shownOverlap} ${r.minutes(l)}`], [w.reason(l), shownReason]]} />
+                <ul className="live-review-list">
+                  <li>{r.once(l, lim.secret_pickup_minutes)}</li>
+                  <li>{r.notMovedBack(l)}</li>
+                  <li>{r.notKnown(l)}</li>
+                  <li>{r.exposed(l)}</li>
+                </ul>
+              </section>
             ) : (
               <>
                 <div className="service-field live-minutes">
-                  <label htmlFor="svc-days">{v.validFor(l)}</label>
+                  <label htmlFor="svc-days">{rotation ? r.newValidFor(l) : v.validFor(l)}</label>
                   <p className="service-hint" id="svc-days-hint">{v.daysHint(l, max)}</p>
                   {daysError && <p className="service-field-error" id="svc-days-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{daysError}</p>}
                   <span className="live-unit">
@@ -419,15 +479,30 @@ function IssueForm({ l, api, page, s, user, stepping, onReload, onAccounts, onPi
                   </span>
                   {ends && <p className="live-note" aria-live="polite">{v.endsOn(l, ends)}</p>}
                 </div>
+                {rotation && (
+                  <div className="service-field live-minutes">
+                    <label htmlFor="svc-overlap">{r.overlap(l)}</label>
+                    <p className="service-hint" id="svc-overlap-hint">{r.overlapHint(l, lim.secret_pickup_minutes, lim.credential_overlap_max_minutes, lim.credential_overlap_minutes)}</p>
+                    {overlapError && <p className="service-field-error" id="svc-overlap-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{overlapError}</p>}
+                    <span className="live-unit">
+                      <input id="svc-overlap" inputMode="numeric" dir="ltr" value={shownOverlap} readOnly={locked} aria-invalid={overlapError ? true : undefined}
+                        aria-describedby={describedBy("svc-overlap-hint", overlapError ? "svc-overlap-error" : "", held, note)} onChange={(e) => edit(setOverlap)(e.target.value)} />
+                      <span>{r.minutes(l)}</span>
+                    </span>
+                    {oldEnd && <p className="live-note" aria-live="polite">{oldEnd.sooner ? r.oldEndsSooner(l, when(l, oldEnd.at)) : r.oldEnds(l, when(l, oldEnd.at))}<span className="live-sub"><UtcTime l={l} iso={oldEnd.at} /></span></p>}
+                  </div>
+                )}
                 <LockableReason l={l} value={shownReason} onChange={edit(setReason)} error={field("live-reason")} locked={locked} extra={describedBy(held, note)} />
               </>
             )}
             <div className="live-buttons">
               {phase !== "lapsed" && (
                 <button type="submit" className="live-primary" aria-busy={phase === "sending" || undefined} disabled={phase === "sending" || phase === "issued"}>
-                  {phase === "sending" ? w.saving(l) : phase === "unknown" ? c.tryAgain(l) : v.issueTitle(l)}
+                  {phase === "sending" ? w.saving(l) : phase === "unknown" ? c.tryAgain(l) : rotation ? (reviewing ? r.title(l) : r.review(l)) : v.issueTitle(l)}
                 </button>
               )}
+              {rotation && reviewing && <button type="button" className="live-secondary" onClick={() => { flushSync(() => setReviewing(false)); document.getElementById("svc-days")?.focus(); }}>{r.edit(l)}</button>}
+              {rotation && !entry && <button type="button" className="service-button-link" onClick={onCancelRotate}>{r.cancel(l)}</button>}
               {(phase === "unknown" || phase === "lapsed" || (phase === "sending" && entry?.retry)) && (
                 <button type="button" className="live-secondary" disabled={phase === "sending"} onClick={startOver}>{v.startOver(l)}</button>
               )}
@@ -598,7 +673,9 @@ function PickupTime({ l, iso }: { l: Locale; iso: string }) {
   return <bdi dir="ltr"><bdi dir="ltr" className="live-nowrap">{new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date).replace(/[\u061c\u200e\u200f]/g, "")}</bdi>{" "}<bdi dir="ltr" className="live-nowrap">{new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(date).replace(/[\u061c\u200e\u200f]/g, "")}</bdi></bdi>;
 }
 
-function CredentialTable({ l, rows, selected, onRevoke, retired = false }: { l: Locale; rows: CredentialRow[]; selected: string; onRevoke?: (c: CredentialRow) => void; retired?: boolean }) {
+function CredentialTable({ l, rows, selected, onRevoke, onRotate, retired = false }: {
+  l: Locale; rows: CredentialRow[]; selected: string; onRevoke?: (c: CredentialRow) => void; onRotate?: (c: CredentialRow) => boolean | (() => void); retired?: boolean;
+}) {
   return (
     <div className="security-table-scroll live-table live-access live-creds">
       <table role="table">
@@ -613,14 +690,21 @@ function CredentialTable({ l, rows, selected, onRevoke, retired = false }: { l: 
           {rows.map((x) => {
             const [state, sub] = credentialState(l, x, retired);
             const pickup = onRevoke ? pickupLabel(l, x) : null;
+            const turn = onRotate?.(x);
             return (
               <tr key={x.id} role="row" className={selected === x.id ? "live-selected" : undefined}>
                 <td role="cell" className="live-user live-mono">{ltr(x.id)}</td>
                 <td role="cell" data-label={v.colValid(l)}><span className="live-to">{v.from(l, when(l, x.not_before))}</span><span className="live-to">{v.until(l, when(l, x.not_after))}</span></td>
                 <td role="cell" data-label={v.colStatus(l)} className={x.state !== "active" || !x.usable ? "live-strong" : ""}>{state}{sub && <span className="live-sub">{sub}</span>}
-                  {pickup && <span className={pickup.never ? "live-sub live-pickup-never" : "live-sub live-pickup"}>{pickup.text}{pickup.time && <> <PickupTime l={l} iso={x.secret_pickup_until!} /></>}</span>}</td>
+                  {pickup && <span className={pickup.never ? "live-sub live-pickup-never" : "live-sub live-pickup"}>{pickup.text}{pickup.time && <> <PickupTime l={l} iso={x.secret_pickup_until!} /></>}</span>}
+                  {x.rotation === "ending" && <span className="live-sub live-rotation">{r.ending(l, when(l, x.not_after))}</span>}
+                  {x.replaced_by && <span className="live-sub">{r.replacedBy(l)[0]}<span className="live-mono live-nowrap">{ltr(x.replaced_by)}</span>{r.replacedBy(l)[1]}</span>}
+                  {x.replaces && <span className="live-sub">{r.replaces(l)[0]}<span className="live-mono live-nowrap">{ltr(x.replaces)}</span>{r.replaces(l)[1]}</span>}</td>
                 {onRevoke && (
-                  <td role="cell"><button type="button" className="live-secondary live-revoke" data-credential={x.id} onClick={() => onRevoke(x)}>{v.revoke(l)}<span className="visually-hidden"> {x.id}</span></button></td>
+                  <td role="cell"><span className="live-row-buttons">
+                    {typeof turn === "function" && <button type="button" className="live-secondary live-rotate" data-rotate={x.id} onClick={turn}>{r.rotate(l)}<span className="visually-hidden"> {x.id}</span></button>}
+                    <button type="button" className="live-secondary live-revoke" data-credential={x.id} onClick={() => onRevoke(x)}>{v.revoke(l)}<span className="visually-hidden"> {x.id}</span></button>
+                  </span></td>
                 )}
               </tr>
             );
@@ -653,15 +737,15 @@ function AttemptsRegion({ l, entries, onOpen, onDiscard, onShow, onRevoke }: {
       {discardable && <p>{v.attemptsDiscardNote(l)}</p>}
       <ul>
         {entries.map((e) => {
-          const [head, rest] = e.phase === "lapsed" ? v.attemptLapsed(l, e.service) : v.attemptUnknown(l, e.service);
+          const [head, rest] = e.phase === "lapsed" ? (e.rotate ? r.lapsed(l, e.service) : v.attemptLapsed(l, e.service)) : e.rotate ? r.unknown(l, e.service) : v.attemptUnknown(l, e.service);
           return (
             <li key={e.service} data-attempt={e.service}>
-              {e.phase === "sending" && <span className="live-row-text" aria-busy="true">{v.attemptSending(l, e.service)}</span>}
+              {e.phase === "sending" && <span className="live-row-text" aria-busy="true">{e.rotate ? r.sending(l, e.service) : v.attemptSending(l, e.service)}</span>}
               {(e.phase === "unknown" || e.phase === "lapsed") && <span className="live-row-text"><strong>{head}</strong> {rest}</span>}
-              {e.phase === "issued" && e.issued && <span className="live-row-text">{v.attemptIssued(l, e.issued.credential, e.service)}</span>}
+              {e.phase === "issued" && e.issued && <span className="live-row-text">{e.rotate ? r.rotated(l, e.issued.credential, e.rotate.credential, e.service) : v.attemptIssued(l, e.issued.credential, e.service)}</span>}
               {e.phase !== "sending" && (
                 <span className="live-row-buttons">
-                  {e.phase === "unknown" && <button type="button" className="live-secondary" onClick={() => onOpen(e.service)}>{v.openIssue(l)}<span className="visually-hidden"> {e.service}</span></button>}
+                  {e.phase === "unknown" && <button type="button" className="live-secondary" onClick={() => onOpen(e.service)}>{e.rotate ? r.open(l) : v.openIssue(l)}<span className="visually-hidden"> {e.service}</span></button>}
                   {e.phase === "issued" && <button type="button" className="live-primary" onClick={() => onShow(e.service)}>{v.showSecret(l)}<span className="visually-hidden"> {e.service}</span></button>}
                   {e.phase === "issued" && e.issued && (
                     <button type="button" className="live-secondary" data-attempt-revoke={e.service} onClick={() => onRevoke(e)}>{v.revoke(l)}<span className="visually-hidden"> {e.issued.credential}</span></button>
@@ -727,6 +811,7 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
   const [focusTo, setFocusTo] = useState("");
   const [formKey, setFormKey] = useState(0);
   const [open, setOpen] = useState(false);
+  const [rotating, setRotating] = useState("");
 
   const unstored = issues.marks(user);
   const attempts = issues.list(user);
@@ -759,6 +844,7 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
       setMode({ kind: "form" });
       setNotice("");
       setOpen(false);
+      setRotating("");
     }
     viewRef.current = view;
   }, [view]);
@@ -769,6 +855,7 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
     if (!got) return;
     issues.mark(user, got.credential);
     setNotice("");
+    setRotating("");
     setChosen(service);
     load();
     setMode({ kind: "reveal", ref: got.ref, service, credential: got.credential, until: got.until });
@@ -782,9 +869,9 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
       const visible = visibleFor(e.service);
       if (e.phase === "issued" && visible) { showSecret(e.service); continue; }
       if (visible) continue;
-      if (e.phase === "unknown") tell(v.attemptUnknown(l, e.service).join(" "));
-      if (e.phase === "lapsed") tell(v.attemptLapsed(l, e.service).join(" "));
-      if (e.phase === "issued" && e.issued) tell(v.attemptIssued(l, e.issued.credential, e.service));
+      if (e.phase === "unknown") tell((e.rotate ? r.unknown(l, e.service) : v.attemptUnknown(l, e.service)).join(" "));
+      if (e.phase === "lapsed") tell((e.rotate ? r.lapsed(l, e.service) : v.attemptLapsed(l, e.service)).join(" "));
+      if (e.phase === "issued" && e.issued) tell(e.rotate ? r.rotated(l, e.issued.credential, e.rotate.credential, e.service) : v.attemptIssued(l, e.issued.credential, e.service));
     }
     phases.current = seen;
   });
@@ -807,7 +894,9 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
   const find = (id: string) => page?.services.find((s) => s.id === id);
   const finished = (message: string, next: Mode, focus: string) => { say(message); setMode(next); setOpen(false); setFormKey((k) => k + 1); load(); setFocusTo(focus); };
   const current = page ? find(currentId) : undefined;
-  const revoke = (id: string, service: string, reason: string, from: string) => { setNotice(""); setMode({ kind: "revoke", id, service, reason, from }); };
+  const revoke = (id: string, service: string, reason: string, from: string) => { setNotice(""); setRotating(""); setMode({ kind: "revoke", id, service, reason, from }); };
+  const openRotate = (id: string) => { setNotice(""); setRotating(id); setMode({ kind: "form" }); setOpen(true); setFormKey((k) => k + 1); setFocusTo("#svc-issue-title"); };
+  const closeRotate = () => { const from = rotating; setRotating(""); setOpen(false); setFormKey((k) => k + 1); setFocusTo(from ? `[data-rotate="${from}"]` : "#svc-cred-title"); };
   const openIssue = (service: string) => { setNotice(""); setChosen(service); setMode({ kind: "form" }); setOpen(true); setFocusTo("#svc-issue-title"); };
   const discard = (service: string) => {
     const at = attempts.findIndex((e) => e.service === service);
@@ -853,7 +942,8 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
       backTo = target.from;
     } else if (wide || mode.kind === "form") {
       panel = <IssueForm key={current.id + formKey} l={l} api={api} page={page} s={current} user={user} stepping={!wide} onReload={load} onAccounts={() => onView("accounts")}
-        onPin={() => { const pin = pinIssue(current.id); setChosen(pin.chosen); setOpen(pin.open); }} onShowSecret={() => showSecret(current.id)} />;
+        onPin={() => { const pin = pinIssue(current.id); setChosen(pin.chosen); setOpen(pin.open); }} onShowSecret={() => showSecret(current.id)}
+        rotate={rotating || undefined} onRotate={setRotating} onCancelRotate={closeRotate} />;
       backTo = ".svc-issue-open";
     }
     back = v.backCreds(l);
@@ -900,7 +990,7 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
           {page && <p className="live-meta">{w.loadedAt(l, when(l, page.now))}</p>}
         </div>
         <div className="live-tools">
-          {!wide && current && <button type="button" className="live-primary svc-issue-open" onClick={() => { setNotice(""); setMode({ kind: "form" }); setOpen(true); }}>{v.issueTitle(l)}</button>}
+          {!wide && current && <button type="button" className="live-primary svc-issue-open" onClick={() => { setNotice(""); setRotating(""); setFormKey((k) => k + 1); setMode({ kind: "form" }); setOpen(true); }}>{v.issueTitle(l)}</button>}
           <button type="button" className="live-secondary" onClick={() => { setNotice(""); load(); }}>{w.reload(l)}</button>
         </div>
       </div>
@@ -939,14 +1029,15 @@ export default function LiveServices({ locale: l, view, session, onSignOut, onVi
         <>
           <div className="service-field">
             <label htmlFor="svc-select">{v.colService(l)}</label>
-            <select id="svc-select" className="live-select live-mono" value={current.id} onChange={(e) => { setChosen(e.target.value); setMode({ kind: "form" }); setOpen(false); setNotice(""); }}>
+            <select id="svc-select" className="live-select live-mono" value={current.id} onChange={(e) => { setChosen(e.target.value); setRotating(""); setMode({ kind: "form" }); setOpen(false); setNotice(""); }}>
               {page.services.map((s) => <option key={s.id} value={s.id}>{s.state === "active" ? s.id : `${s.id} (${serviceState(l, s.state)})`}</option>)}
             </select>
           </div>
           <div className="live-note-rule"><p><strong>{v.prelaunchLead(l)}</strong> {v.prelaunchNote(l)}</p></div>
           <p className="live-meta live-count">{v.credSummary(l, liveCount(current), max)}</p>
           {creds.current.length === 0 ? <p className="live-empty">{v.noCreds(l, current.id)}</p>
-            : <CredentialTable l={l} rows={creds.current} retired={current.state === "retired"} selected={selected} onRevoke={(x) => revoke(x.id, current.id, "", `[data-credential="${x.id}"]`)} />}
+            : <CredentialTable l={l} rows={creds.current} retired={current.state === "retired"} selected={selected || rotating} onRevoke={(x) => revoke(x.id, current.id, "", `[data-credential="${x.id}"]`)}
+              onRotate={(x) => canRotate(current, x, page.now) && !issues.get(user, current.id) && (() => openRotate(x.id))} />}
           {creds.ended.length > 0 && (
             <details className="live-ended"><summary>{v.endedGroup(l, creds.ended.length)}</summary><CredentialTable l={l} rows={creds.ended} selected="" /></details>
           )}

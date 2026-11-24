@@ -55,7 +55,7 @@ function deferred() {
 
 const values = { days: "1", reason: "why" };
 const page = (rows: { id: string; state?: "active" | "revoked"; secret_pickup?: "open" | "collected" | "never_collected" }[]): ServicesPage => ({
-  revision: "r", owners: [], now: "", limits: { credential_days: 30, credentials_per_service: 10, services: 200, replay_seconds: 3600 },
+  revision: "r", owners: [], now: "", limits: { credential_days: 30, credentials_per_service: 10, services: 200, replay_seconds: 3600, credential_overlap_minutes: 1440, credential_overlap_max_minutes: 10080, secret_pickup_minutes: 10 },
   services: [{ id: "svc-a", state: "active", version: 1, creator: "", creator_login: "", owner: "", owner_login: "", credentials: rows.map((r) => ({ not_before: "", not_after: "", usable: true, state: "active", ...r })) }],
 });
 
@@ -248,4 +248,20 @@ test("users are isolated", async () => {
   assert.deepEqual(store.marks("b"), []);
   assert.equal(store.discard("b", "svc-a"), false);
   assert.equal(store.get("a", "svc-a")?.phase, "unknown");
+});
+
+test("a held rotation remembers which credential and overlap it named, and an issue attempt carries none", async () => {
+  const { clocks: c } = clocks();
+  const store = issueAttempts(counter(), c);
+  const { exec } = scripted([fail("busy"), ok()]);
+  const rotate = { credential: "cred-00000000000000aa", overlap: "60" };
+  const given = { ...values, rotate };
+  assert.equal((await store.submit("u", "svc-a", given, "rev-1", 3600, exec)).kind, "unknown");
+  rotate.overlap = "999";
+  assert.deepEqual(store.get("u", "svc-a")?.rotate, { credential: "cred-00000000000000aa", overlap: "60" });
+  assert.equal((await store.submit("u", "svc-a", { ...values, rotate: { credential: "cred-00000000000000bb", overlap: "10" } }, "rev-2", 3600, exec)).kind, "issued");
+  assert.deepEqual(store.get("u", "svc-a")?.rotate, { credential: "cred-00000000000000aa", overlap: "60" });
+  const plain = issueAttempts(counter(), c);
+  await plain.submit("u", "svc-a", values, "rev-1", 3600, scripted([fail("busy")]).exec);
+  assert.equal(plain.get("u", "svc-a")?.rotate, undefined);
 });

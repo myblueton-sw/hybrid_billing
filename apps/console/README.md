@@ -148,3 +148,5 @@ M01 rendered check: the same setup as the M02 check, then `node tools/users-qa.m
 
 Capped lists rendered check (P02 cut delivery list, P01 existing proposal): the same setup as the M02 check, then `node tools/capped-lists-qa.mjs` with the same arguments. It sends two plan proposals to the sample service.
 
+M04 credential rotation rendered check: the same setup as the M02 check, then `node tools/credential-rotation-qa.mjs` with the same arguments. It creates a service account, issues a credential and rotates it in the sample service.
+

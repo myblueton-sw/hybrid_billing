@@ -4,6 +4,7 @@ import { attemptState, nextPhase, outsideWindow, type Track } from "./live-model
 
 export type Phase = "sending" | "unknown" | "issued" | "lapsed";
 export type Issued = { ref: string; credential: string; until: string };
+export type Rotation = { credential: string; overlap: string };
 export type Entry = {
   service: string;
   track: Track;
@@ -17,6 +18,7 @@ export type Entry = {
   error: AdminError | null;
   issued?: Issued;
   issuedAfter: number;
+  rotate?: Rotation;
 };
 export type Refusal = { error: unknown; retry: boolean };
 export type Clocks = { mono: () => number; wall: () => number };
@@ -103,7 +105,7 @@ export function issueAttempts(fresh: () => Attempt, clocks: Clocks, target?: Tar
       reads += 1;
       return reads;
     },
-    async submit(user: string, service: string, values: { days: string; reason: string }, revision: string, window: number, exec: Exec): Promise<Sent> {
+    async submit(user: string, service: string, values: { days: string; reason: string; rotate?: Rotation }, revision: string, window: number, exec: Exec): Promise<Sent> {
       const list = of(user);
       let e = list.get(service);
       if (e && e.phase !== "unknown") return { kind: "refused" };
@@ -114,7 +116,7 @@ export function issueAttempts(fresh: () => Attempt, clocks: Clocks, target?: Tar
       }
       if (!e) {
         e = { service, track: attemptState(fresh), days: values.days, reason: values.reason, expected: revision, phase: "sending", retry: false,
-          firstSentMono: clocks.mono(), firstSentWall: clocks.wall(), error: null, issuedAfter: 0 };
+          firstSentMono: clocks.mono(), firstSentWall: clocks.wall(), error: null, issuedAfter: 0, ...(values.rotate ? { rotate: { ...values.rotate } } : {}) };
         list.set(service, e);
       } else e.retry = true;
       const entry = e;

@@ -590,6 +590,13 @@ Read: `GET /api/v1/identity/services` (`boundary.go:34`), client and parser `adm
 | Revoke step | Credential, service, status | credential ID; row looked up in `services[].credentials` for `credentialState` | `admin.ts:921` | `service-accounts/Live.tsx:428, 439, 442` |
 | Revoke step | Command | `service.revoke_credential` | `admin.ts:871` | `service-accounts/Live.tsx:434` |
 | Revoke step | Already revoked | `invalid_stage` → `stage` | `admin.ts:753` | `service-accounts/Live.tsx:33-35, 441` |
+| Credential row | Rotate offered | derived `canRotate`: active account, active credential, `rotation` not `ending`, started (`service-accounts/live-model.ts`); hidden while an attempt is held for the account | `account-read.ts` (`credentialOf`) | `service-accounts/Live.tsx` (`CredentialTable`) |
+| Credential row | Rotated, ends at; replaced by; replaces | `rotation`, `not_after`, `replaced_by`, `replaces` of the row, stated by the server (`services.go`, `credentialRows`) | `account-read.ts` (`credentialOf`) | `service-accounts/Live.tsx` (`CredentialTable`) |
+| Rotation form | New validity, overlap and its bounds | typed `days` and overlap; `limits.credential_days`, `limits.credential_overlap_minutes`, `limits.credential_overlap_max_minutes`, `limits.secret_pickup_minutes` | `account-read.ts` (`servicesPageOf`) | `service-accounts/Live.tsx` (`IssueForm`, rotation mode) |
+| Rotation form | Estimated end, or end when the credential ends sooner | derived `rotationEnd` from `now`, the row's `not_after` and the overlap (`service-accounts/live-model.ts`); approximate, because the server counts from the command | none | `service-accounts/Live.tsx` (`IssueForm`, review step) |
+| Rotation form | Command | `service.rotate_credential` on the credential with `days` and `overlap_minutes`; a held attempt resends its own target and values | `admin.ts` (`command`) | `service-accounts/Live.tsx` (`IssueForm`, `send`); `issue-attempts.ts` (`rotate`) |
+| Rotation form | Rotated: new credential and secret reference | result `fields.credential`, `fields.secret_ref` (`services.go`, `rotate`); then the Reveal step | `admin.ts` (`command`) | `service-accounts/Live.tsx` (`IssueForm`, `showSecret`) |
+| Rotation form | Can no longer be rotated | derived when the row is gone, not active or `ending`; or server `invalid_stage` | `admin.ts` (`command`) | `service-accounts/Live.tsx` (`IssueForm`, `describeFor`) |
 
 ### HYB-333 pickup and unknown-outcome bindings
 

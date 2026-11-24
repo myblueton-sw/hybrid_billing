@@ -18,11 +18,24 @@ HYB-352, machine:mac_mini, 2026-11-24. Two of the P05 cases are corrected in the
 
 Checks: `tsc` clean; console tests 1364, pass 1361, fail 0, skipped 3. No new test and no rendered check: the sample data has fewer than 50 rows in every one of these lists, so neither line appears with it. Independent change review (independent-reviewer role, AI, by reading; nothing executed): pass, no blocking finding; its optional Korean wording was adopted afterwards. The reviewer that first found these cases could not do this review because of a usage limit, so another model did it.
 
+# P05 decisions, corrected in a second step
+
+When the list of proposals may be incomplete (the service says there are more, or does not say):
+
+- the two headings mark their numbers as counts of what is shown: "Waiting for approval (n shown)" and "Closed (n shown)";
+- a line under the first heading says "Older proposals waiting for approval may not be listed.";
+- an empty list says "No proposals are shown." and not "No proposals are recorded.".
+
+With a complete list the headings and the empty text are unchanged.
+
+Checks: `tsc` clean; console tests 1364, pass 1361, fail 0, skipped 3. No new test and no rendered check, for the same reason as above. Copy and state review (ui-designer role, AI, by reading): fail with one finding (the empty text still claimed the whole list), corrected, and its recommendation for the line about older proposals adopted; re-review pass.
+
+The reviewer's remark stands as part of the decision: marking the count removes the false total, but a person who must act on waiting proposals is only fully served when the service returns every waiting proposal whatever its age. That is a change to a public read.
+
 # Still open on this ticket
 
 Unchanged, from the ticket:
 
-- P05 decisions: the counts in "Waiting for approval (n)" and "Closed (n)" cover only the newest 50 entries.
 - P05: the pending-retirement link to a proposal outside the newest 50 (suspected).
 - P01: the preview basis and the propose offer decided from the 50 newest proposals (suspected).
 - P02: deliveries are the first 50 per subscription with no total, so dead letters can be absent from the screen (suspected).
@@ -31,6 +44,6 @@ Found by the change review in the same two files and not changed here:
 
 - the build comparison's "Fewer than two builds are recorded", its build options and its note about the newest 10 builds are also derived from the capped requirement rows;
 - on the matrix, the count of blocked paths and the intake note are computed from the capped paths, while the limit line for paths appears only under the table;
-- the path detail can say that a requirement's test cases are missing when the requirement is simply beyond the first 50.
+- the path detail's text for a requirement that is not among the loaded rows already says that its test cases "are not in this read", which is accurate; nothing to change there.
 
 The decision named in the ticket still stands for all of these: either the server sends what the console needs to say more than "there may be more", which changes public reads and needs independent design and change review, or each such place states the limit.

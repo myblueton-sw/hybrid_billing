@@ -84,6 +84,35 @@ func issuanceSetupActualScreenBrowser(t *testing.T, output, lang string) {
 			t.Fatalf("actual issuance setup browser failed in phase %s; inspect isolated evidence: %v\n%s", phase, err, raw)
 		}
 	}
+	lost := filepath.Join(output, "lost")
+	f.must(os.MkdirAll(lost, 0o700))
+	stop, movedRevision := make(chan struct{}), make(chan bool, 1)
+	go func() {
+		for {
+			select {
+			case <-stop:
+				movedRevision <- false
+				return
+			case <-time.After(20 * time.Millisecond):
+			}
+			if _, err := os.Stat(filepath.Join(lost, "move-revision")); err == nil {
+				changed := f.s.Change("synthetic unrelated change", func() (bool, error) { return true, nil }) == nil
+				if changed {
+					changed = os.WriteFile(filepath.Join(lost, "revision-moved"), nil, 0o600) == nil
+				}
+				movedRevision <- changed
+				return
+			}
+		}
+	}()
+	browse("lost", map[string]string{"FIRST": AdminLogin})
+	close(stop)
+	if !<-movedRevision {
+		t.Fatal("the installation revision was not moved between the lost request and its retry")
+	}
+	if a.protectedRules != nil || len(a.attestations) != 0 {
+		t.Fatal("the lost request or its refused retry recorded something")
+	}
 	interrupted := false
 	f.s.fault = func(at string) bool {
 		if at == "issuance-channel-after-admit" && !interrupted {

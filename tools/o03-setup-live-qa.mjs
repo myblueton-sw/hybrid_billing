@@ -1,5 +1,5 @@
 import {createRequire} from 'node:module';
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,writeFile,access} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const args=Object.fromEntries(process.argv.slice(2).flatMap((v,i,a)=>v.startsWith('--')?[[v.slice(2),a[i+1]]]:[]));
 const lang=args.lang??'en';assert.ok(['en','ko','ar'].includes(lang));
@@ -8,6 +8,8 @@ const words={
  'Confirm protected settings rules':['보호된 설정 규칙 확인','تأكيد قواعد الإعدادات المحمية'],
  'Review before sending':['전송 전 검토','المراجعة قبل الإرسال'],
  'Retry exact request':['동일 요청 재시도','إعادة محاولة الطلب نفسه'],
+ 'The retry was refused.':['재시도가 거절되었습니다.','رُفضت إعادة المحاولة.'],
+ 'The service has no record of this request.':['서비스에 이 요청의 기록이 없습니다.','لا يوجد لدى الخدمة سجل لهذا الطلب.'],
  'Recover recorded attempt':['기록된 시도 복구','استعادة المحاولة المسجلة'],
  'Register verification channel':['검증 채널 등록','تسجيل قناة التحقق'],
  'Accept verification channel':['검증 채널 수락','قبول قناة التحقق'],
@@ -23,12 +25,12 @@ const words={
 };
 const w=en=>lang==='en'?en:words[en][lang==='ko'?0:1];
 const cookies={};
-const phase=args.phase??'setup',people=phase==='setup'?['FIRST','SECOND','THIRD','MEMBER']:['FIRST','SECOND','THIRD','REQUESTER','VERIFIER'];
+const phase=args.phase??'setup',people=phase==='lost'?['FIRST']:phase==='setup'?['FIRST','SECOND','THIRD','MEMBER']:['FIRST','SECOND','THIRD','REQUESTER','VERIFIER'];let drop='';
 for(const name of people){cookies[name]=process.env['HB_ISSUANCE_SETUP_BROWSER_'+name];delete process.env['HB_ISSUANCE_SETUP_BROWSER_'+name];assert.ok(cookies[name],name);}
 const {chromium}=createRequire(import.meta.url)(args['playwright-module']);const browser=await chromium.launch({headless:true,executablePath:args.chromium});
 await mkdir(args.output,{recursive:true});
 const evidence={mode:'actual isolated server and separate synthetic human sessions',lang,errors:[],commands:[],refusals:[],cases:[]};let stage='setup';
-async function client(who){const cookie=cookies[who],context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),split=cookie.indexOf('=');await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),url:args.url,httpOnly:true,sameSite:'Strict'}]);page.on('pageerror',()=>evidence.errors.push('page_runtime_error'));await page.route('**/api/**',async route=>{const u=new URL(route.request().url());if(u.pathname.includes('/commands/'))evidence.commands.push(who.toLowerCase()+' '+u.pathname.split('/').at(-1));const response=await route.fetch({url:args.api+u.pathname+u.search});if(response.status()>=400){const body=await response.json().catch(()=>({}));evidence.refusals.push({who:who.toLowerCase(),path:u.pathname,status:response.status(),code:typeof body.code==='string'&&/^[a-z_]{1,80}$/.test(body.code)?body.code:'unavailable'});}await route.fulfill({response});});return page;}
+async function client(who){const cookie=cookies[who],context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),split=cookie.indexOf('=');await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),url:args.url,httpOnly:true,sameSite:'Strict'}]);page.on('pageerror',()=>evidence.errors.push('page_runtime_error'));await page.route('**/api/**',async route=>{const u=new URL(route.request().url());if(u.pathname.includes('/commands/'))evidence.commands.push(who.toLowerCase()+' '+u.pathname.split('/').at(-1));if(drop&&route.request().method()==='POST'&&u.pathname.endsWith(drop)){evidence.dropped=(evidence.dropped??0)+1;drop='';await route.abort('failed');return;}const response=await route.fetch({url:args.api+u.pathname+u.search});if(response.status()>=400){const body=await response.json().catch(()=>({}));evidence.refusals.push({who:who.toLowerCase(),path:u.pathname,status:response.status(),code:typeof body.code==='string'&&/^[a-z_]{1,80}$/.test(body.code)?body.code:'unavailable'});}await route.fulfill({response});});return page;}
 const pages={};for(const name of people)pages[name]=await client(name);
 const {FIRST:first,SECOND:second,THIRD:third,MEMBER:member,REQUESTER:requester,VERIFIER:verifier}=pages;
 const all=Object.values(pages);
@@ -44,7 +46,24 @@ const done=check=>evidence.cases.push({check});
 const row=p=>p.locator('.o03-changes-table tbody button');
 const changes=async p=>{await documents(p,'changes','.o03-field-cards');await p.locator('.o03-field-cards > li').nth(2).locator('button').click();await p.locator('#o03-change-steps').waitFor();await idle(p);};
 try{
- if(phase==='changes'){
+ if(phase==='lost'){
+ stage='lost-propose';await documents(first,'rules','#o03-rule-steps');
+ await button(first,w('Propose protected settings rules')).click();await first.locator('#o03-rule-reason').waitFor();
+ await steps(first).locator('input[name=o03-rule-approvals]').nth(0).check();
+ const fill=async(key,value,unit)=>{await steps(first).locator(`[aria-describedby=o03-rule-${key}-hint]`).fill(value);await steps(first).locator(`input[name=o03-rule-${key}-unit]`).nth(unit==='hours'?0:1).check();};
+ await fill('validity','2','days');await fill('lead','7','days');await fill('channelAge','24','hours');await first.locator('#o03-rule-reason').fill('Synthetic rules whose request is lost');
+ drop='issuance_setup.propose_protected_rules';await send(first,w('Propose protected settings rules'));
+ const results=first.locator('section.o03-results'),retry=results.getByRole('button',{name:w('Retry exact request'),exact:true});await retry.waitFor();await idle(first);await shot(first,'lost-unknown');
+ assert.equal(evidence.dropped,1,'the request was not dropped before it reached the service');assert.deepEqual(evidence.refusals,[],'the service answered the dropped request');
+ assert.equal(await first.locator('#o03-rule-blocked').count(),1,'the unknown outcome does not block further rule writes');done('a request lost before it reached the service is shown as an unknown outcome and blocks further writes');
+ stage='lost-revision';await writeFile(args.output+'/move-revision','');
+ let moved=false;for(let i=0;i<200&&!moved;i++){moved=await access(args.output+'/revision-moved').then(()=>true,()=>false);if(!moved)await first.waitForTimeout(50);}assert.ok(moved,'the installation revision was not moved');
+ stage='lost-retry';await retry.click();await retry.waitFor({state:'detached'});await idle(first);await shot(first,'lost-settled');
+ const shown=await results.innerText();assert.ok(shown.includes(w('The retry was refused.')),'the settled entry does not say that the retry was refused');assert.ok(shown.includes(w('The service has no record of this request.')),'the settled entry does not say that the service has no record');assert.ok(shown.includes('revision_conflict'),'the code is not shown');
+ assert.deepEqual(evidence.refusals.map(r=>[r.who,r.path.split('.').at(-1),r.status,r.code]),[['first','propose_protected_rules',409,'revision_conflict']]);
+ assert.equal(await first.locator('#o03-rule-blocked').count(),0,'further rule writes are still blocked after the attempt was settled');
+ assert.equal(await results.getByRole('button',{name:w('Recover recorded attempt'),exact:true}).count(),0);done('the exact retry answered by a revision conflict settles the attempt, says what was observed and ends the block');
+ }else if(phase==='changes'){
  const requestChange=async(n,reason,outcome=0)=>{
   stage='change-request-'+n;await changes(requester);
   await button(requester,w('Request protected settings change: Payment account')).click();await requester.locator('#o03-change-channel').waitFor();

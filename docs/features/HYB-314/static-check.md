@@ -502,3 +502,9 @@ With this section every file the first review reported as unopened has been read
 Left open by the second static check and now corrected: the detail of a job, its items and "more" rows were applied when their read returned, whichever job was open by then, so a slow read of job A could put A's detail under row B. Each open now has a number, and a read applies its result or its failure only while it is still the latest open; closing the pane also ends the turn; a "more" read appends to the rows it started from and is discarded when another job was opened meanwhile; two "more" reads of the same open do not run at once.
 
 Checks: `tsc` clean; console tests 1359, pass 1356, fail 0, skipped 3. No new test and no rendered check. Corrective review by the reviewer who raised it (AI, by reading): PASS, no blocking finding; its one suggestion (a "more" click right after switching jobs did nothing until the earlier read returned) was adopted afterwards and not reviewed again.
+
+## M01 bulk selection, a person whose role is unknown (2026-11-24)
+
+Left open when the unknown role was introduced: after the server refuses a bulk preparation because the selection holds administrators, the screen lists the administrators to deselect, and that list was built from the administrator role only. A person whose role the console does not recognise may be the administrator the server refused for, and was not listed. Such a person is now listed too, labelled "Unknown role" instead of the fixed "Administrator" label, and can be removed from the selection there. The identity module sends only known roles today, so this changes nothing for a well-formed response.
+
+Checks: `tsc` clean; console tests pass with one new test. No rendered check, no new copy and no review; the change is the one the copy and state reviewer suggested for this spot.

@@ -10,7 +10,7 @@ import { Summary, TextField, type Problems } from "../../../../service/Service";
 import { actionDone, actionLabel, impact, w, type Action } from "./live-copy";
 import { accountName, failureText, offers, roleName, setup, tags } from "./live-model";
 import { b } from "./bulk-copy";
-import { number, selectLoaded, toggle, without, type Selection } from "./bulk-model";
+import { mayBeAdministrator, number, selectLoaded, toggle, without, type Selection } from "./bulk-model";
 import { bulkClient } from "../../../../service/identity-bulk";
 import { FixedBar, MatchAction, plainFixedLine } from "./Matching";
 import { m } from "./match-copy";
@@ -739,7 +739,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   };
   if (bulk && data && selectable) {
     const ids = fixedNow ? [] : [...picked];
-    const admins = ids.filter((id) => users.find((u) => u.user_id === id)?.membership?.role === "administrator");
+    const admins = ids.filter((id) => mayBeAdministrator(users.find((u) => u.user_id === id)));
     return (
       <div className="live-users m01-live" data-live={view} data-wide={wide ? "true" : "false"} data-bulk="effect">
         <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>

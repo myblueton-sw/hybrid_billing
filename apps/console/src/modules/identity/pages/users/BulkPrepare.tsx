@@ -359,7 +359,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
                   const row = rows.find((u) => u.user_id === id);
                   return (
                     <li key={id}>
-                      <span className="m01-admin-who"><bdi dir="ltr">{names[id] || id}</bdi> · {roleName(l, "administrator")}</span>
+                      <span className="m01-admin-who"><bdi dir="ltr">{names[id] || id}</bdi> · {roleName(l, row?.membership?.role ?? "administrator")}</span>
                       {row && <span className="m01-admin-period"><PeriodCell l={l} u={row} serverTime={serverTime} /></span>}
                       <button type="button" className="live-secondary" onClick={() => onDeselect(id)}>{b.removeFromSelection(l)}</button>
                     </li>

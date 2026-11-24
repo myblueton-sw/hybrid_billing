@@ -262,7 +262,7 @@ func TestNoOperationExtendsACredentialsEnd(t *testing.T) {
 	}
 }
 
-func TestAReplacedCredentialWhoseReplacementWasPrunedNamesNoneAndStaysReplaced(t *testing.T) {
+func TestPruningKeepsAnEndedReplacementWhileTheReplacedCredentialIsLive(t *testing.T) {
 	f, admin := replaceFixture(t, 3)
 	long := Validity{NotBefore: start, NotAfter: start.Add(100 * time.Hour)}
 	f.must(f.w.AddCredential(admin(), "w1", "svc", "a", v("a"), long))
@@ -273,13 +273,21 @@ func TestAReplacedCredentialWhoseReplacementWasPrunedNamesNoneAndStaysReplaced(t
 		f.must(f.w.AddCredential(admin(), "w1", "svc", id, v(id), Validity{NotBefore: start, NotAfter: start.Add(2 * time.Hour)}))
 		f.must(f.w.RevokeCredential(admin(), "w1", id))
 	}
-	if _, _, err := f.w.Credential(admin(), "w1", "b"); ReasonOf(err) != ReasonUnknown {
-		t.Fatalf("the revoked replacement was not pruned: %v", err)
+	if got := f.credential(admin, "a"); got.ReplacedBy != "b" || got.Validity.NotAfter != start.Add(50*time.Hour) {
+		t.Fatalf("a live replaced credential lost the link to its ended replacement: %+v", got)
 	}
-	if got := f.credential(admin, "a"); got.ReplacedBy != "" || got.Validity.NotAfter != start.Add(50*time.Hour) {
-		t.Fatalf("a replaced credential whose replacement no longer exists: %+v", got)
+	if got := f.credential(admin, "b"); !got.Revoked || got.Replaces != "a" {
+		t.Fatalf("the ended replacement of a live credential: %+v", got)
 	}
 	f.refusal("replacing it again", f.w.ReplaceCredential(admin(), "w1", "a", "c", v("c"), long, start.Add(60*time.Hour)), ReasonState)
+	f.must(f.w.RevokeCredential(admin(), "w1", "a"))
+	f.must(f.w.AddCredential(admin(), "w1", "svc", "trigger", v("trigger"), Validity{NotBefore: start, NotAfter: start.Add(3 * time.Hour)}))
+	if _, _, err := f.w.Credential(admin(), "w1", "b"); ReasonOf(err) != ReasonUnknown {
+		t.Fatalf("the ended replacement after the replaced credential ended too: %v", err)
+	}
+	if got := f.credential(admin, "a"); got.ReplacedBy != "" {
+		t.Fatalf("a replaced credential whose replacement no longer exists: %+v", got)
+	}
 }
 
 func TestAnIdentifierReusedAfterPruningIsNotTakenForTheOtherHalfOfAPair(t *testing.T) {
@@ -288,10 +296,14 @@ func TestAnIdentifierReusedAfterPruningIsNotTakenForTheOtherHalfOfAPair(t *testi
 	f.must(f.w.AddCredential(admin(), "w1", "svc", "a", v("a"), long))
 	f.must(f.w.ReplaceCredential(admin(), "w1", "a", "b", v("b"), Validity{NotBefore: start, NotAfter: start.Add(time.Hour)}, start.Add(50*time.Hour)))
 	f.must(f.w.RevokeCredential(admin(), "w1", "b"))
+	f.must(f.w.RevokeCredential(admin(), "w1", "a"))
 	for i := 0; i < EndedCredentialsKept+1; i++ {
 		id := fmt.Sprintf("filler-%02d", i)
 		f.must(f.w.AddCredential(admin(), "w1", "svc", id, v(id), Validity{NotBefore: start, NotAfter: start.Add(2 * time.Hour)}))
 		f.must(f.w.RevokeCredential(admin(), "w1", id))
+	}
+	if _, _, err := f.w.Credential(admin(), "w1", "b"); ReasonOf(err) != ReasonUnknown {
+		t.Fatalf("the ended replacement of an ended credential was not pruned: %v", err)
 	}
 	f.must(f.w.AddCredential(admin(), "w1", "svc", "b", v("b2"), long))
 	if got := f.credential(admin, "a"); got.ReplacedBy != "" {
@@ -300,7 +312,6 @@ func TestAnIdentifierReusedAfterPruningIsNotTakenForTheOtherHalfOfAPair(t *testi
 	if got := f.credential(admin, "b"); got.Replaces != "" {
 		t.Fatalf("an unrelated credential that reuses an identifier names a credential it did not replace: %+v", got)
 	}
-	f.must(f.w.RevokeCredential(admin(), "w1", "a"))
 	for i := 0; i < EndedCredentialsKept+1; i++ {
 		id := fmt.Sprintf("later-%02d", i)
 		f.must(f.w.AddCredential(admin(), "w1", "svc", id, v(id), Validity{NotBefore: start, NotAfter: start.Add(60 * time.Hour)}))

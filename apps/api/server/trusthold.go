@@ -170,6 +170,7 @@ var holdTable = map[string]holdRule{
 	"service.create":                               {holdRefuse, reasonIncrease},
 	"service.reinstate":                            {holdRefuse, reasonIncrease},
 	"service.issue_credential":                     {holdRefuse, reasonIncrease},
+	"service.rotate_credential":                    {holdRefuse, reasonIncrease},
 	"recovery.lock":                                {holdAllow, reasonStop},
 	"recovery.withdraw":                            {holdAllow, reasonPending},
 	"recovery.approve":                             {holdRefuse, "could lift containment"},

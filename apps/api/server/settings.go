@@ -51,6 +51,8 @@ type AccessSettings struct {
 	AcceptHistoryClock      string
 	ReleaseMarker           string
 	ReleaseReason           string
+	CredentialOverlap       int
+	CredentialOverlapMax    int
 }
 
 type AccessSetting struct {
@@ -100,6 +102,11 @@ var historySettings = []AccessSetting{
 	{"access_history_clock_gap_days", "access-history-clock-gap", "days", 7, 1, 365, func(s *AccessSettings) *int { return &s.HistoryClockGap }},
 }
 
+var credentialSettings = []AccessSetting{
+	{"credential_overlap_minutes", "credential-overlap-minutes", "minutes", 1440, 10, 43200, func(s *AccessSettings) *int { return &s.CredentialOverlap }},
+	{"credential_overlap_max_minutes", "credential-overlap-max-minutes", "minutes", 10080, 10, 43200, func(s *AccessSettings) *int { return &s.CredentialOverlapMax }},
+}
+
 const (
 	ClockBaseLedger = "ledger"
 	ClockBaseWall   = "wall"
@@ -113,8 +120,12 @@ func UserSettingList() []AccessSetting { return append([]AccessSetting(nil), use
 
 func HistorySettingList() []AccessSetting { return append([]AccessSetting(nil), historySettings...) }
 
+func CredentialSettingList() []AccessSetting {
+	return append([]AccessSetting(nil), credentialSettings...)
+}
+
 func allSettings() []AccessSetting {
-	return append(append(append(append(AccessSettingList(), identitySettings...), userSettings...), historySettings...), append(sessionQuerySettings, sessionSelectionSettings...)...)
+	return append(append(append(append(AccessSettingList(), identitySettings...), userSettings...), historySettings...), append(append(sessionQuerySettings, sessionSelectionSettings...), credentialSettings...)...)
 }
 
 func DefaultAccessSettings() AccessSettings {
@@ -136,7 +147,7 @@ func numbersZero(s AccessSettings, list []AccessSetting) bool {
 
 func (s AccessSettings) withDefaults() AccessSettings {
 	out := DefaultAccessSettings()
-	for _, group := range [][]AccessSetting{accessSettings, identitySettings, userSettings, historySettings, sessionQuerySettings, sessionSelectionSettings} {
+	for _, group := range [][]AccessSetting{accessSettings, identitySettings, userSettings, historySettings, sessionQuerySettings, sessionSelectionSettings, credentialSettings} {
 		if !numbersZero(s, group) {
 			for _, a := range group {
 				a.Set(&out, a.Value(s))
@@ -170,6 +181,8 @@ func (s AccessSettings) validate() error {
 		return settingError("role_period_warning_days")
 	case s.ClockBase != "" && s.ClockBase != ClockBaseLedger && s.ClockBase != ClockBaseWall:
 		return settingError("clock_base")
+	case s.CredentialOverlapMax < s.CredentialOverlap:
+		return settingError("credential_overlap_max_minutes")
 	case s.BulkMaxMatching < s.BulkMaxTargets:
 		return settingError("bulk_revocation_max_matching")
 	case s.RetainedPeople() > s.BulkRetainedMax:

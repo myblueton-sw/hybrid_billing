@@ -10,6 +10,10 @@ import { sq } from "./query-copy";
 import { useScopedRead, type ScopedValue } from "./scoped-read";
 import "./end.css";
 
+export function operationFailure(error: unknown): "unavailable" | "unread" {
+  return error instanceof AdminError && (error.code === "unsupported_command" || error.code === "operation_mismatch") ? "unavailable" : "unread";
+}
+
 export function summarySentence(l: Locale, op: SessionOperation): string {
   if (op.state === "unconfirmed" || op.ended_count === null || op.cleanup === null) return e.titleUnknown(l);
   if (op.ended_count === 0) return e.completeNone(l);
@@ -134,20 +138,20 @@ export function ReferencedOperation({ l,api,reference,onEnd,locked,onSignedOut }
   const [reload,setReload] = useState(0);
   const key = useMemo(() => ({ api,reference,reload }),[api,reference,reload]);
   const guard = useScopedRead(key);
-  const [data,setData] = useState<ScopedValue<{ op?: SessionOperation; failed?: "unavailable" | "unconfirmed" }> | null>(null);
+  const [data,setData] = useState<ScopedValue<{ op?: SessionOperation; failed?: "unavailable" | "unconfirmed" | "unread" }> | null>(null);
   const value = data?.scope === guard.token ? data.value : null;
   const title = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     const valid = guard.begin();
     api.sessionOperation(reference).then(op => {
       if (!valid()) return;
-      if (op.operation !== reference || op.kind !== "others") throw new AdminError("invalid");
+      if (op.operation !== reference || op.kind !== "others") throw new AdminError("invalid", [], 0, "", "operation_mismatch");
       setData({ scope:guard.token,value:op.state === "unconfirmed" ? { failed:"unconfirmed" } : { op } });
-    }).catch(error => { if (!valid()) return;setData({ scope:guard.token,value:{ failed:"unavailable" } });if (error instanceof AdminError && error.failure === "unauthenticated") onSignedOut(); });
+    }).catch(error => { if (!valid()) return;setData({ scope:guard.token,value:{ failed:operationFailure(error) } });if (error instanceof AdminError && error.failure === "unauthenticated") onSignedOut(); });
   },[guard]);
   useEffect(() => { if (value) title.current?.focus(); },[value]);
   return <section className="mysec-referenced-operation" aria-labelledby="mysec-referenced-title"><h3 id="mysec-referenced-title" tabIndex={-1} ref={title}>{sq.viewOperation(l)}</h3>
-    {!value && <p role="status">{e.reading(l)}</p>}{value?.failed && <p role={value.failed === "unconfirmed" ? "status" : "alert"}>{value.failed === "unconfirmed" ? sq.operationUnconfirmed(l) : sq.operationUnavailable(l)}</p>}
+    {!value && <p role="status">{e.reading(l)}</p>}{value?.failed && <p role={value.failed === "unconfirmed" ? "status" : "alert"}>{value.failed === "unconfirmed" ? sq.operationUnconfirmed(l) : value.failed === "unread" ? sq.operationUnread(l) : sq.operationUnavailable(l)}</p>}
     <button type="button" className="live-secondary" disabled={!value} onClick={() => setReload(n => n+1)}>{e.checkAgain(l)}</button>
     {value?.op && <ol className="mysec-ops"><OperationCard idPrefix="mysec-referenced-op" l={l} api={api} op={value.op} generation={JSON.stringify([value.op.state,value.op.cleanup])} onEnd={onEnd} locked={locked} onSignedOut={onSignedOut} /></ol>}
   </section>;

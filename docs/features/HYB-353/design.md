@@ -151,3 +151,13 @@ Now, when the write that was just sent is recorded, the editor starts a fresh dr
 Checks: `tsc` clean; console tests 1355, pass 1352, fail 0, skipped 3, with one new test of the editor (cleared and renewed after a recorded write; kept after a refusal and after an unknown outcome). Rendered: `tools/o03-setup-parts-qa.mjs` and `o03-trust-states-qa.mjs` against a console built from the change, exit code 0 each; neither sends a settings write, so the cleared form itself has no rendered run. No review of this change.
 
 Not decided here: a write settled as "no record" keeps the draft, like any refusal, so the person can review and send it again.
+
+# Item 4, a refusal for a missing second factor (2026-11-24)
+
+Confirmed by reading, and moved to HYB-354 because its remedy is a change to the error contract of every command and to authentication behaviour, not to the O03 write machinery.
+
+When the active authentication policy demands a second factor for an action, the command endpoint refuses the command with `prerequisite_failed`, without fields, in the same shape as a domain refusal for a failed prerequisite (`apps/api/server/stepup.go:78-91`, `:112-127`; `commands.go:240-242`). The console cannot tell them apart. For an O03 step write it therefore shows the domain's list of possible causes, none of which is the real one. The settings form does learn the cause, because its action read reports `authentication_policy_unsatisfied` before the write is sent; the step writes have no such read.
+
+Offering the identity action for it, as the finding first suggested, would not help: signing in again does not supply a second factor, and the pre-launch service has none to offer.
+
+Nothing is changed for this item under HYB-353.

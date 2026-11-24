@@ -7,7 +7,7 @@ status: draft
 
 # Scope and ownership
 
-HYB-334, machine:mac_mini. This is a design for review and for the owner's questions at the end. It changes no code. By the owner's direction of 2026-11-19 a new implementation ticket is built by Codex; root owns this design and reviews the change. A security design review by a reviewer separate from the writer is required before implementation, because the command issues and ends credentials.
+HYB-334, machine:mac_mini. This is a design for review and for the owner's questions at the end. It changes no code. By the owner's direction of 2026-11-19 a new implementation ticket is built by Codex; root owns this design and reviews the change. On 2026-11-24 the owner decided that Claude implements this ticket; see the [implementation record](implementation.md). A security design review by a reviewer separate from the writer is required before implementation, because the command issues and ends credentials.
 
 Not in scope: credentials of CSP or ERP connections, which planning keeps separate; client registration on P02; a distinct rotation permission; reading where a credential is used.
 

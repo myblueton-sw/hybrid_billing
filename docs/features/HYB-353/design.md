@@ -128,3 +128,16 @@ Checks: `tsc` clean; console tests 1354, pass 1351, fail 0, skipped 3, with one 
 Review: independent change review (AI, by reading; nothing executed): pass, no blocking finding. The sentences are the ones reviewed for the step store; they had no separate copy review here.
 
 With both stores done, items 1 and 2 of the ticket are implemented. Still to do under this ticket: a real-server run that stages a request lost before it reaches the server and shows the settled state on the screen; the lower findings (the settings draft kept after a recorded write, the wording of a step-up refusal, entries never pruned, the store key after signing in again); and the owner's decision on setting aside an attempt that this rule cannot settle.
+
+# Real-server run with a lost request (2026-11-24)
+
+`TestIssuanceSetupActualScreenBrowser` now begins with a phase that stages the case this ticket is about, in en, ko and ar, on an isolated in-process server with a console built from main f9e27d5 (headless Chromium, synthetic data; not an owner acceptance):
+
+1. The first governor fills and sends a proposal of the protected settings rules. The check drops that one request in the browser before it is forwarded, so the service never receives it. The screen shows the outcome as unknown with "Retry exact request", and the rules form says that further writes are blocked.
+2. The test moves the installation revision by an unrelated change.
+3. The governor presses "Retry exact request". The service answers `409 revision_conflict`; this is the only refusal of the phase. The entry then reads "The retry was refused.", "The service has no record of this request. …" and the code; the retry and recover buttons are gone; the form is no longer blocked and offers the proposal again.
+4. The server holds no rules and no statement afterwards.
+
+The later phases of the same test then propose and confirm the rules normally, so the settled attempt left nothing behind that disturbs them.
+
+This run exercises the step store. The settings store has the same rule and its unit tests but no real-server run with a lost request.

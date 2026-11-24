@@ -15,6 +15,8 @@ const words = {
  phase_unknown: ["Outcome unknown. Retry this request unchanged. If the same result keeps coming back, recover the recorded attempt: the same inputs are sent as a new request.", "결과 미확인. 동일한 요청으로 재시도하세요. 같은 결과가 계속 돌아오면 기록된 시도를 복구하세요. 같은 입력을 새 요청으로 전송합니다.", "النتيجة غير معروفة. أعد محاولة الطلب دون تغيير. إذا تكررت النتيجة نفسها فاستعد المحاولة المسجلة: تُرسل المدخلات نفسها كطلب جديد."],
  phase_refused: ["Refused. This request recorded nothing.", "거절되었습니다. 이 요청은 아무것도 기록하지 않았습니다.", "رُفض. لم يسجّل هذا الطلب شيئاً."],
  phase_recorded: ["Recorded. Current issuance eligibility was not checked.", "기록되었습니다. 현재 발행 가능 여부는 확인하지 않았습니다.", "تم التسجيل. لم تُفحص أهلية الإصدار الحالية."],
+ phase_noRecord: ["The retry was refused.", "재시도가 거절되었습니다.", "رُفضت إعادة المحاولة."],
+ noRecord: ["The service has no record of this request. Records changed after this request was reviewed. Check the current records, then review and send it again if it is still needed.", "서비스에 이 요청의 기록이 없습니다. 요청을 검토한 뒤 기록이 변경되었습니다. 현재 기록을 확인한 다음, 필요하면 다시 검토해 전송하세요.", "لا يوجد لدى الخدمة سجل لهذا الطلب. تغيّرت السجلات بعد مراجعته. راجع السجلات الحالية، ثم راجع الطلب وأرسله من جديد إذا لزم."],
  phase_reconciled: ["Settled by a matching request of this session", "이 세션의 일치하는 요청으로 확인됨", "حُسمت بطلب مطابق في هذه الجلسة"],
  retry: ["Retry exact request", "동일 요청 재시도", "إعادة محاولة الطلب نفسه"],
  recover: ["Recover recorded attempt", "기록된 시도 복구", "استعادة المحاولة المسجلة"],

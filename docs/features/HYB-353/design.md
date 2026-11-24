@@ -94,3 +94,25 @@ Independent design review on 2026-11-24 (independent-reviewer role, AI, by readi
 - `TestCommandRetentionCoversTheNotRecordedBound`: the default retention is at least twice the thirty-minute bound and the replay window at least the bound, so a change of the defaults that undercuts the rule fails a test.
 
 Not pinned by a test: the settings proposal and confirmation handlers and the term handlers (the property tested belongs to the command layer, which they share, but their fault points were not staged here); fact 9, that the revision only increases; fact 10, the reset on restart.
+
+# Implementation, step store (2026-11-24)
+
+The rule is implemented in `setup/step-store.ts`, which carries the writes of rules, channels, protected changes, terms and statements. The settings store (`write-store.ts`, settings proposals and confirmations) is not changed yet.
+
+What was built, and where it is stricter than the proposal above:
+
+- A settled attempt becomes a refused entry marked `noRecord`. Its lines in the results list are "The retry was refused.", then "The service has no record of this request. Records changed after this request was reviewed. Check the current records, then review and send it again if it is still needed.", then the code. It does not show the ordinary line "Refused. This request recorded nothing.", which claims more than was observed.
+- The thirty minutes are required on two clocks at once: wall-clock time since the first send, and a monotonic timer started at the first send. Either one alone past the bound, a negative reading, or a missing start keeps the attempt unknown.
+- A settled entry of another contract stays listed with its sentence, like an unknown one.
+
+Fact 8, completed by the change review: `financialissuanceprotectedrules.go` and `financialissuancetermbinding.go` do return named refusals after an effect, but their wrappers compare the state before and after and turn such a case into an uncertain outcome that is stored with an operation identifier (`financialissuanceprotectedwrites.go:375-383`, `financialissuancetermwrites.go:205-223`). So the fact holds through the wrappers, not in those two files by themselves. All three kinds of step store send mutating `issuance_setup.*` commands with an expected revision and an idempotency key.
+
+Checks: `tsc` clean; console tests 1353, pass 1350, fail 0, skipped 3, with three new tests of the store (every clause of the rule, both clocks, an operation learnt on a later retry, recovery of the original available again after a settled recovery attempt). Rendered, against a console built from the change: five O03 write checks, exit code 0 each, and `TestIssuanceSetupActualScreenBrowser` on a real server in en, ko and ar. None of them stages a request lost before it reaches the server, so the settled state itself has no rendered or real-server run yet.
+
+Reviews (AI, by reading; nothing executed by the reviewers): independent change review, pass with one condition (a settled entry of another contract vanished from the list), corrected; bounded re-review, pass. Copy review, ui-designer role: fail with two findings (the sentence said the settings had changed although the revision is installation-wide, and used a verb the screen does not use), corrected with its wording; re-review, pass.
+
+Added residual risk: on a platform whose monotonic timer pauses while the machine sleeps, a sleep longer than the retention together with a wall clock set back into the window would still read as fresh.
+
+Open observation from the change review, not changed: when the original attempt is retried and settled while its recovery attempt is still unknown, the original shows the note that its statement was not used, although the statement is withheld from reuse until the recovery settles.
+
+Still to do under this ticket: the same rule in the settings store, a real-server run that stages a lost request, and the lower findings.

@@ -17,6 +17,7 @@ const words = {
  phase_recorded: ["Recorded. Current issuance eligibility was not checked.", "기록되었습니다. 현재 발행 가능 여부는 확인하지 않았습니다.", "تم التسجيل. لم تُفحص أهلية الإصدار الحالية."],
  phase_noRecord: ["The retry was refused.", "재시도가 거절되었습니다.", "رُفضت إعادة المحاولة."],
  noRecord: ["The service has no record of this request. Records changed after this request was reviewed. Check the current records, then review and send it again if it is still needed.", "서비스에 이 요청의 기록이 없습니다. 요청을 검토한 뒤 기록이 변경되었습니다. 현재 기록을 확인한 다음, 필요하면 다시 검토해 전송하세요.", "لا يوجد لدى الخدمة سجل لهذا الطلب. تغيّرت السجلات بعد مراجعته. راجع السجلات الحالية، ثم راجع الطلب وأرسله من جديد إذا لزم."],
+ earlierSession: ["Sent before you signed in again. Its outcome is not known here, and it can no longer be retried or recovered from this page. Check the current records. This entry, and the prompt when you leave the page, stay until the page is reloaded.", "다시 로그인하기 전에 전송한 요청입니다. 이 페이지에서는 결과를 확인할 수 없으며, 더 이상 재시도하거나 복구할 수 없습니다. 현재 기록을 확인하세요. 이 항목과 페이지를 떠날 때 나타나는 확인 메시지는 페이지를 다시 불러올 때까지 남아 있습니다.", "أُرسل هذا الطلب قبل أن تسجّل الدخول مجددًا. نتيجته غير معروفة في هذه الصفحة، ولم يعد ممكنًا إعادة محاولته أو استعادته منها. راجع السجلات الحالية. يبقى هذا البند، وكذلك التنبيه عند مغادرة الصفحة، حتى إعادة تحميل الصفحة."],
  phase_reconciled: ["Settled by a matching request of this session", "이 세션의 일치하는 요청으로 확인됨", "حُسمت بطلب مطابق في هذه الجلسة"],
  retry: ["Retry exact request", "동일 요청 재시도", "إعادة محاولة الطلب نفسه"],
  recover: ["Recover recorded attempt", "기록된 시도 복구", "استعادة المحاولة المسجلة"],

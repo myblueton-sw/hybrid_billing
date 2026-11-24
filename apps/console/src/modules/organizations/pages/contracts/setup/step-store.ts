@@ -14,7 +14,8 @@ export class StepWriteStore<I extends StepIntent, R> {
   private state: StepState<I, R> = freeze({ entries: [], drafts: {} });
   private listeners = new Set<() => void>();
   private started = new Map<string, number>();
-  constructor(private readonly owner: Readonly<Owner>, private readonly send: (intent: I) => Promise<R>, private readonly now: () => number = Date.now, private readonly elapsed: () => number = () => performance.now()) {}
+  constructor(private readonly owner: Readonly<Owner>, private readonly send: (intent: I) => Promise<R>, private readonly now: () => number = Date.now, private readonly elapsed: () => number = () => performance.now(), private readonly siblings: () => readonly StepEntry<I, R>[] = () => []) {}
+  earlier(): readonly StepEntry<I, R>[] { return this.siblings().filter(e => e.phase === "pending" || e.phase === "unknown"); }
   private within(age: number): boolean { return Number.isFinite(age) && age >= 0 && age < noRecordBoundMs; }
   private fresh(entry: StepEntry<I, R>): boolean { const began = this.started.get(entry.intent.attempt.key); return began !== undefined && this.within(this.elapsed() - began) && this.within(this.now() - Date.parse(entry.at)); }
   snapshot = () => this.state;
@@ -72,7 +73,8 @@ export function sessionStepStore<I extends StepIntent, R>(kind: string, session:
   let store = stores.get(key) as StepWriteStore<I, R> | undefined;
   if (!store) {
     if (stores.size >= 32) throw new SetupError("session_capacity");
-    store = new StepWriteStore<I, R>(freeze({ user: session.user, workspace: session.workspace, csrf: session.csrf }), send());
+    const others = () => [...stores.entries()].filter(([k]) => { const [otherKind, user, workspace, csrf] = JSON.parse(k) as string[]; return otherKind === kind && user === session.user && workspace === session.workspace && csrf !== session.csrf; }).flatMap(([, other]) => other.snapshot().entries as readonly StepEntry<I, R>[]);
+    store = new StepWriteStore<I, R>(freeze({ user: session.user, workspace: session.workspace, csrf: session.csrf }), send(), Date.now, () => performance.now(), others);
     stores.set(key, store as unknown as StepWriteStore<StepIntent, unknown>);
   }
   return store;

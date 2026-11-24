@@ -147,3 +147,15 @@ test("the not-recorded bound counts from the first send on both clocks, and an o
  const learnt=await run([lost(),new SetupError("internal_error","unknown","operation-9"),conflict()],[{wall:min,mono:min},{wall:2*min,mono:2*min}]);
  assert.deepEqual([learnt.phase,learnt.operationId,learnt.noRecord],["unknown","operation-9",undefined]);
 });
+test("an unresolved request of an earlier sign-in of the same person stays visible to the store of the new session",async()=>{
+ const send=()=>async()=>{throw new SetupError("service_unavailable","unknown");};
+ const before={user:"person-e",workspace:"workspace",csrf:"csrf-before"},after={...before,csrf:"csrf-after"};
+ const old=sessionStepStore<StepIntent,string>("kind-e",before,send);
+ await old.submit(intent("e1",{actor:"person-e",sessionCSRF:"csrf-before"}),"term");
+ assert.equal(old.snapshot().entries[0].phase,"unknown");assert.deepEqual(old.earlier(),[]);
+ const next=sessionStepStore<StepIntent,string>("kind-e",after,send);
+ assert.deepEqual(next.snapshot().entries,[]);assert.deepEqual(next.earlier().map(e=>[e.intent.attempt.key,e.phase]),[["key-e1","unknown"]]);
+ assert.deepEqual(sessionStepStore<StepIntent,string>("kind-other",after,send).earlier(),[],"another kind of store does not show it");
+ assert.deepEqual(sessionStepStore<StepIntent,string>("kind-e",{...after,user:"someone-else"},send).earlier(),[],"another person does not see it");
+ await refuse(next,()=>next.retry("key-e1"),"retry_unavailable");
+});

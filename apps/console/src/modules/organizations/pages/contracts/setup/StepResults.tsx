@@ -28,7 +28,7 @@ type Props<I extends ScopedIntent, R> = {
 };
 export function StepResults<I extends ScopedIntent, R>({ l, id, title, intro = true, store, contract, onSettled, describe, explain, revision }: Props<I, R>) {
  const state = useSyncExternalStore(store.subscribe, store.snapshot), service = useService(), heading = useRef<HTMLHeadingElement>(null), [error, setError] = useState(""), [working, setWorking] = useState(false);
- const entries = state.entries.filter(e => e.intent.scope.contract === contract || e.phase === "pending" || e.phase === "unknown" || e.noRecord).reverse();
+ const entries = state.entries.filter(e => e.intent.scope.contract === contract || e.phase === "pending" || e.phase === "unknown" || e.noRecord).reverse(), earlier = store.earlier();
  const busy = working || state.entries.some(e => e.phase === "pending"), latest = state.entries.at(-1);
  const settle = async (run: () => Promise<void>) => { if (working) return; setWorking(true); setError(""); heading.current?.focus(); try { await run(); } catch (e) { setError(codeOf(e)); return; } finally { setWorking(false); } onSettled(); };
  const recover = async (key: string, intent: I) => {
@@ -36,7 +36,7 @@ export function StepResults<I extends ScopedIntent, R>({ l, id, title, intro = t
   try { current = await revision(intent); } catch { throw new SetupError("recovery_read"); }
   await store.recover(key, attempt(), current);
  };
- if (entries.length === 0) return null;
+ if (entries.length === 0 && earlier.length === 0) return null;
  return <section className="o03-part o03-steps o03-results" aria-labelledby={id} aria-busy={busy || undefined}>
   <h4 id={id} ref={heading} tabIndex={-1}>{title ?? s(l, "results")}</h4>
   {intro && <p className="live-sub">{s(l, "sessionOnly")}</p>}
@@ -51,6 +51,10 @@ export function StepResults<I extends ScopedIntent, R>({ l, id, title, intro = t
    {d.note && <p>{d.note}</p>}
    {d.state && <p>{d.stateLabel ?? s(l, "recordedState")}: {d.state}</p>}
    {entry.phase === "unknown" && <div className="o03-docs-pages"><button type="button" className="live-secondary" disabled={busy} onClick={() => void settle(() => store.retry(entry.intent.attempt.key))}>{s(l, "retry")}</button>{!entry.recovers && <button type="button" className="live-secondary" disabled={busy} onClick={() => void settle(() => recover(entry.intent.attempt.key, entry.intent))}>{s(l, "recover")}</button>}</div>}
+  </article>; })}{earlier.map(entry => { const d = describe(entry); return <article className="o03-setup-outcome" key={"earlier-" + entry.intent.attempt.key}>
+   <h5>{d.action}</h5>
+   <p>{d.target}<span className="live-sub">{s(l, "forContract")}: {ltr(entry.intent.scope.contract)} · {s(l, "settings")}: {ltr(entry.intent.scope.configuration)} · {s(l, "sentAt")}: {stamp(l, entry.at)}</span></p>
+   <p>{s(l, "earlierSession")}</p>
   </article>; })}</div>
  </section>;
 }

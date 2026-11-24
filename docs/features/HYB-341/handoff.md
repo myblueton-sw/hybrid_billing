@@ -80,6 +80,24 @@ The first three are one question seen from three sides: what happens when the pe
 
 Smaller decisions recorded on their tickets: the M01 rows for people who must perform the next step (HYB-344 item 1); "View cost" as the action name of inspect grants and the Korean wording of synthetic resource kinds (HYB-346); "허용 작업" against "권한", "납부 조건" against "지급 조건" and "확인" against "검증" (HYB-347 item 4).
 
+## Added on 2026-11-24, after the static check of the phase 2 to 5 screens
+
+The static check of HYB-314, its second round and the tickets it opened added the following questions. Each document separates what was read, what was run and what was not checked.
+
+| Question | Document | What it found |
+| --- | --- | --- |
+| How lists capped at 50 rows are shown where a screen computes from them | HYB-352 (ticket text; no document yet) | On P01, P02 and P05 several results are computed from a capped list and shown as complete. None occurs with the sample data. The remedy may be a total and a "more" flag in public reads, or a stated limit in the console |
+| Whether a person may set aside an O03 setup write whose outcome cannot be settled | [HYB-353 design](../HYB-353/design.md), section "What the rule does not settle" | The implemented rule settles an unknown write only when its exact retry proves that the service holds no record. A write that keeps failing before that proof, one whose key expired, and one older than thirty minutes stay unknown until the page is reloaded. Letting a person set it aside leaves a setup write unconfirmed by choice |
+| Whether to prepare now for a refusal that names a missing second factor, and in which shape | [HYB-354 design](../HYB-354/design.md) | The refusal has the same body as a domain prerequisite refusal, but it cannot be reached through the product today, because no policy that demands a second factor can be proposed. Two shapes are described; the first is recommended |
+| Whether the per-person command allowance leaves enough room on the O03 documents view | [HYB-351 record](../HYB-351/dev-server-failure.md), section "Observations left with the owner" | One person used 48 of the allowance of 60 commands in the changes phase of the real-server run. The allowance refills one command each second, and no refusal was observed with the built console |
+| Whether a rate-limited read on O03 deserves its own sentence | the same record | The section shows the general sentence for a failed read with the code beneath it; nothing says that waiting is enough |
+| Which reading of the two open points of the QA-01 trace applies | [HYB-308 trace](../HYB-308/qa-01-trace.md) | Recorded there with what is and is not built |
+| The five questions of the rotation design | [HYB-334 plan](../HYB-334/plan.md) | Design approved by its security review; implementation not started |
+
+What was changed without waiting for a decision, and therefore needs the owner's screen review and not a decision: the corrections of HYB-314 on M01 to M05, O01 to O03 and P01, P03 to P05 (`docs/features/HYB-314/static-check.md` lists each with its checks and reviews), and the settling of an unknown O03 setup write with the entries it adds to the results lists (HYB-353). Rendered runs exist for O03, M03, M04, M05 and, through three server-backed tests, for the Revocation jobs view of M01; M02, O01, O02 and the P screens have none.
+
+Closed in the same period: HYB-350 and HYB-351, both about the server-backed browser tests, neither a product defect. The whole suite passes against the dev server (`docs/features/HYB-351/dev-server-failure.md`, `docs/features/HYB-350/browser-test-failures.md`).
+
 # Discovery evidence and traps
 
 Existing private service entry points: financialissuanceprotectedrules.go (proposeProtectedRules/confirmProtectedRules), financialissuancechannel.go (registerChannel/admitChannel/currentChannel), financialissuancechangewrites.go (requestProtectedChange/verifyProtectedChange/decideProtectedChange). Public setup currently exposes configuration operations only. configuredChangeSubject in financialissuancesetuporigin.go derives recipient from contract customer, account from billing-profile issuer and template from configured kind; do not accept caller-selected subjects or invent tax-field support.

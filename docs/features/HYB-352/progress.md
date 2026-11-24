@@ -134,3 +134,16 @@ Checks for the copy change: `tsc` clean; console tests 1366, pass 1363, fail 0, 
 
 Not covered by the script: the P02 module proposal that already exists, the P05 states, the P01 preview basis, Korean and Arabic for the P01 text, and keyboard order. Not an owner acceptance.
 
+# Rendered check extended to P05 (2026-11-24)
+
+`apps/console/tools/capped-lists-qa.mjs` now also covers the P05 states of this ticket. Run against main b0f8c21 (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards): exit code 0, 61 checks passed, none failed, no page error. One run of the final script; the script was not reviewed.
+
+P05, in English, Korean and Arabic at 1440 and 390:
+
+- as the service answers, with complete lists: the Decisions view shows plain counts in its two headings and no line about older proposals, and the Requirements view shows no note about a limited comparison;
+- with every list of the read marked as cut in the browser: the headings read "Waiting for approval (n shown)" and "Closed (n shown)", the line "Older proposals waiting for approval may not be listed." is shown, and the comparison says that it covers only the requirements listed on the screen; the page is not wider than the viewport.
+
+Two screenshots were looked at by the writer (Decisions, English, 1440; Requirements, Korean, 390). The Decisions text reads consistently. In both, the existing lines of the form "Showing the newest 50 of n" name 50 although fewer rows are listed; that comes from marking a short sample list as cut and cannot occur with an answer of the service, which cuts only at the limit. No wrong statement of the product was found in this run.
+
+Still not covered by a rendered check: the P02 module proposal that already exists, the unknown retirement impact on P05, the P01 preview basis, and keyboard order. Not an owner acceptance.
+

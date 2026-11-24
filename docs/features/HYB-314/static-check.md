@@ -623,3 +623,19 @@ Not covered: the other states this ticket added on M01 (a refused or failed disc
 
 Rendered runs recorded for this ticket now cover every screen it touched: M01, M02, M03, M04, M05, O01, O02, O03 and P01 to P05, each to the extent stated in its section. What remains open on this ticket is the owner's screen review.
 
+## Review of the four new rendered scripts, and their rerun (2026-11-24)
+
+The scripts for M01, M02, O01 and O02 were reviewed after they were merged (independent-reviewer role, AI, by reading, nothing run): each "sound with weak checks", none unsound. The copy constants match the product copy in the three languages, the load failure class is the one the screens use, and the row of a person on M01 is that person's own row at both widths.
+
+Weak checks found and corrected:
+
+- Readiness, O01, O02 and M01: the scripts waited for the absence of a busy marker that these screens do not set while loading, so only the idle network kept the checks off the loading state. Each script now waits for a mark that exists only after the read: the view title on O01, the announcement region on O02, a listed person, the jobs title or the list on M01. O01 also checks that the view title has text.
+- O02: "announces nothing" could pass when the plans read had failed, because the announcement region is then absent. The check now fails unless the region is present and no load failure is shown.
+- O01: "repeating the read replaces the failure" could pass while the repeated read was still loading. It now waits for the answered read and for the parent value to appear. "Try again" is now the button next to the failure text, not any button with that name.
+- M02: the zero-impact check could match the session count. The answer is now staged with 5 sessions, and the check reads the value under "Members". That the proposed change is read back as a draft is now a check; before, it was only printed.
+- M01: which actions are offered for an unknown role and an unknown membership state is now checked in each language and width; before, it was only printed. The check for the unknown membership state records what was observed (the two account actions and the sign-in link), which the owner has not decided on.
+
+Rerun against main 277fedd (console dev server and the API binary of the same commit, loopback, sample seed, a new data directory per script, synthetic data only, stopped afterwards), one run each, all with exit code 0 and no page error: M02 56 checks, O01 116, O02 94, M01 134, none failed. These numbers replace the ones in the four sections above.
+
+Left as the review noted and not changed: the M02 script does not check for a load failure, and its record does not claim it. Not read by the reviewer: whether a failed facts read on O01 also raises the page-level failure, the M02 list and detail components, where the live markers are set, and the styles that hide columns at 390. The corrections were not reviewed again.
+

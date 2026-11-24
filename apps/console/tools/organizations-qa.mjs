@@ -25,8 +25,9 @@ const facts = (url) => { const u = new URL(url); return u.pathname.endsWith("/ap
 async function open(lang, view) {
   await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/organizations?lang=${lang}&view=${view}`);
   await root().waitFor();
-  await page.waitForFunction(() => { const r = document.querySelector('[data-screen-id="O01"]'); return !!r && !r.querySelector('[aria-busy="true"]') && r.innerText.trim().length > 10; });
+  await page.locator("#o01-view-title").waitFor();
   await page.waitForLoadState("networkidle");
+  await page.waitForFunction(() => !document.querySelector('[data-screen-id="O01"] [aria-busy="true"]'));
 }
 async function contained(name) {
   const m = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, view: document.documentElement.clientWidth }));
@@ -52,6 +53,7 @@ try {
         await open(lang, view);
         check(`${lang} ${width} ${view} is live with its language and direction`, (await root().getAttribute("data-source-state")) === "live" && (await root().getAttribute("lang")) === lang && (await root().getAttribute("dir")) === (lang === "ar" ? "rtl" : "ltr"));
         const text = await root().innerText();
+        check(`${lang} ${width} ${view} shows its view title`, (await page.locator("#o01-view-title").innerText()).trim().length > 0);
         check(`${lang} ${width} ${view} no placeholder text and no load failure`, !/undefined|NaN|\[object Object\]/.test(text) && (await root().locator(".live-error").count()) === 0, text.match(/.{0,40}(undefined|NaN|\[object Object\]).{0,40}/)?.[0]);
         await contained(`${lang} ${width} ${view}`);
         if (args.shots) await page.screenshot({ path: `${args.shots}/o01-${view}-${lang}-${width}.png`, fullPage: true });
@@ -70,14 +72,18 @@ try {
       await rows.first().click();
       const failed = root().getByText(copy[lang].failed, { exact: true });
       await failed.first().waitFor();
-      const again = root().getByRole("button", { name: copy[lang].again, exact: true });
-      check(`${lang} ${width} a failed read of the member's facts is stated with a way to repeat it`, asked > 0 && (await again.count()) > 0 && (await failed.first().getAttribute("role")) === "alert");
+      const again = failed.first().locator("xpath=following-sibling::button[1]");
+      check(`${lang} ${width} a failed read of the member's facts is stated with a way to repeat it`, asked > 0 && (await again.count()) === 1 && (await again.innerText()).trim() === copy[lang].again && (await failed.first().getAttribute("role")) === "alert");
       await contained(`${lang} ${width} detail with the failed read`);
       if (args.shots) await page.screenshot({ path: `${args.shots}/o01-facts-failed-${lang}-${width}.png`, fullPage: true });
       await page.unrouteAll({ behavior: "wait" });
-      await again.first().click();
-      await failed.first().waitFor({ state: "detached" });
-      check(`${lang} ${width} repeating the read replaces the failure`, (await root().getByText(copy[lang].failed, { exact: true }).count()) === 0);
+      const answered = page.waitForResponse((r) => facts(r.url()) && r.status() === 200);
+      await again.click();
+      await answered;
+      await page.waitForLoadState("networkidle");
+      const parent = page.locator("#o01-detail-title").locator("xpath=ancestor::*[.//dd][1]").locator("dd bdi, dd strong");
+      await parent.first().waitFor();
+      check(`${lang} ${width} repeating the read replaces the failure with the answered facts`, (await root().getByText(copy[lang].failed, { exact: true }).count()) === 0 && (await parent.count()) > 0);
     }
   }
   check("no unexpected JavaScript errors", errors.length === 0, errors.join(" | "));

@@ -115,4 +115,16 @@ Added residual risk: on a platform whose monotonic timer pauses while the machin
 
 Open observation from the change review, not changed: when the original attempt is retried and settled while its recovery attempt is still unknown, the original shows the note that its statement was not used, although the statement is withheld from reuse until the recovery settles.
 
-Still to do under this ticket: the same rule in the settings store, a real-server run that stages a lost request, and the lower findings.
+Still to do after this step: see the next section.
+
+# Implementation, settings store (2026-11-24)
+
+The same rule is implemented in `setup/write-store.ts`, which carries settings proposals and confirmations. This is the store in which one unknown attempt refuses every further proposal and confirmation of the session, so a settled attempt now ends that block. The condition, the two clocks and the sentences are the same as in the step store; the entry keeps the time of its first send, which this store did not record before.
+
+Fact 8 for these two commands, from the change review: every state change of the proposal and confirmation handlers is marked before it is made, any error after a mark becomes an uncertain outcome stored with an operation identifier, and the module states `proposal_unknown` and `confirmation_unknown` are written only after such a mark (`financialissuanceconfigurationwrite.go:125-128`, `:141-147`, `:161`, `:219-229`, `:238`; `financialissuanceconfigurationeffect.go:39-42`). Their exact retry therefore replays or expires and does not reach the revision comparison.
+
+Checks: `tsc` clean; console tests 1354, pass 1351, fail 0, skipped 3, with one new test of the store: it settles inside the bound and another request is then admitted, an unsettled entry still answers that an operation is unresolved, eleven cases stay unknown, and a first send is an ordinary refusal. Rendered, against a console built from the change: three O03 setup checks, exit code 0 each, and `TestIssuanceSetupActualScreenBrowser` on a real server. As before, none stages a request lost before it reaches the server.
+
+Review: independent change review (AI, by reading; nothing executed): pass, no blocking finding. The sentences are the ones reviewed for the step store; they had no separate copy review here.
+
+With both stores done, items 1 and 2 of the ticket are implemented. Still to do under this ticket: a real-server run that stages a request lost before it reaches the server and shows the settled state on the screen; the lower findings (the settings draft kept after a recorded write, the wording of a step-up refusal, entries never pruned, the store key after signing in again); and the owner's decision on setting aside an attempt that this rule cannot settle.

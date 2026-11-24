@@ -518,3 +518,13 @@ Corrected: a referenced operation that is missing, or that is not the one asked 
 Checks: `tsc` clean; console tests 1361, pass 1358, fail 0, skipped 3, with one new test of the distinction. Rendered: the three M05 checks (`my-security-scope-qa`, `my-security-history-qa`, `my-security-selection-qa`) run from the change, pass; none stages a failed read of a referenced operation. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its optional wording ("loaded" as elsewhere on this screen) was adopted afterwards.
 
 With this, no finding of the first or second static check is left open on this ticket. What remains is the rendered part for M01, M02, M04, O01, O02 and the P screens, and the owner's screen review.
+
+## Rendered run on M04 against a real service (2026-11-24)
+
+`apps/console/tools/service-accounts-qa.mjs` was run against a console built from main 0dc73af and the API binary built from the same commit, started on the loopback address with the sample seed and a fresh data directory, as the console README describes. The service was started for this run only and stopped afterwards; it holds synthetic sample data, no real account and no customer data. Not an owner acceptance.
+
+Result: exit code 0; 118 checks passed, none failed, no page error, across all twenty scenarios. They include the issue and one-time pickup of a credential secret, its retry paths, leaving the page and signing out while a secret is held.
+
+What this shows: the change of this ticket to the M04 secret pickup (a pickup reads as gone only when the service refuses it; other failures keep the retry) did not break what the script asserts on a real service. What it does not show: the script does not stage a failure of the pickup other than the ones it already had, so the changed branch itself is covered by its unit test only.
+
+Rendered runs recorded for this ticket now cover O03, M03, M04 and M05. M01, M02, O01, O02 and the P screens have none.

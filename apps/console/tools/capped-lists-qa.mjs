@@ -1,0 +1,134 @@
+import { createRequire } from "node:module";
+import { readFile, mkdir } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+const args = Object.fromEntries(process.argv.slice(2).flatMap((v, i, all) => (v.startsWith("--") ? [[v.slice(2), all[i + 1]]] : [])));
+const { chromium } = createRequire(import.meta.url)(args["playwright-module"] || "playwright");
+const base = (args.url || "http://127.0.0.1:4173").replace(/\/$/, "");
+const browser = await chromium.launch({ headless: true, ...(args.chromium ? { executablePath: args.chromium } : {}) });
+const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+const page = await context.newPage();
+const results = [], errors = [], notes = [];
+let navigation = 0;
+const check = (name, ok, detail = "") => { results.push(`${ok ? "PASS" : "FAIL"} ${name}${!ok && detail ? " " + String(detail).replace(/\s+/g, " ").slice(0, 400) : ""}`); if (!ok) process.exitCode = 1; };
+page.on("pageerror", (e) => errors.push(e.message));
+const password = randomBytes(20).toString("base64url");
+const at = (url, path) => new URL(url).pathname.endsWith("/api/v1/" + path);
+const copy = {
+  en: { cut: "More deliveries exist than are listed here.", order: "Open and queued deliveries are included before dead letters, so some dead letters may not be shown.", maybe: "The service did not say whether more deliveries exist than are listed here." },
+  ko: { cut: "여기에 표시된 것보다 발송 건이 더 있습니다.", order: "진행 중·대기 건을 실패 보관 건보다 먼저 포함하므로 일부 실패 보관 건이 표시되지 않을 수 있습니다.", maybe: "서비스가 여기에 표시된 것보다 발송 건이 더 있는지 알려 주지 않았습니다." },
+  ar: { cut: "توجد عمليات تسليم أكثر مما هو معروض هنا.", order: "تُضمَّن عمليات التسليم المفتوحة والمنتظرة قبل الرسائل غير المُسلّمة، لذا قد لا تظهر بعض الرسائل غير المُسلّمة.", maybe: "لم تذكر الخدمة ما إذا كانت هناك عمليات تسليم أكثر مما هو معروض هنا." },
+};
+const widths = [1440, 390];
+
+async function events(lang) {
+  await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/integrations?lang=${lang}&view=events`);
+  await page.locator(".p02-deliveries").waitFor();
+  await page.waitForLoadState("networkidle");
+}
+async function contained(name) {
+  const m = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, view: document.documentElement.clientWidth }));
+  check(`${name} page is not wider than the viewport`, m.page <= m.view + 1, JSON.stringify(m));
+}
+const stageEvents = (change) => page.route((url) => at(url.toString(), "integrations"), async (route) => {
+  const response = await route.fetch();
+  const body = await response.json();
+  if (body.events && typeof body.events === "object") body.events = change(body.events);
+  await route.fulfill({ response, json: body });
+});
+const line = () => page.locator(".p02-deliveries [data-deliveries-cut]");
+
+try {
+  if (args.shots) await mkdir(args.shots, { recursive: true });
+  const lines = (await readFile(args.activation, "utf8")).trim().split("\n");
+  const activation = new URL(lines.find((l) => l.startsWith("admin@example.invalid ")).split(" ")[1]);
+  await page.goto(`${base}/activate?lang=en${activation.hash}`);
+  await page.locator("#link-new").fill(password); await page.locator("#link-confirm").fill(password);
+  await page.locator("form button[type=submit]").click(); await page.locator("a.service-button-link").waitFor();
+  await page.goto(`${base}/?service=api&lang=en`);
+  await page.locator("#signin-workspace").fill("sample-workspace"); await page.locator("#signin-email").fill("admin@example.invalid");
+  await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click();
+  await page.locator(".service-session").waitFor();
+
+  let served = null;
+  const seen = async (r) => { if (at(r.url(), "integrations") && r.status() === 200 && !served) served = await r.json().catch(() => null); };
+  page.on("response", seen);
+  await events("en");
+  page.off("response", seen);
+  const ev = served?.events ?? {};
+  notes.push(`served events: deliveries ${Array.isArray(ev.deliveries) ? ev.deliveries.length : String(ev.deliveries)}, deliveries_more ${JSON.stringify(ev.deliveries_more)}`);
+  check("the service states that no delivery list was cut", Array.isArray(ev.deliveries_more) && ev.deliveries_more.length === 0);
+  check("with nothing cut the screen shows no line about more deliveries", (await line().count()) === 0);
+
+  for (const lang of ["en", "ko", "ar"]) {
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: 1000 });
+      await stageEvents((e) => ({ ...e, deliveries_more: ["qa-any-subscription"] }));
+      await events(lang);
+      let text = (await line().count()) === 1 ? await line().innerText() : "";
+      check(`${lang} ${width} a cut delivery list is stated`, text.includes(copy[lang].cut) && text.includes(copy[lang].order), text);
+      const cutText = text;
+      await contained(`${lang} ${width} events with a cut list`);
+      if (args.shots) await page.screenshot({ path: `${args.shots}/p02-cut-${lang}-${width}.png`, fullPage: true });
+      await page.unrouteAll({ behavior: "wait" });
+      await stageEvents((e) => { const { deliveries_more, ...rest } = e; return rest; });
+      await events(lang);
+      text = (await line().count()) === 1 ? await line().innerText() : "";
+      check(`${lang} ${width} an answer that does not say is stated as not known`, text !== cutText && text.includes(copy[lang].maybe), text);
+      await page.unrouteAll({ behavior: "wait" });
+    }
+  }
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto(`${base}/?service=api&lang=en&qa=${++navigation}#/installation?lang=en`);
+  await page.locator(".p01-live").waitFor();
+  await page.waitForLoadState("networkidle");
+  const opener = page.locator(".p01-propose .live-buttons button").first();
+  notes.push(`P01 propose offered: ${await opener.count()}; blocker text: ${((await page.locator(".p01-propose .p01-blocker").count()) > 0 ? await page.locator(".p01-propose .p01-blocker").first().innerText() : "none").slice(0, 200)}`);
+  if ((await opener.count()) > 0) {
+    const propose = async (reason) => {
+      await page.locator(".p01-propose .live-buttons button").first().click();
+      await page.locator(".p01-propose .p01-form textarea").fill(reason);
+      await page.locator(".p01-propose .p01-form button[type=submit]").click();
+      const answered = page.waitForResponse((r) => r.url().includes("/api/v1/commands/installation.propose_plan"));
+      await page.locator(".p01-propose .p01-confirm .live-primary").click();
+      const response = await answered;
+      const body = await response.json().catch(() => ({}));
+      await page.waitForLoadState("networkidle");
+      return { status: response.status(), fields: body.fields ?? {}, code: body.code ?? "" };
+    };
+    const first = await propose("synthetic rendered check, first");
+    notes.push(`first proposal: ${first.status} ${JSON.stringify(first.fields)} ${first.code}`);
+    check("the first proposal is new", first.status === 200 && !!first.fields.proposal && first.fields.existing === undefined);
+    const firstText = await page.locator(".p01-live").innerText();
+    check("the screen does not call the first proposal a duplicate", !firstText.includes("already proposed"));
+    const number = String(first.fields.proposal);
+    await page.route((url) => at(url.toString(), "installation"), async (route) => {
+      const response = await route.fetch();
+      const body = await response.json();
+      if (Array.isArray(body.proposals)) body.proposals = body.proposals.filter((p) => String(p.number) !== number);
+      await route.fulfill({ response, json: body });
+    });
+    await page.goto(`${base}/?service=api&lang=en&qa=${++navigation}#/installation?lang=en`);
+    await page.locator(".p01-live").waitFor();
+    await page.waitForLoadState("networkidle");
+    notes.push(`with the proposal left out of the read, propose offered: ${await page.locator(".p01-propose .live-buttons button").count()}`);
+    if ((await page.locator(".p01-propose .live-buttons button").count()) > 0) {
+      const second = await propose("synthetic rendered check, second");
+      notes.push(`second proposal: ${second.status} ${JSON.stringify(second.fields)} ${second.code}`);
+      check("the service answers the repeated proposal with the existing one and says so", second.status === 200 && String(second.fields.proposal) === number && second.fields.existing === "true");
+      const text = await page.locator(".p01-live").innerText();
+      check("the screen says the plan was already proposed, although the proposal is not among those listed", text.includes(`This plan was already proposed as #${number}. No new proposal was created, and that proposal keeps its original reason.`), text.slice(0, 600));
+      if (args.shots) await page.screenshot({ path: `${args.shots}/p01-existing-en-1440.png`, fullPage: true });
+    }
+    await page.unrouteAll({ behavior: "wait" });
+  }
+  check("no unexpected JavaScript errors", errors.length === 0, errors.join(" | "));
+} catch (e) {
+  check("runner completed without unexpected exception", false, String(e));
+  if (args.shots) await page.screenshot({ path: `${args.shots}/runner-failure.png`, fullPage: true }).catch(() => {});
+} finally {
+  results.forEach((r) => console.log(r));
+  notes.forEach((n) => console.log("NOTE " + n));
+  console.log(`RESULT ${results.filter((r) => r.startsWith("PASS")).length} passed ${results.filter((r) => r.startsWith("FAIL")).length} failed`);
+  await browser.close();
+}

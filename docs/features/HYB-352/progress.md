@@ -119,3 +119,18 @@ The servers' stores drop only entries that are no longer waiting (`keep` in `rec
 Consequence: the sentence "This was already proposed as #n." of these three screens cannot be shown today. It is left in place; it would become reachable, and incomplete beyond 50 rows, only if one of these refusals were removed.
 
 Limits: read, not run; no independent review of this record.
+
+# Rendered check of the added states, and a correction of the P02 sentence (2026-11-24)
+
+`apps/console/tools/capped-lists-qa.mjs` is new. Run against the console of this change and the API binary of main 6fd8bce (dev server, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards): exit code 0, 25 checks passed, none failed, no page error. One run of the final script; the script was not reviewed.
+
+P02, in English, Korean and Arabic at 1440 and 390: the service states that no delivery list was cut and the screen then shows no line; with a subscription named as cut, the line is shown with its full text; with the field left out, the line says that the service did not say. The last two were produced by changing the read's answer in the browser.
+
+P01, in English at 1440: a plan is proposed through the screen and is new; with that proposal left out of the read's answer in the browser, so that the screen offers the action again, the same plan is proposed a second time. The service itself answers with the existing proposal and `existing: "true"`, and the screen says "This plan was already proposed as #8. No new proposal was created, and that proposal keeps its original reason." Only the listing was altered; the answer to the command is the service's own.
+
+The run showed a wrong statement in the sentence merged earlier for the cut list. It said that the deliveries "are listed in the order open, queued, dead letter, cancelled". The service takes the 50 of a subscription in that order (`modules/webhooks/deliveries.go:457-465`), but the read then sorts them by sequence (`apps/api/server/integrations.go:793`), and the screenshot showed a dead letter above a waiting delivery. The sentence now reads: "More deliveries exist than are listed here. Open and queued deliveries are included before dead letters, so some dead letters may not be shown." Copy review (ui-designer role, AI, by reading the copy and term files; the two facts about the order came from the writer's brief): pass, with this shorter wording proposed by the reviewer and adopted in the three languages.
+
+Checks for the copy change: `tsc` clean; console tests 1366, pass 1363, fail 0, skipped 3; the script above run with the new text.
+
+Not covered by the script: the P02 module proposal that already exists, the P05 states, the P01 preview basis, Korean and Arabic for the P01 text, and keyboard order. Not an owner acceptance.
+

@@ -113,6 +113,84 @@ try {
     }
   }
 
+  const basis = {
+    en: { pending: "Previewed because it is the newest pending plan proposal.", release: "Previewed because it is the newest release not installed." },
+    ko: { pending: "승인 대기 중인 가장 최근 계획 제안이라서 미리 봅니다.", release: "설치되지 않은 가장 최근 릴리스라서 미리 봅니다." },
+    ar: { pending: "تُعرض لأنها أحدث مقترح خطة بانتظار الاعتماد.", release: "تُعرض لأنها أحدث إصدار غير مثبّت." },
+  };
+  const plan = async (lang) => {
+    await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/installation?lang=${lang}`);
+    await page.locator(".p01-live #p01-plan-title").waitFor();
+    await page.waitForLoadState("networkidle");
+    return page.locator(".p01-plan").innerText();
+  };
+  const stagePlan = (change) => page.route((url) => at(url.toString(), "installation"), async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, json: change(await response.json()) });
+  });
+  let servedBasis = "";
+  const basisSeen = async (r) => { if (at(r.url(), "installation") && r.status() === 200) servedBasis = String((await r.json().catch(() => ({}))).preview_basis ?? "absent"); };
+  page.on("response", basisSeen);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await plan("en");
+  page.off("response", basisSeen);
+  notes.push(`served preview_basis: ${servedBasis}`);
+  check("the service states the basis of the preview", servedBasis === "pending_plan" || servedBasis === "newest_release");
+  for (const lang of ["en", "ko", "ar"]) {
+    let text = await plan(lang);
+    const own = servedBasis === "pending_plan" ? "pending" : "release", other = own === "pending" ? "release" : "pending";
+    check(`${lang} P01 states the basis the service gave`, text.includes(basis[lang][own]) && !text.includes(basis[lang][other]), text.slice(0, 300));
+    await stagePlan((b) => ({ ...b, preview_basis: own === "pending" ? "newest_release" : "pending_plan" }));
+    text = await plan(lang);
+    check(`${lang} P01 follows the served basis and not what it could infer from the listed proposals`, text.includes(basis[lang][other]) && !text.includes(basis[lang][own]), text.slice(0, 300));
+    await page.unrouteAll({ behavior: "wait" });
+    await stagePlan((b) => { const { preview_basis, ...rest } = b; return rest; });
+    text = await plan(lang);
+    check(`${lang} P01 states no basis when the service gives none`, !text.includes(basis[lang].pending) && !text.includes(basis[lang].release), text.slice(0, 300));
+    await contained(`${lang} P01 plan`);
+    await page.unrouteAll({ behavior: "wait" });
+  }
+
+  {
+    const unknown = { en: "This requirement is not listed in this read, so it is unknown whether retiring it removes a blocking check from the gate.", ko: "이 요구사항이 이 조회에 없어, 폐지하면 게이트에서 차단 점검이 빠지는지 알 수 없습니다.", ar: "هذا المتطلب غير مدرج في هذه القراءة، لذا لا يُعرف ما إذا كان إنهاء العمل به يزيل فحصًا حاجبًا من البوابة." };
+    const label = "sample/sample-legacy-report";
+    const second = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const other = await second.newPage();
+    other.on("pageerror", (e) => errors.push(e.message));
+    const secret = randomBytes(20).toString("base64url");
+    const link = new URL(lines.find((l) => l.startsWith("admin2@example.invalid ")).split(" ")[1]);
+    await other.goto(`${base}/activate?lang=en${link.hash}`);
+    await other.locator("#link-new").fill(secret); await other.locator("#link-confirm").fill(secret);
+    await other.locator("form button[type=submit]").click(); await other.locator("a.service-button-link").waitFor();
+    await other.goto(`${base}/?service=api&lang=en`);
+    await other.locator("#signin-workspace").fill("sample-workspace"); await other.locator("#signin-email").fill("admin2@example.invalid");
+    await other.locator("#signin-password").fill(secret); await other.locator("form button[type=submit]").click();
+    await other.locator(".service-session").waitFor();
+    const without = (v) => (Array.isArray(v) ? v.filter((x) => !(x && typeof x === "object" && x.label === label && !("summary" in x))).map(without) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, without(x)])) : v);
+    const confirmText = async (lang, staged) => {
+      await other.unrouteAll({ behavior: "wait" });
+      if (staged) await other.route((url) => at(url.toString(), "release-evidence"), async (route) => { const response = await route.fetch(); const body = await response.json(); await route.fulfill({ response, json: { ...body, requirements: without(body.requirements), matrix: without(body.matrix) } }); });
+      await other.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/release-evidence?lang=${lang}&view=decisions`);
+      await other.locator(".p05-live #p05-waiting").waitFor();
+      await other.waitForLoadState("networkidle");
+      const row = other.locator(".p05-proposals > li").filter({ hasText: "sample-legacy-report" }).first();
+      await row.locator('[data-opener$="release_evidence.approve"]').click();
+      await row.locator(".p05-form textarea").fill("synthetic rendered check");
+      await row.locator(".p05-form button[type=submit]").click();
+      await row.locator(".p05-confirm").waitFor();
+      return row.locator(".p05-confirm").innerText();
+    };
+    for (const lang of ["en", "ko", "ar"]) {
+      let text = await confirmText(lang, false);
+      check(`${lang} P05 approving a retirement of a listed requirement does not call its impact unknown`, !text.includes(unknown[lang]), text.slice(0, 300));
+      text = await confirmText(lang, true);
+      check(`${lang} P05 approving a retirement of a requirement that is not in the read says the impact is unknown`, text.includes(unknown[lang]), text.slice(0, 500));
+      if (args.shots && lang === "en") await other.screenshot({ path: `${args.shots}/p05-retire-unknown-en-1440.png`, fullPage: true });
+    }
+    await other.unrouteAll({ behavior: "wait" });
+    await second.close();
+  }
+
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(`${base}/?service=api&lang=en&qa=${++navigation}#/installation?lang=en`);
   await page.locator(".p01-live").waitFor();

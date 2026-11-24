@@ -147,3 +147,15 @@ Two screenshots were looked at by the writer (Decisions, English, 1440; Requirem
 
 Still not covered by a rendered check: the P02 module proposal that already exists, the unknown retirement impact on P05, the P01 preview basis, and keyboard order. Not an owner acceptance.
 
+# Rendered check extended to the P01 preview basis and the unknown retirement impact (2026-11-24)
+
+Run of `apps/console/tools/capped-lists-qa.mjs` against main 0e2dcbc (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards): exit code 0, 80 checks passed, none failed, no page error. One run; the script was not reviewed.
+
+P01, in English, Korean and Arabic at 1440: the service gives `preview_basis: "pending_plan"` and the plan section says that the version is previewed because it is the newest pending plan proposal. With the basis changed in the browser to the other value the section says the other sentence, although the listed proposals are unchanged, so the screen follows the served value. With the field removed it says neither sentence.
+
+P05, in the three languages at 1440, signed in as the second sample administrator, who may approve the sample's pending requirement retirement: the confirmation step of the approval does not call the impact unknown while the requirement is in the read; with that requirement removed from the read's answer in the browser it says that the requirement is not listed in this read, so it is unknown whether retiring it removes a blocking check from the gate. The approval was not sent.
+
+One screenshot (English, the confirmation with the requirement removed) was looked at by the writer: the requirement line says it is not listed and its state is unknown, and the statement that approval retires it permanently stays. No wrong statement of the product was found.
+
+With this, every state this ticket added has a rendered check except the P02 module proposal that already exists (the same mechanism as on P01, covered by unit tests). Keyboard order is not covered. Not an owner acceptance.
+

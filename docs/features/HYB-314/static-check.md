@@ -528,3 +528,11 @@ Result: exit code 0; 118 checks passed, none failed, no page error, across all t
 What this shows: the change of this ticket to the M04 secret pickup (a pickup reads as gone only when the service refuses it; other failures keep the retry) did not break what the script asserts on a real service. What it does not show: the script does not stage a failure of the pickup other than the ones it already had, so the changed branch itself is covered by its unit test only.
 
 Rendered runs recorded for this ticket now cover O03, M03, M04 and M05. M01, M02, O01, O02 and the P screens have none.
+
+## Server-backed browser suite on main after all fixes, and what it shows of M01 (2026-11-24)
+
+The whole suite (`go test ./server/ -run 'Browser|GrantScreens'`) was run on main b229ae8 against the console source served by the dev server, with an isolated in-process server per test and synthetic data: 17 passed, 1 skipped (`TestFinancialDraftLiveBrowserJourney`, which needs its own runner settings), 0 failed. Not an owner acceptance.
+
+Three of these tests open M01 on a real server: `TestDocumentEvidenceImpactRenderedBrowser`, `TestResultEvidenceImpactRenderedBrowser` and `TestResultAuthorityImpactRenderedBrowser` go to the Revocation jobs view, open a prepared bulk revocation by its row and read its impact rows, in three languages. That path runs through the code this ticket changed in `users/RevocationJobs.tsx` (opening a job, the detail pane, the turn guard for reads that arrive out of order) and through the bulk preview, so those changes did not break opening and reading a prepared job on a real service.
+
+Not shown by them: the states this ticket added on M01 (a refused or failed discard, a list that was never prepared, an unknown account or membership state or role, the failed read of excluded people); the users list and its detail; M02, O01, O02 and the P screens, which still have no rendered run in this record.

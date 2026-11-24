@@ -144,3 +144,5 @@ O01 rendered check: the same setup as the M02 check, then `node tools/organizati
 
 O02 rendered check: the same setup as the M02 check, then `node tools/organization-changes-qa.mjs` with the same arguments. It sends no command; when the service holds no plan it adds one to the read's answer in the browser for the arrival checks.
 
+M01 rendered check: the same setup as the M02 check, then `node tools/users-qa.mjs` with the same arguments. It sends no command and changes the users read's answer in the browser for the unknown role and state.
+

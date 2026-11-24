@@ -14,9 +14,9 @@ page.on("pageerror", (e) => errors.push(e.message));
 const password = randomBytes(20).toString("base64url");
 const at = (url, path) => new URL(url).pathname.endsWith("/api/v1/" + path);
 const copy = {
-  en: { cut: "More deliveries exist than are listed here.", order: "Open and queued deliveries are included before dead letters, so some dead letters may not be shown.", maybe: "The service did not say whether more deliveries exist than are listed here." },
-  ko: { cut: "여기에 표시된 것보다 발송 건이 더 있습니다.", order: "진행 중·대기 건을 실패 보관 건보다 먼저 포함하므로 일부 실패 보관 건이 표시되지 않을 수 있습니다.", maybe: "서비스가 여기에 표시된 것보다 발송 건이 더 있는지 알려 주지 않았습니다." },
-  ar: { cut: "توجد عمليات تسليم أكثر مما هو معروض هنا.", order: "تُضمَّن عمليات التسليم المفتوحة والمنتظرة قبل الرسائل غير المُسلّمة، لذا قد لا تظهر بعض الرسائل غير المُسلّمة.", maybe: "لم تذكر الخدمة ما إذا كانت هناك عمليات تسليم أكثر مما هو معروض هنا." },
+  en: { cut: "More deliveries exist than are listed here.", order: "Every dead letter and held redelivery is listed; those not shown are queued redeliveries or cancelled deliveries.", maybe: "The service did not say whether more deliveries exist than are listed here." },
+  ko: { cut: "여기에 표시된 것보다 발송 건이 더 있습니다.", order: "실패 보관 건과 보류된 재발송 건은 모두 표시되며, 표시되지 않은 건은 대기열에 등록된 재발송 건이거나 취소된 건입니다.", maybe: "서비스가 여기에 표시된 것보다 발송 건이 더 있는지 알려 주지 않았습니다." },
+  ar: { cut: "توجد عمليات تسليم أكثر مما هو معروض هنا.", order: "تُعرض كل الرسائل غير المُسلّمة وعمليات إعادة التسليم المحتجَزة؛ وما لم يُعرض هو عمليات إعادة تسليم في قائمة الانتظار أو عمليات تسليم ملغاة.", maybe: "لم تذكر الخدمة ما إذا كانت هناك عمليات تسليم أكثر مما هو معروض هنا." },
 };
 const widths = [1440, 390];
 

@@ -90,7 +90,7 @@ Deciding from the served field also removes an older wrong case: when a first at
 
 Checks: `go build`, `go vet` and the whole `apps/api/server` test package pass; `tsc` clean; console tests pass. No rendered check. Independent change review (independent-reviewer role, AI, by reading): pass with two conditions, the wording (the first version said that nothing new was recorded, although the command log records the attempt) and the binding document; both corrected, and its suggestion to decide from the served field alone adopted. Not reviewed again.
 
-Not changed: the "Propose" button is still offered when the person's identical plan waits outside the listed proposals; pressing it now gives the accurate text. The same pattern exists on other screens, which decide "already proposed" from their own listed rows and were not changed: P03 (`recovery/LiveResume.tsx:67`), P04 (`retention/LiveHolds.tsx:146`, `LivePolicies.tsx:154`) and the release evidence screen.
+Not changed: the "Propose" button is still offered when the person's identical plan waits outside the listed proposals; pressing it now gives the accurate text. The same pattern exists on other screens, which decide "already proposed" from their own listed rows (checked later, see the last section): P03 (`recovery/LiveResume.tsx:67`), P04 (`retention/LiveHolds.tsx:146`, `LivePolicies.tsx:154`) and the release evidence screen.
 
 # P02, a module change that was already proposed (2026-11-24)
 
@@ -100,4 +100,22 @@ The subscription proposal of the same screen was not changed and does not need i
 
 Checks: `go build`, `go vet` and the whole `apps/api/server` test package pass; `tsc` clean; console tests pass. No rendered check. Independent change review (independent-reviewer role, AI, by reading): pass with conditions, the binding document, an unused import, the unused branch of the snapshot helper with its test, and a test of the new decision; all corrected. Not reviewed again.
 
-Still deciding from their own listed rows: P03 (`recovery/LiveResume.tsx:67`), P04 (`retention/LiveHolds.tsx:146`, `LivePolicies.tsx:154`) and the release evidence screen.
+The other screens named by the review are settled in the next section.
+
+# P03, P04 and release evidence: the duplicate decision (2026-11-24)
+
+Checked by reading; not a defect, nothing changed. On these screens the console also decides "already proposed" from its listed rows, but the server never answers their proposal commands with an existing proposal. Each command is refused with `invalid_stage` while a proposal for the same object waits, whoever proposed it, before the module is asked:
+
+| Screen | Command | Refusal while one waits | Test |
+|---|---|---|---|
+| P03 | `recovery.propose_unlock` | `recoverycmds.go:141` (`pendingUnlock`) | `recovery_commands_test.go:73-74` |
+| P04 | `retention.propose_policy` | `retentioncmds.go:228` (`pendingPolicy`) | not looked for |
+| P04 | `retention.propose_release` | `retentioncmds.go:328` (`pendingRelease`) | `retention_commands_test.go:138-139` |
+| Release evidence | `release_evidence.retire_profile` | `evidencecmds.go:183` (`pendingProfileRetire`) | `evidence_commands_test.go:83-84` |
+| Release evidence | requirement retirement | `evidencecmds.go:169` (`pendingRetire`) | not looked for |
+
+The servers' stores drop only entries that are no longer waiting (`keep` in `recoveryseed.go`, `retentionseed.go`, `evidenceseed.go`), so a waiting proposal is always found by these checks. The opposite error, a new proposal called a duplicate after a reload, does not occur either: the comparison uses the rows listed before the first attempt.
+
+Consequence: the sentence "This was already proposed as #n." of these three screens cannot be shown today. It is left in place; it would become reachable, and incomplete beyond 50 rows, only if one of these refusals were removed.
+
+Limits: read, not run; no independent review of this record.

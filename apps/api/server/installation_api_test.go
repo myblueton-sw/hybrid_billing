@@ -107,6 +107,9 @@ func TestInstallationReadShape(t *testing.T) {
 		t.Errorf("release %s", s)
 	}
 	preview := got.body["preview"].(map[string]any)
+	if got.body["preview_basis"] != "pending_plan" && got.body["preview_basis"] != "newest_release" {
+		t.Errorf("preview basis %v", got.body["preview_basis"])
+	}
 	plan := installRow(t, got, 6)
 	if preview["state"] != "available" || preview["kind"] != "install" || preview["version"] != "1.0.0" || preview["hash"] != plan["summary"].(map[string]any)["plan_hash"] ||
 		len(preview["hash"].(string)) != 64 || fmt.Sprint(preview["permissions"]) != "[create_volume listen_port run_service write_config]" ||
@@ -316,7 +319,7 @@ func TestInstallationProposePlan(t *testing.T) {
 		"sample-admin sample-admin sample reason false own_proposal true " {
 		t.Errorf("proposal %s", s)
 	}
-	if p := read.body["preview"].(map[string]any); p["version"] != "1.1.0" || p["hash"] != next.Hash {
+	if p := read.body["preview"].(map[string]any); p["version"] != "1.1.0" || p["hash"] != next.Hash || read.body["preview_basis"] != "pending_plan" {
 		t.Errorf("preview follows the newest pending plan %v", p)
 	}
 	if again := f.admin(root, "installation.propose_plan", installTarget, "again", fields); again.status != 200 || fmt.Sprint(again.body["fields"]) != "map[proposal:8 target:installation-proposal-8]" {

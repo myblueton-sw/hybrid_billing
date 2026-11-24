@@ -82,6 +82,7 @@ export type InstallationPage = {
   installed: InstallInstalled;
   releases: InstallRelease[];
   preview: InstallPreview;
+  preview_basis: "pending_plan" | "newest_release" | "";
   upgrade: InstallPreview;
   rollback: InstallPreview;
   proposals: InstallProposal[];
@@ -216,6 +217,7 @@ export function installationOf(body: Raw): InstallationPage {
     installed: installedOf(body.installed),
     releases: rows(body.releases, releaseOf),
     preview: previewOf(body.preview),
+    preview_basis: body.preview_basis === "pending_plan" || body.preview_basis === "newest_release" ? body.preview_basis : "",
     upgrade: previewOf(body.upgrade),
     rollback: previewOf(body.rollback),
     proposals: rows(body.proposals, proposalOf),

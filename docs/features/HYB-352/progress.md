@@ -159,3 +159,17 @@ One screenshot (English, the confirmation with the requirement removed) was look
 
 With this, every state this ticket added has a rendered check except the P02 module proposal that already exists (the same mechanism as on P01, covered by unit tests). Keyboard order is not covered. Not an owner acceptance.
 
+# P02, deliveries that need action are always listed (2026-11-24, owner decision)
+
+The owner decided on 2026-11-24 that the delivery list must not leave out the deliveries a person has to act on, with dead letters first and no paging for now. This supersedes the statement in the section "P02, the delivery list" that the list holds only the first 50.
+
+Changing only the order would still have left out dead letters beyond 50, so the read now lists, for each subscription, every dead letter and every held redelivery, and the first 50 of its other deliveries (`apps/api/server/integrations.go`, `deliveriesOf` and `needingActionAnd`). `deliveries_more` now names the subscriptions of which other deliveries were left out; those can only be queued redeliveries and cancelled deliveries, because the one open delivery is first among the others. This goes one step beyond the wording of the decision, to keep its purpose; it is reported to the owner as such.
+
+Bounds, confirmed by the review by reading: queued and dead deliveries of a subscription together number at most 100, cancelled ones at most 100, and at most one is open, so the read walks at most 201 deliveries and returns at most 150 rows for one subscription, for at most 16 subscriptions. The limit is a constant, not a setting.
+
+Texts, in three languages: above the list, "Showing every dead letter and held redelivery, and up to 50 other deliveries per subscription."; when others were left out, "More deliveries exist than are listed here. Every dead letter and held redelivery is listed; those not shown are queued redeliveries or cancelled deliveries."
+
+Reviews. Independent change review (independent-reviewer role, AI, by reading): first FAIL with one blocking finding, that a held redelivery, which a person must re-approve, could still be left out; corrected by always listing held redeliveries, with a test; corrective review by the same reviewer: PASS, finding closed. Its suggestion to also always list cancelled deliveries whose outcome is unknown was not adopted: such a row carries a sentence and no action; left for the owner. Copy review (ui-designer role, AI, by reading): FAIL on the first wording (an ungrammatical Arabic clause, and "queued" without saying what is queued); its final strings were adopted unchanged and not reviewed again.
+
+Checks: `go build`, `go vet`, the whole `apps/api/server` test package pass, with the rewritten test of the rule (a crowded subscription, only dead letters, exactly 50 others, a dead letter and a held redelivery behind the 50 others, none) and of the paged walk; `tsc` clean; console tests 1366, pass 1363, fail 0, skipped 3; `capped-lists-qa.mjs` against the API and console of this change: 80 checks passed, none failed. No test or run fills a real subscription past 50 others; the rule is tested as a function and the sample read as a whole. Not an owner acceptance of the screen.
+

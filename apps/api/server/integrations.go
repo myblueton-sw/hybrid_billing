@@ -727,20 +727,36 @@ func letterActions(d webhooks.DeliveryView, state string, redeliver, dismiss *re
 		"withdraw_redeliver": allow(withdraw(redeliver)), "withdraw_dismiss": allow(withdraw(dismiss))}
 }
 
-func firstDeliveries(list []webhooks.DeliveryView, shown int) ([]webhooks.DeliveryView, bool) {
-	if len(list) > shown {
-		return list[:shown], true
+func needingActionAnd(list []webhooks.DeliveryView, others int) ([]webhooks.DeliveryView, bool) {
+	out, kept, more := []webhooks.DeliveryView{}, 0, false
+	for _, d := range list {
+		switch {
+		case d.Kind == webhooks.KindDead || d.Hold != "":
+			out = append(out, d)
+		case kept < others:
+			out, kept = append(out, d), kept+1
+		default:
+			more = true
+		}
 	}
-	return list, false
+	return out, more
 }
 
 func (s *Server) deliveriesOf(id, state string, reader *viewer) ([]deliveryRow, bool, error) {
-	var list []webhooks.DeliveryView
-	err := s.webhookCall("deliveries", func() (err error) {
-		list, err = s.webhooks.Deliveries(s.bootWorkspace, id, 0, shownDeliveries+1, webhooks.Actor{ID: reader.id, Kind: webhooks.KindHuman})
-		return
-	})
-	list, more := firstDeliveries(list, shownDeliveries)
+	all := []webhooks.DeliveryView{}
+	var err error
+	for err == nil {
+		var page []webhooks.DeliveryView
+		err = s.webhookCall("deliveries", func() (err error) {
+			page, err = s.webhooks.Deliveries(s.bootWorkspace, id, len(all), deliveryPage, webhooks.Actor{ID: reader.id, Kind: webhooks.KindHuman})
+			return
+		})
+		all = append(all, page...)
+		if len(page) < deliveryPage {
+			break
+		}
+	}
+	list, more := needingActionAnd(all, shownDeliveries)
 	out := []deliveryRow{}
 	for _, d := range list {
 		redeliver, dismiss := (*requestRow)(nil), (*requestRow)(nil)

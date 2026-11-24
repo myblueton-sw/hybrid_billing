@@ -70,11 +70,20 @@ test("service credentials reject unsafe permissions, versions and supplied picku
     { state: "expired", secret_pickup: "collected" }]) {
     await assert.rejects(services({ ...servicesFixture, services: [{ ...serviceFixture, credentials: [{ ...credentialFixture, ...patch }] }] }), invalid);
   }
+  const pair = await services({ ...servicesFixture, services: [{ ...serviceFixture, credentials: [
+    { ...credentialFixture, id: "cred-2", replaces: "cred-1", rotation: "replacing" }, { ...credentialFixture, replaced_by: "cred-2", rotation: "ending" },
+    { ...credentialFixture, id: "cred-0", state: "expired", usable: false, replaced_by: "cred-1" }] }] });
+  assert.deepEqual(pair.services[0].credentials.map((x) => [x.id, x.replaces, x.replaced_by, x.rotation]),
+    [["cred-2", "cred-1", undefined, "replacing"], ["cred-1", undefined, "cred-2", "ending"], ["cred-0", undefined, "cred-1", undefined]]);
+  for (const patch of [{ rotation: "rotating" }, { rotation: "ending" }, { rotation: "replacing" }, { replaces: "" }, { replaced_by: "" }, { replaces: 1 },
+    { state: "expired", rotation: "ending", replaced_by: "cred-2" }, { state: "revoked", rotation: "replacing", replaces: "cred-0" }]) {
+    await assert.rejects(services({ ...servicesFixture, services: [{ ...serviceFixture, credentials: [{ ...credentialFixture, ...patch }] }] }), invalid, JSON.stringify(patch));
+  }
   for (const patch of [{ state: "future" }, { version: Number.MAX_SAFE_INTEGER + 1 }, { credentials: null }]) {
     await assert.rejects(services({ ...servicesFixture, services: [{ ...serviceFixture, ...patch }] }), invalid);
   }
   assert.equal((await services({ ...servicesFixture, limits: { ...servicesFixture.limits, credential_days: 0 } })).limits.credential_days, 0);
-  for (const field of ["credentials_per_service", "services", "replay_seconds"]) {
+  for (const field of ["credentials_per_service", "services", "replay_seconds", "credential_overlap_minutes", "credential_overlap_max_minutes", "secret_pickup_minutes"]) {
     await assert.rejects(services({ ...servicesFixture, limits: { ...servicesFixture.limits, [field]: 0 } }), invalid);
   }
   for (const field of Object.keys(servicesFixture.limits)) {

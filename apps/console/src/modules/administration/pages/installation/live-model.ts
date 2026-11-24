@@ -114,8 +114,8 @@ export function latestAcceptance(list: InstallProposal[]): InstallProposal | nul
   return ordered(list).closed.find((x) => x.kind === "plan" && x.state === "applied") ?? null;
 }
 
-export function duplicateOf(before: InstallProposal[], number: string): boolean {
-  return /^[1-9][0-9]*$/.test(number) && before.some((x) => x.number !== null && String(x.number) === number);
+export function duplicateOf(existing: string | undefined): boolean {
+  return existing === "true";
 }
 
 export function showsEffects(state: string): boolean {

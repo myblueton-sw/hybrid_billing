@@ -322,7 +322,7 @@ func TestInstallationProposePlan(t *testing.T) {
 	if p := read.body["preview"].(map[string]any); p["version"] != "1.1.0" || p["hash"] != next.Hash || read.body["preview_basis"] != "pending_plan" {
 		t.Errorf("preview follows the newest pending plan %v", p)
 	}
-	if again := f.admin(root, "installation.propose_plan", installTarget, "again", fields); again.status != 200 || fmt.Sprint(again.body["fields"]) != "map[proposal:8 target:installation-proposal-8]" {
+	if again := f.admin(root, "installation.propose_plan", installTarget, "again", fields); again.status != 200 || fmt.Sprint(again.body["fields"]) != "map[existing:true proposal:8 target:installation-proposal-8]" {
 		t.Errorf("duplicate %s", again.raw)
 	}
 	if n := len(f.installation(root).body["proposals"].([]any)); n != 8 || installRow(t, f.installation(root), 8)["rationale"] != "sample reason" {

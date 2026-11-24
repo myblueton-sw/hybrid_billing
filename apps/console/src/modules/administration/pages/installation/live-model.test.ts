@@ -289,13 +289,10 @@ test("a refusal sentence is kept until a definite answer or the row shows a bloc
   forget();
 });
 
-test("a returned number already listed announces a duplicate", () => {
-  const list = page({ proposals: [plan(4, "pending", "u1")] }).proposals;
-  assert.equal(duplicateOf(list, "4"), true);
-  assert.equal(duplicateOf(list, "5"), false);
-  assert.equal(duplicateOf(list, ""), false);
-  assert.equal(duplicateOf(list, "04"), false);
-  assert.equal(k.duplicate("en", "4"), "This plan was already proposed as #4.");
+test("a duplicate is announced only when the service says the answer is an existing proposal", () => {
+  assert.equal(duplicateOf("true"), true);
+  assert.deepEqual([duplicateOf(undefined), duplicateOf(""), duplicateOf("false"), duplicateOf("TRUE")], [false, false, false, false]);
+  assert.equal(k.duplicate("en", "4"), "This plan was already proposed as #4. No new proposal was created, and that proposal keeps its original reason.");
 });
 
 test("conflicts and effects show only for an available preview", () => {

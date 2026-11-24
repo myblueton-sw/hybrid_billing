@@ -29,7 +29,7 @@ This is part of the [screen binding register](../screen-binding-register.md#pre-
 
 ## P01 Installation
 
-`GET /api/v1/installation` (`boundary.go:43`, handler `installation.go:428-447`), parsed by `installationOf` (`installation.ts:205-232`). Views: `plan` (default), `diagnostics`, `support`, `access` (`installation/live-model.ts:3-7`). Commands: `installation.approve`, `installation.withdraw`, `installation.propose_plan` (`installation.go:547-557`); result fields `proposal`, `target` and business state (`installation.go:543-544`).
+`GET /api/v1/installation` (`boundary.go:43`, handler `installation.go:428-447`), parsed by `installationOf` (`installation.ts:205-232`). Views: `plan` (default), `diagnostics`, `support`, `access` (`installation/live-model.ts:3-7`). Commands: `installation.approve`, `installation.withdraw`, `installation.propose_plan` (`installation.go:547-557`); result fields `proposal`, `target`, `existing` ("true" only when the answer is a proposal that already existed) and business state (`installation.go`, `installHandler.Apply`).
 
 | View/area | Displayed field, column or state | Source | Parser | Rendered at |
 | --- | --- | --- | --- | --- |
@@ -64,7 +64,7 @@ This is part of the [screen binding register](../screen-binding-register.md#pre-
 | Plan | Propose plan: offered, or blocker sentence (unavailable, not applicable, unknown state, conflicts, conflicts unknown, hash, accepted, waiting) | derived from `preview` and `proposals[]` | `installation/live-model.ts:90-104` | `installation/LiveProposals.tsx:318-356` |
 | Plan | Own stale proposal warning | derived: own pending `plan` proposal with another hash | `installation/live-model.ts:101-103` | `installation/LiveProposals.tsx:347` |
 | Plan | Propose confirmation: version and hash sent | `preview.version`, `preview.hash`, or the frozen values of a pending attempt | `installation/LiveProposals.tsx:326-329` | `installation/LiveProposals.tsx:361-366` |
-| Plan | Propose result: proposal number, or duplicate | `installation.propose_plan` → `fields.proposal`; duplicate derived against the loaded list | `admin.ts:742`; `installation/live-model.ts:117-119` | `installation/LiveProposals.tsx:369` |
+| Plan | Propose result: proposal number, or duplicate | `installation.propose_plan` → `fields.proposal`; duplicate from `fields.existing`, stated by the server | `admin.ts:742`; `installation/live-model.ts:117-119` | `installation/LiveProposals.tsx:369` |
 | Plan | Proposals: empty; newest-50 note | `proposals[]` (server keeps the newest 50, `installation.go:415`) | `installation.ts:219` | `installation/LiveProposals.tsx:300-301` |
 | Plan | Waiting and closed groups with counts | derived: split by `state = pending`, sorted by `number` | `installation/live-model.ts:34-37` | `installation/LiveProposals.tsx:302-313` |
 | Plan | Proposal row: number, kind, state tag, proposed by, created | `number`, `kind`, `state`, `proposer_login`/`proposer`, `created_at` | `installation.ts:178-203` | `installation/LiveProposals.tsx:226-231` |

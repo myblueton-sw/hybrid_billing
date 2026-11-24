@@ -57,7 +57,8 @@ export class SetupEditor {
   if(!intent)throw new SetupError("inspection_required");
   this.update({prepared:undefined,error:undefined});
   try{if(recovery)await this.writes.recover(intent);else await this.writes.submit(intent);}
-  catch(error){this.update({error:error instanceof SetupError?error.code:"service_unavailable"});}
+  catch(error){this.update({error:error instanceof SetupError?error.code:"service_unavailable"});return;}
+  if(this.writes.snapshot().entries.find(e=>e.intent.attempt.key===intent.attempt.key)?.phase==="recorded")this.update({draft:{target:attempt().request,preset:false,languages:[],reason:"",selected:""}});
  }
 }
 const editors=new Map<string,SetupEditor>();

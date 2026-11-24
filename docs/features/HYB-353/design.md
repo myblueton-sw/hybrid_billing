@@ -141,3 +141,13 @@ With both stores done, items 1 and 2 of the ticket are implemented. Still to do 
 The later phases of the same test then propose and confirm the rules normally, so the settled attempt left nothing behind that disturbs them.
 
 This run exercises the step store. The settings store has the same rule and its unit tests but no real-server run with a lost request.
+
+# Item 3, the settings draft after a recorded write (2026-11-24)
+
+Confirmed by reading: `SetupEditor.submit` never reset its draft, so after a recorded proposal or confirmation the reason, the sample choice and the languages stayed, the unload guard of the settings form stayed armed, and the draft kept the identifier of the configuration just recorded for the next "New proposal".
+
+Now, when the write that was just sent is recorded, the editor starts a fresh draft with a new identifier. A refused write and one whose outcome is unknown keep the draft, so nothing a person entered is lost before it took effect.
+
+Checks: `tsc` clean; console tests 1355, pass 1352, fail 0, skipped 3, with one new test of the editor (cleared and renewed after a recorded write; kept after a refusal and after an unknown outcome). Rendered: `tools/o03-setup-parts-qa.mjs` and `o03-trust-states-qa.mjs` against a console built from the change, exit code 0 each; neither sends a settings write, so the cleared form itself has no rendered run. No review of this change.
+
+Not decided here: a write settled as "no record" keeps the draft, like any refusal, so the person can review and send it again.

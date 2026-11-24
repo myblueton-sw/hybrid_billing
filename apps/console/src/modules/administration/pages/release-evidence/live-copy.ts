@@ -139,6 +139,7 @@ export const k = {
   compareHint: (l: Locale) => t(l, "Shows how requirement states differ between two builds. Comparison with an earlier support decision is not built, because support decisions are not connected.", "두 빌드 사이에서 요구사항 상태가 어떻게 다른지 보여줍니다. 지원 판정이 연결되지 않아 이전 지원 판정과의 비교는 만들지 않았습니다.", "يعرض اختلاف حالات المتطلبات بين بنيتين. لم تُبنَ المقارنة مع قرار دعم سابق لأن قرارات الدعم غير متصلة."),
   compareFrom: (l: Locale) => t(l, "Compare build", "비교 빌드", "قارن البنية"),
   compareWith: (l: Locale) => t(l, "with build", "대상 빌드", "مع البنية"),
+  compareLimited: (l: Locale) => t(l, "This comparison covers only the requirements listed on this screen, which may not be all of them.", "이 비교는 이 화면에 표시된 요구사항만 대상으로 하며, 전체가 아닐 수 있습니다.", "تشمل هذه المقارنة المتطلبات المدرجة في هذه الشاشة فقط، وقد لا تكون جميعها."),
   compareMore: (l: Locale) => t(l, "Only the newest 10 builds can be compared.", "최근 10개 빌드만 비교할 수 있습니다.", "يمكن مقارنة أحدث 10 بنى فقط."),
   compareSame: (l: Locale) => t(l, "No requirement changed state between these builds.", "두 빌드 사이에 상태가 바뀐 요구사항이 없습니다.", "لم تتغير حالة أي متطلب بين هاتين البنيتين."),
   compareFew: (l: Locale) => t(l, "Fewer than two builds are recorded, so nothing can be compared.", "기록된 빌드가 두 개 미만이라 비교할 수 없습니다.", "سُجّل أقل من بنيتين، لذا لا يمكن المقارنة."),

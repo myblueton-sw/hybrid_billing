@@ -179,6 +179,7 @@ function CompareBlock({ l, page, from, to, requirement }: { l: Locale; page: Evi
         </div>
       </div>
       {buildsMore(page) && <p className="p05-small p05-muted">{k.compareMore(l)}</p>}
+      {page.requirements.requirements.more !== false && <p className="p05-small p05-muted">{k.compareLimited(l)}</p>}
       {diff.length === 0 ? (
         <p>{k.compareSame(l)}</p>
       ) : (

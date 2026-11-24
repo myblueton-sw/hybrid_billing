@@ -18,19 +18,6 @@ function sorted(choices: Map<string, string>): Choice[] {
   return [...choices].map(([id, name]) => ({ id, name: label(name, id) })).sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 }
 
-export function memberChoices(parties: OrgParty[], members: OrgMember[], kind?: RelationKind): Choice[] {
-  const out = new Map<string, string>();
-  const unitsAllowed = !kind || kind === "hierarchy";
-  const partyKind = new Map(parties.map((p) => [p.id, p.state === "active" ? p.kind : "inactive"]));
-  for (const p of parties) if (unitsAllowed && p.kind === "internal_unit" && p.state === "active") out.set(p.id, p.name);
-  for (const m of members) {
-    const k = partyKind.get(m.member);
-    if (k === "legal_entity" || k === "inactive" || (k && !unitsAllowed) || out.has(m.member)) continue;
-    out.set(m.member, m.name);
-  }
-  return sorted(out);
-}
-
 export function targetChoices(kind: RelationKind, member: string, parties: OrgParty[], members: OrgMember[]): Choice[] {
   const out = new Map<string, string>();
   if (kind === "hierarchy" || kind === "payer") {
@@ -137,10 +124,6 @@ export function arrival(arrived: string, plan: PlanRow | undefined): Arrival | n
 
 export function findPlan(plans: PlanRow[], id: string): PlanRow | undefined {
   return id ? plans.find((p) => p.id === id) : undefined;
-}
-
-export function allMemberChoices(parties: OrgParty[], byKind: OrgMember[][], kind?: RelationKind): Choice[] {
-  return memberChoices(parties, byKind.flat(), kind);
 }
 
 export function nameOf(id: string, parties: OrgParty[], members: OrgMember[]): string {
@@ -370,9 +353,9 @@ export function afterConflict(h: Carried | null, cmd: Command, reloaded: number 
   return { handoff: { ...h, refused: true }, shown: "base" };
 }
 
-export type CurrentView = "loading" | "none_of_kind" | "not_in_listing" | "none" | "targets";
-export function currentView(settled: boolean, complete: boolean, got: Choice[] | null): CurrentView {
+export type CurrentView = "loading" | "none_of_kind" | "none" | "targets";
+export function currentView(settled: boolean, got: Choice[] | null): CurrentView {
   if (!settled) return "loading";
-  if (got === null) return complete ? "none_of_kind" : "not_in_listing";
+  if (got === null) return "none_of_kind";
   return got.length === 0 ? "none" : "targets";
 }

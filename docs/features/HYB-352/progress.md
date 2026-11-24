@@ -43,7 +43,15 @@ Unchanged, from the ticket:
 Found by the change review in the same two files and not changed here:
 
 - the build comparison's "Fewer than two builds are recorded", its build options and its note about the newest 10 builds are also derived from the capped requirement rows;
-- on the matrix, the count of blocked paths and the intake note are computed from the capped paths, while the limit line for paths appears only under the table;
 - the path detail's text for a requirement that is not among the loaded rows already says that its test cases "are not in this read", which is accurate; nothing to change there.
 
 The decision named in the ticket still stands for all of these: either the server sends what the console needs to say more than "there may be more", which changes public reads and needs independent design and change review, or each such place states the limit.
+
+# P05 matrix, read again: no change needed (2026-11-24)
+
+The change review listed two matrix sentences as derived from the capped list of paths. Read at main ae40ae1 (`release-evidence/LiveMatrix.tsx`, `MatrixView`), neither states something about the paths that were not loaded:
+
+- The sentence about missing execution evidence is shown when any loaded path is blocked. Its second half, that no support combination can be activated and that activation is not connected in this build, is true of the build whatever the paths are. When no loaded path is blocked the sentence is absent, which claims nothing.
+- The intake note says that customer proof intake is not connected, so the count cannot rise in this build. It is shown when every loaded path reports intake as not connected, and it is a statement about the build. An earlier review of this screen found that an active path, a proven customer state and a ready gate cannot occur in this build.
+
+Both would need another look when activation or customer proof intake is connected, because from then on they would describe the paths and not the build. Nothing was executed for this section and it has no independent review.

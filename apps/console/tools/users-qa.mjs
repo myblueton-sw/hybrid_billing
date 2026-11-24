@@ -105,6 +105,43 @@ try {
     }
     await page.unrouteAll({ behavior: "wait" });
   }
+  {
+    const words = {
+      en: { never: "Not counted: never prepared", until: "Not counted until prepared", three: "3 people" },
+      ko: { never: "집계 안 함: 준비되지 않음", until: "준비 전에는 집계하지 않음", three: "3명" },
+      ar: { never: "لم يُحسب: لم يُحضَّر", until: "لا يُحسب قبل التحضير", three: "3 أشخاص" },
+    };
+    const zero = { targets: 0, excluded: 0, duplicates: 0, succeeded: 0, held: 0, failed: 0, unprocessed: 0 };
+    const job = (id, state, prepared_at, counts = zero) => ({ id: "bulk-revocation-" + id, state, origin: "", effect: "suspend_membership", preparer: "sample-admin", prepared_at, expires_at: "2026-11-19T09:30:00Z", executor: "", executed_at: "", deny_at: "", digest: "", counts, job_state: "", job_reason: "", ledger: {}, cleanup: {}, recorded_at: "", staged: 0, selection: "explicit", matched: 0, fixed_at: "", fixed_revision: "", filter: null, search_masked: false });
+    const added = [job(9101, "draft", ""), job(9102, "discarded", ""), job(9103, "expired", ""), job(9104, "discarded", "2026-11-19T09:00:00Z", { ...zero, targets: 3 })];
+    const isJobs = (url) => new URL(url).pathname.endsWith("/api/v1/identity/bulk-revocations");
+    let servedJobs = -1;
+    await page.route((url) => isJobs(url.toString()), async (route) => {
+      const response = await route.fetch();
+      const body = await response.json();
+      if (servedJobs < 0) servedJobs = Array.isArray(body.jobs) ? body.jobs.length : 0;
+      await route.fulfill({ response, json: { ...body, jobs: [...(Array.isArray(body.jobs) ? body.jobs : []), ...added] } });
+    });
+    for (const lang of ["en", "ko", "ar"]) {
+      for (const width of widths) {
+        await page.setViewportSize({ width, height: 1000 });
+        await open(lang, "revocation");
+        await page.locator(".m01-jobs-list").waitFor();
+        const ended = page.locator(".m01-jobs details.m01-ended");
+        if ((await ended.count()) > 0 && !(await ended.evaluate((e) => e.open))) await ended.locator("summary").click();
+        const rowOf = async (id) => { const r = page.locator(".m01-jobs tr[role=row]").filter({ hasText: String(id) }); return (await r.count()) === 1 ? r.innerText() : `rows found: ${await r.count()}`; };
+        const draft = await rowOf(9101), never = await rowOf(9102), lapsed = await rowOf(9103), prepared = await rowOf(9104);
+        check(`${lang} ${width} a draft list is not counted until prepared`, draft.includes(words[lang].until) && !draft.includes(words[lang].never), draft);
+        check(`${lang} ${width} a discarded list that was never prepared says so and shows no count of people`, never.includes(words[lang].never) && !/\d+\s*(people|person|명|أشخاص|شخص)/.test(never.replace(String(9102), "")), never);
+        check(`${lang} ${width} an expired list that was never prepared says so`, lapsed.includes(words[lang].never), lapsed);
+        check(`${lang} ${width} a discarded list that was prepared shows its count`, prepared.includes(words[lang].three) && !prepared.includes(words[lang].never), prepared);
+        await contained(`${lang} ${width} revocation jobs with closed lists`);
+        if (args.shots) await page.screenshot({ path: `${args.shots}/m01-jobs-${lang}-${width}.png`, fullPage: true });
+      }
+    }
+    notes.push(`jobs served by the sample before the four added in the browser: ${servedJobs}`);
+    await page.unrouteAll({ behavior: "wait" });
+  }
   check("no unexpected JavaScript errors", errors.length === 0, errors.join(" | "));
 } catch (e) {
   check("runner completed without unexpected exception", false, String(e));

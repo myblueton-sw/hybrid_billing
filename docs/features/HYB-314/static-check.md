@@ -639,3 +639,13 @@ Rerun against main 277fedd (console dev server and the API binary of the same co
 
 Left as the review noted and not changed: the M02 script does not check for a load failure, and its record does not claim it. Not read by the reviewer: whether a failed facts read on O01 also raises the page-level failure, the M02 list and detail components, where the live markers are set, and the styles that hide columns at 390. The corrections were not reviewed again.
 
+## Rendered check of the M01 Revocation jobs list (2026-11-24)
+
+`apps/console/tools/users-qa.mjs` now also covers the people column of the Revocation jobs list. Run against main e59b901 (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards): exit code 0, 164 checks passed, none failed, no page error. One run; the added part was not reviewed.
+
+The sample holds no bulk revocation, so four lists are added to the answer of the jobs read in the browser: a draft, a discarded and an expired list that were never prepared, and a discarded list that was prepared with 3 people. In English, Korean and Arabic at 1440 and 390 the draft shows "Not counted until prepared", the two that were never prepared show "Not counted: never prepared" and no count of people, and the prepared one shows "3 people"; the page is not wider than the viewport. The rows come from an altered answer, not from lists the service holds; the three server-backed browser tests remain the evidence for real lists.
+
+One screenshot (English, 1440) was looked at by the writer: the four rows read as described. The "When" column shows a dash for all four, including the prepared and discarded list; whether a closed list should show when it was prepared or closed was not examined and is left as an observation. Not an owner acceptance.
+
+Still covered by unit and render tests only on M01: a refused or failed discard in the matching step, the failed read of excluded people, every command, and the bulk selection.
+

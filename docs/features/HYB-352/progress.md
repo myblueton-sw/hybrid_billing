@@ -38,7 +38,6 @@ Unchanged, from the ticket:
 
 - P05: the pending-retirement link to a proposal outside the newest 50 (suspected).
 - P01: the propose offer and the text after proposing, when the person's own identical plan is waiting outside the 50 listed proposals (confirmed by the change review; see the P01 section below).
-- P02: deliveries are the first 50 per subscription with no total, so dead letters can be absent from the screen (suspected).
 
 Found by the change review in the same two files and not changed here:
 
@@ -69,3 +68,17 @@ Checks: `go build`, `go vet` and the whole `apps/api/server` test package pass, 
 Not changed, noted by the review: when the preview is not available the basis sentence is still shown beside the reason for that, as before this change.
 
 Confirmed by the same review and still open: the server does not refuse an identical waiting plan from the same person; it answers with the existing proposal. When that proposal is outside the 50 listed, the console offers "Propose", and after sending it says that the plan was proposed as that proposal, as if a new one had been created, while the reason the person typed is dropped and the stored one kept (`modules/installer/registry.go:224-227`; `installation/LiveProposals.tsx:391`). Telling the person so needs the server to say that the answer is an existing proposal, which is another added field and is left for the decision of this ticket.
+
+# P02, the delivery list (2026-11-24)
+
+Confirmed by reading and corrected. A subscription can hold up to 100 dead letters (`WebhookLimits`), a read lists its first 50 deliveries in the order open, queued, dead, cancelled (`modules/webhooks/deliveries.go:457-465`), and the screen said only "Showing up to 50 deliveries per subscription", so a dead letter beyond the first 50 was absent with no sign that the list was cut.
+
+The server now says for which subscriptions the list was cut: the events section of the integrations read has the field `deliveries_more`, a list of subscription identifiers, empty when nothing was cut. The console shows a line under the existing note: for a cut list, that more deliveries exist than are listed and, because of the order, dead letters may be among those not shown; when the service does not say, that it did not say. The sentence after a denied approval of a dead letter that is not in the list no longer says that the letter "is gone" but that it "is no longer listed".
+
+This is an added field of a public read. The integrations read's section is not itemised in the OpenAPI document; the screen binding document is updated.
+
+Checks: `go build`, `go vet` and the whole `apps/api/server` test package pass; `tsc` clean; console tests 1366, pass 1363, fail 0, skipped 3, with a test of the model and the parser. No rendered check. Independent change review (independent-reviewer role, AI, by reading): pass with one condition, the binding document, corrected; its suggestions for the Arabic terms, for hiding the line when the list itself is unknown and for the sentence about the letter were adopted. None of these was reviewed again.
+
+A gap the review accepted and that remains: the function that cuts the list is tested, and the read of the sample is tested to report nothing as cut, but no test fills a real subscription past 50, because that needs a signed delivery round the tests cannot reproduce. A change of the request for one row more than is shown would not be caught by a test.
+
+Not changed: the list still holds only the first 50, so a dead letter beyond them cannot be acted on from this screen; changing the order or paging the list is part of the decision of this ticket.

@@ -56,7 +56,7 @@ export const k = {
       : s === "channels" ? t(l, "No webhook subscriptions are registered.", "등록된 웹훅 구독이 없습니다.", "لا توجد اشتراكات webhook مسجّلة.")
         : t(l, "No event types are approved.", "승인된 이벤트 유형이 없습니다.", "لا توجد أنواع أحداث معتمدة."),
   vanishedLetter: (l: Locale) =>
-    t(l, "Your earlier approval may have been applied. The dead letter is gone.", "이전 승인이 이미 반영되었을 수 있습니다. 실패 보관 건이 없어졌습니다.", "ربما طُبّق اعتمادك السابق. اختفت الرسالة غير المُسلّمة."),
+    t(l, "Your earlier approval may have been applied. The dead letter is no longer listed.", "이전 승인이 이미 반영되었을 수 있습니다. 실패 보관 건이 더 이상 목록에 없습니다.", "ربما طُبّق اعتمادك السابق. لم تعد الرسالة غير المُسلّمة مدرجة."),
   vanishedProposal: (l: Locale) =>
     t(l, "Your earlier request may have been applied. The proposal is gone.", "이전 요청이 이미 반영되었을 수 있습니다. 제안이 없어졌습니다.", "ربما طُبّق طلبك السابق. اختفى المقترح."),
   vanishedHint: (l: Locale, event: string) =>
@@ -433,6 +433,8 @@ export const k = {
   eventState: (l: Locale, s: string) => words(l, eventStateWords, s),
   typesNote: (l: Locale) => t(l, "Event publication and type proposals are not connected here.", "이벤트 게시와 유형 제안은 여기에 연결되어 있지 않습니다.", "نشر الأحداث واقتراح الأنواع غير متصلين هنا."),
   deliveriesTitle: (l: Locale) => t(l, "Deliveries", "발송 건", "عمليات التسليم"),
+  deliveriesCut: (l: Locale) => t(l, "More deliveries exist than are listed here. They are listed in the order open, queued, dead letter, cancelled, so dead letters may be among those not shown.", "여기에 표시된 것보다 발송 건이 더 있습니다. 진행 중, 대기, 실패 보관, 취소 순으로 표시하므로 표시되지 않은 건에 실패 보관 건이 있을 수 있습니다.", "توجد عمليات تسليم أكثر مما هو معروض هنا. تُعرض بالترتيب: مفتوحة، منتظرة، غير مُسلّمة، ملغاة؛ لذا قد تكون بين غير المعروض رسائل غير مُسلّمة."),
+  deliveriesMaybeCut: (l: Locale) => t(l, "The service did not say whether more deliveries exist than are listed here.", "서비스가 여기에 표시된 것보다 발송 건이 더 있는지 알려 주지 않았습니다.", "لم تذكر الخدمة ما إذا كانت هناك عمليات تسليم أكثر مما هو معروض هنا."),
   deliveriesNote: (l: Locale) => t(l, "Showing up to 50 deliveries per subscription.", "구독마다 발송 건을 최대 50건까지 표시합니다.", "تُعرض حتى 50 عملية تسليم لكل اشتراك."),
   filterLine: (l: Locale) => t(l, "Deliveries for subscription", "구독별 발송 건:", "عمليات التسليم للاشتراك"),
   showAll: (l: Locale) => t(l, "Show all deliveries", "모든 발송 건 보기", "عرض كل عمليات التسليم"),

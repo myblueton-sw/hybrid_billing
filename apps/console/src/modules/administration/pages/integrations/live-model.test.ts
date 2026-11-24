@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { integrationsOf, pluginProposalOf, type IntegrationsPage } from "../../../../service/integrations";
 import {
-  blockerPolicy, compareVersions, coveredBy, deliveriesShown, deniedOutcome, discard, draftOf, duplicateIn, fieldReaction, forget, frozenValues, keepDraft, keepsAttempt, letterTarget,
+  blockerPolicy, compareVersions, coveredBy, deliveriesCut, deliveriesShown, deniedOutcome, discard, draftOf, duplicateIn, fieldReaction, forget, frozenValues, keepDraft, keepsAttempt, letterTarget,
   commandsAllowed, normalTypes, ordered, pendingFor, pendingNow, pluginTarget, proposalTarget, proposeOffer, proposeValues, pruneRefusals, react, reasonProblem, refusedNow, selectionOf, setScope,
   settle, snapshotOf, subscribeBlocker, subscribeProblems, subscriptionTarget, summaryOf, timeKnown, utf8Bytes, vanished, viewOf, waitsForResume, capabilityOf, type CommandKey,
   dryRunBlocked, refusedByList, refusedLicense, refusedValues, runnable,
@@ -799,4 +799,13 @@ test("retained diagnostics bind every grouped action to its exact target and per
   assert.equal(lostFor([[dismiss[0], "webhook-letter-request:wrong"], dismiss]), "reprocess_events");
   setScope("ws", me, "new-session");
   assert.deepEqual(ids([stop, disable, resume, dismiss]), []);
+});
+
+test("the delivery list is called cut only for a subscription the service names, and unknown when it does not say", () => {
+  const named = page({ events: { deliveries_more: ["s1"] } });
+  assert.deepEqual([deliveriesCut(named, "s1"), deliveriesCut(named, "s2"), deliveriesCut(named, "")], ["cut", "complete", "cut"]);
+  const none = page({ events: { deliveries_more: [] } });
+  assert.deepEqual([deliveriesCut(none, "s1"), deliveriesCut(none, "")], ["complete", "complete"]);
+  assert.equal(deliveriesCut(integrationsOf({}), "s1"), "unknown");
+  assert.equal(integrationsOf({ events: { deliveries_more: "s1" } }).events.deliveries_more, null);
 });

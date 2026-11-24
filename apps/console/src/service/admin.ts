@@ -2,7 +2,7 @@ import type { SessionRow } from "./session-query";
 import { sessionQueryClient } from "./session-query";
 import { grantsOf, delegationsOf, catalogOf, subjectsOf, settingsOf as accessSettingsOf, requestsOf, revocationsOf, previewsOf } from "./access-read";
 import { credentialOf, servicesPageOf, selfPageOf } from "./account-read";
-import { organizationsPageOf } from "./organization-read";
+import { organizationsPageOf, organizationTreeOf } from "./organization-read";
 import { ReadParseError, text as readText } from "./strict-read";
 import { accessHistoryOf, HistoryParseError, type AccessHistoryPage, type AccessHistoryQuery } from "./access-history";
 import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsPage } from "./contracts";
@@ -338,6 +338,12 @@ export type OrgPage = {
   provider_filter: string;
   scan_stopped: boolean;
   scan_budget: number;
+};
+export type OrgTreeNode = { id: string; name: string; kind: "legal_entity" | "internal_unit" | "account" | "unknown"; state: string; source: "relationship" | "registry" | "none"; children: "some" | "none" | "unchecked" };
+export type OrgTreeQuery = { on?: string; revision?: number; parent?: string; group?: "detached"; after?: string; limit?: number };
+export type OrgTreePage = {
+  revision: string; relationship_revision: number; active_revision: number; on: string; parent: string; group: string;
+  nodes: OrgTreeNode[]; next: string; scan_stopped: boolean; registry_empty: boolean;
 };
 export type OrgSubject = "account" | "party" | "any";
 export type OrgFilters = { subject: string; entity: string; unattributed: boolean; q: string; member_count: number; target: string };
@@ -1077,6 +1083,18 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
       const qs = q.toString();
       const body = await send("/organizations" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request);
       return validatedRead(() => organizationsPageOf(body));
+    },
+    async tree(query: OrgTreeQuery = {}): Promise<OrgTreePage> {
+      const q = new URLSearchParams();
+      if (query.on) q.set("on", query.on);
+      if (query.revision !== undefined) q.set("revision", String(query.revision));
+      if (query.parent) q.set("parent", query.parent);
+      if (query.group) q.set("group", query.group);
+      if (query.after) q.set("after", query.after);
+      if (query.limit) q.set("limit", String(query.limit));
+      const qs = q.toString();
+      const body = await send("/organizations/tree" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request);
+      return validatedRead(() => organizationTreeOf(body));
     },
     async targets(query: TargetsQuery): Promise<TargetsPage> {
       const q = new URLSearchParams({ kind: query.kind });

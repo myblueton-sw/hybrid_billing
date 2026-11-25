@@ -147,6 +147,16 @@ func (c *evidenceStore) pendingReplacement(k releasetrace.Key) bool {
 	return false
 }
 
+func (c *evidenceStore) pendingReplacements() map[releasetrace.Key]bool {
+	out := map[releasetrace.Key]bool{}
+	for _, e := range c.entries {
+		if e.module == moduleTrace && e.state == entryPending && e.kind == releasetrace.ChangeRetire {
+			out[e.trace.Retire.Replacement] = true
+		}
+	}
+	return out
+}
+
 func (c *evidenceStore) pendingProfileRetire(id string) *evidenceEntry {
 	for _, e := range c.entries {
 		if e.module == modulePerf && e.state == entryPending && e.kind == perfgate.ChangeRetire && e.perf.Retire.Profile == id {

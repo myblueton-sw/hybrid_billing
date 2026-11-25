@@ -156,18 +156,18 @@ func TestRecoveryReadShape(t *testing.T) {
 	}
 	iso := sectionRow(t, got, "isolation", recoveryPrimary)
 	if s := fmt.Sprint(iso); s != "map[can_lock:false generation:2 installation:sample-primary lock_blocked:recovering lock_history:map[next: total:0] locks:[] open_calls:[map[deadline:2026-11-16T09:01:00Z "+
-		"id:call-2 key:sample-invoice-2 number:2 series:sample-invoice-series writer:sample-erp-writer]] open_calls_source:recovery open_calls_total:1 other_scope_present:false "+
+		"id:call-2 key:sample-invoice-2 number:2 series:sample-invoice-series writer:sample-erp-writer]] open_calls_next: open_calls_source:recovery open_calls_total:1 other_scope_present:false "+
 		"permits:not_shown state:recovering stopped_at:2026-11-16T09:00:00Z verifier:sample-verifier writers:[sample-erp-writer sample-issuance-writer]]" {
 		t.Errorf("primary isolation %s", s)
 	}
 	if s := fmt.Sprint(sectionRow(t, got, "isolation", recoveryStandby)); s != "map[can_lock:false generation:2 installation:sample-standby lock_blocked:locked lock_history:map[next: total:1] "+
-		"locks:[map[at:2026-11-16T09:00:00Z by:sample-admin by_login:admin@example.invalid number:1 rationale:Sample data]] open_calls:[] open_calls_source:not_shown open_calls_total:0 "+
+		"locks:[map[at:2026-11-16T09:00:00Z by:sample-admin by_login:admin@example.invalid number:1 rationale:Sample data]] open_calls:[] open_calls_next: open_calls_source:not_shown open_calls_total:0 "+
 		"other_scope_present:false permits:not_shown state:locked stopped_at:2026-11-16T09:00:00Z verifier: writers:[sample-standby-writer]]" {
 		t.Errorf("standby isolation %s", s)
 	}
 	if s := fmt.Sprint(sectionRow(t, got, "reconciliation", recoveryPrimary)); s != "map[externals:[map[id:sample-erp-ledger kind:erp status:pending] "+
 		"map[id:sample-issuance-register kind:issuance status:pending]] installation:sample-primary other_scope_present:false reconciler:not_connected skipped:0 "+
-		"unknown_targets:[map[fenced:true high_water:2 key:sample-invoice-2 number:2 series:sample-invoice-series]] unknown_total:1]" {
+		"unknown_next: unknown_targets:[map[fenced:true high_water:2 key:sample-invoice-2 number:2 series:sample-invoice-series]] unknown_total:1]" {
 		t.Errorf("reconciliation %s", s)
 	}
 	if hasRow(got, "reconciliation", recoveryStandby) {

@@ -58,6 +58,7 @@ type recoverySetRow struct {
 	Recovery     recoveryOpenRow      `json:"recovery"`
 	History      []recoveryHistoryRow `json:"history"`
 	HistoryTotal int                  `json:"history_total"`
+	HistoryNext  string               `json:"history_next"`
 	Begin        string               `json:"begin"`
 	Abandon      string               `json:"abandon"`
 }
@@ -91,6 +92,7 @@ type recoveryIsolationRow struct {
 	CallsSource  string            `json:"open_calls_source"`
 	OpenCalls    []recoveryCallRow `json:"open_calls"`
 	OpenTotal    int               `json:"open_calls_total"`
+	OpenNext     string            `json:"open_calls_next"`
 	OtherScope   bool              `json:"other_scope_present"`
 	Permits      string            `json:"permits"`
 	Locks        []recoveryLockRow `json:"locks"`
@@ -116,6 +118,7 @@ type recoveryReconcileRow struct {
 	Externals    []recoveryExternalRow `json:"externals"`
 	Unknown      []recoveryTargetRow   `json:"unknown_targets"`
 	UnknownTotal int                   `json:"unknown_total"`
+	UnknownNext  string                `json:"unknown_next"`
 	OtherScope   bool                  `json:"other_scope_present"`
 	Skipped      int                   `json:"skipped"`
 	Reconciler   string                `json:"reconciler"`
@@ -134,6 +137,7 @@ type recoveryResumeRow struct {
 	Phase         string             `json:"phase"`
 	Pending       []recoveryEventRow `json:"pending_events"`
 	PendingTotal  int                `json:"pending_total"`
+	PendingNext   string             `json:"pending_next"`
 	Lost          []uint64           `json:"lost"`
 	LostDigest    string             `json:"lost_digest"`
 	CanUnlock     bool               `json:"can_propose_unlock"`
@@ -287,10 +291,7 @@ func setRow(f recoveryFacts) recoverySetRow {
 			row.Recovery.Domains = append(row.Recovery.Domains, recoveryDomainRow{Domain: d.Domain, Status: d.Status, Mismatch: append([]int{}, d.Mismatch...)})
 		}
 	}
-	for index := len(f.history) - 1; index >= 0 && len(row.History) < recoveryShown; index-- {
-		h := f.history[index]
-		row.History = append(row.History, recoveryHistoryRow{Recovery: h.Recovery, ManifestDigest: h.ManifestDigest, Generation: h.Generation, Outcome: h.Outcome, Lost: h.Lost})
-	}
+	row.History, row.HistoryNext = historyRows(f, 0, recoveryShown)
 	return row
 }
 
@@ -305,16 +306,10 @@ func (s *Server) isolationRow(f recoveryFacts, workspace string) recoveryIsolati
 	if v := f.view; v != nil {
 		row.CallsSource = callsFromRecovery
 		for _, c := range v.OpenCalls {
-			if c.Target.Workspace != workspace {
-				row.OtherScope = true
-				continue
-			}
-			row.OpenTotal++
-			if len(row.OpenCalls) < recoveryShown {
-				row.OpenCalls = append(row.OpenCalls, recoveryCallRow{ID: c.ID, Writer: c.Writer, Deadline: stamp(c.Deadline), Key: c.Target.Key, Series: c.Target.Series,
-					Number: c.Target.Number})
-			}
+			row.OtherScope = row.OtherScope || c.Target.Workspace != workspace
 		}
+		row.OpenCalls, row.OpenTotal = openCallRows(f, workspace, 0, recoveryShown)
+		row.OpenNext = nextOf(len(row.OpenCalls), row.OpenTotal, 0)
 	}
 	first, facts := newestOf(len(i.locks), recoveryShown)
 	for index := first; index < len(i.locks); index++ {
@@ -330,26 +325,13 @@ func (s *Server) reconcileRow(f recoveryFacts, workspace string) (recoveryReconc
 	for _, x := range v.Externals {
 		row.Externals = append(row.Externals, recoveryExternalRow{ID: x.ID, Kind: x.Kind, Status: x.Status})
 	}
-	errs := []error{}
 	for _, t := range v.Unknown {
-		if t.Workspace != workspace {
-			row.OtherScope = true
-			continue
-		}
-		row.UnknownTotal++
-		if len(row.Unknown) >= recoveryShown {
-			continue
-		}
-		target := recoveryTargetRow{Key: t.Key, Series: t.Series, Number: t.Number}
-		errs = append(errs, s.recoveryCall("fenced", func() (err error) { target.Fenced, err = s.recovery.Fenced(id, workspace, t.Key); return }))
-		if t.Series != "" {
-			var high int64
-			errs = append(errs, s.recoveryCall("high_water", func() (err error) { high, err = s.recovery.HighWater(id, workspace, t.Series); return }))
-			target.HighWater = &high
-		}
-		row.Unknown = append(row.Unknown, target)
+		row.OtherScope = row.OtherScope || t.Workspace != workspace
 	}
-	return row, errors.Join(errs...)
+	var err error
+	row.Unknown, row.UnknownTotal, err = s.unknownRows(f, workspace, 0, recoveryShown)
+	row.UnknownNext = nextOf(len(row.Unknown), row.UnknownTotal, 0)
+	return row, err
 }
 
 func (s *Server) resumeRow(f recoveryFacts) recoveryResumeRow {
@@ -357,11 +339,8 @@ func (s *Server) resumeRow(f recoveryFacts) recoveryResumeRow {
 	switch v := f.view; {
 	case v != nil:
 		row.Mode, row.Phase, row.PendingTotal, row.Lost = modeRecoveryResume, v.Phase, len(v.Pending), append(row.Lost, v.Lost...)
-		for _, e := range v.Pending {
-			if len(row.Pending) < recoveryShown {
-				row.Pending = append(row.Pending, recoveryEventRow{Sequence: e.Sequence, Kind: e.Event.Kind, Domain: e.Event.Domain, At: stamp(e.At)})
-			}
-		}
+		row.Pending = pendingRows(f, 0, recoveryShown)
+		row.PendingNext = nextOf(len(row.Pending), row.PendingTotal, 0)
 	case f.state == recovery.StateLocked:
 		row.Mode = modeLockRelease
 	}

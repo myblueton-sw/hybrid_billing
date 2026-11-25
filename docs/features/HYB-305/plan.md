@@ -511,6 +511,24 @@ Review (independent reviewer, read-only, 2026-11-25): approve, no blocking findi
 
 Verification: the whole server package passed (before the comparison was added to the test; the retention tests passed again after it); console tests 1419, 1416 passed, 3 skipped; the rendered check `tools/members-qa.mjs` 61 passed against a local service with the sample seed, in which the rows beyond the sample's are written by the check. The owner has not reviewed the screen.
 
+# Increment 5a, the member lists of P03 (2026-11-25)
+
+Facts (main 938deb9): for each installation the recovery read lists the newest 50 entries of the set's history (the module keeps 100), and, while a recovery is open, the first 50 open calls and unknown targets of the reader's workspace and the first 50 pending events, each with its total. Nothing in a running service opens a recovery or fills these lists beyond the seed (one open call, one unknown target, two pending events, no history); no command begins a recovery. None of the rows is the target of a command or of a link; the lost events are served whole and stay so.
+
+Built:
+
+- The main read keeps its rows and order; the four lists gain `history_next`, `open_calls_next`, `unknown_next` and `pending_next`.
+- One read for the four: `GET /api/v1/recovery/rows` with `installation`, `list` (`history`, `open_calls`, `unknown`, `pending`), `after` and `limit` (at most 50), answering `rows`, `next`, `total`, `order` and `rows_can_move`. The history is newest first and its cursor is the entry's number from the oldest, so a new entry does not move the rows after it while the module holds fewer than its 100 entries; once it is full a new entry drops the oldest and every number goes down by one, so a further read can repeat a row already shown (the screen lists it once) and never skips one. The answer says `rows_can_move: false` for the history with that exception. The other three are in the module's order and their cursor is the number of rows passed; they belong to an open recovery and shrink as it proceeds, so rows can move between two reads, which the answer says and the screen says beside the list. An installation that does not exist or that the reader's workspace may not see is refused alike (422). The read has the recovery read's fault step.
+- Screen: each list loads its further rows itself (`recovery/LiveRows.tsx` on `shared/more-rows.ts`), with the count of all, "Load more", the failure and the read-again line. A row that an answer repeats is listed once; an unknown target is told apart by its key, series and number together, since two calls on one key give two targets.
+
+Tested through the builders with made-up module views (120 rows, one in ten of another workspace) and through the read on the sample; the read's paging beyond the sample's rows is not exercised over HTTP, because no producer exists to fill a real recovery in a test.
+
+Not built: the installations themselves (the read lists every installation the workspace may see; their number is not cut) and the lost events.
+
+Review (independent reviewer, read-only, 2026-11-25): approve with conditions, then resolved on a bounded re-review. It found that unknown targets were told apart by key alone, so a second target on the same key would have been left off the screen with no way to load it; they are now told apart by key, series and number. It also corrected this section's claim about the history cursor, which holds only until the module's 100 entries are full. It confirmed, builder by builder, that the main read answers as before apart from the four new fields. Composition and copy check (ui-designer): failed at first on two points, the Korean sentence not using the screen's word for reload and a button that did not name its list; both were corrected with its strings and it then passed. It did not see the history and unknown targets foots or the Arabic renders after the change.
+
+Verification: the whole server package passed (before the corrections; the only Go change after it is an added test case, and the recovery row tests passed again); console tests 1420, 1417 passed, 3 skipped; the rendered check `tools/recovery-rows-qa.mjs` 109 passed against a local service with the sample seed, with rows written by the check. The owner has not reviewed the screen.
+
 # Open for the owner
 
 - A workspace can now page through all of its deletion records in the window (increment 4g), up to 1,000 instead of 50. Their sequence numbers are numbers of the whole installation, so the gaps between them show roughly how many deletions other workspaces had; the watermark and the first fifty rows already showed this in part. Whether a workspace should see installation-wide sequence numbers at all is for the owner.

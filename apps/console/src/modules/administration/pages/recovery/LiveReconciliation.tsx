@@ -1,5 +1,7 @@
 import type { Locale } from "../../../../shared/types";
 import type { ReconciliationRow } from "../../../../service/recovery";
+import { targetId, targetOf } from "../../../../service/recovery";
+import { RowsFoot, useRows } from "./LiveRows";
 import { k } from "./live-copy";
 import { highWaterOf, more, noRestorePoint, rowId, setOf } from "./live-model";
 import { Code, Known, ListOr, ltr } from "./live-format";
@@ -32,12 +34,14 @@ function Externals({ l, r, noPoint }: { l: Locale; r: ReconciliationRow; noPoint
   );
 }
 
-function Targets({ l, r }: { l: Locale; r: ReconciliationRow }) {
-  const list = r.unknown_targets;
+function Targets({ l, r, shared }: { l: Locale; r: ReconciliationRow; shared: Shared }) {
+  const paged = r.unknown_next !== null;
+  const further = useRows(shared, r.installation, "unknown", r.unknown_targets, r.unknown_next, targetOf, targetId);
+  const list = paged ? further.rows : r.unknown_targets;
   return (
     <section aria-label={k.targetsTitle(l)}>
       <h4>{k.targetsTitle(l)}</h4>
-      {list !== null && more(list.length, r.unknown_total) && <p className="p03-small live-quiet">{k.showingOf(l, r.unknown_total ?? 0)}</p>}
+      {!paged && list !== null && more(list.length, r.unknown_total) && <p className="p03-small live-quiet">{k.showingOf(l, r.unknown_total ?? 0)}</p>}
       {list !== null && list.length === 0 && r.unknown_total !== 0 ? (
         <p className="live-empty">{k.unknown(l)}</p>
       ) : (
@@ -56,7 +60,7 @@ function Targets({ l, r }: { l: Locale; r: ReconciliationRow }) {
                   {rows.map((x, n) => {
                     const hw = highWaterOf(x.series, x.high_water);
                     return (
-                      <tr key={x.key || n} className="p03-target">
+                      <tr key={targetId(x) || n} className="p03-target">
                         <td className="p03-first p03-wrap"><Known l={l} value={x.key} wrap /></td>
                         <td data-label={k.colSeries(l)} className="p03-wrap">{x.series ? ltr(x.series, true) : k.noSeries(l)}</td>
                         <td data-label={k.colNumber(l)} className="p03-num">{x.number === null ? k.unknown(l) : <bdi dir="ltr">{x.number}</bdi>}</td>
@@ -71,12 +75,14 @@ function Targets({ l, r }: { l: Locale; r: ReconciliationRow }) {
           )}
         </ListOr>
       )}
+      {paged && <RowsFoot l={l} kind="targets" rows={further} total={r.unknown_total} moves more={k.rowsMoreTargets(l)} />}
       {r.other_scope_present === null ? <p className="p03-small live-quiet">{k.otherTargetsUnknown(l)}</p> : r.other_scope_present ? <p className="p03-small live-quiet">{k.otherTargets(l)}</p> : null}
     </section>
   );
 }
 
-export function ReconciliationView({ l, page, selection }: Shared) {
+export function ReconciliationView(shared: Shared) {
+  const { l, page, selection } = shared;
   return (
     <>
       <ListOr l={l} items={page.reconciliation.rows} empty={k.reconciliationEmpty(l)}>
@@ -95,7 +101,7 @@ export function ReconciliationView({ l, page, selection }: Shared) {
                   <div className="p03-install-head"><h3 id={head}><Known l={l} value={r.installation} /></h3></div>
                   <div className="p03-recon-grid">
                     <Externals l={l} r={r} noPoint={noPoint} />
-                    <Targets l={l} r={r} />
+                    <Targets l={l} r={r} shared={shared} />
                   </div>
                   <dl className="p03-facts p03-facts-2">
                     <div><dt>{k.skipped(l)}</dt><dd>{r.skipped === null ? k.unknown(l) : <bdi dir="ltr">{r.skipped}</bdi>}</dd></div>

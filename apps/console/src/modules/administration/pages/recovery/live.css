@@ -573,3 +573,6 @@
   inline-size: auto;
   min-block-size: 44px;
 }
+.p03-live .p03-rows-foot {
+  margin-block: 16px 28px;
+}

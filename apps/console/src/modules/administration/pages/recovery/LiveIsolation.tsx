@@ -2,6 +2,8 @@ import type { Locale } from "../../../../shared/types";
 import { useEffect, useRef, useState } from "react";
 import { AdminError } from "../../../../service/admin";
 import type { IsolationRow, LockEntry, LocksPage } from "../../../../service/recovery";
+import { callOf } from "../../../../service/recovery";
+import { RowsFoot, useRows } from "./LiveRows";
 import { k } from "./live-copy";
 import {
   basisContext, basisFrom, basisOf, blockerPolicy, callsOf, generationNumber, installTarget, lockRows, more, pendingNow, refusedNow, rowId, stoppedOf, type Basis,
@@ -9,23 +11,26 @@ import {
 import { Code, Known, ListOr, Prose, Rich, Stamp, Who, ltr } from "./live-format";
 import { CommandForm, RowNote, line, useOpen, type Blocker, type Shared } from "./LiveCommand";
 
-function Calls({ l, r }: { l: Locale; r: IsolationRow }) {
+function Calls({ l, r, shared }: { l: Locale; r: IsolationRow; shared: Shared }) {
   const c = callsOf(r);
+  const paged = r.open_calls_next !== null;
+  const further = useRows(shared, r.installation, "open_calls", r.open_calls, r.open_calls_next, callOf, (x) => x.id);
+  const calls = paged ? further.rows : r.open_calls;
   return (
     <section className="p03-calls" aria-label={k.openCalls(l)}>
       <h4>{k.openCalls(l)}</h4>
       {c.kind === "not_shown" && <p className="live-empty">{k.callsNotShown(l)}</p>}
       {c.kind === "empty" && <p className="live-empty">{k.noCalls(l)}</p>}
       {c.kind === "unknown" && <p className="live-empty">{c.code ? <>{k.unknown(l)} ({ltr(c.code)})</> : k.unknown(l)}</p>}
-      {c.kind === "listed" && r.open_calls && (
+      {c.kind === "listed" && calls && (
         <>
-          {more(r.open_calls.length, r.open_calls_total) && <p className="p03-small live-quiet">{k.showingOf(l, r.open_calls_total ?? 0)}</p>}
+          {!paged && more(calls.length, r.open_calls_total) && <p className="p03-small live-quiet">{k.showingOf(l, r.open_calls_total ?? 0)}</p>}
           <div className="live-table">
             <table className="p03-table">
               <colgroup><col className="p03-c16" /><col className="p03-c22" /><col className="p03-c22" /><col className="p03-c40" /></colgroup>
               <thead><tr><th scope="col">{k.colCall(l)}</th><th scope="col">{k.colWriter(l)}</th><th scope="col">{k.colDeadline(l)}</th><th scope="col">{k.colTarget(l)}</th></tr></thead>
               <tbody>
-                {r.open_calls.map((call, n) => (
+                {calls.map((call, n) => (
                   <tr key={call.id || n} className="p03-call">
                     <td className="p03-first"><Known l={l} value={call.id} /></td>
                     <td data-label={k.colWriter(l)}><Known l={l} value={call.writer} /></td>
@@ -44,6 +49,7 @@ function Calls({ l, r }: { l: Locale; r: IsolationRow }) {
         {r.other_scope_present === null ? <>{k.otherScopeUnknown(l)} </> : r.other_scope_present ? <>{k.otherScope(l)} </> : null}
         {k.deadlineNote(l)}
       </p>
+      {paged && c.kind === "listed" && calls && <RowsFoot l={l} kind="calls" rows={further} total={r.open_calls_total} moves more={k.rowsMoreCalls(l)} />}
     </section>
   );
 }
@@ -219,7 +225,7 @@ export function IsolationView(shared: Shared) {
                     </dd>
                   </div>
                 </dl>
-                <Calls l={l} r={r} />
+                <Calls l={l} r={r} shared={shared} />
                 <LockLog l={l} r={r} revision={shared.page.revision} read={shared.api.recoveryLocks} onRefused={(e) => {
                   if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
                   if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }

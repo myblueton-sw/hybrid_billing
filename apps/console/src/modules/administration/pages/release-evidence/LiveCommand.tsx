@@ -110,6 +110,7 @@ export function CommandForm(props: FormProps) {
   const [message, setMessage] = useState<Message | null>(null);
   const [renewing, setRenewing] = useState(false);
   const confirmTitle = useRef<HTMLHeadingElement>(null);
+  const editTitle = useRef<HTMLHeadingElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const sending = useRef(false);
   const pending = pendingNow(command, target);
@@ -118,7 +119,7 @@ export function CommandForm(props: FormProps) {
   const rationale = draft.rationale ?? "";
   const ctx = pending ? pending.context : props.context(draft);
 
-  useEffect(() => { if (step === "confirm") confirmTitle.current?.focus(); }, [step]);
+  useEffect(() => { if (step === "confirm") confirmTitle.current?.focus(); else if (document.activeElement === document.body) editTitle.current?.focus(); }, [step]);
   useEffect(() => { if (message) messageRef.current?.focus(); }, [message]);
   useEffect(() => { discard(command, target, { ...values, rationale: rationale.trim() }); }, [shown]);
 
@@ -260,7 +261,7 @@ export function CommandForm(props: FormProps) {
   return (
     <div className="p05-form-wrap">
       {diagnostic && <DiagnosticDetails l={l} detail={diagnostic} />}
-      {step === "edit" && <h3 className="p05-form-title">{heading}</h3>}
+      {step === "edit" && <h3 ref={editTitle} tabIndex={-1} className="p05-form-title">{heading}</h3>}
       {pending && !message && <p className="p05-pending" role="status">{f.pendingAttempt(l)}</p>}
       {message && (
         <div ref={messageRef} tabIndex={-1} className={message.alert ? "live-error p05-message" : "p05-message p05-quiet-note"} role={message.alert ? "alert" : "status"}>

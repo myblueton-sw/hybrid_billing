@@ -101,6 +101,7 @@ export function CommandForm(props: FormProps) {
   const [again, setAgain] = useState(false);
   const [message, setMessage] = useState<{ text: string; alert: boolean } | null>(null);
   const confirmTitle = useRef<HTMLHeadingElement>(null);
+  const editTitle = useRef<HTMLHeadingElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const staleRef = useRef<HTMLDivElement>(null);
   const sending = useRef(false);
@@ -110,7 +111,7 @@ export function CommandForm(props: FormProps) {
   const rationale = draft.rationale ?? "";
   const ctx = pending ? pending.context : props.context(draft);
 
-  useEffect(() => { if (step === "confirm") confirmTitle.current?.focus(); }, [step]);
+  useEffect(() => { if (step === "confirm") confirmTitle.current?.focus(); else if (document.activeElement === document.body) editTitle.current?.focus(); }, [step]);
   useEffect(() => { if (message) messageRef.current?.focus(); }, [message]);
   useEffect(() => { if (pending?.stale) staleRef.current?.focus(); }, [pending?.stale]);
   useEffect(() => { if (!pending?.stale) discard(command, target, { ...values, rationale: rationale.trim() }); }, [shown]);
@@ -272,7 +273,7 @@ export function CommandForm(props: FormProps) {
   return (
     <div className="p04-form-wrap">
       {diagnostic && <DiagnosticDetails l={l} detail={diagnostic} />}
-      {step === "edit" && <h4 className="p04-form-title"><Rich text={heading} /></h4>}
+      {step === "edit" && <h4 ref={editTitle} tabIndex={-1} className="p04-form-title"><Rich text={heading} /></h4>}
       {pending && step === "edit" && !message && <p className="live-note-rule" role="status">{k.pendingAttempt(l)}</p>}
       {message && (
         <div ref={messageRef} tabIndex={-1} className={message.alert ? "live-error" : "live-note-rule"} role={message.alert ? "alert" : "status"}>

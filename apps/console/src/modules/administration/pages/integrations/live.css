@@ -562,6 +562,16 @@
   .p02-live td .p02-wrap .live-mono {
     white-space: normal;
   }
+  .p02-live .p02-fold td .p02-login,
+  .p02-live .p02-fold td .live-mono {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .p02-live .p02-fold td .p02-tag {
+    display: inline-block;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
   .p02-confirm .live-facts {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

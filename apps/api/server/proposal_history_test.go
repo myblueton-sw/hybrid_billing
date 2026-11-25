@@ -220,3 +220,81 @@ func listedShape(rows []any) (int, int, int, int) {
 	}
 	return len(rows), first, waiting, oldestClosed
 }
+
+func lockNumbers(rows any) []int { return keptNumbers(rows) }
+
+func TestRecoveryLockLogIsCutCountedAndRead(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root := f.as(AdminLogin)
+	install := f.s.rec.install(recoveryStandby)
+	seeded := len(install.locks)
+	row := func(got reply) map[string]any {
+		t.Helper()
+		rows, _ := got.body["isolation"].(map[string]any)["rows"].([]any)
+		for _, raw := range rows {
+			if r := raw.(map[string]any); r["installation"] == recoveryStandby {
+				return r
+			}
+		}
+		t.Fatalf("no isolation row for the standby installation: %s", got.raw[:min(len(got.raw), 300)])
+		return nil
+	}
+	few := row(f.recoveryRead(root))
+	if facts := few["lock_history"].(map[string]any); whole(facts["total"]) != seeded || facts["next"] != "" || len(lockNumbers(few["locks"])) != seeded {
+		t.Fatalf("a short log is whole and says nothing further exists: %v", facts)
+	}
+	at := install.locks
+	for n := 0; n < 130; n++ {
+		at = append(at, recoveryLockRecord{by: SampleAdmin, rationale: fmt.Sprintf("Drill %03d", n), at: f.s.clock()})
+	}
+	install.locks = at
+	total := seeded + 130
+	main := row(f.recoveryRead(root))
+	facts := main["lock_history"].(map[string]any)
+	shown := lockNumbers(main["locks"])
+	if whole(facts["total"]) != total || len(shown) != recoveryShown || shown[0] != total-recoveryShown+1 || shown[len(shown)-1] != total || fmt.Sprint(facts["next"]) != fmt.Sprint(shown[0]) {
+		t.Fatalf("the main read lists the newest fifty in the order recorded and says where older ones start: %v first %d last %d", facts, shown[0], shown[len(shown)-1])
+	}
+	path := "/api/v1/recovery/locks?installation=" + recoveryStandby
+	all, next, pages := []int{}, fmt.Sprint(facts["next"]), 0
+	for next != "" {
+		got := f.readAs(root, path+"&limit=40&after="+next)
+		if got.status != 200 || whole(got.body["total"]) != len(install.locks) || whole(got.body["matching"]) != len(install.locks) || got.body["order"] != "newest_first" || got.body["installation"] != recoveryStandby {
+			t.Fatalf("after %s: %s", next, got.raw[:min(len(got.raw), 300)])
+		}
+		all = append(all, lockNumbers(got.body["locks"])...)
+		next = fmt.Sprint(got.body["next"])
+		if pages++; pages == 1 {
+			install.locks = append(install.locks, recoveryLockRecord{by: SampleAdmin, rationale: "added meanwhile", at: f.s.clock()})
+		}
+	}
+	if len(all) != total-recoveryShown || all[0] != total-recoveryShown || all[len(all)-1] != 1 {
+		t.Fatalf("the older locks in pages: %d from %d to %d", len(all), all[0], all[len(all)-1])
+	}
+	for index := 1; index < len(all); index++ {
+		if all[index] != all[index-1]-1 {
+			t.Fatalf("a gap or a repeat at %d", index)
+		}
+	}
+	found := f.readAs(root, path+"&q=drill%20129")
+	if n := lockNumbers(found.body["locks"]); found.status != 200 || len(n) != 1 || n[0] != seeded+130 || whole(found.body["matching"]) != 1 {
+		t.Errorf("a search by reason: %s", found.raw[:min(len(found.raw), 300)])
+	}
+	if by := f.readAs(root, path+"&q=admin%40example&limit=1"); by.status != 200 || whole(by.body["matching"]) < 131 || by.body["next"] == "" {
+		t.Errorf("a search by sign-in name: %d %v", by.status, by.body["matching"])
+	}
+	for _, query := range []string{"", "?installation=", "?installation=sample-absent", "?installation=" + recoveryStandby + "&installation=" + recoveryStandby, "?installation=" + recoveryStandby + "&after=0",
+		"?installation=" + recoveryStandby + "&limit=101", "?installation=" + recoveryStandby + "&q=", "?installation=" + recoveryStandby + "&state=x"} {
+		if got := f.readAs(root, "/api/v1/recovery/locks"+query); got.status != 422 {
+			t.Errorf("%s: %d", query, got.status)
+		}
+	}
+	if got := f.readAs(actor{}, path); got.status != 401 {
+		t.Errorf("anonymous: %d", got.status)
+	}
+	member, theirs := f.readAs(f.as(MemberLogin), path), f.recoveryRead(f.as(MemberLogin))
+	if member.status != theirs.status || (member.status == 200 && theirs.body["state"] != "configured") {
+		t.Errorf("a member reads the lock log (%d) but not the recovery read (%d %v)", member.status, theirs.status, theirs.body["state"])
+	}
+}

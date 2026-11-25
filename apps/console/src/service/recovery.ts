@@ -24,7 +24,9 @@ export type SetRow = {
   abandon: string;
 };
 export type OpenCall = { id: string; writer: string; deadline: string; key: string; series: string; number: number | null };
-export type LockEntry = { by: string; by_login: string; rationale: string; at: string };
+export type LockEntry = { number: number | null; by: string; by_login: string; rationale: string; at: string };
+export type LockFacts = { total: number; next: string };
+export type LocksPage = { rows: LockEntry[]; next: string; total: number };
 export type IsolationRow = {
   installation: string;
   state: string;
@@ -40,6 +42,7 @@ export type IsolationRow = {
   other_scope_present: boolean | null;
   permits: string;
   locks: LockEntry[] | null;
+  lock_history: LockFacts | null;
 };
 export type ExternalSystem = { id: string; kind: string; status: string };
 export type UnknownTarget = { key: string; series: string; number: number | null; fenced: boolean | null; high_water: number | null };
@@ -188,7 +191,8 @@ export function isolationRowOf(r: Raw): IsolationRow {
     open_calls_total: count(r.open_calls_total),
     other_scope_present: flag(r.other_scope_present),
     permits: str(r.permits),
-    locks: rows(r.locks, (x) => ({ by: str(x.by), by_login: str(x.by_login), rationale: str(x.rationale), at: str(x.at) })),
+    locks: rows(r.locks, lockOf),
+    lock_history: lockFactsOf(r.lock_history),
   };
 }
 
@@ -294,4 +298,20 @@ export function recoveryOf(body: Raw): RecoveryPage {
     proposals: rows(body.proposals, recoveryProposalOf),
     proposal_history: isRow(body.proposal_history) ? keptFactsOf(body.proposal_history) : null,
   };
+}
+
+export function lockOf(x: Raw): LockEntry {
+  return { number: count(x.number), by: str(x.by), by_login: str(x.by_login), rationale: str(x.rationale), at: str(x.at) };
+}
+
+export function lockFactsOf(v: unknown): LockFacts | null {
+  if (!isRow(v)) return null;
+  const total = count(v.total);
+  return total === null || typeof v.next !== "string" ? null : { total, next: v.next };
+}
+
+export function locksPageOf(body: Raw): LocksPage | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.locks) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.locks.filter(isRow).map(lockOf), next: body.next, total };
 }

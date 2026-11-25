@@ -306,3 +306,21 @@ test("a run's items and a hold's outcomes are read strictly and appended once", 
   assert.deepEqual(calls, ["/api/v1/retention/run-artifacts?run=retention-run-7&limit=50&after=50", "/api/v1/retention/hold-outcomes?hold=hold%3Aa+b&limit=50&after=x%3Ay"]);
   await assert.rejects(api.retentionRunArtifacts("retention-run-7", "2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
 });
+
+test("the possible owners of a hold are read strictly, by search and by identifier", async () => {
+  const { ownersPageOf } = await import("./retention");
+  const { AdminError, adminClient } = await import("./admin");
+  for (const bad of [{}, { owners: [], matching: 0 }, { owners: "x", matching: 0, more: false }, { owners: [], matching: "1", more: false }, { owners: [], matching: 0, more: "no" }]) assert.equal(ownersPageOf(bad), null, JSON.stringify(bad));
+  assert.deepEqual(ownersPageOf({ owners: [{ user_id: "u1", login: "a@example.invalid" }, { user_id: "bad id" }, null], matching: 25, more: true }), { rows: [{ id: "u1", login: "a@example.invalid" }], matching: 25, more: true });
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length < 4 ? { owners: [{ user_id: "u1", login: "a" }], matching: 1, more: false } : { owners: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.retentionOwners({ q: "" })).rows[0].id, "u1");
+  await api.retentionOwners({ q: "a b@c" });
+  await api.retentionOwners({ id: "u:1" });
+  assert.deepEqual(calls, ["/api/v1/retention/owners", "/api/v1/retention/owners?q=a+b%40c", "/api/v1/retention/owners?id=u%3A1"]);
+  await assert.rejects(api.retentionOwners({ q: "x" }), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});

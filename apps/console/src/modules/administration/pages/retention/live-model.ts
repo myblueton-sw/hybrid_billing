@@ -645,10 +645,6 @@ export function partialCounts(fields: Record<string, string>): { a: number | nul
   return { a: n(fields.not_preserved), b: n(fields.outcome_pending), c: n(fields.partially_deleted) };
 }
 
-export function ownerOption(o: Owner): string {
-  return o.login ? "⁦" + o.login + " (" + o.id + ")⁩" : "⁦" + o.id + "⁩";
-}
-
 export function holdValues(d: Record<string, string>, tenant: boolean): Record<string, string> {
   const out: Record<string, string> = { owner: d.owner ?? "", reason: (d.reason ?? "").trim() };
   if (tenant && d.class && classes.includes(d.class)) out.class = d.class;

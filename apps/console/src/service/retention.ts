@@ -442,6 +442,12 @@ export function ownersOf(subjects: unknown): Owner[] {
   });
 }
 
+export function ownersPageOf(body: Raw): { rows: Owner[]; matching: number; more: boolean } | null {
+  const matching = count(body.matching);
+  if (!Array.isArray(body.owners) || matching === null || typeof body.more !== "boolean") return null;
+  return { rows: ownersOf(body.owners), matching, more: body.more };
+}
+
 export function kindCountsOf(v: unknown): Record<string, number> | null {
   if (!isRow(v)) return null;
   return Object.fromEntries(Object.entries(v).filter((e): e is [string, number] => typeof e[1] === "number" && Number.isInteger(e[1]) && e[1] >= 0));

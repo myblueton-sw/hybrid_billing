@@ -10,7 +10,7 @@ import { retentionOf, proposalOf, type RetentionPage } from "../../../../service
 import { sample } from "../../../../service/retention.sample";
 import {
   approveNarrow, approveValuesFor, artifactIdsInUse, artifactOf, artifactTarget, missingArtifacts, withHeldArtifacts, withMoreReferences, blockerPolicy, canonical, changeOf, classTarget, clearReviewed, currentContext, currentFrom, currentOf, decisionLine, deniedOutcome, discard, draftOf,
-  duplicateIn, fieldReaction, holdValues, keepsAttempt, ownerOption, forget, frozenTargetOk, goneKind, graceProblem, holdMatch, holdTarget, impactValues, keepDraft, keepReviewed, keptKey, listed, partialCounts, pendingFor,
+  duplicateIn, fieldReaction, holdValues, keepsAttempt, forget, frozenTargetOk, goneKind, graceProblem, holdMatch, holdTarget, impactValues, keepDraft, keepReviewed, keptKey, listed, partialCounts, pendingFor,
   pendingNow, pendingPolicyFor, pendingReleaseFor, periodProblem, proposalTarget, pruneRefusals, react, reasonProblem, refusedNow, reviewedChanged, reviewedOf, runNumber, runTarget,
   sameAsCurrent, selectionOf, setScope, settle as settleRecorded, snapshotOf, stateSentence, stillAllowed, storeSum, tenantTarget, textProblem, timeKnown, utf8Bytes, vanished, viewOf,
 } from "./live-model";
@@ -204,9 +204,7 @@ test("place-hold values never send class with an item target, and owner options"
   assert.deepEqual(holdValues({ owner: "u", reason: "r", class: "final" }, true), { owner: "u", reason: "r", class: "final" });
   assert.deepEqual(holdValues({ owner: "u", reason: "r", class: "" }, true), { owner: "u", reason: "r" });
   assert.deepEqual(holdValues({ owner: "u", reason: "r", class: "bogus" }, true), { owner: "u", reason: "r" });
-  assert.equal(ownerOption({ id: "u1", login: "a@example.invalid" }), "⁦a@example.invalid (u1)⁩");
-  assert.equal(ownerOption({ id: "u1", login: "" }), "⁦u1⁩");
-  assert.equal(k.form.ownerPlaceholder("en"), "Choose an owner");
+  assert.equal(k.form.ownerChange("en"), "Change");
   assert.equal(k.form.ownerMissing("en"), "Choose an owner.");
   assert.equal(k.form.ownersFailed("en"), "The list of possible owners could not be read.");
   assert.equal(k.form.ownersEmpty("en"), "No active member can own a hold.");

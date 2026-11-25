@@ -149,6 +149,7 @@ type evidenceRequirementRow struct {
 	Design              string                         `json:"design"`
 	Commit              *string                        `json:"commit"`
 	Retired             bool                           `json:"retired"`
+	State               *string                        `json:"state"`
 	Replacement         *string                        `json:"replacement"`
 	States              map[string]string              `json:"states"`
 	BuildsMore          bool                           `json:"builds_more"`
@@ -171,6 +172,7 @@ type evidenceGate struct {
 type evidenceRequirements struct {
 	Origin       string                               `json:"origin"`
 	Requirements evidenceList[evidenceRequirementRow] `json:"requirements"`
+	Next         string                               `json:"next"`
 	Gate         *evidenceGate                        `json:"gate"`
 }
 
@@ -257,6 +259,7 @@ type evidenceFacts struct {
 	origin    string
 	candidate *releasetrace.Release
 	build     string
+	replacing map[releasetrace.Key]bool
 }
 
 func (s *Server) evidencePerson(id string) *evidencePerson {
@@ -459,9 +462,12 @@ func retireCheck(k, replacement releasetrace.Key) releasetrace.Change {
 
 func (f *evidenceFacts) replacements(index int) (evidenceList[evidenceTarget], error) {
 	stored := f.s.ev.requirements
+	if f.replacing == nil {
+		f.replacing = f.s.ev.pendingReplacements()
+	}
 	all := []evidenceTarget{}
 	for m, other := range stored {
-		if m == index || f.s.ev.pendingReplacement(other) {
+		if m == index || f.replacing[other] {
 			continue
 		}
 		reason, err := f.check(retireCheck(stored[index], other), f.reader, "")
@@ -510,6 +516,7 @@ func (f *evidenceFacts) requirementRow(index int) (evidenceRequirementRow, error
 		row.Replacement = optional(label(q.Replacement))
 	}
 	if f.candidate != nil {
+		row.State = optional(q.State)
 		builds := s.ev.builds
 		for n := len(builds) - 1; n >= 0 && len(row.States) < evidenceStatesShown; n-- {
 			v, err := s.traceRequirement(k, builds[n].id)
@@ -539,8 +546,14 @@ func (f *evidenceFacts) requirements() (evidenceRequirements, error) {
 	s := f.s
 	section := evidenceRequirements{Origin: f.origin}
 	var err error
-	if section.Requirements, err = listOf(len(s.ev.requirements), evidenceShown, f.requirementRow); err != nil || f.candidate == nil {
+	if section.Requirements, err = listOf(len(s.ev.requirements), evidenceShown, f.requirementRow); err != nil {
 		return section, err
+	}
+	if section.Requirements.More {
+		section.Next = strconv.Itoa(len(section.Requirements.Rows))
+	}
+	if f.candidate == nil {
+		return section, nil
 	}
 	g, err := s.traceGate(*f.candidate)
 	if err != nil {
@@ -700,13 +713,10 @@ func (f *evidenceFacts) decisions() (evidenceDecisions, error) {
 	return evidenceDecisions{Origin: f.origin, Proposals: list, SupportDecisions: notConnected, ActivationReview: notConnected, Ledger: retentionLedger}, err
 }
 
-func (s *Server) evidencePage(verifier identity.Verifier, reader string, now time.Time) (evidencePage, error) {
-	if s.faulty("release-evidence-read") {
-		return evidencePage{}, releasetrace.ErrInvalid
-	}
+func (s *Server) evidenceFactsFor(verifier identity.Verifier, reader string, now time.Time) (*evidenceFacts, error) {
 	approvers, err := s.retentionApprovers(verifier, now)
 	if err != nil {
-		return evidencePage{}, err
+		return nil, err
 	}
 	f := &evidenceFacts{s: s, reader: reader, origin: evidenceOriginEmpty}
 	for _, user := range approvers {
@@ -715,9 +725,22 @@ func (s *Server) evidencePage(verifier identity.Verifier, reader string, now tim
 	if s.ev.seeded {
 		f.origin = evidenceOriginSeed
 	}
-	page := evidencePage{Revision: s.Revision(), Now: stamp(now), State: stateConfigured}
 	if c := s.ev.candidate; c != nil {
 		f.candidate, f.build = c, c.Build
+	}
+	return f, nil
+}
+
+func (s *Server) evidencePage(verifier identity.Verifier, reader string, now time.Time) (evidencePage, error) {
+	if s.faulty("release-evidence-read") {
+		return evidencePage{}, releasetrace.ErrInvalid
+	}
+	f, err := s.evidenceFactsFor(verifier, reader, now)
+	if err != nil {
+		return evidencePage{}, err
+	}
+	page := evidencePage{Revision: s.Revision(), Now: stamp(now), State: stateConfigured}
+	if c := f.candidate; c != nil {
 		page.Candidate = &evidenceCandidate{Version: c.Version, Build: c.Build, Release: notConnected}
 	}
 	if page.Matrix, err = f.matrix(); err != nil {

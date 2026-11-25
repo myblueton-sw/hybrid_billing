@@ -145,6 +145,21 @@ Tests planned: the pages equal the whole list in order without repeats while req
 
 Design review (AI, Claude Opus 5.5, by reading the code; nothing executed), 2026-11-25: approve with conditions, all incorporated above. Its findings: listing the newest 50 in the main read would change the meaning of a documented order and needs the owner, while recording order with a cursor above the last number is as exact and changes nothing; a filtered list must not replace the rows the other views read; the reload path must hand the completed page to the command handling; a re-read of every loaded page costs a full walk per page under a search, so the acted-on row is read by target instead; 100 rows a page is too costly before the replacement walk is removed; `retired` is not a state; the filter facts were wrong (the paths carry provider, contract, role and version). It also found that no command adds a requirement. Re-review of the rewritten section: approve with one condition, incorporated: every row the command state refers to is read again by target, not only the row acted on.
 
+# Increment 2a, server part (2026-11-25)
+
+Built as designed above, on the server only; the console does not read it yet, so no screen changes with this part.
+
+- The main read: `requirements.next` (the number of the last row when more exist, else empty) and `state` on each row (`null` without a candidate build). Order and rows are unchanged; one existing test pinned the whole empty answer and now includes the empty `next`.
+- `GET /api/v1/release-evidence/requirements` (`evidencereqs.go`): `after`, `limit` (1 to 50), `q`, `state`, `retired`, or `target` alone. Without a filter no requirement is looked up except those of the page; with one, each requirement is looked up once. The facts are built by the function the main read uses (`evidenceFactsFor`).
+- The pending replacement targets are gathered once per request (`pendingReplacements`), for both reads.
+- A number above 1,000,000,000 in `after` or `target` is refused; the module's own limit of 10,000 is not exported, so a cursor between the two answers an empty page.
+
+Tests (`evidencereqs_test.go`): the pages after the main read equal the whole list in order while a requirement is added through the test hook; the first page of the further read equals the rows of the main read; each state alone and with each `retired` value against the module's own answer, and the filtered list in pages; search by identifier, label and case; rows by target equal the rows of the main read for two administrators and for a reader left without an eligible approver; a member is refused and an anonymous caller is unauthenticated, as on the main read; twenty targets accepted, twenty-one and every malformed form refused; the four reads of increment 1 refuse `state`, `retired` and `target`; a state filter without a candidate refused, and rows without `state` then; the state given when the candidate is not among the ten newest builds; a fault and an unknown stored requirement answer dependency unavailable; one run at 10,000 requirements. On the development machine (macOS arm64) that run measured about 18 ms for a search that walks all of them and about 32 ms for a page of ten rows, the page being dominated by the replacement walk that increment 2b removes. A single run on one machine, not a benchmark.
+
+Not covered: another workspace on the new read (the condition is the main read's, by reading); the cost of a state lookup for requirements with many shared tests.
+
+Checks for the server part (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (396 seconds) on the final code. Change review (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve with one condition, then resolved. It confirmed that the main read is otherwise unchanged and that the handler admits as the main read does. Its condition: one test compared nothing, because the member it used is refused the read, while this document said it compared rows; the test now compares a second administrator's rows and a reader left without an eligible approver, and asserts the member's and the anonymous caller's refusals.
+
 # Open for the owner
 
 - Whether the 200 contracts limit of O03 stays and when contracts can be created; until then O03's list is small and complete and nothing is built for it.

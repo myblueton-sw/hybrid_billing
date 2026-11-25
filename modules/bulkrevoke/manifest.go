@@ -85,6 +85,9 @@ func (r *Registry) Prepare(workspace, owner, draft string, effect Effect, revisi
 	}
 	listed := map[string]bool{}
 	for _, t := range targets {
+		if kept, in := e.users[t.User]; in && !kept {
+			return View{}, false, ErrInvalid
+		}
 		listed[t.User] = true
 	}
 	for _, x := range exclusions {

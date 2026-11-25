@@ -88,6 +88,15 @@ func addTargets(s *Server, ctx commands.Context, user string) (commands.Outcome,
 		"duplicates": strconv.Itoa(v.Duplicates)}}, nil
 }
 
+func removeTargets(s *Server, ctx commands.Context, user string) (commands.Outcome, error) {
+	v, got, err := s.bulk.Remove(ctx.Workspace, user, ctx.Target, strings.Split(ctx.Fields["users"], "\n"))
+	if err != nil {
+		return commands.Outcome{}, bulkError(err)
+	}
+	return commands.Outcome{ResultRevision: s.Next(), BusinessState: "draft", Fields: map[string]string{"draft": v.ID, "removed": strconv.Itoa(got.Removed),
+		"already": strconv.Itoa(got.Already), "ignored": strconv.Itoa(got.Ignored), "chosen": strconv.Itoa(v.Chosen)}}, nil
+}
+
 var matchingFields = []string{"q", "status", "membership", "role", "period", "signin", "invitation", "holder", "method"}
 
 func addMatching(s *Server, ctx commands.Context, user string) (commands.Outcome, error) {
@@ -148,6 +157,7 @@ func (s *Server) bulkDefinitions() []commands.Definition {
 	return []commands.Definition{
 		define("bulk_revocation.add_targets", true, []commands.Field{{Name: "users", Type: commands.Text, Required: true}, {Name: "draft", Type: commands.ID}}, addTargets),
 		define("bulk_revocation.add_matching", true, matchingDefinition(), addMatching),
+		define("bulk_revocation.remove_targets", false, []commands.Field{{Name: "users", Type: commands.Text, Required: true}}, removeTargets),
 		define("bulk_revocation.prepare", false, []commands.Field{{Name: "effect", Type: commands.Enum, Required: true,
 			Values: []string{string(bulkrevoke.SuspendMembership), string(bulkrevoke.SuspendUser)}}}, prepareBulk),
 		define("bulk_revocation.execute", false, []commands.Field{{Name: "digest", Type: commands.Text, Required: true}}, executeBulk),

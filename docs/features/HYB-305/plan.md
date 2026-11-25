@@ -340,6 +340,23 @@ Not covered by a test: the note after the server's retire path; the hook's order
 
 Reviews (AI, Claude Opus 5.5, by reading and, for the designer, from screenshots; neither ran anything), 2026-11-25. Independent design and change review: approve with conditions, no blocking finding. It traced every place the module releases a hold (one, the approval of a release) and every production call of that approval (the server's approve function, where the note is set), and found the note cannot make a hold in force look released. Its conditions, applied: this record's wording about the note, the dropped hold name after an approval, the search fields stated exactly, a server test for few holds in force with many released. ui-designer review: FAIL, then PASS. Its finding: one list mixing holds in force with released ones, under a count about the released ones only, could put a hold still in force below dozens of released cards; the view now has two groups, "In force (n)" first, as the proposals have. Left open from it: the group heading counts the released holds loaded, not all of them; the released group shows only its button when none is loaded yet; none of its screenshots showed the headings, which it confirmed from source.
 
+# Increment 3f, the server's subscription entries on P02 (2026-11-25)
+
+Facts (main fa43317): the webhooks module holds at most 16 subscriptions in use and 32 in all for a workspace, and when a proposal would exceed that it purges revoked subscriptions that have no dead letter and nothing queued. The server keeps its own entry for every subscription ever proposed (who proposed it, the rationale, the action history) and never removed one. The integrations read, the propose command, the screening of redeliveries and two other loops walk every entry and ask the module about each; entries of purged subscriptions are skipped by all of them, so they cost a module call each and show nothing.
+
+Built: when a subscription is proposed, the server drops its entries for subscriptions the module no longer holds. An entry is dropped only when the module answers "not found" for it; when the module cannot be asked, the entry stays. No read changes: those entries were never listed. So that no command answer changes either, the server keeps the identifier and the proposer of each dropped entry (the newest 10,000, the limit the request book uses): a command on a purged subscription still resolves its target and is refused for its stage as before, and a repeated request with the same key is still replayed. Beyond 10,000 such notes the oldest is forgotten and a command on it is answered as on a target that never existed. Their action history goes with them; it could not be read before either, since both the main read and the history read of increment 3b answer only for subscriptions the module holds.
+
+A side effect: an identifier the module purged and later accepts again no longer finds the old entry with its old history.
+
+Group 1 of the order above is complete with this.
+
+Checks for increment 3f (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (371 seconds) on the final code. The test proposes through the server and withdraws through the module for five times the module's limit: the server's entries stay equal to what the module holds, the first one is dropped and the seeded one kept, the read lists what the module holds, a failing module read drops nothing, and a command on a purged subscription is refused for its stage as before while one on an identifier that never existed is denied.
+
+Not covered by a test: a repeated request with the same key on a purged subscription; the limit of 10,000 notes; a revoked subscription with a dead letter or a queued redelivery staying in the list (the module's rule, not asserted on the server).
+
+Independent change review of increment 3f (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve with one condition, then resolved. It confirmed that the module deletes only revoked subscriptions with no dead letter and nothing queued, that no reader, request, held redelivery or pending row still needs such an entry, and that a subscription in use cannot answer "not found". Its condition: the first version said no answer changes, which was untrue for commands, because a command on a purged subscription would have been denied instead of refused for its stage and a repeated request would no longer have been replayed; the identifier and proposer are now kept, and it read the three callers of the target lookup to confirm a kept note cannot be taken for a subscription in use.
+
+
 # Open for the owner
 
 - The holds list on P04 now shows every hold in force and pages only the released ones (increment 3e).

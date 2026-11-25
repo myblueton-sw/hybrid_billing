@@ -17,7 +17,7 @@ const ends = (url, path) => new URL(url).pathname.endsWith("/api/v1/" + path);
 const screens = JSON.parse(await readFile(new URL("../src/modules/administration/screens.json", import.meta.url), "utf8")).filter((s) => (args.screens ?? "P02,P03,P04,P05").split(",").includes(s.id));
 const combos = (args.combos ?? "en:320,ar:320,en:1440").split(",").map((c) => c.split(":"));
 const frames = () => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(done, 60))))));
-const records = [];
+const records = [], submitted = [], shot = new Set();
 let probed = false;
 const rings = () => page.evaluate(async () => {
   const rgb = (v) => { const p = v.match(/[\d.]+/g)?.map(Number); return /^rgba?\(/.test(v) && p?.length >= 3 ? [p[0], p[1], p[2], p[3] ?? 1] : null; };
@@ -106,6 +106,22 @@ try {
         check(`${at}: every control of the form shows a focus indicator of 2px and 3:1`, ring.controls > 0 && ring.shown === ring.controls && ring.weak.length === 0, JSON.stringify({ controls: ring.controls, shown: ring.shown, weak: ring.weak.slice(0, 3) }));
         check(`${at}: placeholders meet 4.5:1`, ring.faint.length === 0, JSON.stringify(ring.faint.slice(0, 3)));
         if (args.shots && (found.overflow > 1 || found.clipped.length || found.cut.length || found.low.length || ring.weak.length || ring.faint.length)) await page.screenshot({ path: `${args.shots}/${screen.id}-${tab.key}-${m.kind}-${lang}-${width}.png`, fullPage: true });
+        if (args.submit) {
+          const sub = page.locator("[class*=form-wrap] button[type=submit]").first();
+          if ((await sub.count()) === 0) { notes.push(`${at}: the open form has no submit button`); await open(); continue; }
+          await sub.focus();
+          await page.keyboard.press("Enter");
+          await frames();
+          const after = await page.evaluate(() => { const a = document.activeElement, wrap = document.querySelector("[class*=form-wrap]"); const errs = wrap ? [...wrap.querySelectorAll(".service-field-error, [role=alert], [aria-invalid=true]")].filter((e) => e.getClientRects().length) : []; return { tag: a?.tagName ?? "", cls: String(a?.className ?? "").slice(0, 50), inside: !!(wrap && a && wrap.contains(a)), errors: errs.length, invalid: wrap ? wrap.querySelectorAll("[aria-invalid=true]").length : 0, described: wrap ? [...wrap.querySelectorAll("[aria-invalid=true]")].every((f) => (f.getAttribute("aria-describedby") ?? "").split(" ").some((id) => id && document.getElementById(id)?.textContent.trim())) : true, confirm: !!(wrap && wrap.querySelector("[class*=confirm]")), errorText: errs.map((e) => e.textContent.trim().slice(0, 40)).filter(Boolean).slice(0, 2) }; });
+          const shown = await inspectView(page);
+          const outcome = after.confirm ? "confirm" : after.errors ? "errors" : "other";
+          submitted.push({ screen: screen.id, view: tab.key, lang, width, kind: m.kind, outcome, ...after, overflow: shown.overflow, clipped: shown.clipped, cut: shown.cut, low: shown.low });
+          check(`${at}: after submitting from the keyboard the form shows its confirmation or its errors`, outcome !== "other", JSON.stringify(after));
+          check(`${at}: after submitting, focus is inside the form and not on the pressed button's ghost`, after.inside && after.tag !== "BODY", JSON.stringify(after));
+          if (outcome === "errors") check(`${at}: every field marked invalid points to a message with text`, after.invalid === 0 || after.described, JSON.stringify(after));
+          check(`${at}: the ${outcome} state does not overflow, cut off or lose text contrast`, shown.overflow <= 1 && shown.clipped.length === 0 && shown.cut.length === 0 && shown.low.length === 0, JSON.stringify({ overflow: shown.overflow, clipped: shown.clipped.slice(0, 2), cut: shown.cut.slice(0, 2), low: shown.low.slice(0, 3) }));
+          if (args.shots && !shot.has(screen.id + outcome + lang + width)) { shot.add(screen.id + outcome + lang + width); await page.screenshot({ path: `${args.shots}/${screen.id}-${outcome}-${lang}-${width}.png`, fullPage: false }); }
+        }
         await open();
       }
     }
@@ -114,7 +130,7 @@ try {
   check("the planted-defect probe ran", probed);
   check("every opener found opened a form that took focus", notes.length === 0, notes.join(" | "));
   check("no page error", errors.length === 0, errors.join(" | "));
-  if (args.shots) await (await import("node:fs/promises")).writeFile(`${args.shots}/form-states.json`, JSON.stringify(records, null, 1));
+  if (args.shots) await (await import("node:fs/promises")).writeFile(`${args.shots}/form-states.json`, JSON.stringify({ records, submitted }, null, 1));
 } catch (e) {
   check("the script ran to the end", false, e.stack || e.message);
 } finally {

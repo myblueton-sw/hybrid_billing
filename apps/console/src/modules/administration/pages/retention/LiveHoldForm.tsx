@@ -1,32 +1,153 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { AdminClient } from "../../../../service/admin";
-import { ownersOf, type ArtifactRow, type Owner } from "../../../../service/retention";
+import type { ArtifactRow, Owner } from "../../../../service/retention";
 import { classes } from "./live-codes";
 import { k } from "./live-copy";
-import { holdMatch, holdValues, ownerOption, partialCounts, runNumber, utf8Bytes, type FieldReaction } from "./live-model";
+import { holdMatch, holdValues, partialCounts, runNumber, utf8Bytes, type FieldReaction } from "./live-model";
 import { Code, Rich, holdTextError, href, ltr } from "./live-format";
 import { CommandForm, type Draft, type FieldErrors, type Fields, type Shared } from "./LiveCommand";
 
-export type Owners = { state: "loading" | "failed" | "ready"; list: Owner[] };
+export type OwnerSearch = {
+  term: string;
+  status: "searching" | "ready" | "failed";
+  rows: Owner[];
+  matching: number;
+  more: boolean;
+  seen: Record<string, string>;
+  kept: Record<string, "reading" | "failed" | "gone">;
+  opened: number;
+  search: (term: string) => void;
+  confirm: (id: string) => void;
+  reopen: () => void;
+  forget: (id: string) => void;
+};
 
-export function useOwners(api: AdminClient) {
-  const [owners, setOwners] = useState<Owners>({ state: "loading", list: [] });
+function withinBytes(text: string, limit: number): string {
+  let out = "";
+  for (const ch of text) {
+    if (utf8Bytes(out + ch) > limit) break;
+    out += ch;
+  }
+  return out;
+}
+
+export function useOwnerSearch(api: AdminClient): OwnerSearch {
+  const [found, setFound] = useState<{ term: string; status: "searching" | "ready" | "failed"; rows: Owner[]; matching: number; more: boolean }>({ term: "", status: "searching", rows: [], matching: 0, more: false });
+  const [seen, setSeen] = useState<Record<string, string>>({});
+  const [kept, setKept] = useState<Record<string, "reading" | "failed" | "gone">>({});
+  const [opened, setOpened] = useState(0);
   const seq = useRef(0);
-  const read = useCallback(async () => {
+  const note = (rows: Owner[]) => setSeen((was) => ({ ...was, ...Object.fromEntries(rows.map((o) => [o.id, o.login])) }));
+  const search = useCallback(async (term: string) => {
     const n = ++seq.current;
-    setOwners((o) => ({ state: "loading", list: o.list }));
+    setFound((was) => ({ ...was, term, status: "searching" }));
     try {
-      const got = await api.access();
+      const got = await api.retentionOwners({ q: term });
       if (n !== seq.current) return;
-      setOwners({ state: "ready", list: ownersOf(got.subjects) });
+      note(got.rows);
+      setFound({ term, status: "ready", rows: got.rows, matching: got.matching, more: got.more });
     } catch {
       if (n !== seq.current) return;
-      setOwners({ state: "failed", list: [] });
+      setFound((was) => ({ ...was, term, status: "failed" }));
     }
   }, [api]);
-  useEffect(() => { void read(); }, [read]);
-  return { owners, read };
+  const confirm = useCallback(async (id: string) => {
+    setKept((was) => ({ ...was, [id]: "reading" }));
+    try {
+      const got = await api.retentionOwners({ id });
+      note(got.rows);
+      setKept((was) => {
+        const next = { ...was };
+        if (got.rows.some((o) => o.id === id)) delete next[id];
+        else next[id] = "gone";
+        return next;
+      });
+    } catch {
+      setKept((was) => ({ ...was, [id]: "failed" }));
+    }
+  }, [api]);
+  useEffect(() => { void search(""); }, [search]);
+  return { ...found, seen, kept, opened, search: (term) => { void search(term); }, confirm: (id) => { void confirm(id); }, reopen: () => { setOpened((x) => x + 1); void search(""); },
+    forget: (id) => setKept((was) => { if (!(id in was)) return was; const next = { ...was }; delete next[id]; return next; }) };
+}
+
+function Person({ o }: { o: Owner }) {
+  return (
+    <>
+      {o.login && <bdi dir="auto" className="p04-owner-login">{o.login}</bdi>}
+      <bdi dir="ltr" className="p04-owner-id">{o.id}</bdi>
+    </>
+  );
+}
+
+function OwnerField({ l, id, value, error, set, owners }: { l: Locale; id: string; value: string; error: string; set: (v: string) => void; owners: OwnerSearch }) {
+  const [changing, setChanging] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [focus, setFocus] = useState<{ at: string; n: number } | null>(null);
+  const [gone, setGone] = useState(false);
+  const field = id + "-owner";
+  const state = value ? owners.kept[value] : undefined;
+  const { confirm, seen, opened } = owners;
+  useEffect(() => { if (focus) document.getElementById(focus.at)?.focus(); }, [focus]);
+  useEffect(() => { if (value && !(value in seen) && !owners.kept[value]) confirm(value); }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (opened > 0) { setChanging(true); setFocus((f) => ({ at: field, n: (f?.n ?? 0) + 1 })); } }, [opened]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (state === "gone") { set(""); setChanging(false); setGone(true); } }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
+  const shownError = error || (gone && !value ? k.form.ownerGone(l) : "");
+  const open = !value || changing;
+  const none = owners.status === "ready" && owners.term === "" && owners.matching === 0;
+  const run = () => owners.search(withinBytes(draft.trim(), 64));
+  const go = (at: string) => setFocus((f) => ({ at, n: (f?.n ?? 0) + 1 }));
+  const described = [open && !none ? field + "-search-hint" : "", field + "-hint", shownError ? field + "-error" : ""].filter(Boolean).join(" ");
+  const status = !open ? "" : owners.status === "searching" ? k.form.ownerSearching(l) : owners.status === "failed" || none ? ""
+    : owners.term === "" ? (owners.more ? k.form.ownerFirst(l, owners.rows.length, owners.matching) : k.form.ownerAll(l, owners.matching))
+      : owners.matching === 0 ? k.form.ownerNone(l, owners.term) : owners.more ? k.form.ownerMore(l, owners.rows.length, owners.matching) : k.form.ownerMatches(l, owners.matching);
+  return (
+    <div className="service-field p04-owner-field">
+      {open && !none ? <label htmlFor={field} id={field + "-label"}>{k.form.owner(l)}</label> : <span id={field + "-label"} className="p04-owner-label">{k.form.owner(l)}</span>}
+      {shownError && <p className="service-field-error" id={field + "-error"}>{shownError}</p>}
+      {value && (
+        <p className="p04-owner-chosen">
+          <span className="p04-owner-name" id={field + "-name"}><Person o={{ id: value, login: seen[value] ?? "" }} /></span>
+          {open
+            ? <button type="button" id={field + "-keep"} className="service-button-link p04-owner-toggle" onClick={() => { setChanging(false); go(field); }}>{k.form.ownerKeep(l)}</button>
+            : <button type="button" id={field} className="service-button-link p04-owner-toggle" aria-labelledby={`${field} ${field}-label ${field}-name`} aria-describedby={described} aria-invalid={!!shownError || undefined} onClick={() => { setChanging(true); owners.search(""); setDraft(""); go(field); }}>{k.form.ownerChange(l)}</button>}
+        </p>
+      )}
+      {state === "failed" && (
+        <div className="p04-owner-unread" role="alert">
+          <p>{k.form.ownerLoginFailed(l)}</p>
+          <button type="button" className="live-secondary" onClick={() => confirm(value)}>{k.form.tryAgain(l)}</button>
+        </div>
+      )}
+      {open && none && <p className="live-empty" role="status">{k.form.ownersEmpty(l)}</p>}
+      {open && !none && <p className="service-hint p04-owner-search-hint" id={field + "-search-hint"}>{k.form.ownerSearchHint(l)}</p>}
+      {open && !none && (
+        <div className="p04-owner-search">
+          <input id={field} type="search" dir="auto" autoComplete="off" value={draft} maxLength={64} aria-invalid={!!shownError || undefined} aria-describedby={described} onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); run(); } }} />
+          <button type="button" className="live-secondary p04-owner-search-button" onClick={run}>{k.form.ownerSearch(l)}</button>
+        </div>
+      )}
+      {open && <p className="p04-small live-quiet p04-owner-status" role="status">{status}</p>}
+      {open && owners.status === "failed" && (
+        <div className="live-error p04-owners-failed" role="alert">
+          <p>{k.form.ownersFailed(l)}{value ? " " + k.form.ownerKept(l) : ""}</p>
+          <button type="button" className="live-secondary" onClick={() => { owners.search(owners.term); go(field); }}>{k.form.tryAgain(l)}</button>
+        </div>
+      )}
+      {open && owners.status !== "failed" && owners.rows.length > 0 && (
+        <ul className="p04-owner-results" aria-label={k.form.ownerResults(l)} aria-busy={owners.status === "searching" || undefined}>
+          {owners.rows.map((o) => (
+            <li key={o.id}>
+              <button type="button" className="p04-owner-result" aria-current={(o.id === value && !error) || undefined} onClick={() => { owners.forget(o.id); set(o.id); setChanging(false); setGone(false); go(field); }}><Person o={o} /></button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="service-hint" id={field + "-hint"}>{k.form.ownerHint(l)}</p>
+    </div>
+  );
 }
 
 export function TextField({ l, id, label, value, error, set }: { l: Locale; id: string; label: string; value: string; error: string; set: (v: string) => void }) {
@@ -43,15 +164,15 @@ export function TextField({ l, id, label, value, error, set }: { l: Locale; id: 
   );
 }
 
-function holdFields(l: Locale, tenant: boolean, owners: Owners, retry: () => void): Fields {
-  const ready = owners.state === "ready" && owners.list.length > 0;
+function holdFields(l: Locale, tenant: boolean, owners: OwnerSearch): Fields {
+  const ready = !(owners.status === "ready" && owners.term === "" && owners.matching === 0);
   return {
     keys: tenant ? ["owner", "reason", "class"] : ["owner", "reason"],
     saved: tenant ? ["reason", "class"] : ["reason"],
     ready,
     check: (d) => {
       const e: FieldErrors = {};
-      if (!d.owner || !owners.list.some((o) => o.id === d.owner)) e.owner = k.form.ownerMissing(l);
+      if (!d.owner || owners.kept[d.owner] === "gone") e.owner = k.form.ownerMissing(l);
       const text = holdTextError(l, d.reason ?? "");
       if (text) e.reason = text;
       return e;
@@ -59,29 +180,7 @@ function holdFields(l: Locale, tenant: boolean, owners: Owners, retry: () => voi
     values: (d) => holdValues(d, tenant),
     render: (d, set, errors, id) => (
       <>
-        <div className="service-field p04-select-field">
-          <label htmlFor={id + "-owner"}>{k.form.owner(l)}</label>
-          {errors.owner && <p className="service-field-error" id={id + "-owner-error"}>{errors.owner}</p>}
-          {owners.state === "failed" ? (
-            <div className="live-error p04-owners-failed" role="alert">
-              <p>{k.form.ownersFailed(l)}</p>
-              <button type="button" className="live-secondary" onClick={retry}>{k.form.tryAgain(l)}</button>
-            </div>
-          ) : owners.state === "loading" && owners.list.length === 0 ? (
-            <p className="live-meta" role="status">{k.form.ownersLoading(l)}</p>
-          ) : owners.list.length === 0 ? (
-            <p className="live-empty" role="status">{k.form.ownersEmpty(l)}</p>
-          ) : (
-            <select
-              id={id + "-owner"} value={owners.list.some((o) => o.id === d.owner) ? d.owner : ""} aria-invalid={!!errors.owner || undefined}
-              aria-describedby={[id + "-owner-hint", errors.owner ? id + "-owner-error" : ""].filter(Boolean).join(" ")} onChange={(e) => set("owner", e.target.value)}
-            >
-              <option value="">{k.form.ownerPlaceholder(l)}</option>
-              {owners.list.map((o) => <option key={o.id} value={o.id}>{ownerOption(o)}</option>)}
-            </select>
-          )}
-          <p className="service-hint" id={id + "-owner-hint"}>{k.form.ownerHint(l)}</p>
-        </div>
+        <OwnerField l={l} id={id} value={d.owner ?? ""} error={errors.owner ?? ""} set={(v) => set("owner", v)} owners={owners} />
         <TextField l={l} id={id + "-reason"} label={k.form.holdReason(l)} value={d.reason ?? ""} error={errors.reason ?? ""} set={(v) => set("reason", v)} />
         {tenant && (
           <div className="service-field p04-class-field">
@@ -145,11 +244,11 @@ export function HoldCommand({ target, tenant, base, heading, onClose, ...shared 
   onClose: (how?: "done" | "refused") => void;
 }) {
   const { l, page, api, me } = shared;
-  const { owners, read } = useOwners(api);
-  const ownerLogin = (id: string) => owners.list.find((o) => o.id === id)?.login ?? "";
+  const owners = useOwnerSearch(api);
+  const ownerLogin = (id: string) => owners.seen[id] ?? "";
   return (
     <CommandForm
-      {...shared} command="retention.place_hold" target={target} fields={holdFields(l, tenant, owners, () => void read())}
+      {...shared} command="retention.place_hold" target={target} fields={holdFields(l, tenant, owners)}
       heading={heading} title={k.confirmHold(l)} verb={k.holdVerb(l)}
       context={(d) => ({ ...base, owner: d.owner ?? "", owner_login: ownerLogin(d.owner ?? ""), reason: (d.reason ?? "").trim(), choice: tenant ? d.class ?? "" : "" })}
       facts={(ctx) => (
@@ -170,7 +269,7 @@ export function HoldCommand({ target, tenant, base, heading, onClose, ...shared 
           </>
         ) : <p>{k.staleNoMatch(l)}</p>;
       }}
-      hooks={{ field: (how: FieldReaction) => { if (how === "owner") void read(); } }}
+      hooks={{ field: (how: FieldReaction) => { if (how === "owner") owners.reopen(); } }}
       done={(fields, st) => {
         const hold = fields.hold ?? "";
         if (st === "held" && hold) return k.holdInForce(l, hold);

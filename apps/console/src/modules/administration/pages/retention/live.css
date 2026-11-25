@@ -768,3 +768,104 @@
   padding-block-start: 24px;
   border-block-start: 1px solid var(--border-row);
 }
+.p04-form .p04-owner-label {
+  display: block;
+  font-weight: 600;
+}
+.p04-form .p04-owner-chosen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  align-items: center;
+  margin-block: 4px 8px;
+}
+.p04-form .p04-owner-name,
+.p04-form .p04-owner-result {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  align-items: baseline;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.p04-form .p04-owner-login {
+  font-size: 16px;
+}
+.p04-form .p04-owner-id {
+  font-family: var(--hb-font-mono);
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.p04-form .p04-owner-toggle {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  inline-size: fit-content;
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 16px;
+  text-decoration: underline;
+}
+.p04-form .p04-owner-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-inline-size: 560px;
+}
+.p04-form .p04-owner-search input {
+  flex: 1 1 24ch;
+  min-inline-size: 0;
+  min-block-size: 44px;
+}
+.p04-form .p04-owner-search-button {
+  min-block-size: 44px;
+}
+.p04-form .p04-owner-status {
+  margin-block: 8px 4px;
+  min-block-size: 1lh;
+}
+.p04-form .p04-owner-results {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  max-inline-size: 560px;
+  max-block-size: 352px;
+  overflow-y: auto;
+  border: 1px solid var(--border-row);
+}
+.p04-form .p04-owner-results[aria-busy="true"] button.p04-owner-result {
+  color: var(--hb-muted);
+}
+.p04-form .p04-owner-results li + li {
+  border-block-start: 1px solid var(--border-row);
+}
+.p04-form .p04-owner-results button.p04-owner-result {
+  display: flex;
+  justify-content: flex-start;
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: 8px 12px;
+  border: 0;
+  background: none;
+  text-align: start;
+  font: inherit;
+  color: inherit;
+}
+.p04-form .p04-owner-results button.p04-owner-result:hover {
+  background: var(--surface-hover, rgba(0, 0, 0, 0.04));
+}
+.p04-form .p04-owner-results button.p04-owner-result[aria-current="true"] {
+  font-weight: 600;
+}
+.p04-form .p04-owner-unread p {
+  margin: 0 0 8px;
+}
+.p04-form .p04-owner-search-hint {
+  margin-block: 0 4px;
+}
+.p04-form .p04-owner-search input::-webkit-search-cancel-button {
+  appearance: none;
+}

@@ -11,7 +11,7 @@ import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
 import { deliveriesPageOf, type Delivery as IntegrationDelivery, historyPageOf, integrationsOf, pluginProposalOf, type HistoryEntry, type IntegrationsPage, type PluginProposal } from "./integrations";
 import { recoveryRowsOf, type RecoveryList, locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
 import { buildsPageOf, evidenceOf, hardwareAnswerOf, hardwarePath, pathsAnswerOf, pathsPath, profilesAnswerOf, profilesPath, proposalOf as evidenceProposalOf, resultsPageOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type BuildRow, type HardwareRow, type PathRow, type ProfileRow, type Proposal as EvidenceProposal, type ResultRow, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
-import { holdsPageOf, proposalOf as retentionProposalOf, artifactsPageOf, artifactsPath, outcomesPageOf, referencesPageOf, retentionOf, runItemsPageOf, runsPageOf, tombstonesPageOf, type ArtifactEntry, type HoldOutcome, type HoldRow, type Reference, type RunItem, type Proposal as RetentionProposal, type RetentionPage, type RunRow, type Tombstone } from "./retention";
+import { holdsPageOf, proposalOf as retentionProposalOf, artifactsPageOf, artifactsPath, outcomesPageOf, ownersPageOf, referencesPageOf, retentionOf, runItemsPageOf, runsPageOf, tombstonesPageOf, type ArtifactEntry, type HoldOutcome, type HoldRow, type Owner as HoldOwner, type Reference, type RunItem, type Proposal as RetentionProposal, type RetentionPage, type RunRow, type Tombstone } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
 
 export type RolePeriod = "open" | "bounded" | "ends_soon" | "ended";
@@ -1237,6 +1237,13 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async retentionArtifacts(query: { cls: string; after: string } | { ids: string[] }): Promise<{ rows: ArtifactEntry[]; next: string; total: number }> {
       const got = artifactsPageOf(await send(artifactsPath(query), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionOwners(query: { q: string } | { id: string }): Promise<{ rows: HoldOwner[]; matching: number; more: boolean }> {
+      const q = new URLSearchParams("id" in query ? { id: query.id } : query.q ? { q: query.q } : {});
+      const qs = q.toString();
+      const got = ownersPageOf(await send("/retention/owners" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request));
       if (!got) throw new AdminError("invalid");
       return got;
     },

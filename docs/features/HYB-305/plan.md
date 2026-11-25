@@ -463,8 +463,25 @@ Review (independent reviewer, read-only, 2026-11-25): approve with conditions, t
 
 Verification: the whole server package passed (before the copy and document corrections; no Go file changed after it); console tests 1416, 1413 passed, 3 skipped; the rendered check `tools/runs-qa.mjs` 59 passed against a local service with the sample seed, in which the runs beyond the sample's two are written by the check. The owner has not reviewed the screen.
 
+# Increment 4g, the deletion records of P04 (2026-11-25)
+
+Facts (main b0be51b): the module keeps one deletion record (tombstone) for each deleted artifact, numbered in one sequence for the whole installation. A record is written when a worker reports a deletion; no worker is connected, so a running service has the seed's two. The retention read looks only at the last 1,000 records of the installation (the window), keeps those whose artifact the workspace may see, and listed the newest 50 of them with their count and `more`; the screen says that only the window is scanned. Up to 950 records of the workspace inside the window could not be reached.
+
+Built:
+
+- The main read keeps its rows, order and window; the records gain `next`, the sequence of the last record listed when more exist.
+- `GET /api/v1/retention/tombstones` with `after`, `limit` and `q` (matched against the artifact, the class and the label of the run when the workspace may see that run): the workspace's records of the same window, newest first, with the watermark and the window of the read. Admitted as the retention read is, with its fault step.
+- Screen: under the sentence about the window, the count of those shown, "Load older deletion records", the failure and the read-again line through `useOlderRows`, keyed by the sequence. An answer without `next` keeps "Showing the newest 50."
+
+Not built and unchanged: records older than the window stay out of reach, as the screen already says. The window is taken at each read, so when new records arrive between two reads the oldest of the earlier window are no longer returned; the cursor is a sequence, so no record is returned twice. The sequence and the watermark are numbers of the whole installation, as they already were in the main read.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. It confirmed that the further read filters by the same visibility check as the main read, that a search cannot confirm a hidden artifact or a hidden run's label, and that every count comes from the visible records. Composition and copy check (ui-designer): pass; the note about skipped sequence numbers was moved back directly under the table. It did not see the foot at 1440 or the state with all records loaded.
+
+Verification: the whole server package passed (before the note was moved; no Go file changed after it); console tests 1417, 1414 passed, 3 skipped; the rendered check `tools/records-qa.mjs` 49 passed against a local service with the sample seed, in which the records beyond the sample's two are written by the check. The owner has not reviewed the screen.
+
 # Open for the owner
 
+- A workspace can now page through all of its deletion records in the window (increment 4g), up to 1,000 instead of 50. Their sequence numbers are numbers of the whole installation, so the gaps between them show roughly how many deletions other workspaces had; the watermark and the first fifty rows already showed this in part. Whether a workspace should see installation-wide sequence numbers at all is for the owner.
 - The deletion runs on P04 now list every running run and page only the others (increment 4f); the main read's rows are no longer simply the newest 50. This can be reversed.
 - The holds list on P04 now shows every hold in force and pages only the released ones (increment 3e).
 - The action history of a subscription on P02 now lists the newest action first and is cut at 50 with a read for the rest (increment 3b), as the lock log is. Both can be reversed.

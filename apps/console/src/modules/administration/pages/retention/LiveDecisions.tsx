@@ -1,12 +1,24 @@
+import { useOlderRows } from "../../../../shared/older-rows";
+import { AdminError } from "../../../../service/admin";
+import type { Tombstone } from "../../../../service/retention";
 import { counted, plurals } from "./live-codes";
 import { k } from "./live-copy";
 import { artifactOf, rowId, runNumber } from "./live-model";
 import { Code, Num, Stamp, href, ltr } from "./live-format";
 import type { Shared } from "./LiveCommand";
 
-export function DecisionsView({ l, page }: Shared) {
+export function DecisionsView(shared: Shared) {
+  const { l, page } = shared;
   const d = page.decisions;
   const t = d.tombstones;
+  const facts = t.rows === null || t.next === null || t.total === null ? null : { total: t.total, next: t.next };
+  const older = useOlderRows<Tombstone>(page.revision, facts, t.rows, shared.api.retentionTombstones, (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  }, false, (x) => x.sequence);
+  const listed = facts === null ? t.rows : older.rows;
+  const failed = older.status === "failed";
   return (
     <>
       <dl className="p04-facts p04-facts-5 p04-decision-facts">
@@ -20,12 +32,14 @@ export function DecisionsView({ l, page }: Shared) {
         <h3 id="p04-records-title">{k.deletionRecords(l)}</h3>
         <p className="p04-small">
           {t.window === null ? k.unknown(l) : counted(l, t.window, plurals.window, { t: t.total === null ? k.unknown(l) : String(t.total) })}
-          {t.more === true && <> {k.newest50(l)}</>}
+          {t.more === true && facts === null && <> {k.newest50(l)}</>}
           {t.more === null && <> {k.maybeMore(l)}</>}
         </p>
-        {t.rows === null ? (
+        {facts !== null && older.cut && listed !== null && <p className="p04-small live-quiet p04-records-count" role="status" ref={older.countRef} tabIndex={-1}>{k.recordsShown(l, listed.length, older.total)}</p>}
+        {older.reset && <p className="p04-small p04-records-reset" role="status">{k.recordsReset(l)}</p>}
+        {listed === null ? (
           <p className="live-empty">{k.unknown(l)}</p>
-        ) : t.rows.length === 0 ? (
+        ) : listed.length === 0 ? (
           <p className="live-empty">{t.total === 0 ? k.noRecords(l) : k.unknown(l)}</p>
         ) : (
           <div className="live-table">
@@ -43,7 +57,7 @@ export function DecisionsView({ l, page }: Shared) {
                 </tr>
               </thead>
               <tbody>
-                {t.rows.map((x, i) => {
+                {listed.map((x, i) => {
                   const n = runNumber(x.run);
                   const found = x.artifact ? artifactOf(page, x.artifact) : undefined;
                   return (
@@ -68,6 +82,14 @@ export function DecisionsView({ l, page }: Shared) {
           </div>
         )}
         <p className="p04-small live-quiet">{k.skipNote(l)}</p>
+        {facts !== null && older.more && (
+          <div className="p04-held-more p04-records-more">
+            {failed && <p role="alert">{k.recordsFailed(l)}</p>}
+            <button type="button" className="live-secondary p04-held-more-button p04-records-more-button" aria-disabled={older.status === "loading" || undefined} onClick={older.load}>
+              {failed ? k.heldTryAgain(l) : older.status === "loading" ? k.heldLoading(l) : k.recordsMore(l)}
+            </button>
+          </div>
+        )}
       </section>
     </>
   );

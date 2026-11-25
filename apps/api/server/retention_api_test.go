@@ -471,7 +471,7 @@ func TestRetentionReadShape(t *testing.T) {
 	}
 	decisions := retSection(got, "decisions")
 	if s := fmt.Sprint(decisions); s != "map[durable_commit:not_connected epoch:not_connected ledger:in_memory restore_check:not_connected "+
-		"tombstones:map[more:false rows:[map[artifact:sample-temporary-1 at:2026-11-16T09:00:00Z class:temporary decision:not_connected other_scope:false "+
+		"tombstones:map[more:false next: rows:[map[artifact:sample-temporary-1 at:2026-11-16T09:00:00Z class:temporary decision:not_connected other_scope:false "+
 		"run:map[label:run/2 target:retention-run-2] sequence:2] map[artifact:sample-source-1 at:2026-11-16T09:00:00Z class:source decision:not_connected "+
 		"other_scope:false run:map[label:run/1 target:retention-run-1] sequence:1]] total:2 window:1000] watermark:2]" {
 		t.Errorf("decisions %s", s)
@@ -543,7 +543,7 @@ func TestRetentionReadWithoutSeed(t *testing.T) {
 		}
 	}
 	if s := retJoin(retSection(got, "decisions")["watermark"], retSection(got, "decisions")["tombstones"], retSection(got, "restore")); s !=
-		"0 map[more:false rows:[] total:0 window:1000] map[state:not_connected]" {
+		"0 map[more:false next: rows:[] total:0 window:1000] map[state:not_connected]" {
 		t.Errorf("decisions %s", s)
 	}
 	for _, c := range []struct{ kind, target string }{{retentionApproveKind, retTarget(1)}, {retentionStopKind, "retention-run-1"},

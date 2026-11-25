@@ -230,6 +230,7 @@ type retentionTombstones struct {
 	Window int                     `json:"window"`
 	Total  int                     `json:"total"`
 	More   bool                    `json:"more"`
+	Next   string                  `json:"next"`
 	Rows   []retentionTombstoneRow `json:"rows"`
 }
 
@@ -695,34 +696,21 @@ func (f *retentionFacts) deletion() (retentionDeletionSection, error) {
 }
 
 func (f *retentionFacts) decisions() (retentionDecisionsSection, error) {
-	s := f.s
 	section := retentionDecisionsSection{Tombstones: retentionTombstones{Window: retentionWindow, Rows: []retentionTombstoneRow{}}, Ledger: retentionLedger,
 		Epoch: notConnected, DurableCommit: notConnected, RestoreCheck: notConnected}
-	if err := s.retentionCall("watermark", func() error { section.Watermark = s.retention.Watermark(); return nil }); err != nil {
+	watermark, visible, err := f.windowTombstones()
+	if err != nil {
 		return retentionDecisionsSection{}, err
 	}
-	after := uint64(0)
-	if section.Watermark > retentionWindow {
-		after = section.Watermark - retentionWindow
-	}
-	var list []retention.Tombstone
-	if err := s.retentionCall("tombstones", func() (err error) { list, err = s.retention.Tombstones(after, retentionWindow); return }); err != nil {
-		return retentionDecisionsSection{}, err
-	}
+	section.Watermark = watermark
 	t := &section.Tombstones
-	for index := len(list) - 1; index >= 0; index-- {
-		x := list[index]
-		if !s.ret.visibleArtifact(x.Artifact, f.workspace) {
-			continue
-		}
-		t.Total++
-		if len(t.Rows) < retentionShown {
-			row := retentionTombstoneRow{Sequence: x.Sequence, Artifact: x.Artifact, Class: x.Class, At: stamp(x.At), Decision: notConnected}
-			row.Run, row.OtherScope = f.runRef(x.Run)
-			t.Rows = append(t.Rows, row)
-		}
+	t.Total = len(visible)
+	for _, x := range visible[:min(len(visible), retentionShown)] {
+		t.Rows = append(t.Rows, f.tombstoneRow(x))
 	}
-	t.More = t.Total > len(t.Rows)
+	if t.More = t.Total > len(t.Rows); t.More {
+		t.Next = keptCursor(t.Rows[len(t.Rows)-1].Sequence)
+	}
 	return section, nil
 }
 

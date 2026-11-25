@@ -66,6 +66,9 @@ func TestRequirementsAreReadInRecordedOrderBeyondTheMainRead(t *testing.T) {
 			t.Fatalf("row %d is %v", index, row["target"])
 		}
 	}
+	if hundred := f.requirementsRead(root, "?limit=100"); hundred.status != 200 || len(reqRows(hundred)) != total+1 {
+		t.Errorf("a hundred rows a page: %d", hundred.status)
+	}
 	again := reqRows(f.requirementsRead(root, "?limit=50"))
 	fresh := evRows(evMap(f.evidenceRead(root).body, "requirements", "requirements"))
 	if !reflect.DeepEqual(again, fresh) {
@@ -154,7 +157,7 @@ func TestRequirementsByTargetAndRefusals(t *testing.T) {
 	}
 	for _, query := range []string{"?target=", "?target=trace-requirement-0", "?target=trace-requirement-01", "?target=requirement-1", "?target=trace-requirement-1,trace-requirement-1",
 		"?target=trace-requirement-1,", "?target=" + strings.Join(many, ","), "?target=trace-requirement-1&limit=5", "?target=trace-requirement-1&q=a", "?target=trace-requirement-1&target=trace-requirement-2",
-		"?after=0", "?after=x", "?after=01", "?limit=0", "?limit=51", "?limit=5x", "?q=", "?q=%20", "?state=retired", "?state=", "?retired=maybe", "?retired=", "?order=newest", "?limit=5&limit=6"} {
+		"?after=0", "?after=x", "?after=01", "?limit=0", "?limit=101", "?limit=5x", "?q=", "?q=%20", "?state=retired", "?state=", "?retired=maybe", "?retired=", "?order=newest", "?limit=5&limit=6"} {
 		if refused := f.requirementsRead(root, query); refused.status != 422 {
 			t.Errorf("%s: %d", query, refused.status)
 		}
@@ -232,7 +235,30 @@ func TestRequirementsAtTheModuleLimit(t *testing.T) {
 	if page.status != 200 || len(reqRows(page)) != 10 || page.body["next"] != "" {
 		t.Fatalf("the last page at the limit: %d", page.status)
 	}
-	t.Logf("10,000 requirements: a search walking all of them took %s; a page of ten rows took %s", searched, paged)
+	common := f.requirementsRead(root, "?target=trace-requirement-1")
+	list, _ := reqRows(common)[0]["replacements"].(map[string]any)
+	if common.status != 200 || reqRows(common)[0]["common"] != true || whole(list["total"]) != 0 {
+		t.Fatalf("the common sample requirement has no common replacement among ten thousand ordinary ones: %v", list)
+	}
+	ordinary := f.requirementsRead(root, "?target=trace-requirement-9000")
+	list, _ = reqRows(ordinary)[0]["replacements"].(map[string]any)
+	shown, _ := list["rows"].([]any)
+	if whole(list["total"]) != 1000 || list["more"] != true || len(shown) != evidenceReplacements || shown[0].(map[string]any)["target"] != "trace-requirement-9001" {
+		t.Fatalf("an ordinary requirement is replaced by every later one, the first twenty listed: total %v first %v", list["total"], shown[0])
+	}
+	started = time.Now()
+	wide := f.requirementsRead(root, "?limit=100")
+	widest := time.Since(started)
+	if wide.status != 200 || len(reqRows(wide)) != 100 || wide.body["next"] != "100" {
+		t.Fatalf("the first hundred at the limit: %d", wide.status)
+	}
+	started = time.Now()
+	main := f.evidenceRead(root)
+	whole := time.Since(started)
+	if main.status != 200 {
+		t.Fatalf("the main read at the limit: %d", main.status)
+	}
+	t.Logf("10,000 requirements: a search walking all of them took %s; a page of ten rows took %s; the first hundred rows, each with about ten thousand candidates, took %s; the main read took %s", searched, paged, widest, whole)
 }
 
 func TestRequirementRowsForAReaderWithoutAnEligibleApprover(t *testing.T) {

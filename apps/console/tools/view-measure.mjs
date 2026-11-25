@@ -31,3 +31,30 @@ export function inspectView(page) {
   return { overflow: document.documentElement.scrollWidth - vw, clipped: clipped.slice(0, 12), cut: cut.slice(0, 12), low: low.slice(0, 12), measured, unsure: unsureCount };
 });
 }
+
+export function inspectColour(page) {
+  return page.evaluate(() => {
+    const rgb = (v) => { const p = v.match(/[\d.]+/g)?.map(Number); return /^rgba?\(/.test(v) && p?.length >= 3 ? [p[0], p[1], p[2], p[3] ?? 1] : null; };
+    const chroma = (c) => { if (!c || c[3] < 0.2) return 0; const max = Math.max(c[0], c[1], c[2]), min = Math.min(c[0], c[1], c[2]); return max === 0 ? 0 : (max - min) / max; };
+    const name = (e) => `${e.tagName.toLowerCase()}${e.id ? "#" + e.id : ""}${typeof e.className === "string" && e.className ? "." + e.className.trim().split(/\s+/).slice(0, 2).join(".") : ""}`;
+    const named = (e) => !!(e.getAttribute("aria-label") || e.getAttribute("title") || e.getAttribute("aria-labelledby"));
+    const marks = [], strips = [], seenMark = new Set(), seenStrip = new Set(), colouredKinds = {}, tinted = {}; let boxes = 0, coloured = 0;
+    for (const e of document.querySelectorAll("main *")) {
+      if (e.closest(".visually-hidden, [hidden], [inert]") || !e.getClientRects().length) continue;
+      const r = e.getBoundingClientRect(), c = getComputedStyle(e);
+      if (r.width < 2 || r.height < 2 || c.visibility !== "visible") continue;
+      boxes++;
+      const sides = ["Top", "Right", "Bottom", "Left"].map((s) => ({ side: s, width: parseFloat(c[`border${s}Width`]), style: c[`border${s}Style`], chroma: chroma(rgb(c[`border${s}Color`])) })).filter((b) => b.width > 0 && b.style !== "none");
+      const vivid = sides.filter((b) => b.chroma > 0.35);
+      const fill = chroma(rgb(c.backgroundColor));
+      if (fill > 0.35 || vivid.length) { coloured++; colouredKinds[name(e)] = (e.textContent.trim().slice(0, 24) || "(no text)"); }
+      const ownText = [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 0);
+      if (ownText && chroma(rgb(c.color)) > 0.35 && !e.closest("a, button")) tinted[name(e) + " " + c.color] = e.textContent.trim().slice(0, 30);
+      const thick = vivid.filter((b) => b.width >= 3);
+      if (thick.length && thick.length < 4 && sides.every((b) => thick.includes(b) || b.width < 3) && !e.matches(":focus-visible")) { const k = name(e); if (!seenStrip.has(k)) { seenStrip.add(k); strips.push({ el: k, sides: thick.map((b) => b.side + ":" + b.width).join(","), text: e.textContent.trim().slice(0, 30) }); } }
+      const empty = e.textContent.trim() === "" && !e.querySelector("img, svg, input, select, textarea, button") && !["INPUT", "SELECT", "TEXTAREA", "IMG", "SVG", "PATH", "HR", "BR"].includes(e.tagName.toUpperCase());
+      if (empty && (fill > 0.35 || vivid.length) && r.width <= 48 && r.height <= 48 && !named(e)) { const k = name(e); if (!seenMark.has(k)) { seenMark.add(k); marks.push({ el: k, size: Math.round(r.width) + "x" + Math.round(r.height), hidden: !!e.closest("[aria-hidden=true]"), beside: (e.parentElement?.textContent ?? "").trim().slice(0, 30) }); } }
+    }
+    return { boxes, coloured, colouredKinds, tinted, marks: marks.slice(0, 12), strips: strips.slice(0, 12) };
+  });
+}

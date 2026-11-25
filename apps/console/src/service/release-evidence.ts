@@ -544,6 +544,12 @@ export function profilesPath(query: { after?: string; targets?: string[] }): str
   return "/release-evidence/profiles?" + q.toString();
 }
 
+export function replacementsAnswerOf(body: Raw): { rows: TargetRow[]; matching: number; more: boolean } | null {
+  const matching = count(body.matching);
+  if (!Array.isArray(body.replacements) || matching === null || typeof body.more !== "boolean") return null;
+  return { rows: body.replacements.filter(isRow).map((x) => ({ target: str(x.target), label: str(x.label) })), matching, more: body.more };
+}
+
 export function profilesAnswerOf(body: Raw): { rows: ProfileRow[]; next: string; total: number } | null {
   const total = count(body.total);
   if (!Array.isArray(body.profiles) || typeof body.next !== "string" || total === null) return null;

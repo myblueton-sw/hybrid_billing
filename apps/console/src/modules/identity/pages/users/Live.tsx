@@ -551,7 +551,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   noticeRef.current = notice;
   const dataRef = useRef<Loaded | null>(null);
   dataRef.current = data;
-  const pending = useRef<"" | "filter" | "removed">("");
+  const pending = useRef<"" | "filter" | "removed" | "reload">("");
   const shownQuery = useRef("");
   useEffect(() => {
     if (!focusTo) return;
@@ -570,8 +570,9 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   };
   const tell = (text: string) => { setNotice(text); say(text); };
   const countLine = (page: { next: string; users: UserRow[] }) => (page.users.length === 0 ? fc.noneShown(l) : page.next ? fc.shownMore(l, page.users.length) : fc.shownAll(l, page.users.length));
-  const load = useCallback((keepNotice = false) => {
+  const load = useCallback((keepNotice = false, userRefresh = false) => {
     const n = order.current.next();
+    if (pending.current === "reload") pending.current = "";
     const asked = queryRef.current;
     const key = JSON.stringify(asked);
     const fresh = shownQuery.current !== key;
@@ -585,6 +586,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
       (page) => {
         if (!order.current.latest(n)) return page.revision;
         for (const u of page.users) names.current[u.user_id] = u.login || u.user_id;
+        if (userRefresh && !pending.current) pending.current = "reload";
         shownQuery.current = key;
         setFreshRead(false);
         setData({ ...page, at: new Date(), first: page.list_version });
@@ -601,6 +603,10 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
       },
     );
   }, [api, queryKey]);
+  const refresh = (fromError = false) => {
+    if (fromError) document.querySelector<HTMLButtonElement>("#m01-reload")?.focus();
+    void load(false, true);
+  };
   useEffect(() => { void load(); }, [load]);
   const canBulk = !!data?.can_bulk_revoke;
   useEffect(() => {
@@ -853,7 +859,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
               {wide && !panel && <p className="live-meta">{w.pick(l)}</p>}
             </div>
             <div className="live-tools">
-              <button type="button" className="live-secondary" onClick={() => void load()}>{w.reload(l)}</button>
+              <button id="m01-reload" type="button" className="live-secondary" onClick={() => refresh()}>{w.reload(l)}</button>
               {view !== "membership" && !stranded && (
                 <button type="button" className="live-primary live-create" onClick={() => { setNotice(""); setMode({ kind: "create" }); }}>{w.create(l)}</button>
               )}
@@ -890,7 +896,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
               {error instanceof AdminError && error.failure === "unauthenticated" ? (
                 <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
               ) : (
-                <button type="button" className="live-secondary" onClick={() => void load()}>{c.tryAgain(l)}</button>
+                <button type="button" className="live-secondary" onClick={() => refresh(true)}>{c.tryAgain(l)}</button>
               )}
             </section>
           )}

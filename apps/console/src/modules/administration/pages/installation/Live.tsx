@@ -46,6 +46,7 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
   const [denied, setDenied] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [notice, setNotice] = useState("");
+  const [readComplete, setReadComplete] = useState(false);
   const [noticeDetail, setNoticeDetail] = useState<CommandDiagnostic | null>(null);
   const [terminalDetail, setTerminalDetail] = useState<CommandDiagnostic | null>(null);
   const [busy, setBusy] = useState(false);
@@ -54,8 +55,9 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
   const asked = params.get("proposal") ?? "";
   const selected = /^[1-9][0-9]*$/.test(asked) && page?.proposals.some((p) => String(p.number) === asked) ? asked : "";
 
-  const load = useCallback(async (): Promise<boolean> => {
+  const load = useCallback(async (userRefresh = false): Promise<boolean> => {
     const n = ++seq.current;
+    setReadComplete(false);
     const generation = currentScope();
     setBusy(true);
     try {
@@ -64,6 +66,7 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
       pruneRefusals(got, session.user);
       setPage(got);
       setStatus("ready");
+      setReadComplete(userRefresh);
       setLoadError(null);
       return true;
     } catch (e) {
@@ -77,6 +80,11 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
       if (n === seq.current && generation === currentScope()) setBusy(false);
     }
   }, [api, session.user]);
+
+  const refresh = (fromError = false) => {
+    if (fromError) document.querySelector<HTMLButtonElement>(".p01-reload")?.focus();
+    void load(true);
+  };
 
   useLayoutEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
   useEffect(() => {
@@ -130,6 +138,7 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
 
   return (
     <div className="p01-live" data-live={view} aria-busy={busy || undefined}>
+      <p className="visually-hidden p01-read-status" role="status" aria-live="polite">{readComplete ? sc.dataReloaded(l) : ""}</p>
         <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
       {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
       <div className="p01-scope">
@@ -141,7 +150,7 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
           <div><dt>{k.revision(l)}</dt><dd>{page ? <Known l={l} value={page.revision} /> : "—"}</dd></div>
           <div><dt>{k.now(l)}</dt><dd>{now(l, page)}</dd></div>
         </dl>
-        <button type="button" className="live-secondary p01-reload" onClick={() => void load()}>{k.reload(l)}</button>
+        <button type="button" className="live-secondary p01-reload" onClick={() => refresh()}>{k.reload(l)}</button>
       </div>
       <p className="live-note-rule p01-statement"><strong>{k.statementLead(l)}</strong> {k.statement(l)}</p>
       {notice && <div id="p01-notice" className="service-status" tabIndex={-1} role="status"><p>{notice}</p>{noticeDetail && <DiagnosticDetails l={l} detail={noticeDetail} />}</div>}
@@ -149,7 +158,7 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
         <div className="live-error p01-failure" role="alert">
           <h2>{failureText(l, loadError).title}</h2>
           {failureText(l, loadError).body && <p>{failureText(l, loadError).body}</p>}
-          <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
+          <button type="button" className="live-secondary" onClick={() => refresh(true)}>{sc.tryAgain(l)}</button>
         </div>
       )}
       {status === "error" && page && <p id="p01-stale" className="live-note-rule" role="status">{diagnosticCopy.stale(l)}</p>}

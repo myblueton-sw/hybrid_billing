@@ -307,3 +307,19 @@
     padding: 16px;
   }
 }
+
+.ops-grid.ops-fluid .ops-form {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(16rem, calc((100% - 20px) / 2))), 1fr));
+}
+.ops-grid.ops-fluid .ops-panel {
+  padding-inline: clamp(16px, 5%, 24px);
+}
+.ops-grid.ops-fluid .ops-panel p {
+  max-inline-size: 70ch;
+}
+@media (max-width: 1199px) {
+  .ops-grid.ops-fluid > aside {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    gap: 0 24px;
+  }
+}

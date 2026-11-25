@@ -735,3 +735,29 @@ export const noFilter: RequirementFilter = { q: "", state: "", retired: "" };
 export function filtering(f: RequirementFilter): boolean {
   return f.q !== "" || f.state !== "" || f.retired !== "";
 }
+
+export function withHeldProfiles(page: EvidencePage, rows: ProfileRow[]): EvidencePage {
+  const list = page.load.profiles;
+  if (list.rows === null || rows.length === 0) return page;
+  const byTarget = new Map<string, ProfileRow>();
+  for (const p of [...rows, ...list.rows]) if (p.target !== "" || !byTarget.has(p.target)) byTarget.set(p.target, p);
+  const held = [...byTarget.values()].sort((a, b) => (a.number ?? Number.MAX_SAFE_INTEGER) - (b.number ?? Number.MAX_SAFE_INTEGER));
+  const more = list.total === null ? list.more : held.length < list.total;
+  return { ...page, load: { ...page.load, profiles: { ...list, rows: held, more } } };
+}
+
+export function profileTargetsInUse(): string[] {
+  const out = new Set<string>();
+  for (const id of [...pending.keys(), ...refusals.keys(), ...earlier]) {
+    const at = unslot(id);
+    if (at && at.command === "release_evidence.retire_profile" && at.target.startsWith(profilePrefix) && at.target.length > profilePrefix.length) out.add(at.target);
+  }
+  return [...out];
+}
+
+export function missingProfiles(page: EvidencePage, wanted: string[]): string[] {
+  const rows = page.load.profiles.rows;
+  if (rows === null) return [];
+  const have = new Set(rows.map((p) => p.target));
+  return [...new Set(wanted)].filter((t) => t.startsWith(profilePrefix) && t.length > profilePrefix.length && validTarget(t) && !have.has(t));
+}

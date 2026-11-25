@@ -128,6 +128,7 @@ export type RunRow = {
 };
 
 export type ProfileRow = {
+  number: number | null;
   target: string;
   id: string;
   gate: string;
@@ -175,7 +176,7 @@ export type EvidencePage = {
   matrix: { origin: string; paths: List<PathRow> };
   requirements: { origin: string; requirements: List<RequirementRow>; next: string; gate: Gate };
   artifacts: { origin: string; builds: List<BuildRow>; builds_next: string | null; harnesses: List<HarnessRow>; results: List<ResultRow>; results_next: string | null; files: string; logs: string; environment: string; content: string };
-  load: { origin: string; hardware: List<HardwareRow>; profiles: List<ProfileRow>; readiness: Readiness; measurement: string; planning_targets: string };
+  load: { origin: string; hardware: List<HardwareRow>; profiles: List<ProfileRow>; profiles_next: string | null; readiness: Readiness; measurement: string; planning_targets: string };
   decisions: { origin: string; proposals: List<Proposal>; proposal_history: KeptFacts | null; support_decisions: string; activation_review: string; ledger: string };
 };
 
@@ -353,6 +354,7 @@ export function profileOf(r: Raw): ProfileRow {
   const retire = hint(r.can_retire, r.retire_blocked);
   const n = count(r.retire);
   return {
+    number: count(r.number),
     target: str(r.target),
     id: str(r.id),
     gate: str(r.gate),
@@ -454,6 +456,7 @@ export function evidenceOf(body: Raw): EvidencePage {
       origin: str(ld.origin),
       hardware: listOf(ld.hardware, (x) => ({ id: str(x.id), cpus: count(x.cpus), memory_mib: count(x.memory_mib), disk_gib: count(x.disk_gib), storage: str(x.storage), spec: str(x.spec) })),
       profiles: listOf(ld.profiles, profileOf),
+      profiles_next: typeof ld.profiles_next === "string" ? ld.profiles_next : null,
       readiness: readinessOf(ld.readiness),
       measurement: str(ld.measurement),
       planning_targets: str(ld.planning_targets),
@@ -496,4 +499,20 @@ export function buildsPageOf(body: Raw): { rows: BuildRow[]; next: string; total
   const total = count(body.total);
   if (!Array.isArray(body.builds) || typeof body.next !== "string" || total === null) return null;
   return { rows: body.builds.filter(isRow).map((x) => ({ build: str(x.build), commit: str(x.commit), order: count(x.order) })), next: body.next, total };
+}
+
+export function profilesPath(query: { after?: string; targets?: string[] }): string {
+  const q = new URLSearchParams();
+  if (query.targets) q.set("target", query.targets.join(","));
+  else {
+    q.set("limit", "50");
+    if (query.after) q.set("after", query.after);
+  }
+  return "/release-evidence/profiles?" + q.toString();
+}
+
+export function profilesAnswerOf(body: Raw): { rows: ProfileRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.profiles) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.profiles.filter(isRow).map(profileOf), next: body.next, total };
 }

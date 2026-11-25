@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -984,6 +985,96 @@ func TestEvidenceBuildsArePagedAndEveryHarnessIsListed(t *testing.T) {
 	f.s.fault = nil
 	f.s.bootWorkspace = "elsewhere"
 	if other := f.readAs(root, path); other.status != 200 || len(other.body["builds"].([]any)) != 0 || whole(other.body["total"]) != 0 {
+		t.Errorf("another workspace: %d", other.status)
+	}
+}
+
+func TestEvidenceProfilesAreReadInRecordedOrderAndByTarget(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root := f.as(AdminLogin)
+	seeded := len(f.s.ev.profiles)
+	for i := 0; i < 70; i++ {
+		id := fmt.Sprintf("bulk-profile-%03d", i)
+		f.pfApproved(perfgate.Change{Kind: perfgate.ChangeProfile, Profile: perfgate.Profile{ID: id, Gate: perfgate.GateE2E, Axes: perfgate.Axes{RowsRun: 100000}, Dataset: sampleHash("d" + id),
+			Expected: sampleHash("e" + id)}})
+		f.s.ev.profiles = append(f.s.ev.profiles, id)
+	}
+	total := seeded + 70
+	load := evMap(f.evidenceRead(root).body, "load")
+	mainRows := evRows(evMap(load, "profiles"))
+	if len(mainRows) != evidenceShown || load["profiles_next"] != "50" || whole(mainRows[0]["number"]) != 1 || whole(mainRows[49]["number"]) != 50 || whole(evMap(load, "profiles")["total"]) != total {
+		t.Fatalf("the main read keeps its order and says where it stopped: next %v, %d rows", load["profiles_next"], len(mainRows))
+	}
+	path := "/api/v1/release-evidence/profiles"
+	all, next, pages := append([]map[string]any{}, mainRows...), "50", 0
+	for next != "" {
+		page := f.readAs(root, path+"?limit=15&after="+next)
+		if page.status != 200 || whole(page.body["total"]) != len(f.s.ev.profiles) || whole(page.body["matching"]) != len(f.s.ev.profiles) || page.body["order"] != "recorded" {
+			t.Fatalf("after %s: %s", next, page.raw[:min(len(page.raw), 300)])
+		}
+		for _, raw := range page.body["profiles"].([]any) {
+			all = append(all, raw.(map[string]any))
+		}
+		next = fmt.Sprint(page.body["next"])
+		if pages++; pages == 1 {
+			f.pfApproved(perfgate.Change{Kind: perfgate.ChangeProfile, Profile: perfgate.Profile{ID: "added-meanwhile", Gate: perfgate.GateE2E, Axes: perfgate.Axes{RowsRun: 100000}, Dataset: sampleHash("dm"),
+				Expected: sampleHash("em")}})
+			f.s.ev.profiles = append(f.s.ev.profiles, "added-meanwhile")
+		}
+		if pages > 10 {
+			t.Fatal("the profiles do not end")
+		}
+	}
+	if len(all) != total+1 || all[len(all)-1]["id"] != "added-meanwhile" {
+		t.Fatalf("the pages hold %d of %d", len(all), total+1)
+	}
+	for index, row := range all {
+		if whole(row["number"]) != index+1 || row["id"] != f.s.ev.profiles[index] {
+			t.Fatalf("row %d is %v number %v", index, row["id"], row["number"])
+		}
+	}
+	first := f.readAs(root, path+"?limit=50")
+	fresh := evRows(evMap(f.evidenceRead(root).body, "load", "profiles"))
+	if rows, _ := first.body["profiles"].([]any); len(rows) != len(fresh) || !reflect.DeepEqual(rows[0], map[string]any(fresh[0])) || !reflect.DeepEqual(rows[49], map[string]any(fresh[49])) {
+		t.Error("the first page of the further read differs from the rows of the main read")
+	}
+	last := perfProfileTarget + "bulk-profile-069"
+	byTarget := f.readAs(root, path+"?target="+last+","+perfProfileTarget+f.s.ev.profiles[1]+","+perfProfileTarget+"never-recorded")
+	if rows, _ := byTarget.body["profiles"].([]any); byTarget.status != 200 || len(rows) != 2 || rows[0].(map[string]any)["id"] != f.s.ev.profiles[1] || rows[1].(map[string]any)["target"] != last ||
+		whole(byTarget.body["matching"]) != 2 || byTarget.body["next"] != "" || !reflect.DeepEqual(rows[0], map[string]any(fresh[1])) {
+		t.Fatalf("by target: %s", byTarget.raw[:min(len(byTarget.raw), 300)])
+	}
+	found := f.readAs(root, path+"?q=PROFILE-033")
+	if rows, _ := found.body["profiles"].([]any); found.status != 200 || len(rows) != 1 || rows[0].(map[string]any)["id"] != "bulk-profile-033" || whole(found.body["matching"]) != 1 {
+		t.Errorf("a search by identifier: %s", found.raw[:min(len(found.raw), 300)])
+	}
+	many := []string{}
+	for n := 0; n <= profileTargets; n++ {
+		many = append(many, perfProfileTarget+fmt.Sprintf("bulk-profile-%03d", n))
+	}
+	for _, query := range []string{"?target=", "?target=profile:x", "?target=" + perfProfileTarget, "?target=" + last + "," + last, "?target=" + last + ",", "?target=" + strings.Join(many, ","),
+		"?target=" + last + "&limit=5", "?target=" + last + "&q=a", "?target=" + last + "&target=" + last, "?after=0", "?after=x", "?limit=0", "?limit=101", "?q=", "?state=x", "?limit=5&limit=6"} {
+		if refused := f.readAs(root, path+query); refused.status != 422 {
+			t.Errorf("%s: %d", query, refused.status)
+		}
+	}
+	if twenty := f.readAs(root, path+"?target="+strings.Join(many[:profileTargets], ",")); twenty.status != 200 || len(twenty.body["profiles"].([]any)) != profileTargets {
+		t.Errorf("twenty targets: %d", twenty.status)
+	}
+	f.code(t, "member", f.readAs(f.as(MemberLogin), path), 403, "permission_denied")
+	f.code(t, "anonymous", f.readAs(actor{}, path), 401, "unauthenticated")
+	f.s.fault = func(at string) bool { return at == "release-evidence-read" }
+	if failed := f.readAs(root, path); failed.status != 503 {
+		t.Errorf("a fault: %d", failed.status)
+	}
+	f.s.fault = nil
+	f.s.ev.profiles = append(f.s.ev.profiles, "never-recorded")
+	if failed := f.readAs(root, path+"?target="+perfProfileTarget+"never-recorded"); failed.status != 503 {
+		t.Errorf("an unknown stored profile: %d", failed.status)
+	}
+	f.s.bootWorkspace = "elsewhere"
+	if other := f.readAs(root, path); other.status != 200 || len(other.body["profiles"].([]any)) != 0 || whole(other.body["total"]) != 0 {
 		t.Errorf("another workspace: %d", other.status)
 	}
 }

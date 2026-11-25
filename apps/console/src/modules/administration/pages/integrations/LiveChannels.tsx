@@ -99,7 +99,7 @@ function Fold({ l, s, revision, read, onRefused }: { l: Locale; s: Subscription;
         {(list) => (
           <div className="live-table">
             <table className="p02-table">
-              <colgroup><col className="p02-c16" /><col className="p02-c16" /><col className="p02-c16" /><col className="p02-c12" /><col className="p02-c20" /><col className="p02-c20" /></colgroup>
+              <colgroup><col className="p02-c20" /><col className="p02-c16" /><col className="p02-c16" /><col className="p02-c14" /><col className="p02-c16" /><col className="p02-c18" /></colgroup>
               <thead>
                 <tr>
                   <th scope="col">{k.colKey(l)}</th><th scope="col">{k.colFrom(l)}</th><th scope="col">{k.colUntil(l)}</th><th scope="col">{k.colState(l)}</th>

@@ -251,3 +251,29 @@ test("an editor sees the draft reason, not the proposer reason", () => {
     assert.equal(c.refused(l, "own_draft"), c.ownDraft(l));
   }
 });
+
+test("a plan whose changed members were cut shows the count and one named button for each kind, and none when whole", async () => {
+  const { planMembersPageOf } = await import("../../../../service/admin");
+  const { appended } = await import("../../../../shared/more-rows");
+  const member = (kind: string, id: string) => ({ kind, member: id, name: "", differs: [{ from: "2026-12-01", until: "" }], before: [], after: ["unit-1"] });
+  const cut = plan({ kinds: [{ kind: "hierarchy", changed: 70, entries_before: 1, entries_after: 1, earliest: "2026-12-01", next: "acct-2" }, { kind: "payer", changed: 1, entries_before: 0, entries_after: 1, earliest: "", next: "" }],
+    members: [member("hierarchy", "acct-1"), member("hierarchy", "acct-2"), member("payer", "acct-1")] });
+  const read = async () => ({ rows: [], next: "" });
+  for (const l of locales) {
+    const html = renderToStaticMarkup(<Detail l={l} p={cut} page={page} parties={[]} members={[]} full readMembers={read} />);
+    const out = plain(html);
+    assert.ok(out.includes(c.membersShown(l, 3, 71)), l);
+    assert.equal(html.split("o02-members-more-button").length - 1, 1, l);
+    assert.ok(!detail(l, cut).includes("o02-members-foot"), l);
+  }
+  assert.equal(cut.members[2].kind, "payer");
+  const whole = plan({ kinds: [{ kind: "hierarchy", changed: 1, entries_before: 1, entries_after: 1, earliest: "", next: "" }], members: [member("hierarchy", "acct-1")] });
+  assert.ok(!renderToStaticMarkup(<Detail l="en" p={whole} page={page} parties={[]} members={[]} full readMembers={read} />).includes("o02-members-foot"));
+  const old = plan({ kinds: [{ kind: "hierarchy", changed: 70, entries_before: 1, entries_after: 1, earliest: "" }], members: [{ member: "acct-1", name: "", differs: [], before: [], after: [] }] });
+  assert.ok(!renderToStaticMarkup(<Detail l="en" p={old} page={page} parties={[]} members={[]} full readMembers={read} />).includes("o02-members-foot"));
+  for (const bad of [{}, { members: [] }, { members: "x", next: "" }, { members: [], next: 4 }]) assert.equal(planMembersPageOf(bad), null, JSON.stringify(bad));
+  const got = planMembersPageOf({ members: [member("hierarchy", "acct-3"), null, "x"], next: "acct-3", total: 70 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].kind, got?.rows[0].member, got?.next], [1, "hierarchy", "acct-3", "acct-3"]);
+  const key = (m: { kind?: string; member: string }) => (m.kind ?? "") + "\u0000" + m.member;
+  assert.deepEqual(appended(cut.members, [member("hierarchy", "acct-2"), member("hierarchy", "acct-3"), member("payer", "acct-3")], key).map(key), ["hierarchy\u0000acct-1", "hierarchy\u0000acct-2", "payer\u0000acct-1", "hierarchy\u0000acct-3", "payer\u0000acct-3"]);
+});

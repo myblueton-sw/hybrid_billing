@@ -352,10 +352,28 @@ export type OrgTargetRow = { id: string; name: string; members_on: number };
 export type TargetsQuery = { kind: RelationKind; on?: string; revision?: number; after?: string; limit?: number; q?: string };
 export type TargetsPage = { revision: string; relationship_revision: number; active_revision: number; on: string; kind: RelationKind; targets: OrgTargetRow[]; next: string; scan_stopped: boolean };
 export type PlanChange = { kind: string; member: string; action: string; target: string; from: string };
-export type PlanKind = { kind: string; changed: number; entries_before: number; entries_after: number; earliest: string };
+export type PlanKind = { kind: string; changed: number; entries_before: number; entries_after: number; earliest: string; next?: string };
 export type PlanViolation = { kind: string; member: string; rule: string };
 export type PlanRange = { from: string; until: string };
-export type PlanMember = { member: string; name: string; differs: PlanRange[]; before: string[]; after: string[] };
+export type PlanMember = { kind?: string; member: string; name: string; differs: PlanRange[]; before: string[]; after: string[] };
+
+export function planMemberOf(m: PlanMember | Record<string, unknown>): PlanMember {
+  const r = m as Record<string, unknown>;
+  const list = <T,>(x: unknown) => (Array.isArray(x) ? (x as T[]) : []);
+  return {
+    kind: typeof r.kind === "string" ? r.kind : undefined,
+    member: String(r.member ?? ""),
+    name: String(r.name ?? ""),
+    differs: list<PlanRange | null>(r.differs).filter((d): d is PlanRange => !!d && typeof d === "object").map((d) => ({ from: String(d.from ?? ""), until: String(d.until ?? "") })),
+    before: list<unknown>(r.before).map(String),
+    after: list<unknown>(r.after).map(String),
+  };
+}
+
+export function planMembersPageOf(body: Record<string, unknown>): { rows: PlanMember[]; next: string } | null {
+  if (!Array.isArray(body.members) || typeof body.next !== "string") return null;
+  return { rows: body.members.filter((m): m is Record<string, unknown> => !!m && typeof m === "object" && !Array.isArray(m)).map(planMemberOf), next: body.next };
+}
 export type ImpactState = "computed" | "not_computed" | "unknown";
 export type PlanImpact = { money: ImpactState; publication: ImpactState; erp: ImpactState };
 const impactState = (v: unknown): ImpactState => (v === "computed" || v === "not_computed" ? v : "unknown");
@@ -420,13 +438,7 @@ export function planOf(v: unknown): PlanRow {
     truncated: r.truncated === true,
     members: list<PlanMember | null>(r.members)
       .filter((m): m is PlanMember => !!m && typeof m === "object")
-      .map((m) => ({
-        member: String(m.member ?? ""),
-        name: String(m.name ?? ""),
-        differs: list<PlanRange | null>(m.differs).filter((d): d is PlanRange => !!d && typeof d === "object").map((d) => ({ from: String(d.from ?? ""), until: String(d.until ?? "") })),
-        before: list<unknown>(m.before).map(String),
-        after: list<unknown>(m.after).map(String),
-      })),
+      .map(planMemberOf),
     impact: { money: impactState(impact.money), publication: impactState(impact.publication), erp: impactState(impact.erp) },
     can_activate: r.can_activate === true,
     blocked: String(r.blocked ?? ""),
@@ -1134,6 +1146,11 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
         you: String(body.you ?? ""),
         closed: closedFactsOf(body.closed),
       };
+    },
+    async planMembers(plan: string, kind: string, after: string): Promise<{ rows: PlanMember[]; next: string }> {
+      const got = planMembersPageOf(await send("/organizations/plans/members?" + new URLSearchParams({ plan, kind, limit: "50", after }).toString(), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
     },
     async closedPlans(query: ClosedPlansQuery = {}): Promise<ClosedPlansPage> {
       const q = new URLSearchParams();

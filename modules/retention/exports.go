@@ -11,6 +11,7 @@ type Standing struct {
 	DueAt      time.Time
 	Held       bool
 	Referenced bool
+	Guarding   bool
 	Damaged    bool
 	Run        string
 	Stores     map[string]string
@@ -35,15 +36,17 @@ func (r *Registry) Standing(id string) (Standing, error) {
 	if a == nil {
 		return Standing{}, ErrNotFound
 	}
-	v := Standing{Access: AccessOK, Due: r.due(a, now), Held: r.held(a), Referenced: r.requiredBy[id] > 0, Damaged: a.damaged, Run: a.run, Stores: map[string]string{}}
+	v := Standing{Access: AccessOK, Due: r.due(a, now), Held: r.held(a), Referenced: r.requiredBy[id] > 0, Guarding: r.guarding(a), Damaged: a.damaged, Run: a.run, Stores: map[string]string{}}
 	switch {
 	case a.deleted:
 		v.Access = AccessDeleted
 	case a.damaged || a.run != "":
 		v.Access = AccessBlocked
 	}
-	if p := r.current(a.view.Class); p != nil {
-		v.DueAt = a.view.Anchor.Add(time.Duration(p.Policy.Period+p.Policy.Grace) * day)
+	if at, settled := r.anchor(a); settled {
+		if p := r.current(a.view.Class); p != nil {
+			v.DueAt = at.Add(time.Duration(p.Policy.Period+p.Policy.Grace) * day)
+		}
 	}
 	for store, result := range a.stores {
 		v.Stores[store] = result

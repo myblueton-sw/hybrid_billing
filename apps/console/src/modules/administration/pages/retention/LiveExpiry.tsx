@@ -117,7 +117,7 @@ function Group({ g, ...shared }: Shared & { g: ClassGroup }) {
         <h3 id={head}><Code l={l} value={g.class} say={k.className} /></h3>
         <span className="p04-muted">{g.total === null ? k.unknown(l) : counted(l, g.total, plurals.items)}</span>
       </div>
-      <Strip l={l} counts={g.counts} keys={standingKeys} label={k.standing} cls="p04-strip-7" />
+      <Strip l={l} counts={g.counts} keys={standingKeys} label={k.standing} cls="p04-strip-8" />
       <p className="p04-small live-quiet p04-usage">
         {k.usage(l)}: <Code l={l} value={g.usage} say={k.connection} /> · {k.growth(l)}: <Code l={l} value={g.growth} say={k.connection} /> · {k.bytes(l)}:{" "}
         <Code l={l} value={g.bytes} say={k.connection} />

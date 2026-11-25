@@ -116,7 +116,7 @@ func (f world) run(id string) RunView {
 	f.t.Helper()
 	v, err := f.r.Run(id)
 	f.must(err)
-	if len(v.Counts) != 8 {
+	if len(v.Counts) != 9 {
 		f.t.Fatalf("count keys %v", v.Counts)
 	}
 	sum := 0

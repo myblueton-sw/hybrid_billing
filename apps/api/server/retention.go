@@ -31,15 +31,16 @@ const (
 	standingNoPolicy     = "no_policy"
 	standingNotDue       = "not_due"
 	standingHeld         = "held"
+	standingGuarding     = "guarding"
 	standingReferenced   = "referenced"
 	standingEligible     = "eligible"
 	maxTargetBytes       = 128
 )
 
 var (
-	retentionStandings = []string{standingEligible, standingHeld, standingReferenced, standingNotDue, standingNoPolicy, standingInRun, standingDeleted}
+	retentionStandings = []string{standingEligible, standingHeld, standingGuarding, standingReferenced, standingNotDue, standingNoPolicy, standingInRun, standingDeleted}
 	retentionOutcomes  = []string{retention.OutcomePending, retention.OutcomeDeleting, retention.OutcomeDeleted, retention.OutcomeFailed, retention.OutcomeHeld,
-		retention.OutcomeReferenced, retention.OutcomeNotDue, retention.OutcomeStopped}
+		retention.OutcomeGuarding, retention.OutcomeReferenced, retention.OutcomeNotDue, retention.OutcomeStopped}
 	retentionHoldCounts = []string{retention.HoldNotPreserved, retention.HoldOutcomePending, retention.HoldPartlyDeleted}
 )
 
@@ -393,6 +394,8 @@ func standingOf(v retention.Standing) string {
 		return standingDeleted
 	case v.Run != "":
 		return standingInRun
+	case v.Guarding:
+		return standingGuarding
 	case v.DueAt.IsZero():
 		return standingNoPolicy
 	case !v.Due:
@@ -597,7 +600,7 @@ func (f *retentionFacts) holds(ids []string) (retentionHoldsSection, error) {
 
 func excludedOutcome(outcome string) bool {
 	switch outcome {
-	case retention.OutcomeHeld, retention.OutcomeReferenced, retention.OutcomeNotDue, retention.OutcomeStopped:
+	case retention.OutcomeHeld, retention.OutcomeGuarding, retention.OutcomeReferenced, retention.OutcomeNotDue, retention.OutcomeStopped:
 		return true
 	}
 	return false

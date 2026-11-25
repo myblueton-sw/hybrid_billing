@@ -154,7 +154,7 @@ func TestRetentionSeed(t *testing.T) {
 		t.Error("second seed")
 	}
 	counts := retentionSteps(t)
-	if fmt.Sprint(counts) != "map[retention-approve:5 retention-claim:3 retention-place_hold:2 retention-proceed:2 retention-propose:7 retention-refer:1 "+
+	if fmt.Sprint(counts) != "map[retention-approve:5 retention-claim:3 retention-place_hold:2 retention-proceed:2 retention-propose:7 retention-refer:2 "+
 		"retention-register:14 retention-report:3 retention-run:2]" {
 		t.Errorf("seed calls %v", counts)
 	}
@@ -494,7 +494,7 @@ func TestRetentionActorsAndEffectsAreConfined(t *testing.T) {
 			})
 		}
 	}
-	if fmt.Sprint(found) != "map[Claim:1 KindSystem:2 Proceed:1 Refer:1 Register:1 Report:1 human actors:4 member actors:1]" {
+	if fmt.Sprint(found) != "map[Claim:1 KindSystem:2 Proceed:1 Refer:2 Register:1 Report:1 human actors:4 member actors:1]" {
 		t.Errorf("found %v", found)
 	}
 }

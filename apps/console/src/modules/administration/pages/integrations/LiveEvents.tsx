@@ -1,7 +1,7 @@
 import type { Locale } from "../../../../shared/types";
 import { letterActions, type Delivery, type LetterAction, type RequestValue } from "../../../../service/integrations";
 import { k } from "./live-copy";
-import { actor, blockerPolicy, deliveriesCut, deliveriesShown, letterTarget, pendingNow, refusedNow, subscriptionRevoked, waitsForResume, type CommandKey } from "./live-model";
+import { actor, blockerPolicy, deliveriesCut, deliveriesShown, deliveriesToLoad, letterTarget, pendingNow, refusedNow, subscriptionRevoked, waitsForResume, type CommandKey } from "./live-model";
 import { Code, Known, ListOr, Num, Prose, Who, href, ltr } from "./live-format";
 import { CommandForm, RowNote, blockerLines, plain, useOpen, type Blocker, type Shared } from "./LiveCommand";
 import { letterRequestTarget, redeliveryTarget } from "./live-model";
@@ -203,6 +203,7 @@ function StateTag({ l, d, waits }: { l: Locale; d: Delivery; waits: boolean }) {
 function Deliveries(shared: Shared) {
   const { l, page, selection } = shared;
   const list = deliveriesShown(page, selection.subscription);
+  const further = shared.deliveries ? deliveriesToLoad(page, selection.subscription) : [];
   return (
     <section className="p02-section p02-deliveries" aria-labelledby="p02-deliveries-title">
       <h3 id="p02-deliveries-title">{k.deliveriesTitle(l)}</h3>
@@ -261,6 +262,23 @@ function Deliveries(shared: Shared) {
           </div>
         )}
       </ListOr>
+      {shared.deliveries && (further.length > 0 || shared.deliveries.reset || shared.deliveries.loaded) && (
+        <div className="p02-deliveries-foot">
+          {(further.length > 0 || shared.deliveries.loaded) && <p className="p02-small live-quiet p02-deliveries-move">{k.deliveriesMove(l)}</p>}
+          {shared.deliveries.reset && <p className="p02-small p02-deliveries-reset" role="status">{k.deliveriesReset(l)}</p>}
+          {further.map((id) => {
+            const status = shared.deliveries?.status(id) ?? "idle";
+            return (
+              <div key={id} className="p02-history-more p02-deliveries-more">
+                {status === "failed" && <p role="alert">{k.deliveriesFailed(l)}</p>}
+                <button type="button" className="live-secondary p02-history-more-button p02-deliveries-more-button" aria-disabled={status === "loading" || undefined} onClick={() => { if (status !== "loading") shared.deliveries?.load(id); }}>
+                  {status === "failed" ? <>{k.historyTryAgain(l)} · {ltr(id)}</> : status === "loading" ? k.historyLoading(l) : k.deliveriesMore(l, id)}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

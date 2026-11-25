@@ -27,6 +27,7 @@ export type Shared = {
   onReload: () => Promise<IntegrationsPage | null>;
   onSignedOut: (diagnostic?: CommandDiagnostic) => void;
   onLostAccess: (diagnostic?: CommandDiagnostic) => void;
+  deliveries?: { status: (subscription: string) => "idle" | "loading" | "failed"; reset: boolean; loaded: boolean; load: (subscription: string) => void };
 };
 
 export type ChoiceField = "destination" | "types";

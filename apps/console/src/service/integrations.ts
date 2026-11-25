@@ -193,6 +193,7 @@ export type EventsSection = {
   outbox: { floor: number | null; head: number | null };
   deliveries: Delivery[] | null;
   deliveries_more: string[] | null;
+  deliveries_next: Record<string, string> | null;
   dispatcher: string;
 };
 
@@ -454,6 +455,18 @@ export function channelsOf(v: unknown): ChannelsSection {
   };
 }
 
+export function cursorsOf(v: unknown): Record<string, string> | null {
+  if (!isRow(v)) return null;
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(v)) if (typeof value === "string" && value !== "") out[key] = value;
+  return out;
+}
+
+export function deliveriesPageOf(body: Raw): { rows: Delivery[]; next: string } | null {
+  if (!Array.isArray(body.deliveries) || typeof body.next !== "string") return null;
+  return { rows: body.deliveries.filter(isRow).map(deliveryOf), next: body.next };
+}
+
 export function deliveryOf(r: Raw): Delivery {
   return {
     id: str(r.id),
@@ -496,6 +509,7 @@ export function eventsOf(v: unknown): EventsSection {
     outbox: { floor: count(o.floor), head: count(o.head) },
     deliveries: rows(r.deliveries, deliveryOf),
     deliveries_more: strs(r.deliveries_more),
+    deliveries_next: cursorsOf(r.deliveries_next),
     dispatcher: str(r.dispatcher),
   };
 }

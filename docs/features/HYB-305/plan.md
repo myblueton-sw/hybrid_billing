@@ -529,6 +529,24 @@ Review (independent reviewer, read-only, 2026-11-25): approve with conditions, t
 
 Verification: the whole server package passed (before the corrections; the only Go change after it is an added test case, and the recovery row tests passed again); console tests 1420, 1417 passed, 3 skipped; the rendered check `tools/recovery-rows-qa.mjs` 109 passed against a local service with the sample seed, with rows written by the check. The owner has not reviewed the screen.
 
+# Increment 5b, the deliveries of P02 (2026-11-25)
+
+Facts (main 86a3ee8): for each subscription the integrations read lists every delivery that needs action (a dead letter or a held redelivery), which are the only rows a command applies to, and the first 50 of the others (the open delivery, queued redeliveries, cancelled ones) in the module's order; `deliveries_more` names the subscriptions whose others were cut, and the screen says that more exist. No dispatcher is connected and no command adds a delivery, so a running service has the seed's two; approving a redelivery changes a dead letter's kind without changing the count.
+
+Built:
+
+- The main read keeps its rows and order; the events gain `deliveries_next`, a cursor for each subscription named in `deliveries_more`.
+- `GET /api/v1/integrations/deliveries` with `subscription`, `after` (a count of rows to pass) and `limit` (at most 50): the subscription's deliveries that need no action, in the module's order, with `next`, `total` and `rows_can_move: true`. It needs the rights the channels and events sections need, has the integrations read's fault step, and refuses a subscription that does not exist, was purged or belongs to another workspace alike (422).
+- Screen: under the deliveries table, one button for each subscription whose list was cut ("Load more deliveries of …"), or only the selected subscription's when one is selected; the rows are added to the page's deliveries in sequence order, a delivery an answer repeats is listed once, and the note that more exist goes when a subscription has been read to its end. A sentence says that deliveries can change while they are dispatched. Rows loaded that way are dropped when the screen is read again, and the list says so.
+
+Tested through the windowing function with made-up deliveries (130, some dead or held) and through the read on the sample, whose subscriptions have one such delivery each; the fifty-row cut cannot be reached over HTTP in a test, as nothing produces deliveries.
+
+Not built on P02: the publishers, plugin versions and installations, the dead letters as a separate list and the event types, which the integrations read returns whole and which have no producer.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. It confirmed that the main read answers as before apart from the cursors, that the new read asks for the same rights as the events section and follows the subscription history read step for step, that the further rows carry no usable action, and that the main read's fifty are exactly the first window of the further read. On its suggestion the sentence that deliveries can change now stays while further rows are held. Composition and copy check (ui-designer): pass; the English button now says "for" as the screen does elsewhere. It did not see several cut subscriptions at once or a long subscription identifier at 390.
+
+Verification: the whole server package passed; console tests 1421, 1418 passed, 3 skipped; the rendered check `tools/deliveries-qa.mjs` passed against a local service with the sample seed, which has one subscription, so the case of one subscription read to its end while another still has a button is covered only by the model test.
+
 # Open for the owner
 
 - A workspace can now page through all of its deletion records in the window (increment 4g), up to 1,000 instead of 50. Their sequence numbers are numbers of the whole installation, so the gaps between them show roughly how many deletions other workspaces had; the watermark and the first fifty rows already showed this in part. Whether a workspace should see installation-wide sequence numbers at all is for the owner.

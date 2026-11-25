@@ -44,7 +44,7 @@ try{
   for(const code of [403,401]){
    await page.goto('about:blank');await page.route(routeMatch,route=>route.fulfill({status:code,contentType:'application/json',body:JSON.stringify({code:code===403?'permission_denied':'unauthenticated'})}));
    await page.goto(`${base}/?service=api&lang=en#${screen.path}?lang=en&view=${screen.tabs[0].key}`);
-   if(code===403)await page.locator('#'+prefix+'-denied').waitFor();else await page.locator('.'+prefix+'-live .live-error button').waitFor();
+   if(code===403)await page.locator('#'+prefix+'-denied').waitFor();else await page.locator('#signin-workspace').waitFor();
    assert.equal(await page.locator(status).count(),0);await page.unroute(routeMatch);
   }
   evidence.renders.push({id,backgroundSilent:true,latestSuccessWinsStaleFailure:true,latestFailureWinsStaleSuccess:true,deniedNoSuccessStatus:true,initialDeniedNoSuccessStatus:true,unauthenticatedNoSuccessStatus:true,p05RevokedVsDenied:id==='P05'});

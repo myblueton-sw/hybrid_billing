@@ -228,7 +228,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   return (
     <div className="p04-live" data-live={view} aria-busy={busy || undefined}>
       <p className="visually-hidden p04-read-status" role="status" aria-live="polite">{readComplete ? sc.dataReloaded(l) : ""}</p>
-        <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
+      <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
       {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
       <div className="p04-scope">
         <dl className="p04-scope-facts">

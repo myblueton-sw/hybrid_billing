@@ -680,3 +680,8 @@
   inline-size: auto;
   min-block-size: 44px;
 }
+.p02-live .p02-form-title,
+.p02-live .p02-confirm h3 {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}

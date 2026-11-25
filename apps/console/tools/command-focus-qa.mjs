@@ -60,6 +60,8 @@ try {
         const cancels = page.getByRole("button", { name: cancelName });
         if ((await cancels.count()) <= before) { notes.push(`${at}: Enter opened nothing with a Cancel button`); await open(); continue; }
         const opened = await active();
+        const ring = await page.evaluate(() => { const el = document.activeElement; if (!el || !/form-title/.test(el.className)) return null; const r = document.createRange(); r.selectNodeContents(el); const t = r.getBoundingClientRect(), b = el.getBoundingClientRect(), p = el.parentElement.getBoundingClientRect(); return { extra: Math.round(b.width - t.width), inside: b.left >= p.left - 1 && b.right <= p.right + 1, offset: getComputedStyle(el).outlineOffset }; });
+        if (ring) check(`${at}: the focus ring follows the title's text and stays inside the form`, ring.extra <= 2 && ring.inside && parseFloat(ring.offset) >= 2, JSON.stringify(ring));
         if (args.shots && !shot.has(screen.id + width)) { shot.add(screen.id + width); await mkdir(args.shots, { recursive: true }); await page.locator(":focus").scrollIntoViewIfNeeded().catch(() => {}); await page.screenshot({ path: `${args.shots}/form-opened-${screen.id}-${width}.png` }); }
         let reached = false, steps = 0;
         for (; steps < 80; steps++) {

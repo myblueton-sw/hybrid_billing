@@ -48,6 +48,7 @@ export type ClassGroup = {
   counts: Counts;
   total: number | null;
   more: boolean | null;
+  next: string | null;
   artifacts: ArtifactRow[] | null;
   usage: string;
   growth: string;
@@ -77,7 +78,7 @@ export type HoldRow = {
   release_blocked: string;
 };
 export type Reference = { id: string; class: string };
-export type References = { population: string; total: number | null; more: boolean | null; rows: Reference[] | null };
+export type References = { population: string; total: number | null; more: boolean | null; next: string | null; rows: Reference[] | null };
 export type HoldsSection = { total: number | null; more: boolean | null; rows: HoldRow[] | null; released: { total: number; next: string } | null; tenant_target: string; references: References };
 
 export type StoreRow = { store: string; target: number | null; deleted: number | null; failed: number | null; excluded: number | null; pending: number | null };
@@ -256,6 +257,7 @@ export function classGroupOf(r: Raw): ClassGroup {
     counts: countsOf(r.counts, standingKeys),
     total: count(r.total),
     more: flag(r.more),
+    next: typeof r.next === "string" ? r.next : null,
     artifacts: rows(r.artifacts, artifactRowOf),
     usage: str(r.usage),
     growth: str(r.growth),
@@ -304,7 +306,7 @@ export function holdsOf(v: unknown): HoldsSection {
     rows: rows(r.rows, holdRowOf),
     released: releasedFactsOf(r.released),
     tenant_target: str(r.tenant_target),
-    references: { population: str(ref.population), total: count(ref.total), more: flag(ref.more), rows: rows(ref.rows, (x) => ({ id: str(x.id), class: str(x.class) })) },
+    references: { population: str(ref.population), total: count(ref.total), more: flag(ref.more), next: typeof ref.next === "string" ? ref.next : null, rows: rows(ref.rows, referenceOf) },
   };
 }
 
@@ -447,6 +449,29 @@ export function releasedFactsOf(v: unknown): { total: number; next: string } | n
   if (!isRow(v)) return null;
   const total = count(v.total);
   return total === null || typeof v.next !== "string" ? null : { total, next: v.next };
+}
+
+export function referenceOf(x: Raw): Reference {
+  return { id: str(x.id), class: str(x.class) };
+}
+
+export type ArtifactEntry = { class: string; artifact: ArtifactRow };
+
+export function artifactsPath(query: { cls: string; after: string } | { ids: string[] }): string {
+  const q = new URLSearchParams("ids" in query ? { id: query.ids.join(",") } : { class: query.cls, limit: "50", after: query.after });
+  return "/retention/artifacts?" + q.toString();
+}
+
+export function artifactsPageOf(body: Raw): { rows: ArtifactEntry[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.artifacts) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.artifacts.filter(isRow).map((x) => ({ class: str(x.class), artifact: artifactRowOf(x) })), next: body.next, total };
+}
+
+export function referencesPageOf(body: Raw): { rows: Reference[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.references) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.references.filter(isRow).map(referenceOf), next: body.next, total };
 }
 
 export function tombstoneOf(x: Raw): Tombstone {

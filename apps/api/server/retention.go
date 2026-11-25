@@ -99,6 +99,7 @@ type retentionClassGroup struct {
 	Counts     map[string]int         `json:"counts"`
 	Total      int                    `json:"total"`
 	More       bool                   `json:"more"`
+	Next       string                 `json:"next"`
 	Artifacts  []retentionArtifactRow `json:"artifacts"`
 	Usage      string                 `json:"usage"`
 	Growth     string                 `json:"growth"`
@@ -146,6 +147,7 @@ type retentionReferences struct {
 	Population string                  `json:"population"`
 	Total      int                     `json:"total"`
 	More       bool                    `json:"more"`
+	Next       string                  `json:"next"`
 	Rows       []retentionReferenceRow `json:"rows"`
 }
 
@@ -483,7 +485,9 @@ func (f *retentionFacts) expiry(ids []string) ([]retentionClassGroup, error) {
 				g.Artifacts = append(g.Artifacts, row)
 			}
 		}
-		g.More = g.Total > len(g.Artifacts)
+		if g.More = g.Total > len(g.Artifacts); g.More {
+			g.Next = g.Artifacts[len(g.Artifacts)-1].ID
+		}
 		out = append(out, g)
 	}
 	return out, nil
@@ -596,7 +600,9 @@ func (f *retentionFacts) holds(ids []string) (retentionHoldsSection, error) {
 			refs.Rows = append(refs.Rows, retentionReferenceRow{ID: id, Class: f.s.ret.artifact(id).class})
 		}
 	}
-	refs.More = refs.Total > len(refs.Rows)
+	if refs.More = refs.Total > len(refs.Rows); refs.More {
+		refs.Next = refs.Rows[len(refs.Rows)-1].ID
+	}
 	return section, nil
 }
 

@@ -479,6 +479,22 @@ Review (independent reviewer, read-only, 2026-11-25): approve, no blocking findi
 
 Verification: the whole server package passed (before the note was moved; no Go file changed after it); console tests 1417, 1414 passed, 3 skipped; the rendered check `tools/records-qa.mjs` 49 passed against a local service with the sample seed, in which the records beyond the sample's two are written by the check. The owner has not reviewed the screen.
 
+# Increment 4h, the items of a class and the required items of P04 (2026-11-25)
+
+Facts (main daf2fd8): the retention read lists, for each class, the first 50 artifacts the workspace may see in identifier order, with the class's counts and `total`; and the first 50 referenced artifacts in identifier order. Nothing registers an artifact in a running service (no ingest is connected), so it has the seed's. An artifact is the target of the place hold command and of the `?artifact=` selection, and deletion records link to it; `artifactOf`, `listed` and `stillAllowed` look it up in the rows the page holds.
+
+Built, in the shape of increment 4c:
+
+- The main read keeps its rows and order; each class and the references gain `next`, the identifier of the last row listed when more exist.
+- `GET /api/v1/retention/artifacts` with `class` (required), `after` (an identifier; the rows after it), `limit` (at most 50) and `q` (matched against the identifier), or `id` alone (one to twenty identifiers, of any class; one the workspace may not see or that is not registered is left out). Each row carries its `class`. `GET /api/v1/retention/references` with `after`, `limit` and `q`. Both are admitted as the retention read is, with its fault step.
+- Screen: `Live.tsx` reads by identifier, before it sets the page, every artifact that the main read lacks and that a link or a hold attempt refers to, and the page then holds it in its class; "Load more items" adds the next rows of a class, or of the required items, to the page. Rows loaded that way are dropped when the screen is read again, and the list says so.
+
+Cost, unchanged in kind: the references read works out the standing of every artifact the workspace may see to find the referenced ones, as the main read does; the artifacts read walks the identifiers and builds only the rows it returns.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. With the tenant boundary as its first question, it confirmed that both reads walk only the artifacts the workspace may see, that a read by identifier leaves out another workspace's artifact and an unregistered one alike with no count or error, and that a search matches the identifier only. Composition and copy check (ui-designer): pass; the count sentence now says "sorted by item", the screen's word, instead of "identifier". It did not see the required items foot in the holds view. Its note that several classes on one page each show a button of the same name is carried to a separate issue.
+
+Verification: the whole server package passed; console tests 1418, 1415 passed, 3 skipped; the rendered check `tools/items-qa.mjs` 61 passed against a local service with the sample seed, in which the items beyond the sample's are written by the check. The owner has not reviewed the screen.
+
 # Open for the owner
 
 - A workspace can now page through all of its deletion records in the window (increment 4g), up to 1,000 instead of 50. Their sequence numbers are numbers of the whole installation, so the gaps between them show roughly how many deletions other workspaces had; the watermark and the first fifty rows already showed this in part. Whether a workspace should see installation-wide sequence numbers at all is for the owner.

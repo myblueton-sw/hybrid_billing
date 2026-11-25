@@ -7,7 +7,7 @@ import { k } from "./live-copy";
 import {
   blockerPolicy, duplicateIn, holdTarget, keptKey, pendingNow, pendingReleaseFor, refusedNow, rowId, stateSentence, tenantTarget, textProblem,
 } from "./live-model";
-import { Code, Free, HoldFacts, Rich, Stamp, Who, coversText, holdContext, holdTextError, href, ltr, MoreLine } from "./live-format";
+import { Code, Free, HoldFacts, Rich, Stamp, Who, coversText, holdContext, holdTextError, href, ltr, ItemsFoot, MoreLine } from "./live-format";
 import { CommandForm, RowNote, line, useOpen, type Blocker, type FieldErrors, type Fields, type Shared } from "./LiveCommand";
 import { HoldCommand, TextField } from "./LiveHoldForm";
 import { Strip } from "./LiveExpiry";
@@ -231,7 +231,7 @@ export function HoldsView(shared: Shared) {
         <h3 id="p04-required-title">{k.requiredTitle(l)}</h3>
         <p className="p04-prose">{k.requiredLead(l)}</p>
         <p className="p04-small live-quiet"><Rich text={k.populationNote(l, refs.population)} /></p>
-        <MoreLine l={l} more={refs.more} total={refs.total} forms={plurals.showingOf} />
+        {!shared.listOf && <MoreLine l={l} more={refs.more} total={refs.total} forms={plurals.showingOf} />}
         {refs.rows === null ? (
           <p className="live-empty">{k.unknown(l)}</p>
         ) : refs.rows.length === 0 ? (
@@ -253,6 +253,7 @@ export function HoldsView(shared: Shared) {
             </table>
           </div>
         )}
+        {shared.listOf && <ItemsFoot l={l} kind="refs" list={shared.listOf("refs", refs.next)} shown={refs.rows?.length ?? 0} total={refs.total} />}
       </section>
       <Proposals kind="release" {...shared} />
     </>

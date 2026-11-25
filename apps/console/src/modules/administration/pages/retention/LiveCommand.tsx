@@ -8,7 +8,7 @@ import type { RetentionPage } from "../../../../service/retention";
 import { Summary, type Problems } from "../../../../service/Service";
 import { c as sc, retryPhrase } from "../../../../service/copy";
 import { k } from "./live-copy";
-import { Free, Rich } from "./live-format";
+import { Free, Rich, type MoreList } from "./live-format";
 import {
   refusalDiagnostics, clearDraft, deniedOutcome, discard, draftOf, drop, fieldReaction, frozenValues, goneKind, keepDraft, pendingFor, pendingNow, react, reasonProblem, settle, snapshotOf, stillAllowed,
   utf8Bytes, type CommandKey, type FieldReaction, type Reaction, type Selection,
@@ -28,6 +28,7 @@ export type Shared = {
   onNotice: (text: string, diagnostic?: CommandDiagnostic) => void;
   onReload: () => Promise<RetentionPage | null>;
   onSignedOut: (diagnostic?: CommandDiagnostic) => void;
+  listOf?: (key: string, next: string | null) => MoreList;
 };
 
 export type Draft = Record<string, string>;

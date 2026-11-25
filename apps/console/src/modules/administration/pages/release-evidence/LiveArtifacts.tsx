@@ -1,5 +1,7 @@
 import type { Locale } from "../../../../shared/types";
 import type { ResultRow } from "../../../../service/release-evidence";
+import { AdminError } from "../../../../service/admin";
+import { useOlderRows } from "../../../../shared/older-rows";
 import { k } from "./live-copy";
 import { moduleWords, outcomeWords, plurals, reasonWords } from "./live-codes";
 import { commitPattern, requirementByTest, requirementNumber, rowId } from "./live-model";
@@ -47,6 +49,13 @@ function ResultBody({ x, ...shared }: Shared & { x: ResultRow }) {
 export function ArtifactsView(shared: Shared) {
   const { l, page, selection } = shared;
   const a = page.artifacts;
+  const facts = a.results.rows === null || a.results_next === null || a.results.total === null ? null : { total: a.results.total, next: a.results_next };
+  const older = useOlderRows<ResultRow>(page.revision, facts, a.results.rows, shared.api.evidenceResults, (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  }, false);
+  const failed = older.status === "failed";
   const nc: [string, string][] = [[k.files(l), a.files], [k.logs(l), a.logs], [k.environment(l), a.environment], [k.content(l), a.content]];
   return (
     <>
@@ -107,7 +116,10 @@ export function ArtifactsView(shared: Shared) {
       </div>
       <section className="p05-section p05-list" aria-labelledby="p05-results-title">
         <h3 id="p05-results-title">{k.resultsTitle(l)}</h3>
-        <ListOr l={l} items={a.results.rows} empty={k.noResults(l)}>
+        {older.cut && <p className="p05-small p05-muted p05-results-count" role="status" ref={older.countRef} tabIndex={-1}>{older.all ? k.resultsAll(l, older.total) : k.resultsShown(l, older.rows?.length ?? 0, older.total)}</p>}
+        {older.reset && <p className="p05-small p05-results-reset" role="status">{k.resultsReset(l)}</p>}
+        {older.cut && !older.more && !older.all && older.status === "idle" && <p className="p05-small p05-results-moved" role="status">{k.resultsMoved(l)}</p>}
+        <ListOr l={l} items={older.rows} empty={k.noResults(l)}>
           {(rows) => (
             <div className="live-table">
               <table className="p05-table p05-results">
@@ -124,12 +136,20 @@ export function ArtifactsView(shared: Shared) {
                     <th scope="col" className="p05-r-at">{k.colRecordedAt(l)}</th>
                   </tr>
                 </thead>
-                {rows.map((x, i) => <ResultBody key={x.test + x.build + i} x={x} {...shared} />)}
+                {rows.map((x, i) => <ResultBody key={x.number ?? x.test + x.build + i} x={x} {...shared} />)}
               </table>
             </div>
           )}
         </ListOr>
-        <MoreLine l={l} more={a.results.more} total={a.results.total} forms={plurals.showing50} />
+        {facts === null && <MoreLine l={l} more={a.results.more} total={a.results.total} forms={plurals.showing50} />}
+        {older.more && (
+          <div className="p05-req-more p05-results-more">
+            {failed && <p role="alert">{k.resultsFailed(l)}</p>}
+            <button type="button" className="live-secondary p05-req-more-button p05-results-more-button" aria-disabled={older.status === "loading" || undefined} onClick={older.load}>
+              {failed ? k.resultsTryAgain(l) : older.status === "loading" ? k.resultsLoading(l) : k.resultsMore(l)}
+            </button>
+          </div>
+        )}
       </section>
     </>
   );

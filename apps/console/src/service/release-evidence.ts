@@ -87,6 +87,7 @@ export type Gate = {
 export type BuildRow = { build: string; commit: string; order: number | null };
 export type HarnessRow = { module: string; id: string; revocation: string };
 export type ResultRow = {
+  number: number | null;
   namespace: string;
   test: string;
   build: string;
@@ -173,7 +174,7 @@ export type EvidencePage = {
   candidate: Candidate;
   matrix: { origin: string; paths: List<PathRow> };
   requirements: { origin: string; requirements: List<RequirementRow>; next: string; gate: Gate };
-  artifacts: { origin: string; builds: List<BuildRow>; harnesses: List<HarnessRow>; results: List<ResultRow>; files: string; logs: string; environment: string; content: string };
+  artifacts: { origin: string; builds: List<BuildRow>; harnesses: List<HarnessRow>; results: List<ResultRow>; results_next: string | null; files: string; logs: string; environment: string; content: string };
   load: { origin: string; hardware: List<HardwareRow>; profiles: List<ProfileRow>; readiness: Readiness; measurement: string; planning_targets: string };
   decisions: { origin: string; proposals: List<Proposal>; proposal_history: KeptFacts | null; support_decisions: string; activation_review: string; ledger: string };
 };
@@ -302,6 +303,7 @@ export function gateOf(v: unknown): Gate {
 
 export function resultOf(r: Raw): ResultRow {
   return {
+    number: count(r.number),
     namespace: str(r.namespace),
     test: str(r.test),
     build: str(r.build),
@@ -441,6 +443,7 @@ export function evidenceOf(body: Raw): EvidencePage {
       builds: listOf(a.builds, (x) => ({ build: str(x.build), commit: str(x.commit), order: count(x.order) })),
       harnesses: listOf(a.harnesses, (x) => ({ module: str(x.module), id: str(x.id), revocation: str(x.revocation) })),
       results: listOf(a.results, resultOf),
+      results_next: typeof a.results_next === "string" ? a.results_next : null,
       files: str(a.files),
       logs: str(a.logs),
       environment: str(a.environment),
@@ -480,4 +483,10 @@ export function requirementsAnswerOf(body: Raw): RequirementsAnswer | null {
   const total = whole(body.total);
   if (!Array.isArray(body.requirements) || typeof body.next !== "string" || matching === null || total === null) return null;
   return { rows: body.requirements.filter(isRow).map(requirementOf), next: body.next, matching, total };
+}
+
+export function resultsPageOf(body: Raw): { rows: ResultRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.results) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.results.filter(isRow).map(resultOf), next: body.next, total };
 }

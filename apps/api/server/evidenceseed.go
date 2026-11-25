@@ -80,6 +80,8 @@ type evidenceStore struct {
 	entries      []*evidenceEntry
 	entrySeq     uint64
 	dropped      int
+	resultSeq    map[evidenceResultKey]uint64
+	resultCount  uint64
 }
 
 func newEvidenceStore() *evidenceStore { return &evidenceStore{} }
@@ -208,11 +210,17 @@ func (c *evidenceStore) testOwners(k evidenceResultKey) []releasetrace.Key {
 }
 
 func (c *evidenceStore) addResult(k evidenceResultKey) {
-	for _, stored := range c.results {
+	for index, stored := range c.results {
 		if stored == k {
-			return
+			c.results = append(c.results[:index], c.results[index+1:]...)
+			break
 		}
 	}
+	if c.resultSeq == nil {
+		c.resultSeq = map[evidenceResultKey]uint64{}
+	}
+	c.resultCount++
+	c.resultSeq[k] = c.resultCount
 	c.results = append(c.results, k)
 }
 

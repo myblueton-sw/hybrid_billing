@@ -798,3 +798,113 @@ func TestSubscriptionEntriesOfPurgedSubscriptionsAreDropped(t *testing.T) {
 		t.Errorf("a failing module read dropped entries: %d of %d kept", len(f.s.integ.subscriptions), before)
 	}
 }
+
+func TestEvidenceResultsAreReadNewestFirstWithoutReadingAll(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root := f.as(AdminLogin)
+	seeded := len(f.s.ev.results)
+	seededCalls := 0
+	f.s.fault = func(step string) bool {
+		if step == "trace-results" {
+			seededCalls++
+		}
+		return false
+	}
+	before := evRows(evMap(f.evidenceRead(root).body, "artifacts", "results"))
+	f.s.fault = nil
+	for index, k := range f.s.ev.results {
+		if f.s.ev.resultSeq[k] == 0 || (index > 0 && f.s.ev.resultSeq[k] <= f.s.ev.resultSeq[f.s.ev.results[index-1]]) {
+			t.Fatalf("the seeded results are not in the order of their latest record at %d", index)
+		}
+	}
+	if len(before) != seeded || fmt.Sprint(before[0]["number"]) != fmt.Sprint(f.s.ev.resultSeq[f.s.ev.results[seeded-1]]) {
+		t.Fatalf("the seeded results are listed newest first: %d rows", len(before))
+	}
+	owned := map[string]bool{}
+	record := func(test string) {
+		t.Helper()
+		if !owned[test] {
+			owned[test] = true
+			f.evAddRequirement("owner-of-"+test, false, false, releasetrace.TestRef{ID: test})
+		}
+		x := releasetrace.Result{Namespace: evidenceNamespace, Test: test, Build: evidenceBuild, Passed: true, Evidence: sampleHash("bulk:" + test + fmt.Sprint(f.s.ev.resultCount))}
+		if _, err := f.s.trace.Record(x, releasetrace.Actor{ID: evidenceTraceRunner, Kind: releasetrace.KindSystem}); err != nil {
+			t.Fatalf("record %s: %v", test, err)
+		}
+		f.s.ev.addResult(evidenceResultKey{namespace: evidenceNamespace, test: test, build: evidenceBuild})
+	}
+	for i := 0; i < 130; i++ {
+		record(fmt.Sprintf("bulk-%03d", i))
+	}
+	total := seeded + 130
+	calls := map[string]int{}
+	f.s.fault = func(step string) bool { calls[step]++; return false }
+	got := f.evidenceRead(root)
+	f.s.fault = nil
+	section := evMap(got.body, "artifacts")
+	rows := evRows(evMap(section, "results"))
+	if got.status != 200 || len(rows) != evidenceShown || rows[0]["test"] != "bulk-129" || rows[evidenceShown-1]["test"] != "bulk-080" || whole(evMap(section, "results")["total"]) != total ||
+		evMap(section, "results")["more"] != true || fmt.Sprint(section["results_next"]) != fmt.Sprint(rows[evidenceShown-1]["number"]) {
+		t.Fatalf("the main read lists the newest fifty: first %v last %v next %v", rows[0]["test"], rows[evidenceShown-1]["test"], section["results_next"])
+	}
+	if calls["trace-results"] >= total || calls["trace-results"] > evidenceShown+seededCalls {
+		t.Errorf("the main read asked the module for %d results with %d stored; with the seed alone it asked for %d, and it should ask for the fifty shown and no more for the %d added", calls["trace-results"], total,
+			seededCalls, 130)
+	}
+	path := "/api/v1/release-evidence/results"
+	all, next, pages := []string{}, fmt.Sprint(section["results_next"]), 0
+	for next != "" {
+		page := f.readAs(root, path+"?limit=60&after="+next)
+		if page.status != 200 || whole(page.body["total"]) != len(f.s.ev.results) || whole(page.body["matching"]) != len(f.s.ev.results) || page.body["order"] != "latest_record_first" || page.body["rows_can_move"] != true {
+			t.Fatalf("after %s: %s", next, page.raw[:min(len(page.raw), 300)])
+		}
+		for _, raw := range page.body["results"].([]any) {
+			row := raw.(map[string]any)
+			all = append(all, fmt.Sprint(row["test"], "@", row["build"]))
+		}
+		next = fmt.Sprint(page.body["next"])
+		if pages++; pages == 1 {
+			record("bulk-005")
+			record("added-meanwhile")
+		}
+		if pages > 10 {
+			t.Fatal("the results do not end")
+		}
+	}
+	seen := map[string]bool{}
+	for _, id := range all {
+		if seen[id] {
+			t.Fatalf("%s is listed twice", id)
+		}
+		seen[id] = true
+	}
+	if len(all) != total-evidenceShown-1 || seen["added-meanwhile@"+evidenceBuild] || seen["bulk-005@"+evidenceBuild] {
+		t.Errorf("the older pages hold %d results; a result recorded again between two pages moved above the cursor and is not on them", len(all))
+	}
+	top := evRows(evMap(f.evidenceRead(root).body, "artifacts", "results"))
+	if top[0]["test"] != "added-meanwhile" || top[1]["test"] != "bulk-005" || whole(top[1]["passes"]) != 2 {
+		t.Errorf("a result recorded again is listed at the top with its counts: %v %v", top[0]["test"], top[1]["test"])
+	}
+	found := f.readAs(root, path+"?q=BULK-077")
+	if rows, _ := found.body["results"].([]any); found.status != 200 || len(rows) != 1 || rows[0].(map[string]any)["test"] != "bulk-077" || whole(found.body["matching"]) != 1 {
+		t.Errorf("a search by test: %s", found.raw[:min(len(found.raw), 300)])
+	}
+	f.refusedHistory(root, path)
+	member, theirs := f.readAs(f.as(MemberLogin), path), f.evidenceRead(f.as(MemberLogin))
+	if member.status != theirs.status || member.status != 403 {
+		t.Errorf("a member: the further read %d, the main read %d", member.status, theirs.status)
+	}
+	if anonymous := f.readAs(actor{}, path); anonymous.status != 401 {
+		t.Errorf("anonymous: %d", anonymous.status)
+	}
+	f.s.fault = func(at string) bool { return at == "release-evidence-read" }
+	if failed := f.readAs(root, path); failed.status != 503 {
+		t.Errorf("a fault: %d", failed.status)
+	}
+	f.s.fault = nil
+	f.s.bootWorkspace = "elsewhere"
+	if other := f.readAs(root, path); other.status != 200 || len(other.body["results"].([]any)) != 0 || whole(other.body["total"]) != 0 {
+		t.Errorf("another workspace: %d", other.status)
+	}
+}

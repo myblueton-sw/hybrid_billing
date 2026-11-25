@@ -189,6 +189,7 @@ type evidenceHarnessRow struct {
 }
 
 type evidenceResultRow struct {
+	Number           uint64  `json:"number"`
 	Namespace        string  `json:"namespace"`
 	Test             string  `json:"test"`
 	Build            string  `json:"build"`
@@ -207,6 +208,7 @@ type evidenceArtifacts struct {
 	Builds      evidenceList[evidenceBuildRow]   `json:"builds"`
 	Harnesses   evidenceList[evidenceHarnessRow] `json:"harnesses"`
 	Results     evidenceList[evidenceResultRow]  `json:"results"`
+	ResultsNext string                           `json:"results_next"`
 	Files       string                           `json:"files"`
 	Logs        string                           `json:"logs"`
 	Environment string                           `json:"environment"`
@@ -591,38 +593,17 @@ func (f *evidenceFacts) artifacts() (evidenceArtifacts, error) {
 	section.Harnesses, _ = listOf(len(harnesses), evidenceShown, func(index int) (evidenceHarnessRow, error) {
 		return evidenceHarnessRow{Module: harnesses[index].module, ID: harnesses[index].id, Revocation: notConnected}, nil
 	})
-	type timed struct {
-		at  time.Time
-		row evidenceResultRow
-	}
-	all := []timed{}
-	for n := len(s.ev.results) - 1; n >= 0; n-- {
-		k := s.ev.results[n]
-		v, err := s.traceResults(k)
+	section.Results = evidenceList[evidenceResultRow]{Total: len(s.ev.results), Rows: []evidenceResultRow{}}
+	for n := len(s.ev.results) - 1; n >= 0 && len(section.Results.Rows) < evidenceShown; n-- {
+		row, err := f.resultRow(s.ev.results[n])
 		if err != nil {
 			return evidenceArtifacts{}, err
 		}
-		outcome := outcomeFail
-		if v.Result.Passed {
-			outcome = outcomePass
-		}
-		row := evidenceResultRow{Namespace: k.namespace, Test: k.test, Build: k.build, Counted: v.Counted, LatestOutcome: outcome, Evidence: v.Result.Evidence,
-			Harness: v.Harness, At: stamp(v.At), Passes: v.Passes, Failures: v.Failures}
-		if !v.Counted {
-			reason, err := s.resultNotCounted(k)
-			if err != nil {
-				return evidenceArtifacts{}, err
-			}
-			row.NotCountedReason = optional(reason)
-		}
-		all = append(all, timed{at: v.At, row: row})
+		section.Results.Rows = append(section.Results.Rows, row)
 	}
-	sort.SliceStable(all, func(a, b int) bool { return all[a].at.After(all[b].at) })
-	rows := []evidenceResultRow{}
-	for _, x := range all {
-		rows = append(rows, x.row)
+	if shown := len(section.Results.Rows); shown < section.Results.Total {
+		section.Results.More, section.ResultsNext = true, keptCursor(section.Results.Rows[shown-1].Number)
 	}
-	section.Results = capped(rows, evidenceShown)
 	return section, nil
 }
 

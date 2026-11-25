@@ -325,3 +325,9 @@ dialog.mysec-end h2:focus:not(:focus-visible) {
     row-gap: 4px;
   }
 }
+[data-security-screen="M05"] .live-toolbar .live-secondary[aria-disabled="true"] {
+  cursor: not-allowed;
+  color: var(--hb-text-faint);
+  border-color: var(--hb-line-row);
+  background: var(--c-subtle);
+}

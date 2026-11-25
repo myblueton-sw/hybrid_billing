@@ -124,7 +124,7 @@ export default function SessionOperations({ l,api,refreshKey,onEnd,locked,onSign
     return () => clearTimeout(timer);
   },[page,busy,after,failure]);
   return <section className="mysec-ends" aria-labelledby="mysec-ends-title" aria-busy={busy}>
-    <div className="live-toolbar"><div><h3 id="mysec-ends-title">{e.endsTitle(l)}</h3>{page && <><p className="live-meta">{sq.totalOps(l,page.accepted_count)}</p><p className="mysec-checked">{e.checkedAt(l,whenSeconds(l,page.reference_at))}</p></>}</div><button type="button" className="live-secondary" disabled={busy} onClick={() => load()}>{e.checkAgain(l)}</button></div>
+    <div className="live-toolbar"><div><h3 id="mysec-ends-title">{e.endsTitle(l)}</h3>{page && <><p className="live-meta">{sq.totalOps(l,page.accepted_count)}</p><p className="mysec-checked">{e.checkedAt(l,whenSeconds(l,page.reference_at))}</p></>}</div><button type="button" className="live-secondary" aria-disabled={busy || undefined} onClick={() => { if (!busy) load(); }}>{e.checkAgain(l)}</button></div>
     {busy && <p role="status">{e.reading(l)}</p>}{failure !== null && <div role="alert"><p>{failure instanceof AdminError && failure.code === "revision_conflict" ? sq.expired(l) : m.loadFailed(l)}</p><button type="button" className="live-secondary" onClick={() => load()}>{sq.first(l)}</button></div>}
     {stopped && page && <p role="status">{e.stillRunning(l,whenSeconds(l,page.reference_at))}</p>}
     {page && <><ol className="mysec-ops">{page.rows.map(op => <OperationCard key={op.operation} l={l} api={api} op={op} generation={page.generation} onEnd={onEnd} locked={locked} onSignedOut={onSignedOut} />)}</ol>

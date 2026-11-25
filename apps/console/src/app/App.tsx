@@ -269,6 +269,12 @@ export default function App() {
     document.getElementById("main")?.focus({ preventScroll: true });
   }, [screenKey]);
   useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (document.activeElement === document.body) document.getElementById("main")?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [tab]);
+  useEffect(() => {
     const h = guardUnload(() => dirty);
     window.addEventListener("beforeunload", h);
     return () => window.removeEventListener("beforeunload", h);

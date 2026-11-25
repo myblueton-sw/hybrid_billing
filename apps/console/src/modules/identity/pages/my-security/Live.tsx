@@ -240,7 +240,7 @@ export default function LiveMySecurity({ locale: l, view, session, onSignOut, on
     const form = page && (
       <PasswordForm key={formKey} l={l} api={api} page={page} stepping={stepping} hadWrong={hadWrong} pending={pending} onWrong={() => { if (guard.token.active) setHadWrong(true); }}
         onDone={() => { if (!guard.token.active) return;say(m.changedTitle(l)); setHadWrong(false); load(); }} onSignedOut={(locked) => setSignedOut(locked ? "locked" : "plain")}
-        onCancel={() => { if (!wide) back(); else setFormKey((k) => k + 1); }} />
+        onCancel={() => { if (!wide) back(); else { setFormKey((k) => k + 1); requestAnimationFrame(() => document.getElementById("mysec-current")?.focus()); } }} />
     );
     return (
       <div className="live-users" data-live="methods" data-wide={wide ? "true" : "false"}>

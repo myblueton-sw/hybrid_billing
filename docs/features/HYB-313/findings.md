@@ -97,3 +97,18 @@ Recheck on the corrected tree: 130 checks pass — for each of the 44 openers at
 Limits: English only, since the rule does not depend on language; Chromium only; no screen reader was used, so what is announced is inferred from the focused element; forms on P01 and outside administration (M and O screens) do not use this opener pattern and are not covered by this runner; the confirmation-to-editing return was not exercised by the runner.
 
 Follow-up HYB-367 (2026-11-25): the form title and the confirmation title of P02–P05 take the width of their text (`inline-size: fit-content`, at most the form's width), so the focus ring no longer spans the column. The global focus rule already keeps the ring 3px from the text. `command-focus-qa.mjs` now also measures the focused title: 172 checks pass. The confirmation title's ring was not captured; it has the same rule.
+
+
+# Buttons on M, O and P01 screens that leave focus on the page body (2026-11-25)
+
+`apps/console/tools/press-focus-qa.mjs` signs in to a disposable local service, blocks every request that is not a read, and on each view of M01–M05, O01–O03 and P01 presses up to ten differently named buttons with Enter, one fresh page load per button, recording where focus is afterwards. On main `59b01919` three kinds of control left `document.activeElement` on BODY:
+
+| Finding | Correction |
+| --- | --- |
+| "Go to …" buttons in unavailable-view panels (M02 providers, M03 roles and support, M04 credentials, usage and transfer, M05 recovery) switch the view, which removes the button | `App.tsx`: after a view change, if focus is on BODY, focus the main region, as a screen change already does |
+| M05 methods, Cancel of the password form: the form is remounted, which removes the button | Focus returns to the form's first field |
+| M05 sessions, "Check again" of the ended-sessions list: the button disabled itself while reading | The button stays focusable and is marked `aria-disabled` while reading, with the look of a disabled button; a press while reading does nothing |
+
+Recheck on the corrected tree: the whole run gives 170 cases with one failure, the "Check again" button, which was then corrected and rechecked with the M05 run alone (18 cases, none failing). TypeScript clean; console tests 1426, 1423 passed, 3 skipped.
+
+Limits: English, 1440 wide, Chromium; at most ten buttons per view, chosen by distinct name in document order, so later buttons of long views and buttons inside forms opened by another button are not reached; because writes are blocked, a button that sends a request is observed only up to the refused request; "Sign out" leaves the page and is recorded as such; no screen reader was used. The first two runs are not evidence: one stopped at M05, and one pressed "Sign out" for real before writes were blocked, so the screens after it were read signed out.

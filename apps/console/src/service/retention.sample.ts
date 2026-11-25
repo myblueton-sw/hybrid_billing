@@ -14,7 +14,7 @@ export const sample = {
   ],
   expiry: [
     {
-      class: "source", population: "registered_sample_artifacts", counts: { eligible: 0, held: 1, referenced: 1, not_due: 3, no_policy: 0, in_run: 1, deleted: 1 }, total: 7, more: false,
+      class: "source", population: "registered_sample_artifacts", counts: { eligible: 0, held: 1, guarding: 0, referenced: 1, not_due: 3, no_policy: 0, in_run: 1, deleted: 1 }, total: 7, more: false,
       artifacts: [
         { id: "sample-source-1", anchor: "2025-10-13T10:00:00Z", due_at: "2026-11-12T10:00:00Z", stores: ["sample-database"], access: "deleted", standing: "deleted", held: false, damaged: true, run: { target: "retention-run-1", label: "run/1" }, other_scope: false, shared: false, decision: "not_connected", holdable: true, hold_blocked: "", hold_target: "retention-artifact:sample-source-1" },
         { id: "sample-claim-x", anchor: "2025-10-13T10:00:00Z", due_at: null, stores: [], access: "ok", standing: "no_policy", held: false, damaged: false, run: null, other_scope: true, shared: true, holdable: false, hold_blocked: "target_too_long", hold_target: "" },
@@ -38,7 +38,7 @@ export const sample = {
     rows: [
       {
         run: { target: "retention-run-2", label: "run/2" }, class: "temporary", revision: 1, state: "running", decision: "not_connected", next_chunk: 1, chunks: 3, chunk_size: 1, lease_seconds: 3600, reason: "r", damaged: 0,
-        proposer: who("a1"), approver: who("a2"), stopper: null, counts: { pending: 2, deleting: 0, deleted: 1, failed: 0, held: 0, referenced: 0, not_due: 0, stopped: 0 },
+        proposer: who("a1"), approver: who("a2"), stopper: null, counts: { pending: 2, deleting: 0, deleted: 1, failed: 0, held: 0, guarding: 0, referenced: 0, not_due: 0, stopped: 0 },
         stores: [{ store: "sample-object-store", target: 3, deleted: 1, failed: 0, excluded: 0, pending: 2 }], artifacts: { total: 3, more: false, rows: [{ id: "sample-temporary-1", outcome: "deleted" }] },
         can_stop: true, stop_blocked: "",
       },

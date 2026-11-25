@@ -398,6 +398,11 @@ func (s *Server) seedRetention(now time.Time) error {
 				return s.retention.Refer(retention.Reference{From: "sample-final-1", To: "sample-source-3", Kind: retention.Requires}, ingest)
 			})
 		},
+		func() error {
+			return s.retentionCall("refer", func() error {
+				return s.retention.Refer(retention.Reference{From: "sample-claim-1", To: "sample-source-1", Kind: retention.Guards}, ingest)
+			})
+		},
 		policy(retention.ClassSource, 365, 30),
 		policy(retention.ClassFinal, 3650, 0),
 		policy(retention.ClassTemporary, 7, 0),

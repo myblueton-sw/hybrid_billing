@@ -201,7 +201,7 @@ func (f world) retBalanced(t *testing.T, got reply) {
 			}
 			sum += fmtInt(n)
 		}
-		if sum != fmtInt(g["total"]) || len(g["counts"].(map[string]any)) != 7 || g["population"] != retentionPopulation {
+		if sum != fmtInt(g["total"]) || len(g["counts"].(map[string]any)) != 8 || g["population"] != retentionPopulation {
 			t.Errorf("%s counts %v total %v", g["class"], g["counts"], g["total"])
 		}
 	}
@@ -211,7 +211,7 @@ func (f world) retBalanced(t *testing.T, got reply) {
 			sum += fmtInt(n)
 		}
 		v := f.retRunView(row["run"].(map[string]any)["label"].(string))
-		if sum != len(v.Plan.Artifacts) || len(row["counts"].(map[string]any)) != 8 || row["decision"] != notConnected {
+		if sum != len(v.Plan.Artifacts) || len(row["counts"].(map[string]any)) != 9 || row["decision"] != notConnected {
 			t.Errorf("run counts %v", row["counts"])
 		}
 		for _, item := range row["stores"].([]any) {
@@ -397,13 +397,13 @@ func TestRetentionReadShape(t *testing.T) {
 		g := retGroup(t, got, class)
 		counts = append(counts, retJoin(class, g["counts"], g["total"], g["more"], g["usage"], g["growth"], g["bytes"]))
 	}
-	if s := strings.Join(counts, "|"); s != "claim map[deleted:0 eligible:0 held:0 in_run:0 no_policy:1 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
-		"conversation map[deleted:0 eligible:0 held:0 in_run:0 no_policy:1 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
-		"final map[deleted:0 eligible:0 held:0 in_run:0 no_policy:0 not_due:1 referenced:0] 1 false not_connected not_connected not_connected|"+
-		"identity map[deleted:0 eligible:0 held:0 in_run:0 no_policy:0 not_due:0 referenced:0] 0 false not_connected not_connected not_connected|"+
-		"projection map[deleted:0 eligible:0 held:0 in_run:0 no_policy:1 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
-		"source map[deleted:1 eligible:0 held:1 in_run:1 no_policy:0 not_due:3 referenced:1] 7 false not_connected not_connected not_connected|"+
-		"temporary map[deleted:1 eligible:0 held:0 in_run:2 no_policy:0 not_due:0 referenced:0] 3 false not_connected not_connected not_connected" {
+	if s := strings.Join(counts, "|"); s != "claim map[deleted:0 eligible:0 guarding:1 held:0 in_run:0 no_policy:0 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
+		"conversation map[deleted:0 eligible:0 guarding:0 held:0 in_run:0 no_policy:1 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
+		"final map[deleted:0 eligible:0 guarding:0 held:0 in_run:0 no_policy:0 not_due:1 referenced:0] 1 false not_connected not_connected not_connected|"+
+		"identity map[deleted:0 eligible:0 guarding:0 held:0 in_run:0 no_policy:0 not_due:0 referenced:0] 0 false not_connected not_connected not_connected|"+
+		"projection map[deleted:0 eligible:0 guarding:0 held:0 in_run:0 no_policy:1 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
+		"source map[deleted:1 eligible:0 guarding:0 held:1 in_run:1 no_policy:0 not_due:3 referenced:1] 7 false not_connected not_connected not_connected|"+
+		"temporary map[deleted:1 eligible:0 guarding:0 held:0 in_run:2 no_policy:0 not_due:0 referenced:0] 3 false not_connected not_connected not_connected" {
 		t.Errorf("expiry %s", s)
 	}
 	row := func(id string) string {
@@ -419,7 +419,7 @@ func TestRetentionReadShape(t *testing.T) {
 		"sample-temporary-1": "deleted deleted true true <nil> false false not_connected true retention-artifact:sample-temporary-1",
 		"sample-temporary-2": "blocked in_run true false map[label:run/2 target:retention-run-2] false false not_connected true retention-artifact:sample-temporary-2",
 		"sample-temporary-3": "blocked in_run true false map[label:run/2 target:retention-run-2] false false not_connected true retention-artifact:sample-temporary-3",
-		"sample-claim-1":     "ok no_policy false false <nil> false false <nil> true retention-artifact:sample-claim-1",
+		"sample-claim-1":     "ok guarding false false <nil> false false <nil> true retention-artifact:sample-claim-1",
 	} {
 		if got := row(id); got != want {
 			t.Errorf("%s: %s", id, got)
@@ -777,7 +777,7 @@ func TestRetentionOtherTenantIsHidden(t *testing.T) {
 		t.Error("holds changed")
 	}
 	if s := fmt.Sprint(retArtifact(t, after, "sample-source-5")["standing"], retGroup(t, after, retention.ClassSource)["counts"],
-		retSection(after, "holds")["references"].(map[string]any)["total"]); s != "not_duemap[deleted:1 eligible:0 held:1 in_run:1 no_policy:0 not_due:3 referenced:1] 2" {
+		retSection(after, "holds")["references"].(map[string]any)["total"]); s != "not_duemap[deleted:1 eligible:0 guarding:0 held:1 in_run:1 no_policy:0 not_due:3 referenced:1] 2" {
 		t.Errorf("reference %s", s)
 	}
 	f.retRegister("shared-a", retention.ClassSource, 400, "other-tenant", SampleWorkspace)

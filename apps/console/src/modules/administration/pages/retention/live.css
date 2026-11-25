@@ -560,9 +560,11 @@
   .p04-facts-5 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .p04-strip-7,
   .p04-strip-8 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .p04-strip-9 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .p04-strip-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -587,11 +589,11 @@
   .p04-hold-facts {
     grid-template-columns: minmax(0, 1fr);
   }
-  .p04-strip-7 {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-  }
   .p04-strip-8 {
     grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+  .p04-strip-9 {
+    grid-template-columns: repeat(9, minmax(0, 1fr));
   }
   .p04-hold-grid {
     grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);

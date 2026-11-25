@@ -150,7 +150,7 @@ function Run({ r, ...shared }: Shared & { r: RunRow }) {
       </dl>
       {r.stopper && <p className="p04-small"><Rich text={k.stoppedBy(l, r.stopper.login || r.stopper.id)} /></p>}
       <h4>{k.outcomeCounts(l)}</h4>
-      <Strip l={l} counts={r.counts} keys={runOutcomeKeys} label={k.runOutcome} cls="p04-strip-8" />
+      <Strip l={l} counts={r.counts} keys={runOutcomeKeys} label={k.runOutcome} cls="p04-strip-9" />
       <div className="p04-actions">
         <RowNote l={l} diagnostics={diagnostics(target)} kept={kept} blockers={blockers} focus={focusNote} state={state} />
         {usable && !open && (

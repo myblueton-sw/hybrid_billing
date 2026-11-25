@@ -247,7 +247,7 @@ This is part of the [screen binding register](../screen-binding-register.md#pre-
 | Expiry | Population note, decision note | `expiry[].population` (first non-empty) | `retention.ts:251` | `retention/LiveExpiry.tsx:160-166` |
 | Expiry | Unknown list; class jump links with totals | `expiry[]` (`class`, `total`) | `retention.ts:413`, `:250-253` | `retention/LiveExpiry.tsx:167-177` |
 | Expiry | Class heading and item count | `expiry[].class`, `total` | `retention.ts:250`, `:253` | `retention/LiveExpiry.tsx:116-119` |
-| Expiry | Standing strip: eligible, held, referenced, not due, no policy, in run, deleted | `expiry[].counts.<key>` | `retention.ts:166`, `:189-192`, `:252` | `retention/LiveExpiry.tsx:10-24`, `:120` |
+| Expiry | Standing strip: eligible, held, guarding, referenced, not due, no policy, in run, deleted; an artifact not in a run is shown as guarding before any of no policy, not due, held and referenced (`apps/api/server/retention.go` `standingOf`) | `expiry[].counts.<key>` | `retention.ts:166`, `:189-192`, `:252` | `retention/LiveExpiry.tsx:10-24`, `:120` |
 | Expiry | Usage, growth, bytes connection | `expiry[].usage`, `growth`, `bytes` | `retention.ts:256-258` | `retention/LiveExpiry.tsx:121-124` |
 | Expiry | Other population note; "showing of" | `population`, `more`, `total` | `retention.ts:251`, `:253-254` | `retention/LiveExpiry.tsx:125-126` |
 | Expiry | Items: unknown, none, unknown when empty but total is not 0 | `expiry[].artifacts[]` | `retention.ts:255` | `retention/LiveExpiry.tsx:127-131` |
@@ -276,7 +276,7 @@ This is part of the [screen binding register](../screen-binding-register.md#pre-
 | Deletion | Run label and state tag; state note | `rows[].run.label`, `state` | `retention.ts:309`, `:312` | `retention/LiveDeletion.tsx:133-137` |
 | Deletion | Class, policy revision, decision, chunks (count and next), chunk size, lease, damaged | `class`, `revision`, `decision`, `chunks`, `next_chunk`, `chunk_size`, `lease_seconds`, `damaged` | `retention.ts:310-319` | `retention/LiveDeletion.tsx:130`, `:138-145` |
 | Deletion | Proposed by, approved by, stopped by (not stopped, unknown), plan reason, stopped-by line | `proposer`, `approver`, `stopper` (null means not stopped), `reason` | `retention.ts:318`, `:320-323` | `retention/LiveDeletion.tsx:146-151` |
-| Deletion | Outcome counts strip: pending, deleting, deleted, failed, held, referenced, not due, stopped | `rows[].counts.<key>` | `retention.ts:167`, `:324` | `retention/LiveDeletion.tsx:152-153` |
+| Deletion | Outcome counts strip: pending, deleting, deleted, failed, held, guarding, referenced, not due, stopped | `rows[].counts.<key>` | `retention.ts:167`, `:324` | `retention/LiveDeletion.tsx:152-153` |
 | Deletion | Stop run offered, blocked, state sentence | `can_stop`, `stop_blocked` | `retention.ts:306`, `:327-328` | `retention/LiveDeletion.tsx:111-127`, `:154-160` |
 | Deletion | Stop confirmation: run, class, state, not yet claimed | `run.label`, `class`, `state`, `counts.pending` | `retention.ts:309-312`, `:324` | `retention/LiveDeletion.tsx:11-20`, `:165-166` |
 | Deletion | Stop result: run, stopped count, state after reload | `retention.stop_run` → `fields.run`, `fields.stopped`, `business_state` | `admin.ts:739-742` | `retention/LiveDeletion.tsx:168-176` |

@@ -84,6 +84,7 @@ type Registry struct {
 	refs       map[[3]string]bool
 	requiredBy map[string]int
 	requires   map[string][]string
+	guards     map[string][]string
 	holds      map[string]*hold
 	live       map[string]*hold
 	policies   map[string][]PolicyView
@@ -102,7 +103,7 @@ func NewRegistry(clock func() time.Time) (*Registry, error) {
 		return nil, ErrInvalid
 	}
 	return &Registry{clock: clock, artifacts: map[string]*artifact{}, byClass: map[string]map[string]bool{}, refs: map[[3]string]bool{}, requiredBy: map[string]int{},
-		requires: map[string][]string{}, holds: map[string]*hold{}, live: map[string]*hold{}, policies: map[string][]PolicyView{}, runs: map[string]*run{}, backups: map[string]time.Time{},
+		requires: map[string][]string{}, guards: map[string][]string{}, holds: map[string]*hold{}, live: map[string]*hold{}, policies: map[string][]PolicyView{}, runs: map[string]*run{}, backups: map[string]time.Time{},
 		proposals: map[uint64]*proposal{}}, nil
 }
 

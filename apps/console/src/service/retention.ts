@@ -163,8 +163,8 @@ export type RetentionPage = {
   proposals: ProposalsSection;
 };
 
-export const standingKeys = ["eligible", "held", "referenced", "not_due", "no_policy", "in_run", "deleted"];
-export const runOutcomeKeys = ["pending", "deleting", "deleted", "failed", "held", "referenced", "not_due", "stopped"];
+export const standingKeys = ["eligible", "held", "guarding", "referenced", "not_due", "no_policy", "in_run", "deleted"];
+export const runOutcomeKeys = ["pending", "deleting", "deleted", "failed", "held", "guarding", "referenced", "not_due", "stopped"];
 export const holdCountKeys = ["not_preserved", "outcome_pending", "partially_deleted"];
 
 type Raw = Record<string, unknown>;

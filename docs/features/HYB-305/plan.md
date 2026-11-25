@@ -583,6 +583,47 @@ Review (independent reviewer, read-only, permission lens, 2026-11-25): approve, 
 
 Verification: the whole server package passed (367 seconds), including `roster_reads_test.go`. No console change.
 
+# Increment 5e, the owner of a hold on P04: design (2026-11-25)
+
+Facts (main 633766f): the place hold form (`retention/LiveHoldForm.tsx`, `useOwners`) reads `GET /api/v1/identity/access` and puts every subject it returns, that is, every member of the workspace who is effective and active (`access.go` `grantees`), into one `select`. The same read also returns the grants, delegations and catalogue of the access screen, which the form does not use. The command checks the owner against the same list (`retentioncmds.go` `placeHold`). The identity module sets no limit on the members of a workspace, so the list and the `select` grow with the workspace. The form keeps the chosen owner's identifier in its draft and shows the sign-in name beside it in the confirmation.
+
+Proposed, not built:
+
+- Server: `GET /api/v1/retention/owners`, admitted as the retention read is, answering only for the installation's workspace. With `q` (optional; matched without regard to case against the sign-in name and the user identifier, by the rules of the other searches) and `limit` (1 to 20, default 20) it answers `owners` (`user_id`, `login`), in user identifier order, `matching` (how many match) and `more`. With `id` alone (one user identifier) it answers that person if they can still own a hold, so that a form reopened with a kept choice can show the name. The candidates are exactly `grantees`, the list the command checks, so the read cannot offer someone the command would refuse or the reverse. It reads the member roster once for each request, as the access read does.
+- Screen: the owner field becomes a search. A text input searches by sign-in name or identifier; the matches (at most 20) are offered as a single choice; when more match than are shown the field says how many match and asks for a longer term. A chosen owner is shown as a line with a way to change it. Failure of the search keeps the choice already made. The exact composition, the wording, keyboard behaviour and the states (nothing typed, searching, no match, more than shown, chosen, failed) are for the ui-designer to lead before implementation.
+- The access read is not changed, and the form stops calling it.
+
+Decided after the design review and the composition lead:
+
+- Server. A reader of another workspace gets an empty answer (200) from both forms of the read, before the roster is read; the fault step is `retention-read`; a roster that cannot be read gives 503. The term is at most 64 characters, as the other searches.
+- Before anything is typed the field lists the first twenty people, by user identifier, so that a small workspace chooses in one step as it does today; in a larger one the field says that these are the first twenty of the number that can own a hold.
+- The search runs on Enter or the Search button, not while typing: each request reads the roster, and answers cannot arrive out of order. Nobody is preselected, also when one person matches.
+- Composition: the pattern of the group draft member picker of O02 (`organizations/pages/changes/choices.tsx`), the only picker in the console: label, error, the chosen person on a line with "Change", a search row (input and Search), one status line above the results, the results as a list of plain buttons (sign-in name, then the identifier), at most eight rows high with its own scroll, and the two hints. No listbox, combobox or radio roles. While changing, the chosen line stays, "Keep this owner" replaces "Change", and the current owner's row is marked.
+- The form's own check passes for a person chosen from an answer or confirmed by the `id` read, and the sign-in name in the confirmation comes from that row. A form reopened with a kept identifier asks the `id` read: the name is shown when it answers; when the person can no longer own a hold the choice is cleared with the existing sentence; when the read fails the identifier stays chosen and can be submitted, with a sentence that the name could not be read. When the command refuses the owner, the form runs the `id` read again and opens the search.
+- Focus: to "Change" after choosing; to the input after "Change", after a retry succeeds and after the command refuses the owner; it stays in the input after a search, whose result the status line announces.
+
+Strings (existing ones kept: the label, the hint, "Choose an owner.", the sentence for a person who can no longer own a hold, the empty and failure sentences, "Try again"; the placeholder and the loading sentence are dropped):
+
+| Use | English | Korean | Arabic |
+|---|---|---|---|
+| Search hint | Search by login or user ID. | 로그인 ID 또는 사용자 ID로 검색합니다. | ابحث باسم الدخول أو معرّف المستخدم. |
+| Button | Search | 검색 | بحث |
+| Searching | Searching… | 검색하는 중… | جارٍ البحث… |
+| List label | Possible owners | 책임자 후보 | المالكون المحتملون |
+| No term, all shown | {n} people can own a hold. (1 person can own a hold.) | 보존 보류의 책임자가 될 수 있는 사람은 {n}명입니다. | عدد من يمكنهم امتلاك تعليق: {n}. |
+| No term, more exist | Showing the first 20 of {m} people who can own a hold, by user ID. Search to find others. | 보존 보류의 책임자가 될 수 있는 {m}명 중 사용자 ID순으로 처음 20명을 표시합니다. 다른 사람은 검색하세요. | يُعرض أول 20 من أصل {m} ممن يمكنهم امتلاك تعليق، حسب معرّف المستخدم. ابحث للعثور على غيرهم. |
+| Term, all shown | {n} people match. (1 person matches.) | {n}명이 일치합니다. | عدد المطابقين: {n}. |
+| Term, more match | Showing 20 of {m} people who match. Type more of the login or user ID to narrow the list. | 일치하는 {m}명 중 20명을 표시합니다. 로그인 ID나 사용자 ID를 더 입력해 범위를 좁히세요. | يُعرض 20 من أصل {m} من المطابقين. اكتب المزيد من اسم الدخول أو معرّف المستخدم لتضييق القائمة. |
+| No match | No one who can own a hold matches “{q}”. | “{q}”와 일치하는 책임자 후보가 없습니다. | لا يطابق «{q}» أحدًا ممن يمكنهم امتلاك تعليق. |
+| Failure with a choice | The owner you chose is kept. | 선택한 책임자는 그대로입니다. | يبقى المالك الذي اخترته كما هو. |
+| Change | Change | 변경 | تغيير |
+| Keep | Keep this owner | 이 책임자 유지 | الإبقاء على هذا المالك |
+| Name not read | The owner's login could not be read. | 책임자의 로그인 ID를 읽지 못했습니다. | تعذّرت قراءة اسم الدخول للمالك. |
+
+Tests the design requires: the candidates equal the list the command checks, in identifier order; a suspended member, one not yet effective, one ended and a member of another workspace are returned neither by search nor by identifier; `more` and `matching` around twenty; refusals (an empty term, a limit of 0 and of 21, `id` with another parameter, a repeated parameter); 403, 401, the fault step; a roster failure; another workspace.
+
+Design review (independent reviewer, read-only, permission lens, 2026-11-25): approve with conditions, incorporated above. It confirmed the facts, that the read exposes nothing the same reader cannot already list through the access read, that it changes no command, permission or tenant boundary and is an additive read, and that the commands limit of 20 users bounds people who issue commands, not the members who can own a hold. Composition lead (ui-designer, by reading; nothing is built): the specification above. It consulted no external reference, which the service screen rule asks for and which remains owed; the inner scroll of the result list is its choice and can be undone.
+
 # Open for the owner
 
 - A workspace can now page through all of its deletion records in the window (increment 4g), up to 1,000 instead of 50. Their sequence numbers are numbers of the whole installation, so the gaps between them show roughly how many deletions other workspaces had; the watermark and the first fifty rows already showed this in part. Whether a workspace should see installation-wide sequence numbers at all is for the owner.

@@ -3,7 +3,7 @@ import type { Locale } from "./types";
 import type { KeptFacts, KeptPage } from "../service/kept";
 import { kept as c } from "./kept-copy";
 
-type Numbered = { number: number | null; state: string };
+type Numbered = { target: string; state: string };
 
 const closedIn = (rows: Numbered[]): number => rows.filter((p) => p.state !== "pending").length;
 type State<T> = { revision: string; rows: T[]; next: string | null; total: number | null; status: "idle" | "loading" | "failed" };
@@ -11,8 +11,8 @@ type State<T> = { revision: string; rows: T[]; next: string | null; total: numbe
 export type Older<T> = { rows: T[]; head: ReactNode; count: ReactNode; foot: ReactNode };
 
 export function merged<T extends Numbered>(first: T[], older: T[]): T[] {
-  const seen = new Set(first.map((p) => p.number));
-  return [...first, ...older.filter((p) => !seen.has(p.number))];
+  const seen = new Set(first.map((p) => p.target));
+  return [...first, ...older.filter((p) => p.target === "" || !seen.has(p.target))];
 }
 
 export function useOlder<T extends Numbered>(

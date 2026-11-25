@@ -296,6 +296,27 @@ Not covered by a test: more than fifty pending proposals in the retention read; 
 
 Independent design and change review of increment 3c (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve with conditions, one blocking finding, then resolved. The finding: with `kind`, the further read answered the closed total of all kinds, so after "Load older closed proposals" a list showed "N of" the total of every kind and never reached "All shown"; the first rendered check hid it by giving both totals the same value, and the server test did not look at that field. Corrected in the service, asserted in the server test, and the rendered check now uses different totals. It also confirmed that every reader of the proposals in the screen's command handling is served by the main read holding every pending proposal, and that the cursor of the overall cut skips or repeats nothing for a kind. No ui-designer review was held: the screen part and its sentences are those reviewed for P01 to P03.
 
+# Increment 3d, the proposals of P05 (2026-11-25)
+
+Facts (main 36631f2): the release evidence store keeps 200 proposals of two modules, the release trace and the performance gate, in one list, and drops the oldest that is not pending. Each module numbers its own proposals, so two proposals can share a number; a proposal's target (`trace-proposal-<n>`, `perf-proposal-<n>`) is unique. The read listed the newest 50 of both, pending and closed together, and the decisions view said "Waiting for approval (n shown)" and "Older proposals waiting for approval may not be listed" whenever the list was cut.
+
+Built, in the shape of increments 1b and 3c:
+
+- A proposal gets a sequence number when the server records it; that number orders the list and is the cursor, since a module's number cannot be. It is not a field of any row; an answer carries it only as the cursor in `next`.
+- The release evidence read lists every pending proposal, then the newest closed ones while fewer than 50 are listed. `decisions.proposals` keeps `total` and `more`; `decisions.proposal_history` is added (`total` closed, `next`, `kept`, `dropped`).
+- `GET /api/v1/release-evidence/proposals` with `after`, `limit` and `q`: the closed proposals of both modules, newest first. Admitted as the main read is, with its fault step.
+- Screen: the waiting group is now complete, so its heading gives the count without "shown" and the sentence about older waiting proposals is no longer shown; both remain for an answer without `proposal_history`. The closed group shows its count and "Load older closed proposals" through the shared part, which now tells proposals apart by target instead of by number, so that two modules' proposals with the same number are both kept. That change applies to P01 to P04 as well, where targets are as unique as numbers.
+
+Residual, as before: a link to a closed proposal that is only on an older page does not select it; `retiredAfter` and the labels the decisions view takes from requirements are unaffected.
+
+As on P04: a proposal now leaves the main read as soon as it closes if the pending proposals and the newer closed ones fill the fifty, and a refusal kept on it then becomes the screen's "may have been applied" notice; and the main read builds a row for every pending proposal, with a module check for a retire proposed by someone else.
+
+Checks for increment 3d (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (371 seconds); `tsc` clean; console tests 1409, pass 1406, fail 0, skipped 3; rendered check `tools/proposal-history-qa.mjs` for P01 to P05, 369 passed, 0 failed. For P05 the check reads the real main read and calls the real further read once on the sample's 28 proposals; the long list is written by the script from one module's row, so two modules' proposals with the same number are told apart on the screen only in the unit test of the shared part.
+
+Not covered by a test: newest-first order asserted across the whole walk; proposals added or closed between two pages; more than fifty pending proposals.
+
+Independent design and change review of increment 3d (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve, no blocking finding. It confirmed that every entry gets its sequence through `keep` in production (two tests append directly and leave it at zero, which nothing reads there), that the member's refusal comes from the same admission as the main read, that every reader of the proposals in the command handling needs only pending proposals, and that telling proposals apart by target cannot merge two proposals on P01 to P04. Its observations on this record and on stale line references in the binding document are applied. No ui-designer review was held: the screen part and its sentences are those reviewed for P01 to P03.
+
 # Open for the owner
 
 - The action history of a subscription on P02 now lists the newest action first and is cut at 50 with a read for the rest (increment 3b), as the lock log is. Both can be reversed.

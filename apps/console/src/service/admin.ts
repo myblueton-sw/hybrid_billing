@@ -10,7 +10,7 @@ import { installationOf, proposalOf as installProposalOf, type InstallationPage,
 import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
 import { historyPageOf, integrationsOf, pluginProposalOf, type HistoryEntry, type IntegrationsPage, type PluginProposal } from "./integrations";
 import { locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
-import { evidenceOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
+import { evidenceOf, proposalOf as evidenceProposalOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type Proposal as EvidenceProposal, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
 import { proposalOf as retentionProposalOf, retentionOf, type Proposal as RetentionProposal, type RetentionPage } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
 
@@ -1234,6 +1234,11 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async releaseEvidence(request = attempt().request): Promise<EvidencePage> {
       return evidenceOf(await send("/release-evidence", { method: "GET" }, request));
+    },
+    async evidenceProposals(after: string): Promise<KeptPage<EvidenceProposal>> {
+      const got = keptPageOf(await send("/release-evidence/proposals?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), evidenceProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
     },
     async evidenceRequirements(query: RequirementsQuery, request = attempt().request): Promise<RequirementsAnswer> {
       const got = requirementsAnswerOf(await send(requirementsPath(query), { method: "GET" }, request));

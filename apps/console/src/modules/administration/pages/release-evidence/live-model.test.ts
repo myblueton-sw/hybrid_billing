@@ -883,3 +883,33 @@ test("the requirements table shows its count, filters and button from what it is
   const open = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p, { selection: { ...shared(p).selection, requirement: "2" } }), table: { ...base, rows: [p.requirements.requirements.rows![3]] } }));
   assert.ok(open.includes(k.reqNotListed("en")));
 });
+
+test("the decisions view counts the waiting proposals exactly and offers the older closed ones when the service says how many it keeps", () => {
+  const cut = page((s) => { s.decisions.proposals.total = 90; s.decisions.proposals.more = true; s.decisions.proposal_history = { total: 80, next: "41", kept: 200, dropped: 3 }; });
+  const closed = (cut.decisions.proposals.rows ?? []).filter((p) => p.state !== "pending").length;
+  const waiting = (cut.decisions.proposals.rows ?? []).length - closed;
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(DecisionsView, { ...shared(cut), l }));
+    assert.ok(html.includes(k.waiting(l, waiting, false)) && !html.includes(k.olderWaiting(l)) && html.includes(k.closedGroup(l, closed, true)) && html.includes("kept-count") && html.includes("kept-more-button"), l);
+  }
+  const whole = page((s) => { s.decisions.proposal_history = { total: closed, next: "", kept: 200, dropped: 0 }; });
+  const all = renderToStaticMarkup(createElement(DecisionsView, shared(whole)));
+  assert.ok(all.includes(k.closedGroup("en", closed, false)) && !all.includes("kept-count") && !all.includes("kept-more"));
+  const old = page((s) => { s.decisions.proposals.more = true; delete s.decisions.proposal_history; });
+  const unsure = renderToStaticMarkup(createElement(DecisionsView, shared(old)));
+  assert.ok(unsure.includes(k.olderWaiting("en")) && unsure.includes(k.waiting("en", waiting, true)) && !unsure.includes("kept-more"));
+});
+
+test("the evidence proposals read is asked after the cursor and read strictly", async () => {
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { proposals: [{ module: "perf_gate", number: 8, target: "perf-proposal-8", state: "applied" }], next: "12", matching: 80, proposal_history: { total: 80, next: "", kept: 200, dropped: 3 } } : { proposals: [] }),
+      { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  const got = await api.evidenceProposals("41");
+  assert.equal(calls[0], "/api/v1/release-evidence/proposals?limit=50&after=41");
+  assert.deepEqual([got.rows[0].target, got.rows[0].module, got.next, got.history.total], ["perf-proposal-8", "perf_gate", "12", 80]);
+  await assert.rejects(api.evidenceProposals("2"), (e: AdminError) => e.failure === "invalid");
+});

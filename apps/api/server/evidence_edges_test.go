@@ -234,8 +234,16 @@ func TestEvidenceStoreAndTargets(t *testing.T) {
 	}
 	got := evMap(f.evidenceRead(f.as(AdminLogin)).body, "decisions", "proposals")
 	rows := evRows(got)
-	if len(rows) != evidenceShown || fmtInt(got["total"]) != 88 || got["more"] != true || fmt.Sprint(rows[0]["number"]) != "159" || fmt.Sprint(rows[evidenceShown-1]["number"]) != "110" {
-		t.Errorf("page %d %v", len(rows), got["total"])
+	waiting, oldest := 0, ""
+	for _, row := range rows {
+		if row["state"] == entryPending {
+			waiting++
+		} else {
+			oldest = fmt.Sprint(row["number"])
+		}
+	}
+	if len(rows) != evidenceShown || fmtInt(got["total"]) != 88 || got["more"] != true || fmt.Sprint(rows[0]["number"]) != "159" || waiting == 0 || oldest != fmt.Sprint(110+waiting) {
+		t.Errorf("page %d %v waiting %d oldest closed %s", len(rows), got["total"], waiting, oldest)
 	}
 }
 

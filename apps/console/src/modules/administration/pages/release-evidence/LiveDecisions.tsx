@@ -1,6 +1,8 @@
 import { useEffect, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { EvidencePage, Proposal } from "../../../../service/release-evidence";
+import { AdminError } from "../../../../service/admin";
+import { useOlder } from "../../../../shared/KeptHistory";
 import { blockerText, f, k } from "./live-copy";
 import { counted, has, kindWords, moduleWords, plurals, proposalStateWords, summaryWords } from "./live-codes";
 import {
@@ -221,7 +223,15 @@ function Row({ p, ...shared }: Shared & { p: Proposal }) {
 export function DecisionsView(shared: Shared) {
   const { l, page } = shared;
   const d = page.decisions;
-  const { pending, closed } = ordered(d.proposals.rows ?? []);
+  const history = d.proposals.rows === null ? null : d.proposal_history;
+  const older = useOlder(l, page.revision, history, d.proposals.rows ?? [], shared.api.evidenceProposals, (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  });
+  const { pending, closed } = ordered(older.rows);
+  const unsure = history === null && d.proposals.more !== false;
+  const cut = history !== null && history.total > closed.length;
   return (
     <>
       <p className="p05-lead">{k.decisionsLead(l)}</p>
@@ -230,17 +240,20 @@ export function DecisionsView(shared: Shared) {
         <div><dt>{k.activationReview(l)}</dt><dd><Fixed l={l} value={d.activation_review} locator="activation" /></dd></div>
         <div><dt>{k.ledger(l)}</dt><dd><Fixed l={l} value={d.ledger} locator="ledger" expected="in_memory" say={k.ledgerWord} /></dd></div>
       </dl>
-      <MoreLine l={l} more={d.proposals.more} total={d.proposals.total} forms={plurals.showingNewest50} />
+      {history === null && <MoreLine l={l} more={d.proposals.more} total={d.proposals.total} forms={plurals.showingNewest50} />}
+      {older.head}
       {d.proposals.rows === null ? <p><Absent>{k.unknown(l)}</Absent></p> : d.proposals.rows.length === 0 ? <p>{d.proposals.more !== false ? k.noProposalsShown(l) : k.noProposals(l)}</p> : (
         <>
           <section className="p05-section-first" aria-labelledby="p05-waiting">
-            <h3 id="p05-waiting">{k.waiting(l, pending.length, d.proposals.more !== false)}</h3>
-            {d.proposals.more !== false && <p className="p05-small p05-muted">{k.olderWaiting(l)}</p>}
+            <h3 id="p05-waiting">{k.waiting(l, pending.length, unsure)}</h3>
+            {unsure && <p className="p05-small p05-muted">{k.olderWaiting(l)}</p>}
             {pending.length > 0 && <ol className="p05-proposals">{pending.map((p, i) => <Row key={p.target || "p" + i} p={p} {...shared} />)}</ol>}
           </section>
           <section className="p05-section" aria-labelledby="p05-closed">
-            <h3 id="p05-closed">{k.closedGroup(l, closed.length, d.proposals.more !== false)}</h3>
+            <h3 id="p05-closed">{k.closedGroup(l, closed.length, unsure || cut)}</h3>
+            {older.count}
             {closed.length > 0 && <ol className="p05-proposals">{closed.map((p, i) => <Row key={p.target || "c" + i} p={p} {...shared} />)}</ol>}
+            {older.foot}
           </section>
         </>
       )}

@@ -1,3 +1,4 @@
+import { keptFactsOf, type KeptFacts } from "./kept";
 import { count, hint } from "./integrations";
 
 export type Person = { id: string; login: string | null; directory: boolean | null } | null;
@@ -174,7 +175,7 @@ export type EvidencePage = {
   requirements: { origin: string; requirements: List<RequirementRow>; next: string; gate: Gate };
   artifacts: { origin: string; builds: List<BuildRow>; harnesses: List<HarnessRow>; results: List<ResultRow>; files: string; logs: string; environment: string; content: string };
   load: { origin: string; hardware: List<HardwareRow>; profiles: List<ProfileRow>; readiness: Readiness; measurement: string; planning_targets: string };
-  decisions: { origin: string; proposals: List<Proposal>; support_decisions: string; activation_review: string; ledger: string };
+  decisions: { origin: string; proposals: List<Proposal>; proposal_history: KeptFacts | null; support_decisions: string; activation_review: string; ledger: string };
 };
 
 type Raw = Record<string, unknown>;
@@ -453,7 +454,7 @@ export function evidenceOf(body: Raw): EvidencePage {
       measurement: str(ld.measurement),
       planning_targets: str(ld.planning_targets),
     },
-    decisions: { origin: str(d.origin), proposals: listOf(d.proposals, proposalOf), support_decisions: str(d.support_decisions), activation_review: str(d.activation_review), ledger: str(d.ledger) },
+    decisions: { origin: str(d.origin), proposals: listOf(d.proposals, proposalOf), proposal_history: isRow(d.proposal_history) ? keptFactsOf(d.proposal_history) : null, support_decisions: str(d.support_decisions), activation_review: str(d.activation_review), ledger: str(d.ledger) },
   };
 }
 

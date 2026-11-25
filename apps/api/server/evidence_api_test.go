@@ -396,7 +396,8 @@ func TestEvidenceReadWithoutSeed(t *testing.T) {
 		"map[gate:<nil> next: origin:empty requirements:map[more:false rows:[] total:0]] map[builds:map[more:false rows:[] total:0] content:not_connected "+
 		"environment:not_connected files:not_connected harnesses:map[more:false rows:[] total:0] logs:not_connected origin:empty results:map[more:false rows:[] total:0]] "+
 		"map[hardware:map[more:false rows:[] total:0] measurement:not_connected origin:empty planning_targets:not_connected profiles:map[more:false rows:[] total:0] "+
-		"readiness:<nil>] map[activation_review:not_connected ledger:in_memory origin:empty proposals:map[more:false rows:[] total:0] support_decisions:not_connected]" {
+		"readiness:<nil>] map[activation_review:not_connected ledger:in_memory origin:empty proposal_history:map[dropped:0 kept:200 next: total:0] proposals:map[more:false rows:[] total:0] "+
+		"support_decisions:not_connected]" {
 		t.Errorf("empty read %s", s)
 	}
 	for _, c := range []struct{ kind, target string }{{evidenceApproveKind, traceTarget(1)}, {evidenceWithdrawKind, perfTarget(1)},

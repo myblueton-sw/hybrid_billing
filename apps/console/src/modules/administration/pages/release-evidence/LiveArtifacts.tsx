@@ -1,5 +1,5 @@
 import type { Locale } from "../../../../shared/types";
-import type { ResultRow } from "../../../../service/release-evidence";
+import type { BuildRow, ResultRow } from "../../../../service/release-evidence";
 import { AdminError } from "../../../../service/admin";
 import { useOlderRows } from "../../../../shared/older-rows";
 import { k } from "./live-copy";
@@ -56,6 +56,13 @@ export function ArtifactsView(shared: Shared) {
     return false;
   }, false);
   const failed = older.status === "failed";
+  const buildFacts = a.builds.rows === null || a.builds_next === null || a.builds.total === null ? null : { total: a.builds.total, next: a.builds_next };
+  const builds = useOlderRows<BuildRow>(page.revision, buildFacts, a.builds.rows, shared.api.evidenceBuilds, (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  }, false, (b) => b.order);
+  const buildsFailed = builds.status === "failed";
   const nc: [string, string][] = [[k.files(l), a.files], [k.logs(l), a.logs], [k.environment(l), a.environment], [k.content(l), a.content]];
   return (
     <>
@@ -66,7 +73,10 @@ export function ArtifactsView(shared: Shared) {
       <div className="p05-regs">
         <section className="p05-reg" aria-labelledby="p05-builds-title">
           <h3 id="p05-builds-title">{k.buildsTitle(l)}</h3>
-          <ListOr l={l} items={a.builds.rows} empty={k.noBuilds(l)}>
+          {builds.cut && <p className="p05-small p05-muted p05-builds-count" role="status" ref={builds.countRef} tabIndex={-1}>{builds.all ? k.buildsAll(l, builds.total) : k.buildsShown(l, builds.rows?.length ?? 0, builds.total)}</p>}
+          {builds.reset && <p className="p05-small p05-builds-reset" role="status">{k.buildsReset(l)}</p>}
+          {builds.cut && !builds.more && !builds.all && builds.status === "idle" && <p className="p05-small p05-builds-moved" role="status">{k.buildsMoved(l)}</p>}
+          <ListOr l={l} items={builds.rows} empty={k.noBuilds(l)}>
             {(rows) => (
               <div className="live-table">
                 <table className="p05-table p05-small-reg p05-builds">
@@ -75,7 +85,7 @@ export function ArtifactsView(shared: Shared) {
                   {rows.map((b, i) => {
                     const current = selection.build !== "" && selection.build === b.build;
                     return (
-                      <tbody key={b.build + i} className={"p05-row" + (current ? " live-selected" : "")} id={b.build ? rowId("build", b.build) : undefined} aria-current={current || undefined}>
+                      <tbody key={b.order ?? b.build + i} className={"p05-row" + (current ? " live-selected" : "")} id={b.build ? rowId("build", b.build) : undefined} aria-current={current || undefined}>
                         <tr>
                           <td className="p05-first"><Known l={l} value={b.build} />{current && <span className="p05-tag p05-selected-tag" aria-hidden="true">{k.selected(l)}</span>}</td>
                           <td data-label={k.colCommit(l)}><CommitText l={l} value={b.commit} /></td>
@@ -88,7 +98,15 @@ export function ArtifactsView(shared: Shared) {
               </div>
             )}
           </ListOr>
-          <MoreLine l={l} more={a.builds.more} total={a.builds.total} forms={plurals.showing50} />
+          {buildFacts === null && <MoreLine l={l} more={a.builds.more} total={a.builds.total} forms={plurals.showing50} />}
+          {builds.more && (
+            <div className="p05-req-more p05-builds-more">
+              {buildsFailed && <p role="alert">{k.buildsFailed(l)}</p>}
+              <button type="button" className="live-secondary p05-req-more-button p05-builds-more-button" aria-disabled={builds.status === "loading" || undefined} onClick={builds.load}>
+                {buildsFailed ? k.resultsTryAgain(l) : builds.status === "loading" ? k.resultsLoading(l) : k.buildsMore(l)}
+              </button>
+            </div>
+          )}
         </section>
         <section className="p05-reg" aria-labelledby="p05-harnesses-title">
           <h3 id="p05-harnesses-title">{k.harnessesTitle(l)}</h3>

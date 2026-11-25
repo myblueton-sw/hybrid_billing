@@ -908,3 +908,82 @@ func TestEvidenceResultsAreReadNewestFirstWithoutReadingAll(t *testing.T) {
 		t.Errorf("another workspace: %d", other.status)
 	}
 }
+
+func TestEvidenceBuildsArePagedAndEveryHarnessIsListed(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root := f.as(AdminLogin)
+	seeded := len(f.s.ev.builds)
+	short := evMap(f.evidenceRead(root).body, "artifacts")
+	if short["builds_next"] != "" || len(evRows(evMap(short, "builds"))) != seeded {
+		t.Fatalf("a short list of builds is whole and says nothing further exists: %v", short["builds_next"])
+	}
+	for i := 0; i < 130; i++ {
+		f.s.ev.builds = append(f.s.ev.builds, evidenceBuildRecord{id: fmt.Sprintf("9.%d.0", i), commit: sampleHash(fmt.Sprint("bulk-build", i))[:40]})
+	}
+	for i := 0; i < 70; i++ {
+		f.s.ev.harnesses = append(f.s.ev.harnesses, evidenceHarnessRecord{module: moduleTrace, id: fmt.Sprintf("bulk-harness-%03d", i)})
+	}
+	total := seeded + 130
+	section := evMap(f.evidenceRead(root).body, "artifacts")
+	rows := evRows(evMap(section, "builds"))
+	if len(rows) != evidenceShown || rows[0]["build"] != "9.129.0" || whole(rows[0]["order"]) != total || fmt.Sprint(section["builds_next"]) != fmt.Sprint(rows[evidenceShown-1]["order"]) ||
+		whole(evMap(section, "builds")["total"]) != total || evMap(section, "builds")["more"] != true {
+		t.Fatalf("the main read lists the newest fifty builds: first %v, next %v", rows[0]["build"], section["builds_next"])
+	}
+	harnesses := evMap(section, "harnesses")
+	if len(evRows(harnesses)) != len(f.s.ev.harnesses) || harnesses["more"] != false || whole(harnesses["total"]) != len(f.s.ev.harnesses) || len(f.s.ev.harnesses) < 70 {
+		t.Errorf("every harness is listed: %d of %d", len(evRows(harnesses)), len(f.s.ev.harnesses))
+	}
+	path := "/api/v1/release-evidence/builds"
+	orders, next, pages := []int{}, fmt.Sprint(section["builds_next"]), 0
+	for next != "" {
+		page := f.readAs(root, path+"?limit=40&after="+next)
+		if page.status != 200 || whole(page.body["total"]) != len(f.s.ev.builds) || whole(page.body["matching"]) != len(f.s.ev.builds) || page.body["order"] != "newest_first" {
+			t.Fatalf("after %s: %s", next, page.raw[:min(len(page.raw), 300)])
+		}
+		for _, raw := range page.body["builds"].([]any) {
+			orders = append(orders, whole(raw.(map[string]any)["order"]))
+		}
+		next = fmt.Sprint(page.body["next"])
+		if pages++; pages == 1 {
+			f.s.ev.builds = append(f.s.ev.builds, evidenceBuildRecord{id: "9.999.0", commit: sampleHash("added")[:40]})
+		}
+		if pages > 10 {
+			t.Fatal("the builds do not end")
+		}
+	}
+	if len(orders) != total-evidenceShown || orders[0] != total-evidenceShown || orders[len(orders)-1] != 1 {
+		t.Fatalf("the older builds in pages: %d from %d to %d", len(orders), orders[0], orders[len(orders)-1])
+	}
+	for index := 1; index < len(orders); index++ {
+		if orders[index] != orders[index-1]-1 {
+			t.Fatalf("a gap or a repeat at %d", index)
+		}
+	}
+	found := f.readAs(root, path+"?q=9.77.0")
+	if rows, _ := found.body["builds"].([]any); found.status != 200 || len(rows) != 1 || rows[0].(map[string]any)["build"] != "9.77.0" {
+		t.Errorf("a search by build: %s", found.raw[:min(len(found.raw), 300)])
+	}
+	commit := sampleHash("bulk-build5")[:12]
+	if byCommit := f.readAs(root, path+"?q="+commit); whole(byCommit.body["matching"]) != 1 {
+		t.Errorf("a search by commit: %v", byCommit.body["matching"])
+	}
+	f.refusedHistory(root, path)
+	member, theirs := f.readAs(f.as(MemberLogin), path), f.evidenceRead(f.as(MemberLogin))
+	if member.status != theirs.status || member.status != 403 {
+		t.Errorf("a member: the further read %d, the main read %d", member.status, theirs.status)
+	}
+	if anonymous := f.readAs(actor{}, path); anonymous.status != 401 {
+		t.Errorf("anonymous: %d", anonymous.status)
+	}
+	f.s.fault = func(at string) bool { return at == "release-evidence-read" }
+	if failed := f.readAs(root, path); failed.status != 503 {
+		t.Errorf("a fault: %d", failed.status)
+	}
+	f.s.fault = nil
+	f.s.bootWorkspace = "elsewhere"
+	if other := f.readAs(root, path); other.status != 200 || len(other.body["builds"].([]any)) != 0 || whole(other.body["total"]) != 0 {
+		t.Errorf("another workspace: %d", other.status)
+	}
+}

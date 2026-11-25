@@ -378,6 +378,25 @@ Not covered by a test: results whose latest records share a time; `limit` at 1 a
 
 Reviews (AI, Claude Opus 5.5, by reading and, for the designer, from screenshots; neither ran anything), 2026-11-25. Independent design and change review: approve with conditions, two blocking findings, then resolved. It confirmed that for every record the service can make today the main read's rows and order are what they were, and that the one place that records is always followed by the server's note of it. Its findings: the first version used the word of the lists that only grow for this list's order and said nowhere that rows can move, so a walk could end at "136 of 137" without a button or a reason; and the test meant to show that not every result is read allowed 150 module reads with 137 results stored, a bound the old code met as well. Both corrected. ui-designer check of the sentences: PASS; the reload word in the new sentence matches the screen's button in the three languages. Left open from it: in the state where rows moved, "the newest 100 of 120" is not strictly the newest; Korean column headings of this table break inside a word at 1440, which predates this change.
 
+# Increment 4b, the builds and harnesses of P05 (2026-11-25)
+
+Facts (main 9053fa5): builds are kept in the order registered and never removed (module limit 10,000); the main read listed the newest 50 with each build's position as `order`, and `total` and `more`. Harnesses are kept by both modules, at most 100 each, and the main read listed the first 50 recorded. No command registers either; a running service has the seed's two builds and two harnesses.
+
+Built:
+
+- Builds: the main read gains `artifacts.builds_next` (the order of the last build listed when older ones exist). `GET /api/v1/release-evidence/builds` with `after`, `limit` and `q` (matched against the build and the commit): builds newest first; the cursor is a build's order, exact because the list only grows. The builds table shows its count and "Load older builds" through the shared hook, which can now take a row's number from any field, here `order`.
+- Harnesses: the main read lists every harness, at most 200, instead of the first 50. `more` is then always false. The list is small and complete, as "What the ticket means for each list" asks of complete lists.
+
+The builds read does not read the approver roster, which builds do not depend on; it therefore answers when the main read fails because the roster cannot be read. A build registered while a person loads older pages is above the cursor and counted in the total, so the walk ends one short; the screen then says that builds registered meanwhile are not shown and are at the top after a reload.
+
+Residual: a link to a build that is only on an older page (`?build=`) does not select it.
+
+Checks for increment 4b (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (371 seconds); `tsc` clean; console tests 1412, pass 1409, fail 0, skipped 3; rendered check `tools/builds-qa.mjs`, 51 passed, 0 failed, and, because the shared hook changed, the checks of the lists that use it again: results 56, holds 59, subscription history 54, none failed. The long list of builds is written by the script.
+
+Not covered by a test: `limit` at 1 and 100 and a cursor above the total on the builds read; the roster being unavailable; the sentence about builds registered meanwhile was not looked at by the designer (it has the form of the results' sentence, which was).
+
+Independent design and change review of increment 4b (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve with conditions, no blocking finding. It confirmed the cursor's arithmetic against the rows listed, that builds are only appended, and that the harness list cannot exceed the two modules' limits. Applied from it: the shared hook keeps its type check (a caller whose rows have no `number` must say where the number is); this record states that the builds read answers without the roster; stale line references in the binding document. It also saw that a walk could end one short without a reason when a build is registered meanwhile; the screen now says so.
+
 # Open for the owner
 
 - The holds list on P04 now shows every hold in force and pages only the released ones (increment 3e).

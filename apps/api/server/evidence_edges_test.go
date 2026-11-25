@@ -589,7 +589,7 @@ func TestEvidenceRowsAreBounded(t *testing.T) {
 		fmt.Sprint(len(evMap(many, "states")), many["builds_more"]), size(evMap(got.body, "requirements", "gate", "problems")), size(evMap(got.body, "artifacts", "builds")),
 		size(evMap(got.body, "artifacts", "harnesses")), size(evMap(got.body, "artifacts", "results")), size(evMap(got.body, "load", "hardware")),
 		size(evMap(got.body, "load", "profiles")), size(evMap(resume, "runs"))}
-	if s := strings.Join(sizes, " "); s != "50/55/true 50/51/true 12/13/true 50/58/true 50/51/true 20/56/true 10 true 100/106/true 50/63/true 50/53/true 50/68/true "+
+	if s := strings.Join(sizes, " "); s != "50/55/true 50/51/true 12/13/true 50/58/true 50/51/true 20/56/true 10 true 100/106/true 50/63/true 53/53/false 50/68/true "+
 		"50/52/true 50/55/true 20/21/true" {
 		t.Errorf("sizes %s", s)
 	}

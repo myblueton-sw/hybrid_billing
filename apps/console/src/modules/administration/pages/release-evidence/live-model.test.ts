@@ -940,3 +940,32 @@ test("the results' numbers, the cursor of the main read and the results read are
   assert.equal(calls[0], "/api/v1/release-evidence/results?limit=50&after=71");
   await assert.rejects(api.evidenceResults("2"), (e: AdminError) => e.failure === "invalid");
 });
+
+test("the builds' cursor and the builds read are read strictly, and older builds are told apart by their order", async () => {
+  const { buildsPageOf } = await import("../../../../service/release-evidence");
+  const { newestFirst } = await import("../../../../shared/older-rows");
+  const cut = page((s) => { s.artifacts.builds.total = 120; s.artifacts.builds.more = true; s.artifacts.builds_next = "71"; });
+  assert.equal(cut.artifacts.builds_next, "71");
+  assert.equal(page().artifacts.builds_next, null);
+  for (const bad of [{}, { builds: [], next: "" }, { builds: "x", next: "", total: 0 }, { builds: [], next: 4, total: 0 }]) assert.equal(buildsPageOf(bad), null, JSON.stringify(bad));
+  const got = buildsPageOf({ builds: [{ build: "1.0.0", commit: "c", order: 70 }, null, "x"], next: "21", total: 120 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].order, got?.next, got?.total], [1, 70, "21", 120]);
+  const b = (order: number | null) => ({ build: "b" + order, commit: "", order });
+  assert.deepEqual(newestFirst([b(71), b(72)], [b(71), b(70), b(null)], (x) => x.order).map((x) => x.order), [72, 71, 70, null]);
+  const reads = { evidenceBuilds: async () => ({ rows: [], next: "", total: 120 }), evidenceResults: async () => ({ rows: [], next: "", total: 0 }) } as unknown as AdminClient;
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(ArtifactsView, { ...shared(cut), l, api: reads }));
+    assert.ok(html.includes(k.buildsShown(l, cut.artifacts.builds.rows?.length ?? 0, 120)) && html.includes(k.buildsMore(l)), l);
+  }
+  const whole = renderToStaticMarkup(createElement(ArtifactsView, { ...shared(page((s) => { s.artifacts.builds_next = ""; })), api: reads }));
+  assert.ok(!whole.includes("p05-builds-count") && !whole.includes("p05-builds-more"));
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { builds: [{ build: "1.0.0", commit: "c", order: 70 }], next: "", total: 120 } : { builds: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.evidenceBuilds("71")).rows[0].order, 70);
+  assert.equal(calls[0], "/api/v1/release-evidence/builds?limit=50&after=71");
+  await assert.rejects(api.evidenceBuilds("2"), (e: AdminError) => e.failure === "invalid");
+});

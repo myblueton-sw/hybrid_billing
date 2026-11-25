@@ -13,7 +13,7 @@ import { c as sc, retryPhrase } from "../../../../service/copy";
 import { k } from "./live-copy";
 import {
   commandsAllowed, drop, filtering, forget, isProposalCommand, missingProfiles, missingRequirements, modeOf, noFilter, pruneRefusals, readDenied, readSucceeded, profilePrefix, profileTargetsInUse, requirementPrefix, requirementTargetsInUse, revokedNow, rowId,
-  selectionOf, setScope, validTarget, vanished, viewOf, withHeld, withHeldProfiles, type RequirementFilter, type Selection,
+  selectionOf, setScope, validTarget, vanished, viewOf, withHeld, withHeldProfiles, withMoreHardware, type RequirementFilter, type Selection,
 } from "./live-model";
 import { Absent, Known, Stamp, Template, Unexpected, ltr, takeIntent, useAvailableWidth } from "./live-format";
 import { ErrorDetail, type Announce, type Shared } from "./LiveCommand";
@@ -131,6 +131,8 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   const seq = useRef(0);
   const listSeq = useRef(0);
   const profileSeq = useRef(0);
+  const hardwareSeq = useRef(0);
+  const [hardware, setHardware] = useState<{ next: string | null; status: "idle" | "loading" | "failed"; reset: boolean }>({ next: null, status: "idle", reset: false });
   const scrolled = useRef("");
   const root = useRef<HTMLDivElement>(null);
   const width = useAvailableWidth(root, access);
@@ -172,12 +174,14 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       }
       listSeq.current += 1;
       profileSeq.current += 1;
+      hardwareSeq.current += 1;
       const got = withHeldProfiles(withHeld(main, held), heldProfiles);
       readSucceeded();
       pruneRefusals(got);
       setPage(got);
       setListing(now);
       setProfiles((before) => ({ next: null, status: "idle", reset: before.next !== null }));
+      setHardware((before) => ({ next: null, status: "idle", reset: before.next !== null }));
       setAccess("ok");
       setStatus("ready");
       setFailure(null);
@@ -231,8 +235,26 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       setProfiles({ next: answer.next, status: "idle", reset: false });
     } catch (e) {
       if (n !== profileSeq.current || generation !== currentScope()) return;
-      if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) { void load(); return; }
+      if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) { setProfiles({ next: profiles.next, status: "idle", reset: false }); void load(); return; }
       setProfiles({ next: profiles.next, status: "failed", reset: false });
+    }
+  };
+  const moreHardware = async () => {
+    if (!page || hardware.status === "loading") return;
+    const after = hardware.next ?? page.load.hardware_next ?? "";
+    if (!after) return;
+    const n = ++hardwareSeq.current;
+    const generation = currentScope();
+    setHardware({ next: hardware.next, status: "loading", reset: false });
+    try {
+      const answer = await api.evidenceHardware(after);
+      if (n !== hardwareSeq.current || generation !== currentScope()) return;
+      setPage((p) => (p ? withMoreHardware(p, answer.rows) : p));
+      setHardware({ next: answer.next, status: "idle", reset: false });
+    } catch (e) {
+      if (n !== hardwareSeq.current || generation !== currentScope()) return;
+      if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) { setHardware({ next: hardware.next, status: "idle", reset: false }); void load(); return; }
+      setHardware({ next: hardware.next, status: "failed", reset: false });
     }
   };
   const pageRevision = page?.revision ?? "";
@@ -425,7 +447,8 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
           ) : view === "artifacts" ? (
             <ArtifactsView {...shared} />
           ) : view === "load" ? (
-            <LoadView {...shared} list={{ more: (profiles.next ?? shared.page.load.profiles_next ?? "") !== "", status: profiles.status, reset: profiles.reset, onMore: () => { void moreProfiles(); } }} />
+            <LoadView {...shared} list={{ more: (profiles.next ?? shared.page.load.profiles_next ?? "") !== "", status: profiles.status, reset: profiles.reset, onMore: () => { void moreProfiles(); } }}
+              hardwareList={{ more: (hardware.next ?? shared.page.load.hardware_next ?? "") !== "", status: hardware.status, reset: hardware.reset, onMore: () => { void moreHardware(); } }} />
           ) : view === "decisions" ? (
             <DecisionsView {...shared} />
           ) : (

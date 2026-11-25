@@ -413,6 +413,22 @@ Verification: the whole server package passed; console tests 1413, 1410 passed, 
 
 Not built: a search on the screen; the hardware list of the same view (at most 100, the first 50 listed) and the paths of the matrix view, which follow.
 
+# Increment 4d, the hardware of P05 (2026-11-25)
+
+Facts (main a0f9ab2): the performance gate holds up to 100 hardware records; the server keeps their identifiers in the order recorded and never removes one. No command registers hardware; a running service has the seed's one. The main read lists the first 50 with `total` and `more`. Hardware has no command, no link and no selection on the screen; budgets and runs name hardware by identifier only.
+
+Built:
+
+- The main read keeps its rows and order; each hardware row gains `number`, its position, and the section gains `hardware_next`.
+- `GET /api/v1/release-evidence/hardware` with `after`, `limit` and `q` (matched against the identifier), in the order recorded.
+- Screen: the count of all, "Load more hardware", the failure and the read-again line, through one foot component now shared with the load profiles (`ListFoot` in `LiveLoad.tsx`). Rows loaded that way are dropped when the screen is read again. The denied branch of both lists now returns the button to idle before the screen is read again.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. Composition and copy check (ui-designer): pass; an Arabic string and the space above the foot were adopted. Noted and not changed: the records of a long hardware list have no divider between them.
+
+Verification: the whole server package passed; console tests 1414, 1411 passed, 3 skipped; the rendered check `tools/hardware-qa.mjs` 43 passed against a local service with the sample seed, in which the hardware beyond the sample's one is written by the check (so its first page holds one record, not fifty). The owner has not reviewed the screen.
+
+Not built: a search on the screen; a read by identifier, as nothing on the screen refers to a hardware record outside the list.
+
 # Open for the owner
 
 - The holds list on P04 now shows every hold in force and pages only the released ones (increment 3e).

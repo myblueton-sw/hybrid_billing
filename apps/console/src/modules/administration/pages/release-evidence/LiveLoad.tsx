@@ -86,7 +86,7 @@ export function Readiness({ l, page }: { l: Locale; page: EvidencePage }) {
   );
 }
 
-function Hardware({ l, page }: { l: Locale; page: EvidencePage }) {
+function Hardware({ l, page, list }: { l: Locale; page: EvidencePage; list?: ProfilesList }) {
   const h = page.load.hardware;
   return (
     <section className="p05-hw" aria-labelledby="p05-hw-title">
@@ -109,7 +109,8 @@ function Hardware({ l, page }: { l: Locale; page: EvidencePage }) {
           </>
         )}
       </ListOr>
-      <MoreLine l={l} more={h.more} total={h.total} forms={plurals.showing50} />
+      {!list && <MoreLine l={l} more={h.more} total={h.total} forms={plurals.showing50} />}
+      {list && <ListFoot l={l} kind="hw" list={list} shown={h.rows?.length ?? 0} total={h.total} copy={{ shown: k.hardwareShown, more: k.hardwareMore, failed: k.hardwareFailed, reset: k.hardwareReset }} />}
     </section>
   );
 }
@@ -335,11 +336,31 @@ function Profile({ p, ...shared }: Shared & { p: ProfileRow }) {
 
 export type ProfilesList = { more: boolean; status: "idle" | "loading" | "failed"; reset: boolean; onMore: () => void };
 
-export function LoadView(shared: Shared & { list?: ProfilesList }) {
-  const { l, page, list } = shared;
+type FootCopy = { shown: (l: Locale, n: number, m: number) => string; more: (l: Locale) => string; failed: (l: Locale) => string; reset: (l: Locale) => string };
+
+function ListFoot({ l, kind, list, shown, total, copy }: { l: Locale; kind: string; list: ProfilesList; shown: number; total: number | null; copy: FootCopy }) {
+  const failed = list.status === "failed";
+  const c = "p05-" + kind;
+  return (
+    <div className={"p05-list-foot " + c + "-foot"}>
+      {total !== null && shown > 0 && shown < total && <p className={"p05-small p05-muted " + c + "-count"}>{copy.shown(l, shown, total)}</p>}
+      {list.reset && <p className={"p05-small " + c + "-reset"} role="status">{copy.reset(l)}</p>}
+      {(list.more || failed) && (
+        <div className={"p05-req-more " + c + "-more"}>
+          {failed && <p role="alert">{copy.failed(l)}</p>}
+          <button type="button" className={"live-secondary p05-req-more-button " + c + "-more-button"} aria-disabled={list.status === "loading" || undefined} onClick={() => { if (list.status !== "loading") list.onMore(); }}>
+            {failed ? k.reqTryAgain(l) : list.status === "loading" ? k.reqLoading(l) : copy.more(l)}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function LoadView(shared: Shared & { list?: ProfilesList; hardwareList?: ProfilesList }) {
+  const { l, page, list, hardwareList } = shared;
   const profiles = page.load.profiles;
   const shown = profiles.rows?.length ?? 0;
-  const failed = list?.status === "failed";
   return (
     <>
       <p className="p05-lead">{k.loadLead(l)}</p>
@@ -349,23 +370,12 @@ export function LoadView(shared: Shared & { list?: ProfilesList }) {
         <p>{page.load.measurement === "not_connected" ? k.measurement(l) : <>{k.measurementLabel(l)}: <Fixed l={l} value={page.load.measurement} locator="measurement" /></>}</p>
       </div>
       <Readiness l={l} page={page} />
-      <Hardware l={l} page={page} />
+      <Hardware l={l} page={page} list={hardwareList} />
       <section className="p05-profiles" aria-labelledby="p05-profiles-title">
         <h3 id="p05-profiles-title" className="visually-hidden">{k.profilesTitle(l)}</h3>
         <ListOr l={l} items={profiles.rows} empty={k.noProfiles(l)}>{(rows) => <>{rows.map((p, i) => <Profile key={p.target || "p" + i} p={p} {...shared} />)}</>}</ListOr>
         {!list && <MoreLine l={l} more={profiles.more} total={profiles.total} forms={plurals.showing50} />}
-        {list && <div className="p05-profiles-foot">
-        {list && profiles.total !== null && shown > 0 && shown < profiles.total && <p className="p05-small p05-muted p05-profiles-count">{k.profilesShown(l, shown, profiles.total)}</p>}
-        {list?.reset && <p className="p05-small p05-profiles-reset" role="status">{k.profilesReset(l)}</p>}
-        {list && (list.more || failed) && (
-          <div className="p05-req-more p05-profiles-more">
-            {failed && <p role="alert">{k.profilesFailed(l)}</p>}
-            <button type="button" className="live-secondary p05-req-more-button p05-profiles-more-button" aria-disabled={list.status === "loading" || undefined} onClick={() => { if (list.status !== "loading") list.onMore(); }}>
-              {failed ? k.reqTryAgain(l) : list.status === "loading" ? k.reqLoading(l) : k.profilesMore(l)}
-            </button>
-          </div>
-        )}
-        </div>}
+        {list && <ListFoot l={l} kind="profiles" list={list} shown={shown} total={profiles.total} copy={{ shown: k.profilesShown, more: k.profilesMore, failed: k.profilesFailed, reset: k.profilesReset }} />}
       </section>
     </>
   );

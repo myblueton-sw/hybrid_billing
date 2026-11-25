@@ -1078,3 +1078,82 @@ func TestEvidenceProfilesAreReadInRecordedOrderAndByTarget(t *testing.T) {
 		t.Errorf("another workspace: %d", other.status)
 	}
 }
+
+func TestEvidenceHardwareIsReadInRecordedOrder(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root := f.as(AdminLogin)
+	seeded := len(f.s.ev.hardware)
+	add := func(id string) {
+		f.pfApproved(perfgate.Change{Kind: perfgate.ChangeHardware, Hardware: perfgate.Hardware{ID: id, CPUs: 1, MemoryMiB: 1, DiskGiB: 1, Storage: perfgate.StorageHDD, Spec: sampleHash("s" + id)}})
+		f.s.ev.hardware = append(f.s.ev.hardware, id)
+	}
+	for i := 0; i < 70; i++ {
+		add(fmt.Sprintf("bulk-hw-%03d", i))
+	}
+	total := seeded + 70
+	load := evMap(f.evidenceRead(root).body, "load")
+	mainRows := evRows(evMap(load, "hardware"))
+	if len(mainRows) != evidenceShown || load["hardware_next"] != "50" || whole(mainRows[0]["number"]) != 1 || whole(mainRows[49]["number"]) != 50 || whole(evMap(load, "hardware")["total"]) != total {
+		t.Fatalf("the main read keeps its order and says where it stopped: next %v, %d rows", load["hardware_next"], len(mainRows))
+	}
+	path := "/api/v1/release-evidence/hardware"
+	all, next, pages := append([]map[string]any{}, mainRows...), "50", 0
+	for next != "" {
+		page := f.readAs(root, path+"?limit=15&after="+next)
+		if page.status != 200 || whole(page.body["total"]) != len(f.s.ev.hardware) || whole(page.body["matching"]) != len(f.s.ev.hardware) || page.body["order"] != "recorded" {
+			t.Fatalf("after %s: %s", next, page.raw[:min(len(page.raw), 300)])
+		}
+		for _, raw := range page.body["hardware"].([]any) {
+			all = append(all, raw.(map[string]any))
+		}
+		next = fmt.Sprint(page.body["next"])
+		if pages++; pages == 1 {
+			add("added-meanwhile")
+		}
+		if pages > 10 {
+			t.Fatal("the hardware does not end")
+		}
+	}
+	if len(all) != total+1 {
+		t.Fatalf("the pages hold %d of %d", len(all), total+1)
+	}
+	for index, row := range all {
+		if whole(row["number"]) != index+1 || row["id"] != f.s.ev.hardware[index] {
+			t.Fatalf("row %d is %v number %v", index, row["id"], row["number"])
+		}
+	}
+	first := f.readAs(root, path)
+	fresh := evRows(evMap(f.evidenceRead(root).body, "load", "hardware"))
+	if rows, _ := first.body["hardware"].([]any); len(rows) != len(fresh) || !reflect.DeepEqual(rows[0], map[string]any(fresh[0])) || !reflect.DeepEqual(rows[49], map[string]any(fresh[49])) {
+		t.Error("the first page of the further read differs from the rows of the main read")
+	}
+	found := f.readAs(root, path+"?q=HW-03&limit=4")
+	if rows, _ := found.body["hardware"].([]any); found.status != 200 || len(rows) != 4 || rows[0].(map[string]any)["id"] != "bulk-hw-030" || whole(found.body["matching"]) != 10 || found.body["next"] != fmt.Sprint(whole(rows[3].(map[string]any)["number"])) {
+		t.Errorf("a search by identifier: %s", found.raw[:min(len(found.raw), 300)])
+	}
+	rest := f.readAs(root, path+"?q=HW-03&after="+fmt.Sprint(found.body["next"]))
+	if rows, _ := rest.body["hardware"].([]any); len(rows) != 6 || rows[0].(map[string]any)["id"] != "bulk-hw-034" || rest.body["next"] != "" || whole(rest.body["matching"]) != 10 {
+		t.Errorf("the rest of a search: %s", rest.raw[:min(len(rest.raw), 300)])
+	}
+	for _, query := range []string{"?after=0", "?after=x", "?limit=0", "?limit=101", "?q=", "?target=x", "?limit=5&limit=6"} {
+		if refused := f.readAs(root, path+query); refused.status != 422 {
+			t.Errorf("%s: %d", query, refused.status)
+		}
+	}
+	f.code(t, "member", f.readAs(f.as(MemberLogin), path), 403, "permission_denied")
+	f.code(t, "anonymous", f.readAs(actor{}, path), 401, "unauthenticated")
+	f.s.fault = func(at string) bool { return at == "release-evidence-read" }
+	if failed := f.readAs(root, path); failed.status != 503 {
+		t.Errorf("a fault: %d", failed.status)
+	}
+	f.s.fault = nil
+	f.s.ev.hardware = append(f.s.ev.hardware, "never-recorded")
+	if failed := f.readAs(root, path+"?after=70"); failed.status != 503 {
+		t.Errorf("an unknown stored hardware: %d", failed.status)
+	}
+	f.s.bootWorkspace = "elsewhere"
+	if other := f.readAs(root, path); other.status != 200 || len(other.body["hardware"].([]any)) != 0 || whole(other.body["total"]) != 0 {
+		t.Errorf("another workspace: %d", other.status)
+	}
+}

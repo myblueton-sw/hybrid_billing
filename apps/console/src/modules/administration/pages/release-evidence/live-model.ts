@@ -1,6 +1,6 @@
 import { Refusals } from "../../../../service/refusal";
 import type { RowDiagnostic } from "../../../../service/command-diagnostics";
-import type { Budget, Candidate, CountOf, EvidencePage, PathRow, Problem, ProfileRow, Proposal, RequirementRow, TargetRow, TestRow } from "../../../../service/release-evidence";
+import type { Budget, Candidate, CountOf, EvidencePage, HardwareRow, PathRow, Problem, ProfileRow, Proposal, RequirementRow, TargetRow, TestRow } from "../../../../service/release-evidence";
 import { failingVerdicts, has, verdictWords } from "./live-codes";
 
 export const views = ["matrix", "requirements", "artifacts", "load", "decisions"];
@@ -760,4 +760,18 @@ export function missingProfiles(page: EvidencePage, wanted: string[]): string[] 
   if (rows === null) return [];
   const have = new Set(rows.map((p) => p.target));
   return [...new Set(wanted)].filter((t) => t.startsWith(profilePrefix) && t.length > profilePrefix.length && validTarget(t) && !have.has(t));
+}
+
+export function withMoreHardware(page: EvidencePage, rows: HardwareRow[]): EvidencePage {
+  const list = page.load.hardware;
+  if (list.rows === null || rows.length === 0) return page;
+  const have = new Set(list.rows.map((h) => h.id));
+  const held = [...list.rows];
+  for (const h of rows) {
+    if (h.id === "" || have.has(h.id)) continue;
+    have.add(h.id);
+    held.push(h);
+  }
+  const more = list.total === null ? list.more : held.length < list.total;
+  return { ...page, load: { ...page.load, hardware: { ...list, rows: held, more } } };
 }

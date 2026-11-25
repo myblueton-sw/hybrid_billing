@@ -101,7 +101,7 @@ export type ResultRow = {
   not_counted_reason: string | null;
 };
 
-export type HardwareRow = { id: string; cpus: number | null; memory_mib: number | null; disk_gib: number | null; storage: string; spec: string };
+export type HardwareRow = { number: number | null; id: string; cpus: number | null; memory_mib: number | null; disk_gib: number | null; storage: string; spec: string };
 
 export type Budget = {
   id: string;
@@ -176,7 +176,7 @@ export type EvidencePage = {
   matrix: { origin: string; paths: List<PathRow> };
   requirements: { origin: string; requirements: List<RequirementRow>; next: string; gate: Gate };
   artifacts: { origin: string; builds: List<BuildRow>; builds_next: string | null; harnesses: List<HarnessRow>; results: List<ResultRow>; results_next: string | null; files: string; logs: string; environment: string; content: string };
-  load: { origin: string; hardware: List<HardwareRow>; profiles: List<ProfileRow>; profiles_next: string | null; readiness: Readiness; measurement: string; planning_targets: string };
+  load: { origin: string; hardware: List<HardwareRow>; hardware_next: string | null; profiles: List<ProfileRow>; profiles_next: string | null; readiness: Readiness; measurement: string; planning_targets: string };
   decisions: { origin: string; proposals: List<Proposal>; proposal_history: KeptFacts | null; support_decisions: string; activation_review: string; ledger: string };
 };
 
@@ -454,9 +454,10 @@ export function evidenceOf(body: Raw): EvidencePage {
     },
     load: {
       origin: str(ld.origin),
-      hardware: listOf(ld.hardware, (x) => ({ id: str(x.id), cpus: count(x.cpus), memory_mib: count(x.memory_mib), disk_gib: count(x.disk_gib), storage: str(x.storage), spec: str(x.spec) })),
+      hardware: listOf(ld.hardware, hardwareOf),
       profiles: listOf(ld.profiles, profileOf),
       profiles_next: typeof ld.profiles_next === "string" ? ld.profiles_next : null,
+      hardware_next: typeof ld.hardware_next === "string" ? ld.hardware_next : null,
       readiness: readinessOf(ld.readiness),
       measurement: str(ld.measurement),
       planning_targets: str(ld.planning_targets),
@@ -499,6 +500,20 @@ export function buildsPageOf(body: Raw): { rows: BuildRow[]; next: string; total
   const total = count(body.total);
   if (!Array.isArray(body.builds) || typeof body.next !== "string" || total === null) return null;
   return { rows: body.builds.filter(isRow).map((x) => ({ build: str(x.build), commit: str(x.commit), order: count(x.order) })), next: body.next, total };
+}
+
+export function hardwareOf(x: Raw): HardwareRow {
+  return { number: count(x.number), id: str(x.id), cpus: count(x.cpus), memory_mib: count(x.memory_mib), disk_gib: count(x.disk_gib), storage: str(x.storage), spec: str(x.spec) };
+}
+
+export function hardwarePath(after: string): string {
+  return "/release-evidence/hardware?" + new URLSearchParams({ limit: "50", after }).toString();
+}
+
+export function hardwareAnswerOf(body: Raw): { rows: HardwareRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.hardware) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.hardware.filter(isRow).map(hardwareOf), next: body.next, total };
 }
 
 export function profilesPath(query: { after?: string; targets?: string[] }): string {

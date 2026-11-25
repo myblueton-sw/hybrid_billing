@@ -81,6 +81,9 @@ try {
       await more.focus();
       await page.keyboard.press("Enter");
       await page.waitForFunction(() => document.querySelectorAll(".p05-hw-item").length === 56);
+      const rule = await page.evaluate(() => { const all = [...document.querySelectorAll(".p05-hw-item")].map((el) => { const s = getComputedStyle(el); return { w: s.borderTopWidth, style: s.borderTopStyle, color: s.borderTopColor }; }); const g = (c) => { const m = c.match(/\d+/g).map(Number); return Math.max(m[0], m[1], m[2]) - Math.min(m[0], m[1], m[2]); }; return { first: all[0].w, rest: all.slice(1).every((x) => x.w === "1px" && x.style === "solid" && g(x.color) <= 24), n: all.length }; });
+      check(`${at} every hardware record after the first is separated by a neutral rule`, rule.first === "0px" && rule.rest && rule.n === 56, JSON.stringify(rule));
+      if (args.shots && width === 1440 && lang === "en") { await page.locator(".p05-hw-item").nth(2).scrollIntoViewIfNeeded(); await page.screenshot({ path: `${args.shots}/p05-hardware-divided-${lang}-${width}.png`, fullPage: false }); }
       check(`${at} the next hardware follows in the order recorded`, asked[0] === `limit=50&after=${base0}` && (await page.locator(".p05-hw-count").innerText()).trim() === copy[lang].shown(56, 70) && (await items().nth(base0).innerText()).includes(`routed-hw-${base0 + 1}`));
       await page.keyboard.press("Enter");
       await page.locator(".p05-hw-more [role=alert]").waitFor();

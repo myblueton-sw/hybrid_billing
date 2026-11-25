@@ -547,6 +547,24 @@ Review (independent reviewer, read-only, 2026-11-25): approve, no blocking findi
 
 Verification: the whole server package passed; console tests 1421, 1418 passed, 3 skipped; the rendered check `tools/deliveries-qa.mjs` passed against a local service with the sample seed, which has one subscription, so the case of one subscription read to its end while another still has a button is covered only by the model test.
 
+# Increment 5c, the changed members of a plan on O02 (2026-11-25)
+
+Facts (main edfe4ba): for a sealed or activated plan the plans reads list, for each relationship kind the plan changes, the first 50 changed members in member order, all kinds in one list, and give the true number changed for each kind (`kinds[].changed`). The rows did not say which kind they belong to, and nothing on the screen said that members were left out: the plan's `truncated` flag, which the screen words as "not all members shown", is the module's flag that the list of violations was cut, not the members. The module already reads changed members after a given member. A plan changes more than 50 members of a kind only when a change moves many members at once; the sample has no plan.
+
+Built:
+
+- The plans reads keep their rows and order; each changed member gains `kind`, and each kind gains `next`, the last member listed when more were changed.
+- `GET /api/v1/organizations/plans/members` with `plan`, `kind`, `after` (a member; the rows after it) and `limit` (at most 50): the changed members of that kind in member order, with `next` and `total`. A sealed plan's changes are fixed, so rows do not move. A plan that does not exist or belongs to another workspace is refused alike (422); a plan in another state answers no rows.
+- Screen: under the changed members table of a plan, the count of those shown out of all changed, and one button for each kind that has more ("Load more changed members: …"), with the failure sentence. Rows loaded are kept with the plan while the page's revision stays the same.
+
+Found and carried to a separate issue: the screen's sentence for `truncated` speaks of members while the flag is about violations.
+
+Tested over HTTP with a group plan that changes three members, read one at a time; fifty of a kind is not reached in a test.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. It confirmed that `kinds[].changed` counts exactly the members the module pages, that the plans reads answer as before apart from the two new fields, that an unknown plan and another workspace's plan are refused alike before any module call, and that `truncated` is about violations (HYB-365). Composition and copy check (ui-designer): failed at first because the Korean count used the counter for people; corrected to the screen's counter and then passed. It did not see the button at rest, several kinds cut at once, or Arabic after the change. Not corrected: a denied or signed-out answer of the further read is shown as the generic failure (HYB-365).
+
+Verification: the whole server package passed; console tests 1422, 1419 passed, 3 skipped; the rendered check `tools/plan-members-qa.mjs` 32 passed against a local service with the sample seed, with a plan and members written by the check, since the sample has no plan. The owner has not reviewed the screen.
+
 # Open for the owner
 
 - A workspace can now page through all of its deletion records in the window (increment 4g), up to 1,000 instead of 50. Their sequence numbers are numbers of the whole installation, so the gaps between them show roughly how many deletions other workspaces had; the watermark and the first fifty rows already showed this in part. Whether a workspace should see installation-wide sequence numbers at all is for the owner.

@@ -545,3 +545,9 @@
 .o02-closed-applied {
   margin-block: 8px 12px;
 }
+.o02-members-foot {
+  margin-block-start: 16px;
+}
+.o02-members-more {
+  margin-block-start: 8px;
+}

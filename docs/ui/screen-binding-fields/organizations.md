@@ -87,6 +87,7 @@ This is part of the [screen binding register](../screen-binding-register.md#orga
 | All | Denied | `permission_denied` | `admin.ts:776` | `changes/Live.tsx:456`, `:471` |
 | Result | Closed plans: how many are kept and shown, and the cursor for the rest | `GET /api/v1/organizations/plans` → `closed.total`, `next`, `kept`, `dropped` (`relplans.go` `closedFacts`) | `admin.ts` `plans()`, `closedFactsOf` | `changes/Live.tsx` result view |
 | Result | Further closed plans and search | `GET /api/v1/organizations/plans/closed` with `after`, `limit`, `q` → `plans[]`, `next`, `matching`, `closed` (`relplans.go` `listClosedPlans`) | `admin.ts` `closedPlans()` | `changes/Live.tsx` (`history`, `usePages`), `organizations/filters.tsx` `SearchForm`, `MoreBar` |
+| Result | Changed members of a plan: count when some are left out; more members loaded by relationship kind, failure | `plans[].kinds[].next`, `kinds[].changed`, `members[].kind`; `GET /api/v1/organizations/plans/members` with `plan`, `kind`, `after`, `limit` → `members[]`, `next`, `total` (`relplanmembers.go` `listPlanMembers`) | `admin.ts` (`planMembers()`, `planMembersPageOf`, `planMemberOf`); `shared/more-rows.ts` `appended` | `organizations/pages/changes/Live.tsx` (`Detail`) |
 
 ## O03 Contract lifecycle
 

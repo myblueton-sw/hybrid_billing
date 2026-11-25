@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, attempt, type AdminClient, type Attempt, type CommandId, type DraftMember, type GroupDraft, type OrgMember, type OrgParty, type PlanRow, type PlansPage, type RelationKind } from "../../../../service/admin";
+import { AdminError, attempt, type AdminClient, type Attempt, type CommandId, type DraftMember, type GroupDraft, type OrgMember, type OrgParty, type PlanMember, type PlanRow, type PlansPage, type RelationKind } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
+import { appended } from "../../../../shared/more-rows";
 import type { Session } from "../../../../service/api";
 import { Summary, type Problems } from "../../../../service/Service";
 import { c as sc, retryPhrase } from "../../../../service/copy";
@@ -99,10 +100,42 @@ const impactWord = (l: Locale, v: string) => {
   return i === "computed" ? c.computedImpact(l) : i === "not_computed" ? c.notComputed(l) : c.unknownImpact(l);
 };
 
-export function Detail({ l, p, page, parties, members, full, titleRef }: {
+type FurtherMembers = { key: string; rows: PlanMember[]; next: Record<string, string>; status: Record<string, "loading" | "failed"> };
+
+export function Detail({ l, p, page, parties, members, full, titleRef, readMembers }: {
   l: Locale; p: PlanRow; page: PlansPage; parties: OrgParty[]; members: OrgMember[]; full: boolean; titleRef?: React.Ref<HTMLHeadingElement>;
+  readMembers?: (plan: string, kind: string, after: string) => Promise<{ rows: PlanMember[]; next: string }>;
 }) {
   const named = (id: string) => nameOf(id, parties, members);
+  const furtherKey = page.revision + "\u0000" + p.id;
+  const blankFurther = (): FurtherMembers => ({ key: furtherKey, rows: [], next: {}, status: {} });
+  const [extra, setExtra] = useState<FurtherMembers>(blankFurther);
+  const further = extra.key === furtherKey ? extra : blankFurther();
+  const furtherToken = useRef(0);
+  useEffect(() => { furtherToken.current += 1; }, [furtherKey]);
+  const shownMembers = appended(p.members, further.rows, (m) => (m.kind ?? "") + "\u0000" + m.member);
+  const cutKinds = readMembers ? p.kinds.filter((k) => (k.kind in further.next ? further.next[k.kind] : k.next ?? "") !== "") : [];
+  const changedTotal = p.kinds.reduce((sum, k) => sum + k.changed, 0);
+  const moreMembers = (kind: string) => {
+    const after = kind in further.next ? further.next[kind] : p.kinds.find((k) => k.kind === kind)?.next ?? "";
+    if (!readMembers || !after || further.status[kind] === "loading") return;
+    const mine = furtherToken.current;
+    setExtra({ ...further, status: { ...further.status, [kind]: "loading" } });
+    readMembers(p.id, kind, after)
+      .then((got) => {
+        if (mine !== furtherToken.current) return;
+        setExtra((was) => {
+          const now = was.key === furtherKey ? was : blankFurther();
+          const status = { ...now.status };
+          delete status[kind];
+          return { key: furtherKey, rows: [...now.rows, ...got.rows.map((m) => ({ ...m, kind: m.kind ?? kind }))], next: { ...now.next, [kind]: got.next }, status };
+        });
+      })
+      .catch(() => {
+        if (mine !== furtherToken.current) return;
+        setExtra((was) => { const now = was.key === furtherKey ? was : blankFurther(); return { ...now, status: { ...now.status, [kind]: "failed" } }; });
+      });
+  };
   const kindName = o.kind(l, p.change.kind);
   const memberName = p.member_name || named(p.change.member);
   const targetName = p.change.target ? p.target_name || named(p.change.target) : "";
@@ -150,15 +183,15 @@ export function Detail({ l, p, page, parties, members, full, titleRef }: {
           )}
           <section aria-labelledby="o02-diff-title">
             <h3 id="o02-diff-title">{c.diff(l)}</h3>
-            {!membersKept(p) ? <p className="live-note">{c.notKept(l)}</p> : p.members.length === 0 ? <p className="live-note">{c.none(l)}</p> : (
+            {!membersKept(p) ? <p className="live-note">{c.notKept(l)}</p> : shownMembers.length === 0 ? <p className="live-note">{c.none(l)}</p> : (
               <>
                 {p.draft ? (
                   <div className="security-table-scroll live-table o02-diff o02-group-diff">
                     <table>
                       <thead><tr><th scope="col">{c.colMember(l)}</th><th scope="col">{c.colRanges(l)}</th><th scope="col">{c.colBefore(l)}</th><th scope="col">{c.colAfter(l)}</th></tr></thead>
                       <tbody>
-                        {p.members.map((m) => (
-                          <tr key={m.member}>
+                        {shownMembers.map((m) => (
+                          <tr key={(m.kind ?? "") + m.member}>
                             <td data-label={c.colMember(l)}><Named id={m.member} name={m.name || named(m.member)} /></td>
                             <td data-label={c.colRanges(l)}>{m.differs.length === 0 ? c.none(l) : <ul className="o02-ranges">{m.differs.map((r) => <li key={r.from + r.until}><DatedRange l={l} from={r.from} until={r.until} /></li>)}</ul>}</td>
                             <td data-label={c.colBefore(l)}>{m.before.length === 0 ? c.none(l) : <ul className="o02-ranges">{m.before.map((id) => <li key={id}><Named id={id} name={named(id)} /></li>)}</ul>}</td>
@@ -174,8 +207,8 @@ export function Detail({ l, p, page, parties, members, full, titleRef }: {
                     <colgroup><col className="o02-c20" /><col className="o02-c24" /><col className="o02-c16" /><col className="o02-c20" /><col className="o02-c20" /></colgroup>
                     <thead><tr><th scope="col">{c.colMember(l)}</th><th scope="col">{c.colChange(l)}</th><th scope="col">{c.colRanges(l)}</th><th scope="col">{c.colBefore(l)}</th><th scope="col">{c.colAfter(l)}</th></tr></thead>
                     <tbody>
-                      {p.members.map((m) => (
-                        <tr key={m.member}>
+                      {shownMembers.map((m) => (
+                        <tr key={(m.kind ?? "") + m.member}>
                           <td data-label={c.colMember(l)}><Named id={m.member} name={m.name || named(m.member)} /></td>
                           <td data-label={c.colChange(l)}>{m.member === p.change.member ? (ld.target ? c.leadTo(l, day(l, ld.from), (ld.target === p.change.target && p.target_name) || named(ld.target)) : c.leadNone(l, day(l, ld.from))) : c.none(l)}</td>
                           <td data-label={c.colRanges(l)}>
@@ -190,6 +223,22 @@ export function Detail({ l, p, page, parties, members, full, titleRef }: {
                 </div>
                 )}
                 <p className="live-note">{c.timelineNote(l)}</p>
+                {cutKinds.length > 0 && (
+                  <div className="o02-members-foot">
+                    <p className="live-note o02-members-count">{c.membersShown(l, shownMembers.length, changedTotal)}</p>
+                    {cutKinds.map((k) => {
+                      const status = further.status[k.kind] ?? "idle";
+                      return (
+                        <div key={k.kind} className="o02-members-more">
+                          {status === "failed" && <p role="alert">{c.membersFailed(l)}</p>}
+                          <button type="button" className="live-secondary o02-members-more-button" aria-disabled={status === "loading" || undefined} onClick={() => { if (status !== "loading") moreMembers(k.kind); }}>
+                            {status === "failed" ? c.membersTryAgain(l, o.kind(l, k.kind)) : status === "loading" ? c.membersLoading(l) : c.membersMore(l, o.kind(l, k.kind))}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </>
             )}
           </section>
@@ -1021,7 +1070,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     main = list(open);
     panel = selected ? (
       <section className="live-step o02-detail" aria-labelledby="o02-plan-title">
-        <Detail l={l} p={selected} page={page} parties={parties} members={allMembers} full={view === "impact"} />
+        <Detail l={l} p={selected} page={page} parties={parties} members={allMembers} full={view === "impact"} readMembers={api.planMembers} />
         {view === "impact" ? (
           <ImpactActions l={l} p={selected} onDecision={() => onView("approval", { plan: selected.id, done: "open" })} onAnother={() => onView("targets")} />
         ) : approvalBody(selected)}
@@ -1079,7 +1128,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     );
     panel = selected ? (
       <section className="live-step o02-detail" aria-labelledby="o02-plan-title">
-        <Detail l={l} p={selected} page={page} parties={parties} members={allMembers} full />
+        <Detail l={l} p={selected} page={page} parties={parties} members={allMembers} full readMembers={api.planMembers} />
         <p className="live-note">{c.readOnly(l)}</p>
         {selected.state === "activated" && selected.activated_revision > 0 && <p className="o02-link"><a href={o01Href(selected)}>{c.o01Link(l, day(l, selected.change.from), selected.activated_revision)}</a></p>}
         {selected.state === "sealed" && <button type="button" className="service-button-link" onClick={() => onView("approval", { plan: selected.id })}>{decisionLabel(l, selected)}</button>}

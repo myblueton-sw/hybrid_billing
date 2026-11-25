@@ -508,6 +508,7 @@ type kindRow struct {
 	EntriesBefore int    `json:"entries_before"`
 	EntriesAfter  int    `json:"entries_after"`
 	Earliest      string `json:"earliest"`
+	Next          string `json:"next"`
 }
 
 type violationRow struct {
@@ -522,6 +523,7 @@ type rangeRow struct {
 }
 
 type changedRow struct {
+	Kind    string     `json:"kind"`
 	Member  string     `json:"member"`
 	Name    string     `json:"name"`
 	Differs []rangeRow `json:"differs"`
@@ -596,17 +598,10 @@ func (s *Server) planRow(m *planMeta, active uint64, reader string, now time.Tim
 		}
 		row.Kinds = append(row.Kinds, kr)
 		if info.State == relationships.PlanSealed || info.State == relationships.PlanActivated {
-			changes, _ := s.rels.ChangedMembers(m.workspace, m.id, relationships.Kind(k), "", planMembersShown)
-			for _, c := range changes {
-				cr := changedRow{Member: c.Member, Name: s.label(m.workspace, c.Member), Differs: []rangeRow{}, Before: append([]string{}, c.Before...), After: append([]string{}, c.After...)}
-				for _, iv := range c.Differs {
-					rr := rangeRow{From: iv.Start().ISO()}
-					if end, bounded := iv.End(); bounded {
-						rr.Until = end.ISO()
-					}
-					cr.Differs = append(cr.Differs, rr)
-				}
-				row.Members = append(row.Members, cr)
+			listed, _ := s.changedRows(m, k, "", planMembersShown)
+			row.Members = append(row.Members, listed...)
+			if len(listed) > 0 && len(listed) < sum.Changed {
+				row.Kinds[len(row.Kinds)-1].Next = listed[len(listed)-1].Member
 			}
 		}
 	}

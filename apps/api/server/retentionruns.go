@@ -47,7 +47,7 @@ func (s *Server) listRetentionRuns(w http.ResponseWriter, r *http.Request) {
 	request := r.Header.Get("X-Request-Id")
 	s.domain.RLock()
 	defer s.domain.RUnlock()
-	found, answer, ok := s.admitted(w, r)
+	_, answer, ok := s.admitted(w, r)
 	if !ok {
 		return
 	}
@@ -66,11 +66,8 @@ func (s *Server) listRetentionRuns(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.DependencyUnavailable, request)
 		return
 	}
-	f, err := s.retentionFactsFor(found.verifier, answer.User(), answer.Workspace(), now)
-	var mine []workspaceRun
-	if err == nil {
-		mine, err = f.workspaceRuns()
-	}
+	f := s.retentionFactsWithoutRoster(answer.User(), answer.Workspace())
+	mine, err := f.workspaceRuns()
 	if err != nil {
 		failCode(w, commands.DependencyUnavailable, request)
 		return

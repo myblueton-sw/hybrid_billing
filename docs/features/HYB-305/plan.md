@@ -565,6 +565,24 @@ Review (independent reviewer, read-only, 2026-11-25): approve, no blocking findi
 
 Verification: the whole server package passed; console tests 1422, 1419 passed, 3 skipped; the rendered check `tools/plan-members-qa.mjs` 32 passed against a local service with the sample seed, with a plan and members written by the check, since the sample has no plan. The owner has not reviewed the screen.
 
+# Increment 5d, the approver roster of P04 and P05 (2026-11-25)
+
+Facts (main f3b0dc8): every retention and release evidence read built its facts with `retentionApprovers`, which pages through all members of the workspace (100 a call) to find the people who can approve. The roster is used in three places only: whether a hold's release can be proposed (`releaseBlocked`), and whether a requirement or a profile can be retired (`eligible`). The further reads added by this ticket inherited the roster read although most of their rows never use it, so a screen that loads more rows read the whole roster again for each page, and a roster that could not be read failed reads that did not need it.
+
+Built, on the server only, with no change to any answer:
+
+- The facts can be built without the roster (`retentionFactsWithoutRoster`, `evidenceFactsWithoutRoster`). The reads whose rows do not use it are built that way: the items of a class and items by identifier, the required items, the deletion records, the stopped or finished runs, a run's items and a hold's outcomes on P04; the paths and the results on P05.
+- The main reads and the reads whose rows state whether something can be proposed still read it: the holds, the requirements, the profiles, and, left as they were, the proposal reads.
+- A hold row, a profile row and a requirement row that would need the roster refuse to be built from facts that did not read it, so that a later change cannot state "no eligible approver" from an unread roster.
+
+Admission is unchanged: every read still passes `admitted` first. What changes is that those eight reads no longer fail when the roster cannot be read.
+
+Not built, and left for a design of its own with the ui-designer: the hold owner choice on P04 as a search instead of a list of every active member (`LiveHoldForm.tsx` reads `GET /api/v1/identity/access` whole). The main reads of P04 and P05 still read the roster once each.
+
+Review (independent reviewer, read-only, permission lens, 2026-11-25): approve, no blocking finding. It traced every reader of the roster fields and confirmed that no row of the eight reads reaches one, that the guards sit where the roster is needed, and that the roster read was never an authorization step: the module's member list asks for an active administrator of the workspace and admission asks for the administration right, which only that role holds. Not traced by it: whether those two sources can disagree for a moment; if they can, a reader who got a failure (503) now gets an answer, which was not a permission refusal before either.
+
+Verification: the whole server package passed (367 seconds), including `roster_reads_test.go`. No console change.
+
 # Open for the owner
 
 - A workspace can now page through all of its deletion records in the window (increment 4g), up to 1,000 instead of 50. Their sequence numbers are numbers of the whole installation, so the gaps between them show roughly how many deletions other workspaces had; the watermark and the first fifty rows already showed this in part. Whether a workspace should see installation-wide sequence numbers at all is for the owner.

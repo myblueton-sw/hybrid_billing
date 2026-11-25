@@ -40,7 +40,7 @@ func memberLimit(given []string, present bool) (int, bool) {
 
 func (s *Server) memberFacts(w http.ResponseWriter, r *http.Request, parent string, valid func(map[string][]string) bool) (*retentionFacts, string, bool) {
 	request := r.Header.Get("X-Request-Id")
-	found, answer, ok := s.admitted(w, r)
+	_, answer, ok := s.admitted(w, r)
 	if !ok {
 		return nil, request, false
 	}
@@ -63,12 +63,7 @@ func (s *Server) memberFacts(w http.ResponseWriter, r *http.Request, parent stri
 		failCode(w, commands.DependencyUnavailable, request)
 		return nil, request, false
 	}
-	f, err := s.retentionFactsFor(found.verifier, answer.User(), answer.Workspace(), s.clock())
-	if err != nil {
-		failCode(w, commands.DependencyUnavailable, request)
-		return nil, request, false
-	}
-	return f, request, true
+	return s.retentionFactsWithoutRoster(answer.User(), answer.Workspace()), request, true
 }
 
 func (s *Server) listRetentionRunArtifacts(w http.ResponseWriter, r *http.Request) {

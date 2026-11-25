@@ -46,7 +46,7 @@ func (s *Server) listEvidenceResults(w http.ResponseWriter, r *http.Request) {
 	request := r.Header.Get("X-Request-Id")
 	s.domain.RLock()
 	defer s.domain.RUnlock()
-	found, answer, ok := s.admitted(w, r)
+	_, answer, ok := s.admitted(w, r)
 	if !ok {
 		return
 	}
@@ -65,11 +65,7 @@ func (s *Server) listEvidenceResults(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.DependencyUnavailable, request)
 		return
 	}
-	f, err := s.evidenceFactsFor(found.verifier, answer.User(), now)
-	if err != nil {
-		failCode(w, commands.DependencyUnavailable, request)
-		return
-	}
+	f := s.evidenceFactsWithoutRoster(answer.User())
 	page.Total = len(s.ev.results)
 	walk := keptWalk{q: q}
 	for n := len(s.ev.results) - 1; n >= 0; n-- {

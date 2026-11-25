@@ -357,7 +357,7 @@ func TestRetentionRowsAreBounded(t *testing.T) {
 		refs["more"], len(retRows(deletion)), deletion["total"], deletion["more"], len(retRows(proposals)), proposals["total"], proposals["more"],
 		len(retRows(tomb)), tomb["total"], tomb["more"], retRows(tomb)[0]["sequence"], len(run["artifacts"].(map[string]any)["rows"].([]any)), run["artifacts"].(map[string]any)["total"],
 		run["artifacts"].(map[string]any)["more"], len(hold["outcomes"].([]any)), hold["outcomes_more"], retSection(got, "decisions")["watermark"])
-	if sizes != "50 1002 true 50 53 true 50 51 true 50 53 true 50 58 true 50 1000 true 1003 50 1001 true 50 true 1003" {
+	if sizes != "50 1002 true 53 53 false 50 51 true 50 53 true 50 58 true 50 1000 true 1003 50 1001 true 50 true 1003" {
 		t.Errorf("sizes %s", sizes)
 	}
 	pages := 0

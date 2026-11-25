@@ -31,6 +31,8 @@ type retentionHold struct {
 	workspace string
 	created   time.Time
 	rationale string
+	released  bool
+	number    int
 }
 
 type retentionRun struct {
@@ -230,6 +232,11 @@ func (s *Server) retentionApprove(e *retentionEntry, by retention.Actor, reviewe
 		e.closedBy, e.closing = by.ID, rationale
 	}
 	e.view = view
+	if view.Change.Kind == retention.ChangeRelease && view.State == retention.ProposalApplied {
+		if h := s.ret.hold(view.Change.Release.Hold); h != nil {
+			h.released = true
+		}
+	}
 	return nil
 }
 
@@ -249,7 +256,7 @@ func (s *Server) retentionPlaceHold(h retention.Hold, by retention.Actor, worksp
 		return retention.HoldView{}, err
 	}
 	created := s.clock()
-	s.ret.holds = append(s.ret.holds, &retentionHold{id: h.ID, workspace: workspace, created: created, rationale: rationale})
+	s.ret.holds = append(s.ret.holds, &retentionHold{id: h.ID, workspace: workspace, created: created, rationale: rationale, number: len(s.ret.holds) + 1})
 	s.holdPlaced.Store(h.ID, created)
 	return view, nil
 }

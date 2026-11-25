@@ -118,6 +118,7 @@ type retentionOutcomeRow struct {
 }
 
 type retentionHoldRow struct {
+	Number            int                   `json:"number"`
 	ID                string                `json:"id"`
 	Target            string                `json:"target"`
 	Owner             *retentionPerson      `json:"owner"`
@@ -152,6 +153,7 @@ type retentionHoldsSection struct {
 	Total        int                 `json:"total"`
 	More         bool                `json:"more"`
 	Rows         []retentionHoldRow  `json:"rows"`
+	Released     logFacts            `json:"released"`
 	TenantTarget string              `json:"tenant_target"`
 	References   retentionReferences `json:"references"`
 }
@@ -533,7 +535,7 @@ func (f *retentionFacts) holdRow(h *retentionHold) (retentionHoldRow, error) {
 	if err != nil {
 		return retentionHoldRow{}, err
 	}
-	row := retentionHoldRow{ID: h.id, Target: retentionHoldTarget + h.id, Owner: s.personOf(v.Hold.Owner), Reason: v.Hold.Reason, Placer: s.personOf(v.Placer),
+	row := retentionHoldRow{Number: h.number, ID: h.id, Target: retentionHoldTarget + h.id, Owner: s.personOf(v.Hold.Owner), Reason: v.Hold.Reason, Placer: s.personOf(v.Placer),
 		PlacedAt: stamp(h.created), Rationale: h.rationale, Released: v.Released, Scope: retentionHoldScope{Artifacts: []string{}, Classes: append([]string{}, v.Hold.Classes...)},
 		Counts: zeroCounts(retentionHoldCounts), Outcomes: []retentionOutcomeRow{}, OutcomesMore: len(outcomes) > retentionShown}
 	for _, id := range v.Hold.Artifacts {
@@ -570,22 +572,17 @@ func (f *retentionFacts) holdRow(h *retentionHold) (retentionHoldRow, error) {
 func (f *retentionFacts) holds(ids []string) (retentionHoldsSection, error) {
 	section := retentionHoldsSection{Rows: []retentionHoldRow{}, TenantTarget: retentionTenantTarget + f.workspace,
 		References: retentionReferences{Population: retentionPopulation, Rows: []retentionReferenceRow{}}}
-	for index := len(f.s.ret.holds) - 1; index >= 0; index-- {
-		h := f.s.ret.holds[index]
-		if h.workspace != f.workspace {
-			continue
-		}
-		section.Total++
-		if len(section.Rows) >= retentionShown {
-			continue
-		}
+	mine := f.workspaceHolds()
+	listed, released, next := listKept(mine, holdLive, holdNumber, retentionShown)
+	for _, h := range listed {
 		row, err := f.holdRow(h)
 		if err != nil {
 			return retentionHoldsSection{}, err
 		}
 		section.Rows = append(section.Rows, row)
 	}
-	section.More = section.Total > len(section.Rows)
+	section.Total, section.More = len(mine), len(mine) > len(section.Rows)
+	section.Released = logFacts{Total: released, Next: next}
 	refs := &section.References
 	for _, id := range ids {
 		if !f.standings[id].Referenced {

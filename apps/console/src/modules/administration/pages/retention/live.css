@@ -746,3 +746,21 @@
     justify-content: start;
   }
 }
+.p04-live .p04-held-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-block: 16px 24px;
+}
+.p04-live .p04-held-more p {
+  margin: 0;
+  max-inline-size: 68ch;
+}
+.p04-live .p04-held-more .p04-held-more-button {
+  inline-size: auto;
+  min-block-size: 44px;
+}
+.p04-live .p04-held-group + .p04-held-group {
+  margin-block-start: 32px;
+}

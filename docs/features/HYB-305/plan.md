@@ -317,8 +317,32 @@ Not covered by a test: newest-first order asserted across the whole walk; propos
 
 Independent design and change review of increment 3d (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve, no blocking finding. It confirmed that every entry gets its sequence through `keep` in production (two tests append directly and leave it at zero, which nothing reads there), that the member's refusal comes from the same admission as the main read, that every reader of the proposals in the command handling needs only pending proposals, and that telling proposals apart by target cannot merge two proposals on P01 to P04. Its observations on this record and on stale line references in the binding document are applied. No ui-designer review was held: the screen part and its sentences are those reviewed for P01 to P03.
 
+# Increment 3e, the holds of P04 (2026-11-25)
+
+Facts (main a83fe60): a workspace can have 100 holds that are not released, and released holds are kept without limit (the module's limit is 10,000). The retention read listed the newest 50 holds of the workspace, released or not, with `total` and `more`. A hold that is still in force could therefore be behind fifty newer holds, where the screen cannot show it and a release cannot be proposed from it. Whether a hold is released was known only to the module, one call a hold.
+
+Built, by the rule of the proposals:
+
+- The server notes that a hold is released when the release proposal is applied, so that it can tell the two kinds apart without asking the module for every hold. A hold also gets a number, its position, which is the cursor.
+- The retention read lists every hold of the workspace that is not released, then the newest released ones while fewer than 50 are listed, newest first. `total` and `more` keep their meaning. Each row gains `number`; the section gains `released` (`total`, `next`).
+- `GET /api/v1/retention/holds` with `after`, `limit` and `q` (matched against the identifier, the target and the rationale given when the hold was placed; not the hold's own reason or its owner): the released holds of the workspace, newest first. Admitted as the retention read is, with its fault step.
+- Screen: the holds are shown in two groups, "In force (n)" with every hold in force and "Released (n)", each newest first. In the second group: "Showing N of M released holds, newest first." when released holds are left out, one button "Load older released holds" that also carries "Loading…" and "Try again", and the read-again line, through the shared hook of increment 3b.
+
+Cost that changed: the read builds a row, with its module calls and its outcomes, for every hold in force, up to 100, where it built at most 50 rows.
+
+Residual: a link from a closed release proposal to a released hold that is only on an older page does not select the hold. After a release is approved while fifty or more holds are in force, the released hold is not in the read that follows, and the result sentence then leaves out the hold's name. The note that a hold is released is kept by the server beside the module's own state. In production only the server's approve function calls the module's approval, which is the one place the module releases a hold, and the note is set there; a test that approves through the module directly leaves the note unset, and the server's retire path does not copy the module's state into it. The possible disagreement is one-sided: a released hold listed among those in force, never the reverse.
+
+Checks for increment 3e (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (375 seconds) on the final code; `tsc` clean; console tests 1410, pass 1407, fail 0, skipped 3; rendered check `tools/holds-qa.mjs`, 59 passed, 0 failed. The rendered check reads the real main read and calls the real released holds read once (the sample has two holds, both in force); the 120 released holds are cards written by the script.
+
+What the server tests show and do not: in the two paging tests a hold is made "released" by setting the server's note, so the module still reports those holds as in force and the rows say so; they prove the selection and paging by the note, another workspace kept out, search, refusals and faults. That a real release sets the note and is counted by the read is asserted through the release command in `TestRetentionRelease`, and the note is compared with the module after the seed, where no hold is released.
+
+Not covered by a test: the note after the server's retire path; the hook's order for a list already newest first, outside the rendered check.
+
+Reviews (AI, Claude Opus 5.5, by reading and, for the designer, from screenshots; neither ran anything), 2026-11-25. Independent design and change review: approve with conditions, no blocking finding. It traced every place the module releases a hold (one, the approval of a release) and every production call of that approval (the server's approve function, where the note is set), and found the note cannot make a hold in force look released. Its conditions, applied: this record's wording about the note, the dropped hold name after an approval, the search fields stated exactly, a server test for few holds in force with many released. ui-designer review: FAIL, then PASS. Its finding: one list mixing holds in force with released ones, under a count about the released ones only, could put a hold still in force below dozens of released cards; the view now has two groups, "In force (n)" first, as the proposals have. Left open from it: the group heading counts the released holds loaded, not all of them; the released group shows only its button when none is loaded yet; none of its screenshots showed the headings, which it confirmed from source.
+
 # Open for the owner
 
+- The holds list on P04 now shows every hold in force and pages only the released ones (increment 3e).
 - The action history of a subscription on P02 now lists the newest action first and is cut at 50 with a read for the rest (increment 3b), as the lock log is. Both can be reversed.
 - The lock log on P03 now lists the newest lock first (it listed the oldest first) and the recovery read returns the newest 50 locks of an installation with a count and a read for the rest (increment 3a). Both can be reversed.
 - Whether the lists with no producer today (group 3 of "Which lists can grow in a running service") may leave this ticket until ingest, build pipelines and writers exist. They stay in the ticket and are built last unless the owner says otherwise.

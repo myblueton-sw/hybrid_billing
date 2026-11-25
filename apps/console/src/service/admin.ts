@@ -10,7 +10,7 @@ import { installationOf, proposalOf as installProposalOf, type InstallationPage,
 import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
 import { historyPageOf, integrationsOf, pluginProposalOf, type HistoryEntry, type IntegrationsPage, type PluginProposal } from "./integrations";
 import { locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
-import { evidenceOf, proposalOf as evidenceProposalOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type Proposal as EvidenceProposal, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
+import { evidenceOf, proposalOf as evidenceProposalOf, resultsPageOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type Proposal as EvidenceProposal, type ResultRow, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
 import { holdsPageOf, proposalOf as retentionProposalOf, retentionOf, type HoldRow, type Proposal as RetentionProposal, type RetentionPage } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
 
@@ -1239,6 +1239,11 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async releaseEvidence(request = attempt().request): Promise<EvidencePage> {
       return evidenceOf(await send("/release-evidence", { method: "GET" }, request));
+    },
+    async evidenceResults(after: string): Promise<{ rows: ResultRow[]; next: string; total: number }> {
+      const got = resultsPageOf(await send("/release-evidence/results?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
     },
     async evidenceProposals(after: string): Promise<KeptPage<EvidenceProposal>> {
       const got = keptPageOf(await send("/release-evidence/proposals?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), evidenceProposalOf);

@@ -913,3 +913,30 @@ test("the evidence proposals read is asked after the cursor and read strictly", 
   assert.deepEqual([got.rows[0].target, got.rows[0].module, got.next, got.history.total], ["perf-proposal-8", "perf_gate", "12", 80]);
   await assert.rejects(api.evidenceProposals("2"), (e: AdminError) => e.failure === "invalid");
 });
+
+test("the results' numbers, the cursor of the main read and the results read are read strictly", async () => {
+  const { resultsPageOf } = await import("../../../../service/release-evidence");
+  const cut = page((s) => { s.artifacts.results.total = 120; s.artifacts.results.more = true; s.artifacts.results_next = "71"; s.artifacts.results.rows[0].number = 77; });
+  assert.deepEqual([cut.artifacts.results_next, cut.artifacts.results.rows?.[0].number], ["71", 77]);
+  assert.equal(page().artifacts.results_next, null);
+  for (const bad of [{}, { results: [], next: "" }, { results: "x", next: "", total: 0 }, { results: [], next: 4, total: 0 }]) assert.equal(resultsPageOf(bad), null, JSON.stringify(bad));
+  const got = resultsPageOf({ results: [{ number: 70, test: "t" }, null, "x"], next: "21", total: 120 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].number, got?.rows[0].test, got?.next, got?.total], [1, 70, "t", "21", 120]);
+  for (const l of locales) {
+    const reads = { evidenceResults: async () => ({ rows: [], next: "", total: 120 }) } as unknown as AdminClient;
+    const html = renderToStaticMarkup(createElement(ArtifactsView, { ...shared(cut), l, api: reads }));
+    const shown = cut.artifacts.results.rows?.length ?? 0;
+    assert.ok(html.includes(k.resultsShown(l, shown, 120)) && html.includes(k.resultsMore(l)), l);
+  }
+  const whole = renderToStaticMarkup(createElement(ArtifactsView, shared(page((s) => { s.artifacts.results_next = ""; }))));
+  assert.ok(!whole.includes("p05-results-count") && !whole.includes("p05-results-more"));
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { results: [{ number: 70, test: "t" }], next: "", total: 120 } : { results: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.evidenceResults("71")).rows[0].number, 70);
+  assert.equal(calls[0], "/api/v1/release-evidence/results?limit=50&after=71");
+  await assert.rejects(api.evidenceResults("2"), (e: AdminError) => e.failure === "invalid");
+});

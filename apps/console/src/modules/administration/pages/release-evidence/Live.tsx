@@ -7,17 +7,18 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
-import type { EvidencePage } from "../../../../service/release-evidence";
+import type { EvidencePage, PathRow, ProfileRow, RequirementRow } from "../../../../service/release-evidence";
 import type { Session } from "../../../../service/api";
 import { c as sc, retryPhrase } from "../../../../service/copy";
 import { k } from "./live-copy";
 import {
-  commandsAllowed, drop, forget, isProposalCommand, modeOf, pruneRefusals, readDenied, readSucceeded, revokedNow, rowId, selectionOf, setScope, vanished, viewOf, type Selection,
+  commandsAllowed, drop, filtering, forget, isProposalCommand, missingPath, missingProfiles, missingRequirements, modeOf, noFilter, pruneRefusals, readDenied, readSucceeded, profilePrefix, profileTargetsInUse, requirementPrefix, requirementTargetsInUse, revokedNow, rowId,
+  selectionOf, setScope, validTarget, vanished, viewOf, withHeld, withHeldPaths, withHeldProfiles, withMoreHardware, type RequirementFilter, type Selection,
 } from "./live-model";
 import { Absent, Known, Stamp, Template, Unexpected, ltr, takeIntent, useAvailableWidth } from "./live-format";
 import { ErrorDetail, type Announce, type Shared } from "./LiveCommand";
 import { MatrixView } from "./LiveMatrix";
-import { RequirementsView } from "./LiveRequirements";
+import { RequirementsView, type RequirementsTable } from "./LiveRequirements";
 import { ArtifactsView } from "./LiveArtifacts";
 import { LoadView } from "./LiveLoad";
 import { DecisionsView } from "./LiveDecisions";
@@ -35,6 +36,13 @@ type Props = {
 
 type Failure = { error: unknown; request: string };
 
+type Listing = { filter: RequirementFilter; rows: RequirementRow[]; next: string | null; matching: number | null; status: "idle" | "loading" | "failed"; reset: boolean };
+
+const plainListing: Listing = { filter: noFilter, rows: [], next: null, matching: null, status: "idle", reset: false };
+const targetBatch = 20;
+
+const queryOf = (f: RequirementFilter) => ({ q: f.q || undefined, state: f.state || undefined, retired: f.retired || undefined });
+
 function failureLines(l: Locale, e: unknown): { text: string; code: string; next: string } {
   if (e instanceof AdminError) {
     if (e.failure === "limited") {
@@ -44,6 +52,18 @@ function failureLines(l: Locale, e: unknown): { text: string; code: string; next
     return { text: e.failure === "busy" || e.failure === "unavailable" ? k.failedBusy(l) : "", code: e.code, next: k.nextTry(l) };
   }
   return { text: "", code: "", next: k.nextTry(l) };
+}
+
+function tableOf(page: EvidencePage, listing: Listing, onFilter: (f: RequirementFilter) => void, onMore: () => void): RequirementsTable {
+  const held = page.requirements.requirements;
+  const active = filtering(listing.filter);
+  const last = page.requirements.next === "" ? Number.POSITIVE_INFINITY : Number(page.requirements.next);
+  const byTarget = new Map((held.rows ?? []).map((r) => [r.target, r] as const));
+  const fresh = listing.rows.flatMap((r) => { const now = byTarget.get(r.target); return now ? [now] : []; });
+  const numberOf = (r: RequirementRow) => Number(r.target.slice(requirementPrefix.length));
+  const rows = held.rows === null ? null : active ? fresh : [...held.rows.filter((r) => numberOf(r) <= last), ...fresh.filter((r) => numberOf(r) > last)];
+  const next = active ? listing.next ?? "" : listing.next ?? page.requirements.next;
+  return { rows, filter: listing.filter, total: held.total, matching: listing.matching, more: next !== "", status: listing.status, reset: listing.reset, candidate: page.candidate !== null, onFilter, onMore };
 }
 
 function selectedId(view: string, s: Selection): string {
@@ -99,7 +119,26 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   const [announce, setAnnounce] = useState("");
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
+  const [listing, setListing] = useState<Listing>(plainListing);
+  const listingRef = useRef(listing);
+  listingRef.current = listing;
+  const wantedRequirement = viewOf(rawView) === "requirements" && /^[1-9][0-9]*$/.test(params.get("requirement") ?? "") ? requirementPrefix + params.get("requirement") : "";
+  const wantedRef = useRef(wantedRequirement);
+  wantedRef.current = wantedRequirement;
+  const wantedProfile = viewOf(rawView) === "load" && (params.get("profile") ?? "") !== "" && validTarget(profilePrefix + params.get("profile")) ? profilePrefix + params.get("profile") : "";
+  const wantedProfileRef = useRef(wantedProfile);
+  wantedProfileRef.current = wantedProfile;
+  const [profiles, setProfiles] = useState<{ next: string | null; status: "idle" | "loading" | "failed"; reset: boolean }>({ next: null, status: "idle", reset: false });
   const seq = useRef(0);
+  const listSeq = useRef(0);
+  const profileSeq = useRef(0);
+  const hardwareSeq = useRef(0);
+  const pathSeq = useRef(0);
+  const [paths, setPaths] = useState<{ next: string | null; status: "idle" | "loading" | "failed"; reset: boolean }>({ next: null, status: "idle", reset: false });
+  const wantedPath = viewOf(rawView) === "matrix" && validTarget(params.get("path") ?? "") ? params.get("path") ?? "" : "";
+  const wantedPathRef = useRef(wantedPath);
+  wantedPathRef.current = wantedPath;
+  const [hardware, setHardware] = useState<{ next: string | null; status: "idle" | "loading" | "failed"; reset: boolean }>({ next: null, status: "idle", reset: false });
   const scrolled = useRef("");
   const root = useRef<HTMLDivElement>(null);
   const width = useAvailableWidth(root, access);
@@ -117,11 +156,43 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
     const request = attempt().request;
     setBusy(true);
     try {
-      const got = await api.releaseEvidence(request);
+      const main = await api.releaseEvidence(request);
       if (n !== seq.current || generation !== currentScope()) return null;
+      const held: RequirementRow[] = [];
+      const heldProfiles: ProfileRow[] = [];
+      const heldPaths: PathRow[] = [];
+      const was = listingRef.current;
+      let now: Listing = { ...plainListing, reset: was.rows.length > 0 };
+      if (main.state === "configured") {
+        const missing = missingRequirements(main, [...requirementTargetsInUse(), wantedRef.current]);
+        for (let at = 0; at < missing.length; at += targetBatch) held.push(...(await api.evidenceRequirements({ targets: missing.slice(at, at + targetBatch) })).rows);
+        const absent = missingProfiles(main, [...profileTargetsInUse(), wantedProfileRef.current]);
+        for (let at = 0; at < absent.length; at += targetBatch) heldProfiles.push(...(await api.evidenceProfiles({ targets: absent.slice(at, at + targetBatch) })).rows);
+        if (missingPath(main, wantedPathRef.current)) heldPaths.push(...(await api.evidencePaths({ ids: [wantedPathRef.current] })).rows);
+        if (filtering(was.filter) && (was.filter.state === "" || main.candidate)) {
+          try {
+            const answer = await api.evidenceRequirements(queryOf(was.filter));
+            now = { filter: was.filter, rows: answer.rows, next: answer.next, matching: answer.matching, status: "idle", reset: was.rows.length > answer.rows.length };
+            held.push(...answer.rows);
+          } catch (e) {
+            if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) throw e;
+            now = { ...plainListing, filter: was.filter, status: "failed" };
+          }
+        }
+        if (n !== seq.current || generation !== currentScope()) return null;
+      }
+      listSeq.current += 1;
+      profileSeq.current += 1;
+      hardwareSeq.current += 1;
+      pathSeq.current += 1;
+      const got = withHeldPaths(withHeldProfiles(withHeld(main, held), heldProfiles), heldPaths);
       readSucceeded();
       pruneRefusals(got);
       setPage(got);
+      setListing(now);
+      setProfiles((before) => ({ next: null, status: "idle", reset: before.next !== null }));
+      setHardware((before) => ({ next: null, status: "idle", reset: before.next !== null }));
+      setPaths((before) => ({ next: null, status: "idle", reset: before.next !== null }));
       setAccess("ok");
       setStatus("ready");
       setReadComplete(userRefresh);
@@ -152,6 +223,100 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   };
 
   useLayoutEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
+  const readRows = async (filter: RequirementFilter, after: string, before: Listing) => {
+    const n = ++listSeq.current;
+    const generation = currentScope();
+    setListing({ ...before, filter, status: "loading", reset: false });
+    try {
+      const answer = await api.evidenceRequirements({ ...queryOf(filter), after: after || undefined });
+      if (n !== listSeq.current || generation !== currentScope()) return;
+      setListing({ filter, rows: [...before.rows, ...answer.rows], next: answer.next, matching: answer.matching, status: "idle", reset: false });
+      setPage((p) => (p ? withHeld(p, answer.rows) : p));
+    } catch (e) {
+      if (n !== listSeq.current || generation !== currentScope()) return;
+      if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) { void load(); return; }
+      setListing({ ...before, filter, status: "failed", reset: false });
+    }
+  };
+  const moreProfiles = async () => {
+    if (!page || profiles.status === "loading") return;
+    const after = profiles.next ?? page.load.profiles_next ?? "";
+    if (!after) return;
+    const n = ++profileSeq.current;
+    const generation = currentScope();
+    setProfiles({ next: profiles.next, status: "loading", reset: false });
+    try {
+      const answer = await api.evidenceProfiles({ after });
+      if (n !== profileSeq.current || generation !== currentScope()) return;
+      setPage((p) => (p ? withHeldProfiles(p, answer.rows) : p));
+      setProfiles({ next: answer.next, status: "idle", reset: false });
+    } catch (e) {
+      if (n !== profileSeq.current || generation !== currentScope()) return;
+      if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) { setProfiles({ next: profiles.next, status: "idle", reset: false }); void load(); return; }
+      setProfiles({ next: profiles.next, status: "failed", reset: false });
+    }
+  };
+  const morePaths = async () => {
+    if (!page || paths.status === "loading") return;
+    const after = paths.next ?? page.matrix.paths_next ?? "";
+    if (!after) return;
+    const n = ++pathSeq.current;
+    const generation = currentScope();
+    setPaths({ next: paths.next, status: "loading", reset: false });
+    try {
+      const answer = await api.evidencePaths({ after });
+      if (n !== pathSeq.current || generation !== currentScope()) return;
+      setPage((p) => (p ? withHeldPaths(p, answer.rows) : p));
+      setPaths({ next: answer.next, status: "idle", reset: false });
+    } catch (e) {
+      if (n !== pathSeq.current || generation !== currentScope()) return;
+      if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) { setPaths({ next: paths.next, status: "idle", reset: false }); void load(); return; }
+      setPaths({ next: paths.next, status: "failed", reset: false });
+    }
+  };
+  const moreHardware = async () => {
+    if (!page || hardware.status === "loading") return;
+    const after = hardware.next ?? page.load.hardware_next ?? "";
+    if (!after) return;
+    const n = ++hardwareSeq.current;
+    const generation = currentScope();
+    setHardware({ next: hardware.next, status: "loading", reset: false });
+    try {
+      const answer = await api.evidenceHardware(after);
+      if (n !== hardwareSeq.current || generation !== currentScope()) return;
+      setPage((p) => (p ? withMoreHardware(p, answer.rows) : p));
+      setHardware({ next: answer.next, status: "idle", reset: false });
+    } catch (e) {
+      if (n !== hardwareSeq.current || generation !== currentScope()) return;
+      if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) { setHardware({ next: hardware.next, status: "idle", reset: false }); void load(); return; }
+      setHardware({ next: hardware.next, status: "failed", reset: false });
+    }
+  };
+  const pageRevision = page?.revision ?? "";
+  useEffect(() => {
+    if (!page || page.state !== "configured" || !wantedProfile || missingProfiles(page, [wantedProfile]).length === 0) return;
+    const n = seq.current;
+    const generation = currentScope();
+    void api.evidenceProfiles({ targets: [wantedProfile] }).then((answer) => {
+      if (n === seq.current && generation === currentScope() && answer.rows.length > 0) setPage((p) => (p ? withHeldProfiles(p, answer.rows) : p));
+    }).catch(() => undefined);
+  }, [wantedProfile, page?.revision]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!page || page.state !== "configured" || !wantedPath || !missingPath(page, wantedPath)) return;
+    const n = seq.current;
+    const generation = currentScope();
+    void api.evidencePaths({ ids: [wantedPath] }).then((answer) => {
+      if (n === seq.current && generation === currentScope() && answer.rows.length > 0) setPage((p) => (p ? withHeldPaths(p, answer.rows) : p));
+    }).catch(() => undefined);
+  }, [wantedPath, page?.revision]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!page || page.state !== "configured" || !wantedRequirement || missingRequirements(page, [wantedRequirement]).length === 0) return;
+    const n = seq.current;
+    const generation = currentScope();
+    void api.evidenceRequirements({ targets: [wantedRequirement] }).then((answer) => {
+      if (n === seq.current && generation === currentScope() && answer.rows.length > 0) setPage((p) => (p ? withHeld(p, answer.rows) : p));
+    }).catch(() => undefined);
+  }, [wantedRequirement, pageRevision]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!selected || scrolled.current === selected) return;
     scrolled.current = selected;
@@ -267,6 +432,8 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
         onSignedOut: (reference?: CommandDiagnostic) => { setTerminalDetail(reference ?? null); setSignedOut(true); },
       }
     : null;
+  const table: RequirementsTable | null = shared ? tableOf(shared.page, listing, (f) => { if (filtering(f)) void readRows(f, "", { ...plainListing }); else { listSeq.current += 1; setListing(plainListing); } },
+    () => { void readRows(listing.filter, listing.next ?? (filtering(listing.filter) ? "" : shared.page.requirements.next), listing.status === "failed" ? { ...listing, status: "idle" } : listing); }) : null;
   const gone = shared ? vanished(shared.page, view) : [];
   const lines = failure ? failureLines(l, failure.error) : null;
   const step = mode === "step" && !!detailKey;
@@ -319,16 +486,17 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       {shared && (
         <>
           {!commandsAllowed(shared.page) && !step && view !== "matrix" && view !== "artifacts" && <p className="p05-readonly" role="status">{k.readOnly(l)}</p>}
-          {view === "requirements" ? (
-            <RequirementsView {...shared} />
+          {view === "requirements" && table ? (
+            <RequirementsView {...shared} table={table} />
           ) : view === "artifacts" ? (
             <ArtifactsView {...shared} />
           ) : view === "load" ? (
-            <LoadView {...shared} />
+            <LoadView {...shared} list={{ more: (profiles.next ?? shared.page.load.profiles_next ?? "") !== "", status: profiles.status, reset: profiles.reset, onMore: () => { void moreProfiles(); } }}
+              hardwareList={{ more: (hardware.next ?? shared.page.load.hardware_next ?? "") !== "", status: hardware.status, reset: hardware.reset, onMore: () => { void moreHardware(); } }} />
           ) : view === "decisions" ? (
             <DecisionsView {...shared} />
           ) : (
-            <MatrixView {...shared} />
+            <MatrixView {...shared} pathsList={{ more: (paths.next ?? shared.page.matrix.paths_next ?? "") !== "", status: paths.status, reset: paths.reset, onMore: () => { void morePaths(); } }} />
           )}
         </>
       )}

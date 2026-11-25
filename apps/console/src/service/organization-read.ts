@@ -1,4 +1,4 @@
-import type { OrgPage, OrgParty, OrgProfile, OrgMember } from "./admin";
+import type { OrgPage, OrgParty, OrgProfile, OrgMember, OrgTreeNode, OrgTreePage } from "./admin";
 import { array, boolean, choice, integer, shape, text } from "./strict-read";
 
 const party = shape<OrgParty>({ id: text, name: text, kind: choice("legal_entity", "internal_unit"), parent: text, state: text });
@@ -11,3 +11,7 @@ export const organizationsPageOf = shape<OrgPage>({ revision: text, relationship
   filters: shape({ subject: text, entity: text, unattributed: boolean, q: text, member_count: integer, target: text }),
   provider_filter: text, scan_stopped: boolean, scan_budget: integer,
 });
+const node = shape<OrgTreeNode>({ id: text, name: text, kind: choice("legal_entity", "internal_unit", "account", "unknown"), state: text,
+  source: choice("relationship", "registry", "none"), children: choice("some", "none", "unchecked") });
+export const organizationTreeOf = shape<OrgTreePage>({ revision: text, relationship_revision: integer, active_revision: integer, on: text, parent: text, group: text,
+  nodes: array(node), next: text, scan_stopped: boolean, registry_empty: boolean });

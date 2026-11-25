@@ -9,8 +9,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { retentionOf, proposalOf, type RetentionPage } from "../../../../service/retention";
 import { sample } from "../../../../service/retention.sample";
 import {
-  approveNarrow, approveValuesFor, artifactTarget, blockerPolicy, canonical, changeOf, classTarget, clearReviewed, currentContext, currentFrom, currentOf, decisionLine, deniedOutcome, discard, draftOf,
-  duplicateIn, fieldReaction, holdValues, keepsAttempt, ownerOption, forget, frozenTargetOk, goneKind, graceProblem, holdMatch, holdTarget, impactValues, keepDraft, keepReviewed, keptKey, listed, partialCounts, pendingFor,
+  approveNarrow, approveValuesFor, artifactIdsInUse, artifactOf, artifactTarget, missingArtifacts, withHeldArtifacts, withMoreReferences, blockerPolicy, canonical, changeOf, classTarget, clearReviewed, currentContext, currentFrom, currentOf, decisionLine, deniedOutcome, discard, draftOf,
+  duplicateIn, fieldReaction, holdValues, keepsAttempt, forget, frozenTargetOk, goneKind, graceProblem, holdMatch, holdTarget, impactValues, keepDraft, keepReviewed, keptKey, listed, partialCounts, pendingFor,
   pendingNow, pendingPolicyFor, pendingReleaseFor, periodProblem, proposalTarget, pruneRefusals, react, reasonProblem, refusedNow, reviewedChanged, reviewedOf, runNumber, runTarget,
   sameAsCurrent, selectionOf, setScope, settle as settleRecorded, snapshotOf, stateSentence, stillAllowed, storeSum, tenantTarget, textProblem, timeKnown, utf8Bytes, vanished, viewOf,
 } from "./live-model";
@@ -204,9 +204,7 @@ test("place-hold values never send class with an item target, and owner options"
   assert.deepEqual(holdValues({ owner: "u", reason: "r", class: "final" }, true), { owner: "u", reason: "r", class: "final" });
   assert.deepEqual(holdValues({ owner: "u", reason: "r", class: "" }, true), { owner: "u", reason: "r" });
   assert.deepEqual(holdValues({ owner: "u", reason: "r", class: "bogus" }, true), { owner: "u", reason: "r" });
-  assert.equal(ownerOption({ id: "u1", login: "a@example.invalid" }), "⁦a@example.invalid (u1)⁩");
-  assert.equal(ownerOption({ id: "u1", login: "" }), "⁦u1⁩");
-  assert.equal(k.form.ownerPlaceholder("en"), "Choose an owner");
+  assert.equal(k.form.ownerChange("en"), "Change");
   assert.equal(k.form.ownerMissing("en"), "Choose an owner.");
   assert.equal(k.form.ownersFailed("en"), "The list of possible owners could not be read.");
   assert.equal(k.form.ownersEmpty("en"), "No active member can own a hold.");
@@ -608,3 +606,66 @@ function refusedDetail(command: string, target: string): Receipt | undefined {
 function settle(command: string, target: string, reaction: Parameters<typeof settleRecorded>[2], failure = "", detail?: Receipt) {
   settleRecorded(command, target, reaction, failure, reference(command, target, detail));
 }
+
+test("artifacts and references held beyond the main read are found, selected and kept once", async () => {
+  const { artifactsPageOf, artifactsPath, referencesPageOf } = await import("../../../../service/retention");
+  const { ExpiryView } = await import("./LiveExpiry");
+  forget();
+  setScope("w", "u", "s");
+  const main = page((s) => { const g = s.expiry.find((x) => x.class === "source")!; (g as Over).total = 70; (g as Over).more = true; (g as Over).next = "sample-source-5"; });
+  const group = main.expiry!.find((g) => g.class === "source")!;
+  const from = group.artifacts![0];
+  const extra = (id: string) => ({ class: "source", artifact: { ...from, id, hold_target: "retention-artifact:" + id, holdable: true, hold_blocked: "" } });
+  pendingFor("retention.place_hold", "retention-artifact:zz-held-1", { reason: "x" }, "r1", () => ({ request: "q", key: "k" }), [], { view: "expiry" });
+  settleRecorded("retention.place_hold", "retention-artifact:zz-held-2", "hint", "stage");
+  settleRecorded("retention.stop_run", "retention-run-2", "hint", "stage");
+  assert.deepEqual(artifactIdsInUse().sort(), ["zz-held-1", "zz-held-2"]);
+  assert.deepEqual(missingArtifacts(main, [...artifactIdsInUse(), from.id, "", "a,b", "has space", "p".repeat(129)]).sort(), ["zz-held-1", "zz-held-2"]);
+  assert.equal(vanished(main, "expiry").length, 1);
+  assert.equal(selectionOf(new URLSearchParams("artifact=zz-held-1"), main, "expiry").artifact, "");
+  const held = withHeldArtifacts(main, [extra("zz-held-2"), extra("zz-held-1"), extra("zz-held-2"), extra(from.id), { class: "claim", artifact: { ...from, id: "aa-claim" } }, { class: "source", artifact: { ...from, id: "" } }, { class: "unknown", artifact: { ...from, id: "x" } }]);
+  const rows = held.expiry!.find((g) => g.class === "source")!.artifacts!;
+  assert.deepEqual(rows.map((a) => a.id), [...group.artifacts!.map((a) => a.id), "zz-held-1", "zz-held-2"].sort());
+  assert.equal(artifactOf(held, "aa-claim"), undefined);
+  assert.equal(artifactOf(held, "zz-held-1")?.group.class, "source");
+  assert.equal(held.expiry!.find((g) => g.class === "source")!.more, true);
+  assert.equal(vanished(held, "expiry").length, 0);
+  assert.equal(listed(held, "retention.place_hold", "retention-artifact:zz-held-1"), true);
+  assert.equal(stillAllowed(held, "retention.place_hold", "retention-artifact:zz-held-1"), true);
+  assert.equal(selectionOf(new URLSearchParams("artifact=zz-held-1"), held, "expiry").artifact, "zz-held-1");
+  pruneRefusals(held);
+  assert.equal(refusedNow("retention.place_hold", "retention-artifact:zz-held-2"), "stage");
+  assert.equal(withHeldArtifacts(main, []), main);
+  assert.equal(withHeldArtifacts(main, [extra(from.id)]), main);
+  forget();
+  const refs = page((s) => { (s.holds.references as Over).total = 3; (s.holds.references as Over).more = true; (s.holds.references as Over).next = "sample-source-3"; });
+  const moreRefs = withMoreReferences(refs, [{ id: "zz-a", class: "source" }, { id: "zz-a", class: "source" }, { id: refs.holds.references.rows![0].id, class: "source" }, { id: "", class: "source" }]);
+  assert.deepEqual(moreRefs.holds.references.rows!.map((r) => r.id), [...refs.holds.references.rows!.map((r) => r.id), "zz-a"]);
+  assert.equal(moreRefs.holds.references.more, true);
+  assert.equal(withMoreReferences(refs, []), refs);
+  assert.equal(artifactsPath({ cls: "source", after: "a:b" }), "/retention/artifacts?class=source&limit=50&after=a%3Ab");
+  assert.equal(artifactsPath({ ids: ["a:b", "c"] }), "/retention/artifacts?id=a%3Ab%2Cc");
+  for (const bad of [{}, { artifacts: [], next: "" }, { artifacts: "x", next: "", total: 0 }, { artifacts: [], next: 4, total: 0 }]) assert.equal(artifactsPageOf(bad), null, JSON.stringify(bad));
+  const got = artifactsPageOf({ artifacts: [{ class: "source", id: "zz", holdable: true, hold_target: "retention-artifact:zz" }, null], next: "zz", total: 70 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].class, got?.rows[0].artifact.id, got?.next, got?.total], [1, "source", "zz", "zz", 70]);
+  for (const bad of [{}, { references: [], next: "" }, { references: [], next: 4, total: 0 }]) assert.equal(referencesPageOf(bad), null, JSON.stringify(bad));
+  assert.deepEqual(referencesPageOf({ references: [{ id: "r", class: "source" }, 3], next: "", total: 1 }), { rows: [{ id: "r", class: "source" }], next: "", total: 1 });
+  const base = { api: {} as AdminClient, me: "u", workspace: "w", canCommand: false, onDone: () => undefined, onNotice: () => undefined, onReload: async () => null, onSignedOut: () => undefined };
+  for (const l of locales) {
+    const list = (status: "idle" | "failed", reset: boolean) => (key: string, first: string | null) => ({ more: key === "source" && !!first, status, reset: reset && key === "source", onMore: () => undefined });
+    const html = renderToStaticMarkup(createElement(ExpiryView, { ...base, l, page: main, selection: selectionOf(new URLSearchParams(""), main, "expiry"), listOf: list("idle", false) }));
+    assert.ok(html.includes(k.itemsShown(l, group.artifacts!.length, 70)) && html.includes(k.itemsMore(l)), l);
+    assert.equal(html.split("p04-items-more-button").length - 1, 1, l);
+    const failed = renderToStaticMarkup(createElement(ExpiryView, { ...base, l, page: main, selection: selectionOf(new URLSearchParams(""), main, "expiry"), listOf: list("failed", true) }));
+    assert.ok(failed.includes(k.itemsFailed(l)) && failed.includes(k.heldTryAgain(l)) && failed.includes(k.itemsReset(l)), l);
+  }
+});
+
+test("each load-more button of the expiry view is described by the heading of its class", async () => {
+  const { ExpiryView } = await import("./LiveExpiry");
+  const main = page((s) => { const g = s.expiry.find((x) => x.class === "source")!; (g as Over).total = 70; (g as Over).more = true; (g as Over).next = "sample-source-5"; });
+  const base = { api: {} as AdminClient, me: "u", workspace: "w", canCommand: false, onDone: () => undefined, onNotice: () => undefined, onReload: async () => null, onSignedOut: () => undefined };
+  const html = renderToStaticMarkup(createElement(ExpiryView, { ...base, l: "en", page: main, selection: selectionOf(new URLSearchParams(""), main, "expiry"), listOf: (key: string, first: string | null) => ({ more: !!first, status: "idle" as const, reset: false, onMore: () => undefined }) }));
+  assert.ok(/<h3 id="p04-class-h-source">/.test(html));
+  assert.ok(/class="[^"]*p04-items-more-button"[^>]*aria-describedby="p04-class-h-source"|aria-describedby="p04-class-h-source"[^>]*class="[^"]*p04-items-more-button"/.test(html));
+});

@@ -201,7 +201,7 @@ func (h *Boundary) Recheck(answer Answer) error {
 	}
 	if answer.kind == Service {
 		found := r.credentials[answer.credential]
-		if found == nil || found.revoked || found.user != answer.user || found.serial != answer.serial {
+		if found == nil || found.revoked || found.user != answer.user || found.serial != answer.serial || !found.validity.at(now) {
 			return refused(ReasonAnswer)
 		}
 		return nil

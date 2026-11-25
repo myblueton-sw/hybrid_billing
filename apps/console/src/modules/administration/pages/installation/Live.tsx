@@ -127,7 +127,7 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
   const configured = page?.state === "configured";
   const shared = page && configured
     ? {
-        l, page, api, me: session.user, selected,
+        l, page, api, me: session.user, selected, stale: status === "error",
         onDone: (text: string) => { showNotice(text); void load(); },
         onNotice: showNotice,
         onReload: load,
@@ -161,6 +161,7 @@ export default function LiveInstallation({ locale: l, view: rawView, params, ses
           <button type="button" className="live-secondary" onClick={() => refresh(true)}>{sc.tryAgain(l)}</button>
         </div>
       )}
+      {status === "error" && page && <p id="p01-stale" className="live-note-rule" role="status">{diagnosticCopy.stale(l)}</p>}
       <div className="live-toolbar"><h2 id="p01-view-title" tabIndex={-1}>{k.viewTitle(l, view)}</h2></div>
       {status === "loading" && !page && <p className="live-meta" role="status">{k.loading(l)}</p>}
       {page && page.state === "not_configured" && (

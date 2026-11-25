@@ -9,13 +9,13 @@ import ServiceAccounts from "../../modules/identity/pages/service-accounts/Scree
 import MySecurity from "../../modules/identity/pages/my-security/Screen";
 import LiveUsers from "../../modules/identity/pages/users/Live";
 import LivePolicy from "../../modules/identity/pages/authentication/Live";
-import LiveAccess from "../../modules/identity/pages/access/Live";
+import AccessArea from "../../modules/identity/pages/access/Area";
 import LiveServices from "../../modules/identity/pages/service-accounts/Live";
 import LiveMySecurity from "../../modules/identity/pages/my-security/Live";
 import { useService } from "../../service/context";
 import "../../modules/identity/screen-ui/security.css";
 export type { Props } from "../../modules/identity/screen-ui/types";
-function toParams(extra: Record<string, string | null>) {
+function toParams(extra: Record<string, string | null>, push = false) {
   const [path, query = ""] = location.hash.replace(/^#/, "").split("?");
   const q = new URLSearchParams(query);
   for (const [k, v] of Object.entries(extra)) {
@@ -24,7 +24,8 @@ function toParams(extra: Record<string, string | null>) {
   }
   const next = path + "?" + q.toString();
   if (location.hash.replace(/^#/, "") === next) return;
-  history.replaceState(history.state, "", "#" + next);
+  if (push) history.pushState(history.state, "", "#" + next);
+  else history.replaceState(history.state, "", "#" + next);
   dispatchEvent(new HashChangeEvent("hashchange"));
 }
 
@@ -112,6 +113,8 @@ export default function RemainingSecurity(props: Props) {
         lang={props.locale}
       >
         <LiveMySecurity
+          params={props.params}
+          onParams={(extra) => toParams(extra,true)}
           locale={props.locale}
           view={props.view}
           session={service.session}
@@ -135,7 +138,10 @@ export default function RemainingSecurity(props: Props) {
         dir={props.locale === "ar" ? "rtl" : "ltr"}
         lang={props.locale}
       >
-        <LiveAccess
+        <AccessArea
+          params={props.params}
+          onState={props.onState}
+          onDirty={props.onDirty}
           locale={props.locale}
           view={props.view}
           session={service.session}

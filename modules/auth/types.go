@@ -18,11 +18,38 @@ var (
 type Action string
 
 const (
+	SubmitIssuanceDraft            Action = "submit_issuance_draft"
+	ApproveIssuanceDraft           Action = "approve_issuance_draft"
+	RegisterIssuanceChannel        Action = "register_issuance_channel"
+	AdmitIssuanceChannel           Action = "admit_issuance_channel"
+	RequestIssuanceProtectedChange Action = "request_issuance_protected_change"
+	VerifyIssuanceProtectedChange  Action = "verify_issuance_protected_change"
+	ApproveIssuanceProtectedChange Action = "approve_issuance_protected_change"
+	RecordIssuanceTerm             Action = "record_issuance_term"
+	ApproveIssuanceTerm            Action = "approve_issuance_term"
+	BindIssuanceTerm               Action = "bind_issuance_term"
+	ApproveIssuanceTermBinding     Action = "approve_issuance_term_binding"
+	ProposeERPResult               Action = "propose_erp_result"
+	ConfirmERPResult               Action = "confirm_erp_result"
+	RevokeERPResult                Action = "revoke_erp_result"
+	ApplyERPResult                 Action = "apply_erp_result"
+	ProposeDocumentEvidence        Action = "propose_document_evidence"
+	ConfirmDocumentEvidence        Action = "confirm_document_evidence"
+	RevokeDocumentEvidence         Action = "revoke_document_evidence"
+	PrepareERPRecord               Action = "prepare_erp_record"
+)
+
+const (
 	View                   Action = "view"
 	ViewCost               Action = "view_cost"
 	ChangeCustomerPolicy   Action = "change_customer_policy"
 	ChangeSellingPolicy    Action = "change_selling_policy"
 	RequestApproval        Action = "request_approval"
+	ConfirmInput           Action = "confirm_input"
+	ProposePricingPolicy   Action = "propose_pricing_policy"
+	ApprovePricingPolicy   Action = "approve_pricing_policy"
+	RevokePricingPolicy    Action = "revoke_pricing_policy"
+	UsePricingPolicy       Action = "use_pricing_policy"
 	Approve                Action = "approve"
 	Issue                  Action = "issue"
 	Download               Action = "download"
@@ -51,11 +78,26 @@ func IntegrationRights() []Action {
 const InstallationKind = "installation"
 
 var actions = map[Action]struct{}{
+	SubmitIssuanceDraft: {}, ApproveIssuanceDraft: {},
+	RegisterIssuanceChannel:        {},
+	AdmitIssuanceChannel:           {},
+	RequestIssuanceProtectedChange: {},
+	VerifyIssuanceProtectedChange:  {},
+	ApproveIssuanceProtectedChange: {},
+
+	RecordIssuanceTerm:         {},
+	ApproveIssuanceTerm:        {},
+	BindIssuanceTerm:           {},
+	ApproveIssuanceTermBinding: {},
+
+	ProposeERPResult: {}, ConfirmERPResult: {}, RevokeERPResult: {}, ApplyERPResult: {},
+	ProposeDocumentEvidence: {}, ConfirmDocumentEvidence: {}, RevokeDocumentEvidence: {}, PrepareERPRecord: {},
 	View: {}, ViewCost: {}, ChangeCustomerPolicy: {}, ChangeSellingPolicy: {}, RequestApproval: {},
 	Approve: {}, Issue: {}, Download: {}, Deliver: {}, ApproveSupportSession: {}, AdministerInstallation: {},
 	TrustPropose: {}, TrustValidate: {}, TrustApprove: {}, TrustActivate: {}, RevokeAccessInBulk: {},
 	AdministerAPIClients: {}, AdministerModules: {}, ApproveModules: {}, StopModules: {}, AdministerChannels: {}, ApproveChannels: {}, StopChannels: {},
-	ReprocessEvents: {},
+	ReprocessEvents: {}, ConfirmInput: {},
+	ProposePricingPolicy: {}, ApprovePricingPolicy: {}, RevokePricingPolicy: {}, UsePricingPolicy: {},
 }
 
 func fieldAction(action Action) bool {
@@ -63,6 +105,14 @@ func fieldAction(action Action) bool {
 }
 
 func humanOnly(action Action) bool { return action == Approve || action == ApproveSupportSession }
+
+func directHuman(action Action) bool {
+	switch action {
+	case SubmitIssuanceDraft, ApproveIssuanceDraft, RegisterIssuanceChannel, AdmitIssuanceChannel, RequestIssuanceProtectedChange, VerifyIssuanceProtectedChange, ApproveIssuanceProtectedChange, RecordIssuanceTerm, ApproveIssuanceTerm, BindIssuanceTerm, ApproveIssuanceTermBinding, ProposeERPResult, ConfirmERPResult, RevokeERPResult, ApplyERPResult, ProposeDocumentEvidence, ConfirmDocumentEvidence, RevokeDocumentEvidence, PrepareERPRecord, ConfirmInput, ProposePricingPolicy, ApprovePricingPolicy, RevokePricingPolicy, UsePricingPolicy:
+		return true
+	}
+	return false
+}
 
 func InstallationAction(action Action) bool {
 	switch action {

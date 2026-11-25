@@ -89,8 +89,8 @@ function Scope({ l }: { l: Locale }) {
 
 type Opened = { detail: BulkDetail; items: Paged<BulkItem>; targets: Paged<BulkTarget> | null };
 
-function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, outcome, onOutcome, self, days }: {
-  l: Locale; api: AdminClient; opened: Opened; revision: string; wide: boolean; onClose: () => void; onReload: () => void; onMore: () => void;
+function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, moreFailed, outcome, onOutcome, self, days }: {
+  l: Locale; api: AdminClient; opened: Opened; revision: string; wide: boolean; onClose: () => void; onReload: () => void; onMore: () => void; moreFailed: boolean;
   outcome: string; onOutcome: (o: string) => void; self: string; days: number;
 }) {
   const job = opened.detail.job;
@@ -98,9 +98,14 @@ function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, out
   const [confirming, setConfirming] = useState(false);
   useEffect(() => heading.current?.focus(), [job.id]);
   const owner = job.preparer === self;
+  const [discardFailed, setDiscardFailed] = useState(false);
+  useEffect(() => setDiscardFailed(false), [job.id, job.state]);
   const discard = async () => {
+    setDiscardFailed(false);
     try {
       await api.command("bulk_revocation.discard", job.id, revision, b.discardReason(l), {}, { request: "m01-d-" + job.id + Date.now(), key: "m01-d-" + job.id + Date.now() });
+    } catch (e) {
+      if (!(e instanceof AdminError && e.failure === "stage")) setDiscardFailed(true);
     } finally {
       onReload();
     }
@@ -115,11 +120,12 @@ function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, out
       {job.state === "prepared" ? (
         <>
           {job.selection !== "filter" && <BasisFacts l={l} job={job} days={days} />}
-          <PreviewBody l={l} api={api} prepared={{ detail: opened.detail, targets: opened.targets }} onMore={onMore} days={days} />
+          <PreviewBody l={l} api={api} prepared={{ detail: opened.detail, targets: opened.targets }} onMore={onMore} moreFailed={moreFailed} days={days} />
           <div className="live-buttons">
             {owner && <button type="button" className="live-primary m01-continue" onClick={() => setConfirming(true)}>{b.continue(l)}</button>}
             {owner && <button type="button" className="live-secondary" onClick={() => void discard()}>{b.discard(l)}</button>}
           </div>
+          {discardFailed && <p className="live-meta" role="alert">{b.discardFailed(l)}</p>}
           {!owner && <p className="live-meta m01-not-owner">{b.notOwner(l)}</p>}
           {confirming && <ConfirmDialog l={l} api={api} prepared={{ detail: opened.detail, targets: opened.targets }} revision={revision} defaultReason=""
             onClose={() => setConfirming(false)} onReload={onReload} onAccepted={() => { setConfirming(false); onReload(); }} />}
@@ -129,6 +135,7 @@ function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, out
           <BasisFacts l={l} job={job} days={days} />
           <StateLine l={l} job={job} />
           {owner && <button type="button" className="live-secondary" onClick={() => void discard()}>{b.discardDraft(l)}</button>}
+          {discardFailed && <p className="live-meta" role="alert">{b.discardFailed(l)}</p>}
         </>
       ) : job.state !== "executed" ? (
         <>
@@ -164,6 +171,7 @@ function Detail({ l, api, opened, revision, wide, onClose, onReload, onMore, out
             <ol className="m01-items-list">{opened.items.rows.map((item) => <Item key={item.user_id + item.outcome} l={l} item={item} />)}</ol>
             <p className="live-meta">{b.showing(l, opened.items.rows.length, opened.items.total)}</p>
             {opened.items.next && <button type="button" className="live-secondary" onClick={onMore}>{b.morePeople(l)}</button>}
+            {moreFailed && <p className="live-meta" role="alert">{b.moreFailed(l)}</p>}
           </section>
           <details className="m01-expert">
             <summary>{b.technical(l)}</summary>
@@ -181,6 +189,7 @@ export function JobTable({ l, jobs, open, onOpen, days }: { l: Locale; jobs: Bul
   const strong = (j: BulkJob) => ["unconfirmed", "not_started", "waiting", "partial"].includes(jobWords(j));
   const people = (j: BulkJob) =>
     j.state === "draft" ? <>{b.notCounted(l)}{j.staged > 0 && <span className="live-sub m01-line">{b.sentSoFar(l, j.staged)}</span>}</>
+      : j.state !== "executed" && !j.prepared_at ? <>{b.neverCounted(l)}</>
       : <>{j.state === "executed" ? b.equation(l, j.counts) : b.people(l, j.counts.targets)}{j.counts.excluded > 0 && <span className="live-sub m01-line">{b.excludedCount(l, j.counts.excluded)}</span>}</>;
   const when = (j: BulkJob) =>
     j.state === "prepared" ? <At l={l} template={b.validUntil(l)} iso={j.expires_at} zone={false} /> : j.executed_at ? <At l={l} template={b.executed(l)} iso={j.executed_at} zone={false} />
@@ -237,28 +246,51 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
     }
   };
   useEffect(() => { load(); }, [load]);
-  const openJob = useCallback(async (id: string, filter = outcome) => {
+  const [moreFailed, setMoreFailed] = useState(false);
+  const shown = useRef("");
+  const turn = useRef(0), loadingMore = useRef(-1);
+  const openJob = useCallback(async (id: string, filter = outcome): Promise<boolean> => {
+    const mine = ++turn.current;
     setOpen(id);
+    setMoreFailed(false);
+    if (shown.current !== id) { shown.current = ""; setOpened(null); }
     try {
       const detail = await bulk.detail(id);
       const items = detail.job.state === "executed" ? await bulk.items(id, 0, 50, filter) : { total: 0, next: "", rows: [] };
       const targets = detail.job.state === "prepared" && detail.job.preparer === self ? await bulk.targets(id) : null;
+      if (mine !== turn.current) return false;
+      shown.current = id;
       setOpened({ detail, items, targets });
+      return true;
     } catch (e) {
+      if (mine !== turn.current) return false;
+      if (shown.current !== id) setOpen((now) => (now === id ? "" : now));
       setError(e);
+      return false;
     }
   }, [api, outcome, self]);
   useEffect(() => { if (initial) void openJob(initial); }, [initial]);
   const more = async () => {
-    if (!opened) return;
+    const mine = turn.current;
+    if (!opened || loadingMore.current === mine) return;
     const id = opened.detail.job.id;
-    if (opened.detail.job.state === "prepared") {
-      if (!opened.targets) return;
-      const t = await bulk.targets(id, opened.targets.rows.length);
-      setOpened({ ...opened, targets: { ...t, rows: [...opened.targets.rows, ...t.rows] } });
-    } else {
-      const i = await bulk.items(id, opened.items.rows.length, 50, outcome);
-      setOpened({ ...opened, items: { ...i, rows: [...opened.items.rows, ...i.rows] } });
+    loadingMore.current = mine;
+    try {
+      if (opened.detail.job.state === "prepared") {
+        if (!opened.targets) return;
+        const from = opened.targets.rows, t = await bulk.targets(id, from.length);
+        if (mine !== turn.current) return;
+        setOpened({ ...opened, targets: { ...t, rows: [...from, ...t.rows] } });
+      } else {
+        const from = opened.items.rows, i = await bulk.items(id, from.length, 50, outcome);
+        if (mine !== turn.current) return;
+        setOpened({ ...opened, items: { ...i, rows: [...from, ...i.rows] } });
+      }
+      setMoreFailed(false);
+    } catch {
+      if (mine === turn.current) setMoreFailed(true);
+    } finally {
+      if (loadingMore.current === mine) loadingMore.current = -1;
     }
   };
   if (error instanceof AdminError && error.failure === "unauthenticated") {
@@ -269,10 +301,10 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
   }
   const groupsOf = split(page?.jobs ?? []);
   const days = setting(page?.settings ?? [], "role_period_warning_days", 14);
-  const close = () => { const id = open; setOpen(""); setOpened(null); setTimeout(() => document.querySelector<HTMLElement>(`[data-job="${CSS.escape(id)}"]`)?.focus(), 0); };
+  const close = () => { const id = open; turn.current++; shown.current = ""; setOpen(""); setOpened(null); setMoreFailed(false); setTimeout(() => document.querySelector<HTMLElement>(`[data-job="${CSS.escape(id)}"]`)?.focus(), 0); };
   const detail = opened && open ? (
-    <Detail l={l} api={api} opened={opened} revision={page?.revision ?? revision} wide={wide} onClose={close} onReload={() => { load(); void openJob(open); }} onMore={() => void more()}
-      outcome={outcome} onOutcome={(o) => { setOutcome(o); void openJob(open, o); }} self={self} days={days} />
+    <Detail l={l} api={api} opened={opened} revision={page?.revision ?? revision} wide={wide} onClose={close} onReload={() => { load(); void openJob(open); }} onMore={() => void more()} moreFailed={moreFailed}
+      outcome={outcome} onOutcome={(o) => { void openJob(open, o).then((ok) => { if (ok) setOutcome(o); }); }} self={self} days={days} />
   ) : null;
   const stepping = !wide && detail;
   return (
@@ -287,6 +319,7 @@ export default function RevocationJobs({ l, api, wide, initial, self, revision, 
       {page?.started_at && <p className="m01-note"><At l={l} template={b.notKept(l)} iso={page.started_at} /></p>}
       {error !== null && <section className="live-error" role="alert"><h2>{w.loadFailed(l)}</h2><p>{failureText(l, error).body}</p><button type="button" className="live-secondary" onClick={load}>{c.tryAgain(l)}</button></section>}
       {!page && error === null && <p role="status" className="live-meta">{w.loading(l)}</p>}
+      {page && open && !opened && error === null && <p role="status" className="live-meta m01-job-loading">{w.loading(l)}</p>}
       {page && (
         <div className="m01-jobs-split" data-mode={wide ? "split" : "step"} data-open={detail ? "true" : "false"}>
           {stepping ? (

@@ -273,20 +273,30 @@ function Findings({ l, c }: { l: Locale; c: TrustChange }) {
 }
 
 function Impact({ l, c }: { l: Locale; c: TrustChange }) {
-  const ids = c.impact.affected_ids;
+  const impact = c.impact;
+  if (!impact) {
+    return (
+      <section className="m02-impact" aria-labelledby={"m02-impact-" + c.number}>
+        <h3 id={"m02-impact-" + c.number}>{ty.impactTitle(l)}</h3>
+        <p className="live-strong">{ty.signsOut(l)}</p>
+        <p className="live-quiet">{ty.impactNotComputed(l)}</p>
+      </section>
+    );
+  }
+  const ids = impact.affected_ids;
   return (
     <section className="m02-impact" aria-labelledby={"m02-impact-" + c.number}>
       <h3 id={"m02-impact-" + c.number}>{ty.impactTitle(l)}</h3>
-      {c.impact.signs_out_everyone && <p className="live-strong">{ty.signsOut(l)}</p>}
+      {impact.signs_out_everyone && <p className="live-strong">{ty.signsOut(l)}</p>}
       <dl className="m02-sum">
-        <div><dt>{ty.members(l)}</dt><dd>{c.impact.members}</dd></div>
-        <div><dt>{ty.sessionsNow(l)}</dt><dd>{c.impact.sessions}</dd></div>
+        <div><dt>{ty.members(l)}</dt><dd>{impact.members}</dd></div>
+        <div><dt>{ty.sessionsNow(l)}</dt><dd>{impact.sessions}</dd></div>
       </dl>
       {ids.length > 0 && (
         <details className="m02-members">
-          <summary>{ty.affected(l, c.impact.members)}</summary>
+          <summary>{ty.affected(l, impact.members)}</summary>
           <ul className="m02-ids">{ids.map((id) => <li key={id}>{actor(id)}</li>)}</ul>
-          {c.impact.members > ids.length && <p className="m02-sub">{ty.showing(l, c.impact.members)}</p>}
+          {impact.members > ids.length && <p className="m02-sub">{ty.showing(l, impact.members)}</p>}
         </details>
       )}
     </section>
@@ -416,7 +426,7 @@ export function Detail({ l, page, c, split, onClose, onAction, onOpen, headingRe
         <h3 id={"m02-validation-" + c.number}>{ty.validationTitle(l)}</h3>
         <Findings l={l} c={c} />
       </section>
-      {(c.state !== "activated" && c.state !== "rejected" && c.state !== "cancelled" && c.state !== "superseded") && <Impact l={l} c={c} />}
+      {(c.state !== "activated" && c.state !== "rejected" && c.state !== "cancelled" && c.state !== "superseded" && c.state !== "activation_unknown") && <Impact l={l} c={c} />}
       <section className="m02-people" aria-labelledby={"m02-people-" + c.number}>
         <h3 id={"m02-people-" + c.number}>{ty.people(l)}</h3>
         <dl className="m02-sum">

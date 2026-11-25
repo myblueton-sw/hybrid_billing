@@ -1,3 +1,4 @@
+import type { UserRow } from "../../../../service/admin";
 import type { BulkCounts, BulkItem, BulkJob, Cleanup } from "../../../../service/identity-bulk";
 
 export type Selection = ReadonlySet<string>;
@@ -105,4 +106,8 @@ export const digestShown = (digest: string) => digest.slice(0, 12);
 export function number(id: string): string {
   const m = /^bulk-(?:revocation|draft)-(\d+)$/.exec(id);
   return m ? m[1] : id;
+}
+
+export function mayBeAdministrator(u: UserRow | undefined): boolean {
+  return u?.membership?.role === "administrator" || u?.membership?.role === "unknown";
 }

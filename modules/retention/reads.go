@@ -62,6 +62,9 @@ func (r *Registry) Preview(class, after string, limit int) (PreviewView, error) 
 		case OutcomeHeld:
 			v.Held++
 			continue
+		case OutcomeGuarding:
+			v.Guarding++
+			continue
 		case OutcomeReferenced:
 			v.Referenced++
 			continue

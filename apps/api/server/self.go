@@ -31,22 +31,24 @@ type selfIdentity struct {
 }
 
 type selfPage struct {
-	UserID          string         `json:"user_id"`
-	Login           string         `json:"login"`
-	Email           string         `json:"email"`
-	Workspace       string         `json:"workspace"`
-	Role            string         `json:"role"`
-	Identities      []selfIdentity `json:"identities"`
-	PasswordSet     bool           `json:"password_set"`
-	Installation    bool           `json:"installation_administrator"`
-	Sessions        []selfSession  `json:"sessions"`
-	Generation      string         `json:"sessions_generation"`
-	SessionEnds     []selfEndView  `json:"session_ends"`
-	IdleMinutes     int            `json:"idle_minutes"`
-	MaxAge          int64          `json:"max_age_seconds"`
-	SignedInAt      string         `json:"signed_in_at"`
-	AuthenticatedAt string         `json:"authenticated_at"`
-	Now             string         `json:"now"`
+	UserID             string         `json:"user_id"`
+	Login              string         `json:"login"`
+	Email              string         `json:"email"`
+	Workspace          string         `json:"workspace"`
+	Role               string         `json:"role"`
+	Identities         []selfIdentity `json:"identities"`
+	PasswordSet        bool           `json:"password_set"`
+	Installation       bool           `json:"installation_administrator"`
+	CurrentSession     queriedSession `json:"current_session"`
+	RecordedSessions   int            `json:"recorded_session_count"`
+	AcceptedOperations int            `json:"accepted_operation_count"`
+	Generation         string         `json:"sessions_generation"`
+	IdleMinutes        int            `json:"idle_minutes"`
+	AbsoluteMinutes    int            `json:"absolute_minutes"`
+	MaxAge             int64          `json:"max_age_seconds"`
+	SignedInAt         string         `json:"signed_in_at"`
+	AuthenticatedAt    string         `json:"authenticated_at"`
+	Now                string         `json:"now"`
 }
 
 func handleOf(v identity.Verifier) string {
@@ -94,21 +96,23 @@ func (s *Server) readSelf(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	if found.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) {
+		failCode(w, commands.Unauthenticated, request)
+		return
+	}
 	now := s.clock()
 	person := s.dir.people[answer.User()]
 	page := selfPage{UserID: answer.User(), Login: found.login, Email: person.email, Workspace: answer.Workspace(), Role: string(answer.Role()),
 		Identities: []selfIdentity{{Method: "local-password", Login: found.login}}, PasswordSet: s.passwords.Has(LoginKey(found.login)),
-		Installation: s.dir.holds(answer.User(), now), Sessions: []selfSession{}, IdleMinutes: int(sessionIdle / time.Minute),
+		Installation: s.dir.holds(answer.User(), now), IdleMinutes: int(sessionIdle / time.Minute), AbsoluteMinutes: int(sessionAbsolute / time.Minute),
 		SignedInAt: stamp(found.created), AuthenticatedAt: stamp(found.authenticated), Now: stamp(now)}
 	if current, err := s.policy.Policy(answer.Workspace()); err == nil {
 		page.MaxAge = int64(current.Revision.MaxAge / time.Second)
 	}
-	own, token := s.ownSessions(found)
-	page.Generation, page.SessionEnds = token, s.selfEndViews(answer.User())
-	for _, other := range own {
-		page.Sessions = append(page.Sessions, selfSession{Handle: handleOf(other.verifier), Current: other.verifier == found.verifier,
-			SignedIn: stamp(other.created), Ends: stamp(other.created.Add(sessionAbsolute))})
-	}
+	page.CurrentSession = s.taggedSessionView(found, found.verifier)
+	page.RecordedSessions = s.sessions.indexState(found.owner, now, 0).Count
+	page.AcceptedOperations = len(s.sessionOperationRecords[found.owner])
+	page.Generation = s.sessions.generationToken(found.login)
 	writeJSON(w, http.StatusOK, request, page)
 }
 

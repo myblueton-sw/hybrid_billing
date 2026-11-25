@@ -412,9 +412,19 @@
 .remaining-security .live-access .live-col-d {
   inline-size: 16%;
 }
-.remaining-security .live-revoke {
+.remaining-security .live-revoke,
+.remaining-security .live-rotate {
   min-block-size: 44px;
   padding: 0 12px;
+}
+[data-security-screen="M04"] .live-creds .live-row-buttons {
+  display: inline-grid;
+  grid-auto-columns: max-content;
+  gap: 8px;
+}
+[data-security-screen="M04"] .live-creds .live-row-buttons > button {
+  inline-size: 100%;
+  margin-block-start: 0;
 }
 .remaining-security .live-ended {
   margin-block-start: 16px;
@@ -510,7 +520,8 @@
   .remaining-security .live-effects-form > button {
     margin-block-start: 0;
   }
-  .remaining-security .live-revoke {
+  .remaining-security .live-revoke,
+  .remaining-security .live-rotate {
     inline-size: 100%;
     margin-block-start: 8px;
   }
@@ -749,17 +760,17 @@
   cursor: not-allowed;
 }
 @media (min-width: 768px) {
-  [data-security-screen="M04"] .live-creds .live-col-a {
-    inline-size: 27%;
+  [data-security-screen="M04"] .live-access.live-creds .live-col-a {
+    inline-size: 26%;
   }
-  [data-security-screen="M04"] .live-creds .live-col-b {
-    inline-size: 29%;
+  [data-security-screen="M04"] .live-access.live-creds .live-col-b {
+    inline-size: 26%;
   }
-  [data-security-screen="M04"] .live-creds .live-col-c {
-    inline-size: 28%;
+  [data-security-screen="M04"] .live-access.live-creds .live-col-c {
+    inline-size: 34%;
   }
-  [data-security-screen="M04"] .live-creds .live-col-d {
-    inline-size: 16%;
+  [data-security-screen="M04"] .live-access.live-creds .live-col-d {
+    inline-size: 14%;
   }
 }
 @media (max-width: 767px) {

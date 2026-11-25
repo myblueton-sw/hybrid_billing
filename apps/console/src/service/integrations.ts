@@ -1,3 +1,4 @@
+import { keptFactsOf, type KeptFacts } from "./kept";
 export const rightIds = [
   "administer_api_clients",
   "administer_modules",
@@ -116,13 +117,14 @@ export type ModulesSection = {
   plugins: PluginVersion[] | null;
   installations: PluginInstall[] | null;
   proposals: PluginProposal[] | null;
+  proposal_history: KeptFacts | null;
   actions: { propose: Avail };
 };
 
 export type Destination = { id: string; state: string; source: string };
 export type SubscriptionKey = { version: string; not_before: string; not_after: string; state: string; proposer: string; proposer_login: string; approver: string; approver_login: string };
 export type Gap = { after: number | null; to: number | null };
-export type HistoryEntry = { action: string; actor: string; actor_login: string; rationale: string; reason: string; request: string };
+export type HistoryEntry = { number: number | null; action: string; actor: string; actor_login: string; rationale: string; reason: string; request: string };
 export const subscriptionActions = ["approve", "pause", "request_resume", "approve_resume", "revoke", "withdraw", "withdraw_resume"] as const;
 export type SubscriptionAction = (typeof subscriptionActions)[number];
 export type Subscription = {
@@ -145,6 +147,7 @@ export type Subscription = {
   resumer: string;
   resumer_login: string;
   history: HistoryEntry[] | null;
+  history_facts: { total: number; next: string } | null;
   resume_request: RequestValue;
   keys: SubscriptionKey[] | null;
   signer: string;
@@ -189,6 +192,8 @@ export type EventsSection = {
   types: EventType[] | null;
   outbox: { floor: number | null; head: number | null };
   deliveries: Delivery[] | null;
+  deliveries_more: string[] | null;
+  deliveries_next: Record<string, string> | null;
   dispatcher: string;
 };
 
@@ -396,6 +401,7 @@ export function modulesOf(v: unknown): ModulesSection {
     plugins: rows(r.plugins, versionOf),
     installations: rows(r.installations, installOf),
     proposals: rows(r.proposals, pluginProposalOf),
+    proposal_history: isRow(r.proposal_history) ? keptFactsOf(r.proposal_history) : null,
     actions: actionsOf(r.actions, ["propose"] as const),
   };
 }
@@ -420,14 +426,8 @@ export function subscriptionOf(r: Raw): Subscription {
     approver_login: str(r.approver_login),
     resumer: str(r.resumer),
     resumer_login: str(r.resumer_login),
-    history: rows(r.history, (h) => ({
-      action: str(h.action),
-      actor: str(h.actor),
-      actor_login: str(h.actor_login),
-      rationale: str(h.rationale),
-      reason: str(h.reason),
-      request: str(h.request),
-    })),
+    history: rows(r.history, historyEntryOf),
+    history_facts: olderFactsOf(r.history_facts),
     resume_request: requestOf(r.resume_request),
     keys: rows(r.keys, (k) => ({
       version: str(k.version),
@@ -453,6 +453,18 @@ export function channelsOf(v: unknown): ChannelsSection {
     subscriptions: rows(r.subscriptions, subscriptionOf),
     actions: actionsOf(r.actions, ["propose"] as const),
   };
+}
+
+export function cursorsOf(v: unknown): Record<string, string> | null {
+  if (!isRow(v)) return null;
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(v)) if (typeof value === "string" && value !== "") out[key] = value;
+  return out;
+}
+
+export function deliveriesPageOf(body: Raw): { rows: Delivery[]; next: string } | null {
+  if (!Array.isArray(body.deliveries) || typeof body.next !== "string") return null;
+  return { rows: body.deliveries.filter(isRow).map(deliveryOf), next: body.next };
 }
 
 export function deliveryOf(r: Raw): Delivery {
@@ -496,6 +508,8 @@ export function eventsOf(v: unknown): EventsSection {
     })),
     outbox: { floor: count(o.floor), head: count(o.head) },
     deliveries: rows(r.deliveries, deliveryOf),
+    deliveries_more: strs(r.deliveries_more),
+    deliveries_next: cursorsOf(r.deliveries_next),
     dispatcher: str(r.dispatcher),
   };
 }
@@ -522,4 +536,22 @@ export function integrationsOf(body: Raw): IntegrationsPage {
     channels: channelsOf(body.channels),
     events: eventsOf(body.events),
   };
+}
+
+const wholeNumber = (v: unknown): number | null => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
+
+export function historyEntryOf(h: Raw): HistoryEntry {
+  return { number: wholeNumber(h.number), action: str(h.action), actor: str(h.actor), actor_login: str(h.actor_login), rationale: str(h.rationale), reason: str(h.reason), request: str(h.request) };
+}
+
+export function olderFactsOf(v: unknown): { total: number; next: string } | null {
+  if (!isRow(v)) return null;
+  const total = wholeNumber(v.total);
+  return total === null || typeof v.next !== "string" ? null : { total, next: v.next };
+}
+
+export function historyPageOf(body: Raw): { rows: HistoryEntry[]; next: string; total: number } | null {
+  const total = wholeNumber(body.total);
+  if (!Array.isArray(body.history) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.history.filter(isRow).map(historyEntryOf), next: body.next, total };
 }

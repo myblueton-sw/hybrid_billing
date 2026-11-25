@@ -15,6 +15,30 @@ export function wholeDays(raw: string, max: number): number | null {
   return n <= max ? n : null;
 }
 
+export function wholeMinutes(raw: string, min: number, max: number): number | null {
+  if (!/^[1-9][0-9]{0,5}$/.test(raw)) return null;
+  const n = Number(raw);
+  return n >= min && n <= max ? n : null;
+}
+
+export function rotationEnd(now: string, notAfter: string, minutes: number): { at: string; sooner: boolean } | null {
+  const from = Date.parse(now);
+  const present = Date.parse(notAfter);
+  if (Number.isNaN(from) || Number.isNaN(present)) return null;
+  const wanted = from + minutes * 60000;
+  return present < wanted ? { at: new Date(present).toISOString(), sooner: true } : { at: new Date(wanted).toISOString(), sooner: false };
+}
+
+export function utcTime(l: Locale, iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat({ en: "en-US", ko: "ko-KR", ar: "ar" }[l], { year: "numeric", month: l === "en" ? "short" : "numeric", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" }).format(d);
+}
+
+export function canRotate(s: ServiceRow, c: CredentialRow, now: string): boolean {
+  return s.state === "active" && c.state === "active" && c.rotation !== "ending" && !(Date.parse(c.not_before) > Date.parse(now));
+}
+
 export function split(page: ServicesPage): { current: ServiceRow[]; retired: ServiceRow[] } {
   return { current: page.services.filter((s) => s.state !== "retired"), retired: page.services.filter((s) => s.state === "retired") };
 }

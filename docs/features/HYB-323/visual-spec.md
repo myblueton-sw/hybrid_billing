@@ -61,7 +61,7 @@ Precedence:
   - Job rows carry the filter as one 14px text line (§9.1).
   - The read-only chips appear in the job detail (§9.2).
   - [R-C5]
-- **A-3. Checkbox column while a list is fixed.** Q-B4 says the checkboxes are "not rendered". This addendum removes the whole column (`col`, `th` and `td`), using the table's existing no-check layout.
+- **A-3. Checkbox column while a list is fixed.** Q-B4 says the checkboxes are "not rendered". This addendum removes the whole column (`col`, `th` and `td`), using the table's existing no-check layout. Superseded in part by [HYB-324](../HYB-324/implementation.md): the owner of a filter list can now remove chosen people, in a removal mode that brings the checkbox column back for that purpose only; the dead-end names removal as a remedy and offers a way back to the list, still without a list of administrators.
   - Empty cells would leave a 56px blank column that reads as a broken control.
   - The parity rule (HYB-294 §10) holds by construction.
 
@@ -197,7 +197,7 @@ The layout is unchanged: `m01-bulk-grid` 7fr / 5fr at a container width of 880px
 | `invalid_stage` (**list closed / nobody left**) | `notPrepared` "Preview not prepared" | `listClosed` "This list can no longer be prepared: it expired, or nobody in it can be revoked now. Discard it and select again." | p 600: "Nothing has been revoked." | "Discard list" |
 | `permission_denied` and others | existing failure handling | — | — | — |
 
-In filter mode, the dead-end has no administrator list, no "Remove from selection", no "Preview again" sentence and no "Resume sending". The submit button "Preview impact" is hidden while either summary shows.
+In filter mode, the dead-end has no administrator list, no "Remove from selection", no "Preview again" sentence and no "Resume sending". The submit button "Preview impact" is hidden while either summary shows. Superseded in part by [HYB-324](../HYB-324/implementation.md): the owner of a filter list can now remove chosen people, in a removal mode that brings the checkbox column back for that purpose only; the dead-end names removal as a remedy and offers a way back to the list, still without a list of administrators.
 
 After Discard list, the flow returns to the Users or Membership bar with the filters as they were. Focus goes to `.m01-match-open` and the discarded sentence is announced.
 
@@ -369,7 +369,7 @@ Alerts use `role=alert` and are not also sent to the announcer.
 5. State F has no `th.m01-check`, `td.m01-check` or `col.m01-col-check`, and no `input[type=checkbox]` in the table or the bar. `th` and `td` counts are equal at L, M and the stacked layout.
 6. State F chips are `span`s, not focusable, with no close icon. The fixed line, meta line and `fixedNoChecks` are present. Changing a filter shows `keepsOwn` once, and the chips do not change.
 7. State F survives a tab change and a reload, recovered from the server.
-8. Dead-end: no administrator list, no "Remove from selection"; Discard list returns to the bar with the same filters and focus on the trigger.
+8. Dead-end: no administrator list, no "Remove from selection"; Discard list returns to the bar with the same filters and focus on the trigger. Superseded in part by [HYB-324](../HYB-324/implementation.md): the owner of a filter list can now remove chosen people, in a removal mode that brings the checkbox column back for that purpose only; the dead-end names removal as a remedy and offers a way back to the list, still without a list of administrators.
 9. `invalid_stage` shows `listClosed`.
 10. Preview for a filter list: `m01-fixedfacts` present, the `no_longer_matches` exclusion row present, the arithmetic sentence holds (targets + excluded = matched). The explicit-list preview is byte-identical to `3bdb750` (snapshot).
 11. Job rows show the three basis words. For a second administrator, the search shows "Search applied" and the text of `q` appears nowhere in the DOM, including the `aria-*` and `title` attributes.
@@ -449,7 +449,7 @@ Alerts use `role=alert` and are not also sent to the announcer.
 - Any wording that execution re-runs, re-applies or re-checks the filter, that the list "stays current" or "updates", or that people "still match" at execution (R-B1).
 - Any claim that a filter change updates the fixed list.
 - The search text for a non-preparer, in text, `title` or `aria-*`; and any wording that masking is privacy, secrecy or protection (R-B2).
-- An administrator list or "Remove from selection" in the filter-list dead-end; any "remove chosen people" control on a filter list (Q4, HYB-324 is open).
+- An administrator list or "Remove from selection" in the filter-list dead-end; any "remove chosen people" control on a filter list (Q4, HYB-324 is open). Superseded in part by [HYB-324](../HYB-324/implementation.md): the owner of a filter list can now remove chosen people, in a removal mode that brings the checkbox column back for that purpose only; the dead-end names removal as a remedy and offers a way back to the list, still without a list of administrators.
 - Invented authentication, integrations, metrics or acceptance claims.
 - A centred max-width container, or stretched buttons at ≥768px.
 

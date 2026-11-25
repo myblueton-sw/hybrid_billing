@@ -15,7 +15,7 @@ const organizations = (body: unknown) => client(body).organizations();
 for (const [name, fixture, read, fields] of [
   ["access", accessFixture, access, ["grants", "delegations", "catalog", "subjects", "settings", "requests", "revocations"]],
   ["services", servicesFixture, services, ["services", "owners"]],
-  ["self", selfFixture, me, ["identities", "sessions", "session_ends"]],
+  ["self", selfFixture, me, ["identities"]],
   ["organizations", orgFixture, organizations, ["parties", "profiles", "members"]],
 ] as const) {
   test(`${name} requires arrays and rejects malformed members without dropping valid rows`, async () => {
@@ -70,11 +70,20 @@ test("service credentials reject unsafe permissions, versions and supplied picku
     { state: "expired", secret_pickup: "collected" }]) {
     await assert.rejects(services({ ...servicesFixture, services: [{ ...serviceFixture, credentials: [{ ...credentialFixture, ...patch }] }] }), invalid);
   }
+  const pair = await services({ ...servicesFixture, services: [{ ...serviceFixture, credentials: [
+    { ...credentialFixture, id: "cred-2", replaces: "cred-1", rotation: "replacing" }, { ...credentialFixture, replaced_by: "cred-2", rotation: "ending" },
+    { ...credentialFixture, id: "cred-0", state: "expired", usable: false, replaced_by: "cred-1" }] }] });
+  assert.deepEqual(pair.services[0].credentials.map((x) => [x.id, x.replaces, x.replaced_by, x.rotation]),
+    [["cred-2", "cred-1", undefined, "replacing"], ["cred-1", undefined, "cred-2", "ending"], ["cred-0", undefined, "cred-1", undefined]]);
+  for (const patch of [{ rotation: "rotating" }, { rotation: "ending" }, { rotation: "replacing" }, { replaces: "" }, { replaced_by: "" }, { replaces: 1 },
+    { state: "expired", rotation: "ending", replaced_by: "cred-2" }, { state: "revoked", rotation: "replacing", replaces: "cred-0" }]) {
+    await assert.rejects(services({ ...servicesFixture, services: [{ ...serviceFixture, credentials: [{ ...credentialFixture, ...patch }] }] }), invalid, JSON.stringify(patch));
+  }
   for (const patch of [{ state: "future" }, { version: Number.MAX_SAFE_INTEGER + 1 }, { credentials: null }]) {
     await assert.rejects(services({ ...servicesFixture, services: [{ ...serviceFixture, ...patch }] }), invalid);
   }
   assert.equal((await services({ ...servicesFixture, limits: { ...servicesFixture.limits, credential_days: 0 } })).limits.credential_days, 0);
-  for (const field of ["credentials_per_service", "services", "replay_seconds"]) {
+  for (const field of ["credentials_per_service", "services", "replay_seconds", "credential_overlap_minutes", "credential_overlap_max_minutes", "secret_pickup_minutes"]) {
     await assert.rejects(services({ ...servicesFixture, limits: { ...servicesFixture.limits, [field]: 0 } }), invalid);
   }
   for (const field of Object.keys(servicesFixture.limits)) {
@@ -87,15 +96,12 @@ test("service credentials reject unsafe permissions, versions and supplied picku
 test("self identity and session facts reject coercion while empty identities remain empty", async () => {
   assert.deepEqual(await me(selfFixture), selfFixture);
   for (const patch of [{ identities: [{ method: 1, login: "l" }] }, { identities: [{ method: "local-password", login: null }] },
-    { sessions: [{ ...selfFixture.sessions[0], current: "true" }] }, { password_set: "false" }, { installation_administrator: "true" },
-    { idle_minutes: -1 }, { max_age_seconds: Number.MAX_SAFE_INTEGER + 1 }]) {
+    { current_session: { ...selfFixture.current_session, current: "true" } }, { password_set: "false" }, { installation_administrator: "true" },
+    { idle_minutes: -1 }, { absolute_minutes: 0 }, { absolute_minutes: undefined }, { max_age_seconds: Number.MAX_SAFE_INTEGER + 1 }]) {
     await assert.rejects(me({ ...selfFixture, ...patch }), invalid);
   }
-  const end = { operation: "op", kind: "one", count: 1, state: "complete", blocked_at: "a", list_generation: "", current_generation: "g", generation_changed: false,
-    digest: "d", cleanup: { done: 1, already_ended: 0, failed: 0, pending: 0 }, sessions: [{ handle: "h", signed_in: "a", result: "ended", items: [{ item: "C1", state: "done" }] }], not_included: [], replay: false };
-  assert.equal((await me({ ...selfFixture, session_ends: [end] })).session_ends[0].sessions[0].items[0].reason, "");
-  for (const patch of [{ replay: "false" }, { count: 1.5 }, { state: "future" }, { not_included: null }, { cleanup: { ...end.cleanup, done: "1" } }]) {
-    await assert.rejects(me({ ...selfFixture, session_ends: [{ ...end, ...patch }] }), invalid);
+  for (const patch of [{ current_session:null }, { current_session:{ ...selfFixture.current_session,state:"future" } }, { recorded_session_count:1.5 }, { accepted_operation_count:"0" }]) {
+    await assert.rejects(me({ ...selfFixture,...patch }),invalid);
   }
 });
 

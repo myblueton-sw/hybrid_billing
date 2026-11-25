@@ -284,3 +284,66 @@ func TestCheckIsConcurrent(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestReplacementsAreTheRequirementsARetireAccepts(t *testing.T) {
+	f := standard(t)
+	f.approve(Change{Kind: ChangeRequirement, Requirement: req("N1", false, TestRef{ID: "n1"})})
+	f.approve(Change{Kind: ChangeRequirement, Requirement: req("C2", true, TestRef{ID: "c2"})})
+	b := req("B1", false, TestRef{ID: "b1"})
+	b.Blocking = true
+	f.approve(Change{Kind: ChangeRequirement, Requirement: b})
+	f.approve(Change{Kind: ChangeRequirement, Requirement: req("N2", false, TestRef{ID: "n2"})})
+	f.approve(Change{Kind: ChangeRequirement, Requirement: req("C3", true, TestRef{ID: "c3"})})
+	cb := req("CB", true, TestRef{ID: "cb"})
+	cb.Blocking = true
+	f.approve(Change{Kind: ChangeRequirement, Requirement: cb})
+	f.approve(Change{Kind: ChangeRequirement, Requirement: req("N3", false, TestRef{ID: "n3"})})
+	order := []string{"R1", "N1", "C2", "B1", "N2", "C3", "CB", "N3"}
+	compare := func(stage string) {
+		t.Helper()
+		accepted := 0
+		for _, id := range order {
+			want := []Key{}
+			for _, other := range order {
+				if other != id && f.r.Check(retireOf(id, other), ann.ID, "") == nil {
+					want = append(want, k(other))
+				}
+			}
+			got, err := f.r.Replacements(k(id))
+			if err != nil || fmt.Sprint(got) != fmt.Sprint(want) {
+				t.Errorf("%s: %s has %v, a retire accepts %v (%v)", stage, id, got, want, err)
+			}
+			accepted += len(want)
+		}
+		if accepted == 0 {
+			t.Errorf("%s: no retire accepts any replacement, the comparison is empty", stage)
+		}
+	}
+	if _, err := f.r.Requirement(k("R1"), ""); err != nil {
+		t.Fatalf("the standard world has no R1: %v", err)
+	}
+	compare("fresh")
+	if got, _ := f.r.Replacements(k("C2")); fmt.Sprint(got) != fmt.Sprint([]Key{k("C3"), k("CB")}) {
+		t.Errorf("a common requirement is replaced by later common ones, in the order recorded: %v", got)
+	}
+	if got, _ := f.r.Replacements(k("B1")); fmt.Sprint(got) != fmt.Sprint([]Key{k("CB")}) {
+		t.Errorf("a blocking requirement is replaced by later blocking ones: %v", got)
+	}
+	f.approve(retireOf("C2", "C3"))
+	f.approve(retireOf("N1", ""))
+	compare("after two retirements")
+	if got, _ := f.r.Replacements(k("C2")); len(got) != 0 {
+		t.Errorf("a retired requirement has replacements: %v", got)
+	}
+	for _, id := range order {
+		got, _ := f.r.Replacements(k(id))
+		for _, used := range got {
+			if used == k("C3") || used == k("N1") || used == k("C2") {
+				t.Errorf("%s is offered %v, which is retired or already replaces another", id, used)
+			}
+		}
+	}
+	if _, err := f.r.Replacements(k("Z")); err != ErrNotFound {
+		t.Errorf("an unknown requirement: %v", err)
+	}
+}

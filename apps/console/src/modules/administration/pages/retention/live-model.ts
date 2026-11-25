@@ -1,6 +1,6 @@
 import { Refusals } from "../../../../service/refusal";
 import type { RowDiagnostic } from "../../../../service/command-diagnostics";
-import type { Owner, ArtifactRow, ClassGroup, HoldRow, ImpactNow, Person, PolicyRow, PolicyView, Proposal, RetentionPage, RunRef, RunRow, StoreRow } from "../../../../service/retention";
+import type { Owner, ArtifactEntry, ArtifactRow, ClassGroup, Reference, HoldRow, ImpactNow, Person, PolicyRow, PolicyView, Proposal, RetentionPage, RunRef, RunRow, StoreRow } from "../../../../service/retention";
 import { classes } from "./live-codes";
 
 export const views = ["policies", "expiry", "holds", "deletion", "restore", "decisions"];
@@ -645,10 +645,6 @@ export function partialCounts(fields: Record<string, string>): { a: number | nul
   return { a: n(fields.not_preserved), b: n(fields.outcome_pending), c: n(fields.partially_deleted) };
 }
 
-export function ownerOption(o: Owner): string {
-  return o.login ? "⁦" + o.login + " (" + o.id + ")⁩" : "⁦" + o.id + "⁩";
-}
-
 export function holdValues(d: Record<string, string>, tenant: boolean): Record<string, string> {
   const out: Record<string, string> = { owner: d.owner ?? "", reason: (d.reason ?? "").trim() };
   if (tenant && d.class && classes.includes(d.class)) out.class = d.class;
@@ -660,4 +656,51 @@ export function refusalDiagnostics(target: string): RowDiagnostic[] {
     const entry = refusals.detail(slot(command, target));
     return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
   });
+}
+
+export function withHeldArtifacts(page: RetentionPage, entries: ArtifactEntry[]): RetentionPage {
+  if (page.expiry === null || entries.length === 0) return page;
+  let changed = false;
+  const expiry = page.expiry.map((g) => {
+    if (g.artifacts === null) return g;
+    const have = new Set(g.artifacts.map((a) => a.id));
+    const held = [...g.artifacts];
+    for (const e of entries) {
+      if (e.class !== g.class || e.artifact.id === "" || have.has(e.artifact.id)) continue;
+      have.add(e.artifact.id);
+      held.push(e.artifact);
+    }
+    if (held.length === g.artifacts.length) return g;
+    changed = true;
+    held.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    return { ...g, artifacts: held, more: g.total === null ? g.more : held.length < g.total };
+  });
+  return changed ? { ...page, expiry } : page;
+}
+
+export function withMoreReferences(page: RetentionPage, rows: Reference[]): RetentionPage {
+  const refs = page.holds.references;
+  if (refs.rows === null || rows.length === 0) return page;
+  const have = new Set(refs.rows.map((r) => r.id));
+  const held = [...refs.rows];
+  for (const r of rows) {
+    if (r.id === "" || have.has(r.id)) continue;
+    have.add(r.id);
+    held.push(r);
+  }
+  return { ...page, holds: { ...page.holds, references: { ...refs, rows: held, more: refs.total === null ? refs.more : held.length < refs.total } } };
+}
+
+export function artifactIdsInUse(): string[] {
+  const out = new Set<string>();
+  for (const id of [...pending.keys(), ...refusals.keys()]) {
+    const at = unslot(id);
+    if (at && at.command === "retention.place_hold" && at.target.startsWith(artifactPrefix)) out.add(at.target.slice(artifactPrefix.length));
+  }
+  return [...out];
+}
+
+export function missingArtifacts(page: RetentionPage, ids: string[]): string[] {
+  if (page.expiry === null) return [];
+  return [...new Set(ids)].filter((id) => validId(id) && !artifactOf(page, id));
 }

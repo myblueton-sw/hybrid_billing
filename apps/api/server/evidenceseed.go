@@ -62,6 +62,7 @@ type evidenceEntry struct {
 	closedBy  string
 	closing   string
 	applied   uint64
+	seq       uint64
 }
 
 type evidenceStore struct {
@@ -77,6 +78,10 @@ type evidenceStore struct {
 	results      []evidenceResultKey
 	candidate    *releasetrace.Release
 	entries      []*evidenceEntry
+	entrySeq     uint64
+	dropped      int
+	resultSeq    map[evidenceResultKey]uint64
+	resultCount  uint64
 }
 
 func newEvidenceStore() *evidenceStore { return &evidenceStore{} }
@@ -99,6 +104,8 @@ func (c *evidenceStore) entry(module string, number uint64) *evidenceEntry {
 }
 
 func (c *evidenceStore) keep(e *evidenceEntry) {
+	c.entrySeq++
+	e.seq = c.entrySeq
 	c.entries = append(c.entries, e)
 	if len(c.entries) <= installKept {
 		return
@@ -106,6 +113,7 @@ func (c *evidenceStore) keep(e *evidenceEntry) {
 	for index, old := range c.entries {
 		if old.state != entryPending {
 			c.entries = append(c.entries[:index], c.entries[index+1:]...)
+			c.dropped++
 			return
 		}
 	}
@@ -145,6 +153,16 @@ func (c *evidenceStore) pendingReplacement(k releasetrace.Key) bool {
 		}
 	}
 	return false
+}
+
+func (c *evidenceStore) pendingReplacements() map[releasetrace.Key]bool {
+	out := map[releasetrace.Key]bool{}
+	for _, e := range c.entries {
+		if e.module == moduleTrace && e.state == entryPending && e.kind == releasetrace.ChangeRetire {
+			out[e.trace.Retire.Replacement] = true
+		}
+	}
+	return out
 }
 
 func (c *evidenceStore) pendingProfileRetire(id string) *evidenceEntry {
@@ -192,11 +210,17 @@ func (c *evidenceStore) testOwners(k evidenceResultKey) []releasetrace.Key {
 }
 
 func (c *evidenceStore) addResult(k evidenceResultKey) {
-	for _, stored := range c.results {
+	for index, stored := range c.results {
 		if stored == k {
-			return
+			c.results = append(c.results[:index], c.results[index+1:]...)
+			break
 		}
 	}
+	if c.resultSeq == nil {
+		c.resultSeq = map[evidenceResultKey]uint64{}
+	}
+	c.resultCount++
+	c.resultSeq[k] = c.resultCount
 	c.results = append(c.results, k)
 }
 

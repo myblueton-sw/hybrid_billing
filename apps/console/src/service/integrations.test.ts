@@ -222,5 +222,59 @@ test("held redeliveries and request identities are parsed", () => {
   assert.deepEqual(d?.actions.withdraw_redeliver, { allowed: false, blocked: "missing" });
   const s = got.channels.subscriptions?.[0];
   assert.deepEqual(s?.resume_request, { id: "resume-request-2", target: "webhook-resume-request:resume-request-2", by: "a", by_login: "", rationale: "" });
-  assert.deepEqual(s?.history?.[0], { action: "proposal_closed", actor: "b", actor_login: "", rationale: "", reason: "requester_lost_right", request: "req-1" });
+  assert.deepEqual(s?.history?.[0], { number: null, action: "proposal_closed", actor: "b", actor_login: "", rationale: "", reason: "requester_lost_right", request: "req-1" });
+});
+
+test("a subscription's history count, cursor and further page are read strictly", async () => {
+  const { historyEntryOf, historyPageOf, olderFactsOf } = await import("./integrations");
+  const { newestFirst } = await import("../shared/older-rows");
+  assert.equal(historyEntryOf({ number: 7, action: "pause" }).number, 7);
+  assert.equal(historyEntryOf({ number: "7" }).number, null);
+  assert.deepEqual(olderFactsOf({ total: 120, next: "71" }), { total: 120, next: "71" });
+  for (const bad of [null, [], { total: "1", next: "" }, { total: 1, next: 5 }, { next: "" }]) assert.equal(olderFactsOf(bad), null, JSON.stringify(bad));
+  for (const bad of [{}, { history: [], next: "" }, { history: "x", next: "", total: 0 }, { history: [], next: 4, total: 0 }]) assert.equal(historyPageOf(bad), null, JSON.stringify(bad));
+  const page = historyPageOf({ history: [{ number: 70, action: "pause" }, null, "x"], next: "21", total: 120 });
+  assert.deepEqual([page?.rows.length, page?.rows[0].number, page?.next, page?.total], [1, 70, "21", 120]);
+  const n = (x: number | null) => historyEntryOf({ number: x });
+  assert.deepEqual(newestFirst([n(71), n(72), n(73)], [n(71), n(70), n(69)]).map((x) => x.number), [73, 72, 71, 70, 69]);
+  assert.equal(newestFirst([n(2)], [n(null), n(null)]).length, 3);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { history: [{ number: 70 }], next: "", total: 120 } : { history: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.subscriptionHistory("sample erp", "71")).rows[0].number, 70);
+  assert.equal(calls[0], "/api/v1/integrations/subscription-history?subscription=sample%20erp&limit=50&after=71");
+  await assert.rejects(api.subscriptionHistory("s", "2"), (e: AdminError) => e.failure === "invalid");
+});
+
+test("the deliveries' cursors and the deliveries read are read strictly, and further rows are held once in order", async () => {
+  const { cursorsOf, deliveriesPageOf, deliveryOf } = await import("./integrations");
+  const { withMoreDeliveries, deliveriesToLoad } = await import("../modules/administration/pages/integrations/live-model");
+  const { AdminError, adminClient } = await import("./admin");
+  assert.deepEqual(cursorsOf({ a: "50", b: 5, c: "" }), { a: "50" });
+  for (const bad of [null, [], "x"]) assert.equal(cursorsOf(bad), null, JSON.stringify(bad));
+  for (const bad of [{}, { deliveries: [] }, { deliveries: "x", next: "" }, { deliveries: [], next: 4 }]) assert.equal(deliveriesPageOf(bad), null, JSON.stringify(bad));
+  const got = deliveriesPageOf({ deliveries: [{ id: "d-51", subscription: "s", sequence: 51 }, null], next: "100", total: 120 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].id, got?.next], [1, "d-51", "100"]);
+  const d = (id: string, subscription: string, sequence: number) => deliveryOf({ id, subscription, sequence });
+  const page = { events: { deliveries: [d("d-1", "s", 1), d("d-9", "t", 9)], deliveries_more: ["s", "t"], deliveries_next: { s: "50", t: "50" } } } as unknown as Parameters<typeof withMoreDeliveries>[0];
+  assert.deepEqual(deliveriesToLoad(page, ""), ["s", "t"]);
+  assert.deepEqual(deliveriesToLoad(page, "t"), ["t"]);
+  const more = withMoreDeliveries(page, "s", [d("d-5", "s", 5), d("d-1", "s", 1), d("d-5", "s", 5), d("d-7", "t", 7), d("", "s", 3)], "100");
+  assert.deepEqual(more.events.deliveries?.map((x) => x.id), ["d-1", "d-5", "d-9"]);
+  assert.deepEqual([more.events.deliveries_next, more.events.deliveries_more], [{ s: "100", t: "50" }, ["s", "t"]]);
+  const end = withMoreDeliveries(more, "s", [d("d-6", "s", 6)], "");
+  assert.deepEqual([end.events.deliveries?.map((x) => x.id), end.events.deliveries_next, end.events.deliveries_more, deliveriesToLoad(end, "")], [["d-1", "d-5", "d-6", "d-9"], { t: "50" }, ["t"], ["t"]]);
+  assert.deepEqual(deliveriesToLoad({ events: { deliveries_next: null } } as unknown as Parameters<typeof withMoreDeliveries>[0], ""), []);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { deliveries: [{ id: "d-51" }], next: "" } : { deliveries: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.integrationDeliveries("sub a", "50")).rows[0].id, "d-51");
+  assert.equal(calls[0], "/api/v1/integrations/deliveries?subscription=sub+a&limit=50&after=50");
+  await assert.rejects(api.integrationDeliveries("s", "2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
 });

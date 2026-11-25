@@ -439,6 +439,12 @@ export function selectionOf(params: URLSearchParams, page: IntegrationsPage | nu
   return out;
 }
 
+export function deliveriesCut(page: IntegrationsPage, subscription: string): "cut" | "complete" | "unknown" {
+  const more = page.events.deliveries_more;
+  if (more === null) return "unknown";
+  return (subscription ? more.includes(subscription) : more.length > 0) ? "cut" : "complete";
+}
+
 export function deliveriesShown(page: IntegrationsPage, subscription: string): Delivery[] | null {
   const all = page.events.deliveries;
   if (all === null) return null;
@@ -671,9 +677,12 @@ export function clearDraft(command: string, target: string): void {
 }
 
 export function snapshotOf(page: IntegrationsPage, command: CommandKey): string[] {
-  if (command === "integrations.plugin_propose") return (page.modules.proposals ?? []).flatMap((p) => (p.number === null ? [] : [String(p.number)]));
   if (command === "integrations.subscription_propose") return (page.channels.subscriptions ?? []).map((s) => s.id);
   return [];
+}
+
+export function existingProposal(fields: Record<string, string>): boolean {
+  return fields.existing === "true";
 }
 
 export function duplicateIn(snapshot: string[], id: string): boolean {
@@ -703,4 +712,28 @@ export function feedbackDiagnostics(choices: Array<[CommandKey, string]>): RowDi
     const entry = denied ?? refusals.detail(slot(command, target));
     return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
   });
+}
+
+export function withMoreDeliveries(page: IntegrationsPage, subscription: string, rows: Delivery[], next: string): IntegrationsPage {
+  const events = page.events;
+  if (events.deliveries === null) return page;
+  const have = new Set(events.deliveries.map((d) => d.id));
+  const held = [...events.deliveries];
+  for (const d of rows) {
+    if (d.id === "" || d.subscription !== subscription || have.has(d.id)) continue;
+    have.add(d.id);
+    held.push(d);
+  }
+  held.sort((a, b) => (a.sequence ?? Number.MAX_SAFE_INTEGER) - (b.sequence ?? Number.MAX_SAFE_INTEGER));
+  const cursors = { ...(events.deliveries_next ?? {}) };
+  if (next === "") delete cursors[subscription];
+  else cursors[subscription] = next;
+  const more = next === "" ? (events.deliveries_more ?? []).filter((id) => id !== subscription) : events.deliveries_more;
+  return { ...page, events: { ...events, deliveries: held, deliveries_next: cursors, deliveries_more: more } };
+}
+
+export function deliveriesToLoad(page: IntegrationsPage, subscription: string): string[] {
+  const cursors = page.events.deliveries_next;
+  if (cursors === null) return [];
+  return Object.keys(cursors).filter((id) => !subscription || id === subscription).sort();
 }

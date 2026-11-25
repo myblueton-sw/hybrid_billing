@@ -25,6 +25,7 @@ export const classWords: Words = {
 export const standingWords: Words = {
   eligible: ["Due for deletion", "삭제 대상", "مستحق للحذف"],
   held: ["On hold", "보존 보류 중", "معلّق الحذف"],
+  guarding: ["Kept until item is gone", "원 항목 완전 삭제 전", "بانتظار زوال العنصر الأصلي"],
   referenced: ["Required by another item", "다른 항목이 참조", "مطلوب لعنصر آخر"],
   not_due: ["Not due yet", "아직 기한 전", "لم يحن موعده"],
   no_policy: ["No policy", "정책 없음", "لا توجد سياسة"],
@@ -75,6 +76,7 @@ export const runOutcomeWords: Words = {
   deleted: ["Deleted", "삭제됨", "محذوف"],
   failed: ["Failed", "실패", "فشل"],
   held: ["Skipped: on hold", "제외: 보존 보류", "مستبعد: معلّق الحذف"],
+  guarding: ["Skipped: item not gone", "제외: 원 항목 삭제 전", "مستبعد: العنصر الأصلي باقٍ"],
   referenced: ["Skipped: required", "제외: 참조됨", "مستبعد: مطلوب"],
   not_due: ["Skipped: not due", "제외: 기한 전", "مستبعد: لم يحن موعده"],
   stopped: ["Stopped", "중지됨", "موقوف"],

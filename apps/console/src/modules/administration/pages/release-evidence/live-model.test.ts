@@ -7,13 +7,15 @@ import { readFileSync } from "node:fs";
 import { createElement, type ComponentType } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { AdminClient } from "../../../../service/admin";
-import { evidenceOf, proposalOf, requirementOf, type EvidencePage } from "../../../../service/release-evidence";
+import { evidenceOf, proposalOf, requirementOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type RequirementRow } from "../../../../service/release-evidence";
+import { AdminError, adminClient } from "../../../../service/admin";
 import { sample } from "../../../../service/release-evidence.sample";
 import {
   approveUsable, blockerPolicy, buildsOf, cancelled, deniedOutcome, differences, draftOf, duplicateIn, fieldReaction, forget, frozenTargetOk, goneKind, hadEarlier, keepDraft, keepsAttempt,
   keptKey, modeOf, pairOf, pendingFor, pendingNow, pendingRetire, profileRetire, profileTarget, proposalTarget, pruneRefusals, react, readDenied, readSucceeded, refusedNow, renew,
-  replacementOptions, replacementProblem, requirementRetire, requirementTarget, retireValues, revokedNow, selectionOf, setScope, settle as settleRecorded, snapshotOf, splitWidth, stateSentence, textProblem,
+  replacementChoices, replacementOptions, replacementProblem, requirementRetire, requirementTarget, retireValues, revokedNow, selectionOf, setScope, settle as settleRecorded, snapshotOf, splitWidth, stateSentence, textProblem,
   utf8Bytes, vanished, rowId, closedProposal, verdictLine, viewOf, withdrawUsable,
+  filtering, missingProfiles, missingRequirements, noFilter, profileById, missingPath, profileTargetsInUse, withHeldPaths, withHeldProfiles, withMoreHardware, requirementByLabel, requirementByTarget, requirementByTest, requirementTargetsInUse, stateAtCandidate, stillAllowed, withHeld,
 } from "./live-model";
 import { blockerText, f, k } from "./live-copy";
 import { allWordTables, category, counted, failingVerdicts, plurals, verdictWords } from "./live-codes";
@@ -783,3 +785,301 @@ function refusedDetail(command: string, target: string): Receipt | undefined {
 function settle(command: string, target: string, reaction: Parameters<typeof settleRecorded>[2], failure = "", had = false, detail?: Receipt) {
   settleRecorded(command, target, reaction, failure, had, reference(command, target, detail));
 }
+
+function loaded(p: EvidencePage, n: number, over: Partial<RequirementRow> = {}): RequirementRow {
+  const from = p.requirements.requirements.rows![1];
+  return { ...from, target: "trace-requirement-" + n, id: "loaded-" + n, label: from.namespace + "/loaded-" + n, tests: from.tests ? { ...from.tests, rows: [{ ...from.tests.rows![0], id: "t-loaded-" + n }] } : null, ...over };
+}
+
+test("rows held beyond the main read are read by every lookup and counted in the comparison", () => {
+  const main = page((s) => { s.requirements.requirements.total = 70; s.requirements.requirements.more = true; s.requirements.next = "6"; });
+  const held = withHeld(main, [loaded(main, 60, { states: { "0.0.1": "designed", "0.0.2": "tested" } }), loaded(main, 9), loaded(main, 2, { id: "stale-copy" })]);
+  const rows = held.requirements.requirements.rows!;
+  assert.deepEqual(rows.map((r) => r.target.slice(18)), ["1", "2", "3", "4", "5", "6", "9", "60"]);
+  assert.equal(rows[1].id, main.requirements.requirements.rows![1].id);
+  assert.equal(held.requirements.requirements.more, true);
+  assert.equal(held.requirements.requirements.total, 70);
+  assert.equal(held.requirements.next, "6");
+  assert.equal(requirementByTarget(held, "trace-requirement-60")?.id, "loaded-60");
+  assert.equal(requirementByLabel(held, rows[7].label)?.target, "trace-requirement-60");
+  assert.equal(requirementByTest(held, rows[7].namespace, "t-loaded-60")?.target, "trace-requirement-60");
+  assert.equal(requirementByTarget(main, "trace-requirement-60"), undefined);
+  assert.ok(differences(held, { from: "0.0.1", to: "0.0.2" }).some((d) => d.label === rows[7].label));
+  assert.equal(selectionOf(new URLSearchParams("requirement=60"), held, "requirements").requirement, "60");
+  assert.equal(selectionOf(new URLSearchParams("requirement=60"), main, "requirements").requirement, "");
+  assert.equal(withHeld(main, []), main);
+  const whole = withHeld(page((s) => { s.requirements.requirements.total = 7; }), [loaded(main, 7)]);
+  assert.equal(whole.requirements.requirements.more, false);
+});
+
+test("a row an attempt refers to is asked for again and is not reported as gone once held", () => {
+  forget();
+  setScope("w", "u", "s");
+  const main = page();
+  pendingFor("release_evidence.retire_requirement", "trace-requirement-60", { reason: "x" }, "r1", () => ({ request: "q", key: "k" }), [], { view: "requirements" });
+  settleRecorded("release_evidence.retire_requirement", "trace-requirement-61", "hint", "stage", false);
+  pendingFor("release_evidence.approve", "perf-proposal-9", { rationale: "x" }, "r1", () => ({ request: "q", key: "k" }), [], { view: "decisions", proposal: "9" });
+  assert.deepEqual(requirementTargetsInUse().sort(), ["trace-requirement-60", "trace-requirement-61"]);
+  assert.deepEqual(missingRequirements(main, [...requirementTargetsInUse(), "trace-requirement-2", "trace-requirement-60", "", "x"]).sort(), ["trace-requirement-60", "trace-requirement-61"]);
+  assert.equal(vanished(main, "requirements").length, 1);
+  const held = withHeld(main, [loaded(main, 60, { can_retire: true, retire_blocked: "" }), loaded(main, 61, { can_retire: true, retire_blocked: "" })]);
+  assert.equal(vanished(held, "requirements").length, 0);
+  assert.equal(stillAllowed(held, "release_evidence.retire_requirement", "trace-requirement-60"), true);
+  pruneRefusals(held);
+  assert.equal(refusedNow("release_evidence.retire_requirement", "trace-requirement-61"), "stage");
+  pruneRefusals(main);
+  assert.equal(refusedNow("release_evidence.retire_requirement", "trace-requirement-61"), "");
+  assert.deepEqual(missingRequirements(page((s) => { s.requirements.requirements.rows = null; }), ["trace-requirement-60"]), []);
+  forget();
+});
+
+test("the state at the candidate comes from the row when the service gives it", () => {
+  const p = page();
+  const r = p.requirements.requirements.rows![0];
+  assert.equal(stateAtCandidate({ ...r, state: "failing", states: {} }, p.candidate), "failing");
+  assert.equal(stateAtCandidate({ ...r, state: null, states: { [p.candidate!.build]: "tested" } }, p.candidate), "tested");
+  assert.equal(stateAtCandidate({ ...r, state: "tested" }, null), null);
+  assert.equal(filtering(noFilter), false);
+  assert.equal(filtering({ ...noFilter, retired: "no" }), true);
+});
+
+test("the requirements read is asked and read strictly", async () => {
+  assert.equal(requirementsPath({}), "/release-evidence/requirements");
+  assert.equal(requirementsPath({ after: "6", q: "a b", state: "tested", retired: "no" }), "/release-evidence/requirements?after=6&q=a+b&state=tested&retired=no");
+  assert.equal(requirementsPath({ targets: ["trace-requirement-60", "trace-requirement-2"], q: "ignored" }), "/release-evidence/requirements?target=trace-requirement-60%2Ctrace-requirement-2");
+  for (const bad of [{}, { requirements: [], next: "", matching: 1 }, { requirements: "x", next: "", matching: 0, total: 0 }, { requirements: [], next: 5, matching: 0, total: 0 }, { requirements: [], next: "", matching: -1, total: 0 }]) {
+    assert.equal(requirementsAnswerOf(bad), null, JSON.stringify(bad));
+  }
+  const got = requirementsAnswerOf({ requirements: [{ target: "trace-requirement-7", state: "tested" }, null, "x"], next: "7", matching: 3, total: 70 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].target, got?.rows[0].state, got?.next, got?.matching, got?.total], [1, "trace-requirement-7", "tested", "7", 3, 70]);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { requirements: [], next: "", matching: 0, total: 6 } : { requirements: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.evidenceRequirements({ targets: ["trace-requirement-60"] })).total, 6);
+  assert.equal(calls[0], "/api/v1/release-evidence/requirements?target=trace-requirement-60");
+  await assert.rejects(api.evidenceRequirements({}), (e: AdminError) => e.failure === "invalid");
+});
+
+test("the requirements table shows its count, filters and button from what it is given", () => {
+  const p = page();
+  const base = { rows: p.requirements.requirements.rows, filter: noFilter, total: 70, matching: null, more: true, status: "idle" as const, reset: false, candidate: true, onFilter: () => undefined, onMore: () => undefined };
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), l, table: base }));
+    assert.ok(html.includes(k.reqShown(l, 6, 70)) && html.includes(k.reqMore(l)) && html.includes('id="p05-req-state"') && !html.includes(k.reqClear(l)), l);
+    const filtered = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), l, table: { ...base, filter: { q: "erp", state: "", retired: "" }, rows: [p.requirements.requirements.rows![3]], matching: 1, more: false } }));
+    assert.ok(filtered.includes(k.reqMatching(l, 1, 1)) && filtered.includes(k.reqClear(l)) && !filtered.includes(k.reqMore(l)), l);
+    const none = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), l, table: { ...base, filter: { q: "zz", state: "", retired: "" }, rows: [], matching: 0, more: false } }));
+    assert.ok(none.includes(k.reqNoMatch(l)) && !none.includes(k.noRequirements(l)), l);
+    const lost = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), l, table: { ...base, filter: { q: "erp", state: "", retired: "" }, rows: [], matching: null, more: false, status: "failed" } }));
+    assert.ok(lost.includes(k.reqFailed(l)) && lost.includes(k.reqTryAgain(l)) && !lost.includes(k.reqNoMatch(l)) && !lost.includes("p05-req-count"), l);
+    const failed = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), l, table: { ...base, status: "failed", reset: true } }));
+    assert.ok(failed.includes(k.reqFailed(l)) && failed.includes(k.reqTryAgain(l)) && failed.includes(k.reqReset(l)), l);
+  }
+  const bare = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), table: { ...base, candidate: false, total: 6, more: false } }));
+  assert.ok(!bare.includes('id="p05-req-state"') && !bare.includes("p05-req-count") && !bare.includes("p05-req-more"));
+  const open = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p, { selection: { ...shared(p).selection, requirement: "2" } }), table: { ...base, rows: [p.requirements.requirements.rows![3]] } }));
+  assert.ok(open.includes(k.reqNotListed("en")));
+});
+
+test("the decisions view counts the waiting proposals exactly and offers the older closed ones when the service says how many it keeps", () => {
+  const cut = page((s) => { s.decisions.proposals.total = 90; s.decisions.proposals.more = true; s.decisions.proposal_history = { total: 80, next: "41", kept: 200, dropped: 3 }; });
+  const closed = (cut.decisions.proposals.rows ?? []).filter((p) => p.state !== "pending").length;
+  const waiting = (cut.decisions.proposals.rows ?? []).length - closed;
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(DecisionsView, { ...shared(cut), l }));
+    assert.ok(html.includes(k.waiting(l, waiting, false)) && !html.includes(k.olderWaiting(l)) && html.includes(k.closedGroup(l, closed, true)) && html.includes("kept-count") && html.includes("kept-more-button"), l);
+  }
+  const whole = page((s) => { s.decisions.proposal_history = { total: closed, next: "", kept: 200, dropped: 0 }; });
+  const all = renderToStaticMarkup(createElement(DecisionsView, shared(whole)));
+  assert.ok(all.includes(k.closedGroup("en", closed, false)) && !all.includes("kept-count") && !all.includes("kept-more"));
+  const old = page((s) => { s.decisions.proposals.more = true; delete s.decisions.proposal_history; });
+  const unsure = renderToStaticMarkup(createElement(DecisionsView, shared(old)));
+  assert.ok(unsure.includes(k.olderWaiting("en")) && unsure.includes(k.waiting("en", waiting, true)) && !unsure.includes("kept-more"));
+});
+
+test("the evidence proposals read is asked after the cursor and read strictly", async () => {
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { proposals: [{ module: "perf_gate", number: 8, target: "perf-proposal-8", state: "applied" }], next: "12", matching: 80, proposal_history: { total: 80, next: "", kept: 200, dropped: 3 } } : { proposals: [] }),
+      { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  const got = await api.evidenceProposals("41");
+  assert.equal(calls[0], "/api/v1/release-evidence/proposals?limit=50&after=41");
+  assert.deepEqual([got.rows[0].target, got.rows[0].module, got.next, got.history.total], ["perf-proposal-8", "perf_gate", "12", 80]);
+  await assert.rejects(api.evidenceProposals("2"), (e: AdminError) => e.failure === "invalid");
+});
+
+test("the results' numbers, the cursor of the main read and the results read are read strictly", async () => {
+  const { resultsPageOf } = await import("../../../../service/release-evidence");
+  const cut = page((s) => { s.artifacts.results.total = 120; s.artifacts.results.more = true; s.artifacts.results_next = "71"; s.artifacts.results.rows[0].number = 77; });
+  assert.deepEqual([cut.artifacts.results_next, cut.artifacts.results.rows?.[0].number], ["71", 77]);
+  assert.equal(page().artifacts.results_next, null);
+  for (const bad of [{}, { results: [], next: "" }, { results: "x", next: "", total: 0 }, { results: [], next: 4, total: 0 }]) assert.equal(resultsPageOf(bad), null, JSON.stringify(bad));
+  const got = resultsPageOf({ results: [{ number: 70, test: "t" }, null, "x"], next: "21", total: 120 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].number, got?.rows[0].test, got?.next, got?.total], [1, 70, "t", "21", 120]);
+  for (const l of locales) {
+    const reads = { evidenceResults: async () => ({ rows: [], next: "", total: 120 }) } as unknown as AdminClient;
+    const html = renderToStaticMarkup(createElement(ArtifactsView, { ...shared(cut), l, api: reads }));
+    const shown = cut.artifacts.results.rows?.length ?? 0;
+    assert.ok(html.includes(k.resultsShown(l, shown, 120)) && html.includes(k.resultsMore(l)), l);
+  }
+  const whole = renderToStaticMarkup(createElement(ArtifactsView, shared(page((s) => { s.artifacts.results_next = ""; }))));
+  assert.ok(!whole.includes("p05-results-count") && !whole.includes("p05-results-more"));
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { results: [{ number: 70, test: "t" }], next: "", total: 120 } : { results: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.evidenceResults("71")).rows[0].number, 70);
+  assert.equal(calls[0], "/api/v1/release-evidence/results?limit=50&after=71");
+  await assert.rejects(api.evidenceResults("2"), (e: AdminError) => e.failure === "invalid");
+});
+
+test("the builds' cursor and the builds read are read strictly, and older builds are told apart by their order", async () => {
+  const { buildsPageOf } = await import("../../../../service/release-evidence");
+  const { newestFirst } = await import("../../../../shared/older-rows");
+  const cut = page((s) => { s.artifacts.builds.total = 120; s.artifacts.builds.more = true; s.artifacts.builds_next = "71"; });
+  assert.equal(cut.artifacts.builds_next, "71");
+  assert.equal(page().artifacts.builds_next, null);
+  for (const bad of [{}, { builds: [], next: "" }, { builds: "x", next: "", total: 0 }, { builds: [], next: 4, total: 0 }]) assert.equal(buildsPageOf(bad), null, JSON.stringify(bad));
+  const got = buildsPageOf({ builds: [{ build: "1.0.0", commit: "c", order: 70 }, null, "x"], next: "21", total: 120 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].order, got?.next, got?.total], [1, 70, "21", 120]);
+  const b = (order: number | null) => ({ build: "b" + order, commit: "", order });
+  assert.deepEqual(newestFirst([b(71), b(72)], [b(71), b(70), b(null)], (x) => x.order).map((x) => x.order), [72, 71, 70, null]);
+  const reads = { evidenceBuilds: async () => ({ rows: [], next: "", total: 120 }), evidenceResults: async () => ({ rows: [], next: "", total: 0 }) } as unknown as AdminClient;
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(ArtifactsView, { ...shared(cut), l, api: reads }));
+    assert.ok(html.includes(k.buildsShown(l, cut.artifacts.builds.rows?.length ?? 0, 120)) && html.includes(k.buildsMore(l)), l);
+  }
+  const whole = renderToStaticMarkup(createElement(ArtifactsView, { ...shared(page((s) => { s.artifacts.builds_next = ""; })), api: reads }));
+  assert.ok(!whole.includes("p05-builds-count") && !whole.includes("p05-builds-more"));
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { builds: [{ build: "1.0.0", commit: "c", order: 70 }], next: "", total: 120 } : { builds: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.evidenceBuilds("71")).rows[0].order, 70);
+  assert.equal(calls[0], "/api/v1/release-evidence/builds?limit=50&after=71");
+  await assert.rejects(api.evidenceBuilds("2"), (e: AdminError) => e.failure === "invalid");
+});
+
+test("profiles held beyond the main read are found, selected and not reported as gone", async () => {
+  const { profilesAnswerOf, profilesPath } = await import("../../../../service/release-evidence");
+  forget();
+  setScope("w", "u", "s");
+  const main = page((s) => { s.load.profiles.total = 70; s.load.profiles.more = true; s.load.profiles_next = "4"; s.load.profiles.rows.forEach((p: Raw, i: number) => { p.number = i + 1; }); });
+  const from = main.load.profiles.rows![0];
+  const extra = (n: number) => ({ ...from, number: n, id: "held-" + n, target: "perf-profile:held-" + n, can_retire: true, retire_blocked: "", retired: false, retire: null });
+  pendingFor("release_evidence.retire_profile", "perf-profile:held-60", {}, "r1", () => ({ request: "q", key: "k" }), [], { view: "load" });
+  settleRecorded("release_evidence.retire_profile", "perf-profile:held-61", "hint", "stage", false);
+  pendingFor("release_evidence.retire_requirement", "trace-requirement-9", { reason: "x" }, "r1", () => ({ request: "q", key: "k" }), [], { view: "requirements" });
+  assert.deepEqual(profileTargetsInUse().sort(), ["perf-profile:held-60", "perf-profile:held-61"]);
+  assert.deepEqual(missingProfiles(main, [...profileTargetsInUse(), from.target, "", "perf-profile:", "x"]).sort(), ["perf-profile:held-60", "perf-profile:held-61"]);
+  assert.equal(vanished(main, "load").length, 1);
+  const held = withHeldProfiles(main, [extra(61), extra(60), { ...from, id: "stale-copy" }]);
+  const rows = held.load.profiles.rows!;
+  assert.deepEqual(rows.slice(-2).map((p) => p.id), ["held-60", "held-61"]);
+  assert.equal(rows[0].id, from.id);
+  assert.equal(held.load.profiles.more, true);
+  assert.equal(vanished(held, "load").length, 0);
+  assert.equal(stillAllowed(held, "release_evidence.retire_profile", "perf-profile:held-60"), true);
+  assert.equal(profileById(held, "held-60")?.number, 60);
+  assert.equal(selectionOf(new URLSearchParams("profile=held-60"), held, "load").profile, "held-60");
+  assert.equal(selectionOf(new URLSearchParams("profile=held-60"), main, "load").profile, "");
+  pruneRefusals(held);
+  assert.equal(refusedNow("release_evidence.retire_profile", "perf-profile:held-61"), "stage");
+  assert.equal(withHeldProfiles(main, []), main);
+  assert.deepEqual(missingProfiles(main, ["perf-profile:a,b", "perf-profile:" + "p".repeat(116), "perf-profile:" + "p".repeat(115), "perf-profile:has space"]), ["perf-profile:" + "p".repeat(115)]);
+  forget();
+  assert.equal(profilesPath({ after: "4" }), "/release-evidence/profiles?limit=50&after=4");
+  assert.equal(profilesPath({ targets: ["perf-profile:a", "perf-profile:b"], after: "9" }), "/release-evidence/profiles?target=perf-profile%3Aa%2Cperf-profile%3Ab");
+  for (const bad of [{}, { profiles: [], next: "" }, { profiles: "x", next: "", total: 0 }, { profiles: [], next: 4, total: 0 }]) assert.equal(profilesAnswerOf(bad), null, JSON.stringify(bad));
+  const got = profilesAnswerOf({ profiles: [{ number: 60, id: "held-60", target: "perf-profile:held-60" }, null], next: "60", total: 70 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].number, got?.next, got?.total], [1, 60, "60", 70]);
+  const list = { more: true, status: "idle" as const, reset: false, onMore: () => undefined };
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(LoadView, { ...shared(main), l, list }));
+    assert.ok(html.includes(k.profilesShown(l, main.load.profiles.rows!.length, 70)) && html.includes(k.profilesMore(l)), l);
+    const failed = renderToStaticMarkup(createElement(LoadView, { ...shared(main), l, list: { ...list, status: "failed", reset: true } }));
+    assert.ok(failed.includes(k.profilesFailed(l)) && failed.includes(k.reqTryAgain(l)) && failed.includes(k.profilesReset(l)), l);
+  }
+  const whole = renderToStaticMarkup(createElement(LoadView, { ...shared(page()), list: { ...list, more: false } }));
+  assert.ok(!whole.includes("p05-profiles-count") && !whole.includes("p05-profiles-more"));
+});
+
+test("hardware loaded beyond the main read is added once, in the order read", async () => {
+  const { hardwareAnswerOf, hardwarePath } = await import("../../../../service/release-evidence");
+  const main = page((s) => { s.load.hardware.total = 70; s.load.hardware.more = true; s.load.hardware_next = "1"; s.load.hardware.rows.forEach((h: Raw, i: number) => { h.number = i + 1; }); });
+  const from = main.load.hardware.rows![0];
+  const extra = (n: number) => ({ ...from, number: n, id: "hw-" + n });
+  const more = withMoreHardware(main, [extra(2), extra(3), { ...from }, extra(2), { ...from, id: "" }]);
+  assert.deepEqual(more.load.hardware.rows!.map((h) => h.id), [...main.load.hardware.rows!.map((h) => h.id), "hw-2", "hw-3"]);
+  assert.equal(more.load.hardware.more, true);
+  assert.equal(withMoreHardware(main, []), main);
+  const whole = withMoreHardware(page((s) => { s.load.hardware.total = s.load.hardware.rows.length + 1; s.load.hardware.more = true; }), [extra(2)]);
+  assert.equal(whole.load.hardware.more, false);
+  assert.equal(hardwarePath("50"), "/release-evidence/hardware?limit=50&after=50");
+  for (const bad of [{}, { hardware: [], next: "" }, { hardware: "x", next: "", total: 0 }, { hardware: [], next: 4, total: 0 }]) assert.equal(hardwareAnswerOf(bad), null, JSON.stringify(bad));
+  const got = hardwareAnswerOf({ hardware: [{ number: 60, id: "hw-60", cpus: 4 }, null], next: "60", total: 70 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].number, got?.rows[0].cpus, got?.next, got?.total], [1, 60, 4, "60", 70]);
+  const list = { more: true, status: "idle" as const, reset: false, onMore: () => undefined };
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(LoadView, { ...shared(main), l, hardwareList: list }));
+    assert.ok(html.includes(k.hardwareShown(l, main.load.hardware.rows!.length, 70)) && html.includes(k.hardwareMore(l)), l);
+    const failed = renderToStaticMarkup(createElement(LoadView, { ...shared(main), l, hardwareList: { ...list, status: "failed", reset: true } }));
+    assert.ok(failed.includes(k.hardwareFailed(l)) && failed.includes(k.reqTryAgain(l)) && failed.includes(k.hardwareReset(l)), l);
+  }
+  const all = renderToStaticMarkup(createElement(LoadView, { ...shared(page()), hardwareList: { ...list, more: false } }));
+  assert.ok(!all.includes("p05-hw-count") && !all.includes("p05-hw-more"));
+});
+
+test("paths held beyond the main read are selected, kept once and ordered by number", async () => {
+  const { pathsAnswerOf, pathsPath } = await import("../../../../service/release-evidence");
+  const { MatrixView } = await import("./LiveMatrix");
+  const main = page((s) => { s.matrix.paths.total = 70; s.matrix.paths.more = true; s.matrix.paths_next = "2"; s.matrix.paths.rows.forEach((p: Raw, i: number) => { p.number = i + 1; }); });
+  const from = main.matrix.paths.rows![0];
+  const extra = (n: number) => ({ ...from, number: n, id: "held-path-" + n });
+  assert.equal(missingPath(main, "held-path-60"), true);
+  assert.equal(missingPath(main, from.id), false);
+  for (const bad of ["", "a,b", "has space", "p".repeat(129)]) assert.equal(missingPath(main, bad), false, bad);
+  assert.equal(selectionOf(new URLSearchParams("path=held-path-60"), main, "matrix").path, "");
+  const held = withHeldPaths(main, [extra(61), extra(60), extra(61), { ...from }, { ...from, id: "" }]);
+  assert.deepEqual(held.matrix.paths.rows!.map((p) => p.id), [...main.matrix.paths.rows!.map((p) => p.id), "held-path-60", "held-path-61"]);
+  assert.equal(held.matrix.paths.more, true);
+  assert.equal(selectionOf(new URLSearchParams("path=held-path-60"), held, "matrix").path, "held-path-60");
+  assert.equal(missingPath(held, "held-path-60"), false);
+  assert.equal(withHeldPaths(main, []), main);
+  assert.equal(pathsPath({ after: "50" }), "/release-evidence/paths?limit=50&after=50");
+  assert.equal(pathsPath({ ids: ["a:b", "c"], after: "9" }), "/release-evidence/paths?id=a%3Ab%2Cc");
+  for (const bad of [{}, { paths: [], next: "" }, { paths: "x", next: "", total: 0 }, { paths: [], next: 4, total: 0 }]) assert.equal(pathsAnswerOf(bad), null, JSON.stringify(bad));
+  const got = pathsAnswerOf({ paths: [{ number: 60, id: "held-path-60" }, null], next: "60", total: 70 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].number, got?.next, got?.total], [1, 60, "60", 70]);
+  const list = { more: true, status: "idle" as const, reset: false, onMore: () => undefined };
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(MatrixView, { ...shared(main), l, pathsList: list }));
+    assert.ok(html.includes(k.pathsShown(l, main.matrix.paths.rows!.length, 70)) && html.includes(k.pathsMore(l)), l);
+    const failed = renderToStaticMarkup(createElement(MatrixView, { ...shared(main), l, pathsList: { ...list, status: "failed", reset: true } }));
+    assert.ok(failed.includes(k.pathsFailed(l)) && failed.includes(k.reqTryAgain(l)) && failed.includes(k.pathsReset(l)), l);
+  }
+  const all = renderToStaticMarkup(createElement(MatrixView, { ...shared(page()), pathsList: { ...list, more: false } }));
+  assert.ok(!all.includes("p05-paths-count") && !all.includes("p05-paths-more"));
+});
+
+test("a chosen replacement stays an option only when the form knows it", () => {
+  const listed = [{ target: "trace-requirement-2", label: "a/two" }];
+  assert.deepEqual(replacementChoices(listed, "", "", {}), listed);
+  assert.deepEqual(replacementChoices(listed, "none", "", {}), listed);
+  assert.deepEqual(replacementChoices(listed, "trace-requirement-2", "", {}), listed);
+  assert.deepEqual(replacementChoices(listed, "trace-requirement-9", "", {}), listed);
+  assert.deepEqual(replacementChoices(listed, "trace-requirement-9", "", { "trace-requirement-9": "a/nine" }), [...listed, { target: "trace-requirement-9", label: "a/nine" }]);
+  assert.deepEqual(replacementChoices(listed, "trace-requirement-9", "trace-requirement-9", {}), [...listed, { target: "trace-requirement-9", label: "trace-requirement-9" }]);
+  assert.equal(replacementProblem("trace-requirement-9", true, replacementChoices(listed, "trace-requirement-9", "", {})), "required");
+  assert.equal(replacementProblem("trace-requirement-9", true, replacementChoices(listed, "trace-requirement-9", "", { "trace-requirement-9": "a/nine" })), "");
+});

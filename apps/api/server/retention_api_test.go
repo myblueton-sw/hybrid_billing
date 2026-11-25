@@ -201,7 +201,7 @@ func (f world) retBalanced(t *testing.T, got reply) {
 			}
 			sum += fmtInt(n)
 		}
-		if sum != fmtInt(g["total"]) || len(g["counts"].(map[string]any)) != 7 || g["population"] != retentionPopulation {
+		if sum != fmtInt(g["total"]) || len(g["counts"].(map[string]any)) != 8 || g["population"] != retentionPopulation {
 			t.Errorf("%s counts %v total %v", g["class"], g["counts"], g["total"])
 		}
 	}
@@ -211,7 +211,7 @@ func (f world) retBalanced(t *testing.T, got reply) {
 			sum += fmtInt(n)
 		}
 		v := f.retRunView(row["run"].(map[string]any)["label"].(string))
-		if sum != len(v.Plan.Artifacts) || len(row["counts"].(map[string]any)) != 8 || row["decision"] != notConnected {
+		if sum != len(v.Plan.Artifacts) || len(row["counts"].(map[string]any)) != 9 || row["decision"] != notConnected {
 			t.Errorf("run counts %v", row["counts"])
 		}
 		for _, item := range row["stores"].([]any) {
@@ -397,13 +397,13 @@ func TestRetentionReadShape(t *testing.T) {
 		g := retGroup(t, got, class)
 		counts = append(counts, retJoin(class, g["counts"], g["total"], g["more"], g["usage"], g["growth"], g["bytes"]))
 	}
-	if s := strings.Join(counts, "|"); s != "claim map[deleted:0 eligible:0 held:0 in_run:0 no_policy:1 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
-		"conversation map[deleted:0 eligible:0 held:0 in_run:0 no_policy:1 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
-		"final map[deleted:0 eligible:0 held:0 in_run:0 no_policy:0 not_due:1 referenced:0] 1 false not_connected not_connected not_connected|"+
-		"identity map[deleted:0 eligible:0 held:0 in_run:0 no_policy:0 not_due:0 referenced:0] 0 false not_connected not_connected not_connected|"+
-		"projection map[deleted:0 eligible:0 held:0 in_run:0 no_policy:1 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
-		"source map[deleted:1 eligible:0 held:1 in_run:1 no_policy:0 not_due:3 referenced:1] 7 false not_connected not_connected not_connected|"+
-		"temporary map[deleted:1 eligible:0 held:0 in_run:2 no_policy:0 not_due:0 referenced:0] 3 false not_connected not_connected not_connected" {
+	if s := strings.Join(counts, "|"); s != "claim map[deleted:0 eligible:0 guarding:1 held:0 in_run:0 no_policy:0 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
+		"conversation map[deleted:0 eligible:0 guarding:0 held:0 in_run:0 no_policy:1 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
+		"final map[deleted:0 eligible:0 guarding:0 held:0 in_run:0 no_policy:0 not_due:1 referenced:0] 1 false not_connected not_connected not_connected|"+
+		"identity map[deleted:0 eligible:0 guarding:0 held:0 in_run:0 no_policy:0 not_due:0 referenced:0] 0 false not_connected not_connected not_connected|"+
+		"projection map[deleted:0 eligible:0 guarding:0 held:0 in_run:0 no_policy:1 not_due:0 referenced:0] 1 false not_connected not_connected not_connected|"+
+		"source map[deleted:1 eligible:0 guarding:0 held:1 in_run:1 no_policy:0 not_due:3 referenced:1] 7 false not_connected not_connected not_connected|"+
+		"temporary map[deleted:1 eligible:0 guarding:0 held:0 in_run:2 no_policy:0 not_due:0 referenced:0] 3 false not_connected not_connected not_connected" {
 		t.Errorf("expiry %s", s)
 	}
 	row := func(id string) string {
@@ -419,7 +419,7 @@ func TestRetentionReadShape(t *testing.T) {
 		"sample-temporary-1": "deleted deleted true true <nil> false false not_connected true retention-artifact:sample-temporary-1",
 		"sample-temporary-2": "blocked in_run true false map[label:run/2 target:retention-run-2] false false not_connected true retention-artifact:sample-temporary-2",
 		"sample-temporary-3": "blocked in_run true false map[label:run/2 target:retention-run-2] false false not_connected true retention-artifact:sample-temporary-3",
-		"sample-claim-1":     "ok no_policy false false <nil> false false <nil> true retention-artifact:sample-claim-1",
+		"sample-claim-1":     "ok guarding false false <nil> false false <nil> true retention-artifact:sample-claim-1",
 	} {
 		if got := row(id); got != want {
 			t.Errorf("%s: %s", id, got)
@@ -433,13 +433,13 @@ func TestRetentionReadShape(t *testing.T) {
 	}
 	holds := retSection(got, "holds")
 	if retJoin(holds["total"], holds["more"], holds["tenant_target"], holds["references"]) != "2 false retention-tenant:sample-workspace "+
-		"map[more:false population:registered_sample_artifacts rows:[map[class:source id:sample-source-3]] total:1]" {
+		"map[more:false next: population:registered_sample_artifacts rows:[map[class:source id:sample-source-3]] total:1]" {
 		t.Errorf("holds %v", holds)
 	}
 	temporary := retHold(t, got, retentionTemporary)
 	if s := fmt.Sprint(temporary); s != "map[can_propose_release:false counts:map[not_preserved:1 outcome_pending:0 partially_deleted:0] counts_scope:workspace "+
-		"id:sample-hold-temporary "+
-		"outcomes:[map[artifact:sample-temporary-1 outcome:not_preserved stores:map[sample-object-store:deleted]]] outcomes_more:false "+
+		"id:sample-hold-temporary number:2 "+
+		"outcomes:[map[artifact:sample-temporary-1 outcome:not_preserved stores:map[sample-object-store:deleted]]] outcomes_more:false outcomes_next: "+
 		"owner:map[id:sample-member login:member@example.invalid] placed_at:2026-11-16T09:00:00Z placer:map[id:sample-member login:member@example.invalid] "+
 		"rationale:Sample data reason:Sample export review hold release:6 release_blocked:already_proposed released:false "+
 		"scope:map[artifacts:[] classes:[temporary] workspace:true] target:retention-hold:sample-hold-temporary]" {
@@ -456,7 +456,7 @@ func TestRetentionReadShape(t *testing.T) {
 		t.Errorf("run 1 stores %s", s)
 	}
 	if s := retJoin(one["state"], one["can_stop"], one["stop_blocked"], one["chunks"], one["chunk_size"], one["lease_seconds"], one["revision"], one["reason"],
-		one["stopper"], one["artifacts"]); s != "done false finished 2 2 3600 1 Sample expiry deletion <nil> map[more:false rows:[map[id:sample-source-1 outcome:deleted] "+
+		one["stopper"], one["artifacts"]); s != "done false finished 2 2 3600 1 Sample expiry deletion <nil> map[more:false next: rows:[map[id:sample-source-1 outcome:deleted] "+
 		"map[id:sample-source-2 outcome:failed] map[id:sample-source-3 outcome:referenced] map[id:sample-source-4 outcome:held]] total:4]" {
 		t.Errorf("run 1 %s", s)
 	}
@@ -471,7 +471,7 @@ func TestRetentionReadShape(t *testing.T) {
 	}
 	decisions := retSection(got, "decisions")
 	if s := fmt.Sprint(decisions); s != "map[durable_commit:not_connected epoch:not_connected ledger:in_memory restore_check:not_connected "+
-		"tombstones:map[more:false rows:[map[artifact:sample-temporary-1 at:2026-11-16T09:00:00Z class:temporary decision:not_connected other_scope:false "+
+		"tombstones:map[more:false next: rows:[map[artifact:sample-temporary-1 at:2026-11-16T09:00:00Z class:temporary decision:not_connected other_scope:false "+
 		"run:map[label:run/2 target:retention-run-2] sequence:2] map[artifact:sample-source-1 at:2026-11-16T09:00:00Z class:source decision:not_connected "+
 		"other_scope:false run:map[label:run/1 target:retention-run-1] sequence:1]] total:2 window:1000] watermark:2]" {
 		t.Errorf("decisions %s", s)
@@ -543,7 +543,7 @@ func TestRetentionReadWithoutSeed(t *testing.T) {
 		}
 	}
 	if s := retJoin(retSection(got, "decisions")["watermark"], retSection(got, "decisions")["tombstones"], retSection(got, "restore")); s !=
-		"0 map[more:false rows:[] total:0 window:1000] map[state:not_connected]" {
+		"0 map[more:false next: rows:[] total:0 window:1000] map[state:not_connected]" {
 		t.Errorf("decisions %s", s)
 	}
 	for _, c := range []struct{ kind, target string }{{retentionApproveKind, retTarget(1)}, {retentionStopKind, "retention-run-1"},
@@ -777,7 +777,7 @@ func TestRetentionOtherTenantIsHidden(t *testing.T) {
 		t.Error("holds changed")
 	}
 	if s := fmt.Sprint(retArtifact(t, after, "sample-source-5")["standing"], retGroup(t, after, retention.ClassSource)["counts"],
-		retSection(after, "holds")["references"].(map[string]any)["total"]); s != "not_duemap[deleted:1 eligible:0 held:1 in_run:1 no_policy:0 not_due:3 referenced:1] 2" {
+		retSection(after, "holds")["references"].(map[string]any)["total"]); s != "not_duemap[deleted:1 eligible:0 guarding:0 held:1 in_run:1 no_policy:0 not_due:3 referenced:1] 2" {
 		t.Errorf("reference %s", s)
 	}
 	f.retRegister("shared-a", retention.ClassSource, 400, "other-tenant", SampleWorkspace)

@@ -106,13 +106,15 @@ func (r *Registry) Refer(x Reference, actor Actor) error {
 	if err := actor.system(); err != nil {
 		return err
 	}
-	if !validID(x.From) || !validID(x.To) || x.From == x.To || !oneOf(x.Kind, Requires, Mentions) {
+	if !validID(x.From) || !validID(x.To) || x.From == x.To || !oneOf(x.Kind, Requires, Mentions, Guards) {
 		return ErrInvalid
 	}
 	from, to := r.artifacts[x.From], r.artifacts[x.To]
 	switch {
 	case from == nil || to == nil:
 		return ErrNotFound
+	case x.Kind == Guards && (from.view.Class != ClassClaim || to.view.Class == ClassClaim || !shares(from.view.Tenants, to.view.Tenants)):
+		return ErrInvalid
 	case r.refs[[3]string{x.From, x.To, x.Kind}]:
 		return nil
 	case r.busy(from) || r.busy(to):
@@ -125,7 +127,19 @@ func (r *Registry) Refer(x Reference, actor Actor) error {
 		r.requiredBy[x.To]++
 		r.requires[x.From] = append(r.requires[x.From], x.To)
 	}
+	if x.Kind == Guards {
+		r.guards[x.From] = append(r.guards[x.From], x.To)
+	}
 	return nil
+}
+
+func shares(a, b []string) bool {
+	for _, x := range a {
+		if contains(b, x) {
+			return true
+		}
+	}
+	return false
 }
 
 func (x Hold) valid() bool {

@@ -5,18 +5,23 @@ import type { ContractDetail, ContractEvent } from "../../../../service/contract
 import type { Session } from "../../../../service/api";
 import { k } from "./live-copy";
 import { actorText, canWithdraw, endPassed, maxPeriod, pendingNow, revisionText, spanDays, validDay, type Period } from "./live-model";
-import { ActionBar, CommandForm, type Shared } from "./LiveActions";
+import { ActionBar, CommandForm, staleNote, type Shared } from "./LiveActions";
 import { day, ltr, nameOf, stamp } from "./live-format";
+import { Documents } from "./setup/Documents";
+import { partOf } from "./setup/scope";
+import { PaymentTerms } from "./setup/PaymentTerms";
 
 type Props = {
   l: Locale;
   view: string;
   detail: ContractDetail;
+  stale?: boolean;
   parties: OrgParty[];
   api: AdminClient;
   session: Session;
   params: URLSearchParams;
   period: Period;
+  setupOn: string;
   onParams: (extra: Record<string, string | null>) => void;
   onReload: () => Promise<void>;
   onDone: (text: string) => void;
@@ -24,14 +29,14 @@ type Props = {
   onSignedOut: () => void;
 };
 
-const unconnected = ["documents", "payment-terms", "recognition"];
+const unconnected = ["recognition"];
 
 export function Detail(p: Props) {
   const { l, view, detail } = p;
   const c = detail.contract;
   const title = useRef<HTMLHeadingElement>(null);
   useEffect(() => { title.current?.focus(); }, [c.id]);
-  const shared = { l, detail, api: p.api, session: p.session, onDone: p.onDone, onReload: p.onReload, onDenied: p.onDenied, onSignedOut: p.onSignedOut };
+  const shared = { l, detail, api: p.api, session: p.session, onDone: p.onDone, onReload: p.onReload, onDenied: p.onDenied, onSignedOut: p.onSignedOut, stale: p.stale };
   return (
     <div className="o03-detail">
       <h2 id="o03-contract-title" ref={title} tabIndex={-1}><bdi>{c.name || c.id}</bdi></h2>
@@ -50,8 +55,10 @@ export function Detail(p: Props) {
       {c.end && endPassed(c.end, detail.today) && c.settlement === "pending_final" && <p className="live-note o03-pair-note">{k.endedPending(l)}</p>}
       <div className="o03-sections">
         {view === "schedule" ? <Schedule {...p} shared={shared} />
+          : view === "documents" ? <Documents l={l} session={p.session} contract={c.id} on={p.setupOn} parties={p.parties} part={partOf(p.params.get("part"))} onPart={(part) => p.onParams({ part: part === "settings" ? null : part })} onSignedOut={p.onSignedOut} />
           : view === "products" ? <Products l={l} detail={detail} parties={p.parties} />
             : view === "termination" ? <Termination l={l} detail={detail} shared={shared} />
+              : view === "payment-terms" ? <PaymentTerms l={l} session={p.session} contract={c.id} on={p.setupOn} onSignedOut={p.onSignedOut} />
               : unconnected.includes(view) ? <Unconnected l={l} view={view} />
                 : <Parties l={l} detail={detail} parties={p.parties} />}
       </div>
@@ -161,7 +168,7 @@ function EventRow({ l, e, detail, open, shared, onOpen, onClose }: {
         <td data-label={k.colRate(l)} className="o03-num">{rateText(l, e.revision)}</td>
         <td data-label={k.colAction(l)}>
           {can ? (
-            <button type="button" className="live-secondary o03-row-action" aria-expanded={open} onClick={(ev) => onOpen(ev.currentTarget)}>
+            <button type="button" className="live-secondary o03-row-action" aria-expanded={open} disabled={shared.stale} aria-describedby={shared.stale ? staleNote : undefined} onClick={(ev) => onOpen(ev.currentTarget)}>
               {k.withdraw(l)}<span className="visually-hidden">{k.withdrawWhat(l, k.event(l, e.kind), day(l, e.from))}</span>
             </button>
           ) : (

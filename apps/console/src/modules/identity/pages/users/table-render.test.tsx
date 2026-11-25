@@ -46,3 +46,20 @@ test("No role reads the same in every language", () => {
   assert.equal(w.noRole("ko"), "역할 없음");
   assert.equal(w.noRole("ar"), "بلا دور");
 });
+
+test("an unrecognised account state, membership state or role is shown as unknown and never as active or member", () => {
+  const membership = { role: "unknown", state: "unknown", version: 1, role_from: "", role_until: "", role_period: "open", suspended_for: "", ledger: "" } as UserRow["membership"];
+  const odd: UserRow = { ...none, user_id: "u-odd", login: "odd", state: "locked" as UserRow["state"], membership };
+  for (const l of langs) {
+    for (const view of ["users", "membership"] as const) {
+      const html = renderToStaticMarkup(<Table l={l} view={view} users={[odd]} selected="" onOpen={() => {}} sel={sel} serverTime="2026-11-19T10:00:00Z" />);
+      const row = cells(html), text = row.map((c) => c.body).join(" ");
+      assert.ok(text.includes(w.unknownRole(l)), l + view);
+      assert.ok(text.includes(w.unknownState(l)), l + view);
+      for (const c of row) {
+        assert.ok(!c.body.startsWith(w.member(l)) && !c.body.startsWith(w.administrator(l)), l + view + c.label);
+        assert.notEqual(c.body, w.active(l), l + view + c.label);
+      }
+    }
+  }
+});

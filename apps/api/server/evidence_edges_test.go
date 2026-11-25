@@ -26,8 +26,8 @@ func TestEvidenceReadFaults(t *testing.T) {
 	if got := f.evidenceRead(root); got.status != 200 {
 		t.Fatal(got.raw)
 	}
-	if fmt.Sprint(counts) != "map[perf-active_budget:4 perf-hardware:1 perf-profile:5 perf-readiness:1 perf-runs:4 release-evidence-read:1 roster:1 trace-check:35 "+
-		"trace-gate:3 trace-path:2 trace-requirement:24 trace-results:15]" {
+	if fmt.Sprint(counts) != "map[perf-active_budget:4 perf-hardware:1 perf-profile:5 perf-readiness:1 perf-runs:4 release-evidence-read:1 roster:1 trace-check:5 "+
+		"trace-gate:3 trace-path:2 trace-replacements:6 trace-requirement:24 trace-results:15]" {
 		t.Errorf("read calls %v", counts)
 	}
 	for step, total := range counts {
@@ -234,8 +234,16 @@ func TestEvidenceStoreAndTargets(t *testing.T) {
 	}
 	got := evMap(f.evidenceRead(f.as(AdminLogin)).body, "decisions", "proposals")
 	rows := evRows(got)
-	if len(rows) != evidenceShown || fmtInt(got["total"]) != 88 || got["more"] != true || fmt.Sprint(rows[0]["number"]) != "159" || fmt.Sprint(rows[evidenceShown-1]["number"]) != "110" {
-		t.Errorf("page %d %v", len(rows), got["total"])
+	waiting, oldest := 0, ""
+	for _, row := range rows {
+		if row["state"] == entryPending {
+			waiting++
+		} else {
+			oldest = fmt.Sprint(row["number"])
+		}
+	}
+	if len(rows) != evidenceShown || fmtInt(got["total"]) != 88 || got["more"] != true || fmt.Sprint(rows[0]["number"]) != "159" || waiting == 0 || oldest != fmt.Sprint(110+waiting) {
+		t.Errorf("page %d %v waiting %d oldest closed %s", len(rows), got["total"], waiting, oldest)
 	}
 }
 
@@ -581,7 +589,7 @@ func TestEvidenceRowsAreBounded(t *testing.T) {
 		fmt.Sprint(len(evMap(many, "states")), many["builds_more"]), size(evMap(got.body, "requirements", "gate", "problems")), size(evMap(got.body, "artifacts", "builds")),
 		size(evMap(got.body, "artifacts", "harnesses")), size(evMap(got.body, "artifacts", "results")), size(evMap(got.body, "load", "hardware")),
 		size(evMap(got.body, "load", "profiles")), size(evMap(resume, "runs"))}
-	if s := strings.Join(sizes, " "); s != "50/55/true 50/51/true 12/13/true 50/58/true 50/51/true 20/56/true 10 true 100/106/true 50/63/true 50/53/true 50/68/true "+
+	if s := strings.Join(sizes, " "); s != "50/55/true 50/51/true 12/13/true 50/58/true 50/51/true 20/56/true 10 true 100/106/true 50/63/true 53/53/false 50/68/true "+
 		"50/52/true 50/55/true 20/21/true" {
 		t.Errorf("sizes %s", s)
 	}

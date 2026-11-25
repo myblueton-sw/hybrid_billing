@@ -38,7 +38,7 @@ func (s *Server) Document() ([]byte, error) {
 		}
 	}
 	doc["x-reads"] = map[string]any{"/identity/users": usersReadPath(), "/identity/users/count": usersCountPath(), "/identity/bulk-revocations": bulkReadsPath(),
-		"/identity/services": servicesReadPath(), "/integrations": integrationsReadPath()}
+		"/identity/services": servicesReadPath(), "/integrations": integrationsReadPath(), "/charge-candidates": candidateReadPath(false), "/charge-candidates/{id}": candidateReadPath(true)}
 	doc["x-self"] = selfPaths()
 	return json.MarshalIndent(doc, "", "  ")
 }
@@ -155,9 +155,16 @@ func servicesReadPath() map[string]any {
 	until := map[string]any{"type": "string", "format": "date-time", "x-present-when": "secret_pickup is open",
 		"x-meaning": "estimated end: the earliest of the pickup expiry and the issuing session's absolute and idle ends at this read; activity can move it later and a sign-out can end it sooner"}
 	credential := map[string]any{"type": "object", "properties": map[string]any{"id": str, "not_before": str, "not_after": str, "state": str, "usable": map[string]any{"type": "boolean"},
-		"secret_pickup": pickup, "secret_pickup_until": until}}
+		"secret_pickup": pickup, "secret_pickup_until": until,
+		"replaces":    map[string]any{"type": "string", "x-present-when": "this credential was issued by a rotation and the credential it replaced is still kept"},
+		"replaced_by": map[string]any{"type": "string", "x-present-when": "a rotation replaced this credential and the credential that replaced it is still kept"},
+		"rotation": map[string]any{"type": "string", "enum": []string{rotationReplacing, rotationEnding}, "x-present-when": "the credential is active and either was replaced by a rotation (ending, which takes precedence) or replaced a credential that is still active (replacing)",
+			"x-meaning": map[string]string{rotationReplacing: "the credential it replaced is still active", rotationEnding: "a rotation fixed this credential's end at not_after; the end is not moved back"}}}}
 	limits := map[string]any{"type": "object", "properties": map[string]any{"credential_days": map[string]any{"type": "integer"}, "credentials_per_service": map[string]any{"type": "integer"},
-		"services": map[string]any{"type": "integer"}, "replay_seconds": map[string]any{"type": "integer", "x-meaning": "how long a command's idempotency key replays its stored outcome"}}}
+		"services": map[string]any{"type": "integer"}, "replay_seconds": map[string]any{"type": "integer", "x-meaning": "how long a command's idempotency key replays its stored outcome"},
+		"credential_overlap_minutes":     map[string]any{"type": "integer", "x-meaning": "how long a replaced credential stays valid when a rotation names no overlap"},
+		"credential_overlap_max_minutes": map[string]any{"type": "integer", "x-meaning": "the longest overlap a rotation may name"},
+		"secret_pickup_minutes":          map[string]any{"type": "integer", "x-meaning": "how long a new secret can be collected; also the shortest overlap a rotation may name"}}}
 	return map[string]any{"get": map[string]any{"operationId": "identity.services", "x-credential": credential, "x-limits": limits,
 		"x-never": "the secret and its pickup reference are never part of this read"}}
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, sequence, type Outcome, type PolicyPage, type TrustChange } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
@@ -164,6 +165,7 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
     <section className="live-error" role="alert">
       <h2>{p.loadFailed(l)}</h2>
       <p>{error instanceof AdminError && error.failure === "unauthenticated" ? policyFailure(l, error).body : ty.loadFailedBody(l)}</p>
+      {page && <p>{diagnosticCopy.kept(l)}</p>}
       {error instanceof AdminError && error.failure === "unauthenticated"
         ? <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
         : <button type="button" className="live-secondary" onClick={() => void load()}>{c.tryAgain(l)}</button>}
@@ -175,6 +177,7 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
       {stepping && page ? (
         <section className="m02-step" aria-label={form ? (form.revise ? ty.reviseTitle(l, form.revise.number) : ty.formTitle(l)) : ty.change(l, change?.number ?? 0)}>
           <button type="button" className="service-button-link live-back m02-back" onClick={closeDetail}>{ty.back(l)}</button>
+          {loadError}
           <ShortConditions l={l} page={page} skipHold={change?.state === "activation_unknown"} />
           {panel}
         </section>

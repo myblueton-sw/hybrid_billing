@@ -206,6 +206,7 @@ type modulesSection struct {
 	Plugins       []pluginVersionRow      `json:"plugins"`
 	Installations []pluginInstallRow      `json:"installations"`
 	Proposals     []pluginProposalRow     `json:"proposals"`
+	History       keptFacts               `json:"proposal_history"`
 	Actions       map[string]availability `json:"actions"`
 }
 
@@ -232,6 +233,7 @@ type gapRow struct {
 }
 
 type subscriptionHistoryRow struct {
+	Number     int    `json:"number"`
 	Action     string `json:"action"`
 	Actor      string `json:"actor"`
 	ActorLogin string `json:"actor_login"`
@@ -260,6 +262,7 @@ type subscriptionRow struct {
 	Resumer       string                   `json:"resumer"`
 	ResumerLogin  string                   `json:"resumer_login"`
 	History       []subscriptionHistoryRow `json:"history"`
+	HistoryFacts  logFacts                 `json:"history_facts"`
 	ResumeRequest *requestRow              `json:"resume_request"`
 	Keys          []subscriptionKeyRow     `json:"keys"`
 	Signer        string                   `json:"signer"`
@@ -321,11 +324,13 @@ type outboxRow struct {
 }
 
 type eventsSection struct {
-	State      string        `json:"state"`
-	Types      []typeRow     `json:"types"`
-	Outbox     outboxRow     `json:"outbox"`
-	Deliveries []deliveryRow `json:"deliveries"`
-	Dispatcher string        `json:"dispatcher"`
+	State      string            `json:"state"`
+	Types      []typeRow         `json:"types"`
+	Outbox     outboxRow         `json:"outbox"`
+	Deliveries []deliveryRow     `json:"deliveries"`
+	More       []string          `json:"deliveries_more"`
+	Next       map[string]string `json:"deliveries_next"`
+	Dispatcher string            `json:"dispatcher"`
 }
 
 type integrationsPage struct {
@@ -548,10 +553,12 @@ func (s *Server) modulesOf(reader *viewer) (modulesSection, error) {
 		}
 		out.Installations, errs = append(out.Installations, s.installRowOf(v, reader)), append(errs, err)
 	}
-	for index := len(c.entries) - 1; index >= 0 && len(out.Proposals) < installShown; index-- {
-		row, err := s.pluginProposalOf(c.entries[index], reader)
+	listed, closed, next := listKept(c.entries, pluginPending, pluginNumber, installShown)
+	for _, e := range listed {
+		row, err := s.pluginProposalOf(e, reader)
 		out.Proposals, errs = append(out.Proposals, row), append(errs, err)
 	}
+	out.History = keptFacts{Total: closed, Next: next, Kept: installKept, Dropped: c.dropped}
 	return out, errors.Join(errs...)
 }
 
@@ -652,10 +659,11 @@ func (s *Server) subscriptionRowOf(e *subscriptionEntry, v webhooks.Subscription
 	for _, g := range v.Gaps {
 		row.Gaps = append(row.Gaps, gapRow{After: g.After, To: g.To})
 	}
-	for _, h := range e.history {
-		row.History = append(row.History, subscriptionHistoryRow{Action: h.action, Actor: h.actor, ActorLogin: s.loginOf(h.actor), Rationale: h.rationale,
-			Reason: h.reason, Request: h.request})
+	first, facts := newestOf(len(e.history), installShown)
+	for index := first; index < len(e.history); index++ {
+		row.History = append(row.History, s.historyRow(e, index))
 	}
+	row.HistoryFacts = facts
 	var keys []webhooks.KeyView
 	err := s.webhookCall("keys", func() (err error) {
 		keys, err = s.webhooks.Keys(s.bootWorkspace, sub.ID, webhooks.Actor{ID: reader.id, Kind: webhooks.KindHuman})
@@ -726,12 +734,45 @@ func letterActions(d webhooks.DeliveryView, state string, redeliver, dismiss *re
 		"withdraw_redeliver": allow(withdraw(redeliver)), "withdraw_dismiss": allow(withdraw(dismiss))}
 }
 
-func (s *Server) deliveriesOf(id, state string, reader *viewer) ([]deliveryRow, error) {
-	var list []webhooks.DeliveryView
-	err := s.webhookCall("deliveries", func() (err error) {
-		list, err = s.webhooks.Deliveries(s.bootWorkspace, id, 0, shownDeliveries, webhooks.Actor{ID: reader.id, Kind: webhooks.KindHuman})
-		return
-	})
+func needingActionAnd(list []webhooks.DeliveryView, others int) ([]webhooks.DeliveryView, bool) {
+	out, kept, more := []webhooks.DeliveryView{}, 0, false
+	for _, d := range list {
+		switch {
+		case needsAction(d):
+			out = append(out, d)
+		case kept < others:
+			out, kept = append(out, d), kept+1
+		default:
+			more = true
+		}
+	}
+	return out, more
+}
+
+func (s *Server) deliveriesFor(id string, reader *viewer) ([]webhooks.DeliveryView, error) {
+	all := []webhooks.DeliveryView{}
+	var err error
+	for err == nil {
+		var page []webhooks.DeliveryView
+		err = s.webhookCall("deliveries", func() (err error) {
+			page, err = s.webhooks.Deliveries(s.bootWorkspace, id, len(all), deliveryPage, webhooks.Actor{ID: reader.id, Kind: webhooks.KindHuman})
+			return
+		})
+		all = append(all, page...)
+		if len(page) < deliveryPage {
+			break
+		}
+	}
+	return all, err
+}
+
+func (s *Server) deliveriesOf(id, state string, reader *viewer) ([]deliveryRow, bool, error) {
+	all, err := s.deliveriesFor(id, reader)
+	list, more := needingActionAnd(all, shownDeliveries)
+	return s.deliveryRows(list, state, reader), more, err
+}
+
+func (s *Server) deliveryRows(list []webhooks.DeliveryView, state string, reader *viewer) []deliveryRow {
 	out := []deliveryRow{}
 	for _, d := range list {
 		redeliver, dismiss := (*requestRow)(nil), (*requestRow)(nil)
@@ -750,14 +791,14 @@ func (s *Server) deliveriesOf(id, state string, reader *viewer) ([]deliveryRow, 
 			RequesterLogin: s.loginOf(d.Requester), Approver: d.Approver, ApproverLogin: s.loginOf(d.Approver), Redeliver: redeliver, Dismiss: dismiss,
 			Actions: letterActions(d, state, redeliver, dismiss, reader)})
 	}
-	return out, err
+	return out
 }
 
 func (s *Server) channelsAndEvents(reader *viewer) (channelsSection, eventsSection, error) {
 	c := s.integ
 	channels := channelsSection{State: configured(len(c.subscriptions) > 0), Destinations: []destinationRow{}, Subscribers: []string{sampleSubscriber},
 		Subscriptions: []subscriptionRow{}, Actions: map[string]availability{"propose": allow(reader.blocked(subProposeKind, ""))}}
-	feed := eventsSection{State: configured(len(c.types) > 0), Types: []typeRow{}, Deliveries: []deliveryRow{}, Dispatcher: notConnected}
+	feed := eventsSection{State: configured(len(c.types) > 0), Types: []typeRow{}, Deliveries: []deliveryRow{}, More: []string{}, Next: map[string]string{}, Dispatcher: notConnected}
 	for _, d := range webhookDestinations {
 		channels.Destinations = append(channels.Destinations, destinationRow{ID: d.id, State: d.state, Source: allowlistSource})
 	}
@@ -774,8 +815,12 @@ func (s *Server) channelsAndEvents(reader *viewer) (channelsSection, eventsSecti
 			continue
 		}
 		row, rerr := s.subscriptionRowOf(e, v, head, reader)
-		rows, derr := s.deliveriesOf(e.id, v.State, reader)
+		rows, more, derr := s.deliveriesOf(e.id, v.State, reader)
 		channels.Subscriptions, feed.Deliveries = append(channels.Subscriptions, row), append(feed.Deliveries, rows...)
+		if more {
+			feed.More = append(feed.More, e.id)
+			feed.Next[e.id] = strconv.Itoa(shownDeliveries)
+		}
 		errs = append(errs, err, rerr, derr)
 	}
 	sort.SliceStable(feed.Deliveries, func(a, b int) bool { return feed.Deliveries[a].Sequence < feed.Deliveries[b].Sequence })
@@ -823,5 +868,141 @@ func (s *Server) readIntegrations(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.DependencyUnavailable, request)
 		return
 	}
+	writeJSON(w, http.StatusOK, request, page)
+}
+
+func pluginPending(e *pluginEntry) bool { return e.view.State == plugins.ProposalPending }
+
+func pluginNumber(e *pluginEntry) uint64 { return e.view.Number }
+
+type pluginProposalsPage struct {
+	Revision   string              `json:"revision"`
+	ServerTime string              `json:"server_time"`
+	Order      string              `json:"order"`
+	Q          string              `json:"q"`
+	Proposals  []pluginProposalRow `json:"proposals"`
+	Next       string              `json:"next"`
+	Matching   int                 `json:"matching"`
+	History    keptFacts           `json:"proposal_history"`
+}
+
+func (s *Server) listPluginProposals(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	_, answer, reader, ok := s.admitIntegrations(w, r)
+	if !ok {
+		return
+	}
+	q, valid := parseKeptQuery(r.URL.Query())
+	if !valid {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	page := pluginProposalsPage{Revision: s.Revision(), ServerTime: stamp(reader.now), Order: closedPlansOrder, Q: q.term, Proposals: []pluginProposalRow{}}
+	if !reader.any(moduleRights) {
+		failCode(w, commands.PermissionDenied, request)
+		return
+	}
+	if answer.Workspace() != s.bootWorkspace {
+		writeJSON(w, http.StatusOK, request, page)
+		return
+	}
+	if s.faulty("integrations-read") {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
+	c := s.integ
+	_, closed, _ := listKept(c.entries, pluginPending, pluginNumber, 0)
+	page.History = keptFacts{Total: closed, Kept: installKept, Dropped: c.dropped}
+	walk := keptWalk{q: q}
+	errs := []error{}
+	for index := len(c.entries) - 1; index >= 0; index-- {
+		e := c.entries[index]
+		v := e.view
+		if pluginPending(e) {
+			continue
+		}
+		number := strconv.FormatUint(v.Number, 10)
+		if walk.take(v.Number, q.matches(number, pluginProposalTarget+number, v.Change.Kind, v.State, v.Proposer, s.loginOf(v.Proposer), e.rationale)) {
+			row, err := s.pluginProposalOf(e, reader)
+			page.Proposals, errs = append(page.Proposals, row), append(errs, err)
+		}
+	}
+	if errors.Join(errs...) != nil {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
+	page.Next, page.Matching = walk.Next, walk.Matching
+	writeJSON(w, http.StatusOK, request, page)
+}
+
+type subscriptionHistoryPage struct {
+	Revision     string                   `json:"revision"`
+	ServerTime   string                   `json:"server_time"`
+	Subscription string                   `json:"subscription"`
+	Order        string                   `json:"order"`
+	Q            string                   `json:"q"`
+	History      []subscriptionHistoryRow `json:"history"`
+	Next         string                   `json:"next"`
+	Matching     int                      `json:"matching"`
+	Total        int                      `json:"total"`
+}
+
+func (s *Server) historyRow(e *subscriptionEntry, index int) subscriptionHistoryRow {
+	h := e.history[index]
+	return subscriptionHistoryRow{Number: index + 1, Action: h.action, Actor: h.actor, ActorLogin: s.loginOf(h.actor), Rationale: h.rationale, Reason: h.reason, Request: h.request}
+}
+
+func (s *Server) listSubscriptionHistory(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	_, answer, reader, ok := s.admitIntegrations(w, r)
+	if !ok {
+		return
+	}
+	values := r.URL.Query()
+	named := values["subscription"]
+	values.Del("subscription")
+	q, valid := parseKeptQuery(values)
+	if !valid || len(named) != 1 || named[0] == "" {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	if !reader.any(channelRights) {
+		failCode(w, commands.PermissionDenied, request)
+		return
+	}
+	if s.faulty("integrations-read") {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
+	var e *subscriptionEntry
+	if answer.Workspace() == s.bootWorkspace {
+		e = s.integ.subscription(named[0])
+	}
+	if e != nil {
+		if _, err := s.subscriptionOf(e.id); errors.Is(err, webhooks.ErrNotFound) {
+			e = nil
+		} else if err != nil {
+			failCode(w, commands.DependencyUnavailable, request)
+			return
+		}
+	}
+	if e == nil {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	page := subscriptionHistoryPage{Revision: s.Revision(), ServerTime: stamp(reader.now), Subscription: e.id, Order: closedPlansOrder, Q: q.term, History: []subscriptionHistoryRow{},
+		Total: len(e.history)}
+	walk := keptWalk{q: q}
+	for index := len(e.history) - 1; index >= 0; index-- {
+		h := e.history[index]
+		if walk.take(uint64(index+1), q.matches(h.action, h.actor, s.loginOf(h.actor), h.rationale, h.reason, h.request)) {
+			page.History = append(page.History, s.historyRow(e, index))
+		}
+	}
+	page.Next, page.Matching = walk.Next, walk.Matching
 	writeJSON(w, http.StatusOK, request, page)
 }

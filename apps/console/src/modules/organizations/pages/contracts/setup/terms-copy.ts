@@ -1,0 +1,73 @@
+import type { Locale } from "../../../../../shared/types";
+import { stepError } from "./step-copy";
+const tags: Record<Locale, string> = { en: "en-US", ko: "ko-KR", ar: "ar" };
+export function netDays(l: Locale, value: string): string { return new Intl.NumberFormat(tags[l], { style: "unit", unit: "day", unitDisplay: "long" }).format(Number(value)); }
+const words = {
+ title: ["Payment terms", "납부 조건", "شروط الدفع"],
+ purpose: ["The number of calendar days after the invoice issue date in which payment is due, recorded for the selected issuance settings and approved by another person.", "청구서 발행일로부터 납부 기한까지의 달력일 수입니다. 선택한 발행 설정을 기준으로 기록하고 다른 담당자가 승인합니다.", "عدد الأيام التقويمية بعد تاريخ إصدار الفاتورة التي يستحق خلالها الدفع، يُسجَّل لإعدادات الإصدار المحددة ويعتمده شخص آخر."],
+ notComputed: ["This screen calculates no due date and does not state that an invoice is payable or overdue.", "이 화면은 납부 기한을 계산하지 않으며, 청구서가 납부 대상이거나 연체라고 표시하지 않습니다.", "لا تحسب هذه الشاشة تاريخ استحقاق ولا تذكر أن فاتورة مستحقة الدفع أو متأخرة."],
+ part: ["Payment terms of these settings", "이 설정의 납부 조건", "شروط الدفع لهذه الإعدادات"],
+ appliedBy: ["Applied by", "적용자", "طبّقه"], appliedAt: ["Application observed", "적용 기록 관찰 시각", "وقت رصد التطبيق"], approvedRow: ["Approved by", "승인자", "اعتمده"],
+ none: ["No payment terms are recorded for these settings.", "이 설정에 기록된 납부 조건이 없습니다.", "لا توجد شروط دفع مسجلة لهذه الإعدادات."],
+ values: ["Recorded terms", "기록된 조건", "الشروط المسجلة"], record: ["Record", "기록", "السجل"],
+ netDays: ["Net days (calendar)", "납부 기한 일수(달력일)", "أيام الاستحقاق (تقويمية)"],
+ revision: ["Terms revision", "조건 개정", "مراجعة الشروط"],
+ zone: ["Document time zone of these settings", "이 설정의 문서 시간대", "المنطقة الزمنية للمستند في هذه الإعدادات"],
+ zoneNote: ["A new application made under these settings uses this time zone. It is refused if this contract's existing applications use another.", "이 설정으로 새로 적용하면 이 시간대를 사용합니다. 이 계약의 기존 적용이 다른 시간대를 쓰면 거절됩니다.", "أي تطبيق جديد وفق هذه الإعدادات يستخدم هذه المنطقة الزمنية، ويُرفض إذا كانت تطبيقات هذا العقد الحالية تستخدم منطقة أخرى."],
+ recordedState: ["Recorded state", "기록된 상태", "الحالة المسجَّلة"], observed: ["Observed now", "현재 관찰된 상태", "المرصود حالياً"],
+ pinned: ["Approver pinned, not yet observed", "지정된 승인자, 아직 관찰되지 않음", "المعتمِد المعيَّن، لم يُرصد بعد"],
+ registration_unknown: ["Recording outcome unknown", "기록 처리 결과 미확인", "نتيجة التسجيل غير معروفة"],
+ pending: ["Recorded, awaiting approval", "기록됨, 승인 대기", "مسجَّلة، بانتظار الاعتماد"],
+ approval_unknown: ["Approval outcome unknown", "승인 처리 결과 미확인", "نتيجة الاعتماد غير معروفة"],
+ approved: ["Approved", "승인됨", "معتمدة"],
+ observed_absent: ["Nothing observed", "관찰된 기록 없음", "لا يوجد سجل مرصود"], observed_pending: ["Awaiting approval", "승인 대기", "بانتظار الاعتماد"], observed_approved: ["Approved", "승인됨", "معتمدة"],
+ author: ["Recorded by", "기록자", "سجّلها"], writtenAt: ["Recording observed", "기록 관찰 시각", "وقت رصد التسجيل"],
+ approver: ["Approved by", "승인자", "اعتمدها"], approvedAt: ["Approval observed", "승인 기록 관찰 시각", "وقت رصد الاعتماد"],
+ bindings: ["Payment terms applied to this contract", "이 계약에 적용된 납부 조건", "شروط الدفع المطبَّقة على هذا العقد"],
+ bindingsLead: ["Every application to this contract is listed, because each occupies its dates, whatever its state.", "각 적용은 상태와 관계없이 해당 기간을 차지하므로 이 계약의 모든 적용을 표시합니다.", "يُدرج كل تطبيق على هذا العقد، لأن كل واحد منها يشغل تواريخه أياً كانت حالته."],
+ total: ["Applications to this contract", "이 계약의 적용 수", "التطبيقات على هذا العقد"], showing: ["Rows on this page", "현재 페이지 행 수", "صفوف هذه الصفحة"],
+ empty: ["No payment terms are applied to this contract.", "이 계약에 적용된 납부 조건이 없습니다.", "لا توجد شروط دفع مطبَّقة على هذا العقد."],
+ period: ["Period", "적용 기간", "الفترة"], terms: ["Terms", "조건", "الشروط"], state: ["State", "상태", "الحالة"], people: ["People and times", "담당자와 시각", "الأشخاص والأوقات"], basis: ["Reason and origin", "사유와 출처", "السبب والمصدر"],
+ from: ["From", "시작일", "من"], to: ["To", "종료일", "إلى"], noEnd: ["No end date", "종료일 없음", "بلا تاريخ انتهاء"],
+ days: ["Calendar days", "달력일 기준", "أيام تقويمية"],
+ timeZone: ["Time zone", "시간대", "المنطقة الزمنية"],
+ reason: ["Reason", "사유", "السبب"], initial: ["Initial", "최초 적용", "أولي"], renegotiation: ["Renegotiation", "재협상", "إعادة تفاوض"], correction: ["Correction", "정정", "تصحيح"],
+ origin: ["Origin", "출처", "المصدر"], originThese: ["These issuance settings", "이 발행 설정", "إعدادات الإصدار هذه"], originOther: ["Other issuance settings", "다른 발행 설정", "إعدادات إصدار أخرى"], originProfile: ["Billing profile", "청구 프로필", "ملف الفوترة"],
+ actRecord: ["Record payment terms", "납부 조건 기록", "تسجيل شروط الدفع"],
+ actApprove: ["Approve payment terms", "납부 조건 승인", "اعتماد شروط الدفع"],
+ actApply: ["Apply payment terms to this contract", "이 계약에 납부 조건 적용", "تطبيق شروط الدفع على هذا العقد"],
+ actApproveApply: ["Approve applying payment terms to this contract", "이 계약에 납부 조건 적용 승인", "اعتماد تطبيق شروط الدفع على هذا العقد"],
+ action: ["Action", "작업", "الإجراء"],
+ ownTerm: ["You recorded these terms. The service refuses approval by the person who recorded them.", "이 조건은 본인이 기록했습니다. 기록한 사람의 승인은 서비스가 거절합니다.", "أنت من سجّل هذه الشروط. ترفض الخدمة اعتمادها ممن سجّلها."],
+ ownBinding: ["You applied these terms. The service refuses approval by the person who applied them.", "이 조건은 본인이 적용했습니다. 적용한 사람의 승인은 서비스가 거절합니다.", "أنت من طبّق هذه الشروط. ترفض الخدمة اعتماد التطبيق ممن طبّقه."],
+ fieldDays: ["Net days (calendar)", "납부 기한 일수(달력일)", "أيام الاستحقاق (تقويمية)"],
+ hintDays: ["A whole number from 0 to 365. No value is suggested.", "0부터 365까지의 정수입니다. 제안되는 값은 없습니다.", "عدد صحيح من 0 إلى 365. لا تُقترح أي قيمة."],
+ fieldReason: ["Reason for these terms", "이 조건의 사유", "سبب هذه الشروط"],
+ noticeDays: ["Net days cannot be corrected after recording. These issuance settings hold one set of payment terms.", "납부 기한 일수는 기록한 뒤 정정할 수 없습니다. 이 발행 설정에는 납부 조건을 하나만 둘 수 있습니다.", "لا يمكن تصحيح أيام الاستحقاق بعد التسجيل. تحمل إعدادات الإصدار هذه مجموعة واحدة من شروط الدفع."],
+ fieldFrom: ["Start date", "시작일", "تاريخ البدء"],
+ endLegend: ["End of the period", "기간의 끝", "نهاية الفترة"],
+ endDate: ["Ends on a date", "지정한 날짜에 종료", "تنتهي في تاريخ محدد"], endOpen: ["No end date", "종료일 없음", "بلا تاريخ انتهاء"],
+ fieldTo: ["End date", "종료일", "تاريخ الانتهاء"],
+ openNotice: ["Without an end date the terms occupy every later date of this contract, and no later application can follow.", "종료일이 없으면 이 계약의 이후 모든 날짜를 차지하며, 그 뒤로는 새로 적용할 수 없습니다.", "بلا تاريخ انتهاء تشغل الشروط كل التواريخ اللاحقة لهذا العقد، ولا يمكن أن يتبعها تطبيق لاحق."],
+ reasonLegend: ["Reason for applying", "적용 사유", "سبب التطبيق"],
+ noticeBind: ["An application cannot be withdrawn. Its dates stay occupied for this contract.", "적용은 철회할 수 없습니다. 해당 기간은 이 계약에서 계속 차지된 상태로 남습니다.", "لا يمكن سحب التطبيق. تبقى تواريخه مشغولة لهذا العقد."],
+ targetTerm: ["Payment terms", "납부 조건", "شروط الدفع"], targetBinding: ["Application", "적용", "التطبيق"],
+ invalid: ["Enter net days as a whole number from 0 to 365, and a reason.", "납부 기한 일수를 0부터 365까지의 정수로 입력하고 사유를 입력하세요.", "أدخل أيام الاستحقاق عدداً صحيحاً من 0 إلى 365، وأدخل سبباً."],
+ invalidApply: ["Enter a valid start date, choose how the period ends, give an end date that is not before the start when it ends on a date, and choose a reason.", "유효한 시작일을 입력하고 기간의 끝을 선택하세요. 날짜에 종료하는 경우 시작일보다 빠르지 않은 종료일을 입력하고, 사유를 선택하세요.", "أدخل تاريخ بدء صالحاً واختر نهاية الفترة، وإن كانت تنتهي في تاريخ فأدخل تاريخ انتهاء لا يسبق البدء، واختر سبباً."],
+ actApproveShort: ["Approve application", "적용 승인", "اعتماد التطبيق"],
+ errPermission: ["The step may need a permission you do not hold, the selected settings may not be known to the service, or the service refused for a reason it does not disclose.", "이 단계에 필요한 권한이 없거나, 선택한 설정을 서비스가 알지 못하거나, 서비스가 밝히지 않는 사유로 거절했을 수 있습니다.", "قد تتطلب الخطوة صلاحية لا تملكها، أو أن الإعدادات المحددة غير معروفة للخدمة، أو أن الخدمة رفضت لسبب لا تفصح عنه."],
+ errSelf: ["The person who recorded or applied these terms cannot approve them.", "조건을 기록하거나 적용한 사람은 승인할 수 없습니다.", "لا يمكن لمن سجّل هذه الشروط أو طبّقها أن يعتمدها."],
+ errStale: ["Possible causes: the records changed since this screen read them, the record belongs to other settings, or the service found its records inconsistent. Reload and review again.", "가능한 원인: 이 화면이 조회한 뒤 기록이 변경됨, 기록이 다른 설정에 속함, 서비스가 기록의 불일치를 발견함. 새로 조회한 뒤 다시 검토하세요.", "الأسباب المحتملة: تغيرت السجلات منذ قراءتها في هذه الشاشة، أو أن السجل يخص إعدادات أخرى، أو أن الخدمة وجدت سجلاتها غير متسقة. أعد التحميل ثم راجع من جديد."],
+ errPrerequisite: ["Possible causes: payment terms already exist for these settings, the settings are no longer confirmed, the dates overlap an existing application of this contract, the time zone differs from the contract's existing applications, the terms are not approved, or a limit was reached. The service does not say which.", "가능한 원인: 이 설정에 이미 납부 조건이 있음, 설정이 더 이상 확인 완료 상태가 아님, 기간이 이 계약의 기존 적용과 겹침, 시간대가 계약의 기존 적용과 다름, 조건이 승인되지 않음, 한도 도달. 서비스는 어느 것인지 알려 주지 않습니다.", "الأسباب المحتملة: توجد شروط دفع لهذه الإعدادات، أو لم تعد الإعدادات مؤكدة، أو تتداخل التواريخ مع تطبيق قائم لهذا العقد، أو تختلف المنطقة الزمنية عن تطبيقات العقد القائمة، أو لم تُعتمد الشروط، أو بُلغ حد. لا تحدد الخدمة أيها."],
+ denied: ["These records could not be read. Reading them may need the permission that permission management lists as “Inspect payment terms evidence”. Without them no step can be started from this screen.", "이 기록을 조회하지 못했습니다. 조회하려면 권한 관리의 ‘납부 조건 근거 조회’ 권한이 필요할 수 있습니다. 조회할 수 없으면 이 화면에서 어떤 단계도 시작할 수 없습니다.", "تعذرت قراءة هذه السجلات. قد تتطلب قراءتها الصلاحية المدرجة في إدارة الصلاحيات باسم «عرض أدلة شروط الدفع». بدونها لا يمكن بدء أي خطوة من هذه الشاشة."],
+ noScope: ["Select confirmed issuance settings first. Payment terms are recorded for one set of confirmed settings.", "확인 완료된 발행 설정을 먼저 선택하세요. 납부 조건은 확인 완료된 설정 하나를 기준으로 기록됩니다.", "حدِّد أولاً إعدادات إصدار مؤكدة. تُسجَّل شروط الدفع لمجموعة واحدة من الإعدادات المؤكدة."],
+ toSettings: ["Go to issuance settings", "발행 설정으로 이동", "الانتقال إلى إعدادات الإصدار"],
+ historyDenied: ["The issuance settings of this contract could not be read, so no settings can be selected here. Reading them may need the permission that permission management lists as “Inspect protected settings evidence”.", "이 계약의 발행 설정을 조회하지 못해 여기서 설정을 선택할 수 없습니다. 조회하려면 권한 관리의 ‘보호된 설정 근거 조회’ 권한이 필요할 수 있습니다.", "تعذرت قراءة إعدادات الإصدار لهذا العقد، لذا لا يمكن تحديد إعدادات هنا. قد تتطلب قراءتها الصلاحية المدرجة في إدارة الصلاحيات باسم «عرض أدلة الإعدادات المحمية»."],
+} as const;
+export type TermWord = keyof typeof words;
+export function termText(l: Locale, key: TermWord): string { return words[key][l === "ko" ? 1 : l === "ar" ? 2 : 0]; }
+export function termError(l: Locale, code: string): string {
+ const key: TermWord | "" = code === "permission_denied" ? "errPermission" : code === "self_approval_denied" ? "errSelf" : code === "evidence_stale" || code === "revision_conflict" ? "errStale" : code === "prerequisite_failed" ? "errPrerequisite"
+  : code === "invalid_apply" ? "invalidApply" : code === "invalid_setup_request" || code === "invalid_request" ? "invalid" : "";
+ return key ? termText(l, key) : stepError(l, code);
+}

@@ -187,3 +187,140 @@ test("resend identity: identical values reuse the key, edits renew it", () => {
   assert.equal(pendingNow("retention.place_hold", "retention-artifact:x"), undefined);
   forget();
 });
+
+test("the retention proposals' closed counts by kind and the further read are read strictly", async () => {
+  const { kindCountsOf, retentionOf } = await import("./retention");
+  const { AdminError, adminClient } = await import("./admin");
+  assert.deepEqual(kindCountsOf({ policy: 12, release: "3", plan: -1, other: 2.5, held: 0 }), { policy: 12, held: 0 });
+  assert.equal(kindCountsOf([1]), null);
+  const page = retentionOf({ state: "configured", proposals: { total: 60, more: true, rows: [], history: { total: 55, next: "71", kept: 200, dropped: 5 }, closed_by_kind: { policy: 40 } } });
+  assert.deepEqual([page.proposals.history, page.proposals.closed_by_kind], [{ total: 55, next: "71", kept: 200, dropped: 5 }, { policy: 40 }]);
+  const bare = retentionOf({ state: "configured", proposals: { total: 1, more: false, rows: [] } });
+  assert.deepEqual([bare.proposals.history, bare.proposals.closed_by_kind], [null, null]);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { proposals: [{ number: 70, kind: "policy", state: "withdrawn" }], next: "21", matching: 40, proposal_history: { total: 55, next: "", kept: 200, dropped: 5 } } : { proposals: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  const got = await api.retentionProposals("policy", "71");
+  assert.equal(calls[0], "/api/v1/retention/proposals?kind=policy&limit=50&after=71");
+  assert.deepEqual([got.rows[0].number, got.rows[0].kind, got.next, got.matching], [70, "policy", "21", 40]);
+  await assert.rejects(api.retentionProposals("policy", "2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});
+
+test("the holds' released count, cursor and the released holds read are read strictly", async () => {
+  const { holdsPageOf, releasedFactsOf, retentionOf } = await import("./retention");
+  const { newestFirst } = await import("../shared/older-rows");
+  const { AdminError, adminClient } = await import("./admin");
+  assert.deepEqual(releasedFactsOf({ total: 120, next: "71" }), { total: 120, next: "71" });
+  for (const bad of [null, [], { total: "1", next: "" }, { total: 1, next: 5 }]) assert.equal(releasedFactsOf(bad), null, JSON.stringify(bad));
+  for (const bad of [{}, { holds: [], next: "" }, { holds: "x", next: "", total: 0 }, { holds: [], next: 4, total: 0 }]) assert.equal(holdsPageOf(bad), null, JSON.stringify(bad));
+  const page = holdsPageOf({ holds: [{ number: 70, id: "h-70", released: true }, null, "x"], next: "21", total: 120 });
+  assert.deepEqual([page?.rows.length, page?.rows[0].number, page?.rows[0].id, page?.next, page?.total], [1, 70, "h-70", "21", 120]);
+  const got = retentionOf({ state: "configured", holds: { total: 3, more: false, rows: [{ number: 3, id: "h-3" }], released: { total: 1, next: "" } } });
+  assert.deepEqual([got.holds.released, got.holds.rows?.[0].number], [{ total: 1, next: "" }, 3]);
+  assert.equal(retentionOf({ state: "configured", holds: { total: 0, more: false, rows: [] } }).holds.released, null);
+  const n = (x: number) => ({ number: x });
+  assert.deepEqual(newestFirst([n(71), n(72), n(73)].reverse().reverse(), [n(71), n(70)]).map((x) => x.number), [73, 72, 71, 70]);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { holds: [{ number: 70, id: "h-70" }], next: "", total: 120 } : { holds: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.retentionHolds("71")).rows[0].id, "h-70");
+  assert.equal(calls[0], "/api/v1/retention/holds?limit=50&after=71");
+  await assert.rejects(api.retentionHolds("2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});
+
+test("the runs' finished count, cursor and the finished runs read are read strictly", async () => {
+  const { retentionOf, runsPageOf } = await import("./retention");
+  const { AdminError, adminClient } = await import("./admin");
+  for (const bad of [{}, { runs: [], next: "" }, { runs: "x", next: "", total: 0 }, { runs: [], next: 4, total: 0 }]) assert.equal(runsPageOf(bad), null, JSON.stringify(bad));
+  const page = runsPageOf({ runs: [{ number: 70, run: { target: "retention-run-70", label: "run/70" }, state: "stopped" }, null, "x"], next: "21", total: 120 });
+  assert.deepEqual([page?.rows.length, page?.rows[0].number, page?.rows[0].run?.label, page?.rows[0].state, page?.next, page?.total], [1, 70, "run/70", "stopped", "21", 120]);
+  const got = retentionOf({ state: "configured", deletion: { total: 3, more: false, rows: [{ number: 3, run: { target: "retention-run-3", label: "run/3" } }], finished: { total: 1, next: "" } } });
+  assert.deepEqual([got.deletion.finished, got.deletion.rows?.[0].number], [{ total: 1, next: "" }, 3]);
+  assert.equal(retentionOf({ state: "configured", deletion: { total: 0, more: false, rows: [] } }).deletion.finished, null);
+  assert.equal(retentionOf({ state: "configured", deletion: { total: 1, more: false, rows: [{ run: { target: "retention-run-1", label: "run/1" } }] } }).deletion.rows?.[0].number, null);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { runs: [{ number: 70, run: { target: "retention-run-70", label: "run/70" } }], next: "", total: 120 } : { runs: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.retentionRuns("71")).rows[0].number, 70);
+  assert.equal(calls[0], "/api/v1/retention/runs?limit=50&after=71");
+  await assert.rejects(api.retentionRuns("2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});
+
+test("the deletion records' cursor and the records read are read strictly", async () => {
+  const { retentionOf, tombstonesPageOf } = await import("./retention");
+  const { newestFirst } = await import("../shared/older-rows");
+  const { AdminError, adminClient } = await import("./admin");
+  for (const bad of [{}, { tombstones: [], next: "" }, { tombstones: "x", next: "", total: 0 }, { tombstones: [], next: 4, total: 0 }]) assert.equal(tombstonesPageOf(bad), null, JSON.stringify(bad));
+  const page = tombstonesPageOf({ tombstones: [{ sequence: 70, artifact: "a-70", class: "claim", run: null, other_scope: false }, null, "x"], next: "21", total: 120 });
+  assert.deepEqual([page?.rows.length, page?.rows[0].sequence, page?.rows[0].artifact, page?.next, page?.total], [1, 70, "a-70", "21", 120]);
+  const got = retentionOf({ state: "configured", decisions: { watermark: 9, tombstones: { window: 1000, total: 3, more: true, next: "7", rows: [{ sequence: 9, artifact: "a" }] } } });
+  assert.deepEqual([got.decisions.tombstones.next, got.decisions.tombstones.rows?.[0].sequence], ["7", 9]);
+  assert.equal(retentionOf({ state: "configured", decisions: { tombstones: { window: 1000, total: 0, more: false, rows: [] } } }).decisions.tombstones.next, null);
+  const s = (x: number) => ({ sequence: x });
+  assert.deepEqual(newestFirst([s(73), s(72), s(71)].reverse(), [s(71), s(70)], (x) => x.sequence).map((x) => x.sequence), [73, 72, 71, 70]);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { tombstones: [{ sequence: 70, artifact: "a-70" }], next: "", total: 120 } : { tombstones: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.retentionTombstones("71")).rows[0].sequence, 70);
+  assert.equal(calls[0], "/api/v1/retention/tombstones?limit=50&after=71");
+  await assert.rejects(api.retentionTombstones("2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});
+
+test("a run's items and a hold's outcomes are read strictly and appended once", async () => {
+  const { outcomesPageOf, retentionOf, runItemsPageOf } = await import("./retention");
+  const { appended } = await import("../shared/more-rows");
+  const { AdminError, adminClient } = await import("./admin");
+  for (const bad of [{}, { artifacts: [] }, { artifacts: "x", next: "" }, { artifacts: [], next: 4 }]) assert.equal(runItemsPageOf(bad), null, JSON.stringify(bad));
+  assert.deepEqual(runItemsPageOf({ artifacts: [{ id: "a", outcome: "deleted" }, null], next: "80", total: 120 }), { rows: [{ id: "a", outcome: "deleted" }], next: "80" });
+  for (const bad of [{}, { outcomes: [] }, { outcomes: "x", next: "" }, { outcomes: [], next: 4 }]) assert.equal(outcomesPageOf(bad), null, JSON.stringify(bad));
+  const page = outcomesPageOf({ outcomes: [{ artifact: "a", outcome: "not_preserved", stores: { s: "deleted" } }, "x"], next: "a" });
+  assert.deepEqual([page?.rows.length, page?.rows[0].artifact, page?.rows[0].outcome, page?.next], [1, "a", "not_preserved", "a"]);
+  const got = retentionOf({ state: "configured", holds: { total: 1, more: false, rows: [{ id: "h", outcomes: [{ artifact: "a" }], outcomes_more: true, outcomes_next: "a" }] },
+    deletion: { total: 1, more: false, rows: [{ run: { target: "retention-run-1", label: "run/1" }, artifacts: { total: 3, more: true, next: "1", rows: [{ id: "a" }] } }] } });
+  assert.deepEqual([got.holds.rows?.[0].outcomes_next, got.deletion.rows?.[0].artifacts.next], ["a", "1"]);
+  const old = retentionOf({ state: "configured", holds: { total: 1, more: false, rows: [{ id: "h", outcomes: [], outcomes_more: false }] }, deletion: { total: 1, more: false, rows: [{ artifacts: { total: 0, more: false, rows: [] } }] } });
+  assert.deepEqual([old.holds.rows?.[0].outcomes_next, old.deletion.rows?.[0].artifacts.next], [null, null]);
+  const id = (x: { id: string }) => x.id;
+  assert.deepEqual(appended([{ id: "a" }, { id: "b" }], [{ id: "b" }, { id: "c" }, { id: "" }, { id: "c" }], id).map(id), ["a", "b", "c"]);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    const body = calls.length === 1 ? { artifacts: [{ id: "a" }], next: "" } : calls.length === 2 ? { outcomes: [{ artifact: "a" }], next: "" } : {};
+    return new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.retentionRunArtifacts("retention-run-7", "50")).rows[0].id, "a");
+  assert.equal((await api.retentionHoldOutcomes("hold:a b", "x:y")).rows[0].artifact, "a");
+  assert.deepEqual(calls, ["/api/v1/retention/run-artifacts?run=retention-run-7&limit=50&after=50", "/api/v1/retention/hold-outcomes?hold=hold%3Aa+b&limit=50&after=x%3Ay"]);
+  await assert.rejects(api.retentionRunArtifacts("retention-run-7", "2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});
+
+test("the possible owners of a hold are read strictly, by search and by identifier", async () => {
+  const { ownersPageOf } = await import("./retention");
+  const { AdminError, adminClient } = await import("./admin");
+  for (const bad of [{}, { owners: [], matching: 0 }, { owners: "x", matching: 0, more: false }, { owners: [], matching: "1", more: false }, { owners: [], matching: 0, more: "no" }]) assert.equal(ownersPageOf(bad), null, JSON.stringify(bad));
+  assert.deepEqual(ownersPageOf({ owners: [{ user_id: "u1", login: "a@example.invalid" }, { user_id: "bad id" }, null], matching: 25, more: true }), { rows: [{ id: "u1", login: "a@example.invalid" }], matching: 25, more: true });
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length < 4 ? { owners: [{ user_id: "u1", login: "a" }], matching: 1, more: false } : { owners: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.retentionOwners({ q: "" })).rows[0].id, "u1");
+  await api.retentionOwners({ q: "a b@c" });
+  await api.retentionOwners({ id: "u:1" });
+  assert.deepEqual(calls, ["/api/v1/retention/owners", "/api/v1/retention/owners?q=a+b%40c", "/api/v1/retention/owners?id=u%3A1"]);
+  await assert.rejects(api.retentionOwners({ q: "x" }), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});

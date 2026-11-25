@@ -1,0 +1,254 @@
+{
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "scope": "server query/index/detail foundation only; no full M05 or M02-M05 completion",
+  "base": "0f9d9a27d6202734e79d8f86ef6e65dfdfc5a752",
+  "source_files": [
+    {
+      "path": "apps/api/cmd/hb-api/main.go",
+      "sha256": "b1c2959eaf52c6f53b65bfdc9f9aa599f80b33334992491ae4542be788becca5"
+    },
+    {
+      "path": "apps/api/server/boundary.go",
+      "sha256": "5df287b4b1836aa90505fa028ad83affda971a63b5e60e39c821ccd2370125c3"
+    },
+    {
+      "path": "apps/api/server/commands.go",
+      "sha256": "1fb076e618988d99b417b6551a2c311578403f764d9b7a8791150e37e70134a6"
+    },
+    {
+      "path": "apps/api/server/openapiself.go",
+      "sha256": "f5d886c85ab3e5e20f0af51c1f39f386b5bd485b77f03fb98a3d4c3c6602d15c"
+    },
+    {
+      "path": "apps/api/server/openapisessionquery.go",
+      "sha256": "56ead511575e04978cb7787465cfd33faf131d8f546acf1c9caa4dbb2d6d4e31"
+    },
+    {
+      "path": "apps/api/server/server.go",
+      "sha256": "8f2153a7bb4e3a4ccf5f80a6df6707dbed2a94fa1d8a066d223cc9f673ed6edc"
+    },
+    {
+      "path": "apps/api/server/session.go",
+      "sha256": "ff07fe90446b807e57264884b012a80d9c74b54056a3e68cca423e863f2d4e86"
+    },
+    {
+      "path": "apps/api/server/sessioncursor.go",
+      "sha256": "33ec850c1d12d4e62de1812e780ad43968b15c5c15e6400586e56246179ccc44"
+    },
+    {
+      "path": "apps/api/server/sessiondetail.go",
+      "sha256": "1201fcd09c070a236be8f7639a6baabfb97966d971c79736cc899a10bd812210"
+    },
+    {
+      "path": "apps/api/server/sessionend.go",
+      "sha256": "1a7f72e925b6c3d2cafd96f8bbdbc2f1820e34e50dacdc31696b0e0bea033a61"
+    },
+    {
+      "path": "apps/api/server/sessionindex.go",
+      "sha256": "b9c70a41100096f80e73a7339cdf195e5547aced02dffde449477b3bf694538d"
+    },
+    {
+      "path": "apps/api/server/sessionindex_test.go",
+      "sha256": "4ee7589b26190392ddd4ccf57be1df1de1b512dcb85e9251527364de946e0058"
+    },
+    {
+      "path": "apps/api/server/sessionquery.go",
+      "sha256": "aedf1e4f725441a192f87162791d2f4173311a631d0c1f68d827c721949308bb"
+    },
+    {
+      "path": "apps/api/server/sessionquery_edges_test.go",
+      "sha256": "58e19626b4799c1d78eead05b2fe96bc51d1daf6f99019cf3a84e4f595abc5c9"
+    },
+    {
+      "path": "apps/api/server/sessionquery_openapi_test.go",
+      "sha256": "c83019ab8052614117b4549f888cde47c1abe775742c0bbdab4275ee84a768dd"
+    },
+    {
+      "path": "apps/api/server/sessionquery_population_test.go",
+      "sha256": "0a96321558d9b7946735436578867f733dcb8ef0001a5a34395f9605691789d7"
+    },
+    {
+      "path": "apps/api/server/sessionquery_precision_test.go",
+      "sha256": "94c6af035354095d764f7bff6661c1c26bc27f0ef43f66befad44ab5b503b53f"
+    },
+    {
+      "path": "apps/api/server/sessionquery_test.go",
+      "sha256": "6f4e4e43c2ffce8018d647e89a0e5acfae8ad1a4115d53faa6107b2ee9114109"
+    },
+    {
+      "path": "apps/api/server/settings.go",
+      "sha256": "f4d9d478edd4db76e96d65c2763fd8d28ed1999f94f3f5eb72d729f8939d3092"
+    },
+    {
+      "path": "apps/api/server/signin.go",
+      "sha256": "9c36cb49b888cbba62ad60def7474b42e87e5810a77e5c5fc5e89dd8c416f62b"
+    }
+  ],
+  "checks": {
+    "server_cli_short_regression": "PASS before readonly-test fixture strengthening",
+    "darwin_vet": "PASS",
+    "linux_static_vet": "PASS",
+    "windows_static_vet": "PASS",
+    "query_final_race": {
+      "status": "PASS",
+      "test_results_including_subtests": 29,
+      "failures": 0
+    },
+    "mutations": {
+      "initial_killed": 13,
+      "initial_survived": 1,
+      "survivor_rechecked_and_killed": true,
+      "final_guards_killed": 14,
+      "source_bytes_restored": true,
+      "private_batch_caches_removed": true
+    }
+  },
+  "independent_reviews": {
+    "design": "PASS after corrections",
+    "query_index_detail_source": "PASS after corrections",
+    "openapi": "PASS",
+    "evidence_checkpoint": "PASS;20source hashes and30artifact hashes checked before final race append"
+  },
+  "local_artifacts": [
+    {
+      "path": "/private/tmp/hb304-query-before.log",
+      "sha256": "1770a041a50183699ca570fc5f78680f27a22932ad788c6c71186b1918242a9e"
+    },
+    {
+      "path": "/private/tmp/hb304-query-edges-before.log",
+      "sha256": "389c82752be25232ca9736c6ad4b38625922675c8d85b097ef606f56c3ae127d"
+    },
+    {
+      "path": "/private/tmp/hb304-query-boundaries-before.log",
+      "sha256": "ef78341434008d0554ec2fa53cae543daec9334ddd63845a4752545f1e3c92e8"
+    },
+    {
+      "path": "/private/tmp/hb304-detail-before.log",
+      "sha256": "54be767acc974670796c6a2a03a0cf0e558a2a6bd90200f9548ba31557ef348b"
+    },
+    {
+      "path": "/private/tmp/hb304-openapi-before.log",
+      "sha256": "52be09f1b2ae368c487add9d325db360d3f7781b1dc48b5e9ef24ef5e67be93e"
+    },
+    {
+      "path": "/private/tmp/hb304-precision-before.log",
+      "sha256": "d005b26d5e4cd225433b79d5c00dd7fce2d6ea7fa385a976a980de16bd0e0a97"
+    },
+    {
+      "path": "/private/tmp/hb304-invitation-main.log",
+      "sha256": "2cd0be6cc44957775f9877628a5ffa46c6fd0f2d7e98289a82854617ed2d42c7"
+    },
+    {
+      "path": "/private/tmp/hb304-server-regression.log",
+      "sha256": "2e5b76fb82eaf76260320edd13a4df43d696da57c1381880efae19bcab8bff25"
+    },
+    {
+      "path": "/private/tmp/hb304-foundation-regression.log",
+      "sha256": "05ac87eb40a5aa1a4fb057566d9d4a5e0337d6fce53379a7391fb6003c5c8a99"
+    },
+    {
+      "path": "/private/tmp/hb304-foundation-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/hb304-vet-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/hb304-vet-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/private/tmp/hb304-mutations-initial.json",
+      "sha256": "cf2f3eb5588862a14ea61c72488a93131c7c1706fadcb0b0260880e99de57183"
+    },
+    {
+      "path": "/private/tmp/hb304-mutations-final.json",
+      "sha256": "20ecabe4b33e5a3ade185805909173cea8de8cdc4c0d334a71da4c540206f8ce"
+    },
+    {
+      "path": "/private/tmp/hb304-readonly-check-before.log",
+      "sha256": "1965a6bc6c67b45a4736a1cc763ab08a0355b25e7ce88b1a0527dc725e67084a"
+    },
+    {
+      "path": "/private/tmp/hb304-readonly-mutant-final.log",
+      "sha256": "d5c1a52d84a2d04172ba412dd47122e478811ad55aa92d1ac277817d60ee7bb1"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-caller.log",
+      "sha256": "defe327bbb63fe8c623968ecfccb623934421cb4dc2efeaa27b3dc48f5c36cf6"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-domain-revision.log",
+      "sha256": "ef94a8e03c7bf4fefd2d782feb8079d276cea120196848a4fd5601c0639e0c59"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-expired-state.log",
+      "sha256": "7a151ae9a218bf2b8c99c4a9be713057b31904d5261c1efb1289b570c1f2cb64"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-expiry.log",
+      "sha256": "eba984d0c0fd45516f1292bec68a12b8bbf9af1d3aab46191339b09b5acd2acf"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-fractional-bound.log",
+      "sha256": "874266a4b1274521f09075c55051052e4d1e4226ae11894e9841b5cd65627e77"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-index-generation.log",
+      "sha256": "b5ec55041971688e97f06f28696a96ca776a7386c4b16a8de36b4ae6589b50cb"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-index-removal.log",
+      "sha256": "e21206d3a5fda56968a1ee3e8c452e6f533764be2622d491d2621323a4f0efdc"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-malformed-query.log",
+      "sha256": "9564e7869a4b758a74c24e79a63b791d9a1c2a946f936f9424150d1d8f8fc237"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-page-cap.log",
+      "sha256": "1ccd46cca06c0ad191bb56cae806653b68936513e326794f4b03e29f69b477c6"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-query-binding.log",
+      "sha256": "79aa9ddbcccba96d2b7468b6aa729bfd0d0b1f5e789c0cbc102921ae22d3631a"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-readonly-target.log",
+      "sha256": "c1fa265bf2c99ec975a283699dc2a7b0c8f7144482208e64defc7340c29f93c3"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-scan-budget.log",
+      "sha256": "a3a375f95af81fe8180e12c422fad7dcbbc00befbc5725551e4f9c2072755d80"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-signature.log",
+      "sha256": "ff975f9f873a126e1ff11ff1e9430a17fb0a04dadeea59d4349b73627ea59540"
+    },
+    {
+      "path": "/private/tmp/hb304-mutant-strict-policy-boundary.log",
+      "sha256": "5b2c9afac78c09e2c8f610b42b37bae2a5c375895913c49efc06a2ce17f2834c"
+    },
+    {
+      "path": "/private/tmp/hb304-query-final-race.jsonl",
+      "sha256": "7911e18143787e337f47a41d281c448862c2b1e216fdf3cce81b89dd7eb3673c"
+    }
+  ],
+  "raw_artifact_committed": false,
+  "unimplemented": [
+    "/me bounded summary migration",
+    "frozen selection and global reference accounting",
+    "bounded operation details and replay lifecycle",
+    "console query/confirmation and EN KO AR rendered verification",
+    "remaining M04 M03 M02 increments"
+  ],
+  "platform_checks": {
+    "executed_host": "darwin/arm64",
+    "go": "go1.25.7",
+    "linux_static_vet": "linux/arm64",
+    "windows_static_vet": "windows/arm64",
+    "linux_windows_runtime_execution": "UNVERIFIED"
+  }
+}

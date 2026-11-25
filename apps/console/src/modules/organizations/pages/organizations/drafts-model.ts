@@ -160,7 +160,7 @@ export function partitionPrecheck(pending: DraftMember[], saved: Set<string>, kn
 
 export type PendingPartial = { kind: "new" | "edit"; draftId: string; done: number };
 export type SavePlan = { mode: "continue"; draftId: string; done: number } | { mode: "new" } | { mode: "edit"; draftId: string } | { mode: "none" };
-export function savePlan(partial: PendingPartial | null, target: "new" | "draft" | "gone" | null, draftId: string): SavePlan {
+export function savePlan(partial: PendingPartial | null, target: "new" | "draft" | "gone" | "unread" | null, draftId: string): SavePlan {
   if (partial?.kind === "new" && partial.draftId) return { mode: "continue", draftId: partial.draftId, done: partial.done };
   if (target === "new") return { mode: "new" };
   if (target === "draft" && draftId) return { mode: "edit", draftId };

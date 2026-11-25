@@ -270,12 +270,14 @@ func (r *Registry) checkRetire(x Retire) error {
 		return refuse(ReasonCommonNeedsReplacement)
 	case rep == nil:
 		return nil
-	case rep.retired || rep.replaces || rep.seq < q.seq:
-		return refuse(ReasonWeakerReplacement)
-	case q.view.Common && !rep.view.Common || q.view.Blocking && !rep.view.Blocking:
+	case weaker(q, rep):
 		return refuse(ReasonWeakerReplacement)
 	}
 	return nil
+}
+
+func weaker(q, rep *requirement) bool {
+	return rep.retired || rep.replaces || rep.seq < q.seq || q.view.Common && !rep.view.Common || q.view.Blocking && !rep.view.Blocking
 }
 
 func (r *Registry) checkReconcile(x Reconcile) error {

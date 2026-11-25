@@ -18,7 +18,7 @@ const ungated: Record<string, ProxyTarget> = {
   "/api/focus-receipts": { target: "http://127.0.0.1:8810", changeOrigin: true },
   "/api/credit-case-review": { target: "http://127.0.0.1:8806", changeOrigin: true },
   "/api/claim-history": { target: "http://127.0.0.1:8806", changeOrigin: true },
-  "/api/approval-review": { target: "http://127.0.0.1:8806", changeOrigin: true },
+  "/api/approval-review": { target: goApi, changeOrigin: true },
   "/api/focus-marketplace": { target: "http://127.0.0.1:8806", changeOrigin: true },
   "/api/focus-commitments": { target: "http://127.0.0.1:8806", changeOrigin: true },
   "/api/focus-overview": { target: "http://127.0.0.1:8806", changeOrigin: true },

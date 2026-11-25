@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, type OrgParty } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
@@ -24,11 +25,12 @@ type Props = {
 };
 
 export function failureText(l: Locale, e: unknown): { title: string; body: string } {
+  const title = diagnosticCopy.load(l, "contracts");
   if (e instanceof AdminError) {
-    if (e.failure === "limited") return { title: sc.failed(l), body: sc.limited(l, retryPhrase(l, e.retryAfter || 60)) };
-    if (e.failure === "busy" || e.failure === "unavailable") return { title: sc.failed(l), body: sc.unavailable(l) };
+    if (e.failure === "limited") return { title, body: sc.limited(l, retryPhrase(l, e.retryAfter || 60)) };
+    if (e.failure === "busy" || e.failure === "unavailable") return { title, body: diagnosticCopy.unavailable(l) };
   }
-  return { title: sc.failed(l), body: "" };
+  return { title, body: "" };
 }
 
 export default function LiveContracts({ locale: l, view, params, session, onSignOut, onParams }: Props) {
@@ -40,6 +42,7 @@ export default function LiveContracts({ locale: l, view, params, session, onSign
   const [loadError, setLoadError] = useState<unknown>(null);
   const [detail, setDetail] = useState<ContractDetail | "missing" | null>(null);
   const [detailError, setDetailError] = useState<unknown>(null);
+  const [detailPending, setDetailPending] = useState(false);
   const [parties, setParties] = useState<OrgParty[]>([]);
   const [denied, setDenied] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
@@ -87,16 +90,19 @@ export default function LiveContracts({ locale: l, view, params, session, onSign
       setNotice("");
       shownId.current = selectedId;
     }
-    if (!selectedId) return;
+    if (!selectedId) { setDetailPending(false); return; }
+    setDetailPending(true);
     try {
       const got = period.problem ? await api.contract(selectedId) : await api.contract(selectedId, period.from, period.until);
       if (n !== detailSeq.current) return;
       setDetail(got);
       setDetailError(null);
+      setDetailPending(false);
     } catch (e) {
       if (n !== detailSeq.current) return;
       fail(e);
       setDetailError(e);
+      setDetailPending(false);
     }
   }, [api, selectedId, period.from, period.until, period.problem]);
 
@@ -144,7 +150,7 @@ export default function LiveContracts({ locale: l, view, params, session, onSign
   const list = (
     <div className="live-list o03-list" aria-busy={busy || undefined}>
       <FilterPanel l={l} filters={filters} rows={rows} parties={parties} wide={wide} rail={split} onParams={onParams} />
-      <p className="live-counter">{k.countOf(l, shown.length, rows.length)}</p>
+      {page && <p className="live-counter">{k.countOf(l, shown.length, rows.length)}</p>}
       {status === "loading" && !page && <p className="live-meta" role="status">{k.loading(l)}</p>}
       {page && rows.length === 0 && <p className="live-empty">{k.emptyAll(l)}</p>}
       {page && rows.length > 0 && shown.length === 0 && (
@@ -175,6 +181,7 @@ export default function LiveContracts({ locale: l, view, params, session, onSign
         <div className="live-error o03-failure" role="alert">
           <h2>{failureText(l, loadError).title}</h2>
           {failureText(l, loadError).body && <p>{failureText(l, loadError).body}</p>}
+          {page && <p>{diagnosticCopy.kept(l)}</p>}
           <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
         </div>
       )}
@@ -184,7 +191,7 @@ export default function LiveContracts({ locale: l, view, params, session, onSign
         {selectedId && (
           <aside className="live-panel o03-panel" aria-busy={busy || undefined} aria-labelledby="o03-contract-title">
             {stepped && <button type="button" className="service-button-link live-back" onClick={() => onParams({ contract: null })}>{k.back(l)}</button>}
-            {detail === "missing" || (page && !selected && !detail && !detailError) ? (
+            {detail === "missing" || (page && !selected && !detail && !detailError && !detailPending) ? (
               <div className="live-note-rule" role="status">
                 <p>{k.notFound(l)}</p>
                 <button type="button" className="service-button-link" onClick={() => onParams({ contract: null })}>{k.showAll(l)}</button>
@@ -195,13 +202,16 @@ export default function LiveContracts({ locale: l, view, params, session, onSign
                 <button type="button" className="live-secondary" onClick={() => void loadDetail()}>{sc.tryAgain(l)}</button>
               </div>
             ) : detail && detail.contract.id === selectedId ? (
+              <>
+              {detailError != null && <div className="live-error o03-detail-kept" role="alert" id="o03-detail-stale"><h2>{failureText(l, detailError).title}</h2><p>{diagnosticCopy.kept(l)}</p><button type="button" className="live-secondary" onClick={() => void loadDetail()}>{sc.tryAgain(l)}</button></div>}
               <Detail
                 key={selectedId}
-                l={l} view={view} detail={detail} parties={parties} api={api} session={session} params={params} period={period}
-                onParams={onParams} onReload={reloadAll}
+                l={l} view={view} detail={detail} stale={detailError != null} parties={parties} api={api} session={session} params={params} period={period}
+                setupOn={on || page?.on || ""} onParams={onParams} onReload={reloadAll}
                 onDone={(text) => { setNotice(text); void reloadAll(); requestAnimationFrame(() => document.getElementById("o03-notice")?.focus()); }}
                 onDenied={() => setDenied(true)} onSignedOut={() => setSignedOut(true)}
               />
+              </>
             ) : (
               <p className="live-meta" role="status">{k.loading(l)}</p>
             )}

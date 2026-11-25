@@ -934,3 +934,13 @@ dialog.m01-confirm .m01-ink strong {
   margin: 0;
   max-inline-size: 68ch;
 }
+.m01-selactions .live-secondary[aria-disabled="true"] {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+.m01-kept {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}

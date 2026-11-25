@@ -27,6 +27,7 @@ export const requirementStateWords: Words = {
   implemented: ["Implemented, not tested", "구현됨(미시험)", "منفَّذ، لم يُختبر"],
   failing: ["Failing at this build", "이 빌드에서 실패", "فاشل في هذه البنية"],
   tested: ["Tested at this build", "이 빌드에서 시험됨", "مُختبَر في هذه البنية"],
+  customer_proven: ["Proven with a customer at this build", "이 빌드에서 고객 실증됨", "مُثبَت لدى عميل في هذه البنية"],
 };
 
 export const pathStateWords: Words = {

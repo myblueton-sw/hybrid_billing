@@ -66,7 +66,13 @@ func TestEveryRegisteredMutatingCommandRequiresStepUp(t *testing.T) {
 	f.setPassword(AdminLogin, pw)
 	ids := []string{}
 	for id, mutating := range f.s.mutating {
-		if !mutating || exempt[id] {
+		if !mutating {
+			if f.s.stepUp(id) {
+				t.Errorf("read-only command %s requires mutation step-up", id)
+			}
+			continue
+		}
+		if exempt[id] {
 			t.Errorf("%s is not covered by step-up", id)
 			continue
 		}
@@ -84,7 +90,7 @@ func TestEveryRegisteredMutatingCommandRequiresStepUp(t *testing.T) {
 	if len(ids) != mutating || len(ids) < 63 || len(exempt) != 0 {
 		t.Fatalf("registry %d catalogue %d exempt %d", len(ids), mutating, len(exempt))
 	}
-	for _, family := range []string{"access", "contract", "identity", "installation", "integrations", "trust", "recovery", "relationship", "retention", "service"} {
+	for _, family := range []string{"access", "contract", "erp_final_authority", "erp_final_policy", "erp_final_permission", "erp_final_request_permission", "financial_authority", "erp_final", "financial_charge", "financial_permission", "financial_policy", "financial_request_permission", "identity", "input_authority", "pricing_authority", "pricing_policy", "installation", "integrations", "trust", "recovery", "relationship", "retention", "service"} {
 		if families[family] == 0 {
 			t.Errorf("family %s has no mutating command", family)
 		}
@@ -151,7 +157,7 @@ func TestPostRoutesAreClassified(t *testing.T) {
 			t.Errorf("route %s classified %v", path, step)
 		}
 	}
-	if len(found) != 8 || len(postRoutes) != 8 {
+	if len(found) != 9 || len(postRoutes) != 9 {
 		t.Errorf("routes %d listed %d", len(found), len(postRoutes))
 	}
 	f := setup(t, SeedSample).ready()
@@ -162,7 +168,7 @@ func TestPostRoutesAreClassified(t *testing.T) {
 	before := f.s.counter
 	got := f.selfPost(a, "sessions/end", `{"session":"others"}`)
 	refused(t, "sessions/end", got)
-	if got.body["request_id"] != got.header.Get("X-Request-Id") || got.body["request_id"] == "" || f.s.counter != before || len(f.me(a).body["sessions"].([]any)) != 2 {
+	if got.body["request_id"] != got.header.Get("X-Request-Id") || got.body["request_id"] == "" || f.s.counter != before || len(f.testSessionSnapshot(a)["sessions"].([]any)) != 2 {
 		t.Errorf("sessions/end refusal %+v", got)
 	}
 	if f.reauth(a, pw).status != 204 {

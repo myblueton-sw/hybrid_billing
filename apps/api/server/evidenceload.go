@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/perfgate"
 )
@@ -13,6 +14,7 @@ const (
 )
 
 type evidenceHardwareRow struct {
+	Number    int    `json:"number"`
 	ID        string `json:"id"`
 	CPUs      int64  `json:"cpus"`
 	MemoryMiB int64  `json:"memory_mib"`
@@ -64,6 +66,7 @@ type evidenceRunRow struct {
 }
 
 type evidenceProfileRow struct {
+	Number        int                          `json:"number"`
 	Target        string                       `json:"target"`
 	ID            string                       `json:"id"`
 	Gate          string                       `json:"gate"`
@@ -101,7 +104,9 @@ type evidenceReadiness struct {
 type evidenceLoad struct {
 	Origin          string                            `json:"origin"`
 	Hardware        evidenceList[evidenceHardwareRow] `json:"hardware"`
+	HardwareNext    string                            `json:"hardware_next"`
 	Profiles        evidenceList[evidenceProfileRow]  `json:"profiles"`
+	ProfilesNext    string                            `json:"profiles_next"`
 	Readiness       *evidenceReadiness                `json:"readiness"`
 	Measurement     string                            `json:"measurement"`
 	PlanningTargets string                            `json:"planning_targets"`
@@ -149,6 +154,9 @@ func runRow(v perfgate.RunView) evidenceRunRow {
 
 func (f *evidenceFacts) profileRow(id string, statuses map[string]string) (evidenceProfileRow, error) {
 	s := f.s
+	if !f.rostered {
+		return evidenceProfileRow{}, errRosterNotRead
+	}
 	p, retired, err := s.perfProfile(id)
 	if err != nil {
 		return evidenceProfileRow{}, err
@@ -194,33 +202,48 @@ func statusRows(list []perfgate.ProfileStatus) []evidenceProfileStatus {
 func (f *evidenceFacts) load() (evidenceLoad, error) {
 	s := f.s
 	section := evidenceLoad{Origin: f.origin, Measurement: notConnected, PlanningTargets: notConnected}
-	var statuses map[string]string
-	if f.candidate != nil {
-		v, err := s.perfReadiness(f.build)
-		if err != nil {
-			return evidenceLoad{}, err
-		}
-		statuses = map[string]string{}
-		readiness := &evidenceReadiness{Ready: v.Ready, Gates: []evidenceGateStatus{}}
-		for _, g := range v.Gates {
-			readiness.Gates = append(readiness.Gates, evidenceGateStatus{Gate: g.Gate, Status: g.Status, Profiles: statusRows(g.Profiles), Retired: statusRows(g.Retired)})
-			for _, x := range append(append([]perfgate.ProfileStatus{}, g.Profiles...), g.Retired...) {
-				statuses[x.Profile] = x.Status
-			}
-		}
-		section.Readiness = readiness
-	}
-	var err error
-	hardware := s.ev.hardware
-	if section.Hardware, err = listOf(len(hardware), evidenceShown, func(index int) (evidenceHardwareRow, error) {
-		h, err := s.perfHardware(hardware[index])
-		return evidenceHardwareRow{ID: h.ID, CPUs: h.CPUs, MemoryMiB: h.MemoryMiB, DiskGiB: h.DiskGiB, Storage: h.Storage, Spec: h.Spec}, err
-	}); err != nil {
+	statuses, readiness, err := f.profileStatuses()
+	if err != nil {
 		return evidenceLoad{}, err
 	}
+	section.Readiness = readiness
+	if section.Hardware, err = listOf(len(s.ev.hardware), evidenceShown, s.hardwareAt); err != nil {
+		return evidenceLoad{}, err
+	}
+	if section.Hardware.More {
+		section.HardwareNext = strconv.Itoa(len(section.Hardware.Rows))
+	}
 	profiles := s.ev.profiles
-	section.Profiles, err = listOf(len(profiles), evidenceShown, func(index int) (evidenceProfileRow, error) { return f.profileRow(profiles[index], statuses) })
+	section.Profiles, err = listOf(len(profiles), evidenceShown, func(index int) (evidenceProfileRow, error) { return f.profileAt(index, statuses) })
+	if section.Profiles.More {
+		section.ProfilesNext = strconv.Itoa(len(section.Profiles.Rows))
+	}
 	return section, err
+}
+
+func (f *evidenceFacts) profileStatuses() (map[string]string, *evidenceReadiness, error) {
+	if f.candidate == nil {
+		return nil, nil, nil
+	}
+	v, err := f.s.perfReadiness(f.build)
+	if err != nil {
+		return nil, nil, err
+	}
+	statuses := map[string]string{}
+	readiness := &evidenceReadiness{Ready: v.Ready, Gates: []evidenceGateStatus{}}
+	for _, g := range v.Gates {
+		readiness.Gates = append(readiness.Gates, evidenceGateStatus{Gate: g.Gate, Status: g.Status, Profiles: statusRows(g.Profiles), Retired: statusRows(g.Retired)})
+		for _, x := range append(append([]perfgate.ProfileStatus{}, g.Profiles...), g.Retired...) {
+			statuses[x.Profile] = x.Status
+		}
+	}
+	return statuses, readiness, nil
+}
+
+func (f *evidenceFacts) profileAt(index int, statuses map[string]string) (evidenceProfileRow, error) {
+	row, err := f.profileRow(f.s.ev.profiles[index], statuses)
+	row.Number = index + 1
+	return row, err
 }
 
 func perfSummary(c perfgate.Change) map[string]any {

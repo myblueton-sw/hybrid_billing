@@ -43,8 +43,9 @@ func (h *Workspace) InviteUntil(actor Verifier, workspace, invitationID string, 
 		return ErrConflict
 	}
 	pending := 0
-	for _, existing := range r.invitations {
-		if existing.workspace == workspace && r.countable(existing, now) {
+	for id := range r.pendingInvitations[workspace] {
+		existing := r.invitations[id]
+		if r.countable(existing, now) {
 			pending++
 		}
 	}
@@ -56,6 +57,10 @@ func (h *Workspace) InviteUntil(actor Verifier, workspace, invitationID string, 
 	}
 	r.invitations[invitationID] = &invitation{workspace: workspace, role: role, roleUntil: roleUntil, verifier: verifier, validity: validity, inviter: found.user,
 		inviterEpoch: found.epoch, inviterVersion: r.member(workspace, found.user).version, invitee: invitee}
+	if r.pendingInvitations[workspace] == nil {
+		r.pendingInvitations[workspace] = map[string]struct{}{}
+	}
+	r.pendingInvitations[workspace][invitationID] = struct{}{}
 	return nil
 }
 
@@ -79,6 +84,7 @@ func (h *Workspace) RevokeInvitation(actor Verifier, workspace, invitationID str
 		return refused(ReasonState)
 	}
 	found.state = invitationRevoked
+	delete(r.pendingInvitations[workspace], invitationID)
 	return nil
 }
 
@@ -119,6 +125,7 @@ func (h *Workspace) Accept(workspace, invitationID string, verifier, actor Verif
 		found.attempts++
 		if found.attempts >= r.limits.Attempts {
 			found.state = invitationLocked
+			delete(r.pendingInvitations[workspace], invitationID)
 		}
 		return refused(ReasonVerifier)
 	}
@@ -130,6 +137,7 @@ func (h *Workspace) Accept(workspace, invitationID string, verifier, actor Verif
 		return ErrConflict
 	}
 	found.state = invitationAccepted
+	delete(r.pendingInvitations[workspace], invitationID)
 	r.putMembership(workspace, acting.user, &membership{role: found.role, state: MembershipActive, version: version, joined: joined + 1, from: now, until: found.roleUntil})
 	r.generation++
 	return nil
@@ -445,10 +453,80 @@ func (h *Workspace) AddCredential(actor Verifier, workspace, serviceID, credenti
 	return nil
 }
 
+func (r *Registry) live(found *credential, now time.Time) bool {
+	return found != nil && !found.revoked && now.Before(found.validity.NotAfter)
+}
+
+func (r *Registry) replacementOf(id string) string {
+	found := r.credentials[id]
+	if other := r.credentials[found.replacedBy]; other == nil || other.user != found.user || other.replaces != id {
+		return ""
+	}
+	return found.replacedBy
+}
+
+func (r *Registry) replacedOne(id string) string {
+	found := r.credentials[id]
+	if other := r.credentials[found.replaces]; other == nil || other.user != found.user || other.replacedBy != id {
+		return ""
+	}
+	return found.replaces
+}
+
+func (r *Registry) credentialInfo(id string) CredentialInfo {
+	found := r.credentials[id]
+	return CredentialInfo{ID: id, Validity: found.validity, Revoked: found.revoked, Replaces: r.replacedOne(id), ReplacedBy: r.replacementOf(id)}
+}
+
+func (h *Workspace) ReplaceCredential(actor Verifier, workspace, oldID, newID string, verifier Verifier, validity Validity, oldEnd time.Time) error {
+	r, ok := h.open()
+	if !ok {
+		return ErrUnavailable
+	}
+	defer r.mu.Unlock()
+	now := r.clock()
+	if !validID(workspace) || !validID(oldID) || !validID(newID) || !verifier.valid() || !validity.valid(r.limits.CredentialValidity) ||
+		!now.Before(validity.NotAfter) || validity.NotBefore.After(now) || !now.Before(oldEnd) {
+		return ErrInvalid
+	}
+	if _, err := r.administrator(actor, workspace, now); err != nil {
+		return err
+	}
+	old := r.credentials[oldID]
+	if old == nil || r.users[old.user] == nil || r.users[old.user].kind != Service || r.users[old.user].workspace != workspace {
+		return refused(ReasonUnknown)
+	}
+	if r.users[old.user].state != Active || old.revoked || !old.validity.at(now) || old.replacedBy != "" {
+		return refused(ReasonState)
+	}
+	if r.credentials[newID] != nil {
+		return ErrConflict
+	}
+	held := 0
+	for _, existing := range r.credentials {
+		if existing.user == old.user && r.live(existing, now) {
+			held++
+		}
+	}
+	if held >= r.limits.CredentialsPerServiceUser {
+		return ErrLimit
+	}
+	if !bump(&r.serial) {
+		return ErrConflict
+	}
+	r.credentials[newID] = &credential{serial: r.serial, user: old.user, verifier: verifier, validity: validity, replaces: oldID}
+	old.replacedBy = newID
+	if oldEnd.Before(old.validity.NotAfter) {
+		old.validity.NotAfter = oldEnd
+	}
+	r.pruneCredentials(old.user, now)
+	return nil
+}
+
 func (r *Registry) pruneCredentials(serviceID string, now time.Time) {
 	ended := []string{}
 	for id, found := range r.credentials {
-		if found.user == serviceID && (found.revoked || !now.Before(found.validity.NotAfter)) {
+		if found.user == serviceID && !r.live(found, now) && !r.live(r.credentials[r.replacementOf(id)], now) && !r.live(r.credentials[r.replacedOne(id)], now) {
 			ended = append(ended, id)
 		}
 	}
@@ -507,7 +585,7 @@ func (h *Workspace) Credential(actor Verifier, workspace, credentialID string) (
 	if found == nil || r.users[found.user] == nil || r.users[found.user].workspace != workspace {
 		return "", CredentialInfo{}, refused(ReasonUnknown)
 	}
-	return found.user, CredentialInfo{ID: credentialID, Validity: found.validity, Revoked: found.revoked}, nil
+	return found.user, r.credentialInfo(credentialID), nil
 }
 
 func (h *Workspace) Credentials(actor Verifier, workspace, serviceID string) ([]CredentialInfo, error) {
@@ -528,8 +606,7 @@ func (h *Workspace) Credentials(actor Verifier, workspace, serviceID string) ([]
 	sort.Strings(ids)
 	list := make([]CredentialInfo, 0, len(ids))
 	for _, id := range ids {
-		found := r.credentials[id]
-		list = append(list, CredentialInfo{ID: id, Validity: found.validity, Revoked: found.revoked})
+		list = append(list, r.credentialInfo(id))
 	}
 	return list, nil
 }

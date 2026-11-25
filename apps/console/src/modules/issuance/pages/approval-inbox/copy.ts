@@ -36,6 +36,8 @@ export const kinds: Kind[] = [
 ];
 export const tabLabel = (l: Locale, k: string) =>
   ({
+    drafts: t(l, "Issuance drafts", "발행 초안", "مسودات الإصدار"),
+    results: t(l, "ERP result evidence", "ERP 결과 근거", "أدلة نتائج ERP"),
     pending: t(l, "Pending approvals", "승인 대기", "طلبات الاعتماد المعلّقة"),
     decisions: t(l, "My decisions", "내 결정", "قراراتي"),
     delegation: t(
@@ -51,7 +53,7 @@ export const tabLabel = (l: Locale, k: string) =>
       "인식 주기·대사",
       "دورية الإثبات والمطابقة",
     ),
-  })[k as "pending" | "decisions" | "delegation" | "history" | "recognition"];
+  })[k as "pending" | "decisions" | "delegation" | "history" | "recognition" | "results" | "drafts"];
 export const statusLabel = (l: Locale, k: ApprovalRecord["status"]) =>
   ({
     pending: t(l, "Pending in source", "원천 기록: 대기", "المصدر: معلّق"),
@@ -86,19 +88,21 @@ export const basisLabel = (l: Locale, b: string) =>
     net: t(l, "Net amount", "순액", "المبلغ الصافي"),
     tax: t(l, "Tax", "세금", "الضريبة"),
     gross: t(l, "Gross amount", "총액", "المبلغ الإجمالي"),
+    rated_candidate_total: t(l, "Rated candidate total", "과금 계산 후보 합계", "إجمالي نتيجة احتساب الرسوم المبدئية"),
+    synthetic_reported_net_plus_tax_v1: t(l, "Reported gross (net + tax)", "보고된 총액 (순액 + 세금)", "الإجمالي المبلّغ عنه (الصافي + الضريبة)"),
     expense: t(l, "Expense basis", "비용 인식 기준", "أساس المصروفات"),
-  })[b as "net" | "tax" | "gross" | "expense"] ?? b;
+  })[b as "net" | "tax" | "gross" | "expense" | "rated_candidate_total" | "synthetic_reported_net_plus_tax_v1"] ?? b;
 export const environment = (l: Locale) =>
   t(
     l,
-    "Approval read service unbound",
-    "승인 조회 서비스 미연결",
-    "خدمة قراءة الاعتمادات غير مربوطة",
+    "Approval review",
+    "승인 검토",
+    "مراجعة الاعتمادات",
   );
 export const reviewContext = {
-  profile: "approval-read-unbound-v1",
-  mode: "unconnected",
-  scope: "producer-unbound",
+  profile: "approval-read-v1",
+  mode: "read-only",
+  scope: "response-bound",
   period: "not-bound",
   organization: "not-bound",
   currency: "not-bound",
@@ -106,10 +110,20 @@ export const reviewContext = {
 export const synthetic = (l: Locale) =>
   t(
     l,
-    "Synthetic review examples. Not real approval requests.",
-    "합성 검토 예시입니다. 실제 승인 요청이 아닙니다.",
-    "أمثلة مراجعة تجريبية. ليست طلبات اعتماد حقيقية.",
+    "Synthetic environment records. Not production billing.",
+    "합성 환경의 기록입니다. 운영 청구 데이터가 아닙니다.",
+    "سجلات من بيئة اصطناعية، وليست بيانات فوترة تشغيلية.",
   );
 
 export const sourceUnknown = (l: Locale) =>
   t(l, "Unverified in source", "미확인 (원천 기록)", "غير متحقق منه في المصدر");
+
+export const blockerText = (l: Locale, code: string, text: string) =>
+  code === "current_checks_unverified"
+    ? t(l, "Current prerequisites and permission were not rechecked for this historical read.", "이 이력 조회에서는 현재 선행 조건과 권한을 다시 확인하지 않았습니다.", "لم تُعَد مراجعة المتطلبات المسبقة والصلاحية الحالية عند عرض هذا السجل التاريخي.")
+    : code === "producer_unbound"
+    ? t(l,
+        "Source validation and stage prerequisites are not connected.",
+        "원천 검증과 단계별 선행 조건이 연결되지 않았습니다.",
+        "التحقق من المصدر والمتطلبات المسبقة للمراحل غير مربوطين.")
+    : text;

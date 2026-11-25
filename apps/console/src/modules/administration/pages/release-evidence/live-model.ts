@@ -1,6 +1,6 @@
 import { Refusals } from "../../../../service/refusal";
 import type { RowDiagnostic } from "../../../../service/command-diagnostics";
-import type { Budget, Candidate, CountOf, EvidencePage, PathRow, Problem, ProfileRow, Proposal, RequirementRow, TargetRow, TestRow } from "../../../../service/release-evidence";
+import type { Budget, Candidate, CountOf, EvidencePage, HardwareRow, PathRow, Problem, ProfileRow, Proposal, RequirementRow, TargetRow, TestRow } from "../../../../service/release-evidence";
 import { failingVerdicts, has, verdictWords } from "./live-codes";
 
 export const views = ["matrix", "requirements", "artifacts", "load", "decisions"];
@@ -158,7 +158,9 @@ export function verdictLine(status: string | null, candidate: Candidate): Verdic
 }
 
 export function stateAtCandidate(r: RequirementRow, candidate: Candidate): string | null {
-  if (!candidate || !r.states) return null;
+  if (!candidate) return null;
+  if (r.state !== null) return r.state;
+  if (!r.states) return null;
   return has(r.states, candidate.build) ? r.states[candidate.build] : null;
 }
 
@@ -202,6 +204,12 @@ export function replacementProblem(choice: string, required: boolean, options: T
   if (choice === noReplacement) return required ? "required" : "";
   if (!choice || !options.some((o) => o.target === choice)) return required ? "required" : "choose";
   return "";
+}
+
+export function replacementChoices(listed: TargetRow[], choice: string, frozen: string, known: Record<string, string>): TargetRow[] {
+  if (!choice || choice === noReplacement || listed.some((o) => o.target === choice)) return listed;
+  if (choice !== frozen && known[choice] === undefined) return listed;
+  return [...listed, { target: choice, label: known[choice] ?? choice }];
 }
 
 export function retireValues(d: Record<string, string>): Record<string, string> {
@@ -693,4 +701,103 @@ export function refusalDiagnostics(target: string): RowDiagnostic[] {
     const entry = refusals.detail(slot(command, target));
     return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
   });
+}
+
+function numberOf(target: string): number {
+  const raw = target.startsWith(requirementPrefix) ? target.slice(requirementPrefix.length) : "";
+  return /^[1-9][0-9]*$/.test(raw) ? Number(raw) : 0;
+}
+
+export function withHeld(page: EvidencePage, rows: RequirementRow[]): EvidencePage {
+  const list = page.requirements.requirements;
+  if (list.rows === null || rows.length === 0) return page;
+  const byTarget = new Map<string, RequirementRow>();
+  for (const r of [...rows, ...list.rows]) if (numberOf(r.target) > 0 || !byTarget.has(r.target)) byTarget.set(r.target, r);
+  const held = [...byTarget.values()].sort((a, b) => numberOf(a.target) - numberOf(b.target));
+  const more = list.total === null ? list.more : held.length < list.total;
+  return { ...page, requirements: { ...page.requirements, requirements: { ...list, rows: held, more } } };
+}
+
+export function requirementTargetsInUse(): string[] {
+  const out = new Set<string>();
+  for (const id of [...pending.keys(), ...refusals.keys(), ...earlier]) {
+    const at = unslot(id);
+    if (at && at.command === "release_evidence.retire_requirement" && numberOf(at.target) > 0) out.add(at.target);
+  }
+  return [...out];
+}
+
+export function missingRequirements(page: EvidencePage, wanted: string[]): string[] {
+  const rows = page.requirements.requirements.rows;
+  if (rows === null) return [];
+  const have = new Set(rows.map((r) => r.target));
+  return [...new Set(wanted)].filter((t) => numberOf(t) > 0 && !have.has(t));
+}
+
+export type RequirementFilter = { q: string; state: string; retired: string };
+
+export const noFilter: RequirementFilter = { q: "", state: "", retired: "" };
+
+export function filtering(f: RequirementFilter): boolean {
+  return f.q !== "" || f.state !== "" || f.retired !== "";
+}
+
+export function withHeldProfiles(page: EvidencePage, rows: ProfileRow[]): EvidencePage {
+  const list = page.load.profiles;
+  if (list.rows === null || rows.length === 0) return page;
+  const byTarget = new Map<string, ProfileRow>();
+  for (const p of [...rows, ...list.rows]) if (p.target !== "" || !byTarget.has(p.target)) byTarget.set(p.target, p);
+  const held = [...byTarget.values()].sort((a, b) => (a.number ?? Number.MAX_SAFE_INTEGER) - (b.number ?? Number.MAX_SAFE_INTEGER));
+  const more = list.total === null ? list.more : held.length < list.total;
+  return { ...page, load: { ...page.load, profiles: { ...list, rows: held, more } } };
+}
+
+export function profileTargetsInUse(): string[] {
+  const out = new Set<string>();
+  for (const id of [...pending.keys(), ...refusals.keys(), ...earlier]) {
+    const at = unslot(id);
+    if (at && at.command === "release_evidence.retire_profile" && at.target.startsWith(profilePrefix) && at.target.length > profilePrefix.length) out.add(at.target);
+  }
+  return [...out];
+}
+
+export function missingProfiles(page: EvidencePage, wanted: string[]): string[] {
+  const rows = page.load.profiles.rows;
+  if (rows === null) return [];
+  const have = new Set(rows.map((p) => p.target));
+  return [...new Set(wanted)].filter((t) => t.startsWith(profilePrefix) && t.length > profilePrefix.length && validTarget(t) && !have.has(t));
+}
+
+export function withMoreHardware(page: EvidencePage, rows: HardwareRow[]): EvidencePage {
+  const list = page.load.hardware;
+  if (list.rows === null || rows.length === 0) return page;
+  const have = new Set(list.rows.map((h) => h.id));
+  const held = [...list.rows];
+  for (const h of rows) {
+    if (h.id === "" || have.has(h.id)) continue;
+    have.add(h.id);
+    held.push(h);
+  }
+  const more = list.total === null ? list.more : held.length < list.total;
+  return { ...page, load: { ...page.load, hardware: { ...list, rows: held, more } } };
+}
+
+export function withHeldPaths(page: EvidencePage, rows: PathRow[]): EvidencePage {
+  const list = page.matrix.paths;
+  if (list.rows === null || rows.length === 0) return page;
+  const held = [...list.rows];
+  const have = new Set(held.map((p) => p.id));
+  for (const p of rows) {
+    if (p.id === "" || have.has(p.id)) continue;
+    have.add(p.id);
+    held.push(p);
+  }
+  held.sort((a, b) => (a.number ?? Number.MAX_SAFE_INTEGER) - (b.number ?? Number.MAX_SAFE_INTEGER));
+  const more = list.total === null ? list.more : held.length < list.total;
+  return { ...page, matrix: { ...page.matrix, paths: { ...list, rows: held, more } } };
+}
+
+export function missingPath(page: EvidencePage, id: string): boolean {
+  const rows = page.matrix.paths.rows;
+  return rows !== null && validTarget(id) && !rows.some((p) => p.id === id);
 }

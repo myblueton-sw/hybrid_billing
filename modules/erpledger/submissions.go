@@ -122,68 +122,13 @@ func (r *Registry) Prepare(workspace string, sub Submission, actor Actor) (Submi
 			return SubmissionView{}, ErrConflict
 		}
 	}
-	if err := actor.refusal(); err != nil {
+	checked, err := r.freshPreparation(s, c, sub, actor)
+	if err != nil {
 		return SubmissionView{}, err
 	}
-	if c == nil {
-		return SubmissionView{}, refuse(ReasonUnknownConnection)
-	}
-	scale := c.view.Connection.Scale
-	total, lines := zero(), map[string]amounts{}
-	for _, l := range sub.Lines {
-		net, a := r.units(l.Net, scale)
-		tax, b := r.units(l.Tax, scale)
-		quantity, d := r.units(l.Quantity, scale)
-		if !a || !b || !d {
-			return SubmissionView{}, ErrInvalid
-		}
-		lines[l.ID] = amounts{net, tax, quantity}
-		total.add(lines[l.ID])
-	}
-	if !c.caps[CommandPrepare] {
-		return SubmissionView{}, refuse(ReasonUnsupported)
-	}
-	survey := s.surveys[surveyKey{sub.Connection, sub.Customer, sub.Period}]
-	if survey == nil {
-		return SubmissionView{}, refuse(ReasonNotSurveyed)
-	}
-	if survey.Survey.Outcome != SurveyComplete {
-		return SubmissionView{}, refuse(ReasonLedgerUnknown)
-	}
-	used, ok := s.mapped(sub)
-	if !ok {
-		return SubmissionView{}, refuse(ReasonMappingMissing)
-	}
-	if sub.Path == PathOrderBased {
-		a := s.anchors[sub.Anchor]
-		if a == nil || a.Connection != sub.Connection || a.Customer != sub.Customer || a.Kind == AnchorPayable {
-			return SubmissionView{}, refuse(ReasonUnknownAnchor)
-		}
-	}
-	for _, l := range sub.Lines {
-		for _, a := range s.covering[l.Source] {
-			if blocks(sub.Purpose, a.Kind) && !(sub.Path == PathOrderBased && a.ID == sub.Anchor) {
-				return SubmissionView{}, refuse(ReasonAlreadyReflected)
-			}
-		}
-	}
-	for _, l := range sub.Lines {
-		for _, other := range s.bySource[sourceKey(sub.Purpose, l.Source)] {
-			if other.live() {
-				return SubmissionView{}, refuse(ReasonAlreadySubmitted)
-			}
-		}
-	}
-	if len(sub.Lines) == 0 {
-		return SubmissionView{}, refuse(ReasonEmpty)
-	}
-	if len(sub.Lines) > r.limits.Lines || len(s.submissions) >= r.limits.Submissions ||
-		!r.bounded(total.net, scale) || !r.bounded(total.tax, scale) || !r.bounded(total.quantity, scale) {
-		return SubmissionView{}, ErrLimit
-	}
 	sub.Lines = append([]Line(nil), sub.Lines...)
-	made := &submission{lines: lines, conn: c}
-	made.view = SubmissionView{Submission: sub, State: StatePrepared, Total: total.show(scale), Mappings: used, Author: actor.ID, Prepared: now}
+	made := &submission{lines: checked.lines, conn: c}
+	made.view = SubmissionView{Submission: sub, State: StatePrepared, Total: checked.total.show(c.view.Connection.Scale), Mappings: checked.mappings, Author: actor.ID, Prepared: now}
 	made.view.Digest = submissionDigest(workspace, made.view)
 	s.submissions[sub.Key] = made
 	for _, l := range sub.Lines {

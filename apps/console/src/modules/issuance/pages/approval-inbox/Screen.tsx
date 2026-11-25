@@ -1,3 +1,15 @@
+import { CreateDraft } from "./drafts/Create";
+import { DraftOutcomes } from "./drafts/Outcomes";
+import { useDrafts } from "./drafts/use-drafts";
+import { decisionFamily } from "./decision-api";
+import DraftScreen from "./drafts/Screen";
+import ResultScreen from "./results/Screen";
+import { useDocuments } from "./documents/use-documents";
+import { Failure } from "./documents/Fields";
+import { Attempts } from "./documents/Review";
+import { useDecision } from "./use-decision";
+import { DecisionResult } from "./DecisionPanel";
+import { dc } from "./decision-copy";
 import { useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import {
@@ -18,6 +30,7 @@ type State = {
   requestId?: string;
 };
 const items = [
+  "B09:draft:create-entry",
   "B09:scope:request-filter",
   "B09:data:inbox",
   "B09:action:inspect-request",
@@ -27,6 +40,21 @@ const items = [
   "B09:data:delegation-boundary",
   "B09:data:recognition-boundary",
   "B09:state:async-unconnected",
+  "B09:documents:scope",
+  "B09:documents:history",
+  "B09:documents:inspection",
+  "B09:documents:permission-readiness",
+  "B09:documents:explicit-fields",
+  "B09:documents:validation-review",
+  "B09:documents:governed-actions",
+  "B09:documents:propose",
+  "B09:documents:confirm",
+  "B09:documents:revoke",
+  "B09:documents:prepare",
+  "B09:documents:attempt-results",
+  "B09:documents:identical-retry",
+  "B09:documents:owned-recovery",
+  "B09:documents:reauthentication",
 ];
 const requestKey = (p: URLSearchParams, view: View) =>
   JSON.stringify([
@@ -37,7 +65,7 @@ const requestKey = (p: URLSearchParams, view: View) =>
       )
       .sort(),
   ]);
-export default function Screen({
+function ApprovalScreen({
   locale: l,
   params,
   view: rawView,
@@ -70,7 +98,6 @@ export default function Screen({
       data && selection?.key === key
         ? data.records.find((r) => r.id === selection.id)
         : undefined;
-  useEffect(() => onDirty(false), [onDirty]);
   useEffect(() => {
     const c = new AbortController(),
       n = ++seq.current;
@@ -97,9 +124,18 @@ export default function Screen({
         ? "loaded"
         : current?.result?.kind === "unconnected"
           ? "unconnected"
-          : "loading",
-    review = JSON.stringify({
-      phase: "approval-read-unbound",
+          : "loading";
+  const decision = useDecision(data, selected, JSON.stringify([key, data?.snapshot, data?.permission_revision]), phase === "loading" || phase === "error", () => reload(false));
+  const documents = useDocuments(data, selected, JSON.stringify([key, data?.snapshot, data?.permission_revision]), phase === "loading" || phase === "error");
+  const drafts=useDrafts(),[draftEditing,setDraftEditing]=useState(false);
+  const finalSelected=selected?.status==="approved"&&decisionFamily(selected)==="erp_final"?selected:undefined;
+  useEffect(()=>{if(finalSelected?.evidence.revision)void drafts.store?.final(finalSelected.id,finalSelected.evidence.revision);else drafts.store?.clearSelection();},[drafts.store,finalSelected?.id,finalSelected?.evidence.revision,key,data?.snapshot,data?.permission_revision]);
+  function openDraft(id:string){const next=new URLSearchParams(params);next.set("view","drafts");next.set("draft-id",id);location.hash=`#/approvals?${next}`;}
+  const documentBusy = !!documents.state.draft || !!documents.state.review || documents.unresolved;
+  const decisionBusy = !!decision.state.action || Object.values(decision.state.entries).some(e => e.phase === "pending" || e.phase === "unknown");
+  useEffect(() => onDirty(decisionBusy || documentBusy || draftEditing || drafts.unresolved), [decisionBusy, documentBusy, draftEditing, drafts.unresolved, onDirty]);
+  const review = JSON.stringify({
+      phase: "approval-read",
       variant: `${view}:${phase}:${data?.source_mode ?? "unbound"}`,
       requestKey: key,
       view,
@@ -113,6 +149,9 @@ export default function Screen({
       error: current?.error ?? null,
       requestId: current?.requestId ?? null,
       attempts,
+      drafts: {selected:finalSelected?.id,context: drafts.state.context.loading?"loading":drafts.state.context.error??drafts.state.context.value?.submit_action??"idle",entries:drafts.state.entries.map(e=>[e.intent.target,e.phase,e.error])},
+      documents: { enabled: documents.enabled, context: documents.state.context.phase, history: [documents.state.documents.phase,documents.state.preparations.phase], detail: [documents.state.document.phase,documents.state.preparation.phase], review: documents.state.review?.action, error: documents.state.error, entries: documents.state.entries.map(e => [e.intent.target,e.phase,e.error]) },
+      decision: { checking: decision.state.checking, action: decision.state.action, error: decision.state.error, prepared: !!decision.state.preparation, entries: Object.values(decision.state.entries).map(e => [e.submission.target, e.phase, e.error]) },
     });
   useEffect(() => onState(review, items), [review, onState]);
   useEffect(() => {
@@ -121,11 +160,12 @@ export default function Screen({
       status.current?.focus();
     }
   }, [phase, data]);
-  function go(next: URLSearchParams) {
+  function go(next: URLSearchParams, focus = true) {
+    if(draftEditing&&!window.confirm(t(l,"Discard the unsaved draft form?","저장하지 않은 초안 입력을 버릴까요?","هل تريد تجاهل بيانات المسودة غير المحفوظة؟")))return;
     setState({ key: "pending" });
     setSelection(null);
     setAttempts((n) => n + 1);
-    focusStatus.current = true;
+    focusStatus.current = focus;
     if (requestKey(next, view) === key) {
       setState({ key });
       setRetry((n) => n + 1);
@@ -144,7 +184,10 @@ export default function Screen({
       next.delete(k);
     go(next);
   }
-  function refresh() {
+  function refresh() { reload(true); }
+  function reload(focus: boolean) {
+    decision.store?.invalidatePreparation();
+    documents.store?.invalidate();
     const next = new URLSearchParams(params);
     for (const k of [
       "approval-cursor",
@@ -152,7 +195,7 @@ export default function Screen({
       "approval-permission_revision",
     ])
       next.delete(k);
-    go(next);
+    go(next, focus);
   }
   function page(cursor: string | null) {
     if (!data) return;
@@ -214,7 +257,7 @@ export default function Screen({
             d.open = false;
             d.querySelector("summary")?.focus();
             e.preventDefault();
-          } else if (selected) {
+          } else if (selected && decision.state.entries[selected.id]?.phase !== "pending") {
             setSelection(null);
             e.preventDefault();
           }
@@ -226,12 +269,7 @@ export default function Screen({
           {t(l, "About this screen", "이 화면 안내", "حول هذه الشاشة")}
         </summary>
         <p>
-          {t(
-            l,
-            "Read request targets, amounts and source evidence separately from executing decisions. This screen cannot approve, reject, hand off, delegate or post. Isolated synthetic examples are always labelled.",
-            "요청 대상·금액·원천 근거의 조회와 업무 결정 실행을 구분합니다. 이 화면은 승인·반려·인계·위임·전기를 실행하지 않습니다. 합성 검토 예시는 항상 별도로 표시합니다.",
-            "تُفصل قراءة أهداف الطلبات ومبالغها وأدلة المصدر عن تنفيذ القرارات. لا تنفّذ هذه الشاشة الاعتماد أو الرفض أو الإحالة أو التفويض أو الترحيل. تُميّز الأمثلة التجريبية دائماً.",
-          )}
+          {dc(l,"help")}
         </p>
       </details>
       {phase !== "unconnected" && view !== "delegation" && (
@@ -317,12 +355,7 @@ export default function Screen({
                   "요청 근거 조회 불가",
                   "أدلة الطلبات غير متاحة",
                 )
-              : t(
-                  l,
-                  "Read-only request evidence",
-                  "조회 전용 요청 근거",
-                  "أدلة طلبات للقراءة فقط",
-                )}
+              : dc(l,"evidence")}
         {data && (
           <>
             {" "}
@@ -332,6 +365,9 @@ export default function Screen({
           </>
         )}
       </p>
+      <Failure locale={l} code={documents.error} />
+      <Attempts locale={l} binding={documents} />
+      {Object.values(decision.state.entries).filter(e => e.submission.target !== selected?.id && e.phase !== "refused").map(entry => <DecisionResult key={entry.submission.attempt.key} locale={l} entry={entry} retry={() => void decision.store?.retry(entry.submission.target)} refresh={refresh} reauthenticate={decision.reauthenticate} refreshFailed={phase === "error"} />)}
       {phase === "loading" ? (
         <p>
           {t(
@@ -442,12 +478,20 @@ export default function Screen({
       ) : data ? (
         <Inbox
           locale={l}
+          decision={decision} documents={documents}
+          refresh={refresh}
           data={data}
           selected={selected}
-          select={(id) => setSelection(id ? { key, id } : null)}
+          select={(id) => {if(!draftEditing||window.confirm(t(l,"Discard the unsaved draft form?","저장하지 않은 초안 입력을 버릴까요?","هل تريد تجاهل بيانات المسودة غير المحفوظة؟")))setSelection(id ? { key, id } : null);}}
           page={page}
         />
       ) : null}
+      {finalSelected&&<CreateDraft key={finalSelected.id+finalSelected.evidence.revision} locale={l} binding={drafts} request={finalSelected.id} digest={finalSelected.evidence.revision!} onDirty={setDraftEditing} onOpen={openDraft}/>}
+      <DraftOutcomes locale={l} binding={drafts} onInspect={openDraft}/>
     </div>
   );
+}
+
+export default function Screen(props: Parameters<typeof ApprovalScreen>[0]) {
+ return props.view === "drafts" ? <DraftScreen locale={props.locale} onState={props.onState} onDirty={props.onDirty} /> : props.view === "results" ? <ResultScreen locale={props.locale} onState={props.onState} onDirty={props.onDirty} /> : <ApprovalScreen {...props} />;
 }

@@ -244,7 +244,7 @@ func (r *Registry) Proceed(id string, i int, token uint64, aid string, actor Act
 	case !contains(x.span(i), aid) || x.outcomes[aid] != OutcomeDeleting:
 		return false, refuse(ReasonNotInChunk)
 	}
-	return !r.held(r.artifacts[aid]), nil
+	return !r.held(r.artifacts[aid]) && !r.guarding(r.artifacts[aid]), nil
 }
 
 func (r *Registry) Stop(id string, actor Actor) (RunView, error) {
@@ -303,7 +303,7 @@ func (r *Registry) complete(a *artifact) bool {
 func (r *Registry) runView(x *run) RunView {
 	v := RunView{ID: x.id, Plan: copyChange(Change{Plan: x.plan}).Plan, Revision: x.revision, Chunks: len(x.chunks), Proposer: x.by.proposer, Approver: x.by.approver,
 		Stopper: x.stopper, Counts: map[string]int{}, Stores: map[string]StoreCounts{}, Outcomes: map[string]string{}}
-	for _, out := range []string{OutcomePending, OutcomeDeleting, OutcomeDeleted, OutcomeFailed, OutcomeHeld, OutcomeReferenced, OutcomeNotDue, OutcomeStopped} {
+	for _, out := range []string{OutcomePending, OutcomeDeleting, OutcomeDeleted, OutcomeFailed, OutcomeHeld, OutcomeGuarding, OutcomeReferenced, OutcomeNotDue, OutcomeStopped} {
 		v.Counts[out] = 0
 	}
 	completeAll := true

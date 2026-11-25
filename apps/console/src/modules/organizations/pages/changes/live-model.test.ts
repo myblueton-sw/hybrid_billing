@@ -4,9 +4,9 @@ import type { OrgMember, OrgParty, PlanRow } from "../../../../service/admin";
 import { planOf } from "../../../../service/admin";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
-import { currentView, draftLoad, groupRefusal, planTitle } from "./live-model";
+import { arrival, currentView, draftLoad, groupRefusal, planTitle } from "./live-model";
 import { adopted, afterConflict, baseBlocks, baseField, baseStale, canonicalRevision, conflictShown, fill, formStep, handoffHref, memberMode, prefilled, readHandoff, type Carried } from "./live-model";
-import { canActivate, showOpenCount, actionsFor, allMemberChoices, held, impactDone, impactOf, impactUnread, keepsAttempt, lead, membersKept, nameOf, react, refusal, blocked, closing, currentOn, findPlan, memberChoices, minFrom, needsTarget, partition, steps, targetChoices } from "./live-model";
+import { canActivate, showOpenCount, actionsFor, held, impactDone, impactOf, impactUnread, keepsAttempt, lead, membersKept, nameOf, react, refusal, blocked, closing, currentOn, findPlan, minFrom, needsTarget, partition, steps, targetChoices } from "./live-model";
 
 const parties: OrgParty[] = [
   { id: "le-a", name: "A Corp", kind: "legal_entity", parent: "", state: "active" },
@@ -26,15 +26,6 @@ test("actions follow the kind and only end has no target", () => {
   assert.deepEqual(actionsFor("view_group"), ["join", "leave"]);
   for (const k of ["hierarchy", "payer", "contract_pool", "allocation_pool"] as const) assert.deepEqual(actionsFor(k), ["set", "end"]);
   assert.deepEqual(["set", "end", "join", "leave"].map((a) => needsTarget(a as "set")), [true, false, true, true]);
-});
-
-test("member choices join units and members without duplicates and never offer a legal entity", () => {
-  assert.deepEqual(memberChoices(parties, members).map((c) => c.id), ["acct-1", "acct-2", "unit-b"]);
-  assert.deepEqual(memberChoices(parties, members, "hierarchy").map((c) => c.id), ["acct-1", "acct-2", "unit-b"]);
-  for (const k of ["payer", "contract_pool", "allocation_pool", "view_group"] as const) assert.deepEqual(memberChoices(parties, members, k).map((c) => c.id), ["acct-1", "acct-2"]);
-  const closed: OrgParty[] = [...parties, { id: "unit-c", name: "C unit", kind: "internal_unit", parent: "le-a", state: "suspended" }];
-  assert.deepEqual(memberChoices(closed, [...members, { member: "unit-c", name: "C unit", targets: [], history: [] }], "hierarchy").map((c) => c.id), ["acct-1", "acct-2", "unit-b"]);
-  assert.equal(memberChoices([], members).find((c) => c.id === "acct-2")?.name, "acct-2");
 });
 
 test("target choices follow the server's rules for each kind", () => {
@@ -129,8 +120,6 @@ test("a payer move leads with the dated change and names fall back to IDs", () =
 test("closed plans keep no members and impact never reads as zero", () => {
   assert.deepEqual(["sealed", "activated", "rejected", "discarded"].map((s) => membersKept(plan({ state: s }))), [true, true, false, false]);
   assert.deepEqual(["not_computed", "", "0", "computed", "Computed"].map(impactOf), ["not_computed", "unknown", "unknown", "computed", "unknown"]);
-  assert.deepEqual(allMemberChoices(parties, [[members[0]], [members[1]]]).map((c) => c.id), ["acct-1", "acct-2", "unit-b"]);
-  assert.deepEqual(allMemberChoices(parties, [[members[0]], [members[1]]], "payer").map((c) => c.id), ["acct-1", "acct-2"]);
 });
 
 test("every failure has one reaction and only retries keep the attempt", () => {
@@ -268,12 +257,11 @@ test("a conflict refusal marks the base only for a proposal whose carried base d
 });
 
 test("the Current aside waits for the same listing read as the member choices before it claims anything", () => {
-  assert.equal(currentView(false, false, null), "loading");
-  assert.equal(currentView(false, true, [{ id: "u", name: "U" }]), "loading");
-  assert.equal(currentView(true, false, null), "not_in_listing");
-  assert.equal(currentView(true, true, null), "none_of_kind");
-  assert.equal(currentView(true, true, []), "none");
-  assert.equal(currentView(true, false, [{ id: "u", name: "U" }]), "targets");
+  assert.equal(currentView(false, null), "loading");
+  assert.equal(currentView(false, [{ id: "u", name: "U" }]), "loading");
+  assert.equal(currentView(true, null), "none_of_kind");
+  assert.equal(currentView(true, []), "none");
+  assert.equal(currentView(true, [{ id: "u", name: "U" }]), "targets");
 });
 
 test("a draft link carries only the draft, the date and the base; kind and member are ignored", () => {
@@ -307,4 +295,14 @@ test("an editor of the plan's draft is blocked with its own reason", () => {
   assert.equal(blocked(p), "own_draft");
   assert.equal(refusal(p), "own_draft");
   assert.equal(blocked(planOf({ state: "sealed", blocked: "own_proposal", impact: { money: "computed", publication: "computed", erp: "computed" } })), "own");
+});
+
+test("an arrival is announced only when the loaded plan is in that state", () => {
+  const p = (over: Record<string, unknown>): PlanRow => planOf({ id: "p", state: "sealed", ...over });
+  assert.deepEqual(arrival("sealed", p({})), { what: "sealed", revision: 0 });
+  assert.deepEqual(arrival("activated:9", p({ state: "activated", activated_revision: 4 })), { what: "activated", revision: 4 });
+  assert.deepEqual(arrival("open", undefined), { what: "open", revision: 0 });
+  for (const [text, plan] of [["activated:9", p({})], ["activated:9", p({ state: "activated" })], ["discarded", p({})], ["sealed", undefined], ["rejected", p({ state: "discarded" })], ["sealed:x", p({})], ["", p({})]] as const) {
+    assert.equal(arrival(text, plan), null, text);
+  }
 });

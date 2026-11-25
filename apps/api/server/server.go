@@ -12,26 +12,35 @@ import (
 	"sync"
 	"time"
 
-	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
 	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
+	"github.com/myblueton-sw/hybrid_billing/modules/accesshistory"
+	"github.com/myblueton-sw/hybrid_billing/modules/approvals"
 	"github.com/myblueton-sw/hybrid_billing/modules/authpolicy"
 	"github.com/myblueton-sw/hybrid_billing/modules/bulkrevoke"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/contracts"
 	"github.com/myblueton-sw/hybrid_billing/modules/decisionledger"
+	"github.com/myblueton-sw/hybrid_billing/modules/documentauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/draftauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/events"
+	"github.com/myblueton-sw/hybrid_billing/modules/financialpermission"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
+	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/installer"
 	"github.com/myblueton-sw/hybrid_billing/modules/jobs"
 	"github.com/myblueton-sw/hybrid_billing/modules/organizations"
 	"github.com/myblueton-sw/hybrid_billing/modules/passwords"
 	"github.com/myblueton-sw/hybrid_billing/modules/perfgate"
 	"github.com/myblueton-sw/hybrid_billing/modules/plugins"
+	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/protectedauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/recovery"
 	"github.com/myblueton-sw/hybrid_billing/modules/relationships"
 	"github.com/myblueton-sw/hybrid_billing/modules/releasetrace"
+	"github.com/myblueton-sw/hybrid_billing/modules/resultauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/retention"
+	"github.com/myblueton-sw/hybrid_billing/modules/termsauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/trustchange"
 	"github.com/myblueton-sw/hybrid_billing/modules/webhooks"
 )
@@ -75,86 +84,120 @@ type Config struct {
 }
 
 type Server struct {
-	cfg             Config
-	clock           func() time.Time
-	time            *serverClock
-	log             *slog.Logger
-	identity        *identity.Registry
-	gate            *gate.Gate
-	admin           *gate.Administration
-	commands        *commands.Registry
-	policy          *authpolicy.Registry
-	domain          sync.RWMutex
-	counter         uint64
-	mutating        map[string]bool
-	sessions        *sessions
-	origins         map[string]bool
-	hosts           map[string]bool
-	hostMu          sync.RWMutex
-	seed            []step
-	passwords       *passwords.Registry
-	orgs            *organizations.Registry
-	rels            *relationships.Registry
-	plans           *planStore
-	drafts          *draftStore
-	relLimits       relationships.Limits
-	lifecycles      *contracts.Registry
-	contracts       *contractStore
-	lifecycleLimits contracts.Limits
-	installer       *installer.Registry
-	install         *installStore
-	plugins         *plugins.Registry
-	webhooks        *webhooks.Registry
-	events          *events.Registry
-	integ           *integrationStore
-	signer          *seedSigner
-	recovery        *recovery.Registry
-	rec             *recoveryStore
-	retention       *retention.Registry
-	ret             *retentionStore
-	trace           *releasetrace.Registry
-	perf            *perfgate.Registry
-	ev              *evidenceStore
-	changes         *accesschange.Registry
-	ledger          *decisionledger.Ledger
-	history         *accesshistory.History
-	holdPlaced      sync.Map
-	workers         sync.WaitGroup
-	startedAt       time.Time
-	limit           *limiter
-	slots           chan struct{}
-	boot            activation
-	bootWorkspace   string
-	bootUser        string
-	pause           func()
-	readerSecret    string
-	dir             *directory
-	failures        map[identity.Verifier]int
-	caller          identity.Verifier
-	fault           func(string) bool
-	trust           *trustchange.Registry
-	trustOrigin     trustOrigin
-	hold            *trustHold
-	progress        map[string]trustProgress
-	random          io.Reader
-	memberLedger    map[string]string
-	roleEnds        uint64
-	bulk            *bulkrevoke.Registry
-	jobs            *jobs.Registry
-	answer          gate.Answer
-	stranded        []uint64
-	clockChoice     clockChoice
-	replayNotes     map[string]string
-	stop            chan struct{}
-	wake            chan struct{}
-	stopOnce        sync.Once
-	manual          bool
-	awaiting        map[string]awaitingReplay
-	selfEnds        map[string][]*selfEnd
-	selfSeq         uint64
-	retries         map[identity.Verifier]*selfRetry
-	selfEndHook     func()
-	accessHook      func(identity.Verifier)
+	draftAuthority             *serverGrantAuthority
+	protectedAuthority         *serverGrantAuthority
+	termAuthority              *serverGrantAuthority
+	financialFinals            map[string]financialFinalBinding
+	financialIssuance          *financialIssuance
+	financialCharges           map[string]financialChargeBinding
+	financialPolicies          map[string]financialPolicyBinding
+	erpFinalPolicies           map[string]financialPolicyBinding
+	financialAuthorities       map[string]financialAuthorityBinding
+	erpFinalAuthorities        map[string]financialAuthorityBinding
+	documentAuthority          *serverGrantAuthority
+	resultAuthority            *serverGrantAuthority
+	financialPermission        *serverGrantAuthority
+	erpFinalPermission         *serverGrantAuthority
+	erpFinalRequestPermission  *serverGrantAuthority
+	financialRequestPermission *serverGrantAuthority
+
+	approvals        *approvals.Registry
+	approvalIndex    []approvalIndex
+	approvalKey      []byte
+	inputAuthority   *serverInputAuthority
+	pricingAuthority *serverGrantAuthority
+	inputReviews     *candidateInputReviews
+	cfg              Config
+	clock            func() time.Time
+	time             *serverClock
+	log              *slog.Logger
+	identity         *identity.Registry
+	gate             *gate.Gate
+	admin            *gate.Administration
+	commands         *commands.Registry
+	policy           *authpolicy.Registry
+	domain           sync.RWMutex
+	counter          uint64
+	mutating         map[string]bool
+	sessions         *sessions
+	origins          map[string]bool
+	hosts            map[string]bool
+	hostMu           sync.RWMutex
+	seed             []step
+	passwords        *passwords.Registry
+	orgs             *organizations.Registry
+	chargeProducer   *normalizedCharges
+	documentERP      *financialERP
+	rels             *relationships.Registry
+	plans            *planStore
+	drafts           *draftStore
+	relLimits        relationships.Limits
+	lifecycles       *contracts.Registry
+	contracts        *contractStore
+	lifecycleLimits  contracts.Limits
+	installer        *installer.Registry
+	install          *installStore
+	plugins          *plugins.Registry
+	webhooks         *webhooks.Registry
+	events           *events.Registry
+	integ            *integrationStore
+	signer           *seedSigner
+	recovery         *recovery.Registry
+	rec              *recoveryStore
+	retention        *retention.Registry
+	ret              *retentionStore
+	trace            *releasetrace.Registry
+	perf             *perfgate.Registry
+	ev               *evidenceStore
+	changes          *accesschange.Registry
+	ledger           *decisionledger.Ledger
+	history          *accesshistory.History
+	holdPlaced       sync.Map
+	workers          sync.WaitGroup
+	startedAt        time.Time
+	limit            *limiter
+	slots            chan struct{}
+	boot             activation
+	bootWorkspace    string
+	bootUser         string
+	pause            func()
+	readerSecret     string
+	dir              *directory
+	failures         map[identity.Verifier]int
+	caller           identity.Verifier
+	fault            func(string) bool
+	trust            *trustchange.Registry
+	trustOrigin      trustOrigin
+	hold             *trustHold
+	progress         map[string]trustProgress
+	random           io.Reader
+	memberLedger     map[string]string
+	roleEnds         uint64
+	bulk             *bulkrevoke.Registry
+	jobs             *jobs.Registry
+	answer           gate.Answer
+	stranded         []uint64
+	clockChoice      clockChoice
+	replayNotes      map[string]string
+	stop             chan struct{}
+	wake             chan struct{}
+	stopOnce         sync.Once
+	manual           bool
+	awaiting         map[string]awaitingReplay
+	selfEnds         map[string][]*selfEnd
+	selfSeq          uint64
+	retries          map[identity.Verifier]*selfRetry
+	selfEndHook      func()
+	accessHook       func(identity.Verifier)
+
+	sessionCursorKey         []byte
+	sessionRecords           map[string]*sessionRecord
+	sessionOperations        map[string]*sessionRecord
+	sessionRecordUnits       int
+	sessionOperationRecords  map[sessionOwner][]*sessionRecord
+	sessionOperationVersions map[sessionOwner]uint64
+	sessionOtherOperations   map[sessionOwner]*sessionRecord
+	sessionOperationSequence uint64
 }
 
 func IdentityLimits() identity.Limits {
@@ -175,10 +218,16 @@ func RelationshipLimits() relationships.Limits {
 }
 
 func Catalog(kinds []string, fields map[string]gate.FieldClass) gate.Catalog {
-	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind}, kinds...), Fields: map[string]gate.FieldClass{ReaderField: gate.General}}
+	c := gate.Catalog{AuthorClient: ConsoleClient, Kinds: append([]string{gate.InstallationKind, ReaderKind, candidateKind, approvalKind, inputauthority.ResourceKind, pricingauthority.ResourceKind, financialpermission.ResourceKind, financialpermission.ERPFinalResourceKind, documentauthority.ResourceKind, resultauthority.ResourceKind, termsauthority.ResourceKind, protectedauthority.ResourceKind, draftauthority.ResourceKind}, kinds...), Fields: map[string]gate.FieldClass{draftauthority.EvidenceField: gate.Cost, ReaderField: gate.General, candidateField: gate.Cost, approvalField: gate.General, inputauthority.EvidenceField: gate.Cost, pricingauthority.EvidenceField: gate.Cost}}
 	for name, class := range fields {
 		c.Fields[name] = class
 	}
+	c.Fields[pricingauthority.EvidenceField] = gate.Cost
+	c.Fields[documentauthority.EvidenceField] = gate.Cost
+	c.Fields[resultauthority.EvidenceField] = gate.Cost
+	c.Fields[draftauthority.EvidenceField] = gate.Cost
+	c.Fields[termsauthority.EvidenceField] = gate.Cost
+	c.Fields[protectedauthority.EvidenceField] = gate.Cost
 	return c
 }
 
@@ -214,7 +263,7 @@ func New(cfg Config) (*Server, error) {
 	if len(cfg.Origins) > maxOrigins || cfg.Data == "" || (cfg.Seed != SeedSample && cfg.Seed != SeedNone) {
 		return nil, ErrConfig
 	}
-	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), origins: map[string]bool{}, hosts: map[string]bool{},
+	s := &Server{cfg: cfg, log: cfg.Log, mutating: map[string]bool{}, sessions: newSessions(), sessionCursorKey: random(32), sessionRecords: map[string]*sessionRecord{}, sessionOperations: map[string]*sessionRecord{}, sessionOperationRecords: map[sessionOwner][]*sessionRecord{}, sessionOperationVersions: map[sessionOwner]uint64{}, sessionOtherOperations: map[sessionOwner]*sessionRecord{}, origins: map[string]bool{}, hosts: map[string]bool{},
 		limit: &limiter{}, slots: make(chan struct{}, derivations), dir: newDirectory(), failures: map[identity.Verifier]int{}, selfEnds: map[string][]*selfEnd{}, retries: map[identity.Verifier]*selfRetry{}, plans: newPlanStore(), drafts: newDraftStore(), relLimits: RelationshipLimits(),
 		contracts: newContractStore(), install: newInstallStore(), integ: newIntegrationStore(), signer: newSeedSigner(), rec: newRecoveryStore(),
 		ret: newRetentionStore(), ev: newEvidenceStore(), progress: map[string]trustProgress{}, random: rand.Reader, memberLedger: map[string]string{},
@@ -277,6 +326,7 @@ func New(cfg Config) (*Server, error) {
 			s.lifecycles, err = contracts.NewRegistry(s.lifecycleLimits, s.clock)
 			return
 		},
+		func() (err error) { s.chargeProducer, err = s.newChargeProducer(); return },
 		func() (err error) {
 			s.installer, err = installer.NewRegistry(installer.Config{Random: rand.Reader}, InstallerLimits(), s.clock)
 			return
@@ -299,6 +349,50 @@ func New(cfg Config) (*Server, error) {
 		func() (err error) { s.bulk, err = bulkrevoke.New(cfg.Access.bulkLimits(), s.clock); return },
 		func() (err error) {
 			s.jobs, err = jobs.NewRegistry(cleanupLimits(cfg.Access.BulkMaxMatching), s.clock)
+			return
+		},
+		s.initApprovals,
+
+		func() (err error) {
+			if cfg.Seed == SeedSample {
+				s.inputAuthority, err = newServerInputAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000})
+				if err == nil {
+					s.pricingAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, pricingGrantAuthority)
+				}
+				if err == nil {
+					s.financialPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, financialPermissionDomain)
+				}
+				if err == nil {
+					s.financialRequestPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, financialRequestDomain)
+				}
+				if err == nil {
+					s.erpFinalPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, erpFinalPermissionDomain)
+				}
+				if err == nil {
+					s.erpFinalRequestPermission, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, erpFinalRequestDomain)
+				}
+				if err == nil {
+					s.documentAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, documentGrantAuthority)
+				}
+				if err == nil {
+					s.resultAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, resultGrantAuthority)
+				}
+				if err == nil {
+					s.termAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, termGrantAuthority)
+				}
+				if err == nil {
+					s.protectedAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, protectedGrantAuthority)
+				}
+				if err == nil {
+					s.draftAuthority, err = newServerGrantAuthority(s, inputauthority.Limits{Lifetime: time.Hour, MaxGrantValidity: 24 * time.Hour, Capacity: 1000}, draftGrantAuthority)
+				}
+				if err == nil {
+					s.inputReviews, err = newCandidateInputReviews(s.chargeProducer, serverInputReviewAuthority{s: s}, s.clock)
+				}
+				if err == nil {
+					_, err = s.chargeProducer.newPricingPolicies(serverPricingPolicyAuthority{s: s}, s.clock)
+				}
+			}
 			return
 		},
 		s.registerUsers,

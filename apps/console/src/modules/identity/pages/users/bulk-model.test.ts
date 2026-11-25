@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { jobOf, itemOf, type BulkJob } from "../../../../service/identity-bulk";
-import { digestShown, expired, groups, headerState, invariant, itemWords, jobWords, notLoaded, number, selectLoaded, split, toggle, without } from "./bulk-model";
+import { mayBeAdministrator, digestShown, expired, groups, headerState, invariant, itemWords, jobWords, notLoaded, number, selectLoaded, split, toggle, without } from "./bulk-model";
 
 test("selection is kept by user ID and stops at the limit", () => {
   let s: ReadonlySet<string> = new Set();
@@ -68,4 +68,10 @@ test("lists split by state, expiry uses the server time, digest and number", () 
   assert.equal(number("bulk-revocation-12"), "12");
   assert.equal(number("bulk-draft-3"), "3");
   assert.equal(number("x"), "x");
+});
+
+test("a person whose role is unknown is listed with the administrators of a selection", () => {
+  const row = (role: string | null) => ({ membership: role === null ? null : { role } }) as unknown as Parameters<typeof mayBeAdministrator>[0];
+  assert.deepEqual(["administrator", "unknown", "member", null].map((r) => mayBeAdministrator(row(r))), [true, true, false, false]);
+  assert.equal(mayBeAdministrator(undefined), false);
 });

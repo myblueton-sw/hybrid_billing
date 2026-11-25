@@ -1,7 +1,7 @@
 import { accessFixture, requestFixture, revocationFixture, credentialFixture, serviceFixture, servicesFixture, orgFixture } from "./read-fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, adminClient, attempt, failureOf, ledgerOf, outcomeOf, planOf, reauthenticate, sequence, usersQueryString } from "./admin";
+import { AdminError, adminClient, attempt, failureOf, pickupGone, ledgerOf, outcomeOf, planOf, reauthenticate, sequence, usersQueryString } from "./admin";
 import { selfEndOf, selfSessionOf } from "./self-end";
 
 type Call = { url: string; init: RequestInit };
@@ -78,6 +78,8 @@ test("reads page with a cursor", async () => {
     suspended_for: "role_period_ended", ledger: "unconfirmed" });
   assert.deepEqual(full.users[0].revocation, { bulk: "bulk-revocation-1", state: "deny_confirmed" });
   assert.deepEqual([full.users[1].membership?.role_period, full.users[1].membership?.suspended_for, full.users[1].membership?.ledger, full.users[1].revocation], ["open", "", "", null]);
+  assert.equal(full.users[1].membership?.state, "unknown");
+  assert.equal(full.users[1].membership?.role, "unknown");
   assert.deepEqual([full.can_bulk_revoke, full.clock.wall_lead, full.clock.clock_base.recorded, full.clock.recovery], [true, { wall_time: "a", server_time: "b" }, true, { stranded: true, records: [3] }]);
 });
 
@@ -156,7 +158,11 @@ test("the policy read keeps the server times and the trust model and defaults mi
   assert.equal(empty.holders.needed, 3);
   assert.equal(empty.changes[0].state, "draft");
   assert.equal(empty.changes[0].validation, null);
-  assert.equal(empty.changes[0].impact.signs_out_everyone, true);
+  assert.equal(empty.changes[0].impact, null);
+  const computed = await adminClient("tok", fake(200, { changes: [{ state: "proposed", impact: { members: 0, sessions: 0, affected_ids: [], signs_out_everyone: true } }, { state: "proposed", impact: null }, { state: "proposed", impact: [] }] }).f).policy();
+  assert.deepEqual(computed.changes[0].impact, { members: 0, sessions: 0, affected_ids: [], weakens_mfa: false, signs_out_everyone: true });
+  assert.equal(computed.changes[1].impact, null);
+  assert.equal(computed.changes[2].impact, null);
 });
 
 test("trust refusals map to their own failures", () => {
@@ -250,7 +256,7 @@ test("secret returns only a well-formed secret and credential", async () => {
 
 test("self reads and commands", async () => {
   const page = { user_id: "u", login: "l", email: "e", workspace: "w", role: "member", identities: [{ method: "local-password", login: "l" }], password_set: true,
-    installation_administrator: false, sessions: [{ handle: "h", current: true, signed_in: "a", ends: "b" }], sessions_generation: "g", session_ends: [], idle_minutes: 30,
+    installation_administrator: false, current_session: { handle: "h", current: true, signed_in: "a", ends: "b", state: "active", can_end: false, not_included_operation: "" }, recorded_session_count: 1, accepted_operation_count: 0, sessions_generation: "g", idle_minutes: 30, absolute_minutes: 720,
     max_age_seconds: 3600, signed_in_at: "a", authenticated_at: "c", now: "n" };
   const r = fake(200, page);
   assert.deepEqual(await adminClient("t", r.f).me(), page);
@@ -555,4 +561,77 @@ test("rate limit and cancelled step-up preserve the response diagnostic identity
   await assert.rejects(adminClient("t", fake(403, { code: "reauthentication_required", request_id: "step-330" }).f, async () => false)
     .command("integrations.plugin_stop", "plugin:sample", "r1", "synthetic reason", {}, { request: "client-330", key: "key-330" }),
     (e: AdminError & { request: string }) => e.failure === "reauth_cancelled" && e.code === "reauthentication_required" && e.request === "step-330");
+});
+
+
+test("raw401 retires authentication once and never starts step-up, even with a misleading body", async () => {
+  const net=fake(401,{code:"reauthentication_required"});let asked=0,notified=0;
+  const api=adminClient("synthetic",net.f,async()=>{asked++;return true;});
+  const unsubscribe=api.subscribeAuthenticationLoss(()=>{notified++;});
+  await assert.rejects(api.endSelectedSessions({selection:"s",digest:"d",count:1}),AdminError);
+  assert.equal(asked,0);assert.equal(net.calls.length,1);assert.equal(notified,1);
+  await assert.rejects(api.me(),AdminError);assert.equal(notified,1);assert.equal(net.calls.length,1);unsubscribe();
+  let late=0;api.subscribeAuthenticationLoss(()=>{late++;})();assert.equal(late,1);
+});
+
+test("raw401 is observed before its response body resolves", {timeout:1000}, async () => {
+  let release!: (value:unknown)=>void;let observed=false;
+  const body=new Promise<unknown>(done=>{release=done;});
+  const net=(async()=>({status:401,ok:false,headers:new Headers(),json:()=>body})) as unknown as typeof fetch;
+  const api=adminClient("synthetic",net);api.subscribeAuthenticationLoss(()=>{observed=true;});
+  const pending=api.me();await new Promise<void>(done=>setImmediate(done));const beforeBody=observed;
+  release({code:"unauthenticated"});await assert.rejects(pending,AdminError);assert.equal(beforeBody,true);
+});
+
+test("authentication observers can detach without changing transport failure", async () => {
+  const net=fake(401,{});const api=adminClient("synthetic",net.f);let notified=0;
+  const unsubscribe=api.subscribeAuthenticationLoss(()=>{notified++;});unsubscribe();
+  await assert.rejects(api.me(),AdminError);assert.equal(notified,0);
+});
+
+test("authentication retirement before a step-up retry prevents another mutation POST", async () => {
+  let posts=0;
+  const net=(async(path:string)=>{
+    if(path.endsWith("/me/sessions/end")){posts++;return new Response(JSON.stringify({code:"reauthentication_required"}),{status:403});}
+    return new Response(JSON.stringify({code:"unauthenticated"}),{status:401});
+  }) as unknown as typeof fetch;
+  let api:ReturnType<typeof adminClient>;
+  api=adminClient("synthetic",net,async()=>{await assert.rejects(api.me(),AdminError);return true;});
+  let failure:unknown;
+  try{await api.endSelectedSessions({selection:"s",digest:"d",count:1});}catch(error){failure=error;}
+  assert.equal(posts,1);
+  assert.ok(failure instanceof AdminError&&failure.failure==="unauthenticated"&&failure.code===""&&failure.request==="");
+  await assert.rejects(api.me(),error=>error instanceof AdminError&&error.failure==="unauthenticated"&&error.code==="");
+});
+
+test("a refused CSRF context retires authentication without treating permission denial as sign-out", async () => {
+  for(const [code,expected] of [["csrf_refused",1],["permission_denied",0]] as const){
+    const net=fake(403,{code});const api=adminClient("synthetic",net.f);let observed=0;
+    api.subscribeAuthenticationLoss(()=>{observed++;});await assert.rejects(api.me(),AdminError);assert.equal(observed,expected);
+  }
+});
+
+test("a pickup is gone only when the service refuses it", () => {
+  assert.equal(pickupGone(failureOf(403, { code: "permission_denied" })), true);
+  for (const e of [failureOf(429, {}), failureOf(503, {}), failureOf(401, {}), failureOf(403, { code: "reauthentication_required" }), new AdminError("unavailable"), new Error("x")]) assert.equal(pickupGone(e), false);
+});
+
+test("the plans read carries the closed history facts and the closed plans read builds its query", async () => {
+  const facts = { total: 120, next: "71", kept: 200, dropped: 3 };
+  const first = await adminClient("t", fake(200, { revision: "r", plans: [], closed: facts }).f).plans();
+  assert.deepEqual(first.closed, facts);
+  const bare = await adminClient("t", fake(200, { revision: "r", plans: [] }).f).plans();
+  assert.deepEqual(bare.closed, { total: 0, next: "", kept: 0, dropped: 0 });
+  const odd = await adminClient("t", fake(200, { revision: "r", plans: [], closed: { total: "5", next: 7, kept: -1, dropped: 1.5 } }).f).plans();
+  assert.deepEqual(odd.closed, { total: 0, next: "", kept: 0, dropped: 0 });
+  const r = fake(200, { plans: [{ id: "p-1", state: "discarded" }], next: "12", matching: 40, closed: facts, q: "ann" });
+  const got = await adminClient("t", r.f).closedPlans({ after: "71", limit: 50, q: "a b" });
+  assert.equal(r.calls[0].url, "/api/v1/organizations/plans/closed?after=71&limit=50&q=a+b");
+  assert.deepEqual([got.plans.length, got.plans[0].id, got.next, got.matching, got.q, got.closed.total], [1, "p-1", "12", 40, "ann", 120]);
+  const none = fake(200, { plans: [], next: "", matching: 0, closed: facts, q: "" });
+  await adminClient("t", none.f).closedPlans();
+  assert.equal(none.calls[0].url, "/api/v1/organizations/plans/closed");
+  for (const bad of [{}, { plans: [] }, { plans: "x", next: "" }, { plans: [], next: 5 }]) {
+    await assert.rejects(adminClient("t", fake(200, bad).f).closedPlans(), (e: AdminError) => e.failure === "invalid", JSON.stringify(bad));
+  }
 });

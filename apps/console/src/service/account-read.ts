@@ -1,34 +1,31 @@
 import type { CredentialRow, ServiceRow, ServicesPage, SelfPage } from "./admin";
-import type { SelfEnd, SelfSession } from "./self-end";
+import { sessionRowOf } from "./session-query";
 import { subjectsOf } from "./access-read";
 import { array, boolean, choice, integer, optional, positive, ReadParseError, shape, text } from "./strict-read";
 
 const credential = shape<CredentialRow>({ id: text, not_before: text, not_after: text, state: choice("active", "expired", "revoked"), usable: boolean,
-  secret_pickup: optional(choice("open", "collected", "never_collected")), secret_pickup_until: optional(text) });
+  secret_pickup: optional(choice("open", "collected", "never_collected")), secret_pickup_until: optional(text),
+  replaces: optional(text), replaced_by: optional(text), rotation: optional(choice("replacing", "ending")) });
 export function credentialOf(value: unknown): CredentialRow {
   const parsed = credential(value);
-  const { secret_pickup, secret_pickup_until, ...base } = parsed;
+  const { secret_pickup, secret_pickup_until, replaces, replaced_by, rotation, ...base } = parsed;
+  if (replaces === "" || replaced_by === "" || (rotation !== undefined && base.state !== "active")) throw new ReadParseError();
+  if ((rotation === "ending" && replaced_by === undefined) || (rotation === "replacing" && replaces === undefined)) throw new ReadParseError();
   if (secret_pickup_until !== undefined && (!secret_pickup_until || Number.isNaN(Date.parse(secret_pickup_until)))) throw new ReadParseError();
   if (secret_pickup === "open" && secret_pickup_until === undefined) throw new ReadParseError();
   if (secret_pickup === undefined && secret_pickup_until !== undefined) throw new ReadParseError();
   if (secret_pickup !== undefined && base.state !== "active") throw new ReadParseError();
-  return { ...base, ...(secret_pickup === undefined ? {} : { secret_pickup }), ...(secret_pickup_until === undefined ? {} : { secret_pickup_until }) };
+  return { ...base, ...(secret_pickup === undefined ? {} : { secret_pickup }), ...(secret_pickup_until === undefined ? {} : { secret_pickup_until }),
+    ...(replaces === undefined ? {} : { replaces }), ...(replaced_by === undefined ? {} : { replaced_by }), ...(rotation === undefined ? {} : { rotation }) };
 }
 export const servicesPageOf = shape<ServicesPage>({ revision: text, now: text, owners: subjectsOf,
   services: array(shape<ServiceRow>({ id: text, state: choice("active", "suspended", "retired"), version: integer, creator: text, creator_login: text,
     owner: text, owner_login: text, credentials: array(credentialOf) })),
-  limits: shape({ credential_days: integer, credentials_per_service: positive, services: positive, replay_seconds: positive }),
-});
-const session = shape<SelfSession>({ handle: text, current: boolean, signed_in: text, ends: text });
-const end = shape<SelfEnd>({ operation: text, kind: choice("others", "one"), count: integer,
-  state: choice("cleanup_running", "complete", "cleanup_incomplete"), blocked_at: text, list_generation: text, current_generation: text,
-  generation_changed: boolean, digest: text, cleanup: shape({ done: integer, already_ended: integer, failed: integer, pending: integer }),
-  sessions: array(shape({ handle: text, signed_in: text, result: choice("ended", "already_gone"), items: array(shape({ item: text,
-    state: choice("done", "pending", "failed", "already_ended", "outside_scope", "not_applicable"), reason: (value) => value === undefined ? "" : text(value) })) })),
-  not_included: array(shape({ handle: text, signed_in: text })), replay: boolean,
+  limits: shape({ credential_days: integer, credentials_per_service: positive, services: positive, replay_seconds: positive,
+    credential_overlap_minutes: positive, credential_overlap_max_minutes: positive, secret_pickup_minutes: positive }),
 });
 export const selfPageOf = shape<SelfPage>({ user_id: text, login: text, email: text, workspace: text, role: text,
   identities: array(shape({ method: text, login: text })), password_set: boolean, installation_administrator: boolean,
-  sessions: array(session), sessions_generation: text, session_ends: array(end), idle_minutes: integer, max_age_seconds: integer,
+  current_session: sessionRowOf, recorded_session_count: integer, accepted_operation_count: integer, sessions_generation: text, idle_minutes: integer, absolute_minutes: positive, max_age_seconds: integer,
   signed_in_at: text, authenticated_at: text, now: text,
 });

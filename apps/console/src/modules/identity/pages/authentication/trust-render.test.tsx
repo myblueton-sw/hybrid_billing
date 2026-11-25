@@ -237,3 +237,18 @@ test("the validated line keeps the validator ID in one isolated unit", () => {
     assert.doesNotMatch(html, /⁣/);
   }
 });
+
+test("an impact that was not computed says so and shows no count, while a computed zero is shown as zero", () => {
+  const impactOf = (out: string) => /<section class="m02-impact"[\s\S]*?<\/section>/.exec(out)?.[0] ?? "";
+  for (const l of ["en", "ko", "ar"] as const) {
+    const missing = impactOf(detail(pageFixture(), changeFixture({ impact: null }), l));
+    assert.ok(missing.includes(ty.impactNotComputed(l)), l);
+    assert.ok(missing.includes(ty.signsOut(l)), l);
+    assert.doesNotMatch(missing, /m02-sum/);
+    assert.doesNotMatch(missing, /<dd>\d/);
+    const zero = impactOf(detail(pageFixture(), changeFixture({ impact: { members: 0, sessions: 0, affected_ids: [], weakens_mfa: false, signs_out_everyone: false } }), l));
+    assert.ok(!zero.includes(ty.impactNotComputed(l)), l);
+    assert.match(zero, /<dd>0<\/dd>/);
+  }
+  assert.equal(impactOf(detail(pageFixture(), changeFixture({ state: "activation_unknown", impact: null }))), "", "no impact section while the activation is not confirmed");
+});

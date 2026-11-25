@@ -1,0 +1,655 @@
+---
+type: ReviewReport
+title: UI-10 static check of the phase 2 to 5 screens
+description: Findings of a read-only check that the sign-in, administration, organization and installation screens keep unknown, zero, stale and not-connected states apart and have no fake success or dead action.
+status: draft
+---
+
+# Scope and method
+
+HYB-314, machine:mac_mini. Requirement UI-10 (`docs/planning/v1.16/ui-design.md:553`, translated): keep stale, null, zero, unsupported and unconfirmed apart; no fake success and no action that does nothing. Its parts about channel acceptance against user confirmation and inquiry against resolution belong to messages and cases, which are not connected, and are outside this check.
+
+On 2026-11-24 three role-based AI reviewers, separate from root and from each other, read the console source at main d9bcf99 for the screens of phases 2 to 5 (`docs/features/HB-257/plan.md`, phase table): the sign-in and entry screens L01 to L03, M01 to M05, O01 to O03 and P01 to P07. Nothing was executed or rendered. Each reviewer applied five checks: (1) a value the server did not provide is not shown as zero, as "none" or as a default; (2) a failed or loading read is distinguishable from an empty result and an old value is not left as if current; (3) unsupported or not connected is said as such; (4) no success shown without the server's confirmation; (5) no button without effect and no control disabled without a stated reason.
+
+Root then read six of the confirmed findings in the code and found each as reported; they are marked "root". The other findings rest on the reviewers' reading. A finding is "confirmed" when the code path is unambiguous by reading and "suspected" when a render or a server response is needed to settle it. Paths are under `apps/console/src/`.
+
+This is the static part of the ticket. No fix is made by this report, and the rendered part of the check has not been run.
+
+# Result by screen
+
+| Screen | Result | Confirmed findings | Suspected |
+| --- | --- | --- | --- |
+| L01 to L03 entry screens | no finding | none; none is server-bound and each says it is not connected | none |
+| M01 users | findings | A1, A2, A3, A5, A6 | A4, A7 |
+| M02 authentication | findings | B1, B2, B3 | A4 |
+| M03 access | findings | C2 | C1, A4 |
+| M04 service accounts | findings | A5 | A4 |
+| M05 my security | findings | D1, D2 | D3, D4 |
+| O01 organizations | findings | E1, E2, E3, E4 | E5 |
+| O02 changes | findings | F1, F2 | F3, F4 |
+| O03 contracts | findings | G1, G2, G3, G5, G6 | G4 |
+| O03 issuance setup views | one finding | G5 | none in the files read |
+| P01 installation | findings | H1, H3 | H2, H4, H5 |
+| P02 integrations | findings | none | H2, H5 |
+| P03 recovery | findings | H1 | H5 |
+| P04 retention | findings | H1 | none |
+| P05 release evidence | unverified | none | H4; four view files unread |
+| P06 demo, P07 licences | no finding | none; both render static screens that say not connected | P07 notice link targets not verified |
+
+# Findings
+
+## A common question behind the "fake success" items
+
+Many screens show their success text when a command request resolves, without reading the returned status or business state (`service/admin.ts`, `outcomeOf` and `send`; a resolved request is any 2xx). The command layer has two success statuses, completed and accepted (`modules/commands/types.go:224`, `:225`). Whether each command named below can return a 2xx whose state is not the one the success text states was not traced, so these are suspected, not confirmed. P03, P04, P05 and the O03 issuance setup stores already guard this step and treat an unexpected result as unknown, which is the pattern to follow.
+
+## M01 users
+
+- A1, check 5, confirmed (root). `modules/identity/pages/users/BulkPrepare.tsx:269` to `:274`: discarding a draft catches every failure and returns, so the discard buttons do nothing visible when the command fails. The same holds for the fixed list at `:278` to `:283` for most failures.
+- A2, check 5, confirmed. "Show more" gives no feedback on failure (`BulkPrepare.tsx:37`, `:401`; `RevocationJobs.tsx:252`).
+- A3, check 2, confirmed. `users/Live.tsx:769`, `:788`, `:825`: below 1280 px with a detail open, a failed reload shows no error while the detail keeps the values from before the action beside its done notice.
+- A4, check 4, suspected, shared by M01, M02, M03 and M04: success text on any resolved command (`users/Live.tsx:152`, `:219`; `service-accounts/Live.tsx:88`; `authentication/Live.tsx:142`; `access/Requests.tsx:77`). Trust activation on M02 does read the state.
+- A5, check 2, confirmed, M01 and M04. `users/Live.tsx:266` and `service-accounts/Live.tsx:461`, `:523`: any failure other than "unavailable" (rate limit, denied, session ended) is reported as "this link, or secret, can no longer be shown; issue a new one".
+- A6, check 1, confirmed in code. Defaults stand in for absent or unrecognised values: membership role, state and period (`service/admin.ts:105`, `:110`), any unrecognised account state reads "Active" (`users/live-model.ts:19`), an absent warning period becomes 14 days (`admin.ts:976`, `users/Live.tsx:672`).
+- A7, suspected. A caught staging error followed by "the fixed list was discarded" (`users/Live.tsx:705`, `:740`); a swallowed bulk-list failure (`:599`); absent match counts shown as 0 (`match-model.ts:32`, `BulkPrepare.tsx:94`); a failed read of excluded people rendering nothing under its heading (`BulkPrepare.tsx:41`).
+
+## M02 authentication
+
+- B1, check 1, confirmed in code. An absent impact becomes 0 members and 0 sessions and is printed as numbers (`service/admin.ts:589`; `authentication/TrustChanges.tsx:282`; `TrustConfirmBody.tsx:92`), while another line of the same file treats 0 as "not recorded". An absent sign-out flag defaults to true and prints the warning.
+- B2, check 1, confirmed in code. Unknown change state reads "draft" (`admin.ts:579`); approvals needed fall back to 3 (`:633`); the step-up period falls back to 900 seconds with no "default" label (`authentication/live-model.ts:32`).
+- B3, check 2, confirmed. The same narrow-layout gap as A3 (`authentication/Live.tsx:175`, `:190`).
+- Low: the methods table is hard-coded; password "Active" is not read from the server.
+
+## M03 access
+
+- C1, check 5, suspected. With an empty catalogue the request button is enabled once a person is chosen and the submit returns silently (`access/Live.tsx:273`, `:282`, `:327`).
+- C2, check 2, confirmed. After a failed reload the effects view renders from the retained page with no load error (`access/Live.tsx:438`).
+
+## M05 my security
+
+- D1, check 5, confirmed (root). `my-security/SessionOperations.tsx:83` to `:85`: for an unconfirmed operation the "Results" button only changes its expanded state; nothing is rendered.
+- D2, check 1, confirmed. "12 hours after sign-in" is a constant shown among limits read from the server (`my-security/LiveSessions.tsx:144`).
+- D3, suspected. Every identity row is labelled "Password" whatever its method (`my-security/Live.tsx:266`).
+- D4, suspected. An unconfirmed operation, or any read error, shows as "unavailable" (`SessionOperations.tsx:143`).
+
+## O01 organizations
+
+- E1, check 2, confirmed (root). `organizations/Live.tsx:297` to `:304`: when the member-facts read fails, the detail's parent row shows "Loading…" indefinitely, with no error and no retry.
+- E2, checks 2 and 4, confirmed. `organizations/drafts.tsx:425`, `:429`: if the read-back after a successful save or discard fails, the panel says the draft no longer exists while the live region announces "draft saved".
+- E3, check 2, confirmed. The existing-group search in the draft panel shows neither loading nor error, and on failure keeps the rows of the previous term under the new term (`drafts.tsx:597`, `:789`).
+- E4, check 1, confirmed in code. An absent member limit becomes 1000 and is shown as a real limit; an absent open limit becomes 0 and prints "n of 0"; absent member counts print as 0 (`drafts.tsx:59`, `:178`; `service/admin.ts:445`, `:1083`, `:1110`). Whether the server ever omits these fields is not verified.
+- E5, check 4, suspected. A save with an empty returned identifier still announces "saved" (`drafts.tsx:452`, `:480`).
+
+## O02 changes
+
+- F1, check 2, confirmed. After a failed reload the old plan list and active revision stay on screen with no message; error text exists only when no page is held (`changes/Live.tsx:454`, `:747`, `:778`).
+- F2, check 4, confirmed for the live region. "Activated", "sealed" or "discarded" is announced from an address parameter without checking the plan's state in the loaded page (`changes/Live.tsx:440`, `:486`).
+- F3, check 4, suspected. Every resolved proposal not "rejected" is treated as sealed; activate and discard navigate to the result without reading the state (`:696`, `:707`).
+- F4, check 1, not verified. Absent member count and open limit become 0 (`service/admin.ts:422`; `changes/Live.tsx:646`).
+
+## O03 contracts
+
+- G1, checks 1 and 2, confirmed (root). `contracts/Live.tsx:136`, `:147`: the counter reads "0 of 0 contracts" while loading and after a failed first read, beside facts that correctly show a dash.
+- G2, check 2, confirmed. A failed detail refresh with a detail already held shows no error, including the reload after a write, so a success notice can sit above the detail from before the write (`contracts/Live.tsx:96`, `:192`, `:202`).
+- G3, check 2, confirmed, transient. "This contract is not available" shows while the detail read is still pending for an identifier not in the loaded list (`:187`).
+- G4, check 4, suspected. The done notice on any resolved command (`contracts/LiveActions.tsx:170`).
+- G5, check 5, confirmed (root). `contracts/setup/Writes.tsx:62`: "Check" is disabled when the selected configuration is not on the loaded history page, with no reason shown.
+- G6, check 2, confirmed, low. After a context read failure the sample-options section is a heading with nothing under it (`setup/read-store.ts:26`; `setup/Documents.tsx:82`).
+
+In the issuance setup files that were read, the read stores drop their value on reload and on error, and the write stores never mark an entry recorded after a caught error.
+
+## P01 to P05
+
+- H1, check 2, confirmed (root for P01). On a failed reload P01, P03 and P04 keep and render the previous page, still show the old server time under "Now (UTC)", say only that the data could not be loaded, and keep commands offered on the old data (`administration/pages/installation/Live.tsx:66` to `:75`, `:142`; `recovery/Live.tsx:77`, `:162`; `retention/Live.tsx:86`, `:167`). P02 and P05 handle this: they disable commands on error and say so.
+- H2, check 4, code path confirmed and effect suspected, P01 and P02. Success text with the state ignored, including "proposed as proposal Unknown" when the proposal identifier is absent (`installation/LiveProposals.tsx:300`, `:388`; `integrations/LiveProposals.tsx:169`, `LiveModules.tsx:251`, `LiveChannels.tsx:211`, `:323`, `LiveEvents.tsx:138`, `:189`, `LivePending.tsx:47`).
+- H3, check 1, confirmed, P01. An absent or malformed mark is rendered as "None" (`service/installation.ts:139`; `installation/LivePlan.tsx:169`); the P02 parser keeps the two apart.
+- H4, checks 4 and 5, suspected, P01 and P05. A denied command whose follow-up reload returns nothing ends with no message (`installation/LiveProposals.tsx:115`; `release-evidence/LiveCommand.tsx:209`).
+- H5, check 1, suspected. Empty strings shown as definite values: "Direct", "no verifier", "no series", "None" (`installation/Live.tsx:238`; `recovery/LiveIsolation.tsx:161`; `recovery/LiveReconciliation.tsx:61`; `integrations/LiveModules.tsx:279`).
+
+# Patterns
+
+1. Stale page after a failed reload (A3, B3, C2, F1, G2, H1): six screens keep the earlier page without saying so. P02 and P05 show the handling to copy.
+2. Parser defaults for absent fields (A6, B1, B2, E4, F4, H3, H5): `service/admin.ts` and screen models turn absent or unrecognised values into zero, "active", "draft" or a number. The fix is at the parser, with an explicit unknown.
+3. Success text on a resolved request (A4, E5, F3, G4, H2): settled only by tracing which commands can return a non-final state.
+4. Silent failure of a secondary action (A1, A2, C1, D1, G5): five places.
+
+# What remains for the ticket
+
+- Fix the confirmed findings; patterns 1 and 2 are each best done as one change across screens, with tests.
+- Settle the suspected findings by tracing the commands or by a rendered check with injected failures.
+- Read the files listed below, and run the rendered part of the check.
+
+# Not read
+
+Reported by the reviewers as not opened, so no statement is made about them: on M01, `RolePeriod.tsx`, `Selection.tsx`, `filters.tsx`, `Stamp.tsx`, part of `RevocationJobs.tsx` and the bulk, period and filter models; on M02, the trust model and copy; on M03, `Settings.tsx`, `Area.tsx`, `who.tsx`, the models and most of the result-authority helpers; on M04, `Held.tsx`, the model and part of `Live.tsx`; on M05, `SessionSettings.tsx` and several models; on O03, `Channels.tsx`, `Changes.tsx` and the four step-write components with their flow files; on P02 to P05, the models and formatters and, on P05, `LiveMatrix.tsx`, `LiveRequirements.tsx`, `LiveDecisions.tsx` and `LiveRetireForm.tsx`. Copy files were read by search only. No style sheet and no test was read. Which of the static and live components mounts for each screen was not verified for M02 to M05.
+
+# Fixes
+
+## O03 findings G1, G3, G5 and G6 (2026-11-24)
+
+- G1: the list counter is rendered only once the list has loaded, so no "0 of 0" shows while loading or after a failed first read.
+- G3: "This contract is not available." is not shown while the detail read is pending; the loading status shows instead.
+- G5: when the settings chosen under "Start from" are not on the loaded page of recorded issuance settings, a sentence beside the disabled "Check permission and review" button says so and names the paging buttons. It is shown only when the history page is known.
+- G6: after a failed scope read the sample section keeps its heading and says that it is not shown because the scope could not be loaded.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3; a new render check with injected read failures, `tools/o03-trust-states-qa.mjs`, passes in English, Korean and Arabic at 1440 and 390 for G1, G3 and G6; the existing parts, rules-writes and payment-terms render checks still pass. G5 has no rendered check. Copy and state review, ui-designer role (AI, from renders and source): FAIL with three findings on G5 and G6 (terms that did not match the view, the reason shown while the history page was unknown, a form line pointing at a hidden sample), corrected with its strings; corrective re-review PASS.
+
+Left open from that review and this work: a refused contract detail shows the general failure text, whose wording speaks of signing in; the failed list shows its alert above the section and nothing in the list column; "Loading contracts…" is used for one contract; while the settings history is loading or failed, the disabled button has no reason of its own; Arabic uses two words for "sample" in two copy files; G2 (a failed detail refresh after a write shows no error) is not fixed here.
+
+## M01 findings A1 and A2, M05 finding D1 (2026-11-24)
+
+- A1: when discarding a draft or list fails, a message beside the discard button says that the discard was not confirmed and that the draft or list may still exist. It is cleared when the person resumes, prepares again or discards successfully.
+- A2: when "Show more" fails for the people of a prepared list, the excluded people or the people of a job, a message beside the button says so and that the people already shown are unchanged. It is cleared when another job is opened or closed.
+- D1: opening the results of an operation whose result is not confirmed shows a sentence saying that no results can be shown until it is confirmed.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3. No rendered check and no new test: these states need a failed command or read in the bulk revocation and session flows, which no existing render check stages. Copy and state review, ui-designer role (AI, by reading): FAIL with five findings (messages placed far from their buttons, a message that outlived its cause, and three wordings), corrected; the re-review passed all five and found one more message that outlived its cause, corrected afterwards and not reviewed again.
+
+Left open: the new messages use the secondary text style, whose prominence is for the owner's screen review; three of them sit inside a container that is itself an alert; whether "try again" can succeed after a discard whose outcome was unknown was not traced; C1 on M03 is not fixed here.
+
+## P01, P03 and P04 finding H1 (2026-11-24)
+
+When a reload fails while a page is held, the three screens now say, after the failure alert, that everything on the screen including the time is from the last successful load and that the screen is read-only until a reload succeeds. P03 and P04 stop offering commands in that state through their existing command gate. P01 had no gate: its three command openers and the review and send buttons of an open form are disabled and point at the note.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3, with the P01 proposals render test extended for the stale state of the openers and of an open form's review button. The send button's gate is not asserted, because the confirm step cannot be reached in a static render. No rendered check: no render check exists for these three screens. Copy and state review, ui-designer role (AI, by reading): FAIL with two findings (an already open P01 form could still send; the sentence said "below" although the facts it refers to are above it), corrected; corrective re-review PASS.
+
+Left open: the header still labels the old time "Now (UTC)" on these screens and on P02 and P05; P03 and P04 unmount an open form when the gate closes, so a message inside it is lost; a disabled opener takes no focus, so its reason is rarely announced; the same finding on M01, M02, M03, O02 and O03 (A3, B3, C2, F1, G2) is not fixed here.
+
+## O02 finding F1 and O03 finding G2 (2026-11-24)
+
+- F1: when a reload of the change plans fails while a page is held, an alert after the header says that the changes could not be loaded, that everything shown is from the last successful load, and to reload before acting on it.
+- G2: on O03 the list failure alert adds the same sentence when a page is held, and a failed refresh of a held detail now shows an alert with that sentence and a retry above the detail.
+- Found in the render and fixed with it: the contract screen worded a load failure with the sign-in failure texts ("We could not sign you in…", "The sign-in service is not responding…"). It now says "Contracts could not be loaded." and uses the general service sentence.
+
+These two screens keep their commands enabled in that state, so the sentence advises a reload instead of declaring the screen read-only.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3; `tools/o03-trust-states-qa.mjs` extended for the kept list and detail and for the wording of the load failure, passing in English, Korean and Arabic at 1440 and 390; the parts render check still passes. O02 has no rendered check. Copy and state review, ui-designer role (AI, from four renders and source): PASS as a candidate, no blocking finding; its suggestion of a title on the detail alert was applied afterwards.
+
+Left open: on O03 the alert can be thousands of pixels above the "Check permission and review" button of a held detail, so disabling that button in this state, as on P01, P03 and P04, is recommended as a follow-up; the header facts and the present-tense labels of a held detail still read as current; the alert button says "Try again" where the sentence and the toolbar say "Reload"; a failed detail with nothing held shows only the plural title; whether the write paths of these screens refuse a stale revision was not traced.
+
+## M01, M02 and M03 findings A3, B3 and C2 (2026-11-24)
+
+- A3: on M01 below the wide layout, with a detail or action panel open, a failed reload now shows the load failure in the panel with the sentence that what is shown is from the last successful load, and a retry. Before, the error was rendered only in the hidden list.
+- B3: on M02 the same failure is now rendered in the stepped detail as well, and the load failure adds that sentence whenever a page is held.
+- C2: on M03 the effects view shows the load failure above the effects when a reload fails with a page held, with the same sentence.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3. No new test, no rendered check and no further review: the change places an existing alert in three more spots and reuses the sentence reviewed for O02 and O03. These states need a failed reload at a narrow width with a panel open, which no existing render check stages, so how they look is not verified.
+
+Left open: commands on these three screens stay enabled in that state.
+
+# Trace of the suspected "fake success" findings (2026-11-24)
+
+The findings A4, E5, F3, G4 and H2 were suspected because screens show their success text when a command request resolves, without reading the status. Root traced the command layer and the commands named, by reading main at f78d319. Nothing was executed.
+
+Facts:
+
+| Fact | Evidence |
+| --- | --- |
+| A mutating command's result is either accepted, with a job identifier and no business state, or completed, with a valid result revision and a valid business state. Any other outcome is turned into an internal error, which the console receives as a failed request | `modules/commands/execute.go:184` to `:193`, `:421` to `:437` |
+| Four command paths return accepted: approving an access request that revokes, revoking a delegation, executing a bulk revocation, and a trust activation whose outcome is unknown | `apps/api/server/accessrequests.go:347`, `revocations.go:145`, `bulk.go:129`, `trust.go:315` |
+| The console words each of those as received and not as done: approving a revoking request and revoking a delegation say that the revocation was received and that its state is shown in the Revocations section; executing a bulk revocation hands over to the job view; trust activation reads the returned state | `access/request-copy.ts` (`doneApprovedRevoke`, `doneRevokedDeleg`), `access/Requests.tsx:79`, `users/BulkPrepare.tsx:153`, `authentication/TrustAfter.tsx` |
+| Approving an access request that adds returns completed with the state "granted" | `accessrequests.go:345` |
+| On O02, a completed activation always has the state "activated" and a completed discard "discarded" | `relplans.go:405` to `:451` |
+| On P01, a completed command always returns the proposal number and the proposal's state | `installation.go:544` |
+
+Result:
+
+- A4 (M01, M02, M03, M04): refuted. For the commands on these screens a resolved request is a completed command, except the four accepted paths, which the console already words as received.
+- F3: refuted for activate and discard. Not settled for propose, whose returned state is the plan's state and is treated as sealed unless it is "rejected"; the set of plan states at that point was not traced.
+- H2 (P01): refuted for the missing proposal number and for withdraw. For approve the text shows the returned state, which is accurate. The P02 items were not traced.
+- E5 (O01 draft save) and G4 (O03 contract actions): not settled; the fields and states returned by those commands were not traced.
+
+So the pattern is narrower than the static check suggested: it does not hold on M01 to M04, and what remains is three command-specific questions (O02 propose, O01 draft save, O03 contract actions) and the P02 items.
+
+## O01 finding E1 (2026-11-24)
+
+When the read of a member's facts fails, the parent row of the detail no longer stays on "Loading…": it says "Could not be loaded." with a "Try again" link that repeats the read.
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3. No new test, no rendered check and no review: one short sentence and the existing "Try again" label; no render check exists for O01 with a failing member read, so how it looks is not verified.
+
+## P01 finding H3 (2026-11-24)
+
+The release mark on P01 is now read as three cases, as P02 already does: an explicit null from the server is "None", a mark object is shown, and an absent or malformed value is "Unknown". Before, an absent or malformed value was shown as "None". The server sends an explicit null when a release has no mark (`apps/api/server/installation.go:139`).
+
+Checks: `tsc` clean; console tests 1345, pass 1342, fail 0, skipped 3, with the installation parser test extended by a release without the field and one with a malformed value. No rendered check and no review: no new copy.
+
+## M02 finding B1 (2026-11-24)
+
+The cause was on the server. The trust change row always carried an impact object and left it at a default of zero members, zero sessions and "signs out everyone" when the change was not open or its facts could not be read (`apps/api/server/trustrows.go`). The read now sends `"impact": null` in that case, a change to a public read. The console keeps null apart from a computed zero: the impact section of an open change says "Not computed. This is not zero." and still shows the sign-out sentence, the confirmation rows say the same instead of 0, and the section is not shown for a change whose activation outcome is unknown, for which the server never computes an impact.
+
+Checks: `go vet` clean; `go test ./... -count=1` 83 packages ok, 0 failed, with a new server test (an open change has an impact object, a cancelled one has null); console `tsc` clean and console tests passing with the parser test covering an absent value, an explicit null, an array and a computed zero. Independent change review (role-based AI reviewer separate from the writer, by reading): PASS with no blocking finding; it confirmed that no other reader of the field exists, that the approve and activate confirmations keep their sign-out sentence from static copy, and that approve and activate are refused when the facts read fails. Its corrections were applied afterwards and not reviewed again: an array is no longer parsed as a computed impact, the sentence no longer says "at this read", the sign-out sentence is kept in the not-computed state, and two documents that describe the field were updated.
+
+Left open: no server test for an open change whose facts read fails; no render test of the not-computed state; `docs/features/HYB-297/visual-spec.md` has no not-computed state; B2 (other defaults on M02) is not fixed here. Observation for a separate ticket, not verified: a failed facts read on a validated change is reported as stale evidence.
+
+# Trace of the "parser default" findings (2026-11-24)
+
+After B1 turned out to be a server default and not a parser fault, root read the server side of the other findings of that pattern at main 4ec70b1. Nothing was executed and this section has no independent review.
+
+| Finding | What the console defaults | What the server sends | Result |
+| --- | --- | --- | --- |
+| E4, F4 (O01, O02) | absent member counts and open limits become 0; an absent draft member limit becomes 1000 | `member_count`, `members_on` and `open_limit` are plain integers that are always serialised and computed from real data (`groupdrafts.go:225`, `:269`; `orgtargets.go:61`; `relplans.go:632`); the draft member limit is an installation setting that is always listed, with bounds 1 to 10000 (`orgsettings.go:29`) | the default applies only to a malformed response. Not a present defect |
+| A6 (M01) | a membership state that is not "suspended" reads "active"; a role that is not "administrator" reads "member"; an account state that is neither "suspended" nor "departed" reads "Active" | the identity module has exactly these states and roles today | not a present defect, but the direction of the default is unsafe: a state added later, or a malformed value, would be shown as Active or as an ordinary member. Recommended hardening: an explicit unknown value in the parser and an "Unknown" label |
+| B2 (M02) | an unrecognised change state reads "draft"; approvals needed fall back to 3; the step-up period falls back to 900 seconds | not traced field by field | not settled. The fallback for approvals needed and for the step-up period shows a number the server did not send, without saying so |
+| H5 (P01, P02, P03) | empty strings shown as "Direct", "no verifier", "no series", "None" | not traced | not settled |
+
+So of this pattern only B1 was a present defect, and it is fixed. A6 is a hardening of the direction of a default and is the one worth doing next, because it concerns how a person's access state is shown. E4 and F4 need no change.
+
+## M01 finding A6, states only (2026-11-24)
+
+An account state or membership state that the console does not recognise is no longer read as "Active". The membership parser has an explicit unknown value; the account label, the membership label and the role cells of the list say "Unknown state"; no account action is offered for an unrecognised account state and no membership action for an unrecognised membership state, each with a sentence saying why. The identity module sends only the known states today, so this changes nothing for a well-formed response. Roles are unchanged: an unrecognised role is still read as "member" by the parser.
+
+Checks: `tsc` clean; console tests 1346, pass 1343, fail 0, skipped 3, with a new test for the labels and offers and a parser assertion. No rendered check. Copy and state review, ui-designer role (AI, by reading): FAIL with one finding (the note for an unknown membership state was grouped under sign-in), corrected with its other suggestions; corrective re-review PASS, with one more spot found (the wide role cell lacked the label), added afterwards and not reviewed again. The reviewer judged that offering no action for an unknown account state is the right default.
+
+## O01 findings E2 and E3 (2026-11-24)
+
+- E2: after a successful save or discard, a failed re-read of the draft is no longer shown as "This draft no longer exists". The panel has its own state for it and says that the request was recorded but the draft could not be read again, with the way back to the drafts. A draft that is really missing keeps the earlier text.
+- E3: the existing-group search in the draft panel clears the earlier rows when a new search starts and shows that it is loading or that it failed, so results of an earlier term no longer stay under a new term.
+
+Checks: `tsc` clean; console tests 1346, pass 1343, fail 0, skipped 3. No new test and no rendered check: no render check stages a failed read on the O01 draft panel. Copy review, ui-designer role (AI, by reading): PASS as a candidate.
+
+Left open: whether the saved or discarded announcement is still spoken beside the new alert; a draft beyond the 40 pages that the lookup reads is still reported as missing.
+
+## M03 finding C1 (2026-11-24)
+
+On the effect form, when the page lists no kind of data the "Show effect" button is disabled, the start hint is hidden and a sentence beside the button says that no kind of data is listed and to reload the page. Before, the button was enabled once a person was chosen and submitting did nothing. The chosen kind is also derived from the current catalogue, so a kind that is no longer listed is not sent. The server always sends the catalogue (`access.go:190`), so this concerns a malformed response only.
+
+Checks: `tsc` clean; console tests 1346, pass 1343, fail 0, skipped 3. No new test and no rendered check. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its Korean wording was adopted afterwards.
+
+## M05 finding D2, and D3 by reading (2026-11-24)
+
+- D2: the longest session shown on M05 is read from the server. The self account read has a new required field `absolute_minutes`, the server's absolute session lifetime (720 today, a constant, not an installation setting); the console formats it with the same duration formatter as the other limits. For 720 the text is unchanged in the three languages.
+- D3, not a present defect: the server sends only the `local-password` identity method (`self.go`), so the "Password" label is right today. A second method would need its own label.
+
+Checks: `go build`, `go vet`, the whole `apps/api/server` test package pass; `tsc` clean; console tests pass with one new test for the formatted text. No rendered check. Independent change review (independent-reviewer role, AI, by reading): PASS, no blocking finding; its two suggestions (binding document, a test for the text) were adopted afterwards. It noted that a console built from this change fails the self read against an older server, which follows how the earlier required fields of this read were added, and that the unused `staleNote` copy still states 12 hours.
+
+## M05 finding D4 (2026-11-24)
+
+A referenced operation whose result is not confirmed is no longer reported as "The retained operation is unavailable". It has its own sentence: the result is not confirmed, so it cannot be shown yet; check again. The read's answer is the server's, so this is a stated state and not a failure.
+
+Not changed: a failed read and a missing operation still share the "unavailable" text. The console's failure kinds do not tell a network failure from a missing record on this read (both arrive as "unavailable"), so they cannot be told apart without a change to the service client.
+
+Checks: `tsc` clean; console tests 1347, pass 1344, fail 0, skipped 3. No new test and no rendered check. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its recommendation to announce the unconfirmed state as a status and not an alert was adopted afterwards.
+
+## M01 and M04 finding A5 (2026-11-24)
+
+The one-time pickup of a sign-in link (M01) or a credential secret (M04) is reported as gone only when the service refuses it, which is the server's answer for a pickup that was consumed, expired or belongs to another session (`users.go`, `collect`). Any other failure (the service not answering, an internal error, a lost response) leaves the retry in place instead of telling the administrator to issue a new link or revoke the credential. If the pickup was in fact consumed, the retry is refused and the gone text follows. The M04 rule that allowed a single retry is removed for the same reason.
+
+Checks: `tsc` clean; console tests pass with one new test for the rule. No rendered check. Independent change review (independent-reviewer role, AI, by reading): PASS, no blocking finding. Adopted afterwards: the M04 retry text says "Try again" in English and Korean, since the single-retry limit is gone (the Arabic already said so). It confirmed that a caller who lost installation administration is also told the pickup is gone, as before this change, and that a consumed secret whose body was malformed now takes one more click before the gone text.
+
+## O02 finding F2 (2026-11-24)
+
+The announcement on arrival ("Sealed", "Rejected", "Discarded", "Activated. Relationship revision n is now active.") is made only when the plan named in the address is in the loaded page and is in that state. The revision announced for an activation is the plan's own `activated_revision`, not the number in the address. An address typed or edited by hand no longer produces an announcement the page does not support. When the plan is not in the loaded page nothing is announced.
+
+Checks: `tsc` clean; console tests pass with one new test for the rule. No rendered check and no copy change.
+
+## P01 and P05 finding H4 (2026-11-24)
+
+When a command is denied and the reload that follows fails, the command form on P01 (installation proposals) and P05 (release evidence) now shows the refusal ("This proposal is no longer available." and its variants) as an alert in the form. Before, the form ended with no message. This follows what the retention screen already does (`retention/LiveCommand.tsx`). With a successful reload the behaviour is unchanged.
+
+Checks: `tsc` clean; console tests 1349, pass 1346, fail 0, skipped 3. No new test, no rendered check, no new copy and no review. Not settled: the text says the item is no longer available, which the failed reload could not confirm; the stale-page alert added for P01 in an earlier fix is shown beside it.
+
+## M01 finding A7, excluded people (2026-11-24)
+
+In the bulk revocation preview, a failed first read of the excluded people is shown under its heading with a sentence and a "Try again" button. Before, nothing was rendered under "Excluded: n".
+
+Checks: `tsc` clean; console tests 1349, pass 1346, fail 0, skipped 3. No new test and no rendered check. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its wording for the second sentence was adopted afterwards.
+
+The other parts of A7 are not changed and remain suspected: a discard that fails with a stage error is reported as discarded (`users/Live.tsx`, `discardFixed`); a failed read of the pending fixed list on load is silent (`users/Live.tsx`, the `bulkClient(api).list` effect); an absent match count is read as 0 (`match-model.ts`, `fixedOfFields`).
+
+## M02 finding B2, traced against the server (2026-11-24)
+
+Read at main 4a17b1d; nothing executed; no independent review of this section.
+
+| Console default | What the server sends | Result |
+| --- | --- | --- |
+| approvals needed fall back to 3 (`admin.ts`, `holders.needed`) | `needed` is always set from the server's own required number of people (`policy.go:183`) | applies only to a malformed response |
+| the step-up period falls back to 900 seconds (`authentication/live-model.ts`, `effectiveStep`) | `step_up_seconds` is always set: the server's default, lowered by the active policy when there is one (`policy.go:186-195`) | applies only to a malformed response |
+| an unrecognised change state reads "draft" (`admin.ts`, `trustStates`) | the eight states of the trust change module (`modules/trustchange/types.go:11-18`) are the eight the console lists | not a present defect. The direction is the same as A6: a state added later would be shown as a draft. The actions offered come from the server's `can` flags and not from the state, so the exposure is to the label and the emphasis only |
+
+B2 is therefore not a present defect. A possible hardening, not done: read an unrecognised change state as its own unknown value, as was done for the account and membership states on M01.
+
+## O01 finding E5 and O03 finding G4 (2026-11-24)
+
+- E5, hardening: the server always returns the new draft's identifier from the create command (`groupdraftcmds.go:189`), so the "saved" announcement with an empty identifier does not occur with a well-formed response. With a malformed one the console would have sent the create command again for the next batch of members, making a second draft, and then announced "saved". It now stops after a completed create without an identifier, reloads the drafts and shows the text for a recorded request whose draft could not be read again.
+- G4, not a defect: the O03 done notice states the result state that the command returned ("Final settlement: …", with "Unknown (x)" for a word it does not know); it does not claim a state of its own. The command layer returns a completed result only with a business state.
+
+Checks: `tsc` clean; console tests pass. No new test, no rendered check, no new copy and no review.
+
+## M01 finding A7, discard after a stage error (2026-11-24)
+
+Confirmed by reading the server: `bulk_revocation.discard` is refused with a stage error when the list is no longer a draft or a prepared list, that is when it was already discarded, expired or run (`modules/bulkrevoke/registry.go`, `Discard`). The console treated that refusal as a discard and announced "The fixed list was discarded. Nothing was revoked.", which is false for a list that was run. It now shows, visibly on the page and once to the live region: "There was nothing to discard: this list was already discarded, expired or run. If it was run, the result is on Revocation jobs." The note is cleared on a view change, when a new fixed list exists and when a bulk run starts.
+
+Checks: `tsc` clean; console tests pass. No new test and no rendered check. Copy and state review, ui-designer role (AI, by reading): FAIL with one finding (the text reached only the live region, so a sighted user saw the same as after a real discard), corrected; corrective re-review PASS; its three further suggestions (announce once through the live region, clear the note when a bulk run starts, follow a language switch) were adopted afterwards and not reviewed again.
+
+Still open from A7: a failed read of the pending fixed list on load is silent; an absent match count is read as 0.
+
+## O03 follow-up: contract actions while a held detail is stale (2026-11-24)
+
+While the detail of a contract is held from an earlier load because its reload failed, the contract action buttons, the withdraw button of each event row, and the review and send buttons of an open command form are disabled and described by the stale alert, as on P01, P03 and P04. The form also refuses to review or send in that state. A successful reload enables them again.
+
+Not covered: the writes of the setup sections inside the detail (documents, payment terms, issuance setup) are not gated by this change.
+
+Checks: `tsc` clean; console tests 1349, pass 1346, fail 0, skipped 3. No new test, no rendered check, no copy change and no review; the pattern is the one reviewed for P01.
+
+## Rendered regression run on O03 after the fixes (2026-11-24)
+
+The seven existing O03 rendered checks were run against a console built from main b982afb (headless Chromium, built console with intercepted synthetic reads; no server, no mutation of real data, no owner acceptance). All seven ended with exit code 0 and no page error.
+
+| Script | Cases | Unexpected reads |
+| --- | --- | --- |
+| `tools/o03-trust-states-qa.mjs` | 30 | 0 |
+| `tools/o03-setup-changes-qa.mjs` | 72 | 0 |
+| `tools/o03-setup-changes-writes-qa.mjs` | 27 | 0 |
+| `tools/o03-setup-channels-qa.mjs` | 63 | 0 |
+| `tools/o03-setup-channels-writes-qa.mjs` | 36 | 0 |
+| `tools/o03-payment-terms-qa.mjs` | 99 | 0 |
+| `tools/o03-payment-terms-writes-qa.mjs` | 27 | 0 |
+
+Two scripts had fallen behind the screen and are brought up to date in the same change: `o03-setup-changes-qa.mjs` did not know the channel read and `o03-setup-channels-qa.mjs` did not know the reference read, both added to the documents view by later slices. Each now answers that read as denied, as it does for the other reads it does not stage, instead of counting it as unexpected. Their assertions are unchanged.
+
+What this run shows: the O03 fixes of this ticket did not break what these scripts assert. What it does not show: none of the scripts asserts the newly disabled contract actions on a stale detail, and the other screens changed under this ticket (M01, M02, M03, M04, M05, O01, O02, P01, P03, P04, P05) were not run.
+
+## Rendered regression run on M05, M03 and the rest of O03 (2026-11-24)
+
+Run against a console built from main 5b5b90a (headless Chromium, synthetic reads, no server, no owner acceptance). Every script ended with exit code 0 and no page error.
+
+| Script | Screen | Result |
+| --- | --- | --- |
+| `apps/console/tools/my-security-scope-qa.mjs` | M05 | pass |
+| `apps/console/tools/my-security-history-qa.mjs` | M05 | pass, 61 checks |
+| `apps/console/tools/my-security-selection-qa.mjs` | M05 | pass, 28 checks |
+| `tools/issuance-authority-area-qa.mjs` | M03 | 84 cases; 13 entries counted as unexpected, all of them the page's own access read, which this script does not stage |
+| `tools/o03-setup-parts-qa.mjs` | O03 | 54 cases |
+| `tools/o03-setup-rules-qa.mjs` | O03 | 99 cases |
+| `tools/o03-setup-rules-writes-qa.mjs` | O03 | 18 cases |
+| `tools/o03-setup-statements-qa.mjs` | O03 | 72 cases |
+
+`o03-setup-parts-qa.mjs` and `o03-setup-rules-writes-qa.mjs` counted reads added by later slices as unexpected; each now answers them as denied, as in the earlier update. Their assertions are unchanged. Whether the 13 entries of the M03 script were already there before this ticket was not checked.
+
+Not run: `apps/console/tools/service-accounts-qa.mjs` (M04) needs a running server with a signed-in administrator. M01, M02, O01, O02, P01, P03, P04 and P05 have no rendered run in this record. None of these scripts asserts the states added under this ticket (the M05 unconfirmed operation, the M05 lifetime from the server, the M03 effect form without a kind of data).
+
+## Server-backed browser tests on main (2026-11-24)
+
+The browser tests of `apps/api/server` that start an isolated in-process server were run against a console built from main 8a4c5eb (`go test ./server/ -run 'Browser|GrantScreens'`, loopback preview, headless Chromium). No real account or customer data is involved; this is not an owner acceptance.
+
+| Result | Tests |
+| --- | --- |
+| passed (12) | `TestIssuanceSetupActualScreenBrowser` (en, ko, ar), `TestFinancialDecisionScreenBrowser`, `TestFinancialDecisionRejectionScreenBrowser`, `TestFinancialFinalRequestScreenBrowser`, `TestFinancialFinalDecisionScreenBrowser`, `TestFinancialFinalRejectionScreenBrowser`, `TestDocumentEvidenceImpactRenderedBrowser`, `TestERPFinalPermissionGrantScreens`, `TestResultAuthorityActualScreenBrowser`, `TestResultEvidenceImpactRenderedBrowser`, `TestResultAuthorityImpactRenderedBrowser`, `TestResultReplacementBlockedBrowser` |
+| skipped (1) | `TestFinancialDraftLiveBrowserJourney` (needs its own runner and built console settings) |
+| failed (5) | `TestApprovalProjectionRenderedBrowser`, `TestFinancialDecisionCoreBrowser`, `TestDocumentActualScreenBrowser`, `TestResultActualScreenBrowser`, `TestResultReplacementScreenBrowser` |
+
+The O03 issuance setup journey on a real server therefore still passes in three languages after the O03 changes of this ticket.
+
+The five failures are not caused by this ticket's fixes: the same five fail in the same way with the console and the server built from b950947, the merge before the first fix. Their cause is not established (a product regression from an earlier change, a drifted script, or a requirement of the run that was not met, such as the unset `HB_DOCUMENT_SCREEN_QA_MODE`). They are tracked separately in HYB-350.
+
+## O03 setup sections on a stale detail: no change needed (2026-11-24)
+
+The earlier record left open whether the writes of the setup sections inside a contract detail (documents, payment terms, issuance setup) should also be disabled while the detail is held from an earlier load. Read at main 88543b9: they should not.
+
+The detail passes those sections only the contract identifier, the session and the setup day (`LiveDetail.tsx:58`, `:61`). They do not read the held detail. Each section does its own reads, shows its own failure, and sends its writes against revisions it read itself (the setup context and the protected summary; `setup/Documents.tsx`). A failed reload of the contract detail therefore does not make what these sections show or send stale. Only the detail's own header facts and its contract actions depend on the held detail, and the actions are disabled since the earlier fix.
+
+Nothing was executed for this section and it has no independent review.
+
+## M01 finding A7, the two remaining parts (2026-11-24)
+
+Read at main f5ea521; nothing executed; no independent review of this section.
+
+- An absent match count read as 0 (`match-model.ts`, `fixedOfFields`): the server always returns `matched` with the fixed list (`bulkstage.go:118`), so the default applies only to a malformed response. Not a present defect.
+- A failed read of the pending fixed list when the screen opens (`users/Live.tsx`, the `bulkClient(api).list` effect): the failure is silent, and its effect is that an existing fixed list of the caller is not shown. Nothing unsafe follows from it. If the person then tries to fix a new list, the server refuses because a draft is already open (`modules/bulkrevoke/registry.go`, `ErrOpenDraft`), and the screen says so and points to Revocation jobs ("The list was not fixed. … you may already have an open list. Check Revocation jobs and the filters."). The existing list stays reachable on Revocation jobs. A visible note at the moment of the failed read would be an improvement, not the correction of a wrong statement; left for the owner's screen review.
+
+With these, every part of A7 is either corrected (excluded people, discard after a stage error) or settled as not a present defect.
+
+## Finding H5, traced against the server (2026-11-24)
+
+Read at main a9951b0; nothing executed; no independent review of this section. In each of the four places the empty string is the server's own way of stating the absence, so the label says what the record says.
+
+| Screen | Label for an empty value | What empty means on the server | Result |
+| --- | --- | --- | --- |
+| P01 connection report | "Direct" for an empty route | a diagnosis carries `Via` only when it went through a proxy; a proxy diagnosis without it is rejected (`modules/installer/diagnostics.go:62`) | accurate |
+| P03 isolation | "no verifier" | the installation's verifier is set only by a verifier change (`recoveryseed.go:153`); empty until then | accurate |
+| P03 reconciliation | "no series" | a target is valid either with a series and a number above zero or with neither (`modules/recovery/calls.go:85`) | accurate |
+| P02 modules | "None" for an empty reason | the reason is the one the module state carries, empty when the state has none (`integrations.go:439`) | accurate |
+
+The console parsers read an absent field as an empty string, so a malformed response would show the same labels; that is the same malformed-only case as E4, F4 and B2. H5 is not a present defect.
+
+## Finding H2 on P02, traced against the server (2026-11-24)
+
+Read at main 9677e48; nothing executed; no independent review of this section. The P02 part of H2 is refuted.
+
+- Identifiers shown in the success text are always returned: the proposal number (`integrationcmds.go:173`), the subscription identifier (`:260`) and the redelivery identifier (`:562` and the dead-letter approval). The "Unknown" fallback in the text applies only to a malformed response.
+- The approvals show the state the command returned (`k.result(l, state)`), which is accurate.
+- The withdrawals have one result state, "withdrawn" (`:426`, `:445`), so their fixed text is accurate.
+- The one case where a completed command did not do what its verb says is handled: when the person who started a request has lost the right, the approval completes with the state "closed" and the reason `requester_lost_right` (`integrationheld.go:127`; four call sites, for a module proposal, a subscription, a dead letter and a repeated redelivery). The shared command form reads that state before choosing the text and says "…: Not approved. It was closed because the person who started it no longer holds the right." (`integrations/LiveCommand.tsx:117`), and each of the four forms passes the object that sentence names.
+
+With this, H2 is refuted on both screens it named.
+
+## M01 finding A6, roles (2026-11-24)
+
+An unrecognised membership role is no longer read as "member". The parser has an explicit unknown value; the role is labelled "Unknown role" wherever it is shown, including a role string that did not pass through the membership parser; and for such a person the detail offers no membership action and no set-link or reset-link action, with one sentence saying why. Account actions stay. The identity module sends only "administrator" and "member" today, so a well-formed response is unaffected. With this both halves of A6 are done.
+
+Checks: `tsc` clean; console tests pass with a new test for the label and the offers and a parser assertion. No rendered check. Copy and state review, ui-designer role (AI, by reading): PASS as a candidate, no blocking finding; its suggestion for other role strings was adopted afterwards and not reviewed again.
+
+Left open from that review: in the bulk selection, the list of administrators shown after a server refusal filters on the administrator role, so a person with an unknown role is not listed there as someone to deselect. Nothing false is stated.
+
+# Second static check: files the first review did not open (2026-11-24)
+
+An independent reviewer (independent-reviewer role, AI, separate from root) read fourteen files of M01 to M05 that the first review reported as not opened, with the same five checks and with the server side read before a default or a success text was reported: `users/RolePeriod.tsx`, `Selection.tsx`, `filters.tsx`, `Stamp.tsx`, `RevocationJobs.tsx`, `bulk-model.ts`, `period-model.ts`, `filter-model.ts`; `authentication/trust-model.ts`; `access/Settings.tsx`, `Area.tsx`, `who.tsx`; `service-accounts/Held.tsx`; `my-security/SessionSettings.tsx`. Nothing was executed.
+
+Thirteen files: no finding. `users/RevocationJobs.tsx`: three confirmed findings, each then read by root and corrected in the same change.
+
+| Finding | Before | Now |
+| --- | --- | --- |
+| a refused discard was silent (check 5) | the discard of a draft or prepared list on Revocation jobs had no error handling: a refusal showed nothing and the job stayed | a refusal other than a stage refusal shows the existing "The discard was not confirmed…" text beside the button; a stage refusal (already discarded, expired or run) reloads, and the list shows the real state |
+| "0 people" for a list that was never prepared (check 1) | a discarded or expired draft showed "0 people", although people are first counted at prepare | it shows "Not counted: never prepared"; the prepared time is set only at prepare (`modules/bulkrevoke/manifest.go:111`) |
+| the previous job's detail under a newly opened row (check 2) | when opening a job failed, the earlier job's detail stayed while the new row was marked open; a failed outcome-filter read showed the new filter over the old rows | opening another job clears the earlier detail, a failed open leaves no row marked open, a line says that the job is loading, and the filter changes only after its read succeeded |
+
+Malformed-response-only observations from the same check, not changed: fallback numbers for two settings that the server always lists; an unrecognised role period read as "open" (the unsafe direction, as with A6, and a candidate for the same hardening); an unparsable date shown as "ends in 0 days"; an empty executor or the sequence "0–0" on an executed job; a job or a trust change in an unknown state shown in no group; an unknown setting source read as "default".
+
+Checks: `tsc` clean; console tests 1350, pass 1347, fail 0, skipped 3. No new test and no rendered check. Corrective review by the same reviewer (AI, by reading): PASS for each of the three, no blocking finding. Its suggestion to show a loading line was adopted afterwards and not reviewed again. Left open from it: results of two reads that arrive out of order are applied without checking which is the latest, which predates this change; after a failed filter read only the page-level alert appears, whose retry reloads the list and not the items; the Korean and Arabic wording of the new label had no language review.
+
+Not read by either review: the copy files beyond search, `users/Matching.tsx`, style sheets and tests; the models and formatters of P02 to P05 and, on P05, `LiveMatrix.tsx`, `LiveRequirements.tsx`, `LiveDecisions.tsx` and `LiveRetireForm.tsx`; on O03, `Channels.tsx`, `Changes.tsx` and the four step-write components.
+
+## Second static check, O03 setup step files and the M01 matching step (2026-11-24)
+
+The same independent reviewer read twelve more files with the same five checks: on O03 `setup/Channels.tsx`, `Changes.tsx`, `ChannelWrites.tsx`, `ChangeWrites.tsx`, `RuleWrites.tsx`, `TermWrites.tsx`, `Writes.tsx` and the flow files `channel-flow.ts`, `change-flow.ts`, `rules-flow.ts`, `term-flow.ts`; on M01 `users/Matching.tsx`. Nothing was executed.
+
+Eleven files: no finding. Among what was checked and found sound: a failed next page of the channel or change list shows the alert and no rows, never a partial list presented as whole; the O03 setup parsers reject a response with a missing or unknown field, so no console default can stand in for a value there; on M01 a failed count has its own region with a retry and is not shown as zero, "None" needs a complete count of zero, and an incomplete count reads "at least".
+
+One confirmed finding, low, corrected in the same change:
+
+- `setup/ChannelWrites.tsx`, check 2: while the reference read of the channel registration form was still pending, the "Reference" field was empty with no loading line, and "Review" was enabled and answered that the entries were invalid. The field now says that it is loading, and "Review" is disabled until the references are read, as the change request form already did. A failed read was already stated.
+
+Checks: `tsc` clean; console tests 1350, pass 1347, fail 0, skipped 3. Rendered: `tools/o03-setup-channels-qa.mjs` (63 cases), `o03-setup-channels-writes-qa.mjs` (36) and `o03-setup-changes-writes-qa.mjs` (27) run against a console built from this change, exit code 0 each, no unexpected read. They do not stage a pending reference read, so the corrected state itself is not asserted. No review of the one-line correction.
+
+Not settled by the reviewer: whether the server refuses a request, acceptance, verification or decision on a row governed by other rules, which the console offers (a refusal would be shown with its code); whether the term offers match the server's preconditions (the same). Not read: `StepResults.tsx`, `step-store.ts`, `write-store.ts`, `mutation.ts`, `editor.ts`, `part-store.ts`, the issuance write handlers of the server, and the P02 to P05 models and four P05 files named earlier.
+
+## Second static check, P screens (2026-11-24)
+
+Two independent reviewers (independent-reviewer role, AI, separate from root and from each other) read the remaining unopened files with the same five checks and the server side read before a default was reported. Nothing was executed.
+
+- P01 to P04 models and formatters (`installation`, `integrations`, `recovery`, `retention`: `live-model.ts` and `live-format.tsx` of each, eight files): no confirmed finding. Every list of states, kinds and blockers the reviewer compared matches the server's constants exactly today. Two suspected findings, both about lists capped at 50 rows (P01 preview basis and propose offer; P02 deliveries per subscription).
+- P05 (`release-evidence/LiveMatrix.tsx`, `LiveRequirements.tsx`, `LiveDecisions.tsx`, `LiveRetireForm.tsx`, `live-model.ts`, `live-format.tsx`): four confirmed findings and one suspected, all of them arising only when a server list holds more than the 50 rows it sends. No unsafe default was found: an active path, a proven customer state, a ready gate and a proof count above zero render as "unexpected value" in this build. Success texts depend on the returned state, and offered actions follow the server's permission and blocker values.
+
+Corrected in this change, because it bears on an approval: when a retirement is being approved and its requirement is not among the loaded rows, the impact no longer omits the blocking warning as if the requirement were known not to block. It says that the requirement is not listed in this read, so it is unknown whether retiring it removes a blocking check from the gate. Corrective review by the reviewer who found it (AI, by reading): PASS, no blocking finding, wording consistent with the neighbouring texts in three languages.
+
+Moved to HYB-352, not changed here: the capped-list cases (P05 build comparison, P05 test cases of a path detail, P05 decision counts, the P05 pending-retirement link, the P01 preview basis and propose offer, the P02 deliveries). Each needs more rows than the sample installation holds, and the remedy may change public reads.
+
+Malformed-response-only observations with an unsafe direction, not changed: on the four P screens a proposal in a state other than "pending" is grouped as closed; an unrecognised P01 observation state omits the sentence that it blocks approvals; unreadable P03 reconciliation rows read as "none"; a P04 proposal of an unrecognised kind appears in no view.
+
+Checks for the correction: `tsc` clean; console tests 1350, pass 1347, fail 0, skipped 3. No new test and no rendered check.
+
+With this, every file the first review reported as unopened has been read, except the shared O03 step store files (`StepResults.tsx`, `step-store.ts`, `write-store.ts`, `mutation.ts`, `editor.ts`, `part-store.ts`), the copy and code tables beyond search, style sheets and tests.
+
+## Second static check, shared O03 write machinery (2026-11-24)
+
+An independent reviewer (independent-reviewer role, AI) read the six files that carry every write of the O03 documents view: `setup/StepResults.tsx`, `step-store.ts`, `write-store.ts`, `mutation.ts`, `editor.ts`, `part-store.ts`, with the command layer and the issuance handlers of the server. Nothing was executed. Root then read the first finding in `write-store.ts` and `modules/commands/execute.go` and found it as reported.
+
+Sound: "recorded" is set only from a validated completed response; a retry resends the identical request and a recover uses a new identifier with a freshly read revision and unchanged inputs; handler refusals are never stored, and a stored failure is shown as unknown with its code, never as recorded; a timeout becomes unknown; a new attempt cannot replace an entry; a stale-revision refusal on a first send is stated.
+
+Findings, none corrected here. They concern how an unknown outcome is settled for issuance setup writes, which needs a design and its independent review before a change, so they are tracked in HYB-353:
+
+1. Confirmed: a settings proposal or confirmation whose request never reached the server can block the session. Its retry stays "unknown" whatever the answer, every new write is refused while one is unknown, "recover" finds nothing to recover, and after any other change in the installation the exact retry is answered `revision_conflict` every time.
+2. Confirmed: in the step store a recovery attempt that itself ends unknown leaves only a retry that stays unknown, while the original's recover button always fails.
+3. Confirmed in the console, low: the settings draft is not cleared after a recorded write, so the unload guard stays armed and a second proposal reuses the recorded identifier.
+4. Path confirmed, wording suspected: a step-up that needs a second factor is refused as a failed prerequisite and explained with the domain's prerequisite text, with no identity action offered.
+5. Suspected: after signing in again without a page reload, an unknown entry may be invisible while the unload prompt still fires.
+6. Confirmed in the console, low: attempt entries are never pruned; at 100 a write is refused with a general sentence only.
+
+Reaching the first two needs a lost request followed by another change in the installation, or two failures in a row; neither was observed in the real-server runs of this ticket, whose staged fault is a response lost after the effect, which the recover path settles.
+
+With this section every file the first review reported as unopened has been read. Not read by any review: the copy and code tables beyond search, style sheets, most tests, and on O03 `attestation.ts`, `action.ts`, `client.ts` and `Statements.tsx`.
+
+## M01 Revocation jobs, reads that arrive out of order (2026-11-24)
+
+Left open by the second static check and now corrected: the detail of a job, its items and "more" rows were applied when their read returned, whichever job was open by then, so a slow read of job A could put A's detail under row B. Each open now has a number, and a read applies its result or its failure only while it is still the latest open; closing the pane also ends the turn; a "more" read appends to the rows it started from and is discarded when another job was opened meanwhile; two "more" reads of the same open do not run at once.
+
+Checks: `tsc` clean; console tests 1359, pass 1356, fail 0, skipped 3. No new test and no rendered check. Corrective review by the reviewer who raised it (AI, by reading): PASS, no blocking finding; its one suggestion (a "more" click right after switching jobs did nothing until the earlier read returned) was adopted afterwards and not reviewed again.
+
+## M01 bulk selection, a person whose role is unknown (2026-11-24)
+
+Left open when the unknown role was introduced: after the server refuses a bulk preparation because the selection holds administrators, the screen lists the administrators to deselect, and that list was built from the administrator role only. A person whose role the console does not recognise may be the administrator the server refused for, and was not listed. Such a person is now listed too, labelled "Unknown role" instead of the fixed "Administrator" label, and can be removed from the selection there. The identity module sends only known roles today, so this changes nothing for a well-formed response.
+
+Checks: `tsc` clean; console tests pass with one new test. No rendered check, no new copy and no review; the change is the one the copy and state reviewer suggested for this spot.
+
+## M05 finding D4, the read-failure half (2026-11-24)
+
+The earlier section on D4 said that a failed read and a missing operation could not be told apart without a change to the service client. That was wrong. The server answers a missing or invisible operation with the code `unsupported_command` (`apps/api/server/sessionoperations.go:69-71`), and the console's error keeps the code it received. The same distinction is already used elsewhere in the service client.
+
+Corrected: a referenced operation that is missing, or that is not the one asked for, keeps "The retained operation is unavailable. Refresh the session list to check the current recorded state." Any other failed read (a network failure, the service not answering, a rate limit, a malformed answer) now says "This operation could not be loaded. No outcome is inferred. Check again." With the unconfirmed case corrected earlier, D4 is done.
+
+Checks: `tsc` clean; console tests 1361, pass 1358, fail 0, skipped 3, with one new test of the distinction. Rendered: the three M05 checks (`my-security-scope-qa`, `my-security-history-qa`, `my-security-selection-qa`) run from the change, pass; none stages a failed read of a referenced operation. Copy review, ui-designer role (AI, by reading): PASS as a candidate; its optional wording ("loaded" as elsewhere on this screen) was adopted afterwards.
+
+With this, no finding of the first or second static check is left open on this ticket. What remains is the rendered part for M01, M02, M04, O01, O02 and the P screens, and the owner's screen review.
+
+## Rendered run on M04 against a real service (2026-11-24)
+
+`apps/console/tools/service-accounts-qa.mjs` was run against a console built from main 0dc73af and the API binary built from the same commit, started on the loopback address with the sample seed and a fresh data directory, as the console README describes. The service was started for this run only and stopped afterwards; it holds synthetic sample data, no real account and no customer data. Not an owner acceptance.
+
+Result: exit code 0; 118 checks passed, none failed, no page error, across all twenty scenarios. They include the issue and one-time pickup of a credential secret, its retry paths, leaving the page and signing out while a secret is held.
+
+What this shows: the change of this ticket to the M04 secret pickup (a pickup reads as gone only when the service refuses it; other failures keep the retry) did not break what the script asserts on a real service. What it does not show: the script does not stage a failure of the pickup other than the ones it already had, so the changed branch itself is covered by its unit test only.
+
+Rendered runs recorded for this ticket now cover O03, M03, M04 and M05. M01, M02, O01, O02 and the P screens have none.
+
+## Server-backed browser suite on main after all fixes, and what it shows of M01 (2026-11-24)
+
+The whole suite (`go test ./server/ -run 'Browser|GrantScreens'`) was run on main b229ae8 against the console source served by the dev server, with an isolated in-process server per test and synthetic data: 17 passed, 1 skipped (`TestFinancialDraftLiveBrowserJourney`, which needs its own runner settings), 0 failed. Not an owner acceptance.
+
+Three of these tests open M01 on a real server: `TestDocumentEvidenceImpactRenderedBrowser`, `TestResultEvidenceImpactRenderedBrowser` and `TestResultAuthorityImpactRenderedBrowser` go to the Revocation jobs view, open a prepared bulk revocation by its row and read its impact rows, in three languages. That path runs through the code this ticket changed in `users/RevocationJobs.tsx` (opening a job, the detail pane, the turn guard for reads that arrive out of order) and through the bulk preview, so those changes did not break opening and reading a prepared job on a real service.
+
+Not shown by them: the states this ticket added on M01 (a refused or failed discard, a list that was never prepared, an unknown account or membership state or role, the failed read of excluded people); the users list and its detail; M02, O01, O02 and the P screens, which still have no rendered run in this record.
+
+## M02, a render test for the impact that was not computed (2026-11-24)
+
+The correction of finding B1 changed what M02 shows when the service did not compute the impact of a trust change, but had no test of the rendered detail. One is added to `authentication/trust-render.test.tsx`, for en, ko and ar: with no computed impact the impact section says that it was not computed, keeps the sentence that everyone is signed out, and shows no count; with a computed impact of zero it shows zero and not that sentence; while an activation is not confirmed there is no impact section. It renders the component to markup and is not a browser run.
+
+Console tests: 1362, pass 1359, fail 0, skipped 3. M02 still has no browser run in this record.
+
+## M01, a render test for unknown states and roles (2026-11-24)
+
+The A6 corrections had tests of the model but none of the rendered table. One is added to `users/table-render.test.tsx`: for a person whose account state, membership state and role the console does not recognise, the Users and Membership tables in en, ko and ar show the labels for an unknown state and an unknown role, and no cell reads as active, member or administrator. It renders the table to markup and is not a browser run.
+
+Console tests: 1363, pass 1360, fail 0, skipped 3.
+
+## M01 Revocation jobs, a render test for a list that was never prepared (2026-11-24)
+
+Added to `users/jobs-render.test.tsx`, for en, ko and ar: a discarded or expired list that was never prepared shows "Not counted: never prepared" and no count of people; the same list after a preparation shows its count; a draft keeps "Not counted until prepared". It renders the table to markup and is not a browser run.
+
+Console tests: 1364, pass 1361, fail 0, skipped 3.
+
+## Rendered run on the P screens against a real service (2026-11-24)
+
+`apps/console/tools/command-diagnostics-qa.mjs` was run against main 1b09c91 (console dev server and the API binary of the same commit, loopback, sample seed, new data directory, synthetic data only, stopped afterwards). The first run stopped after 257 passing checks at a case of the script that was out of date since HYB-304; that is HYB-355 and is not a product defect ([record](../HYB-355/script-session-case.md)). With the corrected script: exit code 0, 409 checks passed, none failed, no page error.
+
+What the run shows for P01 to P05, in English, Korean and Arabic at 1440, 1024 and 390: each screen loads on a real service; a failed, denied or ended read is stated with its actual references and without describing a sign-in failure, with page and token containment and bidirectional rules holding; on P02 and P04, refused and rate-limited commands keep their own references per open form and per row.
+
+What it does not show: the states this ticket and HYB-352 added on the P screens (the denied message without a reload on P01 and P05, the unknown retirement impact on P05, the cut delivery list on P02, the preview basis and the existing-proposal text on P01 and P02). The script does not stage them; they are covered by unit tests only. Not an owner acceptance.
+
+Rendered runs recorded for this ticket now cover O03, M03, M04, M05 and the P screens. M01 beyond what the server-backed suite shows, M02, O01 and O02 have none; no rendered script exists for them.
+
+## Rendered run on M02 against a real service (2026-11-24)
+
+M02 had no rendered script. `apps/console/tools/authentication-qa.mjs` is new and was run against main ca0be36 (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards). Result: exit code 0; 55 checks passed, none failed, no page error. One run; the script itself was not reviewed.
+
+What it does: signs in as the sample administrator; because the sample has no trust change, proposes one from the screen (sign-in valid for 600 minutes, with a reason) and reads it back as a draft; loads the Policies view in English, Korean and Arabic at 1440 and 390 and checks language, direction, the absence of placeholder text and that the page is not wider than the viewport; opens the five other views in English.
+
+For the correction of finding B1 it changes the answer of the policy read in the browser, for that one change only: with the impact removed, the detail in all three languages and both widths shows the title, the sentence that everyone is signed out and "Not computed. This is not zero.", and no member count; with a computed impact of zero it shows the member count 0 and neither sentence. Unchanged, the service computed the impact of the draft (3 members, 1 open session). So the state "not computed" was shown by altering the answer, not produced by the service; when the service itself leaves the impact out was not established by this run.
+
+One screenshot (Korean, 390, impact not computed) was looked at by the writer: layout and text as intended. Not an owner acceptance.
+
+Not covered: validating, approving, activating, rejecting or cancelling a change (they need further administrators), the hold and unknown-activation states, a failed read, and keyboard order.
+
+Rendered runs recorded for this ticket now cover O03, M02, M03, M04, M05 and the P screens. O01 and O02 have none and no script; M01 has only what the server-backed suite shows.
+
+## Rendered run on O01 against a real service (2026-11-24)
+
+O01 had no rendered script. `apps/console/tools/organizations-qa.mjs` is new and was run against main 2882e69 (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards). Result: exit code 0; 92 checks passed, none failed, no page error. One complete run, after a first run that stopped on the script's own readiness rule (it required more text than the Korean History view has at 390); the script itself was not reviewed.
+
+What it does: signs in as the sample administrator; loads the Tree, Accounts, Groups and History views in English, Korean and Arabic at 1440 and 390 and checks that the screen is live, its language and direction, the absence of placeholder text and of a load failure, and that the page is not wider than the viewport. The sample lists 6 accounts.
+
+For finding E1 it answers the read of a member's facts with 503 in the browser, opens the first account and checks, in the three languages and both widths, that the parent row says "Could not be loaded." as an alert with "Try again"; then it lets the read through, presses "Try again" and checks that the failure is replaced.
+
+One screenshot (English, 1440, failed read) was looked at by the writer: text and place as intended. In that full-page screenshot the navigation column starts lower than the content; whether that is how a full-page capture shows a column that stays in view while scrolling, or a layout fault, was not examined. Not an owner acceptance.
+
+Not covered: findings E2, E3 and E5 (the draft panel after a failed re-read, the existing-group search, creating a draft without an identifier), any command of the screen, paging, and keyboard order.
+
+Rendered runs recorded for this ticket now cover O01, O03, M02, M03, M04, M05 and the P screens. O02 has none and no script; M01 has only what the server-backed suite shows.
+
+## Rendered run on O02 against a real service (2026-11-24)
+
+O02 had no rendered script. `apps/console/tools/organization-changes-qa.mjs` is new and was run against main b26d389 (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards). Result: exit code 0; 94 checks passed, none failed, no page error. One complete run of the final script, after a first run with 85 passing checks that lacked the arrival checks with a plan; the script itself was not reviewed.
+
+What it does: signs in as the sample administrator; loads the four steps of the screen in English, Korean and Arabic at 1440 and 390 and checks that the screen is live, its language and direction, the absence of placeholder text and of a load failure, and that the page is not wider than the viewport.
+
+For finding F2, in the three languages: an address that names a plan that is not loaded together with an arrival (`done=sealed`, `rejected`, `discarded`, `activated:99`) announces nothing and the arrival is removed from the address. The sample has no plan, so for the other cases one plan is added to the answer of the plans read in the browser: as an activated plan with its own revision 7 and `done=activated:99` in the address, the announcement names revision 7 and not 99; an arrival that does not match the plan's state announces nothing; a matching arrival is announced. These three cases therefore show the console's rule on an altered answer, not a plan the service holds.
+
+One screenshot (English, 1440, arrival on a sealed plan) was looked at by the writer: the plan opens with the focus on its title. The added plan carries no impact, which the screen shows as "Activation is held: the impact of this change could not be read"; that is the screen's reading of an incomplete answer, not a finding. Not an owner acceptance.
+
+The note of the O01 run about the navigation column is settled: the column is styled to stay in view while scrolling (`service-shell.css:44-49`), and the full-page capture was taken after the page had scrolled. Not a layout fault.
+
+Not covered: creating, sealing, rejecting, activating or discarding a plan through the service, the draft hand-over from O01, and keyboard order.
+
+Rendered runs recorded for this ticket now cover O01, O02, O03, M02, M03, M04, M05 and the P screens. M01 has only what the server-backed suite shows.
+
+## Rendered run on M01 against a real service (2026-11-24)
+
+`apps/console/tools/users-qa.mjs` is new and was run against main ba9ac78 (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards). Result: exit code 0; 122 checks passed, none failed, no page error. One run; the script itself was not reviewed.
+
+What it does: signs in as the sample administrator; loads the Users, Invitations, Membership and Revocation views in English, Korean and Arabic at 1440 and 390 and checks that the screen is live, its language and direction, the absence of placeholder text and of a load failure, and that the page is not wider than the viewport. The sample has 4 people.
+
+For finding A6 and the unknown states it changes the answer of the users read in the browser for the two other administrators: one gets a role and the other a membership state that the screen does not know. In the three languages and both widths the Users and Membership lists show "Unknown role" and "Unknown state" for them, and the detail of each says why no membership action is offered. For the unknown role the detail offers the two account actions (suspend, mark as departed) and no membership or sign-in link action, as its sentence says. For the unknown membership state it offers the two account actions and the sign-in link; its sentence, "no action is offered for it here", stands under the membership heading and refers to the membership. Whether a sign-in link should be offered to a person whose membership state is unknown was not decided here; it is recorded as an observation.
+
+One screenshot (English, 1440, detail of the unknown role) was looked at by the writer: labels and sentence as intended. Not an owner acceptance.
+
+Not covered: the other states this ticket added on M01 (a refused or failed discard in the matching step, the failed read of excluded people, the Revocation jobs list that was never prepared), every command, the bulk selection, and keyboard order. Those are covered by unit and render tests only.
+
+Rendered runs recorded for this ticket now cover every screen it touched: M01, M02, M03, M04, M05, O01, O02, O03 and P01 to P05, each to the extent stated in its section. What remains open on this ticket is the owner's screen review.
+
+## Review of the four new rendered scripts, and their rerun (2026-11-24)
+
+The scripts for M01, M02, O01 and O02 were reviewed after they were merged (independent-reviewer role, AI, by reading, nothing run): each "sound with weak checks", none unsound. The copy constants match the product copy in the three languages, the load failure class is the one the screens use, and the row of a person on M01 is that person's own row at both widths.
+
+Weak checks found and corrected:
+
+- Readiness, O01, O02 and M01: the scripts waited for the absence of a busy marker that these screens do not set while loading, so only the idle network kept the checks off the loading state. Each script now waits for a mark that exists only after the read: the view title on O01, the announcement region on O02, a listed person, the jobs title or the list on M01. O01 also checks that the view title has text.
+- O02: "announces nothing" could pass when the plans read had failed, because the announcement region is then absent. The check now fails unless the region is present and no load failure is shown.
+- O01: "repeating the read replaces the failure" could pass while the repeated read was still loading. It now waits for the answered read and for the parent value to appear. "Try again" is now the button next to the failure text, not any button with that name.
+- M02: the zero-impact check could match the session count. The answer is now staged with 5 sessions, and the check reads the value under "Members". That the proposed change is read back as a draft is now a check; before, it was only printed.
+- M01: which actions are offered for an unknown role and an unknown membership state is now checked in each language and width; before, it was only printed. The check for the unknown membership state records what was observed (the two account actions and the sign-in link), which the owner has not decided on.
+
+Rerun against main 277fedd (console dev server and the API binary of the same commit, loopback, sample seed, a new data directory per script, synthetic data only, stopped afterwards), one run each, all with exit code 0 and no page error: M02 56 checks, O01 116, O02 94, M01 134, none failed. These numbers replace the ones in the four sections above.
+
+Left as the review noted and not changed: the M02 script does not check for a load failure, and its record does not claim it. Not read by the reviewer: whether a failed facts read on O01 also raises the page-level failure, the M02 list and detail components, where the live markers are set, and the styles that hide columns at 390. The corrections were not reviewed again.
+
+## Rendered check of the M01 Revocation jobs list (2026-11-24)
+
+`apps/console/tools/users-qa.mjs` now also covers the people column of the Revocation jobs list. Run against main e59b901 (console dev server and the API binary of the same commit, loopback, sample seed, a data directory the service created, synthetic data only, stopped afterwards): exit code 0, 164 checks passed, none failed, no page error. One run; the added part was not reviewed.
+
+The sample holds no bulk revocation, so four lists are added to the answer of the jobs read in the browser: a draft, a discarded and an expired list that were never prepared, and a discarded list that was prepared with 3 people. In English, Korean and Arabic at 1440 and 390 the draft shows "Not counted until prepared", the two that were never prepared show "Not counted: never prepared" and no count of people, and the prepared one shows "3 people"; the page is not wider than the viewport. The rows come from an altered answer, not from lists the service holds; the three server-backed browser tests remain the evidence for real lists.
+
+One screenshot (English, 1440) was looked at by the writer: the four rows read as described. The "When" column shows a dash for all four, including the prepared and discarded list; whether a closed list should show when it was prepared or closed was not examined and is left as an observation. Not an owner acceptance.
+
+Still covered by unit and render tests only on M01: a refused or failed discard in the matching step, the failed read of excluded people, every command, and the bulk selection.
+
+## The When column of a closed Revocation jobs list: settled by reading (2026-11-24)
+
+The observation of the rendered check is not a defect. The column shows the time until which a prepared list is valid, the time a list was executed, or the time a filter selection was fixed for a draft (`users/RevocationJobs.tsx`, `when` in `JobTable`). The read of a list carries no time at which it was discarded (`service/identity-bulk.ts`, `jobOf`: `prepared_at`, `expires_at`, `executed_at`, `recorded_at`, `fixed_at`), so for a discarded list there is nothing truthful to show and the dash is correct. For an expired list the read does carry `expires_at`; showing "expired at" there would be an addition to the design, not a correction, and is left to the owner's screen review. Read, not run; no review.
+

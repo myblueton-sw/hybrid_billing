@@ -558,3 +558,21 @@
     grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   }
 }
+.p03-live .p03-lock-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-block-start: 16px;
+}
+.p03-live .p03-lock-more p {
+  margin: 0;
+  max-inline-size: 68ch;
+}
+.p03-live .p03-lock-more .p03-lock-more-button {
+  inline-size: auto;
+  min-block-size: 44px;
+}
+.p03-live .p03-rows-foot {
+  margin-block: 16px 28px;
+}

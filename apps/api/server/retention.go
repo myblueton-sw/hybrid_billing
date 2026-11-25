@@ -31,15 +31,16 @@ const (
 	standingNoPolicy     = "no_policy"
 	standingNotDue       = "not_due"
 	standingHeld         = "held"
+	standingGuarding     = "guarding"
 	standingReferenced   = "referenced"
 	standingEligible     = "eligible"
 	maxTargetBytes       = 128
 )
 
 var (
-	retentionStandings = []string{standingEligible, standingHeld, standingReferenced, standingNotDue, standingNoPolicy, standingInRun, standingDeleted}
+	retentionStandings = []string{standingEligible, standingHeld, standingGuarding, standingReferenced, standingNotDue, standingNoPolicy, standingInRun, standingDeleted}
 	retentionOutcomes  = []string{retention.OutcomePending, retention.OutcomeDeleting, retention.OutcomeDeleted, retention.OutcomeFailed, retention.OutcomeHeld,
-		retention.OutcomeReferenced, retention.OutcomeNotDue, retention.OutcomeStopped}
+		retention.OutcomeGuarding, retention.OutcomeReferenced, retention.OutcomeNotDue, retention.OutcomeStopped}
 	retentionHoldCounts = []string{retention.HoldNotPreserved, retention.HoldOutcomePending, retention.HoldPartlyDeleted}
 )
 
@@ -98,6 +99,7 @@ type retentionClassGroup struct {
 	Counts     map[string]int         `json:"counts"`
 	Total      int                    `json:"total"`
 	More       bool                   `json:"more"`
+	Next       string                 `json:"next"`
 	Artifacts  []retentionArtifactRow `json:"artifacts"`
 	Usage      string                 `json:"usage"`
 	Growth     string                 `json:"growth"`
@@ -117,6 +119,7 @@ type retentionOutcomeRow struct {
 }
 
 type retentionHoldRow struct {
+	Number            int                   `json:"number"`
 	ID                string                `json:"id"`
 	Target            string                `json:"target"`
 	Owner             *retentionPerson      `json:"owner"`
@@ -130,6 +133,7 @@ type retentionHoldRow struct {
 	CountsScope       string                `json:"counts_scope"`
 	Outcomes          []retentionOutcomeRow `json:"outcomes"`
 	OutcomesMore      bool                  `json:"outcomes_more"`
+	OutcomesNext      string                `json:"outcomes_next"`
 	Release           *uint64               `json:"release"`
 	CanProposeRelease bool                  `json:"can_propose_release"`
 	ReleaseBlocked    string                `json:"release_blocked"`
@@ -144,6 +148,7 @@ type retentionReferences struct {
 	Population string                  `json:"population"`
 	Total      int                     `json:"total"`
 	More       bool                    `json:"more"`
+	Next       string                  `json:"next"`
 	Rows       []retentionReferenceRow `json:"rows"`
 }
 
@@ -151,6 +156,7 @@ type retentionHoldsSection struct {
 	Total        int                 `json:"total"`
 	More         bool                `json:"more"`
 	Rows         []retentionHoldRow  `json:"rows"`
+	Released     logFacts            `json:"released"`
 	TenantTarget string              `json:"tenant_target"`
 	References   retentionReferences `json:"references"`
 }
@@ -172,10 +178,12 @@ type retentionRunArtifactRow struct {
 type retentionRunArtifacts struct {
 	Total int                       `json:"total"`
 	More  bool                      `json:"more"`
+	Next  string                    `json:"next"`
 	Rows  []retentionRunArtifactRow `json:"rows"`
 }
 
 type retentionRunRow struct {
+	Number       int                   `json:"number"`
 	Run          retentionRunRef       `json:"run"`
 	Class        string                `json:"class"`
 	Revision     uint64                `json:"revision"`
@@ -201,6 +209,7 @@ type retentionDeletionSection struct {
 	Total        int               `json:"total"`
 	More         bool              `json:"more"`
 	Rows         []retentionRunRow `json:"rows"`
+	Finished     logFacts          `json:"finished"`
 	Worker       string            `json:"worker"`
 	Retry        string            `json:"retry"`
 	BackupExpiry string            `json:"backup_expiry"`
@@ -225,6 +234,7 @@ type retentionTombstones struct {
 	Window int                     `json:"window"`
 	Total  int                     `json:"total"`
 	More   bool                    `json:"more"`
+	Next   string                  `json:"next"`
 	Rows   []retentionTombstoneRow `json:"rows"`
 }
 
@@ -297,9 +307,11 @@ type retentionProposalRow struct {
 }
 
 type retentionProposals struct {
-	Total int                    `json:"total"`
-	More  bool                   `json:"more"`
-	Rows  []retentionProposalRow `json:"rows"`
+	Total        int                    `json:"total"`
+	More         bool                   `json:"more"`
+	Rows         []retentionProposalRow `json:"rows"`
+	History      keptFacts              `json:"history"`
+	ClosedByKind map[string]int         `json:"closed_by_kind"`
 }
 
 type retentionPage struct {
@@ -320,6 +332,7 @@ type retentionFacts struct {
 	reader    string
 	workspace string
 	approvers []string
+	rostered  bool
 	policies  map[string]*retention.PolicyView
 	artifacts map[string]retention.Artifact
 	standings map[string]retention.Standing
@@ -393,6 +406,8 @@ func standingOf(v retention.Standing) string {
 		return standingDeleted
 	case v.Run != "":
 		return standingInRun
+	case v.Guarding:
+		return standingGuarding
 	case v.DueAt.IsZero():
 		return standingNoPolicy
 	case !v.Due:
@@ -473,7 +488,9 @@ func (f *retentionFacts) expiry(ids []string) ([]retentionClassGroup, error) {
 				g.Artifacts = append(g.Artifacts, row)
 			}
 		}
-		g.More = g.Total > len(g.Artifacts)
+		if g.More = g.Total > len(g.Artifacts); g.More {
+			g.Next = g.Artifacts[len(g.Artifacts)-1].ID
+		}
 		out = append(out, g)
 	}
 	return out, nil
@@ -498,9 +515,9 @@ func (f *retentionFacts) releaseBlocked(id string, v retention.HoldView) string 
 	return f.s.retentionCheck(retention.Change{Kind: retention.ChangeRelease, Release: retention.Release{Hold: id, Reason: retentionCheckText}}, f.reader, "")
 }
 
-func (f *retentionFacts) visibleOutcomes(id string) ([]retention.HoldOutcome, error) {
+func (f *retentionFacts) visibleOutcomes(id, after string, shown int) ([]retention.HoldOutcome, error) {
 	s := f.s
-	out, after := []retention.HoldOutcome{}, ""
+	out := []retention.HoldOutcome{}
 	for {
 		var page []retention.HoldOutcome
 		if err := s.retentionCall("hold_outcomes", func() (err error) { page, err = s.retention.HoldOutcomes(id, after, retentionOutcomePage); return }); err != nil {
@@ -511,7 +528,7 @@ func (f *retentionFacts) visibleOutcomes(id string) ([]retention.HoldOutcome, er
 				out = append(out, o)
 			}
 		}
-		if len(out) > retentionShown || len(page) < retentionOutcomePage {
+		if len(out) > shown || len(page) < retentionOutcomePage {
 			return out, nil
 		}
 		after = page[len(page)-1].Artifact
@@ -520,15 +537,18 @@ func (f *retentionFacts) visibleOutcomes(id string) ([]retention.HoldOutcome, er
 
 func (f *retentionFacts) holdRow(h *retentionHold) (retentionHoldRow, error) {
 	s := f.s
+	if !f.rostered {
+		return retentionHoldRow{}, errRosterNotRead
+	}
 	v, err := s.retentionHold(h.id)
 	if err != nil {
 		return retentionHoldRow{}, err
 	}
-	outcomes, err := f.visibleOutcomes(h.id)
+	outcomes, err := f.visibleOutcomes(h.id, "", retentionShown)
 	if err != nil {
 		return retentionHoldRow{}, err
 	}
-	row := retentionHoldRow{ID: h.id, Target: retentionHoldTarget + h.id, Owner: s.personOf(v.Hold.Owner), Reason: v.Hold.Reason, Placer: s.personOf(v.Placer),
+	row := retentionHoldRow{Number: h.number, ID: h.id, Target: retentionHoldTarget + h.id, Owner: s.personOf(v.Hold.Owner), Reason: v.Hold.Reason, Placer: s.personOf(v.Placer),
 		PlacedAt: stamp(h.created), Rationale: h.rationale, Released: v.Released, Scope: retentionHoldScope{Artifacts: []string{}, Classes: append([]string{}, v.Hold.Classes...)},
 		Counts: zeroCounts(retentionHoldCounts), Outcomes: []retentionOutcomeRow{}, OutcomesMore: len(outcomes) > retentionShown}
 	for _, id := range v.Hold.Artifacts {
@@ -553,6 +573,9 @@ func (f *retentionFacts) holdRow(h *retentionHold) (retentionHoldRow, error) {
 	for _, o := range outcomes[:min(len(outcomes), retentionShown)] {
 		row.Outcomes = append(row.Outcomes, retentionOutcomeRow{Artifact: o.Artifact, Outcome: o.Outcome, Stores: o.Stores})
 	}
+	if row.OutcomesMore {
+		row.OutcomesNext = row.Outcomes[len(row.Outcomes)-1].Artifact
+	}
 	if e := s.ret.pendingRelease(h.id); e != nil {
 		number := e.view.Number
 		row.Release = &number
@@ -565,22 +588,17 @@ func (f *retentionFacts) holdRow(h *retentionHold) (retentionHoldRow, error) {
 func (f *retentionFacts) holds(ids []string) (retentionHoldsSection, error) {
 	section := retentionHoldsSection{Rows: []retentionHoldRow{}, TenantTarget: retentionTenantTarget + f.workspace,
 		References: retentionReferences{Population: retentionPopulation, Rows: []retentionReferenceRow{}}}
-	for index := len(f.s.ret.holds) - 1; index >= 0; index-- {
-		h := f.s.ret.holds[index]
-		if h.workspace != f.workspace {
-			continue
-		}
-		section.Total++
-		if len(section.Rows) >= retentionShown {
-			continue
-		}
+	mine := f.workspaceHolds()
+	listed, released, next := listKept(mine, holdLive, holdNumber, retentionShown)
+	for _, h := range listed {
 		row, err := f.holdRow(h)
 		if err != nil {
 			return retentionHoldsSection{}, err
 		}
 		section.Rows = append(section.Rows, row)
 	}
-	section.More = section.Total > len(section.Rows)
+	section.Total, section.More = len(mine), len(mine) > len(section.Rows)
+	section.Released = logFacts{Total: released, Next: next}
 	refs := &section.References
 	for _, id := range ids {
 		if !f.standings[id].Referenced {
@@ -591,13 +609,15 @@ func (f *retentionFacts) holds(ids []string) (retentionHoldsSection, error) {
 			refs.Rows = append(refs.Rows, retentionReferenceRow{ID: id, Class: f.s.ret.artifact(id).class})
 		}
 	}
-	refs.More = refs.Total > len(refs.Rows)
+	if refs.More = refs.Total > len(refs.Rows); refs.More {
+		refs.Next = refs.Rows[len(refs.Rows)-1].ID
+	}
 	return section, nil
 }
 
 func excludedOutcome(outcome string) bool {
 	switch outcome {
-	case retention.OutcomeHeld, retention.OutcomeReferenced, retention.OutcomeNotDue, retention.OutcomeStopped:
+	case retention.OutcomeHeld, retention.OutcomeGuarding, retention.OutcomeReferenced, retention.OutcomeNotDue, retention.OutcomeStopped:
 		return true
 	}
 	return false
@@ -642,17 +662,14 @@ func stopBlocked(state string) string {
 	return runFinished
 }
 
-func (f *retentionFacts) runRow(r *retentionRun) (retentionRunRow, error) {
+func (f *retentionFacts) runRow(r workspaceRun) (retentionRunRow, error) {
 	s := f.s
-	v, err := s.retentionRunView(r.id)
-	if err != nil {
-		return retentionRunRow{}, err
-	}
+	v := r.view
 	stores, err := f.storeRows(v)
 	if err != nil {
 		return retentionRunRow{}, err
 	}
-	row := retentionRunRow{Run: retentionRunRef{Target: runTarget(r.id), Label: r.id}, Class: v.Plan.Class, Revision: v.Revision, State: v.State, Decision: notConnected,
+	row := retentionRunRow{Number: r.number, Run: retentionRunRef{Target: runTarget(r.id), Label: r.id}, Class: v.Plan.Class, Revision: v.Revision, State: v.State, Decision: notConnected,
 		NextChunk: v.Next, Chunks: v.Chunks, ChunkSize: v.Plan.Chunk, LeaseSeconds: int64(v.Plan.Lease / time.Second), Reason: v.Plan.Reason, Damaged: v.Damaged,
 		Proposer: s.personOf(v.Proposer), Approver: s.personOf(v.Approver), Stopper: s.personOf(v.Stopper), Counts: zeroCounts(retentionOutcomes), Stores: stores,
 		Artifacts: retentionRunArtifacts{Rows: []retentionRunArtifactRow{}}, StopBlocked: stopBlocked(v.State)}
@@ -670,60 +687,47 @@ func (f *retentionFacts) runRow(r *retentionRun) (retentionRunRow, error) {
 			list.Rows = append(list.Rows, retentionRunArtifactRow{ID: id, Outcome: v.Outcomes[id]})
 		}
 	}
-	list.More = list.Total > len(list.Rows)
+	if list.More = list.Total > len(list.Rows); list.More {
+		list.Next = strconv.Itoa(len(list.Rows))
+	}
 	return row, nil
 }
 
 func (f *retentionFacts) deletion() (retentionDeletionSection, error) {
 	section := retentionDeletionSection{Rows: []retentionRunRow{}, Worker: notConnected, Retry: notConnected, BackupExpiry: notConnected, ProposePlan: notConnected}
-	for index := len(f.s.ret.runs) - 1; index >= 0; index-- {
-		r := f.s.ret.runs[index]
-		if r.workspace != f.workspace {
-			continue
-		}
-		section.Total++
-		if len(section.Rows) >= retentionShown {
-			continue
-		}
+	mine, err := f.workspaceRuns()
+	if err != nil {
+		return retentionDeletionSection{}, err
+	}
+	listed, finished, next := listKept(mine, runRunning, runNumber, retentionShown)
+	for _, r := range listed {
 		row, err := f.runRow(r)
 		if err != nil {
 			return retentionDeletionSection{}, err
 		}
 		section.Rows = append(section.Rows, row)
 	}
-	section.More = section.Total > len(section.Rows)
+	section.Total, section.More = len(mine), len(mine) > len(section.Rows)
+	section.Finished = logFacts{Total: finished, Next: next}
 	return section, nil
 }
 
 func (f *retentionFacts) decisions() (retentionDecisionsSection, error) {
-	s := f.s
 	section := retentionDecisionsSection{Tombstones: retentionTombstones{Window: retentionWindow, Rows: []retentionTombstoneRow{}}, Ledger: retentionLedger,
 		Epoch: notConnected, DurableCommit: notConnected, RestoreCheck: notConnected}
-	if err := s.retentionCall("watermark", func() error { section.Watermark = s.retention.Watermark(); return nil }); err != nil {
+	watermark, visible, err := f.windowTombstones()
+	if err != nil {
 		return retentionDecisionsSection{}, err
 	}
-	after := uint64(0)
-	if section.Watermark > retentionWindow {
-		after = section.Watermark - retentionWindow
-	}
-	var list []retention.Tombstone
-	if err := s.retentionCall("tombstones", func() (err error) { list, err = s.retention.Tombstones(after, retentionWindow); return }); err != nil {
-		return retentionDecisionsSection{}, err
-	}
+	section.Watermark = watermark
 	t := &section.Tombstones
-	for index := len(list) - 1; index >= 0; index-- {
-		x := list[index]
-		if !s.ret.visibleArtifact(x.Artifact, f.workspace) {
-			continue
-		}
-		t.Total++
-		if len(t.Rows) < retentionShown {
-			row := retentionTombstoneRow{Sequence: x.Sequence, Artifact: x.Artifact, Class: x.Class, At: stamp(x.At), Decision: notConnected}
-			row.Run, row.OtherScope = f.runRef(x.Run)
-			t.Rows = append(t.Rows, row)
-		}
+	t.Total = len(visible)
+	for _, x := range visible[:min(len(visible), retentionShown)] {
+		t.Rows = append(t.Rows, f.tombstoneRow(x))
 	}
-	t.More = t.Total > len(t.Rows)
+	if t.More = t.Total > len(t.Rows); t.More {
+		t.Next = keptCursor(t.Rows[len(t.Rows)-1].Sequence)
+	}
 	return section, nil
 }
 
@@ -796,23 +800,23 @@ func (f *retentionFacts) proposalRow(e *retentionEntry) (retentionProposalRow, e
 }
 
 func (f *retentionFacts) proposals() (retentionProposals, error) {
-	section := retentionProposals{Rows: []retentionProposalRow{}}
-	for index := len(f.s.ret.entries) - 1; index >= 0; index-- {
-		e := f.s.ret.entries[index]
-		if !f.s.ret.visibleEntry(e, f.workspace) {
-			continue
-		}
-		section.Total++
-		if len(section.Rows) >= retentionShown {
-			continue
-		}
+	section := retentionProposals{Rows: []retentionProposalRow{}, ClosedByKind: map[string]int{}}
+	visible := f.visibleEntries()
+	listed, closed, next := listKept(visible, retentionPending, retentionNumber, retentionShown)
+	for _, e := range listed {
 		row, err := f.proposalRow(e)
 		if err != nil {
 			return retentionProposals{}, err
 		}
 		section.Rows = append(section.Rows, row)
 	}
-	section.More = section.Total > len(section.Rows)
+	for _, e := range visible {
+		if !retentionPending(e) {
+			section.ClosedByKind[e.view.Change.Kind]++
+		}
+	}
+	section.Total, section.More = len(visible), len(visible) > len(section.Rows)
+	section.History = keptFacts{Total: closed, Next: next, Kept: installKept, Dropped: f.s.ret.dropped}
 	return section, nil
 }
 
@@ -854,16 +858,31 @@ func (s *Server) retentionApprovers(verifier identity.Verifier, now time.Time) (
 	return out, nil
 }
 
+func (s *Server) retentionFactsFor(verifier identity.Verifier, reader, workspace string, now time.Time) (*retentionFacts, error) {
+	approvers, err := s.retentionApprovers(verifier, now)
+	if err != nil {
+		return nil, err
+	}
+	f := s.retentionFactsWithoutRoster(reader, workspace)
+	f.approvers, f.rostered = approvers, true
+	return f, nil
+}
+
+var errRosterNotRead = errors.New("the approver roster was not read for this answer")
+
+func (s *Server) retentionFactsWithoutRoster(reader, workspace string) *retentionFacts {
+	return &retentionFacts{s: s, reader: reader, workspace: workspace, policies: map[string]*retention.PolicyView{}, artifacts: map[string]retention.Artifact{},
+		standings: map[string]retention.Standing{}}
+}
+
 func (s *Server) retentionPage(verifier identity.Verifier, reader, workspace string, now time.Time) (retentionPage, error) {
 	if s.faulty("retention-read") {
 		return retentionPage{}, retention.ErrInvalid
 	}
-	approvers, err := s.retentionApprovers(verifier, now)
+	f, err := s.retentionFactsFor(verifier, reader, workspace, now)
 	if err != nil {
 		return retentionPage{}, err
 	}
-	f := &retentionFacts{s: s, reader: reader, workspace: workspace, approvers: approvers, policies: map[string]*retention.PolicyView{},
-		artifacts: map[string]retention.Artifact{}, standings: map[string]retention.Standing{}}
 	page := retentionPage{Revision: s.Revision(), Now: stamp(now), State: stateConfigured, Restore: retentionRestoreSection{State: notConnected}}
 	ids := f.visibleIDs()
 	if page.Policies, err = f.policyRows(); err != nil {

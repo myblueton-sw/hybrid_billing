@@ -1,8 +1,10 @@
+import { AdminError } from "../../../../service/admin";
+import { useOlder } from "../../../../shared/KeptHistory";
 import type { Locale } from "../../../../shared/types";
 import type { IntegrationsPage, PluginProposal, PluginVersion } from "../../../../service/integrations";
 import { summaryWords, words } from "./live-codes";
 import { k } from "./live-copy";
-import { actor, blockerPolicy, drop, installOf, ordered, pendingNow, proposalTarget, refusedByList, refusedLicense, refusedNow, shownLimit, summaryOf, versionOf, type CommandKey } from "./live-model";
+import { actor, blockerPolicy, drop, installOf, ordered, pendingNow, proposalTarget, refusedByList, refusedLicense, refusedNow, summaryOf, versionOf, type CommandKey } from "./live-model";
 import { Code, Known, Prose, fsi, ltr, stamp } from "./live-format";
 import { useEffect, useState } from "react";
 import { CommandForm, RowNote, blockerLines, plain, useOpen, type Blocker, type Shared } from "./LiveCommand";
@@ -181,13 +183,18 @@ function Row({ p, ...shared }: Shared & { p: PluginProposal }) {
 export function Proposals(shared: Shared) {
   const { l, page } = shared;
   const list = page.modules.proposals;
-  const { pending, closed } = ordered(list ?? []);
+  const older = useOlder(l, page.revision, list === null ? null : page.modules.proposal_history, list ?? [], shared.api.integrationProposals, (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { shared.onLostAccess(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  });
+  const { pending, closed } = ordered(older.rows);
   return (
     <section className="p02-section p02-proposals" aria-labelledby="p02-proposals-title">
       <h3 id="p02-proposals-title">{k.proposalsTitle(l)}</h3>
       {list === null && <p className="live-empty">{k.unknown(l)}</p>}
       {list !== null && list.length === 0 && <p className="live-empty">{k.noProposals(l)}</p>}
-      {list !== null && list.length >= shownLimit && <p className="p02-small live-quiet">{k.newest(l, shownLimit)}</p>}
+      {older.head}
       {pending.length > 0 && (
         <>
           <h4>{k.waitingGroup(l, pending.length)}</h4>
@@ -197,9 +204,12 @@ export function Proposals(shared: Shared) {
       {closed.length > 0 && (
         <>
           <h4>{k.closedGroup(l, closed.length)}</h4>
+          {older.count}
           <ul className="p02-list">{closed.map((p, i) => <Row key={p.target || "c" + i} p={p} {...shared} />)}</ul>
         </>
       )}
+      {closed.length === 0 && older.count}
+      {older.foot}
     </section>
   );
 }

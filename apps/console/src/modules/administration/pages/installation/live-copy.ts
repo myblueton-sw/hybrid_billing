@@ -118,7 +118,6 @@ export const k = {
   noProposals: (l: Locale) => t(l, "No installer proposals", "설치 관리자 제안이 없습니다", "لا توجد مقترحات للمثبّت"),
   waitingGroup: (l: Locale, n: number) => t(l, `Waiting for approval (${n})`, `승인 대기(${n})`, `بانتظار الاعتماد (${n})`),
   closedGroup: (l: Locale, n: number) => t(l, `Closed (${n})`, `종료(${n})`, `مغلقة (${n})`),
-  newest: (l: Locale, n: number) => t(l, `Showing the newest ${n}.`, `최근 ${n}건만 표시합니다.`, `تُعرض أحدث ${n} فقط.`),
   proposalN: (l: Locale, n: string) => t(l, `Proposal ${n}`, `제안 ${n}`, `المقترح ${n}`),
   kind: (l: Locale, s: string) => words(l, proposalKindWords, s),
   state: (l: Locale, s: string) => words(l, proposalStateWords, s),
@@ -172,7 +171,7 @@ export const k = {
   withdrawnDone: (l: Locale, n: string) => t(l, `Proposal ${n} withdrawn.`, `제안 ${n}을(를) 철회했습니다.`, `سُحب المقترح ${n}.`),
   proposedDone: (l: Locale, n: string, v: string) =>
     t(l, `Plan ${iso(v)} proposed as proposal ${n}. Another administrator must approve it.`, `계획 ${iso(v)}을(를) 제안 ${n}(으)로 제출했습니다. 다른 관리자가 승인해야 합니다.`, `اقتُرحت الخطة ${iso(v)} بوصفها المقترح ${n}. يجب أن يعتمدها مسؤول آخر.`),
-  duplicate: (l: Locale, n: string) => t(l, `This plan was already proposed as #${n}.`, `이 계획은 이미 #${n}(으)로 제안되었습니다.`, `اقتُرحت هذه الخطة بالفعل برقم #${n}.`),
+  duplicate: (l: Locale, n: string) => t(l, `This plan was already proposed as #${n}. No new proposal was created, and that proposal keeps its original reason.`, `이 계획은 이미 #${n}(으)로 제안되었습니다. 새 제안은 만들어지지 않았으며, 해당 제안의 기존 사유가 유지됩니다.`, `اقتُرحت هذه الخطة بالفعل برقم #${n}. لم يُنشأ مقترح جديد، ويبقى سبب ذلك المقترح الأصلي.`),
   form: {
     rationale: (l: Locale) => t(l, "Reason", "사유", "السبب"),
     rationaleHint: (l: Locale, n: number) => t(l, `${n} of 256 bytes. Required. Do not enter customer data.`, `256바이트 중 ${n}바이트. 필수. 고객 정보를 입력하지 마세요.`, `${n} من 256 بايت. مطلوب. لا تُدخل بيانات العملاء.`),

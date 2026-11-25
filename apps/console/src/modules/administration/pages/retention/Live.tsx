@@ -8,11 +8,11 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { Locale } from "../../../../shared/types";
 import { AdminError } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
-import type { RetentionPage } from "../../../../service/retention";
+import type { ArtifactEntry, RetentionPage } from "../../../../service/retention";
 import type { Session } from "../../../../service/api";
 import { c as sc, retryPhrase } from "../../../../service/copy";
 import { k } from "./live-copy";
-import { commandsAllowed, drop, forget, isProposalCommand, pruneRefusals, rowId, selectionOf, setScope, vanished, viewOf } from "./live-model";
+import { artifactIdsInUse, commandsAllowed, drop, forget, isProposalCommand, missingArtifacts, pruneRefusals, rowId, selectionOf, setScope, validId, vanished, viewOf, withHeldArtifacts, withMoreReferences } from "./live-model";
 import { Known, Rich, Stamp, ltr } from "./live-format";
 import type { Announce, Shared } from "./LiveCommand";
 import { PoliciesView } from "./LivePolicies";
@@ -51,6 +51,10 @@ function selectedOf(view: string, s: ReturnType<typeof selectionOf>): string {
   return "";
 }
 
+type ListState = { next: string | null; status: "idle" | "loading" | "failed"; reset: boolean };
+const idleList: ListState = { next: null, status: "idle", reset: false };
+const idBatch = 20;
+
 export default function LiveRetention({ locale: l, view: rawView, params, session, onSignOut }: Props) {
   const source = useAdminClient();
   const { api, detail } = useCommandDiagnostics(source, JSON.stringify([session.workspace, session.user, session.csrf, rawView]), () => { setNotice(""); setNoticeDetail(null); setTerminalDetail(null); });
@@ -68,6 +72,11 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
   const seq = useRef(0);
+  const listSeq = useRef<{ epoch: number; of: Record<string, number> }>({ epoch: 0, of: {} });
+  const [lists, setLists] = useState<Record<string, ListState>>({});
+  const wantedArtifact = view === "expiry" && validId(params.get("artifact") ?? "") ? params.get("artifact") ?? "" : "";
+  const wantedRef = useRef(wantedArtifact);
+  wantedRef.current = wantedArtifact;
   const scrolled = useRef("");
   const selection = selectionOf(params, page, view);
   const selectedId = selectedOf(view, selection);
@@ -78,10 +87,19 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
     const generation = currentScope();
     setBusy(true);
     try {
-      const got = await api.retention();
+      const main = await api.retention();
       if (n !== seq.current || generation !== currentScope()) return null;
+      const held: ArtifactEntry[] = [];
+      if (main.state === "configured") {
+        const missing = missingArtifacts(main, [...artifactIdsInUse(), wantedRef.current]);
+        for (let at = 0; at < missing.length; at += idBatch) held.push(...(await api.retentionArtifacts({ ids: missing.slice(at, at + idBatch) })).rows);
+        if (n !== seq.current || generation !== currentScope()) return null;
+      }
+      const got = withHeldArtifacts(main, held);
+      listSeq.current = { epoch: listSeq.current.epoch + 1, of: {} };
       pruneRefusals(got);
       setPage(got);
+      setLists((before) => Object.fromEntries(Object.entries(before).filter(([, x]) => x.next !== null).map(([key]) => [key, { next: null, status: "idle" as const, reset: true }])));
       setStatus("ready");
       setReadComplete(userRefresh);
       setLoadError(null);
@@ -104,6 +122,45 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   };
 
   useLayoutEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
+  const more = async (key: string, first: string | null) => {
+    const was = lists[key] ?? idleList;
+    const after = was.next ?? first ?? "";
+    if (!page || was.status === "loading" || !after) return;
+    const epoch = listSeq.current.epoch;
+    const n = (listSeq.current.of[key] = (listSeq.current.of[key] ?? 0) + 1);
+    const generation = currentScope();
+    const current = () => epoch === listSeq.current.epoch && n === listSeq.current.of[key] && generation === currentScope();
+    const set = (x: ListState) => setLists((before) => ({ ...before, [key]: x }));
+    set({ next: was.next, status: "loading", reset: false });
+    try {
+      let next = "";
+      if (key === "refs") {
+        const answer = await api.retentionReferences(after);
+        if (!current()) return;
+        setPage((p) => (p ? withMoreReferences(p, answer.rows) : p));
+        next = answer.next;
+      } else {
+        const answer = await api.retentionArtifacts({ cls: key, after });
+        if (!current()) return;
+        setPage((p) => (p ? withHeldArtifacts(p, answer.rows) : p));
+        next = answer.next;
+      }
+      set({ next, status: "idle", reset: false });
+    } catch (e) {
+      if (!current()) return;
+      if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) { set({ next: was.next, status: "idle", reset: false }); void load(); return; }
+      set({ next: was.next, status: "failed", reset: false });
+    }
+  };
+  const pageRevision = page?.revision ?? "";
+  useEffect(() => {
+    if (!page || page.state !== "configured" || !wantedArtifact || missingArtifacts(page, [wantedArtifact]).length === 0) return;
+    const n = seq.current;
+    const generation = currentScope();
+    void api.retentionArtifacts({ ids: [wantedArtifact] }).then((answer) => {
+      if (n === seq.current && generation === currentScope() && answer.rows.length > 0) setPage((p) => (p ? withHeldArtifacts(p, answer.rows) : p));
+    }).catch(() => undefined);
+  }, [wantedArtifact, pageRevision]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!selectedId || scrolled.current === selectedId) return;
     scrolled.current = selectedId;
@@ -154,11 +211,15 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
   const configured = page?.state === "configured";
   const shared: Shared | null = page && configured
     ? {
-        l, page, api, me: session.user, workspace: session.workspace, selection, canCommand: commandsAllowed(page),
+        l, page, api, me: session.user, workspace: session.workspace, selection, canCommand: commandsAllowed(page) && status !== "error",
         onDone: (text) => { void announce(text); },
         onNotice: showNotice,
         onReload: load,
         onSignedOut: (reference?: CommandDiagnostic) => { setTerminalDetail(reference ?? null); setSignedOut(true); },
+        listOf: (key, first) => {
+          const x = lists[key] ?? idleList;
+          return { more: (x.next ?? first ?? "") !== "", status: x.status, reset: x.reset, onMore: () => { void more(key, first); } };
+        },
       }
     : null;
   const gone = shared ? vanished(shared.page, view) : [];
@@ -188,6 +249,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
           <button type="button" className="live-secondary" onClick={() => refresh(true)}>{sc.tryAgain(l)}</button>
         </div>
       )}
+      {status === "error" && page && <p id="p04-stale" className="live-note-rule p04-readonly" role="status">{diagnosticCopy.stale(l)}</p>}
       {gone.length > 0 && (
         <div className="p04-vanished" role="status">
           {gone.map((g) => (
@@ -213,7 +275,7 @@ export default function LiveRetention({ locale: l, view: rawView, params, sessio
           {view === "holds" && <p className="live-note-rule p04-lead">{k.holdsLeadA(l)} <strong>{k.holdsLeadB(l)}</strong> {k.holdsLeadC(l)}</p>}
           {view === "deletion" && <p className="live-note-rule p04-lead">{k.deletionLead(l)}</p>}
           {view === "decisions" && <p className="live-note-rule p04-lead">{k.decisionsLead(l)}</p>}
-          {!shared.canCommand && view !== "restore" && view !== "decisions" && <p className="live-note-rule p04-readonly" role="status">{k.readOnly(l)}</p>}
+          {!shared.canCommand && status !== "error" && view !== "restore" && view !== "decisions" && <p className="live-note-rule p04-readonly" role="status">{k.readOnly(l)}</p>}
           {view === "policies" ? (
             <PoliciesView {...shared} />
           ) : view === "expiry" ? (

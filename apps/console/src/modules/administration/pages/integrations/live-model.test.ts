@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { integrationsOf, pluginProposalOf, type IntegrationsPage } from "../../../../service/integrations";
 import {
-  blockerPolicy, compareVersions, coveredBy, deliveriesShown, deniedOutcome, discard, draftOf, duplicateIn, fieldReaction, forget, frozenValues, keepDraft, keepsAttempt, letterTarget,
+  blockerPolicy, compareVersions, coveredBy, deliveriesCut, deliveriesShown, deniedOutcome, existingProposal, discard, draftOf, duplicateIn, fieldReaction, forget, frozenValues, keepDraft, keepsAttempt, letterTarget,
   commandsAllowed, normalTypes, ordered, pendingFor, pendingNow, pluginTarget, proposalTarget, proposeOffer, proposeValues, pruneRefusals, react, reasonProblem, refusedNow, selectionOf, setScope,
   settle, snapshotOf, subscribeBlocker, subscribeProblems, subscriptionTarget, summaryOf, timeKnown, utf8Bytes, vanished, viewOf, waitsForResume, capabilityOf, type CommandKey,
   dryRunBlocked, refusedByList, refusedLicense, refusedValues, runnable,
@@ -356,17 +356,18 @@ test("a denied approval of a vanished letter or proposal after an unknown outcom
 test("duplicate announcements compare against the snapshot taken before the first send", () => {
   forget();
   setScope("ws", me, "s");
-  const before = page({ modules: { proposals: [proposal(8, "upgrade", "pending", other)] } });
-  const snap = snapshotOf(before, "integrations.plugin_propose");
-  assert.deepEqual(snap, ["8"]);
-  const tried = pendingFor("integrations.plugin_propose", "plugin:p", { kind: "remove", rationale: "x" }, "r1", fresh, snap);
-  assert.equal(duplicateIn(tried.snapshot, "8"), true);
-  assert.equal(duplicateIn(tried.snapshot, "10"), false);
-  const after = page({ modules: { proposals: [proposal(10, "remove", "pending", me), proposal(8, "upgrade", "pending", other)] } });
-  const resend = pendingFor("integrations.plugin_propose", "plugin:p", { kind: "remove", rationale: "x" }, "r2", fresh, snapshotOf(after, "integrations.plugin_propose"));
+  const snap = snapshotOf(page(), "integrations.subscription_propose");
+  assert.deepEqual(snap, ["s1"]);
+  const tried = pendingFor("integrations.subscription_propose", "webhook-channel:c", { rationale: "x" }, "r1", fresh, snap);
+  assert.equal(duplicateIn(tried.snapshot, "s1"), true);
+  assert.equal(duplicateIn(tried.snapshot, "s2"), false);
+  const resend = pendingFor("integrations.subscription_propose", "webhook-channel:c", { rationale: "x" }, "r2", fresh, ["s2", "s1"]);
   assert.equal(resend, tried);
-  assert.equal(duplicateIn(resend.snapshot, "10"), false);
-  assert.deepEqual(snapshotOf(page(), "integrations.subscription_propose"), ["s1"]);
+  assert.equal(duplicateIn(resend.snapshot, "s2"), false);
+  assert.deepEqual(snapshotOf(page({ modules: { proposals: [proposal(8, "upgrade", "pending", other)] } }), "integrations.plugin_propose"), []);
+  assert.equal(existingProposal({ proposal: "8", existing: "true" }), true);
+  assert.deepEqual([existingProposal({ proposal: "8" }), existingProposal({ existing: "false" }), existingProposal({ existing: "" })], [false, false, false]);
+  assert.ok(k.duplicateProposal("en", "8").includes("No new proposal was created"));
   forget();
 });
 
@@ -799,4 +800,13 @@ test("retained diagnostics bind every grouped action to its exact target and per
   assert.equal(lostFor([[dismiss[0], "webhook-letter-request:wrong"], dismiss]), "reprocess_events");
   setScope("ws", me, "new-session");
   assert.deepEqual(ids([stop, disable, resume, dismiss]), []);
+});
+
+test("the delivery list is called cut only for a subscription the service names, and unknown when it does not say", () => {
+  const named = page({ events: { deliveries_more: ["s1"] } });
+  assert.deepEqual([deliveriesCut(named, "s1"), deliveriesCut(named, "s2"), deliveriesCut(named, "")], ["cut", "complete", "cut"]);
+  const none = page({ events: { deliveries_more: [] } });
+  assert.deepEqual([deliveriesCut(none, "s1"), deliveriesCut(none, "")], ["complete", "complete"]);
+  assert.equal(deliveriesCut(integrationsOf({}), "s1"), "unknown");
+  assert.equal(integrationsOf({ events: { deliveries_more: "s1" } }).events.deliveries_more, null);
 });

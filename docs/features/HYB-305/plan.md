@@ -1,0 +1,655 @@
+---
+type: Plan
+title: Server search, filters and cursor paging for O02, O03 and P01 to P05
+description: What the seven screens read today, which of their lists can grow, the common shape proposed for paged reads and the order of the increments.
+status: draft
+---
+
+# Outcome and ownership
+
+HYB-305, machine:mac_mini, 2026-11-25. This document records the present state of seven screens and splits the ticket into increments. It changes no product code. Each increment gets its own design section here, its own reviews and its own merge.
+
+Requirements: UI-04 (`docs/planning/v1.16/ui-design.md:547`) and the bulk table contract (`:410-430`); in each screen's specification the sentences on server search and stable sort and on reading lists at a fixed revision by cursor without loading the whole data set into the browser (`docs/ui/screens/O02/spec.md:61-63`, `:101-103`; `O03/spec.md:63-65`, `:105-107`; `P01/spec.md:62-64`, `:102-104`; `P02/spec.md:62-64`, `:104-106`; `P03/spec.md:62-64`, `:104-106`; `P04/spec.md:73-75`, `:121-123`; `P05/spec.md:61-63`, `:101-103`). The trace of 2026-11-17 lists them as required and missing (`docs/reviews/HYB-301-trace-classification/report.md:317`); P05 was added to this ticket on 2026-11-18.
+
+# Facts read on main 3a387a8
+
+Common to all seven: the main read of the screen takes no search, filter, sort, cursor or limit and returns one document; caps are constants in the code, mostly 50; no screen filters, sorts or searches its main lists on the server. None of the seven screens has a selection of a page or of a whole filter for a bulk action today (the only checkboxes are inside one contract and inside one form), and the proposal of a deletion plan on P04 is not connected.
+
+| Screen | Read | Lists and their bounds | What is said when a list is cut |
+| --- | --- | --- | --- |
+| O02 | `GET /api/v1/organizations/plans` (`apps/api/server/relplans.go:617-661`) | Closed plans: 200 kept across all workspaces together, so one workspace's closures can push out another's history (`:20`, `:104-118`); at most 50 plans shown, open ones first (`:644-655`). Changed members of a plan: 50 per kind (`:21`, `:568`) | Closed plans: nothing, on the service or the screen. Members: the true count per kind and a truncated mark |
+| O03 | `GET /api/v1/contracts` (`contracts.go:148-176`) | Contracts: at most 200 in a workspace, a limit of the module at creation (`modules/contracts/registry.go:216-217`). No command creates a contract; the list is the five seeded ones. The four filters run in the browser (`contracts/live-model.ts:9-13`) | Nothing is cut |
+| P01 | `GET /api/v1/installation` (`installation.go:433-450`) | Proposals: closed ones are dropped beyond 200 kept, newest 50 shown (`installseed.go:18-19`, `:59-70`). Releases 32, destinations 16, reports 200 are limits of the module | The service says nothing; the screen says "Showing the newest 50" whenever 50 are shown, also when exactly 50 exist |
+| P02 | `GET /api/v1/integrations` (`integrations.go:836-855`) | Deliveries: every delivery of every subscription is read on each request (`:745-758`), then every dead or held one and 50 others per subscription are returned; the module bounds a subscription's deliveries, about 3,200 in all with 16 subscriptions (`modules/webhooks/deliveries.go:62`, `:84-86`). The module pages deliveries by position, and positions shift as deliveries change state. Service accounts: all read, at most 200. Plugin proposals: newest 50. The action history of each subscription: never trimmed, returned whole (`:656-659`) | Deliveries: the subscriptions that were cut are named. Proposals: the screen's "newest 50" note only |
+| P03 | `GET /api/v1/recovery` (`recovery.go:441`) | Open calls (module limit 10,000), unknown targets, pending events, each cut at 50 with a total; history per set cut at 50 with a total; lost events and locks returned whole and never capped (`:316-318`, `:354`); proposals, newest 50. The module copies every open call, unknown target and lost event on each read (`modules/recovery/recovery.go:485`) | Totals for the cut lists; proposals: the screen's note only |
+| P04 | `GET /api/v1/retention` (`retention.go:860-891`) | Artifacts per class (module limit 10,000,000), holds (10,000), required references, artifacts of a run (100,000), deletion records within a window of 1,000, proposals; each cut at 50 with `total` and `more`. Hold outcomes have a "more" mark and no total. The artifacts in the scope of each hold are returned whole, up to 10,000 for one hold (`:537-541`). Every visible artifact is walked on each request with one lookup each, and again for the references; each run walks every artifact of its plan (`:426-482`, `:588-624`, `:667-675`) | As stated per list |
+| P05 | `GET /api/v1/release-evidence` (`evidence.go:703-739`) | Requirements (module limit 10,000; the oldest 50 are shown, `:542`), paths (1,000), builds (10,000), results (1,000,000; all walked and sorted on each request, `:577-603`), profiles (1,000), harnesses (100, 50 shown), proposals. For each requirement shown, the replacements are found by checking every stored requirement (`:460-476`); each path shown evaluates a full readiness check (`:410`) | `total` and `more` on every list |
+
+Further reads that are whole: the parties and billing profiles that every answer of the organizations read repeats, refused above 500 (`organizations.go:16`, `:188-189`), used by O01, O02 and O03; all active members for the choice of a hold's owner on P04 (`apps/api/server/access.go:155-168`); and the member roster read for the approvers on every main read of P04 and P05 (`retention.go:846-858`, `evidence.go:707`).
+
+Existing paged reads, as they are. The users list (`apps/api/server/userfilter.go`, `users.go:126-258`, `userwalk.go`): strict parsing of one value per parameter, a search term with case folding, enumerated filters echoed back, an opaque cursor over a stated order, a page of 1 to 100, a scan budget with a "stopped" mark; no total; no pin, its list version is only echoed; a conflict only when the cursor's person has since departed, any other unknown cursor is an invalid request. The organizations lists (`organizations.go:105-184`): a page of 1 to 99 and a pin of the relationship revision, which is immutable; the parties and profiles in the same answer are read as they are now. Reusable as they are: the parameter parsing, the search rules, the failure answers of a read, and the total-and-more envelope of the release evidence read (`evidence.go:31-53`). The walk itself is specific to each store.
+
+# What the ticket means for each list
+
+- A list bounded by a small limit of its module (O02 open plans 16; P01 releases and destinations; P02 publishers, plugins, installations, subscriptions, types; P03 externals; P04 the seven classes) stays in the main read. Paging it adds nothing.
+- A list that can grow gets a read of its own, with the common shape below, and the main read keeps a first page of it so that the screen opens with one request as today.
+- A list that is cut without saying so is corrected first, because the screen then states something untrue.
+- Every one of the seven specifications asks for server search. Search is therefore part of each list's own read, not an optional extra.
+
+# Common shape of a paged read
+
+One route per list under the screen's own path. Parameters: `after` (an opaque cursor), `limit` (1 to 100, default 50), `q`, and the filters the specification names for that screen that the service can evaluate. Unknown or repeated parameters are refused. The answer carries the rows, `next`, the count of matching rows in the caller's scope where it is known without walking everything, `scan_stopped` with the budget when a filtered walk ended early, the filters as understood, the order in words, and the time the answer was computed.
+
+Order and cursor, by kind of list. None of the seven stores keeps snapshots, and the service's revision is one counter for everything, so a later page cannot be pinned to the state of the first page and must not be refused because something unrelated changed.
+
+- A list that only grows at its newest end and is shown newest first (plans, proposals, holds, runs, deletion records): the cursor is the row's own increasing number. New rows fall above the cursor and do not disturb later pages; they are seen on a reload. When the cursor points below what is still kept, the answer says that older entries are not kept, and that is not an error.
+- A list ordered by a value that can change (results by time, artifacts by standing, deliveries by position): the answer says that rows can move between pages. A fixed snapshot of such a list needs work in its module; where an increment does not do that work, it is recorded as a residual of that increment.
+- The first page inside the main read and a later page from the list's own read are separate answers and can differ; each carries its own count and time.
+
+The screen side, from the bulk table contract (`ui-design.md:416-419`): the order is stated and no sort is offered that the service does not perform; filters are shown as removable chips with "clear all"; the person is told when a list has to be read again from the start; "Show more" is the paging control on these screens, and the page size is not a choice (recorded as a difference from `:416`, which names a page size choice).
+
+Rights and scope. Each list's read repeats the admission of the section it belongs to; on P02 the sections are admitted separately (`integrations.go:821-831`). Every count covers only rows the caller may see. Every increment adds reads to the public contract and has an independent change review; none adds a command.
+
+A filter named by a specification that the service has no data for is not offered and is recorded as not connected in the binding register. Known today: on P05 the provider and the contract or role; on P01 the profile, check area, severity and validity of a diagnosis, of which almost none applies to the proposal history; on P03 the restore point and the check status; on O02 the dependent pool, while the impact is not computed. Each increment states how the specification's filters map to data; P04's "standing" in particular is this service's word for the specification's deletion stage and hold reason together.
+
+Selection of a whole filter with a manifest on the server (`ui-design.md:421`, and the matching sentence of each specification) is not applicable on these seven screens today, because none has a bulk action; it is recorded as such, and returns with the first bulk action.
+
+# Increments, in order
+
+1. **Histories.** O02 closed plans are cut with nothing said: that is corrected first, with a count and a read for the rest, and the pruning is made per workspace. The proposal histories of P01, P02 and P03 already say that the newest 50 are shown, also when nothing was cut: they get a count, a read for the rest, and the note only when something is cut. Every history says where it ends because older entries are not kept. Search over the plan or proposal identifier and its people.
+2. **P05.** Requirements (search, the evidence-state filter, the rest of the list in recording order (the design of increment 2a replaced "newest first", which would have changed a documented order), and the replacements found without checking every requirement for each row), results (paged, without walking all of them on each main read), builds, paths, profiles, harnesses.
+3. **P04.** Artifacts of a class (search by identifier, filters by store and by deletion stage and hold reason), holds with the artifacts in their scope, references, artifacts of a run, deletion records, hold outcomes with a total; the main read stops walking every artifact and every run's plan.
+4. **P03.** Open calls, unknown targets, pending events, lost events, locks, history; needs a paged interface in the recovery module instead of a copy of everything.
+5. **P02.** The action history of a subscription; deliveries of a subscription with filters by kind and state, which needs a stable order in the webhooks module (they are bounded at about 3,200 today, so this comes late); service accounts stay whole at 200.
+6. **O02 members of a plan** beyond 50 per kind, and **O03**: the contracts list is complete, five rows today and at most 200, and filtered in the browser; it moves to the server together with a higher limit or a way to create contracts, which is not in this ticket. The parties and profiles read whole (cap 500) is taken here, with the index by kind that the O01 tree needs when the cap is lifted (`docs/features/HYB-320/design.md`, limits).
+7. **Member reads on P04 and P05**: the hold owner choice becomes a search; the approver roster is not read on every main read.
+
+Each increment: a design section in this document with the facts of that list, independent design review, any module interface change reviewed on its own, server with tests (pages equal the whole list, the cursor while rows are added and while old rows are dropped, the budget, another workspace, counts in scope, and one run with data at the limit of the module), console with unit and rendered checks in three languages, ui-designer review of the controls and copy, independent change review, binding documents.
+
+# Increment 1a, the closed plans of O02 (2026-11-25)
+
+Facts (main 20b9058): closed plans are pruned to 200 across all workspaces together (`relplans.go`, `prunePlans`); the plans read shows the open plans and then closed ones up to 50 in all, newest first by an increasing number given when a plan is recorded, and says nothing about the rest; the screen's result view lists the closed plans it was given and has no search.
+
+Built:
+
+- Pruning is per workspace: each keeps its newest 200 closed plans, and the number dropped is counted per workspace while the service runs.
+- The plans read gains `closed`: `total` (closed plans kept for the workspace), `next` (the cursor after the last closed plan shown, empty when all are shown), `kept` (the limit) and `dropped`.
+- `GET /api/v1/organizations/plans/closed` with `after`, `limit` (1 to 100, default 50) and `q`: the workspace's closed plans, newest first; the cursor is the increasing number of the last row, and a plan gets a new number when it closes (activated, discarded by a person or by the service), so the order and the pruning go by when a plan closed and not by when it was proposed; `q` is matched, with the case folding of the users search, against the plan identifier, the member and target identifiers and names and the proposer's identifier and login. The answer carries `plans`, `next`, `matching` (all rows matching `q`), `closed` as above, `order`, `q` and `server_time`. A cursor below what is kept answers an empty page. Unknown, repeated or malformed parameters are refused. Admission is that of the plans read.
+- The list is at most 200 rows for a workspace, so the search walks all of them and needs no budget; nothing here is pinned, and a plan closed between two pages falls above the cursor because it takes its number when it closes.
+- Screen: the result view shows "N of M shown, newest first", "Load more" for the rest, a search over the closed plans with the count of matches, a sentence at the end when older plans were dropped, and its own failure and no-match states. The applied search is shown with "Clear search". Pages loaded with "Load more" are dropped when the plans read is read again (after any command or a reload); the list then starts from the first fifty and a line says that it was read again from the newest plan.
+
+Not built for this list: the filters the specification names (kind of change, effective date, dependent pool, blocking reason). The first two have data and are left to the next step on this screen; the dependent pool and the blocking reason of a closed plan have none while the impact is not computed.
+
+Checks on the development machine (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (384 seconds) after the last server change; `tsc` clean; console tests 1391, pass 1388, fail 0, skipped 3; rendered check of O02 in three languages at two widths, 313 passed, 0 failed (one spacing rule was added after that run). The rendered check of the history uses answers written by the script for both reads, because the sample has no closed plan: it shows the screen's behaviour for those answers, not the service's. The service's behaviour is shown by `relplans_history_test.go` (pages equal the kept history in order without repeats while plans are added, another workspace's history excluded and counted apart, search by identifier, name and login, a plan closed last listed first and kept, refused parameters, a cursor below what is kept).
+
+Reviews (AI, Claude Opus 5.5, by reading and, for the designer, from screenshots; neither ran anything), 2026-11-25. Independent change review: approve with conditions, then approve. It confirmed that the old pruning let one workspace push out another's history and that nothing in the two answers crosses workspaces. Three findings corrected: the count of matches could come from an earlier search; plans were ordered and pruned by when they were proposed, so a plan that stayed open for long could be dropped the moment it closed (a plan now takes its number when it closes); the screen did not say that the list was read again. ui-designer review: FAIL for the search row stretched across the page with its button label broken over two lines, corrected, then PASS; its strings for the applied search, the Korean term and the Arabic count were adopted. Left open from it: the count on the heading's line, a short label with a hint, the time the list was read, a choice of page size.
+
+# Increment 1b, the proposal histories of P01, P02 and P03 (2026-11-25)
+
+Facts (main 167ac6c): each of the three stores keeps 200 proposals and drops the oldest one that is not pending when a new one is recorded (`installseed.go`, `integrationseed.go`, `recoveryseed.go`, `keep`); a pending proposal is never dropped, so the stores can hold more than 200 when more than 200 wait. Each main read listed the newest 50 by proposal number, pending and closed together, so a proposal still waiting could fall out of the list behind fifty newer ones. The screens said "Showing the newest 50" whenever fifty were listed, also when nothing was cut, and had no way to the rest. Installer and plugin proposals belong to the installation and are answered only to the workspace the service was started for. Recovery proposals are listed for the reader's tenant, but the 200 were counted across all tenants together, so one tenant's proposals could push out another's.
+
+Built:
+
+- Each main read lists every pending proposal, then the newest closed ones while fewer than 50 are listed, in the order of their numbers, newest first (the rule the plans read of O02 has for open plans). A proposal a person can still approve or withdraw is therefore always in the main read, which is what the screens' command handling reads.
+- Recovery proposals are kept per tenant: each keeps 200, and the number dropped is counted per tenant while the service runs. Installer and plugin proposals count what was dropped.
+- Each main read gains `proposal_history` (`modules.proposal_history` on the integrations read), about the closed proposals: `total` (closed proposals kept), `next` (the cursor after the last closed proposal listed, empty when all are listed; a cursor above every number when none is listed), `kept` (the limit of the store) and `dropped` (since the service started).
+- `GET /api/v1/installation/proposals`, `GET /api/v1/integrations/proposals`, `GET /api/v1/recovery/proposals` with `after`, `limit` (1 to 100, default 50) and `q`: the closed proposals newest first by number; the cursor is the number of the last row. A proposal's number is given when it is proposed and does not change, so a row cannot move across the cursor. A proposal that closes between two pages is seen on the next main read; if its number is below the cursor it also appears on a later page. `q` is matched, with the case folding of the member search, against the number, the target, the kind, the state, the proposer and their sign-in name and the rationale (and the installation for recovery). Each read is admitted as its main read is: the integrations read refuses a person without a module right; the other two answer an empty list where the main read says "not configured".
+- The parsing of `after`, `limit` and `q`, the walk and the facts are shared by these three reads and the closed plans read (`history.go`); the answers of the closed plans read are unchanged.
+- Screens: the note "Showing the newest 50" is removed. When closed proposals are left out, the section shows "N of M closed proposals shown, newest first" and "Load older closed proposals"; a failed read leaves the rows shown and the same button offers "Try again"; when nothing further can be read and proposals were dropped, a sentence says that older closed proposals are not kept and that waiting ones always are; when the screen is read again after older proposals were loaded, the list starts again from the newest and says so. Focus stays on the button while it changes and moves to the end sentence or the count when the button goes away. One shared part serves the three screens (`shared/KeptHistory.tsx`).
+
+Not built: a search on the screens (the reads serve `q`; the specification's filter row for these lists is left to the increments of each screen). Residual: what the screens derive from proposals (the latest acceptance on P01, the selection from a link, the propose blockers) reads the main read only, which holds every pending proposal and the newest closed ones; a closed proposal loaded as older is not seen by those checks, and a link to it does not select it.
+
+Checks on the development machine (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (397 seconds) on the final server code; `tsc` clean; console tests 1399, pass 1396, fail 0, skipped 3; rendered check of the three screens in three languages at two widths, 211 passed, 0 failed. In the rendered check the older proposals are rows written by the script (the sample has 7 to 10 proposals), with the sample's real pending proposals kept in the main read; it shows the screens' behaviour for those answers, including load and retry by keyboard and where focus goes. The real further reads are called once per screen and compared with the sample's main read. The service's behaviour is shown by `proposal_history_test.go`: the pages equal the kept closed history in order without repeats, counts and dropped, a search with its cursor, refused parameters, a cursor below the oldest, a crowd of pending proposals, a member without module rights, a fault, another tenant's proposals neither listed nor counted nor found.
+
+Not covered by a test: a workspace other than the one the service was started for on the three new reads; a main read at the modules' limit of pending proposals (about 320 rows for the installer); the screen's handling of a late answer and of the read-again line beyond the rendered check on one language and width.
+
+Reviews (AI, Claude Opus 5.5, by reading and, for the designer, from screenshots; neither ran anything), 2026-11-25. Independent design and change review: approve with conditions, then approve. It confirmed the permission and tenant checks of the three reads against their main reads. Corrected from it: with the newest 50 listed, a proposal still waiting could reach the screen only as an older row, where the screens' command handling does not look, so the main reads now list every pending proposal; a sentence of this plan about derived checks was untrue; a refused read left the button on "Loading…". ui-designer review: FAIL, then PASS. Corrected from it: the end sentence did not match what the service keeps; the button was a different element in each state and lost focus; "kept" was used in two senses; the count now sits under the closed group. Left open from it: the rendered spacing of the count was adjusted after its last look and not looked at again.
+
+# Increment 2a, the requirements of P05: design (2026-11-25)
+
+Status of this section: design, reviewed before any code. Nothing here is built.
+
+Facts (main 66f23f2):
+
+- The release trace module holds up to 10,000 requirements. The server keeps their keys in the order they were recorded (`evidenceseed.go`, `requirements`); a requirement's target is `trace-requirement-<n>` with n its position, which never changes: nothing removes or reorders a requirement, and retiring only marks it (`modules/releasetrace/changes.go`).
+- No command adds a requirement. The list is filled by the seed and by test hooks only, so a running service holds six requirements (sample seed) or none; the store is in memory and the seed rebuilds the same order on restart. The list beyond 50 is therefore reachable today only in tests, and "while requirements are added" can only be tested through the test hook.
+- The main read lists the first 50 in recording order (`evidence.go`, `requirements`, `listOf`), with `total` and `more`; HYB-290 documented that order and tests assert it. The screen says "showing 50" and cannot reach the rest.
+- Every row computes its replacement candidates by running the module's retire check against every stored requirement, and for each candidate scans every proposal entry for a pending replacement (`evidence.go`, `replacements`; `evidenceseed.go`, `pendingReplacement`): about 50 rows × n requirements × the number of entries on each main read. The module requires a replacement only when a common requirement is retired; the form offers an optional one for the others.
+- A row depends on the reader and on the moment: `can_retire` and `retire_blocked` come from the approver roster read on every request and from the pending proposals. A further read has to build its facts exactly as the main read does. Rows read at different moments can disagree; commands are sent with the main read's revision.
+- The state cell shows the state at the candidate build from `states`, which holds only the ten newest builds; the row computes the state at the candidate but does not return it.
+- One state lookup is not constant: it copies the requirement's interfaces and tests and, for each test, walks the requirements that share it (`modules/releasetrace/results.go`). A retired requirement still has a state.
+- The screen reads the listed rows in many places: the table, the detail and its retire form (also the replacement's state), the comparison of two builds (its builds, its "more" flags and its differences), links to a requirement, the decisions view (labels, `retiredAfter`), the artifacts view (the requirement of a test), the matrix detail's test cases, and the command handling (`listed`, `stillAllowed`, `pruneRefusals`, `vanished`, `deniedOutcome`). A row that is shown but not in what these read is reported as gone, or its tests as missing.
+- The specification's filter row (provider, contract or role, product version, issuance path, evidence state) stands under the columns of the support matrix. The path rows carry provider, contract, role, version and issuance; the requirement rows carry none of them. Of the five, only the evidence state is a property of a requirement.
+
+Design:
+
+1. **The main read keeps its order and its rows.** It gains `next` beside `total` and `more` (the number of the last row listed when more exist), and each row gains `state`, the state at the candidate build that the row already computes (`null` without a candidate). Both are additive.
+2. **One further read**, `GET /api/v1/release-evidence/requirements`, admitted as the main read is and building the same facts, with:
+   - `after`: a number; rows are in recording order and the read answers the rows whose numbers are greater than `after`. The order is the main read's, it is exact because numbers do not move, and a requirement added later lands after every page held;
+   - `limit`: 1 to 50, default 50, until increment 2b removes the replacement walk;
+   - `q`: the shared search term, matched against the label, namespace, identifier, source, owner, design reference and interfaces;
+   - `state`: one of the module's five states at the candidate build; refused when the service has no candidate build;
+   - `retired`: `yes` or `no`, independent of `state`;
+   - `target`: one value holding one to twenty requirement targets separated by commas, each with a canonical number; it cannot be combined with any other parameter (a mix is refused, as are more than twenty); the answer holds exactly the rows found, an unknown target is left out, `next` is empty and `matching` is the number of rows found;
+   - answer: `revision`, `server_time`, `order` (`recorded`), `q`, `state`, `retired`, `requirements` (the row type of the main read), `next`, `matching` (rows matching the filters, regardless of the cursor), `total`.
+   A search or filter walks every requirement once with one state lookup each and no retire check; the walk has no budget and no `scan_stopped`, and its cost at 10,000 is accepted because the page stays at 50 rows. The pending replacement targets are gathered once per request instead of once per candidate.
+3. **The screen keeps a set of held rows and one table list.** Held rows are the main read's rows, the rows loaded with "Load more", the rows of the current search or filter, and rows read by target. Every consumer other than the table reads the held set by target, so a filter on the table never changes what the matrix, the decisions, the artifacts or the command handling see. The table shows the main rows followed by the loaded ones, or the search and filter result.
+4. **Reading again.** After a command or a reload, the screen reads the main read, then reads by target every row the command state refers to that is not in the main read (the row a command acted on, the selected row, and every target with a pending attempt, a kept refusal or an earlier attempt in the current scope, in batches of twenty), and only then sets the page and settles what the command did; `pruneRefusals`, `stillAllowed` and `deniedOutcome` receive that page. Other loaded rows are dropped and the list says it was read again from the start; an active search or filter is asked again. A target the service does not return in that read is gone. A link to a requirement that is not held is read by target. A row that is held and no longer matches the active filter stays in the detail and the list says it no longer matches; it is not reported as gone.
+5. **Controls** on the requirements view: a search field, a state filter and a retired filter, the applied search and filters with one "Clear" action, "N of M shown, in the order recorded" or "N of M matching", "Load more", and the sentence that the comparison covers only the requirements held, shown when the held set is not the whole list.
+
+Stated limits of 2a against the bulk table contract: no choice of page size or of sort, no time of the read shown beyond what the page shows today, and no selection across pages (this list has no bulk action). Provider, contract or role, product version and issuance path are filters of the support matrix and are taken with the paths in increment 2c; the binding register says so instead of "no data".
+
+Increment 2b, replacements: a row keeps `replacement_required` and whether any candidate exists, computed in one pass from the module's rule (a different requirement, not retired, not already a replacement, not older, common if the retired one is common, blocking if it is blocking, not named by a pending retire) and confirmed by the module's check for the candidates returned; the retire form searches candidates through its own read; the consumers that read the replacement from the held rows are covered by the read by target; the limit of the further read returns to 100.
+
+Tests planned: the pages equal the whole list in order without repeats while requirements are added through the test hook; a row of the further read equals the same row of the main read field by field, also for a reader who is not eligible and for the proposer of a pending retire; search, each state and `retired` combined against a direct computation; `matching` and `total`; the read by target (known, unknown, more than twenty); refused parameters, and the four reads of increment 1 still refusing `state`, `retired` and `target`; no candidate build; a candidate build outside the ten newest; an unknown stored requirement and a fault answering dependency unavailable; another workspace; one run at 10,000 requirements with its time recorded. Console unit tests: the held set by target, label and test; command handling on a loaded row with no "gone" during or after the re-read; a delayed attempt on a loaded row followed by another command is not shown as gone; a link to a row not held; the matrix test cases, the decisions labels and the artifacts link for a loaded row; a filter that leaves the other views unchanged; duplicates removed. Rendered check with routed answers beyond the six seeded rows, stating what that does not prove.
+
+Design review (AI, Claude Opus 5.5, by reading the code; nothing executed), 2026-11-25: approve with conditions, all incorporated above. Its findings: listing the newest 50 in the main read would change the meaning of a documented order and needs the owner, while recording order with a cursor above the last number is as exact and changes nothing; a filtered list must not replace the rows the other views read; the reload path must hand the completed page to the command handling; a re-read of every loaded page costs a full walk per page under a search, so the acted-on row is read by target instead; 100 rows a page is too costly before the replacement walk is removed; `retired` is not a state; the filter facts were wrong (the paths carry provider, contract, role and version). It also found that no command adds a requirement. Re-review of the rewritten section: approve with one condition, incorporated: every row the command state refers to is read again by target, not only the row acted on.
+
+# Increment 2a, server part (2026-11-25)
+
+Built as designed above, on the server only; the console does not read it yet, so no screen changes with this part.
+
+- The main read: `requirements.next` (the number of the last row when more exist, else empty) and `state` on each row (`null` without a candidate build). Order and rows are unchanged; one existing test pinned the whole empty answer and now includes the empty `next`.
+- `GET /api/v1/release-evidence/requirements` (`evidencereqs.go`): `after`, `limit` (1 to 50), `q`, `state`, `retired`, or `target` alone. Without a filter no requirement is looked up except those of the page; with one, each requirement is looked up once. The facts are built by the function the main read uses (`evidenceFactsFor`).
+- The pending replacement targets are gathered once per request (`pendingReplacements`), for both reads.
+- A number above 1,000,000,000 in `after` or `target` is refused; the module's own limit of 10,000 is not exported, so a cursor between the two answers an empty page.
+
+Tests (`evidencereqs_test.go`): the pages after the main read equal the whole list in order while a requirement is added through the test hook; the first page of the further read equals the rows of the main read; each state alone and with each `retired` value against the module's own answer, and the filtered list in pages; search by identifier, label and case; rows by target equal the rows of the main read for two administrators and for a reader left without an eligible approver; a member is refused and an anonymous caller is unauthenticated, as on the main read; twenty targets accepted, twenty-one and every malformed form refused; the four reads of increment 1 refuse `state`, `retired` and `target`; a state filter without a candidate refused, and rows without `state` then; the state given when the candidate is not among the ten newest builds; a fault and an unknown stored requirement answer dependency unavailable; one run at 10,000 requirements. On the development machine (macOS arm64) that run measured about 18 ms for a search that walks all of them and about 32 ms for a page of ten rows, the page being dominated by the replacement walk that increment 2b removes. A single run on one machine, not a benchmark.
+
+Not covered: another workspace on the new read (the condition is the main read's, by reading); the cost of a state lookup for requirements with many shared tests.
+
+Checks for the server part (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (396 seconds) on the final code. Change review (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve with one condition, then resolved. It confirmed that the main read is otherwise unchanged and that the handler admits as the main read does. Its condition: one test compared nothing, because the member it used is refused the read, while this document said it compared rows; the test now compares a second administrator's rows and a reader left without an eligible approver, and asserts the member's and the anonymous caller's refusals.
+
+# Increment 2a, console part (2026-11-25)
+
+Built as designed:
+
+- `Live.tsx` reads the main read and, before it sets the page, reads by target every requirement that is not in the main read and that the open detail or the command state refers to (a pending attempt, a kept refusal, an earlier attempt), in batches of twenty; with a search or filter active it asks that again. The page it sets holds all of these rows, and that page is what the command handling, the comparison, the matrix, the decisions and the artifacts read. If one of these reads fails, the whole read fails as a failed main read does and the page shown before stays.
+- The table shows the main rows followed by the rows loaded with "Load more", or the rows of the search and filters. Rows loaded with "Load more" are dropped when the screen is read again, and the list says so; a row that is open but not in the table is said to be not in the list shown.
+- A link to a requirement that is not held is read by target and then opens.
+- Controls: search, the state at the candidate build (offered only when there is a candidate), retired, "Apply", "Clear search and filters"; "N of M requirements shown, in the order recorded" or "N of M matching requirements shown"; one button for "Load more requirements", "Loading…" and "Try again".
+- The state cell uses the row's `state` when the service gives it, so a candidate outside the ten newest builds no longer shows as unknown. The state `customer_proven` has a label.
+
+Differences from the design: the comparison's sentence still says "listed on this screen" and its "more" flag is true while fewer rows are held than exist. A held row that no longer matches the filter is said to be "not in the list shown here", the same sentence as for any open row outside the table. A state filter kept while the service loses its candidate is not asked again; the list falls back to the main rows and says it was refreshed. A link to a requirement that does not exist, or whose read fails, shows the list with no detail and no message.
+
+Checks (macOS arm64): `tsc` clean; console tests 1404, pass 1401, fail 0, skipped 3; rendered check `tools/requirements-list-qa.mjs`, 75 passed, 0 failed. In the rendered check the search, the state filter, the retired filter, the no-match state, a search longer than the service accepts and clearing run against the real service with the six sample requirements. Everything beyond six rows (the count, "Load more", the failure and retry, a failed filter and its retry, a filter asked again after a reload, a loaded row's detail, the read by target after a reload, a link to a requirement outside the main read) uses answers written by the script, in three languages at two widths; that part shows the screen's behaviour for those answers and not the service's, which `evidencereqs_test.go` shows.
+
+Not covered by a test: a command sent on a loaded row end to end (the unit tests cover the model: the targets asked again, no "gone" once held, the kept refusal surviving); the order of answers when a reload, "Load more", a new filter and "Clear" overlap (the guard is a counter that each of them advances; read, not exercised); the plan's console cases "a filter leaves the other views unchanged" and "a link to a row not held" exist only in the rendered check, the first not at all.
+
+Reviews (AI, Claude Opus 5.5, by reading and, for the designer, from screenshots; neither ran anything), 2026-11-25. Independent change review: reject as it stood, three findings corrected: a search longer than 64 bytes was sent, refused, kept, and then failed every later read of the screen and disabled its commands (the length is now checked before sending, and a failed filter read no longer fails the main read); an answer of "Load more" or of a filter could arrive after a reload, a new filter or "Clear" and leave a gap in the list or restore a cleared filter; a failed search said that nothing matched. ui-designer review: FAIL for two layout defects, corrected: the three controls had different heights so their labels did not line up, and the line saying the list was refreshed stood under a long table. Its copy suggestions were adopted. Both re-reviews: resolved, approve and PASS. Left open from them: a filter applied while a reload is running can be dropped without a message; the error for a search that is too long stands inside the search field's block and may lift that field above the other two while it shows (not looked at in a render); the two status lines were judged from source only.
+
+# Increment 2b, the replacement candidates of P05 (2026-11-25)
+
+Facts (main ab24299): for every requirement row, the server ran the module's retire check once against every stored requirement to list the row's replacement candidates (`evidence.go`, `replacements`): n module calls a row, each taking the module's lock, for the first twenty candidates and their total.
+
+Built, differently from the shape sketched in increment 2a and with no change to any row or field of either read (one public input widens: the further read accepts `limit` up to 100, where 51 to 100 were refused):
+
+- The release trace module gains one read, `Replacements(key)`: the requirements a retire of that requirement accepts as its replacement, in the order recorded. It uses the same rule as the retire check, which now calls one shared function (`weaker`) instead of holding the rule inline; a retired requirement has none, and the requirement itself is never among them (the retire check refuses a requirement as its own replacement before the rule is reached).
+- The server asks that read once for a row, leaves out the requirements named as replacement by a pending retire as before, and lists the first twenty with the total. The row's `replacements`, `replacement_required`, `can_retire` and `retire_blocked` carry what they carried; the screen is unchanged.
+- The further read's `limit` goes up to 100, as increment 2a planned for this point.
+
+The separate read for searching candidates that increment 2a sketched is not built: the row still lists only the first twenty candidates, which is what the retire form offers today. A search over all candidates is left with the form, not with this ticket's lists: with more than twenty candidates, one beyond the twentieth cannot be chosen on the screen. That limitation existed before this change and is recorded as a follow-up ticket (named in the review paragraph below). The module calls for these candidates are counted under the step `trace-replacements` where they were counted under `trace-check`.
+
+Tests: in the module, `Replacements` is compared with the retire check for every pair of requirements in a world with common, blocking, retired and already-replacing requirements, before and after two retirements, and its order is asserted. On the server, the existing comparisons of the listed candidates with the retire check stay as they were and pass; the count of module calls of the main read on the sample is pinned and falls from 35 retire checks to 5 with 6 calls of the new read; at 10,000 requirements a row's candidates, their total and the first twenty are asserted.
+
+One run at 10,000 requirements on the development machine (macOS arm64), a single run and not a benchmark: a search walking all of them about 13 ms; a page of ten rows about 1 ms (about 32 ms before); the first hundred rows, each with about ten thousand candidates, about 139 ms; the main read about 68 ms.
+
+Checks (macOS arm64): the module's tests pass; `go vet` clean; the whole `apps/api/server` package passes (381 seconds). The wording of this section was corrected after that run; no code changed.
+
+Independent design and change review (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve with conditions, no blocking finding. It followed the retire check from its entry to the rule and found no state in which the new read and the check differ; it confirmed that the module itself does not refuse a replacement a pending proposal names (only the server leaves those out, as before), that the server's list keeps the stored order, and that keeping the rule in one place in the module is sounder than the shape sketched in 2a, which would have copied it into the server. Its conditions, both applied: the limit of 100 is a widened public input and is recorded as one; the candidates beyond twenty are a follow-up ticket, HYB-359. Not applied from it: building the answer from the map key in the module read, and three further module tests (a candidate that replaces and is then retired, a pending proposal naming a candidate, a concurrent run).
+
+# Which lists can grow in a running service, and the order that follows (2026-11-25)
+
+Reason for this section: increment 2a found that no command adds a requirement. The same question was then asked of every list of the six screens: can it grow through a command, a route or a background job, or is it filled only by the sample seed at start and by test hooks. The only route that changes these stores is `POST /api/v1/commands/{command}` (the other POST routes change identity and session state); the background work (`runWorker`) touches none of them; the seed runs once at start and only in sample mode. Everything below is about a service started with the sample seed: without it there are no event types, so no subscription can be proposed, and no recovery installations, so no locks; of the growing lists only the service accounts certainly grow then (holds were not checked for that case).
+
+Lists that grow through commands, by what limits them:
+
+| Screen | List | Grows through | Limit, and what the read returns |
+|---|---|---|---|
+| P03 | Locks of an installation | the recovery lock command, repeatable after each approved unlock | no limit; the read returns all of them |
+| P02 | Action history of a subscription | the subscription commands (approve, pause, request resume, approve resume, revoke, withdraw, withdraw resume, and closures after a lost right) | no limit; the read returns all of it |
+| P02 | Service accounts | `service.create` | at most 200 (`services.go`, `maxServices`); the read returns all of them with one credentials read each |
+| P02 | Subscriptions | the subscription propose command | the module keeps 16 live and 32 stored, so at most 32 are returned; the server keeps an entry for every one ever proposed and walks all of them on each read and each propose |
+| P04 | Holds | the place hold command | 100 live per workspace, released ones stay, module limit 10,000; the read returns the newest 50 with `total` and `more` and no way to the rest; each hold adds a list of outcomes bounded by the artifacts |
+| P04, P05 | Proposals | each screen's propose commands | 200 kept; the newest 50 are returned, pending and closed together, so a pending proposal can fall out of the main read as it could on P01 to P03 before increment 1b |
+| P01 to P03 | Proposals | each screen's propose commands | 200 kept; paged since increment 1b |
+| O02 | Closed plans | `relationship.propose`, `view_group.propose` | 200 kept per workspace; paged since increment 1a (not checked again for this section) |
+| O02 | Members with a relationship | propose and activate | bounded by parties and kinds; already paged with a scan budget (not checked again for this section) |
+| O03 | Events, evidence and records of a contract | the contract commands | 200 writes and 20 in reserve a contract; the contract read returns them whole |
+
+Lists with no producer today, which no command adds to: on P05 the requirements, paths, builds, results, harnesses, hardware, profiles and runs; on P04 the artifacts, references, deletion records and runs; on P03 the installations, open calls, unknown targets, pending events, lost events and the history of a set; on P02 the publishers, plugin versions, installations, deliveries, dead letters and events (approving a redelivery turns a dead letter into a queued redelivery without changing the count); on P01 the releases and reports (destinations can grow by one, when the seeded pending destination proposal is approved); the parties, billing profiles and contracts of O01 to O03 (partly traced: no write outside the seed was found, not every organizations path was followed). For these the size is the seed's in sample mode and zero otherwise, and the reads return them as the table under "Facts read on main 3a387a8" states for each (most cut at 50 with `total` and `more`; some whole, such as lost events on P03 and the artifacts in a hold's scope on P04). What would fill them is ingest, build pipelines and writers outside the console, none of which is built.
+
+Order that follows. The specification's sentences are about scale (a million rows a day, lists of 100,000 and more), and they concern exactly the lists that have no producer today; nothing blocks building and testing their reads through test hooks at the modules' limits, as increment 2a did. So every list stays in this ticket, and only the order changes: the lists a person can meet in a running service come first.
+
+1. **Lists that grow and are returned whole or walked whole**: the locks of an installation on P03; the action history of a subscription on P02; the server's subscription entries on P02. The service accounts are complete at 200 and stay whole, as "What the ticket means for each list" already says for complete lists.
+2. **Lists that grow and are cut**: the holds on P04; the proposals of P04 and P05, which get what increment 1b gave P01 to P03.
+3. **Lists with no producer today**, in the earlier order (the rest of P05, P04, P03, P02, O02 members of a plan and O03, the member reads): built and tested to the modules' limits through test hooks, each increment recording that its producer is not built.
+
+This replaces the order of "Increments, in order" from its item 2 on. Increments 2a and 2b are done and stay as they are. Whether group 3 may leave this ticket until its producers exist is the owner's decision and is listed under "Open for the owner"; until then it stays.
+
+Review of this section (AI, Claude Opus 5.5, by reading the code; nothing executed), 2026-11-25: approve with conditions, incorporated. It confirmed the growing lists and the lists without a producer on P05, P04, P03 and P02 call by call, and corrected the first version: service accounts are capped at 200; other POST routes exist; the first version deferred group 3 "until a command that adds to it is built", which would have narrowed the ticket without the owner and described the lists as "capped at the sample's size", which nothing does. Re-review: resolved, with one sentence about what the reads return corrected.
+
+# Increment 3a, the lock log of an installation on P03 (2026-11-25)
+
+Facts (main bcb4f9d): the server keeps every lock of an installation in the order recorded (`recoveryseed.go`, `recoveryLock`), with who locked, the reason and the time; nothing limits or drops them, and the lock command can be repeated after each approved unlock. The recovery read returned all of them for each installation the reader's workspace can see, and the screen listed them oldest first.
+
+Built:
+
+- The recovery read lists the newest 50 locks of each installation, still in the order recorded, so an answer with 50 or fewer is what it was. Each lock gains `number`, its position, which does not change because the log only grows. Each installation's row gains `lock_history`: `total` and `next` (the number of the oldest lock listed when older ones exist, else empty). An answer with more than 50 locks is cut where it was whole; that is the change this ticket asks for and it is the only change to an existing field.
+- `GET /api/v1/recovery/locks` with `installation`, `after`, `limit` (1 to 100, default 50) and `q`: the installation's locks newest first, those with a number below `after`; `q` is matched against who locked, their sign-in name and the reason. It is admitted as the recovery read is; an installation the reader's workspace cannot see is answered as an invalid request, the same as one that does not exist. The cursor is exact: a lock recorded between two pages has a higher number.
+- The server keeps every lock as before; nothing is pruned.
+- Screen: the lock log lists the newest first (it listed the oldest first), with "N of M locks shown, newest first" when older ones exist, "Load older locks" below the table as one button that also carries "Loading…" and "Try again", a failure sentence that keeps the rows, and a line when the screen was read again after older locks were loaded. No search on the screen.
+
+Decisions made here that the owner can reverse: the order of the log on the screen (newest first); the size of the cut (50, the screen's constant for its other lists).
+
+Checks (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (371 seconds) on the final server code, and the test added afterwards for another tenant's installation passes with the recovery tests; `tsc` clean; console tests 1405, pass 1402, fail 0, skipped 3; rendered check `tools/lock-log-qa.mjs`, 53 passed, 0 failed. The rendered check reads the real main read and calls the real locks read once for the sample's single lock; the long log (120 locks, paging, failure and retry, focus, the read-again line, width, three languages at two widths) runs on answers the script writes and shows the screen's behaviour for those answers. The service's behaviour is shown by `TestRecoveryLockLogIsCutCountedAndRead` (the newest fifty in order, the pages without a gap while a lock is added, search, refused forms, an anonymous caller, a member) and by `TestRecoveryOtherTenantIsHidden` (another tenant's installation is refused exactly as one that does not exist).
+
+Not covered by a test: `limit` at 1 and 100 and a cursor above the total on this read; the component's reset and late-answer handling beyond the rendered check on one language and width.
+
+Reviews (AI, Claude Opus 5.5, by reading and, for the designer, from screenshots; neither ran anything), 2026-11-25. Independent design and change review: approve with conditions, no blocking finding. It confirmed that locks are only appended, that an answer with fifty or fewer locks is unchanged apart from `number`, that the tenant filter is the main read's, and read the cut as the paging this ticket and the P03 specification ask for rather than a change of meaning needing the owner first; its conditions (the other-tenant test, stale line references in the binding document, this record) are applied. ui-designer review: PASS; newest first judged the right order for a log cut at fifty; its sentence forms for the count were adopted so they match the screen's other "Showing …" lines, and the count is announced. Left open from it: focus moving to the count after the last page scrolls back to the top of the log; the read-again line stays until the next load; none of its screenshots showed the count line, which it judged from source.
+
+
+# Increment 3b, the action history of a subscription on P02 (2026-11-25)
+
+Facts (main c8d2b1a): the server keeps for each subscription every action taken on it in the order recorded (`integrationseed.go`, `subscriptionStep`; closures after a lost right in `integrationcmds.go`), with the action, who took it, the reason, and for a closure its cause and request. An action has no time of its own. Nothing limits the history, and pause, request resume and approve resume can repeat. The integrations read returned all of it for every subscription the module still holds, and the screen listed it oldest first inside the "History and signing keys" fold.
+
+Built, in the shape of increment 3a:
+
+- The integrations read lists the newest 50 actions of each subscription in the order recorded, so an answer with 50 or fewer is what it was. Each action gains `number`, its position. Each subscription's row gains `history_facts`: `total` and `next`.
+- `GET /api/v1/integrations/subscription-history` with `subscription`, `after`, `limit` (1 to 100, default 50) and `q` (matched against the action, who took it and their sign-in name, the reason, the cause and the request): the subscription's actions newest first. It is admitted as the integrations read is and refused without a channel right, as the main read withholds the channels section; a subscription that does not exist, that the module no longer holds, or that is asked from another workspace is answered as an invalid request.
+- Screen: the fold lists the newest action first, with "Showing the newest N of M actions." when older ones exist, one button "Load older actions" that also carries "Loading…" and "Try again", and the read-again line. The logic of the lock log of increment 3a was written once more as a shared hook (`shared/older-rows.ts`) and is used here; the lock log keeps its own copy for now.
+
+Not built: the server's entries for subscriptions the module has purged still accumulate and are walked on each read and each propose (group 1 of the order above); taken next.
+
+Found and not caused by this change: with the sample data and the fold open, the channels view is 4 pixels wider than a 1440 viewport because of a sign-in name in a table of the fold. Recorded as HYB-360; the rendered check compares against that width.
+
+Decisions the owner can reverse, as for the lock log: newest first on the screen; the cut at 50.
+
+Checks (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (378 seconds) on the final server code, and the test added afterwards (`TestSubscriptionActionHistoryFollowsTheChannelsSection`) passes on its own; `tsc` clean; console tests 1406, pass 1403, fail 0, skipped 3; rendered checks: `tools/subscription-history-qa.mjs` 54 passed, 0 failed, and `tools/lock-log-qa.mjs` 53 passed, 0 failed, run again because the lock log's count sentence changed with this increment. The history check reads the real main read and calls the real history read once for the sample's single action; the long history runs on answers the script writes. The service's behaviour is shown by the two server tests: the cut, the pages without a gap while an action is added, search, refused forms, an anonymous caller, a member, faults; for each integration right alone, the history read answers exactly when the main read lists subscriptions; a subscription the module no longer holds and another workspace are refused like one that never existed.
+
+The width at 1440 with the folds open: 1446 on main c8d2b1a with the console built from main, 1444 with this change, both on the sample data; the check requires at most 4 pixels, only from a sign-in name in a table of the fold, and that the count line stays inside the fold.
+
+Not covered by a test: `limit` at 1 and 100 on this read; the shared hook's reset and late-answer handling beyond the rendered checks.
+
+Reviews (AI, Claude Opus 5.5, by reading and, for the designer, from screenshots; neither ran anything), 2026-11-25. Independent design and change review: approve with conditions, no blocking finding. It listed every reader of the history on the server and in the console and found none that looks for a past action or the last one, so nothing misses an action beyond fifty; it confirmed the permission check is the main read's and is made before any lookup. Its conditions are applied: the width check no longer trusts a measured baseline without bounds; three server tests were added; stale line references corrected. ui-designer review: FAIL, then PASS. Its finding: with no time column, the cut sentence said which rows are shown but not their order; the sentence now ends "newest first" in the three languages, with the Arabic noun before the number so that no agreement is needed, and the lock log's sentence was changed the same way. Left open from it: a line stating the order when the history is not cut; moving focus to the count only when the button had it. It also saw the signing keys table of the same fold overlapping itself at 1440, which predates this change and is added to HYB-360.
+
+
+# Increment 3c, the proposals of P04 (2026-11-25)
+
+Facts (main 02a43ce): the retention store keeps 200 proposals and drops the oldest that is not pending (`retentionseed.go`, `keep`). The retention read listed the newest 50 of those the reader's workspace may see, pending and closed together, with `total` and `more`, so a pending proposal could fall out of the read behind fifty newer ones, as on P01 to P03 before increment 1b. The screen shows the proposals in three places by kind (policy, release, plan) and said under each that only the newest 50 are read and older ones are shown on no tab.
+
+Built, in the shape of increment 1b:
+
+- The retention read lists every pending proposal the workspace may see, then the newest closed ones while fewer than 50 are listed, newest first. `total` and `more` keep their meaning (all visible proposals; whether some are not listed). The section gains `history` (`total` closed, `next`, `kept`, `dropped` since the service started) and `closed_by_kind`, the closed proposals of each kind, because the screen lists them by kind.
+- `GET /api/v1/retention/proposals` with `after`, `limit`, `q` and `kind` (policy, release or plan): the closed proposals the workspace may see, newest first. Admitted as the retention read is, with its fault step; another workspace gets an empty list where the main read says "not configured". With `kind`, the answer's `proposal_history.total` is the closed proposals of that kind, which is what the list of that kind counts; without it, of all kinds. `dropped` is always the installation's.
+- Screen: each of the three lists shows "N of M closed proposals shown, newest first" when closed proposals of its kind are left out, with "Load older closed proposals", using the shared part of increment 1b. The cursor after the main read's cut serves every kind, since everything newer than the cut is in the main read. The sentence "Only the newest 50 proposals are read" is removed.
+
+Not changed: the store still counts its 200 across workspaces; policy proposals are visible to every workspace and the other kinds only to their own, and only the workspace the service was started for can read at all. `dropped` is therefore a count for the installation.
+
+Residual, as in increment 1b: what the screen derives from proposals (the pending proposal of a policy row, the release proposal of a hold, a link to a proposal) reads the main read, which holds every pending proposal; a closed proposal loaded as older is not selected by a link.
+
+Two things that changed with the listing rule and are not otherwise visible: a proposal now leaves the main read as soon as it closes if the pending proposals and the newer closed ones fill the fifty, where it used to stay while fewer than fifty were newer, and an attempt kept on it is then reported by the screen's "may have been applied" notice instead of on its row; and the main read builds a row, with one module check, for every pending proposal, up to the module's limit of 1,000, where it built at most fifty rows.
+
+Checks for increment 3c (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (381 seconds) on the final code; `tsc` clean; console tests 1407, pass 1404, fail 0, skipped 3; rendered check `tools/proposal-history-qa.mjs` for P01 to P04, 299 passed, 0 failed. For P04 the check reads the real main read and calls the real further read once on the sample's seven proposals; the long list is written by the script, with a total for all kinds (250) that differs from the total of the kind shown (120).
+
+Not covered by a test: more than fifty pending proposals in the retention read; the three lists' state when a person moves between the views with older proposals loaded.
+
+Independent design and change review of increment 3c (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve with conditions, one blocking finding, then resolved. The finding: with `kind`, the further read answered the closed total of all kinds, so after "Load older closed proposals" a list showed "N of" the total of every kind and never reached "All shown"; the first rendered check hid it by giving both totals the same value, and the server test did not look at that field. Corrected in the service, asserted in the server test, and the rendered check now uses different totals. It also confirmed that every reader of the proposals in the screen's command handling is served by the main read holding every pending proposal, and that the cursor of the overall cut skips or repeats nothing for a kind. No ui-designer review was held: the screen part and its sentences are those reviewed for P01 to P03.
+
+# Increment 3d, the proposals of P05 (2026-11-25)
+
+Facts (main 36631f2): the release evidence store keeps 200 proposals of two modules, the release trace and the performance gate, in one list, and drops the oldest that is not pending. Each module numbers its own proposals, so two proposals can share a number; a proposal's target (`trace-proposal-<n>`, `perf-proposal-<n>`) is unique. The read listed the newest 50 of both, pending and closed together, and the decisions view said "Waiting for approval (n shown)" and "Older proposals waiting for approval may not be listed" whenever the list was cut.
+
+Built, in the shape of increments 1b and 3c:
+
+- A proposal gets a sequence number when the server records it; that number orders the list and is the cursor, since a module's number cannot be. It is not a field of any row; an answer carries it only as the cursor in `next`.
+- The release evidence read lists every pending proposal, then the newest closed ones while fewer than 50 are listed. `decisions.proposals` keeps `total` and `more`; `decisions.proposal_history` is added (`total` closed, `next`, `kept`, `dropped`).
+- `GET /api/v1/release-evidence/proposals` with `after`, `limit` and `q`: the closed proposals of both modules, newest first. Admitted as the main read is, with its fault step.
+- Screen: the waiting group is now complete, so its heading gives the count without "shown" and the sentence about older waiting proposals is no longer shown; both remain for an answer without `proposal_history`. The closed group shows its count and "Load older closed proposals" through the shared part, which now tells proposals apart by target instead of by number, so that two modules' proposals with the same number are both kept. That change applies to P01 to P04 as well, where targets are as unique as numbers.
+
+Residual, as before: a link to a closed proposal that is only on an older page does not select it; `retiredAfter` and the labels the decisions view takes from requirements are unaffected.
+
+As on P04: a proposal now leaves the main read as soon as it closes if the pending proposals and the newer closed ones fill the fifty, and a refusal kept on it then becomes the screen's "may have been applied" notice; and the main read builds a row for every pending proposal, with a module check for a retire proposed by someone else.
+
+Checks for increment 3d (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (371 seconds); `tsc` clean; console tests 1409, pass 1406, fail 0, skipped 3; rendered check `tools/proposal-history-qa.mjs` for P01 to P05, 369 passed, 0 failed. For P05 the check reads the real main read and calls the real further read once on the sample's 28 proposals; the long list is written by the script from one module's row, so two modules' proposals with the same number are told apart on the screen only in the unit test of the shared part.
+
+Not covered by a test: newest-first order asserted across the whole walk; proposals added or closed between two pages; more than fifty pending proposals.
+
+Independent design and change review of increment 3d (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve, no blocking finding. It confirmed that every entry gets its sequence through `keep` in production (two tests append directly and leave it at zero, which nothing reads there), that the member's refusal comes from the same admission as the main read, that every reader of the proposals in the command handling needs only pending proposals, and that telling proposals apart by target cannot merge two proposals on P01 to P04. Its observations on this record and on stale line references in the binding document are applied. No ui-designer review was held: the screen part and its sentences are those reviewed for P01 to P03.
+
+# Increment 3e, the holds of P04 (2026-11-25)
+
+Facts (main a83fe60): a workspace can have 100 holds that are not released, and released holds are kept without limit (the module's limit is 10,000). The retention read listed the newest 50 holds of the workspace, released or not, with `total` and `more`. A hold that is still in force could therefore be behind fifty newer holds, where the screen cannot show it and a release cannot be proposed from it. Whether a hold is released was known only to the module, one call a hold.
+
+Built, by the rule of the proposals:
+
+- The server notes that a hold is released when the release proposal is applied, so that it can tell the two kinds apart without asking the module for every hold. A hold also gets a number, its position, which is the cursor.
+- The retention read lists every hold of the workspace that is not released, then the newest released ones while fewer than 50 are listed, newest first. `total` and `more` keep their meaning. Each row gains `number`; the section gains `released` (`total`, `next`).
+- `GET /api/v1/retention/holds` with `after`, `limit` and `q` (matched against the identifier, the target and the rationale given when the hold was placed; not the hold's own reason or its owner): the released holds of the workspace, newest first. Admitted as the retention read is, with its fault step.
+- Screen: the holds are shown in two groups, "In force (n)" with every hold in force and "Released (n)", each newest first. In the second group: "Showing N of M released holds, newest first." when released holds are left out, one button "Load older released holds" that also carries "Loading…" and "Try again", and the read-again line, through the shared hook of increment 3b.
+
+Cost that changed: the read builds a row, with its module calls and its outcomes, for every hold in force, up to 100, where it built at most 50 rows.
+
+Residual: a link from a closed release proposal to a released hold that is only on an older page does not select the hold. After a release is approved while fifty or more holds are in force, the released hold is not in the read that follows, and the result sentence then leaves out the hold's name. The note that a hold is released is kept by the server beside the module's own state. In production only the server's approve function calls the module's approval, which is the one place the module releases a hold, and the note is set there; a test that approves through the module directly leaves the note unset, and the server's retire path does not copy the module's state into it. The possible disagreement is one-sided: a released hold listed among those in force, never the reverse.
+
+Checks for increment 3e (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (375 seconds) on the final code; `tsc` clean; console tests 1410, pass 1407, fail 0, skipped 3; rendered check `tools/holds-qa.mjs`, 59 passed, 0 failed. The rendered check reads the real main read and calls the real released holds read once (the sample has two holds, both in force); the 120 released holds are cards written by the script.
+
+What the server tests show and do not: in the two paging tests a hold is made "released" by setting the server's note, so the module still reports those holds as in force and the rows say so; they prove the selection and paging by the note, another workspace kept out, search, refusals and faults. That a real release sets the note and is counted by the read is asserted through the release command in `TestRetentionRelease`, and the note is compared with the module after the seed, where no hold is released.
+
+Not covered by a test: the note after the server's retire path; the hook's order for a list already newest first, outside the rendered check.
+
+Reviews (AI, Claude Opus 5.5, by reading and, for the designer, from screenshots; neither ran anything), 2026-11-25. Independent design and change review: approve with conditions, no blocking finding. It traced every place the module releases a hold (one, the approval of a release) and every production call of that approval (the server's approve function, where the note is set), and found the note cannot make a hold in force look released. Its conditions, applied: this record's wording about the note, the dropped hold name after an approval, the search fields stated exactly, a server test for few holds in force with many released. ui-designer review: FAIL, then PASS. Its finding: one list mixing holds in force with released ones, under a count about the released ones only, could put a hold still in force below dozens of released cards; the view now has two groups, "In force (n)" first, as the proposals have. Left open from it: the group heading counts the released holds loaded, not all of them; the released group shows only its button when none is loaded yet; none of its screenshots showed the headings, which it confirmed from source.
+
+# Increment 3f, the server's subscription entries on P02 (2026-11-25)
+
+Facts (main fa43317): the webhooks module holds at most 16 subscriptions in use and 32 in all for a workspace, and when a proposal would exceed that it purges revoked subscriptions that have no dead letter and nothing queued. The server keeps its own entry for every subscription ever proposed (who proposed it, the rationale, the action history) and never removed one. The integrations read, the propose command, the screening of redeliveries and two other loops walk every entry and ask the module about each; entries of purged subscriptions are skipped by all of them, so they cost a module call each and show nothing.
+
+Built: when a subscription is proposed, the server drops its entries for subscriptions the module no longer holds. An entry is dropped only when the module answers "not found" for it; when the module cannot be asked, the entry stays. No read changes: those entries were never listed. So that no command answer changes either, the server keeps the identifier and the proposer of each dropped entry (the newest 10,000, the limit the request book uses): a command on a purged subscription still resolves its target and is refused for its stage as before, and a repeated request with the same key is still replayed. Beyond 10,000 such notes the oldest is forgotten and a command on it is answered as on a target that never existed. Their action history goes with them; it could not be read before either, since both the main read and the history read of increment 3b answer only for subscriptions the module holds.
+
+A side effect: an identifier the module purged and later accepts again no longer finds the old entry with its old history.
+
+Group 1 of the order above is complete with this.
+
+Checks for increment 3f (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (371 seconds) on the final code. The test proposes through the server and withdraws through the module for five times the module's limit: the server's entries stay equal to what the module holds, the first one is dropped and the seeded one kept, the read lists what the module holds, a failing module read drops nothing, and a command on a purged subscription is refused for its stage as before while one on an identifier that never existed is denied.
+
+Not covered by a test: a repeated request with the same key on a purged subscription; the limit of 10,000 notes; a revoked subscription with a dead letter or a queued redelivery staying in the list (the module's rule, not asserted on the server).
+
+Independent change review of increment 3f (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve with one condition, then resolved. It confirmed that the module deletes only revoked subscriptions with no dead letter and nothing queued, that no reader, request, held redelivery or pending row still needs such an entry, and that a subscription in use cannot answer "not found". Its condition: the first version said no answer changes, which was untrue for commands, because a command on a purged subscription would have been denied instead of refused for its stage and a repeated request would no longer have been replayed; the identifier and proposer are now kept, and it read the three callers of the target lookup to confirm a kept note cannot be taken for a subscription in use.
+
+
+# Increment 4a, the test results of P05 (2026-11-25)
+
+This is the first increment of group 3: no command records a test result, so in a running service the list is the seed's seven results, and what follows is exercised through test hooks.
+
+Facts (main 70e73ca): the release trace module holds up to a million results, one per namespace, test and build, each with its counts and the time of its latest record. The server keeps their keys in the order first recorded. For the artifacts view the main read asked the module for every result, sorted them by the time of the latest record and returned the newest 50 with `total` and `more`; nothing reached the rest.
+
+Built:
+
+- When a result is recorded again, the server moves its key to the end of its list and gives it the next sequence number, so the list is in the order of the latest record and the newest are at its end. The sequence number is the cursor and is returned on each row as `number`.
+- The main read takes the newest 50 from the end and asks the module only for those; it gains `artifacts.results_next`. The rows and their order are what the sort produced, as long as the server sees the records in the order of the module's clock, which holds for the one place that records. One difference in principle: results whose latest records share a time were ordered by when they were first recorded and are now ordered by when they were last recorded; the seed's one repeated record is made back to back, so no order differs today. A failure of the module on a result outside the newest 50 no longer fails the main read.
+- `GET /api/v1/release-evidence/results` with `after`, `limit` and `q`: results newest first. `q` is matched against the namespace, the test and the build, which the server holds, and not against what only the module knows (harness, evidence digest, outcome). A result recorded again between two pages moves above the cursor and is not on the later pages; it is at the top of the next main read. The plan's rule for lists whose order changes applies: the answer says so (`order` is `latest_record_first` and `rows_can_move` is true, where the lists that only grow say `newest_first`), and when the walk ends with fewer rows than the total the screen says that results recorded, or recorded again, while the list was loading are not shown and are at the top after a reload.
+- Screen: the results table shows "Showing the newest N of M results, newest first." when results are left out, and one button "Load older results", through the shared hook.
+
+Not changed and still walking everything: the server's check that a result key is new (one pass over the keys for each record); the "last observed" time of a path, which looks at every result key of the candidate build; the reason a result is not counted, which scans the proposals for the test's owners. The new read itself walks every key on each page to count the matches, without asking the module. They matter when something records results at scale and are named here so that the producer's ticket finds them.
+
+Checks for increment 4a (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (370 seconds) on the final server code; `tsc` clean; console tests 1411, pass 1408, fail 0, skipped 3; rendered check `tools/results-qa.mjs`, 56 passed, 0 failed. The rendered check reads the real main read and calls the real results read once on the sample's seven results; the long list, the failed page and the walk that ends below the total are answers written by the script.
+
+Not covered by a test: results whose latest records share a time; `limit` at 1 and 100; whether the "recorded at" column shows the time the order follows (the rendered rows share one time).
+
+Reviews (AI, Claude Opus 5.5, by reading and, for the designer, from screenshots; neither ran anything), 2026-11-25. Independent design and change review: approve with conditions, two blocking findings, then resolved. It confirmed that for every record the service can make today the main read's rows and order are what they were, and that the one place that records is always followed by the server's note of it. Its findings: the first version used the word of the lists that only grow for this list's order and said nowhere that rows can move, so a walk could end at "136 of 137" without a button or a reason; and the test meant to show that not every result is read allowed 150 module reads with 137 results stored, a bound the old code met as well. Both corrected. ui-designer check of the sentences: PASS; the reload word in the new sentence matches the screen's button in the three languages. Left open from it: in the state where rows moved, "the newest 100 of 120" is not strictly the newest; Korean column headings of this table break inside a word at 1440, which predates this change.
+
+# Increment 4b, the builds and harnesses of P05 (2026-11-25)
+
+Facts (main 9053fa5): builds are kept in the order registered and never removed (module limit 10,000); the main read listed the newest 50 with each build's position as `order`, and `total` and `more`. Harnesses are kept by both modules, at most 100 each, and the main read listed the first 50 recorded. No command registers either; a running service has the seed's two builds and two harnesses.
+
+Built:
+
+- Builds: the main read gains `artifacts.builds_next` (the order of the last build listed when older ones exist). `GET /api/v1/release-evidence/builds` with `after`, `limit` and `q` (matched against the build and the commit): builds newest first; the cursor is a build's order, exact because the list only grows. The builds table shows its count and "Load older builds" through the shared hook, which can now take a row's number from any field, here `order`.
+- Harnesses: the main read lists every harness, at most 200, instead of the first 50. `more` is then always false. The list is small and complete, as "What the ticket means for each list" asks of complete lists.
+
+The builds read does not read the approver roster, which builds do not depend on; it therefore answers when the main read fails because the roster cannot be read. A build registered while a person loads older pages is above the cursor and counted in the total, so the walk ends one short; the screen then says that builds registered meanwhile are not shown and are at the top after a reload.
+
+Residual: a link to a build that is only on an older page (`?build=`) does not select it.
+
+Checks for increment 4b (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (371 seconds); `tsc` clean; console tests 1412, pass 1409, fail 0, skipped 3; rendered check `tools/builds-qa.mjs`, 51 passed, 0 failed, and, because the shared hook changed, the checks of the lists that use it again: results 56, holds 59, subscription history 54, none failed. The long list of builds is written by the script.
+
+Not covered by a test: `limit` at 1 and 100 and a cursor above the total on the builds read; the roster being unavailable; the sentence about builds registered meanwhile was not looked at by the designer (it has the form of the results' sentence, which was).
+
+Independent design and change review of increment 4b (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve with conditions, no blocking finding. It confirmed the cursor's arithmetic against the rows listed, that builds are only appended, and that the harness list cannot exceed the two modules' limits. Applied from it: the shared hook keeps its type check (a caller whose rows have no `number` must say where the number is); this record states that the builds read answers without the roster; stale line references in the binding document. It also saw that a walk could end one short without a reason when a build is registered meanwhile; the screen now says so.
+
+# Increment 4c, the load profiles of P05 (2026-11-25)
+
+Facts (main b7f0c5e): the performance gate holds up to 1,000 load profiles; the server keeps their identifiers in the order recorded and never removes one (retiring marks it). No command adds a profile; a running service has the seed's four. The main read lists the first 50 in recording order with `total` and `more`. A profile has a command, retire, so the screen's command handling looks profiles up in the rows it holds (`profileById`, `listed`, `stillAllowed`), as it does for requirements.
+
+Built, in the shape of increment 2a and without its search controls:
+
+- The main read keeps its rows and order; each profile row gains `number`, its position, and the section gains `profiles_next`.
+- `GET /api/v1/release-evidence/profiles` with `after` (the rows whose numbers are greater), `limit` and `q` (matched against the identifier and the target), or `target` alone (one to twenty profile targets separated by commas, which cannot be combined with another parameter; an unknown one is left out). Rows are built as the main read builds them, with the readiness of the candidate build read once for the request.
+- Screen: `Live.tsx` reads by target, before it sets the page, every profile that is not in the main read and that a link or the command state refers to, and the page then holds them; "Load more load profiles" adds the next rows to the page, so every reader of the profiles sees the rows shown. Rows loaded that way are dropped when the screen is read again, and the list says so. A profile held only because a link or an attempt refers to it appears after the others, in the order of its number.
+
+Review (independent reviewer, read-only, 2026-11-25): approve with conditions, then approve after a bounded re-review. Two blocking findings were corrected before merge: a link with a malformed profile was sent to the read by target, which refuses it, so the screen failed for as long as the link stayed (the link is now used only when it is a valid target); an answer to "load more" asked during a reload could be added to the newly read page and leave a gap (the list now has its own counter). Composition and copy check (ui-designer): pass; the suggested strings and a rule above the foot were adopted. Not corrected: the state of the button can stay "loading" after a change of scope or a denied answer followed by a failed read of the screen, when the screen shows that failure instead; the read accepts a limit of up to 100 rows, whose cost is not measured.
+
+Verification: the whole server package passed; console tests 1413, 1410 passed, 3 skipped; the rendered check `tools/profiles-qa.mjs` 55 passed against a local service with the sample seed, in which the profiles beyond the sample's four are answers written by the check. The owner has not reviewed the screen.
+
+Not built: a search on the screen; the hardware list of the same view (at most 100, the first 50 listed) and the paths of the matrix view, which follow.
+
+# Increment 4d, the hardware of P05 (2026-11-25)
+
+Facts (main a0f9ab2): the performance gate holds up to 100 hardware records; the server keeps their identifiers in the order recorded and never removes one. No command registers hardware; a running service has the seed's one. The main read lists the first 50 with `total` and `more`. Hardware has no command, no link and no selection on the screen; budgets and runs name hardware by identifier only.
+
+Built:
+
+- The main read keeps its rows and order; each hardware row gains `number`, its position, and the section gains `hardware_next`.
+- `GET /api/v1/release-evidence/hardware` with `after`, `limit` and `q` (matched against the identifier), in the order recorded.
+- Screen: the count of all, "Load more hardware", the failure and the read-again line, through one foot component now shared with the load profiles (`ListFoot` in `LiveLoad.tsx`). Rows loaded that way are dropped when the screen is read again. The denied branch of both lists now returns the button to idle before the screen is read again.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. Composition and copy check (ui-designer): pass; an Arabic string and the space above the foot were adopted. Noted and not changed: the records of a long hardware list have no divider between them.
+
+Verification: the whole server package passed; console tests 1414, 1411 passed, 3 skipped; the rendered check `tools/hardware-qa.mjs` 43 passed against a local service with the sample seed, in which the hardware beyond the sample's one is written by the check (so its first page holds one record, not fifty). The owner has not reviewed the screen.
+
+Not built: a search on the screen; a read by identifier, as nothing on the screen refers to a hardware record outside the list.
+
+# Increment 4e, the paths of P05 (2026-11-25)
+
+Facts (main 16f08da): the trace registry holds up to 1,000 support paths; the server keeps their identifiers in the order recorded and never removes one. No command adds a path; a running service has the seed's two. The main read lists the first 50 with `total` and `more`. A path has no command; the matrix view selects one through `?path=`, and `selectionOf` accepts only a path among the rows held. A path row is the most costly row of the screen: it reads each of its requirements and asks the gate once.
+
+Built:
+
+- The main read keeps its rows and order; each path row gains `number`, its position, and the matrix gains `paths_next`.
+- `GET /api/v1/release-evidence/paths` with `after`, `limit` (at most 50 here, because of the cost of a row) and `q` (matched against the identifier only, so that a search does not read every path), or `id` alone (one to twenty identifiers separated by commas; an unknown one is left out).
+- Screen: `Live.tsx` reads by identifier, before it sets the page, the path a link names when the main read does not hold it, so the link selects it; "Load more combinations" adds the next rows. Rows loaded that way are dropped when the screen is read again, and the list says so. The foot component moved to `live-format.tsx` and serves the three lists.
+
+A path held only because a link names it appears after the others, in the order of its number, as a held profile does.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. Composition and copy check (ui-designer): pass; the foot beside the open detail pane was not in the screenshots and was not judged. Raised and carried to a separate issue: the sentence that some combinations are blocked, and the intake line, are worked out from the rows held, so with more than fifty paths they can stay silent about a blocked path that is not held, without saying the check is partial.
+
+Verification: the whole server package passed; console tests 1415, 1412 passed, 3 skipped; the rendered check `tools/paths-qa.mjs` 55 passed against a local service with the sample seed, in which the paths beyond the sample's two are written by the check. The owner has not reviewed the screen.
+
+Not built: a search on the screen. Unchanged: the sentence above the matrix that says some combinations are blocked is still worked out from the rows held, as before.
+
+# Increment 4f, the deletion runs of P04 (2026-11-25)
+
+Facts (main fcd465b): the retention store keeps the deletion runs of every workspace in the order recorded and never removes one; the module allows 100 unfinished runs and sets no limit on finished ones. A run is recorded when a plan is approved; no command approves a plan (the approve command refuses a plan, and `propose_plan` reads "not connected"), so a running service has the seed's two runs. The retention read listed the newest 50 runs of the workspace, running or not, with `total` and `more`. A run that is still running, which is the only kind the stop command applies to, could therefore be behind fifty newer runs.
+
+Built, in the shape of increment 3e:
+
+- The retention read lists every run of the workspace that is running, then the newest of the others (stopped, done or complete; a stopped run may still be finishing a chunk it had claimed) while fewer than 50 are listed, newest first. `total` and `more` keep their meaning. Each row gains `number`, the run's position among the workspace's runs; the section gains `finished` (`total`, `next`).
+- `GET /api/v1/retention/runs` with `after`, `limit` and `q` (matched against the run's label, its target, its class and the plan's reason): the finished runs of the workspace, newest first. Admitted as the retention read is, with its fault step.
+- Screen: two groups, "Running" and "Stopped or finished", each with its count; the second group shows its count of all, "Load older runs", the failure and the read-again line through `useOlderRows`. An answer without `finished` keeps the single list and its "showing newest" line.
+
+Changed behaviour to weigh: the main read can now list fewer than fifty finished runs, or none, when many are running, and more than fifty rows when more than fifty are running (at most 100). To know which runs are running, the read now asks the module for every run of the workspace, not only the fifty it lists; a stored run the module does not know now fails the read wherever it is in the list. A link to a finished run that the main read does not list selects nothing, as a link to a released hold outside the main read does.
+
+Review (independent reviewer, read-only, 2026-11-25): approve with conditions, then resolved on a bounded re-review. Its condition was that the change of what the main read's rows hold be recorded for the owner, which "Open for the owner" now does; it also corrected the run states named here (four, not three). It confirmed that a run's number and every count come from the workspace's own runs. Composition and copy check (ui-designer): failed at first, because the second group was named "Finished", the state tag of a done run, over runs that are stopped; its strings were adopted and it then passed. It did not see the group headings or the Korean and Arabic renders after the change.
+
+Verification: the whole server package passed (before the copy and document corrections; no Go file changed after it); console tests 1416, 1413 passed, 3 skipped; the rendered check `tools/runs-qa.mjs` 59 passed against a local service with the sample seed, in which the runs beyond the sample's two are written by the check. The owner has not reviewed the screen.
+
+# Increment 4g, the deletion records of P04 (2026-11-25)
+
+Facts (main b0be51b): the module keeps one deletion record (tombstone) for each deleted artifact, numbered in one sequence for the whole installation. A record is written when a worker reports a deletion; no worker is connected, so a running service has the seed's two. The retention read looks only at the last 1,000 records of the installation (the window), keeps those whose artifact the workspace may see, and listed the newest 50 of them with their count and `more`; the screen says that only the window is scanned. Up to 950 records of the workspace inside the window could not be reached.
+
+Built:
+
+- The main read keeps its rows, order and window; the records gain `next`, the sequence of the last record listed when more exist.
+- `GET /api/v1/retention/tombstones` with `after`, `limit` and `q` (matched against the artifact, the class and the label of the run when the workspace may see that run): the workspace's records of the same window, newest first, with the watermark and the window of the read. Admitted as the retention read is, with its fault step.
+- Screen: under the sentence about the window, the count of those shown, "Load older deletion records", the failure and the read-again line through `useOlderRows`, keyed by the sequence. An answer without `next` keeps "Showing the newest 50."
+
+Not built and unchanged: records older than the window stay out of reach, as the screen already says. The window is taken at each read, so when new records arrive between two reads the oldest of the earlier window are no longer returned; the cursor is a sequence, so no record is returned twice. The sequence and the watermark are numbers of the whole installation, as they already were in the main read.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. It confirmed that the further read filters by the same visibility check as the main read, that a search cannot confirm a hidden artifact or a hidden run's label, and that every count comes from the visible records. Composition and copy check (ui-designer): pass; the note about skipped sequence numbers was moved back directly under the table. It did not see the foot at 1440 or the state with all records loaded.
+
+Verification: the whole server package passed (before the note was moved; no Go file changed after it); console tests 1417, 1414 passed, 3 skipped; the rendered check `tools/records-qa.mjs` 49 passed against a local service with the sample seed, in which the records beyond the sample's two are written by the check. The owner has not reviewed the screen.
+
+# Increment 4h, the items of a class and the required items of P04 (2026-11-25)
+
+Facts (main daf2fd8): the retention read lists, for each class, the first 50 artifacts the workspace may see in identifier order, with the class's counts and `total`; and the first 50 referenced artifacts in identifier order. Nothing registers an artifact in a running service (no ingest is connected), so it has the seed's. An artifact is the target of the place hold command and of the `?artifact=` selection, and deletion records link to it; `artifactOf`, `listed` and `stillAllowed` look it up in the rows the page holds.
+
+Built, in the shape of increment 4c:
+
+- The main read keeps its rows and order; each class and the references gain `next`, the identifier of the last row listed when more exist.
+- `GET /api/v1/retention/artifacts` with `class` (required), `after` (an identifier; the rows after it), `limit` (at most 50) and `q` (matched against the identifier), or `id` alone (one to twenty identifiers, of any class; one the workspace may not see or that is not registered is left out). Each row carries its `class`. `GET /api/v1/retention/references` with `after`, `limit` and `q`. Both are admitted as the retention read is, with its fault step.
+- Screen: `Live.tsx` reads by identifier, before it sets the page, every artifact that the main read lacks and that a link or a hold attempt refers to, and the page then holds it in its class; "Load more items" adds the next rows of a class, or of the required items, to the page. Rows loaded that way are dropped when the screen is read again, and the list says so.
+
+Cost, unchanged in kind: the references read works out the standing of every artifact the workspace may see to find the referenced ones, as the main read does; the artifacts read walks the identifiers and builds only the rows it returns.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. With the tenant boundary as its first question, it confirmed that both reads walk only the artifacts the workspace may see, that a read by identifier leaves out another workspace's artifact and an unregistered one alike with no count or error, and that a search matches the identifier only. Composition and copy check (ui-designer): pass; the count sentence now says "sorted by item", the screen's word, instead of "identifier". It did not see the required items foot in the holds view. Its note that several classes on one page each show a button of the same name is carried to a separate issue.
+
+Verification: the whole server package passed; console tests 1418, 1415 passed, 3 skipped; the rendered check `tools/items-qa.mjs` 61 passed against a local service with the sample seed, in which the items beyond the sample's are written by the check. The owner has not reviewed the screen.
+
+# Increment 4i, the items of a run and the outcomes of a hold on P04 (2026-11-25)
+
+Facts (main 88c3347): a run row lists the first 50 artifacts of its plan that the workspace may see, with their count; the module requires a plan's artifacts in ascending identifier order, so plan order is identifier order. A hold row lists the first 50 outcomes, that is, the covered artifacts the workspace may see that were not preserved, in identifier order, with `outcomes_more` and no count: the module pages outcomes by artifact and the server stops as soon as it has one more than it shows. Neither list has a producer in a running service beyond the seed.
+
+Built:
+
+- A run's artifacts gain `next`, the number of rows listed when more exist; a hold gains `outcomes_next`, the artifact of the last outcome listed when more exist.
+- `GET /api/v1/retention/run-artifacts` with `run` (the run's target), `after` (a count of rows to pass) and `limit` (at most 50): the run's artifacts the workspace may see, in identifier order, with `total`. `GET /api/v1/retention/hold-outcomes` with `hold`, `after` (an artifact identifier) and `limit` (at most 50): the outcomes after that artifact, with `next` and no total. A run or a hold that does not exist or belongs to another workspace is refused in the same way (422), and so is the request of a reader of another workspace, which has no run or hold to name.
+- Screen: each run card and each hold card loads its further rows itself through `useMoreRows` (`shared/more-rows.ts`); the run's items show the count of all, the hold's outcomes show only the button, since their number is not served. Rows loaded that way are dropped when the screen is read again, and the list says so. "More items are not shown." stays only for an answer without `outcomes_next`.
+
+Not built: a count of a hold's outcomes, which needs a walk of every covered artifact.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. With the tenant boundary first, it confirmed that a malformed target, an unknown run and another workspace's run are refused before any module call with the same answer, and likewise for a hold; a test now compares those answers. Placement check (ui-designer): pass for the foot in a run card and for a hold's outcomes with a button and no count; it did not see the foot in the hold card, which its screenshot did not reach. Its note that a long outcomes list stretches the hold card's left column is carried to a separate issue.
+
+Verification: the whole server package passed (before the comparison was added to the test; the retention tests passed again after it); console tests 1419, 1416 passed, 3 skipped; the rendered check `tools/members-qa.mjs` 61 passed against a local service with the sample seed, in which the rows beyond the sample's are written by the check. The owner has not reviewed the screen.
+
+# Increment 5a, the member lists of P03 (2026-11-25)
+
+Facts (main 938deb9): for each installation the recovery read lists the newest 50 entries of the set's history (the module keeps 100), and, while a recovery is open, the first 50 open calls and unknown targets of the reader's workspace and the first 50 pending events, each with its total. Nothing in a running service opens a recovery or fills these lists beyond the seed (one open call, one unknown target, two pending events, no history); no command begins a recovery. None of the rows is the target of a command or of a link; the lost events are served whole and stay so.
+
+Built:
+
+- The main read keeps its rows and order; the four lists gain `history_next`, `open_calls_next`, `unknown_next` and `pending_next`.
+- One read for the four: `GET /api/v1/recovery/rows` with `installation`, `list` (`history`, `open_calls`, `unknown`, `pending`), `after` and `limit` (at most 50), answering `rows`, `next`, `total`, `order` and `rows_can_move`. The history is newest first and its cursor is the entry's number from the oldest, so a new entry does not move the rows after it while the module holds fewer than its 100 entries; once it is full a new entry drops the oldest and every number goes down by one, so a further read can repeat a row already shown (the screen lists it once) and never skips one. The answer says `rows_can_move: false` for the history with that exception. The other three are in the module's order and their cursor is the number of rows passed; they belong to an open recovery and shrink as it proceeds, so rows can move between two reads, which the answer says and the screen says beside the list. An installation that does not exist or that the reader's workspace may not see is refused alike (422). The read has the recovery read's fault step.
+- Screen: each list loads its further rows itself (`recovery/LiveRows.tsx` on `shared/more-rows.ts`), with the count of all, "Load more", the failure and the read-again line. A row that an answer repeats is listed once; an unknown target is told apart by its key, series and number together, since two calls on one key give two targets.
+
+Tested through the builders with made-up module views (120 rows, one in ten of another workspace) and through the read on the sample; the read's paging beyond the sample's rows is not exercised over HTTP, because no producer exists to fill a real recovery in a test.
+
+Not built: the installations themselves (the read lists every installation the workspace may see; their number is not cut) and the lost events.
+
+Review (independent reviewer, read-only, 2026-11-25): approve with conditions, then resolved on a bounded re-review. It found that unknown targets were told apart by key alone, so a second target on the same key would have been left off the screen with no way to load it; they are now told apart by key, series and number. It also corrected this section's claim about the history cursor, which holds only until the module's 100 entries are full. It confirmed, builder by builder, that the main read answers as before apart from the four new fields. Composition and copy check (ui-designer): failed at first on two points, the Korean sentence not using the screen's word for reload and a button that did not name its list; both were corrected with its strings and it then passed. It did not see the history and unknown targets foots or the Arabic renders after the change.
+
+Verification: the whole server package passed (before the corrections; the only Go change after it is an added test case, and the recovery row tests passed again); console tests 1420, 1417 passed, 3 skipped; the rendered check `tools/recovery-rows-qa.mjs` 109 passed against a local service with the sample seed, with rows written by the check. The owner has not reviewed the screen.
+
+# Increment 5b, the deliveries of P02 (2026-11-25)
+
+Facts (main 86a3ee8): for each subscription the integrations read lists every delivery that needs action (a dead letter or a held redelivery), which are the only rows a command applies to, and the first 50 of the others (the open delivery, queued redeliveries, cancelled ones) in the module's order; `deliveries_more` names the subscriptions whose others were cut, and the screen says that more exist. No dispatcher is connected and no command adds a delivery, so a running service has the seed's two; approving a redelivery changes a dead letter's kind without changing the count.
+
+Built:
+
+- The main read keeps its rows and order; the events gain `deliveries_next`, a cursor for each subscription named in `deliveries_more`.
+- `GET /api/v1/integrations/deliveries` with `subscription`, `after` (a count of rows to pass) and `limit` (at most 50): the subscription's deliveries that need no action, in the module's order, with `next`, `total` and `rows_can_move: true`. It needs the rights the channels and events sections need, has the integrations read's fault step, and refuses a subscription that does not exist, was purged or belongs to another workspace alike (422).
+- Screen: under the deliveries table, one button for each subscription whose list was cut ("Load more deliveries of …"), or only the selected subscription's when one is selected; the rows are added to the page's deliveries in sequence order, a delivery an answer repeats is listed once, and the note that more exist goes when a subscription has been read to its end. A sentence says that deliveries can change while they are dispatched. Rows loaded that way are dropped when the screen is read again, and the list says so.
+
+Tested through the windowing function with made-up deliveries (130, some dead or held) and through the read on the sample, whose subscriptions have one such delivery each; the fifty-row cut cannot be reached over HTTP in a test, as nothing produces deliveries.
+
+Not built on P02: the publishers, plugin versions and installations, the dead letters as a separate list and the event types, which the integrations read returns whole and which have no producer.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. It confirmed that the main read answers as before apart from the cursors, that the new read asks for the same rights as the events section and follows the subscription history read step for step, that the further rows carry no usable action, and that the main read's fifty are exactly the first window of the further read. On its suggestion the sentence that deliveries can change now stays while further rows are held. Composition and copy check (ui-designer): pass; the English button now says "for" as the screen does elsewhere. It did not see several cut subscriptions at once or a long subscription identifier at 390.
+
+Verification: the whole server package passed; console tests 1421, 1418 passed, 3 skipped; the rendered check `tools/deliveries-qa.mjs` passed against a local service with the sample seed, which has one subscription, so the case of one subscription read to its end while another still has a button is covered only by the model test.
+
+# Increment 5c, the changed members of a plan on O02 (2026-11-25)
+
+Facts (main edfe4ba): for a sealed or activated plan the plans reads list, for each relationship kind the plan changes, the first 50 changed members in member order, all kinds in one list, and give the true number changed for each kind (`kinds[].changed`). The rows did not say which kind they belong to, and nothing on the screen said that members were left out: the plan's `truncated` flag, which the screen words as "not all members shown", is the module's flag that the list of violations was cut, not the members. The module already reads changed members after a given member. A plan changes more than 50 members of a kind only when a change moves many members at once; the sample has no plan.
+
+Built:
+
+- The plans reads keep their rows and order; each changed member gains `kind`, and each kind gains `next`, the last member listed when more were changed.
+- `GET /api/v1/organizations/plans/members` with `plan`, `kind`, `after` (a member; the rows after it) and `limit` (at most 50): the changed members of that kind in member order, with `next` and `total`. A sealed plan's changes are fixed, so rows do not move. A plan that does not exist or belongs to another workspace is refused alike (422); a plan in another state answers no rows.
+- Screen: under the changed members table of a plan, the count of those shown out of all changed, and one button for each kind that has more ("Load more changed members: …"), with the failure sentence. Rows loaded are kept with the plan while the page's revision stays the same.
+
+Found and carried to a separate issue: the screen's sentence for `truncated` speaks of members while the flag is about violations.
+
+Tested over HTTP with a group plan that changes three members, read one at a time; fifty of a kind is not reached in a test.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. It confirmed that `kinds[].changed` counts exactly the members the module pages, that the plans reads answer as before apart from the two new fields, that an unknown plan and another workspace's plan are refused alike before any module call, and that `truncated` is about violations (HYB-365). Composition and copy check (ui-designer): failed at first because the Korean count used the counter for people; corrected to the screen's counter and then passed. It did not see the button at rest, several kinds cut at once, or Arabic after the change. Not corrected: a denied or signed-out answer of the further read is shown as the generic failure (HYB-365).
+
+Verification: the whole server package passed; console tests 1422, 1419 passed, 3 skipped; the rendered check `tools/plan-members-qa.mjs` 32 passed against a local service with the sample seed, with a plan and members written by the check, since the sample has no plan. The owner has not reviewed the screen.
+
+# Increment 5d, the approver roster of P04 and P05 (2026-11-25)
+
+Facts (main f3b0dc8): every retention and release evidence read built its facts with `retentionApprovers`, which pages through all members of the workspace (100 a call) to find the people who can approve. The roster is used in three places only: whether a hold's release can be proposed (`releaseBlocked`), and whether a requirement or a profile can be retired (`eligible`). The further reads added by this ticket inherited the roster read although most of their rows never use it, so a screen that loads more rows read the whole roster again for each page, and a roster that could not be read failed reads that did not need it.
+
+Built, on the server only, with no change to any answer:
+
+- The facts can be built without the roster (`retentionFactsWithoutRoster`, `evidenceFactsWithoutRoster`). The reads whose rows do not use it are built that way: the items of a class and items by identifier, the required items, the deletion records, the stopped or finished runs, a run's items and a hold's outcomes on P04; the paths and the results on P05.
+- The main reads and the reads whose rows state whether something can be proposed still read it: the holds, the requirements, the profiles, and, left as they were, the proposal reads.
+- A hold row, a profile row and a requirement row that would need the roster refuse to be built from facts that did not read it, so that a later change cannot state "no eligible approver" from an unread roster.
+
+Admission is unchanged: every read still passes `admitted` first. What changes is that those eight reads no longer fail when the roster cannot be read.
+
+Not built, and left for a design of its own with the ui-designer: the hold owner choice on P04 as a search instead of a list of every active member (`LiveHoldForm.tsx` reads `GET /api/v1/identity/access` whole). The main reads of P04 and P05 still read the roster once each.
+
+Review (independent reviewer, read-only, permission lens, 2026-11-25): approve, no blocking finding. It traced every reader of the roster fields and confirmed that no row of the eight reads reaches one, that the guards sit where the roster is needed, and that the roster read was never an authorization step: the module's member list asks for an active administrator of the workspace and admission asks for the administration right, which only that role holds. Not traced by it: whether those two sources can disagree for a moment; if they can, a reader who got a failure (503) now gets an answer, which was not a permission refusal before either.
+
+Verification: the whole server package passed (367 seconds), including `roster_reads_test.go`. No console change.
+
+# Increment 5e, the owner of a hold on P04: design (2026-11-25)
+
+Facts (main 633766f): the place hold form (`retention/LiveHoldForm.tsx`, `useOwners`) reads `GET /api/v1/identity/access` and puts every subject it returns, that is, every member of the workspace who is effective and active (`access.go` `grantees`), into one `select`. The same read also returns the grants, delegations and catalogue of the access screen, which the form does not use. The command checks the owner against the same list (`retentioncmds.go` `placeHold`). The identity module sets no limit on the members of a workspace, so the list and the `select` grow with the workspace. The form keeps the chosen owner's identifier in its draft and shows the sign-in name beside it in the confirmation.
+
+Proposed, not built:
+
+- Server: `GET /api/v1/retention/owners`, admitted as the retention read is, answering only for the installation's workspace. With `q` (optional; matched without regard to case against the sign-in name and the user identifier, by the rules of the other searches) and `limit` (1 to 20, default 20) it answers `owners` (`user_id`, `login`), in user identifier order, `matching` (how many match) and `more`. With `id` alone (one user identifier) it answers that person if they can still own a hold, so that a form reopened with a kept choice can show the name. The candidates are exactly `grantees`, the list the command checks, so the read cannot offer someone the command would refuse or the reverse. It reads the member roster once for each request, as the access read does.
+- Screen: the owner field becomes a search. A text input searches by sign-in name or identifier; the matches (at most 20) are offered as a single choice; when more match than are shown the field says how many match and asks for a longer term. A chosen owner is shown as a line with a way to change it. Failure of the search keeps the choice already made. The exact composition, the wording, keyboard behaviour and the states (nothing typed, searching, no match, more than shown, chosen, failed) are for the ui-designer to lead before implementation.
+- The access read is not changed, and the form stops calling it.
+
+Decided after the design review and the composition lead:
+
+- Server. A reader of another workspace gets an empty answer (200) from both forms of the read, before the roster is read; the fault step is `retention-read`; a roster that cannot be read gives 503. The term is at most 64 characters, as the other searches.
+- Before anything is typed the field lists the first twenty people, by user identifier, so that a small workspace chooses in one step as it does today; in a larger one the field says that these are the first twenty of the number that can own a hold.
+- The search runs on Enter or the Search button, not while typing: each request reads the roster, and answers cannot arrive out of order. Nobody is preselected, also when one person matches.
+- Composition: the pattern of the group draft member picker of O02 (`organizations/pages/changes/choices.tsx`), the only picker in the console: label, error, the chosen person on a line with "Change", a search row (input and Search), one status line above the results, the results as a list of plain buttons (sign-in name, then the identifier), at most eight rows high with its own scroll, and the two hints. No listbox, combobox or radio roles. While changing, the chosen line stays, "Keep this owner" replaces "Change", and the current owner's row is marked.
+- The form's own check passes for a person chosen from an answer or confirmed by the `id` read, and the sign-in name in the confirmation comes from that row. A form reopened with a kept identifier asks the `id` read: the name is shown when it answers; when the person can no longer own a hold the choice is cleared with the existing sentence; when the read fails the identifier stays chosen and can be submitted, with a sentence that the name could not be read. When the command refuses the owner, the form runs the `id` read again and opens the search.
+- Focus: to "Change" after choosing; to the input after "Change", after a retry succeeds and after the command refuses the owner; it stays in the input after a search, whose result the status line announces.
+
+Strings (existing ones kept: the label, the hint, "Choose an owner.", the sentence for a person who can no longer own a hold, the empty and failure sentences, "Try again"; the placeholder and the loading sentence are dropped):
+
+| Use | English | Korean | Arabic |
+|---|---|---|---|
+| Search hint | Search by login or user ID. | 로그인 ID 또는 사용자 ID로 검색합니다. | ابحث باسم الدخول أو معرّف المستخدم. |
+| Button | Search | 검색 | بحث |
+| Searching | Searching… | 검색하는 중… | جارٍ البحث… |
+| List label | Possible owners | 책임자 후보 | المالكون المحتملون |
+| No term, all shown | {n} people can own a hold. (1 person can own a hold.) | 보존 보류의 책임자가 될 수 있는 사람은 {n}명입니다. | عدد من يمكنهم امتلاك تعليق: {n}. |
+| No term, more exist | Showing the first 20 of {m} people who can own a hold, by user ID. Search to find others. | 보존 보류의 책임자가 될 수 있는 {m}명 중 사용자 ID순으로 처음 20명을 표시합니다. 다른 사람은 검색하세요. | يُعرض أول 20 من أصل {m} ممن يمكنهم امتلاك تعليق، حسب معرّف المستخدم. ابحث للعثور على غيرهم. |
+| Term, all shown | {n} people match. (1 person matches.) | {n}명이 일치합니다. | عدد المطابقين: {n}. |
+| Term, more match | Showing 20 of {m} people who match. Type more of the login or user ID to narrow the list. | 일치하는 {m}명 중 20명을 표시합니다. 로그인 ID나 사용자 ID를 더 입력해 범위를 좁히세요. | يُعرض 20 من أصل {m} من المطابقين. اكتب المزيد من اسم الدخول أو معرّف المستخدم لتضييق القائمة. |
+| No match | No one who can own a hold matches “{q}”. | “{q}”와 일치하는 책임자 후보가 없습니다. | لا يطابق «{q}» أحدًا ممن يمكنهم امتلاك تعليق. |
+| Failure with a choice | The owner you chose is kept. | 선택한 책임자는 그대로입니다. | يبقى المالك الذي اخترته كما هو. |
+| Change | Change | 변경 | تغيير |
+| Keep | Keep this owner | 이 책임자 유지 | الإبقاء على هذا المالك |
+| Name not read | The owner's login could not be read. | 책임자의 로그인 ID를 읽지 못했습니다. | تعذّرت قراءة اسم الدخول للمالك. |
+
+Tests the design requires: the candidates equal the list the command checks, in identifier order; a suspended member, one not yet effective, one ended and a member of another workspace are returned neither by search nor by identifier; `more` and `matching` around twenty; refusals (an empty term, a limit of 0 and of 21, `id` with another parameter, a repeated parameter); 403, 401, the fault step; a roster failure; another workspace.
+
+Design review (independent reviewer, read-only, permission lens, 2026-11-25): approve with conditions, incorporated above. It confirmed the facts, that the read exposes nothing the same reader cannot already list through the access read, that it changes no command, permission or tenant boundary and is an additive read, and that the commands limit of 20 users bounds people who issue commands, not the members who can own a hold. Composition lead (ui-designer, by reading; nothing is built): the specification above. It consulted no external reference, which the service screen rule asks for and which remains owed; the inner scroll of the result list is its choice and can be undone.
+
+# Increment 5e, the owner of a hold on P04: built (2026-11-25)
+
+Built as designed above: `GET /api/v1/retention/owners` (`retentionowners.go`) and the owner field as a search (`LiveHoldForm.tsx` `useOwnerSearch`, `OwnerField`). The form no longer calls the access read. The component is written for P04 in the pattern of the O02 picker and is not shared with it. The form's submit button is unavailable only when nobody at all can own a hold.
+
+Tested: the server test compares the read with the subjects of the access read, which the form used before, and checks that a suspended member is offered neither by search nor by identifier, answers like an unknown identifier, and is refused by the command; the limits are exercised with `limit`, since a test workspace has three possible owners, not more than twenty. The rendered check runs the real service for the first list, a choice and the confirmation, and routed answers (45 people, one with a long name) for the other states.
+
+Review of the build (2026-11-25). Independent reviewer (read-only, permission lens): approve, no blocking finding; its three observations were applied (a person once marked as gone can be chosen again, the term is cut to 64 bytes before it is sent, no label points at a missing input) and checked again. It accepted that the form reopens the search when the command refuses the owner instead of reading that person again, and that only the suspended member is exercised of the ineligible kinds, since the read uses the command's list unchanged. Rendered review (ui-designer, from screenshots): failed twice, then passed. Corrected: the identifier used a font variable this console does not have; empty space was left under the chosen line; during a search the list was drawn as an empty frame in the capture, and the busy rows are now greyed instead of faded. Left open by it: the confirmation shows the owner all in the mono face, which predates this change; external references for the field were not recorded.
+
+Verification: the whole server package passed (374 seconds; no Go change after it); console tests 1423, 1420 passed, 3 skipped; the rendered check `tools/owner-search-qa.mjs` 82 passed. Not rendered: a form reopened with a kept owner, which arises only when an attempt is repeated. The owner has not reviewed the screen.
+
+# Open for the owner
+
+- A workspace can now page through all of its deletion records in the window (increment 4g), up to 1,000 instead of 50. Their sequence numbers are numbers of the whole installation, so the gaps between them show roughly how many deletions other workspaces had; the watermark and the first fifty rows already showed this in part. Whether a workspace should see installation-wide sequence numbers at all is for the owner.
+- The deletion runs on P04 now list every running run and page only the others (increment 4f); the main read's rows are no longer simply the newest 50. This can be reversed.
+- The holds list on P04 now shows every hold in force and pages only the released ones (increment 3e).
+- The action history of a subscription on P02 now lists the newest action first and is cut at 50 with a read for the rest (increment 3b), as the lock log is. Both can be reversed.
+- The lock log on P03 now lists the newest lock first (it listed the oldest first) and the recovery read returns the newest 50 locks of an installation with a count and a read for the rest (increment 3a). Both can be reversed.
+- Whether the lists with no producer today (group 3 of "Which lists can grow in a running service") may leave this ticket until ingest, build pipelines and writers exist. They stay in the ticket and are built last unless the owner says otherwise.
+- Whether the 200 contracts limit of O03 stays and when contracts can be created; until then O03's list is small and complete and nothing is built for it.
+- The order of the increments above; another order is equally possible.
+- Whether a fixed snapshot is required for the lists whose order can change, which means work in three modules, or whether "rows can move between pages" stated on the screen is acceptable before launch.
+
+# Review
+
+Independent review of this plan (AI, Claude Opus 5.5, by reading the code; nothing executed), 2026-11-25: approve with conditions, all incorporated above. It verified the table cell by cell and corrected it: only O02's closed plans are cut silently (the other three histories carry a note on the screen); deliveries on P02 are bounded; service accounts are capped at 200; P04 does not give a total on every list and returns the artifacts of each hold whole; P03 also copies everything on each read and returns lost events and locks whole; P05's largest walk is the search for replacements; O03 has five contracts and no way to create one. Its blocking finding: the first version pinned later pages to the service revision and treated a vanished cursor row as a conflict, which cannot work on stores without snapshots whose histories drop old rows; the shape now distinguishes lists that only grow from lists whose order can change. Not verified by the reviewer: the size of the installer's installed history, the bound on unknown recovery targets, and the cost of any walk.
+
+# Not verified
+
+No measurement exists of any of the full walks, and nothing here was run against large data.

@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, attempt, sequence, type AdminClient, type SelfPage } from "../../../../service/admin";
+import { AdminError, attempt, type AdminClient, type SelfPage } from "../../../../service/admin";
 import type { AccessHistoryPage, HistoryEvent } from "../../../../service/access-history";
 import { c } from "../../../../service/copy";
 import { w } from "../users/live-copy";
 import { whenSeconds } from "./end-copy";
 import { deviceLabel, emphasised, eventLabel, eventReason, hc, periods, type Period } from "./history-copy";
 import { coverageGap, fromFor, historyState, noteLines, showSizeLimit } from "./history-model";
+import { sq } from "./query-copy";
+import { useScopedRead } from "./scoped-read";
 import "./history.css";
 
 const tags: Record<Locale, string> = { en: "en-US", ko: "ko-KR", ar: "ar" };
@@ -49,13 +51,25 @@ export function HistoryRow({ l, e }: { l: Locale; e: HistoryEvent }) {
   );
 }
 
-export default function AccessHistory({ l, api, self, reloadKey, say, onSignedOut }: {
+type HistoryProps = {
   l: Locale; api: AdminClient; self: SelfPage; reloadKey: number; say: (text: string) => void; onSignedOut: () => void;
-}) {
-  const order = useRef(sequence());
+};
+
+export default function AccessHistory(props: HistoryProps) {
+  const client = useRef({ api: props.api, revision: 0 });
+  if (client.current.api !== props.api) client.current = { api: props.api, revision: client.current.revision + 1 };
+  const key = JSON.stringify([client.current.revision, props.self.user_id, props.self.workspace, props.self.current_session.handle]);
+  return <HistoryContent key={key} {...props} />;
+}
+
+function HistoryContent({ l, api, self, reloadKey, say, onSignedOut }: HistoryProps) {
+  const read = useScopedRead(api);
   const [period, setPeriod] = useState<Period>("all");
   const [page, setPage] = useState<AccessHistoryPage | null>(null);
-  const [rows, setRows] = useState<HistoryEvent[]>([]);
+  const rows = page?.events ?? [];
+  const [before, setBefore] = useState<string | undefined>();
+  const [trail, setTrail] = useState<(string | undefined)[]>([]);
+  const [queryFrom, setQueryFrom] = useState<string | undefined>();
   const [next, setNext] = useState<string | null>(null);
   const [tableLoading, setTableLoading] = useState(false);
   const [failed, setFailed] = useState("");
@@ -64,6 +78,7 @@ export default function AccessHistory({ l, api, self, reloadKey, say, onSignedOu
   const [ended, setEnded] = useState(false);
   const [focusTo, setFocusTo] = useState("");
   const serverNow = useRef("");
+  const retryPage = useRef<{ target: string | undefined; parents: (string | undefined)[] } | null>(null);
   useEffect(() => {
     if (!focusTo) return;
     document.querySelector<HTMLElement>(focusTo)?.focus();
@@ -72,22 +87,23 @@ export default function AccessHistory({ l, api, self, reloadKey, say, onSignedOu
   const fail = (err: unknown) => {
     if (err instanceof AdminError && err.failure === "unauthenticated") {
       setPage(null);
-      setRows([]);
       setNext(null);
       onSignedOut();
     }
   };
   const loadFirst = useCallback((chosen: Period, mode: "background" | "period" | "retry") => {
-    const n = order.current.next();
+    const valid = read.begin();
     const request = attempt().request;
     const from = fromFor(chosen, serverNow.current);
     if (mode !== "background") setTableLoading(true);
     api.accessHistory({ from }, request).then(
       (got) => {
-        if (!order.current.latest(n)) return;
+        if (!valid()) return;
         serverNow.current = got.now;
         setPage(got);
-        setRows(got.events);
+        setBefore(undefined);
+        setTrail([]);
+        setQueryFrom(from);
         setNext(got.next);
         setFailed("");
         setTableLoading(false);
@@ -97,7 +113,7 @@ export default function AccessHistory({ l, api, self, reloadKey, say, onSignedOu
         if (mode === "retry") setFocusTo("#mysec-history-title");
       },
       (err) => {
-        if (!order.current.latest(n)) return;
+        if (!valid()) return;
         fail(err);
         setTableLoading(false);
         setFailed(request);
@@ -107,36 +123,33 @@ export default function AccessHistory({ l, api, self, reloadKey, say, onSignedOu
   }, [api, l]);
   useEffect(() => {
     loadFirst(period, "background");
-    return () => { order.current.next(); };
   }, [api, reloadKey]);
   const changePeriod = (p: Period) => {
     setPeriod(p);
-    setRows([]);
+    setPage(null);
     setNext(null);
     loadFirst(p, "period");
   };
-  const showMore = () => {
-    if (!next || more === "busy") return;
-    const n = order.current.next();
+  const loadPage = (target: string | undefined, parents: (string | undefined)[]) => {
+    if (more === "busy" || tableLoading) return;
+    const valid = read.begin();
     const request = attempt().request;
+    retryPage.current = { target, parents };
     setMore("busy");
-    api.accessHistory({ from: fromFor(period, serverNow.current), before: next }, request).then(
+    api.accessHistory({ from: queryFrom, before: target }, request).then(
       (got) => {
-        if (!order.current.latest(n)) return;
-        setRows((r) => [...r, ...got.events]);
+        if (!valid()) return;
+        setBefore(target);
+        setTrail(parents);
         setNext(got.next);
         setPage(got);
         setMore("idle");
-        say(hc.added(l, got.events.length));
-        if (got.next === null) {
-          setEnded(true);
-          setFocusTo(".mysec-hist-end");
-        } else {
-          setFocusTo(".mysec-hist-more-btn");
-        }
+        say(hc.showing(l, period, got.events.length, got.next !== null));
+        setEnded(got.next === null);
+        setFocusTo("#mysec-history-title");
       },
       (err) => {
-        if (!order.current.latest(n)) return;
+        if (!valid()) return;
         fail(err);
         setMore("failed");
         setMoreRef(request);
@@ -144,6 +157,12 @@ export default function AccessHistory({ l, api, self, reloadKey, say, onSignedOu
         setFocusTo(".mysec-hist-more-failed");
       },
     );
+  };
+  const showMore = () => {
+    if (next) loadPage(next, [...trail, before].slice(-32));
+  };
+  const previous = () => {
+    if (trail.length) loadPage(trail[trail.length - 1], trail.slice(0, -1));
   };
   const time = (iso: string) => whenSeconds(l, iso);
   const state = historyState(page, failed !== "");
@@ -229,15 +248,17 @@ export default function AccessHistory({ l, api, self, reloadKey, say, onSignedOu
       )}
       {!tableLoading && (
         <div className="mysec-hist-more">
+          <button type="button" className="live-secondary" disabled={more === "busy" || before === undefined} onClick={() => loadPage(undefined, [])}>{sq.first(l)}</button>
+          <button type="button" className="live-secondary" disabled={more === "busy" || trail.length === 0} onClick={previous}>{sq.previous(l)}</button>
           {more === "failed" && (
             <div className="service-summary mysec-hist-more-failed" tabIndex={-1}>
               <p>{hc.loadError(l)} {hc.requestRef(l)} <span className="live-mono">{ltr(moreRef)}</span></p>
-              <button type="button" className="live-secondary" onClick={showMore}>{c.tryAgain(l)}</button>
+              <button type="button" className="live-secondary" onClick={() => { const pending = retryPage.current; if (pending) loadPage(pending.target, pending.parents); }}>{c.tryAgain(l)}</button>
             </div>
           )}
           {next !== null && more !== "failed" && (
             <button type="button" className="live-secondary mysec-hist-more-btn" aria-busy={more === "busy" || undefined} disabled={more === "busy"} onClick={showMore}>
-              {more === "busy" ? hc.loadingMore(l) : hc.showMore(l)}
+              {more === "busy" ? hc.loadingMore(l) : sq.next(l)}
             </button>
           )}
           {ended && <p className="mysec-hist-end mysec-hist-muted" tabIndex={-1}>{hc.endLine(l)}</p>}

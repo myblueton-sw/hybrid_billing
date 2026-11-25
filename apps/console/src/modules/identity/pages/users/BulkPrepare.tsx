@@ -34,25 +34,31 @@ function Sum({ rows }: { rows: [string, React.ReactNode, boolean?][] }) {
 
 function Excluded({ l, api, id, total }: { l: Locale; api: AdminClient; id: string; total: number }) {
   const [rows, setRows] = useState<Paged<BulkExclusion> | null>(null);
+  const [failed, setFailed] = useState(false);
   const more = async () => {
     const page = await bulkClient(api).excluded(id, rows?.rows.length ?? 0).catch(() => null);
+    setFailed(!page);
     if (page) setRows({ ...page, rows: [...(rows?.rows ?? []), ...page.rows] });
   };
-  useEffect(() => { setRows(null); if (total > 0) void bulkClient(api).excluded(id).then(setRows, () => setRows(null)); }, [id, total]);
+  const [unread, setUnread] = useState(false);
+  const first = () => { setRows(null); setUnread(false); setFailed(false); if (total > 0) void bulkClient(api).excluded(id).then(setRows, () => { setRows(null); setUnread(true); }); };
+  useEffect(first, [id, total]);
+  if (unread) return <div className="live-meta" role="alert"><p>{b.excludedFailed(l)}</p><button type="button" className="live-secondary" onClick={first}>{c.tryAgain(l)}</button></div>;
   if (!rows || rows.rows.length === 0) return null;
   return (
     <>
       <ul className="m01-people">{rows.rows.map((x) => <li key={x.user_id}><bdi dir="ltr">{x.login || x.user_id}</bdi> · {b.reason(l, x.reason)}</li>)}</ul>
       <p className="live-meta">{b.showing(l, rows.rows.length, rows.total)}</p>
       {rows.next && <button type="button" className="live-secondary" onClick={() => void more()}>{b.moreExcluded(l)}</button>}
+      {failed && <p className="live-meta" role="alert">{b.moreFailed(l)}</p>}
     </>
   );
 }
 
-const filterReasons = ["self", "not_found", "no_longer_matches", "no_membership", "already_revoked"];
+const filterReasons = ["self", "not_found", "no_longer_matches", "no_membership", "already_revoked", "chosen"];
 const explicitReasons = ["self", "not_found", "no_membership", "already_revoked"];
 
-export function PreviewBody({ l, api, prepared, onMore, days = 14 }: { l: Locale; api: AdminClient; prepared: Prepared; onMore: () => void; days?: number }) {
+export function PreviewBody({ l, api, prepared, onMore, moreFailed = false, days = 14 }: { l: Locale; api: AdminClient; prepared: Prepared; onMore: () => void; moreFailed?: boolean; days?: number }) {
   const { detail, targets } = prepared;
   const i = detail.impact;
   const job = detail.job;
@@ -65,7 +71,7 @@ export function PreviewBody({ l, api, prepared, onMore, days = 14 }: { l: Locale
       <p className="m01-lead m01-ink"><strong>{b.scope(l, job.effect, job.counts.targets)}</strong></p>
       <dl className="m01-counts">
         <div><dt>{b.toRevoke(l)}</dt><dd>{job.counts.targets}</dd></div>
-        <div><dt>{b.excluded(l)}</dt><dd>{job.counts.excluded}</dd></div>
+        <div><dt>{b.excluded(l)}</dt><dd>{job.counts.excluded}{job.selection === "filter" && (detail.exclusions.chosen ?? 0) > 0 && <span className="m01-kept" data-kept={detail.exclusions.chosen}>{b.keptByYou(l, detail.exclusions.chosen)}</span>}</dd></div>
         <div><dt>{b.duplicates(l)}</dt><dd>{job.counts.duplicates}</dd></div>
       </dl>
       {job.selection === "filter" && <FixedFacts l={l} job={job} days={days} exclusions={detail.exclusions} />}
@@ -81,7 +87,7 @@ export function PreviewBody({ l, api, prepared, onMore, days = 14 }: { l: Locale
           <Sum rows={[[b.sessions(l), i.sessions], [b.pickups(l), i.pickups], [b.apiKeys(l), i.api_keys === "not_applicable" ? b.noKeys(l) : b.impactUnknown(l)]]} />
           <h4>{b.pendingWork(l)}</h4>
           <Sum rows={[...i.pending.map((s): [string, React.ReactNode, boolean] => [b.store(l, s.store),
-            <><span className="m01-line">{s.count}</span><span className={"m01-line" + (s.rechecked ? "" : " live-strong")}>{s.rechecked ? b.rechecked(l) : b.notRechecked(l)}</span></>, false]),
+            <><span className="m01-line">{s.count}</span><span className={"m01-line" + (s.rechecked ? "" : " live-strong")}>{s.store === "result_evidence_proposals" ? s.rechecked ? b.resultProposerRechecked(l) : b.resultProposerNotRechecked(l) : s.store === "result_applications_unknown" ? s.rechecked ? b.resultRecoveryRechecked(l) : b.resultRecoveryNotRechecked(l) : s.store === "document_evidence_proposals" ? s.rechecked ? b.documentProposerRechecked(l) : b.documentProposerNotRechecked(l) : (s.store === "financial_charge_requests" || s.store === "erp_final_requests") ? b.chargeRequesterNotRechecked(l) : s.store === "issuance_setup_proposals" ? s.rechecked ? b.setupProposerRechecked(l) : b.setupProposerNotRechecked(l) : s.store === "issuance_protected_steps" ? s.rechecked ? b.nextStepRechecked(l) : b.nextStepNotRechecked(l) : s.rechecked ? b.rechecked(l) : b.notRechecked(l)}</span></>, false]),
           [b.pendingJobs(l), i.pending_jobs === "not_applicable" ? b.noJobs(l) : b.impactUnknown(l)]]} />
           <h4>{b.serviceUsers(l)}</h4>
           <Sum rows={[[b.serviceUsers(l), <><span className="m01-line">{i.service_users}</span><span className="m01-line">{b.serviceKeep(l)}</span></>]]} />
@@ -105,6 +111,7 @@ export function PreviewBody({ l, api, prepared, onMore, days = 14 }: { l: Locale
           </ul>
           <p className="live-meta">{b.showing(l, targets.rows.length, targets.total)}</p>
           {targets.next && <button type="button" className="live-secondary" onClick={onMore}>{b.showMore(l)}</button>}
+          {moreFailed && <p className="live-meta" role="alert">{b.moreFailed(l)}</p>}
         </section>
       ) : <p className="m01-owner-only">{b.ownerOnlyPeople(l)}</p>}
       <section className="m01-outside" aria-labelledby="m01-outside-h">
@@ -167,7 +174,7 @@ export function ConfirmDialog({ l, api, prepared, revision, defaultReason, onClo
           <div><dt>{b.list(l)}</dt><dd>{b.bulkN(l, number(job.id))} <bdi dir="ltr" className="live-mono">{job.id}</bdi></dd></div>
           <div><dt>{b.effect(l)}</dt><dd>{job.effect === "suspend_user" ? b.suspendUser(l) : b.suspendMembership(l)}</dd></div>
           <div><dt>{b.toRevoke(l)}</dt><dd>{job.counts.targets}</dd></div>
-          <div><dt>{b.excluded(l)}</dt><dd>{job.counts.excluded}</dd></div>
+          <div><dt>{b.excluded(l)}</dt><dd>{job.counts.excluded}{job.selection === "filter" && (prepared.detail.exclusions.chosen ?? 0) > 0 && <span className="m01-kept" data-kept={prepared.detail.exclusions.chosen}>{b.keptByYou(l, prepared.detail.exclusions.chosen)}</span>}</dd></div>
           <div><dt>{b.preparedBy(l)}</dt><dd><bdi dir="ltr">{job.preparer}</bdi></dd></div>
           <div><dt>{b.preparedAtL(l)}</dt><dd><Stamp l={l} iso={job.prepared_at} /></dd></div>
           <div><dt>{b.validUntilL(l)}</dt><dd><Stamp l={l} iso={job.expires_at} /></dd></div>
@@ -194,7 +201,7 @@ export function ConfirmDialog({ l, api, prepared, revision, defaultReason, onClo
 export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revision, reload, onBack, onJobs, onExecuted, onDeselect, say, fixed = null, days = 14, onPrepared, onDiscarded }: {
   l: Locale; api: AdminClient; ids: string[]; names: Record<string, string>; admins: string[]; rows: UserRow[]; serverTime: string; revision: string; reload: () => Promise<string>;
   onBack: () => void; onJobs: () => void; onExecuted: (id: string, targets: string[]) => void; onDeselect: (id: string) => void; say: (text: string) => void;
-  fixed?: Fixed | null; days?: number; onPrepared?: () => void; onDiscarded?: () => void;
+  fixed?: Fixed | null; days?: number; onPrepared?: () => void; onDiscarded?: (closed: boolean) => void;
 }) {
   const bulk = bulkClient(api);
   const [effect, setEffect] = useState<"suspend_membership" | "suspend_user">("suspend_membership");
@@ -213,7 +220,9 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
     const page = await bulk.targets(id, after);
     return { detail, targets: previous ? { ...page, rows: [...previous.rows, ...page.rows] } : page };
   };
+  const [trouble, setTrouble] = useState<"" | "discard" | "more">("");
   const prepareFixed = async (f: Fixed) => {
+    setTrouble("");
     setState({ kind: "sending", sent: 0, waiting: false });
     setTimeout(() => progress.current?.focus(), 0);
     say(m.checking(l, f.matched));
@@ -231,6 +240,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
     }
   };
   const send = async (draft = "", from = 0, startRevision = rev) => {
+    setTrouble("");
     setState({ kind: "sending", sent: 0, waiting: false });
     setTimeout(() => progress.current?.focus(), 0);
     say(b.sending(l, 0, ids.length));
@@ -270,8 +280,10 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
     try {
       await api.command("bulk_revocation.discard", id, await reload(), reason || b.discardReason(l), {}, attempt());
     } catch {
+      setTrouble("discard");
       return;
     }
+    setTrouble("");
     say(b.discarded(l));
     onBack();
   };
@@ -279,9 +291,13 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
     try {
       await api.command("bulk_revocation.discard", id, await reload(), reason || b.discardReason(l), {}, attempt());
     } catch (e) {
-      if (!(e instanceof AdminError && e.failure === "stage")) return;
+      if (!(e instanceof AdminError && e.failure === "stage")) { setTrouble("discard"); return; }
+      setTrouble("");
+      onDiscarded?.(true);
+      return;
     }
-    onDiscarded?.();
+    setTrouble("");
+    onDiscarded?.(false);
   };
   const sending = state.kind === "sending";
   const proceed = async () => {
@@ -321,14 +337,20 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
                 {state.draft && <button type="button" className="live-secondary" onClick={() => void send(state.draft, stagedBatches(ids, state.staged), state.revision)}>{b.resume(l)}</button>}
                 {state.draft && <button type="button" className="live-secondary" onClick={() => void discard(state.draft)}>{b.discardDraft(l)}</button>}
               </div>
+              {trouble === "discard" && <p className="live-meta" role="alert">{b.discardFailed(l)}</p>}
             </div>
           )}
           {fixed && (state.kind === "blocked" || state.kind === "closed") && (
             <div className="service-summary" role="alert" tabIndex={-1} ref={(el) => el?.focus()}>
               <h2>{state.kind === "blocked" ? b.refused(l) : b.notPrepared(l)}</h2>
               <p className="m01-ink">{state.kind === "blocked" ? <Emph l={l} text={m.blockedFilter(l, `${w.workspaceRole(l)}: ${roleName(l, "member")}`)} /> : m.listClosed(l)}</p>
+              {state.kind === "blocked" && <p className="m01-ink">{m.blockedRemove(l)}</p>}
               <p><strong>{b.nothingRevoked(l)}</strong></p>
-              <button type="button" className="live-secondary m01-discard-list" onClick={() => void discardFixed(state.draft)}>{m.discardList(l)}</button>
+              <div className="live-buttons">
+                {state.kind === "blocked" && <button type="button" className="live-secondary m01-back-list" onClick={onBack}>{m.backToList(l)}</button>}
+                <button type="button" className="live-secondary m01-discard-list" onClick={() => void discardFixed(state.draft)}>{m.discardList(l)}</button>
+              </div>
+              {trouble === "discard" && <p className="live-meta" role="alert">{b.discardFailed(l)}</p>}
             </div>
           )}
           {!fixed && state.kind === "blocked" && (
@@ -341,7 +363,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
                   const row = rows.find((u) => u.user_id === id);
                   return (
                     <li key={id}>
-                      <span className="m01-admin-who"><bdi dir="ltr">{names[id] || id}</bdi> · {roleName(l, "administrator")}</span>
+                      <span className="m01-admin-who"><bdi dir="ltr">{names[id] || id}</bdi> · {roleName(l, row?.membership?.role ?? "administrator")}</span>
                       {row && <span className="m01-admin-period"><PeriodCell l={l} u={row} serverTime={serverTime} /></span>}
                       <button type="button" className="live-secondary" onClick={() => onDeselect(id)}>{b.removeFromSelection(l)}</button>
                     </li>
@@ -350,6 +372,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
               </ul>
               <p>{b.previewAgain(l)}</p>
               <button type="button" className="live-secondary" onClick={() => void discard(state.draft)}>{b.discardDraft(l)}</button>
+              {trouble === "discard" && <p className="live-meta" role="alert">{b.discardFailed(l)}</p>}
             </div>
           )}
           <div className="m01-bulk-grid">
@@ -398,13 +421,14 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
           <h2 id="m01-bulk-title" tabIndex={-1} ref={heading}>{b.impactTitle(l)} <span className="live-meta">{b.bulkN(l, number(state.prepared.detail.job.id))}</span></h2>
           <p className="m01-stepline">{b.step2(l)}</p>
           {expired(state.prepared.detail.job, state.prepared.detail.server_time) && <div className="service-summary" role="alert"><p><Emph l={l} text={b.expired(l)} /></p></div>}
-          <PreviewBody l={l} api={api} prepared={state.prepared} days={days} onMore={async () => setState({ kind: "preview", prepared: await load(state.prepared.detail.job.id, state.prepared.targets?.rows.length ?? 0, state.prepared.targets ?? undefined) })} />
+          <PreviewBody l={l} api={api} prepared={state.prepared} days={days} moreFailed={trouble === "more"} onMore={async () => { try { const prepared = await load(state.prepared.detail.job.id, state.prepared.targets?.rows.length ?? 0, state.prepared.targets ?? undefined); setTrouble(""); setState({ kind: "preview", prepared }); } catch { setTrouble("more"); } }} />
           <div className="live-buttons">
             {expired(state.prepared.detail.job, state.prepared.detail.server_time)
-              ? <button type="button" className="live-primary" onClick={() => setState({ kind: "effect" })}>{b.prepareAgain(l)}</button>
+              ? <button type="button" className="live-primary" onClick={() => { setTrouble(""); setState({ kind: "effect" }); }}>{b.prepareAgain(l)}</button>
               : <button type="button" className="live-primary m01-continue" onClick={() => void proceed()}>{b.continue(l)}</button>}
             <button type="button" className="live-secondary" onClick={() => void discard(state.prepared.detail.job.id)}>{b.discard(l)}</button>
           </div>
+          {trouble === "discard" && <p className="live-meta" role="alert">{b.discardFailed(l)}</p>}
           {confirming && (
             <ConfirmDialog l={l} api={api} prepared={state.prepared} revision={rev} defaultReason={reason}
               onClose={() => { setConfirming(false); setTimeout(() => document.querySelector<HTMLElement>(".m01-continue")?.focus(), 0); }}

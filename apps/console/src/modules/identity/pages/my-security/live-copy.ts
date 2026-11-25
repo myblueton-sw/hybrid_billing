@@ -166,7 +166,7 @@ export const m = {
   idle: (l: Locale) => t(l, "Inactivity limit", "비활성 제한", "حد عدم النشاط"),
   minutes: (l: Locale, n: number) => t(l, `${n} minutes`, `${n}분`, `${n} دقيقة`),
   longest: (l: Locale) => t(l, "Longest session", "최대 세션", "أطول جلسة"),
-  longestValue: (l: Locale) => t(l, "12 hours after sign-in", "로그인 후 12시간", "12 ساعة بعد تسجيل الدخول"),
+  longestValue: (l: Locale, minutes: number) => { const d = m.age(l, minutes * 60); return t(l, `${d} after sign-in`, `로그인 후 ${d}`, `${d} بعد تسجيل الدخول`); },
   maxAge: (l: Locale) =>
     t(
       l,

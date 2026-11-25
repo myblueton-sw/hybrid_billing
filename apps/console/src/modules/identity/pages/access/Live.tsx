@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, sequence, type AccessGrant, type AccessPage, type AdminClient, type Attempt, type Preview } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
@@ -10,7 +11,7 @@ import { w } from "../users/live-copy";
 import { failureText } from "../users/live-model";
 import { when } from "../authentication/live-model";
 import { a, accessPhrase, actionLabel, fieldLabel, kindLabel } from "./live-copy";
-import { accessText, ceilingGrants, delegationsOf, maxDays, people, reasonText, revocable, scopeText, stateLine, wholeDays } from "./live-model";
+import { accessText, capabilityKey, grantCapabilities, selectedCapability, ceilingGrants, delegationsOf, maxDays, people, reasonText, revocable, scopeText, stateLine, wholeDays } from "./live-model";
 import { q, v } from "./request-copy";
 import { additionsPaused, descendantsOf, keepAttempt, pendingRevokeFor, unconfirmedFor } from "./request-model";
 import { DecidePanel, describeRequest, RequestSection, type Decision } from "./Requests";
@@ -40,7 +41,9 @@ function describeFor(kind: "grant" | "revoke" | "load") {
 function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }: {
   l: Locale; api: AdminClient; page: AccessPage; self: string; onDone: (login: string) => void; onCancel: () => void; onReload: () => void; stepping: boolean;
 }) {
-  const pair = page.catalog[0];
+  const capabilities = grantCapabilities(page);
+  const [capability, setCapability] = useState(() => capabilities.length === 1 ? capabilityKey(capabilities[0]) : "");
+  const pair = selectedCapability(page, capability);
   const choices = page.subjects.filter((s) => s.user_id !== self);
   const most = pair ? maxDays(pair.until, page.now) : 0;
   const [subject, setSubject] = useState("");
@@ -60,20 +63,39 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
   useEffect(() => { if (stepping) heading.current?.focus(); }, [stepping]);
   const paused = additionsPaused(page.ledger);
   const edit = (f: (v: string) => void) => (v: string) => { tried.current = attempt(); f(v); };
-  if (!pair || most < 1) return null;
+  useEffect(() => {
+    if (capability && !pair) {
+      setCapability("");
+      setDays("");
+      setProblems([{ field: "access-capability", message: a.accessGone(l) }]);
+      setError(null);
+      tried.current = attempt();
+      kept.current = false;
+    }
+  }, [capability, pair, l]);
+  const changeCapability = (key: string) => {
+    const next = selectedCapability(page, key);
+    setCapability(key);
+    setDays(next ? String(Math.min(30, maxDays(next.until, page.now))) : "");
+    setProblems([]);
+    setError(null);
+    tried.current = attempt();
+    kept.current = false;
+  };
   const n = wholeDays(days, most);
   const login = choices.find((s) => s.user_id === subject)?.login ?? "";
-  const phrase = accessPhrase(l, pair.action, pair.kind, pair.fields) ?? accessText(l, pair.action, pair.fields);
+  const phrase = pair ? accessPhrase(l, pair.action, pair.kind, pair.fields) ?? accessText(l, pair.action, pair.fields) : "";
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const found: Problems = [];
     if (!subject) found.push({ field: "access-person", message: a.errPerson(l) });
-    if (n === null) found.push({ field: "access-days", message: a.errDays(l, most) });
+    if (!pair) found.push({ field: "access-capability", message: a.chooseAccess(l) });
+    if (pair && n === null) found.push({ field: "access-days", message: a.errDays(l, most) });
     const r = reasonProblem(l, reason);
     if (r) found.push({ field: "live-reason", message: r });
     setProblems(found);
     setError(null);
-    if (found.length) { setFocusKey((k) => k + 1); return; }
+    if (found.length || !pair) { setFocusKey((k) => k + 1); return; }
     setBusy(true);
     try {
       await api.command("access.request_grant", "grants", page.revision, reason,
@@ -102,23 +124,33 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
         <div className="service-field">
           <label htmlFor="access-person">{a.person(l)}</label>
           {field("access-person") && <p className="service-field-error" id="access-person-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{field("access-person")}</p>}
-          <select id="access-person" className="live-select" value={subject} aria-invalid={field("access-person") ? true : undefined}
+          <select id="access-person" className="live-select" value={subject} disabled={busy} aria-invalid={field("access-person") ? true : undefined}
             aria-describedby={field("access-person") ? "access-person-error" : undefined} onChange={(e) => edit(setSubject)(e.target.value)}>
             <option value="">{a.choosePerson(l)}</option>
             {choices.map((s) => <option key={s.user_id} value={s.user_id}>{s.login || s.user_id}</option>)}
           </select>
         </div>
       )}
-      <dl className="live-facts">
-        <div><dt>{a.access(l)}</dt><dd>{accessText(l, pair.action, pair.fields)} · {kindLabel(l, pair.kind) ?? pair.kind}</dd><dd className="live-note">{a.onlyPair(l)}</dd></div>
+      <div className="service-field">
+        <label htmlFor="access-capability">{a.access(l)}</label>
+        {field("access-capability") && <p className="service-field-error" id="access-capability-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{field("access-capability")}</p>}
+        <select id="access-capability" className="live-select" value={pair ? capability : ""} disabled={busy}
+          aria-invalid={field("access-capability") ? true : undefined} aria-describedby={field("access-capability") ? "access-capability-error" : undefined}
+          onChange={(e) => changeCapability(e.target.value)}>
+          <option value="">{a.chooseAccess(l)}</option>
+          {capabilities.map((row) => <option key={capabilityKey(row)} value={capabilityKey(row)}>{accessText(l, row.action, row.fields)} · {kindLabel(l, row.kind)}</option>)}
+        </select>
+        {pair && <p className="service-hint">{accessText(l, pair.action, pair.fields)} · {kindLabel(l, pair.kind)}</p>}
+      </div>
+      {pair && <dl className="live-facts">
         <div><dt>{a.customer(l)}</dt><dd>{a.allCustomers(l)}</dd>{pair.kind === "focus_data" && <dd className="live-note">{a.focusAll(l)}</dd>}</div>
-      </dl>
+      </dl>}
       <div className="service-field live-minutes">
         <label htmlFor="access-days">{a.duration(l)}</label>
-        <p className="service-hint" id="access-days-hint">{a.daysHint(l, most, when(l, pair.until))}</p>
+        <p className="service-hint" id="access-days-hint">{pair ? a.daysHint(l, most, when(l, pair.until)) : a.chooseDurationHint(l)}</p>
         {field("access-days") && <p className="service-field-error" id="access-days-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{field("access-days")}</p>}
         <span className="live-unit">
-          <input id="access-days" inputMode="numeric" dir="ltr" value={days} aria-invalid={field("access-days") ? true : undefined}
+          <input id="access-days" inputMode="numeric" dir="ltr" value={days} disabled={busy} aria-invalid={field("access-days") ? true : undefined}
             aria-describedby={["access-days-hint", field("access-days") ? "access-days-error" : ""].filter(Boolean).join(" ")} onChange={(e) => edit(setDays)(e.target.value)} />
           <span>{a.days(l)}</span>
         </span>
@@ -239,7 +271,8 @@ function GrantTable({ l, page, rows, self, selected, onRevoke }: {
 function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPage }) {
   const kinds = Array.from(new Set(page.catalog.map((x) => x.kind)));
   const [subject, setSubject] = useState("");
-  const [kind, setKind] = useState(kinds[0] ?? "");
+  const [picked, setKind] = useState(kinds[0] ?? "");
+  const kind = kinds.includes(picked) ? picked : kinds[0] ?? "";
   const [customer, setCustomer] = useState("");
   const [result, setResult] = useState<{ rows: Preview[]; at: string; login: string; customer: string; kind: string } | null>(null);
   const [state, setState] = useState<"start" | "cleared" | "loading" | "error" | "shown">("start");
@@ -293,11 +326,12 @@ function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPa
           <input id="effect-customer" className="live-mono live-customer" dir="ltr" value={customer} aria-describedby="effect-customer-hint" onChange={(e) => change(setCustomer)(e.target.value)} />
           <p className="service-hint live-hint-below" id="effect-customer-hint">{a.customerOptHint(l)}</p>
         </div>
-        <button type="submit" className="live-primary" disabled={!subject || state === "loading"}>{a.showEffect(l)}</button>
+        <button type="submit" className="live-primary" disabled={!subject || !kind || state === "loading"} aria-describedby={kind ? undefined : "effect-no-kind"}>{a.showEffect(l)}</button>
+        {!kind && <p className="live-error" role="alert" id="effect-no-kind">{a.noKind(l)}</p>}
       </form>
       <p className="live-preview-note"><strong>{a.previewLead(l)}</strong> {a.previewNote(l)}</p>
       {subject && unconfirmedFor(page, subject) && <p className="live-strong" data-unconfirmed="true">{v.previewUnconfirmed(l)}</p>}
-      {state === "start" && <p className="live-empty">{a.startHint(l)}</p>}
+      {state === "start" && kind && <p className="live-empty">{a.startHint(l)}</p>}
       {state === "cleared" && <p className="live-empty">{a.cleared(l)}</p>}
       <p className="visually-hidden" role="status" aria-live="polite">{state === "loading" ? a.loading(l) : state === "shown" && result ? a.allowedCount(l, result.rows.filter((r) => r.allowed).length, result.rows.length) : ""}</p>
       {state === "loading" && <p className="live-meta">{a.loading(l)}</p>}
@@ -399,6 +433,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
     <section className="live-error" role="alert">
       <h2>{a.loadFailed(l)}</h2>
       <p>{describeFor("load")(l, error).body}</p>
+      {page && <p>{diagnosticCopy.kept(l)}</p>}
       {error instanceof AdminError && error.failure === "unauthenticated"
         ? <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
         : <button type="button" className="live-secondary" onClick={load}>{c.tryAgain(l)}</button>}
@@ -406,7 +441,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
   );
   if (view === "effects") {
     if (!page) return <div className="live-users">{loadError || <p className="live-empty">{a.loading(l)}</p>}</div>;
-    return <Effects l={l} api={api} page={page} />;
+    return <>{loadError && <div className="live-users">{loadError}</div>}<Effects l={l} api={api} page={page} /></>;
   }
   const self = session.user;
   const grants = page ? people(page) : { current: [], ended: [] };
@@ -427,7 +462,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
     panel = <Revoke key={selected} l={l} api={api} page={page} target={mode.target} onReload={load}
       onCancel={() => { setMode(null); setFocusTo(back); }}
       onDone={(message) => { say(message); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo(mode.target.kind === "grant" ? "#access-requests" : "#access-revocations"); }} />;
-  } else if (page && page.catalog.length > 0 && maxDays(page.catalog[0].until, page.now) > 0 && (wide || mode?.kind === "form")) {
+  } else if (page && grantCapabilities(page).length > 0 && (wide || mode?.kind === "form")) {
     panel = <GrantForm key={formKey} l={l} api={api} page={page} self={self} stepping={!wide} onReload={load}
       onCancel={() => { setMode(null); setFocusTo(".access-grant-open"); }}
       onDone={() => { say(q.requestSent(l)); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo("#access-requests"); }} />;
@@ -448,7 +483,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
                 {page && <p className="live-meta">{w.loadedAt(l, when(l, page.now))}</p>}
               </div>
               <div className="live-tools">
-                {!wide && page && page.catalog.length > 0 && maxDays(page.catalog[0].until, page.now) > 0 && <button type="button" className="live-primary access-grant-open" onClick={() => { setNotice(""); setMode({ kind: "form" }); }}>{q.requestTitle(l)}</button>}
+                {!wide && page && grantCapabilities(page).length > 0 && <button type="button" className="live-primary access-grant-open" onClick={() => { setNotice(""); setMode({ kind: "form" }); }}>{q.requestTitle(l)}</button>}
                 <button type="button" className="live-secondary" onClick={() => { setNotice(""); load(); }}>{w.reload(l)}</button>
               </div>
             </div>

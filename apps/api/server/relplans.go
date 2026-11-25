@@ -52,9 +52,10 @@ func (m *planMeta) authoredBy(user string) bool {
 }
 
 type planStore struct {
-	byKey  map[string]*planMeta
-	seq    uint64
-	impact func(*planMeta) (planImpact, error)
+	byKey   map[string]*planMeta
+	seq     uint64
+	dropped map[string]int
+	impact  func(*planMeta) (planImpact, error)
 }
 
 const (
@@ -84,7 +85,9 @@ func (s *Server) impactOf(m *planMeta) (planImpact, error) {
 	return s.plans.impact(m)
 }
 
-func newPlanStore() *planStore { return &planStore{byKey: map[string]*planMeta{}} }
+func newPlanStore() *planStore {
+	return &planStore{byKey: map[string]*planMeta{}, dropped: map[string]int{}}
+}
 
 func planKey(workspace, id string) string { return workspace + "\x00" + id }
 
@@ -94,6 +97,11 @@ func (p *planStore) put(m *planMeta) {
 	p.byKey[planKey(m.workspace, m.id)] = m
 }
 
+func (p *planStore) closing(m *planMeta) {
+	p.seq++
+	m.seq = p.seq
+}
+
 func (p *planStore) get(workspace, id string) *planMeta { return p.byKey[planKey(workspace, id)] }
 
 func (s *Server) planState(m *planMeta) relationships.PlanInfo {
@@ -101,19 +109,36 @@ func (s *Server) planState(m *planMeta) relationships.PlanInfo {
 	return info
 }
 
-func (s *Server) prunePlans() {
+func (s *Server) planOpen(m *planMeta) bool {
+	state := s.planState(m).State
+	return state == relationships.PlanDraft || state == relationships.PlanSealed
+}
+
+func (s *Server) closedPlans(ws string) []*planMeta {
 	closed := []*planMeta{}
 	for _, m := range s.plans.byKey {
-		if state := s.planState(m).State; state != relationships.PlanDraft && state != relationships.PlanSealed {
+		if m.workspace == ws && !s.planOpen(m) {
 			closed = append(closed, m)
 		}
 	}
-	if len(closed) <= closedPlansKept {
-		return
-	}
 	sort.Slice(closed, func(a, b int) bool { return closed[a].seq > closed[b].seq })
-	for _, m := range closed[closedPlansKept:] {
-		delete(s.plans.byKey, planKey(m.workspace, m.id))
+	return closed
+}
+
+func (s *Server) prunePlans() {
+	spaces := map[string]bool{}
+	for _, m := range s.plans.byKey {
+		spaces[m.workspace] = true
+	}
+	for ws := range spaces {
+		closed := s.closedPlans(ws)
+		if len(closed) <= closedPlansKept {
+			continue
+		}
+		for _, m := range closed[closedPlansKept:] {
+			delete(s.plans.byKey, planKey(m.workspace, m.id))
+		}
+		s.plans.dropped[ws] += len(closed) - closedPlansKept
 	}
 }
 
@@ -271,6 +296,7 @@ func (s *Server) discardStale(ws string, active uint64, now time.Time) {
 		}
 		if reason != "" && s.rels.Discard(ws, m.id) == nil {
 			m.closed = reason
+			s.plans.closing(m)
 		}
 	}
 }
@@ -434,6 +460,7 @@ func (h relationshipCommand) activate(ctx commands.Context) (string, map[string]
 		return "", nil, refuse(commands.InvalidStage)
 	}
 	m.activated = number
+	s.plans.closing(m)
 	if m.draft != "" {
 		s.draftActivated(ws, m.draft, number)
 	}
@@ -447,6 +474,7 @@ func (h relationshipCommand) discard(ctx commands.Context) (string, error) {
 		return "", refuse(commands.InvalidStage)
 	}
 	m.closed = "discarded"
+	s.plans.closing(m)
 	return "discarded", nil
 }
 
@@ -480,6 +508,7 @@ type kindRow struct {
 	EntriesBefore int    `json:"entries_before"`
 	EntriesAfter  int    `json:"entries_after"`
 	Earliest      string `json:"earliest"`
+	Next          string `json:"next"`
 }
 
 type violationRow struct {
@@ -494,6 +523,7 @@ type rangeRow struct {
 }
 
 type changedRow struct {
+	Kind    string     `json:"kind"`
 	Member  string     `json:"member"`
 	Name    string     `json:"name"`
 	Differs []rangeRow `json:"differs"`
@@ -541,7 +571,10 @@ type plansPage struct {
 	Impact     map[string]string `json:"impact"`
 	Plans      []planRow         `json:"plans"`
 	ReaderUser string            `json:"you"`
+	Closed     closedFacts       `json:"closed"`
 }
+
+type closedFacts = keptFacts
 
 func (s *Server) planRow(m *planMeta, active uint64, reader string, now time.Time) planRow {
 	info := s.planState(m)
@@ -565,17 +598,10 @@ func (s *Server) planRow(m *planMeta, active uint64, reader string, now time.Tim
 		}
 		row.Kinds = append(row.Kinds, kr)
 		if info.State == relationships.PlanSealed || info.State == relationships.PlanActivated {
-			changes, _ := s.rels.ChangedMembers(m.workspace, m.id, relationships.Kind(k), "", planMembersShown)
-			for _, c := range changes {
-				cr := changedRow{Member: c.Member, Name: s.label(m.workspace, c.Member), Differs: []rangeRow{}, Before: append([]string{}, c.Before...), After: append([]string{}, c.After...)}
-				for _, iv := range c.Differs {
-					rr := rangeRow{From: iv.Start().ISO()}
-					if end, bounded := iv.End(); bounded {
-						rr.Until = end.ISO()
-					}
-					cr.Differs = append(cr.Differs, rr)
-				}
-				row.Members = append(row.Members, cr)
+			listed, _ := s.changedRows(m, k, "", planMembersShown)
+			row.Members = append(row.Members, listed...)
+			if len(listed) > 0 && len(listed) < sum.Changed {
+				row.Kinds[len(row.Kinds)-1].Next = listed[len(listed)-1].Member
 			}
 		}
 	}
@@ -653,9 +679,70 @@ func (s *Server) listPlans(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	sort.Slice(shown, func(a, b int) bool { return shown[a].seq > shown[b].seq })
-	mine = shown
-	for _, m := range mine {
+	closed, last := 0, uint64(0)
+	for _, m := range shown {
 		page.Plans = append(page.Plans, s.planRow(m, active, answer.User(), now))
+		if !s.planOpen(m) {
+			closed, last = closed+1, m.seq
+		}
 	}
+	page.Closed = closedFacts{Total: len(mine) - page.OpenPlans, Kept: closedPlansKept, Dropped: s.plans.dropped[ws]}
+	if closed < page.Closed.Total {
+		page.Closed.Next = strconv.FormatUint(last, 10)
+		if closed == 0 {
+			page.Closed.Next = strconv.FormatUint(s.plans.seq+1, 10)
+		}
+	}
+	writeJSON(w, http.StatusOK, request, page)
+}
+
+type closedPlansPage struct {
+	Revision   string      `json:"revision"`
+	ServerTime string      `json:"server_time"`
+	Active     uint64      `json:"active_revision"`
+	Order      string      `json:"order"`
+	Q          string      `json:"q"`
+	Plans      []planRow   `json:"plans"`
+	Next       string      `json:"next"`
+	Matching   int         `json:"matching"`
+	Closed     closedFacts `json:"closed"`
+}
+
+const closedPlansOrder = "newest_first"
+
+func (s *Server) planMatches(m *planMeta, q keptQuery) bool {
+	return q.matches(m.id, m.change.Member, m.change.Target, m.proposer, s.loginOf(m.proposer), s.label(m.workspace, m.change.Member), s.label(m.workspace, m.change.Target))
+}
+
+func (s *Server) listClosedPlans(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	_, answer, ok := s.admitted(w, r)
+	if !ok {
+		return
+	}
+	q, valid := parseKeptQuery(r.URL.Query())
+	if !valid {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	ws := answer.Workspace()
+	active, err := s.activeRevision(ws)
+	if err != nil {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
+	now := s.clock()
+	closed := s.closedPlans(ws)
+	page := closedPlansPage{Revision: s.Revision(), ServerTime: stamp(now), Active: active, Order: closedPlansOrder, Q: q.term, Plans: []planRow{},
+		Closed: closedFacts{Total: len(closed), Kept: closedPlansKept, Dropped: s.plans.dropped[ws]}}
+	walk := keptWalk{q: q}
+	for _, m := range closed {
+		if walk.take(m.seq, q.term == "" || s.planMatches(m, q)) {
+			page.Plans = append(page.Plans, s.planRow(m, active, answer.User(), now))
+		}
+	}
+	page.Next, page.Matching = walk.Next, walk.Matching
 	writeJSON(w, http.StatusOK, request, page)
 }

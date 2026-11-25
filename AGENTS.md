@@ -48,6 +48,12 @@ Read only the relevant `.agents/skills/<name>/SKILL.md`: pm for scope, planner f
 
 Root owns PM/planner responsibility and result integration. Use `.agents/rules/task-assignment.md` to choose the smallest necessary expert/reviewer set. Small tasks may be performed and checked directly; do not delegate just to fill role counts. Important independent reviews require a reviewer separate from the writer.
 
+### Minimize repeated reviews
+
+The owner requires minimal review repetition. Review a coherent change once with the smallest necessary independent reviewer set. After a scope passes, reuse its recorded evidence; do not rerun the same review for status reporting, wording-only updates or unchanged code. Re-review only corrected blocking findings, material changes since the reviewed revision, or newly evidenced risks, and give the reviewer the bounded diff and prior findings. Broaden review only when shared behavior or a concrete risk requires it. Consolidate related findings into one correction pass when practical. Preserve required independent financial, tenant/permission and public-contract reviews; this rule reduces duplication rather than waiving those gates.
+
+Design re-review remains required for changed designs and blocking design corrections. The owner performs screen/browser verification; root implements and runs relevant logic tests. Do not treat design review or source inspection as owner screen acceptance. Record the reviewed scope, revision, outcome and remaining limitations so subsequent work does not restart completed reviews.
+
 Complex work defines primary/support/review ownership and allowed files before execution. Every delegation specifies goal, inputs, permitted edits, validation and result format. One writer per file; use isolated worktrees for concurrent writing. At most four active agents, including root. Architect/reviewer/qa/dba roles are read-only; root or assigned implementers own edits. Models inherit the execution environment.
 
 ## Artifacts, rights and Git

@@ -3,7 +3,7 @@ import type { Candidate, CountOf, EvidencePage, PathRow, Problem } from "../../.
 import { k } from "./live-copy";
 import { categories, categoryWords, counted, pathStateWords, plurals } from "./live-codes";
 import { blockersUnexpected, pathState, proofUnexpected, requirementByTarget, requirementNumber, rowId, timeKnown } from "./live-model";
-import { Absent, Code, DetailShell, Fixed, State, EvidenceLink, Gap, Known, Label, ListOr, MoreLine, Num, Stamp, Template, Unexpected, gapOf, href, ltr } from "./live-format";
+import { Absent, Code, DetailShell, Fixed, State, EvidenceLink, Gap, Known, Label, ListFoot, ListOr, MoreLine, Num, Stamp, Template, Unexpected, gapOf, href, ltr, type ProfilesList } from "./live-format";
 import type { Shared } from "./LiveCommand";
 import { ProblemWords, StateText, Subject, TestBlocks } from "./LiveRequirements";
 
@@ -195,7 +195,7 @@ function PathDetail({ l, page, p, mode }: { l: Locale; page: EvidencePage; p: Pa
                   <h4><Label value={x.label} /></h4>
                   {!r ? <p><Template text={k.testCasesMissing(l)} slots={{ label: <Label value={x.label} /> }} /></p>
                     : r.tests === null ? <p><Gap l={l} why={gapOf(c)} /></p>
-                      : <ListOr l={l} items={r.tests.rows} empty={k.noTests(l)}>{(tests) => <TestBlocks l={l} rows={tests} />}</ListOr>}
+                      : <><ListOr l={l} items={r.tests.rows} empty={k.noTests(l)}>{(tests) => <TestBlocks l={l} rows={tests} />}</ListOr><MoreLine l={l} more={r.tests.more} total={r.tests.total} forms={plurals.showing50} /></>}
                 </div>
               );
             })}
@@ -240,8 +240,8 @@ function PathDetail({ l, page, p, mode }: { l: Locale; page: EvidencePage; p: Pa
   );
 }
 
-export function MatrixView(shared: Shared) {
-  const { l, page, selection, mode } = shared;
+export function MatrixView(shared: Shared & { pathsList?: ProfilesList }) {
+  const { l, page, selection, mode, pathsList } = shared;
   const list = page.matrix.paths;
   const selected = selection.path ? (list.rows ?? []).find((p) => p.id === selection.path) : undefined;
   if (selected && mode === "step") return <PathDetail l={l} page={page} p={selected} mode="step" />;
@@ -287,7 +287,8 @@ export function MatrixView(shared: Shared) {
               </div>
             )}
           </ListOr>
-          <MoreLine l={l} more={list.more} total={list.total} forms={plurals.showing50} />
+          {!pathsList && <MoreLine l={l} more={list.more} total={list.total} forms={plurals.showing50} />}
+          {pathsList && <ListFoot l={l} kind="paths" list={pathsList} shown={list.rows?.length ?? 0} total={list.total} copy={{ shown: k.pathsShown, more: k.pathsMore, failed: k.pathsFailed, reset: k.pathsReset }} />}
         </div>
         {reduced && selected && <PathDetail l={l} page={page} p={selected} mode="split" />}
       </div>

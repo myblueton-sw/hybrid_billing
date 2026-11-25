@@ -1,14 +1,22 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, type SelfEnd, type SelfPage } from "../../../../service/admin";
+import { AdminError, type SelfEnd, type SelfPage, type SelfSession } from "../../../../service/admin";
 import { selfEndOf } from "../../../../service/self-end";
 import { canChange, changeOutcome, checkChange, goneCount, groupOf, heldShown, heldTags, openByDefault, others, presentHandles, rowOutcome, running, submitOutcome } from "./live-model";
 import { e, stateSentence } from "./end-copy";
+import { m } from "./live-copy";
 
-const page = (change: Partial<SelfPage>): SelfPage => ({
+type DisplayPage = SelfPage & { sessions: SelfSession[]; session_ends: SelfEnd[] };
+const page = (change: Partial<DisplayPage>): DisplayPage => ({
   user_id: "u", login: "l", email: "e", workspace: "w", role: "member", identities: [], password_set: true, installation_administrator: false,
   sessions: [{ handle: "a", current: true, signed_in: "1", ends: "2" }, { handle: "b", current: false, signed_in: "0", ends: "1" }],
-  sessions_generation: "g", session_ends: [], idle_minutes: 30, max_age_seconds: 0, signed_in_at: "1", authenticated_at: "1", now: "1", ...change,
+  current_session: { handle:"a",current:true,signed_in:"1",ends:"2",state:"active",can_end: false, not_included_operation: "" }, recorded_session_count:2, accepted_operation_count:0,
+  sessions_generation: "g", session_ends: [], idle_minutes: 30, absolute_minutes: 720, max_age_seconds: 0, signed_in_at: "1", authenticated_at: "1", now: "1", ...change,
+});
+
+test("the longest session reads as the served lifetime", () => {
+  assert.deepEqual([m.longestValue("en", 720), m.longestValue("ko", 720), m.longestValue("ar", 720)], ["12 hours after sign-in", "로그인 후 12시간", "12 ساعة بعد تسجيل الدخول"]);
+  assert.equal(m.longestValue("en", 90), "90 minutes after sign-in");
 });
 
 test("local checks run before any request", () => {

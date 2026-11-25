@@ -1,11 +1,14 @@
-import { holdCountKeys, type HoldRow } from "../../../../service/retention";
+import { holdCountKeys, type HoldOutcome, type HoldRow } from "../../../../service/retention";
+import { AdminError } from "../../../../service/admin";
+import { useOlderRows } from "../../../../shared/older-rows";
+import { useMoreRows } from "../../../../shared/more-rows";
 import type { Locale } from "../../../../shared/types";
 import { plurals } from "./live-codes";
 import { k } from "./live-copy";
 import {
   blockerPolicy, duplicateIn, holdTarget, keptKey, pendingNow, pendingReleaseFor, refusedNow, rowId, stateSentence, tenantTarget, textProblem,
 } from "./live-model";
-import { Code, Free, HoldFacts, Rich, Stamp, Who, coversText, holdContext, holdTextError, href, ltr, MoreLine } from "./live-format";
+import { Code, Free, HoldFacts, Rich, Stamp, Who, coversText, holdContext, holdTextError, href, ltr, ItemsFoot, MoreLine } from "./live-format";
 import { CommandForm, RowNote, line, useOpen, type Blocker, type FieldErrors, type Fields, type Shared } from "./LiveCommand";
 import { HoldCommand, TextField } from "./LiveHoldForm";
 import { Strip } from "./LiveExpiry";
@@ -32,8 +35,15 @@ function countLabel(l: Locale, key: string): string {
   return key === "outcome_pending" ? k.beingDeleted(l) : k.holdOutcome(l, key);
 }
 
-function Outcomes({ l, h }: { l: Locale; h: HoldRow }) {
-  const list = h.outcomes;
+function Outcomes({ h, of, ...shared }: Shared & { h: HoldRow; of: string }) {
+  const { l, page, api } = shared;
+  const older = useMoreRows<HoldOutcome>(page.revision + "\u0000" + h.id, h.outcomes, h.id && h.outcomes_more === true ? h.outcomes_next : null, (after) => api.retentionHoldOutcomes(h.id, after), (o) => o.artifact, (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  });
+  const list = older.rows;
+  const paged = h.outcomes_next !== null;
   return (
     <>
       {list === null ? (
@@ -63,7 +73,8 @@ function Outcomes({ l, h }: { l: Locale; h: HoldRow }) {
         </div>
       )}
       <p className="p04-small live-quiet">{k.onlyListed(l)}</p>
-      {h.outcomes_more === true && <p className="p04-small live-quiet">{k.moreOutcomes(l)}</p>}
+      {h.outcomes_more === true && !paged && <p className="p04-small live-quiet">{k.moreOutcomes(l)}</p>}
+      {paged && <ItemsFoot l={l} kind="outcomes" list={{ more: older.more, status: older.status, reset: older.reset, onMore: older.load }} shown={list?.length ?? 0} total={null} of={of} />}
       {h.outcomes_more === null && <p className="p04-small live-quiet">{k.maybeMore(l)}</p>}
     </>
   );
@@ -115,7 +126,7 @@ function Hold({ h, ...shared }: Shared & { h: HoldRow }) {
           ) : (
             <p>{k.unknown(l)}</p>
           )}
-          <Outcomes l={l} h={h} />
+          <Outcomes h={h} of={head} {...shared} />
         </div>
       </div>
       <div className="p04-actions">
@@ -182,22 +193,54 @@ export function HoldsView(shared: Shared) {
   const { l, page } = shared;
   const holds = page.holds;
   const refs = holds.references;
+  const facts = holds.rows === null ? null : holds.released;
+  const older = useOlderRows<HoldRow>(page.revision, facts, holds.rows, shared.api.retentionHolds, (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  }, false);
+  const rows = older.rows;
+  const released = (rows ?? []).filter((h) => h.released === true);
+  const inForce = (rows ?? []).filter((h) => h.released !== true);
+  const cut = facts !== null && older.counted > (holds.rows ?? []).filter((h) => h.released === true).length;
+  const failed = older.status === "failed";
   return (
     <>
       <Tenant {...shared} />
-      <MoreLine l={l} more={holds.more} total={holds.total} forms={plurals.showingNewest} />
-      {holds.rows === null ? (
+      {facts === null && <MoreLine l={l} more={holds.more} total={holds.total} forms={plurals.showingNewest} />}
+      {rows === null ? (
         <p className="live-empty">{k.unknown(l)}</p>
-      ) : holds.rows.length === 0 ? (
-        <p className="live-empty">{holds.total === 0 ? k.noHolds(l) : k.unknown(l)}</p>
+      ) : rows.length === 0 && holds.total !== 0 && !older.more ? (
+        <p className="live-empty">{k.unknown(l)}</p>
+      ) : rows.length === 0 && !older.more ? (
+        <p className="live-empty">{k.noHolds(l)}</p>
       ) : (
-        holds.rows.map((h, n) => <Hold key={h.id || n} h={h} {...shared} />)
+        <>
+          <section className="p04-held-group p04-held-in-force" aria-labelledby="p04-held-in-force">
+            <h4 id="p04-held-in-force">{k.heldInForce(l, inForce.length)}</h4>
+            {inForce.length === 0 ? <p className="live-empty">{k.heldNoneInForce(l)}</p> : inForce.map((h, n) => <Hold key={h.id || "f" + n} h={h} {...shared} />)}
+          </section>
+          <section className="p04-held-group p04-held-released" aria-labelledby="p04-held-released">
+            <h4 id="p04-held-released">{k.heldReleased(l, released.length)}</h4>
+            {cut && <p className="p04-small live-quiet p04-held-count" role="status" ref={older.countRef} tabIndex={-1}>{!older.more && released.length >= older.counted ? k.heldAll(l, older.counted) : k.heldShown(l, released.length, older.counted)}</p>}
+            {older.reset && <p className="p04-small p04-held-reset" role="status">{k.heldReset(l)}</p>}
+            {released.length === 0 && !older.more ? <p className="live-empty">{k.heldNoneReleased(l)}</p> : released.map((h, n) => <Hold key={h.id || "r" + n} h={h} {...shared} />)}
+            {older.more && (
+              <div className="p04-held-more">
+                {failed && <p role="alert">{k.heldFailed(l)}</p>}
+                <button type="button" className="live-secondary p04-held-more-button" aria-disabled={older.status === "loading" || undefined} onClick={older.load}>
+                  {failed ? k.heldTryAgain(l) : older.status === "loading" ? k.heldLoading(l) : k.heldMore(l)}
+                </button>
+              </div>
+            )}
+          </section>
+        </>
       )}
       <section className="p04-section p04-required" aria-labelledby="p04-required-title">
         <h3 id="p04-required-title">{k.requiredTitle(l)}</h3>
         <p className="p04-prose">{k.requiredLead(l)}</p>
         <p className="p04-small live-quiet"><Rich text={k.populationNote(l, refs.population)} /></p>
-        <MoreLine l={l} more={refs.more} total={refs.total} forms={plurals.showingOf} />
+        {!shared.listOf && <MoreLine l={l} more={refs.more} total={refs.total} forms={plurals.showingOf} />}
         {refs.rows === null ? (
           <p className="live-empty">{k.unknown(l)}</p>
         ) : refs.rows.length === 0 ? (
@@ -219,6 +262,7 @@ export function HoldsView(shared: Shared) {
             </table>
           </div>
         )}
+        {shared.listOf && <ItemsFoot l={l} kind="refs" list={shared.listOf("refs", refs.next)} shown={refs.rows?.length ?? 0} total={refs.total} of="p04-required-title" />}
       </section>
       <Proposals kind="release" {...shared} />
     </>

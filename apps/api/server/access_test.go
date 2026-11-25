@@ -10,7 +10,14 @@ import (
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
+	"github.com/myblueton-sw/hybrid_billing/modules/documentauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/draftauthority"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
+	"github.com/myblueton-sw/hybrid_billing/modules/inputauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/pricingauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/protectedauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/resultauthority"
+	"github.com/myblueton-sw/hybrid_billing/modules/termsauthority"
 )
 
 func (f world) accessRead(a actor, path string) reply {
@@ -86,7 +93,7 @@ func TestAccessReadShape(t *testing.T) {
 			t.Error("installation grant listed")
 		}
 	}
-	if strings.Join(ids, ",") != "reader-console,reader-sample-admin,reader-sample-admin-2" {
+	if strings.Join(ids, ",") != "approval-console,approval-sample-admin,approval-sample-admin-2,approval-sample-admin-3,candidate-console,candidate-sample-admin,candidate-sample-admin-2,candidate-sample-admin-3,reader-console,reader-sample-admin,reader-sample-admin-2" {
 		t.Errorf("grants %v", ids)
 	}
 	first := got.body["grants"].([]any)[1].(map[string]any)
@@ -94,7 +101,7 @@ func TestAccessReadShape(t *testing.T) {
 		t.Errorf("grant row %+v", first)
 	}
 	catalog := got.body["catalog"].([]any)
-	if len(catalog) != 1 || catalog[0].(map[string]any)["kind"] != ReaderKind || catalog[0].(map[string]any)["until"] != stamp(start.Add(readerValidity)) {
+	if len(catalog) != 3 || catalog[0].(map[string]any)["kind"] != approvalKind || catalog[1].(map[string]any)["kind"] != candidateKind || catalog[2].(map[string]any)["kind"] != ReaderKind || catalog[0].(map[string]any)["until"] != stamp(start.Add(readerValidity)) || catalog[1].(map[string]any)["until"] != stamp(start.Add(readerValidity)) || catalog[2].(map[string]any)["until"] != stamp(start.Add(readerValidity)) {
 		t.Errorf("catalog %+v", catalog)
 	}
 	subjects := fmt.Sprint(got.body["subjects"])
@@ -252,15 +259,38 @@ func TestAccessPreview(t *testing.T) {
 	if view := pick(before, ReaderField); view["allowed"] != false || view["reason"] != string(gate.ReasonNoGrant) {
 		t.Errorf("before %+v", view)
 	}
+	costRows := 0
+	costFields := map[any]int{}
 	for _, d := range decisions {
-		if d.(map[string]any)["action"] == "view_cost" {
-			t.Error("view_cost listed without cost fields")
+		row := d.(map[string]any)
+		if row["action"] == "view_cost" {
+			costRows++
+			costFields[row["field"]]++
+			if (row["field"] != candidateField && row["field"] != inputauthority.EvidenceField && row["field"] != pricingauthority.EvidenceField && row["field"] != documentauthority.EvidenceField && row["field"] != resultauthority.EvidenceField && row["field"] != draftauthority.EvidenceField && row["field"] != protectedauthority.EvidenceField && row["field"] != termsauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant) {
+				t.Errorf("unexpected cost preview %+v", row)
+			}
 		}
+	}
+	if costRows != 8 || len(costFields) != 8 || costFields[protectedauthority.EvidenceField] != 1 || costFields[termsauthority.EvidenceField] != 1 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 || costFields[pricingauthority.EvidenceField] != 1 || costFields[documentauthority.EvidenceField] != 1 || costFields[resultauthority.EvidenceField] != 1 || costFields[draftauthority.EvidenceField] != 1 {
+		t.Errorf("cost preview rows = %d, want 8", costRows)
 	}
 	f.grantVia(root, f.as(Admin2Login), SampleMember, nil)
 	after := f.accessRead(root, "/preview?subject="+SampleMember+"&kind="+ReaderKind+"&customer=c1")
 	if pick(after, ReaderField)["allowed"] != true || pick(after, "state")["allowed"] != false {
 		t.Errorf("after %s", after.raw)
+	}
+	costFields = map[any]int{}
+	for _, d := range after.body["decisions"].([]any) {
+		row := d.(map[string]any)
+		if row["action"] == "view_cost" {
+			costFields[row["field"]]++
+		}
+		if row["action"] == "view_cost" && ((row["field"] != candidateField && row["field"] != inputauthority.EvidenceField && row["field"] != pricingauthority.EvidenceField && row["field"] != documentauthority.EvidenceField && row["field"] != resultauthority.EvidenceField && row["field"] != draftauthority.EvidenceField && row["field"] != protectedauthority.EvidenceField && row["field"] != termsauthority.EvidenceField) || row["allowed"] != false || row["reason"] != string(gate.ReasonNoGrant)) {
+			t.Errorf("ordinary reader grant changed cost access %+v", row)
+		}
+	}
+	if len(costFields) != 8 || costFields[protectedauthority.EvidenceField] != 1 || costFields[termsauthority.EvidenceField] != 1 || costFields[candidateField] != 1 || costFields[inputauthority.EvidenceField] != 1 || costFields[pricingauthority.EvidenceField] != 1 || costFields[documentauthority.EvidenceField] != 1 || costFields[resultauthority.EvidenceField] != 1 || costFields[draftauthority.EvidenceField] != 1 {
+		t.Fatal("cost field set changed after ordinary grant", costFields)
 	}
 	for _, q := range []string{"?subject=nobody&kind=" + ReaderKind, "?subject=" + SampleMember + "&kind=" + gate.InstallationKind, "?subject=" + SampleMember + "&kind=" + ReaderKind + "&customer=a%20b"} {
 		f.code(t, q, f.accessRead(root, "/preview"+q), 422, string(commands.InvalidRequest))

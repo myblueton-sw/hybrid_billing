@@ -240,3 +240,21 @@ func TestEmptyInstallationEnrolmentBlock(t *testing.T) {
 		t.Errorf("cancel %s", got.raw)
 	}
 }
+
+func TestTrustChangeImpactIsNullWhenNotComputed(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	p := f.trustAdmins()
+	id := changeOf(t, f.trustPropose(p.a, "60", "0"))
+	open := f.policyRead(p.c).body["changes"].([]any)[0].(map[string]any)
+	if impact, ok := open["impact"].(map[string]any); !ok || impact["signs_out_everyone"] != true {
+		t.Fatalf("open change impact %v", open["impact"])
+	}
+	if got := f.trustEnd(p.a, "trust.cancel", id); got.status != 200 {
+		t.Fatal(got.raw)
+	}
+	closed := f.policyRead(p.c).body["changes"].([]any)[0].(map[string]any)
+	value, present := closed["impact"]
+	if closed["state"] != trustchange.StateCancelled || !present || value != nil {
+		t.Fatalf("closed change state %v impact %v present %v", closed["state"], value, present)
+	}
+}

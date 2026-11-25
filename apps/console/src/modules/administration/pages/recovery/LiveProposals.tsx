@@ -1,3 +1,5 @@
+import { AdminError } from "../../../../service/admin";
+import { useOlder } from "../../../../shared/KeptHistory";
 import { useEffect, useState, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { RecoveryProposal } from "../../../../service/recovery";
@@ -5,7 +7,7 @@ import { summaryWords, words } from "./live-codes";
 import { k } from "./live-copy";
 import {
   actor, approveNarrow, basisContext, basisFrom, basisOf, blockerPolicy, drop, frozenTargetOk, isolationOf, ordered, pendingNow, proposalInstallation, proposalTarget, refusedNow, resumeOf,
-  shownLimit, summaryOf, type Basis,
+  summaryOf, type Basis,
 } from "./live-model";
 import { Code, InstallNow, ModeImpact, Prose, Template, fsi, href, ltr, stamp } from "./live-format";
 import { CommandForm, RowNote, line, useOpen, type Blocker, type Shared } from "./LiveCommand";
@@ -159,13 +161,18 @@ function Row({ p, ...shared }: Shared & { p: RecoveryProposal }) {
 export function Proposals(shared: Shared) {
   const { l, page } = shared;
   const list = page.proposals;
-  const { pending, closed } = ordered(list ?? []);
+  const older = useOlder(l, page.revision, list === null ? null : page.proposal_history, list ?? [], shared.api.recoveryProposals, (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  });
+  const { pending, closed } = ordered(older.rows);
   return (
     <section className="p03-section p03-proposals" aria-labelledby="p03-proposals-title">
       <h3 id="p03-proposals-title">{k.proposalsTitle(l)}</h3>
       {list === null && <p className="live-empty">{k.unknown(l)}</p>}
       {list !== null && list.length === 0 && <p className="live-empty">{k.noProposals(l)}</p>}
-      {list !== null && list.length >= shownLimit && <p className="p03-small live-quiet">{k.newest(l)}</p>}
+      {older.head}
       {pending.length > 0 && (
         <>
           <h4>{k.waitingGroup(l, pending.length)}</h4>
@@ -175,10 +182,13 @@ export function Proposals(shared: Shared) {
       {closed.length > 0 && (
         <>
           <h4>{k.closedGroup(l, closed.length)}</h4>
+          {older.count}
           <ul className="p03-list">{closed.map((p, i) => <Row key={p.target || "c" + i} p={p} {...shared} />)}</ul>
           <p className="p03-small live-quiet">{k.appliedNote(l)}</p>
         </>
       )}
+      {closed.length === 0 && older.count}
+      {older.foot}
     </section>
   );
 }

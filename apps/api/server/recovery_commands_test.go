@@ -78,7 +78,7 @@ func TestRecoveryLockReleaseCycle(t *testing.T) {
 		t.Errorf("pending %s", s)
 	}
 	if locks := sectionRow(t, read, "isolation", recoveryStandby)["locks"].([]any); len(locks) != 2 || fmt.Sprint(locks[1]) !=
-		"map[at:2026-11-16T09:01:00Z by:sample-admin by_login:admin@example.invalid rationale:sample reason]" {
+		"map[at:2026-11-16T09:01:00Z by:sample-admin by_login:admin@example.invalid number:2 rationale:sample reason]" {
 		t.Errorf("locks %v", locks)
 	}
 	f.unchanged(t, "self approval", f.run(second, "recovery.approve", proposalTargetOf(11), nil), "prerequisite_failed")

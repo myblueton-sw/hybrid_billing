@@ -63,6 +63,7 @@ export type RequirementRow = {
   design: string;
   commit: string | null;
   retired: boolean | null;
+  state: string | null;
   replacement: string | null;
   states: Record<string, string> | null;
   builds_more: boolean | null;
@@ -170,7 +171,7 @@ export type EvidencePage = {
   state: string;
   candidate: Candidate;
   matrix: { origin: string; paths: List<PathRow> };
-  requirements: { origin: string; requirements: List<RequirementRow>; gate: Gate };
+  requirements: { origin: string; requirements: List<RequirementRow>; next: string; gate: Gate };
   artifacts: { origin: string; builds: List<BuildRow>; harnesses: List<HarnessRow>; results: List<ResultRow>; files: string; logs: string; environment: string; content: string };
   load: { origin: string; hardware: List<HardwareRow>; profiles: List<ProfileRow>; readiness: Readiness; measurement: string; planning_targets: string };
   decisions: { origin: string; proposals: List<Proposal>; support_decisions: string; activation_review: string; ledger: string };
@@ -280,6 +281,7 @@ export function requirementOf(r: Raw): RequirementRow {
     design: str(r.design),
     commit: opt(r.commit),
     retired: flag(r.retired),
+    state: opt(r.state),
     replacement: opt(r.replacement),
     states: statesOf(r.states),
     builds_more: flag(r.builds_more),
@@ -432,7 +434,7 @@ export function evidenceOf(body: Raw): EvidencePage {
     state: str(body.state),
     candidate: candidateOf(body.candidate),
     matrix: { origin: str(m.origin), paths: listOf(m.paths, pathOf) },
-    requirements: { origin: str(q.origin), requirements: listOf(q.requirements, requirementOf), gate: gateOf(q.gate) },
+    requirements: { origin: str(q.origin), requirements: listOf(q.requirements, requirementOf), next: str(q.next), gate: gateOf(q.gate) },
     artifacts: {
       origin: str(a.origin),
       builds: listOf(a.builds, (x) => ({ build: str(x.build), commit: str(x.commit), order: count(x.order) })),
@@ -453,4 +455,28 @@ export function evidenceOf(body: Raw): EvidencePage {
     },
     decisions: { origin: str(d.origin), proposals: listOf(d.proposals, proposalOf), support_decisions: str(d.support_decisions), activation_review: str(d.activation_review), ledger: str(d.ledger) },
   };
+}
+
+export type RequirementsQuery = { after?: string; q?: string; state?: string; retired?: string; targets?: string[] };
+export type RequirementsAnswer = { rows: RequirementRow[]; next: string; matching: number; total: number };
+
+export function requirementsPath(query: RequirementsQuery): string {
+  const q = new URLSearchParams();
+  if (query.targets) q.set("target", query.targets.join(","));
+  else {
+    if (query.after) q.set("after", query.after);
+    if (query.q) q.set("q", query.q);
+    if (query.state) q.set("state", query.state);
+    if (query.retired) q.set("retired", query.retired);
+  }
+  const text = q.toString();
+  return "/release-evidence/requirements" + (text ? "?" + text : "");
+}
+
+export function requirementsAnswerOf(body: Raw): RequirementsAnswer | null {
+  const whole = (v: unknown): number | null => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
+  const matching = whole(body.matching);
+  const total = whole(body.total);
+  if (!Array.isArray(body.requirements) || typeof body.next !== "string" || matching === null || total === null) return null;
+  return { rows: body.requirements.filter(isRow).map(requirementOf), next: body.next, matching, total };
 }

@@ -1091,3 +1091,43 @@
     grid-column: 1 / -1;
   }
 }
+.p05-live .p05-req-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  margin-block-end: 16px;
+}
+.p05-live .p05-req-form .service-field {
+  margin: 0;
+  inline-size: min(100%, 240px);
+}
+.p05-live .p05-req-form input,
+.p05-live .p05-req-form select {
+  inline-size: 100%;
+  block-size: 44px;
+  box-sizing: border-box;
+}
+.p05-live .p05-req-form button {
+  inline-size: auto;
+  min-block-size: 44px;
+  white-space: nowrap;
+}
+.p05-live .p05-req-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-block-start: 16px;
+}
+.p05-live .p05-req-more p {
+  margin: 0;
+  max-inline-size: 68ch;
+}
+.p05-live .p05-req-more .p05-req-more-button {
+  inline-size: auto;
+  min-block-size: 44px;
+}
+.p05-live .p05-req-count {
+  margin-block-start: 12px;
+}

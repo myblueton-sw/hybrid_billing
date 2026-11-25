@@ -10,7 +10,7 @@ import { installationOf, proposalOf as installProposalOf, type InstallationPage,
 import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
 import { integrationsOf, pluginProposalOf, type IntegrationsPage, type PluginProposal } from "./integrations";
 import { recoveryOf, recoveryProposalOf, type RecoveryPage, type RecoveryProposal } from "./recovery";
-import { evidenceOf, type EvidencePage } from "./release-evidence";
+import { evidenceOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
 import { retentionOf, type RetentionPage } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
 
@@ -1219,6 +1219,11 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async releaseEvidence(request = attempt().request): Promise<EvidencePage> {
       return evidenceOf(await send("/release-evidence", { method: "GET" }, request));
+    },
+    async evidenceRequirements(query: RequirementsQuery, request = attempt().request): Promise<RequirementsAnswer> {
+      const got = requirementsAnswerOf(await send(requirementsPath(query), { method: "GET" }, request));
+      if (!got) throw new AdminError("invalid");
+      return got;
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

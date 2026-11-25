@@ -1,16 +1,18 @@
+import { useEffect, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { Candidate, EvidencePage, Problem, RequirementRow, TestRow } from "../../../../service/release-evidence";
 import { blockerText, f, k } from "./live-copy";
-import { categoryWords, counted, has, outcomeWords, plurals, problemWords, reasonWords, requirementStateWords } from "./live-codes";
+import { categoryWords, counted, has, outcomeWords, plurals, problemWords, reasonWords, requirementStateWords, words } from "./live-codes";
 import {
   blockerPolicy, buildsMore, buildsOf, differences, duplicateIn, frozenValues, keptKey, pairOf, pendingNow, pendingRetire, problemUnexpected, reasonLine, refusedNow, replacementOptions,
-  requirementByTarget, requirementRetire, requirementState, requirementTarget, rowId, sortBuilds, stateAtCandidate, stateSentence, testCounts, type AlreadyProposed,
+  filtering, noFilter, requirementByTarget, requirementRetire, utf8Bytes, requirementState, requirementTarget, rowId, sortBuilds, stateAtCandidate, stateSentence, testCounts, type AlreadyProposed, type RequirementFilter,
 } from "./live-model";
 import { Absent, Code, Commit, DetailShell, Fixed, Known, State, Digest, EvidenceLink, Gap, Label, ListOr, MoreLine, Num, Template, Unexpected, gapOf, href, ltr } from "./live-format";
 import { CommandForm, RowNote, line, useOpen, type Blocker, type Shared } from "./LiveCommand";
 import { retireFields } from "./LiveRetireForm";
 
 const command = "release_evidence.retire_requirement";
+const searchBytes = 64;
 
 export function StateText({ l, state, candidate, sample }: { l: Locale; state: string | null; candidate: Candidate; sample: boolean }) {
   const s = requirementState(state);
@@ -389,9 +391,96 @@ function RequirementDetail({ l, page, r, mode }: { l: Locale; page: EvidencePage
   );
 }
 
-export function RequirementsView(shared: Shared) {
-  const { l, page, selection, mode } = shared;
+export type RequirementsTable = {
+  rows: RequirementRow[] | null;
+  filter: RequirementFilter;
+  total: number | null;
+  matching: number | null;
+  more: boolean;
+  status: "idle" | "loading" | "failed";
+  reset: boolean;
+  candidate: boolean;
+  onFilter: (f: RequirementFilter) => void;
+  onMore: () => void;
+};
+
+function TableControls({ l, table }: { l: Locale; table: RequirementsTable }) {
+  const [draft, setDraft] = useState(table.filter);
+  const [tooLong, setTooLong] = useState(false);
+  useEffect(() => { setDraft(table.filter); setTooLong(false); }, [table.filter]);
+  const apply = () => {
+    const q = draft.q.trim();
+    if (utf8Bytes(q) > searchBytes) { setTooLong(true); document.getElementById("p05-req-q")?.focus(); return; }
+    setTooLong(false);
+    table.onFilter({ ...draft, q });
+  };
+  const active = filtering(table.filter);
+  const whole = (table.total ?? 0) > 0 || active;
+  if (!whole) return null;
+  return (
+    <div className="p05-req-controls">
+      <form className="p05-req-form" role="search" onSubmit={(e) => { e.preventDefault(); apply(); }}>
+        <div className="service-field">
+          <label htmlFor="p05-req-q">{k.reqSearch(l)}</label>
+          <input id="p05-req-q" type="search" dir="auto" maxLength={64} value={draft.q} aria-invalid={tooLong || undefined} aria-describedby={tooLong ? "p05-req-q-error" : undefined} onChange={(e) => setDraft({ ...draft, q: e.target.value })} />
+          {tooLong && <p id="p05-req-q-error" className="service-field-error" role="alert">{k.reqTooLong(l)}</p>}
+        </div>
+        {table.candidate && (
+          <div className="service-field">
+            <label htmlFor="p05-req-state">{k.reqState(l)}</label>
+            <select id="p05-req-state" value={draft.state} onChange={(e) => setDraft({ ...draft, state: e.target.value })}>
+              <option value="">{k.reqAnyState(l)}</option>
+              {Object.keys(requirementStateWords).map((s) => <option key={s} value={s}>{words(l, requirementStateWords, s)}</option>)}
+            </select>
+          </div>
+        )}
+        <div className="service-field">
+          <label htmlFor="p05-req-retired">{k.reqRetired(l)}</label>
+          <select id="p05-req-retired" value={draft.retired} onChange={(e) => setDraft({ ...draft, retired: e.target.value })}>
+            <option value="">{k.reqRetiredAny(l)}</option>
+            <option value="no">{k.reqRetiredNo(l)}</option>
+            <option value="yes">{k.reqRetiredYes(l)}</option>
+          </select>
+        </div>
+        <button type="submit" className="live-secondary p05-req-apply">{k.reqApply(l)}</button>
+        {active && <button type="button" className="live-secondary p05-req-clear" onClick={() => table.onFilter(noFilter)}>{k.reqClear(l)}</button>}
+      </form>
+      {active && table.matching !== null && table.status !== "failed" && <p className="p05-small p05-muted p05-req-count">{k.reqMatching(l, table.rows?.length ?? 0, table.matching)}</p>}
+      {table.reset && <p className="p05-small p05-req-reset" role="status">{k.reqReset(l)}</p>}
+    </div>
+  );
+}
+
+function TableFoot({ l, table }: { l: Locale; table: RequirementsTable }) {
+  const active = filtering(table.filter);
+  const shown = table.rows?.length ?? 0;
+  const of = active ? table.matching : table.total;
+  const failed = table.status === "failed";
+  return (
+    <>
+      {!active && of !== null && (table.more || shown < of) && shown > 0 && <p className="p05-small p05-muted p05-req-count">{k.reqShown(l, shown, of)}</p>}
+      {(table.more || failed) && (
+        <div className="p05-req-more">
+          {failed && <p role="alert">{k.reqFailed(l)}</p>}
+          <button type="button" className="live-secondary p05-req-more-button" aria-disabled={table.status === "loading" || undefined} onClick={() => { if (table.status !== "loading") table.onMore(); }}>
+            {failed ? k.reqTryAgain(l) : table.status === "loading" ? k.reqLoading(l) : k.reqMore(l)}
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+export function wholeTable(page: EvidencePage): RequirementsTable {
   const list = page.requirements.requirements;
+  return { rows: list.rows, filter: noFilter, total: list.total, matching: null, more: false, status: "idle", reset: false, candidate: page.candidate !== null, onFilter: () => undefined, onMore: () => undefined };
+}
+
+export function RequirementsView(shared: Shared & { table?: RequirementsTable }) {
+  const { l, page, selection, mode } = shared;
+  const table = shared.table ?? wholeTable(page);
+  const list = { ...page.requirements.requirements, rows: table.rows };
+  const active = filtering(table.filter);
   const selected = selection.requirement ? requirementByTarget(page, "trace-requirement-" + selection.requirement) : undefined;
   if (selected && mode === "step") return <RequirementDetail l={l} page={page} r={selected} mode="step" />;
   const open = !!selected;
@@ -407,7 +496,9 @@ export function RequirementsView(shared: Shared) {
       <div className="p05-split" data-open={reduced ? "true" : "false"}>
         <div className="p05-list">
           <h3 className="visually-hidden">{k.requirementsCaption(l)}</h3>
-          <ListOr l={l} items={list.rows} empty={k.noRequirements(l)}>
+          <TableControls l={l} table={table} />
+          {selected && !(table.rows ?? []).some((r) => r.target === selected.target) && <p className="p05-small p05-req-unlisted" role="status">{k.reqNotListed(l)}</p>}
+          {!(active && table.status === "failed" && (table.rows ?? []).length === 0) && <ListOr l={l} items={list.rows} empty={active ? (table.status === "loading" ? k.reqLoading(l) : k.reqNoMatch(l)) : k.noRequirements(l)}>
             {(rows) => (
               <div className="live-table">
                 <table className={"p05-table p05-requirements" + (reduced ? " p05-reduced" : " p05-full")}>
@@ -433,8 +524,8 @@ export function RequirementsView(shared: Shared) {
                 </table>
               </div>
             )}
-          </ListOr>
-          <MoreLine l={l} more={list.more} total={list.total} forms={plurals.showing50} />
+          </ListOr>}
+          <TableFoot l={l} table={table} />
         </div>
         {reduced && selected && <RequirementDetail l={l} page={page} r={selected} mode="split" />}
       </div>

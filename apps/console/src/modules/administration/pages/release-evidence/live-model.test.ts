@@ -7,13 +7,15 @@ import { readFileSync } from "node:fs";
 import { createElement, type ComponentType } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { AdminClient } from "../../../../service/admin";
-import { evidenceOf, proposalOf, requirementOf, type EvidencePage } from "../../../../service/release-evidence";
+import { evidenceOf, proposalOf, requirementOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type RequirementRow } from "../../../../service/release-evidence";
+import { AdminError, adminClient } from "../../../../service/admin";
 import { sample } from "../../../../service/release-evidence.sample";
 import {
   approveUsable, blockerPolicy, buildsOf, cancelled, deniedOutcome, differences, draftOf, duplicateIn, fieldReaction, forget, frozenTargetOk, goneKind, hadEarlier, keepDraft, keepsAttempt,
   keptKey, modeOf, pairOf, pendingFor, pendingNow, pendingRetire, profileRetire, profileTarget, proposalTarget, pruneRefusals, react, readDenied, readSucceeded, refusedNow, renew,
   replacementOptions, replacementProblem, requirementRetire, requirementTarget, retireValues, revokedNow, selectionOf, setScope, settle as settleRecorded, snapshotOf, splitWidth, stateSentence, textProblem,
   utf8Bytes, vanished, rowId, closedProposal, verdictLine, viewOf, withdrawUsable,
+  filtering, missingRequirements, noFilter, requirementByLabel, requirementByTarget, requirementByTest, requirementTargetsInUse, stateAtCandidate, stillAllowed, withHeld,
 } from "./live-model";
 import { blockerText, f, k } from "./live-copy";
 import { allWordTables, category, counted, failingVerdicts, plurals, verdictWords } from "./live-codes";
@@ -783,3 +785,101 @@ function refusedDetail(command: string, target: string): Receipt | undefined {
 function settle(command: string, target: string, reaction: Parameters<typeof settleRecorded>[2], failure = "", had = false, detail?: Receipt) {
   settleRecorded(command, target, reaction, failure, had, reference(command, target, detail));
 }
+
+function loaded(p: EvidencePage, n: number, over: Partial<RequirementRow> = {}): RequirementRow {
+  const from = p.requirements.requirements.rows![1];
+  return { ...from, target: "trace-requirement-" + n, id: "loaded-" + n, label: from.namespace + "/loaded-" + n, tests: from.tests ? { ...from.tests, rows: [{ ...from.tests.rows![0], id: "t-loaded-" + n }] } : null, ...over };
+}
+
+test("rows held beyond the main read are read by every lookup and counted in the comparison", () => {
+  const main = page((s) => { s.requirements.requirements.total = 70; s.requirements.requirements.more = true; s.requirements.next = "6"; });
+  const held = withHeld(main, [loaded(main, 60, { states: { "0.0.1": "designed", "0.0.2": "tested" } }), loaded(main, 9), loaded(main, 2, { id: "stale-copy" })]);
+  const rows = held.requirements.requirements.rows!;
+  assert.deepEqual(rows.map((r) => r.target.slice(18)), ["1", "2", "3", "4", "5", "6", "9", "60"]);
+  assert.equal(rows[1].id, main.requirements.requirements.rows![1].id);
+  assert.equal(held.requirements.requirements.more, true);
+  assert.equal(held.requirements.requirements.total, 70);
+  assert.equal(held.requirements.next, "6");
+  assert.equal(requirementByTarget(held, "trace-requirement-60")?.id, "loaded-60");
+  assert.equal(requirementByLabel(held, rows[7].label)?.target, "trace-requirement-60");
+  assert.equal(requirementByTest(held, rows[7].namespace, "t-loaded-60")?.target, "trace-requirement-60");
+  assert.equal(requirementByTarget(main, "trace-requirement-60"), undefined);
+  assert.ok(differences(held, { from: "0.0.1", to: "0.0.2" }).some((d) => d.label === rows[7].label));
+  assert.equal(selectionOf(new URLSearchParams("requirement=60"), held, "requirements").requirement, "60");
+  assert.equal(selectionOf(new URLSearchParams("requirement=60"), main, "requirements").requirement, "");
+  assert.equal(withHeld(main, []), main);
+  const whole = withHeld(page((s) => { s.requirements.requirements.total = 7; }), [loaded(main, 7)]);
+  assert.equal(whole.requirements.requirements.more, false);
+});
+
+test("a row an attempt refers to is asked for again and is not reported as gone once held", () => {
+  forget();
+  setScope("w", "u", "s");
+  const main = page();
+  pendingFor("release_evidence.retire_requirement", "trace-requirement-60", { reason: "x" }, "r1", () => ({ request: "q", key: "k" }), [], { view: "requirements" });
+  settleRecorded("release_evidence.retire_requirement", "trace-requirement-61", "hint", "stage", false);
+  pendingFor("release_evidence.approve", "perf-proposal-9", { rationale: "x" }, "r1", () => ({ request: "q", key: "k" }), [], { view: "decisions", proposal: "9" });
+  assert.deepEqual(requirementTargetsInUse().sort(), ["trace-requirement-60", "trace-requirement-61"]);
+  assert.deepEqual(missingRequirements(main, [...requirementTargetsInUse(), "trace-requirement-2", "trace-requirement-60", "", "x"]).sort(), ["trace-requirement-60", "trace-requirement-61"]);
+  assert.equal(vanished(main, "requirements").length, 1);
+  const held = withHeld(main, [loaded(main, 60, { can_retire: true, retire_blocked: "" }), loaded(main, 61, { can_retire: true, retire_blocked: "" })]);
+  assert.equal(vanished(held, "requirements").length, 0);
+  assert.equal(stillAllowed(held, "release_evidence.retire_requirement", "trace-requirement-60"), true);
+  pruneRefusals(held);
+  assert.equal(refusedNow("release_evidence.retire_requirement", "trace-requirement-61"), "stage");
+  pruneRefusals(main);
+  assert.equal(refusedNow("release_evidence.retire_requirement", "trace-requirement-61"), "");
+  assert.deepEqual(missingRequirements(page((s) => { s.requirements.requirements.rows = null; }), ["trace-requirement-60"]), []);
+  forget();
+});
+
+test("the state at the candidate comes from the row when the service gives it", () => {
+  const p = page();
+  const r = p.requirements.requirements.rows![0];
+  assert.equal(stateAtCandidate({ ...r, state: "failing", states: {} }, p.candidate), "failing");
+  assert.equal(stateAtCandidate({ ...r, state: null, states: { [p.candidate!.build]: "tested" } }, p.candidate), "tested");
+  assert.equal(stateAtCandidate({ ...r, state: "tested" }, null), null);
+  assert.equal(filtering(noFilter), false);
+  assert.equal(filtering({ ...noFilter, retired: "no" }), true);
+});
+
+test("the requirements read is asked and read strictly", async () => {
+  assert.equal(requirementsPath({}), "/release-evidence/requirements");
+  assert.equal(requirementsPath({ after: "6", q: "a b", state: "tested", retired: "no" }), "/release-evidence/requirements?after=6&q=a+b&state=tested&retired=no");
+  assert.equal(requirementsPath({ targets: ["trace-requirement-60", "trace-requirement-2"], q: "ignored" }), "/release-evidence/requirements?target=trace-requirement-60%2Ctrace-requirement-2");
+  for (const bad of [{}, { requirements: [], next: "", matching: 1 }, { requirements: "x", next: "", matching: 0, total: 0 }, { requirements: [], next: 5, matching: 0, total: 0 }, { requirements: [], next: "", matching: -1, total: 0 }]) {
+    assert.equal(requirementsAnswerOf(bad), null, JSON.stringify(bad));
+  }
+  const got = requirementsAnswerOf({ requirements: [{ target: "trace-requirement-7", state: "tested" }, null, "x"], next: "7", matching: 3, total: 70 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].target, got?.rows[0].state, got?.next, got?.matching, got?.total], [1, "trace-requirement-7", "tested", "7", 3, 70]);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { requirements: [], next: "", matching: 0, total: 6 } : { requirements: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.evidenceRequirements({ targets: ["trace-requirement-60"] })).total, 6);
+  assert.equal(calls[0], "/api/v1/release-evidence/requirements?target=trace-requirement-60");
+  await assert.rejects(api.evidenceRequirements({}), (e: AdminError) => e.failure === "invalid");
+});
+
+test("the requirements table shows its count, filters and button from what it is given", () => {
+  const p = page();
+  const base = { rows: p.requirements.requirements.rows, filter: noFilter, total: 70, matching: null, more: true, status: "idle" as const, reset: false, candidate: true, onFilter: () => undefined, onMore: () => undefined };
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), l, table: base }));
+    assert.ok(html.includes(k.reqShown(l, 6, 70)) && html.includes(k.reqMore(l)) && html.includes('id="p05-req-state"') && !html.includes(k.reqClear(l)), l);
+    const filtered = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), l, table: { ...base, filter: { q: "erp", state: "", retired: "" }, rows: [p.requirements.requirements.rows![3]], matching: 1, more: false } }));
+    assert.ok(filtered.includes(k.reqMatching(l, 1, 1)) && filtered.includes(k.reqClear(l)) && !filtered.includes(k.reqMore(l)), l);
+    const none = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), l, table: { ...base, filter: { q: "zz", state: "", retired: "" }, rows: [], matching: 0, more: false } }));
+    assert.ok(none.includes(k.reqNoMatch(l)) && !none.includes(k.noRequirements(l)), l);
+    const lost = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), l, table: { ...base, filter: { q: "erp", state: "", retired: "" }, rows: [], matching: null, more: false, status: "failed" } }));
+    assert.ok(lost.includes(k.reqFailed(l)) && lost.includes(k.reqTryAgain(l)) && !lost.includes(k.reqNoMatch(l)) && !lost.includes("p05-req-count"), l);
+    const failed = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), l, table: { ...base, status: "failed", reset: true } }));
+    assert.ok(failed.includes(k.reqFailed(l)) && failed.includes(k.reqTryAgain(l)) && failed.includes(k.reqReset(l)), l);
+  }
+  const bare = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p), table: { ...base, candidate: false, total: 6, more: false } }));
+  assert.ok(!bare.includes('id="p05-req-state"') && !bare.includes("p05-req-count") && !bare.includes("p05-req-more"));
+  const open = renderToStaticMarkup(createElement(RequirementsView, { ...shared(p, { selection: { ...shared(p).selection, requirement: "2" } }), table: { ...base, rows: [p.requirements.requirements.rows![3]] } }));
+  assert.ok(open.includes(k.reqNotListed("en")));
+});

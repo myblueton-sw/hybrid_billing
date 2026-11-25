@@ -158,7 +158,9 @@ export function verdictLine(status: string | null, candidate: Candidate): Verdic
 }
 
 export function stateAtCandidate(r: RequirementRow, candidate: Candidate): string | null {
-  if (!candidate || !r.states) return null;
+  if (!candidate) return null;
+  if (r.state !== null) return r.state;
+  if (!r.states) return null;
   return has(r.states, candidate.build) ? r.states[candidate.build] : null;
 }
 
@@ -693,4 +695,43 @@ export function refusalDiagnostics(target: string): RowDiagnostic[] {
     const entry = refusals.detail(slot(command, target));
     return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
   });
+}
+
+function numberOf(target: string): number {
+  const raw = target.startsWith(requirementPrefix) ? target.slice(requirementPrefix.length) : "";
+  return /^[1-9][0-9]*$/.test(raw) ? Number(raw) : 0;
+}
+
+export function withHeld(page: EvidencePage, rows: RequirementRow[]): EvidencePage {
+  const list = page.requirements.requirements;
+  if (list.rows === null || rows.length === 0) return page;
+  const byTarget = new Map<string, RequirementRow>();
+  for (const r of [...rows, ...list.rows]) if (numberOf(r.target) > 0 || !byTarget.has(r.target)) byTarget.set(r.target, r);
+  const held = [...byTarget.values()].sort((a, b) => numberOf(a.target) - numberOf(b.target));
+  const more = list.total === null ? list.more : held.length < list.total;
+  return { ...page, requirements: { ...page.requirements, requirements: { ...list, rows: held, more } } };
+}
+
+export function requirementTargetsInUse(): string[] {
+  const out = new Set<string>();
+  for (const id of [...pending.keys(), ...refusals.keys(), ...earlier]) {
+    const at = unslot(id);
+    if (at && at.command === "release_evidence.retire_requirement" && numberOf(at.target) > 0) out.add(at.target);
+  }
+  return [...out];
+}
+
+export function missingRequirements(page: EvidencePage, wanted: string[]): string[] {
+  const rows = page.requirements.requirements.rows;
+  if (rows === null) return [];
+  const have = new Set(rows.map((r) => r.target));
+  return [...new Set(wanted)].filter((t) => numberOf(t) > 0 && !have.has(t));
+}
+
+export type RequirementFilter = { q: string; state: string; retired: string };
+
+export const noFilter: RequirementFilter = { q: "", state: "", retired: "" };
+
+export function filtering(f: RequirementFilter): boolean {
+  return f.q !== "" || f.state !== "" || f.retired !== "";
 }

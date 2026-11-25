@@ -7,6 +7,7 @@ import (
 	"slices"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
@@ -52,9 +53,10 @@ func (m *planMeta) authoredBy(user string) bool {
 }
 
 type planStore struct {
-	byKey  map[string]*planMeta
-	seq    uint64
-	impact func(*planMeta) (planImpact, error)
+	byKey   map[string]*planMeta
+	seq     uint64
+	dropped map[string]int
+	impact  func(*planMeta) (planImpact, error)
 }
 
 const (
@@ -84,7 +86,9 @@ func (s *Server) impactOf(m *planMeta) (planImpact, error) {
 	return s.plans.impact(m)
 }
 
-func newPlanStore() *planStore { return &planStore{byKey: map[string]*planMeta{}} }
+func newPlanStore() *planStore {
+	return &planStore{byKey: map[string]*planMeta{}, dropped: map[string]int{}}
+}
 
 func planKey(workspace, id string) string { return workspace + "\x00" + id }
 
@@ -94,6 +98,11 @@ func (p *planStore) put(m *planMeta) {
 	p.byKey[planKey(m.workspace, m.id)] = m
 }
 
+func (p *planStore) closing(m *planMeta) {
+	p.seq++
+	m.seq = p.seq
+}
+
 func (p *planStore) get(workspace, id string) *planMeta { return p.byKey[planKey(workspace, id)] }
 
 func (s *Server) planState(m *planMeta) relationships.PlanInfo {
@@ -101,19 +110,36 @@ func (s *Server) planState(m *planMeta) relationships.PlanInfo {
 	return info
 }
 
-func (s *Server) prunePlans() {
+func (s *Server) planOpen(m *planMeta) bool {
+	state := s.planState(m).State
+	return state == relationships.PlanDraft || state == relationships.PlanSealed
+}
+
+func (s *Server) closedPlans(ws string) []*planMeta {
 	closed := []*planMeta{}
 	for _, m := range s.plans.byKey {
-		if state := s.planState(m).State; state != relationships.PlanDraft && state != relationships.PlanSealed {
+		if m.workspace == ws && !s.planOpen(m) {
 			closed = append(closed, m)
 		}
 	}
-	if len(closed) <= closedPlansKept {
-		return
-	}
 	sort.Slice(closed, func(a, b int) bool { return closed[a].seq > closed[b].seq })
-	for _, m := range closed[closedPlansKept:] {
-		delete(s.plans.byKey, planKey(m.workspace, m.id))
+	return closed
+}
+
+func (s *Server) prunePlans() {
+	spaces := map[string]bool{}
+	for _, m := range s.plans.byKey {
+		spaces[m.workspace] = true
+	}
+	for ws := range spaces {
+		closed := s.closedPlans(ws)
+		if len(closed) <= closedPlansKept {
+			continue
+		}
+		for _, m := range closed[closedPlansKept:] {
+			delete(s.plans.byKey, planKey(m.workspace, m.id))
+		}
+		s.plans.dropped[ws] += len(closed) - closedPlansKept
 	}
 }
 
@@ -271,6 +297,7 @@ func (s *Server) discardStale(ws string, active uint64, now time.Time) {
 		}
 		if reason != "" && s.rels.Discard(ws, m.id) == nil {
 			m.closed = reason
+			s.plans.closing(m)
 		}
 	}
 }
@@ -434,6 +461,7 @@ func (h relationshipCommand) activate(ctx commands.Context) (string, map[string]
 		return "", nil, refuse(commands.InvalidStage)
 	}
 	m.activated = number
+	s.plans.closing(m)
 	if m.draft != "" {
 		s.draftActivated(ws, m.draft, number)
 	}
@@ -447,6 +475,7 @@ func (h relationshipCommand) discard(ctx commands.Context) (string, error) {
 		return "", refuse(commands.InvalidStage)
 	}
 	m.closed = "discarded"
+	s.plans.closing(m)
 	return "discarded", nil
 }
 
@@ -523,6 +552,7 @@ type planRow struct {
 	CanActivate   bool           `json:"can_activate"`
 	Blocked       string         `json:"blocked"`
 	Draft         *planDraftRow  `json:"draft"`
+	seq           uint64
 }
 
 type planDraftRow struct {
@@ -541,6 +571,14 @@ type plansPage struct {
 	Impact     map[string]string `json:"impact"`
 	Plans      []planRow         `json:"plans"`
 	ReaderUser string            `json:"you"`
+	Closed     closedFacts       `json:"closed"`
+}
+
+type closedFacts struct {
+	Total   int    `json:"total"`
+	Next    string `json:"next"`
+	Kept    int    `json:"kept"`
+	Dropped int    `json:"dropped"`
 }
 
 func (s *Server) planRow(m *planMeta, active uint64, reader string, now time.Time) planRow {
@@ -653,9 +691,102 @@ func (s *Server) listPlans(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	sort.Slice(shown, func(a, b int) bool { return shown[a].seq > shown[b].seq })
-	mine = shown
-	for _, m := range mine {
+	closed, last := 0, uint64(0)
+	for _, m := range shown {
 		page.Plans = append(page.Plans, s.planRow(m, active, answer.User(), now))
+		if !s.planOpen(m) {
+			closed, last = closed+1, m.seq
+		}
+	}
+	page.Closed = closedFacts{Total: len(mine) - page.OpenPlans, Kept: closedPlansKept, Dropped: s.plans.dropped[ws]}
+	if closed < page.Closed.Total {
+		page.Closed.Next = strconv.FormatUint(last, 10)
+		if closed == 0 {
+			page.Closed.Next = strconv.FormatUint(s.plans.seq+1, 10)
+		}
+	}
+	writeJSON(w, http.StatusOK, request, page)
+}
+
+type closedPlansPage struct {
+	Revision   string      `json:"revision"`
+	ServerTime string      `json:"server_time"`
+	Active     uint64      `json:"active_revision"`
+	Order      string      `json:"order"`
+	Q          string      `json:"q"`
+	Plans      []planRow   `json:"plans"`
+	Next       string      `json:"next"`
+	Matching   int         `json:"matching"`
+	Closed     closedFacts `json:"closed"`
+}
+
+const closedPlansOrder = "newest_first"
+
+func (s *Server) planMatches(m *planMeta, term string) bool {
+	for _, text := range []string{m.id, m.change.Member, m.change.Target, m.proposer, s.loginOf(m.proposer), s.label(m.workspace, m.change.Member), s.label(m.workspace, m.change.Target)} {
+		if text != "" && strings.Contains(fold(text), term) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Server) listClosedPlans(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	_, answer, ok := s.admitted(w, r)
+	if !ok {
+		return
+	}
+	values := r.URL.Query()
+	limit, before, term := plansShown, uint64(0), ""
+	for name, given := range values {
+		valid := len(given) == 1 && given[0] != ""
+		switch {
+		case !valid:
+		case name == "after":
+			n, err := strconv.ParseUint(given[0], 10, 64)
+			before, valid = n, err == nil && n > 0 && strconv.FormatUint(n, 10) == given[0]
+		case name == "limit":
+			n, err := strconv.Atoi(given[0])
+			limit, valid = n, err == nil && n >= 1 && n <= userPageMax && strconv.Itoa(n) == given[0]
+		case name == "q":
+			term, valid = parseSearch(given[0])
+		default:
+			valid = false
+		}
+		if !valid {
+			failCode(w, commands.InvalidRequest, request)
+			return
+		}
+	}
+	ws := answer.Workspace()
+	active, err := s.activeRevision(ws)
+	if err != nil {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
+	now := s.clock()
+	closed := s.closedPlans(ws)
+	page := closedPlansPage{Revision: s.Revision(), ServerTime: stamp(now), Active: active, Order: closedPlansOrder, Q: term, Plans: []planRow{},
+		Closed: closedFacts{Total: len(closed), Kept: closedPlansKept, Dropped: s.plans.dropped[ws]}}
+	folded := fold(term)
+	for _, m := range closed {
+		if term != "" && !s.planMatches(m, folded) {
+			continue
+		}
+		page.Matching++
+		if before != 0 && m.seq >= before {
+			continue
+		}
+		if len(page.Plans) == limit {
+			page.Next = strconv.FormatUint(page.Plans[limit-1].seq, 10)
+			continue
+		}
+		row := s.planRow(m, active, answer.User(), now)
+		row.seq = m.seq
+		page.Plans = append(page.Plans, row)
 	}
 	writeJSON(w, http.StatusOK, request, page)
 }

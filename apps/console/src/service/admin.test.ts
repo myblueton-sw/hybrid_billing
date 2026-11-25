@@ -615,3 +615,23 @@ test("a pickup is gone only when the service refuses it", () => {
   assert.equal(pickupGone(failureOf(403, { code: "permission_denied" })), true);
   for (const e of [failureOf(429, {}), failureOf(503, {}), failureOf(401, {}), failureOf(403, { code: "reauthentication_required" }), new AdminError("unavailable"), new Error("x")]) assert.equal(pickupGone(e), false);
 });
+
+test("the plans read carries the closed history facts and the closed plans read builds its query", async () => {
+  const facts = { total: 120, next: "71", kept: 200, dropped: 3 };
+  const first = await adminClient("t", fake(200, { revision: "r", plans: [], closed: facts }).f).plans();
+  assert.deepEqual(first.closed, facts);
+  const bare = await adminClient("t", fake(200, { revision: "r", plans: [] }).f).plans();
+  assert.deepEqual(bare.closed, { total: 0, next: "", kept: 0, dropped: 0 });
+  const odd = await adminClient("t", fake(200, { revision: "r", plans: [], closed: { total: "5", next: 7, kept: -1, dropped: 1.5 } }).f).plans();
+  assert.deepEqual(odd.closed, { total: 0, next: "", kept: 0, dropped: 0 });
+  const r = fake(200, { plans: [{ id: "p-1", state: "discarded" }], next: "12", matching: 40, closed: facts, q: "ann" });
+  const got = await adminClient("t", r.f).closedPlans({ after: "71", limit: 50, q: "a b" });
+  assert.equal(r.calls[0].url, "/api/v1/organizations/plans/closed?after=71&limit=50&q=a+b");
+  assert.deepEqual([got.plans.length, got.plans[0].id, got.next, got.matching, got.q, got.closed.total], [1, "p-1", "12", 40, "ann", 120]);
+  const none = fake(200, { plans: [], next: "", matching: 0, closed: facts, q: "" });
+  await adminClient("t", none.f).closedPlans();
+  assert.equal(none.calls[0].url, "/api/v1/organizations/plans/closed");
+  for (const bad of [{}, { plans: [] }, { plans: "x", next: "" }, { plans: [], next: 5 }]) {
+    await assert.rejects(adminClient("t", fake(200, bad).f).closedPlans(), (e: AdminError) => e.failure === "invalid", JSON.stringify(bad));
+  }
+});

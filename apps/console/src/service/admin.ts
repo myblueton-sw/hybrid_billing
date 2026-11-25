@@ -389,7 +389,11 @@ export type PlansPage = {
   open_limit: number;
   plans: PlanRow[];
   you: string;
+  closed: ClosedFacts;
 };
+export type ClosedFacts = { total: number; next: string; kept: number; dropped: number };
+export type ClosedPlansQuery = { after?: string; limit?: number; q?: string };
+export type ClosedPlansPage = { plans: PlanRow[]; next: string; matching: number; closed: ClosedFacts; q: string };
 
 export function planOf(v: unknown): PlanRow {
   const r = (v ?? {}) as Record<string, unknown>;
@@ -915,6 +919,12 @@ export async function reauthenticate(csrf: string, password: string, f: Fetch = 
   throw failureOf(r.status, body);
 }
 
+function closedFactsOf(v: unknown): ClosedFacts {
+  const c = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+  const n = (x: unknown) => (typeof x === "number" && Number.isInteger(x) && x >= 0 ? x : 0);
+  return { total: n(c.total), next: typeof c.next === "string" ? c.next : "", kept: n(c.kept), dropped: n(c.dropped) };
+}
+
 export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), stepUp?: StepUp) {
   let authenticationLost = false;
   const authenticationListeners = new Set<() => void>();
@@ -1125,7 +1135,18 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
         open_limit: Number(body.open_limit ?? 0),
         plans: (Array.isArray(body.plans) ? body.plans : []).map(planOf),
         you: String(body.you ?? ""),
+        closed: closedFactsOf(body.closed),
       };
+    },
+    async closedPlans(query: ClosedPlansQuery = {}): Promise<ClosedPlansPage> {
+      const q = new URLSearchParams();
+      if (query.after) q.set("after", query.after);
+      if (query.limit) q.set("limit", String(query.limit));
+      if (query.q) q.set("q", query.q);
+      const qs = q.toString();
+      const body = await send("/organizations/plans/closed" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request);
+      if (!Array.isArray(body.plans) || typeof body.next !== "string") throw new AdminError("invalid");
+      return { plans: body.plans.map(planOf), next: body.next, matching: Number(body.matching ?? 0), closed: closedFactsOf(body.closed), q: String(body.q ?? "") };
     },
     async viewGroupDrafts(after = "", limit = 0): Promise<DraftsPage> {
       const q = new URLSearchParams();

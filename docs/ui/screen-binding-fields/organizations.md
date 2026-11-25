@@ -85,6 +85,8 @@ This is part of the [screen binding register](../screen-binding-register.md#orga
 | Group plan | Draft members | view group drafts and members reads | `admin.ts:1044`, `:1055` | `changes/Live.tsx:381-383` |
 | Closed plan | Link to O01 at the activated revision | `change.from`, `activated_revision` | `planOf` | `changes/Live.tsx:956` |
 | All | Denied | `permission_denied` | `admin.ts:776` | `changes/Live.tsx:456`, `:471` |
+| Result | Closed plans: how many are kept and shown, and the cursor for the rest | `GET /api/v1/organizations/plans` → `closed.total`, `next`, `kept`, `dropped` (`relplans.go` `closedFacts`) | `admin.ts` `plans()`, `closedFactsOf` | `changes/Live.tsx` result view |
+| Result | Further closed plans and search | `GET /api/v1/organizations/plans/closed` with `after`, `limit`, `q` → `plans[]`, `next`, `matching`, `closed` (`relplans.go` `listClosedPlans`) | `admin.ts` `closedPlans()` | `changes/Live.tsx` (`history`, `usePages`), `organizations/filters.tsx` `SearchForm`, `MoreBar` |
 
 ## O03 Contract lifecycle
 

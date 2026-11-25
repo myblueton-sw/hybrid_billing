@@ -18,7 +18,7 @@ const computed = { money: "computed", publication: "computed", erp: "computed" }
 const notComputed = { money: "not_computed", publication: "not_computed", erp: "not_computed" };
 const plan = (over: Record<string, unknown>): PlanRow =>
   planOf({ id: "plan-1", state: "sealed", change: { kind: "hierarchy", member: "acct-1", action: "set", target: "unit-1", from: "2026-12-01" }, impact: notComputed, blocked: "impact_not_computed", ...over });
-const page: PlansPage = { revision: "r", active_revision: 1, open_plans: 1, open_limit: 16, plans: [], you: "u" };
+const page: PlansPage = { revision: "r", active_revision: 1, open_plans: 1, open_limit: 16, plans: [], you: "u", closed: { total: 0, next: "", kept: 200, dropped: 0 } };
 const noop = () => undefined;
 const approval = (l: Locale, p: PlanRow) =>
   renderToStaticMarkup(<Approval l={l} p={p} sentence="s" kindName="k" confirm={null} busy={null} reason={null} onOpen={noop} onDecide={noop} onCancel={noop} />);

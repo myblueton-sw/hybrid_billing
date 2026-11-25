@@ -105,6 +105,73 @@ try {
       await page.unroute(read);
     }
   }
+  {
+    const made = (from, to) => Array.from({ length: from - to }, (_, i) => ({ id: `qa-closed-${String(from - i).padStart(3, "0")}`, state: "discarded", closed: "discarded", created: "2026-11-20T00:00:00Z", proposer: "sample-admin",
+      proposer_login: "admin@example.invalid", reason: "synthetic history", change: { kind: "hierarchy", member: `sample-acct-0${1 + ((from - i) % 6)}`, action: "end", target: "", from: "2026-12-01" }, member_name: "", base: 1, kinds: [], violations: [], members: [], impact: {} }));
+    const facts = { total: 120, next: "71", kept: 200, dropped: 3 };
+    let historyAsked = [], failSearch = false;
+    await page.route(read, async (route) => {
+      const response = await route.fetch();
+      const body = await response.json();
+      await route.fulfill({ response, json: { ...body, plans: made(120, 70), closed: facts } });
+    });
+    await page.route((url) => url.pathname === "/api/v1/organizations/plans/closed", async (route) => {
+      const u = new URL(route.request().url());
+      historyAsked.push(u.search);
+      const q = u.searchParams.get("q"), after = Number(u.searchParams.get("after") ?? 0);
+      if (q && failSearch) return route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ code: "dependency_unavailable", request_id: "o02-history-qa" }) });
+      if (q === "zz") return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ plans: [], next: "", matching: 0, closed: facts, q }) });
+      if (q) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ plans: made(110, 107), next: "", matching: 3, closed: facts, q }) });
+      const from = after ? after - 1 : 120, to = Math.max(0, from - 50);
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ plans: made(from, to), next: to > 0 ? String(to + 1) : "", matching: 120, closed: facts, q: "" }) });
+    });
+    const rowsShown = () => root().locator(".o02-results tbody tr").count();
+    for (const lang of ["en", "ko", "ar"]) {
+      for (const width of [1440, 390]) {
+        const at = `${lang} ${width} history`;
+        historyAsked = []; failSearch = false;
+        await page.setViewportSize({ width, height: 1000 });
+        await open(lang, "result");
+        check(`${at} shows the first fifty of 120 with the count and offers more`, (await rowsShown()) === 50 && /50/.test(await root().locator(".o02-closed-count").innerText()) && /120/.test(await root().locator(".o02-closed-count").innerText())
+          && (await root().locator(".o02-closed-more").count()) === 1 && (await root().locator(".o02-closed-end").count()) === 0 && historyAsked.length === 0);
+        await root().locator(".o02-closed-more").click();
+        await page.waitForFunction(() => document.querySelectorAll(".o02-results tbody tr").length === 100);
+        check(`${at} the next page continues after the last plan shown`, historyAsked.length === 1 && historyAsked[0].includes("after=71") && /100/.test(await root().locator(".o02-closed-count").innerText()) && (await root().locator(".o02-closed-end").count()) === 0);
+        await root().locator(".o01-more-button").click();
+        await page.waitForFunction(() => document.querySelectorAll(".o02-results tbody tr").length === 120);
+        check(`${at} at the end it says that older plans are not kept`, (await root().locator(".o02-closed-end").count()) === 1 && /200/.test(await root().locator(".o02-closed-end").innerText()) && (await root().locator(".o01-more-button").count()) === 0
+          && new Set(await root().locator(".o02-results [data-plan]").evaluateAll((els) => els.map((e) => e.dataset.plan))).size === 120);
+        await contained(`${at} whole history`);
+        if (args.shots) await page.screenshot({ path: `${args.shots}/o02-history-end-${lang}-${width}.png`, fullPage: false });
+        await page.locator("#o02-closed-q").fill("acct");
+        await page.locator("#o02-closed-q").press("Enter");
+        await page.waitForFunction(() => document.querySelectorAll(".o02-results tbody tr").length === 3);
+        check(`${at} a search shows only what the service matched, with its count`, historyAsked.some((s) => s.includes("q=acct")) && /3/.test(await root().locator(".o02-closed-count").innerText()));
+        const row = await page.locator(".o02-closed-search .o01-search-row").evaluate((el) => { const b = el.querySelector("button").getBoundingClientRect(); const r = el.getBoundingClientRect(); return { row: r.width, button: b.height }; });
+        check(`${at} the search row is not stretched and its button is one line`, row.row <= 481 && row.button <= 60, JSON.stringify(row));
+        check(`${at} the applied search is shown with a way to clear it`, (await root().locator(".o02-closed-applied").innerText()).includes("acct") && (await root().locator(".o02-closed-clear").count()) === 1);
+        await page.locator(".o02-closed-search").scrollIntoViewIfNeeded();
+        if (args.shots) await page.screenshot({ path: `${args.shots}/o02-history-search-${lang}-${width}.png`, fullPage: false });
+        await root().locator(".o02-closed-clear").click();
+        await page.waitForFunction(() => document.querySelectorAll(".o02-results tbody tr").length === 50);
+        check(`${at} clearing the search returns to the first fifty`, (await root().locator(".o02-closed-applied").count()) === 0 && /120/.test(await root().locator(".o02-closed-count").innerText()));
+        await page.locator("#o02-closed-q").fill("acct");
+        await page.locator("#o02-closed-q").press("Enter");
+        await page.waitForFunction(() => document.querySelectorAll(".o02-results tbody tr").length === 3);
+        await page.locator("#o02-closed-q").fill("zz");
+        await page.locator("#o02-closed-q").press("Enter");
+        await root().locator(".live-empty").first().waitFor();
+        check(`${at} a search with no match says so and shows no row`, (await rowsShown()) === 0 && (await root().locator('[role="alert"]').count()) === 0);
+        failSearch = true;
+        await page.locator("#o02-closed-q").fill("fail");
+        await page.locator("#o02-closed-q").press("Enter");
+        await root().locator('section[aria-labelledby="o02-closed-title"] [role="alert"]').waitFor();
+        check(`${at} a failed search is stated with a way to repeat it, not shown as no match`, (await rowsShown()) === 0 && (await root().locator('section[aria-labelledby="o02-closed-title"] [role="alert"] button').count()) === 1 && (await root().locator(".live-empty").count()) === 0);
+        await contained(`${at} failed search`);
+      }
+    }
+    await page.unrouteAll({ behavior: "wait" });
+  }
   const sent = [], asked = [];
   page.on("request", (r) => {
     const u = new URL(r.url());

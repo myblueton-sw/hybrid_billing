@@ -65,7 +65,7 @@ This is part of the [screen binding register](../screen-binding-register.md#orga
 | Header | Active revision; open plans against the limit | `GET /api/v1/organizations/plans` → `active_revision`, `open_plans`, `open_limit` | `admin.ts:1021-1029` | `changes/Live.tsx:767-768`, `:924-926` |
 | Plan list | Member or group, action, kind, target, from, stale | `plans[]` → `member_name`, `change` (`kind`, `member`, `action`, `target`, `from`), `target_name`, `stale`; `draft` for group plans | `admin.ts:329-371` (`planOf`) | `changes/Live.tsx:933-941` |
 | Plan | Title, draft name, ID | `draft` (`name`, `member_count`, `new_group`), `id` | `planOf` | `changes/Live.tsx:135-137` |
-| Plan | Stale base; truncated | `stale`, `base`, `truncated`; `active_revision` | `planOf` | `changes/Live.tsx:139-140` |
+| Plan | Stale base; rejection reasons cut at the module's limit (`truncated` is about violations, not members; [HYB-365](../../features/HYB-365/plan.md)); the relationship kind under a changed member when a plan changes several kinds | `stale`, `base`, `truncated`; `active_revision`; `members[].kind`, `kinds[]` | `planOf` | `changes/Live.tsx` (`Detail`) |
 | Plan facts | Member, change, target, from, state, base, proposer, at, reason | `change.*`, `member_name`, `target_name`, `state`, `base`, `proposer_login`, `proposer`, `created`, `reason` | `planOf` | `changes/Live.tsx:142-151` |
 | Plan | Violations | `violations[]` (`kind`, `member`, `rule`) | `planOf` | `changes/Live.tsx:155-164` |
 | Plan | Changed members (before and after) | `members[]` (`member`, `name`, `differs`, `before`, `after`) | `admin.ts:351` | `changes/Live.tsx:174-201` |

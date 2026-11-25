@@ -551,3 +551,12 @@
 .o02-members-more {
   margin-block-start: 8px;
 }
+.o02-member-kind {
+  display: block;
+}
+.o02-violations-cut {
+  margin-block: 8px 0;
+}
+.o02-member-kind {
+  font-size: 14px;
+}

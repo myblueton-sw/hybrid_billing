@@ -185,7 +185,7 @@ export const k = {
       "마감 시각이 지난 호출은 다음에 레지스트리를 읽을 때 결과 미확인으로 닫힙니다. 이때 데이터 리비전은 바뀌지 않습니다.",
       "يُغلق الاستدعاء الذي تجاوز موعده النهائي كغير معروف عند قراءة السجل في المرة التالية. لا يغيّر ذلك مراجعة البيانات.",
     ),
-  lockShown: (l: Locale, n: number, m: number) => t(l, `Showing the newest ${n} of ${m} locks.`, `잠금 ${m}건 중 최근 ${n}건을 표시합니다.`, `تُعرض أحدث ${n} من أصل ${m}.`),
+  lockShown: (l: Locale, n: number, m: number) => t(l, `Showing the newest ${n} of ${m} locks, newest first.`, `잠금 ${m}건 중 최근 ${n}건을 최신순으로 표시합니다.`, `تُعرض أحدث الأقفال: ${n} من أصل ${m}، الأحدث أولًا.`),
   lockAll: (l: Locale, m: number) => t(l, `Showing all ${m} locks, newest first.`, `잠금 ${m}건을 모두 최신순으로 표시합니다.`, `تُعرض جميع الأقفال (${m})، الأحدث أولًا.`),
   lockMore: (l: Locale) => t(l, "Load older locks", "이전 잠금 불러오기", "تحميل أقفال أقدم"),
   lockLoading: (l: Locale) => t(l, "Loading…", "불러오는 중…", "جارٍ التحميل…"),

@@ -655,3 +655,18 @@
 .p02-live .p02-row-note {
   max-inline-size: none;
 }
+.p02-live .p02-history-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-block: 16px 24px;
+}
+.p02-live .p02-history-more p {
+  margin: 0;
+  max-inline-size: 68ch;
+}
+.p02-live .p02-history-more .p02-history-more-button {
+  inline-size: auto;
+  min-block-size: 44px;
+}

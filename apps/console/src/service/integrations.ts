@@ -124,7 +124,7 @@ export type ModulesSection = {
 export type Destination = { id: string; state: string; source: string };
 export type SubscriptionKey = { version: string; not_before: string; not_after: string; state: string; proposer: string; proposer_login: string; approver: string; approver_login: string };
 export type Gap = { after: number | null; to: number | null };
-export type HistoryEntry = { action: string; actor: string; actor_login: string; rationale: string; reason: string; request: string };
+export type HistoryEntry = { number: number | null; action: string; actor: string; actor_login: string; rationale: string; reason: string; request: string };
 export const subscriptionActions = ["approve", "pause", "request_resume", "approve_resume", "revoke", "withdraw", "withdraw_resume"] as const;
 export type SubscriptionAction = (typeof subscriptionActions)[number];
 export type Subscription = {
@@ -147,6 +147,7 @@ export type Subscription = {
   resumer: string;
   resumer_login: string;
   history: HistoryEntry[] | null;
+  history_facts: { total: number; next: string } | null;
   resume_request: RequestValue;
   keys: SubscriptionKey[] | null;
   signer: string;
@@ -424,14 +425,8 @@ export function subscriptionOf(r: Raw): Subscription {
     approver_login: str(r.approver_login),
     resumer: str(r.resumer),
     resumer_login: str(r.resumer_login),
-    history: rows(r.history, (h) => ({
-      action: str(h.action),
-      actor: str(h.actor),
-      actor_login: str(h.actor_login),
-      rationale: str(h.rationale),
-      reason: str(h.reason),
-      request: str(h.request),
-    })),
+    history: rows(r.history, historyEntryOf),
+    history_facts: olderFactsOf(r.history_facts),
     resume_request: requestOf(r.resume_request),
     keys: rows(r.keys, (k) => ({
       version: str(k.version),
@@ -527,4 +522,22 @@ export function integrationsOf(body: Raw): IntegrationsPage {
     channels: channelsOf(body.channels),
     events: eventsOf(body.events),
   };
+}
+
+const wholeNumber = (v: unknown): number | null => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
+
+export function historyEntryOf(h: Raw): HistoryEntry {
+  return { number: wholeNumber(h.number), action: str(h.action), actor: str(h.actor), actor_login: str(h.actor_login), rationale: str(h.rationale), reason: str(h.reason), request: str(h.request) };
+}
+
+export function olderFactsOf(v: unknown): { total: number; next: string } | null {
+  if (!isRow(v)) return null;
+  const total = wholeNumber(v.total);
+  return total === null || typeof v.next !== "string" ? null : { total, next: v.next };
+}
+
+export function historyPageOf(body: Raw): { rows: HistoryEntry[]; next: string; total: number } | null {
+  const total = wholeNumber(body.total);
+  if (!Array.isArray(body.history) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.history.filter(isRow).map(historyEntryOf), next: body.next, total };
 }

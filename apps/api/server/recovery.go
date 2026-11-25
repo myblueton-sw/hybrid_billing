@@ -94,7 +94,7 @@ type recoveryIsolationRow struct {
 	OtherScope   bool              `json:"other_scope_present"`
 	Permits      string            `json:"permits"`
 	Locks        []recoveryLockRow `json:"locks"`
-	LockHistory  recoveryLockFacts `json:"lock_history"`
+	LockHistory  logFacts          `json:"lock_history"`
 }
 
 type recoveryExternalRow struct {
@@ -316,14 +316,11 @@ func (s *Server) isolationRow(f recoveryFacts, workspace string) recoveryIsolati
 			}
 		}
 	}
-	first := max(0, len(i.locks)-recoveryShown)
+	first, facts := newestOf(len(i.locks), recoveryShown)
 	for index := first; index < len(i.locks); index++ {
 		row.Locks = append(row.Locks, s.lockRow(i, index))
 	}
-	row.LockHistory = recoveryLockFacts{Total: len(i.locks)}
-	if first > 0 {
-		row.LockHistory.Next = keptCursor(uint64(first + 1))
-	}
+	row.LockHistory = facts
 	return row
 }
 
@@ -519,11 +516,6 @@ func (s *Server) listRecoveryProposals(w http.ResponseWriter, r *http.Request) {
 	}
 	page.Next, page.Matching = walk.Next, walk.Matching
 	writeJSON(w, http.StatusOK, request, page)
-}
-
-type recoveryLockFacts struct {
-	Total int    `json:"total"`
-	Next  string `json:"next"`
 }
 
 type recoveryLocksPage struct {

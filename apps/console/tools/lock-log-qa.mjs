@@ -14,9 +14,9 @@ page.on("pageerror", (e) => errors.push(e.message));
 const password = randomBytes(20).toString("base64url");
 const ends = (url, path) => new URL(url).pathname.endsWith("/api/v1/" + path);
 const copy = {
-  en: { shown: (n, m) => `Showing the newest ${n} of ${m} locks.`, all: (m) => `Showing all ${m} locks, newest first.`, more: "Load older locks", failed: "Older locks could not be loaded. The locks already shown are unchanged.", again: "Try again", reset: "The log was refreshed and starts again from the newest lock." },
-  ko: { shown: (n, m) => `잠금 ${m}건 중 최근 ${n}건을 표시합니다.`, all: (m) => `잠금 ${m}건을 모두 최신순으로 표시합니다.`, more: "이전 잠금 불러오기", failed: "이전 잠금을 불러오지 못했습니다. 이미 표시된 잠금은 그대로입니다.", again: "다시 시도", reset: "잠금 기록을 새로 고쳐 최신 잠금부터 다시 표시합니다." },
-  ar: { shown: (n, m) => `تُعرض أحدث ${n} من أصل ${m}.`, all: (m) => `تُعرض جميع الأقفال (${m})، الأحدث أولًا.`, more: "تحميل أقفال أقدم", failed: "تعذّر تحميل الأقفال الأقدم. لم تتغيّر الأقفال المعروضة.", again: "إعادة المحاولة", reset: "حُدِّث سجل القفل ويبدأ من جديد بأحدث قفل." },
+  en: { shown: (n, m) => `Showing the newest ${n} of ${m} locks, newest first.`, all: (m) => `Showing all ${m} locks, newest first.`, more: "Load older locks", failed: "Older locks could not be loaded. The locks already shown are unchanged.", again: "Try again", reset: "The log was refreshed and starts again from the newest lock." },
+  ko: { shown: (n, m) => `잠금 ${m}건 중 최근 ${n}건을 최신순으로 표시합니다.`, all: (m) => `잠금 ${m}건을 모두 최신순으로 표시합니다.`, more: "이전 잠금 불러오기", failed: "이전 잠금을 불러오지 못했습니다. 이미 표시된 잠금은 그대로입니다.", again: "다시 시도", reset: "잠금 기록을 새로 고쳐 최신 잠금부터 다시 표시합니다." },
+  ar: { shown: (n, m) => `تُعرض أحدث الأقفال: ${n} من أصل ${m}، الأحدث أولًا.`, all: (m) => `تُعرض جميع الأقفال (${m})، الأحدث أولًا.`, more: "تحميل أقفال أقدم", failed: "تعذّر تحميل الأقفال الأقدم. لم تتغيّر الأقفال المعروضة.", again: "إعادة المحاولة", reset: "حُدِّث سجل القفل ويبدأ من جديد بأحدث قفل." },
 };
 const standby = "sample-standby";
 const open = async (lang) => {

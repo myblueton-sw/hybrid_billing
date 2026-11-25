@@ -206,6 +206,12 @@ export function replacementProblem(choice: string, required: boolean, options: T
   return "";
 }
 
+export function replacementChoices(listed: TargetRow[], choice: string, frozen: string, known: Record<string, string>): TargetRow[] {
+  if (!choice || choice === noReplacement || listed.some((o) => o.target === choice)) return listed;
+  if (choice !== frozen && known[choice] === undefined) return listed;
+  return [...listed, { target: choice, label: known[choice] ?? choice }];
+}
+
 export function retireValues(d: Record<string, string>): Record<string, string> {
   const out: Record<string, string> = { reason: (d.reason ?? "").trim() };
   if (d.replacement && d.replacement !== noReplacement) out.replacement = d.replacement;

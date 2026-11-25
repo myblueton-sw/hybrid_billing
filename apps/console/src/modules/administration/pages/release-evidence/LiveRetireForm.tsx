@@ -4,7 +4,7 @@ import type { AdminClient } from "../../../../service/admin";
 import type { EvidencePage, RequirementRow, TargetRow } from "../../../../service/release-evidence";
 import { c as sc } from "../../../../service/copy";
 import { f, k } from "./live-copy";
-import { noReplacement, replacementOptions, replacementProblem, requirementByTarget, retireValues, textProblem, utf8Bytes } from "./live-model";
+import { noReplacement, replacementOptions, replacementProblem, replacementChoices, requirementByTarget, retireValues, textProblem, utf8Bytes } from "./live-model";
 import type { FieldErrors, Fields } from "./LiveCommand";
 
 export function retireTextError(l: Locale, v: string): string {
@@ -26,8 +26,6 @@ export type ReplacementSearch = {
   matching: number;
   more: boolean;
   seen: Record<string, string>;
-  detail: Record<string, RequirementRow | "loading" | "failed">;
-  choose: (target: string) => void;
   focus: number;
   search: (term: string) => void;
 };
@@ -41,19 +39,30 @@ function withinBytes(text: string, limit: number): string {
   return out;
 }
 
-export function useReplacementSearch(api: AdminClient, requirement: string, page: EvidencePage): ReplacementSearch {
+export type ReplacementDetail = RequirementRow | "loading" | "failed" | null;
+
+export function useReplacementDetail(api: AdminClient, page: EvidencePage, target: string): ReplacementDetail {
+  const listed = requirementByTarget(page, target);
+  const key = page.revision + "\n" + target;
+  const [held, setHeld] = useState<{ key: string; row: RequirementRow | "failed" } | null>(null);
+  const wanted = !!target && !listed;
+  useEffect(() => {
+    if (!wanted) return;
+    let live = true;
+    api.evidenceRequirements({ targets: [target] })
+      .then((got) => { if (live) setHeld({ key, row: got.rows.find((x) => x.target === target) ?? "failed" }); })
+      .catch(() => { if (live) setHeld({ key, row: "failed" }); });
+    return () => { live = false; };
+  }, [api, key, wanted, target]);
+  if (listed) return listed;
+  if (!wanted) return null;
+  return held?.key === key ? held.row : "loading";
+}
+
+export function useReplacementSearch(api: AdminClient, requirement: string): ReplacementSearch {
   const [found, setFound] = useState<{ key: string; term: string; status: "idle" | "searching" | "failed"; rows: TargetRow[] | null; matching: number; more: boolean }>({ key: requirement, term: "", status: "idle", rows: null, matching: 0, more: false });
   const [seen, setSeen] = useState<Record<string, string>>({});
-  const [detail, setDetail] = useState<Record<string, RequirementRow | "loading" | "failed">>({});
   const [focus, setFocus] = useState(0);
-  const choose = (target: string) => {
-    const held = detail[target];
-    if (!target || target === noReplacement || requirementByTarget(page, target) || (held && held !== "failed")) return;
-    setDetail((was) => ({ ...was, [target]: "loading" }));
-    api.evidenceRequirements({ targets: [target] })
-      .then((got) => setDetail((was) => ({ ...was, [target]: got.rows.find((x) => x.target === target) ?? "failed" })))
-      .catch(() => setDetail((was) => ({ ...was, [target]: "failed" })));
-  };
   const seq = useRef(0);
   const now = found.key === requirement ? found : { key: requirement, term: "", status: "idle" as const, rows: null, matching: 0, more: false };
   const search = (raw: string) => {
@@ -76,7 +85,7 @@ export function useReplacementSearch(api: AdminClient, requirement: string, page
         setFound((was) => ({ ...(was.key === requirement ? was : now), status: "failed", term: was.key === requirement && was.rows !== null ? was.term : term }));
       });
   };
-  return { ...now, seen, detail, choose, focus, search };
+  return { ...now, seen, focus, search };
 }
 
 function ReplacementFinder({ l, id, r, find }: { l: Locale; id: string; r: RequirementRow; find: ReplacementSearch }) {
@@ -113,9 +122,8 @@ export function retireFields(l: Locale, r: RequirementRow, frozen = "", find?: R
   const first = replacementOptions(r);
   const searchable = !!find && r.replacements.more === true;
   const listed = searchable && find.rows !== null ? find.rows.filter((o) => o.target !== r.target && !!o.label) : first;
-  const known = (target: string) => (find?.seen[target] ?? first.find((o) => o.target === target)?.label ?? target);
-  const withChoice = (choice: string) => (choice && choice !== noReplacement && !listed.some((o) => o.target === choice) && (choice === frozen || !!find?.seen[choice] || first.some((o) => o.target === choice))
-    ? [...listed, { target: choice, label: known(choice) }] : listed);
+  const known = { ...Object.fromEntries(first.map((o) => [o.target, o.label])), ...(find?.seen ?? {}) };
+  const withChoice = (choice: string) => replacementChoices(listed, choice, frozen, known);
   const options = withChoice(frozen);
   return {
     keys: ["reason", "replacement"],
@@ -147,7 +155,7 @@ export function retireFields(l: Locale, r: RequirementRow, frozen = "", find?: R
           {errors.replacement && <p className="service-field-error" id={id + "-replacement-error"}><span className="visually-hidden">{sc.errorPrefix(l)} </span>{errors.replacement}</p>}
           <select
             id={id + "-replacement"} value={d.replacement ?? ""} aria-invalid={!!errors.replacement || undefined}
-            aria-describedby={[id + "-replacement-hint", errors.replacement ? id + "-replacement-error" : "", searchable ? id + "-replacement-status" : ""].filter(Boolean).join(" ")} onChange={(e) => { set("replacement", e.target.value); find?.choose(e.target.value); }}
+            aria-describedby={[id + "-replacement-hint", errors.replacement ? id + "-replacement-error" : "", searchable ? id + "-replacement-status" : ""].filter(Boolean).join(" ")} onChange={(e) => set("replacement", e.target.value)}
           >
             <option value="">{f.choose(l)}</option>
             {!required && <option value={noReplacement}>{f.noReplacementOption(l)}</option>}

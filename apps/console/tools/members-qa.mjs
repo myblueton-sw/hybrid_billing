@@ -93,6 +93,8 @@ try {
       const foot = (name) => page.locator(`${card} .p04-run-items-${name}`);
       check(`${at} the run's first items are listed with the count of all and the button`, (await items().count()) === n0 && (await foot("count").innerText()).trim() === copy[lang].shown(n0, n0 + 70) && (await foot("more-button").innerText()).trim() === copy[lang].more);
       const more = foot("more-button");
+      const named = await more.evaluate((el) => (document.getElementById(el.getAttribute("aria-describedby") ?? "")?.textContent ?? "").trim());
+      check(`${at} the run's button is described by the run's heading`, named === run.run.label, named);
       check(`${at} the button is at least 44 high`, (await more.evaluate((el) => el.getBoundingClientRect().height)) >= 44);
       await more.focus();
       await page.keyboard.press("Enter");
@@ -117,6 +119,8 @@ try {
       asked.length = 0;
       await open(lang, "holds");
       const ofoot = (name) => page.locator(`${holdCard} .p04-outcomes-${name}`);
+      const holdNamed = await ofoot("more-button").evaluate((el) => (document.getElementById(el.getAttribute("aria-describedby") ?? "")?.textContent ?? "").trim());
+      check(`${at} the hold's button is described by the hold's heading`, holdNamed === hold.id, holdNamed);
       check(`${at} the hold's outcomes show the button and no count`, (await outs().count()) === o0 && (await ofoot("more-button").innerText()).trim() === copy[lang].more && (await ofoot("count").count()) === 0);
       await ofoot("more-button").focus();
       await page.keyboard.press("Enter");

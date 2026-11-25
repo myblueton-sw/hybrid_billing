@@ -660,3 +660,12 @@ test("artifacts and references held beyond the main read are found, selected and
     assert.ok(failed.includes(k.itemsFailed(l)) && failed.includes(k.heldTryAgain(l)) && failed.includes(k.itemsReset(l)), l);
   }
 });
+
+test("each load-more button of the expiry view is described by the heading of its class", async () => {
+  const { ExpiryView } = await import("./LiveExpiry");
+  const main = page((s) => { const g = s.expiry.find((x) => x.class === "source")!; (g as Over).total = 70; (g as Over).more = true; (g as Over).next = "sample-source-5"; });
+  const base = { api: {} as AdminClient, me: "u", workspace: "w", canCommand: false, onDone: () => undefined, onNotice: () => undefined, onReload: async () => null, onSignedOut: () => undefined };
+  const html = renderToStaticMarkup(createElement(ExpiryView, { ...base, l: "en", page: main, selection: selectionOf(new URLSearchParams(""), main, "expiry"), listOf: (key: string, first: string | null) => ({ more: !!first, status: "idle" as const, reset: false, onMore: () => undefined }) }));
+  assert.ok(/<h3 id="p04-class-h-source">/.test(html));
+  assert.ok(/class="[^"]*p04-items-more-button"[^>]*aria-describedby="p04-class-h-source"|aria-describedby="p04-class-h-source"[^>]*class="[^"]*p04-items-more-button"/.test(html));
+});

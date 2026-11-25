@@ -35,7 +35,7 @@ function countLabel(l: Locale, key: string): string {
   return key === "outcome_pending" ? k.beingDeleted(l) : k.holdOutcome(l, key);
 }
 
-function Outcomes({ h, ...shared }: Shared & { h: HoldRow }) {
+function Outcomes({ h, of, ...shared }: Shared & { h: HoldRow; of: string }) {
   const { l, page, api } = shared;
   const older = useMoreRows<HoldOutcome>(page.revision + "\u0000" + h.id, h.outcomes, h.id && h.outcomes_more === true ? h.outcomes_next : null, (after) => api.retentionHoldOutcomes(h.id, after), (o) => o.artifact, (e) => {
     if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
@@ -74,7 +74,7 @@ function Outcomes({ h, ...shared }: Shared & { h: HoldRow }) {
       )}
       <p className="p04-small live-quiet">{k.onlyListed(l)}</p>
       {h.outcomes_more === true && !paged && <p className="p04-small live-quiet">{k.moreOutcomes(l)}</p>}
-      {paged && <ItemsFoot l={l} kind="outcomes" list={{ more: older.more, status: older.status, reset: older.reset, onMore: older.load }} shown={list?.length ?? 0} total={null} />}
+      {paged && <ItemsFoot l={l} kind="outcomes" list={{ more: older.more, status: older.status, reset: older.reset, onMore: older.load }} shown={list?.length ?? 0} total={null} of={of} />}
       {h.outcomes_more === null && <p className="p04-small live-quiet">{k.maybeMore(l)}</p>}
     </>
   );
@@ -126,7 +126,7 @@ function Hold({ h, ...shared }: Shared & { h: HoldRow }) {
           ) : (
             <p>{k.unknown(l)}</p>
           )}
-          <Outcomes h={h} {...shared} />
+          <Outcomes h={h} of={head} {...shared} />
         </div>
       </div>
       <div className="p04-actions">
@@ -262,7 +262,7 @@ export function HoldsView(shared: Shared) {
             </table>
           </div>
         )}
-        {shared.listOf && <ItemsFoot l={l} kind="refs" list={shared.listOf("refs", refs.next)} shown={refs.rows?.length ?? 0} total={refs.total} />}
+        {shared.listOf && <ItemsFoot l={l} kind="refs" list={shared.listOf("refs", refs.next)} shown={refs.rows?.length ?? 0} total={refs.total} of="p04-required-title" />}
       </section>
       <Proposals kind="release" {...shared} />
     </>

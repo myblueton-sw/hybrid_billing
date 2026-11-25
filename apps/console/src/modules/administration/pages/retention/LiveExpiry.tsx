@@ -150,7 +150,7 @@ function Group({ g, ...shared }: Shared & { g: ClassGroup }) {
           </table>
         </div>
       )}
-      {shared.listOf && <ItemsFoot l={l} kind="items" list={shared.listOf(g.class, g.next)} shown={g.artifacts?.length ?? 0} total={g.total} />}
+      {shared.listOf && <ItemsFoot l={l} kind="items" list={shared.listOf(g.class, g.next)} shown={g.artifacts?.length ?? 0} total={g.total} of={head} />}
     </section>
   );
 }

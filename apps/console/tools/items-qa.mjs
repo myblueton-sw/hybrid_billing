@@ -90,6 +90,8 @@ try {
       await open(lang, "expiry");
       check(`${at} the first items are listed with the count of all and one button for the class`, (await rows().count()) === base0 && (await foot("count").innerText()).trim() === copy[lang].shown(base0, base0 + 70) && (await foot("more-button").innerText()).trim() === copy[lang].more && (await page.locator(".p04-items-more-button").count()) === 1);
       const more = foot("more-button");
+      const named = await more.evaluate((el) => { const of = document.getElementById(el.getAttribute("aria-describedby") ?? ""); return { text: (of?.textContent ?? "").trim(), inside: !!of && !!el.closest("section")?.contains(of) }; });
+      check(`${at} the button is described by its class's heading`, named.text !== "" && named.inside, JSON.stringify(named));
       check(`${at} the button is at least 44 high`, (await more.evaluate((el) => el.getBoundingClientRect().height)) >= 44);
       await more.focus();
       await page.keyboard.press("Enter");
@@ -124,6 +126,8 @@ try {
         await open(lang, "holds");
         const refRows = () => page.locator(".p04-required table tbody tr");
         const n0 = served.holds.references.rows.length;
+        const refNamed = await page.locator(".p04-refs-more-button").evaluate((el) => (document.getElementById(el.getAttribute("aria-describedby") ?? "")?.textContent ?? "").trim());
+        check(`${at} the references button is described by the section's heading`, refNamed !== "" && refNamed === (await page.locator("#p04-required-title").innerText()).trim(), refNamed);
         check(`${at} the references show their count and button`, (await refRows().count()) === n0 && (await page.locator(".p04-refs-count").innerText()).trim() === copy[lang].shown(n0, n0 + 30) && (await page.locator(".p04-refs-more-button").innerText()).trim() === copy[lang].more);
         await page.locator(".p04-refs-more-button").focus();
         await page.keyboard.press("Enter");

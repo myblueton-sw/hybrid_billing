@@ -333,9 +333,13 @@ function Profile({ p, ...shared }: Shared & { p: ProfileRow }) {
   );
 }
 
-export function LoadView(shared: Shared) {
-  const { l, page } = shared;
+export type ProfilesList = { more: boolean; status: "idle" | "loading" | "failed"; reset: boolean; onMore: () => void };
+
+export function LoadView(shared: Shared & { list?: ProfilesList }) {
+  const { l, page, list } = shared;
   const profiles = page.load.profiles;
+  const shown = profiles.rows?.length ?? 0;
+  const failed = list?.status === "failed";
   return (
     <>
       <p className="p05-lead">{k.loadLead(l)}</p>
@@ -349,7 +353,19 @@ export function LoadView(shared: Shared) {
       <section className="p05-profiles" aria-labelledby="p05-profiles-title">
         <h3 id="p05-profiles-title" className="visually-hidden">{k.profilesTitle(l)}</h3>
         <ListOr l={l} items={profiles.rows} empty={k.noProfiles(l)}>{(rows) => <>{rows.map((p, i) => <Profile key={p.target || "p" + i} p={p} {...shared} />)}</>}</ListOr>
-        <MoreLine l={l} more={profiles.more} total={profiles.total} forms={plurals.showing50} />
+        {!list && <MoreLine l={l} more={profiles.more} total={profiles.total} forms={plurals.showing50} />}
+        {list && <div className="p05-profiles-foot">
+        {list && profiles.total !== null && shown > 0 && shown < profiles.total && <p className="p05-small p05-muted p05-profiles-count">{k.profilesShown(l, shown, profiles.total)}</p>}
+        {list?.reset && <p className="p05-small p05-profiles-reset" role="status">{k.profilesReset(l)}</p>}
+        {list && (list.more || failed) && (
+          <div className="p05-req-more p05-profiles-more">
+            {failed && <p role="alert">{k.profilesFailed(l)}</p>}
+            <button type="button" className="live-secondary p05-req-more-button p05-profiles-more-button" aria-disabled={list.status === "loading" || undefined} onClick={() => { if (list.status !== "loading") list.onMore(); }}>
+              {failed ? k.reqTryAgain(l) : list.status === "loading" ? k.reqLoading(l) : k.profilesMore(l)}
+            </button>
+          </div>
+        )}
+        </div>}
       </section>
     </>
   );

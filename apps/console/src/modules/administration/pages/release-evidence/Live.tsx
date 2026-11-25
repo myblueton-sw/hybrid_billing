@@ -7,13 +7,13 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
-import type { EvidencePage, RequirementRow } from "../../../../service/release-evidence";
+import type { EvidencePage, ProfileRow, RequirementRow } from "../../../../service/release-evidence";
 import type { Session } from "../../../../service/api";
 import { c as sc, retryPhrase } from "../../../../service/copy";
 import { k } from "./live-copy";
 import {
-  commandsAllowed, drop, filtering, forget, isProposalCommand, missingRequirements, modeOf, noFilter, pruneRefusals, readDenied, readSucceeded, requirementPrefix, requirementTargetsInUse, revokedNow, rowId,
-  selectionOf, setScope, vanished, viewOf, withHeld, type RequirementFilter, type Selection,
+  commandsAllowed, drop, filtering, forget, isProposalCommand, missingProfiles, missingRequirements, modeOf, noFilter, pruneRefusals, readDenied, readSucceeded, profilePrefix, profileTargetsInUse, requirementPrefix, requirementTargetsInUse, revokedNow, rowId,
+  selectionOf, setScope, validTarget, vanished, viewOf, withHeld, withHeldProfiles, type RequirementFilter, type Selection,
 } from "./live-model";
 import { Absent, Known, Stamp, Template, Unexpected, ltr, takeIntent, useAvailableWidth } from "./live-format";
 import { ErrorDetail, type Announce, type Shared } from "./LiveCommand";
@@ -124,8 +124,13 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   const wantedRequirement = viewOf(rawView) === "requirements" && /^[1-9][0-9]*$/.test(params.get("requirement") ?? "") ? requirementPrefix + params.get("requirement") : "";
   const wantedRef = useRef(wantedRequirement);
   wantedRef.current = wantedRequirement;
+  const wantedProfile = viewOf(rawView) === "load" && (params.get("profile") ?? "") !== "" && validTarget(profilePrefix + params.get("profile")) ? profilePrefix + params.get("profile") : "";
+  const wantedProfileRef = useRef(wantedProfile);
+  wantedProfileRef.current = wantedProfile;
+  const [profiles, setProfiles] = useState<{ next: string | null; status: "idle" | "loading" | "failed"; reset: boolean }>({ next: null, status: "idle", reset: false });
   const seq = useRef(0);
   const listSeq = useRef(0);
+  const profileSeq = useRef(0);
   const scrolled = useRef("");
   const root = useRef<HTMLDivElement>(null);
   const width = useAvailableWidth(root, access);
@@ -145,11 +150,14 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       const main = await api.releaseEvidence(request);
       if (n !== seq.current || generation !== currentScope()) return null;
       const held: RequirementRow[] = [];
+      const heldProfiles: ProfileRow[] = [];
       const was = listingRef.current;
       let now: Listing = { ...plainListing, reset: was.rows.length > 0 };
       if (main.state === "configured") {
         const missing = missingRequirements(main, [...requirementTargetsInUse(), wantedRef.current]);
         for (let at = 0; at < missing.length; at += targetBatch) held.push(...(await api.evidenceRequirements({ targets: missing.slice(at, at + targetBatch) })).rows);
+        const absent = missingProfiles(main, [...profileTargetsInUse(), wantedProfileRef.current]);
+        for (let at = 0; at < absent.length; at += targetBatch) heldProfiles.push(...(await api.evidenceProfiles({ targets: absent.slice(at, at + targetBatch) })).rows);
         if (filtering(was.filter) && (was.filter.state === "" || main.candidate)) {
           try {
             const answer = await api.evidenceRequirements(queryOf(was.filter));
@@ -163,11 +171,13 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
         if (n !== seq.current || generation !== currentScope()) return null;
       }
       listSeq.current += 1;
-      const got = withHeld(main, held);
+      profileSeq.current += 1;
+      const got = withHeldProfiles(withHeld(main, held), heldProfiles);
       readSucceeded();
       pruneRefusals(got);
       setPage(got);
       setListing(now);
+      setProfiles((before) => ({ next: null, status: "idle", reset: before.next !== null }));
       setAccess("ok");
       setStatus("ready");
       setFailure(null);
@@ -207,7 +217,33 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       setListing({ ...before, filter, status: "failed", reset: false });
     }
   };
+  const moreProfiles = async () => {
+    if (!page || profiles.status === "loading") return;
+    const after = profiles.next ?? page.load.profiles_next ?? "";
+    if (!after) return;
+    const n = ++profileSeq.current;
+    const generation = currentScope();
+    setProfiles({ next: profiles.next, status: "loading", reset: false });
+    try {
+      const answer = await api.evidenceProfiles({ after });
+      if (n !== profileSeq.current || generation !== currentScope()) return;
+      setPage((p) => (p ? withHeldProfiles(p, answer.rows) : p));
+      setProfiles({ next: answer.next, status: "idle", reset: false });
+    } catch (e) {
+      if (n !== profileSeq.current || generation !== currentScope()) return;
+      if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) { void load(); return; }
+      setProfiles({ next: profiles.next, status: "failed", reset: false });
+    }
+  };
   const pageRevision = page?.revision ?? "";
+  useEffect(() => {
+    if (!page || page.state !== "configured" || !wantedProfile || missingProfiles(page, [wantedProfile]).length === 0) return;
+    const n = seq.current;
+    const generation = currentScope();
+    void api.evidenceProfiles({ targets: [wantedProfile] }).then((answer) => {
+      if (n === seq.current && generation === currentScope() && answer.rows.length > 0) setPage((p) => (p ? withHeldProfiles(p, answer.rows) : p));
+    }).catch(() => undefined);
+  }, [wantedProfile, page?.revision]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!page || page.state !== "configured" || !wantedRequirement || missingRequirements(page, [wantedRequirement]).length === 0) return;
     const n = seq.current;
@@ -389,7 +425,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
           ) : view === "artifacts" ? (
             <ArtifactsView {...shared} />
           ) : view === "load" ? (
-            <LoadView {...shared} />
+            <LoadView {...shared} list={{ more: (profiles.next ?? shared.page.load.profiles_next ?? "") !== "", status: profiles.status, reset: profiles.reset, onMore: () => { void moreProfiles(); } }} />
           ) : view === "decisions" ? (
             <DecisionsView {...shared} />
           ) : (

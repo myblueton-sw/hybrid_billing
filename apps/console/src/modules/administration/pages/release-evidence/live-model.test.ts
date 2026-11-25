@@ -15,7 +15,7 @@ import {
   keptKey, modeOf, pairOf, pendingFor, pendingNow, pendingRetire, profileRetire, profileTarget, proposalTarget, pruneRefusals, react, readDenied, readSucceeded, refusedNow, renew,
   replacementOptions, replacementProblem, requirementRetire, requirementTarget, retireValues, revokedNow, selectionOf, setScope, settle as settleRecorded, snapshotOf, splitWidth, stateSentence, textProblem,
   utf8Bytes, vanished, rowId, closedProposal, verdictLine, viewOf, withdrawUsable,
-  filtering, missingRequirements, noFilter, requirementByLabel, requirementByTarget, requirementByTest, requirementTargetsInUse, stateAtCandidate, stillAllowed, withHeld,
+  filtering, missingProfiles, missingRequirements, noFilter, profileById, profileTargetsInUse, withHeldProfiles, requirementByLabel, requirementByTarget, requirementByTest, requirementTargetsInUse, stateAtCandidate, stillAllowed, withHeld,
 } from "./live-model";
 import { blockerText, f, k } from "./live-copy";
 import { allWordTables, category, counted, failingVerdicts, plurals, verdictWords } from "./live-codes";
@@ -968,4 +968,48 @@ test("the builds' cursor and the builds read are read strictly, and older builds
   assert.equal((await api.evidenceBuilds("71")).rows[0].order, 70);
   assert.equal(calls[0], "/api/v1/release-evidence/builds?limit=50&after=71");
   await assert.rejects(api.evidenceBuilds("2"), (e: AdminError) => e.failure === "invalid");
+});
+
+test("profiles held beyond the main read are found, selected and not reported as gone", async () => {
+  const { profilesAnswerOf, profilesPath } = await import("../../../../service/release-evidence");
+  forget();
+  setScope("w", "u", "s");
+  const main = page((s) => { s.load.profiles.total = 70; s.load.profiles.more = true; s.load.profiles_next = "4"; s.load.profiles.rows.forEach((p: Raw, i: number) => { p.number = i + 1; }); });
+  const from = main.load.profiles.rows![0];
+  const extra = (n: number) => ({ ...from, number: n, id: "held-" + n, target: "perf-profile:held-" + n, can_retire: true, retire_blocked: "", retired: false, retire: null });
+  pendingFor("release_evidence.retire_profile", "perf-profile:held-60", {}, "r1", () => ({ request: "q", key: "k" }), [], { view: "load" });
+  settleRecorded("release_evidence.retire_profile", "perf-profile:held-61", "hint", "stage", false);
+  pendingFor("release_evidence.retire_requirement", "trace-requirement-9", { reason: "x" }, "r1", () => ({ request: "q", key: "k" }), [], { view: "requirements" });
+  assert.deepEqual(profileTargetsInUse().sort(), ["perf-profile:held-60", "perf-profile:held-61"]);
+  assert.deepEqual(missingProfiles(main, [...profileTargetsInUse(), from.target, "", "perf-profile:", "x"]).sort(), ["perf-profile:held-60", "perf-profile:held-61"]);
+  assert.equal(vanished(main, "load").length, 1);
+  const held = withHeldProfiles(main, [extra(61), extra(60), { ...from, id: "stale-copy" }]);
+  const rows = held.load.profiles.rows!;
+  assert.deepEqual(rows.slice(-2).map((p) => p.id), ["held-60", "held-61"]);
+  assert.equal(rows[0].id, from.id);
+  assert.equal(held.load.profiles.more, true);
+  assert.equal(vanished(held, "load").length, 0);
+  assert.equal(stillAllowed(held, "release_evidence.retire_profile", "perf-profile:held-60"), true);
+  assert.equal(profileById(held, "held-60")?.number, 60);
+  assert.equal(selectionOf(new URLSearchParams("profile=held-60"), held, "load").profile, "held-60");
+  assert.equal(selectionOf(new URLSearchParams("profile=held-60"), main, "load").profile, "");
+  pruneRefusals(held);
+  assert.equal(refusedNow("release_evidence.retire_profile", "perf-profile:held-61"), "stage");
+  assert.equal(withHeldProfiles(main, []), main);
+  assert.deepEqual(missingProfiles(main, ["perf-profile:a,b", "perf-profile:" + "p".repeat(116), "perf-profile:" + "p".repeat(115), "perf-profile:has space"]), ["perf-profile:" + "p".repeat(115)]);
+  forget();
+  assert.equal(profilesPath({ after: "4" }), "/release-evidence/profiles?limit=50&after=4");
+  assert.equal(profilesPath({ targets: ["perf-profile:a", "perf-profile:b"], after: "9" }), "/release-evidence/profiles?target=perf-profile%3Aa%2Cperf-profile%3Ab");
+  for (const bad of [{}, { profiles: [], next: "" }, { profiles: "x", next: "", total: 0 }, { profiles: [], next: 4, total: 0 }]) assert.equal(profilesAnswerOf(bad), null, JSON.stringify(bad));
+  const got = profilesAnswerOf({ profiles: [{ number: 60, id: "held-60", target: "perf-profile:held-60" }, null], next: "60", total: 70 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].number, got?.next, got?.total], [1, 60, "60", 70]);
+  const list = { more: true, status: "idle" as const, reset: false, onMore: () => undefined };
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(LoadView, { ...shared(main), l, list }));
+    assert.ok(html.includes(k.profilesShown(l, main.load.profiles.rows!.length, 70)) && html.includes(k.profilesMore(l)), l);
+    const failed = renderToStaticMarkup(createElement(LoadView, { ...shared(main), l, list: { ...list, status: "failed", reset: true } }));
+    assert.ok(failed.includes(k.profilesFailed(l)) && failed.includes(k.reqTryAgain(l)) && failed.includes(k.profilesReset(l)), l);
+  }
+  const whole = renderToStaticMarkup(createElement(LoadView, { ...shared(page()), list: { ...list, more: false } }));
+  assert.ok(!whole.includes("p05-profiles-count") && !whole.includes("p05-profiles-more"));
 });

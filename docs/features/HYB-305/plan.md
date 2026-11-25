@@ -397,6 +397,22 @@ Not covered by a test: `limit` at 1 and 100 and a cursor above the total on the 
 
 Independent design and change review of increment 4b (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve with conditions, no blocking finding. It confirmed the cursor's arithmetic against the rows listed, that builds are only appended, and that the harness list cannot exceed the two modules' limits. Applied from it: the shared hook keeps its type check (a caller whose rows have no `number` must say where the number is); this record states that the builds read answers without the roster; stale line references in the binding document. It also saw that a walk could end one short without a reason when a build is registered meanwhile; the screen now says so.
 
+# Increment 4c, the load profiles of P05 (2026-11-25)
+
+Facts (main b7f0c5e): the performance gate holds up to 1,000 load profiles; the server keeps their identifiers in the order recorded and never removes one (retiring marks it). No command adds a profile; a running service has the seed's four. The main read lists the first 50 in recording order with `total` and `more`. A profile has a command, retire, so the screen's command handling looks profiles up in the rows it holds (`profileById`, `listed`, `stillAllowed`), as it does for requirements.
+
+Built, in the shape of increment 2a and without its search controls:
+
+- The main read keeps its rows and order; each profile row gains `number`, its position, and the section gains `profiles_next`.
+- `GET /api/v1/release-evidence/profiles` with `after` (the rows whose numbers are greater), `limit` and `q` (matched against the identifier and the target), or `target` alone (one to twenty profile targets separated by commas, which cannot be combined with another parameter; an unknown one is left out). Rows are built as the main read builds them, with the readiness of the candidate build read once for the request.
+- Screen: `Live.tsx` reads by target, before it sets the page, every profile that is not in the main read and that a link or the command state refers to, and the page then holds them; "Load more load profiles" adds the next rows to the page, so every reader of the profiles sees the rows shown. Rows loaded that way are dropped when the screen is read again, and the list says so. A profile held only because a link or an attempt refers to it appears after the others, in the order of its number.
+
+Review (independent reviewer, read-only, 2026-11-25): approve with conditions, then approve after a bounded re-review. Two blocking findings were corrected before merge: a link with a malformed profile was sent to the read by target, which refuses it, so the screen failed for as long as the link stayed (the link is now used only when it is a valid target); an answer to "load more" asked during a reload could be added to the newly read page and leave a gap (the list now has its own counter). Composition and copy check (ui-designer): pass; the suggested strings and a rule above the foot were adopted. Not corrected: the state of the button can stay "loading" after a change of scope or a denied answer followed by a failed read of the screen, when the screen shows that failure instead; the read accepts a limit of up to 100 rows, whose cost is not measured.
+
+Verification: the whole server package passed; console tests 1413, 1410 passed, 3 skipped; the rendered check `tools/profiles-qa.mjs` 55 passed against a local service with the sample seed, in which the profiles beyond the sample's four are answers written by the check. The owner has not reviewed the screen.
+
+Not built: a search on the screen; the hardware list of the same view (at most 100, the first 50 listed) and the paths of the matrix view, which follow.
+
 # Open for the owner
 
 - The holds list on P04 now shows every hold in force and pages only the released ones (increment 3e).

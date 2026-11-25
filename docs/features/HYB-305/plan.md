@@ -198,8 +198,40 @@ Checks (macOS arm64): the module's tests pass; `go vet` clean; the whole `apps/a
 
 Independent design and change review (AI, Claude Opus 5.5, by reading; nothing executed), 2026-11-25: approve with conditions, no blocking finding. It followed the retire check from its entry to the rule and found no state in which the new read and the check differ; it confirmed that the module itself does not refuse a replacement a pending proposal names (only the server leaves those out, as before), that the server's list keeps the stored order, and that keeping the rule in one place in the module is sounder than the shape sketched in 2a, which would have copied it into the server. Its conditions, both applied: the limit of 100 is a widened public input and is recorded as one; the candidates beyond twenty are a follow-up ticket, HYB-359. Not applied from it: building the answer from the map key in the module read, and three further module tests (a candidate that replaces and is then retired, a pending proposal naming a candidate, a concurrent run).
 
+# Which lists can grow in a running service, and the order that follows (2026-11-25)
+
+Reason for this section: increment 2a found that no command adds a requirement. The same question was then asked of every list of the six screens: can it grow through a command, a route or a background job, or is it filled only by the sample seed at start and by test hooks. The only route that changes these stores is `POST /api/v1/commands/{command}` (the other POST routes change identity and session state); the background work (`runWorker`) touches none of them; the seed runs once at start and only in sample mode. Everything below is about a service started with the sample seed: without it there are no event types, so no subscription can be proposed, and no recovery installations, so no locks; of the growing lists only the service accounts certainly grow then (holds were not checked for that case).
+
+Lists that grow through commands, by what limits them:
+
+| Screen | List | Grows through | Limit, and what the read returns |
+|---|---|---|---|
+| P03 | Locks of an installation | the recovery lock command, repeatable after each approved unlock | no limit; the read returns all of them |
+| P02 | Action history of a subscription | the subscription commands (approve, pause, request resume, approve resume, revoke, withdraw, withdraw resume, and closures after a lost right) | no limit; the read returns all of it |
+| P02 | Service accounts | `service.create` | at most 200 (`services.go`, `maxServices`); the read returns all of them with one credentials read each |
+| P02 | Subscriptions | the subscription propose command | the module keeps 16 live and 32 stored, so at most 32 are returned; the server keeps an entry for every one ever proposed and walks all of them on each read and each propose |
+| P04 | Holds | the place hold command | 100 live per workspace, released ones stay, module limit 10,000; the read returns the newest 50 with `total` and `more` and no way to the rest; each hold adds a list of outcomes bounded by the artifacts |
+| P04, P05 | Proposals | each screen's propose commands | 200 kept; the newest 50 are returned, pending and closed together, so a pending proposal can fall out of the main read as it could on P01 to P03 before increment 1b |
+| P01 to P03 | Proposals | each screen's propose commands | 200 kept; paged since increment 1b |
+| O02 | Closed plans | `relationship.propose`, `view_group.propose` | 200 kept per workspace; paged since increment 1a (not checked again for this section) |
+| O02 | Members with a relationship | propose and activate | bounded by parties and kinds; already paged with a scan budget (not checked again for this section) |
+| O03 | Events, evidence and records of a contract | the contract commands | 200 writes and 20 in reserve a contract; the contract read returns them whole |
+
+Lists with no producer today, which no command adds to: on P05 the requirements, paths, builds, results, harnesses, hardware, profiles and runs; on P04 the artifacts, references, deletion records and runs; on P03 the installations, open calls, unknown targets, pending events, lost events and the history of a set; on P02 the publishers, plugin versions, installations, deliveries, dead letters and events (approving a redelivery turns a dead letter into a queued redelivery without changing the count); on P01 the releases and reports (destinations can grow by one, when the seeded pending destination proposal is approved); the parties, billing profiles and contracts of O01 to O03 (partly traced: no write outside the seed was found, not every organizations path was followed). For these the size is the seed's in sample mode and zero otherwise, and the reads return them as the table under "Facts read on main 3a387a8" states for each (most cut at 50 with `total` and `more`; some whole, such as lost events on P03 and the artifacts in a hold's scope on P04). What would fill them is ingest, build pipelines and writers outside the console, none of which is built.
+
+Order that follows. The specification's sentences are about scale (a million rows a day, lists of 100,000 and more), and they concern exactly the lists that have no producer today; nothing blocks building and testing their reads through test hooks at the modules' limits, as increment 2a did. So every list stays in this ticket, and only the order changes: the lists a person can meet in a running service come first.
+
+1. **Lists that grow and are returned whole or walked whole**: the locks of an installation on P03; the action history of a subscription on P02; the server's subscription entries on P02. The service accounts are complete at 200 and stay whole, as "What the ticket means for each list" already says for complete lists.
+2. **Lists that grow and are cut**: the holds on P04; the proposals of P04 and P05, which get what increment 1b gave P01 to P03.
+3. **Lists with no producer today**, in the earlier order (the rest of P05, P04, P03, P02, O02 members of a plan and O03, the member reads): built and tested to the modules' limits through test hooks, each increment recording that its producer is not built.
+
+This replaces the order of "Increments, in order" from its item 2 on. Increments 2a and 2b are done and stay as they are. Whether group 3 may leave this ticket until its producers exist is the owner's decision and is listed under "Open for the owner"; until then it stays.
+
+Review of this section (AI, Claude Opus 5.5, by reading the code; nothing executed), 2026-11-25: approve with conditions, incorporated. It confirmed the growing lists and the lists without a producer on P05, P04, P03 and P02 call by call, and corrected the first version: service accounts are capped at 200; other POST routes exist; the first version deferred group 3 "until a command that adds to it is built", which would have narrowed the ticket without the owner and described the lists as "capped at the sample's size", which nothing does. Re-review: resolved, with one sentence about what the reads return corrected.
+
 # Open for the owner
 
+- Whether the lists with no producer today (group 3 of "Which lists can grow in a running service") may leave this ticket until ingest, build pipelines and writers exist. They stay in the ticket and are built last unless the owner says otherwise.
 - Whether the 200 contracts limit of O03 stays and when contracts can be created; until then O03's list is small and complete and nothing is built for it.
 - The order of the increments above; another order is equally possible.
 - Whether a fixed snapshot is required for the lists whose order can change, which means work in three modules, or whether "rows can move between pages" stated on the screen is acceptable before launch.

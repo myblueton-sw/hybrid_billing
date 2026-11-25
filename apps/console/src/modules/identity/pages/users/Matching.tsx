@@ -102,8 +102,10 @@ export function plainFixedLine(l: Locale, f: Fixed, at: string): string {
   return fixedLine(l, f).split("{n}").join(String(f.matched)).split("{at}").join(at);
 }
 
-export function FixedBar({ l, f, filters, days, number, error, onPrepare, onDiscard, say }: {
-  l: Locale; f: Fixed; filters: UserFilters; days: number; number: string; error: unknown; onPrepare: () => void; onDiscard: () => void; say: (text: string) => void;
+export type Removal = { on: boolean; selected: number; busy: boolean; note: string; onStart: () => void; onCancel: () => void; onRemove: () => void };
+
+export function FixedBar({ l, f, filters, days, number, error, onPrepare, onDiscard, say, removal }: {
+  l: Locale; f: Fixed; filters: UserFilters; days: number; number: string; error: unknown; onPrepare: () => void; onDiscard: () => void; say: (text: string) => void; removal?: Removal;
 }) {
   const own = keepsOwn(f, filters);
   const was = useRef(own);
@@ -115,10 +117,24 @@ export function FixedBar({ l, f, filters, days, number, error, onPrepare, onDisc
     <section className="m01-selbar m01-fixedbar" aria-labelledby="m01-selbar-h" data-fixed="true">
       <h3 id="m01-selbar-h" className="visually-hidden">{b.barHeading(l)}</h3>
       <p className="m01-selcount" tabIndex={-1}><FixedLine l={l} f={f} /></p>
-      <div className="m01-selactions">
-        <button type="button" className="live-secondary m01-prepare" onClick={onPrepare}>{b.prepare(l)}</button>
-        <button type="button" className="live-secondary m01-discard-list" onClick={onDiscard}>{m.discardList(l)}</button>
-      </div>
+      {(f.chosen > 0 || removal?.on) && <p className="m01-selnote m01-ink m01-removed" tabIndex={-1}>{m.removedSoFar(l, f.chosen)}</p>}
+      {removal?.on ? (
+        <>
+          <p className="m01-selnote" id="m01-remove-hint">{m.removeHint(l)}</p>
+          <div className="m01-selactions">
+            <button type="button" className="live-secondary m01-remove-send" aria-describedby="m01-remove-hint" aria-disabled={removal.selected === 0 || removal.busy || undefined}
+              onClick={() => { if (removal.selected > 0 && !removal.busy) removal.onRemove(); }}>{removal.busy ? m.removing(l) : removal.selected === 0 ? m.removeNone(l) : m.removeSelected(l, removal.selected)}</button>
+            <button type="button" className="live-secondary m01-remove-cancel" aria-disabled={removal.busy || undefined} onClick={() => { if (!removal.busy) removal.onCancel(); }}>{m.removeCancel(l)}</button>
+          </div>
+        </>
+      ) : (
+        <div className="m01-selactions">
+          <button type="button" className="live-secondary m01-prepare" onClick={onPrepare}>{b.prepare(l)}</button>
+          {removal && <button type="button" className="live-secondary m01-remove-open" onClick={removal.onStart}>{m.removeMode(l)}</button>}
+          <button type="button" className="live-secondary m01-discard-list" onClick={onDiscard}>{m.discardList(l)}</button>
+        </div>
+      )}
+      {removal?.note && <p className="m01-selnote m01-removal-note">{removal.note}</p>}
       {!emptyFilter(f.filter) && (
         <div className="m01-fixedfilters">
           <span className="m01-fixedlead">{m.fixedFilters(l)}</span>

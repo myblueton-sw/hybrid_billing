@@ -55,7 +55,7 @@ function Excluded({ l, api, id, total }: { l: Locale; api: AdminClient; id: stri
   );
 }
 
-const filterReasons = ["self", "not_found", "no_longer_matches", "no_membership", "already_revoked"];
+const filterReasons = ["self", "not_found", "no_longer_matches", "no_membership", "already_revoked", "chosen"];
 const explicitReasons = ["self", "not_found", "no_membership", "already_revoked"];
 
 export function PreviewBody({ l, api, prepared, onMore, moreFailed = false, days = 14 }: { l: Locale; api: AdminClient; prepared: Prepared; onMore: () => void; moreFailed?: boolean; days?: number }) {
@@ -71,7 +71,7 @@ export function PreviewBody({ l, api, prepared, onMore, moreFailed = false, days
       <p className="m01-lead m01-ink"><strong>{b.scope(l, job.effect, job.counts.targets)}</strong></p>
       <dl className="m01-counts">
         <div><dt>{b.toRevoke(l)}</dt><dd>{job.counts.targets}</dd></div>
-        <div><dt>{b.excluded(l)}</dt><dd>{job.counts.excluded}</dd></div>
+        <div><dt>{b.excluded(l)}</dt><dd>{job.counts.excluded}{job.selection === "filter" && (detail.exclusions.chosen ?? 0) > 0 && <span className="m01-kept" data-kept={detail.exclusions.chosen}>{b.keptByYou(l, detail.exclusions.chosen)}</span>}</dd></div>
         <div><dt>{b.duplicates(l)}</dt><dd>{job.counts.duplicates}</dd></div>
       </dl>
       {job.selection === "filter" && <FixedFacts l={l} job={job} days={days} exclusions={detail.exclusions} />}
@@ -174,7 +174,7 @@ export function ConfirmDialog({ l, api, prepared, revision, defaultReason, onClo
           <div><dt>{b.list(l)}</dt><dd>{b.bulkN(l, number(job.id))} <bdi dir="ltr" className="live-mono">{job.id}</bdi></dd></div>
           <div><dt>{b.effect(l)}</dt><dd>{job.effect === "suspend_user" ? b.suspendUser(l) : b.suspendMembership(l)}</dd></div>
           <div><dt>{b.toRevoke(l)}</dt><dd>{job.counts.targets}</dd></div>
-          <div><dt>{b.excluded(l)}</dt><dd>{job.counts.excluded}</dd></div>
+          <div><dt>{b.excluded(l)}</dt><dd>{job.counts.excluded}{job.selection === "filter" && (prepared.detail.exclusions.chosen ?? 0) > 0 && <span className="m01-kept" data-kept={prepared.detail.exclusions.chosen}>{b.keptByYou(l, prepared.detail.exclusions.chosen)}</span>}</dd></div>
           <div><dt>{b.preparedBy(l)}</dt><dd><bdi dir="ltr">{job.preparer}</bdi></dd></div>
           <div><dt>{b.preparedAtL(l)}</dt><dd><Stamp l={l} iso={job.prepared_at} /></dd></div>
           <div><dt>{b.validUntilL(l)}</dt><dd><Stamp l={l} iso={job.expires_at} /></dd></div>
@@ -344,8 +344,12 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
             <div className="service-summary" role="alert" tabIndex={-1} ref={(el) => el?.focus()}>
               <h2>{state.kind === "blocked" ? b.refused(l) : b.notPrepared(l)}</h2>
               <p className="m01-ink">{state.kind === "blocked" ? <Emph l={l} text={m.blockedFilter(l, `${w.workspaceRole(l)}: ${roleName(l, "member")}`)} /> : m.listClosed(l)}</p>
+              {state.kind === "blocked" && <p className="m01-ink">{m.blockedRemove(l)}</p>}
               <p><strong>{b.nothingRevoked(l)}</strong></p>
-              <button type="button" className="live-secondary m01-discard-list" onClick={() => void discardFixed(state.draft)}>{m.discardList(l)}</button>
+              <div className="live-buttons">
+                {state.kind === "blocked" && <button type="button" className="live-secondary m01-back-list" onClick={onBack}>{m.backToList(l)}</button>}
+                <button type="button" className="live-secondary m01-discard-list" onClick={() => void discardFixed(state.draft)}>{m.discardList(l)}</button>
+              </div>
               {trouble === "discard" && <p className="live-meta" role="alert">{b.discardFailed(l)}</p>}
             </div>
           )}

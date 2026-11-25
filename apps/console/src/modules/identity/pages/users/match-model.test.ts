@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { jobOf, matchCountOf, type BulkPage } from "../../../../service/identity-bulk";
 import { noFilters } from "./filter-model";
-import { confirmable, countNote, countView, differsFromCount, emptyFilter, fixedOfFields, fixedOfJob, keepsOwn, refusalCause, storedFilters } from "./match-model";
+import { confirmable, countNote, countView, differsFromCount, emptyFilter, fixedOfFields, fixedOfJob, keepsOwn, refusalCause, removalOf, storedFilters } from "./match-model";
 
 const count = (o: Record<string, unknown>) => matchCountOf({ count: 0, complete: false, over_limit: false, limit: 5000, scan_budget: 20000, ...o });
 
@@ -21,7 +21,7 @@ const job = (o: Record<string, unknown>) => jobOf({ id: "bulk-draft-4", state: "
 
 test("an open filter draft of the caller restores the fixed list, nothing else does", () => {
   const f = fixedOfJob(job({}), "me", 11);
-  assert.deepEqual(f, { draft: "bulk-draft-4", matched: 12, fixed_at: "2026-11-19T10:00:00Z", fixed_revision: "r9", counted: 11,
+  assert.deepEqual(f, { draft: "bulk-draft-4", matched: 12, chosen: 0, fixed_at: "2026-11-19T10:00:00Z", fixed_revision: "r9", counted: 11,
     filter: { q: "ann", status: "", membership: "", role: "member", period: "", signin: "", invitation: "", holder: "" } });
   for (const other of [job({ state: "prepared" }), job({ selection: "explicit" }), job({ preparer: "else" }), job({ filter: null })]) assert.equal(fixedOfJob(other, "me"), null);
 });
@@ -35,7 +35,7 @@ test("a fixed list is read from the command answer", () => {
   assert.ok(differsFromCount(f));
   assert.ok(!differsFromCount({ ...f, counted: 40 }));
   assert.ok(!differsFromCount({ ...f, counted: null }));
-  assert.deepEqual(fixedOfFields({}, null), { draft: "", matched: 0, fixed_at: "", fixed_revision: "", counted: null,
+  assert.deepEqual(fixedOfFields({}, null), { draft: "", matched: 0, chosen: 0, fixed_at: "", fixed_revision: "", counted: null,
     filter: { q: "", status: "", membership: "", role: "", period: "", signin: "", invitation: "", holder: "" } });
 });
 
@@ -70,4 +70,14 @@ test("a fixed number below the counted lower bound is explained, a larger one is
   assert.equal(countNote(fixedOfFields({ matched: "35" }, 40, false)), "differs");
   assert.equal(countNote(fixedOfFields({ matched: "40" }, 40, false)), "none");
   assert.equal(countNote(fixedOfFields({ matched: "40" }, null, false)), "none");
+});
+
+test("the number removed by choice is restored with the list, and removal answers add up across requests", () => {
+  assert.equal(fixedOfJob(job({ chosen: 3 }), "me")?.chosen, 3);
+  assert.equal(fixedOfJob(job({ chosen: "3" }), "me")?.chosen, 0);
+  const first = removalOf({ removed: "2", already: "1", ignored: "3", chosen: "2" }, { removed: 0, already: 0, ignored: 0, chosen: 0 });
+  assert.deepEqual(first, { removed: 2, already: 1, ignored: 3, chosen: 2 });
+  assert.deepEqual(removalOf({ removed: "1", already: "0", ignored: "0", chosen: "3" }, first), { removed: 3, already: 1, ignored: 3, chosen: 3 });
+  assert.deepEqual(removalOf({}, first), first);
+  assert.deepEqual(removalOf({ removed: "-1", already: "x", ignored: "1.5", chosen: "1" }, first), first);
 });

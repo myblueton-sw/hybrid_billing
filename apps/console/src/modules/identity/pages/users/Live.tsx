@@ -11,10 +11,10 @@ import { actionDone, actionLabel, impact, w, type Action } from "./live-copy";
 import { accountName, failureText, offers, roleName, setup, tags } from "./live-model";
 import { b } from "./bulk-copy";
 import { mayBeAdministrator, number, selectLoaded, toggle, without, type Selection } from "./bulk-model";
-import { bulkClient } from "../../../../service/identity-bulk";
+import { batches, bulkClient } from "../../../../service/identity-bulk";
 import { FixedBar, MatchAction, plainFixedLine } from "./Matching";
 import { m } from "./match-copy";
-import { fixedOfJob, type Fixed } from "./match-model";
+import { fixedOfJob, removalOf, type Fixed, type RemovalSum } from "./match-model";
 import { dateParts } from "./period-model";
 import { BulkFlow } from "./BulkPrepare";
 import RevocationJobs from "./RevocationJobs";
@@ -386,7 +386,7 @@ function Cell({ label, className, children }: { label: string; className?: strin
   return <td role="cell" data-label={label} className={className}>{children}</td>;
 }
 
-type Select = { on: boolean; selected: Selection; self: string; atLimit: boolean; loaded: string[]; onToggle: (id: string) => void; onAll: () => void };
+type Select = { on: boolean; keeping: boolean; selected: Selection; self: string; atLimit: boolean; loaded: string[]; onToggle: (id: string) => void; onAll: () => void };
 
 function Effect({ l, u }: { l: Locale; u: UserRow }) {
   if (!u.revocation || u.membership?.suspended_for !== "bulk_revocation" && u.state !== "suspended") return null;
@@ -413,13 +413,13 @@ export function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
       <table role="table">
         <colgroup>{check && <col className="m01-col-check" />}<col className="live-col-user" />{head.slice(1).map((h, i) => <col key={h} className={folded(i + 1)} />)}</colgroup>
         <thead role="rowgroup"><tr role="row">
-          {check && <HeaderCheck l={l} selected={sel.selected} loaded={sel.loaded} onAll={sel.onAll} cell />}
+          {check && <HeaderCheck l={l} selected={sel.selected} loaded={sel.loaded} onAll={sel.onAll} cell keeping={sel.keeping} />}
           {head.map((h, i) => <th key={h} scope="col" role="columnheader" className={folded(i)}>{h}</th>)}
         </tr></thead>
         <tbody role="rowgroup">
           {users.map((u) => (
             <tr key={u.user_id} role="row" className={u.user_id === selected ? "live-selected" : undefined}>
-              {check && <CheckCell l={l} u={u} self={sel.self} selected={sel.selected} atLimit={sel.atLimit} onToggle={sel.onToggle} />}
+              {check && <CheckCell l={l} u={u} self={sel.self} selected={sel.selected} atLimit={sel.atLimit} onToggle={sel.onToggle} keeping={sel.keeping} />}
               <td role="cell" className="live-user">
                 <button type="button" className="live-open" data-user-id={u.user_id} aria-current={u.user_id === selected ? "true" : undefined} onClick={() => onOpen(u.user_id)}>
                   <bdi dir="ltr" className={u.login ? undefined : "live-mono"}>{u.login ? <Breakable text={u.login} /> : u.user_id}</bdi>
@@ -531,6 +531,12 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   const [picked, setPicked] = useState<Selection>(() => (kept.user === session.user ? kept.selection : new Set()));
   useEffect(() => { kept = { user: session.user, selection: picked }; }, [picked, session.user]);
   const [fixed, setFixed] = useState<Fixed | null>(() => (keptFixed.user === session.user ? keptFixed.fixed : null));
+  const [removing, setRemoving] = useState(false);
+  const [removePicked, setRemovePicked] = useState<Selection>(new Set());
+  const [removeBusy, setRemoveBusy] = useState(false);
+  const [removeNote, setRemoveNote] = useState("");
+  const fixedDraft = fixed?.draft ?? "";
+  useEffect(() => { setRemoving(false); setRemovePicked(new Set()); setRemoveNote(""); setLimitHit(false); }, [fixedDraft]); // eslint-disable-line react-hooks/exhaustive-deps
   const [fixError, setFixError] = useState<unknown>(null);
   useEffect(() => { keptFixed = { user: session.user, fixed }; }, [fixed, session.user]);
   const [bulk, setBulk] = useState(false);
@@ -706,6 +712,36 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   const pendingLimit = setting(ctx.settings, "bulk_revocation_pending", 20);
   const fixedNow = selectable ? fixed : null;
   const reloadRevision = async () => (await load(true)) || dataRef.current?.revision || "";
+  const removeSelected = async () => {
+    if (!fixedNow || removePicked.size === 0 || removeBusy) return;
+    const draft = fixedNow.draft;
+    setRemoveBusy(true);
+    setFixError(null);
+    let sum: RemovalSum = { removed: 0, already: 0, ignored: 0, chosen: fixedNow.chosen };
+    let failed: unknown = null;
+    try {
+      for (const batch of batches([...removePicked])) {
+        const done = await api.command("bulk_revocation.remove_targets", draft, await reloadRevision(), m.removeReason(l), { users: batch.join("\n") }, attempt());
+        sum = removalOf(done.fields ?? {}, sum);
+      }
+    } catch (e) {
+      failed = e;
+    }
+    setRemoveBusy(false);
+    setFixed((was) => (was && was.draft === draft ? { ...was, chosen: sum.chosen } : was));
+    const note = [sum.removed > 0 ? m.removedNow(l, sum.removed) : "", sum.already > 0 ? m.removedAlready(l, sum.already) : "", sum.ignored > 0 ? m.removedIgnored(l, sum.ignored) : ""].filter(Boolean).join(" ");
+    setRemoveNote(note);
+    if (failed !== null) {
+      if (failed instanceof AdminError && failed.failure === "stage") { closedNow(); return; }
+      setFixError(failed);
+      if (note) say(note);
+      return;
+    }
+    setRemovePicked(new Set());
+    setRemoving(false);
+    setFocusTo(sum.chosen > 0 ? ".m01-removed" : ".m01-selcount");
+    say(note || m.removedNow(l, 0));
+  };
   const gone = (text: string) => { setFixed(null); setFixError(null); setFocusTo(".m01-match-open"); say(text); };
   const closedNow = () => { setFixed(null); setFixError(null); setFocusTo(".m01-match-open"); setClosedNote(true); say(m.alreadyClosed(l)); };
   const discardFixed = async () => {
@@ -721,9 +757,21 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   };
   const loaded = selectableIds(status === "ready" ? "ready" : freshRead ? "fresh" : "reloading", users, session.user);
   const sel: Select = {
-    on: selectable && !fixedNow, selected: picked, self: session.user, atLimit: picked.size >= limit, loaded,
-    onToggle: (id) => { const out = toggle(picked, id, limit); setLimitHit(out.refused); if (out.refused) say(b.limit(l, limit)); else setPicked(out.next); },
-    onAll: () => { const out = selectLoaded(picked, loaded, limit); setLimitHit(out.refused); if (out.refused) say(b.limit(l, limit)); else setPicked(out.next); },
+    on: selectable && (!fixedNow || removing), keeping: !!fixedNow, selected: fixedNow ? removePicked : picked, self: session.user, atLimit: (fixedNow ? removePicked : picked).size >= limit, loaded,
+    onToggle: (id) => {
+      const out = toggle(fixedNow ? removePicked : picked, id, limit);
+      setLimitHit(out.refused);
+      if (out.refused) say(b.limit(l, limit));
+      else if (fixedNow) setRemovePicked(out.next);
+      else setPicked(out.next);
+    },
+    onAll: () => {
+      const out = selectLoaded(fixedNow ? removePicked : picked, loaded, limit);
+      setLimitHit(out.refused);
+      if (out.refused) say(b.limit(l, limit));
+      else if (fixedNow) setRemovePicked(out.next);
+      else setPicked(out.next);
+    },
   };
   const doneAction = (id: string, action: Action, ref: string) => {
     void load(true);
@@ -820,7 +868,11 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
           )}
           {selectable && view !== "invitations" && fixedNow && (
             <FixedBar l={l} f={fixedNow} filters={filters} days={days} number={number(fixedNow.draft)} error={fixError} say={say}
-              onPrepare={() => setBulk(true)} onDiscard={() => void discardFixed()} />
+              onPrepare={() => setBulk(true)} onDiscard={() => void discardFixed()}
+              removal={{ on: removing, selected: removePicked.size, busy: removeBusy, note: removeNote,
+                onStart: () => { setRemoving(true); setRemoveNote(""); setFocusTo(".m01-remove-cancel"); },
+                onCancel: () => { setRemoving(false); setRemovePicked(new Set()); setFocusTo(".m01-remove-open"); },
+                onRemove: () => void removeSelected() }} />
           )}
           {selectable && view !== "invitations" && !fixedNow && (
             <SelectionBar l={l} selected={picked} loaded={loaded} limit={limit} atLimit={limitHit || picked.size >= limit} names={names.current}

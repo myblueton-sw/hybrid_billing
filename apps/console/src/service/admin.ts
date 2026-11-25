@@ -705,6 +705,7 @@ export type CommandId =
   | "identity.set_role_period"
   | "bulk_revocation.add_targets"
   | "bulk_revocation.add_matching"
+  | "bulk_revocation.remove_targets"
   | "bulk_revocation.prepare"
   | "bulk_revocation.execute"
   | "bulk_revocation.discard"

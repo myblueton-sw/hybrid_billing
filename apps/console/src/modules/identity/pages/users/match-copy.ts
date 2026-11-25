@@ -62,7 +62,31 @@ export const m = {
         `تم تثبيت {n} أشخاص في {at} (كان العدد ${when} على الأقل عند العدّ)`, `تم تثبيت {n} شخصًا في {at} (كان العدد ${when} على الأقل عند العدّ)`, `تم تثبيت {n} شخص في {at} (كان العدد ${when} على الأقل عند العدّ)`] }, keep),
   fixedFilters: (l: Locale) => t(l, "Fixed filters:", "고정한 필터:", "عوامل التصفية المثبّتة:"),
   baseRevision: (l: Locale) => t(l, "Base revision", "기준 개정 번호", "رقم التعديل الأساسي"),
-  fixedNoChecks: (l: Locale) => t(l, "Discard the list to choose people one by one.", "사람을 한 명씩 고르려면 목록을 버리세요.", "تجاهل القائمة لاختيار الأشخاص واحدًا تلو الآخر."),
+  fixedNoChecks: (l: Locale) => t(l, "To add people, discard the list and fix a new one.", "사람을 추가하려면 목록을 버리고 새로 고정하세요.", "لإضافة أشخاص، تجاهل القائمة وثبّت قائمة جديدة."),
+  removeMode: (l: Locale) => t(l, "Exclude people from this revocation", "회수에서 제외할 사람 선택", "استبعاد أشخاص من هذا الإبطال"),
+  removeSelected: (l: Locale, n: number) => t(l, `Exclude ${n} (they keep access)`, `${n}명 제외(접근 권한 유지)`, `استبعاد ${n} (يحتفظون بالوصول)`),
+  removeNone: (l: Locale) => t(l, "Select people to exclude", "제외할 사람을 선택하세요", "استبعاد: اختر أشخاصًا أولًا"),
+  removeCancel: (l: Locale) => t(l, "Stop excluding", "제외 그만두기", "إيقاف الاستبعاد"),
+  removeHint: (l: Locale) =>
+    t(l, "Select the people who should keep their access. They are excluded when the list is prepared and cannot be put back. To start again, discard the list.",
+      "접근 권한을 유지할 사람을 선택하세요. 준비할 때 회수 대상에서 빠지며 되돌릴 수 없습니다. 다시 하려면 목록을 버리세요.",
+      "اختر الأشخاص الذين يجب أن يحتفظوا بوصولهم. يُستبعدون عند تحضير القائمة ولا يمكن إعادتهم. للبدء من جديد، تجاهل القائمة."),
+  removedSoFar: (l: Locale, n: number) => t(l, `Excluded by you, keeping access: ${n}`, `직접 제외(접근 권한 유지): ${n}명`, `استبعدتهم أنت ويحتفظون بالوصول: ${n}`),
+  removedNow: (l: Locale, n: number) =>
+    counted(l, n, { en: ["{n} person excluded; they keep their access.", "{n} people excluded; they keep their access."], ko: "{n}명을 제외했습니다. 접근 권한은 유지됩니다.",
+      ar: ["لم يُستبعد أحد.", "استُبعد شخص واحد ويحتفظ بوصوله.", "استُبعد شخصان ويحتفظان بوصولهما.", "استُبعد {n} أشخاص ويحتفظون بوصولهم.", "استُبعد {n} شخصًا ويحتفظون بوصولهم.", "استُبعد {n} شخص ويحتفظون بوصولهم."] }),
+  removedAlready: (l: Locale, n: number) =>
+    counted(l, n, { en: ["{n} person was already excluded.", "{n} people were already excluded."], ko: "{n}명은 이미 제외된 사람입니다.",
+      ar: ["لم يكن أحد مستبعدًا من قبل.", "كان شخص واحد مستبعدًا من قبل.", "كان شخصان مستبعدَين من قبل.", "كان {n} أشخاص مستبعدين من قبل.", "كان {n} شخصًا مستبعدين من قبل.", "كان {n} شخص مستبعدين من قبل."] }),
+  removedIgnored: (l: Locale, n: number) =>
+    counted(l, n, { en: ["{n} person was not in the list and was left as is.", "{n} people were not in the list and were left as they are."], ko: "{n}명은 목록에 없어 그대로 두었습니다.",
+      ar: ["كان الجميع في القائمة.", "لم يكن شخص واحد في القائمة فتُرك كما هو.", "لم يكن شخصان في القائمة فتُركا كما هما.", "لم يكن {n} أشخاص في القائمة فتُركوا كما هم.", "لم يكن {n} شخصًا في القائمة فتُركوا كما هم.", "لم يكن {n} شخص في القائمة فتُركوا كما هم."] }),
+  removeReason: (l: Locale) => t(l, "Excluded from the list on the revocation screen", "회수 화면에서 목록에서 제외", "استُبعد من القائمة في شاشة الإبطال"),
+  removing: (l: Locale) => t(l, "Excluding…", "제외하는 중…", "جارٍ الاستبعاد…"),
+  blockedRemove: (l: Locale) =>
+    t(l, "Or keep one administrator on this list: choose “Back to the list”, then exclude that administrator.", "또는 이 목록의 관리자 한 명을 제외하세요. ‘목록으로 돌아가기’를 누른 뒤 그 관리자를 제외하면 됩니다.",
+      "أو أبقِ مسؤولًا واحدًا في هذه القائمة: اختر «العودة إلى القائمة» ثم استبعد ذلك المسؤول."),
+  backToList: (l: Locale) => t(l, "Back to the list", "목록으로 돌아가기", "العودة إلى القائمة"),
   keepsOwn: (l: Locale) =>
     t(l, "The fixed list keeps its own filters. Changing the filters above does not change it.", "고정 목록은 자체 필터를 유지합니다. 위 필터를 바꿔도 목록은 바뀌지 않습니다.",
       "تحتفظ القائمة المثبّتة بعوامل التصفية الخاصة بها. تغيير عوامل التصفية أعلاه لا يغيّرها."),

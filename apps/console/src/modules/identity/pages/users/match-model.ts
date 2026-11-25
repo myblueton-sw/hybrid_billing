@@ -2,7 +2,7 @@ import type { UsersFilter } from "../../../../service/admin";
 import type { BulkJob, BulkPage, MatchCount } from "../../../../service/identity-bulk";
 import { noFilters, sameFilters, type UserFilters } from "./filter-model";
 
-export type Fixed = { draft: string; matched: number; fixed_at: string; fixed_revision: string; filter: UsersFilter; counted: number | null; countedAtLeast?: boolean };
+export type Fixed = { draft: string; matched: number; chosen: number; fixed_at: string; fixed_revision: string; filter: UsersFilter; counted: number | null; countedAtLeast?: boolean };
 
 export type CountView = "exact" | "atLeast" | "over" | "none";
 
@@ -23,13 +23,13 @@ export function storedFilters(f: UsersFilter): UserFilters {
 
 export function fixedOfJob(j: BulkJob, self: string, counted: number | null = null): Fixed | null {
   if (j.state !== "draft" || j.selection !== "filter" || j.preparer !== self || !j.filter) return null;
-  return { draft: j.id, matched: j.matched, fixed_at: j.fixed_at, fixed_revision: j.fixed_revision, filter: j.filter, counted };
+  return { draft: j.id, matched: j.matched, chosen: j.chosen, fixed_at: j.fixed_at, fixed_revision: j.fixed_revision, filter: j.filter, counted };
 }
 
 export function fixedOfFields(fields: Record<string, string>, counted: number | null, countedAtLeast = false): Fixed {
   const filter: UsersFilter = { q: "", status: "", membership: "", role: "", period: "", signin: "", invitation: "", holder: "" };
   for (const key of Object.keys(filter) as (keyof UsersFilter)[]) filter[key] = fields["filter." + key] ?? "";
-  return { draft: fields.draft ?? "", matched: Number(fields.matched ?? 0), fixed_at: fields.fixed_at ?? "", fixed_revision: fields.fixed_revision ?? "", filter, counted, ...(countedAtLeast ? { countedAtLeast } : {}) };
+  return { draft: fields.draft ?? "", matched: Number(fields.matched ?? 0), chosen: 0, fixed_at: fields.fixed_at ?? "", fixed_revision: fields.fixed_revision ?? "", filter, counted, ...(countedAtLeast ? { countedAtLeast } : {}) };
 }
 
 export type CountNote = "none" | "differs" | "below";
@@ -60,4 +60,11 @@ export function refusalCause(page: BulkPage | null, pendingLimit: number, count:
 
 export function emptyFilter(f: UsersFilter): boolean {
   return Object.values(f).every((v) => v === "");
+}
+
+export type RemovalSum = { removed: number; already: number; ignored: number; chosen: number };
+
+export function removalOf(fields: Record<string, string>, before: RemovalSum): RemovalSum {
+  const n = (key: string) => { const v = Number(fields[key] ?? 0); return Number.isInteger(v) && v >= 0 ? v : 0; };
+  return { removed: before.removed + n("removed"), already: before.already + n("already"), ignored: before.ignored + n("ignored"), chosen: Math.max(before.chosen, n("chosen")) };
 }

@@ -53,7 +53,7 @@ func (s *Server) listRetentionTombstones(w http.ResponseWriter, r *http.Request)
 	request := r.Header.Get("X-Request-Id")
 	s.domain.RLock()
 	defer s.domain.RUnlock()
-	found, answer, ok := s.admitted(w, r)
+	_, answer, ok := s.admitted(w, r)
 	if !ok {
 		return
 	}
@@ -72,11 +72,10 @@ func (s *Server) listRetentionTombstones(w http.ResponseWriter, r *http.Request)
 		failCode(w, commands.DependencyUnavailable, request)
 		return
 	}
-	f, err := s.retentionFactsFor(found.verifier, answer.User(), answer.Workspace(), now)
 	var visible []retention.Tombstone
-	if err == nil {
-		page.Watermark, visible, err = f.windowTombstones()
-	}
+	var err error
+	f := s.retentionFactsWithoutRoster(answer.User(), answer.Workspace())
+	page.Watermark, visible, err = f.windowTombstones()
 	if err != nil {
 		failCode(w, commands.DependencyUnavailable, request)
 		return

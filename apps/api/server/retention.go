@@ -332,6 +332,7 @@ type retentionFacts struct {
 	reader    string
 	workspace string
 	approvers []string
+	rostered  bool
 	policies  map[string]*retention.PolicyView
 	artifacts map[string]retention.Artifact
 	standings map[string]retention.Standing
@@ -536,6 +537,9 @@ func (f *retentionFacts) visibleOutcomes(id, after string, shown int) ([]retenti
 
 func (f *retentionFacts) holdRow(h *retentionHold) (retentionHoldRow, error) {
 	s := f.s
+	if !f.rostered {
+		return retentionHoldRow{}, errRosterNotRead
+	}
 	v, err := s.retentionHold(h.id)
 	if err != nil {
 		return retentionHoldRow{}, err
@@ -859,8 +863,16 @@ func (s *Server) retentionFactsFor(verifier identity.Verifier, reader, workspace
 	if err != nil {
 		return nil, err
 	}
-	return &retentionFacts{s: s, reader: reader, workspace: workspace, approvers: approvers, policies: map[string]*retention.PolicyView{},
-		artifacts: map[string]retention.Artifact{}, standings: map[string]retention.Standing{}}, nil
+	f := s.retentionFactsWithoutRoster(reader, workspace)
+	f.approvers, f.rostered = approvers, true
+	return f, nil
+}
+
+var errRosterNotRead = errors.New("the approver roster was not read for this answer")
+
+func (s *Server) retentionFactsWithoutRoster(reader, workspace string) *retentionFacts {
+	return &retentionFacts{s: s, reader: reader, workspace: workspace, policies: map[string]*retention.PolicyView{}, artifacts: map[string]retention.Artifact{},
+		standings: map[string]retention.Standing{}}
 }
 
 func (s *Server) retentionPage(verifier identity.Verifier, reader, workspace string, now time.Time) (retentionPage, error) {

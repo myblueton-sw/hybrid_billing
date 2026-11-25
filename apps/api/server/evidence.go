@@ -262,6 +262,7 @@ type evidenceFacts struct {
 	s         *Server
 	reader    string
 	eligible  bool
+	rostered  bool
 	origin    string
 	candidate *releasetrace.Release
 	build     string
@@ -505,6 +506,8 @@ func (f *evidenceFacts) retireBlocked(row *evidenceRequirementRow, q releasetrac
 		return releasetrace.ReasonRetired, nil
 	case row.Retire != nil:
 		return alreadyProposed, nil
+	case !f.rostered:
+		return "", errRosterNotRead
 	case !f.eligible:
 		return noEligibleApprover, nil
 	}
@@ -716,17 +719,23 @@ func (s *Server) evidenceFactsFor(verifier identity.Verifier, reader string, now
 	if err != nil {
 		return nil, err
 	}
-	f := &evidenceFacts{s: s, reader: reader, origin: evidenceOriginEmpty}
+	f := s.evidenceFactsWithoutRoster(reader)
+	f.rostered = true
 	for _, user := range approvers {
 		f.eligible = f.eligible || user != reader
 	}
+	return f, nil
+}
+
+func (s *Server) evidenceFactsWithoutRoster(reader string) *evidenceFacts {
+	f := &evidenceFacts{s: s, reader: reader, origin: evidenceOriginEmpty}
 	if s.ev.seeded {
 		f.origin = evidenceOriginSeed
 	}
 	if c := s.ev.candidate; c != nil {
 		f.candidate, f.build = c, c.Build
 	}
-	return f, nil
+	return f
 }
 
 func (s *Server) evidencePage(verifier identity.Verifier, reader string, now time.Time) (evidencePage, error) {

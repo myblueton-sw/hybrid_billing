@@ -114,7 +114,7 @@ func (q idQuery) matches(id string) bool {
 
 func (s *Server) retentionListFacts(w http.ResponseWriter, r *http.Request, classed bool) (*retentionFacts, idQuery, string, bool) {
 	request := r.Header.Get("X-Request-Id")
-	found, answer, ok := s.admitted(w, r)
+	_, answer, ok := s.admitted(w, r)
 	if !ok {
 		return nil, idQuery{}, request, false
 	}
@@ -130,12 +130,7 @@ func (s *Server) retentionListFacts(w http.ResponseWriter, r *http.Request, clas
 		failCode(w, commands.DependencyUnavailable, request)
 		return nil, idQuery{}, request, false
 	}
-	f, err := s.retentionFactsFor(found.verifier, answer.User(), answer.Workspace(), s.clock())
-	if err != nil {
-		failCode(w, commands.DependencyUnavailable, request)
-		return nil, idQuery{}, request, false
-	}
-	return f, q, request, true
+	return s.retentionFactsWithoutRoster(answer.User(), answer.Workspace()), q, request, true
 }
 
 func (s *Server) listRetentionArtifacts(w http.ResponseWriter, r *http.Request) {

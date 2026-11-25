@@ -154,6 +154,9 @@ func runRow(v perfgate.RunView) evidenceRunRow {
 
 func (f *evidenceFacts) profileRow(id string, statuses map[string]string) (evidenceProfileRow, error) {
 	s := f.s
+	if !f.rostered {
+		return evidenceProfileRow{}, errRosterNotRead
+	}
 	p, retired, err := s.perfProfile(id)
 	if err != nil {
 		return evidenceProfileRow{}, err

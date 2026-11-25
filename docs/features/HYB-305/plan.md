@@ -495,6 +495,22 @@ Review (independent reviewer, read-only, 2026-11-25): approve, no blocking findi
 
 Verification: the whole server package passed; console tests 1418, 1415 passed, 3 skipped; the rendered check `tools/items-qa.mjs` 61 passed against a local service with the sample seed, in which the items beyond the sample's are written by the check. The owner has not reviewed the screen.
 
+# Increment 4i, the items of a run and the outcomes of a hold on P04 (2026-11-25)
+
+Facts (main 88c3347): a run row lists the first 50 artifacts of its plan that the workspace may see, with their count; the module requires a plan's artifacts in ascending identifier order, so plan order is identifier order. A hold row lists the first 50 outcomes, that is, the covered artifacts the workspace may see that were not preserved, in identifier order, with `outcomes_more` and no count: the module pages outcomes by artifact and the server stops as soon as it has one more than it shows. Neither list has a producer in a running service beyond the seed.
+
+Built:
+
+- A run's artifacts gain `next`, the number of rows listed when more exist; a hold gains `outcomes_next`, the artifact of the last outcome listed when more exist.
+- `GET /api/v1/retention/run-artifacts` with `run` (the run's target), `after` (a count of rows to pass) and `limit` (at most 50): the run's artifacts the workspace may see, in identifier order, with `total`. `GET /api/v1/retention/hold-outcomes` with `hold`, `after` (an artifact identifier) and `limit` (at most 50): the outcomes after that artifact, with `next` and no total. A run or a hold that does not exist or belongs to another workspace is refused in the same way (422), and so is the request of a reader of another workspace, which has no run or hold to name.
+- Screen: each run card and each hold card loads its further rows itself through `useMoreRows` (`shared/more-rows.ts`); the run's items show the count of all, the hold's outcomes show only the button, since their number is not served. Rows loaded that way are dropped when the screen is read again, and the list says so. "More items are not shown." stays only for an answer without `outcomes_next`.
+
+Not built: a count of a hold's outcomes, which needs a walk of every covered artifact.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. With the tenant boundary first, it confirmed that a malformed target, an unknown run and another workspace's run are refused before any module call with the same answer, and likewise for a hold; a test now compares those answers. Placement check (ui-designer): pass for the foot in a run card and for a hold's outcomes with a button and no count; it did not see the foot in the hold card, which its screenshot did not reach. Its note that a long outcomes list stretches the hold card's left column is carried to a separate issue.
+
+Verification: the whole server package passed (before the comparison was added to the test; the retention tests passed again after it); console tests 1419, 1416 passed, 3 skipped; the rendered check `tools/members-qa.mjs` 61 passed against a local service with the sample seed, in which the rows beyond the sample's are written by the check. The owner has not reviewed the screen.
+
 # Open for the owner
 
 - A workspace can now page through all of its deletion records in the window (increment 4g), up to 1,000 instead of 50. Their sequence numbers are numbers of the whole installation, so the gaps between them show roughly how many deletions other workspaces had; the watermark and the first fifty rows already showed this in part. Whether a workspace should see installation-wide sequence numbers at all is for the owner.

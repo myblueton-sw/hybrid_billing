@@ -277,3 +277,32 @@ test("the deletion records' cursor and the records read are read strictly", asyn
   assert.equal(calls[0], "/api/v1/retention/tombstones?limit=50&after=71");
   await assert.rejects(api.retentionTombstones("2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
 });
+
+test("a run's items and a hold's outcomes are read strictly and appended once", async () => {
+  const { outcomesPageOf, retentionOf, runItemsPageOf } = await import("./retention");
+  const { appended } = await import("../shared/more-rows");
+  const { AdminError, adminClient } = await import("./admin");
+  for (const bad of [{}, { artifacts: [] }, { artifacts: "x", next: "" }, { artifacts: [], next: 4 }]) assert.equal(runItemsPageOf(bad), null, JSON.stringify(bad));
+  assert.deepEqual(runItemsPageOf({ artifacts: [{ id: "a", outcome: "deleted" }, null], next: "80", total: 120 }), { rows: [{ id: "a", outcome: "deleted" }], next: "80" });
+  for (const bad of [{}, { outcomes: [] }, { outcomes: "x", next: "" }, { outcomes: [], next: 4 }]) assert.equal(outcomesPageOf(bad), null, JSON.stringify(bad));
+  const page = outcomesPageOf({ outcomes: [{ artifact: "a", outcome: "not_preserved", stores: { s: "deleted" } }, "x"], next: "a" });
+  assert.deepEqual([page?.rows.length, page?.rows[0].artifact, page?.rows[0].outcome, page?.next], [1, "a", "not_preserved", "a"]);
+  const got = retentionOf({ state: "configured", holds: { total: 1, more: false, rows: [{ id: "h", outcomes: [{ artifact: "a" }], outcomes_more: true, outcomes_next: "a" }] },
+    deletion: { total: 1, more: false, rows: [{ run: { target: "retention-run-1", label: "run/1" }, artifacts: { total: 3, more: true, next: "1", rows: [{ id: "a" }] } }] } });
+  assert.deepEqual([got.holds.rows?.[0].outcomes_next, got.deletion.rows?.[0].artifacts.next], ["a", "1"]);
+  const old = retentionOf({ state: "configured", holds: { total: 1, more: false, rows: [{ id: "h", outcomes: [], outcomes_more: false }] }, deletion: { total: 1, more: false, rows: [{ artifacts: { total: 0, more: false, rows: [] } }] } });
+  assert.deepEqual([old.holds.rows?.[0].outcomes_next, old.deletion.rows?.[0].artifacts.next], [null, null]);
+  const id = (x: { id: string }) => x.id;
+  assert.deepEqual(appended([{ id: "a" }, { id: "b" }], [{ id: "b" }, { id: "c" }, { id: "" }, { id: "c" }], id).map(id), ["a", "b", "c"]);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    const body = calls.length === 1 ? { artifacts: [{ id: "a" }], next: "" } : calls.length === 2 ? { outcomes: [{ artifact: "a" }], next: "" } : {};
+    return new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.retentionRunArtifacts("retention-run-7", "50")).rows[0].id, "a");
+  assert.equal((await api.retentionHoldOutcomes("hold:a b", "x:y")).rows[0].artifact, "a");
+  assert.deepEqual(calls, ["/api/v1/retention/run-artifacts?run=retention-run-7&limit=50&after=50", "/api/v1/retention/hold-outcomes?hold=hold%3Aa+b&limit=50&after=x%3Ay"]);
+  await assert.rejects(api.retentionRunArtifacts("retention-run-7", "2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});

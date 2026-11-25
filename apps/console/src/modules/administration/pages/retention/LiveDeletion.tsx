@@ -1,11 +1,12 @@
 import type { Locale } from "../../../../shared/types";
-import { runOutcomeKeys, type RetentionPage, type RunRow } from "../../../../service/retention";
+import { runOutcomeKeys, type RunItem, type RunRow } from "../../../../service/retention";
 import { useOlderRows } from "../../../../shared/older-rows";
+import { useMoreRows } from "../../../../shared/more-rows";
 import { AdminError } from "../../../../service/admin";
 import { counted, plurals } from "./live-codes";
 import { k } from "./live-copy";
 import { artifactOf, blockerPolicy, keptKey, pendingNow, refusedNow, rowId, runNumber, runOf, runTarget, stateSentence, storesBalanced } from "./live-model";
-import { Code, Free, MoreLine, Num, Rich, Who, href, ltr } from "./live-format";
+import { Code, Free, ItemsFoot, MoreLine, Num, Rich, Who, href, ltr } from "./live-format";
 import { CommandForm, RowNote, line, useOpen, type Blocker, type Shared } from "./LiveCommand";
 import { Strip } from "./LiveExpiry";
 import { Proposals } from "./LiveProposals";
@@ -74,12 +75,20 @@ function Stores({ l, r }: { l: Locale; r: RunRow }) {
   );
 }
 
-function Items({ l, r, page }: { l: Locale; r: RunRow; page: RetentionPage }) {
-  const list = r.artifacts.rows;
+function Items({ r, ...shared }: Shared & { r: RunRow }) {
+  const { l, page, api } = shared;
+  const target = r.run?.target ?? "";
+  const older = useMoreRows<RunItem>(page.revision + "\u0000" + target, r.artifacts.rows, target && r.artifacts.more === true ? r.artifacts.next : null, (after) => api.retentionRunArtifacts(target, after), (x) => x.id, (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  });
+  const list = older.rows;
+  const paged = r.artifacts.next !== null;
   return (
     <>
       <h4>{k.itemsTitle(l)}</h4>
-      <MoreLine l={l} more={r.artifacts.more} total={r.artifacts.total} forms={plurals.showingOf} />
+      {!paged && <MoreLine l={l} more={r.artifacts.more} total={r.artifacts.total} forms={plurals.showingOf} />}
       {list === null ? (
         <p className="live-empty">{k.unknown(l)}</p>
       ) : list.length === 0 ? (
@@ -106,6 +115,7 @@ function Items({ l, r, page }: { l: Locale; r: RunRow; page: RetentionPage }) {
           </table>
         </div>
       )}
+      {paged && <ItemsFoot l={l} kind="run-items" list={{ more: older.more, status: older.status, reset: older.reset, onMore: older.load }} shown={list?.length ?? 0} total={r.artifacts.total} />}
     </>
   );
 }
@@ -181,7 +191,7 @@ function Run({ r, ...shared }: Shared & { r: RunRow }) {
         )}
       </div>
       <Stores l={l} r={r} />
-      <Items l={l} r={r} page={page} />
+      <Items r={r} {...shared} />
     </article>
   );
 }

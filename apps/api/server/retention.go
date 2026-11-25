@@ -133,6 +133,7 @@ type retentionHoldRow struct {
 	CountsScope       string                `json:"counts_scope"`
 	Outcomes          []retentionOutcomeRow `json:"outcomes"`
 	OutcomesMore      bool                  `json:"outcomes_more"`
+	OutcomesNext      string                `json:"outcomes_next"`
 	Release           *uint64               `json:"release"`
 	CanProposeRelease bool                  `json:"can_propose_release"`
 	ReleaseBlocked    string                `json:"release_blocked"`
@@ -177,6 +178,7 @@ type retentionRunArtifactRow struct {
 type retentionRunArtifacts struct {
 	Total int                       `json:"total"`
 	More  bool                      `json:"more"`
+	Next  string                    `json:"next"`
 	Rows  []retentionRunArtifactRow `json:"rows"`
 }
 
@@ -512,9 +514,9 @@ func (f *retentionFacts) releaseBlocked(id string, v retention.HoldView) string 
 	return f.s.retentionCheck(retention.Change{Kind: retention.ChangeRelease, Release: retention.Release{Hold: id, Reason: retentionCheckText}}, f.reader, "")
 }
 
-func (f *retentionFacts) visibleOutcomes(id string) ([]retention.HoldOutcome, error) {
+func (f *retentionFacts) visibleOutcomes(id, after string, shown int) ([]retention.HoldOutcome, error) {
 	s := f.s
-	out, after := []retention.HoldOutcome{}, ""
+	out := []retention.HoldOutcome{}
 	for {
 		var page []retention.HoldOutcome
 		if err := s.retentionCall("hold_outcomes", func() (err error) { page, err = s.retention.HoldOutcomes(id, after, retentionOutcomePage); return }); err != nil {
@@ -525,7 +527,7 @@ func (f *retentionFacts) visibleOutcomes(id string) ([]retention.HoldOutcome, er
 				out = append(out, o)
 			}
 		}
-		if len(out) > retentionShown || len(page) < retentionOutcomePage {
+		if len(out) > shown || len(page) < retentionOutcomePage {
 			return out, nil
 		}
 		after = page[len(page)-1].Artifact
@@ -538,7 +540,7 @@ func (f *retentionFacts) holdRow(h *retentionHold) (retentionHoldRow, error) {
 	if err != nil {
 		return retentionHoldRow{}, err
 	}
-	outcomes, err := f.visibleOutcomes(h.id)
+	outcomes, err := f.visibleOutcomes(h.id, "", retentionShown)
 	if err != nil {
 		return retentionHoldRow{}, err
 	}
@@ -566,6 +568,9 @@ func (f *retentionFacts) holdRow(h *retentionHold) (retentionHoldRow, error) {
 	}
 	for _, o := range outcomes[:min(len(outcomes), retentionShown)] {
 		row.Outcomes = append(row.Outcomes, retentionOutcomeRow{Artifact: o.Artifact, Outcome: o.Outcome, Stores: o.Stores})
+	}
+	if row.OutcomesMore {
+		row.OutcomesNext = row.Outcomes[len(row.Outcomes)-1].Artifact
 	}
 	if e := s.ret.pendingRelease(h.id); e != nil {
 		number := e.view.Number
@@ -678,7 +683,9 @@ func (f *retentionFacts) runRow(r workspaceRun) (retentionRunRow, error) {
 			list.Rows = append(list.Rows, retentionRunArtifactRow{ID: id, Outcome: v.Outcomes[id]})
 		}
 	}
-	list.More = list.Total > len(list.Rows)
+	if list.More = list.Total > len(list.Rows); list.More {
+		list.Next = strconv.Itoa(len(list.Rows))
+	}
 	return row, nil
 }
 

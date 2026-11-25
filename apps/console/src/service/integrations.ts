@@ -1,3 +1,4 @@
+import { keptFactsOf, type KeptFacts } from "./kept";
 export const rightIds = [
   "administer_api_clients",
   "administer_modules",
@@ -116,6 +117,7 @@ export type ModulesSection = {
   plugins: PluginVersion[] | null;
   installations: PluginInstall[] | null;
   proposals: PluginProposal[] | null;
+  proposal_history: KeptFacts | null;
   actions: { propose: Avail };
 };
 
@@ -397,6 +399,7 @@ export function modulesOf(v: unknown): ModulesSection {
     plugins: rows(r.plugins, versionOf),
     installations: rows(r.installations, installOf),
     proposals: rows(r.proposals, pluginProposalOf),
+    proposal_history: isRow(r.proposal_history) ? keptFactsOf(r.proposal_history) : null,
     actions: actionsOf(r.actions, ["propose"] as const),
   };
 }

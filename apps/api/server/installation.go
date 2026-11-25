@@ -210,6 +210,7 @@ type installationPage struct {
 	Upgrade      installPreviewRow       `json:"upgrade"`
 	Rollback     installPreviewRow       `json:"rollback"`
 	Proposals    []installProposalRow    `json:"proposals"`
+	History      keptFacts               `json:"proposal_history"`
 	Destinations []installDestinationRow `json:"destinations"`
 	Reports      []installReportRow      `json:"reports"`
 	Runs         string                  `json:"runs"`
@@ -417,9 +418,11 @@ func (s *Server) installationPage(reader string, now time.Time) (installationPag
 	}
 	page.Observation = installObservationRow{State: observationState(probes), ObservedAt: stamp(s.install.observed),
 		ExpiresAt: stamp(s.install.observed.Add(InstallerLimits().ObservationLife))}
-	for index := len(s.install.entries) - 1; index >= 0 && len(page.Proposals) < installShown; index-- {
-		page.Proposals = append(page.Proposals, s.installProposalRow(s.install.entries[index], reader))
+	listed, closed, next := listKept(s.install.entries, installPending, installNumber, installShown)
+	for _, e := range listed {
+		page.Proposals = append(page.Proposals, s.installProposalRow(e, reader))
 	}
+	page.History = keptFacts{Total: closed, Next: next, Kept: installKept, Dropped: s.install.dropped}
 	for _, d := range s.install.destinations {
 		page.Destinations = append(page.Destinations, installDestinationRow{ID: d.ID, Host: d.Host, Port: d.Port, Ranges: append([]string{}, d.Ranges...)})
 	}
@@ -564,4 +567,54 @@ func (s *Server) installationDefinitions() []commands.Definition {
 		define(installWithdraw),
 		define(installPlan, commands.Field{Name: "version", Type: commands.Text, Required: true}, commands.Field{Name: "hash", Type: commands.Text, Required: true}),
 	}
+}
+
+func installPending(e *installEntry) bool { return e.view.State == installer.ProposalPending }
+
+func installNumber(e *installEntry) uint64 { return e.view.Number }
+
+type installProposalsPage struct {
+	Revision   string               `json:"revision"`
+	ServerTime string               `json:"server_time"`
+	Order      string               `json:"order"`
+	Q          string               `json:"q"`
+	Proposals  []installProposalRow `json:"proposals"`
+	Next       string               `json:"next"`
+	Matching   int                  `json:"matching"`
+	History    keptFacts            `json:"proposal_history"`
+}
+
+func (s *Server) listInstallProposals(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	_, answer, ok := s.admitted(w, r)
+	if !ok {
+		return
+	}
+	q, valid := parseKeptQuery(r.URL.Query())
+	if !valid {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	page := installProposalsPage{Revision: s.Revision(), ServerTime: stamp(s.clock()), Order: closedPlansOrder, Q: q.term, Proposals: []installProposalRow{}}
+	if s.install.site == "" || answer.Workspace() != s.bootWorkspace {
+		writeJSON(w, http.StatusOK, request, page)
+		return
+	}
+	_, closed, _ := listKept(s.install.entries, installPending, installNumber, 0)
+	page.History = keptFacts{Total: closed, Kept: installKept, Dropped: s.install.dropped}
+	walk := keptWalk{q: q}
+	for index := len(s.install.entries) - 1; index >= 0; index-- {
+		e := s.install.entries[index]
+		v := e.view
+		if installPending(e) {
+			continue
+		}
+		if walk.take(v.Number, q.matches(strconv.FormatUint(v.Number, 10), proposalTarget+strconv.FormatUint(v.Number, 10), v.Change.Kind, v.State, v.Proposer, s.loginOf(v.Proposer), e.rationale)) {
+			page.Proposals = append(page.Proposals, s.installProposalRow(e, answer.User()))
+		}
+	}
+	page.Next, page.Matching = walk.Next, walk.Matching
+	writeJSON(w, http.StatusOK, request, page)
 }

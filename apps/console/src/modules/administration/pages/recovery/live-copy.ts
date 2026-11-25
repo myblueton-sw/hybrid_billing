@@ -237,7 +237,6 @@ export const k = {
   goToProposal: (l: Locale, n: string) => t(l, `Go to proposal #${n}`, `제안 #${n}(으)로 이동`, `الانتقال إلى المقترح #${n}`),
 
   proposalsTitle: (l: Locale) => t(l, "Recovery proposals", "복구 제안", "مقترحات الاسترداد"),
-  newest: (l: Locale) => t(l, "Showing the newest 50.", "최근 50건을 표시합니다.", "تُعرض أحدث 50."),
   noProposals: (l: Locale) => t(l, "No recovery proposals.", "복구 제안이 없습니다.", "لا توجد مقترحات استرداد."),
   waitingGroup: (l: Locale, n: number) => t(l, `Waiting for approval (${n})`, `승인 대기(${n})`, `بانتظار الاعتماد (${n})`),
   closedGroup: (l: Locale, n: number) => t(l, `Closed (${n})`, `종료됨(${n})`, `مغلقة (${n})`),

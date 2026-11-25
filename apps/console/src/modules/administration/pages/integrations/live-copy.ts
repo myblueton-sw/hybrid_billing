@@ -261,7 +261,6 @@ export const k = {
   proposalsTitle: (l: Locale) => t(l, "Plugin proposals", "플러그인 제안", "مقترحات الإضافات"),
   waitingGroup: (l: Locale, n: number) => t(l, `Waiting for approval (${n})`, `승인 대기(${n})`, `بانتظار الاعتماد (${n})`),
   closedGroup: (l: Locale, n: number) => t(l, `Closed (${n})`, `종료(${n})`, `مغلقة (${n})`),
-  newest: (l: Locale, n: number) => t(l, `Showing the newest ${n}.`, `최근 ${n}건만 표시합니다.`, `تُعرض أحدث ${n} فقط.`),
   noProposals: (l: Locale) => t(l, "No plugin proposals.", "플러그인 제안이 없습니다.", "لا توجد مقترحات إضافات."),
   proposalN: (l: Locale, n: string) => t(l, `Proposal ${n}`, `제안 ${n}`, `المقترح ${n}`),
   proposalKind: (l: Locale, s: string) => words(l, proposalKindWords, s),

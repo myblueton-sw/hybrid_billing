@@ -1,3 +1,4 @@
+import { keptFactsOf, type KeptFacts } from "./kept";
 export type InstallItem = { kind: string; target: string; action: string; conflict: string };
 export type InstallEffect = { volume: string; effect: string };
 export type InstallPreview = {
@@ -86,6 +87,7 @@ export type InstallationPage = {
   upgrade: InstallPreview;
   rollback: InstallPreview;
   proposals: InstallProposal[];
+  proposal_history: KeptFacts;
   destinations: InstallDestination[];
   reports: InstallReport[];
   runs: string;
@@ -221,6 +223,7 @@ export function installationOf(body: Raw): InstallationPage {
     upgrade: previewOf(body.upgrade),
     rollback: previewOf(body.rollback),
     proposals: rows(body.proposals, proposalOf),
+    proposal_history: keptFactsOf(body.proposal_history),
     destinations: rows(body.destinations, (d) => ({ id: str(d.id), host: str(d.host), port: num(d.port), ranges: strs(d.ranges) })),
     reports: rows(body.reports, (d) => ({
       destination: str(d.destination),

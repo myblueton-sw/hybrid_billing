@@ -6,9 +6,10 @@ import { organizationsPageOf, organizationTreeOf } from "./organization-read";
 import { ReadParseError, text as readText } from "./strict-read";
 import { accessHistoryOf, HistoryParseError, type AccessHistoryPage, type AccessHistoryQuery } from "./access-history";
 import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsPage } from "./contracts";
-import { installationOf, type InstallationPage } from "./installation";
-import { integrationsOf, type IntegrationsPage } from "./integrations";
-import { recoveryOf, type RecoveryPage } from "./recovery";
+import { installationOf, proposalOf as installProposalOf, type InstallationPage, type InstallProposal } from "./installation";
+import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
+import { integrationsOf, pluginProposalOf, type IntegrationsPage, type PluginProposal } from "./integrations";
+import { recoveryOf, recoveryProposalOf, type RecoveryPage, type RecoveryProposal } from "./recovery";
 import { evidenceOf, type EvidencePage } from "./release-evidence";
 import { retentionOf, type RetentionPage } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
@@ -391,7 +392,7 @@ export type PlansPage = {
   you: string;
   closed: ClosedFacts;
 };
-export type ClosedFacts = { total: number; next: string; kept: number; dropped: number };
+export type ClosedFacts = KeptFacts;
 export type ClosedPlansQuery = { after?: string; limit?: number; q?: string };
 export type ClosedPlansPage = { plans: PlanRow[]; next: string; matching: number; closed: ClosedFacts; q: string };
 
@@ -919,11 +920,7 @@ export async function reauthenticate(csrf: string, password: string, f: Fetch = 
   throw failureOf(r.status, body);
 }
 
-function closedFactsOf(v: unknown): ClosedFacts {
-  const c = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
-  const n = (x: unknown) => (typeof x === "number" && Number.isInteger(x) && x >= 0 ? x : 0);
-  return { total: n(c.total), next: typeof c.next === "string" ? c.next : "", kept: n(c.kept), dropped: n(c.dropped) };
-}
+const closedFactsOf = keptFactsOf;
 
 export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), stepUp?: StepUp) {
   let authenticationLost = false;
@@ -1195,6 +1192,21 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async installation(): Promise<InstallationPage> {
       return installationOf(await send("/installation", { method: "GET" }, attempt().request));
+    },
+    async installationProposals(after: string): Promise<KeptPage<InstallProposal>> {
+      const got = keptPageOf(await send("/installation/proposals?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), installProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async integrationProposals(after: string): Promise<KeptPage<PluginProposal>> {
+      const got = keptPageOf(await send("/integrations/proposals?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), pluginProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async recoveryProposals(after: string): Promise<KeptPage<RecoveryProposal>> {
+      const got = keptPageOf(await send("/recovery/proposals?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), recoveryProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
     },
     async integrations(): Promise<IntegrationsPage> {
       return integrationsOf(await send("/integrations", { method: "GET" }, attempt().request));

@@ -118,7 +118,6 @@ export const k = {
   noProposals: (l: Locale) => t(l, "No installer proposals", "설치 관리자 제안이 없습니다", "لا توجد مقترحات للمثبّت"),
   waitingGroup: (l: Locale, n: number) => t(l, `Waiting for approval (${n})`, `승인 대기(${n})`, `بانتظار الاعتماد (${n})`),
   closedGroup: (l: Locale, n: number) => t(l, `Closed (${n})`, `종료(${n})`, `مغلقة (${n})`),
-  newest: (l: Locale, n: number) => t(l, `Showing the newest ${n}.`, `최근 ${n}건만 표시합니다.`, `تُعرض أحدث ${n} فقط.`),
   proposalN: (l: Locale, n: string) => t(l, `Proposal ${n}`, `제안 ${n}`, `المقترح ${n}`),
   kind: (l: Locale, s: string) => words(l, proposalKindWords, s),
   state: (l: Locale, s: string) => words(l, proposalStateWords, s),

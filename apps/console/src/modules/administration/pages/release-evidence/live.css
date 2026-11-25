@@ -1143,3 +1143,40 @@
 .p05-live .p05-hw-foot:not(:empty) {
   margin-block-start: 32px;
 }
+.p05-form .p05-replacement-status {
+  margin-block: 8px 0;
+}
+.p05-form .p05-replacement-search-label {
+  display: block;
+  margin-block: 12px 4px;
+  font-size: 14px;
+  font-weight: 400;
+}
+.p05-form .p05-replacement-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-inline-size: 560px;
+}
+.p05-form .p05-replacement-search input {
+  flex: 1 1 24ch;
+  min-inline-size: 0;
+  min-block-size: 44px;
+}
+.p05-form .p05-replacement-search input::-webkit-search-cancel-button {
+  appearance: none;
+}
+.p05-form .p05-replacement-search-button {
+  min-block-size: 44px;
+}
+.p05-form .p05-replacement-failed {
+  margin-block-start: 8px;
+}
+.p05-form .p05-replacement-failed p {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.p05-replacement-detail {
+  margin: 4px 0 0;
+}

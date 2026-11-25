@@ -473,6 +473,18 @@ func retireCheck(k, replacement releasetrace.Key) releasetrace.Change {
 }
 
 func (f *evidenceFacts) replacements(index int) (evidenceList[evidenceTarget], error) {
+	numbers, err := f.replacementNumbers(index)
+	if err != nil {
+		return evidenceList[evidenceTarget]{}, err
+	}
+	return listOf(len(numbers), evidenceReplacements, func(at int) (evidenceTarget, error) { return f.replacementAt(numbers[at]), nil })
+}
+
+func (f *evidenceFacts) replacementAt(number int) evidenceTarget {
+	return evidenceTarget{Target: requirementTarget(number), Label: label(f.s.ev.requirements[number-1])}
+}
+
+func (f *evidenceFacts) replacementNumbers(index int) ([]int, error) {
 	stored := f.s.ev.requirements
 	if f.replacing == nil {
 		f.replacing = f.s.ev.pendingReplacements()
@@ -486,7 +498,7 @@ func (f *evidenceFacts) replacements(index int) (evidenceList[evidenceTarget], e
 	var accepted []releasetrace.Key
 	err := f.s.traceCall("replacements", func() (err error) { accepted, err = f.s.trace.Replacements(stored[index]); return })
 	if err != nil && !errors.Is(err, releasetrace.ErrNotFound) {
-		return evidenceList[evidenceTarget]{}, err
+		return nil, err
 	}
 	numbers := []int{}
 	for _, other := range accepted {
@@ -495,9 +507,7 @@ func (f *evidenceFacts) replacements(index int) (evidenceList[evidenceTarget], e
 		}
 	}
 	sort.Ints(numbers)
-	return listOf(len(numbers), evidenceReplacements, func(at int) (evidenceTarget, error) {
-		return evidenceTarget{Target: requirementTarget(numbers[at]), Label: label(stored[numbers[at]-1])}, nil
-	})
+	return numbers, nil
 }
 
 func (f *evidenceFacts) retireBlocked(row *evidenceRequirementRow, q releasetrace.RequirementView, k releasetrace.Key) (string, error) {

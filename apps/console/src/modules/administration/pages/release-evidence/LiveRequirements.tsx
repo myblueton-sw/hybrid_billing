@@ -9,7 +9,7 @@ import {
 } from "./live-model";
 import { Absent, Code, Commit, DetailShell, Fixed, Known, State, Digest, EvidenceLink, Gap, Label, ListOr, MoreLine, Num, Template, Unexpected, gapOf, href, ltr } from "./live-format";
 import { CommandForm, RowNote, line, useOpen, type Blocker, type Shared } from "./LiveCommand";
-import { retireFields } from "./LiveRetireForm";
+import { retireFields, useReplacementSearch } from "./LiveRetireForm";
 
 const command = "release_evidence.retire_requirement";
 const searchBytes = 64;
@@ -220,6 +220,12 @@ function testsText(l: Locale, r: RequirementRow): string {
   return lines.join("\n");
 }
 
+function replacementDetail(held: RequirementRow | "loading" | "failed" | undefined, candidate: Candidate): Record<string, string> {
+  if (!held) return {};
+  if (typeof held === "string") return { rep_detail: held };
+  return { rep_detail: "known", rep_state: stateAtCandidate(held, candidate) ?? "" };
+}
+
 function RetireFacts({ l, page, ctx, draft }: { l: Locale; page: EvidencePage; ctx: Record<string, string>; draft: Record<string, string> }) {
   const sample = page.requirements.origin === "sample_seed";
   const rep = ctx.replacement ? requirementByTarget(page, ctx.replacement) : undefined;
@@ -241,7 +247,11 @@ function RetireFacts({ l, page, ctx, draft }: { l: Locale; page: EvidencePage; c
         <dd>
           {ctx.replacement ? (
             <>
-              <Label value={ctx.replacement_label || ctx.replacement} /> · {rep ? <StateText l={l} state={stateAtCandidate(rep, page.candidate)} candidate={page.candidate} sample={sample} /> : <Absent>{k.unknown(l)}</Absent>}
+              <Label value={ctx.replacement_label || ctx.replacement} />
+              {rep ? <> · <StateText l={l} state={stateAtCandidate(rep, page.candidate)} candidate={page.candidate} sample={sample} /></>
+                : ctx.rep_detail === "known" ? <> · <StateText l={l} state={ctx.rep_state || null} candidate={page.candidate} sample={sample} /></>
+                  : ctx.rep_detail === "failed" ? <p className="p05-small p05-muted p05-replacement-detail">{f.replacementDetailFailed(l)}</p>
+                    : ctx.rep_detail === "loading" ? null : <> · <Absent>{k.unknown(l)}</Absent></>}
             </>
           ) : k.noReplacement(l)}
         </dd>
@@ -269,6 +279,7 @@ export function blockingUntested(r: RequirementRow | undefined, candidate: Candi
 function RequirementBody({ r, reduced, ...shared }: Shared & { r: RequirementRow; reduced: boolean }) {
   const { l, page, selection, canCommand, mode } = shared;
   const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"retire">(requirementTarget(r));
+  const find = useReplacementSearch(shared.api, requirementTarget(r), page);
   const target = requirementTarget(r);
   const n = target ? target.slice("trace-requirement-".length) : "";
   const pending = target ? pendingNow(command, target) : undefined;
@@ -292,7 +303,7 @@ function RequirementBody({ r, reduced, ...shared }: Shared & { r: RequirementRow
   const candState = stateAtCandidate(r, page.candidate);
   const evidenceId = rowId("evidence-requirement", n);
   const frozen = frozenValues(pending);
-  const fields = retireFields(l, r, frozen?.replacement ?? "");
+  const fields = retireFields(l, r, frozen?.replacement ?? "", find);
   const cols = reduced ? 3 : 5;
   const head = (
     <>
@@ -334,10 +345,10 @@ function RequirementBody({ r, reduced, ...shared }: Shared & { r: RequirementRow
               title={f.confirmRetire(l)}
               context={(d) => {
                 const choice = d.replacement && d.replacement !== "none" ? d.replacement : "";
-                const opt = replacementOptions(r).find((o) => o.target === choice);
+                const opt = replacementOptions(r).find((o) => o.target === choice) ?? (find.seen[choice] ? { target: choice, label: find.seen[choice] } : undefined);
                 return {
                   view: "requirements", label: r.label, common: r.common ? "1" : "0", blocking: r.blocking ? "1" : "0", state: candState ?? "", tests: testsText(l, r),
-                  replacement: choice, replacement_label: opt?.label ?? "", untested: blockingUntested(r, page.candidate) ? "1" : "0",
+                  replacement: choice, replacement_label: opt?.label ?? "", ...replacementDetail(find.detail[choice], page.candidate), untested: blockingUntested(r, page.candidate) ? "1" : "0",
                 };
               }}
               facts={(ctx, d) => <RetireFacts l={l} page={page} ctx={ctx} draft={d} />}

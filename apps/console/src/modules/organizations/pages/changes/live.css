@@ -526,3 +526,22 @@
   display: block;
   font-weight: 600;
 }
+.o02-closed-search .o01-search-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  inline-size: min(100%, 480px);
+}
+.o02-closed-search .o01-search-row input[type="search"] {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  inline-size: auto;
+}
+.o02-closed-search .o01-search-row button {
+  flex: none;
+  inline-size: auto;
+  white-space: nowrap;
+}
+.o02-closed-applied {
+  margin-block: 8px 12px;
+}

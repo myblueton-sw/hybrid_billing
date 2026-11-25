@@ -18,6 +18,8 @@ import {
   draftLoad, groupRefusal, planTitle, type DraftLoad,
 } from "./live-model";
 import { Named, Picker, resultPage, unitChoices, usePresent } from "./choices";
+import { usePages } from "../organizations/use-pages";
+import { MoreBar, SearchForm } from "../organizations/filters";
 import "../../../identity/pages/users/live.css";
 import "./live.css";
 
@@ -407,6 +409,24 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const [notice, setNotice] = useState<Notice>(null);
   const [failure, setFailure] = useState<Failure>(null);
   const [denied, setDenied] = useState(false);
+  const [historyQ, setHistoryQ] = useState("");
+  const [historyMore, setHistoryMore] = useState(false);
+  const [matching, setMatching] = useState<Record<string, number>>({});
+  const [historyReset, setHistoryReset] = useState(false);
+  const lastRevision = useRef("");
+  const historyKey = view !== "result" || !page ? null : historyQ ? `q|${page.revision}|${historyQ}` : historyMore && page.closed.next ? `more|${page.revision}` : null;
+  const history = usePages<PlanRow>(historyKey, async (after) => {
+    const asked = historyKey ?? "";
+    const got = await api.closedPlans({ q: historyQ || undefined, after: after || (historyQ ? undefined : page?.closed.next), limit: 50 });
+    setMatching((was) => ({ ...was, [asked]: got.matching }));
+    return { rows: got.plans, next: got.next, stopped: false };
+  }, (e) => { if (e instanceof AdminError && e.failure === "denied") { setDenied(true); return true; } return false; });
+  const pageRevision = page?.revision ?? "";
+  useEffect(() => {
+    if (lastRevision.current && lastRevision.current !== pageRevision && historyMore) setHistoryReset(true);
+    lastRevision.current = pageRevision;
+    setHistoryMore(false);
+  }, [pageRevision, historyQ]); // eslint-disable-line react-hooks/exhaustive-deps
   const [initial] = useState(() => (listViews.includes(view) ? null : readHandoff(params, todayUTC(new Date()))));
   const [handoff, setHandoff] = useState<Carried | null>(initial && { ...initial, refused: false });
   const [form, setForm] = useState<Form>(initial ? { ...emptyForm, kind: initial.kind, member: initial.member, from: initial.from } : emptyForm);
@@ -554,8 +574,10 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
   const split = wide && view !== "result";
   const parties = choices?.parties ?? [];
   const allMembers = seen;
-  const { open, closed } = partition(page?.plans ?? []);
-  const selected = findPlan(page?.plans ?? [], selectedId);
+  const { open, closed: firstClosed } = partition(page?.plans ?? []);
+  const searching = historyQ !== "";
+  const closed = searching ? history.rows : history.current ? [...firstClosed, ...history.rows.filter((p) => !firstClosed.some((x) => x.id === p.id))] : firstClosed;
+  const selected = findPlan([...(page?.plans ?? []), ...history.rows], selectedId);
 
   const edit = (patch: Partial<Form>) => {
     const step = formStep("edit", touched);
@@ -1009,8 +1031,18 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     const cols = c.resultCols(l);
     main = (
       <section className="live-list" aria-busy={status === "loading" || undefined} aria-labelledby="o02-closed-title">
-        <div className="live-section-head"><h2 id="o02-closed-title">{c.closed(l)}</h2></div>
-        {closed.length === 0 ? <p className="live-empty">{c.noClosed(l)}</p> : (
+        <div className="live-section-head">
+          <h2 id="o02-closed-title">{c.closed(l)}</h2>
+          {page && closed.length > 0 && <p className="live-meta o02-closed-count">{searching ? c.closedMatching(l, closed.length, matching[history.key ?? ""] ?? closed.length) : c.closedShown(l, closed.length, page.closed.total)}</p>}
+        </div>
+        {page && (page.closed.total > 0 || searching) && <div className="o02-closed-search"><SearchForm l={l} id="o02-closed-q" labelText={c.closedSearch(l)} value={historyQ} onSearch={setHistoryQ} /></div>}
+        {searching && (
+          <p className="live-meta o02-closed-applied"><bdi>{c.closedApplied(l, historyQ)}</bdi> <button type="button" className="service-button-link o02-closed-clear" onClick={() => { setHistoryQ(""); setFocusTo("#o02-closed-q"); }}>{c.closedClear(l)}</button></p>
+        )}
+        {historyReset && !searching && <p className="live-note o02-closed-reset" role="status">{c.closedReset(l)}</p>}
+        {searching && history.status === "loading" ? <p role="status" className="live-meta">{c.searching(l)}</p>
+          : searching && history.status === "error" ? <p role="alert">{c.closedFailed(l)} <button type="button" className="service-button-link" onClick={history.retry}>{o.tryAgain(l)}</button></p>
+          : closed.length === 0 ? <p className="live-empty">{searching ? c.closedNoMatch(l) : c.noClosed(l)}</p> : (
           <div className="security-table-scroll live-table o02-results">
             <table>
               <colgroup><col className="o02-c22" /><col className="o02-c22" /><col className="o02-c14" /><col className="o02-c22" /><col className="o02-c20" /></colgroup>
@@ -1033,6 +1065,15 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
               </tbody>
             </table>
           </div>
+        )}
+        {page && !searching && !history.current && page.closed.next && (
+          <div className="o01-more"><button type="button" className="live-secondary o01-more-button o02-closed-more" onClick={() => { setHistoryReset(false); setHistoryMore(true); }}>{o.loadMore(l)}</button></div>
+        )}
+        {history.current && history.status === "loading" && !searching && <p role="status" className="live-meta">{o.loadingMore(l)}</p>}
+        {history.current && history.status === "error" && !searching && <p role="alert">{o.nextFailed(l)} <button type="button" className="service-button-link" onClick={history.retry}>{o.tryAgain(l)}</button></p>}
+        {history.current && history.status !== "loading" && history.status !== "error" && <MoreBar l={l} next={history.next} stopped={false} status={history.status} count="" compact={false} onMore={history.more} />}
+        {page && page.closed.dropped > 0 && closed.length > 0 && (searching ? history.current && !history.next && history.status === "ready" : history.current ? !history.next && history.status === "ready" : !page.closed.next) && (
+          <p className="live-note o02-closed-end">{c.closedEnd(l, page.closed.kept)}</p>
         )}
       </section>
     );

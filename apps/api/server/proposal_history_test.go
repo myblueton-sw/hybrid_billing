@@ -13,6 +13,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/recovery"
 	"github.com/myblueton-sw/hybrid_billing/modules/releasetrace"
 	"github.com/myblueton-sw/hybrid_billing/modules/retention"
+	"github.com/myblueton-sw/hybrid_billing/modules/webhooks"
 )
 
 func (f world) readAs(a actor, path string) reply {
@@ -744,5 +745,56 @@ func TestRetentionHoldsMixTheNewestReleasedOnesWhenFewAreInForce(t *testing.T) {
 	found := f.readAs(root, "/api/v1/retention/holds?q=closed%20case%20007")
 	if got, _ := found.body["holds"].([]any); len(got) != 1 || got[0].(map[string]any)["id"] != "done-007" {
 		t.Errorf("a search by the reason given when placing: %s", found.raw[:min(len(found.raw), 200)])
+	}
+}
+
+func TestSubscriptionEntriesOfPurgedSubscriptionsAreDropped(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	root := f.as(AdminLogin)
+	by := webhooks.Actor{ID: SampleAdmin, Kind: webhooks.KindHuman}
+	seeded := len(f.s.integ.subscriptions)
+	limit := WebhookLimits().Subscriptions
+	held := func() int {
+		n := 0
+		for _, e := range f.s.integ.subscriptions {
+			if _, err := f.s.subscriptionOf(e.id); err == nil {
+				n++
+			}
+		}
+		return n
+	}
+	for i := 0; i < 5*limit; i++ {
+		id := fmt.Sprintf("round-%03d", i)
+		if _, _, err := f.s.subscriptionPropose(webhooks.Subscription{ID: id, Subscriber: sampleSubscriber, Destination: "sample-erp-webhook", Types: []string{typeInvoice}}, by, "round"); err != nil {
+			t.Fatalf("propose %s: %v", id, err)
+		}
+		if _, err := f.s.webhooks.WithdrawSubscription(SampleWorkspace, id, by); err != nil {
+			t.Fatalf("withdraw %s: %v", id, err)
+		}
+		if n := len(f.s.integ.subscriptions); n > 2*limit+1 || n != held() {
+			t.Fatalf("after %d rounds the server keeps %d entries of which the module holds %d", i+1, n, held())
+		}
+	}
+	if n := len(f.s.integ.subscriptions); n >= seeded+5*limit || n > 2*limit+1 || f.s.integ.subscription(sampleSubscription) == nil || f.s.integ.subscription("round-000") != nil {
+		t.Errorf("the entries are bounded by what the module holds: %d kept, the seeded one kept %v, the first round kept %v", n, f.s.integ.subscription(sampleSubscription) != nil,
+			f.s.integ.subscription("round-000") != nil)
+	}
+	gone := subscriptionTarget + "round-000"
+	if e := f.s.subscriptionEntryOf(gone); e == nil || e.proposer != SampleAdmin || len(e.history) != 0 || len(f.s.integ.purged) == 0 || len(f.s.integ.purged) != 5*limit+seeded-len(f.s.integ.subscriptions) {
+		t.Fatalf("a purged subscription keeps its identifier and proposer for commands: %v, %d noted", e, len(f.s.integ.purged))
+	}
+	f.unchanged(t, "revoke a purged subscription", f.run(root, "integrations.subscription_revoke", gone, nil), "invalid_stage")
+	f.unchanged(t, "withdraw a purged subscription", f.run(root, "integrations.subscription_withdraw", gone, nil), "invalid_stage")
+	f.code(t, "a subscription that never existed", f.run(root, "integrations.subscription_revoke", subscriptionTarget+"never-proposed", nil), 403, "permission_denied")
+	got := f.integrations(root)
+	rows, _ := got.body["channels"].(map[string]any)["subscriptions"].([]any)
+	if got.status != 200 || len(rows) != held() {
+		t.Errorf("the read lists %d subscriptions, the module holds %d", len(rows), held())
+	}
+	f.s.fault = func(at string) bool { return at == "webhooks-subscription" }
+	before := len(f.s.integ.subscriptions)
+	f.s.dropPurgedSubscriptions(nil)
+	if len(f.s.integ.subscriptions) != before {
+		t.Errorf("a failing module read dropped entries: %d of %d kept", len(f.s.integ.subscriptions), before)
 	}
 }

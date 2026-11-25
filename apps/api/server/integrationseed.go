@@ -84,6 +84,7 @@ type integrationStore struct {
 	entries       []*pluginEntry
 	dropped       int
 	subscriptions []*subscriptionEntry
+	purged        []*subscriptionEntry
 	redeliver     map[string]letterRequest
 	dismiss       map[string]letterRequest
 	types         []typeRecord
@@ -266,7 +267,28 @@ func (s *Server) subscriptionPropose(sub webhooks.Subscription, by webhooks.Acto
 		e = &subscriptionEntry{id: sub.ID, created: s.clock(), proposer: by.ID, rationale: rationale, proposed: true}
 		s.integ.subscriptions = append(s.integ.subscriptions, e)
 	}
+	s.dropPurgedSubscriptions(e)
 	return e, view, nil
+}
+
+func (s *Server) dropPurgedSubscriptions(keep *subscriptionEntry) {
+	held := s.integ.subscriptions[:0]
+	for _, e := range s.integ.subscriptions {
+		if e != keep {
+			if _, err := s.subscriptionOf(e.id); errors.Is(err, webhooks.ErrNotFound) {
+				s.integ.purged = append(s.integ.purged, &subscriptionEntry{id: e.id, proposer: e.proposer})
+				continue
+			}
+		}
+		held = append(held, e)
+	}
+	if extra := len(s.integ.purged) - requestTombstone; extra > 0 {
+		s.integ.purged = append([]*subscriptionEntry{}, s.integ.purged[extra:]...)
+	}
+	for index := len(held); index < len(s.integ.subscriptions); index++ {
+		s.integ.subscriptions[index] = nil
+	}
+	s.integ.subscriptions = held
 }
 
 func (s *Server) subscriptionStep(e *subscriptionEntry, action string, by webhooks.Actor, rationale string,

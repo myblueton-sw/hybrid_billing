@@ -90,7 +90,15 @@ func (s *Server) subscriptionEntryOf(target string) *subscriptionEntry {
 	if !found {
 		return nil
 	}
-	return s.integ.subscription(id)
+	if e := s.integ.subscription(id); e != nil {
+		return e
+	}
+	for index := len(s.integ.purged) - 1; index >= 0; index-- {
+		if s.integ.purged[index].id == id {
+			return s.integ.purged[index]
+		}
+	}
+	return nil
 }
 
 func letterOf(target string) string {

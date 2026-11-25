@@ -1180,3 +1180,8 @@
 .p05-live .p05-replacement-detail {
   margin-block: 2px 0;
 }
+.p05-live .p05-form-title,
+.p05-live .p05-confirm .p05-confirm-title {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}

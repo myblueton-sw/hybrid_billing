@@ -873,3 +873,8 @@
 .p04-form .p04-owner-search input::-webkit-search-cancel-button {
   appearance: none;
 }
+.p04-live .p04-form-title,
+.p04-live .p04-confirm .p04-confirm-title {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}

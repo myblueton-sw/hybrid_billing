@@ -576,3 +576,8 @@
 .p03-live .p03-rows-foot {
   margin-block: 16px 28px;
 }
+.p03-live .p03-form-title,
+.p03-live .p03-confirm .p03-confirm-title {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}

@@ -1,5 +1,7 @@
 import type { Locale } from "../../../../shared/types";
 import type { ResumeRow } from "../../../../service/recovery";
+import { eventOf } from "../../../../service/recovery";
+import { RowsFoot, useRows } from "./LiveRows";
 import { k } from "./live-copy";
 import {
   alreadyProposed, basisContext, basisFrom, basisOf, blockerPolicy, duplicateIn, frozenTargetOk, frozenValues, generationNumber, installTarget, isolationOf, lostList, more,
@@ -73,12 +75,14 @@ function Propose({ r, ...shared }: Shared & { r: ResumeRow }) {
   );
 }
 
-function Events({ l, r }: { l: Locale; r: ResumeRow }) {
-  const list = r.pending_events;
+function Events({ l, r, shared }: { l: Locale; r: ResumeRow; shared: Shared }) {
+  const paged = r.pending_next !== null;
+  const further = useRows(shared, r.installation, "pending", r.pending_events, r.pending_next, eventOf, (x) => (x.sequence === null ? "" : String(x.sequence)));
+  const list = paged ? further.rows : r.pending_events;
   return (
     <section className="p03-events" aria-label={k.pendingEvents(l)}>
       <h4>{k.pendingEvents(l)}</h4>
-      {list !== null && more(list.length, r.pending_total) && <p className="p03-small live-quiet">{k.showingOf(l, r.pending_total ?? 0)}</p>}
+      {!paged && list !== null && more(list.length, r.pending_total) && <p className="p03-small live-quiet">{k.showingOf(l, r.pending_total ?? 0)}</p>}
       {list !== null && list.length === 0 && r.pending_total !== 0 ? (
         <p className="live-empty">{k.unknown(l)}</p>
       ) : (
@@ -106,6 +110,7 @@ function Events({ l, r }: { l: Locale; r: ResumeRow }) {
         </ListOr>
       )}
       <p className="p03-small live-quiet">{k.noEventKeys(l)}</p>
+      {paged && <RowsFoot l={l} kind="events" rows={further} total={r.pending_total} moves more={k.rowsMoreEvents(l)} />}
     </section>
   );
 }
@@ -138,7 +143,7 @@ export function ResumeView(shared: Shared) {
                   </dl>
                   {r.mode === "none" && <p className="p03-mode-note">{k.modeNone(l)}</p>}
                   {r.mode === "lock_release" && <p className="p03-mode-note">{k.modeRelease(l)} <strong>{k.modeReleaseStrong(l)}</strong></p>}
-                  {r.mode === "recovery_resume" && <Events l={l} r={r} />}
+                  {r.mode === "recovery_resume" && <Events l={l} r={r} shared={shared} />}
                   <dl className="p03-digest">
                     <div><dt>{k.digest(l)}</dt><dd><Known l={l} value={r.lost_digest} wrap /></dd></div>
                   </dl>

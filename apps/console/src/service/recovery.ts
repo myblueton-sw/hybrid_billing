@@ -20,6 +20,7 @@ export type SetRow = {
   recovery: OpenRecovery;
   history: RecoveryHistory[] | null;
   history_total: number | null;
+  history_next: string | null;
   begin: string;
   abandon: string;
 };
@@ -39,6 +40,7 @@ export type IsolationRow = {
   open_calls_source: string;
   open_calls: OpenCall[] | null;
   open_calls_total: number | null;
+  open_calls_next: string | null;
   other_scope_present: boolean | null;
   permits: string;
   locks: LockEntry[] | null;
@@ -51,6 +53,7 @@ export type ReconciliationRow = {
   externals: ExternalSystem[] | null;
   unknown_targets: UnknownTarget[] | null;
   unknown_total: number | null;
+  unknown_next: string | null;
   other_scope_present: boolean | null;
   skipped: number | null;
   reconciler: string;
@@ -62,6 +65,7 @@ export type ResumeRow = {
   phase: string;
   pending_events: DecisionEvent[] | null;
   pending_total: number | null;
+  pending_next: string | null;
   lost: number[] | null;
   lost_digest: string;
   can_propose_unlock: boolean;
@@ -162,17 +166,41 @@ export function setRowOf(r: Raw): SetRow {
     state: str(r.state),
     generation: count(r.generation),
     recovery: openRecoveryOf(r.recovery),
-    history: rows(r.history, (h) => ({
-      recovery: str(h.recovery),
-      manifest_digest: str(h.manifest_digest),
-      generation: count(h.generation),
-      outcome: str(h.outcome),
-      lost_count: count(h.lost_count),
-    })),
+    history: rows(r.history, historyRowOf),
     history_total: count(r.history_total),
+    history_next: cursor(r.history_next),
     begin: str(r.begin),
     abandon: str(r.abandon),
   };
+}
+
+const cursor = (v: unknown): string | null => (typeof v === "string" ? v : null);
+
+export function historyRowOf(h: Raw): RecoveryHistory {
+  return { recovery: str(h.recovery), manifest_digest: str(h.manifest_digest), generation: count(h.generation), outcome: str(h.outcome), lost_count: count(h.lost_count) };
+}
+
+export function callOf(c: Raw): OpenCall {
+  return { id: str(c.id), writer: str(c.writer), deadline: str(c.deadline), key: str(c.key), series: str(c.series), number: signed(c.number) };
+}
+
+export function targetOf(t: Raw): UnknownTarget {
+  return { key: str(t.key), series: str(t.series), number: signed(t.number), fenced: flag(t.fenced), high_water: signed(t.high_water) };
+}
+
+export function targetId(t: UnknownTarget): string {
+  return t.key === "" ? "" : t.key + "\u0000" + t.series + "\u0000" + String(t.number);
+}
+
+export function eventOf(e: Raw): DecisionEvent {
+  return { sequence: count(e.sequence), kind: str(e.kind), domain: str(e.domain), at: str(e.at) };
+}
+
+export type RecoveryList = "history" | "open_calls" | "unknown" | "pending";
+
+export function recoveryRowsOf<T>(body: Raw, of: (r: Raw) => T): { rows: T[]; next: string } | null {
+  if (!Array.isArray(body.rows) || typeof body.next !== "string") return null;
+  return { rows: body.rows.filter(isRow).map(of), next: body.next };
 }
 
 export function isolationRowOf(r: Raw): IsolationRow {
@@ -187,8 +215,9 @@ export function isolationRowOf(r: Raw): IsolationRow {
     writers: strs(r.writers),
     verifier: str(r.verifier),
     open_calls_source: str(r.open_calls_source),
-    open_calls: rows(r.open_calls, (c) => ({ id: str(c.id), writer: str(c.writer), deadline: str(c.deadline), key: str(c.key), series: str(c.series), number: signed(c.number) })),
+    open_calls: rows(r.open_calls, callOf),
     open_calls_total: count(r.open_calls_total),
+    open_calls_next: cursor(r.open_calls_next),
     other_scope_present: flag(r.other_scope_present),
     permits: str(r.permits),
     locks: rows(r.locks, lockOf),
@@ -200,8 +229,9 @@ export function reconciliationRowOf(r: Raw): ReconciliationRow {
   return {
     installation: str(r.installation),
     externals: rows(r.externals, (x) => ({ id: str(x.id), kind: str(x.kind), status: str(x.status) })),
-    unknown_targets: rows(r.unknown_targets, (t) => ({ key: str(t.key), series: str(t.series), number: signed(t.number), fenced: flag(t.fenced), high_water: signed(t.high_water) })),
+    unknown_targets: rows(r.unknown_targets, targetOf),
     unknown_total: count(r.unknown_total),
+    unknown_next: cursor(r.unknown_next),
     other_scope_present: flag(r.other_scope_present),
     skipped: count(r.skipped),
     reconciler: str(r.reconciler),
@@ -214,8 +244,9 @@ export function resumeRowOf(r: Raw): ResumeRow {
     installation: str(r.installation),
     mode: str(r.mode),
     phase: str(r.phase),
-    pending_events: rows(r.pending_events, (e) => ({ sequence: count(e.sequence), kind: str(e.kind), domain: str(e.domain), at: str(e.at) })),
+    pending_events: rows(r.pending_events, eventOf),
     pending_total: count(r.pending_total),
+    pending_next: cursor(r.pending_next),
     lost: counts(r.lost),
     lost_digest: str(r.lost_digest),
     can_propose_unlock: unlock.allowed,

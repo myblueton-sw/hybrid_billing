@@ -9,7 +9,7 @@ import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsP
 import { installationOf, proposalOf as installProposalOf, type InstallationPage, type InstallProposal } from "./installation";
 import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
 import { historyPageOf, integrationsOf, pluginProposalOf, type HistoryEntry, type IntegrationsPage, type PluginProposal } from "./integrations";
-import { locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
+import { recoveryRowsOf, type RecoveryList, locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
 import { buildsPageOf, evidenceOf, hardwareAnswerOf, hardwarePath, pathsAnswerOf, pathsPath, profilesAnswerOf, profilesPath, proposalOf as evidenceProposalOf, resultsPageOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type BuildRow, type HardwareRow, type PathRow, type ProfileRow, type Proposal as EvidenceProposal, type ResultRow, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
 import { holdsPageOf, proposalOf as retentionProposalOf, artifactsPageOf, artifactsPath, outcomesPageOf, referencesPageOf, retentionOf, runItemsPageOf, runsPageOf, tombstonesPageOf, type ArtifactEntry, type HoldOutcome, type HoldRow, type Reference, type RunItem, type Proposal as RetentionProposal, type RetentionPage, type RunRow, type Tombstone } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
@@ -1245,6 +1245,11 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async retentionProposals(kind: string, after: string): Promise<KeptPage<RetentionProposal>> {
       const got = keptPageOf(await send("/retention/proposals?kind=" + encodeURIComponent(kind) + "&limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), retentionProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async recoveryRows<T>(installation: string, list: RecoveryList, after: string, of: (r: Record<string, unknown>) => T): Promise<{ rows: T[]; next: string }> {
+      const got = recoveryRowsOf(await send("/recovery/rows?" + new URLSearchParams({ installation, list, limit: "50", after }).toString(), { method: "GET" }, attempt().request), of);
       if (!got) throw new AdminError("invalid");
       return got;
     },

@@ -266,3 +266,31 @@ test("the lock log's count, cursor and further page are read strictly", async ()
   assert.equal(calls[0], "/api/v1/recovery/locks?installation=sample%20standby&limit=50&after=71");
   await assert.rejects(api.recoveryLocks("i", "2"), (e: AdminError) => e.failure === "invalid");
 });
+
+test("the recovery lists' cursors and the rows read are read strictly", async () => {
+  const { callOf, eventOf, historyRowOf, recoveryOf, recoveryRowsOf, targetOf } = await import("./recovery");
+  const { AdminError, adminClient } = await import("./admin");
+  for (const bad of [{}, { rows: [] }, { rows: "x", next: "" }, { rows: [], next: 4 }]) assert.equal(recoveryRowsOf(bad, callOf), null, JSON.stringify(bad));
+  assert.deepEqual(recoveryRowsOf({ rows: [{ id: "c-1", writer: "w", number: 3 }, null, "x"], next: "100", total: 120 }, callOf), { rows: [{ id: "c-1", writer: "w", deadline: "", key: "", series: "", number: 3 }], next: "100" });
+  assert.equal(recoveryRowsOf({ rows: [{ sequence: 7, kind: "k" }], next: "" }, eventOf)?.rows[0].sequence, 7);
+  assert.equal(recoveryRowsOf({ rows: [{ key: "a", fenced: true, high_water: 2 }], next: "" }, targetOf)?.rows[0].high_water, 2);
+  assert.equal(recoveryRowsOf({ rows: [{ recovery: "r-1", lost_count: 0 }], next: "71" }, historyRowOf)?.rows[0].recovery, "r-1");
+  const got = recoveryOf({ state: "configured", sets: { state: "configured", rows: [{ installation: "i", history: [], history_total: 0, history_next: "" }] },
+    isolation: { state: "configured", rows: [{ installation: "i", open_calls: [], open_calls_total: 60, open_calls_next: "50" }] },
+    reconciliation: { rows: [{ installation: "i", unknown_targets: [], unknown_total: 0 }] }, resume: { state: "configured", rows: [{ installation: "i", pending_events: [], pending_total: 70, pending_next: "50" }] } });
+  assert.deepEqual([got.sets.rows?.[0].history_next, got.isolation.rows?.[0].open_calls_next, got.reconciliation.rows?.[0].unknown_next, got.resume.rows?.[0].pending_next], ["", "50", null, "50"]);
+  const { appended } = await import("../shared/more-rows");
+  const { targetId } = await import("./recovery");
+  const twice = [targetOf({ key: "k", series: "s", number: 1 }), targetOf({ key: "k", series: "s", number: 2 })];
+  assert.deepEqual(appended([twice[0]], [twice[1], twice[0], targetOf({ key: "", series: "s", number: 9 })], targetId).map((x) => x.number), [1, 2]);
+  assert.notEqual(targetId(twice[0]), targetId(twice[1]));
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { rows: [{ id: "c-51" }], next: "" } : { rows: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.recoveryRows("inst a", "open_calls", "50", callOf)).rows[0].id, "c-51");
+  assert.equal(calls[0], "/api/v1/recovery/rows?installation=inst+a&list=open_calls&limit=50&after=50");
+  await assert.rejects(api.recoveryRows("i", "history", "2", historyRowOf), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});

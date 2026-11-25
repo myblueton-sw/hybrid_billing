@@ -179,6 +179,7 @@ type retentionRunArtifacts struct {
 }
 
 type retentionRunRow struct {
+	Number       int                   `json:"number"`
 	Run          retentionRunRef       `json:"run"`
 	Class        string                `json:"class"`
 	Revision     uint64                `json:"revision"`
@@ -204,6 +205,7 @@ type retentionDeletionSection struct {
 	Total        int               `json:"total"`
 	More         bool              `json:"more"`
 	Rows         []retentionRunRow `json:"rows"`
+	Finished     logFacts          `json:"finished"`
 	Worker       string            `json:"worker"`
 	Retry        string            `json:"retry"`
 	BackupExpiry string            `json:"backup_expiry"`
@@ -644,17 +646,14 @@ func stopBlocked(state string) string {
 	return runFinished
 }
 
-func (f *retentionFacts) runRow(r *retentionRun) (retentionRunRow, error) {
+func (f *retentionFacts) runRow(r workspaceRun) (retentionRunRow, error) {
 	s := f.s
-	v, err := s.retentionRunView(r.id)
-	if err != nil {
-		return retentionRunRow{}, err
-	}
+	v := r.view
 	stores, err := f.storeRows(v)
 	if err != nil {
 		return retentionRunRow{}, err
 	}
-	row := retentionRunRow{Run: retentionRunRef{Target: runTarget(r.id), Label: r.id}, Class: v.Plan.Class, Revision: v.Revision, State: v.State, Decision: notConnected,
+	row := retentionRunRow{Number: r.number, Run: retentionRunRef{Target: runTarget(r.id), Label: r.id}, Class: v.Plan.Class, Revision: v.Revision, State: v.State, Decision: notConnected,
 		NextChunk: v.Next, Chunks: v.Chunks, ChunkSize: v.Plan.Chunk, LeaseSeconds: int64(v.Plan.Lease / time.Second), Reason: v.Plan.Reason, Damaged: v.Damaged,
 		Proposer: s.personOf(v.Proposer), Approver: s.personOf(v.Approver), Stopper: s.personOf(v.Stopper), Counts: zeroCounts(retentionOutcomes), Stores: stores,
 		Artifacts: retentionRunArtifacts{Rows: []retentionRunArtifactRow{}}, StopBlocked: stopBlocked(v.State)}
@@ -678,22 +677,20 @@ func (f *retentionFacts) runRow(r *retentionRun) (retentionRunRow, error) {
 
 func (f *retentionFacts) deletion() (retentionDeletionSection, error) {
 	section := retentionDeletionSection{Rows: []retentionRunRow{}, Worker: notConnected, Retry: notConnected, BackupExpiry: notConnected, ProposePlan: notConnected}
-	for index := len(f.s.ret.runs) - 1; index >= 0; index-- {
-		r := f.s.ret.runs[index]
-		if r.workspace != f.workspace {
-			continue
-		}
-		section.Total++
-		if len(section.Rows) >= retentionShown {
-			continue
-		}
+	mine, err := f.workspaceRuns()
+	if err != nil {
+		return retentionDeletionSection{}, err
+	}
+	listed, finished, next := listKept(mine, runRunning, runNumber, retentionShown)
+	for _, r := range listed {
 		row, err := f.runRow(r)
 		if err != nil {
 			return retentionDeletionSection{}, err
 		}
 		section.Rows = append(section.Rows, row)
 	}
-	section.More = section.Total > len(section.Rows)
+	section.Total, section.More = len(mine), len(mine) > len(section.Rows)
+	section.Finished = logFacts{Total: finished, Next: next}
 	return section, nil
 }
 

@@ -447,8 +447,25 @@ Verification: the whole server package passed; console tests 1415, 1412 passed, 
 
 Not built: a search on the screen. Unchanged: the sentence above the matrix that says some combinations are blocked is still worked out from the rows held, as before.
 
+# Increment 4f, the deletion runs of P04 (2026-11-25)
+
+Facts (main fcd465b): the retention store keeps the deletion runs of every workspace in the order recorded and never removes one; the module allows 100 unfinished runs and sets no limit on finished ones. A run is recorded when a plan is approved; no command approves a plan (the approve command refuses a plan, and `propose_plan` reads "not connected"), so a running service has the seed's two runs. The retention read listed the newest 50 runs of the workspace, running or not, with `total` and `more`. A run that is still running, which is the only kind the stop command applies to, could therefore be behind fifty newer runs.
+
+Built, in the shape of increment 3e:
+
+- The retention read lists every run of the workspace that is running, then the newest of the others (stopped, done or complete; a stopped run may still be finishing a chunk it had claimed) while fewer than 50 are listed, newest first. `total` and `more` keep their meaning. Each row gains `number`, the run's position among the workspace's runs; the section gains `finished` (`total`, `next`).
+- `GET /api/v1/retention/runs` with `after`, `limit` and `q` (matched against the run's label, its target, its class and the plan's reason): the finished runs of the workspace, newest first. Admitted as the retention read is, with its fault step.
+- Screen: two groups, "Running" and "Stopped or finished", each with its count; the second group shows its count of all, "Load older runs", the failure and the read-again line through `useOlderRows`. An answer without `finished` keeps the single list and its "showing newest" line.
+
+Changed behaviour to weigh: the main read can now list fewer than fifty finished runs, or none, when many are running, and more than fifty rows when more than fifty are running (at most 100). To know which runs are running, the read now asks the module for every run of the workspace, not only the fifty it lists; a stored run the module does not know now fails the read wherever it is in the list. A link to a finished run that the main read does not list selects nothing, as a link to a released hold outside the main read does.
+
+Review (independent reviewer, read-only, 2026-11-25): approve with conditions, then resolved on a bounded re-review. Its condition was that the change of what the main read's rows hold be recorded for the owner, which "Open for the owner" now does; it also corrected the run states named here (four, not three). It confirmed that a run's number and every count come from the workspace's own runs. Composition and copy check (ui-designer): failed at first, because the second group was named "Finished", the state tag of a done run, over runs that are stopped; its strings were adopted and it then passed. It did not see the group headings or the Korean and Arabic renders after the change.
+
+Verification: the whole server package passed (before the copy and document corrections; no Go file changed after it); console tests 1416, 1413 passed, 3 skipped; the rendered check `tools/runs-qa.mjs` 59 passed against a local service with the sample seed, in which the runs beyond the sample's two are written by the check. The owner has not reviewed the screen.
+
 # Open for the owner
 
+- The deletion runs on P04 now list every running run and page only the others (increment 4f); the main read's rows are no longer simply the newest 50. This can be reversed.
 - The holds list on P04 now shows every hold in force and pages only the released ones (increment 3e).
 - The action history of a subscription on P02 now lists the newest action first and is cut at 50 with a read for the rest (increment 3b), as the lock log is. Both can be reversed.
 - The lock log on P03 now lists the newest lock first (it listed the oldest first) and the recovery read returns the newest 50 locks of an installation with a count and a read for the rest (increment 3a). Both can be reversed.

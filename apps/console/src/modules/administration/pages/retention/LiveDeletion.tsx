@@ -1,5 +1,7 @@
 import type { Locale } from "../../../../shared/types";
 import { runOutcomeKeys, type RetentionPage, type RunRow } from "../../../../service/retention";
+import { useOlderRows } from "../../../../shared/older-rows";
+import { AdminError } from "../../../../service/admin";
 import { counted, plurals } from "./live-codes";
 import { k } from "./live-copy";
 import { artifactOf, blockerPolicy, keptKey, pendingNow, refusedNow, rowId, runNumber, runOf, runTarget, stateSentence, storesBalanced } from "./live-model";
@@ -187,6 +189,17 @@ function Run({ r, ...shared }: Shared & { r: RunRow }) {
 export function DeletionView(shared: Shared) {
   const { l, page } = shared;
   const d = page.deletion;
+  const facts = d.rows === null ? null : d.finished;
+  const older = useOlderRows<RunRow>(page.revision, facts, d.rows, shared.api.retentionRuns, (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  }, false);
+  const rows = facts === null ? d.rows : older.rows;
+  const finished = (rows ?? []).filter((r) => r.state !== "running");
+  const running = (rows ?? []).filter((r) => r.state === "running");
+  const cut = facts !== null && older.counted > (d.rows ?? []).filter((r) => r.state !== "running").length;
+  const failed = older.status === "failed";
   return (
     <>
       <section className="p04-unconnected" aria-labelledby="p04-unconnected-title">
@@ -198,13 +211,34 @@ export function DeletionView(shared: Shared) {
           <div><dt>{k.planProposals(l)}</dt><dd><Code l={l} value={d.propose_plan} say={k.connection} /></dd></div>
         </dl>
       </section>
-      <MoreLine l={l} more={d.more} total={d.total} forms={plurals.showingNewest} />
-      {d.rows === null ? (
+      {facts === null && <MoreLine l={l} more={d.more} total={d.total} forms={plurals.showingNewest} />}
+      {rows === null ? (
         <p className="live-empty">{k.unknown(l)}</p>
-      ) : d.rows.length === 0 ? (
+      ) : rows.length === 0 && !older.more ? (
         <p className="live-empty">{d.total === 0 ? k.noRuns(l) : k.unknown(l)}</p>
+      ) : facts === null ? (
+        rows.map((r, n) => <Run key={r.run?.target || n} r={r} {...shared} />)
       ) : (
-        d.rows.map((r, n) => <Run key={r.run?.target || n} r={r} {...shared} />)
+        <>
+          <section className="p04-held-group p04-runs-running" aria-labelledby="p04-runs-running">
+            <h4 id="p04-runs-running">{k.runsRunning(l, running.length)}</h4>
+            {running.length === 0 ? <p className="live-empty">{k.runsNoneRunning(l)}</p> : running.map((r, n) => <Run key={r.run?.target || "u" + n} r={r} {...shared} />)}
+          </section>
+          <section className="p04-held-group p04-runs-finished" aria-labelledby="p04-runs-finished">
+            <h4 id="p04-runs-finished">{k.runsFinished(l, finished.length)}</h4>
+            {cut && <p className="p04-small live-quiet p04-runs-count" role="status" ref={older.countRef} tabIndex={-1}>{!older.more && finished.length >= older.counted ? k.runsAll(l, older.counted) : k.runsShown(l, finished.length, older.counted)}</p>}
+            {older.reset && <p className="p04-small p04-runs-reset" role="status">{k.runsReset(l)}</p>}
+            {finished.length === 0 && !older.more ? <p className="live-empty">{k.runsNoneFinished(l)}</p> : finished.map((r, n) => <Run key={r.run?.target || "d" + n} r={r} {...shared} />)}
+            {older.more && (
+              <div className="p04-held-more p04-runs-more">
+                {failed && <p role="alert">{k.runsFailed(l)}</p>}
+                <button type="button" className="live-secondary p04-held-more-button p04-runs-more-button" aria-disabled={older.status === "loading" || undefined} onClick={older.load}>
+                  {failed ? k.heldTryAgain(l) : older.status === "loading" ? k.heldLoading(l) : k.runsMore(l)}
+                </button>
+              </div>
+            )}
+          </section>
+        </>
       )}
       <Proposals kind="plan" {...shared} />
     </>

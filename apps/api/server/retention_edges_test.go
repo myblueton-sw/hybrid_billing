@@ -351,13 +351,20 @@ func TestRetentionRowsAreBounded(t *testing.T) {
 	holds, deletion, proposals := retSection(got, "holds"), retSection(got, "deletion"), retSection(got, "proposals")
 	refs := holds["references"].(map[string]any)
 	tomb := retSection(got, "decisions")["tombstones"].(map[string]any)
-	run := retRun(t, got, "run/53")
+	finished := f.readAs(root, "/api/v1/retention/runs")
+	if rows, _ := finished.body["runs"].([]any); finished.status != 200 || len(rows) == 0 {
+		t.Fatalf("the finished runs: %s", finished.raw[:min(len(finished.raw), 300)])
+	}
+	run := finished.body["runs"].([]any)[0].(map[string]any)
+	if run["run"].(map[string]any)["label"] != "run/53" {
+		t.Fatalf("the newest finished run is %v", run["run"])
+	}
 	hold := retHold(t, got, "bulk-hold")
 	sizes := fmt.Sprint(len(claim["artifacts"].([]any)), claim["total"], claim["more"], len(retRows(holds)), holds["total"], holds["more"], len(retRows(refs)), refs["total"],
 		refs["more"], len(retRows(deletion)), deletion["total"], deletion["more"], len(retRows(proposals)), proposals["total"], proposals["more"],
 		len(retRows(tomb)), tomb["total"], tomb["more"], retRows(tomb)[0]["sequence"], len(run["artifacts"].(map[string]any)["rows"].([]any)), run["artifacts"].(map[string]any)["total"],
 		run["artifacts"].(map[string]any)["more"], len(hold["outcomes"].([]any)), hold["outcomes_more"], retSection(got, "decisions")["watermark"])
-	if sizes != "50 1002 true 53 53 false 50 51 true 50 53 true 50 58 true 50 1000 true 1003 50 1001 true 50 true 1003" {
+	if sizes != "50 1002 true 53 53 false 50 51 true 51 53 true 50 58 true 50 1000 true 1003 50 1001 true 50 true 1003" {
 		t.Errorf("sizes %s", sizes)
 	}
 	pages := 0

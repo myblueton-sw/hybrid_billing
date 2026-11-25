@@ -83,6 +83,7 @@ export type HoldsSection = { total: number | null; more: boolean | null; rows: H
 export type StoreRow = { store: string; target: number | null; deleted: number | null; failed: number | null; excluded: number | null; pending: number | null };
 export type RunItem = { id: string; outcome: string };
 export type RunRow = {
+  number: number | null;
   run: RunRef;
   class: string;
   revision: number | null;
@@ -108,6 +109,7 @@ export type DeletionSection = {
   total: number | null;
   more: boolean | null;
   rows: RunRow[] | null;
+  finished: { total: number; next: string } | null;
   worker: string;
   retry: string;
   backup_expiry: string;
@@ -310,6 +312,7 @@ export function runRowOf(r: Raw): RunRow {
   const stop = hint(r.can_stop, r.stop_blocked);
   const items = obj(r.artifacts);
   return {
+    number: count(r.number),
     run: runRefOf(r.run),
     class: str(r.class),
     revision: count(r.revision),
@@ -339,6 +342,7 @@ export function deletionOf(v: unknown): DeletionSection {
     total: count(r.total),
     more: flag(r.more),
     rows: rows(r.rows, runRowOf),
+    finished: releasedFactsOf(r.finished),
     worker: str(r.worker),
     retry: str(r.retry),
     backup_expiry: str(r.backup_expiry),
@@ -442,6 +446,12 @@ export function releasedFactsOf(v: unknown): { total: number; next: string } | n
   if (!isRow(v)) return null;
   const total = count(v.total);
   return total === null || typeof v.next !== "string" ? null : { total, next: v.next };
+}
+
+export function runsPageOf(body: Raw): { rows: RunRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.runs) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.runs.filter(isRow).map(runRowOf), next: body.next, total };
 }
 
 export function holdsPageOf(body: Raw): { rows: HoldRow[]; next: string; total: number } | null {

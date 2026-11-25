@@ -11,7 +11,7 @@ import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
 import { historyPageOf, integrationsOf, pluginProposalOf, type HistoryEntry, type IntegrationsPage, type PluginProposal } from "./integrations";
 import { locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
 import { buildsPageOf, evidenceOf, hardwareAnswerOf, hardwarePath, pathsAnswerOf, pathsPath, profilesAnswerOf, profilesPath, proposalOf as evidenceProposalOf, resultsPageOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type BuildRow, type HardwareRow, type PathRow, type ProfileRow, type Proposal as EvidenceProposal, type ResultRow, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
-import { holdsPageOf, proposalOf as retentionProposalOf, artifactsPageOf, artifactsPath, referencesPageOf, retentionOf, runsPageOf, tombstonesPageOf, type ArtifactEntry, type HoldRow, type Reference, type Proposal as RetentionProposal, type RetentionPage, type RunRow, type Tombstone } from "./retention";
+import { holdsPageOf, proposalOf as retentionProposalOf, artifactsPageOf, artifactsPath, outcomesPageOf, referencesPageOf, retentionOf, runItemsPageOf, runsPageOf, tombstonesPageOf, type ArtifactEntry, type HoldOutcome, type HoldRow, type Reference, type RunItem, type Proposal as RetentionProposal, type RetentionPage, type RunRow, type Tombstone } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
 
 export type RolePeriod = "open" | "bounded" | "ends_soon" | "ended";
@@ -1215,6 +1215,16 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async retentionArtifacts(query: { cls: string; after: string } | { ids: string[] }): Promise<{ rows: ArtifactEntry[]; next: string; total: number }> {
       const got = artifactsPageOf(await send(artifactsPath(query), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionRunArtifacts(run: string, after: string): Promise<{ rows: RunItem[]; next: string }> {
+      const got = runItemsPageOf(await send("/retention/run-artifacts?" + new URLSearchParams({ run, limit: "50", after }).toString(), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionHoldOutcomes(hold: string, after: string): Promise<{ rows: HoldOutcome[]; next: string }> {
+      const got = outcomesPageOf(await send("/retention/hold-outcomes?" + new URLSearchParams({ hold, limit: "50", after }).toString(), { method: "GET" }, attempt().request));
       if (!got) throw new AdminError("invalid");
       return got;
     },

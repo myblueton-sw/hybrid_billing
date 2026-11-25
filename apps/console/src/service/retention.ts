@@ -73,6 +73,7 @@ export type HoldRow = {
   counts_scope: string;
   outcomes: HoldOutcome[] | null;
   outcomes_more: boolean | null;
+  outcomes_next: string | null;
   release: number | null;
   can_propose_release: boolean;
   release_blocked: string;
@@ -102,7 +103,7 @@ export type RunRow = {
   stopper_known: boolean;
   counts: Counts;
   stores: StoreRow[] | null;
-  artifacts: { total: number | null; more: boolean | null; rows: RunItem[] | null };
+  artifacts: { total: number | null; more: boolean | null; next: string | null; rows: RunItem[] | null };
   can_stop: boolean;
   stop_blocked: string;
 };
@@ -289,8 +290,9 @@ export function holdRowOf(r: Raw): HoldRow {
     scope: { artifacts: strs(scope.artifacts), workspace: flag(scope.workspace), classes: strs(scope.classes) },
     counts: isRow(r.counts) ? countsOf(r.counts, holdCountKeys) : null,
     counts_scope: countsScope,
-    outcomes: rows(r.outcomes, (o) => ({ artifact: str(o.artifact), outcome: str(o.outcome), stores: storeResultsOf(o.stores) })),
+    outcomes: rows(r.outcomes, outcomeOf),
     outcomes_more: flag(r.outcomes_more),
+    outcomes_next: typeof r.outcomes_next === "string" ? r.outcomes_next : null,
     release: count(r.release),
     can_propose_release: release.allowed,
     release_blocked: release.blocked,
@@ -332,7 +334,7 @@ export function runRowOf(r: Raw): RunRow {
     stopper_known: r.stopper === null || personOf(r.stopper) !== null,
     counts: countsOf(r.counts, runOutcomeKeys),
     stores: rows(r.stores, (s) => ({ store: str(s.store), target: count(s.target), deleted: count(s.deleted), failed: count(s.failed), excluded: count(s.excluded), pending: count(s.pending) })),
-    artifacts: { total: count(items.total), more: flag(items.more), rows: rows(items.rows, (x) => ({ id: str(x.id), outcome: str(x.outcome) })) },
+    artifacts: { total: count(items.total), more: flag(items.more), next: typeof items.next === "string" ? items.next : null, rows: rows(items.rows, runItemOf) },
     can_stop: stop.allowed,
     stop_blocked: stop.blocked,
   };
@@ -449,6 +451,24 @@ export function releasedFactsOf(v: unknown): { total: number; next: string } | n
   if (!isRow(v)) return null;
   const total = count(v.total);
   return total === null || typeof v.next !== "string" ? null : { total, next: v.next };
+}
+
+export function outcomeOf(o: Raw): HoldOutcome {
+  return { artifact: str(o.artifact), outcome: str(o.outcome), stores: storeResultsOf(o.stores) };
+}
+
+export function runItemOf(x: Raw): RunItem {
+  return { id: str(x.id), outcome: str(x.outcome) };
+}
+
+export function runItemsPageOf(body: Raw): { rows: RunItem[]; next: string } | null {
+  if (!Array.isArray(body.artifacts) || typeof body.next !== "string") return null;
+  return { rows: body.artifacts.filter(isRow).map(runItemOf), next: body.next };
+}
+
+export function outcomesPageOf(body: Raw): { rows: HoldOutcome[]; next: string } | null {
+  if (!Array.isArray(body.outcomes) || typeof body.next !== "string") return null;
+  return { rows: body.outcomes.filter(isRow).map(outcomeOf), next: body.next };
 }
 
 export function referenceOf(x: Raw): Reference {

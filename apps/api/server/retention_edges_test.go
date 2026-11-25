@@ -374,7 +374,7 @@ func TestRetentionRowsAreBounded(t *testing.T) {
 		}
 		return false
 	}
-	outcomes, err := (&retentionFacts{s: f.s, workspace: SampleWorkspace}).visibleOutcomes("bulk-hold")
+	outcomes, err := (&retentionFacts{s: f.s, workspace: SampleWorkspace}).visibleOutcomes("bulk-hold", "", retentionShown)
 	f.s.fault = nil
 	if len(outcomes) != retentionShown+950 || pages != 1 || err != nil {
 		t.Errorf("a full visible page took %d calls for %d outcomes %v", pages, len(outcomes), err)
@@ -649,7 +649,7 @@ func TestRetentionHiddenArtifactsInVisibleRuns(t *testing.T) {
 	}
 	f.s.ret.runs = append(f.s.ret.runs, &retentionRun{id: run, workspace: SampleWorkspace})
 	row := retRun(t, f.retentionRead(root), run)
-	if s := fmt.Sprint(row["artifacts"], " ", row["stores"]); s != "map[more:false rows:[map[id:sample-source-5 outcome:not_due]] total:1] "+
+	if s := fmt.Sprint(row["artifacts"], " ", row["stores"]); s != "map[more:false next: rows:[map[id:sample-source-5 outcome:not_due]] total:1] "+
 		"[map[deleted:1 excluded:2 failed:0 pending:0 store:sample-database target:3]]" {
 		t.Errorf("injected run %s", s)
 	}

@@ -1,6 +1,7 @@
-import { holdCountKeys, type HoldRow } from "../../../../service/retention";
+import { holdCountKeys, type HoldOutcome, type HoldRow } from "../../../../service/retention";
 import { AdminError } from "../../../../service/admin";
 import { useOlderRows } from "../../../../shared/older-rows";
+import { useMoreRows } from "../../../../shared/more-rows";
 import type { Locale } from "../../../../shared/types";
 import { plurals } from "./live-codes";
 import { k } from "./live-copy";
@@ -34,8 +35,15 @@ function countLabel(l: Locale, key: string): string {
   return key === "outcome_pending" ? k.beingDeleted(l) : k.holdOutcome(l, key);
 }
 
-function Outcomes({ l, h }: { l: Locale; h: HoldRow }) {
-  const list = h.outcomes;
+function Outcomes({ h, ...shared }: Shared & { h: HoldRow }) {
+  const { l, page, api } = shared;
+  const older = useMoreRows<HoldOutcome>(page.revision + "\u0000" + h.id, h.outcomes, h.id && h.outcomes_more === true ? h.outcomes_next : null, (after) => api.retentionHoldOutcomes(h.id, after), (o) => o.artifact, (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  });
+  const list = older.rows;
+  const paged = h.outcomes_next !== null;
   return (
     <>
       {list === null ? (
@@ -65,7 +73,8 @@ function Outcomes({ l, h }: { l: Locale; h: HoldRow }) {
         </div>
       )}
       <p className="p04-small live-quiet">{k.onlyListed(l)}</p>
-      {h.outcomes_more === true && <p className="p04-small live-quiet">{k.moreOutcomes(l)}</p>}
+      {h.outcomes_more === true && !paged && <p className="p04-small live-quiet">{k.moreOutcomes(l)}</p>}
+      {paged && <ItemsFoot l={l} kind="outcomes" list={{ more: older.more, status: older.status, reset: older.reset, onMore: older.load }} shown={list?.length ?? 0} total={null} />}
       {h.outcomes_more === null && <p className="p04-small live-quiet">{k.maybeMore(l)}</p>}
     </>
   );
@@ -117,7 +126,7 @@ function Hold({ h, ...shared }: Shared & { h: HoldRow }) {
           ) : (
             <p>{k.unknown(l)}</p>
           )}
-          <Outcomes l={l} h={h} />
+          <Outcomes h={h} {...shared} />
         </div>
       </div>
       <div className="p04-actions">

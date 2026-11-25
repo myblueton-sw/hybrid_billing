@@ -439,7 +439,7 @@ func TestRetentionReadShape(t *testing.T) {
 	temporary := retHold(t, got, retentionTemporary)
 	if s := fmt.Sprint(temporary); s != "map[can_propose_release:false counts:map[not_preserved:1 outcome_pending:0 partially_deleted:0] counts_scope:workspace "+
 		"id:sample-hold-temporary number:2 "+
-		"outcomes:[map[artifact:sample-temporary-1 outcome:not_preserved stores:map[sample-object-store:deleted]]] outcomes_more:false "+
+		"outcomes:[map[artifact:sample-temporary-1 outcome:not_preserved stores:map[sample-object-store:deleted]]] outcomes_more:false outcomes_next: "+
 		"owner:map[id:sample-member login:member@example.invalid] placed_at:2026-11-16T09:00:00Z placer:map[id:sample-member login:member@example.invalid] "+
 		"rationale:Sample data reason:Sample export review hold release:6 release_blocked:already_proposed released:false "+
 		"scope:map[artifacts:[] classes:[temporary] workspace:true] target:retention-hold:sample-hold-temporary]" {
@@ -456,7 +456,7 @@ func TestRetentionReadShape(t *testing.T) {
 		t.Errorf("run 1 stores %s", s)
 	}
 	if s := retJoin(one["state"], one["can_stop"], one["stop_blocked"], one["chunks"], one["chunk_size"], one["lease_seconds"], one["revision"], one["reason"],
-		one["stopper"], one["artifacts"]); s != "done false finished 2 2 3600 1 Sample expiry deletion <nil> map[more:false rows:[map[id:sample-source-1 outcome:deleted] "+
+		one["stopper"], one["artifacts"]); s != "done false finished 2 2 3600 1 Sample expiry deletion <nil> map[more:false next: rows:[map[id:sample-source-1 outcome:deleted] "+
 		"map[id:sample-source-2 outcome:failed] map[id:sample-source-3 outcome:referenced] map[id:sample-source-4 outcome:held]] total:4]" {
 		t.Errorf("run 1 %s", s)
 	}

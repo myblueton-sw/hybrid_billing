@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/installer"
 	"github.com/myblueton-sw/hybrid_billing/modules/plugins"
 	"github.com/myblueton-sw/hybrid_billing/modules/recovery"
@@ -296,5 +297,116 @@ func TestRecoveryLockLogIsCutCountedAndRead(t *testing.T) {
 	member, theirs := f.readAs(f.as(MemberLogin), path), f.recoveryRead(f.as(MemberLogin))
 	if member.status != theirs.status || (member.status == 200 && theirs.body["state"] != "configured") {
 		t.Errorf("a member reads the lock log (%d) but not the recovery read (%d %v)", member.status, theirs.status, theirs.body["state"])
+	}
+}
+
+func TestSubscriptionActionHistoryIsCutCountedAndRead(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root := f.as(AdminLogin)
+	e := f.s.integ.subscription(sampleSubscription)
+	seeded := len(e.history)
+	row := func(got reply) map[string]any {
+		t.Helper()
+		rows, _ := got.body["channels"].(map[string]any)["subscriptions"].([]any)
+		for _, raw := range rows {
+			if r := raw.(map[string]any); r["id"] == sampleSubscription {
+				return r
+			}
+		}
+		t.Fatalf("no row for the sample subscription: %s", got.raw[:min(len(got.raw), 300)])
+		return nil
+	}
+	few := row(f.integrations(root))
+	if facts := few["history_facts"].(map[string]any); seeded == 0 || whole(facts["total"]) != seeded || facts["next"] != "" || len(keptNumbers(few["history"])) != seeded {
+		t.Fatalf("a short history is whole and says nothing further exists: %v", facts)
+	}
+	for n := 0; n < 130; n++ {
+		e.history = append(e.history, actionRecord{action: "pause", actor: SampleAdmin, rationale: fmt.Sprintf("Window %03d", n)})
+	}
+	total := seeded + 130
+	main := row(f.integrations(root))
+	facts := main["history_facts"].(map[string]any)
+	shown := keptNumbers(main["history"])
+	if whole(facts["total"]) != total || len(shown) != installShown || shown[0] != total-installShown+1 || shown[len(shown)-1] != total || fmt.Sprint(facts["next"]) != fmt.Sprint(shown[0]) {
+		t.Fatalf("the main read lists the newest fifty in the order recorded: %v first %d last %d", facts, shown[0], shown[len(shown)-1])
+	}
+	path := "/api/v1/integrations/subscription-history?subscription=" + sampleSubscription
+	all, next, pages := []int{}, fmt.Sprint(facts["next"]), 0
+	for next != "" {
+		got := f.readAs(root, path+"&limit=40&after="+next)
+		if got.status != 200 || whole(got.body["total"]) != len(e.history) || whole(got.body["matching"]) != len(e.history) || got.body["order"] != "newest_first" || got.body["subscription"] != sampleSubscription {
+			t.Fatalf("after %s: %s", next, got.raw[:min(len(got.raw), 300)])
+		}
+		all = append(all, keptNumbers(got.body["history"])...)
+		next = fmt.Sprint(got.body["next"])
+		if pages++; pages == 1 {
+			e.history = append(e.history, actionRecord{action: "request_resume", actor: SampleAdmin, rationale: "added meanwhile"})
+		}
+	}
+	if len(all) != total-installShown || all[0] != total-installShown || all[len(all)-1] != 1 {
+		t.Fatalf("the older actions in pages: %d from %d to %d", len(all), all[0], all[len(all)-1])
+	}
+	for index := 1; index < len(all); index++ {
+		if all[index] != all[index-1]-1 {
+			t.Fatalf("a gap or a repeat at %d", index)
+		}
+	}
+	found := f.readAs(root, path+"&q=window%20129")
+	if n := keptNumbers(found.body["history"]); found.status != 200 || len(n) != 1 || n[0] != seeded+130 || whole(found.body["matching"]) != 1 {
+		t.Errorf("a search by reason: %s", found.raw[:min(len(found.raw), 300)])
+	}
+	if by := f.readAs(root, path+"&q=request_resume"); by.status != 200 || whole(by.body["matching"]) != 1 {
+		t.Errorf("a search by action: %d %v", by.status, by.body["matching"])
+	}
+	for _, query := range []string{"", "?subscription=", "?subscription=sample-absent", "?subscription=" + sampleSubscription + "&subscription=" + sampleSubscription, "?subscription=" + sampleSubscription + "&after=0",
+		"?subscription=" + sampleSubscription + "&limit=101", "?subscription=" + sampleSubscription + "&q=", "?subscription=" + sampleSubscription + "&state=x"} {
+		if got := f.readAs(root, "/api/v1/integrations/subscription-history"+query); got.status != 422 {
+			t.Errorf("%s: %d", query, got.status)
+		}
+	}
+	if got := f.readAs(actor{}, path); got.status != 401 {
+		t.Errorf("anonymous: %d", got.status)
+	}
+	if denied := f.readAs(f.as(MemberLogin), path); denied.status != 403 || strings.Contains(denied.raw, "Window") {
+		t.Errorf("a member without channel rights reads the history: %d", denied.status)
+	}
+	f.s.fault = func(at string) bool { return at == "integrations-read" }
+	if got := f.readAs(root, path); got.status != 503 {
+		t.Errorf("a fault: %d", got.status)
+	}
+	f.s.fault = func(at string) bool { return at == "webhooks-subscription" }
+	if got := f.readAs(root, path); got.status != 503 {
+		t.Errorf("a failing module read: %d", got.status)
+	}
+}
+
+func TestSubscriptionActionHistoryFollowsTheChannelsSection(t *testing.T) {
+	path := "/api/v1/integrations/subscription-history?subscription=" + sampleSubscription
+	for _, right := range gate.IntegrationRights() {
+		f := setup(t, SeedSample).ready()
+		f.setRights(t, SampleAdmin3, right)
+		reader := f.as(Admin3Login)
+		shown := false
+		for _, r := range channelRights {
+			shown = shown || r == right
+		}
+		main, got := f.integrations(reader), f.readAs(reader, path)
+		_, listed := main.body["channels"].(map[string]any)["subscriptions"]
+		if main.status != 200 || listed != shown || (got.status == 200) != shown || (!shown && got.status != 403) {
+			t.Errorf("only %s: the channels section listed %v, the history read answered %d", right, listed, got.status)
+		}
+	}
+	f := setup(t, SeedSample).ready()
+	root := f.as(AdminLogin)
+	f.s.integ.subscriptions = append(f.s.integ.subscriptions, &subscriptionEntry{id: "no-longer-held", history: []actionRecord{{action: "revoke", actor: SampleAdmin, rationale: "Kept by the server only"}}})
+	gone := f.readAs(root, "/api/v1/integrations/subscription-history?subscription=no-longer-held")
+	absent := f.readAs(root, "/api/v1/integrations/subscription-history?subscription=never-existed")
+	if gone.status != 422 || absent.status != 422 || strings.Contains(gone.raw, "Kept by the server") || gone.body["code"] != absent.body["code"] {
+		t.Errorf("a subscription the module no longer holds: %d %s", gone.status, gone.raw)
+	}
+	f.s.bootWorkspace = "elsewhere"
+	if other := f.readAs(root, path); other.status != 422 || strings.Contains(other.raw, "Sample data") {
+		t.Errorf("another workspace: %d %s", other.status, other.raw)
 	}
 }

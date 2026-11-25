@@ -56,6 +56,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/installation/proposals", s.listInstallProposals)
 	mux.HandleFunc("GET /api/v1/integrations", s.readIntegrations)
 	mux.HandleFunc("GET /api/v1/integrations/proposals", s.listPluginProposals)
+	mux.HandleFunc("GET /api/v1/integrations/subscription-history", s.listSubscriptionHistory)
 	mux.HandleFunc("GET /api/v1/recovery", s.readRecovery)
 	mux.HandleFunc("GET /api/v1/recovery/proposals", s.listRecoveryProposals)
 	mux.HandleFunc("GET /api/v1/recovery/locks", s.listRecoveryLocks)

@@ -233,6 +233,7 @@ type gapRow struct {
 }
 
 type subscriptionHistoryRow struct {
+	Number     int    `json:"number"`
 	Action     string `json:"action"`
 	Actor      string `json:"actor"`
 	ActorLogin string `json:"actor_login"`
@@ -261,6 +262,7 @@ type subscriptionRow struct {
 	Resumer       string                   `json:"resumer"`
 	ResumerLogin  string                   `json:"resumer_login"`
 	History       []subscriptionHistoryRow `json:"history"`
+	HistoryFacts  logFacts                 `json:"history_facts"`
 	ResumeRequest *requestRow              `json:"resume_request"`
 	Keys          []subscriptionKeyRow     `json:"keys"`
 	Signer        string                   `json:"signer"`
@@ -656,10 +658,11 @@ func (s *Server) subscriptionRowOf(e *subscriptionEntry, v webhooks.Subscription
 	for _, g := range v.Gaps {
 		row.Gaps = append(row.Gaps, gapRow{After: g.After, To: g.To})
 	}
-	for _, h := range e.history {
-		row.History = append(row.History, subscriptionHistoryRow{Action: h.action, Actor: h.actor, ActorLogin: s.loginOf(h.actor), Rationale: h.rationale,
-			Reason: h.reason, Request: h.request})
+	first, facts := newestOf(len(e.history), installShown)
+	for index := first; index < len(e.history); index++ {
+		row.History = append(row.History, s.historyRow(e, index))
 	}
+	row.HistoryFacts = facts
 	var keys []webhooks.KeyView
 	err := s.webhookCall("keys", func() (err error) {
 		keys, err = s.webhooks.Keys(s.bootWorkspace, sub.ID, webhooks.Actor{ID: reader.id, Kind: webhooks.KindHuman})
@@ -918,6 +921,76 @@ func (s *Server) listPluginProposals(w http.ResponseWriter, r *http.Request) {
 	if errors.Join(errs...) != nil {
 		failCode(w, commands.DependencyUnavailable, request)
 		return
+	}
+	page.Next, page.Matching = walk.Next, walk.Matching
+	writeJSON(w, http.StatusOK, request, page)
+}
+
+type subscriptionHistoryPage struct {
+	Revision     string                   `json:"revision"`
+	ServerTime   string                   `json:"server_time"`
+	Subscription string                   `json:"subscription"`
+	Order        string                   `json:"order"`
+	Q            string                   `json:"q"`
+	History      []subscriptionHistoryRow `json:"history"`
+	Next         string                   `json:"next"`
+	Matching     int                      `json:"matching"`
+	Total        int                      `json:"total"`
+}
+
+func (s *Server) historyRow(e *subscriptionEntry, index int) subscriptionHistoryRow {
+	h := e.history[index]
+	return subscriptionHistoryRow{Number: index + 1, Action: h.action, Actor: h.actor, ActorLogin: s.loginOf(h.actor), Rationale: h.rationale, Reason: h.reason, Request: h.request}
+}
+
+func (s *Server) listSubscriptionHistory(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	_, answer, reader, ok := s.admitIntegrations(w, r)
+	if !ok {
+		return
+	}
+	values := r.URL.Query()
+	named := values["subscription"]
+	values.Del("subscription")
+	q, valid := parseKeptQuery(values)
+	if !valid || len(named) != 1 || named[0] == "" {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	if !reader.any(channelRights) {
+		failCode(w, commands.PermissionDenied, request)
+		return
+	}
+	if s.faulty("integrations-read") {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
+	var e *subscriptionEntry
+	if answer.Workspace() == s.bootWorkspace {
+		e = s.integ.subscription(named[0])
+	}
+	if e != nil {
+		if _, err := s.subscriptionOf(e.id); errors.Is(err, webhooks.ErrNotFound) {
+			e = nil
+		} else if err != nil {
+			failCode(w, commands.DependencyUnavailable, request)
+			return
+		}
+	}
+	if e == nil {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	page := subscriptionHistoryPage{Revision: s.Revision(), ServerTime: stamp(reader.now), Subscription: e.id, Order: closedPlansOrder, Q: q.term, History: []subscriptionHistoryRow{},
+		Total: len(e.history)}
+	walk := keptWalk{q: q}
+	for index := len(e.history) - 1; index >= 0; index-- {
+		h := e.history[index]
+		if walk.take(uint64(index+1), q.matches(h.action, h.actor, s.loginOf(h.actor), h.rationale, h.reason, h.request)) {
+			page.History = append(page.History, s.historyRow(e, index))
+		}
 	}
 	page.Next, page.Matching = walk.Next, walk.Matching
 	writeJSON(w, http.StatusOK, request, page)

@@ -118,3 +118,17 @@ func listKept[T any](entries []T, pending func(T) bool, number func(T) uint64, s
 	}
 	return listed, closed, keptCursor(last)
 }
+
+type logFacts struct {
+	Total int    `json:"total"`
+	Next  string `json:"next"`
+}
+
+func newestOf(total, shown int) (int, logFacts) {
+	first := max(0, total-shown)
+	facts := logFacts{Total: total}
+	if first > 0 {
+		facts.Next = keptCursor(uint64(first + 1))
+	}
+	return first, facts
+}

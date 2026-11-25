@@ -222,5 +222,29 @@ test("held redeliveries and request identities are parsed", () => {
   assert.deepEqual(d?.actions.withdraw_redeliver, { allowed: false, blocked: "missing" });
   const s = got.channels.subscriptions?.[0];
   assert.deepEqual(s?.resume_request, { id: "resume-request-2", target: "webhook-resume-request:resume-request-2", by: "a", by_login: "", rationale: "" });
-  assert.deepEqual(s?.history?.[0], { action: "proposal_closed", actor: "b", actor_login: "", rationale: "", reason: "requester_lost_right", request: "req-1" });
+  assert.deepEqual(s?.history?.[0], { number: null, action: "proposal_closed", actor: "b", actor_login: "", rationale: "", reason: "requester_lost_right", request: "req-1" });
+});
+
+test("a subscription's history count, cursor and further page are read strictly", async () => {
+  const { historyEntryOf, historyPageOf, olderFactsOf } = await import("./integrations");
+  const { newestFirst } = await import("../shared/older-rows");
+  assert.equal(historyEntryOf({ number: 7, action: "pause" }).number, 7);
+  assert.equal(historyEntryOf({ number: "7" }).number, null);
+  assert.deepEqual(olderFactsOf({ total: 120, next: "71" }), { total: 120, next: "71" });
+  for (const bad of [null, [], { total: "1", next: "" }, { total: 1, next: 5 }, { next: "" }]) assert.equal(olderFactsOf(bad), null, JSON.stringify(bad));
+  for (const bad of [{}, { history: [], next: "" }, { history: "x", next: "", total: 0 }, { history: [], next: 4, total: 0 }]) assert.equal(historyPageOf(bad), null, JSON.stringify(bad));
+  const page = historyPageOf({ history: [{ number: 70, action: "pause" }, null, "x"], next: "21", total: 120 });
+  assert.deepEqual([page?.rows.length, page?.rows[0].number, page?.next, page?.total], [1, 70, "21", 120]);
+  const n = (x: number | null) => historyEntryOf({ number: x });
+  assert.deepEqual(newestFirst([n(71), n(72), n(73)], [n(71), n(70), n(69)]).map((x) => x.number), [73, 72, 71, 70, 69]);
+  assert.equal(newestFirst([n(2)], [n(null), n(null)]).length, 3);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { history: [{ number: 70 }], next: "", total: 120 } : { history: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.subscriptionHistory("sample erp", "71")).rows[0].number, 70);
+  assert.equal(calls[0], "/api/v1/integrations/subscription-history?subscription=sample%20erp&limit=50&after=71");
+  await assert.rejects(api.subscriptionHistory("s", "2"), (e: AdminError) => e.failure === "invalid");
 });

@@ -228,6 +228,10 @@ export const k = {
   placeWorkspaceHold: (l: Locale) => t(l, "Place a workspace hold", "업무 공간 보존 보류 등록", "وضع تعليق حذف لمساحة العمل"),
   tenantNote: (l: Locale) =>
     t(l, "Covers every registered item of this workspace, including items registered later.", "이 업무 공간에 등록된 모든 항목과 이후 등록되는 항목까지 포함합니다.", "يشمل كل عنصر مسجّل في مساحة العمل هذه، بما في ذلك العناصر المسجّلة لاحقًا."),
+  recordsShown: (l: Locale, n: number, m: number) => t(l, `Showing ${n} of the ${m} in this workspace, newest first.`, `이 업무 공간의 ${m}건 중 ${n}건을 최신순으로 표시합니다.`, `تُعرض ${n} من أصل ${m} في مساحة العمل هذه، الأحدث أولًا.`),
+  recordsMore: (l: Locale) => t(l, "Load older deletion records", "이전 삭제 기록 불러오기", "تحميل سجلات حذف أقدم"),
+  recordsFailed: (l: Locale) => t(l, "Older deletion records could not be loaded. The records already shown are unchanged.", "이전 삭제 기록을 불러오지 못했습니다. 이미 표시된 삭제 기록은 그대로입니다.", "تعذّر تحميل سجلات الحذف الأقدم. لم تتغيّر سجلات الحذف المعروضة."),
+  recordsReset: (l: Locale) => t(l, "The list was refreshed. The older deletion records you loaded are no longer shown.", "목록을 새로 고쳤습니다. 불러온 이전 삭제 기록은 더 이상 표시되지 않습니다.", "حُدِّثت القائمة. لم تعد سجلات الحذف الأقدم التي حمّلتها معروضة."),
   runsShown: (l: Locale, n: number, m: number) => t(l, `Showing ${n} of ${m} stopped or finished deletion runs, newest first.`, `중지되거나 종료된 삭제 작업 ${m}건 중 ${n}건을 최신순으로 표시합니다.`, `تُعرض عمليات الحذف الموقوفة أو المنتهية: ${n} من أصل ${m}، الأحدث أولًا.`),
   runsAll: (l: Locale, m: number) => t(l, `Showing all ${m} stopped or finished deletion runs, newest first.`, `중지되거나 종료된 삭제 작업 ${m}건을 모두 최신순으로 표시합니다.`, `تُعرض جميع عمليات الحذف الموقوفة أو المنتهية (${m})، الأحدث أولًا.`),
   runsRunning: (l: Locale, n: number) => t(l, `Running (${n})`, `실행 중(${n})`, `قيد التشغيل (${n})`),

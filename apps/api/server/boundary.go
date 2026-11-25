@@ -64,6 +64,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/retention/proposals", s.listRetentionProposals)
 	mux.HandleFunc("GET /api/v1/retention/holds", s.listRetentionHolds)
 	mux.HandleFunc("GET /api/v1/retention/runs", s.listRetentionRuns)
+	mux.HandleFunc("GET /api/v1/retention/tombstones", s.listRetentionTombstones)
 	mux.HandleFunc("GET /api/v1/release-evidence", s.readEvidence)
 	mux.HandleFunc("GET /api/v1/release-evidence/requirements", s.listEvidenceRequirements)
 	mux.HandleFunc("GET /api/v1/release-evidence/proposals", s.listEvidenceProposals)

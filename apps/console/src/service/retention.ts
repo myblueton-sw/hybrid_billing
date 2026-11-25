@@ -119,7 +119,7 @@ export type DeletionSection = {
 export type Tombstone = { sequence: number | null; artifact: string; class: string; run: RunRef; other_scope: boolean | null; at: string; decision: string };
 export type DecisionsSection = {
   watermark: number | null;
-  tombstones: { window: number | null; total: number | null; more: boolean | null; rows: Tombstone[] | null };
+  tombstones: { window: number | null; total: number | null; more: boolean | null; next: string | null; rows: Tombstone[] | null };
   ledger: string;
   epoch: string;
   durable_commit: string;
@@ -359,7 +359,8 @@ export function decisionsOf(v: unknown): DecisionsSection {
       window: count(t.window),
       total: count(t.total),
       more: flag(t.more),
-      rows: rows(t.rows, (x) => ({ sequence: count(x.sequence), artifact: str(x.artifact), class: str(x.class), run: runRefOf(x.run), other_scope: flag(x.other_scope), at: str(x.at), decision: str(x.decision) })),
+      next: typeof t.next === "string" ? t.next : null,
+      rows: rows(t.rows, tombstoneOf),
     },
     ledger: str(r.ledger),
     epoch: str(r.epoch),
@@ -446,6 +447,16 @@ export function releasedFactsOf(v: unknown): { total: number; next: string } | n
   if (!isRow(v)) return null;
   const total = count(v.total);
   return total === null || typeof v.next !== "string" ? null : { total, next: v.next };
+}
+
+export function tombstoneOf(x: Raw): Tombstone {
+  return { sequence: count(x.sequence), artifact: str(x.artifact), class: str(x.class), run: runRefOf(x.run), other_scope: flag(x.other_scope), at: str(x.at), decision: str(x.decision) };
+}
+
+export function tombstonesPageOf(body: Raw): { rows: Tombstone[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.tombstones) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.tombstones.filter(isRow).map(tombstoneOf), next: body.next, total };
 }
 
 export function runsPageOf(body: Raw): { rows: RunRow[]; next: string; total: number } | null {

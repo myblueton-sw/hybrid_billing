@@ -254,3 +254,26 @@ test("the runs' finished count, cursor and the finished runs read are read stric
   assert.equal(calls[0], "/api/v1/retention/runs?limit=50&after=71");
   await assert.rejects(api.retentionRuns("2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
 });
+
+test("the deletion records' cursor and the records read are read strictly", async () => {
+  const { retentionOf, tombstonesPageOf } = await import("./retention");
+  const { newestFirst } = await import("../shared/older-rows");
+  const { AdminError, adminClient } = await import("./admin");
+  for (const bad of [{}, { tombstones: [], next: "" }, { tombstones: "x", next: "", total: 0 }, { tombstones: [], next: 4, total: 0 }]) assert.equal(tombstonesPageOf(bad), null, JSON.stringify(bad));
+  const page = tombstonesPageOf({ tombstones: [{ sequence: 70, artifact: "a-70", class: "claim", run: null, other_scope: false }, null, "x"], next: "21", total: 120 });
+  assert.deepEqual([page?.rows.length, page?.rows[0].sequence, page?.rows[0].artifact, page?.next, page?.total], [1, 70, "a-70", "21", 120]);
+  const got = retentionOf({ state: "configured", decisions: { watermark: 9, tombstones: { window: 1000, total: 3, more: true, next: "7", rows: [{ sequence: 9, artifact: "a" }] } } });
+  assert.deepEqual([got.decisions.tombstones.next, got.decisions.tombstones.rows?.[0].sequence], ["7", 9]);
+  assert.equal(retentionOf({ state: "configured", decisions: { tombstones: { window: 1000, total: 0, more: false, rows: [] } } }).decisions.tombstones.next, null);
+  const s = (x: number) => ({ sequence: x });
+  assert.deepEqual(newestFirst([s(73), s(72), s(71)].reverse(), [s(71), s(70)], (x) => x.sequence).map((x) => x.sequence), [73, 72, 71, 70]);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { tombstones: [{ sequence: 70, artifact: "a-70" }], next: "", total: 120 } : { tombstones: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.retentionTombstones("71")).rows[0].sequence, 70);
+  assert.equal(calls[0], "/api/v1/retention/tombstones?limit=50&after=71");
+  await assert.rejects(api.retentionTombstones("2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});

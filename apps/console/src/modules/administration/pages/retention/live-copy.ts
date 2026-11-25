@@ -158,8 +158,6 @@ export const k = {
     kind === "policy" ? t(l, "No policy proposals.", "정책 제안이 없습니다.", "لا توجد مقترحات سياسات.")
       : kind === "release" ? t(l, "No release proposals.", "해제 제안이 없습니다.", "لا توجد مقترحات رفع.")
         : t(l, "No deletion plan proposals.", "삭제 계획 제안이 없습니다.", "لا توجد مقترحات خطط حذف."),
-  newestProposals: (l: Locale) =>
-    t(l, "Only the newest 50 proposals are read; older ones are not shown on any tab.", "최신 제안 50건만 읽으며, 이전 제안은 어느 탭에도 표시하지 않습니다.", "تُقرأ أحدث 50 مقترحًا فقط؛ ولا تُعرض الأقدم في أي تبويب."),
   planReadOnly: (l: Locale) =>
     t(
       l,

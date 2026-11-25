@@ -298,9 +298,11 @@ type retentionProposalRow struct {
 }
 
 type retentionProposals struct {
-	Total int                    `json:"total"`
-	More  bool                   `json:"more"`
-	Rows  []retentionProposalRow `json:"rows"`
+	Total        int                    `json:"total"`
+	More         bool                   `json:"more"`
+	Rows         []retentionProposalRow `json:"rows"`
+	History      keptFacts              `json:"history"`
+	ClosedByKind map[string]int         `json:"closed_by_kind"`
 }
 
 type retentionPage struct {
@@ -799,23 +801,23 @@ func (f *retentionFacts) proposalRow(e *retentionEntry) (retentionProposalRow, e
 }
 
 func (f *retentionFacts) proposals() (retentionProposals, error) {
-	section := retentionProposals{Rows: []retentionProposalRow{}}
-	for index := len(f.s.ret.entries) - 1; index >= 0; index-- {
-		e := f.s.ret.entries[index]
-		if !f.s.ret.visibleEntry(e, f.workspace) {
-			continue
-		}
-		section.Total++
-		if len(section.Rows) >= retentionShown {
-			continue
-		}
+	section := retentionProposals{Rows: []retentionProposalRow{}, ClosedByKind: map[string]int{}}
+	visible := f.visibleEntries()
+	listed, closed, next := listKept(visible, retentionPending, retentionNumber, retentionShown)
+	for _, e := range listed {
 		row, err := f.proposalRow(e)
 		if err != nil {
 			return retentionProposals{}, err
 		}
 		section.Rows = append(section.Rows, row)
 	}
-	section.More = section.Total > len(section.Rows)
+	for _, e := range visible {
+		if !retentionPending(e) {
+			section.ClosedByKind[e.view.Change.Kind]++
+		}
+	}
+	section.Total, section.More = len(visible), len(visible) > len(section.Rows)
+	section.History = keptFacts{Total: closed, Next: next, Kept: installKept, Dropped: f.s.ret.dropped}
 	return section, nil
 }
 
@@ -857,16 +859,23 @@ func (s *Server) retentionApprovers(verifier identity.Verifier, now time.Time) (
 	return out, nil
 }
 
+func (s *Server) retentionFactsFor(verifier identity.Verifier, reader, workspace string, now time.Time) (*retentionFacts, error) {
+	approvers, err := s.retentionApprovers(verifier, now)
+	if err != nil {
+		return nil, err
+	}
+	return &retentionFacts{s: s, reader: reader, workspace: workspace, approvers: approvers, policies: map[string]*retention.PolicyView{},
+		artifacts: map[string]retention.Artifact{}, standings: map[string]retention.Standing{}}, nil
+}
+
 func (s *Server) retentionPage(verifier identity.Verifier, reader, workspace string, now time.Time) (retentionPage, error) {
 	if s.faulty("retention-read") {
 		return retentionPage{}, retention.ErrInvalid
 	}
-	approvers, err := s.retentionApprovers(verifier, now)
+	f, err := s.retentionFactsFor(verifier, reader, workspace, now)
 	if err != nil {
 		return retentionPage{}, err
 	}
-	f := &retentionFacts{s: s, reader: reader, workspace: workspace, approvers: approvers, policies: map[string]*retention.PolicyView{},
-		artifacts: map[string]retention.Artifact{}, standings: map[string]retention.Standing{}}
 	page := retentionPage{Revision: s.Revision(), Now: stamp(now), State: stateConfigured, Restore: retentionRestoreSection{State: notConnected}}
 	ids := f.visibleIDs()
 	if page.Policies, err = f.policyRows(); err != nil {

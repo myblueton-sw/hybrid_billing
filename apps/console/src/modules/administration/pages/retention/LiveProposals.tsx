@@ -1,6 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { Proposal, RetentionPage } from "../../../../service/retention";
+import type { KeptFacts } from "../../../../service/kept";
+import { AdminError } from "../../../../service/admin";
+import { useOlder } from "../../../../shared/KeptHistory";
 import { counted, plurals, summaryWords, words } from "./live-codes";
 import { k } from "./live-copy";
 import {
@@ -255,18 +258,31 @@ function Row({ p, ...shared }: Shared & { p: Proposal }) {
   );
 }
 
+function olderFacts(page: RetentionPage, kind: string, list: Proposal[] | null): KeptFacts | null {
+  const h = page.proposals.history;
+  const total = page.proposals.closed_by_kind?.[kind] ?? 0;
+  if (!h || list === null) return null;
+  const listed = list.filter((p) => p.state !== "pending").length;
+  return { total, next: total > listed ? h.next : "", kept: h.kept, dropped: h.dropped };
+}
+
 export function Proposals({ kind, ...shared }: Shared & { kind: "policy" | "release" | "plan" }) {
   const { l, page } = shared;
   const list = proposalsOfKind(page, kind);
-  const { pending, closed } = ordered(list ?? []);
+  const older = useOlder(l, page.revision + "\u0000" + kind, olderFacts(page, kind, list), list ?? [], (after) => shared.api.retentionProposals(kind, after), (e) => {
+    if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
+    if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    return false;
+  });
+  const { pending, closed } = ordered(older.rows);
   const title = kind === "policy" ? k.policyProposalsTitle(l) : kind === "release" ? k.releaseProposalsTitle(l) : k.planProposalsTitle(l);
   const head = "p04-proposals-" + kind;
   return (
     <section className="p04-section p04-proposals" aria-labelledby={head}>
       <h3 id={head}>{title}</h3>
       {kind === "plan" && <p className="p04-small">{k.planReadOnly(l)}</p>}
-      {page.proposals.more === true && <p className="p04-small live-quiet">{k.newestProposals(l)}</p>}
       {page.proposals.more === null && <p className="p04-small live-quiet">{k.maybeMore(l)}</p>}
+      {older.head}
       {list === null && <p className="live-empty">{k.unknown(l)}</p>}
       {list !== null && list.length === 0 && <p className="live-empty">{k.noProposals(l, kind)}</p>}
       {pending.length > 0 && (
@@ -278,10 +294,13 @@ export function Proposals({ kind, ...shared }: Shared & { kind: "policy" | "rele
       {closed.length > 0 && (
         <>
           <h4>{k.closedGroup(l, closed.length)}</h4>
+          {older.count}
           <ul className="p04-list">{closed.map((p, i) => <Row key={p.target || "c" + i} p={p} {...shared} />)}</ul>
           <p className="p04-small live-quiet">{k.appliedNote(l)}</p>
         </>
       )}
+      {closed.length === 0 && older.count}
+      {older.foot}
     </section>
   );
 }

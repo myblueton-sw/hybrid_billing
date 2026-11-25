@@ -11,7 +11,7 @@ import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
 import { historyPageOf, integrationsOf, pluginProposalOf, type HistoryEntry, type IntegrationsPage, type PluginProposal } from "./integrations";
 import { locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
 import { evidenceOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
-import { retentionOf, type RetentionPage } from "./retention";
+import { proposalOf as retentionProposalOf, retentionOf, type Proposal as RetentionProposal, type RetentionPage } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
 
 export type RolePeriod = "open" | "bounded" | "ends_soon" | "ended";
@@ -1205,6 +1205,11 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async subscriptionHistory(subscription: string, after: string): Promise<{ rows: HistoryEntry[]; next: string; total: number }> {
       const got = historyPageOf(await send("/integrations/subscription-history?subscription=" + encodeURIComponent(subscription) + "&limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionProposals(kind: string, after: string): Promise<KeptPage<RetentionProposal>> {
+      const got = keptPageOf(await send("/retention/proposals?kind=" + encodeURIComponent(kind) + "&limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), retentionProposalOf);
       if (!got) throw new AdminError("invalid");
       return got;
     },

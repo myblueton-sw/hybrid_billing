@@ -764,3 +764,7 @@
 .p04-live .p04-held-group + .p04-held-group {
   margin-block-start: 32px;
 }
+.p04-live .p04-runs-more {
+  padding-block-start: 24px;
+  border-block-start: 1px solid var(--border-row);
+}

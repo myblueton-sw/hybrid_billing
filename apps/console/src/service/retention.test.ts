@@ -233,3 +233,24 @@ test("the holds' released count, cursor and the released holds read are read str
   assert.equal(calls[0], "/api/v1/retention/holds?limit=50&after=71");
   await assert.rejects(api.retentionHolds("2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
 });
+
+test("the runs' finished count, cursor and the finished runs read are read strictly", async () => {
+  const { retentionOf, runsPageOf } = await import("./retention");
+  const { AdminError, adminClient } = await import("./admin");
+  for (const bad of [{}, { runs: [], next: "" }, { runs: "x", next: "", total: 0 }, { runs: [], next: 4, total: 0 }]) assert.equal(runsPageOf(bad), null, JSON.stringify(bad));
+  const page = runsPageOf({ runs: [{ number: 70, run: { target: "retention-run-70", label: "run/70" }, state: "stopped" }, null, "x"], next: "21", total: 120 });
+  assert.deepEqual([page?.rows.length, page?.rows[0].number, page?.rows[0].run?.label, page?.rows[0].state, page?.next, page?.total], [1, 70, "run/70", "stopped", "21", 120]);
+  const got = retentionOf({ state: "configured", deletion: { total: 3, more: false, rows: [{ number: 3, run: { target: "retention-run-3", label: "run/3" } }], finished: { total: 1, next: "" } } });
+  assert.deepEqual([got.deletion.finished, got.deletion.rows?.[0].number], [{ total: 1, next: "" }, 3]);
+  assert.equal(retentionOf({ state: "configured", deletion: { total: 0, more: false, rows: [] } }).deletion.finished, null);
+  assert.equal(retentionOf({ state: "configured", deletion: { total: 1, more: false, rows: [{ run: { target: "retention-run-1", label: "run/1" } }] } }).deletion.rows?.[0].number, null);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { runs: [{ number: 70, run: { target: "retention-run-70", label: "run/70" } }], next: "", total: 120 } : { runs: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.retentionRuns("71")).rows[0].number, 70);
+  assert.equal(calls[0], "/api/v1/retention/runs?limit=50&after=71");
+  await assert.rejects(api.retentionRuns("2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});

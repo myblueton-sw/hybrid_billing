@@ -12,6 +12,7 @@ import (
 
 const (
 	requirementsPage     = 50
+	requirementsPageMax  = 100
 	requirementTargets   = 20
 	requirementNumberMax = 1000000000
 	requirementsOrder    = "recorded"
@@ -71,7 +72,7 @@ func parseRequirementsQuery(values url.Values) (requirementsQuery, bool) {
 			out.after, valid = int(n), ok && n > 0 && n <= requirementNumberMax
 		case name == "limit":
 			n, ok := canonicalNumber(given[0])
-			out.limit, valid = int(n), ok && n >= 1 && n <= requirementsPage
+			out.limit, valid = int(n), ok && n >= 1 && n <= requirementsPageMax
 		case name == "q":
 			out.search.term, valid = parseSearch(given[0])
 		case name == "state":

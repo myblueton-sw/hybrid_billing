@@ -1,5 +1,7 @@
 package releasetrace
 
+import "sort"
+
 func (r *Registry) Requirement(k Key, buildID string) (RequirementView, error) {
 	r.enter()
 	defer r.leave()
@@ -61,4 +63,27 @@ func (r *Registry) Deactivate(id, reason string, actor Actor) error {
 	}
 	p.active, p.build, p.proof = false, "", ""
 	return nil
+}
+
+func (r *Registry) Replacements(k Key) ([]Key, error) {
+	r.enter()
+	defer r.leave()
+	q := r.requirements[k]
+	if q == nil {
+		return nil, ErrNotFound
+	}
+	found := []*requirement{}
+	if !q.retired {
+		for _, rep := range r.requirements {
+			if rep != q && !weaker(q, rep) {
+				found = append(found, rep)
+			}
+		}
+	}
+	sort.Slice(found, func(a, b int) bool { return found[a].seq < found[b].seq })
+	out := make([]Key, 0, len(found))
+	for _, rep := range found {
+		out = append(out, Key{Namespace: rep.view.Namespace, ID: rep.view.ID})
+	}
+	return out, nil
 }

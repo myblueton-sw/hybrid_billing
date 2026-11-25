@@ -26,8 +26,8 @@ func TestEvidenceReadFaults(t *testing.T) {
 	if got := f.evidenceRead(root); got.status != 200 {
 		t.Fatal(got.raw)
 	}
-	if fmt.Sprint(counts) != "map[perf-active_budget:4 perf-hardware:1 perf-profile:5 perf-readiness:1 perf-runs:4 release-evidence-read:1 roster:1 trace-check:35 "+
-		"trace-gate:3 trace-path:2 trace-requirement:24 trace-results:15]" {
+	if fmt.Sprint(counts) != "map[perf-active_budget:4 perf-hardware:1 perf-profile:5 perf-readiness:1 perf-runs:4 release-evidence-read:1 roster:1 trace-check:5 "+
+		"trace-gate:3 trace-path:2 trace-replacements:6 trace-requirement:24 trace-results:15]" {
 		t.Errorf("read calls %v", counts)
 	}
 	for step, total := range counts {

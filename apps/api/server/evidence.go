@@ -260,6 +260,7 @@ type evidenceFacts struct {
 	candidate *releasetrace.Release
 	build     string
 	replacing map[releasetrace.Key]bool
+	numbers   map[releasetrace.Key]int
 }
 
 func (s *Server) evidencePerson(id string) *evidencePerson {
@@ -465,20 +466,27 @@ func (f *evidenceFacts) replacements(index int) (evidenceList[evidenceTarget], e
 	if f.replacing == nil {
 		f.replacing = f.s.ev.pendingReplacements()
 	}
-	all := []evidenceTarget{}
-	for m, other := range stored {
-		if m == index || f.replacing[other] {
-			continue
-		}
-		reason, err := f.check(retireCheck(stored[index], other), f.reader, "")
-		switch {
-		case err != nil:
-			return evidenceList[evidenceTarget]{}, err
-		case reason == "":
-			all = append(all, evidenceTarget{Target: requirementTarget(m + 1), Label: label(other)})
+	if f.numbers == nil {
+		f.numbers = make(map[releasetrace.Key]int, len(stored))
+		for m, k := range stored {
+			f.numbers[k] = m + 1
 		}
 	}
-	return capped(all, evidenceReplacements), nil
+	var accepted []releasetrace.Key
+	err := f.s.traceCall("replacements", func() (err error) { accepted, err = f.s.trace.Replacements(stored[index]); return })
+	if err != nil && !errors.Is(err, releasetrace.ErrNotFound) {
+		return evidenceList[evidenceTarget]{}, err
+	}
+	numbers := []int{}
+	for _, other := range accepted {
+		if n := f.numbers[other]; n > 0 && !f.replacing[other] {
+			numbers = append(numbers, n)
+		}
+	}
+	sort.Ints(numbers)
+	return listOf(len(numbers), evidenceReplacements, func(at int) (evidenceTarget, error) {
+		return evidenceTarget{Target: requirementTarget(numbers[at]), Label: label(stored[numbers[at]-1])}, nil
+	})
 }
 
 func (f *evidenceFacts) retireBlocked(row *evidenceRequirementRow, q releasetrace.RequirementView, k releasetrace.Key) (string, error) {

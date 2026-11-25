@@ -3,7 +3,7 @@ import { standingKeys, type ArtifactRow, type ClassGroup, type Counts } from "..
 import { counted, plurals } from "./live-codes";
 import { k } from "./live-copy";
 import { artifactTarget, blockerPolicy, decisionLine, keptKey, pendingNow, refusedNow, rowId, runNumber } from "./live-model";
-import { Code, ListOr, MoreLine, Rich, Stamp, href, ltr } from "./live-format";
+import { Code, ItemsFoot, ListOr, MoreLine, Rich, Stamp, href, ltr } from "./live-format";
 import { RowNote, useOpen, type Shared } from "./LiveCommand";
 import { HoldCommand, itemContext } from "./LiveHoldForm";
 
@@ -123,7 +123,7 @@ function Group({ g, ...shared }: Shared & { g: ClassGroup }) {
         <Code l={l} value={g.bytes} say={k.connection} />
       </p>
       {g.population !== "registered_sample_artifacts" && <p className="p04-small"><Rich text={k.populationNote(l, g.population)} /></p>}
-      <MoreLine l={l} more={g.more} total={g.total} forms={plurals.showingOf} />
+      {!shared.listOf && <MoreLine l={l} more={g.more} total={g.total} forms={plurals.showingOf} />}
       {g.artifacts === null ? (
         <p className="live-empty">{k.unknown(l)}</p>
       ) : g.artifacts.length === 0 ? (
@@ -150,6 +150,7 @@ function Group({ g, ...shared }: Shared & { g: ClassGroup }) {
           </table>
         </div>
       )}
+      {shared.listOf && <ItemsFoot l={l} kind="items" list={shared.listOf(g.class, g.next)} shown={g.artifacts?.length ?? 0} total={g.total} />}
     </section>
   );
 }

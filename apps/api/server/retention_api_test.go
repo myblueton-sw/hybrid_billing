@@ -433,7 +433,7 @@ func TestRetentionReadShape(t *testing.T) {
 	}
 	holds := retSection(got, "holds")
 	if retJoin(holds["total"], holds["more"], holds["tenant_target"], holds["references"]) != "2 false retention-tenant:sample-workspace "+
-		"map[more:false population:registered_sample_artifacts rows:[map[class:source id:sample-source-3]] total:1]" {
+		"map[more:false next: population:registered_sample_artifacts rows:[map[class:source id:sample-source-3]] total:1]" {
 		t.Errorf("holds %v", holds)
 	}
 	temporary := retHold(t, got, retentionTemporary)

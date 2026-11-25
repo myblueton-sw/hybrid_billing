@@ -228,6 +228,10 @@ export const k = {
   placeWorkspaceHold: (l: Locale) => t(l, "Place a workspace hold", "업무 공간 보존 보류 등록", "وضع تعليق حذف لمساحة العمل"),
   tenantNote: (l: Locale) =>
     t(l, "Covers every registered item of this workspace, including items registered later.", "이 업무 공간에 등록된 모든 항목과 이후 등록되는 항목까지 포함합니다.", "يشمل كل عنصر مسجّل في مساحة العمل هذه، بما في ذلك العناصر المسجّلة لاحقًا."),
+  itemsShown: (l: Locale, n: number, m: number) => t(l, `Showing ${n} of ${m} items, sorted by item.`, `${m}건 중 ${n}건을 항목 순으로 표시합니다.`, `تُعرض ${n} من أصل ${m} عنصرًا، مرتبةً حسب العنصر.`),
+  itemsMore: (l: Locale) => t(l, "Load more items", "항목 더 불러오기", "تحميل عناصر أخرى"),
+  itemsFailed: (l: Locale) => t(l, "More items could not be loaded. The items already shown are unchanged.", "항목을 더 불러오지 못했습니다. 이미 표시된 항목은 그대로입니다.", "تعذّر تحميل عناصر أخرى. لم تتغيّر العناصر المعروضة."),
+  itemsReset: (l: Locale) => t(l, "The list was refreshed and starts again from the first item.", "목록을 새로 고쳐 첫 항목부터 다시 표시합니다.", "حُدِّثت القائمة وتبدأ من جديد بأول عنصر."),
   recordsShown: (l: Locale, n: number, m: number) => t(l, `Showing ${n} of the ${m} in this workspace, newest first.`, `이 업무 공간의 ${m}건 중 ${n}건을 최신순으로 표시합니다.`, `تُعرض ${n} من أصل ${m} في مساحة العمل هذه، الأحدث أولًا.`),
   recordsMore: (l: Locale) => t(l, "Load older deletion records", "이전 삭제 기록 불러오기", "تحميل سجلات حذف أقدم"),
   recordsFailed: (l: Locale) => t(l, "Older deletion records could not be loaded. The records already shown are unchanged.", "이전 삭제 기록을 불러오지 못했습니다. 이미 표시된 삭제 기록은 그대로입니다.", "تعذّر تحميل سجلات الحذف الأقدم. لم تتغيّر سجلات الحذف المعروضة."),

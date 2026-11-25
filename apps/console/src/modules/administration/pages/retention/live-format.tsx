@@ -155,3 +155,24 @@ export function MoreLine({ l, more, total, forms }: { l: Locale; more: boolean |
   const text = more === true && total !== null ? counted(l, total, forms) : k.maybeMore(l);
   return <p className="p04-small live-quiet">{text}</p>;
 }
+
+export type MoreList = { more: boolean; status: "idle" | "loading" | "failed"; reset: boolean; onMore: () => void };
+
+export function ItemsFoot({ l, kind, list, shown, total }: { l: Locale; kind: string; list: MoreList; shown: number; total: number | null }) {
+  const failed = list.status === "failed";
+  const c = "p04-" + kind;
+  return (
+    <div className={"p04-items-foot " + c + "-foot"}>
+      {total !== null && shown > 0 && shown < total && <p className={"p04-small live-quiet " + c + "-count"}>{k.itemsShown(l, shown, total)}</p>}
+      {list.reset && <p className={"p04-small " + c + "-reset"} role="status">{k.itemsReset(l)}</p>}
+      {(list.more || failed) && (
+        <div className={"p04-held-more " + c + "-more"}>
+          {failed && <p role="alert">{k.itemsFailed(l)}</p>}
+          <button type="button" className={"live-secondary p04-held-more-button " + c + "-more-button"} aria-disabled={list.status === "loading" || undefined} onClick={() => { if (list.status !== "loading") list.onMore(); }}>
+            {failed ? k.heldTryAgain(l) : list.status === "loading" ? k.heldLoading(l) : k.itemsMore(l)}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

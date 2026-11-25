@@ -282,9 +282,17 @@ func TestRetentionStoreAndTargets(t *testing.T) {
 	}
 	got := retSection(f.retentionRead(f.as(AdminLogin)), "proposals")
 	rows := retRows(got)
-	if len(rows) != retentionShown || fmtInt(got["total"]) != 67 || got["more"] != true || fmt.Sprint(rows[0]["number"]) != "159" ||
-		fmt.Sprint(rows[retentionShown-1]["number"]) != "110" {
-		t.Errorf("page %d %v", len(rows), got["total"])
+	waiting, oldest := 0, ""
+	for _, row := range rows {
+		if row["state"] == retention.ProposalPending {
+			waiting++
+		} else {
+			oldest = fmt.Sprint(row["number"])
+		}
+	}
+	if len(rows) != retentionShown || fmtInt(got["total"]) != 67 || got["more"] != true || fmt.Sprint(rows[0]["number"]) != "159" || waiting == 0 ||
+		oldest != fmt.Sprint(110+waiting) {
+		t.Errorf("page %d %v waiting %d oldest closed %s", len(rows), got["total"], waiting, oldest)
 	}
 }
 

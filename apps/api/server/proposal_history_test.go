@@ -10,6 +10,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/installer"
 	"github.com/myblueton-sw/hybrid_billing/modules/plugins"
 	"github.com/myblueton-sw/hybrid_billing/modules/recovery"
+	"github.com/myblueton-sw/hybrid_billing/modules/retention"
 )
 
 func (f world) readAs(a actor, path string) reply {
@@ -408,5 +409,107 @@ func TestSubscriptionActionHistoryFollowsTheChannelsSection(t *testing.T) {
 	f.s.bootWorkspace = "elsewhere"
 	if other := f.readAs(root, path); other.status != 422 || strings.Contains(other.raw, "Sample data") {
 		t.Errorf("another workspace: %d %s", other.status, other.raw)
+	}
+}
+
+func TestRetentionProposalHistoryIsCountedAndReadByKind(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root := f.as(AdminLogin)
+	seeded := len(f.s.ret.entries)
+	closedOf := func(kind string) int {
+		n := 0
+		for _, e := range f.s.ret.entries {
+			if !retentionPending(e) && f.s.ret.visibleEntry(e, SampleWorkspace) && (kind == "" || e.view.Change.Kind == kind) {
+				n++
+			}
+		}
+		return n
+	}
+	for i := 0; i < installKept+5; i++ {
+		f.s.ret.keep(&retentionEntry{view: retention.ProposalView{Number: uint64(1000 + i), State: retention.ProposalWithdrawn, Proposer: SampleAdmin,
+			Change: retention.Change{Kind: retention.ChangePolicy, Policy: retention.Policy{Class: retention.ClassClaim, Period: 1}}}, rationale: fmt.Sprintf("Review %03d", i)})
+	}
+	for i := 0; i < 3; i++ {
+		f.s.ret.keep(&retentionEntry{workspace: SampleWorkspace, view: retention.ProposalView{Number: uint64(2000 + i), State: retention.ProposalWithdrawn, Proposer: SampleAdmin,
+			Change: retention.Change{Kind: retention.ChangeRelease, Release: retention.Release{Hold: retentionDispute}}}})
+		f.s.ret.keep(&retentionEntry{workspace: "other-workspace", view: retention.ProposalView{Number: uint64(2100 + i), State: retention.ProposalWithdrawn, Proposer: SampleAdmin,
+			Change: retention.Change{Kind: retention.ChangeRelease, Release: retention.Release{Hold: retentionDispute}}}, rationale: "Another workspace"})
+	}
+	section := retSection(f.retentionRead(root), "proposals")
+	facts, _ := section["history"].(map[string]any)
+	byKind, _ := section["closed_by_kind"].(map[string]any)
+	rows := retRows(section)
+	waiting, shown := 0, []int{}
+	for _, row := range rows {
+		if row["state"] == retention.ProposalPending {
+			waiting++
+		} else {
+			shown = append(shown, whole(row["number"]))
+		}
+	}
+	if waiting == 0 || len(rows) != retentionShown || whole(facts["total"]) != closedOf("") || whole(facts["kept"]) != installKept || whole(facts["dropped"]) != f.s.ret.dropped ||
+		f.s.ret.dropped != seeded+installKept+5+6-len(f.s.ret.entries) || f.s.ret.dropped == 0 || fmt.Sprint(facts["next"]) != fmt.Sprint(shown[len(shown)-1]) ||
+		whole(byKind[retention.ChangePolicy]) != closedOf(retention.ChangePolicy) || whole(section["total"]) != len(f.s.ret.entries)-3 || closedOf(retention.ChangeRelease) < 3 || whole(byKind[retention.ChangeRelease]) != closedOf(retention.ChangeRelease) {
+		t.Fatalf("the retention read: %v by kind %v, %d waiting, %d closed shown", facts, byKind, waiting, len(shown))
+	}
+	all := f.walkHistory(root, "/api/v1/retention/proposals", facts, shown)
+	if len(all) != closedOf("") {
+		t.Errorf("the pages hold %d of %d closed", len(all), closedOf(""))
+	}
+	policy := f.readAs(root, "/api/v1/retention/proposals?kind=policy&limit=100&after="+fmt.Sprint(facts["next"]))
+	policyFacts, _ := policy.body["proposal_history"].(map[string]any)
+	if closedOf(retention.ChangePolicy) == closedOf("") || whole(policyFacts["total"]) != closedOf(retention.ChangePolicy) || whole(policyFacts["dropped"]) != f.s.ret.dropped {
+		t.Errorf("with a kind the total is the closed proposals of that kind: %v, policy %d of %d closed", policyFacts, closedOf(retention.ChangePolicy), closedOf(""))
+	}
+	if policy.status != 200 || policy.body["kind"] != "policy" || whole(policy.body["matching"]) != closedOf(retention.ChangePolicy) {
+		t.Errorf("by kind: %d matching %v of %d", policy.status, policy.body["matching"], closedOf(retention.ChangePolicy))
+	}
+	for _, raw := range policy.body["proposals"].([]any) {
+		if row := raw.(map[string]any); row["kind"] != "policy" || row["state"] == retention.ProposalPending {
+			t.Fatalf("a row of another kind or a waiting one: %v %v", row["kind"], row["state"])
+		}
+	}
+	release := f.readAs(root, "/api/v1/retention/proposals?kind=release")
+	if release.status != 200 || whole(release.body["matching"]) != closedOf(retention.ChangeRelease) {
+		t.Errorf("releases: %d %v of %d", release.status, release.body["matching"], closedOf(retention.ChangeRelease))
+	}
+	if searched := f.readAs(root, "/api/v1/retention/proposals?kind=policy&q=review%20204"); whole(searched.body["matching"]) != 1 ||
+		whole(searched.body["proposal_history"].(map[string]any)["total"]) != closedOf(retention.ChangePolicy) {
+		t.Errorf("a search does not change the total of the kind: %s", searched.raw[:min(len(searched.raw), 200)])
+	}
+	if hidden := f.readAs(root, "/api/v1/retention/proposals?q=another"); whole(hidden.body["matching"]) != 0 || strings.Contains(hidden.raw, "Another workspace") {
+		t.Errorf("another workspace's release proposal is found: %s", hidden.raw[:min(len(hidden.raw), 200)])
+	}
+	for _, n := range all {
+		if n >= 2100 && n < 2200 {
+			t.Fatalf("another workspace's release proposal %d is listed", n)
+		}
+	}
+	found := f.readAs(root, "/api/v1/retention/proposals?q=review%20204")
+	if n := keptNumbers(found.body["proposals"]); found.status != 200 || len(n) != 1 || n[0] != 1204 {
+		t.Errorf("a search by rationale: %s", found.raw[:min(len(found.raw), 300)])
+	}
+	f.refusedHistory(root, "/api/v1/retention/proposals")
+	for _, query := range []string{"?kind=", "?kind=other", "?kind=policy&kind=plan"} {
+		if got := f.readAs(root, "/api/v1/retention/proposals"+query); got.status != 422 {
+			t.Errorf("%s: %d", query, got.status)
+		}
+	}
+	member, theirs := f.readAs(f.as(MemberLogin), "/api/v1/retention/proposals"), f.retentionRead(f.as(MemberLogin))
+	if member.status != theirs.status {
+		t.Errorf("a member: the further read %d, the main read %d", member.status, theirs.status)
+	}
+	if got := f.readAs(actor{}, "/api/v1/retention/proposals"); got.status != 401 {
+		t.Errorf("anonymous: %d", got.status)
+	}
+	f.s.fault = func(at string) bool { return at == "retention-read" }
+	if got := f.readAs(root, "/api/v1/retention/proposals"); got.status != 503 {
+		t.Errorf("a fault: %d", got.status)
+	}
+	f.s.fault = nil
+	f.s.bootWorkspace = "elsewhere"
+	if other := f.readAs(root, "/api/v1/retention/proposals"); other.status != 200 || len(keptNumbers(other.body["proposals"])) != 0 || whole(other.body["matching"]) != 0 {
+		t.Errorf("another workspace: %d %s", other.status, other.raw[:min(len(other.raw), 200)])
 	}
 }

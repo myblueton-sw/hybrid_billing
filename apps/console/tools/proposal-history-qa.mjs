@@ -22,6 +22,8 @@ const screens = [
   { id: "p01", read: "installation", hash: (l) => `#/installation?lang=${l}`, list: (b) => b.proposals, put: (b, rows, facts) => ({ ...b, proposals: rows, proposal_history: facts }) },
   { id: "p02", read: "integrations", hash: (l) => `#/integrations?lang=${l}&view=modules`, list: (b) => b.modules?.proposals, put: (b, rows, facts) => ({ ...b, modules: { ...b.modules, proposals: rows, proposal_history: facts } }) },
   { id: "p03", read: "recovery", hash: (l) => `#/recovery?lang=${l}&view=resume`, list: (b) => b.proposals, put: (b, rows, facts) => ({ ...b, proposals: rows, proposal_history: facts }) },
+  { id: "p04", read: "retention", kind: "policy", hash: (l) => `#/retention?lang=${l}&view=policies`, list: (b) => b.proposals?.rows, history: (b) => b.proposals?.history,
+    put: (b, rows, facts) => { const others = (b.proposals.rows ?? []).filter((p) => p.kind !== "policy"); return { ...b, proposals: { ...b.proposals, total: rows.length + others.length, more: true, rows: [...rows, ...others], history: { ...facts, total: facts.total + 130 }, closed_by_kind: { ...b.proposals.closed_by_kind, policy: facts.total, release: 130 } } }; } },
 ];
 const facts = { total: 120, next: "1071", kept: 200, dropped: 5 };
 
@@ -49,7 +51,8 @@ try {
     await page.waitForLoadState("networkidle");
     page.off("response", seen);
     const real = screen.list(served ?? {}) ?? [];
-    const history = screen.id === "p02" ? served?.modules?.proposal_history : served?.proposal_history;
+    const history = screen.history ? screen.history(served ?? {}) : screen.id === "p02" ? served?.modules?.proposal_history : served?.proposal_history;
+    const shownKind = (p) => !screen.kind || p.kind === screen.kind;
     notes.push(`${screen.id} served: ${real.length} proposals, proposal_history ${JSON.stringify(history)}`);
     check(`${screen.id} the service counts the proposals it keeps and has nothing further for the sample`, history && history.total === real.filter((p) => p.state !== "pending").length && history.next === "" && history.dropped === 0, JSON.stringify(history));
     check(`${screen.id} with nothing cut the screen shows no count, no button and no end sentence`, (await section().locator(".kept-count, .kept-more, .kept-end").count()) === 0);
@@ -62,11 +65,11 @@ try {
     check(`${screen.id} the real service answers the further read with the newest closed proposals it keeps`, further.status === 200 && Array.isArray(got.proposals) && got.proposals.length === Math.min(5, realClosed.length) &&
       got.matching === realClosed.length && got.order === "newest_first" && got.proposals.every((p, i) => p.number === realClosed[i].number) && (realClosed.length > 5 ? got.next === String(realClosed[4].number) : got.next === ""), JSON.stringify(got).slice(0, 300));
     notes.push(`${screen.id} sample: ${real.length - realClosed.length} waiting, ${realClosed.length} closed`);
-    const template = real.find((p) => p.state !== "pending") ?? real[0];
+    const template = real.find((p) => p.state !== "pending" && shownKind(p)) ?? real.find(shownKind);
     if (!template) { check(`${screen.id} the sample has a proposal to copy`, false); continue; }
     const made = (n) => ({ ...template, number: n, target: String(template.target).replace(/\d+$/, String(n)), state: template.state === "pending" ? "withdrawn" : template.state, can_approve: false, can_withdraw: false, approve_blocked: "not_pending", withdraw_blocked: "not_pending" });
     const span = (from, to) => Array.from({ length: from - to + 1 }, (_, i) => made(from - i));
-    const waiting = real.filter((p) => p.state === "pending");
+    const waiting = real.filter((p) => p.state === "pending" && shownKind(p));
     for (const lang of ["en", "ko", "ar"]) {
       for (const width of [1440, 390]) {
         const at = `${screen.id} ${lang} ${width}`;
@@ -79,6 +82,7 @@ try {
         });
         await page.route((url) => ends(url.toString(), screen.read + "/proposals"), async (route) => {
           const after = new URL(route.request().url()).searchParams.get("after");
+          if (screen.kind) check(`${screen.id} the further read is asked for the kind this list shows`, new URL(route.request().url()).searchParams.get("kind") === screen.kind);
           asked.push(after);
           if (after === "1021" && fail-- > 0) return route.fulfill({ status: 503, json: { code: "dependency_unavailable", retry: true, next_action: "retry", request_id: "qa" } });
           const body = after === "1071" ? { proposals: span(1070, 1021), next: "1021" } : { proposals: span(1020, 1001), next: "" };

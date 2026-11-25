@@ -54,6 +54,7 @@ type retentionStore struct {
 	entries   []*retentionEntry
 	holdSeq   uint64
 	plans     uint64
+	dropped   int
 }
 
 func newRetentionStore() *retentionStore { return &retentionStore{} }
@@ -102,6 +103,7 @@ func (c *retentionStore) keep(e *retentionEntry) {
 	for index, old := range c.entries {
 		if old.view.State != retention.ProposalPending {
 			c.entries = append(c.entries[:index], c.entries[index+1:]...)
+			c.dropped++
 			return
 		}
 	}

@@ -187,3 +187,24 @@ test("resend identity: identical values reuse the key, edits renew it", () => {
   assert.equal(pendingNow("retention.place_hold", "retention-artifact:x"), undefined);
   forget();
 });
+
+test("the retention proposals' closed counts by kind and the further read are read strictly", async () => {
+  const { kindCountsOf, retentionOf } = await import("./retention");
+  const { AdminError, adminClient } = await import("./admin");
+  assert.deepEqual(kindCountsOf({ policy: 12, release: "3", plan: -1, other: 2.5, held: 0 }), { policy: 12, held: 0 });
+  assert.equal(kindCountsOf([1]), null);
+  const page = retentionOf({ state: "configured", proposals: { total: 60, more: true, rows: [], history: { total: 55, next: "71", kept: 200, dropped: 5 }, closed_by_kind: { policy: 40 } } });
+  assert.deepEqual([page.proposals.history, page.proposals.closed_by_kind], [{ total: 55, next: "71", kept: 200, dropped: 5 }, { policy: 40 }]);
+  const bare = retentionOf({ state: "configured", proposals: { total: 1, more: false, rows: [] } });
+  assert.deepEqual([bare.proposals.history, bare.proposals.closed_by_kind], [null, null]);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { proposals: [{ number: 70, kind: "policy", state: "withdrawn" }], next: "21", matching: 40, proposal_history: { total: 55, next: "", kept: 200, dropped: 5 } } : { proposals: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  const got = await api.retentionProposals("policy", "71");
+  assert.equal(calls[0], "/api/v1/retention/proposals?kind=policy&limit=50&after=71");
+  assert.deepEqual([got.rows[0].number, got.rows[0].kind, got.next, got.matching], [70, "policy", "21", 40]);
+  await assert.rejects(api.retentionProposals("policy", "2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
+});

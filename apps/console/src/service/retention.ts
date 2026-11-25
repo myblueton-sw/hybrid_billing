@@ -1,3 +1,4 @@
+import { keptFactsOf, type KeptFacts } from "./kept";
 import { count, hint } from "./integrations";
 
 export type Person = { id: string; login: string } | null;
@@ -148,7 +149,7 @@ export type Proposal = {
   can_withdraw: boolean;
   withdraw_blocked: string;
 };
-export type ProposalsSection = { total: number | null; more: boolean | null; rows: Proposal[] | null };
+export type ProposalsSection = { total: number | null; more: boolean | null; rows: Proposal[] | null; history: KeptFacts | null; closed_by_kind: Record<string, number> | null };
 
 export type RetentionPage = {
   revision: string;
@@ -415,7 +416,7 @@ export function retentionOf(body: Raw): RetentionPage {
     deletion: deletionOf(body.deletion),
     restore: { state: str(obj(body.restore).state) },
     decisions: decisionsOf(body.decisions),
-    proposals: { total: count(p.total), more: flag(p.more), rows: rows(p.rows, proposalOf) },
+    proposals: { total: count(p.total), more: flag(p.more), rows: rows(p.rows, proposalOf), history: isRow(p.history) ? keptFactsOf(p.history) : null, closed_by_kind: kindCountsOf(p.closed_by_kind) },
   };
 }
 
@@ -427,4 +428,9 @@ export function ownersOf(subjects: unknown): Owner[] {
     const id = str(s.user_id);
     return /^[A-Za-z0-9._:-]{1,128}$/.test(id) ? [{ id, login: str(s.login) }] : [];
   });
+}
+
+export function kindCountsOf(v: unknown): Record<string, number> | null {
+  if (!isRow(v)) return null;
+  return Object.fromEntries(Object.entries(v).filter((e): e is [string, number] => typeof e[1] === "number" && Number.isInteger(e[1]) && e[1] >= 0));
 }

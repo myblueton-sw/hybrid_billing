@@ -302,6 +302,13 @@ export const k = {
   storeRetiredRow: (l: Locale) => t(l, "No longer held by the register. Nothing can be done with it here.", "레지스트리가 더 이상 보관하지 않습니다. 여기서 할 수 있는 작업이 없습니다.", "لم يعد السجل يحتفظ به. لا يمكن فعل أي شيء به هنا."),
   appliedNote: (l: Locale) => t(l, "Applied means recorded in the register; it releases and activates nothing. An applied budget proposal records a proposed budget; budget approval is not connected.", "적용됨은 레지스트리에 기록되었다는 뜻이며 출시하거나 개통하지 않습니다. 적용된 성능 예산 제안은 제안된 성능 예산을 기록할 뿐이며 성능 예산 승인은 연결되지 않았습니다.", "«مطبّق» يعني مسجّلًا في السجل؛ ولا يُصدر أو يفعّل شيئًا. المقترح المطبّق لميزانية الأداء يسجّل ميزانية مقترحة فقط؛ واعتماد ميزانية الأداء غير متصل."),
   readOnlyKind: (l: Locale) => t(l, "Proposals of this kind are recorded by the sample data. Approving or withdrawing them is not available here.", "이 종류의 제안은 샘플 데이터가 기록한 것입니다. 여기서 승인하거나 철회할 수 없습니다.", "سجّلت بيانات العينة مقترحات من هذا النوع. لا يتوفر هنا اعتمادها أو سحبها."),
+  buildsShown: (l: Locale, n: number, m: number) => t(l, `Showing the newest ${n} of ${m} builds, newest first.`, `빌드 ${m}건 중 최근 ${n}건을 최신순으로 표시합니다.`, `تُعرض أحدث البنيات: ${n} من أصل ${m}، الأحدث أولًا.`),
+  buildsAll: (l: Locale, m: number) => t(l, `Showing all ${m} builds, newest first.`, `빌드 ${m}건을 모두 최신순으로 표시합니다.`, `تُعرض جميع البنيات (${m})، الأحدث أولًا.`),
+  buildsMoved: (l: Locale) =>
+    t(l, "Some builds were registered while this list was loading and are not shown here. Reload to see them at the top.", "목록을 불러오는 동안 등록된 빌드는 여기에 표시되지 않습니다. 새로 고치면 맨 위에 나옵니다.", "بعض البنيات سُجّلت أثناء تحميل القائمة ولا تظهر هنا. أعد التحميل لعرضها في الأعلى."),
+  buildsMore: (l: Locale) => t(l, "Load older builds", "이전 빌드 불러오기", "تحميل بنيات أقدم"),
+  buildsFailed: (l: Locale) => t(l, "Older builds could not be loaded. The builds already shown are unchanged.", "이전 빌드를 불러오지 못했습니다. 이미 표시된 빌드는 그대로입니다.", "تعذّر تحميل البنيات الأقدم. لم تتغيّر البنيات المعروضة."),
+  buildsReset: (l: Locale) => t(l, "The list was refreshed. The older builds you loaded are no longer shown.", "목록을 새로 고쳤습니다. 불러온 이전 빌드는 더 이상 표시되지 않습니다.", "حُدِّثت القائمة. لم تعد البنيات الأقدم التي حمّلتها معروضة."),
   resultsShown: (l: Locale, n: number, m: number) => t(l, `Showing the newest ${n} of ${m} results, newest first.`, `결과 ${m}건 중 최근 ${n}건을 최신순으로 표시합니다.`, `تُعرض أحدث النتائج: ${n} من أصل ${m}، الأحدث أولًا.`),
   resultsAll: (l: Locale, m: number) => t(l, `Showing all ${m} results, newest first.`, `결과 ${m}건을 모두 최신순으로 표시합니다.`, `تُعرض جميع النتائج (${m})، الأحدث أولًا.`),
   resultsMoved: (l: Locale) =>

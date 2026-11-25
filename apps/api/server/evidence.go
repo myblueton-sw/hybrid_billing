@@ -206,6 +206,7 @@ type evidenceResultRow struct {
 type evidenceArtifacts struct {
 	Origin      string                           `json:"origin"`
 	Builds      evidenceList[evidenceBuildRow]   `json:"builds"`
+	BuildsNext  string                           `json:"builds_next"`
 	Harnesses   evidenceList[evidenceHarnessRow] `json:"harnesses"`
 	Results     evidenceList[evidenceResultRow]  `json:"results"`
 	ResultsNext string                           `json:"results_next"`
@@ -585,12 +586,12 @@ func (f *evidenceFacts) artifacts() (evidenceArtifacts, error) {
 	s := f.s
 	section := evidenceArtifacts{Origin: f.origin, Files: notConnected, Logs: notConnected, Environment: notConnected, Content: notConnected}
 	builds := s.ev.builds
-	section.Builds, _ = listOf(len(builds), evidenceShown, func(index int) (evidenceBuildRow, error) {
-		n := len(builds) - 1 - index
-		return evidenceBuildRow{Build: builds[n].id, Commit: builds[n].commit, Order: n + 1}, nil
-	})
+	section.Builds, _ = listOf(len(builds), evidenceShown, func(index int) (evidenceBuildRow, error) { return buildRow(builds, len(builds)-1-index), nil })
+	if section.Builds.More {
+		section.BuildsNext = strconv.Itoa(len(builds) - evidenceShown + 1)
+	}
 	harnesses := s.ev.harnesses
-	section.Harnesses, _ = listOf(len(harnesses), evidenceShown, func(index int) (evidenceHarnessRow, error) {
+	section.Harnesses, _ = listOf(len(harnesses), len(harnesses), func(index int) (evidenceHarnessRow, error) {
 		return evidenceHarnessRow{Module: harnesses[index].module, ID: harnesses[index].id, Revocation: notConnected}, nil
 	})
 	section.Results = evidenceList[evidenceResultRow]{Total: len(s.ev.results), Rows: []evidenceResultRow{}}

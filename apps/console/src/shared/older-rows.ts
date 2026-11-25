@@ -18,10 +18,12 @@ export type OlderRows<T> = {
   countRef: RefObject<HTMLParagraphElement | null>;
 };
 
-export function newestFirst<T extends Numbered>(first: T[], older: T[]): T[] {
+export function newestFirst<T extends Numbered>(first: T[], older: T[]): T[];
+export function newestFirst<T>(first: T[], older: T[], numberOf: (row: T) => number | null): T[];
+export function newestFirst<T>(first: T[], older: T[], numberOf: (row: T) => number | null = (row) => (row as Numbered).number): T[] {
   const newest = [...first].reverse();
-  const seen = new Set(newest.map((x) => x.number));
-  return [...newest, ...older.filter((x) => x.number === null || !seen.has(x.number))];
+  const seen = new Set(newest.map(numberOf));
+  return [...newest, ...older.filter((x) => numberOf(x) === null || !seen.has(numberOf(x)))];
 }
 
 export function useOlderRows<T extends Numbered>(
@@ -30,7 +32,25 @@ export function useOlderRows<T extends Numbered>(
   first: T[] | null,
   read: ((after: string) => Promise<OlderPage<T>>) | undefined,
   onRefused: (err: unknown) => boolean,
+  recorded?: boolean,
+): OlderRows<T>;
+export function useOlderRows<T>(
+  key: string,
+  facts: OlderFacts | null,
+  first: T[] | null,
+  read: ((after: string) => Promise<OlderPage<T>>) | undefined,
+  onRefused: (err: unknown) => boolean,
+  recorded: boolean,
+  numberOf: (row: T) => number | null,
+): OlderRows<T>;
+export function useOlderRows<T>(
+  key: string,
+  facts: OlderFacts | null,
+  first: T[] | null,
+  read: ((after: string) => Promise<OlderPage<T>>) | undefined,
+  onRefused: (err: unknown) => boolean,
   recorded = true,
+  numberOf?: (row: T) => number | null,
 ): OlderRows<T> {
   const blank = (): State<T> => ({ key, rows: [], next: null, total: null, status: "idle" });
   const [state, setState] = useState<State<T>>(blank);
@@ -50,7 +70,7 @@ export function useOlderRows<T extends Numbered>(
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   const current = state.key === key ? state : blank();
   const next = facts && read ? current.next ?? facts.next : "";
-  const rows = first === null ? null : newestFirst(recorded ? first : [...first].reverse(), current.rows);
+  const rows = first === null ? null : newestFirst(recorded ? first : [...first].reverse(), current.rows, numberOf ?? ((row) => (row as Numbered).number));
   const total = Math.max(current.total ?? facts?.total ?? 0, rows?.length ?? 0);
   const load = () => {
     if (current.status === "loading" || !next || !read) return;

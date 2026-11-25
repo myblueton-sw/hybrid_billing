@@ -174,7 +174,7 @@ export type EvidencePage = {
   candidate: Candidate;
   matrix: { origin: string; paths: List<PathRow> };
   requirements: { origin: string; requirements: List<RequirementRow>; next: string; gate: Gate };
-  artifacts: { origin: string; builds: List<BuildRow>; harnesses: List<HarnessRow>; results: List<ResultRow>; results_next: string | null; files: string; logs: string; environment: string; content: string };
+  artifacts: { origin: string; builds: List<BuildRow>; builds_next: string | null; harnesses: List<HarnessRow>; results: List<ResultRow>; results_next: string | null; files: string; logs: string; environment: string; content: string };
   load: { origin: string; hardware: List<HardwareRow>; profiles: List<ProfileRow>; readiness: Readiness; measurement: string; planning_targets: string };
   decisions: { origin: string; proposals: List<Proposal>; proposal_history: KeptFacts | null; support_decisions: string; activation_review: string; ledger: string };
 };
@@ -441,6 +441,7 @@ export function evidenceOf(body: Raw): EvidencePage {
     artifacts: {
       origin: str(a.origin),
       builds: listOf(a.builds, (x) => ({ build: str(x.build), commit: str(x.commit), order: count(x.order) })),
+      builds_next: typeof a.builds_next === "string" ? a.builds_next : null,
       harnesses: listOf(a.harnesses, (x) => ({ module: str(x.module), id: str(x.id), revocation: str(x.revocation) })),
       results: listOf(a.results, resultOf),
       results_next: typeof a.results_next === "string" ? a.results_next : null,
@@ -489,4 +490,10 @@ export function resultsPageOf(body: Raw): { rows: ResultRow[]; next: string; tot
   const total = count(body.total);
   if (!Array.isArray(body.results) || typeof body.next !== "string" || total === null) return null;
   return { rows: body.results.filter(isRow).map(resultOf), next: body.next, total };
+}
+
+export function buildsPageOf(body: Raw): { rows: BuildRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.builds) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.builds.filter(isRow).map((x) => ({ build: str(x.build), commit: str(x.commit), order: count(x.order) })), next: body.next, total };
 }

@@ -10,7 +10,7 @@ import { installationOf, proposalOf as installProposalOf, type InstallationPage,
 import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
 import { historyPageOf, integrationsOf, pluginProposalOf, type HistoryEntry, type IntegrationsPage, type PluginProposal } from "./integrations";
 import { locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
-import { evidenceOf, proposalOf as evidenceProposalOf, resultsPageOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type Proposal as EvidenceProposal, type ResultRow, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
+import { buildsPageOf, evidenceOf, proposalOf as evidenceProposalOf, resultsPageOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type BuildRow, type Proposal as EvidenceProposal, type ResultRow, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
 import { holdsPageOf, proposalOf as retentionProposalOf, retentionOf, type HoldRow, type Proposal as RetentionProposal, type RetentionPage } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
 
@@ -1239,6 +1239,11 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async releaseEvidence(request = attempt().request): Promise<EvidencePage> {
       return evidenceOf(await send("/release-evidence", { method: "GET" }, request));
+    },
+    async evidenceBuilds(after: string): Promise<{ rows: BuildRow[]; next: string; total: number }> {
+      const got = buildsPageOf(await send("/release-evidence/builds?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
     },
     async evidenceResults(after: string): Promise<{ rows: ResultRow[]; next: string; total: number }> {
       const got = resultsPageOf(await send("/release-evidence/results?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));

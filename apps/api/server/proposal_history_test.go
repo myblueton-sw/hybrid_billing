@@ -604,3 +604,145 @@ func TestEvidenceProposalHistoryIsCountedAndReadAcrossModules(t *testing.T) {
 		t.Errorf("another workspace: %d", other.status)
 	}
 }
+
+func TestRetentionHoldsListEveryLiveHoldAndPageTheReleasedOnes(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root := f.as(AdminLogin)
+	for _, h := range f.s.ret.holds {
+		v, err := f.s.retentionHold(h.id)
+		if err != nil || v.Released != h.released {
+			t.Fatalf("after the seed the server's note of %s (released %v) differs from the module's (%v, %v)", h.id, h.released, v.Released, err)
+		}
+	}
+	seeded := len(f.s.ret.holds)
+	place := func(id, workspace string, released bool) {
+		t.Helper()
+		if _, err := f.s.retentionPlaceHold(retention.Hold{ID: id, Owner: SampleAdmin, Reason: "bulk", Tenants: []string{workspace}, Classes: []string{retention.ClassClaim}}, retAnn, workspace, "Bulk "+id); err != nil {
+			t.Fatal(err)
+		}
+		f.s.ret.hold(id).released = released
+	}
+	for i := 0; i < 130; i++ {
+		place(fmt.Sprintf("old-%03d", i), SampleWorkspace, true)
+	}
+	for i := 0; i < 60; i++ {
+		place(fmt.Sprintf("live-%03d", i), SampleWorkspace, false)
+	}
+	for i := 0; i < 5; i++ {
+		place(fmt.Sprintf("other-%03d", i), "other-workspace", true)
+	}
+	live, released := 0, 0
+	for _, h := range f.s.ret.holds {
+		if h.workspace == SampleWorkspace && h.released {
+			released++
+		} else if h.workspace == SampleWorkspace {
+			live++
+		}
+	}
+	section := retSection(f.retentionRead(root), "holds")
+	facts, _ := section["released"].(map[string]any)
+	rows := retRows(section)
+	listedLive := 0
+	for _, row := range rows {
+		if row["released"] == false {
+			listedLive++
+		}
+		if strings.HasPrefix(fmt.Sprint(row["id"]), "other-") {
+			t.Fatalf("another workspace's hold %v is listed", row["id"])
+		}
+	}
+	if live < 60 || listedLive != live || len(rows) != live || whole(section["total"]) != live+released || section["more"] != true || whole(facts["total"]) != released ||
+		fmt.Sprint(facts["next"]) != fmt.Sprint(seeded+130+60+1) {
+		t.Fatalf("every live hold is listed, and no released one when the live ones fill the list: %d rows, %d live of %d, released %v", len(rows), listedLive, live, facts)
+	}
+	path := "/api/v1/retention/holds"
+	all, next, pages := []int{}, fmt.Sprint(facts["next"]), 0
+	for next != "" {
+		got := f.readAs(root, path+"?limit=50&after="+next)
+		if got.status != 200 || whole(got.body["total"]) != released || whole(got.body["matching"]) != released || got.body["order"] != "newest_first" {
+			t.Fatalf("after %s: %s", next, got.raw[:min(len(got.raw), 300)])
+		}
+		for _, raw := range got.body["holds"].([]any) {
+			row := raw.(map[string]any)
+			if id := fmt.Sprint(row["id"]); strings.HasPrefix(id, "live-") || strings.HasPrefix(id, "other-") {
+				t.Fatalf("a live hold or another workspace's hold on a further page: %v", id)
+			}
+			all = append(all, whole(row["number"]))
+		}
+		next = fmt.Sprint(got.body["next"])
+		if pages++; pages > 10 {
+			t.Fatal("the released holds do not end")
+		}
+	}
+	for index := 1; index < len(all); index++ {
+		if all[index] >= all[index-1] {
+			t.Fatalf("not newest first without repeats at %d", index)
+		}
+	}
+	if len(all) != released {
+		t.Errorf("the pages hold %d of %d released", len(all), released)
+	}
+	found := f.readAs(root, path+"?q=old-129")
+	if rows, _ := found.body["holds"].([]any); found.status != 200 || len(rows) != 1 || rows[0].(map[string]any)["id"] != "old-129" || whole(found.body["matching"]) != 1 || whole(found.body["total"]) != released {
+		t.Errorf("a search by identifier: %s", found.raw[:min(len(found.raw), 300)])
+	}
+	if hidden := f.readAs(root, path+"?q=other-00"); whole(hidden.body["matching"]) != 0 {
+		t.Errorf("another workspace's hold is found: %v", hidden.body["matching"])
+	}
+	f.refusedHistory(root, path)
+	member, theirs := f.readAs(f.as(MemberLogin), path), f.retentionRead(f.as(MemberLogin))
+	if member.status != theirs.status {
+		t.Errorf("a member: the further read %d, the main read %d", member.status, theirs.status)
+	}
+	if got := f.readAs(actor{}, path); got.status != 401 {
+		t.Errorf("anonymous: %d", got.status)
+	}
+	f.s.fault = func(at string) bool { return at == "retention-read" }
+	if got := f.readAs(root, path); got.status != 503 {
+		t.Errorf("a fault: %d", got.status)
+	}
+	f.s.fault = nil
+	f.s.bootWorkspace = "elsewhere"
+	if other := f.readAs(root, path); other.status != 200 || len(other.body["holds"].([]any)) != 0 || whole(other.body["total"]) != 0 {
+		t.Errorf("another workspace: %d", other.status)
+	}
+}
+
+func TestRetentionHoldsMixTheNewestReleasedOnesWhenFewAreInForce(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	root := f.as(AdminLogin)
+	live := len(f.s.ret.holds)
+	for i := 0; i < 60; i++ {
+		id := fmt.Sprintf("done-%03d", i)
+		if _, err := f.s.retentionPlaceHold(retention.Hold{ID: id, Owner: SampleAdmin, Reason: "bulk", Tenants: []string{SampleWorkspace}, Classes: []string{retention.ClassClaim}}, retAnn, SampleWorkspace,
+			fmt.Sprintf("Closed case %03d", i)); err != nil {
+			t.Fatal(err)
+		}
+		f.s.ret.hold(id).released = true
+	}
+	section := retSection(f.retentionRead(root), "holds")
+	facts, _ := section["released"].(map[string]any)
+	rows := retRows(section)
+	done, first, last := 0, "", ""
+	for _, row := range rows {
+		if id := fmt.Sprint(row["id"]); strings.HasPrefix(id, "done-") {
+			if done++; first == "" {
+				first = id
+			}
+			last = id
+		}
+	}
+	if len(rows) != retentionShown || done != retentionShown-live || first != "done-059" || last != fmt.Sprintf("done-%03d", 60-done) || whole(facts["total"]) != 60 ||
+		fmt.Sprint(facts["next"]) != fmt.Sprint(f.s.ret.hold(last).number) || whole(section["total"]) != live+60 {
+		t.Fatalf("with %d in force: %d rows, %d released from %s to %s, facts %v", live, len(rows), done, first, last, facts)
+	}
+	rest := f.readAs(root, "/api/v1/retention/holds?limit=100&after="+fmt.Sprint(facts["next"]))
+	if got, _ := rest.body["holds"].([]any); rest.status != 200 || len(got) != 60-done || got[0].(map[string]any)["id"] != fmt.Sprintf("done-%03d", 60-done-1) || rest.body["next"] != "" {
+		t.Errorf("the rest of the released holds: %d", rest.status)
+	}
+	found := f.readAs(root, "/api/v1/retention/holds?q=closed%20case%20007")
+	if got, _ := found.body["holds"].([]any); len(got) != 1 || got[0].(map[string]any)["id"] != "done-007" {
+		t.Errorf("a search by the reason given when placing: %s", found.raw[:min(len(found.raw), 200)])
+	}
+}

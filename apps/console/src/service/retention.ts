@@ -58,6 +58,7 @@ export type StoreResult = { store: string; result: string };
 export type HoldOutcome = { artifact: string; outcome: string; stores: StoreResult[] | null };
 export type HoldScope = { artifacts: string[] | null; workspace: boolean | null; classes: string[] | null };
 export type HoldRow = {
+  number: number | null;
   id: string;
   target: string;
   owner: Person;
@@ -77,7 +78,7 @@ export type HoldRow = {
 };
 export type Reference = { id: string; class: string };
 export type References = { population: string; total: number | null; more: boolean | null; rows: Reference[] | null };
-export type HoldsSection = { total: number | null; more: boolean | null; rows: HoldRow[] | null; tenant_target: string; references: References };
+export type HoldsSection = { total: number | null; more: boolean | null; rows: HoldRow[] | null; released: { total: number; next: string } | null; tenant_target: string; references: References };
 
 export type StoreRow = { store: string; target: number | null; deleted: number | null; failed: number | null; excluded: number | null; pending: number | null };
 export type RunItem = { id: string; outcome: string };
@@ -272,6 +273,7 @@ export function holdRowOf(r: Raw): HoldRow {
   const scope = obj(r.scope);
   const countsScope = str(r.counts_scope);
   return {
+    number: count(r.number),
     id: str(r.id),
     target: str(r.target),
     owner: personOf(r.owner),
@@ -298,6 +300,7 @@ export function holdsOf(v: unknown): HoldsSection {
     total: count(r.total),
     more: flag(r.more),
     rows: rows(r.rows, holdRowOf),
+    released: releasedFactsOf(r.released),
     tenant_target: str(r.tenant_target),
     references: { population: str(ref.population), total: count(ref.total), more: flag(ref.more), rows: rows(ref.rows, (x) => ({ id: str(x.id), class: str(x.class) })) },
   };
@@ -433,4 +436,16 @@ export function ownersOf(subjects: unknown): Owner[] {
 export function kindCountsOf(v: unknown): Record<string, number> | null {
   if (!isRow(v)) return null;
   return Object.fromEntries(Object.entries(v).filter((e): e is [string, number] => typeof e[1] === "number" && Number.isInteger(e[1]) && e[1] >= 0));
+}
+
+export function releasedFactsOf(v: unknown): { total: number; next: string } | null {
+  if (!isRow(v)) return null;
+  const total = count(v.total);
+  return total === null || typeof v.next !== "string" ? null : { total, next: v.next };
+}
+
+export function holdsPageOf(body: Raw): { rows: HoldRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.holds) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.holds.filter(isRow).map(holdRowOf), next: body.next, total };
 }

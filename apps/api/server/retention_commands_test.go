@@ -117,8 +117,11 @@ func TestRetentionRelease(t *testing.T) {
 		"impact_count")
 	f.unchanged(t, "self approval", f.run(root, "retention.approve", retTarget(6), nil), "prerequisite_failed")
 	f.ok(t, "approve release", f.run(second, "retention.approve", retTarget(6), nil), "applied", "map[proposal:6 target:retention-proposal-6]")
-	if v := f.retHoldView(retentionTemporary); !v.Released {
-		t.Errorf("hold %+v", v)
+	if v := f.retHoldView(retentionTemporary); !v.Released || !f.s.ret.hold(retentionTemporary).released || f.s.ret.hold(retentionDispute).released {
+		t.Errorf("hold %+v, the server's note of it %v", v, f.s.ret.hold(retentionTemporary).released)
+	}
+	if section := retSection(f.retentionRead(root), "holds"); fmtInt(section["released"].(map[string]any)["total"]) != 1 || retRows(section)[0]["released"] == nil {
+		t.Errorf("the read counts one released hold: %v", section["released"])
 	}
 	if f.retStanding("sample-temporary-2").Held {
 		t.Error("still held")

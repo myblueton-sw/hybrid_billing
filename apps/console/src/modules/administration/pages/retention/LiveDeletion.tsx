@@ -75,7 +75,7 @@ function Stores({ l, r }: { l: Locale; r: RunRow }) {
   );
 }
 
-function Items({ r, ...shared }: Shared & { r: RunRow }) {
+function Items({ r, of, ...shared }: Shared & { r: RunRow; of: string }) {
   const { l, page, api } = shared;
   const target = r.run?.target ?? "";
   const older = useMoreRows<RunItem>(page.revision + "\u0000" + target, r.artifacts.rows, target && r.artifacts.more === true ? r.artifacts.next : null, (after) => api.retentionRunArtifacts(target, after), (x) => x.id, (e) => {
@@ -115,7 +115,7 @@ function Items({ r, ...shared }: Shared & { r: RunRow }) {
           </table>
         </div>
       )}
-      {paged && <ItemsFoot l={l} kind="run-items" list={{ more: older.more, status: older.status, reset: older.reset, onMore: older.load }} shown={list?.length ?? 0} total={r.artifacts.total} />}
+      {paged && <ItemsFoot l={l} kind="run-items" list={{ more: older.more, status: older.status, reset: older.reset, onMore: older.load }} shown={list?.length ?? 0} total={r.artifacts.total} of={of} />}
     </>
   );
 }
@@ -191,7 +191,7 @@ function Run({ r, ...shared }: Shared & { r: RunRow }) {
         )}
       </div>
       <Stores l={l} r={r} />
-      <Items r={r} {...shared} />
+      <Items r={r} of={head} {...shared} />
     </article>
   );
 }

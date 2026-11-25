@@ -43,6 +43,7 @@ type installStore struct {
 	entries      []*installEntry
 	destinations []installer.Destination
 	reports      []installReport
+	dropped      int
 }
 
 func newInstallStore() *installStore { return &installStore{} }
@@ -64,6 +65,7 @@ func (c *installStore) keep(e *installEntry) {
 	for index, old := range c.entries {
 		if old.view.State != installer.ProposalPending {
 			c.entries = append(c.entries[:index], c.entries[index+1:]...)
+			c.dropped++
 			return
 		}
 	}

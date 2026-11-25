@@ -209,6 +209,7 @@ type recoveryPage struct {
 	Migration      recoveryMigrationSection `json:"migration"`
 	Resume         recoveryResumeSection    `json:"resume"`
 	Proposals      []recoveryProposalRow    `json:"proposals"`
+	History        keptFacts                `json:"proposal_history"`
 }
 
 type recoveryFacts struct {
@@ -430,11 +431,11 @@ func (s *Server) recoveryPage(reader, workspace string, installs []*recoveryInst
 		page.Resume.Rows = append(page.Resume.Rows, s.resumeRow(f))
 	}
 	page.Reconciliation.State = configured(len(page.Reconciliation.Rows) > 0)
-	for index := len(s.rec.entries) - 1; index >= 0 && len(page.Proposals) < recoveryShown; index-- {
-		if e := s.rec.entries[index]; s.rec.tenantOf(e) == workspace {
-			page.Proposals = append(page.Proposals, s.recoveryProposalRow(e, reader))
-		}
+	listed, closed, next := listKept(s.rec.of(workspace), recoveryPending, recoveryNumber, recoveryShown)
+	for _, e := range listed {
+		page.Proposals = append(page.Proposals, s.recoveryProposalRow(e, reader))
 	}
+	page.History = keptFacts{Total: closed, Next: next, Kept: installKept, Dropped: s.rec.dropped[workspace]}
 	return page, errors.Join(errs...)
 }
 
@@ -457,5 +458,58 @@ func (s *Server) readRecovery(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.DependencyUnavailable, request)
 		return
 	}
+	writeJSON(w, http.StatusOK, request, page)
+}
+
+func recoveryPending(e *recoveryEntry) bool { return e.view.State == recovery.ProposalPending }
+
+func recoveryNumber(e *recoveryEntry) uint64 { return e.view.Number }
+
+type recoveryProposalsPage struct {
+	Revision   string                `json:"revision"`
+	ServerTime string                `json:"server_time"`
+	Order      string                `json:"order"`
+	Q          string                `json:"q"`
+	Proposals  []recoveryProposalRow `json:"proposals"`
+	Next       string                `json:"next"`
+	Matching   int                   `json:"matching"`
+	History    keptFacts             `json:"proposal_history"`
+}
+
+func (s *Server) listRecoveryProposals(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	_, answer, ok := s.admitted(w, r)
+	if !ok {
+		return
+	}
+	q, valid := parseKeptQuery(r.URL.Query())
+	if !valid {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	workspace := answer.Workspace()
+	page := recoveryProposalsPage{Revision: s.Revision(), ServerTime: stamp(s.clock()), Order: closedPlansOrder, Q: q.term, Proposals: []recoveryProposalRow{}}
+	if len(s.visibleInstalls(workspace)) == 0 {
+		writeJSON(w, http.StatusOK, request, page)
+		return
+	}
+	mine := s.rec.of(workspace)
+	_, closed, _ := listKept(mine, recoveryPending, recoveryNumber, 0)
+	page.History = keptFacts{Total: closed, Kept: installKept, Dropped: s.rec.dropped[workspace]}
+	walk := keptWalk{q: q}
+	for index := len(mine) - 1; index >= 0; index-- {
+		e := mine[index]
+		if recoveryPending(e) {
+			continue
+		}
+		v := e.view
+		number := strconv.FormatUint(v.Number, 10)
+		if walk.take(v.Number, q.matches(number, recoveryProposalTarget+number, v.Change.Kind, changeScope(v.Change), v.State, v.Proposer, s.loginOf(v.Proposer), e.rationale)) {
+			page.Proposals = append(page.Proposals, s.recoveryProposalRow(e, answer.User()))
+		}
+	}
+	page.Next, page.Matching = walk.Next, walk.Matching
 	writeJSON(w, http.StatusOK, request, page)
 }

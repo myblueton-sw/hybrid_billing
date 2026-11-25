@@ -7,7 +7,6 @@ import (
 	"slices"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
@@ -552,7 +551,6 @@ type planRow struct {
 	CanActivate   bool           `json:"can_activate"`
 	Blocked       string         `json:"blocked"`
 	Draft         *planDraftRow  `json:"draft"`
-	seq           uint64
 }
 
 type planDraftRow struct {
@@ -574,12 +572,7 @@ type plansPage struct {
 	Closed     closedFacts       `json:"closed"`
 }
 
-type closedFacts struct {
-	Total   int    `json:"total"`
-	Next    string `json:"next"`
-	Kept    int    `json:"kept"`
-	Dropped int    `json:"dropped"`
-}
+type closedFacts = keptFacts
 
 func (s *Server) planRow(m *planMeta, active uint64, reader string, now time.Time) planRow {
 	info := s.planState(m)
@@ -722,13 +715,8 @@ type closedPlansPage struct {
 
 const closedPlansOrder = "newest_first"
 
-func (s *Server) planMatches(m *planMeta, term string) bool {
-	for _, text := range []string{m.id, m.change.Member, m.change.Target, m.proposer, s.loginOf(m.proposer), s.label(m.workspace, m.change.Member), s.label(m.workspace, m.change.Target)} {
-		if text != "" && strings.Contains(fold(text), term) {
-			return true
-		}
-	}
-	return false
+func (s *Server) planMatches(m *planMeta, q keptQuery) bool {
+	return q.matches(m.id, m.change.Member, m.change.Target, m.proposer, s.loginOf(m.proposer), s.label(m.workspace, m.change.Member), s.label(m.workspace, m.change.Target))
 }
 
 func (s *Server) listClosedPlans(w http.ResponseWriter, r *http.Request) {
@@ -739,27 +727,10 @@ func (s *Server) listClosedPlans(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	values := r.URL.Query()
-	limit, before, term := plansShown, uint64(0), ""
-	for name, given := range values {
-		valid := len(given) == 1 && given[0] != ""
-		switch {
-		case !valid:
-		case name == "after":
-			n, err := strconv.ParseUint(given[0], 10, 64)
-			before, valid = n, err == nil && n > 0 && strconv.FormatUint(n, 10) == given[0]
-		case name == "limit":
-			n, err := strconv.Atoi(given[0])
-			limit, valid = n, err == nil && n >= 1 && n <= userPageMax && strconv.Itoa(n) == given[0]
-		case name == "q":
-			term, valid = parseSearch(given[0])
-		default:
-			valid = false
-		}
-		if !valid {
-			failCode(w, commands.InvalidRequest, request)
-			return
-		}
+	q, valid := parseKeptQuery(r.URL.Query())
+	if !valid {
+		failCode(w, commands.InvalidRequest, request)
+		return
 	}
 	ws := answer.Workspace()
 	active, err := s.activeRevision(ws)
@@ -769,24 +740,14 @@ func (s *Server) listClosedPlans(w http.ResponseWriter, r *http.Request) {
 	}
 	now := s.clock()
 	closed := s.closedPlans(ws)
-	page := closedPlansPage{Revision: s.Revision(), ServerTime: stamp(now), Active: active, Order: closedPlansOrder, Q: term, Plans: []planRow{},
+	page := closedPlansPage{Revision: s.Revision(), ServerTime: stamp(now), Active: active, Order: closedPlansOrder, Q: q.term, Plans: []planRow{},
 		Closed: closedFacts{Total: len(closed), Kept: closedPlansKept, Dropped: s.plans.dropped[ws]}}
-	folded := fold(term)
+	walk := keptWalk{q: q}
 	for _, m := range closed {
-		if term != "" && !s.planMatches(m, folded) {
-			continue
+		if walk.take(m.seq, q.term == "" || s.planMatches(m, q)) {
+			page.Plans = append(page.Plans, s.planRow(m, active, answer.User(), now))
 		}
-		page.Matching++
-		if before != 0 && m.seq >= before {
-			continue
-		}
-		if len(page.Plans) == limit {
-			page.Next = strconv.FormatUint(page.Plans[limit-1].seq, 10)
-			continue
-		}
-		row := s.planRow(m, active, answer.User(), now)
-		row.seq = m.seq
-		page.Plans = append(page.Plans, row)
 	}
+	page.Next, page.Matching = walk.Next, walk.Matching
 	writeJSON(w, http.StatusOK, request, page)
 }

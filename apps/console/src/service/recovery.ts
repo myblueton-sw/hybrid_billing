@@ -1,3 +1,4 @@
+import { keptFactsOf, type KeptFacts } from "./kept";
 import { count, hint } from "./integrations";
 
 export type DomainCheck = { domain: string; status: string; mismatch_chunks: number[] | null };
@@ -109,6 +110,7 @@ export type RecoveryPage = {
   migration: MigrationSection;
   resume: Section<ResumeRow>;
   proposals: RecoveryProposal[] | null;
+  proposal_history: KeptFacts | null;
 };
 
 type Raw = Record<string, unknown>;
@@ -290,5 +292,6 @@ export function recoveryOf(body: Raw): RecoveryPage {
     migration: { state: str(m.state), modules: strs(m.modules) },
     resume: sectionOf(body.resume, resumeRowOf),
     proposals: rows(body.proposals, recoveryProposalOf),
+    proposal_history: isRow(body.proposal_history) ? keptFactsOf(body.proposal_history) : null,
   };
 }

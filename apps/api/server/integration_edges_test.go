@@ -327,8 +327,8 @@ func TestIntegrationStoreAndTargets(t *testing.T) {
 		f.s.integ.keep(&pluginEntry{view: plugins.ProposalView{Number: n, State: plugins.ProposalWithdrawn, Proposer: SampleAdmin, Change: plugins.Change{Kind: plugins.ChangeEnable}}})
 	}
 	rows := part(f.integrations(f.as(AdminLogin)), "modules")["proposals"].([]any)
-	if len(rows) != installShown || fmt.Sprint(rows[0].(map[string]any)["number"]) != "159" || fmt.Sprint(rows[installShown-1].(map[string]any)["number"]) != "110" {
-		t.Errorf("page %d", len(rows))
+	if n, first, waiting, oldest := listedShape(rows); n != installShown || first != 159 || waiting == 0 || oldest != 110+waiting {
+		t.Errorf("page %d first %d waiting %d oldest closed %d", n, first, waiting, oldest)
 	}
 }
 

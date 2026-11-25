@@ -175,8 +175,8 @@ func TestRecoveryStoreAndTargets(t *testing.T) {
 	}
 	got := f.recoveryRead(f.as(AdminLogin))
 	rows := got.body["proposals"].([]any)
-	if len(rows) != recoveryShown || fmt.Sprint(rows[0].(map[string]any)["number"]) != "159" || fmt.Sprint(rows[recoveryShown-1].(map[string]any)["number"]) != "110" {
-		t.Errorf("page %d", len(rows))
+	if n, first, waiting, oldest := listedShape(rows); n != recoveryShown || first != 159 || waiting == 0 || oldest != 110+waiting {
+		t.Errorf("page %d first %d waiting %d oldest closed %d", n, first, waiting, oldest)
 	}
 }
 

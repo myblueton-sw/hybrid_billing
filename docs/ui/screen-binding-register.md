@@ -240,16 +240,16 @@ Tracking: [HYB-295](https://linear.app/hybrid-billing/issue/HYB-295). [HB-257](.
 **P01 Installation**
 - **Tickets.** HB-282 API (#198), HB-283 screen (#199), HYB-293 (#210).
 - **Field map.** [P01 fields](screen-binding-fields/operations.md#p01-installation).
-- **Reads.** `GET /api/v1/installation` (`boundary.go:43`, `admin.ts:1077`, `administration/pages/installation/Live.tsx:52`).
+- **Reads.** `GET /api/v1/installation` (`boundary.go:43`, `admin.ts:1077`, `administration/pages/installation/Live.tsx:52`); older closed proposals: `GET /api/v1/installation/proposals` ([HYB-305](../features/HYB-305/plan.md), increment 1b).
 - **Commands.** `installation.approve`, `installation.withdraw`, `installation.propose_plan` (`installation/LiveProposals.tsx:78`). Server: `installationDefinitions` (`apps/api/server/installation.go:547`). Module: installer.
 - **States.** Site, observation, installed state, install plan with conflicts and effects, upgrade and rollback, releases, proposals with dry-run blockers, allowlisted destinations with guided reports; every decision states that nothing is installed ([HB-283](../features/HB-283/verification.md)).
-- **Not connected / residual.** Runs, install execution, key and release management, diagnostic requests, support bundles and support access; the screen derives some checks from the newest 50 proposals. Open: HYB-305 (Todo).
+- **Not connected / residual.** Runs, install execution, key and release management, diagnostic requests, support bundles and support access; the screen derives some checks from the main read's proposals (every pending one and the newest closed ones), not from older closed proposals loaded afterwards. Open: HYB-305 (In Progress).
 - **Verification.** [HB-282](../features/HB-282/verification.md), [HB-283](../features/HB-283/verification.md).
 
 **P02 Integrations**
 - **Tickets.** HB-284 API (#200), HB-285 screen (#201), HYB-293 (#210).
 - **Field map.** [P02 fields](screen-binding-fields/operations.md#p02-integrations).
-- **Reads.** `GET /api/v1/integrations` (`boundary.go:44`, `admin.ts:1080`, `administration/pages/integrations/Live.tsx:59`).
+- **Reads.** `GET /api/v1/integrations` (`boundary.go:44`, `admin.ts:1080`, `administration/pages/integrations/Live.tsx:59`); older closed plugin proposals: `GET /api/v1/integrations/proposals` ([HYB-305](../features/HYB-305/plan.md), increment 1b).
 - **Commands.** `integrations.plugin_propose`, `plugin_approve`, `plugin_withdraw`, `plugin_stop`, `plugin_disable`, `subscription_propose`, `subscription_approve`, `subscription_pause`, `subscription_request_resume`, `subscription_approve_resume`, `subscription_revoke`, `letter_request_redeliver`, `letter_approve_redeliver`, `letter_request_dismiss`, `letter_approve_dismiss`, and since HYB-310 the author-only withdrawals `subscription_withdraw`, `subscription_withdraw_resume`, `letter_withdraw_redeliver`, `letter_withdraw_dismiss`, plus `redelivery_reapprove` (`integrations/LiveCommand.tsx`). Server: `integrationDefinitions` (`apps/api/server/integrationcmds.go`), rights table `integrationRight` (`apps/api/server/integrationrights.go`). Modules: plugins, webhooks.
 - **States.** Clients, modules, channels and events views; plugin proposals and operations; subscription lifecycle; dead-letter requests; safe resends after lost responses; unknown values fail closed; a constant statement that nothing is dispatched, sent, signed or issued ([HB-285](../features/HB-285/verification.md)).
 - **Not connected / residual.** Dispatch, sending, signing, token issuance, egress checks, key management, marks, filters, search, row drawers and cursor resync; each command and area needs its own integration right since [HYB-310](../features/HYB-310/plan.md) (eight installation rights; `rights`, `own_pending`, `not_permitted` areas, `no_right` and `requester_lost_right` reasons); no way to grant integration rights after setup (HYB-310 R2). Plugin license check before activation: [HYB-309](../features/HYB-309/plan.md) (`modules.licenses`, `plugins[].license`, `license_state`; the `-plugin-licenses` installation setting). Open: HYB-305 (Todo). Whether the HB-23 FA-13 row for P02 (line 35 of this file) is met was not checked by HYB-295.
@@ -258,7 +258,7 @@ Tracking: [HYB-295](https://linear.app/hybrid-billing/issue/HYB-295). [HB-257](.
 **P03 Recovery**
 - **Tickets.** HB-286 API (#202), HB-287 screen (#203), HYB-293 (#210).
 - **Field map.** [P03 fields](screen-binding-fields/operations.md#p03-recovery).
-- **Reads.** `GET /api/v1/recovery` (`boundary.go:45`, `admin.ts:1083`, `administration/pages/recovery/Live.tsx:60`).
+- **Reads.** `GET /api/v1/recovery` (`boundary.go:45`, `admin.ts:1083`, `administration/pages/recovery/Live.tsx:60`); older closed proposals: `GET /api/v1/recovery/proposals` ([HYB-305](../features/HYB-305/plan.md), increment 1b).
 - **Commands.** `recovery.approve` (unlock proposals only), `recovery.withdraw`, `recovery.lock`, `recovery.propose_unlock` (`recovery/LiveCommand.tsx:95`). Server: `recoveryDefinitions` (`apps/api/server/recoverycmds.go:178`). Module: recovery.
 - **States.** Restore sets, isolation, reconciliation, migration (not connected) and resume views; actions only where the read allows them; safe resends with frozen snapshots; wording that nothing is restored, pruned or deleted ([HB-287](../features/HB-287/verification.md)).
 - **Not connected / residual.** Begin, abandon, prune, writer removal, migration and AU/BL read access; all commands use installation administration; a global `bdi` rule forces reasons left-to-right in Arabic. Open: HYB-305 (Todo).

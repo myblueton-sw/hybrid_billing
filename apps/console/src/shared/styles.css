@@ -1263,3 +1263,25 @@ dialog header h2 {
   color: var(--hb-muted);
   text-align: start;
 }
+.kept-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-block-start: 16px;
+}
+.kept-more p {
+  margin: 0;
+  max-inline-size: 68ch;
+}
+.kept-more .kept-more-button {
+  inline-size: auto;
+  min-block-size: 44px;
+}
+.kept-end {
+  margin-block-start: 16px;
+  max-inline-size: 80ch;
+}
+p.live-meta.kept-count {
+  margin-block: 4px 16px;
+}

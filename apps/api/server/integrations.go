@@ -206,6 +206,7 @@ type modulesSection struct {
 	Plugins       []pluginVersionRow      `json:"plugins"`
 	Installations []pluginInstallRow      `json:"installations"`
 	Proposals     []pluginProposalRow     `json:"proposals"`
+	History       keptFacts               `json:"proposal_history"`
 	Actions       map[string]availability `json:"actions"`
 }
 
@@ -549,10 +550,12 @@ func (s *Server) modulesOf(reader *viewer) (modulesSection, error) {
 		}
 		out.Installations, errs = append(out.Installations, s.installRowOf(v, reader)), append(errs, err)
 	}
-	for index := len(c.entries) - 1; index >= 0 && len(out.Proposals) < installShown; index-- {
-		row, err := s.pluginProposalOf(c.entries[index], reader)
+	listed, closed, next := listKept(c.entries, pluginPending, pluginNumber, installShown)
+	for _, e := range listed {
+		row, err := s.pluginProposalOf(e, reader)
 		out.Proposals, errs = append(out.Proposals, row), append(errs, err)
 	}
+	out.History = keptFacts{Total: closed, Next: next, Kept: installKept, Dropped: c.dropped}
 	return out, errors.Join(errs...)
 }
 
@@ -851,5 +854,71 @@ func (s *Server) readIntegrations(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.DependencyUnavailable, request)
 		return
 	}
+	writeJSON(w, http.StatusOK, request, page)
+}
+
+func pluginPending(e *pluginEntry) bool { return e.view.State == plugins.ProposalPending }
+
+func pluginNumber(e *pluginEntry) uint64 { return e.view.Number }
+
+type pluginProposalsPage struct {
+	Revision   string              `json:"revision"`
+	ServerTime string              `json:"server_time"`
+	Order      string              `json:"order"`
+	Q          string              `json:"q"`
+	Proposals  []pluginProposalRow `json:"proposals"`
+	Next       string              `json:"next"`
+	Matching   int                 `json:"matching"`
+	History    keptFacts           `json:"proposal_history"`
+}
+
+func (s *Server) listPluginProposals(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	_, answer, reader, ok := s.admitIntegrations(w, r)
+	if !ok {
+		return
+	}
+	q, valid := parseKeptQuery(r.URL.Query())
+	if !valid {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	page := pluginProposalsPage{Revision: s.Revision(), ServerTime: stamp(reader.now), Order: closedPlansOrder, Q: q.term, Proposals: []pluginProposalRow{}}
+	if !reader.any(moduleRights) {
+		failCode(w, commands.PermissionDenied, request)
+		return
+	}
+	if answer.Workspace() != s.bootWorkspace {
+		writeJSON(w, http.StatusOK, request, page)
+		return
+	}
+	if s.faulty("integrations-read") {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
+	c := s.integ
+	_, closed, _ := listKept(c.entries, pluginPending, pluginNumber, 0)
+	page.History = keptFacts{Total: closed, Kept: installKept, Dropped: c.dropped}
+	walk := keptWalk{q: q}
+	errs := []error{}
+	for index := len(c.entries) - 1; index >= 0; index-- {
+		e := c.entries[index]
+		v := e.view
+		if pluginPending(e) {
+			continue
+		}
+		number := strconv.FormatUint(v.Number, 10)
+		if walk.take(v.Number, q.matches(number, pluginProposalTarget+number, v.Change.Kind, v.State, v.Proposer, s.loginOf(v.Proposer), e.rationale)) {
+			row, err := s.pluginProposalOf(e, reader)
+			page.Proposals, errs = append(page.Proposals, row), append(errs, err)
+		}
+	}
+	if errors.Join(errs...) != nil {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
+	page.Next, page.Matching = walk.Next, walk.Matching
 	writeJSON(w, http.StatusOK, request, page)
 }

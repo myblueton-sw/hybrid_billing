@@ -82,6 +82,7 @@ type integrationStore struct {
 	plugins       []*pluginRecord
 	workspace     string
 	entries       []*pluginEntry
+	dropped       int
 	subscriptions []*subscriptionEntry
 	redeliver     map[string]letterRequest
 	dismiss       map[string]letterRequest
@@ -112,6 +113,7 @@ func (c *integrationStore) keep(e *pluginEntry) {
 	for index, old := range c.entries {
 		if old.view.State != plugins.ProposalPending {
 			c.entries = append(c.entries[:index], c.entries[index+1:]...)
+			c.dropped++
 			return
 		}
 	}

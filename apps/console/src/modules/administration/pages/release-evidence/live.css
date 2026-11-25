@@ -627,6 +627,11 @@
 .p05-hw {
   margin-block-end: 32px;
 }
+.p05-hw-item + .p05-hw-item {
+  margin-block-start: 16px;
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--border-row);
+}
 .p05-strip {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

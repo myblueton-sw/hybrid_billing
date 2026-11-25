@@ -713,3 +713,27 @@ export function feedbackDiagnostics(choices: Array<[CommandKey, string]>): RowDi
     return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
   });
 }
+
+export function withMoreDeliveries(page: IntegrationsPage, subscription: string, rows: Delivery[], next: string): IntegrationsPage {
+  const events = page.events;
+  if (events.deliveries === null) return page;
+  const have = new Set(events.deliveries.map((d) => d.id));
+  const held = [...events.deliveries];
+  for (const d of rows) {
+    if (d.id === "" || d.subscription !== subscription || have.has(d.id)) continue;
+    have.add(d.id);
+    held.push(d);
+  }
+  held.sort((a, b) => (a.sequence ?? Number.MAX_SAFE_INTEGER) - (b.sequence ?? Number.MAX_SAFE_INTEGER));
+  const cursors = { ...(events.deliveries_next ?? {}) };
+  if (next === "") delete cursors[subscription];
+  else cursors[subscription] = next;
+  const more = next === "" ? (events.deliveries_more ?? []).filter((id) => id !== subscription) : events.deliveries_more;
+  return { ...page, events: { ...events, deliveries: held, deliveries_next: cursors, deliveries_more: more } };
+}
+
+export function deliveriesToLoad(page: IntegrationsPage, subscription: string): string[] {
+  const cursors = page.events.deliveries_next;
+  if (cursors === null) return [];
+  return Object.keys(cursors).filter((id) => !subscription || id === subscription).sort();
+}

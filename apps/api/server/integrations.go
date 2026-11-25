@@ -324,12 +324,13 @@ type outboxRow struct {
 }
 
 type eventsSection struct {
-	State      string        `json:"state"`
-	Types      []typeRow     `json:"types"`
-	Outbox     outboxRow     `json:"outbox"`
-	Deliveries []deliveryRow `json:"deliveries"`
-	More       []string      `json:"deliveries_more"`
-	Dispatcher string        `json:"dispatcher"`
+	State      string            `json:"state"`
+	Types      []typeRow         `json:"types"`
+	Outbox     outboxRow         `json:"outbox"`
+	Deliveries []deliveryRow     `json:"deliveries"`
+	More       []string          `json:"deliveries_more"`
+	Next       map[string]string `json:"deliveries_next"`
+	Dispatcher string            `json:"dispatcher"`
 }
 
 type integrationsPage struct {
@@ -737,7 +738,7 @@ func needingActionAnd(list []webhooks.DeliveryView, others int) ([]webhooks.Deli
 	out, kept, more := []webhooks.DeliveryView{}, 0, false
 	for _, d := range list {
 		switch {
-		case d.Kind == webhooks.KindDead || d.Hold != "":
+		case needsAction(d):
 			out = append(out, d)
 		case kept < others:
 			out, kept = append(out, d), kept+1
@@ -748,7 +749,7 @@ func needingActionAnd(list []webhooks.DeliveryView, others int) ([]webhooks.Deli
 	return out, more
 }
 
-func (s *Server) deliveriesOf(id, state string, reader *viewer) ([]deliveryRow, bool, error) {
+func (s *Server) deliveriesFor(id string, reader *viewer) ([]webhooks.DeliveryView, error) {
 	all := []webhooks.DeliveryView{}
 	var err error
 	for err == nil {
@@ -762,7 +763,16 @@ func (s *Server) deliveriesOf(id, state string, reader *viewer) ([]deliveryRow, 
 			break
 		}
 	}
+	return all, err
+}
+
+func (s *Server) deliveriesOf(id, state string, reader *viewer) ([]deliveryRow, bool, error) {
+	all, err := s.deliveriesFor(id, reader)
 	list, more := needingActionAnd(all, shownDeliveries)
+	return s.deliveryRows(list, state, reader), more, err
+}
+
+func (s *Server) deliveryRows(list []webhooks.DeliveryView, state string, reader *viewer) []deliveryRow {
 	out := []deliveryRow{}
 	for _, d := range list {
 		redeliver, dismiss := (*requestRow)(nil), (*requestRow)(nil)
@@ -781,14 +791,14 @@ func (s *Server) deliveriesOf(id, state string, reader *viewer) ([]deliveryRow, 
 			RequesterLogin: s.loginOf(d.Requester), Approver: d.Approver, ApproverLogin: s.loginOf(d.Approver), Redeliver: redeliver, Dismiss: dismiss,
 			Actions: letterActions(d, state, redeliver, dismiss, reader)})
 	}
-	return out, more, err
+	return out
 }
 
 func (s *Server) channelsAndEvents(reader *viewer) (channelsSection, eventsSection, error) {
 	c := s.integ
 	channels := channelsSection{State: configured(len(c.subscriptions) > 0), Destinations: []destinationRow{}, Subscribers: []string{sampleSubscriber},
 		Subscriptions: []subscriptionRow{}, Actions: map[string]availability{"propose": allow(reader.blocked(subProposeKind, ""))}}
-	feed := eventsSection{State: configured(len(c.types) > 0), Types: []typeRow{}, Deliveries: []deliveryRow{}, More: []string{}, Dispatcher: notConnected}
+	feed := eventsSection{State: configured(len(c.types) > 0), Types: []typeRow{}, Deliveries: []deliveryRow{}, More: []string{}, Next: map[string]string{}, Dispatcher: notConnected}
 	for _, d := range webhookDestinations {
 		channels.Destinations = append(channels.Destinations, destinationRow{ID: d.id, State: d.state, Source: allowlistSource})
 	}
@@ -809,6 +819,7 @@ func (s *Server) channelsAndEvents(reader *viewer) (channelsSection, eventsSecti
 		channels.Subscriptions, feed.Deliveries = append(channels.Subscriptions, row), append(feed.Deliveries, rows...)
 		if more {
 			feed.More = append(feed.More, e.id)
+			feed.Next[e.id] = strconv.Itoa(shownDeliveries)
 		}
 		errs = append(errs, err, rerr, derr)
 	}

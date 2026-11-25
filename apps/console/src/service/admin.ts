@@ -8,7 +8,7 @@ import { accessHistoryOf, HistoryParseError, type AccessHistoryPage, type Access
 import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsPage } from "./contracts";
 import { installationOf, proposalOf as installProposalOf, type InstallationPage, type InstallProposal } from "./installation";
 import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
-import { historyPageOf, integrationsOf, pluginProposalOf, type HistoryEntry, type IntegrationsPage, type PluginProposal } from "./integrations";
+import { deliveriesPageOf, type Delivery as IntegrationDelivery, historyPageOf, integrationsOf, pluginProposalOf, type HistoryEntry, type IntegrationsPage, type PluginProposal } from "./integrations";
 import { recoveryRowsOf, type RecoveryList, locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
 import { buildsPageOf, evidenceOf, hardwareAnswerOf, hardwarePath, pathsAnswerOf, pathsPath, profilesAnswerOf, profilesPath, proposalOf as evidenceProposalOf, resultsPageOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type BuildRow, type HardwareRow, type PathRow, type ProfileRow, type Proposal as EvidenceProposal, type ResultRow, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
 import { holdsPageOf, proposalOf as retentionProposalOf, artifactsPageOf, artifactsPath, outcomesPageOf, referencesPageOf, retentionOf, runItemsPageOf, runsPageOf, tombstonesPageOf, type ArtifactEntry, type HoldOutcome, type HoldRow, type Reference, type RunItem, type Proposal as RetentionProposal, type RetentionPage, type RunRow, type Tombstone } from "./retention";
@@ -1200,6 +1200,11 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async integrationProposals(after: string): Promise<KeptPage<PluginProposal>> {
       const got = keptPageOf(await send("/integrations/proposals?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), pluginProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async integrationDeliveries(subscription: string, after: string): Promise<{ rows: IntegrationDelivery[]; next: string }> {
+      const got = deliveriesPageOf(await send("/integrations/deliveries?" + new URLSearchParams({ subscription, limit: "50", after }).toString(), { method: "GET" }, attempt().request));
       if (!got) throw new AdminError("invalid");
       return got;
     },

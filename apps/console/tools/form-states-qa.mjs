@@ -17,7 +17,8 @@ const ends = (url, path) => new URL(url).pathname.endsWith("/api/v1/" + path);
 const screens = JSON.parse(await readFile(new URL("../src/modules/administration/screens.json", import.meta.url), "utf8")).filter((s) => (args.screens ?? "P02,P03,P04,P05").split(",").includes(s.id));
 const combos = (args.combos ?? "en:320,ar:320,en:1440").split(",").map((c) => c.split(":"));
 const frames = () => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(done, 60))))));
-const records = [], submitted = [], shot = new Set();
+let picked = 0;
+const records = [], submitted = [], confirmed = [], unreached = [], notes2 = [], shot = new Set();
 let probed = false;
 const rings = () => page.evaluate(async () => {
   const rgb = (v) => { const p = v.match(/[\d.]+/g)?.map(Number); return /^rgba?\(/.test(v) && p?.length >= 3 ? [p[0], p[1], p[2], p[3] ?? 1] : null; };
@@ -106,6 +107,30 @@ try {
         check(`${at}: every control of the form shows a focus indicator of 2px and 3:1`, ring.controls > 0 && ring.shown === ring.controls && ring.weak.length === 0, JSON.stringify({ controls: ring.controls, shown: ring.shown, weak: ring.weak.slice(0, 3) }));
         check(`${at}: placeholders meet 4.5:1`, ring.faint.length === 0, JSON.stringify(ring.faint.slice(0, 3)));
         if (args.shots && (found.overflow > 1 || found.clipped.length || found.cut.length || found.low.length || ring.weak.length || ring.faint.length)) await page.screenshot({ path: `${args.shots}/${screen.id}-${tab.key}-${m.kind}-${lang}-${width}.png`, fullPage: true });
+        if (args.confirm) {
+          const fill = (value) => page.evaluate((v) => { const wrap = document.querySelector("[class*=form-wrap]"); const set = (el, val) => { const proto = el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : el.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(proto, "value").set.call(el, val); el.dispatchEvent(new Event(el.tagName === "SELECT" ? "change" : "input", { bubbles: true })); }; let n = 0; for (const el of wrap.querySelectorAll("input:not([type=hidden]):not([type=search]):not([readonly]), textarea, select")) { if (el.disabled || !el.getClientRects().length) continue; const bad = el.getAttribute("aria-invalid") === "true"; if (v !== null && !bad) continue; if (el.tagName === "SELECT") { const opt = [...el.options].find((o) => o.value && !o.disabled); if (opt && !el.value) { set(el, opt.value); n++; } continue; } if (el.type === "checkbox" || el.type === "radio") { if (!el.checked) { el.click(); n++; } continue; } set(el, v ?? "Keyboard check of the confirmation step"); n++; } return n; }, value);
+          const press = async () => { const sub = page.locator("[class*=form-wrap] button[type=submit]").first(); if ((await sub.count()) === 0) return false; await sub.focus(); await page.keyboard.press("Enter"); await frames(); return true; };
+          const atConfirm = () => page.evaluate(() => !!document.querySelector("[class*=form-wrap] [class*=confirm]"));
+          let tries = 0;
+          await fill(null);
+          for (const next of ["30", "2027-01-01", "sample"]) { tries++; if (!(await press())) break; if (await atConfirm()) break; if ((await fill(next)) === 0) break; }
+          if (!(await atConfirm()) && (await page.locator("[class*=form-wrap] .p04-owner-results button").count()) > 0) {
+            const person = page.locator("[class*=form-wrap] .p04-owner-results button").first();
+            await person.focus(); await page.keyboard.press("Enter"); await frames(); picked++;
+          }
+          if (!(await atConfirm())) { await press(); }
+          const reached = await atConfirm();
+          if (!reached) { unreached.push(at); const why = await page.evaluate(() => [...document.querySelectorAll("[class*=form-wrap] .service-field-error, [class*=form-wrap] [role=alert]")].map((e) => e.textContent.trim().slice(0, 60)).slice(0, 3)); notes2.push(`${at}: ${why.join(" | ")}`); await open(); continue; }
+          const focus = await page.evaluate(() => { const a = document.activeElement, wrap = document.querySelector("[class*=form-wrap]"); return { tag: a?.tagName ?? "", cls: String(a?.className ?? "").slice(0, 40), inside: !!(wrap && a && wrap.contains(a)) }; });
+          const shown = await inspectView(page), ring = await rings();
+          confirmed.push({ screen: screen.id, view: tab.key, lang, width, kind: m.kind, tries, focus, overflow: shown.overflow, clipped: shown.clipped, cut: shown.cut, low: shown.low, controls: ring.controls, shownRings: ring.shown, byOutline: ring.byOutline, weak: ring.weak });
+          check(`${at}: on reaching the confirmation, focus is on its title inside the form`, focus.inside && /^H[1-6]$/.test(focus.tag), JSON.stringify(focus));
+          check(`${at}: the confirmation does not overflow, cut off or lose text contrast`, shown.overflow <= 1 && shown.clipped.length === 0 && shown.cut.length === 0 && shown.low.length === 0, JSON.stringify({ overflow: shown.overflow, clipped: shown.clipped.slice(0, 2), cut: shown.cut.slice(0, 2), low: shown.low.slice(0, 3) }));
+          check(`${at}: every control of the confirmation shows a 2px, 3:1 outline`, ring.controls > 0 && ring.shown === ring.controls && ring.byOutline === ring.controls, JSON.stringify({ controls: ring.controls, shown: ring.shown, byOutline: ring.byOutline, weak: ring.weak.slice(0, 2) }));
+          if (args.shots && !shot.has(screen.id + "confirm" + lang + width)) { shot.add(screen.id + "confirm" + lang + width); await page.screenshot({ path: `${args.shots}/${screen.id}-confirm-${lang}-${width}.png`, fullPage: false }); }
+          await open();
+          continue;
+        }
         if (args.submit) {
           const sub = page.locator("[class*=form-wrap] button[type=submit]").first();
           if ((await sub.count()) === 0) { notes.push(`${at}: the open form has no submit button`); await open(); continue; }
@@ -129,13 +154,15 @@ try {
   check("every request that was not a read was blocked, and the forms were only opened", posts.length === 0, posts.join());
   check("the planted-defect probe ran", probed);
   check("every opener found opened a form that took focus", notes.length === 0, notes.join(" | "));
+  if (args.confirm) check("every opened form reached its confirmation", unreached.length === 0, notes2.join(" | "));
   check("no page error", errors.length === 0, errors.join(" | "));
-  if (args.shots) await (await import("node:fs/promises")).writeFile(`${args.shots}/form-states.json`, JSON.stringify({ records, submitted }, null, 1));
+  if (args.shots) await (await import("node:fs/promises")).writeFile(`${args.shots}/form-states.json`, JSON.stringify({ records, submitted, confirmed, unreached, notes2 }, null, 1));
 } catch (e) {
   check("the script ran to the end", false, e.stack || e.message);
 } finally {
   await browser.close();
   for (const r of results) if (!args.quiet || r.startsWith("FAIL")) console.log(r);
   for (const n of notes) console.log("NOTE " + n);
+  for (const n of notes2) console.log("UNREACHED " + n);
   console.log(`RESULT ${results.filter((r) => r.startsWith("PASS")).length} passed ${results.filter((r) => r.startsWith("FAIL")).length} failed`);
 }

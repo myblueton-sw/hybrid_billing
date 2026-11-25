@@ -429,6 +429,24 @@ Verification: the whole server package passed; console tests 1414, 1411 passed, 
 
 Not built: a search on the screen; a read by identifier, as nothing on the screen refers to a hardware record outside the list.
 
+# Increment 4e, the paths of P05 (2026-11-25)
+
+Facts (main 16f08da): the trace registry holds up to 1,000 support paths; the server keeps their identifiers in the order recorded and never removes one. No command adds a path; a running service has the seed's two. The main read lists the first 50 with `total` and `more`. A path has no command; the matrix view selects one through `?path=`, and `selectionOf` accepts only a path among the rows held. A path row is the most costly row of the screen: it reads each of its requirements and asks the gate once.
+
+Built:
+
+- The main read keeps its rows and order; each path row gains `number`, its position, and the matrix gains `paths_next`.
+- `GET /api/v1/release-evidence/paths` with `after`, `limit` (at most 50 here, because of the cost of a row) and `q` (matched against the identifier only, so that a search does not read every path), or `id` alone (one to twenty identifiers separated by commas; an unknown one is left out).
+- Screen: `Live.tsx` reads by identifier, before it sets the page, the path a link names when the main read does not hold it, so the link selects it; "Load more combinations" adds the next rows. Rows loaded that way are dropped when the screen is read again, and the list says so. The foot component moved to `live-format.tsx` and serves the three lists.
+
+A path held only because a link names it appears after the others, in the order of its number, as a held profile does.
+
+Review (independent reviewer, read-only, 2026-11-25): approve, no blocking finding. Composition and copy check (ui-designer): pass; the foot beside the open detail pane was not in the screenshots and was not judged. Raised and carried to a separate issue: the sentence that some combinations are blocked, and the intake line, are worked out from the rows held, so with more than fifty paths they can stay silent about a blocked path that is not held, without saying the check is partial.
+
+Verification: the whole server package passed; console tests 1415, 1412 passed, 3 skipped; the rendered check `tools/paths-qa.mjs` 55 passed against a local service with the sample seed, in which the paths beyond the sample's two are written by the check. The owner has not reviewed the screen.
+
+Not built: a search on the screen. Unchanged: the sentence above the matrix that says some combinations are blocked is still worked out from the rows held, as before.
+
 # Open for the owner
 
 - The holds list on P04 now shows every hold in force and pages only the released ones (increment 3e).

@@ -208,3 +208,26 @@ export function DetailShell({ l, mode, title, sub, closeTo, opener, children }: 
     </aside>
   );
 }
+
+export type ProfilesList = { more: boolean; status: "idle" | "loading" | "failed"; reset: boolean; onMore: () => void };
+
+export type FootCopy = { shown: (l: Locale, n: number, m: number) => string; more: (l: Locale) => string; failed: (l: Locale) => string; reset: (l: Locale) => string };
+
+export function ListFoot({ l, kind, list, shown, total, copy }: { l: Locale; kind: string; list: ProfilesList; shown: number; total: number | null; copy: FootCopy }) {
+  const failed = list.status === "failed";
+  const c = "p05-" + kind;
+  return (
+    <div className={"p05-list-foot " + c + "-foot"}>
+      {total !== null && shown > 0 && shown < total && <p className={"p05-small p05-muted " + c + "-count"}>{copy.shown(l, shown, total)}</p>}
+      {list.reset && <p className={"p05-small " + c + "-reset"} role="status">{copy.reset(l)}</p>}
+      {(list.more || failed) && (
+        <div className={"p05-req-more " + c + "-more"}>
+          {failed && <p role="alert">{copy.failed(l)}</p>}
+          <button type="button" className={"live-secondary p05-req-more-button " + c + "-more-button"} aria-disabled={list.status === "loading" || undefined} onClick={() => { if (list.status !== "loading") list.onMore(); }}>
+            {failed ? k.reqTryAgain(l) : list.status === "loading" ? k.reqLoading(l) : copy.more(l)}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

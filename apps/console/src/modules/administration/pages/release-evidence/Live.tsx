@@ -7,13 +7,13 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
-import type { EvidencePage, ProfileRow, RequirementRow } from "../../../../service/release-evidence";
+import type { EvidencePage, PathRow, ProfileRow, RequirementRow } from "../../../../service/release-evidence";
 import type { Session } from "../../../../service/api";
 import { c as sc, retryPhrase } from "../../../../service/copy";
 import { k } from "./live-copy";
 import {
-  commandsAllowed, drop, filtering, forget, isProposalCommand, missingProfiles, missingRequirements, modeOf, noFilter, pruneRefusals, readDenied, readSucceeded, profilePrefix, profileTargetsInUse, requirementPrefix, requirementTargetsInUse, revokedNow, rowId,
-  selectionOf, setScope, validTarget, vanished, viewOf, withHeld, withHeldProfiles, withMoreHardware, type RequirementFilter, type Selection,
+  commandsAllowed, drop, filtering, forget, isProposalCommand, missingPath, missingProfiles, missingRequirements, modeOf, noFilter, pruneRefusals, readDenied, readSucceeded, profilePrefix, profileTargetsInUse, requirementPrefix, requirementTargetsInUse, revokedNow, rowId,
+  selectionOf, setScope, validTarget, vanished, viewOf, withHeld, withHeldPaths, withHeldProfiles, withMoreHardware, type RequirementFilter, type Selection,
 } from "./live-model";
 import { Absent, Known, Stamp, Template, Unexpected, ltr, takeIntent, useAvailableWidth } from "./live-format";
 import { ErrorDetail, type Announce, type Shared } from "./LiveCommand";
@@ -132,6 +132,11 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
   const listSeq = useRef(0);
   const profileSeq = useRef(0);
   const hardwareSeq = useRef(0);
+  const pathSeq = useRef(0);
+  const [paths, setPaths] = useState<{ next: string | null; status: "idle" | "loading" | "failed"; reset: boolean }>({ next: null, status: "idle", reset: false });
+  const wantedPath = viewOf(rawView) === "matrix" && validTarget(params.get("path") ?? "") ? params.get("path") ?? "" : "";
+  const wantedPathRef = useRef(wantedPath);
+  wantedPathRef.current = wantedPath;
   const [hardware, setHardware] = useState<{ next: string | null; status: "idle" | "loading" | "failed"; reset: boolean }>({ next: null, status: "idle", reset: false });
   const scrolled = useRef("");
   const root = useRef<HTMLDivElement>(null);
@@ -153,6 +158,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       if (n !== seq.current || generation !== currentScope()) return null;
       const held: RequirementRow[] = [];
       const heldProfiles: ProfileRow[] = [];
+      const heldPaths: PathRow[] = [];
       const was = listingRef.current;
       let now: Listing = { ...plainListing, reset: was.rows.length > 0 };
       if (main.state === "configured") {
@@ -160,6 +166,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
         for (let at = 0; at < missing.length; at += targetBatch) held.push(...(await api.evidenceRequirements({ targets: missing.slice(at, at + targetBatch) })).rows);
         const absent = missingProfiles(main, [...profileTargetsInUse(), wantedProfileRef.current]);
         for (let at = 0; at < absent.length; at += targetBatch) heldProfiles.push(...(await api.evidenceProfiles({ targets: absent.slice(at, at + targetBatch) })).rows);
+        if (missingPath(main, wantedPathRef.current)) heldPaths.push(...(await api.evidencePaths({ ids: [wantedPathRef.current] })).rows);
         if (filtering(was.filter) && (was.filter.state === "" || main.candidate)) {
           try {
             const answer = await api.evidenceRequirements(queryOf(was.filter));
@@ -175,13 +182,15 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       listSeq.current += 1;
       profileSeq.current += 1;
       hardwareSeq.current += 1;
-      const got = withHeldProfiles(withHeld(main, held), heldProfiles);
+      pathSeq.current += 1;
+      const got = withHeldPaths(withHeldProfiles(withHeld(main, held), heldProfiles), heldPaths);
       readSucceeded();
       pruneRefusals(got);
       setPage(got);
       setListing(now);
       setProfiles((before) => ({ next: null, status: "idle", reset: before.next !== null }));
       setHardware((before) => ({ next: null, status: "idle", reset: before.next !== null }));
+      setPaths((before) => ({ next: null, status: "idle", reset: before.next !== null }));
       setAccess("ok");
       setStatus("ready");
       setFailure(null);
@@ -239,6 +248,24 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       setProfiles({ next: profiles.next, status: "failed", reset: false });
     }
   };
+  const morePaths = async () => {
+    if (!page || paths.status === "loading") return;
+    const after = paths.next ?? page.matrix.paths_next ?? "";
+    if (!after) return;
+    const n = ++pathSeq.current;
+    const generation = currentScope();
+    setPaths({ next: paths.next, status: "loading", reset: false });
+    try {
+      const answer = await api.evidencePaths({ after });
+      if (n !== pathSeq.current || generation !== currentScope()) return;
+      setPage((p) => (p ? withHeldPaths(p, answer.rows) : p));
+      setPaths({ next: answer.next, status: "idle", reset: false });
+    } catch (e) {
+      if (n !== pathSeq.current || generation !== currentScope()) return;
+      if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) { setPaths({ next: paths.next, status: "idle", reset: false }); void load(); return; }
+      setPaths({ next: paths.next, status: "failed", reset: false });
+    }
+  };
   const moreHardware = async () => {
     if (!page || hardware.status === "loading") return;
     const after = hardware.next ?? page.load.hardware_next ?? "";
@@ -266,6 +293,14 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
       if (n === seq.current && generation === currentScope() && answer.rows.length > 0) setPage((p) => (p ? withHeldProfiles(p, answer.rows) : p));
     }).catch(() => undefined);
   }, [wantedProfile, page?.revision]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!page || page.state !== "configured" || !wantedPath || !missingPath(page, wantedPath)) return;
+    const n = seq.current;
+    const generation = currentScope();
+    void api.evidencePaths({ ids: [wantedPath] }).then((answer) => {
+      if (n === seq.current && generation === currentScope() && answer.rows.length > 0) setPage((p) => (p ? withHeldPaths(p, answer.rows) : p));
+    }).catch(() => undefined);
+  }, [wantedPath, page?.revision]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!page || page.state !== "configured" || !wantedRequirement || missingRequirements(page, [wantedRequirement]).length === 0) return;
     const n = seq.current;
@@ -452,7 +487,7 @@ export default function LiveReleaseEvidence({ locale: l, view: rawView, params, 
           ) : view === "decisions" ? (
             <DecisionsView {...shared} />
           ) : (
-            <MatrixView {...shared} />
+            <MatrixView {...shared} pathsList={{ more: (paths.next ?? shared.page.matrix.paths_next ?? "") !== "", status: paths.status, reset: paths.reset, onMore: () => { void morePaths(); } }} />
           )}
         </>
       )}

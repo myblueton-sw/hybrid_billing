@@ -18,6 +18,7 @@ export type Columns = {
 };
 
 export type PathRow = {
+  number: number | null;
   id: string;
   provider: string;
   contract: string;
@@ -173,7 +174,7 @@ export type EvidencePage = {
   now: string;
   state: string;
   candidate: Candidate;
-  matrix: { origin: string; paths: List<PathRow> };
+  matrix: { origin: string; paths: List<PathRow>; paths_next: string | null };
   requirements: { origin: string; requirements: List<RequirementRow>; next: string; gate: Gate };
   artifacts: { origin: string; builds: List<BuildRow>; builds_next: string | null; harnesses: List<HarnessRow>; results: List<ResultRow>; results_next: string | null; files: string; logs: string; environment: string; content: string };
   load: { origin: string; hardware: List<HardwareRow>; hardware_next: string | null; profiles: List<ProfileRow>; profiles_next: string | null; readiness: Readiness; measurement: string; planning_targets: string };
@@ -229,6 +230,7 @@ export function problemsOf(v: unknown): Problem[] | null {
 export function pathOf(r: Raw): PathRow {
   const c = obj(r.columns);
   return {
+    number: count(r.number),
     id: str(r.id),
     provider: str(r.provider),
     contract: str(r.contract),
@@ -438,7 +440,7 @@ export function evidenceOf(body: Raw): EvidencePage {
     now: str(body.now),
     state: str(body.state),
     candidate: candidateOf(body.candidate),
-    matrix: { origin: str(m.origin), paths: listOf(m.paths, pathOf) },
+    matrix: { origin: str(m.origin), paths: listOf(m.paths, pathOf), paths_next: typeof m.paths_next === "string" ? m.paths_next : null },
     requirements: { origin: str(q.origin), requirements: listOf(q.requirements, requirementOf), next: str(q.next), gate: gateOf(q.gate) },
     artifacts: {
       origin: str(a.origin),
@@ -500,6 +502,22 @@ export function buildsPageOf(body: Raw): { rows: BuildRow[]; next: string; total
   const total = count(body.total);
   if (!Array.isArray(body.builds) || typeof body.next !== "string" || total === null) return null;
   return { rows: body.builds.filter(isRow).map((x) => ({ build: str(x.build), commit: str(x.commit), order: count(x.order) })), next: body.next, total };
+}
+
+export function pathsPath(query: { after?: string; ids?: string[] }): string {
+  const q = new URLSearchParams();
+  if (query.ids) q.set("id", query.ids.join(","));
+  else {
+    q.set("limit", "50");
+    if (query.after) q.set("after", query.after);
+  }
+  return "/release-evidence/paths?" + q.toString();
+}
+
+export function pathsAnswerOf(body: Raw): { rows: PathRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.paths) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.paths.filter(isRow).map(pathOf), next: body.next, total };
 }
 
 export function hardwareOf(x: Raw): HardwareRow {

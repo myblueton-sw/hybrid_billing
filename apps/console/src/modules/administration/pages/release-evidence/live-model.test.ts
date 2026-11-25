@@ -15,7 +15,7 @@ import {
   keptKey, modeOf, pairOf, pendingFor, pendingNow, pendingRetire, profileRetire, profileTarget, proposalTarget, pruneRefusals, react, readDenied, readSucceeded, refusedNow, renew,
   replacementOptions, replacementProblem, requirementRetire, requirementTarget, retireValues, revokedNow, selectionOf, setScope, settle as settleRecorded, snapshotOf, splitWidth, stateSentence, textProblem,
   utf8Bytes, vanished, rowId, closedProposal, verdictLine, viewOf, withdrawUsable,
-  filtering, missingProfiles, missingRequirements, noFilter, profileById, profileTargetsInUse, withHeldProfiles, withMoreHardware, requirementByLabel, requirementByTarget, requirementByTest, requirementTargetsInUse, stateAtCandidate, stillAllowed, withHeld,
+  filtering, missingProfiles, missingRequirements, noFilter, profileById, missingPath, profileTargetsInUse, withHeldPaths, withHeldProfiles, withMoreHardware, requirementByLabel, requirementByTarget, requirementByTest, requirementTargetsInUse, stateAtCandidate, stillAllowed, withHeld,
 } from "./live-model";
 import { blockerText, f, k } from "./live-copy";
 import { allWordTables, category, counted, failingVerdicts, plurals, verdictWords } from "./live-codes";
@@ -1038,4 +1038,36 @@ test("hardware loaded beyond the main read is added once, in the order read", as
   }
   const all = renderToStaticMarkup(createElement(LoadView, { ...shared(page()), hardwareList: { ...list, more: false } }));
   assert.ok(!all.includes("p05-hw-count") && !all.includes("p05-hw-more"));
+});
+
+test("paths held beyond the main read are selected, kept once and ordered by number", async () => {
+  const { pathsAnswerOf, pathsPath } = await import("../../../../service/release-evidence");
+  const { MatrixView } = await import("./LiveMatrix");
+  const main = page((s) => { s.matrix.paths.total = 70; s.matrix.paths.more = true; s.matrix.paths_next = "2"; s.matrix.paths.rows.forEach((p: Raw, i: number) => { p.number = i + 1; }); });
+  const from = main.matrix.paths.rows![0];
+  const extra = (n: number) => ({ ...from, number: n, id: "held-path-" + n });
+  assert.equal(missingPath(main, "held-path-60"), true);
+  assert.equal(missingPath(main, from.id), false);
+  for (const bad of ["", "a,b", "has space", "p".repeat(129)]) assert.equal(missingPath(main, bad), false, bad);
+  assert.equal(selectionOf(new URLSearchParams("path=held-path-60"), main, "matrix").path, "");
+  const held = withHeldPaths(main, [extra(61), extra(60), extra(61), { ...from }, { ...from, id: "" }]);
+  assert.deepEqual(held.matrix.paths.rows!.map((p) => p.id), [...main.matrix.paths.rows!.map((p) => p.id), "held-path-60", "held-path-61"]);
+  assert.equal(held.matrix.paths.more, true);
+  assert.equal(selectionOf(new URLSearchParams("path=held-path-60"), held, "matrix").path, "held-path-60");
+  assert.equal(missingPath(held, "held-path-60"), false);
+  assert.equal(withHeldPaths(main, []), main);
+  assert.equal(pathsPath({ after: "50" }), "/release-evidence/paths?limit=50&after=50");
+  assert.equal(pathsPath({ ids: ["a:b", "c"], after: "9" }), "/release-evidence/paths?id=a%3Ab%2Cc");
+  for (const bad of [{}, { paths: [], next: "" }, { paths: "x", next: "", total: 0 }, { paths: [], next: 4, total: 0 }]) assert.equal(pathsAnswerOf(bad), null, JSON.stringify(bad));
+  const got = pathsAnswerOf({ paths: [{ number: 60, id: "held-path-60" }, null], next: "60", total: 70 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].number, got?.next, got?.total], [1, 60, "60", 70]);
+  const list = { more: true, status: "idle" as const, reset: false, onMore: () => undefined };
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(MatrixView, { ...shared(main), l, pathsList: list }));
+    assert.ok(html.includes(k.pathsShown(l, main.matrix.paths.rows!.length, 70)) && html.includes(k.pathsMore(l)), l);
+    const failed = renderToStaticMarkup(createElement(MatrixView, { ...shared(main), l, pathsList: { ...list, status: "failed", reset: true } }));
+    assert.ok(failed.includes(k.pathsFailed(l)) && failed.includes(k.reqTryAgain(l)) && failed.includes(k.pathsReset(l)), l);
+  }
+  const all = renderToStaticMarkup(createElement(MatrixView, { ...shared(page()), pathsList: { ...list, more: false } }));
+  assert.ok(!all.includes("p05-paths-count") && !all.includes("p05-paths-more"));
 });

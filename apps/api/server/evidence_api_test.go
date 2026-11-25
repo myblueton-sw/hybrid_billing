@@ -392,7 +392,7 @@ func TestEvidenceReadWithoutSeed(t *testing.T) {
 		t.Fatalf("empty %s %v", got.raw, called)
 	}
 	if s := fmt.Sprint(got.body["candidate"], " ", evMap(got.body, "matrix"), " ", evMap(got.body, "requirements"), " ", evMap(got.body, "artifacts"), " ",
-		evMap(got.body, "load"), " ", evMap(got.body, "decisions")); s != "<nil> map[origin:empty paths:map[more:false rows:[] total:0]] "+
+		evMap(got.body, "load"), " ", evMap(got.body, "decisions")); s != "<nil> map[origin:empty paths:map[more:false rows:[] total:0] paths_next:] "+
 		"map[gate:<nil> next: origin:empty requirements:map[more:false rows:[] total:0]] map[builds:map[more:false rows:[] total:0] builds_next: content:not_connected "+
 		"environment:not_connected files:not_connected harnesses:map[more:false rows:[] total:0] logs:not_connected origin:empty results:map[more:false rows:[] total:0] results_next:] "+
 		"map[hardware:map[more:false rows:[] total:0] hardware_next: measurement:not_connected origin:empty planning_targets:not_connected profiles:map[more:false rows:[] total:0] profiles_next: "+

@@ -95,6 +95,7 @@ type evidenceProblem struct {
 }
 
 type evidencePathRow struct {
+	Number              int                                  `json:"number"`
 	ID                  string                               `json:"id"`
 	Provider            string                               `json:"provider"`
 	Contract            string                               `json:"contract"`
@@ -116,8 +117,9 @@ type evidencePathRow struct {
 }
 
 type evidenceMatrix struct {
-	Origin string                        `json:"origin"`
-	Paths  evidenceList[evidencePathRow] `json:"paths"`
+	Origin    string                        `json:"origin"`
+	Paths     evidenceList[evidencePathRow] `json:"paths"`
+	PathsNext string                        `json:"paths_next"`
 }
 
 type evidenceTarget struct {
@@ -430,8 +432,12 @@ func (f *evidenceFacts) pathRow(id string) (evidencePathRow, error) {
 
 func (f *evidenceFacts) matrix() (evidenceMatrix, error) {
 	paths := f.s.ev.paths
-	list, err := listOf(len(paths), evidenceShown, func(index int) (evidencePathRow, error) { return f.pathRow(paths[index]) })
-	return evidenceMatrix{Origin: f.origin, Paths: list}, err
+	list, err := listOf(len(paths), evidenceShown, f.pathAt)
+	out := evidenceMatrix{Origin: f.origin, Paths: list}
+	if list.More {
+		out.PathsNext = strconv.Itoa(len(list.Rows))
+	}
+	return out, err
 }
 
 func (f *evidenceFacts) notCounted(k releasetrace.Key, q releasetrace.RequirementView, build string) *string {

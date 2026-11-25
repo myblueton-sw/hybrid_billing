@@ -262,6 +262,10 @@
 .p04-hold-grid > * {
   min-inline-size: 0;
 }
+.p04-hold-grid > .p04-hold-facts {
+  align-content: start;
+  align-self: start;
+}
 .p04-live .p04-covers {
   margin: 0 0 16px;
   overflow-wrap: anywhere;

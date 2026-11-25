@@ -10,7 +10,7 @@ import { installationOf, proposalOf as installProposalOf, type InstallationPage,
 import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
 import { historyPageOf, integrationsOf, pluginProposalOf, type HistoryEntry, type IntegrationsPage, type PluginProposal } from "./integrations";
 import { locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
-import { buildsPageOf, evidenceOf, hardwareAnswerOf, hardwarePath, profilesAnswerOf, profilesPath, proposalOf as evidenceProposalOf, resultsPageOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type BuildRow, type HardwareRow, type ProfileRow, type Proposal as EvidenceProposal, type ResultRow, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
+import { buildsPageOf, evidenceOf, hardwareAnswerOf, hardwarePath, pathsAnswerOf, pathsPath, profilesAnswerOf, profilesPath, proposalOf as evidenceProposalOf, resultsPageOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type BuildRow, type HardwareRow, type PathRow, type ProfileRow, type Proposal as EvidenceProposal, type ResultRow, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
 import { holdsPageOf, proposalOf as retentionProposalOf, retentionOf, type HoldRow, type Proposal as RetentionProposal, type RetentionPage } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
 
@@ -1242,6 +1242,11 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async evidenceProfiles(query: { after?: string; targets?: string[] }): Promise<{ rows: ProfileRow[]; next: string; total: number }> {
       const got = profilesAnswerOf(await send(profilesPath(query), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async evidencePaths(query: { after?: string; ids?: string[] }): Promise<{ rows: PathRow[]; next: string; total: number }> {
+      const got = pathsAnswerOf(await send(pathsPath(query), { method: "GET" }, attempt().request));
       if (!got) throw new AdminError("invalid");
       return got;
     },

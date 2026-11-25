@@ -6,7 +6,7 @@ import { axes, budgetStateWords, counted, gateStatusWords, gateWords, metrics, p
 import {
   blockerPolicy, budgetUnexpected, duplicateIn, keptKey, pendingNow, pendingRetire, profileRetire, profileTarget, refusedNow, rowId, stateSentence, verdictLine, verdictShown, type VerdictLine,
 } from "./live-model";
-import { Absent, Code, Digest, Fixed, State, Gap, Known, ListOr, MoreLine, Num, Stamp, Template, Unexpected, Who, gapOf, ltr } from "./live-format";
+import { Absent, Code, Digest, Fixed, State, Gap, Known, ListFoot, ListOr, MoreLine, Num, Stamp, Template, Unexpected, Who, gapOf, ltr, type ProfilesList } from "./live-format";
 import { CommandForm, RowNote, line, useOpen, type Blocker, type Shared } from "./LiveCommand";
 import { PendingLink } from "./LiveRequirements";
 
@@ -331,29 +331,6 @@ function Profile({ p, ...shared }: Shared & { p: ProfileRow }) {
         )}
       </div>
     </article>
-  );
-}
-
-export type ProfilesList = { more: boolean; status: "idle" | "loading" | "failed"; reset: boolean; onMore: () => void };
-
-type FootCopy = { shown: (l: Locale, n: number, m: number) => string; more: (l: Locale) => string; failed: (l: Locale) => string; reset: (l: Locale) => string };
-
-function ListFoot({ l, kind, list, shown, total, copy }: { l: Locale; kind: string; list: ProfilesList; shown: number; total: number | null; copy: FootCopy }) {
-  const failed = list.status === "failed";
-  const c = "p05-" + kind;
-  return (
-    <div className={"p05-list-foot " + c + "-foot"}>
-      {total !== null && shown > 0 && shown < total && <p className={"p05-small p05-muted " + c + "-count"}>{copy.shown(l, shown, total)}</p>}
-      {list.reset && <p className={"p05-small " + c + "-reset"} role="status">{copy.reset(l)}</p>}
-      {(list.more || failed) && (
-        <div className={"p05-req-more " + c + "-more"}>
-          {failed && <p role="alert">{copy.failed(l)}</p>}
-          <button type="button" className={"live-secondary p05-req-more-button " + c + "-more-button"} aria-disabled={list.status === "loading" || undefined} onClick={() => { if (list.status !== "loading") list.onMore(); }}>
-            {failed ? k.reqTryAgain(l) : list.status === "loading" ? k.reqLoading(l) : copy.more(l)}
-          </button>
-        </div>
-      )}
-    </div>
   );
 }
 

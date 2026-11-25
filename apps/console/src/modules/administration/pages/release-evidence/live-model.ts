@@ -775,3 +775,23 @@ export function withMoreHardware(page: EvidencePage, rows: HardwareRow[]): Evide
   const more = list.total === null ? list.more : held.length < list.total;
   return { ...page, load: { ...page.load, hardware: { ...list, rows: held, more } } };
 }
+
+export function withHeldPaths(page: EvidencePage, rows: PathRow[]): EvidencePage {
+  const list = page.matrix.paths;
+  if (list.rows === null || rows.length === 0) return page;
+  const held = [...list.rows];
+  const have = new Set(held.map((p) => p.id));
+  for (const p of rows) {
+    if (p.id === "" || have.has(p.id)) continue;
+    have.add(p.id);
+    held.push(p);
+  }
+  held.sort((a, b) => (a.number ?? Number.MAX_SAFE_INTEGER) - (b.number ?? Number.MAX_SAFE_INTEGER));
+  const more = list.total === null ? list.more : held.length < list.total;
+  return { ...page, matrix: { ...page.matrix, paths: { ...list, rows: held, more } } };
+}
+
+export function missingPath(page: EvidencePage, id: string): boolean {
+  const rows = page.matrix.paths.rows;
+  return rows !== null && validTarget(id) && !rows.some((p) => p.id === id);
+}

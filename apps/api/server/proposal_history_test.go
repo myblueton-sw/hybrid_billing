@@ -1157,3 +1157,104 @@ func TestEvidenceHardwareIsReadInRecordedOrder(t *testing.T) {
 		t.Errorf("another workspace: %d", other.status)
 	}
 }
+
+func TestEvidencePathsAreReadInRecordedOrderAndByIdentifier(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root := f.as(AdminLogin)
+	seeded := len(f.s.ev.paths)
+	sample, err := f.s.tracePath(f.s.ev.paths[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	add := func(id string) {
+		f.evApproved(releasetrace.Change{Kind: releasetrace.ChangePath, Path: releasetrace.Path{ID: id, Provider: "p", Contract: "c", Role: "r", Version: "v", Issuance: releasetrace.IssuanceFile,
+			Requirements: sample.Path.Requirements[:1]}})
+		f.s.ev.paths = append(f.s.ev.paths, id)
+	}
+	for i := 0; i < 70; i++ {
+		add(fmt.Sprintf("bulk-path-%03d", i))
+	}
+	total := seeded + 70
+	matrix := evMap(f.evidenceRead(root).body, "matrix")
+	mainRows := evRows(evMap(matrix, "paths"))
+	if len(mainRows) != evidenceShown || matrix["paths_next"] != "50" || whole(mainRows[0]["number"]) != 1 || whole(mainRows[49]["number"]) != 50 || whole(evMap(matrix, "paths")["total"]) != total {
+		t.Fatalf("the main read keeps its order and says where it stopped: next %v, %d rows", matrix["paths_next"], len(mainRows))
+	}
+	path := "/api/v1/release-evidence/paths"
+	all, next, pages := append([]map[string]any{}, mainRows...), "50", 0
+	for next != "" {
+		page := f.readAs(root, path+"?limit=15&after="+next)
+		if page.status != 200 || whole(page.body["total"]) != len(f.s.ev.paths) || whole(page.body["matching"]) != len(f.s.ev.paths) || page.body["order"] != "recorded" {
+			t.Fatalf("after %s: %s", next, page.raw[:min(len(page.raw), 300)])
+		}
+		for _, raw := range page.body["paths"].([]any) {
+			all = append(all, raw.(map[string]any))
+		}
+		next = fmt.Sprint(page.body["next"])
+		if pages++; pages == 1 {
+			add("added-meanwhile")
+		}
+		if pages > 10 {
+			t.Fatal("the paths do not end")
+		}
+	}
+	if len(all) != total+1 {
+		t.Fatalf("the pages hold %d of %d", len(all), total+1)
+	}
+	for index, row := range all {
+		if whole(row["number"]) != index+1 || row["id"] != f.s.ev.paths[index] {
+			t.Fatalf("row %d is %v number %v", index, row["id"], row["number"])
+		}
+	}
+	first := f.readAs(root, path)
+	fresh := evRows(evMap(f.evidenceRead(root).body, "matrix", "paths"))
+	if rows, _ := first.body["paths"].([]any); len(rows) != len(fresh) || !reflect.DeepEqual(rows[0], map[string]any(fresh[0])) || !reflect.DeepEqual(rows[49], map[string]any(fresh[49])) {
+		t.Error("the first page of the further read differs from the rows of the main read")
+	}
+	byID := f.readAs(root, path+"?id=bulk-path-069,"+f.s.ev.paths[1]+",never-recorded")
+	if rows, _ := byID.body["paths"].([]any); byID.status != 200 || len(rows) != 2 || rows[1].(map[string]any)["id"] != "bulk-path-069" || whole(byID.body["matching"]) != 2 || byID.body["next"] != "" ||
+		!reflect.DeepEqual(rows[0], map[string]any(fresh[1])) {
+		t.Fatalf("by identifier: %s", byID.raw[:min(len(byID.raw), 300)])
+	}
+	found := f.readAs(root, path+"?q=PATH-03&limit=4")
+	rows, _ := found.body["paths"].([]any)
+	if found.status != 200 || len(rows) != 4 || rows[0].(map[string]any)["id"] != "bulk-path-030" || whole(found.body["matching"]) != 10 {
+		t.Fatalf("a search by identifier: %s", found.raw[:min(len(found.raw), 300)])
+	}
+	rest := f.readAs(root, path+"?q=PATH-03&after="+fmt.Sprint(found.body["next"]))
+	if rows, _ := rest.body["paths"].([]any); len(rows) != 6 || rows[0].(map[string]any)["id"] != "bulk-path-034" || rest.body["next"] != "" {
+		t.Errorf("the rest of a search: %s", rest.raw[:min(len(rest.raw), 300)])
+	}
+	many := []string{}
+	for n := 0; n <= pathIDs; n++ {
+		many = append(many, fmt.Sprintf("bulk-path-%03d", n))
+	}
+	for _, query := range []string{"?id=", "?id=a,,b", "?id=a,a", "?id=" + strings.Repeat("p", pathIDBytes+1), "?id=" + strings.Join(many, ","), "?id=a&limit=5", "?id=a&id=b", "?id=a&q=a",
+		"?after=0", "?after=x", "?limit=0", "?limit=51", "?q=", "?target=x", "?limit=5&limit=6"} {
+		if refused := f.readAs(root, path+query); refused.status != 422 {
+			t.Errorf("%s: %d", query, refused.status)
+		}
+	}
+	if twenty := f.readAs(root, path+"?id="+strings.Join(many[:pathIDs], ",")); twenty.status != 200 || len(twenty.body["paths"].([]any)) != pathIDs {
+		t.Errorf("twenty identifiers: %d", twenty.status)
+	}
+	if fifty := f.readAs(root, path+"?limit=50"); fifty.status != 200 {
+		t.Errorf("a limit of fifty: %d", fifty.status)
+	}
+	f.code(t, "member", f.readAs(f.as(MemberLogin), path), 403, "permission_denied")
+	f.code(t, "anonymous", f.readAs(actor{}, path), 401, "unauthenticated")
+	f.s.fault = func(at string) bool { return at == "release-evidence-read" }
+	if failed := f.readAs(root, path); failed.status != 503 {
+		t.Errorf("a fault: %d", failed.status)
+	}
+	f.s.fault = nil
+	f.s.ev.paths = append(f.s.ev.paths, "never-recorded")
+	if failed := f.readAs(root, path+"?id=never-recorded"); failed.status != 503 {
+		t.Errorf("an unknown stored path: %d", failed.status)
+	}
+	f.s.bootWorkspace = "elsewhere"
+	if other := f.readAs(root, path); other.status != 200 || len(other.body["paths"].([]any)) != 0 || whole(other.body["total"]) != 0 {
+		t.Errorf("another workspace: %d", other.status)
+	}
+}

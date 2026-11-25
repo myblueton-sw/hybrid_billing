@@ -13,7 +13,7 @@ import { sample } from "../../../../service/release-evidence.sample";
 import {
   approveUsable, blockerPolicy, buildsOf, cancelled, deniedOutcome, differences, draftOf, duplicateIn, fieldReaction, forget, frozenTargetOk, goneKind, hadEarlier, keepDraft, keepsAttempt,
   keptKey, modeOf, pairOf, pendingFor, pendingNow, pendingRetire, profileRetire, profileTarget, proposalTarget, pruneRefusals, react, readDenied, readSucceeded, refusedNow, renew,
-  replacementOptions, replacementProblem, requirementRetire, requirementTarget, retireValues, revokedNow, selectionOf, setScope, settle as settleRecorded, snapshotOf, splitWidth, stateSentence, textProblem,
+  replacementChoices, replacementOptions, replacementProblem, requirementRetire, requirementTarget, retireValues, revokedNow, selectionOf, setScope, settle as settleRecorded, snapshotOf, splitWidth, stateSentence, textProblem,
   utf8Bytes, vanished, rowId, closedProposal, verdictLine, viewOf, withdrawUsable,
   filtering, missingProfiles, missingRequirements, noFilter, profileById, missingPath, profileTargetsInUse, withHeldPaths, withHeldProfiles, withMoreHardware, requirementByLabel, requirementByTarget, requirementByTest, requirementTargetsInUse, stateAtCandidate, stillAllowed, withHeld,
 } from "./live-model";
@@ -1070,4 +1070,16 @@ test("paths held beyond the main read are selected, kept once and ordered by num
   }
   const all = renderToStaticMarkup(createElement(MatrixView, { ...shared(page()), pathsList: { ...list, more: false } }));
   assert.ok(!all.includes("p05-paths-count") && !all.includes("p05-paths-more"));
+});
+
+test("a chosen replacement stays an option only when the form knows it", () => {
+  const listed = [{ target: "trace-requirement-2", label: "a/two" }];
+  assert.deepEqual(replacementChoices(listed, "", "", {}), listed);
+  assert.deepEqual(replacementChoices(listed, "none", "", {}), listed);
+  assert.deepEqual(replacementChoices(listed, "trace-requirement-2", "", {}), listed);
+  assert.deepEqual(replacementChoices(listed, "trace-requirement-9", "", {}), listed);
+  assert.deepEqual(replacementChoices(listed, "trace-requirement-9", "", { "trace-requirement-9": "a/nine" }), [...listed, { target: "trace-requirement-9", label: "a/nine" }]);
+  assert.deepEqual(replacementChoices(listed, "trace-requirement-9", "trace-requirement-9", {}), [...listed, { target: "trace-requirement-9", label: "trace-requirement-9" }]);
+  assert.equal(replacementProblem("trace-requirement-9", true, replacementChoices(listed, "trace-requirement-9", "", {})), "required");
+  assert.equal(replacementProblem("trace-requirement-9", true, replacementChoices(listed, "trace-requirement-9", "", { "trace-requirement-9": "a/nine" })), "");
 });

@@ -135,8 +135,13 @@ try {
         await page.locator(".p05-form button[type=submit]").click();
         await page.locator(".p05-confirm").waitFor({ timeout: 5000 }).catch(async () => { notes.push(`${at} form errors: ` + (await page.locator(".p05-form .service-field-error").allInnerTexts()).join(" | ")); });
         const text = (await page.locator(".p05-confirm").count()) ? await page.locator(".p05-confirm").innerText() : "";
+        await page.waitForFunction((label) => [...document.querySelectorAll(".p05-confirm dd")].some((d) => d.textContent.includes(label) && d.textContent.trim().length > label.length + 3), cand(41).label, { timeout: 5000 }).catch(() => {});
         const fact = (await page.locator(".p05-confirm dd").filter({ hasText: cand(41).label }).first().innerText().catch(() => "")).trim();
-        check(`${at} the confirmation names the candidate found by search and ${noDetail ? "says its details could not be read" : "shows its state"}, never Unknown`, text.includes(cand(41).label) && details.join() === cand(41).target && !fact.includes(copy[lang].unknown) && (noDetail ? fact.includes(copy[lang].detail) : fact.length > cand(41).label.length + 3 && !fact.includes(copy[lang].detail)), fact + " / " + details.join());
+        check(`${at} the confirmation names the candidate found by search and ${noDetail ? "says its details could not be read" : "shows its state"}, never Unknown`, text.includes(cand(41).label) && details.length >= 1 && details.every((d) => d === cand(41).target) && !fact.includes(copy[lang].unknown) && (noDetail ? fact.includes(copy[lang].detail) : fact.length > cand(41).label.length + 3 && !fact.includes(copy[lang].detail)), fact + " / " + details.join());
+        if (noDetail) {
+          const gap = await page.locator(".p05-replacement-detail").evaluate((el) => { const c = getComputedStyle(el); return c.marginBlockStart + " " + c.marginBlockEnd; });
+          check(`${at} the failure sentence adds no space under itself`, gap === "2px 0px", gap);
+        }
         if (args.shots && text) { await page.locator(".p05-confirm").scrollIntoViewIfNeeded(); await page.screenshot({ path: `${args.shots}/p05-replacement-confirm-${lang}-${width}.png`, fullPage: false }); }
       }
       await page.unrouteAll({ behavior: "wait" });

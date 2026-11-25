@@ -1177,6 +1177,6 @@
   margin: 0 0 8px;
   font-size: 16px;
 }
-.p05-replacement-detail {
-  margin: 4px 0 0;
+.p05-live .p05-replacement-detail {
+  margin-block: 2px 0;
 }

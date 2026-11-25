@@ -69,6 +69,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/release-evidence/results", s.listEvidenceResults)
 	mux.HandleFunc("GET /api/v1/release-evidence/builds", s.listEvidenceBuilds)
 	mux.HandleFunc("GET /api/v1/release-evidence/profiles", s.listEvidenceProfiles)
+	mux.HandleFunc("GET /api/v1/release-evidence/hardware", s.listEvidenceHardware)
 	mux.HandleFunc("POST /api/v1/me/password", s.changePassword)
 	mux.HandleFunc("POST /api/v1/me/sessions/end", s.endSelfSessions)
 	mux.HandleFunc("POST /api/v1/me/sessions/selections", s.prepareSessionSelection)

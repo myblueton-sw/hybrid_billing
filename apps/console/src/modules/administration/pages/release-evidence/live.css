@@ -1131,7 +1131,10 @@
 .p05-live .p05-req-count {
   margin-block-start: 12px;
 }
-.p05-live .p05-profiles-foot:not(:empty) {
+.p05-live .p05-list-foot:not(:empty) {
   padding-block-start: 24px;
   border-block-start: 1px solid var(--border-row);
+}
+.p05-live .p05-hw-foot:not(:empty) {
+  margin-block-start: 32px;
 }

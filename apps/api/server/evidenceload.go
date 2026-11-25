@@ -14,6 +14,7 @@ const (
 )
 
 type evidenceHardwareRow struct {
+	Number    int    `json:"number"`
 	ID        string `json:"id"`
 	CPUs      int64  `json:"cpus"`
 	MemoryMiB int64  `json:"memory_mib"`
@@ -103,6 +104,7 @@ type evidenceReadiness struct {
 type evidenceLoad struct {
 	Origin          string                            `json:"origin"`
 	Hardware        evidenceList[evidenceHardwareRow] `json:"hardware"`
+	HardwareNext    string                            `json:"hardware_next"`
 	Profiles        evidenceList[evidenceProfileRow]  `json:"profiles"`
 	ProfilesNext    string                            `json:"profiles_next"`
 	Readiness       *evidenceReadiness                `json:"readiness"`
@@ -202,12 +204,11 @@ func (f *evidenceFacts) load() (evidenceLoad, error) {
 		return evidenceLoad{}, err
 	}
 	section.Readiness = readiness
-	hardware := s.ev.hardware
-	if section.Hardware, err = listOf(len(hardware), evidenceShown, func(index int) (evidenceHardwareRow, error) {
-		h, err := s.perfHardware(hardware[index])
-		return evidenceHardwareRow{ID: h.ID, CPUs: h.CPUs, MemoryMiB: h.MemoryMiB, DiskGiB: h.DiskGiB, Storage: h.Storage, Spec: h.Spec}, err
-	}); err != nil {
+	if section.Hardware, err = listOf(len(s.ev.hardware), evidenceShown, s.hardwareAt); err != nil {
 		return evidenceLoad{}, err
+	}
+	if section.Hardware.More {
+		section.HardwareNext = strconv.Itoa(len(section.Hardware.Rows))
 	}
 	profiles := s.ev.profiles
 	section.Profiles, err = listOf(len(profiles), evidenceShown, func(index int) (evidenceProfileRow, error) { return f.profileAt(index, statuses) })

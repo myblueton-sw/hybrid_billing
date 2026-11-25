@@ -15,7 +15,7 @@ import {
   keptKey, modeOf, pairOf, pendingFor, pendingNow, pendingRetire, profileRetire, profileTarget, proposalTarget, pruneRefusals, react, readDenied, readSucceeded, refusedNow, renew,
   replacementOptions, replacementProblem, requirementRetire, requirementTarget, retireValues, revokedNow, selectionOf, setScope, settle as settleRecorded, snapshotOf, splitWidth, stateSentence, textProblem,
   utf8Bytes, vanished, rowId, closedProposal, verdictLine, viewOf, withdrawUsable,
-  filtering, missingProfiles, missingRequirements, noFilter, profileById, profileTargetsInUse, withHeldProfiles, requirementByLabel, requirementByTarget, requirementByTest, requirementTargetsInUse, stateAtCandidate, stillAllowed, withHeld,
+  filtering, missingProfiles, missingRequirements, noFilter, profileById, profileTargetsInUse, withHeldProfiles, withMoreHardware, requirementByLabel, requirementByTarget, requirementByTest, requirementTargetsInUse, stateAtCandidate, stillAllowed, withHeld,
 } from "./live-model";
 import { blockerText, f, k } from "./live-copy";
 import { allWordTables, category, counted, failingVerdicts, plurals, verdictWords } from "./live-codes";
@@ -1012,4 +1012,30 @@ test("profiles held beyond the main read are found, selected and not reported as
   }
   const whole = renderToStaticMarkup(createElement(LoadView, { ...shared(page()), list: { ...list, more: false } }));
   assert.ok(!whole.includes("p05-profiles-count") && !whole.includes("p05-profiles-more"));
+});
+
+test("hardware loaded beyond the main read is added once, in the order read", async () => {
+  const { hardwareAnswerOf, hardwarePath } = await import("../../../../service/release-evidence");
+  const main = page((s) => { s.load.hardware.total = 70; s.load.hardware.more = true; s.load.hardware_next = "1"; s.load.hardware.rows.forEach((h: Raw, i: number) => { h.number = i + 1; }); });
+  const from = main.load.hardware.rows![0];
+  const extra = (n: number) => ({ ...from, number: n, id: "hw-" + n });
+  const more = withMoreHardware(main, [extra(2), extra(3), { ...from }, extra(2), { ...from, id: "" }]);
+  assert.deepEqual(more.load.hardware.rows!.map((h) => h.id), [...main.load.hardware.rows!.map((h) => h.id), "hw-2", "hw-3"]);
+  assert.equal(more.load.hardware.more, true);
+  assert.equal(withMoreHardware(main, []), main);
+  const whole = withMoreHardware(page((s) => { s.load.hardware.total = s.load.hardware.rows.length + 1; s.load.hardware.more = true; }), [extra(2)]);
+  assert.equal(whole.load.hardware.more, false);
+  assert.equal(hardwarePath("50"), "/release-evidence/hardware?limit=50&after=50");
+  for (const bad of [{}, { hardware: [], next: "" }, { hardware: "x", next: "", total: 0 }, { hardware: [], next: 4, total: 0 }]) assert.equal(hardwareAnswerOf(bad), null, JSON.stringify(bad));
+  const got = hardwareAnswerOf({ hardware: [{ number: 60, id: "hw-60", cpus: 4 }, null], next: "60", total: 70 });
+  assert.deepEqual([got?.rows.length, got?.rows[0].number, got?.rows[0].cpus, got?.next, got?.total], [1, 60, 4, "60", 70]);
+  const list = { more: true, status: "idle" as const, reset: false, onMore: () => undefined };
+  for (const l of locales) {
+    const html = renderToStaticMarkup(createElement(LoadView, { ...shared(main), l, hardwareList: list }));
+    assert.ok(html.includes(k.hardwareShown(l, main.load.hardware.rows!.length, 70)) && html.includes(k.hardwareMore(l)), l);
+    const failed = renderToStaticMarkup(createElement(LoadView, { ...shared(main), l, hardwareList: { ...list, status: "failed", reset: true } }));
+    assert.ok(failed.includes(k.hardwareFailed(l)) && failed.includes(k.reqTryAgain(l)) && failed.includes(k.hardwareReset(l)), l);
+  }
+  const all = renderToStaticMarkup(createElement(LoadView, { ...shared(page()), hardwareList: { ...list, more: false } }));
+  assert.ok(!all.includes("p05-hw-count") && !all.includes("p05-hw-more"));
 });

@@ -84,3 +84,14 @@ Rerun on the merged tree: TypeScript check clean; console tests 1426, 1423 passe
 One runner expectation was stale and is corrected: on main a 401 answer to a screen's first read now returns the person to sign-in ("Sign in again."), where the runner waited for an in-screen error button. `admin-read-order-qa.mjs` now waits for the sign-in form. The product behaviour is main's and is not changed here.
 
 Limits of this rerun: the last three runners were run against built files (`vite build`, `vite preview`), because the development server of a worktree whose dependencies are linked from another checkout refuses the font files and those runners assert that no font fails; with the development server they failed on that assertion alone. Captures were not visually reviewed again; the earlier visual reviews apply to the unmerged revisions. The remaining audit scope stated under Current status is unchanged, and this is not whole-ticket accessibility acceptance.
+
+
+# Command forms on P02–P05 lose keyboard focus when opened (2026-11-25)
+
+Reproduced with `apps/console/tools/command-focus-qa.mjs` on main `d25f1720`: on P02, P03, P04 and P05 every command form opened from the keyboard (44 opener kinds across the views, English, 1440 and 390) left `document.activeElement` on BODY. Opening removes the button that was pressed and nothing took focus, so a screen reader is told nothing about the form that appeared. Chromium kept its navigation position, so Tab still reached the form; Cancel already returned focus to the opening control in all 44 cases.
+
+Correction: when a command form shows its editing step and focus is on BODY, focus moves to the form's title (`tabIndex=-1`), as the confirmation step already does with its own title. The untitled subscription form of P02 focuses its wrapper, which is a named group. Files: the four `LiveCommand.tsx` of `integrations`, `recovery`, `retention` and `release-evidence`. Returning from the confirmation to the editing step follows the same rule.
+
+Recheck on the corrected tree: 130 checks pass — for each of the 44 openers at both widths, focus after opening is on the form title (or the named group), Tab reaches Cancel, Cancel returns focus to the opener; no view takes focus into a form on load; no command was sent. TypeScript clean; console tests 1426, 1423 passed, 3 skipped. Three existing form runners still pass (`replacement-search-qa.mjs` 55, `owner-search-qa.mjs` 82, `hold-card-qa.mjs` 10).
+
+Limits: English only, since the rule does not depend on language; Chromium only; no screen reader was used, so what is announced is inferred from the focused element; forms on P01 and outside administration (M and O screens) do not use this opener pattern and are not covered by this runner; the confirmation-to-editing return was not exercised by the runner.

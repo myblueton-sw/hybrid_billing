@@ -1,7 +1,7 @@
 import { RowDiagnostics, DiagnosticDetails, useCurrentCommand, useFailureDiagnostic } from "../../../../service/CommandDiagnostics";
 import { diagnosticOf, type RowDiagnostic, type CommandDiagnostic } from "../../../../service/command-diagnostics";
 import { diagnosticCopy } from "../../../../service/diagnostic-copy";
-import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, type AdminClient } from "../../../../service/admin";
 import type { IntegrationsPage } from "../../../../service/integrations";
@@ -67,11 +67,12 @@ export function CommandForm(props: FormProps) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; alert: boolean } | null>(null);
   const confirmTitle = useRef<HTMLHeadingElement>(null);
+  const editTitle = useRef<HTMLElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
   const pending = pendingNow(command, target);
   const shown = JSON.stringify(values);
 
-  useEffect(() => { if (step === "confirm") confirmTitle.current?.focus(); }, [step]);
+  useEffect(() => { if (step === "confirm") confirmTitle.current?.focus(); else if (document.activeElement === document.body) editTitle.current?.focus(); }, [step]);
   useEffect(() => { if (message) messageRef.current?.focus(); }, [message]);
   useEffect(() => {
     discard(command, target, { ...values, rationale: rationale.trim() });
@@ -197,9 +198,9 @@ export function CommandForm(props: FormProps) {
   const problems: Problems = [...choiceErrors, ...(reasonError ? [{ field: id + "-reason", message: reasonError }] : [])];
 
   return (
-    <div className="p02-form-wrap">
+    <div className="p02-form-wrap" {...(props.untitled ? { ref: editTitle as RefObject<HTMLDivElement>, tabIndex: -1, role: "group", "aria-label": verb } : {})}>
       {diagnostic && <DiagnosticDetails l={l} detail={diagnostic} />}
-      {!props.untitled && <h4 className="p02-form-title">{verb}</h4>}
+      {!props.untitled && <h4 ref={editTitle as RefObject<HTMLHeadingElement>} tabIndex={-1} className="p02-form-title">{verb}</h4>}
       {pending && step === "edit" && !message && <p className="live-note-rule" role="status">{k.pendingAttempt(l)}</p>}
       {message && (
         <div ref={messageRef} tabIndex={-1} className={message.alert ? "live-error" : "live-note-rule"} role={message.alert ? "alert" : "status"}>

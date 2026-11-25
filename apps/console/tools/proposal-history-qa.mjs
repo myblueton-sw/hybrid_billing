@@ -24,6 +24,8 @@ const screens = [
   { id: "p03", read: "recovery", hash: (l) => `#/recovery?lang=${l}&view=resume`, list: (b) => b.proposals, put: (b, rows, facts) => ({ ...b, proposals: rows, proposal_history: facts }) },
   { id: "p04", read: "retention", kind: "policy", hash: (l) => `#/retention?lang=${l}&view=policies`, list: (b) => b.proposals?.rows, history: (b) => b.proposals?.history,
     put: (b, rows, facts) => { const others = (b.proposals.rows ?? []).filter((p) => p.kind !== "policy"); return { ...b, proposals: { ...b.proposals, total: rows.length + others.length, more: true, rows: [...rows, ...others], history: { ...facts, total: facts.total + 130 }, closed_by_kind: { ...b.proposals.closed_by_kind, policy: facts.total, release: 130 } } }; } },
+  { id: "p05", read: "release-evidence", hash: (l) => `#/release-evidence?lang=${l}&view=decisions`, section: ".p05-live", rowSel: ".p05-live ol.p05-proposals > li", list: (b) => b.decisions?.proposals?.rows, history: (b) => b.decisions?.proposal_history,
+    put: (b, rows, facts) => ({ ...b, decisions: { ...b.decisions, proposals: { total: rows.length + 70, more: true, rows }, proposal_history: facts } }) },
 ];
 const facts = { total: 120, next: "1071", kept: 200, dropped: 5 };
 
@@ -40,8 +42,9 @@ try {
   await page.locator(".service-session").waitFor();
 
   for (const screen of screens) {
-    const section = () => page.locator(`.${screen.id}-proposals`);
-    const rows = () => section().locator(`.${screen.id}-list > li`);
+    const rowSel = screen.rowSel ?? `.${screen.id}-proposals .${screen.id}-list > li`;
+    const section = () => page.locator(screen.section ?? `.${screen.id}-proposals`);
+    const rows = () => page.locator(rowSel);
     let served = null;
     let token = "";
     const seen = async (r) => { if (ends(r.url(), screen.read) && r.status() === 200 && !served) { token = r.request().headers()["x-csrf-token"] ?? ""; served = await r.json().catch(() => null); } };
@@ -63,7 +66,7 @@ try {
     const got = further.body ?? {};
     const realClosed = real.filter((p) => p.state !== "pending");
     check(`${screen.id} the real service answers the further read with the newest closed proposals it keeps`, further.status === 200 && Array.isArray(got.proposals) && got.proposals.length === Math.min(5, realClosed.length) &&
-      got.matching === realClosed.length && got.order === "newest_first" && got.proposals.every((p, i) => p.number === realClosed[i].number) && (realClosed.length > 5 ? got.next === String(realClosed[4].number) : got.next === ""), JSON.stringify(got).slice(0, 300));
+      got.matching === realClosed.length && got.order === "newest_first" && got.proposals.every((p, i) => p.target === realClosed[i].target) && (realClosed.length > 5 ? (screen.id === "p05" ? got.next !== "" : got.next === String(realClosed[4].number)) : got.next === ""), JSON.stringify(got).slice(0, 300));
     notes.push(`${screen.id} sample: ${real.length - realClosed.length} waiting, ${realClosed.length} closed`);
     const template = real.find((p) => p.state !== "pending" && shownKind(p)) ?? real.find(shownKind);
     if (!template) { check(`${screen.id} the sample has a proposal to copy`, false); continue; }
@@ -98,7 +101,7 @@ try {
         const size = await more.evaluate((el) => { const r = el.getBoundingClientRect(); return { h: r.height, w: r.width, view: document.documentElement.clientWidth }; });
         check(`${at} the button is at least 44 high and not stretched across a wide page`, size.h >= 44 && (width < 600 || size.w < 420), JSON.stringify(size));
         await more.click();
-        await page.waitForFunction(([sel, extra]) => document.querySelectorAll(sel).length === 100 + extra, [`.${screen.id}-proposals .${screen.id}-list > li`, waiting.length]);
+        await page.waitForFunction(([sel, extra]) => document.querySelectorAll(sel).length === 100 + extra, [rowSel, waiting.length]);
         check(`${at} the next fifty are added and counted`, asked[0] === "1071" && (await section().locator(".kept-count").innerText()).trim() === copy[lang].shown(100, 120));
         await more.focus();
         await page.keyboard.press("Enter");
@@ -108,7 +111,7 @@ try {
         check(`${at} a failed read says so and keeps the hundred shown`, alert.includes(copy[lang].failed) && alert.includes(copy[lang].again) && (await rows().count()) === 100 + waiting.length, alert);
         if (args.shots) { await section().locator(".kept-more").scrollIntoViewIfNeeded(); await page.screenshot({ path: `${args.shots}/${screen.id}-history-failed-${lang}-${width}.png`, fullPage: false }); }
         await page.keyboard.press("Enter");
-        await page.waitForFunction(([sel, extra]) => document.querySelectorAll(sel).length === 120 + extra, [`.${screen.id}-proposals .${screen.id}-list > li`, waiting.length]);
+        await page.waitForFunction(([sel, extra]) => document.querySelectorAll(sel).length === 120 + extra, [rowSel, waiting.length]);
         const end = section().locator(".kept-end");
         check(`${at} at the end every kept proposal is listed, the button is gone and the screen says older ones are not kept`,
           (await section().locator(".kept-more").count()) === 0 && (await end.innerText()).trim() === copy[lang].end && (await section().locator(".kept-count").innerText()).trim() === copy[lang].all(120), JSON.stringify(asked));
@@ -128,7 +131,7 @@ try {
           const reload = page.locator(`.${screen.id}-reload`).first();
           if ((await reload.count()) > 0) {
             await reload.click();
-            await page.waitForFunction(([sel, extra]) => document.querySelectorAll(sel).length === 50 + extra, [`.${screen.id}-proposals .${screen.id}-list > li`, waiting.length]);
+            await page.waitForFunction(([sel, extra]) => document.querySelectorAll(sel).length === 50 + extra, [rowSel, waiting.length]);
             check(`${at} after the screen is read again the list starts from fifty and says so`, (await section().locator(".kept-reset").innerText()).trim() === copy[lang].reset);
           } else notes.push(`${screen.id} has no reload control the script could find; the read-again line was not exercised`);
         }

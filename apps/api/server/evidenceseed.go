@@ -62,6 +62,7 @@ type evidenceEntry struct {
 	closedBy  string
 	closing   string
 	applied   uint64
+	seq       uint64
 }
 
 type evidenceStore struct {
@@ -77,6 +78,8 @@ type evidenceStore struct {
 	results      []evidenceResultKey
 	candidate    *releasetrace.Release
 	entries      []*evidenceEntry
+	entrySeq     uint64
+	dropped      int
 }
 
 func newEvidenceStore() *evidenceStore { return &evidenceStore{} }
@@ -99,6 +102,8 @@ func (c *evidenceStore) entry(module string, number uint64) *evidenceEntry {
 }
 
 func (c *evidenceStore) keep(e *evidenceEntry) {
+	c.entrySeq++
+	e.seq = c.entrySeq
 	c.entries = append(c.entries, e)
 	if len(c.entries) <= installKept {
 		return
@@ -106,6 +111,7 @@ func (c *evidenceStore) keep(e *evidenceEntry) {
 	for index, old := range c.entries {
 		if old.state != entryPending {
 			c.entries = append(c.entries[:index], c.entries[index+1:]...)
+			c.dropped++
 			return
 		}
 	}

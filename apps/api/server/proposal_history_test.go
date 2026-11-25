@@ -8,8 +8,10 @@ import (
 
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"github.com/myblueton-sw/hybrid_billing/modules/installer"
+	"github.com/myblueton-sw/hybrid_billing/modules/perfgate"
 	"github.com/myblueton-sw/hybrid_billing/modules/plugins"
 	"github.com/myblueton-sw/hybrid_billing/modules/recovery"
+	"github.com/myblueton-sw/hybrid_billing/modules/releasetrace"
 	"github.com/myblueton-sw/hybrid_billing/modules/retention"
 )
 
@@ -511,5 +513,94 @@ func TestRetentionProposalHistoryIsCountedAndReadByKind(t *testing.T) {
 	f.s.bootWorkspace = "elsewhere"
 	if other := f.readAs(root, "/api/v1/retention/proposals"); other.status != 200 || len(keptNumbers(other.body["proposals"])) != 0 || whole(other.body["matching"]) != 0 {
 		t.Errorf("another workspace: %d %s", other.status, other.raw[:min(len(other.raw), 200)])
+	}
+}
+
+func TestEvidenceProposalHistoryIsCountedAndReadAcrossModules(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root := f.as(AdminLogin)
+	seeded := len(f.s.ev.entries)
+	for i := 0; i < installKept+5; i++ {
+		module, kind := moduleTrace, releasetrace.ChangeBuild
+		e := &evidenceEntry{module: module, number: uint64(1000 + i/2), kind: kind, state: releasetrace.ProposalWithdrawn, proposer: SampleAdmin, rationale: fmt.Sprintf("Round %03d", i),
+			trace: releasetrace.Change{Kind: releasetrace.ChangeBuild, Build: releasetrace.Build{Build: "9.9.9"}}}
+		if i%2 == 1 {
+			e.module, e.kind, e.trace, e.perf = modulePerf, perfgate.ChangeProfile, releasetrace.Change{}, perfgate.Change{Kind: perfgate.ChangeProfile}
+		}
+		f.s.ev.keep(e)
+	}
+	closedNow := func() int {
+		n := 0
+		for _, e := range f.s.ev.entries {
+			if !evidencePending(e) {
+				n++
+			}
+		}
+		return n
+	}
+	decisions := evMap(f.evidenceRead(root).body, "decisions")
+	facts := evMap(decisions, "proposal_history")
+	rows := evRows(evMap(decisions, "proposals"))
+	waiting, shown := 0, []string{}
+	for _, row := range rows {
+		if row["state"] == entryPending {
+			waiting++
+		} else {
+			shown = append(shown, fmt.Sprint(row["target"]))
+		}
+	}
+	if waiting == 0 || len(rows) != evidenceShown || whole(facts["total"]) != closedNow() || whole(facts["kept"]) != installKept || f.s.ev.dropped != seeded+installKept+5-len(f.s.ev.entries) ||
+		whole(facts["dropped"]) != f.s.ev.dropped || f.s.ev.dropped == 0 || facts["next"] == "" || whole(evMap(decisions, "proposals")["total"]) != len(f.s.ev.entries) {
+		t.Fatalf("the evidence read: %v, %d waiting, %d closed shown", facts, waiting, len(shown))
+	}
+	all, next, pages := append([]string{}, shown...), fmt.Sprint(facts["next"]), 0
+	for next != "" {
+		got := f.readAs(root, "/api/v1/release-evidence/proposals?limit=60&after="+next)
+		if got.status != 200 || whole(got.body["matching"]) != closedNow() || whole(evMap(got.body, "proposal_history")["total"]) != closedNow() || got.body["order"] != "newest_first" {
+			t.Fatalf("after %s: %s", next, got.raw[:min(len(got.raw), 300)])
+		}
+		for _, raw := range got.body["proposals"].([]any) {
+			row := raw.(map[string]any)
+			if row["state"] == entryPending {
+				t.Fatalf("a waiting proposal on a further page: %v", row["target"])
+			}
+			all = append(all, fmt.Sprint(row["target"]))
+		}
+		next = fmt.Sprint(got.body["next"])
+		if pages++; pages > 10 {
+			t.Fatal("the history does not end")
+		}
+	}
+	seen := map[string]bool{}
+	for _, target := range all {
+		if seen[target] {
+			t.Fatalf("%s is listed twice", target)
+		}
+		seen[target] = true
+	}
+	if len(all) != closedNow() || !seen[evidenceProposalTarget(moduleTrace, 1050)] || !seen[evidenceProposalTarget(modulePerf, 1050)] {
+		t.Errorf("the pages hold %d of %d closed, and two modules' proposals with the same number are both kept apart", len(all), closedNow())
+	}
+	found := f.readAs(root, "/api/v1/release-evidence/proposals?q=round%20203")
+	if rows, _ := found.body["proposals"].([]any); found.status != 200 || len(rows) != 1 || rows[0].(map[string]any)["module"] != modulePerf || whole(found.body["matching"]) != 1 {
+		t.Errorf("a search by rationale: %s", found.raw[:min(len(found.raw), 300)])
+	}
+	f.refusedHistory(root, "/api/v1/release-evidence/proposals")
+	member, theirs := f.readAs(f.as(MemberLogin), "/api/v1/release-evidence/proposals"), f.evidenceRead(f.as(MemberLogin))
+	if member.status != theirs.status || member.status != 403 {
+		t.Errorf("a member: the further read %d, the main read %d", member.status, theirs.status)
+	}
+	if got := f.readAs(actor{}, "/api/v1/release-evidence/proposals"); got.status != 401 {
+		t.Errorf("anonymous: %d", got.status)
+	}
+	f.s.fault = func(at string) bool { return at == "release-evidence-read" }
+	if got := f.readAs(root, "/api/v1/release-evidence/proposals"); got.status != 503 {
+		t.Errorf("a fault: %d", got.status)
+	}
+	f.s.fault = nil
+	f.s.bootWorkspace = "elsewhere"
+	if other := f.readAs(root, "/api/v1/release-evidence/proposals"); other.status != 200 || len(other.body["proposals"].([]any)) != 0 || whole(other.body["matching"]) != 0 {
+		t.Errorf("another workspace: %d", other.status)
 	}
 }

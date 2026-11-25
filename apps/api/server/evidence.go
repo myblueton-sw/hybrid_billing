@@ -235,6 +235,7 @@ type evidenceProposalRow struct {
 type evidenceDecisions struct {
 	Origin           string                            `json:"origin"`
 	Proposals        evidenceList[evidenceProposalRow] `json:"proposals"`
+	ProposalHistory  keptFacts                         `json:"proposal_history"`
 	SupportDecisions string                            `json:"support_decisions"`
 	ActivationReview string                            `json:"activation_review"`
 	Ledger           string                            `json:"ledger"`
@@ -715,10 +716,11 @@ func (f *evidenceFacts) proposalRow(e *evidenceEntry) (evidenceProposalRow, erro
 
 func (f *evidenceFacts) decisions() (evidenceDecisions, error) {
 	entries := f.s.ev.entries
-	list, err := listOf(len(entries), evidenceShown, func(index int) (evidenceProposalRow, error) {
-		return f.proposalRow(entries[len(entries)-1-index])
-	})
-	return evidenceDecisions{Origin: f.origin, Proposals: list, SupportDecisions: notConnected, ActivationReview: notConnected, Ledger: retentionLedger}, err
+	listed, closed, next := listKept(entries, evidencePending, evidenceSequence, evidenceShown)
+	list, err := listOf(len(listed), len(listed), func(index int) (evidenceProposalRow, error) { return f.proposalRow(listed[index]) })
+	list.Total, list.More = len(entries), len(entries) > len(listed)
+	return evidenceDecisions{Origin: f.origin, Proposals: list, ProposalHistory: keptFacts{Total: closed, Next: next, Kept: installKept, Dropped: f.s.ev.dropped},
+		SupportDecisions: notConnected, ActivationReview: notConnected, Ledger: retentionLedger}, err
 }
 
 func (s *Server) evidenceFactsFor(verifier identity.Verifier, reader string, now time.Time) (*evidenceFacts, error) {

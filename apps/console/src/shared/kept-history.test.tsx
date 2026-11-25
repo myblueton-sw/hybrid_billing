@@ -7,8 +7,8 @@ import { kept } from "./kept-copy";
 import { keptFactsOf, keptPageOf, type KeptFacts } from "../service/kept";
 import { AdminError, adminClient } from "../service/admin";
 
-type Row = { number: number | null; state: string };
-const rowsOf = (from: number, n: number, state = "applied"): Row[] => Array.from({ length: n }, (_, i) => ({ number: from - i, state }));
+type Row = { number: number | null; target: string; state: string };
+const rowsOf = (from: number, n: number, state = "applied", module = "x"): Row[] => Array.from({ length: n }, (_, i) => ({ number: from - i, target: module + "-" + (from - i), state }));
 
 function Probe({ facts, first, l = "en" as const }: { facts: KeptFacts | null; first: Row[]; l?: "en" | "ko" | "ar" }) {
   const older = useOlder<Row>(l, "r1", facts, first, async () => ({ rows: [], next: "", matching: 0, history: facts ?? keptFactsOf(null) }), () => false);
@@ -52,6 +52,9 @@ test("the count is of closed proposals and leaves out those waiting", () => {
 test("older rows already listed are not listed twice", () => {
   const got = merged(rowsOf(10, 5), rowsOf(7, 4));
   assert.deepEqual(got.map((r) => r.number), [10, 9, 8, 7, 6, 5, 4]);
+  const two = merged(rowsOf(10, 2, "applied", "trace"), [...rowsOf(10, 2, "applied", "perf"), ...rowsOf(9, 1, "applied", "trace")]);
+  assert.deepEqual(two.map((r) => r.target), ["trace-10", "trace-9", "perf-10", "perf-9"]);
+  assert.equal(merged([{ number: 1, target: "", state: "applied" }], [{ number: 1, target: "", state: "applied" }]).length, 2);
 });
 
 test("the facts and a further page are read strictly", () => {

@@ -40,6 +40,17 @@ func prepareBulk(s *Server, ctx commands.Context, user string) (commands.Outcome
 	}
 	effect := bulkrevoke.Effect(ctx.Fields["effect"])
 	targets, exclusions := s.classify(user, ids, effect, r, now, s.stillMatches(draft, r, now))
+	if marked, _ := s.bulk.DraftChosen(ctx.Workspace, user, ctx.Target); len(marked) > 0 {
+		kept := targets[:0]
+		for _, t := range targets {
+			if marked[t.User] {
+				exclusions = append(exclusions, bulkrevoke.Exclusion{User: t.User, Login: t.Login, Reason: bulkrevoke.ExcludedChosen})
+				continue
+			}
+			kept = append(kept, t)
+		}
+		targets = kept
+	}
 	leaving := map[string]bool{}
 	for _, t := range targets {
 		if !s.mayChangeRole(user, t.Role, now) {

@@ -209,6 +209,62 @@ func (r *Registry) DraftUsers(workspace, owner, draft string) ([]string, error) 
 	return out, nil
 }
 
+func (r *Registry) Remove(workspace, owner, draft string, users []string) (View, Removal, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !validID(workspace) || !validID(owner) || len(users) == 0 {
+		return View{}, Removal{}, ErrInvalid
+	}
+	for _, id := range users {
+		if !validID(id) {
+			return View{}, Removal{}, ErrInvalid
+		}
+	}
+	now := r.now()
+	r.expire(now)
+	e := r.visible(workspace, owner, draft)
+	switch {
+	case e == nil || e.v.Owner != owner || !frozen(e.v) && e.v.State != Draft:
+		return View{}, Removal{}, ErrNotFound
+	case frozen(e.v) || e.v.Selection != Filter:
+		return View{}, Removal{}, ErrState
+	}
+	out := Removal{}
+	for _, id := range users {
+		kept, listed := e.users[id]
+		switch {
+		case !listed || id == owner:
+			out.Ignored++
+		case !kept:
+			out.Already++
+		default:
+			e.users[id] = false
+			out.Removed++
+		}
+	}
+	if out.Removed > 0 {
+		e.v.Chosen, e.v.Updated, e.v.ExpiresAt = e.v.Chosen+out.Removed, now, now.Add(r.limits.Lifetime)
+	}
+	return copyView(e.v), out, nil
+}
+
+func (r *Registry) DraftChosen(workspace, owner, draft string) (map[string]bool, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.expire(r.now())
+	e := r.visible(workspace, owner, draft)
+	if e == nil || e.v.State != Draft {
+		return nil, ErrNotFound
+	}
+	out := map[string]bool{}
+	for id, kept := range e.users {
+		if !kept {
+			out[id] = true
+		}
+	}
+	return out, nil
+}
+
 func (r *Registry) Discard(workspace, caller, id string) (View, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()

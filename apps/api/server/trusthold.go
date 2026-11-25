@@ -150,6 +150,7 @@ var holdTable = map[string]holdRule{
 	"bulk_revocation.add_targets":                  {holdAllow, "stages a reduction and changes no access"},
 	"bulk_revocation.add_matching":                 {holdAllow, "stages a reduction and changes no access"},
 	"bulk_revocation.prepare":                      {holdAllow, "freezes a reduction and changes no access"},
+	"bulk_revocation.remove_targets":               {holdAllow, "narrows a staged reduction and changes no access"},
 	"bulk_revocation.discard":                      {holdAllow, reasonPending},
 	"identity.revoke_invitation":                   {holdAllow, reasonReduce},
 	"identity.create_user":                         {holdRefuse, reasonIncrease},

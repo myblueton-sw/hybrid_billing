@@ -47,6 +47,7 @@ type bulkRow struct {
 	Counts     bulkCounts  `json:"counts"`
 	Staged     int         `json:"staged"`
 	Matched    int         `json:"matched"`
+	Chosen     int         `json:"chosen"`
 	FixedAt    string      `json:"fixed_at"`
 	FixedRev   string      `json:"fixed_revision"`
 	Filter     *userFilter `json:"filter"`
@@ -177,7 +178,7 @@ func (s *Server) bulkRow(v bulkrevoke.View, caller string) bulkRow {
 		if caller != v.Owner && filter.Q != "" {
 			filter.Q, row.Masked = "", true
 		}
-		row.Filter, row.Matched, row.FixedAt, row.FixedRev = &filter, v.Matched, stampOr(v.FixedAt), v.FixedRevision
+		row.Filter, row.Matched, row.Chosen, row.FixedAt, row.FixedRev = &filter, v.Matched, v.Chosen, stampOr(v.FixedAt), v.FixedRevision
 	}
 	if v.State != bulkrevoke.Executed {
 		return row
@@ -274,6 +275,7 @@ func (s *Server) readBulk(w http.ResponseWriter, r *http.Request) {
 		Exclusions: map[string]int{bulkrevoke.ExcludedSelf: 0, bulkrevoke.ExcludedNotFound: 0, bulkrevoke.ExcludedNoMembership: 0, bulkrevoke.ExcludedAlreadyRevoked: 0}}
 	if v.Selection == bulkrevoke.Filter {
 		detail.Exclusions[bulkrevoke.ExcludedNoLongerMatches] = 0
+		detail.Exclusions[bulkrevoke.ExcludedChosen] = 0
 	}
 	for _, x := range v.Exclusions {
 		detail.Exclusions[x.Reason]++

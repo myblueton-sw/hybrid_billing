@@ -199,7 +199,7 @@ Reads: `GET /api/v1/identity/bulk-revocations` (`boundary.go:26`), `/{id}` (`:27
 | Preview | Service users kept | `impact.service_users` (`bulkread.go:88`) | `identity-bulk.ts:113` | `users/BulkPrepare.tsx:79` |
 | Preview | Administrators left afterwards | `impact.anchors_after` (`bulkread.go:89`) | `identity-bulk.ts:113` | `users/BulkPrepare.tsx:81` |
 | Preview | Other workspaces | `impact.other_workspaces` (`bulkread.go:90`) | `identity-bulk.ts:113` | `users/BulkPrepare.tsx:82` |
-| Preview | Excluded by reason | `exclusions` map, keys `self`, `not_found`, `no_membership`, `already_revoked` (`bulkread.go:98`) | `identity-bulk.ts:106-107` | `users/BulkPrepare.tsx:85-86` |
+| Preview | Excluded by reason | `exclusions` map, keys `self`, `not_found`, `no_membership`, `already_revoked`, and for a filter list `no_longer_matches` and `chosen` (`bulkread.go`, `readBulk`); `chosen` is served since HYB-324 and the console does not label or list it yet | `identity-bulk.ts:106-107` | `users/BulkPrepare.tsx:85-86` |
 | Preview | Excluded people | `/targets?kind=excluded` → `exclusions[].user_id`, `login`, `reason`, `total`, `next` (`bulkread.go:144-155`) | `identity-bulk.ts:155-162` | `users/BulkPrepare.tsx:31-46` |
 | Preview | People to revoke | `/targets` → `targets[].login`, `user_id`, `role`, `installation_administrator`, `total`, `next` (`bulkread.go:134-142, 157-162`) | `identity-bulk.ts:130-134, 163-167` | `users/BulkPrepare.tsx:90-100` |
 | Preview | Preparer only may see people | derived: targets not loaded (job opened by someone else) | none | `users/BulkPrepare.tsx:101`; `users/RevocationJobs.tsx:234` |

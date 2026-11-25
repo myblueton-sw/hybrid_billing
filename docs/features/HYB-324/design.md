@@ -45,7 +45,7 @@ Requirement: the bulk table contract of the planning document, `docs/planning/v1
 
 ## Reads
 
-- The row of an open filter draft in the list of bulk revocations gains `chosen`, the number of people marked. The exclusions counted by reason gain the key `chosen` for filter lists only, as `no_longer_matches` is today. The excluded people read returns the reason `chosen`. These are a new field and new values in existing reads.
+- The row of a filter list in the list of bulk revocations gains `chosen`, the number of people marked, in every state of the list; like the other counts of a prepared or executed list it is visible to the administrators who can read that list. The exclusions counted by reason gain the key `chosen` for filter lists only, as `no_longer_matches` is today. The excluded people read returns the reason `chosen`. These are a new field and new values in existing reads.
 - No read of a draft's people is added. Who was removed is shown after prepare, in the excluded people of the preview.
 
 ## Screen

@@ -102,9 +102,10 @@ const impactWord = (l: Locale, v: string) => {
 
 type FurtherMembers = { key: string; rows: PlanMember[]; next: Record<string, string>; status: Record<string, "loading" | "failed"> };
 
-export function Detail({ l, p, page, parties, members, full, titleRef, readMembers }: {
+export function Detail({ l, p, page, parties, members, full, titleRef, readMembers, onRefused }: {
   l: Locale; p: PlanRow; page: PlansPage; parties: OrgParty[]; members: OrgMember[]; full: boolean; titleRef?: React.Ref<HTMLHeadingElement>;
   readMembers?: (plan: string, kind: string, after: string) => Promise<{ rows: PlanMember[]; next: string }>;
+  onRefused?: (e: unknown) => boolean;
 }) {
   const named = (id: string) => nameOf(id, parties, members);
   const furtherKey = page.revision + "\u0000" + p.id;
@@ -116,6 +117,7 @@ export function Detail({ l, p, page, parties, members, full, titleRef, readMembe
   const shownMembers = appended(p.members, further.rows, (m) => (m.kind ?? "") + "\u0000" + m.member);
   const cutKinds = readMembers ? p.kinds.filter((k) => (k.kind in further.next ? further.next[k.kind] : k.next ?? "") !== "") : [];
   const changedTotal = p.kinds.reduce((sum, k) => sum + k.changed, 0);
+  const severalKinds = p.kinds.length > 1;
   const moreMembers = (kind: string) => {
     const after = kind in further.next ? further.next[kind] : p.kinds.find((k) => k.kind === kind)?.next ?? "";
     if (!readMembers || !after || further.status[kind] === "loading") return;
@@ -131,9 +133,16 @@ export function Detail({ l, p, page, parties, members, full, titleRef, readMembe
           return { key: furtherKey, rows: [...now.rows, ...got.rows.map((m) => ({ ...m, kind: m.kind ?? kind }))], next: { ...now.next, [kind]: got.next }, status };
         });
       })
-      .catch(() => {
+      .catch((e: unknown) => {
         if (mine !== furtherToken.current) return;
-        setExtra((was) => { const now = was.key === furtherKey ? was : blankFurther(); return { ...now, status: { ...now.status, [kind]: "failed" } }; });
+        const refused = onRefused?.(e) === true;
+        setExtra((was) => {
+          const now = was.key === furtherKey ? was : blankFurther();
+          const status = { ...now.status };
+          if (refused) delete status[kind];
+          else status[kind] = "failed";
+          return { ...now, status };
+        });
       });
   };
   const kindName = o.kind(l, p.change.kind);
@@ -149,7 +158,6 @@ export function Detail({ l, p, page, parties, members, full, titleRef, readMembe
       <p className="live-sub live-mono">{ltr(p.id)}</p>
       <Steps l={l} p={p} />
       {p.stale && <div className="live-note-rule"><p><strong>{c.staleTag(l)}.</strong> {c.stale(l, page.active_revision, p.base)}</p></div>}
-      {p.truncated && <div className="live-note-rule"><p>{c.truncated(l)}</p></div>}
       <dl className="live-facts o02-summary">
         {p.draft ? <div><dt>{c.membersFact(l)}</dt><dd>{p.draft.member_count}</dd></div> : <div><dt>{c.facts.member(l)}</dt><dd><Named id={p.change.member} name={memberName} /></dd></div>}
         <div><dt>{c.facts.kind(l)}</dt><dd>{kindName}</dd></div>
@@ -179,6 +187,7 @@ export function Detail({ l, p, page, parties, members, full, titleRef, readMembe
                   );
                 })}
               </ul>
+              {p.truncated && <p className="live-sub o02-violations-cut">{c.truncated(l)}</p>}
             </section>
           )}
           <section aria-labelledby="o02-diff-title">
@@ -192,7 +201,7 @@ export function Detail({ l, p, page, parties, members, full, titleRef, readMembe
                       <tbody>
                         {shownMembers.map((m) => (
                           <tr key={(m.kind ?? "") + m.member}>
-                            <td data-label={c.colMember(l)}><Named id={m.member} name={m.name || named(m.member)} /></td>
+                            <td data-label={c.colMember(l)}><Named id={m.member} name={m.name || named(m.member)} />{severalKinds && m.kind && <span className="live-sub o02-member-kind">{o.kind(l, m.kind)}</span>}</td>
                             <td data-label={c.colRanges(l)}>{m.differs.length === 0 ? c.none(l) : <ul className="o02-ranges">{m.differs.map((r) => <li key={r.from + r.until}><DatedRange l={l} from={r.from} until={r.until} /></li>)}</ul>}</td>
                             <td data-label={c.colBefore(l)}>{m.before.length === 0 ? c.none(l) : <ul className="o02-ranges">{m.before.map((id) => <li key={id}><Named id={id} name={named(id)} /></li>)}</ul>}</td>
                             <td data-label={c.colAfter(l)}>{m.after.length === 0 ? c.none(l) : <ul className="o02-ranges">{m.after.map((id) => <li key={id}><Named id={id} name={named(id)} /></li>)}</ul>}</td>
@@ -209,7 +218,7 @@ export function Detail({ l, p, page, parties, members, full, titleRef, readMembe
                     <tbody>
                       {shownMembers.map((m) => (
                         <tr key={(m.kind ?? "") + m.member}>
-                          <td data-label={c.colMember(l)}><Named id={m.member} name={m.name || named(m.member)} /></td>
+                          <td data-label={c.colMember(l)}><Named id={m.member} name={m.name || named(m.member)} />{severalKinds && m.kind && <span className="live-sub o02-member-kind">{o.kind(l, m.kind)}</span>}</td>
                           <td data-label={c.colChange(l)}>{m.member === p.change.member ? (ld.target ? c.leadTo(l, day(l, ld.from), (ld.target === p.change.target && p.target_name) || named(ld.target)) : c.leadNone(l, day(l, ld.from))) : c.none(l)}</td>
                           <td data-label={c.colRanges(l)}>
                             {m.differs.length === 0 ? c.none(l) : <ul className="o02-ranges">{m.differs.map((r) => <li key={r.from + r.until}>{r.until ? c.rangeClosed(l, day(l, r.from), day(l, r.until)) : c.rangeOpen(l, day(l, r.from))}</li>)}</ul>}
@@ -517,6 +526,12 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
       return null;
     }
   }, [api]);
+  const membersRefused = (e: unknown): boolean => {
+    if (!(e instanceof AdminError) || (e.failure !== "denied" && e.failure !== "unauthenticated")) return false;
+    if (e.failure === "denied") setDenied(true);
+    else void load(true);
+    return true;
+  };
 
   const loadChoices = useCallback(async () => {
     const n = ++choiceSeq.current;
@@ -1070,7 +1085,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     main = list(open);
     panel = selected ? (
       <section className="live-step o02-detail" aria-labelledby="o02-plan-title">
-        <Detail l={l} p={selected} page={page} parties={parties} members={allMembers} full={view === "impact"} readMembers={api.planMembers} />
+        <Detail l={l} p={selected} page={page} parties={parties} members={allMembers} full={view === "impact"} readMembers={api.planMembers} onRefused={membersRefused} />
         {view === "impact" ? (
           <ImpactActions l={l} p={selected} onDecision={() => onView("approval", { plan: selected.id, done: "open" })} onAnother={() => onView("targets")} />
         ) : approvalBody(selected)}
@@ -1128,7 +1143,7 @@ export default function LiveChanges({ locale: l, view, params, session, onSignOu
     );
     panel = selected ? (
       <section className="live-step o02-detail" aria-labelledby="o02-plan-title">
-        <Detail l={l} p={selected} page={page} parties={parties} members={allMembers} full readMembers={api.planMembers} />
+        <Detail l={l} p={selected} page={page} parties={parties} members={allMembers} full readMembers={api.planMembers} onRefused={membersRefused} />
         <p className="live-note">{c.readOnly(l)}</p>
         {selected.state === "activated" && selected.activated_revision > 0 && <p className="o02-link"><a href={o01Href(selected)}>{c.o01Link(l, day(l, selected.change.from), selected.activated_revision)}</a></p>}
         {selected.state === "sealed" && <button type="button" className="service-button-link" onClick={() => onView("approval", { plan: selected.id })}>{decisionLabel(l, selected)}</button>}

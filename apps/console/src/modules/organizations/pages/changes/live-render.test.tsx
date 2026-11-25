@@ -277,3 +277,23 @@ test("a plan whose changed members were cut shows the count and one named button
   const key = (m: { kind?: string; member: string }) => (m.kind ?? "") + "\u0000" + m.member;
   assert.deepEqual(appended(cut.members, [member("hierarchy", "acct-2"), member("hierarchy", "acct-3"), member("payer", "acct-3")], key).map(key), ["hierarchy\u0000acct-1", "hierarchy\u0000acct-2", "payer\u0000acct-1", "hierarchy\u0000acct-3", "payer\u0000acct-3"]);
 });
+
+test("a plan whose reasons were cut says so in words about reasons, and a plan of several kinds names each member's kind", async () => {
+  const { o } = await import("../../../organizations/pages/organizations/live-copy");
+  const member = (kind: string, id: string) => ({ kind, member: id, name: "", differs: [], before: [], after: [] });
+  const kinds = (names: string[]) => names.map((kind) => ({ kind, changed: 1, entries_before: 0, entries_after: 1, earliest: "", next: "" }));
+  const both = plan({ kinds: kinds(["hierarchy", "payer"]), members: [member("hierarchy", "acct-1"), member("payer", "acct-1")] });
+  const one = plan({ kinds: kinds(["hierarchy"]), members: [member("hierarchy", "acct-1")] });
+  for (const l of locales) {
+    const cut = plain(detail(l, plan({ state: "rejected", truncated: true, violations: [{ kind: "", member: "", rule: "no_change" }] })));
+    assert.ok(cut.includes(c.truncated(l)), l);
+    assert.ok(!plain(detail(l, plan({}))).includes(c.truncated(l)), l);
+    const html = detail(l, both);
+    assert.equal(html.split("o02-member-kind").length - 1, 2, l);
+    assert.ok(plain(html).includes(o.kind(l, "payer")), l);
+    assert.ok(!detail(l, one).includes("o02-member-kind"), l);
+  }
+  assert.ok(/reasons/.test(c.truncated("en")) && !/members/i.test(c.truncated("en")));
+  assert.ok(c.truncated("ko").includes("사유") && !c.truncated("ko").includes("구성원"));
+  assert.ok(c.truncated("ar").includes("الأسباب") && !c.truncated("ar").includes("الأعضاء"));
+});

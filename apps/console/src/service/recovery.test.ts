@@ -242,3 +242,27 @@ test("stubbed refusals map to the kept sentences and partial needs an operation"
     assert.equal(fieldReaction("recovery.propose_unlock", e.fields), "changed");
   }
 });
+
+test("the lock log's count, cursor and further page are read strictly", async () => {
+  const { lockFactsOf, lockOf, locksPageOf } = await import("./recovery");
+  const { lockRows } = await import("../modules/administration/pages/recovery/live-model");
+  assert.deepEqual(lockOf({ number: 7, by: "u", by_login: "a@example.invalid", rationale: "r", at: "t" }), { number: 7, by: "u", by_login: "a@example.invalid", rationale: "r", at: "t" });
+  assert.equal(lockOf({ number: "7" }).number, null);
+  assert.deepEqual(lockFactsOf({ total: 120, next: "71" }), { total: 120, next: "71" });
+  for (const bad of [null, [], { total: "1", next: "" }, { total: 1, next: 5 }, { next: "" }]) assert.equal(lockFactsOf(bad), null, JSON.stringify(bad));
+  for (const bad of [{}, { locks: [], next: "" }, { locks: "x", next: "", total: 0 }, { locks: [], next: 4, total: 0 }]) assert.equal(locksPageOf(bad), null, JSON.stringify(bad));
+  assert.deepEqual(locksPageOf({ locks: [{ number: 70 }, null, "x"], next: "21", total: 120 }), { rows: [lockOf({ number: 70 })], next: "21", total: 120 });
+  const got = recoveryOf({ state: "configured", isolation: { state: "configured", rows: [{ installation: "i", locks: [{ number: 1 }], lock_history: { total: 1, next: "" } }, { installation: "j", locks: [] }] } });
+  assert.deepEqual([got.isolation.rows?.[0].lock_history, got.isolation.rows?.[1].lock_history, got.isolation.rows?.[0].locks?.[0].number], [{ total: 1, next: "" }, null, 1]);
+  const n = (x: number) => lockOf({ number: x });
+  assert.deepEqual(lockRows([n(71), n(72), n(73)], [n(71), n(70), n(69)]).map((x) => x.number), [73, 72, 71, 70, 69]);
+  const calls: string[] = [];
+  const f = (async (url: RequestInfo | URL) => {
+    calls.push(String(url));
+    return new Response(JSON.stringify(calls.length === 1 ? { locks: [{ number: 70 }], next: "", total: 120 } : { locks: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  const api = adminClient("t", f);
+  assert.equal((await api.recoveryLocks("sample standby", "71")).rows[0].number, 70);
+  assert.equal(calls[0], "/api/v1/recovery/locks?installation=sample%20standby&limit=50&after=71");
+  await assert.rejects(api.recoveryLocks("i", "2"), (e: AdminError) => e.failure === "invalid");
+});

@@ -229,8 +229,29 @@ This replaces the order of "Increments, in order" from its item 2 on. Increments
 
 Review of this section (AI, Claude Opus 5.5, by reading the code; nothing executed), 2026-11-25: approve with conditions, incorporated. It confirmed the growing lists and the lists without a producer on P05, P04, P03 and P02 call by call, and corrected the first version: service accounts are capped at 200; other POST routes exist; the first version deferred group 3 "until a command that adds to it is built", which would have narrowed the ticket without the owner and described the lists as "capped at the sample's size", which nothing does. Re-review: resolved, with one sentence about what the reads return corrected.
 
+# Increment 3a, the lock log of an installation on P03 (2026-11-25)
+
+Facts (main bcb4f9d): the server keeps every lock of an installation in the order recorded (`recoveryseed.go`, `recoveryLock`), with who locked, the reason and the time; nothing limits or drops them, and the lock command can be repeated after each approved unlock. The recovery read returned all of them for each installation the reader's workspace can see, and the screen listed them oldest first.
+
+Built:
+
+- The recovery read lists the newest 50 locks of each installation, still in the order recorded, so an answer with 50 or fewer is what it was. Each lock gains `number`, its position, which does not change because the log only grows. Each installation's row gains `lock_history`: `total` and `next` (the number of the oldest lock listed when older ones exist, else empty). An answer with more than 50 locks is cut where it was whole; that is the change this ticket asks for and it is the only change to an existing field.
+- `GET /api/v1/recovery/locks` with `installation`, `after`, `limit` (1 to 100, default 50) and `q`: the installation's locks newest first, those with a number below `after`; `q` is matched against who locked, their sign-in name and the reason. It is admitted as the recovery read is; an installation the reader's workspace cannot see is answered as an invalid request, the same as one that does not exist. The cursor is exact: a lock recorded between two pages has a higher number.
+- The server keeps every lock as before; nothing is pruned.
+- Screen: the lock log lists the newest first (it listed the oldest first), with "N of M locks shown, newest first" when older ones exist, "Load older locks" below the table as one button that also carries "Loading…" and "Try again", a failure sentence that keeps the rows, and a line when the screen was read again after older locks were loaded. No search on the screen.
+
+Decisions made here that the owner can reverse: the order of the log on the screen (newest first); the size of the cut (50, the screen's constant for its other lists).
+
+Checks (macOS arm64): `go vet` clean; the whole `apps/api/server` package passes (371 seconds) on the final server code, and the test added afterwards for another tenant's installation passes with the recovery tests; `tsc` clean; console tests 1405, pass 1402, fail 0, skipped 3; rendered check `tools/lock-log-qa.mjs`, 53 passed, 0 failed. The rendered check reads the real main read and calls the real locks read once for the sample's single lock; the long log (120 locks, paging, failure and retry, focus, the read-again line, width, three languages at two widths) runs on answers the script writes and shows the screen's behaviour for those answers. The service's behaviour is shown by `TestRecoveryLockLogIsCutCountedAndRead` (the newest fifty in order, the pages without a gap while a lock is added, search, refused forms, an anonymous caller, a member) and by `TestRecoveryOtherTenantIsHidden` (another tenant's installation is refused exactly as one that does not exist).
+
+Not covered by a test: `limit` at 1 and 100 and a cursor above the total on this read; the component's reset and late-answer handling beyond the rendered check on one language and width.
+
+Reviews (AI, Claude Opus 5.5, by reading and, for the designer, from screenshots; neither ran anything), 2026-11-25. Independent design and change review: approve with conditions, no blocking finding. It confirmed that locks are only appended, that an answer with fifty or fewer locks is unchanged apart from `number`, that the tenant filter is the main read's, and read the cut as the paging this ticket and the P03 specification ask for rather than a change of meaning needing the owner first; its conditions (the other-tenant test, stale line references in the binding document, this record) are applied. ui-designer review: PASS; newest first judged the right order for a log cut at fifty; its sentence forms for the count were adopted so they match the screen's other "Showing …" lines, and the count is announced. Left open from it: focus moving to the count after the last page scrolls back to the top of the log; the read-again line stays until the next load; none of its screenshots showed the count line, which it judged from source.
+
+
 # Open for the owner
 
+- The lock log on P03 now lists the newest lock first (it listed the oldest first) and the recovery read returns the newest 50 locks of an installation with a count and a read for the rest (increment 3a). Both can be reversed.
 - Whether the lists with no producer today (group 3 of "Which lists can grow in a running service") may leave this ticket until ingest, build pipelines and writers exist. They stay in the ticket and are built last unless the owner says otherwise.
 - Whether the 200 contracts limit of O03 stays and when contracts can be created; until then O03's list is small and complete and nothing is built for it.
 - The order of the increments above; another order is equally possible.

@@ -1,3 +1,4 @@
+import type { LockEntry } from "../../../../service/recovery";
 import { Refusals } from "../../../../service/refusal";
 import type { RowDiagnostic } from "../../../../service/command-diagnostics";
 import type { IsolationRow, ReconciliationRow, RecoveryPage, RecoveryProposal, ResumeRow, SetRow } from "../../../../service/recovery";
@@ -571,4 +572,10 @@ export function refusalDiagnostics(target: string): RowDiagnostic[] {
     const entry = refusals.detail(slot(command, target));
     return entry && entry.command === command && entry.detail.target === target ? [entry] : [];
   });
+}
+
+export function lockRows(first: LockEntry[], older: LockEntry[]): LockEntry[] {
+  const newest = [...first].reverse();
+  const seen = new Set(newest.map((x) => x.number));
+  return [...newest, ...older.filter((x) => x.number === null || !seen.has(x.number))];
 }

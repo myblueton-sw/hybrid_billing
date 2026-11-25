@@ -72,6 +72,7 @@ type recoveryCallRow struct {
 }
 
 type recoveryLockRow struct {
+	Number    int    `json:"number"`
 	By        string `json:"by"`
 	ByLogin   string `json:"by_login"`
 	Rationale string `json:"rationale"`
@@ -93,6 +94,7 @@ type recoveryIsolationRow struct {
 	OtherScope   bool              `json:"other_scope_present"`
 	Permits      string            `json:"permits"`
 	Locks        []recoveryLockRow `json:"locks"`
+	LockHistory  recoveryLockFacts `json:"lock_history"`
 }
 
 type recoveryExternalRow struct {
@@ -314,8 +316,13 @@ func (s *Server) isolationRow(f recoveryFacts, workspace string) recoveryIsolati
 			}
 		}
 	}
-	for _, l := range i.locks {
-		row.Locks = append(row.Locks, recoveryLockRow{By: l.by, ByLogin: s.loginOf(l.by), Rationale: l.rationale, At: stamp(l.at)})
+	first := max(0, len(i.locks)-recoveryShown)
+	for index := first; index < len(i.locks); index++ {
+		row.Locks = append(row.Locks, s.lockRow(i, index))
+	}
+	row.LockHistory = recoveryLockFacts{Total: len(i.locks)}
+	if first > 0 {
+		row.LockHistory.Next = keptCursor(uint64(first + 1))
 	}
 	return row
 }
@@ -508,6 +515,67 @@ func (s *Server) listRecoveryProposals(w http.ResponseWriter, r *http.Request) {
 		number := strconv.FormatUint(v.Number, 10)
 		if walk.take(v.Number, q.matches(number, recoveryProposalTarget+number, v.Change.Kind, changeScope(v.Change), v.State, v.Proposer, s.loginOf(v.Proposer), e.rationale)) {
 			page.Proposals = append(page.Proposals, s.recoveryProposalRow(e, answer.User()))
+		}
+	}
+	page.Next, page.Matching = walk.Next, walk.Matching
+	writeJSON(w, http.StatusOK, request, page)
+}
+
+type recoveryLockFacts struct {
+	Total int    `json:"total"`
+	Next  string `json:"next"`
+}
+
+type recoveryLocksPage struct {
+	Revision     string            `json:"revision"`
+	ServerTime   string            `json:"server_time"`
+	Installation string            `json:"installation"`
+	Order        string            `json:"order"`
+	Q            string            `json:"q"`
+	Locks        []recoveryLockRow `json:"locks"`
+	Next         string            `json:"next"`
+	Matching     int               `json:"matching"`
+	Total        int               `json:"total"`
+}
+
+func (s *Server) lockRow(i *recoveryInstall, index int) recoveryLockRow {
+	l := i.locks[index]
+	return recoveryLockRow{Number: index + 1, By: l.by, ByLogin: s.loginOf(l.by), Rationale: l.rationale, At: stamp(l.at)}
+}
+
+func (s *Server) listRecoveryLocks(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	_, answer, ok := s.admitted(w, r)
+	if !ok {
+		return
+	}
+	values := r.URL.Query()
+	named := values["installation"]
+	values.Del("installation")
+	q, valid := parseKeptQuery(values)
+	if !valid || len(named) != 1 || named[0] == "" {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	var install *recoveryInstall
+	for _, i := range s.visibleInstalls(answer.Workspace()) {
+		if i.id == named[0] {
+			install = i
+		}
+	}
+	if install == nil {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	page := recoveryLocksPage{Revision: s.Revision(), ServerTime: stamp(s.clock()), Installation: install.id, Order: closedPlansOrder, Q: q.term, Locks: []recoveryLockRow{},
+		Total: len(install.locks)}
+	walk := keptWalk{q: q}
+	for index := len(install.locks) - 1; index >= 0; index-- {
+		l := install.locks[index]
+		if walk.take(uint64(index+1), q.matches(l.by, s.loginOf(l.by), l.rationale)) {
+			page.Locks = append(page.Locks, s.lockRow(install, index))
 		}
 	}
 	page.Next, page.Matching = walk.Next, walk.Matching

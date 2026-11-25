@@ -9,7 +9,7 @@ import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsP
 import { installationOf, proposalOf as installProposalOf, type InstallationPage, type InstallProposal } from "./installation";
 import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
 import { integrationsOf, pluginProposalOf, type IntegrationsPage, type PluginProposal } from "./integrations";
-import { recoveryOf, recoveryProposalOf, type RecoveryPage, type RecoveryProposal } from "./recovery";
+import { locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
 import { evidenceOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
 import { retentionOf, type RetentionPage } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
@@ -1200,6 +1200,11 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async integrationProposals(after: string): Promise<KeptPage<PluginProposal>> {
       const got = keptPageOf(await send("/integrations/proposals?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), pluginProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async recoveryLocks(installation: string, after: string): Promise<LocksPage> {
+      const got = locksPageOf(await send("/recovery/locks?installation=" + encodeURIComponent(installation) + "&limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
       if (!got) throw new AdminError("invalid");
       return got;
     },

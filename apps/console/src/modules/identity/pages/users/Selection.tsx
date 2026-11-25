@@ -6,13 +6,13 @@ import { headerState, notLoaded, type Selection } from "./bulk-model";
 import { m } from "./match-copy";
 import { fill } from "./Stamp";
 
-export function CheckCell({ l, u, self, selected, atLimit, onToggle }: {
-  l: Locale; u: UserRow; self: string; selected: Selection; atLimit: boolean; onToggle: (id: string) => void;
+export function CheckCell({ l, u, self, selected, atLimit, onToggle, keeping = false }: {
+  l: Locale; u: UserRow; self: string; selected: Selection; atLimit: boolean; onToggle: (id: string) => void; keeping?: boolean;
 }) {
   if (u.user_id === self) {
     return (
       <td role="cell" className="m01-check">
-        <span className="m01-self">{b.you(l)}<span className="visually-hidden"> {b.selfReason(l)}</span></span>
+        <span className="m01-self">{b.you(l)}<span className="visually-hidden"> {keeping ? b.selfKept(l) : b.selfReason(l)}</span></span>
       </td>
     );
   }
@@ -21,15 +21,15 @@ export function CheckCell({ l, u, self, selected, atLimit, onToggle }: {
   return (
     <td role="cell" className="m01-check">
       <label className="m01-hit">
-        <input type="checkbox" checked={checked} aria-disabled={blocked || undefined} aria-describedby={blocked ? "m01-limit" : undefined}
-          data-select={u.user_id} onChange={() => onToggle(u.user_id)} />
-        <span className="visually-hidden">{b.selectRow(l, u.login || u.user_id)}</span>
+        <input type="checkbox" checked={checked} aria-disabled={blocked || undefined} aria-describedby={blocked && !keeping ? "m01-limit" : undefined}
+          data-select={u.user_id} data-keep={keeping ? "true" : undefined} onChange={() => onToggle(u.user_id)} />
+        <span className="visually-hidden">{keeping ? b.keepRow(l, u.login || u.user_id) : b.selectRow(l, u.login || u.user_id)}</span>
       </label>
     </td>
   );
 }
 
-export function HeaderCheck({ l, selected, loaded, onAll, cell }: { l: Locale; selected: Selection; loaded: string[]; onAll: () => void; cell: boolean }) {
+export function HeaderCheck({ l, selected, loaded, onAll, cell, keeping = false }: { l: Locale; selected: Selection; loaded: string[]; onAll: () => void; cell: boolean; keeping?: boolean }) {
   const box = useRef<HTMLInputElement>(null);
   const state = headerState(selected, loaded);
   useEffect(() => { if (box.current) box.current.indeterminate = state === "mixed"; }, [state]);
@@ -37,7 +37,7 @@ export function HeaderCheck({ l, selected, loaded, onAll, cell }: { l: Locale; s
   const input = (
     <label className={cell ? "m01-hit" : "live-check m01-select-loaded"}>
       <input type="checkbox" ref={box} checked={state === "checked"} onChange={onAll} data-select-loaded="true" />
-      <span className={cell ? "visually-hidden" : undefined}>{b.selectLoaded(l, loaded.length)}</span>
+      <span className={cell ? "visually-hidden" : undefined}>{keeping ? b.keepLoaded(l, loaded.length) : b.selectLoaded(l, loaded.length)}</span>
     </label>
   );
   return cell ? <th scope="col" className="m01-check">{input}</th> : input;

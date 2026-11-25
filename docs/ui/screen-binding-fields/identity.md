@@ -162,6 +162,8 @@ Read: `GET /api/v1/identity/users/count` (`boundary.go:26`, `userscount.go`) thr
 | Fixed bar | Fixed line, when counted | command result `fields.matched`, `fixed_at`; the last complete count | `match-model.ts` `fixedOfFields` | `users/Matching.tsx:103`; `users/Live.tsx:808` |
 | Fixed bar | Fixed filters chips, base revision, draft number | result `fields.filter.<key>`, `fixed_revision`, `draft`; after a reload the own open draft row `filter`, `fixed_revision`, `id` | `match-model.ts` `fixedOfJob`; `identity-bulk.ts:90-104` | `users/Matching.tsx:103-138`; recovery at `users/Live.tsx:596` |
 | Fixed bar | Discard list | `bulk_revocation.discard` on the draft | none | `users/Live.tsx` `discardFixed` |
+| Fixed bar | Remove people from the list | `bulk_revocation.remove_targets` on the draft with `users` (the people selected in removal mode, in batches); result `fields.removed`, `already`, `ignored`, `chosen` | `match-model.ts` `removalOf` | `users/Live.tsx` `removeSelected`; `users/Matching.tsx` `FixedBar` (`removal`) |
+| Fixed bar | Removed by you | the last result's `fields.chosen`; after a reload the own open draft row `chosen` | `identity-bulk.ts` `jobOf`; `match-model.ts` `fixedOfJob` | `users/Matching.tsx` `FixedBar` |
 | Users table | No checkbox column while fixed | derived: fixed list open | none | `users/Live.tsx` (`sel.on`) |
 | Prepare | Everyone matching filters summary | fixed list | none | `users/BulkPrepare.tsx` (filter mode) |
 | Prepare | Anchor dead-end, list closed | `bulk_revocation.prepare` refused `prerequisite_failed` / `invalid_stage` on a filter list | `admin.ts:783-785` | `users/BulkPrepare.tsx:216, 329` |
@@ -199,7 +201,7 @@ Reads: `GET /api/v1/identity/bulk-revocations` (`boundary.go:26`), `/{id}` (`:27
 | Preview | Service users kept | `impact.service_users` (`bulkread.go:88`) | `identity-bulk.ts:113` | `users/BulkPrepare.tsx:79` |
 | Preview | Administrators left afterwards | `impact.anchors_after` (`bulkread.go:89`) | `identity-bulk.ts:113` | `users/BulkPrepare.tsx:81` |
 | Preview | Other workspaces | `impact.other_workspaces` (`bulkread.go:90`) | `identity-bulk.ts:113` | `users/BulkPrepare.tsx:82` |
-| Preview | Excluded by reason | `exclusions` map, keys `self`, `not_found`, `no_membership`, `already_revoked`, and for a filter list `no_longer_matches` and `chosen` (`bulkread.go`, `readBulk`); `chosen` is served since HYB-324 and the console does not label or list it yet | `identity-bulk.ts:106-107` | `users/BulkPrepare.tsx:85-86` |
+| Preview | Excluded by reason | `exclusions` map, keys `self`, `not_found`, `no_membership`, `already_revoked`, and for a filter list `no_longer_matches` and `chosen` (`bulkread.go`, `readBulk`); the count of `chosen` is also shown under the excluded count in the preview and in the confirmation as people who keep their access | `identity-bulk.ts` `detailOf` | `users/BulkPrepare.tsx` `PreviewBody`, `ConfirmDialog` |
 | Preview | Excluded people | `/targets?kind=excluded` → `exclusions[].user_id`, `login`, `reason`, `total`, `next` (`bulkread.go:144-155`) | `identity-bulk.ts:155-162` | `users/BulkPrepare.tsx:31-46` |
 | Preview | People to revoke | `/targets` → `targets[].login`, `user_id`, `role`, `installation_administrator`, `total`, `next` (`bulkread.go:134-142, 157-162`) | `identity-bulk.ts:130-134, 163-167` | `users/BulkPrepare.tsx:90-100` |
 | Preview | Preparer only may see people | derived: targets not loaded (job opened by someone else) | none | `users/BulkPrepare.tsx:101`; `users/RevocationJobs.tsx:234` |

@@ -146,7 +146,13 @@ export const b = {
   otherWorkspaces: (l: Locale) => t(l, "Other workspaces are not changed", "다른 업무 공간은 바뀌지 않습니다", "لا تتغير مساحات العمل الأخرى"),
   reason: (l: Locale, r: string) =>
     ({ self: t(l, "Self", "본인", "الشخص نفسه"), not_found: t(l, "Not found", "찾을 수 없음", "غير موجود"), no_membership: t(l, "No membership", "소속 없음", "لا عضوية"),
-      already_revoked: t(l, "Already revoked", "이미 회수됨", "مُبطَل مسبقًا"), no_longer_matches: t(l, "No longer matches the filters", "더 이상 필터에 맞지 않음", "لم يعد يطابق عوامل التصفية"), changed_since_preview: t(l, "Held: changed after preview", "보류: 미리보기 후 변경됨", "مُستبعَد مؤقتًا: تغيّر بعد المعاينة") } as Record<string, string>)[r] ?? r,
+      already_revoked: t(l, "Already revoked", "이미 회수됨", "مُبطَل مسبقًا"), chosen: t(l, "Excluded by you (keeps access)", "직접 제외(접근 권한 유지)", "مُستبعَد بقرارك (يحتفظ بالوصول)"), no_longer_matches: t(l, "No longer matches the filters", "더 이상 필터에 맞지 않음", "لم يعد يطابق عوامل التصفية"), changed_since_preview: t(l, "Held: changed after preview", "보류: 미리보기 후 변경됨", "مُستبعَد مؤقتًا: تغيّر بعد المعاينة") } as Record<string, string>)[r] ?? r,
+  keptByYou: (l: Locale, n: number) =>
+    counted(l, n, { en: ["including {n} you excluded, who keeps their access", "including {n} you excluded, who keep their access"], ko: "직접 제외한 {n}명 포함(접근 권한 유지)",
+      ar: ["", "منهم شخص واحد استبعدته ويحتفظ بالوصول", "منهم شخصان استبعدتهما ويحتفظان بالوصول", "منهم {n} أشخاص استبعدتهم ويحتفظون بالوصول", "منهم {n} شخصًا استبعدتهم ويحتفظون بالوصول", "منهم {n} شخص استبعدتهم ويحتفظون بالوصول"] }),
+  keepRow: (l: Locale, who: string) => t(l, `Keep access for ${who}`, `${who} 접근 권한 유지`, `إبقاء وصول ${who}`),
+  keepLoaded: (l: Locale, n: number) => t(l, `Keep access for all ${n} shown`, `표시된 ${n}명 모두 접근 권한 유지`, `إبقاء وصول كل المعروضين (${n})`),
+  selfKept: (l: Locale) => t(l, "Your own access is never revoked by this list.", "본인의 접근 권한은 이 목록으로 회수되지 않습니다.", "وصولك أنت لا يُبطَل بهذه القائمة."),
   excludedN: (l: Locale, n: number) => t(l, `Excluded (${n})`, `제외(${n})`, `مستثنى (غير محسوب): ${n}`),
   toRevokeN: (l: Locale, n: number) => t(l, `People to revoke (${n})`, `회수 대상(${n})`, `الأشخاص المراد إبطالهم (${n})`),
   showing: (l: Locale, a: number, n: number) => t(l, `Showing ${a} of ${n}.`, `${n}명 중 ${a}명 표시.`, `يُعرض ${a} من ${n}.`),

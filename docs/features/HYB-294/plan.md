@@ -308,7 +308,7 @@ This reuses HYB-299's transport and adds no route (`HYB-299/plan.md:406`, `:1176
   - People who start matching later are still **not** added, because the draft never widens. The preview says so, and "Select again" makes a new list (`M01/spec.md:104`).
 - **Execute and discard are unchanged.** Anchor checks, holds for targets changed since preview, and the owner-only rules are kept.
 - **A filter list that would leave no anchor administrator** (review M6). Prepare refuses it with `prerequisite_failed`, as for an explicit list (`bulk.go:33-35`; `HYB-299/plan.md:433`).
-  - An explicit list shows the selected administrators to deselect. A filter list cannot deselect (Q4), so the blocked copy says: "This list would leave no administrator who can manage access. Narrow the filters, for example Workspace role: Member."
+  - An explicit list shows the selected administrators to deselect. A filter list cannot deselect (Q4), so the blocked copy says: "This list would leave no administrator who can manage access. Narrow the filters, for example Workspace role: Member." Superseded in part by [HYB-324](../HYB-324/implementation.md): the owner of a filter list can now remove chosen people, in a removal mode that brings the checkbox column back for that purpose only; the dead-end names removal as a remedy and offers a way back to the list, still without a list of administrators.
   - KO: "이 목록으로는 접근을 관리할 관리자가 남지 않습니다. 필터를 좁히세요. 예: 업무 공간 역할: 구성원"
   - AR: "لن يبقى بهذه القائمة أي مسؤول يمكنه إدارة الوصول. ضيّق عوامل التصفية، مثل: الدور في مساحة العمل: عضو"
   - A Go test and a QA step cover it.
@@ -325,7 +325,7 @@ This reuses HYB-299's transport and adds no route (`HYB-299/plan.md:406`, `:1176
     - Other holders see the filter keys, with the search text replaced by "search applied", because `q` can hold part of a login.
   - The prepared preview (owner only) shows the fixed filter as chips, the fixed time, `matched`, the `no_longer_matches` count and the other classification counts.
   - `targets` paging is unchanged (HYB-299 amendment, `HYB-299/plan.md:1382-1388`).
-- **Exclusions chosen by the user: a deferral the owner must accept** (review M4, the HYB-300 Q1 precedent, `HYB-300/plan.md:129`, `:675`).
+- **Exclusions chosen by the user: a deferral the owner must accept** (review M4, the HYB-300 Q1 precedent, `HYB-300/plan.md:129`, `:675`). Built since under [HYB-324](../HYB-324/implementation.md); the question is no longer open.
   - `ui-design.md:421` puts targets **and exclusions** in the manifest. HYB-299's exclusions are system reasons only.
   - HYB-294 does not let a person deselect individuals from a filter list. Until the owner accepts this, it is an **open finding, not a shipped default**.
   - The proposed follow-up ticket is "M01 filter list: remove chosen people (`bulk_revocation.remove_targets` on a filter draft, exclusion reason `chosen`)".

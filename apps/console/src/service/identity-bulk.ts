@@ -22,6 +22,7 @@ export type BulkJob = {
   staged: number;
   selection: "explicit" | "filter" | "not_recorded";
   matched: number;
+  chosen: number;
   fixed_at: string;
   fixed_revision: string;
   filter: UsersFilter | null;
@@ -101,7 +102,7 @@ export function jobOf(v: unknown): BulkJob {
     executed_at: str(j.executed_at), deny_at: str(j.deny_at), digest: str(j.digest), counts: countsOf(j.counts), job_state: jobState, job_reason: str(j.job_reason),
     ledger: { first_sequence: num(ledger.first_sequence), last_sequence: num(ledger.last_sequence), watermark: str(ledger.watermark), reason: str(ledger.reason) },
     cleanup: { done: num(cleanup.done), total: num(cleanup.total) }, recorded_at: str(j.recorded_at), staged: num(j.staged),
-    selection: j.selection === "filter" || j.selection === "not_recorded" ? j.selection : "explicit", matched: num(j.matched), fixed_at: str(j.fixed_at),
+    selection: j.selection === "filter" || j.selection === "not_recorded" ? j.selection : "explicit", matched: num(j.matched), chosen: num(j.chosen), fixed_at: str(j.fixed_at),
     fixed_revision: str(j.fixed_revision), filter: j.filter && typeof j.filter === "object" ? filterOf(j.filter) : null, search_masked: j.search_masked === true,
   };
 }

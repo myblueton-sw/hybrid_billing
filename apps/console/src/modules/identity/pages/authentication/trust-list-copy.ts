@@ -13,5 +13,11 @@ export const tl = {
   noOpenMatch: (l: Locale) => t(l, "No open change matches the filters.", "필터와 일치하는 진행 중인 변경이 없습니다.", "لا يوجد تغيير مفتوح يطابق عوامل التصفية."),
   noClosedMatch: (l: Locale) => t(l, "No closed change matches the filters.", "필터와 일치하는 종료된 변경이 없습니다.", "لا يوجد تغيير مغلق يطابق عوامل التصفية."),
   openFailed: (l: Locale) => t(l, "Open changes could not be loaded", "진행 중인 변경을 불러오지 못했습니다", "تعذّر تحميل التغييرات المفتوحة"),
+  detailLoading: (l: Locale) => t(l, "Loading the change…", "변경을 불러오는 중…", "جارٍ تحميل التغيير…"),
+  detailFailed: (l: Locale) => t(l, "The change could not be loaded", "변경을 불러오지 못했습니다", "تعذّر تحميل التغيير"),
+  noLongerKept: (l: Locale) => t(l, "This change is no longer kept. Older changes are removed when the list reaches its limit.", "이 변경은 더 이상 보관되지 않습니다. 목록이 한도에 이르면 오래된 변경이 삭제됩니다.",
+    "لم يعد هذا التغيير محفوظًا. تُحذف التغييرات الأقدم عندما تبلغ القائمة حدّها."),
+  openWaiting: (l: Locale) => t(l, "Open the change waiting for activation", "활성화 대기 중인 변경 열기", "فتح التغيير المنتظر للتفعيل"),
+  openReplacing: (l: Locale) => t(l, "Open the replacing change", "대체한 변경 열기", "فتح التغيير البديل"),
   closedFailed: (l: Locale) => t(l, "Closed changes could not be loaded", "종료된 변경을 불러오지 못했습니다", "تعذّر تحميل التغييرات المغلقة"),
 };

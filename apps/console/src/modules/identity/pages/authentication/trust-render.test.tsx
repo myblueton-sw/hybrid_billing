@@ -59,7 +59,8 @@ test("a superseded change links to the activated one", () => {
   const out = detail(pageFixture({}, [winner, c]), c);
   assert.match(out, /Another change was activated on the same epoch/);
   assert.match(out, /Superseded by/);
-  assert.match(out, /Change 2/);
+  assert.match(out, /data-opens="trust-0a1b2c3d-2"/);
+  assert.doesNotMatch(out, /Change 2/);
 });
 
 test("a blocked validation names the blocked checks in plain words", () => {

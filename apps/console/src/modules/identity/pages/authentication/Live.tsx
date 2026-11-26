@@ -11,6 +11,7 @@ import { p } from "./live-copy";
 import { policyFailure } from "./live-model";
 import { ChangesHead, Conditions, CurrentRules, Detail, Revoked, ShortConditions } from "./TrustChanges";
 import { TrustLists } from "./TrustLists";
+import { DetailPending, useChangeDetail } from "./TrustDetail";
 import { ProposeForm, type Proposed } from "./TrustActions";
 import { AfterActivation } from "./TrustAfter";
 import { ConfirmDialog, type Confirming } from "./TrustConfirm";
@@ -76,6 +77,7 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
   const [error, setError] = useState<unknown>(null);
   const [revoked, setRevoked] = useState(false);
   const [selected, setSelected] = useState("");
+  const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [generation, setGeneration] = useState(0);
   const [form, setForm] = useState<Form | null>(null);
   const [confirm, setConfirm] = useState<{ k: Confirming; opener: HTMLElement | null } | null>(null);
@@ -118,6 +120,11 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
     );
   }, [api]);
   useEffect(() => { if (view === "policies") void load(); }, [load, view]);
+  const detail = useChangeDetail(api, view === "policies" && !after ? selected : "", generation);
+  const detailState = detail.read.state;
+  useEffect(() => {
+    if (selected && !form && (!document.activeElement || document.activeElement === document.body)) setFocusTo(".m02-detail-title");
+  }, [detailState]);
   if (view === "providers") return <Providers l={l} onView={onView} />;
   if (view === "test") return <Unavailable l={l} title={p.testTitle(l)} body={p.testBody(l)} />;
   if (view === "keys") return <Unavailable l={l} title={p.keysTitle(l)} body={p.keysBody(l)} />;
@@ -134,14 +141,14 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
     return <Revoked l={l} onReload={() => void load()} />;
   }
   if (status === "error" && !page && error instanceof AdminError && error.failure === "denied") return <Unavailable l={l} title={p.deniedTitle(l)} body={p.denied(l)} />;
-  const open = (id: string) => {
-    setForm(null); setSelected(id); setFocusTo(".m02-detail-title");
-    if (page && !page.changes.some((x) => x.id === id)) void load();
-  };
+  const open = (id: string, number: number | null = null) => { setForm(null); setSelected(id); setSelectedNumber(number); setFocusTo(".m02-detail-title"); };
   const closeDetail = () => { const back = selected ? `[data-change="${selected}"].m02-open` : ".m02-propose"; setSelected(""); setForm(null); setFocusTo(back); };
-  const change = page && selected ? page.changes.find((x) => x.id === selected) ?? null : null;
+  const change = page && detail.read.state === "ready" ? detail.read.change : null;
+  const gone = detail.read.state === "gone";
+  const leaveDetail = () => { closeDetail(); if (gone) { setFocusTo("#m02-changes"); void load(); } };
+  const panelLabel = change ? ty.change(l, change.number) : selectedNumber !== null ? ty.change(l, selectedNumber) : selected;
   const onAction = (k: ActionKey, opener: HTMLElement) => {
-    if (!change) return;
+    if (!change || detail.stale) return;
     if (k === "revise") { setForm({ revise: change, initial: null }); setFocusTo(".m02-form h2"); return; }
     setFocusTo("");
     setConfirm({ k: { kind: k, change, proposed: null }, opener });
@@ -155,10 +162,11 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
     say(text);
     setForm(null);
     setSelected(id);
+    setSelectedNumber(n);
     void load().then(() => setFocusTo(".m02-detail-title"));
   };
   const signedOut = () => { clear(); setError(new AdminError("unauthenticated")); setStatus("error"); };
-  const panelOpen = Boolean(form || change);
+  const panelOpen = Boolean(form || selected);
   const stepping = !wide && panelOpen;
   const panel = page && (form ? (
     <ProposeForm key={(form.revise?.id ?? "new") + page.revision} l={l} page={page} revise={form.revise} initial={form.initial}
@@ -166,6 +174,9 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
       onReview={(v) => { setForm({ ...form, initial: v }); setConfirm({ k: { kind: "propose", change: form.revise, proposed: v }, opener: document.activeElement as HTMLElement | null }); }} />
   ) : change ? (
     <Detail l={l} page={page} c={change} split={wide} onClose={closeDetail} onAction={onAction} onOpen={open} />
+  ) : selected && detail.read.state !== "ready" ? (
+    <DetailPending l={l} opened={{ id: selected, number: selectedNumber }} read={detail.read} split={wide} onRetry={detail.retry} onSignOut={onSignOut}
+      onClose={leaveDetail} />
   ) : null);
   const loadError = status === "error" && (
     <section className="live-error" role="alert">
@@ -181,8 +192,8 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
     <div className="m02-live" data-live="policies" aria-busy={status === "loading" || undefined}>
       <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
       {stepping && page && (
-        <section className="m02-step" aria-label={form ? (form.revise ? ty.reviseTitle(l, form.revise.number) : ty.formTitle(l)) : ty.change(l, change?.number ?? 0)}>
-          <button type="button" className="service-button-link live-back m02-back" onClick={closeDetail}>{ty.back(l)}</button>
+        <section className="m02-step" aria-label={form ? (form.revise ? ty.reviseTitle(l, form.revise.number) : ty.formTitle(l)) : panelLabel}>
+          <button type="button" className="service-button-link live-back m02-back" onClick={leaveDetail}>{ty.back(l)}</button>
           {loadError}
           <ShortConditions l={l} page={page} skipHold={change?.state === "activation_unknown"} />
           {panel}
@@ -203,7 +214,7 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
               <ChangesHead l={l} page={page} onPropose={() => { setSelected(""); setForm({ revise: null, initial: null }); setFocusTo(".m02-form h2"); }} />
               <div className="m02-split" data-mode={wide ? "split" : "step"} data-open={panelOpen ? "true" : "false"}>
                 <TrustLists l={l} api={api} generation={generation} selected={selected} reduced={wide && panelOpen} onOpen={open} onSignOut={onSignOut} />
-                {wide && panel && <aside className="m02-detail" tabIndex={0} aria-label={form ? ty.formTitle(l) : ty.change(l, change?.number ?? 0)}>{panel}</aside>}
+                {wide && panel && <aside className="m02-detail" tabIndex={0} aria-busy={detail.stale || undefined} aria-label={form ? ty.formTitle(l) : panelLabel}>{panel}</aside>}
               </div>
             </section>
           )}

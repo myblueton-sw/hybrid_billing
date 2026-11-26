@@ -32,12 +32,21 @@ async function contained(name) {
   const m = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, view: document.documentElement.clientWidth }));
   check(`${name} page is not wider than the viewport`, m.page <= m.view + 1, JSON.stringify(m));
 }
+const one = (url) => /\/api\/v1\/identity\/policy\/changes\/[^/]+$/.test(new URL(url.toString()).pathname);
 async function staged(change) {
   await page.unroute(read);
+  await page.unroute(one);
   await page.route(read, async (route) => {
     const response = await route.fetch();
     const body = await response.json();
     if (Array.isArray(body.changes)) body.changes = body.changes.map(change);
+    await route.fulfill({ response, json: body });
+  });
+  await page.route(one, async (route) => {
+    const response = await route.fetch();
+    if (response.status() !== 200) return route.fulfill({ response });
+    const body = await response.json();
+    if (body.change) body.change = change(body.change);
     await route.fulfill({ response, json: body });
   });
 }

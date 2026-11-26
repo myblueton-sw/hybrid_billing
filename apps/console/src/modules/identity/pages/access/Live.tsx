@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, attempt, sequence, type AccessGrant, type AccessPage, type AdminClient, type Attempt, type Preview } from "../../../../service/admin";
+import { AdminError, attempt, sequence, type AccessPage, type AdminClient, type Attempt, type Preview } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
@@ -11,16 +11,19 @@ import { w } from "../users/live-copy";
 import { failureText } from "../users/live-model";
 import { when } from "../authentication/live-model";
 import { a, accessPhrase, actionLabel, fieldLabel, kindLabel } from "./live-copy";
-import { accessText, capabilityKey, grantCapabilities, selectedCapability, ceilingGrants, delegationsOf, maxDays, people, reasonText, revocable, scopeText, stateLine, wholeDays } from "./live-model";
+import { accessText, capabilityKey, grantCapabilities, selectedCapability, ceilingGrants, maxDays, reasonText, wholeDays } from "./live-model";
 import { q, v } from "./request-copy";
-import { additionsPaused, descendantsOf, keepAttempt, pendingRevokeFor, unconfirmedFor } from "./request-model";
+import { additionsPaused, descendantsOf, keepAttempt, unconfirmedFor } from "./request-model";
 import { DecidePanel, describeRequest, RequestSection, type Decision } from "./Requests";
-import { breakable, loginOf } from "./who";
+import { loginOf } from "./who";
 import { RevocationSection } from "./Revocations";
+import { PermissionList, effectiveLines } from "./Permissions";
+import { p } from "./permission-copy";
+import type { Permission } from "../../../../service/access-query";
 import "../users/live.css";
 import "./access.css";
 
-type Target = { kind: "grant"; row: AccessGrant } | { kind: "delegation"; id: string; who: string; access: string; until: string };
+type Target = { kind: "grant"; id: string; who: string; access: string; customer: string; status: string } | { kind: "delegation"; id: string; who: string; access: string; until: string };
 type Mode = { kind: "form" } | { kind: "revoke"; target: Target } | { kind: "decide"; action: Decision; id: string };
 
 function describeFor(kind: "grant" | "revoke" | "load") {
@@ -179,8 +182,8 @@ function Revoke({ l, api, page, target, onDone, onCancel, onReload }: {
   useEffect(() => heading.current?.focus(), []);
   useEffect(() => { tried.current = attempt(); }, [page.revision]);
   const grant = target.kind === "grant";
-  const who = grant ? loginOf(page, target.row.subject) : target.who;
-  const id = grant ? target.row.id : target.id;
+  const who = target.who;
+  const id = target.id;
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const r = reasonProblem(l, reason);
@@ -209,9 +212,9 @@ function Revoke({ l, api, page, target, onDone, onCancel, onReload }: {
       {problem && <Summary locale={l} title={c.check(l)} problems={[{ field: "live-reason", message: problem }]} focusKey={focusKey} />}
       {error !== null && <FailureBox l={l} error={error} focusKey={focusKey} describe={grant ? describeRequest : describeFor("revoke")} />}
       <dl className="live-facts">
-        <div><dt>{a.access(l)}</dt><dd>{grant ? `${accessText(l, target.row.action, target.row.fields)} · ${kindLabel(l, target.row.kind) ?? target.row.kind}` : target.access}</dd></div>
-        {grant && <div><dt>{a.customer(l)}</dt><dd>{target.row.scope.customer === "all" ? a.allCustomers(l) : target.row.scope.customer}</dd></div>}
-        <div><dt>{a.colStatus(l)}</dt><dd>{grant ? stateLine(l, target.row).join(" · ") : target.until}</dd></div>
+        <div><dt>{a.access(l)}</dt><dd>{target.access}</dd></div>
+        {target.kind === "grant" && <div><dt>{a.customer(l)}</dt><dd>{target.customer}</dd></div>}
+        <div><dt>{a.colStatus(l)}</dt><dd>{target.kind === "grant" ? target.status : target.until}</dd></div>
       </dl>
       <p className="live-impact">{grant ? q.revokeRequestLead(l, who) : a.revokeDelegImpact(l, who)}</p>
       {!grant && (
@@ -226,45 +229,6 @@ function Revoke({ l, api, page, target, onDone, onCancel, onReload }: {
         <button type="button" className="live-secondary" onClick={onCancel}>{w.cancel(l)}</button>
       </div>
     </form>
-  );
-}
-
-function GrantTable({ l, page, rows, self, selected, onRevoke }: {
-  l: Locale; page: AccessPage; rows: AccessGrant[]; self: string; selected: string; onRevoke?: (row: AccessGrant) => void;
-}) {
-  return (
-    <div className="security-table-scroll live-table live-access access-grants">
-      <table role="table">
-        <colgroup><col className="live-col-a" /><col className="live-col-b" /><col className="live-col-c" />{onRevoke && <col className="live-col-d" />}</colgroup>
-        <thead role="rowgroup"><tr role="row">
-          <th scope="col" role="columnheader">{a.colPerson(l)}</th>
-          <th scope="col" role="columnheader">{a.colAccess(l)}</th>
-          <th scope="col" role="columnheader">{a.colStatus(l)}</th>
-          {onRevoke && <th scope="col" role="columnheader"><span className="visually-hidden">{a.colActions(l)}</span></th>}
-        </tr></thead>
-        <tbody role="rowgroup">
-          {rows.map((g) => {
-            const [state, sub] = stateLine(l, g);
-            const asked = pendingRevokeFor(page, g.id);
-            return (
-              <tr key={g.id} role="row" className={selected === g.id ? "live-selected" : undefined}>
-                <td role="cell" className="live-user"><bdi dir="ltr">{breakable(loginOf(page, g.subject))}</bdi></td>
-                <td role="cell" data-label={a.colAccess(l)}>{accessText(l, g.action, g.fields)}<span className="live-sub">{scopeText(l, g.kind, g.scope.customer)}</span></td>
-                <td role="cell" data-label={a.colStatus(l)} data-state={g.state} className={g.effective === false || g.state !== "active" ? "live-strong" : ""}>{state}<span className="live-sub">{sub}</span></td>
-                {onRevoke && (
-                  <td role="cell">
-                    {g.subject === self ? <span className="live-quiet">{a.yourGrant(l)}</span>
-                      : asked ? <span className="live-quiet" data-requested={g.id}>{q.revocationRequested(l)}</span>
-                      : !revocable(g.state) ? null
-                      : <button type="button" className="live-secondary live-revoke" data-grant={g.id} onClick={() => onRevoke(g)}>{q.requestRevocation(l)}<span className="visually-hidden"> {loginOf(page, g.subject)}</span></button>}
-                  </td>
-                )}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
   );
 }
 
@@ -391,8 +355,9 @@ function Unavailable({ title, body, action }: { title: string; body: string; act
   );
 }
 
-export default function LiveAccess({ locale: l, view, session, onSignOut, onView }: {
+export default function LiveAccess({ locale: l, view, session, onSignOut, onView, params, onParams }: {
   locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void;
+  params: URLSearchParams; onParams: (extra: Record<string, string | null>, push?: boolean) => void;
 }) {
   const api = useAdminClient();
   const wide = useWide();
@@ -405,14 +370,16 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
   const [announce, setAnnounce] = useState("");
   const [focusTo, setFocusTo] = useState("");
   const [formKey, setFormKey] = useState(0);
+  const [listed, setListed] = useState(0);
   useEffect(() => {
     if (!focusTo) return;
-    (document.querySelector<HTMLElement>(focusTo) ?? document.querySelector<HTMLElement>("#access-people"))?.focus();
+    (document.querySelector<HTMLElement>(focusTo) ?? document.querySelector<HTMLElement>("#access-list"))?.focus();
     setFocusTo("");
   }, [focusTo]);
   const say = (text: string) => { setNotice(text); setAnnounce(""); setTimeout(() => setAnnounce(text), 50); };
   const load = useCallback(() => {
     const n = order.current.next();
+    setListed((x) => x + 1);
     setStatus("loading");
     api.access().then(
       (got) => { if (order.current.latest(n)) { setPage(got); setStatus("ready"); setError(null); } },
@@ -444,13 +411,15 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
     return <>{loadError && <div className="live-users">{loadError}</div>}<Effects l={l} api={api} page={page} /></>;
   }
   const self = session.user;
-  const grants = page ? people(page) : { current: [], ended: [] };
   const ceiling = page ? ceilingGrants(page) : [];
-  const delegations = page ? delegationsOf(page) : { current: [], ended: [] };
-  const selected = mode?.kind === "revoke" ? (mode.target.kind === "grant" ? mode.target.row.id : mode.target.id) : mode?.kind === "decide" ? mode.id : "";
+  const selected = mode?.kind === "revoke" ? mode.target.id : mode?.kind === "decide" ? mode.id : "";
   const deciding = page && mode?.kind === "decide" ? page.requests.find((r) => r.id === mode.id) : undefined;
   const decide = (action: Decision, id: string) => { setNotice(""); setMode({ kind: "decide", action, id }); };
-  const revokeGrant = (row: AccessGrant) => { setNotice(""); setMode({ kind: "revoke", target: { kind: "grant", row } }); };
+  const customerOf = (row: Permission) => (row.scope.customer.any ? a.allCustomers(l) : row.scope.customer.id);
+  const revokeGrant = (row: Permission) => { setNotice(""); setMode({ kind: "revoke", target: { kind: "grant", id: row.id, who: row.subject_login || row.subject,
+    access: `${accessText(l, row.action, row.fields)} · ${kindLabel(l, row.kind) ?? row.kind}`, customer: customerOf(row), status: effectiveLines(l, row).join(" · ") } }); };
+  const revokeDelegation = (row: Permission) => { setNotice(""); setMode({ kind: "revoke", target: { kind: "delegation", id: row.id, who: row.subject_login || row.subject,
+    access: accessText(l, row.action, row.fields), until: effectiveLines(l, row).join(" · ") } }); };
   let panel: ReactNode = null;
   if (page && mode?.kind === "decide" && deciding) {
     const back = `[data-request="${mode.id}"] [data-act="${mode.action}"]`;
@@ -458,7 +427,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
       onCancel={() => { setMode(null); setFocusTo(back); }}
       onDone={(message) => { say(message); setMode(null); load(); setFocusTo(mode.action === "approve" && deciding.change === "revoke" ? "#access-revocations" : "#access-requests"); }} />;
   } else if (page && mode?.kind === "revoke") {
-    const back = mode.target.kind === "grant" ? `[data-grant="${mode.target.row.id}"]` : `[data-delegation="${mode.target.id}"]`;
+    const back = mode.target.kind === "grant" ? `[data-grant="${mode.target.id}"]` : `[data-delegation="${mode.target.id}"]`;
     panel = <Revoke key={selected} l={l} api={api} page={page} target={mode.target} onReload={load}
       onCancel={() => { setMode(null); setFocusTo(back); }}
       onDone={(message) => { say(message); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo(mode.target.kind === "grant" ? "#access-requests" : "#access-revocations"); }} />;
@@ -468,19 +437,17 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
       onDone={() => { say(q.requestSent(l)); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo("#access-requests"); }} />;
   }
   const stepping = !wide && mode !== null;
-  const backTo = mode?.kind === "revoke" ? (mode.target.kind === "grant" ? `[data-grant="${mode.target.row.id}"]` : `[data-delegation="${mode.target.id}"]`)
+  const backTo = mode?.kind === "revoke" ? (mode.target.kind === "grant" ? `[data-grant="${mode.target.id}"]` : `[data-delegation="${mode.target.id}"]`)
     : mode?.kind === "decide" ? `[data-request="${mode.id}"] [data-act="${mode.action}"]` : ".access-grant-open";
   return (
     <div className="live-users" data-live="grants" data-wide={wide ? "true" : "false"}>
       <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
       {!stepping && (
         <div className="live-list live-sections">
-          <section aria-labelledby="access-people">
+          <section aria-labelledby="access-list">
             <div className="live-toolbar">
               <div className="live-heading">
-                <h2 id="access-people" tabIndex={-1}>{a.peopleTitle(l)}</h2>
-                {page && <p className="live-meta">{a.activeGrants(l, grants.current.filter((g) => g.state === "active" && g.effective).length)}</p>}
-                {page && <p className="live-meta">{w.loadedAt(l, when(l, page.now))}</p>}
+                <h2 id="access-list" tabIndex={-1}>{p.title(l)}</h2>
               </div>
               <div className="live-tools">
                 {!wide && page && grantCapabilities(page).length > 0 && <button type="button" className="live-primary access-grant-open" onClick={() => { setNotice(""); setMode({ kind: "form" }); }}>{q.requestTitle(l)}</button>}
@@ -490,10 +457,8 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
             {notice && <p className="service-status">{notice}</p>}
             {status === "loading" && !page && <p role="status" className="live-meta">{a.loading(l)}</p>}
             {loadError}
-            {page && (grants.current.length === 0 ? <p className="live-empty">{a.noGrants(l)}</p> : <GrantTable l={l} page={page} rows={grants.current} self={self} selected={selected} onRevoke={revokeGrant} />)}
-            {page && grants.ended.length > 0 && (
-              <details className="live-ended"><summary>{a.endedGrants(l, grants.ended.length)}</summary><GrantTable l={l} page={page} rows={grants.ended} self={self} selected="" /></details>
-            )}
+            <PermissionList l={l} api={api} self={self} params={params} onParams={onParams} generation={listed} selected={selected} onSignOut={onSignOut}
+              actions={page ? [...new Set(page.catalog.map((x) => x.action))] : []} onRevokeGrant={revokeGrant} onRevokeDelegation={revokeDelegation} />
           </section>
           {page && <RequestSection l={l} page={page} selected={selected} onAct={(action, r) => decide(action, r.id)} />}
           {page && <RevocationSection l={l} page={page} />}
@@ -515,51 +480,6 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
                   </tbody>
                 </table>
               </div>
-            </section>
-          )}
-          {page && (
-            <section aria-labelledby="access-delegations">
-              <div className="live-heading live-section-head">
-                <h2 id="access-delegations">{a.delegTitle(l)}</h2>
-                <p className="live-meta">{a.activeDelegations(l, delegations.current.length)}</p>
-              </div>
-              {delegations.current.length === 0 ? <p className="live-empty">{a.noDeleg(l)}</p> : (
-                <div className="security-table-scroll live-table live-access">
-                  <table role="table">
-                    <thead role="rowgroup"><tr role="row">
-                      <th scope="col" role="columnheader">{a.colDelegation(l)}</th>
-                      <th scope="col" role="columnheader">{a.colAccess(l)}</th>
-                      <th scope="col" role="columnheader">{a.colStatus(l)}</th>
-                      <th scope="col" role="columnheader"><span className="visually-hidden">{a.colActions(l)}</span></th>
-                    </tr></thead>
-                    <tbody role="rowgroup">
-                      {delegations.current.map((d) => {
-                        const [state, sub] = stateLine(l, d);
-                        const who = loginOf(page, d.delegate);
-                        return (
-                          <tr key={d.id} role="row" className={selected === d.id ? "live-selected" : undefined}>
-                            <td role="cell" className="live-user"><bdi dir="ltr">{loginOf(page, d.delegator)}</bdi> {l === "ar" ? "←" : "→"} <bdi dir="ltr">{who}</bdi>
-                              {d.parent && <span className="live-sub live-mono">{a.fromParent(l, d.parent)}</span>}{d.redelegate && <span className="live-sub">{a.canRedelegate(l)}</span>}</td>
-                            <td role="cell" data-label={a.colAccess(l)}>{accessText(l, d.action, d.fields)}<span className="live-sub">{scopeText(l, d.kind, d.scope.customer)}</span></td>
-                            <td role="cell" data-label={a.colStatus(l)} className={d.state !== "active" ? "live-strong" : ""} data-state={d.state}>{state}<span className="live-sub">{sub}</span></td>
-                            <td role="cell">{revocable(d.state) && <button type="button" className="live-secondary live-revoke" data-delegation={d.id}
-                              onClick={() => { setNotice(""); setMode({ kind: "revoke", target: { kind: "delegation", id: d.id, who, access: accessText(l, d.action, d.fields), until: [state, sub].join(" · ") } }); }}>{a.revoke(l)}</button>}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              {delegations.ended.length > 0 && (
-                <details className="live-ended"><summary>{a.endedDeleg(l, delegations.ended.length)}</summary>
-                  <ul role="list" className="access-ended-delegations access-bullets">
-                    {delegations.ended.map((d) => (
-                      <li key={d.id} data-ended={d.id}><span className="live-mono" dir="ltr">{d.id}</span> · {d.state === "ended" ? v.endedByChain(l) : stateLine(l, d)[0]}</li>
-                    ))}
-                  </ul>
-                </details>
-              )}
             </section>
           )}
         </div>

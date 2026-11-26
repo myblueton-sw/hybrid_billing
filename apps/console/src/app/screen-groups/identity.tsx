@@ -142,6 +142,7 @@ export default function RemainingSecurity(props: Props) {
       >
         <AccessArea
           params={props.params}
+          onParams={toParams}
           onState={props.onState}
           onDirty={props.onDirty}
           locale={props.locale}

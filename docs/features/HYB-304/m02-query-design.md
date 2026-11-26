@@ -75,7 +75,7 @@ Admission is the policy read's. An unknown identifier and one of another workspa
 1. **M2a.** Trust change registry: version, page, summary facts; tests against `List` and `Get`.
 2. **M2b.** The two reads with cursors, filters and counts; the two additive fields on the policy read; API description.
 3. **M2c.** The console's strict client for the two reads and the new fields.
-4. **M2d.** ui-designer composition; the screen on the bounded reads; rendered check.
+4. **M2d.** ui-designer composition ([recorded](m02-composition.md)); the screen on the bounded reads; rendered check.
 5. **M2e.** After the screen reads no list from the policy read: ask the owner about removing `changes`, then remove it and bound the remaining whole-population loads of the policy read (the holders summary).
 
 Each increment has an independent change review; M2b and M2e change a public read.

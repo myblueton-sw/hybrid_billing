@@ -13,7 +13,8 @@ const revocation = { id: "revocation-1", origin: "this_process", recorded_at: "2
   replay: "", state: "revocation_complete", history: [{ state: "received", at: "2026-11-16T09:00:00Z" }, { state: "revocation_complete", at: "2026-11-16T09:00:01Z" }], ended_delegations: [],
   deny_generation: 93, job_state: "succeeded", job_reason: "", requested_by: "sample-admin", approved_by: "sample-admin-2", request: "access-request-2", received_at: "2026-11-16T09:00:00Z",
   deny_at: "2026-11-16T09:00:00Z", receipt: { sequence: 2, watermark: "2:edd4ef79", reason: "" }, verified: true,
-  cleanup: [{ item: "C1", state: "done", reason: "deny_generation", refs: [] }, { item: "C5", state: "outside_scope", reason: "cannot_recall", refs: [] }], completed_at: "2026-11-16T09:00:00Z" };
+  cleanup: [{ item: "C1", state: "done", reason: "deny_generation", refs: [] }, { item: "C5", state: "outside_scope", reason: "cannot_recall", refs: [] }], completed_at: "2026-11-16T09:00:00Z",
+  target_subject: "sample-member", target_subject_login: "member@example.invalid", target_action: "view", target_resource_kind: "focus_data", target_fields: ["rows"] };
 const people = [{ user_id: "sample-admin", login: "admin@example.invalid" }, { user_id: "sample-admin-2", login: "admin2@example.invalid" }];
 const pageOf = (rows: unknown[], order: string, query: Record<string, unknown>, change: Record<string, unknown> = {}) => ({ rows, search_input: "", query, next: "",
   reference_at: "2026-11-16T09:00:00Z", observed_at: "2026-11-16T09:00:00Z", revision: "r11", order, count: { value: String(rows.length), certainty: "exact" }, work_units: rows.length, scan_stopped: false, ...change });
@@ -33,6 +34,7 @@ test("M03 lists: pages as the service answers them are accepted, each as one bou
   const b = await client(revocations([revocation]), see).accessRevocations({});
   const c = await client(subjects(people), see).accessSubjects({});
   assert.deepEqual(paths, ["/api/v1/identity/access/requests", "/api/v1/identity/access/revocations", "/api/v1/identity/access/subjects"]);
+  assert.deepEqual([b.rows[0].target_subject_login, b.rows[0].target_action, b.rows[0].target_fields], ["member@example.invalid", "view", ["rows"]]);
   assert.deepEqual([a.rows.map((r) => r.id), b.rows[0].target_version, c.rows.map((r) => r.login)], [["access-request-5", "access-request-3"], 1, ["admin@example.invalid", "admin2@example.invalid"]]);
   assert.equal(a.rows[0].proposer_login, "admin2@example.invalid");
 });
@@ -88,6 +90,10 @@ test("M03 lists: answers that are not what the service can say are refused", asy
     ["a received time that is not the first transition", revocations([{ ...revocation, received_at: "2026-11-16T09:00:05Z" }]), "v"],
     ["verified with a failed receipt", revocations([{ ...revocation, receipt: { ...revocation.receipt, reason: "mismatch" } }]), "v"],
     ["the same revocation twice", revocations([revocation, revocation]), "v"],
+    ["a revocation without the target's facts", revocations([(({ target_subject: _omitted, ...rest }) => rest)(revocation)]), "v"],
+    ["a sign-in name for a target with no holder", revocations([{ ...revocation, target_subject: "" }]), "v"],
+    ["a target action without its resource kind", revocations([{ ...revocation, target_resource_kind: "" }]), "v"],
+    ["target fields with no action", revocations([{ ...revocation, target_action: "", target_resource_kind: "" }]), "v"],
     ["a state echo on revocations", revocations([revocation], {}, { state: "pending" }), "v"],
     ["an unknown field on a person", subjects([{ ...people[0], role: "administrator" }]), "s"],
     ["people out of order", subjects([people[1], people[0]]), "s"],
@@ -102,7 +108,8 @@ test("M03 lists: answers that are not what the service can say are refused", asy
   assert.equal((await client(revocations([later, revocation])).accessRevocations({})).rows.length, 2);
   assert.equal((await client(revocations([revocation, later])).accessRevocations({})).rows.length, 2);
   const replayed = { ...revocation, id: "revocation-3", origin: "ledger_replay", replay: "absent", target_present: false, state: "decision_unconfirmed", job_state: "waiting", job_reason: "receipt_unverified",
-    approved_by: "", request: "", receipt: { sequence: 0, watermark: "", reason: "" }, verified: false, completed_at: "", cleanup: [{ item: "C1", state: "not_started", reason: "", refs: [] }] };
+    approved_by: "", request: "", receipt: { sequence: 0, watermark: "", reason: "" }, verified: false, completed_at: "", cleanup: [{ item: "C1", state: "not_started", reason: "", refs: [] }],
+    target_subject: "", target_subject_login: "", target_action: "", target_resource_kind: "", target_fields: [] };
   assert.equal((await client(revocations([replayed])).accessRevocations({})).rows[0].state, "decision_unconfirmed");
   const strange = await client(requests([{ ...pending, reason: "line one\nline two\u0001" }, { ...applied, state: "expired", decided_by: "", decided_by_login: "", decided_at: "", result: "" },
     { ...pending, id: "access-request-9", action: "", kind: "", fields: [], customer: "", can_approve: false, current: false }])).accessRequests({});

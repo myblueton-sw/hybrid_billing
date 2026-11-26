@@ -48,6 +48,10 @@ Each is one reviewed change; server increments are additive fields with independ
 - **T5.** Screen: the person picker, the warning and what would end from the bounded reads; the ceiling table removed (items 3 to 6); the three unused helpers and their tests removed; `access-approval-qa.mjs` reads the bounded reads.
 - After T5 the view reads no population from the whole read, and C5 can be put to the owner.
 
+# Progress
+
+- **T1, 2026-11-26.** `revocationRow` in `apps/api/server/revocations.go` adds `target_subject`, `target_subject_login`, `target_action`, `target_resource_kind` and `target_fields` to a revocation row, on the whole read and the bounded read alike, read by identifier at the current time and empty when the record is not present. The console's strict client requires and checks them. Tests: a revoked grant, a revoked delegation (the delegate is named), the whole read's row equal to the bounded read's, and a target that is not present. Verified: the whole server package passes (389 s); console TypeScript clean, 1485 tests, 1480 passed, 5 skipped. Independent review: approve. Not tested: a replayed revocation of a console-client grant (empty holder, action set); a holder whose user record is gone. The reviewer notes that a replayed record targeting an installation-action grant would show its holder here though the whole read's grants list hides such grants; no path creating such a record was found.
+
 # Risk
 
 - The warning (item 4) and what would end (item 5) inform a person before they ask for access or revoke; a wrong answer misleads but the commands decide. The warning's rule moves from the browser to the server and is compared with the browser's rule in tests before the browser's is removed; what would end follows the server's rule instead and is compared with `ended_delegations` after an actual revocation.

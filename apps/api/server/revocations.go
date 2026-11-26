@@ -50,6 +50,11 @@ type revocationRow struct {
 	Verified       bool            `json:"verified"`
 	Cleanup        []itemRow       `json:"cleanup"`
 	CompletedAt    string          `json:"completed_at"`
+	TargetSubject  string          `json:"target_subject"`
+	TargetLogin    string          `json:"target_subject_login"`
+	TargetAction   string          `json:"target_action"`
+	TargetResource string          `json:"target_resource_kind"`
+	TargetFields   []string        `json:"target_fields"`
 }
 
 func chainItem(ended []string) accesschange.Item {
@@ -148,9 +153,31 @@ func (h delegationCommand) Apply(ctx commands.Context) (commands.Outcome, error)
 func (s *Server) revocationRows() []revocationRow {
 	out := []revocationRow{}
 	for _, v := range s.changes.Revocations(s.bootWorkspace) {
-		out = append(out, revocationRowOf(v))
+		out = append(out, s.revocationRow(v))
 	}
 	return out
+}
+
+func (s *Server) revocationRow(v accesschange.RevocationView) revocationRow {
+	row := revocationRowOf(v)
+	var terms gate.Terms
+	now := s.clock()
+	if v.Target.Kind == accesschange.TargetDelegation {
+		d, ok := s.admin.DelegationAt(v.Target.ID, now)
+		if !ok {
+			return row
+		}
+		row.TargetSubject, terms = d.DelegateID, d.Terms
+	} else {
+		g, ok := s.admin.GrantAt(v.Target.ID, now)
+		if !ok {
+			return row
+		}
+		row.TargetSubject, terms = g.SubjectID, g.Terms
+	}
+	row.TargetLogin, _ = s.dir.loginOf(row.TargetSubject)
+	row.TargetAction, row.TargetResource, row.TargetFields = string(terms.Action), terms.Kind, append([]string{}, terms.Fields...)
+	return row
 }
 
 func revocationRowOf(v accesschange.RevocationView) revocationRow {
@@ -159,7 +186,7 @@ func revocationRowOf(v accesschange.RevocationView) revocationRow {
 		TargetPresent: v.TargetPresent, Replay: v.Replay, State: v.State, History: []transitionRow{}, EndedDelegs: append([]string{}, v.Ended...),
 		DenyGeneration: v.DenyGeneration, JobState: job, JobReason: reason, RequestedBy: v.RequestedBy, ApprovedBy: v.ApprovedBy, Request: v.Request,
 		DenyAt: stamp(v.DenyAt), Receipt: receiptRow{Sequence: v.Receipt.Sequence, Watermark: v.Receipt.Watermark, Reason: v.Reason},
-		Verified: v.Reason == "" && v.Receipt.Sequence > 0, Cleanup: []itemRow{}, CompletedAt: stampOrEmpty(v.CompletedAt)}
+		Verified: v.Reason == "" && v.Receipt.Sequence > 0, Cleanup: []itemRow{}, CompletedAt: stampOrEmpty(v.CompletedAt), TargetFields: []string{}}
 	for _, h := range v.History {
 		row.History = append(row.History, transitionRow{State: h.State, At: stamp(h.At)})
 	}

@@ -22,7 +22,11 @@ func serviceRestrictionSchema() map[string]any {
 }
 
 func serviceCredentialEligibilitySchema() map[string]any {
-	return serviceObject(map[string]any{"can_revoke": map[string]any{"type": "boolean"}, "step_up_state": map[string]any{"type": "string", "enum": []string{"ready", "reauthentication_required", "prerequisite_failed", "unavailable"}}, "execution_state": map[string]any{"type": "string", "enum": []string{"ready", "dependency_unavailable", "trust_hold"}}}, "can_revoke", "step_up_state", "execution_state")
+	stepUp := map[string]any{"type": "string", "enum": []string{"ready", "reauthentication_required", "prerequisite_failed", "unavailable"}}
+	return serviceObject(map[string]any{"can_revoke": map[string]any{"type": "boolean"}, "step_up_state": stepUp,
+		"can_rotate":           map[string]any{"type": "boolean", "x-meaning": "at this observation the credential is active, has started, has not been replaced, and its service account could be issued a credential by this caller"},
+		"rotate_step_up_state": stepUp,
+		"execution_state":      map[string]any{"type": "string", "enum": []string{"ready", "dependency_unavailable", "trust_hold"}}}, "can_revoke", "can_rotate", "step_up_state", "rotate_step_up_state", "execution_state")
 }
 
 func serviceCountSchema() map[string]any {

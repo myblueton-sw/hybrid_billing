@@ -25,6 +25,8 @@ import {
 } from "./action-draft";
 import { CommandFailure } from "./command-failure";
 import { admitsIssueDraft } from "./issue-draft";
+import { issueExec } from "./issue-send";
+import { r } from "./rotate-copy";
 import { Facts, bdi, usePanelHeading } from "./query-ui";
 import {
   BoundedReason,
@@ -335,18 +337,11 @@ export function IssueControl({
       {
         days: entry?.days ?? draft.days,
         reason: entry?.reason ?? draft.reason,
+        ...(entry?.rotate ? { rotate: entry.rotate } : {}),
       },
       detail.revision,
       detail.limits.replay_seconds,
-      (tried, expected, frozen) =>
-        api.command(
-          "service.issue_credential",
-          detail.row.id,
-          expected,
-          frozen.reason,
-          { days: frozen.days },
-          tried,
-        ),
+      issueExec(api, detail.row.id),
     );
     if (saved?.target === detail.row.id && issues.get(user, detail.row.id))
       drafts.clear(saved);
@@ -386,9 +381,14 @@ export function IssueControl({
   return (
     <form className="live-step" onSubmit={submit} noValidate>
       <h2 id="svc-issue-title" tabIndex={-1} ref={heading}>
-        {v.issueTitle(l)}
+        {entry?.rotate ? r.title(l) : v.issueTitle(l)}
       </h2>
       <p className="live-mono">{bdi(detail.row.id)}</p>
+      {entry?.rotate && (
+        <p className="live-who">
+          {r.current(l)}: <span className="live-mono">{bdi(entry.rotate.credential)}</span>
+        </p>
+      )}
       <Facts
         items={[
           [t(l, "state"), t(l, detail.eligibility.state)],
@@ -436,7 +436,9 @@ export function IssueControl({
           {entry.phase === "unknown"
             ? t(l, "unknown")
             : entry.phase === "issued"
-              ? v.attemptIssued(l, entry.issued!.credential, entry.service)
+              ? entry.rotate
+                ? r.rotated(l, entry.issued!.credential, entry.rotate.credential, entry.service)
+                : v.attemptIssued(l, entry.issued!.credential, entry.service)
               : entry.phase === "sending"
                 ? v.sendingLead(l)
                 : v.lapsedTitle(l)}
@@ -463,7 +465,7 @@ export function IssueControl({
             entry ? entry.phase !== "unknown" : !detail.eligibility.can_issue
           }
         >
-          {entry?.phase === "unknown" ? c.tryAgain(l) : v.issueTitle(l)}
+          {entry?.phase === "unknown" ? c.tryAgain(l) : entry?.rotate ? r.title(l) : v.issueTitle(l)}
         </button>
         {entry?.phase === "issued" && (
           <button className="live-secondary" type="button" onClick={show}>

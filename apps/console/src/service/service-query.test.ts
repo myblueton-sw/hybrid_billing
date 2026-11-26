@@ -61,7 +61,7 @@ test("all metadata paths and known IDs preserve requested targets", async () => 
   await client({ ...detail, row: serviceOrganization, eligibility: "eligible" }).serviceOrganization("unit", "home");
   await client({ ...detail, row: serviceScope, eligibility: "eligible", catalog_version: "a".repeat(64) }).serviceScope("import", "read", "home");
   await assert.rejects(client({ ...detail, row: { ...serviceScope, audience: "other" }, eligibility: "eligible", catalog_version: "a".repeat(64) }).serviceScope("import", "read", "home"), invalid);
-  const credential = { ...detail, row: serviceCredential, eligibility: { can_revoke: true, step_up_state: "ready", execution_state: "ready" }, limits: serviceLimits };
+  const credential = { ...detail, row: serviceCredential, eligibility: { can_revoke: true, can_rotate: false, step_up_state: "ready", rotate_step_up_state: "ready", execution_state: "ready" }, limits: serviceLimits };
   assert.deepEqual(await client(credential).serviceCredential(serviceCredential.id, "home"), credential);
   await assert.rejects(client({ ...credential, eligibility: {} }).serviceCredential(serviceCredential.id, "home"), invalid);
 });
@@ -117,7 +117,7 @@ test("current command flags cannot contradict observed prerequisites", async () 
   for (const patch of [{ step_up_state: "reauthentication_required" }, { execution_state: "dependency_unavailable" }, { execution_state: "trust_hold" }, { state: "ineligible" }, { live_credentials: "9007199254740993" }]) await assert.rejects(client({ ...accountDetail, eligibility: { ...accountDetail.eligibility, ...patch } }).serviceAccount("svc-import", "home"), invalid);
   const suspended = { ...accountDetail, row: { ...accountDetail.row, state: "suspended" }, eligibility: { ...accountDetail.eligibility, can_issue: false, can_suspend: false, can_reinstate: true, operator_blocked: true } };
   await assert.rejects(client(suspended).serviceAccount("svc-import", "home"), invalid);
-  const credential = { workspace: "home", revision: "7", observed_at: queryTime, row: serviceCredential, limits: serviceLimits, eligibility: { can_revoke: true, step_up_state: "ready", execution_state: "ready" } };
+  const credential = { workspace: "home", revision: "7", observed_at: queryTime, row: serviceCredential, limits: serviceLimits, eligibility: { can_revoke: true, can_rotate: false, step_up_state: "ready", rotate_step_up_state: "ready", execution_state: "ready" } };
   await assert.rejects(client({ ...credential, eligibility: { ...credential.eligibility, step_up_state: "reauthentication_required" } }).serviceCredential(serviceCredential.id, "home"), invalid);
   await assert.rejects(client({ ...credential, row: { ...serviceCredential, state: "revoked", current_state: "revoked", usable: false, secret_pickup: undefined, secret_pickup_until: undefined } }).serviceCredential(serviceCredential.id, "home"), invalid);
   const reduction = { ...accountDetail, eligibility: { ...accountDetail.eligibility, state: "ineligible", can_issue: false, can_declare: false, execution_state: "trust_hold" } };

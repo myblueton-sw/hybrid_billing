@@ -34,6 +34,7 @@ type serviceEligibility struct {
 	LiveCredentials string `json:"live_credentials"`
 	CredentialLimit string `json:"credential_limit"`
 	OperatorBlocked bool   `json:"operator_blocked"`
+	issuable        bool
 }
 
 type serviceAccountDetail struct {
@@ -112,9 +113,11 @@ func serviceKnownFailure(w http.ResponseWriter, r *http.Request, err error) {
 }
 
 type serviceCredentialEligibility struct {
-	CanRevoke      bool   `json:"can_revoke"`
-	StepUpState    string `json:"step_up_state"`
-	ExecutionState string `json:"execution_state"`
+	CanRevoke         bool   `json:"can_revoke"`
+	CanRotate         bool   `json:"can_rotate"`
+	StepUpState       string `json:"step_up_state"`
+	RotateStepUpState string `json:"rotate_step_up_state"`
+	ExecutionState    string `json:"execution_state"`
 }
 
 func (s *Server) serviceStepUpState(actor identity.Verifier, user, command, target string) (bool, string) {
@@ -130,14 +133,17 @@ func (s *Server) serviceStepUpState(actor identity.Verifier, user, command, targ
 	}
 }
 
-func (s *Server) currentCredentialEligibility(actor identity.Verifier, user, id string, info identity.CredentialInfo) serviceCredentialEligibility {
+func (s *Server) currentCredentialEligibility(actor identity.Verifier, user, id string, info identity.CredentialInfo, service identity.ServiceInfo, at time.Time) serviceCredentialEligibility {
 	ready, state := s.serviceStepUpState(actor, user, "service.revoke_credential", id)
 	execution := "ready"
 	allowed := len(s.stranded) == 0
 	if !allowed {
 		execution = "dependency_unavailable"
 	}
-	return serviceCredentialEligibility{CanRevoke: ready && allowed && !info.Revoked, StepUpState: state, ExecutionState: execution}
+	turning, turnState := s.serviceStepUpState(actor, user, "service.rotate_credential", id)
+	rotatable := credentialState(info, at) == "active" && !at.Before(info.Validity.NotBefore) && info.ReplacedBy == ""
+	return serviceCredentialEligibility{CanRevoke: ready && allowed && !info.Revoked, StepUpState: state, ExecutionState: execution, RotateStepUpState: turnState,
+		CanRotate: turning && rotatable && s.currentServiceEligibility(actor, user, service, at).issuable}
 }
 
 func (s *Server) currentServiceEligibility(actor identity.Verifier, user string, service identity.ServiceInfo, at time.Time) serviceEligibility {
@@ -187,7 +193,8 @@ func (s *Server) currentServiceEligibility(actor identity.Verifier, user string,
 		return out
 	}
 	out.State = "eligible"
-	out.CanIssue = expanding && service.State == identity.Active && controls.CanAllocateCredential && controls.LiveCredentials < controls.CredentialLimit && s.cfg.Identity.CredentialValidity >= 24*time.Hour
+	out.issuable = execution && !s.held() && service.State == identity.Active && controls.CanAllocateCredential && controls.LiveCredentials < controls.CredentialLimit && s.cfg.Identity.CredentialValidity >= 24*time.Hour
+	out.CanIssue = ready && out.issuable
 	out.CanReinstate = expanding && service.State == identity.Suspended && !controls.OperatorBlocked && controls.CanTransition
 	return out
 }
@@ -250,7 +257,7 @@ func (s *Server) readServiceCredential(w http.ResponseWriter, r *http.Request) {
 		serviceKnownFailure(w, r, err)
 		return
 	}
-	read.write(w, r, map[string]any{"workspace": s.bootWorkspace, "eligibility": s.currentCredentialEligibility(read.actor, read.user, id, info), "row": s.serviceCredentialView(read.actor, service, info, read.now), "revision": s.Revision(), "observed_at": read.now.UTC().Format(time.RFC3339Nano), "limits": s.queryServiceLimits()})
+	read.write(w, r, map[string]any{"workspace": s.bootWorkspace, "eligibility": s.currentCredentialEligibility(read.actor, read.user, id, info, service, read.now), "row": s.serviceCredentialView(read.actor, service, info, read.now), "revision": s.Revision(), "observed_at": read.now.UTC().Format(time.RFC3339Nano), "limits": s.queryServiceLimits()})
 }
 
 func (s *Server) readServiceOwner(w http.ResponseWriter, r *http.Request) {

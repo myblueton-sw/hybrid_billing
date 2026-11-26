@@ -3,6 +3,7 @@ import type { Locale } from "../../../../shared/types";
 import { c } from "../../../../service/copy";
 import { w } from "../users/live-copy";
 import { v } from "./live-copy";
+import { r } from "./rotate-copy";
 import { qcopy as t } from "./query-copy";
 import { utf8Length } from "../../../../service/helpers";
 
@@ -13,6 +14,7 @@ export const fieldIds = {
   organization: "svc-organization",
   scopes: "svc-scopes",
   days: "svc-days",
+  overlap: "svc-overlap",
   reason: "live-reason",
 } as const;
 export type FormField = keyof typeof fieldIds;
@@ -129,6 +131,7 @@ export function ValidationSummary({
     organization: t(l, "organization"),
     scopes: t(l, "scopes"),
     days: v.validFor(l),
+    overlap: r.overlap(l),
     reason: w.reason(l),
   };
   useLayoutEffect(() => {

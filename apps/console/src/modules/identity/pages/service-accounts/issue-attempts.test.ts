@@ -291,7 +291,7 @@ test("issuance accepts only a completed credential-issued result", async () => {
 test("a held rotation remembers which credential and overlap it named, and an issue attempt carries none", async () => {
   const { clocks: c } = clocks();
   const store = issueAttempts(counter(), c);
-  const { exec } = scripted([fail("busy"), ok()]);
+  const { exec, sent } = scripted([fail("busy"), { ...ok(), state: "credential_rotated" }]);
   const rotate = { credential: "cred-00000000000000aa", overlap: "60" };
   const given = { ...values, rotate };
   assert.equal((await store.submit("u", "svc-a", given, "rev-1", 3600, exec)).kind, "unknown");
@@ -302,4 +302,13 @@ test("a held rotation remembers which credential and overlap it named, and an is
   const plain = issueAttempts(counter(), c);
   await plain.submit("u", "svc-a", values, "rev-1", 3600, scripted([fail("busy")]).exec);
   assert.equal(plain.get("u", "svc-a")?.rotate, undefined);
+  assert.equal(sent.length, 2);
+  const mixed = issueAttempts(counter(), c);
+  assert.equal((await mixed.submit("u", "svc-a", given, "rev-1", 3600, scripted([ok()]).exec)).kind, "unknown", "a rotation is not settled by an issue result");
+  const issue = issueAttempts(counter(), c);
+  assert.equal((await issue.submit("u", "svc-a", values, "rev-1", 3600, scripted([{ ...ok(), state: "credential_rotated" }]).exec)).kind, "unknown", "an issue is not settled by a rotation result");
+  const seen: unknown[] = [];
+  const frozen = issueAttempts(counter(), c);
+  await frozen.submit("u", "svc-a", { ...values, rotate: { credential: "cred-00000000000000aa", overlap: "60" } }, "rev-1", 3600, async (_tried, _expected, v) => { seen.push(v.rotate); return { ...ok(), state: "credential_rotated" }; });
+  assert.deepEqual(seen, [{ credential: "cred-00000000000000aa", overlap: "60" }]);
 });

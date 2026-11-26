@@ -37,6 +37,9 @@ import { ActionForm, IssueControl, type AccountAction } from "./AccountActions";
 import { Reauthenticate, RetainedCommands } from "./command-ui";
 import { Reveal } from "./Reveal";
 import { CredentialPeriod, CredentialStatus } from "./CredentialStatus";
+import { RotateControl } from "./RotateControl";
+import { issueExec } from "./issue-send";
+import { r } from "./rotate-copy";
 import "../users/live.css";
 export { Reveal } from "./Reveal";
 
@@ -149,6 +152,9 @@ function RecoveredServices({
           show={show}
           issue={(id) => {
             onParams({ svc_c_issue: id, view: "credentials" }, true);
+          }}
+          rotation={(id) => {
+            onParams({ svc_c_selected: id, svc_c_rotate: id, view: "credentials" }, true);
           }}
           revoke={onRevoke}
         />
@@ -568,7 +574,8 @@ function CredentialWorkspace({
   const nav = navigation(params, workspace, "credentials");
   const query = nav.valid ? nav.query : { workspace, limit: 25 };
   const selected = nav.valid ? nav.selected : "",
-    issue = nav.valid ? nav.issue : "";
+    issue = nav.valid ? nav.issue : "",
+    rotate = nav.valid ? nav.rotate : "";
   const [trail] = useState(cursorTrail);
   const read = useScopedRead(
     recovery,
@@ -636,7 +643,7 @@ function CredentialWorkspace({
               l={l}
               rows={page.rows}
               selected={selected}
-              select={(id) => onParams({ svc_c_selected: id }, true)}
+              select={(id) => onParams({ svc_c_selected: id, svc_c_rotate: null }, true)}
             />
             <PageInfo
               l={l}
@@ -678,14 +685,40 @@ function CredentialWorkspace({
                 state={detail.eligibility.step_up_state}
                 refresh={known.reload}
               />
-              <button
-                type="button"
-                className="live-secondary"
-                disabled={!detail.eligibility.can_revoke}
-                onClick={() => revoke(detail.row.id, detail.row.service)}
-              >
-                {v.revoke(l)}
-              </button>
+              <div className="live-buttons">
+                <button
+                  type="button"
+                  className="live-secondary live-rotate"
+                  disabled={!detail.eligibility.can_rotate && rotate !== detail.row.id}
+                  onClick={() => onParams({ svc_c_rotate: detail.row.id }, true)}
+                >
+                  {r.rotate(l)}
+                </button>
+                <button
+                  type="button"
+                  className="live-secondary"
+                  disabled={!detail.eligibility.can_revoke}
+                  onClick={() => revoke(detail.row.id, detail.row.service)}
+                >
+                  {v.revoke(l)}
+                </button>
+              </div>
+              {rotate === detail.row.id && (
+                <RotateControl
+                  key={rotate}
+                  l={l}
+                  api={api}
+                  recovery={recovery}
+                  detail={detail}
+                  user={user}
+                  refresh={() => {
+                    known.reload();
+                    refresh();
+                  }}
+                  show={show}
+                  cancel={() => onParams({ svc_c_rotate: null }, true)}
+                />
+              )}
             </section>
           )}
         </ReadBoundary>
@@ -949,6 +982,7 @@ function RecoveryRegion({
   generation,
   show,
   issue,
+  rotation,
   revoke,
 }: {
   l: Locale;
@@ -959,6 +993,7 @@ function RecoveryRegion({
   generation: number;
   show: (service: string) => void;
   issue: (service: string) => void;
+  rotation: (credential: string) => void;
   revoke: (id: string, service: string, reason: string) => void;
 }) {
   const { issues } = recovery;
@@ -991,10 +1026,16 @@ function RecoveryRegion({
               {entry.phase === "unknown"
                 ? t(l, "unknown")
                 : entry.phase === "issued"
-                  ? v.attemptIssued(l, entry.issued!.credential, entry.service)
+                  ? entry.rotate
+                    ? r.rotated(l, entry.issued!.credential, entry.rotate.credential, entry.service)
+                    : v.attemptIssued(l, entry.issued!.credential, entry.service)
                   : entry.phase === "sending"
-                    ? v.sendingLead(l)
-                    : v.lapsedTitle(l)}
+                    ? entry.rotate
+                      ? r.sending(l, entry.service)
+                      : v.sendingLead(l)
+                    : entry.rotate
+                      ? r.lapsed(l, entry.service)[0]
+                      : v.lapsedTitle(l)}
             </p>
             <div className="live-buttons">
               {entry.phase === "unknown" && (
@@ -1002,9 +1043,9 @@ function RecoveryRegion({
                   <button
                     type="button"
                     className="live-secondary"
-                    onClick={() => issue(entry.service)}
+                    onClick={() => (entry.rotate ? rotation(entry.rotate.credential) : issue(entry.service))}
                   >
-                    {v.openIssue(l)}
+                    {entry.rotate ? r.open(l) : v.openIssue(l)}
                   </button>
                   <button
                     type="button"
@@ -1013,18 +1054,10 @@ function RecoveryRegion({
                       issues.submit(
                         user,
                         entry.service,
-                        { days: entry.days, reason: entry.reason },
+                        { days: entry.days, reason: entry.reason, ...(entry.rotate ? { rotate: entry.rotate } : {}) },
                         entry.expected,
                         entry.replay,
-                        (tried, expected, frozen) =>
-                          api.command(
-                            "service.issue_credential",
-                            entry.service,
-                            expected,
-                            frozen.reason,
-                            { days: frozen.days },
-                            tried,
-                          ),
+                        issueExec(api, entry.service),
                       )
                     }
                   >

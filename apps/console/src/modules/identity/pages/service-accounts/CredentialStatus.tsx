@@ -1,6 +1,7 @@
 import type { Locale } from "../../../../shared/types";
 import type { ServiceCredential } from "../../../../service/service-query-types";
 import { v } from "./live-copy";
+import { r } from "./rotate-copy";
 import { filterValue } from "./QueryFilters";
 
 export function CredentialStatus({
@@ -23,6 +24,9 @@ export function CredentialStatus({
       <p>
         {v.colService(l)}: <span>{filterValue(l, row.service_state)}</span>
       </p>
+      {row.rotation === "ending" && <p className="live-rotation">{r.ending(l, "\u2068" + row.not_after + "\u2069")}</p>}
+      {row.replaced_by && <p>{r.replacedBy(l)[0]}<span className="live-mono live-nowrap">{"\u2066" + row.replaced_by + "\u2069"}</span>{r.replacedBy(l)[1]}</p>}
+      {row.replaces && <p>{r.replaces(l)[0]}<span className="live-mono live-nowrap">{"\u2066" + row.replaces + "\u2069"}</span>{r.replaces(l)[1]}</p>}
     </>
   );
 }

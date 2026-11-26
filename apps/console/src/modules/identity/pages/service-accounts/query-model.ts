@@ -27,6 +27,7 @@ export const credentialKeys = [
   "after",
   "selected",
   "issue",
+  "rotate",
 ] as const;
 const id = /^[A-Za-z0-9._:-]{1,128}$/;
 const enums: Record<string, string[]> = {
@@ -35,7 +36,7 @@ const enums: Record<string, string[]> = {
   collection: ["all", "uncollected"],
 };
 export type Navigation<Q> =
-  | { valid: true; query: Q; selected: string; issue: string }
+  | { valid: true; query: Q; selected: string; issue: string; rotate: string }
   | { valid: false; field: string };
 
 export function navigation(
@@ -58,7 +59,8 @@ export function navigation(
     area === "accounts" ? accountKeys : credentialKeys;
   const query: Record<string, string | number> = { workspace, limit: 25 };
   let selected = "",
-    issue = "";
+    issue = "",
+    rotate = "";
   if (utf8Length(params.toString()) > 16384)
     return { valid: false, field: "query" };
   for (const [name, value] of params) {
@@ -95,6 +97,7 @@ export function navigation(
     } else if (!id.test(value)) return { valid: false, field: name };
     if (key === "selected") selected = value;
     else if (key === "issue") issue = value;
+    else if (key === "rotate") rotate = value;
     else query[key] = key === "limit" ? Number(value) : value;
   }
   if (query.scope && !query.audience)
@@ -104,6 +107,7 @@ export function navigation(
     query: query as AccountQuery | CredentialQuery,
     selected,
     issue,
+    rotate: rotate && rotate === selected ? rotate : "",
   };
 }
 

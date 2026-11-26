@@ -26,7 +26,7 @@ export type Entry = {
 export type Refusal = { error: unknown; retry: boolean };
 export type Clocks = { mono: () => number; wall: () => number };
 export type Target = Pick<Window, "addEventListener" | "removeEventListener">;
-export type IssueValues = Readonly<{ days: string; reason: string }>;
+export type IssueValues = Readonly<{ days: string; reason: string; rotate?: Readonly<Rotation> }>;
 export type Marker = { service: string; credential: string };
 export type Observation = Pick<ServiceCredential, "id" | "service" | "current_state" | "secret_pickup">;
 export type Exec = (attempt: Attempt, expected: string, values: IssueValues) => Promise<Outcome>;
@@ -178,7 +178,7 @@ export function issueAttempts(fresh: () => Attempt, clocks: Clocks, target?: Tar
       let outcome: Outcome | null = null;
       let failure: unknown = null;
       try {
-        outcome = await exec(sent.attempt, sent.expected, Object.freeze({ days: entry.days, reason: entry.reason }));
+        outcome = await exec(sent.attempt, sent.expected, Object.freeze({ days: entry.days, reason: entry.reason, ...(entry.rotate ? { rotate: Object.freeze({ ...entry.rotate }) } : {}) }));
       } catch (err) {
         failure = err;
       }
@@ -187,7 +187,7 @@ export function issueAttempts(fresh: () => Attempt, clocks: Clocks, target?: Tar
       if (outcome) {
         const credential = outcome.fields.credential ?? "";
         const ref = outcome.fields.secret_ref ?? "";
-        if (outcome.status === "completed" && outcome.state === "credential_issued" && outcome.job_id === "" && credentialPattern.test(credential) && refPattern.test(ref)) {
+        if (outcome.status === "completed" && outcome.state === (entry.rotate ? "credential_rotated" : "credential_issued") && outcome.job_id === "" && credentialPattern.test(credential) && refPattern.test(ref)) {
           entry.track.succeeded();
           const until = new Date(clocks.wall() + Number(entry.days) * 86400000).toISOString();
           entry.issued = { ref, credential, until };

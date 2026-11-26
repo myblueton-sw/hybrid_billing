@@ -175,8 +175,9 @@ export const accountDetailOf: Parser<AccountDetail> = (v) => {
 export const credentialDetailOf: Parser<CredentialDetail> = (v) => {
   const r = record(v);
   const base = detailOf(credentialOf)(r);
-  const controls = closed({ can_revoke: boolean, step_up_state: stepUp, execution_state: execution })(r.eligibility);
+  const controls = closed({ can_revoke: boolean, can_rotate: boolean, step_up_state: stepUp, rotate_step_up_state: stepUp, execution_state: execution })(r.eligibility);
   if (controls.can_revoke) requireRead(base.row.current_state !== "revoked" && controls.step_up_state === "ready" && controls.execution_state === "ready");
+  if (controls.can_rotate) requireRead(base.row.current_state === "active" && base.row.service_state === "active" && base.row.rotation !== "ending" && base.row.replaced_by === undefined && controls.rotate_step_up_state === "ready" && controls.execution_state === "ready");
   return { ...base, eligibility: controls, limits: limitsOf(r.limits) };
 };
 export const organizationDetailOf: Parser<OrganizationDetail> = (v) => ({ ...detailOf(organizationOf)(v), eligibility: eligible(record(v).eligibility) });

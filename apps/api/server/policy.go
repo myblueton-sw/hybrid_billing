@@ -117,6 +117,8 @@ type policyPage struct {
 	Rights          rightsRow      `json:"rights"`
 	Holders         holdersRow     `json:"holders"`
 	Changes         []changeRow    `json:"changes"`
+	Waiting         string         `json:"waiting_activation"`
+	EarlierRunKept  bool           `json:"earlier_run_kept"`
 }
 
 func revisionOf(r authpolicy.Revision) revisionRow {
@@ -181,15 +183,14 @@ func (s *Server) policyPage(found session, answer identity.Answer) policyPage {
 	page := policyPage{Revision: s.Revision(), Now: stamp(now), SignedInAt: stamp(found.created), AuthenticatedAt: stamp(found.authenticated),
 		You: you, StartedAt: stamp(s.startedAt), Ledger: s.trustLedger(), Rights: s.rightsOf(you, now),
 		Holders: holdersRow{Needed: needPeople, Enrolment: "not_decided", Missing: []string{}}, Changes: []changeRow{}}
-	base, current := s.trustBase(s.bootWorkspace)
-	page.Trust = s.trustRow(base)
-	limit := stepUpDefault
+	ctx := s.trustRows(found, you, now, page.Rights)
+	page.Trust = s.trustRow(ctx.base)
+	limit := ctx.limit
 	var candidate *authpolicy.Revision
 	if view, err := s.policy.Policy(s.bootWorkspace); err == nil {
 		page.Policy = &policyRow{revisionRow: revisionOf(view.Revision), Number: view.Number, Epoch: epochOf(view.Epoch), Proposer: view.Proposer,
 			Validator: view.Validator, Approver: view.Approver, Activator: view.Activator, At: stamp(view.At)}
-		limit = min(limit, window(view.Revision))
-		candidate = &current
+		candidate = &ctx.current
 		page.ActUntil = stamp(found.authenticated.Add(limit))
 	}
 	page.StepUpSeconds = int64(limit / time.Second)
@@ -201,12 +202,22 @@ func (s *Server) policyPage(found session, answer identity.Answer) policyPage {
 			page.Holders.Missing = strings.Split(missing, ",")
 		}
 	}
-	ctx := rowContext{s: s, you: you, base: base, current: current, now: now, verifier: found.verifier, since: found.authenticated, limit: limit,
-		rights: page.Rights, unavailable: s.trustUnavailable(false), activateUnavailable: s.trustUnavailable(true)}
 	for _, v := range s.trust.List(s.bootWorkspace) {
 		page.Changes = append(page.Changes, ctx.row(v))
 	}
+	summary := s.trust.Summary(s.bootWorkspace)
+	page.Waiting, page.EarlierRunKept = summary.Unknown, summary.EarlierRun
 	return page
+}
+
+func (s *Server) trustRows(found session, you string, now time.Time, rights rightsRow) rowContext {
+	base, current := s.trustBase(s.bootWorkspace)
+	limit := stepUpDefault
+	if view, err := s.policy.Policy(s.bootWorkspace); err == nil {
+		limit = min(limit, window(view.Revision))
+	}
+	return rowContext{s: s, you: you, base: base, current: current, now: now, verifier: found.verifier, since: found.authenticated, limit: limit,
+		rights: rights, unavailable: s.trustUnavailable(false), activateUnavailable: s.trustUnavailable(true)}
 }
 
 func minutes(raw string, low, high int) (int, bool) {

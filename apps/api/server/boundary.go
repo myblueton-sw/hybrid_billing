@@ -31,6 +31,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/identity/bulk-revocations/{id}/targets", s.readBulkTargets)
 	mux.HandleFunc("GET /api/v1/identity/links/{ref}", s.collect)
 	mux.HandleFunc("GET /api/v1/identity/policy", s.listPolicy)
+	mux.HandleFunc("GET /api/v1/identity/policy/changes", s.queryTrustChanges)
+	mux.HandleFunc("GET /api/v1/identity/policy/changes/{id}", s.readTrustChange)
 	mux.HandleFunc("GET /api/v1/identity/access", s.listAccess)
 	mux.HandleFunc("GET /api/v1/identity/access/preview", s.previewAccess)
 	mux.HandleFunc("GET /api/v1/identity/access/permissions", s.queryPermissions)

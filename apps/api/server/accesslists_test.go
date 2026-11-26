@@ -74,6 +74,9 @@ func TestAccessRequestsReadEqualsTheWholeReadsRequests(t *testing.T) {
 		t.Errorf("ended: %v want %v", listIDs(got), ended)
 	}
 	all := f.readAs(root, requestsPath+"?limit=50")
+	if part := f.readAs(root, requestsPath+"?limit=1"); part.body["next"] == "" || part.body["count"].(map[string]any)["certainty"] != "lower_bound" || all.body["count"].(map[string]any)["certainty"] != "exact" {
+		t.Errorf("a part of the list states its count as %v, the whole as %v", part.body["count"], all.body["count"])
+	}
 	if len(listIDs(all)) != len(pending)+len(ended) || all.body["count"].(map[string]any)["value"] != fmt.Sprint(len(pending)+len(ended)) {
 		t.Errorf("all: %v", listIDs(all))
 	}

@@ -111,6 +111,8 @@ func parseListQuery(values url.Values, pageLimit int, states []string) (listQuer
 }
 
 type listRead struct {
+	basis   func(*listRead) (string, bool)
+	exact   bool
 	found   session
 	values  url.Values
 	query   listQuery
@@ -128,8 +130,8 @@ func (s *Server) listBasis(read *listRead) (string, bool) {
 	return hex.EncodeToString(s.queryMAC("access-lists-source-v1", []byte(access+"/"+people+"/"+strconv.FormatBool(s.ledgerBlocksIncrease())))), true
 }
 
-func (s *Server) openList(w http.ResponseWriter, r *http.Request, area, domain string, states []string) (*listRead, bool) {
-	read := &listRead{request: r.Header.Get("X-Request-Id")}
+func (s *Server) openList(w http.ResponseWriter, r *http.Request, area, domain string, states []string, source func(*listRead) (string, bool)) (*listRead, bool) {
+	read := &listRead{request: r.Header.Get("X-Request-Id"), basis: source}
 	found, answer, ok := s.admitted(w, r)
 	if !ok {
 		return nil, false
@@ -153,7 +155,7 @@ func (s *Server) openList(w http.ResponseWriter, r *http.Request, area, domain s
 		failCode(w, commands.DependencyUnavailable, read.request)
 		return nil, false
 	}
-	basis, available := s.listBasis(read)
+	basis, available := read.basis(read)
 	if !available {
 		failCode(w, commands.DependencyUnavailable, read.request)
 		return nil, false
@@ -177,7 +179,7 @@ func (s *Server) openList(w http.ResponseWriter, r *http.Request, area, domain s
 }
 
 func closeList[T any](s *Server, w http.ResponseWriter, read *listRead, domain, order string, rows []T, exhausted bool) {
-	current, available := s.listBasis(read)
+	current, available := read.basis(read)
 	if !available || current != read.cursor.Basis {
 		failRead(w, commands.RevisionConflict, read.request, "after")
 		return
@@ -190,7 +192,10 @@ func closeList[T any](s *Server, w http.ResponseWriter, read *listRead, domain, 
 			failCode(w, commands.InternalError, read.request)
 			return
 		}
-		page.Next, page.Count.Certainty, page.ScanStopped = next, "lower_bound", read.budget.remaining() == 0
+		page.Next, page.ScanStopped = next, read.budget.remaining() == 0
+		if !read.exact {
+			page.Count.Certainty = "lower_bound"
+		}
 	}
 	writeJSON(w, http.StatusOK, read.request, page)
 }
@@ -198,7 +203,7 @@ func closeList[T any](s *Server, w http.ResponseWriter, read *listRead, domain, 
 func (s *Server) queryAccessRequests(w http.ResponseWriter, r *http.Request) {
 	s.domain.RLock()
 	defer s.domain.RUnlock()
-	read, ok := s.openList(w, r, "requests", requestsCursorDomain, []string{"pending", "ended"})
+	read, ok := s.openList(w, r, "requests", requestsCursorDomain, []string{"pending", "ended"}, s.listBasis)
 	if !ok {
 		return
 	}
@@ -254,7 +259,7 @@ func (s *Server) queryAccessRequests(w http.ResponseWriter, r *http.Request) {
 func (s *Server) queryAccessRevocations(w http.ResponseWriter, r *http.Request) {
 	s.domain.RLock()
 	defer s.domain.RUnlock()
-	read, ok := s.openList(w, r, "revocations", revocationsCursorDomain, nil)
+	read, ok := s.openList(w, r, "revocations", revocationsCursorDomain, nil, s.listBasis)
 	if !ok {
 		return
 	}

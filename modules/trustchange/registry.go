@@ -16,6 +16,7 @@ type Registry struct {
 	counter uint64
 	changes map[string]*View
 	order   []string
+	version uint64
 }
 
 func Draw(random io.Reader, taken map[string]bool) (string, error) {
@@ -92,6 +93,7 @@ func validCandidate(c Candidate) bool {
 }
 
 func (r *Registry) record(v *View, state, by, rationale string, at time.Time) {
+	r.version++
 	v.State = state
 	v.History = append(v.History, Entry{State: state, By: by, At: at, Rationale: rationale})
 	if len(v.History) > MaxHistory {
@@ -118,6 +120,7 @@ func (r *Registry) prune() {
 		for i, id := range r.order {
 			if !Open(r.changes[id].State) {
 				delete(r.changes, id)
+				r.version++
 				r.order = append(r.order[:i:i], r.order[i+1:]...)
 				dropped = true
 				break
@@ -384,6 +387,7 @@ func (r *Registry) Restore(views []View) error {
 		x.Run, x.EarlierRun = run, true
 		r.changes[x.ID] = &x
 		r.order = append(r.order, x.ID)
+		r.version++
 	}
 	r.prune()
 	return nil

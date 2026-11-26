@@ -35,6 +35,7 @@ type Registry struct {
 	actorJoined           map[string]uint64
 	installationWorkspace string
 	authorClient          string
+	held                  holding
 }
 
 func (r *Registry) SetInstallationWorkspace(id string) error {
@@ -109,6 +110,7 @@ func NewRegistry(installationID string, catalog Catalog, clock func() time.Time)
 		grants: make(map[string]versioned[Grant]), delegations: make(map[string]versioned[Delegation]),
 		sessions:    make(map[string]versioned[SupportSession]),
 		grantJoined: make(map[string]uint64), chainJoined: make(map[string][2]uint64), actorJoined: make(map[string]uint64),
+		held: newHolding(),
 	}
 	for _, kind := range catalog.Kinds {
 		if _, repeated := r.kinds[kind]; repeated || !validID(kind) {
@@ -294,6 +296,7 @@ func (r *Registry) AddGrant(grant Grant) error {
 	}
 	r.grants[grant.ID] = versioned[Grant]{value: grant, version: 1}
 	r.grantOrder = insertOrdered(r.grantOrder, grant.ID)
+	r.held.grant(grant)
 	r.grantJoined[grant.ID] = joined
 	r.changed()
 	return nil
@@ -428,6 +431,7 @@ func (r *Registry) AddDelegation(delegation Delegation) error {
 	delegation.Terms = terms
 	r.delegations[delegation.ID] = versioned[Delegation]{value: delegation, version: 1}
 	r.delegationOrder = insertOrdered(r.delegationOrder, delegation.ID)
+	r.held.delegation(delegation)
 	r.chainJoined[delegation.ID] = [2]uint64{delegatorJoined, delegateJoined}
 	r.changed()
 	return nil

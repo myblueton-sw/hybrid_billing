@@ -327,6 +327,34 @@ func (a *Administration) DelegationAt(id string, at time.Time) (DelegationView, 
 	return a.permissions.DelegationAt(id, at)
 }
 
+func (a *Administration) GrantsOfSubject(subject string, limit int, at time.Time) ([]GrantView, bool) {
+	if !a.ready() {
+		return nil, false
+	}
+	return a.permissions.GrantsOfSubject(subject, limit, at)
+}
+
+func (a *Administration) GrantsOfClient(client string, limit int, at time.Time) ([]GrantView, bool) {
+	if !a.ready() {
+		return nil, false
+	}
+	return a.permissions.GrantsOfClient(client, limit, at)
+}
+
+func (a *Administration) InstallationGrants(action Action, limit int, at time.Time) ([]GrantView, bool) {
+	if !a.ready() {
+		return nil, false
+	}
+	return a.permissions.InstallationGrants(action, limit, at)
+}
+
+func (a *Administration) DelegationsOfUser(user string, limit int, at time.Time) ([]DelegationView, bool) {
+	if !a.ready() {
+		return nil, false
+	}
+	return a.permissions.DelegationsOfUser(user, limit, at)
+}
+
 func (a *Administration) PermissionCounts() (int, int) {
 	if !a.ready() {
 		return 0, 0

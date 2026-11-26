@@ -385,3 +385,64 @@ func TestARequestForEveryCustomerIsNotTheSameAsAGrantForACustomerNamedAll(t *tes
 		t.Errorf("a grant for every customer is not the same request as one for a single customer: %s", got)
 	}
 }
+
+func TestPermissionDetailSaysWhatARevocationWouldEnd(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root, second := f.as(AdminLogin), f.as(Admin2Login)
+	granted := f.grantVia(root, second, SampleMember, nil)
+	f.must(f.s.admin.AddGrant(gate.Grant{ID: "second-holds", SubjectID: SampleAdmin2, Terms: permissionTerms(gate.One("c1")), Validity: gate.Validity{NotBefore: f.s.clock(), NotAfter: f.s.clock().Add(time.Hour)}}))
+	addDelegation(f, "we-root", SampleMember, SampleAdmin2, "")
+	addDelegation(f, "we-child", SampleAdmin2, SampleAdmin, "we-root")
+	addDelegation(f, "we-other", SampleAdmin, SampleAdmin2, "")
+	would := func(source, id string) []string {
+		t.Helper()
+		got := f.readAs(root, "/api/v1/identity/access/permissions/"+source+"/"+id)
+		if got.status != 200 {
+			t.Fatalf("%s %s: %s", source, id, got.raw)
+		}
+		out := []string{}
+		for _, raw := range got.body["would_end"].([]any) {
+			out = append(out, fmt.Sprint(raw))
+		}
+		return out
+	}
+	if got := would("delegation", "we-child"); len(got) != 0 {
+		t.Errorf("a leaf delegation would end %v", got)
+	}
+	if got := would("grant", "second-holds"); len(got) != 0 {
+		t.Errorf("a grant that is not the delegate's last would end %v", got)
+	}
+	scan := f.s.cfg.Access.ServiceQueryScan
+	f.s.cfg.Access.ServiceQueryScan = 1
+	if got := f.readAs(root, "/api/v1/identity/access/permissions/grant/"+granted); got.status != 503 {
+		t.Errorf("more dependent delegations than the limit: %d", got.status)
+	}
+	f.s.cfg.Access.ServiceQueryScan = scan
+	predictedByDelegation := would("delegation", "we-root")
+	if strings.Join(predictedByDelegation, " ") != "we-child" {
+		t.Errorf("the parent delegation would end %v", predictedByDelegation)
+	}
+	predicted := would("grant", granted)
+	if strings.Join(predicted, " ") != "we-child we-root" {
+		t.Fatalf("the backing grant would end %v", predicted)
+	}
+	revoked := f.revokeVia(root, second, granted)
+	if revoked.status != 202 {
+		t.Fatalf("revoke %s", revoked.raw)
+	}
+	newest := f.readAs(root, revocationsPath+"?limit=1").body["rows"].([]any)[0].(map[string]any)
+	if fmt.Sprint(newest["ended_delegations"]) != fmt.Sprint(predicted) || newest["target"] != granted {
+		t.Errorf("the revocation ended %v, the detail read said %v", newest["ended_delegations"], predicted)
+	}
+	if got := would("grant", granted); len(got) != 0 {
+		t.Errorf("a revoked grant would end %v", got)
+	}
+	if got := f.run(root, "access.revoke_delegation", "we-other", nil); got.status != 202 {
+		t.Fatalf("revoke a delegation %s", got.raw)
+	}
+	last := f.readAs(root, revocationsPath+"?limit=1").body["rows"].([]any)[0].(map[string]any)
+	if fmt.Sprint(last["ended_delegations"]) != "[]" {
+		t.Errorf("revoking a leaf ended %v", last["ended_delegations"])
+	}
+}

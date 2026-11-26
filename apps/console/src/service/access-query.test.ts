@@ -102,7 +102,7 @@ test("M03 permissions: a request that could not be asked is not sent", async () 
 });
 
 test("M03 permission detail: the answer must be the one asked for", async () => {
-  const detail = { workspace: "sample-workspace", row: grant, revision: "r27", observed_at: "2026-11-26T08:45:18.211902709Z" };
+  const detail = { workspace: "sample-workspace", row: grant, would_end: ["del-1", "del-2"], revision: "r27", observed_at: "2026-11-26T08:45:18.211902709Z" };
   let asked = "";
   const got = await client(detail, (path) => { asked = path; }).accessPermission("grant", grant.id);
   assert.equal(asked, "/api/v1/identity/access/permissions/grant/approval-sample-admin");
@@ -111,4 +111,11 @@ test("M03 permission detail: the answer must be the one asked for", async () => 
   await assert.rejects(client(detail).accessPermission("delegation", grant.id), invalid, "another source");
   await assert.rejects(client({ ...detail, eligibility: {} }).accessPermission("grant", grant.id), invalid, "an unknown field");
   await assert.rejects(client({ ...detail, observed_at: "now" }).accessPermission("grant", grant.id), invalid, "a time that is not one");
+  assert.deepEqual(got.would_end, ["del-1", "del-2"]);
+  await assert.rejects(client((({ would_end: _dropped, ...rest }) => rest)(detail)).accessPermission("grant", grant.id), invalid, "no list of what would end");
+  await assert.rejects(client({ ...detail, would_end: ["del-2", "del-1"] }).accessPermission("grant", grant.id), invalid, "what would end out of order");
+  await assert.rejects(client({ ...detail, would_end: ["del-1", "del-1"] }).accessPermission("grant", grant.id), invalid, "a delegation named twice");
+  await assert.rejects(client({ ...detail, would_end: ["a b"] }).accessPermission("grant", grant.id), invalid, "something that is not an identifier");
+  await assert.rejects(client({ ...detail, row: delegation, would_end: [delegation.id] }).accessPermission("delegation", delegation.id), invalid, "a delegation that would end itself");
+  assert.deepEqual((await client({ ...detail, row: delegation, would_end: [] }).accessPermission("delegation", delegation.id)).would_end, []);
 });

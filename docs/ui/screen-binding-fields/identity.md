@@ -521,6 +521,8 @@ Bounded reads (HYB-304 increment C2, server only; the screen does not use them y
 
 **Subject rows of the bounded read (HYB-304 T2a, additive, `GET /identity/access/subjects` rows only):** `revocation_unconfirmed`, true when a kept revocation that is not confirmed targets a grant the person holds or a delegation the person receives. Not displayed yet; the request form's warning will use it in T5.
 
+**Permission detail (HYB-304 T2b-2, additive, `GET /identity/access/permissions/grant/{id}` and `/delegation/{id}`):** `would_end`, the delegations effective now that would not be if this record were revoked, in identifier order. Not displayed yet; the revocation panel will use it in T5 in place of the browser's own list.
+
 **Parsed but not displayed on M03:** `you`, grant and delegation `version`, `scope.legal_entity`/`contract`/`period`, request `grant` (used only to match), `result`, revocation `history`, `target_present`, `job_reason`, `requested_by`, `approved_by`, `deny_at`, `verified`, `completed_at`, ledger `replace_reason`, `replaced_file`; preview `revision`, `subject`, `kind`, `customer`.
 
 ## M04 Service accounts
